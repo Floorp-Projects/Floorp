@@ -1804,6 +1804,8 @@ export var Policies = {
         "places.",
         "pref.",
         "print.",
+        "privacy.userContext.enabled",
+        "privacy.userContext.ui.enabled",
         "signon.",
         "spellchecker.",
         "toolkit.legacyUserProfileCustomizations.stylesheets",

@@ -519,8 +519,6 @@ static bool TestCopyAndMove() {
     {
       Maybe<UnmovableValue> mayUnmovableValue = Some(UnmovableValue());
       MOZ_RELEASE_ASSERT(mayUnmovableValue->GetStatus() == eWasCopyConstructed);
-      mayUnmovableValue = Some(UnmovableValue());
-      MOZ_RELEASE_ASSERT(mayUnmovableValue->GetStatus() == eWasCopyAssigned);
       mayUnmovableValue.reset();
       mayUnmovableValue.emplace(UnmovableValue());
       MOZ_RELEASE_ASSERT(mayUnmovableValue->GetStatus() == eWasCopyConstructed);
@@ -530,10 +528,8 @@ static bool TestCopyAndMove() {
 
     static_assert(std::is_copy_constructible_v<Maybe<UnmovableValue>>);
     static_assert(std::is_copy_assignable_v<Maybe<UnmovableValue>>);
-    // TODO(Bug 1601251): Maybe<T> should delete move operations if T does not
-    //                    support moves
-    // static_assert(!std::is_move_constructible_v<Maybe<UnmovableValue>>);
-    // static_assert(!std::is_move_assignable_v<Maybe<UnmovableValue>>);
+    static_assert(!std::is_move_constructible_v<Maybe<UnmovableValue>>);
+    static_assert(!std::is_move_assignable_v<Maybe<UnmovableValue>>);
   }
 
   MOZ_RELEASE_ASSERT(0 == sUndestroyedObjects);

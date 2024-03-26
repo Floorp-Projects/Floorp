@@ -1,0 +1,35 @@
+<!doctype html>
+<style>
+#scrubber {
+  height: 100px;
+  width: 100%;
+  appearance: none;
+  background-color: black;
+  box-sizing: border-box;
+  padding: 6px 2px;
+  margin: 0;
+
+  &::-moz-range-thumb {
+    border-radius: 14px;
+    background-color: #BFBFC9;
+    width: 8px;
+    height: 8px;
+    border: 3px solid white;
+    padding: 0;
+  }
+
+  &::-moz-range-track {
+    background-color: #969696;
+  }
+
+  &::-moz-range-progress {
+    background-color: white;
+  }
+}
+</style>
+<input type="range" id="scrubber" value="0" min="0" max="1" step=".001">
+<script>
+let scrubber = document.getElementById('scrubber');
+scrubber.getBoundingClientRect();
+scrubber.value = 0.5;
+</script>

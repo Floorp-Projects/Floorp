@@ -258,6 +258,7 @@ def test_custom_apk_startup(get_measurement_mock, time_sleep_mock, path_mock):
             test = android_startup.AndroidStartUp(env, mach_cmd)
             test.run_tests = lambda: True
             test.package_id = "FakeID"
+            test.product = "fenix"
             assert test.run_performance_analysis(SAMPLE_APK_METADATA)
 
 

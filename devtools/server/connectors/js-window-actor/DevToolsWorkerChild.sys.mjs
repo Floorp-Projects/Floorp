@@ -22,13 +22,11 @@ ChromeUtils.defineLazyGetter(lazy, "Loader", () =>
 ChromeUtils.defineLazyGetter(lazy, "DevToolsUtils", () =>
   lazy.Loader.require("resource://devtools/shared/DevToolsUtils.js")
 );
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  SessionDataHelpers:
-    "resource://devtools/server/actors/watcher/SessionDataHelpers.jsm",
-});
 ChromeUtils.defineESModuleGetters(lazy, {
   isWindowGlobalPartOfContext:
     "resource://devtools/server/actors/watcher/browsing-context-helpers.sys.mjs",
+  SessionDataHelpers:
+    "resource://devtools/server/actors/watcher/SessionDataHelpers.sys.mjs",
 });
 
 // Name of the attribute into which we save data in `sharedData` object.

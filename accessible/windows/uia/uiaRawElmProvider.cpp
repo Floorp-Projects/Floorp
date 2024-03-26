@@ -45,6 +45,9 @@ void uiaRawElmProvider::RaiseUiaEventForGeckoEvent(Accessible* aAcc,
   }
   PROPERTYID property = 0;
   switch (aGeckoEvent) {
+    case nsIAccessibleEvent::EVENT_DESCRIPTION_CHANGE:
+      property = UIA_FullDescriptionPropertyId;
+      break;
     case nsIAccessibleEvent::EVENT_FOCUS:
       ::UiaRaiseAutomationEvent(uia, UIA_AutomationFocusChangedEventId);
       return;
@@ -300,6 +303,17 @@ uiaRawElmProvider::GetPropertyValue(PROPERTYID aPropertyId,
       aPropertyValue->vt = VT_I4;
       aPropertyValue->lVal = GetControlType();
       break;
+
+    case UIA_FullDescriptionPropertyId: {
+      nsAutoString desc;
+      acc->Description(desc);
+      if (!desc.IsEmpty()) {
+        aPropertyValue->vt = VT_BSTR;
+        aPropertyValue->bstrVal = ::SysAllocString(desc.get());
+        return S_OK;
+      }
+      break;
+    }
 
     case UIA_HasKeyboardFocusPropertyId:
       aPropertyValue->vt = VT_BOOL;

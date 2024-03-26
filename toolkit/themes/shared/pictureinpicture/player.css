@@ -326,31 +326,29 @@ body:fullscreen #controls[showing]:hover {
   background-color: transparent;
   padding: 6px 2px;
   margin: 0;
-}
 
-#audio-scrubber::-moz-range-thumb {
-  border-radius: 8px;
-  background-color: #FFFFFF;
-  position: relative;
-  width: 8px;
-  height: 8px;
-  bottom: 24px;
-  padding: 0;
-}
+  &::-moz-range-thumb {
+    border-radius: 8px;
+    background-color: #FFFFFF;
+    width: 8px;
+    height: 8px;
+    padding: 0;
+  }
 
-#audio-scrubber::-moz-range-track {
-  background-color: #969696;
-}
+  &::-moz-range-track {
+    background-color: #969696;
+  }
 
-#audio-scrubber::-moz-range-progress {
-  background-color: #FFFFFF;
-}
+  &::-moz-range-progress {
+    background-color: #FFFFFF;
+  }
 
-#audio-scrubber,
-#audio-scrubber::-moz-range-track,
-#audio-scrubber::-moz-range-progress {
-  height: 2px;
-  border-radius: 10px;
+  &,
+  &::-moz-range-track,
+  &::-moz-range-progress {
+    height: 2px;
+    border-radius: 10px;
+  }
 }
 
 #fullscreen {
@@ -594,32 +592,30 @@ input:checked + .slider::before {
   width: 100%;
   background-color: transparent;
   padding: 6px 2px;
-}
 
-#scrubber::-moz-range-thumb {
-  border-radius: 14px;
-  background-color: #BFBFC9;
-  position: relative;
-  width: 8px;
-  height: 8px;
-  border: 3px solid #FFFFFF;
-  bottom: 24px;
-  padding: 0;
-}
+  &::-moz-range-thumb {
+    border-radius: 14px;
+    background-color: #BFBFC9;
+    width: 8px;
+    height: 8px;
+    border: 3px solid #FFFFFF;
+    padding: 0;
+  }
 
-#scrubber::-moz-range-track {
-  background-color: #969696;
-}
+  &::-moz-range-track {
+    background-color: #969696;
+  }
 
-#scrubber::-moz-range-progress {
-  background-color: #FFFFFF;
-}
+  &::-moz-range-progress {
+    background-color: #FFFFFF;
+  }
 
-#scrubber,
-#scrubber::-moz-range-track,
-#scrubber::-moz-range-progress {
-  height: 4px;
-  border-radius: 10px;
+  &,
+  &::-moz-range-track,
+  &::-moz-range-progress {
+    height: 4px;
+    border-radius: 10px;
+  }
 }
 
 #timestamp {

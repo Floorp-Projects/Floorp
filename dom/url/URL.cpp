@@ -132,32 +132,40 @@ bool URL::IsValidObjectURL(const GlobalObject& aGlobal, const nsAString& aURL,
   return URLWorker::IsValidObjectURL(aGlobal, aURL, aRv);
 }
 
-bool URL::CanParse(const GlobalObject& aGlobal, const nsAString& aURL,
-                   const Optional<nsAString>& aBase) {
+already_AddRefed<nsIURI> URL::ParseURI(const nsACString& aURL,
+                                       const Optional<nsACString>& aBase) {
   nsCOMPtr<nsIURI> baseUri;
-  if (aBase.WasPassed()) {
-    // Don't use NS_ConvertUTF16toUTF8 because that doesn't let us handle OOM.
-    nsAutoCString base;
-    if (!AppendUTF16toUTF8(aBase.Value(), base, fallible)) {
-      // Just return false with OOM errors as no ErrorResult.
-      return false;
-    }
-
-    nsresult rv = NS_NewURI(getter_AddRefs(baseUri), base);
-    if (NS_FAILED(rv)) {
-      // Invalid base URL, return false.
-      return false;
-    }
-  }
-
-  nsAutoCString urlStr;
-  if (!AppendUTF16toUTF8(aURL, urlStr, fallible)) {
-    // Just return false with OOM errors as no ErrorResult.
-    return false;
-  }
-
   nsCOMPtr<nsIURI> uri;
-  return NS_SUCCEEDED(NS_NewURI(getter_AddRefs(uri), urlStr, nullptr, baseUri));
+
+  if (aBase.WasPassed()) {
+    nsresult rv = NS_NewURI(getter_AddRefs(baseUri), aBase.Value());
+    if (NS_FAILED(rv)) {
+      return nullptr;
+    }
+  }
+
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aURL, nullptr, baseUri);
+  if (NS_FAILED(rv)) {
+    return nullptr;
+  }
+
+  return uri.forget();
+};
+
+already_AddRefed<URL> URL::Parse(const GlobalObject& aGlobal,
+                                 const nsACString& aURL,
+                                 const Optional<nsACString>& aBase) {
+  nsCOMPtr<nsIURI> uri = ParseURI(aURL, aBase);
+  if (!uri) {
+    return nullptr;
+  }
+  return MakeAndAddRef<URL>(aGlobal.GetAsSupports(), std::move(uri));
+}
+
+bool URL::CanParse(const GlobalObject& aGlobal, const nsACString& aURL,
+                   const Optional<nsACString>& aBase) {
+  nsCOMPtr<nsIURI> uri = ParseURI(aURL, aBase);
+  return !!uri;
 }
 
 URLSearchParams* URL::SearchParams() {

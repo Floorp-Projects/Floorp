@@ -19,7 +19,8 @@ interface URL {
   [Throws]
   constructor(USVString url, optional USVString base);
 
-  static boolean canParse(USVString url, optional USVString base);
+  static URL? parse(UTF8String url, optional UTF8String base);
+  static boolean canParse(UTF8String url, optional UTF8String base);
 
   [SetterThrows]
   stringifier attribute USVString href;

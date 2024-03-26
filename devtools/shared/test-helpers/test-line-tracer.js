@@ -4,12 +4,10 @@
 
 "use strict";
 
-const {
-  startTracing,
-  addTracingListener,
-  stopTracing,
-  removeTracingListener,
-} = require("resource://devtools/server/tracer/tracer.jsm");
+const { JSTracer } = ChromeUtils.importESModule(
+  "resource://devtools/server/tracer/tracer.sys.mjs",
+  { global: "shared" }
+);
 
 let lineToTrace;
 
@@ -63,7 +61,7 @@ function traceFrame({ frame }) {
   if (lineToTrace) {
     if (lineNumber == lineToTrace) {
       // Stop the first tracer started from `exports.start()` which was only waiting for the particular test script line to run
-      stopTracing();
+      JSTracer.stopTracing();
 
       const { url } = script.source;
       const filename = url.substr(url.lastIndexOf("/") + 1);
@@ -78,7 +76,7 @@ function traceFrame({ frame }) {
         traceSteps: true,
       };
       lineToTrace = null;
-      startTracing(tracerOptions);
+      JSTracer.startTracing(tracerOptions);
     }
     return false;
   }
@@ -154,13 +152,13 @@ exports.start = function (testGlobal, testUrl, line) {
     // Only trace the running test and nothing else
     filterFrameSourceUrl: testUrl,
   };
-  startTracing(tracerOptions);
-  addTracingListener(tracingListener);
+  JSTracer.startTracing(tracerOptions);
+  JSTracer.addTracingListener(tracingListener);
 };
 
 exports.stop = function () {
-  stopTracing();
-  removeTracingListener(tracingListener);
+  JSTracer.stopTracing();
+  JSTracer.removeTracingListener(tracingListener);
 };
 
 function readURI(uri) {
