@@ -505,12 +505,10 @@ abstract class BaseBrowserFragment :
                 )
             }
 
-            val shouldHideOnScroll =
-                !context.settings().shouldUseFixedTopToolbar && context.settings().isDynamicToolbarEnabled
             _bottomToolbarContainerView = BottomToolbarContainerView(
                 context = context,
                 parent = binding.browserLayout,
-                hideOnScroll = shouldHideOnScroll,
+                hideOnScroll = isToolbarDynamic(context),
                 composableContent = {
                     FirefoxTheme {
                         Column {
@@ -598,9 +596,9 @@ abstract class BaseBrowserFragment :
                 view = binding.findInPageView,
                 engineView = binding.engineView,
                 toolbarInfo = FindInPageIntegration.ToolbarInfo(
-                    browserToolbarView.view,
-                    !context.settings().shouldUseFixedTopToolbar && context.settings().isDynamicToolbarEnabled,
-                    context.settings().toolbarPosition == ToolbarPosition.TOP,
+                    toolbar = browserToolbarView.layout,
+                    isToolbarDynamic = isToolbarDynamic(context),
+                    isToolbarPlacedAtTop = context.settings().toolbarPosition == ToolbarPosition.TOP,
                 ),
             ),
             owner = this,
@@ -1296,7 +1294,7 @@ abstract class BaseBrowserFragment :
     ) {
         val context = requireContext()
 
-        if (!context.settings().shouldUseFixedTopToolbar && context.settings().isDynamicToolbarEnabled) {
+        if (isToolbarDynamic(context)) {
             getEngineView().setDynamicToolbarMaxHeight(topToolbarHeight + bottomToolbarHeight)
 
             if (IncompleteRedesignToolbarFeature(context.settings()).isEnabled) {
@@ -1338,6 +1336,9 @@ abstract class BaseBrowserFragment :
             swipeRefreshParams.bottomMargin = bottomToolbarHeight
         }
     }
+
+    private fun isToolbarDynamic(context: Context) =
+        !context.settings().shouldUseFixedTopToolbar && context.settings().isDynamicToolbarEnabled
 
     /**
      * Returns a list of context menu items [ContextMenuCandidate] for the context menu
