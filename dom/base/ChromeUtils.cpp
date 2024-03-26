@@ -1515,10 +1515,10 @@ already_AddRefed<Promise> ChromeUtils::RequestProcInfo(GlobalObject& aGlobal,
                                                          // DOM windows.
             /* aUtilityInfo = */ std::move(utilityActors),
             /* aChild = */ 0  // Without a ContentProcess, no ChildId.
-#ifdef XP_MACOSX
+#ifdef XP_DARWIN
             ,
             /* aChildTask = */ aGeckoProcess->GetChildTask()
-#endif  // XP_MACOSX
+#endif  // XP_DARWIN
         );
       });
 
@@ -1617,10 +1617,10 @@ already_AddRefed<Promise> ChromeUtils::RequestProcInfo(GlobalObject& aGlobal,
         /* aWindowInfo = */ std::move(windows),
         /* aUtilityInfo = */ nsTArray<UtilityInfo>(),
         /* aChild = */ contentParent->ChildID()
-#ifdef XP_MACOSX
+#ifdef XP_DARWIN
             ,
         /* aChildTask = */ contentParent->Process()->GetChildTask()
-#endif  // XP_MACOSX
+#endif  // XP_DARWIN
     );
   }
 
