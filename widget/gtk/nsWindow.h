@@ -641,7 +641,7 @@ class nsWindow final : public nsBaseWidget {
   // It's set by OnMap/OnUnmap which is based on Gtk events.
   mozilla::Atomic<bool, mozilla::Relaxed> mIsMapped;
   // Has this widget been destroyed yet?
-  bool mIsDestroyed : 1;
+  mozilla::Atomic<bool, mozilla::Relaxed> mIsDestroyed;
   // mIsShown tracks requested visible status from browser perspective, i.e.
   // if the window should be visible or now.
   bool mIsShown : 1;

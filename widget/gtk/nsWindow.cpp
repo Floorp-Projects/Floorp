@@ -3421,9 +3421,11 @@ void* nsWindow::GetNativeData(uint32_t aDataType) {
       // 2) If window is hidden on OnUnmap(), we replace EGLSurface/wl_surface
       //    by offline surface and release XWindow.
 
+      // If nsWindow is already destroyed, don't try to get EGL window at all,
+      // we're going to be deleted anyway.
       MutexAutoLock lock(mWindowVisibilityMutex);
       void* eglWindow = nullptr;
-      if (mIsMapped) {
+      if (mIsMapped && !mIsDestroyed) {
 #ifdef MOZ_X11
         if (GdkIsX11Display()) {
           eglWindow = (void*)GDK_WINDOW_XID(mGdkWindow);
@@ -5816,7 +5818,7 @@ void nsWindow::ConfigureCompositor() {
 
     // too late
     if (mIsDestroyed || !mIsMapped) {
-      LOG("  quit, mIsDestroyed = %d mIsMapped = %d", mIsDestroyed,
+      LOG("  quit, mIsDestroyed = %d mIsMapped = %d", !!mIsDestroyed,
           !!mIsMapped);
       return;
     }
