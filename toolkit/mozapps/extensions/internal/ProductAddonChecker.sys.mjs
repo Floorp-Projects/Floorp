@@ -118,12 +118,18 @@ async function conservativeFetch(input) {
  * @param  contentSignatureHeader
  *         The contents of the 'content-signature' header received along with
  *         `data`.
+ * @param  trustedRoot
+ *         The identifier of the trusted root to use for certificate validation.
  * @return A promise that will resolve to nothing if the signature verification
  *         succeeds, or rejects on failure, with an Error that sets its
  *         addonCheckerErr property disambiguate failure cases and a message
  *         explaining the error.
  */
-async function verifyGmpContentSignature(data, contentSignatureHeader) {
+async function verifyGmpContentSignature(
+  data,
+  contentSignatureHeader,
+  trustedRoot
+) {
   if (!contentSignatureHeader) {
     logger.warn(
       "Unexpected missing content signature header during content signature validation"
@@ -186,13 +192,6 @@ async function verifyGmpContentSignature(data, contentSignatureHeader) {
     "@mozilla.org/security/contentsignatureverifier;1"
   ].createInstance(Ci.nsIContentSignatureVerifier);
 
-  // See bug 1771992. In the future, this may need to handle staging and dev
-  // environments in addition to just production and testing.
-  let root = Ci.nsIContentSignatureVerifier.ContentSignatureProdRoot;
-  if (Services.env.exists("XPCSHELL_TEST_PROFILE_DIR")) {
-    root = Ci.nsIX509CertDB.AppXPCShellRoot;
-  }
-
   let valid;
   try {
     valid = await verifier.asyncVerifyContentSignature(
@@ -200,7 +199,7 @@ async function verifyGmpContentSignature(data, contentSignatureHeader) {
       signature,
       certChain,
       "aus.content-signature.mozilla.org",
-      root
+      trustedRoot
     );
   } catch (err) {
     logger.warn(`Unexpected error while validating content signature: ${err}`);
@@ -329,6 +328,9 @@ function downloadXMLWithRequest(
  * @param  verifyContentSignature
  *         When true, will verify the content signature information from the
  *         response header. Failure to verify will result in an error.
+ * @param  trustedContentSignatureRoot
+ *         The trusted root to use for certificate validation.
+ *         Must be set if verifyContentSignature is true.
  * @return a promise that resolves to the DOM document downloaded or rejects
  *         with a JS exception in case of error.
  */
@@ -336,7 +338,8 @@ async function downloadXML(
   url,
   allowNonBuiltIn = false,
   allowedCerts = null,
-  verifyContentSignature = false
+  verifyContentSignature = false,
+  trustedContentSignatureRoot = null
 ) {
   let request = await downloadXMLWithRequest(
     url,
@@ -346,7 +349,8 @@ async function downloadXML(
   if (verifyContentSignature) {
     await verifyGmpContentSignature(
       request.response,
-      request.getResponseHeader("content-signature")
+      request.getResponseHeader("content-signature"),
+      trustedContentSignatureRoot
     );
   }
   return request.responseXML;
@@ -535,6 +539,9 @@ export const ProductAddonChecker = {
    * @param  verifyContentSignature
    *         When true, will verify the content signature information from the
    *         response header. Failure to verify will result in an error.
+   * @param  trustedContentSignatureRoot
+   *         The trusted root to use for certificate validation.
+   *         Must be set if verifyContentSignature is true.
    * @return a promise that resolves to an object containing the list of add-ons
    *         and whether the local fallback was used, or rejects with a JS
    *         exception in case of error. In the case of an error, a best effort
@@ -545,13 +552,15 @@ export const ProductAddonChecker = {
     url,
     allowNonBuiltIn = false,
     allowedCerts = null,
-    verifyContentSignature = false
+    verifyContentSignature = false,
+    trustedContentSignatureRoot = null
   ) {
     return downloadXML(
       url,
       allowNonBuiltIn,
       allowedCerts,
-      verifyContentSignature
+      verifyContentSignature,
+      trustedContentSignatureRoot
     ).then(parseXML);
   },
 

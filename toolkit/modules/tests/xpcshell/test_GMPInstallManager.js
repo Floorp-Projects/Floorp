@@ -837,6 +837,60 @@ add_task(async function test_checkForAddons_contentSignatureFailure() {
 });
 
 /**
+ * Tests that the signature verification URL is as expected.
+ */
+add_task(async function test_checkForAddons_get_verifier_url() {
+  const previousUrlOverride = setupContentSigTestPrefs();
+
+  let installManager = new GMPInstallManager();
+  // checkForAddons() calls _getContentSignatureRootForURL() with the return
+  // value of _getURL(), which is effectively KEY_URL_OVERRIDE or KEY_URL
+  // followed by some normalization.
+  const rootForUrl = async () => {
+    const url = await installManager._getURL();
+    return installManager._getContentSignatureRootForURL(url);
+  };
+
+  Assert.equal(
+    await rootForUrl(),
+    Ci.nsIX509CertDB.AppXPCShellRoot,
+    "XPCShell root used by default in xpcshell test"
+  );
+
+  const defaultPrefs = Services.prefs.getDefaultBranch("");
+  const defaultUrl = defaultPrefs.getStringPref(GMPPrefs.KEY_URL);
+  Preferences.set(GMPPrefs.KEY_URL_OVERRIDE, defaultUrl);
+  Assert.equal(
+    await rootForUrl(),
+    Ci.nsIContentSignatureVerifier.ContentSignatureProdRoot,
+    "Production cert should be used for the default Balrog URL: " + defaultUrl
+  );
+
+  // The current Balrog endpoint is at aus5.mozilla.org. Confirm that the prod
+  // cert is used even if we bump the version (e.g. aus6):
+  const potentialProdUrl = "https://aus1337.mozilla.org/potential/prod/URL";
+  Preferences.set(GMPPrefs.KEY_URL_OVERRIDE, potentialProdUrl);
+  Assert.equal(
+    await rootForUrl(),
+    Ci.nsIContentSignatureVerifier.ContentSignatureProdRoot,
+    "Production cert should be used for: " + potentialProdUrl
+  );
+
+  // Stage URL documented at https://mozilla-balrog.readthedocs.io/en/latest/infrastructure.html
+  const stageUrl = "https://stage.balrog.nonprod.cloudops.mozgcp.net/etc.";
+  Preferences.set(GMPPrefs.KEY_URL_OVERRIDE, stageUrl);
+  Assert.equal(
+    await rootForUrl(),
+    Ci.nsIContentSignatureVerifier.ContentSignatureStageRoot,
+    "Stage cert should be used with the stage URL: " + stageUrl
+  );
+
+  installManager.uninit();
+
+  revertContentSigTestPrefs(previousUrlOverride);
+});
+
+/**
  * Tests that checkForAddons() works as expected when certificate pinning
  * checking is enabled. We plan to move away from cert pinning in favor of
  * content signature checks, but part of doing this is comparing the telemetry
