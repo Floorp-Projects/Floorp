@@ -346,6 +346,8 @@
     <!-- Title for set firefox as default browser screen used by Nimbus experiments.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="UnusedResources">Бифаҳмед, ки чаро миллионҳо одамон браузери «Firefox»-ро дӯст медоранд</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources">Тамошокунии бехатар бо интихобҳои бештар</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_3">Браузери мо, ки аз ҷониби ташкилоти ғайритиҷоратӣ дастгирӣ мешавад, маъракаҳоеро, ки шуморо дар атрофи Интернет пинҳонӣ пайгирӣ мекунанд, қатъ мекунад.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
@@ -1913,6 +1915,8 @@
     <string name="addresses_middle_name" moz:removedIn="125" tools:ignore="UnusedResources">Номи падар</string>
     <!-- The header for the last name of an address -->
     <string name="addresses_last_name" moz:removedIn="125" tools:ignore="UnusedResources">Насаб</string>
+    <!-- The header for the name of an address. Name represents a person's full name, typically made up of a first, middle and last name, e.g. John Joe Doe. -->
+    <string name="addresses_name">Ном</string>
     <!-- The header for the street address of an address -->
     <string name="addresses_street_address">Нишонии кӯча</string>
     <!-- The header for the city of an address -->
@@ -2326,18 +2330,8 @@
     <string name="review_quality_check_contextual_onboarding_learn_more">Бо истифода аз «%1$s» аз ҷониби «Mozilla», мо ба шумо барои истисно кардани тақризҳои ғаразнок ва ғайримуқаррарӣ кумак мекунем. Намунаи зеҳни сунъии (AI)-ии мо барои муҳофизат кардани раванди харидории шумо доим такмил дода мешавад. %2$s</string>
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">Маълумоти бештар</string>
-    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is the Fakespot product name. Following parameters are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy and review_quality_check_contextual_onboarding_terms_use. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
-    <string name="review_quality_check_contextual_onboarding_caption" moz:RemovedIn="123" tools:ignore="UnusedResources">Бо интихоби «Ҳа, озмоед», шумо ба «%1$s» бо қабули «%2$s» ва «%3$s» аз ҷониби «Mozilla» розӣ мешавед.</string>
-    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. Parameter is the Fakespot product name. After the colon, what appears are two links, each on their own line. The first link is to a Privacy policy (review_quality_check_contextual_onboarding_privacy_policy_2). The second link is to Terms of use (review_quality_check_contextual_onboarding_terms_use_2). -->
-    <string name="review_quality_check_contextual_onboarding_caption_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Бо интихоби «Ҳа, озмоед», шумо бо зерин мувофиқи «%1$s» розӣ мешавед:</string>
-    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy" moz:RemovedIn="123" tools:ignore="UnusedResources">сиёсати махфият</string>
-    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Сиёсати махфият</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
     <string name="review_quality_check_contextual_onboarding_terms_use">шартҳои истифода</string>
-    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
-    <string name="review_quality_check_contextual_onboarding_terms_use_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Шартҳои истифода</string>
     <!-- Text for opt-in button from the review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_primary_button_text">Ҳа, озмоед</string>
     <!-- Text for opt-out button from the review quality check contextual onboarding card. -->
@@ -2417,6 +2411,8 @@
     <string name="translations_bottom_sheet_translate_to">Тарҷума ба забони</string>
     <!-- Button text on the translations dialog to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button">Ҳоло не</string>
+    <!-- Button text on the translations dialog to restore the translated website back to the original untranslated version. -->
+    <string name="translations_bottom_sheet_negative_button_restore">Нишон додани матни аслӣ</string>
     <!-- Button text on the translations dialog when a translation error appears, used to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button_error">Тайёр</string>
     <!-- Button text on the translations dialog to begin a translation of the website. -->
@@ -2438,6 +2434,10 @@
     <string name="translation_error_language_not_supported_warning_text">Мутаассифона, забони %1$s то ҳол дастгирӣ карда намешавад.</string>
     <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
     <string name="translation_error_language_not_supported_learn_more">Маълумоти бештар</string>
+
+
+    <!-- Snackbar title shown if the user closes the Translation Request dialogue and a translation is in progress. -->
+    <string name="translation_in_progress_snackbar">Дар ҳоли тарҷума…</string>
 
 
     <!-- Translations options dialog -->
