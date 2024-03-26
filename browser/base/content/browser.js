@@ -108,6 +108,12 @@ ChromeUtils.defineLazyGetter(this, "fxAccounts", () => {
 
 XPCOMUtils.defineLazyScriptGetter(
   this,
+  "BrowserCommands",
+  "chrome://browser/content/browser-commands.js"
+);
+
+XPCOMUtils.defineLazyScriptGetter(
+  this,
   "PlacesTreeView",
   "chrome://browser/content/places/treeView.js"
 );
@@ -2621,7 +2627,7 @@ function HandleAppCommandEvent(evt) {
       BrowserBack();
       break;
     case "Forward":
-      BrowserForward();
+      BrowserCommands.forward();
       break;
     case "Reload":
       BrowserReloadSkipCache();
@@ -2698,18 +2704,6 @@ function gotoHistoryIndex(aEvent) {
   return true;
 }
 
-function BrowserForward(aEvent) {
-  let where = whereToOpenLink(aEvent, false, true);
-
-  if (where == "current") {
-    try {
-      gBrowser.goForward();
-    } catch (ex) {}
-  } else {
-    duplicateTabIn(gBrowser.selectedTab, where, 1);
-  }
-}
-
 function BrowserBack(aEvent) {
   let where = whereToOpenLink(aEvent, false, true);
 
@@ -2736,7 +2730,7 @@ function BrowserHandleBackspace() {
 function BrowserHandleShiftBackspace() {
   switch (Services.prefs.getIntPref("browser.backspace_action")) {
     case 0:
-      BrowserForward();
+      BrowserCommands.forward();
       break;
     case 1:
       goDoCommand("cmd_scrollPageDown");
