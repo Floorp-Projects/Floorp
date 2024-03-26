@@ -38,6 +38,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.helpers.AppAndSystemHelper.registerAndCleanupIdlingResources
 import org.mozilla.fenix.helpers.Constants.RETRY_COUNT
 import org.mozilla.fenix.helpers.Constants.TAG
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
@@ -79,7 +80,7 @@ class BrowserRobot {
     fun verifyUrl(url: String) {
         sessionLoadedIdlingResource = SessionLoadedIdlingResource()
 
-        runWithIdleRes(sessionLoadedIdlingResource) {
+        registerAndCleanupIdlingResources(sessionLoadedIdlingResource) {
             assertUIObjectExists(
                 itemWithResIdContainingText(
                     "$packageName:id/mozac_browser_toolbar_url_view",
@@ -113,7 +114,7 @@ class BrowserRobot {
             waitingTime,
         )
 
-        runWithIdleRes(sessionLoadedIdlingResource) {
+        registerAndCleanupIdlingResources(sessionLoadedIdlingResource) {
             assertUIObjectExists(itemContainingText(expectedText))
         }
     }

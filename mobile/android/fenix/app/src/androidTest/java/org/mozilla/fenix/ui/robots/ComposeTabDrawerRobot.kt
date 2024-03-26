@@ -42,6 +42,7 @@ import androidx.test.espresso.matcher.ViewMatchers
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import org.hamcrest.Matcher
 import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.AppAndSystemHelper.registerAndCleanupIdlingResources
 import org.mozilla.fenix.helpers.Constants
 import org.mozilla.fenix.helpers.Constants.TAG
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
@@ -526,7 +527,9 @@ class ComposeTabDrawerRobot(private val composeTestRule: HomeActivityComposeTest
             )
 
             behavior?.let {
-                runWithIdleRes(BottomSheetBehaviorStateIdlingResource(it)) {
+                registerAndCleanupIdlingResources(
+                    BottomSheetBehaviorStateIdlingResource(it),
+                ) {
                     ComposeTabDrawerRobot(composeTestRule).interact()
                 }
             }

@@ -12,8 +12,6 @@ import android.util.Log
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.IdlingRegistry
-import androidx.test.espresso.IdlingResource
 import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.action.ViewActions.longClick
 import androidx.test.espresso.assertion.ViewAssertions
@@ -33,6 +31,7 @@ import androidx.test.uiautomator.Until
 import org.hamcrest.CoreMatchers.allOf
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.AppAndSystemHelper.registerAndCleanupIdlingResources
 import org.mozilla.fenix.helpers.Constants
 import org.mozilla.fenix.helpers.Constants.LONG_CLICK_DURATION
 import org.mozilla.fenix.helpers.Constants.TAG
@@ -186,7 +185,7 @@ class NavigationToolbarRobot {
             mDevice.pressEnter()
             Log.i(TAG, "enterURLAndEnterToBrowser: Pressed device enter button")
 
-            runWithIdleRes(sessionLoadedIdlingResource) {
+            registerAndCleanupIdlingResources(sessionLoadedIdlingResource) {
                 Log.i(TAG, "enterURLAndEnterToBrowser: Trying to assert that home screen layout or download button or the total cookie protection contextual hint exist")
                 assertTrue(
                     itemWithResId("$packageName:id/browserLayout").waitForExists(waitingTime) ||
@@ -229,7 +228,7 @@ class NavigationToolbarRobot {
             mDevice.pressEnter()
             Log.i(TAG, "openTabCrashReporter: Pressed device enter button")
 
-            runWithIdleRes(sessionLoadedIdlingResource) {
+            registerAndCleanupIdlingResources(sessionLoadedIdlingResource) {
                 Log.i(TAG, "openTabCrashReporter: Trying to find the tab crasher image")
                 mDevice.findObject(UiSelector().resourceId("$packageName:id/crash_tab_image"))
                 Log.i(TAG, "openTabCrashReporter: Found the tab crasher image")
@@ -485,12 +484,3 @@ private fun readerViewToggle() =
 
 private fun searchSelectorButton() =
     mDevice.findObject(UiSelector().resourceId("$packageName:id/search_selector"))
-
-inline fun runWithIdleRes(ir: IdlingResource?, pendingCheck: () -> Unit) {
-    try {
-        IdlingRegistry.getInstance().register(ir)
-        pendingCheck()
-    } finally {
-        IdlingRegistry.getInstance().unregister(ir)
-    }
-}

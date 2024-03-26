@@ -35,6 +35,7 @@ import org.hamcrest.CoreMatchers.anyOf
 import org.hamcrest.CoreMatchers.containsString
 import org.hamcrest.Matcher
 import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.AppAndSystemHelper.registerAndCleanupIdlingResources
 import org.mozilla.fenix.helpers.Constants.LONG_CLICK_DURATION
 import org.mozilla.fenix.helpers.Constants.RETRY_COUNT
 import org.mozilla.fenix.helpers.Constants.TAG
@@ -619,7 +620,9 @@ class TabDrawerRobot {
             )
 
             behavior?.let {
-                runWithIdleRes(BottomSheetBehaviorStateIdlingResource(it)) {
+                registerAndCleanupIdlingResources(
+                    BottomSheetBehaviorStateIdlingResource(it),
+                ) {
                     TabDrawerRobot().interact()
                 }
             }
