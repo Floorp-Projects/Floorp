@@ -34,6 +34,7 @@ import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.AppAndSystemHelper.grantSystemPermission
 import org.mozilla.fenix.helpers.AppAndSystemHelper.isPackageInstalled
+import org.mozilla.fenix.helpers.AppAndSystemHelper.registerAndCleanupIdlingResources
 import org.mozilla.fenix.helpers.Constants.LONG_CLICK_DURATION
 import org.mozilla.fenix.helpers.Constants.PackageName.GOOGLE_QUICK_SEARCH
 import org.mozilla.fenix.helpers.Constants.RETRY_COUNT
@@ -428,7 +429,7 @@ class SearchRobot {
             mDevice.pressEnter()
             Log.i(TAG, "submitQuery: Clicked device enter button")
 
-            runWithIdleRes(sessionLoadedIdlingResource) {
+            registerAndCleanupIdlingResources(sessionLoadedIdlingResource) {
                 assertUIObjectExists(itemWithResId("$packageName:id/browserLayout"))
             }
 
