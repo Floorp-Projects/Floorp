@@ -486,16 +486,9 @@ nsresult WorkletFetchHandler::StartFetch(JSContext* aCx, nsIURI* aURI,
       do_QueryInterface(mWorklet->GetParentObject());
   MOZ_ASSERT(global);
 
-  // Note: added to infer a default credentials mode in the Request setup,
-  // but we always pass an explicit credentials value in requestInit, so
-  // this has no effect right now. Bug 1887862 covers fixing worklets to behave
-  // the same as "normal" fetch calls.
-  nsIPrincipal* p = global->PrincipalOrNull();
-  CallerType callerType = (p && p->IsSystemPrincipal() ? CallerType::System
-                                                       : CallerType::NonSystem);
   IgnoredErrorResult rv;
-  SafeRefPtr<Request> request = Request::Constructor(
-      global, aCx, requestInput, requestInit, callerType, rv);
+  SafeRefPtr<Request> request =
+      Request::Constructor(global, aCx, requestInput, requestInit, rv);
   if (rv.Failed()) {
     return NS_ERROR_FAILURE;
   }

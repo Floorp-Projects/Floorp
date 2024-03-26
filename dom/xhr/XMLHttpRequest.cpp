@@ -8,7 +8,6 @@
 #include "XMLHttpRequestMainThread.h"
 #include "XMLHttpRequestWorker.h"
 #include "mozilla/Logging.h"
-#include "mozilla/StaticPrefs_network.h"
 #include "mozilla/net/CookieJarSettings.h"
 
 mozilla::LazyLogModule gXMLHttpRequestLog("XMLHttpRequest");
@@ -22,16 +21,15 @@ already_AddRefed<XMLHttpRequest> XMLHttpRequest::Constructor(
   if (NS_IsMainThread()) {
     nsCOMPtr<nsIGlobalObject> global =
         do_QueryInterface(aGlobal.GetAsSupports());
-    nsCOMPtr<nsIScriptObjectPrincipal> scriptPrincipal =
+    nsCOMPtr<nsIScriptObjectPrincipal> principal =
         do_QueryInterface(aGlobal.GetAsSupports());
-    if (!global || !scriptPrincipal) {
+    if (!global || !principal) {
       aRv.Throw(NS_ERROR_FAILURE);
       return nullptr;
     }
 
     nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
     nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(global);
-    nsCOMPtr<nsIPrincipal> principal = scriptPrincipal->GetPrincipal();
     if (window) {
       Document* document = window->GetExtantDoc();
       if (NS_WARN_IF(!document)) {
@@ -42,21 +40,13 @@ already_AddRefed<XMLHttpRequest> XMLHttpRequest::Constructor(
       cookieJarSettings = document->CookieJarSettings();
     } else {
       // We are here because this is a sandbox.
-      cookieJarSettings = net::CookieJarSettings::Create(principal);
+      cookieJarSettings =
+          net::CookieJarSettings::Create(principal->GetPrincipal());
     }
 
     RefPtr<XMLHttpRequestMainThread> req = new XMLHttpRequestMainThread(global);
-    req->Construct(principal, cookieJarSettings, false);
-
-    bool isAnon = false;
-    if (aParams.mMozAnon.WasPassed()) {
-      isAnon = aParams.mMozAnon.Value();
-    } else {
-      isAnon =
-          StaticPrefs::network_fetch_systemDefaultsToOmittingCredentials() &&
-          (aParams.mMozSystem || principal->IsSystemPrincipal());
-    }
-    req->InitParameters(isAnon, aParams.mMozSystem);
+    req->Construct(principal->GetPrincipal(), cookieJarSettings, false);
+    req->InitParameters(aParams.mMozAnon, aParams.mMozSystem);
     return req.forget();
   }
 
