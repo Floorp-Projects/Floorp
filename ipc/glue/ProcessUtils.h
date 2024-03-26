@@ -71,8 +71,8 @@ class SharedPreferenceDeserializer final {
   base::SharedMemory mShmem;
 };
 
-#ifdef ANDROID
-// Android doesn't use -prefsHandle or -prefMapHandle. It gets those FDs
+#if defined(ANDROID) || defined(XP_IOS)
+// Android/iOS doesn't use -prefsHandle or -prefMapHandle. It gets those FDs
 // another way.
 void SetPrefsFd(int aFd);
 void SetPrefMapFd(int aFd);

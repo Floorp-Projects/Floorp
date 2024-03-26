@@ -84,8 +84,8 @@ namespace {
 // This is the file descriptor number that a client process expects to find its
 // IPC socket.
 static int gClientChannelFd =
-#if defined(MOZ_WIDGET_ANDROID)
-    // On android the fd is set at the time of child creation.
+#if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_UIKIT)
+    // On android/ios the fd is set at the time of child creation.
     -1
 #else
     3
@@ -135,9 +135,9 @@ static inline ssize_t corrected_sendmsg(int socket,
 }  // namespace
 //------------------------------------------------------------------------------
 
-#if defined(MOZ_WIDGET_ANDROID)
+#if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_UIKIT)
 void Channel::SetClientChannelFd(int fd) { gClientChannelFd = fd; }
-#endif  // defined(MOZ_WIDGET_ANDROID)
+#endif  // defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_UIKIT)
 
 int Channel::GetClientChannelHandle() { return gClientChannelFd; }
 
