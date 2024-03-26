@@ -1,0 +1,125 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>VirtualizedList Tests</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
+  <link rel="stylesheet" href="chrome://global/content/megalist/megalist.css">
+  <script type="module" src="chrome://global/content/megalist/VirtualizedList.mjs"></script>
+</head>
+<body>
+  <style>
+  </style>
+<p id="display"></p>
+<div id="content">
+  <virtualized-list></virtualized-list>
+</div>
+<pre id="test">
+<script class="testbody" type="application/javascript">
+    const virtualizedList = document.querySelector("virtualized-list");
+
+    function dispatchScrollEvent(target, scrollY) {
+      target.scrollTop = scrollY;
+      virtualizedList.dispatchEvent(new Event('scroll'));
+    }
+
+    function updateVisibleItemBoundaries(visibleItemCount, value) {
+      if (value > visibleItemCount.max) {
+        visibleItemCount.max = value;
+      }
+    }
+
+    // Setup
+    virtualizedList.lineHeight = 64;
+    virtualizedList.lineCount = 1000;
+    virtualizedList.selectedIndex = 0;
+    virtualizedList.createLineElement = index => {
+      const lineElement = document.createElement("div");
+      lineElement.classList.add("line");
+      lineElement.textContent = `Row ${index}`;
+      return lineElement;
+    }
+
+    virtualizedList.style.display = "block";
+    virtualizedList.style.height = "300px";
+    virtualizedList.style.width = "500px";
+
+    /**
+    * Tests that the virtualized list renders expected number of items
+    */
+
+    add_task(async function test_rebuildVisibleLines() {
+      let container = virtualizedList.querySelector(".lines-container");
+      let initialLines = container.querySelectorAll(".line");
+      // Get boundaries of visible item count as they are rendered.
+      let visibleItemsCount = {
+        min: initialLines.length,
+        max: initialLines.length,
+      };
+
+      is(
+        container.style.height,
+        `${virtualizedList.lineHeight * virtualizedList.lineCount}px`,
+        "VirtualizedList is correct height."
+      );
+
+      // Scroll down 800px
+      dispatchScrollEvent(virtualizedList, 800);
+      let newRenderedLines = container.querySelectorAll(".line");
+      updateVisibleItemBoundaries(visibleItemsCount, newRenderedLines.length);
+      let firstRow = container.querySelector(".line[data-index='0']");
+      ok(!firstRow, "The first row should be removed.");
+
+      // Scroll down another 800px
+      dispatchScrollEvent(virtualizedList, 800);
+      newRenderedLines = container.querySelectorAll(".line");
+      updateVisibleItemBoundaries(visibleItemsCount, newRenderedLines.length);
+      let thirdRow = container.querySelector(".line[data-index='2']");
+      ok(!thirdRow, "The third row should be removed.");
+
+      // Check that amount of visible lines is within boundaries. This is to
+      // ensure the list is keeping a range of rendered items and
+      // not increasing the element count in the DOM.
+      ok(
+        newRenderedLines.length >= visibleItemsCount.min &&
+        newRenderedLines.length <= visibleItemsCount.max,
+        "Virtual list is removing and adding lines as needed."
+      );
+
+      // Scroll back to top
+      dispatchScrollEvent(virtualizedList, 0);
+      newRenderedLines = container.querySelectorAll(".line");
+      updateVisibleItemBoundaries(visibleItemsCount, newRenderedLines.length);
+      firstRow = container.querySelector(".line[data-index='0']");
+      thirdRow = container.querySelector(".line[data-index='2']");
+      ok(firstRow, "The first row should be rendered again.");
+      ok(firstRow, "The third row should be rendered again.");
+  });
+
+  /**
+  * Tests that item selection is preserved when list is rebuilt
+  */
+  add_task(async function test_updateLineSelection() {
+    let container = virtualizedList.querySelector(".lines-container");
+    let selectedLine = container.querySelector(".selected");
+    is(selectedLine.dataset.index, "0", "The correct line is selected");
+
+    // Scroll down 800px
+    dispatchScrollEvent(virtualizedList, 800);
+    selectedLine = container.querySelector(".selected");
+    ok(!selectedLine, "Selected line is not rendered because it's out of view");
+    is(virtualizedList.selectedIndex, 0, "Selected line is still preserved in list.");
+
+    // Scroll back to top
+    dispatchScrollEvent(virtualizedList, 0);
+    selectedLine = container.querySelector(".selected");
+    is(selectedLine.dataset.index, "0", "The same selected line is rendered.");
+  });
+
+</script>
+</pre>
+</body>
+</html>

@@ -140,7 +140,7 @@
                   </menupopup>
                 </menu>
                 <menu id="viewSidebarMenuMenu" data-l10n-id="menu-view-sidebar">
-                  <menupopup id="viewSidebarMenu">
+                  <menupopup id="viewSidebarMenu" onpopupshowing="SidebarUI.setMegalistMenubarVisibility(event);">
                     <menuitem id="menu_bookmarksSidebar"
                               type="checkbox"
                               key="viewBookmarksSidebarKb"
@@ -153,6 +153,9 @@
                               type="checkbox"
                               class="sync-ui-item"
                               oncommand="SidebarUI.toggle('viewTabsSidebar');" data-l10n-id="menu-view-synced-tabs-sidebar"/>
+                    <menuitem id="menu_megalistSidebar"
+                              type="checkbox"
+                              oncommand="SidebarUI.toggle('viewMegalistSidebar');" data-l10n-id="menu-view-megalist-sidebar"/>
                   </menupopup>
                 </menu>
                 <menuseparator/>

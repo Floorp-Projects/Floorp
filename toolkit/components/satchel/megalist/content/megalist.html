@@ -1,0 +1,78 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <script
+      type="module"
+      src="chrome://global/content/megalist/MegalistView.mjs"
+    ></script>
+    <link rel="stylesheet" href="chrome://global/skin/in-content/common.css" />
+    <link rel="localization" href="preview/megalist.ftl" />
+  </head>
+
+  <body>
+    <megalist-view></megalist-view>
+
+    <template id="lineElement">
+      <li class="line">
+        <div class="content"></div>
+        <div class="menuButton">
+          <button>…</button>
+        </div>
+      </li>
+    </template>
+
+    <template id="collapsedSectionTemplate">
+      <div class="content section">
+        <img
+          class="icon collapsed"
+          draggable="false"
+          src="chrome://global/skin/icons/arrow-down.svg"
+        />
+        <h4 class="label"></h4>
+      </div>
+    </template>
+
+    <template id="expandedSectionTemplate">
+      <div class="content section">
+        <img
+          class="icon expanded"
+          draggable="false"
+          src="chrome://global/skin/icons/arrow-up.svg"
+        />
+        <h4 class="label"></h4>
+        <div class="value"></div>
+      </div>
+    </template>
+
+    <template id="lineTemplate">
+      <div class="content">
+        <div class="label"></div>
+        <div class="value">
+          <img class="icon" />
+          <span></span>
+        </div>
+        <div class="stickers"></div>
+      </div>
+    </template>
+
+    <template id="editingLineTemplate">
+      <div class="content">
+        <div class="label"></div>
+        <div class="value">
+          <img class="icon" />
+          <input type="text" />
+        </div>
+        <div class="stickers"></div>
+      </div>
+    </template>
+  </body>
+</html>
