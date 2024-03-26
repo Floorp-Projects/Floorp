@@ -390,6 +390,7 @@ static void GtkWindowSetTransientFor(GtkWindow* aWindow, GtkWindow* aParent) {
 
 nsWindow::nsWindow()
     : mTitlebarRectMutex("nsWindow::mTitlebarRectMutex"),
+      mWindowVisibilityMutex("nsWindow::mWindowVisibilityMutex"),
       mIsMapped(false),
       mIsDestroyed(false),
       mIsShown(false),
@@ -3420,10 +3421,7 @@ void* nsWindow::GetNativeData(uint32_t aDataType) {
       // 2) If window is hidden on OnUnmap(), we replace EGLSurface/wl_surface
       //    by offline surface and release XWindow.
 
-      // In all cases nsWindow::GetNativeData(NS_NATIVE_EGL_WINDOW) is called
-      // from Render thread by RenderCompositorEGL::Resume()
-      // as a sync response to our calls at OnMap()/OnUnmap() so we don't
-      // need to use mutex here.
+      MutexAutoLock lock(mWindowVisibilityMutex);
       void* eglWindow = nullptr;
       if (mIsMapped) {
 #ifdef MOZ_X11
@@ -5844,73 +5842,6 @@ void nsWindow::ConfigureCompositor() {
   } else {
     startCompositing();
   }
-}
-
-void nsWindow::ConfigureGdkWindow() {
-  LOG("nsWindow::ConfigureGdkWindow()");
-
-  EnsureGdkWindow();
-  OnScaleChanged(/* aNotify = */ false);
-
-  if (mIsAlert) {
-    gdk_window_set_override_redirect(mGdkWindow, TRUE);
-  }
-
-#ifdef MOZ_X11
-  if (GdkIsX11Display()) {
-    mSurfaceProvider.Initialize(GetX11Window(), GetShapedState());
-
-    // Set window manager hint to keep fullscreen windows composited.
-    //
-    // If the window were to get unredirected, there could be visible
-    // tearing because Gecko does not align its framebuffer updates with
-    // vblank.
-    SetCompositorHint(GTK_WIDGET_COMPOSIDED_ENABLED);
-  }
-#endif
-#ifdef MOZ_WAYLAND
-  if (GdkIsWaylandDisplay()) {
-    mSurfaceProvider.Initialize(this);
-  }
-#endif
-
-  if (mIsDragPopup) {
-    if (GdkIsWaylandDisplay()) {
-      // Disable painting to the widget on Wayland as we paint directly to the
-      // widget. Wayland compositors does not paint wl_subsurface
-      // of D&D widget.
-      if (GtkWidget* parent = gtk_widget_get_parent(mShell)) {
-        GtkWidgetDisableUpdates(parent);
-      }
-      GtkWidgetDisableUpdates(mShell);
-      GtkWidgetDisableUpdates(GTK_WIDGET(mContainer));
-    } else {
-      // Disable rendering of parent container on X11 to avoid flickering.
-      if (GtkWidget* parent = gtk_widget_get_parent(mShell)) {
-        gtk_widget_set_opacity(parent, 0.0);
-      }
-    }
-  }
-
-  if (mWindowType == WindowType::Popup) {
-    if (mNoAutoHide) {
-      gint wmd = ConvertBorderStyles(mBorderStyle);
-      if (wmd != -1) {
-        gdk_window_set_decorations(mGdkWindow, (GdkWMDecoration)wmd);
-      }
-    }
-    // If the popup ignores mouse events, set an empty input shape.
-    SetInputRegion(mInputRegion);
-  }
-
-  RefreshWindowClass();
-
-  // We're not mapped yet but we have already created compositor.
-  if (mCompositorWidgetDelegate) {
-    ConfigureCompositor();
-  }
-
-  LOG("  finished, new GdkWindow %p XID 0x%lx\n", mGdkWindow, GetX11Window());
 }
 
 nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
@@ -10065,41 +9996,109 @@ void nsWindow::ClearRenderingQueue() {
 void nsWindow::OnMap() {
   LOG("nsWindow::OnMap");
 
-  mIsMapped = true;
-  ConfigureGdkWindow();
+  {
+    MutexAutoLock lock(mWindowVisibilityMutex);
+    mIsMapped = true;
+
+    EnsureGdkWindow();
+    OnScaleChanged(/* aNotify = */ false);
+
+    if (mIsAlert) {
+      gdk_window_set_override_redirect(mGdkWindow, TRUE);
+    }
+
+#ifdef MOZ_X11
+    if (GdkIsX11Display()) {
+      mSurfaceProvider.Initialize(GetX11Window(), GetShapedState());
+
+      // Set window manager hint to keep fullscreen windows composited.
+      //
+      // If the window were to get unredirected, there could be visible
+      // tearing because Gecko does not align its framebuffer updates with
+      // vblank.
+      SetCompositorHint(GTK_WIDGET_COMPOSITED_ENABLED);
+    }
+#endif
+#ifdef MOZ_WAYLAND
+    if (GdkIsWaylandDisplay()) {
+      mSurfaceProvider.Initialize(this);
+    }
+#endif
+  }
+
+  if (mIsDragPopup) {
+    if (GdkIsWaylandDisplay()) {
+      // Disable painting to the widget on Wayland as we paint directly to the
+      // widget. Wayland compositors does not paint wl_subsurface
+      // of D&D widget.
+      if (GtkWidget* parent = gtk_widget_get_parent(mShell)) {
+        GtkWidgetDisableUpdates(parent);
+      }
+      GtkWidgetDisableUpdates(mShell);
+      GtkWidgetDisableUpdates(GTK_WIDGET(mContainer));
+    } else {
+      // Disable rendering of parent container on X11 to avoid flickering.
+      if (GtkWidget* parent = gtk_widget_get_parent(mShell)) {
+        gtk_widget_set_opacity(parent, 0.0);
+      }
+    }
+  }
+
+  if (mWindowType == WindowType::Popup) {
+    if (mNoAutoHide) {
+      gint wmd = ConvertBorderStyles(mBorderStyle);
+      if (wmd != -1) {
+        gdk_window_set_decorations(mGdkWindow, (GdkWMDecoration)wmd);
+      }
+    }
+    // If the popup ignores mouse events, set an empty input shape.
+    SetInputRegion(mInputRegion);
+  }
+
+  RefreshWindowClass();
+
+  // We're not mapped yet but we have already created compositor.
+  if (mCompositorWidgetDelegate) {
+    ConfigureCompositor();
+  }
+
+  LOG("  finished, new GdkWindow %p XID 0x%lx\n", mGdkWindow, GetX11Window());
 }
 
 void nsWindow::OnUnmap() {
   LOG("nsWindow::OnUnmap");
 
-  mIsMapped = false;
+  {
+    MutexAutoLock lock(mWindowVisibilityMutex);
+    mIsMapped = false;
 
-  if (mSourceDragContext) {
-    static auto sGtkDragCancel =
-        (void (*)(GdkDragContext*))dlsym(RTLD_DEFAULT, "gtk_drag_cancel");
-    if (sGtkDragCancel) {
-      sGtkDragCancel(mSourceDragContext);
-      mSourceDragContext = nullptr;
+    if (mSourceDragContext) {
+      static auto sGtkDragCancel =
+          (void (*)(GdkDragContext*))dlsym(RTLD_DEFAULT, "gtk_drag_cancel");
+      if (sGtkDragCancel) {
+        sGtkDragCancel(mSourceDragContext);
+        mSourceDragContext = nullptr;
+      }
     }
-  }
 
-  if (mGdkWindow) {
-    if (mIMContext) {
-      mIMContext->SetGdkWindow(nullptr);
+    if (mGdkWindow) {
+      if (mIMContext) {
+        mIMContext->SetGdkWindow(nullptr);
+      }
+      g_object_set_data(G_OBJECT(mGdkWindow), "nsWindow", nullptr);
+      mGdkWindow = nullptr;
     }
-    g_object_set_data(G_OBJECT(mGdkWindow), "nsWindow", nullptr);
-    mGdkWindow = nullptr;
-  }
 
-  // Clear resources (mainly XWindow) stored at GtkCompositorWidget.
-  // It makes sure we don't paint to it when nsWindow becomes hiden/deleted
-  // and XWindow is released.
-  if (mCompositorWidgetDelegate) {
-    mCompositorWidgetDelegate->CleanupResources();
-  }
+    // Clear resources (mainly XWindow) stored at GtkCompositorWidget.
+    // It makes sure we don't paint to it when nsWindow becomes hiden/deleted
+    // and XWindow is released.
+    if (mCompositorWidgetDelegate) {
+      mCompositorWidgetDelegate->CleanupResources();
+    }
 
-  // Clear nsWindow resources used for old (in-thread) rendering.
-  mSurfaceProvider.CleanupResources();
+    // Clear nsWindow resources used for old (in-thread) rendering.
+    mSurfaceProvider.CleanupResources();
+  }
 
   // Until Bug 1654938 is fixed we delete layer manager for hidden popups,
   // otherwise it can easily hold 1GB+ memory for long time.

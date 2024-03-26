@@ -634,6 +634,9 @@ class nsWindow final : public nsBaseWidget {
   mozilla::Mutex mTitlebarRectMutex;
   LayoutDeviceIntRect mTitlebarRect MOZ_GUARDED_BY(mTitlebarRectMutex);
 
+  // This mutex protect window visibility changes.
+  mozilla::Mutex mWindowVisibilityMutex;
+
   // This track real window visibility from OS perspective.
   // It's set by OnMap/OnUnmap which is based on Gtk events.
   mozilla::Atomic<bool, mozilla::Relaxed> mIsMapped;
@@ -801,11 +804,6 @@ class nsWindow final : public nsBaseWidget {
 
   void DispatchMissedButtonReleases(GdkEventCrossing* aGdkEvent);
 
-  // When window widget gets mapped/unmapped we need to configure
-  // underlying GdkWindow properly. Otherwise we'll end up with
-  // rendering to released window.
-  void ConfigureGdkWindow();
-  void ReleaseGdkWindow();
   void ConfigureCompositor();
 
   bool IsAlwaysUndecoratedWindow() const;
@@ -995,9 +993,9 @@ class nsWindow final : public nsBaseWidget {
   void RequestRepaint(LayoutDeviceIntRegion& aRepaintRegion);
 
 #ifdef MOZ_X11
-  typedef enum {GTK_WIDGET_COMPOSIDED_DEFAULT = 0,
-                GTK_WIDGET_COMPOSIDED_DISABLED = 1,
-                GTK_WIDGET_COMPOSIDED_ENABLED = 2} WindowComposeRequest;
+  typedef enum {GTK_WIDGET_COMPOSITED_DEFAULT = 0,
+                GTK_WIDGET_COMPOSITED_DISABLED = 1,
+                GTK_WIDGET_COMPOSITED_ENABLED = 2} WindowComposeRequest;
   void SetCompositorHint(WindowComposeRequest aState);
   bool ConfigureX11GLVisual();
 #endif
