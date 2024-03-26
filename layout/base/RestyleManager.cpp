@@ -2087,6 +2087,28 @@ void RestyleManager::AnimationsWithDestroyedFrame ::StopAnimationsWithoutFrame(
   }
 }
 
+// When using handled hints by an ancestor, we need to make sure that our
+// ancestor in the DOM tree is actually our ancestor in the flat tree.
+// Otherwise, we can't guarantee that e.g. a repaint from an ancestor in the DOM
+// will really end up repainting us.
+static bool CanUseHandledHintsFromAncestors(const nsIFrame* aFrame) {
+  if (aFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)) {
+    // An out of flow can be parented in other part of the tree.
+    return false;
+  }
+  if (aFrame->IsColumnSpanInMulticolSubtree()) {
+    // Any column-spanner's parent frame is not its DOM parent's primary frame.
+    return false;
+  }
+  if (aFrame->IsTableCaption()) {
+    // This one is more subtle. captions are in-flow children of the table
+    // frame. But they are parented to the table wrapper. So hints handled for
+    // the inner table might not be applicable to us.
+    return false;
+  }
+  return true;
+}
+
 #ifdef DEBUG
 static bool IsAnonBox(const nsIFrame* aFrame) {
   return aFrame->Style()->IsAnonBox();
@@ -2185,8 +2207,7 @@ static bool IsInReplicatedFixedPosTree(const nsIFrame* aFrame) {
 
 void ServoRestyleState::AssertOwner(const ServoRestyleState& aParent) const {
   MOZ_ASSERT(mOwner);
-  MOZ_ASSERT(!mOwner->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW));
-  MOZ_ASSERT(!mOwner->IsColumnSpanInMulticolSubtree());
+  MOZ_ASSERT(CanUseHandledHintsFromAncestors(mOwner));
   // We allow aParent.mOwner to be null, for cases when we're not starting at
   // the root of the tree.  We also allow aParent.mOwner to be somewhere up our
   // expected owner chain not our immediate owner, which allows us creating long
@@ -2309,7 +2330,7 @@ size_t ServoRestyleState::ProcessMaybeNestedWrapperRestyle(nsIFrame* aParent,
       nsLayoutUtils::FirstContinuationOrIBSplitSibling(parent);
   if (parentForRestyle != aParent) {
     parentRestyleState.emplace(*parentForRestyle, *this, nsChangeHint_Empty,
-                               Type::InFlow);
+                               CanUseHandledHints::Yes);
   }
   ServoRestyleState& curRestyleState =
       parentRestyleState ? *parentRestyleState : *this;
@@ -2332,7 +2353,7 @@ size_t ServoRestyleState::ProcessMaybeNestedWrapperRestyle(nsIFrame* aParent,
       // the other hand, presumably our mChangesHandled already has the bits
       // we really want here so in practice it doesn't matter.
       ServoRestyleState childState(*cur, curRestyleState, nsChangeHint_Empty,
-                                   Type::InFlow,
+                                   CanUseHandledHints::Yes,
                                    /* aAssertWrapperRestyleLength = */ false);
       numProcessed +=
           childState.ProcessMaybeNestedWrapperRestyle(cur, aIndex + 1);
@@ -2652,8 +2673,7 @@ static void UpdateOneAdditionalComputedStyle(nsIFrame* aFrame, uint32_t aIndex,
   uint32_t equalStructs;  // Not used, actually.
   nsChangeHint childHint =
       aOldContext.CalcStyleDifference(*newStyle, &equalStructs);
-  if (!aFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW) &&
-      !aFrame->IsColumnSpanInMulticolSubtree()) {
+  if (CanUseHandledHintsFromAncestors(aFrame)) {
     childHint = NS_RemoveSubsumedHints(childHint,
                                        aRestyleState.ChangesHandledFor(aFrame));
   }
@@ -2812,11 +2832,8 @@ bool RestyleManager::ProcessPostTraversal(Element* aElement,
   const bool isOutOfFlow =
       primaryFrame && primaryFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW);
 
-  // We need this because any column-spanner's parent frame is not its DOM
-  // parent's primary frame. We need some special check similar to out-of-flow
-  // frames.
-  const bool isColumnSpan =
-      primaryFrame && primaryFrame->IsColumnSpanInMulticolSubtree();
+  const bool canUseHandledHints =
+      primaryFrame && CanUseHandledHintsFromAncestors(primaryFrame);
 
   // Grab the change hint from Servo.
   bool wasRestyled = false;
@@ -2848,11 +2865,12 @@ bool RestyleManager::ProcessPostTraversal(Element* aElement,
       maybeAnonBoxChild = primaryFrame->GetPlaceholderFrame();
     } else {
       maybeAnonBoxChild = primaryFrame;
-      // Do not subsume change hints for the column-spanner.
-      if (!isColumnSpan) {
-        changeHint = NS_RemoveSubsumedHints(
-            changeHint, aRestyleState.ChangesHandledFor(styleFrame));
-      }
+    }
+
+    // Do not subsume change hints for the column-spanner.
+    if (canUseHandledHints) {
+      changeHint = NS_RemoveSubsumedHints(
+          changeHint, aRestyleState.ChangesHandledFor(styleFrame));
     }
 
     // If the parent wasn't restyled, the styles of our anon box parents won't
@@ -2944,10 +2962,9 @@ bool RestyleManager::ProcessPostTraversal(Element* aElement,
 
   Maybe<ServoRestyleState> thisFrameRestyleState;
   if (styleFrame) {
-    auto type = isOutOfFlow || isColumnSpan ? ServoRestyleState::Type::OutOfFlow
-                                            : ServoRestyleState::Type::InFlow;
-
-    thisFrameRestyleState.emplace(*styleFrame, aRestyleState, changeHint, type);
+    thisFrameRestyleState.emplace(
+        *styleFrame, aRestyleState, changeHint,
+        ServoRestyleState::CanUseHandledHints(canUseHandledHints));
   }
 
   // We can't really assume as used changes from display: contents elements (or
