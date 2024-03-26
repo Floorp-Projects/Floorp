@@ -333,6 +333,9 @@ tps_result\.json$
 ^browser/components/storybook/\.storybook/chrome-map\.js
 ^browser/components/storybook/custom-elements\.json
 
+# Ignore design-system node_modules
+toolkit/themes/shared/design-system/node_modules/
+
 # Ignore jscodeshift installed by mach esmify on windows
 ^tools/esmify/jscodeshift
 ^tools/esmify/jscodeshift\.cmd

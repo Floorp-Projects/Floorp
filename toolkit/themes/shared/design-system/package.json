@@ -1,0 +1,12 @@
+{
+  "name": "design-system",
+  "version": "1.0.0",
+  "description": "Package file for node modules used to create our CSS tokens from a JSON source of truth.",
+  "license": "MPL-2.0",
+  "scripts": {
+    "build": "(npm ls || npm ci) && style-dictionary build --config ./tokens-config.js"
+  },
+  "devDependencies": {
+    "style-dictionary": "^3.9.2"
+  }
+}
