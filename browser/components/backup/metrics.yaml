@@ -111,3 +111,20 @@ browser.backup:
       - mconley@mozilla.com
     expires: never
     telemetry_mirror: BROWSER_BACKUP_PREFERENCES_SIZE
+
+  misc_data_size:
+    type: quantity
+    unit: kilobyte
+    description: >
+      The total size of files for telemetry, site storage, media device origin mapping
+      and Mozilla Accounts in the current profile directory, rounded to the nearest tenth kilobyte.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1883747
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1883747
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - mconley@mozilla.com
+    expires: never
+    telemetry_mirror: BROWSER_BACKUP_MISC_DATA_SIZE

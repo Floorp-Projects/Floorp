@@ -12,6 +12,9 @@ const { BackupService } = ChromeUtils.importESModule(
 const { CredentialsAndSecurityBackupResource } = ChromeUtils.importESModule(
   "resource:///modules/backup/CredentialsAndSecurityBackupResource.sys.mjs"
 );
+const { MiscDataBackupResource } = ChromeUtils.importESModule(
+  "resource:///modules/backup/MiscDataBackupResource.sys.mjs"
+);
 const { PlacesBackupResource } = ChromeUtils.importESModule(
   "resource:///modules/backup/PlacesBackupResource.sys.mjs"
 );
@@ -301,5 +304,50 @@ add_task(async function test_preferencesBackupResource() {
     let processedMockFilePath = mockFilePath.split(/[\\\/]/);
     let tempPath = PathUtils.join(tempDir, "chrome", processedMockFilePath);
     await IOUtils.remove(tempPath, { recursive: true });
+  }
+});
+
+/**
+ * Tests that we can measure miscellaneous files in the profile directory.
+ */
+add_task(async function test_miscDataBackupResource() {
+  Services.fog.testResetFOG();
+
+  const EXPECTED_MISC_KILOBYTES_SIZE = 131;
+  const tempDir = PathUtils.tempDir;
+  const mockFiles = new Map([
+    ["times.json", 5],
+    ["signedInUser.json", 5],
+    ["enumerate_devices.txt", 1],
+    ["protections.sqlite", 100],
+    ["SiteSecurityServiceState.bin", 10],
+  ]);
+
+  for (let [mockFileName, mockFileSize] of mockFiles) {
+    let tempPath = PathUtils.join(tempDir, mockFileName);
+    await createKilobyteSizedFile(tempPath, mockFileSize);
+  }
+
+  let miscDataBackupResource = new MiscDataBackupResource();
+  await miscDataBackupResource.measure(tempDir);
+
+  let measurement = Glean.browserBackup.miscDataSize.testGetValue();
+  let scalars = TelemetryTestUtils.getProcessScalars("parent", false, false);
+
+  TelemetryTestUtils.assertScalar(
+    scalars,
+    "browser.backup.misc_data_size",
+    measurement,
+    "Glean and telemetry measurements for misc data should be equal"
+  );
+  Assert.equal(
+    measurement,
+    EXPECTED_MISC_KILOBYTES_SIZE,
+    "Should have collected the correct glean measurement for misc files"
+  );
+
+  for (let mockFileName of mockFiles.keys()) {
+    let tempPath = PathUtils.join(tempDir, mockFileName);
+    await IOUtils.remove(tempPath);
   }
 });

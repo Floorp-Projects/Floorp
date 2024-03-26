@@ -247,6 +247,21 @@ browser.backup:
       - 'firefox'
     record_in_processes:
       - 'main'
+  misc_data_size:
+    bug_numbers:
+      - 1883747
+    description: >
+      The total size of files for telemetry, site storage, media device origin mapping
+      and Mozilla Accounts in the current profile directory, rounded to the nearest tenth kilobyte.
+    expires: never
+    kind: uint
+    notification_emails:
+      - mconley@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
 
 # The following section contains the browser engagement scalars.
 browser.engagement:
