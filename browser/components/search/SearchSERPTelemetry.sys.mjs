@@ -1647,7 +1647,10 @@ class ContentHandler {
       !telemetryState.adImpressionsReported
     ) {
       for (let [componentType, data] of info.adImpressions.entries()) {
-        telemetryState.adsVisible += data.adsVisible;
+        // Not all ad impressions are sponsored.
+        if (AD_COMPONENTS.includes(componentType)) {
+          telemetryState.adsVisible += data.adsVisible;
+        }
 
         lazy.logConsole.debug("Counting ad:", { type: componentType, ...data });
         Glean.serp.adImpression.record({
