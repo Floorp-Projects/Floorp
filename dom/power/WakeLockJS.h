@@ -39,20 +39,15 @@ namespace mozilla::dom {
  *
  * https://www.w3.org/TR/screen-wake-lock/#the-wakelock-interface
  */
-class WakeLockJS final : public nsIDOMEventListener,
+class WakeLockJS final : public nsIObserver,
                          public nsWrapperCache,
                          public hal::BatteryObserver,
-                         public nsIDocumentActivity,
-                         public nsIObserver,
                          public nsSupportsWeakReference {
  public:
-  NS_DECL_NSIDOMEVENTLISTENER
-  NS_DECL_NSIDOCUMENTACTIVITY
   NS_DECL_NSIOBSERVER
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS_AMBIGUOUS(WakeLockJS,
-                                                        nsIDOMEventListener)
+  NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS_AMBIGUOUS(WakeLockJS, nsIObserver)
 
  public:
   explicit WakeLockJS(nsPIDOMWindowInner* aWindow);
@@ -89,7 +84,7 @@ class WakeLockJS final : public nsIDOMEventListener,
   void DetachListeners();
 
   Result<already_AddRefed<WakeLockSentinel>, RequestError> Obtain(
-      WakeLockType aType);
+      WakeLockType aType, Document* aDoc);
 
   RefPtr<nsPIDOMWindowInner> mWindow;
 };

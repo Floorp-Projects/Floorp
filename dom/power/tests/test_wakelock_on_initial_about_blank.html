@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test requesting lock on the initial about:blank</title>
+  <link rel="help" href="https://bugzilla.mozilla.org/1882344"/>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script>
+
+    add_task(async function test() {
+      const iframe = document.createElement('iframe');
+      iframe.src = "file_empty.html";
+      document.documentElement.appendChild(iframe);
+
+      // https://html.spec.whatwg.org/multipage/nav-history-apis.html#the-window-object:initialise-the-document-object
+      is(iframe.contentWindow.location.href, "about:blank", "Initial about:blank is loaded");
+
+      let lock;
+      try {
+        // request lock on initial about:blank
+        lock = await iframe.contentWindow.navigator.wakeLock.request();
+      } catch (err) {
+        // This could happen if the initial about:blank document is inactive
+        // once the async code in .request runs.
+        ok(true, "request was rejected");
+        return;
+      }
+
+      if (iframe.contentWindow.location.href == "about:blank") {
+        await new Promise((res, _rej) => { iframe.onload = res; });
+      }
+      isnot(iframe.contentWindow.location.href, "about:blank", "Target document is loaded");
+
+      is(lock.released, true, "lock was released by load of target doc");
+
+      // window and wakeLock object stayed the same, but document changed
+      await iframe.contentWindow.navigator.wakeLock.request();
+      ok(true, "Was able to request lock on target document");
+    });
+
+  </script>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+</body>
+</html>
