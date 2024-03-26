@@ -2290,8 +2290,7 @@ void APZCTreeManager::SetupScrollbarDrag(
 
   // Under some conditions, we can confirm the drag block right away.
   // Otherwise, we have to wait for a main-thread confirmation.
-  if (StaticPrefs::apz_drag_initial_enabled() &&
-      // check that the scrollbar's target scroll frame is layerized
+  if (/* check that the scrollbar's target scroll frame is layerized */
       aScrollThumbNode->GetScrollTargetId() == aApzc->GetGuid().mScrollId &&
       !aApzc->IsScrollInfoLayer()) {
     uint64_t dragBlockId = dragBlock->GetBlockId();

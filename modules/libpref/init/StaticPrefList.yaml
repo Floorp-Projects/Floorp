@@ -478,11 +478,6 @@
   value: true
   mirror: always
 
-- name: apz.drag.initial.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 - name: apz.drag.touch.enabled
   type: RelaxedAtomicBool
   value: true
