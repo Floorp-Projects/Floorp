@@ -177,6 +177,7 @@ fn main() {
         cfg.events_dir = Some("events_dir".into());
         cfg.ping_dir = Some("ping_dir".into());
         cfg.dump_file = Some("minidump.dmp".into());
+        cfg.restart_command = Some("mockfox".into());
         cfg.strings = Some(lang::load().unwrap());
         let mut cfg = Arc::new(cfg);
         try_run(&mut cfg)
