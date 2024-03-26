@@ -23,7 +23,7 @@ job-defaults:
     worker:
         max-run-time: 10800
         docker-image: {in-tree: debian12-amd64-build}
-    use-system-python: false
+    use-python: default
 
 jobs:
     linux64-shell-haz/debug:

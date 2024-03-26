@@ -99,7 +99,7 @@ job-defaults:
                     - /builds/worker/artifacts/target.dmg
                     - __MOZCUSTOM__
                     - __MOZCUSTOM__dlsource%3D{attribution_code[json][dlsource]}
-    use-system-python: false
+    use-python: default
 
 jobs:
     win32-devedition/opt:

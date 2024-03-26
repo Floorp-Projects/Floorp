@@ -26,7 +26,7 @@ job-defaults:
             RUSTFLAGS: '--deny warnings'
     run:
         sparse-profile: webrender
-    use-system-python: false
+    use-python: default
 
 jobs:
     lint-tidy:

@@ -43,7 +43,7 @@ jobs-from:
     - wpt-metadata.yml
 
 job-defaults:
-    use-system-python: false
+    use-python: default
     attributes:
         retrigger: true
     task-context:

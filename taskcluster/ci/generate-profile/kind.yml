@@ -21,7 +21,7 @@ job-defaults:
         symbol: Bpgo(run)
         kind: build
         tier: 1
-    use-system-python: false
+    use-python: default
 
 jobs:
     linux-shippable/opt:

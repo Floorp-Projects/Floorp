@@ -26,7 +26,7 @@ job-defaults:
         env:
             PERFHERDER_EXTRA_OPTIONS: instrumented
             MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE: system
-    use-system-python: false
+    use-python: default
     run:
         using: mozharness
         actions: [get-secrets, build]

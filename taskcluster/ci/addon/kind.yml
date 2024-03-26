@@ -13,7 +13,7 @@ transforms:
     - gecko_taskgraph.transforms.task:transforms
 
 job-defaults:
-    use-system-python: false
+    use-python: default
 
 jobs:
     tps-xpi:
