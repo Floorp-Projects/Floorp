@@ -151,25 +151,6 @@ JSObject* AudioData::WrapObject(JSContext* aCx,
   return AudioData_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-uint32_t BytesPerSamples(const mozilla::dom::AudioSampleFormat& aFormat) {
-  switch (aFormat) {
-    case AudioSampleFormat::U8:
-    case AudioSampleFormat::U8_planar:
-      return sizeof(uint8_t);
-    case AudioSampleFormat::S16:
-    case AudioSampleFormat::S16_planar:
-      return sizeof(int16_t);
-    case AudioSampleFormat::S32:
-    case AudioSampleFormat::F32:
-    case AudioSampleFormat::S32_planar:
-    case AudioSampleFormat::F32_planar:
-      return sizeof(float);
-    default:
-      MOZ_ASSERT_UNREACHABLE("wrong enum value");
-  }
-  return 0;
-}
-
 Result<Ok, nsCString> IsValidAudioDataInit(const AudioDataInit& aInit) {
   if (aInit.mSampleRate <= 0.0) {
     auto msg = nsLiteralCString("sampleRate must be positive");
