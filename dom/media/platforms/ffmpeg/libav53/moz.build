@@ -6,6 +6,7 @@
 
 UNIFIED_SOURCES += [
     '../FFmpegAudioDecoder.cpp',
+    '../FFmpegAudioEncoder.cpp',
     '../FFmpegDataDecoder.cpp',
     "../FFmpegDataEncoder.cpp",
     '../FFmpegDecoderModule.cpp',

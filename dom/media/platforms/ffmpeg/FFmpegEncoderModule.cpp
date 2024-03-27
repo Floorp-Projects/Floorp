@@ -7,6 +7,7 @@
 #include "FFmpegEncoderModule.h"
 
 #include "FFmpegLog.h"
+#include "FFmpegAudioEncoder.h"
 #include "FFmpegVideoEncoder.h"
 
 // This must be the last header included
@@ -39,6 +40,23 @@ already_AddRefed<MediaDataEncoder> FFmpegEncoderModule<V>::CreateVideoEncoder(
   RefPtr<MediaDataEncoder> encoder =
       new FFmpegVideoEncoder<V>(mLib, codecId, aTaskQueue, aConfig);
   FFMPEGV_LOG("ffmpeg %s encoder: %s has been created",
+              GetCodecTypeString(aConfig.mCodec),
+              encoder->GetDescriptionName().get());
+  return encoder.forget();
+}
+
+template <int V>
+already_AddRefed<MediaDataEncoder> FFmpegEncoderModule<V>::CreateAudioEncoder(
+    const EncoderConfig& aConfig, const RefPtr<TaskQueue>& aTaskQueue) const {
+  AVCodecID codecId = GetFFmpegEncoderCodecId<V>(aConfig.mCodec);
+  if (codecId == AV_CODEC_ID_NONE) {
+    FFMPEGV_LOG("No ffmpeg encoder for %s", GetCodecTypeString(aConfig.mCodec));
+    return nullptr;
+  }
+
+  RefPtr<MediaDataEncoder> encoder =
+      new FFmpegAudioEncoder<V>(mLib, codecId, aTaskQueue, aConfig);
+  FFMPEGA_LOG("ffmpeg %s encoder: %s has been created",
               GetCodecTypeString(aConfig.mCodec),
               encoder->GetDescriptionName().get());
   return encoder.forget();
