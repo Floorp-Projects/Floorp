@@ -1567,6 +1567,7 @@ bool jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation,
              prevFrameType == FrameType::IonJS ||
              prevFrameType == FrameType::BaselineStub ||
              prevFrameType == FrameType::Rectifier ||
+             prevFrameType == FrameType::TrampolineNative ||
              prevFrameType == FrameType::IonICCall ||
              prevFrameType == FrameType::BaselineJS ||
              prevFrameType == FrameType::BaselineInterpreterEntry);

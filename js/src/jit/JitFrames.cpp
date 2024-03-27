@@ -83,6 +83,26 @@ static uint32_t NumArgAndLocalSlots(const InlineFrameIterator& frame) {
   return CountArgSlots(script, frame.maybeCalleeTemplate()) + script->nfixed();
 }
 
+static TrampolineNative TrampolineNativeForFrame(
+    JSRuntime* rt, TrampolineNativeFrameLayout* layout) {
+  JSFunction* nativeFun = CalleeTokenToFunction(layout->calleeToken());
+  MOZ_ASSERT(nativeFun->isBuiltinNative());
+  void** jitEntry = nativeFun->nativeJitEntry();
+  return rt->jitRuntime()->trampolineNativeForJitEntry(jitEntry);
+}
+
+static void UnwindTrampolineNativeFrame(JSRuntime* rt,
+                                        const JSJitFrameIter& frame) {
+  auto* layout = (TrampolineNativeFrameLayout*)frame.fp();
+  TrampolineNative native = TrampolineNativeForFrame(rt, layout);
+  switch (native) {
+    case TrampolineNative::ArraySort:
+      MOZ_CRASH("NYI");
+    case TrampolineNative::Count:
+      MOZ_CRASH("Invalid value");
+  }
+}
+
 static void CloseLiveIteratorIon(JSContext* cx,
                                  const InlineFrameIterator& frame,
                                  const TryNote* tn) {
@@ -809,6 +829,8 @@ void HandleException(ResumeFromException* rfe) {
       if (rfe->kind == ExceptionResumeKind::ForcedReturnBaseline) {
         return;
       }
+    } else if (frame.type() == FrameType::TrampolineNative) {
+      UnwindTrampolineNativeFrame(cx->runtime(), frame);
     }
 
     prevJitFrame = frame.current();
@@ -1399,6 +1421,21 @@ static void TraceJSJitToWasmFrame(JSTracer* trc, const JSJitFrameIter& frame) {
   TraceThisAndArguments(trc, frame, layout);
 }
 
+static void TraceTrampolineNativeFrame(JSTracer* trc,
+                                       const JSJitFrameIter& frame) {
+  auto* layout = (TrampolineNativeFrameLayout*)frame.fp();
+  layout->replaceCalleeToken(TraceCalleeToken(trc, layout->calleeToken()));
+  TraceThisAndArguments(trc, frame, layout);
+
+  TrampolineNative native = TrampolineNativeForFrame(trc->runtime(), layout);
+  switch (native) {
+    case TrampolineNative::ArraySort:
+      MOZ_CRASH("NYI");
+    case TrampolineNative::Count:
+      MOZ_CRASH("Invalid value");
+  }
+}
+
 static void TraceJitActivation(JSTracer* trc, JitActivation* activation) {
 #ifdef CHECK_OSIPOINT_REGISTERS
   if (JitOptions.checkOsiPointRegisters) {
@@ -1440,6 +1477,9 @@ static void TraceJitActivation(JSTracer* trc, JitActivation* activation) {
           break;
         case FrameType::Rectifier:
           TraceRectifierFrame(trc, jitFrame);
+          break;
+        case FrameType::TrampolineNative:
+          TraceTrampolineNativeFrame(trc, jitFrame);
           break;
         case FrameType::IonICCall:
           TraceIonICCallFrame(trc, jitFrame);

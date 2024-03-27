@@ -73,6 +73,10 @@ enum class FrameType {
   // wasm, and is a special kind of exit frame that doesn't have the exit
   // footer. From the point of view of the jit, it can be skipped as an exit.
   JSJitToWasm,
+
+  // Frame for a TrampolineNative, a JS builtin implemented with a JIT
+  // trampoline. See jit/TrampolineNatives.h.
+  TrampolineNative,
 };
 
 enum class ReadFrameArgsBehavior {
