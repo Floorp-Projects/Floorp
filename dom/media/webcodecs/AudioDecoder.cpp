@@ -103,6 +103,22 @@ UniquePtr<AudioDecoderConfigInternal> AudioDecoderConfigInternal::Create(
       std::move(description)));
 }
 
+nsString AudioDecoderConfigInternal::ToString() const {
+  nsString rv;
+
+  rv.AppendLiteral("AudioDecoderConfigInternal: ");
+  rv.AppendPrintf("%s %" PRIu32 "Hz %" PRIu32 " ch",
+                  NS_ConvertUTF16toUTF8(mCodec).get(), mSampleRate,
+                  mNumberOfChannels);
+  if (mDescription) {
+    rv.AppendPrintf("(%zu bytes of extradata)", (*mDescription)->Length());
+  } else {
+    rv.AppendLiteral("(no extradata)");
+  }
+
+  return rv;
+}
+
 /*
  * The followings are helpers for AudioDecoder methods
  */

@@ -116,29 +116,33 @@ class VideoDecoderTraits {
 
 class AudioDecoderConfigInternal {
  public:
+  AudioDecoderConfigInternal(const nsAString& aCodec, uint32_t aSampleRate,
+                             uint32_t aNumberOfChannels,
+                             Maybe<RefPtr<MediaByteBuffer>>&& aDescription);
   static UniquePtr<AudioDecoderConfigInternal> Create(
       const AudioDecoderConfig& aConfig);
   ~AudioDecoderConfigInternal() = default;
 
   bool Equals(const AudioDecoderConfigInternal& aOther) const {
     if (mDescription.isSome() != aOther.mDescription.isSome()) {
-        return false;
+      return false;
     }
     if (mDescription.isSome() && aOther.mDescription.isSome()) {
-        auto lhs = mDescription.value();
-        auto rhs = aOther.mDescription.value();
-        if (lhs->Length() != rhs->Length()) {
-            return false;
-        }
-        if (!ArrayEqual(lhs->Elements(), rhs->Elements(), lhs->Length())) {
-            return false;
-        }
+      auto lhs = mDescription.value();
+      auto rhs = aOther.mDescription.value();
+      if (lhs->Length() != rhs->Length()) {
+        return false;
+      }
+      if (!ArrayEqual(lhs->Elements(), rhs->Elements(), lhs->Length())) {
+        return false;
+      }
     }
-    return mCodec.Equals(aOther.mCodec) &&
-           mSampleRate == aOther.mSampleRate &&
+    return mCodec.Equals(aOther.mCodec) && mSampleRate == aOther.mSampleRate &&
            mNumberOfChannels == aOther.mNumberOfChannels &&
            mOptimizeForLatency == aOther.mOptimizeForLatency;
   }
+  nsString ToString() const;
+
   nsString mCodec;
   uint32_t mSampleRate;
   uint32_t mNumberOfChannels;
@@ -148,11 +152,6 @@ class AudioDecoderConfigInternal {
   HardwareAcceleration mHardwareAcceleration =
       HardwareAcceleration::No_preference;
   Maybe<bool> mOptimizeForLatency;
-
- private:
-  AudioDecoderConfigInternal(const nsAString& aCodec, uint32_t aSampleRate,
-                             uint32_t aNumberOfChannels,
-                             Maybe<RefPtr<MediaByteBuffer>>&& aDescription);
 };
 
 class AudioDecoderTraits {
