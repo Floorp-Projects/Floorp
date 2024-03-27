@@ -175,6 +175,9 @@ class EncoderTemplate : public DOMEventTargetHelper {
   virtual OutputConfigType EncoderConfigToDecoderConfig(
       nsIGlobalObject* aGlobalObject, const RefPtr<MediaRawData>& aData,
       const ConfigTypeInternal& aOutputConfig) const = 0;
+  template <typename T, typename U>
+  void CopyExtradataToDescriptionIfNeeded(nsIGlobalObject* aGlobal,
+                                          const T& aConfigInternal, U& aConfig);
   /* Internal member variables and functions */
  protected:
   // EncoderTemplate can run on either main thread or worker thread.
@@ -247,14 +250,14 @@ class EncoderTemplate : public DOMEventTargetHelper {
   // used as the FlushMessage's Id.
   size_t mFlushCounter;
 
-  // EncoderAgent will be created the first time "configure" is being processed,
-  // and will be destroyed when "reset" is called. If another "configure" is
-  // called, either it's possible to reconfigure the underlying encoder without
-  // tearing eveyrthing down (e.g. a bitrate change), or it's not possible, and
-  // the current encoder will be destroyed and a new one create.
-  // In both cases, the encoder is implicitely flushed before the configuration
-  // change.
-  // See CanReconfigure on the {Audio,Video}EncoderConfigInternal
+  // EncoderAgent will be created the first time "configure" is being
+  // processed, and will be destroyed when "reset" is called. If another
+  // "configure" is called, either it's possible to reconfigure the underlying
+  // encoder without tearing everything down (e.g. a bitrate change), or it's
+  // not possible, and the current encoder will be destroyed and a new one
+  // create. In both cases, the encoder is implicitely flushed before the
+  // configuration change. See CanReconfigure on the
+  // {Audio,Video}EncoderConfigInternal
   RefPtr<EncoderAgent> mAgent;
   RefPtr<ConfigTypeInternal> mActiveConfig;
   // This is true when a configure call has just been processed, and it's

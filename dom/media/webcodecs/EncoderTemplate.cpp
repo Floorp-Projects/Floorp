@@ -300,6 +300,27 @@ void EncoderTemplate<EncoderType>::ReportError(const nsresult& aResult) {
   cb->Call(*e);
 }
 
+template <typename EncoderType>
+template <typename T, typename U>
+void EncoderTemplate<EncoderType>::CopyExtradataToDescriptionIfNeeded(
+    nsIGlobalObject* aGlobal, const T& aConfigInternal, U& aConfig) {
+  if (aConfigInternal.mDescription &&
+      !aConfigInternal.mDescription.value()->IsEmpty()) {
+    auto& abov = aConfig.mDescription.Construct();
+    AutoEntryScript aes(aGlobal, "EncoderConfigToaConfigConfig");
+    size_t lengthBytes = aConfigInternal.mDescription.value()->Length();
+    UniquePtr<uint8_t[], JS::FreePolicy> extradata(new uint8_t[lengthBytes]);
+    PodCopy(extradata.get(),
+            aConfigInternal.mDescription.value()->Elements(),
+            lengthBytes);
+    JS::Rooted<JSObject*> description(
+        aes.cx(), JS::NewArrayBufferWithContents(aes.cx(), lengthBytes,
+                                                 std::move(extradata)));
+    JS::Rooted<JS::Value> value(aes.cx(), JS::ObjectValue(*description));
+    DebugOnly<bool> rv = abov.Init(aes.cx(), value);
+  }
+}
+
 template <>
 void EncoderTemplate<VideoEncoderTraits>::OutputEncodedVideoData(
     nsTArray<RefPtr<MediaRawData>>&& aData) {
@@ -356,23 +377,10 @@ void EncoderTemplate<VideoEncoderTraits>::OutputEncodedVideoData(
             MaybeToNullable(decoderConfigInternal.mColorSpace->mTransfer);
         decoderConfig.mColorSpace.Construct(std::move(colorSpace));
       }
-      if (decoderConfigInternal.mDescription &&
-          !decoderConfigInternal.mDescription.value()->IsEmpty()) {
-        auto& abov = decoderConfig.mDescription.Construct();
-        AutoEntryScript aes(GetParentObject(), "EncoderConfigToDecoderConfig");
-        size_t lengthBytes =
-            decoderConfigInternal.mDescription.value()->Length();
-        UniquePtr<uint8_t[], JS::FreePolicy> extradata(
-            new uint8_t[lengthBytes]);
-        PodCopy(extradata.get(),
-                decoderConfigInternal.mDescription.value()->Elements(),
-                lengthBytes);
-        JS::Rooted<JSObject*> description(
-            aes.cx(), JS::NewArrayBufferWithContents(aes.cx(), lengthBytes,
-                                                     std::move(extradata)));
-        JS::Rooted<JS::Value> value(aes.cx(), JS::ObjectValue(*description));
-        DebugOnly<bool> rv = abov.Init(aes.cx(), value);
-      }
+
+      CopyExtradataToDescriptionIfNeeded(GetParentObject(),
+                                         decoderConfigInternal, decoderConfig);
+
       if (decoderConfigInternal.mDisplayAspectHeight) {
         decoderConfig.mDisplayAspectHeight.Construct(
             decoderConfigInternal.mDisplayAspectHeight.value());
