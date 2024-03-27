@@ -315,6 +315,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState {
   bool quirks;
   bool forceNoQuirks;
   bool allowDeclarativeShadowRoots;
+  bool keepBuffer;
   inline nsHtml5ContentCreatorFunction htmlCreator(
       mozilla::dom::HTMLContentCreatorFunction htmlCreator) {
     nsHtml5ContentCreatorFunction creator;
@@ -330,6 +331,8 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState {
   }
 
  public:
+  void setKeepBuffer(bool keepBuffer);
+  bool dropBufferIfLongerThan(int32_t length);
   void startTokenization(nsHtml5Tokenizer* self);
   void doctype(nsAtom* name, nsHtml5String publicIdentifier,
                nsHtml5String systemIdentifier, bool forceQuirks);

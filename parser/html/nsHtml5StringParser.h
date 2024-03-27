@@ -67,6 +67,9 @@ class nsHtml5StringParser : public nsParserBase {
                     bool aScriptingEnabledForNoscriptParsing,
                     bool aDeclarativeShadowRootsAllowed);
 
+  void TryCache();
+  void ClearCaches();
+
   /**
    * The tree operation executor
    */
@@ -86,6 +89,24 @@ class nsHtml5StringParser : public nsParserBase {
    * The scoped atom table
    */
   nsHtml5AtomTable mAtomTable;
+
+  class CacheClearer : public mozilla::Runnable {
+   public:
+    explicit CacheClearer(nsHtml5StringParser* aParser)
+        : Runnable("CacheClearer"), mParser(aParser) {}
+    NS_IMETHOD Run() {
+      if (mParser) {
+        mParser->ClearCaches();
+      }
+      return NS_OK;
+    }
+    void Disconnect() { mParser = nullptr; }
+
+   private:
+    nsHtml5StringParser* mParser;
+  };
+
+  RefPtr<CacheClearer> mCacheClearer;
 };
 
 #endif  // nsHtml5StringParser_h
