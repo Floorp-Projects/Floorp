@@ -8006,7 +8006,11 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
   // position in order to provide it for the nodes created later.
   TokenPos namePos = pos();
 
-  bool isInClass = pc_->sc()->inClass();
+  auto isClass = [](ParseContext::Statement* stmt) {
+    return stmt->kind() == StatementKind::Class;
+  };
+
+  bool isInClass = pc_->sc()->inClass() || pc_->findInnermostStatement(isClass);
 
   // Push a ParseContext::ClassStatement to keep track of the constructor
   // funbox.
