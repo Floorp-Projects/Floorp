@@ -23,6 +23,10 @@ enum IDBTransactionMode {
 interface IDBTransaction : EventTarget {
     [Throws]
     readonly    attribute IDBTransactionMode mode;
+
+    [Throws]
+    readonly    attribute IDBTransactionDurability durability;
+
     [SameObject] readonly attribute IDBDatabase db;
 
     readonly    attribute DOMException?      error;

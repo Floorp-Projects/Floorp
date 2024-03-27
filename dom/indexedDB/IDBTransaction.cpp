@@ -89,8 +89,9 @@ auto IDBTransaction::DoWithTransactionChild(const Func& aFunc) const {
 
 IDBTransaction::IDBTransaction(IDBDatabase* const aDatabase,
                                const nsTArray<nsString>& aObjectStoreNames,
-                               const Mode aMode, nsString aFilename,
-                               const uint32_t aLineNo, const uint32_t aColumn,
+                               const Mode aMode, const Durability aDurability,
+                               nsString aFilename, const uint32_t aLineNo,
+                               const uint32_t aColumn,
                                CreatedFromFactoryFunction /*aDummy*/)
     : DOMEventTargetHelper(aDatabase),
       mDatabase(aDatabase),
@@ -105,6 +106,7 @@ IDBTransaction::IDBTransaction(IDBDatabase* const aDatabase,
       mLineNo(aLineNo),
       mColumn(aColumn),
       mMode(aMode),
+      mDurability(aDurability),
       mRegistered(false),
       mNotedActiveTransaction(false) {
   MOZ_ASSERT(aDatabase);
@@ -178,9 +180,11 @@ SafeRefPtr<IDBTransaction> IDBTransaction::CreateVersionChange(
   nsString filename;
   uint32_t lineNo, column;
   aOpenRequest->GetCallerLocation(filename, &lineNo, &column);
+  // XXX: What should we have as durability hint here?
   auto transaction = MakeSafeRefPtr<IDBTransaction>(
       aDatabase, emptyObjectStoreNames, Mode::VersionChange,
-      std::move(filename), lineNo, column, CreatedFromFactoryFunction{});
+      Durability::Default, std::move(filename), lineNo, column,
+      CreatedFromFactoryFunction{});
 
   transaction->NoteActiveTransaction();
 
@@ -197,7 +201,8 @@ SafeRefPtr<IDBTransaction> IDBTransaction::CreateVersionChange(
 // static
 SafeRefPtr<IDBTransaction> IDBTransaction::Create(
     JSContext* const aCx, IDBDatabase* const aDatabase,
-    const nsTArray<nsString>& aObjectStoreNames, const Mode aMode) {
+    const nsTArray<nsString>& aObjectStoreNames, const Mode aMode,
+    const Durability aDurability) {
   MOZ_ASSERT(aDatabase);
   aDatabase->AssertIsOnOwningThread();
   MOZ_ASSERT(!aObjectStoreNames.IsEmpty());
@@ -208,8 +213,8 @@ SafeRefPtr<IDBTransaction> IDBTransaction::Create(
   uint32_t lineNo, column;
   IDBRequest::CaptureCaller(aCx, filename, &lineNo, &column);
   auto transaction = MakeSafeRefPtr<IDBTransaction>(
-      aDatabase, aObjectStoreNames, aMode, std::move(filename), lineNo, column,
-      CreatedFromFactoryFunction{});
+      aDatabase, aObjectStoreNames, aMode, aDurability, std::move(filename),
+      lineNo, column, CreatedFromFactoryFunction{});
 
   if (!NS_IsMainThread()) {
     WorkerPrivate* const workerPrivate = GetCurrentThreadWorkerPrivate();
@@ -872,6 +877,24 @@ IDBTransactionMode IDBTransaction::GetMode(ErrorResult& aRv) const {
       return IDBTransactionMode::Versionchange;
 
     case Mode::Invalid:
+    default:
+      MOZ_CRASH("Bad mode!");
+  }
+}
+
+IDBTransactionDurability IDBTransaction::GetDurability(ErrorResult& aRv) const {
+  AssertIsOnOwningThread();
+
+  switch (mDurability) {
+    case Durability::Default:
+      return IDBTransactionDurability::Default;
+
+    case Durability::Strict:
+      return IDBTransactionDurability::Strict;
+
+    case Durability::Relaxed:
+      return IDBTransactionDurability::Relaxed;
+
     default:
       MOZ_CRASH("Bad mode!");
   }

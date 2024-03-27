@@ -5,10 +5,17 @@
  *
  * The origin of this IDL file is
  * https://w3c.github.io/IndexedDB/#database-interface
+ * https://w3c.github.io/IndexedDB/#enumdef-idbtransactiondurability
  *
  * Copyright © 2012 W3C® (MIT, ERCIM, Keio), All Rights Reserved. W3C
  * liability, trademark and document use rules apply.
  */
+
+enum IDBTransactionDurability { "default", "strict", "relaxed" };
+
+dictionary IDBTransactionOptions {
+  IDBTransactionDurability durability = "default";
+};
 
 [Exposed=(Window,Worker)]
 interface IDBDatabase : EventTarget {
@@ -19,7 +26,8 @@ interface IDBDatabase : EventTarget {
 
     [NewObject, Throws]
     IDBTransaction transaction((DOMString or sequence<DOMString>) storeNames,
-                               optional IDBTransactionMode mode = "readonly");
+                               optional IDBTransactionMode mode = "readonly",
+                               optional IDBTransactionOptions options = {});
     [NewObject, Throws]
     IDBObjectStore createObjectStore(
         DOMString name,

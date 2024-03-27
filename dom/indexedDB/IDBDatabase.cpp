@@ -20,6 +20,7 @@
 #include "MainThreadUtils.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Services.h"
+#include "mozilla/dom/IDBTransactionBinding.h"
 #include "mozilla/storage.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/dom/BindingDeclarations.h"
@@ -474,7 +475,8 @@ void IDBDatabase::DeleteObjectStore(const nsAString& aName, ErrorResult& aRv) {
 
 RefPtr<IDBTransaction> IDBDatabase::Transaction(
     JSContext* aCx, const StringOrStringSequence& aStoreNames,
-    IDBTransactionMode aMode, ErrorResult& aRv) {
+    IDBTransactionMode aMode, const IDBTransactionOptions& aOptions,
+    ErrorResult& aRv) {
   AssertIsOnOwningThread();
 
   if ((aMode == IDBTransactionMode::Readwriteflush ||
@@ -598,8 +600,26 @@ RefPtr<IDBTransaction> IDBDatabase::Transaction(
       MOZ_CRASH("Unknown mode!");
   }
 
+  auto durability = IDBTransaction::Durability::Default;
+  if (aOptions.IsAnyMemberPresent()) {
+    switch (aOptions.mDurability) {
+      case mozilla::dom::IDBTransactionDurability::Default:
+        durability = IDBTransaction::Durability::Default;
+        break;
+      case mozilla::dom::IDBTransactionDurability::Strict:
+        durability = IDBTransaction::Durability::Strict;
+        break;
+      case mozilla::dom::IDBTransactionDurability::Relaxed:
+        durability = IDBTransaction::Durability::Relaxed;
+        break;
+
+      default:
+        MOZ_CRASH("Unknown durability hint!");
+    }
+  }
+
   SafeRefPtr<IDBTransaction> transaction =
-      IDBTransaction::Create(aCx, this, sortedStoreNames, mode);
+      IDBTransaction::Create(aCx, this, sortedStoreNames, mode, durability);
   if (NS_WARN_IF(!transaction)) {
     IDB_REPORT_INTERNAL_ERR();
     MOZ_ASSERT(!NS_IsMainThread(),
@@ -617,7 +637,7 @@ RefPtr<IDBTransaction> IDBDatabase::Transaction(
       IDB_LOG_STRINGIFY(*transaction));
 
   if (!mBackgroundActor->SendPBackgroundIDBTransactionConstructor(
-          actor, sortedStoreNames, mode)) {
+          actor, sortedStoreNames, mode, durability)) {
     IDB_REPORT_INTERNAL_ERR();
     aRv.ThrowUnknownError("Failed to create IndexedDB transaction");
     return nullptr;
