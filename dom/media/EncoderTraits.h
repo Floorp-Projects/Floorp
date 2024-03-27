@@ -12,12 +12,13 @@
 
 namespace mozilla::EncoderSupport {
 
-bool Supports(const RefPtr<dom::VideoEncoderConfigInternal>& aEncoderConfigInternal) {
+template <typename T>
+bool Supports(const RefPtr<T>& aEncoderConfigInternal) {
   RefPtr<PEMFactory> factory = new PEMFactory();
   EncoderConfig config = aEncoderConfigInternal->ToEncoderConfig();
   return factory->Supports(config);
 }
 
-}  // namespace mozilla
+}  // namespace mozilla::EncoderSupport
 
 #endif
