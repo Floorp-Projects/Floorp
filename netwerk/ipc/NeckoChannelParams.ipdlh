@@ -63,6 +63,7 @@ struct CookieJarSettingsArgs
   nsString partitionKey;
   bool hasFingerprintingRandomizationKey;
   uint8_t[] fingerprintingRandomizationKey;
+  uint64_t topLevelWindowContextId;
 };
 
 //-----------------------------------------------------------------------------
