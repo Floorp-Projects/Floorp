@@ -258,16 +258,16 @@ impl ReportCrashUI {
                     },
                     HBox valign(Alignment::End) halign(Alignment::End) spacing(10)
                     {
+                        Button["quit"] on_click(cc! { (logic) move || logic.push(|s| s.quit()) })
+                            enabled(&input_enabled) hsize(160)
+                        {
+                            Label text(config.string("crashreporter-button-quit"))
+                        },
                         Button["restart"] visible(config.restart_command.is_some())
                             on_click(cc! { (logic) move || logic.push(|s| s.restart()) })
                             enabled(&input_enabled) hsize(160)
                         {
                             Label text(config.string("crashreporter-button-restart"))
-                        },
-                        Button["quit"] on_click(cc! { (logic) move || logic.push(|s| s.quit()) })
-                            enabled(&input_enabled) hsize(160)
-                        {
-                            Label text(config.string("crashreporter-button-quit"))
                         }
                     }
                 }
