@@ -2077,6 +2077,35 @@ void nsNativeThemeCocoa::DrawSegment(CGContextRef cgContext,
   RenderWithCoreUI(drawRect, cgContext, dict);
 }
 
+void nsNativeThemeCocoa::DrawToolbar(CGContextRef cgContext,
+                                     const CGRect& inBoxRect, bool aIsMain) {
+  CGRect drawRect = inBoxRect;
+
+  // top border
+  drawRect.size.height = 1.0f;
+  DrawNativeGreyColorInRect(cgContext, toolbarTopBorderGrey, drawRect, aIsMain);
+
+  // background
+  drawRect.origin.y += drawRect.size.height;
+  drawRect.size.height = inBoxRect.size.height - 2.0f;
+  DrawNativeGreyColorInRect(cgContext, toolbarFillGrey, drawRect, aIsMain);
+
+  // bottom border
+  drawRect.origin.y += drawRect.size.height;
+  drawRect.size.height = 1.0f;
+  DrawNativeGreyColorInRect(cgContext, toolbarBottomBorderGrey, drawRect,
+                            aIsMain);
+}
+
+static bool ToolbarCanBeUnified(const gfx::Rect& aRect, NSWindow* aWindow) {
+  if (![aWindow isKindOfClass:[ToolbarWindow class]]) return false;
+
+  ToolbarWindow* win = (ToolbarWindow*)aWindow;
+  float unifiedToolbarHeight = [win unifiedToolbarHeight];
+  return aRect.X() == 0 && aRect.Width() >= [win frame].size.width &&
+         aRect.YMost() <= unifiedToolbarHeight;
+}
+
 void nsNativeThemeCocoa::DrawStatusBar(CGContextRef cgContext,
                                        const HIRect& inBoxRect, bool aIsMain) {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
@@ -2298,6 +2327,19 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
 
     case StyleAppearance::Separator:
       return Some(WidgetInfo::Separator());
+
+    case StyleAppearance::Toolbar: {
+      NSWindow* win = NativeWindowForFrame(aFrame);
+      bool isMain = [win isMainWindow];
+      if (ToolbarCanBeUnified(nativeWidgetRect, win)) {
+        // Unified toolbars are drawn similar to vibrancy; we communicate their
+        // extents via the theme geometry mechanism and then place native views
+        // under Gecko's rendering. So Gecko just needs to be transparent in the
+        // place where the toolbar should be visible.
+        return Nothing();
+      }
+      return Some(WidgetInfo::Toolbar(isMain));
+    }
 
     case StyleAppearance::MozWindowTitlebar: {
       return Nothing();
@@ -2549,6 +2591,11 @@ void nsNativeThemeCocoa::RenderWidget(const WidgetInfo& aWidgetInfo,
         case Widget::eSeparator: {
           HIThemeSeparatorDrawInfo sdi = {0, kThemeStateActive};
           HIThemeDrawSeparator(&macRect, &sdi, cgContext, HITHEME_ORIENTATION);
+          break;
+        }
+        case Widget::eToolbar: {
+          bool isMain = aWidgetInfo.Params<bool>();
+          DrawToolbar(cgContext, macRect, isMain);
           break;
         }
         case Widget::eStatusBar: {
@@ -3235,6 +3282,10 @@ nsITheme::ThemeGeometryType nsNativeThemeCocoa::ThemeGeometryTypeForWidget(
   switch (aAppearance) {
     case StyleAppearance::MozWindowTitlebar:
       return eThemeGeometryTypeTitlebar;
+    case StyleAppearance::Toolbar:
+      return eThemeGeometryTypeToolbar;
+    case StyleAppearance::Toolbox:
+      return eThemeGeometryTypeToolbox;
     case StyleAppearance::MozWindowButtonBox:
       return eThemeGeometryTypeWindowButtons;
     case StyleAppearance::Tooltip:

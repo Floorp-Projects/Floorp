@@ -12,17 +12,14 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   nsLookAndFeel();
   virtual ~nsLookAndFeel();
 
-  void NativeInit() final { EnsureInit(); }
-  void RefreshImpl() final;
-  void EnsureInit();
-
+  void NativeInit() final;
   nsresult NativeGetColor(ColorID, ColorScheme, nscolor& aColor) override;
   nsresult NativeGetInt(IntID, int32_t& aResult) override;
   nsresult NativeGetFloat(FloatID, float& aResult) override;
   bool NativeGetFont(FontID aID, nsString& aFontName,
                      gfxFontStyle& aFontStyle) override;
 
-  char16_t GetPasswordCharacterImpl() override {
+  virtual char16_t GetPasswordCharacterImpl() override {
     // unicode value for the bullet character, used for password textfields.
     return 0x2022;
   }
@@ -37,9 +34,10 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   static void RecordAccessibilityTelemetry();
 
  protected:
-  bool mInitialized = false;
-  bool mRtl = false;
-  int32_t mTitlebarHeight = 0;
+  static bool SystemWantsDarkTheme();
+  static bool IsSystemOrientationRTL();
+  static nscolor ProcessSelectionBackground(nscolor aColor,
+                                            ColorScheme aScheme);
 };
 
 #endif  // nsLookAndFeel_h_

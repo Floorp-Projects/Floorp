@@ -3017,7 +3017,7 @@ void nsCocoaWindow::CocoaWindowDidResize() {
     return self.FrameView__closeButtonOrigin;
   }
   auto* win = static_cast<ToolbarWindow*>(self.window);
-  if (win.drawsContentsIntoWindowFrame && !win.wantsTitleDrawn &&
+  if (win.drawsContentsIntoWindowFrame &&
       !(win.styleMask & NSWindowStyleMaskFullScreen) &&
       (win.styleMask & NSWindowStyleMaskTitled)) {
     const NSRect buttonsRect = win.windowButtonsRect;
@@ -3287,7 +3287,7 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
 }
 
 - (void)setDrawsContentsIntoWindowFrame:(BOOL)aState {
-  bool changed = aState != mDrawsIntoWindowFrame;
+  bool changed = (aState != mDrawsIntoWindowFrame);
   mDrawsIntoWindowFrame = aState;
   if (changed) {
     [self reflowTitlebarElements];
@@ -3494,6 +3494,48 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
 - (void)_maskCorners:(NSUInteger)aFlags clipRect:(NSRect)aRect;
 @end
 
+@implementation MOZTitlebarView
+
+- (instancetype)initWithFrame:(NSRect)aFrame {
+  self = [super initWithFrame:aFrame];
+
+  self.material = NSVisualEffectMaterialTitlebar;
+  self.blendingMode = NSVisualEffectBlendingModeWithinWindow;
+
+  // Add a separator line at the bottom of the titlebar. NSBoxSeparator isn't a
+  // perfect match for a native titlebar separator, but it's better than
+  // nothing. We really want the appearance that _NSTitlebarDecorationView
+  // creates with the help of CoreUI, but there's no public API for that.
+  NSBox* separatorLine =
+      [[NSBox alloc] initWithFrame:NSMakeRect(0, 0, aFrame.size.width, 1)];
+  separatorLine.autoresizingMask = NSViewWidthSizable | NSViewMaxYMargin;
+  separatorLine.boxType = NSBoxSeparator;
+  [self addSubview:separatorLine];
+  [separatorLine release];
+
+  return self;
+}
+
+- (BOOL)mouseDownCanMoveWindow {
+  return YES;
+}
+
+- (void)mouseUp:(NSEvent*)event {
+  if (event.clickCount == 2) {
+    // Handle titlebar double click. We don't get the window's default behavior
+    // here because the window uses NSWindowStyleMaskFullSizeContentView, and
+    // this view (the titlebar gradient view) is technically part of the window
+    // "contents" (it's a subview of the content view).
+    if (nsCocoaUtils::ShouldZoomOnTitlebarDoubleClick()) {
+      [self.window performZoom:nil];
+    } else if (nsCocoaUtils::ShouldMinimizeOnTitlebarDoubleClick()) {
+      [self.window performMiniaturize:nil];
+    }
+  }
+}
+
+@end
+
 @interface MOZTitlebarAccessoryView : NSView
 @end
 
@@ -3560,6 +3602,37 @@ static bool MaybeDropEventForModalWindow(NSEvent* aEvent, id aDelegate) {
   return false;
 }
 
+// This class allows us to exercise control over the window's title bar. It is
+// used for all windows with titlebars.
+//
+// ToolbarWindow supports two modes:
+//  - drawsContentsIntoWindowFrame mode: In this mode, the Gecko ChildView is
+//    sized to cover the entire window frame and manages titlebar drawing.
+//  - separate titlebar mode, with support for unified toolbars: In this mode,
+//    the Gecko ChildView does not extend into the titlebar. However, this
+//    window's content view (which is the ChildView's superview) *does* extend
+//    into the titlebar. Moreover, in this mode, we place a MOZTitlebarView
+//    in the content view, as a sibling of the ChildView.
+//
+// The "separate titlebar mode" supports the "unified toolbar" look:
+// If there's a toolbar right below the titlebar, the two can "connect" and
+// form a single gradient without a separator line in between.
+//
+// The following mechanism communicates the height of the unified toolbar to
+// the ToolbarWindow:
+//
+// 1) In the style sheet we set the toolbar's -moz-appearance to toolbar.
+// 2) When the toolbar is visible and we paint the application chrome
+//    window, the array that Gecko passes nsChildView::UpdateThemeGeometries
+//    will contain an entry for the widget type StyleAppearance::Toolbar.
+// 3) nsChildView::UpdateThemeGeometries passes the toolbar's height, plus the
+//    titlebar height, to -[ToolbarWindow setUnifiedToolbarHeight:].
+//
+// The actual drawing of the gradient happens in two parts: The titlebar part
+// (i.e. the top 22 pixels of the gradient) is drawn by the MOZTitlebarView,
+// which is a subview of the window's content view and a sibling of the
+// ChildView. The rest of the gradient is drawn by Gecko into the ChildView, as
+// part of the -moz-appearance rendering of the toolbar.
 @implementation ToolbarWindow
 
 - (id)initWithContentRect:(NSRect)aChildViewRect
@@ -3598,12 +3671,16 @@ static bool MaybeDropEventForModalWindow(NSEvent* aEvent, id aDelegate) {
                                styleMask:aStyle
                                  backing:aBufferingType
                                    defer:aFlag])) {
+    mTitlebarView = nil;
+    mUnifiedToolbarHeight = 22.0f;
     mWindowButtonsRect = NSZeroRect;
+    mInitialTitlebarHeight = [self titlebarHeight];
 
-    self.titlebarAppearsTransparent = YES;
+    [self setTitlebarAppearsTransparent:YES];
     if (@available(macOS 11.0, *)) {
       self.titlebarSeparatorStyle = NSTitlebarSeparatorStyleNone;
     }
+    [self updateTitlebarView];
 
     mFullscreenTitlebarTracker = [[FullscreenTitlebarTracker alloc] init];
     // revealAmount is an undocumented property of
@@ -3669,7 +3746,8 @@ static bool ShouldShiftByMenubarHeightInFullscreen(nsCocoaWindow* aWindow) {
 }
 
 - (void)updateTitlebarShownAmount:(CGFloat)aShownAmount {
-  if (!(self.styleMask & NSWindowStyleMaskFullScreen)) {
+  NSInteger styleMask = [self styleMask];
+  if (!(styleMask & NSWindowStyleMaskFullScreen)) {
     // We are not interested in the size of the titlebar unless we are in
     // fullscreen.
     return;
@@ -3691,11 +3769,10 @@ static bool ShouldShiftByMenubarHeightInFullscreen(nsCocoaWindow* aWindow) {
     }
 
     if (nsIWidgetListener* listener = geckoWindow->GetWidgetListener()) {
-      // titlebarHeight returns 0 when we're in fullscreen, return the default
-      // titlebar height.
-      CGFloat shiftByPixels =
-          LookAndFeel::GetInt(LookAndFeel::IntID::MacTitlebarHeight) *
-          aShownAmount;
+      // Use the titlebar height cached in our frame rather than
+      // [ToolbarWindow titlebarHeight]. titlebarHeight returns 0 when we're in
+      // fullscreen.
+      CGFloat shiftByPixels = mInitialTitlebarHeight * aShownAmount;
       if (ShouldShiftByMenubarHeightInFullscreen(geckoWindow)) {
         shiftByPixels += mMenuBarHeight * aShownAmount;
       }
@@ -3712,6 +3789,7 @@ static bool ShouldShiftByMenubarHeightInFullscreen(nsCocoaWindow* aWindow) {
 }
 
 - (void)dealloc {
+  [mTitlebarView release];
   [mFullscreenTitlebarTracker removeObserver:self forKeyPath:@"revealAmount"];
   [mFullscreenTitlebarTracker removeFromParentViewController];
   [mFullscreenTitlebarTracker release];
@@ -3720,11 +3798,57 @@ static bool ShouldShiftByMenubarHeightInFullscreen(nsCocoaWindow* aWindow) {
 }
 
 - (NSArray<NSView*>*)contentViewContents {
-  return [self.contentView subviews];
+  NSMutableArray<NSView*>* contents = [[self.contentView subviews] mutableCopy];
+  if (mTitlebarView) {
+    // Do not include the titlebar gradient view in the returned array.
+    [contents removeObject:mTitlebarView];
+  }
+  return [contents autorelease];
+}
+
+- (void)updateTitlebarView {
+  BOOL needTitlebarView =
+      !self.drawsContentsIntoWindowFrame || mUnifiedToolbarHeight > 0;
+  if (needTitlebarView && !mTitlebarView) {
+    mTitlebarView =
+        [[MOZTitlebarView alloc] initWithFrame:self.unifiedToolbarRect];
+    mTitlebarView.autoresizingMask = NSViewWidthSizable | NSViewMinYMargin;
+    [self.contentView addSubview:mTitlebarView
+                      positioned:NSWindowBelow
+                      relativeTo:nil];
+  } else if (needTitlebarView && mTitlebarView) {
+    mTitlebarView.frame = self.unifiedToolbarRect;
+  } else if (!needTitlebarView && mTitlebarView) {
+    [mTitlebarView removeFromSuperview];
+    [mTitlebarView release];
+    mTitlebarView = nil;
+  }
 }
 
 - (void)windowMainStateChanged {
+  [self setTitlebarNeedsDisplay];
   [[self mainChildView] ensureNextCompositeIsAtomicWithMainThreadPaint];
+}
+
+- (void)setTitlebarNeedsDisplay {
+  [mTitlebarView setNeedsDisplay:YES];
+}
+
+- (NSRect)titlebarRect {
+  CGFloat titlebarHeight = self.titlebarHeight;
+  return NSMakeRect(0, self.frame.size.height - titlebarHeight,
+                    self.frame.size.width, titlebarHeight);
+}
+
+// In window contentView coordinates (origin bottom left)
+- (NSRect)unifiedToolbarRect {
+  return NSMakeRect(0, self.frame.size.height - mUnifiedToolbarHeight,
+                    self.frame.size.width, mUnifiedToolbarHeight);
+}
+
+// Returns the unified height of titlebar + toolbar.
+- (CGFloat)unifiedToolbarHeight {
+  return mUnifiedToolbarHeight;
 }
 
 - (CGFloat)titlebarHeight {
@@ -3737,6 +3861,15 @@ static bool ShouldShiftByMenubarHeightInFullscreen(nsCocoaWindow* aWindow) {
   NSRect originalContentRect = [NSWindow contentRectForFrameRect:frameRect
                                                        styleMask:styleMask];
   return NSMaxY(frameRect) - NSMaxY(originalContentRect);
+}
+
+// Stores the complete height of titlebar + toolbar.
+- (void)setUnifiedToolbarHeight:(CGFloat)aHeight {
+  if (aHeight == mUnifiedToolbarHeight) return;
+
+  mUnifiedToolbarHeight = aHeight;
+
+  [self updateTitlebarView];
 }
 
 // Extending the content area into the title bar works by resizing the
@@ -3762,6 +3895,13 @@ static bool ShouldShiftByMenubarHeightInFullscreen(nsCocoaWindow* aWindow) {
     // we'll send a mouse move event with the correct new position.
     ChildViewMouseTracker::ResendLastMouseMoveEvent();
   }
+
+  [self updateTitlebarView];
+}
+
+- (void)setWantsTitleDrawn:(BOOL)aDrawTitle {
+  [super setWantsTitleDrawn:aDrawTitle];
+  [self setTitlebarNeedsDisplay];
 }
 
 - (void)placeWindowButtons:(NSRect)aRect {
