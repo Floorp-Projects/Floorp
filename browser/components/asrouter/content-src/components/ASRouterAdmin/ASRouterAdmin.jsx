@@ -15,18 +15,6 @@ const Row = props => (
   </tr>
 );
 
-// Convert a UTF-8 string to a string in which only one byte of each
-// 16-bit unit is occupied. This is necessary to comply with `btoa` API constraints.
-function toBinary(string) {
-  const codeUnits = new Uint16Array(string.length);
-  for (let i = 0; i < codeUnits.length; i++) {
-    codeUnits[i] = string.charCodeAt(i);
-  }
-  return btoa(
-    String.fromCharCode(...Array.from(new Uint8Array(codeUnits.buffer)))
-  );
-}
-
 function relativeTime(timestamp) {
   if (!timestamp) {
     return "";
@@ -543,9 +531,7 @@ export class ASRouterAdminInner extends React.PureComponent {
           {aboutMessagePreviewSupported ? (
             <CopyButton
               transformer={text =>
-                `about:messagepreview?json=${encodeURIComponent(
-                  toBinary(text)
-                )}`
+                `about:messagepreview?json=${encodeURIComponent(btoa(text))}`
               }
               label="Share"
               copiedLabel="Copied!"

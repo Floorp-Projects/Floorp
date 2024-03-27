@@ -985,16 +985,6 @@ function _extends() { _extends = Object.assign ? Object.assign.bind() : function
 const Row = props => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement("tr", _extends({
   className: "message-item"
 }, props), props.children);
-
-// Convert a UTF-8 string to a string in which only one byte of each
-// 16-bit unit is occupied. This is necessary to comply with `btoa` API constraints.
-function toBinary(string) {
-  const codeUnits = new Uint16Array(string.length);
-  for (let i = 0; i < codeUnits.length; i++) {
-    codeUnits[i] = string.charCodeAt(i);
-  }
-  return btoa(String.fromCharCode(...Array.from(new Uint8Array(codeUnits.buffer))));
-}
 function relativeTime(timestamp) {
   if (!timestamp) {
     return "";
@@ -1437,7 +1427,7 @@ class ASRouterAdminInner extends (react__WEBPACK_IMPORTED_MODULE_1___default().P
       className: "button modify",
       onClick: () => this.modifyJson(msg)
     }, "Modify"), aboutMessagePreviewSupported ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default().createElement(_CopyButton__WEBPACK_IMPORTED_MODULE_4__.CopyButton, {
-      transformer: text => `about:messagepreview?json=${encodeURIComponent(toBinary(text))}`,
+      transformer: text => `about:messagepreview?json=${encodeURIComponent(btoa(text))}`,
       label: "Share",
       copiedLabel: "Copied!",
       inputSelector: `#${msg.id}-textarea`,
