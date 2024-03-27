@@ -21,6 +21,7 @@ import java.util.Locale
  * @param onClick Invoked when the user clicks on the button.
  * @param modifier [Modifier] Used to shape and position the underlying [androidx.compose.material.TextButton].
  * @param textColor [Color] to apply to the button text.
+ * @param upperCaseText If the button text should be in uppercase letters.
  */
 @Composable
 fun TextButton(
@@ -28,13 +29,18 @@ fun TextButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     textColor: Color = FirefoxTheme.colors.textAccent,
+    upperCaseText: Boolean = true,
 ) {
     androidx.compose.material.TextButton(
         onClick = onClick,
         modifier = modifier,
     ) {
         Text(
-            text = text.uppercase(Locale.getDefault()),
+            text = if (upperCaseText) {
+                text.uppercase(Locale.getDefault())
+            } else {
+                text
+            },
             color = textColor,
             style = FirefoxTheme.typography.button,
             maxLines = 1,
