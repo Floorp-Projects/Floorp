@@ -132,6 +132,11 @@ class ClipboardGetCallbackForRead final : public ClipboardGetCallback {
     }
 
     RefPtr<Promise> p(std::move(mPromise));
+    if (entries.IsEmpty()) {
+      p->MaybeResolve(nsTArray<RefPtr<ClipboardItem>>{});
+      return NS_OK;
+    }
+
     // We currently only support one clipboard item.
     p->MaybeResolve(
         AutoTArray<RefPtr<ClipboardItem>, 1>{MakeRefPtr<ClipboardItem>(

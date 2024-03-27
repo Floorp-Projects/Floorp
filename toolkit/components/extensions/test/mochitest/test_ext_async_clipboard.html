@@ -354,11 +354,11 @@ add_task(async function test_contentscript_clipboard_nocontents_readtext() {
   await extension.unload();
 });
 
-// Test that performing read(...) when the clipboard is empty returns an empty ClipboardItem
+// Test that performing read(...) when the clipboard is empty returns no ClipboardItem
 add_task(async function test_contentscript_clipboard_nocontents_read() {
   function contentScript() {
     clipboardRead().then(function(items) {
-      if (items[0].types.length) {
+      if (items.length) {
         browser.test.fail("Read read the wrong thing from clipboard, " +
           "ClipboardItem has this many entries: " + items[0].types.length);
       } else {
