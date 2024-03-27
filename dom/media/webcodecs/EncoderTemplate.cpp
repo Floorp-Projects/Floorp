@@ -127,7 +127,9 @@ void EncoderTemplate<EncoderType>::Configure(const ConfigType& aConfig,
   RefPtr<ConfigTypeInternal> config =
       EncoderType::CreateConfigInternal(aConfig);
   if (!config) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);  // Invalid description data.
+    DebugOnly<Result<Ok, nsresult>> r =
+        CloseInternal(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    MOZ_ASSERT(r.value.isOk());
     return;
   }
 
