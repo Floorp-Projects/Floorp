@@ -1567,18 +1567,12 @@ pub enum Appearance {
     TabScrollArrowBack,
     #[parse(condition = "ParserContext::chrome_rules_enabled")]
     TabScrollArrowForward,
-    /// A toolbar in an application window.
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
-    Toolbar,
     /// A single toolbar button (with no associated dropdown).
     #[parse(condition = "ParserContext::chrome_rules_enabled")]
     Toolbarbutton,
     /// The dropdown portion of a toolbar button
     #[parse(condition = "ParserContext::chrome_rules_enabled")]
     ToolbarbuttonDropdown,
-    /// The toolbox that contains the toolbars.
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
-    Toolbox,
     /// A tooltip.
     #[parse(condition = "ParserContext::chrome_rules_enabled")]
     Tooltip,
