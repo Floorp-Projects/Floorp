@@ -227,7 +227,7 @@ impl ReportCrashUI {
                 child_window(details_window)
             {
                 VBox margin(10) spacing(10) halign(Alignment::Fill) valign(Alignment::Fill) {
-                    Label text(config.string("crashreporter-crash-message")),
+                    Label text(config.string("crashreporter-crashed-and-restore")),
                     Label text(config.string("crashreporter-plea")),
                     Checkbox["send"] checked(send_report) label(config.string("crashreporter-send-report"))
                         enabled(&input_enabled),

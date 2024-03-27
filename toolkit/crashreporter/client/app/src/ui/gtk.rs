@@ -288,7 +288,26 @@ unsafe extern "C" fn render_application(app_ptr: *mut gtk::GtkApplication, app: 
     }
     for window in &app.windows {
         let window_ptr = render_window(&window.element_type);
-        apply_style(window_ptr, &window.style);
+        let style = &window.style;
+
+        // Set size before applying style (since the style will set the visibility and show the
+        // window). Note that we take the size request as an initial size here.
+        //
+        // `gtk_window_set_default_size` doesn't work; it resizes to the size request of the inner
+        // labels (instead of wrapping them) since it doesn't know how small they should be (that's
+        // dictated by the window size!).
+        unsafe {
+            gtk::gtk_window_resize(
+                window_ptr as _,
+                style
+                    .horizontal_size_request
+                    .map(|v| v as i32)
+                    .unwrap_or(-1),
+                style.vertical_size_request.map(|v| v as i32).unwrap_or(-1),
+            );
+        }
+
+        apply_style(window_ptr, style);
         unsafe {
             gtk::gtk_application_add_window(app_ptr, window_ptr as *mut _);
         }
@@ -361,6 +380,9 @@ fn render_element_type(element_type: &model::ElementType) -> Option<*mut gtk::Gt
                 let text = CString::new(text.clone()).ok()?;
                 let ptr = unsafe { gtk::gtk_label_new(text.as_ptr()) };
                 text.drop_with_widget(ptr);
+                unsafe { gtk::gtk_label_set_line_wrap(ptr as _, true.into()) };
+                // This is gtk_label_set_{xalign,yalign} in gtk 3.16+
+                unsafe { gtk::gtk_misc_set_alignment(ptr as _, 0.0, 0.5) };
                 ptr
             }
             Property::Binding(b) => {
@@ -368,6 +390,9 @@ fn render_element_type(element_type: &model::ElementType) -> Option<*mut gtk::Gt
                 let ptr = unsafe { gtk::gtk_label_new(label_text.borrow().as_ptr()) };
                 let lt = label_text.clone();
                 label_text.drop_with_widget(ptr);
+                unsafe { gtk::gtk_label_set_line_wrap(ptr as _, true.into()) };
+                // This is gtk_label_set_{xalign,yalign} in gtk 3.16+
+                unsafe { gtk::gtk_misc_set_alignment(ptr as _, 0.0, 0.5) };
                 b.on_change(move |t| {
                     let Some(cstr) = CString::new(t.clone()).ok() else {
                         return;
@@ -388,6 +413,19 @@ fn render_element_type(element_type: &model::ElementType) -> Option<*mut gtk::Gt
                     unsafe {
                         gtk::gtk_container_add(box_ptr as *mut gtk::GtkContainer, widget);
                     }
+                    // Special case horizontal alignment to pack into the end if appropriate
+                    if item.style.horizontal_alignment == Alignment::End {
+                        unsafe {
+                            gtk::gtk_box_set_child_packing(
+                                box_ptr as _,
+                                widget,
+                                false.into(),
+                                false.into(),
+                                0,
+                                gtk::GtkPackType_GTK_PACK_END,
+                            );
+                        }
+                    }
                 }
             }
             box_ptr
@@ -400,6 +438,19 @@ fn render_element_type(element_type: &model::ElementType) -> Option<*mut gtk::Gt
                 if let Some(widget) = render(item) {
                     unsafe {
                         gtk::gtk_container_add(box_ptr as *mut gtk::GtkContainer, widget);
+                    }
+                    // Special case vertical alignment to pack into the end if appropriate
+                    if item.style.vertical_alignment == Alignment::End {
+                        unsafe {
+                            gtk::gtk_box_set_child_packing(
+                                box_ptr as _,
+                                widget,
+                                false.into(),
+                                false.into(),
+                                0,
+                                gtk::GtkPackType_GTK_PACK_END,
+                            );
+                        }
                     }
                 }
             }
