@@ -11,7 +11,6 @@ import io
 import json
 import logging
 import os
-from copy import deepcopy
 
 import mozpack.path as mozpath
 from mach.mixin.logging import LoggingMixin
@@ -49,6 +48,9 @@ class WebIDLCodegenManagerState(dict):
     State is currently just an extended dict. The internal implementation of
     state should be considered a black box to everyone except
     WebIDLCodegenManager. But we'll still document it.
+
+    Any set stored in this dict should be copied and sorted in the `dump()`
+    method.
 
     Fields:
 
@@ -117,12 +119,15 @@ class WebIDLCodegenManagerState(dict):
 
     def dump(self, fh):
         """Dump serialized state to a file handle."""
-        normalized = deepcopy(self)
+        normalized = self.copy()
 
+        webidls = normalized["webidls"] = self["webidls"].copy()
         for k, v in self["webidls"].items():
+            webidls_k = webidls[k] = v.copy()
+
             # Convert sets to lists because JSON doesn't support sets.
-            normalized["webidls"][k]["outputs"] = sorted(v["outputs"])
-            normalized["webidls"][k]["inputs"] = sorted(v["inputs"])
+            webidls_k["outputs"] = sorted(v["outputs"])
+            webidls_k["inputs"] = sorted(v["inputs"])
 
         normalized["dictionaries_convertible_to_js"] = sorted(
             self["dictionaries_convertible_to_js"]
