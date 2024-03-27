@@ -42,7 +42,6 @@ nsHtml5TreeBuilder::nsHtml5TreeBuilder(nsHtml5OplessBuilder* aBuilder)
       quirks(false),
       forceNoQuirks(false),
       allowDeclarativeShadowRoots(false),
-      keepBuffer(false),
       mBuilder(aBuilder),
       mViewSource(nullptr),
       mOpSink(nullptr),

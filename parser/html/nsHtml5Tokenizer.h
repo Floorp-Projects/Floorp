@@ -308,7 +308,6 @@ class nsHtml5Tokenizer {
   nsHtml5HtmlAttributes* attributes;
   bool newAttributesEachTime;
   bool shouldSuspend;
-  bool keepBuffer;
 
  protected:
   bool confident;
@@ -324,8 +323,6 @@ class nsHtml5Tokenizer {
   void setInterner(nsHtml5AtomTable* interner);
   void initLocation(nsHtml5String newPublicId, nsHtml5String newSystemId);
   bool isViewingXmlSource();
-  void setKeepBuffer(bool keepBuffer);
-  bool dropBufferIfLongerThan(int32_t length);
   void setState(int32_t specialTokenizerState);
   void setStateAndEndTagExpectation(int32_t specialTokenizerState,
                                     nsHtml5ElementName* endTagExpectation);

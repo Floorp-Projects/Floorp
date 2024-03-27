@@ -436,8 +436,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
 
     private boolean allowDeclarativeShadowRoots = false;
 
-    private boolean keepBuffer = false;
-
     // [NOCPP[
 
     private boolean reportingDoctype = true;
@@ -579,18 +577,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
 
     // ]NOCPP]
 
-    public void setKeepBuffer(boolean keepBuffer) {
-        this.keepBuffer = keepBuffer;
-    }
-
-    public boolean dropBufferIfLongerThan(int length) {
-        if (charBuffer.length > length) {
-            charBuffer = null;
-            return true;
-        }
-        return false;
-    }
-
     @SuppressWarnings("unchecked") public final void startTokenization(Tokenizer self) throws SAXException {
         tokenizer = self;
         stackNodes = new StackNode[64];
@@ -612,9 +598,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         // ]NOCPP]
         start(fragment);
         charBufferLen = 0;
-        if (!keepBuffer) {
-            charBuffer = null;
-        }
+        charBuffer = null;
         framesetOk = true;
         if (fragment) {
             T elt;
@@ -1467,10 +1451,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         // [NOCPP[
         idLocations.clear();
         // ]NOCPP]
-
-        if (!keepBuffer) {
-            charBuffer = null;
-        }
+        charBuffer = null;
         end();
     }
 
