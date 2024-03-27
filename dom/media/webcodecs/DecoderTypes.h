@@ -120,6 +120,25 @@ class AudioDecoderConfigInternal {
       const AudioDecoderConfig& aConfig);
   ~AudioDecoderConfigInternal() = default;
 
+  bool Equals(const AudioDecoderConfigInternal& aOther) const {
+    if (mDescription.isSome() != aOther.mDescription.isSome()) {
+        return false;
+    }
+    if (mDescription.isSome() && aOther.mDescription.isSome()) {
+        auto lhs = mDescription.value();
+        auto rhs = aOther.mDescription.value();
+        if (lhs->Length() != rhs->Length()) {
+            return false;
+        }
+        if (!ArrayEqual(lhs->Elements(), rhs->Elements(), lhs->Length())) {
+            return false;
+        }
+    }
+    return mCodec.Equals(aOther.mCodec) &&
+           mSampleRate == aOther.mSampleRate &&
+           mNumberOfChannels == aOther.mNumberOfChannels &&
+           mOptimizeForLatency == aOther.mOptimizeForLatency;
+  }
   nsString mCodec;
   uint32_t mSampleRate;
   uint32_t mNumberOfChannels;
