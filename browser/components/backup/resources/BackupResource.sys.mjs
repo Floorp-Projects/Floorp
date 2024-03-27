@@ -115,4 +115,27 @@ export class BackupResource {
   async measure(profilePath) {
     throw new Error("BackupResource::measure needs to be overridden.");
   }
+
+  /**
+   * Perform a safe copy of the resource(s) and write them into the backup
+   * database. The Promise should resolve with an object that can be serialized
+   * to JSON, as it will be written to the manifest file. This same object will
+   * be deserialized and passed to restore() when restoring the backup.
+   *
+   * @param {string} stagingPath
+   *   The path to the staging folder where copies of the datastores for this
+   *   BackupResource should be written to.
+   * @param {string} [profilePath=null]
+   *   This is null if the backup is being run on the currently running user
+   *   profile. If, however, the backup is being run on a different user profile
+   *   (for example, it's being run from a BackgroundTask on a user profile that
+   *   just shut down, or during test), then this is a string set to that user
+   *   profile path.
+   *
+   * @returns {Promise<object>}
+   */
+  // eslint-disable-next-line no-unused-vars
+  async backup(stagingPath, profilePath = null) {
+    throw new Error("BackupResource::backup must be overridden");
+  }
 }
