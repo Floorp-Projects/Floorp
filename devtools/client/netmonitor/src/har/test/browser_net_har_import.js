@@ -65,7 +65,7 @@ add_task(async () => {
   );
   is(
     har2.log.entries[1]._securityState,
-    "insecure",
+    "secure",
     "There must be expected security state"
   );
   is(har2.log.entries[2].response.status, 304, "There must be expected status");
