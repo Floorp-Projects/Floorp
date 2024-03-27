@@ -62,6 +62,8 @@ const wchar_t* nsUXThemeData::GetClassName(nsUXThemeClass cls) {
       return L"Button";
     case eUXEdit:
       return L"Edit";
+    case eUXRebar:
+      return L"Rebar";
     case eUXToolbar:
       return L"Toolbar";
     case eUXProgress:

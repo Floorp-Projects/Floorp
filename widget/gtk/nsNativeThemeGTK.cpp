@@ -882,6 +882,11 @@ LayoutDeviceIntMargin nsNativeThemeGTK::GetWidgetBorder(
   CSSIntMargin result;
   GtkTextDirection direction = GetTextDirection(aFrame);
   switch (aAppearance) {
+    case StyleAppearance::Toolbox:
+      // gtk has no toolbox equivalent.  So, although we map toolbox to
+      // gtk's 'toolbar' for purposes of painting the widget background,
+      // we don't use the toolbar border for toolbox.
+      break;
     case StyleAppearance::Dualbutton:
       // TOOLBAR_DUAL_BUTTON is an interesting case.  We want a border to draw
       // around the entire button + dropdown, and also an inner border if you're
@@ -1162,7 +1167,9 @@ nsNativeThemeGTK::WidgetStateChanged(nsIFrame* aFrame,
   }
 
   // Some widget types just never change state.
-  if (aAppearance == StyleAppearance::Progresschunk ||
+  if (aAppearance == StyleAppearance::Toolbox ||
+      aAppearance == StyleAppearance::Toolbar ||
+      aAppearance == StyleAppearance::Progresschunk ||
       aAppearance == StyleAppearance::ProgressBar ||
       aAppearance == StyleAppearance::Tooltip ||
       aAppearance == StyleAppearance::MozWindowDecorations) {
@@ -1235,6 +1242,7 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
     case StyleAppearance::Button:
     case StyleAppearance::Radio:
     case StyleAppearance::Checkbox:
+    case StyleAppearance::Toolbox:  // N/A
     case StyleAppearance::Toolbarbutton:
     case StyleAppearance::Dualbutton:  // so we can override the border with 0
     case StyleAppearance::ToolbarbuttonDropdown:
