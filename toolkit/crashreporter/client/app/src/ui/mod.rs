@@ -80,7 +80,7 @@ pub fn error_dialog<M: std::fmt::Display>(config: &Config, message: M) {
     };
 
     let window = ui! {
-        Window title(string_or("crashreporter-title", "Crash Reporter")) hsize(600) vsize(400)
+        Window title(string_or("crashreporter-branded-title", "Firefox Crash Reporter")) hsize(600) vsize(400)
             close_when(&close) halign(Alignment::Fill) valign(Alignment::Fill) {
             VBox margin(10) spacing(10) halign(Alignment::Fill) valign(Alignment::Fill) {
                 Label text(string_or(
@@ -222,7 +222,7 @@ impl ReportCrashUI {
         };
 
         let main_window = ui! {
-            Window title(config.string("crashreporter-title")) hsize(600) vsize(400)
+            Window title(config.string("crashreporter-branded-title")) hsize(600) vsize(400)
                 halign(Alignment::Fill) valign(Alignment::Fill) close_when(close_window)
                 child_window(details_window)
             {

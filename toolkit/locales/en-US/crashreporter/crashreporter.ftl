@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-crashreporter-title = Crash Reporter
+crashreporter-branded-title = { -brand-short-name } Crash Reporter
 
 crashreporter-crashed-and-restore = { -brand-short-name } had a problem and crashed. We’ll try to restore your tabs and windows when it restarts.
 crashreporter-plea = To help us diagnose and fix the problem, you can send us a crash report.
