@@ -1805,7 +1805,8 @@ Maybe<uint64_t> nsFocusManager::SetFocusInner(Element* aNewContent,
     // focus, update the node in the window, and  raise the window if desired.
     if (allowFrameSwitch) {
       AdjustWindowFocus(newBrowsingContext, true, IsWindowVisible(newWindow),
-                        actionId);
+                        actionId, false /* aShouldClearAncestorFocus */,
+                        nullptr /* aAncestorBrowsingContextToFocus */);
     }
 
     // set the focus node and method as needed
@@ -1978,7 +1979,9 @@ mozilla::dom::BrowsingContext* nsFocusManager::GetCommonAncestor(
 
 bool nsFocusManager::AdjustInProcessWindowFocus(
     BrowsingContext* aBrowsingContext, bool aCheckPermission, bool aIsVisible,
-    uint64_t aActionId) {
+    uint64_t aActionId, bool aShouldClearAncestorFocus,
+    BrowsingContext* aAncestorBrowsingContextToFocus) {
+  MOZ_ASSERT_IF(aAncestorBrowsingContextToFocus, aShouldClearAncestorFocus);
   if (ActionIdComparableAndLower(aActionId,
                                  mActionIdForFocusedBrowsingContextInContent)) {
     LOGFOCUS(
@@ -2029,6 +2032,17 @@ bool nsFocusManager::AdjustInProcessWindowFocus(
       break;
     }
 
+    if (aShouldClearAncestorFocus) {
+      // This is the BrowsingContext that receives the focus, no need to clear
+      // its focused element and the rest of the ancestors.
+      if (window->GetBrowsingContext() == aAncestorBrowsingContextToFocus) {
+        break;
+      }
+
+      window->SetFocusedElement(nullptr);
+      continue;
+    }
+
     if (frameElement != window->GetFocusedElement()) {
       window->SetFocusedElement(frameElement);
 
@@ -2044,18 +2058,22 @@ bool nsFocusManager::AdjustInProcessWindowFocus(
   return needToNotifyOtherProcess;
 }
 
-void nsFocusManager::AdjustWindowFocus(BrowsingContext* aBrowsingContext,
-                                       bool aCheckPermission, bool aIsVisible,
-                                       uint64_t aActionId) {
+void nsFocusManager::AdjustWindowFocus(
+    BrowsingContext* aBrowsingContext, bool aCheckPermission, bool aIsVisible,
+    uint64_t aActionId, bool aShouldClearAncestorFocus,
+    BrowsingContext* aAncestorBrowsingContextToFocus) {
+  MOZ_ASSERT_IF(aAncestorBrowsingContextToFocus, aShouldClearAncestorFocus);
   if (AdjustInProcessWindowFocus(aBrowsingContext, aCheckPermission, aIsVisible,
-                                 aActionId)) {
+                                 aActionId, aShouldClearAncestorFocus,
+                                 aAncestorBrowsingContextToFocus)) {
     // Some ancestors of aBrowsingContext isn't in this process, so notify other
     // processes to adjust their focused element.
     mozilla::dom::ContentChild* contentChild =
         mozilla::dom::ContentChild::GetSingleton();
     MOZ_ASSERT(contentChild);
-    contentChild->SendAdjustWindowFocus(aBrowsingContext, aIsVisible,
-                                        aActionId);
+    contentChild->SendAdjustWindowFocus(aBrowsingContext, aIsVisible, aActionId,
+                                        aShouldClearAncestorFocus,
+                                        aAncestorBrowsingContextToFocus);
   }
 }
 
@@ -2426,6 +2444,22 @@ bool nsFocusManager::BlurImpl(BrowsingContext* aBrowsingContextToClear,
       if (ancestorWindowToFocus) {
         ancestorWindowToFocus->SetFocusedElement(nullptr, 0, true);
       }
+
+      // When the focus of aBrowsingContextToClear is cleared, it should
+      // also clear its ancestors's focus because ancestors should no longer
+      // be considered aBrowsingContextToClear is focused.
+      //
+      // We don't need to do this when aBrowsingContextToClear and
+      // aAncestorBrowsingContextToFocus is equal because ancestors don't
+      // care about this.
+      if (aBrowsingContextToClear &&
+          aBrowsingContextToClear != aAncestorBrowsingContextToFocus) {
+        AdjustWindowFocus(
+            aBrowsingContextToClear, false,
+            IsWindowVisible(aBrowsingContextToClear->GetDOMWindow()), aActionId,
+            true /* aShouldClearAncestorFocus */,
+            aAncestorBrowsingContextToFocus);
+      }
     }
 
     SetFocusedWindowInternal(nullptr, aActionId);
@@ -2572,7 +2606,9 @@ void nsFocusManager::Focus(
     // focus can be traversed from the top level down to the newly focused
     // window.
     RefPtr<BrowsingContext> bc = aWindow->GetBrowsingContext();
-    AdjustWindowFocus(bc, false, IsWindowVisible(aWindow), aActionId);
+    AdjustWindowFocus(bc, false, IsWindowVisible(aWindow), aActionId,
+                      false /* aShouldClearAncestorFocus */,
+                      nullptr /* aAncestorBrowsingContextToFocus */);
   }
 
   // indicate that the window has taken focus.
