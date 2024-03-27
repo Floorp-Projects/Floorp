@@ -176,8 +176,9 @@ JumpListBuilder::JumpListBuilder(const nsAString& aAppUserModelId,
   // the app, as it is set in the package manifest instead.
   if (!mozilla::widget::WinUtils::HasPackageIdentity()) {
     mIOThread->Dispatch(
-        NewRunnableMethod<nsString>(
-            "SetAppID", this, &JumpListBuilder::DoSetAppID, aAppUserModelId),
+        NewRunnableMethod<nsString>("SetAppID", this,
+                                    &JumpListBuilder::DoSetAppIDIfAvailable,
+                                    aAppUserModelId),
         NS_DISPATCH_NORMAL);
   }
 }
@@ -203,10 +204,13 @@ void JumpListBuilder::DoShutdownBackend() {
   mJumpListBackend = nullptr;
 }
 
-void JumpListBuilder::DoSetAppID(nsString aAppUserModelID) {
+void JumpListBuilder::DoSetAppIDIfAvailable(nsString aAppUserModelID) {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(mJumpListBackend);
-  mJumpListBackend->SetAppID(aAppUserModelID.get());
+
+  if (mJumpListBackend->IsAvailable()) {
+    mJumpListBackend->SetAppID(aAppUserModelID.get());
+  }
 }
 
 NS_IMETHODIMP
