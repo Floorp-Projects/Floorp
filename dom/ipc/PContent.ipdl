@@ -1874,8 +1874,18 @@ both:
     async DiscardBrowsingContext(MaybeDiscardedBrowsingContext aContext, bool aDoDiscard)
             returns (uint64_t unused);
 
+    /**
+     * aContext is the one that's taking the affect. Either the one that
+     * receives the focus, or the one that loses the focus.
+     *
+     * aAncestorBrowsingContextToFocus can only be non-null when
+     * aShouldClearAncestorFocus is true. This is the browsing context
+     * that receives the focus when aContext loses the focus.
+     */
     async AdjustWindowFocus(MaybeDiscardedBrowsingContext aContext,
-                            bool aIsVisible, uint64_t aActionId);
+                            bool aIsVisible, uint64_t aActionId,
+                            bool aShouldClearAncestorFocus,
+                            MaybeDiscardedBrowsingContext aAncestorBrowsingContextToFocus);
     async WindowClose(MaybeDiscardedBrowsingContext aContext,
                       bool aTrustedCaller);
     async WindowFocus(MaybeDiscardedBrowsingContext aContext,
