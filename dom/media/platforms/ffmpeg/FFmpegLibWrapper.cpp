@@ -200,6 +200,7 @@ FFmpegLibWrapper::LinkResult FFmpegLibWrapper::Link() {
   AV_FUNC(av_image_get_buffer_size, AV_FUNC_AVUTIL_ALL)
   AV_FUNC_OPTION(av_channel_layout_default, AV_FUNC_AVUTIL_60)
   AV_FUNC_OPTION(av_channel_layout_from_mask, AV_FUNC_AVUTIL_60)
+  AV_FUNC_OPTION(av_channel_layout_copy, AV_FUNC_AVUTIL_60)
   AV_FUNC_OPTION(av_buffer_get_opaque,
                  (AV_FUNC_AVUTIL_56 | AV_FUNC_AVUTIL_57 | AV_FUNC_AVUTIL_58 |
                   AV_FUNC_AVUTIL_59 | AV_FUNC_AVUTIL_60))
