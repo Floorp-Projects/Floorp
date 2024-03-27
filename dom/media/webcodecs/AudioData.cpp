@@ -627,6 +627,10 @@ void AudioData::Close() {
   mAudioSampleFormat = Nothing();
 }
 
+bool AudioData::IsClosed() const {
+  return !mResource;
+}
+
 // https://w3c.github.io/webcodecs/#ref-for-deserialization-steps%E2%91%A1
 /* static */
 JSObject* AudioData::ReadStructuredClone(JSContext* aCx,
