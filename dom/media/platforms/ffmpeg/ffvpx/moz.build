@@ -27,6 +27,7 @@ LOCAL_INCLUDES += [
     "..",
     "../ffmpeg60/include",
     "/media/mozva",
+    "/toolkit/xre",
 ]
 
 CXXFLAGS += ["-Wno-deprecated-declarations"]
