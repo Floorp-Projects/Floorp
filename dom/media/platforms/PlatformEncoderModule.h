@@ -35,6 +35,7 @@ enum class CodecType {
   _EndVideo_,
   _BeginAudio_ = _EndVideo_,
   Opus,
+  Vorbis,
   G722,
   _EndAudio_,
   Unknown,
