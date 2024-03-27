@@ -80,9 +80,8 @@ static bool SetConstantBitrate(VTCompressionSessionRef& aSession,
 }
 
 static bool SetBitrateAndMode(VTCompressionSessionRef& aSession,
-                              MediaDataEncoder::BitrateMode aBitrateMode,
-                              uint32_t aBitsPerSec) {
-  if (aBitrateMode == MediaDataEncoder::BitrateMode::Variable) {
+                              BitrateMode aBitrateMode, uint32_t aBitsPerSec) {
+  if (aBitrateMode == BitrateMode::Variable) {
     return SetAverageBitrate(aSession, aBitsPerSec);
   }
   return SetConstantBitrate(aSession, aBitsPerSec);
@@ -177,9 +176,8 @@ RefPtr<MediaDataEncoder::InitPromise> AppleVTEncoder::Init() {
   if (mConfig.mBitrate) {
     if (!SetBitrateAndMode(mSession, mConfig.mBitrateMode, mConfig.mBitrate)) {
       LOGE("failed to set bitrate to %d and mode to %s", mConfig.mBitrate,
-           mConfig.mBitrateMode == MediaDataEncoder::BitrateMode::Constant
-               ? "constant"
-               : "variable");
+           mConfig.mBitrateMode == BitrateMode::Constant ? "constant"
+                                                         : "variable");
       return InitPromise::CreateAndReject(
           MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                       "fail to configurate bitrate"),
@@ -231,22 +229,22 @@ RefPtr<MediaDataEncoder::InitPromise> AppleVTEncoder::Init() {
   return InitPromise::CreateAndResolve(true, __func__);
 }
 
-static Maybe<OSType> MapPixelFormat(MediaDataEncoder::PixelFormat aFormat) {
+static Maybe<OSType> MapPixelFormat(dom::ImageBitmapFormat aFormat) {
   switch (aFormat) {
-    case MediaDataEncoder::PixelFormat::RGBA32:
-    case MediaDataEncoder::PixelFormat::BGRA32:
+    case dom::ImageBitmapFormat::RGBA32:
+    case dom::ImageBitmapFormat::BGRA32:
       return Some(kCVPixelFormatType_32BGRA);
-    case MediaDataEncoder::PixelFormat::RGB24:
+    case dom::ImageBitmapFormat::RGB24:
       return Some(kCVPixelFormatType_24RGB);
-    case MediaDataEncoder::PixelFormat::BGR24:
+    case dom::ImageBitmapFormat::BGR24:
       return Some(kCVPixelFormatType_24BGR);
-    case MediaDataEncoder::PixelFormat::GRAY8:
+    case dom::ImageBitmapFormat::GRAY8:
       return Some(kCVPixelFormatType_OneComponent8);
-    case MediaDataEncoder::PixelFormat::YUV444P:
+    case dom::ImageBitmapFormat::YUV444P:
       return Some(kCVPixelFormatType_444YpCbCr8);
-    case MediaDataEncoder::PixelFormat::YUV420P:
+    case dom::ImageBitmapFormat::YUV420P:
       return Some(kCVPixelFormatType_420YpCbCr8PlanarFullRange);
-    case MediaDataEncoder::PixelFormat::YUV420SP_NV12:
+    case dom::ImageBitmapFormat::YUV420SP_NV12:
       return Some(kCVPixelFormatType_420YpCbCr8BiPlanarFullRange);
     default:
       return Nothing();
@@ -458,11 +456,10 @@ void AppleVTEncoder::OutputFrame(CMSampleBufferRef aBuffer) {
   LOGD("::OutputFrame");
   RefPtr<MediaRawData> output(new MediaRawData());
 
-
   bool forceAvcc = false;
   if (mConfig.mCodecSpecific->is<H264Specific>()) {
     forceAvcc = mConfig.mCodecSpecific->as<H264Specific>().mFormat ==
-      H264BitStreamFormat::AVC;
+                H264BitStreamFormat::AVC;
   }
   bool asAnnexB = mConfig.mUsage == Usage::Realtime && !forceAvcc;
   bool succeeded = WriteExtraData(output, aBuffer, asAnnexB) &&
@@ -600,18 +597,18 @@ AppleVTEncoder::ProcessReconfigure(
   return P::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
 }
 
-static size_t NumberOfPlanes(MediaDataEncoder::PixelFormat aPixelFormat) {
+static size_t NumberOfPlanes(dom::ImageBitmapFormat aPixelFormat) {
   switch (aPixelFormat) {
-    case MediaDataEncoder::PixelFormat::RGBA32:
-    case MediaDataEncoder::PixelFormat::BGRA32:
-    case MediaDataEncoder::PixelFormat::RGB24:
-    case MediaDataEncoder::PixelFormat::BGR24:
-    case MediaDataEncoder::PixelFormat::GRAY8:
+    case dom::ImageBitmapFormat::RGBA32:
+    case dom::ImageBitmapFormat::BGRA32:
+    case dom::ImageBitmapFormat::RGB24:
+    case dom::ImageBitmapFormat::BGR24:
+    case dom::ImageBitmapFormat::GRAY8:
       return 1;
-    case MediaDataEncoder::PixelFormat::YUV444P:
-    case MediaDataEncoder::PixelFormat::YUV420P:
+    case dom::ImageBitmapFormat::YUV444P:
+    case dom::ImageBitmapFormat::YUV420P:
       return 3;
-    case MediaDataEncoder::PixelFormat::YUV420SP_NV12:
+    case dom::ImageBitmapFormat::YUV420SP_NV12:
       return 2;
     default:
       LOGE("Unsupported input pixel format");

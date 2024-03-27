@@ -155,9 +155,9 @@ struct VPXSVCSetting {
   nsTArray<uint32_t> mTargetBitrates;
 };
 
-static Maybe<VPXSVCSetting> GetVPXSVCSetting(
-    const MediaDataEncoder::ScalabilityMode& aMode, uint32_t aBitPerSec) {
-  if (aMode == MediaDataEncoder::ScalabilityMode::None) {
+static Maybe<VPXSVCSetting> GetVPXSVCSetting(const ScalabilityMode& aMode,
+                                             uint32_t aBitPerSec) {
+  if (aMode == ScalabilityMode::None) {
     return Nothing();
   }
 
@@ -172,7 +172,7 @@ static Maybe<VPXSVCSetting> GetVPXSVCSetting(
   nsTArray<uint8_t> layerIds;
   nsTArray<uint8_t> rateDecimators;
   nsTArray<uint32_t> bitrates;
-  if (aMode == MediaDataEncoder::ScalabilityMode::L1T2) {
+  if (aMode == ScalabilityMode::L1T2) {
     // Two temporal layers. 0-1...
     //
     // Frame pattern:
@@ -197,7 +197,7 @@ static Maybe<VPXSVCSetting> GetVPXSVCSetting(
     bitrates.AppendElement(kbps * 3 / 5);
     bitrates.AppendElement(kbps);
   } else {
-    MOZ_ASSERT(aMode == MediaDataEncoder::ScalabilityMode::L1T3);
+    MOZ_ASSERT(aMode == ScalabilityMode::L1T3);
     // Three temporal layers. 0-2-1-2...
     //
     // Frame pattern:
@@ -293,7 +293,7 @@ nsresult FFmpegVideoEncoder<LIBAV_VER>::InitSpecific() {
 #endif
   mCodecContext->gop_size = static_cast<int>(mConfig.mKeyframeInterval);
 
-  if (mConfig.mUsage == MediaDataEncoder::Usage::Realtime) {
+  if (mConfig.mUsage == Usage::Realtime) {
     mLib->av_opt_set(mCodecContext->priv_data, "deadline", "realtime", 0);
     // Explicitly ask encoder do not keep in flight at any one time for
     // lookahead purposes.

@@ -206,10 +206,10 @@ nsString AudioEncoderConfigInternal::ToString() const {
 }
 
 EncoderConfig AudioEncoderConfigInternal::ToEncoderConfig() const {
-  MediaDataEncoder::BitrateMode bitrateMode =
+  const mozilla::BitrateMode bitrateMode =
       mBitrateMode == mozilla::dom::BitrateMode::Constant
-          ? MediaDataEncoder::BitrateMode::Constant
-          : MediaDataEncoder::BitrateMode::Variable;
+          ? mozilla::BitrateMode::Constant
+          : mozilla::BitrateMode::Variable;
 
   CodecType type = CodecType::Opus;
   Maybe<EncoderConfig::CodecSpecific> specific;

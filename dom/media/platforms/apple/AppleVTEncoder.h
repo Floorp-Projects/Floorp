@@ -24,9 +24,8 @@ class AppleVTEncoder final : public MediaDataEncoder {
                  const RefPtr<TaskQueue>& aTaskQueue)
       : mConfig(aConfig),
         mTaskQueue(aTaskQueue),
-        mHardwareNotAllowed(
-            aConfig.mHardwarePreference ==
-            MediaDataEncoder::HardwarePreference::RequireSoftware),
+        mHardwareNotAllowed(aConfig.mHardwarePreference ==
+                            HardwarePreference::RequireSoftware),
         mFramesCompleted(false),
         mError(NS_OK),
         mSession(nullptr) {
