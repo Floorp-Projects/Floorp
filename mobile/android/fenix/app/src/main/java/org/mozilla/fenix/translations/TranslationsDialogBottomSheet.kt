@@ -699,6 +699,7 @@ private fun TranslationsDialogActionButtons(
             text = negativeButtonText,
             modifier = Modifier,
             onClick = onNegativeButtonClicked,
+            upperCaseText = false,
         )
 
         Spacer(modifier = Modifier.width(10.dp))
