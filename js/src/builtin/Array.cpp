@@ -10,6 +10,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/SIMD.h"
 #include "mozilla/TextUtils.h"
 
@@ -23,6 +24,7 @@
 
 #include "ds/Sort.h"
 #include "jit/InlinableNatives.h"
+#include "jit/TrampolineNatives.h"
 #include "js/Class.h"
 #include "js/Conversions.h"
 #include "js/experimental/JitInfo.h"  // JSJitGetterOp, JSJitInfo
@@ -2223,6 +2225,524 @@ static bool ArrayNativeSortImpl(JSContext* cx, Handle<JSObject*> obj,
     }
   }
   return true;
+}
+
+void ArraySortData::init(JSObject* obj, JSObject* comparator, ValueVector&& vec,
+                         uint32_t length, uint32_t denseLen) {
+  MOZ_ASSERT(!vec.empty(), "must have items to sort");
+  MOZ_ASSERT(denseLen <= length);
+
+  obj_ = obj;
+  comparator_ = comparator;
+
+  this->length = length;
+  this->denseLen = denseLen;
+  this->vec = std::move(vec);
+
+  auto getComparatorKind = [](JSContext* cx, JSObject* comparator) {
+    if (!comparator->is<JSFunction>()) {
+      return ComparatorKind::Unoptimized;
+    }
+    JSFunction* fun = &comparator->as<JSFunction>();
+    if (!fun->hasJitEntry() || fun->isClassConstructor()) {
+      return ComparatorKind::Unoptimized;
+    }
+    if (fun->realm() == cx->realm() && fun->nargs() <= ComparatorActualArgs) {
+      return ComparatorKind::JSSameRealmNoRectifier;
+    }
+    return ComparatorKind::JS;
+  };
+  comparatorKind_ = getComparatorKind(cx(), comparator);
+}
+
+// This function handles sorting without a comparator function (or with a
+// trivial comparator function that we can pattern match) by calling
+// ArrayNativeSortImpl.
+//
+// If there's a non-trivial comparator function, it initializes the
+// ArraySortData struct for ArraySortData::sortWithComparator. This function
+// must be called next to perform the sorting.
+//
+// This is separate from ArraySortData::sortWithComparator because it lets the
+// compiler generate better code for ArraySortData::sortWithComparator.
+//
+// https://tc39.es/ecma262/#sec-array.prototype.sort
+// 23.1.3.30 Array.prototype.sort ( comparefn )
+static MOZ_ALWAYS_INLINE bool ArraySortPrologue(JSContext* cx,
+                                                Handle<Value> thisv,
+                                                Handle<Value> comparefn,
+                                                ArraySortData* d, bool* done) {
+  // Step 1.
+  if (MOZ_UNLIKELY(!comparefn.isUndefined() && !IsCallable(comparefn))) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_SORT_ARG);
+    return false;
+  }
+
+  // Step 2.
+  Rooted<JSObject*> obj(cx, ToObject(cx, thisv));
+  if (!obj) {
+    return false;
+  }
+
+  // Use a fast path if there's no comparator or if the comparator is a function
+  // that we can pattern match.
+  do {
+    ComparatorMatchResult comp = Match_None;
+    if (comparefn.isObject()) {
+      comp = MatchNumericComparator(cx, &comparefn.toObject());
+      if (comp == Match_Failure) {
+        return false;
+      }
+      if (comp == Match_None) {
+        // Pattern matching failed.
+        break;
+      }
+    }
+    if (!ArrayNativeSortImpl(cx, obj, comparefn, comp)) {
+      return false;
+    }
+    d->setReturnValue(obj);
+    *done = true;
+    return true;
+  } while (false);
+
+  // Step 3.
+  uint64_t length;
+  if (MOZ_UNLIKELY(!GetLengthPropertyInlined(cx, obj, &length))) {
+    return false;
+  }
+
+  // Arrays with less than two elements remain unchanged when sorted.
+  if (length <= 1) {
+    d->setReturnValue(obj);
+    *done = true;
+    return true;
+  }
+
+  // Ensure length * 2 (used below) doesn't overflow UINT32_MAX.
+  if (MOZ_UNLIKELY(length > UINT32_MAX / 2)) {
+    ReportAllocationOverflow(cx);
+    return false;
+  }
+  uint32_t len = uint32_t(length);
+
+  // Merge sort requires extra scratch space.
+  bool needsScratchSpace = len >= ArraySortData::InsertionSortLimit;
+
+  Rooted<ArraySortData::ValueVector> vec(cx);
+  if (MOZ_UNLIKELY(!vec.reserve(needsScratchSpace ? (2 * len) : len))) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+
+  // Append elements to the vector. Skip holes.
+  if (IsPackedArray(obj)) {
+    Handle<ArrayObject*> array = obj.as<ArrayObject>();
+    const Value* elements = array->getDenseElements();
+    vec.infallibleAppend(elements, len);
+  } else {
+    RootedValue v(cx);
+    for (uint32_t i = 0; i < len; i++) {
+      if (!CheckForInterrupt(cx)) {
+        return false;
+      }
+
+      bool hole;
+      if (!HasAndGetElement(cx, obj, i, &hole, &v)) {
+        return false;
+      }
+      if (hole) {
+        continue;
+      }
+      vec.infallibleAppend(v);
+    }
+    // If there are only holes, the object is already sorted.
+    if (vec.empty()) {
+      d->setReturnValue(obj);
+      *done = true;
+      return true;
+    }
+  }
+
+  uint32_t denseLen = vec.length();
+  if (needsScratchSpace) {
+    MOZ_ALWAYS_TRUE(vec.resize(denseLen * 2));
+  }
+  d->init(obj, &comparefn.toObject(), std::move(vec.get()), len, denseLen);
+
+  // Continue in ArraySortData::sortWithComparator.
+  MOZ_ASSERT(!*done);
+  return true;
+}
+
+static ArraySortResult CallComparatorSlow(ArraySortData* d, const Value& x,
+                                          const Value& y) {
+  JSContext* cx = d->cx();
+  FixedInvokeArgs<2> callArgs(cx);
+  callArgs[0].set(x);
+  callArgs[1].set(y);
+  Rooted<Value> comparefn(cx, ObjectValue(*d->comparator()));
+  Rooted<Value> rval(cx);
+  if (!js::Call(cx, comparefn, UndefinedHandleValue, callArgs, &rval)) {
+    return ArraySortResult::Failure;
+  }
+  d->setComparatorReturnValue(rval);
+  return ArraySortResult::Done;
+}
+
+static MOZ_ALWAYS_INLINE ArraySortResult
+MaybeYieldToComparator(ArraySortData* d, const Value& x, const Value& y) {
+  // https://tc39.es/ecma262/#sec-comparearrayelements
+  // 23.1.3.30.2 CompareArrayElements ( x, y, comparefn )
+
+  // Steps 1-2.
+  if (x.isUndefined()) {
+    d->setComparatorReturnValue(Int32Value(y.isUndefined() ? 0 : 1));
+    return ArraySortResult::Done;
+  }
+
+  // Step 3.
+  if (y.isUndefined()) {
+    d->setComparatorReturnValue(Int32Value(-1));
+    return ArraySortResult::Done;
+  }
+
+  // Step 4. Yield to the JIT trampoline (or js::array_sort) if the comparator
+  // is a JS function we can call more efficiently from JIT code.
+  auto kind = d->comparatorKind();
+  if (MOZ_LIKELY(kind != ArraySortData::ComparatorKind::Unoptimized)) {
+    d->setComparatorArgs(x, y);
+    return (kind == ArraySortData::ComparatorKind::JSSameRealmNoRectifier)
+               ? ArraySortResult::CallJSSameRealmNoRectifier
+               : ArraySortResult::CallJS;
+  }
+  return CallComparatorSlow(d, x, y);
+}
+
+static MOZ_ALWAYS_INLINE bool RvalIsLessOrEqual(ArraySortData* data,
+                                                bool* lessOrEqual) {
+  // https://tc39.es/ecma262/#sec-comparearrayelements
+  // 23.1.3.30.2 CompareArrayElements ( x, y, comparefn )
+
+  // Fast path for int32 return values.
+  Value rval = data->comparatorReturnValue();
+  if (MOZ_LIKELY(rval.isInt32())) {
+    *lessOrEqual = rval.toInt32() <= 0;
+    return true;
+  }
+
+  // Step 4.a.
+  Rooted<Value> rvalRoot(data->cx(), rval);
+  double d;
+  if (MOZ_UNLIKELY(!ToNumber(data->cx(), rvalRoot, &d))) {
+    return false;
+  }
+
+  // Step 4.b-c.
+  *lessOrEqual = std::isnan(d) ? true : (d <= 0);
+  return true;
+}
+
+static void CopyValues(Value* out, const Value* list, uint32_t start,
+                       uint32_t end) {
+  for (uint32_t i = start; i <= end; i++) {
+    out[i] = list[i];
+  }
+}
+
+// static
+ArraySortResult ArraySortData::sortWithComparator(ArraySortData* d) {
+  JSContext* cx = d->cx();
+  auto& vec = d->vec;
+
+  // This function is like a generator that is called repeatedly from the JIT
+  // trampoline or js::array_sort. Resume the sorting algorithm where we left
+  // off before calling the comparator.
+  switch (d->state) {
+    case State::Initial:
+      break;
+    case State::InsertionSortCall1:
+      goto insertion_sort_call1;
+    case State::InsertionSortCall2:
+      goto insertion_sort_call2;
+    case State::MergeSortCall1:
+      goto merge_sort_call1;
+    case State::MergeSortCall2:
+      goto merge_sort_call2;
+  }
+
+  d->list = vec.begin();
+
+  // Use insertion sort for small arrays.
+  if (d->denseLen < InsertionSortLimit) {
+    for (d->i = 1; d->i < d->denseLen; d->i++) {
+      d->item = vec[d->i];
+      d->j = d->i - 1;
+      do {
+        {
+          ArraySortResult res = MaybeYieldToComparator(d, vec[d->j], d->item);
+          if (res != ArraySortResult::Done) {
+            d->state = State::InsertionSortCall1;
+            return res;
+          }
+        }
+      insertion_sort_call1:
+        bool lessOrEqual;
+        if (!RvalIsLessOrEqual(d, &lessOrEqual)) {
+          return ArraySortResult::Failure;
+        }
+        if (lessOrEqual) {
+          break;
+        }
+        vec[d->j + 1] = vec[d->j];
+      } while (d->j-- > 0);
+      vec[d->j + 1] = d->item;
+    }
+  } else {
+    static constexpr size_t InitialWindowSize = 4;
+
+    // Use insertion sort for initial ranges.
+    for (d->start = 0; d->start < d->denseLen - 1;
+         d->start += InitialWindowSize) {
+      d->end =
+          std::min<uint32_t>(d->start + InitialWindowSize - 1, d->denseLen - 1);
+      for (d->i = d->start + 1; d->i <= d->end; d->i++) {
+        d->item = vec[d->i];
+        d->j = d->i - 1;
+        do {
+          {
+            ArraySortResult res = MaybeYieldToComparator(d, vec[d->j], d->item);
+            if (res != ArraySortResult::Done) {
+              d->state = State::InsertionSortCall2;
+              return res;
+            }
+          }
+        insertion_sort_call2:
+          bool lessOrEqual;
+          if (!RvalIsLessOrEqual(d, &lessOrEqual)) {
+            return ArraySortResult::Failure;
+          }
+          if (lessOrEqual) {
+            break;
+          }
+          vec[d->j + 1] = vec[d->j];
+        } while (d->j-- > d->start);
+        vec[d->j + 1] = d->item;
+      }
+    }
+
+    // Merge sort. Set d->out to scratch space initially.
+    d->out = vec.begin() + d->denseLen;
+    for (d->windowSize = InitialWindowSize; d->windowSize < d->denseLen;
+         d->windowSize *= 2) {
+      for (d->start = 0; d->start < d->denseLen;
+           d->start += 2 * d->windowSize) {
+        // The midpoint between the two subarrays.
+        d->mid = d->start + d->windowSize - 1;
+
+        // To keep from going over the edge.
+        d->end = std::min<uint32_t>(d->start + 2 * d->windowSize - 1,
+                                    d->denseLen - 1);
+
+        // Merge comparator-sorted slices list[start..<=mid] and
+        // list[mid+1..<=end], storing the merged sequence in out[start..<=end].
+
+        // Skip lopsided runs to avoid doing useless work.
+        if (d->mid >= d->end) {
+          CopyValues(d->out, d->list, d->start, d->end);
+          continue;
+        }
+
+        // Skip calling the comparator if the sub-list is already sorted.
+        {
+          ArraySortResult res =
+              MaybeYieldToComparator(d, d->list[d->mid], d->list[d->mid + 1]);
+          if (res != ArraySortResult::Done) {
+            d->state = State::MergeSortCall1;
+            return res;
+          }
+        }
+      merge_sort_call1:
+        bool lessOrEqual;
+        if (!RvalIsLessOrEqual(d, &lessOrEqual)) {
+          return ArraySortResult::Failure;
+        }
+        if (lessOrEqual) {
+          CopyValues(d->out, d->list, d->start, d->end);
+          continue;
+        }
+
+        d->i = d->start;
+        d->j = d->mid + 1;
+        d->k = d->start;
+
+        while (d->i <= d->mid && d->j <= d->end) {
+          {
+            ArraySortResult res =
+                MaybeYieldToComparator(d, d->list[d->i], d->list[d->j]);
+            if (res != ArraySortResult::Done) {
+              d->state = State::MergeSortCall2;
+              return res;
+            }
+          }
+        merge_sort_call2:
+          bool lessOrEqual;
+          if (!RvalIsLessOrEqual(d, &lessOrEqual)) {
+            return ArraySortResult::Failure;
+          }
+          d->out[d->k++] = lessOrEqual ? d->list[d->i++] : d->list[d->j++];
+        }
+
+        // Empty out any remaining elements. Use local variables to let the
+        // compiler generate more efficient code.
+        Value* out = d->out;
+        Value* list = d->list;
+        uint32_t k = d->k;
+        uint32_t mid = d->mid;
+        uint32_t end = d->end;
+        for (uint32_t i = d->i; i <= mid; i++) {
+          out[k++] = list[i];
+        }
+        for (uint32_t j = d->j; j <= end; j++) {
+          out[k++] = list[j];
+        }
+      }
+
+      // Swap both lists.
+      std::swap(d->list, d->out);
+    }
+  }
+
+  // Copy elements to the array.
+  Rooted<JSObject*> obj(cx, d->obj_);
+  if (!SetArrayElements(cx, obj, 0, d->denseLen, d->list)) {
+    return ArraySortResult::Failure;
+  }
+
+  // Re-create any holes that sorted to the end of the array.
+  for (uint32_t i = d->denseLen; i < d->length; i++) {
+    if (!CheckForInterrupt(cx) || !DeletePropertyOrThrow(cx, obj, i)) {
+      return ArraySortResult::Failure;
+    }
+  }
+
+  d->freeMallocData();
+  d->setReturnValue(obj);
+  return ArraySortResult::Done;
+}
+
+// https://tc39.es/ecma262/#sec-array.prototype.sort
+// 23.1.3.30 Array.prototype.sort ( comparefn )
+bool js::array_sort(JSContext* cx, unsigned argc, Value* vp) {
+  AutoJSMethodProfilerEntry pseudoFrame(cx, "Array.prototype", "sort");
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  // If we have a comparator argument, use the JIT trampoline implementation
+  // instead. This avoids a performance cliff (especially with large arrays)
+  // because C++ => JIT calls are much slower than Trampoline => JIT calls.
+  if (args.hasDefined(0) && jit::IsBaselineInterpreterEnabled()) {
+    return CallTrampolineNativeJitCode(cx, jit::TrampolineNative::ArraySort,
+                                       args);
+  }
+
+  Rooted<ArraySortData> data(cx, cx);
+
+  // On all return paths other than ArraySortWithComparatorLoop returning Done,
+  // we call freeMallocData to not fail debug assertions. This matches the JIT
+  // trampoline where we can't rely on C++ destructors.
+  auto freeData =
+      mozilla::MakeScopeExit([&]() { data.get().freeMallocData(); });
+
+  bool done = false;
+  if (!ArraySortPrologue(cx, args.thisv(), args.get(0), data.address(),
+                         &done)) {
+    return false;
+  }
+  if (done) {
+    args.rval().set(data.get().returnValue());
+    return true;
+  }
+
+  FixedInvokeArgs<2> callArgs(cx);
+  Rooted<Value> rval(cx);
+
+  while (true) {
+    ArraySortResult res = ArraySortData::sortWithComparator(data.address());
+    switch (res) {
+      case ArraySortResult::Failure:
+        return false;
+
+      case ArraySortResult::Done:
+        freeData.release();
+        args.rval().set(data.get().returnValue());
+        return true;
+
+      case ArraySortResult::CallJS:
+      case ArraySortResult::CallJSSameRealmNoRectifier:
+        MOZ_ASSERT(data.get().comparatorThisValue().isUndefined());
+        MOZ_ASSERT(&args[0].toObject() == data.get().comparator());
+        callArgs[0].set(data.get().comparatorArg(0));
+        callArgs[1].set(data.get().comparatorArg(1));
+        if (!js::Call(cx, args[0], UndefinedHandleValue, callArgs, &rval)) {
+          return false;
+        }
+        data.get().setComparatorReturnValue(rval);
+        break;
+    }
+  }
+}
+
+ArraySortResult js::ArraySortFromJit(JSContext* cx,
+                                     jit::TrampolineNativeFrameLayout* frame) {
+  // Initialize the ArraySortData class stored in the trampoline frame.
+  void* dataUninit = frame->getFrameData<ArraySortData>();
+  auto* data = new (dataUninit) ArraySortData(cx);
+
+  Rooted<Value> thisv(cx, frame->thisv());
+  Rooted<Value> comparefn(cx);
+  if (frame->numActualArgs() > 0) {
+    comparefn = frame->actualArgs()[0];
+  }
+
+  bool done = false;
+  if (!ArraySortPrologue(cx, thisv, comparefn, data, &done)) {
+    return ArraySortResult::Failure;
+  }
+  if (done) {
+    data->freeMallocData();
+    return ArraySortResult::Done;
+  }
+
+  // We're sorting with a JS comparator function. Initialize the descriptor to
+  // make sure the trampoline is ready for a JIT comparator call.
+  uintptr_t descriptor = MakeFrameDescriptorForJitCall(
+      jit::FrameType::TrampolineNative, ArraySortData::ComparatorActualArgs);
+  data->initDescriptor(descriptor);
+  return ArraySortData::sortWithComparator(data);
+}
+
+ArraySortData::ArraySortData(JSContext* cx) : cx_(cx) {
+#ifdef DEBUG
+  cx_->liveArraySortDataInstances++;
+#endif
+}
+
+void ArraySortData::freeMallocData() {
+  vec.clearAndFree();
+#ifdef DEBUG
+  MOZ_ASSERT(cx_->liveArraySortDataInstances > 0);
+  cx_->liveArraySortDataInstances--;
+#endif
+}
+
+void ArraySortData::trace(JSTracer* trc) {
+  TraceNullableRoot(trc, &comparator_, "comparator_");
+  TraceRoot(trc, &thisv, "thisv");
+  TraceRoot(trc, &callArgs[0], "callArgs0");
+  TraceRoot(trc, &callArgs[1], "callArgs1");
+  vec.trace(trc);
+  TraceRoot(trc, &item, "item");
+  TraceNullableRoot(trc, &obj_, "obj");
 }
 
 bool js::NewbornArrayPush(JSContext* cx, HandleObject obj, const Value& v) {
@@ -4846,7 +5366,7 @@ static const JSFunctionSpec array_methods[] = {
     /* Perl-ish methods. */
     JS_INLINABLE_FN("join", array_join, 1, 0, ArrayJoin),
     JS_FN("reverse", array_reverse, 0, 0),
-    JS_SELF_HOSTED_FN("sort", "ArraySort", 1, 0),
+    JS_TRAMPOLINE_FN("sort", array_sort, 1, 0, ArraySort),
     JS_INLINABLE_FN("push", array_push, 1, 0, ArrayPush),
     JS_INLINABLE_FN("pop", array_pop, 0, 0, ArrayPop),
     JS_INLINABLE_FN("shift", array_shift, 0, 0, ArrayShift),
