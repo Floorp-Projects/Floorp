@@ -310,8 +310,7 @@ void EncoderTemplate<EncoderType>::CopyExtradataToDescriptionIfNeeded(
     AutoEntryScript aes(aGlobal, "EncoderConfigToaConfigConfig");
     size_t lengthBytes = aConfigInternal.mDescription.value()->Length();
     UniquePtr<uint8_t[], JS::FreePolicy> extradata(new uint8_t[lengthBytes]);
-    PodCopy(extradata.get(),
-            aConfigInternal.mDescription.value()->Elements(),
+    PodCopy(extradata.get(), aConfigInternal.mDescription.value()->Elements(),
             lengthBytes);
     JS::Rooted<JSObject*> description(
         aes.cx(), JS::NewArrayBufferWithContents(aes.cx(), lengthBytes,
@@ -802,8 +801,10 @@ void EncoderTemplate<EncoderType>::Reconfigure(
   RefPtr<WebCodecsConfigurationChangeList> configDiff =
       config->Diff(*mActiveConfig);
 
-  // Nothing to do, return now
+  // Nothing to do, return now, but per spec the config
+  // must be output next time a packet is output.
   if (configDiff->Empty()) {
+    mOutputNewDecoderConfig = true;
     LOG("Reconfigure with identical config, returning.");
     mProcessingMessage = nullptr;
     StopBlockingMessageQueue();
