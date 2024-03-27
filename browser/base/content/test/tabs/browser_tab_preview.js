@@ -60,10 +60,7 @@ add_task(async function hoverTests() {
   const previewContainer = document.getElementById("tabbrowser-tab-preview");
 
   await openPreview(tab1);
-  Assert.ok(
-    ["open", "showing"].includes(previewContainer.panel.state),
-    "tab1 preview shown"
-  );
+  Assert.equal(previewContainer.panelState, "open", "tab1 preview shown");
   Assert.equal(
     previewContainer.renderRoot.querySelector(".tab-preview-title").innerText,
     "First New Tab",
@@ -71,10 +68,7 @@ add_task(async function hoverTests() {
   );
 
   await openPreview(tab2);
-  Assert.ok(
-    ["open", "showing"].includes(previewContainer.panel.state),
-    "tab2 preview shown"
-  );
+  Assert.equal(previewContainer.panelState, "open", "tab2 preview shown");
   Assert.equal(
     previewContainer.renderRoot.querySelector(".tab-preview-title").innerText,
     "Second New Tab",
@@ -82,8 +76,9 @@ add_task(async function hoverTests() {
   );
 
   await closePreviews();
-  Assert.ok(
-    ["closed", "hiding"].includes(previewContainer.panel.state),
+  Assert.equal(
+    previewContainer.panelState,
+    "closed",
     "preview container is now hidden"
   );
 
@@ -113,19 +108,23 @@ add_task(async function thumbnailTests() {
 
   const thumbnailUpdated = BrowserTestUtils.waitForEvent(
     previewContainer,
-    "previewThumbnailUpdated"
+    "previewThumbnailUpdated",
+    false,
+    evt => evt.detail.thumbnail
   );
   await openPreview(tab1);
   await thumbnailUpdated;
   Assert.ok(
-    previewContainer.renderRoot.querySelectorAll("img,canvas").length,
+    previewContainer.thumbnailContainer.renderRoot.querySelectorAll(
+      "img,canvas"
+    ).length,
     "Tab1 preview contains thumbnail"
   );
 
   await openPreview(tab2);
   Assert.equal(
-    previewContainer.renderRoot.querySelectorAll("img,canvas").length,
-    0,
+    previewContainer.thumbnailContainer,
+    null,
     "Tab2 (selected) does not contain thumbnail"
   );
 
@@ -160,11 +159,7 @@ add_task(async function delayTests() {
   const tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, tabUrl2);
   const previewContainer = document.getElementById("tabbrowser-tab-preview");
 
-  const resetDelayMock = sinon.replace(
-    previewContainer,
-    "resetDelay",
-    sinon.fake()
-  );
+  sinon.spy(previewContainer, "deactivate");
 
   await openPreview(tab1);
 
@@ -175,7 +170,7 @@ add_task(async function delayTests() {
     "previewhidden"
   );
   Assert.ok(
-    !resetDelayMock.called,
+    !previewContainer.deactivate.called,
     "Delay is not reset when moving between tabs"
   );
 
@@ -186,13 +181,67 @@ add_task(async function delayTests() {
   await previewHidden;
 
   Assert.ok(
-    resetDelayMock.called,
+    previewContainer.deactivate.called,
     "Delay is reset when cursor leaves tabstrip"
   );
 
   BrowserTestUtils.removeTab(tab1);
   BrowserTestUtils.removeTab(tab2);
   sinon.restore();
+});
+
+/**
+ * Dragging a tab should deactivate the preview
+ */
+add_task(async function dragTests() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["ui.tooltip.delay_ms", 1000]],
+  });
+  const tabUrl1 =
+    "data:text/html,<html><head><title>First New Tab</title></head><body>Hello</body></html>";
+  const tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, tabUrl1);
+  const tabUrl2 =
+    "data:text/html,<html><head><title>Second New Tab</title></head><body>Hello</body></html>";
+  const tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, tabUrl2);
+  const previewContainer = document.getElementById("tabbrowser-tab-preview");
+
+  sinon.spy(previewContainer, "deactivate");
+
+  await openPreview(tab1);
+  const previewHidden = BrowserTestUtils.waitForEvent(
+    previewContainer,
+    "previewhidden"
+  );
+  let dragend = BrowserTestUtils.waitForEvent(tab1, "dragend");
+  EventUtils.synthesizePlainDragAndDrop({
+    srcElement: tab1,
+    destElement: tab2,
+  });
+
+  await previewHidden;
+
+  Assert.equal(
+    previewContainer.panelState,
+    "closed",
+    "preview container is hidden after drag started"
+  );
+  Assert.ok(
+    previewContainer.deactivate.called,
+    "delay is reset after drag started"
+  );
+
+  await dragend;
+
+  BrowserTestUtils.removeTab(tab1);
+  BrowserTestUtils.removeTab(tab2);
+  sinon.restore();
+
+  // Move the mouse outside of the tab strip.
+  EventUtils.synthesizeMouseAtCenter(document.documentElement, {
+    type: "mouseover",
+  });
+
+  await SpecialPowers.popPrefEnv();
 });
 
 /**

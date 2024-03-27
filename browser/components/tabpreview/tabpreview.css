@@ -46,12 +46,6 @@
   border-top: 1px solid var(--tab-preview-border-color);
 }
 
-.tab-preview-thumbnail-container img,
-.tab-preview-thumbnail-container canvas {
-  display: block;
-  width: 100%;
-}
-
 @media (max-width: 640px) {
   .tab-preview-thumbnail-container {
     display: none;

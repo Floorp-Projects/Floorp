@@ -3,5 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 browser.jar:
+    content/browser/tabpreview/tabpreview-thumbnail.mjs (tabpreview-thumbnail.mjs)
+    content/browser/tabpreview/panel-wrapped-element.mjs (panel-wrapped-element.mjs)
     content/browser/tabpreview/tabpreview.mjs        (tabpreview.mjs)
     content/browser/tabpreview/tabpreview.css        (tabpreview.css)
