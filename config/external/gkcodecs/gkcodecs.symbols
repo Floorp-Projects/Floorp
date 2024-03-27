@@ -98,6 +98,8 @@ opus_packet_get_nb_frames
 opus_packet_get_samples_per_frame
 opus_packet_parse
 opus_strerror
+opus_multistream_encode_float
+opus_multistream_surround_encoder_create
 # libtheora symbols
 th_comment_clear
 th_comment_init
@@ -127,6 +129,19 @@ vorbis_synthesis_init
 vorbis_synthesis_pcmout
 vorbis_synthesis_read
 vorbis_synthesis_restart
+vorbis_encode_ctl
+vorbis_bitrate_addblock
+vorbis_analysis_buffer
+vorbis_analysis_blockout
+vorbis_encode_setup_vbr
+vorbis_analysis
+vorbis_analysis_init
+vorbis_analysis_headerout
+vorbis_encode_setup_init
+vorbis_encode_setup_managed
+vorbis_comment_add_tag
+vorbis_bitrate_flushpacket
+vorbis_analysis_wrote
 # libvpx symbols
 #ifndef MOZ_SYSTEM_LIBVPX
 vpx_codec_build_config
@@ -156,3 +171,4 @@ vpx_img_alloc
 vpx_img_free
 vpx_img_wrap
 #endif
+#
