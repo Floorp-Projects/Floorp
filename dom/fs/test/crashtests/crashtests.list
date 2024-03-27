@@ -1,6 +1,7 @@
 # StorageManager isn't enabled on Android
 defaults skip-if(Android) pref(dom.fs.enabled,true) pref(dom.fs.writable_file_stream.enabled,true)
 
+# Most of the issues here are reproducible only with --verify
 load 1798773.html
 load 1800470.html
 load 1809759.html
@@ -8,3 +9,4 @@ load 1816710.html
 load 1841702.html
 HTTP load 1844619.html
 HTTP load 1858820.html
+load 1874334.html

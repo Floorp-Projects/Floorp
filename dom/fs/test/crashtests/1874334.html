@@ -1,0 +1,16 @@
+<script>
+
+async function stuff() {
+    let arr = new ArrayBuffer(500000);
+    let blob = new Blob([arr]);
+    let file = new File([blob], "", { });
+
+    let dir = await self.navigator.storage.getDirectory();
+    let handle = await dir.getFileHandle("514600c6-596b-4676-ab0c-3e6f1e86759f", {"create": true});
+    let wfs = await handle.createWritable({"keepExistingData": true});
+
+    await file.stream().pipeTo(wfs);
+};
+
+document.addEventListener("DOMContentLoaded", stuff);
+</script>
