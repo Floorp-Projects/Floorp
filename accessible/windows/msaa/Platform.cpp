@@ -72,8 +72,10 @@ void a11y::PlatformEvent(Accessible* aTarget, uint32_t aEventType) {
   uiaRawElmProvider::RaiseUiaEventForGeckoEvent(aTarget, aEventType);
 }
 
-void a11y::PlatformStateChangeEvent(Accessible* aTarget, uint64_t, bool) {
+void a11y::PlatformStateChangeEvent(Accessible* aTarget, uint64_t aState,
+                                    bool aEnabled) {
   MsaaAccessible::FireWinEvent(aTarget, nsIAccessibleEvent::EVENT_STATE_CHANGE);
+  uiaRawElmProvider::RaiseUiaEventForStateChange(aTarget, aState, aEnabled);
 }
 
 void a11y::PlatformFocusEvent(Accessible* aTarget,

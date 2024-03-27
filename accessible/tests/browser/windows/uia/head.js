@@ -4,7 +4,7 @@
 
 "use strict";
 
-/* exported gIsUiaEnabled, addUiaTask, definePyVar, assignPyVarToUiaWithId, setUpWaitForUiaEvent, setUpWaitForUiaPropEvent, waitForUiaEvent */
+/* exported gIsUiaEnabled, addUiaTask, definePyVar, assignPyVarToUiaWithId, setUpWaitForUiaEvent, setUpWaitForUiaPropEvent, waitForUiaEvent, testPatternAbsent */
 
 // Load the shared-head file first.
 Services.scriptloader.loadSubScript(
@@ -101,4 +101,15 @@ function waitForUiaEvent() {
   return runPython(`
     onEvent.wait()
   `);
+}
+
+/**
+ * Verify that a UIA element does *not* support the given control pattern.
+ */
+async function testPatternAbsent(id, patternName) {
+  const hasPattern = await runPython(`
+    el = findUiaByDomId(doc, "${id}")
+    return bool(getUiaPattern(el, "${patternName}"))
+  `);
+  ok(!hasPattern, `${id} doesn't have ${patternName} pattern`);
 }
