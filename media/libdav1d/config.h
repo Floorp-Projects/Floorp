@@ -46,7 +46,10 @@
 // Those values are copied from the auto generated
 // config file produced by stand alone dav1d build.
 #  define HAVE_AS_FUNC 0
+// Build with <sys/auxv.h> header only on Linux-specific systems.
+#if defined(__linux__)
 #  define HAVE_GETAUXVAL 1
+#endif
 #  define PIC 3
 #endif
 
