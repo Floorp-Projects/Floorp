@@ -1689,33 +1689,6 @@ RefPtr<layers::NativeLayerRoot> nsChildView::GetNativeLayerRoot() {
   return mNativeLayerRoot;
 }
 
-static int32_t FindTitlebarBottom(
-    const nsTArray<nsIWidget::ThemeGeometry>& aThemeGeometries,
-    int32_t aWindowWidth) {
-  int32_t titlebarBottom = 0;
-  for (auto& g : aThemeGeometries) {
-    if (g.mType == eThemeGeometryTypeTitlebar && g.mRect.X() <= 0 &&
-        g.mRect.XMost() >= aWindowWidth && g.mRect.Y() <= 0) {
-      titlebarBottom = std::max(titlebarBottom, g.mRect.YMost());
-    }
-  }
-  return titlebarBottom;
-}
-
-static int32_t FindUnifiedToolbarBottom(
-    const nsTArray<nsIWidget::ThemeGeometry>& aThemeGeometries,
-    int32_t aWindowWidth, int32_t aTitlebarBottom) {
-  int32_t unifiedToolbarBottom = aTitlebarBottom;
-  for (uint32_t i = 0; i < aThemeGeometries.Length(); ++i) {
-    const nsIWidget::ThemeGeometry& g = aThemeGeometries[i];
-    if ((g.mType == eThemeGeometryTypeToolbar) && g.mRect.X() <= 0 &&
-        g.mRect.XMost() >= aWindowWidth && g.mRect.Y() <= aTitlebarBottom) {
-      unifiedToolbarBottom = std::max(unifiedToolbarBottom, g.mRect.YMost());
-    }
-  }
-  return unifiedToolbarBottom;
-}
-
 static LayoutDeviceIntRect FindFirstRectOfType(
     const nsTArray<nsIWidget::ThemeGeometry>& aThemeGeometries,
     nsITheme::ThemeGeometryType aThemeGeometryType) {
@@ -1741,24 +1714,16 @@ void nsChildView::UpdateThemeGeometries(
   }
 
   // Update unified toolbar height and sheet attachment position.
-  int32_t windowWidth = mBounds.width;
-  int32_t titlebarBottom = FindTitlebarBottom(aThemeGeometries, windowWidth);
-  int32_t unifiedToolbarBottom =
-      FindUnifiedToolbarBottom(aThemeGeometries, windowWidth, titlebarBottom);
-
   ToolbarWindow* win = (ToolbarWindow*)[mView window];
-  int32_t titlebarHeight = [win drawsContentsIntoWindowFrame]
-                               ? 0
-                               : CocoaPointsToDevPixels([win titlebarHeight]);
-  int32_t devUnifiedHeight = titlebarHeight + unifiedToolbarBottom;
-  [win setUnifiedToolbarHeight:DevPixelsToCocoaPoints(devUnifiedHeight)];
 
   // Update titlebar control offsets.
   LayoutDeviceIntRect windowButtonRect =
       FindFirstRectOfType(aThemeGeometries, eThemeGeometryTypeWindowButtons);
-  [win placeWindowButtons:[mView convertRect:DevPixelsToCocoaPoints(
-                                                 windowButtonRect)
-                                      toView:nil]];
+  if (!windowButtonRect.IsEmpty()) {
+    [win placeWindowButtons:[mView convertRect:DevPixelsToCocoaPoints(
+                                                   windowButtonRect)
+                                        toView:nil]];
+  }
 }
 
 static Maybe<VibrancyType> ThemeGeometryTypeToVibrancyType(
@@ -1768,6 +1733,8 @@ static Maybe<VibrancyType> ThemeGeometryTypeToVibrancyType(
       return Some(VibrancyType::TOOLTIP);
     case eThemeGeometryTypeMenu:
       return Some(VibrancyType::MENU);
+    case eThemeGeometryTypeTitlebar:
+      return Some(VibrancyType::TITLEBAR);
     default:
       return Nothing();
   }
@@ -1777,7 +1744,7 @@ static LayoutDeviceIntRegion GatherVibrantRegion(
     const nsTArray<nsIWidget::ThemeGeometry>& aThemeGeometries,
     VibrancyType aVibrancyType) {
   LayoutDeviceIntRegion region;
-  for (auto& geometry : aThemeGeometries) {
+  for (const auto& geometry : aThemeGeometries) {
     if (ThemeGeometryTypeToVibrancyType(geometry.mType) ==
         Some(aVibrancyType)) {
       region.OrWith(geometry.mRect);
@@ -1813,13 +1780,16 @@ void nsChildView::UpdateVibrancy(
       GatherVibrantRegion(aThemeGeometries, VibrancyType::MENU);
   LayoutDeviceIntRegion tooltipRegion =
       GatherVibrantRegion(aThemeGeometries, VibrancyType::TOOLTIP);
+  LayoutDeviceIntRegion titlebarRegion =
+      GatherVibrantRegion(aThemeGeometries, VibrancyType::TITLEBAR);
 
-  MakeRegionsNonOverlapping(menuRegion, tooltipRegion);
+  MakeRegionsNonOverlapping(menuRegion, tooltipRegion, titlebarRegion);
 
   auto& vm = EnsureVibrancyManager();
   bool changed = false;
   changed |= vm.UpdateVibrantRegion(VibrancyType::MENU, menuRegion);
   changed |= vm.UpdateVibrantRegion(VibrancyType::TOOLTIP, tooltipRegion);
+  changed |= vm.UpdateVibrantRegion(VibrancyType::TITLEBAR, titlebarRegion);
 
   if (changed) {
     SuspendAsyncCATransactions();

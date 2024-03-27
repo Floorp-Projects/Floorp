@@ -2252,6 +2252,7 @@ STATIC_ATOMS = [
     Atom("_moz_windows_accent_color_in_tabs", "-moz-windows-accent-color-in-tabs"),
     Atom("_moz_mac_big_sur_theme", "-moz-mac-big-sur-theme"),
     Atom("_moz_mac_rtl", "-moz-mac-rtl"),
+    Atom("_moz_mac_titlebar_height", "-moz-mac-titlebar-height"),
     Atom("_moz_platform", "-moz-platform"),
     Atom("_moz_gtk_theme_family", "-moz-gtk-theme-family"),
     Atom("_moz_menubar_drag", "-moz-menubar-drag"),

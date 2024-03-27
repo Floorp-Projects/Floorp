@@ -151,6 +151,7 @@ static const char sIntPrefs[][45] = {
     "ui.windowsAccentColorInTitlebar",
     "ui.macBigSurTheme",
     "ui.macRTL",
+    "ui.macTitlebarHeight",
     "ui.alertNotificationOrigin",
     "ui.scrollToClick",
     "ui.IMERawInputUnderlineStyle",

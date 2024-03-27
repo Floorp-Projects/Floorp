@@ -7,6 +7,64 @@
   appearance: auto;
 }
 
+#placesToolbar {
+  appearance: none;
+  position: relative;
+  -moz-window-dragging: drag;
+  padding: env(-moz-mac-titlebar-height) 4px 3px;
+  border-bottom: 1px solid ThreeDShadow;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    appearance: auto;
+    -moz-default-appearance: -moz-window-titlebar;
+    z-index: -1;
+  }
+
+  > toolbarbutton {
+    margin: 4px 4px 5px;
+    padding: 0;
+    height: 22px;
+    appearance: auto;
+    -moz-default-appearance: toolbarbutton;
+
+    > .toolbarbutton-icon {
+      -moz-context-properties: fill, fill-opacity;
+      fill: currentColor;
+      fill-opacity: 0.8;
+      margin: 1px 4px;
+    }
+
+    &:not(#clearDownloadsButton) > .toolbarbutton-text {
+      display: none;
+    }
+
+    &[type="menu"] > .toolbarbutton-menu-dropmarker {
+      content: url(chrome://global/skin/icons/arrow-down-12.svg);
+      padding: 0;
+      margin-inline-end: 2px;
+    }
+
+    &[disabled] > .toolbarbutton-icon,
+    &:not(:hover):-moz-window-inactive > .toolbarbutton-icon,
+    &[type="menu"][disabled] > .toolbarbutton-menu-dropmarker,
+    &:not(:hover):-moz-window-inactive[type="menu"] > .toolbarbutton-menu-dropmarker {
+      opacity: .5;
+    }
+
+    &:-moz-window-inactive[disabled] > .toolbarbutton-icon,
+    &:-moz-window-inactive[type="menu"][disabled] > .toolbarbutton-menu-dropmarker {
+      opacity: .25;
+    }
+
+    > menupopup {
+      margin-top: 1px;
+    }
+  }
+}
+
 /* Places Organizer Sidebars */
 
 #placesList {
@@ -14,78 +72,33 @@
   width: 160px;
   min-width: 100px;
   max-width: 400px;
-}
 
-#placesList > treechildren::-moz-tree-cell-text {
-  margin-inline-end: 6px;
-}
+  > treechildren::-moz-tree-cell-text {
+    margin-inline-end: 6px;
+  }
 
-#placesList > treechildren::-moz-tree-cell(separator) {
-  cursor: default;
-}
+  > treechildren::-moz-tree-cell(separator) {
+    cursor: default;
+  }
 
-#placesList > treechildren::-moz-tree-separator {
-  border-top: 1px solid color-mix(in srgb, FieldText 70%, transparent);
-  margin: 0 10px;
-}
-
-#placesToolbar {
-  padding: 0 4px 3px;
+  > treechildren::-moz-tree-separator {
+    border-top: 1px solid color-mix(in srgb, FieldText 70%, transparent);
+    margin: 0 10px;
+  }
 }
 
 #placesView {
   border-top: none !important;
-}
 
-#placesView > splitter {
-  border-inline-start: none !important;
-  border-inline-end: 1px solid color-mix(in srgb, FieldText 30%, transparent);
-  min-width: 1px;
-  width: 3px;
-  margin-inline-start: -3px;
-  position: relative;
-  background-image: none !important;
-}
-
-#placesToolbar > toolbarbutton {
-  margin: 4px 4px 5px;
-  padding: 0;
-  height: 22px;
-  appearance: auto;
-  -moz-default-appearance: toolbarbutton;
-}
-
-#placesToolbar > toolbarbutton > .toolbarbutton-icon {
-  -moz-context-properties: fill, fill-opacity;
-  fill: currentColor;
-  fill-opacity: 0.8;
-  margin: 1px 4px;
-}
-
-#placesToolbar > toolbarbutton:not(#clearDownloadsButton) > .toolbarbutton-text {
-  display: none;
-}
-
-#placesToolbar > toolbarbutton[type="menu"] > .toolbarbutton-menu-dropmarker {
-  content: url(chrome://global/skin/icons/arrow-down-12.svg);
-  padding: 0;
-  margin-inline-end: 2px;
-}
-
-#placesToolbar > toolbarbutton[disabled] > .toolbarbutton-icon,
-#placesToolbar > toolbarbutton:not(:hover):-moz-window-inactive > .toolbarbutton-icon,
-#placesToolbar > toolbarbutton[type="menu"][disabled] > .toolbarbutton-menu-dropmarker,
-#placesToolbar > toolbarbutton:not(:hover):-moz-window-inactive[type="menu"] > .toolbarbutton-menu-dropmarker {
-  opacity: .5;
-}
-
-#placesToolbar > toolbarbutton:-moz-window-inactive[disabled] > .toolbarbutton-icon,
-#placesToolbar > toolbarbutton:-moz-window-inactive[type="menu"][disabled] > .toolbarbutton-menu-dropmarker {
-  opacity: .25;
-}
-
-#placesToolbar > toolbarbutton > menupopup {
-  margin-top: 1px;
+  > splitter {
+    border-inline-start: none !important;
+    border-inline-end: 1px solid color-mix(in srgb, FieldText 30%, transparent);
+    min-width: 1px;
+    width: 3px;
+    margin-inline-start: -3px;
+    position: relative;
+    background-image: none !important;
+  }
 }
 
 /* back and forward button */
