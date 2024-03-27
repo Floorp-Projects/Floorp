@@ -837,6 +837,7 @@
   args:
     obj: ObjId
     result: ObjId
+    fallible: BoolImm
 
 - name: LoadValueTag
   shared: true

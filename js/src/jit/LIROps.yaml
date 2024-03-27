@@ -3694,6 +3694,7 @@
   result_type: WordSized
   operands:
     object: WordSized
+  mir_op: true
 
 - name: GuardHasGetterSetter
   operands:

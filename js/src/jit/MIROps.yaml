@@ -2810,13 +2810,16 @@
   alias_set: none
 
 # Load the target object from a proxy wrapper. The target is stored in the
-# proxy object's private slot.
+# proxy object's private slot. This operation is fallible if the proxy can
+# be revoked.
 - name: LoadWrapperTarget
   operands:
     object: Object
+  arguments:
+    fallible: bool
   result_type: Object
   movable: true
-  congruent_to: if_operands_equal
+  congruent_to: custom
   # Can't use |AliasSet::None| because the target changes on navigation.
   # TODO: Investigate using a narrower or a custom alias set.
   alias_set: custom

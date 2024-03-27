@@ -6752,7 +6752,11 @@ void LIRGenerator::visitLoadWrapperTarget(MLoadWrapperTarget* ins) {
   MDefinition* object = ins->object();
   MOZ_ASSERT(object->type() == MIRType::Object);
 
-  define(new (alloc()) LLoadWrapperTarget(useRegisterAtStart(object)), ins);
+  auto* lir = new (alloc()) LLoadWrapperTarget(useRegisterAtStart(object));
+  if (ins->fallible()) {
+    assignSnapshot(lir, ins->bailoutKind());
+  }
+  define(lir, ins);
 }
 
 void LIRGenerator::visitGuardHasGetterSetter(MGuardHasGetterSetter* ins) {
