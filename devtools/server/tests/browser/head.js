@@ -23,7 +23,9 @@ const {
 
 const PATH = "browser/devtools/server/tests/browser/";
 const TEST_DOMAIN = "http://test1.example.org";
+const TEST_DOMAIN_HTTPS = "https://test1.example.org";
 const MAIN_DOMAIN = `${TEST_DOMAIN}/${PATH}`;
+const MAIN_DOMAIN_HTTPS = `${TEST_DOMAIN_HTTPS}/${PATH}`;
 const ALT_DOMAIN = "http://sectest1.example.org/" + PATH;
 const ALT_DOMAIN_SECURED = "https://sectest1.example.org:443/" + PATH;
 

@@ -7,11 +7,11 @@
 
 add_task(async function () {
   await SpecialPowers.pushPermissions([
-    { type: "allowXULXBL", allow: true, context: MAIN_DOMAIN },
+    { type: "allowXULXBL", allow: true, context: MAIN_DOMAIN_HTTPS },
   ]);
 
   const { walker } = await initInspectorFront(
-    MAIN_DOMAIN + "inspector-traversal-data.html"
+    MAIN_DOMAIN_HTTPS + "inspector-traversal-data.html"
   );
 
   await testXBLAnonymousInHTMLDocument(walker);

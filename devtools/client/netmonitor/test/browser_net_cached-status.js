@@ -10,6 +10,9 @@
 add_task(async function () {
   // Disable rcwn to make cache behavior deterministic.
   await pushPref("network.http.rcwn.enabled", false);
+  // performing http to https redirects, hence we do not
+  // want https-first to interfere with that test
+  await pushPref("dom.security.https_first", false);
 
   const { tab, monitor } = await initNetMonitor(STATUS_CODES_URL, {
     enableCache: true,
