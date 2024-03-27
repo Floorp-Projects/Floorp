@@ -1199,7 +1199,8 @@ static ObjOperandId GuardAndLoadWindowProxyWindow(CacheIRWriter& writer,
                                                   ObjOperandId objId,
                                                   GlobalObject* windowObj) {
   writer.guardClass(objId, GuardClassKind::WindowProxy);
-  ObjOperandId windowObjId = writer.loadWrapperTarget(objId);
+  ObjOperandId windowObjId = writer.loadWrapperTarget(objId,
+                                                      /*fallible = */ false);
   writer.guardSpecificObject(windowObjId, windowObj);
   return windowObjId;
 }
@@ -1357,7 +1358,8 @@ AttachDecision GetPropIRGenerator::tryAttachCrossCompartmentWrapper(
   writer.guardHasProxyHandler(objId, Wrapper::wrapperHandler(obj));
 
   // Load the object wrapped by the CCW
-  ObjOperandId wrapperTargetId = writer.loadWrapperTarget(objId);
+  ObjOperandId wrapperTargetId =
+      writer.loadWrapperTarget(objId, /*fallible = */ false);
 
   // If the compartment of the wrapped object is different we should fail.
   writer.guardCompartment(wrapperTargetId, wrappedTargetGlobal,
@@ -1468,7 +1470,8 @@ AttachDecision GetPropIRGenerator::tryAttachXrayCrossCompartmentWrapper(
   writer.guardHasProxyHandler(objId, GetProxyHandler(obj));
 
   // Load the object wrapped by the CCW
-  ObjOperandId wrapperTargetId = writer.loadWrapperTarget(objId);
+  ObjOperandId wrapperTargetId =
+      writer.loadWrapperTarget(objId, /*fallible = */ false);
 
   // Test the wrapped object's class. The properties held by xrays or their
   // prototypes will be invariant for objects of a given class, except for
@@ -1580,7 +1583,8 @@ AttachDecision GetPropIRGenerator::tryAttachScriptedProxy(
   writer.guardHasProxyHandler(objId, &ScriptedProxyHandler::singleton);
   ValOperandId handlerValId = writer.loadScriptedProxyHandler(objId);
   ObjOperandId handlerObjId = writer.guardToObject(handlerValId);
-  ObjOperandId targetObjId = writer.loadWrapperTarget(objId);
+  ObjOperandId targetObjId =
+      writer.loadWrapperTarget(objId, /*fallible =*/true);
 
   writer.guardIsNativeObject(targetObjId);
 

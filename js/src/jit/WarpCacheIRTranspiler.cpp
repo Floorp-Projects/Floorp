@@ -5216,10 +5216,14 @@ bool WarpCacheIRTranspiler::emitLoadOperandResult(ValOperandId inputId) {
 }
 
 bool WarpCacheIRTranspiler::emitLoadWrapperTarget(ObjOperandId objId,
-                                                  ObjOperandId resultId) {
+                                                  ObjOperandId resultId,
+                                                  bool fallible) {
   MDefinition* obj = getOperand(objId);
 
-  auto* ins = MLoadWrapperTarget::New(alloc(), obj);
+  auto* ins = MLoadWrapperTarget::New(alloc(), obj, fallible);
+  if (fallible) {
+    ins->setGuard();
+  }
   add(ins);
 
   return defineOperand(resultId, ins);

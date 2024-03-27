@@ -1373,9 +1373,13 @@ ICInterpretOps(BaselineFrame* frame, VMFrameManager& frameMgr, State& state,
   CACHEOP_CASE(LoadWrapperTarget) {
     ObjOperandId objId = icregs.cacheIRReader.objOperandId();
     ObjOperandId resultId = icregs.cacheIRReader.objOperandId();
+    bool fallible = icregs.cacheIRReader.readBool();
     BOUNDSCHECK(resultId);
     JSObject* obj = reinterpret_cast<JSObject*>(icregs.icVals[objId.id()]);
-    JSObject* target = &obj->as<ProxyObject>().private_().toObject();
+    JSObject* target = obj->as<ProxyObject>().private_().toObjectOrNull();
+    if (fallible && !target) {
+      return ICInterpretOpResult::NextIC;
+    }
     icregs.icVals[resultId.id()] = reinterpret_cast<uintptr_t>(target);
     DISPATCH_CACHEOP();
   }

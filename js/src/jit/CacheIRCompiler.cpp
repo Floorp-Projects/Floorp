@@ -2934,14 +2934,27 @@ bool CacheIRCompiler::emitLoadEnclosingEnvironment(ObjOperandId objId,
 }
 
 bool CacheIRCompiler::emitLoadWrapperTarget(ObjOperandId objId,
-                                            ObjOperandId resultId) {
+                                            ObjOperandId resultId,
+                                            bool fallible) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   Register obj = allocator.useRegister(masm, objId);
   Register reg = allocator.defineRegister(masm, resultId);
 
+  FailurePath* failure;
+  if (fallible && !addFailurePath(&failure)) {
+    return false;
+  }
+
   masm.loadPtr(Address(obj, ProxyObject::offsetOfReservedSlots()), reg);
-  masm.unboxObject(
-      Address(reg, js::detail::ProxyReservedSlots::offsetOfPrivateSlot()), reg);
+
+  Address targetAddr(reg,
+                     js::detail::ProxyReservedSlots::offsetOfPrivateSlot());
+  if (fallible) {
+    masm.fallibleUnboxObject(targetAddr, reg, failure->label());
+  } else {
+    masm.unboxObject(targetAddr, reg);
+  }
+
   return true;
 }
 

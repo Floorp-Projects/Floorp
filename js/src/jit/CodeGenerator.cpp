@@ -19881,9 +19881,17 @@ void CodeGenerator::visitLoadWrapperTarget(LLoadWrapperTarget* lir) {
   Register output = ToRegister(lir->output());
 
   masm.loadPtr(Address(object, ProxyObject::offsetOfReservedSlots()), output);
-  masm.unboxObject(
-      Address(output, js::detail::ProxyReservedSlots::offsetOfPrivateSlot()),
-      output);
+
+  // Bail for revoked proxies.
+  Label bail;
+  Address targetAddr(output,
+                     js::detail::ProxyReservedSlots::offsetOfPrivateSlot());
+  if (lir->mir()->fallible()) {
+    masm.fallibleUnboxObject(targetAddr, output, &bail);
+    bailoutFrom(&bail, lir->snapshot());
+  } else {
+    masm.unboxObject(targetAddr, output);
+  }
 }
 
 void CodeGenerator::visitGuardHasGetterSetter(LGuardHasGetterSetter* lir) {

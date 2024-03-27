@@ -7242,6 +7242,16 @@ AliasSet MLoadWrapperTarget::getAliasSet() const {
   return AliasSet::Load(AliasSet::Any);
 }
 
+bool MLoadWrapperTarget::congruentTo(const MDefinition* ins) const {
+  if (!ins->isLoadWrapperTarget()) {
+    return false;
+  }
+  if (ins->toLoadWrapperTarget()->fallible() != fallible()) {
+    return false;
+  }
+  return congruentIfOperandsEqual(ins);
+}
+
 AliasSet MGuardHasGetterSetter::getAliasSet() const {
   return AliasSet::Load(AliasSet::ObjectFields);
 }
