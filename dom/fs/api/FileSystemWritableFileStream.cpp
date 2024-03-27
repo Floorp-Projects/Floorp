@@ -180,8 +180,10 @@ class FileSystemWritableFileStream::CloseHandler {
    * @brief Transition from initial to open state. In initial state
    *
    */
-  void Open() {
+  void Open(std::function<void()>&& aCallback) {
     MOZ_ASSERT(State::Initial == mState);
+
+    mShutdownBlocker->SetCallback(std::move(aCallback));
     mShutdownBlocker->Block();
 
     mState = State::Open;
@@ -193,6 +195,7 @@ class FileSystemWritableFileStream::CloseHandler {
    */
   void Close() {
     mShutdownBlocker->Unblock();
+    mShutdownBlocker = nullptr;
     mState = State::Closed;
     mClosePromiseHolder.ResolveIfExists(true, __func__);
   }
@@ -329,7 +332,17 @@ FileSystemWritableFileStream::Create(
   autoClose.release();
 
   stream->mWorkerRef = std::move(workerRef);
-  stream->mCloseHandler->Open();
+
+  // The close handler passes this callback to `FileSystemShutdownBlocker`
+  // which has separate handling for debug and release builds. Basically,
+  // there's no content process shutdown blocking in release builds, so the
+  // callback might be executed in debug builds only.
+  stream->mCloseHandler->Open([stream]() {
+    if (stream->IsOpen()) {
+      // We don't need the promise, we just begin the closing process.
+      Unused << stream->BeginAbort();
+    }
+  });
 
   // Step 9: Return stream.
   return stream;

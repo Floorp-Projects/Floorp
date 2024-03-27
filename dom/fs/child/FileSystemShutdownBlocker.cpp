@@ -36,6 +36,8 @@ class FileSystemWritableBlocker : public FileSystemShutdownBlocker {
  public:
   FileSystemWritableBlocker() : mName(CreateBlockerName()) {}
 
+  void SetCallback(std::function<void()>&& aCallback) override;
+
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIASYNCSHUTDOWNBLOCKER
 
@@ -50,7 +52,12 @@ class FileSystemWritableBlocker : public FileSystemShutdownBlocker {
 
  private:
   const nsString mName;
+  std::function<void()> mCallback;
 };
+
+void FileSystemWritableBlocker::SetCallback(std::function<void()>&& aCallback) {
+  mCallback = std::move(aCallback);
+}
 
 NS_IMPL_ISUPPORTS_INHERITED(FileSystemWritableBlocker,
                             FileSystemShutdownBlocker, nsIAsyncShutdownBlocker)
@@ -112,11 +119,18 @@ FileSystemWritableBlocker::BlockShutdown(
     nsIAsyncShutdownClient* /* aBarrier */) {
   MOZ_ASSERT(NS_IsMainThread());
 
+  if (mCallback) {
+    auto callback = std::move(mCallback);
+    callback();
+  }
+
   return NS_OK;
 }
 
 class FileSystemNullBlocker : public FileSystemShutdownBlocker {
  public:
+  void SetCallback(std::function<void()>&& aCallback) override {}
+
   NS_IMETHODIMP Block() override { return NS_OK; }
 
   NS_IMETHODIMP Unblock() override { return NS_OK; }

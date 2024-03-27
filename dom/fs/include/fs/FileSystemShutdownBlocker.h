@@ -17,6 +17,8 @@ class FileSystemShutdownBlocker : public nsIAsyncShutdownBlocker {
  public:
   static already_AddRefed<FileSystemShutdownBlocker> CreateForWritable();
 
+  virtual void SetCallback(std::function<void()>&& aCallback) = 0;
+
   NS_DECL_ISUPPORTS
   NS_DECL_NSIASYNCSHUTDOWNBLOCKER
 
