@@ -32,7 +32,7 @@ mod scope_rule;
 use crate::gecko_bindings::sugar::refptr::RefCounted;
 #[cfg(feature = "gecko")]
 use crate::gecko_bindings::{bindings, structs};
-use crate::parser::ParserContext;
+use crate::parser::{NestingContext, ParserContext};
 use crate::shared_lock::{DeepCloneParams, DeepCloneWithLock, Locked};
 use crate::shared_lock::{SharedRwLock, SharedRwLockReadGuard, ToCssWithGuard};
 use crate::str::CssStringWriter;
@@ -476,7 +476,11 @@ impl CssRule {
             None,
             None,
         );
-        context.rule_types = insert_rule_context.containing_rule_types;
+        // Override the nesting context with existing data.
+        context.nesting_context = NestingContext::new(
+            insert_rule_context.containing_rule_types,
+            insert_rule_context.parse_relative_rule_type
+        );
 
         let state = if !insert_rule_context.containing_rule_types.is_empty() {
             State::Body

@@ -210,12 +210,21 @@ nsresult ServoCSSRuleList::InsertRule(const nsACString& aRule,
   }
   StyleCssRuleType type;
   uint32_t containingTypes = 0;
+  Maybe<StyleCssRuleType> parseRelativeRuleType;
   for (css::Rule* rule = mParentRule; rule; rule = rule->GetParentRule()) {
-    containingTypes |= (1 << uint32_t(rule->Type()));
+    const auto ruleType = rule->Type();
+    containingTypes |= (1 << uint32_t(ruleType));
+    if (parseRelativeRuleType.isNothing() &&
+        (ruleType == StyleCssRuleType::Style ||
+         ruleType == StyleCssRuleType::Scope)) {
+      // Only the closest applicable type to this rule matters.
+      parseRelativeRuleType = Some(ruleType);
+    }
   }
   nsresult rv = Servo_CssRules_InsertRule(
       mRawRules, mStyleSheet->RawContents(), &aRule, aIndex, containingTypes,
-      loader, allowImportRules, mStyleSheet, &type);
+      parseRelativeRuleType.ptrOr(nullptr), loader, allowImportRules,
+      mStyleSheet, &type);
   NS_ENSURE_SUCCESS(rv, rv);
   mRules.InsertElementAt(aIndex, uintptr_t(type));
   return rv;
