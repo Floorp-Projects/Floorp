@@ -606,4 +606,52 @@ bool IsSupportedVideoCodec(const nsAString& aCodec) {
   return true;
 }
 
+nsCString ConvertCodecName(const nsCString& aContainer,
+                           const nsCString& aCodec) {
+  if (!aContainer.EqualsLiteral("x-wav")) {
+    return aCodec;
+  }
+
+  // https://www.rfc-editor.org/rfc/rfc2361.txt
+  if (aCodec.EqualsLiteral("ulaw")) {
+    return nsCString("7");
+  }
+  if (aCodec.EqualsLiteral("alaw")) {
+    return nsCString("6");
+  }
+  if (aCodec.Find("f32")) {
+    return nsCString("3");
+  }
+  // Linear PCM
+  return nsCString("1");
+}
+
+bool IsSupportedAudioCodec(const nsAString& aCodec) {
+  LOG("IsSupportedAudioCodec: %s", NS_ConvertUTF16toUTF8(aCodec).get());
+  return aCodec.EqualsLiteral("flac") || aCodec.EqualsLiteral("mp3") ||
+         IsAACCodecString(aCodec) || aCodec.EqualsLiteral("opus") ||
+         aCodec.EqualsLiteral("ulaw") || aCodec.EqualsLiteral("alaw") ||
+         aCodec.EqualsLiteral("pcm-u8") || aCodec.EqualsLiteral("pcm-s16") ||
+         aCodec.EqualsLiteral("pcm-s24") || aCodec.EqualsLiteral("pcm-s32") ||
+         aCodec.EqualsLiteral("pcm-f32");
+}
+
+uint32_t BytesPerSamples(const mozilla::dom::AudioSampleFormat& aFormat) {
+  switch (aFormat) {
+    case AudioSampleFormat::U8:
+    case AudioSampleFormat::U8_planar:
+      return sizeof(uint8_t);
+    case AudioSampleFormat::S16:
+    case AudioSampleFormat::S16_planar:
+      return sizeof(int16_t);
+    case AudioSampleFormat::S32:
+    case AudioSampleFormat::F32:
+    case AudioSampleFormat::S32_planar:
+    case AudioSampleFormat::F32_planar:
+      return sizeof(float);
+  }
+  MOZ_ASSERT_UNREACHABLE("Invalid enum value");
+  return 0;
+}
+
 }  // namespace mozilla::dom

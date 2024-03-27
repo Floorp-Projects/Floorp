@@ -118,24 +118,6 @@ struct AudioMIMECreateParam {
 
 // Map between WebCodecs pcm types as strings and codec numbers
 // All other codecs
-nsCString ConvertCodecName(const nsCString& aContainer,
-                           const nsCString& aCodec) {
-  if (!aContainer.EqualsLiteral("x-wav")) {
-    return aCodec;
-  }
-  if (aCodec.EqualsLiteral("ulaw")) {
-    return nsCString("7");
-  }
-  if (aCodec.EqualsLiteral("alaw")) {
-    return nsCString("6");
-  }
-  if (aCodec.Find("f32")) {
-    return nsCString("3");
-  }
-  // Linear PCM
-  return nsCString("1");
-}
-
 static nsTArray<nsCString> GuessMIMETypes(const AudioMIMECreateParam& aParam) {
   nsCString codec = NS_ConvertUTF16toUTF8(aParam.mParsedCodec);
   nsTArray<nsCString> types;
@@ -145,16 +127,6 @@ static nsTArray<nsCString> GuessMIMETypes(const AudioMIMECreateParam& aParam) {
     types.AppendElement(mime);
   }
   return types;
-}
-
-static bool IsSupportedAudioCodec(const nsAString& aCodec) {
-  LOG("IsSupportedAudioCodec: %s", NS_ConvertUTF16toUTF8(aCodec).get());
-  return aCodec.EqualsLiteral("flac") || aCodec.EqualsLiteral("mp3") ||
-         IsAACCodecString(aCodec) || aCodec.EqualsLiteral("opus") ||
-         aCodec.EqualsLiteral("ulaw") || aCodec.EqualsLiteral("alaw") ||
-         aCodec.EqualsLiteral("pcm-u8") || aCodec.EqualsLiteral("pcm-s16") ||
-         aCodec.EqualsLiteral("pcm-s24") || aCodec.EqualsLiteral("pcm-s32") ||
-         aCodec.EqualsLiteral("pcm-f32");
 }
 
 // https://w3c.github.io/webcodecs/#check-configuration-support
