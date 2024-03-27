@@ -47,6 +47,7 @@ enum QuadRenderStrategy {
     NinePatch {
         radius: LayoutVector2D,
         clip_rect: LayoutRect,
+        mode: ClipMode,
     },
     /// Split the primitive into coarse tiles so that each tile independently
     /// has the opportunity to be drawn directly in the destination target or
@@ -260,19 +261,36 @@ pub fn push_quad(
                 &scratch.quad_segments,
             );
         }
-        QuadRenderStrategy::NinePatch { clip_rect, radius } => {
+        QuadRenderStrategy::NinePatch { clip_rect, radius, mode } => {
             let unclipped_surface_rect = surface
                 .map_to_device_rect(&clip_chain.pic_coverage_rect, frame_context.spatial_tree);
 
-            let local_corner_0 = LayoutRect::new(
-                clip_rect.min,
-                clip_rect.min + radius,
-            );
-
-            let local_corner_1 = LayoutRect::new(
-                clip_rect.max - radius,
-                clip_rect.max,
-            );
+            let (local_corner_0, local_corner_1) = match mode {
+                ClipMode::Clip => {
+                    (
+                        LayoutRect::new(
+                            clip_rect.min,
+                            clip_rect.min + radius,
+                        ),
+                        LayoutRect::new(
+                            clip_rect.max - radius,
+                            clip_rect.max,
+                        ),
+                    )
+                }
+                ClipMode::ClipOut => {
+                    (
+                        LayoutRect::new(
+                            local_rect.min,
+                            clip_rect.min + radius,
+                        ),
+                        LayoutRect::new(
+                            clip_rect.max - radius,
+                            local_rect.max,
+                        ),
+                    )
+                }
+            };
 
             let pic_corner_0 = pic_state.map_local_to_pic.map(&local_corner_0).unwrap();
             let pic_corner_1 = pic_state.map_local_to_pic.map(&local_corner_1).unwrap();
@@ -316,8 +334,19 @@ pub fn push_quad(
                         continue;
                     }
 
-                    // Only create render tasks for the corners.
-                    let create_task = x != 1 && y != 1;
+                    let create_task = match mode {
+                        ClipMode::Clip => {
+                            // Only create render tasks for the corners.
+                            x != 1 && y != 1
+                        }
+                        ClipMode::ClipOut => {
+                            if x == 1 && y == 1 {
+                                continue;
+                            }
+
+                            true
+                        }
+                    };
 
                     let rect = DeviceIntRect::new(point2(x0, y0), point2(x1, y1));
 
@@ -389,7 +418,7 @@ fn get_prim_render_strategy(
         let clip_instance = clip_store.get_instance_from_range(&clip_chain.clips_range, 0);
         let clip_node = &interned_clips[clip_instance.handle];
 
-        if let ClipItemKind::RoundedRectangle { ref radius, mode: ClipMode::Clip, rect, .. } = clip_node.item.kind {
+        if let ClipItemKind::RoundedRectangle { ref radius, mode, rect, .. } = clip_node.item.kind {
             let max_corner_width = radius.top_left.width
                                         .max(radius.bottom_left.width)
                                         .max(radius.top_right.width)
@@ -419,6 +448,7 @@ fn get_prim_render_strategy(
                         return QuadRenderStrategy::NinePatch {
                             radius: LayoutVector2D::new(max_corner_width, max_corner_height),
                             clip_rect: rect,
+                            mode,
                         };
                     }
                 }
