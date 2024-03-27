@@ -11,9 +11,17 @@ add_task(async function () {
   // requests to evaluateJSAsync.
   await pushPref("devtools.webconsole.input.eagerEvaluation", false);
 
-  const { inspector, toolbox } = await openInspectorForURL(TEST_URL);
+  info("Testing 'Use in Console' menu item with enabled split console.");
+  await pushPref("devtools.toolbox.splitconsole.enabled", true);
+  await testConsoleFunctionality({ isSplitConsoleEnabled: true });
 
-  info("Testing 'Use in Console' menu item.");
+  info("Testing 'Use in Console' menu item with disabled split console.");
+  await pushPref("devtools.toolbox.splitconsole.enabled", false);
+  await testConsoleFunctionality({ isSplitConsoleEnabled: false });
+});
+
+async function testConsoleFunctionality({ isSplitConsoleEnabled }) {
+  const { inspector, toolbox } = await openInspectorForURL(TEST_URL);
 
   await selectNode("#console-var", inspector);
   const container = await getContainerForSelector("#console-var", inspector);
@@ -26,6 +34,12 @@ add_task(async function () {
   await inspector.once("console-var-ready");
 
   const hud = toolbox.getPanel("webconsole").hud;
+
+  if (isSplitConsoleEnabled) {
+    ok(toolbox.splitConsole, "The console is split console.");
+  } else {
+    ok(!toolbox.splitConsole, "The console is Web Console tab.");
+  }
 
   const getConsoleResults = () => hud.ui.outputNode.querySelectorAll(".result");
 
@@ -54,4 +68,4 @@ add_task(async function () {
   );
 
   hud.ui.wrapper.dispatchClearHistory();
-});
+}

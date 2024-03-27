@@ -22,8 +22,14 @@ const TEST_URI = `https://example.com/document-builder.sjs?html=<meta charset=ut
 const { Toolbox } = require("resource://devtools/client/framework/toolbox.js");
 
 add_task(async function () {
-  // Make sure we start the test with the split console disabled.
-  await pushPref("devtools.toolbox.splitconsoleEnabled", false);
+  // Make sure we start the test with the split console closed, and the split console setting enabled
+  await pushPref("devtools.toolbox.splitconsole.open", false);
+  await pushPref("devtools.toolbox.splitconsole.enabled", true);
+
+  registerCleanupFunction(() => {
+    Services.prefs.clearUserPref("devtools.toolbox.splitconsole.enabled");
+  });
+
   const tab = await addTab(TEST_URI);
 
   const toolbox = await openToolboxForTab(
@@ -174,6 +180,28 @@ add_task(async function () {
     true,
     "The error is displayed again, with the correct error count, after enabling it from the settings panel"
   );
+
+  info("Disable the split console from the options panel");
+  const splitConsoleButtonToggleEl =
+    optionsPanel.panelWin.document.querySelector(
+      "input#devtools-enable-split-console"
+    );
+  splitConsoleButtonToggleEl.click();
+  await waitFor(
+    () => getErrorIcon(toolbox).getAttribute("title") === "Show Console"
+  );
+  ok(
+    true,
+    "The error count icon title changed to reflect split console being disabled"
+  );
+
+  info(
+    "Check if with split console being disabled click leads to the console tab"
+  );
+  const onWebConsole = toolbox.once("webconsole-selected");
+  getErrorIcon(toolbox).click();
+  await onWebConsole;
+  ok(!toolbox.splitConsole, "Web Console opened instead of split console");
 
   toolbox.destroy();
 });

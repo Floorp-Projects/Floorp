@@ -9,7 +9,7 @@
 "use strict";
 
 add_task(async function () {
-  Services.prefs.setBoolPref("devtools.toolbox.splitconsoleEnabled", true);
+  Services.prefs.setBoolPref("devtools.toolbox.splitconsole.open", true);
   await pushPref("devtools.debugger.map-scopes-enabled", true);
 
   const dbg = await initDebugger("doc-sourcemaps3.html", "test.js");

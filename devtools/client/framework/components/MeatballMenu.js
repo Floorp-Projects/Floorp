@@ -3,6 +3,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const SPLITCONSOLE_ENABLED_PREF = "devtools.toolbox.splitconsole.enabled";
+
 const {
   PureComponent,
   createFactory,
@@ -180,19 +182,27 @@ class MeatballMenu extends PureComponent {
 
     // Split console
     if (this.props.currentToolId !== "webconsole") {
-      const l10nID = this.props.isSplitConsoleActive
-        ? "toolbox-meatball-menu-hideconsole-label"
-        : "toolbox-meatball-menu-splitconsole-label";
-      items.push(
-        MenuItem({
-          id: "toolbox-meatball-menu-splitconsole",
-          key: "splitconsole",
-          l10nID,
-          accelerator: "Esc",
-          onClick: this.props.toggleSplitConsole,
-          className: "iconic",
-        })
+      const isSplitConsoleEnabled = Services.prefs.getBoolPref(
+        SPLITCONSOLE_ENABLED_PREF,
+        true
       );
+
+      if (isSplitConsoleEnabled) {
+        const l10nID = this.props.isSplitConsoleActive
+          ? "toolbox-meatball-menu-hideconsole-label"
+          : "toolbox-meatball-menu-splitconsole-label";
+
+        items.push(
+          MenuItem({
+            id: "toolbox-meatball-menu-splitconsole",
+            key: "splitconsole",
+            l10nID,
+            accelerator: "Esc",
+            onClick: this.props.toggleSplitConsole,
+            className: "iconic",
+          })
+        );
+      }
     }
 
     // Settings

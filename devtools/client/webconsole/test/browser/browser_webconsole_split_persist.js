@@ -99,7 +99,7 @@ add_task(async function () {
 });
 
 function getVisiblePrefValue() {
-  return Services.prefs.getBoolPref("devtools.toolbox.splitconsoleEnabled");
+  return Services.prefs.getBoolPref("devtools.toolbox.splitconsole.open");
 }
 
 function getHeightPrefValue() {
