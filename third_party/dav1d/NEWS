@@ -1,3 +1,15 @@
+Changes for 1.4.1 'Road Runner':
+--------------------------------
+
+1.4.1 is a small release of dav1d, improving notably ARM and RISC-V speed
+
+- Optimizations for 6tap filters for NEON (ARM)
+- More RISC-V optimizations for itx (4x8, 8x4, 4x16, 16x4, 8x16, 16x8)
+- Reduction of binary size on ARM64, ARM32 and RISC-V
+- Fix out-of-bounds read in 8bpc SSE2/SSSE3 wiener_filter
+- Msac optimizations
+
+
 Changes for 1.4.0 'Road Runner':
 --------------------------------
 
@@ -26,7 +38,7 @@ Changes for 1.3.0 'Tundra Peregrine Falcon (Calidus)':
 
 
 Changes for 1.2.1 'Arctic Peregrine Falcon':
--------------------------------------------
+--------------------------------------------
 
 1.2.1 is a small release of dav1d, adding more SIMD and fixes
 
@@ -42,7 +54,7 @@ Changes for 1.2.1 'Arctic Peregrine Falcon':
 
 
 Changes for 1.2.0 'Arctic Peregrine Falcon':
--------------------------------------------
+--------------------------------------------
 
 1.2.0 is a small release of dav1d, adding more SIMD and fixes
 
@@ -55,7 +67,7 @@ Changes for 1.2.0 'Arctic Peregrine Falcon':
 
 
 Changes for 1.1.0 'Arctic Peregrine Falcon':
--------------------------------------------
+--------------------------------------------
 
 1.1.0 is an important release of dav1d, fixing numerous bugs, and adding SIMD
 

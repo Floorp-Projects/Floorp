@@ -117,9 +117,11 @@ static ALWAYS_INLINE void itx_dsp_init_arm(Dav1dInvTxfmDSPContext *const c, int 
 
     if (!(flags & DAV1D_ARM_CPU_FLAG_NEON)) return;
 
+    assign_itx_fn( , 4, 4, wht_wht,           WHT_WHT,           neon);
+
     if (BITDEPTH == 16 && bpc != 10) return;
 
-    assign_itx17_fn( ,  4,  4, neon);
+    assign_itx16_fn( ,  4,  4, neon);
     assign_itx16_fn(R,  4,  8, neon);
     assign_itx16_fn(R,  4, 16, neon);
     assign_itx16_fn(R,  8,  4, neon);
