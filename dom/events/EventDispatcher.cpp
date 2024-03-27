@@ -1141,9 +1141,8 @@ nsresult EventDispatcher::Dispatch(EventTarget* aTarget,
           if (!postVisitor.mDOMEvent) {
             // This is tiny bit slow, but happens only once per event.
             // Similar code also in EventListenerManager.
-            nsCOMPtr<EventTarget> et = aEvent->mOriginalTarget;
-            RefPtr<Event> event =
-                EventDispatcher::CreateEvent(et, aPresContext, aEvent, u""_ns);
+            RefPtr<Event> event = EventDispatcher::CreateEvent(
+                aEvent->mOriginalTarget, aPresContext, aEvent, u""_ns);
             event.swap(postVisitor.mDOMEvent);
           }
           nsAutoString typeStr;
@@ -1151,12 +1150,11 @@ nsresult EventDispatcher::Dispatch(EventTarget* aTarget,
           AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING(
               "EventDispatcher::Dispatch", OTHER, typeStr);
 
-          nsCOMPtr<nsIDocShell> docShell;
-          docShell = nsContentUtils::GetDocShellForEventTarget(aEvent->mTarget);
           MarkerInnerWindowId innerWindowId;
-          if (nsCOMPtr<nsPIDOMWindowInner> inner =
-                  do_QueryInterface(aEvent->mTarget->GetOwnerGlobal())) {
-            innerWindowId = MarkerInnerWindowId{inner->WindowID()};
+          if (nsIGlobalObject* global = aEvent->mTarget->GetOwnerGlobal()) {
+            if (nsPIDOMWindowInner* inner = global->GetAsInnerWindow()) {
+              innerWindowId = MarkerInnerWindowId{inner->WindowID()};
+            }
           }
 
           struct DOMEventMarker {
@@ -1206,7 +1204,7 @@ nsresult EventDispatcher::Dispatch(EventTarget* aTarget,
 
           auto startTime = TimeStamp::Now();
           profiler_add_marker("DOMEvent", geckoprofiler::category::DOM,
-                              {MarkerTiming::IntervalStart(),
+                              {MarkerTiming::IntervalStart(startTime),
                                MarkerInnerWindowId(innerWindowId)},
                               DOMEventMarker{}, typeStr, target, startTime,
                               aEvent->mTimeStamp);
