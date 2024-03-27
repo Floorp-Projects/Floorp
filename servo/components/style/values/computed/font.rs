@@ -8,7 +8,7 @@ use crate::parser::{Parse, ParserContext};
 use crate::values::animated::ToAnimatedValue;
 use crate::values::computed::{
     Angle, Context, Integer, Length, NonNegativeLength, NonNegativeNumber, Number, Percentage,
-    ToComputedValue,
+    ToComputedValue, Zoom,
 };
 use crate::values::generics::font::{
     FeatureTagValue, FontSettings, TaggedFontValue, VariationValue,
@@ -276,6 +276,16 @@ impl FontSize {
     #[inline]
     pub fn used_size(&self) -> Length {
         self.used_size.0
+    }
+
+    /// Apply zoom to the font-size. This is usually done by ToComputedValue.
+    #[inline]
+    pub fn zoom(&self, zoom: Zoom) -> Self {
+        Self {
+            computed_size: NonNegative(Length::new(zoom.zoom(self.computed_size.0.px()))),
+            used_size: NonNegative(Length::new(zoom.zoom(self.used_size.0.px()))),
+            keyword_info: self.keyword_info,
+        }
     }
 
     #[inline]
