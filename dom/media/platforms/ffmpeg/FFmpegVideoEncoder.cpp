@@ -245,9 +245,7 @@ uint8_t FFmpegVideoEncoder<LIBAV_VER>::SVCInfo::UpdateTemporalLayerId() {
 FFmpegVideoEncoder<LIBAV_VER>::FFmpegVideoEncoder(
     const FFmpegLibWrapper* aLib, AVCodecID aCodecID,
     const RefPtr<TaskQueue>& aTaskQueue, const EncoderConfig& aConfig)
-    : FFmpegDataEncoder(aLib, aCodecID, aTaskQueue, aConfig)
-    {}
-
+    : FFmpegDataEncoder(aLib, aCodecID, aTaskQueue, aConfig) {}
 
 nsCString FFmpegVideoEncoder<LIBAV_VER>::GetDescriptionName() const {
 #ifdef USING_MOZFFVPX
@@ -263,7 +261,7 @@ nsCString FFmpegVideoEncoder<LIBAV_VER>::GetDescriptionName() const {
 #endif
 }
 
-MediaResult FFmpegVideoEncoder<LIBAV_VER>::InitSpecific() {
+nsresult FFmpegVideoEncoder<LIBAV_VER>::InitSpecific() {
   MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
 
   FFMPEGV_LOG("FFmpegVideoEncoder::InitSpecific");
@@ -271,10 +269,8 @@ MediaResult FFmpegVideoEncoder<LIBAV_VER>::InitSpecific() {
   // Initialize the common members of the encoder instance
   AVCodec* codec = FFmpegDataEncoder<LIBAV_VER>::InitCommon();
   if (!codec) {
-    return MediaResult(
-        NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR,
-        RESULT_DETAIL(
-            "Failed to initialize common members of FFmpegVideooEncoder"));
+    FFMPEGV_LOG("FFmpegDataEncoder::InitCommon failed");
+    return NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR;
   }
 
   // And now the video-specific part
@@ -282,7 +278,11 @@ MediaResult FFmpegVideoEncoder<LIBAV_VER>::InitSpecific() {
   mCodecContext->width = static_cast<int>(mConfig.mSize.width);
   mCodecContext->height = static_cast<int>(mConfig.mSize.height);
   mCodecContext->gop_size = static_cast<int>(mConfig.mKeyframeInterval);
-  #if LIBAVCODEC_VERSION_MAJOR >= 57
+  // TODO(bug 1869560): The recommended time_base is the reciprocal of the frame
+  // rate, but we set it to microsecond for now.
+  mCodecContext->time_base =
+      AVRational{.num = 1, .den = static_cast<int>(USECS_PER_S)};
+#if LIBAVCODEC_VERSION_MAJOR >= 57
   // Note that sometimes framerate can be zero (from webcodecs).
   mCodecContext->framerate =
       AVRational{.num = static_cast<int>(mConfig.mFramerate), .den = 1};
@@ -366,7 +366,7 @@ MediaResult FFmpegVideoEncoder<LIBAV_VER>::InitSpecific() {
   // encoder.
   mCodecContext->strict_std_compliance = FF_COMPLIANCE_EXPERIMENTAL;
 
-  MediaResult rv =  FinishInitCommon(codec);
+  MediaResult rv = FinishInitCommon(codec);
   if (NS_FAILED(rv)) {
     FFMPEGV_LOG("FFmpeg video encoder initialization failure.");
     return rv;
@@ -380,7 +380,7 @@ MediaResult FFmpegVideoEncoder<LIBAV_VER>::InitSpecific() {
               mCodecContext->time_base.num, mCodecContext->time_base.den,
               h264Log.IsEmpty() ? "" : h264Log.get());
 
-  return MediaResult(NS_OK);
+  return NS_OK;
 }
 
 bool FFmpegVideoEncoder<LIBAV_VER>::ScaleInputFrame() {
@@ -427,8 +427,8 @@ bool FFmpegVideoEncoder<LIBAV_VER>::ScaleInputFrame() {
 
 // avcodec_send_frame and avcodec_receive_packet were introduced in version 58.
 #if LIBAVCODEC_VERSION_MAJOR >= 58
-RefPtr<MediaDataEncoder::EncodePromise> FFmpegVideoEncoder<
-    LIBAV_VER>::EncodeWithModernAPIs(RefPtr<const MediaData> aSample) {
+Result<MediaDataEncoder::EncodedData, nsresult> FFmpegVideoEncoder<
+    LIBAV_VER>::EncodeInputWithModernAPIs(RefPtr<const MediaData> aSample) {
   MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
   MOZ_ASSERT(mCodecContext);
   MOZ_ASSERT(aSample);
@@ -438,26 +438,20 @@ RefPtr<MediaDataEncoder::EncodePromise> FFmpegVideoEncoder<
   // Validate input.
   if (!sample->mImage) {
     FFMPEGV_LOG("No image");
-    return EncodePromise::CreateAndReject(
-        MediaResult(NS_ERROR_ILLEGAL_INPUT,
-                    RESULT_DETAIL("No image in sample")),
-        __func__);
+    return Result<MediaDataEncoder::EncodedData, nsresult>(
+        NS_ERROR_DOM_MEDIA_FATAL_ERR);
   }
   if (sample->mImage->GetSize().IsEmpty()) {
     FFMPEGV_LOG("image width or height is invalid");
-    return EncodePromise::CreateAndReject(
-        MediaResult(NS_ERROR_ILLEGAL_INPUT,
-                    RESULT_DETAIL("Invalid image size")),
-        __func__);
+    return Result<MediaDataEncoder::EncodedData, nsresult>(
+        NS_ERROR_DOM_MEDIA_FATAL_ERR);
   }
 
   // Allocate AVFrame.
   if (!PrepareFrame()) {
     FFMPEGV_LOG("failed to allocate frame");
-    return EncodePromise::CreateAndReject(
-        MediaResult(NS_ERROR_OUT_OF_MEMORY,
-                    RESULT_DETAIL("Unable to allocate frame")),
-        __func__);
+    return Result<MediaDataEncoder::EncodedData, nsresult>(
+        NS_ERROR_DOM_MEDIA_FATAL_ERR);
   }
 
   // Set AVFrame properties for its internal data allocation. For now, we always
@@ -470,20 +464,16 @@ RefPtr<MediaDataEncoder::EncodePromise> FFmpegVideoEncoder<
   if (int ret = mLib->av_frame_get_buffer(mFrame, 0); ret < 0) {
     FFMPEGV_LOG("failed to allocate frame data: %s",
                 MakeErrorString(mLib, ret).get());
-    return EncodePromise::CreateAndReject(
-        MediaResult(NS_ERROR_OUT_OF_MEMORY,
-                    RESULT_DETAIL("Unable to allocate frame data")),
-        __func__);
+    return Result<MediaDataEncoder::EncodedData, nsresult>(
+        NS_ERROR_DOM_MEDIA_FATAL_ERR);
   }
 
   // Make sure AVFrame is writable.
   if (int ret = mLib->av_frame_make_writable(mFrame); ret < 0) {
     FFMPEGV_LOG("failed to make frame writable: %s",
                 MakeErrorString(mLib, ret).get());
-    return EncodePromise::CreateAndReject(
-        MediaResult(NS_ERROR_NOT_AVAILABLE,
-                    RESULT_DETAIL("Unable to make frame writable")),
-        __func__);
+    return Result<MediaDataEncoder::EncodedData, nsresult>(
+        NS_ERROR_DOM_MEDIA_FATAL_ERR);
   }
 
   nsresult rv = ConvertToI420(
@@ -491,10 +481,8 @@ RefPtr<MediaDataEncoder::EncodePromise> FFmpegVideoEncoder<
       mFrame->linesize[1], mFrame->data[2], mFrame->linesize[2]);
   if (NS_FAILED(rv)) {
     FFMPEGV_LOG("Conversion error!");
-    return EncodePromise::CreateAndReject(
-        MediaResult(NS_ERROR_ILLEGAL_INPUT,
-                    RESULT_DETAIL("libyuv conversion error")),
-        __func__);
+    return Result<MediaDataEncoder::EncodedData, nsresult>(
+        NS_ERROR_DOM_MEDIA_FATAL_ERR);
   }
 
   // Scale the YUV input frame if needed -- the encoded frame will have the
@@ -502,10 +490,8 @@ RefPtr<MediaDataEncoder::EncodePromise> FFmpegVideoEncoder<
   if (mFrame->width != mConfig.mSize.Width() ||
       mFrame->height != mConfig.mSize.Height()) {
     if (!ScaleInputFrame()) {
-      return EncodePromise::CreateAndReject(
-          MediaResult(NS_ERROR_OUT_OF_MEMORY,
-                      RESULT_DETAIL("libyuv scaling error")),
-          __func__);
+      return Result<MediaDataEncoder::EncodedData, nsresult>(
+          NS_ERROR_DOM_MEDIA_FATAL_ERR);
     }
   }
 
@@ -526,21 +512,10 @@ RefPtr<MediaDataEncoder::EncodePromise> FFmpegVideoEncoder<
 #  endif
   mFrame->pkt_duration = aSample->mDuration.ToMicroseconds();
 
-  // Initialize AVPacket.
-  AVPacket* pkt = mLib->av_packet_alloc();
-
-  if (!pkt) {
-    FFMPEGV_LOG("failed to allocate packet");
-    return EncodePromise::CreateAndReject(
-        MediaResult(NS_ERROR_OUT_OF_MEMORY,
-                    RESULT_DETAIL("Unable to allocate packet")),
-        __func__);
-  }
-
   // Now send the AVFrame to ffmpeg for encoding, same code for audio and video.
-  return FFmpegDataEncoder<LIBAV_VER>::EncodeWithModernAPIs(aSample);
+  return FFmpegDataEncoder<LIBAV_VER>::EncodeWithModernAPIs();
 }
-#endif // if LIBAVCODEC_VERSION_MAJOR >= 58
+#endif  // if LIBAVCODEC_VERSION_MAJOR >= 58
 
 RefPtr<MediaRawData> FFmpegVideoEncoder<LIBAV_VER>::ToMediaRawData(
     AVPacket* aPacket) {
