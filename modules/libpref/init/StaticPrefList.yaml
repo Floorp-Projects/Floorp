@@ -2862,7 +2862,7 @@
 #ifdef MOZ_ENABLE_FORKSERVER
 - name: dom.ipc.forkserver.enable
   type: bool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: once
 #endif
 
