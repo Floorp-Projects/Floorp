@@ -86,6 +86,9 @@ if CONFIG["OS_ARCH"] == "WINNT":
 if CONFIG["MOZ_NEEDS_LIBATOMIC"]:
     OS_LIBS += ["atomic"]
 
+if CONFIG["TARGET_OS"] == "iOS":
+    OS_LIBS += ["-framework BrowserEngineCore"]
+
 OS_LIBS += CONFIG["REALTIME_LIBS"]
 
 NO_EXPAND_LIBS = True
