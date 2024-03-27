@@ -1199,7 +1199,6 @@ cglobal prep_bilin_8bpc, 3, 7, 0, tmp, src, stride, w, h, mxy, stride3
     RET
 .v:
 %if notcpuflag(ssse3)
- %assign stack_offset stack_offset - stack_size_padded
     WIN64_SPILL_XMM 8
 %endif
     movzx                wd, word [r6+wq*2+table_offset(prep, _bilin_v)]
@@ -1375,7 +1374,6 @@ cglobal prep_bilin_8bpc, 3, 7, 0, tmp, src, stride, w, h, mxy, stride3
     ; (16 * src[x] + (my * (src[x + src_stride] - src[x])) + 8) >> 4
     ; = src[x] + (((my * (src[x + src_stride] - src[x])) + 8) >> 4)
     movzx                wd, word [r6+wq*2+table_offset(prep, _bilin_hv)]
-%assign stack_offset stack_offset - stack_size_padded
 %if cpuflag(ssse3)
     imul               mxyd, 0x08000800
     WIN64_SPILL_XMM 8
@@ -1592,7 +1590,6 @@ FN put_8tap, regular,        REGULAR, REGULAR
 %endif
 
 cglobal put_8tap_8bpc, 1, 9, 0, dst, ds, src, ss, w, h, mx, my, ss3
-%assign org_stack_offset stack_offset
     imul                mxd, mxm, 0x010101
     add                 mxd, t0d ; 8tap_h, mx, 4tap_h
 %if ARCH_X86_64
@@ -1618,7 +1615,6 @@ cglobal put_8tap_8bpc, 1, 9, 0, dst, ds, src, ss, w, h, mx, my, ss3
     movzx                wd, word [base_reg+wq*2+table_offset(put,)]
     add                  wq, base_reg
 ; put_bilin mangling jump
-%assign stack_offset org_stack_offset
     movifnidn           dsq, dsmp
     movifnidn           ssq, ssmp
 %if WIN64
@@ -1792,7 +1788,6 @@ cglobal put_8tap_8bpc, 1, 9, 0, dst, ds, src, ss, w, h, mx, my, ss3
     cmovs               ssd, mxd
     movq                 m0, [base_reg+ssq*8+subpel_filters-put_ssse3]
 %else
- %assign stack_offset org_stack_offset
     WIN64_SPILL_XMM      16
     movzx               mxd, myb
     shr                 myd, 16
@@ -2048,7 +2043,7 @@ cglobal put_8tap_8bpc, 1, 9, 0, dst, ds, src, ss, w, h, mx, my, ss3
 %undef subpel2
 %undef subpel3
 .hv:
-    %assign stack_offset org_stack_offset
+    RESET_STACK_STATE
     cmp                  wd, 4
     jg .hv_w8
 %if ARCH_X86_32
@@ -2369,7 +2364,7 @@ cglobal put_8tap_8bpc, 1, 9, 0, dst, ds, src, ss, w, h, mx, my, ss3
 %undef subpelv2
 %undef subpelv3
 .hv_w8:
-    %assign stack_offset org_stack_offset
+    RESET_STACK_STATE
 %define hv8_line_1 0
 %define hv8_line_2 1
 %define hv8_line_3 2
@@ -2843,7 +2838,6 @@ FN prep_8tap, regular,        REGULAR, REGULAR
  %define base 0
 %endif
 cglobal prep_8tap_8bpc, 1, 9, 0, tmp, src, stride, w, h, mx, my, stride3
-%assign org_stack_offset stack_offset
     imul                mxd, mxm, 0x010101
     add                 mxd, t0d ; 8tap_h, mx, 4tap_h
     imul                myd, mym, 0x010101
@@ -2862,7 +2856,6 @@ cglobal prep_8tap_8bpc, 1, 9, 0, tmp, src, stride, w, h, mx, my, stride3
     add                  wq, base_reg
     movifnidn       strided, stridem
     lea                  r6, [strideq*3]
-    %assign stack_offset org_stack_offset
 %if WIN64
     pop                  r8
     pop                  r7
@@ -3095,7 +3088,6 @@ cglobal prep_8tap_8bpc, 1, 9, 0, tmp, src, stride, w, h, mx, my, stride3
     mov                 mxd, myd
     and                 mxd, 0x7f
 %else
- %assign stack_offset org_stack_offset
     WIN64_SPILL_XMM      16
     movzx               mxd, myb
 %endif
@@ -3359,7 +3351,7 @@ cglobal prep_8tap_8bpc, 1, 9, 0, tmp, src, stride, w, h, mx, my, stride3
 %undef subpel2
 %undef subpel3
 .hv:
-    %assign stack_offset org_stack_offset
+    RESET_STACK_STATE
     cmp                  wd, 4
     jg .hv_w8
     and                 mxd, 0x7f
@@ -3659,7 +3651,7 @@ cglobal prep_8tap_8bpc, 1, 9, 0, tmp, src, stride, w, h, mx, my, stride3
 %undef subpelv2
 %undef subpelv3
 .hv_w8:
-    %assign stack_offset org_stack_offset
+    RESET_STACK_STATE
 %define hv8_line_1 0
 %define hv8_line_2 1
 %define hv8_line_3 2

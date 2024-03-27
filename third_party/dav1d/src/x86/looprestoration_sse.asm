@@ -42,7 +42,6 @@ pb_0to15:      db  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15
 pb_right_ext_mask: times 24 db 0xff
                    times 8 db 0
 pb_1:          times 16 db 1
-pb_3:          times 16 db 3
 pw_256:        times 8 dw 256
 pw_2056:       times 8 dw 2056
 pw_m16380:     times 8 dw -16380
@@ -290,7 +289,7 @@ cglobal wiener_filter7_8bpc, 0, 7, 8, -384*12-stk_off, _, x, left, lpf, tmpstrid
     call mangle(private_prefix %+ _wiener_filter7_8bpc_ssse3).v
     jmp .v1
 .extend_right:
-    movd            m2, [lpfq-4]
+    movd            m2, [lpfq-1]
 %if ARCH_X86_64
     push            r0
     lea             r0, [pb_right_ext_mask+21]
@@ -302,10 +301,11 @@ cglobal wiener_filter7_8bpc, 0, 7, 8, -384*12-stk_off, _, x, left, lpf, tmpstrid
     movu            m1, [r6+xq+8]
 %endif
 %if cpuflag(ssse3)
-    pshufb          m2, [base+pb_3]
+    pxor            m3, m3
+    pshufb          m2, m3
 %else
     punpcklbw       m2, m2
-    pshuflw         m2, m2, q3333
+    pshuflw         m2, m2, q0000
     punpcklqdq      m2, m2
 %endif
     pand            m4, m0

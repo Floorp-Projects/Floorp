@@ -1016,6 +1016,10 @@ void dav1d_inv_identity32_1d_c(int32_t *const c, const ptrdiff_t stride,
         c[stride * i] *= 4;
 }
 
+#if !(HAVE_ASM && TRIM_DSP_FUNCTIONS && ( \
+  ARCH_AARCH64 || \
+  (ARCH_ARM && (defined(__ARM_NEON) || defined(__APPLE__) || defined(_WIN32))) \
+))
 void dav1d_inv_wht4_1d_c(int32_t *const c, const ptrdiff_t stride) {
     assert(stride > 0);
     const int in0 = c[0 * stride], in1 = c[1 * stride];
@@ -1032,3 +1036,4 @@ void dav1d_inv_wht4_1d_c(int32_t *const c, const ptrdiff_t stride) {
     c[2 * stride] = t1;
     c[3 * stride] = t2 + t1;
 }
+#endif
