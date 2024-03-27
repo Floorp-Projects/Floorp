@@ -65,6 +65,38 @@ void uiaRawElmProvider::RaiseUiaEventForGeckoEvent(Accessible* aAcc,
   }
 }
 
+/* static */
+void uiaRawElmProvider::RaiseUiaEventForStateChange(Accessible* aAcc,
+                                                    uint64_t aState,
+                                                    bool aEnabled) {
+  if (!StaticPrefs::accessibility_uia_enable()) {
+    return;
+  }
+  auto* uia = MsaaAccessible::GetFrom(aAcc);
+  if (!uia) {
+    return;
+  }
+  PROPERTYID property = 0;
+  _variant_t newVal;
+  switch (aState) {
+    case states::CHECKED:
+    case states::MIXED:
+    case states::PRESSED:
+      property = UIA_ToggleToggleStatePropertyId;
+      newVal.vt = VT_I4;
+      newVal.lVal = ToToggleState(aEnabled ? aState : 0);
+      break;
+    default:
+      return;
+  }
+  MOZ_ASSERT(property);
+  if (::UiaClientsAreListening()) {
+    // We can't get the old value. Thankfully, clients don't seem to need it.
+    _variant_t oldVal;
+    ::UiaRaiseAutomationPropertyChangedEvent(uia, property, oldVal, newVal);
+  }
+}
+
 // IUnknown
 
 STDMETHODIMP
@@ -78,6 +110,8 @@ uiaRawElmProvider::QueryInterface(REFIID aIid, void** aInterface) {
     *aInterface = static_cast<IRawElementProviderFragment*>(this);
   } else if (aIid == IID_IInvokeProvider) {
     *aInterface = static_cast<IInvokeProvider*>(this);
+  } else if (aIid == IID_IToggleProvider) {
+    *aInterface = static_cast<IToggleProvider*>(this);
   } else {
     return E_NOINTERFACE;
   }
@@ -176,9 +210,18 @@ uiaRawElmProvider::GetPatternProvider(
   }
   switch (aPatternId) {
     case UIA_InvokePatternId:
-      if (acc->ActionCount() > 0) {
+      // Per the UIA documentation, we should only expose the Invoke pattern "if
+      // the same behavior is not exposed through another control pattern
+      // provider".
+      if (acc->ActionCount() > 0 && !HasTogglePattern()) {
         RefPtr<IInvokeProvider> invoke = this;
         invoke.forget(aPatternProvider);
+      }
+      return S_OK;
+    case UIA_TogglePatternId:
+      if (HasTogglePattern()) {
+        RefPtr<IToggleProvider> toggle = this;
+        toggle.forget(aPatternProvider);
       }
       return S_OK;
   }
@@ -497,6 +540,31 @@ uiaRawElmProvider::Invoke() {
   return S_OK;
 }
 
+// IToggleProvider methods
+
+STDMETHODIMP
+uiaRawElmProvider::Toggle() {
+  Accessible* acc = Acc();
+  if (!acc) {
+    return CO_E_OBJNOTCONNECTED;
+  }
+  acc->DoAction(0);
+  return S_OK;
+}
+
+STDMETHODIMP
+uiaRawElmProvider::get_ToggleState(__RPC__out enum ToggleState* aRetVal) {
+  if (!aRetVal) {
+    return E_INVALIDARG;
+  }
+  Accessible* acc = Acc();
+  if (!acc) {
+    return CO_E_OBJNOTCONNECTED;
+  }
+  *aRetVal = ToToggleState(acc->State());
+  return S_OK;
+}
+
 // Private methods
 
 bool uiaRawElmProvider::IsControl() {
@@ -577,4 +645,22 @@ long uiaRawElmProvider::GetControlType() const {
 #undef ROLE
   MOZ_CRASH("Unknown role.");
   return 0;
+}
+
+bool uiaRawElmProvider::HasTogglePattern() {
+  Accessible* acc = Acc();
+  MOZ_ASSERT(acc);
+  return acc->State() & states::CHECKABLE ||
+         acc->Role() == roles::TOGGLE_BUTTON;
+}
+
+/* static */
+ToggleState uiaRawElmProvider::ToToggleState(uint64_t aState) {
+  if (aState & states::MIXED) {
+    return ToggleState_Indeterminate;
+  }
+  if (aState & (states::CHECKED | states::PRESSED)) {
+    return ToggleState_On;
+  }
+  return ToggleState_Off;
 }
