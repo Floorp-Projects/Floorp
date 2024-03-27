@@ -1581,8 +1581,7 @@ AttachDecision GetPropIRGenerator::tryAttachScriptedProxy(
 
   writer.guardIsProxy(objId);
   writer.guardHasProxyHandler(objId, &ScriptedProxyHandler::singleton);
-  ValOperandId handlerValId = writer.loadScriptedProxyHandler(objId);
-  ObjOperandId handlerObjId = writer.guardToObject(handlerValId);
+  ObjOperandId handlerObjId = writer.loadScriptedProxyHandler(objId);
   ObjOperandId targetObjId =
       writer.loadWrapperTarget(objId, /*fallible =*/true);
 

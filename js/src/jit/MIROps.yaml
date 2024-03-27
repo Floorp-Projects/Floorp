@@ -539,7 +539,8 @@
 - name: LoadScriptedProxyHandler
   operands:
     object: Object
-  result_type: Value
+  result_type: Object
+  guard: true
   congruent_to: if_operands_equal
   alias_set: none
 
