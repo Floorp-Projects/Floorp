@@ -643,19 +643,8 @@ fn hover_and_active_quirk_applies<Impl: SelectorImpl>(
     }
 
     selector_iter.clone().all(|simple| match *simple {
-        Component::LocalName(_) |
-        Component::AttributeInNoNamespaceExists { .. } |
-        Component::AttributeInNoNamespace { .. } |
-        Component::AttributeOther(_) |
-        Component::ID(_) |
-        Component::Class(_) |
-        Component::PseudoElement(_) |
-        Component::Negation(_) |
-        Component::Empty |
-        Component::Nth(_) |
-        Component::NthOf(_) => false,
         Component::NonTSPseudoClass(ref pseudo_class) => pseudo_class.is_active_or_hover(),
-        _ => true,
+        _ => false,
     })
 }
 

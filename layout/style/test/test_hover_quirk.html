@@ -54,6 +54,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=783213
     #dynamic-test:hover > * {
       background: rgb(0, 255, 0);
     }
+
+    #dynamic-test-2 :is(button,input,a){
+      background-color:yellow !important;
+    }
+
+    #dynamic-test-2 :is(button,input,a):hover{
+      background-color:lime !important;
+    }
+
+    #dynamic-test-2 :is(button,input):focus{
+      background-color:skyblue !important;
+    }
   </style>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <script src="/tests/SimpleTest/EventUtils.js"></script>
@@ -97,6 +109,21 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=783213
       is(getComputedStyle(document.getElementById('should-be-green-on-hover')).backgroundColor,
          "rgb(0, 255, 0)",
          "Dynamic change should invalidate properly");
+
+      synthesizeMouseAtCenter(document.getElementById('button'), {type: "mousemove"});
+      is(getComputedStyle(document.getElementById('button')).backgroundColor,
+        "rgb(0, 255, 0)",
+        "Button hover should be green");
+
+      synthesizeMouseAtCenter(document.getElementById('input'), {type: "mousemove"});
+      is(getComputedStyle(document.getElementById('input')).backgroundColor,
+        "rgb(0, 255, 0)",
+        "Input hover should be green");
+
+      synthesizeMouseAtCenter(document.getElementById('link-2'), {type: "mousemove"});
+      is(getComputedStyle(document.getElementById('link-2')).backgroundColor,
+        "rgb(0, 255, 0)",
+        "Link hover should be green");
       SimpleTest.finish();
     });
   </script>
@@ -112,6 +139,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=783213
     <label id="label">Label<span class="child"></span></label><br>
     <a id="link" href="#">Link<span class="child"></span></a><br>
     <div id="div" class="parent">Div <span><span class="child"></span></span></div><br>
+  </div>
+  <div id="dynamic-test-2">
+    <button id="button">Button</button>
+    <input id="input" value="Input">
+    <a id="link-2"href="">Link</a>
   </div>
   <pre id="test"></pre>
 </body>
