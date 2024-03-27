@@ -22,6 +22,8 @@ const {
 const SUPPORTED_OPTIONS = {
   // List of all active breakpoints.
   breakpoints: true,
+  // List of all active event breakpoints.
+  eventBreakpoints: true,
   // Disable pausing on caught exceptions.
   ignoreCaughtExceptions: true,
   // Log the event break points.
