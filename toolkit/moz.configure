@@ -205,10 +205,8 @@ def audio_backends_default(target):
         return ("oss",)
     elif target.os == "OpenBSD":
         return ("sndio",)
-    elif target.os == "OSX":
+    elif target.kernel == "Darwin":
         return ("audiounit",)
-    elif target.os == "iOS":
-        return None
     elif target.os == "NetBSD":
         return ("sunaudio",)
     elif target.os == "SunOS":
@@ -259,11 +257,7 @@ def imply_alsa(values, target):
 
 @depends("--enable-audio-backends", target)
 def imply_audiounit(values, target):
-    if (
-        any("audiounit" in value for value in values)
-        and target.os != "OSX"
-        and target.kernel != "Darwin"
-    ):
+    if any("audiounit" in value for value in values) and target.kernel != "Darwin":
         die("Cannot enable AudioUnit on %s", target.os)
     return any("audiounit" in value for value in values) or None
 
