@@ -162,13 +162,7 @@ open class DefaultToolbarMenu(
     // Predicates that need to be repeatedly called as the session changes
     @VisibleForTesting(otherwise = PRIVATE)
     fun canAddToHomescreen(): Boolean =
-        selectedSession != null && isPinningSupported &&
-            !context.components.useCases.webAppUseCases.isInstallable()
-
-    @VisibleForTesting(otherwise = PRIVATE)
-    fun canInstall(): Boolean =
-        selectedSession != null && isPinningSupported &&
-            context.components.useCases.webAppUseCases.isInstallable()
+        selectedSession != null && isPinningSupported
 
     /**
      * Should the "Open in regular tab" menu item be visible?
@@ -203,22 +197,6 @@ open class DefaultToolbarMenu(
             FxNimbus.features.translations.value().mainFlowBrowserMenuEnabled
     } ?: false
     // End of predicates //
-
-    private val installToHomescreen = BrowserMenuHighlightableItem(
-        label = context.getString(R.string.browser_menu_install_on_homescreen),
-        startImageResource = R.drawable.mozac_ic_add_to_homescreen_24,
-        iconTintColorResource = primaryTextColor(),
-        highlight = BrowserMenuHighlight.LowPriority(
-            label = context.getString(R.string.browser_menu_install_on_homescreen),
-            notificationTint = getColor(context, R.color.fx_mobile_icon_color_information),
-        ),
-        isCollapsingMenuLimit = true,
-        isHighlighted = {
-            !context.settings().installPwaOpened
-        },
-    ) {
-        onItemTapped.invoke(ToolbarMenu.Item.InstallPwaToHomeScreen)
-    }
 
     @VisibleForTesting
     internal val newTabItem = BrowserMenuImageText(
@@ -314,7 +292,11 @@ open class DefaultToolbarMenu(
         iconTintColorResource = primaryTextColor(),
         isCollapsingMenuLimit = true,
     ) {
-        onItemTapped.invoke(ToolbarMenu.Item.AddToHomeScreen)
+        if (context.components.useCases.webAppUseCases.isInstallable()) {
+            onItemTapped.invoke(ToolbarMenu.Item.InstallPwaToHomeScreen)
+        } else {
+            onItemTapped.invoke(ToolbarMenu.Item.AddToHomeScreen)
+        }
     }
 
     private val addRemoveTopSitesItem = TwoStateBrowserMenuImageText(
@@ -430,7 +412,6 @@ open class DefaultToolbarMenu(
                 reportSiteIssuePlaceholder,
                 BrowserMenuDivider(),
                 addToHomeScreenItem.apply { visible = ::canAddToHomescreen },
-                installToHomescreen.apply { visible = ::canInstall },
                 if (shouldShowTopSites) addRemoveTopSitesItem else null,
                 saveToCollectionItem,
                 if (FxNimbus.features.print.value().browserPrintEnabled) printPageItem else null,
