@@ -154,6 +154,7 @@ static const char SandboxPolicyRDD[] = R"SANDBOX_LITERAL(
       (iokit-property "IOAVDHEVCDecodeCapabilities")
       (iokit-property "IOGVAHEVCEncode")
       (iokit-property "IOGVAXDecode")
+      (iokit-property "IOAVDAV1DecodeCapabilities")
       (iokit-property "IOPCITunnelled")
       (iokit-property "IOVARendererID")
       (iokit-property "MetalPluginName")
