@@ -57,7 +57,7 @@ class AbstractGeneratorObject : public NativeObject {
   static bool suspend(JSContext* cx, HandleObject obj, AbstractFramePtr frame,
                       const jsbytecode* pc, unsigned nvalues);
 
-  static void finalSuspend(HandleObject obj);
+  static void finalSuspend(JSContext* cx, HandleObject obj);
 
   JSFunction& callee() const {
     return getFixedSlot(CALLEE_SLOT).toObject().as<JSFunction>();
@@ -149,13 +149,7 @@ class AbstractGeneratorObject : public NativeObject {
     return getFixedSlot(RESUME_INDEX_SLOT).toInt32();
   }
   bool isClosed() const { return getFixedSlot(CALLEE_SLOT).isNull(); }
-  void setClosed() {
-    setFixedSlot(CALLEE_SLOT, NullValue());
-    setFixedSlot(ENV_CHAIN_SLOT, NullValue());
-    setFixedSlot(ARGS_OBJ_SLOT, NullValue());
-    setFixedSlot(STACK_STORAGE_SLOT, NullValue());
-    setFixedSlot(RESUME_INDEX_SLOT, NullValue());
-  }
+  void setClosed(JSContext* cx);
 
   bool isAfterYield();
   bool isAfterAwait();

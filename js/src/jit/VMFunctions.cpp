@@ -1111,7 +1111,7 @@ bool NormalSuspend(JSContext* cx, HandleObject obj, BaselineFrame* frame,
 
 bool FinalSuspend(JSContext* cx, HandleObject obj, const jsbytecode* pc) {
   MOZ_ASSERT(JSOp(*pc) == JSOp::FinalYieldRval);
-  AbstractGeneratorObject::finalSuspend(obj);
+  AbstractGeneratorObject::finalSuspend(cx, obj);
   return true;
 }
 

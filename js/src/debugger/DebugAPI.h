@@ -342,6 +342,9 @@ class DebugAPI {
       JSContext* cx, AbstractFramePtr frame,
       Handle<AbstractGeneratorObject*> genObj);
 
+  static inline void onGeneratorClosed(JSContext* cx,
+                                       AbstractGeneratorObject* genObj);
+
   // If necessary, record an object that was just allocated for any observing
   // debuggers.
   [[nodiscard]] static inline bool onLogAllocationSite(
@@ -371,6 +374,8 @@ class DebugAPI {
   [[nodiscard]] static bool slowPathOnNewGenerator(
       JSContext* cx, AbstractFramePtr frame,
       Handle<AbstractGeneratorObject*> genObj);
+  static void slowPathOnGeneratorClosed(JSContext* cx,
+                                        AbstractGeneratorObject* genObj);
   [[nodiscard]] static bool slowPathCheckNoExecute(JSContext* cx,
                                                    HandleScript script);
   [[nodiscard]] static bool slowPathOnEnterFrame(JSContext* cx,
