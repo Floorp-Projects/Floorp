@@ -184,8 +184,8 @@ static bool CanEncode(const RefPtr<AudioEncoderConfigInternal>& aConfig,
   return EncoderSupport::Supports(aConfig);
 }
 
-nsString AudioEncoderConfigInternal::ToString() const {
-  nsString rv;
+nsCString AudioEncoderConfigInternal::ToString() const {
+  nsCString rv;
 
   rv.AppendPrintf("AudioEncoderConfigInternal: %s",
                   NS_ConvertUTF16toUTF8(mCodec).get());
@@ -264,8 +264,8 @@ bool AudioEncoderTraits::IsSupported(
   bool canEncode =
       CanEncode(MakeRefPtr<AudioEncoderConfigInternal>(aConfig), errorMessage);
   if (!canEncode) {
-    LOGE("Can't encode configuration %s: %s",
-         NS_ConvertUTF16toUTF8(aConfig.ToString()).get(), errorMessage.get());
+    LOGE("Can't encode configuration %s: %s", aConfig.ToString().get(),
+         errorMessage.get());
   }
   return canEncode;
 }

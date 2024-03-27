@@ -57,7 +57,7 @@ class VideoDecoderConfigInternal {
                              Maybe<bool>&& aOptimizeForLatency);
   ~VideoDecoderConfigInternal() = default;
 
-  nsString ToString() const;
+  nsCString ToString() const;
 
   bool Equals(const VideoDecoderConfigInternal& aOther) const {
     if (mDescription.isSome() != aOther.mDescription.isSome()) {
@@ -141,7 +141,7 @@ class AudioDecoderConfigInternal {
            mNumberOfChannels == aOther.mNumberOfChannels &&
            mOptimizeForLatency == aOther.mOptimizeForLatency;
   }
-  nsString ToString() const;
+  nsCString ToString() const;
 
   nsString mCodec;
   uint32_t mSampleRate;

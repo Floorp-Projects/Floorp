@@ -34,7 +34,7 @@ class AudioEncoderConfigInternal {
 
   void SetSpecific(const EncoderConfig::CodecSpecific& aSpecific);
 
-  nsString ToString() const;
+  nsCString ToString() const;
 
   bool Equals(const AudioEncoderConfigInternal& aOther) const;
   bool CanReconfigure(const AudioEncoderConfigInternal& aOther) const;
@@ -103,7 +103,7 @@ class VideoEncoderConfigInternal {
   bool CanReconfigure(const VideoEncoderConfigInternal& aOther) const;
   already_AddRefed<WebCodecsConfigurationChangeList> Diff(
       const VideoEncoderConfigInternal& aOther) const;
-  nsString ToString() const;
+  nsCString ToString() const;
 
   nsString mCodec;
   uint32_t mWidth;

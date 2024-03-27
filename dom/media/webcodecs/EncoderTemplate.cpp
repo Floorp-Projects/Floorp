@@ -396,7 +396,7 @@ void EncoderTemplate<VideoEncoderTraits>::OutputEncodedVideoData(
       metadata.mDecoderConfig.Construct(std::move(decoderConfig));
       mOutputNewDecoderConfig = false;
       LOGE("New config passed to output callback: %s",
-           NS_ConvertUTF16toUTF8(decoderConfigInternal.ToString()).get());
+           decoderConfigInternal.ToString().get());
     }
 
     nsAutoCString metadataInfo;
@@ -466,7 +466,7 @@ void EncoderTemplate<AudioEncoderTraits>::OutputEncodedAudioData(
       metadata.mDecoderConfig.Construct(std::move(decoderConfig));
       mOutputNewDecoderConfig = false;
       LOGE("New config passed to output callback: %s",
-           NS_ConvertUTF16toUTF8(decoderConfigInternal.ToString()).get());
+           decoderConfigInternal.ToString().get());
     }
 
     nsAutoCString metadataInfo;
@@ -794,8 +794,7 @@ void EncoderTemplate<EncoderType>::Reconfigure(
     RefPtr<ConfigureMessage> aMessage) {
   MOZ_ASSERT(mAgent);
 
-  LOG("Reconfiguring encoder: %s",
-      NS_ConvertUTF16toUTF8(aMessage->Config()->ToString()).get());
+  LOG("Reconfiguring encoder: %s", aMessage->Config()->ToString().get());
 
   RefPtr<ConfigTypeInternal> config = aMessage->Config();
   RefPtr<WebCodecsConfigurationChangeList> configDiff =
@@ -812,9 +811,8 @@ void EncoderTemplate<EncoderType>::Reconfigure(
   }
 
   LOG("Attempting to reconfigure encoder: old: %s new: %s, diff: %s",
-      NS_ConvertUTF16toUTF8(mActiveConfig->ToString()).get(),
-      NS_ConvertUTF16toUTF8(config->ToString()).get(),
-      NS_ConvertUTF16toUTF8(configDiff->ToString()).get());
+      mActiveConfig->ToString().get(), config->ToString().get(),
+      configDiff->ToString().get());
 
   RefPtr<EncoderConfigurationChangeList> changeList =
       configDiff->ToPEMChangeList();
@@ -914,8 +912,7 @@ void EncoderTemplate<EncoderType>::Configure(
     RefPtr<ConfigureMessage> aMessage) {
   MOZ_ASSERT(!mAgent);
 
-  LOG("Configuring encoder: %s",
-      NS_ConvertUTF16toUTF8(aMessage->Config()->ToString()).get());
+  LOG("Configuring encoder: %s", aMessage->Config()->ToString().get());
 
   mOutputNewDecoderConfig = true;
   mActiveConfig = aMessage->Config();
@@ -947,7 +944,7 @@ void EncoderTemplate<EncoderType>::Configure(
   MOZ_ASSERT(mActiveConfig);
 
   LOG("Real configuration with fresh config: %s",
-      NS_ConvertUTF16toUTF8(mActiveConfig->ToString().get()).get());
+      mActiveConfig->ToString().get());
 
   EncoderConfig config = mActiveConfig->ToEncoderConfig();
   mAgent->Configure(config)

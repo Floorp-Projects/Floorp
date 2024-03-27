@@ -147,10 +147,10 @@ UniquePtr<VideoDecoderConfigInternal> VideoDecoderConfigInternal::Create(
       OptionalToMaybe(aConfig.mOptimizeForLatency)));
 }
 
-nsString VideoDecoderConfigInternal::ToString() const {
-  nsString rv;
+nsCString VideoDecoderConfigInternal::ToString() const {
+  nsCString rv;
 
-  rv.Append(mCodec);
+  rv.Append(NS_ConvertUTF16toUTF8(mCodec));
   if (mCodedWidth.isSome()) {
     rv.AppendPrintf("coded: %dx%d", mCodedWidth.value(), mCodedHeight.value());
   }
@@ -579,8 +579,7 @@ bool VideoDecoderTraits::IsSupported(
 /* static */
 Result<UniquePtr<TrackInfo>, nsresult> VideoDecoderTraits::CreateTrackInfo(
     const VideoDecoderConfigInternal& aConfig) {
-  LOG("Create a VideoInfo from %s config",
-      NS_ConvertUTF16toUTF8(aConfig.ToString()).get());
+  LOG("Create a VideoInfo from %s config", aConfig.ToString().get());
 
   nsTArray<UniquePtr<TrackInfo>> tracks = GetTracksInfo(aConfig);
   if (tracks.Length() != 1 || tracks[0]->GetType() != TrackInfo::kVideoTrack) {

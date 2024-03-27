@@ -120,8 +120,8 @@ VideoEncoderConfigInternal::VideoEncoderConfigInternal(
       mContentHint(OptionalToMaybe(aConfig.mContentHint)),
       mAvc(OptionalToMaybe(aConfig.mAvc)) {}
 
-nsString VideoEncoderConfigInternal::ToString() const {
-  nsString rv;
+nsCString VideoEncoderConfigInternal::ToString() const {
+  nsCString rv;
 
   rv.AppendPrintf("Codec: %s, [%" PRIu32 "x%" PRIu32 "],",
                   NS_ConvertUTF16toUTF8(mCodec).get(), mWidth, mHeight);

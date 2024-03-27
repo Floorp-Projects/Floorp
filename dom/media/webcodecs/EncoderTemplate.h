@@ -82,10 +82,8 @@ class EncoderTemplate : public DOMEventTargetHelper {
     RefPtr<ConfigTypeInternal> Config() { return mConfig; }
     nsCString ToString() const override {
       nsCString rv;
-      rv.AppendPrintf(
-          "ConfigureMessage(#%zu): %s", this->mMessageId,
-          mConfig ? NS_ConvertUTF16toUTF8(mConfig->ToString().get()).get()
-                  : "null cfg");
+      rv.AppendPrintf("ConfigureMessage(#%zu): %s", this->mMessageId,
+                      mConfig ? mConfig->ToString().get() : "null cfg");
       return rv;
     }
 
