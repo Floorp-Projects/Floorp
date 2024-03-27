@@ -973,6 +973,7 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
 #ifdef DEBUG
       inUnsafeCallWithABI(this, false),
       hasAutoUnsafeCallWithABI(this, false),
+      liveArraySortDataInstances(this, 0),
 #endif
 #ifdef JS_SIMULATOR
       simulator_(this, nullptr),
@@ -1044,6 +1045,9 @@ JSContext::~JSContext() {
 
   /* Free the stuff hanging off of cx. */
   MOZ_ASSERT(!resolvingList);
+
+  // Ensure we didn't leak memory for the ArraySortData vector.
+  MOZ_ASSERT(liveArraySortDataInstances == 0);
 
   if (dtoaState) {
     DestroyDtoaState(dtoaState);

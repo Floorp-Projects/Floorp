@@ -25,7 +25,7 @@ function TupleToSorted(comparefn) {
 
   /* Step 3. */
   var items = TupleToArray(T);
-  var sorted = callFunction(ArraySort, items, comparefn);
+  var sorted = callFunction(std_Array_sort, items, comparefn);
   return std_Tuple_unchecked(sorted);
 }
 

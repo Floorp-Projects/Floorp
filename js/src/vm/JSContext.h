@@ -428,6 +428,7 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
 #ifdef DEBUG
   js::ContextData<uint32_t> inUnsafeCallWithABI;
   js::ContextData<bool> hasAutoUnsafeCallWithABI;
+  js::ContextData<uint32_t> liveArraySortDataInstances;
 #endif
 
 #ifdef JS_SIMULATOR

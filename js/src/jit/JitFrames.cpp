@@ -97,7 +97,8 @@ static void UnwindTrampolineNativeFrame(JSRuntime* rt,
   TrampolineNative native = TrampolineNativeForFrame(rt, layout);
   switch (native) {
     case TrampolineNative::ArraySort:
-      MOZ_CRASH("NYI");
+      layout->getFrameData<ArraySortData>()->freeMallocData();
+      break;
     case TrampolineNative::Count:
       MOZ_CRASH("Invalid value");
   }
@@ -1430,7 +1431,8 @@ static void TraceTrampolineNativeFrame(JSTracer* trc,
   TrampolineNative native = TrampolineNativeForFrame(trc->runtime(), layout);
   switch (native) {
     case TrampolineNative::ArraySort:
-      MOZ_CRASH("NYI");
+      layout->getFrameData<ArraySortData>()->trace(trc);
+      break;
     case TrampolineNative::Count:
       MOZ_CRASH("Invalid value");
   }

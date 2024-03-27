@@ -99,62 +99,6 @@ function ArraySortCompare(comparefn) {
   };
 }
 
-// ES2023 draft rev cb4224156c54156f30c18c50784c1b0148ebfae5
-// 23.1.3.30 Array.prototype.sort ( comparefn )
-function ArraySort(comparefn) {
-  // Step 1.
-  if (comparefn !== undefined) {
-    if (!IsCallable(comparefn)) {
-      ThrowTypeError(JSMSG_BAD_SORT_ARG);
-    }
-  }
-
-  // Step 2.
-  var O = ToObject(this);
-
-  // First try to sort the array in native code, if that fails, indicated by
-  // returning |false| from ArrayNativeSort, sort it in self-hosted code.
-  if (callFunction(ArrayNativeSort, O, comparefn)) {
-    return O;
-  }
-
-  // Step 3.
-  var len = ToLength(O.length);
-
-  // Arrays with less than two elements remain unchanged when sorted.
-  if (len <= 1) {
-    return O;
-  }
-
-  // Step 4.
-  var wrappedCompareFn = ArraySortCompare(comparefn);
-
-  // Step 5.
-  // To save effort we will do all of our work on a dense list, then create
-  // holes at the end.
-  var denseList = [];
-  var denseLen = 0;
-
-  for (var i = 0; i < len; i++) {
-    if (i in O) {
-      DefineDataProperty(denseList, denseLen++, O[i]);
-    }
-  }
-
-  if (denseLen < 1) {
-    return O;
-  }
-
-  var sorted = MergeSort(denseList, denseLen, wrappedCompareFn);
-
-  assert(IsPackedArray(sorted), "sorted is a packed array");
-  assert(sorted.length === denseLen, "sorted array has the correct length");
-
-  MoveHoles(O, len, sorted, denseLen);
-
-  return O;
-}
-
 /* ES5 15.4.4.18. */
 function ArrayForEach(callbackfn /*, thisArg*/) {
   /* Step 1. */

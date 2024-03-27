@@ -47,7 +47,168 @@ uint32_t JitRuntime::generateArraySortTrampoline(MacroAssembler& masm) {
 
   const uint32_t offset = startTrampolineCode(masm);
 
-  masm.assumeUnreachable("NYI");
+  // The stack for the trampoline frame will look like this:
+  //
+  //   [TrampolineNativeFrameLayout]
+  //     * this and arguments passed by the caller
+  //     * CalleeToken
+  //     * Descriptor
+  //     * Return Address
+  //     * Saved frame pointer   <= FramePointer
+  //   [ArraySortData]
+  //     * ...
+  //     * Comparator this + argument Values --+ -> comparator JitFrameLayout
+  //     * Comparator (CalleeToken)            |
+  //     * Descriptor                      ----+ <= StackPointer
+  //
+  // The call to the comparator pushes the return address and the frame pointer,
+  // so we check the alignment after pushing these two pointers.
+  constexpr size_t FrameSize = sizeof(ArraySortData);
+  constexpr size_t PushedByCall = 2 * sizeof(void*);
+  static_assert((FrameSize + PushedByCall) % JitStackAlignment == 0);
+
+  // Assert ArraySortData comparator data matches JitFrameLayout.
+  static_assert(PushedByCall + ArraySortData::offsetOfDescriptor() ==
+                JitFrameLayout::offsetOfDescriptor());
+  static_assert(PushedByCall + ArraySortData::offsetOfComparator() ==
+                JitFrameLayout::offsetOfCalleeToken());
+  static_assert(PushedByCall + ArraySortData::offsetOfComparatorThis() ==
+                JitFrameLayout::offsetOfThis());
+  static_assert(PushedByCall + ArraySortData::offsetOfComparatorArgs() ==
+                JitFrameLayout::offsetOfActualArgs());
+  static_assert(CalleeToken_Function == 0,
+                "JSFunction* is valid CalleeToken for non-constructor calls");
+
+  // Compute offsets from FramePointer.
+  constexpr int32_t ComparatorOffset =
+      -int32_t(FrameSize) + ArraySortData::offsetOfComparator();
+  constexpr int32_t RvalOffset =
+      -int32_t(FrameSize) + ArraySortData::offsetOfComparatorReturnValue();
+
+#ifdef JS_USE_LINK_REGISTER
+  masm.pushReturnAddress();
+#endif
+  masm.push(FramePointer);
+  masm.moveStackPtrTo(FramePointer);
+
+  AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
+  regs.takeUnchecked(ReturnReg);
+  regs.takeUnchecked(JSReturnOperand);
+  Register temp0 = regs.takeAny();
+  Register temp1 = regs.takeAny();
+  Register temp2 = regs.takeAny();
+
+  // Reserve space and check alignment of the comparator frame.
+  masm.reserveStack(FrameSize);
+  masm.assertStackAlignment(JitStackAlignment, PushedByCall);
+
+  // Trampoline control flow looks like this:
+  //
+  //     call ArraySortFromJit
+  //     goto checkReturnValue
+  //   call_comparator:
+  //     call comparator
+  //     call ArraySortData::sortWithComparator
+  //   checkReturnValue:
+  //     check return value, jump to call_comparator if needed
+  //     return rval
+
+  auto pushExitFrame = [&](Register cxReg, Register scratchReg) {
+    MOZ_ASSERT(masm.framePushed() == FrameSize);
+    masm.PushFrameDescriptor(FrameType::TrampolineNative);
+    masm.Push(ImmWord(0));  // Fake return address.
+    masm.Push(FramePointer);
+    masm.enterFakeExitFrame(cxReg, scratchReg, ExitFrameType::Bare);
+  };
+
+  // Call ArraySortFromJit.
+  using Fn1 = ArraySortResult (*)(JSContext* cx,
+                                  jit::TrampolineNativeFrameLayout* frame);
+  masm.loadJSContext(temp0);
+  pushExitFrame(temp0, temp1);
+  masm.setupAlignedABICall();
+  masm.passABIArg(temp0);
+  masm.passABIArg(FramePointer);
+  masm.callWithABI<Fn1, ArraySortFromJit>(
+      ABIType::General, CheckUnsafeCallWithABI::DontCheckHasExitFrame);
+
+  // Check return value.
+  Label checkReturnValue;
+  masm.jump(&checkReturnValue);
+  masm.setFramePushed(FrameSize);
+
+  // Call the comparator.
+  Label callDone, jitCallFast, jitCallSlow;
+  masm.bind(&jitCallFast);
+  {
+    masm.loadPtr(Address(FramePointer, ComparatorOffset), temp0);
+    masm.loadJitCodeRaw(temp0, temp1);
+    masm.callJit(temp1);
+    masm.jump(&callDone);
+  }
+  masm.bind(&jitCallSlow);
+  {
+    masm.loadPtr(Address(FramePointer, ComparatorOffset), temp0);
+    masm.loadJitCodeRaw(temp0, temp1);
+    masm.switchToObjectRealm(temp0, temp2);
+
+    // Handle arguments underflow.
+    Label noUnderflow, restoreRealm;
+    masm.loadFunctionArgCount(temp0, temp0);
+    masm.branch32(Assembler::BelowOrEqual, temp0,
+                  Imm32(ArraySortData::ComparatorActualArgs), &noUnderflow);
+    {
+      Label rectifier;
+      bindLabelToOffset(&rectifier, argumentsRectifierOffset_);
+      masm.call(&rectifier);
+      masm.jump(&restoreRealm);
+    }
+    masm.bind(&noUnderflow);
+    masm.callJit(temp1);
+
+    masm.bind(&restoreRealm);
+    Address calleeToken(FramePointer,
+                        TrampolineNativeFrameLayout::offsetOfCalleeToken());
+    masm.loadFunctionFromCalleeToken(calleeToken, temp0);
+    masm.switchToObjectRealm(temp0, temp1);
+  }
+
+  // Store the comparator's return value.
+  masm.bind(&callDone);
+  masm.storeValue(JSReturnOperand, Address(FramePointer, RvalOffset));
+
+  // Call ArraySortData::sortWithComparator.
+  using Fn2 = ArraySortResult (*)(ArraySortData* data);
+  masm.moveStackPtrTo(temp2);
+  masm.loadJSContext(temp0);
+  pushExitFrame(temp0, temp1);
+  masm.setupAlignedABICall();
+  masm.passABIArg(temp2);
+  masm.callWithABI<Fn2, ArraySortData::sortWithComparator>(
+      ABIType::General, CheckUnsafeCallWithABI::DontCheckHasExitFrame);
+
+  // Check return value.
+  masm.bind(&checkReturnValue);
+  masm.branch32(Assembler::Equal, ReturnReg,
+                Imm32(int32_t(ArraySortResult::Failure)), masm.failureLabel());
+  masm.freeStack(ExitFrameLayout::SizeWithFooter());
+  masm.branch32(Assembler::Equal, ReturnReg,
+                Imm32(int32_t(ArraySortResult::CallJSSameRealmNoRectifier)),
+                &jitCallFast);
+  masm.branch32(Assembler::Equal, ReturnReg,
+                Imm32(int32_t(ArraySortResult::CallJS)), &jitCallSlow);
+#ifdef DEBUG
+  Label ok;
+  masm.branch32(Assembler::Equal, ReturnReg,
+                Imm32(int32_t(ArraySortResult::Done)), &ok);
+  masm.assumeUnreachable("Unexpected return value");
+  masm.bind(&ok);
+#endif
+
+  masm.loadValue(Address(FramePointer, RvalOffset), JSReturnOperand);
+  masm.moveToStackPtr(FramePointer);
+  masm.pop(FramePointer);
+  masm.ret();
 
   return offset;
 }

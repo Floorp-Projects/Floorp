@@ -103,6 +103,8 @@ namespace jit {
   _(js::ArgumentsObject::finishForIonPure)                            \
   _(js::ArgumentsObject::finishInlineForIonPure)                      \
   _(js::ArrayShiftMoveElements)                                       \
+  _(js::ArraySortData::sortWithComparator)                            \
+  _(js::ArraySortFromJit)                                             \
   _(js::ecmaAtan2)                                                    \
   _(js::ecmaHypot)                                                    \
   _(js::ecmaPow)                                                      \
