@@ -110,6 +110,8 @@ class AudioData final : public nsISupports, public nsWrapperCache {
 
   nsCString ToString() const;
 
+  RefPtr<mozilla::AudioData> ToAudioData() const;
+
  private:
   size_t ComputeCopyElementCount(const AudioDataCopyToOptions& aOptions,
                                  ErrorResult& aRv);
