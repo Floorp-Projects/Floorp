@@ -14,12 +14,6 @@ let ignoreList = [
   { sourceName: /codemirror\.css$/i, isFromDevTools: true },
   // UA-only media features.
   {
-    sourceName: /\b(autocomplete-item)\.css$/,
-    errorMessage: /Expected media feature name but found \u2018-moz.*/i,
-    isFromDevTools: false,
-    platforms: ["windows"],
-  },
-  {
     sourceName:
       /\b(contenteditable|EditorOverride|svg|forms|html|mathml|ua)\.css$/i,
     errorMessage: /Unknown pseudo-class.*-moz-/i,
@@ -27,7 +21,7 @@ let ignoreList = [
   },
   {
     sourceName:
-      /\b(scrollbars|xul|html|mathml|ua|forms|svg|manageDialog|autocomplete-item-shared|formautofill)\.css$/i,
+      /\b(scrollbars|xul|html|mathml|ua|forms|svg|manageDialog|formautofill)\.css$/i,
     errorMessage: /Unknown property.*-moz-/i,
     isFromDevTools: false,
   },

@@ -725,6 +725,11 @@
   // and, optionally a secondary label, for example:
   //   { "fillMessageName": "Fill:Clear", secondary: "Second Label" }
   class MozAutocompleteActionRichlistitem extends MozAutocompleteTwoLineRichlistitem {
+    constructor() {
+      super();
+      this.selectedByMouseOver = true;
+    }
+
     _adjustAcItem() {
       super._adjustAcItem();
 
@@ -779,6 +784,58 @@
       super._adjustAcItem();
       this.#setStatus(this);
       this.setAttribute("disabled", "true");
+    }
+  }
+
+  class MozAutocompleteAutoFillRichlistitem extends MozAutocompleteTwoLineRichlistitem {
+    constructor() {
+      super();
+      this.selectedByMouseOver = true;
+    }
+
+    _adjustAcItem() {
+      let { primary, secondary, ariaLabel } = JSON.parse(
+        this.getAttribute("ac-value")
+      );
+
+      let line1Label = this.querySelector(".line1-label");
+      line1Label.textContent = primary.toString();
+
+      let line2Label = this.querySelector(".line2-label");
+      line2Label.textContent = secondary.toString();
+
+      if (ariaLabel) {
+        this.setAttribute("aria-label", ariaLabel);
+      }
+
+      this.querySelector(".ac-site-icon").collapsed =
+        this.getAttribute("ac-image") == "";
+    }
+
+    set selected(val) {
+      if (val) {
+        this.setAttribute("selected", "true");
+      } else {
+        this.removeAttribute("selected");
+      }
+
+      let { AutoCompleteParent } = ChromeUtils.importESModule(
+        "resource://gre/actors/AutoCompleteParent.sys.mjs"
+      );
+
+      let actor = AutoCompleteParent.getCurrentActor();
+      if (!actor) {
+        return;
+      }
+
+      let selectedIndex = val ? this.control.getIndexOfItem(this) : -1;
+      actor.manager
+        .getActor("FormAutofill")
+        .sendAsyncMessage("FormAutofill:PreviewProfile", { selectedIndex });
+    }
+
+    get selected() {
+      return this.getAttribute("selected") == "true";
     }
   }
 
@@ -901,6 +958,14 @@
   customElements.define(
     "autocomplete-two-line-richlistitem",
     MozAutocompleteTwoLineRichlistitem,
+    {
+      extends: "richlistitem",
+    }
+  );
+
+  customElements.define(
+    "autocomplete-autofill-richlistitem",
+    MozAutocompleteAutoFillRichlistitem,
     {
       extends: "richlistitem",
     }
