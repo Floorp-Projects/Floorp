@@ -151,7 +151,7 @@ static bool AsyncFunctionResume(JSContext* cx,
   if (!CallSelfHostedFunction(cx, funName, generatorOrValue, args,
                               &generatorOrValue)) {
     if (!generator->isClosed()) {
-      generator->setClosed();
+      generator->setClosed(cx);
     }
 
     // Handle the OOM case mentioned above.

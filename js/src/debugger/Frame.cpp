@@ -439,6 +439,24 @@ void DebuggerFrame::terminate(JS::GCContext* gcx, AbstractFramePtr frame) {
   gcx->delete_(this, info, MemoryUse::DebuggerFrameGeneratorInfo);
 }
 
+void DebuggerFrame::onGeneratorClosed(JS::GCContext* gcx) {
+  GeneratorInfo* info = generatorInfo();
+
+  // If the generator is closed, eagerly drop the onStep handler, to make sure
+  // the stepper counter matches in the assertion in DebugAPI::onSingleStep.
+  // Also clear the slot in order to suppress the decrementStepperCounter in
+  // DebuggerFrame::terminate.
+  if (!info->isGeneratorScriptAboutToBeFinalized()) {
+    JSScript* generatorScript = info->generatorScript();
+    OnStepHandler* handler = onStepHandler();
+    if (handler) {
+      decrementStepperCounter(gcx, generatorScript);
+      setReservedSlot(ONSTEP_HANDLER_SLOT, UndefinedValue());
+      handler->drop(gcx, this);
+    }
+  }
+}
+
 void DebuggerFrame::suspend(JS::GCContext* gcx) {
   // There must be generator info because otherwise this would be the same
   // overall behavior as terminate() except that here we do not properly

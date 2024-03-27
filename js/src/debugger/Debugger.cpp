@@ -1794,7 +1794,7 @@ static bool CheckResumptionValue(JSContext* cx, AbstractFramePtr frame,
     }
 
     // 2.  The generator must be closed.
-    genObj->setClosed();
+    genObj->setClosed(cx);
 
     // Async generators have additionally bookkeeping which must be adjusted
     // when switching over to the closed state.
@@ -1823,7 +1823,7 @@ static bool CheckResumptionValue(JSContext* cx, AbstractFramePtr frame,
       vp.setObject(*promise);
 
       // 2.  The generator must be closed.
-      generator->setClosed();
+      generator->setClosed(cx);
     } else {
       // We're before entering the actual function code.
 
@@ -2852,6 +2852,20 @@ void DebugAPI::slowPathOnNewGlobalObject(JSContext* cx,
     }
   }
   MOZ_ASSERT(!cx->isExceptionPending());
+}
+
+/* static */
+void DebugAPI::slowPathOnGeneratorClosed(JSContext* cx,
+                                         AbstractGeneratorObject* genObj) {
+  JS::AutoAssertNoGC nogc;
+  for (Realm::DebuggerVectorEntry& entry : cx->global()->getDebuggers(nogc)) {
+    Debugger* dbg = entry.dbg;
+    if (Debugger::GeneratorWeakMap::Ptr frameEntry =
+            dbg->generatorFrames.lookup(genObj)) {
+      DebuggerFrame* frameObj = frameEntry->value();
+      frameObj->onGeneratorClosed(cx->gcContext());
+    }
+  }
 }
 
 /* static */

@@ -1071,7 +1071,7 @@ bool js::AsyncGeneratorThrow(JSContext* cx, unsigned argc, Value* vp) {
   if (!CallSelfHostedFunction(cx, funName, thisOrRval, args, &thisOrRval)) {
     // 25.5.3.2, steps 5.f, 5.g.
     if (!generator->isClosed()) {
-      generator->setClosed();
+      generator->setClosed(cx);
     }
     return AsyncGeneratorThrown(cx, generator);
   }
