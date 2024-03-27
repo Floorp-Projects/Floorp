@@ -2410,11 +2410,13 @@ class Database final
 
   already_AddRefed<PBackgroundIDBTransactionParent>
   AllocPBackgroundIDBTransactionParent(
-      const nsTArray<nsString>& aObjectStoreNames, const Mode& aMode) override;
+      const nsTArray<nsString>& aObjectStoreNames, const Mode& aMode,
+      const Durability& aDurability) override;
 
   mozilla::ipc::IPCResult RecvPBackgroundIDBTransactionConstructor(
       PBackgroundIDBTransactionParent* aActor,
-      nsTArray<nsString>&& aObjectStoreNames, const Mode& aMode) override;
+      nsTArray<nsString>&& aObjectStoreNames, const Mode& aMode,
+      const Durability& aDurability) override;
 
   mozilla::ipc::IPCResult RecvDeleteMe() override;
 
@@ -2607,6 +2609,7 @@ class TransactionBase : public AtomicSafeRefCounted<TransactionBase> {
 
  protected:
   using Mode = IDBTransaction::Mode;
+  using Durability = IDBTransaction::Durability;
 
  private:
   const SafeRefPtr<Database> mDatabase;
@@ -2618,6 +2621,7 @@ class TransactionBase : public AtomicSafeRefCounted<TransactionBase> {
   uint64_t mActiveRequestCount;
   Atomic<bool> mInvalidatedOnAnyThread;
   const Mode mMode;
+  const Durability mDurability;  // TODO: See bug 1883045
   FlippedOnce<false> mInitialized;
   FlippedOnce<false> mHasBeenActiveOnConnectionThread;
   FlippedOnce<false> mActorDestroyed;
@@ -2676,6 +2680,8 @@ class TransactionBase : public AtomicSafeRefCounted<TransactionBase> {
   const nsACString& DatabaseId() const { return mDatabaseId; }
 
   Mode GetMode() const { return mMode; }
+
+  Durability GetDurability() const { return mDurability; }
 
   const Database& GetDatabase() const {
     MOZ_ASSERT(mDatabase);
@@ -2739,7 +2745,8 @@ class TransactionBase : public AtomicSafeRefCounted<TransactionBase> {
   virtual ~TransactionBase();
 
  protected:
-  TransactionBase(SafeRefPtr<Database> aDatabase, Mode aMode);
+  TransactionBase(SafeRefPtr<Database> aDatabase, Mode aMode,
+                  Durability aDurability);
 
   void NoteActorDestroyed() {
     AssertIsOnBackgroundThread();
@@ -2895,6 +2902,7 @@ class NormalTransaction final : public TransactionBase,
   // This constructor is only called by Database.
   NormalTransaction(
       SafeRefPtr<Database> aDatabase, TransactionBase::Mode aMode,
+      TransactionBase::Durability aDurability,
       nsTArray<SafeRefPtr<FullObjectStoreMetadata>>&& aObjectStores);
 
   MOZ_INLINE_DECL_SAFEREFCOUNTING_INHERITED(NormalTransaction, TransactionBase)
@@ -9783,7 +9791,8 @@ bool Database::DeallocPBackgroundIDBDatabaseFileParent(
 
 already_AddRefed<PBackgroundIDBTransactionParent>
 Database::AllocPBackgroundIDBTransactionParent(
-    const nsTArray<nsString>& aObjectStoreNames, const Mode& aMode) {
+    const nsTArray<nsString>& aObjectStoreNames, const Mode& aMode,
+    const Durability& aDurability) {
   AssertIsOnBackgroundThread();
 
   // Once a database is closed it must not try to open new transactions.
@@ -9800,6 +9809,12 @@ Database::AllocPBackgroundIDBTransactionParent(
                          aMode != IDBTransaction::Mode::ReadWrite &&
                          aMode != IDBTransaction::Mode::ReadWriteFlush &&
                          aMode != IDBTransaction::Mode::Cleanup)) {
+    return nullptr;
+  }
+
+  if (NS_AUUF_OR_WARN_IF(aDurability != IDBTransaction::Durability::Default &&
+                         aDurability != IDBTransaction::Durability::Strict &&
+                         aDurability != IDBTransaction::Durability::Relaxed)) {
     return nullptr;
   }
 
@@ -9845,13 +9860,15 @@ Database::AllocPBackgroundIDBTransactionParent(
       nullptr);
 
   return MakeSafeRefPtr<NormalTransaction>(SafeRefPtrFromThis(), aMode,
+                                           aDurability,
                                            std::move(objectStoreMetadatas))
       .forget();
 }
 
 mozilla::ipc::IPCResult Database::RecvPBackgroundIDBTransactionConstructor(
     PBackgroundIDBTransactionParent* aActor,
-    nsTArray<nsString>&& aObjectStoreNames, const Mode& aMode) {
+    nsTArray<nsString>&& aObjectStoreNames, const Mode& aMode,
+    const Durability& aDurability) {  // TODO: See bug 1883045
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
   MOZ_ASSERT(!aObjectStoreNames.IsEmpty());
@@ -9859,6 +9876,9 @@ mozilla::ipc::IPCResult Database::RecvPBackgroundIDBTransactionConstructor(
              aMode == IDBTransaction::Mode::ReadWrite ||
              aMode == IDBTransaction::Mode::ReadWriteFlush ||
              aMode == IDBTransaction::Mode::Cleanup);
+  MOZ_ASSERT(aDurability == IDBTransaction::Durability::Default ||
+             aDurability == IDBTransaction::Durability::Strict ||
+             aDurability == IDBTransaction::Durability::Relaxed);
   MOZ_ASSERT(!mClosed);
 
   if (IsInvalidated()) {
@@ -9990,7 +10010,8 @@ void Database::StartTransactionOp::Cleanup() {
  * TransactionBase
  ******************************************************************************/
 
-TransactionBase::TransactionBase(SafeRefPtr<Database> aDatabase, Mode aMode)
+TransactionBase::TransactionBase(SafeRefPtr<Database> aDatabase, Mode aMode,
+                                 Durability aDurability)
     : mDatabase(std::move(aDatabase)),
       mDatabaseId(mDatabase->Id()),
       mLoggingSerialNumber(
@@ -9998,6 +10019,7 @@ TransactionBase::TransactionBase(SafeRefPtr<Database> aDatabase, Mode aMode)
       mActiveRequestCount(0),
       mInvalidatedOnAnyThread(false),
       mMode(aMode),
+      mDurability(aDurability),
       mResultCode(NS_OK) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(mDatabase);
@@ -10757,8 +10779,9 @@ bool TransactionBase::StartCursor(PBackgroundIDBCursorParent* const aActor,
 
 NormalTransaction::NormalTransaction(
     SafeRefPtr<Database> aDatabase, TransactionBase::Mode aMode,
+    TransactionBase::Durability aDurability,
     nsTArray<SafeRefPtr<FullObjectStoreMetadata>>&& aObjectStores)
-    : TransactionBase(std::move(aDatabase), aMode),
+    : TransactionBase(std::move(aDatabase), aMode, aDurability),
       mObjectStores{std::move(aObjectStores)} {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!mObjectStores.IsEmpty());
@@ -10881,7 +10904,9 @@ mozilla::ipc::IPCResult NormalTransaction::RecvPBackgroundIDBCursorConstructor(
 VersionChangeTransaction::VersionChangeTransaction(
     OpenDatabaseOp* aOpenDatabaseOp)
     : TransactionBase(aOpenDatabaseOp->mDatabase.clonePtr(),
-                      IDBTransaction::Mode::VersionChange),
+                      IDBTransaction::Mode::VersionChange,
+                      // VersionChange must not change durability.
+                      IDBTransaction::Durability::Default),  // Not used.
       mOpenDatabaseOp(aOpenDatabaseOp) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aOpenDatabaseOp);

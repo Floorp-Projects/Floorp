@@ -166,7 +166,8 @@ class IDBDatabase final : public DOMEventTargetHelper {
   // This will be called from the DOM.
   [[nodiscard]] RefPtr<IDBTransaction> Transaction(
       JSContext* aCx, const StringOrStringSequence& aStoreNames,
-      IDBTransactionMode aMode, ErrorResult& aRv);
+      IDBTransactionMode aMode, const IDBTransactionOptions& aOptions,
+      ErrorResult& aRv);
 
   IMPL_EVENT_HANDLER(abort)
   IMPL_EVENT_HANDLER(close)

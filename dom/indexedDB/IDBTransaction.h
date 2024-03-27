@@ -63,6 +63,15 @@ class IDBTransaction final
     Invalid
   };
 
+  enum struct Durability {
+    Default = 0,
+    Strict,
+    Relaxed,
+
+    // Only needed for IPC serialization helper, should never be used in code.
+    Invalid
+  };
+
   enum struct ReadyState { Active, Inactive, Committing, Finished };
 
  private:
@@ -113,6 +122,7 @@ class IDBTransaction final
   ReadyState mReadyState = ReadyState::Active;
   FlippedOnce<false> mStarted;
   const Mode mMode;
+  const Durability mDurability;
 
   bool mRegistered;  ///< Whether mDatabase->RegisterTransaction() has been
                      ///< called (which may not be the case if construction was
@@ -135,7 +145,8 @@ class IDBTransaction final
 
   [[nodiscard]] static SafeRefPtr<IDBTransaction> Create(
       JSContext* aCx, IDBDatabase* aDatabase,
-      const nsTArray<nsString>& aObjectStoreNames, Mode aMode);
+      const nsTArray<nsString>& aObjectStoreNames, Mode aMode,
+      Durability aDurability);
 
   static Maybe<IDBTransaction&> MaybeCurrent();
 
@@ -237,6 +248,11 @@ class IDBTransaction final
     return mMode;
   }
 
+  Durability GetDurability() const {
+    AssertIsOnOwningThread();
+    return mDurability;
+  }
+
   uint32_t GetPendingRequestCount() const { return mPendingRequestCount; }
 
   IDBDatabase* Database() const {
@@ -307,6 +323,8 @@ class IDBTransaction final
 
   IDBTransactionMode GetMode(ErrorResult& aRv) const;
 
+  IDBTransactionDurability GetDurability(ErrorResult& aRv) const;
+
   DOMException* GetError() const;
 
   [[nodiscard]] RefPtr<IDBObjectStore> ObjectStore(const nsAString& aName,
@@ -331,8 +349,8 @@ class IDBTransaction final
  public:
   IDBTransaction(IDBDatabase* aDatabase,
                  const nsTArray<nsString>& aObjectStoreNames, Mode aMode,
-                 nsString aFilename, uint32_t aLineNo, uint32_t aColumn,
-                 CreatedFromFactoryFunction aDummy);
+                 Durability aDurability, nsString aFilename, uint32_t aLineNo,
+                 uint32_t aColumn, CreatedFromFactoryFunction aDummy);
 
  private:
   ~IDBTransaction();
