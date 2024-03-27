@@ -130,7 +130,7 @@ class FileSystemDatabaseManagerVersion001 : public FileSystemDatabaseManager {
   void DecreaseCachedQuotaUsage(int64_t aDelta);
 
   nsresult UpdateCachedQuotaUsage(const FileId& aFileId, Usage aOldUsage,
-                                  Usage aNewUsage);
+                                  Usage aNewUsage) const;
 
   nsresult ClearDestinationIfNotLocked(
       const FileSystemConnection& aConnection,

@@ -1233,7 +1233,7 @@ void FileSystemDatabaseManagerVersion001::DecreaseCachedQuotaUsage(
 }
 
 nsresult FileSystemDatabaseManagerVersion001::UpdateCachedQuotaUsage(
-    const FileId& aFileId, Usage aOldUsage, Usage aNewUsage) {
+    const FileId& aFileId, Usage aOldUsage, Usage aNewUsage) const {
   quota::QuotaManager* quotaManager = quota::QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 

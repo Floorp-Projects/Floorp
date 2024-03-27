@@ -463,6 +463,9 @@ nsresult FileSystemDatabaseManagerVersion002::GetFile(
     if (mainFileId) {
       QM_TRY_UNWRAP(aFile,
                     mFileManager->CreateFileFrom(aFileId, mainFileId.value()));
+      int64_t fileSize = 0;
+      QM_TRY(QM_TO_RESULT(aFile->GetFileSize(&fileSize)));
+      UpdateCachedQuotaUsage(aFileId, 0, fileSize);
     } else {
       // LockShared/EnsureTemporaryFileId has provided a brand new fileId.
       QM_TRY_UNWRAP(aFile, mFileManager->GetOrCreateFile(aFileId));
