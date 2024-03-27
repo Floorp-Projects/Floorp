@@ -49,6 +49,13 @@ nsresult FFmpegAudioEncoder<LIBAV_VER>::InitSpecific() {
   // And now the audio-specific part
   mCodecContext->sample_rate = AssertedCast<int>(mConfig.mSampleRate);
   mCodecContext->channels = AssertedCast<int>(mConfig.mNumberOfChannels);
+
+#if LIBAVCODEC_VERSION_MAJOR >= 60
+  // Gecko's ordering intentionnally matches ffmepg's ordering
+  mLib->av_channel_layout_default(&mCodecContext->ch_layout,
+                                  AssertedCast<int>(mCodecContext->channels));
+#endif
+
   switch (mConfig.mCodec) {
     case CodecType::Opus:
       // When using libopus, ffmpeg supports interleaved float and s16 input.
@@ -108,6 +115,17 @@ FFmpegAudioEncoder<LIBAV_VER>::EncodeOnePacket(Span<float> aSamples,
   MOZ_ASSERT(AssertedCast<int>(frameCount) <= mCodecContext->frame_size);
 
   mFrame->channels = AssertedCast<int>(aChannels);
+
+#  if LIBAVCODEC_VERSION_MAJOR >= 60
+  int rv = mLib->av_channel_layout_copy(&mFrame->ch_layout,
+                                        &mCodecContext->ch_layout);
+  if (rv < 0) {
+    FFMPEG_LOG("channel layout copy error: %s",
+                MakeErrorString(mLib, rv).get());
+    return Err(NS_ERROR_DOM_MEDIA_FATAL_ERR);
+  }
+#  endif
+
   mFrame->sample_rate = AssertedCast<int>(aRate);
   // Not a mistake, nb_samples is per channel in ffmpeg
   mFrame->nb_samples = AssertedCast<int>(frameCount);
