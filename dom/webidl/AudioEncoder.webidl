@@ -23,6 +23,23 @@ dictionary AudioEncoderConfig {
   [EnforceRange] unsigned long numberOfChannels;
   [EnforceRange] unsigned long long bitrate;
   BitrateMode bitrateMode = "variable";
+  OpusEncoderConfig opus;
+};
+
+// Opus specific configuration options:
+// https://w3c.github.io/webcodecs/opus_codec_registration.html
+enum OpusBitstreamFormat {
+  "opus",
+  "ogg",
+};
+
+dictionary OpusEncoderConfig {
+  OpusBitstreamFormat format = "opus";
+  [EnforceRange] unsigned long long frameDuration = 20000;
+  [EnforceRange] unsigned long complexity;
+  [EnforceRange] unsigned long packetlossperc = 0;
+  boolean useinbandfec = false;
+  boolean usedtx = false;
 };
 
 [Exposed=(Window,DedicatedWorker), SecureContext, Pref="dom.media.webcodecs.enabled"]
