@@ -7,8 +7,14 @@
 #include "FFVPXRuntimeLinker.h"
 #include "FFmpegLibWrapper.h"
 #include "FFmpegLog.h"
-#include "nsXREDirProvider.h"
+#include "BinaryPath.h"
+#include "mozilla/FileUtils.h"
+#include "nsLocalFile.h"
+#include "prmem.h"
 #include "prlink.h"
+#ifdef XP_WIN
+#  include <windows.h>
+#endif
 
 namespace mozilla {
 
@@ -79,13 +85,31 @@ bool FFVPXRuntimeLinker::Init() {
 #endif
 
   nsCOMPtr<nsIFile> libFile;
-  RefPtr<nsXREDirProvider> provider = nsXREDirProvider::GetSingleton();
-  if (NS_FAILED(provider->GetGREDir()->Clone(getter_AddRefs(libFile)))) {
+  if (NS_FAILED(mozilla::BinaryPath::GetFile(getter_AddRefs(libFile)))) {
     return false;
   }
 
-  if (NS_FAILED(libFile->AppendNative(MOZ_DLL_PREFIX "mozavutil" MOZ_DLL_SUFFIX
-                                                     ""_ns))) {
+#ifdef XP_DARWIN
+  if (!XRE_IsParentProcess() &&
+      (XRE_GetChildProcBinPathType(XRE_GetProcessType()) ==
+       BinPathType::PluginContainer)) {
+    // On macOS, PluginContainer processes have their binary in a
+    // plugin-container.app/Content/MacOS/ directory.
+    nsCOMPtr<nsIFile> parentDir1, parentDir2;
+    if (NS_FAILED(libFile->GetParent(getter_AddRefs(parentDir1)))) {
+      return false;
+    }
+    if (NS_FAILED(parentDir1->GetParent(getter_AddRefs(parentDir2)))) {
+      return false;
+    }
+    if (NS_FAILED(parentDir2->GetParent(getter_AddRefs(libFile)))) {
+      return false;
+    }
+  }
+#endif
+
+  if (NS_FAILED(libFile->SetNativeLeafName(MOZ_DLL_PREFIX
+                                           "mozavutil" MOZ_DLL_SUFFIX ""_ns))) {
     return false;
   }
   sFFVPXLib.mAVUtilLib = MozAVLink(libFile);
