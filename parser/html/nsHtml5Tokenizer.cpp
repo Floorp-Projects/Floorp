@@ -126,6 +126,7 @@ nsHtml5Tokenizer::nsHtml5Tokenizer(nsHtml5TreeBuilder* tokenHandler,
                                             : nullptr),
       newAttributesEachTime(!tokenHandler->HasBuilder()),
       shouldSuspend(false),
+      keepBuffer(false),
       confident(false),
       line(0),
       attributeLine(0),
@@ -145,6 +146,18 @@ void nsHtml5Tokenizer::initLocation(nsHtml5String newPublicId,
 }
 
 bool nsHtml5Tokenizer::isViewingXmlSource() { return viewingXmlSource; }
+
+void nsHtml5Tokenizer::setKeepBuffer(bool keepBuffer) {
+  this->keepBuffer = keepBuffer;
+}
+
+bool nsHtml5Tokenizer::dropBufferIfLongerThan(int32_t length) {
+  if (strBuf.length > length) {
+    strBuf = nullptr;
+    return true;
+  }
+  return false;
+}
 
 void nsHtml5Tokenizer::setState(int32_t specialTokenizerState) {
   this->stateSave = specialTokenizerState;
@@ -5022,7 +5035,9 @@ void nsHtml5Tokenizer::emitOrAppendOne(const char16_t* val,
 }
 
 void nsHtml5Tokenizer::end() {
-  strBuf = nullptr;
+  if (!keepBuffer) {
+    strBuf = nullptr;
+  }
   doctypeName = nullptr;
   if (systemIdentifier) {
     systemIdentifier.Release();
@@ -5148,7 +5163,9 @@ void nsHtml5Tokenizer::loadState(nsHtml5Tokenizer* other) {
 
 void nsHtml5Tokenizer::initializeWithoutStarting() {
   confident = false;
-  strBuf = nullptr;
+  if (!keepBuffer) {
+    strBuf = nullptr;
+  }
   line = 1;
   attributeLine = 1;
   resetToDataState();

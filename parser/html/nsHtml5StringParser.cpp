@@ -20,9 +20,11 @@ nsHtml5StringParser::nsHtml5StringParser()
       mTreeBuilder(new nsHtml5TreeBuilder(mBuilder)),
       mTokenizer(new nsHtml5Tokenizer(mTreeBuilder.get(), false)) {
   mTokenizer->setInterner(&mAtomTable);
+  mTokenizer->setKeepBuffer(true);
+  mTreeBuilder->setKeepBuffer(true);
 }
 
-nsHtml5StringParser::~nsHtml5StringParser() {}
+nsHtml5StringParser::~nsHtml5StringParser() { ClearCaches(); }
 
 nsresult nsHtml5StringParser::ParseFragment(
     const nsAString& aSourceBuffer, nsIContent* aTargetNode,
@@ -69,6 +71,31 @@ nsresult nsHtml5StringParser::ParseDocument(
                   aTargetDoc->AllowsDeclarativeShadowRoots());
 }
 
+void nsHtml5StringParser::ClearCaches() {
+  mTokenizer->dropBufferIfLongerThan(0);
+  mTreeBuilder->dropBufferIfLongerThan(0);
+  if (mCacheClearer) {
+    mCacheClearer->Disconnect();
+    mCacheClearer = nullptr;
+  }
+}
+
+void nsHtml5StringParser::TryCache() {
+  const int32_t kMaxBuffer = 1024 * 1024;
+  bool didDrop = mTokenizer->dropBufferIfLongerThan(kMaxBuffer);
+  didDrop |= mTreeBuilder->dropBufferIfLongerThan(kMaxBuffer);
+  if (didDrop) {
+    return;
+  }
+
+  if (!mCacheClearer) {
+    mCacheClearer = new CacheClearer(this);
+    nsCOMPtr<nsIRunnable> runnable = mCacheClearer.get();
+    NS_DispatchToMainThreadQueue(runnable.forget(),
+                                 mozilla::EventQueuePriority::Idle);
+  }
+}
+
 nsresult nsHtml5StringParser::Tokenize(const nsAString& aSourceBuffer,
                                        Document* aDocument,
                                        bool aScriptingEnabledForNoscriptParsing,
@@ -109,8 +136,10 @@ nsresult nsHtml5StringParser::Tokenize(const nsAString& aSourceBuffer,
   if (NS_SUCCEEDED(rv)) {
     mTokenizer->eof();
   }
+
   mTokenizer->end();
   mBuilder->Finish();
   mAtomTable.Clear();
+  TryCache();
   return rv;
 }
