@@ -13,6 +13,7 @@ const {
 types.addDictType("thread-configuration.configuration", {
   pauseOnExceptions: "nullable:boolean",
   ignoreCaughtExceptions: "nullable:boolean",
+  breakpoints: "json",
 });
 
 const threadConfigurationSpec = generateActorSpec({
