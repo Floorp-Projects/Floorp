@@ -32,6 +32,8 @@ const char* GetCodecTypeString(const CodecType& aCodecType) {
       return "_EndVideo_/_BeginAudio_";
     case CodecType::Opus:
       return "Opus";
+    case CodecType::Vorbis:
+      return "Vorbis";
     case CodecType::G722:
       return "G722";
     case CodecType::_EndAudio_:
