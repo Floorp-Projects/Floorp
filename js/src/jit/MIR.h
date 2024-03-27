@@ -2310,7 +2310,7 @@ class WrappedFunction : public TempObject {
     return nativeFun_->nativeUnchecked();
   }
   bool hasJitInfo() const {
-    return flags_.isBuiltinNative() && nativeFun_->jitInfoUnchecked();
+    return flags_.canHaveJitInfo() && nativeFun_->jitInfoUnchecked();
   }
   const JSJitInfo* jitInfo() const {
     MOZ_ASSERT(hasJitInfo());

@@ -116,9 +116,10 @@ class FunctionFlags {
     // This flag is used only by scripted functions and AsmJS.
     LAMBDA = 1 << 9,
 
-    // The WASM function has a JIT entry which emulates the
-    // js::BaseScript::jitCodeRaw mechanism.
-    WASM_JIT_ENTRY = 1 << 10,
+    // This Native function has a JIT entry which emulates the
+    // js::BaseScript::jitCodeRaw mechanism. Used for Wasm functions and
+    // TrampolineNative builtins.
+    NATIVE_JIT_ENTRY = 1 << 10,
 
     // Function had no explicit name, but a name was set by SetFunctionName at
     // compile time or SetFunctionName at runtime.
@@ -238,7 +239,7 @@ class FunctionFlags {
     switch (kind()) {
       case FunctionKind::NormalFunction:
         MOZ_ASSERT(!hasFlags(LAZY_ACCESSOR_NAME));
-        MOZ_ASSERT(!hasFlags(WASM_JIT_ENTRY));
+        MOZ_ASSERT(!hasFlags(NATIVE_JIT_ENTRY));
         break;
 
       case FunctionKind::Arrow:
@@ -246,38 +247,38 @@ class FunctionFlags {
         MOZ_ASSERT(!hasFlags(CONSTRUCTOR));
         MOZ_ASSERT(!hasFlags(LAZY_ACCESSOR_NAME));
         MOZ_ASSERT(hasFlags(LAMBDA));
-        MOZ_ASSERT(!hasFlags(WASM_JIT_ENTRY));
+        MOZ_ASSERT(!hasFlags(NATIVE_JIT_ENTRY));
         break;
       case FunctionKind::Method:
         MOZ_ASSERT(hasFlags(BASESCRIPT) || hasFlags(SELFHOSTLAZY));
         MOZ_ASSERT(!hasFlags(CONSTRUCTOR));
         MOZ_ASSERT(!hasFlags(LAZY_ACCESSOR_NAME));
         MOZ_ASSERT(!hasFlags(LAMBDA));
-        MOZ_ASSERT(!hasFlags(WASM_JIT_ENTRY));
+        MOZ_ASSERT(!hasFlags(NATIVE_JIT_ENTRY));
         break;
       case FunctionKind::ClassConstructor:
         MOZ_ASSERT(hasFlags(BASESCRIPT) || hasFlags(SELFHOSTLAZY));
         MOZ_ASSERT(hasFlags(CONSTRUCTOR));
         MOZ_ASSERT(!hasFlags(LAZY_ACCESSOR_NAME));
         MOZ_ASSERT(!hasFlags(LAMBDA));
-        MOZ_ASSERT(!hasFlags(WASM_JIT_ENTRY));
+        MOZ_ASSERT(!hasFlags(NATIVE_JIT_ENTRY));
         break;
       case FunctionKind::Getter:
         MOZ_ASSERT(!hasFlags(CONSTRUCTOR));
         MOZ_ASSERT(!hasFlags(LAMBDA));
-        MOZ_ASSERT(!hasFlags(WASM_JIT_ENTRY));
+        MOZ_ASSERT(!hasFlags(NATIVE_JIT_ENTRY));
         break;
       case FunctionKind::Setter:
         MOZ_ASSERT(!hasFlags(CONSTRUCTOR));
         MOZ_ASSERT(!hasFlags(LAMBDA));
-        MOZ_ASSERT(!hasFlags(WASM_JIT_ENTRY));
+        MOZ_ASSERT(!hasFlags(NATIVE_JIT_ENTRY));
         break;
 
       case FunctionKind::AsmJS:
         MOZ_ASSERT(!hasFlags(BASESCRIPT));
         MOZ_ASSERT(!hasFlags(SELFHOSTLAZY));
         MOZ_ASSERT(!hasFlags(LAZY_ACCESSOR_NAME));
-        MOZ_ASSERT(!hasFlags(WASM_JIT_ENTRY));
+        MOZ_ASSERT(!hasFlags(NATIVE_JIT_ENTRY));
         break;
       case FunctionKind::Wasm:
         MOZ_ASSERT(!hasFlags(BASESCRIPT));
@@ -316,10 +317,11 @@ class FunctionFlags {
     MOZ_ASSERT_IF(kind() == Wasm, isNativeFun());
     return kind() == Wasm;
   }
-  bool isWasmWithJitEntry() const {
-    MOZ_ASSERT_IF(hasFlags(WASM_JIT_ENTRY), isWasm());
-    return hasFlags(WASM_JIT_ENTRY);
+  bool isNativeWithJitEntry() const {
+    MOZ_ASSERT_IF(hasFlags(NATIVE_JIT_ENTRY), isNativeFun());
+    return hasFlags(NATIVE_JIT_ENTRY);
   }
+  bool isWasmWithJitEntry() const { return isWasm() && isNativeWithJitEntry(); }
   bool isNativeWithoutJitEntry() const {
     MOZ_ASSERT_IF(!hasJitEntry(), isNativeFun());
     return !hasJitEntry();
@@ -328,7 +330,14 @@ class FunctionFlags {
     return isNativeFun() && !isAsmJSNative() && !isWasm();
   }
   bool hasJitEntry() const {
-    return hasBaseScript() || hasSelfHostedLazyScript() || isWasmWithJitEntry();
+    return hasBaseScript() || hasSelfHostedLazyScript() ||
+           isNativeWithJitEntry();
+  }
+
+  bool canHaveJitInfo() const {
+    // A native builtin can have a pointer to either its JitEntry or JSJitInfo,
+    // but not both.
+    return isBuiltinNative() && !isNativeWithJitEntry();
   }
 
   /* Possible attributes of an interpreted function: */
@@ -417,7 +426,7 @@ class FunctionFlags {
     return clearFlags(LAZY_ACCESSOR_NAME);
   }
 
-  FunctionFlags& setWasmJitEntry() { return setFlags(WASM_JIT_ENTRY); }
+  FunctionFlags& setNativeJitEntry() { return setFlags(NATIVE_JIT_ENTRY); }
 
   bool isExtended() const { return hasFlags(EXTENDED); }
   FunctionFlags& setIsExtended() { return setFlags(EXTENDED); }
@@ -430,7 +439,7 @@ class FunctionFlags {
   static uint16_t HasJitEntryFlags(bool isConstructing) {
     uint16_t flags = BASESCRIPT | SELFHOSTLAZY;
     if (!isConstructing) {
-      flags |= WASM_JIT_ENTRY;
+      flags |= NATIVE_JIT_ENTRY;
     }
     return flags;
   }

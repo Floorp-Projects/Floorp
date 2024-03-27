@@ -86,7 +86,7 @@ class JSFunction : public js::NativeObject {
      *    the low bit set to ensure it's never identical to a BaseScript*
      *    pointer
      *
-     *  - a wasm JIT entry
+     *  - a native JIT entry (used for Wasm and TrampolineNative functions)
      *
      * The JIT depends on none of the above being a valid BaseScript pointer.
      *
@@ -199,6 +199,7 @@ class JSFunction : public js::NativeObject {
 
   bool isWasm() const { return flags().isWasm(); }
   bool isWasmWithJitEntry() const { return flags().isWasmWithJitEntry(); }
+  bool isNativeWithJitEntry() const { return flags().isNativeWithJitEntry(); }
   bool isNativeWithoutJitEntry() const {
     return flags().isNativeWithoutJitEntry();
   }
@@ -637,7 +638,9 @@ class JSFunction : public js::NativeObject {
                   JS::PrivateValue(reinterpret_cast<void*>(native)));
     setNativeJitInfoOrInterpretedScript(const_cast<JSJitInfo*>(jitInfo));
   }
-  bool hasJitInfo() const { return isBuiltinNative() && jitInfoUnchecked(); }
+  bool hasJitInfo() const {
+    return flags().canHaveJitInfo() && jitInfoUnchecked();
+  }
   const JSJitInfo* jitInfo() const {
     MOZ_ASSERT(hasJitInfo());
     return jitInfoUnchecked();
@@ -677,12 +680,25 @@ class JSFunction : public js::NativeObject {
     MOZ_ASSERT(*entry);
     MOZ_ASSERT(isWasm());
     MOZ_ASSERT(!isWasmWithJitEntry());
-    setFlags(flags().setWasmJitEntry());
+    setFlags(flags().setNativeJitEntry());
     setNativeJitInfoOrInterpretedScript(entry);
     MOZ_ASSERT(isWasmWithJitEntry());
   }
+  void setTrampolineNativeJitEntry(void** entry) {
+    MOZ_ASSERT(*entry);
+    MOZ_ASSERT(isBuiltinNative());
+    MOZ_ASSERT(!hasJitEntry());
+    MOZ_ASSERT(!hasJitInfo(), "shouldn't clobber JSJitInfo");
+    setFlags(flags().setNativeJitEntry());
+    setNativeJitInfoOrInterpretedScript(entry);
+    MOZ_ASSERT(isNativeWithJitEntry());
+  }
   void** wasmJitEntry() const {
     MOZ_ASSERT(isWasmWithJitEntry());
+    return nativeJitEntry();
+  }
+  void** nativeJitEntry() const {
+    MOZ_ASSERT(isNativeWithJitEntry());
     return static_cast<void**>(nativeJitInfoOrInterpretedScript());
   }
   inline js::wasm::Instance& wasmInstance() const;

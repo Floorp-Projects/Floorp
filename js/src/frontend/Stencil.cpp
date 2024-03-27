@@ -4309,8 +4309,8 @@ void js::DumpFunctionFlagsItems(js::JSONPrinter& json,
         case FunctionFlags::Flags::LAMBDA:
           json.value("LAMBDA");
           break;
-        case FunctionFlags::Flags::WASM_JIT_ENTRY:
-          json.value("WASM_JIT_ENTRY");
+        case FunctionFlags::Flags::NATIVE_JIT_ENTRY:
+          json.value("NATIVE_JIT_ENTRY");
           break;
         case FunctionFlags::Flags::HAS_INFERRED_NAME:
           json.value("HAS_INFERRED_NAME");
