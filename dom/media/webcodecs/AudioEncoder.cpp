@@ -78,6 +78,29 @@ AudioEncoderConfigInternal::AudioEncoderConfigInternal(
           OptionalToMaybe(aConfig.mNumberOfChannels),
           OptionalToMaybe(aConfig.mBitrate), aConfig.mBitrateMode) {
   DebugOnly<nsCString> errorMessage;
+  if (aConfig.mCodec.EqualsLiteral("opus") && aConfig.mOpus.WasPassed()) {
+    // All values are in range at this point, the config is known valid.
+    OpusSpecific specific;
+    if (aConfig.mOpus.Value().mComplexity.WasPassed()) {
+      specific.mComplexity = aConfig.mOpus.Value().mComplexity.Value();
+    } else {
+      // https://w3c.github.io/webcodecs/opus_codec_registration.html#dom-opusencoderconfig-complexity
+      // If no value is specificied, the default value is platform-specific:
+      // User Agents SHOULD set a default of 5 for mobile platforms, and a
+      // default of 9 for all other platforms.
+      if (IsOnAndroid()) {
+        specific.mComplexity = 5;
+      } else {
+        specific.mComplexity = 9;
+      }
+    }
+    specific.mApplication = OpusSpecific::Application::Unspecified;
+    specific.mFrameDuration = aConfig.mOpus.Value().mFrameDuration;
+    specific.mPacketLossPerc = aConfig.mOpus.Value().mPacketlossperc;
+    specific.mUseDTX = aConfig.mOpus.Value().mUsedtx;
+    specific.mUseInBandFEC = aConfig.mOpus.Value().mUseinbandfec;
+    mSpecific.emplace(specific);
+  }
   MOZ_ASSERT(AudioEncoderTraits::Validate(aConfig, errorMessage));
 }
 
@@ -86,6 +109,11 @@ AudioEncoderConfigInternal::AudioEncoderConfigInternal(
     : AudioEncoderConfigInternal(aConfig.mCodec, aConfig.mSampleRate,
                                  aConfig.mNumberOfChannels, aConfig.mBitrate,
                                  aConfig.mBitrateMode) {}
+
+void AudioEncoderConfigInternal::SetSpecific(
+    const EncoderConfig::CodecSpecific& aSpecific) {
+  mSpecific.emplace(aSpecific);
+}
 
 /*
  * The followings are helpers for AudioEncoder methods
@@ -187,6 +215,8 @@ EncoderConfig AudioEncoderConfigInternal::ToEncoderConfig() const {
   Maybe<EncoderConfig::CodecSpecific> specific;
   if (mCodec.EqualsLiteral("opus")) {
     type = CodecType::Opus;
+    MOZ_ASSERT(mSpecific.isNothing() || mSpecific->is<OpusSpecific>());
+    specific = mSpecific;
   } else if (mCodec.EqualsLiteral("vorbis")) {
     type = CodecType::Vorbis;
   } else if (mCodec.EqualsLiteral("flac")) {
@@ -268,7 +298,8 @@ bool AudioEncoderTraits::Validate(const AudioEncoderConfig& aConfig,
     return false;
   }
 
-  if (aConfig.mBitrate.WasPassed() && aConfig.mBitrate.Value() > std::numeric_limits<int>::max()) {
+  if (aConfig.mBitrate.WasPassed() &&
+      aConfig.mBitrate.Value() > std::numeric_limits<int>::max()) {
     aErrorMessage.AppendPrintf("Invalid config: bitrate value too large");
     return false;
   }
