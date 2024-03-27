@@ -3,12 +3,6 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
-const { BackupResource } = ChromeUtils.importESModule(
-  "resource:///modules/backup/BackupResource.sys.mjs"
-);
-const { BackupService } = ChromeUtils.importESModule(
-  "resource:///modules/backup/BackupService.sys.mjs"
-);
 const { CredentialsAndSecurityBackupResource } = ChromeUtils.importESModule(
   "resource:///modules/backup/CredentialsAndSecurityBackupResource.sys.mjs"
 );
@@ -38,12 +32,7 @@ const { TelemetryTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TelemetryTestUtils.sys.mjs"
 );
 
-const { sinon } = ChromeUtils.importESModule(
-  "resource://testing-common/Sinon.sys.mjs"
-);
-
 add_setup(() => {
-  do_get_profile();
   // FOG needs to be initialized in order for data to flow.
   Services.fog.initializeFOG();
   Services.telemetry.clearScalars();
@@ -54,26 +43,6 @@ add_setup(() => {
  * method of all registered BackupResource classes.
  */
 add_task(async function test_takeMeasurements() {
-  /**
-   * Some fake backup resource classes to test with.
-   */
-  class FakeBackupResource1 extends BackupResource {
-    static get key() {
-      return "fake1";
-    }
-    measure() {}
-  }
-
-  /**
-   * Another fake backup resource class to test with.
-   */
-  class FakeBackupResource2 extends BackupResource {
-    static get key() {
-      return "fake2";
-    }
-    measure() {}
-  }
-
   let sandbox = sinon.createSandbox();
   sandbox.stub(FakeBackupResource1.prototype, "measure").resolves();
   sandbox

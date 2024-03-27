@@ -2,8 +2,13 @@
 head = "head.js"
 firefox-appdir = "browser"
 skip-if = ["os == 'android'"]
+prefs = [
+  "browser.backup.log=true",
+]
 
 ["test_BackupResource.js"]
 support-files = ["data/test_xulstore.json"]
+
+["test_createBackup.js"]
 
 ["test_measurements.js"]

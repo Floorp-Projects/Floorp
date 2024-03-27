@@ -4,7 +4,51 @@
 
 "use strict";
 
+const { BackupService } = ChromeUtils.importESModule(
+  "resource:///modules/backup/BackupService.sys.mjs"
+);
+
+const { BackupResource } = ChromeUtils.importESModule(
+  "resource:///modules/backup/BackupResource.sys.mjs"
+);
+
+const { sinon } = ChromeUtils.importESModule(
+  "resource://testing-common/Sinon.sys.mjs"
+);
+
 const BYTES_IN_KB = 1000;
+
+do_get_profile();
+
+/**
+ * Some fake backup resource classes to test with.
+ */
+class FakeBackupResource1 extends BackupResource {
+  static get key() {
+    return "fake1";
+  }
+  measure() {}
+}
+
+/**
+ * Another fake backup resource class to test with.
+ */
+class FakeBackupResource2 extends BackupResource {
+  static get key() {
+    return "fake2";
+  }
+  measure() {}
+}
+
+/**
+ * Yet another fake backup resource class to test with.
+ */
+class FakeBackupResource3 extends BackupResource {
+  static get key() {
+    return "fake3";
+  }
+  measure() {}
+}
 
 /**
  * Create a file of a given size in kilobytes.
