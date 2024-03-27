@@ -12,22 +12,11 @@
   }
 
   #topBar {
-    position: relative;
+    appearance: auto;
+    -moz-default-appearance: toolbar;
     -moz-window-dragging: drag;
-    padding-top: env(-moz-mac-titlebar-height);
-    border-bottom: 1px solid ThreeDShadow;
-
     align-items: center;
     justify-content: center;
-
-    &::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      appearance: auto;
-      -moz-default-appearance: -moz-window-titlebar;
-      z-index: -1;
-    }
   }
 }
 

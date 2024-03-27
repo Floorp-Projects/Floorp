@@ -125,12 +125,7 @@ macro_rules! lnf_int_variable {
     }};
 }
 
-static CHROME_ENVIRONMENT_VARIABLES: [EnvironmentVariable; 9] = [
-    lnf_int_variable!(
-        atom!("-moz-mac-titlebar-height"),
-        MacTitlebarHeight,
-        int_pixels
-    ),
+static CHROME_ENVIRONMENT_VARIABLES: [EnvironmentVariable; 8] = [
     lnf_int_variable!(
         atom!("-moz-gtk-csd-titlebar-button-spacing"),
         TitlebarButtonSpacing,
