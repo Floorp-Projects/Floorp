@@ -56,3 +56,11 @@
   font-family: monospace;
   white-space: pre;
 }
+
+.space-default {
+  white-space: initial;
+}
+
+.space-preserve {
+  white-space: pre-wrap;
+}

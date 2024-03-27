@@ -12,3 +12,4 @@ fuzzy(0-1,0-5) == bug559996.html bug559996-ref.html
 == bug592366-2.xhtml bug592366-ref.xhtml
 == bug798068.xhtml bug798068-ref.xhtml
 == bug1389406.xml bug1389406-ref.xml
+== prettyprint-space.xml prettyprint-space-ref.xhtml
