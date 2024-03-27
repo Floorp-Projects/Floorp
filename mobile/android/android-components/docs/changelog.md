@@ -9,16 +9,13 @@ permalink: /changelog/
 * **feature-downloads**
   * Content intent of completed `DownloadNotification` now uses a `PendingIntent` which launches an `Activity` directly, see [Bug 1885167](https://bugzilla.mozilla.org/show_bug.cgi?id=1885167).
 
-* **concept-toolbar**
-  * Added the `setDisplayHorizontalPadding` method, allowing the caller to dynamically adjust the horizontal padding for the display toolbar.
-
 # 125.0
 * [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v124..releases_v125)
 * [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/releases_v125/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)
 * [Gecko](https://github.com/mozilla-mobile/firefox-android/blob/releases_v125/android-components/plugins/dependencies/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/releases_v125/android-components/.config.yml)
 
-* **concept-toolbar**:
+* **concept-toolabar**:
   * Added a new method for `ActionButton` to update the contentDescription and the iconTint, see [Bug 1875817](https://bugzilla.mozilla.org/show_bug.cgi?id=1875817).
 
 * **concept-engine**

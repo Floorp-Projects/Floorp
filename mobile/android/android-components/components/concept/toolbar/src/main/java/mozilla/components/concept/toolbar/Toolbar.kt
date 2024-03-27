@@ -184,11 +184,6 @@ interface Toolbar : ScrollableToolbar {
     fun showMenuButton()
 
     /**
-     * Sets the horizontal padding in display mode.
-     */
-    fun setDisplayHorizontalPadding(horizontalPadding: Int)
-
-    /**
      * Hides the page action separator in display mode.
      */
     fun hidePageActionSeparator()
