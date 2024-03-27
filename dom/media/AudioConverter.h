@@ -137,7 +137,6 @@ class AudioConverter {
       AlignedBuffer<Value> temp = buffer.Forget();
       Process(temp, temp.Data(), SamplesInToFrames(temp.Length()));
       return AudioDataBuffer<Format, Value>(std::move(temp));
-      ;
     }
     return Process(buffer);
   }
