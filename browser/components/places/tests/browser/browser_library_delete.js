@@ -120,7 +120,6 @@ add_task(async function test_ensure_correct_selection_and_functionality() {
 });
 
 add_task(async function test_repeated_remove_bookmark() {
-  // Select and open the left pane "History" query.
   let PO = gLibrary.PlacesOrganizer;
   PO.selectLeftPaneBuiltIn("UnfiledBookmarks");
 
@@ -154,4 +153,45 @@ add_task(async function test_repeated_remove_bookmark() {
   PO._places.controller.doCommand("cmd_delete");
   Assert.equal(spy.callCount, 4, "Should have been invoked again");
   Assert.equal(stub.callCount, 2, "Should have been invoked again");
+
+  sinon.restore();
+});
+
+add_task(async function test_repeated_remove_separator() {
+  await PlacesUtils.bookmarks.eraseEverything();
+
+  const NUM_SEPARATORS = 2;
+  for (let i = 0; i < NUM_SEPARATORS; ++i) {
+    await PlacesUtils.bookmarks.insert({
+      parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+      type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
+      index: 0,
+    });
+  }
+
+  gLibrary.PlacesOrganizer.selectLeftPaneBuiltIn("UnfiledBookmarks");
+  let view = gLibrary.ContentTree.view;
+  view.focus();
+  let unsortedNode = PlacesUtils.asContainer(view.result.root);
+  Assert.equal(2, unsortedNode.childCount, "Unsorted node has 2 children");
+
+  for (let i = NUM_SEPARATORS - 1; i >= 0; --i) {
+    let node = unsortedNode.getChild(i);
+    Assert.equal(
+      node.type,
+      Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR,
+      "Separator found in unsorted bookmarks"
+    );
+    view.selectNode(node);
+    Assert.ok(
+      view.controller.isCommandEnabled("cmd_delete"),
+      "Delete command is enabled"
+    );
+    view.controller.doCommand("cmd_delete");
+    await PlacesTestUtils.waitForNotification("bookmark-removed", events =>
+      events.some(({ guid }) => guid == node.bookmarkGuid)
+    );
+  }
+
+  Assert.equal(unsortedNode.childCount, 0, "Unsorted node has no children");
 });
