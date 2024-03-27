@@ -11,7 +11,7 @@ namespace sdk {
 
 // static
 std::unique_ptr<Client> Client::Create(Config config) {
-  return std::make_unique<ClientMac>(std::move(config));
+  return nullptr;
 }
 
 ClientMac::ClientMac(Config config) : ClientBase(std::move(config)) {}

@@ -8,8 +8,8 @@ origin:
   name: Content Analysis SDK
   description: SDK that DLP agents may use to interoperate with web browsers
   url: https://github.com/chromium/content_analysis_sdk
-  release: 93f5b9cfe9509a6b58eb0414f1bd610c4859ed1d (2023-07-31T13:35:40Z).
-  revision: 93f5b9cfe9509a6b58eb0414f1bd610c4859ed1d
+  release: 9a408736204513e0e95dd2ab3c08de0d95963efc (2023-09-20T15:27:43Z).
+  revision: 9a408736204513e0e95dd2ab3c08de0d95963efc
   license: BSD-3-Clause
 
 vendoring:
