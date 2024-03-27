@@ -17,6 +17,8 @@ vendoring:
   source-hosting: github
   exclude:
     - .gitattributes
+  patches:
+    - agent_improvements.patch
 
 updatebot:
     maintainer-phab: "#dlp-reviewers"
