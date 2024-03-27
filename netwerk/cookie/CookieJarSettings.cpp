@@ -172,8 +172,7 @@ CookieJarSettings::CookieJarSettings(uint32_t aCookieBehavior,
       mIsOnContentBlockingAllowListUpdated(false),
       mState(aState),
       mToBeMerged(false),
-      mShouldResistFingerprinting(aShouldResistFingerprinting),
-      mTopLevelWindowContextId(0) {
+      mShouldResistFingerprinting(aShouldResistFingerprinting) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT_IF(
       mIsFirstPartyIsolated,
@@ -409,8 +408,6 @@ void CookieJarSettings::Serialize(CookieJarSettingsArgs& aData) {
         CookiePermissionData(principalInfo, cookiePermission));
   }
 
-  aData.topLevelWindowContextId() = mTopLevelWindowContextId;
-
   mToBeMerged = false;
 }
 
@@ -453,8 +450,6 @@ void CookieJarSettings::Serialize(CookieJarSettingsArgs& aData) {
     cookieJarSettings->mFingerprintingRandomKey.emplace(
         aData.fingerprintingRandomizationKey().Clone());
   }
-
-  cookieJarSettings->mTopLevelWindowContextId = aData.topLevelWindowContextId();
 
   cookieJarSettings.forget(aCookieJarSettings);
 }

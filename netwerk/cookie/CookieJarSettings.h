@@ -179,11 +179,6 @@ class CookieJarSettings final : public nsICookieJarSettings {
   // network.cookie.rejectForeignWithExceptions.enabled pref is set to true.
   static bool IsRejectThirdPartyContexts(uint32_t aCookieBehavior);
 
-  void SetTopLevelWindowContextId(uint64_t aId) {
-    mTopLevelWindowContextId = aId;
-  }
-  uint64_t GetTopLevelWindowContextId() { return mTopLevelWindowContextId; }
-
  private:
   enum State {
     // No cookie permissions are allowed to be stored in this object.
@@ -264,10 +259,6 @@ class CookieJarSettings final : public nsICookieJarSettings {
   // browsing session changes. This can prevent trackers to identify individuals
   // by using browser fingerprints.
   Maybe<nsTArray<uint8_t>> mFingerprintingRandomKey;
-
-  // This field caches the top level window context id when loading the top
-  // level document.
-  uint64_t mTopLevelWindowContextId;
 };
 
 }  // namespace net

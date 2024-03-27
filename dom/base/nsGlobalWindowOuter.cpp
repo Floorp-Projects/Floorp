@@ -2414,11 +2414,6 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
 
   MOZ_RELEASE_ASSERT(newInnerWindow->mDoc == aDocument);
 
-  if (mBrowsingContext->IsTopContent()) {
-    net::CookieJarSettings::Cast(aDocument->CookieJarSettings())
-        ->SetTopLevelWindowContextId(aDocument->InnerWindowID());
-  }
-
   newInnerWindow->RefreshReduceTimerPrecisionCallerType();
 
   if (!aState) {
