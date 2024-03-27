@@ -28,9 +28,19 @@ class ThreadConfigurationCommand {
 
   async updateConfiguration(configuration) {
     if (this._commands.targetCommand.hasTargetWatcherSupport()) {
+      // Remove thread options that are not currently supported by
+      // the thread configuration actor.
+      const filteredConfiguration = Object.fromEntries(
+        Object.entries(configuration).filter(
+          ([key]) => !["breakpoints", "eventBreakpoints"].includes(key)
+        )
+      );
+
       const threadConfigurationFront = await this.getThreadConfigurationFront();
       const updatedConfiguration =
-        await threadConfigurationFront.updateConfiguration(configuration);
+        await threadConfigurationFront.updateConfiguration(
+          filteredConfiguration
+        );
       this._configuration = updatedConfiguration;
     }
 

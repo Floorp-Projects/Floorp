@@ -195,7 +195,7 @@ loader.lazyRequireGetter(
 
 loader.lazyRequireGetter(
   this,
-  "getThreadConfiguration",
+  "getThreadOptions",
   "resource://devtools/client/shared/thread-utils.js",
   true
 );
@@ -2214,7 +2214,7 @@ Toolbox.prototype = {
     const targetConfiguration = {};
 
     // Get the current thread settings from the prefs as well as debugger internal storage for breakpoints.
-    const threadConfiguration = await getThreadConfiguration();
+    const threadConfiguration = await getThreadOptions();
 
     for (const prefName in BOOLEAN_CONFIGURATION_PREFS) {
       const { name, thread } = BOOLEAN_CONFIGURATION_PREFS[prefName];
