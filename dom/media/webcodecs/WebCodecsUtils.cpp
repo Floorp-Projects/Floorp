@@ -7,6 +7,7 @@
 #include "WebCodecsUtils.h"
 
 #include "DecoderTypes.h"
+#include "PlatformEncoderModule.h"
 #include "VideoUtils.h"
 #include "js/experimental/TypedData.h"
 #include "mozilla/Assertions.h"
@@ -15,8 +16,6 @@
 #include "mozilla/dom/VideoFrameBinding.h"
 #include "mozilla/gfx/Types.h"
 #include "nsDebug.h"
-#include "PlatformEncoderModule.h"
-#include "PlatformEncoderModule.h"
 
 extern mozilla::LazyLogModule gWebCodecsLog;
 

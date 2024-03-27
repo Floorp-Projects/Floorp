@@ -190,6 +190,8 @@ let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "AudioDestinationNode", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "AudioEncoder", nightly: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "AudioListener", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "AudioNode", insecureContext: true },
