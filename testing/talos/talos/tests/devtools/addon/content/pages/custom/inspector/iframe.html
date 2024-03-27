@@ -58,6 +58,10 @@
         font-family: Arial;
         margin: 20px;
       }`;
+      manyCssRules += `
+      .many-css-rules::after {
+        content: "rule #${i}";
+      }`;
     }
 
     let CSS_VARIABLES_COUNT = 300;
