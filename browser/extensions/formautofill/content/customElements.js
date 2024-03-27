@@ -154,46 +154,4 @@
     MozElements.MozAutocompleteProfileListitem,
     { extends: "richlistitem" }
   );
-
-  class MozAutocompleteCreditcardInsecureField extends MozAutocompleteProfileListitemBase {
-    static get markup() {
-      return `
-      <div xmlns="http://www.w3.org/1999/xhtml" class="autofill-insecure-item"></div>
-      `;
-    }
-
-    connectedCallback() {
-      if (this.delayConnectedCallback()) {
-        return;
-      }
-      this.textContent = "";
-      this.appendChild(this.constructor.fragment);
-
-      this._itemBox = this.querySelector(".autofill-insecure-item");
-
-      this._adjustAcItem();
-    }
-
-    set selected(val) {
-      // This item is unselectable since we see this item as a pure message.
-    }
-
-    get selected() {
-      return this.getAttribute("selected") == "true";
-    }
-
-    _adjustAcItem() {
-      this._adjustAutofillItemLayout();
-      this.setAttribute("formautofillattached", "true");
-
-      let value = this.getAttribute("ac-value");
-      this._itemBox.textContent = value;
-    }
-  }
-
-  customElements.define(
-    "autocomplete-creditcard-insecure-field",
-    MozAutocompleteCreditcardInsecureField,
-    { extends: "richlistitem" }
-  );
 })();

@@ -522,6 +522,11 @@
           return;
         }
 
+        let label = this.getAttribute("ac-label");
+        if (label && JSON.parse(label)?.noLearnMore) {
+          return;
+        }
+
         let baseURL = Services.urlFormatter.formatURLPref(
           "app.support.baseURL"
         );
