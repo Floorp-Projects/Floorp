@@ -14,6 +14,7 @@
 #include "mozilla/dom/quota/PersistenceType.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
 #include "mozilla/net/nsFileProtocolHandler.h"
+#include "mozilla/AppShutdown.h"
 #include "mozIStorageConnection.h"
 #include "mozIStorageService.h"
 #include "mozStorageCID.h"
@@ -62,7 +63,7 @@ void DBAction::RunOnTarget(
   MOZ_DIAGNOSTIC_ASSERT(aDirectoryMetadata);
   MOZ_DIAGNOSTIC_ASSERT(aDirectoryMetadata->mDir);
 
-  if (IsCanceled()) {
+  if (IsCanceled() || AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownQM)) {
     aResolver->Resolve(NS_ERROR_ABORT);
     return;
   }
