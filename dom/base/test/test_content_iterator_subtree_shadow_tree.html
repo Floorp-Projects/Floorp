@@ -83,202 +83,206 @@ SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function () {
   let iter = createContentIterator();
 
-  /**
-   * Basic tests with complicated tree.
-   */
-  function check(aIter, aExpectedResult, aDescription) {
-    if (aExpectedResult.length) {
-      is(SpecialPowers.unwrap(aIter.currentNode), aExpectedResult[0],
-        `${aDescription}: currentNode should be the text node immediately after initialization (got: ${getNodeDescription(aIter.currentNode)}, expected: ${getNodeDescription(aExpectedResult[0])})`);
-      ok(!aIter.isDone, `${aDescription}: isDone shouldn't be true immediately after initialization`);
+  function runTest() {
+    /**
+     * Basic tests with complicated tree.
+     */
+    function check(aIter, aExpectedResult, aDescription) {
+      if (aExpectedResult.length) {
+        is(SpecialPowers.unwrap(aIter.currentNode), aExpectedResult[0],
+          `${aDescription}: currentNode should be the text node immediately after initialization (got: ${getNodeDescription(aIter.currentNode)}, expected: ${getNodeDescription(aExpectedResult[0])})`);
+        ok(!aIter.isDone, `${aDescription}: isDone shouldn't be true immediately after initialization`);
 
-      aIter.first();
-      is(SpecialPowers.unwrap(aIter.currentNode), aExpectedResult[0],
-        `${aDescription}: currentNode should be the text node after calling first() (got: ${getNodeDescription(aIter.currentNode)}, expected: ${getNodeDescription(aExpectedResult[0])})`);
-      ok(!aIter.isDone, `${aDescription}: isDone shouldn't be true after calling first()`);
+        aIter.first();
+        is(SpecialPowers.unwrap(aIter.currentNode), aExpectedResult[0],
+          `${aDescription}: currentNode should be the text node after calling first() (got: ${getNodeDescription(aIter.currentNode)}, expected: ${getNodeDescription(aExpectedResult[0])})`);
+        ok(!aIter.isDone, `${aDescription}: isDone shouldn't be true after calling first()`);
 
-      for (let expected of aExpectedResult) {
-        is(SpecialPowers.unwrap(aIter.currentNode), expected,
-          `${aDescription}: currentNode should be the node (got: ${getNodeDescription(aIter.currentNode)}, expected: ${getNodeDescription(expected)})`);
-        ok(!aIter.isDone, `${aDescription}: isDone shouldn't be true when ${getNodeDescription(expected)} is expected`);
-        aIter.next();
+        for (let expected of aExpectedResult) {
+          is(SpecialPowers.unwrap(aIter.currentNode), expected,
+            `${aDescription}: currentNode should be the node (got: ${getNodeDescription(aIter.currentNode)}, expected: ${getNodeDescription(expected)})`);
+          ok(!aIter.isDone, `${aDescription}: isDone shouldn't be true when ${getNodeDescription(expected)} is expected`);
+          aIter.next();
+        }
+
+        is(SpecialPowers.unwrap(aIter.currentNode), null,
+          `${aDescription}: currentNode should be null after calling next() finally (got: ${getNodeDescription(aIter.currentNode)}`);
+        ok(aIter.isDone, `${aDescription}: isDone should be true after calling next() finally`);
+      } else {
+        is(SpecialPowers.unwrap(aIter.currentNode), null,
+          `${aDescription}: currentNode should be null immediately after initialization (got: ${getNodeDescription(aIter.currentNode)})`);
+        ok(aIter.isDone, `${aDescription}: isDone should be true immediately after initialization`);
+
+        aIter.first();
+        is(SpecialPowers.unwrap(aIter.currentNode), null,
+          `${aDescription}: currentNode should be null after calling first() (got: ${getNodeDescription(aIter.currentNode)})`);
+        ok(aIter.isDone, `${aDescription}: isDone should be true after calling first()`);
       }
-
-      is(SpecialPowers.unwrap(aIter.currentNode), null,
-        `${aDescription}: currentNode should be null after calling next() finally (got: ${getNodeDescription(aIter.currentNode)}`);
-      ok(aIter.isDone, `${aDescription}: isDone should be true after calling next() finally`);
-    } else {
-      is(SpecialPowers.unwrap(aIter.currentNode), null,
-        `${aDescription}: currentNode should be null immediately after initialization (got: ${getNodeDescription(aIter.currentNode)})`);
-      ok(aIter.isDone, `${aDescription}: isDone should be true immediately after initialization`);
-
-      aIter.first();
-      is(SpecialPowers.unwrap(aIter.currentNode), null,
-        `${aDescription}: currentNode should be null after calling first() (got: ${getNodeDescription(aIter.currentNode)})`);
-      ok(aIter.isDone, `${aDescription}: isDone should be true after calling first()`);
     }
+
+    // Structure
+    //   <div>OuterText1</div>
+    //   <div #host1>
+    //     #ShadowRoot
+    //       InnerText1
+    //   <div>OuterText2</div>
+    //   <div #host2>
+    //     #ShadowRoot
+    //       <div>InnerText2</div>
+    //       <div>InnerText3</div>
+    //   <div #host3>
+    //     #ShadowRoot
+    //       <div #host4>
+    //         #ShadowRoot
+    //           InnerText4
+    //   OuterText3
+
+    document.body.innerHTML = `<div id="outerText1">OuterText1</div>` +
+                              `<div id="host1"></div>` +
+                              `<div id="outerText2">OuterText2</div>` +
+                              `<div id="host2"></div>` +
+                              `<div id="host3"></div>` +
+                              `OuterText3`;
+    const outerText1 = document.getElementById("outerText1");
+    const outerText2 = document.getElementById("outerText2");
+
+    const host1 = document.getElementById("host1");
+    const root1 = host1.attachShadow({mode: "open"});
+    root1.innerHTML = "InnerText1";
+
+    const host2 = document.getElementById("host2");
+    const root2 = host2.attachShadow({mode: "open"});
+    root2.innerHTML = "<div>InnerText2</div><div>InnerText3</div>";
+
+    const host3 = document.getElementById("host3");
+    const root3 = host3.attachShadow({mode: "open"});
+    root3.innerHTML = `<div id="host4"></div>`;
+
+    const host4 = root3.getElementById("host4");
+    const root4 = host4.attachShadow({mode: "open"});
+    root4.innerHTML = "InnerText4";
+
+    /**
+     * Selects the <body> with a range.
+     */
+    range = document.createRange();
+    range.selectNode(document.body);
+    iter.initWithRangeAllowCrossShadowBoundary(Ci.nsIScriptableContentIterator.SUBTREE_ITERATOR, range);
+    check(iter, [document.body], "Initialized with range selecting the <body>");
+
+    /**
+     * Selects all children in the <body> with a range.
+     */
+    range = document.createRange();
+    range.selectNodeContents(document.body);
+    iter.initWithRangeAllowCrossShadowBoundary(Ci.nsIScriptableContentIterator.SUBTREE_ITERATOR, range);
+    check(iter, [outerText1, host1,
+                 outerText2, host2,
+                 host3, // host4 is a child of host3
+                 document.body.lastChild],
+          "Initialized with range selecting all children in the <body>");
+
+    /**
+     * range around elements.
+     */
+    range = document.createRange();
+    SpecialPowers.wrap(range).setStartAllowCrossShadowBoundary(outerText1.firstChild, 0);
+    SpecialPowers.wrap(range).setEndAllowCrossShadowBoundary(root1.firstChild, root1.firstChild.length);
+    iter.initWithRangeAllowCrossShadowBoundary(Ci.nsIScriptableContentIterator.SUBTREE_ITERATOR, range);
+    // outerText1.firstChild is a node without children, so the
+    // next candidate is root1.firstChild, given root1.firstChild
+    // is also the end container which isn't fully contained
+    // by this range, so the iterator returns nothing.
+    check(iter, [], "Initialized with range selecting 'OuterText1 and InnerText1'");
+
+    // From light DOM to Shadow DOM #1
+    range = document.createRange();
+    SpecialPowers.wrap(range).setStartAllowCrossShadowBoundary(outerText1, 0);
+    SpecialPowers.wrap(range).setEndAllowCrossShadowBoundary(root1.firstChild, root1.firstChild.length);
+    iter.initWithRangeAllowCrossShadowBoundary(Ci.nsIScriptableContentIterator.SUBTREE_ITERATOR, range);
+    // [start] outerText1 is a container and it has children, so the first node
+    //         is the topmost descendant, which is outerText.firstChild.
+    // [end] The end point of this iteration is also outerText1.firstChild because
+    //       it is also the topmost element in the previous node of root1.firstChild.
+    // Iteration #1: outerText1.firstChild as it is the start node
+    check(iter, [outerText1.firstChild], "Initialized with range selecting 'OuterText1 and InnerText1'");
+
+    // From light DOM to Shadow DOM #2
+    SpecialPowers.wrap(range).setStartAllowCrossShadowBoundary(outerText1, 0);
+    SpecialPowers.wrap(range).setEndAllowCrossShadowBoundary(root2, root2.childNodes.length);
+    iter.initWithRangeAllowCrossShadowBoundary(Ci.nsIScriptableContentIterator.SUBTREE_ITERATOR, range);
+    // [start] outerText1 is a container and it has children, so the first node
+    //         is the topmost descendant, which is outerText.firstChild.
+    // [end] root2 is the container and it has children, so the end node is
+    //       the last node of root2, which is root2.lastChild
+    // Iteration #1: outerText1.firstChild, as it's the start node
+    // Iteration #2: host1, as it's next available node after outerText1.firstChild
+    // Iteration #3: outerText2, as it's the next sibiling of host1
+    // Iteration #4: host2, as it's the next sibling of outerText2. Since it's
+    //               the ancestor of the end node, so we get into this tree and returns
+    //               root2.firstChild here.
+    // Iteration #5: root2.lastChild, as it's the next sibling of root2.firstChild
+    check(iter, [outerText1.firstChild, host1, outerText2, root2.firstChild, root2.lastChild],
+      "Initialized with range selecting 'OuterText1, InnerText1, OuterText2 and InnerText2'");
+
+    // From Shadow DOM to Shadow DOM #1
+    SpecialPowers.wrap(range).setStartAllowCrossShadowBoundary(root1.firstChild, 0);
+    SpecialPowers.wrap(range).setEndAllowCrossShadowBoundary(root2.lastChild, root2.lastChild.length);
+    iter.initWithRangeAllowCrossShadowBoundary(Ci.nsIScriptableContentIterator.SUBTREE_ITERATOR, range);
+    // [start] outerText2 is the start because root1.firstChild doesn't have children,
+    //         so we look for next available node which is outerText2.
+    // [end] root2.lastChild is the end container, so we look for previous
+    //       nodes and get root2.firstChild
+    // Iteration #1: outerText2, as it's the start node
+    // Iteration #2: host2, as it's the next sibling of outerText2. Since it's
+    //               the ancestor of the end node, so we get into this tree and returns
+    //               root2.firstChild here.
+    check(iter, [outerText2, root2.firstChild], "Initialized with range selecting 'InnerText1, OuterText2 and InnerText2'");
+
+    // From Shadow DOM to Shadow DOM #2
+    SpecialPowers.wrap(range).setStartAllowCrossShadowBoundary(root1, 0);
+    SpecialPowers.wrap(range).setEndAllowCrossShadowBoundary(root2.lastChild, root2.lastChild.length);
+    iter.initWithRangeAllowCrossShadowBoundary(Ci.nsIScriptableContentIterator.SUBTREE_ITERATOR, range);
+    // [start] root1 is the start container and it has children, so the first node
+    //         is the topmost descendant, which is root1.firstChild.
+    // [end] root2.lastChild is the end container, so we look for previous
+    //       nodes and get root2.firstChild
+    // Iteration #1: root1.firstChild, as it's the start node
+    // Iteration #2: outerText2, as it's the next available node
+    // Iteration #3: host2, as it's the next sibling of outerText2. Since it's
+    //               the ancestor of the end node, so we get into this tree and returns
+    //               root2.firstChild here.
+    check(iter, [root1.firstChild, outerText2, root2.firstChild], "Initialized with range selecting 'InnerText1, OuterText2 and InnerText2'");
+
+    SpecialPowers.wrap(range).setStartAllowCrossShadowBoundary(root1.firstChild, 1);
+    SpecialPowers.wrap(range).setEndAllowCrossShadowBoundary(root4.firstChild, root4.firstChild.length);
+    iter.initWithRangeAllowCrossShadowBoundary(Ci.nsIScriptableContentIterator.SUBTREE_ITERATOR, range);
+    // [start] outerText2 is the start because root1.firstChild doesn't have children,
+    //         so we look for next available node which is outerText2.
+    // [end] host2 is the end container, so we look for previous
+    //       nodes root4.firstChild and eventually get host2.
+    // Iteration #1: outerText2, as it's the start node
+    // Iteration #2: host2, as it's the next sibling of outerText2
+    check(iter, [outerText2, host2], "Initialized with range selecting 'InnerText1, OuterText2, InnerText2 and InnerText3'");
+
+    // From light to light
+    SpecialPowers.wrap(range).setStartAllowCrossShadowBoundary(outerText1.firstChild, 0);
+    SpecialPowers.wrap(range).setEndAllowCrossShadowBoundary(document.body.lastChild, document.body.lastChild.length);
+    iter.initWithRangeAllowCrossShadowBoundary(Ci.nsIScriptableContentIterator.SUBTREE_ITERATOR, range);
+    // [start] host1 is the start because it's the next available node of
+    //         outerText1.firstChild.
+    // [end] host3 is the end because the previous node of document.body.lastChild is host3.
+    // Iteration #1: host1, as it's the start node
+    // Iteration #2: outerText2, as it's the next sibling of host1
+    // Iteration #3: host2, as it's the next sibling of outerText2
+    // Iteration #4: host3, as it's the next sibling of host2
+    check(iter, [host1, outerText2, host2, host3],
+      "Initialized with range selecting 'OuterText1, InnerText1, OuterText2, InnerText2, InnerText3 and OuterText3'");
+
+    finish();
   }
 
-  // Structure
-  //   <div>OuterText1</div>
-  //   <div #host1>
-  //     #ShadowRoot
-  //       InnerText1
-  //   <div>OuterText2</div>
-  //   <div #host2>
-  //     #ShadowRoot
-  //       <div>InnerText2</div>
-  //       <div>InnerText3</div>
-  //   <div #host3>
-  //     #ShadowRoot
-  //       <div #host4>
-  //         #ShadowRoot
-  //           InnerText4
-  //   OuterText3
-
-  document.body.innerHTML = `<div id="outerText1">OuterText1</div>` +
-                            `<div id="host1"></div>` +
-                            `<div id="outerText2">OuterText2</div>` +
-                            `<div id="host2"></div>` +
-                            `<div id="host3"></div>` +
-                            `OuterText3`;
-  const outerText1 = document.getElementById("outerText1");
-  const outerText2 = document.getElementById("outerText2");
-
-  const host1 = document.getElementById("host1");
-  const root1 = host1.attachShadow({mode: "open"});
-  root1.innerHTML = "InnerText1";
-
-  const host2 = document.getElementById("host2");
-  const root2 = host2.attachShadow({mode: "open"});
-  root2.innerHTML = "<div>InnerText2</div><div>InnerText3</div>";
-
-  const host3 = document.getElementById("host3");
-  const root3 = host3.attachShadow({mode: "open"});
-  root3.innerHTML = `<div id="host4"></div>`;
-
-  const host4 = root3.getElementById("host4");
-  const root4 = host4.attachShadow({mode: "open"});
-  root4.innerHTML = "InnerText4";
-
-  /**
-   * Selects the <body> with a range.
-   */
-  range = document.createRange();
-  range.selectNode(document.body);
-  iter.initWithRangeAllowCrossShadowBoundary(Ci.nsIScriptableContentIterator.SUBTREE_ITERATOR, range);
-  check(iter, [document.body], "Initialized with range selecting the <body>");
-
-  /**
-   * Selects all children in the <body> with a range.
-   */
-  range = document.createRange();
-  range.selectNodeContents(document.body);
-  iter.initWithRangeAllowCrossShadowBoundary(Ci.nsIScriptableContentIterator.SUBTREE_ITERATOR, range);
-  check(iter, [outerText1, host1,
-               outerText2, host2,
-               host3, // host4 is a child of host3
-               document.body.lastChild],
-        "Initialized with range selecting all children in the <body>");
-
-  /**
-   * range around elements.
-   */
-  range = document.createRange();
-  SpecialPowers.wrap(range).setStartAllowCrossShadowBoundary(outerText1.firstChild, 0);
-  SpecialPowers.wrap(range).setEndAllowCrossShadowBoundary(root1.firstChild, root1.firstChild.length);
-  iter.initWithRangeAllowCrossShadowBoundary(Ci.nsIScriptableContentIterator.SUBTREE_ITERATOR, range);
-  // outerText1.firstChild is a node without children, so the
-  // next candidate is root1.firstChild, given root1.firstChild
-  // is also the end container which isn't fully contained
-  // by this range, so the iterator returns nothing.
-  check(iter, [], "Initialized with range selecting 'OuterText1 and InnerText1'");
-
-  // From light DOM to Shadow DOM #1
-  range = document.createRange();
-  SpecialPowers.wrap(range).setStartAllowCrossShadowBoundary(outerText1, 0);
-  SpecialPowers.wrap(range).setEndAllowCrossShadowBoundary(root1.firstChild, root1.firstChild.length);
-  iter.initWithRangeAllowCrossShadowBoundary(Ci.nsIScriptableContentIterator.SUBTREE_ITERATOR, range);
-  // [start] outerText1 is a container and it has children, so the first node
-  //         is the topmost descendant, which is outerText.firstChild.
-  // [end] The end point of this iteration is also outerText1.firstChild because
-  //       it is also the topmost element in the previous node of root1.firstChild.
-  // Iteration #1: outerText1.firstChild as it is the start node
-  check(iter, [outerText1.firstChild], "Initialized with range selecting 'OuterText1 and InnerText1'");
-
-  // From light DOM to Shadow DOM #2
-  SpecialPowers.wrap(range).setStartAllowCrossShadowBoundary(outerText1, 0);
-  SpecialPowers.wrap(range).setEndAllowCrossShadowBoundary(root2, root2.childNodes.length);
-  iter.initWithRangeAllowCrossShadowBoundary(Ci.nsIScriptableContentIterator.SUBTREE_ITERATOR, range);
-  // [start] outerText1 is a container and it has children, so the first node
-  //         is the topmost descendant, which is outerText.firstChild.
-  // [end] root2 is the container and it has children, so the end node is
-  //       the last node of root2, which is root2.lastChild
-  // Iteration #1: outerText1.firstChild, as it's the start node
-  // Iteration #2: host1, as it's next available node after outerText1.firstChild
-  // Iteration #3: outerText2, as it's the next sibiling of host1
-  // Iteration #4: host2, as it's the next sibling of outerText2. Since it's
-  //               the ancestor of the end node, so we get into this tree and returns
-  //               root2.firstChild here.
-  // Iteration #5: root2.lastChild, as it's the next sibling of root2.firstChild
-  check(iter, [outerText1.firstChild, host1, outerText2, root2.firstChild, root2.lastChild],
-    "Initialized with range selecting 'OuterText1, InnerText1, OuterText2 and InnerText2'");
-
-  // From Shadow DOM to Shadow DOM #1
-  SpecialPowers.wrap(range).setStartAllowCrossShadowBoundary(root1.firstChild, 0);
-  SpecialPowers.wrap(range).setEndAllowCrossShadowBoundary(root2.lastChild, root2.lastChild.length);
-  iter.initWithRangeAllowCrossShadowBoundary(Ci.nsIScriptableContentIterator.SUBTREE_ITERATOR, range);
-  // [start] outerText2 is the start because root1.firstChild doesn't have children,
-  //         so we look for next available node which is outerText2.
-  // [end] root2.lastChild is the end container, so we look for previous
-  //       nodes and get root2.firstChild
-  // Iteration #1: outerText2, as it's the start node
-  // Iteration #2: host2, as it's the next sibling of outerText2. Since it's
-  //               the ancestor of the end node, so we get into this tree and returns
-  //               root2.firstChild here.
-  check(iter, [outerText2, root2.firstChild], "Initialized with range selecting 'InnerText1, OuterText2 and InnerText2'");
-
-  // From Shadow DOM to Shadow DOM #2
-  SpecialPowers.wrap(range).setStartAllowCrossShadowBoundary(root1, 0);
-  SpecialPowers.wrap(range).setEndAllowCrossShadowBoundary(root2.lastChild, root2.lastChild.length);
-  iter.initWithRangeAllowCrossShadowBoundary(Ci.nsIScriptableContentIterator.SUBTREE_ITERATOR, range);
-  // [start] root1 is the start container and it has children, so the first node
-  //         is the topmost descendant, which is root1.firstChild.
-  // [end] root2.lastChild is the end container, so we look for previous
-  //       nodes and get root2.firstChild
-  // Iteration #1: root1.firstChild, as it's the start node
-  // Iteration #2: outerText2, as it's the next available node
-  // Iteration #3: host2, as it's the next sibling of outerText2. Since it's
-  //               the ancestor of the end node, so we get into this tree and returns
-  //               root2.firstChild here.
-  check(iter, [root1.firstChild, outerText2, root2.firstChild], "Initialized with range selecting 'InnerText1, OuterText2 and InnerText2'");
-
-  SpecialPowers.wrap(range).setStartAllowCrossShadowBoundary(root1.firstChild, 1);
-  SpecialPowers.wrap(range).setEndAllowCrossShadowBoundary(root4.firstChild, root4.firstChild.length);
-  iter.initWithRangeAllowCrossShadowBoundary(Ci.nsIScriptableContentIterator.SUBTREE_ITERATOR, range);
-  // [start] outerText2 is the start because root1.firstChild doesn't have children,
-  //         so we look for next available node which is outerText2.
-  // [end] host2 is the end container, so we look for previous
-  //       nodes root4.firstChild and eventually get host2.
-  // Iteration #1: outerText2, as it's the start node
-  // Iteration #2: host2, as it's the next sibling of outerText2
-  check(iter, [outerText2, host2], "Initialized with range selecting 'InnerText1, OuterText2, InnerText2 and InnerText3'");
-
-  // From light to light
-  SpecialPowers.wrap(range).setStartAllowCrossShadowBoundary(outerText1.firstChild, 0);
-  SpecialPowers.wrap(range).setEndAllowCrossShadowBoundary(document.body.lastChild, document.body.lastChild.length);
-  iter.initWithRangeAllowCrossShadowBoundary(Ci.nsIScriptableContentIterator.SUBTREE_ITERATOR, range);
-  // [start] host1 is the start because it's the next available node of
-  //         outerText1.firstChild.
-  // [end] host3 is the end because the previous node of document.body.lastChild is host3.
-  // Iteration #1: host1, as it's the start node
-  // Iteration #2: outerText2, as it's the next sibling of host1
-  // Iteration #3: host2, as it's the next sibling of outerText2
-  // Iteration #4: host3, as it's the next sibling of host2
-  check(iter, [host1, outerText2, host2, host3],
-    "Initialized with range selecting 'OuterText1, InnerText1, OuterText2, InnerText2, InnerText3 and OuterText3'");
-
-  finish();
+  SpecialPowers.pushPrefEnv({"set": [["dom.shadowdom.selection_across_boundary.enabled", true]]}, runTest);
 });
 </script>
 </head>
