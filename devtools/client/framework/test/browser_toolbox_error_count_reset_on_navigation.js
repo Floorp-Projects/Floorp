@@ -23,7 +23,7 @@ add_task(async function () {
 
   // Make sure we start the test with the split console disabled.
   // ⚠️ In this test it's important to _not_ enable the console.
-  await pushPref("devtools.toolbox.splitconsoleEnabled", false);
+  await pushPref("devtools.toolbox.splitconsole.open", false);
   const tab = await addTab(TEST_URI);
 
   const toolbox = await openToolboxForTab(

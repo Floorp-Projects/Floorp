@@ -5,7 +5,8 @@
 "use strict";
 
 const MAX_ORDINAL = 99;
-const SPLITCONSOLE_ENABLED_PREF = "devtools.toolbox.splitconsoleEnabled";
+const SPLITCONSOLE_OPEN_PREF = "devtools.toolbox.splitconsole.open";
+const SPLITCONSOLE_ENABLED_PREF = "devtools.toolbox.splitconsole.enabled";
 const SPLITCONSOLE_HEIGHT_PREF = "devtools.toolbox.splitconsoleHeight";
 const DEVTOOLS_ALWAYS_ON_TOP = "devtools.toolbox.alwaysOnTop";
 const DISABLE_AUTOHIDE_PREF = "ui.popup.disable_autohide";
@@ -608,6 +609,18 @@ Toolbox.prototype = {
     );
   },
 
+  /**
+   * Get the enabled split console setting, and if it's not set, set it with updateIsSplitConsoleEnabled
+   * @returns {boolean} devtools.toolbox.splitconsole.enabled option
+   */
+  isSplitConsoleEnabled() {
+    if (typeof this._splitConsoleEnabled !== "boolean") {
+      this.updateIsSplitConsoleEnabled();
+    }
+
+    return this._splitConsoleEnabled;
+  },
+
   get isBrowserToolbox() {
     return this.hostType === Toolbox.HostType.BROWSERTOOLBOX;
   },
@@ -1038,7 +1051,7 @@ Toolbox.prototype = {
       // Wait until the original tool is selected so that the split
       // console input will receive focus.
       let splitConsolePromise = Promise.resolve();
-      if (Services.prefs.getBoolPref(SPLITCONSOLE_ENABLED_PREF)) {
+      if (Services.prefs.getBoolPref(SPLITCONSOLE_OPEN_PREF)) {
         splitConsolePromise = this.openSplitConsole();
         this.telemetry.addEventProperty(
           this.topWindow,
@@ -1617,7 +1630,7 @@ Toolbox.prototype = {
   },
 
   _splitConsoleOnKeypress(e) {
-    if (e.keyCode !== KeyCodes.DOM_VK_ESCAPE) {
+    if (e.keyCode !== KeyCodes.DOM_VK_ESCAPE || !this.isSplitConsoleEnabled()) {
       return;
     }
 
@@ -2351,6 +2364,21 @@ Toolbox.prototype = {
   },
 
   /**
+   * Setup the _splitConsoleEnabled, reflecting the enabled/disabled state of the Enable Split
+   * Console setting, and close the split console if it's open and the setting is turned off
+   */
+  updateIsSplitConsoleEnabled() {
+    this._splitConsoleEnabled = Services.prefs.getBoolPref(
+      SPLITCONSOLE_ENABLED_PREF,
+      true
+    );
+
+    if (!this._splitConsoleEnabled && this.splitConsole) {
+      this.closeSplitConsole();
+    }
+  },
+
+  /**
    * Ensure the visibility of each toolbox button matches the preference value.
    */
   _commandIsVisible(button) {
@@ -3013,8 +3041,15 @@ Toolbox.prototype = {
    *          loaded and focused.
    */
   openSplitConsole({ focusConsoleInput = true } = {}) {
+    if (!this.isSplitConsoleEnabled()) {
+      return this.selectTool(
+        "webconsole",
+        "use_in_console_with_disabled_split_console"
+      );
+    }
+
     this._splitConsole = true;
-    Services.prefs.setBoolPref(SPLITCONSOLE_ENABLED_PREF, true);
+    Services.prefs.setBoolPref(SPLITCONSOLE_OPEN_PREF, true);
     this._refreshConsoleDisplay();
 
     // Ensure split console is visible if console was already loaded in background
@@ -3044,7 +3079,7 @@ Toolbox.prototype = {
    */
   closeSplitConsole() {
     this._splitConsole = false;
-    Services.prefs.setBoolPref(SPLITCONSOLE_ENABLED_PREF, false);
+    Services.prefs.setBoolPref(SPLITCONSOLE_OPEN_PREF, false);
     this._refreshConsoleDisplay();
     this.component.setIsSplitConsoleActive(false);
 

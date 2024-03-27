@@ -53,4 +53,27 @@ add_task(async function () {
   await onSplitConsoleEvent;
 
   ok(!toolbox.splitConsole, "Split console is hidden.");
+
+  info("Test if Split console Shortcut stops working when it's disabled.");
+
+  info("Setting the Pref to false and sending ESCAPE key.");
+  await pushPref("devtools.toolbox.splitconsole.enabled", false);
+  // pushPref doesn't trigger _prefChanged of toolbox-options.js, so we invoke the toolbox setting update manually
+  toolbox.updateIsSplitConsoleEnabled();
+  const onSplitConsole = toolbox.once("split-console");
+  const onTimeout = wait(1000).then(() => "TIMEOUT");
+  EventUtils.sendKey("ESCAPE", toolbox.win);
+  const raceResult = await Promise.race([onSplitConsole, onTimeout]);
+  is(raceResult, "TIMEOUT", "split-console wasn't emitted");
+
+  ok(!toolbox.splitConsole, "Split console didn't get Triggered.");
+
+  info("Setting the Pref to true and sending ESCAPE key again.");
+  await pushPref("devtools.toolbox.splitconsole.enabled", true);
+  toolbox.updateIsSplitConsoleEnabled();
+  const onSplitConsoleReadyAgain = toolbox.once("split-console");
+  EventUtils.sendKey("ESCAPE", toolbox.win);
+  await onSplitConsoleReadyAgain;
+
+  ok(toolbox.splitConsole, "Split console Shortcut is working again.");
 });

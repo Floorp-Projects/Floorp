@@ -300,7 +300,7 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref("dom.ipc.processPrelaunch.enabled");
   Services.prefs.clearUserPref("devtools.toolbox.host");
   Services.prefs.clearUserPref("devtools.toolbox.previousHost");
-  Services.prefs.clearUserPref("devtools.toolbox.splitconsoleEnabled");
+  Services.prefs.clearUserPref("devtools.toolbox.splitconsole.open");
   Services.prefs.clearUserPref("devtools.toolbox.splitconsoleHeight");
   Services.prefs.clearUserPref(
     "javascript.options.asyncstack_capture_debuggee_only"
