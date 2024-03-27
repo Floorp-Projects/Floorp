@@ -60,6 +60,9 @@ class FFmpegAudioEncoder<LIBAV_VER> : public FFmpegDataEncoder<LIBAV_VER> {
   int mInputSampleRate = 0;
   UniquePtr<SpeexResamplerState, ResamplerDestroy> mResampler;
   uint64_t mPacketsDelivered = 0;
+  // Threshold under which a packet isn't returned to the encoder user,
+  // because it is known to be silent and DTX is enabled.
+  int mDtxThreshold = 0;
 };
 
 }  // namespace mozilla
