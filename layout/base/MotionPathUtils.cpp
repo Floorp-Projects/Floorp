@@ -695,6 +695,21 @@ already_AddRefed<gfx::Path> MotionPathUtils::BuildSVGPath(
                                 0.0);
 }
 
+static already_AddRefed<gfx::Path> BuildShape(
+    const Span<const StyleShapeCommand>& aShape, gfx::PathBuilder* aPathBuilder,
+    const nsRect& aCoordBox) {
+  if (!aPathBuilder) {
+    return nullptr;
+  }
+
+  // For motion path, we always use CSSPixel unit to compute the offset
+  // transform (i.e. motion path transform).
+  const auto rect = CSSRect::FromAppUnits(aCoordBox);
+  return SVGPathData::BuildPath(aShape, aPathBuilder, StyleStrokeLinecap::Butt,
+                                0.0, rect.Size(),
+                                rect.TopLeft().ToUnknownPoint());
+}
+
 /* static */
 already_AddRefed<gfx::Path> MotionPathUtils::BuildPath(
     const StyleBasicShape& aBasicShape,
@@ -732,8 +747,11 @@ already_AddRefed<gfx::Path> MotionPathUtils::BuildPath(
       // reference. https://github.com/w3c/fxtf-drafts/issues/504
       return BuildSVGPath(aBasicShape.AsPath().path, aPathBuilder);
     case StyleBasicShape::Tag::Shape:
-      // TODO: Bug 1884424. Suport shape() for offset-path.
-      return nullptr;
+      // Note that shape() always defines the initial position, i.e. "from x y",
+      // by its first move command, so |aOffsetPosition|, i.e. offset-position
+      // property, is ignored.
+      return BuildShape(aBasicShape.AsShape().commands.AsSpan(), aPathBuilder,
+                        aCoordBox);
   }
 
   return nullptr;

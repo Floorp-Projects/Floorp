@@ -184,7 +184,8 @@ bitflags! {
             Self::CIRCLE.bits() |
             Self::ELLIPSE.bits() |
             Self::POLYGON.bits() |
-            Self::PATH.bits();
+            Self::PATH.bits() |
+            Self::SHAPE.bits();
 
         /// For shape-outside.
         const SHAPE_OUTSIDE =
@@ -253,9 +254,7 @@ impl Parse for ClipPath {
             input,
             ClipPath::Shape,
             ClipPath::Box,
-            // TODO: Bug 1884424. We will merge SHAPE into ALL when supporting shape() on
-            // offset-path.
-            AllowedBasicShapes::ALL | AllowedBasicShapes::SHAPE,
+            AllowedBasicShapes::ALL,
         )
     }
 }

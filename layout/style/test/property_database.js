@@ -1036,10 +1036,14 @@ if (IsCSSPropertyPrefEnabled("layout.css.basic-shape-rect.enabled")) {
 }
 
 var basicShapeShapeValues = [];
+var basicShapeShapeValuesWithFillRule = [];
 if (IsCSSPropertyPrefEnabled("layout.css.basic-shape-shape.enabled")) {
-  basicShapeShapeValues.push(
+  basicShapeShapeValuesWithFillRule.push(
     "shape(evenodd from 0px 0px, line to 10px 10px)",
-    "shape(nonzero from 0px 0px, line to 10px 10px)",
+    "shape(nonzero from 0px 0px, line to 10px 10px)"
+  );
+
+  basicShapeShapeValues.push(
     "shape(from 0px 0%, line to 10px 10%)",
     "shape(from 10px 10px, move by 10px 5px, line by 20px 40%, close)",
     "shape(from 10px 10px, hline by 10px, vline to 5rem)",
@@ -6957,7 +6961,8 @@ var gCSSProperties = {
     ]
       .concat(pathValues.other_values)
       .concat(basicShapeOtherValues)
-      .concat(basicShapeXywhRectValues),
+      .concat(basicShapeXywhRectValues)
+      .concat(basicShapeShapeValues),
     invalid_values: [
       "path('')",
       "ray(closest-side)",
@@ -8977,7 +8982,8 @@ var gCSSProperties = {
       .concat(basicShapeOtherValues)
       .concat(basicShapeOtherValuesWithFillRule)
       .concat(basicShapeXywhRectValues)
-      .concat(basicShapeShapeValues),
+      .concat(basicShapeShapeValues)
+      .concat(basicShapeShapeValuesWithFillRule),
     invalid_values: [
       "path(nonzero)",
       "path(abs, 'M 10 10 L 10 10 z')",
