@@ -9205,7 +9205,7 @@ function getDocument(src) {
   }
   const fetchDocParams = {
     docId,
-    apiVersion: "4.1.332",
+    apiVersion: "4.1.342",
     data,
     password,
     disableAutoFetch,
@@ -10849,8 +10849,8 @@ class InternalRenderTask {
     }
   }
 }
-const version = "4.1.332";
-const build = "3d7ea6076";
+const version = "4.1.342";
+const build = "e384df6f1";
 
 ;// CONCATENATED MODULE: ./src/shared/scripting_utils.js
 function makeColorComp(n) {
@@ -13515,11 +13515,13 @@ class AnnotationLayer {
 
 
 
+const EOL_PATTERN = /\r\n?|\n/g;
 class FreeTextEditor extends AnnotationEditor {
   #boundEditorDivBlur = this.editorDivBlur.bind(this);
   #boundEditorDivFocus = this.editorDivFocus.bind(this);
   #boundEditorDivInput = this.editorDivInput.bind(this);
   #boundEditorDivKeydown = this.editorDivKeydown.bind(this);
+  #boundEditorDivPaste = this.editorDivPaste.bind(this);
   #color;
   #content = "";
   #editorDivId = `${this.id}-editor`;
@@ -13672,6 +13674,7 @@ class FreeTextEditor extends AnnotationEditor {
     this.editorDiv.addEventListener("focus", this.#boundEditorDivFocus);
     this.editorDiv.addEventListener("blur", this.#boundEditorDivBlur);
     this.editorDiv.addEventListener("input", this.#boundEditorDivInput);
+    this.editorDiv.addEventListener("paste", this.#boundEditorDivPaste);
   }
   disableEditMode() {
     if (!this.isInEditMode()) {
@@ -13687,6 +13690,7 @@ class FreeTextEditor extends AnnotationEditor {
     this.editorDiv.removeEventListener("focus", this.#boundEditorDivFocus);
     this.editorDiv.removeEventListener("blur", this.#boundEditorDivBlur);
     this.editorDiv.removeEventListener("input", this.#boundEditorDivInput);
+    this.editorDiv.removeEventListener("paste", this.#boundEditorDivPaste);
     this.div.focus({
       preventScroll: true
     });
@@ -13728,10 +13732,8 @@ class FreeTextEditor extends AnnotationEditor {
   #extractText() {
     const buffer = [];
     this.editorDiv.normalize();
-    const EOL_PATTERN = /\r\n?|\n/g;
     for (const child of this.editorDiv.childNodes) {
-      const content = child.nodeType === Node.TEXT_NODE ? child.nodeValue : child.innerText;
-      buffer.push(content.replaceAll(EOL_PATTERN, ""));
+      buffer.push(FreeTextEditor.#getNodeContent(child));
     }
     return buffer.join("\n");
   }
@@ -13900,6 +13902,85 @@ class FreeTextEditor extends AnnotationEditor {
       this.editorDiv.contentEditable = true;
     }
     return this.div;
+  }
+  static #getNodeContent(node) {
+    return (node.nodeType === Node.TEXT_NODE ? node.nodeValue : node.innerText).replaceAll(EOL_PATTERN, "");
+  }
+  editorDivPaste(event) {
+    const clipboardData = event.clipboardData || window.clipboardData;
+    const {
+      types
+    } = clipboardData;
+    if (types.length === 1 && types[0] === "text/plain") {
+      return;
+    }
+    event.preventDefault();
+    const paste = FreeTextEditor.#deserializeContent(clipboardData.getData("text") || "").replaceAll(EOL_PATTERN, "\n");
+    if (!paste) {
+      return;
+    }
+    const selection = window.getSelection();
+    if (!selection.rangeCount) {
+      return;
+    }
+    this.editorDiv.normalize();
+    selection.deleteFromDocument();
+    const range = selection.getRangeAt(0);
+    if (!paste.includes("\n")) {
+      range.insertNode(document.createTextNode(paste));
+      this.editorDiv.normalize();
+      selection.collapseToStart();
+      return;
+    }
+    const {
+      startContainer,
+      startOffset
+    } = range;
+    const bufferBefore = [];
+    const bufferAfter = [];
+    if (startContainer.nodeType === Node.TEXT_NODE) {
+      const parent = startContainer.parentElement;
+      bufferAfter.push(startContainer.nodeValue.slice(startOffset).replaceAll(EOL_PATTERN, ""));
+      if (parent !== this.editorDiv) {
+        let buffer = bufferBefore;
+        for (const child of this.editorDiv.childNodes) {
+          if (child === parent) {
+            buffer = bufferAfter;
+            continue;
+          }
+          buffer.push(FreeTextEditor.#getNodeContent(child));
+        }
+      }
+      bufferBefore.push(startContainer.nodeValue.slice(0, startOffset).replaceAll(EOL_PATTERN, ""));
+    } else if (startContainer === this.editorDiv) {
+      let buffer = bufferBefore;
+      let i = 0;
+      for (const child of this.editorDiv.childNodes) {
+        if (i++ === startOffset) {
+          buffer = bufferAfter;
+        }
+        buffer.push(FreeTextEditor.#getNodeContent(child));
+      }
+    }
+    this.#content = `${bufferBefore.join("\n")}${paste}${bufferAfter.join("\n")}`;
+    this.#setContent();
+    const newRange = new Range();
+    let beforeLength = bufferBefore.reduce((acc, line) => acc + line.length, 0);
+    for (const {
+      firstChild
+    } of this.editorDiv.childNodes) {
+      if (firstChild.nodeType === Node.TEXT_NODE) {
+        const length = firstChild.nodeValue.length;
+        if (beforeLength <= length) {
+          newRange.setStart(firstChild, beforeLength);
+          newRange.setEnd(firstChild, beforeLength);
+          break;
+        }
+        beforeLength -= length;
+      }
+    }
+    selection.removeAllRanges();
+    selection.addRange(newRange);
   }
   #setContent() {
     this.editorDiv.replaceChildren();
@@ -17450,8 +17531,8 @@ class DrawLayer {
 
 
 
-const pdfjsVersion = "4.1.332";
-const pdfjsBuild = "3d7ea6076";
+const pdfjsVersion = "4.1.342";
+const pdfjsBuild = "e384df6f1";
 
 var __webpack_exports__AbortException = __webpack_exports__.AbortException;
 var __webpack_exports__AnnotationEditorLayer = __webpack_exports__.AnnotationEditorLayer;
