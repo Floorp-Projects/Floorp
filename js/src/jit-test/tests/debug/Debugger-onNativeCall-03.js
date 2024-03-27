@@ -1,4 +1,5 @@
-// Test onNativeCall's behavior when used with self-hosted functions.
+// Test onNativeCall's behavior when used with self-hosted functions
+// and trampoline natives.
 
 load(libdir + 'eqArrayHelper.js');
 
@@ -18,13 +19,22 @@ dbg.onNativeCall = f => {
 
 gdbg.executeInGlobal(`
   var x = [1,3,2];
+  x.forEach((a) => {print(a)});
   x.sort((a, b) => {print(a)});
+  x.sort(print);
 `);
 
 assertEqArray(rv, [
-  "EnterFrame", "sort",
-  "ArraySortCompare/<",
+  "EnterFrame", "forEach",
   "EnterFrame", "print",
-  "ArraySortCompare/<",
   "EnterFrame", "print",
+  "EnterFrame", "print",
+
+  "sort",
+  "EnterFrame","print",
+  "EnterFrame","print",
+
+  "sort",
+  "print",
+  "print"
 ]);
