@@ -148,13 +148,11 @@ class ProfileAutoCompleteResult {
    */
   getCommentAt(index) {
     let type = this.getTypeOfIndex(index);
-    switch (type) {
-      case "clear":
-        return '{"fillMessageName": "FormAutofill:ClearForm"}';
-      case "manage":
-        return '{"fillMessageName": "FormAutofill:OpenPreferences"}';
-      case "insecure":
-        return '{"noLearnMore": true }';
+    if (type == "clear") {
+      return '{"fillMessageName": "FormAutofill:ClearForm"}';
+    }
+    if (type == "manage") {
+      return '{"fillMessageName": "FormAutofill:OpenPreferences"}';
     }
 
     const item = this.getAt(index);
@@ -179,9 +177,9 @@ class ProfileAutoCompleteResult {
       case "clear":
         return "action";
       case "insecure":
-        return "insecureWarning";
+        return "autofill-insecureWarning";
       default:
-        return "autofill";
+        return "autofill-profile";
     }
   }
 
@@ -541,8 +539,8 @@ export class CreditCardResult extends ProfileAutoCompleteResult {
           .filter(chunk => !!chunk) // Exclude empty chunks.
           .join(" ");
         return {
-          primary: primary.toString().replaceAll("*", "•"),
-          secondary: secondary.toString().replaceAll("*", "•"),
+          primary,
+          secondary,
           ariaLabel,
           image,
         };

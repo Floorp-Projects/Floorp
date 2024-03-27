@@ -422,7 +422,8 @@ export const ProfileAutocomplete = {
     if (
       selectedIndex == -1 ||
       !this.lastProfileAutoCompleteResult ||
-      this.lastProfileAutoCompleteResult.getStyleAt(selectedIndex) != "autofill"
+      this.lastProfileAutoCompleteResult.getStyleAt(selectedIndex) !=
+        "autofill-profile"
     ) {
       await this.sendFillRequestToFormAutofillParent(focusedInput, comment);
       return;
@@ -455,7 +456,8 @@ export const ProfileAutocomplete = {
 
     if (
       !this.lastProfileAutoCompleteResult ||
-      this.lastProfileAutoCompleteResult.getStyleAt(selectedIndex) != "autofill"
+      this.lastProfileAutoCompleteResult.getStyleAt(selectedIndex) !=
+        "autofill-profile"
     ) {
       return;
     }

@@ -79,7 +79,7 @@ add_task(async function test_credit_card_dropdown_icon_invalid_types_select() {
 
       const creditCardItems = getDisplayedPopupItems(
         browser,
-        "[originaltype='autofill']"
+        "[originaltype='autofill-profile']"
       );
 
       for (const [index, creditCardItem] of creditCardItems.entries()) {
