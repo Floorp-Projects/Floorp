@@ -62,6 +62,15 @@ Span<AudioDataValue> AudioData::Data() const {
   return Span{GetAdjustedData(), mFrames * mChannels};
 }
 
+nsCString AudioData::ToString() const {
+  nsCString rv;
+  rv.AppendPrintf("AudioData: %s %s %" PRIu32 " frames %" PRIu32 "Hz, %" PRIu32
+                  "ch",
+                  mTime.ToString().get(), mDuration.ToString().get(), mFrames,
+                  mRate, mChannels);
+  return rv;
+}
+
 void AudioData::SetOriginalStartTime(const media::TimeUnit& aStartTime) {
   MOZ_ASSERT(mTime == mOriginalTime,
              "Do not call this if data has been trimmed!");
