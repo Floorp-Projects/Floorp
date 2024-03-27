@@ -128,16 +128,48 @@ nsresult FFmpegAudioEncoder<LIBAV_VER>::InitSpecific() {
     if (mConfig.mBitrateMode == BitrateMode::Constant) {
       mLib->av_opt_set(mCodecContext->priv_data, "vbr", "off", 0);
     }
+    if (mConfig.mCodecSpecific.isSome()) {
+      MOZ_ASSERT(mConfig.mCodecSpecific->is<OpusSpecific>());
+      const OpusSpecific& specific = mConfig.mCodecSpecific->as<OpusSpecific>();
+      // This attribute maps directly to complexity
+      mCodecContext->compression_level = specific.mComplexity;
+      FFMPEG_LOG("Opus complexity set to %d", specific.mComplexity);
+      float frameDurationMs =
+          AssertedCast<float>(specific.mFrameDuration) / 1000.f;
+      if (mLib->av_opt_set_double(mCodecContext->priv_data, "frame_duration",
+                                  frameDurationMs, 0)) {
+        FFMPEG_LOG("Error setting the frame duration on Opus encoder");
+        return NS_ERROR_FAILURE;
+      }
+      FFMPEG_LOG("Opus frame duration set to %0.2f", frameDurationMs);
+      if (specific.mPacketLossPerc) {
+        if (mLib->av_opt_set_int(
+                mCodecContext->priv_data, "packet_loss",
+                AssertedCast<int64_t>(specific.mPacketLossPerc), 0)) {
+          FFMPEG_LOG("Error setting the packet loss percentage to %" PRIu64
+                      " on Opus encoder",
+                      specific.mPacketLossPerc);
+          return NS_ERROR_FAILURE;
+        }
+        FFMPEG_LOGV("Packet loss set to %d%% in Opus encoder",
+                    AssertedCast<int>(specific.mPacketLossPerc));
+      }
+      if (specific.mUseInBandFEC) {
+        if (mLib->av_opt_set(mCodecContext->priv_data, "fec", "on", 0)) {
+          FFMPEG_LOG("Error %s FEC on Opus encoder",
+                      specific.mUseInBandFEC ? "enabling" : "disabling");
+          return NS_ERROR_FAILURE;
+        }
+        FFMPEG_LOGV("In-band FEC enabled for Opus encoder.");
+      }
+      // TODO: DTX, format
+      // https://bugzilla.mozilla.org/show_bug.cgi?id=1876064
+      // https://bugzilla.mozilla.org/show_bug.cgi?id=1876066
+    }
   }
   // Override the time base: always the sample-rate the encoder is running at
   mCodecContext->time_base =
       AVRational{.num = 1, .den = mCodecContext->sample_rate};
-
-  // Apply codec specific settings.
-  nsAutoCString codecSpecificLog;
-  if (mConfig.mCodecSpecific) {
-    // TODO
-  }
 
   MediaResult rv = FinishInitCommon(codec);
   if (NS_FAILED(rv)) {
@@ -356,7 +388,6 @@ RefPtr<MediaRawData> FFmpegAudioEncoder<LIBAV_VER>::ToMediaRawData(
   data->mTimecode = data->mTime;
   data->mDuration =
       media::TimeUnit(mCodecContext->frame_size, mConfig.mSampleRate);
-  // Add here the new rate
 
   // Handle encoder delay
   // Tracked in https://github.com/w3c/webcodecs/issues/626 because not quite

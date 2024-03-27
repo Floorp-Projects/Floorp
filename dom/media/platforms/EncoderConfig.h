@@ -56,14 +56,18 @@ struct H264Specific final {
       : mProfile(aProfile), mLevel(aLevel), mFormat(aFormat) {}
 };
 
-struct OpusSpecific final {
-  enum class Application { Voip, Audio, RestricedLowDelay };
-
-enum class OpusBitstreamFormat {
-  Opus,
-  OGG
-};
 enum class OpusBitstreamFormat { Opus, OGG };
+
+// The default values come from the Web Codecs specification.
+struct OpusSpecific final {
+  enum class Application { Unspecified, Voip, Audio, RestricedLowDelay };
+  Application mApplication = Application::Unspecified;
+  uint64_t mFrameDuration = 20000;  // microseconds
+  uint8_t mComplexity = 10;         // 0-10
+  OpusBitstreamFormat mFormat = OpusBitstreamFormat::Opus;
+  uint64_t mPacketLossPerc = 0;  // 0-100
+  bool mUseInBandFEC = false;
+  bool mUseDTX = false;
 };
 
 enum class VPXComplexity { Normal, High, Higher, Max };
@@ -119,9 +123,9 @@ class EncoderConfig final {
   // This constructor is used for video encoders
   EncoderConfig(const CodecType aCodecType, gfx::IntSize aSize,
                 const Usage aUsage, const PixelFormat aPixelFormat,
-                const PixelFormat aSourcePixelFormat,
-                const uint8_t aFramerate, const size_t aKeyframeInterval,
-                const uint32_t aBitrate, const BitrateMode aBitrateMode,
+                const PixelFormat aSourcePixelFormat, const uint8_t aFramerate,
+                const size_t aKeyframeInterval, const uint32_t aBitrate,
+                const BitrateMode aBitrateMode,
                 const HardwarePreference aHardwarePreference,
                 const ScalabilityMode aScalabilityMode,
                 const Maybe<CodecSpecific>& aCodecSpecific)
