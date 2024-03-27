@@ -18632,12 +18632,24 @@ nsICookieJarSettings* Document::CookieJarSettings() {
         net::CookieJarSettings::Cast(mCookieJarSettings)
             ->SetFingerprintingRandomizationKey(randomKey);
       }
+
+      // Inerit the top level windowContext id from the parent.
+      net::CookieJarSettings::Cast(mCookieJarSettings)
+          ->SetTopLevelWindowContextId(
+              net::CookieJarSettings::Cast(inProcessParent->CookieJarSettings())
+                  ->GetTopLevelWindowContextId());
     } else {
       mCookieJarSettings = net::CookieJarSettings::Create(NodePrincipal());
+
+      if (IsTopLevelContentDocument()) {
+        net::CookieJarSettings::Cast(mCookieJarSettings)
+            ->SetTopLevelWindowContextId(InnerWindowID());
+      }
     }
 
     if (auto* wgc = GetWindowGlobalChild()) {
       net::CookieJarSettingsArgs csArgs;
+
       net::CookieJarSettings::Cast(mCookieJarSettings)->Serialize(csArgs);
       // Update cookie settings in the parent process
       if (!wgc->SendUpdateCookieJarSettings(csArgs)) {
