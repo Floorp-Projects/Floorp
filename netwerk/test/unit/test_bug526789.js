@@ -239,6 +239,7 @@ add_task(async () => {
   await testTrailingDotCookie("http://foo.com/", "foo.com");
 
   cm.removeAll();
+  Services.prefs.clearUserPref("dom.security.https_first");
 });
 
 function getCookieCount() {
@@ -285,5 +286,4 @@ async function testTrailingDotCookie(uriString, domain) {
   Assert.equal(cm.countCookiesFromHost(domain), 0);
   Assert.equal(cm.countCookiesFromHost(domain + "."), 0);
   cm.removeAll();
-  Services.prefs.clearUserPref("dom.security.https_first");
 }
