@@ -74,8 +74,8 @@ if CONFIG['MOZ_AUDIOUNIT_RUST']:
         SOURCES += [
             'cubeb_osx_run_loop.c',
         ]
+        DEFINES['USE_AUDIOUNIT_RUST'] = True
     DEFINES['USE_AUDIOUNIT'] = True
-    DEFINES['USE_AUDIOUNIT_RUST'] = True
 
 if CONFIG['MOZ_WASAPI']:
     SOURCES += [

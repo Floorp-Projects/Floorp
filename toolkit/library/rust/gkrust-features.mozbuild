@@ -21,7 +21,7 @@ if CONFIG["MOZ_WEBRENDER_DEBUGGER"]:
 if CONFIG["MOZ_PULSEAUDIO"]:
     gkrust_features += ["cubeb_pulse_rust"]
 
-if CONFIG["MOZ_AUDIOUNIT_RUST"]:
+if CONFIG["MOZ_AUDIOUNIT_RUST"] and CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
     gkrust_features += ["cubeb_coreaudio_rust"]
 
 if CONFIG["MOZ_RUST_SIMD"]:
