@@ -1655,19 +1655,39 @@ class AddonInstall {
           this.addon.signedDate &&
           !hasStrongSignature(this.addon)
         ) {
-          // Reject if it is a new install or installing over an existing addon including
-          // strong cryptographic signatures.
-          if (!this.existingAddon || hasStrongSignature(this.existingAddon)) {
+          const addonAllowedByPolicies = Services.policies.getExtensionSettings(
+            this.addon.id
+          )?.temporarily_allow_weak_signatures;
+
+          const globallyAllowedByPolicies =
+            Services.policies.getExtensionSettings(
+              "*"
+            )?.temporarily_allow_weak_signatures;
+
+          const allowedByPolicies =
+            (globallyAllowedByPolicies &&
+              (addonAllowedByPolicies || addonAllowedByPolicies == null)) ||
+            addonAllowedByPolicies;
+
+          if (
+            !allowedByPolicies &&
+            (!this.existingAddon || hasStrongSignature(this.existingAddon))
+          ) {
+            // Reject if it is a new install or installing over an existing addon including
+            // strong cryptographic signatures.
             return Promise.reject([
               AddonManager.ERROR_CORRUPT_FILE,
               "install rejected due to the package not including a strong cryptographic signature",
             ]);
           }
 
-          // Still allow installs using weak signatures to install if the existing addon also had a
-          // weak signature.
+          // Still allow installs using weak signatures to install if either:
+          // - it is explicitly allowed through Enterprise Policies Settings
+          // - or there is an existing addon with a weak signature.
           logger.warn(
-            `Allow weak signature install over existing "${this.existingAddon.id}" XPI`
+            allowedByPolicies
+              ? `Allow weak signature install for ${this.addon.id} XPI due to Enterprise Policies`
+              : `Allow weak signature install over existing "${this.existingAddon.id}" XPI`
           );
         }
       }

@@ -662,6 +662,9 @@
               "items": {
                 "type": "string"
               }
+            },
+            "temporarily_allow_weak_signatures": {
+              "type": "boolean"
             }
           }
         }
@@ -691,6 +694,9 @@
             "default_area": {
               "type": "string",
               "enum": ["navbar", "menupanel"]
+            },
+            "temporarily_allow_weak_signatures": {
+              "type": "boolean"
             }
           }
         }

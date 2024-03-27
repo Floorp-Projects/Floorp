@@ -21,7 +21,7 @@ let themeID = "policytheme@mozilla.com";
 
 let fileURL;
 
-add_task(async function setup() {
+add_setup(async function setup() {
   await AddonTestUtils.promiseStartupManager();
 
   let webExtensionFile = AddonTestUtils.createTempWebExtensionFile({
@@ -34,6 +34,10 @@ add_task(async function setup() {
     },
   });
 
+  server.registerFile(
+    "/data/amosigned-sha1only.xpi",
+    do_get_file("amosigned-sha1only.xpi")
+  );
   server.registerFile("/data/policy_test.xpi", webExtensionFile);
   fileURL = Services.io
     .newFileURI(webExtensionFile)
@@ -288,4 +292,113 @@ add_task(async function test_addon_normalinstalled_file() {
   );
 
   await addon.uninstall();
+});
+
+add_task(async function test_allow_weak_signatures() {
+  // Make sure weak signatures are restricted.
+  const resetWeakSignaturePref =
+    AddonTestUtils.setWeakSignatureInstallAllowed(false);
+
+  const id = "amosigned-xpi@tests.mozilla.org";
+  const perAddonSettings = {
+    installation_mode: "normal_installed",
+    install_url: BASE_URL + "/amosigned-sha1only.xpi",
+  };
+
+  info(
+    "Sanity check: expect install to fail if not allowed through enterprise policy settings"
+  );
+  await Promise.all([
+    AddonTestUtils.promiseInstallEvent("onDownloadFailed"),
+    setupPolicyEngineWithJson({
+      policies: {
+        ExtensionSettings: {
+          [id]: { ...perAddonSettings },
+        },
+      },
+    }),
+  ]);
+  let addon = await AddonManager.getAddonByID(id);
+  equal(addon, null, "Add-on not installed");
+
+  info(
+    "Expect install to be allowed through per-addon enterprise policy settings"
+  );
+  await Promise.all([
+    AddonTestUtils.promiseInstallEvent("onInstallEnded"),
+    setupPolicyEngineWithJson({
+      policies: {
+        ExtensionSettings: {
+          [id]: {
+            ...perAddonSettings,
+            temporarily_allow_weak_signatures: true,
+          },
+        },
+      },
+    }),
+  ]);
+  addon = await AddonManager.getAddonByID(id);
+  notEqual(addon, null, "Add-on not installed");
+  await addon.uninstall();
+
+  info(
+    "Expect install to be allowed through global enterprise policy settings"
+  );
+  await Promise.all([
+    AddonTestUtils.promiseInstallEvent("onInstallEnded"),
+    setupPolicyEngineWithJson({
+      policies: {
+        ExtensionSettings: {
+          "*": { temporarily_allow_weak_signatures: true },
+          [id]: { ...perAddonSettings },
+        },
+      },
+    }),
+  ]);
+  addon = await AddonManager.getAddonByID(id);
+  notEqual(addon, null, "Add-on installed");
+  await addon.uninstall();
+
+  info(
+    "Expect install to fail if allowed globally but disallowed by per-addon settings"
+  );
+  await Promise.all([
+    AddonTestUtils.promiseInstallEvent("onDownloadFailed"),
+    setupPolicyEngineWithJson({
+      policies: {
+        ExtensionSettings: {
+          "*": { temporarily_allow_weak_signatures: true },
+          [id]: {
+            ...perAddonSettings,
+            temporarily_allow_weak_signatures: false,
+          },
+        },
+      },
+    }),
+  ]);
+  addon = await AddonManager.getAddonByID(id);
+  equal(addon, null, "Add-on not installed");
+
+  info(
+    "Expect install to be allowed through per addon setting when globally disallowed"
+  );
+  await Promise.all([
+    AddonTestUtils.promiseInstallEvent("onInstallEnded"),
+    setupPolicyEngineWithJson({
+      policies: {
+        ExtensionSettings: {
+          "*": { temporarily_allow_weak_signatures: false },
+          [id]: {
+            ...perAddonSettings,
+            temporarily_allow_weak_signatures: true,
+          },
+        },
+      },
+    }),
+  ]);
+  addon = await AddonManager.getAddonByID(id);
+  notEqual(addon, null, "Add-on installed");
+  await addon.uninstall();
+
+  resetWeakSignaturePref();
 });

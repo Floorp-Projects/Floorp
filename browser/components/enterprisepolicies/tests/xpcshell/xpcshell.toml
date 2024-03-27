@@ -2,7 +2,10 @@
 skip-if = ["os == 'android'"] # bug 1730213
 firefox-appdir = "browser"
 head = "head.js"
-support-files = ["policytest_v0.1.xpi"]
+support-files = [
+  "policytest_v0.1.xpi",
+  "../../../../../toolkit/mozapps/extensions/test/xpinstall/amosigned-sha1only.xpi"
+]
 
 ["test_3rdparty.js"]
 
