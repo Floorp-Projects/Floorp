@@ -59,6 +59,14 @@ add_task(async function () {
     getComputedStyle(gBrowser.selectedTab).paddingInlineStart
   );
   let minTabWidth = firstTabRect.width - 2 * tabPaddingStart;
+  if (AppConstants.platform == "macosx") {
+    // On macOS, after bug 1886729, gecko screenshots like the ones for this
+    // test can't screenshot the native titlebar. That, plus the fact that
+    // there's no border or shadow (see bug 1702653) means that we only end up
+    // with the tab text color changing, which is smaller than the tab
+    // background size.
+    minTabWidth = 0;
+  }
   let maxTabWidth = firstTabRect.width;
   let inRange = (val, min, max) => min <= val && val <= max;
 
@@ -84,11 +92,7 @@ add_task(async function () {
                   // The tab selection changes between 2 adjacent tabs, so we expect
                   // both to change color at once: this should be a single rect of the
                   // width of 2 tabs.
-                  inRange(
-                    r.w,
-                    minTabWidth - 1, // -1 for the border on Win7
-                    maxTabWidth * 2
-                  )
+                  inRange(r.w, minTabWidth, maxTabWidth * 2)
                 )
               )
           ),
