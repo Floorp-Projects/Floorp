@@ -84,21 +84,6 @@ export let FormAutofillStatus = {
       Services.prefs.addObserver(ENABLED_AUTOFILL_CREDITCARDS_PREF, this);
     }
 
-    // We have to use empty window type to get all opened windows here because the
-    // window type parameter may not be available during startup.
-    for (let win of Services.wm.getEnumerator("")) {
-      let { documentElement } = win.document;
-      if (documentElement?.getAttribute("windowtype") == "navigator:browser") {
-        this.injectElements(win.document);
-      } else {
-        // Manually call onOpenWindow for windows that are already opened but not
-        // yet have the window type set. This ensures we inject the elements we need
-        // when its docuemnt is ready.
-        this.onOpenWindow(win);
-      }
-    }
-    Services.wm.addListener(this);
-
     Services.telemetry.setEventRecordingEnabled("creditcard", true);
     Services.telemetry.setEventRecordingEnabled("address", true);
   },
@@ -197,31 +182,6 @@ export let FormAutofillStatus = {
 
     this.updateStatus();
   },
-
-  injectElements(doc) {
-    Services.scriptloader.loadSubScript(
-      "chrome://formautofill/content/customElements.js",
-      doc.ownerGlobal
-    );
-  },
-
-  onOpenWindow(xulWindow) {
-    const win = xulWindow.docShell.domWindow;
-    win.addEventListener(
-      "load",
-      () => {
-        if (
-          win.document.documentElement.getAttribute("windowtype") ==
-          "navigator:browser"
-        ) {
-          this.injectElements(win.document);
-        }
-      },
-      { once: true }
-    );
-  },
-
-  onCloseWindow() {},
 
   async observe(subject, topic, data) {
     lazy.log.debug("observe:", topic, "with data:", data);
