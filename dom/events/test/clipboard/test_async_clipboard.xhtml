@@ -74,15 +74,7 @@
     });
 
     const items = await navigator.clipboard.read();
-
-    // Bug 1756955: at least on Ubuntu 20.04, clearing the clipboard leads to
-    // one item with no types.
-    if (!items.length ||
-        (items.length == 1 && !items[0].types.length)) {
-      ok(true, "read() read the right thing from empty clipboard");
-    } else {
-      ok(false, "read() read the wrong thing from empty clipboard");
-    }
+    ok(!items.length, "read() read the right thing from empty clipboard");
   }
 
   async function testNoContentsReadText() {

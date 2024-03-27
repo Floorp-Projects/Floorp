@@ -1,0 +1,89 @@
+<html>
+<head>
+<title>Test for bug 1756955</title>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script>
+
+const kIsMac = navigator.platform.indexOf("Mac") > -1;
+
+async function copyByDataTransfer(aItems) {
+  const copyPromise = new Promise(resolve => {
+    document.addEventListener("copy", (e) => {
+      e.preventDefault();
+      for (const [key, value] of Object.entries(aItems)) {
+        e.clipboardData.setData(key, value);
+      }
+      resolve();
+    }, { once: true });
+  });
+  synthesizeKey(
+    "c",
+    kIsMac ? { accelKey: true } : { ctrlKey: true }
+  );
+  await copyPromise;
+}
+
+async function paste(aCallback) {
+  const pastePromise = new Promise(resolve => {
+    document.addEventListener("paste", (e) => {
+      resolve(aCallback(e.clipboardData));
+    }, { once: true });
+  });
+  synthesizeKey(
+    "v",
+    kIsMac ? { accelKey: true } : { ctrlKey: true }
+  );
+  await pastePromise;
+}
+
+add_setup(async function () {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["dom.events.asyncClipboard.readText", true],
+      ["dom.events.asyncClipboard.clipboardItem", true],
+    ],
+  });
+});
+
+add_task(async function test_mandatory_type() {
+  const items = {
+    "text/plain": "X" + Math.random(),
+    "custom/foo": "X" + Math.random(),
+  };
+  await copyByDataTransfer(items);
+  await paste(async (clipboardData) => {
+    for (const [key, value] of Object.entries(items)) {
+      is(clipboardData.getData(key), value, `Check ${key} type`);
+    }
+
+    let clipboardItems = await navigator.clipboard.read();
+    is(clipboardItems.length, 1, "Should only one clipboardItem");
+    is(clipboardItems[0].types.length, 1, "Should only one type");
+    is(await clipboardItems[0].getType("text/plain").then(blob => blob.text()),
+       items["text/plain"],
+       "Check text/plain type in clipbordItem");
+  });
+});
+
+add_task(async function test_no_mandatory_type() {
+  const items = {
+    "custom/foo": "X" + Math.random(),
+  };
+  await copyByDataTransfer(items);
+  await paste(async (clipboardData) => {
+    for (const [key, value] of Object.entries(items)) {
+      is(clipboardData.getData(key), value, `Check ${key} type`);
+    }
+
+    let clipboardItems = await navigator.clipboard.read();
+    is(clipboardItems.length, 0, "Should only have no clipboardItem");
+  });
+});
+
+</script>
+</head>
+<body>
+</body>
+</html>
