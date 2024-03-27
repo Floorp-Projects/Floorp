@@ -87,4 +87,9 @@ object FeatureFlags {
      * Enable Toolbar Redesign partial components and behaviors.
      */
     val incompleteToolbarRedesignEnabled = Config.channel.isNightlyOrDebug
+
+    /**
+     * Enables the menu redesign.
+     */
+    const val menuRedesignEnabled = false
 }

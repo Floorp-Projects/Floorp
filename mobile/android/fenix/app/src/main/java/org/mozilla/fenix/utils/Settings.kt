@@ -1875,6 +1875,14 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     /**
+     * Indicates if the menu redesign is enabled.
+     */
+    var enableMenuRedesign by booleanPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_enable_menu_redesign),
+        default = FeatureFlags.menuRedesignEnabled,
+    )
+
+    /**
      * Adjust Activated User sent
      */
     var growthUserActivatedSent by booleanPreference(
