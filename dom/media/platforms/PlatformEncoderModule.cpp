@@ -116,6 +116,14 @@ struct ConfigurationChangeToString {
     return nsPrintfCString("Content hint: %s",
                            MaybeToString(aContentHintChange.get()).get());
   }
+  nsCString operator()(const SampleRateChange& aSampleRateChange) {
+    return nsPrintfCString("Sample rate %" PRIu32 "Hz",
+                           aSampleRateChange.get());
+  }
+  nsCString operator()(const NumberOfChannelsChange& aNumberOfChannelsChange) {
+    return nsPrintfCString("Channels: %" PRIu32 "Hz",
+                           aNumberOfChannelsChange.get());
+  }
 };
 
 nsString EncoderConfigurationChangeList::ToString() const {
@@ -132,7 +140,9 @@ bool CanLikelyEncode(const EncoderConfig& aConfig) {
   if (aConfig.mCodec == CodecType::H264) {
     if (!aConfig.mCodecSpecific ||
         !aConfig.mCodecSpecific->is<H264Specific>()) {
-      LOGD("Error: asking for support codec for h264 without h264 specific config.");
+      LOGD(
+          "Error: asking for support codec for h264 without h264 specific "
+          "config.");
       return false;
     }
     H264Specific specific = aConfig.mCodecSpecific->as<H264Specific>();
