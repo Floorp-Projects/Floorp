@@ -113,7 +113,7 @@ job-defaults:
     shipping-phase:
         by-build-type:
             (nightly|beta|release): promote
-            default: build
+            default: null
     shipping-product: firefox-android
     treeherder:
         kind: build
