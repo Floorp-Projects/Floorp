@@ -114,6 +114,7 @@ module.exports = {
           "pos",
           "hide-secondary-section",
           "reverse-split",
+          "no-rdm",
         ],
       },
     ],
