@@ -32,7 +32,6 @@ static const GUID CodecToSubtype(CodecType aCodec) {
     case CodecType::VP9:
       return MFVideoFormat_VP90;
     default:
-      MOZ_ASSERT(false, "Unsupported codec");
       return GUID_NULL;
   }
 }
