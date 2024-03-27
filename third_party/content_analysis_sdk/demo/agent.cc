@@ -136,12 +136,12 @@ void PrintHelp() {
     << kArgQueued << " : Queue requests for processing in a background thread" << std::endl
     << kArgThreads << " : When queued, number of threads in the request processing thread pool" << std::endl
     << kArgUserSpecific << " : Make agent OS user specific." << std::endl
+    << kArgHelp << " : prints this help message" << std::endl
     << kArgSavePrintRequestDataTo << " : saves the PDF data to the given file path for print requests" << std::endl
     << kArgToBlock << "<regex> : Regular expression matching file and text content to block." << std::endl
     << kArgToWarn << "<regex> : Regular expression matching file and text content to warn about." << std::endl
     << kArgToReport << "<regex> : Regular expression matching file and text content to report." << std::endl
-    << kArgMisbehave << "<mode> : Use 'misbehaving' agent in given mode for testing purposes." << std::endl
-    << kArgHelp << " : prints this help message" << std::endl;
+    << kArgMisbehave << "<mode> : Use 'misbehaving' agent in given mode for testing purposes." << std::endl;
 }
 
 int main(int argc, char* argv[]) {
@@ -150,10 +150,9 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  // TODO: Add toBlock, toWarn, toReport to QueueingHandler
   auto handler =
     useMisbehavingHandler
-      ? MisbehavingHandler::Create(delays[0], modeStr)
+      ? MisbehavingHandler::Create(modeStr, std::move(delays), save_print_data_path, std::move(toBlock), std::move(toWarn), std::move(toReport))
       : use_queue
         ? std::make_unique<QueuingHandler>(num_threads, std::move(delays), save_print_data_path, std::move(toBlock), std::move(toWarn), std::move(toReport))
         : std::make_unique<Handler>(std::move(delays), save_print_data_path, std::move(toBlock), std::move(toWarn), std::move(toReport));

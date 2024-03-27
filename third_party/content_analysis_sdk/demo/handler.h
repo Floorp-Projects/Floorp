@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <atomic>
 #include <chrono>
+#include <cstdio>
 #include <fstream>
 #include <iostream>
 #include <optional>
@@ -41,34 +42,46 @@ class Handler : public content_analysis::sdk::AgentEventHandler {
   size_t nextDelayIndex() const { return nextDelayIndex_; }
 
  protected:
+  // subclasses can override this
+  // returns whether the response has been set
+  virtual bool SetCustomResponse(AtomicCout& aout, std::unique_ptr<Event>& event) {
+    return false;
+  }
+  // subclasses can override this
+  // returns whether the response has been sent
+  virtual bool SendCustomResponse(std::unique_ptr<Event>& event) {
+    return false;
+  }
   // Analyzes one request from Google Chrome and responds back to the browser
   // with either an allow or block verdict.
-  void AnalyzeContent(std::stringstream& stream, std::unique_ptr<Event> event) {
+  void AnalyzeContent(AtomicCout& aout, std::unique_ptr<Event> event) {
     // An event represents one content analysis request and response triggered
     // by a user action in Google Chrome.  The agent determines whether the
     // user is allowed to perform the action by examining event->GetRequest().
     // The verdict, which can be "allow" or "block" is written into
     // event->GetResponse().
 
-    DumpEvent(stream, event.get());
+    DumpEvent(aout.stream(), event.get());
 
     bool success = true;
-    std::optional<content_analysis::sdk::ContentAnalysisResponse_Result_TriggeredRule_Action> caResponse =
-        content_analysis::sdk::ContentAnalysisResponse_Result_TriggeredRule_Action_BLOCK;
-
-    if (event->GetRequest().has_text_content()) {
-      caResponse = DecideCAResponse(
-          event->GetRequest().text_content(), stream);
-    } else if (event->GetRequest().has_file_path()) {
-      // TODO: Fix downloads to store file *first* so we can check contents.
-      // Until then, just check the file name:
-      caResponse = DecideCAResponse(
-          event->GetRequest().file_path(), stream);
-    } else if (event->GetRequest().has_print_data()) {
-      // In the case of print request, normally the PDF bytes would be parsed
-      // for sensitive data violations. To keep this class simple, only the
-      // URL is checked for the word "block".
-      caResponse = DecideCAResponse(event->GetRequest().request_data().url(), stream);
+    std::optional<content_analysis::sdk::ContentAnalysisResponse_Result_TriggeredRule_Action> caResponse;
+    bool setResponse = SetCustomResponse(aout, event);
+    if (!setResponse) {
+      caResponse = content_analysis::sdk::ContentAnalysisResponse_Result_TriggeredRule_Action_BLOCK;
+      if (event->GetRequest().has_text_content()) {
+        caResponse = DecideCAResponse(
+            event->GetRequest().text_content(), aout.stream());
+      } else if (event->GetRequest().has_file_path()) {
+        // TODO: Fix downloads to store file *first* so we can check contents.
+        // Until then, just check the file name:
+        caResponse = DecideCAResponse(
+            event->GetRequest().file_path(), aout.stream());
+      } else if (event->GetRequest().has_print_data()) {
+        // In the case of print request, normally the PDF bytes would be parsed
+        // for sensitive data violations. To keep this class simple, only the
+        // URL is checked for the word "block".
+        caResponse = DecideCAResponse(event->GetRequest().request_data().url(), aout.stream());
+      }
     }
 
     if (!success) {
@@ -76,61 +89,67 @@ class Handler : public content_analysis::sdk::AgentEventHandler {
           event->GetResponse(),
           std::string(),
           content_analysis::sdk::ContentAnalysisResponse::Result::FAILURE);
-      stream << "  Verdict: failed to reach verdict: ";
-      stream << event->DebugString() << std::endl;
+      aout.stream() << "  Verdict: failed to reach verdict: ";
+      aout.stream() << event->DebugString() << std::endl;
     } else {
-      stream << "  Verdict: ";
+      aout.stream() << "  Verdict: ";
       if (caResponse) {
         switch (caResponse.value()) {
           case content_analysis::sdk::ContentAnalysisResponse_Result_TriggeredRule_Action_BLOCK:
-            stream << "BLOCK";
+            aout.stream() << "BLOCK";
             break;
           case content_analysis::sdk::ContentAnalysisResponse_Result_TriggeredRule_Action_WARN:
-            stream << "WARN";
+            aout.stream() << "WARN";
             break;
           case content_analysis::sdk::ContentAnalysisResponse_Result_TriggeredRule_Action_REPORT_ONLY:
-            stream << "REPORT_ONLY";
+            aout.stream() << "REPORT_ONLY";
             break;
           case content_analysis::sdk::ContentAnalysisResponse_Result_TriggeredRule_Action_ACTION_UNSPECIFIED:
-            stream << "ACTION_UNSPECIFIED";
+            aout.stream() << "ACTION_UNSPECIFIED";
             break;
           default:
-            stream << "<error>";
+            aout.stream() << "<error>";
             break;
         }
         auto rc =
           content_analysis::sdk::SetEventVerdictTo(event.get(), caResponse.value());
         if (rc != content_analysis::sdk::ResultCode::OK) {
-          stream << " error: "
-                 << content_analysis::sdk::ResultCodeToString(rc) << std::endl;
-          stream << "  " << event->DebugString() << std::endl;
+          aout.stream() << " error: "
+                        << content_analysis::sdk::ResultCodeToString(rc) << std::endl;
+          aout.stream() << "  " << event->DebugString() << std::endl;
         }
-        stream << std::endl;
+        aout.stream() << std::endl;
       } else {
-        stream << "  Verdict: allow" << std::endl;
+        aout.stream() << "  Verdict: allow" << std::endl;
       }
-      stream << std::endl;
+      aout.stream() << std::endl;
     }
-    stream << std::endl;
+    aout.stream() << std::endl;
 
     // If a delay is specified, wait that much.
     size_t nextDelayIndex = nextDelayIndex_.fetch_add(1);
     unsigned long delay = delays_[nextDelayIndex % delays_.size()];
     if (delay > 0) {
+      aout.stream() << "Delaying response to " << event->GetRequest().request_token()
+                    << " for " << delay << "s" << std::endl<< std::endl;
+      aout.flush();
       std::this_thread::sleep_for(std::chrono::seconds(delay));
     }
 
     // Send the response back to Google Chrome.
-    auto rc = event->Send();
-    if (rc != content_analysis::sdk::ResultCode::OK) {
-      stream << "[Demo] Error sending response: "
-             << content_analysis::sdk::ResultCodeToString(rc)
-             << std::endl;
-      stream << event->DebugString() << std::endl;
+    bool sentCustomResponse = SendCustomResponse(event);
+    if (!sentCustomResponse) {
+      auto rc = event->Send();
+      if (rc != content_analysis::sdk::ResultCode::OK) {
+        aout.stream() << "[Demo] Error sending response: "
+                      << content_analysis::sdk::ResultCodeToString(rc)
+                      << std::endl;
+        aout.stream() << event->DebugString() << std::endl;
+      }
     }
   }
 
- private:
+ protected:
   void OnBrowserConnected(
       const content_analysis::sdk::BrowserInfo& info) override {
     AtomicCout aout;
@@ -155,7 +174,7 @@ class Handler : public content_analysis::sdk::AgentEventHandler {
     // In this example code, the event is handled synchronously.
     AtomicCout aout;
     aout.stream() << std::endl << "----------" << std::endl << std::endl;
-    AnalyzeContent(aout.stream(), std::move(event));
+    AnalyzeContent(aout, std::move(event));
   }
 
   void OnResponseAcknowledged(
@@ -183,7 +202,7 @@ class Handler : public content_analysis::sdk::AgentEventHandler {
     }
 
     AtomicCout aout;
-    aout.stream() << "Ack: " << ack.request_token() << std::endl;
+    aout.stream() << "  Ack: " << ack.request_token() << std::endl;
     aout.stream() << "  Final action: " << final_action << std::endl;
   }
   void OnCancelRequests(
@@ -206,31 +225,62 @@ class Handler : public content_analysis::sdk::AgentEventHandler {
 
   void DumpEvent(std::stringstream& stream, Event* event) {
     time_t now = time(nullptr);
-    stream << "Received at: " << ctime(&now);  // Returned string includes \n.
+    stream << "Received at: " << ctime(&now);  // Includes \n.
+    stream << "Received from: pid=" << event->GetBrowserInfo().pid
+           <<  " path=" << event->GetBrowserInfo().binary_path << std::endl;
 
     const content_analysis::sdk::ContentAnalysisRequest& request =
         event->GetRequest();
     std::string connector = "<Unknown>";
     if (request.has_analysis_connector()) {
-      switch (request.analysis_connector())
-      {
-      case content_analysis::sdk::FILE_DOWNLOADED:
-        connector = "download";
-        break;
-      case content_analysis::sdk::FILE_ATTACHED:
-        connector = "attach";
-        break;
-      case content_analysis::sdk::BULK_DATA_ENTRY:
-        connector = "bulk-data-entry";
-        break;
-      case content_analysis::sdk::PRINT:
-        connector = "print";
-        break;
-      case content_analysis::sdk::FILE_TRANSFER:
-        connector = "file-transfer";
-        break;
-      default:
-        break;
+      switch (request.analysis_connector()) {
+        case content_analysis::sdk::FILE_DOWNLOADED:
+          connector = "download";
+          break;
+        case content_analysis::sdk::FILE_ATTACHED:
+          connector = "attach";
+          break;
+        case content_analysis::sdk::BULK_DATA_ENTRY:
+          connector = "bulk-data-entry";
+          break;
+        case content_analysis::sdk::PRINT:
+          connector = "print";
+          break;
+        case content_analysis::sdk::FILE_TRANSFER:
+          connector = "file-transfer";
+          break;
+        default:
+          break;
+      }
+    }
+    std::string reason;
+    if (request.has_reason()) {
+      using content_analysis::sdk::ContentAnalysisRequest;
+      switch (request.reason()) {
+        case content_analysis::sdk::ContentAnalysisRequest::UNKNOWN:
+          reason = "<Unknown>";
+          break;
+        case content_analysis::sdk::ContentAnalysisRequest::CLIPBOARD_PASTE:
+          reason = "CLIPBOARD_PASTE";
+          break;
+        case content_analysis::sdk::ContentAnalysisRequest::DRAG_AND_DROP:
+          reason = "DRAG_AND_DROP";
+          break;
+        case content_analysis::sdk::ContentAnalysisRequest::FILE_PICKER_DIALOG:
+          reason = "FILE_PICKER_DIALOG";
+          break;
+        case content_analysis::sdk::ContentAnalysisRequest::PRINT_PREVIEW_PRINT:
+          reason = "PRINT_PREVIEW_PRINT";
+          break;
+        case content_analysis::sdk::ContentAnalysisRequest::SYSTEM_DIALOG_PRINT:
+          reason = "SYSTEM_DIALOG_PRINT";
+          break;
+        case content_analysis::sdk::ContentAnalysisRequest::NORMAL_DOWNLOAD:
+          reason = "NORMAL_DOWNLOAD";
+          break;
+        case content_analysis::sdk::ContentAnalysisRequest::SAVE_AS_DOWNLOAD:
+          reason = "SAVE_AS_DOWNLOAD";
+          break;
       }
     }
 
@@ -252,11 +302,7 @@ class Handler : public content_analysis::sdk::AgentEventHandler {
 
     std::string file_path =
         request.has_file_path()
-        ? request.file_path() : "<none>";
-
-    std::string text_content =
-        request.has_text_content()
-        ? request.text_content() : "<none>";
+        ? request.file_path() : "None, bulk text entry or print";
 
     std::string machine_user =
         request.has_client_metadata() &&
@@ -282,14 +328,35 @@ class Handler : public content_analysis::sdk::AgentEventHandler {
     stream << "  Expires at: " << expires_at_str << " ("
            << secs_remaining << " seconds from now)" << std::endl;
     stream << "  Connector: " << connector << std::endl;
+    if (!reason.empty()) {
+      stream << "  Reason: " << reason << std::endl;
+    }
     stream << "  URL: " << url << std::endl;
     stream << "  Tab title: " << tab_title << std::endl;
     stream << "  Filename: " << filename << std::endl;
     stream << "  Digest: " << digest << std::endl;
     stream << "  Filepath: " << file_path << std::endl;
-    stream << "  Text content: '" << text_content << "'" << std::endl;
     stream << "  Machine user: " << machine_user << std::endl;
     stream << "  Email: " << email << std::endl;
+
+    if (request.has_text_content() && !request.text_content().empty()) {
+      std::string prefix = "  Pasted data: ";
+      std::string text_content = request.text_content();
+
+      // Truncate the text past 50 bytes to keep it to a reasonable length in
+      // the terminal window.
+      if (text_content.size() > 50) {
+        prefix = "  Pasted data (truncated): ";
+        text_content = text_content.substr(0, 50) + "...";
+      }
+      stream << prefix
+             << text_content
+             << std::endl;
+      stream << "  Pasted data size (bytes): "
+             << request.text_content().size()
+             << std::endl;
+    }
+
     if (request.has_print_data() && !print_data_file_path_.empty()) {
       if (request.request_data().has_print_metadata() &&
           request.request_data().print_metadata().has_printer_name()) {
@@ -415,12 +482,13 @@ class QueuingHandler : public Handler {
 
       AtomicCout aout;
       aout.stream()  << std::endl << "----------" << std::endl;
-      aout.stream() << "Thread: " << std::this_thread::get_id() << std::endl;
+      aout.stream() << "Thread: " << std::this_thread::get_id()
+                    << std::endl;
       aout.stream() << "Delaying request processing for "
                     << handler->delays()[handler->nextDelayIndex() % handler->delays().size()] << "s" << std::endl << std::endl;
       aout.flush();
 
-      handler->AnalyzeContent(aout.stream(), std::move(event));
+      handler->AnalyzeContent(aout, std::move(event));
     }
 
     return 0;

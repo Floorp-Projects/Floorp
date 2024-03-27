@@ -317,7 +317,7 @@ void HandleRequest(const ContentAnalysisRequest& request) {
         global_final_action = final_action;
     } else {
       int err = client->Acknowledge(
-        BuildAcknowledgement(request.request_token(), final_action));
+        BuildAcknowledgement(response.request_token(), final_action));
       if (err != 0) {
         aout.stream() << "[Demo] Error sending ack " << request.request_token()
                       << std::endl;
