@@ -63,7 +63,7 @@ class FirefoxSuggestTest : TestSetup() {
             ),
             "Groupon" to listOf(
                 "groupon.com - Discover & Save!",
-                "groupon.com/?utm_source=google&utm_medium=cpc&utm_campaign=us_dt_sea_ggl_txt_smp_sr_cbp_ch1_nbr_k*{keyword}_m*{match-type}_d*ADMRKT_319093357us1279${getSponsoredFxSuggestPlaceHolder()}&mfadid=adm",
+                "groupon.com/?utm_source=google&utm_medium=cpc&utm_campaign=us_dt_sea_ggl_txt_smp_sr_cbp_ch1_nbr_k*groupon_m*broad_d*ADMRKT_319093357us1279${getSponsoredFxSuggestPlaceHolder()}&mfadid=adm",
             ),
         )
 
