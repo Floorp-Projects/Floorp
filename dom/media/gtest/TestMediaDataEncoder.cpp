@@ -234,10 +234,7 @@ static bool EnsureInit(const RefPtr<MediaDataEncoder>& aEncoder) {
   bool succeeded;
   media::Await(
       GetMediaThreadPool(MediaThreadType::SUPERVISOR), aEncoder->Init(),
-      [&succeeded](TrackInfo::TrackType t) {
-        EXPECT_EQ(TrackInfo::TrackType::kVideoTrack, t);
-        succeeded = true;
-      },
+      [&succeeded](bool) { succeeded = true; },
       [&succeeded](const MediaResult& r) { succeeded = false; });
   return succeeded;
 }

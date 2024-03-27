@@ -228,8 +228,7 @@ RefPtr<MediaDataEncoder::InitPromise> AppleVTEncoder::Init() {
   }
 
   mError = NS_OK;
-  return InitPromise::CreateAndResolve(TrackInfo::TrackType::kVideoTrack,
-                                       __func__);
+  return InitPromise::CreateAndResolve(true, __func__);
 }
 
 static Maybe<OSType> MapPixelFormat(MediaDataEncoder::PixelFormat aFormat) {

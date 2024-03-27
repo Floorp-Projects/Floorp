@@ -32,8 +32,8 @@ class FFmpegDataEncoder<LIBAV_VER> : public MediaDataEncoder {
 
  public:
   FFmpegDataEncoder(const FFmpegLibWrapper* aLib, AVCodecID aCodecID,
-                     const RefPtr<TaskQueue>& aTaskQueue,
-                     const EncoderConfig& aConfig);
+                    const RefPtr<TaskQueue>& aTaskQueue,
+                    const EncoderConfig& aConfig);
 
   /* MediaDataEncoder Methods */
   // All methods run on the task queue, except for GetDescriptionName.
@@ -51,11 +51,12 @@ class FFmpegDataEncoder<LIBAV_VER> : public MediaDataEncoder {
   RefPtr<InitPromise> ProcessInit();
   RefPtr<EncodePromise> ProcessEncode(RefPtr<const MediaData> aSample);
   RefPtr<ReconfigurationPromise> ProcessReconfigure(
-      const RefPtr<const EncoderConfigurationChangeList>& aConfigurationChanges);
+      const RefPtr<const EncoderConfigurationChangeList>&
+          aConfigurationChanges);
   RefPtr<EncodePromise> ProcessDrain();
   RefPtr<ShutdownPromise> ProcessShutdown();
   // Initialize the audio or video-specific members of an encoder instance.
-  virtual MediaResult InitSpecific() = 0;
+  virtual nsresult InitSpecific() = 0;
   // nullptr in case of failure. This is to be called by the
   // audio/video-specific InitInternal methods in the sub-class, and initializes
   // the common members.
@@ -68,8 +69,10 @@ class FFmpegDataEncoder<LIBAV_VER> : public MediaDataEncoder {
   bool PrepareFrame();
   void DestroyFrame();
 #if LIBAVCODEC_VERSION_MAJOR >= 58
-  virtual RefPtr<EncodePromise> EncodeWithModernAPIs(RefPtr<const MediaData> aSample);
-  RefPtr<EncodePromise> DrainWithModernAPIs();
+  virtual Result<EncodedData, nsresult> EncodeInputWithModernAPIs(
+      RefPtr<const MediaData> aSample) = 0;
+  Result<EncodedData, nsresult> EncodeWithModernAPIs();
+  virtual Result<EncodedData, nsresult> DrainWithModernAPIs();
 #endif
   virtual RefPtr<MediaRawData> ToMediaRawData(AVPacket* aPacket) = 0;
   RefPtr<MediaRawData> ToMediaRawDataCommon(AVPacket* aPacket);

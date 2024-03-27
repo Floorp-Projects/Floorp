@@ -32,9 +32,9 @@ static AVCodec* FindEncoderWithPreference(const FFmpegLibWrapper* aLib,
       FFMPEGV_LOG("Prefer libx264 for h264 codec");
       return codec;
     }
+    FFMPEGV_LOG("Fallback to other h264 library. Fingers crossed");
   }
 
-  FFMPEGV_LOG("Fallback to other h264 library. Fingers crossed");
   return aLib->avcodec_find_encoder(aCodecId);
 }
 
@@ -58,10 +58,17 @@ AVCodecID GetFFmpegEncoderCodecId<LIBAV_VER>(CodecType aCodec) {
   if (aCodec == CodecType::AV1) {
     return AV_CODEC_ID_AV1;
   }
+
+  if (aCodec == CodecType::Opus) {
+    return AV_CODEC_ID_OPUS;
+  }
+
+  if (aCodec == CodecType::Vorbis) {
+    return AV_CODEC_ID_VORBIS;
+  }
 #endif
   return AV_CODEC_ID_NONE;
 }
-
 
 StaticMutex FFmpegDataEncoder<LIBAV_VER>::sMutex;
 
@@ -106,8 +113,7 @@ FFmpegDataEncoder<LIBAV_VER>::Reconfigure(
     const RefPtr<const EncoderConfigurationChangeList>& aConfigurationChanges) {
   return InvokeAsync<const RefPtr<const EncoderConfigurationChangeList>>(
       mTaskQueue, this, __func__,
-      &FFmpegDataEncoder<LIBAV_VER>::ProcessReconfigure,
-      aConfigurationChanges);
+      &FFmpegDataEncoder<LIBAV_VER>::ProcessReconfigure, aConfigurationChanges);
 }
 
 RefPtr<MediaDataEncoder::EncodePromise> FFmpegDataEncoder<LIBAV_VER>::Drain() {
@@ -133,10 +139,9 @@ FFmpegDataEncoder<LIBAV_VER>::ProcessInit() {
   MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
 
   FFMPEG_LOG("ProcessInit");
-  MediaResult r = InitSpecific();
-  return NS_FAILED(r)
-             ? InitPromise::CreateAndReject(r, __func__)
-             : InitPromise::CreateAndResolve(TrackInfo::kVideoTrack, __func__);
+  nsresult rv = InitSpecific();
+  return NS_FAILED(rv) ? InitPromise::CreateAndReject(rv, __func__)
+                       : InitPromise::CreateAndResolve(true, __func__);
 }
 
 RefPtr<MediaDataEncoder::EncodePromise>
@@ -151,7 +156,12 @@ FFmpegDataEncoder<LIBAV_VER>::ProcessEncode(RefPtr<const MediaData> aSample) {
   return EncodePromise::CreateAndReject(NS_ERROR_NOT_IMPLEMENTED, __func__);
 #else
 
-  return EncodeWithModernAPIs(aSample);
+  auto rv = EncodeInputWithModernAPIs(std::move(aSample));
+  if (rv.isErr()) {
+    return EncodePromise::CreateAndReject(rv.inspectErr(), __func__);
+  }
+
+  return EncodePromise::CreateAndResolve(rv.unwrap(), __func__);
 #endif
 }
 
@@ -178,7 +188,11 @@ FFmpegDataEncoder<LIBAV_VER>::ProcessDrain() {
   MOZ_CRASH("FFmpegDataEncoder needs ffmpeg 58 at least.");
   return EncodePromise::CreateAndReject(NS_ERROR_NOT_IMPLEMENTED, __func__);
 #else
-  return DrainWithModernAPIs();
+  auto rv = DrainWithModernAPIs();
+  if (rv.isErr()) {
+    return EncodePromise::CreateAndReject(rv.inspectErr(), __func__);
+  }
+  return EncodePromise::CreateAndResolve(rv.unwrap(), __func__);
 #endif
 }
 
@@ -217,14 +231,8 @@ AVCodec* FFmpegDataEncoder<LIBAV_VER>::InitCommon() {
   return codec;
 }
 
-MediaResult FFmpegDataEncoder<LIBAV_VER>::FinishInitCommon(AVCodec* aCodec)
-{
-  mCodecContext->bit_rate =
-      static_cast<FFmpegBitRate>(mConfig.mBitrate);
-  // TODO(bug 1869560): The recommended time_base is the reciprocal of the frame
-  // rate, but we set it to microsecond for now.
-  mCodecContext->time_base =
-      AVRational{.num = 1, .den = static_cast<int>(USECS_PER_S)};
+MediaResult FFmpegDataEncoder<LIBAV_VER>::FinishInitCommon(AVCodec* aCodec) {
+  mCodecContext->bit_rate = static_cast<FFmpegBitRate>(mConfig.mBitrate);
 #if LIBAVCODEC_VERSION_MAJOR >= 60
   mCodecContext->flags |= AV_CODEC_FLAG_FRAME_DURATION;
 #endif
@@ -233,8 +241,8 @@ MediaResult FFmpegDataEncoder<LIBAV_VER>::FinishInitCommon(AVCodec* aCodec)
   if (int ret = OpenCodecContext(aCodec, &options); ret < 0) {
     FFMPEG_LOG("failed to open %s avcodec: %s", aCodec->name,
                 MakeErrorString(mLib, ret).get());
-        MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                    RESULT_DETAIL("avcodec_open2 error"));
+    return MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                       RESULT_DETAIL("avcodec_open2 error"));
   }
   mLib->av_dict_free(&options);
 
@@ -256,7 +264,7 @@ void FFmpegDataEncoder<LIBAV_VER>::ShutdownInternal() {
 }
 
 int FFmpegDataEncoder<LIBAV_VER>::OpenCodecContext(const AVCodec* aCodec,
-                                                    AVDictionary** aOptions) {
+                                                   AVDictionary** aOptions) {
   MOZ_ASSERT(mCodecContext);
 
   StaticMutexAutoLock mon(sMutex);
@@ -310,36 +318,14 @@ void FFmpegDataEncoder<LIBAV_VER>::DestroyFrame() {
 
 // avcodec_send_frame and avcodec_receive_packet were introduced in version 58.
 #if LIBAVCODEC_VERSION_MAJOR >= 58
-RefPtr<MediaDataEncoder::EncodePromise> FFmpegDataEncoder<
-    LIBAV_VER>::EncodeWithModernAPIs(RefPtr<const MediaData> aSample) {
-  // When this is called, the audio or video-specific members of mFrame have
-  // been set. This function deals with members that are present in both and
-  // calls the ffmpeg functions.
-
-  // Set presentation timestamp and duration of the AVFrame. The unit of pts is
-  // time_base.
-#  if LIBAVCODEC_VERSION_MAJOR >= 59
-  mFrame->time_base =
-      AVRational{.num = 1, .den = static_cast<int>(USECS_PER_S)};
-#  endif
-  mFrame->pts = aSample->mTime.ToMicroseconds();
-#  if LIBAVCODEC_VERSION_MAJOR >= 60
-  mFrame->duration = aSample->mDuration.ToMicroseconds();
-#  else
-  // Save duration in the time_base unit.
-  mDurationMap.Insert(mFrame->pts, aSample->mDuration.ToMicroseconds());
-#  endif
-  mFrame->pkt_duration = aSample->mDuration.ToMicroseconds();
-
+Result<MediaDataEncoder::EncodedData, nsresult>
+FFmpegDataEncoder<LIBAV_VER>::EncodeWithModernAPIs() {
   // Initialize AVPacket.
   AVPacket* pkt = mLib->av_packet_alloc();
 
   if (!pkt) {
     FFMPEG_LOG("failed to allocate packet");
-    return EncodePromise::CreateAndReject(
-        MediaResult(NS_ERROR_OUT_OF_MEMORY,
-                    RESULT_DETAIL("Unable to allocate packet")),
-        __func__);
+    return Err(NS_ERROR_OUT_OF_MEMORY);
   }
 
   auto freePacket = MakeScopeExit([this, &pkt] { mLib->av_packet_free(&pkt); });
@@ -352,10 +338,7 @@ RefPtr<MediaDataEncoder::EncodePromise> FFmpegDataEncoder<
     // TODO: Create a NS_ERROR_DOM_MEDIA_ENCODE_ERR in ErrorList.py?
     FFMPEG_LOG("avcodec_send_frame error: %s",
                 MakeErrorString(mLib, ret).get());
-    return EncodePromise::CreateAndReject(
-        MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                    RESULT_DETAIL("avcodec_send_frame error")),
-        __func__);
+    return Err(NS_ERROR_DOM_MEDIA_FATAL_ERR);
   }
 
   EncodedData output;
@@ -372,30 +355,24 @@ RefPtr<MediaDataEncoder::EncodePromise> FFmpegDataEncoder<
       // shouldn't happen here.
       FFMPEG_LOG("avcodec_receive_packet error: %s",
                   MakeErrorString(mLib, ret).get());
-      return EncodePromise::CreateAndReject(
-          MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                      RESULT_DETAIL("avcodec_receive_packet error")),
-          __func__);
+      return Err(NS_ERROR_DOM_MEDIA_FATAL_ERR);
     }
 
     RefPtr<MediaRawData> d = ToMediaRawData(pkt);
     mLib->av_packet_unref(pkt);
     if (!d) {
       FFMPEGV_LOG("failed to create a MediaRawData from the AVPacket");
-      return EncodePromise::CreateAndReject(
-          MediaResult(
-              NS_ERROR_OUT_OF_MEMORY,
-              RESULT_DETAIL("Unable to get MediaRawData from AVPacket")),
-          __func__);
+      return Result<MediaDataEncoder::EncodedData, nsresult>(
+          NS_ERROR_DOM_MEDIA_FATAL_ERR);
     }
     output.AppendElement(std::move(d));
   }
 
   FFMPEG_LOG("Got %zu encoded data", output.Length());
-  return EncodePromise::CreateAndResolve(std::move(output), __func__);
+  return std::move(output);
 }
 
-RefPtr<MediaDataEncoder::EncodePromise>
+Result<MediaDataEncoder::EncodedData, nsresult>
 FFmpegDataEncoder<LIBAV_VER>::DrainWithModernAPIs() {
   MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
   MOZ_ASSERT(mCodecContext);
@@ -407,10 +384,7 @@ FFmpegDataEncoder<LIBAV_VER>::DrainWithModernAPIs() {
   AVPacket* pkt = mLib->av_packet_alloc();
   if (!pkt) {
     FFMPEG_LOG("failed to allocate packet");
-    return EncodePromise::CreateAndReject(
-        MediaResult(NS_ERROR_OUT_OF_MEMORY,
-                    RESULT_DETAIL("Unable to allocate packet")),
-        __func__);
+    return Err(NS_ERROR_DOM_MEDIA_FATAL_ERR);
   }
   auto freePacket = MakeScopeExit([this, &pkt] { mLib->av_packet_free(&pkt); });
 
@@ -426,15 +400,12 @@ FFmpegDataEncoder<LIBAV_VER>::DrainWithModernAPIs() {
     if (ret == AVERROR_EOF) {
       // The encoder has been flushed. Drain can be called multiple time.
       FFMPEG_LOG("encoder has been flushed!");
-      return EncodePromise::CreateAndResolve(EncodedData(), __func__);
+      return EncodedData();
     }
 
     FFMPEG_LOG("avcodec_send_frame error: %s",
                 MakeErrorString(mLib, ret).get());
-    return EncodePromise::CreateAndReject(
-        MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                    RESULT_DETAIL("avcodec_send_frame error")),
-        __func__);
+    return Err(NS_ERROR_DOM_MEDIA_FATAL_ERR);
   }
 
   EncodedData output;
@@ -450,21 +421,14 @@ FFmpegDataEncoder<LIBAV_VER>::DrainWithModernAPIs() {
       // draining mode.
       FFMPEG_LOG("avcodec_receive_packet error: %s",
                   MakeErrorString(mLib, ret).get());
-      return EncodePromise::CreateAndReject(
-          MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                      RESULT_DETAIL("avcodec_receive_packet error")),
-          __func__);
+      return Err(NS_ERROR_DOM_MEDIA_FATAL_ERR);
     }
 
     RefPtr<MediaRawData> d = ToMediaRawData(pkt);
     mLib->av_packet_unref(pkt);
     if (!d) {
       FFMPEG_LOG("failed to create a MediaRawData from the AVPacket");
-      return EncodePromise::CreateAndReject(
-          MediaResult(
-              NS_ERROR_OUT_OF_MEMORY,
-              RESULT_DETAIL("Unable to get MediaRawData from AVPacket")),
-          __func__);
+      return Err(NS_ERROR_DOM_MEDIA_FATAL_ERR);
     }
     output.AppendElement(std::move(d));
   }
@@ -475,12 +439,13 @@ FFmpegDataEncoder<LIBAV_VER>::DrainWithModernAPIs() {
   // TODO: Only re-create AVCodecContext when avcodec_flush_buffers is
   // unavailable.
   ShutdownInternal();
-  MediaResult r = InitSpecific();
-  return NS_FAILED(r)
-             ? EncodePromise::CreateAndReject(r, __func__)
-             : EncodePromise::CreateAndResolve(std::move(output), __func__);
+  nsresult r = InitSpecific();
+  return NS_FAILED(r) ? Result<MediaDataEncoder::EncodedData, nsresult>(
+                            NS_ERROR_DOM_MEDIA_FATAL_ERR)
+                      : Result<MediaDataEncoder::EncodedData, nsresult>(
+                            std::move(output));
 }
-#endif // LIBAVCODEC_VERSION_MAJOR >= 58
+#endif  // LIBAVCODEC_VERSION_MAJOR >= 58
 
 RefPtr<MediaRawData> FFmpegDataEncoder<LIBAV_VER>::ToMediaRawDataCommon(
     AVPacket* aPacket) {

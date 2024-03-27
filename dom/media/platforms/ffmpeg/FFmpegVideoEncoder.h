@@ -32,10 +32,10 @@ class FFmpegVideoEncoder<LIBAV_VER> : public FFmpegDataEncoder<LIBAV_VER> {
   nsCString GetDescriptionName() const override;
 
  protected:
- // Methods only called on mTaskQueue.
-  virtual MediaResult InitSpecific() override;
+  // Methods only called on mTaskQueue.
+  virtual nsresult InitSpecific() override;
 #if LIBAVCODEC_VERSION_MAJOR >= 58
-  RefPtr<MediaDataEncoder::EncodePromise> EncodeWithModernAPIs(
+  Result<EncodedData, nsresult> EncodeInputWithModernAPIs(
       RefPtr<const MediaData> aSample) override;
 #endif
   bool ScaleInputFrame();
@@ -69,4 +69,4 @@ class FFmpegVideoEncoder<LIBAV_VER> : public FFmpegDataEncoder<LIBAV_VER> {
 
 }  // namespace mozilla
 
-#endif // DOM_MEDIA_PLATFORMS_FFMPEG_FFMPEGVIDEOENCODER_H_
+#endif  // DOM_MEDIA_PLATFORMS_FFMPEG_FFMPEGVIDEOENCODER_H_
