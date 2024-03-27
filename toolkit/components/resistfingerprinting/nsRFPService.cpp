@@ -2017,49 +2017,11 @@ Maybe<RFPTarget> nsRFPService::GetOverriddenFingerprintingSettingsForChannel(
 
   // The channel is for the third-party load. We get the first-party URI from
   // the top-level window global parent.
-  RefPtr<dom::CanonicalBrowsingContext> topBC = bc->Top()->Canonical();
-  RefPtr<dom::WindowGlobalParent> topWGP = topBC->GetCurrentWindowGlobal();
+  RefPtr<dom::WindowGlobalParent> topWGP =
+      bc->Top()->Canonical()->GetCurrentWindowGlobal();
 
   if (NS_WARN_IF(!topWGP)) {
     return Nothing();
-  }
-
-  nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
-  DebugOnly<nsresult> rv =
-      loadInfo->GetCookieJarSettings(getter_AddRefs(cookieJarSettings));
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
-  MOZ_ASSERT(cookieJarSettings);
-
-  uint64_t topWindowContextIdFromCJS =
-      net::CookieJarSettings::Cast(cookieJarSettings)
-          ->GetTopLevelWindowContextId();
-
-  // The top-level window could be navigated away when we get the fingerprinting
-  // override here. For example, the beacon requests. In this case, the
-  // top-level windowContext id won't match the inner window id of the top-level
-  // windowGlobalParent. So, we cannot rely on the URI from the top-level
-  // windowGlobalParent because it could be different from the one that creates
-  // the channel. Instead, we fallback to use the partitionKey in the
-  // cookieJarSettings to get the top-level URI.
-  if (topWGP->InnerWindowId() != topWindowContextIdFromCJS) {
-    nsAutoString partitionKey;
-    rv = cookieJarSettings->GetPartitionKey(partitionKey);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-
-    nsAutoString scheme;
-    nsAutoString domain;
-    int32_t unused;
-    if (!OriginAttributes::ParsePartitionKey(partitionKey, scheme, domain,
-                                             unused)) {
-      MOZ_ASSERT(false);
-      return Nothing();
-    }
-
-    nsCOMPtr<nsIURI> topURI;
-    rv = NS_NewURI(getter_AddRefs(topURI), scheme + u"://"_ns + domain);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-
-    return GetOverriddenFingerprintingSettingsForURI(topURI, uri);
   }
 
   nsCOMPtr<nsIPrincipal> topPrincipal = topWGP->DocumentPrincipal();
@@ -2087,6 +2049,9 @@ Maybe<RFPTarget> nsRFPService::GetOverriddenFingerprintingSettingsForChannel(
 
 #ifdef DEBUG
   // Verify if the top URI matches the partitionKey of the channel.
+  nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
+  Unused << loadInfo->GetCookieJarSettings(getter_AddRefs(cookieJarSettings));
+
   nsAutoString partitionKey;
   cookieJarSettings->GetPartitionKey(partitionKey);
 
