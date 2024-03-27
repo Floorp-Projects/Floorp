@@ -141,10 +141,6 @@ DIRS += ["nimbus"]
 if CONFIG["MOZ_BACKGROUNDTASKS"]:
     DIRS += ["backgroundtasks"]
 
-# This is only packaged for browser since corrupt JAR and XPI files tend to be a desktop-OS problem.
-if CONFIG["MOZ_BUILD_APP"] == "browser":
-    DIRS += ["corroborator"]
-
 if CONFIG["MOZ_UNIFFI_FIXTURES"]:
     DIRS += ["uniffi-bindgen-gecko-js/fixtures"]
 

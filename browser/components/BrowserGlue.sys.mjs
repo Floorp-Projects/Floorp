@@ -31,7 +31,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource://gre/modules/ContentRelevancyManager.sys.mjs",
   ContextualIdentityService:
     "resource://gre/modules/ContextualIdentityService.sys.mjs",
-  Corroborate: "resource://gre/modules/Corroborate.sys.mjs",
   DAPTelemetrySender: "resource://gre/modules/DAPTelemetrySender.sys.mjs",
   DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
   Discovery: "resource:///modules/Discovery.sys.mjs",
@@ -3215,12 +3214,6 @@ BrowserGlue.prototype = {
 
       function RemoteSecuritySettingsInit() {
         lazy.RemoteSecuritySettings.init();
-      },
-
-      function CorroborateInit() {
-        if (Services.prefs.getBoolPref("corroborator.enabled", false)) {
-          lazy.Corroborate.init().catch(console.error);
-        }
       },
 
       function BrowserUsageTelemetryReportProfileCount() {
