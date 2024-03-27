@@ -103,8 +103,8 @@ UniquePtr<AudioDecoderConfigInternal> AudioDecoderConfigInternal::Create(
       std::move(description)));
 }
 
-nsString AudioDecoderConfigInternal::ToString() const {
-  nsString rv;
+nsCString AudioDecoderConfigInternal::ToString() const {
+  nsCString rv;
 
   rv.AppendLiteral("AudioDecoderConfigInternal: ");
   rv.AppendPrintf("%s %" PRIu32 "Hz %" PRIu32 " ch",

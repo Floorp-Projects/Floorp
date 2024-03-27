@@ -411,8 +411,8 @@ struct ConfigurationChangeToString {
   }
 };
 
-nsString WebCodecsConfigurationChangeList::ToString() const {
-  nsString rv;
+nsCString WebCodecsConfigurationChangeList::ToString() const {
+  nsCString rv;
   for (const WebCodecsEncoderConfigurationItem& change : mChanges) {
     nsCString str = change.match(ConfigurationChangeToString());
     rv.AppendPrintf("- %s\n", str.get());
@@ -569,7 +569,7 @@ Maybe<CodecType> CodecStringToCodecType(const nsAString& aCodecString) {
   return Nothing();
 }
 
-nsString ConfigToString(const VideoDecoderConfig& aConfig) {
+nsCString ConfigToString(const VideoDecoderConfig& aConfig) {
   nsString rv;
 
   auto internal = VideoDecoderConfigInternal::Create(aConfig);
