@@ -20,6 +20,7 @@ LOCAL_INCLUDES += ['/modules/fdlibm/inexact-math-override']
 SharedLibrary('mozavcodec')
 SOURCES += [
     'allcodecs.c',
+    'audio_frame_queue.c',
     'avcodec.c',
     'avdct.c',
     'avfft.c',
@@ -47,7 +48,9 @@ SOURCES += [
     'jrevdct.c',
     'libopus.c',
     'libopusdec.c',
+    'libopusenc.c',
     'libvorbisdec.c',
+    'libvorbisenc.c',
     'log2_tab.c',
     'mpegaudio.c',
     'mpegaudiodata.c',

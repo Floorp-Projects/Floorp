@@ -92,6 +92,7 @@ av_fifo_alloc
 av_fifo_alloc2
 av_fifo_alloc_array
 av_fifo_can_read
+av_fifo_can_write
 av_fifo_drain
 av_fifo_drain2
 av_fifo_free

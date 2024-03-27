@@ -20,6 +20,9 @@ static const FFCodec * const codec_list[] = {
 #if CONFIG_LIBVORBIS_DECODER
     &ff_libvorbis_decoder,
 #endif
+#if CONFIG_LIBVORBIS_ENCODER
+    &ff_libvorbis_encoder,
+#endif
 #if CONFIG_PCM_ALAW_DECODER
     &ff_pcm_alaw_decoder,
 #endif
@@ -43,6 +46,9 @@ static const FFCodec * const codec_list[] = {
 #endif
 #if CONFIG_LIBOPUS_DECODER
     &ff_libopus_decoder,
+#endif
+#if CONFIG_LIBOPUS_ENCODER
+    &ff_libopus_encoder,
 #endif
 #if CONFIG_LIBVPX_VP8_DECODER
     &ff_libvpx_vp8_decoder,
