@@ -32,17 +32,39 @@ using namespace mozilla;
 + (void)startObserving;
 @end
 
-nsLookAndFeel::nsLookAndFeel() = default;
+nsLookAndFeel::nsLookAndFeel() {
+  [MOZLookAndFeelDynamicChangeObserver startObserving];
+}
 
 nsLookAndFeel::~nsLookAndFeel() = default;
 
-void nsLookAndFeel::NativeInit() {
+void nsLookAndFeel::EnsureInit() {
+  if (mInitialized) {
+    return;
+  }
+
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK
 
-  [MOZLookAndFeelDynamicChangeObserver startObserving];
+  mInitialized = true;
+  NSWindow* window =
+      [[NSWindow alloc] initWithContentRect:NSZeroRect
+                                  styleMask:NSWindowStyleMaskTitled
+                                    backing:NSBackingStoreBuffered
+                                      defer:NO];
+  auto release = MakeScopeExit([&] { [window release]; });
+
+  mRtl = window.windowTitlebarLayoutDirection ==
+         NSUserInterfaceLayoutDirectionRightToLeft;
+  mTitlebarHeight = std::ceil(window.frame.size.height);
+
   RecordTelemetry();
 
   NS_OBJC_END_TRY_ABORT_BLOCK
+}
+
+void nsLookAndFeel::RefreshImpl() {
+  mInitialized = false;
+  nsXPLookAndFeel::RefreshImpl();
 }
 
 static nscolor GetColorFromNSColor(NSColor* aColor) {
@@ -77,8 +99,7 @@ static nscolor GetColorFromNSColorWithCustomAlpha(NSColor* aColor,
 // whereas white text on dark blue (which what you get if you mix
 // partially-transparent light blue with the black textbox background) has much
 // better contrast.
-nscolor nsLookAndFeel::ProcessSelectionBackground(nscolor aColor,
-                                                  ColorScheme aScheme) {
+static nscolor ProcessSelectionBackground(nscolor aColor, ColorScheme aScheme) {
   if (aScheme == ColorScheme::Dark) {
     // When we use a dark selection color, we do not change alpha because we do
     // not use dark selection in content. The dark system color is appropriate
@@ -335,6 +356,16 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
   NS_OBJC_END_TRY_ABORT_BLOCK
 }
 
+static bool SystemWantsDarkTheme() {
+  // This returns true if the macOS system appearance is set to dark mode,
+  // false otherwise.
+  NSAppearanceName aquaOrDarkAqua =
+      [NSApp.effectiveAppearance bestMatchFromAppearancesWithNames:@[
+        NSAppearanceNameAqua, NSAppearanceNameDarkAqua
+      ]];
+  return [aquaOrDarkAqua isEqualToString:NSAppearanceNameDarkAqua];
+}
+
 nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
@@ -408,7 +439,12 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       aResult = nsCocoaFeatures::OnBigSurOrLater();
       break;
     case IntID::MacRTL:
-      aResult = IsSystemOrientationRTL();
+      EnsureInit();
+      aResult = mRtl;
+      break;
+    case IntID::MacTitlebarHeight:
+      EnsureInit();
+      aResult = mTitlebarHeight;
       break;
     case IntID::AlertNotificationOrigin:
       aResult = NS_ALERT_TOP;
@@ -505,28 +541,6 @@ nsresult nsLookAndFeel::NativeGetFloat(FloatID aID, float& aResult) {
   return res;
 
   NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
-}
-
-bool nsLookAndFeel::SystemWantsDarkTheme() {
-  // This returns true if the macOS system appearance is set to dark mode, false
-  // otherwise.
-  NSAppearanceName aquaOrDarkAqua =
-      [NSApp.effectiveAppearance bestMatchFromAppearancesWithNames:@[
-        NSAppearanceNameAqua, NSAppearanceNameDarkAqua
-      ]];
-  return [aquaOrDarkAqua isEqualToString:NSAppearanceNameDarkAqua];
-}
-
-/*static*/
-bool nsLookAndFeel::IsSystemOrientationRTL() {
-  NSWindow* window =
-      [[NSWindow alloc] initWithContentRect:NSZeroRect
-                                  styleMask:NSWindowStyleMaskBorderless
-                                    backing:NSBackingStoreBuffered
-                                      defer:NO];
-  auto direction = window.windowTitlebarLayoutDirection;
-  [window release];
-  return direction == NSUserInterfaceLayoutDirectionRightToLeft;
 }
 
 bool nsLookAndFeel::NativeGetFont(FontID aID, nsString& aFontName,
