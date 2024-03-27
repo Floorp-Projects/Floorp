@@ -574,7 +574,6 @@ module.exports = {
         "toolkit/components/cleardata/**",
         "toolkit/components/contentprefs/ContentPrefService2.sys.mjs",
         "toolkit/components/cookiebanners/**",
-        "toolkit/components/corroborator/Corroborate.sys.mjs",
         "toolkit/components/crashes/**",
         "toolkit/components/crashmonitor/CrashMonitor.sys.mjs",
         "toolkit/components/credentialmanagement/IdentityCredentialPromptService.sys.mjs",

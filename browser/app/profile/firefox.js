@@ -2513,9 +2513,6 @@ pref("identity.fxaccounts.toolbar.pxiToolbarEnabled.monitorEnabled", true);
 pref("identity.fxaccounts.toolbar.pxiToolbarEnabled.relayEnabled", true);
 pref("identity.fxaccounts.toolbar.pxiToolbarEnabled.vpnEnabled", true);
 
-// Check bundled omni JARs for corruption.
-pref("corroborator.enabled", true);
-
 // Toolbox preferences
 pref("devtools.toolbox.footer.height", 250);
 pref("devtools.toolbox.sidebar.width", 500);

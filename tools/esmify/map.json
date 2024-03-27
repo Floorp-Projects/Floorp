@@ -497,7 +497,6 @@
   "resource://gre/modules/ContentPrefStore.jsm": "toolkit/components/contentprefs/ContentPrefStore.jsm",
   "resource://gre/modules/ContentPrefUtils.jsm": "toolkit/components/contentprefs/ContentPrefUtils.jsm",
   "resource://gre/modules/ContextualIdentityService.jsm": "toolkit/components/contextualidentity/ContextualIdentityService.jsm",
-  "resource://gre/modules/Corroborate.jsm": "toolkit/components/corroborator/Corroborate.jsm",
   "resource://gre/modules/CoveragePing.jsm": "toolkit/components/telemetry/pings/CoveragePing.jsm",
   "resource://gre/modules/CrashManager.jsm": "toolkit/components/crashes/CrashManager.in.jsm",
   "resource://gre/modules/CrashMonitor.jsm": "toolkit/components/crashmonitor/CrashMonitor.jsm",
