@@ -22,6 +22,7 @@ namespace js {
 namespace jit {
 
 enum class InlinableNative : uint16_t;
+enum class TrampolineNative : uint16_t;
 
 }  // namespace jit
 
@@ -138,6 +139,7 @@ class JSJitInfo {
     Method,
     StaticMethod,
     InlinableNative,
+    TrampolineNative,
     IgnoresReturnValueNative,
     // Must be last
     OpTypeCount
@@ -227,6 +229,7 @@ class JSJitInfo {
   union {
     uint16_t protoID;
     js::jit::InlinableNative inlinableNative;
+    js::jit::TrampolineNative trampolineNative;
   };
 
   union {

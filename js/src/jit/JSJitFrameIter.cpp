@@ -383,6 +383,10 @@ void JSJitFrameIter::dump() const {
       fprintf(stderr, " Rectifier frame\n");
       fprintf(stderr, "  Caller frame ptr: %p\n", current()->callerFramePtr());
       break;
+    case FrameType::TrampolineNative:
+      fprintf(stderr, " TrampolineNative frame\n");
+      fprintf(stderr, "  Caller frame ptr: %p\n", current()->callerFramePtr());
+      break;
     case FrameType::IonICCall:
       fprintf(stderr, " Ion IC call\n");
       fprintf(stderr, "  Caller frame ptr: %p\n", current()->callerFramePtr());
@@ -707,47 +711,47 @@ void JSJitProfilingFrameIterator::moveToNextFrame(CommonFrameLayout* frame) {
    * |
    * ^--- WasmToJSJit <---- (other wasm frames, not handled by this iterator)
    * |
-   * ^--- Arguments Rectifier
-   * |    ^
-   * |    |
-   * |    ^--- Ion
-   * |    |
-   * |    ^--- Baseline Stub <---- Baseline
-   * |    |
-   * |    ^--- WasmToJSJit <--- (other wasm frames)
-   * |    |
-   * |    ^--- Entry Frame (CppToJSJit)
+   * ^--- Entry Frame (BaselineInterpreter) (unwrapped)
+   * |
+   * ^--- Arguments Rectifier (unwrapped)
+   * |
+   * ^--- Trampoline Native (unwrapped)
    * |
    * ^--- Entry Frame (CppToJSJit)
-   * |
-   * ^--- Entry Frame (BaselineInterpreter)
-   * |    ^
-   * |    |
-   * |    ^--- Ion
-   * |    |
-   * |    ^--- Baseline Stub <---- Baseline
-   * |    |
-   * |    ^--- WasmToJSJit <--- (other wasm frames)
-   * |    |
-   * |    ^--- Entry Frame (CppToJSJit)
-   * |    |
-   * |    ^--- Arguments Rectifier
    *
    * NOTE: Keep this in sync with JitRuntime::generateProfilerExitFrameTailStub!
    */
 
-  // Unwrap baseline interpreter entry frame.
-  if (frame->prevType() == FrameType::BaselineInterpreterEntry) {
-    frame = GetPreviousRawFrame<BaselineInterpreterEntryFrameLayout*>(frame);
-  }
+  while (true) {
+    // Unwrap baseline interpreter entry frame.
+    if (frame->prevType() == FrameType::BaselineInterpreterEntry) {
+      frame = GetPreviousRawFrame<BaselineInterpreterEntryFrameLayout*>(frame);
+      continue;
+    }
 
-  // Unwrap rectifier frames.
-  if (frame->prevType() == FrameType::Rectifier) {
-    frame = GetPreviousRawFrame<RectifierFrameLayout*>(frame);
-    MOZ_ASSERT(frame->prevType() == FrameType::IonJS ||
-               frame->prevType() == FrameType::BaselineStub ||
-               frame->prevType() == FrameType::WasmToJSJit ||
-               frame->prevType() == FrameType::CppToJSJit);
+    // Unwrap rectifier frames.
+    if (frame->prevType() == FrameType::Rectifier) {
+      frame = GetPreviousRawFrame<RectifierFrameLayout*>(frame);
+      MOZ_ASSERT(frame->prevType() == FrameType::IonJS ||
+                 frame->prevType() == FrameType::BaselineStub ||
+                 frame->prevType() == FrameType::TrampolineNative ||
+                 frame->prevType() == FrameType::WasmToJSJit ||
+                 frame->prevType() == FrameType::CppToJSJit);
+      continue;
+    }
+
+    // Unwrap TrampolineNative frames.
+    if (frame->prevType() == FrameType::TrampolineNative) {
+      frame = GetPreviousRawFrame<TrampolineNativeFrameLayout*>(frame);
+      MOZ_ASSERT(frame->prevType() == FrameType::IonJS ||
+                 frame->prevType() == FrameType::BaselineStub ||
+                 frame->prevType() == FrameType::Rectifier ||
+                 frame->prevType() == FrameType::WasmToJSJit ||
+                 frame->prevType() == FrameType::CppToJSJit);
+      continue;
+    }
+
+    break;
   }
 
   FrameType prevType = frame->prevType();
@@ -791,6 +795,7 @@ void JSJitProfilingFrameIterator::moveToNextFrame(CommonFrameLayout* frame) {
 
     case FrameType::BaselineInterpreterEntry:
     case FrameType::Rectifier:
+    case FrameType::TrampolineNative:
     case FrameType::Exit:
     case FrameType::Bailout:
     case FrameType::JSJitToWasm:

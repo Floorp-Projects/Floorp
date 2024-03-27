@@ -149,7 +149,8 @@ function selfHostingFunctions() {
   let content = tryReadFile("js/src/vm/SelfHosting.cpp").replace(/\s+/g, "");
 
   let globals = Object.create(null);
-  for (let m of content.matchAll(/(?:JS_FN|JS_INLINABLE_FN)\("(\w+)"/g)) {
+  let re = /(?:JS_FN|JS_INLINABLE_FN|JS_TRAMPOLINE_FN)\("(\w+)"/g;
+  for (let m of content.matchAll(re)) {
     globals[m[1]] = "readonly";
   }
   return globals;

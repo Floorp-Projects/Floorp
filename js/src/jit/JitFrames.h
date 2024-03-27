@@ -299,6 +299,17 @@ class RectifierFrameLayout : public JitFrameLayout {
   static inline size_t Size() { return sizeof(RectifierFrameLayout); }
 };
 
+class TrampolineNativeFrameLayout : public JitFrameLayout {
+ public:
+  static inline size_t Size() { return sizeof(TrampolineNativeFrameLayout); }
+
+  template <typename T>
+  T* getFrameData() {
+    uint8_t* raw = reinterpret_cast<uint8_t*>(this) - sizeof(T);
+    return reinterpret_cast<T*>(raw);
+  }
+};
+
 class WasmToJSJitFrameLayout : public JitFrameLayout {
  public:
   static inline size_t Size() { return sizeof(WasmToJSJitFrameLayout); }

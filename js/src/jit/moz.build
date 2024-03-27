@@ -87,6 +87,7 @@ UNIFIED_SOURCES += [
     "Sink.cpp",
     "Snapshots.cpp",
     "Trampoline.cpp",
+    "TrampolineNatives.cpp",
     "TrialInlining.cpp",
     "TypePolicy.cpp",
     "ValueNumbering.cpp",
