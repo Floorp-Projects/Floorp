@@ -18,6 +18,7 @@
 #include "mozilla/Result.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/VideoEncoderBinding.h"
+#include "mozilla/dom/AudioEncoderBinding.h"
 #include "mozilla/dom/WorkerRef.h"
 #include "mozilla/media/MediaUtils.h"
 #include "nsStringFwd.h"
@@ -186,7 +187,9 @@ class EncoderTemplate : public DOMEventTargetHelper {
   Result<Ok, nsresult> CloseInternal(const nsresult& aResult);
 
   MOZ_CAN_RUN_SCRIPT void ReportError(const nsresult& aResult);
-  MOZ_CAN_RUN_SCRIPT void OutputEncodedData(
+  MOZ_CAN_RUN_SCRIPT void OutputEncodedVideoData(
+      nsTArray<RefPtr<MediaRawData>>&& aData);
+  MOZ_CAN_RUN_SCRIPT void OutputEncodedAudioData(
       nsTArray<RefPtr<MediaRawData>>&& aData);
 
   class ErrorRunnable;
