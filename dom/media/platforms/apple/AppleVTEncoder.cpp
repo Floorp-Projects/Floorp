@@ -590,7 +590,9 @@ AppleVTEncoder::ProcessReconfigure(
           mConfig.mUsage = aChange.get();
           return SetRealtime(mSession, aChange.get() == Usage::Realtime);
         },
-        [&](const ContentHintChange& aChange) -> bool { return false; });
+        [&](const ContentHintChange& aChange) -> bool { return false; },
+        [&](const SampleRateChange& aChange) -> bool { return false; },
+        [&](const NumberOfChannelsChange& aChange) -> bool { return false; });
   };
   using P = MediaDataEncoder::ReconfigurationPromise;
   if (ok) {

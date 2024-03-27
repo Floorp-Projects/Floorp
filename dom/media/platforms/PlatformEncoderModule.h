@@ -12,7 +12,6 @@
 #  include "MediaInfo.h"
 #  include "MediaResult.h"
 #  include "VPXDecoder.h"
-#  include "mozilla/Attributes.h"
 #  include "mozilla/Maybe.h"
 #  include "mozilla/MozPromise.h"
 #  include "mozilla/RefPtr.h"
@@ -229,26 +228,17 @@ class MediaDataEncoder {
   virtual ~MediaDataEncoder() = default;
 };
 
+// A class that holds the intial configuration of an encoder. For simplicity,
+// this is used for both audio and video encoding. Members irrelevant to the
+// instance are to be ignored, and are set at their default value.
 class EncoderConfig final {
  public:
   using CodecSpecific =
       Variant<H264Specific, OpusSpecific, VP8Specific, VP9Specific>;
 
-  EncoderConfig(const EncoderConfig& aConfig)
-      : mCodec(aConfig.mCodec),
-        mSize(aConfig.mSize),
-        mUsage(aConfig.mUsage),
-        mHardwarePreference(aConfig.mHardwarePreference),
-        mPixelFormat(aConfig.mPixelFormat),
-        mSourcePixelFormat(aConfig.mSourcePixelFormat),
-        mScalabilityMode(aConfig.mScalabilityMode),
-        mFramerate(aConfig.mFramerate),
-        mKeyframeInterval(aConfig.mKeyframeInterval),
-        mBitrate(aConfig.mBitrate),
-        mBitrateMode(aConfig.mBitrateMode),
-        mCodecSpecific(aConfig.mCodecSpecific) {}
+  EncoderConfig(const EncoderConfig& aConfig) = default;
 
-  template <typename... Ts>
+  // This constructor is used for video encoders
   EncoderConfig(const CodecType aCodecType, gfx::IntSize aSize,
                 const MediaDataEncoder::Usage aUsage,
                 const MediaDataEncoder::PixelFormat aPixelFormat,
@@ -261,6 +251,8 @@ class EncoderConfig final {
                 const Maybe<CodecSpecific>& aCodecSpecific)
       : mCodec(aCodecType),
         mSize(aSize),
+        mBitrateMode(aBitrateMode),
+        mBitrate(aBitrate),
         mUsage(aUsage),
         mHardwarePreference(aHardwarePreference),
         mPixelFormat(aPixelFormat),
@@ -268,9 +260,23 @@ class EncoderConfig final {
         mScalabilityMode(aScalabilityMode),
         mFramerate(aFramerate),
         mKeyframeInterval(aKeyframeInterval),
-        mBitrate(aBitrate),
+        mCodecSpecific(aCodecSpecific) {
+    MOZ_ASSERT(IsVideo());
+  }
+
+  // This constructor is used for audio encoders
+  EncoderConfig(const CodecType aCodecType, uint32_t aNumberOfChannels,
+                const MediaDataEncoder::BitrateMode aBitrateMode,
+                uint32_t aSampleRate, uint32_t aBitrate,
+                const Maybe<CodecSpecific>& aCodecSpecific)
+      : mCodec(aCodecType),
         mBitrateMode(aBitrateMode),
-        mCodecSpecific(aCodecSpecific) {}
+        mBitrate(aBitrate),
+        mNumberOfChannels(aNumberOfChannels),
+        mSampleRate(aSampleRate),
+        mCodecSpecific(aCodecSpecific) {
+    MOZ_ASSERT(IsAudio());
+  }
 
   static CodecType CodecTypeForMime(const nsACString& aMimeType) {
     if (MP4Decoder::IsH264(aMimeType)) {
@@ -294,18 +300,22 @@ class EncoderConfig final {
     return mCodec > CodecType::_BeginAudio_ && mCodec < CodecType::_EndAudio_;
   }
 
-  CodecType mCodec;
-  gfx::IntSize mSize;
-  MediaDataEncoder::Usage mUsage;
-  MediaDataEncoder::HardwarePreference mHardwarePreference;
-  MediaDataEncoder::PixelFormat mPixelFormat;
-  MediaDataEncoder::PixelFormat mSourcePixelFormat;
-  MediaDataEncoder::ScalabilityMode mScalabilityMode;
+  CodecType mCodec{};
+  gfx::IntSize mSize{};
+  MediaDataEncoder::BitrateMode mBitrateMode{};
+  uint32_t mBitrate{};
+  MediaDataEncoder::Usage mUsage{};
+  // Video-only
+  MediaDataEncoder::HardwarePreference mHardwarePreference{};
+  MediaDataEncoder::PixelFormat mPixelFormat{};
+  MediaDataEncoder::PixelFormat mSourcePixelFormat{};
+  MediaDataEncoder::ScalabilityMode mScalabilityMode{};
   uint8_t mFramerate{};
   size_t mKeyframeInterval{};
-  uint32_t mBitrate{};
-  MediaDataEncoder::BitrateMode mBitrateMode{};
-  Maybe<CodecSpecific> mCodecSpecific;
+  // Audio-only
+  uint32_t mNumberOfChannels{};
+  uint32_t mSampleRate{};
+  Maybe<CodecSpecific> mCodecSpecific{};
 };
 
 // Wrap a type to make it unique. This allows using ergonomically in the Variant
@@ -350,11 +360,17 @@ using UsageChange =
 // encoder uses generic settings.
 using ContentHintChange =
     StrongTypedef<Maybe<nsString>, struct ContentHintTypeType>;
+// If present, the new sample-rate of the audio
+using SampleRateChange = StrongTypedef<uint32_t, struct SampleRateChangeType>;
+// If present, the new sample-rate of the audio
+using NumberOfChannelsChange =
+    StrongTypedef<uint32_t, struct NumberOfChannelsChangeType>;
 
 // A change to a parameter of an encoder instance.
 using EncoderConfigurationItem =
     Variant<DimensionsChange, DisplayDimensionsChange, BitrateModeChange,
-            BitrateChange, FramerateChange, UsageChange, ContentHintChange>;
+            BitrateChange, FramerateChange, UsageChange, ContentHintChange,
+            SampleRateChange, NumberOfChannelsChange>;
 
 // A list of changes to an encoder configuration, that _might_ be able to change
 // on the fly. Not all encoder modules can adjust their configuration on the
