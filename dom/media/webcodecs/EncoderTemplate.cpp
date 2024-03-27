@@ -468,8 +468,13 @@ void EncoderTemplate<AudioEncoderTraits>::OutputEncodedAudioData(
       metadataInfo.Append(", new decoder config");
     }
 
-    LOG("EncoderTemplate:: output callback (ts: % " PRId64 ")%s",
-        encodedData->Timestamp(), metadataInfo.get());
+    LOG("EncoderTemplate:: output callback (ts: % " PRId64
+        ", duration: % " PRId64 ", %zu bytes, %" PRIu64 " so far)",
+        encodedData->Timestamp(),
+        !encodedData->GetDuration().IsNull()
+            ? encodedData->GetDuration().Value()
+            : 0,
+        data->Size(), mPacketsOutput++);
     cb->Call((EncodedAudioChunk&)(*encodedData), metadata);
   }
 }

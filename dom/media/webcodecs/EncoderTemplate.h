@@ -286,6 +286,7 @@ class EncoderTemplate : public DOMEventTargetHelper {
   // TODO: Use StrongWorkerRef instead if this is always used in the same
   // thread?
   RefPtr<ThreadSafeWorkerRef> mWorkerRef;
+  uint64_t mPacketsOutput = 0;
 };
 
 }  // namespace mozilla::dom
