@@ -1474,6 +1474,12 @@ bool ServoStyleSet::HasNthOfStateDependency(const Element& aElement,
                                                 aState.GetInternalValue());
 }
 
+bool ServoStyleSet::HasNthOfCustomStateDependency(const Element& aElement,
+                                                  nsAtom* aState) const {
+  return Servo_StyleSet_HasNthOfCustomStateDependency(mRawData.get(), &aElement,
+                                                      aState);
+}
+
 void ServoStyleSet::RestyleSiblingsForNthOf(const Element& aElement,
                                             uint32_t aFlags) const {
   Servo_StyleSet_RestyleSiblingsForNthOf(&aElement, aFlags);

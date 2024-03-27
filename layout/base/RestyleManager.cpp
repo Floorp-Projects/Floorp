@@ -3470,15 +3470,25 @@ void RestyleManager::CustomStatesWillChange(Element& aElement) {
 }
 
 void RestyleManager::CustomStateChanged(Element& aElement, nsAtom* aState) {
-  const auto* parentNode = aElement.GetParentNode();
-  const auto parentFlags = parentNode->GetSelectorFlags();
-  if (parentFlags & NodeSelectorFlags::HasSlowSelectorNthOf) {
-    RestyleSiblingsForNthOf(&aElement, parentFlags);
-  }
-
   ServoStyleSet& styleSet = *StyleSet();
+  MaybeRestyleForNthOfCustomState(styleSet, aElement, aState);
   styleSet.MaybeInvalidateRelativeSelectorCustomStateDependency(
       aElement, aState, Snapshots());
+}
+
+void RestyleManager::MaybeRestyleForNthOfCustomState(ServoStyleSet& aStyleSet,
+                                                     Element& aChild,
+                                                     nsAtom* aState) {
+  const auto* parentNode = aChild.GetParentNode();
+  MOZ_ASSERT(parentNode);
+  const auto parentFlags = parentNode->GetSelectorFlags();
+  if (!(parentFlags & NodeSelectorFlags::HasSlowSelectorNthOf)) {
+    return;
+  }
+
+  if (aStyleSet.HasNthOfCustomStateDependency(aChild, aState)) {
+    RestyleSiblingsForNthOf(&aChild, parentFlags);
+  }
 }
 
 void RestyleManager::MaybeRestyleForNthOfState(ServoStyleSet& aStyleSet,

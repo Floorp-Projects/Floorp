@@ -558,6 +558,12 @@ class ServoStyleSet {
   bool HasNthOfStateDependency(const dom::Element&, dom::ElementState) const;
 
   /**
+   * Returns true if a change in Custom State on an element might require
+   * us to restyle the element's siblings.
+   */
+  bool HasNthOfCustomStateDependency(const dom::Element&, nsAtom*) const;
+
+  /**
    * Restyle this element's siblings in order to propagate any potential change
    * in :nth-child(of) styling.
    */

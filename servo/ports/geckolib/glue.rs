@@ -7541,6 +7541,21 @@ pub extern "C" fn Servo_StyleSet_HasStateDependency(
 }
 
 #[no_mangle]
+pub extern "C" fn Servo_StyleSet_HasNthOfCustomStateDependency(
+    raw_data: &PerDocumentStyleData,
+    element: &RawGeckoElement,
+    state: *mut nsAtom,
+) -> bool {
+    let element = GeckoElement(element);
+    let data = raw_data.borrow();
+    data.stylist
+        .any_applicable_rule_data(element, |data| unsafe {
+            AtomIdent::with(state, |atom| data.has_nth_of_custom_state_dependency(atom))
+        })
+}
+
+
+#[no_mangle]
 pub extern "C" fn Servo_StyleSet_HasNthOfStateDependency(
     raw_data: &PerDocumentStyleData,
     element: &RawGeckoElement,
