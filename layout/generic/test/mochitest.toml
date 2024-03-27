@@ -267,28 +267,40 @@ support-files = [
 ["test_selection_changes_with_middle_mouse_button.html"]
 
 ["test_selection_cross_shadow_boundary_1_backward_click.html"]
+skip-if = ["release_or_beta"] # requires Selection.getComposedRanges to be enabled (Nightly only)
 
 ["test_selection_cross_shadow_boundary_1_backward_drag.html"]
+skip-if = ["release_or_beta"] # requires Selection.getComposedRanges to be enabled (Nightly only)
 
 ["test_selection_cross_shadow_boundary_1_forward_click.html"]
+skip-if = ["release_or_beta"] # requires Selection.getComposedRanges to be enabled (Nightly only)
 
 ["test_selection_cross_shadow_boundary_1_forward_drag.html"]
+skip-if = ["release_or_beta"] # requires Selection.getComposedRanges to be enabled (Nightly only)
 
 ["test_selection_cross_shadow_boundary_2_backward_click.html"]
+skip-if = ["release_or_beta"] # requires Selection.getComposedRanges to be enabled (Nightly only)
 
 ["test_selection_cross_shadow_boundary_2_backward_drag.html"]
+skip-if = ["release_or_beta"] # requires Selection.getComposedRanges to be enabled (Nightly only)
 
 ["test_selection_cross_shadow_boundary_2_forward_click.html"]
+skip-if = ["release_or_beta"] # requires Selection.getComposedRanges to be enabled (Nightly only)
 
 ["test_selection_cross_shadow_boundary_2_forward_drag.html"]
+skip-if = ["release_or_beta"] # requires Selection.getComposedRanges to be enabled (Nightly only)
 
 ["test_selection_cross_shadow_boundary_multi_ranges_forward_drag.html"]
+skip-if = ["release_or_beta"] # requires Selection.getComposedRanges to be enabled (Nightly only)
 
 ["test_selection_cross_shadow_boundary_multi_ranges_forward_click.html"]
+skip-if = ["release_or_beta"] # requires Selection.getComposedRanges to be enabled (Nightly only)
 
 ["test_selection_cross_shadow_boundary_multi_ranges_backward_drag.html"]
+skip-if = ["release_or_beta"] # requires Selection.getComposedRanges to be enabled (Nightly only)
 
 ["test_selection_cross_shadow_boundary_multi_ranges_backward_click.html"]
+skip-if = ["release_or_beta"] # requires Selection.getComposedRanges to be enabled (Nightly only)
 
 ["test_selection_doubleclick.html"]
 
