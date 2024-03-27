@@ -9,7 +9,9 @@
 
 #include "mozilla/Maybe.h"
 #include "mozilla/dom/EncodedVideoChunk.h"
+#include "mozilla/dom/MediaRecorderBinding.h"
 #include "mozilla/dom/VideoEncoderBinding.h"
+#include "mozilla/dom/AudioEncoderBinding.h"
 #include "mozilla/dom/VideoFrame.h"
 #include "mozilla/dom/VideoFrameBinding.h"
 #include "nsStringFwd.h"
@@ -23,6 +25,66 @@ class TrackInfo;
 class MediaByteBuffer;
 
 namespace dom {
+
+class AudioEncoderConfigInternal {
+ public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AudioEncoderConfigInternal);
+  explicit AudioEncoderConfigInternal(const AudioEncoderConfig& aConfig);
+  explicit AudioEncoderConfigInternal(
+      const AudioEncoderConfigInternal& aConfig);
+
+  nsString ToString() const;
+
+  bool Equals(const AudioEncoderConfigInternal& aOther) const;
+  bool CanReconfigure(const AudioEncoderConfigInternal& aOther) const;
+
+  // Returns an EncoderConfig struct with as many filled members as
+  // possible.
+  // TODO: handle codec specific things
+  EncoderConfig ToEncoderConfig() const;
+
+  already_AddRefed<WebCodecsConfigurationChangeList> Diff(
+      const AudioEncoderConfigInternal& aOther) const;
+
+  nsString mCodec;
+  Maybe<uint32_t> mSampleRate;
+  Maybe<uint32_t> mNumberOfChannels;
+  Maybe<uint32_t> mBitrate;
+  BitrateMode mBitrateMode;
+
+ private:
+  AudioEncoderConfigInternal(const nsAString& aCodec,
+                             Maybe<uint32_t> aSampleRate,
+                             Maybe<uint32_t> aNumberOfChannels,
+                             Maybe<uint32_t> aBitRate,
+                             BitrateMode aBitratemode);
+  ~AudioEncoderConfigInternal() = default;
+};
+
+class AudioEncoderTraits {
+ public:
+  static constexpr nsLiteralCString Name = "AudioEncoder"_ns;
+  using ConfigType = AudioEncoderConfig;
+  using ConfigTypeInternal = AudioEncoderConfigInternal;
+  using InputType = dom::AudioData;
+  using OutputConfigType = mozilla::dom::AudioDecoderConfigInternal;
+  using InputTypeInternal = mozilla::AudioData;
+  using OutputType = EncodedAudioChunk;
+  using OutputCallbackType = EncodedAudioChunkOutputCallback;
+  using MetadataType = EncodedAudioChunkMetadata;
+
+  static bool IsSupported(const ConfigTypeInternal& aConfig);
+  static Result<UniquePtr<TrackInfo>, nsresult> CreateTrackInfo(
+      const ConfigTypeInternal& aConfig);
+  static bool Validate(const ConfigType& aConfig, nsCString& aErrorMessage);
+  static RefPtr<ConfigTypeInternal> CreateConfigInternal(
+      const ConfigType& aConfig);
+  static RefPtr<InputTypeInternal> CreateInputInternal(
+      const InputType& aInput, const VideoEncoderEncodeOptions& aOptions);
+  static already_AddRefed<OutputConfigType> EncoderConfigToDecoderConfig(
+      nsIGlobalObject* aGlobal, const RefPtr<MediaRawData>& aData,
+      const ConfigTypeInternal& mOutputConfig);
+};
 
 class VideoEncoderConfigInternal {
  public:
@@ -92,9 +154,8 @@ class VideoEncoderTraits {
   static RefPtr<InputTypeInternal> CreateInputInternal(
       const InputType& aInput, const VideoEncoderEncodeOptions& aOptions);
   static already_AddRefed<OutputConfigType> EncoderConfigToDecoderConfig(
-    nsIGlobalObject* aGlobal,
-    const RefPtr<MediaRawData>& aData,
-    const ConfigTypeInternal& mOutputConfig);
+      nsIGlobalObject* aGlobal, const RefPtr<MediaRawData>& aData,
+      const ConfigTypeInternal& mOutputConfig);
 };
 
 }  // namespace dom

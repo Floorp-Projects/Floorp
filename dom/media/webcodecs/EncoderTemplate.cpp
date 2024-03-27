@@ -300,8 +300,8 @@ void EncoderTemplate<EncoderType>::ReportError(const nsresult& aResult) {
   cb->Call(*e);
 }
 
-template <typename EncoderType>
-void EncoderTemplate<EncoderType>::OutputEncodedData(
+template <>
+void EncoderTemplate<VideoEncoderTraits>::OutputEncodedVideoData(
     nsTArray<RefPtr<MediaRawData>>&& aData) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == CodecState::Configured);
@@ -315,7 +315,7 @@ void EncoderTemplate<EncoderType>::OutputEncodedData(
       jsapi.Init(GetParentObject());  // TODO: check returned value?
   JSContext* cx = jsapi.cx();
 
-  RefPtr<typename EncoderType::OutputCallbackType> cb(mOutputCallback);
+  RefPtr<EncodedVideoChunkOutputCallback> cb(mOutputCallback);
   for (auto& data : aData) {
     // It's possible to have reset() called in between this task having been
     // dispatched, and running -- no output callback should happen when that's
@@ -325,10 +325,10 @@ void EncoderTemplate<EncoderType>::OutputEncodedData(
     if (!mActiveConfig) {
       return;
     }
-    RefPtr<typename EncoderType::OutputType> encodedData =
+    RefPtr<EncodedVideoChunk> encodedData =
         EncodedDataToOutputType(GetParentObject(), data);
 
-    RootedDictionary<typename EncoderType::MetadataType> metadata(cx);
+    RootedDictionary<EncodedVideoChunkMetadata> metadata(cx);
     if (mOutputNewDecoderConfig) {
       VideoDecoderConfigInternal decoderConfigInternal =
           EncoderConfigToDecoderConfig(GetParentObject(), data, *mActiveConfig);
@@ -409,7 +409,68 @@ void EncoderTemplate<EncoderType>::OutputEncodedData(
 
     LOG("EncoderTemplate:: output callback (ts: % " PRId64 ")%s",
         encodedData->Timestamp(), metadataInfo.get());
-    cb->Call((typename EncoderType::OutputType&)(*encodedData), metadata);
+    cb->Call((EncodedVideoChunk&)(*encodedData), metadata);
+  }
+}
+
+template <>
+void EncoderTemplate<AudioEncoderTraits>::OutputEncodedAudioData(
+    nsTArray<RefPtr<MediaRawData>>&& aData) {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mState == CodecState::Configured);
+  MOZ_ASSERT(mActiveConfig);
+
+  // Get JSContext for RootedDictionary.
+  // The EncoderType::MetadataType, AudioDecoderConfig
+  // below are rooted to work around the JS hazard issues.
+  AutoJSAPI jsapi;
+  DebugOnly<bool> ok =
+      jsapi.Init(GetParentObject());  // TODO: check returned value?
+  JSContext* cx = jsapi.cx();
+
+  RefPtr<EncodedAudioChunkOutputCallback> cb(mOutputCallback);
+  for (auto& data : aData) {
+    // It's possible to have reset() called in between this task having been
+    // dispatched, and running -- no output callback should happen when that's
+    // the case.
+    // This is imprecise in the spec, but discussed in
+    // https://github.com/w3c/webcodecs/issues/755 and agreed upon.
+    if (!mActiveConfig) {
+      return;
+    }
+    RefPtr<EncodedAudioChunk> encodedData =
+        EncodedDataToOutputType(GetParentObject(), data);
+
+    RootedDictionary<EncodedAudioChunkMetadata> metadata(cx);
+    if (mOutputNewDecoderConfig) {
+      AudioDecoderConfigInternal decoderConfigInternal =
+          this->EncoderConfigToDecoderConfig(GetParentObject(), data,
+                                             *mActiveConfig);
+
+      // Convert VideoDecoderConfigInternal to VideoDecoderConfig
+      RootedDictionary<AudioDecoderConfig> decoderConfig(cx);
+      decoderConfig.mCodec = decoderConfigInternal.mCodec;
+      decoderConfig.mNumberOfChannels = decoderConfigInternal.mNumberOfChannels;
+      decoderConfig.mSampleRate = decoderConfigInternal.mSampleRate;
+
+      CopyExtradataToDescriptionIfNeeded(GetParentObject(),
+                                         decoderConfigInternal, decoderConfig);
+
+      metadata.mDecoderConfig.Construct(std::move(decoderConfig));
+      mOutputNewDecoderConfig = false;
+      LOGE("New config passed to output callback: %s",
+           NS_ConvertUTF16toUTF8(decoderConfigInternal.ToString()).get());
+    }
+
+    nsAutoCString metadataInfo;
+
+    if (metadata.mDecoderConfig.WasPassed()) {
+      metadataInfo.Append(", new decoder config");
+    }
+
+    LOG("EncoderTemplate:: output callback (ts: % " PRId64 ")%s",
+        encodedData->Timestamp(), metadataInfo.get());
+    cb->Call((EncodedAudioChunk&)(*encodedData), metadata);
   }
 }
 
@@ -480,7 +541,11 @@ class EncoderTemplate<EncoderType>::OutputRunnable final
     LOGV("%s %p, yields %s-result for EncoderAgent #%zu",
          EncoderType::Name.get(), mEncoder.get(), mLabel.get(), mConfigureId);
     RefPtr<Self> d = std::move(mEncoder);
-    d->OutputEncodedData(std::move(mData));
+    if constexpr (std::is_same_v<EncoderType, VideoEncoderTraits>) {
+      d->OutputEncodedVideoData(std::move(mData));
+    } else {
+      d->OutputEncodedAudioData(std::move(mData));
+    }
 
     return NS_OK;
   }
@@ -1220,6 +1285,7 @@ void EncoderTemplate<EncoderType>::DestroyEncoderAgentIfAny() {
 }
 
 template class EncoderTemplate<VideoEncoderTraits>;
+template class EncoderTemplate<AudioEncoderTraits>;
 
 #undef LOG
 #undef LOGW
