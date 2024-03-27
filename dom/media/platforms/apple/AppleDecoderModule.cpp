@@ -34,6 +34,7 @@ using media::MediaCodec;
 
 bool AppleDecoderModule::sInitialized = false;
 bool AppleDecoderModule::sCanUseVP9Decoder = false;
+bool AppleDecoderModule::sCanUseAV1Decoder = false;
 
 /* static */
 void AppleDecoderModule::Init() {
@@ -45,6 +46,7 @@ void AppleDecoderModule::Init() {
   if (RegisterSupplementalVP9Decoder()) {
     sCanUseVP9Decoder = CanCreateHWDecoder(MediaCodec::VP9);
   }
+  sCanUseAV1Decoder = CanCreateHWDecoder(MediaCodec::AV1);
 }
 
 nsresult AppleDecoderModule::Startup() {
@@ -83,7 +85,8 @@ DecodeSupportSet AppleDecoderModule::SupportsMimeType(
     const nsACString& aMimeType, DecoderDoctorDiagnostics* aDiagnostics) const {
   bool checkSupport = aMimeType.EqualsLiteral("audio/mp4a-latm") ||
                       MP4Decoder::IsH264(aMimeType) ||
-                      VPXDecoder::IsVP9(aMimeType);
+                      VPXDecoder::IsVP9(aMimeType) ||
+                      AOMDecoder::IsAV1(aMimeType);
   DecodeSupportSet supportType{};
 
   if (checkSupport) {
@@ -142,6 +145,15 @@ bool AppleDecoderModule::IsVideoSupported(
   if (MP4Decoder::IsH264(aConfig.mMimeType)) {
     return true;
   }
+  if (AOMDecoder::IsAV1(aConfig.mMimeType)) {
+    if (!sCanUseAV1Decoder ||
+        aOptions.contains(
+            CreateDecoderParams::Option::HardwareDecoderNotAllowed)) {
+      return false;
+    }
+    return true;
+  }
+
   if (!VPXDecoder::IsVP9(aConfig.mMimeType) || !sCanUseVP9Decoder ||
       aOptions.contains(
           CreateDecoderParams::Option::HardwareDecoderNotAllowed)) {
@@ -187,6 +199,20 @@ bool AppleDecoderModule::CanCreateHWDecoder(MediaCodec aCodec) {
     return false;
   }
   switch (aCodec) {
+    case MediaCodec::AV1: {
+      info.mMimeType = "video/av1";
+
+      // Build up a fake CBox
+      bool hasSeqHdr;
+      AOMDecoder::AV1SequenceInfo seqInfo;
+      AOMDecoder::OperatingPoint op;
+      seqInfo.mOperatingPoints.AppendElement(op);
+      seqInfo.mImage = {1920, 1080};
+      AOMDecoder::WriteAV1CBox(seqInfo, info.mExtraData, hasSeqHdr);
+
+      vtReportsSupport = VTIsHardwareDecodeSupported(kCMVideoCodecType_AV1);
+      break;
+    }
     case MediaCodec::VP9:
       info.mMimeType = "video/vp9";
       VPXDecoder::GetVPCCBox(info.mExtraData, VPXDecoder::VPXStreamInfo());
