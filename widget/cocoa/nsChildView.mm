@@ -473,7 +473,9 @@ void* nsChildView::GetNativeData(uint32_t aDataType) {
 #pragma mark -
 
 void nsChildView::SuppressAnimation(bool aSuppress) {
-  GetAppWindowWidget()->SuppressAnimation(aSuppress);
+  if (nsCocoaWindow* widget = GetAppWindowWidget()) {
+    widget->SuppressAnimation(aSuppress);
+  }
 }
 
 bool nsChildView::IsVisible() const {
@@ -483,7 +485,8 @@ bool nsChildView::IsVisible() const {
     return mVisible;
   }
 
-  if (!GetAppWindowWidget()->IsVisible()) {
+  nsCocoaWindow* widget = GetAppWindowWidget();
+  if (!widget || !widget->IsVisible()) {
     return false;
   }
 
@@ -1070,10 +1073,8 @@ nsresult nsChildView::SynthesizeNativeTouchpadDoubleTap(
 
 bool nsChildView::SendEventToNativeMenuSystem(NSEvent* aEvent) {
   bool handled = false;
-  nsCocoaWindow* widget = GetAppWindowWidget();
-  if (widget) {
-    nsMenuBarX* mb = widget->GetMenuBar();
-    if (mb) {
+  if (nsCocoaWindow* widget = GetAppWindowWidget()) {
+    if (nsMenuBarX* mb = widget->GetMenuBar()) {
       // Check if main menu wants to handle the event.
       handled = mb->PerformKeyEquivalent(aEvent);
     }
@@ -1157,10 +1158,8 @@ nsresult nsChildView::ActivateNativeMenuItemAt(const nsAString& indexString) {
 nsresult nsChildView::ForceUpdateNativeMenuAt(const nsAString& indexString) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
-  nsCocoaWindow* widget = GetAppWindowWidget();
-  if (widget) {
-    nsMenuBarX* mb = widget->GetMenuBar();
-    if (mb) {
+  if (nsCocoaWindow* widget = GetAppWindowWidget()) {
+    if (nsMenuBarX* mb = widget->GetMenuBar()) {
       if (indexString.IsEmpty())
         mb->ForceNativeMenuReload();
       else
