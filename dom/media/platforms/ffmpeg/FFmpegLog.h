@@ -19,6 +19,9 @@ static mozilla::LazyLogModule sFFmpegAudioLog("FFmpegAudio");
 #  define FFMPEGV_LOG(str, ...)                        \
     MOZ_LOG(sFFmpegVideoLog, mozilla::LogLevel::Debug, \
             ("FFVPX: " str, ##__VA_ARGS__))
+#  define FFMPEGA_LOG(str, ...)                        \
+    MOZ_LOG(sFFmpegAudioLog, mozilla::LogLevel::Debug, \
+            ("FFVPX: " str, ##__VA_ARGS__))
 #  define FFMPEGP_LOG(str, ...) \
     MOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, ("FFVPX: " str, ##__VA_ARGS__))
 #else
@@ -27,6 +30,9 @@ static mozilla::LazyLogModule sFFmpegAudioLog("FFmpegAudio");
             mozilla::LogLevel::Debug, ("FFMPEG: " str, ##__VA_ARGS__))
 #  define FFMPEGV_LOG(str, ...)                        \
     MOZ_LOG(sFFmpegVideoLog, mozilla::LogLevel::Debug, \
+            ("FFMPEG: " str, ##__VA_ARGS__))
+#  define FFMPEGA_LOG(str, ...)                        \
+    MOZ_LOG(sFFmpegAudioLog, mozilla::LogLevel::Debug, \
             ("FFMPEG: " str, ##__VA_ARGS__))
 #  define FFMPEGP_LOG(str, ...) \
     MOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, ("FFMPEG: " str, ##__VA_ARGS__))

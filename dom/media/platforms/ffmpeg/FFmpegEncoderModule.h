@@ -30,6 +30,10 @@ class FFmpegEncoderModule final : public PlatformEncoderModule {
       const EncoderConfig& aConfig,
       const RefPtr<TaskQueue>& aTaskQueue) const override;
 
+  already_AddRefed<MediaDataEncoder> CreateAudioEncoder(
+      const EncoderConfig& aConfig,
+      const RefPtr<TaskQueue>& aTaskQueue) const override;
+
  protected:
   explicit FFmpegEncoderModule(FFmpegLibWrapper* aLib) : mLib(aLib) {
     MOZ_ASSERT(mLib);
