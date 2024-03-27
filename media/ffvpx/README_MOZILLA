@@ -158,6 +158,8 @@ There are going to be a lot of changes in terms of symbols exported. Adjust
 `libavutil/avutil.symbols` and `libavcodec/avcodec.symbols` by removing and
 adding symbols until the build passes.
 
-Finally, apply the patch:
+Finally, apply the patches:
 - no-unicode-stdio.patch to avoid passing the infity symbol in unicode to an
   stdio.h function, that causes bug 1879740 issue on Windows.
+- opusenc-dtx.patch to allow enabling DTX in the opus encoder.
+
