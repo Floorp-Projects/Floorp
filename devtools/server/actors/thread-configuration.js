@@ -20,6 +20,8 @@ const {
 // List of options supported by this thread configuration actor.
 /* eslint sort-keys: "error" */
 const SUPPORTED_OPTIONS = {
+  // List of all active breakpoints.
+  breakpoints: true,
   // Disable pausing on caught exceptions.
   ignoreCaughtExceptions: true,
   // Log the event break points.

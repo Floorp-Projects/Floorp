@@ -32,7 +32,7 @@ class ThreadConfigurationCommand {
       // the thread configuration actor.
       const filteredConfiguration = Object.fromEntries(
         Object.entries(configuration).filter(
-          ([key]) => !["breakpoints", "eventBreakpoints"].includes(key)
+          ([key]) => !["eventBreakpoints"].includes(key)
         )
       );
 

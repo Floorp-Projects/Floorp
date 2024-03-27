@@ -18,7 +18,43 @@ const asyncStore = asyncStoreHelper("debugger", {
 });
 exports.asyncStore = asyncStore;
 
-exports.getThreadOptions = async function () {
+/**
+ * Generates the breakpoints object passed as a thread configuration to the server.
+ *
+ * @return {Object}
+ *         Dictionary of breakpoints objects passed to the server with location and options attributes.
+ */
+async function getBreakpointConfiguration() {
+  // `sanitizeBreakpoints` will remove buggy breakpoints with invalid properties
+  const breakpoints = sanitizeBreakpoints(await asyncStore.pendingBreakpoints);
+
+  for (const key in breakpoints) {
+    const breakpoint = breakpoints[key];
+
+    // The async store contains frontend data, we have to map that to the server expectation.
+    // The server doesn't know about disabled breakpoints, they are only managed by the frontend.
+    if (breakpoint.disabled) {
+      delete breakpoints[key];
+      continue;
+    }
+
+    // The server doesn't know about original location, so we have to pass only the generated one.
+    // Otherwise it only supports the `options` attribute for log/conditional breakpoints.
+    breakpoints[key] = {
+      location: breakpoint.generatedLocation,
+      options: breakpoint.options,
+    };
+  }
+  return breakpoints;
+}
+
+/**
+ * Generates the Thread Configuration object to be handed over to the backend.
+ *
+ * @return {Object}
+ *         Configuration object for the thread actor.
+ */
+exports.getThreadConfiguration = async function () {
   return {
     shouldPauseOnDebuggerStatement: Services.prefs.getBoolPref(
       "devtools.debugger.pause-on-debugger-statement"
@@ -43,7 +79,9 @@ exports.getThreadOptions = async function () {
     ),
     // This option is always true. See Bug 1654590 for removal.
     observeAsmJS: true,
-    breakpoints: sanitizeBreakpoints(await asyncStore.pendingBreakpoints),
+
+    breakpoints: await getBreakpointConfiguration(),
+
     // XXX: `event-listener-breakpoints` is a copy of the event-listeners state
     // of the debugger panel. The `active` property is therefore linked to
     // the `active` property of the state.
