@@ -910,12 +910,15 @@ static inline uintptr_t ReadAllocation(const JSJitFrameIter& frame,
 
 static void TraceThisAndArguments(JSTracer* trc, const JSJitFrameIter& frame,
                                   JitFrameLayout* layout) {
-  // Trace |this| and any extra actual arguments for an Ion frame. Tracing
-  // of formal arguments is taken care of by the frame's safepoint/snapshot,
-  // except when the script might have lazy arguments or rest, in which case
-  // we trace them as well. We also have to trace formals if we have a
-  // LazyLink frame or an InterpreterStub frame or a special JSJit to wasm
-  // frame (since wasm doesn't use snapshots).
+  // Trace |this| and the actual and formal arguments of a JIT frame.
+  //
+  // Tracing of formal arguments of an Ion frame is taken care of by the frame's
+  // safepoint/snapshot. We skip tracing formal arguments if the script doesn't
+  // use |arguments| or rest, because the register allocator can spill values to
+  // argument slots in this case.
+  //
+  // For other frames such as LazyLink frames or InterpreterStub frames, we
+  // always trace all actual and formal arguments.
 
   if (!CalleeTokenIsFunction(layout->calleeToken())) {
     return;
@@ -927,8 +930,7 @@ static void TraceThisAndArguments(JSTracer* trc, const JSJitFrameIter& frame,
   size_t numArgs = std::max(layout->numActualArgs(), numFormals);
   size_t firstArg = 0;
 
-  if (frame.type() != FrameType::JSJitToWasm &&
-      !frame.isExitFrameLayout<CalledFromJitExitFrameLayout>() &&
+  if (frame.isIonScripted() &&
       !fun->nonLazyScript()->mayReadFrameArgsDirectly()) {
     firstArg = numFormals;
   }
@@ -936,17 +938,17 @@ static void TraceThisAndArguments(JSTracer* trc, const JSJitFrameIter& frame,
   Value* argv = layout->thisAndActualArgs();
 
   // Trace |this|.
-  TraceRoot(trc, argv, "ion-thisv");
+  TraceRoot(trc, argv, "jit-thisv");
 
   // Trace arguments. Note + 1 for thisv.
   for (size_t i = firstArg; i < numArgs; i++) {
-    TraceRoot(trc, &argv[i + 1], "ion-argv");
+    TraceRoot(trc, &argv[i + 1], "jit-argv");
   }
 
   // Always trace the new.target from the frame. It's not in the snapshots.
   // +1 to pass |this|
   if (CalleeTokenIsConstructing(layout->calleeToken())) {
-    TraceRoot(trc, &argv[1 + numArgs], "ion-newTarget");
+    TraceRoot(trc, &argv[1 + numArgs], "jit-newTarget");
   }
 }
 
