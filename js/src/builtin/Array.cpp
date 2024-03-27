@@ -2028,17 +2028,10 @@ static bool FillWithUndefined(JSContext* cx, HandleObject obj, uint32_t start,
   return true;
 }
 
-static bool ArrayNativeSortImpl(JSContext* cx, Handle<JSObject*> obj,
-                                Handle<Value> fval,
-                                ComparatorMatchResult comp) {
-  uint64_t length;
-  if (!GetLengthPropertyInlined(cx, obj, &length)) {
-    return false;
-  }
-  if (length < 2) {
-    /* [] and [a] remain unchanged when sorted. */
-    return true;
-  }
+static bool ArraySortWithoutComparator(JSContext* cx, Handle<JSObject*> obj,
+                                       uint64_t length,
+                                       ComparatorMatchResult comp) {
+  MOZ_ASSERT(length > 1);
 
   if (length > UINT32_MAX) {
     ReportAllocationOverflow(cx);
@@ -2217,7 +2210,7 @@ void ArraySortData::init(JSObject* obj, JSObject* comparator, ValueVector&& vec,
 
 // This function handles sorting without a comparator function (or with a
 // trivial comparator function that we can pattern match) by calling
-// ArrayNativeSortImpl.
+// ArraySortWithoutComparator.
 //
 // If there's a non-trivial comparator function, it initializes the
 // ArraySortData struct for ArraySortData::sortWithComparator. This function
@@ -2244,6 +2237,19 @@ static MOZ_ALWAYS_INLINE bool ArraySortPrologue(JSContext* cx,
     return false;
   }
 
+  // Step 3.
+  uint64_t length;
+  if (MOZ_UNLIKELY(!GetLengthPropertyInlined(cx, obj, &length))) {
+    return false;
+  }
+
+  // Arrays with less than two elements remain unchanged when sorted.
+  if (length <= 1) {
+    d->setReturnValue(obj);
+    *done = true;
+    return true;
+  }
+
   // Use a fast path if there's no comparator or if the comparator is a function
   // that we can pattern match.
   do {
@@ -2258,26 +2264,13 @@ static MOZ_ALWAYS_INLINE bool ArraySortPrologue(JSContext* cx,
         break;
       }
     }
-    if (!ArrayNativeSortImpl(cx, obj, comparefn, comp)) {
+    if (!ArraySortWithoutComparator(cx, obj, length, comp)) {
       return false;
     }
     d->setReturnValue(obj);
     *done = true;
     return true;
   } while (false);
-
-  // Step 3.
-  uint64_t length;
-  if (MOZ_UNLIKELY(!GetLengthPropertyInlined(cx, obj, &length))) {
-    return false;
-  }
-
-  // Arrays with less than two elements remain unchanged when sorted.
-  if (length <= 1) {
-    d->setReturnValue(obj);
-    *done = true;
-    return true;
-  }
 
   // Ensure length * 2 (used below) doesn't overflow UINT32_MAX.
   if (MOZ_UNLIKELY(length > UINT32_MAX / 2)) {
