@@ -60,6 +60,7 @@
     "testmc:lint": "npm run lint",
     "testmc:build": "npm run bundle:admin",
     "testmc:unit": "karma start karma.mc.config.js",
+    "testmc:import": "npm run import-rollouts",
     "tddmc": "karma start karma.mc.config.js --tdd",
     "debugcoverage": "open logs/coverage/lcov-report/index.html",
     "lint": "npm-run-all lint:*",

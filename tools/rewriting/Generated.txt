@@ -8,6 +8,8 @@ browser/components/asrouter/content/asrouter-admin.bundle.js
 browser/components/asrouter/logs/
 browser/components/asrouter/content-src/schemas/BackgroundTaskMessagingExperiment.schema.json
 browser/components/asrouter/content-src/schemas/MessagingExperiment.schema.json
+browser/components/asrouter/tests/InflightAssetsMessageProvider.sys.mjs
+browser/components/asrouter/tests/NimbusRolloutMessageProvider.sys.mjs
 browser/components/newtab/logs/
 browser/components/newtab/node_modules/
 browser/components/storybook/storybook-static/

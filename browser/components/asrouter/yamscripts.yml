@@ -19,6 +19,7 @@ scripts:
     lint: =>lint
     build: =>bundle:admin
     unit: karma start karma.mc.config.js
+    import: =>import-rollouts
 
   tddmc: karma start karma.mc.config.js --tdd
 

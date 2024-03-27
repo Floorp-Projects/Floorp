@@ -12,6 +12,427 @@ export const NimbusRolloutMessageProvider = {
   getMessages() {
     return [
       {
+        // Nimbus slug: device-migration-q4-spotlights-remaining-population-esr:treatment (message 1 of 3)
+        // Recipe: https://experimenter.services.mozilla.com/nimbus/device-migration-q4-spotlights-remaining-population-esr/summary#treatment
+        id: "Q4_DEVICE_MIGRATION_BACKUP_SPOTLIGHT",
+        groups: ["eco"],
+        content: {
+          id: "Q4_DEVICE_MIGRATION_BACKUP_SPOTLIGHT",
+          modal: "tab",
+          screens: [
+            {
+              id: "Q4_DEVICE_MIGRATION_BACKUP_SPOTLIGHT_BACKUP",
+              content: {
+                logo: {
+                  height: "152px",
+                  imageURL:
+                    "https://firefox-settings-attachments.cdn.mozilla.net/main-workspace/ms-images/c92a41e4-82cf-4ad5-8480-04a138bfb3cd.png",
+                },
+                title: {
+                  fontSize: "24px",
+                  string_id: "device-migration-fxa-spotlight-heavy-user-header",
+                  letterSpacing: 0,
+                },
+                subtitle: {
+                  fontSize: "15px",
+                  string_id: "device-migration-fxa-spotlight-heavy-user-body",
+                  lineHeight: "1.4",
+                  marginBlock: "8px 20px",
+                  letterSpacing: 0,
+                  paddingInline: "20px",
+                },
+                dismiss_button: {
+                  action: {
+                    navigate: true,
+                  },
+                },
+                primary_button: {
+                  label: {
+                    string_id:
+                      "device-migration-fxa-spotlight-heavy-user-primary-button",
+                    paddingBlock: "4px",
+                    paddingInline: "16px",
+                  },
+                  action: {
+                    data: {
+                      args: "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/switching-devices?utm_source=spotlight-default&utm_medium=firefox-desktop&utm_campaign=migration&utm_content=dont-forget-to-backup&entrypoint=device-migration-spotlight-experiment-v2",
+                      where: "tabshifted",
+                    },
+                    type: "OPEN_URL",
+                    navigate: true,
+                  },
+                },
+              },
+            },
+          ],
+          backdrop: "transparent",
+          template: "multistage",
+          transitions: true,
+        },
+        trigger: {
+          id: "defaultBrowserCheck",
+        },
+        template: "spotlight",
+        frequency: {
+          lifetime: 1,
+        },
+        targeting:
+          "source == 'startup' && !willShowDefaultPrompt && 'browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features'|preferenceValue && !usesFirefoxSync && !hasActiveEnterprisePolicies && userMonthlyActivity[userMonthlyActivity|length - 2][1]|date >= currentDate|date - (28 * 24 * 60 * 60 * 1000) && (((currentDate|date - profileAgeCreated|date) / 86400000 >= 168) || totalBookmarksCount >= 35)",
+      },
+      {
+        // Nimbus slug: device-migration-q4-spotlights-remaining-population-esr:treatment (message 2 of 3)
+        // Recipe: https://experimenter.services.mozilla.com/nimbus/device-migration-q4-spotlights-remaining-population-esr/summary#treatment
+        id: "Q4_DEVICE_MIGRATION_BACKUP_SPOTLIGHT",
+        groups: ["eco"],
+        content: {
+          id: "Q4_DEVICE_MIGRATION_BACKUP_SPOTLIGHT",
+          modal: "tab",
+          screens: [
+            {
+              id: "Q4_DEVICE_MIGRATION_BACKUP_SPOTLIGHT_PEACE",
+              content: {
+                logo: {
+                  height: "133px",
+                  imageURL:
+                    "https://firefox-settings-attachments.cdn.mozilla.net/main-workspace/ms-images/4a56d3ed-98c8-4a33-b853-b2cf7646efd8.png",
+                  marginBlock: "22px -10px",
+                },
+                title: {
+                  fontSize: "24px",
+                  string_id:
+                    "device-migration-fxa-spotlight-older-device-header",
+                  letterSpacing: 0,
+                },
+                subtitle: {
+                  fontSize: "15px",
+                  string_id: "device-migration-fxa-spotlight-older-device-body",
+                  lineHeight: "1.4",
+                  marginBlock: "8px 20px",
+                  letterSpacing: 0,
+                  paddingInline: "40px",
+                },
+                dismiss_button: {
+                  action: {
+                    navigate: true,
+                  },
+                },
+                primary_button: {
+                  label: {
+                    string_id:
+                      "device-migration-fxa-spotlight-older-device-primary-button",
+                    marginBlock: "0 22px",
+                    paddingBlock: "4px",
+                    paddingInline: "16px",
+                  },
+                  action: {
+                    data: {
+                      args: "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/switching-devices?utm_source=spotlight-default&utm_medium=firefox-desktop&utm_campaign=migration&utm_content=peace-of-mind&entrypoint=device-migration-spotlight-experiment-v2",
+                      where: "tabshifted",
+                    },
+                    type: "OPEN_URL",
+                    navigate: true,
+                  },
+                },
+              },
+            },
+          ],
+          backdrop: "transparent",
+          template: "multistage",
+          transitions: true,
+        },
+        trigger: {
+          id: "defaultBrowserCheck",
+        },
+        template: "spotlight",
+        frequency: {
+          lifetime: 1,
+        },
+        targeting:
+          "source == 'startup' && !willShowDefaultPrompt && 'browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features'|preferenceValue && !usesFirefoxSync && !hasActiveEnterprisePolicies && userMonthlyActivity[userMonthlyActivity|length - 2][1]|date >= currentDate|date - (28 * 24 * 60 * 60 * 1000) && !(((currentDate|date - profileAgeCreated|date) / 86400000 >= 168) || totalBookmarksCount >= 35) && os.isWindows && os.windowsVersion >= 6.1 && os.windowsBuildNumber < 22000",
+      },
+      {
+        // Nimbus slug: device-migration-q4-spotlights-remaining-population-esr:treatment (message 3 of 3)
+        // Recipe: https://experimenter.services.mozilla.com/nimbus/device-migration-q4-spotlights-remaining-population-esr/summary#treatment
+        id: "Q4_DEVICE_MIGRATION_BACKUP_SPOTLIGHT",
+        groups: ["eco"],
+        content: {
+          id: "Q4_DEVICE_MIGRATION_BACKUP_SPOTLIGHT",
+          modal: "tab",
+          screens: [
+            {
+              id: "Q4_DEVICE_MIGRATION_BACKUP_SPOTLIGHT_NEW_DEVICE",
+              content: {
+                logo: {
+                  height: "149px",
+                  imageURL:
+                    "https://firefox-settings-attachments.cdn.mozilla.net/main-workspace/ms-images/a43cd9cc-e8b2-477c-92f2-345557370de1.svg",
+                },
+                title: {
+                  fontSize: "24px",
+                  string_id:
+                    "device-migration-fxa-spotlight-getting-new-device-header-2",
+                  letterSpacing: 0,
+                },
+                subtitle: {
+                  fontSize: "15px",
+                  string_id:
+                    "device-migration-fxa-spotlight-getting-new-device-body-2",
+                  lineHeight: "1.4",
+                  marginBlock: "8px 20px",
+                  letterSpacing: 0,
+                  paddingInline: "40px",
+                },
+                dismiss_button: {
+                  action: {
+                    navigate: true,
+                  },
+                },
+                primary_button: {
+                  label: {
+                    string_id:
+                      "device-migration-fxa-spotlight-getting-new-device-primary-button",
+                    paddingBlock: "4px",
+                    paddingInline: "16px",
+                  },
+                  action: {
+                    data: {
+                      args: "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/switching-devices?utm_source=spotlight-default&utm_medium=firefox-desktop&utm_campaign=migration&utm_content=new-device-in-your-future&entrypoint=device-migration-spotlight-experiment-v2",
+                      where: "tabshifted",
+                    },
+                    type: "OPEN_URL",
+                    navigate: true,
+                  },
+                },
+              },
+            },
+          ],
+          backdrop: "transparent",
+          template: "multistage",
+          transitions: true,
+        },
+        trigger: {
+          id: "defaultBrowserCheck",
+        },
+        template: "spotlight",
+        frequency: {
+          lifetime: 1,
+        },
+        targeting:
+          "source == 'startup' && !willShowDefaultPrompt && 'browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features'|preferenceValue && !usesFirefoxSync && !hasActiveEnterprisePolicies && userMonthlyActivity[userMonthlyActivity|length - 2][1]|date >= currentDate|date - (28 * 24 * 60 * 60 * 1000) && !(((currentDate|date - profileAgeCreated|date) / 86400000 >= 168) || totalBookmarksCount >= 35) && !(os.isWindows && os.windowsVersion >= 6.1 && os.windowsBuildNumber < 22000)",
+      },
+      {
+        // Nimbus slug: device-migration-q4-spotlights-remaining-population:treatment (message 1 of 3)
+        // Version range: 122+
+        // Recipe: https://experimenter.services.mozilla.com/nimbus/device-migration-q4-spotlights-remaining-population/summary#treatment
+        id: "Q4_DEVICE_MIGRATION_BACKUP_SPOTLIGHT",
+        groups: ["eco"],
+        content: {
+          id: "Q4_DEVICE_MIGRATION_BACKUP_SPOTLIGHT",
+          modal: "tab",
+          screens: [
+            {
+              id: "Q4_DEVICE_MIGRATION_BACKUP_SPOTLIGHT_BACKUP",
+              content: {
+                logo: {
+                  height: "152px",
+                  imageURL:
+                    "https://firefox-settings-attachments.cdn.mozilla.net/main-workspace/ms-images/c92a41e4-82cf-4ad5-8480-04a138bfb3cd.png",
+                },
+                title: {
+                  fontSize: "24px",
+                  string_id: "device-migration-fxa-spotlight-heavy-user-header",
+                  letterSpacing: 0,
+                },
+                subtitle: {
+                  fontSize: "15px",
+                  string_id: "device-migration-fxa-spotlight-heavy-user-body",
+                  lineHeight: "1.4",
+                  marginBlock: "8px 20px",
+                  letterSpacing: 0,
+                  paddingInline: "20px",
+                },
+                dismiss_button: {
+                  action: {
+                    navigate: true,
+                  },
+                },
+                primary_button: {
+                  label: {
+                    string_id:
+                      "device-migration-fxa-spotlight-heavy-user-primary-button",
+                    paddingBlock: "4px",
+                    paddingInline: "16px",
+                  },
+                  action: {
+                    data: {
+                      args: "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/switching-devices?utm_source=spotlight-default&utm_medium=firefox-desktop&utm_campaign=migration&utm_content=dont-forget-to-backup&entrypoint=device-migration-spotlight-experiment-v2",
+                      where: "tabshifted",
+                    },
+                    type: "OPEN_URL",
+                    navigate: true,
+                  },
+                },
+              },
+            },
+          ],
+          backdrop: "transparent",
+          template: "multistage",
+          transitions: true,
+        },
+        trigger: {
+          id: "defaultBrowserCheck",
+        },
+        template: "spotlight",
+        frequency: {
+          lifetime: 1,
+        },
+        targeting:
+          "source == 'startup' && !willShowDefaultPrompt && 'browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features'|preferenceValue && !usesFirefoxSync && !hasActiveEnterprisePolicies && userMonthlyActivity[userMonthlyActivity|length - 2][1]|date >= currentDate|date - (28 * 24 * 60 * 60 * 1000) && (((currentDate|date - profileAgeCreated|date) / 86400000 >= 168) || totalBookmarksCount >= 35)",
+      },
+      {
+        // Nimbus slug: device-migration-q4-spotlights-remaining-population:treatment (message 2 of 3)
+        // Version range: 122+
+        // Recipe: https://experimenter.services.mozilla.com/nimbus/device-migration-q4-spotlights-remaining-population/summary#treatment
+        id: "Q4_DEVICE_MIGRATION_BACKUP_SPOTLIGHT",
+        groups: ["eco"],
+        content: {
+          id: "Q4_DEVICE_MIGRATION_BACKUP_SPOTLIGHT",
+          modal: "tab",
+          screens: [
+            {
+              id: "Q4_DEVICE_MIGRATION_BACKUP_SPOTLIGHT_PEACE",
+              content: {
+                logo: {
+                  height: "133px",
+                  imageURL:
+                    "https://firefox-settings-attachments.cdn.mozilla.net/main-workspace/ms-images/4a56d3ed-98c8-4a33-b853-b2cf7646efd8.png",
+                  marginBlock: "22px -10px",
+                },
+                title: {
+                  fontSize: "24px",
+                  string_id:
+                    "device-migration-fxa-spotlight-older-device-header",
+                  letterSpacing: 0,
+                },
+                subtitle: {
+                  fontSize: "15px",
+                  string_id: "device-migration-fxa-spotlight-older-device-body",
+                  lineHeight: "1.4",
+                  marginBlock: "8px 20px",
+                  letterSpacing: 0,
+                  paddingInline: "40px",
+                },
+                dismiss_button: {
+                  action: {
+                    navigate: true,
+                  },
+                },
+                primary_button: {
+                  label: {
+                    string_id:
+                      "device-migration-fxa-spotlight-older-device-primary-button",
+                    marginBlock: "0 22px",
+                    paddingBlock: "4px",
+                    paddingInline: "16px",
+                  },
+                  action: {
+                    data: {
+                      args: "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/switching-devices?utm_source=spotlight-default&utm_medium=firefox-desktop&utm_campaign=migration&utm_content=peace-of-mind&entrypoint=device-migration-spotlight-experiment-v2",
+                      where: "tabshifted",
+                    },
+                    type: "OPEN_URL",
+                    navigate: true,
+                  },
+                },
+              },
+            },
+          ],
+          backdrop: "transparent",
+          template: "multistage",
+          transitions: true,
+        },
+        trigger: {
+          id: "defaultBrowserCheck",
+        },
+        template: "spotlight",
+        frequency: {
+          lifetime: 1,
+        },
+        targeting:
+          "source == 'startup' && !willShowDefaultPrompt && 'browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features'|preferenceValue && !usesFirefoxSync && !hasActiveEnterprisePolicies && userMonthlyActivity[userMonthlyActivity|length - 2][1]|date >= currentDate|date - (28 * 24 * 60 * 60 * 1000) && !(((currentDate|date - profileAgeCreated|date) / 86400000 >= 168) || totalBookmarksCount >= 35) && os.isWindows && os.windowsVersion >= 6.1 && os.windowsBuildNumber < 22000",
+      },
+      {
+        // Nimbus slug: device-migration-q4-spotlights-remaining-population:treatment (message 3 of 3)
+        // Version range: 122+
+        // Recipe: https://experimenter.services.mozilla.com/nimbus/device-migration-q4-spotlights-remaining-population/summary#treatment
+        id: "Q4_DEVICE_MIGRATION_BACKUP_SPOTLIGHT",
+        groups: ["eco"],
+        content: {
+          id: "Q4_DEVICE_MIGRATION_BACKUP_SPOTLIGHT",
+          modal: "tab",
+          screens: [
+            {
+              id: "Q4_DEVICE_MIGRATION_BACKUP_SPOTLIGHT_NEW_DEVICE",
+              content: {
+                logo: {
+                  height: "149px",
+                  imageURL:
+                    "https://firefox-settings-attachments.cdn.mozilla.net/main-workspace/ms-images/a43cd9cc-e8b2-477c-92f2-345557370de1.svg",
+                },
+                title: {
+                  fontSize: "24px",
+                  string_id:
+                    "device-migration-fxa-spotlight-getting-new-device-header-2",
+                  letterSpacing: 0,
+                },
+                subtitle: {
+                  fontSize: "15px",
+                  string_id:
+                    "device-migration-fxa-spotlight-getting-new-device-body-2",
+                  lineHeight: "1.4",
+                  marginBlock: "8px 20px",
+                  letterSpacing: 0,
+                  paddingInline: "40px",
+                },
+                dismiss_button: {
+                  action: {
+                    navigate: true,
+                  },
+                },
+                primary_button: {
+                  label: {
+                    string_id:
+                      "device-migration-fxa-spotlight-getting-new-device-primary-button",
+                    paddingBlock: "4px",
+                    paddingInline: "16px",
+                  },
+                  action: {
+                    data: {
+                      args: "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/switching-devices?utm_source=spotlight-default&utm_medium=firefox-desktop&utm_campaign=migration&utm_content=new-device-in-your-future&entrypoint=device-migration-spotlight-experiment-v2",
+                      where: "tabshifted",
+                    },
+                    type: "OPEN_URL",
+                    navigate: true,
+                  },
+                },
+              },
+            },
+          ],
+          backdrop: "transparent",
+          template: "multistage",
+          transitions: true,
+        },
+        trigger: {
+          id: "defaultBrowserCheck",
+        },
+        template: "spotlight",
+        frequency: {
+          lifetime: 1,
+        },
+        targeting:
+          "source == 'startup' && !willShowDefaultPrompt && 'browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features'|preferenceValue && !usesFirefoxSync && !hasActiveEnterprisePolicies && userMonthlyActivity[userMonthlyActivity|length - 2][1]|date >= currentDate|date - (28 * 24 * 60 * 60 * 1000) && !(((currentDate|date - profileAgeCreated|date) / 86400000 >= 168) || totalBookmarksCount >= 35) && !(os.isWindows && os.windowsVersion >= 6.1 && os.windowsBuildNumber < 22000)",
+      },
+      {
         // Nimbus slug: fox-doodle-set-to-default-early-day-user-de-fr-it-treatment-a-rollout:treatment-a
         // Version range: 116+
         // Recipe: https://experimenter.services.mozilla.com/nimbus/fox-doodle-set-to-default-early-day-user-de-fr-it-treatment-a-rollout/summary#treatment-a
