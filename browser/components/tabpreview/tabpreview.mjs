@@ -3,7 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { html } from "chrome://global/content/vendor/lit.all.mjs";
-import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
+import { MozPanelWrappedElement } from "./panel-wrapped-element.mjs";
+import { TabPreviewThumbnail } from "./tabpreview-thumbnail.mjs";
 
 var { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
@@ -20,20 +21,23 @@ const TAB_PREVIEW_USE_THUMBNAILS_PREF =
  * @fires TabPreview#previewshown
  * @fires TabPreview#previewThumbnailUpdated
  */
-export default class TabPreview extends MozLitElement {
+export default class TabPreview extends MozPanelWrappedElement {
   static properties = {
     tab: { type: Object },
 
-    _previewIsActive: { type: Boolean, state: true },
+    _previewsActive: { type: Boolean, state: true },
     _previewDelayTimeout: { type: Number, state: true },
     _previewDelayTimeoutActive: { type: Boolean, state: true },
-    _displayTitle: { type: String, state: true },
-    _displayURI: { type: String, state: true },
     _displayImg: { type: Object, state: true },
   };
 
   constructor() {
     super();
+    this.panelID = "tabpreviewpanel";
+    this.noautofocus = true;
+    this.norolluponanchor = true;
+    this.rolluponmousewheel = true;
+    this.consumeoutsideclicks = false;
     XPCOMUtils.defineLazyPreferenceGetter(
       this,
       "_prefPreviewDelay",
@@ -48,39 +52,6 @@ export default class TabPreview extends MozLitElement {
     this._previewDelayTimeoutActive = true;
   }
 
-  // render this inside a <panel>
-  createRenderRoot() {
-    if (!document.createXULElement) {
-      console.error(
-        "Unable to create panel: document.createXULElement is not available"
-      );
-      return super.createRenderRoot();
-    }
-    this.attachShadow({ mode: "open" });
-    this.panel = document.createXULElement("panel");
-    this.panel.setAttribute("id", "tabPreviewPanel");
-    this.panel.setAttribute("noautofocus", true);
-    this.panel.setAttribute("norolluponanchor", true);
-    this.panel.setAttribute("consumeoutsideclicks", "never");
-    this.panel.setAttribute("rolluponmousewheel", "true");
-    this.panel.setAttribute("level", "parent");
-    this.shadowRoot.append(this.panel);
-    return this.panel;
-  }
-
-  get previewCanShow() {
-    return this._previewIsActive && this.tab;
-  }
-
-  get thumbnailCanShow() {
-    return (
-      this.previewCanShow &&
-      this._prefDisplayThumbnail &&
-      !this.tab.selected &&
-      this._displayImg
-    );
-  }
-
   getPrettyURI(uri) {
     try {
       const url = new URL(uri);
@@ -91,35 +62,22 @@ export default class TabPreview extends MozLitElement {
   }
 
   handleEvent(e) {
-    switch (e.type) {
-      case "TabSelect": {
-        this.requestUpdate();
-        break;
-      }
-      case "popuphidden": {
-        this.previewHidden();
-        break;
-      }
+    if (e.type === "TabSelect") {
+      this.requestUpdate();
     }
   }
 
-  showPreview() {
-    this.panel.openPopup(this.tab, {
-      position: "bottomleft topleft",
-      y: -2,
-      isContextMenu: false,
-    });
-    window.addEventListener("TabSelect", this);
-    this.panel.addEventListener("popuphidden", this);
+  activate() {
+    this._previewsActive = true;
   }
 
-  hidePreview() {
-    this.panel.hidePopup();
+  deactivate() {
+    this._previewsActive = false;
+    this._previewDelayTimeoutActive = true;
   }
 
-  previewHidden() {
+  on_popuphidden() {
     window.removeEventListener("TabSelect", this);
-    this.panel.removeEventListener("popuphidden", this);
 
     /**
      * @event TabPreview#previewhidden
@@ -128,92 +86,55 @@ export default class TabPreview extends MozLitElement {
     this.dispatchEvent(new CustomEvent("previewhidden"));
   }
 
-  resetDelay() {
-    this._previewDelayTimeoutActive = true;
-  }
-
-  // compute values derived from tab element
-  willUpdate(changedProperties) {
-    if (!changedProperties.has("tab")) {
-      return;
-    }
-    if (!this.tab) {
-      this._displayTitle = "";
-      this._displayURI = "";
-      this._displayImg = null;
-      return;
-    }
-    this._displayTitle = this.tab.textLabel.textContent;
-    this._displayURI = this.getPrettyURI(
-      this.tab.linkedBrowser.currentURI.spec
+  on_popupshown() {
+    window.addEventListener("TabSelect", this);
+    this.dispatchEvent(
+      /**
+       * @event TabPreview#previewshown
+       * @type {CustomEvent}
+       * @property {object} detail
+       * @property {MozTabbrowserTab} detail.tab - the tab being previewed
+       */
+      new CustomEvent("previewshown", {
+        detail: { tab: this.tab },
+      })
     );
-    this._displayImg = null;
-    let { tab } = this;
-    window.tabPreviews.get(this.tab).then(el => {
-      if (this.tab == tab) {
-        this._displayImg = el;
-      }
-    });
   }
 
-  updated(changedProperties) {
-    if (changedProperties.has("tab")) {
-      // handle preview delay
-      clearTimeout(this._previewDelayTimeout);
-      if (!this.tab) {
-        this._previewIsActive = false;
-      } else {
-        this._previewDelayTimeout = setTimeout(
-          () => {
-            this._previewIsActive = true;
-            this._previewDelayTimeoutActive = false;
-          },
-          this._previewDelayTimeoutActive ? this._prefPreviewDelay : 0
-        );
-      }
+  get _displayTitle() {
+    if (!this.tab) {
+      return "";
     }
-    if (changedProperties.has("_previewIsActive")) {
-      if (!this._previewIsActive) {
-        this.hidePreview();
-      }
-    }
-    if (
-      (changedProperties.has("tab") ||
-        changedProperties.has("_previewIsActive")) &&
-      this.previewCanShow
-    ) {
-      this.updateComplete.then(() => {
-        if (this.panel.state == "open" || this.panel.state == "showing") {
-          this.panel.moveToAnchor(this.tab, "bottomleft topleft", 0, -2);
-        } else {
-          this.showPreview();
-        }
+    return this.tab.textLabel.textContent;
+  }
 
-        this.dispatchEvent(
-          /**
-           * @event TabPreview#previewshown
-           * @type {CustomEvent}
-           * @property {object} detail
-           * @property {MozTabbrowserTab} detail.tab - the tab being previewed
-           */
-          new CustomEvent("previewshown", {
-            detail: { tab: this.tab },
-          })
-        );
-      });
+  get _displayURI() {
+    if (!this.tab) {
+      return "";
     }
-    if (changedProperties.has("_displayImg")) {
-      this.updateComplete.then(() => {
-        /**
-         * fires when the thumbnail for a preview is loaded
-         * and added to the document.
-         *
-         * @event TabPreview#previewThumbnailUpdated
-         * @type {CustomEvent}
-         */
-        this.dispatchEvent(new CustomEvent("previewThumbnailUpdated"));
-      });
+    return this.getPrettyURI(this.tab.linkedBrowser.currentURI.spec);
+  }
+
+  willUpdate() {
+    if (this.tab && this._previewsActive) {
+      clearTimeout(this._previewDelayTimeout);
+
+      this._previewDelayTimeout = setTimeout(
+        () => {
+          this.panelAnchor = this.tab;
+          this.panelState = "open";
+          this._previewDelayTimeoutActive = false;
+        },
+        this._previewDelayTimeoutActive ? this._prefPreviewDelay : 0
+      );
+    } else {
+      clearTimeout(this._previewDelayTimeout);
+      this.panelState = "closed";
     }
+  }
+
+  get thumbnailContainer() {
+    return this.renderRoot.querySelector("tabpreview-thumbnail");
   }
 
   render() {
@@ -228,15 +149,33 @@ export default class TabPreview extends MozLitElement {
           <div class="tab-preview-title">${this._displayTitle}</div>
           <div class="tab-preview-uri">${this._displayURI}</div>
         </div>
-        ${this.thumbnailCanShow
-          ? html`
-              <div class="tab-preview-thumbnail-container">
-                ${this._displayImg}
-              </div>
-            `
+        ${this._prefDisplayThumbnail && this.tab && !this.tab.selected
+          ? html`<div class="tab-preview-thumbnail-container">
+              <tabpreview-thumbnail
+                .tab=${this.tab}
+                .onThumbnailUpdated=${thumbnail => {
+                  /**
+                   * fires when the thumbnail for a preview is loaded
+                   * and added to the document.
+                   *
+                   * @event TabPreview#previewThumbnailUpdated
+                   * @type {CustomEvent}
+                   */
+                  this.dispatchEvent(
+                    new CustomEvent("previewThumbnailUpdated", {
+                      detail: {
+                        thumbnail,
+                      },
+                    })
+                  );
+                }}
+              ></tabpreview-thumbnail>
+            </div>`
           : ""}
       </div>
     `;
   }
 }
+
+customElements.define("tabpreview-thumbnail", TabPreviewThumbnail);
 customElements.define("tab-preview", TabPreview);

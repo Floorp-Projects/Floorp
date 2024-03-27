@@ -62,6 +62,9 @@
       this._hiddenSoundPlayingTabs = new Set();
       this._allTabs = null;
       this._visibleTabs = null;
+      this._previewContainer = document.getElementById(
+        "tabbrowser-tab-preview"
+      );
 
       var tab = this.allTabs[0];
       tab.label = this.emptyTabTitle;
@@ -129,9 +132,10 @@
         this.tooltip = this._showCardPreviews ? null : "tabbrowser-tab-tooltip";
 
         // activate new tooltip behavior if pref is set
-        document
-          .getElementById("tabbrowser-tab-preview")
-          .toggleAttribute("hidden", !this._showCardPreviews);
+        this._previewContainer.toggleAttribute(
+          "hidden",
+          !this._showCardPreviews
+        );
       };
       XPCOMUtils.defineLazyPreferenceGetter(
         this,
@@ -190,20 +194,15 @@
 
     on_TabHoverStart(event) {
       if (this._showCardPreviews) {
-        const previewContainer = document.getElementById(
-          "tabbrowser-tab-preview"
-        );
-        previewContainer.tab = event.target;
+        this._previewContainer.tab = event.target;
+        this._previewContainer.activate();
       }
     }
 
     on_TabHoverEnd(event) {
       if (this._showCardPreviews) {
-        const previewContainer = document.getElementById(
-          "tabbrowser-tab-preview"
-        );
-        if (previewContainer.tab === event.target) {
-          previewContainer.tab = null;
+        if (this._previewContainer.tab === event.target) {
+          this._previewContainer.tab = null;
         }
       }
     }
@@ -451,6 +450,9 @@
         return;
       }
 
+      if (this._showCardPreviews) {
+        this._previewContainer.deactivate();
+      }
       this.startTabDrag(event, tab);
     }
 
@@ -1854,8 +1856,7 @@
           break;
         case "mouseleave":
           if (this._showCardPreviews) {
-            let preview = document.getElementById("tabbrowser-tab-preview");
-            preview.resetDelay();
+            this._previewContainer.deactivate();
           }
           break;
         default:
