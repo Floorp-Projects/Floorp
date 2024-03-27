@@ -17,29 +17,13 @@
 #include "mozilla/TaskQueue.h"
 #include "prsystem.h"
 #include "VideoUtils.h"
+#include "FFmpegUtils.h"
+
 #include "FFmpegLibs.h"
 
 namespace mozilla {
 
 StaticMutex FFmpegDataDecoder<LIBAV_VER>::sMutex;
-
-static bool IsVideoCodec(AVCodecID aCodecID) {
-  switch (aCodecID) {
-    case AV_CODEC_ID_H264:
-#if LIBAVCODEC_VERSION_MAJOR >= 54
-    case AV_CODEC_ID_VP8:
-#endif
-#if LIBAVCODEC_VERSION_MAJOR >= 55
-    case AV_CODEC_ID_VP9:
-#endif
-#if LIBAVCODEC_VERSION_MAJOR >= 59
-    case AV_CODEC_ID_AV1:
-#endif
-      return true;
-    default:
-      return false;
-  }
-}
 
 FFmpegDataDecoder<LIBAV_VER>::FFmpegDataDecoder(FFmpegLibWrapper* aLib,
                                                 AVCodecID aCodecID)

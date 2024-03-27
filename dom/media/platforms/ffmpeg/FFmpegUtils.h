@@ -26,6 +26,31 @@ constexpr size_t FFmpegErrorMaxStringSize = 64;
 
 nsCString MakeErrorString(const FFmpegLibWrapper* aLib, int aErrNum);
 
+template <typename T, typename F>
+void IterateZeroTerminated(const T& aList, F&& aLambda) {
+  for (size_t i = 0; aList[i] != 0; i++) {
+    aLambda(aList[i]);
+  }
+}
+
+inline bool IsVideoCodec(AVCodecID aCodecID) {
+  switch (aCodecID) {
+    case AV_CODEC_ID_H264:
+#if LIBAVCODEC_VERSION_MAJOR >= 54
+    case AV_CODEC_ID_VP8:
+#endif
+#if LIBAVCODEC_VERSION_MAJOR >= 55
+    case AV_CODEC_ID_VP9:
+#endif
+#if LIBAVCODEC_VERSION_MAJOR >= 59
+    case AV_CODEC_ID_AV1:
+#endif
+      return true;
+    default:
+      return false;
+  }
+}
+
 }  // namespace mozilla
 
 #endif  // DOM_MEDIA_PLATFORMS_FFMPEG_FFMPEGUTILS_H_
