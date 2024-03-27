@@ -412,7 +412,6 @@
           // _adjustAcItem() are unreusable.
           const UNREUSEABLE_STYLES = [
             "autofill-profile",
-            "autofill-insecureWarning",
             "action",
             "status",
             "generatedPassword",
@@ -439,9 +438,6 @@
           switch (style) {
             case "autofill-profile":
               options = { is: "autocomplete-profile-listitem" };
-              break;
-            case "autofill-insecureWarning":
-              options = { is: "autocomplete-creditcard-insecure-field" };
               break;
             case "action":
               options = { is: "autocomplete-action-richlistitem" };
