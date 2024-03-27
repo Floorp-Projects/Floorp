@@ -27,7 +27,7 @@ def set_build_schedules_optimization(config, tasks):
                 # These are not GeckoView builds, so are associated with Firefox.
                 schedules.append("firefox")
 
-        elif config.kind == "build-components":
+        elif config.kind in ("build-components", "build-samples-browser"):
             # These are Android components builds and can only impact Fenix or Focus.
             schedules = ["android", "fenix", "focus-android"]
 
