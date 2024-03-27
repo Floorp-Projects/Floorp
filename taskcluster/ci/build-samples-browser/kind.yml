@@ -41,7 +41,7 @@ job-defaults:
         platform: AC-android-all/opt
         tier: 1
         symbol: 'samples-browser(B)'
-    worker-type: b-linux-large-gcp
+    worker-type: b-linux-medium-gcp
     worker:
         chain-of-trust: true
         docker-image: {in-tree: android-components}
