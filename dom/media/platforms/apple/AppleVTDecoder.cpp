@@ -18,7 +18,6 @@
 #include "MacIOSurfaceImage.h"
 #include "MediaData.h"
 #include "VPXDecoder.h"
-#include "AOMDecoder.h"
 #include "VideoUtils.h"
 #include "gfxMacUtils.h"
 #include "mozilla/ArrayUtils.h"
@@ -56,7 +55,6 @@ AppleVTDecoder::AppleVTDecoder(const VideoInfo& aConfig,
       mColorDepth(aConfig.mColorDepth),
       mStreamType(MP4Decoder::IsH264(aConfig.mMimeType)  ? StreamType::H264
                   : VPXDecoder::IsVP9(aConfig.mMimeType) ? StreamType::VP9
-                  : AOMDecoder::IsAV1(aConfig.mMimeType) ? StreamType::AV1
                                                          : StreamType::Unknown),
       mTaskQueue(TaskQueue::Create(
           GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
@@ -91,10 +89,7 @@ AppleVTDecoder::AppleVTDecoder(const VideoInfo& aConfig,
   MOZ_ASSERT(mStreamType != StreamType::Unknown);
   // TODO: Verify aConfig.mime_type.
   LOG("Creating AppleVTDecoder for %dx%d %s video", mDisplayWidth,
-      mDisplayHeight,
-      mStreamType == StreamType::H264  ? "H.264"
-      : mStreamType == StreamType::VP9 ? "VP9"
-                                       : "AV1");
+      mDisplayHeight, mStreamType == StreamType::H264 ? "H.264" : "VP9");
 }
 
 AppleVTDecoder::~AppleVTDecoder() { MOZ_COUNT_DTOR(AppleVTDecoder); }
@@ -181,9 +176,6 @@ void AppleVTDecoder::ProcessDecode(MediaRawData* aSample) {
         break;
       case StreamType::VP9:
         flag |= MediaInfoFlag::VIDEO_VP9;
-        break;
-      case StreamType::AV1:
-        flag |= MediaInfoFlag::VIDEO_AV1;
         break;
       default:
         break;
@@ -385,8 +377,6 @@ nsCString AppleVTDecoder::GetCodecName() const {
       return "h264"_ns;
     case StreamType::VP9:
       return "vp9"_ns;
-    case StreamType::AV1:
-      return "av1"_ns;
     default:
       return "unknown"_ns;
   }
@@ -608,17 +598,13 @@ MediaResult AppleVTDecoder::InitializeSession() {
   OSStatus rv;
 
   AutoCFRelease<CFDictionaryRef> extensions = CreateDecoderExtensions();
-  CMVideoCodecType streamType;
-  if (mStreamType == StreamType::H264) {
-    streamType = kCMVideoCodecType_H264;
-  } else if (mStreamType == StreamType::VP9) {
-    streamType = CMVideoCodecType(AppleDecoderModule::kCMVideoCodecType_VP9);
-  } else {
-    streamType = kCMVideoCodecType_AV1;
-  }
 
   rv = CMVideoFormatDescriptionCreate(
-      kCFAllocatorDefault, streamType, AssertedCast<int32_t>(mPictureWidth),
+      kCFAllocatorDefault,
+      mStreamType == StreamType::H264
+          ? kCMVideoCodecType_H264
+          : CMVideoCodecType(AppleDecoderModule::kCMVideoCodecType_VP9),
+      AssertedCast<int32_t>(mPictureWidth),
       AssertedCast<int32_t>(mPictureHeight), extensions, &mFormat);
   if (rv != noErr) {
     return MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
@@ -640,7 +626,6 @@ MediaResult AppleVTDecoder::InitializeSession() {
                                    &cb, &mSession);
 
   if (rv != noErr) {
-    LOG("AppleVTDecoder: VTDecompressionSessionCreate failed: %d", rv);
     return MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                        RESULT_DETAIL("Couldn't create decompression session!"));
   }
@@ -671,10 +656,7 @@ CFDictionaryRef AppleVTDecoder::CreateDecoderExtensions() {
                    AssertedCast<CFIndex>(mExtraData->Length()));
 
   const void* atomsKey[1];
-  atomsKey[0] = mStreamType == StreamType::H264  ? CFSTR("avcC")
-                : mStreamType == StreamType::VP9 ? CFSTR("vpcC")
-                                                 : CFSTR("av1C");
-  ;
+  atomsKey[0] = mStreamType == StreamType::H264 ? CFSTR("avcC") : CFSTR("vpcC");
   const void* atomsValue[] = {data};
   static_assert(ArrayLength(atomsKey) == ArrayLength(atomsValue),
                 "Non matching keys/values array size");

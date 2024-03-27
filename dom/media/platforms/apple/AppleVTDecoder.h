@@ -111,7 +111,7 @@ class AppleVTDecoder final : public MediaDataDecoder,
   CFDictionaryRef CreateDecoderSpecification();
   CFDictionaryRef CreateDecoderExtensions();
 
-  enum class StreamType { Unknown, H264, VP9, AV1 };
+  enum class StreamType { Unknown, H264, VP9 };
   const StreamType mStreamType;
   const RefPtr<TaskQueue> mTaskQueue;
   const uint32_t mMaxRefFrames;
