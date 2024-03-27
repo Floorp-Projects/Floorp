@@ -1467,13 +1467,13 @@ class BasePreferences {
       prefs
     }) => {
       const options = Object.create(null);
-      for (const [name, defaultVal] of Object.entries(this.#browserDefaults)) {
+      for (const [name, val] of Object.entries(this.#browserDefaults)) {
         const prefVal = browserPrefs?.[name];
-        options[name] = typeof prefVal === typeof defaultVal ? prefVal : defaultVal;
+        options[name] = typeof prefVal === typeof val ? prefVal : val;
       }
-      for (const [name, defaultVal] of Object.entries(this.#defaults)) {
+      for (const [name, val] of Object.entries(this.#defaults)) {
         const prefVal = prefs?.[name];
-        options[name] = this.#prefs[name] = typeof prefVal === typeof defaultVal ? prefVal : defaultVal;
+        options[name] = this.#prefs[name] = typeof prefVal === typeof val ? prefVal : val;
       }
       AppOptions.setAll(options, true);
       window.addEventListener("updatedPreference", evt => {
@@ -1512,12 +1512,7 @@ class BasePreferences {
     throw new Error("Please use `about:config` to change preferences.");
   }
   async get(name) {
-    await this.#initializedPromise;
-    const defaultValue = this.#defaults[name];
-    if (defaultValue === undefined) {
-      throw new Error(`Get preference: "${name}" is undefined.`);
-    }
-    return this.#prefs[name] ?? defaultValue;
+    throw new Error("Not implemented: get");
   }
   get initializedPromise() {
     return this.#initializedPromise;
@@ -8505,7 +8500,7 @@ class PDFViewer {
   #scaleTimeoutId = null;
   #textLayerMode = TextLayerMode.ENABLE;
   constructor(options) {
-    const viewerVersion = "4.1.332";
+    const viewerVersion = "4.1.342";
     if (version !== viewerVersion) {
       throw new Error(`The API version "${version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -12636,8 +12631,8 @@ function webViewerReportTelemetry({
 
 
 
-const pdfjsVersion = "4.1.332";
-const pdfjsBuild = "3d7ea6076";
+const pdfjsVersion = "4.1.342";
+const pdfjsBuild = "e384df6f1";
 const AppConstants = null;
 window.PDFViewerApplication = PDFViewerApplication;
 window.PDFViewerApplicationConstants = AppConstants;
