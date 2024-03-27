@@ -23,6 +23,7 @@
 #  include "mozilla/gfx/Rect.h"
 #  include "nsString.h"
 #  include "nsTArray.h"
+#  include "EncoderConfig.h"
 
 namespace mozilla {
 
@@ -722,6 +723,9 @@ class MediaRawData final : public MediaData {
   // If it's true, the `mCrypto` should be copied into the remote data as well.
   // Currently this is only used for the media engine DRM playback.
   bool mShouldCopyCryptoToRemoteRawData = false;
+
+  // Config used to encode this packet.
+  UniquePtr<const EncoderConfig> mConfig;
 
   // It's only used when the remote decoder reconstructs the media raw data.
   CryptoSample& GetWritableCrypto() { return mCryptoInternal; }
