@@ -109,11 +109,10 @@ struct ConfigurationChangeToString {
     return nsPrintfCString("Framerate: %lfHz", aFramerateChange.get().value());
   }
   nsCString operator()(const BitrateModeChange& aBitrateModeChange) {
-    return nsPrintfCString(
-        "Bitrate mode: %s",
-        aBitrateModeChange.get() == BitrateMode::Constant
-            ? "Constant"
-            : "Variable");
+    return nsPrintfCString("Bitrate mode: %s",
+                           aBitrateModeChange.get() == BitrateMode::Constant
+                               ? "Constant"
+                               : "Variable");
   }
   nsCString operator()(const UsageChange& aUsageChange) {
     return nsPrintfCString(

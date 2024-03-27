@@ -18,8 +18,7 @@ namespace mozilla {
 FFmpegAudioEncoder<LIBAV_VER>::FFmpegAudioEncoder(
     const FFmpegLibWrapper* aLib, AVCodecID aCodecID,
     const RefPtr<TaskQueue>& aTaskQueue, const EncoderConfig& aConfig)
-    : FFmpegDataEncoder(aLib, aCodecID, aTaskQueue, aConfig)
-{}
+    : FFmpegDataEncoder(aLib, aCodecID, aTaskQueue, aConfig) {}
 
 nsCString FFmpegAudioEncoder<LIBAV_VER>::GetDescriptionName() const {
 #ifdef USING_MOZFFVPX
@@ -147,8 +146,8 @@ nsresult FFmpegAudioEncoder<LIBAV_VER>::InitSpecific() {
                 mCodecContext->priv_data, "packet_loss",
                 AssertedCast<int64_t>(specific.mPacketLossPerc), 0)) {
           FFMPEG_LOG("Error setting the packet loss percentage to %" PRIu64
-                      " on Opus encoder",
-                      specific.mPacketLossPerc);
+                     " on Opus encoder",
+                     specific.mPacketLossPerc);
           return NS_ERROR_FAILURE;
         }
         FFMPEG_LOGV("Packet loss set to %d%% in Opus encoder",
@@ -157,7 +156,7 @@ nsresult FFmpegAudioEncoder<LIBAV_VER>::InitSpecific() {
       if (specific.mUseInBandFEC) {
         if (mLib->av_opt_set(mCodecContext->priv_data, "fec", "on", 0)) {
           FFMPEG_LOG("Error %s FEC on Opus encoder",
-                      specific.mUseInBandFEC ? "enabling" : "disabling");
+                     specific.mUseInBandFEC ? "enabling" : "disabling");
           return NS_ERROR_FAILURE;
         }
         FFMPEG_LOGV("In-band FEC enabled for Opus encoder.");
@@ -165,7 +164,7 @@ nsresult FFmpegAudioEncoder<LIBAV_VER>::InitSpecific() {
       if (specific.mUseDTX) {
         if (mLib->av_opt_set(mCodecContext->priv_data, "dtx", "on", 0)) {
           FFMPEG_LOG("Error %s DTX on Opus encoder",
-                      specific.mUseDTX ? "enabling" : "disabling");
+                     specific.mUseDTX ? "enabling" : "disabling");
           return NS_ERROR_FAILURE;
         }
         // DTX packets are a TOC byte, and possibly one byte of length, packets
@@ -214,7 +213,7 @@ FFmpegAudioEncoder<LIBAV_VER>::EncodeOnePacket(Span<float> aSamples,
                                         &mCodecContext->ch_layout);
   if (rv < 0) {
     FFMPEG_LOG("channel layout copy error: %s",
-                MakeErrorString(mLib, rv).get());
+               MakeErrorString(mLib, rv).get());
     return Err(NS_ERROR_DOM_MEDIA_FATAL_ERR);
   }
 #  endif
@@ -240,15 +239,15 @@ FFmpegAudioEncoder<LIBAV_VER>::EncodeOnePacket(Span<float> aSamples,
 
   if (int ret = mLib->av_frame_get_buffer(mFrame, 16); ret < 0) {
     FFMPEG_LOG("failed to allocate frame data: %s",
-                MakeErrorString(mLib, ret).get());
+               MakeErrorString(mLib, ret).get());
     return Err(NS_ERROR_OUT_OF_MEMORY);
   }
 
   // Make sure AVFrame is writable.
   if (int ret = mLib->av_frame_make_writable(mFrame); ret < 0) {
     FFMPEG_LOG("failed to make frame writable: %s",
-                MakeErrorString(mLib, ret).get());
-    return Err( NS_ERROR_DOM_MEDIA_FATAL_ERR);
+               MakeErrorString(mLib, ret).get());
+    return Err(NS_ERROR_DOM_MEDIA_FATAL_ERR);
   }
 
   // The input is always in f32 interleaved for now
@@ -276,7 +275,7 @@ Result<MediaDataEncoder::EncodedData, nsresult> FFmpegAudioEncoder<
   RefPtr<const AudioData> sample(aSample->As<AudioData>());
 
   FFMPEG_LOG("Encoding %" PRIu32 " frames of audio at pts: %s",
-              sample->Frames(), sample->mTime.ToString().get());
+             sample->Frames(), sample->mTime.ToString().get());
 
   if ((!mResampler && sample->mRate != mConfig.mSampleRate) ||
       (mResampler &&
@@ -330,8 +329,7 @@ Result<MediaDataEncoder::EncodedData, nsresult> FFmpegAudioEncoder<
   EncodedData output;
   MediaResult rv = NS_OK;
 
-  mPacketizer->Input(audio.data(),
-                     audio.Length() / mConfig.mNumberOfChannels);
+  mPacketizer->Input(audio.data(), audio.Length() / mConfig.mNumberOfChannels);
 
   // Dequeue and encode each packet
   while (mPacketizer->PacketsAvailable() && rv.Code() == NS_OK) {
@@ -340,7 +338,7 @@ Result<MediaDataEncoder::EncodedData, nsresult> FFmpegAudioEncoder<
     media::TimeUnit pts = mPacketizer->Output(mTempBuffer.Elements());
     auto audio = Span(mTempBuffer.Elements(), mTempBuffer.Length());
     FFMPEG_LOG("Encoding %" PRIu32 " frames, pts: %s",
-                mPacketizer->PacketSize(), pts.ToString().get());
+               mPacketizer->PacketSize(), pts.ToString().get());
     auto encodeResult = EncodeOnePacket(audio, pts);
     if (encodeResult.isOk()) {
       output.AppendElements(std::move(encodeResult.unwrap()));
@@ -436,8 +434,8 @@ RefPtr<MediaRawData> FFmpegAudioEncoder<LIBAV_VER>::ToMediaRawData(
         data->Size(), data->mExtraData->Length());
   } else {
     FFMPEG_LOG("FFmpegAudioEncoder out: [%s,%s] (%zu bytes)",
-                data->mTime.ToString().get(), data->mDuration.ToString().get(),
-                data->Size());
+               data->mTime.ToString().get(), data->mDuration.ToString().get(),
+               data->Size());
   }
 
   return data;

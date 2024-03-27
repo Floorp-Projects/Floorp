@@ -70,4 +70,4 @@ class TimedPacketizer {
 
 }  // namespace mozilla
 
-#endif // DOM_MEDIA_TIMEPACKETIZER_H_
+#endif  // DOM_MEDIA_TIMEPACKETIZER_H_

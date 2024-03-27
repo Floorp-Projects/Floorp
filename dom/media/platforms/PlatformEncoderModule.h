@@ -169,8 +169,7 @@ using FramerateChange =
 using BitrateModeChange =
     StrongTypedef<BitrateMode, struct BitrateModeChangeType>;
 // The usage for the encoded stream, this influence latency, ordering, etc.
-using UsageChange =
-    StrongTypedef<Usage, struct UsageChangeType>;
+using UsageChange = StrongTypedef<Usage, struct UsageChangeType>;
 // If present, the expected content of the video frames (screen, movie, etc.).
 // The value the string can have isn't decided just yet. When absent, the
 // encoder uses generic settings.
