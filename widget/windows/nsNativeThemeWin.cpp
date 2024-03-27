@@ -484,6 +484,9 @@ mozilla::Maybe<nsUXThemeClass> nsNativeThemeWin::GetThemeClass(
     case StyleAppearance::Textfield:
     case StyleAppearance::Textarea:
       return Some(eUXEdit);
+    case StyleAppearance::Toolbox:
+      return Some(eUXRebar);
+    case StyleAppearance::Toolbar:
     case StyleAppearance::Toolbarbutton:
     case StyleAppearance::Separator:
       return Some(eUXToolbar);
@@ -713,6 +716,27 @@ nsresult nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame,
           aState = TS_HOVER;
         else
           aState = TS_NORMAL;
+      }
+      return NS_OK;
+    }
+    case StyleAppearance::Toolbox: {
+      aState = 0;
+      aPart = RP_BACKGROUND;
+      return NS_OK;
+    }
+    case StyleAppearance::Toolbar: {
+      // Use -1 to indicate we don't wish to have the theme background drawn
+      // for this item. We will pass any nessessary information via aState,
+      // and will render the item using separate code.
+      aPart = -1;
+      aState = 0;
+      if (aFrame) {
+        nsIContent* content = aFrame->GetContent();
+        nsIContent* parent = content->GetParent();
+        // XXXzeniko hiding the first toolbar will result in an unwanted margin
+        if (parent && parent->GetFirstChild() == content) {
+          aState = 1;
+        }
       }
       return NS_OK;
     }
@@ -1007,6 +1031,16 @@ RENDER_AGAIN:
         ::DeleteObject(hPen);
       }
     }
+  } else if (aAppearance == StyleAppearance::Toolbar && state == 0) {
+    // Draw toolbar separator lines above all toolbars except the first one.
+    // The lines are part of the Rebar theme, which is loaded for
+    // StyleAppearance::Toolbox.
+    theme = GetTheme(StyleAppearance::Toolbox);
+    if (!theme) return NS_ERROR_FAILURE;
+
+    widgetRect.bottom = widgetRect.top + TB_SEPARATOR_HEIGHT;
+    DrawThemeEdge(theme, hdc, RP_BAND, 0, &widgetRect, EDGE_ETCHED, BF_TOP,
+                  nullptr);
   }
 
   nativeDrawing.EndNativeDrawing();
@@ -1067,12 +1101,19 @@ LayoutDeviceIntMargin nsNativeThemeWin::GetWidgetBorder(
   }
 
   if (!WidgetIsContainer(aAppearance) ||
+      aAppearance == StyleAppearance::Toolbox ||
       aAppearance == StyleAppearance::Tabpanel)
     return result;  // Don't worry about it.
 
   int32_t part, state;
   nsresult rv = GetThemePartAndState(aFrame, aAppearance, part, state);
   if (NS_FAILED(rv)) return result;
+
+  if (aAppearance == StyleAppearance::Toolbar) {
+    // make space for the separator line above all toolbars but the first
+    if (state == 0) result.top = TB_SEPARATOR_HEIGHT;
+    return result;
+  }
 
   result = GetCachedWidgetBorder(theme, themeClass.value(), aAppearance, part,
                                  state);
@@ -1237,6 +1278,8 @@ LayoutDeviceIntSize nsNativeThemeWin::GetMinimumWidgetSize(
   switch (aAppearance) {
     case StyleAppearance::NumberInput:
     case StyleAppearance::Textfield:
+    case StyleAppearance::Toolbox:
+    case StyleAppearance::Toolbar:
     case StyleAppearance::Progresschunk:
     case StyleAppearance::Tabpanels:
     case StyleAppearance::Tabpanel:
@@ -1309,7 +1352,9 @@ nsNativeThemeWin::WidgetStateChanged(nsIFrame* aFrame,
                                      nsAtom* aAttribute, bool* aShouldRepaint,
                                      const nsAttrValue* aOldValue) {
   // Some widget types just never change state.
-  if (aAppearance == StyleAppearance::Progresschunk ||
+  if (aAppearance == StyleAppearance::Toolbox ||
+      aAppearance == StyleAppearance::Toolbar ||
+      aAppearance == StyleAppearance::Progresschunk ||
       aAppearance == StyleAppearance::ProgressBar ||
       aAppearance == StyleAppearance::Tabpanels ||
       aAppearance == StyleAppearance::Tabpanel ||

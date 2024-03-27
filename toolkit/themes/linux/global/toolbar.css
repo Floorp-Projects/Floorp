@@ -8,6 +8,11 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
+toolbox {
+  appearance: auto;
+  -moz-default-appearance: toolbox;
+}
+
 toolbar {
   background-color: -moz-headerbar;
   color: -moz-headerbartext;
