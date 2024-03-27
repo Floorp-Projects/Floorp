@@ -34,6 +34,13 @@ const char* GetCodecTypeString(const CodecType& aCodecType) {
       return "Opus";
     case CodecType::Vorbis:
       return "Vorbis";
+    case CodecType::Flac:
+      return "Flac";
+    case CodecType::AAC:
+      return "AAC";
+    case CodecType::PCM:
+      return "PCM";
+      break;
     case CodecType::G722:
       return "G722";
     case CodecType::_EndAudio_:
