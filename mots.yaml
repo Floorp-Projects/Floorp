@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2024-03-27T11:10:10.244017'
+updated_at: '2024-03-28T00:01:46.798094'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -2401,7 +2401,7 @@ modules:
       - *ckerschb
     machine_name: core_privilege_manager
 
-  - name: 'Core: Push Notifications'
+  - name: 'Core: Push Subscriptions'
     description: Push is a way for application developers to send messages to their
       web applications.
     includes:
@@ -2413,11 +2413,11 @@ modules:
       peers_emeritus:
         - Nikhil Marathe
         - Dragana Damjanovic
+        - *mt
       components:
         - 'Core::DOM: Notifications'
-    peers:
-      - *mt
-    machine_name: core_push_notifications
+    peers: []
+    machine_name: core_push_subscriptions
 
   - name: 'Core: Sandboxing (Linux)'
     description: Sandboxing for the Linux platform
@@ -4214,5 +4214,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: d46b1fbe6f9e0c38aed247109a92df61c048ec8b
-  export: 7f03e8b14db7356d04e543b96088f732b60c569b
+  config: b8eafef72542cfbba2860fac821841a77f75b1f9
+  export: 7a1fb8eb504221d61c112084fb9fe1b1c0be9bba
