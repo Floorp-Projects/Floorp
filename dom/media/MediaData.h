@@ -379,7 +379,7 @@ class NullData : public MediaData {
   static const Type sType = Type::NULL_DATA;
 };
 
-// Holds chunk a decoded audio frames.
+// Holds chunk a decoded interleaved audio frames.
 class AudioData : public MediaData {
  public:
   AudioData(int64_t aOffset, const media::TimeUnit& aTime,
