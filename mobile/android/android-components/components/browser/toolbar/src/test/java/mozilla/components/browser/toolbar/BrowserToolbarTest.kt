@@ -597,21 +597,6 @@ class BrowserToolbarTest {
     }
 
     @Test
-    fun `WHEN setDisplayHorizontalPadding is sent to BrowserToolbar THEN it will be forwarded to the DisplayToolbar`() {
-        val toolbar = BrowserToolbar(testContext)
-
-        val display: DisplayToolbar = mock()
-        toolbar.display = display
-        toolbar.edit = mock()
-
-        toolbar.setDisplayHorizontalPadding(123)
-        verify(display).setHorizontalPadding(123)
-
-        toolbar.setDisplayHorizontalPadding(0)
-        verify(display).setHorizontalPadding(0)
-    }
-
-    @Test
     fun `cast to view`() {
         // Given
         val toolbar = BrowserToolbar(testContext)
