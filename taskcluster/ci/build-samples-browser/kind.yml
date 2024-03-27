@@ -6,6 +6,7 @@ loader: gecko_taskgraph.loader.transform:loader
 
 transforms:
     - android_taskgraph.transforms.build_components:transforms
+    - gecko_taskgraph.transforms.build_schedules:transforms
     - gecko_taskgraph.transforms.job:transforms
     - gecko_taskgraph.transforms.task:transforms
 
