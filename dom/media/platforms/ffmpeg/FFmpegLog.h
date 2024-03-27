@@ -32,7 +32,8 @@ static mozilla::LazyLogModule sFFmpegAudioLog("FFmpegAudio");
     MOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, ("FFMPEG: " str, ##__VA_ARGS__))
 #endif
 
-#define FFMPEG_LOGV(...) \
-  MOZ_LOG(sFFmpegVideoLog, mozilla::LogLevel::Verbose, (__VA_ARGS__))
+#define FFMPEG_LOGV(...)                                   \
+  MOZ_LOG(mVideoCodec ? sFFmpegVideoLog : sFFmpegAudioLog, \
+          mozilla::LogLevel::Verbose, (__VA_ARGS__))
 
 #endif  // __FFmpegLog_h__

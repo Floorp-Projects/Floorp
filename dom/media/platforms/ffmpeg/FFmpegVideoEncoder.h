@@ -7,10 +7,10 @@
 #ifndef DOM_MEDIA_PLATFORMS_FFMPEG_FFMPEGVIDEOENCODER_H_
 #define DOM_MEDIA_PLATFORMS_FFMPEG_FFMPEGVIDEOENCODER_H_
 
+#include "FFmpegDataEncoder.h"
 #include "FFmpegLibWrapper.h"
 #include "PlatformEncoderModule.h"
 #include "SimpleMap.h"
-#include "mozilla/ThreadSafety.h"
 
 // This must be the last header included
 #include "FFmpegLibs.h"
@@ -18,17 +18,10 @@
 namespace mozilla {
 
 template <int V>
-AVCodecID GetFFmpegEncoderCodecId(CodecType aCodec);
-
-template <>
-AVCodecID GetFFmpegEncoderCodecId<LIBAV_VER>(CodecType aCodec);
-
-template <int V>
 class FFmpegVideoEncoder : public MediaDataEncoder {};
 
-// TODO: Bug 1860925: FFmpegDataEncoder
 template <>
-class FFmpegVideoEncoder<LIBAV_VER> final : public MediaDataEncoder {
+class FFmpegVideoEncoder<LIBAV_VER> : public FFmpegDataEncoder<LIBAV_VER> {
   using DurationMap = SimpleMap<int64_t>;
 
  public:
@@ -36,44 +29,19 @@ class FFmpegVideoEncoder<LIBAV_VER> final : public MediaDataEncoder {
                      const RefPtr<TaskQueue>& aTaskQueue,
                      const EncoderConfig& aConfig);
 
-  /* MediaDataEncoder Methods */
-  // All methods run on the task queue, except for GetDescriptionName.
-  RefPtr<InitPromise> Init() override;
-  RefPtr<EncodePromise> Encode(const MediaData* aSample) override;
-  RefPtr<ReconfigurationPromise> Reconfigure(
-      const RefPtr<const EncoderConfigurationChangeList>& aConfigurationChanges)
-      override;
-  RefPtr<EncodePromise> Drain() override;
-  RefPtr<ShutdownPromise> Shutdown() override;
-  RefPtr<GenericPromise> SetBitrate(uint32_t aBitRate) override;
   nsCString GetDescriptionName() const override;
 
- private:
-  ~FFmpegVideoEncoder() = default;
-
-  // Methods only called on mTaskQueue.
-  RefPtr<InitPromise> ProcessInit();
-  RefPtr<EncodePromise> ProcessEncode(RefPtr<const MediaData> aSample);
-  RefPtr<ReconfigurationPromise> ProcessReconfigure(
-      const RefPtr<const EncoderConfigurationChangeList> aConfigurationChanges);
-  RefPtr<EncodePromise> ProcessDrain();
-  RefPtr<ShutdownPromise> ProcessShutdown();
-  MediaResult InitInternal();
-  void ShutdownInternal();
-  // TODO: Share these with FFmpegDataDecoder.
-  int OpenCodecContext(const AVCodec* aCodec, AVDictionary** aOptions)
-      MOZ_EXCLUDES(sMutex);
-  void CloseCodecContext() MOZ_EXCLUDES(sMutex);
-  bool PrepareFrame();
-  void DestroyFrame();
-  bool ScaleInputFrame();
+ protected:
+ // Methods only called on mTaskQueue.
+  virtual MediaResult InitSpecific() override;
 #if LIBAVCODEC_VERSION_MAJOR >= 58
-  RefPtr<EncodePromise> EncodeWithModernAPIs(RefPtr<const VideoData> aSample);
-  RefPtr<EncodePromise> DrainWithModernAPIs();
+  RefPtr<MediaDataEncoder::EncodePromise> EncodeWithModernAPIs(
+      RefPtr<const MediaData> aSample) override;
 #endif
-  RefPtr<MediaRawData> ToMediaRawData(AVPacket* aPacket);
+  bool ScaleInputFrame();
+  virtual RefPtr<MediaRawData> ToMediaRawData(AVPacket* aPacket) override;
   Result<already_AddRefed<MediaByteBuffer>, nsresult> GetExtraData(
-      AVPacket* aPacket);
+      AVPacket* aPacket) override;
   void ForceEnablingFFmpegDebugLogs();
   struct SVCSettings {
     nsTArray<uint8_t> mTemporalLayerIds;
@@ -88,21 +56,6 @@ class FFmpegVideoEncoder<LIBAV_VER> final : public MediaDataEncoder {
     nsTArray<std::pair<nsCString, nsCString>> mSettingKeyValuePairs;
   };
   H264Settings GetH264Settings(const H264Specific& aH264Specific);
-
-  // This refers to a static FFmpegLibWrapper, so raw pointer is adequate.
-  const FFmpegLibWrapper* mLib;
-  const AVCodecID mCodecID;
-  const RefPtr<TaskQueue> mTaskQueue;
-
-  // set in constructor, modified when parameters change
-  EncoderConfig mConfig;
-
-  // mTaskQueue only.
-  nsCString mCodecName;
-  AVCodecContext* mCodecContext;
-  AVFrame* mFrame;
-  DurationMap mDurationMap;
-
   struct SVCInfo {
     explicit SVCInfo(nsTArray<uint8_t>&& aTemporalLayerIds)
         : mTemporalLayerIds(std::move(aTemporalLayerIds)), mNextIndex(0) {}
@@ -111,13 +64,9 @@ class FFmpegVideoEncoder<LIBAV_VER> final : public MediaDataEncoder {
     // Return the current temporal layer id and update the next.
     uint8_t UpdateTemporalLayerId();
   };
-  Maybe<SVCInfo> mSVCInfo;
-
-  // Provide critical-section for open/close mCodecContext.
-  // TODO: Merge this with FFmpegDataDecoder's one.
-  static StaticMutex sMutex;
+  Maybe<SVCInfo> mSVCInfo{};
 };
 
 }  // namespace mozilla
 
-#endif /* DOM_MEDIA_PLATFORMS_FFMPEG_FFMPEGVIDEOENCODER_H_ */
+#endif // DOM_MEDIA_PLATFORMS_FFMPEG_FFMPEGVIDEOENCODER_H_
