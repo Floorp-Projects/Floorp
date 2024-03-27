@@ -4,6 +4,14 @@
  */
 "use strict";
 
+// performing http and https testing within this file,
+// and we do not want https-first to interfere with that test
+Services.prefs.setBoolPref("dom.security.https_first", false);
+
+registerCleanupFunction(function () {
+  Services.prefs.clearUserPref("dom.security.https_first");
+});
+
 const {
   HTTPS_EXAMPLE_ORG,
   HTTPS_EXAMPLE_COM,
