@@ -14,6 +14,7 @@
 
 // This must be the last header included
 #include "FFmpegLibs.h"
+#include "speex/speex_resampler.h"
 
 namespace mozilla {
 
@@ -34,8 +35,6 @@ class FFmpegAudioEncoder<LIBAV_VER> : public FFmpegDataEncoder<LIBAV_VER> {
   virtual nsresult InitSpecific() override;
 #if LIBAVCODEC_VERSION_MAJOR >= 58
   Result<EncodedData, nsresult> EncodeOnePacket(Span<float> aSamples,
-                                                uint32_t aChannels,
-                                                uint32_t aRate,
                                                 media::TimeUnit aPts);
   Result<EncodedData, nsresult> EncodeInputWithModernAPIs(
       RefPtr<const MediaData> aSample) override;
@@ -47,11 +46,20 @@ class FFmpegAudioEncoder<LIBAV_VER> : public FFmpegDataEncoder<LIBAV_VER> {
       AVPacket* aPacket) override;
   // Most audio codecs (except PCM) require a very specific frame size.
   Maybe<TimedPacketizer<float, float>> mPacketizer;
-  // A temporary buffer kept around for shuffling audio frames, if needed.
+  // A temporary buffer kept around for shuffling audio frames, resampling,
+  // packetization, etc.
   nsTArray<float> mTempBuffer;
   // The pts of the first packet this encoder has seen, to be able to properly
   // mark encoder delay as such.
   media::TimeUnit mFirstPacketPts{media::TimeUnit::Invalid()};
+  struct ResamplerDestroy {
+    void operator()(SpeexResamplerState* aResampler);
+  };
+  // Rate at which this instance has been configured, which might be different
+  // from the rate the underlying encoder is running at.
+  int mInputSampleRate = 0;
+  UniquePtr<SpeexResamplerState, ResamplerDestroy> mResampler;
+  uint64_t mPacketsDelivered = 0;
 };
 
 }  // namespace mozilla
