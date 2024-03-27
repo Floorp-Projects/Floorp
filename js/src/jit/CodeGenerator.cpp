@@ -6279,7 +6279,8 @@ void CodeGenerator::visitCallKnown(LCallKnown* call) {
       UnusedStackBytesForCall(call->mir()->paddedNumStackArgs());
   WrappedFunction* target = call->getSingleTarget();
 
-  // Native single targets (except wasm) are handled by LCallNative.
+  // Native single targets (except Wasm and TrampolineNative functions) are
+  // handled by LCallNative.
   MOZ_ASSERT(target->hasJitEntry());
 
   // Missing arguments must have been explicitly appended by WarpBuilder.
