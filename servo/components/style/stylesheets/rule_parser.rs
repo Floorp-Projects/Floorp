@@ -23,8 +23,8 @@ use crate::stylesheets::font_feature_values_rule::parse_family_name_list;
 use crate::stylesheets::import_rule::{ImportLayer, ImportRule, ImportSupportsCondition};
 use crate::stylesheets::keyframes_rule::parse_keyframe_list;
 use crate::stylesheets::layer_rule::{LayerBlockRule, LayerName, LayerStatementRule};
-use crate::stylesheets::supports_rule::SupportsCondition;
 use crate::stylesheets::scope_rule::{ScopeBounds, ScopeRule};
+use crate::stylesheets::supports_rule::SupportsCondition;
 use crate::stylesheets::{
     AllowImportRules, CorsMode, CssRule, CssRuleType, CssRuleTypes, CssRules, DocumentRule,
     FontFeatureValuesRule, FontPaletteValuesRule, KeyframesRule, MarginRule, MarginRuleType,
@@ -51,6 +51,8 @@ pub struct InsertRuleContext<'a> {
     pub index: usize,
     /// The containing rule types of our ancestors.
     pub containing_rule_types: CssRuleTypes,
+    /// Rule type determining if and how we parse relative selector syntax.
+    pub parse_relative_rule_type: Option<CssRuleType>,
 }
 
 impl<'a> InsertRuleContext<'a> {
@@ -487,18 +489,29 @@ impl NestedParseResult {
 impl<'a, 'i> NestedRuleParser<'a, 'i> {
     #[inline]
     fn in_style_rule(&self) -> bool {
-        self.context.rule_types.contains(CssRuleType::Style)
+        self.context
+            .nesting_context
+            .rule_types
+            .contains(CssRuleType::Style)
     }
 
     #[inline]
     fn in_page_rule(&self) -> bool {
-        self.context.rule_types.contains(CssRuleType::Page)
+        self.context
+            .nesting_context
+            .rule_types
+            .contains(CssRuleType::Page)
     }
 
     #[inline]
     fn in_style_or_page_rule(&self) -> bool {
         let types = CssRuleTypes::from_bits(CssRuleType::Style.bit() | CssRuleType::Page.bit());
-        self.context.rule_types.intersects(types)
+        self.context.nesting_context.rule_types.intersects(types)
+    }
+
+    #[inline]
+    fn parse_relative(&self) -> ParseRelative {
+        self.context.nesting_context.parse_relative
     }
 
     // https://drafts.csswg.org/css-nesting/#conditionals
@@ -528,10 +541,9 @@ impl<'a, 'i> NestedRuleParser<'a, 'i> {
     }
 
     fn nest_for_rule<R>(&mut self, rule_type: CssRuleType, cb: impl FnOnce(&mut Self) -> R) -> R {
-        let old_rule_types = self.context.rule_types;
-        self.context.rule_types.insert(rule_type);
+        let old = self.context.nesting_context.save(rule_type);
         let r = cb(self);
-        self.context.rule_types = old_rule_types;
+        self.context.nesting_context.restore(old);
         r
     }
 
@@ -871,7 +883,7 @@ impl<'a, 'i> AtRuleParser<'i> for NestedRuleParser<'a, 'i> {
                     block: Arc::new(self.shared_lock.wrap(declarations)),
                     source_location: start.source_location(),
                 }))
-            }
+            },
             AtRulePrelude::Import(..) | AtRulePrelude::Namespace(..) => {
                 // These rules don't have blocks.
                 return Err(input.new_unexpected_token_error(cssparser::Token::CurlyBracketBlock));
@@ -932,12 +944,7 @@ impl<'a, 'i> QualifiedRuleParser<'i> for NestedRuleParser<'a, 'i> {
             url_data: self.context.url_data,
             for_supports_rule: false,
         };
-        let parse_relative = if self.in_style_rule() {
-            ParseRelative::ForNesting
-        } else {
-            ParseRelative::No
-        };
-        SelectorList::parse(&selector_parser, input, parse_relative)
+        SelectorList::parse(&selector_parser, input, self.parse_relative())
     }
 
     fn parse_block<'t>(

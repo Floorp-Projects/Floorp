@@ -16,6 +16,8 @@ use malloc_size_of::{MallocShallowSizeOf, MallocSizeOfOps};
 use servo_arc::Arc;
 use std::fmt::{self, Write};
 
+use super::CssRuleType;
+
 /// A list of CSS rules.
 #[derive(Debug, ToShmem)]
 pub struct CssRules(pub Vec<CssRule>);
@@ -136,6 +138,7 @@ pub trait CssRulesHelpers {
         parent_stylesheet_contents: &StylesheetContents,
         index: usize,
         nested: CssRuleTypes,
+        parse_relative_rule_type: Option<CssRuleType>,
         loader: Option<&dyn StylesheetLoader>,
         allow_import_rules: AllowImportRules,
     ) -> Result<CssRule, RulesMutateError>;
@@ -149,6 +152,7 @@ impl CssRulesHelpers for Locked<CssRules> {
         parent_stylesheet_contents: &StylesheetContents,
         index: usize,
         containing_rule_types: CssRuleTypes,
+        parse_relative_rule_type: Option<CssRuleType>,
         loader: Option<&dyn StylesheetLoader>,
         allow_import_rules: AllowImportRules,
     ) -> Result<CssRule, RulesMutateError> {
@@ -165,6 +169,7 @@ impl CssRulesHelpers for Locked<CssRules> {
                 rule_list: &rules.0,
                 index,
                 containing_rule_types,
+                parse_relative_rule_type,
             };
 
             // Steps 3, 4, 5, 6

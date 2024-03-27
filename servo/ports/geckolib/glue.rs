@@ -2167,6 +2167,7 @@ pub extern "C" fn Servo_CssRules_InsertRule(
     rule: &nsACString,
     index: u32,
     containing_rule_types: u32,
+    parse_relative_rule_type: Option<&CssRuleType>,
     loader: *mut Loader,
     allow_import_rules: AllowImportRules,
     gecko_stylesheet: *mut DomStyleSheet,
@@ -2194,6 +2195,7 @@ pub extern "C" fn Servo_CssRules_InsertRule(
         contents,
         index as usize,
         CssRuleTypes::from_bits(containing_rule_types),
+        parse_relative_rule_type.cloned(),
         loader,
         allow_import_rules,
     );
