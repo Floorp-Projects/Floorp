@@ -74,6 +74,9 @@ class FFmpegDataEncoder<LIBAV_VER> : public MediaDataEncoder {
   Result<EncodedData, nsresult> EncodeWithModernAPIs();
   virtual Result<EncodedData, nsresult> DrainWithModernAPIs();
 #endif
+  // Convert an AVPacket to a MediaRawData. This can return nullptr if a packet
+  // has been processed by the encoder, but is not to be returned to the caller,
+  // because DTX is enabled.
   virtual RefPtr<MediaRawData> ToMediaRawData(AVPacket* aPacket) = 0;
   RefPtr<MediaRawData> ToMediaRawDataCommon(AVPacket* aPacket);
   virtual Result<already_AddRefed<MediaByteBuffer>, nsresult> GetExtraData(
