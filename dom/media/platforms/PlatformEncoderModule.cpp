@@ -111,15 +111,14 @@ struct ConfigurationChangeToString {
   nsCString operator()(const BitrateModeChange& aBitrateModeChange) {
     return nsPrintfCString(
         "Bitrate mode: %s",
-        aBitrateModeChange.get() == MediaDataEncoder::BitrateMode::Constant
+        aBitrateModeChange.get() == BitrateMode::Constant
             ? "Constant"
             : "Variable");
   }
   nsCString operator()(const UsageChange& aUsageChange) {
     return nsPrintfCString(
         "Usage mode: %s",
-        aUsageChange.get() == MediaDataEncoder::Usage::Realtime ? "Realtime"
-                                                                : "Recoding");
+        aUsageChange.get() == Usage::Realtime ? "Realtime" : "Recoding");
   }
   nsCString operator()(const ContentHintChange& aContentHintChange) {
     return nsPrintfCString("Content hint: %s",

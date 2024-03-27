@@ -469,24 +469,24 @@ WebCodecsConfigurationChangeList::ToPEMChangeList() const {
     } else if (change.is<FramerateChange>()) {
       rv->Push(mozilla::FramerateChange(change.as<FramerateChange>().get()));
     } else if (change.is<dom::BitrateModeChange>()) {
-      MediaDataEncoder::BitrateMode mode;
+      mozilla::BitrateMode mode;
       if (change.as<dom::BitrateModeChange>().get() ==
           dom::VideoEncoderBitrateMode::Constant) {
-        mode = MediaDataEncoder::BitrateMode::Constant;
+        mode = mozilla::BitrateMode::Constant;
       } else if (change.as<BitrateModeChange>().get() ==
                  dom::VideoEncoderBitrateMode::Variable) {
-        mode = MediaDataEncoder::BitrateMode::Variable;
+        mode = mozilla::BitrateMode::Variable;
       } else {
         // Quantizer, not underlying support yet.
-        mode = MediaDataEncoder::BitrateMode::Variable;
+        mode = mozilla::BitrateMode::Variable;
       }
       rv->Push(mozilla::BitrateModeChange(mode));
     } else if (change.is<LatencyModeChange>()) {
-      MediaDataEncoder::Usage usage;
+      Usage usage;
       if (change.as<LatencyModeChange>().get() == dom::LatencyMode::Quality) {
-        usage = MediaDataEncoder::Usage::Record;
+        usage = Usage::Record;
       } else {
-        usage = MediaDataEncoder::Usage::Realtime;
+        usage = Usage::Realtime;
       }
       rv->Push(UsageChange(usage));
     } else if (change.is<ContentHintChange>()) {
