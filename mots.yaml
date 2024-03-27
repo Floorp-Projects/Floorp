@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2024-03-25T18:09:45.620316'
+updated_at: '2024-03-27T11:10:10.244017'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -516,10 +516,6 @@ people:
     bmo_id: 541747
     name: Jamie Nicol
     nick: jnicol
-  - &jonalmeida
-    bmo_id: 541581
-    name: Jonathan Almeida
-    nick: jonalmeida
   - &jonco
     bmo_id: 443194
     name: Jon Coppeard
@@ -1631,6 +1627,7 @@ modules:
         - Aaron Klotz
         - Jim Chen
         - Randall E. Barker
+        - Jon Almeida
       url: https://wiki.mozilla.org/Mobile/GeckoView
       components:
         - GeckoView::General
@@ -1638,7 +1635,6 @@ modules:
       - *owlish
     peers:
       - *calu
-      - *jonalmeida
       - *mkato
       - *olivia
     machine_name: core_geckoview
@@ -4218,5 +4214,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: d8458c2bcd314364d46e8eac9a76d3ad3e667c1c
-  export: b6d42414df936dcf1dd4f150802ab7cf24b3c3e3
+  config: d46b1fbe6f9e0c38aed247109a92df61c048ec8b
+  export: 7f03e8b14db7356d04e543b96088f732b60c569b
