@@ -7,6 +7,7 @@
 #include <math.h>
 #include <memory>
 #include "../AudioPacketizer.h"
+#include "../TimedPacketizer.h"
 #include "gtest/gtest.h"
 
 using namespace mozilla;
@@ -25,16 +26,15 @@ class AutoBuffer {
 int16_t Sequence(int16_t* aBuffer, uint32_t aSize, uint32_t aStart = 0) {
   uint32_t i;
   for (i = 0; i < aSize; i++) {
-    aBuffer[i] = aStart + i;
+    aBuffer[i] = (aStart + i) % INT16_MAX;
   }
   return aStart + i;
 }
 
-void IsSequence(std::unique_ptr<int16_t[]> aBuffer, uint32_t aSize,
-                uint32_t aStart = 0) {
+void IsSequence(int16_t* aBuffer, uint32_t aSize, uint32_t aStart = 0) {
   for (uint32_t i = 0; i < aSize; i++) {
-    ASSERT_TRUE(aBuffer[i] == static_cast<int64_t>(aStart + i))
-    << "Buffer is not a sequence at offset " << i << '\n';
+    ASSERT_EQ(aBuffer[i], static_cast<int64_t>((aStart + i) % INT16_MAX))
+        << "Buffer is not a sequence at offset " << i << '\n';
   }
   // Buffer is a sequence.
 }
@@ -70,7 +70,7 @@ TEST(AudioPacketizer, Test)
         seqEnd = Sequence(b.Get(), channels * 441, prevEnd);
         ap.Input(b.Get(), 441);
         std::unique_ptr<int16_t[]> out(ap.Output());
-        IsSequence(std::move(out), 441 * channels, prevEnd);
+        IsSequence(out.get(), 441 * channels, prevEnd);
       }
     }
     // Simple test, with input/output buffer size aligned on the packet size,
@@ -89,8 +89,8 @@ TEST(AudioPacketizer, Test)
         ap.Input(b1.Get(), 441);
         std::unique_ptr<int16_t[]> out(ap.Output());
         std::unique_ptr<int16_t[]> out2(ap.Output());
-        IsSequence(std::move(out), 441 * channels, prevEnd0);
-        IsSequence(std::move(out2), 441 * channels, prevEnd1);
+        IsSequence(out.get(), 441 * channels, prevEnd0);
+        IsSequence(out2.get(), 441 * channels, prevEnd1);
       }
     }
     // Input/output buffer size not aligned on the packet size,
@@ -108,9 +108,9 @@ TEST(AudioPacketizer, Test)
         ap.Input(b1.Get(), 480);
         std::unique_ptr<int16_t[]> out(ap.Output());
         std::unique_ptr<int16_t[]> out2(ap.Output());
-        IsSequence(std::move(out), 441 * channels, prevEnd);
+        IsSequence(out.get(), 441 * channels, prevEnd);
         prevEnd += 441 * channels;
-        IsSequence(std::move(out2), 441 * channels, prevEnd);
+        IsSequence(out2.get(), 441 * channels, prevEnd);
         prevEnd += 441 * channels;
       }
       printf("Available: %d\n", ap.PacketsAvailable());
@@ -160,4 +160,35 @@ TEST(AudioPacketizer, Test)
       Zero(std::move(out), 441);
     }
   }
+}
+
+TEST(TimedPacketizer, Test)
+{
+  const int channels = 2;
+  const int64_t rate = 48000;
+  const int64_t inputPacketSize = 240;
+  const int64_t packetSize = 96;
+  TimedPacketizer<int16_t, int16_t> tp(packetSize, channels, 0, rate);
+  int16_t prevEnd = 0;
+  int16_t prevSeq = 0;
+  nsTArray<int16_t> packet;
+  uint64_t tsCheck = 0;
+  packet.SetLength(tp.PacketSize() * channels);
+  for (int16_t i = 0; i < 10; i++) {
+    AutoBuffer<int16_t> b(inputPacketSize * channels);
+    prevSeq = Sequence(b.Get(), inputPacketSize * channels, prevSeq);
+    tp.Input(b.Get(), inputPacketSize);
+    while (tp.PacketsAvailable()) {
+      media::TimeUnit ts = tp.Output(packet.Elements());
+      IsSequence(packet.Elements(), packetSize * channels, prevEnd);
+      EXPECT_EQ(ts, media::TimeUnit(tsCheck, rate));
+      prevEnd += packetSize * channels;
+      tsCheck += packetSize;
+    }
+  }
+  EXPECT_TRUE(!tp.PacketsAvailable());
+  uint32_t drained;
+  media::TimeUnit ts = tp.Drain(packet.Elements(), drained);
+  EXPECT_EQ(ts, media::TimeUnit(tsCheck, rate));
+  EXPECT_LE(drained, packetSize);
 }

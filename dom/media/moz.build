@@ -200,6 +200,7 @@ EXPORTS += [
     "SeekTarget.h",
     "SelfRef.h",
     "SharedBuffer.h",
+    "TimedPacketizer.h",
     "TimeUnits.h",
     "Tracing.h",
     "VideoFrameContainer.h",
