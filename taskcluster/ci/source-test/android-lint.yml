@@ -13,7 +13,7 @@ job-defaults:
         env:
             JAVA_HOME: "/builds/worker/fetches/jdk/jdk-17.0.6+10"
         docker-image: {in-tree: lint}
-    always-target: true
+    always-target: false
     attributes:
         code-review: true
     dependencies:
