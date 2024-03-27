@@ -290,6 +290,7 @@ class mozJSModuleLoader final : public nsIMemoryReporter {
   nsClassHashtable<nsCStringHashKey, nsCString> mLocations;
 
   bool mInitialized;
+  bool mIsUnloaded = false;
 #ifdef DEBUG
   bool mIsInitializingLoaderGlobal = false;
 #endif
