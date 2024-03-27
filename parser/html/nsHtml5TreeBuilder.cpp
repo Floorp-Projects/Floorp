@@ -100,18 +100,6 @@ static const char* const QUIRKY_PUBLIC_IDS_DATA[] = {
     "-//webtechs//dtd mozilla html//"};
 staticJArray<const char*, int32_t> nsHtml5TreeBuilder::QUIRKY_PUBLIC_IDS = {
     QUIRKY_PUBLIC_IDS_DATA, MOZ_ARRAY_LENGTH(QUIRKY_PUBLIC_IDS_DATA)};
-void nsHtml5TreeBuilder::setKeepBuffer(bool keepBuffer) {
-  this->keepBuffer = keepBuffer;
-}
-
-bool nsHtml5TreeBuilder::dropBufferIfLongerThan(int32_t length) {
-  if (charBuffer.length > length) {
-    charBuffer = nullptr;
-    return true;
-  }
-  return false;
-}
-
 void nsHtml5TreeBuilder::startTokenization(nsHtml5Tokenizer* self) {
   tokenizer = self;
   stackNodes = jArray<nsHtml5StackNode*, int32_t>::newJArray(64);
@@ -130,9 +118,7 @@ void nsHtml5TreeBuilder::startTokenization(nsHtml5Tokenizer* self) {
   headPointer = nullptr;
   start(fragment);
   charBufferLen = 0;
-  if (!keepBuffer) {
-    charBuffer = nullptr;
-  }
+  charBuffer = nullptr;
   framesetOk = true;
   if (fragment) {
     nsIContentHandle* elt;
@@ -666,9 +652,7 @@ void nsHtml5TreeBuilder::endTokenization() {
     stackNodesIdx = 0;
     stackNodes = nullptr;
   }
-  if (!keepBuffer) {
-    charBuffer = nullptr;
-  }
+  charBuffer = nullptr;
   end();
 }
 
