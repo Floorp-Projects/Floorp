@@ -266,7 +266,7 @@ var SidebarUI = {
   },
 
   updateShortcut({ keyId }) {
-    let menuitem = this._switcherPanel.querySelector(`[key="${keyId}"]`);
+    let menuitem = this._switcherPanel?.querySelector(`[key="${keyId}"]`);
     if (!menuitem) {
       // If the menu item doesn't exist yet then the accel text will be set correctly
       // upon creation so there's nothing to do now.
