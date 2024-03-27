@@ -76,29 +76,6 @@ function ArraySome(callbackfn /*, thisArg*/) {
 // Inlining this enables inlining of the callback function.
 SetIsInlinableLargeFunction(ArraySome);
 
-// ES2023 draft rev cb4224156c54156f30c18c50784c1b0148ebfae5
-// 23.1.3.30 Array.prototype.sort ( comparefn )
-function ArraySortCompare(comparefn) {
-  return function(x, y) {
-    // Steps 4.a-c.
-    if (x === undefined) {
-      if (y === undefined) {
-        return 0;
-      }
-      return 1;
-    }
-    if (y === undefined) {
-      return -1;
-    }
-
-    // Step 4.d.i.
-    var v = ToNumber(callContentFunction(comparefn, undefined, x, y));
-
-    // Steps 4.d.ii-iii.
-    return v !== v ? 0 : v;
-  };
-}
-
 /* ES5 15.4.4.18. */
 function ArrayForEach(callbackfn /*, thisArg*/) {
   /* Step 1. */
@@ -1279,22 +1256,8 @@ function ArrayToSorted(comparefn) {
     return items;
   }
 
-  // First try to sort the array in native code, if that fails, indicated by
-  // returning |false| from ArrayNativeSort, sort it in self-hosted code.
-  if (callFunction(ArrayNativeSort, items, comparefn)) {
-    return items;
-  }
-
-  // Step 5.
-  var wrappedCompareFn = ArraySortCompare(comparefn);
-
-  // Steps 6-9.
-  var sorted = MergeSort(items, len, wrappedCompareFn);
-
-  assert(IsPackedArray(sorted), "sorted is a packed array");
-  assert(sorted.length === len, "sorted array has the correct length");
-
-  return sorted;
+  // Steps 5-9.
+  return callFunction(std_Array_sort, items, comparefn);
 }
 
 // https://github.com/tc39/proposal-array-find-from-last

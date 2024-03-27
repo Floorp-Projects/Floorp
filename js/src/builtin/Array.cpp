@@ -2029,46 +2029,6 @@ static bool FillWithUndefined(JSContext* cx, HandleObject obj, uint32_t start,
 }
 
 static bool ArrayNativeSortImpl(JSContext* cx, Handle<JSObject*> obj,
-                                Handle<Value> fval, ComparatorMatchResult comp);
-
-bool js::intrinsic_ArrayNativeSort(JSContext* cx, unsigned argc, Value* vp) {
-  // This function is called from the self-hosted Array.prototype.sort
-  // implementation. It returns |true| if the array was sorted, otherwise it
-  // returns |false| to notify the self-hosted code to perform the sorting.
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 1);
-
-  HandleValue fval = args[0];
-  MOZ_ASSERT(fval.isUndefined() || IsCallable(fval));
-
-  ComparatorMatchResult comp;
-  if (fval.isObject()) {
-    comp = MatchNumericComparator(cx, &fval.toObject());
-    if (comp == Match_Failure) {
-      return false;
-    }
-
-    if (comp == Match_None) {
-      // Non-optimized user supplied comparators perform much better when
-      // called from within a self-hosted sorting function.
-      args.rval().setBoolean(false);
-      return true;
-    }
-  } else {
-    comp = Match_None;
-  }
-
-  Rooted<JSObject*> obj(cx, &args.thisv().toObject());
-
-  if (!ArrayNativeSortImpl(cx, obj, fval, comp)) {
-    return false;
-  }
-
-  args.rval().setBoolean(true);
-  return true;
-}
-
-static bool ArrayNativeSortImpl(JSContext* cx, Handle<JSObject*> obj,
                                 Handle<Value> fval,
                                 ComparatorMatchResult comp) {
   uint64_t length;

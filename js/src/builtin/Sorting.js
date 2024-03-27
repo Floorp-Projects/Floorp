@@ -6,7 +6,7 @@
 // consolidated here to avoid confusion and re-implementation of existing
 // algorithms.
 
-// For sorting small arrays.
+// For sorting small typed arrays.
 function InsertionSort(array, from, to, comparefn) {
   var item, swap, i, j;
   for (i = from + 1; i <= to; i++) {
@@ -20,101 +20,6 @@ function InsertionSort(array, from, to, comparefn) {
     }
     array[j + 1] = item;
   }
-}
-
-// A helper function for MergeSort.
-//
-// Merge comparefn-sorted slices list[start..<=mid] and list[mid+1..<=end],
-// storing the merged sequence in out[start..<=end].
-function Merge(list, out, start, mid, end, comparefn) {
-  // Skip lopsided runs to avoid doing useless work.
-  // Skip calling the comparator if the sub-list is already sorted.
-  if (
-    mid >= end ||
-    callContentFunction(comparefn, undefined, list[mid], list[mid + 1]) <= 0
-  ) {
-    for (var i = start; i <= end; i++) {
-      DefineDataProperty(out, i, list[i]);
-    }
-    return;
-  }
-
-  var i = start;
-  var j = mid + 1;
-  var k = start;
-  while (i <= mid && j <= end) {
-    var lvalue = list[i];
-    var rvalue = list[j];
-    if (callContentFunction(comparefn, undefined, lvalue, rvalue) <= 0) {
-      DefineDataProperty(out, k++, lvalue);
-      i++;
-    } else {
-      DefineDataProperty(out, k++, rvalue);
-      j++;
-    }
-  }
-
-  // Empty out any remaining elements.
-  while (i <= mid) {
-    DefineDataProperty(out, k++, list[i++]);
-  }
-  while (j <= end) {
-    DefineDataProperty(out, k++, list[j++]);
-  }
-}
-
-// Helper function for overwriting a sparse array with a
-// dense array, filling remaining slots with holes.
-function MoveHoles(sparse, sparseLen, dense, denseLen) {
-  for (var i = 0; i < denseLen; i++) {
-    sparse[i] = dense[i];
-  }
-  for (var j = denseLen; j < sparseLen; j++) {
-    delete sparse[j];
-  }
-}
-
-// Iterative, bottom up, mergesort.
-function MergeSort(array, len, comparefn) {
-  assert(IsPackedArray(array), "array is packed");
-  assert(array.length === len, "length mismatch");
-  assert(len > 0, "array should be non-empty");
-
-  // Insertion sort for small arrays, where "small" is defined by performance
-  // testing.
-  if (len < 24) {
-    InsertionSort(array, 0, len - 1, comparefn);
-    return array;
-  }
-
-  // We do all of our allocating up front
-  var lBuffer = array;
-  var rBuffer = [];
-
-  // Use insertion sort for initial ranges.
-  var windowSize = 4;
-  for (var start = 0; start < len - 1; start += windowSize) {
-    var end = std_Math_min(start + windowSize - 1, len - 1);
-    InsertionSort(lBuffer, start, end, comparefn);
-  }
-
-  for (; windowSize < len; windowSize = 2 * windowSize) {
-    for (var start = 0; start < len; start += 2 * windowSize) {
-      // The midpoint between the two subarrays.
-      var mid = start + windowSize - 1;
-
-      // To keep from going over the edge.
-      var end = std_Math_min(start + 2 * windowSize - 1, len - 1);
-
-      Merge(lBuffer, rBuffer, start, mid, end, comparefn);
-    }
-
-    // Swap both lists.
-    var swap = lBuffer;
-    lBuffer = rBuffer;
-    rBuffer = swap;
-  }
-  return lBuffer;
 }
 
 // A helper function for MergeSortTypedArray.

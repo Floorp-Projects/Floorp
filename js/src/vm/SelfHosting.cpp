@@ -1963,7 +1963,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_INLINABLE_FN("ArrayIteratorPrototypeOptimizable",
                     intrinsic_ArrayIteratorPrototypeOptimizable, 0, 0,
                     IntrinsicArrayIteratorPrototypeOptimizable),
-    JS_FN("ArrayNativeSort", intrinsic_ArrayNativeSort, 1, 0),
     JS_FN("AssertionFailed", intrinsic_AssertionFailed, 1, 0),
     JS_FN("CallArrayBufferMethodIfWrapped",
           CallNonGenericSelfhostedMethod<Is<ArrayBufferObject>>, 2, 0),
