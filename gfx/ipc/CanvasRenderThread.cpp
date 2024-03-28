@@ -152,6 +152,9 @@ void CanvasRenderThread::Shutdown() {
   // This closes all of the IPDL actors with possibly active task queues.
   CanvasManagerParent::Shutdown();
 
+  // Queue any remaining global cleanup for CanvasTranslator
+  layers::CanvasTranslator::Shutdown();
+
   // Any task queues that are in the process of shutting down are tracked in
   // mPendingShutdownTaskQueues. We need to block on each one until all events
   // are flushed so that we can safely teardown RemoteTextureMap afterwards.
