@@ -121,10 +121,10 @@ already_AddRefed<Path> CSSClipPathInstance::CreateClipPath(
       return CreateClipPathPolygon(aDrawTarget, r);
     case StyleBasicShape::Tag::Rect:
       return CreateClipPathInset(aDrawTarget, r);
-    case StyleBasicShape::Tag::Path:
-      return CreateClipPathPath(aDrawTarget, r);
-    case StyleBasicShape::Tag::Shape:
-      return CreateClipPathShape(aDrawTarget, r);
+    case StyleBasicShape::Tag::PathOrShape:
+      return basicShape.AsPathOrShape().IsPath()
+                 ? CreateClipPathPath(aDrawTarget, r)
+                 : CreateClipPathShape(aDrawTarget, r);
     default:
       MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Unexpected shape type");
   }
@@ -177,7 +177,7 @@ already_AddRefed<Path> CSSClipPathInstance::CreateClipPathInset(
 
 already_AddRefed<Path> CSSClipPathInstance::CreateClipPathPath(
     DrawTarget* aDrawTarget, const nsRect& aRefBox) {
-  const auto& path = mClipPathStyle.AsShape()._0->AsPath();
+  const auto& path = mClipPathStyle.AsShape()._0->AsPathOrShape().AsPath();
 
   RefPtr<PathBuilder> builder = aDrawTarget->CreatePathBuilder(
       path.fill == StyleFillRule::Nonzero ? FillRule::FILL_WINDING
@@ -196,7 +196,7 @@ already_AddRefed<Path> CSSClipPathInstance::CreateClipPathPath(
 
 already_AddRefed<Path> CSSClipPathInstance::CreateClipPathShape(
     DrawTarget* aDrawTarget, const nsRect& aRefBox) {
-  const auto& shape = mClipPathStyle.AsShape()._0->AsShape();
+  const auto& shape = mClipPathStyle.AsShape()._0->AsPathOrShape().AsShape();
 
   RefPtr<PathBuilder> builder = aDrawTarget->CreatePathBuilder(
       shape.fill == StyleFillRule::Nonzero ? FillRule::FILL_WINDING

@@ -2507,8 +2507,7 @@ nsFloatManager::ShapeInfo::CreateBasicShape(const StyleBasicShape& aBasicShape,
     case StyleBasicShape::Tag::Rect:
       return CreateInset(aBasicShape, aShapeMargin, aFrame, aShapeBoxRect, aWM,
                          aContainerSize);
-    case StyleBasicShape::Tag::Path:
-    case StyleBasicShape::Tag::Shape:
+    case StyleBasicShape::Tag::PathOrShape:
       MOZ_ASSERT_UNREACHABLE("Unsupported basic shape");
   }
   return nullptr;

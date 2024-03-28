@@ -204,10 +204,8 @@ pub enum GenericBasicShape<
     ),
     /// Defines a polygon with pair arguments.
     Polygon(GenericPolygon<LengthPercentage>),
-    /// Defines a path with SVG path syntax.
-    Path(Path),
-    /// Defines a shape function, which is identical to path(() but it uses the CSS syntax.
-    Shape(#[css(field_bound)] Shape<Angle, LengthPercentage>),
+    /// Defines a path() or shape().
+    PathOrShape(#[css(field_bound)] GenericPathOrShapeFunction<Angle, LengthPercentage>),
 }
 
 pub use self::GenericBasicShape as BasicShape;
@@ -370,6 +368,31 @@ pub use self::GenericPolygon as Polygon;
 )]
 #[repr(C)]
 pub struct PolygonCoord<LengthPercentage>(pub LengthPercentage, pub LengthPercentage);
+
+/// path() function or shape() function.
+#[derive(
+    Animate,
+    Clone,
+    ComputeSquaredDistance,
+    Debug,
+    Deserialize,
+    MallocSizeOf,
+    PartialEq,
+    Serialize,
+    SpecifiedValueInfo,
+    ToAnimatedValue,
+    ToComputedValue,
+    ToCss,
+    ToResolvedValue,
+    ToShmem,
+)]
+#[repr(C, u8)]
+pub enum GenericPathOrShapeFunction<Angle, LengthPercentage> {
+    /// Defines a path with SVG path syntax.
+    Path(Path),
+    /// Defines a shape function, which is identical to path() but it uses the CSS syntax.
+    Shape(#[css(field_bound)] Shape<Angle, LengthPercentage>),
+}
 
 // https://drafts.csswg.org/css-shapes/#typedef-fill-rule
 // NOTE: Basic shapes spec says that these are the only two values, however
