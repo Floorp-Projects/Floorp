@@ -99,11 +99,6 @@ browsertime-tp6:
                         - --browsertime-no-ffwindowrecorder
                         - --conditioned-profile=settled
                         - --extra-profiler-run
-                    macosx1015.*:
-                        - --chimera
-                        - --browsertime-no-ffwindowrecorder
-                        - --conditioned-profile=settled
-                        - --extra-profiler-run
                     default:
                         - --chimera
                         - --conditioned-profile=settled
@@ -180,11 +175,6 @@ browsertime-responsiveness:
                     - --browsertime-no-ffwindowrecorder
                     - --conditioned-profile=settled
                     - --extra-profiler-run
-                macosx1015.*:
-                    - --cold
-                    - --browsertime-no-ffwindowrecorder
-                    - --conditioned-profile=settled
-                    - --extra-profiler-run
                 default:
                     - --cold
                     - --conditioned-profile=settled
@@ -213,11 +203,6 @@ browsertime-tp6-essential:
                         - --browsertime-no-ffwindowrecorder
                         - --conditioned-profile=settled
                         - --collect-perfstats
-                        - --extra-profiler-run
-                    macosx1015.*:
-                        - --chimera
-                        - --browsertime-no-ffwindowrecorder
-                        - --conditioned-profile=settled
                         - --extra-profiler-run
                     default:
                         - --chimera
@@ -288,13 +273,6 @@ browsertime-tp6-bytecode:
         extra-options:
             by-test-platform:
                 windows10-64.*shippable.*-qr.*:
-                    - --chimera
-                    - --browsertime
-                    - --browsertime-no-ffwindowrecorder
-                    - --conditioned-profile=settled
-                    - --test-bytecode-cache
-                    - --extra-profiler-run
-                macosx1015.*:
                     - --chimera
                     - --browsertime
                     - --browsertime-no-ffwindowrecorder
@@ -897,11 +875,6 @@ browsertime-tp6-webextensions:
                     - --browsertime
                     - --browsertime-no-ffwindowrecorder
                     - --conditioned-profile=settled-webext
-                macosx1015.*:
-                    - --chimera
-                    - --browsertime-no-ffwindowrecorder
-                    - --conditioned-profile=settled
-                    - --extra-profiler-run
                 default:
                     - --chimera
                     - --browsertime
