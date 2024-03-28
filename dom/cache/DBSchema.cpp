@@ -1646,7 +1646,7 @@ nsresult DeleteSecurityInfo(mozIStorageConnection& aConn, int32_t aId,
         QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE_MEMBER(*state, GetInt32, 0));
       }()));
 
-  MOZ_DIAGNOSTIC_ASSERT(refcount >= aCount);
+  MOZ_ASSERT_DEBUG_OR_FUZZING(refcount >= aCount);
 
   // Next, calculate the new refcount
   int32_t newCount = refcount - aCount;
