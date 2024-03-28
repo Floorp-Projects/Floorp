@@ -257,19 +257,20 @@ class URLParams final {
    * true otherwise
    */
   template <typename ParamHandler>
-  static bool Parse(const nsACString& aInput, ParamHandler aParamHandler) {
+  static bool Parse(const nsACString& aInput, bool aShouldDecode,
+                    ParamHandler aParamHandler) {
     const char* start = aInput.BeginReading();
     const char* const end = aInput.EndReading();
 
     while (start != end) {
-      nsAutoString decodedName;
-      nsAutoString decodedValue;
+      nsAutoString name;
+      nsAutoString value;
 
-      if (!ParseNextInternal(start, end, &decodedName, &decodedValue)) {
+      if (!ParseNextInternal(start, end, aShouldDecode, &name, &value)) {
         continue;
       }
 
-      if (!aParamHandler(std::move(decodedName), std::move(decodedValue))) {
+      if (!aParamHandler(std::move(name), std::move(value))) {
         return false;
       }
     }
@@ -357,8 +358,8 @@ class URLParams final {
   static void DecodeString(const nsACString& aInput, nsAString& aOutput);
   static void ConvertString(const nsACString& aInput, nsAString& aOutput);
   static bool ParseNextInternal(const char*& aStart, const char* aEnd,
-                                nsAString* aOutDecodedName,
-                                nsAString* aOutDecodedValue);
+                                bool aShouldDecode, nsAString* aOutputName,
+                                nsAString* aOutputValue);
 
   struct Param {
     nsString mKey;
