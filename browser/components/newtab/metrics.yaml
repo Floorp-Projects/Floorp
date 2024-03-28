@@ -796,6 +796,35 @@ pocket:
     send_in_pings:
       - spoc
 
+  fetch_timestamp:
+    type: datetime
+    lifetime: ping
+    description: |
+      Timestamp of when the spoc was fetched by the client
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1887655
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1887655
+    notification_emails:
+      - dmueller@mozilla.com
+    expires: never
+    send_in_pings:
+      - spoc
+
+  newtab_creation_timestamp:
+    type: datetime
+    lifetime: ping
+    description: |
+      Timestamp of when this instance of the newtab was first visible to the user.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1887655
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1887655
+    notification_emails:
+      - dmueller@mozilla.com
+    expires: never
+    send_in_pings:
+      - spoc
 
 messaging_system:
   event_context_parse_error:

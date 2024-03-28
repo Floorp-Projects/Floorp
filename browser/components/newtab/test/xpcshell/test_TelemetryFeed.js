@@ -2230,6 +2230,8 @@ add_task(
     const POS_1 = 1;
     const POS_2 = 4;
     const SHIM = "Y29uc2lkZXIgeW91ciBjdXJpb3NpdHkgcmV3YXJkZWQ=";
+    const FETCH_TIMESTAMP = new Date("March 22, 2024 10:15:20");
+    const NEWTAB_CREATION_TIMESTAMP = new Date("March 23, 2024 11:10:30");
     sandbox.stub(instance.sessions, "get").returns({ session_id: SESSION_ID });
 
     let pingSubmitted = new Promise(resolve => {
@@ -2252,6 +2254,14 @@ add_task(
           tile_id: String(2),
         });
         Assert.equal(Glean.pocket.shim.testGetValue(), SHIM);
+        Assert.deepEqual(
+          Glean.pocket.fetchTimestamp.testGetValue(),
+          FETCH_TIMESTAMP
+        );
+        Assert.deepEqual(
+          Glean.pocket.newtabCreationTimestamp.testGetValue(),
+          NEWTAB_CREATION_TIMESTAMP
+        );
 
         resolve();
       });
@@ -2272,10 +2282,12 @@ add_task(
           type: "spoc",
           recommendation_id: undefined,
           shim: SHIM,
+          fetchTimestamp: FETCH_TIMESTAMP.valueOf(),
         },
       ],
       window_inner_width: 1000,
       window_inner_height: 900,
+      firstVisibleTimestamp: NEWTAB_CREATION_TIMESTAMP.valueOf(),
     });
 
     await pingSubmitted;
@@ -2917,6 +2929,8 @@ add_task(
     Services.fog.testResetFOG();
     const ACTION_POSITION = 42;
     const SHIM = "Y29uc2lkZXIgeW91ciBjdXJpb3NpdHkgcmV3YXJkZWQ=";
+    const FETCH_TIMESTAMP = new Date("March 22, 2024 10:15:20");
+    const NEWTAB_CREATION_TIMESTAMP = new Date("March 23, 2024 11:10:30");
     let action = ac.DiscoveryStreamUserEvent({
       event: "CLICK",
       action_position: ACTION_POSITION,
@@ -2925,6 +2939,8 @@ add_task(
         recommendation_id: undefined,
         tile_id: 448685088,
         shim: SHIM,
+        fetchTimestamp: FETCH_TIMESTAMP.valueOf(),
+        firstVisibleTimestamp: NEWTAB_CREATION_TIMESTAMP.valueOf(),
       },
     });
 
@@ -2934,6 +2950,14 @@ add_task(
     let pingSubmitted = new Promise(resolve => {
       GleanPings.spoc.testBeforeNextSubmit(reason => {
         Assert.equal(reason, "click");
+        Assert.deepEqual(
+          Glean.pocket.fetchTimestamp.testGetValue(),
+          FETCH_TIMESTAMP
+        );
+        Assert.deepEqual(
+          Glean.pocket.newtabCreationTimestamp.testGetValue(),
+          NEWTAB_CREATION_TIMESTAMP
+        );
         resolve();
       });
     });
@@ -3011,6 +3035,8 @@ add_task(
     Services.fog.testResetFOG();
     const ACTION_POSITION = 42;
     const SHIM = "Y29uc2lkZXIgeW91ciBjdXJpb3NpdHkgcmV3YXJkZWQ=";
+    const FETCH_TIMESTAMP = new Date("March 22, 2024 10:15:20");
+    const NEWTAB_CREATION_TIMESTAMP = new Date("March 23, 2024 11:10:30");
     let action = ac.DiscoveryStreamUserEvent({
       event: "SAVE_TO_POCKET",
       action_position: ACTION_POSITION,
@@ -3019,6 +3045,8 @@ add_task(
         recommendation_id: undefined,
         tile_id: 448685088,
         shim: SHIM,
+        fetchTimestamp: FETCH_TIMESTAMP.valueOf(),
+        newtabCreationTimestamp: NEWTAB_CREATION_TIMESTAMP.valueOf(),
       },
     });
 
@@ -3031,6 +3059,14 @@ add_task(
           Glean.pocket.shim.testGetValue(),
           SHIM,
           "Pocket shim was recorded"
+        );
+        Assert.deepEqual(
+          Glean.pocket.fetchTimestamp.testGetValue(),
+          FETCH_TIMESTAMP
+        );
+        Assert.deepEqual(
+          Glean.pocket.newtabCreationTimestamp.testGetValue(),
+          NEWTAB_CREATION_TIMESTAMP
         );
 
         resolve();

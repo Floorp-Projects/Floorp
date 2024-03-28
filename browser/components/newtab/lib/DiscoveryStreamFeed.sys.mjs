@@ -986,8 +986,9 @@ export class DiscoveryStreamFeed {
         });
 
         if (spocsResponse) {
+          const fetchTimestamp = Date.now();
           spocsState = {
-            lastUpdated: Date.now(),
+            lastUpdated: fetchTimestamp,
             spocs: {
               ...spocsResponse,
             },
@@ -1050,8 +1051,13 @@ export class DiscoveryStreamFeed {
 
               const { data: blockedResults } = this.filterBlocked(capResult);
 
+              const { data: spocsWithFetchTimestamp } = this.addFetchTimestamp(
+                blockedResults,
+                fetchTimestamp
+              );
+
               const { data: scoredResults, personalized } =
-                await this.scoreItems(blockedResults, "spocs");
+                await this.scoreItems(spocsWithFetchTimestamp, "spocs");
 
               spocsState.spocs = {
                 ...spocsState.spocs,
@@ -1207,6 +1213,22 @@ export class DiscoveryStreamFeed {
       return { data: filteredItems };
     }
     return { data };
+  }
+
+  // Add the fetch timestamp property to each spoc returned to communicate how
+  // old the spoc is in telemetry when it is used by the client
+  addFetchTimestamp(spocs, fetchTimestamp) {
+    if (spocs && spocs.length) {
+      return {
+        data: spocs.map(s => {
+          return {
+            ...s,
+            fetchTimestamp,
+          };
+        }),
+      };
+    }
+    return { data: spocs };
   }
 
   // For backwards compatibility, older spoc endpoint don't have flight_id,
@@ -1768,7 +1790,7 @@ export class DiscoveryStreamFeed {
         break;
       // Check if spocs was disabled. Remove them if they were.
       case PREF_SHOW_SPONSORED:
-      case PREF_SHOW_SPONSORED_TOPSITES:
+      case PREF_SHOW_SPONSORED_TOPSITES: {
         const dispatch = update =>
           this.store.dispatch(ac.BroadcastToContent(update));
         // We refresh placements data because one of the spocs were turned off.
@@ -1794,6 +1816,7 @@ export class DiscoveryStreamFeed {
         await this.cache.set("spocs", {});
         await this.loadSpocs(dispatch);
         break;
+      }
     }
   }
 

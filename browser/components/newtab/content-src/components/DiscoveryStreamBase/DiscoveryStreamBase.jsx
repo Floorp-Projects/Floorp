@@ -164,7 +164,7 @@ export class _DiscoveryStreamBase extends React.PureComponent {
             privacyNoticeURL={component.properties.privacyNoticeURL}
           />
         );
-      case "CollectionCardGrid":
+      case "CollectionCardGrid": {
         const { DiscoveryStream } = this.props;
         return (
           <CollectionCardGrid
@@ -178,6 +178,7 @@ export class _DiscoveryStreamBase extends React.PureComponent {
             dispatch={this.props.dispatch}
           />
         );
+      }
       case "CardGrid":
         return (
           <CardGrid
@@ -200,6 +201,7 @@ export class _DiscoveryStreamBase extends React.PureComponent {
             editorsPicksHeader={component.properties.editorsPicksHeader}
             recentSavesEnabled={this.props.DiscoveryStream.recentSavesEnabled}
             hideDescriptions={this.props.DiscoveryStream.hideDescriptions}
+            firstVisibleTimestamp={this.props.firstVisibleTimestamp}
           />
         );
       case "HorizontalRule":

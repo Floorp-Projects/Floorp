@@ -358,6 +358,7 @@ export class _CardGrid extends React.PureComponent {
             url={rec.url}
             id={rec.id}
             shim={rec.shim}
+            fetchTimestamp={rec.fetchTimestamp}
             type={this.props.type}
             context={rec.context}
             sponsor={rec.sponsor}
@@ -374,6 +375,7 @@ export class _CardGrid extends React.PureComponent {
             ctaButtonVariant={ctaButtonVariant}
             spocMessageVariant={spocMessageVariant}
             recommendation_id={rec.recommendation_id}
+            firstVisibleTimestamp={this.props.firstVisibleTimestamp}
           />
         )
       );

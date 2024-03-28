@@ -25,6 +25,8 @@ const DEFAULT_PROPS = {
     isForStartupCache: false,
   },
   DiscoveryStream: INITIAL_STATE.DiscoveryStream,
+  fetchTimestamp: new Date("March 20, 2024 10:30:44").getTime(),
+  firstVisibleTimestamp: new Date("March 21, 2024 10:11:12").getTime(),
 };
 
 describe("<DSCard>", () => {
@@ -171,6 +173,8 @@ describe("<DSCard>", () => {
             card_type: "organic",
             recommendation_id: undefined,
             tile_id: "fooidx",
+            fetchTimestamp: DEFAULT_PROPS.fetchTimestamp,
+            firstVisibleTimestamp: DEFAULT_PROPS.firstVisibleTimestamp,
           },
         })
       );
@@ -209,6 +213,8 @@ describe("<DSCard>", () => {
             card_type: "spoc",
             recommendation_id: undefined,
             tile_id: "fooidx",
+            fetchTimestamp: DEFAULT_PROPS.fetchTimestamp,
+            firstVisibleTimestamp: DEFAULT_PROPS.firstVisibleTimestamp,
           },
         })
       );
@@ -255,6 +261,8 @@ describe("<DSCard>", () => {
             recommendation_id: undefined,
             tile_id: "fooidx",
             shim: "click shim",
+            fetchTimestamp: DEFAULT_PROPS.fetchTimestamp,
+            firstVisibleTimestamp: DEFAULT_PROPS.firstVisibleTimestamp,
           },
         })
       );
@@ -367,7 +375,12 @@ describe("<DSCard>", () => {
 
   describe("DSCard onSaveClick", () => {
     it("should fire telemetry for onSaveClick", () => {
-      wrapper.setProps({ id: "fooidx", pos: 1, type: "foo" });
+      wrapper.setProps({
+        id: "fooidx",
+        pos: 1,
+        type: "foo",
+        fetchTimestamp: undefined,
+      });
       wrapper.instance().onSaveClick();
 
       assert.calledThrice(dispatch);
@@ -388,6 +401,8 @@ describe("<DSCard>", () => {
             card_type: "organic",
             recommendation_id: undefined,
             tile_id: "fooidx",
+            fetchTimestamp: undefined,
+            firstVisibleTimestamp: DEFAULT_PROPS.firstVisibleTimestamp,
           },
         })
       );

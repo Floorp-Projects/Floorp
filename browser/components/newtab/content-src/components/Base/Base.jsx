@@ -13,6 +13,9 @@ import React from "react";
 import { Search } from "content-src/components/Search/Search";
 import { Sections } from "content-src/components/Sections/Sections";
 
+const VISIBLE = "visible";
+const VISIBILITY_CHANGE_EVENT = "visibilitychange";
+
 export const PrefsButton = ({ onClick, icon }) => (
   <div className="prefs-button">
     <button
@@ -107,17 +110,49 @@ export class BaseContent extends React.PureComponent {
     this.handleOnKeyDown = this.handleOnKeyDown.bind(this);
     this.onWindowScroll = debounce(this.onWindowScroll.bind(this), 5);
     this.setPref = this.setPref.bind(this);
-    this.state = { fixedSearch: false };
+    this.state = { fixedSearch: false, firstVisibleTimestamp: null };
+  }
+
+  setFirstVisibleTimestamp() {
+    if (!this.state.firstVisibleTimestamp) {
+      this.setState({
+        firstVisibleTimestamp: Date.now(),
+      });
+    }
   }
 
   componentDidMount() {
     global.addEventListener("scroll", this.onWindowScroll);
     global.addEventListener("keydown", this.handleOnKeyDown);
+    if (this.props.document.visibilityState === VISIBLE) {
+      this.setFirstVisibleTimestamp();
+    } else {
+      this._onVisibilityChange = () => {
+        if (this.props.document.visibilityState === VISIBLE) {
+          this.setFirstVisibleTimestamp();
+          this.props.document.removeEventListener(
+            VISIBILITY_CHANGE_EVENT,
+            this._onVisibilityChange
+          );
+          this._onVisibilityChange = null;
+        }
+      };
+      this.props.document.addEventListener(
+        VISIBILITY_CHANGE_EVENT,
+        this._onVisibilityChange
+      );
+    }
   }
 
   componentWillUnmount() {
     global.removeEventListener("scroll", this.onWindowScroll);
     global.removeEventListener("keydown", this.handleOnKeyDown);
+    if (this._onVisibilityChange) {
+      this.props.document.removeEventListener(
+        VISIBILITY_CHANGE_EVENT,
+        this._onVisibilityChange
+      );
+    }
   }
 
   onWindowScroll() {
@@ -249,6 +284,7 @@ export class BaseContent extends React.PureComponent {
                   <DiscoveryStreamBase
                     locale={props.App.locale}
                     mayHaveSponsoredStories={mayHaveSponsoredStories}
+                    firstVisibleTimestamp={this.state.firstVisibleTimestamp}
                   />
                 </ErrorBoundary>
               ) : (
@@ -262,6 +298,10 @@ export class BaseContent extends React.PureComponent {
     );
   }
 }
+
+BaseContent.defaultProps = {
+  document: global.document,
+};
 
 export const Base = connect(state => ({
   App: state.App,

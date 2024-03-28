@@ -33,12 +33,15 @@ describe("<ImpressionStats>", () => {
     };
   }
 
+  const TEST_FETCH_TIMESTAMP = Date.now();
+  const TEST_FIRST_VISIBLE_TIMESTAMP = Date.now();
   const DEFAULT_PROPS = {
     rows: [
-      { id: 1, pos: 0 },
-      { id: 2, pos: 1 },
-      { id: 3, pos: 2 },
+      { id: 1, pos: 0, fetchTimestamp: TEST_FETCH_TIMESTAMP },
+      { id: 2, pos: 1, fetchTimestamp: TEST_FETCH_TIMESTAMP },
+      { id: 3, pos: 2, fetchTimestamp: TEST_FETCH_TIMESTAMP },
     ],
+    firstVisibleTimestamp: TEST_FIRST_VISIBLE_TIMESTAMP,
     source: SOURCE,
     IntersectionObserver: buildIntersectionObserver(FullIntersectEntries),
     document: {
@@ -76,7 +79,7 @@ describe("<ImpressionStats>", () => {
 
     assert.notCalled(dispatch);
   });
-  it("should noly send loaded content but not impression when the wrapped item is not visbible", () => {
+  it("should only send loaded content but not impression when the wrapped item is not visbible", () => {
     const dispatch = sinon.spy();
     const props = {
       dispatch,
@@ -128,11 +131,37 @@ describe("<ImpressionStats>", () => {
     [action] = dispatch.secondCall.args;
     assert.equal(action.type, at.DISCOVERY_STREAM_IMPRESSION_STATS);
     assert.equal(action.data.source, SOURCE);
+    assert.equal(
+      action.data.firstVisibleTimestamp,
+      TEST_FIRST_VISIBLE_TIMESTAMP
+    );
     assert.deepEqual(action.data.tiles, [
-      { id: 1, pos: 0, type: "organic", recommendation_id: undefined },
-      { id: 2, pos: 1, type: "organic", recommendation_id: undefined },
-      { id: 3, pos: 2, type: "organic", recommendation_id: undefined },
+      {
+        id: 1,
+        pos: 0,
+        type: "organic",
+        recommendation_id: undefined,
+        fetchTimestamp: TEST_FETCH_TIMESTAMP,
+      },
+      {
+        id: 2,
+        pos: 1,
+        type: "organic",
+        recommendation_id: undefined,
+        fetchTimestamp: TEST_FETCH_TIMESTAMP,
+      },
+      {
+        id: 3,
+        pos: 2,
+        type: "organic",
+        recommendation_id: undefined,
+        fetchTimestamp: TEST_FETCH_TIMESTAMP,
+      },
     ]);
+    assert.equal(
+      action.data.firstVisibleTimestamp,
+      TEST_FIRST_VISIBLE_TIMESTAMP
+    );
   });
   it("should send a DISCOVERY_STREAM_SPOC_IMPRESSION when the wrapped item has a flightId", () => {
     const dispatch = sinon.spy();
@@ -207,10 +236,32 @@ describe("<ImpressionStats>", () => {
     [action] = dispatch.firstCall.args;
     assert.equal(action.type, at.DISCOVERY_STREAM_IMPRESSION_STATS);
     assert.deepEqual(action.data.tiles, [
-      { id: 1, pos: 0, type: "organic", recommendation_id: undefined },
-      { id: 2, pos: 1, type: "organic", recommendation_id: undefined },
-      { id: 3, pos: 2, type: "organic", recommendation_id: undefined },
+      {
+        id: 1,
+        pos: 0,
+        type: "organic",
+        recommendation_id: undefined,
+        fetchTimestamp: TEST_FETCH_TIMESTAMP,
+      },
+      {
+        id: 2,
+        pos: 1,
+        type: "organic",
+        recommendation_id: undefined,
+        fetchTimestamp: TEST_FETCH_TIMESTAMP,
+      },
+      {
+        id: 3,
+        pos: 2,
+        type: "organic",
+        recommendation_id: undefined,
+        fetchTimestamp: TEST_FETCH_TIMESTAMP,
+      },
     ]);
+    assert.equal(
+      action.data.firstVisibleTimestamp,
+      TEST_FIRST_VISIBLE_TIMESTAMP
+    );
   });
   it("should remove visibility change listener when the wrapper is removed", () => {
     const props = {
