@@ -19,6 +19,8 @@ interface nsIGfxInfo : nsISupports
   readonly attribute AString AzureCanvasBackend;
   readonly attribute AString AzureContentBackend;
   readonly attribute boolean usingGPUProcess;
+  readonly attribute boolean usingRemoteCanvas;
+  readonly attribute boolean usingAcceleratedCanvas;
   readonly attribute boolean hasBattery;
   readonly attribute AString DWriteVersion;
   readonly attribute AString cleartypeParameters;
