@@ -1985,13 +1985,11 @@ export var Policies = {
     onBeforeAddons(manager, param) {
       if (param.Locked) {
         manager.disallowFeature("changeProxySettings");
-        lazy.ProxyPolicies.configureProxySettings(param, setAndLockPref);
-      } else {
-        lazy.ProxyPolicies.configureProxySettings(
-          param,
-          PoliciesUtils.setDefaultPref
-        );
       }
+      lazy.ProxyPolicies.configureProxySettings(
+        param,
+        PoliciesUtils.setDefaultPref
+      );
     },
   },
 
