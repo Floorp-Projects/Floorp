@@ -131,6 +131,10 @@ add_task(async function testSlowLoadingDocument() {
   // Navigate to about:blank to clean the state.
   await navigateTo("about:blank");
 
+  const markuploaded = inspector.once("markuploaded");
+  const onNewRoot = inspector.once("new-root");
+  const onUpdated = inspector.once("inspector-updated");
+
   await navigateTo(TEST_URL_2, { waitForLoad: false });
   info("Wait for the #start div to be available as a markupview container");
   await TestUtils.waitForCondition(async () => {
@@ -165,4 +169,11 @@ add_task(async function testSlowLoadingDocument() {
     "body",
     inspector
   );
+
+  info(
+    "Waiting for inspector to update after having released the document load"
+  );
+  await markuploaded;
+  await onNewRoot;
+  await onUpdated;
 });
