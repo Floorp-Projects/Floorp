@@ -1038,12 +1038,19 @@ renaming_overrides_prefixing = true
 
   // Return true if the <basic-shape> is path().
   bool IsPath() const {
-    return IsOffsetPath() && AsOffsetPath().path->IsShape() &&
-           AsOffsetPath().path->AsShape().IsPath();
+    if (!IsOffsetPath()) {
+      return false;
+    }
+    const auto& path = AsOffsetPath().path;
+    if (!path->IsShape()) {
+      return false;
+    }
+    const auto& shape = path->AsShape();
+    return shape.IsPathOrShape() && shape.AsPathOrShape().IsPath();
   }
 
   const StyleSVGPathData& AsSVGPathData() const {
-    return AsOffsetPath().path->AsShape().AsPath().path;
+    return AsOffsetPath().path->AsShape().AsPathOrShape().AsPath().path;
   }
 
   // Return true if this is "<basic-shape> || <coord-box>".

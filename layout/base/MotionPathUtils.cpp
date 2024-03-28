@@ -740,18 +740,22 @@ already_AddRefed<gfx::Path> MotionPathUtils::BuildPath(
     case StyleBasicShape::Tag::Polygon:
       return ShapeUtils::BuildPolygonPath(aBasicShape, aCoordBox,
                                           AppUnitsPerCSSPixel(), aPathBuilder);
-    case StyleBasicShape::Tag::Path:
+    case StyleBasicShape::Tag::PathOrShape: {
       // FIXME: Bug 1836847. Once we support "at <position>" for path(), we have
       // to also check its containing block as well. For now, we are still
       // building its gfx::Path directly by its SVGPathData without other
       // reference. https://github.com/w3c/fxtf-drafts/issues/504
-      return BuildSVGPath(aBasicShape.AsPath().path, aPathBuilder);
-    case StyleBasicShape::Tag::Shape:
+      const auto& pathOrShape = aBasicShape.AsPathOrShape();
+      if (pathOrShape.IsPath()) {
+        return BuildSVGPath(pathOrShape.AsPath().path, aPathBuilder);
+      }
+
       // Note that shape() always defines the initial position, i.e. "from x y",
       // by its first move command, so |aOffsetPosition|, i.e. offset-position
       // property, is ignored.
-      return BuildShape(aBasicShape.AsShape().commands.AsSpan(), aPathBuilder,
+      return BuildShape(pathOrShape.AsShape().commands.AsSpan(), aPathBuilder,
                         aCoordBox);
+    }
   }
 
   return nullptr;
