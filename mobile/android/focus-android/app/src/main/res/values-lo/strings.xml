@@ -84,7 +84,11 @@
     <string name="share_dialog_title">ແບ່ງປັນຜ່ານທາງ</string>
 
     <string name="notification_erase_title_android_14">ລຶບປະຫວັດການທ່ອງເວັບ</string>
-    <string name="notification_erase_text_android_14">ແຕະ ຫຼື ລຶບການແຈ້ງເຕືອນນີ້ເພື່ອລຶບປະຫວັດການທ່ອງເວັບຂອງທ່ານຢ່າງປອດໄພ.</string>
+    <string name="notification_erase_text_android_14" moz:RemovedIn="124" tools:ignore="UnusedResources">ແຕະ ຫຼື ລຶບການແຈ້ງເຕືອນນີ້ເພື່ອລຶບປະຫວັດການທ່ອງເວັບຂອງທ່ານຢ່າງປອດໄພ.</string>
+
+    <!-- Text shown in the notification description that pops up to remind the user that a browsing session is active
+    for Android 14+. -->
+    <string name="notification_erase_text_android_14_1">ແຕະ ຫຼື ປັດການແຈ້ງເຕືອນນີ້ເພື່ອລຶບປະຫວັດການທ່ອງເວັບຂອງທ່ານຢ່າງປອດໄພ.</string>
 
     <string name="notification_erase_text">ລຶບປະຫວັດການທ່ອງເວັບ</string>
 
