@@ -11,9 +11,9 @@ const { TargetActorRegistry } = ChromeUtils.importESModule(
   "resource://devtools/server/actors/targets/target-actor-registry.sys.mjs",
   { global: "shared" }
 );
-const { WatcherRegistry } = ChromeUtils.importESModule(
-  "resource://devtools/server/actors/watcher/WatcherRegistry.sys.mjs",
-  // WatcherRegistry needs to be a true singleton and loads ActorManagerParent
+const { ParentProcessWatcherRegistry } = ChromeUtils.importESModule(
+  "resource://devtools/server/actors/watcher/ParentProcessWatcherRegistry.sys.mjs",
+  // ParentProcessWatcherRegistry needs to be a true singleton and loads ActorManagerParent
   // which also has to be a true singleton.
   { global: "shared" }
 );
@@ -164,7 +164,7 @@ exports.WatcherActor = class WatcherActor extends Actor {
     // Only try to notify content processes if the watcher was in the registry.
     // Otherwise it means that it wasn't connected to any process and the JS Process Actor
     // wouldn't be registered.
-    if (WatcherRegistry.getWatcher(this.actorID)) {
+    if (ParentProcessWatcherRegistry.getWatcher(this.actorID)) {
       // Emit one IPC message on destroy to all the processes
       const domProcesses = ChromeUtils.getAllDOMProcesses();
       for (const domProcess of domProcesses) {
@@ -180,7 +180,7 @@ exports.WatcherActor = class WatcherActor extends Actor {
       Resources.getParentProcessResourceTypes(Object.values(Resources.TYPES))
     );
 
-    WatcherRegistry.unregisterWatcher(this.actorID);
+    ParentProcessWatcherRegistry.unregisterWatcher(this.actorID);
 
     // In case the watcher actor is leaked, prevent leaking the browser window
     this._browserElement = null;
@@ -198,7 +198,7 @@ exports.WatcherActor = class WatcherActor extends Actor {
    *         Returns the list of currently watched resource types.
    */
   get sessionData() {
-    return WatcherRegistry.getSessionData(this);
+    return ParentProcessWatcherRegistry.getSessionData(this);
   }
 
   form() {
@@ -227,7 +227,7 @@ exports.WatcherActor = class WatcherActor extends Actor {
    *        Type of context to observe. See Targets.TYPES object.
    */
   async watchTargets(targetType) {
-    WatcherRegistry.watchTargets(this, targetType);
+    ParentProcessWatcherRegistry.watchTargets(this, targetType);
 
     // When debugging a tab, ensure processing the top level target first
     // (for now, other session context types are instantiating the top level target
@@ -277,7 +277,7 @@ exports.WatcherActor = class WatcherActor extends Actor {
    *        true when this is called as the result of a change to the devtools.browsertoolbox.scope pref
    */
   unwatchTargets(targetType, options = {}) {
-    const isWatchingTargets = WatcherRegistry.unwatchTargets(
+    const isWatchingTargets = ParentProcessWatcherRegistry.unwatchTargets(
       this,
       targetType,
       options
@@ -299,7 +299,7 @@ exports.WatcherActor = class WatcherActor extends Actor {
     // unless we're switching mode (having both condition at the same time should only
     // happen in tests).
     if (!options.isModeSwitching) {
-      WatcherRegistry.maybeUnregisterJSActors();
+      ParentProcessWatcherRegistry.maybeUnregisterJSActors();
     }
   }
 
@@ -549,13 +549,13 @@ exports.WatcherActor = class WatcherActor extends Actor {
     );
 
     // Bail out early if all resources were watched from parent process.
-    // In this scenario, we do not need to update these resource types in the WatcherRegistry
+    // In this scenario, we do not need to update these resource types in the ParentProcessWatcherRegistry
     // as targets do not care about them.
     if (!Resources.hasResourceTypesForTargets(resourceTypes)) {
       return;
     }
 
-    WatcherRegistry.watchResources(this, resourceTypes);
+    ParentProcessWatcherRegistry.watchResources(this, resourceTypes);
 
     const promises = [];
     const domProcesses = ChromeUtils.getAllDOMProcesses();
@@ -624,13 +624,13 @@ exports.WatcherActor = class WatcherActor extends Actor {
     );
 
     // Bail out early if all resources were all watched from parent process.
-    // In this scenario, we do not need to update these resource types in the WatcherRegistry
+    // In this scenario, we do not need to update these resource types in the ParentProcessWatcherRegistry
     // as targets do not care about them.
     if (!Resources.hasResourceTypesForTargets(resourceTypes)) {
       return;
     }
 
-    const isWatchingResources = WatcherRegistry.unwatchResources(
+    const isWatchingResources = ParentProcessWatcherRegistry.unwatchResources(
       this,
       resourceTypes
     );
@@ -663,7 +663,7 @@ exports.WatcherActor = class WatcherActor extends Actor {
     }
 
     // Unregister the JS Window Actor if there is no more DevTools code observing any target/resource
-    WatcherRegistry.maybeUnregisterJSActors();
+    ParentProcessWatcherRegistry.maybeUnregisterJSActors();
   }
 
   clearResources(resourceTypes) {
@@ -758,7 +758,12 @@ exports.WatcherActor = class WatcherActor extends Actor {
    *        "set" will update the data set with the new entries.
    */
   async addOrSetDataEntry(type, entries, updateType) {
-    WatcherRegistry.addOrSetSessionDataEntry(this, type, entries, updateType);
+    ParentProcessWatcherRegistry.addOrSetSessionDataEntry(
+      this,
+      type,
+      entries,
+      updateType
+    );
 
     const promises = [];
     const domProcesses = ChromeUtils.getAllDOMProcesses();
@@ -803,7 +808,7 @@ exports.WatcherActor = class WatcherActor extends Actor {
    *        List of values to remove from this data type.
    */
   removeDataEntry(type, entries) {
-    WatcherRegistry.removeSessionDataEntry(this, type, entries);
+    ParentProcessWatcherRegistry.removeSessionDataEntry(this, type, entries);
 
     const domProcesses = ChromeUtils.getAllDOMProcesses();
     for (const domProcess of domProcesses) {
@@ -847,7 +852,7 @@ exports.WatcherActor = class WatcherActor extends Actor {
       host = new URL(newTargetUrl).host;
     } catch (e) {}
 
-    WatcherRegistry.addOrSetSessionDataEntry(
+    ParentProcessWatcherRegistry.addOrSetSessionDataEntry(
       this,
       "browser-element-host",
       [host],
