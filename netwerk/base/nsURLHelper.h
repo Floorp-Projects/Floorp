@@ -308,6 +308,8 @@ class URLParams final {
    */
   void Serialize(nsAString& aValue, bool aEncode) const;
 
+  static void SerializeString(const nsCString& aInput, nsAString& aValue);
+
   void Get(const nsAString& aName, nsString& aRetval);
 
   void GetAll(const nsAString& aName, nsTArray<nsString>& aRetval);
@@ -338,6 +340,8 @@ class URLParams final {
 
   uint32_t Length() const { return mParams.Length(); }
 
+  static void DecodeString(const nsACString& aInput, nsAString& aOutput);
+
   const nsAString& GetKeyAtIndex(uint32_t aIndex) const {
     MOZ_ASSERT(aIndex < mParams.Length());
     return mParams[aIndex].mKey;
@@ -355,7 +359,6 @@ class URLParams final {
   void Sort();
 
  private:
-  static void DecodeString(const nsACString& aInput, nsAString& aOutput);
   static void ConvertString(const nsACString& aInput, nsAString& aOutput);
   static bool ParseNextInternal(const char*& aStart, const char* aEnd,
                                 bool aShouldDecode, nsAString* aOutputName,

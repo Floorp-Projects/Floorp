@@ -1302,9 +1302,7 @@ void URLParams::ParseInput(const nsACString& aInput) {
   });
 }
 
-namespace {
-
-void SerializeString(const nsCString& aInput, nsAString& aValue) {
+void URLParams::SerializeString(const nsCString& aInput, nsAString& aValue) {
   const unsigned char* p = (const unsigned char*)aInput.get();
   const unsigned char* end = p + aInput.Length();
 
@@ -1324,8 +1322,6 @@ void SerializeString(const nsCString& aInput, nsAString& aValue) {
     ++p;
   }
 }
-
-}  // namespace
 
 void URLParams::Serialize(nsAString& aValue, bool aEncode) const {
   aValue.Truncate();
