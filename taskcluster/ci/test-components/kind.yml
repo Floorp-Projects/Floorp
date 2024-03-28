@@ -44,7 +44,7 @@ job-defaults:
         kind: test
         platform: 'AC-ui-test/opt'
         tier: 2
-    worker-type: b-linux-medium-gcp
+    worker-type: b-linux-large-gcp
     worker:
         artifacts:
             - name: public

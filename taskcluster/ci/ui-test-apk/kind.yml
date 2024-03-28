@@ -22,7 +22,7 @@ job-defaults:
             - android-sdk-linux
     optimization:
         skip-unless-backstop: null
-    worker-type: t-linux-large
+    worker-type: b-linux-gcp
     worker:
         docker-image: {in-tree: android-ui-tests}
         max-run-time: 7200
