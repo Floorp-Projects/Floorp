@@ -9,8 +9,8 @@ const { SiteDataTestUtils } = ChromeUtils.importESModule(
 
 const uuidGenerator = Services.uuid;
 
-const ORIGIN_A = "http://example.net";
-const ORIGIN_B = "http://example.org";
+const ORIGIN_A = "https://example.net";
+const ORIGIN_B = "https://example.org";
 
 const PREFLIGHT_URL_PATH =
   "/browser/toolkit/components/cleardata/tests/browser/file_cors_preflight.sjs";
@@ -45,7 +45,7 @@ async function testDeleteAll(
   clearDataFlag,
   { deleteBy = "all", hasUserInput = false } = {}
 ) {
-  await BrowserTestUtils.withNewTab("http://example.com", async browser => {
+  await BrowserTestUtils.withNewTab("https://example.com", async browser => {
     let token = uuidGenerator.generateUUID().toString();
 
     // Populate the preflight cache.
@@ -132,7 +132,7 @@ add_task(async function test_deletePrivateBrowsingCache() {
 
     const tab = (browser.gBrowser.selectedTab = BrowserTestUtils.addTab(
       browser.gBrowser,
-      "http://example.com"
+      "https://example.com"
     ));
     await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
