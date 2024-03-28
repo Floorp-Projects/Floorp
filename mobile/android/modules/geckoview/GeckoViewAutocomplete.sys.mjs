@@ -609,7 +609,7 @@ export const GeckoViewAutocomplete = {
           );
           break;
         }
-        case "autofill": {
+        case "autofill-profile": {
           const comment = JSON.parse(option.comment);
           debug`delegateSelection ${comment}`;
           const creditCard = CreditCard.fromGecko(comment);

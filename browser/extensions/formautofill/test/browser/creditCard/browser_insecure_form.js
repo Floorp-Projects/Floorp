@@ -55,28 +55,28 @@ add_task(async function test_insecure_form() {
       urlPath: TEST_URL_PATH,
       protocol: "https",
       focusInput: "#organization",
-      expectedType: "autofill",
+      expectedType: "autofill-profile",
       expectedResultLength: 3, // add one for the status row
     },
     {
       urlPath: TEST_URL_PATH,
       protocol: "http",
       focusInput: "#organization",
-      expectedType: "autofill",
+      expectedType: "autofill-profile",
       expectedResultLength: 3, // add one for the status row
     },
     {
       urlPath: TEST_URL_PATH_CC,
       protocol: "https",
       focusInput: "#cc-name",
-      expectedType: "autofill",
+      expectedType: "autofill-profile",
       expectedResultLength: 3, // no status row here
     },
     {
       urlPath: TEST_URL_PATH_CC,
       protocol: "http",
       focusInput: "#cc-name",
-      expectedType: "insecureWarning", // insecure warning field
+      expectedType: "autofill-insecureWarning", // insecure warning field
       expectedResultLength: 1,
     },
   ];
