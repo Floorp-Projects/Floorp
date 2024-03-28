@@ -570,10 +570,6 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
 
   void OnShutdown();
 
-  bool IsContextLost() const { return mIsContextLost; }
-  void OnRemoteCanvasLost();
-  void OnRemoteCanvasRestored();
-
   /**
    * Update CurrentState().filter with the filter description for
    * CurrentState().filterChain.
@@ -766,7 +762,7 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
    * Check if the target is valid after calling EnsureTarget.
    */
   bool IsTargetValid() const {
-    return !!mTarget && mTarget != sErrorTarget.get() && !mIsContextLost;
+    return !!mTarget && mTarget != sErrorTarget.get();
   }
 
   /**
@@ -849,10 +845,6 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
   bool mWillReadFrequently = false;
   // Whether or not we have already shutdown.
   bool mHasShutdown = false;
-  // Whether or not remote canvas is currently unavailable.
-  bool mIsContextLost = false;
-  // Whether or not we can restore the context after restoration.
-  bool mAllowContextRestore = true;
 
   bool AddShutdownObserver();
   void RemoveShutdownObserver();

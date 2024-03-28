@@ -185,8 +185,6 @@ support-files = [
 
 ["test_ImageData_ctor.html"]
 
-["test_accelerated_canvas_context_loss.html"]
-
 ["test_bitmaprenderer.html"]
 
 ["test_bug232227.html"]

@@ -2161,18 +2161,6 @@ GfxInfoBase::GetUsingGPUProcess(bool* aOutValue) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-GfxInfoBase::GetUsingRemoteCanvas(bool* aOutValue) {
-  *aOutValue = gfx::gfxVars::RemoteCanvasEnabled();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-GfxInfoBase::GetUsingAcceleratedCanvas(bool* aOutValue) {
-  *aOutValue = gfx::gfxVars::UseAcceleratedCanvas2D();
-  return NS_OK;
-}
-
 NS_IMETHODIMP_(int32_t)
 GfxInfoBase::GetMaxRefreshRate(bool* aMixed) {
   if (aMixed) {

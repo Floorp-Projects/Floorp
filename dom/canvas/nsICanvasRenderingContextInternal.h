@@ -15,7 +15,6 @@
 #include "nsRFPService.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/dom/OffscreenCanvas.h"
-#include "mozilla/EventForwards.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/StateWatching.h"
@@ -225,9 +224,6 @@ class nsICanvasRenderingContextInternal : public nsISupports,
 
   // Checking if fingerprinting protection is enable for the given target.
   bool ShouldResistFingerprinting(mozilla::RFPTarget aTarget) const;
-
-  bool DispatchEvent(const nsAString& eventName, mozilla::CanBubble aCanBubble,
-                     mozilla::Cancelable aIsCancelable) const;
 
  protected:
   RefPtr<mozilla::dom::HTMLCanvasElement> mCanvasElement;
