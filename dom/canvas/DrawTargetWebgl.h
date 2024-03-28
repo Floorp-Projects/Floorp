@@ -92,6 +92,8 @@ class SharedContextWebgl : public mozilla::RefCounted<SharedContextWebgl>,
 
   void OnMemoryPressure();
 
+  void ClearCaches();
+
  private:
   SharedContextWebgl();
 

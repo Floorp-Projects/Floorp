@@ -113,6 +113,8 @@ static bool CreateAndMapShmem(RefPtr<ipc::SharedMemoryBasic>& aShmem,
   return true;
 }
 
+StaticRefPtr<gfx::SharedContextWebgl> CanvasTranslator::sSharedContext;
+
 bool CanvasTranslator::EnsureSharedContextWebgl() {
   if (!mSharedContext || mSharedContext->IsContextLost()) {
     if (mSharedContext) {
@@ -122,7 +124,14 @@ bool CanvasTranslator::EnsureSharedContextWebgl() {
         mRemoteTextureOwner->ClearRecycledTextures();
       }
     }
-    mSharedContext = gfx::SharedContextWebgl::Create();
+    // Check if the global shared context is still valid. If not, instantiate
+    // a new one before we try to use it.
+    if (!sSharedContext || sSharedContext->IsContextLost()) {
+      sSharedContext = gfx::SharedContextWebgl::Create();
+    }
+    mSharedContext = sSharedContext;
+    // If we can't get a new context, then the only thing left to do is block
+    // new canvases.
     if (!mSharedContext || mSharedContext->IsContextLost()) {
       mSharedContext = nullptr;
       BlockCanvas();
@@ -130,6 +139,13 @@ bool CanvasTranslator::EnsureSharedContextWebgl() {
     }
   }
   return true;
+}
+
+void CanvasTranslator::Shutdown() {
+  if (sSharedContext) {
+    gfx::CanvasRenderThread::Dispatch(NS_NewRunnableFunction(
+        "CanvasTranslator::Shutdown", []() { sSharedContext = nullptr; }));
+  }
 }
 
 mozilla::ipc::IPCResult CanvasTranslator::RecvInitTranslator(
@@ -1145,6 +1161,13 @@ void CanvasTranslator::ClearTextureInfo() {
   mTextureInfo.clear();
   mDrawTargets.Clear();
   mSharedContext = nullptr;
+  // If the global shared context's ref is the last ref left, then clear out
+  // any internal caches and textures from the context, but still keep it
+  // alive. This saves on startup costs while not contributing significantly
+  // to memory usage.
+  if (sSharedContext && sSharedContext->hasOneRef()) {
+    sSharedContext->ClearCaches();
+  }
   mBaseDT = nullptr;
   if (mReferenceTextureData) {
     mReferenceTextureData->Unlock();

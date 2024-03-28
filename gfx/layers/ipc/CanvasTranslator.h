@@ -277,6 +277,8 @@ class CanvasTranslator final : public gfx::InlineTranslator,
 
   void GetDataSurface(uint64_t aSurfaceRef);
 
+  static void Shutdown();
+
  private:
   ~CanvasTranslator();
 
@@ -336,6 +338,7 @@ class CanvasTranslator final : public gfx::InlineTranslator,
 #if defined(XP_WIN)
   RefPtr<ID3D11Device> mDevice;
 #endif
+  static StaticRefPtr<gfx::SharedContextWebgl> sSharedContext;
   RefPtr<gfx::SharedContextWebgl> mSharedContext;
   RefPtr<RemoteTextureOwnerClient> mRemoteTextureOwner;
 
