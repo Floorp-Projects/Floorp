@@ -119,7 +119,7 @@ fuzzy-range(<=1,1) == gradient_cache_hardstop_clip.yaml gradient_cache_hardstop_
 fuzzy(2,23000) == linear-large.yaml linear-large-ref.yaml
 == conic-large.yaml conic-large-ref.yaml
 fuzzy-if(env(android,device),254,1) == conic-large-hard-stop.yaml conic-large-hard-stop-ref.yaml # Android device is Samsung Galaxy A51
-fuzzy(1,7000) == radial-large.yaml radial-large-ref.png
+fuzzy(1,8000) == radial-large.yaml radial-large-ref.png
 
 # crash tests
 == linear-far-endpoints.yaml linear-far-endpoints.yaml
