@@ -13525,16 +13525,6 @@
   value: true
   mirror: always
 
-# Determines if and when to center pages on a sheet horiontally when printing.
-# With a setting of 2, it's guaranteed that A4 on US Letter will be centered.
-#  0: never,
-#  1: always,
-#  2: when the ratio of sheet to page size after content scaling is near 1.0
-- name: print.center_page_on_sheet
-  type: RelaxedAtomicUint32
-  value: 2
-  mirror: always
-
 #---------------------------------------------------------------------------
 # Prefs starting with "privacy."
 #---------------------------------------------------------------------------
