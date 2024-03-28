@@ -388,7 +388,7 @@ add_task(async function test_doorhanger_homepage_button() {
   await ext2.startup();
 
   let popupShown = promisePopupShown(panel);
-  BrowserHome();
+  BrowserCommands.home();
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, false, () =>
     gURLBar.value.endsWith("ext2.html")
   );
@@ -410,7 +410,7 @@ add_task(async function test_doorhanger_homepage_button() {
   popupShown = promisePopupShown(panel);
   await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank");
   let openHomepage = TestUtils.topicObserved("browser-open-homepage-start");
-  BrowserHome();
+  BrowserCommands.home();
   await openHomepage;
   await popupShown;
   await TestUtils.waitForCondition(
@@ -432,7 +432,7 @@ add_task(async function test_doorhanger_homepage_button() {
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
   openHomepage = TestUtils.topicObserved("browser-open-homepage-start");
-  BrowserHome();
+  BrowserCommands.home();
   await openHomepage;
 
   is(getHomePageURL(), defaultHomePage, "The homepage is set back to default");
@@ -507,7 +507,7 @@ add_task(async function test_doorhanger_new_window() {
   let popupShown = promisePopupShown(panel);
   await BrowserTestUtils.openNewForegroundTab(win.gBrowser, "about:blank");
   let openHomepage = TestUtils.topicObserved("browser-open-homepage-start");
-  win.BrowserHome();
+  win.BrowserCommands.home();
   await openHomepage;
   await popupShown;
 
@@ -547,7 +547,7 @@ async function testHomePageWindow(options = {}) {
   let panel = ExtensionControlledPopup._getAndMaybeCreatePanel(doc);
 
   let popupShown = options.expectPanel && promisePopupShown(panel);
-  win.BrowserHome();
+  win.BrowserCommands.home();
   await Promise.all([
     BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser),
     openHomepage,

@@ -216,7 +216,7 @@
     <key id="goBackKb2" data-l10n-id="nav-back-shortcut-alt" command="Browser:Back" modifiers="accel"/>
     <key id="goForwardKb2" data-l10n-id="nav-fwd-shortcut-alt" command="Browser:Forward" modifiers="accel"/>
 #endif
-    <key id="goHome" keycode="VK_HOME" oncommand="BrowserHome();" modifiers="alt"/>
+    <key id="goHome" keycode="VK_HOME" oncommand="BrowserCommands.home();" modifiers="alt"/>
     <key keycode="VK_F5" command="Browser:Reload"/>
 #ifndef XP_MACOSX
     <key id="showAllHistoryKb" data-l10n-id="history-show-all-shortcut" command="Browser:ShowAllHistory" modifiers="accel,shift"/>

@@ -195,4 +195,89 @@ var BrowserCommands = {
       );
     }
   },
+
+  home(aEvent) {
+    if (aEvent?.button == 2) {
+      // right-click: do nothing
+      return;
+    }
+
+    const homePage = HomePage.get(window);
+    let where = BrowserUtils.whereToOpenLink(aEvent, false, true);
+
+    // Don't load the home page in pinned or hidden tabs (e.g. Firefox View).
+    if (
+      where == "current" &&
+      (gBrowser?.selectedTab.pinned || gBrowser?.selectedTab.hidden)
+    ) {
+      where = "tab";
+    }
+
+    // openTrustedLinkIn in utilityOverlay.js doesn't handle loading multiple pages
+    let notifyObservers;
+    switch (where) {
+      case "current":
+        // If we're going to load an initial page in the current tab as the
+        // home page, we set initialPageLoadedFromURLBar so that the URL
+        // bar is cleared properly (even during a remoteness flip).
+        if (isInitialPage(homePage)) {
+          gBrowser.selectedBrowser.initialPageLoadedFromUserAction = homePage;
+        }
+        loadOneOrMoreURIs(
+          homePage,
+          Services.scriptSecurityManager.getSystemPrincipal(),
+          null
+        );
+        if (isBlankPageURL(homePage)) {
+          gURLBar.select();
+        } else {
+          gBrowser.selectedBrowser.focus();
+        }
+        notifyObservers = true;
+        aEvent?.preventDefault();
+        break;
+      case "tabshifted":
+      case "tab": {
+        const urls = homePage.split("|");
+        const loadInBackground = Services.prefs.getBoolPref(
+          "browser.tabs.loadBookmarksInBackground",
+          false
+        );
+        // The homepage observer event should only be triggered when the homepage opens
+        // in the foreground. This is mostly to support the homepage changed by extension
+        // doorhanger which doesn't currently support background pages. This may change in
+        // bug 1438396.
+        notifyObservers = !loadInBackground;
+        gBrowser.loadTabs(urls, {
+          inBackground: loadInBackground,
+          triggeringPrincipal:
+            Services.scriptSecurityManager.getSystemPrincipal(),
+          csp: null,
+        });
+        if (!loadInBackground) {
+          if (isBlankPageURL(homePage)) {
+            gURLBar.select();
+          } else {
+            gBrowser.selectedBrowser.focus();
+          }
+        }
+        aEvent?.preventDefault();
+        break;
+      }
+      case "window":
+        // OpenBrowserWindow will trigger the observer event, so no need to do so here.
+        notifyObservers = false;
+        OpenBrowserWindow();
+        aEvent?.preventDefault();
+        break;
+    }
+
+    if (notifyObservers) {
+      // A notification for when a user has triggered their homepage. This is used
+      // to display a doorhanger explaining that an extension has modified the
+      // homepage, if necessary. Observers are only notified if the homepage
+      // becomes the active page.
+      Services.obs.notifyObservers(null, "browser-open-homepage-start");
+    }
+  },
 };
