@@ -7637,7 +7637,7 @@ Result<bool, nsresult> UpgradeStorageFrom1_0To2_0Helper::MaybeRemoveAppsData(
     MOZ_ASSERT(originalSuffix[0] == '^');
 
     if (!URLParams::Parse(
-            Substring(originalSuffix, 1, originalSuffix.Length() - 1),
+            Substring(originalSuffix, 1, originalSuffix.Length() - 1), true,
             [](const nsAString& aName, const nsAString& aValue) {
               if (aName.EqualsLiteral("appId")) {
                 return false;
