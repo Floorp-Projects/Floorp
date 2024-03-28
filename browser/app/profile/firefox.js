@@ -1758,7 +1758,7 @@ pref("browser.newtabpage.activity-stream.discoverystream.spoc-positions", "1,5,7
 pref("browser.newtabpage.activity-stream.discoverystream.spoc-topsites-positions", "2");
 // This is a 0-based index, for consistency with the other position CSVs,
 // but Contile positions are a 1-based index, so we end up adding 1 to these before using them.
-pref("browser.newtabpage.activity-stream.discoverystream.contile-topsites-positions", "0,1,2");
+pref("browser.newtabpage.activity-stream.discoverystream.contile-topsites-positions", "0,1");
 pref("browser.newtabpage.activity-stream.discoverystream.widget-positions", "");
 
 pref("browser.newtabpage.activity-stream.discoverystream.spocs-endpoint", "");
