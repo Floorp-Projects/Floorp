@@ -1,4 +1,7 @@
-import { ASRouterAdminInner } from "content-src/components/ASRouterAdmin/ASRouterAdmin";
+import {
+  ASRouterAdminInner,
+  toBinary,
+} from "content-src/components/ASRouterAdmin/ASRouterAdmin";
 import { ASRouterUtils } from "content-src/asrouter-utils";
 import { GlobalOverrider } from "test/unit/utils";
 import React from "react";
@@ -257,6 +260,45 @@ describe("ASRouterAdmin", () => {
           data: "messageProvider",
         });
       });
+    });
+  });
+  describe("toBinary", () => {
+    // Bringing the 'fromBinary' function over from
+    // messagepreview to prove it works
+    function fromBinary(encoded) {
+      const binary = atob(decodeURIComponent(encoded));
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < bytes.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      return String.fromCharCode(...new Uint16Array(bytes.buffer));
+    }
+
+    it("correctly encodes a latin string", () => {
+      const testString = "Hi I am a test string";
+      const expectedResult =
+        "SABpACAASQAgAGEAbQAgAGEAIAB0AGUAcwB0ACAAcwB0AHIAaQBuAGcA";
+
+      const encodedResult = toBinary(testString);
+
+      assert.equal(encodedResult, expectedResult);
+
+      const decodedResult = fromBinary(encodedResult);
+
+      assert.equal(decodedResult, testString);
+    });
+
+    it("correctly encodes a non-latin string", () => {
+      const nonLatinString = "тестовое сообщение";
+      const expectedResult = "QgQ1BEEEQgQ+BDIEPgQ1BCAAQQQ+BD4EMQRJBDUEPQQ4BDUE";
+
+      const encodedResult = toBinary("тестовое сообщение");
+
+      assert.equal(encodedResult, expectedResult);
+
+      const decodedResult = fromBinary(encodedResult);
+
+      assert.equal(decodedResult, nonLatinString);
     });
   });
 });
