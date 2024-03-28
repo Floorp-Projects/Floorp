@@ -70,6 +70,8 @@ support-files = ["bookmarks_long_tag.json"]
 
 ["test_bookmarks_update.js"]
 
+["test_insert_thousands_bookmarks.js"]
+
 ["test_insertTree_fixupOrSkipInvalidEntries.js"]
 
 ["test_keywords.js"]
