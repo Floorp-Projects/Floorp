@@ -8,6 +8,18 @@
 "use strict";
 
 var BrowserCommands = {
+  back(aEvent) {
+    const where = BrowserUtils.whereToOpenLink(aEvent, false, true);
+
+    if (where == "current") {
+      try {
+        gBrowser.goBack();
+      } catch (ex) {}
+    } else {
+      duplicateTabIn(gBrowser.selectedTab, where, -1);
+    }
+  },
+
   forward(aEvent) {
     const where = BrowserUtils.whereToOpenLink(aEvent, false, true);
 

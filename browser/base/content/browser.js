@@ -2624,7 +2624,7 @@ gBrowserInit.idleTasksFinishedPromise = new Promise(resolve => {
 function HandleAppCommandEvent(evt) {
   switch (evt.command) {
     case "Back":
-      BrowserBack();
+      BrowserCommands.back();
       break;
     case "Forward":
       BrowserCommands.forward();
@@ -2704,22 +2704,10 @@ function gotoHistoryIndex(aEvent) {
   return true;
 }
 
-function BrowserBack(aEvent) {
-  let where = whereToOpenLink(aEvent, false, true);
-
-  if (where == "current") {
-    try {
-      gBrowser.goBack();
-    } catch (ex) {}
-  } else {
-    duplicateTabIn(gBrowser.selectedTab, where, -1);
-  }
-}
-
 function BrowserHandleBackspace() {
   switch (Services.prefs.getIntPref("browser.backspace_action")) {
     case 0:
-      BrowserBack();
+      BrowserCommands.back();
       break;
     case 1:
       goDoCommand("cmd_scrollPageUp");
