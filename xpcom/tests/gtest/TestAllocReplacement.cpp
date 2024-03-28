@@ -73,34 +73,3 @@ TEST(AllocReplacement, posix_memalign_check)
   });
 }
 #endif
-
-#if defined(XP_WIN)
-#  include <windows.h>
-
-#  undef ASSERT_ALLOCATION_HAPPENED
-#  define ASSERT_ALLOCATION_HAPPENED(lambda) \
-    ASSERT_TRUE(ValidateHookedAllocation(    \
-        lambda, [](void* p) { HeapFree(GetProcessHeap(), 0, p); }));
-
-TEST(AllocReplacement, HeapAlloc_check)
-{
-  ASSERT_ALLOCATION_HAPPENED([] {
-    HANDLE h = GetProcessHeap();
-    return HeapAlloc(h, 0, kAllocAmount);
-  });
-}
-
-TEST(AllocReplacement, HeapReAlloc_check)
-{
-  ASSERT_ALLOCATION_HAPPENED([] {
-    HANDLE h = GetProcessHeap();
-    void* p = HeapAlloc(h, 0, kAllocAmount / 2);
-
-    if (!p) {
-      return static_cast<void*>(nullptr);
-    }
-
-    return HeapReAlloc(h, 0, p, kAllocAmount);
-  });
-}
-#endif

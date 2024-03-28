@@ -21,14 +21,6 @@ if CONFIG["WRAP_STL_INCLUDES"]:
             "msvc_raise_wrappers.cpp",
         ]
 
-if CONFIG["OS_TARGET"] == "WINNT":
-    # Don't build winheap.cpp when mozglue is a static library.
-    if CONFIG["MOZ_MEMORY"] or not CONFIG["JS_STANDALONE"]:
-        # Keep this file separate to avoid #include'ing windows.h everywhere.
-        SOURCES += [
-            "winheap.cpp",
-        ]
-
 UNIFIED_SOURCES += [
     "mozalloc.cpp",
     "mozalloc_abort.cpp",
