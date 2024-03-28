@@ -121,7 +121,7 @@ def task_labels_from_try_config(try_task_config):
     if try_task_config["version"] == 2:
         parameters = try_task_config.get("parameters", {})
         if "try_task_config" in parameters:
-            return parameters["try_task_config"]["tasks"]
+            return parameters["try_task_config"].get("tasks")
         else:
             return None
     elif try_task_config["version"] == 1:
