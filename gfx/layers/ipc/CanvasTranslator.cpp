@@ -21,6 +21,7 @@
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/layers/SharedSurfacesParent.h"
 #include "mozilla/layers/TextureClient.h"
+#include "mozilla/layers/VideoBridgeParent.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/TaskQueue.h"
@@ -1161,6 +1162,46 @@ void CanvasTranslator::ClearTextureInfo() {
 already_AddRefed<gfx::SourceSurface> CanvasTranslator::LookupExternalSurface(
     uint64_t aKey) {
   return mSharedSurfacesHolder->Get(wr::ToExternalImageId(aKey));
+}
+
+// Check if the surface descriptor describes a GPUVideo texture for which we
+// only have an opaque source/handle from SurfaceDescriptorRemoteDecoder to
+// derive the actual texture from.
+static bool SDIsNullRemoteDecoder(const SurfaceDescriptor& sd) {
+  return sd.type() == SurfaceDescriptor::TSurfaceDescriptorGPUVideo &&
+         sd.get_SurfaceDescriptorGPUVideo()
+                 .get_SurfaceDescriptorRemoteDecoder()
+                 .subdesc()
+                 .type() == RemoteDecoderVideoSubDescriptor::Tnull_t;
+}
+
+already_AddRefed<gfx::SourceSurface>
+CanvasTranslator::LookupSourceSurfaceFromSurfaceDescriptor(
+    const SurfaceDescriptor& aDesc) {
+  if (!SDIsNullRemoteDecoder(aDesc)) {
+    return nullptr;
+  }
+
+  const auto& sdrd = aDesc.get_SurfaceDescriptorGPUVideo()
+                         .get_SurfaceDescriptorRemoteDecoder();
+  RefPtr<VideoBridgeParent> parent =
+      VideoBridgeParent::GetSingleton(sdrd.source());
+  if (!parent) {
+    MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+    gfxCriticalNote << "TexUnpackSurface failed to get VideoBridgeParent";
+    return nullptr;
+  }
+  RefPtr<TextureHost> texture =
+      parent->LookupTexture(mContentId, sdrd.handle());
+  if (!texture) {
+    MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+    gfxCriticalNote << "TexUnpackSurface failed to get TextureHost";
+    return nullptr;
+  }
+
+  RefPtr<gfx::DataSourceSurface> surf = texture->GetAsSurface();
+
+  return surf.forget();
 }
 
 void CanvasTranslator::CheckpointReached() { CheckAndSignalWriter(); }

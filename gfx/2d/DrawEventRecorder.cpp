@@ -33,6 +33,13 @@ void DrawEventRecorderPrivate::StoreExternalSurfaceRecording(
   mExternalSurfaces.push_back({aSurface});
 }
 
+void DrawEventRecorderPrivate::StoreExternalImageRecording(
+    const RefPtr<layers::Image>& aImageOfSurfaceDescriptor) {
+  NS_ASSERT_OWNINGTHREAD(DrawEventRecorderPrivate);
+
+  mExternalImages.push_back({aImageOfSurfaceDescriptor});
+}
+
 void DrawEventRecorderPrivate::StoreSourceSurfaceRecording(
     SourceSurface* aSurface, const char* aReason) {
   NS_ASSERT_OWNINGTHREAD(DrawEventRecorderPrivate);

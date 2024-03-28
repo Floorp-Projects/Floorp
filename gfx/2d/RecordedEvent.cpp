@@ -70,6 +70,8 @@ std::string RecordedEvent::GetEventName(EventType aType) {
       return "Stroke";
     case DRAWSURFACE:
       return "DrawSurface";
+    case DRAWSURFACEDESCRIPTOR:
+      return "DrawSurfaceDescriptor";
     case DRAWDEPENDENTSURFACE:
       return "DrawDependentSurface";
     case DRAWSURFACEWITHSHADOW:

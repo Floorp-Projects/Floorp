@@ -7449,7 +7449,7 @@ SurfaceFromElementResult nsLayoutUtils::SurfaceFromElement(
 
 SurfaceFromElementResult nsLayoutUtils::SurfaceFromElement(
     HTMLVideoElement* aElement, uint32_t aSurfaceFlags,
-    RefPtr<DrawTarget>& aTarget) {
+    RefPtr<DrawTarget>& aTarget, bool aOptimizeSourceSurface) {
   SurfaceFromElementResult result;
   result.mAlphaType = gfxAlphaType::Opaque;  // Assume opaque.
 
@@ -7484,7 +7484,7 @@ SurfaceFromElementResult nsLayoutUtils::SurfaceFromElement(
   result.mIsWriteOnly = CanvasUtils::CheckWriteOnlySecurity(
       result.mCORSUsed, result.mPrincipal, result.mHadCrossOriginRedirects);
 
-  if (aTarget) {
+  if (aTarget && aOptimizeSourceSurface) {
     // They gave us a DrawTarget to optimize for, so even though we have a
     // layers::Image, we should unconditionally try to grab a SourceSurface and
     // try to optimize it.

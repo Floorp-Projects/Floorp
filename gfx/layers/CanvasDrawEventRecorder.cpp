@@ -127,6 +127,7 @@ int64_t CanvasDrawEventRecorder::CreateCheckpoint() {
   int64_t checkpoint = mHeader->eventCount;
   RecordEvent(RecordedCheckpoint());
   ClearProcessedExternalSurfaces();
+  ClearProcessedExternalImages();
   return checkpoint;
 }
 
@@ -276,6 +277,7 @@ void CanvasDrawEventRecorder::DropFreeBuffers() {
   }
 
   ClearProcessedExternalSurfaces();
+  ClearProcessedExternalImages();
 }
 
 void CanvasDrawEventRecorder::IncrementEventCount() {
@@ -444,12 +446,31 @@ void CanvasDrawEventRecorder::StoreSourceSurfaceRecording(
   DrawEventRecorderPrivate::StoreSourceSurfaceRecording(aSurface, aReason);
 }
 
+void CanvasDrawEventRecorder::StoreImageRecording(
+    const RefPtr<Image>& aImageOfSurfaceDescriptor, const char* aReasony) {
+  NS_ASSERT_OWNINGTHREAD(CanvasDrawEventRecorder);
+
+  StoreExternalImageRecording(aImageOfSurfaceDescriptor);
+  mExternalImages.back().mEventCount = mHeader->eventCount;
+
+  ClearProcessedExternalImages();
+}
+
 void CanvasDrawEventRecorder::ClearProcessedExternalSurfaces() {
   while (!mExternalSurfaces.empty()) {
     if (mExternalSurfaces.front().mEventCount > mHeader->processedCount) {
       break;
     }
     mExternalSurfaces.pop_front();
+  }
+}
+
+void CanvasDrawEventRecorder::ClearProcessedExternalImages() {
+  while (!mExternalImages.empty()) {
+    if (mExternalImages.front().mEventCount > mHeader->processedCount) {
+      break;
+    }
+    mExternalImages.pop_front();
   }
 }
 

@@ -9,6 +9,7 @@
 #include "PathRecording.h"
 #include <stdio.h>
 
+#include "ImageContainer.h"
 #include "Logging.h"
 #include "Tools.h"
 #include "Filters.h"
@@ -529,6 +530,21 @@ void DrawTargetRecording::DrawSurface(SourceSurface* aSurface,
 
   mRecorder->RecordEvent(this, RecordedDrawSurface(aSurface, aDest, aSource,
                                                    aSurfOptions, aOptions));
+}
+
+void DrawTargetRecording::DrawSurfaceDescriptor(
+    const layers::SurfaceDescriptor& aDesc,
+    const RefPtr<layers::Image>& aImageOfSurfaceDescriptor, const Rect& aDest,
+    const Rect& aSource, const DrawSurfaceOptions& aSurfOptions,
+    const DrawOptions& aOptions) {
+  MarkChanged();
+
+  mRecorder->StoreImageRecording(aImageOfSurfaceDescriptor,
+                                 "DrawSurfaceDescriptor");
+
+  mRecorder->RecordEvent(
+      this, RecordedDrawSurfaceDescriptor(aDesc, aDest, aSource, aSurfOptions,
+                                          aOptions));
 }
 
 void DrawTargetRecording::DrawDependentSurface(uint64_t aId,
