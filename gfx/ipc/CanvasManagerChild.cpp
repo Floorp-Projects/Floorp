@@ -55,6 +55,10 @@ void CanvasManagerChild::DestroyInternal() {
     mCanvasChild->Destroy();
     mCanvasChild = nullptr;
   }
+
+  if (auto* shutdownManager = CanvasShutdownManager::Get()) {
+    shutdownManager->OnRemoteCanvasLost();
+  }
 }
 
 void CanvasManagerChild::Destroy() {
@@ -140,6 +144,7 @@ void CanvasManagerChild::Destroy() {
   }
 
   manager->SendInitialize(manager->Id());
+  shutdownManager->OnRemoteCanvasRestored();
   sLocalManager.set(manager);
   return manager;
 }

@@ -228,6 +228,9 @@ EVENT(lostpointercapture, ePointerLostCapture, EventNameType_All,
       ePointerEventClass)
 EVENT(selectstart, eSelectStart, EventNameType_HTMLXUL, eBasicEventClass)
 
+EVENT(contextlost, eContextLost, EventNameType_HTML, eBasicEventClass)
+EVENT(contextrestored, eContextRestored, EventNameType_HTML, eBasicEventClass)
+
 // Not supported yet; probably never because "wheel" is a better idea.
 // EVENT(mousewheel)
 EVENT(pause, ePause, EventNameType_HTML, eBasicEventClass)

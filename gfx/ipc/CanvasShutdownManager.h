@@ -7,6 +7,7 @@
 #define _include_gfx_ipc_CanvasShutdownManager_h__
 
 #include "mozilla/RefPtr.h"
+#include "mozilla/StaticMutex.h"
 #include "mozilla/ThreadLocal.h"
 #include <set>
 
@@ -29,15 +30,25 @@ class CanvasShutdownManager final {
   void AddShutdownObserver(dom::CanvasRenderingContext2D* aCanvas);
   void RemoveShutdownObserver(dom::CanvasRenderingContext2D* aCanvas);
 
+  static void OnCompositorManagerRestored();
+
+  void OnRemoteCanvasLost();
+  void OnRemoteCanvasRestored();
+
  private:
   explicit CanvasShutdownManager(dom::StrongWorkerRef* aWorkerRef);
   CanvasShutdownManager();
   ~CanvasShutdownManager();
   void Destroy();
 
+  static void MaybeRestoreRemoteCanvas();
+
   RefPtr<dom::ThreadSafeWorkerRef> mWorkerRef;
   std::set<dom::CanvasRenderingContext2D*> mActiveCanvas;
   static MOZ_THREAD_LOCAL(CanvasShutdownManager*) sLocalManager;
+
+  static StaticMutex sManagersMutex;
+  static std::set<CanvasShutdownManager*> sManagers;
 };
 
 }  // namespace gfx
