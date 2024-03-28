@@ -364,6 +364,21 @@ bool StructType::init() {
   return true;
 }
 
+/* static */
+bool StructType::createImmutable(const ValTypeVector& types,
+                                 StructType* struct_) {
+  StructFieldVector fields;
+  if (!fields.resize(types.length())) {
+    return false;
+  }
+  for (size_t i = 0; i < types.length(); i++) {
+    fields[i].type = StorageType(types[i].packed());
+    fields[i].isMutable = false;
+  }
+  *struct_ = StructType(std::move(fields));
+  return struct_->init();
+}
+
 size_t StructType::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
   return fields_.sizeOfExcludingThis(mallocSizeOf);
 }

@@ -371,6 +371,8 @@ class StructType {
     return true;
   }
 
+  static bool createImmutable(const ValTypeVector& types, StructType* struct_);
+
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
   WASM_DECLARE_FRIEND_SERIALIZE(StructType);
 };

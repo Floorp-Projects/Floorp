@@ -40,6 +40,49 @@ using mozilla::CheckedInt32;
 using mozilla::IsUtf8;
 using mozilla::Span;
 
+// Module environment helpers.
+
+bool ModuleEnvironment::addDefinedFunc(
+    ValTypeVector&& params, ValTypeVector&& results, bool declareForRef,
+    Maybe<CacheableName>&& optionalExportedName) {
+  uint32_t typeIndex = types->length();
+  FuncType funcType(std::move(params), std::move(results));
+  if (!types->addType(std::move(funcType))) {
+    return false;
+  }
+
+  FuncDesc funcDesc = FuncDesc(&(*types)[typeIndex].funcType(), typeIndex);
+  uint32_t funcIndex = funcs.length();
+  if (!funcs.append(funcDesc)) {
+    return false;
+  }
+  if (declareForRef) {
+    declareFuncExported(funcIndex, true, true);
+  }
+  if (optionalExportedName.isSome()) {
+    if (!exports.emplaceBack(std::move(optionalExportedName.ref()), funcIndex,
+                             DefinitionKind::Function)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool ModuleEnvironment::addImportedFunc(ValTypeVector&& params,
+                                        ValTypeVector&& results,
+                                        CacheableName&& importModName,
+                                        CacheableName&& importFieldName) {
+  MOZ_ASSERT(numFuncImports == funcs.length());
+  if (!addDefinedFunc(std::move(params), std::move(results), false,
+                      mozilla::Nothing())) {
+    return false;
+  }
+  numFuncImports++;
+  return imports.emplaceBack(std::move(importModName),
+                             std::move(importFieldName),
+                             DefinitionKind::Function);
+}
+
 // Misc helpers.
 
 bool wasm::EncodeLocalEntries(Encoder& e, const ValTypeVector& locals) {

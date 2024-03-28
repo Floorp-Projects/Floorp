@@ -191,6 +191,15 @@ struct ModuleEnvironment {
     MOZ_ASSERT(tagIndex < tags.length());
     return tagsOffsetStart + tagIndex * sizeof(TagInstanceData);
   }
+
+  bool addDefinedFunc(
+      ValTypeVector&& params, ValTypeVector&& results,
+      bool declareForRef = false,
+      Maybe<CacheableName>&& optionalExportedName = mozilla::Nothing());
+
+  bool addImportedFunc(ValTypeVector&& params, ValTypeVector&& results,
+                       CacheableName&& importModName,
+                       CacheableName&& importFieldName);
 };
 
 // ElemSegmentFlags provides methods for decoding and encoding the flags field

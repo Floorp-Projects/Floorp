@@ -138,6 +138,7 @@ UNIFIED_SOURCES += [
     "testUbiNode.cpp",
     "testUncaughtSymbol.cpp",
     "testUTF8.cpp",
+    "testWasmEncoder.cpp",
     "testWasmLEB128.cpp",
     "testWasmReturnCalls.cpp",
     "testWeakMap.cpp",
