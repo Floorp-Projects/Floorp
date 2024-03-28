@@ -2677,33 +2677,6 @@ function HandleAppCommandEvent(evt) {
   evt.preventDefault();
 }
 
-function gotoHistoryIndex(aEvent) {
-  aEvent = getRootEvent(aEvent);
-
-  let index = aEvent.target.getAttribute("index");
-  if (!index) {
-    return false;
-  }
-
-  let where = whereToOpenLink(aEvent);
-
-  if (where == "current") {
-    // Normal click. Go there in the current tab and update session history.
-
-    try {
-      gBrowser.gotoIndex(index);
-    } catch (ex) {
-      return false;
-    }
-    return true;
-  }
-  // Modified click. Go there in a new tab/window.
-
-  let historyindex = aEvent.target.getAttribute("historyindex");
-  duplicateTabIn(gBrowser.selectedTab, where, Number(historyindex));
-  return true;
-}
-
 function BrowserStop() {
   gBrowser.webNavigation.stop(Ci.nsIWebNavigation.STOP_ALL);
 }
@@ -4402,7 +4375,8 @@ function FillHistoryMenu(aParent) {
       item.setAttribute("label", entry.title || uri);
       item.setAttribute("index", j);
 
-      // Cache this so that gotoHistoryIndex doesn't need the original index
+      // Cache this so that BrowserCommands.gotoHistoryIndex doesn't need the
+      // original index
       item.setAttribute("historyindex", j - index);
 
       if (j != index) {

@@ -53,4 +53,31 @@ var BrowserCommands = {
         break;
     }
   },
+
+  gotoHistoryIndex(aEvent) {
+    aEvent = BrowserUtils.getRootEvent(aEvent);
+
+    const index = aEvent.target.getAttribute("index");
+    if (!index) {
+      return false;
+    }
+
+    const where = BrowserUtils.whereToOpenLink(aEvent);
+
+    if (where == "current") {
+      // Normal click. Go there in the current tab and update session history.
+
+      try {
+        gBrowser.gotoIndex(index);
+      } catch (ex) {
+        return false;
+      }
+      return true;
+    }
+    // Modified click. Go there in a new tab/window.
+
+    const historyindex = aEvent.target.getAttribute("historyindex");
+    duplicateTabIn(gBrowser.selectedTab, where, Number(historyindex));
+    return true;
+  },
 };
