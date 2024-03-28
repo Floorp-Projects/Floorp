@@ -57,7 +57,7 @@ class ElementStyle {
     this.ruleView = ruleView;
     this.store = store || {};
     this.pageStyle = pageStyle;
-    this.pseudoElements = [];
+    this.pseudoElementTypes = new Set();
     this.showUserAgentStyles = showUserAgentStyles;
     this.rules = [];
     this.cssProperties = this.ruleView.cssProperties;
@@ -90,7 +90,7 @@ class ElementStyle {
     }
 
     this.destroyed = true;
-    this.pseudoElements = [];
+    this.pseudoElementTypes.clear();
 
     for (const rule of this.rules) {
       if (rule.editor) {
@@ -141,9 +141,12 @@ class ElementStyle {
         }
 
         // Store a list of all pseudo-element types found in the matching rules.
-        this.pseudoElements = this.rules
-          .filter(r => r.pseudoElement)
-          .map(r => r.pseudoElement);
+        this.pseudoElementTypes = new Set();
+        for (const rule of this.rules) {
+          if (rule.pseudoElement) {
+            this.pseudoElementTypes.add(rule.pseudoElement);
+          }
+        }
 
         // Mark overridden computed styles.
         this.onRuleUpdated();
@@ -275,7 +278,7 @@ class ElementStyle {
     this.updateDeclarations();
 
     // Update declarations for matching rules for pseudo-elements.
-    for (const pseudo of this.pseudoElements) {
+    for (const pseudo of this.pseudoElementTypes) {
       this.updateDeclarations(pseudo);
     }
   }
