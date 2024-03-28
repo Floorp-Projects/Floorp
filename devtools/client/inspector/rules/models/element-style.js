@@ -299,11 +299,6 @@ class ElementStyle {
   updateDeclarations(pseudo = "") {
     // Gather all text properties applicable to the selected element or pseudo-element.
     const textProps = this._getDeclarations(pseudo);
-    // Gather all the computed properties applied by those text properties.
-    let computedProps = [];
-    for (const textProp of textProps) {
-      computedProps = computedProps.concat(textProp.computed);
-    }
 
     // CSS Variables inherits from the normal element in case of pseudo element.
     const variables = new Map(pseudo ? this.variablesMap.get("") : null);
@@ -332,58 +327,62 @@ class ElementStyle {
     // _overriddenDirty will be set on each prop, indicating whether its
     // dirty status changed during this pass.
     const taken = new Map();
-    for (const computedProp of computedProps) {
-      const earlier = taken.get(computedProp.name);
+    for (const textProp of textProps) {
+      for (const computedProp of textProp.computed) {
+        const earlier = taken.get(computedProp.name);
 
-      // Prevent -webkit-gradient from being selected after unchecking
-      // linear-gradient in this case:
-      //  -moz-linear-gradient: ...;
-      //  -webkit-linear-gradient: ...;
-      //  linear-gradient: ...;
-      if (!computedProp.textProp.isValid()) {
-        computedProp.overridden = true;
-        continue;
-      }
+        // Prevent -webkit-gradient from being selected after unchecking
+        // linear-gradient in this case:
+        //  -moz-linear-gradient: ...;
+        //  -webkit-linear-gradient: ...;
+        //  linear-gradient: ...;
+        if (!computedProp.textProp.isValid()) {
+          computedProp.overridden = true;
+          continue;
+        }
 
-      let overridden;
-      if (
-        earlier &&
-        computedProp.priority === "important" &&
-        (earlier.priority !== "important" ||
-          // Even if the earlier property was important, if the current rule is in a layer
-          // it will take precedence, unless the earlier property rule was in the same layer.
-          (computedProp.textProp.rule?.isInLayer() &&
-            computedProp.textProp.rule.isInDifferentLayer(
-              earlier.textProp.rule
-            ))) &&
-        // For !important only consider rules applying to the same parent node.
-        computedProp.textProp.rule.inherited == earlier.textProp.rule.inherited
-      ) {
-        // New property is higher priority. Mark the earlier property
-        // overridden (which will reverse its dirty state).
-        earlier._overriddenDirty = !earlier._overriddenDirty;
-        earlier.overridden = true;
-        overridden = false;
-      } else {
-        overridden = !!earlier;
-      }
-
-      computedProp._overriddenDirty = !!computedProp.overridden !== overridden;
-      computedProp.overridden = overridden;
-
-      if (!computedProp.overridden && computedProp.textProp.enabled) {
-        taken.set(computedProp.name, computedProp);
-
-        // At this point, we can get CSS variable from "inherited" rules.
-        // When this is a registered custom property with `inherits` set to false,
-        // the text prop is "invisible" (i.e. not shown in the rule view).
-        // In such case, we don't want to get the value in the Map, and we'll rather
-        // get the initial value from the registered property definition.
+        let overridden;
         if (
-          isCssVariable(computedProp.name) &&
-          !computedProp.textProp.invisible
+          earlier &&
+          computedProp.priority === "important" &&
+          (earlier.priority !== "important" ||
+            // Even if the earlier property was important, if the current rule is in a layer
+            // it will take precedence, unless the earlier property rule was in the same layer.
+            (computedProp.textProp.rule?.isInLayer() &&
+              computedProp.textProp.rule.isInDifferentLayer(
+                earlier.textProp.rule
+              ))) &&
+          // For !important only consider rules applying to the same parent node.
+          computedProp.textProp.rule.inherited ==
+            earlier.textProp.rule.inherited
         ) {
-          variables.set(computedProp.name, computedProp.value);
+          // New property is higher priority. Mark the earlier property
+          // overridden (which will reverse its dirty state).
+          earlier._overriddenDirty = !earlier._overriddenDirty;
+          earlier.overridden = true;
+          overridden = false;
+        } else {
+          overridden = !!earlier;
+        }
+
+        computedProp._overriddenDirty =
+          !!computedProp.overridden !== overridden;
+        computedProp.overridden = overridden;
+
+        if (!computedProp.overridden && computedProp.textProp.enabled) {
+          taken.set(computedProp.name, computedProp);
+
+          // At this point, we can get CSS variable from "inherited" rules.
+          // When this is a registered custom property with `inherits` set to false,
+          // the text prop is "invisible" (i.e. not shown in the rule view).
+          // In such case, we don't want to get the value in the Map, and we'll rather
+          // get the initial value from the registered property definition.
+          if (
+            isCssVariable(computedProp.name) &&
+            !computedProp.textProp.invisible
+          ) {
+            variables.set(computedProp.name, computedProp.value);
+          }
         }
       }
     }
