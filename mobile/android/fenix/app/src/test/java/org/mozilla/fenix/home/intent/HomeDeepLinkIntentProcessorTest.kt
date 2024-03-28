@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.home.intent
 
+import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
@@ -43,7 +44,7 @@ class HomeDeepLinkIntentProcessorTest {
         activity = mockk(relaxed = true)
         navController = mockk(relaxed = true)
         out = mockk()
-        processorHome = HomeDeepLinkIntentProcessor(activity)
+        processorHome = HomeDeepLinkIntentProcessor(activity, ::showAddSearchWidgetPrompt)
     }
 
     @Test
@@ -257,9 +258,10 @@ class HomeDeepLinkIntentProcessorTest {
 
         assertTrue(processorHome.process(testIntent("make_default_browser"), navController, out))
 
-        val searchTermOrURL = SupportUtils.getGenericSumoURLForTopic(
-            topic = SupportUtils.SumoTopic.SET_AS_DEFAULT_BROWSER,
-        )
+        val searchTermOrURL =
+            SupportUtils.getGenericSumoURLForTopic(
+                topic = SupportUtils.SumoTopic.SET_AS_DEFAULT_BROWSER,
+            )
 
         verify {
             activity.openToBrowserAndLoad(
@@ -291,5 +293,18 @@ class HomeDeepLinkIntentProcessorTest {
         verify { out wasNot Called }
     }
 
+    @Test
+    fun `process install_search_widget deep link`() {
+        assertTrue(processorHome.process(testIntent("install_search_widget"), navController, out))
+
+        verify { showAddSearchWidgetPrompt(activity) }
+        verify { navController wasNot Called }
+        verify { out wasNot Called }
+    }
+
     private fun testIntent(uri: String) = Intent("", "$DEEP_LINK_SCHEME://$uri".toUri())
+
+    private fun showAddSearchWidgetPrompt(activity: Activity) {
+        println("$activity add search widget prompt was shown ")
+    }
 }
