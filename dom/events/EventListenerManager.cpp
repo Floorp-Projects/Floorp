@@ -1417,10 +1417,10 @@ already_AddRefed<nsPIDOMWindowInner> EventListenerManager::WindowFromListener(
       if (global) {
         innerWindow = global->GetAsInnerWindow();  // Can be nullptr
       }
-    } else {
+    } else if (mTarget) {
       // This ensures `window.event` can be set properly for
       // nsWindowRoot to handle KeyPress event.
-      if (aListener && aTypeAtom == nsGkAtoms::onkeypress && mTarget &&
+      if (aListener && aTypeAtom == nsGkAtoms::onkeypress &&
           mTarget->IsRootWindow()) {
         nsPIWindowRoot* root = mTarget->AsWindowRoot();
         if (nsPIDOMWindowOuter* outerWindow = root->GetWindow()) {
@@ -1431,7 +1431,9 @@ already_AddRefed<nsPIDOMWindowInner> EventListenerManager::WindowFromListener(
         // listener->mListener.GetXPCOMCallback().
         // In most cases, it would be the same as for
         // the target, so let's do that.
-        innerWindow = GetInnerWindowForTarget();  // Can be nullptr
+        if (nsIGlobalObject* global = mTarget->GetOwnerGlobal()) {
+          innerWindow = global->GetAsInnerWindow();
+        }
       }
     }
   }
