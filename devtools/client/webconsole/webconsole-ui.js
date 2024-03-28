@@ -10,8 +10,8 @@ const {
   l10n,
 } = require("resource://devtools/client/webconsole/utils/messages.js");
 
-const { BrowserLoader } = ChromeUtils.import(
-  "resource://devtools/shared/loader/browser-loader.js"
+const { BrowserLoader } = ChromeUtils.importESModule(
+  "resource://devtools/shared/loader/browser-loader.sys.mjs"
 );
 const {
   getAdHocFrontOrPrimitiveGrip,

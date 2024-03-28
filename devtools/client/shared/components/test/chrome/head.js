@@ -14,8 +14,8 @@ var { Assert } = ChromeUtils.importESModule(
   "resource://testing-common/Assert.sys.mjs"
 );
 var { gDevTools } = require("resource://devtools/client/framework/devtools.js");
-var { BrowserLoader } = ChromeUtils.import(
-  "resource://devtools/shared/loader/browser-loader.js"
+var { BrowserLoader } = ChromeUtils.importESModule(
+  "resource://devtools/shared/loader/browser-loader.sys.mjs"
 );
 var {
   DevToolsServer,

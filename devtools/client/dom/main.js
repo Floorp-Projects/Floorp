@@ -6,8 +6,8 @@
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
-const { BrowserLoader } = ChromeUtils.import(
-  "resource://devtools/shared/loader/browser-loader.js"
+const { BrowserLoader } = ChromeUtils.importESModule(
+  "resource://devtools/shared/loader/browser-loader.sys.mjs"
 );
 
 // Module Loader

@@ -15,8 +15,8 @@ add_task(async function testParseFileUri() {
 
   // Mocks are not supported for the regular DevTools loader.
   info("Create a BrowserLoader to enable mocks in the test");
-  const { BrowserLoader } = ChromeUtils.import(
-    "resource://devtools/shared/loader/browser-loader.js"
+  const { BrowserLoader } = ChromeUtils.importESModule(
+    "resource://devtools/shared/loader/browser-loader.sys.mjs"
   );
   const mockedRequire = BrowserLoader({
     baseURI: "resource://devtools/client/shared/remote-debugging/adb",

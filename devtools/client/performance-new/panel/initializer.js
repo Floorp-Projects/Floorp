@@ -23,8 +23,8 @@
   // TypeScript. See devtools/client/performance-new/typescript.md and
   // the section on "Do not overload require" for more information.
 
-  const { BrowserLoader } = ChromeUtils.import(
-    "resource://devtools/shared/loader/browser-loader.js"
+  const { BrowserLoader } = ChromeUtils.importESModule(
+    "resource://devtools/shared/loader/browser-loader.sys.mjs"
   );
   const browserLoader = BrowserLoader({
     baseURI: "resource://devtools/client/performance-new/",

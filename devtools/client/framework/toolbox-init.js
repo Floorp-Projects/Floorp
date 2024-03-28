@@ -40,8 +40,8 @@ const onLoad = new Promise(r => {
 
 async function showErrorPage(doc, errorMessage) {
   const win = doc.defaultView;
-  const { BrowserLoader } = ChromeUtils.import(
-    "resource://devtools/shared/loader/browser-loader.js"
+  const { BrowserLoader } = ChromeUtils.importESModule(
+    "resource://devtools/shared/loader/browser-loader.sys.mjs"
   );
   const browserRequire = BrowserLoader({
     window: win,
