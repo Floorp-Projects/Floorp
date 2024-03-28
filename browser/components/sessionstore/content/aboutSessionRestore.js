@@ -204,7 +204,7 @@ function startNewSession() {
       ),
     });
   } else {
-    getBrowserWindow().BrowserHome();
+    getBrowserWindow().BrowserCommands.home();
   }
 }
 

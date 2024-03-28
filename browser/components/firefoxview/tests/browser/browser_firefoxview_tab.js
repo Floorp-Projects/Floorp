@@ -118,8 +118,8 @@ add_task(async function homepage_new_tab() {
       win.gBrowser.tabContainer,
       "TabOpen"
     );
-    win.BrowserHome();
-    info("Waiting for BrowserHome() to open a new tab");
+    win.BrowserCommands.home();
+    info("Waiting for BrowserCommands.home() to open a new tab");
     await newTabOpened;
     assertFirefoxViewTab(win);
     ok(

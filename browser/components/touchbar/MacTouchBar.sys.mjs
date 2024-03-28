@@ -107,7 +107,7 @@ var gBuiltInInputs = {
     type: kInputTypes.BUTTON,
     callback: () => {
       let win = lazy.BrowserWindowTracker.getTopWindow();
-      win.BrowserHome();
+      win.BrowserCommands.home();
     },
   },
   Fullscreen: {

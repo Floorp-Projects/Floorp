@@ -35,7 +35,6 @@
   "BrowserCommands",
   "BrowserStop",
   "kSkipCacheFlags",
-  "BrowserHome",
   "loadOneOrMoreURIs",
   "openLocation",
   "BrowserOpenTab",
