@@ -1,0 +1,32 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+# Adding a new metric? We have docs for that!
+# https://firefox-source-docs.mozilla.org/toolkit/components/glean/user/new_definitions_file.html
+
+---
+$schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
+$tags:
+  - 'Core :: Security: PSM'
+
+cert_verifier:
+  crlite_status:
+    type: labeled_counter
+    description: >
+      Counts the number of times different CRLite statuses were returned.
+    data_sensitivity:
+      - technical
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1886042
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1886042
+    notification_emails:
+      - jschanck@mozilla.com
+    expires: never
+    labels:
+      - no_filter
+      - not_covered
+      - not_enrolled
+      - not_revoked
+      - revoked_in_filter
+      - revoked_in_stash
