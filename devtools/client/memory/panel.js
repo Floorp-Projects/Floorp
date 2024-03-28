@@ -12,8 +12,8 @@ function MemoryPanel(iframeWindow, toolbox, commands) {
   this._toolbox = toolbox;
   this._commands = commands;
 
-  const { BrowserLoader } = ChromeUtils.import(
-    "resource://devtools/shared/loader/browser-loader.js"
+  const { BrowserLoader } = ChromeUtils.importESModule(
+    "resource://devtools/shared/loader/browser-loader.sys.mjs"
   );
   const browserRequire = BrowserLoader({
     baseURI: "resource://devtools/client/memory/",

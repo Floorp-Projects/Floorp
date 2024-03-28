@@ -8,7 +8,7 @@
 if CONFIG["MOZ_DEVTOOLS"] == "all":
     DevToolsModules(
         "browser-loader-mocks.js",
-        "browser-loader.js",
+        "browser-loader.sys.mjs",
     )
 
 DevToolsModules(

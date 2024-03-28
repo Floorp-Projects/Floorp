@@ -3,8 +3,8 @@
 
 "use strict";
 
-var { BrowserLoader } = ChromeUtils.import(
-  "resource://devtools/shared/loader/browser-loader.js"
+var { BrowserLoader } = ChromeUtils.importESModule(
+  "resource://devtools/shared/loader/browser-loader.sys.mjs"
 );
 var { require } = BrowserLoader({
   baseURI: "resource://devtools/client/memory/",

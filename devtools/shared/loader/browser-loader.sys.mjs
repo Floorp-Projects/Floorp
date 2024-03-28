@@ -1,14 +1,13 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
-const BaseLoader = ChromeUtils.importESModule(
-  "resource://devtools/shared/loader/base-loader.sys.mjs"
-);
-const { require: devtoolsRequire, loader } = ChromeUtils.importESModule(
-  "resource://devtools/shared/loader/Loader.sys.mjs"
-);
+import * as BaseLoader from "resource://devtools/shared/loader/base-loader.sys.mjs";
+import {
+  require as devtoolsRequire,
+  loader,
+} from "resource://devtools/shared/loader/Loader.sys.mjs";
+
 const flags = devtoolsRequire("devtools/shared/flags");
 const { joinURI } = devtoolsRequire("devtools/shared/path");
 const { assert } = devtoolsRequire("devtools/shared/DevToolsUtils");
@@ -81,7 +80,7 @@ const browserBasedDirsRegExp =
  *         - loader: the Loader instance
  *         - require: a function to require modules with
  */
-function BrowserLoader(options) {
+export function BrowserLoader(options) {
   const browserLoaderBuilder = new BrowserLoaderBuilder(options);
   return {
     loader: browserLoaderBuilder.loader,
@@ -233,7 +232,3 @@ BrowserLoaderBuilder.prototype = {
     }
   },
 };
-
-this.BrowserLoader = BrowserLoader;
-
-this.EXPORTED_SYMBOLS = ["BrowserLoader"];
