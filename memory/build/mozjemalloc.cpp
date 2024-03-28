@@ -4885,7 +4885,7 @@ inline void MozJemalloc::jemalloc_stats_internal(
   aStats->mapped = 0;
   aStats->allocated = 0;
   aStats->waste = 0;
-  aStats->page_cache = 0;
+  aStats->pages_dirty = 0;
   aStats->pages_fresh = 0;
   aStats->pages_madvised = 0;
   aStats->bookkeeping = 0;
@@ -4978,7 +4978,7 @@ inline void MozJemalloc::jemalloc_stats_internal(
 
     aStats->mapped += arena_mapped;
     aStats->allocated += arena_allocated;
-    aStats->page_cache += arena_dirty;
+    aStats->pages_dirty += arena_dirty;
     aStats->pages_fresh += arena_fresh;
     aStats->pages_madvised += arena_madvised;
     // "waste" is committed memory that is neither dirty nor
@@ -5005,7 +5005,7 @@ inline void MozJemalloc::jemalloc_stats_internal(
   aStats->waste -= chunk_header_size;
 
   MOZ_ASSERT(aStats->mapped >= aStats->allocated + aStats->waste +
-                                   aStats->page_cache + aStats->bookkeeping);
+                                   aStats->pages_dirty + aStats->bookkeeping);
 }
 
 inline size_t MozJemalloc::jemalloc_stats_num_bins() {

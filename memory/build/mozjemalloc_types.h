@@ -115,8 +115,7 @@ typedef struct {
   size_t waste;           // Bytes committed, not in use by the
                           // application, and not intentionally left
                           // unused (i.e., not dirty).
-  size_t page_cache;      // Committed, unused pages kept around as a
-                          // cache.  (jemalloc calls these "dirty".)
+  size_t pages_dirty;     // Committed, unused pages kept around as a cache.
   size_t pages_fresh;     // Unused pages that have never been touched.
   size_t pages_madvised;  // Unsed pages we told the kernel we don't need.
   size_t bookkeeping;     // Committed bytes used internally by the
