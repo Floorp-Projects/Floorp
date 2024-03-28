@@ -1,6 +1,60 @@
 {
   "data": [
     {
+      "schema": 1711464837732,
+      "derHash": "8H04OCfiZDJsXQ2+JXqoIQhAnyUkb4HuNsivIitaHkM=",
+      "subject": "CN=Telia RSA OV CA v4,O=Telia Company AB,C=SE",
+      "subjectDN": "MEUxCzAJBgNVBAYTAlNFMRkwFwYDVQQKDBBUZWxpYSBDb21wYW55IEFCMRswGQYDVQQDDBJUZWxpYSBSU0EgT1YgQ0EgdjQ=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "8a8a355227c0c3345470ef0bfb850234b21b1dd60470e4dcf566cfdff0e502f8",
+        "size": 2300,
+        "filename": "uNTFkYMpAkhXFadzPws2J6iLVX44ue38H6LKC6alh3A=.pem",
+        "location": "security-state-staging/intermediates/74ec359d-1abe-4c34-9800-83d22cf1824f.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "uNTFkYMpAkhXFadzPws2J6iLVX44ue38H6LKC6alh3A=",
+      "crlite_enrolled": false,
+      "id": "2b785473-c7ec-4117-be0b-1f5cbe2c9bca",
+      "last_modified": 1711465023926
+    },
+    {
+      "schema": 1711464836863,
+      "derHash": "pn8+Z8sd8urPOkBOr/F5N05eP0ug2C6RQF2urfsPM30=",
+      "subject": "CN=Telia RSA DV CA v4,O=Telia Company AB,C=SE",
+      "subjectDN": "MEUxCzAJBgNVBAYTAlNFMRkwFwYDVQQKDBBUZWxpYSBDb21wYW55IEFCMRswGQYDVQQDDBJUZWxpYSBSU0EgRFYgQ0EgdjQ=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "dd2acaf8dd832742c4ce4c63de0d80621f24a60707462a487a496d4fd1271456",
+        "size": 2300,
+        "filename": "pbnDROwxL9imiYDtQcKHL4D07MvFyHJGsfaj_hTH-uw=.pem",
+        "location": "security-state-staging/intermediates/7acb6902-fa54-421e-9b3f-bbb075b0e656.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "pbnDROwxL9imiYDtQcKHL4D07MvFyHJGsfaj/hTH+uw=",
+      "crlite_enrolled": false,
+      "id": "7e90cfb9-3e37-47af-898a-e5d61b99b444",
+      "last_modified": 1711465023924
+    },
+    {
+      "schema": 1711464837319,
+      "derHash": "JtdCdBukKDlPkE5EEO1tqS9NDFVSHx7eKyl5f4ZslVw=",
+      "subject": "CN=Telia EC DV CA v4,O=Telia Company AB,C=SE",
+      "subjectDN": "MEQxCzAJBgNVBAYTAlNFMRkwFwYDVQQKDBBUZWxpYSBDb21wYW55IEFCMRowGAYDVQQDDBFUZWxpYSBFQyBEViBDQSB2NA==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "c085e851d30509db40952fc9f84105396c73546c29ad715cda6452e1c7e04e1d",
+        "size": 1150,
+        "filename": "NeN7Ibyh_EFluoZE27OfNSDLpVsqzCOtSIe0YDz2GSA=.pem",
+        "location": "security-state-staging/intermediates/81c10429-00de-407d-a5c2-78f8d1a46d0d.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "NeN7Ibyh/EFluoZE27OfNSDLpVsqzCOtSIe0YDz2GSA=",
+      "crlite_enrolled": false,
+      "id": "ccbb9d09-e78a-42eb-84e3-ec36872e58a4",
+      "last_modified": 1711465023921
+    },
+    {
       "schema": 1711079327797,
       "derHash": "GnD+GCdR5jfA5dPVU+db26HWVf/lQR2bOQtzyDePpyw=",
       "subject": "CN=Leocert TLS Issuing RSA CA 1,O=Leocert LLC,C=US",
@@ -30583,5 +30637,5 @@
       "last_modified": 1559865884636
     }
   ],
-  "timestamp": 1711292223155
+  "timestamp": 1711465023926
 }
