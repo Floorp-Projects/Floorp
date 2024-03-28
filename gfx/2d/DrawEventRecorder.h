@@ -15,6 +15,7 @@
 #include <functional>
 #include <vector>
 
+#include "ImageContainer.h"
 #include "mozilla/DataMutex.h"
 #include "mozilla/ThreadSafeWeakPtr.h"
 #include "nsTHashMap.h"
@@ -185,6 +186,12 @@ class DrawEventRecorderPrivate : public DrawEventRecorder {
   virtual void StoreSourceSurfaceRecording(SourceSurface* aSurface,
                                            const char* aReason);
 
+  virtual void StoreImageRecording(
+      const RefPtr<layers::Image>& aImageOfSurfaceDescriptor,
+      const char* aReasony) {
+    MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+  }
+
   /**
    * Used when a source surface is destroyed, aSurface is a void* instead of a
    * SourceSurface* because this is called during the SourceSurface destructor,
@@ -209,10 +216,20 @@ class DrawEventRecorderPrivate : public DrawEventRecorder {
     aSurfaces = std::move(mExternalSurfaces);
   }
 
+  struct ExternalImageEntry {
+    RefPtr<layers::Image> mImage;
+    int64_t mEventCount = -1;
+  };
+
+  using ExternalImagesHolder = std::deque<ExternalImageEntry>;
+
  protected:
   NS_DECL_OWNINGTHREAD
 
   void StoreExternalSurfaceRecording(SourceSurface* aSurface, uint64_t aKey);
+
+  void StoreExternalImageRecording(
+      const RefPtr<layers::Image>& aImageOfSurfaceDescriptor);
 
   void ProcessPendingDeletions() {
     NS_ASSERT_OWNINGTHREAD(DrawEventRecorderPrivate);
@@ -253,6 +270,7 @@ class DrawEventRecorderPrivate : public DrawEventRecorder {
 
   ReferencePtr mCurrentDT;
   ExternalSurfacesHolder mExternalSurfaces;
+  ExternalImagesHolder mExternalImages;
   bool mExternalFonts;
 };
 

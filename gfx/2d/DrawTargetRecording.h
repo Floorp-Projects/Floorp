@@ -71,6 +71,13 @@ class DrawTargetRecording : public DrawTarget {
       const DrawSurfaceOptions& aSurfOptions = DrawSurfaceOptions(),
       const DrawOptions& aOptions = DrawOptions()) override;
 
+  virtual void DrawSurfaceDescriptor(
+      const layers::SurfaceDescriptor& aDesc,
+      const RefPtr<layers::Image>& aImageOfSurfaceDescriptor, const Rect& aDest,
+      const Rect& aSource,
+      const DrawSurfaceOptions& aSurfOptions = DrawSurfaceOptions(),
+      const DrawOptions& aOptions = DrawOptions()) override;
+
   virtual void DrawDependentSurface(uint64_t aId, const Rect& aDest) override;
 
   virtual void DrawFilter(FilterNode* aNode, const Rect& aSourceRect,

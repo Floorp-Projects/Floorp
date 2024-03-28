@@ -111,6 +111,9 @@ class CanvasDrawEventRecorder final : public gfx::DrawEventRecorderPrivate,
   void StoreSourceSurfaceRecording(gfx::SourceSurface* aSurface,
                                    const char* aReason) final;
 
+  void StoreImageRecording(const RefPtr<Image>& aImageOfSurfaceDescriptor,
+                           const char* aReasony) final;
+
   gfx::RecorderType GetRecorderType() const override {
     return gfx::RecorderType::CANVAS;
   }
@@ -133,6 +136,8 @@ class CanvasDrawEventRecorder final : public gfx::DrawEventRecorderPrivate,
   void DropFreeBuffers();
 
   void ClearProcessedExternalSurfaces();
+
+  void ClearProcessedExternalImages();
 
  protected:
   gfx::ContiguousBuffer& GetContiguousBuffer(size_t aSize) final;

@@ -2230,7 +2230,7 @@ class nsLayoutUtils {
   }
   static mozilla::SurfaceFromElementResult SurfaceFromElement(
       mozilla::dom::HTMLVideoElement* aElement, uint32_t aSurfaceFlags,
-      RefPtr<DrawTarget>& aTarget);
+      RefPtr<DrawTarget>& aTarget, bool aOptimizeSourceSurface = true);
 
   /**
    * When the document is editable by contenteditable attribute of its root

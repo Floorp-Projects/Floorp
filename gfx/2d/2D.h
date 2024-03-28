@@ -85,7 +85,9 @@ namespace mozilla {
 class Mutex;
 
 namespace layers {
+class Image;
 class MemoryOrShmem;
+class SurfaceDescriptor;
 class SurfaceDescriptorBuffer;
 class TextureData;
 }  // namespace layers
@@ -1415,6 +1417,15 @@ class DrawTarget : public external::AtomicRefCounted<DrawTarget> {
       SourceSurface* aSurface, const Rect& aDest, const Rect& aSource,
       const DrawSurfaceOptions& aSurfOptions = DrawSurfaceOptions(),
       const DrawOptions& aOptions = DrawOptions()) = 0;
+
+  virtual void DrawSurfaceDescriptor(
+      const layers::SurfaceDescriptor& aDesc,
+      const RefPtr<layers::Image>& aImageOfSurfaceDescriptor, const Rect& aDest,
+      const Rect& aSource,
+      const DrawSurfaceOptions& aSurfOptions = DrawSurfaceOptions(),
+      const DrawOptions& aOptions = DrawOptions()) {
+    MOZ_CRASH("GFX: DrawSurfaceDescriptor");
+  }
 
   /**
    * Draw a surface to the draw target, when the surface will be available
