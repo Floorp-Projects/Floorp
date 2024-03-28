@@ -26,4 +26,9 @@ class ResizableKeyboardCoordinatorLayout @JvmOverloads constructor(
         super.onDetachedFromWindow()
         delegate.onDetachedFromWindow()
     }
+
+    override fun requestDisallowInterceptTouchEvent(b: Boolean) {
+        // As this is a direct parent of EngineView, we don't want to propagate this request to the parent
+        // because that would prevent the hiding of the toolbar.
+    }
 }
