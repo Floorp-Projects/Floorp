@@ -583,8 +583,9 @@ const nsAttrValue* nsAccUtils::GetARIAAttr(dom::Element* aElement,
 bool nsAccUtils::ARIAAttrValueIs(dom::Element* aElement, const nsAtom* aName,
                                  const nsAString& aValue,
                                  nsCaseTreatment aCaseSensitive) {
-  if (aElement->AttrValueIs(kNameSpaceID_None, aName, aValue, aCaseSensitive)) {
-    return true;
+  if (aElement->HasAttr(kNameSpaceID_None, aName)) {
+    return aElement->AttrValueIs(kNameSpaceID_None, aName, aValue,
+                                 aCaseSensitive);
   }
   const auto* defaults = GetARIADefaults(aElement);
   if (!defaults) {
@@ -597,8 +598,9 @@ bool nsAccUtils::ARIAAttrValueIs(dom::Element* aElement, const nsAtom* aName,
 bool nsAccUtils::ARIAAttrValueIs(dom::Element* aElement, const nsAtom* aName,
                                  const nsAtom* aValue,
                                  nsCaseTreatment aCaseSensitive) {
-  if (aElement->AttrValueIs(kNameSpaceID_None, aName, aValue, aCaseSensitive)) {
-    return true;
+  if (aElement->HasAttr(kNameSpaceID_None, aName)) {
+    return aElement->AttrValueIs(kNameSpaceID_None, aName, aValue,
+                                 aCaseSensitive);
   }
   const auto* defaults = GetARIADefaults(aElement);
   if (!defaults) {
