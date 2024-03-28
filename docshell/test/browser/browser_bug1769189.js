@@ -20,7 +20,7 @@ add_task(async function test_beforeUnload_and_replaceState() {
         browser,
         "pageshow"
       );
-      BrowserReload();
+      BrowserCommands.reload();
       await awaitPageShow;
 
       let updatedState = await SpecialPowers.spawn(browser, [], () => {

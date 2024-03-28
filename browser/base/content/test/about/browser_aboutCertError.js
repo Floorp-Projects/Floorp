@@ -544,7 +544,7 @@ add_task(async function checkViewSource() {
   certOverrideService.clearValidityOverride("expired.example.com", -1, {});
 
   loaded = BrowserTestUtils.waitForErrorPage(browser);
-  BrowserReloadSkipCache();
+  BrowserCommands.reloadSkipCache();
   await loaded;
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);

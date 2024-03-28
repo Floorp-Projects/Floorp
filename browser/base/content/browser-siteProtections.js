@@ -2190,7 +2190,7 @@ var gProtectionsHandler = {
     ContentBlockingAllowList.add(gBrowser.selectedBrowser);
     if (shouldReload) {
       this._hidePopup();
-      BrowserReload();
+      BrowserCommands.reload();
     }
   },
 
@@ -2198,7 +2198,7 @@ var gProtectionsHandler = {
     ContentBlockingAllowList.remove(gBrowser.selectedBrowser);
     if (shouldReload) {
       this._hidePopup();
-      BrowserReload();
+      BrowserCommands.reload();
     }
   },
 

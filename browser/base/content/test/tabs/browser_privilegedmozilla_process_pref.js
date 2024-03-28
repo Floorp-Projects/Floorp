@@ -140,7 +140,7 @@ add_task(async function process_switching_through_navigation_features() {
     );
 
     // Check that reload does not break the privileged mozilla content process affinity.
-    BrowserReload();
+    BrowserCommands.reload();
     await BrowserTestUtils.browserLoaded(browser, false, TEST_HIGH1);
     is(
       browser.frameLoader.remoteTab.osPid,
