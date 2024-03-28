@@ -289,12 +289,12 @@ bool DebuggerEnvironment::CallData::findMethod() {
     return false;
   }
 
-  if (!environment->requireDebuggee(cx)) {
+  RootedId id(cx);
+  if (!ValueToIdentifier(cx, args[0], &id)) {
     return false;
   }
 
-  RootedId id(cx);
-  if (!ValueToIdentifier(cx, args[0], &id)) {
+  if (!environment->requireDebuggee(cx)) {
     return false;
   }
 
@@ -312,12 +312,12 @@ bool DebuggerEnvironment::CallData::getVariableMethod() {
     return false;
   }
 
-  if (!environment->requireDebuggee(cx)) {
+  RootedId id(cx);
+  if (!ValueToIdentifier(cx, args[0], &id)) {
     return false;
   }
 
-  RootedId id(cx);
-  if (!ValueToIdentifier(cx, args[0], &id)) {
+  if (!environment->requireDebuggee(cx)) {
     return false;
   }
 
@@ -329,12 +329,12 @@ bool DebuggerEnvironment::CallData::setVariableMethod() {
     return false;
   }
 
-  if (!environment->requireDebuggee(cx)) {
+  RootedId id(cx);
+  if (!ValueToIdentifier(cx, args[0], &id)) {
     return false;
   }
 
-  RootedId id(cx);
-  if (!ValueToIdentifier(cx, args[0], &id)) {
+  if (!environment->requireDebuggee(cx)) {
     return false;
   }
 
