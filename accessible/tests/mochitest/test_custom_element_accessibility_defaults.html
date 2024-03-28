@@ -33,7 +33,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1665151
   ["disabled", "button", internals => internals.ariaDisabled = "true"],
   ["expanded", "button", internals => internals.ariaExpanded = "true"],
   ["haspopup", "button", internals => internals.ariaHasPopup = "true"],
-  ["hidden", "region", internals => internals.ariaHidden = "false"],
+  ["hidden", "region", internals => internals.ariaHidden = "true"],
   ["invalid", "textbox", internals => internals.ariaInvalid = "true"],
   ["keyshortcuts", "button", internals => internals.ariaKeyShortcuts = "Alt+Shift+A"],
   ["label", "button", internals => internals.ariaLabel = "Default"],
@@ -122,8 +122,8 @@ async function runTest() {
   testAttrs("default-haspopup", {"haspopup": "true"}, true);
   testAbsentAttrs("custom-haspopup", {"haspopup": "false"});
 
-  ok(isAccessible("default-hidden"), "Accessible for not aria-hidden");
-  ok(!isAccessible("custom-hidden"), "No accessible for aria-hidden");
+  ok(!isAccessible("default-hidden"), "Accessible for aria-hidden default");
+  ok(isAccessible("custom-hidden"), "Accessible for custom aria-hidden=false");
 
   testStates("default-invalid", STATE_INVALID);
   testStates("custom-invalid", 0, 0, STATE_INVALID);
@@ -277,7 +277,7 @@ addA11yLoadEvent(runTest);
 <custom-haspopup id="custom-haspopup" aria-haspopup="false"></custom-haspopup>
 
 <custom-hidden id="default-hidden"></custom-hidden>
-<custom-hidden id="custom-hidden" aria-hidden="true"></custom-hidden>
+<custom-hidden id="custom-hidden" aria-hidden="false"></custom-hidden>
 
 <custom-invalid id="default-invalid"></custom-invalid>
 <custom-invalid id="custom-invalid" aria-invalid="false"></custom-invalid>
