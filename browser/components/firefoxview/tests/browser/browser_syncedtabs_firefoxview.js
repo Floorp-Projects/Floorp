@@ -276,9 +276,12 @@ add_task(async function test_tabs() {
   });
 
   await withFirefoxView({ openNewWindow: true }, async browser => {
+    // Notify observers while in recent browsing. Once synced tabs is selected,
+    // it should have the updated data.
+    Services.obs.notifyObservers(null, UIState.ON_UPDATE);
+
     const { document } = browser.contentWindow;
     await navigateToViewAndWait(document, "syncedtabs");
-    Services.obs.notifyObservers(null, UIState.ON_UPDATE);
 
     let syncedTabsComponent = document.querySelector(
       "view-syncedtabs:not([slot=syncedtabs])"
