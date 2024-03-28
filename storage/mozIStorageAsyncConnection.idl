@@ -70,8 +70,12 @@ interface mozIStorageAsyncConnection : nsISupports {
    *
    * If you bind more params than this limit, `create{Async}Statement` will
    * fail with a "too many SQL variables" error.
+   * It's possible to lower the limit, but it's not possible to set it higher
+   * than the default value, passing an higher value will silently truncate to
+   * the default. Lowering the limit is particularly useful for testing code
+   * that may bind many variables.
    */
-  readonly attribute int32_t variableLimit;
+  attribute int32_t variableLimit;
 
   /**
    * Returns true if a transaction is active on this connection.

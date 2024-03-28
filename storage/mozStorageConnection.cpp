@@ -2469,6 +2469,18 @@ Connection::GetVariableLimit(int32_t* _limit) {
 }
 
 NS_IMETHODIMP
+Connection::SetVariableLimit(int32_t limit) {
+  if (!connectionReady()) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+  int oldLimit = ::sqlite3_limit(mDBConn, SQLITE_LIMIT_VARIABLE_NUMBER, limit);
+  if (oldLimit < 0) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 Connection::BeginTransaction() {
   if (!connectionReady()) {
     return NS_ERROR_NOT_INITIALIZED;

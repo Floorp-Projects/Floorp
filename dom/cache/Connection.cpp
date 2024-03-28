@@ -227,6 +227,11 @@ Connection::GetVariableLimit(int32_t* aResultOut) {
 }
 
 NS_IMETHODIMP
+Connection::SetVariableLimit(int32_t aLimit) {
+  return mBase->SetVariableLimit(aLimit);
+}
+
+NS_IMETHODIMP
 Connection::BeginTransaction() { return mBase->BeginTransaction(); }
 
 NS_IMETHODIMP
