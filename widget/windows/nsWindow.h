@@ -175,7 +175,6 @@ class nsWindow final : public nsBaseWidget {
   void Resize(double aWidth, double aHeight, bool aRepaint) override;
   void Resize(double aX, double aY, double aWidth, double aHeight,
               bool aRepaint) override;
-  mozilla::Maybe<bool> IsResizingNativeWidget() override;
   void PlaceBehind(nsTopLevelWidgetZPlacement aPlacement, nsIWidget* aWidget,
                    bool aActivate) override;
   void SetSizeMode(nsSizeMode aMode) override;
