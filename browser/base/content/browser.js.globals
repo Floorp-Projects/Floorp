@@ -32,7 +32,6 @@
   "delayedStartupPromise",
   "gBrowserInit",
   "HandleAppCommandEvent",
-  "gotoHistoryIndex",
   "BrowserCommands",
   "BrowserStop",
   "BrowserReloadOrDuplicate",
