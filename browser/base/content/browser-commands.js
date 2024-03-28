@@ -31,4 +31,26 @@ var BrowserCommands = {
       duplicateTabIn(gBrowser.selectedTab, where, 1);
     }
   },
+
+  handleBackspace() {
+    switch (Services.prefs.getIntPref("browser.backspace_action")) {
+      case 0:
+        this.back();
+        break;
+      case 1:
+        goDoCommand("cmd_scrollPageUp");
+        break;
+    }
+  },
+
+  handleShiftBackspace() {
+    switch (Services.prefs.getIntPref("browser.backspace_action")) {
+      case 0:
+        this.forward();
+        break;
+      case 1:
+        goDoCommand("cmd_scrollPageDown");
+        break;
+    }
+  },
 };
