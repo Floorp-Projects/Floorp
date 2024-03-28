@@ -478,11 +478,9 @@ export class FormAutofillChild extends JSWindowActorChild {
       return;
     }
 
-    const doc = this.document;
-
     switch (message.name) {
       case "FormAutofill:PreviewProfile": {
-        this.previewProfile(doc);
+        this.previewProfile(message.data.selectedIndex);
         break;
       }
       case "FormAutofill:ClearForm": {
@@ -658,9 +656,7 @@ export class FormAutofillChild extends JSWindowActorChild {
     }
   }
 
-  previewProfile(doc) {
-    let docWin = doc.ownerGlobal;
-    let selectedIndex = lazy.ProfileAutocomplete._getSelectedIndex(docWin);
+  previewProfile(selectedIndex) {
     let lastAutoCompleteResult =
       lazy.ProfileAutocomplete.lastProfileAutoCompleteResult;
     let focusedInput = this.activeInput;
@@ -669,7 +665,7 @@ export class FormAutofillChild extends JSWindowActorChild {
       selectedIndex === -1 ||
       !focusedInput ||
       !lastAutoCompleteResult ||
-      lastAutoCompleteResult.getStyleAt(selectedIndex) != "autofill-profile"
+      lastAutoCompleteResult.getStyleAt(selectedIndex) != "autofill"
     ) {
       lazy.ProfileAutocomplete._clearProfilePreview();
     } else {

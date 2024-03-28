@@ -181,7 +181,7 @@ class ProfileAutoCompleteResult {
       case "insecure":
         return "insecureWarning";
       default:
-        return "autofill-profile";
+        return "autofill";
     }
   }
 
@@ -541,8 +541,8 @@ export class CreditCardResult extends ProfileAutoCompleteResult {
           .filter(chunk => !!chunk) // Exclude empty chunks.
           .join(" ");
         return {
-          primary,
-          secondary,
+          primary: primary.toString().replaceAll("*", "•"),
+          secondary: secondary.toString().replaceAll("*", "•"),
           ariaLabel,
           image,
         };
