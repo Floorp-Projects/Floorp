@@ -117,6 +117,8 @@ treeherder:
         'R-cf': 'Reftests confirm failure'
         'R-nofis': 'Reftests without fission enabled'
         'R-nofis-cf': 'Reftests confirm failure without fission enabled'
+        'R-nofis-ship': 'Reftests without fission and with SHIP (session history in parent) enabled (Android specific)'
+        'R-nofis-ship-cf': 'Reftests confirm failure without fission and with SHIP (session history in parent) enabled (Android specific)'
         'R-swr': 'Reftests with software webrender enabled'
         'R-swr-cf': 'Reftests confirm failure with software webrender enabled'
         'R-swr-nofis': 'Reftests with software webrender enabled without fission enabled'
