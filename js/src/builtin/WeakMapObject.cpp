@@ -122,8 +122,8 @@ bool WeakMapObject::delete_(JSContext* cx, unsigned argc, Value* vp) {
   MOZ_ASSERT(WeakMapObject::is(args.thisv()));
 
   if (!CanBeHeldWeakly(cx, args.get(0))) {
-    ReportValueError(cx, JSMSG_WEAKMAP_KEY_CANT_BE_HELD_WEAKLY,
-                     JSDVG_IGNORE_STACK, args.get(0), nullptr);
+    unsigned errorNum = GetErrorNumber(true);
+    ReportValueError(cx, errorNum, JSDVG_IGNORE_STACK, args.get(0), nullptr);
     return false;
   }
 
@@ -238,8 +238,8 @@ JS_PUBLIC_API bool JS::SetWeakMapEntry(JSContext* cx, HandleObject mapObj,
   CHECK_THREAD(cx);
   cx->check(key, val);
   if (!CanBeHeldWeakly(cx, key)) {
-    ReportValueError(cx, JSMSG_WEAKMAP_KEY_CANT_BE_HELD_WEAKLY,
-                     JSDVG_IGNORE_STACK, key, nullptr);
+    unsigned errorNum = GetErrorNumber(true);
+    ReportValueError(cx, errorNum, JSDVG_IGNORE_STACK, key, nullptr);
     return false;
   }
 

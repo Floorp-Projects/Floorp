@@ -80,6 +80,8 @@ MSG_DEF(JSMSG_SPREAD_TOO_LARGE,        0, JSEXN_RANGEERR, "array too large due t
 MSG_DEF(JSMSG_BAD_WEAKMAP_KEY,         0, JSEXN_TYPEERR, "cannot use the given object as a weak map key")
 MSG_DEF(JSMSG_WEAKMAP_KEY_CANT_BE_HELD_WEAKLY, 1, JSEXN_TYPEERR, "WeakMap key {0} must be an object or an unregistered symbol")
 MSG_DEF(JSMSG_WEAKSET_VAL_CANT_BE_HELD_WEAKLY, 1, JSEXN_TYPEERR, "WeakSet value {0} must be an object or an unregistered symbol")
+MSG_DEF(JSMSG_WEAKMAP_KEY_MUST_BE_AN_OBJECT, 1, JSEXN_TYPEERR, "WeakMap key {0} must be an object")
+MSG_DEF(JSMSG_WEAKSET_VAL_MUST_BE_AN_OBJECT, 1, JSEXN_TYPEERR, "WeakSet value {0} must be an object")
 MSG_DEF(JSMSG_BAD_GETTER_OR_SETTER,    1, JSEXN_TYPEERR, "invalid {0} usage")
 MSG_DEF(JSMSG_BAD_ARRAY_LENGTH,        0, JSEXN_RANGEERR, "invalid array length")
 MSG_DEF(JSMSG_SOURCE_ARRAY_TOO_LONG,   0, JSEXN_RANGEERR, "source array is too long")

@@ -31,8 +31,8 @@ using namespace js;
 
   // Step 4.
   if (!CanBeHeldWeakly(cx, args.get(0))) {
-    ReportValueError(cx, JSMSG_WEAKSET_VAL_CANT_BE_HELD_WEAKLY,
-                     JSDVG_IGNORE_STACK, args.get(0), nullptr);
+    unsigned errorNum = GetErrorNumber(false);
+    ReportValueError(cx, errorNum, JSDVG_IGNORE_STACK, args.get(0), nullptr);
     return false;
   }
 
@@ -198,8 +198,9 @@ bool WeakSetObject::construct(JSContext* cx, unsigned argc, Value* vp) {
         MOZ_ASSERT(!keyVal.isMagic(JS_ELEMENTS_HOLE));
 
         if (!CanBeHeldWeakly(cx, keyVal)) {
-          ReportValueError(cx, JSMSG_WEAKSET_VAL_CANT_BE_HELD_WEAKLY,
-                           JSDVG_IGNORE_STACK, keyVal, nullptr);
+          unsigned errorNum = GetErrorNumber(false);
+          ReportValueError(cx, errorNum, JSDVG_IGNORE_STACK, args.get(0),
+                           nullptr);
           return false;
         }
 
