@@ -688,7 +688,8 @@ private fun readerViewAppearanceToggle() =
 private fun removeFromShortcutsButton() =
     onView(allOf(withText(R.string.browser_menu_remove_from_shortcuts)))
 
-private fun installPWAButton() = mDevice.findObject(UiSelector().text("Install"))
+private fun installPWAButton() =
+    itemContainingText(getStringResource(R.string.browser_menu_add_to_homescreen))
 
 private fun openInAppButton() =
     onView(
