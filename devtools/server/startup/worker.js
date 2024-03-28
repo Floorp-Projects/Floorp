@@ -4,7 +4,7 @@
 
 "use strict";
 
-/* global worker, loadSubScript, global */
+/* global global */
 
 /*
  * Worker debugger script that listens for requests to start a `DevToolsServer` for a
@@ -44,7 +44,10 @@ this.rpc = function (method, ...params) {
   });
 }.bind(this);
 
-loadSubScript("resource://devtools/shared/loader/worker-loader.js");
+const { worker } = ChromeUtils.importESModule(
+  "resource://devtools/shared/loader/worker-loader.sys.mjs",
+  { global: "current" }
+);
 
 const { WorkerTargetActor } = worker.require(
   "resource://devtools/server/actors/targets/worker.js"

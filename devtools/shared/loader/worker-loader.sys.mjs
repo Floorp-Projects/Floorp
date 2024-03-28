@@ -2,9 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
+/* global DebuggerNotificationObserver */
 
-/* global worker, DebuggerNotificationObserver */
+// This module does import many attributes from the global object
+/* eslint-disable mozilla/reject-global-this */
 
 // A CommonJS module loader that is designed to run inside a worker debugger.
 // We can't simply use the SDK module loader, because it relies heavily on
@@ -21,8 +22,6 @@
 //
 // Note: to see dump output when running inside the worker thread, you might
 // need to enable the browser.dom.window.dump.enabled pref.
-
-this.EXPORTED_SYMBOLS = ["WorkerDebuggerLoader", "worker"];
 
 // Some notes on module ids and URLs:
 //
@@ -319,8 +318,6 @@ function WorkerDebuggerLoader(options) {
   this.require = createRequire();
 }
 
-this.WorkerDebuggerLoader = WorkerDebuggerLoader;
-
 var loader = {
   lazyGetter(object, name, lambda) {
     Object.defineProperty(object, name, {
@@ -438,7 +435,7 @@ addDebuggerToGlobal(globalThis);
       Debugger,
       URL,
       createSandbox,
-      dump: this.dump,
+      dump: globalThis.dump,
       rpc,
       loadSubScript,
       setImmediate,
@@ -448,7 +445,7 @@ addDebuggerToGlobal(globalThis);
   // Worker thread
   const requestors = [];
 
-  const scope = this;
+  const scope = globalThis;
 
   const xpcInspector = {
     get eventLoopNestLevel() {
@@ -473,13 +470,13 @@ addDebuggerToGlobal(globalThis);
   };
 
   return {
-    Debugger: this.Debugger,
-    URL: this.URL,
-    createSandbox: this.createSandbox,
-    dump: this.dump,
-    rpc: this.rpc,
-    loadSubScript: this.loadSubScript,
-    setImmediate: this.setImmediate,
+    Debugger: globalThis.Debugger,
+    URL: globalThis.URL,
+    createSandbox: globalThis.createSandbox,
+    dump: globalThis.dump,
+    rpc: globalThis.rpc,
+    loadSubScript: globalThis.loadSubScript,
+    setImmediate: globalThis.setImmediate,
     xpcInspector,
   };
 }.call(this);
@@ -488,7 +485,7 @@ addDebuggerToGlobal(globalThis);
 // Create the default instance of the worker loader, using the APIs we defined
 // above.
 
-this.worker = new WorkerDebuggerLoader({
+export const worker = new WorkerDebuggerLoader({
   createSandbox,
   globals: {
     isWorker: true,
@@ -497,12 +494,12 @@ this.worker = new WorkerDebuggerLoader({
     rpc,
     URL,
     setImmediate,
-    retrieveConsoleEvents: this.retrieveConsoleEvents,
-    setConsoleEventHandler: this.setConsoleEventHandler,
-    clearConsoleEvents: this.clearConsoleEvents,
+    retrieveConsoleEvents: globalThis.retrieveConsoleEvents,
+    setConsoleEventHandler: globalThis.setConsoleEventHandler,
+    clearConsoleEvents: globalThis.clearConsoleEvents,
     console,
-    btoa: this.btoa,
-    atob: this.atob,
+    btoa: globalThis.btoa,
+    atob: globalThis.atob,
     Services: Object.create(null),
     ChromeUtils,
     DebuggerNotificationObserver,

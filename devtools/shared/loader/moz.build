@@ -17,5 +17,5 @@ DevToolsModules(
     "DistinctSystemPrincipalLoader.sys.mjs",
     "loader-plugin-raw.sys.mjs",
     "Loader.sys.mjs",
-    "worker-loader.js",
+    "worker-loader.sys.mjs",
 )
