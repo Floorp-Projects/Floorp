@@ -39,6 +39,8 @@ default_optimizations = (
     {"upload-symbols": None},
     # optimize strategy alias for reprocess-symbols tasks
     {"reprocess-symbols": None},
+    # optimization strategy for mozlint tests
+    {"skip-unless-mozlint": voluptuous.Any(str, [str])},
 )
 
 OptimizationSchema = voluptuous.Any(*default_optimizations)
