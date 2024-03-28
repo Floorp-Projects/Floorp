@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: glean-parser
-Version: 13.0.0
+Version: 13.0.1
 Summary: Parser tools for Mozilla's Glean telemetry
 Home-page: https://github.com/mozilla/glean_parser
 Author: The Glean Team
@@ -78,6 +78,10 @@ $ glean_parser check < ping.json
 # Changelog
 
 ## Unreleased
+
+## 13.0.1
+
+- Use faster C yaml parser if available ([#677](https://github.com/mozilla/glean_parser/pull/677))
 
 ## 13.0.0
 
