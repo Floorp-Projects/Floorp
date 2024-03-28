@@ -221,7 +221,6 @@ void ArrayBufferViewObject::computeResizableLengthAndByteOffset(
     size_t bytesPerElement) {
   MOZ_ASSERT(!isSharedMemory());
   MOZ_ASSERT(hasBuffer());
-  MOZ_ASSERT(!bufferUnshared()->isLengthPinned());
   MOZ_ASSERT(bufferUnshared()->isResizable());
 
   size_t byteOffsetStart = initialByteOffset();
