@@ -3118,6 +3118,12 @@ class FactoryOp
     return mOriginMetadata.mOrigin;
   }
 
+  const Maybe<nsString>& DatabaseNameRef() const {
+    AssertIsOnOwningThread();
+
+    return mDatabaseName;
+  }
+
   bool DatabaseFilePathIsKnown() const {
     AssertIsOnOwningThread();
 
@@ -5077,7 +5083,7 @@ class Maintenance final : public Runnable {
   PRTime mStartTime;
   RefPtr<UniversalDirectoryLock> mPendingDirectoryLock;
   RefPtr<UniversalDirectoryLock> mDirectoryLock;
-  nsCOMPtr<nsIRunnable> mCompleteCallback;
+  nsTArray<nsCOMPtr<nsIRunnable>> mCompleteCallbacks;
   nsTArray<DirectoryInfo> mDirectoryInfos;
   nsTHashMap<nsStringHashKey, DatabaseMaintenance*> mDatabaseMaintenances;
   nsresult mResultCode;
@@ -5131,9 +5137,8 @@ class Maintenance final : public Runnable {
   void WaitForCompletion(nsIRunnable* aCallback) {
     AssertIsOnBackgroundThread();
     MOZ_ASSERT(mDatabaseMaintenances.Count());
-    MOZ_ASSERT(!mCompleteCallback);
 
-    mCompleteCallback = aCallback;
+    mCompleteCallbacks.AppendElement(aCallback);
   }
 
   void Stringify(nsACString& aResult) const;
@@ -13141,9 +13146,10 @@ void Maintenance::UnregisterDatabaseMaintenance(
     return;
   }
 
-  if (mCompleteCallback) {
-    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(mCompleteCallback.forget()));
+  for (const auto& completeCallback : mCompleteCallbacks) {
+    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(completeCallback));
   }
+  mCompleteCallbacks.Clear();
 
   mState = State::Finishing;
   Finish();
@@ -13541,6 +13547,10 @@ nsresult Maintenance::BeginDatabaseMaintenance() {
       if (gFactoryOps) {
         for (uint32_t index = gFactoryOps->Length(); index > 0; index--) {
           CheckedUnsafePtr<FactoryOp>& existingOp = (*gFactoryOps)[index - 1];
+
+          if (existingOp->DatabaseNameRef().isNothing()) {
+            return false;
+          }
 
           if (!existingOp->DatabaseFilePathIsKnown()) {
             continue;
@@ -15028,7 +15038,7 @@ nsresult FactoryOp::DirectoryWorkDone() {
 
         if (RefPtr<Maintenance> currentMaintenance =
                 quotaClient->GetCurrentMaintenance()) {
-          if (self.mDatabaseFilePath.isSome()) {
+          if (self.mDatabaseName.isSome()) {
             if (RefPtr<DatabaseMaintenance> databaseMaintenance =
                     currentMaintenance->GetDatabaseMaintenance(
                         self.mDatabaseFilePath.ref())) {
