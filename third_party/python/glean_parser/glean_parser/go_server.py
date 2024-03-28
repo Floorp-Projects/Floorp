@@ -21,6 +21,7 @@ The generated code creates the following:
 * Two methods for logging an Event metric
     one with and one without user request info specified
 """
+
 from collections import defaultdict
 from pathlib import Path
 from typing import Any, Dict, Optional, List

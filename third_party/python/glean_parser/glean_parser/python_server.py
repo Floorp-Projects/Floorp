@@ -20,6 +20,7 @@ see `SUPPORTED_METRIC_TYPES` below.
 The generated code creates a `ServerEventLogger` class for each ping that has
 at least one event metric. The class has a `record` method for each event metric.
 """
+
 from collections import defaultdict
 from pathlib import Path
 from typing import Any, Dict, Optional, List

@@ -18,6 +18,7 @@ Then it's the role of the ingestion pipeline to pick the messages up and process
 Warning: this outputter supports a limited set of metrics,
 see `SUPPORTED_METRIC_TYPES` below.
 """
+
 from collections import defaultdict
 from pathlib import Path
 from typing import Any, Dict, List, Optional

@@ -28,6 +28,7 @@ There are two patterns for event structure supported in this environment:
 
 Therefore, unlike in other outputters, here we don't generate classes for each metric.
 """
+
 from collections import defaultdict
 from pathlib import Path
 from typing import Any, Dict, Optional, List
