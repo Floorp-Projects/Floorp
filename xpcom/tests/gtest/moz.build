@@ -144,10 +144,8 @@ if (
         "TestSTLWrappers.cpp",
     ]
 
-# Compile TestAllocReplacement separately so Windows headers don't pollute
-# the global namespace for other files.
 if CONFIG["MOZ_MEMORY"]:
-    SOURCES += [
+    UNIFIED_SOURCES += [
         "TestAllocReplacement.cpp",
     ]
 
