@@ -1532,7 +1532,6 @@ std::shared_ptr<ExternalTexture> WebGPUParent::CreateExternalTexture(
   UniquePtr<ExternalTexture> texture =
       ExternalTexture::Create(aWidth, aHeight, aFormat, aUsage);
   if (!texture) {
-    MOZ_ASSERT_UNREACHABLE("unexpected to be called");
     return nullptr;
   }
 
