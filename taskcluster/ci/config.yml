@@ -161,6 +161,8 @@ treeherder:
         'X-condprof-cf': 'Xpcshell tests confirm failure with a conditioned profile'
         'X-nofis': 'Xpcshell tests without fission enabled'
         'X-nofis-cf': 'Xpcshell tests confirm failure without fission enabled'
+        'X-nofis-ship': 'Xpcshell tests without fission and with SHIP (session history in parent) enabled (Android specific)'
+        'X-nofis-ship-cf': 'Xpcshell tests confirm failure without fission and with SHIP (session history in parent) enabled (Android specific)'
         'X-spi-nw': 'Xpcshell tests with networking on socket process'
         'X-spi-nw-cf': 'Xpcshell tests confirm failure with networking on socket process'
         'X-spi-nw-nofis': 'Xpcshell tests with networking on socket process without fission enabled'

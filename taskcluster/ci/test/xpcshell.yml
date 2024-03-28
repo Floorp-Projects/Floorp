@@ -51,6 +51,7 @@ xpcshell:
         - socketprocess_networking
         - no-fission
         - msix
+        - geckoview-no-fission-ship
     run-on-projects:
         by-variant:
             conditioned_profile:
@@ -78,6 +79,11 @@ xpcshell:
                 by-test-platform:
                     windows11-64-2009(-shippable)?-qr/opt: built-projects
                     windows11-64-2009-qr/debug: built-projects
+                    default: []
+            geckoview-no-fission-ship:
+                by-test-platform:
+                    android-em-7.0-x86_64-qr/debug-isolated-process: []
+                    android-em.*: built-projects
                     default: []
             default:
                 by-test-platform:
