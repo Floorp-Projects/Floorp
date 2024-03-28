@@ -100,7 +100,10 @@ class TelemetryProbesReporter final {
   void ReportResultForMFCDMPlaybackIfNeeded(double aTotalPlayTimeS,
                                             const nsCString& aResolution);
 #endif
-
+  void ReportPlaytimeForKeySystem(const nsAString& aKeySystem,
+                                  const double aTotalPlayTimeS,
+                                  const nsCString& aCodec,
+                                  const nsCString& aResolution);
   // Helper class to measure times for playback telemetry stats
   class TimeDurationAccumulator {
    public:

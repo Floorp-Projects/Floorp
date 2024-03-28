@@ -1,0 +1,42 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Adding a new metric? We have docs for that!
+# https://firefox-source-docs.mozilla.org/toolkit/components/glean/user/new_definitions_file.html
+
+---
+$schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
+$tags:
+  - 'Core :: Audio/Video'
+
+mediadrm:
+  eme_playback:
+    type: event
+    description: >
+      Record the EME play time with the video codec and resolutions.
+    metadata:
+      tags:
+        - 'Core :: Audio/Video: Playback'
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1882567
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1882567#3
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - media-alerts@mozilla.com
+    extra_keys:
+      key_system:
+        description: The key system used for the EME playback
+        type: string
+      played_time:
+        description: How many second the EME content has been played since last record
+        type: quantity
+      resolution:
+        description: The video resolution used for EME playback
+        type: string
+      video_codec:
+        description: The video codec used for EME playback
+        type: string
+    expires: never
