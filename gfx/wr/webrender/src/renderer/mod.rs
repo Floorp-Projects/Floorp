@@ -193,7 +193,7 @@ const GPU_TAG_CACHE_LINEAR_GRADIENT: GpuProfileTag = GpuProfileTag {
     label: "C_LinearGradient",
     color: debug_colors::BROWN,
 };
-const GPU_TAG_RADIAL_GRADIENT: GpuProfileTag = GpuProfileTag {
+const GPU_TAG_CACHE_RADIAL_GRADIENT: GpuProfileTag = GpuProfileTag {
     label: "C_RadialGradient",
     color: debug_colors::BROWN,
 };
@@ -288,7 +288,6 @@ impl BatchKind {
             }
             BatchKind::TextRun(_) => GPU_TAG_PRIM_TEXT_RUN,
             BatchKind::Quad(PatternKind::ColorOrTexture) => GPU_TAG_PRIMITIVE,
-            BatchKind::Quad(PatternKind::RadialGradient) => GPU_TAG_RADIAL_GRADIENT,
             BatchKind::Quad(PatternKind::Mask) => GPU_TAG_INDIRECT_MASK,
         }
     }
@@ -4070,7 +4069,7 @@ impl Renderer {
 
         // Draw any radial gradients for this target.
         if !target.radial_gradients.is_empty() {
-            let _timer = self.gpu_profiler.start_timer(GPU_TAG_RADIAL_GRADIENT);
+            let _timer = self.gpu_profiler.start_timer(GPU_TAG_CACHE_RADIAL_GRADIENT);
 
             self.set_blend(false, FramebufferKind::Other);
 
