@@ -62,6 +62,7 @@ mochitest-plain:
         - http3
         - http2
         - geckoview-fission-isolate-high-value
+        - geckoview-no-fission-ship
     run-on-projects:
         by-variant:
             conditioned_profile:
@@ -110,6 +111,11 @@ mochitest-plain:
                     linux1804-64-qr/debug: built-projects
                     default: []
             geckoview-fission-isolate-high-value:
+                by-test-platform:
+                    android-em-7.0-x86_64-qr/debug-isolated-process: []
+                    android-em.*: built-projects
+                    default: []
+            geckoview-no-fission-ship:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug-isolated-process: []
                     android-em.*: built-projects

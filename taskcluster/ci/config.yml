@@ -76,6 +76,8 @@ treeherder:
         'M-gli-cf': 'Mochitests confirm failure with WebGL over IPC'
         'M-nofis': 'Mochitests without fission enabled'
         'M-nofis-cf': 'Mochitests confirm failure without fission enabled'
+        'M-nofis-ship': "Mochitests without fission and with SHIP (session history in parent) enabled (Android-specific)"
+        'M-nofis-ship-cf': "Mochitests confirm failure without fission and with SHIP (session history in parent) enabled (Android-specific)"
         'M-spi': 'Mochitests with socket process'
         'M-spi-cf': 'Mochitests confirm failure with socket process'
         'M-spi-nofis': 'Mochitests with socket process without fission enabled'
