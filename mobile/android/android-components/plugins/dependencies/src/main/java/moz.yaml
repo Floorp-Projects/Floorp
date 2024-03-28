@@ -30,11 +30,9 @@ origin:
   url: https://github.com/mozilla/application-services
 
   # Human-readable identifier for this version/release
-  # Generally "version NNN", "tag SSS", "bookmark SSS"
   release: a69ebea12384421435ff6b555573e04dc497dcdc (2024-03-26T20:11:06Z).
 
-  # Revision to pull in
-  # Must be a long or short commit SHA (long preferred)
+  # Version to pull in
   revision: a69ebea12384421435ff6b555573e04dc497dcdc
 
   # The package's license, where possible using the mnemonic from
@@ -55,7 +53,9 @@ updatebot:
 
 vendoring:
   url: https://github.com/mozilla/application-services
-  source-hosting: github
+  source-hosting: yaml-dir
+  source-host-path: appservices_version_bump.ASHost
+  tracking: tag
 
   skip-vendoring-steps:
     - fetch
@@ -66,7 +66,7 @@ vendoring:
     - update-moz-build
 
   update-actions:
-    - action: run-script
-      script: '{yaml_dir}/appservices_version_bump.py'
-      cwd: '.'
-      args: []
+    - action: replace-in-file-regex
+      pattern: 'val VERSION = ".*"'
+      with: 'val VERSION = "{revision}"'
+      file: ApplicationServices.kt
