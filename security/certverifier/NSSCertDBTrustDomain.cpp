@@ -28,18 +28,19 @@
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Unused.h"
+#include "mozilla/glean/GleanMetrics.h"
 #include "mozpkix/Result.h"
 #include "mozpkix/pkix.h"
 #include "mozpkix/pkixnss.h"
 #include "mozpkix/pkixutil.h"
 #include "nsCRTGlue.h"
 #include "nsIObserverService.h"
-#include "nsNetCID.h"
 #include "nsNSSCallbacks.h"
 #include "nsNSSCertHelper.h"
 #include "nsNSSCertificate.h"
 #include "nsNSSCertificateDB.h"
 #include "nsNSSIOLayer.h"
+#include "nsNetCID.h"
 #include "nsPrintfCString.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
@@ -664,6 +665,8 @@ Result NSSCertDBTrustDomain::CheckCRLiteStash(
     MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
             ("NSSCertDBTrustDomain::CheckCRLiteStash: IsCertRevokedByStash "
              "returned true"));
+    mozilla::glean::cert_verifier::crlite_status.Get("revoked_in_stash"_ns)
+        .Add(1);
     return Result::ERROR_REVOKED_CERTIFICATE;
   }
   return Success;
@@ -693,18 +696,25 @@ Result NSSCertDBTrustDomain::CheckCRLite(
   switch (crliteRevocationState) {
     case nsICertStorage::STATE_ENFORCE:
       filterCoversCertificate = true;
+      mozilla::glean::cert_verifier::crlite_status.Get("revoked_in_filter"_ns)
+          .Add(1);
       return Result::ERROR_REVOKED_CERTIFICATE;
     case nsICertStorage::STATE_UNSET:
       filterCoversCertificate = true;
+      mozilla::glean::cert_verifier::crlite_status.Get("not_revoked"_ns).Add(1);
       return Success;
     case nsICertStorage::STATE_NOT_ENROLLED:
       filterCoversCertificate = false;
+      mozilla::glean::cert_verifier::crlite_status.Get("not_enrolled"_ns)
+          .Add(1);
       return Success;
     case nsICertStorage::STATE_NOT_COVERED:
       filterCoversCertificate = false;
+      mozilla::glean::cert_verifier::crlite_status.Get("not_covered"_ns).Add(1);
       return Success;
     case nsICertStorage::STATE_NO_FILTER:
       filterCoversCertificate = false;
+      mozilla::glean::cert_verifier::crlite_status.Get("no_filter"_ns).Add(1);
       return Success;
     default:
       MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
