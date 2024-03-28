@@ -6,9 +6,9 @@
 
 import json
 import os
+import shutil
 import sys
 from collections import namedtuple
-from distutils.spawn import find_executable
 from subprocess import check_output
 
 import mozinfo
@@ -108,7 +108,7 @@ def get_debugger_path(debugger):
             if path:
                 return path
         except Exception:
-            # Just default to find_executable instead.
+            # Just default to shutil.which instead.
             pass
 
     if mozinfo.os == "win" and debugger == "devenv.exe":
@@ -122,10 +122,10 @@ def get_debugger_path(debugger):
                 vsinfo[0]["installationPath"], "Common7", "IDE", "devenv.exe"
             )
         except Exception:
-            # Just default to find_executable instead.
+            # Just default to shutil.which instead.
             pass
 
-    return find_executable(debugger)
+    return shutil.which(debugger)
 
 
 def get_debugger_info(debugger, debuggerArgs=None, debuggerInteractive=False):
