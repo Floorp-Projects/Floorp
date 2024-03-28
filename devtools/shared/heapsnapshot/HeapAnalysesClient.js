@@ -5,9 +5,10 @@
 "use strict";
 
 const DevToolsUtils = require("resource://devtools/shared/DevToolsUtils.js");
-const {
-  DevToolsWorker,
-} = require("resource://devtools/shared/worker/worker.js");
+const lazy = {};
+ChromeUtils.defineESModuleGetters(lazy, {
+  DevToolsWorker: "resource://devtools/shared/worker/worker.sys.mjs",
+});
 
 const WORKER_URL =
   "resource://devtools/shared/heapsnapshot/HeapAnalyses.worker.js";
@@ -21,7 +22,7 @@ var workerCounter = 0;
  * terminating the client (see the `destroy` method).
  */
 const HeapAnalysesClient = (module.exports = function () {
-  this._worker = new DevToolsWorker(WORKER_URL, {
+  this._worker = new lazy.DevToolsWorker(WORKER_URL, {
     name: `HeapAnalyses-${workerCounter++}`,
     verbose: DevToolsUtils.dumpv.wantVerbose,
   });

@@ -9,5 +9,5 @@ if CONFIG["MOZ_BUILD_APP"] != "mobile/android":
 
 DevToolsModules(
     "helper.js",
-    "worker.js",
+    "worker.sys.mjs",
 )

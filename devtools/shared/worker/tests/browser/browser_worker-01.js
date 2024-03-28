@@ -3,8 +3,9 @@
 
 "use strict";
 
-// Tests that the devtools/shared/worker communicates properly
-// as both CommonJS module and as a JSM.
+const { DevToolsWorker, workerify } = ChromeUtils.importESModule(
+  "resource://devtools/shared/worker/worker.sys.mjs"
+);
 
 const BUFFER_SIZE = 8;
 
@@ -15,22 +16,16 @@ registerCleanupFunction(function () {
 add_task(async function () {
   // Test both CJS and JSM versions
 
-  await testWorker("JSM", () =>
-    ChromeUtils.import("resource://devtools/shared/worker/worker.js")
-  );
-  await testWorker("CommonJS", () =>
-    require("resource://devtools/shared/worker/worker.js")
-  );
+  await testWorker();
   await testTransfer();
 });
 
-async function testWorker(context, workerFactory) {
+async function testWorker() {
   // Needed for blob:null
   Services.prefs.setBoolPref(
     "security.allow_parent_unrestricted_js_loads",
     true
   );
-  const { DevToolsWorker, workerify } = workerFactory();
 
   const blob = new Blob(
     [
@@ -71,13 +66,13 @@ createTask(self, "groupByField", function({
   is(
     Object.keys(results.groups).join(","),
     "France,Nigeria",
-    `worker should have returned the expected result in ${context}`
+    `worker should have returned the expected result`
   );
 
   URL.revokeObjectURL(WORKER_URL);
 
   const fn = workerify(x => x * x);
-  is(await fn(5), 25, `workerify works in ${context}`);
+  is(await fn(5), 25, `workerify works`);
   fn.destroy();
 
   worker.destroy();
@@ -87,9 +82,6 @@ async function testTransfer() {
   Services.prefs.setBoolPref(
     "security.allow_parent_unrestricted_js_loads",
     true
-  );
-  const { workerify } = ChromeUtils.import(
-    "resource://devtools/shared/worker/worker.js"
   );
   const workerFn = workerify(({ buf }) => buf.byteLength);
   const buf = new ArrayBuffer(BUFFER_SIZE);
