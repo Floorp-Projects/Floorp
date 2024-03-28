@@ -34,7 +34,6 @@
   "HandleAppCommandEvent",
   "gotoHistoryIndex",
   "BrowserCommands",
-  "BrowserBack",
   "BrowserHandleBackspace",
   "BrowserHandleShiftBackspace",
   "BrowserStop",

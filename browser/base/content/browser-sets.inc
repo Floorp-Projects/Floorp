@@ -60,8 +60,8 @@
             oncommand="PlacesCommandHook.searchBookmarks();"/>
     <command id="Browser:BookmarkAllTabs"
              oncommand="PlacesCommandHook.bookmarkTabs();"/>
-    <command id="Browser:Back"    oncommand="BrowserBack();" disabled="true"/>
-    <command id="Browser:BackOrBackDuplicate" oncommand="BrowserBack(event);" disabled="true">
+    <command id="Browser:Back"    oncommand="BrowserCommands.back();" disabled="true"/>
+    <command id="Browser:BackOrBackDuplicate" oncommand="BrowserCommands.back(event);" disabled="true">
       <observes element="Browser:Back" attribute="disabled"/>
     </command>
     <command id="Browser:Forward" oncommand="BrowserCommands.forward();" disabled="true"/>
