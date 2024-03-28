@@ -54,10 +54,20 @@ public class GeckoBatteryManager extends BroadcastReceiver {
 
     mApplicationContext = context.getApplicationContext();
     // registerReceiver will return null if registering fails.
-    if (mApplicationContext.registerReceiver(this, mFilter) == null) {
+    final Intent intent = mApplicationContext.registerReceiver(this, mFilter);
+    if (intent == null) {
       Log.e(LOGTAG, "Registering receiver failed");
+      return;
+    }
+
+    mIsEnabled = true;
+    final double current = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+    final double max = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+    if (current == -1 || max == -1) {
+      Log.e(LOGTAG, "Failed to get battery level!");
+      sLevel = kDefaultLevel;
     } else {
-      mIsEnabled = true;
+      sLevel = current / max;
     }
   }
 
@@ -194,7 +204,10 @@ public class GeckoBatteryManager extends BroadcastReceiver {
     sNotificationsEnabled = false;
   }
 
-  public static double[] getCurrentInformation() {
+  public static double[] getCurrentInformation(final Context context) {
+    if (!getInstance().mIsEnabled) {
+      getInstance().start(context);
+    }
     return new double[] {getLevel(), isCharging() ? 1.0 : 0.0, getRemainingTime()};
   }
 }

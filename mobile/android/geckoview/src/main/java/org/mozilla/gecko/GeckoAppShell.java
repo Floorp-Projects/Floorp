@@ -1231,7 +1231,7 @@ public class GeckoAppShell {
 
   @WrapForJNI(calledFrom = "gecko")
   private static double[] getCurrentBatteryInformation() {
-    return GeckoBatteryManager.getCurrentInformation();
+    return GeckoBatteryManager.getCurrentInformation(getApplicationContext());
   }
 
   /* Called by JNI from AndroidBridge, and by reflection from tests/BaseTest.java.in */
