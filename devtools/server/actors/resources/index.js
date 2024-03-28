@@ -390,6 +390,14 @@ exports.hasResourceTypesForTargets = hasResourceTypesForTargets;
  *        List of all type of resource to stop listening to.
  */
 function unwatchResources(rootOrWatcherOrTargetActor, resourceTypes) {
+  // If we are given a target actor, filter out the resource types supported by the target.
+  // When using sharedData to pass types between processes, we are passing them for all target types.
+  const { targetType } = rootOrWatcherOrTargetActor;
+  // Only target actors usecase will have a target type.
+  // For Root and Watcher we process the `resourceTypes` list unfiltered.
+  if (targetType) {
+    resourceTypes = getResourceTypesForTargetType(resourceTypes, targetType);
+  }
   for (const resourceType of resourceTypes) {
     // Pull all info about this resource type from `Resources` global object
     const { watchers } = getResourceTypeEntry(
@@ -415,6 +423,14 @@ exports.unwatchResources = unwatchResources;
  *        List of all type of resource to clear.
  */
 function clearResources(rootOrWatcherOrTargetActor, resourceTypes) {
+  // If we are given a target actor, filter out the resource types supported by the target.
+  // When using sharedData to pass types between processes, we are passing them for all target types.
+  const { targetType } = rootOrWatcherOrTargetActor;
+  // Only target actors usecase will have a target type.
+  // For Root and Watcher we process the `resourceTypes` list unfiltered.
+  if (targetType) {
+    resourceTypes = getResourceTypesForTargetType(resourceTypes, targetType);
+  }
   for (const resourceType of resourceTypes) {
     const { watchers } = getResourceTypeEntry(
       rootOrWatcherOrTargetActor,

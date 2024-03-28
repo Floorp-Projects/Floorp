@@ -149,8 +149,9 @@ add_task(async function testBreakpointsPanePersistOnPauseToggle() {
   is(getPaneElements(dbg).length, 1, "Breakpoint pane is closed");
 
   info("Check event listener breakpoints log box");
-
+  const wait = waitForDispatch(dbg.store, "TOGGLE_EVENT_LISTENERS");
   await clickElement(dbg, "logEventsCheckbox");
+  await wait;
 
   is(getPaneElements(dbg).length, 1, "Breakpoint pane is still closed");
 });

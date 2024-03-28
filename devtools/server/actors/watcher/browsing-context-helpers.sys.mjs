@@ -382,7 +382,7 @@ export function getAllBrowsingContextsForContext(
       sessionContext.browserId
     );
     // topBrowsingContext can be null if getCurrentTopByBrowserId is called for a tab that is unloaded.
-    if (topBrowsingContext) {
+    if (topBrowsingContext?.embedderElement) {
       // Unfortunately, getCurrentTopByBrowserId is subject to race conditions and may refer to a BrowsingContext
       // that already navigated away.
       // Query the current "live" BrowsingContext by going through the embedder element (i.e. the <browser>/<iframe> element)
