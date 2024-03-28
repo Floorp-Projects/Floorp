@@ -1,5 +1,4 @@
-geckodriver
-===========
+# geckodriver
 
 Proxy for using W3C [WebDriver] compatible clients to interact with
 Gecko-based browsers.
@@ -13,16 +12,21 @@ as a proxy between the local- and remote ends.
 [Marionette remote protocol]: https://firefox-source-docs.mozilla.org/testing/marionette/
 [WebDriver]: https://developer.mozilla.org/en-US/docs/Web/WebDriver
 
+## Installation
 
-Downloads
----------
+Geckodriver can be installed through various distribution channels:
 
-* [Releases](https://github.com/mozilla/geckodriver/releases/latest)
-* [Change log](https://searchfox.org/mozilla-central/source/testing/geckodriver/CHANGES.md)
+* You can download pre-built binaries for the most common platforms from our [Releases] page on GitHub.
+* Alternatively, you can compile it yourself by using:
+  * `cargo install geckodriver`, or
+  * Checking out the `release` branch or a specific tag.
 
+For a detailed list of changes included in each release, please refer to the [change log].
 
-Documentation
--------------
+[change log]: https://github.com/mozilla/geckodriver/blob/release/CHANGES.md
+[Releases]: https://github.com/mozilla/geckodriver/releases/latest
+
+## Documentation
 
 * [WebDriver] (work in progress)
   * [Commands](https://developer.mozilla.org/en-US/docs/Web/WebDriver/Commands)
@@ -52,21 +56,17 @@ Documentation
   * [Releasing](https://firefox-source-docs.mozilla.org/testing/geckodriver/Releasing.html)
   * [Self-serving an ARM build](https://firefox-source-docs.mozilla.org/testing/geckodriver/ARM.html)
 
-
-Source code
------------
+## Source code
 
 geckodriver is made available under the [Mozilla Public License].
 
 Its source code can be found in [mozilla-central] under testing/geckodriver.
 This GitHub repository is only used for issue tracking and making releases.
 
-[source code]: https://hg.mozilla.org/mozilla-unified/file/tip/testing/geckodriver
 [Mozilla Public License]: https://www.mozilla.org/en-US/MPL/2.0/
 [mozilla-central]: https://hg.mozilla.org/mozilla-central/file/tip/testing/geckodriver
 
-Custom release builds
----------------------
+## Custom release builds
 
 If a binary is not available for your platform, it's possibe to create a custom
 build using the [Rust] toolchain. To do this, checkout the release tag for the
@@ -75,11 +75,11 @@ be built and installed from `crates.io` using `cargo install geckodriver`.
 
 [Rust]: https://rustup.rs/
 
-Contact
--------
+## Contact
 
 The mailing list for geckodriver discussion is
-https://groups.google.com/a/mozilla.org/g/dev-webdriver.
+<https://groups.google.com/a/mozilla.org/g/dev-webdriver>.
 
-There is also an Element channel to talk about using and developing
-geckodriver on `#webdriver:mozilla.org <https://chat.mozilla.org/#/room/#webdriver:mozilla.org>`__
+There is also a [Matrix](https://wiki.mozilla.org/Matrix) channel on
+chat.mozilla.org to talk about using and developing geckodriver in
+[#webdriver](https://chat.mozilla.org/#/room/#webdriver:mozilla.org).
