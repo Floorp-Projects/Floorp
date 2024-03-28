@@ -10,7 +10,7 @@ use crate::values::distance::{ComputeSquaredDistance, SquaredDistance};
 use crate::values::generics::border::GenericBorderRadius;
 use crate::values::generics::position::GenericPositionOrAuto;
 use crate::values::generics::rect::Rect;
-use crate::values::specified::SVGPathData;
+use crate::values::specified::svg_path::{PathCommand, SVGPathData};
 use crate::Zero;
 use std::fmt::{self, Write};
 use style_traits::{CssWriter, ToCss};
@@ -205,7 +205,10 @@ pub enum GenericBasicShape<
     /// Defines a polygon with pair arguments.
     Polygon(GenericPolygon<LengthPercentage>),
     /// Defines a path() or shape().
-    PathOrShape(#[css(field_bound)] GenericPathOrShapeFunction<Angle, LengthPercentage>),
+    PathOrShape(
+        #[animation(field_bound)]
+        #[css(field_bound)]
+        GenericPathOrShapeFunction<Angle, LengthPercentage>),
 }
 
 pub use self::GenericBasicShape as BasicShape;
@@ -371,7 +374,6 @@ pub struct PolygonCoord<LengthPercentage>(pub LengthPercentage, pub LengthPercen
 
 /// path() function or shape() function.
 #[derive(
-    Animate,
     Clone,
     ComputeSquaredDistance,
     Debug,
@@ -452,6 +454,14 @@ pub struct Path {
     pub fill: FillRule,
     /// The svg path data.
     pub path: SVGPathData,
+}
+
+impl Path {
+    /// Returns the slice of PathCommand.
+    #[inline]
+    pub fn commands(&self) -> &[PathCommand] {
+        self.path.commands()
+    }
 }
 
 impl<B, U> ToAnimatedZero for ClipPath<B, U> {
@@ -619,6 +629,14 @@ pub struct Shape<Angle, LengthPercentage> {
     /// slice.
     // Note: The first command is always GenericShapeCommand::Move.
     pub commands: crate::OwnedSlice<GenericShapeCommand<Angle, LengthPercentage>>,
+}
+
+impl<Angle, LengthPercentage> Shape<Angle, LengthPercentage> {
+    /// Returns the slice of GenericShapeCommand<..>.
+    #[inline]
+    pub fn commands(&self) -> &[GenericShapeCommand<Angle, LengthPercentage>] {
+        &self.commands
+    }
 }
 
 impl<Angle, LengthPercentage> Animate for Shape<Angle, LengthPercentage>
