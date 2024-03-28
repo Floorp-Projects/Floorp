@@ -43,8 +43,8 @@ origin:
   license-file: LICENSE
 
 updatebot:
-    maintainer-phab: gbrown
-    maintainer-bz: gbrown@mozilla.com
+    maintainer-phab: "#release-managers"
+    maintainer-bz: dmeehan@mozilla.com
     tasks:
       - type: vendoring
         enabled: true
