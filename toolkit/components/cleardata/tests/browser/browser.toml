@@ -3,21 +3,26 @@
 ["browser_auth_tokens.js"]
 
 ["browser_css_cache.js"]
-https_first_disabled = true
 support-files = [
   "file_css_cache.css",
   "file_css_cache.html"
 ]
+prefs = [
+  # do not upgrade connections to HTTPS to test separate caches for HTTPS/HTTP
+  "dom.security.https_first=false",
+]
 
 ["browser_image_cache.js"]
-https_first_disabled = true
 support-files = [
   "file_image_cache.html",
   "file_image_cache.jpg"
 ]
+prefs = [
+  # do not upgrade connections to HTTPS to test separate caches for HTTPS/HTTP
+  "dom.security.https_first=false",
+]
 
 ["browser_preflight_cache.js"]
-https_first_disabled = true
 support-files = ["file_cors_preflight.sjs"]
 
 ["browser_quota.js"]
