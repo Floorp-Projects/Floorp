@@ -2,20 +2,518 @@
   "data": [
     {
       "click": {
+        "optIn": "#c-bns #c-p-bn",
+        "optOut": "#c-bns button.grey",
+        "presence": "#cm"
+      },
+      "schema": 1711039008141,
+      "cookies": {
+        "optOut": [
+          {
+            "name": "cc_cookie",
+            "value": "{\"level\":[\"necessary\"],\"revision\":0,\"data\":null,\"rfc_cookie\":false}"
+          }
+        ]
+      },
+      "domains": [
+        "yazio.com"
+      ],
+      "id": "B8CB497B-9E12-49A7-BA2A-B7842CAEDFC3",
+      "last_modified": 1711550955136
+    },
+    {
+      "click": {
+        "optIn": "#rgpd-btn-index-accept",
+        "optOut": "#rgpd-btn-index-continue",
+        "presence": "#modalTpl"
+      },
+      "schema": 1711039008141,
+      "domains": [
+        "rueducommerce.fr"
+      ],
+      "id": "BC3582FC-C5FA-4743-85E8-7E46F67629AB",
+      "last_modified": 1711550955133
+    },
+    {
+      "click": {
+        "optIn": "#cookieConsentAcceptButton",
+        "optOut": "#cookieConsentRefuseButton",
+        "presence": "#cookieConsentBanner"
+      },
+      "schema": 1711039008141,
+      "domains": [
+        "ldlc.com",
+        "ldlc.pro",
+        "materiel.net"
+      ],
+      "id": "4A767353-98B9-4284-857A-D98DC3ECDFE1",
+      "last_modified": 1711550955129
+    },
+    {
+      "click": {
+        "optIn": "#header_tc_privacy_button_3",
+        "optOut": "#header_tc_privacy_button",
+        "presence": "#tc-privacy-wrapper"
+      },
+      "schema": 1711039008141,
+      "domains": [
+        "ovh.com",
+        "ovhcloud.com",
+        "ovhtelecom.fr"
+      ],
+      "id": "17B1F270-F499-451C-AED5-5C737106F003",
+      "last_modified": 1711550955125
+    },
+    {
+      "click": {
+        "optIn": "#popin_tc_privacy_button_2",
+        "optOut": "#optout_link",
+        "presence": "#tc-privacy-wrapper"
+      },
+      "schema": 1711039008141,
+      "domains": [
+        "laredoute.fr"
+      ],
+      "id": "9022E9FE-2DC2-48DD-BE4A-EFA8A2C81E2B",
+      "last_modified": 1711550955121
+    },
+    {
+      "click": {
+        "optIn": "#popin_tc_privacy_button_2",
+        "optOut": "#popin_tc_privacy_button",
+        "presence": "#tc-privacy-wrapper"
+      },
+      "schema": 1711039008141,
+      "domains": [
+        "quechoisir.org",
+        "quechoisirensemble.fr"
+      ],
+      "id": "5D50AA8D-D00E-4A51-8D32-64965A0575CA",
+      "last_modified": 1711550955117
+    },
+    {
+      "click": {
+        "optIn": "button#footer_tc_privacy_button_3",
+        "optOut": "button#footer_tc_privacy_button_2",
+        "presence": "div#tc-privacy-wrapper"
+      },
+      "schema": 1711039008141,
+      "cookies": {},
+      "domains": [
+        "labanquepostale.fr"
+      ],
+      "id": "6c1ebd2b-867a-40a5-8184-0ead733eae69",
+      "last_modified": 1711550955113
+    },
+    {
+      "click": {
+        "optIn": "button.orejime-Notice-saveButton",
+        "optOut": "button.orejime-Notice-declineButton",
+        "presence": "div.orejime-Notice"
+      },
+      "schema": 1711039008141,
+      "domains": [
+        "service-public.fr"
+      ],
+      "id": "7293dc4c-1d3d-4236-84a6-3c5cb3def55a",
+      "last_modified": 1711550955109
+    },
+    {
+      "schema": 1711039008141,
+      "cookies": {
+        "optIn": [
+          {
+            "name": "cb",
+            "value": "1_2055_07_11_"
+          }
+        ],
+        "optOut": [
+          {
+            "name": "cb",
+            "value": "1_2055_07_11_2-3"
+          }
+        ]
+      },
+      "domains": [
+        "threads.net"
+      ],
+      "id": "c232eab8-f55a-436a-8033-478746d05d98",
+      "last_modified": 1711550955105
+    },
+    {
+      "click": {
+        "optIn": "button#onetrust-accept-btn-handler",
+        "optOut": ".ot-pc-refuse-all-handler, #onetrust-reject-all-handler",
+        "presence": "div#onetrust-consent-sdk"
+      },
+      "schema": 1711039008141,
+      "cookies": {},
+      "domains": [
+        "espncricinfo.com",
+        "blackboard.com",
+        "roche.com",
+        "apnews.com",
+        "nationalgeographic.com",
+        "espn.com",
+        "hotjar.com",
+        "marriott.com",
+        "hootsuite.com",
+        "wattpad.com",
+        "gamespot.com",
+        "apa.org",
+        "opendns.com",
+        "epicgames.com",
+        "zendesk.com",
+        "drei.at",
+        "ikea.com",
+        "search.ch",
+        "centrum.sk",
+        "zoom.us",
+        "pluska.sk",
+        "hp.com",
+        "ceskatelevize.cz",
+        "telenet.be",
+        "adobe.com",
+        "rottentomatoes.com",
+        "dhl.com",
+        "dhl.de",
+        "nvidia.com",
+        "cloudflare.com",
+        "webex.com",
+        "indeed.com",
+        "discord.com",
+        "sport.ro",
+        "ricardo.ch",
+        "stirileprotv.ro",
+        "1177.se",
+        "meinbezirk.at",
+        "orange.ro",
+        "ica.se",
+        "flashscore.pl",
+        "kuleuven.be",
+        "tutti.ch",
+        "post.at",
+        "rezultati.com",
+        "nbg.gr",
+        "behance.net",
+        "zemanta.com",
+        "grammarly.com",
+        "usatoday.com",
+        "cnet.com",
+        "npr.org",
+        "binance.com",
+        "linktr.ee",
+        "time.com",
+        "cisco.com",
+        "udemy.com",
+        "shutterstock.com",
+        "investopedia.com",
+        "cbsnews.com",
+        "okta.com",
+        "appsflyer.com",
+        "typepad.com",
+        "calendly.com",
+        "verisign.com",
+        "outbrain.com",
+        "zdnet.com",
+        "deloitte.com",
+        "hdfcbank.com",
+        "media.net",
+        "docker.com",
+        "avast.com",
+        "bluehost.com",
+        "nba.com",
+        "hostgator.com",
+        "scientificamerican.com",
+        "aljazeera.com",
+        "sahibinden.com",
+        "rackspace.com",
+        "namecheap.com",
+        "people.com",
+        "branch.io",
+        "tv2.dk",
+        "criteo.com",
+        "trustpilot.com",
+        "hm.com",
+        "mailchimp.com",
+        "surveymonkey.com",
+        "mckinsey.com",
+        "rollingstone.com",
+        "slate.com",
+        "dictionary.com",
+        "coursera.org",
+        "msn.com",
+        "chegg.com",
+        "variety.com",
+        "cnn.com",
+        "proximus.be",
+        "adevarul.ro",
+        "cnbc.com",
+        "oe24.at",
+        "reuters.com",
+        "booking.com",
+        "bluewin.ch",
+        "viaplay.dk",
+        "aib.ie",
+        "hbomax.com",
+        "rtlnieuws.nl",
+        "buienradar.be",
+        "viaplay.se",
+        "antena3.ro",
+        "statista.com",
+        "pixabay.com",
+        "constantcontact.com",
+        "atlassian.com",
+        "bmj.com",
+        "trendyol.com",
+        "meetup.com",
+        "vmware.com",
+        "bitbucket.org",
+        "viaplay.no",
+        "asana.com",
+        "freepik.com",
+        "heute.at",
+        "mtvuutiset.fi",
+        "buienradar.nl",
+        "nypost.com",
+        "panasonic.com",
+        "safeway.com",
+        "amd.com",
+        "atg.se",
+        "brother.de",
+        "brother.eu",
+        "brother.fr",
+        "corsair.com",
+        "crucial.com",
+        "dc.com",
+        "dn.no",
+        "epson.de",
+        "epson.es",
+        "epson.eu",
+        "epson.fr",
+        "epson.it",
+        "evga.com",
+        "fortnite.com",
+        "fujitsu.com",
+        "global.canon",
+        "gpuopen.com",
+        "info.lidl",
+        "inpost.es",
+        "inpost.eu",
+        "inpost.it",
+        "intel.com",
+        "kaufland.de",
+        "lg.com",
+        "lidl.co.uk",
+        "lidl.com",
+        "lidl.cz",
+        "lidl.de",
+        "lidl.fr",
+        "lidl.it",
+        "lidl.pl",
+        "lifewire.com",
+        "logitech.com",
+        "micron.com",
+        "mythomson.com",
+        "oki.com",
+        "otto.de",
+        "razer.com",
+        "rightmove.co.uk",
+        "sbb.ch",
+        "seagate.com",
+        "soundcloud.com",
+        "trello.com",
+        "unrealengine.com",
+        "askubuntu.com",
+        "mathoverflow.net",
+        "serverfault.com",
+        "stackapps.com",
+        "stackexchange.com",
+        "stackoverflow.com",
+        "superuser.com",
+        "carrefour.fr"
+      ],
+      "id": "6c7366a0-4762-47b9-8eeb-04e86cc7a0cc",
+      "last_modified": 1711550955100
+    },
+    {
+      "click": {
+        "optIn": "#footer_tc_privacy_button",
+        "optOut": "#footer_tc_privacy_button_2",
+        "presence": ".tc-privacy-wrapper.tc-privacy-override.tc-privacy-wrapper"
+      },
+      "schema": 1711039008141,
+      "domains": [
+        "arte.tv",
+        "urssaf.fr"
+      ],
+      "id": "cc818b41-7b46-46d3-9b17-cf924cbe87d1",
+      "last_modified": 1711550955095
+    },
+    {
+      "click": {
+        "optIn": "button#didomi-notice-agree-button",
+        "optOut": "span.didomi-continue-without-agreeing",
+        "presence": "div#didomi-popup"
+      },
+      "schema": 1711039008141,
+      "cookies": {},
+      "domains": [
+        "theconversation.com",
+        "leparisien.fr",
+        "lesechos.fr",
+        "numerama.com",
+        "jofogas.hu",
+        "orange.fr",
+        "meteofrance.com",
+        "subito.it",
+        "hasznaltauto.hu",
+        "zdnet.de",
+        "intersport.fr",
+        "decathlon.fr",
+        "leboncoin.fr",
+        "boursorama.com",
+        "boursobank.com",
+        "intermarche.com",
+        "bricomarche.com",
+        "entrepot-du-bricolage.fr",
+        "lesnumeriques.com",
+        "seloger.com",
+        "societe.com",
+        "manomano.fr",
+        "pagesjaunes.fr",
+        "sncf-connect.com",
+        "largus.fr"
+      ],
+      "id": "c1d7be10-151e-4a66-b83b-31a762869a97",
+      "last_modified": 1711550955088
+    },
+    {
+      "click": {
+        "optIn": "button#footer_tc_privacy_button_2",
+        "optOut": "button#footer_tc_privacy_button_3",
+        "presence": "div#tc-privacy-wrapper"
+      },
+      "schema": 1711039008141,
+      "cookies": {},
+      "domains": [
+        "cdiscount.com",
+        "laposte.net",
+        "laposte.fr"
+      ],
+      "id": "1871561d-65f8-4972-8e8a-84fa9eb704b4",
+      "last_modified": 1711550955084
+    },
+    {
+      "click": {
+        "optIn": "button#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll",
+        "optOut": "button#CybotCookiebotDialogBodyButtonDecline",
+        "presence": "div#CybotCookiebotDialog"
+      },
+      "schema": 1711039008141,
+      "cookies": {},
+      "domains": [
+        "politiken.dk"
+      ],
+      "id": "1006f951-cd51-47cc-9527-5036cef4b85a",
+      "last_modified": 1711550955080
+    },
+    {
+      "click": {
+        "optIn": "button#didomi-notice-agree-button",
+        "optOut": "button#didomi-notice-disagree-button",
+        "presence": "div#didomi-host"
+      },
+      "schema": 1711039008141,
+      "cookies": {},
+      "domains": [
+        "doctolib.fr",
+        "pravda.sk",
+        "topky.sk",
+        "zoznam.sk",
+        "tvnoviny.sk",
+        "aukro.cz",
+        "krone.at",
+        "cas.sk",
+        "heureka.sk",
+        "free.fr",
+        "markiza.sk",
+        "willhaben.at",
+        "francetvinfo.fr",
+        "france.tv",
+        "france24.com",
+        "opodo.at",
+        "opodo.ch",
+        "opodo.co.uk",
+        "opodo.de",
+        "opodo.dk",
+        "opodo.fi",
+        "opodo.fr",
+        "opodo.it",
+        "opodo.nl",
+        "opodo.no",
+        "opodo.pl",
+        "opodo.pt",
+        "radiofrance.fr",
+        "rfi.fr",
+        "blablacar.fr",
+        "6play.fr"
+      ],
+      "id": "690aa076-4a8b-48ec-b52c-1443d44ff008",
+      "last_modified": 1711550955075
+    },
+    {
+      "click": {
         "optIn": "button#onetrust-accept-btn-handler",
         "optOut": "button.onetrust-close-btn-handler",
         "presence": "div#onetrust-consent-sdk"
       },
-      "schema": 1710174339269,
+      "schema": 1711039008141,
       "cookies": {},
       "domains": [
+        "e.leclerc",
         "fnac.be",
         "fnac.ch",
         "fnac.com",
-        "fnac.pt"
+        "fnac.pt",
+        "leclercdrive.fr",
+        "mondialrelay.fr"
       ],
       "id": "2d821158-5945-4134-a078-56c6da4f678d",
-      "last_modified": 1710331175432
+      "last_modified": 1711550955071
+    },
+    {
+      "click": {
+        "optIn": "#popin_tc_privacy_button",
+        "optOut": "#popin_tc_privacy_button_3",
+        "presence": "#tc-privacy-wrapper"
+      },
+      "schema": 1711039008141,
+      "domains": [
+        "dpd.com",
+        "dpdgroup.com",
+        "edf.fr",
+        "totalenergies.fr"
+      ],
+      "id": "43ad2b6b-a57b-4f7a-9d76-e32e696ddc10",
+      "last_modified": 1711550955067
+    },
+    {
+      "click": {
+        "optIn": "#popin_tc_privacy_button_3",
+        "optOut": "#popin_tc_privacy_button_2",
+        "presence": "#tc-privacy-wrapper"
+      },
+      "schema": 1711039008141,
+      "domains": [
+        "bouyguestelecom.fr",
+        "enedis.fr",
+        "fortuneo.fr",
+        "lcl.fr",
+        "tf1.fr"
+      ],
+      "id": "98D89E26-F4B6-4C2D-BABF-4295B922E433",
+      "last_modified": 1711550955063
     },
     {
       "click": {
@@ -47,20 +545,6 @@
     {
       "click": {
         "optIn": "#popin_tc_privacy_button",
-        "optOut": "#popin_tc_privacy_button_3",
-        "presence": "#tc-privacy-wrapper"
-      },
-      "schema": 1710174339269,
-      "domains": [
-        "dpd.com",
-        "dpdgroup.com"
-      ],
-      "id": "43ad2b6b-a57b-4f7a-9d76-e32e696ddc10",
-      "last_modified": 1710331175424
-    },
-    {
-      "click": {
-        "optIn": "#popin_tc_privacy_button",
         "optOut": "#popin_tc_privacy_button_2",
         "presence": "#tc-privacy-wrapper"
       },
@@ -70,20 +554,6 @@
       ],
       "id": "3030D307-A610-4F3D-B589-D2BE133850D7",
       "last_modified": 1710331175420
-    },
-    {
-      "click": {
-        "optIn": "#popin_tc_privacy_button_3",
-        "optOut": "#popin_tc_privacy_button_2",
-        "presence": "#tc-privacy-wrapper"
-      },
-      "schema": 1710174339269,
-      "domains": [
-        "fortuneo.fr",
-        "lcl.fr"
-      ],
-      "id": "98D89E26-F4B6-4C2D-BABF-4295B922E433",
-      "last_modified": 1710331175416
     },
     {
       "click": {
@@ -316,35 +786,6 @@
     },
     {
       "click": {
-        "optIn": "button#didomi-notice-agree-button",
-        "optOut": "span.didomi-continue-without-agreeing",
-        "presence": "div#didomi-popup"
-      },
-      "schema": 1710174339269,
-      "cookies": {},
-      "domains": [
-        "theconversation.com",
-        "leparisien.fr",
-        "lesechos.fr",
-        "numerama.com",
-        "jofogas.hu",
-        "orange.fr",
-        "meteofrance.com",
-        "subito.it",
-        "hasznaltauto.hu",
-        "zdnet.de",
-        "intersport.fr",
-        "decathlon.fr",
-        "leboncoin.fr",
-        "boursorama.com",
-        "boursobank.com",
-        "intermarche.com"
-      ],
-      "id": "c1d7be10-151e-4a66-b83b-31a762869a97",
-      "last_modified": 1710331175364
-    },
-    {
-      "click": {
         "optOut": ".sp_choice_type_13",
         "presence": ".message-container > #notice",
         "runContext": "child"
@@ -414,46 +855,6 @@
       ],
       "id": "af4c5b38-d210-472b-9a07-21cbe53c85ab",
       "last_modified": 1710331175354
-    },
-    {
-      "click": {
-        "optIn": "button#didomi-notice-agree-button",
-        "optOut": "button#didomi-notice-disagree-button",
-        "presence": "div#didomi-host"
-      },
-      "schema": 1710174339269,
-      "cookies": {},
-      "domains": [
-        "doctolib.fr",
-        "pravda.sk",
-        "topky.sk",
-        "zoznam.sk",
-        "tvnoviny.sk",
-        "aukro.cz",
-        "krone.at",
-        "cas.sk",
-        "heureka.sk",
-        "free.fr",
-        "markiza.sk",
-        "willhaben.at",
-        "francetvinfo.fr",
-        "france24.com",
-        "opodo.at",
-        "opodo.ch",
-        "opodo.co.uk",
-        "opodo.de",
-        "opodo.dk",
-        "opodo.fi",
-        "opodo.fr",
-        "opodo.it",
-        "opodo.nl",
-        "opodo.no",
-        "opodo.pl",
-        "opodo.pt",
-        "radiofrance.fr"
-      ],
-      "id": "690aa076-4a8b-48ec-b52c-1443d44ff008",
-      "last_modified": 1710331175349
     },
     {
       "click": {
@@ -672,201 +1073,6 @@
       ],
       "id": "0132691F-247B-4CB9-BF9B-0EB61B7435F3",
       "last_modified": 1708772697226
-    },
-    {
-      "click": {
-        "optIn": "button#onetrust-accept-btn-handler",
-        "optOut": ".ot-pc-refuse-all-handler, #onetrust-reject-all-handler",
-        "presence": "div#onetrust-consent-sdk"
-      },
-      "schema": 1708699541450,
-      "cookies": {},
-      "domains": [
-        "espncricinfo.com",
-        "blackboard.com",
-        "roche.com",
-        "apnews.com",
-        "nationalgeographic.com",
-        "espn.com",
-        "hotjar.com",
-        "marriott.com",
-        "hootsuite.com",
-        "wattpad.com",
-        "gamespot.com",
-        "apa.org",
-        "opendns.com",
-        "epicgames.com",
-        "zendesk.com",
-        "drei.at",
-        "ikea.com",
-        "search.ch",
-        "centrum.sk",
-        "zoom.us",
-        "pluska.sk",
-        "hp.com",
-        "ceskatelevize.cz",
-        "telenet.be",
-        "adobe.com",
-        "rottentomatoes.com",
-        "dhl.com",
-        "dhl.de",
-        "nvidia.com",
-        "cloudflare.com",
-        "webex.com",
-        "indeed.com",
-        "discord.com",
-        "sport.ro",
-        "ricardo.ch",
-        "stirileprotv.ro",
-        "1177.se",
-        "meinbezirk.at",
-        "orange.ro",
-        "ica.se",
-        "flashscore.pl",
-        "kuleuven.be",
-        "tutti.ch",
-        "post.at",
-        "rezultati.com",
-        "nbg.gr",
-        "behance.net",
-        "zemanta.com",
-        "grammarly.com",
-        "usatoday.com",
-        "cnet.com",
-        "npr.org",
-        "binance.com",
-        "linktr.ee",
-        "time.com",
-        "cisco.com",
-        "udemy.com",
-        "shutterstock.com",
-        "investopedia.com",
-        "cbsnews.com",
-        "okta.com",
-        "appsflyer.com",
-        "typepad.com",
-        "calendly.com",
-        "verisign.com",
-        "outbrain.com",
-        "zdnet.com",
-        "deloitte.com",
-        "hdfcbank.com",
-        "media.net",
-        "docker.com",
-        "avast.com",
-        "bluehost.com",
-        "nba.com",
-        "hostgator.com",
-        "scientificamerican.com",
-        "aljazeera.com",
-        "sahibinden.com",
-        "rackspace.com",
-        "namecheap.com",
-        "people.com",
-        "branch.io",
-        "tv2.dk",
-        "criteo.com",
-        "trustpilot.com",
-        "hm.com",
-        "mailchimp.com",
-        "surveymonkey.com",
-        "mckinsey.com",
-        "rollingstone.com",
-        "slate.com",
-        "dictionary.com",
-        "coursera.org",
-        "msn.com",
-        "chegg.com",
-        "variety.com",
-        "cnn.com",
-        "proximus.be",
-        "adevarul.ro",
-        "cnbc.com",
-        "oe24.at",
-        "reuters.com",
-        "booking.com",
-        "bluewin.ch",
-        "viaplay.dk",
-        "aib.ie",
-        "hbomax.com",
-        "rtlnieuws.nl",
-        "buienradar.be",
-        "viaplay.se",
-        "antena3.ro",
-        "statista.com",
-        "pixabay.com",
-        "constantcontact.com",
-        "atlassian.com",
-        "bmj.com",
-        "trendyol.com",
-        "meetup.com",
-        "vmware.com",
-        "bitbucket.org",
-        "viaplay.no",
-        "asana.com",
-        "freepik.com",
-        "heute.at",
-        "mtvuutiset.fi",
-        "buienradar.nl",
-        "nypost.com",
-        "panasonic.com",
-        "safeway.com",
-        "amd.com",
-        "atg.se",
-        "brother.de",
-        "brother.eu",
-        "brother.fr",
-        "corsair.com",
-        "crucial.com",
-        "dc.com",
-        "dn.no",
-        "epson.de",
-        "epson.es",
-        "epson.eu",
-        "epson.fr",
-        "epson.it",
-        "evga.com",
-        "fortnite.com",
-        "fujitsu.com",
-        "global.canon",
-        "gpuopen.com",
-        "info.lidl",
-        "inpost.es",
-        "inpost.eu",
-        "inpost.it",
-        "intel.com",
-        "kaufland.de",
-        "lg.com",
-        "lidl.co.uk",
-        "lidl.com",
-        "lidl.cz",
-        "lidl.de",
-        "lidl.fr",
-        "lidl.it",
-        "lidl.pl",
-        "lifewire.com",
-        "logitech.com",
-        "micron.com",
-        "mythomson.com",
-        "oki.com",
-        "otto.de",
-        "razer.com",
-        "rightmove.co.uk",
-        "sbb.ch",
-        "seagate.com",
-        "soundcloud.com",
-        "trello.com",
-        "unrealengine.com",
-        "askubuntu.com",
-        "mathoverflow.net",
-        "serverfault.com",
-        "stackapps.com",
-        "stackexchange.com",
-        "stackoverflow.com",
-        "superuser.com"
-      ],
-      "id": "6c7366a0-4762-47b9-8eeb-04e86cc7a0cc",
-      "last_modified": 1708772697220
     },
     {
       "click": {
@@ -2663,27 +2869,6 @@
     },
     {
       "click": {
-        "optIn": "button#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll",
-        "optOut": "button#CybotCookiebotDialogBodyButtonDecline",
-        "presence": "div#CybotCookiebotDialog"
-      },
-      "schema": 1700784006705,
-      "cookies": {
-        "optOut": [
-          {
-            "name": "CookieConsent",
-            "value": "{stamp:%277wlvZfVgG/Pfkj1y6Hfoz636NePkdUWVOV+lQLpJefS1O2ny+RqIdg==%27%2Cnecessary:true%2Cpreferences:false%2Cstatistics:false%2Cmarketing:false%2Cmethod:%27explicit%27%2Cver:5%2Cutc:1699462925195%2Ciab2:%27CP07BsAP07BsACGABBENDeCgAAAAAH_AAAAAAAAS4gGgAgABkAEQAJ4AbwA_AEWAJ2AYoBMgC8wGCAS4AAAA.YAAAAAAAAAAA%27%2Cgacm:%271~%27%2Cregion:%27de%27}"
-          }
-        ]
-      },
-      "domains": [
-        "politiken.dk"
-      ],
-      "id": "1006f951-cd51-47cc-9527-5036cef4b85a",
-      "last_modified": 1700826062547
-    },
-    {
-      "click": {
         "optIn": "#iubenda-cs-accept-btn iubenda-cs-btn-primary",
         "presence": "div#iubenda-cs-banner"
       },
@@ -3231,41 +3416,6 @@
       ],
       "id": "788ed05e-cf93-41a8-b2e5-c5571d855232",
       "last_modified": 1695037595328
-    },
-    {
-      "click": {
-        "optIn": "#footer_tc_privacy_button",
-        "optOut": "#footer_tc_privacy_button_2",
-        "presence": ".tc-privacy-wrapper.tc-privacy-override.tc-privacy-wrapper"
-      },
-      "schema": 1690070404721,
-      "domains": [
-        "arte.tv"
-      ],
-      "id": "cc818b41-7b46-46d3-9b17-cf924cbe87d1",
-      "last_modified": 1690359097318
-    },
-    {
-      "schema": 1690070404721,
-      "cookies": {
-        "optIn": [
-          {
-            "name": "cb",
-            "value": "1_2055_07_11_"
-          }
-        ],
-        "optOut": [
-          {
-            "name": "cb",
-            "value": "1_2055_07_11_2-3"
-          }
-        ]
-      },
-      "domains": [
-        "threads.net"
-      ],
-      "id": "C232EAB8-F55A-436A-8033-478746D05D98",
-      "last_modified": 1690359097314
     },
     {
       "click": {
@@ -9069,20 +9219,6 @@
     },
     {
       "click": {
-        "optIn": "button#footer_tc_privacy_button_2",
-        "optOut": "button#footer_tc_privacy_button_3",
-        "presence": "div#tc-privacy-wrapper"
-      },
-      "schema": 1670460541263,
-      "cookies": {},
-      "domains": [
-        "cdiscount.com"
-      ],
-      "id": "1871561d-65f8-4972-8e8a-84fa9eb704b4",
-      "last_modified": 1670498155756
-    },
-    {
-      "click": {
         "optIn": "button#accept-cookies",
         "optOut": "button#decline-cookies",
         "presence": "div#cookie-popup"
@@ -9230,5 +9366,5 @@
       "last_modified": 1670498155641
     }
   ],
-  "timestamp": 1710331175432
+  "timestamp": 1711550955136
 }
