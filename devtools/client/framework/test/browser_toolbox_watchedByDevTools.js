@@ -64,11 +64,6 @@ add_task(async function () {
 
   info("Check that the flag is reset when the toolbox is closed");
   await gDevTools.closeToolboxForTab(tab);
-
-  // As the destroy sequence of DevTools server is synchronous and we aren't waiting
-  // for full completion of server cleanups, we have to wait for its full processing.
-  await waitFor(() => !tab.linkedBrowser.browsingContext.watchedByDevTools);
-
   is(
     tab.linkedBrowser.browsingContext.watchedByDevTools,
     false,

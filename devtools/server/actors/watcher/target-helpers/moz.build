@@ -5,8 +5,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    "process.sys.mjs",
-    "service_worker.sys.mjs",
-    "window-global.sys.mjs",
-    "worker.sys.mjs",
+    "content-process-jsprocessactor-startup.js",
+    "frame-helper.js",
+    "process-helper.js",
+    "service-worker-helper.js",
+    "service-worker-jsprocessactor-startup.js",
+    "worker-helper.js",
 )

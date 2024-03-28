@@ -9,9 +9,9 @@ const { isWindowGlobalPartOfContext } = ChromeUtils.importESModule(
   "resource://devtools/server/actors/watcher/browsing-context-helpers.sys.mjs",
   { global: "contextual" }
 );
-const { ParentProcessWatcherRegistry } = ChromeUtils.importESModule(
-  "resource://devtools/server/actors/watcher/ParentProcessWatcherRegistry.sys.mjs",
-  // ParentProcessWatcherRegistry needs to be a true singleton and loads ActorManagerParent
+const { WatcherRegistry } = ChromeUtils.importESModule(
+  "resource://devtools/server/actors/watcher/WatcherRegistry.sys.mjs",
+  // WatcherRegistry needs to be a true singleton and loads ActorManagerParent
   // which also has to be a true singleton.
   { global: "shared" }
 );
@@ -253,7 +253,7 @@ class NetworkEventWatcher {
     // (i.e. the process where this Watcher runs)
     const isParentProcessOnlyBrowserToolbox =
       this.watcherActor.sessionContext.type == "all" &&
-      !ParentProcessWatcherRegistry.isWatchingTargets(
+      !WatcherRegistry.isWatchingTargets(
         this.watcherActor,
         Targets.TYPES.FRAME
       );

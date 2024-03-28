@@ -24,6 +24,8 @@
  * while from the content process, we will read `sharedData` directly.
  */
 
+import { ActorManagerParent } from "resource://gre/modules/ActorManagerParent.sys.mjs";
+
 const { SessionDataHelpers } = ChromeUtils.importESModule(
   "resource://devtools/server/actors/watcher/SessionDataHelpers.sys.mjs",
   { global: "contextual" }
@@ -67,7 +69,7 @@ function persistMapToSharedData() {
   Services.ppmm.sharedData.flush();
 }
 
-export const ParentProcessWatcherRegistry = {
+export const WatcherRegistry = {
   /**
    * Tells if a given watcher currently watches for a given target type.
    *
@@ -182,9 +184,8 @@ export const ParentProcessWatcherRegistry = {
     persistMapToSharedData();
 
     // Register the JS Window Actor the first time we start watching for something (e.g. resource, target, …).
-    if (watcher.sessionContext.type == "all") {
-      registerBrowserToolboxJSProcessActor();
-    } else {
+    registerJSWindowActor();
+    if (sessionData?.targets?.includes("process")) {
       registerJSProcessActor();
     }
   },
@@ -247,9 +248,9 @@ export const ParentProcessWatcherRegistry = {
    * if we remove all entries. But we aren't removing all breakpoints.
    * So here, we force clearing any reference to the watcher actor when it destroys.
    */
-  unregisterWatcher(watcherActorID) {
-    sessionDataByWatcherActor.delete(watcherActorID);
-    watcherActors.delete(watcherActorID);
+  unregisterWatcher(watcher) {
+    sessionDataByWatcherActor.delete(watcher.actorID);
+    watcherActors.delete(watcher.actorID);
     this.maybeUnregisterJSActors();
   },
 
@@ -258,7 +259,7 @@ export const ParentProcessWatcherRegistry = {
    */
   maybeUnregisterJSActors() {
     if (sessionDataByWatcherActor.size == 0) {
-      unregisterBrowserToolboxJSProcessActor();
+      unregisterJSWindowActor();
       unregisterJSProcessActor();
     }
   },
@@ -336,9 +337,74 @@ export const ParentProcessWatcherRegistry = {
   },
 };
 
+// Boolean flag to know if the DevToolsFrame JS Window Actor is currently registered
+let isJSWindowActorRegistered = false;
+
+/**
+ * Register the JSWindowActor pair "DevToolsFrame".
+ *
+ * We should call this method before we try to use this JS Window Actor from the parent process
+ * (via `WindowGlobal.getActor("DevToolsFrame")` or `WindowGlobal.getActor("DevToolsWorker")`).
+ * Also, registering it will automatically force spawing the content process JSWindow Actor
+ * anytime a new document is opened (via DOMWindowCreated event).
+ */
+
+const JSWindowActorsConfig = {
+  DevToolsFrame: {
+    parent: {
+      esModuleURI:
+        "resource://devtools/server/connectors/js-window-actor/DevToolsFrameParent.sys.mjs",
+    },
+    child: {
+      esModuleURI:
+        "resource://devtools/server/connectors/js-window-actor/DevToolsFrameChild.sys.mjs",
+      events: {
+        DOMWindowCreated: {},
+        DOMDocElementInserted: {},
+        pageshow: {},
+        pagehide: {},
+      },
+    },
+    allFrames: true,
+  },
+  DevToolsWorker: {
+    parent: {
+      esModuleURI:
+        "resource://devtools/server/connectors/js-window-actor/DevToolsWorkerParent.sys.mjs",
+    },
+    child: {
+      esModuleURI:
+        "resource://devtools/server/connectors/js-window-actor/DevToolsWorkerChild.sys.mjs",
+      events: {
+        DOMWindowCreated: {},
+      },
+    },
+    allFrames: true,
+  },
+};
+
+function registerJSWindowActor() {
+  if (isJSWindowActorRegistered) {
+    return;
+  }
+  isJSWindowActorRegistered = true;
+  ActorManagerParent.addJSWindowActors(JSWindowActorsConfig);
+}
+
+function unregisterJSWindowActor() {
+  if (!isJSWindowActorRegistered) {
+    return;
+  }
+  isJSWindowActorRegistered = false;
+
+  for (const JSWindowActorName of Object.keys(JSWindowActorsConfig)) {
+    // ActorManagerParent doesn't expose a "removeActors" method, but it would be equivalent to that:
+    ChromeUtils.unregisterWindowActor(JSWindowActorName);
+  }
+}
+
 // Boolean flag to know if the DevToolsProcess JS Process Actor is currently registered
 let isJSProcessActorRegistered = false;
-let isBrowserToolboxJSProcessActorRegistered = false;
 
 const JSProcessActorConfig = {
   parent: {
@@ -356,11 +422,7 @@ const JSProcessActorConfig = {
   // The parent process is handled very differently from content processes
   // This uses the ParentProcessTarget which inherits from BrowsingContextTarget
   // and is, for now, manually created by the descriptor as the top level target.
-  includeParent: true,
-};
-
-const BrowserToolboxJSProcessActorConfig = {
-  ...JSProcessActorConfig,
+  includeParent: false,
 
   // This JS Process Actor is used to bootstrap DevTools code debugging the privileged code
   // in content processes. The privileged code runs in the "shared JSM global" (See mozJSModuleLoader).
@@ -373,7 +435,7 @@ const BrowserToolboxJSProcessActorConfig = {
 };
 
 const PROCESS_SCRIPT_URL =
-  "resource://devtools/server/connectors/js-process-actor/content-process-jsprocessactor-startup.js";
+  "resource://devtools/server/actors/watcher/target-helpers/content-process-jsprocessactor-startup.js";
 
 function registerJSProcessActor() {
   if (isJSProcessActorRegistered) {
@@ -381,22 +443,6 @@ function registerJSProcessActor() {
   }
   isJSProcessActorRegistered = true;
   ChromeUtils.registerProcessActor("DevToolsProcess", JSProcessActorConfig);
-
-  // There is no good observer service notification we can listen to to instantiate the JSProcess Actor
-  // as soon as the process start.
-  // So manually spawn our JSProcessActor from a process script emitting a custom observer service notification...
-  Services.ppmm.loadProcessScript(PROCESS_SCRIPT_URL, true);
-}
-
-function registerBrowserToolboxJSProcessActor() {
-  if (isBrowserToolboxJSProcessActorRegistered) {
-    return;
-  }
-  isBrowserToolboxJSProcessActorRegistered = true;
-  ChromeUtils.registerProcessActor(
-    "BrowserToolboxDevToolsProcess",
-    BrowserToolboxJSProcessActorConfig
-  );
 
   // There is no good observer service notification we can listen to to instantiate the JSProcess Actor
   // as soon as the process start.
@@ -413,25 +459,6 @@ function unregisterJSProcessActor() {
     ChromeUtils.unregisterProcessActor("DevToolsProcess");
   } catch (e) {
     // If any pending query was still ongoing, this would throw
-  }
-  if (isBrowserToolboxJSProcessActorRegistered) {
-    return;
-  }
-  Services.ppmm.removeDelayedProcessScript(PROCESS_SCRIPT_URL);
-}
-
-function unregisterBrowserToolboxJSProcessActor() {
-  if (!isBrowserToolboxJSProcessActorRegistered) {
-    return;
-  }
-  isBrowserToolboxJSProcessActorRegistered = false;
-  try {
-    ChromeUtils.unregisterProcessActor("BrowserToolboxDevToolsProcess");
-  } catch (e) {
-    // If any pending query was still ongoing, this would throw
-  }
-  if (isJSProcessActorRegistered) {
-    return;
   }
   Services.ppmm.removeDelayedProcessScript(PROCESS_SCRIPT_URL);
 }
