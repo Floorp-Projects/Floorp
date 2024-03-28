@@ -465,6 +465,7 @@ void TelemetryProbesReporter::ReportResultForVideo() {
                           SECONDS_TO_MS(totalVideoPlayTimeS));
   }
 
+  // TODO: deprecate the old probes.
   // Report result for video using CDM
   auto keySystem = mOwner->GetKeySystem();
   if (keySystem) {
@@ -519,6 +520,10 @@ void TelemetryProbesReporter::ReportResultForVideo() {
     ReportResultForMFCDMPlaybackIfNeeded(totalVideoPlayTimeS, key);
   }
 #endif
+  if (keySystem) {
+    ReportPlaytimeForKeySystem(*keySystem, totalVideoPlayTimeS,
+                               info.mVideo.mMimeType, key);
+  }
 }
 
 #ifdef MOZ_WMF_CDM
@@ -563,6 +568,17 @@ void TelemetryProbesReporter::ReportResultForMFCDMPlaybackIfNeeded(
   glean::mfcdm::eme_playback.Record(Some(extraData));
 }
 #endif
+
+void TelemetryProbesReporter::ReportPlaytimeForKeySystem(
+    const nsAString& aKeySystem, const double aTotalPlayTimeS,
+    const nsCString& aCodec, const nsCString& aResolution) {
+  glean::mediadrm::EmePlaybackExtra extra = {
+      .keySystem = Some(NS_ConvertUTF16toUTF8(aKeySystem)),
+      .playedTime = Some(aTotalPlayTimeS),
+      .resolution = Some(aResolution),
+      .videoCodec = Some(aCodec)};
+  glean::mediadrm::eme_playback.Record(Some(extra));
+}
 
 void TelemetryProbesReporter::ReportResultForAudio() {
   // Don't record telemetry for a media that didn't have a valid audio or video
