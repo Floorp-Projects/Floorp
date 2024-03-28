@@ -22,8 +22,8 @@ appInfo.updateAppInfo({
 const { require, loader } = ChromeUtils.importESModule(
   "resource://devtools/shared/loader/Loader.sys.mjs"
 );
-const { worker } = ChromeUtils.import(
-  "resource://devtools/shared/loader/worker-loader.js"
+const { worker } = ChromeUtils.importESModule(
+  "resource://devtools/shared/loader/worker-loader.sys.mjs"
 );
 
 const { NetUtil } = ChromeUtils.importESModule(
