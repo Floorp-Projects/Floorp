@@ -92,6 +92,21 @@ static MOZ_ALWAYS_INLINE bool CanBeHeldWeakly(JSContext* cx,
   return false;
 }
 
+static unsigned GetErrorNumber(bool isWeakMap) {
+#ifdef NIGHTLY_BUILD
+  bool symbolsAsWeakMapKeysEnabled =
+      JS::Prefs::experimental_symbols_as_weakmap_keys();
+
+  if (symbolsAsWeakMapKeysEnabled) {
+    return isWeakMap ? JSMSG_WEAKMAP_KEY_CANT_BE_HELD_WEAKLY
+                     : JSMSG_WEAKSET_VAL_CANT_BE_HELD_WEAKLY;
+  }
+#endif
+
+  return isWeakMap ? JSMSG_WEAKMAP_KEY_MUST_BE_AN_OBJECT
+                   : JSMSG_WEAKSET_VAL_MUST_BE_AN_OBJECT;
+}
+
 }  // namespace js
 
 #endif /* builtin_WeakMapObject_inl_h */
