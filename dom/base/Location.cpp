@@ -549,26 +549,6 @@ void Location::Reload(bool aForceget, nsIPrincipal& aSubjectPrincipal,
     return aRv.Throw(NS_ERROR_FAILURE);
   }
 
-  if (StaticPrefs::dom_block_reload_from_resize_event_handler()) {
-    nsCOMPtr<nsPIDOMWindowOuter> window = docShell->GetWindow();
-    if (window && window->IsHandlingResizeEvent()) {
-      // location.reload() was called on a window that is handling a
-      // resize event. Sites do this since Netscape 4.x needed it, but
-      // we don't, and it's a horrible experience for nothing. In stead
-      // of reloading the page, just clear style data and reflow the
-      // page since some sites may use this trick to work around gecko
-      // reflow bugs, and this should have the same effect.
-      RefPtr<Document> doc = window->GetExtantDoc();
-
-      nsPresContext* pcx;
-      if (doc && (pcx = doc->GetPresContext())) {
-        pcx->RebuildAllStyleData(NS_STYLE_HINT_REFLOW,
-                                 RestyleHint::RestyleSubtree());
-      }
-      return;
-    }
-  }
-
   RefPtr<BrowsingContext> bc = GetBrowsingContext();
   if (!bc || bc->IsDiscarded()) {
     return;

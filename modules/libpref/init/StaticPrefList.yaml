@@ -2239,17 +2239,6 @@
   value: 20
   mirror: always
 
-# Whether window.location.reload() and window.history.go(0) should be blocked
-# when called directly from a window resize event handler.
-#
-# This used to be necessary long ago to prevent terrible UX when using stuff
-# like TypeAheadFind (bug 258917), but it also causes compat issues on mobile
-# (bug 1570566).
-- name: dom.block_reload_from_resize_event_handler
-  type: bool
-  value: false
-  mirror: always
-
   # Enable CacheAPI in private browsing mode with encryption
 - name: dom.cache.privateBrowsing.enabled
   type: RelaxedAtomicBool
