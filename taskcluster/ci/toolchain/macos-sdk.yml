@@ -32,20 +32,20 @@ macosx64-sdk-13.3:
         toolchain-alias:
             - MacOSX13.3.sdk
 
-macosx64-sdk-14.2:
-    description: "MacOSX14.2 SDK"
+macosx64-sdk-14.4:
+    description: "MacOSX14.4 SDK"
     treeherder:
-        symbol: TM(sdk14.2)
+        symbol: TM(sdk14.4)
     run:
         arguments:
-            - https://swcdn.apple.com/content/downloads/35/47/042-23550-A_M34N50O9N3/sua6ev7bjcexvorh4709vsgk64zgvsl42p/CLTools_macOSNMOS_SDK.pkg
-            - 22ce0acc9ab5c28845218b8c686d0208d6bf66bef64a369d3c0622247ba1258b438c9e44c64bb2bacf5e99eb398a6e7a337f2730cd4a969a7f0d2d5d3107306a
-            - Library/Developer/CommandLineTools/SDKs/MacOSX14.2.sdk
-        toolchain-artifact: project/gecko/mac-sdk/MacOSX14.2.sdk.tar.zst
+            - https://swcdn.apple.com/content/downloads/14/48/052-59890-A_I0F5YGAY0Y/p9n40hio7892gou31o1v031ng6fnm9sb3c/CLTools_macOSNMOS_SDK.pkg
+            - a4e05d2a051027620c86f72694da126a2ceed59b8740270426c4ca3adb38e16fe981b536a373a7f0cdcc84bbe9d9149608ccd03967dbd94262548ccadbfa0f5d
+            - Library/Developer/CommandLineTools/SDKs/MacOSX14.4.sdk
+        toolchain-artifact: project/gecko/mac-sdk/MacOSX14.4.sdk.tar.zst
         toolchain-alias:
             - macosx64-sdk
             - macosx64-sdk-toolchain
-            - MacOSX14.2.sdk
+            - MacOSX14.4.sdk
 
 ios-sdk-17.4:
     description: "iPhoneOS17.4 SDK"

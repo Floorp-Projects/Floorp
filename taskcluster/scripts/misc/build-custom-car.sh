@@ -55,7 +55,7 @@ fi
 # Logic for macosx64
 if [[ $(uname -s) == "Darwin" ]]; then
   # Modify the config with fetched sdk path
-  export MACOS_SYSROOT="$MOZ_FETCHES_DIR/MacOSX14.2.sdk"
+  export MACOS_SYSROOT="$MOZ_FETCHES_DIR/MacOSX14.4.sdk"
 
   # Avoid mixing up the system python and toolchain python in the
   # python path configuration
