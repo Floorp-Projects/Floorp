@@ -5,9 +5,9 @@
 import { loader } from "resource://devtools/shared/loader/Loader.sys.mjs";
 import { EventEmitter } from "resource://gre/modules/EventEmitter.sys.mjs";
 
-const { WatcherRegistry } = ChromeUtils.importESModule(
-  "resource://devtools/server/actors/watcher/WatcherRegistry.sys.mjs",
-  // WatcherRegistry needs to be a true singleton and loads ActorManagerParent
+const { ParentProcessWatcherRegistry } = ChromeUtils.importESModule(
+  "resource://devtools/server/actors/watcher/ParentProcessWatcherRegistry.sys.mjs",
+  // ParentProcessWatcherRegistry needs to be a true singleton and loads ActorManagerParent
   // which also has to be a true singleton.
   { global: "shared" }
 );
@@ -105,7 +105,7 @@ export class DevToolsProcessParent extends JSProcessActorParent {
    * Called when the content process notified us about a new target actor
    */
   #onTargetAvailable({ watcherActorID, forwardingPrefix, targetActorForm }) {
-    const watcher = WatcherRegistry.getWatcher(watcherActorID);
+    const watcher = ParentProcessWatcherRegistry.getWatcher(watcherActorID);
 
     if (!watcher) {
       throw new Error(
@@ -161,7 +161,7 @@ export class DevToolsProcessParent extends JSProcessActorParent {
    */
   #onTargetDestroyed({ actors, options }) {
     for (const { watcherActorID, targetActorForm } of actors) {
-      const watcher = WatcherRegistry.getWatcher(watcherActorID);
+      const watcher = ParentProcessWatcherRegistry.getWatcher(watcherActorID);
       // As we instruct to destroy all targets when the watcher is destroyed,
       // we may easily receive the target destruction notification *after*
       // the watcher has been removed from the registry.
@@ -288,7 +288,7 @@ export class DevToolsProcessParent extends JSProcessActorParent {
         const browsingContext = BrowsingContext.get(
           message.data.browsingContextId
         );
-        for (const watcherActor of WatcherRegistry.getWatchersForBrowserId(
+        for (const watcherActor of ParentProcessWatcherRegistry.getWatchersForBrowserId(
           browsingContext.browserId
         )) {
           watcherActor.emit("bf-cache-navigation-pageshow", {
@@ -301,7 +301,7 @@ export class DevToolsProcessParent extends JSProcessActorParent {
         const browsingContext = BrowsingContext.get(
           message.data.browsingContextId
         );
-        for (const watcherActor of WatcherRegistry.getWatchersForBrowserId(
+        for (const watcherActor of ParentProcessWatcherRegistry.getWatchersForBrowserId(
           browsingContext.browserId
         )) {
           watcherActor.emit("bf-cache-navigation-pagehide", {
