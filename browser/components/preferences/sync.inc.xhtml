@@ -22,7 +22,7 @@
         <description id="noFxaDescription" class="description-deemphasized" flex="1" data-l10n-id="sync-signedout-description2"/>
       </vbox>
       <vbox>
-        <image class="fxaSyncIllustration"/>
+        <image class="fxaSyncIllustration" alt=""/>
       </vbox>
     </hbox>
     <hbox id="fxaNoLoginStatus" align="center" flex="1">
@@ -37,6 +37,7 @@
     </hbox>
     <label class="fxaMobilePromo" data-l10n-id="sync-mobile-promo">
       <html:img
+        role="none"
         src="chrome://browser/skin/logo-android.svg"
         data-l10n-name="android-icon"
         class="androidIcon"/>
@@ -44,6 +45,7 @@
         data-l10n-name="android-link"
         class="fxaMobilePromo-android text-link" target="_blank"/>
       <html:img
+        role="none"
         src="chrome://browser/skin/logo-ios.svg"
         data-l10n-name="ios-icon"
         class="iOSIcon"/>
@@ -66,7 +68,8 @@
               <image id="openChangeProfileImage"
                      class="fxaProfileImage actionable"
                      role="button"
-                     data-l10n-id="sync-profile-picture"/>
+                     data-l10n-attrs="alt"
+                     data-l10n-id="sync-profile-picture-with-alt"/>
               <vbox flex="1" pack="center">
                 <hbox flex="1" align="baseline">
                   <label id="fxaDisplayName" hidden="true">
@@ -88,11 +91,15 @@
             <!-- logged in to an unverified account -->
             <hbox id="fxaLoginUnverified">
               <vbox>
-                <image class="fxaProfileImage"/>
+                <image class="fxaProfileImage"
+                       data-l10n-attrs="alt"
+                       data-l10n-id="sync-profile-picture-account-problem"/>
               </vbox>
               <vbox flex="1" pack="center">
                 <hbox align="center">
-                  <image class="fxaLoginRejectedWarning"/>
+                  <image class="fxaLoginRejectedWarning"
+                         data-l10n-attrs="alt"
+                         data-l10n-id="fxa-login-rejected-warning"/>
                   <description flex="1"
                     class="l10nArgsEmailAddress"
                     data-l10n-id="sync-signedin-unverified"
@@ -112,11 +119,15 @@
             <!-- logged in locally but server rejected credentials -->
             <hbox id="fxaLoginRejected">
               <vbox>
-                <image class="fxaProfileImage"/>
+                <image class="fxaProfileImage"
+                       data-l10n-attrs="alt"
+                       data-l10n-id="sync-profile-picture-account-problem"/>
               </vbox>
               <vbox flex="1" pack="center">
                 <hbox align="center">
-                  <image class="fxaLoginRejectedWarning"/>
+                  <image class="fxaLoginRejectedWarning"
+                         data-l10n-attrs="alt"
+                         data-l10n-id="fxa-login-rejected-warning"/>
                   <description flex="1"
                     class="l10nArgsEmailAddress"
                     data-l10n-id="sync-signedin-login-failure"
@@ -187,35 +198,35 @@
                 <label data-l10n-id="sync-syncing-across-devices-heading"/>
                 <html:div class="sync-engines-list">
                   <html:div engine_preference="services.sync.engine.bookmarks">
-                    <image class="sync-engine-image sync-engine-bookmarks"/>
+                    <image class="sync-engine-image sync-engine-bookmarks" alt=""/>
                     <label data-l10n-id="sync-currently-syncing-bookmarks"/>
                   </html:div>
                   <html:div engine_preference="services.sync.engine.history">
-                    <image class="sync-engine-image sync-engine-history"/>
+                    <image class="sync-engine-image sync-engine-history" alt=""/>
                     <label data-l10n-id="sync-currently-syncing-history"/>
                   </html:div>
                   <html:div engine_preference="services.sync.engine.tabs">
-                    <image class="sync-engine-image sync-engine-tabs"/>
+                    <image class="sync-engine-image sync-engine-tabs" alt=""/>
                     <label data-l10n-id="sync-currently-syncing-tabs"/>
                   </html:div>
                   <html:div engine_preference="services.sync.engine.passwords">
-                    <image class="sync-engine-image sync-engine-passwords"/>
+                    <image class="sync-engine-image sync-engine-passwords" alt=""/>
                     <label data-l10n-id="sync-currently-syncing-passwords"/>
                   </html:div>
                   <html:div engine_preference="services.sync.engine.addresses">
-                    <image class="sync-engine-image sync-engine-addresses"/>
+                    <image class="sync-engine-image sync-engine-addresses" alt=""/>
                     <label data-l10n-id="sync-currently-syncing-addresses"/>
                   </html:div>
                   <html:div engine_preference="services.sync.engine.creditcards">
-                    <image class="sync-engine-image sync-engine-creditcards"/>
+                    <image class="sync-engine-image sync-engine-creditcards" alt=""/>
                     <label data-l10n-id="sync-currently-syncing-payment-methods"/>
                   </html:div>
                   <html:div engine_preference="services.sync.engine.addons">
-                    <image class="sync-engine-image sync-engine-addons"/>
+                    <image class="sync-engine-image sync-engine-addons" alt=""/>
                     <label data-l10n-id="sync-currently-syncing-addons"/>
                   </html:div>
                   <html:div engine_preference="services.sync.engine.prefs">
-                    <image class="sync-engine-image sync-engine-prefs"/>
+                    <image class="sync-engine-image sync-engine-prefs" alt=""/>
                     <label data-l10n-id="sync-currently-syncing-settings"/>
                   </html:div>
                 </html:div>
