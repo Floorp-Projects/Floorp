@@ -849,6 +849,8 @@ describe("DiscoveryStreamFeed", () => {
         spocs: { items: [{ id: "data" }] },
       });
       sandbox.stub(feed.cache, "set").returns(Promise.resolve());
+      const loadTimestamp = 100;
+      clock.tick(loadTimestamp);
 
       await feed.loadSpocs(feed.store.dispatch);
 
@@ -860,15 +862,15 @@ describe("DiscoveryStreamFeed", () => {
             title: "",
             sponsor: "",
             sponsored_by_override: undefined,
-            items: [{ id: "data", score: 1 }],
+            items: [{ id: "data", score: 1, fetchTimestamp: loadTimestamp }],
           },
         },
-        lastUpdated: 0,
+        lastUpdated: loadTimestamp,
       });
 
       assert.deepEqual(
         feed.store.getState().DiscoveryStream.spocs.data.spocs.items[0],
-        { id: "data", score: 1 }
+        { id: "data", score: 1, fetchTimestamp: loadTimestamp }
       );
     });
     it("should normalizeSpocsItems for older spoc data", async () => {
@@ -882,7 +884,7 @@ describe("DiscoveryStreamFeed", () => {
 
       assert.deepEqual(
         feed.store.getState().DiscoveryStream.spocs.data.spocs.items[0],
-        { id: "data", score: 1 }
+        { id: "data", score: 1, fetchTimestamp: 0 }
       );
     });
     it("should dispatch DISCOVERY_STREAM_PERSONALIZATION_OVERRIDE with feature_flags", async () => {
@@ -936,7 +938,7 @@ describe("DiscoveryStreamFeed", () => {
           context: "",
           sponsor: "",
           sponsored_by_override: undefined,
-          items: [{ id: "data", score: 1 }],
+          items: [{ id: "data", score: 1, fetchTimestamp: 0 }],
         },
         placement2: {
           title: "",
@@ -978,7 +980,7 @@ describe("DiscoveryStreamFeed", () => {
           context: "context",
           sponsor: "",
           sponsored_by_override: undefined,
-          items: [{ id: "data", score: 1 }],
+          items: [{ id: "data", score: 1, fetchTimestamp: 0 }],
         },
       });
     });

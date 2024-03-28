@@ -713,9 +713,16 @@ export class TelemetryFeed {
     });
     const session = this.sessions.get(au.getPortIdOfSender(action));
     switch (action.data?.event) {
-      case "CLICK":
-        const { card_type, topic, recommendation_id, tile_id, shim } =
-          action.data.value ?? {};
+      case "CLICK": {
+        const {
+          card_type,
+          topic,
+          recommendation_id,
+          tile_id,
+          shim,
+          fetchTimestamp,
+          firstVisibleTimestamp,
+        } = action.data.value ?? {};
         if (
           action.data.source === "POPULAR_TOPICS" ||
           card_type === "topics_widget"
@@ -734,10 +741,19 @@ export class TelemetryFeed {
           });
           if (shim) {
             Glean.pocket.shim.set(shim);
+            if (fetchTimestamp) {
+              Glean.pocket.fetchTimestamp.set(fetchTimestamp * 1000);
+            }
+            if (firstVisibleTimestamp) {
+              Glean.pocket.newtabCreationTimestamp.set(
+                firstVisibleTimestamp * 1000
+              );
+            }
             GleanPings.spoc.submit("click");
           }
         }
         break;
+      }
       case "SAVE_TO_POCKET":
         Glean.pocket.save.record({
           newtab_visit_id: session.session_id,
@@ -748,6 +764,16 @@ export class TelemetryFeed {
         });
         if (action.data.value?.shim) {
           Glean.pocket.shim.set(action.data.value.shim);
+          if (action.data.value.fetchTimestamp) {
+            Glean.pocket.fetchTimestamp.set(
+              action.data.value.fetchTimestamp * 1000
+            );
+          }
+          if (action.data.value.newtabCreationTimestamp) {
+            Glean.pocket.newtabCreationTimestamp.set(
+              action.data.value.newtabCreationTimestamp * 1000
+            );
+          }
           GleanPings.spoc.submit("save");
         }
         break;
@@ -969,6 +995,14 @@ export class TelemetryFeed {
       });
       if (tile.shim) {
         Glean.pocket.shim.set(tile.shim);
+        if (tile.fetchTimestamp) {
+          Glean.pocket.fetchTimestamp.set(tile.fetchTimestamp * 1000);
+        }
+        if (data.firstVisibleTimestamp) {
+          Glean.pocket.newtabCreationTimestamp.set(
+            data.firstVisibleTimestamp * 1000
+          );
+        }
         GleanPings.spoc.submit("impression");
       }
     });

@@ -2057,8 +2057,10 @@ class ImpressionStats_ImpressionStats extends (external_React_default()).PureCom
           ...(link.shim ? {
             shim: link.shim
           } : {}),
-          recommendation_id: link.recommendation_id
-        }))
+          recommendation_id: link.recommendation_id,
+          fetchTimestamp: link.fetchTimestamp
+        })),
+        firstVisibleTimestamp: this.props.firstVisibleTimestamp
       }));
       this.impressionCardGuids = cards.map(link => link.id);
     }
@@ -2729,7 +2731,9 @@ class _DSCard extends (external_React_default()).PureComponent {
           tile_id: this.props.id,
           ...(this.props.shim && this.props.shim.click ? {
             shim: this.props.shim.click
-          } : {})
+          } : {}),
+          fetchTimestamp: this.props.fetchTimestamp,
+          firstVisibleTimestamp: this.props.firstVisibleTimestamp
         }
       }));
       this.props.dispatch(actionCreators.ImpressionStats({
@@ -2770,7 +2774,9 @@ class _DSCard extends (external_React_default()).PureComponent {
           tile_id: this.props.id,
           ...(this.props.shim && this.props.shim.save ? {
             shim: this.props.shim.save
-          } : {})
+          } : {}),
+          fetchTimestamp: this.props.fetchTimestamp,
+          firstVisibleTimestamp: this.props.firstVisibleTimestamp
         }
       }));
       this.props.dispatch(actionCreators.ImpressionStats({
@@ -2931,10 +2937,12 @@ class _DSCard extends (external_React_default()).PureComponent {
         ...(this.props.shim && this.props.shim.impression ? {
           shim: this.props.shim.impression
         } : {}),
-        recommendation_id: this.props.recommendation_id
+        recommendation_id: this.props.recommendation_id,
+        fetchTimestamp: this.props.fetchTimestamp
       }],
       dispatch: this.props.dispatch,
-      source: this.props.type
+      source: this.props.type,
+      firstVisibleTimestamp: this.props.firstVisibleTimestamp
     })), ctaButtonVariant === "variant-b" && /*#__PURE__*/external_React_default().createElement("div", {
       className: "cta-header"
     }, "Shop Now"), /*#__PURE__*/external_React_default().createElement(DefaultMeta, {
@@ -3567,6 +3575,7 @@ class _CardGrid extends (external_React_default()).PureComponent {
         url: rec.url,
         id: rec.id,
         shim: rec.shim,
+        fetchTimestamp: rec.fetchTimestamp,
         type: this.props.type,
         context: rec.context,
         sponsor: rec.sponsor,
@@ -3582,7 +3591,8 @@ class _CardGrid extends (external_React_default()).PureComponent {
         ctaButtonSponsors: ctaButtonSponsors,
         ctaButtonVariant: ctaButtonVariant,
         spocMessageVariant: spocMessageVariant,
-        recommendation_id: rec.recommendation_id
+        recommendation_id: rec.recommendation_id,
+        firstVisibleTimestamp: this.props.firstVisibleTimestamp
       }));
     }
     if (widgets?.positions?.length && widgets?.data?.length) {
@@ -8620,19 +8630,21 @@ class _DiscoveryStreamBase extends (external_React_default()).PureComponent {
           privacyNoticeURL: component.properties.privacyNoticeURL
         });
       case "CollectionCardGrid":
-        const {
-          DiscoveryStream
-        } = this.props;
-        return /*#__PURE__*/external_React_default().createElement(CollectionCardGrid, {
-          data: component.data,
-          feed: component.feed,
-          spocs: DiscoveryStream.spocs,
-          placement: component.placement,
-          type: component.type,
-          items: component.properties.items,
-          dismissible: this.props.DiscoveryStream.isCollectionDismissible,
-          dispatch: this.props.dispatch
-        });
+        {
+          const {
+            DiscoveryStream
+          } = this.props;
+          return /*#__PURE__*/external_React_default().createElement(CollectionCardGrid, {
+            data: component.data,
+            feed: component.feed,
+            spocs: DiscoveryStream.spocs,
+            placement: component.placement,
+            type: component.type,
+            items: component.properties.items,
+            dismissible: this.props.DiscoveryStream.isCollectionDismissible,
+            dispatch: this.props.dispatch
+          });
+        }
       case "CardGrid":
         return /*#__PURE__*/external_React_default().createElement(CardGrid, {
           title: component.header && component.header.title,
@@ -8653,7 +8665,8 @@ class _DiscoveryStreamBase extends (external_React_default()).PureComponent {
           spocMessageVariant: component.properties.spocMessageVariant,
           editorsPicksHeader: component.properties.editorsPicksHeader,
           recentSavesEnabled: this.props.DiscoveryStream.recentSavesEnabled,
-          hideDescriptions: this.props.DiscoveryStream.hideDescriptions
+          hideDescriptions: this.props.DiscoveryStream.hideDescriptions,
+          firstVisibleTimestamp: this.props.firstVisibleTimestamp
         });
       case "HorizontalRule":
         return /*#__PURE__*/external_React_default().createElement(HorizontalRule, null);
@@ -9352,6 +9365,8 @@ function Base_extends() { Base_extends = Object.assign ? Object.assign.bind() : 
 
 
 
+const Base_VISIBLE = "visible";
+const Base_VISIBILITY_CHANGE_EVENT = "visibilitychange";
 const PrefsButton = ({
   onClick,
   icon
@@ -9432,16 +9447,39 @@ class BaseContent extends (external_React_default()).PureComponent {
     this.onWindowScroll = debounce(this.onWindowScroll.bind(this), 5);
     this.setPref = this.setPref.bind(this);
     this.state = {
-      fixedSearch: false
+      fixedSearch: false,
+      firstVisibleTimestamp: null
     };
+  }
+  setFirstVisibleTimestamp() {
+    if (!this.state.firstVisibleTimestamp) {
+      this.setState({
+        firstVisibleTimestamp: Date.now()
+      });
+    }
   }
   componentDidMount() {
     __webpack_require__.g.addEventListener("scroll", this.onWindowScroll);
     __webpack_require__.g.addEventListener("keydown", this.handleOnKeyDown);
+    if (this.props.document.visibilityState === Base_VISIBLE) {
+      this.setFirstVisibleTimestamp();
+    } else {
+      this._onVisibilityChange = () => {
+        if (this.props.document.visibilityState === Base_VISIBLE) {
+          this.setFirstVisibleTimestamp();
+          this.props.document.removeEventListener(Base_VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
+          this._onVisibilityChange = null;
+        }
+      };
+      this.props.document.addEventListener(Base_VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
+    }
   }
   componentWillUnmount() {
     __webpack_require__.g.removeEventListener("scroll", this.onWindowScroll);
     __webpack_require__.g.removeEventListener("keydown", this.handleOnKeyDown);
+    if (this._onVisibilityChange) {
+      this.props.document.removeEventListener(Base_VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
+    }
   }
   onWindowScroll() {
     const prefs = this.props.Prefs.values;
@@ -9554,10 +9592,14 @@ class BaseContent extends (external_React_default()).PureComponent {
       className: "borderless-error"
     }, /*#__PURE__*/external_React_default().createElement(DiscoveryStreamBase, {
       locale: props.App.locale,
-      mayHaveSponsoredStories: mayHaveSponsoredStories
+      mayHaveSponsoredStories: mayHaveSponsoredStories,
+      firstVisibleTimestamp: this.state.firstVisibleTimestamp
     })) : /*#__PURE__*/external_React_default().createElement(Sections_Sections, null)), /*#__PURE__*/external_React_default().createElement(ConfirmDialog, null))));
   }
 }
+BaseContent.defaultProps = {
+  document: __webpack_require__.g.document
+};
 const Base = (0,external_ReactRedux_namespaceObject.connect)(state => ({
   App: state.App,
   Prefs: state.Prefs,

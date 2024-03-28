@@ -97,7 +97,9 @@ export class ImpressionStats extends React.PureComponent {
             type: this.props.flightId ? "spoc" : "organic",
             ...(link.shim ? { shim: link.shim } : {}),
             recommendation_id: link.recommendation_id,
+            fetchTimestamp: link.fetchTimestamp,
           })),
+          firstVisibleTimestamp: this.props.firstVisibleTimestamp,
         })
       );
       this.impressionCardGuids = cards.map(link => link.id);

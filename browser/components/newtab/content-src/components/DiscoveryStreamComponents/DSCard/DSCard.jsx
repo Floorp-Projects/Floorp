@@ -197,6 +197,8 @@ export class _DSCard extends React.PureComponent {
             ...(this.props.shim && this.props.shim.click
               ? { shim: this.props.shim.click }
               : {}),
+            fetchTimestamp: this.props.fetchTimestamp,
+            firstVisibleTimestamp: this.props.firstVisibleTimestamp,
           },
         })
       );
@@ -244,6 +246,8 @@ export class _DSCard extends React.PureComponent {
             ...(this.props.shim && this.props.shim.save
               ? { shim: this.props.shim.save }
               : {}),
+            fetchTimestamp: this.props.fetchTimestamp,
+            firstVisibleTimestamp: this.props.firstVisibleTimestamp,
           },
         })
       );
@@ -439,10 +443,12 @@ export class _DSCard extends React.PureComponent {
                   ? { shim: this.props.shim.impression }
                   : {}),
                 recommendation_id: this.props.recommendation_id,
+                fetchTimestamp: this.props.fetchTimestamp,
               },
             ]}
             dispatch={this.props.dispatch}
             source={this.props.type}
+            firstVisibleTimestamp={this.props.firstVisibleTimestamp}
           />
         </SafeAnchor>
         {ctaButtonVariant === "variant-b" && (
