@@ -4,7 +4,9 @@
 
 package mozilla.components.support.locale
 
+import android.annotation.SuppressLint
 import android.content.Context
+import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import androidx.annotation.VisibleForTesting
@@ -14,8 +16,18 @@ import androidx.appcompat.app.AppCompatActivity
  * Base activity for apps that want to customized the system defined language by their own.
  */
 open class LocaleAwareAppCompatActivity : AppCompatActivity() {
+    @SuppressLint("AppBundleLocaleChanges")
     override fun attachBaseContext(base: Context) {
-        val newContext = LocaleManager.updateResources(base)
+        val locale = LocaleManager.getCurrentLocale(base) ?: LocaleManager.getSystemDefault()
+
+        // According to https://android-review.googlesource.com/c/platform/frameworks/support/+/2137592
+        // We should re-apply overrides.
+        val overrideConfiguration = Configuration()
+
+        // Modify the configuration as needed
+        overrideConfiguration.setLocale(locale)
+
+        val newContext = base.createConfigurationContext(overrideConfiguration)
         val contextWrapper = ActivityContextWrapper(newContext, base)
         super.attachBaseContext(contextWrapper)
     }
