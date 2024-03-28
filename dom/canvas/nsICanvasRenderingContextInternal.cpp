@@ -7,9 +7,12 @@
 
 #include "mozilla/dom/CanvasUtils.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/ErrorResult.h"
 #include "mozilla/PresShell.h"
+#include "nsContentUtils.h"
 #include "nsPIDOMWindow.h"
 #include "nsRefreshDriver.h"
 
@@ -115,4 +118,25 @@ bool nsICanvasRenderingContextInternal::ShouldResistFingerprinting(
   }
   // Last resort, just check the global preference
   return nsContentUtils::ShouldResistFingerprinting("Fallback", aTarget);
+}
+
+bool nsICanvasRenderingContextInternal::DispatchEvent(
+    const nsAString& eventName, mozilla::CanBubble aCanBubble,
+    mozilla::Cancelable aIsCancelable) const {
+  bool useDefaultHandler = true;
+
+  if (mCanvasElement) {
+    nsContentUtils::DispatchTrustedEvent(mCanvasElement->OwnerDoc(),
+                                         mCanvasElement, eventName, aCanBubble,
+                                         aIsCancelable, &useDefaultHandler);
+  } else if (mOffscreenCanvas) {
+    // OffscreenCanvas case
+    auto event = mozilla::MakeRefPtr<mozilla::dom::Event>(mOffscreenCanvas,
+                                                          nullptr, nullptr);
+    event->InitEvent(eventName, aCanBubble, aIsCancelable);
+    event->SetTrusted(true);
+    useDefaultHandler = mOffscreenCanvas->DispatchEvent(
+        *event, mozilla::dom::CallerType::System, mozilla::IgnoreErrors());
+  }
+  return useDefaultHandler;
 }

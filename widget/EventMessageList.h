@@ -209,6 +209,10 @@ NS_EVENT_MESSAGE(eLegacyDOMFocusOut)
 NS_EVENT_MESSAGE(ePageShow)
 NS_EVENT_MESSAGE(ePageHide)
 
+// Canvas events
+NS_EVENT_MESSAGE(eContextLost)
+NS_EVENT_MESSAGE(eContextRestored)
+
 // SVG events
 NS_EVENT_MESSAGE(eSVGLoad)
 NS_EVENT_MESSAGE(eSVGScroll)

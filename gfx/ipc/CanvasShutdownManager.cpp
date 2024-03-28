@@ -9,11 +9,15 @@
 #include "mozilla/dom/CanvasRenderingContext2D.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRef.h"
+#include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/gfx/CanvasManagerChild.h"
 
 using namespace mozilla::dom;
 
 namespace mozilla::gfx {
+
+StaticMutex CanvasShutdownManager::sManagersMutex;
+std::set<CanvasShutdownManager*> CanvasShutdownManager::sManagers;
 
 // The owning thread will tell us to close when it is shutdown, either via
 // CanvasShutdownManager::Shutdown for the main thread, or via a shutdown
@@ -40,6 +44,11 @@ void CanvasShutdownManager::Destroy() {
   auto* manager = MaybeGet();
   if (!manager) {
     return;
+  }
+
+  {
+    StaticMutexAutoLock lock(sManagersMutex);
+    sManagers.erase(manager);
   }
 
   sLocalManager.set(nullptr);
@@ -77,6 +86,9 @@ void CanvasShutdownManager::Destroy() {
 
     CanvasShutdownManager* manager = new CanvasShutdownManager(workerRef);
     sLocalManager.set(manager);
+
+    StaticMutexAutoLock lock(sManagersMutex);
+    sManagers.insert(manager);
     return manager;
   }
 
@@ -88,6 +100,9 @@ void CanvasShutdownManager::Destroy() {
 
     CanvasShutdownManager* manager = new CanvasShutdownManager();
     sLocalManager.set(manager);
+
+    StaticMutexAutoLock lock(sManagersMutex);
+    sManagers.insert(manager);
     return manager;
   }
 
@@ -103,6 +118,62 @@ void CanvasShutdownManager::AddShutdownObserver(
 void CanvasShutdownManager::RemoveShutdownObserver(
     dom::CanvasRenderingContext2D* aCanvas) {
   mActiveCanvas.erase(aCanvas);
+}
+
+void CanvasShutdownManager::OnRemoteCanvasLost() {
+  // Note that the canvas cannot do anything that mutates our state. It will
+  // dispatch for anything that risks re-entrancy.
+  for (const auto& canvas : mActiveCanvas) {
+    canvas->OnRemoteCanvasLost();
+  }
+}
+
+void CanvasShutdownManager::OnRemoteCanvasRestored() {
+  // Note that the canvas cannot do anything that mutates our state. It will
+  // dispatch for anything that risks re-entrancy.
+  for (const auto& canvas : mActiveCanvas) {
+    canvas->OnRemoteCanvasRestored();
+  }
+}
+
+/* static */ void CanvasShutdownManager::MaybeRestoreRemoteCanvas() {
+  // Calling Get will recreate the CanvasManagerChild, which in turn will
+  // cause us to call OnRemoteCanvasRestore upon success.
+  if (CanvasShutdownManager* manager = MaybeGet()) {
+    if (!manager->mActiveCanvas.empty()) {
+      CanvasManagerChild::Get();
+    }
+  }
+}
+
+/* static */ void CanvasShutdownManager::OnCompositorManagerRestored() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  class RestoreRunnable final : public WorkerRunnable {
+   public:
+    explicit RestoreRunnable(WorkerPrivate* aWorkerPrivate)
+        : WorkerRunnable(aWorkerPrivate,
+                         "CanvasShutdownManager::RestoreRunnable") {}
+
+    bool WorkerRun(JSContext*, WorkerPrivate*) override {
+      MaybeRestoreRemoteCanvas();
+      return true;
+    }
+  };
+
+  // We can restore the main thread canvases immediately.
+  MaybeRestoreRemoteCanvas();
+
+  // And dispatch to restore any DOM worker canvases. This is safe because we
+  // remove the manager from sManagers before clearing mWorkerRef during DOM
+  // worker shutdown.
+  StaticMutexAutoLock lock(sManagersMutex);
+  for (const auto& manager : sManagers) {
+    if (manager->mWorkerRef) {
+      auto task = MakeRefPtr<RestoreRunnable>(manager->mWorkerRef->Private());
+      task->Dispatch();
+    }
+  }
 }
 
 }  // namespace mozilla::gfx
