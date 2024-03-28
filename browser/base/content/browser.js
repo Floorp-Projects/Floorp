@@ -2704,28 +2704,6 @@ function gotoHistoryIndex(aEvent) {
   return true;
 }
 
-function BrowserHandleBackspace() {
-  switch (Services.prefs.getIntPref("browser.backspace_action")) {
-    case 0:
-      BrowserCommands.back();
-      break;
-    case 1:
-      goDoCommand("cmd_scrollPageUp");
-      break;
-  }
-}
-
-function BrowserHandleShiftBackspace() {
-  switch (Services.prefs.getIntPref("browser.backspace_action")) {
-    case 0:
-      BrowserCommands.forward();
-      break;
-    case 1:
-      goDoCommand("cmd_scrollPageDown");
-      break;
-  }
-}
-
 function BrowserStop() {
   gBrowser.webNavigation.stop(Ci.nsIWebNavigation.STOP_ALL);
 }
