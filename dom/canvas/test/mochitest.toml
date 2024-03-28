@@ -185,6 +185,10 @@ support-files = [
 
 ["test_ImageData_ctor.html"]
 
+["test_accelerated_canvas_context_loss.html"]
+subsuite = "gpu"
+skip-if = ["verify || (os == 'win' && debug)"]
+
 ["test_bitmaprenderer.html"]
 
 ["test_bug232227.html"]
