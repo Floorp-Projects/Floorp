@@ -60,6 +60,16 @@ export class SyncedTabsController {
     this.host.removeEventListener("click", this);
   }
 
+  addSyncObservers() {
+    Services.obs.addObserver(this.observe, SYNCED_TABS_CHANGED);
+    Services.obs.addObserver(this.observe, TOPIC_SETUPSTATE_CHANGED);
+  }
+
+  removeSyncObservers() {
+    Services.obs.removeObserver(this.observe, SYNCED_TABS_CHANGED);
+    Services.obs.removeObserver(this.observe, TOPIC_SETUPSTATE_CHANGED);
+  }
+
   handleEvent(event) {
     if (event.type == "click" && event.target.dataset.action) {
       const { ErrorType } = SyncedTabsErrorHandler;
@@ -105,7 +115,6 @@ export class SyncedTabsController {
     if (topic == SYNCED_TABS_CHANGED) {
       await this.getSyncedTabData();
     }
-    this.host.requestUpdate();
   }
 
   async updateStates(errorState) {
@@ -119,6 +128,7 @@ export class SyncedTabsController {
 
     this.currentSetupStateIndex = stateIndex;
     this.errorState = errorState;
+    this.host.requestUpdate();
   }
 
   actionMappings = {
@@ -283,6 +293,7 @@ export class SyncedTabsController {
     }
 
     this.currentSyncedTabs = tabsToRender;
+    this.host.requestUpdate();
   }
 
   async getSyncedTabData() {

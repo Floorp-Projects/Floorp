@@ -24,8 +24,6 @@ import {
   navigateToLink,
 } from "./helpers.mjs";
 
-const SYNCED_TABS_CHANGED = "services.sync.tabs.changed";
-const TOPIC_SETUPSTATE_CHANGED = "firefox-view.setupstate.changed";
 const UI_OPEN_STATE = "browser.tabs.firefox-view.ui-state.tab-pickup.open";
 
 class SyncedTabsInView extends ViewPage {
@@ -65,9 +63,7 @@ class SyncedTabsInView extends ViewPage {
       return;
     }
     this._started = true;
-    Services.obs.addObserver(this.controller.observe, TOPIC_SETUPSTATE_CHANGED);
-    Services.obs.addObserver(this.controller.observe, SYNCED_TABS_CHANGED);
-
+    this.controller.addSyncObservers();
     this.controller.updateStates();
     this.onVisibilityChange();
 
@@ -86,12 +82,7 @@ class SyncedTabsInView extends ViewPage {
     this._started = false;
     TabsSetupFlowManager.updateViewVisibility(this._id, "unloaded");
     this.onVisibilityChange();
-
-    Services.obs.removeObserver(
-      this.controller.observe,
-      TOPIC_SETUPSTATE_CHANGED
-    );
-    Services.obs.removeObserver(this.controller.observe, SYNCED_TABS_CHANGED);
+    this.controller.removeSyncObservers();
 
     if (this.recentBrowsing) {
       this.recentBrowsingElement.removeEventListener(
