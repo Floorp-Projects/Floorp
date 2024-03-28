@@ -159,7 +159,7 @@ add_task(async function process_switching_through_navigation_features() {
       assertIsPrivilegedProcess(browser, "new tab opened from about:newtab");
 
       // Check that reload does not break the privileged about: content process affinity.
-      BrowserReload();
+      BrowserCommands.reload();
       await BrowserTestUtils.browserLoaded(browser, false, ABOUT_NEWTAB);
       assertIsPrivilegedProcess(browser, "about:newtab after reload");
 

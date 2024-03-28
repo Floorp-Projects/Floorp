@@ -18,7 +18,7 @@ add_task(async function test_backAndReload() {
       await BrowserTestUtils.browserStopped(browser);
 
       info("Reload.");
-      BrowserReload();
+      BrowserCommands.reload();
       await BrowserTestUtils.waitForLocationChange(gBrowser);
 
       is(browser.documentURI.spec, DUMMY);

@@ -515,7 +515,7 @@ add_task(async function () {
     gInvalidFormPopup,
     "popuphidden"
   );
-  BrowserReloadSkipCache();
+  BrowserCommands.reloadSkipCache();
   await popupHiddenPromise;
 
   gBrowser.removeCurrentTab();

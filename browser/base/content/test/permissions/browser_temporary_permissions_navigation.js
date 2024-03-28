@@ -41,7 +41,7 @@ add_task(async function testTempPermissionOnReload() {
     reloaded = BrowserTestUtils.browserLoaded(browser, false, origin);
 
     // Reload as a user (should remove the temp permission).
-    BrowserReload();
+    BrowserCommands.reload();
 
     await reloaded;
 

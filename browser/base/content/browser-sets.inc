@@ -69,11 +69,11 @@
       <observes element="Browser:Forward" attribute="disabled"/>
     </command>
     <command id="Browser:Stop"    oncommand="BrowserStop();" disabled="true"/>
-    <command id="Browser:Reload"  oncommand="if (event.shiftKey) BrowserReloadSkipCache(); else BrowserReload()" disabled="true"/>
-    <command id="Browser:ReloadOrDuplicate" oncommand="BrowserReloadOrDuplicate(event)" disabled="true">
+    <command id="Browser:Reload"  oncommand="if (event.shiftKey) BrowserCommands.reloadSkipCache(); else BrowserCommands.reload()" disabled="true"/>
+    <command id="Browser:ReloadOrDuplicate" oncommand="BrowserCommands.reloadOrDuplicate(event)" disabled="true">
       <observes element="Browser:Reload" attribute="disabled"/>
     </command>
-    <command id="Browser:ReloadSkipCache" oncommand="BrowserReloadSkipCache()" disabled="true">
+    <command id="Browser:ReloadSkipCache" oncommand="BrowserCommands.reloadSkipCache()" disabled="true">
       <observes element="Browser:Reload" attribute="disabled"/>
     </command>
     <command id="Browser:NextTab" oncommand="gBrowser.tabContainer.advanceSelectedTab(1, true);"/>

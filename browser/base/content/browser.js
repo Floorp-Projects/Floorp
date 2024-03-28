@@ -108,7 +108,7 @@ ChromeUtils.defineLazyGetter(this, "fxAccounts", () => {
 
 XPCOMUtils.defineLazyScriptGetter(
   this,
-  "BrowserCommands",
+  ["BrowserCommands", "kSkipCacheFlags"],
   "chrome://browser/content/browser-commands.js"
 );
 
@@ -2630,7 +2630,7 @@ function HandleAppCommandEvent(evt) {
       BrowserCommands.forward();
       break;
     case "Reload":
-      BrowserReloadSkipCache();
+      BrowserCommands.reloadSkipCache();
       break;
     case "Stop":
       if (XULBrowserWindow.stopCommand.getAttribute("disabled") != "true") {
@@ -2679,42 +2679,6 @@ function HandleAppCommandEvent(evt) {
 
 function BrowserStop() {
   gBrowser.webNavigation.stop(Ci.nsIWebNavigation.STOP_ALL);
-}
-
-function BrowserReloadOrDuplicate(aEvent) {
-  aEvent = getRootEvent(aEvent);
-  let accelKeyPressed =
-    AppConstants.platform == "macosx" ? aEvent.metaKey : aEvent.ctrlKey;
-  var backgroundTabModifier = aEvent.button == 1 || accelKeyPressed;
-
-  if (aEvent.shiftKey && !backgroundTabModifier) {
-    BrowserReloadSkipCache();
-    return;
-  }
-
-  let where = whereToOpenLink(aEvent, false, true);
-  if (where == "current") {
-    BrowserReload();
-  } else {
-    duplicateTabIn(gBrowser.selectedTab, where);
-  }
-}
-
-function BrowserReload() {
-  if (gBrowser.currentURI.schemeIs("view-source")) {
-    // Bug 1167797: For view source, we always skip the cache
-    return BrowserReloadSkipCache();
-  }
-  const reloadFlags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
-  BrowserReloadWithFlags(reloadFlags);
-}
-
-const kSkipCacheFlags =
-  Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_PROXY |
-  Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE;
-function BrowserReloadSkipCache() {
-  // Bypass proxy and cache.
-  BrowserReloadWithFlags(kSkipCacheFlags);
 }
 
 function BrowserHome(aEvent) {
@@ -3413,84 +3377,6 @@ function getDefaultHomePage() {
 
 function BrowserFullScreen() {
   window.fullScreen = !window.fullScreen || BrowserHandler.kiosk;
-}
-
-function BrowserReloadWithFlags(reloadFlags) {
-  let unchangedRemoteness = [];
-
-  for (let tab of gBrowser.selectedTabs) {
-    let browser = tab.linkedBrowser;
-    let url = browser.currentURI;
-    let urlSpec = url.spec;
-    // We need to cache the content principal here because the browser will be
-    // reconstructed when the remoteness changes and the content prinicpal will
-    // be cleared after reconstruction.
-    let principal = tab.linkedBrowser.contentPrincipal;
-    if (gBrowser.updateBrowserRemotenessByURL(browser, urlSpec)) {
-      // If the remoteness has changed, the new browser doesn't have any
-      // information of what was loaded before, so we need to load the previous
-      // URL again.
-      if (tab.linkedPanel) {
-        loadBrowserURI(browser, url, principal);
-      } else {
-        // Shift to fully loaded browser and make
-        // sure load handler is instantiated.
-        tab.addEventListener(
-          "SSTabRestoring",
-          () => loadBrowserURI(browser, url, principal),
-          { once: true }
-        );
-        gBrowser._insertBrowser(tab);
-      }
-    } else {
-      unchangedRemoteness.push(tab);
-    }
-  }
-
-  if (!unchangedRemoteness.length) {
-    return;
-  }
-
-  // Reset temporary permissions on the remaining tabs to reload.
-  // This is done here because we only want to reset
-  // permissions on user reload.
-  for (let tab of unchangedRemoteness) {
-    SitePermissions.clearTemporaryBlockPermissions(tab.linkedBrowser);
-    // Also reset DOS mitigations for the basic auth prompt on reload.
-    delete tab.linkedBrowser.authPromptAbuseCounter;
-  }
-  gIdentityHandler.hidePopup();
-  gPermissionPanel.hidePopup();
-
-  let handlingUserInput = document.hasValidTransientUserGestureActivation;
-
-  for (let tab of unchangedRemoteness) {
-    if (tab.linkedPanel) {
-      sendReloadMessage(tab);
-    } else {
-      // Shift to fully loaded browser and make
-      // sure load handler is instantiated.
-      tab.addEventListener("SSTabRestoring", () => sendReloadMessage(tab), {
-        once: true,
-      });
-      gBrowser._insertBrowser(tab);
-    }
-  }
-
-  function loadBrowserURI(browser, url, principal) {
-    browser.loadURI(url, {
-      flags: reloadFlags,
-      triggeringPrincipal: principal,
-    });
-  }
-
-  function sendReloadMessage(tab) {
-    tab.linkedBrowser.sendMessageToActor(
-      "Browser:Reload",
-      { flags: reloadFlags, handlingUserInput },
-      "BrowserTab"
-    );
-  }
 }
 
 // TODO: can we pull getPEMString in from pippki.js instead of
@@ -7224,7 +7110,9 @@ function handleDroppedLink(
 
 function BrowserForceEncodingDetection() {
   gBrowser.selectedBrowser.forceEncodingDetection();
-  BrowserReloadWithFlags(Ci.nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE);
+  BrowserCommands.reloadWithFlags(
+    Ci.nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE
+  );
 }
 
 var ToolbarContextMenu = {
