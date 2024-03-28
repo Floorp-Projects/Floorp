@@ -5,9 +5,9 @@
 
 // Tests errors are handled properly by the DevToolsWorker.
 
-const {
-  DevToolsWorker,
-} = require("resource://devtools/shared/worker/worker.js");
+const { DevToolsWorker } = ChromeUtils.importESModule(
+  "resource://devtools/shared/worker/worker.sys.mjs"
+);
 
 const blob = new Blob(
   [

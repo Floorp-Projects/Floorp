@@ -42,14 +42,16 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "DevToolsWorker",
-  "resource://devtools/shared/worker/worker.js",
-  true
-);
-loader.lazyRequireGetter(
-  this,
   "InspectorActorUtils",
   "resource://devtools/server/actors/inspector/utils.js"
+);
+const lazy = {};
+ChromeUtils.defineESModuleGetters(
+  lazy,
+  {
+    DevToolsWorker: "resource://devtools/shared/worker/worker.sys.mjs",
+  },
+  { global: "contextual" }
 );
 
 const WORKER_URL = "resource://devtools/server/actors/accessibility/worker.js";
@@ -58,7 +60,7 @@ const {
   LARGE_TEXT: { BOLD_LARGE_TEXT_MIN_PIXELS, LARGE_TEXT_MIN_PIXELS },
 } = require("resource://devtools/shared/accessibility.js");
 
-loader.lazyGetter(this, "worker", () => new DevToolsWorker(WORKER_URL));
+loader.lazyGetter(this, "worker", () => new lazy.DevToolsWorker(WORKER_URL));
 
 /**
  * Get canvas rendering context for the current target window bound by the bounds of the
