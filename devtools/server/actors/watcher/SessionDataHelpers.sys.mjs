@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * Helper module alongside ParentProcessWatcherRegistry, which focus on updating the "sessionData" object.
+ * Helper module alongside WatcherRegistry, which focus on updating the "sessionData" object.
  * This object is shared across processes and threads and have to be maintained in all these runtimes.
  */
 

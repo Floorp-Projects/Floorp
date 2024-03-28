@@ -13,18 +13,17 @@ const { WatcherRegistry } = ChromeUtils.importESModule(
 );
 
 const lazy = {};
+
 loader.lazyRequireGetter(
   lazy,
   "JsWindowActorTransport",
-  "devtools/shared/transport/js-window-actor-transport",
+  "resource://devtools/shared/transport/js-window-actor-transport.js",
   true
 );
 
-export class DevToolsProcessParent extends JSProcessActorParent {
+export class DevToolsFrameParent extends JSWindowActorParent {
   constructor() {
     super();
-
-    this._destroyed = false;
 
     // Map of DevToolsServerConnection's used to forward the messages from/to
     // the client. The connections run in the parent process, as this code. We
@@ -51,50 +50,72 @@ export class DevToolsProcessParent extends JSProcessActorParent {
   }
 
   /**
-   * Request the content process to create the ContentProcessTarget
+   * Request the content process to create the Frame Target if there is one
+   * already available that matches the Browsing Context ID
    */
-  instantiateTarget({
+  async instantiateTarget({
     watcherActorID,
     connectionPrefix,
     sessionContext,
     sessionData,
   }) {
-    return this.sendQuery(
-      "DevToolsProcessParent:instantiate-already-available",
-      {
-        watcherActorID,
-        connectionPrefix,
-        sessionContext,
-        sessionData,
-      }
-    );
+    await this.sendQuery("DevToolsFrameParent:instantiate-already-available", {
+      watcherActorID,
+      connectionPrefix,
+      sessionContext,
+      sessionData,
+    });
   }
 
-  destroyTarget({ watcherActorID, isModeSwitching }) {
-    this.sendAsyncMessage("DevToolsProcessParent:destroy", {
+  /**
+   * @param {object} arg
+   * @param {object} arg.sessionContext
+   * @param {object} arg.options
+   * @param {boolean} arg.options.isModeSwitching
+   *        true when this is called as the result of a change to the devtools.browsertoolbox.scope pref
+   */
+  destroyTarget({ watcherActorID, sessionContext, options }) {
+    this.sendAsyncMessage("DevToolsFrameParent:destroy", {
       watcherActorID,
-      isModeSwitching,
+      sessionContext,
+      options,
     });
   }
 
   /**
    * Communicate to the content process that some data have been added.
    */
-  addOrSetSessionDataEntry({ watcherActorID, type, entries, updateType }) {
-    return this.sendQuery("DevToolsProcessParent:addOrSetSessionDataEntry", {
-      watcherActorID,
-      type,
-      entries,
-      updateType,
-    });
+  async addOrSetSessionDataEntry({
+    watcherActorID,
+    sessionContext,
+    type,
+    entries,
+    updateType,
+  }) {
+    try {
+      await this.sendQuery("DevToolsFrameParent:addOrSetSessionDataEntry", {
+        watcherActorID,
+        sessionContext,
+        type,
+        entries,
+        updateType,
+      });
+    } catch (e) {
+      console.warn(
+        "Failed to add session data entry for frame targets in browsing context",
+        this.browsingContext.id
+      );
+      console.warn(e);
+    }
   }
 
   /**
    * Communicate to the content process that some data have been removed.
    */
-  removeSessionDataEntry({ watcherActorID, type, entries }) {
-    this.sendAsyncMessage("DevToolsProcessParent:removeSessionDataEntry", {
+  removeSessionDataEntry({ watcherActorID, sessionContext, type, entries }) {
+    this.sendAsyncMessage("DevToolsFrameParent:removeSessionDataEntry", {
       watcherActorID,
+      sessionContext,
       type,
       entries,
     });
@@ -113,14 +134,10 @@ export class DevToolsProcessParent extends JSProcessActorParent {
     connection.on("closed", this._onConnectionClosed);
 
     // Create a js-window-actor based transport.
-    const transport = new lazy.JsWindowActorTransport(
-      this,
-      forwardingPrefix,
-      "DevToolsProcessParent:packet"
-    );
+    const transport = new lazy.JsWindowActorTransport(this, forwardingPrefix);
     transport.hooks = {
       onPacket: connection.send.bind(connection),
-      onClosed() {},
+      onTransportClosed() {},
     };
     transport.ready();
 
@@ -142,64 +159,61 @@ export class DevToolsProcessParent extends JSProcessActorParent {
     watcher.notifyTargetAvailable(actor);
   }
 
-  _onConnectionClosed(status, prefix) {
-    if (this._connections.has(prefix)) {
-      const { connection } = this._connections.get(prefix);
-      this._cleanupConnection(connection);
-    }
+  _onConnectionClosed(status, connectionPrefix) {
+    this._unregisterWatcher(connectionPrefix);
   }
 
   /**
-   * Close and unregister a given DevToolsServerConnection.
+   * Given a watcher connection prefix, unregister everything related to the Watcher
+   * in this JSWindowActor.
    *
-   * @param {DevToolsServerConnection} connection
-   * @param {object} options
-   * @param {boolean} options.isModeSwitching
-   *        true when this is called as the result of a change to the devtools.browsertoolbox.scope pref
+   * @param {String} connectionPrefix
+   *        The connection prefix of the watcher to unregister
    */
-  async _cleanupConnection(connection, options = {}) {
-    const connectionInfo = this._connections.get(connection.prefix);
+  async _unregisterWatcher(connectionPrefix) {
+    const connectionInfo = this._connections.get(connectionPrefix);
     if (!connectionInfo) {
       return;
     }
-    const { forwardingPrefix, transport } = connectionInfo;
+    const { forwardingPrefix, transport, connection } = connectionInfo;
+    this._connections.delete(connectionPrefix);
 
     connection.off("closed", this._onConnectionClosed);
     if (transport) {
       // If we have a child transport, the actor has already
       // been created. We need to stop using this transport.
-      transport.close(options);
+      transport.close();
     }
 
-    this._connections.delete(connection.prefix);
-    if (!this._connections.size) {
-      this._destroy(options);
-    }
-
-    // When cancelling the forwarding, one RDP event is sent to the client to purge all requests
-    // and actors related to a given prefix. Do this *after* calling _destroy which will emit
-    // the target-destroyed RDP event. This helps the Watcher Front retrieve the related target front,
-    // otherwise it would be too eagerly destroyed by the purge event.
     connection.cancelForwarding(forwardingPrefix);
   }
 
   /**
-   * Destroy and cleanup everything for this DOM Process.
+   * Destroy everything that we did related to the current WindowGlobal that
+   * this JSWindow Actor represents:
+   *  - close all transports that were used as bridge to communicate with the
+   *    DevToolsFrameChild, running in the content process
+   *  - unregister these transports from DevToolsServer (cancelForwarding)
+   *  - notify the client, via the WatcherActor that all related targets,
+   *    one per client/connection are all destroyed
+   *
+   * Note that with bfcacheInParent, we may reuse a JSWindowActor pair after closing all connections.
+   * This is can happen outside of the destruction of the actor.
+   * We may reuse a DevToolsFrameParent and DevToolsFrameChild pair.
+   * When navigating away, we will destroy them and call this method.
+   * Then when navigating back, we will reuse the same instances.
+   * So that we should be careful to keep the class fully function and only clear all its state.
    *
    * @param {object} options
    * @param {boolean} options.isModeSwitching
    *        true when this is called as the result of a change to the devtools.browsertoolbox.scope pref
    */
-  _destroy(options) {
-    if (this._destroyed) {
-      return;
-    }
-    this._destroyed = true;
-
-    for (const { actor, connection, watcher } of this._connections.values()) {
+  _closeAllConnections(options) {
+    for (const { actor, watcher } of this._connections.values()) {
       watcher.notifyTargetDestroyed(actor, options);
-      this._cleanupConnection(connection, options);
+      this._unregisterWatcher(watcher.conn.prefix);
     }
+    this._connections.clear();
   }
 
   /**
@@ -207,31 +221,20 @@ export class DevToolsProcessParent extends JSProcessActorParent {
    */
 
   sendPacket(packet, prefix) {
-    this.sendAsyncMessage("DevToolsProcessParent:packet", { packet, prefix });
+    this.sendAsyncMessage("DevToolsFrameParent:packet", { packet, prefix });
   }
 
   /**
    * JsWindowActor API
    */
 
-  async sendQuery(msg, args) {
-    try {
-      const res = await super.sendQuery(msg, args);
-      return res;
-    } catch (e) {
-      console.error("Failed to sendQuery in DevToolsProcessParent", msg);
-      console.error(e.toString());
-      throw e;
-    }
-  }
-
   receiveMessage(message) {
     switch (message.name) {
-      case "DevToolsProcessChild:connectFromContent":
+      case "DevToolsFrameChild:connectFromContent":
         return this.connectFromContent(message.data);
-      case "DevToolsProcessChild:packet":
+      case "DevToolsFrameChild:packet":
         return this.emit("packet-received", message);
-      case "DevToolsProcessChild:destroy":
+      case "DevToolsFrameChild:destroy":
         for (const { form, watcherActorID } of message.data.actors) {
           const watcher = WatcherRegistry.getWatcher(watcherActorID);
           // As we instruct to destroy all targets when the watcher is destroyed,
@@ -239,18 +242,36 @@ export class DevToolsProcessParent extends JSProcessActorParent {
           // the watcher has been removed from the registry.
           if (watcher) {
             watcher.notifyTargetDestroyed(form, message.data.options);
-            this._cleanupConnection(watcher.conn, message.data.options);
+            this._unregisterWatcher(watcher.conn.prefix);
           }
+        }
+        return null;
+      case "DevToolsFrameChild:bf-cache-navigation-pageshow":
+        for (const watcherActor of WatcherRegistry.getWatchersForBrowserId(
+          this.browsingContext.browserId
+        )) {
+          watcherActor.emit("bf-cache-navigation-pageshow", {
+            windowGlobal: this.browsingContext.currentWindowGlobal,
+          });
+        }
+        return null;
+      case "DevToolsFrameChild:bf-cache-navigation-pagehide":
+        for (const watcherActor of WatcherRegistry.getWatchersForBrowserId(
+          this.browsingContext.browserId
+        )) {
+          watcherActor.emit("bf-cache-navigation-pagehide", {
+            windowGlobal: this.browsingContext.currentWindowGlobal,
+          });
         }
         return null;
       default:
         throw new Error(
-          "Unsupported message in DevToolsProcessParent: " + message.name
+          "Unsupported message in DevToolsFrameParent: " + message.name
         );
     }
   }
 
   didDestroy() {
-    this._destroy();
+    this._closeAllConnections();
   }
 }

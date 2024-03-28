@@ -30,9 +30,9 @@ add_task(async function () {
   info("Call any target front method, to ensure it works fine");
   await targetCommand.targetFront.focus();
 
-  // Simulate a toolbox closing by the cleanup of TargetCommand.
-  // This will stop watching for all target types and destroy all target actors/fronts.
-  await targetCommand.stopListening();
+  // Destroying the target front should end up calling "WindowGlobalTargetActor.detach"
+  // which should destroy the target on the server side
+  await targetCommand.targetFront.destroy();
 
   info(
     "Now create a second commands after destroy, to see if we can spawn a new, functional target"

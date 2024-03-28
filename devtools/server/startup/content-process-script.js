@@ -143,7 +143,7 @@ class ContentProcessStartup {
 
   /**
    * Called when the content process just started.
-   * This will start creating ContentProcessTarget actors, but only if DevTools code (WatcherActor / ParentProcessWatcherRegistry.sys.mjs)
+   * This will start creating ContentProcessTarget actors, but only if DevTools code (WatcherActor / WatcherRegistry.sys.mjs)
    * put some data in `sharedData` telling us to do so.
    */
   maybeCreateExistingTargetActors() {
@@ -187,7 +187,7 @@ class ContentProcessStartup {
    *        The prefix of the DevToolsServerConnection of the Watcher Actor.
    *        This is used to compute a unique ID for the target actor.
    * @param Object sessionData
-   *        All data managed by the Watcher Actor and ParentProcessWatcherRegistry.jsm, containing
+   *        All data managed by the Watcher Actor and WatcherRegistry.jsm, containing
    *        target types, resources types to be listened as well as breakpoints and any
    *        other data meant to be shared across processes and threads.
    * @param Object options Dictionary with optional values:
