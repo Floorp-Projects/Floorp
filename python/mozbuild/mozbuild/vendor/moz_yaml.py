@@ -57,7 +57,15 @@ VALID_LICENSES = [
     "Unicode",  # http://www.unicode.org/copyright.html
 ]
 
-VALID_SOURCE_HOSTS = ["gitlab", "googlesource", "github", "angle", "codeberg", "git"]
+VALID_SOURCE_HOSTS = [
+    "gitlab",
+    "googlesource",
+    "github",
+    "angle",
+    "codeberg",
+    "git",
+    "yaml-dir",
+]
 
 """
 ---
@@ -443,6 +451,7 @@ def _schema_1():
                     Length(min=1),
                     In(VALID_SOURCE_HOSTS, msg="Unsupported Source Hosting"),
                 ),
+                "source-host-path": str,
                 "tracking": Match(r"^(commit|tag)$"),
                 "release-artifact": All(str, Length(min=1)),
                 "flavor": Match(r"^(regular|rust|individual-files)$"),
