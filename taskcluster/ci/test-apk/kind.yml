@@ -33,7 +33,7 @@ job-defaults:
         use-caches: false
     treeherder:
         kind: test
-    worker-type: b-linux-medium-gcp
+    worker-type: b-linux-large-gcp
     worker:
         docker-image: {in-tree: android-components}
         max-run-time: 7200
