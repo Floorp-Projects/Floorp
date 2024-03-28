@@ -209,22 +209,16 @@ void HTMLFormElement::GetMethod(nsAString& aValue) {
   GetEnumAttr(nsGkAtoms::method, kFormDefaultMethod->tag, aValue);
 }
 
-void HTMLFormElement::ReportInvalidUnfocusableElements() {
+void HTMLFormElement::ReportInvalidUnfocusableElements(
+    const nsTArray<RefPtr<Element>>&& aInvalidElements) {
   RefPtr<nsFocusManager> focusManager = nsFocusManager::GetFocusManager();
   MOZ_ASSERT(focusManager);
 
-  // This shouldn't be called recursively, so use a rather large value
-  // for the preallocated buffer.
-  AutoTArray<RefPtr<nsGenericHTMLFormElement>, 100> sortedControls;
-  if (NS_FAILED(mControls->GetSortedControls(sortedControls))) {
-    return;
-  }
-
-  for (auto& _e : sortedControls) {
-    // MOZ_CAN_RUN_SCRIPT requires explicit copy, Bug 1620312
-    RefPtr<nsGenericHTMLFormElement> element = _e;
+  for (const auto& element : aInvalidElements) {
     bool isFocusable = false;
-    focusManager->ElementIsFocusable(element, 0, &isFocusable);
+    // MOZ_KnownLive because 'aInvalidElements' is guaranteed to keep it alive.
+    // This can go away once bug 1620312 is fixed.
+    focusManager->ElementIsFocusable(MOZ_KnownLive(element), 0, &isFocusable);
     if (!isFocusable) {
       nsTArray<nsString> params;
       nsAutoCString messageName("InvalidFormControlUnfocusable");
@@ -291,7 +285,6 @@ void HTMLFormElement::MaybeSubmit(Element* aSubmitter) {
       HasAttr(nsGkAtoms::novalidate) ||
       (aSubmitter && aSubmitter->HasAttr(nsGkAtoms::formnovalidate));
   if (!noValidateState && !CheckValidFormSubmission()) {
-    ReportInvalidUnfocusableElements();
     return;
   }
 
@@ -1759,7 +1752,8 @@ bool HTMLFormElement::CheckValidFormSubmission() {
   /**
    * Check for form validity: do not submit a form if there are unhandled
    * invalid controls in the form.
-   * This should not be done if the form has been submitted with .submit().
+   * This should not be done if the form has been submitted with .submit() or
+   * has been submitted and novalidate/formnovalidate is used.
    *
    * NOTE: for the moment, we are also checking that whether the MozInvalidForm
    * event gets prevented default so it will prevent blocking form submission if
@@ -1769,9 +1763,6 @@ bool HTMLFormElement::CheckValidFormSubmission() {
    * Forms will be spread enough and authors will assume forms can't be
    * submitted when invalid. See bug 587671.
    */
-
-  NS_ASSERTION(!HasAttr(nsGkAtoms::novalidate),
-               "We shouldn't be there if novalidate is set!");
 
   AutoTArray<RefPtr<Element>, 32> invalidElements;
   if (CheckFormValidity(&invalidElements)) {
@@ -1796,6 +1787,8 @@ bool HTMLFormElement::CheckValidFormSubmission() {
   event->WidgetEventPtr()->mFlags.mOnlyChromeDispatch = true;
 
   DispatchEvent(*event);
+
+  ReportInvalidUnfocusableElements(std::move(invalidElements));
 
   return !event->DefaultPrevented();
 }
