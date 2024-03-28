@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<head>
+  <style>
+@page {
+  size: letter;
+  margin: 0;
+}
+body{
+  margin:0;
+}
+div{
+  /* A4-on-letter requires a 0.9407 downscale. 11in = 279.4mm, and
+   * 279.4mm / 297mm = 0.9407407407..
+   * The unscaled reference case has a 200px square div, so reverse the scale
+   * to match that (rounding to 0.940741)
+   */
+  height: calc(0.940741 * 200px);
+  width: calc(0.940741 * 200px);
+  background: blue;
+  margin: auto;
+}
+  </style>
+</head>
+<body>
+  <div></div>
+</body>
