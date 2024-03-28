@@ -914,9 +914,9 @@ var gXPInstallObserver = {
           let height = undefined;
 
           if (PopupNotifications.isPanelOpen) {
-            let rect = document
-              .getElementById("addon-progress-notification")
-              .getBoundingClientRect();
+            let rect = window.windowUtils.getBoundsWithoutFlushing(
+              document.getElementById("addon-progress-notification")
+            );
             height = rect.height;
           }
 
