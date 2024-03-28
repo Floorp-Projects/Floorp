@@ -829,7 +829,7 @@ class Replay {
 
     // This formula corresponds to the calculation of wasted (from committed and
     // the other parameters) within jemalloc_stats()
-    size_t committed = stats.allocated + stats.waste + stats.page_cache +
+    size_t committed = stats.allocated + stats.waste + stats.pages_dirty +
                        stats.bookkeeping + stats.bin_unused;
 
     FdPrintf(mStdErr, "\n");
@@ -845,7 +845,7 @@ class Replay {
 #endif
     FdPrintf(mStdErr, "allocated:        %9zu\n", stats.allocated);
     FdPrintf(mStdErr, "waste:            %9zu\n", stats.waste);
-    FdPrintf(mStdErr, "dirty:            %9zu\n", stats.page_cache);
+    FdPrintf(mStdErr, "dirty:            %9zu\n", stats.pages_dirty);
     FdPrintf(mStdErr, "fresh:            %9zu\n", stats.pages_fresh);
     FdPrintf(mStdErr, "madvised:         %9zu\n", stats.pages_madvised);
     FdPrintf(mStdErr, "bookkeep:         %9zu\n", stats.bookkeeping);

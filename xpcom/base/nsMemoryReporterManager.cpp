@@ -1247,7 +1247,7 @@ NS_IMPL_ISUPPORTS(PageFaultsHardReporter, nsIMemoryReporter)
 #ifdef HAVE_JEMALLOC_STATS
 
 static size_t HeapOverhead(const jemalloc_stats_t& aStats) {
-  return aStats.waste + aStats.bookkeeping + aStats.page_cache +
+  return aStats.waste + aStats.bookkeeping + aStats.pages_dirty +
          aStats.bin_unused;
 }
 
@@ -1318,7 +1318,7 @@ class JemallocHeapReporter final : public nsIMemoryReporter {
 
     MOZ_COLLECT_REPORT(
       "heap/committed/unused-pages/dirty", KIND_NONHEAP, UNITS_BYTES,
-      stats.page_cache,
+      stats.pages_dirty,
 "Memory which the allocator could return to the operating system, but hasn't. "
 "The allocator keeps this memory around as an optimization, so it doesn't "
 "have to ask the OS the next time it needs to fulfill a request. This value "
@@ -1351,7 +1351,7 @@ class JemallocHeapReporter final : public nsIMemoryReporter {
 "from the application's resident set.");
 
     {
-      size_t decommitted = stats.mapped - stats.allocated - stats.waste - stats.page_cache - stats.pages_fresh - stats.bookkeeping - stats.bin_unused;
+      size_t decommitted = stats.mapped - stats.allocated - stats.waste - stats.pages_dirty - stats.pages_fresh - stats.bookkeeping - stats.bin_unused;
       MOZ_COLLECT_REPORT(
         "heap/decommitted/unmapped", KIND_OTHER, UNITS_BYTES, decommitted,
   "Amount of memory currently mapped but not committed, "
