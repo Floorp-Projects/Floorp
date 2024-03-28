@@ -10,7 +10,6 @@
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/CompositorManagerParent.h"
 #include "mozilla/layers/CompositorThread.h"
-#include "mozilla/gfx/CanvasShutdownManager.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/dom/ContentChild.h"  // for ContentChild
@@ -68,15 +67,7 @@ bool CompositorManagerChild::Init(Endpoint<PCompositorManagerChild>&& aEndpoint,
   sInstance = new CompositorManagerChild(std::move(aEndpoint), aProcessToken,
                                          aNamespace);
   sOtherPid = sInstance->OtherPid();
-  if (!sInstance->CanSend()) {
-    return false;
-  }
-
-  // If there are any canvases waiting on the recreation of the GPUProcess or
-  // CompositorManagerChild, then we need to notify them so that they can
-  // restore their contexts.
-  gfx::CanvasShutdownManager::OnCompositorManagerRestored();
-  return true;
+  return sInstance->CanSend();
 }
 
 /* static */

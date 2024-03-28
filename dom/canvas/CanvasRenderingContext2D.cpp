@@ -1227,64 +1227,6 @@ void CanvasRenderingContext2D::RemoveShutdownObserver() {
   canvasManager->RemoveShutdownObserver(this);
 }
 
-void CanvasRenderingContext2D::OnRemoteCanvasLost() {
-  // We only lose context / data if we are using remote canvas, which is only
-  // for accelerated targets.
-  if (!mBufferProvider || !mBufferProvider->IsAccelerated() || mIsContextLost) {
-    return;
-  }
-
-  // 2. Set context's context lost to true.
-  mIsContextLost = mAllowContextRestore = true;
-
-  // 3. Reset the rendering context to its default state given context.
-  ClearTarget();
-
-  // We dispatch because it isn't safe to call into the script event handlers,
-  // and we don't want to mutate our state in CanvasShutdownManager.
-  NS_DispatchToCurrentThread(NS_NewCancelableRunnableFunction(
-      "CanvasRenderingContext2D::OnRemoteCanvasLost", [self = RefPtr{this}] {
-        // 4. Let shouldRestore be the result of firing an event named
-        // contextlost at canvas, with the cancelable attribute initialized to
-        // true.
-        self->mAllowContextRestore = self->DispatchEvent(
-            u"contextlost"_ns, CanBubble::eNo, Cancelable::eYes);
-      }));
-}
-
-void CanvasRenderingContext2D::OnRemoteCanvasRestored() {
-  // We never lost our context if it was not a remote canvas, nor can we restore
-  // if we have already shutdown.
-  if (mHasShutdown || !mIsContextLost || !mAllowContextRestore) {
-    return;
-  }
-
-  // We dispatch because it isn't safe to call into the script event handlers,
-  // and we don't want to mutate our state in CanvasShutdownManager.
-  NS_DispatchToCurrentThread(NS_NewCancelableRunnableFunction(
-      "CanvasRenderingContext2D::OnRemoteCanvasRestored",
-      [self = RefPtr{this}] {
-        // 5. If shouldRestore is false, then abort these steps.
-        if (!self->mHasShutdown && self->mIsContextLost &&
-            self->mAllowContextRestore) {
-          // 7. Set context's context lost to false.
-          self->mIsContextLost = false;
-
-          // 6. Attempt to restore context by creating a backing storage using
-          // context's attributes and associating them with context. If this
-          // fails, then abort these steps.
-          if (!self->EnsureTarget()) {
-            self->mIsContextLost = true;
-            return;
-          }
-
-          // 8. Fire an event named contextrestored at canvas.
-          self->DispatchEvent(u"contextrestored"_ns, CanBubble::eNo,
-                              Cancelable::eNo);
-        }
-      }));
-}
-
 void CanvasRenderingContext2D::SetStyleFromString(const nsACString& aStr,
                                                   Style aWhichStyle) {
   MOZ_ASSERT(!aStr.IsVoid());
@@ -1509,17 +1451,6 @@ bool CanvasRenderingContext2D::EnsureTarget(ErrorResult& aError,
     SetErrorState();
     aError.ThrowInvalidStateError(
         "Cannot use canvas after shutdown initiated.");
-    return false;
-  }
-
-  // The spec doesn't say what to do in this case, but Chrome silently fails
-  // without throwing an error. We should at least throw if the canvas is
-  // permanently disabled.
-  if (NS_WARN_IF(mIsContextLost)) {
-    if (!mAllowContextRestore) {
-      aError.ThrowInvalidStateError(
-          "Cannot use canvas as context is lost forever.");
-    }
     return false;
   }
 
@@ -2095,7 +2026,7 @@ CanvasRenderingContext2D::GetOptimizedSnapshot(DrawTarget* aTarget,
   // already exists, otherwise we get performance issues. See bug 1567054.
   if (!EnsureTarget()) {
     MOZ_ASSERT(
-        mTarget == sErrorTarget.get() || mIsContextLost,
+        mTarget == sErrorTarget.get(),
         "On EnsureTarget failure mTarget should be set to sErrorTarget.");
     // In rare circumstances we may have failed to create an error target.
     return mTarget ? mTarget->Snapshot() : nullptr;

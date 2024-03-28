@@ -73,8 +73,6 @@ class GfxInfoBase : public nsIGfxInfo,
   NS_IMETHOD GetAzureCanvasBackend(nsAString& aBackend) override;
   NS_IMETHOD GetAzureContentBackend(nsAString& aBackend) override;
   NS_IMETHOD GetUsingGPUProcess(bool* aOutValue) override;
-  NS_IMETHOD GetUsingRemoteCanvas(bool* aOutValue) override;
-  NS_IMETHOD GetUsingAcceleratedCanvas(bool* aOutValue) override;
   NS_IMETHOD GetIsHeadless(bool* aIsHeadless) override;
   NS_IMETHOD GetTargetFrameRate(uint32_t* aTargetFrameRate) override;
   NS_IMETHOD GetCodecSupportInfo(nsACString& aCodecSupportInfo) override;

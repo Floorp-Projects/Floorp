@@ -151,7 +151,6 @@ interface mixin CanvasState {
   undefined save(); // push state on state stack
   undefined restore(); // pop state stack and restore state
   undefined reset(); // reset the rendering context to its default state
-  boolean isContextLost(); // return whether context is lost
 };
 
 interface mixin CanvasTransform {
