@@ -1236,8 +1236,8 @@ void URLParams::DecodeString(const nsACString& aInput, nsAString& aOutput) {
 
 /* static */
 bool URLParams::ParseNextInternal(const char*& aStart, const char* const aEnd,
-                                  nsAString* aOutDecodedName,
-                                  nsAString* aOutDecodedValue) {
+                                  bool aShouldDecode, nsAString* aOutputName,
+                                  nsAString* aOutputValue) {
   nsDependentCSubstring string;
 
   const char* const iter = std::find(aStart, aEnd, '&');
@@ -1267,9 +1267,14 @@ bool URLParams::ParseNextInternal(const char*& aStart, const char* const aEnd,
     name.Rebind(string, 0);
   }
 
-  DecodeString(name, *aOutDecodedName);
-  DecodeString(value, *aOutDecodedValue);
+  if (aShouldDecode) {
+    DecodeString(name, *aOutputName);
+    DecodeString(value, *aOutputValue);
+    return true;
+  }
 
+  ConvertString(name, *aOutputName);
+  ConvertString(value, *aOutputValue);
   return true;
 }
 
@@ -1278,7 +1283,7 @@ bool URLParams::Extract(const nsACString& aInput, const nsAString& aName,
                         nsAString& aValue) {
   aValue.SetIsVoid(true);
   return !URLParams::Parse(
-      aInput, [&aName, &aValue](const nsAString& name, nsString&& value) {
+      aInput, true, [&aName, &aValue](const nsAString& name, nsString&& value) {
         if (aName == name) {
           aValue = std::move(value);
           return false;
@@ -1291,7 +1296,7 @@ void URLParams::ParseInput(const nsACString& aInput) {
   // Remove all the existing data before parsing a new input.
   DeleteAll();
 
-  URLParams::Parse(aInput, [this](nsString&& name, nsString&& value) {
+  URLParams::Parse(aInput, true, [this](nsString&& name, nsString&& value) {
     mParams.AppendElement(Param{std::move(name), std::move(value)});
     return true;
   });

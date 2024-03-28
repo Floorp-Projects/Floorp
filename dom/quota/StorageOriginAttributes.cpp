@@ -68,7 +68,7 @@ bool StorageOriginAttributes::PopulateFromSuffix(const nsACString& aStr) {
   }
 
   bool ok =
-      URLParams::Parse(Substring(aStr, 1, aStr.Length() - 1),
+      URLParams::Parse(Substring(aStr, 1, aStr.Length() - 1), true,
                        [this](const nsAString& aName, const nsAString& aValue) {
                          if (aName.EqualsLiteral("inBrowser")) {
                            if (!aValue.EqualsLiteral("1")) {
