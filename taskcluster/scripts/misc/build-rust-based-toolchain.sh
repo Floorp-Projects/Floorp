@@ -31,8 +31,8 @@ x86_64-unknown-linux-gnu)
     fi
     export CC="$MOZ_FETCHES_DIR/clang/bin/clang"
     export CXX="$MOZ_FETCHES_DIR/clang/bin/clang++"
-    export TARGET_CFLAGS="-isysroot $MOZ_FETCHES_DIR/MacOSX14.2.sdk"
-    export TARGET_CXXFLAGS="-isysroot $MOZ_FETCHES_DIR/MacOSX14.2.sdk -stdlib=libc++"
+    export TARGET_CFLAGS="-isysroot $MOZ_FETCHES_DIR/MacOSX14.4.sdk"
+    export TARGET_CXXFLAGS="-isysroot $MOZ_FETCHES_DIR/MacOSX14.4.sdk -stdlib=libc++"
     ;;
 *-pc-windows-msvc)
     # Cross-compiling for Windows on Linux.

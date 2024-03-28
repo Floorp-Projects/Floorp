@@ -231,7 +231,7 @@ macosx64-custom-car:
         toolchain-artifact: public/build/car_macosx.tar.zst
     fetches:
         toolchain:
-            - macosx64-sdk-14.2
+            - macosx64-sdk-14.4
 
 macosx-arm64-custom-car:
     description: "Custom chromium-as-release build for mac (apple silicon)"
@@ -267,7 +267,7 @@ macosx-arm64-custom-car:
         toolchain-artifact: public/build/car_macosx_arm.tar.zst
     fetches:
         toolchain:
-            - macosx64-sdk-14.2
+            - macosx64-sdk-14.4
 
 android-custom-car:
     description: "Custom chromium-as-release build for Android"
