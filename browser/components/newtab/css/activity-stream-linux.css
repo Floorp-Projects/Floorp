@@ -3562,6 +3562,12 @@ main section {
   opacity: 1;
   transform: scale(1);
 }
+.ds-card.active header, .ds-card:focus-within header, .ds-card:hover header {
+  color: var(--newtab-primary-action-background);
+}
+.ds-card:active header {
+  color: var(--newtab-primary-element-active-color);
+}
 .ds-card .img {
   height: 0;
   padding-top: 50%;
@@ -3576,20 +3582,11 @@ main section {
   width: 100%;
   text-decoration: none;
 }
-.ds-card .ds-card-link:hover header {
-  color: var(--newtab-primary-action-background);
-}
 .ds-card .ds-card-link:focus {
   border: 0;
   outline: 0;
   box-shadow: 0 0 0 3px var(--newtab-primary-action-background-dimmed), 0 0 0 1px var(--newtab-primary-action-background);
   transition: none;
-}
-.ds-card .ds-card-link:focus header {
-  color: var(--newtab-primary-action-background);
-}
-.ds-card .ds-card-link:active header {
-  color: var(--newtab-primary-element-active-color);
 }
 .ds-card .meta {
   display: flex;

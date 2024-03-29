@@ -118,6 +118,16 @@ $ds-card-image-gradient-solid: rgba(0, 0, 0, 100%);
         transform: scale(1);
       }
     }
+
+    header {
+      color: var(--newtab-primary-action-background);
+    }
+  }
+
+  &:active {
+    header {
+      color: var(--newtab-primary-element-active-color);
+    }
   }
 
   .img {
@@ -136,26 +146,10 @@ $ds-card-image-gradient-solid: rgba(0, 0, 0, 100%);
     width: 100%;
     text-decoration: none;
 
-    &:hover {
-      header {
-        color: var(--newtab-primary-action-background);
-      }
-    }
-
     &:focus {
       @include ds-focus;
 
       transition: none;
-
-      header {
-        color: var(--newtab-primary-action-background);
-      }
-    }
-
-    &:active {
-      header {
-        color: var(--newtab-primary-element-active-color);
-      }
     }
   }
 
