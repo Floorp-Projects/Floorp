@@ -1574,16 +1574,6 @@ def target_tasks_l10n_cross_channel(full_task_graph, parameters, graph_config):
     return [l for l, t in full_task_graph.tasks.items() if filter(t)]
 
 
-@_target_task("are-we-esmified-yet")
-def target_tasks_are_we_esmified_yet(full_task_graph, parameters, graph_config):
-    """
-    select the task to track the progress of the esmification project
-    """
-    return [
-        l for l, t in full_task_graph.tasks.items() if t.kind == "are-we-esmified-yet"
-    ]
-
-
 @_target_task("eslint-build")
 def target_tasks_eslint_build(full_task_graph, parameters, graph_config):
     """Select the task to run additional ESLint rules which require a build."""
