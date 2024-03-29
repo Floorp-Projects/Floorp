@@ -80,4 +80,14 @@ function run_test() {
     canonicalize("http://host.com//twoslashes?more//slashes"),
     "http://host.com/twoslashes?more//slashes"
   );
+  equal(
+    canonicalize("http://host.com/path?query%3Awith%3Acolons"),
+    "http://host.com/path?query:with:colons"
+  );
+  equal(
+    canonicalize(
+      "https://wiki.mozilla.org/index.php?title=MozillaWiki%3AHelp&action=history"
+    ),
+    "https://wiki.mozilla.org/index.php?title=MozillaWiki:Help&action=history"
+  );
 }
