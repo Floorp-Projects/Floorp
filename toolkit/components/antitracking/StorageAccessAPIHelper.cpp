@@ -1060,12 +1060,7 @@ StorageAccessAPIHelper::CheckSameSiteCallingContextDecidesStorageAccessAPI(
     }
   }
 
-  nsIChannel* chan = aDocument->GetChannel();
-  if (!chan) {
-    return Some(false);
-  }
-  nsCOMPtr<nsILoadInfo> loadInfo = chan->LoadInfo();
-  if (loadInfo->GetIsThirdPartyContextToTopWindow()) {
+  if (AntiTrackingUtils::IsThirdPartyDocument(aDocument)) {
     return Some(false);
   }
 
