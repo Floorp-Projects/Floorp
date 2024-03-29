@@ -39,5 +39,6 @@ class ASHost(BaseHost):
             index = "latest"
         else:
             index = revision
-        json = get_as_nightly_json(index)
-        return json["version"], json["commit"]
+        version = get_as_nightly_json(index)["version"]
+        # return version and timestamp
+        return version, version.rsplit(".", 1)[1]
