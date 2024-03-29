@@ -926,6 +926,7 @@ export var Sanitizer = {
             Ci.nsIClearDataService.CLEAR_COOKIES |
               Ci.nsIClearDataService.CLEAR_COOKIE_BANNER_EXECUTED_RECORD |
               Ci.nsIClearDataService.CLEAR_DOM_STORAGES |
+              Ci.nsIClearDataService.CLEAR_EME |
               Ci.nsIClearDataService.CLEAR_AUTH_TOKENS |
               Ci.nsIClearDataService.CLEAR_AUTH_CACHE |
               Ci.nsIClearDataService.CLEAR_FINGERPRINTING_PROTECTION_STATE |
@@ -938,6 +939,7 @@ export var Sanitizer = {
             Ci.nsIClearDataService.CLEAR_COOKIES |
               Ci.nsIClearDataService.CLEAR_COOKIE_BANNER_EXECUTED_RECORD |
               Ci.nsIClearDataService.CLEAR_DOM_STORAGES |
+              Ci.nsIClearDataService.CLEAR_EME |
               Ci.nsIClearDataService.CLEAR_AUTH_TOKENS |
               Ci.nsIClearDataService.CLEAR_AUTH_CACHE |
               Ci.nsIClearDataService.CLEAR_FINGERPRINTING_PROTECTION_STATE |
