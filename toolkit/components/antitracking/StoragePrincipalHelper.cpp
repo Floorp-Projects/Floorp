@@ -86,10 +86,8 @@ bool ChooseOriginAttributes(nsIChannel* aChannel, OriginAttributes& aAttrs,
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return false;
   }
-  bool foreignByAncestorContext =
-      AntiTrackingUtils::IsThirdPartyChannel(aChannel) &&
-      !loadInfo->GetIsThirdPartyContextToTopWindow();
-  aAttrs.SetPartitionKey(principalURI, foreignByAncestorContext);
+
+  aAttrs.SetPartitionKey(principalURI);
   return true;
 }
 
@@ -315,7 +313,7 @@ nsresult StoragePrincipalHelper::GetPrincipal(nsIChannel* aChannel,
       // We only support foreign partitioned principal when dFPI is enabled.
       if (cjs->GetCookieBehavior() ==
               nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN &&
-          AntiTrackingUtils::IsThirdPartyChannel(aChannel)) {
+          loadInfo->GetIsThirdPartyContextToTopWindow()) {
         outPrincipal = partitionedPrincipal;
       }
       break;
@@ -437,7 +435,7 @@ bool StoragePrincipalHelper::ShouldUsePartitionPrincipalForServiceWorker(
     return false;
   }
 
-  return aWorkerPrivate->IsThirdPartyContext();
+  return aWorkerPrivate->IsThirdPartyContextToTopWindow();
 }
 
 // static
@@ -481,7 +479,7 @@ bool StoragePrincipalHelper::GetOriginAttributes(
       // Otherwise, we will use the regular principal.
       if (cjs->GetCookieBehavior() ==
               nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN &&
-          AntiTrackingUtils::IsThirdPartyChannel(aChannel)) {
+          loadInfo->GetIsThirdPartyContextToTopWindow()) {
         ChooseOriginAttributes(aChannel, aAttributes, true);
       }
       break;
@@ -562,7 +560,7 @@ void StoragePrincipalHelper::UpdateOriginAttributesForNetworkState(
     return;
   }
 
-  aAttributes.SetPartitionKey(aFirstPartyURI, false);
+  aAttributes.SetPartitionKey(aFirstPartyURI);
 }
 
 enum SupportedScheme { HTTP, HTTPS };
@@ -666,37 +664,14 @@ bool StoragePrincipalHelper::PartitionKeyHasBaseDomain(
   nsString scheme;
   nsString pkBaseDomain;
   int32_t port;
-  bool foreign;
-  bool success = OriginAttributes::ParsePartitionKey(
-      aPartitionKey, scheme, pkBaseDomain, port, foreign);
+  bool success = OriginAttributes::ParsePartitionKey(aPartitionKey, scheme,
+                                                     pkBaseDomain, port);
 
   if (!success) {
     return false;
   }
 
   return aBaseDomain.Equals(pkBaseDomain);
-}
-
-// static
-void StoragePrincipalHelper::UpdatePartitionKeyWithForeignAncestorBit(
-    nsAString& aKey, bool aForeignByAncestorContext) {
-  bool site = 0 == aKey.Find(u"(");
-  if (!site) {
-    return;
-  }
-  if (aForeignByAncestorContext) {
-    int32_t index = aKey.Find(u",f)");
-    if (index == -1) {
-      uint32_t cutStart = aKey.Length() - 1;
-      aKey.ReplaceLiteral(cutStart, 1, u",f)");
-    }
-  } else {
-    int32_t index = aKey.Find(u",f)");
-    if (index != -1) {
-      uint32_t cutLength = aKey.Length() - index;
-      aKey.ReplaceLiteral(index, cutLength, u")");
-    }
-  }
 }
 
 }  // namespace mozilla
