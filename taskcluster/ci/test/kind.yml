@@ -46,6 +46,7 @@ jobs-from:
 job-defaults:
     attributes:
         retrigger: true
+    use-python: default
     require-signed-extensions:
         by-release-type:
             release|esr.*: true
