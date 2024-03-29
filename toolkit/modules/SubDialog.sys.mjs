@@ -419,6 +419,11 @@ SubDialog.prototype = {
       );
     };
 
+    // Defining resizeDialog on the contentWindow object to resize dialogs when prompted
+    this._frame.contentWindow.resizeDialog = () => {
+      return this.resizeDialog();
+    };
+
     // Make window.close calls work like dialog closing.
     let oldClose = this._frame.contentWindow.close;
     this._frame.contentWindow.close = () => {
