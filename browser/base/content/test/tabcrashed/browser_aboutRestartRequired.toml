@@ -14,8 +14,10 @@ prefs = [
 #["browser_aboutRestartRequired_buildid_false-positive.js"]
 #skip-if = ["win11_2009 && msix && debug"]  # bug 1823581
 
-["browser_aboutRestartRequired_buildid_mismatch.js"]
-skip-if = ["win11_2009 && msix && debug"]  # bug 1823581
+# Bug 1888355: re-enable once bug 1877361 is fixed
+#["browser_aboutRestartRequired_buildid_mismatch.js"]
+#skip-if = ["win11_2009 && msix && debug"]  # bug 1823581
 
-["browser_aboutRestartRequired_buildid_no-platform-ini.js"]
-skip-if = ["win11_2009 && msix && debug"]  # bug 1823581
+# Bug 1888355: re-enable once bug 1877361 is fixed
+#["browser_aboutRestartRequired_buildid_no-platform-ini.js"]
+#skip-if = ["win11_2009 && msix && debug"]  # bug 1823581
