@@ -1423,18 +1423,8 @@ class nsCSSFrameConstructor final : public nsFrameManager {
   // for it.
   void ReframeTextIfNeeded(nsIContent* aContent);
 
-  enum InsertPageBreakLocation { eBefore, eAfter };
-  inline void AppendPageBreakItem(nsIContent* aContent,
-                                  FrameConstructionItemList& aItems) {
-    InsertPageBreakItem(aContent, aItems, InsertPageBreakLocation::eAfter);
-  }
-  inline void PrependPageBreakItem(nsIContent* aContent,
-                                   FrameConstructionItemList& aItems) {
-    InsertPageBreakItem(aContent, aItems, InsertPageBreakLocation::eBefore);
-  }
-  void InsertPageBreakItem(nsIContent* aContent,
-                           FrameConstructionItemList& aItems,
-                           InsertPageBreakLocation location);
+  void AppendPageBreakItem(nsIContent* aContent,
+                           FrameConstructionItemList& aItems);
 
   // Function to find FrameConstructionData for aElement.  Will return
   // null if aElement is not HTML.

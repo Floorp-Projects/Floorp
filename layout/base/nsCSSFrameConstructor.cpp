@@ -4985,9 +4985,8 @@ nsCSSFrameConstructor::FindSVGData(const Element& aElement,
   return data;
 }
 
-void nsCSSFrameConstructor::InsertPageBreakItem(
-    nsIContent* aContent, FrameConstructionItemList& aItems,
-    InsertPageBreakLocation location) {
+void nsCSSFrameConstructor::AppendPageBreakItem(
+    nsIContent* aContent, FrameConstructionItemList& aItems) {
   RefPtr<ComputedStyle> pseudoStyle =
       mPresShell->StyleSet()->ResolveNonInheritingAnonymousBoxStyle(
           PseudoStyleType::pageBreak);
@@ -4997,13 +4996,8 @@ void nsCSSFrameConstructor::InsertPageBreakItem(
 
   static constexpr FrameConstructionData sPageBreakData(NS_NewPageBreakFrame,
                                                         FCDATA_SKIP_FRAMESET);
-  if (location == InsertPageBreakLocation::eBefore) {
-    aItems.PrependItem(this, &sPageBreakData, aContent, pseudoStyle.forget(),
-                       true);
-  } else {
-    aItems.AppendItem(this, &sPageBreakData, aContent, pseudoStyle.forget(),
-                      true);
-  }
+  aItems.AppendItem(this, &sPageBreakData, aContent, pseudoStyle.forget(),
+                    true);
 }
 
 bool nsCSSFrameConstructor::ShouldCreateItemsForChild(
