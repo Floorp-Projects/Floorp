@@ -357,16 +357,6 @@ jobs:
               mozilla-central: [{hour: 11, minute: 0}, {hour: 23, minute: 0}]
               default: []
 
-    - name: are-we-esmified-yet
-      job:
-          type: decision-task
-          treeherder-symbol: are-we-esmified-yet
-          target-tasks-method: are-we-esmified-yet
-      run-on-projects:
-          - mozilla-central
-      when:
-          - {hour: 0, minute: 00}
-
     - name: eslint-build
       job:
           type: decision-task
