@@ -4,8 +4,9 @@
 <script>
   window.onload = () => {
     window.requestIdleCallback(() => {
-      SpecialPowers.wrap(self).printPreview()
+      let pp = SpecialPowers.wrap(self).printPreview()
       setTimeout(() => {
+        try { pp.close(); } catch (e) { }
         document.documentElement.classList.remove("reftest-wait");
       }, 250)
     })
