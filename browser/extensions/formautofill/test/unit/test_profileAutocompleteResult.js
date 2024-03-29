@@ -65,7 +65,7 @@ let addressTestCases = [
       items: [
         {
           value: "",
-          style: "autofill-profile",
+          style: "autofill",
           comment: JSON.stringify(matchingProfiles[0]),
           label: JSON.stringify({
             primary: "Sesame Street",
@@ -76,7 +76,7 @@ let addressTestCases = [
         },
         {
           value: "",
-          style: "autofill-profile",
+          style: "autofill",
           comment: JSON.stringify(matchingProfiles[1]),
           label: JSON.stringify({
             primary: "Mozilla",
@@ -101,7 +101,7 @@ let addressTestCases = [
       items: [
         {
           value: "",
-          style: "autofill-profile",
+          style: "autofill",
           comment: JSON.stringify(matchingProfiles[0]),
           label: JSON.stringify({
             primary: "1-345-345-3456.",
@@ -112,7 +112,7 @@ let addressTestCases = [
         },
         {
           value: "",
-          style: "autofill-profile",
+          style: "autofill",
           comment: JSON.stringify(matchingProfiles[1]),
           label: JSON.stringify({
             primary: "1-650-903-0800",
@@ -123,7 +123,7 @@ let addressTestCases = [
         },
         {
           value: "",
-          style: "autofill-profile",
+          style: "autofill",
           comment: JSON.stringify(matchingProfiles[2]),
           label: JSON.stringify({
             primary: "1-000-000-0000",
@@ -148,7 +148,7 @@ let addressTestCases = [
       items: [
         {
           value: "",
-          style: "autofill-profile",
+          style: "autofill",
           comment: JSON.stringify(matchingProfiles[0]),
           label: JSON.stringify({
             primary: "123 Sesame Street.",
@@ -159,7 +159,7 @@ let addressTestCases = [
         },
         {
           value: "",
-          style: "autofill-profile",
+          style: "autofill",
           comment: JSON.stringify(matchingProfiles[1]),
           label: JSON.stringify({
             primary: "331 E. Evelyn Avenue",
@@ -170,7 +170,7 @@ let addressTestCases = [
         },
         {
           value: "",
-          style: "autofill-profile",
+          style: "autofill",
           comment: JSON.stringify(matchingProfiles[2]),
           label: JSON.stringify({
             primary: "321, No Name St. 2nd line 3rd line",
@@ -195,7 +195,7 @@ let addressTestCases = [
       items: [
         {
           value: "",
-          style: "autofill-profile",
+          style: "autofill",
           comment: JSON.stringify(matchingProfiles[0]),
           label: JSON.stringify({
             primary: "123 Sesame Street.",
@@ -206,7 +206,7 @@ let addressTestCases = [
         },
         {
           value: "",
-          style: "autofill-profile",
+          style: "autofill",
           comment: JSON.stringify(matchingProfiles[1]),
           label: JSON.stringify({
             primary: "331 E. Evelyn Avenue",
@@ -217,7 +217,7 @@ let addressTestCases = [
         },
         {
           value: "",
-          style: "autofill-profile",
+          style: "autofill",
           comment: JSON.stringify(matchingProfiles[2]),
           label: JSON.stringify({
             primary: "321, No Name St.",
@@ -298,11 +298,11 @@ let creditCardTestCases = [
       items: [
         {
           value: "",
-          style: "autofill-profile",
+          style: "autofill",
           comment: JSON.stringify(matchingProfiles[0]),
           label: JSON.stringify({
             primary: "Timothy Berners-Lee",
-            secondary: "****6785",
+            secondary: "••••6785",
             ariaLabel: "Visa Timothy Berners-Lee ****6785",
             image: "chrome://formautofill/content/third-party/cc-logo-visa.svg",
           }),
@@ -310,11 +310,11 @@ let creditCardTestCases = [
         },
         {
           value: "",
-          style: "autofill-profile",
+          style: "autofill",
           comment: JSON.stringify(matchingProfiles[1]),
           label: JSON.stringify({
             primary: "John Doe",
-            secondary: "****1234",
+            secondary: "••••1234",
             ariaLabel: "American Express John Doe ****1234",
             image: "chrome://formautofill/content/third-party/cc-logo-amex.png",
           }),
@@ -336,10 +336,10 @@ let creditCardTestCases = [
       items: [
         {
           value: "",
-          style: "autofill-profile",
+          style: "autofill",
           comment: JSON.stringify(matchingProfiles[0]),
           label: JSON.stringify({
-            primary: "****6785",
+            primary: "••••6785",
             secondary: "Timothy Berners-Lee",
             ariaLabel: "Visa 6785 Timothy Berners-Lee",
             image: "chrome://formautofill/content/third-party/cc-logo-visa.svg",
@@ -348,10 +348,10 @@ let creditCardTestCases = [
         },
         {
           value: "",
-          style: "autofill-profile",
+          style: "autofill",
           comment: JSON.stringify(matchingProfiles[1]),
           label: JSON.stringify({
-            primary: "****1234",
+            primary: "••••1234",
             secondary: "John Doe",
             ariaLabel: "American Express 1234 John Doe",
             image: "chrome://formautofill/content/third-party/cc-logo-amex.png",
@@ -360,10 +360,10 @@ let creditCardTestCases = [
         },
         {
           value: "",
-          style: "autofill-profile",
+          style: "autofill",
           comment: JSON.stringify(matchingProfiles[2]),
           label: JSON.stringify({
-            primary: "****5678",
+            primary: "••••5678",
             secondary: "",
             ariaLabel: "5678",
             image: "chrome://formautofill/content/icon-credit-card-generic.svg",

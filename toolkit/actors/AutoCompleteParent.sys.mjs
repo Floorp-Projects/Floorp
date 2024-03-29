@@ -247,7 +247,7 @@ export class AutoCompleteParent extends JSWindowActorParent {
     // the scrollbar in login or form autofill popups.
     if (
       resultStyles.size &&
-      (resultStyles.has("autofill-profile") || resultStyles.has("loginsFooter"))
+      (resultStyles.has("autofill") || resultStyles.has("loginsFooter"))
     ) {
       this.openedPopup._normalMaxRows = this.openedPopup.maxRows;
       this.openedPopup.mInput.maxRows = 10;

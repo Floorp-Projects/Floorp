@@ -3,12 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #PopupAutoComplete {
-  &[resultstyles~="autofill-profile"] {
+  &[resultstyles~="autofill"] {
     min-width: 150px !important;
   }
 
   > richlistbox > richlistitem {
-    &[originaltype="autofill-profile"] {
+    &[originaltype="autofill"] {
       display: block;
       margin: 0;
       padding: 0;
