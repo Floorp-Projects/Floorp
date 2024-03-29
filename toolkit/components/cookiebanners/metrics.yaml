@@ -210,6 +210,52 @@ cookie.banners:
       - pbz@mozilla.com
       - tihuang@mozilla.com
     expires: 128
+  google_gdpr_choice_cookie:
+    type: labeled_string
+    description: >
+      Records the GDPR choice on Google Search based on the "SOCS" cookie of the
+      Google Search domains. The value could be "Accept", "Reject" or "Custom".
+      We use the label to record different choices on different Google domains.
+      We only collect this if the default search engine is Google.
+    bugs:
+      - https://bugzilla.mozilla.org/1874741
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1874741#c10
+    data_sensitivity:
+      - stored_content
+    notification_emails:
+      - pbz@mozilla.com
+      - tihuang@mozilla.com
+    expires: never
+  google_gdpr_choice_cookie_event:
+    type: event
+    description: >
+      Recorded whenever a GDPR choice is made on a Google Search page. We assess
+      the "SOCS" cookie to know the GDPR choice.
+    bugs:
+      - https://bugzilla.mozilla.org/1874741
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1874741#c10
+    data_sensitivity:
+      - stored_content
+    notification_emails:
+      - pbz@mozilla.com
+      - tihuang@mozilla.com
+    expires: never
+    extra_keys:
+      search_domain:
+        description: The Google search domain where the GDPR choice was made.
+        type: string
+      choice:
+        description: >
+          The GDPR choice. The value could be "Accept", "Reject" or "Custom".
+        type: string
+      region:
+        description: >
+          The region where the GDPR consent is made. This is based on the IP
+          location.
+        type: string
+
 cookie.banners.click:
   handle_duration:
     type: timing_distribution
