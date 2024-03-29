@@ -161,11 +161,13 @@ class CookieJarSettings final : public nsICookieJarSettings {
 
   void UpdateIsOnContentBlockingAllowList(nsIChannel* aChannel);
 
-  void SetPartitionKey(nsIURI* aURI);
+  void SetPartitionKey(nsIURI* aURI, bool aForeignByAncestorContext);
   void SetPartitionKey(const nsAString& aPartitionKey) {
     mPartitionKey = aPartitionKey;
   }
   const nsAString& GetPartitionKey() { return mPartitionKey; };
+
+  void UpdatePartitionKeyForDocumentLoadedByChannel(nsIChannel* aChannel);
 
   void SetFingerprintingRandomizationKey(const nsTArray<uint8_t>& aKey) {
     mFingerprintingRandomKey.reset();
