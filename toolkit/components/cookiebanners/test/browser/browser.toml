@@ -36,6 +36,8 @@ support-files = [
 ["browser_bannerClicking_visibilityOverride.js"]
 support-files = ["file_banner_invisible.html"]
 
+["browser_cookiebanner_gdpr_telemetry.js"]
+
 ["browser_cookiebanner_telemetry.js"]
 support-files = ["file_iframe_banner.html"]
 
