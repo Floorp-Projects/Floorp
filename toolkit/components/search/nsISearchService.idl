@@ -548,4 +548,14 @@ interface nsISearchService : nsISupports
    *        "https://www.google.com/search?q=terms".
    */
   nsISearchParseSubmissionResult parseSubmissionURL(in AString url);
+
+  /**
+   * Returns a list of alternate domains for a given search engine domain.
+   *
+   * @param domain
+   *        The domain of the search engine.
+   * @returns {Array}
+   *          An array which contains all alternate domains.
+   */
+  Array<ACString> getAlternateDomains(in ACString domain);
 };
