@@ -1281,10 +1281,13 @@ void PresShell::Destroy() {
 
   ClearApproximatelyVisibleFramesList(Some(OnNonvisible::DiscardImages));
 
-  if (mCaret) {
-    mCaret->Terminate();
-    mCaret = nullptr;
+  if (mOriginalCaret) {
+    mOriginalCaret->Terminate();
   }
+  if (mCaret && mCaret != mOriginalCaret) {
+    mCaret->Terminate();
+  }
+  mCaret = mOriginalCaret = nullptr;
 
   mFocusedFrameSelection = nullptr;
 
@@ -2242,9 +2245,13 @@ void PresShell::SetCaret(nsCaret* aNewCaret) {
   if (mCaret == aNewCaret) {
     return;
   }
-  mCaret->SchedulePaint();
+  if (mCaret) {
+    mCaret->SchedulePaint();
+  }
   mCaret = aNewCaret;
-  aNewCaret->SchedulePaint();
+  if (aNewCaret) {
+    aNewCaret->SchedulePaint();
+  }
 }
 
 void PresShell::RestoreCaret() { SetCaret(mOriginalCaret); }
