@@ -148,11 +148,13 @@ class ProfileAutoCompleteResult {
    */
   getCommentAt(index) {
     let type = this.getTypeOfIndex(index);
-    if (type == "clear") {
-      return '{"fillMessageName": "FormAutofill:ClearForm"}';
-    }
-    if (type == "manage") {
-      return '{"fillMessageName": "FormAutofill:OpenPreferences"}';
+    switch (type) {
+      case "clear":
+        return '{"fillMessageName": "FormAutofill:ClearForm"}';
+      case "manage":
+        return '{"fillMessageName": "FormAutofill:OpenPreferences"}';
+      case "insecure":
+        return '{"noLearnMore": true }';
     }
 
     const item = this.getAt(index);
@@ -177,7 +179,7 @@ class ProfileAutoCompleteResult {
       case "clear":
         return "action";
       case "insecure":
-        return "autofill-insecureWarning";
+        return "insecureWarning";
       default:
         return "autofill-profile";
     }
