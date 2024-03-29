@@ -1289,9 +1289,10 @@ void ChromeUtils::GetBaseDomainFromPartitionKey(dom::GlobalObject& aGlobal,
   nsString scheme;
   nsString pkBaseDomain;
   int32_t port;
+  bool ancestor;
 
-  if (!mozilla::OriginAttributes::ParsePartitionKey(aPartitionKey, scheme,
-                                                    pkBaseDomain, port)) {
+  if (!mozilla::OriginAttributes::ParsePartitionKey(
+          aPartitionKey, scheme, pkBaseDomain, port, ancestor)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
@@ -1317,7 +1318,10 @@ void ChromeUtils::GetPartitionKeyFromURL(dom::GlobalObject& aGlobal,
   }
 
   mozilla::OriginAttributes attrs;
-  attrs.SetPartitionKey(uri);
+  // For now, uses assume the partition key is cross-site.
+  // We will need to not make this assumption to allow access
+  // to same-site partitioned cookies in the cookie extension API.
+  attrs.SetPartitionKey(uri, false);
 
   aPartitionKey = attrs.mPartitionKey;
 }
