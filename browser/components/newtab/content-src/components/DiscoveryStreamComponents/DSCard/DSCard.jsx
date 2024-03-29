@@ -101,9 +101,7 @@ export const DefaultMeta = ({
           sponsored_by_override={sponsored_by_override}
         />
       )}
-      <header title={title} className="title clamp">
-        {title}
-      </header>
+      <header className="title clamp">{title}</header>
       {excerpt && <p className="excerpt clamp">{excerpt}</p>}
     </div>
     {!newSponsoredLabel && (
@@ -411,7 +409,7 @@ export class _DSCard extends React.PureComponent {
     };
 
     return (
-      <div
+      <article
         className={`ds-card ${compactImagesClassName} ${imageGradientClassName} ${titleLinesName} ${descLinesClassName} ${ctaButtonClassName} ${ctaButtonVariantClassName}`}
         ref={this.setContextMenuButtonHostRef}
       >
@@ -431,6 +429,7 @@ export class _DSCard extends React.PureComponent {
           dispatch={this.props.dispatch}
           onLinkClick={!this.props.placeholder ? this.onLinkClick : undefined}
           url={this.props.url}
+          title={this.props.title}
         >
           <ImpressionStats
             flightId={this.props.flightId}
@@ -517,7 +516,7 @@ export class _DSCard extends React.PureComponent {
             isRecentSave={isRecentSave}
           />
         )}
-      </div>
+      </article>
     );
   }
 }

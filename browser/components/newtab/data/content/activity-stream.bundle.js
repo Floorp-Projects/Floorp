@@ -2213,10 +2213,12 @@ class SafeAnchor extends (external_React_default()).PureComponent {
   render() {
     const {
       url,
-      className
+      className,
+      title
     } = this.props;
     return /*#__PURE__*/external_React_default().createElement("a", {
       href: this.safeURI(url),
+      title: title,
       className: className,
       onClick: this.onClick
     }, this.props.children);
@@ -2629,7 +2631,6 @@ const DefaultMeta = ({
   sponsor: sponsor,
   sponsored_by_override: sponsored_by_override
 }), /*#__PURE__*/external_React_default().createElement("header", {
-  title: title,
   className: "title clamp"
 }, title), excerpt && /*#__PURE__*/external_React_default().createElement("p", {
   className: "excerpt clamp"
@@ -2880,7 +2881,7 @@ class _DSCard extends (external_React_default()).PureComponent {
         "data-l10n-id": "newtab-pocket-save"
       })));
     };
-    return /*#__PURE__*/external_React_default().createElement("div", {
+    return /*#__PURE__*/external_React_default().createElement("article", {
       className: `ds-card ${compactImagesClassName} ${imageGradientClassName} ${titleLinesName} ${descLinesClassName} ${ctaButtonClassName} ${ctaButtonVariantClassName}`,
       ref: this.setContextMenuButtonHostRef
     }, /*#__PURE__*/external_React_default().createElement("div", {
@@ -2897,7 +2898,8 @@ class _DSCard extends (external_React_default()).PureComponent {
       className: "ds-card-link",
       dispatch: this.props.dispatch,
       onLinkClick: !this.props.placeholder ? this.onLinkClick : undefined,
-      url: this.props.url
+      url: this.props.url,
+      title: this.props.title
     }, /*#__PURE__*/external_React_default().createElement(ImpressionStats_ImpressionStats, {
       flightId: this.props.flightId,
       rows: [{
