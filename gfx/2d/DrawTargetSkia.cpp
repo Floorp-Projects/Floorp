@@ -1398,7 +1398,7 @@ void DrawTargetSkia::Mask(const Pattern& aSource, const Pattern& aMask,
   SkPaint maskPaint;
   SetPaintPattern(maskPaint, aMask, lock);
 
-  sk_sp<SkShader> maskShader(maskPaint.getShader());
+  sk_sp<SkShader> maskShader(maskPaint.refShader());
   if (!maskShader && maskPaint.getAlpha() != 0xFF) {
     if (maskPaint.getAlpha() == 0) {
       return;
