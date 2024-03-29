@@ -255,6 +255,26 @@ cookie.banners:
           The region where the GDPR consent is made. This is based on the IP
           location.
         type: string
+  google_gdpr_choice_cookie_event_pbm:
+    type: event
+    description: >
+      Recorded whenever a GDPR choice is made on a Google Search page on private
+      browsing windows. We assess the "SOCS" cookie to know the GDPR choice.
+    bugs:
+      - https://bugzilla.mozilla.org/1874741
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1874741#c10
+    data_sensitivity:
+      - stored_content
+    notification_emails:
+      - pbz@mozilla.com
+      - tihuang@mozilla.com
+    expires: never
+    extra_keys:
+      choice:
+        description: >
+          The GDPR choice. The value could be "Accept", "Reject" or "Custom".
+        type: string
 
 cookie.banners.click:
   handle_duration:
