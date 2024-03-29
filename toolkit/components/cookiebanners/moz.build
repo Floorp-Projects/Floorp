@@ -14,14 +14,10 @@ XPIDL_SOURCES += [
     "nsICookieBannerListService.idl",
     "nsICookieBannerRule.idl",
     "nsICookieBannerService.idl",
-    "nsICookieBannerTelemetryService.idl",
     "nsICookieRule.idl",
 ]
 
 XPIDL_MODULE = "toolkit_cookiebanners"
-
-DEFINES["GOOGLE_PROTOBUF_NO_RTTI"] = True
-DEFINES["GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER"] = True
 
 EXTRA_JS_MODULES += [
     "CookieBannerListService.sys.mjs",
@@ -35,18 +31,15 @@ EXPORTS.mozilla += [
     "nsClickRule.h",
     "nsCookieBannerRule.h",
     "nsCookieBannerService.h",
-    "nsCookieBannerTelemetryService.h",
     "nsCookieInjector.h",
     "nsCookieRule.h",
 ]
 
 UNIFIED_SOURCES += [
-    "cookieBanner.pb.cc",
     "CookieBannerDomainPrefService.cpp",
     "nsClickRule.cpp",
     "nsCookieBannerRule.cpp",
     "nsCookieBannerService.cpp",
-    "nsCookieBannerTelemetryService.cpp",
     "nsCookieInjector.cpp",
     "nsCookieRule.cpp",
 ]
