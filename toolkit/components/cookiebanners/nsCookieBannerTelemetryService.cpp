@@ -129,6 +129,9 @@ nsresult nsCookieBannerTelemetryService::Init() {
   rv = obsSvc->AddObserver(this, "cookie-changed", false);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  rv = obsSvc->AddObserver(this, "private-cookie-changed", false);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return NS_OK;
 }
 
@@ -150,6 +153,9 @@ nsresult nsCookieBannerTelemetryService::Shutdown() {
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = obsSvc->RemoveObserver(this, "cookie-changed");
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = obsSvc->RemoveObserver(this, "private-cookie-changed");
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -181,9 +187,9 @@ nsCookieBannerTelemetryService::Observe(nsISupports* aSubject,
     return MaybeReportGoogleGDPRChoiceTelemetry();
   }
 
-  if (nsCRT::strcmp(aTopic, "cookie-changed") == 0) {
-    MOZ_LOG(gCookieBannerTelemetryLog, LogLevel::Debug,
-            ("Observe cookie-changed"));
+  if (nsCRT::strcmp(aTopic, "cookie-changed") == 0 ||
+      nsCRT::strcmp(aTopic, "private-cookie-changed") == 0) {
+    MOZ_LOG(gCookieBannerTelemetryLog, LogLevel::Debug, ("Observe %s", aTopic));
 
     nsCOMPtr<nsICookieNotification> notification = do_QueryInterface(aSubject);
     NS_ENSURE_TRUE(notification, NS_ERROR_FAILURE);
@@ -267,8 +273,11 @@ nsresult nsCookieBannerTelemetryService::MaybeReportGoogleGDPRChoiceTelemetry(
   if (aCookie) {
     const auto& attrs = aCookie->AsCookie().OriginAttributesRef();
 
-    // We only report cookies with the default originAttributes.
-    if (attrs == OriginAttributes()) {
+    // We only report cookies for the default originAttributes or private
+    // browsing mode.
+    if (attrs.mPrivateBrowsingId !=
+            nsIScriptSecurityManager::DEFAULT_PRIVATE_BROWSING_ID ||
+        attrs == OriginAttributes()) {
       cookies.AppendElement(RefPtr<nsICookie>(aCookie));
     }
   } else {
@@ -321,24 +330,45 @@ nsresult nsCookieBannerTelemetryService::MaybeReportGoogleGDPRChoiceTelemetry(
     rv = DecodeSOCSGoogleCookie(value, choice, region);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    bool isPrivateBrowsing =
+        cookie->AsCookie().OriginAttributesRef().mPrivateBrowsingId !=
+        nsIScriptSecurityManager::DEFAULT_PRIVATE_BROWSING_ID;
+
     MOZ_LOG(gCookieBannerTelemetryLog, LogLevel::Debug,
-            ("Record the Google GDPR choice %s on the host %s in region %s",
-             choice.get(), host.get(), region.get()));
+            ("Record the Google GDPR choice %s on the host %s in region %s for "
+             "the %s window",
+             choice.get(), host.get(), region.get(),
+             isPrivateBrowsing ? "private" : "normal"));
 
     // We rely on the dynamical labelled string which can send most 16 different
     // labels per report. In average cases, 16 labels is sufficient because we
     // expect a user might have only 1 or 2 "SOCS" cookies on different Google
     // Search domains.
-    glean::cookie_banners::google_gdpr_choice_cookie.Get(host).Set(choice);
+    //
+    // Note that we only report event telemetry for private browsing windows
+    // because the private session is ephemeral. People can change GDPR
+    // choice across different private sessions, so it's hard to collect the
+    // state correctly.
+    if (!isPrivateBrowsing) {
+      glean::cookie_banners::google_gdpr_choice_cookie.Get(host).Set(choice);
+    }
 
     if (aReportEvent) {
-      glean::cookie_banners::GoogleGdprChoiceCookieEventExtra extra = {
-          .choice = Some(choice),
-          .region = Some(region),
-          .searchDomain = Some(host),
-      };
-      glean::cookie_banners::google_gdpr_choice_cookie_event.Record(
-          Some(extra));
+      if (isPrivateBrowsing) {
+        glean::cookie_banners::GoogleGdprChoiceCookieEventPbmExtra extra = {
+            .choice = Some(choice),
+        };
+        glean::cookie_banners::google_gdpr_choice_cookie_event_pbm.Record(
+            Some(extra));
+      } else {
+        glean::cookie_banners::GoogleGdprChoiceCookieEventExtra extra = {
+            .choice = Some(choice),
+            .region = Some(region),
+            .searchDomain = Some(host),
+        };
+        glean::cookie_banners::google_gdpr_choice_cookie_event.Record(
+            Some(extra));
+      }
     }
   }
 

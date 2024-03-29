@@ -139,3 +139,51 @@ add_task(async function test_invalid_google_socs_cookies() {
     "No event telemetry is recorded."
   );
 });
+
+add_task(async function test_google_gdpr_telemetry_pbm() {
+  // Clear telemetry before starting telemetry test.
+  Services.fog.testResetFOG();
+
+  for (let test of TEST_CASES) {
+    // Add a private Google SOCS cookie to trigger recording telemetry.
+    SiteDataTestUtils.addToCookies({
+      name: "SOCS",
+      value: test.value,
+      host: test.host,
+      path: "/",
+      originAttributes: { privateBrowsingId: 1 },
+    });
+
+    // Ensure we don't record google GDPR choice cookie telemetry.
+    is(
+      Glean.cookieBanners.googleGdprChoiceCookie[test.host].testGetValue(),
+      null,
+      "No Google GDPR telemetry is recorded."
+    );
+
+    // Verify the the event telemetry for PBM is recorded properly.
+    let events =
+      Glean.cookieBanners.googleGdprChoiceCookieEventPbm.testGetValue();
+    let event = events[events.length - 1];
+
+    is(
+      event.extra.choice,
+      test.expected,
+      "The Google GDPR event telemetry records the choice properly."
+    );
+
+    is(event.extra.search_domain, undefined, "No search domain is recorded.");
+    is(event.extra.region, undefined, "No region is recorded.");
+  }
+
+  is(
+    Glean.cookieBanners.googleGdprChoiceCookieEventPbm.testGetValue().length,
+    TEST_CASES.length,
+    "The number of events is expected."
+  );
+
+  // We need to notify the "last-pb-context-exited" tp explicitly remove private
+  // cookies. Otherwise, the remaining private cookies could affect following
+  // tests. The SiteDataTestUtils.clear() doesn't clear for private cookies.
+  Services.obs.notifyObservers(null, "last-pb-context-exited");
+});
