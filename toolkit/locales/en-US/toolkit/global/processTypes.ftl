@@ -21,6 +21,9 @@ process-type-extension = Extension
 # process used to open file:// URLs
 process-type-file = Local File
 
+# process used to instantiate new child processes
+process-type-forkserver = Fork Server
+
 # process used to isolate a webpage from other web pages
 # to improve security
 process-type-webisolated = Isolated Web Content
