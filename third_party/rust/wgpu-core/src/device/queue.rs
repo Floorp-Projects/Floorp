@@ -815,7 +815,6 @@ impl Global {
                         &mut trackers.textures,
                         &device.alignments,
                         device.zero_buffer.as_ref().unwrap(),
-                        &device.snatchable_lock.read(),
                     )
                     .map_err(QueueWriteError::from)?;
                 }
@@ -1085,7 +1084,6 @@ impl Global {
                         &mut trackers.textures,
                         &device.alignments,
                         device.zero_buffer.as_ref().unwrap(),
-                        &device.snatchable_lock.read(),
                     )
                     .map_err(QueueWriteError::from)?;
                 }
@@ -1149,9 +1147,6 @@ impl Global {
 
             let device = queue.device.as_ref().unwrap();
 
-            let snatch_guard = device.snatchable_lock.read();
-
-            // Fence lock must be acquired after the snatch lock everywhere to avoid deadlocks.
             let mut fence = device.fence.write();
             let fence = fence.as_mut().unwrap();
             let submit_index = device
@@ -1160,7 +1155,9 @@ impl Global {
                 + 1;
             let mut active_executions = Vec::new();
 
-            let mut used_surface_textures = track::TextureUsageScope::default();
+            let mut used_surface_textures = track::TextureUsageScope::new();
+
+            let snatch_guard = device.snatchable_lock.read();
 
             let mut submit_surface_textures_owned = SmallVec::<[_; 2]>::new();
 
@@ -1394,10 +1391,10 @@ impl Global {
                         //Note: locking the trackers has to be done after the storages
                         let mut trackers = device.trackers.lock();
                         baked
-                            .initialize_buffer_memory(&mut *trackers, &snatch_guard)
+                            .initialize_buffer_memory(&mut *trackers)
                             .map_err(|err| QueueSubmitError::DestroyedBuffer(err.0))?;
                         baked
-                            .initialize_texture_memory(&mut *trackers, device, &snatch_guard)
+                            .initialize_texture_memory(&mut *trackers, device)
                             .map_err(|err| QueueSubmitError::DestroyedTexture(err.0))?;
                         //Note: stateless trackers are not merged:
                         // device already knows these resources exist.
@@ -1438,7 +1435,7 @@ impl Global {
                                 baked.encoder.end_encoding().unwrap()
                             };
                             baked.list.push(present);
-                            used_surface_textures = track::TextureUsageScope::default();
+                            used_surface_textures = track::TextureUsageScope::new();
                         }
 
                         // done
@@ -1545,7 +1542,7 @@ impl Global {
 
             // This will schedule destruction of all resources that are no longer needed
             // by the user but used in the command stream, among other things.
-            let (closures, _) = match device.maintain(fence, wgt::Maintain::Poll, &snatch_guard) {
+            let (closures, _) = match device.maintain(fence, wgt::Maintain::Poll) {
                 Ok(closures) => closures,
                 Err(WaitIdleError::Device(err)) => return Err(QueueSubmitError::Queue(err)),
                 Err(WaitIdleError::StuckGpu) => return Err(QueueSubmitError::StuckGpu),

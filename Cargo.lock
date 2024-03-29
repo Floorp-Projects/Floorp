@@ -1196,7 +1196,7 @@ dependencies = [
 [[package]]
 name = "d3d12"
 version = "0.19.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=b34219ca214caea2af86dbb64a2a2b613ea5198c#b34219ca214caea2af86dbb64a2a2b613ea5198c"
+source = "git+https://github.com/gfx-rs/wgpu?rev=152a94bc6c502226d9871f28e35db0b755ea35bf#152a94bc6c502226d9871f28e35db0b755ea35bf"
 dependencies = [
  "bitflags 2.4.1",
  "libloading",
@@ -3917,7 +3917,7 @@ checksum = "a2983372caf4480544083767bf2d27defafe32af49ab4df3a0b7fc90793a3664"
 [[package]]
 name = "naga"
 version = "0.19.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=b34219ca214caea2af86dbb64a2a2b613ea5198c#b34219ca214caea2af86dbb64a2a2b613ea5198c"
+source = "git+https://github.com/gfx-rs/wgpu?rev=152a94bc6c502226d9871f28e35db0b755ea35bf#152a94bc6c502226d9871f28e35db0b755ea35bf"
 dependencies = [
  "arrayvec",
  "bit-set",
@@ -6574,7 +6574,7 @@ dependencies = [
 [[package]]
 name = "wgpu-core"
 version = "0.19.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=b34219ca214caea2af86dbb64a2a2b613ea5198c#b34219ca214caea2af86dbb64a2a2b613ea5198c"
+source = "git+https://github.com/gfx-rs/wgpu?rev=152a94bc6c502226d9871f28e35db0b755ea35bf#152a94bc6c502226d9871f28e35db0b755ea35bf"
 dependencies = [
  "arrayvec",
  "bit-vec",
@@ -6601,7 +6601,7 @@ dependencies = [
 [[package]]
 name = "wgpu-hal"
 version = "0.19.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=b34219ca214caea2af86dbb64a2a2b613ea5198c#b34219ca214caea2af86dbb64a2a2b613ea5198c"
+source = "git+https://github.com/gfx-rs/wgpu?rev=152a94bc6c502226d9871f28e35db0b755ea35bf#152a94bc6c502226d9871f28e35db0b755ea35bf"
 dependencies = [
  "android_system_properties",
  "arrayvec",
@@ -6640,7 +6640,7 @@ dependencies = [
 [[package]]
 name = "wgpu-types"
 version = "0.19.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=b34219ca214caea2af86dbb64a2a2b613ea5198c#b34219ca214caea2af86dbb64a2a2b613ea5198c"
+source = "git+https://github.com/gfx-rs/wgpu?rev=152a94bc6c502226d9871f28e35db0b755ea35bf#152a94bc6c502226d9871f28e35db0b755ea35bf"
 dependencies = [
  "bitflags 2.4.1",
  "js-sys",
