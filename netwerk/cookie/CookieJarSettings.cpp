@@ -15,6 +15,7 @@
 #include "mozilla/PermissionManager.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/StaticPrefs_network.h"
+#include "mozilla/StoragePrincipalHelper.h"
 #include "mozilla/Unused.h"
 #include "nsIPrincipal.h"
 #if defined(MOZ_THUNDERBIRD) || defined(MOZ_SUITE)
@@ -196,7 +197,7 @@ CookieJarSettings::InitWithURI(nsIURI* aURI, bool aIsPrivate) {
 
   mCookieBehavior = nsICookieManager::GetCookieBehavior(aIsPrivate);
 
-  SetPartitionKey(aURI);
+  SetPartitionKey(aURI, false);
   return NS_OK;
 }
 
@@ -526,12 +527,24 @@ void CookieJarSettings::Merge(const CookieJarSettingsArgs& aData) {
   }
 }
 
-void CookieJarSettings::SetPartitionKey(nsIURI* aURI) {
+void CookieJarSettings::SetPartitionKey(nsIURI* aURI,
+                                        bool aForeignByAncestorContext) {
   MOZ_ASSERT(aURI);
 
   OriginAttributes attrs;
-  attrs.SetPartitionKey(aURI);
+  attrs.SetPartitionKey(aURI, aForeignByAncestorContext);
   mPartitionKey = std::move(attrs.mPartitionKey);
+}
+
+void CookieJarSettings::UpdatePartitionKeyForDocumentLoadedByChannel(
+    nsIChannel* aChannel) {
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+  bool foreignByAncestorContext =
+      false;  //  Bug 1876575 will change this to
+              //  loadInfo->GetIsInThirdPartyContext() &&
+              //  !loadInfo->GetIsThirdPartyContextToTopWindow();
+  StoragePrincipalHelper::UpdatePartitionKeyWithForeignAncestorBit(
+      mPartitionKey, foreignByAncestorContext);
 }
 
 void CookieJarSettings::UpdateIsOnContentBlockingAllowList(
