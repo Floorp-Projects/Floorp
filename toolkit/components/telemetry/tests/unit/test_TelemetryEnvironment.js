@@ -715,18 +715,18 @@ add_task(async function test_addons() {
 add_task(async function test_signedAddon() {
   AddonTestUtils.useRealCertChecks = true;
 
-  const { PKCS7_WITH_SHA1 } = Ci.nsIAppSignatureInfo;
+  const { PKCS7_WITH_SHA1, COSE_WITH_SHA256 } = Ci.nsIAppSignatureInfo;
 
-  const ADDON_INSTALL_URL = gDataRoot + "signed-webext.xpi";
-  const ADDON_ID = "tel-signed-webext@tests.mozilla.org";
+  const ADDON_INSTALL_URL = gDataRoot + "amosigned.xpi";
+  const ADDON_ID = "amosigned-xpi@tests.mozilla.org";
   const ADDON_INSTALL_DATE = truncateToDays(Date.now());
   const EXPECTED_ADDON_DATA = {
     blocklisted: false,
-    description: "A signed webextension",
-    name: "XPI Telemetry Signed Test",
+    description: null,
+    name: "XPI Test",
     userDisabled: false,
     appDisabled: false,
-    version: "1.0",
+    version: "2.2",
     scope: 1,
     type: "extension",
     foreignInstall: false,
@@ -734,7 +734,7 @@ add_task(async function test_signedAddon() {
     installDay: ADDON_INSTALL_DATE,
     updateDay: ADDON_INSTALL_DATE,
     signedState: AddonManager.SIGNEDSTATE_SIGNED,
-    signedTypes: JSON.stringify([PKCS7_WITH_SHA1]),
+    signedTypes: JSON.stringify([COSE_WITH_SHA256, PKCS7_WITH_SHA1]),
     quarantineIgnoredByUser: false,
     // quarantineIgnoredByApp expected to be false because
     // the test addon is signed as a non-privileged (see signedState),
