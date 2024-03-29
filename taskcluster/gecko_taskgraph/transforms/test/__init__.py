@@ -27,6 +27,7 @@ from taskgraph.util.schema import Schema, optionally_keyed_by, resolve_keyed_by
 from voluptuous import Any, Exclusive, Optional, Required
 
 from gecko_taskgraph.optimize.schema import OptimizationSchema
+from gecko_taskgraph.transforms.job import job_description_schema
 from gecko_taskgraph.transforms.test.other import get_mobile_project
 from gecko_taskgraph.util.chunking import manifest_loaders
 
@@ -282,6 +283,8 @@ test_description_schema = Schema(
         Optional("subtest"): str,
         # Define if a given task supports artifact builds or not, see bug 1695325.
         Optional("supports-artifact-builds"): bool,
+        # Version of python used to run the task
+        Optional("use-python"): job_description_schema["use-python"],
     }
 )
 
@@ -349,6 +352,7 @@ def set_defaults(config, tasks):
         task.setdefault("run-without-variant", True)
         task.setdefault("variants", [])
         task.setdefault("supports-artifact-builds", True)
+        task.setdefault("use-python", "system")
 
         task["mozharness"].setdefault("extra-options", [])
         task["mozharness"].setdefault("requires-signed-builds", False)
