@@ -27,9 +27,9 @@ class OriginAttributes : public dom::OriginAttributesDictionary {
   void SetFirstPartyDomain(const bool aIsTopLevelDocument,
                            const nsAString& aDomain, bool aForced = false);
 
-  void SetPartitionKey(nsIURI* aURI, bool aForeignByAncestorContext);
-  void SetPartitionKey(const nsACString& aOther);
-  void SetPartitionKey(const nsAString& aOther);
+  void SetPartitionKey(nsIURI* aURI);
+  void SetPartitionKey(const nsACString& aDomain);
+  void SetPartitionKey(const nsAString& aDomain);
 
   enum {
     STRIP_FIRST_PARTY_DOMAIN = 0x01,
@@ -129,13 +129,13 @@ class OriginAttributes : public dom::OriginAttributesDictionary {
   // different than 0.
   static bool IsPrivateBrowsing(const nsACString& aOrigin);
 
-  // Parse a partitionKey of the format
-  // "(<scheme>,<baseDomain>,[port],[ancestorbit])" into its components. Returns
-  // false if the partitionKey cannot be parsed because the format is invalid.
+  // Parse a partitionKey of the format "(<scheme>,<baseDomain>,[port])" into
+  // its components.
+  // Returns false if the partitionKey cannot be parsed because the format is
+  // invalid.
   static bool ParsePartitionKey(const nsAString& aPartitionKey,
                                 nsAString& outScheme, nsAString& outBaseDomain,
-                                int32_t& outPort,
-                                bool& outForeignByAncestorContext);
+                                int32_t& outPort);
 };
 
 class OriginAttributesPattern : public dom::OriginAttributesPatternDictionary {
@@ -193,9 +193,8 @@ class OriginAttributesPattern : public dom::OriginAttributesPatternDictionary {
         nsString scheme;
         nsString baseDomain;
         int32_t port;
-        bool ancestor;
         bool success = OriginAttributes::ParsePartitionKey(
-            aAttrs.mPartitionKey, scheme, baseDomain, port, ancestor);
+            aAttrs.mPartitionKey, scheme, baseDomain, port);
         if (!success) {
           return false;
         }
@@ -209,10 +208,6 @@ class OriginAttributesPattern : public dom::OriginAttributesPatternDictionary {
           return false;
         }
         if (pkPattern.mPort.WasPassed() && pkPattern.mPort.Value() != port) {
-          return false;
-        }
-        if (pkPattern.mForeignByAncestorContext.WasPassed() &&
-            pkPattern.mForeignByAncestorContext.Value() != ancestor) {
           return false;
         }
       }
@@ -265,12 +260,6 @@ class OriginAttributesPattern : public dom::OriginAttributesPatternDictionary {
       }
       if (self.mPort.WasPassed() && other.mPort.WasPassed() &&
           self.mPort.Value() != other.mPort.Value()) {
-        return false;
-      }
-      if (self.mForeignByAncestorContext.WasPassed() &&
-          other.mForeignByAncestorContext.WasPassed() &&
-          self.mForeignByAncestorContext.Value() !=
-              other.mForeignByAncestorContext.Value()) {
         return false;
       }
     }

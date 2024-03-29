@@ -101,7 +101,7 @@ WorkerLoadInfoData::WorkerLoadInfoData()
       mUsingStorageAccess(false),
       mServiceWorkersTestingInWindow(false),
       mShouldResistFingerprinting(false),
-      mIsThirdPartyContext(true),
+      mIsThirdPartyContextToTopWindow(true),
       mSecureContext(eNotSet) {}
 
 nsresult WorkerLoadInfo::SetPrincipalsAndCSPOnMainThread(

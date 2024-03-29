@@ -147,7 +147,7 @@ struct WorkerLoadInfoData {
   bool mShouldResistFingerprinting;
   Maybe<RFPTarget> mOverriddenFingerprintingSettings;
   OriginAttributes mOriginAttributes;
-  bool mIsThirdPartyContext;
+  bool mIsThirdPartyContextToTopWindow;
 
   enum {
     eNotSet,

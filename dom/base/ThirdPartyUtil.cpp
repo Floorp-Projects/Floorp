@@ -200,9 +200,9 @@ ThirdPartyUtil::IsThirdPartyWindow(mozIDOMWindowProxy* aWindow, nsIURI* aURI,
 
   bool result;
 
-  // Ignore about:blank and about:srcdoc URIs here since they have no domain
-  // and attempting to compare against them will fail.
-  if (aURI && !NS_IsAboutBlank(aURI) && !NS_IsAboutSrcdoc(aURI)) {
+  // Ignore about:blank URIs here since they have no domain and attempting to
+  // compare against them will fail.
+  if (aURI && !NS_IsAboutBlank(aURI)) {
     nsCOMPtr<nsIPrincipal> prin;
     nsresult rv = GetPrincipalFromWindow(aWindow, getter_AddRefs(prin));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -320,10 +320,10 @@ ThirdPartyUtil::IsThirdPartyChannel(nsIChannel* aChannel, nsIURI* aURI,
     }
   }
 
-  // Special consideration must be done for about:blank and about:srcdoc URIs
-  // because those inherit the principal from the parent context. For them,
-  // let's consider the principal URI.
-  if (NS_IsAboutBlank(channelURI) || NS_IsAboutSrcdoc(channelURI)) {
+  // Special consideration must be done for about:blank URIs because those
+  // inherit the principal from the parent context. For them, let's consider the
+  // principal URI.
+  if (NS_IsAboutBlank(channelURI)) {
     nsCOMPtr<nsIPrincipal> principalToInherit =
         loadInfo->FindPrincipalToInherit(aChannel);
     if (!principalToInherit) {
