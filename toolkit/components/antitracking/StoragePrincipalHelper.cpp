@@ -437,7 +437,7 @@ bool StoragePrincipalHelper::ShouldUsePartitionPrincipalForServiceWorker(
     return false;
   }
 
-  return aWorkerPrivate->IsThirdPartyContextToTopWindow();
+  return aWorkerPrivate->IsThirdPartyContext();
 }
 
 // static

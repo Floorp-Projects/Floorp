@@ -286,7 +286,7 @@ nsresult RemoteWorkerChild::ExecWorkerOnMainThread(RemoteWorkerData&& aData) {
   info.mStorageAccess = aData.storageAccess();
   info.mUseRegularPrincipal = aData.useRegularPrincipal();
   info.mUsingStorageAccess = aData.usingStorageAccess();
-  info.mIsThirdPartyContextToTopWindow = aData.isThirdPartyContextToTopWindow();
+  info.mIsThirdPartyContext = aData.isThirdPartyContext();
   info.mOriginAttributes =
       BasePrincipal::Cast(principal)->OriginAttributesRef();
   info.mShouldResistFingerprinting = aData.shouldResistFingerprinting();
