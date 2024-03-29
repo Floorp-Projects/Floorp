@@ -1,0 +1,25 @@
+syntax = "proto2";
+
+option optimize_for = LITE_RUNTIME;
+
+package mozilla.cookieBanner;
+
+// Represent the SOCS cookie used to store GDPR choice on the google search.
+message GoogleSOCSCookie {
+  // The GDPR choice. 1 means reject All and 2 means Accept or Custom.
+  required uint32 gdpr_choice = 1;
+  message extraData {
+    required uint32 unused1 = 1;
+    // The value Represents where does the consent is set. We will use this
+    // value to differentiate Accept and Custom.
+    required string platform = 2;
+    required string region = 3;
+    required uint32 unused2 = 4;
+  }
+  required extraData data = 2;
+
+  message timeData {
+    required uint64 timeStamp = 1;
+  }
+  required timeData time = 3;
+}
