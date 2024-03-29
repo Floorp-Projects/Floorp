@@ -66,7 +66,7 @@ AddonTestUtils.registerJSON(server, "/updates-now-compatible.json", {
 
 add_task(async function test_local_install_blocklisted() {
   let id = "amosigned-xpi@tests.mozilla.org";
-  let version = "2.1";
+  let version = "2.2";
 
   await AddonTestUtils.loadBlocklistRawData({
     extensionsMLBF: [
