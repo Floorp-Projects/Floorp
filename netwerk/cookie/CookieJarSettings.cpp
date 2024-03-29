@@ -4,9 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozIThirdPartyUtil.h"
 #include "mozilla/AntiTrackingUtils.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/Components.h"
 #include "mozilla/ContentBlockingAllowList.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/net/CookieJarSettings.h"
@@ -539,10 +541,9 @@ void CookieJarSettings::SetPartitionKey(nsIURI* aURI,
 void CookieJarSettings::UpdatePartitionKeyForDocumentLoadedByChannel(
     nsIChannel* aChannel) {
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+  bool thirdParty = AntiTrackingUtils::IsThirdPartyChannel(aChannel);
   bool foreignByAncestorContext =
-      false;  //  Bug 1876575 will change this to
-              //  loadInfo->GetIsInThirdPartyContext() &&
-              //  !loadInfo->GetIsThirdPartyContextToTopWindow();
+      thirdParty && !loadInfo->GetIsThirdPartyContextToTopWindow();
   StoragePrincipalHelper::UpdatePartitionKeyWithForeignAncestorBit(
       mPartitionKey, foreignByAncestorContext);
 }
