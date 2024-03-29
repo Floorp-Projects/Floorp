@@ -15112,15 +15112,19 @@ static bool CreateStackMapFromLSafepoint(LSafepoint& safepoint,
   // REG DUMP AREA, if any.
   size_t regDumpWords = 0;
   const LiveGeneralRegisterSet wasmAnyRefRegs = safepoint.wasmAnyRefRegs();
-  GeneralRegisterForwardIterator wasmAnyRefRegsIter(wasmAnyRefRegs);
+  const LiveGeneralRegisterSet slotsOrElementsRegs =
+      safepoint.slotsOrElementsRegs();
+  const LiveGeneralRegisterSet refRegs(GeneralRegisterSet::Union(
+      wasmAnyRefRegs.set(), slotsOrElementsRegs.set()));
+  GeneralRegisterForwardIterator refRegsIter(refRegs);
   switch (safepoint.wasmSafepointKind()) {
     case WasmSafepointKind::LirCall:
     case WasmSafepointKind::CodegenCall: {
       size_t spilledNumWords = nRegisterDumpBytes / sizeof(void*);
       regDumpWords += spilledNumWords;
 
-      for (; wasmAnyRefRegsIter.more(); ++wasmAnyRefRegsIter) {
-        Register reg = *wasmAnyRefRegsIter;
+      for (; refRegsIter.more(); ++refRegsIter) {
+        Register reg = *refRegsIter;
         size_t offsetFromSpillBase =
             safepoint.liveRegs().gprs().offsetOfPushedRegister(reg) /
             sizeof(void*);
@@ -15128,9 +15132,13 @@ static bool CreateStackMapFromLSafepoint(LSafepoint& safepoint,
                    offsetFromSpillBase <= spilledNumWords);
         size_t index = spilledNumWords - offsetFromSpillBase;
 
-        stackMap->set(index, wasm::StackMap::AnyRef);
+        if (wasmAnyRefRegs.has(reg)) {
+          stackMap->set(index, wasm::StackMap::AnyRef);
+        } else {
+          MOZ_ASSERT(slotsOrElementsRegs.has(reg));
+          stackMap->set(index, wasm::StackMap::ArrayDataPointer);
+        }
       }
-
       // Float and vector registers do not have to be handled; they cannot
       // contain wasm anyrefs, and they are spilled after general-purpose
       // registers. Gprs are therefore closest to the spill base and thus their
@@ -15139,8 +15147,8 @@ static bool CreateStackMapFromLSafepoint(LSafepoint& safepoint,
     case WasmSafepointKind::Trap: {
       regDumpWords += trapExitLayoutNumWords;
 
-      for (; wasmAnyRefRegsIter.more(); ++wasmAnyRefRegsIter) {
-        Register reg = *wasmAnyRefRegsIter;
+      for (; refRegsIter.more(); ++refRegsIter) {
+        Register reg = *refRegsIter;
         size_t offsetFromTop = trapExitLayout.getOffset(reg);
 
         // If this doesn't hold, the associated register wasn't saved by
@@ -15153,7 +15161,12 @@ static bool CreateStackMapFromLSafepoint(LSafepoint& safepoint,
         // offset up from the bottom of the (integer register) save area.
         size_t offsetFromBottom = trapExitLayoutNumWords - 1 - offsetFromTop;
 
-        stackMap->set(offsetFromBottom, wasm::StackMap::AnyRef);
+        if (wasmAnyRefRegs.has(reg)) {
+          stackMap->set(offsetFromBottom, wasm::StackMap::AnyRef);
+        } else {
+          MOZ_ASSERT(slotsOrElementsRegs.has(reg));
+          stackMap->set(offsetFromBottom, wasm::StackMap::ArrayDataPointer);
+        }
       }
     } break;
     default:
