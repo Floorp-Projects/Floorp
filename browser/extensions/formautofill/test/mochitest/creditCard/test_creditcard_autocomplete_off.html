@@ -49,6 +49,11 @@ async function setupFormHistory() {
   ]);
 }
 
+function replaceStars(str)
+{
+  return str.replaceAll("*", "•")
+}
+
 initPopupListener();
 
 // Show Form History popup for non-autocomplete="off" field only
@@ -73,7 +78,7 @@ add_task(async function check_menu_when_both_with_autocomplete_off() {
   synthesizeKey("KEY_ArrowDown");
   await expectPopup();
   checkMenuEntries(MOCK_STORAGE.map(patchRecordCCNumber).map(({ cc, expected }) => JSON.stringify({
-    primary: cc.ccNumberFmt,
+    primary: replaceStars(cc.ccNumberFmt),
     secondary: cc["cc-name"],
     ariaLabel: `${getCCTypeName(cc)} ${cc.ccNumberFmt.replaceAll("*", "")} ${cc["cc-name"]}`,
     image: expected.image,
@@ -84,7 +89,7 @@ add_task(async function check_menu_when_both_with_autocomplete_off() {
   await expectPopup();
   checkMenuEntries(MOCK_STORAGE.map(patchRecordCCNumber).map(({ cc, expected }) => JSON.stringify({
     primary: cc["cc-name"],
-    secondary: cc.ccNumberFmt,
+    secondary: replaceStars(cc.ccNumberFmt),
     ariaLabel: `${getCCTypeName(cc)} ${cc["cc-name"]} ${cc.ccNumberFmt}`,
     image: expected.image,
   })));

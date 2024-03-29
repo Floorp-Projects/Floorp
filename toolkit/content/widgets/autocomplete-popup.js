@@ -411,7 +411,7 @@
           // The styles on the list which have different <content> structure and overrided
           // _adjustAcItem() are unreusable.
           const UNREUSEABLE_STYLES = [
-            "autofill-profile",
+            "autofill",
             "action",
             "status",
             "generatedPassword",
@@ -436,8 +436,8 @@
         if (!reusable) {
           let options = null;
           switch (style) {
-            case "autofill-profile":
-              options = { is: "autocomplete-profile-listitem" };
+            case "autofill":
+              options = { is: "autocomplete-autofill-richlistitem" };
               break;
             case "action":
               options = { is: "autocomplete-action-richlistitem" };
