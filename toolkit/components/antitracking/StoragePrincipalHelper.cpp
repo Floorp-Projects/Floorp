@@ -87,9 +87,8 @@ bool ChooseOriginAttributes(nsIChannel* aChannel, OriginAttributes& aAttrs,
     return false;
   }
   bool foreignByAncestorContext =
-      false;  //  Bug 1876575 will change this to
-              //  loadInfo->GetIsInThirdPartyContext() &&
-              //  !loadInfo->GetIsThirdPartyContextToTopWindow();
+      AntiTrackingUtils::IsThirdPartyChannel(aChannel) &&
+      !loadInfo->GetIsThirdPartyContextToTopWindow();
   aAttrs.SetPartitionKey(principalURI, foreignByAncestorContext);
   return true;
 }
@@ -316,7 +315,7 @@ nsresult StoragePrincipalHelper::GetPrincipal(nsIChannel* aChannel,
       // We only support foreign partitioned principal when dFPI is enabled.
       if (cjs->GetCookieBehavior() ==
               nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN &&
-          loadInfo->GetIsThirdPartyContextToTopWindow()) {
+          AntiTrackingUtils::IsThirdPartyChannel(aChannel)) {
         outPrincipal = partitionedPrincipal;
       }
       break;
@@ -482,7 +481,7 @@ bool StoragePrincipalHelper::GetOriginAttributes(
       // Otherwise, we will use the regular principal.
       if (cjs->GetCookieBehavior() ==
               nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN &&
-          loadInfo->GetIsThirdPartyContextToTopWindow()) {
+          AntiTrackingUtils::IsThirdPartyChannel(aChannel)) {
         ChooseOriginAttributes(aChannel, aAttributes, true);
       }
       break;

@@ -19,6 +19,7 @@
 #include "MainThreadUtils.h"
 #include "ScopedNSSTypes.h"
 
+#include "mozilla/AntiTrackingUtils.h"
 #include "mozilla/ArrayIterator.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Atomics.h"
@@ -1268,9 +1269,8 @@ Maybe<nsTArray<uint8_t>> nsRFPService::GenerateKey(nsIChannel* aChannel) {
   // Set the partitionKey using the top level URI to ensure that the key is
   // specific to the top level site.
   bool foreignByAncestorContext =
-      false;  //  Bug 1876575 will change this to
-              //  loadInfo->GetIsInThirdPartyContext() &&
-              //  !loadInfo->GetIsThirdPartyContextToTopWindow();
+      AntiTrackingUtils::IsThirdPartyChannel(aChannel) &&
+      loadInfo->GetIsThirdPartyContextToTopWindow();
   attrs.SetPartitionKey(topLevelURI, foreignByAncestorContext);
 
   nsAutoCString oaSuffix;
@@ -2050,7 +2050,7 @@ Maybe<RFPTarget> nsRFPService::GetOverriddenFingerprintingSettingsForChannel(
   }
 
   // The channel is for the first-party load.
-  if (!loadInfo->GetIsThirdPartyContextToTopWindow()) {
+  if (!AntiTrackingUtils::IsThirdPartyChannel(aChannel)) {
     return GetOverriddenFingerprintingSettingsForURI(uri, nullptr);
   }
 
