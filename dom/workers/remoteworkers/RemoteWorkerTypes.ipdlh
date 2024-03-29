@@ -76,7 +76,7 @@ struct RemoteWorkerData
 
   StorageAccess storageAccess;
 
-  bool isThirdPartyContextToTopWindow;
+  bool isThirdPartyContext;
 
   bool shouldResistFingerprinting;
 
