@@ -12,14 +12,8 @@
 #include <tuple>
 
 #include "mozilla/dom/FlexBinding.h"
-#include "mozilla/UniquePtr.h"
 #include "nsContainerFrame.h"
 #include "nsILineIterator.h"
-
-namespace mozilla {
-class LogicalPoint;
-class PresShell;
-}  // namespace mozilla
 
 nsContainerFrame* NS_NewFlexContainerFrame(mozilla::PresShell* aPresShell,
                                            mozilla::ComputedStyle* aStyle);
