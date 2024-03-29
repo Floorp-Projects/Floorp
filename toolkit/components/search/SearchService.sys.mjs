@@ -967,10 +967,6 @@ export class SearchService {
     );
   }
 
-  getAlternateDomains(domain) {
-    return lazy.SearchStaticData.getAlternateDomains(domain);
-  }
-
   /**
    * This is a nsITimerCallback for the timerManager notification that is
    * registered for handling updates to search engines. Only OpenSearch engines
