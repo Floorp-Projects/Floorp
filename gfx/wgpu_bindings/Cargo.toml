@@ -17,7 +17,7 @@ default = []
 [dependencies.wgc]
 package = "wgpu-core"
 git = "https://github.com/gfx-rs/wgpu"
-rev = "152a94bc6c502226d9871f28e35db0b755ea35bf"
+rev = "b34219ca214caea2af86dbb64a2a2b613ea5198c"
 # TODO: remove the replay feature on the next update containing https://github.com/gfx-rs/wgpu/pull/5182
 features = ["serde", "replay", "trace", "strict_asserts", "wgsl", "api_log_info"]
 
@@ -26,37 +26,37 @@ features = ["serde", "replay", "trace", "strict_asserts", "wgsl", "api_log_info"
 [target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies.wgc]
 package = "wgpu-core"
 git = "https://github.com/gfx-rs/wgpu"
-rev = "152a94bc6c502226d9871f28e35db0b755ea35bf"
+rev = "b34219ca214caea2af86dbb64a2a2b613ea5198c"
 features = ["metal"]
 
 # We want the wgpu-core Direct3D backends on Windows.
 [target.'cfg(windows)'.dependencies.wgc]
 package = "wgpu-core"
 git = "https://github.com/gfx-rs/wgpu"
-rev = "152a94bc6c502226d9871f28e35db0b755ea35bf"
+rev = "b34219ca214caea2af86dbb64a2a2b613ea5198c"
 features = ["dx12"]
 
 # We want the wgpu-core Vulkan backend on Linux and Windows.
 [target.'cfg(any(windows, all(unix, not(any(target_os = "macos", target_os = "ios")))))'.dependencies.wgc]
 package = "wgpu-core"
 git = "https://github.com/gfx-rs/wgpu"
-rev = "152a94bc6c502226d9871f28e35db0b755ea35bf"
+rev = "b34219ca214caea2af86dbb64a2a2b613ea5198c"
 features = ["vulkan"]
 
 [dependencies.wgt]
 package = "wgpu-types"
 git = "https://github.com/gfx-rs/wgpu"
-rev = "152a94bc6c502226d9871f28e35db0b755ea35bf"
+rev = "b34219ca214caea2af86dbb64a2a2b613ea5198c"
 
 [dependencies.wgh]
 package = "wgpu-hal"
 git = "https://github.com/gfx-rs/wgpu"
-rev = "152a94bc6c502226d9871f28e35db0b755ea35bf"
+rev = "b34219ca214caea2af86dbb64a2a2b613ea5198c"
 features = ["windows_rs"]
 
 [target.'cfg(windows)'.dependencies.d3d12]
 git = "https://github.com/gfx-rs/wgpu"
-rev = "152a94bc6c502226d9871f28e35db0b755ea35bf"
+rev = "b34219ca214caea2af86dbb64a2a2b613ea5198c"
 
 [target.'cfg(windows)'.dependencies]
 winapi = "0.3"
