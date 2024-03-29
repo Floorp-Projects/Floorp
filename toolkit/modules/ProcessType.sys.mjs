@@ -14,6 +14,7 @@ export const ProcessType = Object.freeze({
     rdd: "process-type-rdd",
     socket: "process-type-socket",
     utility: "process-type-utility",
+    forkServer: "process-type-forkserver",
 
     // Utility with actor names
     utility_audioDecoder_Generic:
