@@ -5347,7 +5347,7 @@ static Matrix ComputeRotationMatrix(gfxFloat aRotatedWidth,
 }
 
 static Maybe<layers::SurfaceDescriptor>
-MaybeGetSurfaceDescriptorForCanvasTranslator(
+MaybeGetSurfaceDescriptorForRemoteCanvas(
     const SurfaceFromElementResult& aResult) {
   if (!aResult.mLayersImage) {
     return Nothing();
@@ -5511,7 +5511,7 @@ void CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
             !(NeedToApplyFilter() && NeedToDrawShadow())) {
           res = nsLayoutUtils::SurfaceFromElement(
               video, sfeFlags, mTarget, /* aOptimizeSourceSurface */ false);
-          surfaceDescriptor = MaybeGetSurfaceDescriptorForCanvasTranslator(res);
+          surfaceDescriptor = MaybeGetSurfaceDescriptorForRemoteCanvas(res);
           if (surfaceDescriptor.isNothing() && res.mLayersImage) {
             if ((res.mSourceSurface = res.mLayersImage->GetAsSourceSurface())) {
               RefPtr<SourceSurface> opt =
