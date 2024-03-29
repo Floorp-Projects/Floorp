@@ -29,6 +29,8 @@ class nsUrlClassifierUtils final : public nsIUrlClassifierUtils,
                                 nsACString& _retval);
   nsresult CanonicalizePath(const nsACString& url, nsACString& _retval);
 
+  nsresult CanonicalizeQuery(const nsACString& query, nsACString& _retval);
+
   // This function will encode all "special" characters in typical url encoding,
   // that is %hh where h is a valid hex digit.  The characters which are encoded
   // by this function are any ascii characters under 32(control characters and
