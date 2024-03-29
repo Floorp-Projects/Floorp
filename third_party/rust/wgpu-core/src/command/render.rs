@@ -739,9 +739,9 @@ impl<A: HalApi> TextureView<A> {
 const MAX_TOTAL_ATTACHMENTS: usize = hal::MAX_COLOR_ATTACHMENTS + hal::MAX_COLOR_ATTACHMENTS + 1;
 type AttachmentDataVec<T> = ArrayVec<T, MAX_TOTAL_ATTACHMENTS>;
 
-struct RenderPassInfo<'a, 'd, A: HalApi> {
+struct RenderPassInfo<'a, A: HalApi> {
     context: RenderPassContext,
-    usage_scope: UsageScope<'d, A>,
+    usage_scope: UsageScope<A>,
     /// All render attachments, including depth/stencil
     render_attachments: AttachmentDataVec<RenderAttachment<'a, A>>,
     is_depth_read_only: bool,
@@ -754,7 +754,7 @@ struct RenderPassInfo<'a, 'd, A: HalApi> {
     multiview: Option<NonZeroU32>,
 }
 
-impl<'a, 'd, A: HalApi> RenderPassInfo<'a, 'd, A> {
+impl<'a, A: HalApi> RenderPassInfo<'a, A> {
     fn add_pass_texture_init_actions<V>(
         channel: &PassChannel<V>,
         texture_memory_actions: &mut CommandBufferTextureMemoryActions<A>,
@@ -790,7 +790,7 @@ impl<'a, 'd, A: HalApi> RenderPassInfo<'a, 'd, A> {
     }
 
     fn start(
-        device: &'d Device<A>,
+        device: &Device<A>,
         label: Option<&str>,
         color_attachments: &[Option<RenderPassColorAttachment>],
         depth_stencil_attachment: Option<&RenderPassDepthStencilAttachment>,
@@ -1214,7 +1214,7 @@ impl<'a, 'd, A: HalApi> RenderPassInfo<'a, 'd, A> {
 
         Ok(Self {
             context,
-            usage_scope: device.new_usage_scope(),
+            usage_scope: UsageScope::new(&device.tracker_indices),
             render_attachments,
             is_depth_read_only,
             is_stencil_read_only,
@@ -1230,7 +1230,7 @@ impl<'a, 'd, A: HalApi> RenderPassInfo<'a, 'd, A> {
         mut self,
         raw: &mut A::CommandEncoder,
         snatch_guard: &SnatchGuard,
-    ) -> Result<(UsageScope<'d, A>, SurfacesInDiscardState<A>), RenderPassErrorInner> {
+    ) -> Result<(UsageScope<A>, SurfacesInDiscardState<A>), RenderPassErrorInner> {
         profiling::scope!("RenderPassInfo::finish");
         unsafe {
             raw.end_render_pass();
@@ -2374,7 +2374,7 @@ impl Global {
                                 .extend(texture_memory_actions.register_init_action(action));
                         }
 
-                        unsafe { bundle.execute(raw, &snatch_guard) }
+                        unsafe { bundle.execute(raw) }
                             .map_err(|e| match e {
                                 ExecutionError::DestroyedBuffer(id) => {
                                     RenderCommandError::DestroyedBuffer(id)
@@ -2427,7 +2427,6 @@ impl Global {
                 transit,
                 &mut tracker.textures,
                 &cmd_buf.device,
-                &snatch_guard,
             );
 
             cmd_buf_data
