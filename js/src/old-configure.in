@@ -456,10 +456,6 @@ AC_LANG_CPLUSPLUS
 
 MOZ_CXX11
 
-dnl Checks for header files.
-dnl ========================================================
-AC_HEADER_DIRENT
-
 dnl Checks for libraries.
 dnl ========================================================
 AC_CHECK_LIB(c_r, gethostbyname_r)
