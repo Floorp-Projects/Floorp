@@ -36,7 +36,7 @@ bool nsIFrame::IsFlexOrGridItem() const {
 
 bool nsIFrame::IsMasonry(mozilla::LogicalAxis aAxis) const {
   MOZ_DIAGNOSTIC_ASSERT(IsGridContainerFrame());
-  return HasAnyStateBits(aAxis == mozilla::eLogicalAxisBlock
+  return HasAnyStateBits(aAxis == mozilla::LogicalAxis::Block
                              ? NS_STATE_GRID_IS_ROW_MASONRY
                              : NS_STATE_GRID_IS_COL_MASONRY);
 }

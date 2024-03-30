@@ -46,9 +46,9 @@ struct IMENotification;
 }  // namespace widget
 
 // Logical axis, edge, side and corner constants for use in various places.
-enum LogicalAxis : uint8_t {
-  eLogicalAxisBlock = 0x0,
-  eLogicalAxisInline = 0x1
+enum class LogicalAxis : uint8_t {
+  Block,
+  Inline,
 };
 enum LogicalEdge { eLogicalEdgeStart = 0x0, eLogicalEdgeEnd = 0x1 };
 
@@ -84,7 +84,7 @@ enum class PhysicalAxes : uint8_t {
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(PhysicalAxes)
 
 inline LogicalAxis GetOrthogonalAxis(LogicalAxis aAxis) {
-  return aAxis == eLogicalAxisBlock ? eLogicalAxisInline : eLogicalAxisBlock;
+  return aAxis == LogicalAxis::Block ? LogicalAxis::Inline : LogicalAxis::Block;
 }
 
 inline bool IsInline(LogicalSide aSide) {
@@ -100,7 +100,7 @@ inline bool IsEnd(LogicalSide aSide) {
 inline bool IsStart(LogicalSide aSide) { return !IsEnd(aSide); }
 
 inline LogicalAxis GetAxis(LogicalSide aSide) {
-  return IsInline(aSide) ? eLogicalAxisInline : eLogicalAxisBlock;
+  return IsInline(aSide) ? LogicalAxis::Inline : LogicalAxis::Block;
 }
 
 inline LogicalEdge GetEdge(LogicalSide aSide) {
@@ -113,7 +113,7 @@ inline LogicalEdge GetOppositeEdge(LogicalEdge aEdge) {
 }
 
 inline LogicalSide MakeLogicalSide(LogicalAxis aAxis, LogicalEdge aEdge) {
-  return LogicalSide((aAxis << 1) | aEdge);
+  return LogicalSide((uint8_t(aAxis) << 1) | aEdge);
 }
 
 inline LogicalSide GetOppositeSide(LogicalSide aSide) {
@@ -338,11 +338,12 @@ class WritingMode {
     static_assert(uint8_t(StyleWritingModeProperty::HorizontalTb) == 0 &&
                       uint8_t(StyleWritingModeProperty::VerticalRl) == 1 &&
                       uint8_t(StyleWritingModeProperty::VerticalLr) == 3 &&
-                      eLogicalAxisBlock == 0 && eLogicalAxisInline == 1 &&
-                      eAxisVertical == 0 && eAxisHorizontal == 1,
+                      uint8_t(LogicalAxis::Block) == 0 &&
+                      uint8_t(LogicalAxis::Inline) == 1 && eAxisVertical == 0 &&
+                      eAxisHorizontal == 1,
                   "unexpected writing-mode, logical axis or physical axis "
                   "constant values");
-    return mozilla::PhysicalAxis((aWritingModeValue ^ aAxis) & 0x1);
+    return mozilla::PhysicalAxis((aWritingModeValue ^ uint8_t(aAxis)) & 0x1);
   }
 
   mozilla::PhysicalAxis PhysicalAxis(LogicalAxis aAxis) const {
@@ -741,7 +742,7 @@ class LogicalPoint {
     return mPoint.y;
   }
   nscoord Pos(LogicalAxis aAxis, WritingMode aWM) const {
-    return aAxis == eLogicalAxisInline ? I(aWM) : B(aWM);
+    return aAxis == LogicalAxis::Inline ? I(aWM) : B(aWM);
   }
   nscoord LineRelative(WritingMode aWritingMode,
                        const nsSize& aContainerSize) const  // line-axis
@@ -770,7 +771,7 @@ class LogicalPoint {
     return mPoint.y;
   }
   nscoord& Pos(LogicalAxis aAxis, WritingMode aWM) {
-    return aAxis == eLogicalAxisInline ? I(aWM) : B(aWM);
+    return aAxis == LogicalAxis::Inline ? I(aWM) : B(aWM);
   }
 
   /**
@@ -961,7 +962,7 @@ class LogicalSize {
     return mSize.height;
   }
   nscoord Size(LogicalAxis aAxis, WritingMode aWM) const {
-    return aAxis == eLogicalAxisInline ? ISize(aWM) : BSize(aWM);
+    return aAxis == LogicalAxis::Inline ? ISize(aWM) : BSize(aWM);
   }
 
   nscoord Width(WritingMode aWritingMode) const {
@@ -987,7 +988,7 @@ class LogicalSize {
     return mSize.height;
   }
   nscoord& Size(LogicalAxis aAxis, WritingMode aWM) {
-    return aAxis == eLogicalAxisInline ? ISize(aWM) : BSize(aWM);
+    return aAxis == LogicalAxis::Inline ? ISize(aWM) : BSize(aWM);
   }
 
   /**
@@ -1243,10 +1244,10 @@ class LogicalMargin {
     return mMargin.bottom;
   }
   nscoord Start(LogicalAxis aAxis, WritingMode aWM) const {
-    return aAxis == eLogicalAxisInline ? IStart(aWM) : BStart(aWM);
+    return aAxis == LogicalAxis::Inline ? IStart(aWM) : BStart(aWM);
   }
   nscoord End(LogicalAxis aAxis, WritingMode aWM) const {
-    return aAxis == eLogicalAxisInline ? IEnd(aWM) : BEnd(aWM);
+    return aAxis == LogicalAxis::Inline ? IEnd(aWM) : BEnd(aWM);
   }
 
   nscoord& IStart(WritingMode aWritingMode)  // inline-start margin
@@ -1270,10 +1271,10 @@ class LogicalMargin {
     return mMargin.bottom;
   }
   nscoord& Start(LogicalAxis aAxis, WritingMode aWM) {
-    return aAxis == eLogicalAxisInline ? IStart(aWM) : BStart(aWM);
+    return aAxis == LogicalAxis::Inline ? IStart(aWM) : BStart(aWM);
   }
   nscoord& End(LogicalAxis aAxis, WritingMode aWM) {
-    return aAxis == eLogicalAxisInline ? IEnd(aWM) : BEnd(aWM);
+    return aAxis == LogicalAxis::Inline ? IEnd(aWM) : BEnd(aWM);
   }
 
   nscoord IStartEnd(WritingMode aWritingMode) const  // inline margins
@@ -1287,7 +1288,7 @@ class LogicalMargin {
     return mMargin.TopBottom();
   }
   nscoord StartEnd(LogicalAxis aAxis, WritingMode aWM) const {
-    return aAxis == eLogicalAxisInline ? IStartEnd(aWM) : BStartEnd(aWM);
+    return aAxis == LogicalAxis::Inline ? IStartEnd(aWM) : BStartEnd(aWM);
   }
 
   nscoord Side(LogicalSide aSide, WritingMode aWM) const {
@@ -1655,13 +1656,13 @@ class LogicalRect {
   }
 
   nscoord Start(LogicalAxis aAxis, WritingMode aWM) const {
-    return aAxis == eLogicalAxisInline ? IStart(aWM) : BStart(aWM);
+    return aAxis == LogicalAxis::Inline ? IStart(aWM) : BStart(aWM);
   }
   nscoord End(LogicalAxis aAxis, WritingMode aWM) const {
-    return aAxis == eLogicalAxisInline ? IEnd(aWM) : BEnd(aWM);
+    return aAxis == LogicalAxis::Inline ? IEnd(aWM) : BEnd(aWM);
   }
   nscoord Size(LogicalAxis aAxis, WritingMode aWM) const {
-    return aAxis == eLogicalAxisInline ? ISize(aWM) : BSize(aWM);
+    return aAxis == LogicalAxis::Inline ? ISize(aWM) : BSize(aWM);
   }
 
   /**
@@ -1689,10 +1690,10 @@ class LogicalRect {
     return mBSize;
   }
   nscoord& Start(LogicalAxis aAxis, WritingMode aWM) {
-    return aAxis == eLogicalAxisInline ? IStart(aWM) : BStart(aWM);
+    return aAxis == LogicalAxis::Inline ? IStart(aWM) : BStart(aWM);
   }
   nscoord& Size(LogicalAxis aAxis, WritingMode aWM) {
-    return aAxis == eLogicalAxisInline ? ISize(aWM) : BSize(aWM);
+    return aAxis == LogicalAxis::Inline ? ISize(aWM) : BSize(aWM);
   }
 
   /**
@@ -2110,7 +2111,7 @@ T& StyleRect<T>::GetBEnd(WritingMode aWM) {
 template <typename T>
 const T& StyleRect<T>::Start(mozilla::LogicalAxis aAxis,
                              mozilla::WritingMode aWM) const {
-  return Get(aWM, aAxis == mozilla::eLogicalAxisInline
+  return Get(aWM, aAxis == mozilla::LogicalAxis::Inline
                       ? mozilla::LogicalSide::IStart
                       : mozilla::LogicalSide::BStart);
 }
@@ -2118,7 +2119,7 @@ const T& StyleRect<T>::Start(mozilla::LogicalAxis aAxis,
 template <typename T>
 const T& StyleRect<T>::End(mozilla::LogicalAxis aAxis,
                            mozilla::WritingMode aWM) const {
-  return Get(aWM, aAxis == mozilla::eLogicalAxisInline
+  return Get(aWM, aAxis == mozilla::LogicalAxis::Inline
                       ? mozilla::LogicalSide::IEnd
                       : mozilla::LogicalSide::BEnd);
 }
@@ -2156,15 +2157,15 @@ inline const mozilla::StyleMaxSize& nsStylePosition::MaxBSize(
 }
 inline const mozilla::StyleSize& nsStylePosition::Size(
     mozilla::LogicalAxis aAxis, WritingMode aWM) const {
-  return aAxis == mozilla::eLogicalAxisInline ? ISize(aWM) : BSize(aWM);
+  return aAxis == mozilla::LogicalAxis::Inline ? ISize(aWM) : BSize(aWM);
 }
 inline const mozilla::StyleSize& nsStylePosition::MinSize(
     mozilla::LogicalAxis aAxis, WritingMode aWM) const {
-  return aAxis == mozilla::eLogicalAxisInline ? MinISize(aWM) : MinBSize(aWM);
+  return aAxis == mozilla::LogicalAxis::Inline ? MinISize(aWM) : MinBSize(aWM);
 }
 inline const mozilla::StyleMaxSize& nsStylePosition::MaxSize(
     mozilla::LogicalAxis aAxis, WritingMode aWM) const {
-  return aAxis == mozilla::eLogicalAxisInline ? MaxISize(aWM) : MaxBSize(aWM);
+  return aAxis == mozilla::LogicalAxis::Inline ? MaxISize(aWM) : MaxBSize(aWM);
 }
 
 inline bool nsStylePosition::ISizeDependsOnContainer(WritingMode aWM) const {
@@ -2214,26 +2215,26 @@ inline bool nsStyleMargin::HasInlineAxisAuto(mozilla::WritingMode aWM) const {
 }
 inline bool nsStyleMargin::HasAuto(mozilla::LogicalAxis aAxis,
                                    mozilla::WritingMode aWM) const {
-  return aAxis == mozilla::eLogicalAxisInline ? HasInlineAxisAuto(aWM)
-                                              : HasBlockAxisAuto(aWM);
+  return aAxis == mozilla::LogicalAxis::Inline ? HasInlineAxisAuto(aWM)
+                                               : HasBlockAxisAuto(aWM);
 }
 
 inline mozilla::StyleAlignFlags nsStylePosition::UsedSelfAlignment(
     mozilla::LogicalAxis aAxis, const mozilla::ComputedStyle* aParent) const {
-  return aAxis == mozilla::eLogicalAxisBlock ? UsedAlignSelf(aParent)._0
-                                             : UsedJustifySelf(aParent)._0;
+  return aAxis == mozilla::LogicalAxis::Block ? UsedAlignSelf(aParent)._0
+                                              : UsedJustifySelf(aParent)._0;
 }
 
 inline mozilla::StyleContentDistribution nsStylePosition::UsedContentAlignment(
     mozilla::LogicalAxis aAxis) const {
-  return aAxis == mozilla::eLogicalAxisBlock ? mAlignContent : mJustifyContent;
+  return aAxis == mozilla::LogicalAxis::Block ? mAlignContent : mJustifyContent;
 }
 
 inline mozilla::StyleContentDistribution nsStylePosition::UsedTracksAlignment(
     mozilla::LogicalAxis aAxis, uint32_t aIndex) const {
   using T = mozilla::StyleAlignFlags;
   const auto& tracksAlignment =
-      aAxis == mozilla::eLogicalAxisBlock ? mAlignTracks : mJustifyTracks;
+      aAxis == mozilla::LogicalAxis::Block ? mAlignTracks : mJustifyTracks;
   if (MOZ_LIKELY(tracksAlignment.IsEmpty())) {
     // An empty array encodes the initial value, 'normal', which behaves as
     // 'start' for Grid containers.

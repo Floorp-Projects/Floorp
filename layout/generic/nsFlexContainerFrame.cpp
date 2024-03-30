@@ -141,10 +141,10 @@ class MOZ_STACK_CLASS nsFlexContainerFrame::FlexboxAxisTracker {
 
   // Accessors:
   LogicalAxis MainAxis() const {
-    return IsRowOriented() ? eLogicalAxisInline : eLogicalAxisBlock;
+    return IsRowOriented() ? LogicalAxis::Inline : LogicalAxis::Block;
   }
   LogicalAxis CrossAxis() const {
-    return IsRowOriented() ? eLogicalAxisBlock : eLogicalAxisInline;
+    return IsRowOriented() ? LogicalAxis::Block : LogicalAxis::Inline;
   }
 
   LogicalSide MainAxisStartSide() const;
@@ -306,7 +306,7 @@ class MOZ_STACK_CLASS nsFlexContainerFrame::FlexboxAxisTracker {
                                                 : StyleAlignFlags::END;
     }
 
-    MOZ_ASSERT(MainAxis() == eLogicalAxisInline,
+    MOZ_ASSERT(MainAxis() == LogicalAxis::Inline,
                "Row-oriented flex container's main axis should be parallel to "
                "line-left <-> line-right axis!");
 
@@ -1303,7 +1303,7 @@ StyleAlignFlags nsFlexContainerFrame::CSSAlignmentForAbsPosChild(
   // block axis), then the caller is really asking about our *main* axis.
   // Otherwise, the caller is asking about our cross axis.
   const bool isMainAxis =
-      (axisTracker.IsRowOriented() == (aLogicalAxis == eLogicalAxisInline));
+      (axisTracker.IsRowOriented() == (aLogicalAxis == LogicalAxis::Inline));
   const nsStylePosition* containerStylePos = StylePosition();
   const bool isAxisReversed = isMainAxis ? axisTracker.IsMainAxisReversed()
                                          : axisTracker.IsCrossAxisReversed();
@@ -2755,7 +2755,7 @@ class MOZ_STACK_CLASS PositionTracker {
   const WritingMode mWM;
 
   // The axis along which we're moving.
-  const LogicalAxis mAxis = eLogicalAxisInline;
+  const LogicalAxis mAxis = LogicalAxis::Inline;
 
   // Is the axis along which we're moving reversed (e.g. LTR vs RTL) with
   // respect to the corresponding axis on the flex container's WM?
@@ -3950,7 +3950,7 @@ void SingleLineCrossAxisPositionTracker::EnterAlignPackingSpace(
   if (alignSelf == StyleAlignFlags::SELF_START ||
       alignSelf == StyleAlignFlags::SELF_END) {
     const LogicalAxis logCrossAxis =
-        aAxisTracker.IsRowOriented() ? eLogicalAxisBlock : eLogicalAxisInline;
+        aAxisTracker.IsRowOriented() ? LogicalAxis::Block : LogicalAxis::Inline;
     const WritingMode cWM = aAxisTracker.GetWritingMode();
     const bool sameStart =
         cWM.ParallelAxisStartsOnSameSide(logCrossAxis, aItem.GetWritingMode());

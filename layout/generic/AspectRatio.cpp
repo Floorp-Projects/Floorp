@@ -20,7 +20,7 @@ nscoord AspectRatio::ComputeRatioDependentSize(
   const LogicalSize& boxSizingAdjust = mUseBoxSizing == UseBoxSizing::No
                                            ? LogicalSize(aWM)
                                            : aContentBoxSizeToBoxSizingAdjust;
-  return aRatioDependentAxis == LogicalAxis::eLogicalAxisInline
+  return aRatioDependentAxis == LogicalAxis::Inline
              ? ConvertToWritingMode(aWM).ApplyTo(aRatioDeterminingSize +
                                                  boxSizingAdjust.BSize(aWM)) -
                    boxSizingAdjust.ISize(aWM)

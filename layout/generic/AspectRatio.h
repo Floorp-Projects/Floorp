@@ -22,7 +22,7 @@ struct ParamTraits;
 
 namespace mozilla {
 
-enum LogicalAxis : uint8_t;
+enum class LogicalAxis : uint8_t;
 class LogicalSize;
 class WritingMode;
 

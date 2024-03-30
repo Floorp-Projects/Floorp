@@ -4676,7 +4676,7 @@ nscoord nsLayoutUtils::IntrinsicForAxis(
       horizontalAxis ? stylePos->mMaxWidth : stylePos->mMaxHeight;
 
   PhysicalAxis ourInlineAxis =
-      aFrame->GetWritingMode().PhysicalAxis(eLogicalAxisInline);
+      aFrame->GetWritingMode().PhysicalAxis(LogicalAxis::Inline);
   const bool isInlineAxis = aAxis == ourInlineAxis;
 
   auto resetIfKeywords = [](StyleSize& aSize, StyleSize& aMinSize,
@@ -4897,8 +4897,8 @@ nscoord nsLayoutUtils::IntrinsicForAxis(
           // We are computing the size of |aFrame|, so we use the inline & block
           // dimensions of |aFrame|.
           result = ratio.ComputeRatioDependentSize(
-              isInlineAxis ? eLogicalAxisInline : eLogicalAxisBlock, childWM, h,
-              *contentBoxSizeToBoxSizingAdjust);
+              isInlineAxis ? LogicalAxis::Inline : LogicalAxis::Block, childWM,
+              h, *contentBoxSizeToBoxSizingAdjust);
           // We have get the inlineSizeForAspectRatio value, so we don't have to
           // recompute this again below.
           inlineSizeFromAspectRatio.emplace(result);
@@ -4910,8 +4910,8 @@ nscoord nsLayoutUtils::IntrinsicForAxis(
              GetPercentBSize(styleMaxBSize, aFrame, horizontalAxis, h))) {
           h = std::max(0, h - bSizeTakenByBoxSizing);
           nscoord maxISize = ratio.ComputeRatioDependentSize(
-              isInlineAxis ? eLogicalAxisInline : eLogicalAxisBlock, childWM, h,
-              *contentBoxSizeToBoxSizingAdjust);
+              isInlineAxis ? LogicalAxis::Inline : LogicalAxis::Block, childWM,
+              h, *contentBoxSizeToBoxSizingAdjust);
           if (maxISize < result) {
             result = maxISize;
           }
@@ -4926,8 +4926,8 @@ nscoord nsLayoutUtils::IntrinsicForAxis(
              GetPercentBSize(styleMinBSize, aFrame, horizontalAxis, h))) {
           h = std::max(0, h - bSizeTakenByBoxSizing);
           nscoord minISize = ratio.ComputeRatioDependentSize(
-              isInlineAxis ? eLogicalAxisInline : eLogicalAxisBlock, childWM, h,
-              *contentBoxSizeToBoxSizingAdjust);
+              isInlineAxis ? LogicalAxis::Inline : LogicalAxis::Block, childWM,
+              h, *contentBoxSizeToBoxSizingAdjust);
           if (minISize > result) {
             result = minISize;
           }
@@ -4990,9 +4990,9 @@ nscoord nsLayoutUtils::IntrinsicForAxis(
           GetDefiniteSizeTakenByBoxSizing(boxSizingForAR, aFrame, !isInlineAxis,
                                           ignorePadding, aPercentageBasis);
       bSize -= bSizeTakenByBoxSizing;
-      inlineSizeFromAspectRatio.emplace(ar.ComputeRatioDependentSize(
-          LogicalAxis::eLogicalAxisInline, childWM, bSize,
-          *contentBoxSizeToBoxSizingAdjust));
+      inlineSizeFromAspectRatio.emplace(
+          ar.ComputeRatioDependentSize(LogicalAxis::Inline, childWM, bSize,
+                                       *contentBoxSizeToBoxSizingAdjust));
     }
   }
 
@@ -5027,7 +5027,7 @@ nscoord nsLayoutUtils::IntrinsicForContainer(gfxContext* aRenderingContext,
   MOZ_ASSERT(aFrame && aFrame->GetParent());
   // We want the size aFrame will contribute to its parent's inline-size.
   PhysicalAxis axis =
-      aFrame->GetParent()->GetWritingMode().PhysicalAxis(eLogicalAxisInline);
+      aFrame->GetParent()->GetWritingMode().PhysicalAxis(LogicalAxis::Inline);
   return IntrinsicForAxis(axis, aRenderingContext, aFrame, aType, Nothing(),
                           aFlags);
 }
@@ -5056,7 +5056,7 @@ nscoord nsLayoutUtils::MinSizeContributionForAxis(
   StyleMaxSize maxSize =
       aAxis == eAxisHorizontal ? stylePos->mMaxWidth : stylePos->mMaxHeight;
   auto childWM = aFrame->GetWritingMode();
-  PhysicalAxis ourInlineAxis = childWM.PhysicalAxis(eLogicalAxisInline);
+  PhysicalAxis ourInlineAxis = childWM.PhysicalAxis(LogicalAxis::Inline);
   // According to the spec, max-content and min-content should behave as the
   // property's initial values in block axis.
   // It also make senses to use the initial values for -moz-fit-content and
