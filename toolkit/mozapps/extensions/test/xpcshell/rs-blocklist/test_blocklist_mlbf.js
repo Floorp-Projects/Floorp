@@ -183,19 +183,27 @@ add_task(async function signed_temporary() {
 // It can still be blocked by a stash, which is tested in
 // privileged_addon_blocked_by_stash in test_blocklist_mlbf_stashes.js.
 add_task(async function privileged_xpi_not_blocked() {
+  const PRIV_ADDON_ID = "test@tests.mozilla.org";
+  const PRIV_ADDON_VERSION = "2.0buildid20240326.152244";
   mockMLBF({
-    blocked: ["test@tests.mozilla.org:2.0"],
+    blocked: [`${PRIV_ADDON_ID}:${PRIV_ADDON_VERSION}`],
     notblocked: [],
     generationTime: 1546297200000, // 1 jan 2019 = after the cert's notBefore
   });
   await ExtensionBlocklistMLBF._onUpdate();
 
+  // Prevent install to fail due to privileged.xpi version using
+  // an addon version that hits a manifest warning (see PRIV_ADDON_VERSION).
+  // TODO(Bug 1824240): remove this once privileged.xpi can be resigned with a
+  // version format that does not hit a manifest warning.
+  ExtensionTestUtils.failOnSchemaWarnings(false);
   const install = await promiseInstallFile(
     do_get_file("../data/signing_checks/privileged.xpi")
   );
+  ExtensionTestUtils.failOnSchemaWarnings(true);
   Assert.equal(install.error, 0, "Install should not have an error");
 
-  let addon = await promiseAddonByID("test@tests.mozilla.org");
+  let addon = await promiseAddonByID(PRIV_ADDON_ID);
   Assert.equal(addon.signedState, AddonManager.SIGNEDSTATE_PRIVILEGED);
   Assert.equal(addon.blocklistState, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   await addon.uninstall();

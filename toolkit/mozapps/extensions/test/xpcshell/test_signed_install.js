@@ -291,7 +291,16 @@ add_task(async function test_install_valid_sha256() {
 // Try to install an add-on with the "Mozilla Extensions" OU
 add_task(async function test_install_valid_privileged() {
   let file = do_get_file(DATA + ADDONS.privileged);
-  await test_install_working(file, AddonManager.SIGNEDSTATE_PRIVILEGED);
+  try {
+    // Prevent install to fail due to privileged.xpi version using
+    // a version format that hits a manifest warning.
+    // TODO(Bug 1824240): remove this once privileged.xpi can be resigned with a
+    // version format that does not hit a manifest warning.
+    ExtensionTestUtils.failOnSchemaWarnings(false);
+    await test_install_working(file, AddonManager.SIGNEDSTATE_PRIVILEGED);
+  } finally {
+    ExtensionTestUtils.failOnSchemaWarnings(true);
+  }
 });
 
 // Try to update to a broken add-on
