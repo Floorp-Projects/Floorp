@@ -26,9 +26,7 @@
 #include <iterator>
 #include <limits>
 #include <stdint.h>
-#ifdef HAVE_SSIZE_T
-#  include <sys/types.h>
-#endif
+#include <sys/types.h>
 #include <type_traits>
 
 #include "jsapi.h"
