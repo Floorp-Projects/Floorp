@@ -64,7 +64,7 @@ class JumpListBuilder : public nsIJumpListBuilder, public nsIObserver {
   void DoSetupBackend();
   void DoSetupTestingBackend(RefPtr<JumpListBackend> aTestingBackend);
   void DoShutdownBackend();
-  void DoSetAppID(nsString aAppUserModelID);
+  void DoSetAppIDIfAvailable(nsString aAppUserModelID);
   void DoIsAvailable(const nsMainThreadPtrHandle<dom::Promise>& aPromiseHolder);
   void DoCheckForRemovals(
       const nsMainThreadPtrHandle<dom::Promise>& aPromiseHolder);
