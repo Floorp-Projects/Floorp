@@ -223,6 +223,11 @@ bool WinTaskbar::GenerateAppUserModelID(nsAString& aAppUserModelId,
         id.AppendInt(HashString(path));
         if (!id.IsEmpty()) {
           aAppUserModelId.Assign(id);
+
+          if (aPrivateBrowsing) {
+            aAppUserModelId.AppendLiteral(";PrivateBrowsingAUMID");
+          }
+
           return true;
         }
       }
