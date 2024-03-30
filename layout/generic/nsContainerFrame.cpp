@@ -2200,9 +2200,9 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
   // This variable only gets meaningfully set if isFlexItem is true.  It
   // indicates which axis (in this frame's own WM) corresponds to its
   // flex container's main axis.
-  LogicalAxis flexMainAxis = eLogicalAxisBlock;
+  LogicalAxis flexMainAxis = LogicalAxis::Block;
   if (isFlexItem && nsFlexContainerFrame::IsItemInlineAxisMainAxis(this)) {
-    flexMainAxis = eLogicalAxisInline;
+    flexMainAxis = LogicalAxis::Inline;
   }
 
   // Handle intrinsic sizes and their interaction with
@@ -2262,8 +2262,8 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
                               aSizeOverrides, aFlags)
                 .mISize;
   } else if (MOZ_UNLIKELY(isGridItem) &&
-             !parentFrame->IsMasonry(isOrthogonal ? eLogicalAxisBlock
-                                                  : eLogicalAxisInline)) {
+             !parentFrame->IsMasonry(isOrthogonal ? LogicalAxis::Block
+                                                  : LogicalAxis::Inline)) {
     MOZ_ASSERT(!IsTrueOverflowContainer());
     // 'auto' inline-size for grid-level box - apply 'stretch' as needed:
     auto cbSize = aCBSize.ISize(aWM);
@@ -2290,7 +2290,7 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
   const auto& maxISizeCoord = stylePos->MaxISize(aWM);
 
   if (!maxISizeCoord.IsNone() &&
-      !(isFlexItem && flexMainAxis == eLogicalAxisInline)) {
+      !(isFlexItem && flexMainAxis == LogicalAxis::Inline)) {
     maxISize = ComputeISizeValue(aRenderingContext, aWM, aCBSize,
                                  boxSizingAdjust, boxSizingToMarginEdgeISize,
                                  maxISizeCoord, aSizeOverrides, aFlags)
@@ -2306,7 +2306,7 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
   const auto& minISizeCoord = stylePos->MinISize(aWM);
 
   if (!minISizeCoord.IsAuto() &&
-      !(isFlexItem && flexMainAxis == eLogicalAxisInline)) {
+      !(isFlexItem && flexMainAxis == LogicalAxis::Inline)) {
     minISize = ComputeISizeValue(aRenderingContext, aWM, aCBSize,
                                  boxSizingAdjust, boxSizingToMarginEdgeISize,
                                  minISizeCoord, aSizeOverrides, aFlags)
@@ -2325,8 +2325,8 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
                                              boxSizingAdjust.BSize(aWM),
                                              styleBSize.AsLengthPercentage());
   } else if (MOZ_UNLIKELY(isGridItem) &&
-             !parentFrame->IsMasonry(isOrthogonal ? eLogicalAxisInline
-                                                  : eLogicalAxisBlock)) {
+             !parentFrame->IsMasonry(isOrthogonal ? LogicalAxis::Inline
+                                                  : LogicalAxis::Block)) {
     MOZ_ASSERT(!IsTrueOverflowContainer());
     // 'auto' block-size for grid-level box - apply 'stretch' as needed:
     auto cbSize = aCBSize.BSize(aWM);
@@ -2353,7 +2353,7 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
   const auto& maxBSizeCoord = stylePos->MaxBSize(aWM);
 
   if (!nsLayoutUtils::IsAutoBSize(maxBSizeCoord, aCBSize.BSize(aWM)) &&
-      !(isFlexItem && flexMainAxis == eLogicalAxisBlock)) {
+      !(isFlexItem && flexMainAxis == LogicalAxis::Block)) {
     maxBSize = nsLayoutUtils::ComputeBSizeValue(
         aCBSize.BSize(aWM), boxSizingAdjust.BSize(aWM),
         maxBSizeCoord.AsLengthPercentage());
@@ -2364,7 +2364,7 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
   const auto& minBSizeCoord = stylePos->MinBSize(aWM);
 
   if (!nsLayoutUtils::IsAutoBSize(minBSizeCoord, aCBSize.BSize(aWM)) &&
-      !(isFlexItem && flexMainAxis == eLogicalAxisBlock)) {
+      !(isFlexItem && flexMainAxis == LogicalAxis::Block)) {
     minBSize = nsLayoutUtils::ComputeBSizeValue(
         aCBSize.BSize(aWM), boxSizingAdjust.BSize(aWM),
         minBSizeCoord.AsLengthPercentage());
@@ -2388,8 +2388,7 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
         tentISize = intrinsicISize;
       } else if (hasIntrinsicBSize && aspectRatio) {
         tentISize = aspectRatio.ComputeRatioDependentSize(
-            LogicalAxis::eLogicalAxisInline, aWM, intrinsicBSize,
-            boxSizingAdjust);
+            LogicalAxis::Inline, aWM, intrinsicBSize, boxSizingAdjust);
       } else if (aspectRatio) {
         tentISize =
             aCBSize.ISize(aWM) - boxSizingToMarginEdgeISize;  // XXX scrollbar?
@@ -2412,7 +2411,7 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
         tentBSize = intrinsicBSize;
       } else if (aspectRatio) {
         tentBSize = aspectRatio.ComputeRatioDependentSize(
-            LogicalAxis::eLogicalAxisBlock, aWM, tentISize, boxSizingAdjust);
+            LogicalAxis::Block, aWM, tentISize, boxSizingAdjust);
       } else {
         tentBSize = fallbackIntrinsicSize.BSize(aWM);
       }
@@ -2430,29 +2429,29 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
         } else if (stretchB == eStretchPreservingRatio && aspectRatio) {
           // 'normal' / 'stretch'
           tentBSize = aspectRatio.ComputeRatioDependentSize(
-              LogicalAxis::eLogicalAxisBlock, aWM, iSize, boxSizingAdjust);
+              LogicalAxis::Block, aWM, iSize, boxSizingAdjust);
         }
       } else if (stretchB == eStretch) {
         tentBSize = bSize;  // 'stretch' / * (except 'stretch')
         if (stretchI == eStretchPreservingRatio && aspectRatio) {
           // 'stretch' / 'normal'
           tentISize = aspectRatio.ComputeRatioDependentSize(
-              LogicalAxis::eLogicalAxisInline, aWM, bSize, boxSizingAdjust);
+              LogicalAxis::Inline, aWM, bSize, boxSizingAdjust);
         }
       } else if (stretchI == eStretchPreservingRatio && aspectRatio) {
         tentISize = iSize;  // * (except 'stretch') / 'normal'
         tentBSize = aspectRatio.ComputeRatioDependentSize(
-            LogicalAxis::eLogicalAxisBlock, aWM, iSize, boxSizingAdjust);
+            LogicalAxis::Block, aWM, iSize, boxSizingAdjust);
         if (stretchB == eStretchPreservingRatio && tentBSize > bSize) {
           // Stretch within the CB size with preserved intrinsic ratio.
           tentBSize = bSize;  // 'normal' / 'normal'
           tentISize = aspectRatio.ComputeRatioDependentSize(
-              LogicalAxis::eLogicalAxisInline, aWM, bSize, boxSizingAdjust);
+              LogicalAxis::Inline, aWM, bSize, boxSizingAdjust);
         }
       } else if (stretchB == eStretchPreservingRatio && aspectRatio) {
         tentBSize = bSize;  // 'normal' / * (except 'normal' and 'stretch')
         tentISize = aspectRatio.ComputeRatioDependentSize(
-            LogicalAxis::eLogicalAxisInline, aWM, bSize, boxSizingAdjust);
+            LogicalAxis::Inline, aWM, bSize, boxSizingAdjust);
       }
 
       // ComputeAutoSizeWithIntrinsicDimensions preserves the ratio when
@@ -2479,7 +2478,7 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
       if (stretchI != eStretch) {
         if (aspectRatio) {
           iSize = aspectRatio.ComputeRatioDependentSize(
-              LogicalAxis::eLogicalAxisInline, aWM, bSize, boxSizingAdjust);
+              LogicalAxis::Inline, aWM, bSize, boxSizingAdjust);
         } else if (hasIntrinsicISize) {
           if (!(aFlags.contains(ComputeSizeFlag::IClampMarginBoxMinSize) &&
                 intrinsicISize > iSize)) {
@@ -2497,8 +2496,8 @@ LogicalSize nsContainerFrame::ComputeSizeWithIntrinsicDimensions(
       iSize = NS_CSS_MINMAX(iSize, minISize, maxISize);
       if (stretchB != eStretch) {
         if (aspectRatio) {
-          bSize = aspectRatio.ComputeRatioDependentSize(
-              LogicalAxis::eLogicalAxisBlock, aWM, iSize, boxSizingAdjust);
+          bSize = aspectRatio.ComputeRatioDependentSize(LogicalAxis::Block, aWM,
+                                                        iSize, boxSizingAdjust);
         } else if (hasIntrinsicBSize) {
           if (!(aFlags.contains(ComputeSizeFlag::BClampMarginBoxMinSize) &&
                 intrinsicBSize > bSize)) {

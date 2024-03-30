@@ -547,7 +547,7 @@ ComputeSizeFlags nsTableWrapperFrame::CreateComputeSizeFlagsForChild() const {
   // Shrink-wrap child frames by default, except if we're a stretched grid item.
   if (MOZ_UNLIKELY(IsGridItem())) {
     auto* gridContainer = static_cast<nsGridContainerFrame*>(GetParent());
-    if (gridContainer->GridItemShouldStretch(this, eLogicalAxisInline)) {
+    if (gridContainer->GridItemShouldStretch(this, LogicalAxis::Inline)) {
       return {};
     }
   }

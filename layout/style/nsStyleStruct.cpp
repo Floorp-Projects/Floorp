@@ -3536,7 +3536,7 @@ static nscoord Resolve(const StyleContainIntrinsicSize& aSize,
   }
   MOZ_ASSERT(aSize.HasAuto());
   if (const auto* element = Element::FromNodeOrNull(aFrame.GetContent())) {
-    Maybe<float> lastSize = aAxis == eLogicalAxisBlock
+    Maybe<float> lastSize = aAxis == LogicalAxis::Block
                                 ? element->GetLastRememberedBSize()
                                 : element->GetLastRememberedISize();
     if (lastSize && aFrame.HidesContent()) {
@@ -3556,7 +3556,7 @@ Maybe<nscoord> ContainSizeAxes::ContainIntrinsicBSize(
   }
   const StyleContainIntrinsicSize& bSize =
       aFrame.StylePosition()->ContainIntrinsicBSize(aFrame.GetWritingMode());
-  return Some(Resolve(bSize, aNoneValue, aFrame, eLogicalAxisBlock));
+  return Some(Resolve(bSize, aNoneValue, aFrame, LogicalAxis::Block));
 }
 
 Maybe<nscoord> ContainSizeAxes::ContainIntrinsicISize(
@@ -3566,7 +3566,7 @@ Maybe<nscoord> ContainSizeAxes::ContainIntrinsicISize(
   }
   const StyleContainIntrinsicSize& iSize =
       aFrame.StylePosition()->ContainIntrinsicISize(aFrame.GetWritingMode());
-  return Some(Resolve(iSize, aNoneValue, aFrame, eLogicalAxisInline));
+  return Some(Resolve(iSize, aNoneValue, aFrame, LogicalAxis::Inline));
 }
 
 nsSize ContainSizeAxes::ContainSize(const nsSize& aUncontainedSize,

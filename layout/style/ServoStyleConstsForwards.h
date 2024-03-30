@@ -83,7 +83,7 @@ struct PropertyStyleAnimationValuePair;
 using ComputedKeyframeValues = nsTArray<PropertyStyleAnimationValuePair>;
 
 class ComputedStyle;
-enum LogicalAxis : uint8_t;
+enum class LogicalAxis : uint8_t;
 class SeenPtrs;
 class SharedFontList;
 class StyleSheet;

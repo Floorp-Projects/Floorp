@@ -522,7 +522,7 @@ static nscoord OffsetToAlignedStaticPos(const ReflowInput& aKidReflowInput,
     return 0;  // (leave the child at the start of its alignment container)
   }
 
-  nscoord alignAreaSizeInAxis = (pcAxis == eLogicalAxisInline)
+  nscoord alignAreaSizeInAxis = (pcAxis == LogicalAxis::Inline)
                                     ? alignAreaSize.ISize(pcWM)
                                     : alignAreaSize.BSize(pcWM);
 
@@ -619,7 +619,7 @@ void nsAbsoluteContainingBlock::ResolveSizeDependentOffsets(
       placeholderContainer = GetPlaceholderContainer(aKidReflowInput.mFrame);
       nscoord offset = OffsetToAlignedStaticPos(
           aKidReflowInput, aKidSize, logicalCBSizeOuterWM, placeholderContainer,
-          outerWM, eLogicalAxisInline);
+          outerWM, LogicalAxis::Inline);
       // Shift IStart from its current position (at start corner of the
       // alignment container) by the returned offset.  And set IEnd to the
       // distance between the kid's end edge to containing block's end edge.
@@ -639,7 +639,7 @@ void nsAbsoluteContainingBlock::ResolveSizeDependentOffsets(
       }
       nscoord offset = OffsetToAlignedStaticPos(
           aKidReflowInput, aKidSize, logicalCBSizeOuterWM, placeholderContainer,
-          outerWM, eLogicalAxisBlock);
+          outerWM, LogicalAxis::Block);
       // Shift BStart from its current position (at start corner of the
       // alignment container) by the returned offset.  And set BEnd to the
       // distance between the kid's end edge to containing block's end edge.
