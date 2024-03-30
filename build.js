@@ -68,7 +68,7 @@ if (process.argv[2] && process.argv[2] === "--run") {
     await decompress(archive, "dist/bin");
 
     console.log("decompress complete!");
-    //await fs.writeFile("dist/bin/nora.version.txt", VERSION);
+    await fs.writeFile("dist/bin/nora.version.txt", VERSION);
   }
 
   //await fs.cp("dist", "bin/chrome/noraneko/content", { recursive: true });
