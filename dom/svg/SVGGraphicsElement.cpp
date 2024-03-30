@@ -125,8 +125,7 @@ already_AddRefed<SVGRect> SVGGraphicsElement::GetBBox(
 }
 
 already_AddRefed<SVGMatrix> SVGGraphicsElement::GetCTM() {
-  Document* currentDoc = GetComposedDoc();
-  if (currentDoc) {
+  if (auto* currentDoc = GetComposedDoc()) {
     // Flush all pending notifications so that our frames are up to date
     currentDoc->FlushPendingNotifications(FlushType::Layout);
   }
@@ -137,8 +136,7 @@ already_AddRefed<SVGMatrix> SVGGraphicsElement::GetCTM() {
 }
 
 already_AddRefed<SVGMatrix> SVGGraphicsElement::GetScreenCTM() {
-  Document* currentDoc = GetComposedDoc();
-  if (currentDoc) {
+  if (auto* currentDoc = GetComposedDoc()) {
     // Flush all pending notifications so that our frames are up to date
     currentDoc->FlushPendingNotifications(FlushType::Layout);
   }

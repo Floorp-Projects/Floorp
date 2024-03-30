@@ -187,7 +187,7 @@ bool SVGGeometryElement::IsPointInFill(const DOMPointInit& aPoint) {
 bool SVGGeometryElement::IsPointInStroke(const DOMPointInit& aPoint) {
   // stroke-* attributes and the d attribute are presentation attributes, so we
   // flush the layout before building the path.
-  if (nsCOMPtr<Document> doc = GetComposedDoc()) {
+  if (auto* doc = GetComposedDoc()) {
     doc->FlushPendingNotifications(FlushType::Layout);
   }
 
