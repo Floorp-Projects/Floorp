@@ -198,7 +198,7 @@ void SVGSVGElement::SetCurrentTime(float seconds) {
     return;
   }
   // Make sure the timegraph is up-to-date
-  if (RefPtr<Document> currentDoc = GetComposedDoc()) {
+  if (auto* currentDoc = GetComposedDoc()) {
     currentDoc->FlushPendingNotifications(FlushType::Style);
   }
   if (!mTimedDocumentRoot) {
