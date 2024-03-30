@@ -437,21 +437,6 @@ if test -z "$SKIP_COMPILER_CHECKS"; then
 dnl Checks for typedefs, structures, and compiler characteristics.
 dnl ========================================================
 
-AC_LANG_C
-AC_MSG_CHECKING(for ssize_t)
-AC_CACHE_VAL(ac_cv_type_ssize_t,
- [AC_TRY_COMPILE([#include <stdio.h>
-                  #include <sys/types.h>],
-                 [ssize_t foo = 0;],
-                 [ac_cv_type_ssize_t=true],
-                 [ac_cv_type_ssize_t=false])])
-if test "$ac_cv_type_ssize_t" = true ; then
-  AC_DEFINE(HAVE_SSIZE_T)
-  AC_MSG_RESULT(yes)
-else
-  AC_MSG_RESULT(no)
-fi
-
 AC_LANG_CPLUSPLUS
 
 MOZ_CXX11
