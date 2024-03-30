@@ -84,7 +84,11 @@
     <string name="share_dialog_title">Partejar via</string>
 
     <string name="notification_erase_title_android_14">Escafar l’istoric de navegacion ?</string>
-    <string name="notification_erase_text_android_14">Tocatz aquesta notificacion o suprimissètz-la per escafar l’istoric de navegacion d’una manièra segura.</string>
+    <string name="notification_erase_text_android_14" moz:RemovedIn="124" tools:ignore="UnusedResources">Tocatz aquesta notificacion o suprimissètz-la per escafar l’istoric de navegacion d’una manièra segura.</string>
+
+    <!-- Text shown in the notification description that pops up to remind the user that a browsing session is active
+    for Android 14+. -->
+    <string name="notification_erase_text_android_14_1">Tocatz o lisatz aquesta notificacion per escafar l’istoric de navegacion d’una manièra segura.</string>
 
     <string name="notification_erase_text">Netejar l’istoric de navegacion</string>
 
