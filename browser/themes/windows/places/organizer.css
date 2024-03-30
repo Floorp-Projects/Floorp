@@ -82,7 +82,6 @@
 /* Toolbar and menus */
 
 #placesToolbar {
-  appearance: none;
   background-color: var(--organizer-toolbar-background);
   color: var(--organizer-color);
   border-bottom: 1px solid var(--organizer-border-color);
