@@ -1,0 +1,13 @@
+{
+  "typeAcquisition": {
+    "enable": true
+  },
+  "compilerOptions": {
+    "useDefineForClassFields": true,
+    "lib": ["es2022", "DOM"],
+    "module": "NodeNext",
+    "allowJs": true,
+    "checkJs": true
+  },
+  "exclude": ["dist/**"]
+}
