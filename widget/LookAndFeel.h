@@ -117,6 +117,9 @@ class LookAndFeel {
      */
     MacRTL,
 
+    /* Native macOS titlebar height. */
+    MacTitlebarHeight,
+
     /*
      * AlertNotificationOrigin indicates from which corner of the
      * screen alerts slide in, and from which direction (horizontal/vertical).
