@@ -87,8 +87,7 @@ class Buffer {
     if (n_bytes > 1024 * 1024 * 1024) {
       return OTS_FAILURE();
     }
-    if ((offset_ + n_bytes > length_) ||
-        (offset_ > length_ - n_bytes)) {
+    if (length_ < n_bytes || offset_ > length_ - n_bytes) {
       return OTS_FAILURE();
     }
     if (buf) {
@@ -99,7 +98,7 @@ class Buffer {
   }
 
   inline bool ReadU8(uint8_t *value) {
-    if (offset_ + 1 > length_) {
+    if (length_ < 1 || offset_ > length_ - 1) {
       return OTS_FAILURE();
     }
     *value = buffer_[offset_];
@@ -108,7 +107,7 @@ class Buffer {
   }
 
   bool ReadU16(uint16_t *value) {
-    if (offset_ + 2 > length_) {
+    if (length_ < 2 || offset_ > length_ - 2) {
       return OTS_FAILURE();
     }
     std::memcpy(value, buffer_ + offset_, sizeof(uint16_t));
@@ -122,7 +121,7 @@ class Buffer {
   }
 
   bool ReadU24(uint32_t *value) {
-    if (offset_ + 3 > length_) {
+    if (length_ < 3 || offset_ > length_ - 3) {
       return OTS_FAILURE();
     }
     *value = static_cast<uint32_t>(buffer_[offset_]) << 16 |
@@ -133,7 +132,7 @@ class Buffer {
   }
 
   bool ReadU32(uint32_t *value) {
-    if (offset_ + 4 > length_) {
+    if (length_ < 4 || offset_ > length_ - 4) {
       return OTS_FAILURE();
     }
     std::memcpy(value, buffer_ + offset_, sizeof(uint32_t));
@@ -147,7 +146,7 @@ class Buffer {
   }
 
   bool ReadR64(uint64_t *value) {
-    if (offset_ + 8 > length_) {
+    if (length_ < 8 || offset_ > length_ - 8) {
       return OTS_FAILURE();
     }
     std::memcpy(value, buffer_ + offset_, sizeof(uint64_t));
