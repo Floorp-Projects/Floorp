@@ -193,23 +193,30 @@ float SVGSVGElement::GetCurrentTimeAsFloat() {
 }
 
 void SVGSVGElement::SetCurrentTime(float seconds) {
-  if (mTimedDocumentRoot) {
-    // Make sure the timegraph is up-to-date
-    FlushAnimations();
-    double fMilliseconds = double(seconds) * PR_MSEC_PER_SEC;
-    // Round to nearest whole number before converting, to avoid precision
-    // errors
-    SMILTime lMilliseconds = SVGUtils::ClampToInt64(NS_round(fMilliseconds));
-    mTimedDocumentRoot->SetCurrentTime(lMilliseconds);
-    AnimationNeedsResample();
-    // Trigger synchronous sample now, to:
-    //  - Make sure we get an up-to-date paint after this method
-    //  - re-enable event firing (it got disabled during seeking, and it
-    //  doesn't get re-enabled until the first sample after the seek -- so
-    //  let's make that happen now.)
-    FlushAnimations();
+  if (!mTimedDocumentRoot) {
+    // we're not the outermost <svg> or not bound to a tree, so silently fail
+    return;
   }
-  // else we're not the outermost <svg> or not bound to a tree, so silently fail
+  // Make sure the timegraph is up-to-date
+  if (RefPtr<Document> currentDoc = GetComposedDoc()) {
+    currentDoc->FlushPendingNotifications(FlushType::Style);
+  }
+  if (!mTimedDocumentRoot) {
+    return;
+  }
+  FlushAnimations();
+  double fMilliseconds = double(seconds) * PR_MSEC_PER_SEC;
+  // Round to nearest whole number before converting, to avoid precision
+  // errors
+  SMILTime lMilliseconds = SVGUtils::ClampToInt64(NS_round(fMilliseconds));
+  mTimedDocumentRoot->SetCurrentTime(lMilliseconds);
+  AnimationNeedsResample();
+  // Trigger synchronous sample now, to:
+  //  - Make sure we get an up-to-date paint after this method
+  //  - re-enable event firing (it got disabled during seeking, and it
+  //  doesn't get re-enabled until the first sample after the seek -- so
+  //  let's make that happen now.)
+  FlushAnimations();
 }
 
 void SVGSVGElement::DeselectAll() {
