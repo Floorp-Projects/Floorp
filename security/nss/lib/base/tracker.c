@@ -338,7 +338,7 @@ nssPointerTracker_remove(nssPointerTracker *tracker, const void *pointer)
  *
  * Return value:
  *  PR_SUCCESS
- *  PR_FAILRUE
+ *  PR_FAILURE
  */
 
 NSS_IMPLEMENT PRStatus

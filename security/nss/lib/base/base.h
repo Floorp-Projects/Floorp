@@ -1034,7 +1034,7 @@ extern const NSSError NSS_ERROR_POINTER_NOT_REGISTERED;
  *
  * Return value:
  *  PR_SUCCESS
- *  PR_FAILRUE
+ *  PR_FAILURE
  */
 
 #ifdef DEBUG
