@@ -104,7 +104,7 @@ skip-if = ["fission"] # Fails with Fission, and we're unlikely to spend time to 
 ["browser_multiple_popups.js"]
 skip-if = [
   "os == 'win' && !debug", # Bug 1505235
-  "os == 'mac' && !debug", # Bug 1661132 (osx)
+  "apple_catalina", # Bug 1661132 (osx), Bug 1866073
   "socketprocess_networking",
 ]
 support-files = ["browser_multiple_popups.html"]
