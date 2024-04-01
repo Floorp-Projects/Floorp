@@ -419,6 +419,22 @@ features:
         type: Boolean
         default: false
 
+  toolbar-redesign:
+    description: Feature for toolbar redesign.
+    variables:
+      enabled:
+        description: >
+          When the feature is enabled then the user will see the new redesigned toolbar.
+        type: Boolean
+        default: false
+    defaults:
+      - channel: developer
+        value:
+          enabled: true
+      - channel: nightly
+        value:
+          enabled: true
+
 types:
   objects: {}
 
