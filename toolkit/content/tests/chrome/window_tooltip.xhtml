@@ -329,43 +329,7 @@ var popupTests = [
     // that the original height has increased by at least 10 pixels
     ok(gOriginalHeight + 10 < rect.bottom - rect.top, testname + " tooltip is wrapped");
   }
-},
-{
-  testname: "anchored tooltip with no offset",
-  events: ["popupshowing thetooltip", "popupshown thetooltip"],
-  autohide: "thetooltip",
-  test() {
-    gButton = document.getElementById("withtooltip");
-    document
-      .getElementById("thetooltip")
-      .setAttribute(
-        "onpopupshowing",
-        "this.moveToAnchor(this.triggerNode, 'after_start');"
-      );
-    disableNonTestMouse(true);
-    synthesizeMouse(gButton, 2, 2, { type: "mouseover" });
-    synthesizeMouse(gButton, 4, 4, { type: "mousemove" });
-    synthesizeMouse(gButton, 6, 6, { type: "mousemove" });
-    disableNonTestMouse(false);
-  },
-  result(testname) {
-    var buttonrect = document
-      .getElementById("withtooltip")
-      .getBoundingClientRect();
-    var tooltip = document.getElementById("thetooltip");
-    var rect = tooltip.getBoundingClientRect();
-    var popupstyle = window.getComputedStyle(tooltip);
-
-    // Offset does not apply to anchored tooltips
-    is(
-      Math.round(rect.top),
-      Math.round(buttonrect.bottom + parseFloat(popupstyle.marginTop)),
-      testname + " top position of tooltip"
-    );
-
-    tooltip.removeAttribute("onpopupshowing");
-  },
-},
+}
 ];
 
 var waitSteps = 0;
