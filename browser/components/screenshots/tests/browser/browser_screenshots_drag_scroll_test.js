@@ -434,7 +434,14 @@ add_task(async function test_scrollIfByEdgeWithKeyboard() {
       is(scrollX, windowX, "Window x position is 1000");
       is(scrollY, windowY, "Window y position is 1000");
 
-      await helper.dragOverlay(1020, 1020, 1120, 1120);
+      await helper.dragOverlay(
+        scrollX + 20,
+        scrollY + 20,
+        scrollX + 120,
+        scrollY + 120
+      );
+
+      await helper.scrollContentWindow(windowX, windowY);
 
       await helper.moveOverlayViaKeyboard("highlight", [
         { key: "ArrowLeft", options: { shiftKey: true } },
