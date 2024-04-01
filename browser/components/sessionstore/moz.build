@@ -11,6 +11,8 @@ MARIONETTE_MANIFESTS += ["test/marionette/manifest.toml"]
 JAR_MANIFESTS += ["jar.mn"]
 
 EXTRA_JS_MODULES.sessionstore = [
+    "ContentRestore.sys.mjs",
+    "ContentSessionStore.sys.mjs",
     "GlobalState.sys.mjs",
     "RecentlyClosedTabsAndWindowsMenuUtils.sys.mjs",
     "RunState.sys.mjs",
