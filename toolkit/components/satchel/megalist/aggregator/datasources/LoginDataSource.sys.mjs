@@ -2,9 +2,29 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { LoginHelper } from "resource://gre/modules/LoginHelper.sys.mjs";
 import { DataSourceBase } from "resource://gre/modules/megalist/aggregator/datasources/DataSourceBase.sys.mjs";
 import { LoginCSVImport } from "resource://gre/modules/LoginCSVImport.sys.mjs";
+
+const lazy = {};
+ChromeUtils.defineESModuleGetters(lazy, {
+  LoginBreaches: "resource:///modules/LoginBreaches.sys.mjs",
+});
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "BREACH_ALERTS_ENABLED",
+  "signon.management.page.breach-alerts.enabled",
+  false
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "VULNERABLE_PASSWORDS_ENABLED",
+  "signon.management.page.vulnerable-passwords.enabled",
+  false
+);
 
 /**
  * Data source for Logins.
@@ -74,8 +94,8 @@ export class LoginDataSource extends DataSourceBase {
         const copyCommand = { id: "Copy", label: copyCommandLabel };
         const editCommand = { id: "Edit", label: editCommandLabel };
         const deleteCommand = { id: "Delete", label: deleteCommandLabel };
-        const warningBreach = { type: "warning", label: "BREACH" };
-        const riskBreach = { type: "risk", label: "RISK" };
+        this.breachedSticker = { type: "warning", label: "BREACH" };
+        this.vulnerableSticker = { type: "risk", label: "🤮 Vulnerable" };
         this.#loginsDisabledMessage = passwordsDisabled;
         this.#header = this.createHeaderLine(headerLabel);
         this.#header.commands.push(
@@ -126,17 +146,6 @@ export class LoginDataSource extends DataSourceBase {
               "-",
               deleteCommand,
             ],
-          },
-          stickers: {
-            *get() {
-              if (this.record.origin.includes("maz")) {
-                yield warningBreach;
-              }
-
-              if (this.record.origin.includes(".net")) {
-                yield riskBreach;
-              }
-            },
           },
           executeCopy: {
             value() {
@@ -247,6 +256,14 @@ export class LoginDataSource extends DataSourceBase {
 
         Services.obs.addObserver(this, "passwordmgr-storage-changed");
         Services.prefs.addObserver("signon.rememberSignons", this);
+        Services.prefs.addObserver(
+          "signon.management.page.breach-alerts.enabled",
+          this
+        );
+        Services.prefs.addObserver(
+          "signon.management.page.vulnerable-passwords.enabled",
+          this
+        );
         this.#reloadDataSource();
       }
     );
@@ -375,6 +392,11 @@ export class LoginDataSource extends DataSourceBase {
 
     const logins = await LoginHelper.getAllUserFacingLogins();
     this.beforeReloadingDataSource();
+
+    const breachesMap = lazy.BREACH_ALERTS_ENABLED
+      ? await lazy.LoginBreaches.getPotentialBreachesByLoginGUID(logins)
+      : new Map();
+
     logins.forEach(login => {
       // Similar domains will be grouped together
       // www. will have least effect on the sorting
@@ -388,10 +410,45 @@ export class LoginDataSource extends DataSourceBase {
       const domain = parts.reverse().join(".");
       const lineId = `${domain}:${login.username}:${login.guid}`;
 
-      this.addOrUpdateLine(login, lineId + "0", this.#originPrototype);
+      let originLine = this.addOrUpdateLine(
+        login,
+        lineId + "0",
+        this.#originPrototype
+      );
       this.addOrUpdateLine(login, lineId + "1", this.#usernamePrototype);
-      this.addOrUpdateLine(login, lineId + "2", this.#passwordPrototype);
+      let passwordLine = this.addOrUpdateLine(
+        login,
+        lineId + "2",
+        this.#passwordPrototype
+      );
+
+      let breachIndex =
+        originLine.stickers?.findIndex(s => s === this.breachedSticker) ?? -1;
+      let breach = breachesMap.get(login.guid);
+      if (breach && breachIndex < 0) {
+        originLine.stickers ??= [];
+        originLine.stickers.push(this.breachedSticker);
+      } else if (!breach && breachIndex >= 0) {
+        originLine.stickers.splice(breachIndex, 1);
+      }
+
+      const vulnerable = lazy.VULNERABLE_PASSWORDS_ENABLED
+        ? lazy.LoginBreaches.getPotentiallyVulnerablePasswordsByLoginGUID([
+            login,
+          ]).size
+        : 0;
+
+      let vulnerableIndex =
+        passwordLine.stickers?.findIndex(s => s === this.vulnerableSticker) ??
+        -1;
+      if (vulnerable && vulnerableIndex < 0) {
+        passwordLine.stickers ??= [];
+        passwordLine.stickers.push(this.vulnerableSticker);
+      } else if (!vulnerable && vulnerableIndex >= 0) {
+        passwordLine.stickers.splice(vulnerableIndex, 1);
+      }
     });
+
     this.afterReloadingDataSource();
   }
 
@@ -405,7 +462,9 @@ export class LoginDataSource extends DataSourceBase {
   observe(_subj, topic, message) {
     if (
       topic == "passwordmgr-storage-changed" ||
-      message == "signon.rememberSignons"
+      message == "signon.rememberSignons" ||
+      message == "signon.management.page.breach-alerts.enabled" ||
+      message == "signon.management.page.vulnerable-passwords.enabled"
     ) {
       this.#reloadDataSource();
     }
