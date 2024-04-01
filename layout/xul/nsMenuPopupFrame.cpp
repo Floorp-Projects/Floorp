@@ -2186,7 +2186,7 @@ nsMargin nsMenuPopupFrame::GetMargin() const {
     margin.left += auOffset.x;
     margin.right += auOffset.x;
   }
-  if (mPopupType == PopupType::Tooltip) {
+  if (mPopupType == PopupType::Tooltip && !IsAnchored()) {
     const auto auOffset =
         CSSPixel::ToAppUnits(LookAndFeel::TooltipOffsetVertical());
     margin.top += auOffset;
@@ -2252,7 +2252,8 @@ void nsMenuPopupFrame::MoveTo(const CSSPoint& aPos, bool aUpdateAttrs,
 void nsMenuPopupFrame::MoveToAnchor(nsIContent* aAnchorContent,
                                     const nsAString& aPosition, int32_t aXPos,
                                     int32_t aYPos, bool aAttributesOverride) {
-  NS_ASSERTION(IsVisible(), "popup must be visible to move it");
+  NS_ASSERTION(IsVisibleOrShowing(),
+               "popup must be visible or showing to move it");
 
   nsPopupState oldstate = mPopupState;
   InitializePopup(aAnchorContent, mTriggerContent, aPosition, aXPos, aYPos,
