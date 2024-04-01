@@ -31,7 +31,7 @@
     appearance: auto;
 
     #navigator-toolbox {
-      background: transparent;
+      background-color: light-dark(rgba(0, 0, 0, .05), transparent);
 
       /* This is conceptually a background, but putting this on a
        * pseudo-element avoids it from suppressing the chrome-content separator
