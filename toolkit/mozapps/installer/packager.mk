@@ -83,14 +83,14 @@ ifdef ENABLE_MOZSEARCH_PLUGIN
 	cd $(topobjdir)/ && cp _build_manifests/install/dist_include '$(ABS_DIST)/$(PKG_PATH)$(MOZSEARCH_INCLUDEMAP_BASENAME).map'
 	@echo 'Generating mozsearch scip index...'
 	$(RM) $(MOZSEARCH_SCIP_INDEX_BASENAME).zip
-	cp $(topsrcdir)/.cargo/config.in $(topsrcdir)/.cargo/config
+	cp $(topsrcdir)/.cargo/config.toml.in $(topsrcdir)/.cargo/config.toml
 	cd $(topsrcdir)/ && \
           CARGO=$(MOZ_FETCHES_DIR)/rustc/bin/cargo \
           RUSTC=$(MOZ_FETCHES_DIR)/rustc/bin/rustc \
           $(MOZ_FETCHES_DIR)/rustc/bin/rust-analyzer scip . && \
           zip -r5D '$(ABS_DIST)/$(PKG_PATH)$(MOZSEARCH_SCIP_INDEX_BASENAME).zip' \
           index.scip
-	rm $(topsrcdir)/.cargo/config
+	rm $(topsrcdir)/.cargo/config.toml
 ifeq ($(MOZ_BUILD_APP),mobile/android)
 	@echo 'Generating mozsearch java/kotlin semanticdb tarball...'
 	$(RM) $(MOZSEARCH_JAVA_INDEX_BASENAME).zip

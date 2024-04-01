@@ -179,7 +179,7 @@ rsync_filter_list = """
 + /config/**
 + /python/**
 
-+ /.cargo/config.in
++ /.cargo/config.toml.in
 
 + /third_party/function2/**
 - /third_party/python/gyp
