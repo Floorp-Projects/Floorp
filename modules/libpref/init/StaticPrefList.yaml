@@ -16000,6 +16000,11 @@
   type: RelaxedAtomicBool
   value: true
   mirror: always
+
+- name: widget.macos.titlebar-blend-mode.behind-window
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
 #endif
 
 # Whether native GTK global menubar support is enabled.

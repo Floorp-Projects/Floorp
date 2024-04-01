@@ -9,6 +9,7 @@
 #import <objc/message.h>
 
 #include "nsChildView.h"
+#include "mozilla/StaticPrefs_widget.h"
 
 using namespace mozilla;
 
@@ -48,6 +49,19 @@ static NSVisualEffectMaterial VisualEffectMaterialForVibrancyType(
   }
 }
 
+static NSVisualEffectBlendingMode VisualEffectBlendingModeForVibrancyType(
+    VibrancyType aType) {
+  switch (aType) {
+    case VibrancyType::TOOLTIP:
+    case VibrancyType::MENU:
+      return NSVisualEffectBlendingModeBehindWindow;
+    case VibrancyType::TITLEBAR:
+      return StaticPrefs::widget_macos_titlebar_blend_mode_behind_window()
+                 ? NSVisualEffectBlendingModeBehindWindow
+                 : NSVisualEffectBlendingModeWithinWindow;
+  }
+}
+
 @implementation MOZVibrantView
 
 - (instancetype)initWithFrame:(NSRect)aRect vibrancyType:(VibrancyType)aType {
@@ -57,10 +71,8 @@ static NSVisualEffectMaterial VisualEffectMaterialForVibrancyType(
   self.appearance = nil;
   self.state = VisualEffectStateForVibrancyType(mType);
   self.material = VisualEffectMaterialForVibrancyType(mType);
+  self.blendingMode = VisualEffectBlendingModeForVibrancyType(mType);
   self.emphasized = NO;
-  self.blendingMode = aType == VibrancyType::TITLEBAR
-                          ? NSVisualEffectBlendingModeWithinWindow
-                          : NSVisualEffectBlendingModeBehindWindow;
   return self;
 }
 
