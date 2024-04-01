@@ -114,7 +114,10 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
   void DispatchVisualViewportResizeEvents();
 
   void PostScrollEvent(mozilla::Runnable* aScrollEvent, bool aDelayed = false);
+  void PostScrollEndEvent(mozilla::Runnable* aScrollEndEvent,
+                          bool aDelayed = false);
   void DispatchScrollEvents();
+  void DispatchScrollEndEvents();
 
   void PostVisualViewportScrollEvent(VVPScrollEvent* aScrollEvent);
   void DispatchVisualViewportScrollEvents();
@@ -694,10 +697,12 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
   AutoTArray<nsCOMPtr<nsIRunnable>, 16> mEarlyRunners;
   VisualViewportResizeEventArray mVisualViewportResizeEvents;
   ScrollEventArray mScrollEvents;
+  ScrollEventArray mScrollEndEvents;
   VisualViewportScrollEventArray mVisualViewportScrollEvents;
 
   // Scroll events on documents that might have events suppressed.
   ScrollEventArray mDelayedScrollEvents;
+  ScrollEventArray mDelayedScrollEndEvents;
 
   AutoTArray<mozilla::PresShell*, 16> mResizeEventFlushObservers;
   AutoTArray<mozilla::PresShell*, 16> mDelayedResizeEventFlushObservers;

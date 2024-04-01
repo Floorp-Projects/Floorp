@@ -1528,12 +1528,29 @@ void nsRefreshDriver::PostScrollEvent(mozilla::Runnable* aScrollEvent,
   }
 }
 
+void nsRefreshDriver::PostScrollEndEvent(mozilla::Runnable* aScrollEndEvent,
+                                         bool aDelayed) {
+  if (aDelayed) {
+    mDelayedScrollEndEvents.AppendElement(aScrollEndEvent);
+  } else {
+    mScrollEndEvents.AppendElement(aScrollEndEvent);
+    EnsureTimerStarted();
+  }
+}
+
 void nsRefreshDriver::DispatchScrollEvents() {
   // Scroll events are one-shot, so after running them we can drop them.
   // However, dispatching a scroll event can potentially cause more scroll
   // events to be posted, so we move the initial set into a temporary array
   // first. (Newly posted scroll events will be dispatched on the next tick.)
   ScrollEventArray events = std::move(mScrollEvents);
+  for (auto& event : events) {
+    event->Run();
+  }
+}
+
+void nsRefreshDriver::DispatchScrollEndEvents() {
+  ScrollEventArray events = std::move(mScrollEndEvents);
   for (auto& event : events) {
     event->Run();
   }
@@ -1672,6 +1689,9 @@ void nsRefreshDriver::RunDelayedEventsSoon() {
 
   mScrollEvents.AppendElements(mDelayedScrollEvents);
   mDelayedScrollEvents.Clear();
+
+  mScrollEndEvents.AppendElements(mDelayedScrollEvents);
+  mDelayedScrollEndEvents.Clear();
 
   mResizeEventFlushObservers.AppendElements(mDelayedResizeEventFlushObservers);
   mDelayedResizeEventFlushObservers.Clear();
@@ -2008,7 +2028,7 @@ auto nsRefreshDriver::GetReasonsToTick() const -> TickReasons {
   if (!mVisualViewportResizeEvents.IsEmpty()) {
     reasons |= TickReasons::eHasVisualViewportResizeEvents;
   }
-  if (!mScrollEvents.IsEmpty()) {
+  if (!mScrollEvents.IsEmpty() || !mScrollEndEvents.IsEmpty()) {
     reasons |= TickReasons::eHasScrollEvents;
   }
   if (!mVisualViewportScrollEvents.IsEmpty()) {
@@ -2476,6 +2496,7 @@ bool nsRefreshDriver::TickObserverArray(uint32_t aIdx, TimeStamp aNowTime) {
     FlushAutoFocusDocuments();
     DispatchScrollEvents();
     DispatchVisualViewportScrollEvents();
+    DispatchScrollEndEvents();
     EvaluateMediaQueriesAndReportChanges();
     DispatchAnimationEvents();
     RunFullscreenSteps();
