@@ -86,6 +86,7 @@
         <!-- Border -->
         <!-- Default, Divider, Dotted -->
         <item name="borderPrimary">@color/fx_mobile_border_color_primary</item>
+        <item name="borderSecondary">@color/fx_mobile_border_color_secondary</item>
         <!-- Toolbar divider -->
         <item name="borderToolbarDivider">@color/fx_mobile_border_color_toolbar_divider</item>
         <!-- Active thumb color & Active track color (30% transparency) -->
@@ -281,6 +282,7 @@
         <!-- Border -->
         <!-- Default, Divider, Dotted -->
         <item name="borderPrimary">@color/fx_mobile_private_border_color_primary</item>
+        <item name="borderSecondary">@color/fx_mobile_private_border_color_secondary</item>
         <!-- Toolbar divider -->
         <item name="borderToolbarDivider">@color/fx_mobile_private_border_color_toolbar_divider</item>
 
