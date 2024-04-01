@@ -26,6 +26,21 @@ class TranslationsDialogMiddleware(
         action: TranslationsDialogAction,
     ) {
         when (action) {
+            is TranslationsDialogAction.InitTranslationsDialog -> {
+                // If the languages are missing, we should attempt to fetch the supported languages.
+                // This will also ensure the missing languages dialog error state, if fetching fails.
+                if (browserStore.state.translationEngine.supportedLanguages?.fromLanguages == null ||
+                    browserStore.state.translationEngine.supportedLanguages?.toLanguages == null
+                ) {
+                    browserStore.dispatch(
+                        TranslationsAction.OperationRequestedAction(
+                            tabId = sessionId,
+                            operation = TranslationOperation.FETCH_SUPPORTED_LANGUAGES,
+                        ),
+                    )
+                }
+            }
+
             is TranslationsDialogAction.FetchDownloadFileSizeAction -> {
                 browserStore.dispatch(
                     TranslationsAction.FetchTranslationDownloadSizeAction(

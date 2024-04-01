@@ -245,6 +245,17 @@ class TranslationsMiddleware(
                         supportedLanguages = it,
                     ),
                 )
+
+                // Ensures error is cleared, if a tab made this request.
+                if (tabId != null) {
+                    context.store.dispatch(
+                        TranslationsAction.TranslateSuccessAction(
+                            tabId = tabId,
+                            operation = TranslationOperation.FETCH_SUPPORTED_LANGUAGES,
+                        ),
+                    )
+                }
+
                 logger.info("Success requesting supported languages.")
             },
             onError = {

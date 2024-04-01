@@ -11,7 +11,10 @@ import kotlinx.coroutines.flow.mapNotNull
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.browser.state.state.TranslationsBrowserState
+import mozilla.components.browser.state.state.TranslationsState
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.engine.translate.TranslationError
 import mozilla.components.concept.engine.translate.initialFromLanguage
 import mozilla.components.concept.engine.translate.initialToLanguage
 import mozilla.components.lib.state.helpers.AbstractBinding
@@ -71,13 +74,6 @@ class TranslationsDialogBinding(
                     )
                 }
 
-                // Dispatch engine level errors
-                if (browserTranslationsState.engineError != null) {
-                    translationsDialogStore.dispatch(
-                        TranslationsDialogAction.UpdateTranslationError(browserTranslationsState.engineError),
-                    )
-                }
-
                 // Session Translations State Behavior (Tab)
                 val sessionTranslationsState = state.sessionState.translationsState
 
@@ -131,32 +127,84 @@ class TranslationsDialogBinding(
                     updateStoreIfTranslated()
                 }
 
-                // A session error may override a browser error
-                if (sessionTranslationsState.translationError != null) {
-                    val documentLangDisplayName = sessionTranslationsState.translationEngineState
-                        ?.detectedLanguages?.documentLangTag?.let { docLangTag ->
-                            val documentLocale = Locale.forLanguageTag(docLangTag)
-                            val userLocale = state.browserState.locale ?: LocaleManager.getSystemDefault()
-                            LocaleUtils.getLocalizedDisplayName(
-                                userLocale = userLocale,
-                                languageLocale = documentLocale,
-                            )
-                        }
-
-                    translationsDialogStore.dispatch(
-                        TranslationsDialogAction.UpdateTranslationError(
-                            translationError = sessionTranslationsState.translationError,
-                            documentLangDisplayName = documentLangDisplayName,
-                        ),
-                    )
-                }
-
                 sessionTranslationsState.translationDownloadSize?.let {
                     translationsDialogStore.dispatch(
                         TranslationsDialogAction.UpdateDownloadTranslationDownloadSize(it),
                     )
                 }
+
+                // Error handling requires both knowledge of browser and session state
+                updateTranslationError(
+                    sessionTranslationsState = sessionTranslationsState,
+                    browserTranslationsState = browserTranslationsState,
+                    browserState = state.browserState,
+                )
             }
+    }
+
+    /**
+     * Helper function for error handling, which requires considering both
+     * [TranslationsState] (session) and [TranslationsBrowserState] (browser or global) states.
+     *
+     * Will dispatch [TranslationsDialogAction] to update store when appropriate.
+     *
+     * Certain errors take priority over others, depending on how important they are.
+     * Error priority:
+     * 1. An error in [TranslationsBrowserState] of [EngineNotSupportedError] should be the
+     * highest priority to process.
+     * 2. An error in [TranslationsState] of [LanguageNotSupportedError] is the second highest
+     * priority and requires additional information.
+     * 3. Displayable browser errors only should be the dialog error when the session has a
+     * non-displayable error. (Usually expect this case where an error  recovery action occurred on
+     * a different tab and failed.)
+     * 4. Displayable session errors and null errors are the default dialog error.
+     *
+     * @param sessionTranslationsState The session state to consider when dispatching errors.
+     * @param browserTranslationsState The browser state to consider when dispatching errors.
+     * @param browserState The browser state to consider when fetching information for errors.
+
+     */
+    private fun updateTranslationError(
+        sessionTranslationsState: TranslationsState,
+        browserTranslationsState: TranslationsBrowserState,
+        browserState: BrowserState,
+    ) {
+        if (browserTranslationsState.engineError is TranslationError.EngineNotSupportedError) {
+            // [EngineNotSupportedError] is a browser error that overrides all other errors.
+            translationsDialogStore.dispatch(
+                TranslationsDialogAction.UpdateTranslationError(browserTranslationsState.engineError),
+            )
+        } else if (sessionTranslationsState.translationError is TranslationError.LanguageNotSupportedError) {
+            // [LanguageNotSupportedError] is a special case where we need additional information.
+            val documentLangDisplayName = sessionTranslationsState.translationEngineState
+                ?.detectedLanguages?.documentLangTag?.let { docLangTag ->
+                    val documentLocale = Locale.forLanguageTag(docLangTag)
+                    val userLocale = browserState.locale ?: LocaleManager.getSystemDefault()
+                    LocaleUtils.getLocalizedDisplayName(
+                        userLocale = userLocale,
+                        languageLocale = documentLocale,
+                    )
+                }
+
+            translationsDialogStore.dispatch(
+                TranslationsDialogAction.UpdateTranslationError(
+                    translationError = sessionTranslationsState.translationError,
+                    documentLangDisplayName = documentLangDisplayName,
+                ),
+            )
+        } else if (browserTranslationsState.engineError?.displayError == true &&
+            sessionTranslationsState.translationError?.displayError != true
+        ) {
+            // Browser errors should only be displayed with the session error is not displayable nor null.
+            translationsDialogStore.dispatch(
+                TranslationsDialogAction.UpdateTranslationError(browserTranslationsState.engineError),
+            )
+        } else if (sessionTranslationsState.translationError?.displayError != false) {
+            // Displayable session errors and null session errors should be passed to the dialog under most cases.
+            translationsDialogStore.dispatch(
+                TranslationsDialogAction.UpdateTranslationError(sessionTranslationsState.translationError),
+            )
+        }
     }
 
     private fun updateStoreIfIsTranslateProcessing() {

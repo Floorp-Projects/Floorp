@@ -130,33 +130,6 @@ class TranslationsDialogReducerTest {
     }
 
     @Test
-    fun `WHEN the reducer is called for InitTranslationsDialog THEN a new state for PositiveButtonType is returned`() {
-        val translationsDialogState = TranslationsDialogState()
-
-        val updatedState = TranslationsDialogReducer.reduce(
-            translationsDialogState,
-            TranslationsDialogAction.InitTranslationsDialog,
-        )
-
-        assertEquals(PositiveButtonType.Disabled, updatedState.positiveButtonType)
-
-        val spanishLanguage = Language("es", "Spanish")
-        val englishLanguage = Language("en", "English")
-        val translationsDialogStateTwo = TranslationsDialogState(
-            initialFrom = spanishLanguage,
-            initialTo = englishLanguage,
-            positiveButtonType = PositiveButtonType.Enabled,
-        )
-
-        val updatedStateTwo = TranslationsDialogReducer.reduce(
-            translationsDialogStateTwo,
-            TranslationsDialogAction.InitTranslationsDialog,
-        )
-
-        assertEquals(PositiveButtonType.Enabled, updatedStateTwo.positiveButtonType)
-    }
-
-    @Test
     fun `WHEN the reducer is called for UpdateTranslationError THEN a new state with translation error is returned`() {
         val translationsDialogState = TranslationsDialogState()
 

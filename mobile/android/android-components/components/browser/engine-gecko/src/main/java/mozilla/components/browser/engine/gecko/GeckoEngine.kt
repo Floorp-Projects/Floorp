@@ -760,8 +760,8 @@ class GeckoEngine(
         TranslationsController.RuntimeTranslation.listSupportedLanguages().then(
             {
                 if (it != null) {
-                    var listOfFromLanguages = mutableListOf<Language>()
-                    var listOfToLanguages = mutableListOf<Language>()
+                    val listOfFromLanguages = mutableListOf<Language>()
+                    val listOfToLanguages = mutableListOf<Language>()
 
                     if (it.fromLanguages != null) {
                         for (each in it.fromLanguages!!) {
