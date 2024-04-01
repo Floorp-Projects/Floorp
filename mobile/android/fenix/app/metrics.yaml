@@ -854,7 +854,9 @@ events:
     notification_emails:
       - android-probes@mozilla.com
     expires: never
-  translations_action:
+
+translations:
+  action:
     type: event
     description: |
       An area inside the translations feature was tapped.
@@ -870,8 +872,33 @@ events:
         type: string
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1883968
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1886851
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1883968#c6
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1886851#c8
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
+  offer_event:
+    type: event
+    description: |
+      The translations engine decided the user may be interested in a translation or that the user
+      should be offered a translation. 
+      An "expected" event means the user is expected to want to translate and we should show the feature on the toolbar.
+      An "offer" event means we should popup the translations dialog.
+    extra_keys:
+      item:
+        description: |
+          A string containing the type of signal sent by the translations engine. 
+          These signals include:
+          expected, offer
+        type: string
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1886851
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1886851#c8
     data_sensitivity:
       - interaction
     notification_emails:

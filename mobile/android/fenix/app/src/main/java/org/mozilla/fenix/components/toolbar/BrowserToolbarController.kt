@@ -20,6 +20,7 @@ import mozilla.components.support.ktx.kotlin.isUrl
 import mozilla.components.ui.tabcounter.TabCounterMenu
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.ReaderMode
+import org.mozilla.fenix.GleanMetrics.Translations
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
@@ -230,7 +231,7 @@ class DefaultBrowserToolbarController(
     }
 
     override fun handleTranslationsButtonClick() {
-        Events.translationsAction.record(Events.TranslationsActionExtra("main_flow_toolbar"))
+        Translations.action.record(Translations.ActionExtra("main_flow_toolbar"))
         val directions =
             BrowserFragmentDirections.actionBrowserFragmentToTranslationsDialogFragment(
                 sessionId = currentSession?.id,

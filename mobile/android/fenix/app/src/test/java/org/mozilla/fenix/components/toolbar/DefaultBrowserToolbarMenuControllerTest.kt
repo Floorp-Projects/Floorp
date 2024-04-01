@@ -61,6 +61,7 @@ import org.junit.runner.RunWith
 import org.mozilla.fenix.GleanMetrics.Collections
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.ReaderMode
+import org.mozilla.fenix.GleanMetrics.Translations
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
@@ -842,7 +843,7 @@ class DefaultBrowserToolbarMenuControllerTest {
                 )
             }
 
-            val telemetry = Events.translationsAction.testGetValue()?.firstOrNull()
+            val telemetry = Translations.action.testGetValue()?.firstOrNull()
             assertEquals("main_flow_browser", telemetry?.extra?.get("item"))
         }
 

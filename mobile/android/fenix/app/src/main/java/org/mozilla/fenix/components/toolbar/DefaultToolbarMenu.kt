@@ -192,10 +192,16 @@ open class DefaultToolbarMenu(
      * Should Translations menu item be visible?
      */
     @VisibleForTesting(otherwise = PRIVATE)
-    fun shouldShowTranslations(): Boolean = selectedSession?.let {
-        store.state.translationEngine.isEngineSupported == true &&
-            FxNimbus.features.translations.value().mainFlowBrowserMenuEnabled
-    } ?: false
+    fun shouldShowTranslations(): Boolean {
+        val isEngineSupported = store.state.translationEngine.isEngineSupported
+        if (isEngineSupported == true) {
+            FxNimbus.features.translations.recordExposure()
+        }
+        return selectedSession?.let {
+            isEngineSupported == true &&
+                FxNimbus.features.translations.value().mainFlowBrowserMenuEnabled
+        } ?: false
+    }
     // End of predicates //
 
     @VisibleForTesting

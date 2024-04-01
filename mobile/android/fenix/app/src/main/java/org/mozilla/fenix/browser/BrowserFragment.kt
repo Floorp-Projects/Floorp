@@ -273,6 +273,10 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         val isEngineSupported =
             context.components.core.store.state.translationEngine.isEngineSupported
 
+        if (isEngineSupported == true) {
+            FxNimbus.features.translations.recordExposure()
+        }
+
         if (isEngineSupported != true ||
             !FxNimbus.features.translations.value().mainFlowToolbarEnabled
         ) {

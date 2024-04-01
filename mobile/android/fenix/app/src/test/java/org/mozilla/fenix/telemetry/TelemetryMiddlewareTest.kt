@@ -14,6 +14,7 @@ import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.ExtensionsProcessAction
 import mozilla.components.browser.state.action.TabListAction
+import mozilla.components.browser.state.action.TranslationsAction
 import mozilla.components.browser.state.engine.EngineMiddleware
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
@@ -40,6 +41,7 @@ import org.junit.runner.RunWith
 import org.mozilla.fenix.GleanMetrics.Addons
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.Metrics
+import org.mozilla.fenix.GleanMetrics.Translations
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.metrics.Event
@@ -448,6 +450,26 @@ class TelemetryMiddlewareTest {
 
         assertEquals(1, Addons.extensionsProcessUiDisable.testGetValue())
         assertNull(Addons.extensionsProcessUiRetry.testGetValue())
+    }
+
+    @Test
+    fun `WHEN TranslateOfferAction is dispatched THEN update telemetry`() {
+        assertNull(Translations.offerEvent.testGetValue())
+
+        store.dispatch(TranslationsAction.TranslateOfferAction(tabId = "1")).joinBlocking()
+
+        val telemetry = Translations.offerEvent.testGetValue()?.firstOrNull()
+        assertEquals("offer", telemetry?.extra?.get("item"))
+    }
+
+    @Test
+    fun `WHEN TranslateExpectedAction is dispatched THEN update telemetry`() {
+        assertNull(Translations.offerEvent.testGetValue())
+
+        store.dispatch(TranslationsAction.TranslateExpectedAction(tabId = "1")).joinBlocking()
+
+        val telemetry = Translations.offerEvent.testGetValue()?.firstOrNull()
+        assertEquals("expected", telemetry?.extra?.get("item"))
     }
 }
 

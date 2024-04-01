@@ -35,7 +35,7 @@ import mozilla.components.concept.engine.translate.TranslationError
 import mozilla.components.lib.state.ext.observeAsComposableState
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.fenix.BrowserDirection
-import org.mozilla.fenix.GleanMetrics.Events
+import org.mozilla.fenix.GleanMetrics.Translations
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
@@ -144,13 +144,12 @@ class TranslationsDialogFragment : BottomSheetDialogFragment() {
                                     }
                                 },
                             ) {
-                                FxNimbus.features.translations.recordExposure()
                                 TranslationsDialogContent(
                                     learnMoreUrl = learnMoreUrl,
                                     showPageSettings = FxNimbus.features.translations.value().pageSettingsEnabled,
                                     translationsDialogState = translationsDialogState,
                                 ) {
-                                    Events.translationsAction.record(Events.TranslationsActionExtra("page_settings"))
+                                    Translations.action.record(Translations.ActionExtra("page_settings"))
                                     translationsVisibility = false
                                 }
                             }
@@ -348,7 +347,7 @@ class TranslationsDialogFragment : BottomSheetDialogFragment() {
             },
             onBackClicked = onBackClicked,
             onTranslationSettingsClicked = {
-                Events.translationsAction.record(Events.TranslationsActionExtra("global_settings"))
+                Translations.action.record(Translations.ActionExtra("global_settings"))
                 findNavController().navigate(
                     TranslationsDialogFragmentDirections
                         .actionTranslationsDialogFragmentToTranslationSettingsFragment(
