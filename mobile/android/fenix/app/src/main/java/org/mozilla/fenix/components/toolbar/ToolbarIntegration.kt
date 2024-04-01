@@ -124,6 +124,11 @@ class DefaultToolbarIntegration(
 
         if (isNavBarEnabled) {
             toolbar.hideMenuButton()
+            toolbar.setDisplayHorizontalPadding(
+                context.resources.getDimensionPixelSize(
+                    R.dimen.browser_fragment_display_toolbar_padding,
+                ),
+            )
         } else {
             val tabCounterMenu = FenixTabCounterMenu(
                 context = context,
