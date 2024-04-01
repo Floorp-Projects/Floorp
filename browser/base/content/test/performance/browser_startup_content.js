@@ -57,6 +57,12 @@ const known_scripts = {
   ]),
 };
 
+if (!Services.appinfo.sessionHistoryInParent) {
+  known_scripts.modules.add(
+    "resource:///modules/sessionstore/ContentSessionStore.sys.mjs"
+  );
+}
+
 // Items on this list *might* load when creating the process, as opposed to
 // items in the main list, which we expect will always load.
 const intermittently_loaded_scripts = {

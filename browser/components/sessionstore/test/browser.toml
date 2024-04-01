@@ -316,6 +316,7 @@ support-files = ["file_async_flushes.html"]
 run-if = ["crashreporter"]
 
 ["browser_async_remove_tab.js"]
+skip-if = ["!sessionHistoryInParent"]
 
 ["browser_async_window_flushing.js"]
 https_first_disabled = true
@@ -465,6 +466,7 @@ skip-if = [
 ["browser_privatetabs.js"]
 
 ["browser_purge_shistory.js"]
+skip-if = ["!sessionHistoryInParent"] # Bug 1271024
 
 ["browser_remoteness_flip_on_restore.js"]
 
@@ -513,6 +515,9 @@ skip-if = [
 ]
 
 ["browser_scrollPositionsReaderMode.js"]
+
+["browser_send_async_message_oom.js"]
+skip-if = ["sessionHistoryInParent"] # Tests that the frame script OOMs, which is unused when SHIP is enabled.
 
 ["browser_sessionHistory.js"]
 https_first_disabled = true
