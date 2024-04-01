@@ -72,18 +72,20 @@ fun TranslationSettings(
                 }
             }
 
-            item {
-                Text(
-                    text = stringResource(
-                        id = R.string.translation_settings_translation_preference,
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 72.dp, end = 16.dp, bottom = 16.dp, top = 8.dp)
-                        .semantics { heading() },
-                    color = FirefoxTheme.colors.textAccent,
-                    style = FirefoxTheme.typography.headline8,
-                )
+            if (showAutomaticTranslations || showNeverTranslate || showDownloads) {
+                item {
+                    Text(
+                        text = stringResource(
+                            id = R.string.translation_settings_translation_preference,
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 72.dp, end = 16.dp, bottom = 16.dp, top = 8.dp)
+                            .semantics { heading() },
+                        color = FirefoxTheme.colors.textAccent,
+                        style = FirefoxTheme.typography.headline8,
+                    )
+                }
             }
 
             if (showAutomaticTranslations) {
