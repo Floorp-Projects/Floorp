@@ -552,6 +552,7 @@ export var ProcessHangMonitor = {
     // or, if DevTools are opened on the slow tab.
     if (
       AppConstants.MOZ_DEV_EDITION ||
+      AppConstants.NIGHTLY_BUILD ||
       report.scriptBrowser.browsingContext.watchedByDevTools
     ) {
       buttons.push({
