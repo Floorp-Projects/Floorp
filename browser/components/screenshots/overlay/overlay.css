@@ -84,8 +84,6 @@
 .screenshots-button {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: var(--space-xsmall);
   cursor: pointer;
   text-align: center;
   user-select: none;
@@ -143,6 +141,11 @@
 
 #download > img {
   content: url("chrome://browser/skin/downloads/downloads.svg");
+}
+
+#download > img,
+#copy > img {
+  margin-inline-end: 5px;
 }
 
 .face-container {
