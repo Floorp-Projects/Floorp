@@ -500,7 +500,7 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   OverflowState GetOverflowState() const;
 
   MOZ_CAN_RUN_SCRIPT nsresult FireScrollPortEvent();
-  void PostScrollEndEvent();
+  void PostScrollEndEvent(bool aDelayed = false);
   MOZ_CAN_RUN_SCRIPT void FireScrollEndEvent();
   void PostOverflowEvent();
 
