@@ -17,12 +17,12 @@ namespace mozilla {
 namespace contentanalysis {
 
 enum class NoContentAnalysisResult : uint8_t {
-  CONTENT_ANALYSIS_NOT_ACTIVE,
-  CONTEXT_EXEMPT_FROM_CONTENT_ANALYSIS,
-  CANCELED,
-  ERROR_INVALID_JSON_RESPONSE,
-  ERROR_COULD_NOT_GET_DATA,
-  ERROR_OTHER,
+  ALLOW_DUE_TO_CONTENT_ANALYSIS_NOT_ACTIVE,
+  ALLOW_DUE_TO_CONTEXT_EXEMPT_FROM_CONTENT_ANALYSIS,
+  ALLOW_DUE_TO_COULD_NOT_GET_DATA,
+  DENY_DUE_TO_CANCELED,
+  DENY_DUE_TO_INVALID_JSON_RESPONSE,
+  DENY_DUE_TO_OTHER_ERROR,
   LAST_VALUE
 };
 
@@ -59,7 +59,8 @@ class ContentAnalysisResult : public nsIContentAnalysisResult {
         }
       }
     }
-    return FromNoResult(NoContentAnalysisResult::ERROR_INVALID_JSON_RESPONSE);
+    return FromNoResult(
+        NoContentAnalysisResult::DENY_DUE_TO_INVALID_JSON_RESPONSE);
   }
 
   static RefPtr<ContentAnalysisResult> FromJSONContentAnalysisResponse(
@@ -76,11 +77,12 @@ class ContentAnalysisResult : public nsIContentAnalysisResult {
         } else if (shouldAllowValue.isFalse()) {
           return FromAction(nsIContentAnalysisResponse::Action::eBlock);
         } else {
-          return FromNoResult(NoContentAnalysisResult::ERROR_OTHER);
+          return FromNoResult(NoContentAnalysisResult::DENY_DUE_TO_OTHER_ERROR);
         }
       }
     }
-    return FromNoResult(NoContentAnalysisResult::ERROR_INVALID_JSON_RESPONSE);
+    return FromNoResult(
+        NoContentAnalysisResult::DENY_DUE_TO_INVALID_JSON_RESPONSE);
   }
 
   static RefPtr<ContentAnalysisResult> FromContentAnalysisResponse(
@@ -159,7 +161,8 @@ struct ParamTraits<mozilla::contentanalysis::ContentAnalysisResult*> {
       return true;
     }
     *aResult = mozilla::contentanalysis::ContentAnalysisResult::FromNoResult(
-        mozilla::contentanalysis::NoContentAnalysisResult::ERROR_OTHER);
+        mozilla::contentanalysis::NoContentAnalysisResult::
+            DENY_DUE_TO_OTHER_ERROR);
     return ReadParam(aReader, &((*aResult)->mValue));
   }
 };

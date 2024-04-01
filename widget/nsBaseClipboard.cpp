@@ -340,7 +340,7 @@ class SafeContentAnalysisResultCallback final
   NS_IMETHODIMP Error(nsresult aError) override {
     using namespace mozilla::contentanalysis;
     Callback(ContentAnalysisResult::FromNoResult(
-        NoContentAnalysisResult::ERROR_OTHER));
+        NoContentAnalysisResult::DENY_DUE_TO_OTHER_ERROR));
     return NS_OK;
   }
 
@@ -379,13 +379,18 @@ CheckClipboardContentAnalysisAsText(
   }
   nsString text;
   if (NS_FAILED(textData->GetData(text))) {
-    return mozilla::Err(NoContentAnalysisResult::ERROR_OTHER);
+    return mozilla::Err(NoContentAnalysisResult::DENY_DUE_TO_OTHER_ERROR);
+  }
+  if (text.IsEmpty()) {
+    // Content Analysis doesn't expect to analyze an empty string.
+    // Just approve it.
+    return true;
   }
   RefPtr<mozilla::dom::WindowGlobalParent> window =
       mozilla::dom::WindowGlobalParent::GetByInnerWindowId(aInnerWindowId);
   if (!window) {
     // The window has gone away in the meantime
-    return mozilla::Err(NoContentAnalysisResult::ERROR_OTHER);
+    return mozilla::Err(NoContentAnalysisResult::DENY_DUE_TO_OTHER_ERROR);
   }
   nsCOMPtr<nsIContentAnalysisRequest> contentAnalysisRequest =
       new ContentAnalysisRequest(
@@ -395,7 +400,7 @@ CheckClipboardContentAnalysisAsText(
   nsresult rv = aContentAnalysis->AnalyzeContentRequestCallback(
       contentAnalysisRequest, /* aAutoAcknowledge */ true, aResolver);
   if (NS_FAILED(rv)) {
-    return mozilla::Err(NoContentAnalysisResult::ERROR_OTHER);
+    return mozilla::Err(NoContentAnalysisResult::DENY_DUE_TO_OTHER_ERROR);
   }
   return true;
 }
@@ -420,7 +425,7 @@ CheckClipboardContentAnalysisAsFile(
       rv = file->GetPath(filePath);
     } else {
       MOZ_ASSERT_UNREACHABLE("clipboard data had kFileMime but no nsIFile!");
-      return mozilla::Err(NoContentAnalysisResult::ERROR_OTHER);
+      return mozilla::Err(NoContentAnalysisResult::DENY_DUE_TO_OTHER_ERROR);
     }
   }
   if (NS_FAILED(rv) || filePath.IsEmpty()) {
@@ -430,7 +435,7 @@ CheckClipboardContentAnalysisAsFile(
       mozilla::dom::WindowGlobalParent::GetByInnerWindowId(aInnerWindowId);
   if (!window) {
     // The window has gone away in the meantime
-    return mozilla::Err(NoContentAnalysisResult::ERROR_OTHER);
+    return mozilla::Err(NoContentAnalysisResult::DENY_DUE_TO_OTHER_ERROR);
   }
   // Let the content analysis code calculate the digest
   nsCOMPtr<nsIContentAnalysisRequest> contentAnalysisRequest =
@@ -443,7 +448,7 @@ CheckClipboardContentAnalysisAsFile(
       contentAnalysisRequest,
       /* aAutoAcknowledge */ true, aResolver);
   if (NS_FAILED(rv)) {
-    return mozilla::Err(NoContentAnalysisResult::ERROR_OTHER);
+    return mozilla::Err(NoContentAnalysisResult::DENY_DUE_TO_OTHER_ERROR);
   }
   return true;
 }
@@ -463,14 +468,15 @@ static void CheckClipboardContentAnalysis(
   if (!aWindow || aWindow->GetBrowsingContext()->IsChrome() ||
       aWindow->IsInProcess()) {
     aResolver->Callback(ContentAnalysisResult::FromNoResult(
-        NoContentAnalysisResult::CONTEXT_EXEMPT_FROM_CONTENT_ANALYSIS));
+        NoContentAnalysisResult::
+            ALLOW_DUE_TO_CONTEXT_EXEMPT_FROM_CONTENT_ANALYSIS));
     return;
   }
   nsCOMPtr<nsIContentAnalysis> contentAnalysis =
       mozilla::components::nsIContentAnalysis::Service();
   if (!contentAnalysis) {
     aResolver->Callback(ContentAnalysisResult::FromNoResult(
-        NoContentAnalysisResult::ERROR_OTHER));
+        NoContentAnalysisResult::DENY_DUE_TO_OTHER_ERROR));
     return;
   }
 
@@ -478,7 +484,7 @@ static void CheckClipboardContentAnalysis(
   nsresult rv = contentAnalysis->GetIsActive(&contentAnalysisIsActive);
   if (MOZ_LIKELY(NS_FAILED(rv) || !contentAnalysisIsActive)) {
     aResolver->Callback(ContentAnalysisResult::FromNoResult(
-        NoContentAnalysisResult::CONTENT_ANALYSIS_NOT_ACTIVE));
+        NoContentAnalysisResult::ALLOW_DUE_TO_CONTENT_ANALYSIS_NOT_ACTIVE));
     return;
   }
 
@@ -488,7 +494,7 @@ static void CheckClipboardContentAnalysis(
   rv = aTransferable->FlavorsTransferableCanExport(flavors);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aResolver->Callback(ContentAnalysisResult::FromNoResult(
-        NoContentAnalysisResult::ERROR_OTHER));
+        NoContentAnalysisResult::DENY_DUE_TO_OTHER_ERROR));
     return;
   }
   bool keepChecking = true;
@@ -515,7 +521,7 @@ static void CheckClipboardContentAnalysis(
     if (!textResult.unwrap()) {
       // Couldn't get file or text data from this
       aResolver->Callback(ContentAnalysisResult::FromNoResult(
-          NoContentAnalysisResult::ERROR_COULD_NOT_GET_DATA));
+          NoContentAnalysisResult::ALLOW_DUE_TO_COULD_NOT_GET_DATA));
       return;
     }
   }
