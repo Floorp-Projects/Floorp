@@ -5349,6 +5349,10 @@ static Matrix ComputeRotationMatrix(gfxFloat aRotatedWidth,
 static Maybe<layers::SurfaceDescriptor>
 MaybeGetSurfaceDescriptorForRemoteCanvas(
     const SurfaceFromElementResult& aResult) {
+  if (!StaticPrefs::gfx_canvas_remote_use_draw_image_fast_path()) {
+    return Nothing();
+  }
+
   if (!aResult.mLayersImage) {
     return Nothing();
   }

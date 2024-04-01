@@ -5818,6 +5818,11 @@
   value: 10000
   mirror: always
 
+- name: gfx.canvas.remote.use-draw-image-fast-path
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 - name: gfx.canvas.willreadfrequently.enabled
   type: bool
 #if defined(XP_WIN)
