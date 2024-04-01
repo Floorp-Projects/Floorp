@@ -684,15 +684,17 @@ NS_IMETHODIMP ContentAnalysisResult::GetShouldAllowContent(
   if (mValue.is<NoContentAnalysisResult>()) {
     NoContentAnalysisResult result = mValue.as<NoContentAnalysisResult>();
     if (Preferences::GetBool(kDefaultAllowPref)) {
-      *aShouldAllowContent = result != NoContentAnalysisResult::CANCELED;
+      *aShouldAllowContent =
+          result != NoContentAnalysisResult::DENY_DUE_TO_CANCELED;
     } else {
       // Note that we allow content if we're unable to get it (for example, if
       // there's clipboard content that is not text or file)
       *aShouldAllowContent =
-          result == NoContentAnalysisResult::CONTENT_ANALYSIS_NOT_ACTIVE ||
-          result ==
-              NoContentAnalysisResult::CONTEXT_EXEMPT_FROM_CONTENT_ANALYSIS ||
-          result == NoContentAnalysisResult::ERROR_COULD_NOT_GET_DATA;
+          result == NoContentAnalysisResult::
+                        ALLOW_DUE_TO_CONTENT_ANALYSIS_NOT_ACTIVE ||
+          result == NoContentAnalysisResult::
+                        ALLOW_DUE_TO_CONTEXT_EXEMPT_FROM_CONTENT_ANALYSIS ||
+          result == NoContentAnalysisResult::ALLOW_DUE_TO_COULD_NOT_GET_DATA;
     }
   } else {
     *aShouldAllowContent =
