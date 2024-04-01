@@ -1,15 +1,25 @@
+using std::string from "string";
+
+// std::string is an arbitrary simple type declared inside a namespace,
+// to test that that will work when used in a UniquePtr inside a union.
+
 namespace mozilla {
 namespace _ipdltest {
 
 struct DummyStruct {
-  int x;
+  string x;
+};
+
+union DummyUnion {
+  UniquePtr<string>;
+  int;
 };
 
 [ChildProc=any, ChildImpl=virtual, ParentImpl=virtual]
 protocol PTestUniquePtrIPC {
 child:
-  async TestMessage(UniquePtr<int> a1, UniquePtr<DummyStruct> a2,
-                    DummyStruct a3, UniquePtr<int> a4);
+  async TestMessage(UniquePtr<string> a1, UniquePtr<DummyStruct> a2,
+                    DummyStruct a3, UniquePtr<string> a4, DummyUnion a5);
   async TestSendReference(UniquePtr<DummyStruct> a);
 };
 

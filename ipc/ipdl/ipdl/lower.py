@@ -233,13 +233,16 @@ def _flatTypeName(ipdltype):
     # NB: this logic depends heavily on what IPDL types are allowed to
     # be constructed; e.g., Foo[][] is disallowed.  needs to be kept in
     # sync with grammar.
-    if ipdltype.isIPDL() and ipdltype.isArray():
+    if not ipdltype.isIPDL():
+        return ipdltype.name()
+    if ipdltype.isArray():
         return "ArrayOf" + _flatTypeName(ipdltype.basetype)
-    if ipdltype.isIPDL() and ipdltype.isMaybe():
+    if ipdltype.isMaybe():
         return "Maybe" + _flatTypeName(ipdltype.basetype)
-    # NotNull types just assume the underlying variant name to avoid unnecessary
-    # noise, as a NotNull<T> and T should never exist in the same union.
-    if ipdltype.isIPDL() and ipdltype.isNotNull():
+    # NotNull and UniquePtr types just assume the underlying variant name
+    # to avoid unnecessary noise, as eg a NotNull<T> and T should never exist
+    # in the same union.
+    if ipdltype.isNotNull() or ipdltype.isUniquePtr():
         return _flatTypeName(ipdltype.basetype)
     return ipdltype.name()
 
@@ -407,6 +410,13 @@ def _sentinelReadError(classname):
             args=[ExprLiteral.String(classname)],
         )
     )
+
+
+identifierRegExp = re.compile("[a-zA-Z_][a-zA-Z0-9_]*")
+
+
+def _validCxxIdentifier(name):
+    return identifierRegExp.fullmatch(name) is not None
 
 
 # Results that IPDL-generated code returns back to *Channel code.
@@ -933,6 +943,7 @@ class _UnionMember(_CompoundTypeComponent):
 
     def __init__(self, ipdltype, ud):
         flatname = _flatTypeName(ipdltype)
+        assert _validCxxIdentifier(flatname)
 
         _CompoundTypeComponent.__init__(self, ipdltype, "V" + flatname)
         self.flattypename = flatname
@@ -2483,9 +2494,7 @@ class _ComputeTypeDeps(TypeVisitor):
         self.visitActorType(s.actor)
 
     def visitUniquePtrType(self, s):
-        if s in self.visited:
-            return
-        self.visited.add(s)
+        return TypeVisitor.visitUniquePtrType(self, s)
 
     def visitVoidType(self, v):
         assert 0
