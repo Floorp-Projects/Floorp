@@ -59,7 +59,7 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
         }
 
         requirePreference<SwitchPreference>(R.string.pref_key_toolbar_use_redesign_incomplete).apply {
-            isVisible = FeatureFlags.incompleteToolbarRedesignEnabled
+            isVisible = Config.channel.isNightlyOrDebug
             isChecked = context.settings().enableIncompleteToolbarRedesign
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
