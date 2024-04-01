@@ -276,16 +276,6 @@ internal object TranslationsDialogReducer {
                 )
             }
 
-            is TranslationsDialogAction.InitTranslationsDialog -> {
-                state.copy(
-                    positiveButtonType = if (state.initialTo == null || state.initialFrom == null) {
-                        PositiveButtonType.Disabled
-                    } else {
-                        state.positiveButtonType
-                    },
-                )
-            }
-
             is TranslationsDialogAction.UpdateTranslationError -> {
                 state.copy(
                     error = action.translationError,
@@ -323,6 +313,7 @@ internal object TranslationsDialogReducer {
                 )
             }
 
+            TranslationsDialogAction.InitTranslationsDialog,
             is TranslationsDialogAction.TranslateAction,
             is TranslationsDialogAction.UpdatePageSettingsValue,
             TranslationsDialogAction.TranslateAction,

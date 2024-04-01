@@ -139,6 +139,13 @@ class TranslationsMiddlewareTest {
             ),
         )
 
+        verify(context.store, atLeastOnce()).dispatch(
+            TranslationsAction.TranslateSuccessAction(
+                tabId = tab.id,
+                operation = TranslationOperation.FETCH_SUPPORTED_LANGUAGES,
+            ),
+        )
+
         waitForIdle()
     }
 

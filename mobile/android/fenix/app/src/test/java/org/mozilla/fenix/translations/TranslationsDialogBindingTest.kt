@@ -24,6 +24,7 @@ import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.mozilla.fenix.R
@@ -302,6 +303,95 @@ class TranslationsDialogBindingTest {
 
             verify(translationsDialogStore).dispatch(
                 TranslationsDialogAction.UpdateTranslationError(fetchError),
+            )
+        }
+
+    @Test
+    fun `WHEN a non-displayable error is sent to the browserStore THEN the translation dialog store is not updated`() =
+        runTestOnMain {
+            translationsDialogStore =
+                spy(TranslationsDialogStore(TranslationsDialogState()))
+            browserStore = BrowserStore(
+                BrowserState(
+                    tabs = listOf(tab),
+                    selectedTabId = tabId,
+                ),
+            )
+
+            val binding = TranslationsDialogBinding(
+                browserStore = browserStore,
+                translationsDialogStore = translationsDialogStore,
+                sessionId = tabId,
+                getTranslatedPageTitle = { localizedFrom, localizedTo ->
+                    testContext.getString(
+                        R.string.translations_bottom_sheet_title_translation_completed,
+                        localizedFrom,
+                        localizedTo,
+                    )
+                },
+            )
+            binding.start()
+
+            val fetchError = TranslationError.UnknownEngineSupportError(null)
+            browserStore.dispatch(
+                TranslationsAction.EngineExceptionAction(
+                    error = fetchError,
+                ),
+            ).joinBlocking()
+
+            verify(translationsDialogStore, never()).dispatch(
+                TranslationsDialogAction.UpdateTranslationError(fetchError),
+            )
+        }
+
+    @Test
+    fun `WHEN a browser and session error is sent to the browserStore THEN the session error takes priority and the translation dialog store is updated`() =
+        runTestOnMain {
+            translationsDialogStore =
+                spy(TranslationsDialogStore(TranslationsDialogState()))
+            browserStore = BrowserStore(
+                BrowserState(
+                    tabs = listOf(tab),
+                    selectedTabId = tabId,
+                ),
+            )
+
+            val binding = TranslationsDialogBinding(
+                browserStore = browserStore,
+                translationsDialogStore = translationsDialogStore,
+                sessionId = tabId,
+                getTranslatedPageTitle = { localizedFrom, localizedTo ->
+                    testContext.getString(
+                        R.string.translations_bottom_sheet_title_translation_completed,
+                        localizedFrom,
+                        localizedTo,
+                    )
+                },
+            )
+            binding.start()
+
+            val sessionError = TranslationError.CouldNotLoadLanguagesError(null)
+            browserStore.dispatch(
+                TranslationsAction.TranslateExceptionAction(
+                    tabId = tab.id,
+                    operation = TranslationOperation.FETCH_SUPPORTED_LANGUAGES,
+                    translationError = sessionError,
+                ),
+            ).joinBlocking()
+
+            verify(translationsDialogStore).dispatch(
+                TranslationsDialogAction.UpdateTranslationError(sessionError),
+            )
+
+            val engineError = TranslationError.UnknownError(IllegalStateException())
+            browserStore.dispatch(
+                TranslationsAction.EngineExceptionAction(
+                    error = engineError,
+                ),
+            ).joinBlocking()
+
+            verify(translationsDialogStore, never()).dispatch(
+                TranslationsDialogAction.UpdateTranslationError(engineError),
             )
         }
 
