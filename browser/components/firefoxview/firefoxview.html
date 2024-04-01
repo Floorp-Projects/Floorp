@@ -72,6 +72,7 @@
       >
       </moz-page-nav-button>
       <moz-page-nav-button
+        class="sync-ui-item"
         view="syncedtabs"
         data-l10n-id="firefoxview-synced-tabs-nav"
         iconSrc="chrome://browser/content/firefoxview/view-syncedtabs.svg"
@@ -95,7 +96,10 @@
               <view-recentlyclosed slot="recentlyclosed"></view-recentlyclosed>
             </div>
             <div>
-              <view-syncedtabs slot="syncedtabs"></view-syncedtabs>
+              <view-syncedtabs
+                class="sync-ui-item"
+                slot="syncedtabs"
+              ></view-syncedtabs>
             </div>
           </view-recentbrowsing>
           <view-history name="history" type="page"></view-history>
@@ -104,7 +108,11 @@
             name="recentlyclosed"
             type="page"
           ></view-recentlyclosed>
-          <view-syncedtabs name="syncedtabs" type="page"></view-syncedtabs>
+          <view-syncedtabs
+            class="sync-ui-item"
+            name="syncedtabs"
+            type="page"
+          ></view-syncedtabs>
         </named-deck>
       </div>
     </main>

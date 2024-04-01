@@ -139,3 +139,36 @@ add_task(async function test_sync_error() {
   });
   await tearDown(sandbox);
 });
+
+add_task(async function test_sync_disabled_by_policy() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["identity.fxaccounts.enabled", false]],
+  });
+  await withFirefoxView({}, async browser => {
+    const { document } = browser.contentWindow;
+    const recentBrowsingSyncedTabs = document.querySelector(
+      "view-syncedtabs[slot=syncedtabs]"
+    );
+    const syncedtabsPageNavButton = document.querySelector(
+      "moz-page-nav-button[view='syncedtabs']"
+    );
+
+    ok(
+      BrowserTestUtils.isHidden(recentBrowsingSyncedTabs),
+      "Synced tabs should not be visible from recent browsing."
+    );
+    ok(
+      BrowserTestUtils.isHidden(syncedtabsPageNavButton),
+      "Synced tabs nav button should not be visible."
+    );
+
+    document.location.assign(`${getFirefoxViewURL()}#syncedtabs`);
+    await TestUtils.waitForTick();
+    is(
+      document.querySelector("moz-page-nav").currentView,
+      "recentbrowsing",
+      "Should not be able to navigate to synced tabs."
+    );
+  });
+  await tearDown();
+});

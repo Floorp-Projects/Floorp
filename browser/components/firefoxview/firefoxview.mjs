@@ -80,6 +80,16 @@ async function updateSearchKeyboardShortcut() {
   searchKeyboardShortcut = key.toLocaleLowerCase();
 }
 
+function updateSyncVisibility() {
+  const syncEnabled = Services.prefs.getBoolPref(
+    "identity.fxaccounts.enabled",
+    false
+  );
+  for (const el of document.querySelectorAll(".sync-ui-item")) {
+    el.hidden = !syncEnabled;
+  }
+}
+
 window.addEventListener("DOMContentLoaded", async () => {
   recordEnteredTelemetry();
 
@@ -106,6 +116,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   onViewsDeckViewChange();
   await updateSearchTextboxSize();
   await updateSearchKeyboardShortcut();
+  updateSyncVisibility();
 
   if (Cu.isInAutomation) {
     Services.obs.notifyObservers(null, "firefoxview-entered");
@@ -150,12 +161,17 @@ window.addEventListener(
     document.body.textContent = "";
     topChromeWindow.removeEventListener("command", onCommand);
     Services.obs.removeObserver(onLocalesChanged, "intl:app-locales-changed");
+    Services.prefs.removeObserver(
+      "identity.fxaccounts.enabled",
+      updateSyncVisibility
+    );
   },
   { once: true }
 );
 
 topChromeWindow.addEventListener("command", onCommand);
 Services.obs.addObserver(onLocalesChanged, "intl:app-locales-changed");
+Services.prefs.addObserver("identity.fxaccounts.enabled", updateSyncVisibility);
 
 function onCommand(e) {
   if (document.hidden || !e.target.closest("#contentAreaContextMenu")) {
