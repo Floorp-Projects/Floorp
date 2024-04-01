@@ -393,6 +393,12 @@ void gfxUserFontEntry::LoadNextSrc() {
 }
 
 void gfxUserFontEntry::ContinueLoad() {
+  if (mUserFontLoadState == STATUS_NOT_LOADED) {
+    // We must have been cancelled (possibly due to a font-list refresh) while
+    // the runnable was pending, so just bail out.
+    return;
+  }
+
   MOZ_ASSERT(mUserFontLoadState == STATUS_LOAD_PENDING);
   MOZ_ASSERT(mSrcList[mCurrentSrcIndex].mSourceType ==
              gfxFontFaceSrc::eSourceType_URL);
