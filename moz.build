@@ -183,7 +183,9 @@ if CONFIG["MOZ_BUILD_APP"]:
 else:
     include("/toolkit/toolkit.mozbuild")
 
-OBJDIR_PP_FILES[".cargo"] += [CONFIG["MOZ_OVERRIDE_CARGO_CONFIG"] or ".cargo/config.in"]
+OBJDIR_PP_FILES[".cargo"] += [
+    CONFIG["MOZ_OVERRIDE_CARGO_CONFIG"] or ".cargo/config.toml.in"
+]
 
 DEFINES["top_srcdir"] = TOPSRCDIR
 

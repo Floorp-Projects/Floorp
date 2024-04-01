@@ -390,11 +390,12 @@ def cargo_vet(command_context, arguments, stdout=None, env=os.environ):
 
     locked = "--locked" in arguments
     if locked:
-        # The use of --locked requires .cargo/config to exist, but other things,
+        # The use of --locked requires .cargo/config.toml to exist, but other things,
         # like cargo update, don't want it there, so remove it once we're done.
         topsrcdir = Path(command_context.topsrcdir)
         shutil.copyfile(
-            topsrcdir / ".cargo" / "config.in", topsrcdir / ".cargo" / "config"
+            topsrcdir / ".cargo" / "config.toml.in",
+            topsrcdir / ".cargo" / "config.toml",
         )
 
     try:
@@ -406,7 +407,7 @@ def cargo_vet(command_context, arguments, stdout=None, env=os.environ):
         )
     finally:
         if locked:
-            (topsrcdir / ".cargo" / "config").unlink()
+            (topsrcdir / ".cargo" / "config.toml").unlink()
 
     # When the function is invoked without stdout set (the default when running
     # as a mach subcommand), exit with the returncode from cargo vet.

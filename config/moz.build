@@ -112,5 +112,5 @@ if CONFIG["COMPILE_ENVIRONMENT"] and CONFIG["CBINDGEN"]:
         "cbindgen-metadata.json",
         script="/build/RunCbindgen.py",
         entry_point="generate_metadata",
-        inputs=["!/.cargo/config"],
+        inputs=["!/.cargo/config.toml"],
     )

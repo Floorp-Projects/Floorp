@@ -32,7 +32,7 @@ cross-compile ARMv7 from a Linux host system is as follows:
       % rustup target install armv7-unknown-linux-gnueabihf
       ```
 
-  5. Put this in [testing/geckodriver/.cargo/config]:
+  5. Put this in [testing/geckodriver/.cargo/config.toml]:
 
       ```rust
       [target.armv7-unknown-linux-gnueabihf]
@@ -47,4 +47,4 @@ cross-compile ARMv7 from a Linux host system is as follows:
       ```
 
 [central]: https://hg.mozilla.org/mozilla-central/
-[testing/geckodriver/.cargo/config]: https://searchfox.org/mozilla-central/source/testing/geckodriver/.cargo/config
+[testing/geckodriver/.cargo/config.toml]: https://searchfox.org/mozilla-central/source/testing/geckodriver/.cargo/config.toml
