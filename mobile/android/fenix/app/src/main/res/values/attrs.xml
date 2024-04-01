@@ -48,6 +48,7 @@
     <!-- Border -->
     <!-- Default, Divider, Dotted -->
     <attr name="borderPrimary" format="reference" />
+    <attr name="borderSecondary" format="reference" />
     <!-- Toolbar divider -->
     <attr name="borderToolbarDivider" format="reference"/>
 

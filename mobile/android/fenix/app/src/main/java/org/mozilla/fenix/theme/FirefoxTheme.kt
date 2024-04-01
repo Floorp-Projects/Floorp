@@ -157,6 +157,7 @@ private val darkColorPalette = FirefoxColors(
     iconGradientStart = PhotonColors.Violet20,
     iconGradientEnd = PhotonColors.Blue20,
     borderPrimary = PhotonColors.DarkGrey05,
+    borderSecondary = PhotonColors.DarkGrey10,
     borderInverted = PhotonColors.LightGrey30,
     borderFormDefault = PhotonColors.LightGrey05,
     borderAccent = PhotonColors.Violet40,
@@ -234,6 +235,7 @@ private val lightColorPalette = FirefoxColors(
     iconGradientStart = PhotonColors.Violet50,
     iconGradientEnd = PhotonColors.Blue60,
     borderPrimary = PhotonColors.LightGrey30,
+    borderSecondary = PhotonColors.LightGrey20,
     borderInverted = PhotonColors.DarkGrey05,
     borderFormDefault = PhotonColors.DarkGrey90,
     borderAccent = PhotonColors.Ink20,
@@ -247,6 +249,7 @@ private val privateColorPalette = darkColorPalette.copy(
     layer2 = PhotonColors.Ink50,
     layer3 = PhotonColors.Ink90,
     layerSearch = PhotonColors.Ink90,
+    borderSecondary = PhotonColors.Ink10,
     borderToolbarDivider = PhotonColors.Violet80,
 )
 
@@ -324,6 +327,7 @@ class FirefoxColors(
     iconGradientStart: Color,
     iconGradientEnd: Color,
     borderPrimary: Color,
+    borderSecondary: Color,
     borderInverted: Color,
     borderFormDefault: Color,
     borderAccent: Color,
@@ -600,6 +604,9 @@ class FirefoxColors(
     var borderPrimary by mutableStateOf(borderPrimary)
         private set
 
+    var borderSecondary by mutableStateOf(borderSecondary)
+        private set
+
     // Onboarding
     var borderInverted by mutableStateOf(borderInverted)
         private set
@@ -697,6 +704,7 @@ class FirefoxColors(
         iconGradientStart = other.iconGradientStart
         iconGradientEnd = other.iconGradientEnd
         borderPrimary = other.borderPrimary
+        borderSecondary = other.borderSecondary
         borderInverted = other.borderInverted
         borderFormDefault = other.borderFormDefault
         borderAccent = other.borderAccent
@@ -778,6 +786,7 @@ class FirefoxColors(
         iconGradientStart: Color = this.iconGradientStart,
         iconGradientEnd: Color = this.iconGradientEnd,
         borderPrimary: Color = this.borderPrimary,
+        borderSecondary: Color = this.borderSecondary,
         borderInverted: Color = this.borderInverted,
         borderFormDefault: Color = this.borderFormDefault,
         borderAccent: Color = this.borderAccent,
@@ -853,6 +862,7 @@ class FirefoxColors(
         iconGradientStart = iconGradientStart,
         iconGradientEnd = iconGradientEnd,
         borderPrimary = borderPrimary,
+        borderSecondary = borderSecondary,
         borderInverted = borderInverted,
         borderFormDefault = borderFormDefault,
         borderAccent = borderAccent,
