@@ -346,7 +346,7 @@ add_task(async function test_empty_states() {
       "Import history banner is shown"
     );
     let importHistoryCloseButton =
-      historyComponent.cards[0].querySelector("button.close");
+      historyComponent.cards[0].querySelector("moz-button.close");
     importHistoryCloseButton.click();
     await TestUtils.waitForCondition(() => historyComponent.fullyUpdated);
     ok(
