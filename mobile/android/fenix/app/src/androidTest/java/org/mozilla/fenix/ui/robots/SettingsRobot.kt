@@ -270,17 +270,20 @@ class SettingsRobot {
         onView(withText("Privacy and security"))
             .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
         Log.i(TAG, "verifySettingsView: Verified that the \"Privacy and security\" heading is visible")
-        Log.i(TAG, "verifySettingsView: Trying to perform scroll to the \"Add-ons\" button")
+
+        val extensions = getStringResource(R.string.preferences_extensions)
+        Log.i(TAG, "verifySettingsView: Trying to perform scroll to the \"$extensions\" button")
         onView(withId(R.id.recycler_view)).perform(
             RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
-                hasDescendant(withText("Add-ons")),
+                hasDescendant(withText(R.string.preferences_extensions)),
             ),
         )
-        Log.i(TAG, "verifySettingsView: Performed scroll to the \"Add-ons\" button")
-        Log.i(TAG, "verifySettingsView: Trying to verify that the \"Add-ons\" button is completely displayed")
-        onView(withText("Add-ons"))
+        Log.i(TAG, "verifySettingsView: Performed scroll to the \"$extensions\" button")
+        Log.i(TAG, "verifySettingsView: Trying to verify that the \"$extensions\" button is completely displayed")
+        onView(withText(R.string.preferences_extensions))
             .check(matches(isCompletelyDisplayed()))
-        Log.i(TAG, "verifySettingsView: Verified that the \"Add-ons\" button is completely displayed")
+        Log.i(TAG, "verifySettingsView: Verified that the \"$extensions\" button is completely displayed")
+
         Log.i(TAG, "verifySettingsView: Trying to perform ${LISTS_MAXSWIPES}x a scroll action to the end of the settings list")
         settingsList().scrollToEnd(LISTS_MAXSWIPES)
         Log.i(TAG, "verifySettingsView: Performed ${LISTS_MAXSWIPES}x a scroll action to the end of the settings list")
@@ -310,30 +313,32 @@ class SettingsRobot {
 
     // ADVANCED SECTION
     fun verifyAdvancedHeading() {
-        Log.i(TAG, "verifyAdvancedHeading: Trying to perform scroll to the \"Add-ons\" button")
+        val extensions = getStringResource(R.string.preferences_extensions)
+        Log.i(TAG, "verifyAdvancedHeading: Trying to perform scroll to the \"$extensions\" button")
         onView(withId(R.id.recycler_view)).perform(
             RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
-                hasDescendant(withText("Add-ons")),
+                hasDescendant(withText(R.string.preferences_extensions)),
             ),
         )
-        Log.i(TAG, "verifyAdvancedHeading: Performed scroll to the \"Add-ons\" button")
-        Log.i(TAG, "verifyAdvancedHeading: Trying to verify that the \"Add-ons\" button is completely displayed")
-        onView(withText("Add-ons"))
+        Log.i(TAG, "verifyAdvancedHeading: Performed scroll to the \"$extensions\" button")
+        Log.i(TAG, "verifyAdvancedHeading: Trying to verify that the \"$extensions\" button is completely displayed")
+        onView(withText(R.string.preferences_extensions))
             .check(matches(isCompletelyDisplayed()))
-        Log.i(TAG, "verifyAdvancedHeading: Verified that the \"Add-ons\" button is completely displayed")
+        Log.i(TAG, "verifyAdvancedHeading: Verified that the \"$extensions\" button is completely displayed")
     }
     fun verifyAddons() {
-        Log.i(TAG, "verifyAddons: Trying to perform scroll to the \"Add-ons\" button")
+        val extensions = getStringResource(R.string.preferences_extensions)
+        Log.i(TAG, "verifyAddons: Trying to perform scroll to the \"$extensions\" button")
         onView(withId(R.id.recycler_view)).perform(
             RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
-                hasDescendant(withText("Add-ons")),
+                hasDescendant(withText(R.string.preferences_extensions)),
             ),
         )
-        Log.i(TAG, "verifyAddons: Performed scroll to the \"Add-ons\" button")
-        Log.i(TAG, "verifyAddons: Trying to verify that the \"Add-ons\" button is completely displayed")
+        Log.i(TAG, "verifyAddons: Performed scroll to the \"$extensions\" button")
+        Log.i(TAG, "verifyAddons: Trying to verify that the \"$extensions\" button is completely displayed")
         addonsManagerButton()
             .check(matches(isCompletelyDisplayed()))
-        Log.i(TAG, "verifyAddons: Verified that the \"Add-ons\" button is completely displayed")
+        Log.i(TAG, "verifyAddons: Verified that the \"$extensions\" button is completely displayed")
     }
 
     fun verifyExternalDownloadManagerButton() {
@@ -793,7 +798,7 @@ fun clickRateButtonGooglePlay() {
     rateOnGooglePlayHeading().click()
 }
 
-private fun addonsManagerButton() = onView(withText(R.string.preferences_addons))
+private fun addonsManagerButton() = onView(withText(R.string.preferences_extensions))
 
 private fun goBackButton() =
     onView(CoreMatchers.allOf(withContentDescription("Navigate up")))

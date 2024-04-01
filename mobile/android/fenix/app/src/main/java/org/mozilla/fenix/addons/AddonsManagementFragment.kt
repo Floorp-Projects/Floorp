@@ -67,7 +67,7 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
 
     override fun onResume() {
         super.onResume()
-        showToolbar(getString(R.string.preferences_addons))
+        showToolbar(getString(R.string.preferences_extensions))
     }
 
     override fun onDestroyView() {
@@ -150,7 +150,7 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
                         binding?.let {
                             showSnackBar(
                                 it.root,
-                                getString(R.string.mozac_feature_addons_failed_to_query_add_ons),
+                                getString(R.string.mozac_feature_addons_failed_to_query_extensions),
                             )
                         }
                         binding?.addOnsProgressBar?.isVisible = false

@@ -104,7 +104,7 @@ class AddonsFragment : Fragment(), AddonsManagerAdapterDelegate {
                 scope.launch(Dispatchers.Main) {
                     Toast.makeText(
                         activity,
-                        addonsR.string.mozac_feature_addons_failed_to_query_add_ons,
+                        addonsR.string.mozac_feature_addons_failed_to_query_extensions,
                         Toast.LENGTH_SHORT,
                     ).show()
                 }

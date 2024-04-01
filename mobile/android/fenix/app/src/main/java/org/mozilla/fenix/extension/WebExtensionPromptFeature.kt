@@ -171,21 +171,21 @@ class WebExtensionPromptFeature(
                 if (addonName.isNotEmpty()) {
                     context.getString(R.string.mozac_feature_addons_failed_to_install, addonName)
                 } else {
-                    context.getString(R.string.mozac_feature_addons_failed_to_install_generic)
+                    context.getString(R.string.mozac_feature_addons_extension_failed_to_install)
                 }
             }
 
             is WebExtensionInstallException.NetworkFailure -> {
-                context.getString(R.string.mozac_feature_addons_failed_to_install_network_error)
+                context.getString(R.string.mozac_feature_addons_extension_failed_to_install_network_error)
             }
 
             is WebExtensionInstallException.CorruptFile -> {
-                context.getString(R.string.mozac_feature_addons_failed_to_install_corrupt_error)
+                context.getString(R.string.mozac_feature_addons_extension_failed_to_install_corrupt_error)
             }
 
             is WebExtensionInstallException.NotSigned -> {
                 context.getString(
-                    R.string.mozac_feature_addons_failed_to_install_not_signed_error,
+                    R.string.mozac_feature_addons_extension_failed_to_install_not_signed_error,
                 )
             }
 

@@ -74,7 +74,7 @@ class ExtensionsProcessDisabledForegroundController(
                 return
             }
 
-            val message = context.getString(R.string.addon_process_crash_dialog_message, appName)
+            val message = context.getString(R.string.extension_process_crash_dialog_message, appName)
             var onDismissDialog: (() -> Unit)? = null
             val layout = LayoutInflater.from(context)
                 .inflate(R.layout.crash_extension_dialog, null, false)
@@ -94,7 +94,7 @@ class ExtensionsProcessDisabledForegroundController(
             builder.apply {
                 setCancelable(false)
                 setView(layout)
-                setTitle(R.string.addon_process_crash_dialog_title)
+                setTitle(R.string.extension_process_crash_dialog_title)
             }
 
             val dialog = builder.show()

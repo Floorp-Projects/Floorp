@@ -391,7 +391,7 @@ class WebExtensionBrowserMenuBuilderTest {
         assertEquals("ParentBrowserMenuItem", parentMenuItem.javaClass.simpleName)
 
         // the replaced item should have the action title of the WebExtensionBrowserMenuItem
-        assertEquals("Add-ons", parentMenuItem.label)
+        assertEquals(testContext.getString(R.string.mozac_browser_menu_extensions), parentMenuItem.label)
 
         val subMenuItemSize = parentMenuItem.subMenu.adapter.visibleItems.size
 
@@ -450,7 +450,7 @@ class WebExtensionBrowserMenuBuilderTest {
         assertEquals(3, recyclerAdapter.itemCount)
 
         val lastItem = recyclerAdapter.visibleItems[2]
-        assert(lastItem is ParentBrowserMenuItem && lastItem.label == "Add-ons")
+        assert(lastItem is ParentBrowserMenuItem && lastItem.label == testContext.getString(R.string.mozac_browser_menu_extensions))
     }
 
     @Test

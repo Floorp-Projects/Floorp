@@ -226,7 +226,7 @@
             android:minHeight="48dp"
             android:clickable="true"
             android:focusable="true"
-            android:text="@string/mozac_feature_addons_more_info_link"
+            android:text="@string/mozac_feature_addons_more_info_link_2"
             android:textColor="?textAccent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/detail_url_divider" />

@@ -288,7 +288,7 @@ class DefaultAddonUpdater(
     ): Notification {
         val channel = ChannelData(
             NOTIFICATION_CHANNEL_ID,
-            R.string.mozac_feature_addons_updater_notification_channel,
+            R.string.mozac_feature_addons_updater_notification_channel_2,
             NotificationManagerCompat.IMPORTANCE_LOW,
         )
         val channelId = ensureNotificationChannelExists(applicationContext, channel)

@@ -9,7 +9,7 @@
     android:layout_marginEnd="12dp"
     android:layout_marginTop="8dp"
     android:layout_marginBottom="12dp"
-    android:text="@string/mozac_feature_addons_find_more_addons_button_text"
+    android:text="@string/mozac_feature_addons_find_more_extensions_button_text"
     android:textAlignment="center"
     android:textAllCaps="false"
     android:textSize="14sp" />

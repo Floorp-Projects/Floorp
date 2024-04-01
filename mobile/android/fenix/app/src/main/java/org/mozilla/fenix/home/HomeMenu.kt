@@ -143,7 +143,7 @@ class HomeMenu(
         }
 
         val extensionsItem = BrowserMenuImageText(
-            context.getString(R.string.browser_menu_add_ons),
+            context.getString(R.string.browser_menu_extensions),
             R.drawable.ic_addons_extensions,
             primaryTextColor,
         ) {
