@@ -18,8 +18,6 @@ prefs = [
 ["browser_iframe_test.js"]
 skip-if = ["os == 'linux'"]
 
-["browser_keyboard_shortcuts.js"]
-
 ["browser_overlay_keyboard_test.js"]
 
 ["browser_screenshots_drag_scroll_test.js"]
