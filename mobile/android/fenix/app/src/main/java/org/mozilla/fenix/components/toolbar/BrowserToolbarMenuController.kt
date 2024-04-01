@@ -34,6 +34,7 @@ import org.mozilla.fenix.GleanMetrics.AppMenu
 import org.mozilla.fenix.GleanMetrics.Collections
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.ReaderMode
+import org.mozilla.fenix.GleanMetrics.Translations
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
@@ -408,7 +409,7 @@ class DefaultBrowserToolbarMenuController(
             }
 
             ToolbarMenu.Item.Translate -> {
-                Events.translationsAction.record(Events.TranslationsActionExtra("main_flow_browser"))
+                Translations.action.record(Translations.ActionExtra("main_flow_browser"))
                 val directions =
                     BrowserFragmentDirections.actionBrowserFragmentToTranslationsDialogFragment(
                         sessionId = currentSession?.id,

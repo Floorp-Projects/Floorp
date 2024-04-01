@@ -12,6 +12,7 @@ import mozilla.components.browser.state.action.DownloadAction
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.ExtensionsProcessAction
 import mozilla.components.browser.state.action.TabListAction
+import mozilla.components.browser.state.action.TranslationsAction
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.browser.state.selector.normalTabs
@@ -29,6 +30,7 @@ import org.mozilla.fenix.GleanMetrics.Addons
 import org.mozilla.fenix.GleanMetrics.Awesomebar
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.Metrics
+import org.mozilla.fenix.GleanMetrics.Translations
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
@@ -152,6 +154,12 @@ class TelemetryMiddleware(
                 } else {
                     Awesomebar.engagement.record()
                 }
+            }
+            is TranslationsAction.TranslateOfferAction -> {
+                Translations.offerEvent.record(Translations.OfferEventExtra("offer"))
+            }
+            is TranslationsAction.TranslateExpectedAction -> {
+                Translations.offerEvent.record(Translations.OfferEventExtra("expected"))
             }
             else -> {
                 // no-op
