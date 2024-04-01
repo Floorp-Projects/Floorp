@@ -75,24 +75,23 @@
         color: "--button-text-color-primary",
         height: "--button-min-height",
       });
-
       assertButtonPropertiesMatch(four, {
         width: "--button-size-icon",
         height: "--button-size-icon",
         backgroundColor: "--button-background-color",
-        fill: "--button-text-color",
+        fill: "--icon-color",
       });
       assertButtonPropertiesMatch(five, {
         width: "--button-size-icon",
         height: "--button-size-icon",
         backgroundColor: "transparent",
-        fill: "--button-text-color",
+        fill: "--icon-color",
       });
       assertButtonPropertiesMatch(six, {
         width: "--button-size-icon",
         height: "--button-size-icon",
         backgroundColor: "transparent",
-        fill: "--button-text-color",
+        fill: "--icon-color",
       });
 
       buttons.forEach(btn => (btn.size = "small"));

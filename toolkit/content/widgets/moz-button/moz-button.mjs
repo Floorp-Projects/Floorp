@@ -68,6 +68,11 @@ export default class MozButton extends MozLitElement {
     }
   }
 
+  // Delegate clicks on host to the button element.
+  click() {
+    this.buttonEl.click();
+  }
+
   render() {
     return html`
       <link

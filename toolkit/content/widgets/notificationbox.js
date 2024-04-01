@@ -663,6 +663,10 @@
         }
       }
 
+      closeButtonTemplate() {
+        return super.closeButtonTemplate({ size: "small" });
+      }
+
       #setStyles() {
         let style = document.createElement("link");
         style.rel = "stylesheet";

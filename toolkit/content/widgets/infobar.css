@@ -32,11 +32,8 @@
   }
 
   .close {
-    margin-block: 4px;
+    margin-block: 2px;
     margin-inline-start: 8px;
-    background-size: 12px;
-    height: 24px;
-    width: 24px;
     align-self: flex-start;
   }
 }
