@@ -875,6 +875,9 @@ export class TranslationsParent extends JSWindowActorParent {
           }
           return Array.from(languagePairMap.values());
         });
+      TranslationsParent.#languagePairs.catch(() => {
+        TranslationsParent.#languagePairs = null;
+      });
     }
     return TranslationsParent.#languagePairs;
   }
