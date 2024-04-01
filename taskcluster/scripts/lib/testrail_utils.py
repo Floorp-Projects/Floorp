@@ -38,7 +38,7 @@ def build_milestone_description(milestone_name):
     return textwrap.dedent(
         f"""
         RELEASE: {milestone_name}\n\n\
-        RELEASE_TAG_URL: https://github.com/mozilla-mobile/firefox-android/releases\n\n\
+        RELEASE_TAG_URL: https://archive.mozilla.org/pub/fenix/releases/\n\n\
         RELEASE_DATE: {formatted_date}\n\n\
         TESTING_STATUS: [ TBD ]\n\n\
         QA_RECOMMENDATION:[ TBD ]\n\n\
@@ -52,26 +52,12 @@ def build_milestone_description(milestone_name):
 
 
 def get_release_version():
-    # Get the current script's directory (absolute path)
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-
-    # Initialize root_dir as script_dir initially
-    root_dir = script_dir
-
-    # Loop to traverse up until you find the version.txt or reach the filesystem root
-    while root_dir != os.path.dirname(
-        root_dir
-    ):  # Check if root_dir has reached the filesystem root
-        version_file_path = os.path.join(root_dir, "version.txt")
-        if os.path.isfile(version_file_path):
-            break
-        root_dir = os.path.dirname(root_dir)  # Move one directory up
-
     # Check if version.txt was found
+    version_file_path = os.path.join(
+        os.environ.get("GECKO_PATH", "."), "mobile", "android", "version.txt"
+    )
     if not os.path.isfile(version_file_path):
-        raise FileNotFoundError(
-            "version.txt not found in any of the parent directories."
-        )
+        raise FileNotFoundError(f"{version_file_path} not found.")
 
     # Read the version from the file
     with open(version_file_path, "r") as file:
