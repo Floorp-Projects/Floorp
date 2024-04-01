@@ -50,12 +50,12 @@ import org.mozilla.fenix.theme.ThemeManager
  * @param browserStore The [BrowserStore] instance used to observe tabs state.
  * @param menuButton A [MenuButton] to be used as an [AndroidView]. The view implementation
  * contains the builder for the menu, so for the time being we are not implementing it as a composable.
- * @param onBackButtonClick Invoked when the user clicks the back button in the nav bar.
- * @param onBackButtonLongPress Invoked when the user long-presses the back button in the nav bar.
- * @param onForwardButtonClick Invoked when the user clicks the forward button in the nav bar.
- * @param onForwardButtonLongPress Invoked when the user long-presses the forward button in the nav bar.
- * @param onHomeButtonClick Invoked when the user clicks the home button in the nav bar.
- * @param onTabsButtonClick Invoked when the user clicks the tabs button in the nav bar.
+ * @param onBackButtonClick Invoked when the user clicks on the back button in the navigation bar.
+ * @param onBackButtonLongPress Invoked when the user long-presses the back button in the navigation bar.
+ * @param onForwardButtonClick Invoked when the user clicks on the forward button in the navigation bar.
+ * @param onForwardButtonLongPress Invoked when the user long-presses the forward button in the navigation bar.
+ * @param onHomeButtonClick Invoked when the user clicks on the home button in the navigation bar.
+ * @param onTabsButtonClick Invoked when the user clicks on the tabs button in the navigation bar.
  */
 @Suppress("LongParameterList")
 @Composable
@@ -298,11 +298,11 @@ private fun HomeNavBarPreviewRoot(isPrivateMode: Boolean) {
     }
 
     HomeNavBar(
-        onSearchButtonClick = {},
-        menuButton = menuButton,
-        onTabsButtonClick = {},
         isPrivateMode = false,
         browserStore = BrowserStore(),
+        menuButton = menuButton,
+        onSearchButtonClick = {},
+        onTabsButtonClick = {},
     )
 }
 
@@ -325,15 +325,15 @@ private fun OpenTabNavBarNavBarPreviewRoot(isPrivateMode: Boolean) {
     }
 
     BrowserNavBar(
+        isPrivateMode = false,
+        browserStore = BrowserStore(),
+        menuButton = menuButton,
         onBackButtonClick = {},
         onBackButtonLongPress = {},
         onForwardButtonClick = {},
         onForwardButtonLongPress = {},
         onHomeButtonClick = {},
-        menuButton = menuButton,
         onTabsButtonClick = {},
-        isPrivateMode = false,
-        browserStore = BrowserStore(),
     )
 }
 
