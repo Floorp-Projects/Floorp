@@ -904,7 +904,89 @@ translations:
     notification_emails:
       - android-probes@mozilla.com
     expires: never
-
+  translate_requested:
+    type: event
+    description: |
+      The user requested a translation of the page.
+    extra_keys:
+      to_language:
+        description: |
+          A string containing the BCP 47 that the user is translating the page to. Predefined based 
+          on published translation models. For example, possible values are:
+          "en", "es", "fr", and all other translations engine "to" language codes.
+        type: string
+      from_language:
+        description: |
+          A string containing the BCP 47 that the user is translating the page from. Predefined based 
+          on published translation models. For example, possible values are:
+          "en", "es", "fr", and all other translations engine "from" language codes.
+        type: string
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1886221
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1886221#c3
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
+  translate_success:
+    type: event
+    description: |
+      The user requested a translation of the page and it completed successfully.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1886221
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1886221#c3
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
+  translate_failed:
+    type: event
+    description: |
+      The user requested a translation of the page and it failed.
+    extra_keys:
+      error:
+        description: |
+          A string containing the name of the error that occurred. Possible values are predefined 
+          in TranslationError and include:
+          unknown, unexpected-null, missing-session-coordinator, engine-not-supported, unknown-engine-support
+          could-not-translate, could-not-restore, could-not-determine-translation-download-size, could-not-load-languages,
+          could-not-load-settings, could-not-load-language-settings, could-not-load-never-translate-sites,
+          language-not-supported, model-could-not-retrieve, model-could-not-delete, model-could-not-download,
+          model-language-required, model-download-required
+        type: string
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1886221
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1886221#c3
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
+  engine_supported:
+    type: event
+    description: |
+      The translations engine for translating pages is only supported on certain devices. 
+      This probe indicates if the device supports the translations engine or not.
+    extra_keys:
+      support:
+        description: |
+          A string describing the support of the engine, either:
+          supported, unsupported,
+        type: string
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1886221
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1886221#c3
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
 splash_screen:
   first_launch_extended:
     type: event

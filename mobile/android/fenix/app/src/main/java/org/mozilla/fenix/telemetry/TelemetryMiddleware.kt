@@ -20,6 +20,7 @@ import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.concept.base.crash.CrashReporting
+import mozilla.components.concept.engine.translate.TranslationOperation
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.support.base.log.logger.Logger
@@ -160,6 +161,31 @@ class TelemetryMiddleware(
             }
             is TranslationsAction.TranslateExpectedAction -> {
                 Translations.offerEvent.record(Translations.OfferEventExtra("expected"))
+            }
+            is TranslationsAction.TranslateAction -> {
+                Translations.translateRequested.record(
+                    Translations.TranslateRequestedExtra(
+                        fromLanguage = action.fromLanguage,
+                        toLanguage = action.toLanguage,
+                    ),
+                )
+            }
+            is TranslationsAction.TranslateSuccessAction -> {
+                if (action.operation == TranslationOperation.TRANSLATE) {
+                    Translations.translateSuccess.record()
+                }
+            }
+            is TranslationsAction.TranslateExceptionAction -> {
+                if (action.operation == TranslationOperation.TRANSLATE) {
+                    Translations.translateFailed.record(
+                        Translations.TranslateFailedExtra(action.translationError.errorName),
+                    )
+                }
+            }
+            is TranslationsAction.SetEngineSupportedAction -> {
+                Translations.engineSupported.record(
+                    Translations.EngineSupportedExtra(if (action.isEngineSupported) "supported" else "unsupported"),
+                )
             }
             else -> {
                 // no-op
