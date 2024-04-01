@@ -8,7 +8,7 @@ skip-if(Android) fuzzy(0-10,0-778536) fuzzy-if(appleSilicon,0-37,0-699614) == im
 # Bug 1758718
 skip-if(Android) fuzzy(0-27,0-573106) skip-if(cocoaWidget) == image-10bits-rendering-720-video.html image-10bits-rendering-720-ref.html
 skip-if(Android) fuzzy(0-31,0-573249) fuzzy-if(appleSilicon,0-37,0-543189) == image-10bits-rendering-720-90-video.html image-10bits-rendering-720-90-ref.html
-skip-if(Android) fuzzy(0-84,0-771156) fails-if(useDrawSnapshot) == uneven_frame_duration_video.html uneven_frame_duration_video-ref.html # Skip on Windows 7 as the resolution of the video is too high for test machines and will fail in the decoder.
+skip-if(Android) fuzzy(0-84,0-774213) fails-if(useDrawSnapshot) == uneven_frame_duration_video.html uneven_frame_duration_video-ref.html # Skip on Windows 7 as the resolution of the video is too high for test machines and will fail in the decoder.
 # Set media.dormant-on-pause-timeout-ms to avoid decoders becoming dormant and busting test, skip on android as test is too noisy and unstable
 skip-if(Android) pref(media.dormant-on-pause-timeout-ms,-1) fuzzy(0-20,0-500) == frame_order_mp4.html frame_order_mp4-ref.html
 skip-if(Android) fuzzy(0-30,0-270000) == incorrect_display_in_bytestream_vp8.html incorrect_display_in_bytestream_vp8-ref.html
