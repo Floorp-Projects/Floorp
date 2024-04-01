@@ -16,6 +16,8 @@ import { ViewPage } from "./viewpage.mjs";
 // eslint-disable-next-line import/no-unassigned-import
 import "chrome://browser/content/migration/migration-wizard.mjs";
 import { HistoryController } from "./HistoryController.mjs";
+// eslint-disable-next-line import/no-unassigned-import
+import "chrome://global/content/elements/moz-button.mjs";
 
 const lazy = {};
 
@@ -503,11 +505,12 @@ class HistoryInView extends ViewPage {
                 data-l10n-id="firefoxview-choose-browser-button"
                 @click=${this.openMigrationWizard}
               ></button>
-              <button
-                class="close ghost-button"
+              <moz-button
+                class="close"
+                type="icon ghost"
                 data-l10n-id="firefoxview-import-history-close-button"
                 @click=${this.dismissImportHistory}
-              ></button>
+              ></moz-button>
             </div>
           </div>
         </card-container>

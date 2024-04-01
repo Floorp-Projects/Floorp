@@ -387,7 +387,6 @@ class RecentlyClosedTabsInView extends ViewPage {
             () =>
               html`
                 <fxview-tab-list
-                  class="with-dismiss-button"
                   slot="main"
                   .maxTabsLength=${!this.recentBrowsing || this.showAll
                     ? -1

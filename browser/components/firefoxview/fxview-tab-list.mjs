@@ -12,6 +12,8 @@ import {
 } from "chrome://global/content/vendor/lit.all.mjs";
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 import { escapeRegExp } from "./helpers.mjs";
+// eslint-disable-next-line import/no-unassigned-import
+import "chrome://global/content/elements/moz-button.mjs";
 
 const NOW_THRESHOLD_MS = 91000;
 const FXVIEW_ROW_HEIGHT_PX = 32;
@@ -612,13 +614,9 @@ export class FxviewTabRowBase extends MozLitElement {
 
   stylesheets() {
     return html`<link
-        rel="stylesheet"
-        href="chrome://global/skin/in-content/common.css"
-      />
-      <link
-        rel="stylesheet"
-        href="chrome://browser/content/firefoxview/fxview-tab-row.css"
-      />`;
+      rel="stylesheet"
+      href="chrome://browser/content/firefoxview/fxview-tab-row.css"
+    />`;
   }
 
   faviconTemplate() {
@@ -703,12 +701,10 @@ export class FxviewTabRowBase extends MozLitElement {
   secondaryButtonTemplate() {
     return html`${when(
       this.secondaryL10nId && this.secondaryActionHandler,
-      () => html`<button
+      () => html`<moz-button
+        type="icon ghost"
         class=${classMap({
           "fxview-tab-row-button": true,
-          "ghost-button": true,
-          "icon-button": true,
-          "semi-transparent": true,
           [this.secondaryActionClass]: this.secondaryActionClass,
         })}
         id="fxview-tab-row-secondary-button"
@@ -720,19 +716,17 @@ export class FxviewTabRowBase extends MozLitElement {
         this.currentActiveElementId === "fxview-tab-row-secondary-button"
           ? "0"
           : "-1"}"
-      ></button>`
+      ></moz-button>`
     )}`;
   }
 
   tertiaryButtonTemplate() {
     return html`${when(
       this.tertiaryL10nId && this.tertiaryActionHandler,
-      () => html`<button
+      () => html`<moz-button
+        type="icon ghost"
         class=${classMap({
           "fxview-tab-row-button": true,
-          "ghost-button": true,
-          "icon-button": true,
-          "semi-transparent": true,
           [this.tertiaryActionClass]: this.tertiaryActionClass,
         })}
         id="fxview-tab-row-tertiary-button"
@@ -744,7 +738,7 @@ export class FxviewTabRowBase extends MozLitElement {
         this.currentActiveElementId === "fxview-tab-row-tertiary-button"
           ? "0"
           : "-1"}"
-      ></button>`
+      ></moz-button>`
     )}`;
   }
 }

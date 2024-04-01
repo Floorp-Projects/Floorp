@@ -5,6 +5,7 @@
 .fxview-tab-row-favicon-wrapper {
   height: 16px;
   position: relative;
+  display: block;
 
   .fxview-tab-row-favicon::after,
   .fxview-tab-row-button::after,
@@ -47,8 +48,9 @@
   }
 
   &.pinned .fxview-tab-row-pinned-media-button {
-    inset-block-start: -10px;
-    inset-inline-end: -10px;
+    inset-block-start: -5px;
+    inset-inline-end: 1px;
+    border: var(--button-border);
     border-radius: 100%;
     background-color: var(--fxview-background-color-secondary);
     padding: 6px;
@@ -62,6 +64,11 @@
 
     &[soundplaying="true"] {
     background-image: url("chrome://global/skin/media/audio.svg");
+    }
+
+    &:active,
+    &:hover:active {
+      background-color: var(--button-background-color-active);
     }
   }
 }
@@ -83,27 +90,7 @@
   }
 }
 
-.fxview-tab-row-button {
-  &[muted="true"],
-  &[soundplaying="true"] {
-    background-size: 16px;
-    background-repeat: no-repeat;
-    background-position: center;
-    -moz-context-properties: fill;
-    fill: currentColor;
-  }
-
-  &[muted="true"] {
-    background-image: url("chrome://global/skin/media/audio-muted.svg");
-  }
-
-  &[soundplaying="true"] {
-    background-image: url("chrome://global/skin/media/audio.svg");
-  }
-}
-
-button.fxview-tab-row-main:hover,
-.fxview-tab-row-button.ghost-button.icon-button:enabled:hover {
+button.fxview-tab-row-main:hover {
   & .fxview-tab-row-favicon-wrapper .fxview-tab-row-favicon::after {
     stroke: var(--fxview-indicator-stroke-color-hover);
   }

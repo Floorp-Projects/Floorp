@@ -51,19 +51,8 @@
   cursor: pointer;
 }
 
-.import-history-banner .close {
+moz-button.close::part(button) {
   background-image: url("chrome://global/skin/icons/close-12.svg");
-  background-repeat: no-repeat;
-  background-position: center center;
-  -moz-context-properties: fill;
-  fill: currentColor;
-  min-width: auto;
-  min-height: auto;
-  width: 24px;
-  height: 24px;
-  margin: 0;
-  padding: 0;
-  flex-shrink: 0;
 }
 
 dialog {

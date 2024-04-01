@@ -13,6 +13,8 @@ import {
   FxviewTabListBase,
   FxviewTabRowBase,
 } from "chrome://browser/content/firefoxview/fxview-tab-list.mjs";
+// eslint-disable-next-line import/no-unassigned-import
+import "chrome://global/content/elements/moz-button.mjs";
 
 const lazy = {};
 let XPCOMUtils;
@@ -310,7 +312,7 @@ export class OpenTabsTabRow extends FxviewTabRowBase {
   static queries = {
     ...FxviewTabRowBase.queries,
     mediaButtonEl: "#fxview-tab-row-media-button",
-    pinnedTabButtonEl: "button#fxview-tab-row-main",
+    pinnedTabButtonEl: "moz-button#fxview-tab-row-main",
   };
 
   connectedCallback() {
@@ -432,7 +434,7 @@ export class OpenTabsTabRow extends FxviewTabRowBase {
             this.indicators?.includes("soundplaying")),
         () => html`
           <button
-            class="fxview-tab-row-pinned-media-button ghost-button icon-button"
+            class="fxview-tab-row-pinned-media-button"
             id="fxview-tab-row-media-button"
             tabindex="-1"
             data-l10n-id=${this.indicators?.includes("muted")
@@ -485,27 +487,22 @@ export class OpenTabsTabRow extends FxviewTabRowBase {
     return html`${when(
       this.indicators?.includes("soundplaying") ||
         this.indicators?.includes("muted"),
-      () => html`<button
-        class=fxview-tab-row-button ghost-button icon-button semi-transparent"
+      () => html`<moz-button
+        type="icon ghost"
+        class="fxview-tab-row-button"
         id="fxview-tab-row-media-button"
-        data-l10n-id=${
-          this.indicators?.includes("muted")
-            ? "fxviewtabrow-unmute-tab-button-no-context"
-            : "fxviewtabrow-mute-tab-button-no-context"
-        }
+        data-l10n-id=${this.indicators?.includes("muted")
+          ? "fxviewtabrow-unmute-tab-button-no-context"
+          : "fxviewtabrow-mute-tab-button-no-context"}
         muted=${this.indicators?.includes("muted")}
-        soundplaying=${
-          this.indicators?.includes("soundplaying") &&
-          !this.indicators?.includes("muted")
-        }
+        soundplaying=${this.indicators?.includes("soundplaying") &&
+        !this.indicators?.includes("muted")}
         @click=${this.muteOrUnmuteTab}
-        tabindex="${
-          this.active &&
-          this.currentActiveElementId === "fxview-tab-row-media-button"
-            ? "0"
-            : "-1"
-        }"
-      ></button>`,
+        tabindex="${this.active &&
+        this.currentActiveElementId === "fxview-tab-row-media-button"
+          ? "0"
+          : "-1"}"
+      ></moz-button>`,
       () => html`<span></span>`
     )}`;
   }
@@ -522,23 +519,25 @@ export class OpenTabsTabRow extends FxviewTabRowBase {
   }
 
   #pinnedTabItemTemplate() {
-    return html` <button
-      class="fxview-tab-row-main ghost-button semi-transparent"
-      id="fxview-tab-row-main"
-      aria-haspopup=${ifDefined(this.hasPopup)}
-      data-l10n-id=${ifDefined(this.primaryL10nId)}
-      data-l10n-args=${ifDefined(this.primaryL10nArgs)}
-      tabindex=${this.active &&
-      this.currentActiveElementId === "fxview-tab-row-main"
-        ? "0"
-        : "-1"}
-      role="tab"
-      @click=${this.primaryActionHandler}
-      @keydown=${this.primaryActionHandler}
-      @contextmenu=${this.#secondaryActionHandler}
-    >
-      ${this.#faviconTemplate()}
-    </button>`;
+    return html`
+      <moz-button
+        type="icon ghost"
+        id="fxview-tab-row-main"
+        aria-haspopup=${ifDefined(this.hasPopup)}
+        data-l10n-id=${ifDefined(this.primaryL10nId)}
+        data-l10n-args=${ifDefined(this.primaryL10nArgs)}
+        tabindex=${this.active &&
+        this.currentActiveElementId === "fxview-tab-row-main"
+          ? "0"
+          : "-1"}
+        role="tab"
+        @click=${this.primaryActionHandler}
+        @keydown=${this.primaryActionHandler}
+        @contextmenu=${this.#secondaryActionHandler}
+      >
+        ${this.#faviconTemplate()}
+      </moz-button>
+    `;
   }
 
   #unpinnedTabItemTemplate() {
