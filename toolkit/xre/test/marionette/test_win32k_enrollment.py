@@ -389,8 +389,7 @@ class TestWin32kAutostart(MarionetteTestCase):
 
         self.marionette.set_pref(Prefs.WIN32K, True)
 
-        app_version = self.execute_script("return Services.appinfo.version")
-        self.restart(env={ENV_DISABLE_E10S: app_version})
+        self.restart(env={ENV_DISABLE_E10S: "1"})
         self.set_env(ENV_DISABLE_E10S, "null")
 
         self.check_win32k_status(
@@ -623,8 +622,7 @@ class TestWin32kAutostart(MarionetteTestCase):
 
         self.marionette.set_pref(Prefs.WIN32K, True)
 
-        app_version = self.execute_script("return Services.appinfo.version")
-        self.restart(env={ENV_DISABLE_E10S: app_version})
+        self.restart(env={ENV_DISABLE_E10S: "1"})
         self.set_env(ENV_DISABLE_E10S, "null")
 
         self.check_win32k_status(
@@ -869,8 +867,7 @@ class TestWin32kAutostart(MarionetteTestCase):
             enrollmentStatusPref=ExperimentStatus.UNENROLLED,
         )
 
-        app_version = self.execute_script("return Services.appinfo.version")
-        self.restart(env={ENV_DISABLE_E10S: app_version})
+        self.restart(env={ENV_DISABLE_E10S: "1"})
         self.set_env(ENV_DISABLE_E10S, "null")
 
         self.check_win32k_status(
@@ -1137,8 +1134,7 @@ class TestWin32kAutostart(MarionetteTestCase):
             enrollmentStatusPref=ExperimentStatus.UNENROLLED,
         )
 
-        app_version = self.execute_script("return Services.appinfo.version")
-        self.restart(env={ENV_DISABLE_E10S: app_version})
+        self.restart(env={ENV_DISABLE_E10S: "1"})
         self.set_env(ENV_DISABLE_E10S, "null")
 
         self.check_win32k_status(
@@ -1366,8 +1362,7 @@ class TestWin32kAutostart(MarionetteTestCase):
         # Re-set enrollment pref, like Normandy would do
         self.set_enrollment_status(ExperimentStatus.ENROLLED_CONTROL)
 
-        app_version = self.execute_script("return Services.appinfo.version")
-        self.restart(env={ENV_DISABLE_E10S: app_version})
+        self.restart(env={ENV_DISABLE_E10S: "1"})
         self.set_env(ENV_DISABLE_E10S, "null")
 
         self.check_win32k_status(
@@ -1603,8 +1598,7 @@ class TestWin32kAutostart(MarionetteTestCase):
         # Re-set enrollment pref, like Normandy would do
         self.set_enrollment_status(ExperimentStatus.ENROLLED_CONTROL)
 
-        app_version = self.execute_script("return Services.appinfo.version")
-        self.restart(env={ENV_DISABLE_E10S: app_version})
+        self.restart(env={ENV_DISABLE_E10S: "1"})
         self.set_env(ENV_DISABLE_E10S, "null")
 
         self.check_win32k_status(
@@ -1853,8 +1847,7 @@ class TestWin32kAutostart(MarionetteTestCase):
         # Re-set enrollment pref, like Normandy would do
         self.set_enrollment_status(ExperimentStatus.ENROLLED_TREATMENT)
 
-        app_version = self.execute_script("return Services.appinfo.version")
-        self.restart(env={ENV_DISABLE_E10S: app_version})
+        self.restart(env={ENV_DISABLE_E10S: "1"})
         self.set_env(ENV_DISABLE_E10S, "null")
 
         self.check_win32k_status(
@@ -2103,8 +2096,7 @@ class TestWin32kAutostart(MarionetteTestCase):
         # Re-set enrollment pref, like Normandy would do
         self.set_enrollment_status(ExperimentStatus.ENROLLED_TREATMENT)
 
-        app_version = self.execute_script("return Services.appinfo.version")
-        self.restart(env={ENV_DISABLE_E10S: app_version})
+        self.restart(env={ENV_DISABLE_E10S: "1"})
         self.set_env(ENV_DISABLE_E10S, "null")
 
         self.check_win32k_status(
