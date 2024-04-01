@@ -64,7 +64,6 @@ import org.mozilla.fenix.translations.TranslationsDialogFragment.Companion.TRANS
  */
 @Suppress("TooManyFunctions", "LargeClass")
 class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
-
     private val windowFeature = ViewBoundFeatureWrapper<WindowFeature>()
     private val openInAppOnboardingObserver = ViewBoundFeatureWrapper<OpenInAppOnboardingObserver>()
     private val standardSnackbarErrorBinding =
@@ -153,6 +152,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                 visible = {
                     readerModeAvailable && !reviewQualityCheckAvailable
                 },
+                weight = { READER_MODE_WEIGHT },
                 selected = getCurrentTab()?.let {
                     activity?.components?.core?.store?.state?.findTab(it.id)?.readerState?.active
                 } ?: false,
@@ -162,8 +162,8 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         browserToolbarView.view.addPageAction(readerModeAction)
 
         initTranslationsAction(context, view)
-        initSharePageAction(context)
         initReviewQualityCheck(context, view)
+        initSharePageAction(context)
         initReloadAction(context)
 
         thumbnailsFeature.set(
@@ -261,6 +261,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                     R.drawable.mozac_ic_share_android_24,
                 )!!,
                 contentDescription = getString(R.string.browser_menu_share),
+                weight = { SHARE_WEIGHT },
                 iconTintColorResource = ThemeManager.resolveAttribute(R.attr.textPrimary, context),
                 listener = { browserToolbarInteractor.onShareActionClicked() },
             )
@@ -286,6 +287,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
             contentDescription = context.getString(R.string.browser_toolbar_translate),
             iconTintColorResource = ThemeManager.resolveAttribute(R.attr.textPrimary, context),
             visible = { translationsAvailable },
+            weight = { TRANSLATIONS_WEIGHT },
             listener = {
                 browserToolbarInteractor.onTranslationsButtonClicked()
             },
@@ -351,6 +353,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                 )!!,
                 secondaryContentDescription = context.getString(R.string.browser_menu_stop),
                 disableInSecondaryState = false,
+                weight = { RELOAD_WEIGHT },
                 longClickListener = {
                     browserToolbarInteractor.onBrowserToolbarMenuItemTapped(
                         ToolbarMenu.Item.Reload(bypassCache = true),
@@ -389,6 +392,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                 contentDescriptionSelected =
                 context.getString(R.string.review_quality_check_close_handle_content_description),
                 visible = { reviewQualityCheckAvailable },
+                weight = { REVIEW_QUALITY_CHECK_WEIGHT },
                 listener = { _ ->
                     requireComponents.appStore.dispatch(
                         AppAction.ShoppingAction.ShoppingSheetStateUpdated(expanded = true),
@@ -732,5 +736,17 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
     @VisibleForTesting
     internal fun updateLastBrowseActivity() {
         requireContext().settings().lastBrowseActivity = System.currentTimeMillis()
+    }
+
+    companion object {
+        /** Indicates weight of an action. The lesser the weight, the closer it is to the url.
+         * A default weight -1 indicates, the position is not cared for
+         * and action will be appended at the end.
+         */
+        const val READER_MODE_WEIGHT = 1
+        const val TRANSLATIONS_WEIGHT = 2
+        const val REVIEW_QUALITY_CHECK_WEIGHT = 3
+        const val SHARE_WEIGHT = 4
+        const val RELOAD_WEIGHT = 5
     }
 }

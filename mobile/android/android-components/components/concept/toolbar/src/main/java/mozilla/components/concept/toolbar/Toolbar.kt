@@ -266,6 +266,9 @@ interface Toolbar : ScrollableToolbar {
         val autoHide: () -> Boolean
             get() = { false }
 
+        val weight: () -> Int
+            get() = { -1 }
+
         fun createView(parent: ViewGroup): View
 
         fun bind(view: View)
@@ -278,6 +281,9 @@ interface Toolbar : ScrollableToolbar {
      * @param contentDescription The content description to use.
      * @param visible Lambda that returns true or false to indicate whether this button should be shown.
      * @param autoHide Lambda that returns true or false to indicate whether this button should auto hide.
+     * @param weight Lambda that returns an integer to indicate weight of an action. The lesser the weight,
+     * the closer it is to the url. A default weight -1 indicates, the position is not cared for
+     * and action will be appended at the end.
      * @param padding A optional custom padding.
      * @param iconTintColorResource Optional ID of color resource to tint the icon.
      * @param longClickListener Callback that will be invoked whenever the button is long-pressed.
@@ -288,6 +294,7 @@ interface Toolbar : ScrollableToolbar {
         val contentDescription: String,
         override val visible: () -> Boolean = { true },
         override val autoHide: () -> Boolean = { false },
+        override val weight: () -> Int = { -1 },
         private val background: Int = 0,
         private val padding: Padding? = null,
         @ColorRes val iconTintColorResource: Int = ViewGroup.NO_ID,
@@ -348,6 +355,9 @@ interface Toolbar : ScrollableToolbar {
      * @param contentDescription The content description to use if the button is in unselected state.
      * @param contentDescriptionSelected The content description to use if the button is in selected state.
      * @param visible Lambda that returns true or false to indicate whether this button should be shown.
+     * @param weight Lambda that returns an integer to indicate weight of an action. The lesser the weight,
+     * the closer it is to the url. A default weight -1 indicates, the position is not cared for
+     * and action will be appended at the end.
      * @param selected Sets whether this button should be selected initially.
      * @param padding A optional custom padding.
      * @param listener Callback that will be invoked whenever the checked state changes.
@@ -358,6 +368,7 @@ interface Toolbar : ScrollableToolbar {
         private val contentDescription: String,
         private val contentDescriptionSelected: String,
         override val visible: () -> Boolean = { true },
+        override val weight: () -> Int = { -1 },
         private var selected: Boolean = false,
         @DrawableRes private val background: Int = 0,
         private val padding: Padding? = null,
