@@ -471,6 +471,9 @@ class BrowserToolbar @JvmOverloads constructor(
      * @param contentDescription The content description to use.
      * @param visible Lambda that returns true or false to indicate whether this button should be shown.
      * @param autoHide Lambda that returns true or false to indicate whether this button should auto hide.
+     * @param weight Lambda that returns an integer to indicate weight of an action. The lesser the weight,
+     * the closer it is to the url. A default weight -1 indicates, the position is not cared for
+     * and action will be appended at the end.
      * @param background A custom (stateful) background drawable resource to be used.
      * @param padding a custom [Padding] for this Button.
      * @param iconTintColorResource Optional ID of color resource to tint the icon.
@@ -482,6 +485,7 @@ class BrowserToolbar @JvmOverloads constructor(
         contentDescription: String,
         visible: () -> Boolean = { true },
         autoHide: () -> Boolean = { false },
+        weight: () -> Int = { -1 },
         @DrawableRes background: Int = 0,
         val padding: Padding = DEFAULT_PADDING,
         @ColorRes iconTintColorResource: Int = NO_ID,
@@ -492,6 +496,7 @@ class BrowserToolbar @JvmOverloads constructor(
         contentDescription,
         visible,
         autoHide,
+        weight,
         background,
         padding,
         iconTintColorResource,
@@ -508,6 +513,9 @@ class BrowserToolbar @JvmOverloads constructor(
      * @param contentDescription The content description to use if the button is in unselected state.
      * @param contentDescriptionSelected The content description to use if the button is in selected state.
      * @param visible Lambda that returns true or false to indicate whether this button should be shown.
+     * @param weight Lambda that returns an integer to indicate weight of an action. The lesser the weight,
+     * the closer it is to the url. A default weight -1 indicates, the position is not cared for
+     * and action will be appended at the end.
      * @param selected Sets whether this button should be selected initially.
      * @param background A custom (stateful) background drawable resource to be used.
      * @param padding a custom [Padding] for this Button.
@@ -519,6 +527,7 @@ class BrowserToolbar @JvmOverloads constructor(
         contentDescription: String,
         contentDescriptionSelected: String,
         visible: () -> Boolean = { true },
+        weight: () -> Int = { -1 },
         selected: Boolean = false,
         @DrawableRes background: Int = 0,
         val padding: Padding = DEFAULT_PADDING,
@@ -529,6 +538,7 @@ class BrowserToolbar @JvmOverloads constructor(
         contentDescription,
         contentDescriptionSelected,
         visible,
+        weight,
         selected,
         background,
         padding,
@@ -548,6 +558,9 @@ class BrowserToolbar @JvmOverloads constructor(
      * @param primaryImageTintResource: Optional ID of color resource to tint the icon in the primary state.
      * @param secondaryImageTintResource: ID of color resource to tint the icon in the secondary state.
      * @param disableInSecondaryState: Disable the button entirely when in the secondary state?
+     * @param weight Lambda that returns an integer to indicate weight of an action. The lesser the weight,
+     * the closer it is to the url. A default weight -1 indicates, the position is not cared for
+     * and action will be appended at the end.
      * @param background A custom (stateful) background drawable resource to be used.
      * @param longClickListener Callback that will be invoked whenever the button is long-pressed.
      * @param listener Callback that will be invoked whenever the button is pressed.
@@ -561,12 +574,14 @@ class BrowserToolbar @JvmOverloads constructor(
         @ColorRes val primaryImageTintResource: Int = NO_ID,
         @ColorRes val secondaryImageTintResource: Int = primaryImageTintResource,
         val disableInSecondaryState: Boolean = true,
+        override val weight: () -> Int = { -1 },
         background: Int = 0,
         longClickListener: (() -> Unit)? = null,
         listener: () -> Unit,
-    ) : BrowserToolbar.Button(
+    ) : Button(
         primaryImage,
         primaryContentDescription,
+        weight = weight,
         background = background,
         longClickListener = longClickListener,
         listener = listener,

@@ -10,6 +10,7 @@ import android.util.AttributeSet
 import android.view.Gravity
 import android.view.View
 import android.widget.LinearLayout
+import androidx.annotation.VisibleForTesting
 import androidx.core.view.isVisible
 import mozilla.components.browser.toolbar.R
 import mozilla.components.concept.toolbar.Toolbar
@@ -52,11 +53,37 @@ internal class ActionContainer @JvmOverloads constructor(
 
             action.createView(this).let {
                 wrapper.view = it
-                addActionView(it)
+                val insertionIndex = calculateInsertionIndex(action)
+                addActionView(it, insertionIndex)
             }
         }
 
         actions.add(wrapper)
+        actions.sortBy { it.actual.weight() }
+    }
+
+    /**
+     * Essentially calculates the index of an action on toolbar based on a
+     * map [visibleActionIndicesWithWeights] that holds the order
+     * of visible action indices to their weights sorted by weights.
+     * An index is now calculated by finding the immediate next larger weight
+     * compared to the new action's weight. Index of this find becomes the index of the new action.
+     * If not found, action is appended at the end.
+     */
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun calculateInsertionIndex(newAction: Toolbar.Action): Int {
+        if (newAction.weight() == -1) {
+            return -1
+        }
+        val visibleActionIndicesWithWeights = actions.filter { it.actual.visible() }
+            .mapNotNull { actionWrapper ->
+                val index = indexOfChild(actionWrapper.view)
+                if (index != -1) index to actionWrapper.actual.weight() else null
+            }.sortedBy { it.second }
+
+        val insertionIndex = visibleActionIndicesWithWeights.firstOrNull { it.second > newAction.weight() }?.first
+
+        return insertionIndex ?: childCount
     }
 
     fun removeAction(action: Toolbar.Action) {
@@ -68,7 +95,7 @@ internal class ActionContainer @JvmOverloads constructor(
 
     fun invalidateActions() {
         TransitionManager.beginDelayedTransition(this)
-
+        actions.sortBy { it.actual.weight() }
         var updatedVisibility = View.GONE
 
         for (action in actions) {
@@ -79,14 +106,13 @@ internal class ActionContainer @JvmOverloads constructor(
             }
 
             if (!visible && action.view != null) {
-                // Action should not be visible anymore. Remove view.
                 removeView(action.view)
                 action.view = null
             } else if (visible && action.view == null) {
-                // Action should be visible. Add view for it.
                 action.actual.createView(this).let {
                     action.view = it
-                    addActionView(it)
+                    val insertionIndex = calculateInsertionIndex(action.actual)
+                    addActionView(it, insertionIndex)
                 }
             }
 
@@ -94,6 +120,17 @@ internal class ActionContainer @JvmOverloads constructor(
         }
 
         visibility = updatedVisibility
+        reevaluateAndReorderActions()
+    }
+
+    private fun reevaluateAndReorderActions() {
+        // Remove all views and re-add them based on current visibility states and weights
+        removeAllViews()
+        actions.filter { it.actual.visible() }
+            .sortedBy { it.actual.weight() }
+            .forEach { action ->
+                addView(action.view)
+            }
     }
 
     fun autoHideAction(isVisible: Boolean) {
@@ -104,7 +141,7 @@ internal class ActionContainer @JvmOverloads constructor(
         }
     }
 
-    private fun addActionView(view: View) {
-        addView(view, LayoutParams(actionSize ?: 0, actionSize ?: 0))
+    private fun addActionView(view: View, index: Int) {
+        addView(view, index, LayoutParams(actionSize ?: 0, actionSize ?: 0))
     }
 }
