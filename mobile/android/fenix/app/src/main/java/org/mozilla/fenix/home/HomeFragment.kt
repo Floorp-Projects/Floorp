@@ -488,6 +488,7 @@ class HomeFragment : Fragment() {
                             HomeNavBar(
                                 isPrivateMode = activity.browsingModeManager.mode.isPrivate,
                                 browserStore = requireContext().components.core.store,
+                                menuButton = menuButton,
                                 onSearchButtonClick = {
                                     val directions =
                                         NavGraphDirections.actionGlobalSearchDialog(
@@ -502,7 +503,6 @@ class HomeFragment : Fragment() {
 
                                     Events.searchBarTapped.record(Events.SearchBarTappedExtra("HOME"))
                                 },
-                                menuButton = menuButton,
                                 onTabsButtonClick = {
                                     StartOnHome.openTabsTray.record(NoExtras())
                                     findNavController().nav(
