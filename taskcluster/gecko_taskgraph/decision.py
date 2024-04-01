@@ -351,9 +351,6 @@ def get_decision_parameters(graph_config, options):
         )
         parameters.update(PER_PROJECT_PARAMETERS["default"])
 
-    # Determine if this should be a backstop push.
-    parameters["backstop"] = is_backstop(parameters)
-
     # `target_tasks_method` has higher precedence than `project` parameters
     if options.get("target_tasks_method"):
         parameters["target_tasks_method"] = options["target_tasks_method"]
@@ -361,11 +358,7 @@ def get_decision_parameters(graph_config, options):
     # ..but can be overridden by the commit message: if it contains the special
     # string "DONTBUILD" and this is an on-push decision task, then use the
     # special 'nothing' target task method.
-    if (
-        "DONTBUILD" in commit_message
-        and options["tasks_for"] == "hg-push"
-        and not parameters["backstop"]
-    ):
+    if "DONTBUILD" in commit_message and options["tasks_for"] == "hg-push":
         parameters["target_tasks_method"] = "nothing"
 
     if options.get("include_push_tasks"):
@@ -390,6 +383,9 @@ def get_decision_parameters(graph_config, options):
 
     if options.get("optimize_target_tasks") is not None:
         parameters["optimize_target_tasks"] = options["optimize_target_tasks"]
+
+    # Determine if this should be a backstop push.
+    parameters["backstop"] = is_backstop(parameters)
 
     if "decision-parameters" in graph_config["taskgraph"]:
         find_object(graph_config["taskgraph"]["decision-parameters"])(
