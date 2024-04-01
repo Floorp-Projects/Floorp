@@ -26,26 +26,14 @@ function test() {
   let browser = tab.linkedBrowser;
 
   promiseTabState(tab, tabState).then(() => {
-    let entry;
-    if (!Services.appinfo.sessionHistoryInParent) {
-      let sessionHistory = browser.sessionHistory;
-      entry = sessionHistory.legacySHistory.getEntryAtIndex(0);
-    } else {
-      let sessionHistory = browser.browsingContext.sessionHistory;
-      entry = sessionHistory.getEntryAtIndex(0);
-    }
+    let sessionHistory = browser.browsingContext.sessionHistory;
+    let entry = sessionHistory.getEntryAtIndex(0);
 
     whenChildCount(entry, 1, function () {
       whenChildCount(entry, 2, function () {
         promiseBrowserLoaded(browser).then(() => {
-          let newEntry;
-          if (!Services.appinfo.sessionHistoryInParent) {
-            let newSessionHistory = browser.sessionHistory;
-            newEntry = newSessionHistory.legacySHistory.getEntryAtIndex(0);
-          } else {
-            let newSessionHistory = browser.browsingContext.sessionHistory;
-            newEntry = newSessionHistory.getEntryAtIndex(0);
-          }
+          let newSessionHistory = browser.browsingContext.sessionHistory;
+          let newEntry = newSessionHistory.getEntryAtIndex(0);
 
           whenChildCount(newEntry, 0, function () {
             // Make sure that we reset the state.

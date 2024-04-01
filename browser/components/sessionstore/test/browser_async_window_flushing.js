@@ -116,17 +116,10 @@ add_task(async function test_remove_uninteresting_window() {
   await SpecialPowers.spawn(browser, [], async function () {
     // Epic hackery to make this browser seem suddenly boring.
     docShell.setCurrentURIForSessionStore(Services.io.newURI("about:blank"));
-
-    if (!SpecialPowers.Services.appinfo.sessionHistoryInParent) {
-      let { sessionHistory } = docShell.QueryInterface(Ci.nsIWebNavigation);
-      sessionHistory.legacySHistory.purgeHistory(sessionHistory.count);
-    }
   });
 
-  if (SpecialPowers.Services.appinfo.sessionHistoryInParent) {
-    let { sessionHistory } = browser.browsingContext;
-    sessionHistory.purgeHistory(sessionHistory.count);
-  }
+  let { sessionHistory } = browser.browsingContext;
+  sessionHistory.purgeHistory(sessionHistory.count);
 
   // Once this windowClosed Promise resolves, we should have finished
   // the flush and revisited our decision to put this window into
