@@ -2186,7 +2186,7 @@ nsMargin nsMenuPopupFrame::GetMargin() const {
     margin.left += auOffset.x;
     margin.right += auOffset.x;
   }
-  if (mPopupType == PopupType::Tooltip) {
+  if (mPopupType == PopupType::Tooltip && !IsAnchored()) {
     const auto auOffset =
         CSSPixel::ToAppUnits(LookAndFeel::TooltipOffsetVertical());
     margin.top += auOffset;
