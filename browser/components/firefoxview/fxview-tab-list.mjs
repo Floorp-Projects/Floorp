@@ -47,6 +47,7 @@ if (!window.IS_STORYBOOK) {
  * @property {number} maxTabsLength - The max number of tabs for the list
  * @property {Array} tabItems - Items to show in the tab list
  * @property {string} searchQuery - The query string to highlight, if provided.
+ * @property {string} searchInProgress - Whether a search has been initiated.
  * @property {string} secondaryActionClass - The class used to style the secondary action element
  * @property {string} tertiaryActionClass - The class used to style the tertiary action element
  */
@@ -62,6 +63,7 @@ export class FxviewTabListBase extends MozLitElement {
     this.maxTabsLength = 25;
     this.tabItems = [];
     this.compactRows = false;
+    this.searchInProgress = false;
     this.updatesPaused = true;
     this.#register();
   }
@@ -76,6 +78,7 @@ export class FxviewTabListBase extends MozLitElement {
     tabItems: { type: Array },
     updatesPaused: { type: Boolean },
     searchQuery: { type: String },
+    searchInProgress: { type: Boolean },
     secondaryActionClass: { type: String },
     tertiaryActionClass: { type: String },
   };
@@ -303,7 +306,11 @@ export class FxviewTabListBase extends MozLitElement {
   }
 
   render() {
-    if (this.searchQuery && this.tabItems.length === 0) {
+    if (
+      this.searchQuery &&
+      this.tabItems.length === 0 &&
+      !this.searchInProgress
+    ) {
       return this.emptySearchResultsTemplate();
     }
     return html`

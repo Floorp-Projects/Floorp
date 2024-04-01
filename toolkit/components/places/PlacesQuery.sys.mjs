@@ -58,7 +58,7 @@ export class PlacesQuery {
   #historyListenerCallback = null;
   /** @type {DeferredTask} */
   #historyObserverTask = null;
-  #searchInProgress = false;
+  searchInProgress = false;
 
   /**
    * Get a snapshot of history visits at this moment.
@@ -169,11 +169,11 @@ export class PlacesQuery {
       GROUP BY url
       ORDER BY ${orderBy}
       LIMIT ${limit > 0 ? limit : -1}`;
-    if (this.#searchInProgress) {
+    if (this.searchInProgress) {
       db.interrupt();
     }
     try {
-      this.#searchInProgress = true;
+      this.searchInProgress = true;
       const rows = await db.executeCached(sql, {
         query,
         matchBehavior: Ci.mozIPlacesAutoComplete.MATCH_ANYWHERE_UNMODIFIED,
@@ -181,7 +181,7 @@ export class PlacesQuery {
       });
       return rows.map(row => this.formatRowAsVisit(row));
     } finally {
-      this.#searchInProgress = false;
+      this.searchInProgress = false;
     }
   }
 

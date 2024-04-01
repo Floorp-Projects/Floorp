@@ -418,6 +418,7 @@ class HistoryInView extends ViewPage {
         .tabItems=${this.controller.searchResults}
         @fxview-tab-list-primary-action=${this.onPrimaryAction}
         @fxview-tab-list-secondary-action=${this.onSecondaryAction}
+        .searchInProgress=${this.controller.placesQuery.searchInProgress}
       >
         ${this.panelListTemplate()}
       </fxview-tab-list>
