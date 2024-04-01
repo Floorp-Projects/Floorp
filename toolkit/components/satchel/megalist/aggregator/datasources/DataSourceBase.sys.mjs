@@ -241,6 +241,7 @@ export class DataSourceBase {
       this.lines.splice(index, 0, line);
     }
     this.lines[index].record = record;
+    return this.lines[index];
   }
 
   *enumerateLinesForMatchingRecords(searchText, stats, match) {
