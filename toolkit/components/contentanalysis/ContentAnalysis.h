@@ -201,7 +201,7 @@ class ContentAnalysis final : public nsIContentAnalysis {
 
   std::vector<std::regex> mAllowUrlList;
   std::vector<std::regex> mDenyUrlList;
-  bool mParsedUrlLists;
+  bool mParsedUrlLists = false;
 
   friend class ContentAnalysisResponse;
   friend class ::ContentAnalysisTest;
