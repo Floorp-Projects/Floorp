@@ -3095,7 +3095,9 @@ class FactoryOp
   // Must be released on the main thread!
   RefPtr<DirectoryLock> mDirectoryLock;
 
-  RefPtr<FactoryOp> mDelayedOp;
+  nsTArray<NotNull<RefPtr<FactoryOp>>> mBlocking;
+  nsTArray<NotNull<RefPtr<FactoryOp>>> mBlockedOn;
+
   nsTArray<MaybeBlockedDatabaseInfo> mMaybeBlockedDatabases;
 
   const PrincipalInfo mPrincipalInfo;
@@ -3211,6 +3213,27 @@ class FactoryOp
  private:
   // Test whether this FactoryOp needs to wait for the given op.
   bool MustWaitFor(const FactoryOp& aExistingOp);
+
+  void AddBlockingOp(FactoryOp& aOp) {
+    AssertIsOnOwningThread();
+
+    mBlocking.AppendElement(WrapNotNull(&aOp));
+  }
+
+  void AddBlockedOnOp(FactoryOp& aOp) {
+    AssertIsOnOwningThread();
+
+    mBlockedOn.AppendElement(WrapNotNull(&aOp));
+  }
+
+  void MaybeUnblock(FactoryOp& aOp) {
+    AssertIsOnOwningThread();
+
+    mBlockedOn.RemoveElement(&aOp);
+    if (mBlockedOn.IsEmpty()) {
+      MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(this));
+    }
+  }
 };
 
 class FactoryRequestOp : public FactoryOp,
@@ -15014,48 +15037,48 @@ nsresult FactoryOp::DirectoryWorkDone() {
   MOZ_ASSERT(gFactoryOps);
 
   // See if this FactoryOp needs to wait.
-  const bool delayed =
-      std::any_of(
-          gFactoryOps->rbegin(), gFactoryOps->rend(),
-          [foundThis = false, &self = *this](const auto& existingOp) mutable {
-            if (existingOp == &self) {
-              foundThis = true;
-              return false;
-            }
+  const bool blocked = [&self = *this] {
+    bool foundThis = false;
+    bool blocked = false;
 
-            if (foundThis && self.MustWaitFor(*existingOp)) {
-              // Only one op can be delayed.
-              MOZ_ASSERT(!existingOp->mDelayedOp);
-              existingOp->mDelayedOp = &self;
-              return true;
-            }
+    for (const auto& existingOp : Reversed(*gFactoryOps)) {
+      if (existingOp == &self) {
+        foundThis = true;
+        continue;
+      }
 
-            return false;
-          }) ||
-      [&self = *this] {
-        QuotaClient* quotaClient = QuotaClient::GetInstance();
-        MOZ_ASSERT(quotaClient);
+      if (foundThis && self.MustWaitFor(*existingOp)) {
+        existingOp->AddBlockingOp(self);
+        self.AddBlockedOnOp(*existingOp);
+        blocked = true;
+      }
+    }
 
-        if (RefPtr<Maintenance> currentMaintenance =
-                quotaClient->GetCurrentMaintenance()) {
-          if (self.mDatabaseName.isSome()) {
-            if (RefPtr<DatabaseMaintenance> databaseMaintenance =
-                    currentMaintenance->GetDatabaseMaintenance(
-                        self.mDatabaseFilePath.ref())) {
-              databaseMaintenance->WaitForCompletion(&self);
-              return true;
-            }
-          } else if (currentMaintenance->HasDatabaseMaintenances()) {
-            currentMaintenance->WaitForCompletion(&self);
-            return true;
-          }
+    return blocked;
+  }() || [&self = *this] {
+    QuotaClient* quotaClient = QuotaClient::GetInstance();
+    MOZ_ASSERT(quotaClient);
+
+    if (RefPtr<Maintenance> currentMaintenance =
+            quotaClient->GetCurrentMaintenance()) {
+      if (self.mDatabaseName.isSome()) {
+        if (RefPtr<DatabaseMaintenance> databaseMaintenance =
+                currentMaintenance->GetDatabaseMaintenance(
+                    self.mDatabaseFilePath.ref())) {
+          databaseMaintenance->WaitForCompletion(&self);
+          return true;
         }
+      } else if (currentMaintenance->HasDatabaseMaintenances()) {
+        currentMaintenance->WaitForCompletion(&self);
+        return true;
+      }
+    }
 
-        return false;
-      }();
+    return false;
+  }();
 
   mState = State::DatabaseOpenPending;
-  if (!delayed) {
+  if (!blocked) {
     QM_TRY(MOZ_TO_RESULT(DatabaseOpen()));
   }
 
@@ -15102,9 +15125,10 @@ void FactoryOp::WaitForTransactions() {
 void FactoryOp::CleanupMetadata() {
   AssertIsOnOwningThread();
 
-  if (mDelayedOp) {
-    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(mDelayedOp.forget()));
+  for (const NotNull<RefPtr<FactoryOp>>& blockingOp : mBlocking) {
+    blockingOp->MaybeUnblock(*this);
   }
+  mBlocking.Clear();
 
   MOZ_ASSERT(gFactoryOps);
   gFactoryOps->RemoveElement(this);
