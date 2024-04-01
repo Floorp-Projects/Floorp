@@ -13,7 +13,7 @@
         if (history.length == 4) {
           // We're coming back from history.
           function listener(m) {
-            if (m.message.includes("Scripts may not close windows that were not opened by script.")) {
+            if (m.message.includes("Scripts may only close windows that were opened by a script.")) {
               SpecialPowers.postConsoleSentinel();
               SpecialPowers.pushPrefEnv({ set: [["dom.allow_scripts_to_close_windows", true]]}).then(
                 function() {

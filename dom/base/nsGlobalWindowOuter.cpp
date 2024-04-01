@@ -5958,10 +5958,11 @@ void nsGlobalWindowOuter::CloseOuter(bool aTrustedCaller) {
       if (!allowClose) {
         // We're blocking the close operation
         // report localized error msg in JS console
-        nsContentUtils::ReportToConsole(
-            nsIScriptError::warningFlag, "DOM Window"_ns,
-            mDoc,  // Better name for the category?
-            nsContentUtils::eDOM_PROPERTIES, "WindowCloseBlockedWarning");
+        nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                        "DOM Window"_ns,
+                                        mDoc,  // Better name for the category?
+                                        nsContentUtils::eDOM_PROPERTIES,
+                                        "WindowCloseByScriptBlockedWarning");
 
         return;
       }
