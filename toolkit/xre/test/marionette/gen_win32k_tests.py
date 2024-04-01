@@ -58,8 +58,7 @@ def set_e10s(enable):
     if enable:
         output.write(
             """
-        app_version = self.execute_script("return Services.appinfo.version")
-        self.restart(env={ENV_DISABLE_E10S: app_version})
+        self.restart(env={ENV_DISABLE_E10S: "1"})
         self.set_env(ENV_DISABLE_E10S, "null")\n"""
         )
     else:
