@@ -28,6 +28,8 @@ class TargetTest(BaseConfigureTest):
             platform = "win32"
         elif "openbsd6" in self.HOST:
             platform = "openbsd6"
+        elif "apple-darwin" in self.HOST:
+            platform = "darwin"
         else:
             raise Exception("Missing platform for HOST {}".format(self.HOST))
         sandbox = self.get_sandbox({}, {}, args, env, cls=sandbox_class(platform))
@@ -111,7 +113,7 @@ class TestTargetAndroid(TargetTest):
     def test_target(self):
         self.assertEqual(
             self.get_target(["--enable-project=mobile/android"]),
-            "arm-unknown-linux-androideabi",
+            "x86_64-unknown-linux-android",
         )
         self.assertEqual(
             self.get_target(["--enable-project=mobile/android", "--target=i686"]),
@@ -128,6 +130,16 @@ class TestTargetAndroid(TargetTest):
         self.assertEqual(
             self.get_target(["--enable-project=mobile/android", "--target=arm"]),
             "arm-unknown-linux-androideabi",
+        )
+
+
+class TestTargetAndroidAppleSiliconHost(TargetTest):
+    HOST = "aarch64-apple-darwin"
+
+    def test_target(self):
+        self.assertEqual(
+            self.get_target(["--enable-project=mobile/android"]),
+            "aarch64-unknown-linux-android",
         )
 
 
