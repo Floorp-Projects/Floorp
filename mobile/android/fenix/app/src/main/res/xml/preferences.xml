@@ -147,18 +147,18 @@
         <androidx.preference.Preference
             android:key="@string/pref_key_addons"
             app:iconSpaceReserved="false"
-            android:title="@string/preferences_addons" />
+            android:title="@string/preferences_extensions" />
 
         <androidx.preference.Preference
             android:key="@string/pref_key_install_local_addon"
             app:iconSpaceReserved="false"
             app:isPreferenceVisible="false"
-            android:title="@string/preferences_install_local_addon" />
+            android:title="@string/preferences_install_local_extension" />
 
         <androidx.preference.Preference
             android:key="@string/pref_key_override_amo_collection"
             app:iconSpaceReserved="false"
-            android:title="@string/preferences_customize_amo_collection" />
+            android:title="@string/preferences_customize_extension_collection" />
 
         <androidx.preference.Preference
             android:key="@string/pref_key_open_links_in_apps"

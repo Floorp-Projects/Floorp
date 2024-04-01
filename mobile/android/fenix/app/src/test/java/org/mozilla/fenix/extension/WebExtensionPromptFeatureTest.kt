@@ -76,7 +76,7 @@ class WebExtensionPromptFeatureTest {
         )
         val expectedMessage =
             testContext.getString(
-                R.string.mozac_feature_addons_failed_to_install_network_error,
+                R.string.mozac_feature_addons_extension_failed_to_install_network_error,
                 "name",
             )
 
@@ -150,7 +150,7 @@ class WebExtensionPromptFeatureTest {
             throwable = Exception(),
         )
         val expectedMessage =
-            testContext.getString(R.string.mozac_feature_addons_failed_to_install_generic)
+            testContext.getString(R.string.mozac_feature_addons_extension_failed_to_install)
 
         webExtensionPromptFeature.handleInstallationFailedRequest(
             exception = exception,
@@ -167,7 +167,7 @@ class WebExtensionPromptFeatureTest {
             throwable = Exception(),
         )
         val expectedMessage =
-            testContext.getString(R.string.mozac_feature_addons_failed_to_install_corrupt_error)
+            testContext.getString(R.string.mozac_feature_addons_extension_failed_to_install_corrupt_error)
 
         webExtensionPromptFeature.handleInstallationFailedRequest(
             exception = exception,
@@ -184,7 +184,7 @@ class WebExtensionPromptFeatureTest {
             throwable = Exception(),
         )
         val expectedMessage =
-            testContext.getString(R.string.mozac_feature_addons_failed_to_install_not_signed_error)
+            testContext.getString(R.string.mozac_feature_addons_extension_failed_to_install_not_signed_error)
 
         webExtensionPromptFeature.handleInstallationFailedRequest(
             exception = exception,

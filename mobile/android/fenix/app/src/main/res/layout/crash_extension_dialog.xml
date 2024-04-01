@@ -18,14 +18,14 @@
             android:layout_marginHorizontal="24dp"
             android:layout_marginVertical="8dp"
             android:textColor="?attr/textPrimary"
-            tools:text="@string/addon_process_crash_dialog_message" />
+            tools:text="@string/extension_process_crash_dialog_message" />
 
         <Button
             android:id="@+id/positive"
             style="@style/Widget.AppCompat.Button.Borderless.Colored"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/addon_process_crash_dialog_retry_button_text"
+            android:text="@string/extension_process_crash_dialog_retry_button_text"
             android:textAlignment="textEnd"
             android:textColor="?textAccent" />
 
@@ -34,7 +34,7 @@
             style="@style/Widget.AppCompat.Button.Borderless.Colored"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/addon_process_crash_dialog_disable_addons_button_text"
+            android:text="@string/extension_process_crash_dialog_disable_extensions_button_text"
             android:textAlignment="textEnd"
             android:textColor="?textAccent" />
     </LinearLayout>

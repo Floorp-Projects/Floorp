@@ -718,7 +718,7 @@ private fun historyButton() =
 private fun downloadsButton() =
     itemContainingText(getStringResource(R.string.library_downloads))
 private fun addOnsButton() =
-    itemContainingText(getStringResource(R.string.browser_menu_add_ons))
+    itemContainingText(getStringResource(R.string.browser_menu_extensions))
 private fun desktopSiteButton() =
     itemContainingText(getStringResource(R.string.browser_menu_desktop_site))
 private fun desktopSiteToggle(state: Boolean) =

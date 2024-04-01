@@ -91,14 +91,14 @@ class WebExtensionBrowserMenuBuilder(
     ): List<BrowserMenuItem> {
         val addonsMenuItem = if (filteredExtensionMenuItems.isNotEmpty()) {
             val backPressMenuItem = BackPressMenuItem(
-                contentDescription = context.getString(R.string.mozac_browser_menu_addons_description),
-                label = context.getString(R.string.mozac_browser_menu_addons),
+                contentDescription = context.getString(R.string.mozac_browser_menu_extensions_content_description),
+                label = context.getString(R.string.mozac_browser_menu_extensions),
                 imageResource = style.backPressMenuItemDrawableRes,
                 iconTintColorResource = style.webExtIconTintColorResource,
             )
 
             val addonsManagerMenuItem = BrowserMenuImageText(
-                label = context.getString(R.string.mozac_browser_menu_addons_manager),
+                label = context.getString(R.string.mozac_browser_menu_extensions_manager),
                 imageResource = style.addonsManagerMenuItemDrawableRes,
                 iconTintColorResource = style.webExtIconTintColorResource,
             ) {
@@ -119,7 +119,7 @@ class WebExtensionBrowserMenuBuilder(
             val webExtMenu = WebExtensionBrowserMenu(webExtBrowserMenuAdapter, store)
 
             ParentBrowserMenuItem(
-                label = context.getString(R.string.mozac_browser_menu_addons),
+                label = context.getString(R.string.mozac_browser_menu_extensions),
                 imageResource = style.addonsManagerMenuItemDrawableRes,
                 iconTintColorResource = style.webExtIconTintColorResource,
                 subMenu = webExtMenu,
@@ -127,7 +127,7 @@ class WebExtensionBrowserMenuBuilder(
             )
         } else {
             BrowserMenuImageText(
-                label = context.getString(R.string.mozac_browser_menu_addons),
+                label = context.getString(R.string.mozac_browser_menu_extensions),
                 imageResource = style.addonsManagerMenuItemDrawableRes,
                 iconTintColorResource = style.webExtIconTintColorResource,
             ) {

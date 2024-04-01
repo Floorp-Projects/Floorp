@@ -23,7 +23,7 @@
             android:drawablePadding="8dp"
             android:gravity="start|center_vertical"
             android:padding="16dp"
-            android:text="@string/mozac_add_on_install_progress_caption"
+            android:text="@string/mozac_extension_install_progress_caption"
             app:drawableStartCompat="@drawable/mozac_ic_extensions_black" />
 
         <Button

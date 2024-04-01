@@ -486,7 +486,7 @@ class AddonsManagerAdapterTest {
 
         adapter.bindNotYetSupportedSection(unsupportedSectionViewHolder, mock())
         verify(unsupportedSectionViewHolder.descriptionView).setText(
-            testContext.getString(R.string.mozac_feature_addons_unsupported_caption_plural, unsupportedAddons.size),
+            testContext.getString(R.string.mozac_feature_addons_unsupported_caption_plural_2, unsupportedAddons.size),
         )
 
         unsupportedSectionViewHolder.itemView.performClick()

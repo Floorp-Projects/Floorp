@@ -247,10 +247,10 @@ class AddonsManagerAdapter(
         holder.titleView.setText(section.title)
         holder.descriptionView.text =
             if (unsupportedAddons.size == 1) {
-                context.getString(R.string.mozac_feature_addons_unsupported_caption)
+                context.getString(R.string.mozac_feature_addons_unsupported_caption_2)
             } else {
                 context.getString(
-                    R.string.mozac_feature_addons_unsupported_caption_plural,
+                    R.string.mozac_feature_addons_unsupported_caption_plural_2,
                     unsupportedAddons.size.toString(),
                 )
             }

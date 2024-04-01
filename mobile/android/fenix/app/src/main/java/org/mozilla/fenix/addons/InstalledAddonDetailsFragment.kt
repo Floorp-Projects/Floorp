@@ -109,7 +109,7 @@ class InstalledAddonDetailsFragment : Fragment() {
                     runIfFragmentIsAttached {
                         showSnackBar(
                             binding.root,
-                            getString(R.string.mozac_feature_addons_failed_to_query_add_ons),
+                            getString(R.string.mozac_feature_addons_failed_to_query_extensions),
                         )
                         findNavController().popBackStack()
                     }

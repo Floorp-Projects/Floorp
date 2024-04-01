@@ -370,7 +370,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
                 val binding = AmoCollectionOverrideDialogBinding.bind(dialogView)
                 AlertDialog.Builder(context).apply {
-                    setTitle(context.getString(R.string.preferences_customize_amo_collection))
+                    setTitle(context.getString(R.string.preferences_customize_extension_collection))
                     setView(dialogView)
                     setNegativeButton(R.string.customize_addon_collection_cancel) { dialog: DialogInterface, _ ->
                         dialog.cancel()
@@ -383,7 +383,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
                         Toast.makeText(
                             context,
-                            getString(R.string.toast_customize_addon_collection_done),
+                            getString(R.string.toast_customize_extension_collection_done),
                             Toast.LENGTH_LONG,
                         ).show()
 

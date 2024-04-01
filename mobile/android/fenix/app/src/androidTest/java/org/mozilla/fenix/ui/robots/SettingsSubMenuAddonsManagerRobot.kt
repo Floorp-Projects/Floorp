@@ -56,9 +56,9 @@ class SettingsSubMenuAddonsManagerRobot {
         assertUIObjectExists(addonsList(), exists = shouldBeDisplayed)
 
     fun verifyAddonDownloadOverlay() {
-        Log.i(TAG, "verifyAddonDownloadOverlay: Trying to verify that the \"Downloading and verifying add-on\" prompt is displayed")
-        onView(withText(R.string.mozac_add_on_install_progress_caption)).check(matches(isDisplayed()))
-        Log.i(TAG, "verifyAddonDownloadOverlay: Verified that the \"Downloading and verifying add-on\" prompt is displayed")
+        Log.i(TAG, "verifyAddonDownloadOverlay: Trying to verify that the \"Downloading and verifying extension\" prompt is displayed")
+        onView(withText(R.string.mozac_extension_install_progress_caption)).check(matches(isDisplayed()))
+        Log.i(TAG, "verifyAddonDownloadOverlay: Verified that the \"Downloading and verifying extension\" prompt is displayed")
     }
 
     fun verifyAddonPermissionPrompt(addonName: String) {

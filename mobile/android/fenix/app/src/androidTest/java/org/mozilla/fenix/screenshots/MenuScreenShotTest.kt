@@ -223,7 +223,7 @@ fun settingsTelemetry() = onView(withText(R.string.preferences_data_collection))
 
 fun loginsAndPassword() = onView(withText(R.string.preferences_passwords_logins_and_passwords)).click()
 
-fun addOns() = onView(withText(R.string.preferences_addons)).click()
+fun addOns() = onView(withText(R.string.preferences_extensions)).click()
 
 fun settingsLanguage() = onView(withText(R.string.preferences_language)).click()
 
