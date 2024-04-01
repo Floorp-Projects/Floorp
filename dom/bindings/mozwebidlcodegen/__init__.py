@@ -11,6 +11,7 @@ import io
 import json
 import logging
 import os
+from multiprocessing import Pool
 
 import mozpack.path as mozpath
 from mach.mixin.logging import LoggingMixin
@@ -20,6 +21,24 @@ from mozbuild.util import FileAvoidWrite
 
 # There are various imports in this file in functions to avoid adding
 # dependencies to config.status. See bug 949875.
+
+
+#################################
+# These two routines are used to initialize the process pool when generating the
+# webidl bindings, avoiding redundant state copies.
+
+
+def build_files_for_webidl_worker_init(state):
+    global process_state  # noqa: PLW0603
+    process_state = state
+
+
+def build_files_for_webidl_worker_run(filename):
+    return process_state._generate_build_files_for_webidl(filename)
+
+
+#
+#################################
 
 
 class BuildResult(object):
@@ -316,11 +335,24 @@ class WebIDLCodegenManager(LoggingMixin):
             d.identifier.name for d in self._config.getDictionariesConvertibleFromJS()
         )
 
+        # Distribute the generation load across several processes. This requires
+        # a) that `self' is serializable and b) that `self' is unchanged by
+        # _generate_build_files_for_webidl(...)
+        ordered_changed_inputs = sorted(changed_inputs)
+        with Pool(
+            initializer=build_files_for_webidl_worker_init, initargs=(self,)
+        ) as pool:
+            generation_results = pool.map(
+                build_files_for_webidl_worker_run, ordered_changed_inputs
+            )
+
         # Generate bindings from .webidl files.
-        for filename in sorted(changed_inputs):
+        for filename, generation_result in zip(
+            ordered_changed_inputs, generation_results
+        ):
             basename = mozpath.basename(filename)
             result.inputs.add(filename)
-            written, deps = self._generate_build_files_for_webidl(filename)
+            written, deps = generation_result
             result.created |= written[0]
             result.updated |= written[1]
             result.unchanged |= written[2]
@@ -565,6 +597,8 @@ class WebIDLCodegenManager(LoggingMixin):
 
         return paths
 
+    # Parallelization of the generation setp relies on this method not changing
+    # the internal state of the object
     def _generate_build_files_for_webidl(self, filename):
         from Codegen import CGBindingRoot, CGEventRoot
 
