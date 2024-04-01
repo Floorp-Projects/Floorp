@@ -614,12 +614,13 @@ this.AccessibilityUtils = (function () {
       (node.tagName == "menuitem" &&
         node.classList.contains("urlbarView-result-menuitem"));
 
+    let parentNode = node.getRootNode().host ?? node.parentNode;
     const isParentMenu =
-      node.parentNode.getAttribute("role") == "menu" ||
-      (node.parentNode.tagName == "richlistbox" &&
-        node.parentNode.classList.contains("autocomplete-richlistbox")) ||
-      (node.parentNode.tagName == "menupopup" &&
-        node.parentNode.classList.contains("urlbarView-result-menu"));
+      parentNode.getAttribute("role") == "menu" ||
+      (parentNode.tagName == "richlistbox" &&
+        parentNode.classList.contains("autocomplete-richlistbox")) ||
+      (parentNode.tagName == "menupopup" &&
+        parentNode.classList.contains("urlbarView-result-menu"));
     return (
       isMenuItem &&
       isParentMenu &&
