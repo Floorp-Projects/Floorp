@@ -567,6 +567,11 @@ Maybe<layers::SurfaceDescriptor> ClientWebGLContext::GetFrontBuffer(
     info.flushesSinceLastCongestionCheck = 0;
     info.congestionCheckGeneration++;
 
+    // If the actor is destroyed, don't send over invalid texture owner id.
+    if (!child->CanSend()) {
+      return {};
+    }
+
     return Some(layers::SurfaceDescriptorRemoteTexture(*mLastRemoteTextureId,
                                                        *mRemoteTextureOwnerId));
   }
