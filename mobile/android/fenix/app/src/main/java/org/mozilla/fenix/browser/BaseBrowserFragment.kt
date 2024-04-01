@@ -521,7 +521,6 @@ abstract class BaseBrowserFragment :
                             BrowserNavBar(
                                 isPrivateMode = activity.browsingModeManager.mode.isPrivate,
                                 browserStore = context.components.core.store,
-                                menuButton = menuButton,
                                 onBackButtonClick = {
                                     browserToolbarInteractor.onBrowserToolbarMenuItemTapped(
                                         ToolbarMenu.Item.Back(viewHistory = false),
@@ -550,6 +549,7 @@ abstract class BaseBrowserFragment :
                                         )
                                     }
                                 },
+                                menuButton = menuButton,
                                 onTabsButtonClick = {
                                     thumbnailsFeature.get()?.requestScreenshot()
                                     findNavController().nav(

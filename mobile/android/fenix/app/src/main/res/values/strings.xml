@@ -233,10 +233,6 @@
     <string name="browser_menu_edit">Edit</string>
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">Customize homepage</string>
-    <!-- Browser menu label to sign in to sync on the device using Firefox Accounts -->
-    <string name="browser_menu_sign_in">Sign in</string>
-    <!-- Browser menu caption label for the "Sign in" browser menu item described in browser_menu_sign_in -->
-    <string name="browser_menu_sign_in_caption">Sync passwords, tabs, and more</string>
 
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
