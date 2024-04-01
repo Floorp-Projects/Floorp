@@ -4,6 +4,20 @@ How To Contribute Code To Firefox
 The whole process can be a bit long, and it might take time to get things right.
 If at any point you are stuck, please don't hesitate to ask at `https://chat.mozilla.org <https://chat.mozilla.org>`_
 in the `#introduction <https://chat.mozilla.org/#/room/#introduction:mozilla.org>`_ channel.
+Additionally, here are some etiquette tips to help when reaching out:
+
+* Please don't ask to ask a question, post your question with the relevant context and someone will be able to help when they have time.
+* Use public facing channels to ask your questions instead of direct messaging folks.
+
+  * Other people get to learn from your question and there's a higher chance your question will get answered quickly since there are many people in the #introduction room.
+
+* Your question may not be answered immediately, this is expected! If you are not getting feedback after an hour or so, feel free to repost the question.
+
+  * Sometimes messages get skimmed over or notifications are lost in the sea of other things, so it's normal to repost your question in this case.
+
+* Please search through the recent scrollback of your relevant channels to see if your question has been asked and/or answered already.
+
+  * Most issues with setup have been experienced before, so there's a good possibility that your question has already been answered recently.
 
 We make changes to Firefox by writing patches, testing them and pushing them into "the tree", the
 term we use for all the code in Mozilla-Central. Let's get started.
