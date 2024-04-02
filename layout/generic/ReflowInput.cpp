@@ -2163,8 +2163,6 @@ void ReflowInput::InitConstraints(
   WritingMode wm = GetWritingMode();
   LogicalSize cbSize = aContainingBlockSize.valueOr(
       LogicalSize(mWritingMode, NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE));
-  DISPLAY_INIT_CONSTRAINTS(mFrame, this, cbSize.ISize(wm), cbSize.BSize(wm),
-                           aBorder, aPadding);
 
   // If this is a reflow root, then set the computed width and
   // height equal to the available space
@@ -2501,7 +2499,6 @@ void SizeComputationInput::InitOffsets(WritingMode aCBWM, nscoord aPercentBasis,
                                        const Maybe<LogicalMargin>& aBorder,
                                        const Maybe<LogicalMargin>& aPadding,
                                        const nsStyleDisplay* aDisplay) {
-  DISPLAY_INIT_OFFSETS(mFrame, this, aPercentBasis, aCBWM, aBorder, aPadding);
   nsPresContext* presContext = mFrame->PresContext();
 
   // Compute margins from the specified margin style information. These
