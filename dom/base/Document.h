@@ -244,7 +244,6 @@ class EventListener;
 struct FailedCertSecurityInfo;
 class FeaturePolicy;
 class FontFaceSet;
-class FragmentDirective;
 class FrameRequestCallback;
 class ImageTracker;
 class HighlightRegistry;
@@ -4092,13 +4091,6 @@ class Document : public nsINode,
    */
   class HighlightRegistry& HighlightRegistry();
 
-  /**
-   * @brief Returns the `FragmentDirective` object which contains information
-   * and functionality to extract or create text directives.
-   * Guaranteed to be non-null.
-   */
-  FragmentDirective* FragmentDirective();
-
   bool ShouldResistFingerprinting(RFPTarget aTarget) const;
   bool IsInPrivateBrowsing() const;
 
@@ -5380,7 +5372,6 @@ class Document : public nsINode,
   nsTArray<CanvasUsage> mCanvasUsage;
   uint64_t mLastCanvasUsage = 0;
 
-  RefPtr<class FragmentDirective> mFragmentDirective;
   UniquePtr<RadioGroupContainer> mRadioGroupContainer;
 
  public:
