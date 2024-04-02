@@ -199,13 +199,13 @@
     <!-- Browser menu button that opens a user's library -->
     <string name="browser_menu_library">Գրադարան</string>
     <!-- Browser menu toggle that requests a desktop site -->
-    <string name="browser_menu_desktop_site">Դեսքթոփ տարբերակ</string>
+    <string name="browser_menu_desktop_site">Աշխատասեղանի տարբերակ</string>
     <!-- Browser menu button that reopens a private tab as a regular tab -->
     <string name="browser_menu_open_in_regular_tab">Բացել կանոնավոր ներդիրում</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">Ավելացնել Տնային էկրանին</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
-    <string name="browser_menu_install_on_homescreen">Տեղադրել</string>
+    <string name="browser_menu_install_on_homescreen" moz:removedIn="126" tools:ignore="UnusedResources">Տեղադրել</string>
 
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">Կրկնահամաժամեցում</string>
@@ -229,7 +229,7 @@
     <!-- Browser menu button to put the current page in reader mode -->
     <string name="browser_menu_read">Ընթերցողի դիտում</string>
     <!-- Browser menu button content description to close reader mode and return the user to the regular browser -->
-    <string name="browser_menu_read_close">Փակել Ընթերցման դիտումը</string>
+    <string name="browser_menu_read_close">Փակել ընթերցման դիտումը</string>
     <!-- Browser menu button to open the current page in an external app -->
     <string name="browser_menu_open_app_link">Բացել հավելվածում</string>
 
@@ -2336,24 +2336,14 @@
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">Իմանալ ավելին</string>
 
-    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is the Fakespot product name. Following parameters are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy and review_quality_check_contextual_onboarding_terms_use. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
-    <string name="review_quality_check_contextual_onboarding_caption" moz:RemovedIn="123" tools:ignore="UnusedResources">Ընտրելով «Այո, փորձիր»՝ դուք համաձայնում եք %1$s-ը Mozilla-ի կողմիցի %2$s-ին և %3$s-ին:</string>
-    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. Parameter is the Fakespot product name. After the colon, what appears are two links, each on their own line. The first link is to a Privacy policy (review_quality_check_contextual_onboarding_privacy_policy_2). The second link is to Terms of use (review_quality_check_contextual_onboarding_terms_use_2). -->
-    <string name="review_quality_check_contextual_onboarding_caption_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Ընտրելով «Այո, փորձիր»՝ դուք ընդունում եք %1$s-ը.</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is Firefox app name, third parameter is the Fakespot product name. Second & fourth are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy_3 and review_quality_check_contextual_onboarding_terms_use. -->
     <string name="review_quality_check_contextual_onboarding_caption_3" moz:RemovedIn="124" tools:ignore="UnusedResources">Ընտրելով «Այո, փորձիր»՝ դուք համաձայնվում եք %1$s-ի %2$s-ին և %3$s-ի %4$s-ին:</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is Firefox app name, third parameter is the Fakespot product name. Second & fourth are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy_3 and review_quality_check_contextual_onboarding_terms_use. -->
     <string name="review_quality_check_contextual_onboarding_caption_4">Ընտրելով «Այո, փորձիր»՝ դուք համաձայնվում եք %1$s-ի %2$s-ին և %3$s-ի %4$s-ին:</string>
-    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy" moz:RemovedIn="123" tools:ignore="UnusedResources">գաղտնիության դրույթներ</string>
-    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Գաղտնիության դրույթներ</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy notice. -->
     <string name="review_quality_check_contextual_onboarding_privacy_policy_3">գաղտնիության ծանուցում</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
     <string name="review_quality_check_contextual_onboarding_terms_use">օգտվելու կանոններ</string>
-    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
-    <string name="review_quality_check_contextual_onboarding_terms_use_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Օգտագործման պայմաններ</string>
     <!-- Text for opt-in button from the review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_primary_button_text">Այո, փորձիր</string>
     <!-- Text for opt-out button from the review quality check contextual onboarding card. -->

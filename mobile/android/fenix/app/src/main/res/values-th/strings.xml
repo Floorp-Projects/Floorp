@@ -205,7 +205,7 @@
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">เพิ่มไปยังหน้าจอหลัก</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
-    <string name="browser_menu_install_on_homescreen">ติดตั้ง</string>
+    <string name="browser_menu_install_on_homescreen" moz:removedIn="126" tools:ignore="UnusedResources">ติดตั้ง</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">ซิงค์ใหม่</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -2234,7 +2234,7 @@
 
     <!-- Review quality check feature-->
     <!-- Name for the review quality check feature used as title for the panel. -->
-    <string name="review_quality_check_feature_name_2">ตัวตรวจสอบบทวิจารณ์</string>
+    <string name="review_quality_check_feature_name_2">เครื่องมือตรวจสอบบทวิจารณ์</string>
     <!-- Summary for grades A and B for review quality check adjusted grading. -->
     <string name="review_quality_check_grade_a_b_description">บทวิจารณ์ที่น่าเชื่อถือ</string>
     <!-- Summary for grade C for review quality check adjusted grading. -->
@@ -2272,19 +2272,19 @@
     <!-- Text for title of settings section. -->
     <string name="review_quality_check_settings_title">การตั้งค่า</string>
     <!-- Text for label for switch preference to show recommended products from review quality check settings section. -->
-    <string name="review_quality_check_settings_recommended_products">แสดงโฆษณาในตัวตรวจสอบบทวิจารณ์</string>
+    <string name="review_quality_check_settings_recommended_products">แสดงโฆษณาในเครื่องมือตรวจสอบบทวิจารณ์</string>
     <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
     <string name="review_quality_check_settings_recommended_products_description_2" tools:ignore="UnusedResources">คุณจะเห็นโฆษณาผลิตภัณฑ์ที่เกี่ยวข้องเป็นครั้งคราว เราโฆษณาเฉพาะผลิตภัณฑ์ที่มีบทวิจารณ์ที่เชื่อถือได้เท่านั้น %s</string>
     <!-- Clickable text that links to review quality check recommended products support article. -->
     <string name="review_quality_check_settings_recommended_products_learn_more" tools:ignore="UnusedResources">เรียนรู้เพิ่ม</string>
     <!-- Text for turning sidebar off button from review quality check settings section. -->
-    <string name="review_quality_check_settings_turn_off">ปิดตัวตรวจสอบบทวิจารณ์</string>
+    <string name="review_quality_check_settings_turn_off">ปิดเครื่องมือตรวจสอบบทวิจารณ์</string>
     <!-- Text for title of recommended product section. This is displayed above a product image, suggested as an alternative to the product reviewed. -->
     <string name="review_quality_check_ad_title" tools:ignore="UnusedResources">ลองดูเพิ่ม</string>
     <!-- Caption for recommended product section indicating this is an ad by Fakespot. First parameter is the Fakespot product name. -->
     <string name="review_quality_check_ad_caption" tools:ignore="UnusedResources">โฆษณาโดย %s</string>
     <!-- Caption for review quality check panel. First parameter is for clickable text defined in review_quality_check_powered_by_link. -->
-    <string name="review_quality_check_powered_by_2">ตัวตรวจสอบบทวิจารณ์ขับเคลื่อนโดย %s</string>
+    <string name="review_quality_check_powered_by_2">เครื่องมือตรวจสอบบทวิจารณ์ขับเคลื่อนโดย %s</string>
     <!-- Clickable text that links to Fakespot.com. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
     <string name="review_quality_check_powered_by_link" tools:ignore="UnusedResources">%s โดย Mozilla</string>
     <!-- Text for title of warning card informing the user that the current analysis is outdated. -->
@@ -2338,31 +2338,21 @@
     <!-- Headline for review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_title">ลองใช้คำแนะนำที่เชื่อถือได้ของเราเกี่ยวกับบทวิจารณ์ผลิตภัณฑ์</string>
     <!-- Description for review quality check contextual onboarding card. The first and last two parameters are for retailer names (e.g. Amazon, Walmart). The second parameter is for the name of the application (e.g. Firefox). -->
-    <string name="review_quality_check_contextual_onboarding_description">ดูว่าบทวิจารณ์ผลิตภัณฑ์น่าเชื่อถือแค่ไหนใน %1$s ก่อนตัดสินใจซื้อ ตัวตรวจสอบบทวิจารณ์ ซึ่งเป็นคุณลักษณะทดลองจาก %2$s ถูกบรรจุไว้ภายในตัวเบราว์เซอร์โดยตรง ซึ่งสามารถใช้ใน %3$s และ %4$s ได้ด้วย</string>
+    <string name="review_quality_check_contextual_onboarding_description">ดูว่าบทวิจารณ์ผลิตภัณฑ์น่าเชื่อถือแค่ไหนใน %1$s ก่อนตัดสินใจซื้อ เครื่องมือตรวจสอบบทวิจารณ์ ซึ่งเป็นคุณลักษณะทดลองจาก %2$s ถูกบรรจุไว้ภายในตัวเบราว์เซอร์โดยตรง ซึ่งสามารถใช้ใน %3$s และ %4$s ได้ด้วย</string>
     <!-- Description for review quality check contextual onboarding card. The first parameters is for retailer name (e.g. Amazon). The second parameter is for the name of the application (e.g. Firefox). -->
-    <string name="review_quality_check_contextual_onboarding_description_one_vendor">ดูว่าบทวิจารณ์ผลิตภัณฑ์น่าเชื่อถือแค่ไหนใน %1$s ก่อนตัดสินใจซื้อ ตัวตรวจสอบบทวิจารณ์ ซึ่งเป็นคุณลักษณะทดลองจาก %2$s ถูกบรรจุไว้ภายในตัวเบราว์เซอร์โดยตรง</string>
+    <string name="review_quality_check_contextual_onboarding_description_one_vendor">ดูว่าบทวิจารณ์ผลิตภัณฑ์น่าเชื่อถือแค่ไหนใน %1$s ก่อนตัดสินใจซื้อ เครื่องมือตรวจสอบบทวิจารณ์ ซึ่งเป็นคุณลักษณะทดลองจาก %2$s ถูกบรรจุไว้ภายในตัวเบราว์เซอร์โดยตรง</string>
     <!-- Paragraph presenting review quality check feature. First parameter is the Fakespot product name. Second parameter is for clickable text defined in review_quality_check_contextual_onboarding_learn_more_link. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
     <string name="review_quality_check_contextual_onboarding_learn_more">ด้วยการใช้พลังของ %1$s โดย Mozilla เราช่วยให้คุณหลีกเลี่ยงบทวิจารณ์ที่มีอคติและไม่น่าไว้วางใจได้ โมเดล AI ของเราจะปรับปรุงอยู่เสมอเพื่อปกป้องคุณในขณะที่คุณซื้อของ %2$s</string>
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">เรียนรู้เพิ่มเติม</string>
-    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is the Fakespot product name. Following parameters are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy and review_quality_check_contextual_onboarding_terms_use. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
-    <string name="review_quality_check_contextual_onboarding_caption" moz:RemovedIn="123" tools:ignore="UnusedResources">การเลือก “ใช่ ลองใช้เลย” ถือว่าคุณยอมรับ%2$sและ%3$sของ %1$s โดย Mozilla</string>
-    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. Parameter is the Fakespot product name. After the colon, what appears are two links, each on their own line. The first link is to a Privacy policy (review_quality_check_contextual_onboarding_privacy_policy_2). The second link is to Terms of use (review_quality_check_contextual_onboarding_terms_use_2). -->
-    <string name="review_quality_check_contextual_onboarding_caption_2" moz:RemovedIn="123" tools:ignore="UnusedResources">การเลือก “ใช่ ลองใช้เลย” ถือว่าคุณยอมรับข้อตกลงต่อไปนี้จาก %1$s:</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is Firefox app name, third parameter is the Fakespot product name. Second & fourth are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy_3 and review_quality_check_contextual_onboarding_terms_use. -->
     <string name="review_quality_check_contextual_onboarding_caption_3" moz:RemovedIn="124" tools:ignore="UnusedResources">การเลือก “ใช่ ลองใช้เลย” ถือว่าคุณยอมรับ%2$sของ %1$s และ%4$sของ %3$s</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is Firefox app name, third parameter is the Fakespot product name. Second & fourth are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy_3 and review_quality_check_contextual_onboarding_terms_use. -->
     <string name="review_quality_check_contextual_onboarding_caption_4">การเลือก “ใช่ ลองใช้เลย” ถือว่าคุณยอมรับ%2$sของ %1$s และ%4$sของ %3$s</string>
-    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy" moz:RemovedIn="123" tools:ignore="UnusedResources">นโยบายความเป็นส่วนตัว</string>
-    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy_2" moz:RemovedIn="123" tools:ignore="UnusedResources">นโยบายความเป็นส่วนตัว</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy notice. -->
     <string name="review_quality_check_contextual_onboarding_privacy_policy_3">ประกาศความเป็นส่วนตัว</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
     <string name="review_quality_check_contextual_onboarding_terms_use">เงื่อนไขการใช้งาน</string>
-    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
-    <string name="review_quality_check_contextual_onboarding_terms_use_2" moz:RemovedIn="123" tools:ignore="UnusedResources">เงื่อนไขการใช้งาน</string>
     <!-- Text for opt-in button from the review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_primary_button_text">ใช่ลองดู</string>
     <!-- Text for opt-out button from the review quality check contextual onboarding card. -->
@@ -2370,17 +2360,17 @@
     <!-- Text for the first CFR presenting the review quality check feature. -->
     <string name="review_quality_check_first_cfr_message">ค้นพบว่าคุณสามารถเชื่อถือบทวิจารณ์ของผลิตภัณฑ์นี้ได้หรือไม่ ก่อนที่คุณจะตัดสินใจซื้อ</string>
     <!-- Text displayed in the first CFR presenting the review quality check feature that opens the review checker when clicked. -->
-    <string name="review_quality_check_first_cfr_action" tools:ignore="UnusedResources">ลองตัวตรวจสอบบทวิจารณ์</string>
+    <string name="review_quality_check_first_cfr_action" tools:ignore="UnusedResources">ลองใช้เครื่องมือตรวจสอบบทวิจารณ์</string>
     <!-- Text for the second CFR presenting the review quality check feature. -->
     <string name="review_quality_check_second_cfr_message">บทวิจารณ์เหล่านี้เชื่อถือได้หรือไม่? ตรวจสอบตอนนี้เพื่อดูคะแนนที่ปรับแล้ว</string>
     <!-- Text displayed in the second CFR presenting the review quality check feature that opens the review checker when clicked. -->
-    <string name="review_quality_check_second_cfr_action" tools:ignore="UnusedResources">เปิดตัวตรวจสอบบทวิจารณ์</string>
+    <string name="review_quality_check_second_cfr_action" tools:ignore="UnusedResources">เปิดเครื่องมือตรวจสอบบทวิจารณ์</string>
     <!-- Flag showing that the review quality check feature is work in progress. -->
     <string name="review_quality_check_beta_flag">Beta</string>
     <!-- Content description (not visible, for screen readers etc.) for opening browser menu button to open review quality check bottom sheet. -->
-    <string name="review_quality_check_open_handle_content_description">เปิดตัวตรวจสอบบทวิจารณ์</string>
+    <string name="review_quality_check_open_handle_content_description">เปิดเครื่องมือตรวจสอบบทวิจารณ์</string>
     <!-- Content description (not visible, for screen readers etc.) for closing browser menu button to open review quality check bottom sheet. -->
-    <string name="review_quality_check_close_handle_content_description">ปิดตัวตรวจสอบบทวิจารณ์</string>
+    <string name="review_quality_check_close_handle_content_description">ปิดเครื่องมือตรวจสอบบทวิจารณ์</string>
     <!-- Content description (not visible, for screen readers etc.) for review quality check star rating. First parameter is the number of stars (1-5) representing the rating. -->
     <string name="review_quality_check_star_rating_content_description">%1$s จาก 5 ดาว</string>
     <!-- Text for minimize button from highlights card. When clicked the highlights card should reduce its size. -->
