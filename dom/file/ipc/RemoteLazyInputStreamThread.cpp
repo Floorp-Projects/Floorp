@@ -151,7 +151,7 @@ RemoteLazyInputStreamThread::Dispatch(already_AddRefed<nsIRunnable> aRunnable,
 
   if (RLISThreadIsInOrBeyondShutdown()) {
     // nsIEventTarget::Dispatch must leak the runnable if the dispatch fails.
-    (void)runnable.forget();
+    Unused << runnable.forget();
 
     return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
   }
