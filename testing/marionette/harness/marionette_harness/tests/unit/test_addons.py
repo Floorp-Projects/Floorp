@@ -90,11 +90,11 @@ class TestAddons(MarionetteTestCase):
         self.assertNotIn("{d3e7c1f1-2e35-4a49-89fe-9f46eb8abf0a}", self.all_addon_ids)
 
     def test_install_and_remove_signed_addon(self):
-        addon_path = os.path.join(here, "webextension-signed.xpi")
+        addon_path = os.path.join(here, "amosigned.xpi")
 
         addon_id = self.addons.install(addon_path)
         self.assertIn(addon_id, self.all_addon_ids)
-        self.assertEqual(addon_id, "{d3e7c1f1-2e35-4a49-89fe-9f46eb8abf0a}")
+        self.assertEqual(addon_id, "amosigned-xpi@tests.mozilla.org")
 
         self.addons.uninstall(addon_id)
         self.assertNotIn(addon_id, self.all_addon_ids)
@@ -126,11 +126,11 @@ class TestAddons(MarionetteTestCase):
     def test_install_mixed_separator_windows(self):
         # Ensure the base path has only \
         addon_path = here.replace("/", "\\")
-        addon_path += "/webextension-signed.xpi"
+        addon_path += "/amosigned.xpi"
 
         addon_id = self.addons.install(addon_path, temp=True)
         self.assertIn(addon_id, self.all_addon_ids)
-        self.assertEqual(addon_id, "{d3e7c1f1-2e35-4a49-89fe-9f46eb8abf0a}")
+        self.assertEqual(addon_id, "amosigned-xpi@tests.mozilla.org")
 
         self.addons.uninstall(addon_id)
         self.assertNotIn(addon_id, self.all_addon_ids)
