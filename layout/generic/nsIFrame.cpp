@@ -11699,16 +11699,6 @@ DR_cookie::~DR_cookie() {
   nsIFrame::DisplayReflowExit(mPresContext, mFrame, mMetrics, mStatus, mValue);
 }
 
-DR_layout_cookie::DR_layout_cookie(nsIFrame* aFrame) : mFrame(aFrame) {
-  MOZ_COUNT_CTOR(DR_layout_cookie);
-  mValue = nsIFrame::DisplayLayoutEnter(mFrame);
-}
-
-DR_layout_cookie::~DR_layout_cookie() {
-  MOZ_COUNT_DTOR(DR_layout_cookie);
-  nsIFrame::DisplayLayoutExit(mFrame, mValue);
-}
-
 DR_intrinsic_inline_size_cookie::DR_intrinsic_inline_size_cookie(
     nsIFrame* aFrame, const char* aType, nscoord& aResult)
     : mFrame(aFrame), mType(aType), mResult(aResult) {
@@ -11719,19 +11709,6 @@ DR_intrinsic_inline_size_cookie::DR_intrinsic_inline_size_cookie(
 DR_intrinsic_inline_size_cookie::~DR_intrinsic_inline_size_cookie() {
   MOZ_COUNT_DTOR(DR_intrinsic_inline_size_cookie);
   nsIFrame::DisplayIntrinsicISizeExit(mFrame, mType, mResult, mValue);
-}
-
-DR_intrinsic_size_cookie::DR_intrinsic_size_cookie(nsIFrame* aFrame,
-                                                   const char* aType,
-                                                   nsSize& aResult)
-    : mFrame(aFrame), mType(aType), mResult(aResult) {
-  MOZ_COUNT_CTOR(DR_intrinsic_size_cookie);
-  mValue = nsIFrame::DisplayIntrinsicSizeEnter(mFrame, mType);
-}
-
-DR_intrinsic_size_cookie::~DR_intrinsic_size_cookie() {
-  MOZ_COUNT_DTOR(DR_intrinsic_size_cookie);
-  nsIFrame::DisplayIntrinsicSizeExit(mFrame, mType, mResult, mValue);
 }
 
 DR_init_constraints_cookie::DR_init_constraints_cookie(
@@ -12418,20 +12395,6 @@ void* nsIFrame::DisplayReflowEnter(nsPresContext* aPresContext,
   return treeNode;
 }
 
-void* nsIFrame::DisplayLayoutEnter(nsIFrame* aFrame) {
-  if (!DR_state->mInited) DR_state->Init();
-  if (!DR_state->mActive) return nullptr;
-
-  NS_ASSERTION(aFrame, "invalid call");
-
-  DR_FrameTreeNode* treeNode = DR_state->CreateTreeNode(aFrame, nullptr);
-  if (treeNode && treeNode->mDisplay) {
-    DR_state->DisplayFrameTypeInfo(aFrame, treeNode->mIndent);
-    printf("XULLayout\n");
-  }
-  return treeNode;
-}
-
 void* nsIFrame::DisplayIntrinsicISizeEnter(nsIFrame* aFrame,
                                            const char* aType) {
   if (!DR_state->mInited) DR_state->Init();
@@ -12443,20 +12406,6 @@ void* nsIFrame::DisplayIntrinsicISizeEnter(nsIFrame* aFrame,
   if (treeNode && treeNode->mDisplay) {
     DR_state->DisplayFrameTypeInfo(aFrame, treeNode->mIndent);
     printf("Get%sISize\n", aType);
-  }
-  return treeNode;
-}
-
-void* nsIFrame::DisplayIntrinsicSizeEnter(nsIFrame* aFrame, const char* aType) {
-  if (!DR_state->mInited) DR_state->Init();
-  if (!DR_state->mActive) return nullptr;
-
-  NS_ASSERTION(aFrame, "invalid call");
-
-  DR_FrameTreeNode* treeNode = DR_state->CreateTreeNode(aFrame, nullptr);
-  if (treeNode && treeNode->mDisplay) {
-    DR_state->DisplayFrameTypeInfo(aFrame, treeNode->mIndent);
-    printf("Get%sSize\n", aType);
   }
   return treeNode;
 }
@@ -12522,21 +12471,6 @@ void nsIFrame::DisplayReflowExit(nsPresContext* aPresContext, nsIFrame* aFrame,
   DR_state->DeleteTreeNode(*treeNode);
 }
 
-void nsIFrame::DisplayLayoutExit(nsIFrame* aFrame, void* aFrameTreeNode) {
-  if (!DR_state->mActive) return;
-
-  NS_ASSERTION(aFrame, "non-null frame required");
-  if (!aFrameTreeNode) return;
-
-  DR_FrameTreeNode* treeNode = (DR_FrameTreeNode*)aFrameTreeNode;
-  if (treeNode->mDisplay) {
-    DR_state->DisplayFrameTypeInfo(aFrame, treeNode->mIndent);
-    nsRect rect = aFrame->GetRect();
-    printf("XULLayout=%d,%d,%d,%d\n", rect.x, rect.y, rect.width, rect.height);
-  }
-  DR_state->DeleteTreeNode(*treeNode);
-}
-
 void nsIFrame::DisplayIntrinsicISizeExit(nsIFrame* aFrame, const char* aType,
                                          nscoord aResult,
                                          void* aFrameTreeNode) {
@@ -12551,26 +12485,6 @@ void nsIFrame::DisplayIntrinsicISizeExit(nsIFrame* aFrame, const char* aType,
     char iSize[16];
     DR_state->PrettyUC(aResult, iSize, 16);
     printf("Get%sISize=%s\n", aType, iSize);
-  }
-  DR_state->DeleteTreeNode(*treeNode);
-}
-
-void nsIFrame::DisplayIntrinsicSizeExit(nsIFrame* aFrame, const char* aType,
-                                        nsSize aResult, void* aFrameTreeNode) {
-  if (!DR_state->mActive) return;
-
-  NS_ASSERTION(aFrame, "non-null frame required");
-  if (!aFrameTreeNode) return;
-
-  DR_FrameTreeNode* treeNode = (DR_FrameTreeNode*)aFrameTreeNode;
-  if (treeNode->mDisplay) {
-    DR_state->DisplayFrameTypeInfo(aFrame, treeNode->mIndent);
-
-    char width[16];
-    char height[16];
-    DR_state->PrettyUC(aResult.width, width, 16);
-    DR_state->PrettyUC(aResult.height, height, 16);
-    printf("Get%sSize=%s,%s\n", aType, width, height);
   }
   DR_state->DeleteTreeNode(*treeNode);
 }

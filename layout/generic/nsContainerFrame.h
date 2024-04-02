@@ -1094,14 +1094,6 @@ struct DR_cookie {
   void* mValue;
 };
 
-struct DR_layout_cookie {
-  explicit DR_layout_cookie(nsIFrame* aFrame);
-  ~DR_layout_cookie();
-
-  nsIFrame* mFrame;
-  void* mValue;
-};
-
 struct DR_intrinsic_inline_size_cookie {
   DR_intrinsic_inline_size_cookie(nsIFrame* aFrame, const char* aType,
                                   nscoord& aResult);
@@ -1110,17 +1102,6 @@ struct DR_intrinsic_inline_size_cookie {
   nsIFrame* mFrame;
   const char* mType;
   nscoord& mResult;
-  void* mValue;
-};
-
-struct DR_intrinsic_size_cookie {
-  DR_intrinsic_size_cookie(nsIFrame* aFrame, const char* aType,
-                           nsSize& aResult);
-  ~DR_intrinsic_size_cookie();
-
-  nsIFrame* mFrame;
-  const char* mType;
-  nsSize& mResult;
   void* mValue;
 };
 
@@ -1155,17 +1136,10 @@ struct DR_init_offsets_cookie {
     DR_cookie dr_cookie(dr_pres_context, dr_frame, dr_rf_state, dr_rf_metrics, \
                         dr_rf_status);
 #  define DISPLAY_REFLOW_CHANGE() dr_cookie.Change();
-#  define DISPLAY_LAYOUT(dr_frame) DR_layout_cookie dr_cookie(dr_frame);
 #  define DISPLAY_MIN_INLINE_SIZE(dr_frame, dr_result) \
     DR_intrinsic_inline_size_cookie dr_cookie(dr_frame, "Min", dr_result)
 #  define DISPLAY_PREF_INLINE_SIZE(dr_frame, dr_result) \
     DR_intrinsic_inline_size_cookie dr_cookie(dr_frame, "Pref", dr_result)
-#  define DISPLAY_PREF_SIZE(dr_frame, dr_result) \
-    DR_intrinsic_size_cookie dr_cookie(dr_frame, "Pref", dr_result)
-#  define DISPLAY_MIN_SIZE(dr_frame, dr_result) \
-    DR_intrinsic_size_cookie dr_cookie(dr_frame, "Min", dr_result)
-#  define DISPLAY_MAX_SIZE(dr_frame, dr_result) \
-    DR_intrinsic_size_cookie dr_cookie(dr_frame, "Max", dr_result)
 #  define DISPLAY_INIT_CONSTRAINTS(dr_frame, dr_state, dr_cbw, dr_cbh, dr_bdr, \
                                    dr_pad)                                     \
     DR_init_constraints_cookie dr_cookie(dr_frame, dr_state, dr_cbw, dr_cbh,   \
@@ -1180,14 +1154,10 @@ struct DR_init_offsets_cookie {
 #  define DISPLAY_REFLOW(dr_pres_context, dr_frame, dr_rf_state, \
                          dr_rf_metrics, dr_rf_status)
 #  define DISPLAY_REFLOW_CHANGE()
-#  define DISPLAY_LAYOUT(dr_frame) PR_BEGIN_MACRO PR_END_MACRO
 #  define DISPLAY_MIN_INLINE_SIZE(dr_frame, dr_result) \
     PR_BEGIN_MACRO PR_END_MACRO
 #  define DISPLAY_PREF_INLINE_SIZE(dr_frame, dr_result) \
     PR_BEGIN_MACRO PR_END_MACRO
-#  define DISPLAY_PREF_SIZE(dr_frame, dr_result) PR_BEGIN_MACRO PR_END_MACRO
-#  define DISPLAY_MIN_SIZE(dr_frame, dr_result) PR_BEGIN_MACRO PR_END_MACRO
-#  define DISPLAY_MAX_SIZE(dr_frame, dr_result) PR_BEGIN_MACRO PR_END_MACRO
 #  define DISPLAY_INIT_CONSTRAINTS(dr_frame, dr_state, dr_cbw, dr_cbh, dr_bdr, \
                                    dr_pad)                                     \
     PR_BEGIN_MACRO PR_END_MACRO
