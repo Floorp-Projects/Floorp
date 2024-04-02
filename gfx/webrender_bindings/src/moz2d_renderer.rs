@@ -178,12 +178,6 @@ struct BlobReader<'a> {
     begin: usize,
 }
 
-#[derive(PartialEq, Debug, Eq, Clone, Copy)]
-struct IntPoint {
-    x: i32,
-    y: i32,
-}
-
 /// The metadata for each display item in a blob image (doesn't match the serialized layout).
 ///
 /// See BlobReader above for detailed docs of the blob image format.
