@@ -5921,7 +5921,7 @@ nsresult HTMLInputElement::SetDefaultValueAsValue() {
 void HTMLInputElement::SetAutoDirectionality(bool aNotify,
                                              const nsAString* aKnownValue) {
   if (!IsAutoDirectionalityAssociated()) {
-    return SetDirectionality(GetParentDirectionality(this), aNotify);
+    return SetDirectionality(Directionality::Ltr, aNotify);
   }
   nsAutoString value;
   if (!aKnownValue) {
