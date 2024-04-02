@@ -27,6 +27,7 @@
   border: var(--message-bar-border-width) solid var(--message-bar-border-color);
   border-radius: var(--message-bar-border-radius);
   color: var(--message-bar-text-color);
+  text-align: start;
 }
 
 @media (prefers-contrast) {
