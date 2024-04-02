@@ -37,22 +37,17 @@ def is_backstop(
         return True
 
     project = params["project"]
-    pushid = int(params["pushlog_id"])
-    pushdate = int(params["pushdate"])
-
     if project in TRY_PROJECTS:
         return False
     if project not in integration_projects:
         return True
 
-    # On every Nth push, want to run all tasks.
-    if pushid % push_interval == 0:
-        return True
-
-    if time_interval <= 0:
+    # This push was explicitly set to run nothing (e.g via DONTBUILD), so
+    # shouldn't be a backstop candidate.
+    if params["target_tasks_method"] == "nothing":
         return False
 
-    # We also want to ensure we run all tasks at least once per N minutes.
+    # Find the last backstop to compute push and time intervals.
     subs = {"trust-domain": trust_domain, "project": project}
     index = BACKSTOP_INDEX.format(**subs)
 
@@ -67,9 +62,7 @@ def is_backstop(
         return True
 
     try:
-        last_pushdate = get_artifact(last_backstop_id, "public/parameters.yml")[
-            "pushdate"
-        ]
+        last_params = get_artifact(last_backstop_id, "public/parameters.yml")
     except HTTPError as e:
         # If the last backstop decision task exists in the index, but
         # parameters.yml isn't available yet, it means the decision task is
@@ -79,6 +72,15 @@ def is_backstop(
             return False
         raise
 
-    if (pushdate - last_pushdate) / 60 >= time_interval:
+    # On every Nth push, want to run all tasks.
+    if params["pushlog_id"] - last_params["pushlog_id"] >= push_interval:
         return True
+
+    if time_interval <= 0:
+        return False
+
+    # We also want to ensure we run all tasks at least once per N minutes.
+    if (params["pushdate"] - last_params["pushdate"]) / 60 >= time_interval:
+        return True
+
     return False
