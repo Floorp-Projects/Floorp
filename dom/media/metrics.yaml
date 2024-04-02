@@ -157,4 +157,7 @@ media.playback:
           is performed by the HLS decoder, which utilizes the external player to
           play video.
         type: boolean
+      is_hardware_decoding:
+        description: True if the first frame is decoded by a hardware decoder.
+        type: boolean
     expires: never

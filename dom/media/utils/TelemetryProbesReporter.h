@@ -72,6 +72,7 @@ class TelemetryProbesReporter final {
     IsMSE,
     IsExternalEngineStateMachine,
     IsHLS,
+    IsHardwareDecoding,
   };
   using FirstFrameLoadedFlagSet = EnumSet<FirstFrameLoadedFlag, uint8_t>;
   void OntFirstFrameLoaded(const double aLoadedFirstFrameTime,
