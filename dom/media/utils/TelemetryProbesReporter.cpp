@@ -294,7 +294,7 @@ void TelemetryProbesReporter::OnDecodeResumed() {
 
 void TelemetryProbesReporter::OntFirstFrameLoaded(
     const double aLoadedFirstFrameTime, const double aLoadedMetadataTime,
-    const double aTotalWaitingVideoDataTime,
+    const double aTotalWaitingDataTime, const double aTotalBufferingTime,
     const FirstFrameLoadedFlagSet aFlags) {
   const MediaInfo& info = mOwner->GetMediaInfo();
   MOZ_ASSERT(info.HasVideo());
@@ -309,6 +309,7 @@ void TelemetryProbesReporter::OntFirstFrameLoaded(
   extraData.firstFrameLoadedTime = Some(aLoadedFirstFrameTime);
   extraData.metadataLoadedTime = Some(aLoadedMetadataTime);
   extraData.totalWaitingDataTime = Some(aTotalWaitingDataTime);
+  extraData.bufferingTime = Some(aTotalBufferingTime);
   if (!isMSE && !isExternalEngineStateMachine) {
     extraData.playbackType = Some("Non-MSE playback"_ns);
   } else if (isMSE && !isExternalEngineStateMachine) {
@@ -342,12 +343,13 @@ void TelemetryProbesReporter::OntFirstFrameLoaded(
   if (MOZ_LOG_TEST(gTelemetryProbesReporterLog, LogLevel::Debug)) {
     nsPrintfCString logMessage{
         "Media_Playabck First_Frame_Loaded event, time(ms)=["
-        "full:%f, loading-meta:%f, waiting-data:%f], "
+        "full:%f, loading-meta:%f, waiting-data:%f, buffering:%f], "
         "playback-type=%s, "
         "videoCodec=%s, resolution=%s, hardware=%d",
         aLoadedFirstFrameTime,
         aLoadedMetadataTime,
         aTotalWaitingDataTime,
+        aTotalBufferingTime,
         extraData.playbackType->get(),
         extraData.videoCodec->get(),
         extraData.resolution->get(),

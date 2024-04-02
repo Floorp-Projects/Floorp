@@ -909,6 +909,7 @@ void MediaDecoder::FirstFrameLoaded(
           auto firstFrameLoadedTime = (now - creationTime).ToMilliseconds();
           MOZ_ASSERT(result->mReader.mTotalReadMetadataTimeMs >= 0.0);
           MOZ_ASSERT(result->mReader.mTotalWaitingForVideoDataTimeMs >= 0.0);
+          MOZ_ASSERT(result->mStateMachine.mTotalBufferingTimeMs >= 0.0);
 
           using FirstFrameLoadedFlag =
               TelemetryProbesReporter::FirstFrameLoadedFlag;
@@ -927,7 +928,8 @@ void MediaDecoder::FirstFrameLoaded(
           }
           mTelemetryProbesReporter->OntFirstFrameLoaded(
               firstFrameLoadedTime, result->mReader.mTotalReadMetadataTimeMs,
-              result->mReader.mTotalWaitingForVideoDataTimeMs, flags);
+              result->mReader.mTotalWaitingForVideoDataTimeMs,
+              result->mStateMachine.mTotalBufferingTimeMs, flags);
         });
     mMDSMCreationTime.reset();
   }

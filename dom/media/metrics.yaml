@@ -131,6 +131,11 @@ media.playback:
           state of waiting video data due to lacking of data before the first
           frame is loaded.
         type: quantity
+      buffering_time:
+        description:
+          How long (in milliseconds) does the our media pipeline has been spent
+          on the buffering state before the first frame is loaded.
+        type: quantity
       playback_type:
         description:
           The type of the playback. The value could be one of following

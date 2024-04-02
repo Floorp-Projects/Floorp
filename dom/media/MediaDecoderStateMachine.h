@@ -530,6 +530,9 @@ class MediaDecoderStateMachine
   // logic until the media loops back.
   bool mBypassingSkipToNextKeyFrameCheck = false;
 
+  // The total amount of time we've spent on the buffering state.
+  TimeDuration mTotalBufferingDuration;
+
  private:
   // Audio stream name
   Mirror<nsAutoString> mStreamName;
