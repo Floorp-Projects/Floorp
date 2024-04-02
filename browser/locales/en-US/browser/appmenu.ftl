@@ -81,7 +81,7 @@ appmenu-remote-tabs-turn-on-sync =
 
 # This is shown after the tabs list if we can display more tabs by clicking on the button
 appmenu-remote-tabs-showmore =
-  .label = Show More Tabs
+  .label = Show more tabs
   .tooltiptext = Show more tabs from this device
 
 # This is shown when there are inactive tabs which are not being shown.
