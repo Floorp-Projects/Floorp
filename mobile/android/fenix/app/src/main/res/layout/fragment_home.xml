@@ -151,7 +151,7 @@
 
             <TextView
                 android:id="@+id/toolbar"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_gravity="start|center_vertical"
                 android:clickable="false"
@@ -161,7 +161,52 @@
                 android:lines="1"
                 android:text="@string/search_hint"
                 android:textColor="?attr/textPrimary"
-                android:textSize="15sp" />
+                android:textSize="15sp"
+                android:layout_weight="1"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toEndOf="@id/search_selector_button"
+                app:layout_constraintEnd_toStartOf="@id/browser_action_separator" />
+
+            <View
+                android:id="@+id/browser_action_separator"
+                android:layout_width="@dimen/mozac_browser_toolbar_page_action_separator_width"
+                android:layout_height="match_parent"
+                android:layout_marginStart="8dp"
+                android:importantForAccessibility="no"
+                android:scaleType="center"
+                android:background="?homeBackground"
+                android:gravity="end"
+                android:visibility="gone"
+                app:layout_constraintStart_toEndOf="@id/toolbar"
+                app:layout_constraintEnd_toStartOf="@id/microphone_action_image"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <ImageView
+                android:id="@+id/microphone_action_image"
+                app:srcCompat="@drawable/ic_microphone"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="8dp"
+                android:layout_width="40dp"
+                android:layout_height="match_parent"
+                android:gravity="end"
+                android:visibility="gone"
+                app:layout_constraintStart_toEndOf="@id/browser_action_separator"
+                app:layout_constraintEnd_toEndOf="@id/qr_action_image"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <ImageView
+                android:id="@+id/qr_action_image"
+                app:srcCompat="@drawable/ic_qr"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="8dp"
+                android:layout_width="40dp"
+                android:layout_height="match_parent"
+                android:gravity="end"
+                android:visibility="gone"
+                app:layout_constraintStart_toEndOf="@id/microphone_action_image"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
         </LinearLayout>
 
         <androidx.constraintlayout.widget.Barrier

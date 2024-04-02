@@ -45,7 +45,7 @@ events:
       source:
         description: |
           The view the user was on when they initiated the search (For example:
-          `Home` or `Browser`)
+          `HOME`, `HOME_NAV_SEARCH`, `HOME_QR`, `HOME_VOICE` or `BROWSER`)
         type: string
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/959

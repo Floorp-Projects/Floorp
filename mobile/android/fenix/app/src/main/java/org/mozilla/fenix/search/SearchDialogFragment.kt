@@ -105,6 +105,13 @@ import org.mozilla.fenix.settings.SupportUtils
 
 typealias SearchDialogFragmentStore = SearchFragmentStore
 
+/**
+ * Possible extra actions when opening search dialog fragment.
+ */
+enum class ExtraAction {
+    QR_READER, VOICE_SEARCH, NONE,
+}
+
 @SuppressWarnings("LargeClass", "TooManyFunctions")
 class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
     private var _binding: FragmentSearchDialogBinding? = null
@@ -473,6 +480,13 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
             addSearchSelector()
             updateQrButton(it)
             updateVoiceSearchButton()
+        }
+
+        val args by navArgs<SearchDialogFragmentArgs>()
+        when (args.extraAction) {
+            ExtraAction.QR_READER -> launchQr()
+            ExtraAction.VOICE_SEARCH -> launchVoiceSearch()
+            ExtraAction.NONE -> {}
         }
     }
 
