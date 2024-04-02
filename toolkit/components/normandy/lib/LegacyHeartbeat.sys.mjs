@@ -43,6 +43,7 @@ export const LegacyHeartbeat = {
       capabilities: ["action.show-heartbeat"],
       filter_expression: "true",
       use_only_baseline_capabilities: true,
+      revision_id: "1", // Required for the Heartbeat telemetry ping.
     };
   },
 };
