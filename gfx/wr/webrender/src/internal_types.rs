@@ -6,7 +6,6 @@ use api::{ColorF, DocumentId, ExternalImageId, PrimitiveFlags, Parameter, Render
 use api::{ImageFormat, NotificationRequest, Shadow, FilterOp, ImageBufferKind};
 use api::FramePublishId;
 use api::units::*;
-use api;
 use crate::render_api::DebugCommand;
 use crate::composite::NativeSurfaceOperation;
 use crate::device::TextureFilter;

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use std::{iter::Extend, ops, marker::PhantomData, u32};
+use std::{ops, marker::PhantomData, u32};
 use crate::util::Recycler;
 
 #[derive(Debug, Hash)]
