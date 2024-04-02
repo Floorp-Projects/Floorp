@@ -22,9 +22,9 @@ use crate::{Atom, WeakAtom};
 use crate::values::AtomIdent;
 use dom::ElementState;
 use selectors::attr::CaseSensitivity;
+use selectors::kleene_value::KleeneValue;
 use selectors::matching::{
-    matches_selector, MatchingContext, MatchingForInvalidation, MatchingMode, NeedsSelectorFlags,
-    SelectorCaches, VisitedHandlingMode,
+    matches_selector_kleene, MatchingContext, MatchingForInvalidation, MatchingMode, NeedsSelectorFlags, SelectorCaches, VisitedHandlingMode
 };
 use smallvec::SmallVec;
 
@@ -100,23 +100,25 @@ where
     E: TElement,
     W: selectors::Element<Impl = E::Impl>,
 {
-    let matches_now = matches_selector(
-        &dependency.selector,
-        dependency.selector_offset,
-        None,
-        element,
-        context,
-    );
+    context.for_invalidation_comparison(|context| {
+        let matches_now = matches_selector_kleene(
+            &dependency.selector,
+            dependency.selector_offset,
+            None,
+            element,
+            context,
+        );
 
-    let matched_then = matches_selector(
-        &dependency.selector,
-        dependency.selector_offset,
-        None,
-        wrapper,
-        context,
-    );
+        let matched_then = matches_selector_kleene(
+            &dependency.selector,
+            dependency.selector_offset,
+            None,
+            wrapper,
+            context,
+        );
 
-    matched_then != matches_now
+        matched_then != matches_now || matches_now == KleeneValue::Unknown
+    })
 }
 
 /// Whether we should process the descendants of a given element for style

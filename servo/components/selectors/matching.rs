@@ -7,6 +7,7 @@ use crate::attr::{
     ParsedAttrSelectorOperation, ParsedCaseSensitivity,
 };
 use crate::bloom::{BloomFilter, BLOOM_HASH_MASK};
+use crate::kleene_value::KleeneValue;
 use crate::parser::{
     AncestorHashes, Combinator, Component, LocalName, NthSelectorData, RelativeSelectorMatchHint,
 };
@@ -200,12 +201,39 @@ fn may_match(hashes: &AncestorHashes, bf: &BloomFilter) -> bool {
 /// However since the selector "c1" raises
 /// NotMatchedAndRestartFromClosestDescendant. So the selector
 /// "b1 + c1 > b2 ~ " doesn't match and restart matching from "d1".
+///
+/// There is also the unknown result, which is used during invalidation when
+/// specific selector is being tested for before/after comparison. More specifically,
+/// selectors that are too expensive to correctly compute during invalidation may
+/// return unknown, as the computation will be thrown away and only to be recomputed
+/// during styling. For most cases, the unknown result can be treated as matching.
+/// This is because a compound of selectors acts like &&, and unknown && matched
+/// == matched and unknown && not-matched == not-matched. However, some selectors,
+/// like `:is()`, behave like || i.e. `:is(.a, .b)` == a || b. Treating unknown
+/// == matching then causes these selectors to always return matching, which undesired
+/// for before/after comparison. Coercing to not-matched doesn't work since each
+/// inner selector may have compounds: e.g. Toggling `.foo` in `:is(.foo:has(..))`
+/// with coersion to not-matched would result in an invalid before/after comparison
+/// of not-matched/not-matched.
 #[derive(Clone, Copy, Eq, PartialEq)]
 enum SelectorMatchingResult {
     Matched,
     NotMatchedAndRestartFromClosestLaterSibling,
     NotMatchedAndRestartFromClosestDescendant,
     NotMatchedGlobally,
+    Unknown,
+}
+
+impl From<SelectorMatchingResult> for KleeneValue {
+    fn from(value: SelectorMatchingResult) -> Self {
+        match value {
+            SelectorMatchingResult::Matched => KleeneValue::True,
+            SelectorMatchingResult::Unknown => KleeneValue::Unknown,
+            SelectorMatchingResult::NotMatchedAndRestartFromClosestLaterSibling |
+            SelectorMatchingResult::NotMatchedAndRestartFromClosestDescendant |
+            SelectorMatchingResult::NotMatchedGlobally => KleeneValue::False,
+        }
+    }
 }
 
 /// Matches a selector, fast-rejecting against a bloom filter.
@@ -227,11 +255,33 @@ pub fn matches_selector<E>(
 where
     E: Element,
 {
+    let result = matches_selector_kleene(selector, offset, hashes, element, context);
+    if cfg!(debug_assertions) && result == KleeneValue::Unknown {
+        debug_assert!(
+            context.matching_for_invalidation_comparison().unwrap_or(false),
+            "How did we return unknown?"
+        );
+    }
+    result.to_bool(true)
+}
+
+/// Same as matches_selector, but returns the Kleene value as-is.
+#[inline(always)]
+pub fn matches_selector_kleene<E>(
+    selector: &Selector<E::Impl>,
+    offset: usize,
+    hashes: Option<&AncestorHashes>,
+    element: &E,
+    context: &mut MatchingContext<E::Impl>,
+) -> KleeneValue
+where
+    E: Element,
+{
     // Use the bloom filter to fast-reject.
     if let Some(hashes) = hashes {
         if let Some(filter) = context.bloom_filter {
             if !may_match(hashes, filter) {
-                return false;
+                return KleeneValue::False;
             }
         }
     }
@@ -275,6 +325,12 @@ pub fn matches_compound_selector_from<E>(
 where
     E: Element,
 {
+    debug_assert!(
+        !context
+            .matching_for_invalidation_comparison()
+            .unwrap_or(false),
+        "CompoundSelectorMatchingResult doesn't support unknown"
+    );
     if cfg!(debug_assertions) && from_offset != 0 {
         selector.combinator_at_parse_order(from_offset - 1); // This asserts.
     }
@@ -320,7 +376,9 @@ where
     );
 
     for component in iter {
-        if !matches_simple_selector(component, element, &mut local_context) {
+        let result = matches_simple_selector(component, element, &mut local_context);
+        debug_assert!(result != KleeneValue::Unknown, "Returned unknown in non invalidation context?");
+        if !result.to_bool(true) {
             return CompoundSelectorMatchingResult::NotMatched;
         }
     }
@@ -341,7 +399,7 @@ fn matches_complex_selector<E>(
     element: &E,
     context: &mut MatchingContext<E::Impl>,
     rightmost: SubjectOrPseudoElement,
-) -> bool
+) -> KleeneValue
 where
     E: Element,
 {
@@ -353,7 +411,7 @@ where
             Component::PseudoElement(ref pseudo) => {
                 if let Some(ref f) = context.pseudo_element_matching_fn {
                     if !f(pseudo) {
-                        return false;
+                        return KleeneValue::False;
                     }
                 }
             },
@@ -364,12 +422,12 @@ where
                      in a non-pseudo selector {:?}",
                     other
                 );
-                return false;
+                return KleeneValue::False;
             },
         }
 
         if !iter.matches_for_stateless_pseudo_element() {
-            return false;
+            return KleeneValue::False;
         }
 
         // Advance to the non-pseudo-element part of the selector.
@@ -377,9 +435,14 @@ where
         debug_assert_eq!(next_sequence, Combinator::PseudoElement);
     }
 
-    let result = matches_complex_selector_internal(iter, element, context, rightmost);
-
-    matches!(result, SelectorMatchingResult::Matched)
+    matches_complex_selector_internal(
+        iter,
+        element,
+        context,
+        rightmost,
+        SubjectOrPseudoElement::Yes,
+    )
+    .into()
 }
 
 /// Matches each selector of a list as a complex selector
@@ -388,13 +451,16 @@ fn matches_complex_selector_list<E: Element>(
     element: &E,
     context: &mut MatchingContext<E::Impl>,
     rightmost: SubjectOrPseudoElement,
-) -> bool {
-    for selector in list {
-        if matches_complex_selector(selector.iter(), element, context, rightmost) {
-            return true;
-        }
-    }
-    false
+) -> KleeneValue {
+    KleeneValue::any(
+        list.iter(),
+        |selector| matches_complex_selector(
+            selector.iter(),
+            element,
+            context,
+            rightmost
+        )
+    )
 }
 
 fn matches_relative_selector<E: Element>(
@@ -423,7 +489,8 @@ fn matches_relative_selector<E: Element>(
                 &el,
                 context,
                 rightmost,
-            );
+            )
+            .to_bool(true);
             if !matched && relative_selector.match_hint.is_subtree() {
                 matched = matches_relative_selector_subtree(
                     &relative_selector.selector,
@@ -472,6 +539,7 @@ fn matches_relative_selector<E: Element>(
                 )
             } else {
                 matches_complex_selector(relative_selector.selector.iter(), &el, context, rightmost)
+                    .to_bool(true)
             };
             if matched {
                 return true;
@@ -490,12 +558,6 @@ fn relative_selector_match_early<E: Element>(
     element: &E,
     context: &mut MatchingContext<E::Impl>,
 ) -> Option<bool> {
-    if context.matching_for_invalidation() {
-        // In the context of invalidation, we can't use caching/filtering due to
-        // now/then matches. DOM structure also may have changed, so just pretend
-        // that we always match.
-        return Some(!context.in_negation());
-    }
     // See if we can return a cached result.
     if let Some(cached) = context
         .selector_caches
@@ -526,18 +588,28 @@ fn match_relative_selectors<E: Element>(
     element: &E,
     context: &mut MatchingContext<E::Impl>,
     rightmost: SubjectOrPseudoElement,
-) -> bool {
+) -> KleeneValue {
     if context.relative_selector_anchor().is_some() {
         // FIXME(emilio): This currently can happen with nesting, and it's not fully
         // correct, arguably. But the ideal solution isn't super-clear either. For now,
         // cope with it and explicitly reject it at match time. See [1] for discussion.
         //
         // [1]: https://github.com/w3c/csswg-drafts/issues/9600
-        return false;
+        return KleeneValue::False;
+    }
+    if let Some(may_return_unknown) = context.matching_for_invalidation_comparison() {
+        // In the context of invalidation, :has is expensive, especially because we
+        // can't use caching/filtering due to now/then matches. DOM structure also
+        // may have changed.
+        return if may_return_unknown {
+            KleeneValue::Unknown
+        } else {
+            KleeneValue::from(!context.in_negation())
+        };
     }
     context.nest_for_relative_selector(element.opaque(), |context| {
         do_match_relative_selectors(selectors, element, context, rightmost)
-    })
+    }).into()
 }
 
 /// Matches a relative selector in a list of relative selectors.
@@ -604,7 +676,7 @@ fn matches_relative_selector_subtree<E: Element>(
                 ElementSelectorFlags::RELATIVE_SELECTOR_SEARCH_DIRECTION_ANCESTOR,
             );
         }
-        if matches_complex_selector(selector.iter(), &el, context, rightmost) {
+        if matches_complex_selector(selector.iter(), &el, context, rightmost).to_bool(true) {
             return true;
         }
 
@@ -742,6 +814,7 @@ fn matches_complex_selector_internal<E>(
     element: &E,
     context: &mut MatchingContext<E::Impl>,
     rightmost: SubjectOrPseudoElement,
+    first_subject_compound: SubjectOrPseudoElement,
 ) -> SelectorMatchingResult
 where
     E: Element,
@@ -751,8 +824,24 @@ where
         selector_iter, element
     );
 
-    let matches_compound_selector =
-        matches_compound_selector(&mut selector_iter, element, context, rightmost);
+    let matches_compound_selector = {
+        let result = matches_compound_selector(&mut selector_iter, element, context, rightmost);
+        // We only care for unknown match in the first subject in compound - in the context of comparison
+        // invalidation, ancestors/previous sibling being an unknown match doesn't matter - we must
+        // invalidate to guarantee correctness.
+        if result == KleeneValue::Unknown && first_subject_compound == SubjectOrPseudoElement::No {
+            debug_assert!(
+                context
+                    .matching_for_invalidation_comparison()
+                    .unwrap_or(false),
+                "How did we return unknown?"
+            );
+            // Coerce the result to matched.
+            KleeneValue::True
+        } else {
+            result
+        }
+    };
 
     let combinator = selector_iter.next_sequence();
     if combinator.map_or(false, |c| c.is_sibling()) {
@@ -761,24 +850,42 @@ where
         }
     }
 
-    if !matches_compound_selector {
+    // We don't short circuit unknown here, since the rest of the selector
+    // to the left of this compound may return false.
+    if matches_compound_selector == KleeneValue::False {
         return SelectorMatchingResult::NotMatchedAndRestartFromClosestLaterSibling;
     }
 
     let combinator = match combinator {
-        None => return SelectorMatchingResult::Matched,
+        None => {
+            return match matches_compound_selector {
+                KleeneValue::True => SelectorMatchingResult::Matched,
+                KleeneValue::Unknown => SelectorMatchingResult::Unknown,
+                KleeneValue::False => unreachable!(),
+            }
+        },
         Some(c) => c,
     };
 
-    let (candidate_not_found, mut rightmost) = match combinator {
-        Combinator::NextSibling | Combinator::LaterSibling => {
-            (SelectorMatchingResult::NotMatchedAndRestartFromClosestDescendant, SubjectOrPseudoElement::No)
-        },
+    let (candidate_not_found, rightmost, first_subject_compound) = match combinator {
+        Combinator::NextSibling | Combinator::LaterSibling => (
+            SelectorMatchingResult::NotMatchedAndRestartFromClosestDescendant,
+            SubjectOrPseudoElement::No,
+            SubjectOrPseudoElement::No,
+        ),
         Combinator::Child |
         Combinator::Descendant |
         Combinator::SlotAssignment |
-        Combinator::Part => (SelectorMatchingResult::NotMatchedGlobally, SubjectOrPseudoElement::No),
-        Combinator::PseudoElement => (SelectorMatchingResult::NotMatchedGlobally, rightmost),
+        Combinator::Part => (
+            SelectorMatchingResult::NotMatchedGlobally,
+            SubjectOrPseudoElement::No,
+            SubjectOrPseudoElement::No,
+        ),
+        Combinator::PseudoElement => (
+            SelectorMatchingResult::NotMatchedGlobally,
+            rightmost,
+            first_subject_compound,
+        ),
     };
 
     // Stop matching :visited as soon as we find a link, or a combinator for
@@ -807,18 +914,27 @@ where
                 &element,
                 context,
                 rightmost,
+                first_subject_compound,
             )
         });
 
-        if !matches!(combinator, Combinator::PseudoElement) {
-            rightmost = SubjectOrPseudoElement::No;
-        }
-
         match (result, combinator) {
             // Return the status immediately.
-            (SelectorMatchingResult::Matched, _) |
-            (SelectorMatchingResult::NotMatchedGlobally, _) |
-            (_, Combinator::NextSibling) => {
+            (SelectorMatchingResult::Matched | SelectorMatchingResult::Unknown, _) => {
+                debug_assert!(
+                    matches_compound_selector.to_bool(true),
+                    "Compound didn't match?"
+                );
+                if result == SelectorMatchingResult::Matched &&
+                    matches_compound_selector.to_bool(false)
+                {
+                    // Matches without question
+                    return result;
+                }
+                // Something returned unknown, so return unknown.
+                return SelectorMatchingResult::Unknown;
+            },
+            (SelectorMatchingResult::NotMatchedGlobally, _) | (_, Combinator::NextSibling) => {
                 return result;
             },
 
@@ -910,18 +1026,18 @@ fn matches_host<E>(
     selector: Option<&Selector<E::Impl>>,
     context: &mut MatchingContext<E::Impl>,
     rightmost: SubjectOrPseudoElement,
-) -> bool
+) -> KleeneValue
 where
     E: Element,
 {
     let host = match context.shadow_host() {
         Some(h) => h,
-        None => return false,
+        None => return KleeneValue::False,
     };
     if host != element.opaque() {
-        return false;
+        return KleeneValue::False;
     }
-    selector.map_or(true, |selector| {
+    selector.map_or(KleeneValue::True, |selector| {
         context
             .nest(|context| matches_complex_selector(selector.iter(), element, context, rightmost))
     })
@@ -932,13 +1048,13 @@ fn matches_slotted<E>(
     selector: &Selector<E::Impl>,
     context: &mut MatchingContext<E::Impl>,
     rightmost: SubjectOrPseudoElement,
-) -> bool
+) -> KleeneValue
 where
     E: Element,
 {
     // <slots> are never flattened tree slottables.
     if element.is_html_slot_element() {
-        return false;
+        return KleeneValue::False;
     }
     context.nest(|context| matches_complex_selector(selector.iter(), element, context, rightmost))
 }
@@ -983,7 +1099,7 @@ fn matches_compound_selector<E>(
     element: &E,
     context: &mut MatchingContext<E::Impl>,
     rightmost: SubjectOrPseudoElement,
-) -> bool
+) -> KleeneValue
 where
     E: Element,
 {
@@ -997,7 +1113,14 @@ where
         rightmost,
         quirks_data,
     };
-    selector_iter.all(|simple| matches_simple_selector(simple, element, &mut local_context))
+    KleeneValue::any_false(
+        selector_iter,
+        |simple| matches_simple_selector(
+            simple,
+            element,
+            &mut local_context
+        )
+    )
 }
 
 /// Determines whether the given element matches the given single selector.
@@ -1005,13 +1128,13 @@ fn matches_simple_selector<E>(
     selector: &Component<E::Impl>,
     element: &E,
     context: &mut LocalMatchingContext<E::Impl>,
-) -> bool
+) -> KleeneValue
 where
     E: Element,
 {
     debug_assert!(context.shared.is_nested() || !context.shared.in_negation());
     let rightmost = context.rightmost;
-    match *selector {
+    KleeneValue::from(match *selector {
         Component::ID(ref id) => {
             element.has_id(id, context.shared.classes_and_ids_case_sensitivity())
         },
@@ -1042,7 +1165,7 @@ where
         },
         Component::Part(ref parts) => matches_part(element, parts, &mut context.shared),
         Component::Slotted(ref selector) => {
-            matches_slotted(element, selector, &mut context.shared, rightmost)
+            return matches_slotted(element, selector, &mut context.shared, rightmost);
         },
         Component::PseudoElement(ref pseudo) => {
             element.match_pseudo_element(pseudo, context.shared)
@@ -1061,7 +1184,7 @@ where
                     !element.is_link() &&
                     hover_and_active_quirk_applies(iter, context.shared, context.rightmost)
                 {
-                    return false;
+                    return KleeneValue::False;
                 }
             }
             element.match_non_ts_pseudo_class(pc, &mut context.shared)
@@ -1074,32 +1197,43 @@ where
             element.is_empty()
         },
         Component::Host(ref selector) => {
-            matches_host(element, selector.as_ref(), &mut context.shared, rightmost)
+            return matches_host(element, selector.as_ref(), &mut context.shared, rightmost);
         },
         Component::ParentSelector | Component::Scope => match context.shared.scope_element {
             Some(ref scope_element) => element.opaque() == *scope_element,
             None => element.is_root(),
         },
         Component::Nth(ref nth_data) => {
-            matches_generic_nth_child(element, context.shared, nth_data, &[], rightmost)
+            return matches_generic_nth_child(element, context.shared, nth_data, &[], rightmost);
         },
-        Component::NthOf(ref nth_of_data) => context.shared.nest(|context| {
-            matches_generic_nth_child(
-                element,
-                context,
-                nth_of_data.nth_data(),
-                nth_of_data.selectors(),
-                rightmost,
-            )
-        }),
-        Component::Is(ref list) | Component::Where(ref list) => context.shared.nest(|context| {
-            matches_complex_selector_list(list.slice(), element, context, rightmost)
-        }),
-        Component::Negation(ref list) => context.shared.nest_for_negation(|context| {
-            !matches_complex_selector_list(list.slice(), element, context, rightmost)
-        }),
+        Component::NthOf(ref nth_of_data) => {
+            return context.shared.nest(|context| {
+                matches_generic_nth_child(
+                    element,
+                    context,
+                    nth_of_data.nth_data(),
+                    nth_of_data.selectors(),
+                    rightmost,
+                )
+            })
+        },
+        Component::Is(ref list) | Component::Where(ref list) => {
+            return context.shared.nest(|context| {
+                matches_complex_selector_list(list.slice(), element, context, rightmost)
+            })
+        },
+        Component::Negation(ref list) => {
+            return context.shared.nest_for_negation(|context| {
+                !matches_complex_selector_list(list.slice(), element, context, rightmost)
+            })
+        },
         Component::Has(ref relative_selectors) => {
-            match_relative_selectors(relative_selectors, element, context.shared, rightmost)
+            return match_relative_selectors(
+                relative_selectors,
+                element,
+                context.shared,
+                rightmost,
+            );
         },
         Component::Combinator(_) => unsafe {
             debug_unreachable!("Shouldn't try to selector-match combinators")
@@ -1110,7 +1244,7 @@ where
             anchor.map_or(true, |a| a == element.opaque())
         },
         Component::Invalid(..) => false,
-    }
+    })
 }
 
 #[inline(always)]
@@ -1152,19 +1286,23 @@ fn matches_generic_nth_child<E>(
     nth_data: &NthSelectorData,
     selectors: &[Selector<E::Impl>],
     rightmost: SubjectOrPseudoElement,
-) -> bool
+) -> KleeneValue
 where
     E: Element,
 {
     if element.ignores_nth_child_selectors() {
-        return false;
+        return KleeneValue::False;
     }
     let has_selectors = !selectors.is_empty();
-    let selectors_match =
-        !has_selectors || matches_complex_selector_list(selectors, element, context, rightmost);
-    if context.matching_for_invalidation() {
+    let selectors_match = !has_selectors ||
+        matches_complex_selector_list(selectors, element, context, rightmost).to_bool(true);
+    if let Some(may_return_unknown) = context.matching_for_invalidation_comparison() {
         // Skip expensive indexing math in invalidation.
-        return selectors_match && !context.in_negation();
+        return if selectors_match && may_return_unknown {
+            KleeneValue::Unknown
+        } else {
+            KleeneValue::from(selectors_match && !context.in_negation())
+        };
     }
 
     let NthSelectorData { ty, a, b, .. } = *nth_data;
@@ -1174,18 +1312,23 @@ where
             !has_selectors,
             ":only-child and :only-of-type cannot have a selector list!"
         );
-        return matches_generic_nth_child(
-            element,
-            context,
-            &NthSelectorData::first(is_of_type),
-            selectors,
-            rightmost,
-        ) && matches_generic_nth_child(
-            element,
-            context,
-            &NthSelectorData::last(is_of_type),
-            selectors,
-            rightmost,
+        return KleeneValue::from(
+            matches_generic_nth_child(
+                element,
+                context,
+                &NthSelectorData::first(is_of_type),
+                selectors,
+                rightmost,
+            )
+            .to_bool(true) &&
+                matches_generic_nth_child(
+                    element,
+                    context,
+                    &NthSelectorData::last(is_of_type),
+                    selectors,
+                    rightmost,
+                )
+                .to_bool(true),
         );
     }
 
@@ -1212,7 +1355,7 @@ where
     }
 
     if !selectors_match {
-        return false;
+        return KleeneValue::False;
     }
 
     // :first/last-child are rather trivial to match, don't bother with the
@@ -1223,7 +1366,8 @@ where
         } else {
             element.prev_sibling_element()
         }
-        .is_none();
+        .is_none()
+        .into();
     }
 
     // Lookup or compute the index.
@@ -1269,6 +1413,7 @@ where
             None /* a == 0 */ => an == 0,
         },
     }
+    .into()
 }
 
 #[inline]
@@ -1303,7 +1448,7 @@ where
             let matches = if is_of_type {
                 element.is_same_type(&curr)
             } else if !selectors.is_empty() {
-                matches_complex_selector_list(selectors, &curr, context, rightmost)
+                matches_complex_selector_list(selectors, &curr, context, rightmost).to_bool(true)
             } else {
                 true
             };
@@ -1334,7 +1479,7 @@ where
         let matches = if is_of_type {
             element.is_same_type(&curr)
         } else if !selectors.is_empty() {
-            matches_complex_selector_list(selectors, &curr, context, rightmost)
+            matches_complex_selector_list(selectors, &curr, context, rightmost).to_bool(true)
         } else {
             true
         };

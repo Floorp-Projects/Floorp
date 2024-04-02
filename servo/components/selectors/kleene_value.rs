@@ -35,6 +35,45 @@ impl KleeneValue {
             Self::Unknown => unknown,
         }
     }
+
+    /// Return true if any result of f() is true. Otherwise, return the strongest value seen.
+    /// Returns false if empty, like that of `Iterator`.
+    pub fn any<T>(
+        iter: impl Iterator<Item = T>,
+        f: impl FnMut(T) -> Self,
+    ) -> Self {
+        Self::any_value(iter, Self::True, Self::False, f)
+    }
+
+    /// Return false if any results of f() is false. Otherwise, return the strongest value seen.
+    /// Returns true if empty, opposite of `Iterator`.
+    pub fn any_false<T>(
+        iter: impl Iterator<Item = T>,
+        f: impl FnMut(T) -> Self,
+    ) -> Self {
+        Self::any_value(iter, Self::False, Self::True, f)
+    }
+
+    fn any_value<T>(
+        iter: impl Iterator<Item = T>,
+        value: Self,
+        on_empty: Self,
+        mut f: impl FnMut(T) -> Self,
+    ) -> Self {
+        let mut result = None;
+        for item in iter {
+            let r = f(item);
+            if r == value {
+                return r;
+            }
+            if let Some(v) = result.as_mut() {
+                *v = *v & r;
+            } else {
+                result = Some(r);
+            }
+        }
+        result.unwrap_or(on_empty)
+    }
 }
 
 impl std::ops::Not for KleeneValue {
