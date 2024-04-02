@@ -633,6 +633,7 @@ pub struct Shaders {
     ps_split_composite: LazilyCompiledShader,
     pub ps_quad_textured: LazilyCompiledShader,
     pub ps_quad_radial_gradient: LazilyCompiledShader,
+    pub ps_quad_conic_gradient: LazilyCompiledShader,
     pub ps_mask: LazilyCompiledShader,
     pub ps_mask_fast: LazilyCompiledShader,
     pub ps_clear: LazilyCompiledShader,
@@ -899,6 +900,16 @@ impl Shaders {
             profile,
         )?;
 
+        let ps_quad_conic_gradient = LazilyCompiledShader::new(
+            ShaderKind::Primitive,
+            "ps_quad_conic_gradient",
+            &[],
+            device,
+            options.precache_flags,
+            &shader_list,
+            profile,
+        )?;
+
         let ps_split_composite = LazilyCompiledShader::new(
             ShaderKind::Primitive,
             "ps_split_composite",
@@ -1134,6 +1145,7 @@ impl Shaders {
             ps_text_run_dual_source,
             ps_quad_textured,
             ps_quad_radial_gradient,
+            ps_quad_conic_gradient,
             ps_mask,
             ps_mask_fast,
             ps_split_composite,
@@ -1173,6 +1185,7 @@ impl Shaders {
         match pattern {
             PatternKind::ColorOrTexture => &mut self.ps_quad_textured,
             PatternKind::RadialGradient => &mut self.ps_quad_radial_gradient,
+            PatternKind::ConicGradient => &mut self.ps_quad_conic_gradient,
             PatternKind::Mask => unreachable!(),
         }
     }
@@ -1190,6 +1203,9 @@ impl Shaders {
             }
             BatchKind::Quad(PatternKind::RadialGradient) => {
                 &mut self.ps_quad_radial_gradient
+            }
+            BatchKind::Quad(PatternKind::ConicGradient) => {
+                &mut self.ps_quad_conic_gradient
             }
             BatchKind::Quad(PatternKind::Mask) => {
                 unreachable!();
@@ -1322,6 +1338,7 @@ impl Shaders {
         self.ps_split_composite.deinit(device);
         self.ps_quad_textured.deinit(device);
         self.ps_quad_radial_gradient.deinit(device);
+        self.ps_quad_conic_gradient.deinit(device);
         self.ps_mask.deinit(device);
         self.ps_mask_fast.deinit(device);
         self.ps_clear.deinit(device);
