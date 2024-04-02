@@ -381,6 +381,15 @@ class WindowGlobalTargetActor extends BaseTargetActor {
     // (This is also probably meant to disappear once EFT is the only supported codepath)
     this._docShellsObserved = false;
     DevToolsUtils.executeSoon(() => this._watchDocshells());
+
+    // The `watchedByDevTools` enables gecko behavior tied to this flag, such as:
+    //  - reporting the contents of HTML loaded in the docshells,
+    //  - or capturing stacks for the network monitor.
+    //
+    // This flag can only be set on top level BrowsingContexts.
+    if (!this.browsingContext.parent) {
+      this.browsingContext.watchedByDevTools = true;
+    }
   }
 
   get docShell() {
@@ -478,6 +487,10 @@ class WindowGlobalTargetActor extends BaseTargetActor {
 
   get browsingContextID() {
     return this.browsingContext?.id;
+  }
+
+  get innerWindowId() {
+    return this.window?.windowGlobalChild.innerWindowId;
   }
 
   get browserId() {
@@ -729,6 +742,17 @@ class WindowGlobalTargetActor extends BaseTargetActor {
     if (this._touchSimulator) {
       this._touchSimulator.stop();
       this._touchSimulator = null;
+    }
+
+    // The watchedByDevTools flag is only set on top level BrowsingContext
+    // (as it then cascades to all its children),
+    // and when destroying the target, we should tell the platform we no longer
+    // observe this BrowsingContext and set this attribute to false.
+    if (
+      this.browsingContext?.watchedByDevTools &&
+      !this.browsingContext.parent
+    ) {
+      this.browsingContext.watchedByDevTools = false;
     }
 
     // Check for `docShell` availability, as it can be already gone during
@@ -1384,7 +1408,14 @@ class WindowGlobalTargetActor extends BaseTargetActor {
    */
   _restoreTargetConfiguration() {
     if (this._restoreFocus && this.browsingContext?.isActive) {
-      this.window.focus();
+      try {
+        this.window.focus();
+      } catch (e) {
+        // When closing devtools while navigating, focus() may throw NS_ERROR_XPC_SECURITY_MANAGER_VETO
+        if (e.result != Cr.NS_ERROR_XPC_SECURITY_MANAGER_VETO) {
+          throw e;
+        }
+      }
     }
   }
 
@@ -1688,17 +1719,6 @@ class DebuggerProgressListener {
       this._knownWindowIDs.set(getWindowID(win), win);
     }
 
-    // The `watchedByDevTools` enables gecko behavior tied to this flag, such as:
-    //  - reporting the contents of HTML loaded in the docshells,
-    //  - or capturing stacks for the network monitor.
-    //
-    // This flag is also set in frame-helper but in the case of the browser toolbox, we
-    // don't have the watcher enabled by default yet, and as a result we need to set it
-    // here for the parent process window global.
-    // This should be removed as part of Bug 1709529.
-    if (this._targetActor.typeName === "parentProcessTarget") {
-      docShell.browsingContext.watchedByDevTools = true;
-    }
     // Immediately enable CSS error reports on new top level docshells, if this was already enabled.
     // This is specific to MBT and WebExtension targets (so the isRootActor check).
     if (
@@ -1740,12 +1760,6 @@ class DebuggerProgressListener {
       : this._getWindowsInDocShell(docShell);
     for (const win of windows) {
       this._knownWindowIDs.delete(getWindowID(win));
-    }
-
-    // We only reset it for parent process target actor as the flag should be set in parent
-    // process, and thus is set elsewhere for other type of BrowsingContextActor.
-    if (this._targetActor.typeName === "parentProcessTarget") {
-      docShell.browsingContext.watchedByDevTools = false;
     }
   }
 

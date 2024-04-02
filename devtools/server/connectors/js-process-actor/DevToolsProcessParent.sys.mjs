@@ -24,8 +24,6 @@ export class DevToolsProcessParent extends JSProcessActorParent {
   constructor() {
     super();
 
-    this._destroyed = false;
-
     // Map of DevToolsServerConnection's used to forward the messages from/to
     // the client. The connections run in the parent process, as this code. We
     // may have more than one when there is more than one client debugging the
@@ -44,41 +42,38 @@ export class DevToolsProcessParent extends JSProcessActorParent {
     // which can be considered as a kind of id. On top of this, parent process
     // DevToolsServerConnections also have forwarding prefixes because they are
     // responsible for forwarding messages to content process connections.
-    this._connections = new Map();
 
-    this._onConnectionClosed = this._onConnectionClosed.bind(this);
     EventEmitter.decorate(this);
   }
 
-  /**
-   * Request the content process to create the ContentProcessTarget
-   */
-  instantiateTarget({
-    watcherActorID,
-    connectionPrefix,
-    sessionContext,
-    sessionData,
-  }) {
-    return this.sendQuery(
-      "DevToolsProcessParent:instantiate-already-available",
-      {
-        watcherActorID,
-        connectionPrefix,
-        sessionContext,
-        sessionData,
-      }
-    );
-  }
+  #destroyed = false;
+  #connections = new Map();
 
-  destroyTarget({ watcherActorID, isModeSwitching }) {
-    this.sendAsyncMessage("DevToolsProcessParent:destroy", {
+  /**
+   * Request the content process to create all the targets currently watched
+   * and start observing for new ones to be created later.
+   */
+  watchTargets({ watcherActorID, targetType }) {
+    return this.sendQuery("DevToolsProcessParent:watchTargets", {
       watcherActorID,
-      isModeSwitching,
+      targetType,
     });
   }
 
   /**
-   * Communicate to the content process that some data have been added.
+   * Request the content process to stop observing for currently watched targets
+   * and destroy all the currently active ones.
+   */
+  unwatchTargets({ watcherActorID, targetType, options }) {
+    this.sendAsyncMessage("DevToolsProcessParent:unwatchTargets", {
+      watcherActorID,
+      targetType,
+      options,
+    });
+  }
+
+  /**
+   * Communicate to the content process that some data have been added or set.
    */
   addOrSetSessionDataEntry({ watcherActorID, type, entries, updateType }) {
     return this.sendQuery("DevToolsProcessParent:addOrSetSessionDataEntry", {
@@ -100,7 +95,16 @@ export class DevToolsProcessParent extends JSProcessActorParent {
     });
   }
 
-  connectFromContent({ watcherActorID, forwardingPrefix, actor }) {
+  destroyWatcher({ watcherActorID }) {
+    return this.sendAsyncMessage("DevToolsProcessParent:destroyWatcher", {
+      watcherActorID,
+    });
+  }
+
+  /**
+   * Called when the content process notified us about a new target actor
+   */
+  #onTargetAvailable({ watcherActorID, forwardingPrefix, targetActorForm }) {
     const watcher = WatcherRegistry.getWatcher(watcherActorID);
 
     if (!watcher) {
@@ -110,44 +114,85 @@ export class DevToolsProcessParent extends JSProcessActorParent {
     }
     const connection = watcher.conn;
 
-    connection.on("closed", this._onConnectionClosed);
+    // If this is the first target actor for this watcher,
+    // hook up the DevToolsServerConnection which will bridge
+    // communication between the parent process DevToolsServer
+    // and the content process.
+    if (!this.#connections.get(watcher.conn.prefix)) {
+      connection.on("closed", this.#onConnectionClosed);
 
-    // Create a js-window-actor based transport.
-    const transport = new lazy.JsWindowActorTransport(
-      this,
-      forwardingPrefix,
-      "DevToolsProcessParent:packet"
-    );
-    transport.hooks = {
-      onPacket: connection.send.bind(connection),
-      onClosed() {},
-    };
-    transport.ready();
+      // Create a js-window-actor based transport.
+      const transport = new lazy.JsWindowActorTransport(
+        this,
+        forwardingPrefix,
+        "DevToolsProcessParent:packet"
+      );
+      transport.hooks = {
+        onPacket: connection.send.bind(connection),
+        onClosed() {},
+      };
+      transport.ready();
 
-    connection.setForwarding(forwardingPrefix, transport);
+      connection.setForwarding(forwardingPrefix, transport);
 
-    this._connections.set(watcher.conn.prefix, {
-      watcher,
-      connection,
-      // This prefix is the prefix of the DevToolsServerConnection, running
-      // in the content process, for which we should forward packets to, based on its prefix.
-      // While `watcher.connection` is also a DevToolsServerConnection, but from this process,
-      // the parent process. It is the one receiving Client packets and the one, from which
-      // we should forward packets from.
-      forwardingPrefix,
-      transport,
-      actor,
-    });
+      this.#connections.set(watcher.conn.prefix, {
+        watcher,
+        connection,
+        // This prefix is the prefix of the DevToolsServerConnection, running
+        // in the content process, for which we should forward packets to, based on its prefix.
+        // While `watcher.connection` is also a DevToolsServerConnection, but from this process,
+        // the parent process. It is the one receiving Client packets and the one, from which
+        // we should forward packets from.
+        forwardingPrefix,
+        transport,
+        targetActorForms: [],
+      });
+    }
 
-    watcher.notifyTargetAvailable(actor);
+    this.#connections
+      .get(watcher.conn.prefix)
+      .targetActorForms.push(targetActorForm);
+
+    watcher.notifyTargetAvailable(targetActorForm);
   }
 
-  _onConnectionClosed(status, prefix) {
-    if (this._connections.has(prefix)) {
-      const { connection } = this._connections.get(prefix);
-      this._cleanupConnection(connection);
+  /**
+   * Called when the content process notified us about a target actor that has been destroyed.
+   */
+  #onTargetDestroyed({ actors, options }) {
+    for (const { watcherActorID, targetActorForm } of actors) {
+      const watcher = WatcherRegistry.getWatcher(watcherActorID);
+      // As we instruct to destroy all targets when the watcher is destroyed,
+      // we may easily receive the target destruction notification *after*
+      // the watcher has been removed from the registry.
+      if (!watcher || watcher.isDestroyed()) {
+        continue;
+      }
+      watcher.notifyTargetDestroyed(targetActorForm, options);
+      const connectionInfo = this.#connections.get(watcher.conn.prefix);
+      if (connectionInfo) {
+        const idx = connectionInfo.targetActorForms.findIndex(
+          form => form.actor == targetActorForm.actor
+        );
+        if (idx != -1) {
+          connectionInfo.targetActorForms.splice(idx, 1);
+        }
+        // Once the last active target is removed, disconnect the DevTools transport
+        // and cleanup everything bound to this DOM Process. We will re-instantiate
+        // a new connection/transport on the next reported target actor.
+        if (!connectionInfo.targetActorForms.length) {
+          this.#cleanupConnection(connectionInfo.connection);
+        }
+      }
     }
   }
+
+  #onConnectionClosed = (status, prefix) => {
+    if (this.#connections.has(prefix)) {
+      const { connection } = this.#connections.get(prefix);
+      this.#cleanupConnection(connection);
+    }
+  };
 
   /**
    * Close and unregister a given DevToolsServerConnection.
@@ -157,30 +202,27 @@ export class DevToolsProcessParent extends JSProcessActorParent {
    * @param {boolean} options.isModeSwitching
    *        true when this is called as the result of a change to the devtools.browsertoolbox.scope pref
    */
-  async _cleanupConnection(connection, options = {}) {
-    const connectionInfo = this._connections.get(connection.prefix);
-    if (!connectionInfo) {
-      return;
-    }
-    const { forwardingPrefix, transport } = connectionInfo;
-
-    connection.off("closed", this._onConnectionClosed);
-    if (transport) {
-      // If we have a child transport, the actor has already
-      // been created. We need to stop using this transport.
-      transport.close(options);
-    }
-
-    this._connections.delete(connection.prefix);
-    if (!this._connections.size) {
-      this._destroy(options);
+  async #cleanupConnection(connection, options = {}) {
+    const watcherConnectionInfo = this.#connections.get(connection.prefix);
+    if (watcherConnectionInfo) {
+      const { forwardingPrefix, transport } = watcherConnectionInfo;
+      if (transport) {
+        // If we have a child transport, the actor has already
+        // been created. We need to stop using this transport.
+        transport.close(options);
+      }
+      // When cancelling the forwarding, one RDP event is sent to the client to purge all requests
+      // and actors related to a given prefix.
+      // Be careful that any late RDP event would be ignored by the client passed this call.
+      connection.cancelForwarding(forwardingPrefix);
     }
 
-    // When cancelling the forwarding, one RDP event is sent to the client to purge all requests
-    // and actors related to a given prefix. Do this *after* calling _destroy which will emit
-    // the target-destroyed RDP event. This helps the Watcher Front retrieve the related target front,
-    // otherwise it would be too eagerly destroyed by the purge event.
-    connection.cancelForwarding(forwardingPrefix);
+    connection.off("closed", this.#onConnectionClosed);
+
+    this.#connections.delete(connection.prefix);
+    if (!this.#connections.size) {
+      this.#destroy(options);
+    }
   }
 
   /**
@@ -190,20 +232,26 @@ export class DevToolsProcessParent extends JSProcessActorParent {
    * @param {boolean} options.isModeSwitching
    *        true when this is called as the result of a change to the devtools.browsertoolbox.scope pref
    */
-  _destroy(options) {
-    if (this._destroyed) {
+  #destroy(options) {
+    if (this.#destroyed) {
       return;
     }
-    this._destroyed = true;
+    this.#destroyed = true;
 
-    for (const { actor, connection, watcher } of this._connections.values()) {
-      watcher.notifyTargetDestroyed(actor, options);
-      this._cleanupConnection(connection, options);
+    for (const {
+      targetActorForms,
+      connection,
+      watcher,
+    } of this.#connections.values()) {
+      for (const actor of targetActorForms) {
+        watcher.notifyTargetDestroyed(actor, options);
+      }
+      this.#cleanupConnection(connection, options);
     }
   }
 
   /**
-   * Supported Queries
+   * Used by DevTools Transport to send packets to the content process.
    */
 
   sendPacket(packet, prefix) {
@@ -211,7 +259,7 @@ export class DevToolsProcessParent extends JSProcessActorParent {
   }
 
   /**
-   * JsWindowActor API
+   * JsProcessActor API
    */
 
   async sendQuery(msg, args) {
@@ -225,24 +273,43 @@ export class DevToolsProcessParent extends JSProcessActorParent {
     }
   }
 
+  /**
+   * Called by the JSProcessActor API when the content process sent us a message
+   */
   receiveMessage(message) {
     switch (message.name) {
-      case "DevToolsProcessChild:connectFromContent":
-        return this.connectFromContent(message.data);
+      case "DevToolsProcessChild:targetAvailable":
+        return this.#onTargetAvailable(message.data);
       case "DevToolsProcessChild:packet":
         return this.emit("packet-received", message);
-      case "DevToolsProcessChild:destroy":
-        for (const { form, watcherActorID } of message.data.actors) {
-          const watcher = WatcherRegistry.getWatcher(watcherActorID);
-          // As we instruct to destroy all targets when the watcher is destroyed,
-          // we may easily receive the target destruction notification *after*
-          // the watcher has been removed from the registry.
-          if (watcher) {
-            watcher.notifyTargetDestroyed(form, message.data.options);
-            this._cleanupConnection(watcher.conn, message.data.options);
-          }
+      case "DevToolsProcessChild:targetDestroyed":
+        return this.#onTargetDestroyed(message.data);
+      case "DevToolsProcessChild:bf-cache-navigation-pageshow": {
+        const browsingContext = BrowsingContext.get(
+          message.data.browsingContextId
+        );
+        for (const watcherActor of WatcherRegistry.getWatchersForBrowserId(
+          browsingContext.browserId
+        )) {
+          watcherActor.emit("bf-cache-navigation-pageshow", {
+            windowGlobal: browsingContext.currentWindowGlobal,
+          });
         }
         return null;
+      }
+      case "DevToolsProcessChild:bf-cache-navigation-pagehide": {
+        const browsingContext = BrowsingContext.get(
+          message.data.browsingContextId
+        );
+        for (const watcherActor of WatcherRegistry.getWatchersForBrowserId(
+          browsingContext.browserId
+        )) {
+          watcherActor.emit("bf-cache-navigation-pagehide", {
+            windowGlobal: browsingContext.currentWindowGlobal,
+          });
+        }
+        return null;
+      }
       default:
         throw new Error(
           "Unsupported message in DevToolsProcessParent: " + message.name
@@ -250,7 +317,12 @@ export class DevToolsProcessParent extends JSProcessActorParent {
     }
   }
 
+  /**
+   * Called by the JSProcessActor API when this content process is destroyed.
+   */
   didDestroy() {
-    this._destroy();
+    this.#destroy();
   }
 }
+
+export class BrowserToolboxDevToolsProcessParent extends DevToolsProcessParent {}
