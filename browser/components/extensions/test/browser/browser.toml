@@ -46,8 +46,8 @@ support-files = [
   "empty.xpi",
   "../../../../../toolkit/components/extensions/test/mochitest/head_webrequest.js",
   "../../../../../toolkit/components/extensions/test/mochitest/redirection.sjs",
-  "../../../../../toolkit/components/reader/test/readerModeNonArticle.html",
-  "../../../../../toolkit/components/reader/test/readerModeArticle.html",
+  "../../../../../toolkit/components/reader/tests/browser/readerModeNonArticle.html",
+  "../../../../../toolkit/components/reader/tests/browser/readerModeArticle.html",
 ]
 skip-if = ["os == 'linux' && os_version == '18.04' && asan"] # Bug 1721945 - Software WebRender
 

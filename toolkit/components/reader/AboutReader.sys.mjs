@@ -8,6 +8,7 @@ import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
 let gScrollPositions = new Map();
+let lastSelectedTheme = "auto";
 
 ChromeUtils.defineESModuleGetters(lazy, {
   AsyncPrefs: "resource://gre/modules/AsyncPrefs.sys.mjs",
@@ -26,10 +27,31 @@ ChromeUtils.defineLazyGetter(
 );
 
 const COLORSCHEME_L10N_IDS = {
-  light: "about-reader-color-scheme-light",
-  dark: "about-reader-color-scheme-dark",
-  sepia: "about-reader-color-scheme-sepia",
-  auto: "about-reader-color-scheme-auto",
+  auto: "about-reader-color-theme-auto",
+  light: "about-reader-color-theme-light",
+  dark: "about-reader-color-theme-dark",
+  sepia: "about-reader-color-theme-sepia",
+  contrast: "about-reader-color-theme-contrast",
+  gray: "about-reader-color-theme-gray",
+  custom: "about-reader-color-theme-custom",
+};
+
+const CUSTOM_THEME_COLOR_INPUTS = [
+  "foreground",
+  "background",
+  "unvisited-links",
+  "visited-links",
+  "selection-highlight",
+];
+
+const COLORS_MENU_TABS = ["fxtheme", "customtheme"];
+
+const DEFAULT_COLORS = {
+  background: "#FFFFFF",
+  foreground: "#14151A",
+  "unvisited-links": "#0060DF",
+  "visited-links": "#321C64",
+  "selection-highlight": "#FFFFCC",
 };
 
 Services.telemetry.setEventRecordingEnabled("readermode", true);
@@ -147,9 +169,27 @@ export var AboutReader = function (
   // we're ready for any external setup, send a signal for that.
   this._actor.sendAsyncMessage("Reader:OnSetup");
 
-  let colorSchemeValues = JSON.parse(
+  // set up segmented tab controls for colors menu.
+  this._setupColorsTabs(
+    COLORS_MENU_TABS,
+    this._handleColorsTabClick.bind(this)
+  );
+
+  // fetch color scheme values from prefs.
+  let colorsMenuColorSchemeValues = JSON.parse(
     Services.prefs.getCharPref("reader.color_scheme.values")
   );
+  // remove contrast and gray options from regular menu.
+  let colorSchemeValues = [...colorsMenuColorSchemeValues];
+  colorSchemeValues.splice(colorSchemeValues.length - 2, 2);
+
+  let colorsMenuColorSchemeOptions = colorsMenuColorSchemeValues.map(value => ({
+    l10nId: COLORSCHEME_L10N_IDS[value],
+    groupName: "color-scheme",
+    value,
+    itemClass: value + "-button",
+  }));
+
   let colorSchemeOptions = colorSchemeValues.map(value => ({
     l10nId: COLORSCHEME_L10N_IDS[value],
     groupName: "color-scheme",
@@ -158,12 +198,33 @@ export var AboutReader = function (
   }));
   let colorScheme = Services.prefs.getCharPref("reader.color_scheme");
 
-  this._setupSegmentedButton(
-    "color-scheme-buttons",
-    colorSchemeOptions,
-    colorScheme,
-    this._setColorSchemePref.bind(this)
-  );
+  if (Services.prefs.getBoolPref("reader.colors_menu.enabled", false)) {
+    doc.getElementById("regular-color-scheme").hidden = true;
+    doc.getElementById("custom-colors-color-scheme").hidden = false;
+    this._setupSegmentedButton(
+      "colors-menu-color-scheme-buttons",
+      colorsMenuColorSchemeOptions,
+      colorScheme,
+      this._setColorSchemePref.bind(this)
+    );
+    this._setupCustomColors(
+      CUSTOM_THEME_COLOR_INPUTS,
+      "custom-colors-selection",
+      "about-reader-custom-colors"
+    );
+    this._setupButton(
+      "custom-colors-reset-button",
+      this._resetCustomColors.bind(this)
+    );
+  } else {
+    this._setupSegmentedButton(
+      "color-scheme-buttons",
+      colorSchemeOptions,
+      colorScheme,
+      this._setColorSchemePref.bind(this)
+    );
+  }
+
   this._setColorSchemePref(colorScheme);
 
   let fontTypeOptions = [
@@ -738,19 +799,43 @@ AboutReader.prototype = {
       this._colorScheme = "hcm";
     }
 
+    if (this._colorScheme == "custom") {
+      const colorInputs = this._doc.querySelectorAll("color-input");
+      colorInputs.forEach(input => {
+        // Set document body styles to pref values.
+        let property = input.getAttribute("prop-name");
+        let pref = `reader.custom_colors.${property}`;
+        let customColor = Services.prefs.getStringPref(pref, "");
+        // If customColor is truthy, set the value from pref.
+        if (customColor) {
+          let cssProp = `--custom-theme-${property}`;
+          this._doc.body.style.setProperty(cssProp, customColor);
+        }
+      });
+    }
+
     bodyClasses.add(this._colorScheme);
   },
 
-  // Pref values include "dark", "light", "sepia", and "auto"
-  _setColorSchemePref(colorSchemePref) {
+  // Pref values include "auto", "dark", "light", "sepia",
+  // "gray", "contrast", and "custom"
+  _setColorSchemePref(colorSchemePref, fromInputEvent = false) {
+    // The input event for the last selected segmented button is fired
+    // upon loading a reader article in the same session. To prevent it
+    // from overwriting custom colors, we return false.
+    if (this._colorScheme == "custom" && fromInputEvent) {
+      lastSelectedTheme = colorSchemePref;
+      return false;
+    }
     this._setColorScheme(colorSchemePref);
 
     lazy.AsyncPrefs.set("reader.color_scheme", colorSchemePref);
+    return true;
   },
 
   _setFontType(newFontType) {
     if (this._fontType === newFontType) {
-      return;
+      return false;
     }
 
     let bodyClasses = this._doc.body.classList;
@@ -763,6 +848,8 @@ AboutReader.prototype = {
     bodyClasses.add(this._fontType);
 
     lazy.AsyncPrefs.set("reader.font_type", this._fontType);
+
+    return true;
   },
 
   async _loadArticle(docContentType = "document") {
@@ -1094,14 +1181,17 @@ AboutReader.prototype = {
             label.removeAttribute("checked");
           }
 
-          aEvent.target.nextElementSibling.setAttribute("checked", "true");
-          callback(option.value);
+          let setOption = callback(option.value, true);
+          if (setOption) {
+            aEvent.target.setAttribute("checked", "true");
+            aEvent.target.nextElementSibling.setAttribute("checked", "true");
+          }
         },
         true
       );
 
       if (option.value === initialValue) {
-        radioButton.checked = true;
+        radioButton.setAttribute("checked", "true");
         item.setAttribute("checked", "true");
       }
     }
@@ -1122,6 +1212,121 @@ AboutReader.prototype = {
       },
       true
     );
+  },
+
+  _handleColorsTabClick(option) {
+    let doc = this._doc;
+    if (option == "customtheme") {
+      this._setColorSchemePref("custom");
+      lazy.AsyncPrefs.set("reader.color_scheme", "custom");
+
+      // Store the last selected preset theme button.
+      const colorSchemePresets = doc.querySelector(
+        ".colors-menu-color-scheme-buttons"
+      );
+      const labels = colorSchemePresets.querySelectorAll("label");
+      labels.forEach(label => {
+        if (label.hasAttribute("checked")) {
+          lastSelectedTheme = label.className.split("-")[0];
+        }
+      });
+    }
+    if (option == "fxtheme") {
+      this._setColorSchemePref(lastSelectedTheme);
+      lazy.AsyncPrefs.set("reader.color_scheme", lastSelectedTheme);
+      // set the last selected button to checked.
+      const colorSchemePresets = doc.querySelector(
+        ".colors-menu-color-scheme-buttons"
+      );
+      const labels = colorSchemePresets.querySelectorAll("label");
+      labels.forEach(label => {
+        if (label.className == `${lastSelectedTheme}-button`) {
+          label.setAttribute("checked", "true");
+          label.previousElementSibling.setAttribute("checked", "true");
+        }
+      });
+    }
+  },
+
+  _setupColorsTabs(options, callback) {
+    let doc = this._doc;
+    let colorScheme = Services.prefs.getCharPref("reader.color_scheme");
+    for (let option of options) {
+      let tabButton = doc.getElementById(`tabs-deck-button-${option}`);
+      // Open custom theme tab if color scheme is set to custom.
+      if (option == "customtheme" && colorScheme == "custom") {
+        tabButton.click();
+      }
+      tabButton.addEventListener(
+        "click",
+        function (aEvent) {
+          if (!aEvent.isTrusted) {
+            return;
+          }
+
+          callback(option);
+        },
+        true
+      );
+    }
+  },
+
+  _setupColorInput(prop) {
+    let doc = this._doc;
+    let input = doc.createElement("color-input");
+    input.setAttribute("prop-name", prop);
+    let labelL10nId = `about-reader-custom-colors-${prop}`;
+    input.setAttribute("data-l10n-id", labelL10nId);
+
+    let pref = `reader.custom_colors.${prop}`;
+    let customColor = Services.prefs.getStringPref(pref, "");
+    // Set the swatch color from prefs if one has been set.
+    if (customColor) {
+      input.setAttribute("color", customColor);
+    } else {
+      let defaultColor = DEFAULT_COLORS[prop];
+      input.setAttribute("color", defaultColor);
+    }
+
+    // Attach event listener to update the pref and page colors on input.
+    input.addEventListener("color-picked", e => {
+      const cssPropToUpdate = `--custom-theme-${prop}`;
+      this._doc.body.style.setProperty(cssPropToUpdate, e.detail);
+
+      const prefToUpdate = `reader.custom_colors.${prop}`;
+      lazy.AsyncPrefs.set(prefToUpdate, e.detail);
+    });
+
+    return input;
+  },
+
+  _setupCustomColors(options, id) {
+    let doc = this._doc;
+    const list = doc.getElementsByClassName(id)[0];
+
+    for (let option of options) {
+      let listItem = doc.createElement("li");
+      let colorInput = this._setupColorInput(option);
+      listItem.appendChild(colorInput);
+      list.appendChild(listItem);
+    }
+  },
+
+  _resetCustomColors() {
+    // Need to reset prefs, page colors, and color inputs.
+    const colorInputs = this._doc.querySelectorAll("color-input");
+    colorInputs.forEach(input => {
+      let property = input.getAttribute("prop-name");
+      let pref = `reader.custom_colors.${property}`;
+      lazy.AsyncPrefs.set(pref, "");
+
+      // Set css props to empty strings so they use fallback value.
+      let cssProp = `--custom-theme-${property}`;
+      this._doc.body.style.setProperty(cssProp, "");
+
+      let defaultColor = DEFAULT_COLORS[property];
+      input.setAttribute("color", defaultColor);
+    });
   },
 
   _toggleDropdownClicked(event) {

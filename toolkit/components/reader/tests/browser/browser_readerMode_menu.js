@@ -41,28 +41,34 @@ add_task(async function () {
           dispatchMouseEvent(win, target, "click");
         }
 
+        async function testOpenCloseDropdown(target) {
+          let button = doc.querySelector(`.${target}-button`);
+
+          let dropdown = doc.querySelector(`.${target}-dropdown`);
+          ok(!dropdown.classList.contains("open"), "dropdown is closed");
+
+          simulateClick(button);
+          ok(dropdown.classList.contains("open"), "dropdown is open");
+
+          // simulate clicking on the article title to close the dropdown
+          let title = doc.querySelector(".reader-title");
+          simulateClick(title);
+          ok(!dropdown.classList.contains("open"), "dropdown is closed");
+
+          // reopen the dropdown
+          simulateClick(button);
+          ok(dropdown.classList.contains("open"), "dropdown is open");
+
+          // now click on the button again to close it
+          simulateClick(button);
+          ok(!dropdown.classList.contains("open"), "dropdown is closed");
+        }
+
         let doc = content.document;
         let win = content.window;
-        let styleButton = doc.querySelector(".style-button");
 
-        let styleDropdown = doc.querySelector(".style-dropdown");
-        ok(!styleDropdown.classList.contains("open"), "dropdown is closed");
-
-        simulateClick(styleButton);
-        ok(styleDropdown.classList.contains("open"), "dropdown is open");
-
-        // simulate clicking on the article title to close the dropdown
-        let title = doc.querySelector("h1");
-        simulateClick(title);
-        ok(!styleDropdown.classList.contains("open"), "dropdown is closed");
-
-        // reopen the dropdown
-        simulateClick(styleButton);
-        ok(styleDropdown.classList.contains("open"), "dropdown is open");
-
-        // now click on the button again to close it
-        simulateClick(styleButton);
-        ok(!styleDropdown.classList.contains("open"), "dropdown is closed");
+        testOpenCloseDropdown("style");
+        testOpenCloseDropdown("colors");
       });
     }
   );

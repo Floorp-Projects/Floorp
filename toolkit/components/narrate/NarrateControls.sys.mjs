@@ -38,7 +38,7 @@ export function NarrateControls(win, languagePromise) {
   toggleButton.dataset.telemetryId = "reader-listen";
   let tip = win.document.createElement("span");
   let shortcutNarrateKey = gStrings.GetStringFromName("narrate-key-shortcut");
-  let labelText = gStrings.formatStringFromName("listen-label", [
+  let labelText = gStrings.formatStringFromName("read-aloud-label", [
     shortcutNarrateKey,
   ]);
   tip.textContent = labelText;
@@ -64,10 +64,6 @@ export function NarrateControls(win, languagePromise) {
   let narrateVoices = win.document.createElement("div");
   narrateVoices.className = "narrate-row narrate-voices";
   dropdownList.appendChild(narrateVoices);
-
-  let dropdownArrow = win.document.createElement("div");
-  dropdownArrow.className = "dropdown-arrow";
-  dropdownList.appendChild(dropdownArrow);
 
   let narrateSkipPrevious = win.document.createElement("button");
   narrateSkipPrevious.className = "narrate-skip-previous";

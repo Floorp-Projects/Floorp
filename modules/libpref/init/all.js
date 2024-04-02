@@ -3569,7 +3569,19 @@ pref("reader.line_height", 4);
 pref("reader.color_scheme", "auto");
 
 // Color scheme values available in reader mode UI.
-pref("reader.color_scheme.values", "[\"light\",\"dark\",\"sepia\",\"auto\"]");
+pref("reader.color_scheme.values", "[\"auto\",\"light\",\"dark\",\"sepia\",\"contrast\",\"gray\"]");
+
+// Determines if updated color theme menu is enabled in reader mode.
+pref("reader.colors_menu.enabled", false);
+
+// The custom color scheme options in reader colors menu.
+pref("reader.custom_colors.foreground", "");
+pref("reader.custom_colors.background", "");
+
+pref("reader.custom_colors.unvisited-links", "");
+pref("reader.custom_colors.visited-links", "");
+
+pref("reader.custom_colors.selection-highlight", "");
 
 // The font type in reader (sans-serif, serif)
 pref("reader.font_type", "sans-serif");

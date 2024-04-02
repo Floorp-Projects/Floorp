@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>ColorInput Tests</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="module" src="chrome://global/content/reader/color-input.mjs"></script>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: block">
+  <color-input color="#ffffff" prop-name="test-prop" data-l10n-id="color-input-test-label"></color-input>
+</div>
+<pre id="test">
+  <script class="testbody" type="application/javascript">
+    add_task(async function testColorInput() {
+      const colorInput = document.querySelector("color-input");
+      ok(colorInput, "color input element is rendered");
+
+      let input = colorInput.shadowRoot.querySelector("input");
+      is(input.value, "#ffffff", "color input has the correct initial value");
+    });
+    add_task(async function testColorInputEvents() {
+      const colorInput = document.querySelector("color-input");
+      let input = colorInput.shadowRoot.querySelector("input");
+
+      const pickedColor = new Promise((resolve) => {
+      colorInput.addEventListener("color-picked", (event) => resolve(event.detail), { once: true });
+      });
+      input.value = "#0000ff";
+      input.dispatchEvent(new Event("input"));
+      let color = await pickedColor;
+      is(color, "#0000ff", "color-picked event dispatches on input");
+    });
+  </script>
+</pre>
+</body>
+</html>
