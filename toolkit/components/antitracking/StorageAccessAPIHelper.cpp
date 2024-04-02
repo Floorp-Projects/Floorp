@@ -475,6 +475,7 @@ StorageAccessAPIHelper::CompleteAllowAccessForOnParentProcess(
       [aParentContext, aTopLevelWindowId, trackingOrigin, trackingPrincipal,
        aCookieBehavior,
        aReason](int aAllowMode) -> RefPtr<StorageAccessPermissionGrantPromise> {
+    MOZ_ASSERT(!aParentContext->IsInProcess());
     // We don't have the window, send an IPC to the content process that
     // owns the parent window. But there is a special case, for window.open,
     // we'll return to the content process we need to inform when this
@@ -1059,7 +1060,12 @@ StorageAccessAPIHelper::CheckSameSiteCallingContextDecidesStorageAccessAPI(
     }
   }
 
-  if (AntiTrackingUtils::IsThirdPartyDocument(aDocument)) {
+  nsIChannel* chan = aDocument->GetChannel();
+  if (!chan) {
+    return Some(false);
+  }
+  nsCOMPtr<nsILoadInfo> loadInfo = chan->LoadInfo();
+  if (loadInfo->GetIsThirdPartyContextToTopWindow()) {
     return Some(false);
   }
 
