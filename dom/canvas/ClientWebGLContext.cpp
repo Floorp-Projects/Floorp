@@ -548,41 +548,42 @@ Maybe<layers::SurfaceDescriptor> ClientWebGLContext::GetFrontBuffer(
   const auto& child = mNotLost->outOfProcess;
   child->FlushPendingCmds();
 
-  Maybe<layers::SurfaceDescriptor> ret;
+  // Always synchronously get the front buffer if not using a remote texture.
+  bool needsSync = true;
+  Maybe<layers::SurfaceDescriptor> syncDesc;
+  Maybe<layers::SurfaceDescriptor> remoteDesc;
   auto& info = child->GetFlushedCmdInfo();
 
   // If valid remote texture data was set for async present, then use it.
   if (!fb && !vr && mRemoteTextureOwnerId && mLastRemoteTextureId) {
     const auto tooManyFlushes = 10;
     // If there are many flushed cmds, force synchronous IPC to avoid too many
-    // pending ipc messages.
-    if (XRE_IsParentProcess() ||
-        gfx::gfxVars::WebglOopAsyncPresentForceSync() ||
-        info.flushesSinceLastCongestionCheck > tooManyFlushes) {
-      // Request the front buffer from IPDL to cause a sync, even though we
-      // will continue to use the remote texture descriptor after.
-      (void)child->SendGetFrontBuffer(fb ? fb->mId : 0, vr, &ret);
-    }
-    // Reset flushesSinceLastCongestionCheck
-    info.flushesSinceLastCongestionCheck = 0;
-    info.congestionCheckGeneration++;
+    // pending ipc messages. Otherwise don't sync for other cases to avoid any
+    // performance penalty.
+    needsSync = XRE_IsParentProcess() ||
+                gfx::gfxVars::WebglOopAsyncPresentForceSync() ||
+                info.flushesSinceLastCongestionCheck > tooManyFlushes;
 
-    // If the actor is destroyed, don't send over invalid texture owner id.
-    if (!child->CanSend()) {
-      return {};
+    // Only send over a remote texture descriptor if the WebGLChild actor is
+    // alive to ensure the remote texture id is valid.
+    if (child->CanSend()) {
+      remoteDesc = Some(layers::SurfaceDescriptorRemoteTexture(
+          *mLastRemoteTextureId, *mRemoteTextureOwnerId));
     }
-
-    return Some(layers::SurfaceDescriptorRemoteTexture(*mLastRemoteTextureId,
-                                                       *mRemoteTextureOwnerId));
   }
 
-  if (!child->SendGetFrontBuffer(fb ? fb->mId : 0, vr, &ret)) return {};
+  if (needsSync &&
+      !child->SendGetFrontBuffer(fb ? fb->mId : 0, vr, &syncDesc)) {
+    return {};
+  }
 
   // Reset flushesSinceLastCongestionCheck
   info.flushesSinceLastCongestionCheck = 0;
   info.congestionCheckGeneration++;
 
-  return ret;
+  // If there is a remote texture descriptor, use that preferentially, as the
+  // sync front buffer descriptor was only created to force a sync first.
+  return remoteDesc ? remoteDesc : syncDesc;
 }
 
 Maybe<layers::SurfaceDescriptor> ClientWebGLContext::PresentFrontBuffer(
