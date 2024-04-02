@@ -4,6 +4,13 @@
 
 "use strict";
 
+/* import-globals-from ../../../mochitest/role.js */
+/* import-globals-from ../../../mochitest/states.js */
+loadScripts(
+  { name: "role.js", dir: MOCHITESTS_DIR },
+  { name: "states.js", dir: MOCHITESTS_DIR }
+);
+
 /* eslint-disable camelcase */
 const ExpandCollapseState_Collapsed = 0;
 const ExpandCollapseState_Expanded = 1;
@@ -258,5 +265,30 @@ addUiaTask(
     }
 
     await testPatternAbsent("button", "ExpandCollapse");
+  }
+);
+
+/**
+ * Test the ScrollItem pattern.
+ */
+addUiaTask(
+  `
+<hr style="height: 100vh;">
+<button id="button">button</button>
+  `,
+  async function testScrollItem(browser, docAcc) {
+    await definePyVar("doc", `getDocUia()`);
+    await assignPyVarToUiaWithId("button");
+    await definePyVar("pattern", `getUiaPattern(button, "ScrollItem")`);
+    ok(await runPython(`bool(pattern)`), "button has ScrollItem pattern");
+    const button = findAccessibleChildByID(docAcc, "button");
+    testStates(button, STATE_OFFSCREEN);
+    info("Calling ScrollIntoView on button");
+    // UIA doesn't have an event for this.
+    let scrolled = waitForEvent(EVENT_SCROLLING_END, docAcc);
+    await runPython(`pattern.ScrollIntoView()`);
+    await scrolled;
+    ok(true, "Document scrolled");
+    testStates(button, 0, 0, STATE_OFFSCREEN);
   }
 );
