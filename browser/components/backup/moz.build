@@ -7,6 +7,9 @@
 with Files("**"):
     BUG_COMPONENT = ("Firefox", "Profiles")
 
+if CONFIG["NIGHTLY_BUILD"]:
+    JAR_MANIFESTS += ["jar.mn"]
+
 SPHINX_TREES["docs"] = "docs"
 
 XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.toml"]
