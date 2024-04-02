@@ -192,9 +192,13 @@ def create_maven_archive(topobjdir):
     gradle_folder = os.path.join(topobjdir, "gradle")
     maven_folder = os.path.join(gradle_folder, "maven")
 
-    with tarfile.open(
-        os.path.join(gradle_folder, "target.maven.tar.xz"), "w|xz"
-    ) as tar:
+    # Create the archive, with no compression: The archive contents are large
+    # files which cannot be significantly compressed; attempting to compress
+    # the archive is usually expensive in time and results in minimal
+    # reduction in size.
+    # Even though the archive is not compressed, use the .xz file extension
+    # so that the taskcluster worker also skips compression.
+    with tarfile.open(os.path.join(gradle_folder, "target.maven.tar.xz"), "w") as tar:
         for abs_path in get_maven_archive_paths(maven_folder):
             tar.add(
                 abs_path,
