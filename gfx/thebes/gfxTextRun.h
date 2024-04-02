@@ -122,7 +122,7 @@ class gfxTextRun : public gfxShapedText {
   }
 
   // Returns a gfxShapedText::CompressedGlyph::FLAG_BREAK_TYPE_* value
-  // as defined in gfxFont.h (may be NONE, NORMAL or HYPHEN).
+  // as defined in gfxFont.h (may be NONE, NORMAL, HYPHEN or EMERGENCY_WRAP).
   uint8_t CanBreakBefore(uint32_t aPos) const {
     MOZ_ASSERT(aPos < GetLength());
     return mCharacterGlyphs[aPos].CanBreakBefore();
