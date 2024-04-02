@@ -44,12 +44,6 @@ struct ID3D11Device;
 
 namespace mozilla {
 
-// When defined, we track which pool the tile came from and test for
-// any inconsistencies.  This can be defined in release build as well.
-#ifdef DEBUG
-#  define GFX_DEBUG_TRACK_CLIENTS_IN_POOL 1
-#endif
-
 namespace layers {
 
 class AndroidHardwareBufferTextureData;
@@ -68,9 +62,6 @@ class GPUVideoTextureData;
 class TextureClient;
 class ITextureClientRecycleAllocator;
 class SharedSurfaceTextureData;
-#ifdef GFX_DEBUG_TRACK_CLIENTS_IN_POOL
-class TextureClientPool;
-#endif
 class TextureForwarder;
 struct RemoteTextureOwnerId;
 
@@ -696,11 +687,6 @@ class TextureClient : public AtomicRefCountedWithFinalize<TextureClient> {
   static void TextureClientRecycleCallback(TextureClient* aClient,
                                            void* aClosure);
 
-  // Internal helpers for creating texture clients using the actual forwarder
-  // instead of KnowsCompositor. TextureClientPool uses these to let it cache
-  // texture clients per-process instead of per ShadowLayerForwarder, but
-  // everyone else should use the public functions instead.
-  friend class TextureClientPool;
   static already_AddRefed<TextureClient> CreateForDrawing(
       TextureForwarder* aAllocator, gfx::SurfaceFormat aFormat,
       gfx::IntSize aSize, KnowsCompositor* aKnowsCompositor,
@@ -795,12 +781,6 @@ class TextureClient : public AtomicRefCountedWithFinalize<TextureClient> {
   friend void TestTextureClientYCbCr(TextureClient*, PlanarYCbCrData&);
   friend already_AddRefed<TextureHost> CreateTextureHostWithBackend(
       TextureClient*, ISurfaceAllocator*, LayersBackend&);
-
-#ifdef GFX_DEBUG_TRACK_CLIENTS_IN_POOL
- public:
-  // Pointer to the pool this tile came from.
-  TextureClientPool* mPoolTracker;
-#endif
 };
 
 /**
