@@ -82,7 +82,6 @@ fuzzy(1,7) == tiling-conic-3.yaml tiling-conic-3-ref.yaml
 platform(linux,mac) == linear-aligned-border-radius.yaml linear-aligned-border-radius.png
 # interpolation fuzz from sampling texture-baked gradient ramps
 platform(linux,mac) fuzzy-range(<=1,*1404) == repeat-border-radius.yaml repeat-border-radius.png
-fuzzy(1,6000) == radial-border-radius-large.yaml radial-border-radius-large-ref.png
 
 == conic.yaml conic-ref.yaml
 fuzzy(1,57) == conic-simple.yaml conic-simple.png
@@ -120,7 +119,7 @@ fuzzy-range(<=1,1) == gradient_cache_hardstop_clip.yaml gradient_cache_hardstop_
 fuzzy(2,23000) == linear-large.yaml linear-large-ref.yaml
 == conic-large.yaml conic-large-ref.yaml
 fuzzy-if(env(android,device),254,1) == conic-large-hard-stop.yaml conic-large-hard-stop-ref.yaml # Android device is Samsung Galaxy A51
-fuzzy(1,80000) == radial-large.yaml radial-large-ref.png
+fuzzy(1,7000) == radial-large.yaml radial-large-ref.png
 
 # crash tests
 == linear-far-endpoints.yaml linear-far-endpoints.yaml
