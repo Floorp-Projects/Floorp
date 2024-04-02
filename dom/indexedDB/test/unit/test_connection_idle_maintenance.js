@@ -8,7 +8,7 @@ async function testSteps() {
   // A constant used to deal with small decrease in usage when transactions are
   // transferred from the WAL file back into the original database, also called
   // as checkpointing.
-  const cosmologicalConstant = 20000;
+  const cosmologicalConstant = 31768;
 
   // The length of time that database connections will be held open after all
   // transactions have completed before doing idle maintenance.

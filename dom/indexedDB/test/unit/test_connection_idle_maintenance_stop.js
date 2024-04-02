@@ -8,7 +8,7 @@ async function testSteps() {
   // A constant used to deal with small decrease in usage when transactions are
   // transferred from the WAL file back into the original database, also called
   // as checkpointing.
-  const cosmologicalConstant = 35000;
+  const cosmologicalConstant = 32768;
 
   // The maximum number of threads that can be used for database activity at a
   // single time.
