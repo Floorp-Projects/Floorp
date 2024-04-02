@@ -388,26 +388,32 @@ def cargo_vet(command_context, arguments, stdout=None, env=os.environ):
                 ),
             )
 
+    topsrcdir = Path(command_context.topsrcdir)
+    config_toml_in = topsrcdir / ".cargo/config.toml.in"
+    cargo_vet_dir = topsrcdir
+
+    if override_config_toml_in := command_context.substs.get(
+        "MOZ_OVERRIDE_CARGO_CONFIG"
+    ):
+        config_toml_in = Path(override_config_toml_in).absolute()
+        cargo_vet_dir = config_toml_in.parent.parent
+
+    config_toml = config_toml_in.parent / config_toml_in.stem
     locked = "--locked" in arguments
     if locked:
         # The use of --locked requires .cargo/config.toml to exist, but other things,
         # like cargo update, don't want it there, so remove it once we're done.
-        topsrcdir = Path(command_context.topsrcdir)
-        shutil.copyfile(
-            topsrcdir / ".cargo" / "config.toml.in",
-            topsrcdir / ".cargo" / "config.toml",
-        )
-
+        shutil.copyfile(config_toml_in, config_toml)
     try:
         res = subprocess.run(
             [cargo, "vet"] + arguments,
-            cwd=command_context.topsrcdir,
+            cwd=cargo_vet_dir,
             stdout=stdout,
             env=env,
         )
     finally:
         if locked:
-            (topsrcdir / ".cargo" / "config.toml").unlink()
+            config_toml.unlink()
 
     # When the function is invoked without stdout set (the default when running
     # as a mach subcommand), exit with the returncode from cargo vet.
