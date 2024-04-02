@@ -21,55 +21,46 @@ scheme = "https"
 ["test_basic_canvas.worker.html"]
 fail-if = [
   "os == 'linux' && os_version == '18.04'",
-  "os == 'mac'",
 ]
 
 ["test_buffer_mapping.html"]
 fail-if = [
   "os == 'linux' && os_version == '18.04'",
-  "os == 'mac'",
 ]
 
 ["test_buffer_mapping_invalid_device.html"]
 fail-if = [
   "os == 'linux' && os_version == '18.04'",
-  "os == 'mac'",
 ]
 
 ["test_command_buffer_creation.html"]
 fail-if = [
   "os == 'linux' && os_version == '18.04'",
-  "os == 'mac'",
 ]
 
 ["test_compilation_message_pos.html"]
 fail-if = [
   "os == 'linux' && os_version == '18.04'",
-  "os == 'mac'",
 ]
 
 ["test_context_configure.html"]
 fail-if = [
   "os == 'linux' && os_version == '18.04'",
-  "os == 'mac'",
 ]
 
 ["test_device_creation.html"]
 fail-if = [
   "os == 'linux' && os_version == '18.04'",
-  "os == 'mac'",
 ]
 
 ["test_device_lost.html"]
 fail-if = [
   "os == 'linux' && os_version == '18.04'",
-  "os == 'mac'",
 ]
 
 ["test_double_encoder_finish.html"]
 fail-if = [
   "os == 'linux' && os_version == '18.04'",
-  "os == 'mac'",
 ]
 
 ["test_enabled.html"]
@@ -77,7 +68,6 @@ fail-if = [
 ["test_error_scope.html"]
 fail-if = [
   "os == 'linux' && os_version == '18.04'",
-  "os == 'mac'",
 ]
 
 ["test_insecure_context.html"]
@@ -89,35 +79,29 @@ scheme = "http"
 ["test_queue_copyExternalImageToTexture.html"]
 fail-if = [
   "os == 'linux' && os_version == '18.04'",
-  "os == 'mac'",
 ]
 
 ["test_queue_write.html"]
 fail-if = [
   "os == 'linux' && os_version == '18.04'",
-  "os == 'mac'",
 ]
 
 ["test_queue_write_invalid_device.html"]
 fail-if = [
   "os == 'linux' && os_version == '18.04'",
-  "os == 'mac'",
 ]
 
 ["test_submit_compute_empty.html"]
 fail-if = [
   "os == 'linux' && os_version == '18.04'",
-  "os == 'mac'",
 ]
 
 ["test_submit_render_empty.html"]
 fail-if = [
   "os == 'linux' && os_version == '18.04'",
-  "os == 'mac'",
 ]
 
 ["test_submit_render_empty.worker.html"]
 fail-if = [
   "os == 'linux' && os_version == '18.04'",
-  "os == 'mac'",
 ]

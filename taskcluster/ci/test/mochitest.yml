@@ -1122,7 +1122,6 @@ mochitest-webgpu:
             default:
                 by-test-platform:
                     android.*: []
-                    macosx.*: []
                     # Things like asan/tsan/32bit are restricted to --full
                     # via UNCOMMON_TRY_TASK_LABELS
                     # in taskcluster/gecko_taskgraph/target_tasks.py.
@@ -1135,6 +1134,11 @@ mochitest-webgpu:
     allow-software-gl-layers: false
     mozharness:
         mochitest-flavor: plain
+        extra-options:
+            by-test-platform:
+                macos.*:
+                    - --setpref=gfx.webgpu.ignore-blocklist=true
+                default: []
 
 mochitest-remote:
     description: "Mochitest for the remote agent (/remote folder)"
