@@ -10,14 +10,12 @@ use api::{ColorF, PremultipliedColorF};
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum PatternKind {
     ColorOrTexture = 0,
-    RadialGradient = 1,
-    ConicGradient = 2,
 
-    Mask = 3,
+    Mask = 1,
     // When adding patterns, don't forget to update the NUM_PATTERNS constant.
 }
 
-pub const NUM_PATTERNS: u32 = 4;
+pub const NUM_PATTERNS: u32 = 2;
 
 impl PatternKind {
     pub fn from_u32(val: u32) -> Self {
