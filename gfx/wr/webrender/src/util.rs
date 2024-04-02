@@ -834,22 +834,6 @@ pub mod test {
     }
 
     #[test]
-    fn inverse_project_2d_origin() {
-        let mut m = Transform3D::identity();
-        assert_eq!(m.inverse_project_2d_origin(), Some(Point2D::zero()));
-        m.m11 = 0.0;
-        assert_eq!(m.inverse_project_2d_origin(), None);
-        m.m21 = -2.0;
-        m.m22 = 0.0;
-        m.m12 = -0.5;
-        m.m41 = 1.0;
-        m.m42 = 0.5;
-        let origin = m.inverse_project_2d_origin().unwrap();
-        assert_eq!(origin, Point2D::new(1.0, 0.5));
-        assert_eq!(m.transform_point2d(origin), Some(Point2D::zero()));
-    }
-
-    #[test]
     fn polygon_clip_is_left_of_point() {
         // Define points of a line through (1, -3) and (-2, 6) to test against.
         // If the triplet consisting of these two points and the test point
