@@ -23,13 +23,10 @@ import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -38,7 +35,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
@@ -95,16 +91,15 @@ fun TranslationsDialogBottomSheet(
     Column(
         modifier = Modifier.padding(16.dp),
     ) {
-        BetaLabel(
-            modifier = Modifier
-                .padding(bottom = 8.dp)
-                .clearAndSetSemantics {},
-        )
+        if (LocalConfiguration.current.orientation == Configuration.ORIENTATION_PORTRAIT) {
+            BetaLabel(
+                modifier = Modifier
+                    .padding(bottom = 8.dp),
+            )
+        }
 
         TranslationsDialogHeader(
-            title = if (
-                translationsDialogState.isTranslated && translationsDialogState.translatedPageTitle != null
-            ) {
+            title = if (translationsDialogState.isTranslated && translationsDialogState.translatedPageTitle != null) {
                 translationsDialogState.translatedPageTitle
             } else {
                 getTranslationsDialogTitle(
@@ -147,6 +142,7 @@ fun TranslationsDialogBottomSheet(
  * @param onFromDropdownSelected Invoked when the user selects an item on the from dropdown.
  * @param onToDropdownSelected Invoked when the user selects an item on the to dropdown.
  */
+@Suppress("LongParameterList")
 @Composable
 private fun DialogContentBaseOnTranslationState(
     translationsDialogState: TranslationsDialogState,
@@ -325,14 +321,7 @@ private fun TranslationsDialogContent(
     onFromDropdownSelected: (Language) -> Unit,
     onToDropdownSelected: (Language) -> Unit,
 ) {
-    var orientation by remember { mutableIntStateOf(Configuration.ORIENTATION_PORTRAIT) }
-
-    val configuration = LocalConfiguration.current
-
-    LaunchedEffect(configuration) {
-        snapshotFlow { configuration.orientation }.collect { orientation = it }
-    }
-    when (orientation) {
+    when (LocalConfiguration.current.orientation) {
         Configuration.ORIENTATION_LANDSCAPE -> {
             TranslationsDialogContentInLandscapeMode(
                 translateFromLanguages = translateFromLanguages,
@@ -451,7 +440,11 @@ private fun TranslationsDialogHeader(
             style = FirefoxTheme.typography.headline7,
         )
 
-        Spacer(modifier = Modifier.width(4.dp))
+        if (LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            BetaLabel()
+        }
+
+        Spacer(modifier = Modifier.width(8.dp))
 
         if (showPageSettings) {
             IconButton(
