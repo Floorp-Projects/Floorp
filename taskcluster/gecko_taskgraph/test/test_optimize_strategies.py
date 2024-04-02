@@ -19,7 +19,6 @@ from gecko_taskgraph.optimize.bugbug import (
     DisperseGroups,
     SkipUnlessDebug,
 )
-from gecko_taskgraph.optimize.mozlint import SkipUnlessMozlint
 from gecko_taskgraph.optimize.strategies import SkipUnlessSchedules
 from gecko_taskgraph.util.backstop import BACKSTOP_PUSH_INTERVAL
 from gecko_taskgraph.util.bugbug import (
@@ -510,80 +509,6 @@ def test_project_autoland_test(monkeypatch, responses, params):
         t.label for t in default_tasks if not opt.should_remove_task(t, params, {})
     }
     assert scheduled == {"task-0-label", "task-1-label"}
-
-
-@pytest.mark.parametrize(
-    "pushed_files,to_lint,expected",
-    [
-        pytest.param(
-            ["a/b/c.txt"],
-            [],
-            True,
-        ),
-        pytest.param(
-            ["python/mozlint/a/support_file.txt", "b/c/d.txt"],
-            ["python/mozlint/a/support_file.txt"],
-            False,
-        ),
-    ],
-    ids=idfn,
-)
-def test_mozlint_should_remove_task(
-    monkeypatch, params, pushed_files, to_lint, expected
-):
-    import mozlint.pathutils
-
-    class MockParser:
-        def __call__(self, *args, **kwargs):
-            return []
-
-    def mock_filterpaths(*args, **kwargs):
-        return to_lint, None
-
-    monkeypatch.setattr(mozlint.pathutils, "filterpaths", mock_filterpaths)
-
-    opt = SkipUnlessMozlint("")
-    monkeypatch.setattr(opt, "mozlint_parser", MockParser())
-    params["files-changed"] = pushed_files
-
-    result = opt.should_remove_task(default_tasks[0], params, "")
-    assert result == expected
-
-
-@pytest.mark.parametrize(
-    "pushed_files,linter_config,expected",
-    [
-        pytest.param(
-            ["a/b/c.txt"],
-            [{"include": ["b/c"]}],
-            True,
-        ),
-        pytest.param(
-            ["a/b/c.txt"],
-            [{"include": ["a/b"], "exclude": ["a/b/c.txt"]}],
-            True,
-        ),
-        pytest.param(
-            ["python/mozlint/a/support_file.txt", "b/c/d.txt"],
-            [{}],
-            False,
-        ),
-    ],
-    ids=idfn,
-)
-def test_mozlint_should_remove_task2(
-    monkeypatch, params, pushed_files, linter_config, expected
-):
-    class MockParser:
-        def __call__(self, *args, **kwargs):
-            return linter_config
-
-    opt = SkipUnlessMozlint("")
-    monkeypatch.setattr(opt, "mozlint_parser", MockParser())
-    params["files-changed"] = pushed_files
-
-    result = opt.should_remove_task(default_tasks[0], params, "")
-    assert result == expected
 
 
 if __name__ == "__main__":
