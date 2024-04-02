@@ -940,13 +940,7 @@ static JSFunction* GetRejectFunctionFromResolve(JSFunction* resolve);
 /**
  * Returns Promise Resolve Function's [[AlreadyResolved]].[[Value]].
  */
-static bool IsAlreadyResolvedMaybeWrappedResolveFunction(
-    JSObject* resolveFunObj) {
-  if (IsWrapper(resolveFunObj)) {
-    resolveFunObj = UncheckedUnwrap(resolveFunObj);
-  }
-
-  JSFunction* resolveFun = &resolveFunObj->as<JSFunction>();
+static bool IsAlreadyResolvedResolveFunction(JSFunction* resolveFun) {
   MOZ_ASSERT(resolveFun->maybeNative() == ResolvePromiseFunction);
 
   bool alreadyResolved =
@@ -970,13 +964,7 @@ static bool IsAlreadyResolvedMaybeWrappedResolveFunction(
 /**
  * Returns Promise Reject Function's [[AlreadyResolved]].[[Value]].
  */
-static bool IsAlreadyResolvedMaybeWrappedRejectFunction(
-    JSObject* rejectFunObj) {
-  if (IsWrapper(rejectFunObj)) {
-    rejectFunObj = UncheckedUnwrap(rejectFunObj);
-  }
-
-  JSFunction* rejectFun = &rejectFunObj->as<JSFunction>();
+static bool IsAlreadyResolvedRejectFunction(JSFunction* rejectFun) {
   MOZ_ASSERT(rejectFun->maybeNative() == RejectPromiseFunction);
 
   bool alreadyResolved =
@@ -1023,8 +1011,8 @@ static void SetAlreadyResolvedResolutionFunction(JSFunction* resolutionFun) {
   reject->setExtendedSlot(RejectFunctionSlot_Promise, UndefinedValue());
   reject->setExtendedSlot(RejectFunctionSlot_ResolveFunction, UndefinedValue());
 
-  MOZ_ASSERT(IsAlreadyResolvedMaybeWrappedResolveFunction(resolve));
-  MOZ_ASSERT(IsAlreadyResolvedMaybeWrappedRejectFunction(reject));
+  MOZ_ASSERT(IsAlreadyResolvedResolveFunction(resolve));
+  MOZ_ASSERT(IsAlreadyResolvedRejectFunction(reject));
 }
 
 /**
@@ -1132,8 +1120,8 @@ void js::SetAlreadyResolvedPromiseWithDefaultResolvingFunction(
   rejectFun->initExtendedSlot(RejectFunctionSlot_ResolveFunction,
                               ObjectValue(*resolveFun));
 
-  MOZ_ASSERT(!IsAlreadyResolvedMaybeWrappedResolveFunction(resolveFun));
-  MOZ_ASSERT(!IsAlreadyResolvedMaybeWrappedRejectFunction(rejectFun));
+  MOZ_ASSERT(!IsAlreadyResolvedResolveFunction(resolveFun));
+  MOZ_ASSERT(!IsAlreadyResolvedRejectFunction(rejectFun));
 
   // Step 12. Return the Record { [[Resolve]]: resolve, [[Reject]]: reject }.
   return true;
@@ -1181,8 +1169,7 @@ static bool RejectPromiseFunction(JSContext* cx, unsigned argc, Value* vp) {
   // If the Promise isn't available anymore, it has been resolved and the
   // reference to it removed to make it eligible for collection.
   bool alreadyResolved = promiseVal.isUndefined();
-  MOZ_ASSERT(IsAlreadyResolvedMaybeWrappedRejectFunction(reject) ==
-             alreadyResolved);
+  MOZ_ASSERT(IsAlreadyResolvedRejectFunction(reject) == alreadyResolved);
   if (alreadyResolved) {
     args.rval().setUndefined();
     return true;
@@ -1362,8 +1349,7 @@ static bool ResolvePromiseFunction(JSContext* cx, unsigned argc, Value* vp) {
   //
   // NOTE: We use the reference to the reject function as [[AlreadyResolved]].
   bool alreadyResolved = promiseVal.isUndefined();
-  MOZ_ASSERT(IsAlreadyResolvedMaybeWrappedResolveFunction(resolve) ==
-             alreadyResolved);
+  MOZ_ASSERT(IsAlreadyResolvedResolveFunction(resolve) == alreadyResolved);
   if (alreadyResolved) {
     args.rval().setUndefined();
     return true;
