@@ -2791,8 +2791,7 @@ nsresult WorkerPrivate::GetLoadInfo(
     loadInfo.mOriginAttributes = aParent->GetOriginAttributes();
     loadInfo.mServiceWorkersTestingInWindow =
         aParent->ServiceWorkersTestingInWindow();
-    loadInfo.mIsThirdPartyContextToTopWindow =
-        aParent->IsThirdPartyContextToTopWindow();
+    loadInfo.mIsThirdPartyContext = aParent->IsThirdPartyContext();
     loadInfo.mShouldResistFingerprinting = aParent->ShouldResistFingerprinting(
         RFPTarget::IsAlwaysEnabledForPrecompute);
     loadInfo.mOverriddenFingerprintingSettings =
@@ -2953,7 +2952,7 @@ nsresult WorkerPrivate::GetLoadInfo(
           StorageAllowedForDocument(document) != StorageAccess::eAllow) {
         loadInfo.mUsingStorageAccess = false;
       }
-      loadInfo.mIsThirdPartyContextToTopWindow =
+      loadInfo.mIsThirdPartyContext =
           AntiTrackingUtils::IsThirdPartyWindow(globalWindow, nullptr);
       loadInfo.mCookieJarSettings = document->CookieJarSettings();
       if (loadInfo.mCookieJarSettings) {
@@ -3021,7 +3020,7 @@ nsresult WorkerPrivate::GetLoadInfo(
       cookieJarSettings->Serialize(loadInfo.mCookieJarSettingsArgs);
 
       loadInfo.mOriginAttributes = OriginAttributes();
-      loadInfo.mIsThirdPartyContextToTopWindow = false;
+      loadInfo.mIsThirdPartyContext = false;
     }
 
     MOZ_ASSERT(loadInfo.mLoadingPrincipal);
