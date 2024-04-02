@@ -172,8 +172,6 @@
 #include "mozilla/dom/FeaturePolicy.h"
 #include "mozilla/dom/FeaturePolicyUtils.h"
 #include "mozilla/dom/FontFaceSet.h"
-#include "mozilla/dom/FragmentDirective.h"
-#include "mozilla/dom/fragmentdirectives_ffi_generated.h"
 #include "mozilla/dom/FromParser.h"
 #include "mozilla/dom/HighlightRegistry.h"
 #include "mozilla/dom/HTMLAllCollection.h"
@@ -2486,7 +2484,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(Document)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFontFaceSet)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mReadyForIdle)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocumentL10n)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFragmentDirective)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mHighlightRegistry)
 
   // Traverse all Document nsCOMPtrs.
@@ -2634,7 +2631,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Document)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFontFaceSet)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mReadyForIdle)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocumentL10n)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFragmentDirective)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mHighlightRegistry)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mParser)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mOnloadBlocker)
@@ -4069,21 +4065,6 @@ void Document::StopDocumentLoad() {
 void Document::SetDocumentURI(nsIURI* aURI) {
   nsCOMPtr<nsIURI> oldBase = GetDocBaseURI();
   mDocumentURI = aURI;
-  // This loosely implements §3.4.1 of Text Fragments
-  // https://wicg.github.io/scroll-to-text-fragment/#invoking-text-directives
-  // Unlike specified in the spec, the fragment directive is not stripped from
-  // the URL in the session history entry. Instead it is removed when the URL is
-  // set in the `Document`. Also, instead of storing the `uninvokedDirective` in
-  // `Document` as mentioned in the spec, the extracted directives are moved to
-  // the `FragmentDirective` object which deals with finding the ranges to
-  // highlight in `ScrollToRef()`.
-  // XXX(:jjaschke): This is only a temporary solution.
-  // https://bugzil.la/1881429 is filed for revisiting this.
-  nsTArray<TextDirective> textDirectives;
-  FragmentDirective::ParseAndRemoveFragmentDirectiveFromFragment(
-      mDocumentURI, &textDirectives);
-  FragmentDirective()->SetTextDirectives(std::move(textDirectives));
-
   nsIURI* newBase = GetDocBaseURI();
 
   mChromeRulesEnabled = URLExtraData::ChromeRulesEnabled(aURI);
@@ -13104,29 +13085,25 @@ void Document::SetScrollToRef(nsIURI* aDocumentURI) {
 
 // https://html.spec.whatwg.org/#scrolling-to-a-fragment
 void Document::ScrollToRef() {
+  if (mScrolledToRefAlready) {
+    RefPtr<PresShell> presShell = GetPresShell();
+    if (presShell) {
+      presShell->ScrollToAnchor();
+    }
+    return;
+  }
+
+  // 2. If fragment is the empty string, then return the special value top of
+  // the document.
+  if (mScrollToRef.IsEmpty()) {
+    return;
+  }
+
   RefPtr<PresShell> presShell = GetPresShell();
   if (!presShell) {
     return;
   }
-  if (mScrolledToRefAlready) {
-    presShell->ScrollToAnchor();
-    return;
-  }
 
-  // If text directives is non-null, then highlight the text directives and
-  // scroll to the last one.
-  // XXX(:jjaschke): Document policy integration should happen here
-  // as soon as https://bugzil.la/1860915 lands.
-  // XXX(:jjaschke): Same goes for User Activation and security aspects,
-  // tracked in https://bugzil.la/1888756.
-  const bool didScrollToTextFragment =
-      presShell->HighlightAndGoToTextFragment(true);
-
-  // 2. If fragment is the empty string and no text directives have been
-  // scrolled to, then return the special value top of the document.
-  if (didScrollToTextFragment || mScrollToRef.IsEmpty()) {
-    return;
-  }
   // 3. Let potentialIndicatedElement be the result of finding a potential
   // indicated element given document and fragment.
   NS_ConvertUTF8toUTF16 ref(mScrollToRef);
@@ -19082,13 +19059,6 @@ HighlightRegistry& Document::HighlightRegistry() {
     mHighlightRegistry = MakeRefPtr<class HighlightRegistry>(this);
   }
   return *mHighlightRegistry;
-}
-
-FragmentDirective* Document::FragmentDirective() {
-  if (!mFragmentDirective) {
-    mFragmentDirective = MakeRefPtr<class FragmentDirective>(this);
-  }
-  return mFragmentDirective;
 }
 
 RadioGroupContainer& Document::OwnedRadioGroupContainer() {

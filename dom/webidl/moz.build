@@ -568,7 +568,6 @@ WEBIDL_FILES = [
     "FontFaceSet.webidl",
     "FontFaceSource.webidl",
     "FormData.webidl",
-    "FragmentDirective.webidl",
     "Function.webidl",
     "GainNode.webidl",
     "Gamepad.webidl",
