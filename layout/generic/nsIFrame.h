@@ -5489,10 +5489,6 @@ class nsIFrame : public nsQueryFrame {
   // NS_FRAME_IS_DIRTY bit set
   static void VerifyDirtyBitSet(const nsFrameList& aFrameList);
 
-  // Display Reflow Debugging
-  static void DisplayReflowStartup();
-  static void DisplayReflowShutdown();
-
   static mozilla::LazyLogModule sFrameLogModule;
 #endif
 };

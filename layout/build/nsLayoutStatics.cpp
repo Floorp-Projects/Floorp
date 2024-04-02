@@ -183,9 +183,6 @@ nsresult nsLayoutStatics::Initialize() {
 
   nsMathMLOperators::AddRefTable();
 
-#ifdef DEBUG
-  nsIFrame::DisplayReflowStartup();
-#endif
   Attr::Initialize();
 
   PopupBlocker::Initialize();
@@ -320,9 +317,6 @@ void nsLayoutStatics::Shutdown() {
   HTMLDNSPrefetch::Shutdown();
   nsCSSRendering::Shutdown();
   StaticPresData::Shutdown();
-#ifdef DEBUG
-  nsIFrame::DisplayReflowShutdown();
-#endif
   nsCellMap::Shutdown();
   ActiveLayerTracker::Shutdown();
 
