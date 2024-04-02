@@ -904,6 +904,11 @@ class nsDisplayListBuilder {
                        const dom::EffectsInfo& aUpdate);
 
   /**
+   * Invalidates the caret frames from previous paints, if they have changed.
+   */
+  void InvalidateCaretFramesIfNeeded();
+
+  /**
    * Allocate memory in our arena. It will only be freed when this display list
    * builder is destroyed. This memory holds nsDisplayItems and
    * DisplayItemClipChain objects.
@@ -1807,6 +1812,9 @@ class nsDisplayListBuilder {
 
   // Stores reusable items collected during display list preprocessing.
   nsTHashSet<nsDisplayItem*> mReuseableItems;
+
+  // Tracked carets used for retained display list.
+  AutoTArray<RefPtr<nsCaret>, 1> mPaintedCarets;
 
   // Tracked regions used for retained display list.
   WeakFrameRegion mRetainedWindowDraggingRegion;
