@@ -275,7 +275,6 @@ void nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
                                       nsReflowStatus& aStatus) {
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsRubyBaseContainerFrame");
-  DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
 
   if (!aReflowInput.mLineLayout) {

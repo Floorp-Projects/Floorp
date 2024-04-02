@@ -98,7 +98,6 @@ void BRFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
                      const ReflowInput& aReflowInput, nsReflowStatus& aStatus) {
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("BRFrame");
-  DISPLAY_REFLOW(aPresContext, this, aReflowInput, aMetrics, aStatus);
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
 
   WritingMode wm = aReflowInput.GetWritingMode();

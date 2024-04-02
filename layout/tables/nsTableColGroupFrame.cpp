@@ -329,7 +329,6 @@ void nsTableColGroupFrame::Reflow(nsPresContext* aPresContext,
                                   nsReflowStatus& aStatus) {
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsTableColGroupFrame");
-  DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
   NS_ASSERTION(nullptr != mContent, "bad state -- null content for frame");
 

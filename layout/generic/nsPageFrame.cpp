@@ -214,7 +214,6 @@ void nsPageFrame::Reflow(nsPresContext* aPresContext,
                          nsReflowStatus& aStatus) {
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsPageFrame");
-  DISPLAY_REFLOW(aPresContext, this, aReflowInput, aReflowOutput, aStatus);
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
   MOZ_ASSERT(mPD, "Need a pointer to nsSharedPageData before reflow starts");
 
@@ -1015,7 +1014,6 @@ void nsPageBreakFrame::Reflow(nsPresContext* aPresContext,
                               const ReflowInput& aReflowInput,
                               nsReflowStatus& aStatus) {
   DO_GLOBAL_REFLOW_COUNT("nsPageBreakFrame");
-  DISPLAY_REFLOW(aPresContext, this, aReflowInput, aReflowOutput, aStatus);
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
 
   // Override reflow, since we don't want to deal with what our

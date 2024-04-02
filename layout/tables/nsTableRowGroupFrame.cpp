@@ -1324,7 +1324,6 @@ void nsTableRowGroupFrame::Reflow(nsPresContext* aPresContext,
                                   nsReflowStatus& aStatus) {
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsTableRowGroupFrame");
-  DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
 
   // Row geometry may be going to change so we need to invalidate any row

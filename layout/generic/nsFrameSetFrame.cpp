@@ -760,7 +760,6 @@ void nsHTMLFramesetFrame::Reflow(nsPresContext* aPresContext,
                                  nsReflowStatus& aStatus) {
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsHTMLFramesetFrame");
-  DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
 
   mozilla::PresShell* presShell = aPresContext->PresShell();
@@ -1312,7 +1311,6 @@ void nsHTMLFramesetBorderFrame::Reflow(nsPresContext* aPresContext,
                                        const ReflowInput& aReflowInput,
                                        nsReflowStatus& aStatus) {
   DO_GLOBAL_REFLOW_COUNT("nsHTMLFramesetBorderFrame");
-  DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
 
   // Override Reflow(), since we don't want to deal with what our

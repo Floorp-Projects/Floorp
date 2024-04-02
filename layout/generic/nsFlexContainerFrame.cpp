@@ -4558,7 +4558,6 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
 
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsFlexContainerFrame");
-  DISPLAY_REFLOW(aPresContext, this, aReflowInput, aReflowOutput, aStatus);
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
   MOZ_ASSERT(aPresContext == PresContext());
   NS_WARNING_ASSERTION(

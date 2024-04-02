@@ -266,7 +266,6 @@ void nsPageSequenceFrame::Reflow(nsPresContext* aPresContext,
   MOZ_ASSERT(aPresContext->IsRootPaginatedDocument(),
              "A Page Sequence is only for real pages");
   DO_GLOBAL_REFLOW_COUNT("nsPageSequenceFrame");
-  DISPLAY_REFLOW(aPresContext, this, aReflowInput, aReflowOutput, aStatus);
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
   NS_FRAME_TRACE_REFLOW_IN("nsPageSequenceFrame::Reflow");
 

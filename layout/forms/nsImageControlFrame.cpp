@@ -97,7 +97,6 @@ void nsImageControlFrame::Reflow(nsPresContext* aPresContext,
                                  const ReflowInput& aReflowInput,
                                  nsReflowStatus& aStatus) {
   DO_GLOBAL_REFLOW_COUNT("nsImageControlFrame");
-  DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
   return nsImageFrame::Reflow(aPresContext, aDesiredSize, aReflowInput,
                               aStatus);

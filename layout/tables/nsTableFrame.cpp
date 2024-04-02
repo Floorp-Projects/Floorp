@@ -1615,7 +1615,6 @@ void nsTableFrame::Reflow(nsPresContext* aPresContext,
                           nsReflowStatus& aStatus) {
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsTableFrame");
-  DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
   MOZ_ASSERT(!HasAnyStateBits(NS_FRAME_OUT_OF_FLOW),
              "The nsTableWrapperFrame should be the out-of-flow if needed");

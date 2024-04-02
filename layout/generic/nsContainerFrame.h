@@ -1076,34 +1076,4 @@ class nsOverflowContinuationTracker {
   bool mWalkOOFFrames;
 };
 
-// Start Display Reflow Debugging
-#ifdef DEBUG
-
-struct DR_cookie {
-  DR_cookie(nsPresContext* aPresContext, nsIFrame* aFrame,
-            const mozilla::ReflowInput& aReflowInput,
-            mozilla::ReflowOutput& aMetrics, nsReflowStatus& aStatus);
-  ~DR_cookie();
-
-  nsPresContext* mPresContext;
-  nsIFrame* mFrame;
-  const mozilla::ReflowInput& mReflowInput;
-  mozilla::ReflowOutput& mMetrics;
-  nsReflowStatus& mStatus;
-  void* mValue;
-};
-
-#  define DISPLAY_REFLOW(dr_pres_context, dr_frame, dr_rf_state,               \
-                         dr_rf_metrics, dr_rf_status)                          \
-    DR_cookie dr_cookie(dr_pres_context, dr_frame, dr_rf_state, dr_rf_metrics, \
-                        dr_rf_status);
-
-#else
-
-#  define DISPLAY_REFLOW(dr_pres_context, dr_frame, dr_rf_state, \
-                         dr_rf_metrics, dr_rf_status)
-
-#endif
-// End Display Reflow Debugging
-
 #endif /* nsContainerFrame_h___ */
