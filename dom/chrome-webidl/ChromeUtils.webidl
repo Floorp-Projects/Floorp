@@ -975,6 +975,7 @@ dictionary PartitionKeyPatternDictionary {
   DOMString scheme;
   DOMString baseDomain;
   long port;
+  boolean foreignByAncestorContext;
 };
 
 dictionary CompileScriptOptionsDictionary {
