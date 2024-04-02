@@ -1891,16 +1891,6 @@ role LocalAccessible::ARIATransformRole(role aRole) const {
       return roles::COMBOBOX_OPTION;
     }
 
-    // Orphaned option outside the context of a listbox.
-    const Accessible* listbox = FindAncestorIf([](const Accessible& aAcc) {
-      const role accRole = aAcc.Role();
-      return accRole == roles::LISTBOX    ? AncestorSearchOption::Found
-             : accRole == roles::GROUPING ? AncestorSearchOption::Continue
-                                          : AncestorSearchOption::NotFound;
-    });
-    if (!listbox) {
-      return NativeRole();
-    }
   } else if (aRole == roles::MENUITEM) {
     // Menuitem has a submenu.
     if (mContent->IsElement() &&
@@ -1910,30 +1900,6 @@ role LocalAccessible::ARIATransformRole(role aRole) const {
       return roles::PARENT_MENUITEM;
     }
 
-    // Orphaned menuitem outside the context of a menu/menubar.
-    const Accessible* menu = FindAncestorIf([](const Accessible& aAcc) {
-      const role accRole = aAcc.Role();
-      return (accRole == roles::MENUBAR || accRole == roles::MENUPOPUP)
-                 ? AncestorSearchOption::Found
-             : accRole == roles::GROUPING ? AncestorSearchOption::Continue
-                                          : AncestorSearchOption::NotFound;
-    });
-    if (!menu) {
-      return NativeRole();
-    }
-  } else if (aRole == roles::RADIO_MENU_ITEM ||
-             aRole == roles::CHECK_MENU_ITEM) {
-    // Orphaned radio/checkbox menuitem outside the context of a menu/menubar.
-    const Accessible* menu = FindAncestorIf([](const Accessible& aAcc) {
-      const role accRole = aAcc.Role();
-      return (accRole == roles::MENUBAR || accRole == roles::MENUPOPUP)
-                 ? AncestorSearchOption::Found
-             : accRole == roles::GROUPING ? AncestorSearchOption::Continue
-                                          : AncestorSearchOption::NotFound;
-    });
-    if (!menu) {
-      return NativeRole();
-    }
   } else if (aRole == roles::CELL) {
     // A cell inside an ancestor table element that has a grid role needs a
     // gridcell role
@@ -1941,63 +1907,6 @@ role LocalAccessible::ARIATransformRole(role aRole) const {
     const LocalAccessible* table = nsAccUtils::TableFor(this);
     if (table && table->IsARIARole(nsGkAtoms::grid)) {
       return roles::GRID_CELL;
-    }
-  } else if (aRole == roles::ROW) {
-    // Orphaned rows outside the context of a table.
-    const LocalAccessible* table = nsAccUtils::TableFor(this);
-    if (!table) {
-      return NativeRole();
-    }
-  } else if (aRole == roles::ROWGROUP) {
-    // Orphaned rowgroups outside the context of a table.
-    const Accessible* table = FindAncestorIf([](const Accessible& aAcc) {
-      return aAcc.IsTable() ? AncestorSearchOption::Found
-                            : AncestorSearchOption::NotFound;
-    });
-    if (!table) {
-      return NativeRole();
-    }
-  } else if (aRole == roles::GRID_CELL || aRole == roles::ROWHEADER ||
-             aRole == roles::COLUMNHEADER) {
-    // Orphaned gridcell/rowheader/columnheader outside the context of a row.
-    const Accessible* row = FindAncestorIf([](const Accessible& aAcc) {
-      return aAcc.IsTableRow() ? AncestorSearchOption::Found
-                               : AncestorSearchOption::NotFound;
-    });
-    if (!row) {
-      return NativeRole();
-    }
-  } else if (aRole == roles::LISTITEM) {
-    // doc-biblioentry and doc-endnote should not be treated as listitems.
-    const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
-    if (!roleMapEntry || (roleMapEntry->roleAtom != nsGkAtoms::docBiblioentry &&
-                          roleMapEntry->roleAtom != nsGkAtoms::docEndnote)) {
-      // Orphaned listitem outside the context of a list.
-      const Accessible* list = FindAncestorIf([](const Accessible& aAcc) {
-        return aAcc.IsList() ? AncestorSearchOption::Found
-                             : AncestorSearchOption::Continue;
-      });
-      if (!list) {
-        return NativeRole();
-      }
-    }
-  } else if (aRole == roles::PAGETAB) {
-    // Orphaned tab outside the context of a tablist.
-    const Accessible* tablist = FindAncestorIf([](const Accessible& aAcc) {
-      return aAcc.Role() == roles::PAGETABLIST ? AncestorSearchOption::Found
-                                               : AncestorSearchOption::NotFound;
-    });
-    if (!tablist) {
-      return NativeRole();
-    }
-  } else if (aRole == roles::OUTLINEITEM) {
-    // Orphaned treeitem outside the context of a tree.
-    const Accessible* tree = FindAncestorIf([](const Accessible& aAcc) {
-      return aAcc.Role() == roles::OUTLINE ? AncestorSearchOption::Found
-                                           : AncestorSearchOption::Continue;
-    });
-    if (!tree) {
-      return NativeRole();
     }
   }
 
@@ -2206,14 +2115,12 @@ Relation LocalAccessible::RelationByType(RelationType aType) const {
       if (roleMapEntry && (roleMapEntry->role == roles::OUTLINEITEM ||
                            roleMapEntry->role == roles::LISTITEM ||
                            roleMapEntry->role == roles::ROW)) {
-        AccGroupInfo* groupInfo =
-            const_cast<LocalAccessible*>(this)->GetOrCreateGroupInfo();
-        if (groupInfo) {
-          Accessible* parent = groupInfo->ConceptualParent();
-          if (parent) {
-            MOZ_ASSERT(parent->IsLocal());
-            rel.AppendTarget(parent->AsLocal());
-          }
+        Accessible* parent = const_cast<LocalAccessible*>(this)
+                                 ->GetOrCreateGroupInfo()
+                                 ->ConceptualParent();
+        if (parent) {
+          MOZ_ASSERT(parent->IsLocal());
+          rel.AppendTarget(parent->AsLocal());
         }
       }
 

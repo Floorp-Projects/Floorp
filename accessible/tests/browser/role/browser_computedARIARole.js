@@ -14,9 +14,7 @@ addAccessibleTask(
 <div id="ariaDirectory" role="directory">ARIA directory</div>
 <div id="ariaAlertdialog" role="alertdialog">ARIA alertdialog</div>
 <div id="ariaFeed" role="feed">ARIA feed</div>
-<div role="table">
-  <div id="ariaRowgroup" role="rowgroup">ARIA rowgroup</div>
-</div>
+<div id="ariaRowgroup" role="rowgroup">ARIA rowgroup</div>
 <div id="ariaSearchbox" role="searchbox">ARIA searchbox</div>
 <div id="ariaUnknown" role="unknown">unknown ARIA role</div>
 <button id="htmlButton">HTML button</button>

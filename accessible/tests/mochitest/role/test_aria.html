@@ -42,6 +42,8 @@
       testRole("aria_checkbox_mixed", ROLE_CHECKBUTTON);
       testRole("aria_code", ROLE_CODE);
       testRole("aria_code_mixed", ROLE_CODE);
+      testRole("aria_columnheader", ROLE_COLUMNHEADER);
+      testRole("aria_columnheader_mixed", ROLE_COLUMNHEADER);
       testRole("aria_combobox", ROLE_EDITCOMBOBOX);
       testRole("aria_combobox_mixed", ROLE_EDITCOMBOBOX);
       testRole("aria_comment", ROLE_COMMENT);
@@ -64,6 +66,8 @@
       testRole("aria_figure_mixed", ROLE_FIGURE);
       testRole("aria_grid", ROLE_GRID);
       testRole("aria_grid_mixed", ROLE_GRID);
+      testRole("aria_gridcell", ROLE_GRID_CELL);
+      testRole("aria_gridcell_mixed", ROLE_GRID_CELL);
       testRole("aria_group", ROLE_GROUPING);
       testRole("aria_group_mixed", ROLE_GROUPING);
       testRole("aria_heading", ROLE_HEADING);
@@ -78,6 +82,8 @@
       testRole("aria_list_mixed", ROLE_LIST);
       testRole("aria_listbox", ROLE_LISTBOX);
       testRole("aria_listbox_mixed", ROLE_LISTBOX);
+      testRole("aria_listitem", ROLE_LISTITEM);
+      testRole("aria_listitem_mixed", ROLE_LISTITEM);
       testRole("aria_log", ROLE_TEXT); // weak role
       testRole("aria_log_mixed", ROLE_TEXT); // weak role
       testRole("aria_mark", ROLE_MARK);
@@ -90,6 +96,12 @@
       testRole("aria_menu_mixed", ROLE_MENUPOPUP);
       testRole("aria_menubar", ROLE_MENUBAR);
       testRole("aria_menubar_mixed", ROLE_MENUBAR);
+      testRole("aria_menuitem", ROLE_MENUITEM);
+      testRole("aria_menuitem_mixed", ROLE_MENUITEM);
+      testRole("aria_menuitemcheckbox", ROLE_CHECK_MENU_ITEM);
+      testRole("aria_menuitemcheckbox_mixed", ROLE_CHECK_MENU_ITEM);
+      testRole("aria_menuitemradio", ROLE_RADIO_MENU_ITEM);
+      testRole("aria_menuitemradio_mixed", ROLE_RADIO_MENU_ITEM);
       testRole("aria_meter", ROLE_METER);
       testRole("aria_meter_mixed", ROLE_METER);
       testRole("aria_note", ROLE_NOTE);
@@ -118,6 +130,10 @@
       testRole("aria_region_as_table_with_caption_mixed", ROLE_REGION);
       testRole("aria_region_as_table_with_miscaption", ROLE_TABLE);
       testRole("aria_region_as_table_with_miscaption_mixed", ROLE_TABLE);
+      testRole("aria_row", ROLE_ROW);
+      testRole("aria_row_mixed", ROLE_ROW);
+      testRole("aria_rowheader", ROLE_ROWHEADER);
+      testRole("aria_rowheader_mixed", ROLE_ROWHEADER);
       testRole("aria_scrollbar", ROLE_SCROLLBAR);
       testRole("aria_scrollbar_mixed", ROLE_SCROLLBAR);
       testRole("aria_searchbox", ROLE_ENTRY);
@@ -138,6 +154,8 @@
       testRole("aria_superscript_mixed", ROLE_SUPERSCRIPT);
       testRole("aria_switch", ROLE_SWITCH);
       testRole("aria_switch_mixed", ROLE_SWITCH);
+      testRole("aria_tab", ROLE_PAGETAB);
+      testRole("aria_tab_mixed", ROLE_PAGETAB);
       testRole("aria_tablist", ROLE_PAGETABLIST);
       testRole("aria_tablist_mixed", ROLE_PAGETABLIST);
       testRole("aria_tabpanel", ROLE_PROPERTYPAGE);
@@ -156,6 +174,8 @@
       testRole("aria_tree_mixed", ROLE_OUTLINE);
       testRole("aria_treegrid", ROLE_TREE_TABLE);
       testRole("aria_treegrid_mixed", ROLE_TREE_TABLE);
+      testRole("aria_treeitem", ROLE_OUTLINEITEM);
+      testRole("aria_treeitem_mixed", ROLE_OUTLINEITEM);
 
       // Note:
       // The phrase "weak foo" here means that there is no good foo-to-platform
@@ -240,29 +260,6 @@
       testRole("togglebutton_mixed", ROLE_TOGGLE_BUTTON);
       testRole("implicit_gridcell", ROLE_GRID_CELL);
       testRole("implicit_gridcell_mixed", ROLE_GRID_CELL);
-
-      // ////////////////////////////////////////////////////////////////////////
-      // child roles dependent on ancestor role presence
-      testRole("aria_columnheader", ROLE_COLUMNHEADER);
-      testRole("aria_columnheader_mixed", ROLE_COLUMNHEADER);
-      testRole("aria_gridcell", ROLE_GRID_CELL);
-      testRole("aria_gridcell_mixed", ROLE_GRID_CELL);
-      testRole("aria_rowheader", ROLE_ROWHEADER);
-      testRole("aria_rowheader_mixed", ROLE_ROWHEADER);
-      testRole("aria_listitem", ROLE_LISTITEM);
-      testRole("aria_listitem_mixed", ROLE_LISTITEM);
-      testRole("aria_menuitem", ROLE_MENUITEM);
-      testRole("aria_menuitem_mixed", ROLE_MENUITEM);
-      testRole("aria_menuitemcheckbox", ROLE_CHECK_MENU_ITEM);
-      testRole("aria_menuitemcheckbox_mixed", ROLE_CHECK_MENU_ITEM);
-      testRole("aria_menuitemradio", ROLE_RADIO_MENU_ITEM);
-      testRole("aria_menuitemradio_mixed", ROLE_RADIO_MENU_ITEM);
-      testRole("aria_row", ROLE_ROW);
-      testRole("aria_row_mixed", ROLE_ROW);
-      testRole("aria_tab", ROLE_PAGETAB);
-      testRole("aria_tab_mixed", ROLE_PAGETAB);
-      testRole("aria_treeitem", ROLE_OUTLINEITEM);
-      testRole("aria_treeitem_mixed", ROLE_OUTLINEITEM);
 
       // ////////////////////////////////////////////////////////////////////////
       // ignore unknown roles, take first known
@@ -403,6 +400,8 @@
   <span id="aria_checkbox_mixed" role="cHECKBOx"></span>
   <span id="aria_code" role="code"></span>
   <span id="aria_code_mixed" role="cODe"></span>
+  <span id="aria_columnheader" role="columnheader"></span>
+  <span id="aria_columnheader_mixed" role="cOLUMNHEADEr"></span>
   <span id="aria_combobox" role="combobox"></span>
   <span id="aria_combobox_mixed" role="cOMBOBOx"></span>
   <span id="aria_comment" role="comment"></span>
@@ -425,6 +424,8 @@
   <span id="aria_figure_mixed" role="fIGURe"></span>
   <span id="aria_grid" role="grid"></span>
   <span id="aria_grid_mixed" role="gRId"></span>
+  <span id="aria_gridcell" role="gridcell"></span>
+  <span id="aria_gridcell_mixed" role="gRIDCELl"></span>
   <span id="aria_group" role="group"></span>
   <span id="aria_group_mixed" role="gROUp"></span>
   <span id="aria_heading" role="heading"></span>
@@ -439,6 +440,8 @@
   <span id="aria_list_mixed" role="lISt"></span>
   <span id="aria_listbox" role="listbox"></span>
   <span id="aria_listbox_mixed" role="lISTBOx"></span>
+  <span id="aria_listitem" role="listitem"></span>
+  <span id="aria_listitem_mixed" role="lISTITEm"></span>
   <span id="aria_log" role="log"></span>
   <span id="aria_log_mixed" role="lOg"></span>
   <span id="aria_mark" role="mark"></span>
@@ -451,6 +454,12 @@
   <span id="aria_menu_mixed" role="mENu"></span>
   <span id="aria_menubar" role="menubar"></span>
   <span id="aria_menubar_mixed" role="mENUBAr"></span>
+  <span id="aria_menuitem" role="menuitem"></span>
+  <span id="aria_menuitem_mixed" role="mENUITEm"></span>
+  <span id="aria_menuitemcheckbox" role="menuitemcheckbox"></span>
+  <span id="aria_menuitemcheckbox_mixed" role="mENUITEMCHECKBOx"></span>
+  <span id="aria_menuitemradio" role="menuitemradio"></span>
+  <span id="aria_menuitemradio_mixed" role="mENUITEMRADIo"></span>
   <span id="aria_meter" role="meter"></span>
   <span id="aria_meter_mixed" role="meTer"></span>
   <span id="aria_note" role="note"></span>
@@ -479,6 +488,10 @@
   <table id="aria_region_as_table_with_caption_mixed" role="rEGIOn"><caption>hello</caption></table>
   <table id="aria_region_as_table_with_miscaption" role="region"><caption role="option">hello</caption></table>
   <table id="aria_region_as_table_with_miscaption_mixed" role="rEGIOn"><caption role="option">hello</caption></table>
+  <span id="aria_row" role="row"></span>
+  <span id="aria_row_mixed" role="rOw"></span>
+  <span id="aria_rowheader" role="rowheader"></span>
+  <span id="aria_rowheader_mixed" role="rOWHEADEr"></span>
   <span id="aria_scrollbar" role="scrollbar"></span>
   <span id="aria_scrollbar_mixed" role="sCROLLBAr"></span>
   <span id="aria_searchbox" role="textbox"></span>
@@ -499,6 +512,8 @@
   <span id="aria_superscript_mixed" role="sUPERSCRIPt"></span>
   <span id="aria_switch" role="switch"></span>
   <span id="aria_switch_mixed" role="sWITCh"></span>
+  <span id="aria_tab" role="tab"></span>
+  <span id="aria_tab_mixed" role="tAb"></span>
   <span id="aria_tablist" role="tablist"></span>
   <span id="aria_tablist_mixed" role="tABLISt"></span>
   <span id="aria_tabpanel" role="tabpanel"></span>
@@ -517,6 +532,8 @@
   <span id="aria_tree_mixed" role="tREe"></span>
   <span id="aria_treegrid" role="treegrid"></span>
   <span id="aria_treegrid_mixed" role="tREEGRId"></span>
+  <span id="aria_treeitem" role="treeitem"></span>
+  <span id="aria_treeitem_mixed" role="tREEITEm"></span>
 
   <article id="articlemain" role="main">a main area</article>
   <article id="articlemain_mixed" role="mAIn">a main area</article>
@@ -647,42 +664,6 @@
       <td id="implicit_gridcell_mixed">foo</td>
     </tr>
   </table>
-
-  <!-- child roles dependent on ancestor role presence -->
-  <div role="grid">
-    <div role="row">
-      <span id="aria_columnheader" role="columnheader"></span>
-      <span id="aria_columnheader_mixed" role="cOLUMNHEADEr"></span>
-      <span id="aria_gridcell" role="gridcell"></span>
-      <span id="aria_gridcell_mixed" role="gRIDCELl"></span>
-      <span id="aria_rowheader" role="rowheader"></span>
-      <span id="aria_rowheader_mixed" role="rOWHEADEr"></span>
-    </div>
-  </div>
-  <div role="list">
-    <span id="aria_listitem" role="listitem"></span>
-    <span id="aria_listitem_mixed" role="lISTITEm"></span>
-  </div>
-  <div role="menu">
-    <span id="aria_menuitem" role="menuitem"></span>
-    <span id="aria_menuitem_mixed" role="mENUITEm"></span>
-    <span id="aria_menuitemcheckbox" role="menuitemcheckbox"></span>
-    <span id="aria_menuitemcheckbox_mixed" role="mENUITEMCHECKBOx"></span>
-    <span id="aria_menuitemradio" role="menuitemradio"></span>
-    <span id="aria_menuitemradio_mixed" role="mENUITEMRADIo"></span>
-  </div>
-  <div role="table">
-    <span id="aria_row" role="row"></span>
-    <span id="aria_row_mixed" role="rOw"></span>
-  </div>
-  <div role="tablist">
-    <span id="aria_tab" role="tab"></span>
-    <span id="aria_tab_mixed" role="tAb"></span>
-  </div>
-  <div role="tree">
-    <span id="aria_treeitem" role="treeitem"></span>
-    <span id="aria_treeitem_mixed" role="tREEITEm"></span>
-  </div>
 
   <!-- roles transformed by ARIA state attributes -->
   <button aria-pressed="true" id="togglebutton"></button>
