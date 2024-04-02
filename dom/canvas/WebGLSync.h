@@ -11,9 +11,30 @@
 namespace mozilla {
 namespace webgl {
 class AvailabilityRunnable;
+
+struct Task {
+  virtual ~Task() = default;
+  virtual void operator()() const = 0;
+};
+
+template <class F>
+struct FnTask : public Task {
+  const F fn;
+
+  explicit FnTask(F&& fn) : fn(std::move(fn)) {}
+
+  virtual void operator()() const override { fn(); }
+};
 }  // namespace webgl
 
-class WebGLSync final : public WebGLContextBoundObject {
+enum class ClientWaitSyncResult : GLenum {
+  WAIT_FAILED = LOCAL_GL_WAIT_FAILED,
+  TIMEOUT_EXPIRED = LOCAL_GL_TIMEOUT_EXPIRED,
+  CONDITION_SATISFIED = LOCAL_GL_CONDITION_SATISFIED,
+  ALREADY_SIGNALED = LOCAL_GL_ALREADY_SIGNALED,
+};
+
+class WebGLSync final : public WebGLContextBoundObject, public SupportsWeakPtr {
   friend class WebGL2Context;
   friend class webgl::AvailabilityRunnable;
 
@@ -23,10 +44,22 @@ class WebGLSync final : public WebGLContextBoundObject {
   const uint64_t mFenceId;
   bool mCanBeAvailable = false;
 
+  std::optional<std::vector<std::unique_ptr<webgl::Task>>> mOnCompleteTasks =
+      std::vector<std::unique_ptr<webgl::Task>>{};
+
  public:
   WebGLSync(WebGLContext* webgl, GLenum condition, GLbitfield flags);
 
-  void MarkSignaled() const;
+  ClientWaitSyncResult ClientWaitSync(GLbitfield flags, GLuint64 timeout);
+
+  template <class F>
+  void OnCompleteTaskAdd(F&& fn) {
+    MOZ_RELEASE_ASSERT(mOnCompleteTasks);
+    auto task = std::make_unique<webgl::FnTask<F>>(std::move(fn));
+    mOnCompleteTasks->push_back(std::move(task));
+  }
+
+  bool IsKnownComplete() const { return !mOnCompleteTasks; }
 
  private:
   ~WebGLSync() override;

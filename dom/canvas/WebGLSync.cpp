@@ -23,10 +23,39 @@ WebGLSync::~WebGLSync() {
   mContext->gl->fDeleteSync(mGLName);
 }
 
-void WebGLSync::MarkSignaled() const {
-  if (mContext->mCompletedFenceId < mFenceId) {
-    mContext->mCompletedFenceId = mFenceId;
+ClientWaitSyncResult WebGLSync::ClientWaitSync(const GLbitfield flags,
+                                               const GLuint64 timeout) {
+  if (!mContext) return ClientWaitSyncResult::WAIT_FAILED;
+  if (IsKnownComplete()) return ClientWaitSyncResult::ALREADY_SIGNALED;
+
+  auto ret = ClientWaitSyncResult::WAIT_FAILED;
+  bool newlyComplete = false;
+  const auto status = static_cast<ClientWaitSyncResult>(
+      mContext->gl->fClientWaitSync(mGLName, 0, 0));
+  switch (status) {
+    case ClientWaitSyncResult::TIMEOUT_EXPIRED:  // Poll() -> false
+    case ClientWaitSyncResult::WAIT_FAILED:      // Error
+      ret = status;
+      break;
+    case ClientWaitSyncResult::CONDITION_SATISFIED:  // Should never happen, but
+                                                     // tolerate it.
+    case ClientWaitSyncResult::ALREADY_SIGNALED:     // Poll() -> true
+      newlyComplete = true;
+      ret = status;
+      break;
   }
+
+  if (newlyComplete) {
+    if (mContext->mCompletedFenceId < mFenceId) {
+      mContext->mCompletedFenceId = mFenceId;
+    }
+    MOZ_RELEASE_ASSERT(mOnCompleteTasks);
+    for (const auto& task : *mOnCompleteTasks) {
+      (*task)();
+    }
+    mOnCompleteTasks = {};
+  }
+  return ret;
 }
 
 }  // namespace mozilla

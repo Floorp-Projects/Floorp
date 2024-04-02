@@ -134,9 +134,6 @@ class ShaderKeepAlive final {
 };
 
 class ContextGenerationInfo final {
- private:
-  ObjectId mLastId = 0;
-
  public:
   webgl::ExtensionBits mEnabledExtensions;
   RefPtr<WebGLProgramJS> mCurrentProgram;
@@ -181,8 +178,6 @@ class ContextGenerationInfo final {
   webgl::ProvokingVertex mProvokingVertex = webgl::ProvokingVertex::LastVertex;
 
   mutable Maybe<std::unordered_map<GLenum, bool>> mIsEnabledMap;
-
-  ObjectId NextId() { return mLastId += 1; }
 };
 
 // -
@@ -495,7 +490,6 @@ class WebGLSyncJS final : public nsWrapperCache,
 
   bool mCanBeAvailable = false;
   uint8_t mNumQueriesBeforeFirstFrameBoundary = 0;
-  bool mSignaled = false;
 
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLSyncJS)
@@ -783,8 +777,11 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   mutable GLenum mNextError = 0;
   mutable webgl::LossStatus mLossStatus = webgl::LossStatus::Ready;
   mutable bool mAwaitingRestore = false;
+  mutable webgl::ObjectId mLastId = 0;
 
  public:
+  webgl::ObjectId NextId() const { return mLastId += 1; }
+
   // Holds Some Id if async present is used
   mutable Maybe<layers::RemoteTextureId> mLastRemoteTextureId;
   mutable Maybe<layers::RemoteTextureOwnerId> mRemoteTextureOwnerId;
@@ -1400,7 +1397,7 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
 
   void DepthRange(GLclampf zNear, GLclampf zFar);
 
-  void Flush(bool flushGl = true);
+  void Flush(bool flushGl = true) const;
 
   void Finish();
 
@@ -2247,6 +2244,13 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   void GetSyncParameter(JSContext*, WebGLSyncJS&, GLenum pname,
                         JS::MutableHandle<JS::Value> retval) const;
   void WaitSync(const WebGLSyncJS&, GLbitfield flags, GLint64 timeout) const;
+
+  mutable webgl::ObjectId mCompletedSyncId = 0;
+  void OnSyncComplete(webgl::ObjectId id) const {
+    if (mCompletedSyncId < id) {
+      mCompletedSyncId = id;
+    }
+  }
 
   // -------------------------- Transform Feedback ---------------------------
 

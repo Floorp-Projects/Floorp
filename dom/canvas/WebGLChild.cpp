@@ -162,4 +162,11 @@ mozilla::ipc::IPCResult WebGLChild::RecvOnContextLoss(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult WebGLChild::RecvOnSyncComplete(
+    const webgl::ObjectId id) const {
+  if (!mContext) return IPC_OK();
+  mContext->OnSyncComplete(id);
+  return IPC_OK();
+}
+
 }  // namespace mozilla::dom

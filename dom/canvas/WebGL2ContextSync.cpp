@@ -29,10 +29,11 @@ RefPtr<WebGLSync> WebGL2Context::FenceSync(GLenum condition, GLbitfield flags) {
   }
 
   RefPtr<WebGLSync> globj = new WebGLSync(this, condition, flags);
+  mPendingSyncs.emplace_back(globj);
   return globj;
 }
 
-GLenum WebGL2Context::ClientWaitSync(const WebGLSync& sync, GLbitfield flags,
+GLenum WebGL2Context::ClientWaitSync(WebGLSync& sync, GLbitfield flags,
                                      GLuint64 timeout) {
   const FuncScope funcScope(*this, "clientWaitSync");
   if (IsContextLost()) return LOCAL_GL_WAIT_FAILED;
@@ -50,13 +51,47 @@ GLenum WebGL2Context::ClientWaitSync(const WebGLSync& sync, GLbitfield flags,
     return LOCAL_GL_WAIT_FAILED;
   }
 
-  const auto ret = gl->fClientWaitSync(sync.mGLName, flags, timeout);
+  const auto ret = sync.ClientWaitSync(flags, timeout);
+  return UnderlyingValue(ret);
+}
 
-  if (ret == LOCAL_GL_CONDITION_SATISFIED || ret == LOCAL_GL_ALREADY_SIGNALED) {
-    sync.MarkSignaled();
+void WebGLContext::EnsurePollPendingSyncs_Pending() const {
+  if (mPollPendingSyncs_Pending) return;
+  mPollPendingSyncs_Pending = NS_NewRunnableFunction(
+      "WebGLContext::PollPendingSyncs", [weak = WeakPtr{this}]() {
+        if (const auto strong = RefPtr{weak.get()}) {
+          strong->PollPendingSyncs();
+        }
+      });
+  if (const auto eventTarget = GetCurrentSerialEventTarget()) {
+    eventTarget->DelayedDispatch(do_AddRef(mPollPendingSyncs_Pending),
+                                 kPollPendingSyncs_DelayMs);
+  } else {
+    NS_WARNING(
+        "[EnsurePollPendingSyncs_Pending] GetCurrentSerialEventTarget() -> "
+        "nullptr");
   }
+}
 
-  return ret;
+void WebGLContext::PollPendingSyncs() const {
+  const FuncScope funcScope(*this, "<pollPendingSyncs>");
+  if (IsContextLost()) return;
+
+  while (mPendingSyncs.size()) {
+    if (const auto sync = RefPtr{mPendingSyncs.front().get()}) {
+      const auto res = sync->ClientWaitSync(0, 0);
+      switch (res) {
+        case ClientWaitSyncResult::WAIT_FAILED:
+        case ClientWaitSyncResult::TIMEOUT_EXPIRED:
+          return;
+        case ClientWaitSyncResult::CONDITION_SATISFIED:
+        case ClientWaitSyncResult::ALREADY_SIGNALED:
+          // Communication back to child happens in sync->lientWaitSync.
+          break;
+      }
+    }
+    mPendingSyncs.pop_front();
+  }
 }
 
 }  // namespace mozilla

@@ -108,8 +108,7 @@ class WebGL2Context final : public WebGLContext {
       1000 * 1000 * 1000;  // 1000ms in ns.
 
   RefPtr<WebGLSync> FenceSync(GLenum condition, GLbitfield flags);
-  GLenum ClientWaitSync(const WebGLSync& sync, GLbitfield flags,
-                        GLuint64 timeout);
+  GLenum ClientWaitSync(WebGLSync& sync, GLbitfield flags, GLuint64 timeout);
 
   // -------------------------------------------------------------------------
   // Transform Feedback - WebGL2ContextTransformFeedback.cpp
