@@ -36,7 +36,7 @@ add_task(async function () {
     async function runChecks() {
       is(document.cookie, "", "No cookies for me");
       document.cookie = "name=value";
-      is(document.cookie, "name=value", "I have the cookies!");
+      is(document.cookie, "", "I don't have the cookies!");
     }
 
     await new Promise(resolve => {

@@ -45,7 +45,7 @@ nsresult CreateMockChannel(nsIPrincipal* aPrincipal, bool isThirdParty,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsILoadInfo> mockLoadInfo = mockChannel->LoadInfo();
-  rv = mockLoadInfo->SetIsThirdPartyContextToTopWindow(isThirdParty);
+  rv = mockLoadInfo->SetIsInThirdPartyContext(isThirdParty);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsICookieJarSettings> cjs;

@@ -112,6 +112,8 @@ skip-if = ["os == 'mac' && !debug"] # Bug 1503778, 1577362
 
 ["browser_onModifyRequestNotificationForTrackingResources.js"]
 
+["browser_partitionedABA.js"]
+
 ["browser_partitionedClearSiteDataHeader.js"]
 support-files = ["clearSiteData.sjs"]
 
