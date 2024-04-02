@@ -1674,7 +1674,8 @@ export class TranslationsParent extends JSWindowActorParent {
           `Translation model fetched in ${duration / 1000} seconds:`,
           record.fromLang,
           record.toLang,
-          record.fileType
+          record.fileType,
+          record.version
         );
       })
     );
