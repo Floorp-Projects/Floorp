@@ -5983,6 +5983,11 @@ void nsHTMLScrollFrame::PostOverflowEvent() {
     return;
   }
 
+  if (!PresContext()->IsChrome() &&
+      !StaticPrefs::layout_overflow_underflow_content_enabled()) {
+    return;
+  }
+
   OverflowState overflowState = GetOverflowState();
 
   bool newVerticalOverflow = !!(overflowState & OverflowState::Vertical);
