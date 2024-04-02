@@ -891,7 +891,10 @@ MediaFormatReader::MediaFormatReader(MediaFormatReaderInit& aInit,
                 "MediaFormatReader::mBuffered (Canonical)"),
       mFrameStats(aInit.mFrameStats),
       mMediaDecoderOwnerID(aInit.mMediaDecoderOwnerID),
-      mTrackingId(std::move(aInit.mTrackingId)) {
+      mTrackingId(std::move(aInit.mTrackingId)),
+      mReadMetadataStartTime(Nothing()),
+      mReadMetaDataTime(TimeDuration::Zero()),
+      mTotalWaitingForVideoDataTime(TimeDuration::Zero()) {
   MOZ_ASSERT(aDemuxer);
   MOZ_COUNT_CTOR(MediaFormatReader);
   DDLINKCHILD("audio decoder data", "MediaFormatReader::DecoderDataWithPromise",
@@ -1162,6 +1165,10 @@ MediaFormatReader::AsyncReadMetadata() {
     return MetadataPromise::CreateAndResolve(std::move(metadata), __func__);
   }
 
+  if (!mReadMetadataStartTime) {
+    mReadMetadataStartTime = Some(TimeStamp::Now());
+  }
+
   RefPtr<MetadataPromise> p = mMetadataPromise.Ensure(__func__);
 
   mDemuxer->Init()
@@ -1342,6 +1349,11 @@ void MediaFormatReader::MaybeResolveMetadataPromise() {
                       &MediaFormatReader::NotifyTrackInfoUpdated);
   mIsWatchingWorkingInfo = true;
 
+  if (mReadMetadataStartTime) {
+    mReadMetaDataTime = TimeStamp::Now() - *mReadMetadataStartTime;
+    mReadMetadataStartTime.reset();
+  }
+
   mMetadataPromise.Resolve(std::move(metadata), __func__);
 }
 
@@ -1490,7 +1502,7 @@ void MediaFormatReader::OnDemuxFailed(TrackType aTrack,
             aTrack == TrackType::kVideoTrack ? "video_demux_interruption"
                                              : "audio_demux_interruption",
             aError);
-      if (!decoder.mWaitingForData) {
+      if (!decoder.mWaitingForDataStartTime) {
         decoder.RequestDrain();
       }
       NotifyEndOfStream(aTrack);
@@ -1500,7 +1512,7 @@ void MediaFormatReader::OnDemuxFailed(TrackType aTrack,
             aTrack == TrackType::kVideoTrack ? "video_demux_interruption"
                                              : "audio_demux_interruption",
             aError);
-      if (!decoder.mWaitingForData) {
+      if (!decoder.mWaitingForDataStartTime) {
         decoder.RequestDrain();
       }
       NotifyWaitingForData(aTrack);
@@ -1783,7 +1795,7 @@ void MediaFormatReader::NotifyError(TrackType aTrack,
 void MediaFormatReader::NotifyWaitingForData(TrackType aTrack) {
   MOZ_ASSERT(OnTaskQueue());
   auto& decoder = GetDecoderData(aTrack);
-  decoder.mWaitingForData = true;
+  decoder.mWaitingForDataStartTime = Some(TimeStamp::Now());
   if (decoder.mTimeThreshold) {
     decoder.mTimeThreshold.ref().mWaiting = true;
   }
@@ -1848,7 +1860,7 @@ bool MediaFormatReader::UpdateReceivedNewData(TrackType aTrack) {
     return false;
   }
 
-  // We do not want to clear mWaitingForData while there are pending
+  // We do not want to clear mWaitingForDataStartTime while there are pending
   // demuxing or seeking operations that could affect the value of this flag.
   // This is in order to ensure that we will retry once they complete as we may
   // now have new data that could potentially allow those operations to
@@ -1870,7 +1882,7 @@ bool MediaFormatReader::UpdateReceivedNewData(TrackType aTrack) {
   }
 
   if (decoder.HasPendingDrain()) {
-    // We do not want to clear mWaitingForData or mDemuxEOS while
+    // We do not want to clear mWaitingForDataStartTime or mDemuxEOS while
     // a drain is in progress in order to properly complete the operation.
     return false;
   }
@@ -1879,7 +1891,11 @@ bool MediaFormatReader::UpdateReceivedNewData(TrackType aTrack) {
   if (decoder.mTimeThreshold) {
     decoder.mTimeThreshold.ref().mWaiting = false;
   }
-  decoder.mWaitingForData = false;
+  if (aTrack == TrackType::kVideoTrack && decoder.mWaitingForDataStartTime) {
+    mTotalWaitingForVideoDataTime +=
+        TimeStamp::Now() - *decoder.mWaitingForDataStartTime;
+  }
+  decoder.mWaitingForDataStartTime.reset();
 
   if (decoder.HasFatalError()) {
     return false;
@@ -2390,7 +2406,7 @@ void MediaFormatReader::Update(TrackType aTrack) {
           NotifyDecoderBenchmarkStore();
         }
         decoder.RejectPromise(NS_ERROR_DOM_MEDIA_END_OF_STREAM, __func__);
-      } else if (decoder.mWaitingForData) {
+      } else if (decoder.mWaitingForDataStartTime) {
         if (decoder.mDrainState == DrainState::DrainCompleted &&
             decoder.mLastDecodedSampleTime && !decoder.mNextStreamSourceID) {
           // We have completed draining the decoder following WaitingForData.
@@ -2562,8 +2578,9 @@ void MediaFormatReader::Update(TrackType aTrack) {
        decoder.mNumSamplesOutput, uint32_t(size_t(decoder.mSizeOfQueue)),
        decoder.mDecodeRequest.Exists(), decoder.mFlushing,
        decoder.mDescription.get(), uint32_t(decoder.mOutput.Length()),
-       decoder.mWaitingForData, decoder.mDemuxEOS, int32_t(decoder.mDrainState),
-       decoder.mLastStreamSourceID, IsDecoderWaitingForCDM(aTrack));
+       !!decoder.mWaitingForDataStartTime, decoder.mDemuxEOS,
+       int32_t(decoder.mDrainState), decoder.mLastStreamSourceID,
+       IsDecoderWaitingForCDM(aTrack));
 
   if (IsWaitingOnCDMResource() || !ResolveSetCDMPromiseIfDone(aTrack)) {
     // If the content is encrypted, MFR won't start to create decoder until
@@ -2576,7 +2593,7 @@ void MediaFormatReader::Update(TrackType aTrack) {
       (decoder.IsWaitingForKey())) {
     // Nothing more we can do at present.
     LOGV("Still waiting for data or key. data(%d)/key(%d)",
-         decoder.mWaitingForData, decoder.mWaitingForKey);
+         !!decoder.mWaitingForDataStartTime, decoder.mWaitingForKey);
     return;
   }
 
@@ -3319,7 +3336,7 @@ void MediaFormatReader::GetDebugInfo(dom::MediaFormatReaderDebugInfo& aInfo) {
     aInfo.mAudioState.mQueueSize =
         AssertedCast<int32_t>(size_t(mAudio.mSizeOfQueue));
     aInfo.mAudioState.mPending = AssertedCast<int>(mAudio.mOutput.Length());
-    aInfo.mAudioState.mWaitingForData = mAudio.mWaitingForData;
+    aInfo.mAudioState.mWaitingForData = !!mAudio.mWaitingForDataStartTime;
     aInfo.mAudioState.mDemuxEOS = mAudio.mDemuxEOS;
     aInfo.mAudioState.mDrainState = int32_t(mAudio.mDrainState);
     aInfo.mAudioState.mWaitingForKey = mAudio.mWaitingForKey;
@@ -3359,12 +3376,15 @@ void MediaFormatReader::GetDebugInfo(dom::MediaFormatReaderDebugInfo& aInfo) {
     aInfo.mVideoState.mQueueSize =
         AssertedCast<int32_t>(size_t(mVideo.mSizeOfQueue));
     aInfo.mVideoState.mPending = AssertedCast<int32_t>(mVideo.mOutput.Length());
-    aInfo.mVideoState.mWaitingForData = mVideo.mWaitingForData;
+    aInfo.mVideoState.mWaitingForData = !!mVideo.mWaitingForDataStartTime;
     aInfo.mVideoState.mDemuxEOS = mVideo.mDemuxEOS;
     aInfo.mVideoState.mDrainState = int32_t(mVideo.mDrainState);
     aInfo.mVideoState.mWaitingForKey = mVideo.mWaitingForKey;
     aInfo.mVideoState.mLastStreamSourceID =
         AssertedCast<int64_t>(mVideo.mLastStreamSourceID);
+    aInfo.mTotalReadMetadataTimeMs = mReadMetaDataTime.ToMilliseconds();
+    aInfo.mTotalWaitingForVideoDataTimeMs =
+        mTotalWaitingForVideoDataTime.ToMilliseconds();
   }
 
   CopyUTF8toUTF16(videoDecoderName, aInfo.mVideoDecoderName);

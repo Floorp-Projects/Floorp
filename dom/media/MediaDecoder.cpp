@@ -893,19 +893,39 @@ void MediaDecoder::FirstFrameLoaded(
 
   // We only care about video first frame.
   if (mInfo->HasVideo() && mMDSMCreationTime) {
-    using FirstFrameLoadedFlag = TelemetryProbesReporter::FirstFrameLoadedFlag;
-    TelemetryProbesReporter::FirstFrameLoadedFlagSet flags;
-    if (IsMSE()) {
-      flags += FirstFrameLoadedFlag::IsMSE;
+    auto info = MakeUnique<dom::MediaDecoderDebugInfo>();
+    RequestDebugInfo(*info)->Then(
+        GetMainThreadSerialEventTarget(), __func__,
+        [self = RefPtr<MediaDecoder>{this}, this, now = TimeStamp::Now(),
+         creationTime = *mMDSMCreationTime, result = std::move(info)](
+            GenericPromise::ResolveOrRejectValue&& aValue) mutable {
+          if (IsShutdown()) {
+            return;
+          }
+          if (aValue.IsReject()) {
+            NS_WARNING("Failed to get debug info for the first frame probe!");
+            return;
+          }
+          auto firstFrameLoadedTime = (now - creationTime).ToMilliseconds();
+          MOZ_ASSERT(result->mReader.mTotalReadMetadataTimeMs >= 0.0);
+          MOZ_ASSERT(result->mReader.mTotalWaitingForVideoDataTimeMs >= 0.0);
+
+          using FirstFrameLoadedFlag =
+              TelemetryProbesReporter::FirstFrameLoadedFlag;
+          TelemetryProbesReporter::FirstFrameLoadedFlagSet flags;
+          if (IsMSE()) {
+            flags += FirstFrameLoadedFlag::IsMSE;
+          }
+          if (mDecoderStateMachine->IsExternalEngineStateMachine()) {
+            flags += FirstFrameLoadedFlag::IsExternalEngineStateMachine;
+          }
+          if (IsHLSDecoder()) {
+            flags += FirstFrameLoadedFlag::IsHLS;
+          }
+          mTelemetryProbesReporter->OntFirstFrameLoaded(
+              firstFrameLoadedTime, result->mReader.mTotalReadMetadataTimeMs,
+              result->mReader.mTotalWaitingForVideoDataTimeMs, flags);
         });
-    if (mDecoderStateMachine->IsExternalEngineStateMachine()) {
-      flags += FirstFrameLoadedFlag::IsExternalEngineStateMachine;
-    }
-    if (IsHLSDecoder()) {
-      flags += FirstFrameLoadedFlag::IsHLS;
-    }
-    mTelemetryProbesReporter->OntFirstFrameLoaded(
-        TimeStamp::Now() - *mMDSMCreationTime, flags);
     mMDSMCreationTime.reset();
   }
 

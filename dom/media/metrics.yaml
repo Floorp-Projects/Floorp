@@ -117,7 +117,19 @@ media.playback:
       first_frame_loaded_time:
         description:
           How long (in milliseconds) does the our media pipeline take to load
-          the first video frame.
+          the first video frame from "the creation of MDSM" to "the first frame
+          loaded".
+        type: quantity
+      metadata_loaded_time:
+        description:
+          How long (in milliseconds) does the our media pipeline take to load
+          the metadata, which happens before finishing loading the first frame.
+        type: quantity
+      total_waiting_data_time:
+        description:
+          How long (in milliseconds) does the our media pipeline has been in a
+          state of waiting video data due to lacking of data before the first
+          frame is loaded.
         type: quantity
       playback_type:
         description:
