@@ -203,7 +203,7 @@ var SidebarUI = {
 
   /**
    * The handler for Services.obs.addObserver.
-   **/
+   */
   observe(_subject, topic, _data) {
     switch (topic) {
       case "intl:app-locales-changed": {
@@ -260,6 +260,7 @@ var SidebarUI = {
 
   /**
    * Handles keydown on the the switcherTarget button
+   *
    * @param  {Event} event
    */
   handleKeydown(event) {
@@ -368,8 +369,9 @@ var SidebarUI = {
 
   /**
    * Try and adopt the status of the sidebar from another window.
+   *
    * @param {Window} sourceWindow - Window to use as a source for sidebar status.
-   * @return true if we adopted the state, or false if the caller should
+   * @returns {boolean} true if we adopted the state, or false if the caller should
    * initialize the state itself.
    */
   adoptFromWindow(sourceWindow) {
@@ -512,7 +514,7 @@ var SidebarUI = {
    * @param  {string}  commandID     ID of the sidebar.
    * @param  {DOMNode} [triggerNode] Node, usually a button, that triggered the
    *                                 visibility toggling of the sidebar.
-   * @return {Promise}
+   * @returns {Promise}
    */
   toggle(commandID = this.lastOpenedId, triggerNode) {
     if (
@@ -559,7 +561,7 @@ var SidebarUI = {
    * @param {string}  commandID     ID of the sidebar to use.
    * @param {DOMNode} [triggerNode] Node, usually a button, that triggered the
    *                                showing of the sidebar.
-   * @return {Promise<boolean>}
+   * @returns {Promise<boolean>}
    */
   async show(commandID, triggerNode) {
     let panelType = commandID.substring(4, commandID.length - 7);
@@ -588,7 +590,7 @@ var SidebarUI = {
    * when a window opens (not triggered by user interaction).
    *
    * @param {string} commandID ID of the sidebar.
-   * @return {Promise<boolean>}
+   * @returns {Promise<boolean>}
    */
   async showInitially(commandID) {
     let panelType = commandID.substring(4, commandID.length - 7);
@@ -610,7 +612,7 @@ var SidebarUI = {
    * when a window is opened and we don't want to ping telemetry.
    *
    * @param {string} commandID ID of the sidebar.
-   * @return {Promise<void>}
+   * @returns {Promise<void>}
    */
   _show(commandID) {
     return new Promise(resolve => {

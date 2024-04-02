@@ -57,6 +57,7 @@ const MAPPINGS = {
     "browser/components/places/content/places-menupopup.js",
   "shopping-sidebar.js":
     "browser/components/shopping/content/shopping-sidebar.js",
+  "browser-sidebar.js": "browser/components/sidebar/browser-sidebar.js",
 };
 
 const globalScriptsRegExp =
