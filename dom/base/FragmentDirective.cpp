@@ -21,6 +21,7 @@
 #include "nsICSSDeclaration.h"
 #include "nsIFrame.h"
 #include "nsINode.h"
+#include "nsIURIMutator.h"
 #include "nsRange.h"
 #include "nsString.h"
 
@@ -48,6 +49,34 @@ FragmentDirective::FragmentDirective(Document* aDocument)
 JSObject* FragmentDirective::WrapObject(JSContext* aCx,
                                         JS::Handle<JSObject*> aGivenProto) {
   return FragmentDirective_Binding::Wrap(aCx, this, aGivenProto);
+}
+
+void FragmentDirective::ParseAndRemoveFragmentDirectiveFromFragment(
+    nsCOMPtr<nsIURI>& aURI, nsTArray<TextDirective>* aTextDirectives) {
+  if (!aURI || !StaticPrefs::dom_text_fragments_enabled()) {
+    return;
+  }
+  bool hasRef = false;
+  aURI->GetHasRef(&hasRef);
+  if (!hasRef) {
+    return;
+  }
+
+  nsAutoCString hash;
+  aURI->GetRef(hash);
+
+  ParsedFragmentDirectiveResult fragmentDirective;
+  const bool hasRemovedFragmentDirective =
+      parse_fragment_directive(&hash, &fragmentDirective);
+  if (!hasRemovedFragmentDirective) {
+    return;
+  }
+  Unused << NS_MutateURI(aURI)
+                .SetRef(fragmentDirective.url_without_fragment_directive)
+                .Finalize(aURI);
+  if (aTextDirectives) {
+    aTextDirectives->SwapElements(fragmentDirective.text_directives);
+  }
 }
 
 nsTArray<RefPtr<nsRange>> FragmentDirective::FindTextFragmentsInDocument() {
