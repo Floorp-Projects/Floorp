@@ -1945,6 +1945,7 @@ void SurfaceCache::ReleaseImageOnMainThread(
   // Don't try to dispatch the release after shutdown, we'll just leak the
   // runnable.
   if (AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdownFinal)) {
+    Unused << aImage;
     return;
   }
 
