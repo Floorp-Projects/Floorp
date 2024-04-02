@@ -84,10 +84,13 @@
          sharing an URL. -->
     <string name="share_dialog_title">Kua´a jii</string>
 
-    <!-- While a browsing session is active (in the foreground or background) we will show a notification
-         so that the user doesn't forget about the website still being open. This text is shown in
-         the notification. Clicking the notification will have the same effect as clicking the "erase"
-         button in the application. -->
+    <string name="notification_erase_title_android_14">Xiná daa nnánukunu?</string>
+    <string name="notification_erase_text_android_14" moz:RemovedIn="124" tools:ignore="UnusedResources">Kuaxin a xíín xina notificación sa naa a nnánukunu.</string>
+
+    <!-- Text shown in the notification description that pops up to remind the user that a browsing session is active
+    for Android 14+. -->
+    <string name="notification_erase_text_android_14_1">Kuaxin a xíín xina notificación sa naa a nnánukunu.</string>
+
     <string name="notification_erase_text">Xiná daa nnánukunu</string>
 
     <!-- Notification action to open Focus and resume the current browsing session. -->
@@ -622,8 +625,19 @@
 
     <!-- Text shown in the "Your rights" screen.
     %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the trademark policy (e.g. https://www.mozilla.org/foundation/trademarks/policy/) -->
+    <string name="your_rights_content3"><![CDATA[Ntu taji tutu xitu a xíín daa inka tutu xitu Mozilla a xíín inka vetiñu nuu noo\'o, vani kuviji logos a xiin sivɨ Mozilla, Firefox a xiin %1$s. Kuvi nani\'inu kue\'eka jiee  <a href="%2$s">ya\'a</a>.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
     %2$s will be replaced with a URL linking to the list of licenses used by the dependencies.-->
     <string name="your_rights_content4"><![CDATA[Código da fuente adicional %1$s íyo jíí <a href="%2$s"> licencias </a> nune jee kuvi sama código.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the GPL
+    %3$s will be replaced with a URL linking to the tracking protection wiki page (e.g. https://wiki.mozilla.org/Security/Tracking_protection#Lists) -->
+    <string name="your_rights_content5"><![CDATA[%1$s ni´i lista ntɨ tuvi a taji Disconnect, Inc. jiee <a href="%2$s"> tutu xitu ntaka GNU v3 </a> jee kuvi nani´inuma <a href="%3$s"> ya´a </a>.]]></string>
 
     <!-- Text shown in prompts for GeckoView -->
     <string name="gv_prompt_username_hint">Sivɨ</string>
@@ -726,8 +740,14 @@
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site. -->
     <string name="cookie_banner_exception_panel_title_state_off_for_site">¿A kuvi sa´a reducción banner da cookies nu %1$s?</string>
 
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
+    <string name="cookie_banner_exception_panel_description_state_on_for_site">%1$s Naa daa cookies sitio ya\'a jee nakajie\'e tuku tutu. Dee naa kuaiyo daa cookies kuvi nakasɨ sesión noo\'o a xíín naa daa ka̱a̱ nuu ke\'en.</string>
+
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
     <string name="cookie_banner_exception_panel_description_state_off_for_site2">%1$s kuvi sá´á njia´a da solicitudes jikan cookies.</string>
+
+    <!-- Long text for a detail explanation indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner panel in the toolbar. -->
+    <string name="cookie_banner_exception_panel_description_site_is_not_supported">Ntañu\'un, nuu ya\'a ntu satiñu va\'a jíí reducción banner jíí cookies. ¿A kuvinu kakanu nuu daa nuu\'u kune\'yadani nuu web ya\'a saa kuvi satiñu va\'a íchi nuu?</string>
 
     <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner panel in the toolbar. -->
     <string name="cookie_banner_exception_panel_site_is_not_supported_cancel_button">Nkuvi</string>
@@ -741,6 +761,10 @@
     <!-- Label for cookie banner item from tracking protection, after the user reports with success a website where cookie banner reducer did not work -->
     <string name="cookie_banner_the_site_was_reported">Tutu a chineida noo´o nchu´un ichi</string>
 
+    <!-- Contextual Feature Recommendation Popups -->
+    <!-- CFR for Cookie Banner (Banner Info Message). %1$s will be replaced by the app name, %2$s will be an active link using the string cfr_cookie_banner_link as text. -->
+    <string name="cfr_cookie_banner">%1$s Nkua\'anu jia\'a daa solicitudes cookies saa naa daa banners cokies.\n
+\n Ke\'i daa preferencias banners cookies nu %2$s.</string>
     <!-- CFR for Cookie Banner (Banner Info Message). This string is used as text for a link in cfr_cookie_banner and takes the user to the app settings. -->
     <string name="cfr_cookie_banner_link">Da nu ke´i</string>
 
@@ -914,6 +938,9 @@
     <!-- Title of the preference to enable "HTTPS-Only" mode -->
     <string name="preference_https_only_title">Ntu xini HTTPS</string>
 
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preference_https_only_summary3">Nakivɨ tuku nuu daa sitio jee ni\'i protocolo encriptación HTTPS saa koo kue\'eka a kumiji noo\'o saa jikanu nuu ka̱a̱ ya\'a.</string>
+
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Exceptions</string>
     <!-- Description for the exceptions preference screen-->
@@ -1004,8 +1031,27 @@
      <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
     <string name="errorpage_httpsonly_title2">Ntu satiñu vatu jii HTTPS</string>
 
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus").
+        Contains a button that will redirect the user to Privacy & Security Screen-->
+    <string name="errorpage_httpsonly_message2"><![CDATA[%1$s Ni\'i iin conexión HTTPS ntaka kuvinu koo kue\'e a kumiji noo\'o
+     <a href="%2$s">Kuni kue\'eka jiee</a> <br/><br/>
+     Sama configuración nuu ajustes > Privacidad &amp; Seguridad > Seguridad.]]></string>
+
     <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_title">Conexión ntu va´a</string>
+
+     <!-- The error message shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+ Sa̱na kuvi iin problema jii configuración ka̱a̱ servidor a xíín íyo neva kuvi sa´a xeen.<br/><br/>
+ Dee a kivɨ-nu servidor ya´a íchi yata sa̱naan kuvi iin error nkene ntañu\'u, kuvi nakivɨ-nu íchika dee nníní.
+ ]]></string>
+
+    <!-- The advanced certificate information shown when a website has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+ <label>Sana íyo ñivɨ kuvi kantu\'un noo\'o nuu sitio ya\'a de jia\'nu kuvi koo tixi.</label>
+ <br><br>
+ <label>%1$s no confía en <b>%2$s</b> porque el emisor del certificado es desconocido, el certificado está autofirmado o el servidor no envía los certificados intermedios correctos.</label>
+ ]]></string>
 
      <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
@@ -1021,6 +1067,8 @@
     <!-- Tool Tip for: Privacy and Security Settings Screen  task : https://github.com/mozilla-mobile/focus-android/issues/6211 -->
     <!-- Tool Tip Title -->
     <string name="tool_tip_title">¡Kumidani noo´o!</string>
+    <!-- Tool Tip Message -->
+    <string name="tool_tip_message">Configuración predeterminada jia\'a iin a kumi. Ntu viji kuvi kei\'o saa kuvi koo kua kuvinu ni\'inuma</string>
     <!-- Tool Tip "X" button Content description (not visible, for screen readers etc.) :Button that closes the tool tip -->
     <string name="tool_tip_dismiss_button_content_description">Xita</string>
 
