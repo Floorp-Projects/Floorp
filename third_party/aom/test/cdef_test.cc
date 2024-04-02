@@ -614,7 +614,7 @@ TEST_P(CDEFCopyRect16to16Test, TestSIMDNoMismatch) {
 
 using std::make_tuple;
 
-#if (HAVE_SSE2 || HAVE_SSSE3 || HAVE_SSE4_1 || HAVE_AVX2 || HAVE_NEON)
+#if ((AOM_ARCH_X86 && HAVE_SSSE3) || HAVE_SSE4_1 || HAVE_AVX2 || HAVE_NEON)
 static const CdefFilterBlockFunctions kCdefFilterFuncC[] = {
   { &cdef_filter_8_0_c, &cdef_filter_8_1_c, &cdef_filter_8_2_c,
     &cdef_filter_8_3_c }
@@ -626,50 +626,7 @@ static const CdefFilterBlockFunctions kCdefFilterHighbdFuncC[] = {
 };
 #endif
 
-#if HAVE_SSE2
-static const CdefFilterBlockFunctions kCdefFilterFuncSse2[] = {
-  { &cdef_filter_8_0_sse2, &cdef_filter_8_1_sse2, &cdef_filter_8_2_sse2,
-    &cdef_filter_8_3_sse2 }
-};
-
-static const CdefFilterBlockFunctions kCdefFilterHighbdFuncSse2[] = {
-  { &cdef_filter_16_0_sse2, &cdef_filter_16_1_sse2, &cdef_filter_16_2_sse2,
-    &cdef_filter_16_3_sse2 }
-};
-
-INSTANTIATE_TEST_SUITE_P(
-    SSE2, CDEFBlockTest,
-    ::testing::Combine(::testing::ValuesIn(kCdefFilterFuncSse2),
-                       ::testing::ValuesIn(kCdefFilterFuncC),
-                       ::testing::Values(BLOCK_4X4, BLOCK_4X8, BLOCK_8X4,
-                                         BLOCK_8X8),
-                       ::testing::Range(0, 16), ::testing::Values(8)));
-INSTANTIATE_TEST_SUITE_P(
-    SSE2, CDEFBlockHighbdTest,
-    ::testing::Combine(::testing::ValuesIn(kCdefFilterHighbdFuncSse2),
-                       ::testing::ValuesIn(kCdefFilterHighbdFuncC),
-                       ::testing::Values(BLOCK_4X4, BLOCK_4X8, BLOCK_8X4,
-                                         BLOCK_8X8),
-                       ::testing::Range(0, 16), ::testing::Range(10, 13, 2)));
-INSTANTIATE_TEST_SUITE_P(SSE2, CDEFFindDirTest,
-                         ::testing::Values(make_tuple(&cdef_find_dir_sse2,
-                                                      &cdef_find_dir_c)));
-INSTANTIATE_TEST_SUITE_P(SSE2, CDEFFindDirDualTest,
-                         ::testing::Values(make_tuple(&cdef_find_dir_dual_sse2,
-                                                      &cdef_find_dir_dual_c)));
-
-INSTANTIATE_TEST_SUITE_P(
-    SSE2, CDEFCopyRect8to16Test,
-    ::testing::Values(make_tuple(&cdef_copy_rect8_8bit_to_16bit_c,
-                                 &cdef_copy_rect8_8bit_to_16bit_sse2)));
-
-INSTANTIATE_TEST_SUITE_P(
-    SSE2, CDEFCopyRect16to16Test,
-    ::testing::Values(make_tuple(&cdef_copy_rect8_16bit_to_16bit_c,
-                                 &cdef_copy_rect8_16bit_to_16bit_sse2)));
-#endif
-
-#if HAVE_SSSE3
+#if AOM_ARCH_X86 && HAVE_SSSE3
 static const CdefFilterBlockFunctions kCdefFilterFuncSsse3[] = {
   { &cdef_filter_8_0_ssse3, &cdef_filter_8_1_ssse3, &cdef_filter_8_2_ssse3,
     &cdef_filter_8_3_ssse3 }
@@ -843,30 +800,7 @@ INSTANTIATE_TEST_SUITE_P(
 #endif
 
 // Test speed for all supported architectures
-#if HAVE_SSE2
-INSTANTIATE_TEST_SUITE_P(
-    SSE2, CDEFSpeedTest,
-    ::testing::Combine(::testing::ValuesIn(kCdefFilterFuncSse2),
-                       ::testing::ValuesIn(kCdefFilterFuncC),
-                       ::testing::Values(BLOCK_4X4, BLOCK_4X8, BLOCK_8X4,
-                                         BLOCK_8X8),
-                       ::testing::Range(0, 16), ::testing::Values(8)));
-INSTANTIATE_TEST_SUITE_P(
-    SSE2, CDEFSpeedHighbdTest,
-    ::testing::Combine(::testing::ValuesIn(kCdefFilterHighbdFuncSse2),
-                       ::testing::ValuesIn(kCdefFilterHighbdFuncC),
-                       ::testing::Values(BLOCK_4X4, BLOCK_4X8, BLOCK_8X4,
-                                         BLOCK_8X8),
-                       ::testing::Range(0, 16), ::testing::Values(10)));
-INSTANTIATE_TEST_SUITE_P(SSE2, CDEFFindDirSpeedTest,
-                         ::testing::Values(make_tuple(&cdef_find_dir_sse2,
-                                                      &cdef_find_dir_c)));
-INSTANTIATE_TEST_SUITE_P(SSE2, CDEFFindDirDualSpeedTest,
-                         ::testing::Values(make_tuple(&cdef_find_dir_dual_sse2,
-                                                      &cdef_find_dir_dual_c)));
-#endif
-
-#if HAVE_SSSE3
+#if AOM_ARCH_X86 && HAVE_SSSE3
 INSTANTIATE_TEST_SUITE_P(
     SSSE3, CDEFSpeedTest,
     ::testing::Combine(::testing::ValuesIn(kCdefFilterFuncSsse3),

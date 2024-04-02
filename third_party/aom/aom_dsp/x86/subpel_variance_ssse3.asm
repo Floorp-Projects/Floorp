@@ -15,21 +15,6 @@
 
 SECTION_RODATA
 pw_8: times  8 dw  8
-bilin_filter_m_sse2: times  8 dw 16
-                     times  8 dw  0
-                     times  8 dw 14
-                     times  8 dw  2
-                     times  8 dw 12
-                     times  8 dw  4
-                     times  8 dw 10
-                     times  8 dw  6
-                     times 16 dw  8
-                     times  8 dw  6
-                     times  8 dw 10
-                     times  8 dw  4
-                     times  8 dw 12
-                     times  8 dw  2
-                     times  8 dw 14
 
 bilin_filter_m_ssse3: times  8 db 16,  0
                       times  8 db 14,  2
@@ -109,9 +94,6 @@ SECTION .text
 %if cpuflag(ssse3)
 %define bilin_filter_m bilin_filter_m_ssse3
 %define filter_idx_shift 4
-%else
-%define bilin_filter_m bilin_filter_m_sse2
-%define filter_idx_shift 5
 %endif
 ; FIXME(rbultje) only bilinear filters use >8 registers, and ssse3 only uses
 ; 11, not 13, if the registers are ordered correctly. May make a minor speed
@@ -1449,20 +1431,10 @@ SECTION .text
 ; location in the sse/2 version, rather than duplicating that code in the
 ; binary.
 
-INIT_XMM sse2
-SUBPEL_VARIANCE  4
-SUBPEL_VARIANCE  8
-SUBPEL_VARIANCE 16
-
 INIT_XMM ssse3
 SUBPEL_VARIANCE  4
 SUBPEL_VARIANCE  8
 SUBPEL_VARIANCE 16
-
-INIT_XMM sse2
-SUBPEL_VARIANCE  4, 1
-SUBPEL_VARIANCE  8, 1
-SUBPEL_VARIANCE 16, 1
 
 INIT_XMM ssse3
 SUBPEL_VARIANCE  4, 1

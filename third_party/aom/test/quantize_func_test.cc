@@ -482,9 +482,9 @@ const QuantizeParam<LPQuantizeFunc> kLPQParamArrayAvx2[] = {
   make_tuple(&av1_quantize_lp_c, &av1_quantize_lp_avx2,
              static_cast<TX_SIZE>(TX_16X16), TYPE_FP, AOM_BITS_8),
   make_tuple(&av1_quantize_lp_c, &av1_quantize_lp_avx2,
-             static_cast<TX_SIZE>(TX_32X32), TYPE_FP, AOM_BITS_8),
+             static_cast<TX_SIZE>(TX_8X8), TYPE_FP, AOM_BITS_8),
   make_tuple(&av1_quantize_lp_c, &av1_quantize_lp_avx2,
-             static_cast<TX_SIZE>(TX_64X64), TYPE_FP, AOM_BITS_8)
+             static_cast<TX_SIZE>(TX_4X4), TYPE_FP, AOM_BITS_8)
 };
 
 INSTANTIATE_TEST_SUITE_P(AVX2, LowPrecisionQuantizeTest,
@@ -704,9 +704,9 @@ const QuantizeParam<LPQuantizeFunc> kLPQParamArrayNEON[] = {
   make_tuple(av1_quantize_lp_c, av1_quantize_lp_neon,
              static_cast<TX_SIZE>(TX_16X16), TYPE_FP, AOM_BITS_8),
   make_tuple(av1_quantize_lp_c, av1_quantize_lp_neon,
-             static_cast<TX_SIZE>(TX_32X32), TYPE_FP, AOM_BITS_8),
+             static_cast<TX_SIZE>(TX_8X8), TYPE_FP, AOM_BITS_8),
   make_tuple(av1_quantize_lp_c, av1_quantize_lp_neon,
-             static_cast<TX_SIZE>(TX_64X64), TYPE_FP, AOM_BITS_8)
+             static_cast<TX_SIZE>(TX_4X4), TYPE_FP, AOM_BITS_8)
 };
 
 INSTANTIATE_TEST_SUITE_P(NEON, LowPrecisionQuantizeTest,

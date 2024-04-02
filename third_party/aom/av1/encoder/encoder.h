@@ -21,6 +21,7 @@
 #include "config/aom_config.h"
 
 #include "aom/aomcx.h"
+#include "aom_util/aom_pthread.h"
 
 #include "av1/common/alloccommon.h"
 #include "av1/common/av1_common_int.h"
@@ -3631,10 +3632,10 @@ typedef struct AV1_COMP {
   unsigned int zeromv_skip_thresh_exit_part[BLOCK_SIZES_ALL];
 
   /*!
-   *  Number of downsampling pyramid levels to allocate for each frame
+   *  Should we allocate a downsampling pyramid for each frame buffer?
    *  This is currently only used for global motion
    */
-  int image_pyramid_levels;
+  bool alloc_pyramid;
 
 #if CONFIG_SALIENCY_MAP
   /*!
@@ -3808,7 +3809,7 @@ int av1_init_parallel_frame_context(const AV1_COMP_DATA *const first_cpi_data,
  * copy of the pointer.
  */
 int av1_receive_raw_frame(AV1_COMP *cpi, aom_enc_frame_flags_t frame_flags,
-                          YV12_BUFFER_CONFIG *sd, int64_t time_stamp,
+                          const YV12_BUFFER_CONFIG *sd, int64_t time_stamp,
                           int64_t end_time_stamp);
 
 /*!\brief Encode a frame
@@ -4310,7 +4311,7 @@ static AOM_INLINE int is_psnr_calc_enabled(const AV1_COMP *cpi) {
   const AV1_COMMON *const cm = &cpi->common;
 
   return cpi->ppi->b_calculate_psnr && !is_stat_generation_stage(cpi) &&
-         cm->show_frame;
+         cm->show_frame && !cpi->is_dropped_frame;
 }
 
 static INLINE int is_frame_resize_pending(const AV1_COMP *const cpi) {

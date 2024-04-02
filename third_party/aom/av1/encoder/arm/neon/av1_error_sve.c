@@ -14,7 +14,7 @@
 #include "config/aom_config.h"
 
 #include "aom_dsp/aom_dsp_common.h"
-#include "aom_dsp/arm/dot_sve.h"
+#include "aom_dsp/arm/aom_neon_sve_bridge.h"
 #include "aom_dsp/arm/mem_neon.h"
 
 int64_t av1_block_error_sve(const tran_low_t *coeff, const tran_low_t *dqcoeff,

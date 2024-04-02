@@ -24,7 +24,13 @@
 #define DECLARE_ALIGNED(n, typ, val) typ val
 #endif
 
-#if HAVE_NEON && defined(_MSC_VER)
+#if defined(__has_builtin)
+#define AOM_HAS_BUILTIN(x) __has_builtin(x)
+#else
+#define AOM_HAS_BUILTIN(x) 0
+#endif
+
+#if !AOM_HAS_BUILTIN(__builtin_prefetch) && !defined(__GNUC__)
 #define __builtin_prefetch(x)
 #endif
 
