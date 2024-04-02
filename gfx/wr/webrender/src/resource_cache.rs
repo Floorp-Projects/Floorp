@@ -193,12 +193,6 @@ struct ImageResource {
     generation: ImageGeneration,
 }
 
-#[derive(Clone, Debug)]
-pub struct ImageTiling {
-    pub image_size: DeviceIntSize,
-    pub tile_size: TileSize,
-}
-
 #[derive(Default)]
 struct ImageTemplates {
     images: FastHashMap<ImageKey, ImageResource>,

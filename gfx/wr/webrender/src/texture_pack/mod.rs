@@ -57,8 +57,6 @@ pub trait AtlasAllocatorList<TextureParameters> {
 
     fn set_handle(&mut self, texture_id: CacheTextureId, alloc_id: AllocId, handle: &TextureCacheHandle);
 
-    fn remove_handle(&mut self, texture_id: CacheTextureId, alloc_id: AllocId);
-
     /// Deallocate a rectangle and return its size.
     fn deallocate(&mut self, texture_id: CacheTextureId, alloc_id: AllocId);
 
@@ -233,14 +231,6 @@ for AllocatorList<Allocator, TextureParameters> {
             .find(|unit| unit.texture_id == texture_id)
             .expect("Unable to find the associated texture array unit");
         unit.handles.insert(alloc_id, handle.clone());
-    }
-
-    fn remove_handle(&mut self, texture_id: CacheTextureId, alloc_id: AllocId) {
-        let unit = self.units
-            .iter_mut()
-            .find(|unit| unit.texture_id == texture_id)
-            .expect("Unable to find the associated texture array unit");
-        unit.handles.remove(&alloc_id);
     }
 
     fn deallocate(&mut self, texture_id: CacheTextureId, alloc_id: AllocId) {
