@@ -21,6 +21,8 @@ import android.widget.LinearLayout.LayoutParams
 import android.widget.TextView
 import androidx.annotation.VisibleForTesting
 import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.R
 import mozilla.components.support.utils.ext.getParcelableCompat
@@ -151,10 +153,15 @@ class PermissionsDialogFragment : AddonDialogFragment() {
             },
             addon.translateName(requireContext()),
         )
-        rootView.findViewById<TextView>(R.id.permissions).text = buildPermissionsText()
+        rootView.findViewById<TextView>(R.id.optional_or_required_text).text = buildOptionalOrRequiredText()
 
+        val listPermissions = buildPermissionsList()
+        val permissionsRecyclerView = rootView.findViewById<RecyclerView>(R.id.permissions)
         val positiveButton = rootView.findViewById<Button>(R.id.allow_button)
         val negativeButton = rootView.findViewById<Button>(R.id.deny_button)
+
+        permissionsRecyclerView.adapter = RequiredPermissionsAdapter(listPermissions)
+        permissionsRecyclerView.layoutManager = LinearLayoutManager(context)
 
         if (forOptionalPermissions) {
             positiveButton.text = requireContext().getString(R.string.mozac_feature_addons_permissions_dialog_allow)
@@ -199,28 +206,25 @@ class PermissionsDialogFragment : AddonDialogFragment() {
     }
 
     @VisibleForTesting
-    internal fun buildPermissionsText(): String {
-        var permissionsText = ""
-        val permissions = if (forOptionalPermissions) {
+    internal fun buildPermissionsList(): List<String> {
+        val permissionsList = if (forOptionalPermissions) {
             Addon.localizePermissions(optionalPermissions.asList(), requireContext())
         } else {
             addon.translatePermissions(requireContext())
         }
 
-        if (permissions.isNotEmpty()) {
-            permissionsText += if (forOptionalPermissions) {
-                getString(R.string.mozac_feature_addons_optional_permissions_dialog_subtitle)
-            } else {
-                getString(R.string.mozac_feature_addons_permissions_dialog_subtitle)
-            }
-            permissionsText += "\n\n"
-            permissions.forEachIndexed { index, item ->
-                val brakeLine = if (index + 1 != permissions.size) "\n\n" else ""
-                permissionsText += "• $item $brakeLine"
-            }
+        return permissionsList
+    }
+
+    @VisibleForTesting
+    internal fun buildOptionalOrRequiredText(): String {
+        val optionalOrRequiredText = if (forOptionalPermissions) {
+            getString(R.string.mozac_feature_addons_optional_permissions_dialog_subtitle)
+        } else {
+            getString(R.string.mozac_feature_addons_permissions_dialog_subtitle)
         }
 
-        return permissionsText
+        return optionalOrRequiredText
     }
 
     companion object {

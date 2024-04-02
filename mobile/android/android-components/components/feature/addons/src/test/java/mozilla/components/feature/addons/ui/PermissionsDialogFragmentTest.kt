@@ -10,12 +10,14 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentTransaction
+import androidx.recyclerview.widget.RecyclerView
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.R
 import mozilla.components.feature.addons.ui.AddonDialogFragment.PromptsStyling
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -43,19 +45,24 @@ class PermissionsDialogFragmentTest {
 
         val name = addon.translateName(testContext)
         val titleTextView = dialog.findViewById<TextView>(R.id.title)
-        val permissionTextView = dialog.findViewById<TextView>(R.id.permissions)
-        val permissionText = fragment.buildPermissionsText()
+        val optionalOrRequiredTextView = dialog.findViewById<TextView>(R.id.optional_or_required_text)
+        val permissionsRecyclerView = dialog.findViewById<RecyclerView>(R.id.permissions)
+        val recyclerAdapter = permissionsRecyclerView.adapter!! as RequiredPermissionsAdapter
+        val optionalOrRequiredText = fragment.buildOptionalOrRequiredText()
+        val permissionList = fragment.buildPermissionsList()
 
         assertTrue(titleTextView.text.contains(name))
-        assertTrue(permissionText.contains(testContext.getString(R.string.mozac_feature_addons_permissions_dialog_subtitle)))
-        assertTrue(permissionText.contains(testContext.getString(R.string.mozac_feature_addons_permissions_privacy_description)))
-        assertTrue(permissionText.contains(testContext.getString(R.string.mozac_feature_addons_permissions_all_urls_description)))
-        assertTrue(permissionText.contains(testContext.getString(R.string.mozac_feature_addons_permissions_tabs_description)))
+        assertTrue(optionalOrRequiredText.contains(testContext.getString(R.string.mozac_feature_addons_permissions_dialog_subtitle)))
+        assertTrue(permissionList.contains(testContext.getString(R.string.mozac_feature_addons_permissions_privacy_description)))
+        assertTrue(permissionList.contains(testContext.getString(R.string.mozac_feature_addons_permissions_all_urls_description)))
+        assertTrue(permissionList.contains(testContext.getString(R.string.mozac_feature_addons_permissions_tabs_description)))
 
-        assertTrue(permissionTextView.text.contains(testContext.getString(R.string.mozac_feature_addons_permissions_dialog_subtitle)))
-        assertTrue(permissionTextView.text.contains(testContext.getString(R.string.mozac_feature_addons_permissions_privacy_description)))
-        assertTrue(permissionTextView.text.contains(testContext.getString(R.string.mozac_feature_addons_permissions_all_urls_description)))
-        assertTrue(permissionTextView.text.contains(testContext.getString(R.string.mozac_feature_addons_permissions_tabs_description)))
+        assertTrue(optionalOrRequiredTextView.text.contains(testContext.getString(R.string.mozac_feature_addons_permissions_dialog_subtitle)))
+        Assert.assertNotNull(recyclerAdapter)
+        assertEquals(3, recyclerAdapter.itemCount)
+        assertTrue(recyclerAdapter.getItemAtPosition(0).contains(testContext.getString(R.string.mozac_feature_addons_permissions_privacy_description)))
+        assertTrue(recyclerAdapter.getItemAtPosition(1).contains(testContext.getString(R.string.mozac_feature_addons_permissions_all_urls_description)))
+        assertTrue(recyclerAdapter.getItemAtPosition(2).contains(testContext.getString(R.string.mozac_feature_addons_permissions_tabs_description)))
     }
 
     @Test
@@ -143,12 +150,19 @@ class PermissionsDialogFragmentTest {
 
         val name = addon.translateName(testContext)
         val titleTextView = dialog.findViewById<TextView>(R.id.title)
-        val permissionTextView = dialog.findViewById<TextView>(R.id.permissions)
-        val permissionText = fragment.buildPermissionsText()
+        val optionalOrRequiredTextView = dialog.findViewById<TextView>(R.id.optional_or_required_text)
+        val permissionsRecyclerView = dialog.findViewById<RecyclerView>(R.id.permissions)
+        val recyclerAdapter = permissionsRecyclerView.adapter!! as RequiredPermissionsAdapter
+        val optionalOrRequiredText = fragment.buildOptionalOrRequiredText()
+        val permissionList = fragment.buildPermissionsList()
 
         assertTrue(titleTextView.text.contains(name))
-        assertFalse(permissionText.contains(testContext.getString(R.string.mozac_feature_addons_permissions_dialog_subtitle)))
-        assertFalse(permissionTextView.text.contains(testContext.getString(R.string.mozac_feature_addons_permissions_dialog_subtitle)))
+        assertTrue(optionalOrRequiredText.contains(testContext.getString(R.string.mozac_feature_addons_permissions_dialog_subtitle)))
+        assertTrue(optionalOrRequiredTextView.text.contains(testContext.getString(R.string.mozac_feature_addons_permissions_dialog_subtitle)))
+        assertEquals(0, recyclerAdapter.itemCount)
+        assertFalse(permissionList.contains(testContext.getString(R.string.mozac_feature_addons_permissions_privacy_description)))
+        assertFalse(permissionList.contains(testContext.getString(R.string.mozac_feature_addons_permissions_all_urls_description)))
+        assertFalse(permissionList.contains(testContext.getString(R.string.mozac_feature_addons_permissions_tabs_description)))
     }
 
     @Test
@@ -166,39 +180,42 @@ class PermissionsDialogFragmentTest {
 
         val addonName = addon.translateName(testContext)
         val titleTextView = dialog.findViewById<TextView>(R.id.title)
-        val permissionTextView = dialog.findViewById<TextView>(R.id.permissions)
+        val optionalOrRequiredTextView = dialog.findViewById<TextView>(R.id.optional_or_required_text)
+        val permissionsRecyclerView = dialog.findViewById<RecyclerView>(R.id.permissions)
+        val recyclerAdapter = permissionsRecyclerView.adapter!! as RequiredPermissionsAdapter
         val allowButton = dialog.findViewById<Button>(R.id.allow_button)
         val denyButton = dialog.findViewById<Button>(R.id.deny_button)
-        val permissionText = fragment.buildPermissionsText()
+        val optionalOrRequiredText = fragment.buildOptionalOrRequiredText()
+        val permissionsList = fragment.buildPermissionsList()
 
         assertEquals(
             titleTextView.text,
             testContext.getString(R.string.mozac_feature_addons_optional_permissions_dialog_title, addonName),
         )
 
-        assertTrue(permissionText.contains(testContext.getString(R.string.mozac_feature_addons_optional_permissions_dialog_subtitle)))
-        assertTrue(permissionText.contains(testContext.getString(R.string.mozac_feature_addons_permissions_privacy_description)))
+        assertTrue(optionalOrRequiredText.contains(testContext.getString(R.string.mozac_feature_addons_optional_permissions_dialog_subtitle)))
+        assertTrue(permissionsList.contains(testContext.getString(R.string.mozac_feature_addons_permissions_privacy_description)))
         assertTrue(
-            permissionText.contains(
+            permissionsList.contains(
                 testContext.getString(
                     R.string.mozac_feature_addons_permissions_one_site_description,
                     "example.org",
                 ),
             ),
         )
-        assertTrue(permissionText.contains(testContext.getString(R.string.mozac_feature_addons_permissions_tabs_description)))
+        assertTrue(permissionsList.contains(testContext.getString(R.string.mozac_feature_addons_permissions_tabs_description)))
 
-        assertTrue(permissionTextView.text.contains(testContext.getString(R.string.mozac_feature_addons_optional_permissions_dialog_subtitle)))
-        assertTrue(permissionTextView.text.contains(testContext.getString(R.string.mozac_feature_addons_permissions_privacy_description)))
+        assertTrue(optionalOrRequiredTextView.text.contains(testContext.getString(R.string.mozac_feature_addons_optional_permissions_dialog_subtitle)))
+        assertTrue(recyclerAdapter.getItemAtPosition(0).contains(testContext.getString(R.string.mozac_feature_addons_permissions_privacy_description)))
+        assertTrue(recyclerAdapter.getItemAtPosition(1).contains(testContext.getString(R.string.mozac_feature_addons_permissions_tabs_description)))
         assertTrue(
-            permissionTextView.text.contains(
+            recyclerAdapter.getItemAtPosition(2).contains(
                 testContext.getString(
                     R.string.mozac_feature_addons_permissions_one_site_description,
                     "example.org",
                 ),
             ),
         )
-        assertTrue(permissionTextView.text.contains(testContext.getString(R.string.mozac_feature_addons_permissions_tabs_description)))
 
         assertEquals(allowButton.text, testContext.getString(R.string.mozac_feature_addons_permissions_dialog_allow))
         assertEquals(denyButton.text, testContext.getString(R.string.mozac_feature_addons_permissions_dialog_deny))
