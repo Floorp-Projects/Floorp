@@ -81,10 +81,6 @@ Maybe<double> WebGL2Context::GetParameter(GLenum pname) {
       return Some(4 * val);
     }
 
-    /* GLint64 */
-    case LOCAL_GL_MAX_CLIENT_WAIT_TIMEOUT_WEBGL:
-      return Some(kMaxClientWaitSyncTimeoutNS);
-
     case LOCAL_GL_MAX_ELEMENT_INDEX:
       // GL_MAX_ELEMENT_INDEX becomes available in GL 4.3 or via ES3
       // compatibility

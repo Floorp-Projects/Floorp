@@ -46,12 +46,6 @@ GLenum WebGL2Context::ClientWaitSync(WebGLSync& sync, GLbitfield flags,
     return LOCAL_GL_WAIT_FAILED;
   }
 
-  if (timeout > kMaxClientWaitSyncTimeoutNS) {
-    ErrorInvalidOperation("`timeout` must not exceed %s nanoseconds.",
-                          "MAX_CLIENT_WAIT_TIMEOUT_WEBGL");
-    return LOCAL_GL_WAIT_FAILED;
-  }
-
   const auto ret = sync.ClientWaitSync(flags, timeout);
   return UnderlyingValue(ret);
 }
