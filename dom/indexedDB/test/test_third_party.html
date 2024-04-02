@@ -25,12 +25,12 @@
       { host: "http://sub1.test2.example.org:8000", cookieBehavior: BEHAVIOR_REJECT, expectedResultFrame1: false, expectedResultFrame2: false },
 
       { host: "http://" + window.location.host, cookieBehavior: BEHAVIOR_REJECTFOREIGN, expectedResultFrame1: true, expectedResultFrame2: true },
-      { host: "http://example.com", cookieBehavior: BEHAVIOR_REJECTFOREIGN, expectedResultFrame1: false, expectedResultFrame2: true },
-      { host: "http://sub1.test2.example.org:8000", cookieBehavior: BEHAVIOR_REJECTFOREIGN, expectedResultFrame1: false, expectedResultFrame2: true },
+      { host: "http://example.com", cookieBehavior: BEHAVIOR_REJECTFOREIGN, expectedResultFrame1: false, expectedResultFrame2: false },
+      { host: "http://sub1.test2.example.org:8000", cookieBehavior: BEHAVIOR_REJECTFOREIGN, expectedResultFrame1: false, expectedResultFrame2: false },
 
       { host: "http://" + window.location.host, cookieBehavior: BEHAVIOR_LIMITFOREIGN, expectedResultFrame1: true, expectedResultFrame2: true },
-      { host: "http://example.com", cookieBehavior: BEHAVIOR_LIMITFOREIGN, expectedResultFrame1: false, expectedResultFrame2: true },
-      { host: "http://sub1.test2.example.org:8000", cookieBehavior: BEHAVIOR_LIMITFOREIGN, expectedResultFrame1: false, expectedResultFrame2: true },
+      { host: "http://example.com", cookieBehavior: BEHAVIOR_LIMITFOREIGN, expectedResultFrame1: false, expectedResultFrame2: false },
+      { host: "http://sub1.test2.example.org:8000", cookieBehavior: BEHAVIOR_LIMITFOREIGN, expectedResultFrame1: false, expectedResultFrame2: false },
     ];
 
     const iframe1Path =
