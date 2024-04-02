@@ -1182,21 +1182,18 @@
     <label class="doh-status-label" id="dohResolver"/>
     <label class="doh-status-label" id="dohSteeringStatus" data-l10n-id="preferences-doh-steering-status" hidden="true"/>
   </vbox>
-  <hbox id="dohExceptionBox">
-    <label flex="1" data-l10n-id="preferences-doh-exceptions-description"/>
-    <button id="dohExceptionsButton"
-            is="highlightable-button"
-            class="accessory-button"
-            data-l10n-id="preferences-doh-manage-exceptions"
-            search-l10n-ids="
-              permissions-doh-entry-field,
-              permissions-doh-add-exception.label,
-              permissions-doh-remove.label,
-              permissions-doh-remove-all.label,
-              permissions-exceptions-doh-window.title,
-              permissions-exceptions-manage-doh-desc,
-            "/>
-  </hbox>
+  <button id="dohExceptionsButton"
+          is="highlightable-button"
+          class="accessory-button"
+          data-l10n-id="preferences-doh-manage-exceptions"
+          search-l10n-ids="
+            permissions-doh-entry-field,
+            permissions-doh-add-exception.label,
+            permissions-doh-remove.label,
+            permissions-doh-remove-all.label,
+            permissions-exceptions-doh-window.title,
+            permissions-exceptions-manage-doh-desc,
+          "/>
   <vbox>
     <label><html:h2 id="dohGroupMessage" data-l10n-id="preferences-doh-group-message2"/></label>
     <vbox id="dohCategories">
