@@ -35327,7 +35327,8 @@ function pickPlatformItem(dict) {
   return null;
 }
 class FileSpec {
-  constructor(root, xref) {
+  #contentAvailable = false;
+  constructor(root, xref, skipContent = false) {
     if (!(root instanceof Dict)) {
       return;
     }
@@ -35340,10 +35341,12 @@ class FileSpec {
     if (root.has("RF")) {
       warn("Related file specifications are not supported");
     }
-    this.contentAvailable = true;
-    if (!root.has("EF")) {
-      this.contentAvailable = false;
-      warn("Non-embedded file specifications are not supported");
+    if (!skipContent) {
+      if (root.has("EF")) {
+        this.#contentAvailable = true;
+      } else {
+        warn("Non-embedded file specifications are not supported");
+      }
     }
   }
   get filename() {
@@ -35354,7 +35357,7 @@ class FileSpec {
     return this._filename;
   }
   get content() {
-    if (!this.contentAvailable) {
+    if (!this.#contentAvailable) {
       return null;
     }
     if (!this.contentRef && this.root) {
@@ -38563,7 +38566,7 @@ class Catalog {
         continue;
       }
       if (!outlineDict.has("Title")) {
-        throw new FormatError("Invalid outline item encountered.");
+        warn("Invalid outline item encountered.");
       }
       const data = {
         url: null,
@@ -38592,7 +38595,7 @@ class Catalog {
         unsafeUrl: data.unsafeUrl,
         newWindow: data.newWindow,
         setOCGState: data.setOCGState,
-        title: stringToPDFString(title),
+        title: typeof title === "string" ? stringToPDFString(title) : "",
         color: rgbColor,
         count: Number.isInteger(count) ? count : undefined,
         bold: !!(flags & 2),
@@ -39598,7 +39601,11 @@ class Catalog {
         case "GoToR":
           const urlDict = action.get("F");
           if (urlDict instanceof Dict) {
-            url = urlDict.get("F") || null;
+            const fs = new FileSpec(urlDict, null, true);
+            const {
+              filename
+            } = fs.serializable;
+            url = filename;
           } else if (typeof urlDict === "string") {
             url = urlDict;
           }
@@ -56725,7 +56732,7 @@ class WorkerMessageHandler {
       docId,
       apiVersion
     } = docParams;
-    const workerVersion = "4.1.342";
+    const workerVersion = "4.1.348";
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -57287,8 +57294,8 @@ if (typeof window === "undefined" && !isNodeJS && typeof self !== "undefined" &&
 
 ;// CONCATENATED MODULE: ./src/pdf.worker.js
 
-const pdfjsVersion = "4.1.342";
-const pdfjsBuild = "e384df6f1";
+const pdfjsVersion = "4.1.348";
+const pdfjsBuild = "5f87da50d";
 
 var __webpack_exports__WorkerMessageHandler = __webpack_exports__.WorkerMessageHandler;
 export { __webpack_exports__WorkerMessageHandler as WorkerMessageHandler };
