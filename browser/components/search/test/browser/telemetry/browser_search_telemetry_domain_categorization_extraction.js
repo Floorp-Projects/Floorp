@@ -362,6 +362,37 @@ const TESTS = [
     ],
     expectedDomains: ["organic.com"],
   },
+  {
+    title: "Bing organic result with a path in the URL.",
+    extractorInfos: [
+      {
+        selectors: "#test26 #b_results .b_algo .b_attribution cite",
+        method: "textContent",
+      },
+    ],
+    expectedDomains: ["organic.com"],
+  },
+  {
+    title: "Bing organic result with a path and query param in the URL.",
+    extractorInfos: [
+      {
+        selectors: "#test27 #b_results .b_algo .b_attribution cite",
+        method: "textContent",
+      },
+    ],
+    expectedDomains: ["organic.com"],
+  },
+  {
+    title:
+      "Bing organic result with a path in the URL, but protocol appears in separate HTML element.",
+    extractorInfos: [
+      {
+        selectors: "#test28 #b_results .b_algo .b_attribution cite",
+        method: "textContent",
+      },
+    ],
+    expectedDomains: ["wikipedia.org"],
+  },
 ];
 
 add_setup(async function () {
