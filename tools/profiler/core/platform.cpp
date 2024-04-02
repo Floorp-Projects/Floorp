@@ -42,7 +42,12 @@
 #include "ProfilerIOInterposeObserver.h"
 #include "ProfilerParent.h"
 #include "ProfilerRustBindings.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/MozPromise.h"
+#include "nsCOMPtr.h"
+#include "nsDebug.h"
+#include "nsXPCOM.h"
 #include "shared-libraries.h"
 #include "VTuneProfiler.h"
 #include "ETWTools.h"
@@ -95,6 +100,7 @@
 #include "nsSystemInfo.h"
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
+#include "nsDirectoryServiceUtils.h"
 #include "Tracing.h"
 #include "prdtoa.h"
 #include "prtime.h"
@@ -107,6 +113,18 @@
 #include <sstream>
 #include <string_view>
 #include <type_traits>
+
+// The signals that we use to control the profiler conflict with the signals
+// used to control the code coverage tool. Therefore, if coverage is enabled, we
+// need to disable our own signal handling mechanisms.
+#ifndef MOZ_CODE_COVERAGE
+#  ifdef XP_WIN
+// TODO: Add support for windows "signal"-like behaviour. See Bug 1867328.
+#  else
+#    include <signal.h>
+#    include <unistd.h>
+#  endif
+#endif
 
 #if defined(GP_OS_android)
 #  include "JavaExceptions.h"
@@ -233,6 +251,10 @@ ProfileChunkedBuffer& profiler_get_core_buffer() {
 }
 
 mozilla::Atomic<int, mozilla::MemoryOrdering::Relaxed> gSkipSampling;
+
+// Atomic flag to stop the profiler from within the sampling loop
+mozilla::Atomic<bool, mozilla::MemoryOrdering::Relaxed> gStopAndDumpFromSignal(
+    false);
 
 #if defined(GP_OS_android)
 class GeckoJavaSampler
@@ -647,6 +669,7 @@ class CorePS {
 
   PS_GET_AND_SET(const nsACString&, ProcessName)
   PS_GET_AND_SET(const nsACString&, ETLDplus1)
+  PS_GET_AND_SET(const Maybe<nsCOMPtr<nsIFile>>&, DownloadDirectory)
 
   static void SetBandwidthCounter(ProfilerBandwidthCounter* aBandwidthCounter) {
     MOZ_ASSERT(sInstance);
@@ -695,6 +718,9 @@ class CorePS {
   // lock, so it is safe to have only one instance allocated for all of the
   // threads.
   JsFrameBuffer mJsFrames;
+
+  // Cached download directory for when we need to dump profiles to disk.
+  Maybe<nsCOMPtr<nsIFile>> mDownloadDirectory;
 };
 
 CorePS* CorePS::sInstance = nullptr;
@@ -2933,16 +2959,6 @@ static void StreamMetaJSCustomObject(
   ActivePS::WriteActiveConfiguration(aLock, aWriter,
                                      MakeStringSpan("configuration"));
 
-  if (!NS_IsMainThread()) {
-    // Leave the rest of the properties out if we're not on the main thread.
-    // At the moment, the only case in which this function is called on a
-    // background thread is if we're in a content process and are going to
-    // send this profile to the parent process. In that case, the parent
-    // process profile's "meta" object already has the rest of the properties,
-    // and the parent process profile is dumped on that process's main thread.
-    return;
-  }
-
   aWriter.DoubleProperty("interval", ActivePS::Interval(aLock));
   aWriter.IntProperty("stackwalk", ActivePS::FeatureStackWalk(aLock));
 
@@ -3018,6 +3034,16 @@ static void StreamMetaJSCustomObject(
     StreamMetaPlatformSampleUnits(aLock, aWriter);
   }
   aWriter.EndObject();
+
+  if (!NS_IsMainThread()) {
+    // Leave the rest of the properties out if we're not on the main thread.
+    // At the moment, the only case in which this function is called on a
+    // background thread is if we're in a content process and are going to
+    // send this profile to the parent process. In that case, the parent
+    // process profile's "meta" object already has the rest of the properties,
+    // and the parent process profile is dumped on that process's main thread.
+    return;
+  }
 
   // We should avoid collecting extension metadata for profiler when there is no
   // observer service, since a ExtensionPolicyService could not be created then.
@@ -4077,6 +4103,10 @@ static SamplerThread* NewSamplerThread(PSLockRef aLock, uint32_t aGeneration,
   return new SamplerThread(aLock, aGeneration, aInterval, aFeatures);
 }
 
+// Forward declare the function to call when we need to dump + stop from within
+// the sampler thread
+void profiler_dump_and_stop();
+
 // This function is the sampler thread.  This implementation is used for all
 // targets.
 void SamplerThread::Run() {
@@ -4732,6 +4762,27 @@ void SamplerThread::Run() {
       scheduledSampleStart = beforeSleep + sampleInterval;
       SleepMicro(static_cast<uint32_t>(sampleInterval.ToMicroseconds()));
     }
+
+    // Check to see if the hard-reset flag has been set to stop the profiler.
+    // This should only be used on the worst occasions when we need to stop the
+    // profiler from within the sampling thread (e.g. if the main thread is
+    // stuck) We need to do this here as it is outside of the scope of the lock.
+    // Otherwise we'll encounter a race condition where `profiler_stop` tries to
+    // get the lock that we already hold. We also need to wait until after we
+    // have carried out post sampling callbacks, as otherwise we may reach a
+    // situation where another part of the program is waiting for us to finish
+    // sampling, but we have ended early!
+    if (gStopAndDumpFromSignal) {
+      // Reset the flag in case we restart the profiler at a later point
+      gStopAndDumpFromSignal = false;
+      // dump the profile, and stop the profiler
+      profiler_dump_and_stop();
+      // profiler_stop will try to destroy the active sampling thread. This will
+      // also destroy some data structures that are used further down this
+      // function, leading to invalid accesses. We therefore exit the function
+      // directly, rather than breaking from the loop.
+      return;
+    }
   }
 
   // End of `while` loop. We can only be here from a `break` inside the loop.
@@ -5240,6 +5291,98 @@ static const char* get_size_suffix(const char* str) {
   return ptr;
 }
 
+#if !defined(XP_WIN) && !defined(MOZ_CODE_COVERAGE)
+static void profiler_stop_signal_handler(int signal, siginfo_t* info,
+                                         void* context) {
+  // We cannot really do any logging here, as this is a signal handler.
+  // Signal handlers are limited in what functions they can call, for more
+  // details see: https://man7.org/linux/man-pages/man7/signal-safety.7.html
+  // Writing to a file is allowed, but as signal handlers are also limited in
+  // how long they can run, we instead set an atomic variable to true to trigger
+  // the sampling thread to stop and dump the data in the profiler.
+  gStopAndDumpFromSignal = true;
+}
+#endif
+
+// This may fail if we have previously had an issue finding the download
+// directory, or if the directory has moved since we cached the path.
+// This is non-ideal, but captured by Bug 1885000
+Maybe<nsAutoCString> profiler_find_dump_path() {
+  Maybe<nsCOMPtr<nsIFile>> directory = Nothing();
+  nsAutoCString path;
+
+  {
+    // Acquire the lock so that we can get things from CorePS
+    PSAutoLock lock;
+    Maybe<nsCOMPtr<nsIFile>> downloadDir = Nothing();
+    downloadDir = CorePS::DownloadDirectory(lock);
+
+    // This needs to be done within the context of the lock, as otherwise
+    // another thread might modify CorePS::mDownloadDirectory while we're
+    // cloning the pointer.
+    if (downloadDir) {
+      nsCOMPtr<nsIFile> d;
+      downloadDir.value()->Clone(getter_AddRefs(d));
+      directory = Some(d);
+    } else {
+      return Nothing();
+    }
+  }
+
+  // Now, we can check to see if we have a directory, and use it to construct
+  // the output file
+  if (directory) {
+    // Set up the name of our profile file
+    path.AppendPrintf("profile_%i_%i.json", XRE_GetProcessType(), getpid());
+
+    // Append it to the directory we found
+    nsresult rv = directory.value()->AppendNative(path);
+    if (NS_FAILED(rv)) {
+      LOG("Failed to append path to profile file");
+      return Nothing();
+    }
+
+    // Write the result *back* to the original path
+    rv = directory.value()->GetNativePath(path);
+    if (NS_FAILED(rv)) {
+      LOG("Failed to get native path for temp path");
+      return Nothing();
+    }
+
+    return Some(path);
+  }
+
+  return Nothing();
+}
+
+void profiler_dump_and_stop() {
+  // pause the profiler until we are done dumping
+  profiler_pause();
+
+  // Try to save the profile to a file
+  if (auto path = profiler_find_dump_path()) {
+    profiler_save_profile_to_file(path.value().get());
+  } else {
+    LOG("Failed to dump profile to disk");
+  }
+
+  // Stop the profiler
+  profiler_stop();
+}
+
+void profiler_init_signal_handlers() {
+#if !defined(XP_WIN) && !defined(MOZ_CODE_COVERAGE)
+  // Set a handler to stop the profiler
+  struct sigaction prof_stop_sa {};
+  memset(&prof_stop_sa, 0, sizeof(struct sigaction));
+  prof_stop_sa.sa_sigaction = profiler_stop_signal_handler;
+  prof_stop_sa.sa_flags = SA_RESTART | SA_SIGINFO;
+  sigemptyset(&prof_stop_sa.sa_mask);
+  DebugOnly<int> r2 = sigaction(SIGUSR2, &prof_stop_sa, nullptr);
+  MOZ_ASSERT(r2 == 0, "Failed to install Profiler SIGUSR2 handler");
+#endif
+}
+
 void profiler_init(void* aStackTop) {
   LOG("profiler_init");
 
@@ -5289,9 +5432,11 @@ void profiler_init(void* aStackTop) {
         locked_register_thread(lock, offThreadRef);
       }
     }
-
     // Platform-specific initialization.
     PlatformInit(lock);
+
+    // Initialise the signal handlers needed to start/stop the profiler
+    profiler_init_signal_handlers();
 
 #if defined(GP_OS_android)
     if (jni::IsAvailable()) {
@@ -6307,6 +6452,32 @@ bool profiler_is_paused() {
   PSAutoLock lock;
 
   return ActivePS::AppendPostSamplingCallback(lock, std::move(aCallback));
+}
+
+// See `ProfilerControl.h` for more details.
+void profiler_lookup_download_directory() {
+  LOG("profiler_lookup_download_directory");
+
+  MOZ_ASSERT(
+      NS_IsMainThread(),
+      "We can only get access to the directory service from the main thread");
+
+  // Make sure the profiler is actually running~
+  MOZ_RELEASE_ASSERT(CorePS::Exists());
+
+  // take the lock so that we can write to CorePS
+  PSAutoLock lock;
+
+  nsCOMPtr<nsIFile> tDownloadDir;
+  nsresult rv = NS_GetSpecialDirectory(NS_OS_DEFAULT_DOWNLOAD_DIR,
+                                       getter_AddRefs(tDownloadDir));
+  if (NS_FAILED(rv)) {
+    LOG("Failed to find download directory. Profiler signal handling will not "
+        "be able to save to disk. Error: %s",
+        GetStaticErrorName(rv));
+  } else {
+    CorePS::SetDownloadDirectory(lock, Some(tDownloadDir));
+  }
 }
 
 RefPtr<GenericPromise> profiler_pause() {
