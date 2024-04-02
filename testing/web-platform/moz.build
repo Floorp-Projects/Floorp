@@ -653,6 +653,12 @@ with Files("tests/screen-capture/**"):
 with Files("tests/screen-orientation/**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
+with Files("tests/scroll-animations/**"):
+    BUG_COMPONENT = ("Core", "Layout")
+
+with Files("tests/scroll-to-text-fragments/**"):
+    BUG_COMPONENT = ("Core", "DOM: Navigation")
+
 with Files("tests/secure-contexts/**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
@@ -667,6 +673,9 @@ with Files("tests/service-workers/**"):
 
 with Files("tests/shadow-dom/**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("tests/shape-detection/**"):
+    BUG_COMPONENT = ("Geckoview", "General")
 
 with Files("tests/speech-api/**"):
     BUG_COMPONENT = ("Core", "Web Speech")
@@ -692,8 +701,14 @@ with Files("tests/touch-events/**"):
 with Files("tests/tools/**"):
     BUG_COMPONENT = ("Testing", "web-platform-tests")
 
+with Files("tests/top-level-storage-access-api/**"):
+    BUG_COMPONENT = ("Core", "Privacy: Anti-Tracking")
+
 with Files("tests/trusted-types/**"):
     BUG_COMPONENT = ("Core", "DOM: Security")
+
+with Files("tests/ua-client-hints/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
 with Files("tests/uievents/**"):
     BUG_COMPONENT = ("Core", "DOM: Events")
@@ -704,11 +719,20 @@ with Files("tests/upgrade-insecure-requests/**"):
 with Files("tests/url/**"):
     BUG_COMPONENT = ("Core", "DOM: Networking")
 
+with Files("tests/urlpattern/**"):
+    BUG_COMPONENT = ("Core", "DOM: Networking")
+
 with Files("tests/user-timing/**"):
     BUG_COMPONENT = ("Core", "DOM: Performance")
 
 with Files("tests/vibration/**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("tests/video-rvfc/**"):
+    BUG_COMPONENT = ("Core", "Audio/Video: Playback")
+
+with Files("tests/virtual-keyboard/**"):
+    BUG_COMPONENT = ("Core", "Layout")
 
 with Files("tests/visual-viewport/**"):
     BUG_COMPONENT = ("Core", "Layout")
@@ -752,11 +776,17 @@ with Files("tests/web-nfc/**"):
 with Files("tests/webrtc/**"):
     BUG_COMPONENT = ("Core", "WebRTC")
 
+with Files("tests/webrtc-encoded-transform/**"):
+    BUG_COMPONENT = ("Core", "WebRTC: Networking")
+
 with Files("tests/webrtc-extensions/**"):
     BUG_COMPONENT = ("Core", "WebRTC")
 
 with Files("tests/webrtc-identity/**"):
     BUG_COMPONENT = ("Core", "WebRTC")
+
+with Files("tests/webrtc-priority/**"):
+    BUG_COMPONENT = ("Core", "WebRTC: Networking")
 
 with Files("tests/webrtc-stats/**"):
     BUG_COMPONENT = ("Core", "WebRTC")
