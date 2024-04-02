@@ -68,8 +68,22 @@ int opus_select_arch(void);
   Use this to work around those restrictions (which should hopefully all get
    optimized to a single MOVD instruction).
   GCC implemented _mm_loadu_si32() since GCC 11; HOWEVER, there is a bug!
-  https://gcc.gnu.org/bugzilla/show_bug.cgi?id=99754 */
-#  if !defined(_MSC_VER) && !OPUS_GNUC_PREREQ(11,3) && !(defined(__clang__) && (__clang_major__ >= 8))
+  https://gcc.gnu.org/bugzilla/show_bug.cgi?id=99754
+  LLVM implemented _mm_loadu_si32() since Clang 8.0, however the
+   __clang_major__ version number macro is unreliable, as vendors
+   (specifically, Apple) will use different numbering schemes than upstream.
+  Clang's advice is "use feature detection", but they do not provide feature
+   detection support for specific SIMD functions.
+  We follow the approach from the SIMDe project and instead detect unrelated
+   features that should be available in the version we want (see
+   <https://github.com/simd-everywhere/simde/blob/master/simde/simde-detect-clang.h>).*/
+#  if defined(__clang__)
+#   if __has_warning("-Wextra-semi-stmt") || \
+ __has_builtin(__builtin_rotateleft32)
+#    define OPUS_CLANG_8 (1)
+#   endif
+#  endif
+#  if !defined(_MSC_VER) && !OPUS_GNUC_PREREQ(11,3) && !defined(OPUS_CLANG_8)
 #   include <string.h>
 #   include <emmintrin.h>
 

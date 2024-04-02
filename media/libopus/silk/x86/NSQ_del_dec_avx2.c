@@ -73,7 +73,6 @@ static OPUS_INLINE int verify_assumptions(const silk_encoder_state *psEncC)
 /* Intrinsics not defined on MSVC */
 #ifdef _MSC_VER
 #include <Intsafe.h>
-#define __m128i_u __m128i
 static inline int __builtin_sadd_overflow(opus_int32 a, opus_int32 b, opus_int32* res)
 {
     *res = a+b;
@@ -959,7 +958,7 @@ static OPUS_INLINE void silk_nsq_del_dec_scale_states_avx2(
     {
         __m256i x = _mm256_cvtepi16_epi64(_mm_loadu_si64(&x16[i]));
         x = _mm256_slli_epi64(_mm256_mul_epi32(x, _mm256_set1_epi32(inv_gain_Q26)), 16);
-        _mm_storeu_si128((__m128i_u*)&x_sc_Q10[i], silk_cvtepi64_epi32_high(x));
+        _mm_storeu_si128((__m128i*)&x_sc_Q10[i], silk_cvtepi64_epi32_high(x));
     }
 
     /* After rewhitening the LTP state is un-scaled, so scale with inv_gain_Q16 */
@@ -985,8 +984,8 @@ static OPUS_INLINE void silk_nsq_del_dec_scale_states_avx2(
         /* Scale long-term shaping state */
         for (i = NSQ->sLTP_shp_buf_idx - psEncC->ltp_mem_length; i < NSQ->sLTP_shp_buf_idx; i+=4)
         {
-            __m128i_u* p = (__m128i_u*)&NSQ->sLTP_shp_Q14[i];
-            *p = silk_mm_smulww_epi32(*p, gain_adj_Q16);
+	    opus_int32 *p = &NSQ->sLTP_shp_Q14[i];
+            _mm_storeu_si128((__m128i*)p, silk_mm_smulww_epi32(_mm_loadu_si128((__m128i*)p), gain_adj_Q16));
         }
 
         /* Scale long-term prediction state */
@@ -1041,13 +1040,13 @@ static OPUS_INLINE void silk_LPC_analysis_filter_avx2(
         /* Allowing wrap around so that two wraps can cancel each other. The rare
            cases where the result wraps around can only be triggered by invalid streams*/
 
-        __m256i in_v = _mm256_cvtepi16_epi32(_mm_loadu_si128((__m128i_u*)&in_ptr[-8]));
-        __m256i B_v  = _mm256_cvtepi16_epi32(_mm_loadu_si128((__m128i_u*)&      B[0]));
+        __m256i in_v = _mm256_cvtepi16_epi32(_mm_loadu_si128((__m128i*)&in_ptr[-8]));
+        __m256i B_v  = _mm256_cvtepi16_epi32(_mm_loadu_si128((__m128i*)&      B[0]));
         __m256i sum = _mm256_mullo_epi32(in_v, silk_mm256_reverse_epi32(B_v));
         if (order > 10)
         {
-            in_v = _mm256_cvtepi16_epi32(_mm_loadu_si128((__m128i_u*)&in_ptr[-16]));
-            B_v  = _mm256_cvtepi16_epi32(_mm_loadu_si128((__m128i_u*)&B       [8]));
+            in_v = _mm256_cvtepi16_epi32(_mm_loadu_si128((__m128i*)&in_ptr[-16]));
+            B_v  = _mm256_cvtepi16_epi32(_mm_loadu_si128((__m128i*)&B       [8]));
             B_v  = silk_mm256_reverse_epi32(B_v);
         }
         else
