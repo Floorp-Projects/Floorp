@@ -922,6 +922,9 @@ void MediaDecoder::FirstFrameLoaded(
           if (IsHLSDecoder()) {
             flags += FirstFrameLoadedFlag::IsHLS;
           }
+          if (result->mReader.mVideoHardwareAccelerated) {
+            flags += FirstFrameLoadedFlag::IsHardwareDecoding;
+          }
           mTelemetryProbesReporter->OntFirstFrameLoaded(
               firstFrameLoadedTime, result->mReader.mTotalReadMetadataTimeMs,
               result->mReader.mTotalWaitingForVideoDataTimeMs, flags);

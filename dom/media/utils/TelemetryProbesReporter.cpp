@@ -329,6 +329,9 @@ void TelemetryProbesReporter::OntFirstFrameLoaded(
   if (const auto keySystem = mOwner->GetKeySystem()) {
     extraData.keySystem = Some(NS_ConvertUTF16toUTF8(*keySystem));
   }
+  if (aFlags.contains(FirstFrameLoadedFlag::IsHardwareDecoding)) {
+    extraData.isHardwareDecoding = Some(true);
+  }
 
 #ifdef MOZ_WIDGET_ANDROID
   if (aFlags.contains(FirstFrameLoadedFlag::IsHLS)) {
@@ -341,13 +344,14 @@ void TelemetryProbesReporter::OntFirstFrameLoaded(
         "Media_Playabck First_Frame_Loaded event, time(ms)=["
         "full:%f, loading-meta:%f, waiting-data:%f], "
         "playback-type=%s, "
-        "videoCodec=%s, resolution=%s",
+        "videoCodec=%s, resolution=%s, hardware=%d",
         aLoadedFirstFrameTime,
         aLoadedMetadataTime,
         aTotalWaitingDataTime,
         extraData.playbackType->get(),
         extraData.videoCodec->get(),
-        extraData.resolution->get()};
+        extraData.resolution->get(),
+        aFlags.contains(FirstFrameLoadedFlag::IsHardwareDecoding)};
     if (const auto keySystem = mOwner->GetKeySystem()) {
       logMessage.Append(nsPrintfCString{
           ", keySystem=%s", NS_ConvertUTF16toUTF8(*keySystem).get()});
