@@ -1091,15 +1091,15 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
 
   // -
 
-  bool mAutoFlushPending = false;
+  mutable bool mAutoFlushPending = false;
 
-  void AutoEnqueueFlush() {
+  void AutoEnqueueFlush() const {
     if (MOZ_LIKELY(mAutoFlushPending)) return;
     mAutoFlushPending = true;
 
-    const auto weak = WeakPtr<ClientWebGLContext>(this);
-    const auto DeferredFlush = [weak]() {
-      const auto strong = RefPtr<ClientWebGLContext>(weak);
+    const auto DeferredFlush = [weak =
+                                    WeakPtr<const ClientWebGLContext>(this)]() {
+      const auto strong = RefPtr<const ClientWebGLContext>(weak);
       if (!strong) return;
       if (!strong->mAutoFlushPending) return;
       strong->mAutoFlushPending = false;
@@ -1110,12 +1110,12 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
     };
 
     already_AddRefed<mozilla::CancelableRunnable> runnable =
-        NS_NewCancelableRunnableFunction("enqueue Event_webglcontextrestored",
+        NS_NewCancelableRunnableFunction("ClientWebGLContext::DeferredFlush",
                                          DeferredFlush);
     NS_DispatchToCurrentThread(std::move(runnable));
   }
 
-  void CancelAutoFlush() { mAutoFlushPending = false; }
+  void CancelAutoFlush() const { mAutoFlushPending = false; }
 
   // -
 

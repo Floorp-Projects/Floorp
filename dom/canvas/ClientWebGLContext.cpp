@@ -1489,6 +1489,8 @@ already_AddRefed<WebGLSyncJS> ClientWebGLContext::FenceSync(
   availRunnable.mSyncs.push_back(ret.get());
   ret->mCanBeAvailable = false;
 
+  AutoEnqueueFlush();
+
   return ret.forget();
 }
 
@@ -5740,6 +5742,7 @@ void ClientWebGLContext::DrawBuffers(const dom::Sequence<GLenum>& buffers) {
 void ClientWebGLContext::EnqueueErrorImpl(const GLenum error,
                                           const nsACString& text) const {
   if (!mNotLost) return;  // Ignored if context is lost.
+  AutoEnqueueFlush();
   Run<RPROC(GenerateError)>(error, ToString(text));
 }
 
