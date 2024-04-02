@@ -73,6 +73,7 @@ support-files = [
   "unit/test_objectStore_remove_values.js",
   "unit/test_object_identity.js",
   "unit/test_odd_result_order.js",
+  "unit/test_open_and_databases.js",
   "unit/test_open_empty_db.js",
   "unit/test_open_for_principal.js",
   "unit/test_open_objectStore.js",
@@ -298,6 +299,8 @@ skip-if = [
 ["test_object_identity.html"]
 
 ["test_odd_result_order.html"]
+
+["test_open_and_databases.html"]
 
 ["test_open_empty_db.html"]
 

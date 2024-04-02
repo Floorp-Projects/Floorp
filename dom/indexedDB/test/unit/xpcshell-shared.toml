@@ -111,6 +111,8 @@ skip-if = ["os == 'android'"] # bug 864843
 
 ["test_odd_result_order.js"]
 
+["test_open_and_databases.js"]
+
 ["test_open_empty_db.js"]
 
 ["test_open_for_principal.js"]
