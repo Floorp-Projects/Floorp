@@ -452,6 +452,8 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
 
   void GetDebugInfo(dom::MediaDecoderDebugInfo& aInfo);
 
+  virtual bool IsHLSDecoder() const { return false; }
+
  protected:
   virtual ~MediaDecoder();
 

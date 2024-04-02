@@ -47,6 +47,8 @@ class HLSDecoder final : public MediaDecoder {
   // Called when Exoplayer start to load media. Main thread only.
   void NotifyLoad(nsCString aMediaUrl);
 
+  bool IsHLSDecoder() const override { return true; }
+
  private:
   friend class HLSResourceCallbacksSupport;
 
