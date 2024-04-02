@@ -1077,7 +1077,11 @@ class DomainExtractor {
           break;
         }
         case "textContent": {
-          this.#fromElementsRetrieveTextContent(elements, extractedDomains);
+          this.#fromElementsRetrieveTextContent(
+            elements,
+            extractedDomains,
+            providerName
+          );
           break;
         }
       }
@@ -1197,8 +1201,26 @@ class DomainExtractor {
    *  A list of elements from the page whose text content we want to inspect.
    * @param {Set<string>} extractedDomains
    *  The result set of domains extracted from the page.
+   * @param {string} providerName
+   *  The name of the search provider.
    */
-  #fromElementsRetrieveTextContent(elements, extractedDomains) {
+  #fromElementsRetrieveTextContent(elements, extractedDomains, providerName) {
+    // Not an exhaustive regex, but it fits our purpose for this method.
+    const LOOSE_URL_REGEX =
+      /^(?:https?:\/\/)?(?:www\.)?(?:[\w\-]+\.)+(?:[\w\-]{2,})/i;
+
+    // Known but acceptable limitations to this function, where the return
+    // value won't be correctly fixed up:
+    //   1) A url is embedded within other text. Ex: "xkcd.com is cool."
+    //   2) The url contains legal but unusual characters. Ex: $ ! * '
+    function fixup(textContent) {
+      return textContent
+        .toLowerCase()
+        .replaceAll(" ", "")
+        .replace(/\.$/, "")
+        .concat(".com");
+    }
+
     for (let element of elements) {
       if (this.#exceedsThreshold(extractedDomains.size)) {
         return;
@@ -1209,18 +1231,24 @@ class DomainExtractor {
       }
 
       let domain;
-      try {
-        domain = new URL(textContent).hostname;
-      } catch (e) {
-        domain = textContent.toLowerCase().replaceAll(" ", "");
-        // If the attempt to turn the text content into a URL object only fails
-        // because we're missing a protocol, ".com" may already be present.
-        if (!domain.endsWith(".com")) {
-          domain = domain.concat(".com");
+      if (LOOSE_URL_REGEX.test(textContent)) {
+        // Creating a new URL object will throw if the protocol is missing.
+        if (!/^https?:\/\//.test(textContent)) {
+          textContent = "https://" + textContent;
         }
+
+        try {
+          domain = new URL(textContent).hostname;
+        } catch (e) {
+          domain = fixup(textContent);
+        }
+      } else {
+        domain = fixup(textContent);
       }
-      if (!extractedDomains.has(domain)) {
-        extractedDomains.add(domain);
+
+      let processedDomain = this.#processDomain(domain, providerName);
+      if (processedDomain && !extractedDomains.has(processedDomain)) {
+        extractedDomains.add(processedDomain);
       }
     }
   }
