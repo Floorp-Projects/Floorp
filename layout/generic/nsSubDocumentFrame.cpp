@@ -555,7 +555,6 @@ nsresult nsSubDocumentFrame::GetFrameName(nsAString& aResult) const {
 /* virtual */
 nscoord nsSubDocumentFrame::GetMinISize(gfxContext* aRenderingContext) {
   nscoord result;
-  DISPLAY_MIN_INLINE_SIZE(this, result);
 
   nsCOMPtr<nsIObjectLoadingContent> iolc = do_QueryInterface(mContent);
   auto olc = static_cast<nsObjectLoadingContent*>(iolc.get());
@@ -575,18 +574,13 @@ nscoord nsSubDocumentFrame::GetMinISize(gfxContext* aRenderingContext) {
 
 /* virtual */
 nscoord nsSubDocumentFrame::GetPrefISize(gfxContext* aRenderingContext) {
-  nscoord result;
-  DISPLAY_PREF_INLINE_SIZE(this, result);
-
   // If the subdocument is an SVG document, then in theory we want to return
   // the same thing that SVGOuterSVGFrame::GetPrefISize does.  That method
   // has some special handling of percentage values to avoid unhelpful zero
   // sizing in the presence of orthogonal writing modes.  We don't bother
   // with that for SVG documents in <embed> and <object>, since that special
   // handling doesn't look up across document boundaries anyway.
-  result = GetIntrinsicISize();
-
-  return result;
+  return GetIntrinsicISize();
 }
 
 /* virtual */

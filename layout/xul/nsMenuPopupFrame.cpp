@@ -491,19 +491,13 @@ void nsMenuPopupFrame::TweakMinPrefISize(nscoord& aSize) {
 }
 
 nscoord nsMenuPopupFrame::GetMinISize(gfxContext* aRC) {
-  nscoord result;
-  DISPLAY_PREF_INLINE_SIZE(this, result);
-
-  result = nsBlockFrame::GetMinISize(aRC);
+  nscoord result = nsBlockFrame::GetMinISize(aRC);
   TweakMinPrefISize(result);
   return result;
 }
 
 nscoord nsMenuPopupFrame::GetPrefISize(gfxContext* aRC) {
-  nscoord result;
-  DISPLAY_PREF_INLINE_SIZE(this, result);
-
-  result = nsBlockFrame::GetPrefISize(aRC);
+  nscoord result = nsBlockFrame::GetPrefISize(aRC);
   TweakMinPrefISize(result);
   return result;
 }

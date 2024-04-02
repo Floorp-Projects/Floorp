@@ -6006,18 +6006,10 @@ void nsIFrame::MarkSubtreeDirty() {
 }
 
 /* virtual */
-nscoord nsIFrame::GetMinISize(gfxContext* aRenderingContext) {
-  nscoord result = 0;
-  DISPLAY_MIN_INLINE_SIZE(this, result);
-  return result;
-}
+nscoord nsIFrame::GetMinISize(gfxContext* aRenderingContext) { return 0; }
 
 /* virtual */
-nscoord nsIFrame::GetPrefISize(gfxContext* aRenderingContext) {
-  nscoord result = 0;
-  DISPLAY_PREF_INLINE_SIZE(this, result);
-  return result;
-}
+nscoord nsIFrame::GetPrefISize(gfxContext* aRenderingContext) { return 0; }
 
 /* virtual */
 void nsIFrame::AddInlineMinISize(gfxContext* aRenderingContext,
@@ -11699,18 +11691,6 @@ DR_cookie::~DR_cookie() {
   nsIFrame::DisplayReflowExit(mPresContext, mFrame, mMetrics, mStatus, mValue);
 }
 
-DR_intrinsic_inline_size_cookie::DR_intrinsic_inline_size_cookie(
-    nsIFrame* aFrame, const char* aType, nscoord& aResult)
-    : mFrame(aFrame), mType(aType), mResult(aResult) {
-  MOZ_COUNT_CTOR(DR_intrinsic_inline_size_cookie);
-  mValue = nsIFrame::DisplayIntrinsicISizeEnter(mFrame, mType);
-}
-
-DR_intrinsic_inline_size_cookie::~DR_intrinsic_inline_size_cookie() {
-  MOZ_COUNT_DTOR(DR_intrinsic_inline_size_cookie);
-  nsIFrame::DisplayIntrinsicISizeExit(mFrame, mType, mResult, mValue);
-}
-
 struct DR_Rule;
 
 struct DR_FrameTypeInfo {
@@ -12346,21 +12326,6 @@ void* nsIFrame::DisplayReflowEnter(nsPresContext* aPresContext,
   return treeNode;
 }
 
-void* nsIFrame::DisplayIntrinsicISizeEnter(nsIFrame* aFrame,
-                                           const char* aType) {
-  if (!DR_state->mInited) DR_state->Init();
-  if (!DR_state->mActive) return nullptr;
-
-  NS_ASSERTION(aFrame, "invalid call");
-
-  DR_FrameTreeNode* treeNode = DR_state->CreateTreeNode(aFrame, nullptr);
-  if (treeNode && treeNode->mDisplay) {
-    DR_state->DisplayFrameTypeInfo(aFrame, treeNode->mIndent);
-    printf("Get%sISize\n", aType);
-  }
-  return treeNode;
-}
-
 void nsIFrame::DisplayReflowExit(nsPresContext* aPresContext, nsIFrame* aFrame,
                                  ReflowOutput& aMetrics,
                                  const nsReflowStatus& aStatus,
@@ -12418,24 +12383,6 @@ void nsIFrame::DisplayReflowExit(nsPresContext* aPresContext, nsIFrame* aFrame,
       CheckPixelError(aMetrics.Width(), d2a);
       CheckPixelError(aMetrics.Height(), d2a);
     }
-  }
-  DR_state->DeleteTreeNode(*treeNode);
-}
-
-void nsIFrame::DisplayIntrinsicISizeExit(nsIFrame* aFrame, const char* aType,
-                                         nscoord aResult,
-                                         void* aFrameTreeNode) {
-  if (!DR_state->mActive) return;
-
-  NS_ASSERTION(aFrame, "non-null frame required");
-  if (!aFrameTreeNode) return;
-
-  DR_FrameTreeNode* treeNode = (DR_FrameTreeNode*)aFrameTreeNode;
-  if (treeNode->mDisplay) {
-    DR_state->DisplayFrameTypeInfo(aFrame, treeNode->mIndent);
-    char iSize[16];
-    DR_state->PrettyUC(aResult, iSize, 16);
-    printf("Get%sISize=%s\n", aType, iSize);
   }
   DR_state->DeleteTreeNode(*treeNode);
 }

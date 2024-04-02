@@ -151,7 +151,6 @@ void ColumnSetWrapperFrame::MarkIntrinsicISizesDirty() {
 
 nscoord ColumnSetWrapperFrame::GetMinISize(gfxContext* aRenderingContext) {
   nscoord iSize = 0;
-  DISPLAY_MIN_INLINE_SIZE(this, iSize);
 
   if (Maybe<nscoord> containISize =
           ContainIntrinsicISize(NS_UNCONSTRAINEDSIZE)) {
@@ -193,7 +192,6 @@ nscoord ColumnSetWrapperFrame::GetMinISize(gfxContext* aRenderingContext) {
 
 nscoord ColumnSetWrapperFrame::GetPrefISize(gfxContext* aRenderingContext) {
   nscoord iSize = 0;
-  DISPLAY_PREF_INLINE_SIZE(this, iSize);
 
   if (Maybe<nscoord> containISize =
           ContainIntrinsicISize(NS_UNCONSTRAINEDSIZE)) {

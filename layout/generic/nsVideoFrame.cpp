@@ -375,14 +375,9 @@ nsIFrame::SizeComputationResult nsVideoFrame::ComputeSize(
 }
 
 nscoord nsVideoFrame::GetMinISize(gfxContext* aRenderingContext) {
-  nscoord result;
-  // Bind the result variable to a RAII-based debug object - the variable
-  // therefore must match the function's return value.
-  DISPLAY_MIN_INLINE_SIZE(this, result);
   // This call handles size-containment
   nsSize size = GetIntrinsicSize().ToSize().valueOr(nsSize());
-  result = GetWritingMode().IsVertical() ? size.height : size.width;
-  return result;
+  return GetWritingMode().IsVertical() ? size.height : size.width;
 }
 
 nscoord nsVideoFrame::GetPrefISize(gfxContext* aRenderingContext) {

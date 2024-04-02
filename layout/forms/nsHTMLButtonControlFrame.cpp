@@ -238,29 +238,21 @@ void nsHTMLButtonControlFrame::BuildDisplayList(
 }
 
 nscoord nsHTMLButtonControlFrame::GetMinISize(gfxContext* aRenderingContext) {
-  nscoord result;
-  DISPLAY_MIN_INLINE_SIZE(this, result);
   if (Maybe<nscoord> containISize = ContainIntrinsicISize()) {
-    result = *containISize;
-  } else {
-    nsIFrame* kid = mFrames.FirstChild();
-    result = nsLayoutUtils::IntrinsicForContainer(aRenderingContext, kid,
-                                                  IntrinsicISizeType::MinISize);
+    return *containISize;
   }
-  return result;
+  nsIFrame* kid = mFrames.FirstChild();
+  return nsLayoutUtils::IntrinsicForContainer(aRenderingContext, kid,
+                                              IntrinsicISizeType::MinISize);
 }
 
 nscoord nsHTMLButtonControlFrame::GetPrefISize(gfxContext* aRenderingContext) {
-  nscoord result;
-  DISPLAY_PREF_INLINE_SIZE(this, result);
   if (Maybe<nscoord> containISize = ContainIntrinsicISize()) {
-    result = *containISize;
-  } else {
-    nsIFrame* kid = mFrames.FirstChild();
-    result = nsLayoutUtils::IntrinsicForContainer(
-        aRenderingContext, kid, IntrinsicISizeType::PrefISize);
+    return *containISize;
   }
-  return result;
+  nsIFrame* kid = mFrames.FirstChild();
+  return nsLayoutUtils::IntrinsicForContainer(aRenderingContext, kid,
+                                              IntrinsicISizeType::PrefISize);
 }
 
 void nsHTMLButtonControlFrame::Reflow(nsPresContext* aPresContext,

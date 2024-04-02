@@ -242,7 +242,6 @@ ComputedStyle* nsTableWrapperFrame::GetParentComputedStyle(
 nscoord nsTableWrapperFrame::GetMinISize(gfxContext* aRenderingContext) {
   nscoord iSize = nsLayoutUtils::IntrinsicForContainer(
       aRenderingContext, InnerTableFrame(), IntrinsicISizeType::MinISize);
-  DISPLAY_MIN_INLINE_SIZE(this, iSize);
   if (mCaptionFrames.NotEmpty()) {
     nscoord capISize = nsLayoutUtils::IntrinsicForContainer(
         aRenderingContext, mCaptionFrames.FirstChild(),
@@ -256,10 +255,7 @@ nscoord nsTableWrapperFrame::GetMinISize(gfxContext* aRenderingContext) {
 
 /* virtual */
 nscoord nsTableWrapperFrame::GetPrefISize(gfxContext* aRenderingContext) {
-  nscoord maxISize;
-  DISPLAY_PREF_INLINE_SIZE(this, maxISize);
-
-  maxISize = nsLayoutUtils::IntrinsicForContainer(
+  nscoord maxISize = nsLayoutUtils::IntrinsicForContainer(
       aRenderingContext, InnerTableFrame(), IntrinsicISizeType::PrefISize);
   if (mCaptionFrames.NotEmpty()) {
     // Don't let the caption's pref isize expand the table's pref isize.

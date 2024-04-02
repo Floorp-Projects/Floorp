@@ -1290,7 +1290,6 @@ nscoord nsHTMLScrollFrame::GetMinISize(gfxContext* aRenderingContext) {
     return mScrolledFrame->GetMinISize(aRenderingContext);
   }();
 
-  DISPLAY_MIN_INLINE_SIZE(this, result);
   return result + IntrinsicScrollbarGutterSizeAtInlineEdges();
 }
 
@@ -1300,7 +1299,6 @@ nscoord nsHTMLScrollFrame::GetPrefISize(gfxContext* aRenderingContext) {
   nscoord result = containISize
                        ? *containISize
                        : mScrolledFrame->GetPrefISize(aRenderingContext);
-  DISPLAY_PREF_INLINE_SIZE(this, result);
   return NSCoordSaturatingAdd(result,
                               IntrinsicScrollbarGutterSizeAtInlineEdges());
 }

@@ -408,7 +408,6 @@ static void MoveChildTo(nsIFrame* aChild, LogicalPoint aOrigin, WritingMode aWM,
 
 nscoord nsColumnSetFrame::GetMinISize(gfxContext* aRenderingContext) {
   nscoord iSize = 0;
-  DISPLAY_MIN_INLINE_SIZE(this, iSize);
 
   if (mFrames.FirstChild()) {
     // We want to ignore this in the case that we're size contained
@@ -443,8 +442,6 @@ nscoord nsColumnSetFrame::GetPrefISize(gfxContext* aRenderingContext) {
   // the child's preferred width, times the number of columns, plus the width
   // of any required column gaps
   // XXX what about forced column breaks here?
-  nscoord result = 0;
-  DISPLAY_PREF_INLINE_SIZE(this, result);
   const nsStyleColumn* colStyle = StyleColumn();
 
   nscoord colISize;
@@ -466,8 +463,7 @@ nscoord nsColumnSetFrame::GetPrefISize(gfxContext* aRenderingContext) {
           ? 1
           : colStyle->mColumnCount;
   nscoord colGap = ColumnUtils::GetColumnGap(this, NS_UNCONSTRAINEDSIZE);
-  result = ColumnUtils::IntrinsicISize(numColumns, colGap, colISize);
-  return result;
+  return ColumnUtils::IntrinsicISize(numColumns, colGap, colISize);
 }
 
 nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowColumns(
