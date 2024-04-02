@@ -253,7 +253,7 @@ web-platform-tests-webgpu:
     variants: []  # We don't need sw or nofis testing.
     run-on-projects:
         by-test-platform:
-            android.*: []  # Out of scope
+            android.*: []  # https://bugzilla.mozilla.org/show_bug.cgi?id=1836811
             .*-wayland/debug.*: []  # https://bugzilla.mozilla.org/show_bug.cgi?id=1864700
             default: ['mozilla-central']
     mozharness:
