@@ -487,7 +487,10 @@ class TargetConfigurationActor extends Actor {
       "bf-cache-navigation-pageshow",
       this._onBfCacheNavigation
     );
-    this._restoreParentProcessConfiguration();
+    // Avoid trying to restore if the related context is already being destroyed
+    if (this._browsingContext && !this._browsingContext.isDiscarded) {
+      this._restoreParentProcessConfiguration();
+    }
     super.destroy();
   }
 }

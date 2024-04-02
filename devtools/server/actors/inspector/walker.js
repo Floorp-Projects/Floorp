@@ -384,7 +384,6 @@ class WalkerActor extends Actor {
       this.layoutHelpers = null;
       this._orphaned = null;
       this._retainedOrphans = null;
-      this._nodeActorsMap = null;
 
       this.targetActor.off("will-navigate", this.onFrameUnload);
       this.targetActor.off("window-ready", this.onFrameLoad);
@@ -433,6 +432,9 @@ class WalkerActor extends Actor {
         this._onEventListenerChange
       );
 
+      // Only nullify some key attributes after having removed all the listeners
+      // as they may still be used in the related listeners.
+      this._nodeActorsMap = null;
       this.onMutations = null;
 
       this.layoutActor = null;

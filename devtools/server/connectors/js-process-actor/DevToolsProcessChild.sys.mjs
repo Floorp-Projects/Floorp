@@ -3,260 +3,261 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { EventEmitter } from "resource://gre/modules/EventEmitter.sys.mjs";
+import { ContentProcessWatcherRegistry } from "resource://devtools/server/connectors/js-process-actor/ContentProcessWatcherRegistry.sys.mjs";
 
 const lazy = {};
 ChromeUtils.defineESModuleGetters(
   lazy,
   {
-    releaseDistinctSystemPrincipalLoader:
-      "resource://devtools/shared/loader/DistinctSystemPrincipalLoader.sys.mjs",
-    useDistinctSystemPrincipalLoader:
-      "resource://devtools/shared/loader/DistinctSystemPrincipalLoader.sys.mjs",
+    ProcessTargetWatcher:
+      "resource://devtools/server/connectors/js-process-actor/target-watchers/process.sys.mjs",
+    SessionDataHelpers:
+      "resource://devtools/server/actors/watcher/SessionDataHelpers.sys.mjs",
+    ServiceWorkerTargetWatcher:
+      "resource://devtools/server/connectors/js-process-actor/target-watchers/service_worker.sys.mjs",
+    WorkerTargetWatcher:
+      "resource://devtools/server/connectors/js-process-actor/target-watchers/worker.sys.mjs",
+    WindowGlobalTargetWatcher:
+      "resource://devtools/server/connectors/js-process-actor/target-watchers/window-global.sys.mjs",
   },
   { global: "contextual" }
 );
 
-// Name of the attribute into which we save data in `sharedData` object.
-const SHARED_DATA_KEY_NAME = "DevTools:watchedPerWatcher";
-
-// If true, log info about DOMProcess's being created.
-const DEBUG = false;
-
-/**
- * Print information about operation being done against each content process.
- *
- * @param {nsIDOMProcessChild} domProcessChild
- *        The process for which we should log a message.
- * @param {String} message
- *        Message to log.
- */
-function logDOMProcess(domProcessChild, message) {
-  if (!DEBUG) {
-    return;
-  }
-  dump(" [pid:" + domProcessChild + "] " + message + "\n");
-}
+// TargetActorRegistery has to be shared between all devtools instances
+// and so is loaded into the shared global.
+// eslint-disable-next-line mozilla/reject-multiple-getters-calls
+ChromeUtils.defineESModuleGetters(
+  lazy,
+  {
+    TargetActorRegistry:
+      "resource://devtools/server/actors/targets/target-actor-registry.sys.mjs",
+  },
+  { global: "shared" }
+);
 
 export class DevToolsProcessChild extends JSProcessActorChild {
   constructor() {
     super();
 
-    // The map is indexed by the Watcher Actor ID.
-    // The values are objects containing the following properties:
-    // - connection: the DevToolsServerConnection itself
-    // - actor: the ContentProcessTargetActor instance
-    this._connections = new Map();
-
-    this._onConnectionChange = this._onConnectionChange.bind(this);
+    // The EventEmitter interface is used for DevToolsTransport's packet-received event.
     EventEmitter.decorate(this);
   }
 
+  #watchers = {
+    // Keys are target types, which are defined in this CommonJS Module:
+    // https://searchfox.org/mozilla-central/rev/0e9ea50a999420d93df0e4e27094952af48dd3b8/devtools/server/actors/targets/index.js#7-14
+    // We avoid loading it as this ESM should be lightweight and avoid spawning DevTools CommonJS Loader until
+    // whe know we have to instantiate a Target Actor.
+    frame: {
+      // Number of active watcher actors currently watching for the given target type
+      activeListener: 0,
+
+      // Instance of a target watcher class whose task is to observe new target instances
+      get watcher() {
+        return lazy.WindowGlobalTargetWatcher;
+      },
+    },
+
+    process: {
+      activeListener: 0,
+      get watcher() {
+        return lazy.ProcessTargetWatcher;
+      },
+    },
+
+    worker: {
+      activeListener: 0,
+      get watcher() {
+        return lazy.WorkerTargetWatcher;
+      },
+    },
+
+    service_worker: {
+      activeListener: 0,
+      get watcher() {
+        return lazy.ServiceWorkerTargetWatcher;
+      },
+    },
+  };
+
+  #initialized = false;
+
+  /**
+   * Called when this JSProcess Actor instantiate either when we start observing for first target types,
+   * or when the process just started.
+   */
   instantiate() {
-    const { sharedData } = Services.cpmm;
-    const watchedDataByWatcherActor = sharedData.get(SHARED_DATA_KEY_NAME);
-    if (!watchedDataByWatcherActor) {
-      throw new Error(
-        "Request to instantiate the target(s) for the process, but `sharedData` is empty about watched targets"
-      );
+    if (this.#initialized) {
+      return;
     }
-
-    // Create one Target actor for each prefix/client which listen to processes
-    for (const [watcherActorID, sessionData] of watchedDataByWatcherActor) {
-      const { connectionPrefix } = sessionData;
-
-      if (sessionData.targets?.includes("process")) {
-        this._createTargetActor(watcherActorID, connectionPrefix, sessionData);
-      }
+    this.#initialized = true;
+    // Create and watch for future target actors for each watcher currently watching some target types
+    for (const watcherDataObject of ContentProcessWatcherRegistry.getAllWatchersDataObjects()) {
+      this.#watchInitialTargetsForWatcher(watcherDataObject);
     }
   }
 
   /**
-   * Instantiate a new ProcessTarget for the given connection.
+   * Instantiate and watch future target actors based on the already watched targets.
    *
-   * @param String watcherActorID
-   *        The ID of the WatcherActor who requested to observe and create these target actors.
-   * @param String parentConnectionPrefix
-   *        The prefix of the DevToolsServerConnection of the Watcher Actor.
-   *        This is used to compute a unique ID for the target actor.
-   * @param Object sessionData
-   *        All data managed by the Watcher Actor and WatcherRegistry.sys.mjs, containing
-   *        target types, resources types to be listened as well as breakpoints and any
-   *        other data meant to be shared across processes and threads.
+   * @param Object watcherDataObject
+   *        See ContentProcessWatcherRegistry.
    */
-  _createTargetActor(watcherActorID, parentConnectionPrefix, sessionData) {
-    // This method will be concurrently called from `observe()` and `DevToolsProcessParent:instantiate-already-available`
-    // When the JSprocessActor initializes itself and when the watcher want to force instantiating existing targets.
-    // Simply ignore the second call as there is nothing to return, neither to wait for as this method is synchronous.
-    if (this._connections.has(watcherActorID)) {
-      return;
-    }
+  #watchInitialTargetsForWatcher(watcherDataObject) {
+    const { sessionData, sessionContext } = watcherDataObject;
 
-    // Compute a unique prefix, just for this DOM Process,
-    // which will be used to create a JSWindowActorTransport pair between content and parent processes.
-    // This is slightly hacky as we typicaly compute Prefix and Actor ID via `DevToolsServerConnection.allocID()`,
-    // but here, we can't have access to any DevTools connection as we are really early in the content process startup
-    // XXX: nsIDOMProcessChild's childID should be unique across processes, I think. So that should be safe?
-    // (this.manager == nsIDOMProcessChild interface)
-    // Ensure appending a final slash, otherwise the prefix may be the same between childID 1 and 10...
-    const forwardingPrefix =
-      parentConnectionPrefix + "contentProcess" + this.manager.childID + "/";
-
-    logDOMProcess(
-      this.manager,
-      "Instantiate ContentProcessTarget with prefix: " + forwardingPrefix
-    );
-
-    const { connection, targetActor } = this._createConnectionAndActor(
-      watcherActorID,
-      forwardingPrefix,
-      sessionData
-    );
-    this._connections.set(watcherActorID, {
-      connection,
-      actor: targetActor,
-    });
-
-    // Immediately queue a message for the parent process,
-    // in order to ensure that the JSWindowActorTransport is instantiated
-    // before any packet is sent from the content process.
-    // As the order of messages is guaranteed to be delivered in the order they
-    // were queued, we don't have to wait for anything around this sendAsyncMessage call.
-    // In theory, the ContentProcessTargetActor may emit events in its constructor.
-    // If it does, such RDP packets may be lost. But in practice, no events
-    // are emitted during its construction. Instead the frontend will start
-    // the communication first.
-    this.sendAsyncMessage("DevToolsProcessChild:connectFromContent", {
-      watcherActorID,
-      forwardingPrefix,
-      actor: targetActor.form(),
-    });
-
-    // Pass initialization data to the target actor
-    for (const type in sessionData) {
-      // `sessionData` will also contain `browserId` as well as entries with empty arrays,
-      // which shouldn't be processed.
-      const entries = sessionData[type];
-      if (!Array.isArray(entries) || !entries.length) {
-        continue;
-      }
-      targetActor.addOrSetSessionDataEntry(
-        type,
-        sessionData[type],
-        false,
-        "set"
+    // About WebExtension, see note in addOrSetSessionDataEntry.
+    // Their target actor aren't created by this class, but session data is still managed by it
+    // and we need to pass the initial session data coming to already instantiated target actor.
+    if (sessionContext.type == "webextension") {
+      const { watcherActorID } = watcherDataObject;
+      const connectionPrefix = watcherActorID.replace(/watcher\d+$/, "");
+      const targetActors = lazy.TargetActorRegistry.getTargetActors(
+        sessionContext,
+        connectionPrefix
       );
-    }
-  }
-
-  _destroyTargetActor(watcherActorID, isModeSwitching) {
-    const connectionInfo = this._connections.get(watcherActorID);
-    // This connection has already been cleaned?
-    if (!connectionInfo) {
-      throw new Error(
-        `Trying to destroy a target actor that doesn't exists, or has already been destroyed. Watcher Actor ID:${watcherActorID}`
-      );
-    }
-    connectionInfo.connection.close({ isModeSwitching });
-    this._connections.delete(watcherActorID);
-    if (this._connections.size == 0) {
-      this.didDestroy({ isModeSwitching });
-    }
-  }
-
-  _createConnectionAndActor(watcherActorID, forwardingPrefix, sessionData) {
-    if (!this.loader) {
-      this.loader = lazy.useDistinctSystemPrincipalLoader(this);
-    }
-    const { DevToolsServer } = this.loader.require(
-      "devtools/server/devtools-server"
-    );
-
-    const { ContentProcessTargetActor } = this.loader.require(
-      "devtools/server/actors/targets/content-process"
-    );
-
-    DevToolsServer.init();
-
-    // For browser content toolbox, we do need a regular root actor and all tab
-    // actors, but don't need all the "browser actors" that are only useful when
-    // debugging the parent process via the browser toolbox.
-    DevToolsServer.registerActors({ target: true });
-    DevToolsServer.on("connectionchange", this._onConnectionChange);
-
-    const connection = DevToolsServer.connectToParentWindowActor(
-      this,
-      forwardingPrefix,
-      "DevToolsProcessChild:packet"
-    );
-
-    // Create the actual target actor.
-    const targetActor = new ContentProcessTargetActor(connection, {
-      sessionContext: sessionData.sessionContext,
-    });
-    // There is no root actor in content processes and so
-    // the target actor can't be managed by it, but we do have to manage
-    // the actor to have it working and be registered in the DevToolsServerConnection.
-    // We make it manage itself and become a top level actor.
-    targetActor.manage(targetActor);
-
-    const form = targetActor.form();
-    targetActor.once("destroyed", options => {
-      // This will destroy the content process one
-      this._destroyTargetActor(watcherActorID, options.isModeSwitching);
-      // And this will destroy the parent process one
-      try {
-        this.sendAsyncMessage("DevToolsProcessChild:destroy", {
-          actors: [
-            {
-              watcherActorID,
-              form,
-            },
-          ],
-          options,
-        });
-      } catch (e) {
-        // Ignore exception when the JSProcessActorChild has already been destroyed.
-        // We often try to emit this message while the process is being destroyed,
-        // but sendAsyncMessage doesn't have time to complete and throws.
-        if (
-          !e.message.includes("JSProcessActorChild cannot send at the moment")
-        ) {
-          throw e;
+      if (targetActors.length) {
+        // Pass initialization data to the target actor
+        for (const type in sessionData) {
+          // `sessionData` will also contain `browserId` as well as entries with empty arrays,
+          // which shouldn't be processed.
+          const entries = sessionData[type];
+          if (!Array.isArray(entries) || !entries.length) {
+            continue;
+          }
+          targetActors[0].addOrSetSessionDataEntry(type, entries, false, "set");
         }
       }
-    });
+    }
 
-    return { connection, targetActor };
+    // Ignore the call if the watched targets property isn't populated yet.
+    // This typically happens when instantiating the JS Process Actor on toolbox opening,
+    // where the actor is spawn early and a watchTarget message comes later with the `targets` array set.
+    if (!sessionData.targets) {
+      return;
+    }
+
+    for (const targetType of sessionData.targets) {
+      this.#watchNewTargetTypeForWatcher(watcherDataObject, targetType, true);
+    }
   }
 
   /**
-   * Destroy the server once its last connection closes. Note that multiple
-   * frame scripts may be running in parallel and reuse the same server.
+   * Instantiate and watch future target actors based on the already watched targets.
+   *
+   * @param Object watcherDataObject
+   *        See ContentProcessWatcherRegistry.
+   * @param String targetType
+   *        New typeof target to start watching.
+   * @param Boolean isProcessActorStartup
+   *        True when we are watching for targets during this JS Process actor instantiation.
+   *        It shouldn't be the case on toolbox opening, but only when a new process starts.
+   *        On toolbox opening, the Actor will receive an explicit watchTargets query.
    */
-  _onConnectionChange() {
-    if (this._destroyed) {
+  #watchNewTargetTypeForWatcher(
+    watcherDataObject,
+    targetType,
+    isProcessActorStartup
+  ) {
+    const { watchingTargetTypes } = watcherDataObject;
+    // Ensure creating and watching only once per target type and watcher actor.
+    if (watchingTargetTypes.includes(targetType)) {
       return;
     }
-    this._destroyed = true;
+    watchingTargetTypes.push(targetType);
 
-    const { DevToolsServer } = this.loader.require(
-      "devtools/server/devtools-server"
+    // Update sessionData as watched target types are a Session Data
+    // used later for example by worker target watcher
+    lazy.SessionDataHelpers.addOrSetSessionDataEntry(
+      watcherDataObject.sessionData,
+      "targets",
+      [targetType],
+      "add"
     );
 
-    // Only destroy the server if there is no more connections to it. It may be
-    // used to debug another tab running in the same process.
-    if (DevToolsServer.hasConnection() || DevToolsServer.keepAlive) {
-      return;
+    this.#watchers[targetType].activeListener++;
+
+    // Start listening for platform events when we are observing this type for the first time
+    if (this.#watchers[targetType].activeListener === 1) {
+      this.#watchers[targetType].watcher.watch();
     }
 
-    DevToolsServer.off("connectionchange", this._onConnectionChange);
-    DevToolsServer.destroy();
+    // And instantiate targets for the already existing instances
+    this.#watchers[targetType].watcher.createTargetsForWatcher(
+      watcherDataObject,
+      isProcessActorStartup
+    );
   }
 
   /**
-   * Supported Queries
+   * Stop watching for all target types and destroy all existing targets actor
+   * related to a given watcher actor.
+   *
+   * @param {Object} watcherDataObject
+   * @param {String} targetType
+   * @param {Object} options
    */
+  #unwatchTargetsForWatcher(watcherDataObject, targetType, options) {
+    const { watchingTargetTypes } = watcherDataObject;
+    const targetTypeIndex = watchingTargetTypes.indexOf(targetType);
+    // Ignore targetTypes which were not observed
+    if (targetTypeIndex === -1) {
+      return;
+    }
+    // Update to the new list of currently watched target types
+    watchingTargetTypes.splice(targetTypeIndex, 1);
 
+    // Update sessionData as watched target types are a Session Data
+    // used later for example by worker target watcher
+    lazy.SessionDataHelpers.removeSessionDataEntry(
+      watcherDataObject.sessionData,
+      "targets",
+      [targetType]
+    );
+
+    this.#watchers[targetType].activeListener--;
+
+    // Stop observing for platform events
+    if (this.#watchers[targetType].activeListener === 0) {
+      this.#watchers[targetType].watcher.unwatch();
+    }
+
+    // Destroy all targets which are still instantiated for this type
+    this.#watchers[targetType].watcher.destroyTargetsForWatcher(
+      watcherDataObject,
+      options
+    );
+
+    // Unregister the watcher if we stopped watching for all target types
+    if (!watchingTargetTypes.length) {
+      ContentProcessWatcherRegistry.remove(watcherDataObject);
+    }
+
+    // If we removed the last watcher, clean the internal state of this class.
+    if (ContentProcessWatcherRegistry.isEmpty()) {
+      this.didDestroy(options);
+    }
+  }
+
+  /**
+   * Cleanup everything around a given watcher actor
+   *
+   * @param {Object} watcherDataObject
+   */
+  #destroyWatcher(watcherDataObject) {
+    const { watchingTargetTypes } = watcherDataObject;
+    // Clone the array as it will be modified during the loop execution
+    for (const targetType of [...watchingTargetTypes]) {
+      this.#unwatchTargetsForWatcher(watcherDataObject, targetType);
+    }
+  }
+
+  /**
+   * Used by DevTools Transport to send packets to the content process.
+   *
+   * @param {JSON} packet
+   * @param {String} prefix
+   */
   sendPacket(packet, prefix) {
     this.sendAsyncMessage("DevToolsProcessChild:packet", { packet, prefix });
   }
@@ -276,23 +277,33 @@ export class DevToolsProcessChild extends JSProcessActorChild {
     }
   }
 
+  /**
+   * Called by the JSProcessActor API when the process process sent us a message.
+   */
   receiveMessage(message) {
     switch (message.name) {
-      case "DevToolsProcessParent:instantiate-already-available": {
-        const { watcherActorID, connectionPrefix, sessionData } = message.data;
-        return this._createTargetActor(
-          watcherActorID,
-          connectionPrefix,
-          sessionData
+      case "DevToolsProcessParent:watchTargets": {
+        const { watcherActorID, targetType } = message.data;
+        const watcherDataObject =
+          ContentProcessWatcherRegistry.getWatcherDataObject(watcherActorID);
+        return this.#watchNewTargetTypeForWatcher(
+          watcherDataObject,
+          targetType
         );
       }
-      case "DevToolsProcessParent:destroy": {
-        const { watcherActorID, isModeSwitching } = message.data;
-        return this._destroyTargetActor(watcherActorID, isModeSwitching);
+      case "DevToolsProcessParent:unwatchTargets": {
+        const { watcherActorID, targetType, options } = message.data;
+        const watcherDataObject =
+          ContentProcessWatcherRegistry.getWatcherDataObject(watcherActorID);
+        return this.#unwatchTargetsForWatcher(
+          watcherDataObject,
+          targetType,
+          options
+        );
       }
       case "DevToolsProcessParent:addOrSetSessionDataEntry": {
         const { watcherActorID, type, entries, updateType } = message.data;
-        return this._addOrSetSessionDataEntry(
+        return this.#addOrSetSessionDataEntry(
           watcherActorID,
           type,
           entries,
@@ -301,7 +312,20 @@ export class DevToolsProcessChild extends JSProcessActorChild {
       }
       case "DevToolsProcessParent:removeSessionDataEntry": {
         const { watcherActorID, type, entries } = message.data;
-        return this._removeSessionDataEntry(watcherActorID, type, entries);
+        return this.#removeSessionDataEntry(watcherActorID, type, entries);
+      }
+      case "DevToolsProcessParent:destroyWatcher": {
+        const { watcherActorID } = message.data;
+        const watcherDataObject =
+          ContentProcessWatcherRegistry.getWatcherDataObject(
+            watcherActorID,
+            true
+          );
+        // The watcher may already be destroyed if the client unwatched for all target types.
+        if (watcherDataObject) {
+          return this.#destroyWatcher(watcherDataObject);
+        }
+        return null;
       }
       case "DevToolsProcessParent:packet":
         return this.emit("packet-received", message);
@@ -312,51 +336,160 @@ export class DevToolsProcessChild extends JSProcessActorChild {
     }
   }
 
-  _getTargetActorForWatcherActorID(watcherActorID) {
-    const connectionInfo = this._connections.get(watcherActorID);
-    return connectionInfo?.actor;
-  }
+  /**
+   * The parent process requested that some session data have been added or set.
+   *
+   * @param {String} watcherActorID
+   *        The Watcher Actor ID requesting to add new session data
+   * @param {String} type
+   *        The type of data to be added
+   * @param {Array<Object>} entries
+   *        The values to be added to this type of data
+   * @param {String} updateType
+   *        "add" will only add the new entries in the existing data set.
+   *        "set" will update the data set with the new entries.
+   */
+  async #addOrSetSessionDataEntry(watcherActorID, type, entries, updateType) {
+    const watcherDataObject =
+      ContentProcessWatcherRegistry.getWatcherDataObject(watcherActorID);
 
-  _addOrSetSessionDataEntry(watcherActorID, type, entries, updateType) {
-    const targetActor = this._getTargetActorForWatcherActorID(watcherActorID);
-    if (!targetActor) {
-      throw new Error(
-        `No target actor for this Watcher Actor ID:"${watcherActorID}"`
-      );
-    }
-    return targetActor.addOrSetSessionDataEntry(
+    // Maintain the copy of `sessionData` so that it is up-to-date when
+    // a new worker target needs to be instantiated
+    const { sessionData } = watcherDataObject;
+    lazy.SessionDataHelpers.addOrSetSessionDataEntry(
+      sessionData,
       type,
       entries,
-      false,
       updateType
     );
-  }
 
-  _removeSessionDataEntry(watcherActorID, type, entries) {
-    const targetActor = this._getTargetActorForWatcherActorID(watcherActorID);
-    // By the time we are calling this, the target may already have been destroyed.
-    if (!targetActor) {
-      return null;
+    // This type is really specific to Service Workers and doesn't need to be transferred to any target.
+    // We only need to instantiate and destroy the target actors based on this new host.
+    const { watchingTargetTypes } = watcherDataObject;
+    if (type == "browser-element-host") {
+      if (watchingTargetTypes.includes("service_worker")) {
+        this.#watchers.service_worker.watcher.updateBrowserElementHost(
+          watcherDataObject
+        );
+      }
+      return;
     }
-    return targetActor.removeSessionDataEntry(type, entries);
+
+    const promises = [];
+    for (const targetActor of watcherDataObject.actors) {
+      promises.push(
+        targetActor.addOrSetSessionDataEntry(type, entries, false, updateType)
+      );
+    }
+
+    // Very special codepath for Web Extensions.
+    // Their WebExtension Target Actor is still created manually by WebExtensionDescritpor.getTarget,
+    // via a message manager. That, instead of being instantiated via the WatcherActor.watchTargets and this JSProcess actor.
+    // The Watcher Actor will still instantiate a JS Actor for the WebExt DOM Content Process
+    // and send the addOrSetSessionDataEntry query. But as the target actor isn't managed by the JS Actor,
+    // we have to manually retrieve it via the TargetActorRegistry.
+    if (sessionData.sessionContext.type == "webextension") {
+      const connectionPrefix = watcherActorID.replace(/watcher\d+$/, "");
+      const targetActors = lazy.TargetActorRegistry.getTargetActors(
+        sessionData.sessionContext,
+        connectionPrefix
+      );
+      // We will have a single match only in the DOM Process where the add-on runs
+      if (targetActors.length) {
+        promises.push(
+          targetActors[0].addOrSetSessionDataEntry(
+            type,
+            entries,
+            false,
+            updateType
+          )
+        );
+      }
+    }
+    await Promise.all(promises);
+
+    if (watchingTargetTypes.includes("worker")) {
+      await this.#watchers.worker.watcher.addOrSetSessionDataEntry(
+        watcherDataObject,
+        type,
+        entries,
+        updateType
+      );
+    }
+    if (watchingTargetTypes.includes("service_worker")) {
+      await this.#watchers.service_worker.watcher.addOrSetSessionDataEntry(
+        watcherDataObject,
+        type,
+        entries,
+        updateType
+      );
+    }
   }
 
-  observe(subject, topic) {
+  /**
+   * The parent process requested that some session data have been removed.
+   *
+   * @param {String} watcherActorID
+   *        The Watcher Actor ID requesting to remove session data
+   * @param {String}} type
+   *        The type of data to be removed
+   * @param {Array<Object>} entries
+   *        The values to be removed to this type of data
+   */
+  #removeSessionDataEntry(watcherActorID, type, entries) {
+    const watcherDataObject =
+      ContentProcessWatcherRegistry.getWatcherDataObject(watcherActorID, true);
+
+    // When we unwatch resources after targets during the devtools shutdown,
+    // the watcher will be removed on last target type unwatch.
+    if (!watcherDataObject) {
+      return;
+    }
+
+    // Maintain the copy of `sessionData` so that it is up-to-date when
+    // a new worker target needs to be instantiated
+    lazy.SessionDataHelpers.removeSessionDataEntry(
+      watcherDataObject.sessionData,
+      type,
+      entries
+    );
+
+    for (const targetActor of watcherDataObject.actors) {
+      targetActor.removeSessionDataEntry(type, entries);
+    }
+  }
+
+  /**
+   * Observer service notification handler.
+   *
+   * @param {DOMWindow|Document} subject
+   *        A window for *-document-global-created
+   *        A document for *-page-{shown|hide}
+   * @param {String} topic
+   */
+  observe = (subject, topic) => {
     if (topic === "init-devtools-content-process-actor") {
       // This is triggered by the process actor registration and some code in process-helper.js
       // which defines a unique topic to be observed
       this.instantiate();
     }
-  }
+  };
 
-  didDestroy(options) {
-    for (const { connection } of this._connections.values()) {
-      connection.close(options);
+  /**
+   * Called by JS Process Actor API when the current process is destroyed,
+   * but also within this class when the last watcher stopped watching for targets.
+   */
+  didDestroy() {
+    // Stop watching for all target types
+    for (const entry of Object.values(this.#watchers)) {
+      if (entry.activeListener > 0) {
+        entry.watcher.unwatch();
+        entry.activeListener = 0;
+      }
     }
-    this._connections.clear();
-    if (this.loader) {
-      lazy.releaseDistinctSystemPrincipalLoader(this);
-      this.loader = null;
-    }
+
+    ContentProcessWatcherRegistry.clear();
   }
 }
+
+export class BrowserToolboxDevToolsProcessChild extends DevToolsProcessChild {}
