@@ -67,7 +67,7 @@ function persistMapToSharedData() {
   Services.ppmm.sharedData.flush();
 }
 
-export const WatcherRegistry = {
+export const ParentProcessWatcherRegistry = {
   /**
    * Tells if a given watcher currently watches for a given target type.
    *
