@@ -325,8 +325,6 @@ NS_InitXPCOM(nsIServiceManager** aResult, nsIFile* aBinDirectory,
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-
-  // Initialise the profiler
   AUTO_PROFILER_INIT2;
 
   // Set up the timer globals/timer thread
@@ -465,11 +463,6 @@ NS_InitXPCOM(nsIServiceManager** aResult, nsIFile* aBinDirectory,
   // add any services listed in the "xpcom-directory-providers" category
   // to the directory service.
   nsDirectoryService::gService->RegisterCategoryProviders();
-
-  // Now that both the profiler and directory services have been started
-  // we can find the download directory, where the profiler can write
-  // profiles if necessary
-  profiler_lookup_download_directory();
 
   // Init mozilla::SharedThreadPool (which needs the service manager).
   mozilla::SharedThreadPool::InitStatics();
