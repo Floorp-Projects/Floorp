@@ -1202,7 +1202,7 @@ void ContentSubtreeIterator::Next() {
   nsINode* nextNode = ContentIteratorBase::GetNextSibling(
       mCurNode, IterAllowCrossShadowBoundary());
 
-  MOZ_ASSERT(nextNode, "No next sibling!?! This could mean deadlock!");
+  NS_ASSERTION(nextNode, "No next sibling!?! This could mean deadlock!");
 
   int32_t i = mInclusiveAncestorsOfEndContainer.IndexOf(nextNode);
   while (i != -1) {
@@ -1216,7 +1216,7 @@ void ContentSubtreeIterator::Next() {
       nextNode = mRange->MayCrossShadowBoundary() ? root->GetFirstChild()
                                                   : nextNode->GetFirstChild();
     }
-    MOZ_ASSERT(nextNode, "Iterator error, expected a child node!");
+    NS_ASSERTION(nextNode, "Iterator error, expected a child node!");
 
     // should be impossible to get a null pointer.  If we went all the way
     // down the child chain to the bottom without finding an interior node,
