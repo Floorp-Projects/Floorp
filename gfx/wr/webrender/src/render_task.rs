@@ -947,9 +947,7 @@ impl RenderTask {
         size: DeviceIntSize,
         kind: RenderTaskKind,
     ) -> Self {
-        if size.is_empty() {
-            log::warn!("Bad {} render task size: {:?}", kind.as_str(), size);
-        }
+        assert!(!size.is_empty(), "Bad {} render task size: {:?}", kind.as_str(), size);
         RenderTask::new(
             RenderTaskLocation::Unallocated { size },
             kind,
