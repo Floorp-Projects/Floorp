@@ -206,7 +206,7 @@ macosx64-custom-car:
     treeherder:
         symbol: TM(custom-car)
     worker:
-        max-run-time: 35000
+        max-run-time: 40000
     use-python: default
     run-on-projects: []
     run:
