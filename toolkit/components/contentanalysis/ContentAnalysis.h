@@ -135,6 +135,10 @@ class ContentAnalysis final : public nsIContentAnalysis {
   nsresult CreateContentAnalysisClient(nsCString&& aPipePathName,
                                        nsString&& aClientSignatureSetting,
                                        bool aIsPerUser);
+  nsresult AnalyzeContentRequestCallbackPrivate(
+      nsIContentAnalysisRequest* aRequest, bool aAutoAcknowledge,
+      nsIContentAnalysisCallback* aCallback);
+
   nsresult RunAnalyzeRequestTask(
       const RefPtr<nsIContentAnalysisRequest>& aRequest, bool aAutoAcknowledge,
       int64_t aRequestCount,
@@ -219,6 +223,7 @@ class ContentAnalysisResponse final : public nsIContentAnalysisResponse {
 
   void SetOwner(RefPtr<ContentAnalysis> aOwner);
   void DoNotAcknowledge() { mDoNotAcknowledge = true; }
+  void SetCancelError(CancelError aCancelError);
 
  private:
   ~ContentAnalysisResponse() = default;
@@ -239,7 +244,11 @@ class ContentAnalysisResponse final : public nsIContentAnalysisResponse {
   // Identifier for the corresponding nsIContentAnalysisRequest
   nsCString mRequestToken;
 
-  // ContentAnalysis (or, more precisely, it's Client object) must outlive
+  // If mAction is eCanceled, this is the error explaining why the request was
+  // canceled, or eUserInitiated if the user canceled it.
+  CancelError mCancelError = CancelError::eUserInitiated;
+
+  // ContentAnalysis (or, more precisely, its Client object) must outlive
   // the transaction.
   RefPtr<ContentAnalysis> mOwner;
 
