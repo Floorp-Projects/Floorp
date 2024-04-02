@@ -823,16 +823,21 @@ workers:
             implementation: generic-worker
             os: linux-bitbar
             worker-type: 'gecko-{alias}'
-        t-linux(-large|-xlarge|-xlarge-source):
+        t-linux-xlarge-source:
             provisioner: '{trust-domain}-t'
             implementation: docker-worker
             os: linux
             worker-type: '{alias}-gcp'
+        t-linux(-large|-xlarge):
+            provisioner: '{trust-domain}-t'
+            implementation: docker-worker
+            os: linux
+            worker-type: '{alias}-noscratch-gcp'
         t-linux-kvm:
             provisioner: '{trust-domain}-t'
             implementation: docker-worker
             os: linux
-            worker-type: 't-linux-kvm-gcp'
+            worker-type: 't-linux-kvm-noscratch-gcp'
         t-linux-talos:
             provisioner: releng-hardware
             implementation: generic-worker
@@ -875,7 +880,7 @@ workers:
                     default: '{trust-domain}-t'
             implementation: docker-worker
             os: linux
-            worker-type: 't-linux-xlarge-gcp'
+            worker-type: 't-linux-xlarge-noscratch-gcp'
         b-osx-1015:
             provisioner: releng-hardware
             implementation: generic-worker
