@@ -48,7 +48,7 @@ import org.mozilla.gecko.annotation.WrapForJNI;
         Log.e(LOGTAG, "Cannot open the uri: " + aUri + " (invalid header)");
         close();
       }
-    } catch (final IOException | SecurityException e) {
+    } catch (final Exception e) {
       Log.e(LOGTAG, "Cannot open the uri: " + aUri, e);
       close();
     }
@@ -146,7 +146,7 @@ import org.mozilla.gecko.annotation.WrapForJNI;
         Log.d(LOGTAG, "The uri is readable: " + uri);
         return true;
       }
-    } catch (final IOException | SecurityException e) {
+    } catch (final Exception e) {
       // A SecurityException could happen if the uri is no more valid or if
       // we're in an isolated process.
       Log.e(LOGTAG, "Cannot read the uri: " + uri, e);
