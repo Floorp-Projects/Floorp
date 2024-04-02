@@ -294,7 +294,7 @@ add_task(async function test_preferencesBackupResource() {
 add_task(async function test_miscDataBackupResource() {
   Services.fog.testResetFOG();
 
-  const EXPECTED_MISC_KILOBYTES_SIZE = 131;
+  const EXPECTED_MISC_KILOBYTES_SIZE = 251;
   const tempDir = PathUtils.tempDir;
   const mockFiles = new Map([
     ["times.json", 5],
@@ -306,6 +306,24 @@ add_task(async function test_miscDataBackupResource() {
 
   for (let [mockFileName, mockFileSize] of mockFiles) {
     let tempPath = PathUtils.join(tempDir, mockFileName);
+    await createKilobyteSizedFile(tempPath, mockFileSize);
+  }
+
+  const mockChromeIndexedDBDirFiles = new Map([
+    ["123ABC.sqlite", 40],
+    ["456DEF.sqlite", 40],
+    ["mockIDBDir/890HIJ.sqlite", 40],
+  ]);
+
+  for (let [mockFilePath, mockFileSize] of mockChromeIndexedDBDirFiles) {
+    let processedMockFileName = mockFilePath.split(/[\\\/]/);
+    let tempPath = PathUtils.join(
+      tempDir,
+      "storage",
+      "permanent",
+      "chrome",
+      ...processedMockFileName
+    );
     await createKilobyteSizedFile(tempPath, mockFileSize);
   }
 
@@ -329,7 +347,7 @@ add_task(async function test_miscDataBackupResource() {
 
   for (let mockFileName of mockFiles.keys()) {
     let tempPath = PathUtils.join(tempDir, mockFileName);
-    await IOUtils.remove(tempPath);
+    await maybeRemoveFile(tempPath);
   }
 });
 

@@ -116,12 +116,15 @@ browser.backup:
     type: quantity
     unit: kilobyte
     description: >
-      The total size of files for telemetry, site storage, media device origin mapping
-      and Mozilla Accounts in the current profile directory, rounded to the nearest tenth kilobyte.
+      The total size of files for telemetry, site storage, media device origin mapping,
+      chrome privileged IndexedDB databases, and Mozilla Accounts in the current profile directory,
+      rounded to the nearest tenth kilobyte.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1883747
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1887746
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1883747
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1887746
     data_sensitivity:
       - technical
     notification_emails:

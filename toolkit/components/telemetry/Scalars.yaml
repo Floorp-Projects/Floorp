@@ -250,9 +250,11 @@ browser.backup:
   misc_data_size:
     bug_numbers:
       - 1883747
+      - 1887746
     description: >
-      The total size of files for telemetry, site storage, media device origin mapping
-      and Mozilla Accounts in the current profile directory, rounded to the nearest tenth kilobyte.
+      The total size of files for telemetry, site storage, media device origin mapping,
+      chrome privileged IndexedDB databases, and Mozilla Accounts in the current profile directory,
+      rounded to the nearest tenth kilobyte.
     expires: never
     kind: uint
     notification_emails:
