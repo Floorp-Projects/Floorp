@@ -9424,12 +9424,6 @@
   value: false
   mirror: always
 
-# Enable/disable overflow/underflow events in content
-- name: layout.overflow-underflow.content.enabled
-  type: bool
-  value: @IS_NOT_EARLY_BETA_OR_EARLIER@
-  mirror: always
-
 - name: layout.visibility.min-recompute-interval-ms
   type: uint32_t
   value: 1000
