@@ -5078,14 +5078,6 @@
   value: @IS_NOT_ANDROID@
   mirror: never
 
-# This pref has no effect within fission windows, it only controls the
-# behaviour within non-fission windows. If true, preserve browsing contexts
-# between process swaps.
-- name: fission.preserve_browsing_contexts
-  type: bool
-  value: true
-  mirror: always
-
 # Disable storing the session history in the parent process, and accessing it
 # over IPC from the child processes.
 - name: fission.disableSessionHistoryInParent

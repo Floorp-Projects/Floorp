@@ -81,13 +81,7 @@ nsFrameLoaderOwner::ShouldPreserveBrowsingContext(
     }
   }
 
-  // We will preserve our browsing context if either fission is enabled, or the
-  // `preserve_browsing_contexts` pref is active.
-  if (UseRemoteSubframes() ||
-      StaticPrefs::fission_preserve_browsing_contexts()) {
-    return ChangeRemotenessContextType::PRESERVE;
-  }
-  return ChangeRemotenessContextType::DONT_PRESERVE;
+  return ChangeRemotenessContextType::PRESERVE;
 }
 
 void nsFrameLoaderOwner::ChangeRemotenessCommon(

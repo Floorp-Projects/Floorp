@@ -63,14 +63,11 @@ add_task(async function oopProcessSwap() {
       );
 
       is(browser.browsingContext.children.length, 1);
-
-      if (Services.prefs.getBoolPref("fission.preserve_browsing_contexts")) {
-        is(
-          frameId,
-          oopinfo.browsingContextId,
-          `BrowsingContext should not have changed (${frameId} != ${oopinfo.browsingContextId})`
-        );
-      }
+      is(
+        frameId,
+        oopinfo.browsingContextId,
+        `BrowsingContext should not have changed (${frameId} != ${oopinfo.browsingContextId})`
+      );
       is(oopinfo.location, WEB, "correct location");
     }
   );
@@ -146,13 +143,11 @@ add_task(async function oopOriginProcessSwap() {
       );
 
       is(browser.browsingContext.children.length, 1);
-      if (Services.prefs.getBoolPref("fission.preserve_browsing_contexts")) {
-        is(
-          frameId,
-          oopinfo.browsingContextId,
-          `BrowsingContext should not have changed (${frameId} != ${oopinfo.browsingContextId})`
-        );
-      }
+      is(
+        frameId,
+        oopinfo.browsingContextId,
+        `BrowsingContext should not have changed (${frameId} != ${oopinfo.browsingContextId})`
+      );
       is(oopinfo.location, ORG_POSTMSG, "correct location");
     }
   );
