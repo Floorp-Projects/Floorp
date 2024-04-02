@@ -23,7 +23,7 @@ addRDMTask(TEST_URL, async function ({ ui, manager }) {
   const expected = [
     {
       metaSupport: false,
-      before: [1.0, 300, 600],
+      before: [0.5, 300, 600],
       after: [1.0, 600, 300],
     },
     {
