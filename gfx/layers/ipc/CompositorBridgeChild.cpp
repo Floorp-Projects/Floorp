@@ -18,8 +18,7 @@
 #include "mozilla/layers/CanvasChild.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/layers/PTextureChild.h"
-#include "mozilla/layers/TextureClient.h"      // for TextureClient
-#include "mozilla/layers/TextureClientPool.h"  // for TextureClientPool
+#include "mozilla/layers/TextureClient.h"  // for TextureClient
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "mozilla/layers/SyncObject.h"  // for SyncObjectClient
 #include "mozilla/gfx/CanvasManagerChild.h"
@@ -134,10 +133,6 @@ void CompositorBridgeChild::Destroy() {
   // let's make sure there is still a reference to keep this alive whatever
   // happens.
   RefPtr<CompositorBridgeChild> selfRef = this;
-
-  for (size_t i = 0; i < mTexturePools.Length(); i++) {
-    mTexturePools[i]->Destroy();
-  }
 
   if (mSectionAllocator) {
     delete mSectionAllocator;
@@ -275,9 +270,6 @@ bool CompositorBridgeChild::CompositorIsInGPUProcess() {
 mozilla::ipc::IPCResult CompositorBridgeChild::RecvDidComposite(
     const LayersId& aId, const nsTArray<TransactionId>& aTransactionIds,
     const TimeStamp& aCompositeStart, const TimeStamp& aCompositeEnd) {
-  // Hold a reference to keep texture pools alive.  See bug 1387799
-  const auto texturePools = mTexturePools.Clone();
-
   for (const auto& id : aTransactionIds) {
     if (mLayerManager) {
       MOZ_ASSERT(!aId.IsValid());
@@ -291,10 +283,6 @@ mozilla::ipc::IPCResult CompositorBridgeChild::RecvDidComposite(
         child->DidComposite(id, aCompositeStart, aCompositeEnd);
       }
     }
-  }
-
-  for (size_t i = 0; i < texturePools.Length(); i++) {
-    texturePools[i]->ReturnDeferredClients();
   }
 
   return IPC_OK();

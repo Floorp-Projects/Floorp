@@ -45,7 +45,6 @@ class CompositorManagerChild;
 class CompositorOptions;
 class WebRenderLayerManager;
 class TextureClient;
-class TextureClientPool;
 struct FrameMetrics;
 struct FwdTransactionCounter;
 
@@ -232,8 +231,6 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
       mTexturesWaitingNotifyNotUsed;
 
   nsCOMPtr<nsISerialEventTarget> mThread;
-
-  AutoTArray<RefPtr<TextureClientPool>, 2> mTexturePools;
 
   uint64_t mProcessToken;
 

@@ -1548,12 +1548,7 @@ TextureClient::TextureClient(TextureData* aData, TextureFlags aFlags,
       mUpdated(false),
       mAddedToCompositableClient(false),
       mFwdTransactionId(0),
-      mSerial(++sSerialCounter)
-#ifdef GFX_DEBUG_TRACK_CLIENTS_IN_POOL
-      ,
-      mPoolTracker(nullptr)
-#endif
-{
+      mSerial(++sSerialCounter) {
   mData->FillInfo(mInfo);
   mFlags |= mData->GetTextureFlags();
 }
