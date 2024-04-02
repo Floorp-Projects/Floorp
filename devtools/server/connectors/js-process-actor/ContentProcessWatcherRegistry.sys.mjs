@@ -24,7 +24,7 @@ const SHARED_DATA_KEY_NAME = "DevTools:watchedPerWatcher";
 // The main attribute of interest is the `sessionData` one which is set alongside
 // various other attributes necessary to maintain state per watcher in the content process.
 //
-// The Session Data object is maintained by WatcherRegistry, in the parent process
+// The Session Data object is maintained by ParentProcessWatcherRegistry, in the parent process
 // and is fetched from the content process via `sharedData` API.
 // It is then manually maintained via DevToolsProcess JS Actor queries.
 let gAllWatcherData = null;
