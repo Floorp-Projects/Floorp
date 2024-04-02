@@ -1439,7 +1439,6 @@ Document::Document(const char* aContentType)
       mThrowOnDynamicMarkupInsertionCounter(0),
       mIgnoreOpensDuringUnloadCounter(0),
       mSavedResolution(1.0f),
-      mSavedResolutionBeforeMVM(1.0f),
       mGeneration(0),
       mCachedTabSizeGeneration(0),
       mNextFormNumber(0),

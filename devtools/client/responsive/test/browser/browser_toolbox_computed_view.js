@@ -6,18 +6,22 @@
 // Check that when the viewport is resized, the computed-view refreshes.
 
 const TEST_URI =
-  "data:text/html;charset=utf-8,<html><style>" +
-  "div {" +
-  "  width: 500px;" +
-  "  height: 10px;" +
-  "  background: purple;" +
-  "} " +
-  "@media screen and (max-width: 200px) {" +
-  "  div { " +
-  "    width: 100px;" +
-  "  }" +
-  "};" +
-  "</style><div></div></html>";
+  "data:text/html;charset=utf-8," +
+  `
+  <meta name="viewport" content="width=device-width">
+  <style>
+  div {
+    width: 500px;
+    height: 10px;
+    background: purple;
+  }
+  @media screen and (max-width: 200px) {
+    div {
+      width: 100px;
+    }
+  };
+  </style><div></div></html>
+`;
 
 addRDMTask(TEST_URI, async function ({ ui, manager }) {
   info("Open the responsive design mode and set its size to 500x500 to start");

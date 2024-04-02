@@ -5657,7 +5657,7 @@ nsresult PresShell::SetResolutionAndScaleTo(float aResolution,
 
   // GetResolution handles mResolution being nothing by returning 1 so this
   // is checking that the resolution is actually changing.
-  bool resolutionUpdated = (aResolution != GetResolution());
+  bool resolutionUpdated = aResolution != GetResolution();
 
   mLastResolutionChangeOrigin = aOrigin;
 
@@ -11321,6 +11321,11 @@ void PresShell::MaybeRecreateMobileViewportManager(bool aAfterInitialization) {
     return;
   }
 
+  if (!mPresContext->IsRootContentDocumentCrossProcess()) {
+    MOZ_ASSERT(!mMobileViewportManager, "We never create MVMs for subframes");
+    return;
+  }
+
   if (mMobileViewportManager) {
     // We have one, but we need to either destroy it completely to replace it
     // with another one of the correct type. So either way, let's destroy the
@@ -11330,16 +11335,6 @@ void PresShell::MaybeRecreateMobileViewportManager(bool aAfterInitialization) {
     mMVMContext = nullptr;
 
     ResetVisualViewportSize();
-
-    // After we clear out the MVM and the MVMContext, also reset the
-    // resolution to its pre-MVM value.
-    SetResolutionAndScaleTo(mDocument->GetSavedResolutionBeforeMVM(),
-                            ResolutionChangeOrigin::MainThreadRestore);
-
-    if (aAfterInitialization) {
-      // Force a reflow to our correct view manager size.
-      ForceResizeReflowWithCurrentDimensions();
-    }
   }
 
   if (mvmType) {
@@ -11347,32 +11342,33 @@ void PresShell::MaybeRecreateMobileViewportManager(bool aAfterInitialization) {
     // have one.
     MOZ_ASSERT(!mMobileViewportManager);
 
-    if (mPresContext->IsRootContentDocumentCrossProcess()) {
-      // Store the resolution so we can restore to this resolution when
-      // the MVM is destroyed.
-      mDocument->SetSavedResolutionBeforeMVM(mResolution.valueOr(1.0f));
-
-      mMVMContext = new GeckoMVMContext(mDocument, this);
-      mMobileViewportManager = new MobileViewportManager(mMVMContext, *mvmType);
-      if (MOZ_UNLIKELY(
-              MOZ_LOG_TEST(MobileViewportManager::gLog, LogLevel::Debug))) {
-        nsIURI* uri = mDocument->GetDocumentURI();
-        MOZ_LOG(MobileViewportManager::gLog, LogLevel::Debug,
-                ("Created MVM %p (type %d) for URI %s",
-                 mMobileViewportManager.get(), (int)*mvmType,
-                 uri ? uri->GetSpecOrDefault().get() : "(null)"));
-      }
-
-      if (aAfterInitialization) {
-        // Setting the initial viewport will trigger a reflow.
-        mMobileViewportManager->SetInitialViewport();
-      }
+    mMVMContext = new GeckoMVMContext(mDocument, this);
+    mMobileViewportManager = new MobileViewportManager(mMVMContext, *mvmType);
+    if (MOZ_UNLIKELY(
+            MOZ_LOG_TEST(MobileViewportManager::gLog, LogLevel::Debug))) {
+      nsIURI* uri = mDocument->GetDocumentURI();
+      MOZ_LOG(
+          MobileViewportManager::gLog, LogLevel::Debug,
+          ("Created MVM %p (type %d) for URI %s", mMobileViewportManager.get(),
+           (int)*mvmType, uri ? uri->GetSpecOrDefault().get() : "(null)"));
     }
+  }
+  if (aAfterInitialization) {
+    // Setting the initial viewport will trigger a reflow.
+    if (mMobileViewportManager) {
+      mMobileViewportManager->SetInitialViewport();
+    } else {
+      // Force a reflow to our correct view manager size.
+      ForceResizeReflowWithCurrentDimensions();
+    }
+    // After we clear out the MVM and the MVMContext, also reset the
+    // resolution to 1.
+    SetResolutionAndScaleTo(1.0f, ResolutionChangeOrigin::MainThreadRestore);
   }
 }
 
 bool PresShell::UsesMobileViewportSizing() const {
-  return mMobileViewportManager != nullptr &&
+  return mMobileViewportManager &&
          nsLayoutUtils::ShouldHandleMetaViewport(mDocument);
 }
 

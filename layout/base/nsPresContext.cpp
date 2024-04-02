@@ -1410,6 +1410,11 @@ void nsPresContext::SetInRDMPane(bool aInRDMPane) {
   }
   mInRDMPane = aInRDMPane;
   RecomputeTheme();
+  if (mPresShell) {
+    nsContentUtils::AddScriptRunner(NewRunnableMethod<bool>(
+        "PresShell::MaybeRecreateMobileViewportManager", mPresShell,
+        &PresShell::MaybeRecreateMobileViewportManager, true));
+  }
 }
 
 float nsPresContext::GetDeviceFullZoom() {

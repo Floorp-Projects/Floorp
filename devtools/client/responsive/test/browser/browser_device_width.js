@@ -11,9 +11,6 @@ addRDMTask(TEST_URL, async function ({ ui, manager }) {
   ok(ui, "An instance of the RDM should be attached to the tab.");
   await setViewportSizeAndAwaitReflow(ui, manager, 110, 500);
 
-  info("Checking initial width/height properties.");
-  await doInitialChecks(ui, 110);
-
   info("Checking initial width/height with meta viewport on");
   await setTouchAndMetaViewportSupport(ui, true);
   await doInitialChecks(ui, 980);
