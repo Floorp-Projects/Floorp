@@ -31,15 +31,13 @@ use thin_vec::ThinVec;
 use euclid::SideOffsets2D;
 use moz2d_renderer::Moz2dBlobImageHandler;
 use nsstring::nsAString;
-use num_cpus;
 use program_cache::{remove_disk_cache, WrProgramCache};
-use rayon;
 use tracy_rs::register_thread_with_profiler;
 use webrender::sw_compositor::SwCompositor;
 use webrender::{
     api::units::*, api::*, create_webrender_instance, render_api::*, set_profiler_hooks, AsyncPropertySampler,
     AsyncScreenshotHandle, Compositor, CompositorCapabilities, CompositorConfig, CompositorSurfaceTransform,
-    DebugFlags, Device, MappableCompositor, MappedTileInfo, NativeSurfaceId, NativeSurfaceInfo, NativeTileId,
+    Device, MappableCompositor, MappedTileInfo, NativeSurfaceId, NativeSurfaceInfo, NativeTileId,
     PartialPresentCompositor, PipelineInfo, ProfilerHooks, RecordedFrameHandle, Renderer, RendererStats,
     SWGLCompositeSurfaceInfo, SceneBuilderHooks, ShaderPrecacheFlags, Shaders, SharedShaders, TextureCacheConfig,
     UploadMethod, WebRenderOptions, WindowVisibility, ONE_TIME_USAGE_HINT,

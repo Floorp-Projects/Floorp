@@ -11,8 +11,6 @@ use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use std::sync::Arc;
 
-use bincode;
-use fxhash;
 use nsstring::nsAString;
 use rayon::ThreadPool;
 use webrender::{ProgramBinary, ProgramCache, ProgramCacheObserver, ProgramSourceDigest};

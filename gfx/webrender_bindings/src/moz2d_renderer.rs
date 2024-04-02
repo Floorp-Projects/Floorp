@@ -19,7 +19,6 @@ use webrender::api::units::{BlobDirtyRect, BlobToDeviceTranslation, DeviceIntRec
 use webrender::api::*;
 
 use euclid::point2;
-use std;
 use std::collections::btree_map::BTreeMap;
 use std::collections::hash_map;
 use std::collections::hash_map::HashMap;
@@ -29,9 +28,6 @@ use std::mem;
 use std::os::raw::c_void;
 use std::ptr;
 use std::sync::Arc;
-
-#[cfg(target_os = "windows")]
-use dwrote;
 
 #[cfg(any(target_os = "macos", target_os = "ios"))]
 use core_foundation::string::CFString;
