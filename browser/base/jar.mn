@@ -55,7 +55,6 @@ browser.jar:
         content/browser/browser-places.js                   (content/browser-places.js)
         content/browser/browser-profiles.js                 (content/browser-profiles.js)
         content/browser/browser-safebrowsing.js             (content/browser-safebrowsing.js)
-        content/browser/browser-sidebar.js                  (content/browser-sidebar.js)
         content/browser/browser-siteIdentity.js             (content/browser-siteIdentity.js)
         content/browser/browser-sitePermissionPanel.js      (content/browser-sitePermissionPanel.js)
         content/browser/browser-siteProtections.js          (content/browser-siteProtections.js)
