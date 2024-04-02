@@ -20,6 +20,8 @@ const kPipeNamePref = "pipe_path_name";
 const kTimeoutPref = "agent_timeout";
 const kAllowUrlPref = "allow_url_regex_list";
 const kDenyUrlPref = "deny_url_regex_list";
+const kAgentNamePref = "agent_name";
+const kClientSignaturePref = "client_signature";
 const kPerUserPref = "is_per_user";
 const kShowBlockedPref = "show_blocked_result";
 const kDefaultAllowPref = "default_allow";
@@ -67,6 +69,8 @@ add_task(async function test_ca_active() {
 add_task(async function test_ca_enterprise_config() {
   const string1 = "this is a string";
   const string2 = "this is another string";
+  const string3 = "an agent name";
+  const string4 = "a client signature";
 
   await EnterprisePolicyTesting.setupPolicyEngineWithJson({
     policies: {
@@ -75,6 +79,8 @@ add_task(async function test_ca_enterprise_config() {
         AgentTimeout: 99,
         AllowUrlRegexList: string1,
         DenyUrlRegexList: string2,
+        AgentName: string3,
+        ClientSignature: string4,
         IsPerUser: true,
         ShowBlockedResult: false,
         DefaultAllow: true,
@@ -101,6 +107,18 @@ add_task(async function test_ca_enterprise_config() {
     Services.prefs.getStringPref("browser.contentanalysis." + kDenyUrlPref),
     string2,
     "deny urls match"
+  );
+  is(
+    Services.prefs.getStringPref("browser.contentanalysis." + kAgentNamePref),
+    string3,
+    "agent names match"
+  );
+  is(
+    Services.prefs.getStringPref(
+      "browser.contentanalysis." + kClientSignaturePref
+    ),
+    string4,
+    "client signatures match"
   );
   is(
     Services.prefs.getBoolPref("browser.contentanalysis." + kPerUserPref),

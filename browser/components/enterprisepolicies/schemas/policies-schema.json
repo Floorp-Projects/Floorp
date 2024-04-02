@@ -253,6 +253,12 @@
         "DenyUrlRegexList": {
           "type": "string"
         },
+        "AgentName": {
+          "type": "string"
+        },
+        "ClientSignature": {
+          "type": "string"
+        },
         "IsPerUser": {
           "type": "boolean"
         },
