@@ -25,6 +25,32 @@
 using namespace mozilla;
 using namespace mozilla::a11y;
 
+// Helper functions
+
+static ToggleState ToToggleState(uint64_t aState) {
+  if (aState & states::MIXED) {
+    return ToggleState_Indeterminate;
+  }
+  if (aState & (states::CHECKED | states::PRESSED)) {
+    return ToggleState_On;
+  }
+  return ToggleState_Off;
+}
+
+static ExpandCollapseState ToExpandCollapseState(uint64_t aState) {
+  if (aState & states::EXPANDED) {
+    return ExpandCollapseState_Expanded;
+  }
+  // If aria-haspopup is specified without aria-expanded, we should still expose
+  // collapsed, since aria-haspopup infers that it can be expanded. The
+  // alternative is ExpandCollapseState_LeafNode, but that means that the
+  // element can't be expanded nor collapsed.
+  if (aState & (states::COLLAPSED | states::HASPOPUP)) {
+    return ExpandCollapseState_Collapsed;
+  }
+  return ExpandCollapseState_LeafNode;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // uiaRawElmProvider
 ////////////////////////////////////////////////////////////////////////////////
@@ -86,6 +112,13 @@ void uiaRawElmProvider::RaiseUiaEventForStateChange(Accessible* aAcc,
       newVal.vt = VT_I4;
       newVal.lVal = ToToggleState(aEnabled ? aState : 0);
       break;
+    case states::COLLAPSED:
+    case states::EXPANDED:
+    case states::HASPOPUP:
+      property = UIA_ExpandCollapseExpandCollapseStatePropertyId;
+      newVal.vt = VT_I4;
+      newVal.lVal = ToExpandCollapseState(aEnabled ? aState : 0);
+      break;
     default:
       return;
   }
@@ -108,6 +141,8 @@ uiaRawElmProvider::QueryInterface(REFIID aIid, void** aInterface) {
     *aInterface = static_cast<IRawElementProviderSimple*>(this);
   } else if (aIid == IID_IRawElementProviderFragment) {
     *aInterface = static_cast<IRawElementProviderFragment*>(this);
+  } else if (aIid == IID_IExpandCollapseProvider) {
+    *aInterface = static_cast<IExpandCollapseProvider*>(this);
   } else if (aIid == IID_IInvokeProvider) {
     *aInterface = static_cast<IInvokeProvider*>(this);
   } else if (aIid == IID_IToggleProvider) {
@@ -209,11 +244,18 @@ uiaRawElmProvider::GetPatternProvider(
     return CO_E_OBJNOTCONNECTED;
   }
   switch (aPatternId) {
+    case UIA_ExpandCollapsePatternId:
+      if (HasExpandCollapsePattern()) {
+        RefPtr<IExpandCollapseProvider> expand = this;
+        expand.forget(aPatternProvider);
+      }
+      return S_OK;
     case UIA_InvokePatternId:
       // Per the UIA documentation, we should only expose the Invoke pattern "if
       // the same behavior is not exposed through another control pattern
       // provider".
-      if (acc->ActionCount() > 0 && !HasTogglePattern()) {
+      if (acc->ActionCount() > 0 && !HasTogglePattern() &&
+          !HasExpandCollapsePattern()) {
         RefPtr<IInvokeProvider> invoke = this;
         invoke.forget(aPatternProvider);
       }
@@ -565,6 +607,48 @@ uiaRawElmProvider::get_ToggleState(__RPC__out enum ToggleState* aRetVal) {
   return S_OK;
 }
 
+// IExpandCollapseProvider methods
+
+STDMETHODIMP
+uiaRawElmProvider::Expand() {
+  Accessible* acc = Acc();
+  if (!acc) {
+    return CO_E_OBJNOTCONNECTED;
+  }
+  if (acc->State() & states::EXPANDED) {
+    return UIA_E_INVALIDOPERATION;
+  }
+  acc->DoAction(0);
+  return S_OK;
+}
+
+STDMETHODIMP
+uiaRawElmProvider::Collapse() {
+  Accessible* acc = Acc();
+  if (!acc) {
+    return CO_E_OBJNOTCONNECTED;
+  }
+  if (acc->State() & states::COLLAPSED) {
+    return UIA_E_INVALIDOPERATION;
+  }
+  acc->DoAction(0);
+  return S_OK;
+}
+
+STDMETHODIMP
+uiaRawElmProvider::get_ExpandCollapseState(
+    __RPC__out enum ExpandCollapseState* aRetVal) {
+  if (!aRetVal) {
+    return E_INVALIDARG;
+  }
+  Accessible* acc = Acc();
+  if (!acc) {
+    return CO_E_OBJNOTCONNECTED;
+  }
+  *aRetVal = ToExpandCollapseState(acc->State());
+  return S_OK;
+}
+
 // Private methods
 
 bool uiaRawElmProvider::IsControl() {
@@ -654,13 +738,8 @@ bool uiaRawElmProvider::HasTogglePattern() {
          acc->Role() == roles::TOGGLE_BUTTON;
 }
 
-/* static */
-ToggleState uiaRawElmProvider::ToToggleState(uint64_t aState) {
-  if (aState & states::MIXED) {
-    return ToggleState_Indeterminate;
-  }
-  if (aState & (states::CHECKED | states::PRESSED)) {
-    return ToggleState_On;
-  }
-  return ToggleState_Off;
+bool uiaRawElmProvider::HasExpandCollapsePattern() {
+  Accessible* acc = Acc();
+  MOZ_ASSERT(acc);
+  return acc->State() & (states::EXPANDABLE | states::HASPOPUP);
 }
