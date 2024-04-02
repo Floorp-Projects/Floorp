@@ -296,10 +296,10 @@ private fun DialogContentAnErrorOccurred(
             }
 
         val positiveButtonType =
-            if (translationError is TranslationError.CouldNotLoadLanguagesError) {
-                PositiveButtonType.Enabled
+            if (translationError is TranslationError.LanguageNotSupportedError) {
+                PositiveButtonType.Disabled
             } else {
-                translationsDialogState.positiveButtonType
+                PositiveButtonType.Enabled
             }
 
         TranslationsDialogActionButtons(
