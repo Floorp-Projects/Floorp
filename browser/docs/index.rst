@@ -31,4 +31,6 @@ This is the nascent documentation of the Firefox front-end code.
    components/storybook/docs/README.other-widgets.stories
    components/storybook/docs/README.lit-guide.stories
    components/storybook/docs/README.xul-and-html.stories
+   /toolkit/themes/shared/design-system/docs/README.design-tokens.stories
+   /toolkit/themes/shared/design-system/docs/README.json-design-tokens.stories
    components/backup/docs/index

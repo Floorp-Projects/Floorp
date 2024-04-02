@@ -41,173 +41,15 @@ _The following documentation borrows from Nathan Curtis' essay on [Naming Design
 
 Design tokens' variable names follow a taxonomy with distinct classification levels and sublevels, forming a prescriptive vocabulary of descriptive terms which are classified by category.
 
-<div class="box container-width-large">
-<div class="box">
-  <div class="box vertical">
-    <b>Ecosystem</b>
-    <div class="post-it"><b>Domain</b></div>
-  </div>
-  <div class="box vertical">
-    <b>Object</b>
-    <div class="box">
-      <div class="post-it green"><b>Pattern</b></div>
-      <div class="post-it green"><b>Component</b></div>
-      <div class="post-it green"><b>Element</b></div>
-    </div>
-  </div>
-  <div class="box vertical">
-    <b>Category</b>
-    <div class="box">
-      <div class="post-it orange"><b>Type</b></div>
-      <div class="post-it orange"><b>Concept</b></div>
-      <div class="post-it orange"><b>Property</b></div>
-    </div>
-  </div>
-  <div class="box vertical">
-    <b>Modifier</b>
-    <div class="box">
-      <div class="post-it blue"><b>Variant</b></div>
-      <div class="post-it blue"><b>State</b></div>
-      <div class="post-it blue"><b>Scale</b></div>
-    </div>
-  </div>
-</div>
-
-<div class="box">
-  <div class="box vertical">
-    <div class="post-it disabled"></div>
-  </div>
-  <div class="box vertical">
-    <div class="box">
-      <div class="post-it green disabled"></div>
-      <div class="post-it green disabled"></div>
-      <div class="post-it green disabled"></div>
-    </div>
-  </div>
-  <div class="box vertical">
-    <div class="box">
-      <div class="post-it orange">Color</div>
-      <div class="post-it orange disabled"></div>
-      <div class="post-it orange disabled"></div>
-    </div>
-  </div>
-  <div class="box vertical">
-    <div class="box">
-      <div class="post-it blue">Blue</div>
-      <div class="post-it blue disabled"></div>
-      <div class="post-it blue">50</div>
-    </div>
-  </div>
-</div>
-
-<div class="box">
-  <div class="box vertical">
-    <div class="post-it disabled"></div>
-  </div>
-  <div class="box vertical">
-    <div class="box">
-      <div class="post-it green disabled"></div>
-      <div class="post-it green disabled"></div>
-      <div class="post-it green disabled"></div>
-    </div>
-  </div>
-  <div class="box vertical">
-    <div class="box">
-      <div class="post-it orange">Size</div>
-      <div class="post-it orange">Item</div>
-      <div class="post-it orange disabled"></div>
-    </div>
-  </div>
-  <div class="box vertical">
-    <div class="box">
-      <div class="post-it blue disabled"></div>
-      <div class="post-it blue disabled"></div>
-      <div class="post-it blue">Small</div>
-    </div>
-  </div>
-</div>
-
-<div class="box">
-  <div class="box vertical">
-    <div class="post-it disabled"></div>
-  </div>
-  <div class="box vertical">
-    <div class="box">
-      <div class="post-it green disabled"></div>
-      <div class="post-it green">Link</div>
-      <div class="post-it green disabled"></div>
-    </div>
-  </div>
-  <div class="box vertical">
-    <div class="box">
-      <div class="post-it orange disabled"></div>
-      <div class="post-it orange disabled"></div>
-      <div class="post-it orange">Color</div>
-    </div>
-  </div>
-  <div class="box vertical">
-    <div class="box">
-      <div class="post-it blue disabled"></div>
-      <div class="post-it blue disabled"></div>
-      <div class="post-it blue disabled"></div>
-    </div>
-  </div>
-</div>
-
-<div class="box">
-  <div class="box vertical">
-    <div class="post-it disabled"></div>
-  </div>
-  <div class="box vertical">
-    <div class="box">
-      <div class="post-it green disabled"></div>
-      <div class="post-it green">Link</div>
-      <div class="post-it green">Focus Outline</div>
-    </div>
-  </div>
-  <div class="box vertical">
-    <div class="box">
-      <div class="post-it orange disabled"></div>
-      <div class="post-it orange disabled"></div>
-      <div class="post-it orange">Color</div>
-    </div>
-  </div>
-  <div class="box vertical">
-    <div class="box">
-      <div class="post-it blue disabled"></div>
-      <div class="post-it blue disabled"></div>
-      <div class="post-it blue disabled"></div>
-    </div>
-  </div>
-</div>
-
-<div class="box">
-  <div class="box vertical">
-    <div class="post-it">Shopping</div>
-  </div>
-  <div class="box vertical">
-    <div class="box">
-      <div class="post-it green disabled"></div>
-      <div class="post-it green">Card</div>
-      <div class="post-it green disabled"></div>
-    </div>
-  </div>
-  <div class="box vertical">
-    <div class="box">
-      <div class="post-it orange disabled"></div>
-      <div class="post-it orange disabled"></div>
-      <div class="post-it orange">Border Color</div>
-    </div>
-  </div>
-  <div class="box vertical">
-    <div class="box">
-      <div class="post-it blue disabled"></div>
-      <div class="post-it blue disabled"></div>
-      <div class="post-it blue disabled"></div>
-    </div>
-  </div>
-</div>
-</div>
+![
+  Our design system taxonomy has distinct classifiction levels and sublevels. \
+  There are four high level buckets: Ecosystem, Object, Category, and Modifier. \
+  Within the Ecosystem bucket is one sublevel: Domain. \
+  Within the Object bucket are three sublevels: Pattern, Component, and Element. \
+  Within the Category bucket are three sublevels: Type, Concept, and Property. \
+  Within the Modifier bucket are three sublevels: Variant, State, and Scale. \
+  Each of these levels and sublevels are explained in further detail after this graphic. \
+  ](./img/taxonomy-overview.png)
 
 ### Ecosystem
 The ecosystem level helps describe the context that a token is scoped to.
@@ -219,17 +61,7 @@ For example, if a token is specific to a certain feature, you can use the domain
 
 Example from [browser/components/shopping/content/shopping-container.css](https://searchfox.org/mozilla-central/rev/02841791400cf7cf5760c0cfaf31f5d772624253/browser/components/shopping/content/shopping-container.css#7):
 
-<div class="box">
-  <div class="post-it big">
-    <strong>shopping</strong>
-  </div>
-  <div class="post-it blue big">
-    header
-  </div>
-  <div class="post-it blue big">
-    font-size
-  </div>
-</div>
+![Example showing "shopping" as the 'Domain' part of the "shopping-header-font-size" token](./img/ecosystem-domain.png)
 
 ### Objects
 The object level helps define the object (or objects) that the token applies to.
@@ -237,44 +69,17 @@ The object level helps define the object (or objects) that the token applies to.
 #### Pattern
 A design pattern that is composed of, or represents, multiple related components.
 
-<div class="box">
-  <div class="post-it big">
-   <strong>input</strong>
-  </div>
-  <div class="post-it blue big">
-    text
-  </div>
-  <div class="post-it blue big">
-    min-height
-  </div>
-</div>
+![Example showing "input" as the 'Pattern' part of the "input-text-min-height" token](./img/objects-pattern-example.png)
 
 #### Component
 The component name.
 
-<div class="box">
-  <div class="post-it big">
-    <strong>toggle</strong>
-  </div>
-  <div class="post-it blue big">
-    background-color
-  </div>
-</div>
+![Example showing "toggle" as the 'Component' part of the "toggle-background-color" token](./img/component-name-example.png)
 
 #### Nested element
 Any element that may be nested within a component (e.g. an icon).
 
-<div class="box">
-  <div class="post-it blue big">
-    message-bar
-  </div>
-  <div class="post-it big">
-    <strong>icon</strong>
-  </div>
-  <div class="post-it blue big">
-    color
-  </div>
-</div>
+![Example showing "icon" as the 'Nested Element' part of the "message-bar-icon-color" token](./img/nested-element-example.png)
 
 ### Categories
 The category level helps define the visual style that apply to the token.
@@ -282,32 +87,12 @@ The category level helps define the visual style that apply to the token.
 #### Type
 The type of style category a design token belongs to.
 
-<div class="box">
-  <div class="post-it big">
-    <strong>color</strong>
-  </div>
-  <div class="post-it blue big">
-    blue
-  </div>
-  <div class="post-it blue big">
-    50
-  </div>
-</div>
+![Example showing "color" as the 'Type' part of the "color-blue-50" token](./img/categories-type-example.png)
 
 #### Concept
 A concept further describes user interface styles. They are either industry-wide patterns, or they are terms determined by our team based on specific user interface style needs. For example, "accent" is a common design industry term used for deliniating a brand's or product's accent color(s) that we happen to use for our color tokens.
 
-<div class="box">
-  <div class="post-it blue big">
-    color
-  </div>
-  <div class="post-it big">
-    <strong>accent</strong>
-  </div>
-  <div class="post-it blue big">
-    primary
-  </div>
-</div>
+![Example showing "accent" as the 'Concept" part of the "color-accent-primary" token](./img/categories-concept-example.png)
 
 To further illustrate this taxonomy level, here are detailed explanations and definitions of existing concepts:
 
@@ -334,14 +119,7 @@ We use the "item" concept as a modifier on top of the "size" type tokens group t
 #### Property
 A property (e.g. size, width, color, fill) further describes a design tokens' style, although this is not to be confused with the categorical type of token mentioned above, albeit they often use similar terms. Note that sometimes properties are double-worded, and that's totally fine (e.g. min-width, background-color)
 
-<div class="box">
-  <div class="post-it big">
-    <strong>border-radius</strong>
-  </div>
-  <div class="post-it blue big">
-    circle
-  </div>
-</div>
+![Example showing "border-radius" as the 'Property' part of the "border-radius-circle" token](./img/categories-property-example.png)
 
 ### Modifiers
 The modifier level helps further classify a design token's characteristic with further specification.
@@ -349,61 +127,21 @@ The modifier level helps further classify a design token's characteristic with f
 #### Variant
 A variant specifies a token from a group of tokens related by a common meaning but that have varying purpose.
 
-<div class="box vertical">
-<div class="box">
-  <div class="post-it blue big">
-    icon
-  </div>
-  <div class="post-it blue big">
-    color
-  </div>
-  <div class="post-it big">
-    <strong>success</strong>
-  </div>
-</div>
-
-<div class="box">
-  <div class="post-it blue big">
-    icon
-  </div>
-  <div class="post-it blue big">
-    color
-  </div>
-  <div class="post-it big">
-    <strong>critical</strong>
-  </div>
-</div>
-</div>
+![Two examples: 
+  one showing "success" as the 'Variant' part of the "icon-color-success" token. \
+  another showing "critical" as the 'Variant' part of the "icon-color-critical" token. \
+](./img/modifiers-variant-example.png)
 
 #### State
 A state defines possible intereactive states of a design token.
 (e.g. hover, active, focus, disabled)
 
-<div class="box">
-  <div class="post-it blue big">
-    button
-  </div>
-  <div class="post-it blue big">
-    background-color
-  </div>
-  <div class="post-it big">
-   <strong>hover</strong>
-  </div>
-</div>
+![Example showing "hover" as the 'State' part of the "button-background-color-hover" token](./img/modifiers-state-example.png)
 
 #### Scale
 A scale defines a collection of tokens that relate to one another's but vary by their type, such as a collection of size units, or any other relationship that requires differentiating tokens by a determined scale.
 
-<div class="box vertical">
-<div class="box">
-  <div class="post-it blue big">
-    font-size
-  </div>
-  <div class="post-it big">
-   <strong>small</strong>
-  </div>
-</div>
-</div>
+![Example showing "small" as the 'Scale' part of the "font-size-small" token](./img/modifiers-scale-example.png)
 
 Today we have scales based off a sequence of numbers or t-shirt sizing.
 
@@ -442,52 +180,20 @@ You will see that the font size scale is missing what would be a logical "medium
 
 The `--font-size-root` token was created for specific use under the document's `:root` in order to set the default font size for our relative typography scale. We label our default font size token as `root` in order to be specific **and** intentional.
 
-<div class="box">
-  <div class="post-it blue big">
-    font-size
-  </div>
-  <div class="post-it big">
-   <strong>root</strong>
-  </div>
-</div>
+![Example showing "root" being the 'Scale' part of the "font-size-root" token](./img/modifiers-font-size-example.png)
 
 It's okay to include intentional terms within scales that better represent the meaning of a value and when to use it. For example, our border radius collection, which uses t-shirt sizing, also mixes the 'circle' option within its scale in order to describe a border radius that will create a circular effect:
 
-<div class="box">
-  <div class="post-it blue big">
-    border-radius
-  </div>
-  <div class="post-it big">
-    <strong>circle</strong>
-  </div>
-</div>
+![Example showing "circle" being the 'Scale' part of the "border-radius-circle" token](./img/modifiers-border-radius-example.png)
 
 
 ## Naming guidelines
 The goal of design tokens naming is modularity and legibility.
 
-<div class="box container-width-large">
-  <div class="box vertical">
-    <b>Ecosystem</b>
-      Domain
-    <div class="post-it big green">brand</div>
-  </div>
-  <div class="box">
-    <div class="box vertical">
-      <b>Category</b>
-      <div class="box">
-        <div class="box vertical">
-           Type
-          <div class="post-it big orange">color</div>
-        </div>
-        <div class="box vertical">
-          Concept
-        <div class="post-it big orange">accent</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+![
+  An example showing the "brand-color-accent" token. \
+  "brand" is part of the 'Domain' ecosystem, while "color" and "accent" belong to 'Type' and 'Concept' sublevel of Category respectively.
+  ](./img/modifiers-naming-guidelines.png)
 
 Meanings and the relationship between meanings can be complex, therefore taxonomy levels are chained to provide clarity. (see example above)
 
@@ -521,62 +227,13 @@ Shared tokens ([tokens-shared.css](https://searchfox.org/mozilla-central/source/
 
 [common-shared.css](https://searchfox.org/mozilla-central/source/toolkit/themes/shared/in-content/common-shared.css) imports `tokens-brand.css` so that in-content/about: pages can make use of our brand values, while [global-shared.css](https://searchfox.org/mozilla-central/source/toolkit/themes/shared/global-shared.css), which styles the chrome, imports `tokens-platform.css` so that the chrome can access operating system and themeable values.
 
-<div class="box">
-  <div class="box vertical">
-    <div class="box vertical align-center">
-      <div class="post-it big">
-        <a title="tokens-shared.css" href="https://searchfox.org/mozilla-central/source/toolkit/themes/shared/design-system/tokens-shared.css">tokens-shared.css</a>
-      </div>
-    </div>
-    <div class="box justify-center">
-      ↙ ↘
-    </div>
-    <div class="box justify-center">
-      <div class="box vertical">
-        <div class="post-it big">
-          <a title="tokens-brand.css" href="https://searchfox.org/mozilla-central/source/toolkit/themes/shared/design-system/tokens-brand.css">tokens-brand.css</a>
-        </div>
-        <div class="box justify-center">
-            ↓
-        </div>
-      </div>
-      <div class="box vertical">
-        <div class="post-it big">
-          <a title="tokens-platform.css" href="https://searchfox.org/mozilla-central/source/toolkit/themes/shared/design-system/tokens-platform.css">tokens-platform.css</a>
-        </div>
-        <div class="box justify-center">
-            ↓
-        </div>
-      </div>
-    </div>
-    <div class="box justify-center">
-      <div class="box vertical">
-        <div class="post-it orange big">
-          <a title="common-shared.css" href="https://searchfox.org/mozilla-central/source/toolkit/themes/shared/in-content/common-shared.css">common-shared.css</a>
-        </div>
-        <div class="box justify-center">
-          ↓
-        </div>
-      </div>
-      <div class="box vertical">
-        <div class="post-it orange big">
-          <a title="global-shared.css" href="https://searchfox.org/mozilla-central/source/toolkit/themes/shared/global-shared.css">global-shared.css</a>
-        </div>
-        <div class="box justify-center">
-          ↓
-        </div>
-      </div>
-    </div>
-    <div class="box justify-center">
-      <div class="post-it blue big">
-        Styles in-content (about:) pages
-      </div>
-      <div class="post-it blue big">
-        Styles the chrome
-      </div>
-    </div>
-  </div>
-</div>
+![
+  A diagram of the token files' hierarchy. \
+  Tokens-shared.css is imported by both tokens-brand.css and tokens-platform.css. \
+  There are two branches now, tokens-brand and tokens-platform. \
+  For the tokens-brand branch, these tokens are then imported by common-shared.css which then styles in-content pages. \
+  For the tokens-platform branch, these tokens are imported by global-shared.css which then styles the chrome. \
+](./img/token-files-hierarchy.png)
 
 #### `tokens-brand.css`
 This file is for token values specific to the brand, such as colors and
