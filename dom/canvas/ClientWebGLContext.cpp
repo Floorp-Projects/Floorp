@@ -5512,6 +5512,18 @@ GLenum ClientWebGLContext::ClientWaitSync(WebGLSyncJS& sync,
   }
   if (flags & LOCAL_GL_SYNC_FLUSH_COMMANDS_BIT) {
     Flush();
+  } else {
+    constexpr uint8_t WARN_AT = 100;
+    if (sync.mNumQueriesWithoutFlushCommandsBit <= WARN_AT) {
+      sync.mNumQueriesWithoutFlushCommandsBit += 1;
+      if (sync.mNumQueriesWithoutFlushCommandsBit == WARN_AT) {
+        EnqueueWarning(
+            "ClientWaitSync with timeout=0 (or GetSyncParameter(SYNC_STATUS)) "
+            "called %hhu times without SYNC_FLUSH_COMMANDS_BIT. If you do not "
+            "flush, this sync object is not guaranteed to ever complete.",
+            sync.mNumQueriesWithoutFlushCommandsBit);
+      }
+    }
   }
   if (!timeout) return LOCAL_GL_TIMEOUT_EXPIRED;
 
