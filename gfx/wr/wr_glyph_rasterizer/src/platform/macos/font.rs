@@ -18,7 +18,6 @@ use core_graphics::context::{CGBlendMode, CGTextDrawingMode};
 use core_graphics::font::{CGFont, CGGlyph};
 use core_graphics::geometry::{CGAffineTransform, CGPoint, CGSize};
 use core_graphics::geometry::{CG_AFFINE_TRANSFORM_IDENTITY, CGRect};
-use core_text;
 use core_text::font::CTFont;
 use core_text::font_descriptor::{CTFontDescriptor, kCTFontDefaultOrientation};
 use core_text::font_descriptor::{kCTFontURLAttribute, kCTFontVariationAttribute};
