@@ -383,6 +383,36 @@ nsDisplayWrapList* nsDisplayListBuilder::MergeItems(
   return merged;
 }
 
+// FIXME(emilio): This whole business should ideally not be needed at all, but
+// there are a variety of hard-to-deal-with caret invalidation issues, like
+// bug 1888583, and caret changes are relatively uncommon, enough that it
+// probably isn't worth chasing all them down.
+void nsDisplayListBuilder::InvalidateCaretFramesIfNeeded() {
+  if (mPaintedCarets.IsEmpty()) {
+    return;
+  }
+  size_t i = mPaintedCarets.Length();
+  while (i--) {
+    nsCaret* caret = mPaintedCarets[i];
+    nsIFrame* oldCaret = caret->GetLastPaintedFrame();
+    nsRect caretRect;
+    nsIFrame* currentCaret = caret->GetPaintGeometry(&caretRect);
+    if (oldCaret == currentCaret) {
+      // Keep tracking this caret, it hasn't changed.
+      continue;
+    }
+    if (oldCaret) {
+      oldCaret->MarkNeedsDisplayItemRebuild();
+    }
+    if (currentCaret) {
+      currentCaret->MarkNeedsDisplayItemRebuild();
+    }
+    // If / when we paint this caret, we'll track it again.
+    caret->SetLastPaintedFrame(nullptr);
+    mPaintedCarets.RemoveElementAt(i);
+  }
+}
+
 void nsDisplayListBuilder::AutoCurrentActiveScrolledRootSetter::
     SetCurrentActiveScrolledRoot(
         const ActiveScrolledRoot* aActiveScrolledRoot) {
@@ -1107,20 +1137,13 @@ void nsDisplayListBuilder::EnterPresShell(const nsIFrame* aReferenceFrame,
   state->mCaretFrame = [&]() -> nsIFrame* {
     RefPtr<nsCaret> caret = state->mPresShell->GetCaret();
     nsIFrame* currentCaret = caret->GetPaintGeometry(&mCaretRect);
-
-    if (auto* oldCaret = caret->GetLastPaintedFrame();
-        oldCaret && oldCaret != currentCaret) {
-      // Make sure to rebuild the old caret if it has changed.
-      MarkFrameForDisplay(oldCaret, aReferenceFrame);
-    }
-
     if (!currentCaret) {
       return nullptr;
     }
 
     // Check if the display root for the caret matches the display root that
     // we're painting, and only use it if it matches. Likely we only need this
-    // for popup.
+    // for carets inside popups.
     if (nsLayoutUtils::GetDisplayRootFrame(currentCaret) !=
         nsLayoutUtils::GetDisplayRootFrame(aReferenceFrame)) {
       return nullptr;
@@ -1132,6 +1155,9 @@ void nsDisplayListBuilder::EnterPresShell(const nsIFrame* aReferenceFrame,
     MOZ_ASSERT(currentCaret->PresShell() == state->mPresShell);
     MarkFrameForDisplay(currentCaret, aReferenceFrame);
     caret->SetLastPaintedFrame(currentCaret);
+    if (!mPaintedCarets.Contains(caret)) {
+      mPaintedCarets.AppendElement(std::move(caret));
+    }
     return currentCaret;
   }();
 }

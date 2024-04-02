@@ -200,11 +200,6 @@ class RetainedDisplayListBuilder {
   void IncrementSubDocPresShellPaintCount(nsDisplayItem* aItem);
 
   /**
-   * Invalidates the current and previous caret frame if they have changed.
-   */
-  void InvalidateCaretFramesIfNeeded();
-
-  /**
    * A simple early exit heuristic to avoid slow partial display list rebuilds.
    * Returns true if a partial display list build should be attempted.
    */
