@@ -1063,8 +1063,8 @@ nsresult WorkerScriptLoader::LoadScript(
     // This flag reflects the fact that if the worker is created under a
     // third-party context.
     nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
-    loadInfo->SetIsThirdPartyContextToTopWindow(
-        mWorkerRef->Private()->IsThirdPartyContextToTopWindow());
+    loadInfo->SetIsInThirdPartyContext(
+        mWorkerRef->Private()->IsThirdPartyContext());
 
     Maybe<ClientInfo> clientInfo;
     clientInfo.emplace(loadContext->mClientInfo.ref());
