@@ -5,6 +5,8 @@
 "use strict";
 
 /* eslint-disable camelcase */
+const ExpandCollapseState_Collapsed = 0;
+const ExpandCollapseState_Expanded = 1;
 const ToggleState_Off = 0;
 const ToggleState_On = 1;
 const ToggleState_Indeterminate = 2;
@@ -139,5 +141,122 @@ addUiaTask(
 
     await testPatternAbsent("button", "Toggle");
     await testPatternAbsent("p", "Toggle");
+  }
+);
+
+/**
+ * Test the ExpandCollapse pattern.
+ */
+addUiaTask(
+  `
+<details>
+  <summary id="summary">summary</summary>
+  details
+</details>
+<button id="popup" aria-haspopup="true">popup</button>
+<button id="button">button</button>
+<script>
+  // When popup is clicked, set aria-expanded to true.
+  document.getElementById("popup").addEventListener("click", evt => {
+    evt.target.ariaExpanded = "true";
+  });
+</script>
+  `,
+  async function testExpandCollapse() {
+    await definePyVar("doc", `getDocUia()`);
+    await assignPyVarToUiaWithId("summary");
+    await definePyVar("pattern", `getUiaPattern(summary, "ExpandCollapse")`);
+    ok(await runPython(`bool(pattern)`), "summary has ExpandCollapse pattern");
+    is(
+      await runPython(`pattern.CurrentExpandCollapseState`),
+      ExpandCollapseState_Collapsed,
+      "summary has ExpandCollapseState_Collapsed"
+    );
+    // The IA2 -> UIA proxy doesn't fire ToggleState prop change events, nor
+    // does it fail when Expand/Collapse is called on a control which is
+    // already in the desired state.
+    if (gIsUiaEnabled) {
+      info("Calling Expand on summary");
+      await setUpWaitForUiaPropEvent(
+        "ExpandCollapseExpandCollapseState",
+        "summary"
+      );
+      await runPython(`pattern.Expand()`);
+      await waitForUiaEvent();
+      ok(
+        true,
+        "Got ExpandCollapseExpandCollapseState prop change event on summary"
+      );
+      is(
+        await runPython(`pattern.CurrentExpandCollapseState`),
+        ExpandCollapseState_Expanded,
+        "summary has ExpandCollapseState_Expanded"
+      );
+      info("Calling Expand on summary");
+      let failed = false;
+      try {
+        await runPython(`pattern.Expand()`);
+      } catch {
+        failed = true;
+      }
+      ok(failed, "Expand on summary failed");
+      info("Calling Collapse on summary");
+      await setUpWaitForUiaPropEvent(
+        "ExpandCollapseExpandCollapseState",
+        "summary"
+      );
+      await runPython(`pattern.Collapse()`);
+      await waitForUiaEvent();
+      ok(
+        true,
+        "Got ExpandCollapseExpandCollapseState prop change event on summary"
+      );
+      is(
+        await runPython(`pattern.CurrentExpandCollapseState`),
+        ExpandCollapseState_Collapsed,
+        "summary has ExpandCollapseState_Collapsed"
+      );
+      info("Calling Collapse on summary");
+      failed = false;
+      try {
+        await runPython(`pattern.Collapse()`);
+      } catch {
+        failed = true;
+      }
+      ok(failed, "Collapse on summary failed");
+    }
+
+    await assignPyVarToUiaWithId("popup");
+    // Initially, popup has aria-haspopup but not aria-expanded. That should
+    // be exposed as collapsed.
+    await definePyVar("pattern", `getUiaPattern(popup, "ExpandCollapse")`);
+    ok(await runPython(`bool(pattern)`), "popup has ExpandCollapse pattern");
+    // The IA2 -> UIA proxy doesn't expose ExpandCollapseState_Collapsed for
+    // aria-haspopup without aria-expanded.
+    if (gIsUiaEnabled) {
+      is(
+        await runPython(`pattern.CurrentExpandCollapseState`),
+        ExpandCollapseState_Collapsed,
+        "popup has ExpandCollapseState_Collapsed"
+      );
+      info("Calling Expand on popup");
+      await setUpWaitForUiaPropEvent(
+        "ExpandCollapseExpandCollapseState",
+        "popup"
+      );
+      await runPython(`pattern.Expand()`);
+      await waitForUiaEvent();
+      ok(
+        true,
+        "Got ExpandCollapseExpandCollapseState prop change event on popup"
+      );
+      is(
+        await runPython(`pattern.CurrentExpandCollapseState`),
+        ExpandCollapseState_Expanded,
+        "popup has ExpandCollapseState_Expanded"
+      );
+    }
+
+    await testPatternAbsent("button", "ExpandCollapse");
   }
 );
