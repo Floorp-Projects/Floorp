@@ -13,8 +13,6 @@
 #include "config/aom_config.h"
 
 #include "aom_mem/aom_mem.h"
-#include "aom_scale/yv12config.h"
-#include "aom_util/aom_pthread.h"
 
 #include "av1/common/alloccommon.h"
 #include "av1/common/av1_common_int.h"
@@ -22,8 +20,6 @@
 #include "av1/common/cdef_block.h"
 #include "av1/common/entropymode.h"
 #include "av1/common/entropymv.h"
-#include "av1/common/enums.h"
-#include "av1/common/restoration.h"
 #include "av1/common/thread_common.h"
 
 int av1_get_MBs(int width, int height) {
@@ -204,7 +200,7 @@ void av1_alloc_cdef_buffers(AV1_COMMON *const cm,
   const int is_num_workers_changed =
       cdef_info->allocated_num_workers != num_workers;
   const int is_cdef_enabled =
-      cm->seq_params->enable_cdef && !cm->tiles.single_tile_decoding;
+      cm->seq_params->enable_cdef && !cm->tiles.large_scale;
 
   // num-bufs=3 represents ping-pong buffers for top linebuf,
   // followed by bottom linebuf.

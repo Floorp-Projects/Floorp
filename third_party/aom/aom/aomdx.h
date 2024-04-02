@@ -234,11 +234,8 @@ enum aom_dec_control_id {
    */
   AV1D_GET_IMG_FORMAT,
 
-  /*!\brief Codec control function to get the width and height (in pixels) of
-   * the tiles in a tile list, unsigned int* parameter
-   *
-   * Tile width is in the high 16 bits of the output value, and tile height is
-   * in the low 16 bits of the output value.
+  /*!\brief Codec control function to get the size of the tile, unsigned int*
+   * parameter
    */
   AV1D_GET_TILE_SIZE,
 

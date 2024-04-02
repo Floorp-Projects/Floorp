@@ -3202,7 +3202,6 @@ const SadSkipMxNx4Param skip_x4d_avx2_tests[] = {
   make_tuple(32, 8, &aom_sad_skip_32x8x4d_avx2, -1),
 
   make_tuple(16, 64, &aom_sad_skip_16x64x4d_avx2, -1),
-  make_tuple(16, 4, &aom_sad_skip_16x4x4d_avx2, -1),
 #endif
 };
 
@@ -3295,7 +3294,6 @@ const SadMxNx4Param x3d_avx2_tests[] = {
 #if !CONFIG_REALTIME_ONLY
   make_tuple(32, 8, &aom_sad32x8x3d_avx2, -1),
   make_tuple(64, 16, &aom_sad64x16x3d_avx2, -1),
-  make_tuple(16, 4, &aom_sad16x4x3d_avx2, -1),
 #endif  // !CONFIG_REALTIME_ONLY
 
 #if CONFIG_AV1_HIGHBITDEPTH

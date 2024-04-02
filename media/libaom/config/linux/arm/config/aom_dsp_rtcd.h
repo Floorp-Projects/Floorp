@@ -54,15 +54,9 @@ void aom_comp_mask_pred_c(uint8_t *comp_pred, const uint8_t *pred, int width, in
 void aom_comp_mask_pred_neon(uint8_t *comp_pred, const uint8_t *pred, int width, int height, const uint8_t *ref, int ref_stride, const uint8_t *mask, int mask_stride, int invert_mask);
 RTCD_EXTERN void (*aom_comp_mask_pred)(uint8_t *comp_pred, const uint8_t *pred, int width, int height, const uint8_t *ref, int ref_stride, const uint8_t *mask, int mask_stride, int invert_mask);
 
-double aom_compute_correlation_c(const unsigned char *frame1, int stride1, int x1, int y1, double mean1, double one_over_stddev1, const unsigned char *frame2, int stride2, int x2, int y2, double mean2, double one_over_stddev2);
-#define aom_compute_correlation aom_compute_correlation_c
-
 void aom_compute_flow_at_point_c(const uint8_t *src, const uint8_t *ref, int x, int y, int width, int height, int stride, double *u, double *v);
 void aom_compute_flow_at_point_neon(const uint8_t *src, const uint8_t *ref, int x, int y, int width, int height, int stride, double *u, double *v);
 RTCD_EXTERN void (*aom_compute_flow_at_point)(const uint8_t *src, const uint8_t *ref, int x, int y, int width, int height, int stride, double *u, double *v);
-
-bool aom_compute_mean_stddev_c(const unsigned char *frame, int stride, int x, int y, double *mean, double *one_over_stddev);
-#define aom_compute_mean_stddev aom_compute_mean_stddev_c
 
 void aom_convolve8_c(const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, const InterpKernel *filter, int x0_q4, int x_step_q4, int y0_q4, int y_step_q4, int w, int h);
 #define aom_convolve8 aom_convolve8_c
@@ -6217,6 +6211,9 @@ RTCD_EXTERN unsigned int (*aom_variance8x8)(const uint8_t *src_ptr, int source_s
 int aom_vector_var_c(const int16_t *ref, const int16_t *src, int bwl);
 int aom_vector_var_neon(const int16_t *ref, const int16_t *src, int bwl);
 RTCD_EXTERN int (*aom_vector_var)(const int16_t *ref, const int16_t *src, int bwl);
+
+double av1_compute_cross_correlation_c(const unsigned char *frame1, int stride1, int x1, int y1, const unsigned char *frame2, int stride2, int x2, int y2);
+#define av1_compute_cross_correlation av1_compute_cross_correlation_c
 
 void aom_dsp_rtcd(void);
 

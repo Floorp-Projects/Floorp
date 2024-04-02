@@ -55,7 +55,6 @@
 #define CONFIG_OUTPUT_FRAME_SIZE 0
 #define CONFIG_PARTITION_SEARCH_ORDER 0
 #define CONFIG_PIC 1
-#define CONFIG_QUANT_MATRIX 1
 #define CONFIG_RATECTRL_LOG 0
 #define CONFIG_RD_COMMAND 0
 #define CONFIG_RD_DEBUG 0
@@ -90,7 +89,6 @@
 #define HAVE_SSE4_2 0
 #define HAVE_SSSE3 0
 #define HAVE_SVE 0
-#define HAVE_SVE2 0
 #define HAVE_VSX 0
 #define HAVE_WXWIDGETS 0
 #define INLINE inline

@@ -14,23 +14,20 @@
 #include <stddef.h>
 
 #include "config/aom_config.h"
+#include "config/aom_dsp_rtcd.h"
 #include "config/aom_scale_rtcd.h"
+#include "config/av1_rtcd.h"
 
 #include "aom/aom_codec.h"
-#include "aom/aom_image.h"
-#include "aom/internal/aom_codec_internal.h"
 #include "aom_dsp/aom_dsp_common.h"
 #include "aom_dsp/binary_codes_reader.h"
 #include "aom_dsp/bitreader.h"
 #include "aom_dsp/bitreader_buffer.h"
-#include "aom_dsp/txfm_common.h"
 #include "aom_mem/aom_mem.h"
 #include "aom_ports/aom_timer.h"
 #include "aom_ports/mem.h"
 #include "aom_ports/mem_ops.h"
 #include "aom_scale/aom_scale.h"
-#include "aom_scale/yv12config.h"
-#include "aom_util/aom_pthread.h"
 #include "aom_util/aom_thread.h"
 
 #if CONFIG_BITSTREAM_DEBUG || CONFIG_MISMATCH_DEBUG
@@ -38,41 +35,33 @@
 #endif  // CONFIG_BITSTREAM_DEBUG || CONFIG_MISMATCH_DEBUG
 
 #include "av1/common/alloccommon.h"
-#include "av1/common/av1_common_int.h"
-#include "av1/common/blockd.h"
 #include "av1/common/cdef.h"
 #include "av1/common/cfl.h"
-#include "av1/common/common_data.h"
+#if CONFIG_INSPECTION
+#include "av1/decoder/inspection.h"
+#endif
 #include "av1/common/common.h"
 #include "av1/common/entropy.h"
 #include "av1/common/entropymode.h"
 #include "av1/common/entropymv.h"
-#include "av1/common/enums.h"
 #include "av1/common/frame_buffers.h"
 #include "av1/common/idct.h"
-#include "av1/common/mv.h"
 #include "av1/common/mvref_common.h"
-#include "av1/common/obmc.h"
 #include "av1/common/pred_common.h"
 #include "av1/common/quant_common.h"
 #include "av1/common/reconinter.h"
 #include "av1/common/reconintra.h"
 #include "av1/common/resize.h"
-#include "av1/common/restoration.h"
-#include "av1/common/scale.h"
 #include "av1/common/seg_common.h"
 #include "av1/common/thread_common.h"
 #include "av1/common/tile_common.h"
 #include "av1/common/warped_motion.h"
-
+#include "av1/common/obmc.h"
 #include "av1/decoder/decodeframe.h"
 #include "av1/decoder/decodemv.h"
 #include "av1/decoder/decoder.h"
 #include "av1/decoder/decodetxb.h"
 #include "av1/decoder/detokenize.h"
-#if CONFIG_INSPECTION
-#include "av1/decoder/inspection.h"
-#endif
 
 #define ACCT_STR __func__
 
@@ -1946,8 +1935,8 @@ static AOM_INLINE void setup_buffer_pool(AV1_COMMON *cm) {
           &cm->cur_frame->buf, cm->width, cm->height, seq_params->subsampling_x,
           seq_params->subsampling_y, seq_params->use_highbitdepth,
           AOM_DEC_BORDER_IN_PIXELS, cm->features.byte_alignment,
-          &cm->cur_frame->raw_frame_buffer, pool->get_fb_cb, pool->cb_priv,
-          false, 0)) {
+          &cm->cur_frame->raw_frame_buffer, pool->get_fb_cb, pool->cb_priv, 0,
+          0)) {
     unlock_buffer_pool(pool);
     aom_internal_error(cm->error, AOM_CODEC_MEM_ERROR,
                        "Failed to allocate frame buffer");
@@ -2304,11 +2293,7 @@ static const uint8_t *get_ls_tile_buffers(
     const int tile_col_size_bytes = pbi->tile_col_size_bytes;
     const int tile_size_bytes = pbi->tile_size_bytes;
     int tile_width, tile_height;
-    if (!av1_get_uniform_tile_size(cm, &tile_width, &tile_height)) {
-      aom_internal_error(
-          &pbi->error, AOM_CODEC_CORRUPT_FRAME,
-          "Not all the tiles in the tile list have the same size.");
-    }
+    av1_get_uniform_tile_size(cm, &tile_width, &tile_height);
     const int tile_copy_mode =
         ((AOMMAX(tile_width, tile_height) << MI_SIZE_LOG2) <= 256) ? 1 : 0;
     // Read tile column sizes for all columns (we need the last tile buffer)
@@ -2317,16 +2302,8 @@ static const uint8_t *get_ls_tile_buffers(
       size_t tile_col_size;
 
       if (!is_last) {
-        if (tile_col_size_bytes > data_end - data) {
-          aom_internal_error(&pbi->error, AOM_CODEC_CORRUPT_FRAME,
-                             "Not enough data to read tile_col_size");
-        }
         tile_col_size = mem_get_varsize(data, tile_col_size_bytes);
         data += tile_col_size_bytes;
-        if (tile_col_size > (size_t)(data_end - data)) {
-          aom_internal_error(&pbi->error, AOM_CODEC_CORRUPT_FRAME,
-                             "tile_col_data_end[%d] is out of bound", c);
-        }
         tile_col_data_end[c] = data + tile_col_size;
       } else {
         tile_col_size = data_end - data;
@@ -4791,7 +4768,7 @@ static int read_uncompressed_header(AV1Decoder *pbi,
                   seq_params->max_frame_height, seq_params->subsampling_x,
                   seq_params->subsampling_y, seq_params->use_highbitdepth,
                   AOM_BORDER_IN_PIXELS, features->byte_alignment,
-                  &buf->raw_frame_buffer, pool->get_fb_cb, pool->cb_priv, false,
+                  &buf->raw_frame_buffer, pool->get_fb_cb, pool->cb_priv, 0,
                   0)) {
             decrease_ref_count(buf, pool);
             unlock_buffer_pool(pool);

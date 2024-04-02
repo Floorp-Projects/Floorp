@@ -1348,9 +1348,6 @@ typedef struct macroblock {
   //! Motion vector from superblock MV derived from int_pro_motion() in
   // the variance_partitioning.
   int_mv sb_me_mv;
-  //! Flag to indicate if a fixed partition should be used, only if the
-  // speed feature rt_sf->use_fast_fixed_part is enabled.
-  int sb_force_fixed_part;
   //! SSE of the current predictor.
   unsigned int pred_sse[REF_FRAMES];
   //! Prediction for ML based partition.

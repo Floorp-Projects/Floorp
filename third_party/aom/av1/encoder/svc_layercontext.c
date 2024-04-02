@@ -203,10 +203,8 @@ void av1_update_temporal_layer_framerate(AV1_COMP *const cpi) {
   }
 }
 
-bool av1_check_ref_is_low_spatial_res_super_frame(AV1_COMP *const cpi,
-                                                  int ref_frame) {
-  SVC *svc = &cpi->svc;
-  RTC_REF *const rtc_ref = &cpi->ppi->rtc_ref;
+static AOM_INLINE bool check_ref_is_low_spatial_res_super_frame(
+    int ref_frame, const SVC *svc, const RTC_REF *rtc_ref) {
   int ref_frame_idx = rtc_ref->ref_idx[ref_frame - 1];
   return rtc_ref->buffer_time_index[ref_frame_idx] == svc->current_superframe &&
          rtc_ref->buffer_spatial_layer[ref_frame_idx] <=
@@ -255,13 +253,13 @@ void av1_restore_layer_context(AV1_COMP *const cpi) {
   // previous spatial layer(s) at the same time (current_superframe).
   if (rtc_ref->set_ref_frame_config && svc->force_zero_mode_spatial_ref &&
       cpi->sf.rt_sf.use_nonrd_pick_mode) {
-    if (av1_check_ref_is_low_spatial_res_super_frame(cpi, LAST_FRAME)) {
+    if (check_ref_is_low_spatial_res_super_frame(LAST_FRAME, svc, rtc_ref)) {
       svc->skip_mvsearch_last = 1;
     }
-    if (av1_check_ref_is_low_spatial_res_super_frame(cpi, GOLDEN_FRAME)) {
+    if (check_ref_is_low_spatial_res_super_frame(GOLDEN_FRAME, svc, rtc_ref)) {
       svc->skip_mvsearch_gf = 1;
     }
-    if (av1_check_ref_is_low_spatial_res_super_frame(cpi, ALTREF_FRAME)) {
+    if (check_ref_is_low_spatial_res_super_frame(ALTREF_FRAME, svc, rtc_ref)) {
       svc->skip_mvsearch_altref = 1;
     }
   }

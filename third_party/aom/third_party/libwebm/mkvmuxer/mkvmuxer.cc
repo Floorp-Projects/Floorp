@@ -65,8 +65,7 @@ bool StrCpy(const char* src, char** dst_ptr) {
   if (dst == NULL)
     return false;
 
-  memcpy(dst, src, size - 1);
-  dst[size - 1] = '\0';
+  strcpy(dst, src);  // NOLINT
   return true;
 }
 
@@ -920,8 +919,11 @@ void Track::set_codec_id(const char* codec_id) {
     const size_t length = strlen(codec_id) + 1;
     codec_id_ = new (std::nothrow) char[length];  // NOLINT
     if (codec_id_) {
-      memcpy(codec_id_, codec_id, length - 1);
-      codec_id_[length - 1] = '\0';
+#ifdef _MSC_VER
+      strcpy_s(codec_id_, length, codec_id);
+#else
+      strcpy(codec_id_, codec_id);
+#endif
     }
   }
 }
@@ -934,8 +936,11 @@ void Track::set_language(const char* language) {
     const size_t length = strlen(language) + 1;
     language_ = new (std::nothrow) char[length];  // NOLINT
     if (language_) {
-      memcpy(language_, language, length - 1);
-      language_[length - 1] = '\0';
+#ifdef _MSC_VER
+      strcpy_s(language_, length, language);
+#else
+      strcpy(language_, language);
+#endif
     }
   }
 }
@@ -947,8 +952,11 @@ void Track::set_name(const char* name) {
     const size_t length = strlen(name) + 1;
     name_ = new (std::nothrow) char[length];  // NOLINT
     if (name_) {
-      memcpy(name_, name, length - 1);
-      name_[length - 1] = '\0';
+#ifdef _MSC_VER
+      strcpy_s(name_, length, name);
+#else
+      strcpy(name_, name);
+#endif
     }
   }
 }
@@ -1551,8 +1559,11 @@ void VideoTrack::set_colour_space(const char* colour_space) {
     const size_t length = strlen(colour_space) + 1;
     colour_space_ = new (std::nothrow) char[length];  // NOLINT
     if (colour_space_) {
-      memcpy(colour_space_, colour_space, length - 1);
-      colour_space_[length - 1] = '\0';
+#ifdef _MSC_VER
+      strcpy_s(colour_space_, length, colour_space);
+#else
+      strcpy(colour_space_, colour_space);
+#endif
     }
   }
 }
@@ -2845,13 +2856,13 @@ bool SeekHead::AddSeekEntry(uint32_t id, uint64_t pos) {
 
 uint32_t SeekHead::GetId(int index) const {
   if (index < 0 || index >= kSeekEntryCount)
-    return UINT32_MAX;
+    return UINT_MAX;
   return seek_entry_id_[index];
 }
 
 uint64_t SeekHead::GetPosition(int index) const {
   if (index < 0 || index >= kSeekEntryCount)
-    return UINT64_MAX;
+    return ULLONG_MAX;
   return seek_entry_pos_[index];
 }
 
@@ -2885,7 +2896,7 @@ SegmentInfo::SegmentInfo()
       muxing_app_(NULL),
       timecode_scale_(1000000ULL),
       writing_app_(NULL),
-      date_utc_(INT64_MIN),
+      date_utc_(LLONG_MIN),
       duration_pos_(-1) {}
 
 SegmentInfo::~SegmentInfo() {
@@ -2916,8 +2927,11 @@ bool SegmentInfo::Init() {
   if (!muxing_app_)
     return false;
 
-  memcpy(muxing_app_, temp, app_len - 1);
-  muxing_app_[app_len - 1] = '\0';
+#ifdef _MSC_VER
+  strcpy_s(muxing_app_, app_len, temp);
+#else
+  strcpy(muxing_app_, temp);
+#endif
 
   set_writing_app(temp);
   if (!writing_app_)
@@ -2960,7 +2974,7 @@ bool SegmentInfo::Write(IMkvWriter* writer) {
   if (duration_ > 0.0)
     size +=
         EbmlElementSize(libwebm::kMkvDuration, static_cast<float>(duration_));
-  if (date_utc_ != INT64_MIN)
+  if (date_utc_ != LLONG_MIN)
     size += EbmlDateElementSize(libwebm::kMkvDateUTC);
   size += EbmlElementSize(libwebm::kMkvMuxingApp, muxing_app_);
   size += EbmlElementSize(libwebm::kMkvWritingApp, writing_app_);
@@ -2985,7 +2999,7 @@ bool SegmentInfo::Write(IMkvWriter* writer) {
       return false;
   }
 
-  if (date_utc_ != INT64_MIN)
+  if (date_utc_ != LLONG_MIN)
     WriteEbmlDateElement(writer, libwebm::kMkvDateUTC, date_utc_);
 
   if (!WriteEbmlElement(writer, libwebm::kMkvMuxingApp, muxing_app_))
@@ -3008,8 +3022,11 @@ void SegmentInfo::set_muxing_app(const char* app) {
     if (!temp_str)
       return;
 
-    memcpy(temp_str, app, length - 1);
-    temp_str[length - 1] = '\0';
+#ifdef _MSC_VER
+    strcpy_s(temp_str, length, app);
+#else
+    strcpy(temp_str, app);
+#endif
 
     delete[] muxing_app_;
     muxing_app_ = temp_str;
@@ -3023,8 +3040,11 @@ void SegmentInfo::set_writing_app(const char* app) {
     if (!temp_str)
       return;
 
-    memcpy(temp_str, app, length - 1);
-    temp_str[length - 1] = '\0';
+#ifdef _MSC_VER
+    strcpy_s(temp_str, length, app);
+#else
+    strcpy(temp_str, app);
+#endif
 
     delete[] writing_app_;
     writing_app_ = temp_str;
@@ -3608,17 +3628,19 @@ bool Segment::SetChunking(bool chunking, const char* filename) {
     if (chunking_ && !strcmp(filename, chunking_base_name_))
       return true;
 
-    const size_t filename_length = strlen(filename);
-    char* const temp = new (std::nothrow) char[filename_length + 1];  // NOLINT
+    const size_t name_length = strlen(filename) + 1;
+    char* const temp = new (std::nothrow) char[name_length];  // NOLINT
     if (!temp)
       return false;
 
-    memcpy(temp, filename, filename_length);
-    temp[filename_length] = '\0';
+#ifdef _MSC_VER
+    strcpy_s(temp, name_length, filename);
+#else
+    strcpy(temp, filename);
+#endif
 
     delete[] chunking_base_name_;
     chunking_base_name_ = temp;
-    // From this point, strlen(chunking_base_name_) == filename_length
 
     if (!UpdateChunkName("chk", &chunk_name_))
       return false;
@@ -3644,16 +3666,18 @@ bool Segment::SetChunking(bool chunking, const char* filename) {
     if (!chunk_writer_cluster_->Open(chunk_name_))
       return false;
 
-    const size_t hdr_length = strlen(".hdr");
-    const size_t header_length = filename_length + hdr_length + 1;
+    const size_t header_length = strlen(filename) + strlen(".hdr") + 1;
     char* const header = new (std::nothrow) char[header_length];  // NOLINT
     if (!header)
       return false;
 
-    memcpy(header, chunking_base_name_, filename_length);
-    memcpy(&header[filename_length], ".hdr", hdr_length);
-    header[filename_length + hdr_length] = '\0';
-
+#ifdef _MSC_VER
+    strcpy_s(header, header_length - strlen(".hdr"), chunking_base_name_);
+    strcat_s(header, header_length, ".hdr");
+#else
+    strcpy(header, chunking_base_name_);
+    strcat(header, ".hdr");
+#endif
     if (!chunk_writer_header_->Open(header)) {
       delete[] header;
       return false;
@@ -3998,16 +4022,18 @@ bool Segment::UpdateChunkName(const char* ext, char** name) const {
   snprintf(ext_chk, sizeof(ext_chk), "_%06d.%s", chunk_count_, ext);
 #endif
 
-  const size_t chunking_base_name_length = strlen(chunking_base_name_);
-  const size_t ext_chk_length = strlen(ext_chk);
-  const size_t length = chunking_base_name_length + ext_chk_length + 1;
+  const size_t length = strlen(chunking_base_name_) + strlen(ext_chk) + 1;
   char* const str = new (std::nothrow) char[length];  // NOLINT
   if (!str)
     return false;
 
-  memcpy(str, chunking_base_name_, chunking_base_name_length);
-  memcpy(&str[chunking_base_name_length], ext_chk, ext_chk_length);
-  str[chunking_base_name_length + ext_chk_length] = '\0';
+#ifdef _MSC_VER
+  strcpy_s(str, length - strlen(ext_chk), chunking_base_name_);
+  strcat_s(str, length, ext_chk);
+#else
+  strcpy(str, chunking_base_name_);
+  strcat(str, ext_chk);
+#endif
 
   delete[] * name;
   *name = str;

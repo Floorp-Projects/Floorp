@@ -19,23 +19,18 @@
 #include "aom/internal/aom_image_internal.h"
 #include "aom/aomdx.h"
 #include "aom/aom_decoder.h"
-#include "aom/aom_image.h"
 #include "aom_dsp/bitreader_buffer.h"
 #include "aom_dsp/aom_dsp_common.h"
-#include "aom_ports/mem.h"
 #include "aom_ports/mem_ops.h"
-#include "aom_util/aom_pthread.h"
 #include "aom_util/aom_thread.h"
 
 #include "av1/common/alloccommon.h"
-#include "av1/common/av1_common_int.h"
 #include "av1/common/frame_buffers.h"
 #include "av1/common/enums.h"
 #include "av1/common/obu_util.h"
 
 #include "av1/decoder/decoder.h"
 #include "av1/decoder/decodeframe.h"
-#include "av1/decoder/dthread.h"
 #include "av1/decoder/grain_synthesis.h"
 #include "av1/decoder/obu.h"
 
@@ -870,9 +865,7 @@ static aom_image_t *decoder_get_frame(aom_codec_alg_priv_t *ctx,
   if (pbi->ext_tile_debug && tiles->single_tile_decoding &&
       pbi->dec_tile_row >= 0) {
     int tile_width, tile_height;
-    if (!av1_get_uniform_tile_size(cm, &tile_width, &tile_height)) {
-      return NULL;
-    }
+    av1_get_uniform_tile_size(cm, &tile_width, &tile_height);
     const int tile_row = AOMMIN(pbi->dec_tile_row, tiles->rows - 1);
     const int mi_row = tile_row * tile_height;
     const int ssy = ctx->img.y_chroma_shift;
@@ -891,9 +884,7 @@ static aom_image_t *decoder_get_frame(aom_codec_alg_priv_t *ctx,
   if (pbi->ext_tile_debug && tiles->single_tile_decoding &&
       pbi->dec_tile_col >= 0) {
     int tile_width, tile_height;
-    if (!av1_get_uniform_tile_size(cm, &tile_width, &tile_height)) {
-      return NULL;
-    }
+    av1_get_uniform_tile_size(cm, &tile_width, &tile_height);
     const int tile_col = AOMMIN(pbi->dec_tile_col, tiles->cols - 1);
     const int mi_col = tile_col * tile_width;
     const int ssx = ctx->img.x_chroma_shift;
@@ -1437,9 +1428,7 @@ static aom_codec_err_t ctrl_get_tile_size(aom_codec_alg_priv_t *ctx,
           (FrameWorkerData *)worker->data1;
       const AV1_COMMON *const cm = &frame_worker_data->pbi->common;
       int tile_width, tile_height;
-      if (!av1_get_uniform_tile_size(cm, &tile_width, &tile_height)) {
-        return AOM_CODEC_CORRUPT_FRAME;
-      }
+      av1_get_uniform_tile_size(cm, &tile_width, &tile_height);
       *tile_size = ((tile_width * MI_SIZE) << 16) + tile_height * MI_SIZE;
       return AOM_CODEC_OK;
     } else {

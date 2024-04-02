@@ -22,7 +22,6 @@
 #include "aom_ports/mem.h"
 #include "aom_scale/aom_scale.h"
 #include "aom_scale/yv12config.h"
-#include "aom_util/aom_pthread.h"
 
 #include "av1/common/entropymv.h"
 #include "av1/common/quant_common.h"

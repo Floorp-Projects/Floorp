@@ -1196,8 +1196,7 @@ static void build_directional_and_filter_intra_predictors(
     const int need_right = p_angle < 90;
     const int need_bottom = p_angle > 180;
     if (p_angle != 90 && p_angle != 180) {
-      assert(need_above_left);
-      const int ab_le = 1;
+      const int ab_le = need_above_left ? 1 : 0;
       if (need_above && need_left && (txwpx + txhpx >= 24)) {
         filter_intra_edge_corner(above_row, left_col);
       }
@@ -1501,8 +1500,7 @@ static void highbd_build_directional_and_filter_intra_predictors(
     const int need_right = p_angle < 90;
     const int need_bottom = p_angle > 180;
     if (p_angle != 90 && p_angle != 180) {
-      assert(need_above_left);
-      const int ab_le = 1;
+      const int ab_le = need_above_left ? 1 : 0;
       if (need_above && need_left && (txwpx + txhpx >= 24)) {
         highbd_filter_intra_edge_corner(above_row, left_col);
       }
