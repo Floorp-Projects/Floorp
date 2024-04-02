@@ -181,18 +181,21 @@ decorate_task(
     sandbox.stub(client, "get").resolves([]);
 
     // Override Heartbeat so we can get the instance and manipulate it directly.
-    const heartbeatDeferred = Promise.withResolvers();
+    let resolveHeartbeatPromise;
+    const heartbeatPromise = new Promise(resolve => {
+      resolveHeartbeatPromise = resolve;
+    });
     class TestHeartbeat extends Heartbeat {
       constructor(...args) {
         super(...args);
-        heartbeatDeferred.resolve(this);
+        resolveHeartbeatPromise(this);
       }
     }
     ShowHeartbeatAction.overrideHeartbeatForTests(TestHeartbeat);
 
     try {
       await RecipeRunner.run();
-      const heartbeat = await heartbeatDeferred.promise;
+      const heartbeat = await heartbeatPromise;
       // We are going to simulate the timer timing out, so we do not want it to
       // *actually* time out.
       heartbeat.endTimerIfPresent("surveyEndTimer");
