@@ -612,6 +612,12 @@ ContentAnalysisResponse::GetAction(Action* aAction) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+ContentAnalysisResponse::GetCancelError(CancelError* aCancelError) {
+  *aCancelError = mCancelError;
+  return NS_OK;
+}
+
 static void LogAcknowledgement(
     content_analysis::sdk::ContentAnalysisAcknowledgement* aPbAck) {
   if (!static_cast<LogModule*>(gContentAnalysisLog)
@@ -641,6 +647,10 @@ static void LogAcknowledgement(
 
 void ContentAnalysisResponse::SetOwner(RefPtr<ContentAnalysis> aOwner) {
   mOwner = std::move(aOwner);
+}
+
+void ContentAnalysisResponse::SetCancelError(CancelError aCancelError) {
+  mCancelError = aCancelError;
 }
 
 void ContentAnalysisResponse::ResolveWarnAction(bool aAllowContent) {
@@ -955,6 +965,20 @@ nsresult ContentAnalysis::CancelWithError(nsCString aRequestToken,
                       : nsIContentAnalysisResponse::Action::eCanceled,
                 aRequestToken);
         response->SetOwner(owner);
+        nsIContentAnalysisResponse::CancelError cancelError;
+        switch (aResult) {
+          case NS_ERROR_NOT_AVAILABLE:
+            cancelError = nsIContentAnalysisResponse::CancelError::eNoAgent;
+            break;
+          case NS_ERROR_INVALID_SIGNATURE:
+            cancelError =
+                nsIContentAnalysisResponse::CancelError::eInvalidAgentSignature;
+            break;
+          default:
+            cancelError = nsIContentAnalysisResponse::CancelError::eErrorOther;
+            break;
+        }
+        response->SetCancelError(cancelError);
         obsServ->NotifyObservers(response, "dlp-response", nullptr);
         nsMainThreadPtrHandle<nsIContentAnalysisCallback> callbackHolder;
         {
@@ -1236,8 +1260,28 @@ NS_IMETHODIMP
 ContentAnalysis::AnalyzeContentRequestCallback(
     nsIContentAnalysisRequest* aRequest, bool aAutoAcknowledge,
     nsIContentAnalysisCallback* aCallback) {
+  MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_ARG(aRequest);
   NS_ENSURE_ARG(aCallback);
+  nsresult rv = AnalyzeContentRequestCallbackPrivate(aRequest, aAutoAcknowledge,
+                                                     aCallback);
+  if (NS_FAILED(rv)) {
+    nsCString requestToken;
+    nsresult requestTokenRv = aRequest->GetRequestToken(requestToken);
+    NS_ENSURE_SUCCESS(requestTokenRv, requestTokenRv);
+    CancelWithError(requestToken, rv);
+  }
+  return rv;
+}
+
+nsresult ContentAnalysis::AnalyzeContentRequestCallbackPrivate(
+    nsIContentAnalysisRequest* aRequest, bool aAutoAcknowledge,
+    nsIContentAnalysisCallback* aCallback) {
+  // Make sure we send the notification first, so if we later return
+  // an error the JS will handle it correctly.
+  nsCOMPtr<nsIObserverService> obsServ =
+      mozilla::services::GetObserverService();
+  obsServ->NotifyObservers(aRequest, "dlp-request-made", nullptr);
 
   bool isActive;
   nsresult rv = GetIsActive(&isActive);
@@ -1245,10 +1289,6 @@ ContentAnalysis::AnalyzeContentRequestCallback(
   if (!isActive) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-
-  nsCOMPtr<nsIObserverService> obsServ =
-      mozilla::services::GetObserverService();
-  obsServ->NotifyObservers(aRequest, "dlp-request-made", nullptr);
 
   MOZ_ASSERT(NS_IsMainThread());
   // since we're on the main thread, don't need to synchronize this
