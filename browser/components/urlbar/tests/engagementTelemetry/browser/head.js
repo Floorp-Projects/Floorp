@@ -10,6 +10,7 @@ Services.scriptloader.loadSubScript(
 
 ChromeUtils.defineESModuleGetters(this, {
   QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
+  sinon: "resource://testing-common/Sinon.sys.mjs",
 });
 
 const lazy = {};
