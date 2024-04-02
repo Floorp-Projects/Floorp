@@ -1743,6 +1743,10 @@ class HighlightToolbar {
     button.className = "highlightButton";
     button.tabIndex = 0;
     button.setAttribute("data-l10n-id", `pdfjs-highlight-floating-button`);
+    const span = document.createElement("span");
+    button.append(span);
+    span.className = "visuallyHidden";
+    span.setAttribute("data-l10n-id", "pdfjs-editor-highlight-button-label");
     button.addEventListener("contextmenu", noContextMenu);
     button.addEventListener("click", () => {
       this.#uiManager.highlightSelection("floating_button");
@@ -2812,6 +2816,9 @@ class AnnotationEditorUIManager {
       for (const layer of this.#allLayers.values()) {
         layer.enable();
       }
+      for (const editor of this.#allEditors.values()) {
+        editor.enable();
+      }
     }
   }
   #disableAll() {
@@ -2820,6 +2827,9 @@ class AnnotationEditorUIManager {
       this.#isEnabled = false;
       for (const layer of this.#allLayers.values()) {
         layer.disable();
+      }
+      for (const editor of this.#allEditors.values()) {
+        editor.disable();
       }
     }
   }
@@ -2871,6 +2881,7 @@ class AnnotationEditorUIManager {
       layer.addOrRebuild(editor);
     } else {
       this.addEditor(editor);
+      this.addToAnnotationStorage(editor);
     }
   }
   setActiveEditor(editor) {
@@ -3411,6 +3422,7 @@ class AltText {
 class AnnotationEditor {
   #allResizerDivs = null;
   #altText = null;
+  #disabled = false;
   #keepAspectRatio = false;
   #resizersDiv = null;
   #savedDimensions = null;
@@ -4046,7 +4058,7 @@ class AnnotationEditor {
     this.div.setAttribute("data-editor-rotation", (360 - this.rotation) % 360);
     this.div.className = this.name;
     this.div.setAttribute("id", this.id);
-    this.div.setAttribute("tabIndex", 0);
+    this.div.tabIndex = this.#disabled ? -1 : 0;
     if (!this._isVisible) {
       this.div.classList.add("hidden");
     }
@@ -4204,7 +4216,6 @@ class AnnotationEditor {
   rebuild() {
     this.div?.addEventListener("focusin", this.#boundFocusin);
     this.div?.addEventListener("focusout", this.#boundFocusout);
-    this.show(this._isVisible);
   }
   rotate(_angle) {}
   serialize(isForCopying = false, context = null) {
@@ -4248,6 +4259,7 @@ class AnnotationEditor {
       }
       this.#telemetryTimeouts = null;
     }
+    this.parent = null;
   }
   get isResizable() {
     return false;
@@ -4467,9 +4479,21 @@ class AnnotationEditor {
       }
     });
   }
-  show(visible) {
+  show(visible = this._isVisible) {
     this.div.classList.toggle("hidden", !visible);
     this._isVisible = visible;
+  }
+  enable() {
+    if (this.div) {
+      this.div.tabIndex = 0;
+    }
+    this.#disabled = false;
+  }
+  disable() {
+    if (this.div) {
+      this.div.tabIndex = -1;
+    }
+    this.#disabled = true;
   }
 }
 class FakeEditor extends AnnotationEditor {
@@ -9181,7 +9205,7 @@ function getDocument(src) {
   }
   const fetchDocParams = {
     docId,
-    apiVersion: "4.1.287",
+    apiVersion: "4.1.342",
     data,
     password,
     disableAutoFetch,
@@ -10825,8 +10849,8 @@ class InternalRenderTask {
     }
   }
 }
-const version = "4.1.287";
-const build = "30e69956d";
+const version = "4.1.342";
+const build = "e384df6f1";
 
 ;// CONCATENATED MODULE: ./src/shared/scripting_utils.js
 function makeColorComp(n) {
@@ -11225,8 +11249,11 @@ class AnnotationElement {
       container.tabIndex = DEFAULT_TAB_INDEX;
     }
     container.style.zIndex = this.parent.zIndex++;
-    if (this.data.popupRef) {
+    if (data.popupRef) {
       container.setAttribute("aria-haspopup", "dialog");
+    }
+    if (data.alternativeText) {
+      container.title = data.alternativeText;
     }
     if (data.noRotate) {
       container.classList.add("norotate");
@@ -11875,9 +11902,6 @@ class TextAnnotationElement extends AnnotationElement {
 }
 class WidgetAnnotationElement extends AnnotationElement {
   render() {
-    if (this.data.alternativeText) {
-      this.container.title = this.data.alternativeText;
-    }
     return this.container;
   }
   showElementAndHideCanvas(element) {
@@ -12478,9 +12502,6 @@ class PushButtonWidgetAnnotationElement extends LinkAnnotationElement {
   render() {
     const container = super.render();
     container.classList.add("buttonWidgetAnnotation", "pushButton");
-    if (this.data.alternativeText) {
-      container.title = this.data.alternativeText;
-    }
     const linkElement = container.lastChild;
     if (this.enableScripting && this.hasJSActions && linkElement) {
       this._setDefaultPropertiesFromJS(linkElement);
@@ -13494,11 +13515,13 @@ class AnnotationLayer {
 
 
 
+const EOL_PATTERN = /\r\n?|\n/g;
 class FreeTextEditor extends AnnotationEditor {
   #boundEditorDivBlur = this.editorDivBlur.bind(this);
   #boundEditorDivFocus = this.editorDivFocus.bind(this);
   #boundEditorDivInput = this.editorDivInput.bind(this);
   #boundEditorDivKeydown = this.editorDivKeydown.bind(this);
+  #boundEditorDivPaste = this.editorDivPaste.bind(this);
   #color;
   #content = "";
   #editorDivId = `${this.id}-editor`;
@@ -13651,6 +13674,7 @@ class FreeTextEditor extends AnnotationEditor {
     this.editorDiv.addEventListener("focus", this.#boundEditorDivFocus);
     this.editorDiv.addEventListener("blur", this.#boundEditorDivBlur);
     this.editorDiv.addEventListener("input", this.#boundEditorDivInput);
+    this.editorDiv.addEventListener("paste", this.#boundEditorDivPaste);
   }
   disableEditMode() {
     if (!this.isInEditMode()) {
@@ -13666,6 +13690,7 @@ class FreeTextEditor extends AnnotationEditor {
     this.editorDiv.removeEventListener("focus", this.#boundEditorDivFocus);
     this.editorDiv.removeEventListener("blur", this.#boundEditorDivBlur);
     this.editorDiv.removeEventListener("input", this.#boundEditorDivInput);
+    this.editorDiv.removeEventListener("paste", this.#boundEditorDivPaste);
     this.div.focus({
       preventScroll: true
     });
@@ -13707,10 +13732,8 @@ class FreeTextEditor extends AnnotationEditor {
   #extractText() {
     const buffer = [];
     this.editorDiv.normalize();
-    const EOL_PATTERN = /\r\n?|\n/g;
     for (const child of this.editorDiv.childNodes) {
-      const content = child.nodeType === Node.TEXT_NODE ? child.nodeValue : child.innerText;
-      buffer.push(content.replaceAll(EOL_PATTERN, ""));
+      buffer.push(FreeTextEditor.#getNodeContent(child));
     }
     return buffer.join("\n");
   }
@@ -13879,6 +13902,85 @@ class FreeTextEditor extends AnnotationEditor {
       this.editorDiv.contentEditable = true;
     }
     return this.div;
+  }
+  static #getNodeContent(node) {
+    return (node.nodeType === Node.TEXT_NODE ? node.nodeValue : node.innerText).replaceAll(EOL_PATTERN, "");
+  }
+  editorDivPaste(event) {
+    const clipboardData = event.clipboardData || window.clipboardData;
+    const {
+      types
+    } = clipboardData;
+    if (types.length === 1 && types[0] === "text/plain") {
+      return;
+    }
+    event.preventDefault();
+    const paste = FreeTextEditor.#deserializeContent(clipboardData.getData("text") || "").replaceAll(EOL_PATTERN, "\n");
+    if (!paste) {
+      return;
+    }
+    const selection = window.getSelection();
+    if (!selection.rangeCount) {
+      return;
+    }
+    this.editorDiv.normalize();
+    selection.deleteFromDocument();
+    const range = selection.getRangeAt(0);
+    if (!paste.includes("\n")) {
+      range.insertNode(document.createTextNode(paste));
+      this.editorDiv.normalize();
+      selection.collapseToStart();
+      return;
+    }
+    const {
+      startContainer,
+      startOffset
+    } = range;
+    const bufferBefore = [];
+    const bufferAfter = [];
+    if (startContainer.nodeType === Node.TEXT_NODE) {
+      const parent = startContainer.parentElement;
+      bufferAfter.push(startContainer.nodeValue.slice(startOffset).replaceAll(EOL_PATTERN, ""));
+      if (parent !== this.editorDiv) {
+        let buffer = bufferBefore;
+        for (const child of this.editorDiv.childNodes) {
+          if (child === parent) {
+            buffer = bufferAfter;
+            continue;
+          }
+          buffer.push(FreeTextEditor.#getNodeContent(child));
+        }
+      }
+      bufferBefore.push(startContainer.nodeValue.slice(0, startOffset).replaceAll(EOL_PATTERN, ""));
+    } else if (startContainer === this.editorDiv) {
+      let buffer = bufferBefore;
+      let i = 0;
+      for (const child of this.editorDiv.childNodes) {
+        if (i++ === startOffset) {
+          buffer = bufferAfter;
+        }
+        buffer.push(FreeTextEditor.#getNodeContent(child));
+      }
+    }
+    this.#content = `${bufferBefore.join("\n")}${paste}${bufferAfter.join("\n")}`;
+    this.#setContent();
+    const newRange = new Range();
+    let beforeLength = bufferBefore.reduce((acc, line) => acc + line.length, 0);
+    for (const {
+      firstChild
+    } of this.editorDiv.childNodes) {
+      if (firstChild.nodeType === Node.TEXT_NODE) {
+        const length = firstChild.nodeValue.length;
+        if (beforeLength <= length) {
+          newRange.setStart(firstChild, beforeLength);
+          newRange.setEnd(firstChild, beforeLength);
+          break;
+        }
+        beforeLength -= length;
+      }
+    }
+    selection.removeAllRanges();
+    selection.addRange(newRange);
   }
   #setContent() {
     this.editorDiv.replaceChildren();
@@ -15089,11 +15191,11 @@ class HighlightEditor extends AnnotationEditor {
     this.div.focus();
   }
   remove() {
-    super.remove();
     this.#cleanDrawLayer();
     this._reportTelemetry({
       action: "deleted"
     });
+    super.remove();
   }
   rebuild() {
     if (!this.parent) {
@@ -15269,11 +15371,17 @@ class HighlightEditor extends AnnotationEditor {
   }
   select() {
     super.select();
+    if (!this.#outlineId) {
+      return;
+    }
     this.parent?.drawLayer.removeClass(this.#outlineId, "hovered");
     this.parent?.drawLayer.addClass(this.#outlineId, "selected");
   }
   unselect() {
     super.unselect();
+    if (!this.#outlineId) {
+      return;
+    }
     this.parent?.drawLayer.removeClass(this.#outlineId, "selected");
     if (!this.#isFreeHighlight) {
       this.#setCaret(false);
@@ -15282,7 +15390,7 @@ class HighlightEditor extends AnnotationEditor {
   get _mustFixPosition() {
     return !this.#isFreeHighlight;
   }
-  show(visible) {
+  show(visible = this._isVisible) {
     super.show(visible);
     if (this.parent) {
       this.parent.drawLayer.show(this.#id, visible);
@@ -15737,7 +15845,7 @@ class InkEditor extends AnnotationEditor {
       this.allRawPaths.push(currentPath);
       this.paths.push(bezier);
       this.bezierPath2D.push(path2D);
-      this.rebuild();
+      this._uiManager.rebuild(this);
     };
     const undo = () => {
       this.allRawPaths.pop();
@@ -16364,7 +16472,7 @@ class StampEditor extends AnnotationEditor {
     if (this.div === null) {
       return;
     }
-    if (this.#bitmapId) {
+    if (this.#bitmapId && this.#canvas === null) {
       this.#getBitmap();
     }
     if (!this.isAttachedToDOM) {
@@ -16376,7 +16484,7 @@ class StampEditor extends AnnotationEditor {
     this.div.focus();
   }
   isEmpty() {
-    return !(this.#bitmapPromise || this.#bitmap || this.#bitmapUrl || this.#bitmapFile);
+    return !(this.#bitmapPromise || this.#bitmap || this.#bitmapUrl || this.#bitmapFile || this.#bitmapId);
   }
   get isResizable() {
     return true;
@@ -16654,9 +16762,9 @@ class AnnotationEditorLayer {
   #accessibilityManager;
   #allowClick = false;
   #annotationLayer = null;
-  #boundPointerup = this.pointerup.bind(this);
-  #boundPointerdown = this.pointerdown.bind(this);
-  #boundTextLayerPointerDown = this.#textLayerPointerDown.bind(this);
+  #boundPointerup = null;
+  #boundPointerdown = null;
+  #boundTextLayerPointerDown = null;
   #editorFocusTimeoutId = null;
   #editors = new Map();
   #hadPointerDown = false;
@@ -16697,6 +16805,9 @@ class AnnotationEditorLayer {
   }
   get isEmpty() {
     return this.#editors.size === 0;
+  }
+  get isInvisible() {
+    return this.isEmpty && this.#uiManager.getMode() === AnnotationEditorType.NONE;
   }
   updateToolbar(mode) {
     this.#uiManager.updateToolbar(mode);
@@ -16769,6 +16880,7 @@ class AnnotationEditorLayer {
     this.#annotationLayer?.div.classList.toggle("disabled", !enabled);
   }
   enable() {
+    this.div.tabIndex = 0;
     this.togglePointerEvents(true);
     const annotationElementIds = new Set();
     for (const editor of this.#editors.values()) {
@@ -16799,6 +16911,7 @@ class AnnotationEditorLayer {
   }
   disable() {
     this.#isDisabling = true;
+    this.div.tabIndex = -1;
     this.togglePointerEvents(false);
     const hiddenAnnotationIds = new Set();
     for (const editor of this.#editors.values()) {
@@ -16847,14 +16960,18 @@ class AnnotationEditorLayer {
     this.#uiManager.setActiveEditor(editor);
   }
   enableTextSelection() {
-    if (this.#textLayer?.div) {
+    this.div.tabIndex = -1;
+    if (this.#textLayer?.div && !this.#boundTextLayerPointerDown) {
+      this.#boundTextLayerPointerDown = this.#textLayerPointerDown.bind(this);
       this.#textLayer.div.addEventListener("pointerdown", this.#boundTextLayerPointerDown);
       this.#textLayer.div.classList.add("highlighting");
     }
   }
   disableTextSelection() {
-    if (this.#textLayer?.div) {
+    this.div.tabIndex = 0;
+    if (this.#textLayer?.div && this.#boundTextLayerPointerDown) {
       this.#textLayer.div.removeEventListener("pointerdown", this.#boundTextLayerPointerDown);
+      this.#boundTextLayerPointerDown = null;
       this.#textLayer.div.classList.remove("highlighting");
     }
   }
@@ -16879,12 +16996,22 @@ class AnnotationEditorLayer {
     }
   }
   enableClick() {
+    if (this.#boundPointerdown) {
+      return;
+    }
+    this.#boundPointerdown = this.pointerdown.bind(this);
+    this.#boundPointerup = this.pointerup.bind(this);
     this.div.addEventListener("pointerdown", this.#boundPointerdown);
     this.div.addEventListener("pointerup", this.#boundPointerup);
   }
   disableClick() {
+    if (!this.#boundPointerdown) {
+      return;
+    }
     this.div.removeEventListener("pointerdown", this.#boundPointerdown);
     this.div.removeEventListener("pointerup", this.#boundPointerup);
+    this.#boundPointerdown = null;
+    this.#boundPointerup = null;
   }
   attach(editor) {
     this.#editors.set(editor.id, editor);
@@ -16971,6 +17098,7 @@ class AnnotationEditorLayer {
     if (editor.needsToBeRebuilt()) {
       editor.parent ||= this;
       editor.rebuild();
+      editor.show();
     } else {
       this.add(editor);
     }
@@ -17161,6 +17289,7 @@ class AnnotationEditorLayer {
     setLayerDimensions(this.div, viewport);
     for (const editor of this.#uiManager.getEditors(this.pageIndex)) {
       this.add(editor);
+      editor.rebuild();
     }
     this.updateMode();
   }
@@ -17168,6 +17297,7 @@ class AnnotationEditorLayer {
     viewport
   }) {
     this.#uiManager.commitOrRemove();
+    this.#cleanup();
     const oldRotation = this.viewport.rotation;
     const rotation = viewport.rotation;
     this.viewport = viewport;
@@ -17179,7 +17309,7 @@ class AnnotationEditorLayer {
         editor.rotate(rotation);
       }
     }
-    this.updateMode();
+    this.addInkEditorIfNeeded(false);
   }
   get pageDimensions() {
     const {
@@ -17401,8 +17531,8 @@ class DrawLayer {
 
 
 
-const pdfjsVersion = "4.1.287";
-const pdfjsBuild = "30e69956d";
+const pdfjsVersion = "4.1.342";
+const pdfjsBuild = "e384df6f1";
 
 var __webpack_exports__AbortException = __webpack_exports__.AbortException;
 var __webpack_exports__AnnotationEditorLayer = __webpack_exports__.AnnotationEditorLayer;
