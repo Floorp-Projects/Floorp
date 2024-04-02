@@ -43,7 +43,6 @@ linux1804-64-qr/opt:
         - awsy
         - desktop-screenshot-capture
         - linux1804-tests
-        - mochitest-webgpu
         - web-platform-tests
         - web-platform-tests-backlog
         - webgpu
@@ -56,7 +55,6 @@ linux1804-64-shippable-qr/opt:
         - awsy
         - desktop-screenshot-capture
         - linux1804-tests
-        - mochitest-webgpu
         - web-platform-tests
         - web-platform-tests-backlog
         - webgpu
@@ -74,7 +72,6 @@ linux1804-64-qr/debug:
     build-platform: linux64/debug
     test-sets:
         - linux1804-tests
-        - mochitest-webgpu
         - web-platform-tests
         - webgpu
 
@@ -82,7 +79,6 @@ linux1804-64-asan-qr/opt:
     build-platform: linux64-asan/opt
     test-sets:
         - linux1804-tests
-        - mochitest-webgpu
         - web-platform-tests
         - webgpu
 
@@ -90,7 +86,6 @@ linux1804-64-tsan-qr/opt:
     build-platform: linux64-tsan/opt
     test-sets:
         - linux1804-tests
-        - mochitest-webgpu
         - web-platform-tests
         - webgpu
 
@@ -100,7 +95,6 @@ linux1804-64-ccov-qr/opt:
         - ccov-code-coverage-tests
         - linux1804-tests
         - linux1804-ccov-tests
-        - mochitest-webgpu
         - web-platform-tests
         - webgpu
 
