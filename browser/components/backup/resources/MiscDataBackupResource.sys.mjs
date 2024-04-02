@@ -6,7 +6,8 @@ import { BackupResource } from "resource:///modules/backup/BackupResource.sys.mj
 
 /**
  * Class representing miscellaneous files for telemetry, site storage,
- * media device origin mapping and Mozilla Accounts within a user profile.
+ * media device origin mapping, chrome privileged IndexedDB databases,
+ * and Mozilla Accounts within a user profile.
  */
 export class MiscDataBackupResource extends BackupResource {
   static get key() {
@@ -30,6 +31,19 @@ export class MiscDataBackupResource extends BackupResource {
       if (Number.isInteger(resourceSize)) {
         fullSize += resourceSize;
       }
+    }
+
+    let chromeIndexedDBDirPath = PathUtils.join(
+      profilePath,
+      "storage",
+      "permanent",
+      "chrome"
+    );
+    let chromeIndexedDBDirSize = await BackupResource.getDirectorySize(
+      chromeIndexedDBDirPath
+    );
+    if (Number.isInteger(chromeIndexedDBDirSize)) {
+      fullSize += chromeIndexedDBDirSize;
     }
 
     Glean.browserBackup.miscDataSize.set(fullSize);
