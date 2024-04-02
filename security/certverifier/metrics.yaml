@@ -30,3 +30,18 @@ cert_verifier:
       - not_revoked
       - revoked_in_filter
       - revoked_in_stash
+
+  cert_trust_evaluation_time:
+    type: timing_distribution
+    time_unit: nanosecond
+    description: >
+      Measures how long we take to evaluate the trust status of a certificate.
+    data_sensitivity:
+      - technical
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1888420
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1888420
+    notification_emails:
+      - jschanck@mozilla.com
+    expires: 132
