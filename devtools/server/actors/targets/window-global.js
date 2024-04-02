@@ -1338,10 +1338,6 @@ class WindowGlobalTargetActor extends BaseTargetActor {
     if (typeof options.touchEventsOverride !== "undefined") {
       const enableTouchSimulator = options.touchEventsOverride === "enabled";
 
-      this.docShell.metaViewportOverride = enableTouchSimulator
-        ? Ci.nsIDocShell.META_VIEWPORT_OVERRIDE_ENABLED
-        : Ci.nsIDocShell.META_VIEWPORT_OVERRIDE_NONE;
-
       // We want to reload the document if it's an "existing" top level target on which
       // the touch simulator will be toggled and the user has turned the
       // "reload on touch simulation" setting on.

@@ -1267,10 +1267,6 @@ class nsDocShell final : public nsDocLoader,
   uint32_t mLoadType;
   uint32_t mFailedLoadType;
 
-  // Whether or not handling of the <meta name="viewport"> tag is overridden.
-  // Possible values are defined as constants in nsIDocShell.idl.
-  MetaViewportOverride mMetaViewportOverride;
-
   // See WindowGlobalParent::mSingleChannelId.
   mozilla::Maybe<uint64_t> mSingleChannelId;
   uint32_t mRequestForBlockingFromBFCacheCount = 0;
