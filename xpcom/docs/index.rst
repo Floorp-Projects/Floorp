@@ -12,6 +12,7 @@ These pages contain documentation for Mozilla's Cross-Platform Component Object 
    thread-safety
    huntingleaks
    collections
+   sorting.md
    xpidl
    writing-xpcom-interface
    hashtables
