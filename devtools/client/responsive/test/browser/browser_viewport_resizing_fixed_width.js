@@ -19,8 +19,8 @@ addRDMTask(TEST_URL, async function ({ ui, manager }) {
   const expected = [
     {
       metaSupport: false,
-      before: [1.0, 600, 300],
-      after: [1.0, 50, 50], // Zoom is unaffected.
+      before: [2.0, 300, 150],
+      after: [0.25, 300, 300], // This checks that min-zoom is active.
     },
     {
       metaSupport: true,
