@@ -73,7 +73,7 @@ def is_backstop(
         raise
 
     # On every Nth push, want to run all tasks.
-    if params["pushlog_id"] - last_params["pushlog_id"] >= push_interval:
+    if int(params["pushlog_id"]) - int(last_params["pushlog_id"]) >= push_interval:
         return True
 
     if time_interval <= 0:
