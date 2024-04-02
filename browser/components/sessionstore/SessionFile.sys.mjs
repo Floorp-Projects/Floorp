@@ -194,6 +194,7 @@ var SessionFileInternal = {
   },
 
   async _readInternal(useOldExtension) {
+    Services.telemetry.setEventRecordingEnabled("session_restore", true);
     let result;
     let noFilesFound = true;
     this._usingOldExtension = useOldExtension;
@@ -251,6 +252,18 @@ var SessionFileInternal = {
             path,
             ". Wrong format/version: " + JSON.stringify(parsed.version) + "."
           );
+          Services.telemetry.recordEvent(
+            "session_restore",
+            "backup_can_be_loaded",
+            "session_file",
+            null,
+            {
+              can_load: "false",
+              path_key: key,
+              loadfail_reason:
+                "Wrong format/version: " + JSON.stringify(parsed.version) + ".",
+            }
+          );
           continue;
         }
         result = {
@@ -259,6 +272,17 @@ var SessionFileInternal = {
           parsed,
           useOldExtension,
         };
+        Services.telemetry.recordEvent(
+          "session_restore",
+          "backup_can_be_loaded",
+          "session_file",
+          null,
+          {
+            can_load: "true",
+            path_key: key,
+            loadfail_reason: "N/A",
+          }
+        );
         Services.telemetry
           .getHistogramById("FX_SESSION_RESTORE_CORRUPT_FILE")
           .add(false);
@@ -269,6 +293,17 @@ var SessionFileInternal = {
       } catch (ex) {
         if (DOMException.isInstance(ex) && ex.name == "NotFoundError") {
           exists = false;
+          Services.telemetry.recordEvent(
+            "session_restore",
+            "backup_can_be_loaded",
+            "session_file",
+            null,
+            {
+              can_load: "false",
+              path_key: key,
+              loadfail_reason: "File doesn't exist.",
+            }
+          );
         } else if (
           DOMException.isInstance(ex) &&
           ex.name == "NotAllowedError"
@@ -277,6 +312,17 @@ var SessionFileInternal = {
           // or similar failures. We'll just count it as "corrupted".
           console.error("Could not read session file ", ex);
           corrupted = true;
+          Services.telemetry.recordEvent(
+            "session_restore",
+            "backup_can_be_loaded",
+            "session_file",
+            null,
+            {
+              can_load: "false",
+              path_key: key,
+              loadfail_reason: ` ${ex.name}: Could not read session file`,
+            }
+          );
         } else if (ex instanceof SyntaxError) {
           console.error(
             "Corrupt session file (invalid JSON found) ",
@@ -285,6 +331,17 @@ var SessionFileInternal = {
           );
           // File is corrupted, try next file
           corrupted = true;
+          Services.telemetry.recordEvent(
+            "session_restore",
+            "backup_can_be_loaded",
+            "session_file",
+            null,
+            {
+              can_load: "false",
+              path_key: key,
+              loadfail_reason: ` ${ex.name}: Corrupt session file (invalid JSON found)`,
+            }
+          );
         }
       } finally {
         if (exists) {
@@ -292,6 +349,17 @@ var SessionFileInternal = {
           Services.telemetry
             .getHistogramById("FX_SESSION_RESTORE_CORRUPT_FILE")
             .add(corrupted);
+          Services.telemetry.recordEvent(
+            "session_restore",
+            "backup_can_be_loaded",
+            "session_file",
+            null,
+            {
+              can_load: !corrupted.toString(),
+              path_key: key,
+              loadfail_reason: "N/A",
+            }
+          );
         }
       }
     }
