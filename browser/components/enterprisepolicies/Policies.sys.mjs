@@ -540,6 +540,15 @@ export var Policies = {
           param.DenyUrlRegexList
         );
       }
+      if ("AgentName" in param) {
+        setAndLockPref("browser.contentanalysis.agent_name", param.AgentName);
+      }
+      if ("ClientSignature" in param) {
+        setAndLockPref(
+          "browser.contentanalysis.client_signature",
+          param.ClientSignature
+        );
+      }
       let boolPrefs = [
         ["IsPerUser", "is_per_user"],
         ["ShowBlockedResult", "show_blocked_result"],
