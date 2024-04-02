@@ -14,30 +14,27 @@
  */
 
 export class PdfjsChild extends JSWindowActorChild {
-  init(supportsFind) {
-    if (supportsFind) {
+  init(aSupportsFind) {
+    if (aSupportsFind) {
       this.sendAsyncMessage("PDFJS:Parent:addEventListener");
     }
   }
 
-  dispatchEvent(type, detail) {
+  dispatchEvent(aType, aDetail) {
+    aDetail &&= Cu.cloneInto(aDetail, this.contentWindow);
     const contentWindow = this.contentWindow;
     const forward = contentWindow.document.createEvent("CustomEvent");
-    forward.initCustomEvent(type, true, true, detail);
+    forward.initCustomEvent(aType, true, true, aDetail);
     contentWindow.dispatchEvent(forward);
   }
 
   receiveMessage(msg) {
     switch (msg.name) {
-      case "PDFJS:Child:handleEvent": {
-        let detail = Cu.cloneInto(msg.data.detail, this.contentWindow);
-        this.dispatchEvent(msg.data.type, detail);
+      case "PDFJS:Child:handleEvent":
+        this.dispatchEvent(msg.data.type, msg.data.detail);
         break;
-      }
-
       case "PDFJS:Editing":
-        let data = Cu.cloneInto(msg.data, this.contentWindow);
-        this.dispatchEvent("editingaction", data);
+        this.dispatchEvent("editingaction", msg.data);
         break;
       case "PDFJS:ZoomIn":
       case "PDFJS:ZoomOut":
