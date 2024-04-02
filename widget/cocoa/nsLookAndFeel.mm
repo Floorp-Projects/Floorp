@@ -282,7 +282,9 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
       break;
     case ColorID::MozDialog:
     case ColorID::Window:
-      color = GetColorFromNSColor(NSColor.windowBackgroundColor);
+      color = GetColorFromNSColor(aScheme == ColorScheme::Light
+                                      ? NSColor.windowBackgroundColor
+                                      : NSColor.underPageBackgroundColor);
       break;
     case ColorID::Field:
     case ColorID::MozCombobox:
