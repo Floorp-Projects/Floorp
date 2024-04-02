@@ -821,17 +821,31 @@ class TelemetryEvent {
    * @param {DOMElement} [details.element] The picked view element.
    */
   record(event, details) {
+    // Prevent re-entering `record()`. This can happen because
+    // `#internalRecord()` will notify an engagement to the provider, that may
+    // execute an action blurring the input field. Then both an engagement
+    // and an abandonment would be recorded for the same session.
+    // Nulling out `_startEventInfo` doesn't save us in this case, because it
+    // happens after `#internalRecord()`, and `isSessionOngoing` must be
+    // calculated inside it.
+    if (this.#handlingRecord) {
+      return;
+    }
+
     // This should never throw, or it may break the urlbar.
     try {
-      this._internalRecord(event, details);
+      this.#handlingRecord = true;
+      this.#internalRecord(event, details);
     } catch (ex) {
       console.error("Could not record event: ", ex);
     } finally {
+      this.#handlingRecord = false;
+
       // Reset the start event info except for engagements that do not end the
       // search session. In that case, the view stays open and further
       // engagements are possible and should be recorded when they occur.
       // (`details.isSessionOngoing` is not a param; rather, it's set by
-      // `_internalRecord()`.)
+      // `#internalRecord()`.)
       if (!details.isSessionOngoing) {
         this._startEventInfo = null;
         this._discarded = false;
@@ -839,7 +853,7 @@ class TelemetryEvent {
     }
   }
 
-  _internalRecord(event, details) {
+  #internalRecord(event, details) {
     const startEventInfo = this._startEventInfo;
 
     if (!this._category || !startEventInfo) {
@@ -1349,6 +1363,9 @@ class TelemetryEvent {
       metric.set(lazy.UrlbarPrefs.get(pref));
     }
   }
+
+  // Used to avoid re-entering `record()`.
+  #handlingRecord = false;
 
   #previousSearchWordsSet = null;
 
