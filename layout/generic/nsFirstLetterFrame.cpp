@@ -197,7 +197,6 @@ void nsFirstLetterFrame::Reflow(nsPresContext* aPresContext,
                                 nsReflowStatus& aReflowStatus) {
   MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsFirstLetterFrame");
-  DISPLAY_REFLOW(aPresContext, this, aReflowInput, aMetrics, aReflowStatus);
   MOZ_ASSERT(aReflowStatus.IsEmpty(),
              "Caller should pass a fresh reflow status!");
 

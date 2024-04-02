@@ -5490,13 +5490,6 @@ class nsIFrame : public nsQueryFrame {
   static void VerifyDirtyBitSet(const nsFrameList& aFrameList);
 
   // Display Reflow Debugging
-  static void* DisplayReflowEnter(nsPresContext* aPresContext, nsIFrame* aFrame,
-                                  const ReflowInput& aReflowInput);
-  static void DisplayReflowExit(nsPresContext* aPresContext, nsIFrame* aFrame,
-                                ReflowOutput& aMetrics,
-                                const nsReflowStatus& aStatus,
-                                void* aFrameTreeNode);
-
   static void DisplayReflowStartup();
   static void DisplayReflowShutdown();
 

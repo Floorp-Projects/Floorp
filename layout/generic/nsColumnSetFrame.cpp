@@ -1198,7 +1198,6 @@ void nsColumnSetFrame::Reflow(nsPresContext* aPresContext,
   nsPresContext::InterruptPreventer noInterrupts(aPresContext);
 
   DO_GLOBAL_REFLOW_COUNT("nsColumnSetFrame");
-  DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
 
   MOZ_ASSERT(aReflowInput.mCBReflowInput->mFrame->StyleColumn()
