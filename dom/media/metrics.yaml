@@ -139,4 +139,10 @@ media.playback:
       key_system:
         description: The key system used for the EME playback if exists
         type: string
+      hls_decoder:
+        description:
+          This value will only be set on Android. It tells that whether playback
+          is performed by the HLS decoder, which utilizes the external player to
+          play video.
+        type: boolean
     expires: never

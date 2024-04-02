@@ -293,23 +293,27 @@ void TelemetryProbesReporter::OnDecodeResumed() {
 }
 
 void TelemetryProbesReporter::OntFirstFrameLoaded(
-    const TimeDuration& aLoadedFirstFrameTime, bool aIsMSE,
-    bool aIsExternalEngineStateMachine) {
+    const TimeDuration& aLoadedFirstFrameTime,
+    const FirstFrameLoadedFlagSet aFlags) {
   const MediaInfo& info = mOwner->GetMediaInfo();
   MOZ_ASSERT(info.HasVideo());
   nsCString resolution;
   DetermineResolutionForTelemetry(info, resolution);
 
+  const bool isMSE = aFlags.contains(FirstFrameLoadedFlag::IsMSE);
+  const bool isExternalEngineStateMachine =
+      aFlags.contains(FirstFrameLoadedFlag::IsExternalEngineStateMachine);
+
   glean::media_playback::FirstFrameLoadedExtra extraData;
   extraData.firstFrameLoadedTime = Some(aLoadedFirstFrameTime.ToMilliseconds());
-  if (!aIsMSE && !aIsExternalEngineStateMachine) {
+  if (!isMSE && !isExternalEngineStateMachine) {
     extraData.playbackType = Some("Non-MSE playback"_ns);
-  } else if (aIsMSE && !aIsExternalEngineStateMachine) {
+  } else if (isMSE && !isExternalEngineStateMachine) {
     extraData.playbackType = !mOwner->IsEncrypted() ? Some("MSE playback"_ns)
                                                     : Some("EME playback"_ns);
-  } else if (!aIsMSE && aIsExternalEngineStateMachine) {
+  } else if (!isMSE && isExternalEngineStateMachine) {
     extraData.playbackType = Some("Non-MSE media-engine playback"_ns);
-  } else if (aIsMSE && aIsExternalEngineStateMachine) {
+  } else if (isMSE && isExternalEngineStateMachine) {
     extraData.playbackType = !mOwner->IsEncrypted()
                                  ? Some("MSE media-engine playback"_ns)
                                  : Some("EME media-engine playback"_ns);
@@ -322,6 +326,12 @@ void TelemetryProbesReporter::OntFirstFrameLoaded(
   if (const auto keySystem = mOwner->GetKeySystem()) {
     extraData.keySystem = Some(NS_ConvertUTF16toUTF8(*keySystem));
   }
+
+#ifdef MOZ_WIDGET_ANDROID
+  if (aFlags.contains(FirstFrameLoadedFlag::IsHLS)) {
+    extraData.hlsDecoder = Some(true);
+  }
+#endif
 
   if (MOZ_LOG_TEST(gTelemetryProbesReporterLog, LogLevel::Debug)) {
     nsPrintfCString logMessage{

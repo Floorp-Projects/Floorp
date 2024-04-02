@@ -893,9 +893,19 @@ void MediaDecoder::FirstFrameLoaded(
 
   // We only care about video first frame.
   if (mInfo->HasVideo() && mMDSMCreationTime) {
+    using FirstFrameLoadedFlag = TelemetryProbesReporter::FirstFrameLoadedFlag;
+    TelemetryProbesReporter::FirstFrameLoadedFlagSet flags;
+    if (IsMSE()) {
+      flags += FirstFrameLoadedFlag::IsMSE;
+        });
+    if (mDecoderStateMachine->IsExternalEngineStateMachine()) {
+      flags += FirstFrameLoadedFlag::IsExternalEngineStateMachine;
+    }
+    if (IsHLSDecoder()) {
+      flags += FirstFrameLoadedFlag::IsHLS;
+    }
     mTelemetryProbesReporter->OntFirstFrameLoaded(
-        TimeStamp::Now() - *mMDSMCreationTime, IsMSE(),
-        mDecoderStateMachine->IsExternalEngineStateMachine());
+        TimeStamp::Now() - *mMDSMCreationTime, flags);
     mMDSMCreationTime.reset();
   }
 
