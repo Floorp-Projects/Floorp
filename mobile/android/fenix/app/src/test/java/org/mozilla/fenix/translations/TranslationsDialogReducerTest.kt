@@ -9,6 +9,7 @@ import mozilla.components.concept.engine.translate.TranslationDownloadSize
 import mozilla.components.concept.engine.translate.TranslationError
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -144,7 +145,7 @@ class TranslationsDialogReducerTest {
         )
 
         assertTrue(updatedState.error is TranslationError.LanguageNotSupportedError)
-        assertEquals(PositiveButtonType.Disabled, updatedState.positiveButtonType)
+        assertNull(updatedState.positiveButtonType)
         assertEquals(updatedState.documentLangDisplayName, "German")
 
         val updatedStateTwo = TranslationsDialogReducer.reduce(
@@ -157,7 +158,7 @@ class TranslationsDialogReducerTest {
         )
 
         assertTrue(updatedStateTwo.error is TranslationError.CouldNotLoadLanguagesError)
-        assertEquals(PositiveButtonType.Enabled, updatedStateTwo.positiveButtonType)
+        assertNull(updatedStateTwo.positiveButtonType)
     }
 
     @Test
