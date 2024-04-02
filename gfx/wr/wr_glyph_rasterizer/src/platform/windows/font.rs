@@ -4,7 +4,6 @@
 
 use api::{FontInstanceFlags, FontKey, FontRenderMode, FontVariation};
 use api::{ColorU, GlyphDimensions, NativeFontHandle};
-use dwrote;
 use crate::gamma_lut::{ColorLut, GammaLut};
 use crate::rasterizer::{FontInstance, FontTransform, GlyphKey};
 use crate::rasterizer::{GlyphFormat, GlyphRasterError, GlyphRasterResult, RasterizedGlyph};
