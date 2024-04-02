@@ -2224,6 +2224,10 @@ void ClientWebGLContext::GetParameter(JSContext* cx, GLenum pname,
         (void)ToJSValueOrNull(cx, state.mBoundDrawFb, retval);
         return;
 
+      case LOCAL_GL_MAX_CLIENT_WAIT_TIMEOUT_WEBGL:
+        retval.set(JS::NumberValue(webgl::kMaxClientWaitSyncTimeoutNS));
+        return;
+
       case LOCAL_GL_PIXEL_PACK_BUFFER_BINDING:
         fnSetRetval_Buffer(LOCAL_GL_PIXEL_PACK_BUFFER);
         return;
@@ -5476,6 +5480,8 @@ void ClientWebGLContext::GetSyncParameter(
   }());
 }
 
+// -
+
 GLenum ClientWebGLContext::ClientWaitSync(WebGLSyncJS& sync,
                                           const GLbitfield flags,
                                           const GLuint64 timeout) const {
@@ -5487,6 +5493,16 @@ GLenum ClientWebGLContext::ClientWaitSync(WebGLSyncJS& sync,
   if ((flags | VALID_BITS) != VALID_BITS) {
     EnqueueError(LOCAL_GL_INVALID_VALUE,
                  "`flags` must be SYNC_FLUSH_COMMANDS_BIT or 0.");
+    return LOCAL_GL_WAIT_FAILED;
+  }
+
+  if (timeout > webgl::kMaxClientWaitSyncTimeoutNS) {
+    EnqueueError(
+        LOCAL_GL_INVALID_OPERATION,
+        "`timeout` (%sns) must be less than MAX_CLIENT_WAIT_TIMEOUT_WEBGL "
+        "(%sns).",
+        ToStringWithCommas(timeout).c_str(),
+        ToStringWithCommas(webgl::kMaxClientWaitSyncTimeoutNS).c_str());
     return LOCAL_GL_WAIT_FAILED;
   }
 
