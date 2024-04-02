@@ -90,7 +90,7 @@ add_task(async function test_selectingElementsInIframes() {
         await helper.waitForHoverElementRect(el.width, el.height);
         mouse.click(x, y);
 
-        await helper.waitForStateChange(["selected"]);
+        await helper.waitForStateChange("selected");
 
         let dimensions = await helper.getSelectionRegionDimensions();
 
@@ -116,7 +116,7 @@ add_task(async function test_selectingElementsInIframes() {
         );
 
         mouse.click(500, 500);
-        await helper.waitForStateChange(["crosshairs"]);
+        await helper.waitForStateChange("crosshairs");
       }
     }
   );

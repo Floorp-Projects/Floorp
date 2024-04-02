@@ -84,8 +84,6 @@
 .screenshots-button {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: var(--space-xsmall);
   cursor: pointer;
   text-align: center;
   user-select: none;
@@ -133,10 +131,6 @@
   pointer-events: none;
 }
 
-.screenshots-button > label {
-  pointer-events: none;
-}
-
 #cancel > img {
   content: url("chrome://global/skin/icons/close.svg");
 }
@@ -147,6 +141,11 @@
 
 #download > img {
   content: url("chrome://browser/skin/downloads/downloads.svg");
+}
+
+#download > img,
+#copy > img {
+  margin-inline-end: 5px;
 }
 
 .face-container {

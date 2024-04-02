@@ -428,19 +428,13 @@ add_task(async function test_scrollIfByEdgeWithKeyboard() {
       helper.triggerUIFromToolbar();
       await helper.waitForOverlay();
 
-      let { scrollX, scrollY } = await helper.getContentDimensions();
+      let { scrollX, scrollY, clientWidth, clientHeight } =
+        await helper.getContentDimensions();
 
       is(scrollX, windowX, "Window x position is 1000");
       is(scrollY, windowY, "Window y position is 1000");
 
-      await helper.dragOverlay(
-        scrollX + 20,
-        scrollY + 20,
-        scrollX + 120,
-        scrollY + 120
-      );
-
-      await helper.scrollContentWindow(windowX, windowY);
+      await helper.dragOverlay(1020, 1020, 1120, 1120);
 
       await helper.moveOverlayViaKeyboard("highlight", [
         { key: "ArrowLeft", options: { shiftKey: true } },
@@ -453,32 +447,14 @@ add_task(async function test_scrollIfByEdgeWithKeyboard() {
       windowY = 989;
       await helper.waitForScrollTo(windowX, windowY);
 
-      ({ scrollX, scrollY } = await helper.getContentDimensions());
+      ({ scrollX, scrollY, clientWidth, clientHeight } =
+        await helper.getContentDimensions());
 
       is(scrollX, windowX, "Window x position is 989");
       is(scrollY, windowY, "Window y position is 989");
-    }
-  );
 
-  await BrowserTestUtils.withNewTab(
-    {
-      gBrowser,
-      url: TEST_PAGE,
-    },
-    async browser => {
-      let helper = new ScreenshotsHelper(browser);
-
-      let windowX = 989;
-      let windowY = 989;
-
-      await helper.scrollContentWindow(windowX, windowY);
-
-      helper.triggerUIFromToolbar();
-      await helper.waitForOverlay();
-
-      let { scrollX, scrollY, clientWidth, clientHeight } =
-        await helper.getContentDimensions();
-
+      mouse.click(1200, 1200);
+      await helper.assertStateChange("crosshairs");
       await helper.dragOverlay(
         scrollX + clientWidth - 100 - 20,
         scrollY + clientHeight - 100 - 20,

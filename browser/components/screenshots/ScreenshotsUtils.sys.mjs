@@ -817,9 +817,8 @@ export var ScreenshotsUtils = {
 
     let dialog = await this.openPreviewDialog(browser);
     await dialog._dialogReady;
-    let screenshotsUI = dialog._frame.contentDocument.createElement(
-      "screenshots-preview"
-    );
+    let screenshotsUI =
+      dialog._frame.contentDocument.createElement("screenshots-ui");
     dialog._frame.contentDocument.body.appendChild(screenshotsUI);
 
     screenshotsUI.focusButton(lazy.SCREENSHOTS_LAST_SAVED_METHOD);

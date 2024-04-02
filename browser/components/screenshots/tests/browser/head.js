@@ -159,23 +159,23 @@ class ScreenshotsHelper {
     });
   }
 
-  waitForStateChange(newStateArr) {
-    return SpecialPowers.spawn(this.browser, [newStateArr], async stateArr => {
+  waitForStateChange(newState) {
+    return SpecialPowers.spawn(this.browser, [newState], async state => {
       let screenshotsChild = content.windowGlobalChild.getActor(
         "ScreenshotsComponent"
       );
 
       await ContentTaskUtils.waitForCondition(() => {
-        info(`got ${screenshotsChild.overlay.state}. expected ${stateArr}`);
-        return stateArr.includes(screenshotsChild.overlay.state);
-      }, `Wait for overlay state to be ${stateArr}`);
+        info(`got ${screenshotsChild.overlay.state}. expected ${state}`);
+        return screenshotsChild.overlay.state === state;
+      }, `Wait for overlay state to be ${state}`);
 
       return screenshotsChild.overlay.state;
     });
   }
 
   async assertStateChange(newState) {
-    let currentState = await this.waitForStateChange([newState]);
+    let currentState = await this.waitForStateChange(newState);
 
     is(
       currentState,
@@ -269,20 +269,18 @@ class ScreenshotsHelper {
 
     mouse.down(startX, startY);
 
-    await this.waitForStateChange(["draggingReady", "resizing"]);
-    // await Promise.any([
-    //   this.waitForStateChange("draggingReady"),
-    //   this.waitForStateChange("resizing"),
-    // ]);
+    await Promise.any([
+      this.waitForStateChange("draggingReady"),
+      this.waitForStateChange("resizing"),
+    ]);
     Assert.ok(true, "The overlay is in the draggingReady or resizing state");
 
     mouse.move(endX, endY);
 
-    await this.waitForStateChange(["dragging", "resizing"]);
-    // await Promise.any([
-    //   this.waitForStateChange("dragging"),
-    //   this.waitForStateChange("resizing"),
-    // ]);
+    await Promise.any([
+      this.waitForStateChange("dragging"),
+      this.waitForStateChange("resizing"),
+    ]);
     Assert.ok(true, "The overlay is in the dragging or resizing state");
     // We intentionally turn off this a11y check, because the following mouse
     // event is emitted at the end of the dragging event. Its keyboard
@@ -326,6 +324,7 @@ class ScreenshotsHelper {
             overlay.topRightMover.focus({ focusVisible: true });
             break;
         }
+        screenshotsChild.overlay.highlightEl.focus();
 
         for (let event of eventsArr) {
           EventUtils.synthesizeKey(
@@ -355,6 +354,7 @@ class ScreenshotsHelper {
   }
 
   async scrollContentWindow(x, y) {
+    let promise = BrowserTestUtils.waitForContentEvent(this.browser, "scroll");
     let contentDims = await this.getContentDimensions();
     await ContentTask.spawn(
       this.browser,
@@ -404,6 +404,7 @@ class ScreenshotsHelper {
         }, `Waiting for window to scroll to ${xPos}, ${yPos}`);
       }
     );
+    await promise;
   }
 
   async waitForScrollTo(x, y) {
@@ -917,21 +918,6 @@ add_setup(async () => {
   );
   let screenshotBtn = document.getElementById("screenshot-button");
   Assert.ok(screenshotBtn, "The screenshots button was added to the nav bar");
-
-  registerCleanupFunction(async () => {
-    info(`downloads panel should be visible: ${DownloadsPanel.isPanelShowing}`);
-    if (DownloadsPanel.isPanelShowing) {
-      let hiddenPromise = BrowserTestUtils.waitForEvent(
-        DownloadsPanel.panel,
-        "popuphidden"
-      );
-      DownloadsPanel.hidePanel();
-      await hiddenPromise;
-      info(
-        `downloads panel should not be visible: ${DownloadsPanel.isPanelShowing}`
-      );
-    }
-  });
 });
 
 function getContentDevicePixelRatio(browser) {
