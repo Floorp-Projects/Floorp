@@ -81,17 +81,17 @@ jittest:
             default: []
     chunks:
         by-test-platform:
-            windows.*-ccov-qr/opt: 8
+            windows.*-ccov-qr/opt: 6
             windows.*: 1
             macosx.*/opt: 1
             macosx.*/debug: 3
-            android.*: 10
+            android.*/opt: 3
+            android-hw-.*-aarch64-qr/debug: 8
             default: 6
     max-run-time:
         by-test-platform:
-            windows.*-ccov.*/.*: 7200
-            macosx.*-ccov.*/.*: 7200
-            android-hw.*: 5400
+            windows.*-ccov.*/.*: 1800
+            android-hw.*: 2400
             default: 3600
     mozharness:
         chunked:
@@ -116,7 +116,10 @@ jittest-all:
         by-test-platform:
             android-hw-.*-arm7(?:-shippable)?-qr/.*: ['mozilla-central', 'release']
             default: []
-    chunks: 10
+    chunks:
+        by-test-platform:
+            android-.*/opt: 3
+            android-.*/debug: 6
     max-run-time: 3600
     mozharness:
         chunked: true
