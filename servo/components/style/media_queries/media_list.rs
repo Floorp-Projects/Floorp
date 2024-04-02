@@ -10,10 +10,10 @@ use super::{Device, MediaQuery, Qualifier};
 use crate::context::QuirksMode;
 use crate::error_reporting::ContextualParseError;
 use crate::parser::ParserContext;
-use crate::queries::condition::KleeneValue;
 use crate::values::computed;
 use cssparser::{Delimiter, Parser};
 use cssparser::{ParserInput, Token};
+use selectors::kleene_value::KleeneValue;
 
 /// A type that encapsulates a media query list.
 #[derive(Clone, MallocSizeOf, ToCss, ToShmem)]

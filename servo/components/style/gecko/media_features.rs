@@ -8,13 +8,13 @@ use crate::gecko_bindings::bindings;
 use crate::gecko_bindings::structs;
 use crate::gecko_bindings::structs::ScreenColorGamut;
 use crate::media_queries::{Device, MediaType};
-use crate::queries::condition::KleeneValue;
 use crate::queries::feature::{AllowsRanges, Evaluator, FeatureFlags, QueryFeatureDescription};
 use crate::queries::values::Orientation;
 use crate::values::computed::{CSSPixelLength, Context, Ratio, Resolution};
 use crate::values::AtomString;
 use app_units::Au;
 use euclid::default::Size2D;
+use selectors::kleene_value::KleeneValue;
 
 fn device_size(device: &Device) -> Size2D<Au> {
     let mut width = 0;

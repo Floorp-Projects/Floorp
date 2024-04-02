@@ -8,7 +8,6 @@
 use super::feature::{Evaluator, QueryFeatureDescription};
 use super::feature::{FeatureFlags, KeywordDiscriminant};
 use crate::parser::{Parse, ParserContext};
-use crate::queries::condition::KleeneValue;
 use crate::str::{starts_with_ignore_ascii_case, string_as_ascii_lowercase};
 use crate::values::computed::{self, Ratio, ToComputedValue};
 use crate::values::specified::{Integer, Length, Number, Resolution};
@@ -18,6 +17,7 @@ use cssparser::{Parser, Token};
 use std::cmp::{Ordering, PartialOrd};
 use std::fmt::{self, Write};
 use style_traits::{CssWriter, ParseError, StyleParseErrorKind, ToCss};
+use selectors::kleene_value::KleeneValue;
 
 /// Whether we're parsing a media or container query feature.
 #[derive(Clone, Copy, Debug, Eq, MallocSizeOf, PartialEq, ToShmem)]
