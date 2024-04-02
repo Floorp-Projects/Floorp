@@ -106,7 +106,7 @@ impl<'a> Layout<'a> {
                 self.measure_text(label.as_str(), element, &mut size);
                 content_size = Some(size.plus_margin(&CHECKBOX_MARGIN));
             }
-            Label(model::Label { text }) => {
+            Label(model::Label { text, bold: _ }) => {
                 let mut size = inner_size.clone();
                 match text {
                     Property::Static(text) => self.measure_text(text.as_str(), element, &mut size),

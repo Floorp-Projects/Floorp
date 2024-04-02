@@ -27,15 +27,15 @@ use self::objc::*;
 use super::model::{self, Alignment, Application, Element, TypedElement};
 use crate::data::Property;
 use cocoa::{
-    INSApplication, INSBox, INSButton, INSColor, INSControl, INSLayoutAnchor, INSLayoutConstraint,
-    INSLayoutDimension, INSLayoutGuide, INSMenu, INSMenuItem, INSMutableParagraphStyle, INSObject,
-    INSProcessInfo, INSProgressIndicator, INSRunLoop, INSScrollView, INSStackView, INSText,
-    INSTextContainer, INSTextView, INSView, INSWindow, NSArray_NSArrayCreation,
-    NSAttributedString_NSExtendedAttributedString, NSDictionary_NSDictionaryCreation,
-    NSRunLoop_NSRunLoopConveniences, NSStackView_NSStackViewGravityAreas,
-    NSString_NSStringExtensionMethods, NSTextField_NSTextFieldConvenience,
-    NSView_NSConstraintBasedLayoutInstallingConstraints, NSView_NSConstraintBasedLayoutLayering,
-    NSView_NSSafeAreas, PNSObject,
+    INSApplication, INSBox, INSButton, INSColor, INSControl, INSFont, INSLayoutAnchor,
+    INSLayoutConstraint, INSLayoutDimension, INSLayoutGuide, INSMenu, INSMenuItem,
+    INSMutableParagraphStyle, INSObject, INSProcessInfo, INSProgressIndicator, INSRunLoop,
+    INSScrollView, INSStackView, INSText, INSTextContainer, INSTextField, INSTextView, INSView,
+    INSWindow, NSArray_NSArrayCreation, NSAttributedString_NSExtendedAttributedString,
+    NSDictionary_NSDictionaryCreation, NSRunLoop_NSRunLoopConveniences,
+    NSStackView_NSStackViewGravityAreas, NSString_NSStringExtensionMethods,
+    NSTextField_NSTextFieldConvenience, NSView_NSConstraintBasedLayoutInstallingConstraints,
+    NSView_NSConstraintBasedLayoutLayering, NSView_NSSafeAreas, PNSObject,
 };
 
 /// https://developer.apple.com/documentation/foundation/1497293-string_encodings/nsutf8stringencoding?language=objc
@@ -878,6 +878,7 @@ fn render_element(
         Button(mut b) => {
             if let Some(Label(model::Label {
                 text: Property::Static(text),
+                ..
             })) = b.content.take().map(|e| e.element_type)
             {
                 let button = self::Button { element: b }.with_title(text.as_str());
@@ -890,24 +891,26 @@ fn render_element(
             let button = self::Checkbox { element: cb }.into_button();
             button.into()
         }
-        Label(model::Label { text }) => match text {
-            Property::Static(text) => {
-                let tf = cocoa::NSTextField(unsafe {
-                    cocoa::NSTextField::wrappingLabelWithString_(nsstring(text.as_str()))
-                });
-                tf.into()
+        Label(model::Label { text, bold }) => {
+            let tf = cocoa::NSTextField(unsafe {
+                cocoa::NSTextField::wrappingLabelWithString_(nsstring(""))
+            });
+            unsafe { tf.setSelectable_(runtime::NO) };
+            if bold {
+                unsafe { tf.setFont_(cocoa::NSFont::boldSystemFontOfSize_(0.0)) };
             }
-            Property::Binding(b) => {
-                let tf = cocoa::NSTextField(unsafe {
-                    cocoa::NSTextField::wrappingLabelWithString_(nsstring(b.borrow().as_str()))
-                });
-                b.on_change(move |s| {
-                    unsafe { tf.setStringValue_(nsstring(s)) };
-                });
-                tf.into()
+            match text {
+                Property::Static(text) => {
+                    unsafe { tf.setStringValue_(nsstring(text.as_str())) };
+                }
+                Property::Binding(b) => {
+                    unsafe { tf.setStringValue_(nsstring(b.borrow().as_str())) };
+                    b.on_change(move |s| unsafe { tf.setStringValue_(nsstring(s)) });
+                }
+                Property::ReadOnly(_) => unimplemented!("ReadOnly not supported for Label::text"),
             }
-            Property::ReadOnly(_) => unimplemented!("ReadOnly not supported for Label::text"),
-        },
+            tf.into()
+        }
         Progress(model::Progress { amount }) => {
             fn update(progress: cocoa::NSProgressIndicator, value: Option<f32>) {
                 unsafe {

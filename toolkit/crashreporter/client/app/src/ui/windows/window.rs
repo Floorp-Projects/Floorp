@@ -4,6 +4,7 @@
 
 //! Types and helpers relating to windows and window classes.
 
+use super::Font;
 use super::WideString;
 use std::cell::RefCell;
 use windows_sys::Win32::{
@@ -244,6 +245,7 @@ impl<'a, W> WindowBuilder<'a, W> {
         Window {
             handle,
             child_id: self.child_id,
+            font_set: false,
             _class: std::marker::PhantomData,
         }
     }
@@ -256,6 +258,7 @@ impl<'a, W> WindowBuilder<'a, W> {
 pub struct Window<W: 'static = ()> {
     pub handle: HWND,
     pub child_id: i32,
+    font_set: bool,
     _class: std::marker::PhantomData<&'static RefCell<W>>,
 }
 
@@ -273,7 +276,21 @@ impl<W> Window<W> {
         Window {
             handle: self.handle,
             child_id: self.child_id,
+            font_set: self.font_set,
             _class: std::marker::PhantomData,
+        }
+    }
+
+    /// Set a window's font.
+    pub fn set_font(&mut self, font: &Font) {
+        unsafe { win::SendMessageW(self.handle, win::WM_SETFONT, **font as _, 1 as _) };
+        self.font_set = true;
+    }
+
+    /// Set a window's font if not already set.
+    pub fn set_default_font(&mut self, font: &Font) {
+        if !self.font_set {
+            self.set_font(font);
         }
     }
 }

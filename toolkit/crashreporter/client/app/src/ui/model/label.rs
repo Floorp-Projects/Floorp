@@ -8,10 +8,15 @@ use crate::data::Property;
 #[derive(Debug, Default)]
 pub struct Label {
     pub text: Property<String>,
+    pub bold: bool,
 }
 
 impl super::ElementBuilder<Label> {
     pub fn text(&mut self, s: impl Into<Property<String>>) {
         self.element_type.text = s.into();
+    }
+
+    pub fn bold(&mut self, value: bool) {
+        self.element_type.bold = value;
     }
 }

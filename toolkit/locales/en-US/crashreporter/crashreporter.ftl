@@ -4,6 +4,7 @@
 
 crashreporter-branded-title = { -brand-short-name } Crash Reporter
 
+crashreporter-apology = We’re Sorry
 crashreporter-crashed-and-restore = { -brand-short-name } had a problem and crashed. We’ll try to restore your tabs and windows when it restarts.
 crashreporter-plea = To help us diagnose and fix the problem, you can send us a crash report.
 
