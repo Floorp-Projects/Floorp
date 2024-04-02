@@ -79,10 +79,18 @@ pub enum NeedsSelectorFlags {
 }
 
 /// Whether we're matching in the contect of invalidation.
-#[derive(PartialEq)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum MatchingForInvalidation {
     No,
     Yes,
+    YesForComparison,
+}
+
+impl MatchingForInvalidation {
+    /// Are we matching for invalidation?
+    pub fn is_for_invalidation(&self) -> bool {
+        matches!(*self, Self::Yes | Self::YesForComparison)
+    }
 }
 
 /// Which quirks mode is this document in.
@@ -314,7 +322,31 @@ where
     /// Whether or not we're matching to invalidate.
     #[inline]
     pub fn matching_for_invalidation(&self) -> bool {
-        self.matching_for_invalidation == MatchingForInvalidation::Yes
+        self.matching_for_invalidation.is_for_invalidation()
+    }
+
+    /// Whether or not we're comparing for invalidation, if we are matching for invalidation.
+    #[inline]
+    pub fn matching_for_invalidation_comparison(&self) -> Option<bool> {
+        match self.matching_for_invalidation {
+            MatchingForInvalidation::No => None,
+            MatchingForInvalidation::Yes => Some(false),
+            MatchingForInvalidation::YesForComparison => Some(true),
+        }
+    }
+
+    /// Run the given matching function for before/after invalidation comparison.
+    #[inline]
+    pub fn for_invalidation_comparison<F, R>(&mut self, f: F) -> R
+    where
+        F: FnOnce(&mut Self) -> R,
+    {
+        debug_assert!(self.matching_for_invalidation(), "Not matching for invalidation?");
+        let prev = self.matching_for_invalidation;
+        self.matching_for_invalidation = MatchingForInvalidation::YesForComparison;
+        let result = f(self);
+        self.matching_for_invalidation = prev;
+        result
     }
 
     /// The case-sensitivity for class and ID selectors
