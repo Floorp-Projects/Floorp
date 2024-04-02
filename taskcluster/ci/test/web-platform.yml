@@ -229,7 +229,6 @@ web-platform-tests-webgpu:
     virtualization: virtual-with-gpu
     tier:
         by-test-platform:
-            .*-32.*/.*: 3
             android.*: 3  # https://bugzilla.mozilla.org/show_bug.cgi?id=1849914
             macos.*: 3  # https://bugzilla.mozilla.org/show_bug.cgi?id=1849913
             linux2204.*-64.*: 3  # https://bugzilla.mozilla.org/show_bug.cgi?id=1849912
