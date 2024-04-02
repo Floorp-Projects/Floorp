@@ -2423,7 +2423,6 @@ HttpBaseChannel::GetDocumentURI(nsIURI** aDocumentURI) {
 NS_IMETHODIMP
 HttpBaseChannel::SetDocumentURI(nsIURI* aDocumentURI) {
   ENSURE_CALLED_BEFORE_CONNECT();
-
   mDocumentURI = aDocumentURI;
   return NS_OK;
 }
