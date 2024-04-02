@@ -324,6 +324,7 @@ class ScreenshotsHelper {
             overlay.topRightMover.focus({ focusVisible: true });
             break;
         }
+        screenshotsChild.overlay.highlightEl.focus();
 
         for (let event of eventsArr) {
           EventUtils.synthesizeKey(
@@ -917,21 +918,6 @@ add_setup(async () => {
   );
   let screenshotBtn = document.getElementById("screenshot-button");
   Assert.ok(screenshotBtn, "The screenshots button was added to the nav bar");
-
-  registerCleanupFunction(async () => {
-    info(`downloads panel should be visible: ${DownloadsPanel.isPanelShowing}`);
-    if (DownloadsPanel.isPanelShowing) {
-      let hiddenPromise = BrowserTestUtils.waitForEvent(
-        DownloadsPanel.panel,
-        "popuphidden"
-      );
-      DownloadsPanel.hidePanel();
-      await hiddenPromise;
-      info(
-        `downloads panel should not be visible: ${DownloadsPanel.isPanelShowing}`
-      );
-    }
-  });
 });
 
 function getContentDevicePixelRatio(browser) {
