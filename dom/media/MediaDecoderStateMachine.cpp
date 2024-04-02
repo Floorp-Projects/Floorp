@@ -3377,6 +3377,7 @@ void MediaDecoderStateMachine::BufferingState::Step() {
   }
 
   SLOG("Buffered for %.3lfs", (now - mBufferingStart).ToSeconds());
+  mMaster->mTotalBufferingDuration += (now - mBufferingStart);
   SetDecodingState();
 }
 
@@ -3471,6 +3472,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
       mIsMSE(aDecoder->IsMSE()),
       mShouldResistFingerprinting(aDecoder->ShouldResistFingerprinting()),
       mSeamlessLoopingAllowed(false),
+      mTotalBufferingDuration(TimeDuration::Zero()),
       INIT_MIRROR(mStreamName, nsAutoString()),
       INIT_MIRROR(mSinkDevice, nullptr),
       INIT_MIRROR(mOutputCaptureState, MediaDecoder::OutputCaptureState::None),
@@ -4694,6 +4696,7 @@ void MediaDecoderStateMachine::GetDebugInfo(
   aInfo.mVideoCompleted = mVideoCompleted;
   mStateObj->GetDebugInfo(aInfo.mStateObj);
   mMediaSink->GetDebugInfo(aInfo.mMediaSink);
+  aInfo.mTotalBufferingTimeMs = mTotalBufferingDuration.ToMilliseconds();
 }
 
 RefPtr<GenericPromise> MediaDecoderStateMachine::RequestDebugInfo(

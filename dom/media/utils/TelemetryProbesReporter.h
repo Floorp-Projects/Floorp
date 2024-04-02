@@ -78,6 +78,7 @@ class TelemetryProbesReporter final {
   void OntFirstFrameLoaded(const double aLoadedFirstFrameTime,
                            const double aLoadedMetadataTime,
                            const double aTotalWaitingDataTime,
+                           const double aTotalBufferingTime,
                            const FirstFrameLoadedFlagSet aFlags);
 
   double GetTotalVideoPlayTimeInSeconds() const;
