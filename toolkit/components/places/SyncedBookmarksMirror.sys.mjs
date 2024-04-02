@@ -2060,11 +2060,7 @@ function validateURL(rawURL) {
   if (typeof rawURL != "string" || rawURL.length > DB_URL_LENGTH_MAX) {
     return null;
   }
-  let url = null;
-  try {
-    url = new URL(rawURL);
-  } catch (ex) {}
-  return url;
+  return URL.parse(rawURL);
 }
 
 function validateKeyword(rawKeyword) {
