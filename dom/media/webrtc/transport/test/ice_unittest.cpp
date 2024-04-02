@@ -58,9 +58,9 @@ using namespace mozilla;
 
 static unsigned int kDefaultTimeout = 7000;
 
-// TODO(nils@mozilla.com): This should get replaced with some non-external
-// solution like discussed in bug 860775.
-const std::string kDefaultStunServerHostname((char*)"stun.l.google.com");
+// TODO: It would be nice to have a test STUN/TURN server that can run with
+// gtest.
+const std::string kDefaultStunServerHostname((char*)"");
 const std::string kBogusStunServerHostname(
     (char*)"stun-server-nonexistent.invalid");
 const uint16_t kDefaultStunServerPort = 19305;
@@ -1576,12 +1576,17 @@ class WebRtcIceConnectTest : public StunTest {
       peer->SetMappingType(mapping_type_);
       peer->SetBlockUdp(block_udp_);
     } else if (setup_stun_servers) {
-      std::vector<NrIceStunServer> stun_servers;
+      if (stun_server_address_.empty()) {
+        InitTestStunServer();
+        peer->UseTestStunServer();
+      } else {
+        std::vector<NrIceStunServer> stun_servers;
 
-      stun_servers.push_back(*NrIceStunServer::Create(
-          stun_server_address_, kDefaultStunServerPort, kNrIceTransportUdp));
+        stun_servers.push_back(*NrIceStunServer::Create(
+            stun_server_address_, kDefaultStunServerPort, kNrIceTransportUdp));
 
-      peer->SetStunServers(stun_servers);
+        peer->SetStunServers(stun_servers);
+      }
     }
   }
 
