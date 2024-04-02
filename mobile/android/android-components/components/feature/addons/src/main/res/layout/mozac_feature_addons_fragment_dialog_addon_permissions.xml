@@ -40,8 +40,8 @@
         tools:textColor="#000000" />
 
     <TextView
-        android:id="@+id/permissions"
-        android:layout_width="wrap_content"
+        android:id="@+id/optional_or_required_text"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/title"
         android:layout_alignStart="@id/title"
@@ -50,7 +50,19 @@
         android:paddingTop="4dp"
         android:paddingEnd="5dp"
         android:textColor="?android:attr/textColorPrimary"
-        tools:text="It requires your permission to: \n\n 	• Access your data for all websites. \n\n 	• Acess browser tabs. \n\n 	• Access browser activity during navigation." />
+        tools:text="It requires your permission to:" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/permissions"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/optional_or_required_text"
+        android:layout_alignStart="@id/optional_or_required_text"
+        android:layout_marginStart="0dp"
+        android:paddingStart="5dp"
+        android:paddingTop="4dp"
+        android:paddingEnd="5dp"
+        android:visibility="visible" />
 
     <Button
         android:id="@+id/deny_button"
