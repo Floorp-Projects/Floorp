@@ -1169,7 +1169,9 @@ import org.mozilla.geckoview.SessionTextInput.EditableListener.IMEState;
     }
 
     // Preserve enter and tab keys for the browser
-    if (keyCode == KeyEvent.KEYCODE_ENTER || keyCode == KeyEvent.KEYCODE_TAB) {
+    if (keyCode == KeyEvent.KEYCODE_ENTER
+        || keyCode == KeyEvent.KEYCODE_NUMPAD_ENTER
+        || keyCode == KeyEvent.KEYCODE_TAB) {
       return true;
     }
     // BaseKeyListener returns false even if it handled these keys for us,
