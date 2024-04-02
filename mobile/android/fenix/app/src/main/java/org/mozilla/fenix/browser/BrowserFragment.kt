@@ -298,41 +298,38 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         )
         browserToolbarView.view.addPageAction(translationsAction)
 
-        getCurrentTab()?.let {
-            translationsBinding.set(
-                feature = TranslationsBinding(
-                    browserStore = context.components.core.store,
-                    sessionId = it.id,
-                    onStateUpdated = { isVisible, isTranslated, fromSelectedLanguage, toSelectedLanguage ->
-                        translationsAvailable = isVisible
+        translationsBinding.set(
+            feature = TranslationsBinding(
+                browserStore = context.components.core.store,
+                onStateUpdated = { isVisible, isTranslated, fromSelectedLanguage, toSelectedLanguage ->
+                    translationsAvailable = isVisible
 
-                        translationsAction.updateView(
-                            tintColorResource = if (isTranslated) {
-                                R.color.fx_mobile_icon_color_accent_violet
-                            } else {
-                                ThemeManager.resolveAttribute(R.attr.textPrimary, context)
-                            },
-                            contentDescription = if (isTranslated) {
-                                context.getString(
-                                    R.string.browser_toolbar_translated_successfully,
-                                    fromSelectedLanguage?.localizedDisplayName,
-                                    toSelectedLanguage?.localizedDisplayName,
-                                )
-                            } else {
-                                context.getString(R.string.browser_toolbar_translate)
-                            },
-                        )
+                    translationsAction.updateView(
+                        tintColorResource = if (isTranslated) {
+                            R.color.fx_mobile_icon_color_accent_violet
+                        } else {
+                            ThemeManager.resolveAttribute(R.attr.textPrimary, context)
+                        },
+                        contentDescription = if (isTranslated) {
+                            context.getString(
+                                R.string.browser_toolbar_translated_successfully,
+                                fromSelectedLanguage?.localizedDisplayName,
+                                toSelectedLanguage?.localizedDisplayName,
+                            )
+                        } else {
+                            context.getString(R.string.browser_toolbar_translate)
+                        },
+                    )
 
-                        safeInvalidateBrowserToolbarView()
-                    },
-                    onShowTranslationsDialog = {
-                        browserToolbarInteractor.onTranslationsButtonClicked()
-                    },
-                ),
-                owner = this,
-                view = view,
-            )
-        }
+                    safeInvalidateBrowserToolbarView()
+                },
+                onShowTranslationsDialog = {
+                    browserToolbarInteractor.onTranslationsButtonClicked()
+                },
+            ),
+            owner = this,
+            view = view,
+        )
     }
 
     private fun initReloadAction(context: Context) {
