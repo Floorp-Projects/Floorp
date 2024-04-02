@@ -972,9 +972,7 @@ class WorkerPrivate final
   }
 
   // Determine if the worker was created under a third-party context.
-  bool IsThirdPartyContextToTopWindow() const {
-    return mLoadInfo.mIsThirdPartyContextToTopWindow;
-  }
+  bool IsThirdPartyContext() const { return mLoadInfo.mIsThirdPartyContext; }
 
   bool IsWatchedByDevTools() const { return mLoadInfo.mWatchedByDevTools; }
 
