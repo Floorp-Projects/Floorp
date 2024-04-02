@@ -1,0 +1,13 @@
+[package]
+name = "dom_fragmentdirectives"
+version = "0.1.0"
+authors = ["Jan Jaeschke <jjaschke@mozilla.com>"]
+edition = "2021"
+license = "MPL-2.0"
+
+[dependencies]
+nsstring = { path = "../../../xpcom/rust/nsstring/" }
+thin-vec = { version = "0.2.1", features = ["gecko-ffi"] }
+percent-encoding = { version = "2.3.1" }
+[lib]
+path = "lib.rs"
