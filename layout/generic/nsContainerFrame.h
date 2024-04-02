@@ -1084,7 +1084,6 @@ struct DR_cookie {
             const mozilla::ReflowInput& aReflowInput,
             mozilla::ReflowOutput& aMetrics, nsReflowStatus& aStatus);
   ~DR_cookie();
-  void Change() const;
 
   nsPresContext* mPresContext;
   nsIFrame* mFrame;
@@ -1109,7 +1108,6 @@ struct DR_intrinsic_inline_size_cookie {
                          dr_rf_metrics, dr_rf_status)                          \
     DR_cookie dr_cookie(dr_pres_context, dr_frame, dr_rf_state, dr_rf_metrics, \
                         dr_rf_status);
-#  define DISPLAY_REFLOW_CHANGE() dr_cookie.Change();
 #  define DISPLAY_MIN_INLINE_SIZE(dr_frame, dr_result) \
     DR_intrinsic_inline_size_cookie dr_cookie(dr_frame, "Min", dr_result)
 #  define DISPLAY_PREF_INLINE_SIZE(dr_frame, dr_result) \
@@ -1119,7 +1117,6 @@ struct DR_intrinsic_inline_size_cookie {
 
 #  define DISPLAY_REFLOW(dr_pres_context, dr_frame, dr_rf_state, \
                          dr_rf_metrics, dr_rf_status)
-#  define DISPLAY_REFLOW_CHANGE()
 #  define DISPLAY_MIN_INLINE_SIZE(dr_frame, dr_result) \
     PR_BEGIN_MACRO PR_END_MACRO
 #  define DISPLAY_PREF_INLINE_SIZE(dr_frame, dr_result) \

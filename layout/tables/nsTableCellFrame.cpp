@@ -713,14 +713,12 @@ void nsTableCellFrame::Reflow(nsPresContext* aPresContext,
     if (aReflowInput.mFlags.mSpecialBSizeReflow) {
       const_cast<ReflowInput&>(aReflowInput)
           .SetComputedBSize(BSize(wm) - bp.BStartEnd(wm));
-      DISPLAY_REFLOW_CHANGE();
     } else {
       const nscoord computedUnpaginatedBSize =
           CalcUnpaginatedBSize(*this, *tableFrame, bp.BStartEnd(wm));
       if (computedUnpaginatedBSize > 0) {
         const_cast<ReflowInput&>(aReflowInput)
             .SetComputedBSize(computedUnpaginatedBSize);
-        DISPLAY_REFLOW_CHANGE();
       }
     }
   }
