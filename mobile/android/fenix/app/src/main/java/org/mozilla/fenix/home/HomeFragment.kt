@@ -449,6 +449,7 @@ class HomeFragment : Fragment() {
             binding = binding,
             context = requireContext(),
             interactor = sessionControlInteractor,
+            searchEngine = components.core.store.state.search.selectedOrDefaultSearchEngine,
         )
 
         if (IncompleteRedesignToolbarFeature(requireContext().settings()).isEnabled) {
@@ -501,7 +502,7 @@ class HomeFragment : Fragment() {
                                         BrowserAnimator.getToolbarNavOptions(activity),
                                     )
 
-                                    Events.searchBarTapped.record(Events.SearchBarTappedExtra("HOME"))
+                                    Events.searchBarTapped.record(Events.SearchBarTappedExtra("HOME_NAV_SEARCH"))
                                 },
                                 onTabsButtonClick = {
                                     StartOnHome.openTabsTray.record(NoExtras())

@@ -253,6 +253,10 @@
             android:defaultValue="@null"
             app:argType="string"
             app:nullable="true" />
+        <argument
+            android:name="extra_action"
+            android:defaultValue="NONE"
+            app:argType="org.mozilla.fenix.search.ExtraAction" />
     </dialog>
 
     <fragment

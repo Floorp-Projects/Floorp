@@ -79,6 +79,7 @@
 
     <!-- Home Fragment -->
     <dimen name="home_fragment_top_toolbar_header_margin">60dp</dimen>
+    <dimen name="home_fragment_toolbar_margin">4dp</dimen>
     <dimen name="home_item_horizontal_margin">16dp</dimen>
     <dimen name="home_item_vertical_margin">8dp</dimen>
     <dimen name="wordmark_text_height">18dp</dimen>
