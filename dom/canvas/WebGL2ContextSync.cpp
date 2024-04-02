@@ -30,6 +30,7 @@ RefPtr<WebGLSync> WebGL2Context::FenceSync(GLenum condition, GLbitfield flags) {
 
   RefPtr<WebGLSync> globj = new WebGLSync(this, condition, flags);
   mPendingSyncs.emplace_back(globj);
+  EnsurePollPendingSyncs_Pending();
   return globj;
 }
 
@@ -60,7 +61,12 @@ void WebGLContext::EnsurePollPendingSyncs_Pending() const {
   mPollPendingSyncs_Pending = NS_NewRunnableFunction(
       "WebGLContext::PollPendingSyncs", [weak = WeakPtr{this}]() {
         if (const auto strong = RefPtr{weak.get()}) {
+          strong->mPollPendingSyncs_Pending = nullptr;
           strong->PollPendingSyncs();
+          if (strong->mPendingSyncs.size()) {
+            // Not done yet...
+            strong->EnsurePollPendingSyncs_Pending();
+          }
         }
       });
   if (const auto eventTarget = GetCurrentSerialEventTarget()) {
