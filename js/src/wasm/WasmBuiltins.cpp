@@ -751,8 +751,8 @@ bool wasm::HandleThrow(JSContext* cx, WasmFrameIter& iter,
   // Assert that any pending exception escaping to non-wasm code is not a
   // wrapper exception object
 #ifdef DEBUG
-  Rooted<Value> pendingException(cx);
-  if (cx->isExceptionPending() && cx->getPendingException(&pendingException)) {
+  if (cx->isExceptionPending()) {
+    Rooted<Value> pendingException(cx, cx->getPendingExceptionUnwrapped());
     MOZ_ASSERT_IF(pendingException.isObject() &&
                       pendingException.toObject().is<WasmExceptionObject>(),
                   !pendingException.toObject()

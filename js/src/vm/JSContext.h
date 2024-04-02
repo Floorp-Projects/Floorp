@@ -723,6 +723,13 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
    */
   js::SavedFrame* getPendingExceptionStack();
 
+#ifdef DEBUG
+  /**
+   * Return the pending exception (without wrapping).
+   */
+  const JS::Value& getPendingExceptionUnwrapped();
+#endif
+
   bool isThrowingDebuggeeWouldRun();
   bool isClosingGenerator();
 
