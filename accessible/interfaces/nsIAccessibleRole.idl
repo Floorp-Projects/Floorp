@@ -806,11 +806,4 @@ interface nsIAccessibleRole : nsISupports
    * by using methods of two-dimensional navigation.
    */
   const unsigned long ROLE_GRID = 138;
-
-  /**
-   * Represents a structure containing one or more row elements in a tabular
-   * container. It is the structural equivalent to the thead, tfoot, and tbody
-   * elements in an HTML table element.
-   */
-  const unsigned long ROLE_ROWGROUP = 139;
 };

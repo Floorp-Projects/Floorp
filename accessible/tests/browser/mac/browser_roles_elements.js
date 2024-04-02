@@ -73,8 +73,8 @@ addAccessibleTask(
   <div id="switch" role="switch"></div>
   <div id="timer" role="timer"></div>
   <div id="tooltip" role="tooltip"></div>
-  <div role="menu"><input type="radio" role="menuitemradio" id="menuitemradio"></div>
-  <div role="menu"><input type="checkbox" role="menuitemcheckbox" id="menuitemcheckbox"></div>
+  <input type="radio" role="menuitemradio" id="menuitemradio">
+  <input type="checkbox" role="menuitemcheckbox" id="menuitemcheckbox">
   <input type="datetime-local" id="datetime">
 
   <!-- text entries -->
