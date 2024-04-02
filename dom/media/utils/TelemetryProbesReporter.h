@@ -74,7 +74,9 @@ class TelemetryProbesReporter final {
     IsHLS,
   };
   using FirstFrameLoadedFlagSet = EnumSet<FirstFrameLoadedFlag, uint8_t>;
-  void OntFirstFrameLoaded(const TimeDuration& aLoadedFirstFrameTime,
+  void OntFirstFrameLoaded(const double aLoadedFirstFrameTime,
+                           const double aLoadedMetadataTime,
+                           const double aTotalWaitingDataTime,
                            const FirstFrameLoadedFlagSet aFlags);
 
   double GetTotalVideoPlayTimeInSeconds() const;

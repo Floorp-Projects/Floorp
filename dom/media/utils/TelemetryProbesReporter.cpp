@@ -293,7 +293,8 @@ void TelemetryProbesReporter::OnDecodeResumed() {
 }
 
 void TelemetryProbesReporter::OntFirstFrameLoaded(
-    const TimeDuration& aLoadedFirstFrameTime,
+    const double aLoadedFirstFrameTime, const double aLoadedMetadataTime,
+    const double aTotalWaitingVideoDataTime,
     const FirstFrameLoadedFlagSet aFlags) {
   const MediaInfo& info = mOwner->GetMediaInfo();
   MOZ_ASSERT(info.HasVideo());
@@ -305,7 +306,9 @@ void TelemetryProbesReporter::OntFirstFrameLoaded(
       aFlags.contains(FirstFrameLoadedFlag::IsExternalEngineStateMachine);
 
   glean::media_playback::FirstFrameLoadedExtra extraData;
-  extraData.firstFrameLoadedTime = Some(aLoadedFirstFrameTime.ToMilliseconds());
+  extraData.firstFrameLoadedTime = Some(aLoadedFirstFrameTime);
+  extraData.metadataLoadedTime = Some(aLoadedMetadataTime);
+  extraData.totalWaitingDataTime = Some(aTotalWaitingDataTime);
   if (!isMSE && !isExternalEngineStateMachine) {
     extraData.playbackType = Some("Non-MSE playback"_ns);
   } else if (isMSE && !isExternalEngineStateMachine) {
@@ -335,10 +338,16 @@ void TelemetryProbesReporter::OntFirstFrameLoaded(
 
   if (MOZ_LOG_TEST(gTelemetryProbesReporterLog, LogLevel::Debug)) {
     nsPrintfCString logMessage{
-        "Media_Playabck First_Frame_Loaded event, time(ms)=%f, "
-        "playback-type=%s, videoCodec=%s, resolution=%s",
-        aLoadedFirstFrameTime.ToMilliseconds(), extraData.playbackType->get(),
-        extraData.videoCodec->get(), extraData.resolution->get()};
+        "Media_Playabck First_Frame_Loaded event, time(ms)=["
+        "full:%f, loading-meta:%f, waiting-data:%f], "
+        "playback-type=%s, "
+        "videoCodec=%s, resolution=%s",
+        aLoadedFirstFrameTime,
+        aLoadedMetadataTime,
+        aTotalWaitingDataTime,
+        extraData.playbackType->get(),
+        extraData.videoCodec->get(),
+        extraData.resolution->get()};
     if (const auto keySystem = mOwner->GetKeySystem()) {
       logMessage.Append(nsPrintfCString{
           ", keySystem=%s", NS_ConvertUTF16toUTF8(*keySystem).get()});
