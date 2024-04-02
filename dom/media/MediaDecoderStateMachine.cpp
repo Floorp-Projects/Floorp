@@ -3479,7 +3479,8 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
       INIT_MIRROR(mOutputDummyTrack, nullptr),
       INIT_MIRROR(mOutputTracks, nsTArray<RefPtr<ProcessedMediaTrack>>()),
       INIT_MIRROR(mOutputPrincipal, PRINCIPAL_HANDLE_NONE),
-      INIT_CANONICAL(mCanonicalOutputPrincipal, PRINCIPAL_HANDLE_NONE) {
+      INIT_CANONICAL(mCanonicalOutputPrincipal, PRINCIPAL_HANDLE_NONE),
+      mShuttingDown(false) {
   MOZ_COUNT_CTOR(MediaDecoderStateMachine);
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
 
@@ -3814,6 +3815,7 @@ void MediaDecoderStateMachine::VolumeChanged() {
 RefPtr<ShutdownPromise> MediaDecoderStateMachine::Shutdown() {
   AUTO_PROFILER_LABEL("MediaDecoderStateMachine::Shutdown", MEDIA_PLAYBACK);
   MOZ_ASSERT(OnTaskQueue());
+  mShuttingDown = true;
   return mStateObj->HandleShutdown();
 }
 
@@ -4701,6 +4703,10 @@ void MediaDecoderStateMachine::GetDebugInfo(
 
 RefPtr<GenericPromise> MediaDecoderStateMachine::RequestDebugInfo(
     dom::MediaDecoderStateMachineDebugInfo& aInfo) {
+  if (mShuttingDown) {
+    return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+  }
+
   RefPtr<GenericPromise::Private> p = new GenericPromise::Private(__func__);
   RefPtr<MediaDecoderStateMachine> self = this;
   nsresult rv = OwnerThread()->Dispatch(
@@ -4710,7 +4716,7 @@ RefPtr<GenericPromise> MediaDecoderStateMachine::RequestDebugInfo(
                                p->Resolve(true, __func__);
                              }),
       AbstractThread::TailDispatch);
-  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
   Unused << rv;
   return p;
 }
