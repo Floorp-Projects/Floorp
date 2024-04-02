@@ -452,14 +452,17 @@ def set_try_config(parameters, task_config_file):
 def set_decision_indexes(decision_task_id, params, graph_config):
     index_paths = []
     if params["backstop"]:
-        index_paths.append(BACKSTOP_INDEX)
+        # When two Decision tasks run at nearly the same time, it's possible
+        # they both end up being backstops if the second checks the backstop
+        # index before the first inserts it. Insert this index first to reduce
+        # the chances of that happening.
+        index_paths.insert(0, BACKSTOP_INDEX)
 
     subs = params.copy()
     subs["trust-domain"] = graph_config["trust-domain"]
 
-    index_paths = [i.format(**subs) for i in index_paths]
     for index_path in index_paths:
-        insert_index(index_path, decision_task_id, use_proxy=True)
+        insert_index(index_path.format(**subs), decision_task_id, use_proxy=True)
 
 
 def write_artifact(filename, data):
