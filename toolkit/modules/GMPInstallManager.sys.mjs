@@ -43,6 +43,16 @@ const LOCAL_GMP_SOURCES = [
   },
 ];
 
+function getLocalSources() {
+  if (GMPPrefs.getBool(GMPPrefs.KEY_ALLOW_LOCAL_SOURCES, true)) {
+    return LOCAL_GMP_SOURCES;
+  }
+
+  let log = getScopedLogger("GMPInstallManager.downloadLocalConfig");
+  log.info("ignoring local sources");
+  return [];
+}
+
 function downloadJSON(uri) {
   let log = getScopedLogger("GMPInstallManager.checkForAddons");
   log.info("fetching config from: " + uri);
@@ -70,7 +80,7 @@ function downloadJSON(uri) {
 function downloadLocalConfig() {
   let log = getScopedLogger("GMPInstallManager.downloadLocalConfig");
   return Promise.all(
-    LOCAL_GMP_SOURCES.map(conf => {
+    getLocalSources().map(conf => {
       return downloadJSON(conf.src).then(addons => {
         let platforms = addons.vendors[conf.id].platforms;
         let target = Services.appinfo.OS + "_" + lazy.UpdateUtils.ABI;
