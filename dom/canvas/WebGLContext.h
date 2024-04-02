@@ -303,6 +303,15 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
   uint64_t mNextFenceId = 1;
   uint64_t mCompletedFenceId = 0;
 
+  mutable std::list<WeakPtr<WebGLSync>> mPendingSyncs;
+  mutable RefPtr<nsIRunnable> mPollPendingSyncs_Pending;
+  static constexpr uint32_t kPollPendingSyncs_DelayMs =
+      4;  // Four times a frame.
+ public:
+  void EnsurePollPendingSyncs_Pending() const;
+  void PollPendingSyncs() const;
+
+ protected:
   std::unique_ptr<gl::Texture> mIncompleteTexOverride;
 
  public:

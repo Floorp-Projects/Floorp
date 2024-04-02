@@ -881,6 +881,8 @@ void WebGLContext::OnEndOfFrame() {
 
   mDrawCallsSinceLastFlush = 0;
 
+  PollPendingSyncs();
+
   BumpLru();
 }
 

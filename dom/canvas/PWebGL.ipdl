@@ -109,6 +109,9 @@ child:
 
   // Tell client that this queue needs to be shut down
   async OnContextLoss(ContextLossReason aReason);
+
+  // Triggered when the id from FenceSync completes.
+  async OnSyncComplete(uint64_t id);
 };
 
 } // dom

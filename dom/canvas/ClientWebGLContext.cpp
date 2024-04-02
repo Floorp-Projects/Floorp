@@ -3031,7 +3031,7 @@ void ClientWebGLContext::DepthRange(GLclampf zNear, GLclampf zFar) {
   Run<RPROC(DepthRange)>(zNear, zFar);
 }
 
-void ClientWebGLContext::Flush(const bool flushGl) {
+void ClientWebGLContext::Flush(const bool flushGl) const {
   const FuncScope funcScope(*this, "flush");
   if (IsContextLost()) return;
 
@@ -5461,13 +5461,11 @@ void ClientWebGLContext::GetSyncParameter(
       case LOCAL_GL_SYNC_FLAGS:
         return JS::NumberValue(0);
       case LOCAL_GL_SYNC_STATUS: {
-        if (!sync.mSignaled) {
-          const auto res = ClientWaitSync(sync, 0, 0);
-          sync.mSignaled = (res == LOCAL_GL_ALREADY_SIGNALED ||
-                            res == LOCAL_GL_CONDITION_SATISFIED);
-        }
-        return JS::NumberValue(sync.mSignaled ? LOCAL_GL_SIGNALED
-                                              : LOCAL_GL_UNSIGNALED);
+        const auto res = ClientWaitSync(sync, 0, 0);
+        const auto signaled = (res == LOCAL_GL_ALREADY_SIGNALED ||
+                               res == LOCAL_GL_CONDITION_SATISFIED);
+        return JS::NumberValue(signaled ? LOCAL_GL_SIGNALED
+                                        : LOCAL_GL_UNSIGNALED);
       }
       default:
         EnqueueError_ArgEnum("pname", pname);
@@ -5483,11 +5481,40 @@ GLenum ClientWebGLContext::ClientWaitSync(WebGLSyncJS& sync,
   if (IsContextLost()) return LOCAL_GL_WAIT_FAILED;
   if (!sync.ValidateUsable(*this, "sync")) return LOCAL_GL_WAIT_FAILED;
 
-  if (flags != 0 && flags != LOCAL_GL_SYNC_FLUSH_COMMANDS_BIT) {
+  static constexpr auto VALID_BITS = LOCAL_GL_SYNC_FLUSH_COMMANDS_BIT;
+  if ((flags | VALID_BITS) != VALID_BITS) {
     EnqueueError(LOCAL_GL_INVALID_VALUE,
                  "`flags` must be SYNC_FLUSH_COMMANDS_BIT or 0.");
     return LOCAL_GL_WAIT_FAILED;
   }
+
+  const bool canBeAvailable =
+      (sync.mCanBeAvailable || StaticPrefs::webgl_allow_immediate_queries());
+  if (!canBeAvailable) {
+    constexpr uint8_t WARN_AT = 100;
+    if (sync.mNumQueriesBeforeFirstFrameBoundary <= WARN_AT) {
+      sync.mNumQueriesBeforeFirstFrameBoundary += 1;
+      if (sync.mNumQueriesBeforeFirstFrameBoundary == WARN_AT) {
+        EnqueueWarning(
+            "ClientWaitSync must return TIMEOUT_EXPIRED until control has"
+            " returned to the user agent's main loop, but was polled %hhu "
+            "times. Are you spin-locking? (only warns once)",
+            sync.mNumQueriesBeforeFirstFrameBoundary);
+      }
+    }
+    return LOCAL_GL_TIMEOUT_EXPIRED;
+  }
+
+  if (mCompletedSyncId >= sync.mId) {
+    return LOCAL_GL_ALREADY_SIGNALED;
+  }
+  if (flags & LOCAL_GL_SYNC_FLUSH_COMMANDS_BIT) {
+    Flush();
+  }
+  if (!timeout) return LOCAL_GL_TIMEOUT_EXPIRED;
+
+  // -
+  // Fine, time to block:
 
   const auto ret = [&]() {
     const auto& inProcess = mNotLost->inProcess;
@@ -5506,27 +5533,8 @@ GLenum ClientWebGLContext::ClientWaitSync(WebGLSyncJS& sync,
   switch (ret) {
     case LOCAL_GL_CONDITION_SATISFIED:
     case LOCAL_GL_ALREADY_SIGNALED:
-      sync.mSignaled = true;
+      OnSyncComplete(sync.mId);
       break;
-  }
-
-  // -
-
-  const bool canBeAvailable =
-      (sync.mCanBeAvailable || StaticPrefs::webgl_allow_immediate_queries());
-  if (!canBeAvailable) {
-    constexpr uint8_t WARN_AT = 100;
-    if (sync.mNumQueriesBeforeFirstFrameBoundary <= WARN_AT) {
-      sync.mNumQueriesBeforeFirstFrameBoundary += 1;
-      if (sync.mNumQueriesBeforeFirstFrameBoundary == WARN_AT) {
-        EnqueueWarning(
-            "ClientWaitSync must return TIMEOUT_EXPIRED until control has"
-            " returned to the user agent's main loop, but was polled %hhu "
-            "times. Are you spin-locking? (only warns once)",
-            sync.mNumQueriesBeforeFirstFrameBoundary);
-      }
-    }
-    return LOCAL_GL_TIMEOUT_EXPIRED;
   }
 
   return ret;
@@ -6614,7 +6622,7 @@ Maybe<Span<uint8_t>> ClientWebGLContext::ValidateArrayBufferView(
 // ---------------------------
 
 webgl::ObjectJS::ObjectJS(const ClientWebGLContext& webgl)
-    : mGeneration(webgl.mNotLost), mId(webgl.mNotLost->state.NextId()) {}
+    : mGeneration(webgl.mNotLost), mId(webgl.NextId()) {}
 
 // -
 
