@@ -13,60 +13,94 @@ function openTab() {
 // Creates and configures a video element for non-MSE playback in `tab`. Does not
 // start playback for the element. Returns a promise that will resolve once
 // the element is setup and ready for playback.
-function loadVideo(tab) {
-  return SpecialPowers.spawn(tab.linkedBrowser, [], async _ => {
-    let video = content.document.createElement("video");
-    video.id = "media";
-    content.document.body.appendChild(video);
+function loadVideo(tab, extraEvent = undefined) {
+  return SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [extraEvent],
+    async _extraEvent => {
+      let video = content.document.createElement("video");
+      video.id = "media";
+      content.document.body.appendChild(video);
 
-    video.src = "gizmo.mp4";
-    video.load();
+      video.src = "gizmo.mp4";
+      video.load();
 
-    info(`waiting 'loadeddata' event to ensure playback is ready`);
-    await new Promise(r => (video.onloadeddata = r));
-  });
+      info(`waiting 'loadeddata' event to ensure playback is ready`);
+      let promises = [];
+      promises.push(new Promise(r => (video.onloadeddata = r)));
+      if (_extraEvent != undefined) {
+        info(
+          `waiting '${_extraEvent}' event to ensure the probe has been recorded`
+        );
+        promises.push(
+          new Promise(r =>
+            video.addEventListener(_extraEvent, r, { once: true })
+          )
+        );
+      }
+      await Promise.allSettled(promises);
+    }
+  );
 }
 
 // Creates and configures a video element for MSE playback in `tab`. Does not
 // start playback for the element. Returns a promise that will resolve once
 // the element is setup and ready for playback.
-function loadMseVideo(tab) {
-  return SpecialPowers.spawn(tab.linkedBrowser, [], async _ => {
-    async function once(target, name) {
-      return new Promise(r => target.addEventListener(name, r, { once: true }));
+function loadMseVideo(tab, extraEvent = undefined) {
+  return SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [extraEvent],
+    async _extraEvent => {
+      async function once(target, name) {
+        return new Promise(r =>
+          target.addEventListener(name, r, { once: true })
+        );
+      }
+
+      let video = content.document.createElement("video");
+      video.id = "media";
+      content.document.body.appendChild(video);
+
+      info(`starting setup MSE`);
+      const ms = new content.wrappedJSObject.MediaSource();
+      video.src = content.wrappedJSObject.URL.createObjectURL(ms);
+      await once(ms, "sourceopen");
+      const sb = ms.addSourceBuffer("video/mp4");
+      const videoFile = "bipbop2s.mp4";
+      let fetchResponse = await content.fetch(videoFile);
+      sb.appendBuffer(await fetchResponse.arrayBuffer());
+      await once(sb, "updateend");
+      ms.endOfStream();
+      await once(ms, "sourceended");
+
+      info(`waiting 'loadeddata' event to ensure playback is ready`);
+      let promises = [];
+      promises.push(once(video, "loadeddata"));
+      if (_extraEvent != undefined) {
+        info(
+          `waiting '${_extraEvent}' event to ensure the probe has been recorded`
+        );
+        promises.push(
+          new Promise(r =>
+            video.addEventListener(_extraEvent, r, { once: true })
+          )
+        );
+      }
+      await Promise.allSettled(promises);
     }
-
-    let video = content.document.createElement("video");
-    video.id = "media";
-    content.document.body.appendChild(video);
-
-    info(`starting setup MSE`);
-    const ms = new content.wrappedJSObject.MediaSource();
-    video.src = content.wrappedJSObject.URL.createObjectURL(ms);
-    await once(ms, "sourceopen");
-    const sb = ms.addSourceBuffer("video/mp4");
-    const videoFile = "bipbop2s.mp4";
-    let fetchResponse = await content.fetch(videoFile);
-    sb.appendBuffer(await fetchResponse.arrayBuffer());
-    await once(sb, "updateend");
-    ms.endOfStream();
-    await once(ms, "sourceended");
-
-    info(`waiting 'loadeddata' event to ensure playback is ready`);
-    await once(video, "loadeddata");
-  });
+  );
 }
 
 // Creates and configures a video element for EME playback in `tab`. Does not
 // start playback for the element. Returns a promise that will resolve once
 // the element is setup and ready for playback.
-function loadEmeVideo(tab) {
+function loadEmeVideo(tab, extraEvent = undefined) {
   const emeHelperUri =
     gTestPath.substr(0, gTestPath.lastIndexOf("/")) + "/eme_standalone.js";
   return SpecialPowers.spawn(
     tab.linkedBrowser,
-    [emeHelperUri],
-    async _emeHelperUri => {
+    [emeHelperUri, extraEvent],
+    async (_emeHelperUri, _extraEvent) => {
       async function once(target, name) {
         return new Promise(r =>
           target.addEventListener(name, r, { once: true })
@@ -113,7 +147,19 @@ function loadEmeVideo(tab) {
       await once(ms, "sourceended");
 
       info(`waiting 'loadeddata' event to ensure playback is ready`);
-      await once(video, "loadeddata");
+      let promises = [];
+      promises.push(once(video, "loadeddata"));
+      if (_extraEvent != undefined) {
+        info(
+          `waiting '${_extraEvent}' event to ensure the probe has been recorded`
+        );
+        promises.push(
+          new Promise(r =>
+            video.addEventListener(_extraEvent, r, { once: true })
+          )
+        );
+      }
+      await Promise.allSettled(promises);
     }
   );
 }
