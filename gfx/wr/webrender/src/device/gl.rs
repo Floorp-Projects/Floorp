@@ -199,10 +199,6 @@ pub fn get_unoptimized_shader_source(shader_name: &str, base_path: Option<&PathB
     }
 }
 
-pub trait FileWatcherHandler: Send {
-    fn file_changed(&self, path: PathBuf);
-}
-
 impl VertexAttributeKind {
     fn size_in_bytes(&self) -> u32 {
         match *self {
