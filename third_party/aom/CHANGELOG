@@ -1,3 +1,22 @@
+2024-03-08 v3.8.2
+  This release includes several bug fixes. This release is ABI
+  compatible with the last release. See
+  https://aomedia.googlesource.com/aom/+log/v3.8.1..v3.8.2 for all the
+  commits in this release.
+
+  - Bug Fixes
+    * aomedia:3523: SIGFPE in av1_twopass_postencode_update()
+      pass2_strategy.c:4261.
+    * aomedia:3535, b/317646516: Over reads in aom_convolve_copy_neon().
+    * aomedia:3543: invalid feature modifier when compiling
+      aom_dsp/arm/aom_convolve8_neon_i8mm.c on Debian 10 with arm64
+      architecture.
+    * aomedia:3545: Failed to parse configurations due to inconsistent
+      elements between two arrays "av1_ctrl_args" and "av1_arg_ctrl_map"
+      in aomenc.c.
+    * oss-fuzz:66474, b/319140742: Integer-overflow in search_wiener.
+    * Zero initialize an array in cdef search.
+
 2024-01-17 v3.8.1
   This release includes several bug fixes. This release is ABI
   compatible with the last release. See

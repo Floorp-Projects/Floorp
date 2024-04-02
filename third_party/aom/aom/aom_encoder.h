@@ -1044,6 +1044,11 @@ aom_fixed_buf_t *aom_codec_get_global_headers(aom_codec_ctx_t *ctx);
  *     Interface is not an encoder interface.
  * \retval #AOM_CODEC_INVALID_PARAM
  *     A parameter was NULL, the image format is unsupported, etc.
+ *
+ * \note
+ * `duration` is of the unsigned long type, which can be 32 or 64 bits.
+ * `duration` must be less than or equal to UINT32_MAX so that its range is
+ * independent of the size of unsigned long.
  */
 aom_codec_err_t aom_codec_encode(aom_codec_ctx_t *ctx, const aom_image_t *img,
                                  aom_codec_pts_t pts, unsigned long duration,

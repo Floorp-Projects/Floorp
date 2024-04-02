@@ -1456,7 +1456,7 @@ bool av1_tf_info_alloc(TEMPORAL_FILTER_INFO *tf_info, const AV1_COMP *cpi) {
             oxcf->frm_dim_cfg.height, seq_params->subsampling_x,
             seq_params->subsampling_y, seq_params->use_highbitdepth,
             cpi->oxcf.border_in_pixels, cm->features.byte_alignment, NULL, NULL,
-            NULL, cpi->image_pyramid_levels, 0)) {
+            NULL, cpi->alloc_pyramid, 0)) {
       return false;
     }
   }

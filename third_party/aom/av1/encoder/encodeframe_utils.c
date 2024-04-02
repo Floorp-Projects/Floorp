@@ -1431,6 +1431,10 @@ void av1_source_content_sb(AV1_COMP *cpi, MACROBLOCK *x, TileDataEnc *tile_data,
   if ((tmp_sse - tmp_variance) < (sum_sq_thresh >> 1))
     x->content_state_sb.low_sumdiff = 1;
 
+  if (tmp_sse > ((avg_source_sse_threshold_high * 7) >> 3) &&
+      !x->content_state_sb.lighting_change && !x->content_state_sb.low_sumdiff)
+    x->sb_force_fixed_part = 0;
+
   if (!cpi->sf.rt_sf.use_rtc_tf || cpi->rc.high_source_sad ||
       cpi->rc.frame_source_sad > 20000 || cpi->svc.number_spatial_layers > 1)
     return;

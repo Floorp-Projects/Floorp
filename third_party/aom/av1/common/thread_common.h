@@ -16,6 +16,7 @@
 
 #include "av1/common/av1_loopfilter.h"
 #include "av1/common/cdef.h"
+#include "aom_util/aom_pthread.h"
 #include "aom_util/aom_thread.h"
 
 #ifdef __cplusplus

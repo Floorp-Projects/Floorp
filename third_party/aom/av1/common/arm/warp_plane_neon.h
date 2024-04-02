@@ -24,32 +24,37 @@
 #include "av1/common/warped_motion.h"
 #include "av1/common/scale.h"
 
-static INLINE int16x8_t horizontal_filter_4x1_f4(const uint8x16_t in, int sx,
-                                                 int alpha);
+static AOM_FORCE_INLINE int16x8_t horizontal_filter_4x1_f4(const uint8x16_t in,
+                                                           int sx, int alpha);
 
-static INLINE int16x8_t horizontal_filter_8x1_f8(const uint8x16_t in, int sx,
-                                                 int alpha);
+static AOM_FORCE_INLINE int16x8_t horizontal_filter_8x1_f8(const uint8x16_t in,
+                                                           int sx, int alpha);
 
-static INLINE int16x8_t horizontal_filter_4x1_f1(const uint8x16_t in, int sx);
+static AOM_FORCE_INLINE int16x8_t horizontal_filter_4x1_f1(const uint8x16_t in,
+                                                           int sx);
 
-static INLINE int16x8_t horizontal_filter_8x1_f1(const uint8x16_t in, int sx);
+static AOM_FORCE_INLINE int16x8_t horizontal_filter_8x1_f1(const uint8x16_t in,
+                                                           int sx);
 
-static INLINE void vertical_filter_4x1_f1(const int16x8_t *src, int32x4_t *res,
-                                          int sy);
+static AOM_FORCE_INLINE void vertical_filter_4x1_f1(const int16x8_t *src,
+                                                    int32x4_t *res, int sy);
 
-static INLINE void vertical_filter_4x1_f4(const int16x8_t *src, int32x4_t *res,
-                                          int sy, int gamma);
+static AOM_FORCE_INLINE void vertical_filter_4x1_f4(const int16x8_t *src,
+                                                    int32x4_t *res, int sy,
+                                                    int gamma);
 
-static INLINE void vertical_filter_8x1_f1(const int16x8_t *src,
-                                          int32x4_t *res_low,
-                                          int32x4_t *res_high, int sy);
+static AOM_FORCE_INLINE void vertical_filter_8x1_f1(const int16x8_t *src,
+                                                    int32x4_t *res_low,
+                                                    int32x4_t *res_high,
+                                                    int sy);
 
-static INLINE void vertical_filter_8x1_f8(const int16x8_t *src,
-                                          int32x4_t *res_low,
-                                          int32x4_t *res_high, int sy,
-                                          int gamma);
+static AOM_FORCE_INLINE void vertical_filter_8x1_f8(const int16x8_t *src,
+                                                    int32x4_t *res_low,
+                                                    int32x4_t *res_high, int sy,
+                                                    int gamma);
 
-static INLINE void load_filters_4(int16x8_t out[], int offset, int stride) {
+static AOM_FORCE_INLINE void load_filters_4(int16x8_t out[], int offset,
+                                            int stride) {
   out[0] = vld1q_s16((int16_t *)(av1_warped_filter + ((offset + 0 * stride) >>
                                                       WARPEDDIFF_PREC_BITS)));
   out[1] = vld1q_s16((int16_t *)(av1_warped_filter + ((offset + 1 * stride) >>
@@ -60,7 +65,8 @@ static INLINE void load_filters_4(int16x8_t out[], int offset, int stride) {
                                                       WARPEDDIFF_PREC_BITS)));
 }
 
-static INLINE void load_filters_8(int16x8_t out[], int offset, int stride) {
+static AOM_FORCE_INLINE void load_filters_8(int16x8_t out[], int offset,
+                                            int stride) {
   out[0] = vld1q_s16((int16_t *)(av1_warped_filter + ((offset + 0 * stride) >>
                                                       WARPEDDIFF_PREC_BITS)));
   out[1] = vld1q_s16((int16_t *)(av1_warped_filter + ((offset + 1 * stride) >>
@@ -79,16 +85,14 @@ static INLINE void load_filters_8(int16x8_t out[], int offset, int stride) {
                                                       WARPEDDIFF_PREC_BITS)));
 }
 
-static INLINE int clamp_iy(int iy, int height) {
+static AOM_FORCE_INLINE int clamp_iy(int iy, int height) {
   return clamp(iy, 0, height - 1);
 }
 
-static INLINE void warp_affine_horizontal(const uint8_t *ref, int width,
-                                          int height, int stride, int p_width,
-                                          int p_height, int16_t alpha,
-                                          int16_t beta, const int64_t x4,
-                                          const int64_t y4, const int i,
-                                          int16x8_t tmp[]) {
+static AOM_FORCE_INLINE void warp_affine_horizontal(
+    const uint8_t *ref, int width, int height, int stride, int p_width,
+    int p_height, int16_t alpha, int16_t beta, const int64_t x4,
+    const int64_t y4, const int i, int16x8_t tmp[]) {
   const int bd = 8;
   const int reduce_bits_horiz = ROUND0_BITS;
   const int height_limit = AOMMIN(8, p_height - i) + 7;
@@ -197,7 +201,7 @@ static INLINE void warp_affine_horizontal(const uint8_t *ref, int width,
   }
 }
 
-static INLINE void warp_affine_vertical(
+static AOM_FORCE_INLINE void warp_affine_vertical(
     uint8_t *pred, int p_width, int p_height, int p_stride, int is_compound,
     uint16_t *dst, int dst_stride, int do_average, int use_dist_wtd_comp_avg,
     int16_t gamma, int16_t delta, const int64_t y4, const int i, const int j,
@@ -325,7 +329,7 @@ static INLINE void warp_affine_vertical(
   }
 }
 
-static INLINE void av1_warp_affine_common(
+static AOM_FORCE_INLINE void av1_warp_affine_common(
     const int32_t *mat, const uint8_t *ref, int width, int height, int stride,
     uint8_t *pred, int p_col, int p_row, int p_width, int p_height,
     int p_stride, int subsampling_x, int subsampling_y,

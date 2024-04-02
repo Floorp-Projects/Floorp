@@ -14,12 +14,19 @@
 #include "config/aom_scale_rtcd.h"
 
 #include "aom_dsp/aom_dsp_common.h"
+#include "aom_dsp/txfm_common.h"
 #include "aom_mem/aom_mem.h"
+#include "aom_util/aom_pthread.h"
+#include "aom_util/aom_thread.h"
 #include "av1/common/av1_loopfilter.h"
+#include "av1/common/blockd.h"
+#include "av1/common/cdef.h"
 #include "av1/common/entropymode.h"
+#include "av1/common/enums.h"
 #include "av1/common/thread_common.h"
 #include "av1/common/reconinter.h"
 #include "av1/common/reconintra.h"
+#include "av1/common/restoration.h"
 
 // Set up nsync by width.
 static INLINE int get_sync_range(int width) {

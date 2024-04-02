@@ -12,6 +12,8 @@
 #include <assert.h>
 #include <stdbool.h>
 
+#include "aom_util/aom_pthread.h"
+
 #include "av1/common/warped_motion.h"
 #include "av1/common/thread_common.h"
 
@@ -1415,7 +1417,7 @@ static AOM_INLINE void sync_fpmt_workers(AV1_PRIMARY *ppi,
   int num_workers = ppi->p_mt_info.p_num_workers;
   int had_error = 0;
   // Points to error in the earliest display order frame in the parallel set.
-  const struct aom_internal_error_info *error;
+  const struct aom_internal_error_info *error = NULL;
 
   // Encoding ends.
   for (int i = num_workers - 1; i >= 0; --i) {

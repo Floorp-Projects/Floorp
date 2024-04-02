@@ -11,20 +11,24 @@
  */
 
 #include <math.h>
+#include <stddef.h>
 
 #include "config/aom_config.h"
-#include "config/aom_dsp_rtcd.h"
 #include "config/aom_scale_rtcd.h"
 
+#include "aom/internal/aom_codec_internal.h"
 #include "aom_mem/aom_mem.h"
+#include "aom_dsp/aom_dsp_common.h"
+#include "aom_mem/aom_mem.h"
+#include "aom_ports/mem.h"
+#include "aom_util/aom_pthread.h"
+
 #include "av1/common/av1_common_int.h"
+#include "av1/common/convolve.h"
+#include "av1/common/enums.h"
 #include "av1/common/resize.h"
 #include "av1/common/restoration.h"
 #include "av1/common/thread_common.h"
-#include "aom_dsp/aom_dsp_common.h"
-#include "aom_mem/aom_mem.h"
-
-#include "aom_ports/mem.h"
 
 // The 's' values are calculated based on original 'r' and 'e' values in the
 // spec using GenSgrprojVtable().
@@ -115,8 +119,9 @@ void av1_loop_restoration_precal(void) {
 #endif
 }
 
-static void extend_frame_lowbd(uint8_t *data, int width, int height, int stride,
-                               int border_horz, int border_vert) {
+static void extend_frame_lowbd(uint8_t *data, int width, int height,
+                               ptrdiff_t stride, int border_horz,
+                               int border_vert) {
   uint8_t *data_p;
   int i;
   for (i = 0; i < height; ++i) {
@@ -136,7 +141,8 @@ static void extend_frame_lowbd(uint8_t *data, int width, int height, int stride,
 
 #if CONFIG_AV1_HIGHBITDEPTH
 static void extend_frame_highbd(uint16_t *data, int width, int height,
-                                int stride, int border_horz, int border_vert) {
+                                ptrdiff_t stride, int border_horz,
+                                int border_vert) {
   uint16_t *data_p;
   int i, j;
   for (i = 0; i < height; ++i) {
@@ -988,8 +994,10 @@ void av1_loop_restoration_filter_unit(
 
   int unit_h = limits->v_end - limits->v_start;
   int unit_w = limits->h_end - limits->h_start;
-  uint8_t *data8_tl = data8 + limits->v_start * stride + limits->h_start;
-  uint8_t *dst8_tl = dst8 + limits->v_start * dst_stride + limits->h_start;
+  uint8_t *data8_tl =
+      data8 + limits->v_start * (ptrdiff_t)stride + limits->h_start;
+  uint8_t *dst8_tl =
+      dst8 + limits->v_start * (ptrdiff_t)dst_stride + limits->h_start;
 
   if (unit_rtype == RESTORE_NONE) {
     copy_rest_unit(unit_w, unit_h, data8_tl, stride, dst8_tl, dst_stride,
@@ -1074,7 +1082,8 @@ void av1_loop_restoration_filter_frame_init(AV1LrStruct *lr_ctxt,
   if (aom_realloc_frame_buffer(
           lr_ctxt->dst, frame_width, frame_height, seq_params->subsampling_x,
           seq_params->subsampling_y, highbd, AOM_RESTORATION_FRAME_BORDER,
-          cm->features.byte_alignment, NULL, NULL, NULL, 0, 0) != AOM_CODEC_OK)
+          cm->features.byte_alignment, NULL, NULL, NULL, false,
+          0) != AOM_CODEC_OK)
     aom_internal_error(cm->error, AOM_CODEC_MEM_ERROR,
                        "Failed to allocate restoration dst buffer");
 
@@ -1349,7 +1358,7 @@ static void save_deblock_boundary_lines(
   const int is_uv = plane > 0;
   const uint8_t *src_buf = REAL_PTR(use_highbd, frame->buffers[plane]);
   const int src_stride = frame->strides[is_uv] << use_highbd;
-  const uint8_t *src_rows = src_buf + row * src_stride;
+  const uint8_t *src_rows = src_buf + row * (ptrdiff_t)src_stride;
 
   uint8_t *bdry_buf = is_above ? boundaries->stripe_boundary_above
                                : boundaries->stripe_boundary_below;
@@ -1404,7 +1413,7 @@ static void save_cdef_boundary_lines(const YV12_BUFFER_CONFIG *frame,
   const int is_uv = plane > 0;
   const uint8_t *src_buf = REAL_PTR(use_highbd, frame->buffers[plane]);
   const int src_stride = frame->strides[is_uv] << use_highbd;
-  const uint8_t *src_rows = src_buf + row * src_stride;
+  const uint8_t *src_rows = src_buf + row * (ptrdiff_t)src_stride;
 
   uint8_t *bdry_buf = is_above ? boundaries->stripe_boundary_above
                                : boundaries->stripe_boundary_below;

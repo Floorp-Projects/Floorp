@@ -23,7 +23,15 @@
 #define SSE_STRIDE (BW + 4)
 
 // clang-format off
+// Table used to pad the first and last columns and apply the sliding window.
+DECLARE_ALIGNED(16, static const uint8_t, kLoadPad[4][16]) = {
+  {   2,   2, 2, 3, 4, 255, 255, 255, 255,   2,   2, 3, 4, 5, 255, 255 },
+  { 255, 255, 2, 3, 4,   5,   6, 255, 255, 255, 255, 3, 4, 5,   6,   7 },
+  {   0,   1, 2, 3, 4, 255, 255, 255, 255,   1,   2, 3, 4, 5, 255, 255 },
+  { 255, 255, 2, 3, 4,   5,   5, 255, 255, 255, 255, 3, 4, 5,   5,   5 }
+};
 
+// For columns that don't need to be padded it's just a simple mask.
 DECLARE_ALIGNED(16, static const uint8_t, kSlidingWindowMask[]) = {
   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00,
   0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00,
@@ -56,22 +64,6 @@ static INLINE void get_abs_diff(const uint8_t *frame1, const uint32_t stride1,
   } while (++i < block_height);
 }
 
-static INLINE uint8x16_t load_and_pad(const uint8_t *src, const uint32_t col,
-                                      const uint32_t block_width) {
-  uint8x8_t s = vld1_u8(src);
-
-  if (col == 0) {
-    const uint8_t lane2 = vget_lane_u8(s, 2);
-    s = vset_lane_u8(lane2, s, 0);
-    s = vset_lane_u8(lane2, s, 1);
-  } else if (col >= block_width - 4) {
-    const uint8_t lane5 = vget_lane_u8(s, 5);
-    s = vset_lane_u8(lane5, s, 6);
-    s = vset_lane_u8(lane5, s, 7);
-  }
-  return vcombine_u8(s, s);
-}
-
 static void apply_temporal_filter(
     const uint8_t *frame, const unsigned int stride, const uint32_t block_width,
     const uint32_t block_height, const int *subblock_mses,
@@ -84,6 +76,10 @@ static void apply_temporal_filter(
 
   uint32_t acc_5x5_neon[BH][BW];
   const uint8x16x2_t vmask = vld1q_u8_x2(kSlidingWindowMask);
+  const uint8x16_t pad_tbl0 = vld1q_u8(kLoadPad[0]);
+  const uint8x16_t pad_tbl1 = vld1q_u8(kLoadPad[1]);
+  const uint8x16_t pad_tbl2 = vld1q_u8(kLoadPad[2]);
+  const uint8x16_t pad_tbl3 = vld1q_u8(kLoadPad[3]);
 
   // Traverse 4 columns at a time - first and last two columns need padding.
   for (uint32_t col = 0; col < block_width; col += 4) {
@@ -92,9 +88,18 @@ static void apply_temporal_filter(
 
     // Load, pad (for first and last two columns) and mask 3 rows from the top.
     for (int i = 2; i < 5; i++) {
-      const uint8x16_t s = load_and_pad(src, col, block_width);
-      vsrc[i][0] = vandq_u8(s, vmask.val[0]);
-      vsrc[i][1] = vandq_u8(s, vmask.val[1]);
+      uint8x8_t s = vld1_u8(src);
+      uint8x16_t s_dup = vcombine_u8(s, s);
+      if (col == 0) {
+        vsrc[i][0] = vqtbl1q_u8(s_dup, pad_tbl0);
+        vsrc[i][1] = vqtbl1q_u8(s_dup, pad_tbl1);
+      } else if (col >= block_width - 4) {
+        vsrc[i][0] = vqtbl1q_u8(s_dup, pad_tbl2);
+        vsrc[i][1] = vqtbl1q_u8(s_dup, pad_tbl3);
+      } else {
+        vsrc[i][0] = vandq_u8(s_dup, vmask.val[0]);
+        vsrc[i][1] = vandq_u8(s_dup, vmask.val[1]);
+      }
       src += SSE_STRIDE;
     }
 
@@ -130,9 +135,18 @@ static void apply_temporal_filter(
 
       if (row <= block_height - 4) {
         // Load next row into the bottom of the sliding window.
-        uint8x16_t s = load_and_pad(src, col, block_width);
-        vsrc[4][0] = vandq_u8(s, vmask.val[0]);
-        vsrc[4][1] = vandq_u8(s, vmask.val[1]);
+        uint8x8_t s = vld1_u8(src);
+        uint8x16_t s_dup = vcombine_u8(s, s);
+        if (col == 0) {
+          vsrc[4][0] = vqtbl1q_u8(s_dup, pad_tbl0);
+          vsrc[4][1] = vqtbl1q_u8(s_dup, pad_tbl1);
+        } else if (col >= block_width - 4) {
+          vsrc[4][0] = vqtbl1q_u8(s_dup, pad_tbl2);
+          vsrc[4][1] = vqtbl1q_u8(s_dup, pad_tbl3);
+        } else {
+          vsrc[4][0] = vandq_u8(s_dup, vmask.val[0]);
+          vsrc[4][1] = vandq_u8(s_dup, vmask.val[1]);
+        }
         src += SSE_STRIDE;
       } else {
         // Pad the bottom 2 rows.

@@ -35,6 +35,7 @@
 #include "aom_ports/aom_timer.h"
 #include "aom_ports/mem.h"
 #include "aom_scale/aom_scale.h"
+#include "aom_util/aom_pthread.h"
 #if CONFIG_BITSTREAM_DEBUG
 #include "aom_util/debug_util.h"
 #endif  // CONFIG_BITSTREAM_DEBUG
@@ -152,24 +153,33 @@ int av1_set_active_map(AV1_COMP *cpi, unsigned char *new_map_16x16, int rows,
     unsigned char *const active_map_4x4 = cpi->active_map.map;
     const int mi_rows = mi_params->mi_rows;
     const int mi_cols = mi_params->mi_cols;
-    const int row_scale = mi_size_high_log2[BLOCK_16X16];
-    const int col_scale = mi_size_wide_log2[BLOCK_16X16];
     cpi->active_map.update = 0;
+    cpi->rc.percent_blocks_inactive = 0;
     assert(mi_rows % 2 == 0);
     assert(mi_cols % 2 == 0);
     if (new_map_16x16) {
-      for (int r = 0; r < (mi_rows >> row_scale); ++r) {
-        for (int c = 0; c < (mi_cols >> col_scale); ++c) {
-          const uint8_t val = new_map_16x16[r * cols + c]
+      int num_samples = 0;
+      int num_blocks_inactive = 0;
+      for (int r = 0; r < mi_rows; r += 4) {
+        for (int c = 0; c < mi_cols; c += 4) {
+          const uint8_t val = new_map_16x16[(r >> 2) * cols + (c >> 2)]
                                   ? AM_SEGMENT_ID_ACTIVE
                                   : AM_SEGMENT_ID_INACTIVE;
-          active_map_4x4[(2 * r + 0) * mi_cols + (c + 0)] = val;
-          active_map_4x4[(2 * r + 0) * mi_cols + (c + 1)] = val;
-          active_map_4x4[(2 * r + 1) * mi_cols + (c + 0)] = val;
-          active_map_4x4[(2 * r + 1) * mi_cols + (c + 1)] = val;
+          num_samples++;
+          if (val == AM_SEGMENT_ID_INACTIVE) num_blocks_inactive++;
+          const int row_max = AOMMIN(4, mi_rows - r);
+          const int col_max = AOMMIN(4, mi_cols - c);
+          for (int x = 0; x < row_max; ++x) {
+            for (int y = 0; y < col_max; ++y) {
+              active_map_4x4[(r + x) * mi_cols + (c + y)] = val;
+            }
+          }
         }
       }
       cpi->active_map.enabled = 1;
+      cpi->active_map.update = 1;
+      cpi->rc.percent_blocks_inactive =
+          (num_blocks_inactive * 100) / num_samples;
     }
     return 0;
   }
@@ -943,14 +953,9 @@ void av1_change_config(struct AV1_COMP *cpi, const AV1EncoderConfig *oxcf,
 
 #if CONFIG_REALTIME_ONLY
   assert(!oxcf->tool_cfg.enable_global_motion);
-  cpi->image_pyramid_levels = 0;
+  cpi->alloc_pyramid = false;
 #else
-  if (oxcf->tool_cfg.enable_global_motion) {
-    cpi->image_pyramid_levels =
-        global_motion_pyr_levels[default_global_motion_method];
-  } else {
-    cpi->image_pyramid_levels = 0;
-  }
+  cpi->alloc_pyramid = oxcf->tool_cfg.enable_global_motion;
 #endif  // CONFIG_REALTIME_ONLY
 }
 
@@ -2208,7 +2213,7 @@ void av1_set_frame_size(AV1_COMP *cpi, int width, int height) {
           &cm->cur_frame->buf, cm->width, cm->height, seq_params->subsampling_x,
           seq_params->subsampling_y, seq_params->use_highbitdepth,
           cpi->oxcf.border_in_pixels, cm->features.byte_alignment, NULL, NULL,
-          NULL, cpi->image_pyramid_levels, 0))
+          NULL, cpi->alloc_pyramid, 0))
     aom_internal_error(cm->error, AOM_CODEC_MEM_ERROR,
                        "Failed to allocate frame buffer");
 
@@ -2498,7 +2503,8 @@ static int encode_without_recode(AV1_COMP *cpi) {
             &cpi->svc.source_last_TL0, cpi->oxcf.frm_dim_cfg.width,
             cpi->oxcf.frm_dim_cfg.height, seq_params->subsampling_x,
             seq_params->subsampling_y, seq_params->use_highbitdepth,
-            cpi->oxcf.border_in_pixels, cm->features.byte_alignment, 0, 0)) {
+            cpi->oxcf.border_in_pixels, cm->features.byte_alignment, false,
+            0)) {
       aom_internal_error(cm->error, AOM_CODEC_MEM_ERROR,
                          "Failed to allocate buffer for source_last_TL0");
     }
@@ -2547,7 +2553,7 @@ static int encode_without_recode(AV1_COMP *cpi) {
 
   cpi->source = av1_realloc_and_scale_if_required(
       cm, unscaled, &cpi->scaled_source, filter_scaler, phase_scaler, true,
-      false, cpi->oxcf.border_in_pixels, cpi->image_pyramid_levels);
+      false, cpi->oxcf.border_in_pixels, cpi->alloc_pyramid);
   if (frame_is_intra_only(cm) || resize_pending != 0) {
     const int current_size =
         (cm->mi_params.mi_rows * cm->mi_params.mi_cols) >> 2;
@@ -2570,7 +2576,7 @@ static int encode_without_recode(AV1_COMP *cpi) {
     cpi->last_source = av1_realloc_and_scale_if_required(
         cm, cpi->unscaled_last_source, &cpi->scaled_last_source, filter_scaler,
         phase_scaler, true, false, cpi->oxcf.border_in_pixels,
-        cpi->image_pyramid_levels);
+        cpi->alloc_pyramid);
   }
 
   if (cpi->sf.rt_sf.use_temporal_noise_estimate) {
@@ -2667,26 +2673,26 @@ static int encode_without_recode(AV1_COMP *cpi) {
   cm->cur_frame->seg.enabled = cm->seg.enabled;
 
   // This is for rtc temporal filtering case.
-  if (is_psnr_calc_enabled(cpi) && cpi->sf.rt_sf.use_rtc_tf &&
-      cm->current_frame.frame_type != KEY_FRAME) {
+  if (is_psnr_calc_enabled(cpi) && cpi->sf.rt_sf.use_rtc_tf) {
     const SequenceHeader *seq_params = cm->seq_params;
 
     if (cpi->orig_source.buffer_alloc_sz == 0 ||
-        cpi->last_source->y_width != cpi->source->y_width ||
-        cpi->last_source->y_height != cpi->source->y_height) {
+        cpi->rc.prev_coded_width != cpi->oxcf.frm_dim_cfg.width ||
+        cpi->rc.prev_coded_height != cpi->oxcf.frm_dim_cfg.height) {
       // Allocate a source buffer to store the true source for psnr calculation.
       if (aom_alloc_frame_buffer(
               &cpi->orig_source, cpi->oxcf.frm_dim_cfg.width,
               cpi->oxcf.frm_dim_cfg.height, seq_params->subsampling_x,
               seq_params->subsampling_y, seq_params->use_highbitdepth,
-              cpi->oxcf.border_in_pixels, cm->features.byte_alignment, 0, 0))
+              cpi->oxcf.border_in_pixels, cm->features.byte_alignment, false,
+              0))
         aom_internal_error(cm->error, AOM_CODEC_MEM_ERROR,
                            "Failed to allocate scaled buffer");
     }
 
-    aom_yv12_copy_y(cpi->source, &cpi->orig_source);
-    aom_yv12_copy_u(cpi->source, &cpi->orig_source);
-    aom_yv12_copy_v(cpi->source, &cpi->orig_source);
+    aom_yv12_copy_y(cpi->source, &cpi->orig_source, 1);
+    aom_yv12_copy_u(cpi->source, &cpi->orig_source, 1);
+    aom_yv12_copy_v(cpi->source, &cpi->orig_source, 1);
   }
 
 #if CONFIG_COLLECT_COMPONENT_TIMING
@@ -2725,9 +2731,9 @@ static int encode_without_recode(AV1_COMP *cpi) {
       (cm->width != cpi->unscaled_source->y_crop_width ||
        cm->height != cpi->unscaled_source->y_crop_height)) {
     cpi->scaled_last_source_available = 1;
-    aom_yv12_copy_y(&cpi->scaled_source, &cpi->scaled_last_source);
-    aom_yv12_copy_u(&cpi->scaled_source, &cpi->scaled_last_source);
-    aom_yv12_copy_v(&cpi->scaled_source, &cpi->scaled_last_source);
+    aom_yv12_copy_y(&cpi->scaled_source, &cpi->scaled_last_source, 1);
+    aom_yv12_copy_u(&cpi->scaled_source, &cpi->scaled_last_source, 1);
+    aom_yv12_copy_v(&cpi->scaled_source, &cpi->scaled_last_source, 1);
   }
 
 #if CONFIG_COLLECT_COMPONENT_TIMING
@@ -2846,7 +2852,7 @@ static int encode_with_recode_loop(AV1_COMP *cpi, size_t *size, uint8_t *dest) {
     }
     cpi->source = av1_realloc_and_scale_if_required(
         cm, cpi->unscaled_source, &cpi->scaled_source, EIGHTTAP_REGULAR, 0,
-        false, false, cpi->oxcf.border_in_pixels, cpi->image_pyramid_levels);
+        false, false, cpi->oxcf.border_in_pixels, cpi->alloc_pyramid);
 
 #if CONFIG_TUNE_BUTTERAUGLI
     if (oxcf->tune_cfg.tuning == AOM_TUNE_BUTTERAUGLI) {
@@ -2866,7 +2872,7 @@ static int encode_with_recode_loop(AV1_COMP *cpi, size_t *size, uint8_t *dest) {
       cpi->last_source = av1_realloc_and_scale_if_required(
           cm, cpi->unscaled_last_source, &cpi->scaled_last_source,
           EIGHTTAP_REGULAR, 0, false, false, cpi->oxcf.border_in_pixels,
-          cpi->image_pyramid_levels);
+          cpi->alloc_pyramid);
     }
 
     int scale_references = 0;
@@ -4042,7 +4048,7 @@ int av1_encode(AV1_COMP *const cpi, uint8_t *const dest,
 }
 
 #if CONFIG_DENOISE
-static int apply_denoise_2d(AV1_COMP *cpi, YV12_BUFFER_CONFIG *sd,
+static int apply_denoise_2d(AV1_COMP *cpi, const YV12_BUFFER_CONFIG *sd,
                             int block_size, float noise_level,
                             int64_t time_stamp, int64_t end_time) {
   AV1_COMMON *const cm = &cpi->common;
@@ -4077,7 +4083,7 @@ static int apply_denoise_2d(AV1_COMP *cpi, YV12_BUFFER_CONFIG *sd,
 #endif
 
 int av1_receive_raw_frame(AV1_COMP *cpi, aom_enc_frame_flags_t frame_flags,
-                          YV12_BUFFER_CONFIG *sd, int64_t time_stamp,
+                          const YV12_BUFFER_CONFIG *sd, int64_t time_stamp,
                           int64_t end_time) {
   AV1_COMMON *const cm = &cpi->common;
   const SequenceHeader *const seq_params = cm->seq_params;
@@ -4139,8 +4145,7 @@ int av1_receive_raw_frame(AV1_COMP *cpi, aom_enc_frame_flags_t frame_flags,
 #endif  //  CONFIG_DENOISE
 
   if (av1_lookahead_push(cpi->ppi->lookahead, sd, time_stamp, end_time,
-                         use_highbitdepth, cpi->image_pyramid_levels,
-                         frame_flags)) {
+                         use_highbitdepth, cpi->alloc_pyramid, frame_flags)) {
     aom_set_error(cm->error, AOM_CODEC_ERROR, "av1_lookahead_push() failed");
     res = -1;
   }

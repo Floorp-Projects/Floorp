@@ -587,6 +587,9 @@ typedef struct GLOBAL_MOTION_SPEED_FEATURES {
   // GF group
   int disable_gm_search_based_on_stats;
 
+  // Downsampling pyramid level to use for global motion estimation
+  int downsample_level;
+
   // Number of refinement steps to apply after initial model generation
   int num_refinement_steps;
 } GLOBAL_MOTION_SPEED_FEATURES;
