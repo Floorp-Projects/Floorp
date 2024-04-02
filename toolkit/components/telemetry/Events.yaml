@@ -4270,3 +4270,40 @@ screenshots:
       - 1801019
     expiry_version: "never"
     release_channel_collection: opt-out
+
+session_restore:
+  backup_can_be_loaded:
+    objects: ["session_file"]
+    description: >
+      Recorded when a file is able to be successfully read on startup
+    record_in_processes:
+      - main
+    products:
+      - "firefox"
+    extra_keys:
+      can_load: Whether or not the startup file can be read/loaded
+      path_key: A symbolic name for the backup file, should be one of "clean", "recovery", "recoveryBackup", "cleanBackup", or "upgradeBackup"
+      loadfail_reason: Reason why the file cannot be loaded, N/A if can be loaded
+    notification_emails:
+      - "session-restore-telemetry-alerts@mozilla.com"
+    bug_numbers:
+      - 1874742
+    expiry_version: "never"
+    release_channel_collection: opt-out
+  shutdown_success:
+    objects: ["session_startup"]
+    description: >
+      Report shutdown success
+    record_in_processes:
+      - main
+    products:
+      - "firefox"
+    extra_keys:
+      shutdown_ok: Whether or not the shutdown happened successfully, unsuccessful if previous session crashed
+      shutdown_reason: Reason why shutdown didn't happen successfully, N/A if previous session didn't crashed
+    notification_emails:
+      - "session-restore-telemetry-alerts@mozilla.com"
+    bug_numbers:
+      - 1874742
+    expiry_version: "never"
+    release_channel_collection: opt-out

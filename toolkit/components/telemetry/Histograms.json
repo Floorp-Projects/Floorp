@@ -8743,6 +8743,7 @@
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
     "alert_emails": ["session-restore-telemetry-alerts@mozilla.com"],
+    "releaseChannelCollection": "opt-out",
     "expires_in_version": "default",
     "kind": "boolean",
     "description": "Session restore: Whether none of the backup files contained parse-able JSON"
