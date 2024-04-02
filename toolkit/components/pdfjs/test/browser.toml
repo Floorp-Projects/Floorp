@@ -4,6 +4,8 @@ support-files = [
   "head.js",
 ]
 
+["browser_pdfjs_caret_browsing_mode.js"]
+
 ["browser_pdfjs_download_button.js"]
 
 ["browser_pdfjs_editing_contextmenu.js"]

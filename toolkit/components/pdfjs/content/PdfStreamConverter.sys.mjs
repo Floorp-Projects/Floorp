@@ -19,6 +19,9 @@ const PDF_VIEWER_WEB_PAGE = "resource://pdf.js/web/viewer.html";
 const MAX_NUMBER_OF_PREFS = 50;
 const PDF_CONTENT_TYPE = "application/pdf";
 
+// Preferences
+const caretBrowsingModePref = "accessibility.browsewithcaret";
+
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
@@ -178,6 +181,45 @@ PdfDataListener.prototype = {
   },
 };
 
+class PrefObserver {
+  #domWindow;
+
+  constructor(domWindow) {
+    this.#domWindow = domWindow;
+    this.#init();
+  }
+
+  #init() {
+    Services.prefs.addObserver(
+      caretBrowsingModePref,
+      this,
+      /* aHoldWeak = */ true
+    );
+  }
+
+  observe(_aSubject, aTopic, aPrefName) {
+    if (aTopic != "nsPref:changed") {
+      return;
+    }
+
+    const actor = getActor(this.#domWindow);
+    if (!actor) {
+      return;
+    }
+    const eventName = "updatedPreference";
+    switch (aPrefName) {
+      case caretBrowsingModePref:
+        actor.dispatchEvent(eventName, {
+          name: "supportsCaretBrowsingMode",
+          value: Services.prefs.getBoolPref(caretBrowsingModePref),
+        });
+        break;
+    }
+  }
+
+  QueryInterface = ChromeUtils.generateQI([Ci.nsISupportsWeakReference]);
+}
+
 /**
  * All the privileged actions.
  */
@@ -187,6 +229,7 @@ class ChromeActions {
     this.contentDispositionFilename = contentDispositionFilename;
     this.sandbox = null;
     this.unloadListener = null;
+    this.observer = new PrefObserver(domWindow);
   }
 
   createSandbox(data, sendResponse) {
@@ -300,7 +343,7 @@ class ChromeActions {
         Services.prefs.getIntPref("mousewheel.with_meta.action") === 3,
       supportsPinchToZoom: Services.prefs.getBoolPref("apz.allow_zooming"),
       supportsCaretBrowsingMode: Services.prefs.getBoolPref(
-        "accessibility.browsewithcaret"
+        caretBrowsingModePref
       ),
     };
   }
