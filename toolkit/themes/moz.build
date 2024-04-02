@@ -29,3 +29,5 @@ else:
 
 with Files("**"):
     BUG_COMPONENT = ("Toolkit", "Themes")
+
+SPHINX_TREES["shared/design-system/docs"] = "shared/design-system/docs"
