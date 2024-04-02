@@ -1105,32 +1105,6 @@ struct DR_intrinsic_inline_size_cookie {
   void* mValue;
 };
 
-struct DR_init_constraints_cookie {
-  DR_init_constraints_cookie(
-      nsIFrame* aFrame, mozilla::ReflowInput* aState, nscoord aCBWidth,
-      nscoord aCBHeight, const mozilla::Maybe<mozilla::LogicalMargin> aBorder,
-      const mozilla::Maybe<mozilla::LogicalMargin> aPadding);
-  ~DR_init_constraints_cookie();
-
-  nsIFrame* mFrame;
-  mozilla::ReflowInput* mState;
-  void* mValue;
-};
-
-struct DR_init_offsets_cookie {
-  DR_init_offsets_cookie(nsIFrame* aFrame,
-                         mozilla::SizeComputationInput* aState,
-                         nscoord aPercentBasis,
-                         mozilla::WritingMode aCBWritingMode,
-                         const mozilla::Maybe<mozilla::LogicalMargin> aBorder,
-                         const mozilla::Maybe<mozilla::LogicalMargin> aPadding);
-  ~DR_init_offsets_cookie();
-
-  nsIFrame* mFrame;
-  mozilla::SizeComputationInput* mState;
-  void* mValue;
-};
-
 #  define DISPLAY_REFLOW(dr_pres_context, dr_frame, dr_rf_state,               \
                          dr_rf_metrics, dr_rf_status)                          \
     DR_cookie dr_cookie(dr_pres_context, dr_frame, dr_rf_state, dr_rf_metrics, \
@@ -1140,14 +1114,6 @@ struct DR_init_offsets_cookie {
     DR_intrinsic_inline_size_cookie dr_cookie(dr_frame, "Min", dr_result)
 #  define DISPLAY_PREF_INLINE_SIZE(dr_frame, dr_result) \
     DR_intrinsic_inline_size_cookie dr_cookie(dr_frame, "Pref", dr_result)
-#  define DISPLAY_INIT_CONSTRAINTS(dr_frame, dr_state, dr_cbw, dr_cbh, dr_bdr, \
-                                   dr_pad)                                     \
-    DR_init_constraints_cookie dr_cookie(dr_frame, dr_state, dr_cbw, dr_cbh,   \
-                                         dr_bdr, dr_pad)
-#  define DISPLAY_INIT_OFFSETS(dr_frame, dr_state, dr_pb, dr_cbwm, dr_bdr, \
-                               dr_pad)                                     \
-    DR_init_offsets_cookie dr_cookie(dr_frame, dr_state, dr_pb, dr_cbwm,   \
-                                     dr_bdr, dr_pad)
 
 #else
 
@@ -1157,12 +1123,6 @@ struct DR_init_offsets_cookie {
 #  define DISPLAY_MIN_INLINE_SIZE(dr_frame, dr_result) \
     PR_BEGIN_MACRO PR_END_MACRO
 #  define DISPLAY_PREF_INLINE_SIZE(dr_frame, dr_result) \
-    PR_BEGIN_MACRO PR_END_MACRO
-#  define DISPLAY_INIT_CONSTRAINTS(dr_frame, dr_state, dr_cbw, dr_cbh, dr_bdr, \
-                                   dr_pad)                                     \
-    PR_BEGIN_MACRO PR_END_MACRO
-#  define DISPLAY_INIT_OFFSETS(dr_frame, dr_state, dr_pb, dr_cbwm, dr_bdr, \
-                               dr_pad)                                     \
     PR_BEGIN_MACRO PR_END_MACRO
 
 #endif

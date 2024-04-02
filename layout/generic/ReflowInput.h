@@ -178,20 +178,6 @@ struct SizeComputationInput {
                        const mozilla::Maybe<mozilla::LogicalMargin>& aPadding =
                            mozilla::Nothing());
 
-#ifdef DEBUG
-  // Reflow trace methods.  Defined in nsFrame.cpp so they have access
-  // to the display-reflow infrastructure.
-  static void* DisplayInitOffsetsEnter(nsIFrame* aFrame,
-                                       SizeComputationInput* aState,
-                                       nscoord aPercentBasis,
-                                       mozilla::WritingMode aCBWritingMode,
-                                       const nsMargin* aBorder,
-                                       const nsMargin* aPadding);
-  static void DisplayInitOffsetsExit(nsIFrame* aFrame,
-                                     SizeComputationInput* aState,
-                                     void* aValue);
-#endif
-
  private:
   /**
    * Computes margin values from the specified margin style information, and
@@ -897,21 +883,6 @@ struct ReflowInput : public SizeComputationInput {
                                             bool aIsMarginIEndAuto,
                                             LogicalMargin& aMargin,
                                             LogicalMargin& aOffsets);
-
-#ifdef DEBUG
-  // Reflow trace methods.  Defined in nsFrame.cpp so they have access
-  // to the display-reflow infrastructure.
-  static void* DisplayInitConstraintsEnter(nsIFrame* aFrame,
-                                           ReflowInput* aState,
-                                           nscoord aCBISize, nscoord aCBBSize,
-                                           const nsMargin* aBorder,
-                                           const nsMargin* aPadding);
-  static void DisplayInitConstraintsExit(nsIFrame* aFrame, ReflowInput* aState,
-                                         void* aValue);
-  static void* DisplayInitFrameTypeEnter(nsIFrame* aFrame, ReflowInput* aState);
-  static void DisplayInitFrameTypeExit(nsIFrame* aFrame, ReflowInput* aState,
-                                       void* aValue);
-#endif
 
  protected:
   void InitCBReflowInput();
