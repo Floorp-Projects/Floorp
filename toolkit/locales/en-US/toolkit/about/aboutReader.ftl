@@ -5,14 +5,20 @@
 about-reader-loading = Loading…
 about-reader-load-error = Failed to load article from page
 
-about-reader-color-scheme-light = Light
-    .title = Color Scheme Light
-about-reader-color-scheme-dark = Dark
-    .title = Color Scheme Dark
-about-reader-color-scheme-sepia = Sepia
-    .title = Color Scheme Sepia
-about-reader-color-scheme-auto = Auto
-    .title = Color Scheme Auto
+about-reader-color-theme-light = Light
+    .title = Color Theme Light
+about-reader-color-theme-dark = Dark
+    .title = Color Theme Dark
+about-reader-color-theme-sepia = Sepia
+    .title = Color Theme Sepia
+about-reader-color-theme-auto = Auto
+    .title = Color Theme Auto
+about-reader-color-theme-gray = Gray
+    .title = Color Theme Gray
+about-reader-color-theme-contrast = Contrast
+    .title = Color Theme Contrast
+about-reader-color-theme-custom = Custom colors
+    .title = Color Theme Custom
 
 # An estimate for how long it takes to read an article,
 # expressed as a range covering both slow and fast readers.
@@ -49,4 +55,31 @@ about-reader-font-type-sans-serif = Sans-serif
 
 about-reader-toolbar-close = Close Reader View
 about-reader-toolbar-type-controls = Type controls
+about-reader-toolbar-color-controls = Colors
 about-reader-toolbar-savetopocket = Save To { -pocket-brand-name }
+
+## Reader View colors menu
+
+about-reader-colors-menu-header = Theme
+
+about-reader-fxtheme-tab = Default
+about-reader-customtheme-tab = Custom
+
+## These are used as labels for the custom theme color pickers.
+## The .title element is used to make the editing functionality
+## clear and give context for screen reader users.
+
+about-reader-custom-colors-foreground = Text
+    .title = Edit color
+about-reader-custom-colors-background = Background
+    .title = Edit color
+
+about-reader-custom-colors-unvisited-links = Unvisited links
+    .title = Edit color
+about-reader-custom-colors-visited-links = Visited links
+    .title = Edit color
+
+about-reader-custom-colors-selection-highlight = Highlighter for read aloud
+    .title = Edit color
+
+about-reader-custom-colors-reset-button = Reset defaults

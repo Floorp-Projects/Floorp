@@ -6,7 +6,7 @@
 // Ensure keyboard navigation works in editor mode and does
 // not trigger reader mode (See 1682340).
 
-const TEST_URI = `http://example.com/browser/toolkit/components/reader/test/readerModeArticle.html`;
+const TEST_URI = `http://example.com/browser/toolkit/components/reader/tests/browser/readerModeArticle.html`;
 const isMacOS = AppConstants.platform === "macosx";
 
 add_task(async function () {

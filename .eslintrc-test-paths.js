@@ -217,7 +217,7 @@ const extraBrowserTestPaths = [
   "toolkit/components/pdfjs/test/",
   "toolkit/components/pictureinpicture/tests/",
   "toolkit/components/printing/tests/",
-  "toolkit/components/reader/test/",
+  "toolkit/components/reader/tests/",
   "toolkit/components/thumbnails/test/",
   "toolkit/components/tooltiptext/tests/",
   "toolkit/components/windowcreator/test/",

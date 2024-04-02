@@ -953,8 +953,8 @@ toolkit/components/places/tests/unit/bookmarks_html_localized.html
 toolkit/components/places/tests/unit/bookmarks_html_singleframe.html
 toolkit/components/printing/tests/simplifyArticleSample.html
 toolkit/components/processtools/tests/browser/dummy.html
-toolkit/components/reader/test/readerModeArticleMedium.html
-toolkit/components/reader/test/readerModeArticleShort.html
+toolkit/components/reader/tests/browser/readerModeArticleMedium.html
+toolkit/components/reader/tests/browser/readerModeArticleShort.html
 toolkit/components/translations/content/translations.html
 toolkit/components/translations/tests/browser/translations-tester-no-tag.html
 toolkit/components/url-classifier/tests/mochitest/classifiedAnnotatedFrame.html

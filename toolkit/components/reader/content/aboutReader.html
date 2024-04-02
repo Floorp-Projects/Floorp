@@ -14,11 +14,23 @@
     <meta name="viewport" content="width=device-width; user-scalable=0" />
     <link
       rel="stylesheet"
+      href="chrome://global/skin/design-system/tokens-brand.css"
+    />
+    <link
+      rel="stylesheet"
       href="chrome://global/skin/aboutReader.css"
       type="text/css"
     />
     <link rel="localization" href="toolkit/about/aboutReader.ftl" />
     <link rel="localization" href="toolkit/branding/brandings.ftl" />
+    <script
+      type="module"
+      src="chrome://global/content/reader/color-input.mjs"
+    ></script>
+    <script
+      type="module"
+      src="chrome://global/content/elements/named-deck.js"
+    ></script>
   </head>
 
   <body>
@@ -53,7 +65,6 @@
               </button>
             </li>
             <li class="dropdown-popup">
-              <div class="dropdown-arrow"></div>
               <div class="font-type-buttons radiorow"></div>
               <div class="font-size-buttons buttonrow">
                 <button
@@ -88,7 +99,63 @@
                   data-l10n-id="about-reader-toolbar-lineheightplus"
                 ></button>
               </div>
-              <div class="color-scheme-buttons radiorow"></div>
+              <div
+                class="color-scheme-buttons radiorow"
+                id="regular-color-scheme"
+                hidden="false"
+              ></div>
+            </li>
+          </ul>
+          <ul
+            class="dropdown colors-dropdown"
+            id="custom-colors-color-scheme"
+            hidden="true"
+          >
+            <li>
+              <button
+                class="dropdown-toggle toolbar-button colors-button"
+                aria-labelledby="toolbar-color-controls"
+                data-telemetry-id="reader-color-controls"
+              >
+                <span
+                  class="hover-label"
+                  id="toolbar-color-controls"
+                  data-l10n-id="about-reader-toolbar-color-controls"
+                ></span>
+              </button>
+            </li>
+            <li class="dropdown-popup" id="color-controls">
+              <h2
+                data-l10n-id="about-reader-colors-menu-header"
+                id="about-reader-colors-menu-header"
+              ></h2>
+              <button-group aria-labelledby="about-reader-colors-menu-header">
+                <button
+                  is="named-deck-button"
+                  deck="tabs-deck"
+                  name="fxtheme"
+                  data-l10n-id="about-reader-fxtheme-tab"
+                ></button>
+                <button
+                  is="named-deck-button"
+                  deck="tabs-deck"
+                  name="customtheme"
+                  data-l10n-id="about-reader-customtheme-tab"
+                ></button>
+              </button-group>
+              <named-deck id="tabs-deck" is-tabbed>
+                <div
+                  name="fxtheme"
+                  class="colors-menu-color-scheme-buttons radiorow"
+                ></div>
+                <div name="customtheme">
+                  <ul class="custom-colors-selection"></ul>
+                  <button
+                    class="custom-colors-reset-button"
+                    data-l10n-id="about-reader-custom-colors-reset-button"
+                  ></button>
+                </div>
+              </named-deck>
             </li>
           </ul>
         </div>

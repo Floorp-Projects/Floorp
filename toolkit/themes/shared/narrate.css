@@ -16,10 +16,15 @@ body.sepia {
   --narrating-paragraph-background-color: #e0d7c5;
 }
 
-body.dark {
+body.dark,
+body.contrast {
   --current-voice: #a09eac;
   --narrate-word-highlight-color: #6f6f6f;
   --narrating-paragraph-background-color: #242424;
+}
+
+body.custom {
+  --narrating-paragraph-background-color: var(--custom-theme-selection-highlight);
 }
 
 body.hcm {
@@ -100,14 +105,6 @@ body.hcm .speaking:not(.open) .narrate-toggle:hover {
   outline-offset: -2px;
 }
 
-.narrate-dropdown > .dropdown-popup {
-  top: -34px;
-}
-
-.narrate-dropdown .dropdown-arrow {
-  top: 40px;
-}
-
 .narrate-row {
   display: flex;
   align-items: center;
@@ -168,7 +165,7 @@ body.hcm .speaking:not(.open) .narrate-toggle:hover {
   background-repeat: no-repeat;
   background-size: 24px auto;
   -moz-context-properties: fill;
-  fill: var(--icon-fill);
+  fill: var(--popup-button-foreground);
 }
 
 .narrate-rate::before {
@@ -193,7 +190,7 @@ body.hcm .speaking:not(.open) .narrate-toggle:hover {
 }
 
 .narrate-rate-input::-moz-range-track {
-  background-color: var(--icon-fill);
+  background-color: var(--popup-button-foreground);
   height: 2px;
 }
 
@@ -203,7 +200,7 @@ body.hcm .speaking:not(.open) .narrate-toggle:hover {
 }
 
 .narrate-rate-input::-moz-range-thumb {
-  background-color: var(--icon-fill);
+  background-color: var(--popup-button-foreground);
   height: 16px;
   width: 16px;
   border-radius: 8px;
@@ -244,6 +241,10 @@ body.hcm .speaking:not(.open) .narrate-toggle:hover {
   color: var(--current-voice);
 }
 
+.voiceselect .label {
+  color: var(--popup-button-foreground);
+}
+
 .voiceselect > .options {
   display: none;
   overflow-y: auto;
@@ -256,6 +257,7 @@ body.hcm .speaking:not(.open) .narrate-toggle:hover {
 
 .voiceselect > .options > button.option {
   box-sizing: border-box;
+  color: var(--popup-button-foreground);
 }
 
 .voiceselect > .options > button.option:not(:first-child) {

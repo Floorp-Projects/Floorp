@@ -39,7 +39,6 @@ body {
   --tooltip-border: transparent;
   --popup-background: #fff;
   --popup-border: rgba(0, 0, 0, 0.12);
-  --opaque-popup-border: rgb(224, 224, 224);
   --popup-line: var(--grey-30);
   --popup-shadow: rgba(49, 49, 49, 0.3);
   --popup-button-background: rgba(207, 207, 216, 0.33);
@@ -47,9 +46,8 @@ body {
   --popup-button-background-hover: var(--toolbar-button-background-hover);
   --popup-button-foreground-hover: var(--main-foreground);
   --popup-button-background-active: var(--toolbar-button-background-active);
-  --popup-button-border: var(--popup-border);
+  --popup-button-border: rgba(0, 0, 0, 0.2);
   --selected-background: rgba(0, 97, 224, 0.3);
-  --selected-border: var(--primary-color);
   --outline-focus-color: var(--primary-color);
   --font-value-background: rgb(240, 240, 244);
   --font-value-border: var(--grey-30);
@@ -61,6 +59,11 @@ body {
   --link-selected-background: var(--selected-background);
   --link-selected-foreground: #333;
   --visited-link-foreground: #b5007f;
+  --custom-theme-background: var(--color-white);
+  --custom-theme-foreground: #14151A;
+  --custom-theme-unvisited-links: var(--color-blue-50);
+  --custom-theme-visited-links: #321C64;
+  --custom-theme-selection-highlight: #FFFFCC;
   /* light colours */
 }
 
@@ -72,26 +75,62 @@ body.sepia {
   --icon-disabled-fill: rgba(91, 70, 54, 0.4);
 }
 
+body.gray {
+  --main-background: var(--grey-30);
+  --main-foreground: var(--light-theme-foreground);
+  --toolbar-border: var(--main-foreground);
+  --icon-fill: var(--main-foreground);
+}
+
+body.dark,
+body.contrast {
+  --toolbar-box-shadow: black;
+  --toolbar-button-background-hover: rgb(82, 82, 94);
+  --toolbar-button-background-active: rgb(91, 91, 102);
+  --popup-background: rgb(66, 65, 77);
+  --popup-button-border: rgba(255, 255, 255, 0.12);
+  --popup-line: rgba(249, 249, 250, 0.1);
+  --popup-button-background: rgb(43, 42, 51);
+  --font-value-background: rgba(249, 249, 250, 0.15);
+  --font-value-border: #656468;
+  --icon-disabled-fill: rgba(251, 251, 254, 0.4);
+  --link-selected-foreground: #fff;
+  --visited-link-foreground: #e675fd;
+  --selected-background: rgba(0, 221, 255, 0.3);
+  /* dark colours */
+
+  .moz-reader-block-img {
+    filter: brightness(0.8) contrast(1.2);
+  }
+}
+
 body.dark {
   --main-background: var(--dark-theme-background);
   --main-foreground: var(--dark-theme-foreground);
   --primary-color: rgb(0, 221, 255);
   --toolbar-border: rgba(249, 249, 250, 0.2);
-  --toolbar-box-shadow: black;
-  --toolbar-button-background-hover: rgb(82, 82, 94);
-  --toolbar-button-background-active: rgb(91, 91, 102);
-  --popup-background: rgb(66, 65, 77);
-  --opaque-popup-border: #434146;
-  --popup-line: rgba(249, 249, 250, 0.1);
-  --popup-button-background: rgb(43, 42, 51);
-  --selected-background: rgba(0, 221, 255, 0.3);
-  --font-value-background: rgba(249, 249, 250, 0.15);
-  --font-value-border: #656468;
   --icon-fill: rgb(251, 251, 254);
-  --icon-disabled-fill: rgba(251, 251, 254, 0.4);
-  --link-selected-foreground: #fff;
-  --visited-link-foreground: #e675fd;
-  /* dark colours */
+}
+
+body.contrast {
+  --main-background: #000000;
+  --main-foreground: #fff;
+  --primary-color: #D6B4FD;
+  --toolbar-border: #FFEE32;
+  --icon-fill: #FFEE32;
+}
+
+body.custom {
+  --main-background: var(--custom-theme-background);
+  --main-foreground: var(--custom-theme-foreground);
+  --link-foreground: var(--custom-theme-unvisited-links);
+  --visited-link-foreground: var(--custom-theme-visited-links);
+  --popup-button-foreground: var(--light-theme-foreground);
+  --popup-button-foreground-hover: var(--light-theme-foreground);
+  --tooltip-foreground: var(--light-theme-foreground);
+  --toolbar-border: var(--main-foreground);
+  --icon-fill: var(--main-foreground);
+  --icon-disabled-fill: rgba(91, 91, 102, 0.4);
 }
 
 body.hcm {
@@ -116,7 +155,6 @@ body.hcm {
   --tooltip-border: CanvasText;
   --popup-background: Canvas;
   --popup-border: CanvasText;
-  --opaque-popup-border: CanvasText;
   --popup-line: CanvasText;
   --popup-button-background: ButtonFace;
   --popup-button-foreground: ButtonText;
@@ -136,6 +174,11 @@ body.hcm {
   --link-selected-background: SelectedItem;
   --link-selected-foreground: SelectedItemText;
   --visited-link-foreground: VisitedText;
+}
+
+body.hcm .colors-dropdown {
+  /* Hide entire colors menu when HCM is on. */
+  display: none;
 }
 
 body {
@@ -182,31 +225,29 @@ blockquote {
   border-inline-start: 2px solid var(--main-foreground) !important;
 }
 
-.light-button,
-.auto-button {
-  color: var(--light-theme-foreground);
-  background-color: var(--light-theme-background);
-}
-
-@media (prefers-color-scheme: dark) {
+.color-scheme-buttons {
+  .light-button,
   .auto-button {
+    color: var(--light-theme-foreground);
+    background-color: var(--light-theme-background);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .auto-button {
+      color: var(--dark-theme-foreground);
+      background-color: var(--dark-theme-background);
+    }
+  }
+
+  .dark-button {
     color: var(--dark-theme-foreground);
     background-color: var(--dark-theme-background);
   }
 
-  .moz-reader-block-img {
-    filter: brightness(0.8) contrast(1.2);
+  .sepia-button {
+    color: #5b4636;
+    background-color: #f4ecd8;
   }
-}
-
-.dark-button {
-  color: var(--dark-theme-foreground);
-  background-color: var(--dark-theme-background);
-}
-
-.sepia-button {
-  color: #5b4636;
-  background-color: #f4ecd8;
 }
 
 /* Loading/error message */
@@ -311,7 +352,7 @@ blockquote {
    */
   margin-inline-start: max(calc(50% - 17px - var(--inline-padding)), calc(100% - 96px - 34px - 2 * var(--inline-padding)));
 
-  font-family: Helvetica, Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Ubuntu, "Helvetica Neue", sans-serif;
   list-style: none;
   user-select: none;
 
@@ -452,40 +493,26 @@ button:disabled {
 .dropdown .dropdown-popup {
   text-align: start;
   position: absolute;
-  inset-inline-start: 40px;
+  inset-inline-start: 32px;
   z-index: 1000;
   background-color: var(--popup-background);
   visibility: hidden;
   border-radius: 4px;
   border: 1px solid var(--popup-border);
   box-shadow: 0 0 10px 0 var(--popup-shadow);
-  top: 0;
+  top: var(--space-xsmall);
+}
+
+.dropdown-popup h2 {
+  font-size: var(--font-size-root);
+  font-weight: var(--font-weight-bold);
+  color: var(--popup-button-foreground);
+  margin-block: var(--space-large);
+  margin-inline: var(--space-large) 0;
 }
 
 .open > .dropdown-popup {
   visibility: visible;
-}
-
-.dropdown-arrow {
-  position: absolute;
-  height: 24px;
-  width: 16px;
-  inset-inline-start: -16px;
-  background-image: url("chrome://global/skin/reader/RM-Type-Controls-Arrow.svg");
-  display: block;
-  -moz-context-properties: fill, stroke;
-  fill: var(--popup-background);
-  stroke: var(--opaque-popup-border);
-  pointer-events: none;
-}
-
-.dropdown-arrow:dir(rtl) {
-  transform: scaleX(-1);
-}
-
-/* Align the style dropdown arrow (narrate does its own) */
-.style-dropdown .dropdown-arrow {
-  top: 7px;
 }
 
 /* Font style popup */
@@ -513,13 +540,14 @@ button:disabled {
   box-sizing: border-box;
   width: 36px;
   height: 20px;
-  line-height: 20px;
+  line-height: 18px;
   display: flex;
   justify-content: center;
   align-content: center;
   margin: auto;
   border-radius: 10px;
   border: 1px solid var(--font-value-border);
+  color: var(--popup-button-foreground);
   background-color: var(--font-value-background);
 }
 
@@ -547,14 +575,9 @@ button:disabled {
   outline-offset: -2px;
 }
 
-.radiorow:not(:last-child),
-.buttonrow:not(:last-child) {
+.style-dropdown .radiorow:not(:last-child),
+.style-dropdown .buttonrow:not(:last-child) {
   border-bottom: 1px solid var(--popup-line);
-}
-
-body.hcm .buttonrow.line-height-buttons {
-  /* On HCM the .color-scheme-buttons row is hidden, so remove the border from the row above it */
-  border-bottom: none;
 }
 
 .radiorow > label {
@@ -565,27 +588,16 @@ body.hcm .buttonrow.line-height-buttons {
 }
 
 .radiorow > label[checked] {
-  border-color: var(--selected-border);
+  border: 2px solid var(--link-selected-foreground);
 }
 
-/* For the hover style, we draw a line under the item by means of a
- * pseudo-element. Because these items are variable height, and
- * because their contents are variable height, position it absolutely,
- * and give it a width of 100% (the content width) + 4px for the 2 * 2px
- * border width.
- */
-.radiorow > input[type=radio]:focus-visible + label::after,
-.radiorow > label:hover::after {
-  content: "";
-  display: block;
-  border-bottom: 2px solid var(--selected-border);
-  border-radius: 4px;
-  width: calc(100% + 4px);
-  position: absolute;
-  /* to skip the 2 * 2px border + 2px spacing. */
-  bottom: -6px;
-  /* Match the start of the 2px border of the element: */
-  inset-inline-start: -2px;
+.radiorow > label:hover {
+  background-color: var(--toolbar-button-background-hover);
+}
+
+.radiorow > input[type=radio]:focus-visible + label {
+  outline: 2px solid var(--primary-color);
+  outline-offset: var(--focus-outline-offset);
 }
 
 .font-type-buttons > label {
@@ -606,6 +618,16 @@ body.hcm .buttonrow.line-height-buttons {
    * baselines between serif and sans-serif, this isn't always enough. */
   line-height: 1;
   padding-top: 2px;
+}
+
+.font-type-buttons {
+  > label:first-of-type {
+    margin-inline-start: var(--space-large);
+  }
+
+  > label:last-of-type {
+    margin-inline-end: var(--space-large);
+  }
 }
 
 .font-type-buttons > label[checked] {
@@ -642,6 +664,7 @@ body.hcm .color-scheme-buttons {
   justify-content: center;
   /* We want 10px between items, but there's no margin collapsing in flexbox. */
   margin: 10px 5px;
+  border-color: var(--popup-border);
 }
 
 .color-scheme-buttons > input:first-child + label {
@@ -652,6 +675,108 @@ body.hcm .color-scheme-buttons {
   margin-inline-end: 10px;
 }
 
+/* Separate colors menu popup */
+
+#color-controls {
+  padding-block-end: var(--space-large);
+  width: 400px;
+}
+
+button-group {
+  display: flex;
+  font-size: var(--font-size-small);
+}
+
+button[is="named-deck-button"] {
+  background: none;
+  color: var(--popup-button-foreground);
+  border: 1px var(--popup-button-border);
+  border-style: solid none;
+  padding: var(--space-small);
+  flex-basis: 50%;
+
+  &[selected] {
+    color: var(--primary-color);
+    border-top: 2px solid var(--primary-color);
+  }
+}
+
+.custom-colors-selection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-small);
+  padding: var(--space-large);
+  list-style-type: none;
+  font-size: var(--font-size-root);
+  color: var(--popup-button-foreground);
+}
+
+.colors-menu-color-scheme-buttons {
+  flex-wrap: wrap;
+  margin-block-start: var(--space-small);
+}
+
+.colors-menu-color-scheme-buttons > label {
+  height: 48px;
+  width: calc(50% - 21px);
+  font-size: var(--font-size-root);
+  color: var(--popup-button-foreground);
+  border: 1px solid var(--popup-button-border);
+  border-radius: var(--border-radius-small);
+  /* Center content vertically and justify left horizontally */
+  display: inline-flex;
+  align-items: center;
+  justify-content: start;
+  margin: var(--space-xsmall);
+}
+
+.colors-menu-color-scheme-buttons > label:before {
+  content: "";
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--border-radius-circle);
+  outline: 1px solid var(--popup-button-border);
+  margin: 0 10px 0 12px;
+}
+
+.colors-menu-color-scheme-buttons {
+  .auto-button:before {
+    background: linear-gradient(to right, var(--light-theme-background) 50%, var(--dark-theme-background) 50%);;
+  }
+
+  .light-button:before {
+    background-color: var(--light-theme-background);
+  }
+
+  .dark-button:before {
+    background-color: var(--dark-theme-background);
+  }
+
+  .sepia-button:before {
+    background-color: #f4ecd8;
+  }
+
+  .contrast-button:before {
+    background-color: #000000;
+  }
+
+  .gray-button:before {
+    background-color: var(--grey-30);
+  }
+}
+
+.custom-colors-reset-button {
+  display: block;
+  background: none;
+  border: none;
+  padding: 0 var(--space-large);
+  color: var(--primary-color);
+  text-decoration: underline;
+  font-size: var(--font-size-root);
+  cursor: pointer;
+}
+
 /* Toolbar icons */
 
 .close-button {
@@ -660,6 +785,10 @@ body.hcm .color-scheme-buttons {
 
 .style-button {
   background-image: url("chrome://global/skin/reader/RM-Type-Controls-24x24.svg");
+}
+
+.colors-button {
+  background-image: url("chrome://mozapps/skin/extensions/category-themes.svg");
 }
 
 .minus-button {

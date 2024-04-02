@@ -7,7 +7,7 @@
 // contained within it, so if the article gets reloaded instead of using
 // the cached version, it would have a different value in it.
 const URL =
-  "http://mochi.test:8888/browser/toolkit/components/reader/test/readerModeRandom.sjs";
+  "http://mochi.test:8888/browser/toolkit/components/reader/tests/browser/readerModeRandom.sjs";
 
 add_task(async function () {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, URL);

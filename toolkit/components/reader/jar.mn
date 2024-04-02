@@ -4,3 +4,5 @@
 
 toolkit.jar:
   content/global/reader/aboutReader.html             (content/aboutReader.html)
+  content/global/reader/color-input.css              (color-input.css)
+  content/global/reader/color-input.mjs              (color-input.mjs)

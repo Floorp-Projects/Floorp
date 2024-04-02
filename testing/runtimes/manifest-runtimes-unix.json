@@ -271,7 +271,7 @@
     "toolkit/components/pictureinpicture/tests/browser.ini": 85.82,
     "toolkit/components/places/tests/browser/browser.ini": 30.19,
     "toolkit/components/printing/tests/browser.ini": 7.15,
-    "toolkit/components/reader/test/browser.ini": 17.92,
+    "toolkit/components/reader/tests/browser/browser.ini": 17.92,
     "toolkit/components/remotebrowserutils/tests/browser/browser.ini": 33.48,
     "toolkit/components/remotepagemanager/tests/browser/browser.ini": 6.94,
     "toolkit/components/satchel/test/browser/browser.ini": 6.09,
