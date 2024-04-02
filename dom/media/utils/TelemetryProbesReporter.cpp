@@ -361,6 +361,7 @@ void TelemetryProbesReporter::OntFirstFrameLoaded(
     LOG("%s", logMessage.get());
   }
   glean::media_playback::first_frame_loaded.Record(Some(extraData));
+  mOwner->DispatchAsyncTestingEvent(u"mozfirstframeloadedprobe"_ns);
 }
 
 void TelemetryProbesReporter::OnShutdown() {

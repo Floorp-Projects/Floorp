@@ -17,7 +17,7 @@ const testCases = [
       key_system: undefined,
     },
     async run(tab) {
-      await loadVideo(tab);
+      await loadVideo(tab, "mozfirstframeloadedprobe");
     },
   },
   {
@@ -28,7 +28,7 @@ const testCases = [
       key_system: undefined,
     },
     async run(tab) {
-      await loadMseVideo(tab);
+      await loadMseVideo(tab, "mozfirstframeloadedprobe");
     },
   },
   {
@@ -39,10 +39,16 @@ const testCases = [
       key_system: "org.w3.clearkey",
     },
     async run(tab) {
-      await loadEmeVideo(tab);
+      await loadEmeVideo(tab, "mozfirstframeloadedprobe");
     },
   },
 ];
+
+add_task(async function setTestPref() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["media.testing-only-events", true]],
+  });
+});
 
 add_task(async function testGleanMediaPlayackFirstFrameLoaded() {
   for (let test of testCases) {
