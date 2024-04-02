@@ -280,6 +280,11 @@ internal object TranslationsDialogReducer {
                 state.copy(
                     error = action.translationError,
                     documentLangDisplayName = action.documentLangDisplayName,
+                    positiveButtonType = if (action.translationError is TranslationError.LanguageNotSupportedError) {
+                        PositiveButtonType.Disabled
+                    } else {
+                        PositiveButtonType.Enabled
+                    },
                 )
             }
 
