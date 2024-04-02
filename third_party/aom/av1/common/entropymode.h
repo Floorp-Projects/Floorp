@@ -12,7 +12,6 @@
 #ifndef AOM_AV1_COMMON_ENTROPYMODE_H_
 #define AOM_AV1_COMMON_ENTROPYMODE_H_
 
-#include "aom_ports/bitops.h"
 #include "av1/common/entropy.h"
 #include "av1/common/entropymv.h"
 #include "av1/common/filter.h"
@@ -193,7 +192,13 @@ void av1_setup_past_independence(struct AV1Common *cm);
 // Returns (int)ceil(log2(n)).
 static INLINE int av1_ceil_log2(int n) {
   if (n < 2) return 0;
-  return get_msb(n - 1) + 1;
+  int i = 1;
+  unsigned int p = 2;
+  while (p < (unsigned int)n) {
+    i++;
+    p = p << 1;
+  }
+  return i;
 }
 
 // Returns the context for palette color index at row 'r' and column 'c',

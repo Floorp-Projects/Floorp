@@ -12,7 +12,7 @@
 #include "aom_dsp/pyramid.h"
 #include "aom_mem/aom_mem.h"
 #include "aom_ports/bitops.h"
-#include "aom_util/aom_pthread.h"
+#include "aom_util/aom_thread.h"
 
 // TODO(rachelbarker): Move needed code from av1/ to aom_dsp/
 #include "av1/common/resize.h"
@@ -26,16 +26,18 @@
 //   levels. This is counted in the size checked against the max allocation
 //   limit
 // * Then calls aom_alloc_pyramid() to actually create the pyramid
-// * Pyramid is initially marked as containing no valid data
-// * Each pyramid layer is computed on-demand, the first time it is requested
-// * Whenever frame buffer is reused, reset the counter of filled levels.
-//   This invalidates all of the existing pyramid levels.
+// * Pyramid is initially marked as invalid (no data)
+// * Whenever pyramid is needed, we check the valid flag. If set, use existing
+//   data. If not set, compute full pyramid
+// * Whenever frame buffer is reused, clear the valid flag
 // * Whenever frame buffer is resized, reallocate pyramid
 
-size_t aom_get_pyramid_alloc_size(int width, int height, bool image_is_16bit) {
-  // Allocate the maximum possible number of layers for this width and height
+size_t aom_get_pyramid_alloc_size(int width, int height, int n_levels,
+                                  bool image_is_16bit) {
+  // Limit number of levels on small frames
   const int msb = get_msb(AOMMIN(width, height));
-  const int n_levels = AOMMAX(msb - MIN_PYRAMID_SIZE_LOG2, 1);
+  const int max_levels = AOMMAX(msb - MIN_PYRAMID_SIZE_LOG2, 1);
+  n_levels = AOMMIN(n_levels, max_levels);
 
   size_t alloc_size = 0;
   alloc_size += sizeof(ImagePyramid);
@@ -98,10 +100,12 @@ size_t aom_get_pyramid_alloc_size(int width, int height, bool image_is_16bit) {
   return alloc_size;
 }
 
-ImagePyramid *aom_alloc_pyramid(int width, int height, bool image_is_16bit) {
-  // Allocate the maximum possible number of layers for this width and height
+ImagePyramid *aom_alloc_pyramid(int width, int height, int n_levels,
+                                bool image_is_16bit) {
+  // Limit number of levels on small frames
   const int msb = get_msb(AOMMIN(width, height));
-  const int n_levels = AOMMAX(msb - MIN_PYRAMID_SIZE_LOG2, 1);
+  const int max_levels = AOMMAX(msb - MIN_PYRAMID_SIZE_LOG2, 1);
+  n_levels = AOMMIN(n_levels, max_levels);
 
   ImagePyramid *pyr = aom_calloc(1, sizeof(*pyr));
   if (!pyr) {
@@ -114,8 +118,8 @@ ImagePyramid *aom_alloc_pyramid(int width, int height, bool image_is_16bit) {
     return NULL;
   }
 
-  pyr->max_levels = n_levels;
-  pyr->filled_levels = 0;
+  pyr->valid = false;
+  pyr->n_levels = n_levels;
 
   // Compute sizes and offsets for each pyramid level
   // These are gathered up first, so that we can allocate all pyramid levels
@@ -244,67 +248,46 @@ static INLINE void fill_border(uint8_t *img_buf, const int width,
   }
 }
 
-// Compute downsampling pyramid for a frame
-//
-// This function will ensure that the first `n_levels` levels of the pyramid
-// are filled, unless the frame is too small to have this many levels.
-// In that case, we will fill all available levels and then stop.
-//
-// Returns the actual number of levels filled, capped at n_levels,
-// or -1 on error.
-//
+// Compute coarse to fine pyramids for a frame
 // This must only be called while holding frame_pyr->mutex
-static INLINE int fill_pyramid(const YV12_BUFFER_CONFIG *frame, int bit_depth,
-                               int n_levels, ImagePyramid *frame_pyr) {
-  int already_filled_levels = frame_pyr->filled_levels;
-
-  // This condition should already be enforced by aom_compute_pyramid
-  assert(n_levels <= frame_pyr->max_levels);
-
-  if (already_filled_levels >= n_levels) {
-    return n_levels;
-  }
-
+static INLINE bool fill_pyramid(const YV12_BUFFER_CONFIG *frame, int bit_depth,
+                                ImagePyramid *frame_pyr) {
+  int n_levels = frame_pyr->n_levels;
   const int frame_width = frame->y_crop_width;
   const int frame_height = frame->y_crop_height;
   const int frame_stride = frame->y_stride;
   assert((frame_width >> n_levels) >= 0);
   assert((frame_height >> n_levels) >= 0);
 
-  if (already_filled_levels == 0) {
-    // Fill in largest level from the original image
-    PyramidLayer *first_layer = &frame_pyr->layers[0];
-    if (frame->flags & YV12_FLAG_HIGHBITDEPTH) {
-      // For frames stored in a 16-bit buffer, we need to downconvert to 8 bits
-      assert(first_layer->width == frame_width);
-      assert(first_layer->height == frame_height);
+  PyramidLayer *first_layer = &frame_pyr->layers[0];
+  if (frame->flags & YV12_FLAG_HIGHBITDEPTH) {
+    // For frames stored in a 16-bit buffer, we need to downconvert to 8 bits
+    assert(first_layer->width == frame_width);
+    assert(first_layer->height == frame_height);
 
-      uint16_t *frame_buffer = CONVERT_TO_SHORTPTR(frame->y_buffer);
-      uint8_t *pyr_buffer = first_layer->buffer;
-      int pyr_stride = first_layer->stride;
-      for (int y = 0; y < frame_height; y++) {
-        uint16_t *frame_row = frame_buffer + y * frame_stride;
-        uint8_t *pyr_row = pyr_buffer + y * pyr_stride;
-        for (int x = 0; x < frame_width; x++) {
-          pyr_row[x] = frame_row[x] >> (bit_depth - 8);
-        }
+    uint16_t *frame_buffer = CONVERT_TO_SHORTPTR(frame->y_buffer);
+    uint8_t *pyr_buffer = first_layer->buffer;
+    int pyr_stride = first_layer->stride;
+    for (int y = 0; y < frame_height; y++) {
+      uint16_t *frame_row = frame_buffer + y * frame_stride;
+      uint8_t *pyr_row = pyr_buffer + y * pyr_stride;
+      for (int x = 0; x < frame_width; x++) {
+        pyr_row[x] = frame_row[x] >> (bit_depth - 8);
       }
-
-      fill_border(pyr_buffer, frame_width, frame_height, pyr_stride);
-    } else {
-      // For frames stored in an 8-bit buffer, we don't need to copy anything -
-      // we can just reference the original image buffer
-      first_layer->buffer = frame->y_buffer;
-      first_layer->width = frame_width;
-      first_layer->height = frame_height;
-      first_layer->stride = frame_stride;
     }
 
-    already_filled_levels = 1;
+    fill_border(pyr_buffer, frame_width, frame_height, pyr_stride);
+  } else {
+    // For frames stored in an 8-bit buffer, we need to configure the first
+    // pyramid layer to point at the original image buffer
+    first_layer->buffer = frame->y_buffer;
+    first_layer->width = frame_width;
+    first_layer->height = frame_height;
+    first_layer->stride = frame_stride;
   }
 
   // Fill in the remaining levels through progressive downsampling
-  for (int level = already_filled_levels; level < n_levels; ++level) {
+  for (int level = 1; level < n_levels; ++level) {
     PyramidLayer *prev_layer = &frame_pyr->layers[level - 1];
     uint8_t *prev_buffer = prev_layer->buffer;
     int prev_stride = prev_layer->stride;
@@ -331,16 +314,11 @@ static INLINE int fill_pyramid(const YV12_BUFFER_CONFIG *frame, int bit_depth,
     //    TODO(rachelbarker): Use optimized downsample-by-2 function
     if (!av1_resize_plane(prev_buffer, this_height << 1, this_width << 1,
                           prev_stride, this_buffer, this_height, this_width,
-                          this_stride)) {
-      // If we can't allocate memory, we'll have to terminate early
-      frame_pyr->filled_levels = n_levels;
-      return -1;
-    }
+                          this_stride))
+      return false;
     fill_border(this_buffer, this_width, this_height, this_stride);
   }
-
-  frame_pyr->filled_levels = n_levels;
-  return n_levels;
+  return true;
 }
 
 // Fill out a downsampling pyramid for a given frame.
@@ -349,72 +327,63 @@ static INLINE int fill_pyramid(const YV12_BUFFER_CONFIG *frame, int bit_depth,
 // regardless of the input bit depth. Additional levels are then downscaled
 // by powers of 2.
 //
-// This function will ensure that the first `n_levels` levels of the pyramid
-// are filled, unless the frame is too small to have this many levels.
-// In that case, we will fill all available levels and then stop.
-// No matter how small the frame is, at least one level is guaranteed
-// to be filled.
+// For small input frames, the number of levels actually constructed
+// will be limited so that the smallest image is at least MIN_PYRAMID_SIZE
+// pixels along each side.
 //
-// Returns the actual number of levels filled, capped at n_levels,
-// or -1 on error.
-int aom_compute_pyramid(const YV12_BUFFER_CONFIG *frame, int bit_depth,
-                        int n_levels, ImagePyramid *pyr) {
+// However, if the input frame has a side of length < MIN_PYRAMID_SIZE,
+// we will still construct the top level.
+bool aom_compute_pyramid(const YV12_BUFFER_CONFIG *frame, int bit_depth,
+                         ImagePyramid *pyr) {
   assert(pyr);
 
   // Per the comments in the ImagePyramid struct, we must take this mutex
-  // before reading or writing the filled_levels field, and hold it while
-  // computing any additional pyramid levels, to ensure proper behaviour
-  // when multithreading is used
+  // before reading or writing the "valid" flag, and hold it while computing
+  // the pyramid, to ensure proper behaviour if multiple threads call this
+  // function simultaneously
 #if CONFIG_MULTITHREAD
   pthread_mutex_lock(&pyr->mutex);
 #endif  // CONFIG_MULTITHREAD
 
-  n_levels = AOMMIN(n_levels, pyr->max_levels);
-  int result = n_levels;
-  if (pyr->filled_levels < n_levels) {
-    // Compute any missing levels that we need
-    result = fill_pyramid(frame, bit_depth, n_levels, pyr);
+  if (!pyr->valid) {
+    pyr->valid = fill_pyramid(frame, bit_depth, pyr);
   }
+  bool valid = pyr->valid;
 
-  // At this point, as long as result >= 0, the requested number of pyramid
-  // levels are guaranteed to be valid, and can be safely read from without
-  // holding the mutex any further
-  assert(IMPLIES(result >= 0, pyr->filled_levels >= n_levels));
+  // At this point, the pyramid is guaranteed to be valid, and can be safely
+  // read from without holding the mutex any more
+
 #if CONFIG_MULTITHREAD
   pthread_mutex_unlock(&pyr->mutex);
 #endif  // CONFIG_MULTITHREAD
-  return result;
+  return valid;
 }
 
 #ifndef NDEBUG
-// Check if a pyramid has already been computed to at least n levels
+// Check if a pyramid has already been computed.
 // This is mostly a debug helper - as it is necessary to hold pyr->mutex
-// while reading the number of already-computed levels, we cannot just write:
-//   assert(pyr->filled_levels >= n_levels);
+// while reading the valid flag, we cannot just write:
+//   assert(pyr->valid);
 // This function allows the check to be correctly written as:
-//   assert(aom_is_pyramid_valid(pyr, n_levels));
-//
-// Note: This deliberately does not restrict n_levels based on the maximum
-// number of permitted levels for the frame size. This allows the check to
-// catch cases where the caller forgets to handle the case where
-// max_levels is less than the requested number of levels
-bool aom_is_pyramid_valid(ImagePyramid *pyr, int n_levels) {
+//   assert(aom_is_pyramid_valid(pyr));
+bool aom_is_pyramid_valid(ImagePyramid *pyr) {
   assert(pyr);
 
   // Per the comments in the ImagePyramid struct, we must take this mutex
-  // before reading or writing the filled_levels field, to ensure proper
-  // behaviour when multithreading is used
+  // before reading or writing the "valid" flag, and hold it while computing
+  // the pyramid, to ensure proper behaviour if multiple threads call this
+  // function simultaneously
 #if CONFIG_MULTITHREAD
   pthread_mutex_lock(&pyr->mutex);
 #endif  // CONFIG_MULTITHREAD
 
-  bool result = (pyr->filled_levels >= n_levels);
+  bool valid = pyr->valid;
 
 #if CONFIG_MULTITHREAD
   pthread_mutex_unlock(&pyr->mutex);
 #endif  // CONFIG_MULTITHREAD
 
-  return result;
+  return valid;
 }
 #endif
 
@@ -425,7 +394,7 @@ void aom_invalidate_pyramid(ImagePyramid *pyr) {
 #if CONFIG_MULTITHREAD
     pthread_mutex_lock(&pyr->mutex);
 #endif  // CONFIG_MULTITHREAD
-    pyr->filled_levels = 0;
+    pyr->valid = false;
 #if CONFIG_MULTITHREAD
     pthread_mutex_unlock(&pyr->mutex);
 #endif  // CONFIG_MULTITHREAD

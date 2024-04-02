@@ -55,7 +55,7 @@ Type* SafeArrayAlloc(unsigned long long num_elements,
 void GetVersion(int& major, int& minor, int& build, int& revision) {
   major = 1;
   minor = 1;
-  build = 3;
+  build = 1;
   revision = 0;
 }
 
@@ -246,8 +246,7 @@ long UnserializeFloat(IMkvReader* pReader, long long pos, long long size_,
   if (size == 4) {
     union {
       float f;
-      uint32_t ff;
-      static_assert(sizeof(float) == sizeof(uint32_t), "");
+      unsigned long ff;
     };
 
     ff = 0;
@@ -265,8 +264,7 @@ long UnserializeFloat(IMkvReader* pReader, long long pos, long long size_,
   } else {
     union {
       double d;
-      uint64_t dd;
-      static_assert(sizeof(double) == sizeof(uint64_t), "");
+      unsigned long long dd;
     };
 
     dd = 0;
@@ -4571,8 +4569,7 @@ int Track::Info::CopyStr(char* Info::*str, Info& dst_) const {
   if (dst == NULL)
     return -1;
 
-  memcpy(dst, src, len);
-  dst[len] = '\0';
+  strcpy(dst, src);
 
   return 0;
 }

@@ -23,7 +23,7 @@
 #include "aom_dsp/binary_codes_writer.h"
 #include "aom_ports/mem.h"
 #include "aom_ports/aom_timer.h"
-#include "aom_util/aom_pthread.h"
+
 #if CONFIG_MISMATCH_DEBUG
 #include "aom_util/debug_util.h"
 #endif  // CONFIG_MISMATCH_DEBUG
@@ -536,8 +536,8 @@ static AOM_INLINE void encode_nonrd_sb(AV1_COMP *cpi, ThreadData *td,
 #endif
   // Set the partition
   if (sf->part_sf.partition_search_type == FIXED_PARTITION || seg_skip ||
-      (sf->rt_sf.use_fast_fixed_part && x->sb_force_fixed_part == 1 &&
-       !frame_is_intra_only(cm))) {
+      (sf->rt_sf.use_fast_fixed_part &&
+       x->content_state_sb.source_sad_nonrd < kMedSad)) {
     // set a fixed-size partition
     av1_set_offsets(cpi, tile_info, x, mi_row, mi_col, sb_size);
     BLOCK_SIZE bsize_select = sf->part_sf.fixed_partition_size;
@@ -1054,13 +1054,8 @@ static AOM_INLINE bool is_calc_src_content_needed(AV1_COMP *cpi,
 
     // The threshold is determined based on kLowSad and kHighSad threshold and
     // test results.
-    uint64_t thresh_low = 15000;
-    uint64_t thresh_high = 40000;
-
-    if (cpi->sf.rt_sf.increase_source_sad_thresh) {
-      thresh_low = thresh_low << 1;
-      thresh_high = thresh_high << 1;
-    }
+    const uint64_t thresh_low = 15000;
+    const uint64_t thresh_high = 40000;
 
     if (avg_64x64_blk_sad > thresh_low && avg_64x64_blk_sad < thresh_high) {
       do_calc_src_content = false;
@@ -1208,7 +1203,6 @@ static AOM_INLINE void encode_sb_row(AV1_COMP *cpi, ThreadData *td,
     x->sb_me_block = 0;
     x->sb_me_partition = 0;
     x->sb_me_mv.as_int = 0;
-    x->sb_force_fixed_part = 1;
 
     if (cpi->oxcf.mode == ALLINTRA) {
       x->intra_sb_rdmult_modifier = 128;
@@ -1237,7 +1231,7 @@ static AOM_INLINE void encode_sb_row(AV1_COMP *cpi, ThreadData *td,
 
     // Grade the temporal variation of the sb, the grade will be used to decide
     // fast mode search strategy for coding blocks
-    if (!seg_skip) grade_source_content_sb(cpi, x, tile_data, mi_row, mi_col);
+    grade_source_content_sb(cpi, x, tile_data, mi_row, mi_col);
 
     // encode the superblock
     if (use_nonrd_mode) {
@@ -2343,7 +2337,7 @@ void av1_encode_frame(AV1_COMP *cpi) {
   // a source or a ref frame should have an image pyramid allocated.
   // Check here so that issues can be caught early in debug mode
 #if !defined(NDEBUG) && !CONFIG_REALTIME_ONLY
-  if (cpi->alloc_pyramid) {
+  if (cpi->image_pyramid_levels > 0) {
     assert(cpi->source->y_pyramid);
     for (int ref_frame = LAST_FRAME; ref_frame <= ALTREF_FRAME; ++ref_frame) {
       const RefCntBuffer *const buf = get_ref_frame_buf(cm, ref_frame);

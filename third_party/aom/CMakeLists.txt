@@ -59,7 +59,7 @@ endif()
 #
 # We set SO_FILE_VERSION = [c-a].a.r
 set(LT_CURRENT 11)
-set(LT_REVISION 2)
+set(LT_REVISION 1)
 set(LT_AGE 8)
 math(EXPR SO_VERSION "${LT_CURRENT} - ${LT_AGE}")
 set(SO_FILE_VERSION "${SO_VERSION}.${LT_AGE}.${LT_REVISION}")
@@ -825,8 +825,7 @@ if(BUILD_SHARED_LIBS)
   # Clang's AddressSanitizer documentation says "When linking shared libraries,
   # the AddressSanitizer run-time is not linked, so -Wl,-z,defs may cause link
   # errors (don't use it with AddressSanitizer)." See
-  # https://clang.llvm.org/docs/AddressSanitizer.html#usage. Similarly, see
-  # https://clang.llvm.org/docs/MemorySanitizer.html#usage.
+  # https://clang.llvm.org/docs/AddressSanitizer.html#usage.
   if(NOT WIN32
      AND NOT APPLE
      AND NOT (CMAKE_C_COMPILER_ID MATCHES "Clang" AND SANITIZE))
@@ -842,6 +841,12 @@ if(BUILD_SHARED_LIBS)
 
   include("${AOM_ROOT}/build/cmake/exports.cmake")
   setup_exports_target()
+endif()
+
+# Do not allow implicit vector type conversions on Clang builds (this is already
+# the default on GCC builds).
+if(CMAKE_C_COMPILER_ID MATCHES "Clang")
+  append_compiler_flag("-flax-vector-conversions=none")
 endif()
 
 # Handle user supplied compile and link flags last to ensure they're obeyed.

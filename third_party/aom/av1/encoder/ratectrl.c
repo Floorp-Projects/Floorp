@@ -30,7 +30,6 @@
 #include "av1/common/seg_common.h"
 
 #include "av1/encoder/encodemv.h"
-#include "av1/encoder/encoder_utils.h"
 #include "av1/encoder/encode_strategy.h"
 #include "av1/encoder/gop_structure.h"
 #include "av1/encoder/random.h"
@@ -406,10 +405,10 @@ void av1_primary_rc_init(const AV1EncoderConfig *oxcf,
   p_rc->rate_correction_factors[KF_STD] = 1.0;
   p_rc->bits_off_target = p_rc->starting_buffer_level;
 
-  p_rc->rolling_target_bits = AOMMAX(
-      1, (int)(oxcf->rc_cfg.target_bandwidth / oxcf->input_cfg.init_framerate));
-  p_rc->rolling_actual_bits = AOMMAX(
-      1, (int)(oxcf->rc_cfg.target_bandwidth / oxcf->input_cfg.init_framerate));
+  p_rc->rolling_target_bits =
+      (int)(oxcf->rc_cfg.target_bandwidth / oxcf->input_cfg.init_framerate);
+  p_rc->rolling_actual_bits =
+      (int)(oxcf->rc_cfg.target_bandwidth / oxcf->input_cfg.init_framerate);
 }
 
 void av1_rc_init(const AV1EncoderConfig *oxcf, RATE_CONTROL *rc) {
@@ -440,7 +439,6 @@ void av1_rc_init(const AV1EncoderConfig *oxcf, RATE_CONTROL *rc) {
   rc->rtc_external_ratectrl = 0;
   rc->frame_level_fast_extra_bits = 0;
   rc->use_external_qp_one_pass = 0;
-  rc->percent_blocks_inactive = 0;
 }
 
 static bool check_buffer_below_thresh(AV1_COMP *cpi, int64_t buffer_level,
@@ -1721,39 +1719,41 @@ static void adjust_active_best_and_worst_quality(const AV1_COMP *cpi,
   const AV1_COMMON *const cm = &cpi->common;
   const RATE_CONTROL *const rc = &cpi->rc;
   const PRIMARY_RATE_CONTROL *const p_rc = &cpi->ppi->p_rc;
+  const RefreshFrameInfo *const refresh_frame = &cpi->refresh_frame;
   int active_best_quality = *active_best;
   int active_worst_quality = *active_worst;
 #if CONFIG_FPMT_TEST
+  const int simulate_parallel_frame =
+      cpi->ppi->gf_group.frame_parallel_level[cpi->gf_frame_index] > 0 &&
+      cpi->ppi->fpmt_unit_test_cfg == PARALLEL_SIMULATION_ENCODE;
+  int extend_minq = simulate_parallel_frame ? p_rc->temp_extend_minq
+                                            : cpi->ppi->twopass.extend_minq;
+  int extend_maxq = simulate_parallel_frame ? p_rc->temp_extend_maxq
+                                            : cpi->ppi->twopass.extend_maxq;
 #endif
   // Extension to max or min Q if undershoot or overshoot is outside
   // the permitted range.
   if (cpi->oxcf.rc_cfg.mode != AOM_Q) {
-#if CONFIG_FPMT_TEST
-    const int simulate_parallel_frame =
-        cpi->ppi->gf_group.frame_parallel_level[cpi->gf_frame_index] > 0 &&
-        cpi->ppi->fpmt_unit_test_cfg == PARALLEL_SIMULATION_ENCODE;
-    const int extend_minq = simulate_parallel_frame
-                                ? p_rc->temp_extend_minq
-                                : cpi->ppi->twopass.extend_minq;
-    const int extend_maxq = simulate_parallel_frame
-                                ? p_rc->temp_extend_maxq
-                                : cpi->ppi->twopass.extend_maxq;
-    const RefreshFrameInfo *const refresh_frame = &cpi->refresh_frame;
     if (frame_is_intra_only(cm) ||
         (!rc->is_src_frame_alt_ref &&
          (refresh_frame->golden_frame || is_intrl_arf_boost ||
           refresh_frame->alt_ref_frame))) {
+#if CONFIG_FPMT_TEST
       active_best_quality -= extend_minq;
       active_worst_quality += (extend_maxq / 2);
+#else
+      active_best_quality -= cpi->ppi->twopass.extend_minq / 4;
+      active_worst_quality += (cpi->ppi->twopass.extend_maxq / 2);
+#endif
     } else {
+#if CONFIG_FPMT_TEST
       active_best_quality -= extend_minq / 2;
       active_worst_quality += extend_maxq;
-    }
 #else
-    (void)is_intrl_arf_boost;
-    active_best_quality -= cpi->ppi->twopass.extend_minq / 8;
-    active_worst_quality += cpi->ppi->twopass.extend_maxq / 4;
+      active_best_quality -= cpi->ppi->twopass.extend_minq / 4;
+      active_worst_quality += cpi->ppi->twopass.extend_maxq;
 #endif
+    }
   }
 
 #ifndef STRICT_RC
@@ -2991,24 +2991,6 @@ void av1_set_rtc_reference_structure_one_layer(AV1_COMP *cpi, int gf_update) {
     cpi->rt_reduce_num_ref_buffers &= (rtc_ref->ref_idx[2] < 7);
 }
 
-static int set_block_is_active(unsigned char *const active_map_4x4, int mi_cols,
-                               int mi_rows, int sbi_col, int sbi_row, int sh,
-                               int num_4x4) {
-  int r = sbi_row << sh;
-  int c = sbi_col << sh;
-  const int row_max = AOMMIN(num_4x4, mi_rows - r);
-  const int col_max = AOMMIN(num_4x4, mi_cols - c);
-  // Active map is set for 16x16 blocks, so only need to
-  // check over16x16,
-  for (int x = 0; x < row_max; x += 4) {
-    for (int y = 0; y < col_max; y += 4) {
-      if (active_map_4x4[(r + x) * mi_cols + (c + y)] == AM_SEGMENT_ID_ACTIVE)
-        return 1;
-    }
-  }
-  return 0;
-}
-
 /*!\brief Check for scene detection, for 1 pass real-time mode.
  *
  * Compute average source sad (temporal sad: between current source and
@@ -3111,26 +3093,11 @@ static void rc_scene_detection_onepass_rt(AV1_COMP *cpi,
                                              sizeof(*cpi->src_sad_blk_64x64)));
     }
   }
-  const CommonModeInfoParams *const mi_params = &cpi->common.mi_params;
-  const int mi_cols = mi_params->mi_cols;
-  const int mi_rows = mi_params->mi_rows;
-  int sh = (cm->seq_params->sb_size == BLOCK_128X128) ? 5 : 4;
-  int num_4x4 = (cm->seq_params->sb_size == BLOCK_128X128) ? 32 : 16;
-  unsigned char *const active_map_4x4 = cpi->active_map.map;
   // Avoid bottom and right border.
   for (int sbi_row = 0; sbi_row < sb_rows - border; ++sbi_row) {
     for (int sbi_col = 0; sbi_col < sb_cols; ++sbi_col) {
-      int block_is_active = 1;
-      if (cpi->active_map.enabled && rc->percent_blocks_inactive > 0) {
-        block_is_active = set_block_is_active(active_map_4x4, mi_cols, mi_rows,
-                                              sbi_col, sbi_row, sh, num_4x4);
-      }
-      if (block_is_active) {
-        tmp_sad = cpi->ppi->fn_ptr[bsize].sdf(src_y, src_ystride, last_src_y,
-                                              last_src_ystride);
-      } else {
-        tmp_sad = 0;
-      }
+      tmp_sad = cpi->ppi->fn_ptr[bsize].sdf(src_y, src_ystride, last_src_y,
+                                            last_src_ystride);
       if (cpi->src_sad_blk_64x64 != NULL)
         cpi->src_sad_blk_64x64[sbi_col + sbi_row * sb_cols] = tmp_sad;
       if (check_light_change) {
@@ -3489,13 +3456,8 @@ void av1_get_one_pass_rt_params(AV1_COMP *cpi, FRAME_TYPE *const frame_type,
       }
     }
   }
-  if (cpi->active_map.enabled && cpi->rc.percent_blocks_inactive == 100) {
-    rc->frame_source_sad = 0;
-    rc->avg_source_sad = (3 * rc->avg_source_sad + rc->frame_source_sad) >> 2;
-    rc->percent_blocks_with_motion = 0;
-    rc->high_source_sad = 0;
-  } else if (cpi->sf.rt_sf.check_scene_detection &&
-             svc->spatial_layer_id == 0) {
+  // Check for scene change: for SVC check on base spatial layer only.
+  if (cpi->sf.rt_sf.check_scene_detection && svc->spatial_layer_id == 0) {
     if (rc->prev_coded_width == cm->width &&
         rc->prev_coded_height == cm->height) {
       rc_scene_detection_onepass_rt(cpi, frame_input);
@@ -3560,10 +3522,6 @@ void av1_get_one_pass_rt_params(AV1_COMP *cpi, FRAME_TYPE *const frame_type,
   }
 }
 
-#define CHECK_INTER_LAYER_PRED(ref_frame)                         \
-  ((cpi->ref_frame_flags & av1_ref_frame_flag_list[ref_frame]) && \
-   (av1_check_ref_is_low_spatial_res_super_frame(cpi, ref_frame)))
-
 int av1_encodedframe_overshoot_cbr(AV1_COMP *cpi, int *q) {
   AV1_COMMON *const cm = &cpi->common;
   PRIMARY_RATE_CONTROL *const p_rc = &cpi->ppi->p_rc;
@@ -3574,26 +3532,12 @@ int av1_encodedframe_overshoot_cbr(AV1_COMP *cpi, int *q) {
   int target_bits_per_mb;
   double q2;
   int enumerator;
-  int inter_layer_pred_on = 0;
   int is_screen_content = (cpi->oxcf.tune_cfg.content == AOM_CONTENT_SCREEN);
+  *q = (3 * cpi->rc.worst_quality + *q) >> 2;
+  // For screen content use the max-q set by the user to allow for less
+  // overshoot on slide changes.
+  if (is_screen_content) *q = cpi->rc.worst_quality;
   cpi->cyclic_refresh->counter_encode_maxq_scene_change = 0;
-  if (cpi->svc.spatial_layer_id > 0) {
-    // For spatial layers: check if inter-layer (spatial) prediction is used
-    // (check if any reference is being used that is the lower spatial layer),
-    inter_layer_pred_on = CHECK_INTER_LAYER_PRED(LAST_FRAME) ||
-                          CHECK_INTER_LAYER_PRED(GOLDEN_FRAME) ||
-                          CHECK_INTER_LAYER_PRED(ALTREF_FRAME);
-  }
-  // If inter-layer prediction is on: we expect to pull up the quality from
-  // the lower spatial layer, so we can use a lower q.
-  if (cpi->svc.spatial_layer_id > 0 && inter_layer_pred_on) {
-    *q = (cpi->rc.worst_quality + *q) >> 1;
-  } else {
-    *q = (3 * cpi->rc.worst_quality + *q) >> 2;
-    // For screen content use the max-q set by the user to allow for less
-    // overshoot on slide changes.
-    if (is_screen_content) *q = cpi->rc.worst_quality;
-  }
   // Adjust avg_frame_qindex, buffer_level, and rate correction factors, as
   // these parameters will affect QP selection for subsequent frames. If they
   // have settled down to a very different (low QP) state, then not adjusting
@@ -3622,10 +3566,8 @@ int av1_encodedframe_overshoot_cbr(AV1_COMP *cpi, int *q) {
         rate_correction_factor;
   }
   // For temporal layers: reset the rate control parameters across all
-  // temporal layers. Only do it for spatial enhancement layers when
-  // inter_layer_pred_on is not set (off).
-  if (cpi->svc.number_temporal_layers > 1 &&
-      (cpi->svc.spatial_layer_id == 0 || inter_layer_pred_on == 0)) {
+  // temporal layers.
+  if (cpi->svc.number_temporal_layers > 1) {
     SVC *svc = &cpi->svc;
     for (int tl = 0; tl < svc->number_temporal_layers; ++tl) {
       int sl = svc->spatial_layer_id;
