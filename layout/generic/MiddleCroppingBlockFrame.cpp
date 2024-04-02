@@ -57,18 +57,11 @@ void MiddleCroppingBlockFrame::UpdateDisplayedValueToUncroppedValue(
 }
 
 nscoord MiddleCroppingBlockFrame::GetMinISize(gfxContext* aRenderingContext) {
-  nscoord result;
-  DISPLAY_MIN_INLINE_SIZE(this, result);
-
   // Our min inline size is our pref inline size
-  result = GetPrefISize(aRenderingContext);
-  return result;
+  return GetPrefISize(aRenderingContext);
 }
 
 nscoord MiddleCroppingBlockFrame::GetPrefISize(gfxContext* aRenderingContext) {
-  nscoord result;
-  DISPLAY_PREF_INLINE_SIZE(this, result);
-
   nsAutoString prevValue;
   bool restoreOldValue = false;
 
@@ -79,7 +72,7 @@ nscoord MiddleCroppingBlockFrame::GetPrefISize(gfxContext* aRenderingContext) {
     UpdateDisplayedValueToUncroppedValue(false);
   }
 
-  result = nsBlockFrame::GetPrefISize(aRenderingContext);
+  nscoord result = nsBlockFrame::GetPrefISize(aRenderingContext);
 
   if (restoreOldValue) {
     UpdateDisplayedValue(prevValue, /* aIsCropped = */ true, false);

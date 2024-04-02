@@ -348,19 +348,11 @@ nscoord nsFieldSetFrame::GetIntrinsicISize(gfxContext* aRenderingContext,
 }
 
 nscoord nsFieldSetFrame::GetMinISize(gfxContext* aRenderingContext) {
-  nscoord result = 0;
-  DISPLAY_MIN_INLINE_SIZE(this, result);
-
-  result = GetIntrinsicISize(aRenderingContext, IntrinsicISizeType::MinISize);
-  return result;
+  return GetIntrinsicISize(aRenderingContext, IntrinsicISizeType::MinISize);
 }
 
 nscoord nsFieldSetFrame::GetPrefISize(gfxContext* aRenderingContext) {
-  nscoord result = 0;
-  DISPLAY_PREF_INLINE_SIZE(this, result);
-
-  result = GetIntrinsicISize(aRenderingContext, IntrinsicISizeType::PrefISize);
-  return result;
+  return GetIntrinsicISize(aRenderingContext, IntrinsicISizeType::PrefISize);
 }
 
 /* virtual */

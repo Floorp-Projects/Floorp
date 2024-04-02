@@ -1476,8 +1476,6 @@ nscoord nsImageFrame::GetContinuationOffset() const {
 nscoord nsImageFrame::GetMinISize(gfxContext* aRenderingContext) {
   // XXX The caller doesn't account for constraints of the block-size,
   // min-block-size, and max-block-size properties.
-  DebugOnly<nscoord> result;
-  DISPLAY_MIN_INLINE_SIZE(this, result);
   EnsureIntrinsicSizeAndRatio();
   const auto& iSize = GetWritingMode().IsVertical() ? mIntrinsicSize.height
                                                     : mIntrinsicSize.width;
@@ -1487,8 +1485,6 @@ nscoord nsImageFrame::GetMinISize(gfxContext* aRenderingContext) {
 nscoord nsImageFrame::GetPrefISize(gfxContext* aRenderingContext) {
   // XXX The caller doesn't account for constraints of the block-size,
   // min-block-size, and max-block-size properties.
-  DebugOnly<nscoord> result;
-  DISPLAY_PREF_INLINE_SIZE(this, result);
   EnsureIntrinsicSizeAndRatio();
   const auto& iSize = GetWritingMode().IsVertical() ? mIntrinsicSize.height
                                                     : mIntrinsicSize.width;

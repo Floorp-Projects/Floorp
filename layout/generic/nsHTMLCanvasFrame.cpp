@@ -382,7 +382,6 @@ nscoord nsHTMLCanvasFrame::GetMinISize(gfxContext* aRenderingContext) {
     result = nsPresContext::CSSPixelsToAppUnits(
         vertical ? GetCanvasSize().height : GetCanvasSize().width);
   }
-  DISPLAY_MIN_INLINE_SIZE(this, result);
   return result;
 }
 
@@ -398,7 +397,6 @@ nscoord nsHTMLCanvasFrame::GetPrefISize(gfxContext* aRenderingContext) {
     result = nsPresContext::CSSPixelsToAppUnits(
         vertical ? GetCanvasSize().height : GetCanvasSize().width);
   }
-  DISPLAY_PREF_INLINE_SIZE(this, result);
   return result;
 }
 

@@ -52,18 +52,12 @@ void nsCheckboxRadioFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
 /* virtual */
 nscoord nsCheckboxRadioFrame::GetMinISize(gfxContext* aRenderingContext) {
-  nscoord result;
-  DISPLAY_MIN_INLINE_SIZE(this, result);
-  result = StyleDisplay()->HasAppearance() ? DefaultSize() : 0;
-  return result;
+  return StyleDisplay()->HasAppearance() ? DefaultSize() : 0;
 }
 
 /* virtual */
 nscoord nsCheckboxRadioFrame::GetPrefISize(gfxContext* aRenderingContext) {
-  nscoord result;
-  DISPLAY_PREF_INLINE_SIZE(this, result);
-  result = StyleDisplay()->HasAppearance() ? DefaultSize() : 0;
-  return result;
+  return StyleDisplay()->HasAppearance() ? DefaultSize() : 0;
 }
 
 /* virtual */

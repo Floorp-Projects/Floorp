@@ -230,34 +230,30 @@ nscoord nsListControlFrame::CalcBSizeOfARow() {
 }
 
 nscoord nsListControlFrame::GetPrefISize(gfxContext* aRenderingContext) {
-  nscoord result;
-  DISPLAY_PREF_INLINE_SIZE(this, result);
-
   // Always add scrollbar inline sizes to the pref-inline-size of the
   // scrolled content. Combobox frames depend on this happening in the
   // dropdown, and standalone listboxes are overflow:scroll so they need
   // it too.
   WritingMode wm = GetWritingMode();
   Maybe<nscoord> containISize = ContainIntrinsicISize();
-  result = containISize ? *containISize
-                        : GetScrolledFrame()->GetPrefISize(aRenderingContext);
+  nscoord result = containISize
+                       ? *containISize
+                       : GetScrolledFrame()->GetPrefISize(aRenderingContext);
   LogicalMargin scrollbarSize(wm, GetDesiredScrollbarSizes());
   result = NSCoordSaturatingAdd(result, scrollbarSize.IStartEnd(wm));
   return result;
 }
 
 nscoord nsListControlFrame::GetMinISize(gfxContext* aRenderingContext) {
-  nscoord result;
-  DISPLAY_MIN_INLINE_SIZE(this, result);
-
   // Always add scrollbar inline sizes to the min-inline-size of the
   // scrolled content. Combobox frames depend on this happening in the
   // dropdown, and standalone listboxes are overflow:scroll so they need
   // it too.
   WritingMode wm = GetWritingMode();
   Maybe<nscoord> containISize = ContainIntrinsicISize();
-  result = containISize ? *containISize
-                        : GetScrolledFrame()->GetMinISize(aRenderingContext);
+  nscoord result = containISize
+                       ? *containISize
+                       : GetScrolledFrame()->GetMinISize(aRenderingContext);
   LogicalMargin scrollbarSize(wm, GetDesiredScrollbarSizes());
   result += scrollbarSize.IStartEnd(wm);
 

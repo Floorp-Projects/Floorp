@@ -595,26 +595,18 @@ nsIScrollableFrame* nsTableCellFrame::GetScrollTargetFrame() const {
 
 /* virtual */
 nscoord nsTableCellFrame::GetMinISize(gfxContext* aRenderingContext) {
-  nscoord result = 0;
-  DISPLAY_MIN_INLINE_SIZE(this, result);
-
   nsIFrame* inner = mFrames.FirstChild();
-  result = nsLayoutUtils::IntrinsicForContainer(aRenderingContext, inner,
-                                                IntrinsicISizeType::MinISize,
-                                                nsLayoutUtils::IGNORE_PADDING);
-  return result;
+  return nsLayoutUtils::IntrinsicForContainer(aRenderingContext, inner,
+                                              IntrinsicISizeType::MinISize,
+                                              nsLayoutUtils::IGNORE_PADDING);
 }
 
 /* virtual */
 nscoord nsTableCellFrame::GetPrefISize(gfxContext* aRenderingContext) {
-  nscoord result = 0;
-  DISPLAY_PREF_INLINE_SIZE(this, result);
-
   nsIFrame* inner = mFrames.FirstChild();
-  result = nsLayoutUtils::IntrinsicForContainer(aRenderingContext, inner,
-                                                IntrinsicISizeType::PrefISize,
-                                                nsLayoutUtils::IGNORE_PADDING);
-  return result;
+  return nsLayoutUtils::IntrinsicForContainer(aRenderingContext, inner,
+                                              IntrinsicISizeType::PrefISize,
+                                              nsLayoutUtils::IGNORE_PADDING);
 }
 
 /* virtual */ nsIFrame::IntrinsicSizeOffsetData

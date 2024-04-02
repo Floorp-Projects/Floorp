@@ -848,20 +848,14 @@ void nsMathMLContainerFrame::UpdateIntrinsicWidth(
 
 /* virtual */
 nscoord nsMathMLContainerFrame::GetMinISize(gfxContext* aRenderingContext) {
-  nscoord result;
-  DISPLAY_MIN_INLINE_SIZE(this, result);
   UpdateIntrinsicWidth(aRenderingContext);
-  result = mIntrinsicWidth;
-  return result;
+  return mIntrinsicWidth;
 }
 
 /* virtual */
 nscoord nsMathMLContainerFrame::GetPrefISize(gfxContext* aRenderingContext) {
-  nscoord result;
-  DISPLAY_PREF_INLINE_SIZE(this, result);
   UpdateIntrinsicWidth(aRenderingContext);
-  result = mIntrinsicWidth;
-  return result;
+  return mIntrinsicWidth;
 }
 
 /* virtual */

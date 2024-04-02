@@ -813,8 +813,6 @@ nscoord nsBlockFrame::GetMinISize(gfxContext* aRenderingContext) {
     return firstInFlow->GetMinISize(aRenderingContext);
   }
 
-  DISPLAY_MIN_INLINE_SIZE(this, mCachedMinISize);
-
   CheckIntrinsicCacheAgainstShrinkWrapState();
 
   if (mCachedMinISize != NS_INTRINSIC_ISIZE_UNKNOWN) {
@@ -901,8 +899,6 @@ nscoord nsBlockFrame::GetPrefISize(gfxContext* aRenderingContext) {
   if (firstInFlow != this) {
     return firstInFlow->GetPrefISize(aRenderingContext);
   }
-
-  DISPLAY_PREF_INLINE_SIZE(this, mCachedPrefISize);
 
   CheckIntrinsicCacheAgainstShrinkWrapState();
 
