@@ -1130,8 +1130,6 @@ mochitest-webgpu:
         by-test-platform:
             macosx.*64-ccov.*/.*: 7200
             default: 1800
-    # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
-    allow-software-gl-layers: false
     mozharness:
         mochitest-flavor: plain
         extra-options:
