@@ -3150,7 +3150,8 @@ static bool PromiseAllResolveElementFunction(JSContext* cx, unsigned argc,
   for (size_t i = 0, len = promises.length(); i < len; i++) {
     JSObject* obj = promises[i];
     cx->check(obj);
-    MOZ_ASSERT(UncheckedUnwrap(obj)->is<PromiseObject>());
+    JSObject* unwrapped = UncheckedUnwrap(obj);
+    MOZ_ASSERT(unwrapped->is<PromiseObject>() || JS_IsDeadWrapper(unwrapped));
   }
 #endif
 
@@ -3251,7 +3252,13 @@ static bool PromiseAllResolveElementFunction(JSContext* cx, unsigned argc,
       // compartments with principals inaccessible from the current
       // compartment. To make that work, it unwraps promises with
       // UncheckedUnwrap,
-      nextPromise = &UncheckedUnwrap(nextPromiseObj)->as<PromiseObject>();
+      JSObject* unwrapped = UncheckedUnwrap(nextPromiseObj);
+      if (JS_IsDeadWrapper(unwrapped)) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                  JSMSG_DEAD_OBJECT);
+        return nullptr;
+      }
+      nextPromise = &unwrapped->as<PromiseObject>();
 
       if (!PerformPromiseThen(cx, nextPromise, resolveFunVal, rejectFunVal,
                               resultCapabilityWithoutResolving)) {
@@ -5022,7 +5029,8 @@ static PromiseReactionRecord* NewReactionRecord(
       // This is the only case where we allow `resolve` and `reject` to
       // be null when the `promise` field is not a PromiseObject.
       JSObject* unwrappedPromise = UncheckedUnwrap(resultCapability.promise());
-      MOZ_ASSERT(unwrappedPromise->is<PromiseObject>());
+      MOZ_ASSERT(unwrappedPromise->is<PromiseObject>() ||
+                 JS_IsDeadWrapper(unwrappedPromise));
       MOZ_ASSERT(!resultCapability.resolve());
       MOZ_ASSERT(!resultCapability.reject());
     }
@@ -6202,6 +6210,11 @@ bool js::Promise_then(JSContext* cx, unsigned argc, Value* vp) {
     HandleObject dependentPromise) {
   if (promise->state() != JS::PromiseState::Pending) {
     return true;
+  }
+
+  if (JS_IsDeadWrapper(UncheckedUnwrap(dependentPromise))) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
+    return false;
   }
 
   // `dependentPromise` should be a maybe-wrapped Promise.
