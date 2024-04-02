@@ -31,8 +31,8 @@
   },
   "win11-hw": {
     "screen_resolution": {
-      "x": 1280,
-      "y": 1024
+      "x": 1920,
+      "y": 1080
     },
     "mouse_position": {
       "x": 1010,
