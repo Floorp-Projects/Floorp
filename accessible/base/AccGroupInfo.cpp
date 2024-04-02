@@ -292,6 +292,7 @@ uint32_t AccGroupInfo::TotalItemCount(Accessible* aContainer,
     case roles::MENUPOPUP:
     case roles::COMBOBOX:
     case roles::GROUPING:
+    case roles::ROWGROUP:
     case roles::TREE_TABLE:
     case roles::COMBOBOX_LIST:
     case roles::LISTBOX:

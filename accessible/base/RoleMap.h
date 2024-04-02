@@ -1831,4 +1831,17 @@ ROLE(GRID,
      IsAccessibilityElementRule::IfChildlessWithNameAndFocusable,
      UIA_DataGridControlTypeId,
      eNameFromSubtreeIfReqRule)
+
+ROLE(ROWGROUP,
+     "rowgroup",
+     nsGkAtoms::rowgroup,
+     ATK_ROLE_PANEL,
+     NSAccessibilityGroupRole,
+     NSAccessibilityUnknownSubrole,
+     ROLE_SYSTEM_GROUPING,
+     ROLE_SYSTEM_GROUPING,
+     java::SessionAccessibility::CLASSNAME_VIEW,
+     IsAccessibilityElementRule::IfChildlessWithNameAndFocusable,
+     UIA_GroupControlTypeId,
+     eNameFromSubtreeIfReqRule)
 // clang-format on
