@@ -57,7 +57,6 @@ class TranslationsBindingTest {
 
             val binding = TranslationsBinding(
                 browserStore = browserStore,
-                sessionId = tabId,
                 onStateUpdated = onIconChanged,
                 onShowTranslationsDialog = {},
             )
@@ -124,7 +123,6 @@ class TranslationsBindingTest {
 
             val binding = TranslationsBinding(
                 browserStore = browserStore,
-                sessionId = tabId,
                 onStateUpdated = onIconChanged,
                 onShowTranslationsDialog = {},
             )
@@ -156,7 +154,6 @@ class TranslationsBindingTest {
 
             val binding = TranslationsBinding(
                 browserStore = browserStore,
-                sessionId = tabId,
                 onStateUpdated = onIconChanged,
                 onShowTranslationsDialog = {},
             )
@@ -182,7 +179,6 @@ class TranslationsBindingTest {
 
             val binding = TranslationsBinding(
                 browserStore = browserStore,
-                sessionId = tabId,
                 onStateUpdated = onIconChanged,
                 onShowTranslationsDialog = onShowTranslationsDialog,
             )

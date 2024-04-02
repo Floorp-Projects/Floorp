@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.mapNotNull
-import mozilla.components.browser.state.selector.findTab
+import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TranslationsState
 import mozilla.components.browser.state.store.BrowserStore
@@ -24,14 +24,12 @@ import org.mozilla.fenix.translations.TranslationsFlowState
  * from the [BrowserStore] and updating the translations action button.
  *
  * @param browserStore [BrowserStore] observed for any changes related to [TranslationsState].
- * @param sessionId Current open tab session id.
  * @param onStateUpdated Invoked when the translations action button should be updated with the new translations state.
  * @param onShowTranslationsDialog Invoked when [TranslationDialogBottomSheet]
  * should be automatically shown to the user.
  */
 class TranslationsBinding(
     private val browserStore: BrowserStore,
-    private val sessionId: String,
     private val onStateUpdated: (
         isVisible: Boolean,
         isTranslated: Boolean,
@@ -49,7 +47,7 @@ class TranslationsBinding(
             }
 
         // Session level flows
-        val sessionFlow = flow.mapNotNull { state -> state.findTab(sessionId) }
+        val sessionFlow = flow.mapNotNull { state -> state.selectedTab }
             .distinctUntilChangedBy {
                 it.translationsState
             }
