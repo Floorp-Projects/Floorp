@@ -16,6 +16,7 @@
 ### Feature-specific test groups
 
 webgpu:
+    - mochitest-webgpu
     - web-platform-tests-webgpu
 
 web-platform-tests:
@@ -33,9 +34,6 @@ web-platform-tests-backlog:
 
 mochitest-devtools-chrome:
     - mochitest-devtools-chrome
-
-mochitest-webgpu:
-    - mochitest-webgpu
 
 talos:
     - talos-bcv
