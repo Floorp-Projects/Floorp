@@ -107,6 +107,7 @@ Backend
    :maxdepth: 1
 
    Remote Debugging Protocol <backend/protocol.md>
+   Backend Overview <backend/watcher-architecture.md>
    Client API <backend/client-api.md>
    Debugger API <backend/debugger-api.md>
    Backward Compatibility <backend/backward-compatibility.md>
