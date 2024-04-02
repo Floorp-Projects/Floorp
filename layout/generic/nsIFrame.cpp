@@ -12449,14 +12449,6 @@ void nsIFrame::DisplayReflowShutdown() {
   DR_state = nullptr;
 }
 
-void DR_cookie::Change() const {
-  DR_FrameTreeNode* treeNode = (DR_FrameTreeNode*)mValue;
-  if (treeNode && treeNode->mDisplay) {
-    DisplayReflowEnterPrint(mPresContext, mFrame, mReflowInput, *treeNode,
-                            true);
-  }
-}
-
 // End Display Reflow
 
 // Validation of SideIsVertical.
