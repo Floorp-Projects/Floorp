@@ -6,13 +6,19 @@ use mozbuild::config::{
     CC_BASE_FLAGS as CFLAGS, MOZ_GTK3_CFLAGS as GTK_CFLAGS, MOZ_GTK3_LIBS as GTK_LIBS,
 };
 
+const HEADER: &str = r#"
+#include "gtk/gtk.h"
+#include "pango/pango.h"
+"#;
+
 fn main() {
     let bindings = bindgen::Builder::default()
-        .header_contents("gtk_bindings.h", r#"#include "gtk/gtk.h""#)
+        .header_contents("gtk_bindings.h", HEADER)
         .clang_args(CFLAGS)
         .clang_args(GTK_CFLAGS)
         .allowlist_function("gtk_.*")
         .allowlist_function("g_(application|main_context|object|signal|timeout)_.*")
+        .allowlist_function("pango_attr_.*")
         // The gtk/glib valist functions generate FFI-unsafe signatures on aarch64 which cause
         // compile errors. We don't use them anyway.
         .blocklist_function(".*_valist")

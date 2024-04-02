@@ -414,6 +414,7 @@ struct WindowRendererInner {
     /// Element references pertain to elements in `model`.
     pub windows: RefCell<twoway::TwoWay<ElementRef, HWND>>,
     pub font: Font,
+    pub bold_font: Font,
 }
 
 impl WindowRenderer {
@@ -424,6 +425,7 @@ impl WindowRenderer {
                 model: RefCell::new(Box::pin(model)),
                 windows: Default::default(),
                 font: Font::caption(),
+                bold_font: Font::caption_bold().unwrap_or_else(Font::caption),
             }),
         }
     }
@@ -524,15 +526,9 @@ impl<'a> WindowChildRenderer<'a> {
     }
 
     fn render_child(&mut self, element: &Element) {
-        if let Some(window) = self.render_element_type(&element.element_type) {
-            unsafe {
-                win::SendMessageW(
-                    window.handle,
-                    win::WM_SETFONT,
-                    *self.renderer.font as _,
-                    1 as _,
-                )
-            };
+        if let Some(mut window) = self.render_element_type(&element.element_type) {
+            window.set_default_font(&self.renderer.font);
+
             // Store the element to handle mapping.
             self.renderer
                 .windows
@@ -586,34 +582,38 @@ impl<'a> WindowChildRenderer<'a> {
     fn render_element_type(&mut self, element_type: &model::ElementType) -> Option<Window> {
         use model::ElementType as ET;
         match element_type {
-            ET::Label(model::Label { text }) => match text {
-                Property::Static(text) => {
-                    let text = WideString::new(text.as_str());
-                    let window = self
-                        .add_child(Static)
-                        .name(&text)
-                        .add_style(SystemServices::SS_LEFT | SystemServices::SS_NOPREFIX)
-                        .create();
-                    Some(window.generic())
-                }
-                Property::Binding(b) => {
-                    let text = WideString::new(b.borrow().as_str());
-                    let window = self
-                        .add_child(Static)
-                        .name(&text)
-                        .add_style(SystemServices::SS_LEFT | SystemServices::SS_NOPREFIX)
-                        .create();
-                    let handle = window.handle;
-                    b.on_change(move |text| {
+            ET::Label(model::Label { text, bold }) => {
+                let mut window = match text {
+                    Property::Static(text) => {
                         let text = WideString::new(text.as_str());
-                        unsafe { win::SetWindowTextW(handle, text.pcwstr()) };
-                    });
-                    Some(window.generic())
+                        self.add_child(Static)
+                            .name(&text)
+                            .add_style(SystemServices::SS_LEFT | SystemServices::SS_NOPREFIX)
+                            .create()
+                    }
+                    Property::Binding(b) => {
+                        let text = WideString::new(b.borrow().as_str());
+                        let window = self
+                            .add_child(Static)
+                            .name(&text)
+                            .add_style(SystemServices::SS_LEFT | SystemServices::SS_NOPREFIX)
+                            .create();
+                        let handle = window.handle;
+                        b.on_change(move |text| {
+                            let text = WideString::new(text.as_str());
+                            unsafe { win::SetWindowTextW(handle, text.pcwstr()) };
+                        });
+                        window
+                    }
+                    Property::ReadOnly(_) => {
+                        unimplemented!("ReadOnly property not supported for Label::text")
+                    }
+                };
+                if *bold {
+                    window.set_font(&self.renderer.bold_font);
                 }
-                Property::ReadOnly(_) => {
-                    unimplemented!("ReadOnly property not supported for Label::text")
-                }
-            },
+                Some(window.generic())
+            }
             ET::TextBox(model::TextBox {
                 placeholder,
                 content,

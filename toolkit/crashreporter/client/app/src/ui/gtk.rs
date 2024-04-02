@@ -372,38 +372,86 @@ fn alignment(align: &Alignment) -> gtk::GtkAlign {
     }
 }
 
+struct PangoAttrList {
+    list: *mut gtk::PangoAttrList,
+}
+
+impl PangoAttrList {
+    pub fn new() -> Self {
+        PangoAttrList {
+            list: unsafe { gtk::pango_attr_list_new() },
+        }
+    }
+
+    pub fn bold(&mut self) -> &mut Self {
+        unsafe {
+            gtk::pango_attr_list_insert(
+                self.list,
+                gtk::pango_attr_weight_new(gtk::PangoWeight_PANGO_WEIGHT_BOLD),
+            )
+        };
+        self
+    }
+}
+
+impl std::ops::Deref for PangoAttrList {
+    type Target = *mut gtk::PangoAttrList;
+
+    fn deref(&self) -> &Self::Target {
+        &self.list
+    }
+}
+
+impl std::ops::DerefMut for PangoAttrList {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.list
+    }
+}
+
+impl Drop for PangoAttrList {
+    fn drop(&mut self) {
+        unsafe { gtk::pango_attr_list_unref(self.list) };
+    }
+}
+
 fn render_element_type(element_type: &model::ElementType) -> Option<*mut gtk::GtkWidget> {
     use model::ElementType::*;
     Some(match element_type {
-        Label(model::Label { text }) => match text {
-            Property::Static(text) => {
-                let text = CString::new(text.clone()).ok()?;
-                let ptr = unsafe { gtk::gtk_label_new(text.as_ptr()) };
-                text.drop_with_widget(ptr);
-                unsafe { gtk::gtk_label_set_line_wrap(ptr as _, true.into()) };
-                // This is gtk_label_set_{xalign,yalign} in gtk 3.16+
-                unsafe { gtk::gtk_misc_set_alignment(ptr as _, 0.0, 0.5) };
-                ptr
-            }
-            Property::Binding(b) => {
-                let label_text = Rc::new(RefCell::new(CString::new(b.borrow().clone()).ok()?));
-                let ptr = unsafe { gtk::gtk_label_new(label_text.borrow().as_ptr()) };
-                let lt = label_text.clone();
-                label_text.drop_with_widget(ptr);
-                unsafe { gtk::gtk_label_set_line_wrap(ptr as _, true.into()) };
-                // This is gtk_label_set_{xalign,yalign} in gtk 3.16+
-                unsafe { gtk::gtk_misc_set_alignment(ptr as _, 0.0, 0.5) };
-                b.on_change(move |t| {
-                    let Some(cstr) = CString::new(t.clone()).ok() else {
-                        return;
+        Label(model::Label { text, bold }) => {
+            let label_ptr = unsafe { gtk::gtk_label_new(std::ptr::null()) };
+            match text {
+                Property::Static(text) => {
+                    let text = CString::new(text.clone()).ok()?;
+                    unsafe { gtk::gtk_label_set_text(label_ptr as _, text.as_ptr()) };
+                    text.drop_with_widget(label_ptr);
+                }
+                Property::Binding(b) => {
+                    let label_text = Rc::new(RefCell::new(CString::new(b.borrow().clone()).ok()?));
+                    unsafe {
+                        gtk::gtk_label_set_text(label_ptr as _, label_text.borrow().as_ptr())
                     };
-                    unsafe { gtk::gtk_label_set_text(ptr as _, cstr.as_ptr()) };
-                    *lt.borrow_mut() = cstr;
-                });
-                ptr
+                    let lt = label_text.clone();
+                    label_text.drop_with_widget(label_ptr);
+                    b.on_change(move |t| {
+                        let Some(cstr) = CString::new(t.clone()).ok() else {
+                            return;
+                        };
+                        unsafe { gtk::gtk_label_set_text(label_ptr as _, cstr.as_ptr()) };
+                        *lt.borrow_mut() = cstr;
+                    });
+                }
+                Property::ReadOnly(_) => unimplemented!("ReadOnly not supported for Label::text"),
             }
-            Property::ReadOnly(_) => unimplemented!("ReadOnly not supported for Label::text"),
-        },
+            unsafe { gtk::gtk_label_set_line_wrap(label_ptr as _, true.into()) };
+            // This is gtk_label_set_{xalign,yalign} in gtk 3.16+
+            unsafe { gtk::gtk_misc_set_alignment(label_ptr as _, 0.0, 0.5) };
+            if *bold {
+                unsafe {
+                    gtk::gtk_label_set_attributes(label_ptr as _, **PangoAttrList::new().bold())
+                };
+            }
+            label_ptr
+        }
         HBox(model::HBox { items, spacing }) => {
             let box_ptr =
                 unsafe { gtk::gtk_box_new(gtk::GtkOrientation_GTK_ORIENTATION_HORIZONTAL, 0) };
