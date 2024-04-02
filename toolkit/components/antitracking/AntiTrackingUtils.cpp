@@ -825,7 +825,8 @@ void AntiTrackingUtils::ComputeIsThirdPartyToTopWindow(nsIChannel* aChannel) {
     // whether the page is third-party, so we use channel result principal
     // instead. By doing this, an the resource inherits the principal from
     // its parent is considered not a third-party.
-    if (NS_IsAboutBlank(uri) || NS_IsAboutSrcdoc(uri)) {
+    if (NS_IsAboutBlank(uri) || NS_IsAboutSrcdoc(uri) ||
+        uri->SchemeIs("blob")) {
       nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
       if (NS_WARN_IF(!ssm)) {
         return;
@@ -851,10 +852,36 @@ void AntiTrackingUtils::ComputeIsThirdPartyToTopWindow(nsIChannel* aChannel) {
 bool AntiTrackingUtils::IsThirdPartyChannel(nsIChannel* aChannel) {
   MOZ_ASSERT(aChannel);
 
-  // We only care whether the channel is 3rd-party with respect to
-  // the top-level.
-  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
-  return loadInfo->GetIsThirdPartyContextToTopWindow();
+  // We have to handle blob URLs here because they always fail
+  // IsThirdPartyChannel because of how blob URLs are constructed. We just
+  // recompare to their ancestor chain from the loadInfo, bailing if any is
+  // third party.
+  nsAutoCString scheme;
+  nsCOMPtr<nsIURI> channelURI;
+  nsresult rv = aChannel->GetURI(getter_AddRefs(channelURI));
+  if (NS_SUCCEEDED(rv) && channelURI->SchemeIs("blob")) {
+    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+    for (const nsCOMPtr<nsIPrincipal>& principal :
+         loadInfo->AncestorPrincipals()) {
+      bool thirdParty = true;
+      rv = loadInfo->PrincipalToInherit()->IsThirdPartyPrincipal(principal,
+                                                                 &thirdParty);
+      if (NS_SUCCEEDED(rv) && thirdParty) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  nsCOMPtr<mozIThirdPartyUtil> tpuService =
+      mozilla::components::ThirdPartyUtil::Service();
+  if (!tpuService) {
+    return true;
+  }
+  bool thirdParty = true;
+  rv = tpuService->IsThirdPartyChannel(aChannel, nullptr, &thirdParty);
+  NS_ENSURE_SUCCESS(rv, true);
+  return thirdParty;
 }
 
 /* static */
@@ -907,19 +934,29 @@ bool AntiTrackingUtils::IsThirdPartyWindow(nsPIDOMWindowInner* aWindow,
 /* static */
 bool AntiTrackingUtils::IsThirdPartyDocument(Document* aDocument) {
   MOZ_ASSERT(aDocument);
-  if (!aDocument->GetChannel()) {
+  nsCOMPtr<mozIThirdPartyUtil> tpuService =
+      mozilla::components::ThirdPartyUtil::Service();
+  if (!tpuService) {
+    return true;
+  }
+  bool thirdParty = true;
+  if (!aDocument->GetChannel() ||
+      aDocument->GetDocumentURI()->SchemeIs("blob")) {
     // If we can't get the channel from the document, i.e. initial about:blank
     // page, we use the browsingContext of the document to check if it's in the
     // third-party context. If the browsing context is still not available, we
     // will treat the window as third-party.
+    // We also rely on IsThirdPartyContext for blob documents because the
+    // IsThirdPartyChannel check relies on getting the BaseDomain,
+    // which correctly fails for blobs URIs.
     RefPtr<BrowsingContext> bc = aDocument->GetBrowsingContext();
     return bc ? IsThirdPartyContext(bc) : true;
   }
 
-  // We only care whether the channel is 3rd-party with respect to
-  // the top-level.
-  nsCOMPtr<nsILoadInfo> loadInfo = aDocument->GetChannel()->LoadInfo();
-  return loadInfo->GetIsThirdPartyContextToTopWindow();
+  nsresult rv = tpuService->IsThirdPartyChannel(aDocument->GetChannel(),
+                                                nullptr, &thirdParty);
+  NS_ENSURE_SUCCESS(rv, true);
+  return thirdParty;
 }
 
 /* static */
@@ -927,41 +964,47 @@ bool AntiTrackingUtils::IsThirdPartyContext(BrowsingContext* aBrowsingContext) {
   MOZ_ASSERT(aBrowsingContext);
   MOZ_ASSERT(aBrowsingContext->IsInProcess());
 
-  if (aBrowsingContext->IsTopContent()) {
-    return false;
-  }
-
-  // If the top browsing context is not in the same process, it's cross-origin.
-  if (!aBrowsingContext->Top()->IsInProcess()) {
-    return true;
-  }
-
+  // iframes with SANDBOX_ORIGIN are always third-party contexts
+  // because they are a unique origin
   nsIDocShell* docShell = aBrowsingContext->GetDocShell();
   if (!docShell) {
     return true;
   }
   Document* doc = docShell->GetExtantDocument();
-  if (!doc) {
+  if (!doc || doc->GetSandboxFlags() & SANDBOXED_ORIGIN) {
     return true;
   }
   nsIPrincipal* principal = doc->NodePrincipal();
 
-  nsIDocShell* topDocShell = aBrowsingContext->Top()->GetDocShell();
-  if (!topDocShell) {
-    return true;
+  BrowsingContext* traversingParent = aBrowsingContext->GetParent();
+  while (traversingParent) {
+    // If the parent browsing context is not in the same process, it's
+    // cross-origin.
+    if (!traversingParent->IsInProcess()) {
+      return true;
+    }
+
+    nsIDocShell* parentDocShell = traversingParent->GetDocShell();
+    if (!parentDocShell) {
+      return true;
+    }
+    Document* parentDoc = parentDocShell->GetDocument();
+    if (!parentDoc || parentDoc->GetSandboxFlags() & SANDBOXED_ORIGIN) {
+      return true;
+    }
+    nsIPrincipal* parentPrincipal = parentDoc->NodePrincipal();
+
+    auto* parentBasePrin = BasePrincipal::Cast(parentPrincipal);
+    bool isThirdParty = true;
+
+    parentBasePrin->IsThirdPartyPrincipal(principal, &isThirdParty);
+    if (isThirdParty) {
+      return true;
+    }
+
+    traversingParent = traversingParent->GetParent();
   }
-  Document* topDoc = topDocShell->GetDocument();
-  if (!topDoc) {
-    return true;
-  }
-  nsIPrincipal* topPrincipal = topDoc->NodePrincipal();
-
-  auto* topBasePrin = BasePrincipal::Cast(topPrincipal);
-  bool isThirdParty = true;
-
-  topBasePrin->IsThirdPartyPrincipal(principal, &isThirdParty);
-
-  return isThirdParty;
+  return false;
 }
 
 /* static */
@@ -1009,13 +1052,17 @@ void AntiTrackingUtils::UpdateAntiTrackingInfoForChannel(nsIChannel* aChannel) {
       ->MarkOverriddenFingerprintingSettingsAsSet();
 #endif
 
-  nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
-  Unused << loadInfo->GetCookieJarSettings(getter_AddRefs(cookieJarSettings));
-  // For subdocuments, the channel's partition key is that of the parent
-  // document. This document may have a different partition key, particularly
-  // one without the same-site bit.
-  net::CookieJarSettings::Cast(cookieJarSettings)
-      ->UpdatePartitionKeyForDocumentLoadedByChannel(aChannel);
+  ExtContentPolicyType contentType = loadInfo->GetExternalContentPolicyType();
+  if (contentType == ExtContentPolicy::TYPE_DOCUMENT ||
+      contentType == ExtContentPolicy::TYPE_SUBDOCUMENT) {
+    nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
+    Unused << loadInfo->GetCookieJarSettings(getter_AddRefs(cookieJarSettings));
+    // For subdocuments, the channel's partition key is that of the parent
+    // document. This document may have a different partition key, particularly
+    // one without the same-site bit.
+    net::CookieJarSettings::Cast(cookieJarSettings)
+        ->UpdatePartitionKeyForDocumentLoadedByChannel(aChannel);
+  }
 
   // We only update the IsOnContentBlockingAllowList flag and the partition key
   // for the top-level http channel.
@@ -1027,14 +1074,15 @@ void AntiTrackingUtils::UpdateAntiTrackingInfoForChannel(nsIChannel* aChannel) {
   // The partition key is computed based on the site, so it's no point to set it
   // for channels other than http channels.
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
-  if (!httpChannel || loadInfo->GetExternalContentPolicyType() !=
-                          ExtContentPolicy::TYPE_DOCUMENT) {
+  if (!httpChannel || contentType != ExtContentPolicy::TYPE_DOCUMENT) {
     return;
   }
 
   // Update the IsOnContentBlockingAllowList flag in the CookieJarSettings
   // if this is a top level loading. For sub-document loading, this flag
   // would inherit from the parent.
+  nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
+  Unused << loadInfo->GetCookieJarSettings(getter_AddRefs(cookieJarSettings));
   net::CookieJarSettings::Cast(cookieJarSettings)
       ->UpdateIsOnContentBlockingAllowList(aChannel);
 
