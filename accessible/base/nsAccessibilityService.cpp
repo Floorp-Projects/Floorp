@@ -122,7 +122,7 @@ static LocalAccessible* MaybeCreateSpecificARIAAccessible(
     if (!parent) {
       return nullptr;
     }
-    if (!parent->IsTable() && parent->Role() == roles::GROUPING) {
+    if (!parent->IsTable() && parent->Role() == roles::ROWGROUP) {
       parent = parent->GetNonGenericParent();
       if (!parent) {
         return nullptr;
