@@ -28,7 +28,7 @@ use crate::prim_store::line_dec::MAX_LINE_DECORATION_RESOLUTION;
 use crate::prim_store::*;
 use crate::quad;
 use crate::pattern::Pattern;
-use crate::prim_store::gradient::{radial_gradient_pattern, GradientGpuBlockBuilder};
+use crate::prim_store::gradient::{radial_gradient_pattern, conic_gradient_pattern, GradientGpuBlockBuilder};
 use crate::render_backend::DataStores;
 use crate::render_task_graph::RenderTaskId;
 use crate::render_task_cache::RenderTaskCacheKeyKind;
@@ -244,6 +244,7 @@ fn prepare_prim_for_render(
         let should_update_clip_task = match prim_instance.kind {
             PrimitiveInstanceKind::Rectangle { use_legacy_path: ref mut no_quads, .. }
             | PrimitiveInstanceKind::RadialGradient { cached: ref mut no_quads, .. }
+            | PrimitiveInstanceKind::ConicGradient { cached: ref mut no_quads, .. }
             => {
                 *no_quads = disable_quad_path || !can_use_clip_chain_for_quad_path(
                     &prim_instance.vis.clip_chain,
@@ -868,9 +869,42 @@ fn prepare_interned_prim_for_render(
                 }
             }
         }
-        PrimitiveInstanceKind::ConicGradient { data_handle, ref mut visible_tiles_range, .. } => {
+        PrimitiveInstanceKind::ConicGradient { data_handle, ref mut visible_tiles_range, cached, .. } => {
             profile_scope!("ConicGradient");
             let prim_data = &mut data_stores.conic_grad[*data_handle];
+
+            if !*cached {
+                // The scaling parameter is used to compensate for when we reduce the size
+                // of the render task for cached gradients. Here we aren't applying any.
+                let no_scale = DeviceVector2D::one();
+
+                let pattern = conic_gradient_pattern(
+                    prim_data.center,
+                    no_scale,
+                    &prim_data.params,
+                    prim_data.extend_mode,
+                    &prim_data.stops,
+                    &mut frame_state.frame_gpu_data,
+                );
+
+                quad::push_quad(
+                    &pattern,
+                    &prim_data.common.prim_rect,
+                    prim_instance_index,
+                    prim_spatial_node_index,
+                    &prim_instance.vis.clip_chain,
+                    device_pixel_scale,
+                    frame_context,
+                    pic_context,
+                    targets,
+                    &data_stores.clip,
+                    frame_state,
+                    pic_state,
+                    scratch,
+                );
+
+                return;
+            }
 
             prim_data.common.may_need_repetition = prim_data.stretch_size.width < prim_data.common.prim_rect.width()
                 || prim_data.stretch_size.height < prim_data.common.prim_rect.height();
