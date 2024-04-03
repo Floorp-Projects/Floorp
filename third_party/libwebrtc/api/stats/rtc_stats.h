@@ -21,7 +21,6 @@
 #include <vector>
 
 #include "api/stats/attribute.h"
-#include "api/stats/rtc_stats_member.h"
 #include "api/units/timestamp.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/system/rtc_export.h"

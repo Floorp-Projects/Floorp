@@ -806,7 +806,6 @@ rtc_source_set("rtc_stats_api") {
     "stats/attribute.h",
     "stats/rtc_stats.h",
     "stats/rtc_stats_collector_callback.h",
-    "stats/rtc_stats_member.h",
     "stats/rtc_stats_report.h",
     "stats/rtcstats_objects.h",
   ]

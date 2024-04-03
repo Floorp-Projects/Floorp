@@ -166,7 +166,8 @@ TEST(RTCStatsTest, EqualityOperator) {
   stats_with_all_values.m_map_string_double = std::map<std::string, double>();
   EXPECT_NE(stats_with_all_values, empty_stats);
   EXPECT_EQ(stats_with_all_values, stats_with_all_values);
-  EXPECT_NE(stats_with_all_values.m_int32, stats_with_all_values.m_uint32);
+  EXPECT_NE(stats_with_all_values.GetAttribute(stats_with_all_values.m_int32),
+            stats_with_all_values.GetAttribute(stats_with_all_values.m_uint32));
 
   RTCTestStats one_member_different[] = {
       stats_with_all_values, stats_with_all_values, stats_with_all_values,
@@ -392,71 +393,42 @@ TEST(RTCStatsTest, RTCStatsPrintsValidJson) {
 
 TEST(RTCStatsTest, IsSequence) {
   RTCTestStats stats("statsId", Timestamp::Micros(42));
-  EXPECT_FALSE(stats.m_bool.is_sequence());
-  EXPECT_FALSE(stats.m_int32.is_sequence());
-  EXPECT_FALSE(stats.m_uint32.is_sequence());
-  EXPECT_FALSE(stats.m_int64.is_sequence());
-  EXPECT_FALSE(stats.m_uint64.is_sequence());
-  EXPECT_FALSE(stats.m_double.is_sequence());
-  EXPECT_FALSE(stats.m_string.is_sequence());
-  EXPECT_TRUE(stats.m_sequence_bool.is_sequence());
-  EXPECT_TRUE(stats.m_sequence_int32.is_sequence());
-  EXPECT_TRUE(stats.m_sequence_uint32.is_sequence());
-  EXPECT_TRUE(stats.m_sequence_int64.is_sequence());
-  EXPECT_TRUE(stats.m_sequence_uint64.is_sequence());
-  EXPECT_TRUE(stats.m_sequence_double.is_sequence());
-  EXPECT_TRUE(stats.m_sequence_string.is_sequence());
-  EXPECT_FALSE(stats.m_map_string_uint64.is_sequence());
-  EXPECT_FALSE(stats.m_map_string_double.is_sequence());
-}
-
-TEST(RTCStatsTest, Type) {
-  RTCTestStats stats("statsId", Timestamp::Micros(42));
-  EXPECT_EQ(RTCStatsMemberInterface::kBool, stats.m_bool.type());
-  EXPECT_EQ(RTCStatsMemberInterface::kInt32, stats.m_int32.type());
-  EXPECT_EQ(RTCStatsMemberInterface::kUint32, stats.m_uint32.type());
-  EXPECT_EQ(RTCStatsMemberInterface::kInt64, stats.m_int64.type());
-  EXPECT_EQ(RTCStatsMemberInterface::kUint64, stats.m_uint64.type());
-  EXPECT_EQ(RTCStatsMemberInterface::kDouble, stats.m_double.type());
-  EXPECT_EQ(RTCStatsMemberInterface::kString, stats.m_string.type());
-  EXPECT_EQ(RTCStatsMemberInterface::kSequenceBool,
-            stats.m_sequence_bool.type());
-  EXPECT_EQ(RTCStatsMemberInterface::kSequenceInt32,
-            stats.m_sequence_int32.type());
-  EXPECT_EQ(RTCStatsMemberInterface::kSequenceUint32,
-            stats.m_sequence_uint32.type());
-  EXPECT_EQ(RTCStatsMemberInterface::kSequenceInt64,
-            stats.m_sequence_int64.type());
-  EXPECT_EQ(RTCStatsMemberInterface::kSequenceUint64,
-            stats.m_sequence_uint64.type());
-  EXPECT_EQ(RTCStatsMemberInterface::kSequenceDouble,
-            stats.m_sequence_double.type());
-  EXPECT_EQ(RTCStatsMemberInterface::kSequenceString,
-            stats.m_sequence_string.type());
-  EXPECT_EQ(RTCStatsMemberInterface::kMapStringUint64,
-            stats.m_map_string_uint64.type());
-  EXPECT_EQ(RTCStatsMemberInterface::kMapStringDouble,
-            stats.m_map_string_double.type());
+  EXPECT_FALSE(stats.GetAttribute(stats.m_bool).is_sequence());
+  EXPECT_FALSE(stats.GetAttribute(stats.m_int32).is_sequence());
+  EXPECT_FALSE(stats.GetAttribute(stats.m_uint32).is_sequence());
+  EXPECT_FALSE(stats.GetAttribute(stats.m_int64).is_sequence());
+  EXPECT_FALSE(stats.GetAttribute(stats.m_uint64).is_sequence());
+  EXPECT_FALSE(stats.GetAttribute(stats.m_double).is_sequence());
+  EXPECT_FALSE(stats.GetAttribute(stats.m_string).is_sequence());
+  EXPECT_TRUE(stats.GetAttribute(stats.m_sequence_bool).is_sequence());
+  EXPECT_TRUE(stats.GetAttribute(stats.m_sequence_int32).is_sequence());
+  EXPECT_TRUE(stats.GetAttribute(stats.m_sequence_uint32).is_sequence());
+  EXPECT_TRUE(stats.GetAttribute(stats.m_sequence_int64).is_sequence());
+  EXPECT_TRUE(stats.GetAttribute(stats.m_sequence_uint64).is_sequence());
+  EXPECT_TRUE(stats.GetAttribute(stats.m_sequence_double).is_sequence());
+  EXPECT_TRUE(stats.GetAttribute(stats.m_sequence_string).is_sequence());
+  EXPECT_FALSE(stats.GetAttribute(stats.m_map_string_uint64).is_sequence());
+  EXPECT_FALSE(stats.GetAttribute(stats.m_map_string_double).is_sequence());
 }
 
 TEST(RTCStatsTest, IsString) {
   RTCTestStats stats("statsId", Timestamp::Micros(42));
-  EXPECT_TRUE(stats.m_string.is_string());
-  EXPECT_FALSE(stats.m_bool.is_string());
-  EXPECT_FALSE(stats.m_int32.is_string());
-  EXPECT_FALSE(stats.m_uint32.is_string());
-  EXPECT_FALSE(stats.m_int64.is_string());
-  EXPECT_FALSE(stats.m_uint64.is_string());
-  EXPECT_FALSE(stats.m_double.is_string());
-  EXPECT_FALSE(stats.m_sequence_bool.is_string());
-  EXPECT_FALSE(stats.m_sequence_int32.is_string());
-  EXPECT_FALSE(stats.m_sequence_uint32.is_string());
-  EXPECT_FALSE(stats.m_sequence_int64.is_string());
-  EXPECT_FALSE(stats.m_sequence_uint64.is_string());
-  EXPECT_FALSE(stats.m_sequence_double.is_string());
-  EXPECT_FALSE(stats.m_sequence_string.is_string());
-  EXPECT_FALSE(stats.m_map_string_uint64.is_string());
-  EXPECT_FALSE(stats.m_map_string_double.is_string());
+  EXPECT_TRUE(stats.GetAttribute(stats.m_string).is_string());
+  EXPECT_FALSE(stats.GetAttribute(stats.m_bool).is_string());
+  EXPECT_FALSE(stats.GetAttribute(stats.m_int32).is_string());
+  EXPECT_FALSE(stats.GetAttribute(stats.m_uint32).is_string());
+  EXPECT_FALSE(stats.GetAttribute(stats.m_int64).is_string());
+  EXPECT_FALSE(stats.GetAttribute(stats.m_uint64).is_string());
+  EXPECT_FALSE(stats.GetAttribute(stats.m_double).is_string());
+  EXPECT_FALSE(stats.GetAttribute(stats.m_sequence_bool).is_string());
+  EXPECT_FALSE(stats.GetAttribute(stats.m_sequence_int32).is_string());
+  EXPECT_FALSE(stats.GetAttribute(stats.m_sequence_uint32).is_string());
+  EXPECT_FALSE(stats.GetAttribute(stats.m_sequence_int64).is_string());
+  EXPECT_FALSE(stats.GetAttribute(stats.m_sequence_uint64).is_string());
+  EXPECT_FALSE(stats.GetAttribute(stats.m_sequence_double).is_string());
+  EXPECT_FALSE(stats.GetAttribute(stats.m_sequence_string).is_string());
+  EXPECT_FALSE(stats.GetAttribute(stats.m_map_string_uint64).is_string());
+  EXPECT_FALSE(stats.GetAttribute(stats.m_map_string_double).is_string());
 }
 
 TEST(RTCStatsTest, AttributeToString) {
