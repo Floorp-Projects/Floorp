@@ -179,7 +179,7 @@ export class UserCharacteristicsPageService {
         lazy.console.debug(`Data:`, data.output);
 
         lazy.console.debug("Populating Glean metrics...");
-        // e.g. Glean.characteristics.timezone.set(data.output.foo)
+        Glean.characteristics.timezone.set(data.output.foo);
 
         lazy.console.debug("Unregistering actor");
         Services.obs.notifyObservers(

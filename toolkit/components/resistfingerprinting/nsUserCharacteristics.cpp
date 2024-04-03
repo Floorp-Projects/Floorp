@@ -288,53 +288,53 @@ void nsUserCharacteristics::PopulateDataAndEventuallySubmit(
     Preferences::SetCString(kUUIDPref, uuidString);
   }
 
-  // ------------------------------------------------------------------------
-
   glean::characteristics::client_identifier.Set(uuidString);
 
   glean::characteristics::max_touch_points.Set(testing::MaxTouchPoints());
 
-  if (aTesting) {
-    // Many of the later peices of data do not work in a gtest
-    // so just populate something, and return
-    return;
-  }
-
   // ------------------------------------------------------------------------
 
-  PopulateMissingFonts();
-  PopulateCSSProperties();
-  PopulateScreenProperties();
-  PopulatePrefs();
+  if (!aTesting) {
+    // Many of the later peices of data do not work in a gtest
+    // so skip populating them
 
-  glean::characteristics::target_frame_rate.Set(gfxPlatform::TargetFrameRate());
+    // ------------------------------------------------------------------------
 
-  int32_t processorCount = 0;
+    PopulateMissingFonts();
+    PopulateCSSProperties();
+    PopulateScreenProperties();
+    PopulatePrefs();
+
+    glean::characteristics::target_frame_rate.Set(
+        gfxPlatform::TargetFrameRate());
+
+    int32_t processorCount = 0;
 #if defined(XP_MACOSX)
-  if (nsMacUtilsImpl::IsTCSMAvailable()) {
-    // On failure, zero is returned from GetPhysicalCPUCount()
-    // and we fallback to PR_GetNumberOfProcessors below.
-    processorCount = nsMacUtilsImpl::GetPhysicalCPUCount();
-  }
+    if (nsMacUtilsImpl::IsTCSMAvailable()) {
+      // On failure, zero is returned from GetPhysicalCPUCount()
+      // and we fallback to PR_GetNumberOfProcessors below.
+      processorCount = nsMacUtilsImpl::GetPhysicalCPUCount();
+    }
 #endif
-  if (processorCount == 0) {
-    processorCount = PR_GetNumberOfProcessors();
-  }
-  glean::characteristics::processor_count.Set(processorCount);
+    if (processorCount == 0) {
+      processorCount = PR_GetNumberOfProcessors();
+    }
+    glean::characteristics::processor_count.Set(processorCount);
 
-  AutoTArray<char16_t, 128> tzBuffer;
-  auto result = intl::TimeZone::GetDefaultTimeZone(tzBuffer);
-  if (result.isOk()) {
-    NS_ConvertUTF16toUTF8 timeZone(
-        nsDependentString(tzBuffer.Elements(), tzBuffer.Length()));
-    glean::characteristics::timezone.Set(timeZone);
-  } else {
-    glean::characteristics::timezone.Set("<error>"_ns);
-  }
+    AutoTArray<char16_t, 128> tzBuffer;
+    auto result = intl::TimeZone::GetDefaultTimeZone(tzBuffer);
+    if (result.isOk()) {
+      NS_ConvertUTF16toUTF8 timeZone(
+          nsDependentString(tzBuffer.Elements(), tzBuffer.Length()));
+      glean::characteristics::timezone.Set(timeZone);
+    } else {
+      glean::characteristics::timezone.Set("<error>"_ns);
+    }
 
-  nsAutoCString locale;
-  intl::OSPreferences::GetInstance()->GetSystemLocale(locale);
-  glean::characteristics::system_locale.Set(locale);
+    nsAutoCString locale;
+    intl::OSPreferences::GetInstance()->GetSystemLocale(locale);
+    glean::characteristics::system_locale.Set(locale);
+  }
 
   // When this promise resolves, everything succeeded and we can submit.
   RefPtr<mozilla::dom::Promise> promise = ContentPageStuff();
@@ -347,7 +347,9 @@ void nsUserCharacteristics::PopulateDataAndEventuallySubmit(
     MOZ_LOG(gUserCharacteristicsLog, mozilla::LogLevel::Debug,
             ("ContentPageStuff Promise Resolved"));
 
-    nsUserCharacteristics::SubmitPing();
+    if (!aTesting) {
+      nsUserCharacteristics::SubmitPing();
+    }
 
     if (aUpdatePref) {
       MOZ_LOG(gUserCharacteristicsLog, mozilla::LogLevel::Debug,

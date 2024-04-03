@@ -31,3 +31,5 @@ support-files = [
 support-files = ["file_pdf.pdf"]
 
 ["browser_serviceWorker_fingerprinting_webcompat.js"]
+
+["browser_usercharacteristics.js"]
