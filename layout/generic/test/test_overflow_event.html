@@ -9,15 +9,10 @@
 
   SimpleTest.waitForExplicitFinish();
 
-  window.addEventListener("load", function (event) {
-    SpecialPowers.pushPrefEnv(
-      { set: [["layout.overflow-underflow.content.enabled", true]] },
-      function () {
-        if (event.target == document) {
+  window.addEventListener("load", function(event) {
+      if (event.target == document) {
           test_bug981637();
-        }
       }
-    );
   });
 
   /** Test for Bug 981637:  correct overflow event firing in updateOverflow **/
