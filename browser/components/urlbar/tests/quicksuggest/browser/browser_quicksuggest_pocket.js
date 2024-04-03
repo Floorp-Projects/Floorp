@@ -4,12 +4,6 @@
 "use strict";
 
 // Browser tests for Pocket suggestions.
-//
-// TODO: Make this work with Rust enabled. Right now, running this test with
-// Rust hits the following error on ingest, which prevents ingest from finishing
-// successfully:
-//
-//  0:03.17 INFO Console message: [JavaScript Error: "1698289045697	urlbar	ERROR	QuickSuggest.SuggestBackendRust :: Ingest error: Error executing SQL: FOREIGN KEY constraint failed" {file: "resource://gre/modules/Log.sys.mjs" line: 722}]
 
 // The expected index of the Pocket suggestion.
 const EXPECTED_RESULT_INDEX = 1;
@@ -30,6 +24,8 @@ const REMOTE_SETTINGS_DATA = [
   },
 ];
 
+requestLongerTimeout(5);
+
 add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -47,7 +43,7 @@ add_setup(async function () {
   });
 });
 
-add_task(async function basic() {
+add_tasks_with_rust(async function basic() {
   await BrowserTestUtils.withNewTab("about:blank", async () => {
     // Do a search.
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
@@ -96,7 +92,7 @@ add_task(async function basic() {
 });
 
 // Tests the "Show less frequently" command.
-add_task(async function resultMenu_showLessFrequently() {
+add_tasks_with_rust(async function resultMenu_showLessFrequently() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.urlbar.pocket.featureGate", true],
@@ -235,7 +231,7 @@ async function doShowLessFrequently({ input, expected, keepViewOpen = false }) {
 }
 
 // Tests the "Not interested" result menu dismissal command.
-add_task(async function resultMenu_notInterested() {
+add_tasks_with_rust(async function resultMenu_notInterested() {
   await doDismissTest("not_interested");
 
   // Re-enable suggestions and wait until PocketSuggestions syncs them from
@@ -245,7 +241,7 @@ add_task(async function resultMenu_notInterested() {
 });
 
 // Tests the "Not relevant" result menu dismissal command.
-add_task(async function notRelevant() {
+add_tasks_with_rust(async function notRelevant() {
   await doDismissTest("not_relevant");
 });
 
@@ -361,7 +357,7 @@ async function doDismissTest(command) {
 }
 
 // Tests row labels.
-add_task(async function rowLabel() {
+add_tasks_with_rust(async function rowLabel() {
   const testCases = [
     // high confidence keyword best match
     {
@@ -389,7 +385,7 @@ add_task(async function rowLabel() {
 });
 
 // Tests visibility of "Show less frequently" menu.
-add_task(async function showLessFrequentlyMenuVisibility() {
+add_tasks_with_rust(async function showLessFrequentlyMenuVisibility() {
   const testCases = [
     // high confidence keyword best match
     {
