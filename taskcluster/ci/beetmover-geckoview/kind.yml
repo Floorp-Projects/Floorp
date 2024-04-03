@@ -20,7 +20,7 @@ only-for-attributes:
 not-for-build-platforms:
     - linux-shippable/opt
     - linux64-shippable/opt
-    - linux-aarch64-shippable/opt
+    - linux64-aarch64-shippable/opt
     - linux64-nightlyasrelease/opt
     - macosx64-shippable/opt
     - macosx64-nightlyasrelease/opt

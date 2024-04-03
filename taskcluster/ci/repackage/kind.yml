@@ -27,7 +27,7 @@ only-for-build-platforms:
     - linux64-devedition/opt
     - linux64-asan-reporter-shippable/opt
     - linux64/opt
-    - linux-aarch64-shippable/opt
+    - linux64-aarch64-shippable/opt
     - macosx64-shippable/opt
     - macosx64-devedition/opt
     - macosx64/opt
