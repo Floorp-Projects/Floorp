@@ -12,7 +12,7 @@ export function FeatureHighlight({
   position = "top-left",
   title,
   ariaLabel,
-  source = "FEATURE_HIGHLIGHT_DEFAULT",
+  feature = "FEATURE_HIGHLIGHT_DEFAULT",
   dispatch = () => {},
   windowObj = global,
 }) {
@@ -33,14 +33,19 @@ export function FeatureHighlight({
   }, [windowObj]);
 
   const onToggleClick = useCallback(() => {
+    if (!opened) {
+      dispatch(
+        ac.DiscoveryStreamUserEvent({
+          event: "CLICK",
+          source: "FEATURE_HIGHLIGHT",
+          value: {
+            feature,
+          },
+        })
+      );
+    }
     setOpened(!opened);
-    dispatch(
-      ac.DiscoveryStreamUserEvent({
-        event: "CLICK",
-        source,
-      })
-    );
-  }, [dispatch, source, opened]);
+  }, [dispatch, feature, opened]);
 
   const openedClassname = opened ? `opened` : `closed`;
   return (
