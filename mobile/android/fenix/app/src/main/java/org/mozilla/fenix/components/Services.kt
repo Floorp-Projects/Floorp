@@ -5,6 +5,7 @@
 package org.mozilla.fenix.components
 
 import android.content.Context
+import android.net.Uri
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -25,8 +26,17 @@ class Services(
 ) {
     val accountsAuthFeature by lazyMonitored {
         FirefoxAccountsAuthFeature(accountManager, FxaServer.REDIRECT_URL) { context, authUrl ->
+            var url = authUrl
+            if (context.settings().useReactFxAServer) {
+                url = Uri.parse(url)
+                    .buildUpon()
+                    .appendQueryParameter("forceExperiment", "generalizedReactApp")
+                    .appendQueryParameter("forceExperimentGroup", "react")
+                    .build()
+                    .toString()
+            }
             CoroutineScope(Dispatchers.Main).launch {
-                val intent = SupportUtils.createAuthCustomTabIntent(context, authUrl)
+                val intent = SupportUtils.createAuthCustomTabIntent(context, url)
                 context.startActivity(intent)
             }
         }

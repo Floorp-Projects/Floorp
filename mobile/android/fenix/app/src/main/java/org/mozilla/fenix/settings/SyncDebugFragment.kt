@@ -5,6 +5,7 @@
 package org.mozilla.fenix.settings
 
 import android.os.Bundle
+import androidx.preference.CheckBoxPreference
 import androidx.preference.EditTextPreference
 import androidx.preference.Preference
 import androidx.preference.Preference.OnPreferenceClickListener
@@ -54,6 +55,9 @@ class SyncDebugFragment : PreferenceFragmentCompat() {
                 // quit, is there a better way?
                 exitProcess(0)
             }
+        }
+        requirePreference<CheckBoxPreference>(R.string.pref_key_use_react_fxa).apply {
+            onPreferenceChangeListener = SharedPreferenceUpdater()
         }
         updateMenu()
     }

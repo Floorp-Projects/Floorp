@@ -1375,6 +1375,11 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = "",
     )
 
+    var useReactFxAServer by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_use_react_fxa),
+        default = false,
+    )
+
     var overrideSyncTokenServer by stringPreference(
         appContext.getPreferenceKey(R.string.pref_key_override_sync_tokenserver),
         default = "",
