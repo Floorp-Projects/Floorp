@@ -1,3 +1,4 @@
+use crate::annotation;
 use crate::core::*;
 use crate::encode::Encode;
 use crate::kw;
@@ -14,6 +15,20 @@ use std::mem;
 #[allow(missing_docs)]
 pub struct Expression<'a> {
     pub instrs: Box<[Instruction<'a>]>,
+    pub branch_hints: Vec<BranchHint>,
+}
+
+/// A `@metadata.code.branch_hint` in the code, associated with a If or BrIf
+/// This instruction is a placeholder and won't produce anything. Its purpose
+/// is to store the offset of the following instruction and check that
+/// it's followed by `br_if` or `if`.
+#[derive(Debug)]
+pub struct BranchHint {
+    /// Index of instructions in `instrs` field of `Expression` that this hint
+    /// appplies to.
+    pub instr_index: usize,
+    /// The value of this branch hint
+    pub value: u32,
 }
 
 impl<'a> Parse<'a> for Expression<'a> {
@@ -22,6 +37,7 @@ impl<'a> Parse<'a> for Expression<'a> {
         exprs.parse(parser)?;
         Ok(Expression {
             instrs: exprs.instrs.into(),
+            branch_hints: exprs.branch_hints,
         })
     }
 }
@@ -47,6 +63,7 @@ impl<'a> Expression<'a> {
         exprs.parse_folded_instruction(parser)?;
         Ok(Expression {
             instrs: exprs.instrs.into(),
+            branch_hints: exprs.branch_hints,
         })
     }
 }
@@ -66,6 +83,11 @@ struct ExpressionParser<'a> {
     /// Descriptor of all our nested s-expr blocks. This only happens when
     /// instructions themselves are nested.
     stack: Vec<Level<'a>>,
+
+    /// Related to the branch hints proposal.
+    /// Will be used later to collect the offsets in the final binary.
+    /// <(index of branch instructions, BranchHintAnnotation)>
+    branch_hints: Vec<BranchHint>,
 }
 
 enum Paren {
@@ -89,6 +111,9 @@ enum Level<'a> {
     /// which don't correspond to terminating instructions, we're just in a
     /// nested block.
     IfArm,
+
+    /// This means we are finishing the parsing of a branch hint annotation.
+    BranchHint,
 }
 
 /// Possible states of "what is currently being parsed?" in an `if` expression.
@@ -145,6 +170,14 @@ impl<'a> ExpressionParser<'a> {
                     if self.handle_if_lparen(parser)? {
                         continue;
                     }
+
+                    // Handle the case of a branch hint annotation
+                    if parser.peek::<annotation::metadata_code_branch_hint>()? {
+                        self.parse_branch_hint(parser)?;
+                        self.stack.push(Level::BranchHint);
+                        continue;
+                    }
+
                     match parser.parse()? {
                         // If block/loop show up then we just need to be sure to
                         // push an `end` instruction whenever the `)` token is
@@ -177,6 +210,7 @@ impl<'a> ExpressionParser<'a> {
                 Paren::Right => match self.stack.pop().unwrap() {
                     Level::EndWith(i) => self.instrs.push(i),
                     Level::IfArm => {}
+                    Level::BranchHint => {}
 
                     // If an `if` statement hasn't parsed the clause or `then`
                     // block, then that's an error because there weren't enough
@@ -191,7 +225,6 @@ impl<'a> ExpressionParser<'a> {
                 },
             }
         }
-
         Ok(())
     }
 
@@ -286,6 +319,24 @@ impl<'a> ExpressionParser<'a> {
             // that's not syntactically allowed.
             If::Else => Err(parser.error("unexpected token: too many payloads inside of `(if)`")),
         }
+    }
+
+    fn parse_branch_hint(&mut self, parser: Parser<'a>) -> Result<()> {
+        parser.parse::<annotation::metadata_code_branch_hint>()?;
+
+        let hint = parser.parse::<String>()?;
+
+        let value = match hint.as_bytes() {
+            [0] => 0,
+            [1] => 1,
+            _ => return Err(parser.error("invalid value for branch hint")),
+        };
+
+        self.branch_hints.push(BranchHint {
+            instr_index: self.instrs.len(),
+            value,
+        });
+        Ok(())
     }
 }
 

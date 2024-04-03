@@ -155,7 +155,14 @@ in its space itself.
 
 ### `#![no_std]` Support
 
-Bumpalo is a `no_std` crate. It depends only on the `alloc` and `core` crates.
+Bumpalo is a `no_std` crate by default. It depends only on the `alloc` and `core` crates.
+
+### `std` Support
+
+You can optionally decide to enable the `std` feature in order to enable some
+std only trait implementations for some collections:
+
+* `std::io::Write` for `Vec<'bump, u8>`
 
 ### Thread support
 
@@ -179,7 +186,7 @@ First, enable the `allocator_api` feature in your `Cargo.toml`:
 
 ```toml
 [dependencies]
-bumpalo = { version = "3.9", features = ["allocator_api"] }
+bumpalo = { version = "3", features = ["allocator_api"] }
 ```
 
 Next, enable the `allocator_api` nightly Rust feature in your `src/lib.rs` or
@@ -207,9 +214,17 @@ v.push(2);
 
 [`Allocator`]: https://doc.rust-lang.org/std/alloc/trait.Allocator.html
 
-#### Minimum Supported Rust Version (MSRV)
+### Using the `Allocator` API on Stable Rust
 
-This crate is guaranteed to compile on stable Rust **1.56** and up. It might
+You can enable the `allocator-api2` Cargo feature and `bumpalo` will use [the
+`allocator-api2` crate](https://crates.io/crates/allocator-api2) to implement
+the unstable nightly`Allocator` API on stable Rust. This means that
+`bumpalo::Bump` will be usable with any collection that is generic over
+`allocator_api2::Allocator`.
+
+### Minimum Supported Rust Version (MSRV)
+
+This crate is guaranteed to compile on stable Rust **1.73** and up. It might
 compile with older versions but that may change in any new patch release.
 
 We reserve the right to increment the MSRV on minor releases, however we will

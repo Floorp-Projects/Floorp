@@ -7,12 +7,13 @@
 use crate::{arbitrary_loop, Config};
 use arbitrary::{Arbitrary, Result, Unstructured};
 use std::collections::BTreeMap;
-use std::convert::TryFrom;
 use std::{
     collections::{HashMap, HashSet},
     rc::Rc,
 };
-use wasm_encoder::{ComponentTypeRef, ComponentValType, PrimitiveValType, TypeBounds, ValType};
+use wasm_encoder::{
+    ComponentTypeRef, ComponentValType, HeapType, PrimitiveValType, RefType, TypeBounds, ValType,
+};
 
 mod encode;
 
@@ -540,7 +541,7 @@ impl ComponentBuilder {
         }
 
         let ty = match u.int_in_range::<u8>(0..=1)? {
-            0 => CoreType::Func(crate::core::arbitrary_func_type(
+            0 => CoreType::Func(arbitrary_func_type(
                 u,
                 &self.config,
                 &self.core_valtypes,
@@ -819,7 +820,7 @@ impl ComponentBuilder {
 
                 // Type definition.
                 2 => {
-                    let ty = crate::core::arbitrary_func_type(
+                    let ty = arbitrary_func_type(
                         u,
                         &self.config,
                         &self.core_valtypes,
@@ -955,7 +956,7 @@ impl ComponentBuilder {
     }
 
     fn arbitrary_core_table_type(&self, u: &mut Unstructured) -> Result<crate::core::TableType> {
-        crate::core::arbitrary_table_type(u, &self.config)
+        crate::core::arbitrary_table_type(u, &self.config, None)
     }
 
     fn arbitrary_core_memory_type(&self, u: &mut Unstructured) -> Result<crate::core::MemoryType> {
@@ -2175,4 +2176,46 @@ struct CoreInstanceSection {}
 #[derive(Debug)]
 struct CoreTypeSection {
     types: Vec<Rc<CoreType>>,
+}
+
+fn arbitrary_func_type(
+    u: &mut Unstructured,
+    config: &Config,
+    valtypes: &[ValType],
+    max_results: Option<usize>,
+    type_ref_limit: u32,
+) -> Result<Rc<crate::core::FuncType>> {
+    let mut params = vec![];
+    let mut results = vec![];
+    arbitrary_loop(u, 0, 20, |u| {
+        params.push(arbitrary_valtype(u, config, valtypes, type_ref_limit)?);
+        Ok(true)
+    })?;
+    arbitrary_loop(u, 0, max_results.unwrap_or(20), |u| {
+        results.push(arbitrary_valtype(u, config, valtypes, type_ref_limit)?);
+        Ok(true)
+    })?;
+    Ok(Rc::new(crate::core::FuncType { params, results }))
+}
+
+fn arbitrary_valtype(
+    u: &mut Unstructured,
+    config: &Config,
+    valtypes: &[ValType],
+    type_ref_limit: u32,
+) -> Result<ValType> {
+    if config.gc_enabled && type_ref_limit > 0 && u.ratio(1, 20)? {
+        Ok(ValType::Ref(RefType {
+            // TODO: For now, only create allow nullable reference
+            // types. Eventually we should support non-nullable reference types,
+            // but this means that we will also need to recognize when it is
+            // impossible to create an instance of the reference (eg `(ref
+            // nofunc)` has no instances, and self-referential types that
+            // contain a non-null self-reference are also impossible to create).
+            nullable: true,
+            heap_type: HeapType::Concrete(u.int_in_range(0..=type_ref_limit - 1)?),
+        }))
+    } else {
+        Ok(*u.choose(valtypes)?)
+    }
 }

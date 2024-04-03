@@ -1,5 +1,5 @@
 use crate::core::*;
-use wasm_encoder::{BlockType, Instruction, ValType};
+use wasm_encoder::Instruction;
 
 use super::CodeBuilder;
 

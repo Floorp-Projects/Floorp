@@ -319,7 +319,7 @@ impl<'a, T> RawVec<'a, T> {
         used_cap: usize,
         needed_extra_cap: usize,
     ) -> Result<(), CollectionAllocErr> {
-        self.reserve_internal(used_cap, needed_extra_cap, Fallible, Exact)
+        self.fallible_reserve_internal(used_cap, needed_extra_cap, Exact)
     }
 
     /// Ensures that the buffer contains at least enough space to hold
@@ -343,11 +343,7 @@ impl<'a, T> RawVec<'a, T> {
     ///
     /// Aborts on OOM
     pub fn reserve_exact(&mut self, used_cap: usize, needed_extra_cap: usize) {
-        match self.reserve_internal(used_cap, needed_extra_cap, Infallible, Exact) {
-            Err(CapacityOverflow) => capacity_overflow(),
-            Err(AllocErr) => unreachable!(),
-            Ok(()) => { /* yay */ }
-        }
+        self.infallible_reserve_internal(used_cap, needed_extra_cap, Exact)
     }
 
     /// Calculates the buffer's new size given that it'll hold `used_cap +
@@ -374,7 +370,7 @@ impl<'a, T> RawVec<'a, T> {
         used_cap: usize,
         needed_extra_cap: usize,
     ) -> Result<(), CollectionAllocErr> {
-        self.reserve_internal(used_cap, needed_extra_cap, Fallible, Amortized)
+        self.fallible_reserve_internal(used_cap, needed_extra_cap, Amortized)
     }
 
     /// Ensures that the buffer contains at least enough space to hold
@@ -429,13 +425,11 @@ impl<'a, T> RawVec<'a, T> {
     /// #   vector.push_all(&[1, 3, 5, 7, 9]);
     /// # }
     /// ```
+    #[inline(always)]
     pub fn reserve(&mut self, used_cap: usize, needed_extra_cap: usize) {
-        match self.reserve_internal(used_cap, needed_extra_cap, Infallible, Amortized) {
-            Err(CapacityOverflow) => capacity_overflow(),
-            Err(AllocErr) => unreachable!(),
-            Ok(()) => { /* yay */ }
-        }
+        self.infallible_reserve_internal(used_cap, needed_extra_cap, Amortized)
     }
+
     /// Attempts to ensure that the buffer contains at least enough space to hold
     /// `used_cap + needed_extra_cap` elements. If it doesn't already have
     /// enough capacity, will reallocate in place enough space plus comfortable slack
@@ -593,6 +587,68 @@ enum ReserveStrategy {
 use self::ReserveStrategy::*;
 
 impl<'a, T> RawVec<'a, T> {
+    #[inline(always)]
+    fn fallible_reserve_internal(
+        &mut self,
+        used_cap: usize,
+        needed_extra_cap: usize,
+        strategy: ReserveStrategy,
+    ) -> Result<(), CollectionAllocErr> {
+        // This portion of the method should always be inlined.
+        if self.cap().wrapping_sub(used_cap) >= needed_extra_cap {
+            return Ok(());
+        }
+        // This portion of the method should never be inlined, and will only be called when
+        // the check above has confirmed that it is necessary.
+        self.reserve_internal_or_error(used_cap, needed_extra_cap, Fallible, strategy)
+    }
+
+    #[inline(always)]
+    fn infallible_reserve_internal(
+        &mut self,
+        used_cap: usize,
+        needed_extra_cap: usize,
+        strategy: ReserveStrategy,
+    ) {
+        // This portion of the method should always be inlined.
+        if self.cap().wrapping_sub(used_cap) >= needed_extra_cap {
+            return;
+        }
+        // This portion of the method should never be inlined, and will only be called when
+        // the check above has confirmed that it is necessary.
+        self.reserve_internal_or_panic(used_cap, needed_extra_cap, strategy)
+    }
+
+    #[inline(never)]
+    fn reserve_internal_or_panic(
+        &mut self,
+        used_cap: usize,
+        needed_extra_cap: usize,
+        strategy: ReserveStrategy,
+    ) {
+        // Delegates the call to `reserve_internal_or_error` and panics in the event of an error.
+        // This allows the method to have a return type of `()`, simplifying the assembly at the
+        // call site.
+        match self.reserve_internal(used_cap, needed_extra_cap, Infallible, strategy) {
+            Err(CapacityOverflow) => capacity_overflow(),
+            Err(AllocErr) => unreachable!(),
+            Ok(()) => { /* yay */ }
+        }
+    }
+
+    #[inline(never)]
+    fn reserve_internal_or_error(
+        &mut self,
+         used_cap: usize,
+         needed_extra_cap: usize,
+         fallibility: Fallibility,
+         strategy: ReserveStrategy,)-> Result<(), CollectionAllocErr> {
+        // Delegates the call to `reserve_internal`, which can be inlined.
+        self.reserve_internal(used_cap, needed_extra_cap, fallibility, strategy)
+    }
+
+    /// Helper method to reserve additional space, reallocating the backing memory.
+    /// The caller is responsible for confirming that there is not already enough space available.
     fn reserve_internal(
         &mut self,
         used_cap: usize,
@@ -607,12 +663,6 @@ impl<'a, T> RawVec<'a, T> {
             // to actually catch "asking for more than usize::MAX" in that case.
             // If we make it past the first branch then we are guaranteed to
             // panic.
-
-            // Don't actually need any more capacity.
-            // Wrapping in case they gave a bad `used_cap`.
-            if self.cap().wrapping_sub(used_cap) >= needed_extra_cap {
-                return Ok(());
-            }
 
             // Nothing we can really do about these checks :(
             let new_cap = match strategy {

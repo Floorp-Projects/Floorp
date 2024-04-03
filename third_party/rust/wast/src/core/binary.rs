@@ -69,7 +69,7 @@ pub fn encode(
     if needs_data_count(&funcs) {
         e.section(12, &data.len());
     }
-    e.section_list(10, Code, &funcs);
+    e.code_section(&funcs, &imports);
     e.section_list(11, Data, &data);
 
     let names = find_names(module_id, module_name, fields);
@@ -120,6 +120,47 @@ impl Encoder<'_> {
             self.section(id, &list)
         }
         self.custom_sections(CustomPlace::After(anchor));
+    }
+
+    /// Encodes the code section of a wasm module module while additionally
+    /// handling the branch hinting proposal.
+    ///
+    /// The branch hinting proposal requires to encode the offsets of the
+    /// instructions relative from the beginning of the function. Here we encode
+    /// each instruction and we save its offset. If needed, we use this
+    /// information to build the branch hint section and insert it before the
+    /// code section.
+    fn code_section<'a>(&'a mut self, list: &[&'a Func<'_>], imports: &[&Import<'_>]) {
+        self.custom_sections(CustomPlace::Before(CustomPlaceAnchor::Code));
+
+        if !list.is_empty() {
+            let mut branch_hints = Vec::new();
+            let mut code_section = Vec::new();
+
+            list.len().encode(&mut code_section);
+            let mut func_index = imports
+                .iter()
+                .filter(|i| matches!(i.item.kind, ItemKind::Func(..)))
+                .count() as u32;
+            for func in list.iter() {
+                let hints = func.encode(&mut code_section);
+                if !hints.is_empty() {
+                    branch_hints.push(FunctionBranchHints { func_index, hints });
+                }
+                func_index += 1;
+            }
+
+            // Branch hints section has to be inserted before the Code section
+            // Insert the section only if we have some hints
+            if !branch_hints.is_empty() {
+                self.section(0, &("metadata.code.branch_hint", branch_hints));
+            }
+
+            // Finally, insert the Code section from the tmp buffer
+            self.wasm.push(10);
+            code_section.encode(&mut self.wasm);
+        }
+        self.custom_sections(CustomPlace::After(CustomPlaceAnchor::Code));
     }
 }
 
@@ -475,7 +516,7 @@ impl Encode for Table<'_> {
                 e.push(0x40);
                 e.push(0x00);
                 ty.encode(e);
-                init_expr.encode(e);
+                init_expr.encode(e, 0);
             }
             _ => panic!("TableKind should be normal during encoding"),
         }
@@ -497,7 +538,9 @@ impl Encode for Global<'_> {
         assert!(self.exports.names.is_empty());
         self.ty.encode(e);
         match &self.kind {
-            GlobalKind::Inline(expr) => expr.encode(e),
+            GlobalKind::Inline(expr) => {
+                let _hints = expr.encode(e, 0);
+            }
             _ => panic!("GlobalKind should be inline during encoding"),
         }
     }
@@ -534,7 +577,7 @@ impl Encode for Elem<'_> {
                 ElemPayload::Indices(_),
             ) => {
                 e.push(0x00);
-                offset.encode(e);
+                offset.encode(e, 0);
             }
             (ElemKind::Passive, ElemPayload::Indices(_)) => {
                 e.push(0x01); // flags
@@ -543,7 +586,7 @@ impl Encode for Elem<'_> {
             (ElemKind::Active { table, offset }, ElemPayload::Indices(_)) => {
                 e.push(0x02); // flags
                 table.encode(e);
-                offset.encode(e);
+                offset.encode(e, 0);
                 e.push(0x00); // extern_kind
             }
             (ElemKind::Declared, ElemPayload::Indices(_)) => {
@@ -565,7 +608,7 @@ impl Encode for Elem<'_> {
                 },
             ) => {
                 e.push(0x04);
-                offset.encode(e);
+                offset.encode(e, 0);
             }
             (ElemKind::Passive, ElemPayload::Exprs { ty, .. }) => {
                 e.push(0x05);
@@ -574,7 +617,7 @@ impl Encode for Elem<'_> {
             (ElemKind::Active { table, offset }, ElemPayload::Exprs { ty, .. }) => {
                 e.push(0x06);
                 table.encode(e);
-                offset.encode(e);
+                offset.encode(e, 0);
                 ty.encode(e);
             }
             (ElemKind::Declared, ElemPayload::Exprs { ty, .. }) => {
@@ -594,7 +637,7 @@ impl Encode for ElemPayload<'_> {
             ElemPayload::Exprs { exprs, ty: _ } => {
                 exprs.len().encode(e);
                 for expr in exprs {
-                    expr.encode(e);
+                    expr.encode(e, 0);
                 }
             }
         }
@@ -610,12 +653,12 @@ impl Encode for Data<'_> {
                 offset,
             } => {
                 e.push(0x00);
-                offset.encode(e);
+                offset.encode(e, 0);
             }
             DataKind::Active { memory, offset } => {
                 e.push(0x02);
                 memory.encode(e);
-                offset.encode(e);
+                offset.encode(e, 0);
             }
         }
         self.data.iter().map(|l| l.len()).sum::<usize>().encode(e);
@@ -625,20 +668,25 @@ impl Encode for Data<'_> {
     }
 }
 
-impl Encode for Func<'_> {
-    fn encode(&self, e: &mut Vec<u8>) {
+impl Func<'_> {
+    /// Encodes the function into `e` while returning all branch hints with
+    /// known relative offsets after encoding.
+    fn encode(&self, e: &mut Vec<u8>) -> Vec<BranchHint> {
         assert!(self.exports.names.is_empty());
-        let mut tmp = Vec::new();
         let (expr, locals) = match &self.kind {
             FuncKind::Inline { expression, locals } => (expression, locals),
             _ => panic!("should only have inline functions in emission"),
         };
 
+        // Encode the function into a temporary vector because functions are
+        // prefixed with their length. The temporary vector, when encoded,
+        // encodes its length first then the body.
+        let mut tmp = Vec::new();
         locals.encode(&mut tmp);
-        expr.encode(&mut tmp);
+        let branch_hints = expr.encode(&mut tmp, 0);
+        tmp.encode(e);
 
-        tmp.len().encode(e);
-        e.extend_from_slice(&tmp);
+        branch_hints
     }
 }
 
@@ -658,12 +706,25 @@ impl Encode for Box<[Local<'_>]> {
     }
 }
 
-impl Encode for Expression<'_> {
-    fn encode(&self, e: &mut Vec<u8>) {
-        for instr in self.instrs.iter() {
+// Encode the expression and store the offset from the beginning
+// for each instruction.
+impl Expression<'_> {
+    fn encode(&self, e: &mut Vec<u8>, relative_start: usize) -> Vec<BranchHint> {
+        let mut hints = Vec::with_capacity(self.branch_hints.len());
+        let mut next_hint = self.branch_hints.iter().peekable();
+
+        for (i, instr) in self.instrs.iter().enumerate() {
+            if let Some(hint) = next_hint.next_if(|h| h.instr_index == i) {
+                hints.push(BranchHint {
+                    branch_func_offset: u32::try_from(e.len() - relative_start).unwrap(),
+                    branch_hint_value: hint.value,
+                });
+            }
             instr.encode(e);
         }
         e.push(0x0b);
+
+        hints
     }
 }
 
@@ -1143,6 +1204,31 @@ impl Encode for Dylink0Subsection<'_> {
             Dylink0Subsection::ExportInfo(list) => list.encode(e),
             Dylink0Subsection::ImportInfo(list) => list.encode(e),
         }
+    }
+}
+
+struct FunctionBranchHints {
+    func_index: u32,
+    hints: Vec<BranchHint>,
+}
+
+struct BranchHint {
+    branch_func_offset: u32,
+    branch_hint_value: u32,
+}
+
+impl Encode for FunctionBranchHints {
+    fn encode(&self, e: &mut Vec<u8>) {
+        self.func_index.encode(e);
+        self.hints.encode(e);
+    }
+}
+
+impl Encode for BranchHint {
+    fn encode(&self, e: &mut Vec<u8>) {
+        self.branch_func_offset.encode(e);
+        1u32.encode(e);
+        self.branch_hint_value.encode(e);
     }
 }
 

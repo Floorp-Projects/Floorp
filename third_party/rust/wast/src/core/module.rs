@@ -114,6 +114,7 @@ impl<'a> Parse<'a> for Module<'a> {
         let _r = parser.register_annotation("producers");
         let _r = parser.register_annotation("name");
         let _r = parser.register_annotation("dylink.0");
+        let _r = parser.register_annotation("metadata.code.branch_hint");
 
         let span = parser.parse::<kw::module>()?.0;
         let id = parser.parse()?;

@@ -111,6 +111,7 @@ impl<'a> Parse<'a> for Component<'a> {
         let _r = parser.register_annotation("custom");
         let _r = parser.register_annotation("producers");
         let _r = parser.register_annotation("name");
+        let _r = parser.register_annotation("metadata.code.branch_hint");
 
         let span = parser.parse::<kw::component>()?.0;
         let id = parser.parse()?;
