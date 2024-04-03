@@ -826,16 +826,21 @@ class StyleRuleActor extends Actor {
       let cssText = await this.pageStyle.styleSheetsManager.getText(resourceId);
 
       const { offset, text } = getRuleText(cssText, this.line, this.column);
-      cssText =
-        cssText.substring(0, offset) +
-        newText +
-        cssText.substring(offset + text.length);
 
-      await this.pageStyle.styleSheetsManager.setStyleSheetText(
-        resourceId,
-        cssText,
-        { kind: UPDATE_PRESERVING_RULES }
-      );
+      // setStyleSheetText will parse the stylesheet which can be costly, so only do it
+      // if the text has actually changed.
+      if (text !== newText) {
+        cssText =
+          cssText.substring(0, offset) +
+          newText +
+          cssText.substring(offset + text.length);
+
+        await this.pageStyle.styleSheetsManager.setStyleSheetText(
+          resourceId,
+          cssText,
+          { kind: UPDATE_PRESERVING_RULES }
+        );
+      }
     }
 
     this.authoredText = newText;
