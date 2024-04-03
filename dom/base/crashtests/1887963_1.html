@@ -1,0 +1,15 @@
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  let c = a.attachShadow({mode: "open"})
+  let b = document.getElementById("host").shadowRoot.getElementById("b");
+  window.parent.getSelection().setBaseAndExtent(b, 0, c, 0)
+})
+</script>
+<div id="a">A</div>
+<video>
+  <div id="host">
+    <template shadowrootmode="open">
+      <video id="b">
+    </template>
+  </div>
+</video>

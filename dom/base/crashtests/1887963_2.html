@@ -1,0 +1,15 @@
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  let c = a.attachShadow({mode: "open"})
+  let b = document.getElementById("not-slotted");
+  window.parent.getSelection().setBaseAndExtent(b, 0, c, 0)
+})
+</script>
+<div id="a">A</div>
+<video>
+  <div id="host">
+    <template shadowrootmode="open">
+    </template>
+    <span id="not-slotted">NotSlotted</span>
+  </div>
+</video>

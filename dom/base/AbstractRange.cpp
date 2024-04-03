@@ -267,15 +267,23 @@ nsINode* AbstractRange::GetClosestCommonInclusiveAncestor(
       return startContainer ? startContainer->GetComposedDoc()
                             : endContainer->GetComposedDoc();
     }
-    // RangeBoundary allows the container to be shadow roots; When
-    // this happens, we should use the shadow host here.
-    if (startContainer->IsShadowRoot()) {
-      startContainer = startContainer->GetContainingShadowHost();
-    }
-    if (endContainer->IsShadowRoot()) {
-      endContainer = endContainer->GetContainingShadowHost();
-    }
-    return nsContentUtils::GetCommonFlattenedTreeAncestor(
+
+    const auto rescope = [](nsINode*& aContainer) {
+      if (!aContainer) {
+        return;
+      }
+      // RangeBoundary allows the container to be shadow roots; When
+      // this happens, we should use the shadow host here.
+      if (auto* shadowRoot = ShadowRoot::FromNode(aContainer)) {
+        aContainer = shadowRoot->GetHost();
+        return;
+      }
+    };
+
+    rescope(startContainer);
+    rescope(endContainer);
+
+    return nsContentUtils::GetCommonFlattenedTreeAncestorForSelection(
         startContainer ? startContainer->AsContent() : nullptr,
         endContainer ? endContainer->AsContent() : nullptr);
   }

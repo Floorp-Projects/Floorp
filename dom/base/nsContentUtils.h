@@ -515,6 +515,13 @@ class nsContentUtils {
   }
 
   /**
+   * Returns the common flattened tree ancestor from the point of view of
+   * the selection system, if any, for two given content nodes.
+   */
+  static nsIContent* GetCommonFlattenedTreeAncestorForSelection(
+      nsIContent* aContent1, nsIContent* aContent2);
+
+  /**
    * Returns the common flattened tree ancestor from the point of view of the
    * style system, if any, for two given content nodes.
    */
