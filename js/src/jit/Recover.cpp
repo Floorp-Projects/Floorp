@@ -1044,7 +1044,11 @@ bool MFromCharCode::writeRecoverData(CompactBufferWriter& writer) const {
 RFromCharCode::RFromCharCode(CompactBufferReader& reader) {}
 
 bool RFromCharCode::recover(JSContext* cx, SnapshotIterator& iter) const {
-  int32_t charCode = iter.read().toInt32();
+  Value charCodeValue = iter.read();
+  MOZ_ASSERT(charCodeValue.isNumber(),
+             "charCode computed from (recoverable) user input");
+
+  int32_t charCode = JS::ToInt32(charCodeValue.toNumber());
 
   JSString* str = StringFromCharCode(cx, charCode);
   if (!str) {
@@ -2015,9 +2019,13 @@ RAtomicIsLockFree::RAtomicIsLockFree(CompactBufferReader& reader) {}
 
 bool RAtomicIsLockFree::recover(JSContext* cx, SnapshotIterator& iter) const {
   Value operand = iter.read();
-  MOZ_ASSERT(operand.isInt32());
+  MOZ_ASSERT(operand.isNumber());
 
-  bool result = AtomicOperations::isLockfreeJS(operand.toInt32());
+  double dsize = JS::ToInteger(operand.toNumber());
+
+  int32_t size;
+  bool result = mozilla::NumberEqualsInt32(dsize, &size) &&
+                AtomicOperations::isLockfreeJS(size);
   iter.storeInstructionResult(BooleanValue(result));
   return true;
 }
