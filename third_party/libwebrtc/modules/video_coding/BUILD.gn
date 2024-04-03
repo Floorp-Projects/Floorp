@@ -999,6 +999,8 @@ if (rtc_include_tests) {
 
     deps = [
       ":video_codec_interface",
+      "../../api/environment",
+      "../../api/environment:environment_factory",
       "../../api/test/metrics:global_metrics_logger_and_exporter",
       "../../api/units:data_rate",
       "../../api/units:frequency",

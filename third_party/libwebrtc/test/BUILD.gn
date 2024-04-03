@@ -735,6 +735,8 @@ if (rtc_include_tests) {
         "../api:mock_video_encoder",
         "../api:scoped_refptr",
         "../api:simulcast_test_fixture_api",
+        "../api/environment",
+        "../api/environment:environment_factory",
         "../api/task_queue",
         "../api/task_queue:task_queue_test",
         "../api/test/video:function_video_factory",

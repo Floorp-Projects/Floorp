@@ -14,6 +14,8 @@
 
 #include "absl/flags/flag.h"
 #include "absl/functional/any_invocable.h"
+#include "api/environment/environment.h"
+#include "api/environment/environment_factory.h"
 #include "api/test/metrics/global_metrics_logger_and_exporter.h"
 #include "api/units/data_rate.h"
 #include "api/units/frequency.h"
@@ -178,6 +180,7 @@ std::string TestOutputPath() {
 }  // namespace
 
 std::unique_ptr<VideoCodecStats> RunEncodeDecodeTest(
+    const Environment& env,
     std::string encoder_impl,
     std::string decoder_impl,
     const VideoInfo& video_info,
@@ -247,7 +250,7 @@ std::unique_ptr<VideoCodecStats> RunEncodeDecodeTest(
   }
 
   return VideoCodecTester::RunEncodeDecodeTest(
-      source_settings, encoder_factory.get(), decoder_factory.get(),
+      env, source_settings, encoder_factory.get(), decoder_factory.get(),
       encoder_settings, decoder_settings, encoding_settings);
 }
 
@@ -313,6 +316,7 @@ class SpatialQualityTest : public ::testing::TestWithParam<std::tuple<
 };
 
 TEST_P(SpatialQualityTest, SpatialQuality) {
+  const Environment env = CreateEnvironment();
   auto [codec_type, codec_impl, video_info, coding_settings] = GetParam();
   auto [width, height, framerate_fps, bitrate_kbps, expected_min_psnr] =
       coding_settings;
@@ -324,8 +328,8 @@ TEST_P(SpatialQualityTest, SpatialQuality) {
           codec_type, /*scalability_mode=*/"L1T1", width, height,
           {bitrate_kbps}, framerate_fps, num_frames);
 
-  std::unique_ptr<VideoCodecStats> stats =
-      RunEncodeDecodeTest(codec_impl, codec_impl, video_info, frames_settings);
+  std::unique_ptr<VideoCodecStats> stats = RunEncodeDecodeTest(
+      env, codec_impl, codec_impl, video_info, frames_settings);
 
   VideoCodecStats::Stream stream;
   if (stats != nullptr) {
@@ -527,6 +531,7 @@ INSTANTIATE_TEST_SUITE_P(
     FramerateAdaptationTest::TestParamsToString);
 
 TEST(VideoCodecTest, DISABLED_EncodeDecode) {
+  const Environment env = CreateEnvironment();
   std::vector<std::string> bitrate_str = absl::GetFlag(FLAGS_bitrate_kbps);
   std::vector<int> bitrate_kbps;
   std::transform(bitrate_str.begin(), bitrate_str.end(),
@@ -544,7 +549,7 @@ TEST(VideoCodecTest, DISABLED_EncodeDecode) {
   // logged test name (implies lossing history in the chromeperf dashboard).
   // Sync with changes in Stream::LogMetrics (see TODOs there).
   std::unique_ptr<VideoCodecStats> stats = RunEncodeDecodeTest(
-      CodecNameToCodecImpl(absl::GetFlag(FLAGS_encoder)),
+      env, CodecNameToCodecImpl(absl::GetFlag(FLAGS_encoder)),
       CodecNameToCodecImpl(absl::GetFlag(FLAGS_decoder)),
       kRawVideos.at(absl::GetFlag(FLAGS_video_name)), frames_settings);
   ASSERT_NE(nullptr, stats);
