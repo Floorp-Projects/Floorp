@@ -910,7 +910,7 @@ bool RConcat::recover(JSContext* cx, SnapshotIterator& iter) const {
 RStringLength::RStringLength(CompactBufferReader& reader) {}
 
 bool RStringLength::recover(JSContext* cx, SnapshotIterator& iter) const {
-  JSString* string = iter.read().toString();
+  JSString* string = iter.readString();
 
   static_assert(JSString::MAX_LENGTH <= INT32_MAX,
                 "Can cast string length to int32_t");
@@ -1017,7 +1017,7 @@ bool MCharCodeAt::writeRecoverData(CompactBufferWriter& writer) const {
 RCharCodeAt::RCharCodeAt(CompactBufferReader& reader) {}
 
 bool RCharCodeAt::recover(JSContext* cx, SnapshotIterator& iter) const {
-  JSString* string = iter.read().toString();
+  JSString* string = iter.readString();
 
   // Int32 because |index| is computed from MBoundsCheck.
   int32_t index = iter.readInt32();
@@ -1430,8 +1430,8 @@ bool MStringSplit::writeRecoverData(CompactBufferWriter& writer) const {
 RStringSplit::RStringSplit(CompactBufferReader& reader) {}
 
 bool RStringSplit::recover(JSContext* cx, SnapshotIterator& iter) const {
-  RootedString str(cx, iter.read().toString());
-  RootedString sep(cx, iter.read().toString());
+  RootedString str(cx, iter.readString());
+  RootedString sep(cx, iter.readString());
 
   JSObject* res = StringSplitString(cx, str, sep, INT32_MAX);
   if (!res) {
@@ -1470,7 +1470,7 @@ RRegExpMatcher::RRegExpMatcher(CompactBufferReader& reader) {}
 
 bool RRegExpMatcher::recover(JSContext* cx, SnapshotIterator& iter) const {
   RootedObject regexp(cx, &iter.read().toObject());
-  RootedString input(cx, iter.read().toString());
+  RootedString input(cx, iter.readString());
 
   // Int32 because |lastIndex| is computed from transpiled self-hosted call.
   int32_t lastIndex = iter.readInt32();
@@ -1970,9 +1970,9 @@ RStringReplace::RStringReplace(CompactBufferReader& reader) {
 }
 
 bool RStringReplace::recover(JSContext* cx, SnapshotIterator& iter) const {
-  RootedString string(cx, iter.read().toString());
-  RootedString pattern(cx, iter.read().toString());
-  RootedString replace(cx, iter.read().toString());
+  RootedString string(cx, iter.readString());
+  RootedString pattern(cx, iter.readString());
+  RootedString replace(cx, iter.readString());
 
   JSString* result =
       isFlatReplacement_
@@ -1996,8 +1996,7 @@ bool MSubstr::writeRecoverData(CompactBufferWriter& writer) const {
 RSubstr::RSubstr(CompactBufferReader& reader) {}
 
 bool RSubstr::recover(JSContext* cx, SnapshotIterator& iter) const {
-  RootedString str(cx, iter.read().toString());
-
+  RootedString str(cx, iter.readString());
 
   // Int32 because |begin| is computed from MStringTrimStartIndex, MConstant,
   // or CallSubstringKernelResult.

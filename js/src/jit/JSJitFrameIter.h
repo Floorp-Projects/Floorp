@@ -507,6 +507,12 @@ class SnapshotIterator {
     return val.toNumber();
   }
 
+  JSString* readString() {
+    Value val = read();
+    MOZ_RELEASE_ASSERT(val.isString());
+    return val.toString();
+  }
+
   // Read the |Normal| value unless it is not available and that the snapshot
   // provides a |Default| value. This is useful to avoid invalidations of the
   // frame while we are only interested in a few properties which are provided
