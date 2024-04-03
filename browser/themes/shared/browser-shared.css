@@ -213,11 +213,15 @@
   transition: var(--ext-theme-background-transition);
 }
 
-#nav-bar:not([tabs-hidden="true"]) {
-  /* The toolbar buttons that animate are only visible when the #TabsToolbar is not collapsed.
-     The animations use position:absolute and require a positioned #nav-bar. */
+#nav-bar {
+  /* The toolbar buttons that animate use position:absolute and require a
+   * positioned #nav-bar. */
   position: relative;
   border-top: 0.01px solid var(--tabs-navbar-separator-color);
+
+  &[tabs-hidden="true"] {
+    border-top-style: none;
+  }
 }
 
 /* Bookmarks toolbar */
