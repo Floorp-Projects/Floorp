@@ -2402,15 +2402,6 @@ already_AddRefed<ComputedStyle> nsIFrame::ComputeHighlightSelectionStyle(
       *element, PseudoStyleType::highlight, aHighlightName, Style());
 }
 
-already_AddRefed<ComputedStyle> nsIFrame::ComputeTargetTextStyle() const {
-  const Element* element = FindElementAncestorForMozSelection(GetContent());
-  if (!element) {
-    return nullptr;
-  }
-  return PresContext()->StyleSet()->ProbePseudoElementStyle(
-      *element, PseudoStyleType::targetText, nullptr, Style());
-}
-
 template <typename SizeOrMaxSize>
 static inline bool IsIntrinsicKeyword(const SizeOrMaxSize& aSize) {
   // All keywords other than auto/none/-moz-available depend on intrinsic sizes.
