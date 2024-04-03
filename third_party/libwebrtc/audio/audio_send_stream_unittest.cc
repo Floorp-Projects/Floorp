@@ -560,8 +560,7 @@ TEST(AudioSendStreamTest, AudioNetworkAdaptorReceivesOverhead) {
               InSequence s;
               EXPECT_CALL(
                   *mock_encoder,
-                  OnReceivedOverhead(Eq(kOverheadPerPacket.bytes<size_t>())))
-                  .Times(2);
+                  OnReceivedOverhead(Eq(kOverheadPerPacket.bytes<size_t>())));
               EXPECT_CALL(*mock_encoder,
                           EnableAudioNetworkAdaptor(StrEq(kAnaConfigString), _))
                   .WillOnce(Return(true));
@@ -847,7 +846,6 @@ TEST(AudioSendStreamTest, AudioOverheadChanged) {
     EXPECT_CALL(*helper.rtp_rtcp(), ExpectedPerPacketOverhead)
         .WillRepeatedly(Return(audio_overhead_per_packet_bytes));
     auto send_stream = helper.CreateAudioSendStream();
-    auto new_config = helper.config();
 
     BitrateAllocationUpdate update;
     update.target_bitrate =
@@ -861,6 +859,8 @@ TEST(AudioSendStreamTest, AudioOverheadChanged) {
 
     EXPECT_CALL(*helper.rtp_rtcp(), ExpectedPerPacketOverhead)
         .WillRepeatedly(Return(audio_overhead_per_packet_bytes + 20));
+    // RTP overhead can only change in response to RTCP or configuration change.
+    send_stream->Reconfigure(helper.config(), nullptr);
     EXPECT_CALL(*helper.channel_send(), OnBitrateAllocation);
     send_stream->OnBitrateUpdated(update);
 

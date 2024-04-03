@@ -171,7 +171,6 @@ AudioSendStream::AudioSendStream(
 
   RTC_DCHECK_RUN_ON(&worker_thread_checker_);
   ConfigureStream(config, true, nullptr);
-  UpdateCachedTargetAudioBitrateConstraints();
 }
 
 AudioSendStream::~AudioSendStream() {
@@ -324,10 +323,7 @@ void AudioSendStream::ConfigureStream(
   }
 
   // Set currently known overhead (used in ANA, opus only).
-  {
-    MutexLock lock(&overhead_per_packet_lock_);
-    UpdateOverheadForEncoder();
-  }
+  UpdateOverheadPerPacket();
 
   channel_send_->CallEncoder([this](AudioEncoder* encoder) {
     RTC_DCHECK_RUN_ON(&worker_thread_checker_);
@@ -335,7 +331,6 @@ void AudioSendStream::ConfigureStream(
       return;
     }
     frame_length_range_ = encoder->GetFrameLengthRange();
-    UpdateCachedTargetAudioBitrateConstraints();
   });
 
   if (sending_) {
@@ -343,9 +338,6 @@ void AudioSendStream::ConfigureStream(
   }
 
   config_ = new_config;
-  if (!first_time) {
-    UpdateCachedTargetAudioBitrateConstraints();
-  }
 
   webrtc::InvokeSetParametersCallback(callback, webrtc::RTCError::OK());
 }
@@ -489,30 +481,23 @@ webrtc::AudioSendStream::Stats AudioSendStream::GetStats(
 void AudioSendStream::DeliverRtcp(const uint8_t* packet, size_t length) {
   RTC_DCHECK_RUN_ON(&worker_thread_checker_);
   channel_send_->ReceivedRTCPPacket(packet, length);
-
-  {
-    // Poll if overhead has changed, which it can do if ack triggers us to stop
-    // sending mid/rid.
-    MutexLock lock(&overhead_per_packet_lock_);
-    UpdateOverheadForEncoder();
-  }
-  UpdateCachedTargetAudioBitrateConstraints();
+  // Poll if overhead has changed, which it can do if ack triggers us to stop
+  // sending mid/rid.
+  UpdateOverheadPerPacket();
 }
 
 uint32_t AudioSendStream::OnBitrateUpdated(BitrateAllocationUpdate update) {
   RTC_DCHECK_RUN_ON(&worker_thread_checker_);
-
   // Pick a target bitrate between the constraints. Overrules the allocator if
   // it 1) allocated a bitrate of zero to disable the stream or 2) allocated a
   // higher than max to allow for e.g. extra FEC.
-  RTC_DCHECK(cached_constraints_.has_value());
-  update.target_bitrate.Clamp(cached_constraints_->min,
-                              cached_constraints_->max);
-  update.stable_target_bitrate.Clamp(cached_constraints_->min,
-                                     cached_constraints_->max);
-
+  absl::optional<TargetAudioBitrateConstraints> constraints =
+      GetMinMaxBitrateConstraints();
+  if (constraints) {
+    update.target_bitrate.Clamp(constraints->min, constraints->max);
+    update.stable_target_bitrate.Clamp(constraints->min, constraints->max);
+  }
   channel_send_->OnBitrateAllocation(update);
-
   // The amount of audio protection is not exposed by the encoder, hence
   // always returning 0.
   return 0;
@@ -521,41 +506,30 @@ uint32_t AudioSendStream::OnBitrateUpdated(BitrateAllocationUpdate update) {
 void AudioSendStream::SetTransportOverhead(
     int transport_overhead_per_packet_bytes) {
   RTC_DCHECK_RUN_ON(&worker_thread_checker_);
-  {
-    MutexLock lock(&overhead_per_packet_lock_);
-    transport_overhead_per_packet_bytes_ = transport_overhead_per_packet_bytes;
-    UpdateOverheadForEncoder();
-  }
-  UpdateCachedTargetAudioBitrateConstraints();
+  transport_overhead_per_packet_bytes_ = transport_overhead_per_packet_bytes;
+  UpdateOverheadPerPacket();
 }
 
-void AudioSendStream::UpdateOverheadForEncoder() {
+void AudioSendStream::UpdateOverheadPerPacket() {
   RTC_DCHECK_RUN_ON(&worker_thread_checker_);
-  size_t overhead_per_packet_bytes = GetPerPacketOverheadBytes();
+  size_t overhead_per_packet_bytes =
+      transport_overhead_per_packet_bytes_ +
+      rtp_rtcp_module_->ExpectedPerPacketOverhead();
   if (overhead_per_packet_ == overhead_per_packet_bytes) {
     return;
   }
   overhead_per_packet_ = overhead_per_packet_bytes;
-
   channel_send_->CallEncoder([&](AudioEncoder* encoder) {
     encoder->OnReceivedOverhead(overhead_per_packet_bytes);
   });
-  if (total_packet_overhead_bytes_ != overhead_per_packet_bytes) {
-    total_packet_overhead_bytes_ = overhead_per_packet_bytes;
-    if (registered_with_allocator_) {
-      ConfigureBitrateObserver();
-    }
+  if (registered_with_allocator_) {
+    ConfigureBitrateObserver();
   }
 }
 
 size_t AudioSendStream::TestOnlyGetPerPacketOverheadBytes() const {
-  MutexLock lock(&overhead_per_packet_lock_);
-  return GetPerPacketOverheadBytes();
-}
-
-size_t AudioSendStream::GetPerPacketOverheadBytes() const {
-  return transport_overhead_per_packet_bytes_ +
-         rtp_rtcp_module_->ExpectedPerPacketOverhead();
+  RTC_DCHECK_RUN_ON(&worker_thread_checker_);
+  return overhead_per_packet_;
 }
 
 RtpState AudioSendStream::GetRtpState() const {
@@ -649,13 +623,9 @@ bool AudioSendStream::SetupSendCodec(const Config& new_config) {
   }
 
   // Set currently known overhead (used in ANA, opus only).
-  // If overhead changes later, it will be updated in UpdateOverheadForEncoder.
-  {
-    MutexLock lock(&overhead_per_packet_lock_);
-    size_t overhead = GetPerPacketOverheadBytes();
-    if (overhead > 0) {
-      encoder->OnReceivedOverhead(overhead);
-    }
+  // If overhead changes later, it will be updated in UpdateOverheadPerPacket.
+  if (overhead_per_packet_ > 0) {
+    encoder->OnReceivedOverhead(overhead_per_packet_);
   }
 
   StoreEncoderProperties(encoder->SampleRateHz(), encoder->NumChannels());
@@ -717,18 +687,14 @@ void AudioSendStream::ReconfigureANA(const Config& new_config) {
     return;
   }
   if (new_config.audio_network_adaptor_config) {
-    // This lock needs to be acquired before CallEncoder, since it aquires
-    // another lock and we need to maintain the same order at all call sites to
-    // avoid deadlock.
-    MutexLock lock(&overhead_per_packet_lock_);
-    size_t overhead = GetPerPacketOverheadBytes();
     channel_send_->CallEncoder([&](AudioEncoder* encoder) {
+      RTC_DCHECK_RUN_ON(&worker_thread_checker_);
       if (encoder->EnableAudioNetworkAdaptor(
               *new_config.audio_network_adaptor_config, event_log_)) {
         RTC_LOG(LS_INFO) << "Audio network adaptor enabled on SSRC "
                          << new_config.rtp.ssrc;
-        if (overhead > 0) {
-          encoder->OnReceivedOverhead(overhead);
+        if (overhead_per_packet_ > 0) {
+          encoder->OnReceivedOverhead(overhead_per_packet_);
         }
       } else {
         RTC_LOG(LS_INFO) << "Failed to enable Audio network adaptor on SSRC "
@@ -833,8 +799,7 @@ void AudioSendStream::ConfigureBitrateObserver() {
     priority_bitrate += max_overhead;
   } else {
     RTC_DCHECK(frame_length_range_);
-    const DataSize overhead_per_packet =
-        DataSize::Bytes(total_packet_overhead_bytes_);
+    const DataSize overhead_per_packet = DataSize::Bytes(overhead_per_packet_);
     DataRate min_overhead = overhead_per_packet / frame_length_range_->second;
     priority_bitrate += min_overhead;
   }
@@ -898,10 +863,9 @@ AudioSendStream::GetMinMaxBitrateConstraints() const {
       RTC_LOG(LS_WARNING) << "frame_length_range_ is not set";
       return absl::nullopt;
     }
-    const DataSize kOverheadPerPacket =
-        DataSize::Bytes(total_packet_overhead_bytes_);
-    constraints.min += kOverheadPerPacket / frame_length_range_->second;
-    constraints.max += kOverheadPerPacket / frame_length_range_->first;
+    const DataSize overhead_per_packet = DataSize::Bytes(overhead_per_packet_);
+    constraints.min += overhead_per_packet / frame_length_range_->second;
+    constraints.max += overhead_per_packet / frame_length_range_->first;
   }
   return constraints;
 }
@@ -909,15 +873,6 @@ AudioSendStream::GetMinMaxBitrateConstraints() const {
 void AudioSendStream::RegisterCngPayloadType(int payload_type,
                                              int clockrate_hz) {
   channel_send_->RegisterCngPayloadType(payload_type, clockrate_hz);
-}
-
-void AudioSendStream::UpdateCachedTargetAudioBitrateConstraints() {
-  absl::optional<AudioSendStream::TargetAudioBitrateConstraints>
-      new_constraints = GetMinMaxBitrateConstraints();
-  if (!new_constraints.has_value()) {
-    return;
-  }
-  cached_constraints_ = new_constraints;
 }
 
 }  // namespace internal
