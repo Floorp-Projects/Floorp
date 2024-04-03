@@ -23,6 +23,7 @@
 #include <vector>
 
 #include "absl/strings/str_replace.h"
+#include "absl/types/optional.h"
 #include "api/candidate.h"
 #include "api/dtls_transport_interface.h"
 #include "api/media_stream_interface.h"
@@ -3723,7 +3724,7 @@ class RTCTestStats : public RTCStats {
   RTCTestStats(const std::string& id, Timestamp timestamp)
       : RTCStats(id, timestamp) {}
 
-  RTCStatsMember<int32_t> dummy_stat;
+  absl::optional<int32_t> dummy_stat;
 };
 
 WEBRTC_RTCSTATS_IMPL(RTCTestStats,

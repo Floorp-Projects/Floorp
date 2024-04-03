@@ -15,6 +15,7 @@
 #include <cstring>
 #include <iostream>
 
+#include "absl/types/optional.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/strings/json.h"
 #include "stats/test/rtc_test_stats.h"
@@ -46,7 +47,7 @@ class RTCChildStats : public RTCStats {
   RTCChildStats(const std::string& id, Timestamp timestamp)
       : RTCStats(id, timestamp) {}
 
-  RTCStatsMember<int32_t> child_int;
+  absl::optional<int32_t> child_int;
 };
 
 WEBRTC_RTCSTATS_IMPL(RTCChildStats,
@@ -61,7 +62,7 @@ class RTCGrandChildStats : public RTCChildStats {
   RTCGrandChildStats(const std::string& id, Timestamp timestamp)
       : RTCChildStats(id, timestamp) {}
 
-  RTCStatsMember<int32_t> grandchild_int;
+  absl::optional<int32_t> grandchild_int;
 };
 
 WEBRTC_RTCSTATS_IMPL(RTCGrandChildStats,
