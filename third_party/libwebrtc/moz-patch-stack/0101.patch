@@ -1,36 +1,64 @@
-From: Michael Froman <mfroman@mozilla.com>
-Date: Mon, 4 Dec 2023 12:57:00 -0600
-Subject: Bug 1867099 - (fix-66b7275561) disable wgc capture yellow-line
- removal. r?ng!
+From: Nico Grunbaum <na-g@nostrum.com>
+Date: Wed, 15 Nov 2023 22:33:00 +0000
+Subject: Bug 1863041 - P0 - add device filter control to
+ RTCCameraVideoCapturer;r=pehrsons,webrtc-reviewers
 
-This code won't build until we support building with
-Win 10 SDK v10.0.20348.0 or newer.
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/0aac94794aad2ddb637f5076bc08706a11866737
+I have filed this bug upstream: https://bugs.chromium.org/p/webrtc/issues/detail?id=15639
+
+Differential Revision: https://phabricator.services.mozilla.com/D193172
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/91a763d768b74acc9cf4828f91a86df4a7b092ce
 ---
- modules/desktop_capture/win/wgc_capture_session.cc | 6 ++++++
- 1 file changed, 6 insertions(+)
+ .../capturer/RTCCameraVideoCapturer.h           |  5 ++++-
+ .../capturer/RTCCameraVideoCapturer.m           | 17 +++++++++++++++--
+ 2 files changed, 19 insertions(+), 3 deletions(-)
 
-diff --git a/modules/desktop_capture/win/wgc_capture_session.cc b/modules/desktop_capture/win/wgc_capture_session.cc
-index 8c74c2bf24..86afc52411 100644
---- a/modules/desktop_capture/win/wgc_capture_session.cc
-+++ b/modules/desktop_capture/win/wgc_capture_session.cc
-@@ -188,6 +188,11 @@ HRESULT WgcCaptureSession::StartCapture(const DesktopCaptureOptions& options) {
-     }
-   }
+diff --git a/sdk/objc/components/capturer/RTCCameraVideoCapturer.h b/sdk/objc/components/capturer/RTCCameraVideoCapturer.h
+index 370bfa70f0..b1f3f64f74 100644
+--- a/sdk/objc/components/capturer/RTCCameraVideoCapturer.h
++++ b/sdk/objc/components/capturer/RTCCameraVideoCapturer.h
+@@ -26,7 +26,10 @@ NS_EXTENSION_UNAVAILABLE_IOS("Camera not available in app extensions.")
+ @property(readonly, nonatomic) AVCaptureSession *captureSession;
  
-+// Until Mozilla builds with Win 10 SDK v10.0.20348.0 or newer, this
-+// code will not build.  Once we support the newer SDK, Bug 1868198
-+// exists to decide if we ever want to use this code since it is
-+// removing an indicator that capture is happening.
-+#if !defined(WEBRTC_MOZILLA_BUILD)
-   // By default, the WGC capture API adds a yellow border around the captured
-   // window or display to indicate that a capture is in progress. The section
-   // below is an attempt to remove this yellow border to make the capture
-@@ -199,6 +204,7 @@ HRESULT WgcCaptureSession::StartCapture(const DesktopCaptureOptions& options) {
-           &session3))) {
-     session3->put_IsBorderRequired(false);
-   }
+ // Returns list of available capture devices that support video capture.
+-+ (NSArray<AVCaptureDevice *> *)captureDevices;
+++ (NSArray<AVCaptureDevice *> *)captureDevicesWithDeviceTypes:
++    (NSArray<AVCaptureDeviceType> *)deviceTypes;
++// Returns list of default capture devices types
+++ (NSArray<AVCaptureDeviceType> *)defaultCaptureDeviceTypes;
+ // Returns list of formats that are supported by this class for this device.
+ + (NSArray<AVCaptureDeviceFormat *> *)supportedFormatsForDevice:(AVCaptureDevice *)device;
+ 
+diff --git a/sdk/objc/components/capturer/RTCCameraVideoCapturer.m b/sdk/objc/components/capturer/RTCCameraVideoCapturer.m
+index e7c47b4e99..1361207faf 100644
+--- a/sdk/objc/components/capturer/RTCCameraVideoCapturer.m
++++ b/sdk/objc/components/capturer/RTCCameraVideoCapturer.m
+@@ -117,14 +117,27 @@ const int64_t kNanosecondsPerSecond = 1000000000;
+   [[NSNotificationCenter defaultCenter] removeObserver:self];
+ }
+ 
+-+ (NSArray<AVCaptureDevice *> *)captureDevices {
+++ (NSArray<AVCaptureDevice *> *)captureDevicesWithDeviceTypes:
++    (NSArray<AVCaptureDeviceType> *)deviceTypes {
+   AVCaptureDeviceDiscoverySession *session = [AVCaptureDeviceDiscoverySession
+-      discoverySessionWithDeviceTypes:@[ AVCaptureDeviceTypeBuiltInWideAngleCamera ]
++      discoverySessionWithDeviceTypes:deviceTypes
+                             mediaType:AVMediaTypeVideo
+                              position:AVCaptureDevicePositionUnspecified];
+   return session.devices;
+ }
+ 
+++ (NSArray<AVCaptureDeviceType> *)defaultCaptureDeviceTypes {
++  NSArray *types = @[ AVCaptureDeviceTypeBuiltInWideAngleCamera ];
++#if !defined(WEBRTC_IOS)
++  if (@available(macOS 14.0, *)) {
++    types = [types arrayByAddingObject:AVCaptureDeviceTypeExternal];
++  } else {
++    types = [types arrayByAddingObject:AVCaptureDeviceTypeExternalUnknown];
++  }
 +#endif
- 
-   allow_zero_hertz_ = options.allow_wgc_zero_hertz();
- 
++  return types;
++}
++
+ + (NSArray<AVCaptureDeviceFormat *> *)supportedFormatsForDevice:(AVCaptureDevice *)device {
+   // Support opening the device in any format. We make sure it's converted to a format we
+   // can handle, if needed, in the method `-setupVideoDataOutput`.
