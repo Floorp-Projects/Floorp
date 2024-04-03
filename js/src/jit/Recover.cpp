@@ -6,6 +6,8 @@
 
 #include "jit/Recover.h"
 
+#include "mozilla/Casting.h"
+
 #include "jsmath.h"
 
 #include "builtin/Object.h"
@@ -1955,9 +1957,14 @@ bool RSubstr::recover(JSContext* cx, SnapshotIterator& iter) const {
   // or CallSubstringKernelResult.
   int32_t begin = iter.readInt32();
 
-  // Int32 because |length| is computed from MSub(truncated),
-  // MStringTrimEndIndex, or CallSubstringKernelResult.
-  int32_t length = iter.readInt32();
+  // |length| is computed from MSub(truncated), MStringTrimEndIndex, or
+  // CallSubstringKernelResult. The current MSub inputs won't overflow, so when
+  // RSub recovers the MSub instruction, the input will be representable as an
+  // Int32. This is only true as long as RSub calls |js::SubOperation|, which in
+  // turn calls |JS::Value::setNumber|. We don't want to rely on this exact call
+  // sequence, so instead use |readNumber| here and then release-assert the
+  // number is exactly representable as an Int32.
+  int32_t length = mozilla::ReleaseAssertedCast<int32_t>(iter.readNumber());
 
   JSString* result = SubstringKernel(cx, str, begin, length);
   if (!result) {
