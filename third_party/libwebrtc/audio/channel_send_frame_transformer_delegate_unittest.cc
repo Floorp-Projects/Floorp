@@ -68,6 +68,7 @@ std::unique_ptr<TransformableAudioFrameInterface> CreateMockReceiverFrame(
   ON_CALL(*mock_frame, GetDirection)
       .WillByDefault(Return(TransformableFrameInterface::Direction::kReceiver));
   ON_CALL(*mock_frame, GetContributingSources).WillByDefault(Return(csrcs));
+  ON_CALL(*mock_frame, SequenceNumber).WillByDefault(Return(987654321));
   return mock_frame;
 }
 
@@ -252,6 +253,7 @@ TEST(ChannelSendFrameTransformerDelegateTest, CloningReceiverFrameWithCsrcs) {
   ASSERT_NE(frame->GetContributingSources().size(), 0u);
   EXPECT_THAT(cloned_frame->GetContributingSources(),
               ElementsAreArray(frame->GetContributingSources()));
+  EXPECT_EQ(cloned_frame->SequenceNumber(), frame->SequenceNumber());
 }
 
 }  // namespace
