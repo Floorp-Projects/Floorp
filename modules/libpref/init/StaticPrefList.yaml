@@ -4135,6 +4135,12 @@
   value: false
   mirror: always
 
+- name: dom.text_fragments.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
 - name: dom.textMetrics.actualBoundingBox.enabled
   type: RelaxedAtomicBool
   value: true
