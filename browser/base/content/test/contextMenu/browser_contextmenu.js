@@ -137,7 +137,7 @@ add_task(async function test_setup_html() {
     audio.loop = true;
     audio.src = "audio.ogg";
     video.loop = true;
-    video.src = "video.webm";
+    video.src = "video.ogg";
 
     let awaitPause = ContentTaskUtils.waitForEvent(audio, "pause");
     await ContentTaskUtils.waitForCondition(

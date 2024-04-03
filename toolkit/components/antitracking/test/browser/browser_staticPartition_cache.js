@@ -105,7 +105,7 @@ add_task(async function () {
         // The CSS cache needs to be cleared in-process.
         content.windowUtils.clearSharedStyleSheetCache();
 
-        let videoURL = arg.urlPrefix + "file_thirdPartyChild.video.webm";
+        let videoURL = arg.urlPrefix + "file_thirdPartyChild.video.ogv";
         let audioURL = arg.urlPrefix + "file_thirdPartyChild.audio.ogg";
         let URLSuffix = "?r=" + arg.randomSuffix;
 
@@ -176,7 +176,7 @@ add_task(async function () {
       "xhr.html",
       "worker.xhr.html",
       "audio.ogg",
-      "video.webm",
+      "video.ogv",
       "fetch.html",
       "worker.fetch.html",
       "request.html",

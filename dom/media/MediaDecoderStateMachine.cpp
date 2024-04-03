@@ -2331,16 +2331,16 @@ class MediaDecoderStateMachine::NextFrameSeekingState
     }
 
     // Otherwise, we need to do the seek operation asynchronously for a special
-    // case (video with no data)which has no data at all, the 1st
-    // seekToNextFrame() operation reaches the end of the media. If we did the
-    // seek operation synchronously, we immediately resolve the SeekPromise in
-    // mSeekJob and then switch to the CompletedState which dispatches an
-    // "ended" event. However, the ThenValue of the SeekPromise has not yet been
-    // set, so the promise resolving is postponed and then the JS developer
-    // receives the "ended" event before the seek promise is resolved. An
-    // asynchronous seek operation helps to solve this issue since while the
-    // seek is actually performed, the ThenValue of SeekPromise has already been
-    // set so that it won't be postponed.
+    // case (bug504613.ogv) which has no data at all, the 1st seekToNextFrame()
+    // operation reaches the end of the media. If we did the seek operation
+    // synchronously, we immediately resolve the SeekPromise in mSeekJob and
+    // then switch to the CompletedState which dispatches an "ended" event.
+    // However, the ThenValue of the SeekPromise has not yet been set, so the
+    // promise resolving is postponed and then the JS developer receives the
+    // "ended" event before the seek promise is resolved.
+    // An asynchronous seek operation helps to solve this issue since while the
+    // seek is actually performed, the ThenValue of SeekPromise has already
+    // been set so that it won't be postponed.
     RefPtr<Runnable> r = mAsyncSeekTask = new AysncNextFrameSeekTask(this);
     nsresult rv = OwnerThread()->Dispatch(r.forget());
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));

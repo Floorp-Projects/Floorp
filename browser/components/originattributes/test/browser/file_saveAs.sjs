@@ -2,8 +2,8 @@ const HTTP_ORIGIN = "http://example.com";
 const SECOND_ORIGIN = "http://example.org";
 const URI_PATH = "/browser/browser/components/originattributes/test/browser/";
 const LINK_PATH = `${URI_PATH}file_saveAs.sjs`;
-// Reusing existing webm file for testing.
-const VIDEO_PATH = `${URI_PATH}file_thirdPartyChild.video.webm`;
+// Reusing existing ogv file for testing.
+const VIDEO_PATH = `${URI_PATH}file_thirdPartyChild.video.ogv`;
 // Reusing existing png file for testing.
 const IMAGE_PATH = `${URI_PATH}file_favicon.png`;
 const FRAME_PATH = `${SECOND_ORIGIN}${URI_PATH}file_saveAs.sjs?image=1`;

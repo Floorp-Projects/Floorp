@@ -273,6 +273,9 @@ include outline/reftest.list
 # object/
 include object/reftest.list
 
+# ogg-video/
+skip include ogg-video/reftest.list
+
 # webm-video/
 skip include webm-video/reftest.list
 

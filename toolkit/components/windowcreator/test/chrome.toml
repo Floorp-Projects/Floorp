@@ -1,6 +1,6 @@
 [DEFAULT]
 support-files = [
-  "320x240.webm",
+  "320x240.ogv",
   "bug449141_page.html",
   "bug1170334_iframe.xml",
   "bug1170334_style.css",

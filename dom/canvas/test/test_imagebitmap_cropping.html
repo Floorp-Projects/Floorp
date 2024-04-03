@@ -33,7 +33,7 @@ function isPixel(ctx, x, y, c, d) {
 }
 
 //
-//  The pattern of the 320x240.webm video.
+//  The pattern of the 320x240.ogv video.
 //  .------------------------------------------------.
 //  | 255  | 255  | 0    | 0    | 255  | 255  | 0    |
 //  | 255  | 255  | 255  | 255  | 0    | 0    | 0    |
@@ -135,7 +135,7 @@ var gJPEGBlob;
 
 function prepareSources() {
   gVideo = document.createElement("video");
-  gVideo.src = "http://example.com/tests/dom/canvas/test/crossorigin/video.sjs?name=tests/dom/canvas/test/320x240.webm&type=video/webm&cors=anonymous";
+  gVideo.src = "http://example.com/tests/dom/canvas/test/crossorigin/video.sjs?name=tests/dom/canvas/test/320x240.ogv&type=video/ogg&cors=anonymous";
   gVideo.crossOrigin = "anonymous";
   gVideo.autoplay = "true"
 

@@ -8,9 +8,9 @@
 # requests is not interferred with by Necko's cache. See bug 977398
 # for details. Necko will fix this in bug 977314. 
 
-FILES=(`ls *.ogg *.webm *.mp3 *.opus *.mp4 *.m4s *.wav`)
+FILES=(`ls *.ogg *.ogv *.webm *.mp3 *.opus *.mp4 *.m4s *.wav`)
 
-rm -f *.ogg^headers^ *.webm^headers^ *.mp3^headers^ *.opus^headers^ *.mp4^headers^ *.m4s^headers^ *.wav^headers^
+rm -f *.ogg^headers^ *.ogv^headers^ *.webm^headers^ *.mp3^headers^ *.opus^headers^ *.mp4^headers^ *.m4s^headers^ *.wav^headers^
 
 for i in "${FILES[@]}"
 do

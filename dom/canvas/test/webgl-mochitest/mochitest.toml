@@ -8,6 +8,7 @@ support-files = [
   "webgl-util.js",
   "test_video_fastpath.js",
   "red-green.mp4",
+  "red-green.theora.ogv",
   "red-green.webmvp8.webm",
   "red-green.webmvp9.webm",
 ]
@@ -198,12 +199,20 @@ support-files = ["blank_15000x10000.png"]
 ["test_video_fastpath_mp4.html"]
 skip-if = ["win11_2009 && bits == 32"] # No fast video path for h264 decoder (done in RDD, can't be read in content)
 
+["test_video_fastpath_theora.html"]
+skip-if = [
+  "os == 'linux' && os_version == '18.04'",
+  "apple_catalina",
+  "apple_silicon",
+  "win11_2009 && bits == 32", # No fast video path for theora decoder (done in RDD, can't be read in content)
+]
+
 ["test_video_fastpath_vp8.html"]
 skip-if = [
   "os == 'linux' && os_version == '18.04'",
   "apple_catalina",
   "apple_silicon",
-  "win11_2009 && bits == 32", # No fast video path for vp8 decoder (done in RDD, can't be read in content)
+  "win11_2009 && bits == 32", # No fast video path for theora decoder (done in RDD, can't be read in content)
 ]
 
 ["test_video_fastpath_vp9.html"]
@@ -211,7 +220,7 @@ skip-if = [
   "os == 'linux' && os_version == '18.04'",
   "apple_catalina",
   "apple_silicon",
-  "win11_2009 && bits == 32", # No fast video path for vp9 decoder (done in RDD, can't be read in content)
+  "win11_2009 && bits == 32", # No fast video path for theora decoder (done in RDD, can't be read in content)
 ]
 
 ["test_webgl2_alpha_luminance.html"]
