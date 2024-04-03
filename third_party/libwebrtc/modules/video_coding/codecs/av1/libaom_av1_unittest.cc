@@ -62,6 +62,7 @@ VideoCodec DefaultCodecSettings() {
   codec_settings.height = kHeight;
   codec_settings.maxFramerate = kFramerate;
   codec_settings.maxBitrate = 1000;
+  codec_settings.startBitrate = 1;
   codec_settings.qpMax = 63;
   return codec_settings;
 }
