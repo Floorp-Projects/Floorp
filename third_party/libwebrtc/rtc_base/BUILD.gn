@@ -2126,7 +2126,6 @@ if (rtc_include_tests) {
         "nat_unittest.cc",
         "network_route_unittest.cc",
         "network_unittest.cc",
-        "proxy_unittest.cc",
         "rolling_accumulator_unittest.cc",
         "rtc_certificate_generator_unittest.cc",
         "rtc_certificate_unittest.cc",
