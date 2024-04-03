@@ -7,7 +7,7 @@ package org.mozilla.fenix.detektrules.perf
 import io.gitlab.arturbosch.detekt.api.*
 import org.jetbrains.kotlin.psi.*
 
-private const val VIOLATION_MSG = "Please use `org.mozilla.fenix.perf.runBlockingImplement` instead" +
+private const val VIOLATION_MSG = "Please use `org.mozilla.fenix.perf.runBlockingIncrement` instead " +
     "because it allows us to monitor the code for performance regressions."
 
 /**
