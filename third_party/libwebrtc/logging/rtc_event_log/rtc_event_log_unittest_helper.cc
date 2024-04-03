@@ -238,12 +238,10 @@ EventGenerator::NewIceCandidatePairConfig() {
       static_cast<IceCandidatePairProtocol>(prng_.Rand(
           static_cast<uint32_t>(IceCandidatePairProtocol::kNumValues) - 1));
 
-  IceCandidatePairDescription desc;
-  desc.local_candidate_type = local_candidate_type;
+  IceCandidatePairDescription desc(local_candidate_type, remote_candidate_type);
   desc.local_relay_protocol = protocol_type;
   desc.local_network_type = local_network_type;
   desc.local_address_family = local_address_family;
-  desc.remote_candidate_type = remote_candidate_type;
   desc.remote_address_family = remote_address_family;
   desc.candidate_pair_protocol = protocol_type;
 
