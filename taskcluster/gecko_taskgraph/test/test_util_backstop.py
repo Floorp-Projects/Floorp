@@ -30,7 +30,7 @@ DEFAULT_RESPONSES = {
         "body": dedent(
             """
             pushdate: {}
-            pushlog_id: {}
+            pushlog_id: "{}"
         """.format(
                 LAST_BACKSTOP_PUSHDATE,
                 LAST_BACKSTOP_PUSHID,
@@ -52,7 +52,7 @@ def params():
         "head_rev": "abcdef",
         "project": "autoland",
         "pushdate": LAST_BACKSTOP_PUSHDATE + 1,
-        "pushlog_id": LAST_BACKSTOP_PUSHID + 1,
+        "pushlog_id": f"{LAST_BACKSTOP_PUSHID + 1}",
         "target_tasks_method": "default",
     }
 
@@ -64,7 +64,7 @@ def params():
             {
                 "index": {"status": 404},
             },
-            {"pushlog_id": 1},
+            {"pushlog_id": "1"},
             True,
             id="no previous backstop",
         ),
@@ -81,7 +81,7 @@ def params():
         pytest.param(
             DEFAULT_RESPONSES,
             {
-                "pushlog_id": LAST_BACKSTOP_PUSHID + BACKSTOP_PUSH_INTERVAL - 1,
+                "pushlog_id": f"{LAST_BACKSTOP_PUSHID + BACKSTOP_PUSH_INTERVAL - 1}",
                 "pushdate": LAST_BACKSTOP_PUSHDATE + (BACKSTOP_TIME_INTERVAL * 60) - 1,
             },
             False,
@@ -98,7 +98,7 @@ def params():
         pytest.param(
             DEFAULT_RESPONSES,
             {
-                "pushlog_id": LAST_BACKSTOP_PUSHID + BACKSTOP_PUSH_INTERVAL,
+                "pushlog_id": f"{LAST_BACKSTOP_PUSHID + BACKSTOP_PUSH_INTERVAL}",
             },
             True,
             id="interval",
@@ -106,7 +106,7 @@ def params():
         pytest.param(
             DEFAULT_RESPONSES,
             {
-                "pushlog_id": LAST_BACKSTOP_PUSHID + BACKSTOP_PUSH_INTERVAL + 1,
+                "pushlog_id": f"{LAST_BACKSTOP_PUSHID + BACKSTOP_PUSH_INTERVAL + 1}",
             },
             True,
             id="greater than interval",
@@ -123,7 +123,7 @@ def params():
             {},
             {
                 "project": "try",
-                "pushlog_id": BACKSTOP_PUSH_INTERVAL,
+                "pushlog_id": f"{BACKSTOP_PUSH_INTERVAL}",
             },
             False,
             id="try not a backstop",
@@ -163,7 +163,6 @@ def test_is_backstop(responses, params, response_args, extra_params, expected):
 
     for key in ("index", "status", "artifact"):
         if key in response_args:
-            print(urls[key])
             responses.add(responses.GET, urls[key], **response_args[key])
 
     params.update(extra_params)
