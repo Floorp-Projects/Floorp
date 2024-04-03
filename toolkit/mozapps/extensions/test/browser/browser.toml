@@ -8,8 +8,6 @@ support-files = [
   "addons/browser_dragdrop_incompat.xpi",
   "addons/browser_installssl.xpi",
   "addons/browser_theme.xpi",
-  "addons/options_signed.xpi",
-  "addons/options_signed/*",
   "addon_prefs.xhtml",
   "discovery/api_response.json",
   "discovery/api_response_empty.json",
@@ -40,7 +38,6 @@ generated-files = [
   "addons/browser_dragdrop_incompat.xpi",
   "addons/browser_installssl.xpi",
   "addons/browser_theme.xpi",
-  "addons/options_signed.xpi",
 ]
 
 skip-if = [
