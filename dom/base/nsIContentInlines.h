@@ -82,10 +82,27 @@ static inline nsINode* GetFlattenedTreeParentNode(const nsINode* aNode) {
     return parent;
   }
 
-  if (parentAsContent->GetShadowRoot()) {
-    // If it's not assigned to any slot it's not part of the flat tree, and thus
-    // we return null.
-    return content->GetAssignedSlot();
+  // Use GetShadowRootForSelection for the selection case such that
+  // if the content is slotted into a UA shadow tree, use
+  // the parent of content as the flattened tree parent (instead of
+  // the slot element).
+  const nsINode* shadowRootForParent =
+      aType == nsINode::eForSelection
+          ? parentAsContent->GetShadowRootForSelection()
+          : parentAsContent->GetShadowRoot();
+
+  if (shadowRootForParent) {
+    // When aType is not nsINode::eForSelection, If it's not assigned to any
+    // slot it's not part of the flat tree, and thus we return null.
+    auto* assignedSlot = content->GetAssignedSlot();
+    if (assignedSlot || aType != nsINode::eForSelection) {
+      return assignedSlot;
+    }
+
+    MOZ_ASSERT(aType == nsINode::eForSelection);
+    // When aType is nsINode::eForSelection, we use the parent of the
+    // content even if it's not assigned to any slot.
+    return parent;
   }
 
   if (parentAsContent->IsInShadowTree()) {
@@ -106,7 +123,7 @@ static inline nsINode* GetFlattenedTreeParentNode(const nsINode* aNode) {
 }
 
 inline nsINode* nsINode::GetFlattenedTreeParentNode() const {
-  return ::GetFlattenedTreeParentNode<nsINode::eNotForStyle>(this);
+  return ::GetFlattenedTreeParentNode<nsINode::eNormal>(this);
 }
 
 inline nsIContent* nsIContent::GetFlattenedTreeParent() const {
@@ -125,6 +142,11 @@ inline bool nsIContent::IsEventAttributeName(nsAtom* aName) {
 
 inline nsINode* nsINode::GetFlattenedTreeParentNodeForStyle() const {
   return ::GetFlattenedTreeParentNode<nsINode::eForStyle>(this);
+}
+
+inline nsIContent* nsINode::GetFlattenedTreeParentNodeForSelection() const {
+  nsINode* parent = ::GetFlattenedTreeParentNode<nsINode::eForSelection>(this);
+  return (parent && parent->IsContent()) ? parent->AsContent() : nullptr;
 }
 
 inline bool nsINode::NodeOrAncestorHasDirAuto() const {

@@ -1099,7 +1099,7 @@ class nsINode : public mozilla::dom::EventTarget {
                             : nullptr;
   }
 
-  enum FlattenedParentType { eNotForStyle, eForStyle };
+  enum FlattenedParentType { eNormal, eForStyle, eForSelection };
 
   /**
    * Returns the node that is the parent of this node in the flattened
@@ -1120,6 +1120,15 @@ class nsINode : public mozilla::dom::EventTarget {
    * scroll frame.
    */
   inline nsINode* GetFlattenedTreeParentNodeForStyle() const;
+
+  /**
+   * Similar to GetFlattenedTreeParentNode, it does two things differently
+   *   1. For contents that are not in the flattened tree, use its
+   *   parent rather than nullptr.
+   *   2. For contents that are slotted into a UA shadow tree, use its
+   *   parent rather than the slot element.
+   */
+  inline nsIContent* GetFlattenedTreeParentNodeForSelection() const;
 
   inline mozilla::dom::Element* GetFlattenedTreeParentElement() const;
   inline mozilla::dom::Element* GetFlattenedTreeParentElementForStyle() const;
