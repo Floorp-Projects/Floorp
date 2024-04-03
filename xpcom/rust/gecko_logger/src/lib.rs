@@ -10,7 +10,6 @@ extern crate lazy_static;
 use app_services_logger::{AppServicesLogger, LOGGERS_BY_TARGET};
 use log::Log;
 use log::{Level, LevelFilter};
-use std::boxed::Box;
 use std::collections::HashMap;
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
