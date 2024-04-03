@@ -1017,24 +1017,20 @@ bool MCharCodeAt::writeRecoverData(CompactBufferWriter& writer) const {
 RCharCodeAt::RCharCodeAt(CompactBufferReader& reader) {}
 
 bool RCharCodeAt::recover(JSContext* cx, SnapshotIterator& iter) const {
-  RootedString string(cx, iter.read().toString());
+  JSString* string = iter.read().toString();
+
   Value indexValue = iter.read();
   MOZ_ASSERT(indexValue.isInt32(), "index computed from MBoundsCheck");
 
   int32_t index = indexValue.toInt32();
+  MOZ_RELEASE_ASSERT(0 <= index && size_t(index) < string->length());
 
-  RootedValue result(cx);
-  if (0 <= index && size_t(index) < string->length()) {
-    char16_t c;
-    if (!string->getChar(cx, index, &c)) {
-      return false;
-    }
-    result.setInt32(c);
-  } else {
-    result.setNaN();
+  char16_t c;
+  if (!string->getChar(cx, index, &c)) {
+    return false;
   }
 
-  iter.storeInstructionResult(result);
+  iter.storeInstructionResult(Int32Value(c));
   return true;
 }
 
