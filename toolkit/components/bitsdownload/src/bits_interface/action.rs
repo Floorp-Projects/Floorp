@@ -11,7 +11,6 @@
 //! A value of type `ServiceAction` or `RequestAction` can easily be converted
 //! to an `Action` using the `into()` method.
 
-use std::convert::From;
 use xpcom::interfaces::nsIBits;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
