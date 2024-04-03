@@ -2666,11 +2666,6 @@ ArraySortResult js::ArraySortFromJit(JSContext* cx,
     return ArraySortResult::Done;
   }
 
-  // We're sorting with a JS comparator function. Initialize the descriptor to
-  // make sure the trampoline is ready for a JIT comparator call.
-  uintptr_t descriptor = MakeFrameDescriptorForJitCall(
-      jit::FrameType::TrampolineNative, ArraySortData::ComparatorActualArgs);
-  data->initDescriptor(descriptor);
   return ArraySortData::sortWithComparator(data);
 }
 
