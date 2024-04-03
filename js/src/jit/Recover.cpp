@@ -953,7 +953,7 @@ bool MFloor::writeRecoverData(CompactBufferWriter& writer) const {
 RFloor::RFloor(CompactBufferReader& reader) {}
 
 bool RFloor::recover(JSContext* cx, SnapshotIterator& iter) const {
-  double num = iter.read().toNumber();
+  double num = iter.readNumber();
   double result = js::math_floor_impl(num);
 
   iter.storeInstructionResult(NumberValue(result));
@@ -969,7 +969,7 @@ bool MCeil::writeRecoverData(CompactBufferWriter& writer) const {
 RCeil::RCeil(CompactBufferReader& reader) {}
 
 bool RCeil::recover(JSContext* cx, SnapshotIterator& iter) const {
-  double num = iter.read().toNumber();
+  double num = iter.readNumber();
   double result = js::math_ceil_impl(num);
 
   iter.storeInstructionResult(NumberValue(result));
@@ -985,7 +985,7 @@ bool MRound::writeRecoverData(CompactBufferWriter& writer) const {
 RRound::RRound(CompactBufferReader& reader) {}
 
 bool RRound::recover(JSContext* cx, SnapshotIterator& iter) const {
-  double num = iter.read().toNumber();
+  double num = iter.readNumber();
   double result = js::math_round_impl(num);
 
   iter.storeInstructionResult(NumberValue(result));
@@ -1001,7 +1001,7 @@ bool MTrunc::writeRecoverData(CompactBufferWriter& writer) const {
 RTrunc::RTrunc(CompactBufferReader& reader) {}
 
 bool RTrunc::recover(JSContext* cx, SnapshotIterator& iter) const {
-  double num = iter.read().toNumber();
+  double num = iter.readNumber();
   double result = js::math_trunc_impl(num);
 
   iter.storeInstructionResult(NumberValue(result));
@@ -1041,11 +1041,8 @@ bool MFromCharCode::writeRecoverData(CompactBufferWriter& writer) const {
 RFromCharCode::RFromCharCode(CompactBufferReader& reader) {}
 
 bool RFromCharCode::recover(JSContext* cx, SnapshotIterator& iter) const {
-  Value charCodeValue = iter.read();
-  MOZ_ASSERT(charCodeValue.isNumber(),
-             "charCode computed from (recoverable) user input");
-
-  int32_t charCode = JS::ToInt32(charCodeValue.toNumber());
+  // Number because |charCode| is computed from (recoverable) user input.
+  int32_t charCode = JS::ToInt32(iter.readNumber());
 
   JSString* str = StringFromCharCode(cx, charCode);
   if (!str) {
@@ -1095,8 +1092,8 @@ bool MPow::writeRecoverData(CompactBufferWriter& writer) const {
 RPow::RPow(CompactBufferReader& reader) {}
 
 bool RPow::recover(JSContext* cx, SnapshotIterator& iter) const {
-  double base = iter.read().toNumber();
-  double power = iter.read().toNumber();
+  double base = iter.readNumber();
+  double power = iter.readNumber();
   double result = ecmaPow(base, power);
 
   iter.storeInstructionResult(NumberValue(result));
@@ -1112,7 +1109,7 @@ bool MPowHalf::writeRecoverData(CompactBufferWriter& writer) const {
 RPowHalf::RPowHalf(CompactBufferReader& reader) {}
 
 bool RPowHalf::recover(JSContext* cx, SnapshotIterator& iter) const {
-  double base = iter.read().toNumber();
+  double base = iter.readNumber();
   double power = 0.5;
   double result = ecmaPow(base, power);
 
@@ -1130,8 +1127,8 @@ bool MMinMax::writeRecoverData(CompactBufferWriter& writer) const {
 RMinMax::RMinMax(CompactBufferReader& reader) { isMax_ = reader.readByte(); }
 
 bool RMinMax::recover(JSContext* cx, SnapshotIterator& iter) const {
-  double x = iter.read().toNumber();
-  double y = iter.read().toNumber();
+  double x = iter.readNumber();
+  double y = iter.readNumber();
 
   double result;
   if (isMax_) {
@@ -1153,7 +1150,7 @@ bool MAbs::writeRecoverData(CompactBufferWriter& writer) const {
 RAbs::RAbs(CompactBufferReader& reader) {}
 
 bool RAbs::recover(JSContext* cx, SnapshotIterator& iter) const {
-  double num = iter.read().toNumber();
+  double num = iter.readNumber();
   double result = js::math_abs_impl(num);
 
   iter.storeInstructionResult(NumberValue(result));
@@ -1172,7 +1169,7 @@ RSqrt::RSqrt(CompactBufferReader& reader) {
 }
 
 bool RSqrt::recover(JSContext* cx, SnapshotIterator& iter) const {
-  double num = iter.read().toNumber();
+  double num = iter.readNumber();
   double result = js::math_sqrt_impl(num);
 
   // MIRType::Float32 is a specialization embedding the fact that the result is
@@ -1194,8 +1191,8 @@ bool MAtan2::writeRecoverData(CompactBufferWriter& writer) const {
 RAtan2::RAtan2(CompactBufferReader& reader) {}
 
 bool RAtan2::recover(JSContext* cx, SnapshotIterator& iter) const {
-  double y = iter.read().toNumber();
-  double x = iter.read().toNumber();
+  double y = iter.readNumber();
+  double x = iter.readNumber();
   double result = js::ecmaAtan2(y, x);
 
   iter.storeInstructionResult(DoubleValue(result));
@@ -1220,7 +1217,7 @@ bool RHypot::recover(JSContext* cx, SnapshotIterator& iter) const {
   }
 
   for (uint32_t i = 0; i < numOperands_; ++i) {
-    vec.infallibleAppend(iter.read());
+    vec.infallibleAppend(NumberValue(iter.readNumber()));
   }
 
   RootedValue result(cx);
@@ -1267,7 +1264,7 @@ bool MSign::writeRecoverData(CompactBufferWriter& writer) const {
 RSign::RSign(CompactBufferReader& reader) {}
 
 bool RSign::recover(JSContext* cx, SnapshotIterator& iter) const {
-  double num = iter.read().toNumber();
+  double num = iter.readNumber();
   double result = js::math_sign_impl(num);
 
   iter.storeInstructionResult(NumberValue(result));
@@ -1324,7 +1321,7 @@ RMathFunction::RMathFunction(CompactBufferReader& reader) {
 }
 
 bool RMathFunction::recover(JSContext* cx, SnapshotIterator& iter) const {
-  double num = iter.read().toNumber();
+  double num = iter.readNumber();
 
   double result;
   switch (function_) {
@@ -1454,7 +1451,7 @@ bool MNaNToZero::writeRecoverData(CompactBufferWriter& writer) const {
 RNaNToZero::RNaNToZero(CompactBufferReader& reader) {}
 
 bool RNaNToZero::recover(JSContext* cx, SnapshotIterator& iter) const {
-  double v = iter.read().toNumber();
+  double v = iter.readNumber();
   if (std::isnan(v) || mozilla::IsNegativeZero(v)) {
     v = 0.0;
   }
@@ -1553,7 +1550,7 @@ bool MToFloat32::writeRecoverData(CompactBufferWriter& writer) const {
 RToFloat32::RToFloat32(CompactBufferReader& reader) {}
 
 bool RToFloat32::recover(JSContext* cx, SnapshotIterator& iter) const {
-  double num = iter.read().toNumber();
+  double num = iter.readNumber();
   double result = js::RoundFloat32(num);
 
   iter.storeInstructionResult(DoubleValue(result));
@@ -2028,10 +2025,7 @@ bool MAtomicIsLockFree::writeRecoverData(CompactBufferWriter& writer) const {
 RAtomicIsLockFree::RAtomicIsLockFree(CompactBufferReader& reader) {}
 
 bool RAtomicIsLockFree::recover(JSContext* cx, SnapshotIterator& iter) const {
-  Value operand = iter.read();
-  MOZ_ASSERT(operand.isNumber());
-
-  double dsize = JS::ToInteger(operand.toNumber());
+  double dsize = JS::ToInteger(iter.readNumber());
 
   int32_t size;
   bool result = mozilla::NumberEqualsInt32(dsize, &size) &&
