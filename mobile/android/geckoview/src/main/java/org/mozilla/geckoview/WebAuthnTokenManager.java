@@ -6,7 +6,6 @@
 package org.mozilla.geckoview;
 
 import android.app.PendingIntent;
-import android.content.Intent;
 import android.net.Uri;
 import android.util.Base64;
 import android.util.Log;
@@ -21,11 +20,13 @@ import com.google.android.gms.fido.fido2.api.common.AuthenticationExtensions;
 import com.google.android.gms.fido.fido2.api.common.AuthenticatorAssertionResponse;
 import com.google.android.gms.fido.fido2.api.common.AuthenticatorAttestationResponse;
 import com.google.android.gms.fido.fido2.api.common.AuthenticatorErrorResponse;
+import com.google.android.gms.fido.fido2.api.common.AuthenticatorResponse;
 import com.google.android.gms.fido.fido2.api.common.AuthenticatorSelectionCriteria;
 import com.google.android.gms.fido.fido2.api.common.BrowserPublicKeyCredentialCreationOptions;
 import com.google.android.gms.fido.fido2.api.common.BrowserPublicKeyCredentialRequestOptions;
 import com.google.android.gms.fido.fido2.api.common.EC2Algorithm;
 import com.google.android.gms.fido.fido2.api.common.FidoAppIdExtension;
+import com.google.android.gms.fido.fido2.api.common.PublicKeyCredential;
 import com.google.android.gms.fido.fido2.api.common.PublicKeyCredentialCreationOptions;
 import com.google.android.gms.fido.fido2.api.common.PublicKeyCredentialDescriptor;
 import com.google.android.gms.fido.fido2.api.common.PublicKeyCredentialParameters;
@@ -128,16 +129,19 @@ import org.mozilla.gecko.util.GeckoBundle;
     public final byte[] keyHandle;
     public final byte[] attestationObject;
     public final String[] transports;
+    public final String authenticatorAttachment;
 
     public MakeCredentialResponse(
         final byte[] clientDataJson,
         final byte[] keyHandle,
         final byte[] attestationObject,
-        final String[] transports) {
+        final String[] transports,
+        final String authenticatorAttachment) {
       this.clientDataJson = clientDataJson;
       this.keyHandle = keyHandle;
       this.attestationObject = attestationObject;
       this.transports = transports;
+      this.authenticatorAttachment = authenticatorAttachment;
     }
   }
 
@@ -290,42 +294,63 @@ import org.mozilla.gecko.util.GeckoBundle;
               .startActivityForResult(pendingIntent)
               .accept(
                   intent -> {
-                    final WebAuthnTokenManager.Exception error = parseErrorIntent(intent);
+                    if (!intent.hasExtra(Fido.FIDO2_KEY_CREDENTIAL_EXTRA)) {
+                      Log.w(LOGTAG, "Failed to get credential data in FIDO intent");
+                      result.completeExceptionally(
+                          new WebAuthnTokenManager.Exception("UNKNOWN_ERR"));
+                      return;
+                    }
+                    final byte[] rspData =
+                        intent.getByteArrayExtra(Fido.FIDO2_KEY_CREDENTIAL_EXTRA);
+                    final PublicKeyCredential publicKeyCredentialData =
+                        PublicKeyCredential.deserializeFromBytes(rspData);
+
+                    final AuthenticatorResponse response = publicKeyCredentialData.getResponse();
+                    final WebAuthnTokenManager.Exception error = parseErrorResponse(response);
                     if (error != null) {
                       result.completeExceptionally(error);
                       return;
                     }
 
-                    final byte[] rspData = intent.getByteArrayExtra(Fido.FIDO2_KEY_RESPONSE_EXTRA);
-                    if (rspData != null) {
-                      final AuthenticatorAttestationResponse responseData =
-                          AuthenticatorAttestationResponse.deserializeFromBytes(rspData);
-
-                      Log.d(
-                          LOGTAG,
-                          "key handle: "
-                              + Base64.encodeToString(responseData.getKeyHandle(), Base64.DEFAULT));
-                      Log.d(
-                          LOGTAG,
-                          "clientDataJSON: "
-                              + Base64.encodeToString(
-                                  responseData.getClientDataJSON(), Base64.DEFAULT));
-                      Log.d(
-                          LOGTAG,
-                          "attestation Object: "
-                              + Base64.encodeToString(
-                                  responseData.getAttestationObject(), Base64.DEFAULT));
-
-                      Log.d(
-                          LOGTAG, "transports: " + String.join(", ", responseData.getTransports()));
-
-                      result.complete(
-                          new WebAuthnTokenManager.MakeCredentialResponse(
-                              responseData.getClientDataJSON(),
-                              responseData.getKeyHandle(),
-                              responseData.getAttestationObject(),
-                              responseData.getTransports()));
+                    if (!(response instanceof AuthenticatorAttestationResponse)) {
+                      Log.w(LOGTAG, "Failed to get attestation response in FIDO intent");
+                      result.completeExceptionally(
+                          new WebAuthnTokenManager.Exception("UNKNOWN_ERR"));
+                      return;
                     }
+
+                    final AuthenticatorAttestationResponse responseData =
+                        (AuthenticatorAttestationResponse) response;
+
+                    Log.d(
+                        LOGTAG,
+                        "key handle: "
+                            + Base64.encodeToString(
+                                publicKeyCredentialData.getRawId(), Base64.DEFAULT));
+                    Log.d(
+                        LOGTAG,
+                        "clientDataJSON: "
+                            + Base64.encodeToString(
+                                responseData.getClientDataJSON(), Base64.DEFAULT));
+                    Log.d(
+                        LOGTAG,
+                        "attestation Object: "
+                            + Base64.encodeToString(
+                                responseData.getAttestationObject(), Base64.DEFAULT));
+
+                    Log.d(LOGTAG, "transports: " + String.join(", ", responseData.getTransports()));
+                    Log.d(
+                        LOGTAG,
+                        "authenticatorAttachment :"
+                            + publicKeyCredentialData.getAuthenticatorAttachment());
+
+                    result.complete(
+                        new WebAuthnTokenManager.MakeCredentialResponse(
+                            responseData.getClientDataJSON(),
+                            publicKeyCredentialData.getRawId(),
+                            responseData.getAttestationObject(),
+                            responseData.getTransports(),
+                            publicKeyCredentialData.getAuthenticatorAttachment()));
                   },
                   e -> {
                     Log.w(LOGTAG, "Failed to launch activity: ", e);
@@ -390,29 +415,31 @@ import org.mozilla.gecko.util.GeckoBundle;
     public final byte[] authData;
     public final byte[] signature;
     public final byte[] userHandle;
+    public final String authenticatorAttachment;
 
     public GetAssertionResponse(
         final byte[] clientDataJson,
         final byte[] keyHandle,
         final byte[] authData,
         final byte[] signature,
-        final byte[] userHandle) {
+        final byte[] userHandle,
+        final String authenticatorAttachment) {
       this.clientDataJson = clientDataJson;
       this.keyHandle = keyHandle;
       this.authData = authData;
       this.signature = signature;
       this.userHandle = userHandle;
+      this.authenticatorAttachment = authenticatorAttachment;
     }
   }
 
-  private static WebAuthnTokenManager.Exception parseErrorIntent(final Intent intent) {
-    if (!intent.hasExtra(Fido.FIDO2_KEY_ERROR_EXTRA)) {
+  private static WebAuthnTokenManager.Exception parseErrorResponse(
+      final AuthenticatorResponse response) {
+    if (!(response instanceof AuthenticatorErrorResponse)) {
       return null;
     }
 
-    final byte[] errData = intent.getByteArrayExtra(Fido.FIDO2_KEY_ERROR_EXTRA);
-    final AuthenticatorErrorResponse responseData =
-        AuthenticatorErrorResponse.deserializeFromBytes(errData);
+    final AuthenticatorErrorResponse responseData = (AuthenticatorErrorResponse) response;
 
     Log.e(LOGTAG, "errorCode.name: " + responseData.getErrorCode());
     Log.e(LOGTAG, "errorMessage: " + responseData.getErrorMessage());
@@ -485,51 +512,73 @@ import org.mozilla.gecko.util.GeckoBundle;
               .startActivityForResult(pendingIntent)
               .accept(
                   intent -> {
-                    final WebAuthnTokenManager.Exception error = parseErrorIntent(intent);
+                    if (!intent.hasExtra(Fido.FIDO2_KEY_CREDENTIAL_EXTRA)) {
+                      Log.w(LOGTAG, "Failed to get credential data in FIDO intent");
+                      result.completeExceptionally(
+                          new WebAuthnTokenManager.Exception("UNKNOWN_ERR"));
+                      return;
+                    }
+
+                    final byte[] rspData =
+                        intent.getByteArrayExtra(Fido.FIDO2_KEY_CREDENTIAL_EXTRA);
+                    final PublicKeyCredential publicKeyCredentialData =
+                        PublicKeyCredential.deserializeFromBytes(rspData);
+                    final AuthenticatorResponse response = publicKeyCredentialData.getResponse();
+
+                    final WebAuthnTokenManager.Exception error = parseErrorResponse(response);
                     if (error != null) {
                       result.completeExceptionally(error);
                       return;
                     }
 
-                    if (intent.hasExtra(Fido.FIDO2_KEY_RESPONSE_EXTRA)) {
-                      final byte[] rspData =
-                          intent.getByteArrayExtra(Fido.FIDO2_KEY_RESPONSE_EXTRA);
-                      final AuthenticatorAssertionResponse responseData =
-                          AuthenticatorAssertionResponse.deserializeFromBytes(rspData);
-
-                      Log.d(
-                          LOGTAG,
-                          "key handle: "
-                              + Base64.encodeToString(responseData.getKeyHandle(), Base64.DEFAULT));
-                      Log.d(
-                          LOGTAG,
-                          "clientDataJSON: "
-                              + Base64.encodeToString(
-                                  responseData.getClientDataJSON(), Base64.DEFAULT));
-                      Log.d(
-                          LOGTAG,
-                          "auth data: "
-                              + Base64.encodeToString(
-                                  responseData.getAuthenticatorData(), Base64.DEFAULT));
-                      Log.d(
-                          LOGTAG,
-                          "signature: "
-                              + Base64.encodeToString(responseData.getSignature(), Base64.DEFAULT));
-
-                      // Nullable field
-                      byte[] userHandle = responseData.getUserHandle();
-                      if (userHandle == null) {
-                        userHandle = new byte[0];
-                      }
-
-                      result.complete(
-                          new WebAuthnTokenManager.GetAssertionResponse(
-                              responseData.getClientDataJSON(),
-                              responseData.getKeyHandle(),
-                              responseData.getAuthenticatorData(),
-                              responseData.getSignature(),
-                              userHandle));
+                    if (!(response instanceof AuthenticatorAssertionResponse)) {
+                      Log.w(LOGTAG, "Failed to get assertion response in FIDO intent");
+                      result.completeExceptionally(
+                          new WebAuthnTokenManager.Exception("UNKNOWN_ERR"));
+                      return;
                     }
+
+                    final AuthenticatorAssertionResponse responseData =
+                        (AuthenticatorAssertionResponse) publicKeyCredentialData.getResponse();
+
+                    Log.d(
+                        LOGTAG,
+                        "key handle: "
+                            + Base64.encodeToString(
+                                publicKeyCredentialData.getRawId(), Base64.DEFAULT));
+                    Log.d(
+                        LOGTAG,
+                        "clientDataJSON: "
+                            + Base64.encodeToString(
+                                responseData.getClientDataJSON(), Base64.DEFAULT));
+                    Log.d(
+                        LOGTAG,
+                        "auth data: "
+                            + Base64.encodeToString(
+                                responseData.getAuthenticatorData(), Base64.DEFAULT));
+                    Log.d(
+                        LOGTAG,
+                        "signature: "
+                            + Base64.encodeToString(responseData.getSignature(), Base64.DEFAULT));
+                    Log.d(
+                        LOGTAG,
+                        "authenticatorAttachment :"
+                            + publicKeyCredentialData.getAuthenticatorAttachment());
+
+                    // Nullable field
+                    byte[] userHandle = responseData.getUserHandle();
+                    if (userHandle == null) {
+                      userHandle = new byte[0];
+                    }
+
+                    result.complete(
+                        new WebAuthnTokenManager.GetAssertionResponse(
+                            responseData.getClientDataJSON(),
+                            publicKeyCredentialData.getRawId(),
+                            responseData.getAuthenticatorData(),
+                            responseData.getSignature(),
+                            userHandle,
+                            publicKeyCredentialData.getAuthenticatorAttachment()));
                   },
                   e -> {
                     Log.w(LOGTAG, "Failed to get FIDO intent", e);

@@ -63,8 +63,8 @@ class WebAuthnRegisterResult final : public nsIWebAuthnRegisterResult {
       mTransports.AppendElement(
           jni::String::LocalRef(transports->GetElement(i))->ToString());
     }
-    // authenticator attachment is not available on Android
-    mAuthenticatorAttachment = Nothing();
+    mAuthenticatorAttachment =
+        Some(aResponse->AuthenticatorAttachment()->ToString());
   }
 #endif
 
@@ -191,8 +191,8 @@ class WebAuthnSignResult final : public nsIWebAuthnSignResult {
         reinterpret_cast<uint8_t*>(
             aResponse->UserHandle()->GetElements().Elements()),
         aResponse->UserHandle()->Length());
-    // authenticator attachment is not available on Android
-    mAuthenticatorAttachment = Nothing();
+    mAuthenticatorAttachment =
+        Some(aResponse->AuthenticatorAttachment()->ToString());
   }
 #endif
 
