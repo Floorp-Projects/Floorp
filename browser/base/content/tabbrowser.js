@@ -4358,7 +4358,7 @@
       } // Do nothing
 
       if (event.button == 1) {
-        BrowserOpenTab({ event });
+        BrowserCommands.openTab({ event });
         // Stop the propagation of the click event, to prevent the event from being
         // handled more than once.
         // E.g. see https://bugzilla.mozilla.org/show_bug.cgi?id=1657992#c4

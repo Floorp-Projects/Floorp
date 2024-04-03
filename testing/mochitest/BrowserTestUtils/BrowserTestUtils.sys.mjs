@@ -745,7 +745,7 @@ export var BrowserTestUtils = {
    * @resolves With the {xul:tab} when a tab is opened and its location changes
    *           to the given URL and optionally that browser has loaded.
    *
-   * NB: this method will not work if you open a new tab with e.g. BrowserOpenTab
+   * NB: this method will not work if you open a new tab with e.g. BrowserCommands.openTab
    * and the tab does not load a URL, because no onLocationChange will fire.
    */
   waitForNewTab(

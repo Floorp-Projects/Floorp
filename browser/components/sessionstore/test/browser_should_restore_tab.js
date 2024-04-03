@@ -73,7 +73,7 @@ add_task(async function test_about_new_tab() {
     () => {}
   );
   // This opens about:newtab:
-  win.BrowserOpenTab();
+  win.BrowserCommands.openTab();
   let tab = await tabOpenedAndSwitchedTo;
   await check_tab_close_notification(tab, false);
 });

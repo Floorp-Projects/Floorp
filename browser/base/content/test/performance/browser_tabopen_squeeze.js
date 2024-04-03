@@ -52,7 +52,7 @@ add_task(async function () {
   await withPerfObserver(
     async function () {
       let switchDone = BrowserTestUtils.waitForEvent(window, "TabSwitchDone");
-      BrowserOpenTab();
+      BrowserCommands.openTab();
       await BrowserTestUtils.waitForEvent(
         gBrowser.selectedTab,
         "TabAnimationEnd"

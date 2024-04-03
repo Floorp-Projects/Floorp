@@ -82,7 +82,7 @@ add_task(async function override_loads_in_browser() {
     Assert.ok(AboutNewTab.newTabURLOverridden, "url has been overridden");
 
     // simulate a newtab open as a user would
-    BrowserOpenTab();
+    BrowserCommands.openTab();
 
     let browser = gBrowser.selectedBrowser;
     await BrowserTestUtils.browserLoaded(browser);
@@ -116,7 +116,7 @@ add_task(async function override_blank_loads_in_browser() {
     Assert.ok(AboutNewTab.newTabURLOverridden, "url has been overridden");
 
     // simulate a newtab open as a user would
-    BrowserOpenTab();
+    BrowserCommands.openTab();
 
     let browser = gBrowser.selectedBrowser;
     await BrowserTestUtils.browserLoaded(browser);

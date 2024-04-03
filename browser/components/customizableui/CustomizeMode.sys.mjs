@@ -63,7 +63,7 @@ var gTab;
 function closeGlobalTab() {
   let win = gTab.ownerGlobal;
   if (win.gBrowser.browsers.length == 1) {
-    win.BrowserOpenTab();
+    win.BrowserCommands.openTab();
   }
   win.gBrowser.removeTab(gTab, { animate: true });
   gTab = null;

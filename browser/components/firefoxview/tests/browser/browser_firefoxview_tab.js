@@ -78,7 +78,7 @@ add_task(async function aria_attributes() {
     "true",
     'Firefox View button should have `aria-pressed="true"` upon selecting it'
   );
-  win.BrowserOpenTab();
+  win.BrowserCommands.openTab();
   is(
     win.FirefoxViewHandler.button.getAttribute("aria-pressed"),
     "false",

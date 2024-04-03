@@ -2647,7 +2647,7 @@ function HandleAppCommandEvent(evt) {
       BrowserCommands.home();
       break;
     case "New":
-      BrowserOpenTab();
+      BrowserCommands.openTab();
       break;
     case "Close":
       BrowserCloseTabOrWindow();
@@ -2726,62 +2726,6 @@ function openLocation(event) {
     "_blank",
     "chrome,all,dialog=no",
     BROWSER_NEW_TAB_URL
-  );
-}
-
-function BrowserOpenTab({ event, url } = {}) {
-  let werePassedURL = !!url;
-  url ??= BROWSER_NEW_TAB_URL;
-  let searchClipboard = gMiddleClickNewTabUsesPasteboard && event?.button == 1;
-
-  let relatedToCurrent = false;
-  let where = "tab";
-
-  if (event) {
-    where = whereToOpenLink(event, false, true);
-
-    switch (where) {
-      case "tab":
-      case "tabshifted":
-        // When accel-click or middle-click are used, open the new tab as
-        // related to the current tab.
-        relatedToCurrent = true;
-        break;
-      case "current":
-        where = "tab";
-        break;
-    }
-  }
-
-  // A notification intended to be useful for modular peformance tracking
-  // starting as close as is reasonably possible to the time when the user
-  // expressed the intent to open a new tab.  Since there are a lot of
-  // entry points, this won't catch every single tab created, but most
-  // initiated by the user should go through here.
-  //
-  // Note 1: This notification gets notified with a promise that resolves
-  //         with the linked browser when the tab gets created
-  // Note 2: This is also used to notify a user that an extension has changed
-  //         the New Tab page.
-  Services.obs.notifyObservers(
-    {
-      wrappedJSObject: new Promise(resolve => {
-        let options = {
-          relatedToCurrent,
-          resolveOnNewTabCreated: resolve,
-        };
-        if (!werePassedURL && searchClipboard) {
-          let clipboard = readFromClipboard();
-          clipboard = UrlbarUtils.stripUnsafeProtocolOnPaste(clipboard).trim();
-          if (clipboard) {
-            url = clipboard;
-            options.allowThirdPartyFixup = true;
-          }
-        }
-        openTrustedLinkIn(url, where, options);
-      }),
-    },
-    "browser-open-newtab-start"
   );
 }
 
@@ -5814,7 +5758,7 @@ nsBrowserAccess.prototype = {
     }
 
     if (aIsExternal && (!aURI || aURI.spec == "about:blank")) {
-      win.BrowserOpenTab(); // this also focuses the location bar
+      win.BrowserCommands.openTab(); // this also focuses the location bar
       win.focus();
       return win.gBrowser.selectedBrowser;
     }

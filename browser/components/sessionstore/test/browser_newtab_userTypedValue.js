@@ -16,7 +16,7 @@ add_task(async function () {
   );
 
   // This opens about:newtab:
-  win.BrowserOpenTab();
+  win.BrowserCommands.openTab();
   let tab = await tabOpenedAndSwitchedTo;
   is(win.gURLBar.value, "", "URL bar should be empty");
   is(tab.linkedBrowser.userTypedValue, null, "userTypedValue should be null");
@@ -55,7 +55,7 @@ add_task(async function () {
 
   for (let url of gInitialPages) {
     if (url == BROWSER_NEW_TAB_URL) {
-      continue; // We tested about:newtab using BrowserOpenTab() above.
+      continue; // We tested about:newtab using BrowserCommands.openTab() above.
     }
     info("Testing " + url + " - " + new Date());
     await BrowserTestUtils.openNewForegroundTab(win.gBrowser, url);

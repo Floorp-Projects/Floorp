@@ -3,7 +3,7 @@
 "use strict";
 
 add_task(async function test_browser_open_newtab_default_url() {
-  BrowserOpenTab();
+  BrowserCommands.openTab();
   const tab = gBrowser.selectedTab;
 
   if (tab.linkedBrowser.currentURI.spec !== window.BROWSER_NEW_TAB_URL) {
@@ -19,7 +19,7 @@ add_task(async function test_browser_open_newtab_default_url() {
 add_task(async function test_browser_open_newtab_specific_url() {
   const url = "https://example.com";
 
-  BrowserOpenTab({ url });
+  BrowserCommands.openTab({ url });
   const tab = gBrowser.selectedTab;
 
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);

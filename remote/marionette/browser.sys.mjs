@@ -237,7 +237,7 @@ browser.Context = class {
       tab = await lazy.TabManager.addTab({ focus, window: this.window });
     } else if (lazy.AppInfo.isFirefox) {
       const opened = new lazy.EventPromise(this.window, "TabOpen");
-      this.window.BrowserOpenTab({ url: "about:blank" });
+      this.window.BrowserCommands.openTab({ url: "about:blank" });
       await opened;
 
       tab = this.tabBrowser.selectedTab;

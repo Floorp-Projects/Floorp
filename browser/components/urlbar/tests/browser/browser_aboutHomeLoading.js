@@ -98,7 +98,7 @@ add_task(async function clearURLBarAfterManuallyLoadingAboutHome() {
     () => {}
   );
   // This opens about:newtab:
-  BrowserOpenTab();
+  BrowserCommands.openTab();
   let tab = await promiseTabOpenedAndSwitchedTo;
   is(gURLBar.value, "", "URL bar should be empty");
   is(tab.linkedBrowser.userTypedValue, null, "userTypedValue should be null");
@@ -132,7 +132,7 @@ add_task(async function dontTemporarilyShowAboutHome() {
   let win = OpenBrowserWindow();
   await windowOpenedPromise;
   let promiseTabSwitch = BrowserTestUtils.switchTab(win.gBrowser, () => {});
-  win.BrowserOpenTab();
+  win.BrowserCommands.openTab();
   await promiseTabSwitch;
   currentBrowser = win.gBrowser.selectedBrowser;
   is(win.gBrowser.visibleTabs.length, 2, "2 tabs opened");

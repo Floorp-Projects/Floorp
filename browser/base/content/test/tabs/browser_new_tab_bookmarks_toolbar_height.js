@@ -109,7 +109,7 @@ add_task(async function () {
   info("Opening a new tab, making the previous tab non-selected");
   await expectBmToolbarVisibilityChange(
     () => {
-      BrowserOpenTab();
+      BrowserCommands.openTab();
       ok(
         !tab.selected,
         "non-new tab is in the background (not the selected tab)"

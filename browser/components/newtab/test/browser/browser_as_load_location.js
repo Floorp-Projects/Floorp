@@ -8,7 +8,7 @@
  */
 async function checkNewtabLoads(selector, message) {
   // simulate a newtab open as a user would
-  BrowserOpenTab();
+  BrowserCommands.openTab();
 
   // wait until the browser loads
   let browser = gBrowser.selectedBrowser;

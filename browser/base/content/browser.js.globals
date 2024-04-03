@@ -37,7 +37,6 @@
   "kSkipCacheFlags",
   "loadOneOrMoreURIs",
   "openLocation",
-  "BrowserOpenTab",
   "gLastOpenDirectory",
   "BrowserOpenFileWindow",
   "BrowserCloseTabOrWindow",
