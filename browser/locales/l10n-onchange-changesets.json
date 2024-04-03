@@ -1,6 +1,7 @@
 {
     "ar": {
         "platforms": [
+            "linux64-aarch64",
             "linux",
             "linux-devedition",
             "linux64",
@@ -18,6 +19,7 @@
     },
     "en-CA": {
         "platforms": [
+            "linux64-aarch64",
             "linux",
             "linux-devedition",
             "linux64",
@@ -35,6 +37,7 @@
     },
     "he": {
         "platforms": [
+            "linux64-aarch64",
             "linux",
             "linux-devedition",
             "linux64",
@@ -52,6 +55,7 @@
     },
     "it": {
         "platforms": [
+            "linux64-aarch64",
             "linux",
             "linux-devedition",
             "linux64",
@@ -69,6 +73,7 @@
     },
     "ja": {
         "platforms": [
+            "linux64-aarch64",
             "linux",
             "linux-devedition",
             "linux64",
