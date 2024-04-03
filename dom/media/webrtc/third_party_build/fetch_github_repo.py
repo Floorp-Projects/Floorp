@@ -87,6 +87,10 @@ def fetch_repo(github_path, clone_protocol, force_fetch, tar_path):
     else:
         print("Upstream remote branch-heads already configured")
 
+    # prevent changing line endings when moving things out of the git repo
+    # (and into hg for instance)
+    run_git("git config --local core.autocrlf false")
+
     # do a sanity fetch in case this was not a freshly cloned copy of the
     # repo, meaning it may not have all the mozilla branches present.
     run_git("git fetch --all", github_path)
