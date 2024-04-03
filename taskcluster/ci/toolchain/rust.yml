@@ -31,7 +31,7 @@ linux64-rust-1.77:
         symbol: TL(rust)
     run:
         arguments: [
-            '--channel', '1.77.0',
+            '--channel', '1.77.1',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'i686-unknown-linux-gnu',
@@ -62,7 +62,7 @@ linux64-rust-dev:
         ]
     fetches:
         fetch:
-            - rust-1.77.0
+            - rust-1.77.1
         toolchain:
             - linux64-clang-toolchain
             - linux64-toolchain-sysroot
@@ -73,7 +73,7 @@ linux64-rust-cross-1.77:
         symbol: TL(rust-cross)
     run:
         arguments: [
-            '--channel', '1.77.0',
+            '--channel', '1.77.1',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'i686-unknown-linux-gnu',
@@ -96,7 +96,7 @@ linux64-rust-static-1.77:
         symbol: TL(rust-static)
     run:
         arguments: [
-            '--channel', '1.77.0',
+            '--channel', '1.77.1',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'aarch64-unknown-linux-musl',
             '--target', 'x86_64-unknown-linux-gnu',
@@ -126,7 +126,7 @@ linux64-rust-macos-1.77:
         symbol: TL(rust-macos)
     run:
         arguments: [
-            '--channel', '1.77.0',
+            '--channel', '1.77.1',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-apple-darwin',
@@ -140,7 +140,7 @@ linux64-rust-ios-1.77:
         symbol: TL(rust-ios)
     run:
         arguments: [
-            '--channel', '1.77.0',
+            '--channel', '1.77.1',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'aarch64-apple-ios',
@@ -154,7 +154,7 @@ linux64-rust-android-1.77:
         symbol: TL(rust-android)
     run:
         arguments: [
-            '--channel', '1.77.0',
+            '--channel', '1.77.1',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'armv7-linux-androideabi',
@@ -185,7 +185,7 @@ linux64-rust-windows-1.77:
         symbol: TL(rust-win)
     run:
         arguments: [
-            '--channel', '1.77.0',
+            '--channel', '1.77.1',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-pc-windows-msvc',
@@ -199,7 +199,7 @@ win64-rust-1.77:
         symbol: TW64(rust)
     run:
         arguments: [
-            '--channel', '1.77.0',
+            '--channel', '1.77.1',
             '--host', 'x86_64-pc-windows-msvc',
             '--target', 'x86_64-pc-windows-msvc',
             '--target', 'i686-pc-windows-msvc',
@@ -212,7 +212,7 @@ macosx64-rust-1.77:
         symbol: TM(rust)
     run:
         arguments: [
-            '--channel', '1.77.0',
+            '--channel', '1.77.1',
             '--host', 'x86_64-apple-darwin',
             '--target', 'x86_64-apple-darwin',
         ]
@@ -223,7 +223,7 @@ mingw32-rust-1.77:
         symbol: TMW(rust)
     run:
         arguments: [
-            '--channel', '1.77.0',
+            '--channel', '1.77.1',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'i686-unknown-linux-gnu',
             '--target', 'i686-pc-windows-gnu',
