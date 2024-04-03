@@ -10,11 +10,13 @@
 #include "nsIUserCharacteristicsPageService.h"
 #include "nsServiceManagerUtils.h"
 
-#include "mozilla/Components.h"
 #include "mozilla/Logging.h"
-#include "mozilla/dom/Promise-inl.h"
 #include "mozilla/glean/GleanPings.h"
 #include "mozilla/glean/GleanMetrics.h"
+
+#include "jsapi.h"
+#include "mozilla/Components.h"
+#include "mozilla/dom/Promise-inl.h"
 
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_general.h"
@@ -62,13 +64,23 @@ int MaxTouchPoints() {
 };  // namespace testing
 
 // ==================================================================
-void CanvasStuff() {
+// ==================================================================
+already_AddRefed<mozilla::dom::Promise> ContentPageStuff() {
   nsCOMPtr<nsIUserCharacteristicsPageService> ucp =
       do_GetService("@mozilla.org/user-characteristics-page;1");
   MOZ_ASSERT(ucp);
 
   RefPtr<mozilla::dom::Promise> promise;
-  mozilla::Unused << ucp->CreateContentPage(getter_AddRefs(promise));
+  nsresult rv = ucp->CreateContentPage(getter_AddRefs(promise));
+  if (NS_FAILED(rv)) {
+    MOZ_LOG(gUserCharacteristicsLog, mozilla::LogLevel::Error,
+            ("Could not create Content Page"));
+    return nullptr;
+  }
+  MOZ_LOG(gUserCharacteristicsLog, mozilla::LogLevel::Debug,
+          ("Created Content Page"));
+
+  return promise.forget();
 }
 
 void PopulateCSSProperties() {
@@ -168,6 +180,11 @@ void PopulatePrefs() {
 // the source of the data we are looking at.
 const int kSubmissionSchema = 1;
 
+const auto* const kLastVersionPref =
+    "toolkit.telemetry.user_characteristics_ping.last_version_sent";
+const auto* const kCurrentVersionPref =
+    "toolkit.telemetry.user_characteristics_ping.current_version";
+
 /* static */
 void nsUserCharacteristics::MaybeSubmitPing() {
   MOZ_LOG(gUserCharacteristicsLog, LogLevel::Debug, ("In MaybeSubmitPing()"));
@@ -188,11 +205,6 @@ void nsUserCharacteristics::MaybeSubmitPing() {
    * Sent = Current Version.
    *
    */
-  const auto* const kLastVersionPref =
-      "toolkit.telemetry.user_characteristics_ping.last_version_sent";
-  const auto* const kCurrentVersionPref =
-      "toolkit.telemetry.user_characteristics_ping.current_version";
-
   auto lastSubmissionVersion = Preferences::GetInt(kLastVersionPref, 0);
   auto currentVersion = Preferences::GetInt(kCurrentVersionPref, 0);
 
@@ -216,9 +228,7 @@ void nsUserCharacteristics::MaybeSubmitPing() {
     // currentVersion = -1 is a development value to force a ping submission
     MOZ_LOG(gUserCharacteristicsLog, LogLevel::Debug,
             ("Force-Submitting Ping"));
-    if (NS_SUCCEEDED(PopulateData())) {
-      SubmitPing();
-    }
+    PopulateDataAndEventuallySubmit(false);
     return;
   }
   if (lastSubmissionVersion > currentVersion) {
@@ -237,11 +247,7 @@ void nsUserCharacteristics::MaybeSubmitPing() {
     return;
   }
   if (lastSubmissionVersion < currentVersion) {
-    if (NS_SUCCEEDED(PopulateData())) {
-      if (NS_SUCCEEDED(SubmitPing())) {
-        Preferences::SetInt(kLastVersionPref, currentVersion);
-      }
-    }
+    PopulateDataAndEventuallySubmit(false);
   } else {
     MOZ_ASSERT_UNREACHABLE("Should never reach here");
   }
@@ -251,13 +257,18 @@ const auto* const kUUIDPref =
     "toolkit.telemetry.user_characteristics_ping.uuid";
 
 /* static */
-nsresult nsUserCharacteristics::PopulateData(bool aTesting /* = false */) {
+void nsUserCharacteristics::PopulateDataAndEventuallySubmit(
+    bool aUpdatePref /* = true */, bool aTesting /* = false */
+) {
   MOZ_LOG(gUserCharacteristicsLog, LogLevel::Warning, ("Populating Data"));
   MOZ_ASSERT(XRE_IsParentProcess());
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-  NS_ENSURE_TRUE(obs, NS_ERROR_NOT_AVAILABLE);
+  if (!obs) {
+    return;
+  }
 
+  // This notification tells us to register the actor
   obs->NotifyObservers(nullptr, "user-characteristics-populating-data",
                        nullptr);
 
@@ -268,12 +279,17 @@ nsresult nsUserCharacteristics::PopulateData(bool aTesting /* = false */) {
   if (NS_FAILED(rv) || uuidString.Length() == 0) {
     nsCOMPtr<nsIUUIDGenerator> uuidgen =
         do_GetService("@mozilla.org/uuid-generator;1", &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv)) {
+      return;
+    }
 
     nsIDToCString id(nsID::GenerateUUID());
     uuidString = id.get();
     Preferences::SetCString(kUUIDPref, uuidString);
   }
+
+  // ------------------------------------------------------------------------
+
   glean::characteristics::client_identifier.Set(uuidString);
 
   glean::characteristics::max_touch_points.Set(testing::MaxTouchPoints());
@@ -281,8 +297,10 @@ nsresult nsUserCharacteristics::PopulateData(bool aTesting /* = false */) {
   if (aTesting) {
     // Many of the later peices of data do not work in a gtest
     // so just populate something, and return
-    return NS_OK;
+    return;
   }
+
+  // ------------------------------------------------------------------------
 
   PopulateMissingFonts();
   PopulateCSSProperties();
@@ -318,13 +336,47 @@ nsresult nsUserCharacteristics::PopulateData(bool aTesting /* = false */) {
   intl::OSPreferences::GetInstance()->GetSystemLocale(locale);
   glean::characteristics::system_locale.Set(locale);
 
-  return NS_OK;
+  // When this promise resolves, everything succeeded and we can submit.
+  RefPtr<mozilla::dom::Promise> promise = ContentPageStuff();
+
+  // ------------------------------------------------------------------------
+
+  auto fulfillSteps = [aUpdatePref, aTesting](
+                          JSContext* aCx, JS::Handle<JS::Value> aPromiseResult,
+                          mozilla::ErrorResult& aRv) {
+    MOZ_LOG(gUserCharacteristicsLog, mozilla::LogLevel::Debug,
+            ("ContentPageStuff Promise Resolved"));
+
+    nsUserCharacteristics::SubmitPing();
+
+    if (aUpdatePref) {
+      MOZ_LOG(gUserCharacteristicsLog, mozilla::LogLevel::Debug,
+              ("Updating preference"));
+      auto current_version =
+          mozilla::Preferences::GetInt(kCurrentVersionPref, 0);
+      mozilla::Preferences::SetInt(kLastVersionPref, current_version);
+    }
+  };
+
+  // Something failed in the Content Page...
+  auto rejectSteps = [](JSContext* aCx, JS::Handle<JS::Value> aReason,
+                        mozilla::ErrorResult& aRv) {
+    MOZ_LOG(gUserCharacteristicsLog, mozilla::LogLevel::Error,
+            ("ContentPageStuff Promise Rejected"));
+  };
+
+  if (promise) {
+    promise->AddCallbacksWithCycleCollectedArgs(std::move(fulfillSteps),
+                                                std::move(rejectSteps));
+  } else {
+    MOZ_LOG(gUserCharacteristicsLog, mozilla::LogLevel::Error,
+            ("Did not get a Promise back from ContentPageStuff"));
+  }
 }
 
 /* static */
-nsresult nsUserCharacteristics::SubmitPing() {
-  MOZ_LOG(gUserCharacteristicsLog, LogLevel::Warning, ("Submitting Ping"));
+void nsUserCharacteristics::SubmitPing() {
+  MOZ_LOG(gUserCharacteristicsLog, mozilla::LogLevel::Warning,
+          ("Submitting Ping"));
   glean_pings::UserCharacteristics.Submit();
-
-  return NS_OK;
 }

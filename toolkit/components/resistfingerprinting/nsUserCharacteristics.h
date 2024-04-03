@@ -12,9 +12,15 @@ class nsUserCharacteristics {
  public:
   static void MaybeSubmitPing();
 
-  // Public For testing
-  static nsresult PopulateData(bool aTesting = false);
-  static nsresult SubmitPing();
+  /*
+   * These APIs are public only for testing using the gtest
+   * When PopulateDataAndEventuallySubmit is called with aTesting = true
+   *   it will not submit the data, and SubmitPing must be called explicitly.
+   *   This is perfect because that's what we want for the gtest.
+   */
+  static void PopulateDataAndEventuallySubmit(bool aUpdatePref = true,
+                                              bool aTesting = false);
+  static void SubmitPing();
 };
 
 namespace testing {

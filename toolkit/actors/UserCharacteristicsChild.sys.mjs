@@ -16,12 +16,11 @@ export class UserCharacteristicsChild extends JSWindowActorChild {
   handleEvent(event) {
     lazy.console.debug("Got ", event.type);
     switch (event.type) {
-      case "DOMContentLoaded":
-      case "pageshow":
+      case "UserCharacteristicsDataDone":
         lazy.console.debug("creating IdleDispatch");
         ChromeUtils.idleDispatch(() => {
           lazy.console.debug("sending PageReady");
-          this.sendAsyncMessage("UserCharacteristics::PageReady");
+          this.sendAsyncMessage("UserCharacteristics::PageReady", event.detail);
         });
         break;
     }

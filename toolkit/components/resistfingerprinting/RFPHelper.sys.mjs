@@ -114,10 +114,11 @@ class _RFPHelper {
       child: {
         esModuleURI: "resource://gre/actors/UserCharacteristicsChild.sys.mjs",
         events: {
-          DOMContentLoaded: {},
-          pageshow: {},
+          UserCharacteristicsDataDone: { wantUntrusted: true },
         },
       },
+      matches: ["about:fingerprinting"],
+      remoteTypes: ["privilegedabout"],
     });
   }
 

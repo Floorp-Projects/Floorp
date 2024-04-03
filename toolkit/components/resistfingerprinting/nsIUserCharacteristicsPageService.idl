@@ -9,7 +9,7 @@ webidl BrowsingContext;
 [scriptable, uuid(ce3e9659-e311-49fb-b18b-7f27c6659b23)]
 interface nsIUserCharacteristicsPageService : nsISupports {
 
-    /* (In the next patch, this will:)
+    /*
      * Create the UserCharacteristics about: page as a HiddenFrame
      * and begin the data collection.
      */
@@ -17,6 +17,7 @@ interface nsIUserCharacteristicsPageService : nsISupports {
 
     /*
      * Called when the UserCharacteristics about: page has been loaded
+     * and supplied data back to the actor, which is passed as `data`
      */
-    void pageLoaded(in BrowsingContext browsingContext);
+    void pageLoaded(in BrowsingContext browsingContext, in jsval data);
 };
