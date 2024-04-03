@@ -450,11 +450,6 @@ NS_EVENT_MESSAGE(eToggle)
 NS_EVENT_MESSAGE(eClose)
 NS_EVENT_MESSAGE(eCancel)
 
-// Marquee element events.
-NS_EVENT_MESSAGE(eMarqueeBounce)
-NS_EVENT_MESSAGE(eMarqueeStart)
-NS_EVENT_MESSAGE(eMarqueeFinish)
-
 NS_EVENT_MESSAGE(eScrollend)
 
 #ifdef UNDEF_NS_EVENT_MESSAGE_FIRST_LAST

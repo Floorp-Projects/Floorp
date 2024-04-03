@@ -169,12 +169,6 @@ this.MarqueeBaseImplWidget = class {
     this.runId = 0;
   }
 
-  _fireEvent(aName, aBubbles, aCancelable) {
-    var e = this.document.createEvent("Events");
-    e.initEvent(aName, aBubbles, aCancelable);
-    this.element.dispatchEvent(e);
-  }
-
   _doMove(aResetPosition) {
     this._lastMoveDate = Date.now();
 
@@ -267,7 +261,6 @@ this.MarqueeBaseImplWidget = class {
 
       if (aResetPosition) {
         this.newPosition = this.startAt;
-        this._fireEvent("start", false, false);
       }
     } // end if
 
@@ -297,9 +290,6 @@ this.MarqueeBaseImplWidget = class {
             this.outerDiv.scrollLeft = this.newPosition;
           }
 
-          if (this._currentLoop != 1) {
-            this._fireEvent("bounce", false, true);
-          }
           break;
 
         case "slide":
@@ -319,9 +309,6 @@ this.MarqueeBaseImplWidget = class {
           } else {
             this.outerDiv.scrollLeft = this.newPosition;
           }
-
-          // dispatch start event, even when this._currentLoop == 1, comp. with IE6
-          this._fireEvent("start", false, false);
       }
 
       if (this._currentLoop > 1) {
@@ -336,7 +323,6 @@ this.MarqueeBaseImplWidget = class {
           this.outerDiv.scrollLeft = this.stopAt;
         }
         this.element.stop();
-        this._fireEvent("finish", false, true);
         return;
       }
     } else if (

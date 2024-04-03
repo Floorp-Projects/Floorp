@@ -772,7 +772,6 @@ STATIC_ATOMS = [
     Atom("onbeforeunload", "onbeforeunload"),
     Atom("onblocked", "onblocked"),
     Atom("onblur", "onblur"),
-    Atom("onbounce", "onbounce"),
     Atom("onboundschange", "onboundschange"),
     Atom("onbroadcast", "onbroadcast"),
     Atom("onbufferedamountlow", "onbufferedamountlow"),
