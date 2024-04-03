@@ -1422,8 +1422,6 @@
     index: Int32
   type_policy: none
   alias_set: custom
-  # By default no, unless built as a recovered instruction.
-  can_recover: custom
 
 # Load the function length. Bails for functions with lazy scripts or a
 # resolved "length" property.

@@ -129,7 +129,6 @@ namespace jit {
   _(ObjectKeys)                   \
   _(ObjectState)                  \
   _(ArrayState)                   \
-  _(SetArrayLength)               \
   _(AtomicIsLockFree)             \
   _(BigIntAsIntN)                 \
   _(BigIntAsUintN)                \
@@ -877,14 +876,6 @@ class RArrayState final : public RInstruction {
     // +1 for the initalized length.
     return numElements() + 2;
   }
-
-  [[nodiscard]] bool recover(JSContext* cx,
-                             SnapshotIterator& iter) const override;
-};
-
-class RSetArrayLength final : public RInstruction {
- public:
-  RINSTRUCTION_HEADER_NUM_OP_(SetArrayLength, 2)
 
   [[nodiscard]] bool recover(JSContext* cx,
                              SnapshotIterator& iter) const override;
