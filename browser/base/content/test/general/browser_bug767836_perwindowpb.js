@@ -59,7 +59,7 @@ add_task(async function test_newTabService() {
 
 async function openNewTab(aWindow, aExpectedURL) {
   // Open a new tab
-  aWindow.BrowserOpenTab();
+  aWindow.BrowserCommands.openTab();
   let browser = aWindow.gBrowser.selectedBrowser;
 
   // We're already loaded.

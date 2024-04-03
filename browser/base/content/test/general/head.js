@@ -185,7 +185,7 @@ function promiseOpenAndLoadWindow(aOptions, aWaitForDelayedStartup = false) {
 }
 
 async function whenNewTabLoaded(aWindow, aCallback) {
-  aWindow.BrowserOpenTab();
+  aWindow.BrowserCommands.openTab();
 
   let expectedURL = AboutNewTab.newTabURL;
   let browser = aWindow.gBrowser.selectedBrowser;

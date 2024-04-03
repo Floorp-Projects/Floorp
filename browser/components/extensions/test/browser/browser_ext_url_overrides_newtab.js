@@ -45,7 +45,7 @@ async function promiseNewTab(expectUrl = AboutNewTab.newTabURL, win = window) {
     `Should open correct new tab url ${expectUrl}.`
   );
 
-  win.BrowserOpenTab();
+  win.BrowserCommands.openTab();
   const newTabCreatedPromise = newTabStartPromise;
   const browser = await newTabCreatedPromise;
   await newtabShown;

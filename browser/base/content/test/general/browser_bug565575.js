@@ -3,7 +3,7 @@ add_task(async function () {
 
   await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
-    () => BrowserOpenTab(),
+    () => BrowserCommands.openTab(),
     false
   );
   ok(gURLBar.focused, "location bar is focused for a new tab");

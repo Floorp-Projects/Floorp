@@ -9,10 +9,10 @@ add_task(async function test_browser_open_newtab_start_observer_notification() {
     Services.obs.addObserver(observe, "browser-open-newtab-start");
   });
 
-  // We're calling BrowserOpenTab() (rather the using BrowserTestUtils
+  // We're calling BrowserCommands.openTab() (rather the using BrowserTestUtils
   // because we want to be sure that it triggers the event to fire, since
   // it's very close to where various user-actions are triggered.
-  BrowserOpenTab();
+  BrowserCommands.openTab();
   const newTabCreatedPromise = await observerFiredPromise;
   const browser = await newTabCreatedPromise;
   const tab = gBrowser.selectedTab;

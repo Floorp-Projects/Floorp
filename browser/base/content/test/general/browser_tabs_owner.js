@@ -8,13 +8,13 @@ function test() {
   is(gBrowser.tabs.length, 4, "4 tabs are open");
 
   owner = gBrowser.selectedTab = gBrowser.tabs[2];
-  BrowserOpenTab();
+  BrowserCommands.openTab();
   is(gBrowser.selectedTab, gBrowser.tabs[4], "newly opened tab is selected");
   gBrowser.removeCurrentTab();
   is(gBrowser.selectedTab, owner, "owner is selected");
 
   owner = gBrowser.selectedTab;
-  BrowserOpenTab();
+  BrowserCommands.openTab();
   gBrowser.selectedTab = gBrowser.tabs[1];
   gBrowser.selectedTab = gBrowser.tabs[4];
   gBrowser.removeCurrentTab();
@@ -25,7 +25,7 @@ function test() {
   );
 
   owner = gBrowser.selectedTab;
-  BrowserOpenTab();
+  BrowserCommands.openTab();
   gBrowser.moveTabTo(gBrowser.selectedTab, 0);
   gBrowser.removeCurrentTab();
   is(

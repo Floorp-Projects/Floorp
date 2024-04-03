@@ -33,7 +33,7 @@ add_task(async function () {
   // Open 3 tabs using the preloaded browser.
   let tabs = [];
   for (let i = 0; i < 3; i++) {
-    BrowserOpenTab();
+    BrowserCommands.openTab();
     tabs.unshift(gBrowser.selectedTab);
     await BrowserTestUtils.maybeCreatePreloadedBrowser(gBrowser);
 
@@ -114,7 +114,7 @@ add_task(async function preloaded_state_attribute() {
     "Sanity check that the first preloaded browser has the correct attribute"
   );
 
-  BrowserOpenTab();
+  BrowserCommands.openTab();
   await BrowserTestUtils.maybeCreatePreloadedBrowser(gBrowser);
 
   // Now check that the tabs have the correct browser attributes set

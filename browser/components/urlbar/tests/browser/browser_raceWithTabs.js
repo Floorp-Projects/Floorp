@@ -41,7 +41,7 @@ add_task(async function hitEnterLoadInRightTab() {
     gBrowser.tabContainer,
     "TabOpen"
   );
-  BrowserOpenTab();
+  BrowserCommands.openTab();
   let oldTab = (await oldTabOpenPromise).target;
   let oldTabLoadedPromise = BrowserTestUtils.browserLoaded(
     oldTab.linkedBrowser,
@@ -60,7 +60,7 @@ add_task(async function hitEnterLoadInRightTab() {
   EventUtils.sendKey("return");
 
   info("Immediately open a second tab");
-  BrowserOpenTab();
+  BrowserCommands.openTab();
   let newTab = (await tabOpenPromise).target;
 
   info("Created new tab; waiting for tabs to load");

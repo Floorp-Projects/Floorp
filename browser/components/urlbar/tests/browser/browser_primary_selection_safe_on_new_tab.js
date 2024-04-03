@@ -42,7 +42,7 @@ add_task(async function () {
         // tab button.
         let userInput = window.windowUtils.setHandlingUserInput(true);
         try {
-          BrowserOpenTab();
+          BrowserCommands.openTab();
         } finally {
           userInput.destruct();
         }

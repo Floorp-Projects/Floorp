@@ -5,7 +5,7 @@
 function test() {
   waitForExplicitFinish();
 
-  BrowserOpenTab();
+  BrowserCommands.openTab();
   let tab = gBrowser.selectedTab;
   registerCleanupFunction(function () {
     gBrowser.removeTab(tab);

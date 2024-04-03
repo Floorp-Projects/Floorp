@@ -19,8 +19,8 @@
     <command id="cmd_handleBackspace" oncommand="BrowserCommands.handleBackspace();" />
     <command id="cmd_handleShiftBackspace" oncommand="BrowserCommands.handleShiftBackspace();" />
 
-    <command id="cmd_newNavigatorTab" oncommand="BrowserOpenTab({ event });"/>
-    <command id="cmd_newNavigatorTabNoEvent" oncommand="BrowserOpenTab();"/>
+    <command id="cmd_newNavigatorTab" oncommand="BrowserCommands.openTab({ event });"/>
+    <command id="cmd_newNavigatorTabNoEvent" oncommand="BrowserCommands.openTab();"/>
     <command id="Browser:OpenFile"  oncommand="BrowserOpenFileWindow();"/>
     <command id="Browser:SavePage" oncommand="saveBrowser(gBrowser.selectedBrowser);"/>
 

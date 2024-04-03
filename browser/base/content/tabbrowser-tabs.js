@@ -241,7 +241,7 @@
       }
 
       if (!this._blockDblClick) {
-        BrowserOpenTab();
+        BrowserCommands.openTab();
       }
 
       event.preventDefault();
@@ -333,7 +333,7 @@
             (!RTL_UI && event.clientX > endOfTab) ||
             (RTL_UI && event.clientX < endOfTab)
           ) {
-            BrowserOpenTab();
+            BrowserCommands.openTab();
           }
         } else {
           return;
