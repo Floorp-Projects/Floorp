@@ -345,10 +345,6 @@ class ModuleLoaderBase : public nsISupports {
 
   nsresult GetFetchedModuleURLs(nsTArray<nsCString>& aURLs);
 
-  // Removed a fetched module from the module map. Asserts that the module is
-  // unlinked. Extreme care should be taken when calling this method.
-  bool RemoveFetchedModule(nsIURI* aURL);
-
   // Override the module loader with given loader until ResetOverride is called.
   // While overridden, ModuleLoaderBase::GetCurrentModuleLoader returns aLoader.
   //
