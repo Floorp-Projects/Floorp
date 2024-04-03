@@ -1019,10 +1019,8 @@ RCharCodeAt::RCharCodeAt(CompactBufferReader& reader) {}
 bool RCharCodeAt::recover(JSContext* cx, SnapshotIterator& iter) const {
   JSString* string = iter.read().toString();
 
-  Value indexValue = iter.read();
-  MOZ_ASSERT(indexValue.isInt32(), "index computed from MBoundsCheck");
-
-  int32_t index = indexValue.toInt32();
+  // Int32 because |index| is computed from MBoundsCheck.
+  int32_t index = iter.readInt32();
   MOZ_RELEASE_ASSERT(0 <= index && size_t(index) < string->length());
 
   char16_t c;
@@ -1071,11 +1069,8 @@ RFromCharCodeEmptyIfNegative::RFromCharCodeEmptyIfNegative(
 
 bool RFromCharCodeEmptyIfNegative::recover(JSContext* cx,
                                            SnapshotIterator& iter) const {
-  Value charCodeValue = iter.read();
-  MOZ_ASSERT(charCodeValue.isInt32(),
-             "charCode is computed from MCharCodeAtOrNegative");
-
-  int32_t charCode = charCodeValue.toInt32();
+  // Int32 because |charCode| is computed from MCharCodeAtOrNegative.
+  int32_t charCode = iter.readInt32();
 
   JSString* str;
   if (charCode < 0) {
@@ -1479,11 +1474,9 @@ RRegExpMatcher::RRegExpMatcher(CompactBufferReader& reader) {}
 bool RRegExpMatcher::recover(JSContext* cx, SnapshotIterator& iter) const {
   RootedObject regexp(cx, &iter.read().toObject());
   RootedString input(cx, iter.read().toString());
-  Value lastIndexValue = iter.read();
-  MOZ_ASSERT(lastIndexValue.isInt32(),
-             "lastIndex computed from transpiled self-hosted call");
 
-  int32_t lastIndex = lastIndexValue.toInt32();
+  // Int32 because |lastIndex| is computed from transpiled self-hosted call.
+  int32_t lastIndex = iter.readInt32();
 
   RootedValue result(cx);
   if (!RegExpMatcherRaw(cx, regexp, input, lastIndex, nullptr, &result)) {
@@ -1518,10 +1511,8 @@ bool MTypeOfName::writeRecoverData(CompactBufferWriter& writer) const {
 RTypeOfName::RTypeOfName(CompactBufferReader& reader) {}
 
 bool RTypeOfName::recover(JSContext* cx, SnapshotIterator& iter) const {
-  Value typeValue = iter.read();
-  MOZ_ASSERT(typeValue.isInt32(), "type computed from MTypeOf");
-
-  int32_t type = typeValue.toInt32();
+  // Int32 because |type| is computed from MTypeOf.
+  int32_t type = iter.readInt32();
   MOZ_ASSERT(JSTYPE_UNDEFINED <= type && type < JSTYPE_LIMIT);
 
   JSString* name = TypeName(JSType(type), *cx->runtime()->commonNames);
@@ -1896,10 +1887,9 @@ RArrayState::RArrayState(CompactBufferReader& reader) {
 
 bool RArrayState::recover(JSContext* cx, SnapshotIterator& iter) const {
   ArrayObject* object = &iter.read().toObject().as<ArrayObject>();
-  Value initLengthValue = iter.read();
-  MOZ_ASSERT(initLengthValue.isInt32(), "initLength computed from MConstant");
 
-  uint32_t initLength = initLengthValue.toInt32();
+  // Int32 because |initLength| is computed from MConstant.
+  uint32_t initLength = iter.readInt32();
 
   MOZ_ASSERT(object->getDenseInitializedLength() == 0,
              "initDenseElement call below relies on this");
@@ -2011,18 +2001,14 @@ RSubstr::RSubstr(CompactBufferReader& reader) {}
 bool RSubstr::recover(JSContext* cx, SnapshotIterator& iter) const {
   RootedString str(cx, iter.read().toString());
 
-  Value beginValue = iter.read();
-  MOZ_ASSERT(beginValue.isInt32(),
-             "begin computed from "
-             "MStringTrimStartIndex/MConstant/CallSubstringKernelResult");
 
-  Value lengthValue = iter.read();
-  MOZ_ASSERT(lengthValue.isInt32(),
-             "length computed from "
-             "MSub(truncated)/MStringTrimEndIndex/CallSubstringKernelResult");
+  // Int32 because |begin| is computed from MStringTrimStartIndex, MConstant,
+  // or CallSubstringKernelResult.
+  int32_t begin = iter.readInt32();
 
-  int32_t begin = beginValue.toInt32();
-  int32_t length = lengthValue.toInt32();
+  // Int32 because |length| is computed from MSub(truncated),
+  // MStringTrimEndIndex, or CallSubstringKernelResult.
+  int32_t length = iter.readInt32();
 
   JSString* result = SubstringKernel(cx, str, begin, length);
   if (!result) {
@@ -2063,11 +2049,8 @@ bool MBigIntAsIntN::writeRecoverData(CompactBufferWriter& writer) const {
 RBigIntAsIntN::RBigIntAsIntN(CompactBufferReader& reader) {}
 
 bool RBigIntAsIntN::recover(JSContext* cx, SnapshotIterator& iter) const {
-  Value bitsValue = iter.read();
-  MOZ_ASSERT(bitsValue.isInt32(),
-             "bits computed from MGuardInt32IsNonNegative");
-
-  int32_t bits = bitsValue.toInt32();
+  // Int32 because |bits| is computed from MGuardInt32IsNonNegative.
+  int32_t bits = iter.readInt32();
   MOZ_ASSERT(bits >= 0);
 
   RootedBigInt input(cx, iter.read().toBigInt());
@@ -2090,11 +2073,8 @@ bool MBigIntAsUintN::writeRecoverData(CompactBufferWriter& writer) const {
 RBigIntAsUintN::RBigIntAsUintN(CompactBufferReader& reader) {}
 
 bool RBigIntAsUintN::recover(JSContext* cx, SnapshotIterator& iter) const {
-  Value bitsValue = iter.read();
-  MOZ_ASSERT(bitsValue.isInt32(),
-             "bits computed from MGuardInt32IsNonNegative");
-
-  int32_t bits = bitsValue.toInt32();
+  // Int32 because |bits| is computed from MGuardInt32IsNonNegative.
+  int32_t bits = iter.readInt32();
   MOZ_ASSERT(bits >= 0);
 
   RootedBigInt input(cx, iter.read().toBigInt());
@@ -2178,11 +2158,8 @@ RRest::RRest(CompactBufferReader& reader) {
 bool RRest::recover(JSContext* cx, SnapshotIterator& iter) const {
   JitFrameLayout* frame = iter.frame();
 
-  Value numActualsValue = iter.read();
-  MOZ_ASSERT(numActualsValue.isInt32(),
-             "numActuals computed from MArgumentsLength");
-
-  uint32_t numActuals = numActualsValue.toInt32();
+  // Int32 because |numActuals| is computed from MArgumentsLength.
+  uint32_t numActuals = iter.readInt32();
   MOZ_ASSERT(numActuals == frame->numActualArgs());
 
   uint32_t numFormals = numFormals_;
