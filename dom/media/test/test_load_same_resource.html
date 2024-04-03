@@ -78,7 +78,7 @@ async function initTest(test, token) {
   e.token = token;
   manager.started(token);
 
-  // Since 320x240.ogv is less than 32KB, we need to wait for the
+  // Since 320x240.webm is less than 32KB, we need to wait for the
   // 'suspend' event to ensure the partial block is flushed to the cache
   // otherwise the cloned resource will create a new channel when it
   // has no data to read at position 0. The new channel will download

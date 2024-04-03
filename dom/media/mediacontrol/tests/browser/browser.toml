@@ -16,7 +16,6 @@ support-files = [
   "file_non_eligible_media.html",
   "file_non_looping_media.html",
   "head.js",
-  "../../../test/bogus.ogv",
   "../../../test/gizmo.mp4",
   "../../../test/gizmo-noaudio.webm",
   "../../../test/gizmo-short.mp4",
