@@ -1,8 +1,0 @@
-Manifest-Version: 1.0
-
-Name: manifest.json
-Digest-Algorithms: MD5 SHA1 SHA256
-MD5-Digest: mCLu38qfGN3trj7qKQQeEA==
-SHA1-Digest: A1BaJErQY6KqnYDijP0lglrehk0=
-SHA256-Digest: p2vjGP7DRqrK81NfT4LqnF7a5p8+lEuout5WLBhk9AA=
-
