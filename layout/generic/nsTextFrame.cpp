@@ -5676,10 +5676,6 @@ bool nsTextFrame::GetSelectionTextColors(SelectionType aSelectionType,
           aHighlightName, aBackground);
       return hasForeground || hasBackground;
     }
-    case SelectionType::eTargetText: {
-      aTextPaintStyle.GetTargetTextColors(aForeground, aBackground);
-      return true;
-    }
     case SelectionType::eURLSecondary:
       aTextPaintStyle.GetURLSecondaryColor(aForeground);
       *aBackground = NS_RGBA(0, 0, 0, 0);
