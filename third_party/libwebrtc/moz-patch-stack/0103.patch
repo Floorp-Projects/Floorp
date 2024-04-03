@@ -19,17 +19,17 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/d92a578327f524ec3
  5 files changed, 23 insertions(+), 5 deletions(-)
 
 diff --git a/call/rtp_video_sender.cc b/call/rtp_video_sender.cc
-index 1ace08fa32..4d99c61bb4 100644
+index 580850359c..ac5540a7f2 100644
 --- a/call/rtp_video_sender.cc
 +++ b/call/rtp_video_sender.cc
-@@ -510,6 +510,7 @@ void RtpVideoSender::SetActiveModulesLocked(
-     const bool was_active = rtp_module.Sending();
-     const bool should_be_active = active_modules[i];
- 
+@@ -492,6 +492,7 @@ void RtpVideoSender::SetActiveModulesLocked(bool sending) {
+   active_ = sending;
+   for (size_t i = 0; i < rtp_streams_.size(); ++i) {
+     RtpRtcpInterface& rtp_module = *rtp_streams_[i].rtp_rtcp;
 +    // Sends a kRtcpByeCode when going from true to false.
-     rtp_module.SetSendingStatus(active_modules[i]);
- 
-     if (was_active && !should_be_active) {
+     rtp_module.SetSendingStatus(sending);
+     rtp_module.SetSendingMediaStatus(sending);
+     if (sending) {
 diff --git a/modules/rtp_rtcp/source/rtcp_sender.cc b/modules/rtp_rtcp/source/rtcp_sender.cc
 index 099b0be1a3..971f49b949 100644
 --- a/modules/rtp_rtcp/source/rtcp_sender.cc
