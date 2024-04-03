@@ -9,6 +9,8 @@ with Files("**"):
 
 TEST_DIRS += ["tests"]
 
+JAR_MANIFESTS += ["jar.mn"]
+
 UNIFIED_SOURCES += [
     "nsRFPService.cpp",
     "RelativeTimeline.cpp",

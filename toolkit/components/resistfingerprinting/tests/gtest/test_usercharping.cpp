@@ -35,7 +35,8 @@ TEST(ResistFingerprinting, UserCharacteristics_Simple)
 
 TEST(ResistFingerprinting, UserCharacteristics_Complex)
 {
-  nsUserCharacteristics::PopulateData(true);
+  nsUserCharacteristics::PopulateDataAndEventuallySubmit(
+      /* aUpdatePref = */ false, /* aTesting = */ true);
 
   bool submitted = false;
   mozilla::glean_pings::UserCharacteristics.TestBeforeNextSubmit(
@@ -102,7 +103,8 @@ TEST(ResistFingerprinting, UserCharacteristics_ClearPref)
                 .value()
                 .get());
       });
-  nsUserCharacteristics::PopulateData(true);
+  nsUserCharacteristics::PopulateDataAndEventuallySubmit(
+      /* aUpdatePref = */ false, /* aTesting = */ true);
   nsUserCharacteristics::SubmitPing();
 
   auto original_value =
@@ -135,7 +137,8 @@ TEST(ResistFingerprinting, UserCharacteristics_ClearPref)
         Preferences::GetCString(kUUIDPref, uuidValue);
         ASSERT_STRNE("", uuidValue.get());
       });
-  nsUserCharacteristics::PopulateData(true);
+  nsUserCharacteristics::PopulateDataAndEventuallySubmit(
+      /* aUpdatePref = */ false, /* aTesting = */ true);
   nsUserCharacteristics::SubmitPing();
 
   Preferences::SetBool("datareporting.healthreport.uploadEnabled",

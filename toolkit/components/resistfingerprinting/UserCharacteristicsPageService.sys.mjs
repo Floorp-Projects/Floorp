@@ -145,13 +145,9 @@ export class UserCharacteristicsPageService {
       return;
     }
     this._initialized = true;
-
-    lazy.console.debug("Init completes");
   }
 
-  shutdown() {
-    lazy.console.debug("shutdown");
-  }
+  shutdown() {}
 
   createContentPage() {
     lazy.console.debug("called createContentPage");
@@ -161,38 +157,51 @@ export class UserCharacteristicsPageService {
         let { promise, resolve } = Promise.withResolvers();
         this._backgroundBrowsers.set(browser, resolve);
 
-        let userCharacteristicsPageURI =
-          Services.io.newURI("https://ritter.vg");
         let principal = Services.scriptSecurityManager.getSystemPrincipal();
         let loadURIOptions = {
           triggeringPrincipal: principal,
         };
+
+        let userCharacteristicsPageURI = Services.io.newURI(
+          "about:fingerprinting"
+        );
+
         browser.loadURI(userCharacteristicsPageURI, loadURIOptions);
 
-        await promise;
+        let data = await promise;
+        if (data.debug) {
+          lazy.console.debug(`Debugging Output:`);
+          for (let line of data.debug) {
+            lazy.console.debug(line);
+          }
+          lazy.console.debug(`(debugging output done)`);
+        }
+        lazy.console.debug(`Data:`, data.output);
+
+        lazy.console.debug("Populating Glean metrics...");
+        // e.g. Glean.characteristics.timezone.set(data.output.foo)
 
         lazy.console.debug("Unregistering actor");
         Services.obs.notifyObservers(
           null,
           "user-characteristics-populating-data-done"
         );
-
-        lazy.console.debug(`Returning`);
       } finally {
-        lazy.console.debug(`In finally`);
         this._backgroundBrowsers.delete(browser);
       }
     });
   }
 
-  async pageLoaded(browsingContext) {
-    lazy.console.debug(`pageLoaded browsingContext=${browsingContext}`);
+  async pageLoaded(browsingContext, data) {
+    lazy.console.debug(
+      `pageLoaded browsingContext=${browsingContext} data=${data}`
+    );
 
     let browser = browsingContext.embedderElement;
 
     let backgroundResolve = this._backgroundBrowsers.get(browser);
     if (backgroundResolve) {
-      backgroundResolve();
+      backgroundResolve(data);
       return;
     }
     throw new Error(`No backround resolve for ${browser} found`);
