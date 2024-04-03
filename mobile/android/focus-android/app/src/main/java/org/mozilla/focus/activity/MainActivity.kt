@@ -197,10 +197,14 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
     }
 
     final override fun onUserLeaveHint() {
-        val browserFragment =
-            supportFragmentManager.findFragmentByTag(BrowserFragment.FRAGMENT_TAG) as BrowserFragment?
-        if (browserFragment is UserInteractionHandler && browserFragment.onHomePressed()) {
-            return
+        // The notification permission prompt will trigger onUserLeaveHint too.
+        // We shouldn't treat this situation as user leaving.
+        if (!components.notificationsDelegate.isRequestingPermission) {
+            val browserFragment =
+                supportFragmentManager.findFragmentByTag(BrowserFragment.FRAGMENT_TAG) as BrowserFragment?
+            if (browserFragment is UserInteractionHandler && browserFragment.onHomePressed()) {
+                return
+            }
         }
         super.onUserLeaveHint()
     }

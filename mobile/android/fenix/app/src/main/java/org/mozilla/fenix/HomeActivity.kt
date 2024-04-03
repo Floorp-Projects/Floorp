@@ -833,9 +833,13 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
     }
 
     final override fun onUserLeaveHint() {
-        supportFragmentManager.primaryNavigationFragment?.childFragmentManager?.fragments?.forEach {
-            if (it is UserInteractionHandler && it.onHomePressed()) {
-                return
+        // The notification permission prompt will trigger onUserLeaveHint too.
+        // We shouldn't treat this situation as user leaving.
+        if (!components.notificationsDelegate.isRequestingPermission) {
+            supportFragmentManager.primaryNavigationFragment?.childFragmentManager?.fragments?.forEach {
+                if (it is UserInteractionHandler && it.onHomePressed()) {
+                    return
+                }
             }
         }
 
