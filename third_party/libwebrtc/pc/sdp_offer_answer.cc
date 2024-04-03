@@ -285,9 +285,6 @@ RTCError VerifyCrypto(const SessionDescription* desc,
     if (content_info.rejected) {
       continue;
     }
-#if !defined(WEBRTC_FUCHSIA)
-    RTC_CHECK(dtls_enabled) << "SDES protocol is only allowed in Fuchsia";
-#endif
     const std::string& mid = content_info.name;
     auto it = bundle_groups_by_mid.find(mid);
     const cricket::ContentGroup* bundle =

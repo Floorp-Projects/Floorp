@@ -451,15 +451,6 @@ class RTC_EXPORT PeerConnectionInterface : public webrtc::RefCountInterface {
     // when switching from a static scene to one with motion.
     absl::optional<int> screencast_min_bitrate;
 
-#if defined(WEBRTC_FUCHSIA)
-    // TODO(bugs.webrtc.org/11066): Remove entirely once Fuchsia does not use.
-    // TODO(bugs.webrtc.org/9891) - Move to crypto_options
-    // Can be used to disable DTLS-SRTP. This should never be done, but can be
-    // useful for testing purposes, for example in setting up a loopback call
-    // with a single PeerConnection.
-    absl::optional<bool> enable_dtls_srtp;
-#endif
-
     /////////////////////////////////////////////////
     // The below fields are not part of the standard.
     /////////////////////////////////////////////////
