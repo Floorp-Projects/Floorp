@@ -24,8 +24,7 @@ class uiaRawElmProvider : public IAccessibleEx,
                           public IRawElementProviderFragment,
                           public IInvokeProvider,
                           public IToggleProvider,
-                          public IExpandCollapseProvider,
-                          public IScrollItemProvider {
+                          public IExpandCollapseProvider {
  public:
   static void RaiseUiaEventForGeckoEvent(Accessible* aAcc,
                                          uint32_t aGeckoEvent);
@@ -103,9 +102,6 @@ class uiaRawElmProvider : public IAccessibleEx,
 
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_ExpandCollapseState(
       /* [retval][out] */ __RPC__out enum ExpandCollapseState* aRetVal);
-
-  // IScrollItemProvider
-  virtual HRESULT STDMETHODCALLTYPE ScrollIntoView(void);
 
  private:
   Accessible* Acc() const;
