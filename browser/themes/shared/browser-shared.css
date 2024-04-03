@@ -39,6 +39,8 @@
   --toolbarbutton-border-radius: 4px;
 
   --chrome-content-separator-color: ThreeDShadow;
+
+  --tabs-navbar-shadow-size: 1px;
   --tabs-navbar-separator-color: ThreeDShadow;
 
   --panelui-subview-transition-duration: 150ms;
@@ -138,6 +140,14 @@
   @media (prefers-reduced-motion) {
     --inactive-window-transition: 0s;
   }
+
+  @media (min-resolution: 1.5dppx) {
+    --tabs-navbar-shadow-size: 0.5px;
+  }
+
+  @media (min-resolution: 3dppx) {
+    --tabs-navbar-shadow-size: 0.33px;
+  }
 }
 
 #navigator-toolbox {
@@ -213,15 +223,11 @@
   transition: var(--ext-theme-background-transition);
 }
 
-#nav-bar {
-  /* The toolbar buttons that animate use position:absolute and require a
-   * positioned #nav-bar. */
+#nav-bar:not([tabs-hidden="true"]) {
+  /* The toolbar buttons that animate are only visible when the #TabsToolbar is not collapsed.
+     The animations use position:absolute and require a positioned #nav-bar. */
   position: relative;
-  border-top: 0.01px solid var(--tabs-navbar-separator-color);
-
-  &[tabs-hidden="true"] {
-    border-top-style: none;
-  }
+  box-shadow: 0 calc(-1 * var(--tabs-navbar-shadow-size)) 0 var(--tabs-navbar-separator-color);
 }
 
 /* Bookmarks toolbar */

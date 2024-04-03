@@ -113,7 +113,7 @@ toolbar .toolbarbutton-1 {
 }
 
 #TabsToolbar .toolbarbutton-1 {
-  margin: 0;
+  margin: 0 0 var(--tabs-navbar-shadow-size);
 
   > .toolbarbutton-icon,
   > .toolbarbutton-text,
