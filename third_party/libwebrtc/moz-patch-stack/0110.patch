@@ -1,207 +1,243 @@
-From: Michael Froman <mjfroman@mac.com>
-Date: Wed, 20 Mar 2024 11:32:05 -0500
-Subject: Bug 1886497 - Cherry-pick upstream libwebrtc commit de3c726121
- r?dbaker
+From: Jan Grulich <jgrulich@redhat.com>
+Date: Tue, 5 Mar 2024 08:38:00 +0000
+Subject: Bug 1876895 - WebRTC backport: Video capture PipeWire: add support
+ for DMABuf buffer type r=pehrsons,webrtc-reviewers
 
-Upstream commit: https://webrtc.googlesource.com/src/+/de3c726121bd097e79a8f1aa43df48aab7e2237f
-       Update to vpython 3.11 and remove .vpython (v2.x)
+This is a simple backport of an WebRTC upstream change.
 
-       Bug: b/310806212
-       Change-Id: I7fdb12ee4f83410bed9358e7249e4601e773056f
-       Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/335641
-       Reviewed-by: Mirko Bonadei <mbonadei@webrtc.org>
-       Commit-Queue: Christoffer Dewerin <jansson@google.com>
-       Cr-Commit-Position: refs/heads/main@{#41607}
+Upstream commit: 334e9133dcdecb5d00d991332e05c7b80ae26578
+
+Differential Revision: https://phabricator.services.mozilla.com/D202929
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/e915ae33e90a5e176f9196a67a201b86e22e498b
 ---
- .vpython  | 76 -------------------------------------------------------
- .vpython3 | 38 ++++++++++++++--------------
- 2 files changed, 19 insertions(+), 95 deletions(-)
- delete mode 100644 .vpython
+ .../linux/wayland/shared_screencast_stream.cc | 28 -------
+ modules/portal/pipewire_utils.h               | 75 +++++++++++++++++++
+ .../linux/video_capture_pipewire.cc           | 46 +++++++++---
+ 3 files changed, 110 insertions(+), 39 deletions(-)
 
-diff --git a/.vpython b/.vpython
-deleted file mode 100644
-index d226875f02..0000000000
---- a/.vpython
-+++ /dev/null
-@@ -1,76 +0,0 @@
--# This is a vpython "spec" file.
--#
--# It describes patterns for python wheel dependencies of the python scripts in
--# the chromium repo, particularly for dependencies that have compiled components
--# (since pure-python dependencies can be easily vendored into third_party).
--#
--# When vpython is invoked, it finds this file and builds a python VirtualEnv,
--# containing all of the dependencies described in this file, fetching them from
--# CIPD (the "Chrome Infrastructure Package Deployer" service). Unlike `pip`,
--# this never requires the end-user machine to have a working python extension
--# compilation environment. All of these packages are built using:
--#   https://chromium.googlesource.com/infra/infra/+/main/infra/tools/dockerbuild/
--#
--# All python scripts in the repo share this same spec, to avoid dependency
--# fragmentation.
--#
--# If you have depot_tools installed in your $PATH, you can invoke python scripts
--# in this repo by running them as you normally would run them, except
--# substituting `vpython` instead of `python` on the command line, e.g.:
--#   vpython path/to/script.py some --arguments
--#
--# Read more about `vpython` and how to modify this file here:
--#   https://chromium.googlesource.com/infra/infra/+/main/doc/users/vpython.md
+diff --git a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
+index 61c6957d27..473f913466 100644
+--- a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
++++ b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
+@@ -14,7 +14,6 @@
+ #include <libdrm/drm_fourcc.h>
+ #include <pipewire/pipewire.h>
+ #include <spa/param/video/format-utils.h>
+-#include <sys/mman.h>
+ 
+ #include <vector>
+ 
+@@ -49,33 +48,6 @@ constexpr int CursorMetaSize(int w, int h) {
+ constexpr PipeWireVersion kDmaBufModifierMinVersion = {0, 3, 33};
+ constexpr PipeWireVersion kDropSingleModifierMinVersion = {0, 3, 40};
+ 
+-class ScopedBuf {
+- public:
+-  ScopedBuf() {}
+-  ScopedBuf(uint8_t* map, int map_size, int fd)
+-      : map_(map), map_size_(map_size), fd_(fd) {}
+-  ~ScopedBuf() {
+-    if (map_ != MAP_FAILED) {
+-      munmap(map_, map_size_);
+-    }
+-  }
 -
--python_version: "2.7"
+-  explicit operator bool() { return map_ != MAP_FAILED; }
 -
--# Used by:
--#   third_party/catapult
--wheel: <
--  name: "infra/python/wheels/psutil/${platform}_${py_python}_${py_abi}"
--  version: "version:5.2.2"
-->
+-  void initialize(uint8_t* map, int map_size, int fd) {
+-    map_ = map;
+-    map_size_ = map_size;
+-    fd_ = fd;
+-  }
 -
--# Used by tools_webrtc/perf/process_perf_results.py.
--wheel: <
--  name: "infra/python/wheels/httplib2-py2_py3"
--  version: "version:0.10.3"
-->
+-  uint8_t* get() { return map_; }
 -
--# Used by:
--#   build/toolchain/win
--wheel: <
--  name: "infra/python/wheels/pypiwin32/${vpython_platform}"
--  version: "version:219"
--  match_tag: <
--    platform: "win32"
--  >
--  match_tag: <
--    platform: "win_amd64"
--  >
-->
+- protected:
+-  uint8_t* map_ = static_cast<uint8_t*>(MAP_FAILED);
+-  int map_size_;
+-  int fd_;
+-};
 -
--wheel: <
--  name: "infra/python/wheels/six-py2_py3"
--  version: "version:1.15.0"
-->
--wheel: <
--  name: "infra/python/wheels/pbr-py2_py3"
--  version: "version:3.0.0"
-->
--wheel: <
--  name: "infra/python/wheels/funcsigs-py2_py3"
--  version: "version:1.0.2"
-->
--wheel: <
--  name: "infra/python/wheels/mock-py2_py3"
--  version: "version:2.0.0"
-->
--wheel: <
--  name: "infra/python/wheels/protobuf-py2_py3"
--  version: "version:3.13.0"
-->
--wheel: <
--  name: "infra/python/wheels/requests-py2_py3"
--  version: "version:2.13.0"
-->
-diff --git a/.vpython3 b/.vpython3
-index 3f571df261..2be8efaa0a 100644
---- a/.vpython3
-+++ b/.vpython3
-@@ -22,24 +22,24 @@
- # Read more about `vpython` and how to modify this file here:
- #   https://chromium.googlesource.com/infra/infra/+/main/doc/users/vpython.md
+ class SharedScreenCastStreamPrivate {
+  public:
+   SharedScreenCastStreamPrivate();
+diff --git a/modules/portal/pipewire_utils.h b/modules/portal/pipewire_utils.h
+index 8344a8cefb..c1327b85c9 100644
+--- a/modules/portal/pipewire_utils.h
++++ b/modules/portal/pipewire_utils.h
+@@ -11,6 +11,21 @@
+ #ifndef MODULES_PORTAL_PIPEWIRE_UTILS_H_
+ #define MODULES_PORTAL_PIPEWIRE_UTILS_H_
  
--python_version: "3.8"
-+python_version: "3.11"
++#include <errno.h>
++#include <stdint.h>
++#include <sys/ioctl.h>
++#include <sys/mman.h>
++
++// static
++struct dma_buf_sync {
++  uint64_t flags;
++};
++#define DMA_BUF_SYNC_READ (1 << 0)
++#define DMA_BUF_SYNC_START (0 << 2)
++#define DMA_BUF_SYNC_END (1 << 2)
++#define DMA_BUF_BASE 'b'
++#define DMA_BUF_IOCTL_SYNC _IOW(DMA_BUF_BASE, 0, struct dma_buf_sync)
++
+ struct pw_thread_loop;
  
- # Used by:
- #   third_party/catapult
- wheel: <
-   name: "infra/python/wheels/psutil/${vpython_platform}"
--  version: "version:5.8.0.chromium.2"
-+  version: "version:5.8.0.chromium.3"
- >
+ namespace webrtc {
+@@ -32,6 +47,66 @@ class PipeWireThreadLoopLock {
+   pw_thread_loop* const loop_;
+ };
  
- # Used by tools_webrtc/perf/process_perf_results.py.
- wheel: <
-   name: "infra/python/wheels/httplib2-py3"
--  version: "version:0.19.1"
-+  version: "version:0.22.0"
- >
++// We should synchronize DMA Buffer object access from CPU to avoid potential
++// cache incoherency and data loss.
++// See
++// https://01.org/linuxgraphics/gfx-docs/drm/driver-api/dma-buf.html#cpu-access-to-dma-buffer-objects
++static bool SyncDmaBuf(int fd, uint64_t start_or_end) {
++  struct dma_buf_sync sync = {0};
++
++  sync.flags = start_or_end | DMA_BUF_SYNC_READ;
++
++  while (true) {
++    int ret;
++    ret = ioctl(fd, DMA_BUF_IOCTL_SYNC, &sync);
++    if (ret == -1 && errno == EINTR) {
++      continue;
++    } else if (ret == -1) {
++      return false;
++    } else {
++      break;
++    }
++  }
++
++  return true;
++}
++
++class ScopedBuf {
++ public:
++  ScopedBuf() {}
++  ScopedBuf(uint8_t* map, int map_size, int fd, bool is_dma_buf = false)
++      : map_(map), map_size_(map_size), fd_(fd), is_dma_buf_(is_dma_buf) {}
++  ~ScopedBuf() {
++    if (map_ != MAP_FAILED) {
++      if (is_dma_buf_) {
++        SyncDmaBuf(fd_, DMA_BUF_SYNC_END);
++      }
++      munmap(map_, map_size_);
++    }
++  }
++
++  explicit operator bool() { return map_ != MAP_FAILED; }
++
++  void initialize(uint8_t* map, int map_size, int fd, bool is_dma_buf = false) {
++    map_ = map;
++    map_size_ = map_size;
++    is_dma_buf_ = is_dma_buf;
++    fd_ = fd;
++
++    if (is_dma_buf_) {
++      SyncDmaBuf(fd_, DMA_BUF_SYNC_START);
++    }
++  }
++
++  uint8_t* get() { return map_; }
++
++ protected:
++  uint8_t* map_ = static_cast<uint8_t*>(MAP_FAILED);
++  int map_size_;
++  int fd_;
++  bool is_dma_buf_;
++};
++
+ }  // namespace webrtc
  
- wheel: <
--  name: "infra/python/wheels/pyparsing-py2_py3"
--  version: "version:2.4.7"
-+  name: "infra/python/wheels/pyparsing-py3"
-+  version: "version:3.1.1"
- >
+ #endif  // MODULES_PORTAL_PIPEWIRE_UTILS_H_
+diff --git a/modules/video_capture/linux/video_capture_pipewire.cc b/modules/video_capture/linux/video_capture_pipewire.cc
+index 8af483636a..319824d3c5 100644
+--- a/modules/video_capture/linux/video_capture_pipewire.cc
++++ b/modules/video_capture/linux/video_capture_pipewire.cc
+@@ -178,8 +178,7 @@ int32_t VideoCaptureModulePipeWire::StartCapture(
+   int res = pw_stream_connect(
+       stream_, PW_DIRECTION_INPUT, node_id_,
+       static_cast<enum pw_stream_flags>(PW_STREAM_FLAG_AUTOCONNECT |
+-                                        PW_STREAM_FLAG_DONT_RECONNECT |
+-                                        PW_STREAM_FLAG_MAP_BUFFERS),
++                                        PW_STREAM_FLAG_DONT_RECONNECT),
+       params.data(), params.size());
+   if (res != 0) {
+     RTC_LOG(LS_ERROR) << "Could not connect to camera stream: "
+@@ -312,11 +311,11 @@ void VideoCaptureModulePipeWire::OnFormatChanged(const struct spa_pod* format) {
+                         0);
+   }
  
++  const int buffer_types =
++      (1 << SPA_DATA_DmaBuf) | (1 << SPA_DATA_MemFd) | (1 << SPA_DATA_MemPtr);
+   spa_pod_builder_add(
+       &builder, SPA_PARAM_BUFFERS_buffers, SPA_POD_CHOICE_RANGE_Int(8, 1, 32),
+-      SPA_PARAM_BUFFERS_dataType,
+-      SPA_POD_CHOICE_FLAGS_Int((1 << SPA_DATA_MemFd) | (1 << SPA_DATA_MemPtr)),
+-      0);
++      SPA_PARAM_BUFFERS_dataType, SPA_POD_CHOICE_FLAGS_Int(buffer_types), 0);
+   params.push_back(
+       static_cast<spa_pod*>(spa_pod_builder_pop(&builder, &frame)));
  
-@@ -47,7 +47,7 @@ wheel: <
- #   build/toolchain/win
- wheel: <
-   name: "infra/python/wheels/pywin32/${vpython_platform}"
--  version: "version:300"
-+  version: "version:306"
-   match_tag: <
-     platform: "win32"
-   >
-@@ -59,48 +59,48 @@ wheel: <
- # GRPC used by iOS test.
- wheel: <
-   name: "infra/python/wheels/grpcio/${vpython_platform}"
--  version: "version:1.44.0"
-+  version: "version:1.57.0"
- >
+@@ -384,14 +383,15 @@ void VideoCaptureModulePipeWire::ProcessBuffers() {
+   RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
  
- wheel: <
-   name: "infra/python/wheels/six-py2_py3"
--  version: "version:1.15.0"
-+  version: "version:1.16.0"
- >
- wheel: <
-   name: "infra/python/wheels/pbr-py2_py3"
--  version: "version:3.0.0"
-+  version: "version:5.9.0"
- >
- wheel: <
-   name: "infra/python/wheels/funcsigs-py2_py3"
-   version: "version:1.0.2"
- >
- wheel: <
--  name: "infra/python/wheels/mock-py2_py3"
--  version: "version:2.0.0"
-+  name: "infra/python/wheels/mock-py3"
-+  version: "version:4.0.3"
- >
- wheel: <
-   name: "infra/python/wheels/protobuf-py3"
--  version: "version:3.20.0"
-+  version: "version:4.25.1"
- >
- wheel: <
-   name: "infra/python/wheels/requests-py3"
-   version: "version:2.31.0"
- >
- wheel: <
--  name: "infra/python/wheels/idna-py2_py3"
--  version: "version:2.8"
-+  name: "infra/python/wheels/idna-py3"
-+  version: "version:3.4"
- >
- wheel: <
--  name: "infra/python/wheels/urllib3-py2_py3"
--  version: "version:1.26.6"
-+  name: "infra/python/wheels/urllib3-py3"
-+  version: "version:2.1.0"
- >
- wheel: <
--  name: "infra/python/wheels/certifi-py2_py3"
--  version: "version:2020.11.8"
-+  name: "infra/python/wheels/certifi-py3"
-+  version: "version:2023.11.17"
- >
- wheel: <
-   name: "infra/python/wheels/charset_normalizer-py3"
--  version: "version:2.0.4"
-+  version: "version:3.3.2"
- >
- wheel: <
-   name: "infra/python/wheels/brotli/${vpython_platform}"
+   while (pw_buffer* buffer = pw_stream_dequeue_buffer(stream_)) {
++    spa_buffer* spaBuffer = buffer->buffer;
+     struct spa_meta_header* h;
+     h = static_cast<struct spa_meta_header*>(
+-        spa_buffer_find_meta_data(buffer->buffer, SPA_META_Header, sizeof(*h)));
++        spa_buffer_find_meta_data(spaBuffer, SPA_META_Header, sizeof(*h)));
+ 
+     struct spa_meta_videotransform* videotransform;
+     videotransform =
+         static_cast<struct spa_meta_videotransform*>(spa_buffer_find_meta_data(
+-            buffer->buffer, SPA_META_VideoTransform, sizeof(*videotransform)));
++            spaBuffer, SPA_META_VideoTransform, sizeof(*videotransform)));
+     if (videotransform) {
+       VideoRotation rotation =
+           VideorotationFromPipeWireTransform(videotransform->transform);
+@@ -401,11 +401,35 @@ void VideoCaptureModulePipeWire::ProcessBuffers() {
+ 
+     if (h->flags & SPA_META_HEADER_FLAG_CORRUPTED) {
+       RTC_LOG(LS_INFO) << "Dropping corruped frame.";
+-    } else {
+-      IncomingFrame(static_cast<unsigned char*>(buffer->buffer->datas[0].data),
+-                    buffer->buffer->datas[0].chunk->size,
+-                    configured_capability_);
++      pw_stream_queue_buffer(stream_, buffer);
++      continue;
++    }
++
++    if (spaBuffer->datas[0].type == SPA_DATA_DmaBuf ||
++        spaBuffer->datas[0].type == SPA_DATA_MemFd) {
++      ScopedBuf frame;
++      frame.initialize(
++          static_cast<uint8_t*>(
++              mmap(nullptr,
++                   spaBuffer->datas[0].maxsize + spaBuffer->datas[0].mapoffset,
++                   PROT_READ, MAP_PRIVATE, spaBuffer->datas[0].fd, 0)),
++          spaBuffer->datas[0].maxsize + spaBuffer->datas[0].mapoffset,
++          spaBuffer->datas[0].fd, spaBuffer->datas[0].type == SPA_DATA_DmaBuf);
++
++      if (!frame) {
++        RTC_LOG(LS_ERROR) << "Failed to mmap the memory: "
++                          << std::strerror(errno);
++        return;
++      }
++
++      IncomingFrame(
++          SPA_MEMBER(frame.get(), spaBuffer->datas[0].mapoffset, uint8_t),
++          spaBuffer->datas[0].chunk->size, configured_capability_);
++    } else {  // SPA_DATA_MemPtr
++      IncomingFrame(static_cast<uint8_t*>(spaBuffer->datas[0].data),
++                    spaBuffer->datas[0].chunk->size, configured_capability_);
+     }
++
+     pw_stream_queue_buffer(stream_, buffer);
+   }
+ }
