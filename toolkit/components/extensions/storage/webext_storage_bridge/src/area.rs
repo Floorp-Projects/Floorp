@@ -13,7 +13,7 @@ use std::{
 };
 
 use golden_gate::{ApplyTask, BridgedEngine, FerryTask};
-use moz_task::{self, DispatchOptions, TaskRunnable};
+use moz_task::{DispatchOptions, TaskRunnable};
 use nserror::{nsresult, NS_OK};
 use nsstring::{nsACString, nsCString, nsString};
 use thin_vec::ThinVec;
