@@ -1219,7 +1219,6 @@ trait Column<T> {
     fn from_column(raw: T) -> Result<Self>
     where
         Self: Sized;
-    fn into_column(self) -> T;
 }
 
 impl Column<i64> for Kind {
@@ -1233,16 +1232,6 @@ impl Column<i64> for Kind {
             _ => return Err(Error::UnknownItemKind(raw)),
         })
     }
-
-    fn into_column(self) -> i64 {
-        match self {
-            Kind::Bookmark => mozISyncedBookmarksMerger::KIND_BOOKMARK as i64,
-            Kind::Query => mozISyncedBookmarksMerger::KIND_QUERY as i64,
-            Kind::Folder => mozISyncedBookmarksMerger::KIND_FOLDER as i64,
-            Kind::Livemark => mozISyncedBookmarksMerger::KIND_LIVEMARK as i64,
-            Kind::Separator => mozISyncedBookmarksMerger::KIND_SEPARATOR as i64,
-        }
-    }
 }
 
 impl Column<i64> for Validity {
@@ -1253,14 +1242,6 @@ impl Column<i64> for Validity {
             Ok(mozISyncedBookmarksMerger::VALIDITY_REPLACE) => Validity::Replace,
             _ => return Err(Error::UnknownItemValidity(raw).into()),
         })
-    }
-
-    fn into_column(self) -> i64 {
-        match self {
-            Validity::Valid => mozISyncedBookmarksMerger::VALIDITY_VALID as i64,
-            Validity::Reupload => mozISyncedBookmarksMerger::VALIDITY_REUPLOAD as i64,
-            Validity::Replace => mozISyncedBookmarksMerger::VALIDITY_REPLACE as i64,
-        }
     }
 }
 
