@@ -31,7 +31,7 @@ use marionette_rs::webdriver::{
 use mozdevice::AndroidStorageInput;
 use serde::de::{self, Deserialize, Deserializer};
 use serde::ser::{Serialize, Serializer};
-use serde_json::{self, Map, Value};
+use serde_json::{Map, Value};
 use std::io::prelude::*;
 use std::io::Error as IoError;
 use std::io::ErrorKind;

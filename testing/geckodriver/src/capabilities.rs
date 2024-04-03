@@ -12,7 +12,7 @@ use mozprofile::preferences::Pref;
 use mozprofile::profile::Profile;
 use mozrunner::firefox_args::{get_arg_value, parse_args, Arg};
 use mozrunner::runner::platform::firefox_default_path;
-use mozversion::{self, firefox_binary_version, firefox_version, Version};
+use mozversion::{firefox_binary_version, firefox_version, Version};
 use regex::bytes::Regex;
 use serde_json::{Map, Value};
 use std::collections::BTreeMap;
