@@ -653,7 +653,7 @@ class ProviderAutofill extends UrlbarProvider {
       queryType: QUERYTYPE.AUTOFILL_ADAPTIVE,
       // `fullSearchString` is the value the user typed including a prefix if
       // they typed one. `searchString` has been stripped of the prefix.
-      fullSearchString: queryContext.searchString.toLowerCase(),
+      fullSearchString: queryContext.lowerCaseSearchString,
       searchString: this._searchString,
       strippedPrefix: this._strippedPrefix,
       useCountThreshold: lazy.UrlbarPrefs.get(

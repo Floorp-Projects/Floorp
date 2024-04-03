@@ -95,7 +95,7 @@ class ProviderQuickActions extends UrlbarProvider {
    */
   async startQuery(queryContext, addCallback) {
     await lazy.QuickActionsLoaderDefault.ensureLoaded();
-    let input = queryContext.trimmedSearchString.toLowerCase();
+    let input = queryContext.trimmedLowerCaseSearchString;
 
     if (
       !queryContext.searchMode &&

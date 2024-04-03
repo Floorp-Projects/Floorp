@@ -49,7 +49,7 @@ class ProviderAboutPages extends UrlbarProvider {
    * @returns {boolean} Whether this provider should be invoked for the search.
    */
   isActive(queryContext) {
-    return queryContext.trimmedSearchString.toLowerCase().startsWith("about:");
+    return queryContext.trimmedLowerCaseSearchString.startsWith("about:");
   }
 
   /**
@@ -61,7 +61,7 @@ class ProviderAboutPages extends UrlbarProvider {
    *        result. A UrlbarResult should be passed to it.
    */
   startQuery(queryContext, addCallback) {
-    let searchString = queryContext.trimmedSearchString.toLowerCase();
+    let searchString = queryContext.trimmedLowerCaseSearchString;
     for (const aboutUrl of lazy.AboutPagesUtils.visibleAboutUrls) {
       if (aboutUrl.startsWith(searchString)) {
         let result = new lazy.UrlbarResult(

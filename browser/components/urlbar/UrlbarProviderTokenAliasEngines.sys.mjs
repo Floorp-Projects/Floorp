@@ -173,7 +173,7 @@ class ProviderTokenAliasEngines extends UrlbarProvider {
   }
 
   async _getAutofillResult(queryContext) {
-    let lowerCaseSearchString = queryContext.searchString.toLowerCase();
+    let { lowerCaseSearchString } = queryContext;
 
     // The user is typing a specific engine. We should show a heuristic result.
     for (let { engine, tokenAliases } of this._engines) {

@@ -236,7 +236,7 @@ class ProviderInputHistory extends UrlbarProvider {
       SQL_ADAPTIVE_QUERY,
       {
         parent: lazy.PlacesUtils.tagsFolderId,
-        search_string: queryContext.searchString.toLowerCase(),
+        search_string: queryContext.lowerCaseSearchString,
         matchBehavior: Ci.mozIPlacesAutoComplete.MATCH_ANYWHERE,
         searchBehavior: lazy.UrlbarPrefs.get("defaultBehavior"),
         userContextId: lazy.UrlbarPrefs.get("switchTabs.searchAllContainers")

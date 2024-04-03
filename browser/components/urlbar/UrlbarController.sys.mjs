@@ -133,6 +133,7 @@ export class UrlbarController {
     // notifications related to the previous query.
     this.notify(NOTIFICATIONS.QUERY_STARTED, queryContext);
     await this.manager.startQuery(queryContext, this);
+
     // If the query has been cancelled, onQueryFinished was notified already.
     // Note this._lastQueryContextWrapper may have changed in the meanwhile.
     if (
@@ -144,6 +145,16 @@ export class UrlbarController {
       this.manager.cancelQuery(queryContext);
       this.notify(NOTIFICATIONS.QUERY_FINISHED, queryContext);
     }
+
+    // Record a potential exposure if the current search string matches one of
+    // the registered keywords.
+    if (!queryContext.isPrivate) {
+      let searchStr = queryContext.trimmedLowerCaseSearchString;
+      if (lazy.UrlbarPrefs.get("potentialExposureKeywords").has(searchStr)) {
+        this.engagementEvent.addPotentialExposure(searchStr);
+      }
+    }
+
     return queryContext;
   }
 
@@ -335,7 +346,7 @@ export class UrlbarController {
         }
         event.preventDefault();
         break;
-      case KeyEvent.DOM_VK_TAB:
+      case KeyEvent.DOM_VK_TAB: {
         // It's always possible to tab through results when the urlbar was
         // focused with the mouse or has a search string, or when the view
         // already has a selection.
@@ -368,6 +379,7 @@ export class UrlbarController {
           event.preventDefault();
         }
         break;
+      }
       case KeyEvent.DOM_VK_PAGE_DOWN:
       case KeyEvent.DOM_VK_PAGE_UP:
         if (event.ctrlKey) {
@@ -952,6 +964,10 @@ class TelemetryEvent {
       }
     );
 
+    if (!details.isSessionOngoing) {
+      this.#recordEndOfSessionTelemetry(details.searchString);
+    }
+
     if (skipLegacyTelemetry) {
       this._controller.manager.notifyEngagementChange(
         method,
@@ -1105,28 +1121,43 @@ class TelemetryEvent {
       return;
     }
 
-    // First check to see if we can record an exposure event
-    if (method === "abandonment" || method === "engagement") {
-      if (this.#exposureResultTypes.size) {
-        let exposure = {
-          results: [...this.#exposureResultTypes].sort().join(","),
-        };
-        this._controller.logger.debug(
-          `exposure event: ${JSON.stringify(exposure)}`
-        );
-        Glean.urlbar.exposure.record(exposure);
-      }
-
-      // reset the provider list on the controller
-      this.#exposureResultTypes.clear();
-      this.#tentativeExposureResultTypes.clear();
-    }
-
     this._controller.logger.info(
       `${method} event: ${JSON.stringify(eventInfo)}`
     );
 
     Glean.urlbar[method].record(eventInfo);
+  }
+
+  #recordEndOfSessionTelemetry(searchString) {
+    // exposures
+    if (this.#exposureResultTypes.size) {
+      let exposure = {
+        results: [...this.#exposureResultTypes].sort().join(","),
+      };
+      this._controller.logger.debug(
+        `exposure event: ${JSON.stringify(exposure)}`
+      );
+      Glean.urlbar.exposure.record(exposure);
+      this.#exposureResultTypes.clear();
+    }
+    this.#tentativeExposureResultTypes.clear();
+
+    // potential exposures
+    if (this.#potentialExposureKeywords.size) {
+      let normalizedSearchString = searchString.trim().toLowerCase();
+      for (let keyword of this.#potentialExposureKeywords) {
+        let data = {
+          keyword,
+          terminal: keyword == normalizedSearchString,
+        };
+        this._controller.logger.debug(
+          `potential_exposure event: ${JSON.stringify(data)}`
+        );
+        Glean.urlbar.potentialExposure.record(data);
+      }
+      GleanPings.urlbarPotentialExposure.submit();
+      this.#potentialExposureKeywords.clear();
+    }
   }
 
   /**
@@ -1176,6 +1207,16 @@ class TelemetryEvent {
    */
   discardTentativeExposures() {
     this.#tentativeExposureResultTypes.clear();
+  }
+
+  /**
+   * Registers a potential exposure in the current urlbar session.
+   *
+   * @param {string} keyword
+   *   The keyword that was matched.
+   */
+  addPotentialExposure(keyword) {
+    this.#potentialExposureKeywords.add(keyword);
   }
 
   #getInteractionType(
@@ -1371,4 +1412,5 @@ class TelemetryEvent {
 
   #exposureResultTypes = new Set();
   #tentativeExposureResultTypes = new Set();
+  #potentialExposureKeywords = new Set();
 }

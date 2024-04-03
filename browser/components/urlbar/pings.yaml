@@ -19,3 +19,19 @@ quick-suggest:
     - https://bugzilla.mozilla.org/show_bug.cgi?id=1854755
   notification_emails:
     - najiang@mozilla.com
+
+urlbar-potential-exposure:
+  description: |
+    This ping is submitted at the end of urlbar sessions during which the user
+    typed a keyword defined by the Nimbus variable `potentialExposureKeywords`.
+    A "session" begins when the user focuses the urlbar and ends with an
+    engagement or abandonment. The ping will contain one
+    `urlbar.potential_exposure` event per unique keyword that is typed during
+    the session. This ping is not submitted for sessions in private windows.
+  include_client_id: false
+  bugs:
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1881875
+  data_reviews:
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1881875
+  notification_emails:
+    - fx-search-telemetry@mozilla.com

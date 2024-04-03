@@ -1506,12 +1506,28 @@ class Preferences {
         return this.shouldHandOffToSearchModePrefs.some(
           prefName => !this.get(prefName)
         );
-      case "autoFillAdaptiveHistoryUseCountThreshold":
+      case "autoFillAdaptiveHistoryUseCountThreshold": {
         const nimbusValue =
           this._nimbus.autoFillAdaptiveHistoryUseCountThreshold;
         return nimbusValue === undefined
           ? this.get("autoFill.adaptiveHistory.useCountThreshold")
           : parseFloat(nimbusValue);
+      }
+      case "potentialExposureKeywords": {
+        // Get the keywords array from Nimbus or prefs and convert it to a Set.
+        // If the value comes from Nimbus, it will already be an array. If it
+        // comes from prefs, it should be a stringified array.
+        let value = this._readPref(pref);
+        if (typeof value == "string") {
+          try {
+            value = JSON.parse(value);
+          } catch (e) {}
+        }
+        if (!Array.isArray(value)) {
+          value = null;
+        }
+        return new Set(value);
+      }
     }
     return this._readPref(pref);
   }

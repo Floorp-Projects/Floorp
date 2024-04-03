@@ -158,6 +158,7 @@ urlbar:
     notification_emails:
       - fx-search-telemetry@mozilla.com
     expires: never
+
   engagement:
     type: event
     description: Recorded when the user executes an action on a result.
@@ -428,6 +429,40 @@ urlbar:
     notification_emails:
       - fx-search-telemetry@mozilla.com
     expires: never
+
+  potential_exposure:
+    type: event
+    description: >
+      This event is recorded in the `urlbar-potential-exposure` ping, which is
+      submitted at the end of urlbar sessions during which the user typed a
+      keyword defined by the Nimbus variable `potentialExposureKeywords`. A
+      "session" begins when the user focuses the urlbar and ends with an
+      engagement or abandonment. The ping will contain one event per unique
+      keyword that is typed during the session. This ping is not submitted for
+      sessions in private windows.
+    extra_keys:
+      keyword:
+        type: string
+        description: >
+          The matched keyword.
+      terminal:
+        type: boolean
+        description: >
+          Whether the matched keyword was present at the end of the urlbar
+          session. If true, the session ended with the keyword. If false, the
+          keyword was typed at some point during the session but the session
+          did not end with it.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1881875
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1881875
+    data_sensitivity:
+      - stored_content
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+    expires: never
+    send_in_pings:
+      - urlbar-potential-exposure
 
   quick_suggest_contextual_opt_in:
     type: event
