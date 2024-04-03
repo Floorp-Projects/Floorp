@@ -125,6 +125,31 @@ TEST_F(PacketRouterTest, GeneratePaddingPrioritizesRtx) {
   packet_router_.RemoveSendRtpModule(&rtp_2);
 }
 
+TEST_F(PacketRouterTest, SupportsRtxPayloadPaddingFalseIfNoRtxSendModule) {
+  EXPECT_FALSE(packet_router_.SupportsRtxPayloadPadding());
+
+  NiceMock<MockRtpRtcpInterface> none_rtx_module;
+  ON_CALL(none_rtx_module, SupportsRtxPayloadPadding())
+      .WillByDefault(Return(false));
+
+  packet_router_.AddSendRtpModule(&none_rtx_module, false);
+  EXPECT_FALSE(packet_router_.SupportsRtxPayloadPadding());
+
+  packet_router_.RemoveSendRtpModule(&none_rtx_module);
+  EXPECT_FALSE(packet_router_.SupportsRtxPayloadPadding());
+}
+
+TEST_F(PacketRouterTest, SupportsRtxPayloadPaddingTrueIfRtxSendModule) {
+  NiceMock<MockRtpRtcpInterface> rtx_module;
+  ON_CALL(rtx_module, SupportsRtxPayloadPadding()).WillByDefault(Return(true));
+
+  packet_router_.AddSendRtpModule(&rtx_module, false);
+  EXPECT_TRUE(packet_router_.SupportsRtxPayloadPadding());
+
+  packet_router_.RemoveSendRtpModule(&rtx_module);
+  EXPECT_FALSE(packet_router_.SupportsRtxPayloadPadding());
+}
+
 TEST_F(PacketRouterTest, GeneratePaddingPrioritizesVideo) {
   // Two RTP modules. Neither support RTX, both support padding,
   // but the first one is for audio and second for video.

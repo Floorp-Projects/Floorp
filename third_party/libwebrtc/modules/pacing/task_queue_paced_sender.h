@@ -60,6 +60,9 @@ class TaskQueuePacedSender : public RtpPacketPacer, public RtpPacketSender {
   // 'burst_interval'.
   void SetSendBurstInterval(TimeDelta burst_interval);
 
+  // A probe may be sent without first waing for a media packet.
+  void SetAllowProbeWithoutMediaPacket(bool allow);
+
   // Ensure that necessary delayed tasks are scheduled.
   void EnsureStarted();
 
