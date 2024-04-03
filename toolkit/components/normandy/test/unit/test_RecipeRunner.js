@@ -12,6 +12,9 @@ const { RecipeRunner } = ChromeUtils.importESModule(
 
 // Test that new build IDs trigger immediate recipe runs
 add_task(async () => {
+  // This test assumes normandy is enabled.
+  Services.prefs.setBoolPref("app.normandy.enabled", true);
+
   updateAppInfo({
     appBuildID: "new-build-id",
     lastAppBuildID: "old-build-id",

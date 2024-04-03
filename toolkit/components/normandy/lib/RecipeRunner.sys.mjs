@@ -197,7 +197,7 @@ export var RecipeRunner = {
   },
 
   checkPrefs() {
-    if (!Services.prefs.getBoolPref(SHIELD_ENABLED_PREF)) {
+    if (!Services.prefs.getBoolPref(SHIELD_ENABLED_PREF, false)) {
       log.debug(
         `Disabling Shield because ${SHIELD_ENABLED_PREF} is set to false`
       );
@@ -205,7 +205,7 @@ export var RecipeRunner = {
       return;
     }
 
-    const apiUrl = Services.prefs.getCharPref(API_URL_PREF);
+    const apiUrl = Services.prefs.getCharPref(API_URL_PREF, "");
     if (!apiUrl) {
       log.warn(`Disabling Shield because ${API_URL_PREF} is not set.`);
       this.disable();
@@ -287,7 +287,7 @@ export var RecipeRunner = {
     // Run once every `runInterval` wall-clock seconds. This is managed by setting a "last ran"
     // timestamp, and running if it is more than `runInterval` seconds ago. Even with very short
     // intervals, the timer will only fire at most once every few minutes.
-    const runInterval = Services.prefs.getIntPref(RUN_INTERVAL_PREF);
+    const runInterval = Services.prefs.getIntPref(RUN_INTERVAL_PREF, 21600); // 6h
     lazy.timerManager.registerTimer(TIMER_NAME, () => this.run(), runInterval);
   },
 
@@ -597,7 +597,7 @@ export var RecipeRunner = {
    * executed in the browser console.
    */
   async testRun(baseApiUrl) {
-    const oldApiUrl = Services.prefs.getCharPref(API_URL_PREF);
+    const oldApiUrl = Services.prefs.getCharPref(API_URL_PREF, "");
     Services.prefs.setCharPref(API_URL_PREF, baseApiUrl);
 
     try {
