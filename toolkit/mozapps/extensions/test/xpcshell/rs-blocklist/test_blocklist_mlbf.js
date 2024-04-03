@@ -11,11 +11,11 @@ createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1");
 AddonTestUtils.useRealCertChecks = true;
 
 // A real, signed XPI for use in the test.
-const SIGNED_ADDON_XPI_FILE = do_get_file("../data/webext-implicit-id.xpi");
-const SIGNED_ADDON_ID = "webext_implicit_id@tests.mozilla.org";
-const SIGNED_ADDON_VERSION = "1.0";
+const SIGNED_ADDON_XPI_FILE = do_get_file("amosigned.xpi");
+const SIGNED_ADDON_ID = "amosigned-xpi@tests.mozilla.org";
+const SIGNED_ADDON_VERSION = "2.2";
 const SIGNED_ADDON_KEY = `${SIGNED_ADDON_ID}:${SIGNED_ADDON_VERSION}`;
-const SIGNED_ADDON_SIGN_TIME = 1459980789000; // notBefore of certificate.
+const SIGNED_ADDON_SIGN_TIME = 1711462525000; // notBefore of certificate.
 
 // A real, signed sitepermission XPI for use in the test.
 const SIGNED_SITEPERM_XPI_FILE = do_get_file("webmidi_permission.xpi");
@@ -78,7 +78,7 @@ add_task(async function signed_xpi_initially_unblocked() {
     await Blocklist.getAddonBlocklistEntry(addon),
     {
       state: Ci.nsIBlocklistService.STATE_BLOCKED,
-      url: "https://addons.mozilla.org/en-US/xpcshell/blocked-addon/webext_implicit_id@tests.mozilla.org/1.0/",
+      url: `https://addons.mozilla.org/en-US/xpcshell/blocked-addon/${SIGNED_ADDON_ID}/${SIGNED_ADDON_VERSION}/`,
     },
     "Blocked addon should have blocked entry"
   );
@@ -174,7 +174,9 @@ add_task(async function signed_temporary() {
 
   await Assert.rejects(
     AddonManager.installTemporaryAddon(SIGNED_ADDON_XPI_FILE),
-    /Add-on webext_implicit_id@tests.mozilla.org is not compatible with application version/,
+    new RegExp(
+      `Add-on ${SIGNED_ADDON_ID} is not compatible with application version`
+    ),
     "Blocklisted add-on cannot be installed"
   );
 });
@@ -213,8 +215,12 @@ add_task(async function privileged_xpi_not_blocked() {
 // It can still be blocked by a stash, which is tested in
 // langpack_blocked_by_stash in test_blocklist_mlbf_stashes.js.
 add_task(
-  // We do not support langpacks on Android.
-  { skip_if: () => AppConstants.platform == "android" },
+  {
+    // langpack_signed.xpi is signed with AMO staging signature.
+    pref_set: [["xpinstall.signatures.dev-root", true]],
+    // We do not support langpacks on Android.
+    skip_if: () => AppConstants.platform == "android",
+  },
   async function langpack_not_blocked_on_Nightly() {
     mockMLBF({
       blocked: ["langpack-klingon@firefox.mozilla.org:1.0"],

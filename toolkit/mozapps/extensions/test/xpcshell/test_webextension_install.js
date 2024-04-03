@@ -11,8 +11,10 @@ add_task(async function setup() {
   await promiseStartupManager();
 });
 
+// Extension without id in the manifest file and signed with AMO prod root
+// (https://addons.mozilla.org/en-US/firefox/addon/reference-static-theme/).
 const IMPLICIT_ID_XPI = "data/webext-implicit-id.xpi";
-const IMPLICIT_ID_ID = "webext_implicit_id@tests.mozilla.org";
+const IMPLICIT_ID_ID = "{46607a7b-1b2a-40ce-9afe-91cda52c46a6}";
 
 // webext-implicit-id.xpi has a minimal manifest with no
 // applications or browser_specific_settings, so its id comes

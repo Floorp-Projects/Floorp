@@ -355,7 +355,7 @@ add_task(
   }
 );
 
-add_task(async function test_no_change() {
+add_task(useAMOStageCert(), async function test_no_change() {
   // Install the first add-on
   await promiseInstallFile(do_get_file(`${DATA}/signed1.xpi`));
 
@@ -391,7 +391,7 @@ add_task(async function test_no_change() {
   AddonManager.removeAddonListener(listener);
 });
 
-add_task(async function test_disable() {
+add_task(useAMOStageCert(), async function test_disable() {
   // Install the first add-on
   await promiseInstallFile(do_get_file(`${DATA}/signed1.xpi`));
 
