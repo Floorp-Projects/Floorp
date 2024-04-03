@@ -679,12 +679,8 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
   struct FixedPositionInfo;
   struct StickyPositionInfo;
 
-  // Returns true if |aNode| is a fixed layer that is fixed to the root content
-  // APZC.
-  // The map lock is required within these functions; if the map lock is already
-  // being held by the caller, the second overload should be used. If the map
-  // lock is not being held at the call site, the first overload should be used.
-  bool IsFixedToRootContent(const HitTestingTreeNode* aNode) const;
+  // Returns true if |aFixedInfo| represents a layer that is fixed to the root
+  // content APZC.
   bool IsFixedToRootContent(const FixedPositionInfo& aFixedInfo,
                             const MutexAutoLock& aProofOfMapLock) const;
 
