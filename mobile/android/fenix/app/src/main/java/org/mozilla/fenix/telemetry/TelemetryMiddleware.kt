@@ -160,6 +160,7 @@ class TelemetryMiddleware(
                 Translations.offerEvent.record(Translations.OfferEventExtra("offer"))
             }
             is TranslationsAction.TranslateExpectedAction -> {
+                FxNimbus.features.translations.recordExposure()
                 Translations.offerEvent.record(Translations.OfferEventExtra("expected"))
             }
             is TranslationsAction.TranslateAction -> {

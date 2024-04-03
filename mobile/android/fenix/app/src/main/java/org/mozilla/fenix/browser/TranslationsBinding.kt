@@ -67,11 +67,12 @@ class TranslationsBinding(
                     browserTranslationsState.supportedLanguages?.fromLanguages
                 val translateToLanguages =
                     browserTranslationsState.supportedLanguages?.toLanguages
+                val isEngineSupported = browserTranslationsState.isEngineSupported
 
                 // Session Translations State Behavior (Tab)
                 val sessionTranslationsState = state.sessionState.translationsState
 
-                if (sessionTranslationsState.isTranslated) {
+                if (isEngineSupported == true && sessionTranslationsState.isTranslated) {
                     val fromSelected =
                         sessionTranslationsState.translationEngineState?.initialFromLanguage(
                             translateFromLanguages,
@@ -89,7 +90,7 @@ class TranslationsBinding(
                             toSelected,
                         )
                     }
-                } else if (sessionTranslationsState.isExpectedTranslate) {
+                } else if (isEngineSupported == true && sessionTranslationsState.isExpectedTranslate) {
                     onStateUpdated(
                         true,
                         false,
@@ -100,7 +101,7 @@ class TranslationsBinding(
                     onStateUpdated(false, false, null, null)
                 }
 
-                if (sessionTranslationsState.isOfferTranslate) {
+                if (isEngineSupported == true && sessionTranslationsState.isOfferTranslate) {
                     onShowTranslationsDialog()
                 }
             }
