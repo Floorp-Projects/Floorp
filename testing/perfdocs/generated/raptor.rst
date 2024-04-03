@@ -6957,7 +6957,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    **Owner**: :jgilbert and Graphics(gfx) Team
 
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, safari
+   * **apps**: firefox, chrome
    * **expected**: pass
    * **expose browser profiler**: true
    * **gecko profile interval**: 1
@@ -7136,11 +7136,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - ❌
       * - **browsertime-benchmark-firefox-unity-webgl**
         - ✅
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-safari-unity-webgl**
-        - ❌
         - ❌
         - ❌
         - ❌
@@ -7418,11 +7413,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - ❌
       * - **browsertime-benchmark-firefox-unity-webgl**
         - ✅
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-safari-unity-webgl**
-        - ❌
         - ❌
         - ❌
         - ❌
