@@ -18,7 +18,7 @@
       --toolbar-field-border-color: transparent;
       --toolbar-field-background-color: light-dark(rgba(0, 0, 0, .05), rgba(0, 0, 0, .3));
       --toolbar-field-color: inherit;
-      --tabs-navbar-shadow-color: transparent;
+      --tabs-navbar-separator-color: transparent;
       @media (prefers-color-scheme: light) {
         --toolbar-non-lwt-bgcolor: white;
         --urlbar-box-bgcolor: #fafafa;
