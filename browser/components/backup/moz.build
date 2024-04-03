@@ -14,7 +14,6 @@ XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.toml"]
 EXTRA_JS_MODULES.backup += [
     "BackupResources.sys.mjs",
     "BackupService.sys.mjs",
-    "resources/AddonsBackupResource.sys.mjs",
     "resources/BackupResource.sys.mjs",
     "resources/CookiesBackupResource.sys.mjs",
     "resources/CredentialsAndSecurityBackupResource.sys.mjs",
