@@ -13310,6 +13310,12 @@
   value: true
   mirror: always
 
+# Minimum content-lengthe to use off-main-thread decompression of network streams
+- name: network.decompression_off_mainthread_min_size
+  type: int32_t
+  value: 512
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "nglayout."
 #---------------------------------------------------------------------------
