@@ -207,7 +207,7 @@ class ArraySortData {
 
   using ValueVector = GCVector<Value, 8, SystemAllocPolicy>;
 
- private:
+ protected:  // Silence Clang warning about unused private fields.
   // Data for the comparator call. These fields must match the JitFrameLayout
   // to let us perform efficient calls to the comparator from JIT code.
   // This is asserted in the JIT trampoline code.
@@ -218,6 +218,7 @@ class ArraySortData {
   Value thisv;
   Value callArgs[ComparatorActualArgs];
 
+ private:
   ValueVector vec;
   Value item;
   JSContext* cx_;
@@ -286,8 +287,6 @@ class ArraySortData {
   void setComparatorReturnValue(const Value& v) { callArgs[0] = v; }
 
   ComparatorKind comparatorKind() const { return comparatorKind_; }
-
-  void initDescriptor(uintptr_t descriptor) { descriptor_ = descriptor; }
 
   static ArraySortResult sortWithComparator(ArraySortData* d);
 

@@ -84,6 +84,8 @@ uint32_t JitRuntime::generateArraySortTrampoline(MacroAssembler& masm) {
       -int32_t(FrameSize) + ArraySortData::offsetOfComparator();
   constexpr int32_t RvalOffset =
       -int32_t(FrameSize) + ArraySortData::offsetOfComparatorReturnValue();
+  constexpr int32_t DescriptorOffset =
+      -int32_t(FrameSize) + ArraySortData::offsetOfDescriptor();
 
 #ifdef JS_USE_LINK_REGISTER
   masm.pushReturnAddress();
@@ -137,10 +139,15 @@ uint32_t JitRuntime::generateArraySortTrampoline(MacroAssembler& masm) {
   masm.jump(&checkReturnValue);
   masm.setFramePushed(FrameSize);
 
-  // Call the comparator.
+  // Call the comparator. Store the frame descriptor before each call to ensure
+  // the HASCACHEDSAVEDFRAME_BIT flag from a previous call is cleared.
+  uintptr_t jitCallDescriptor = MakeFrameDescriptorForJitCall(
+      jit::FrameType::TrampolineNative, ArraySortData::ComparatorActualArgs);
   Label callDone, jitCallFast, jitCallSlow;
   masm.bind(&jitCallFast);
   {
+    masm.storePtr(ImmWord(jitCallDescriptor),
+                  Address(FramePointer, DescriptorOffset));
     masm.loadPtr(Address(FramePointer, ComparatorOffset), temp0);
     masm.loadJitCodeRaw(temp0, temp1);
     masm.callJit(temp1);
@@ -148,6 +155,8 @@ uint32_t JitRuntime::generateArraySortTrampoline(MacroAssembler& masm) {
   }
   masm.bind(&jitCallSlow);
   {
+    masm.storePtr(ImmWord(jitCallDescriptor),
+                  Address(FramePointer, DescriptorOffset));
     masm.loadPtr(Address(FramePointer, ComparatorOffset), temp0);
     masm.loadJitCodeRaw(temp0, temp1);
     masm.switchToObjectRealm(temp0, temp2);
