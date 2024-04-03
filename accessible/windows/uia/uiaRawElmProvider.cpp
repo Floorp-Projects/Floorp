@@ -119,6 +119,11 @@ void uiaRawElmProvider::RaiseUiaEventForStateChange(Accessible* aAcc,
       newVal.vt = VT_I4;
       newVal.lVal = ToExpandCollapseState(aEnabled ? aState : 0);
       break;
+    case states::UNAVAILABLE:
+      property = UIA_IsEnabledPropertyId;
+      newVal.vt = VT_BOOL;
+      newVal.boolVal = aEnabled ? VARIANT_FALSE : VARIANT_TRUE;
+      break;
     default:
       return;
   }
@@ -421,6 +426,12 @@ uiaRawElmProvider::GetPropertyValue(PROPERTYID aPropertyId,
     case UIA_IsControlElementPropertyId:
       aPropertyValue->vt = VT_BOOL;
       aPropertyValue->boolVal = IsControl() ? VARIANT_TRUE : VARIANT_FALSE;
+      return S_OK;
+
+    case UIA_IsEnabledPropertyId:
+      aPropertyValue->vt = VT_BOOL;
+      aPropertyValue->boolVal =
+          (acc->State() & states::UNAVAILABLE) ? VARIANT_FALSE : VARIANT_TRUE;
       return S_OK;
 
     case UIA_IsKeyboardFocusablePropertyId:
