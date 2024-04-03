@@ -36,7 +36,7 @@
     --toolbar-field-color: inherit;
 
     @media (-moz-gtk-theme-family) {
-      --tabs-navbar-shadow-color: transparent;
+      --tabs-navbar-separator-color: transparent;
       @media (prefers-color-scheme: light) {
         --urlbar-box-bgcolor: #fafafa;
       }

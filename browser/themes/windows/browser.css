@@ -58,7 +58,7 @@
 /* When temporarily showing the menu bar, make it at least as tall as the
  * tab bar such that the window controls don't appear to move up. */
 :root[tabsintitlebar] #toolbar-menubar[autohide="true"] {
-  height: calc(var(--tab-min-height) - var(--tabs-navbar-shadow-size));
+  height: var(--tab-min-height);
 }
 
 /* Titlebar */
@@ -76,12 +76,6 @@
 
 .titlebar-buttonbox-container {
   align-items: stretch;
-
-  /* Prevent window controls from overlapping the nav bar's shadow on the tab
-   * bar. */
-  #TabsToolbar > & {
-    margin-bottom: var(--tabs-navbar-shadow-size);
-  }
 }
 
 /* Window control buttons */

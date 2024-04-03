@@ -493,7 +493,7 @@
 .tabbrowser-tab > .tab-stack > .tab-content[pinned][titlechanged]:not([selected]),
 #firefox-view-button[attention] {
   background-image: radial-gradient(circle, var(--attention-dot-color), var(--attention-dot-color) 2px, transparent 2px);
-  background-position: center bottom calc(6.5px + var(--tabs-navbar-shadow-size));
+  background-position: center bottom 6.5px;
   background-size: 4px 4px;
   background-repeat: no-repeat;
 }

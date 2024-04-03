@@ -39,9 +39,7 @@
   --toolbarbutton-border-radius: 4px;
 
   --chrome-content-separator-color: ThreeDShadow;
-
-  --tabs-navbar-shadow-size: 1px;
-  --tabs-navbar-shadow-color: ThreeDShadow;
+  --tabs-navbar-separator-color: ThreeDShadow;
 
   --panelui-subview-transition-duration: 150ms;
 
@@ -109,7 +107,7 @@
 
     --link-color: light-dark(rgb(0, 97, 224), rgb(0, 221, 255));
     --chrome-content-separator-color: rgba(0,0,0,.3);
-    --tabs-navbar-shadow-color: light-dark(rgba(0,0,0,.1), rgba(0,0,0,.3));
+    --tabs-navbar-separator-color: light-dark(rgba(0,0,0,.1), rgba(0,0,0,.3));
     --attention-dot-color: light-dark(#2ac3a2, #54ffbd);
 
     @media not (prefers-contrast) {
@@ -140,21 +138,13 @@
   @media (prefers-reduced-motion) {
     --inactive-window-transition: 0s;
   }
-
-  @media (min-resolution: 1.5dppx) {
-    --tabs-navbar-shadow-size: 0.5px;
-  }
-
-  @media (min-resolution: 3dppx) {
-    --tabs-navbar-shadow-size: 0.33px;
-  }
 }
 
 #navigator-toolbox {
   appearance: none;
 
   /* Toolbar / content area border */
-  border-bottom: 1px solid var(--chrome-content-separator-color);
+  border-bottom: 0.01px solid var(--chrome-content-separator-color);
 
   background-color: var(--toolbox-non-lwt-bgcolor);
   color: var(--toolbox-non-lwt-textcolor);
@@ -227,7 +217,7 @@
   /* The toolbar buttons that animate are only visible when the #TabsToolbar is not collapsed.
      The animations use position:absolute and require a positioned #nav-bar. */
   position: relative;
-  box-shadow: 0 calc(-1 * var(--tabs-navbar-shadow-size)) 0 var(--tabs-navbar-shadow-color);
+  border-top: 0.01px solid var(--tabs-navbar-separator-color);
 }
 
 /* Bookmarks toolbar */
