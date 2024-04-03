@@ -145,8 +145,6 @@ uiaRawElmProvider::QueryInterface(REFIID aIid, void** aInterface) {
     *aInterface = static_cast<IExpandCollapseProvider*>(this);
   } else if (aIid == IID_IInvokeProvider) {
     *aInterface = static_cast<IInvokeProvider*>(this);
-  } else if (aIid == IID_IScrollItemProvider) {
-    *aInterface = static_cast<IScrollItemProvider*>(this);
   } else if (aIid == IID_IToggleProvider) {
     *aInterface = static_cast<IToggleProvider*>(this);
   } else {
@@ -262,11 +260,6 @@ uiaRawElmProvider::GetPatternProvider(
         invoke.forget(aPatternProvider);
       }
       return S_OK;
-    case UIA_ScrollItemPatternId: {
-      RefPtr<IScrollItemProvider> scroll = this;
-      scroll.forget(aPatternProvider);
-      return S_OK;
-    }
     case UIA_TogglePatternId:
       if (HasTogglePattern()) {
         RefPtr<IToggleProvider> toggle = this;
@@ -653,18 +646,6 @@ uiaRawElmProvider::get_ExpandCollapseState(
     return CO_E_OBJNOTCONNECTED;
   }
   *aRetVal = ToExpandCollapseState(acc->State());
-  return S_OK;
-}
-
-// IScrollItemProvider methods
-
-STDMETHODIMP
-uiaRawElmProvider::ScrollIntoView() {
-  Accessible* acc = Acc();
-  if (!acc) {
-    return CO_E_OBJNOTCONNECTED;
-  }
-  acc->ScrollTo(nsIAccessibleScrollType::SCROLL_TYPE_ANYWHERE);
   return S_OK;
 }
 
