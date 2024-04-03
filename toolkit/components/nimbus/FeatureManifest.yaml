@@ -264,6 +264,13 @@ urlbar:
         will be able to click the "Show less frequently" command for Pocket
         suggestions. If undefined or zero, the user will be able to click the
         command without any limit.
+    potentialExposureKeywords:
+      type: json
+      fallbackPref: browser.urlbar.potentialExposureKeywords
+      description: >-
+        An array of keyword strings that will trigger the
+        `urlbar-potential-exposure` ping when the user types one during a urlbar
+        session.
     quickSuggestAllowPositionInSuggestions:
       type: boolean
       fallbackPref: browser.urlbar.quicksuggest.allowPositionInSuggestions

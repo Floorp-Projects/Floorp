@@ -115,7 +115,7 @@ class ProviderWeather extends UrlbarProvider {
       return false;
     }
 
-    return keywords.has(queryContext.searchString.trim().toLocaleLowerCase());
+    return keywords.has(queryContext.trimmedLowerCaseSearchString);
   }
 
   /**

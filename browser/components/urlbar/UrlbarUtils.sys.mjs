@@ -854,7 +854,7 @@ export var UrlbarUtils = {
    * @returns {string} The modified paste data.
    */
   stripUnsafeProtocolOnPaste(pasteData) {
-    while (true) {
+    for (;;) {
       let scheme = "";
       try {
         scheme = Services.io.extractScheme(pasteData);
@@ -2175,6 +2175,8 @@ export class UrlbarQueryContext {
     this.pendingHeuristicProviders = new Set();
     this.deferUserSelectionProviders = new Set();
     this.trimmedSearchString = this.searchString.trim();
+    this.lowerCaseSearchString = this.searchString.toLowerCase();
+    this.trimmedLowerCaseSearchString = this.trimmedSearchString.toLowerCase();
     this.userContextId =
       lazy.UrlbarProviderOpenTabs.getUserContextIdForOpenPagesTable(
         options.userContextId,
