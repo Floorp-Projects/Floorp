@@ -234,8 +234,7 @@ bool Convert(std::string inputfile,
             candidate_type_name{{IceCandidateType::kLocal, "LOCAL"},
                                 {IceCandidateType::kStun, "STUN"},
                                 {IceCandidateType::kPrflx, "PRFLX"},
-                                {IceCandidateType::kRelay, "RELAY"},
-                                {IceCandidateType::kNumValues, "NUM_VALUES"}};
+                                {IceCandidateType::kRelay, "RELAY"}};
 
         static const std::map<IceCandidatePairProtocol, std::string>
             protocol_name{{IceCandidatePairProtocol::kUnknown, "UNKNOWN"},
