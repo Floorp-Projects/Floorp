@@ -446,10 +446,12 @@ class StyleSheetsManager extends EventEmitter {
     InspectorUtils.parseStyleSheet(styleSheet, text);
     modifiedStyleSheets.set(styleSheet, text);
 
-    const { atRules, ruleCount } =
-      this.getStyleSheetRuleCountAndAtRules(styleSheet);
-
+    // getStyleSheetRuleCountAndAtRules can be costly, so only call it when needed,
+    // i.e. when the whole stylesheet is modified, not when a rule body is.
+    let atRules, ruleCount;
     if (kind !== UPDATE_PRESERVING_RULES) {
+      ({ atRules, ruleCount } =
+        this.getStyleSheetRuleCountAndAtRules(styleSheet));
       this.#notifyPropertyChanged(resourceId, "ruleCount", ruleCount);
     }
 
@@ -465,13 +467,15 @@ class StyleSheetsManager extends EventEmitter {
       });
     }
 
-    this.#onStyleSheetUpdated({
-      resourceId,
-      updateKind: "at-rules-changed",
-      updates: {
-        resourceUpdates: { atRules },
-      },
-    });
+    if (kind !== UPDATE_PRESERVING_RULES) {
+      this.#onStyleSheetUpdated({
+        resourceId,
+        updateKind: "at-rules-changed",
+        updates: {
+          resourceUpdates: { atRules },
+        },
+      });
+    }
   }
 
   /**
