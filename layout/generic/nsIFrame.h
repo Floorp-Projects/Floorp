@@ -3939,6 +3939,9 @@ class nsIFrame : public nsQueryFrame {
  public:
   // given a frame five me the first/last leaf available
   // XXX Robert O'Callahan wants to move these elsewhere
+  // FIXME: Only GetLastLeaf() never returns a leaf frame in native anonymous
+  // subtrees under aFrame.  However, GetFirstLeaf() may return a leaf frame
+  // in a native anonymous subtree.
   static void GetLastLeaf(nsIFrame** aFrame);
   static void GetFirstLeaf(nsIFrame** aFrame);
 
