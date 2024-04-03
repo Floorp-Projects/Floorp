@@ -1,0 +1,22 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+webidl BrowsingContext;
+
+[scriptable, uuid(ce3e9659-e311-49fb-b18b-7f27c6659b23)]
+interface nsIUserCharacteristicsPageService : nsISupports {
+
+    /* (In the next patch, this will:)
+     * Create the UserCharacteristics about: page as a HiddenFrame
+     * and begin the data collection.
+     */
+    Promise createContentPage();
+
+    /*
+     * Called when the UserCharacteristics about: page has been loaded
+     */
+    void pageLoaded(in BrowsingContext browsingContext);
+};
