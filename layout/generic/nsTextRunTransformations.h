@@ -202,7 +202,6 @@ class nsTransformedTextRun final : public gfxTextRun {
         mOwnsFactory(aOwnsFactory),
         mNeedsRebuild(true) {
     mCharacterGlyphs = reinterpret_cast<CompressedGlyph*>(this + 1);
-    SetupClusterBoundaries(0, aString, aLength);
   }
 };
 
