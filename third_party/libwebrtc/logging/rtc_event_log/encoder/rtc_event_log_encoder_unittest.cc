@@ -14,7 +14,7 @@
 #include <string>
 #include <tuple>
 
-#include "api/transport/field_trial_based_config.h"
+#include "api/field_trials_view.h"
 #include "logging/rtc_event_log/encoder/rtc_event_log_encoder_legacy.h"
 #include "logging/rtc_event_log/encoder/rtc_event_log_encoder_new_format.h"
 #include "logging/rtc_event_log/encoder/rtc_event_log_encoder_v3.h"
@@ -42,7 +42,6 @@
 #include "rtc_base/fake_clock.h"
 #include "rtc_base/random.h"
 #include "test/explicit_key_value_config.h"
-#include "test/field_trial.h"
 #include "test/gtest.h"
 
 namespace webrtc {
@@ -63,15 +62,15 @@ class RtcEventLogEncoderTest
         verifier_(encoding_type_) {}
   ~RtcEventLogEncoderTest() override = default;
 
-  std::unique_ptr<RtcEventLogEncoder> CreateEncoder() {
+  std::unique_ptr<RtcEventLogEncoder> CreateEncoder(
+      const FieldTrialsView& field_trials = ExplicitKeyValueConfig("")) {
     std::unique_ptr<RtcEventLogEncoder> encoder;
     switch (encoding_type_) {
       case RtcEventLog::EncodingType::Legacy:
         encoder = std::make_unique<RtcEventLogEncoderLegacy>();
         break;
       case RtcEventLog::EncodingType::NewFormat:
-        encoder = std::make_unique<RtcEventLogEncoderNewFormat>(
-            FieldTrialBasedConfig());
+        encoder = std::make_unique<RtcEventLogEncoderNewFormat>(field_trials);
         break;
       case RtcEventLog::EncodingType::ProtoFree:
         encoder = std::make_unique<RtcEventLogEncoderV3>();
@@ -98,7 +97,7 @@ class RtcEventLogEncoderTest
       uint32_t ssrc);
 
   template <typename EventType, typename ParsedType>
-  void TestRtpPackets();
+  void TestRtpPackets(RtcEventLogEncoder& encoder);
 
   std::deque<std::unique_ptr<RtcEvent>> history_;
   ParsedRtcEventLog parsed_log_;
@@ -174,14 +173,13 @@ RtcEventLogEncoderTest::GetRtpPacketsBySsrc(const ParsedRtcEventLog* parsed_log,
 }
 
 template <typename EventType, typename ParsedType>
-void RtcEventLogEncoderTest::TestRtpPackets() {
+void RtcEventLogEncoderTest::TestRtpPackets(RtcEventLogEncoder& encoder) {
   // SSRCs will be randomly assigned out of this small pool, significant only
   // in that it also covers such edge cases as SSRC = 0 and SSRC = 0xffffffff.
   // The pool is intentionally small, so as to produce collisions.
   const std::vector<uint32_t> kSsrcPool = {0x00000000, 0x12345678, 0xabcdef01,
                                            0xffffffff, 0x20171024, 0x19840730,
                                            0x19831230};
-  std::unique_ptr<RtcEventLogEncoder> encoder = CreateEncoder();
 
   // TODO(terelius): Test extensions for legacy encoding, too.
   RtpHeaderExtensionMap extension_map;
@@ -203,7 +201,7 @@ void RtcEventLogEncoderTest::TestRtpPackets() {
   }
 
   // Encode and parse.
-  encoded_ += encoder->EncodeBatch(history_.begin(), history_.end());
+  encoded_ += encoder.EncodeBatch(history_.begin(), history_.end());
   ASSERT_TRUE(parsed_log_.ParseString(encoded_).ok());
 
   // For each SSRC, make sure the RTP packets associated with it to have been
@@ -1339,25 +1337,31 @@ TEST_P(RtcEventLogEncoderTest, RtcEventRtcpLossNotification) {
 }
 
 TEST_P(RtcEventLogEncoderTest, RtcEventRtpPacketIncoming) {
-  TestRtpPackets<RtcEventRtpPacketIncoming, LoggedRtpPacketIncoming>();
+  std::unique_ptr<RtcEventLogEncoder> encoder = CreateEncoder();
+  TestRtpPackets<RtcEventRtpPacketIncoming, LoggedRtpPacketIncoming>(*encoder);
 }
 
 TEST_P(RtcEventLogEncoderTest, RtcEventRtpPacketOutgoing) {
-  TestRtpPackets<RtcEventRtpPacketOutgoing, LoggedRtpPacketOutgoing>();
+  std::unique_ptr<RtcEventLogEncoder> encoder = CreateEncoder();
+  TestRtpPackets<RtcEventRtpPacketOutgoing, LoggedRtpPacketOutgoing>(*encoder);
 }
 
 TEST_P(RtcEventLogEncoderTest,
        RtcEventRtpPacketIncomingNoDependencyDescriptor) {
-  test::ScopedFieldTrials no_dd(
+  ExplicitKeyValueConfig no_dd(
       "WebRTC-RtcEventLogEncodeDependencyDescriptor/Disabled/");
-  TestRtpPackets<RtcEventRtpPacketIncoming, LoggedRtpPacketIncoming>();
+  std::unique_ptr<RtcEventLogEncoder> encoder = CreateEncoder(no_dd);
+  verifier_.ExpectDependencyDescriptorExtensionIsSet(false);
+  TestRtpPackets<RtcEventRtpPacketIncoming, LoggedRtpPacketIncoming>(*encoder);
 }
 
 TEST_P(RtcEventLogEncoderTest,
        RtcEventRtpPacketOutgoingNoDependencyDescriptor) {
-  test::ScopedFieldTrials no_dd(
+  ExplicitKeyValueConfig no_dd(
       "WebRTC-RtcEventLogEncodeDependencyDescriptor/Disabled/");
-  TestRtpPackets<RtcEventRtpPacketOutgoing, LoggedRtpPacketOutgoing>();
+  std::unique_ptr<RtcEventLogEncoder> encoder = CreateEncoder(no_dd);
+  verifier_.ExpectDependencyDescriptorExtensionIsSet(false);
+  TestRtpPackets<RtcEventRtpPacketOutgoing, LoggedRtpPacketOutgoing>(*encoder);
 }
 
 // TODO(eladalon/terelius): Test with multiple events in the batch.
