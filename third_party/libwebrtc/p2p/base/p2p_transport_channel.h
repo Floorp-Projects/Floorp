@@ -79,8 +79,6 @@ class RtcEventLog;
 
 namespace cricket {
 
-static const int MIN_PINGS_AT_WEAK_PING_INTERVAL = 3;
-
 bool IceCredentialsChanged(absl::string_view old_ufrag,
                            absl::string_view old_pwd,
                            absl::string_view new_ufrag,
