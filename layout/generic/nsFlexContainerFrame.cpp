@@ -41,10 +41,25 @@ using CachedBAxisMeasurement = nsFlexContainerFrame::CachedBAxisMeasurement;
 using CachedFlexItemData = nsFlexContainerFrame::CachedFlexItemData;
 
 static mozilla::LazyLogModule gFlexContainerLog("FlexContainer");
-#define FLEX_LOG(...) \
-  MOZ_LOG(gFlexContainerLog, LogLevel::Debug, (__VA_ARGS__));
-#define FLEX_LOGV(...) \
-  MOZ_LOG(gFlexContainerLog, LogLevel::Verbose, (__VA_ARGS__));
+
+// FLEX_LOG is a top-level general log print.
+#define FLEX_LOG(message, ...) \
+  MOZ_LOG(gFlexContainerLog, LogLevel::Debug, (message, ##__VA_ARGS__));
+
+// FLEX_ITEM_LOG is a top-level log print for flex item.
+#define FLEX_ITEM_LOG(item_frame, message, ...) \
+  MOZ_LOG(gFlexContainerLog, LogLevel::Debug,   \
+          ("Flex item %p: " message, item_frame, ##__VA_ARGS__));
+
+// FLEX_LOGV is a verbose log print with built-in two spaces indentation. The
+// convention to use FLEX_LOGV is that FLEX_LOGV statements should generally be
+// preceded by one FLEX_LOG or FLEX_ITEM_LOG so that there's no need to repeat
+// information presented in the preceding LOG statement. If you want extra level
+// of indentation, just add two extra spaces at the start of the message string.
+#define FLEX_LOGV(message, ...) \
+  MOZ_LOG(gFlexContainerLog, LogLevel::Verbose, ("  " message, ##__VA_ARGS__));
+
+static const char* BoolToYesNo(bool aArg) { return aArg ? "yes" : "no"; }
 
 // Returns true if aFlexContainer is a frame for some element that has
 // display:-webkit-{inline-}box (or -moz-{inline-}box). aFlexContainer is
@@ -680,9 +695,8 @@ class nsFlexContainerFrame::FlexItem final {
     // to the [min,max] range:
     mMainSize = NS_CSS_MINMAX(mFlexBaseSize, mMainMinSize, mMainMaxSize);
 
-    FLEX_LOGV(
-        "Set flex base size: %d, hypothetical main size: %d for flex item %p",
-        mFlexBaseSize, mMainSize, mFrame);
+    FLEX_ITEM_LOG(mFrame, "Set flex base size: %d, hypothetical main size: %d",
+                  mFlexBaseSize, mMainSize);
   }
 
   // Setters used while we're resolving flexible lengths
@@ -1590,7 +1604,7 @@ static nscoord PartiallyResolveAutoMinSize(
   if (specifiedSizeSuggestion != nscoord_MAX) {
     // We have the specified size suggestion. Return it now since we don't need
     // to consider transferred size suggestion.
-    FLEX_LOGV(" Specified size suggestion: %d", specifiedSizeSuggestion);
+    FLEX_LOGV("Specified size suggestion: %d", specifiedSizeSuggestion);
     return specifiedSizeSuggestion;
   }
 
@@ -1609,7 +1623,7 @@ static nscoord PartiallyResolveAutoMinSize(
     transferredSizeSuggestion = aFlexItem.ClampMainSizeViaCrossAxisConstraints(
         transferredSizeSuggestion, aItemReflowInput);
 
-    FLEX_LOGV(" Transferred size suggestion: %d", transferredSizeSuggestion);
+    FLEX_LOGV("Transferred size suggestion: %d", transferredSizeSuggestion);
     return transferredSizeSuggestion;
   }
 
@@ -1636,8 +1650,10 @@ void nsFlexContainerFrame::ResolveAutoFlexBasisAndMinSize(
     return;
   }
 
-  FLEX_LOGV("Resolving auto main size or auto min main size for flex item %p",
-            aFlexItem.Frame());
+  FLEX_ITEM_LOG(
+      aFlexItem.Frame(),
+      "Resolving auto main size? %s; resolving auto min main size? %s",
+      BoolToYesNo(isMainSizeAuto), BoolToYesNo(isMainMinSizeAuto));
 
   nscoord resolvedMinSize;  // (only set/used if isMainMinSizeAuto==true)
   bool minSizeNeedsToMeasureContent = false;  // assume the best
@@ -1723,7 +1739,7 @@ void nsFlexContainerFrame::ResolveAutoFlexBasisAndMinSize(
             contentSizeSuggestion, aItemReflowInput);
       }
 
-      FLEX_LOGV(" Content size suggestion: %d", contentSizeSuggestion);
+      FLEX_LOGV("Content size suggestion: %d", contentSizeSuggestion);
       resolvedMinSize = std::min(resolvedMinSize, contentSizeSuggestion);
 
       // Clamp the resolved min main size by the max main size if it's definite.
@@ -1737,7 +1753,7 @@ void nsFlexContainerFrame::ResolveAutoFlexBasisAndMinSize(
         // nscoord_MAX sentinel value if we reach this point).
         resolvedMinSize = nscoord_MAX;
       }
-      FLEX_LOGV(" Resolved auto min main size: %d", resolvedMinSize);
+      FLEX_LOGV("Resolved auto min main size: %d", resolvedMinSize);
 
       if (resolvedMinSize == contentSizeSuggestion) {
         // When we are here, we've measured the item's content-based size, and
@@ -1990,12 +2006,16 @@ const CachedBAxisMeasurement& nsFlexContainerFrame::MeasureBSizeForFlexItem(
   if (cachedData && cachedData->mBAxisMeasurement) {
     if (!aItem.Frame()->IsSubtreeDirty() &&
         cachedData->mBAxisMeasurement->IsValidFor(aChildReflowInput)) {
-      FLEX_LOG("[perf] MeasureBSizeForFlexItem accepted cached value");
+      FLEX_ITEM_LOG(aItem.Frame(),
+                    "[perf] Accepted cached measurement: block-size %d",
+                    cachedData->mBAxisMeasurement->BSize());
       return *(cachedData->mBAxisMeasurement);
     }
-    FLEX_LOG("[perf] MeasureBSizeForFlexItem rejected cached value");
+    FLEX_ITEM_LOG(aItem.Frame(),
+                  "[perf] Rejected cached measurement: block-size %d",
+                  cachedData->mBAxisMeasurement->BSize());
   } else {
-    FLEX_LOG("[perf] MeasureBSizeForFlexItem didn't have a cached value");
+    FLEX_ITEM_LOG(aItem.Frame(), "[perf] No cached measurement");
   }
 
   // CachedFlexItemData is stored in item's writing mode, so we pass
@@ -2053,7 +2073,7 @@ void nsFlexContainerFrame::MarkIntrinsicISizesDirty() {
 nscoord nsFlexContainerFrame::MeasureFlexItemContentBSize(
     FlexItem& aFlexItem, bool aForceBResizeForMeasuringReflow,
     const ReflowInput& aParentReflowInput) {
-  FLEX_LOG("Measuring flex item's content block-size");
+  FLEX_ITEM_LOG(aFlexItem.Frame(), "Measuring item's content block-size");
 
   // Set up a reflow input for measuring the flex item's content block-size:
   WritingMode wm = aFlexItem.Frame()->GetWritingMode();
@@ -2068,7 +2088,7 @@ nscoord nsFlexContainerFrame::MeasureFlexItemContentBSize(
     // block-size, because that would prevent us from measuring the content
     // block-size.
     sizeOverrides.mAspectRatio.emplace(AspectRatio());
-    FLEX_LOGV(" Cross size override: %d", aFlexItem.CrossSize());
+    FLEX_LOGV("Cross size override: %d", aFlexItem.CrossSize());
   }
   sizeOverrides.mStyleBSize.emplace(StyleSize::Auto());
 
@@ -2535,18 +2555,17 @@ static bool FrameHasRelativeBSizeDependency(nsIFrame* aFrame) {
 
 bool FlexItem::NeedsFinalReflow(const ReflowInput& aParentReflowInput) const {
   if (!StaticPrefs::layout_flexbox_item_final_reflow_optimization_enabled()) {
-    FLEX_LOG(
-        "[perf] Flex item %p needed a final reflow due to optimization being "
-        "disabled via the preference",
-        mFrame);
+    FLEX_ITEM_LOG(mFrame,
+                  "[perf] Item needed a final reflow due to optimization being "
+                  "disabled via the preference");
     return true;
   }
 
   // NOTE: We can have continuations from an earlier constrained reflow.
   if (mFrame->GetPrevInFlow() || mFrame->GetNextInFlow()) {
     // This is an item has continuation(s). Reflow it.
-    FLEX_LOG("[frag] Flex item %p needed a final reflow due to continuation(s)",
-             mFrame);
+    FLEX_ITEM_LOG(mFrame,
+                  "[frag] Item needed a final reflow due to continuation(s)");
     return true;
   }
 
@@ -2558,10 +2577,9 @@ bool FlexItem::NeedsFinalReflow(const ReflowInput& aParentReflowInput) const {
   // prevent triggering O(n^2) behavior when printing a deeply-nested flex
   // container.
   if (aParentReflowInput.IsInFragmentedContext()) {
-    FLEX_LOG(
-        "[frag] Flex item %p needed both a measuring reflow and a final "
-        "reflow due to being in a fragmented context.",
-        mFrame);
+    FLEX_ITEM_LOG(mFrame,
+                  "[frag] Item needed both a measuring reflow and a final "
+                  "reflow due to being in a fragmented context");
     return true;
   }
 
@@ -2577,10 +2595,9 @@ bool FlexItem::NeedsFinalReflow(const ReflowInput& aParentReflowInput) const {
     if (finalSize != mFrame->ContentSize(mWM)) {
       // The measuring reflow left the item with a different size than its
       // final flexed size. So, we need to reflow to give it the correct size.
-      FLEX_LOG(
-          "[perf] Flex item %p needed both a measuring reflow and a final "
-          "reflow due to measured size disagreeing with final size",
-          mFrame);
+      FLEX_ITEM_LOG(mFrame,
+                    "[perf] Item needed both a measuring reflow and a final "
+                    "reflow due to measured size disagreeing with final size");
       return true;
     }
 
@@ -2588,10 +2605,9 @@ bool FlexItem::NeedsFinalReflow(const ReflowInput& aParentReflowInput) const {
       // This item has descendants with relative BSizes who may care that its
       // size may now be considered "definite" in the final reflow (whereas it
       // was indefinite during the measuring reflow).
-      FLEX_LOG(
-          "[perf] Flex item %p needed both a measuring reflow and a final "
-          "reflow due to BSize potentially becoming definite",
-          mFrame);
+      FLEX_ITEM_LOG(mFrame,
+                    "[perf] Item needed both a measuring reflow and a final "
+                    "reflow due to BSize potentially becoming definite");
       return true;
     }
 
@@ -2619,10 +2635,9 @@ bool FlexItem::NeedsFinalReflow(const ReflowInput& aParentReflowInput) const {
   // definiteness.
   // Let's check for each condition that would still require us to reflow:
   if (mFrame->IsSubtreeDirty()) {
-    FLEX_LOG(
-        "[perf] Flex item %p needed a final reflow due to its subtree "
-        "being dirty",
-        mFrame);
+    FLEX_ITEM_LOG(
+        mFrame,
+        "[perf] Item needed a final reflow due to its subtree being dirty");
     return true;
   }
 
@@ -2632,19 +2647,17 @@ bool FlexItem::NeedsFinalReflow(const ReflowInput& aParentReflowInput) const {
   // Did we cache the metrics from its most recent "final reflow"?
   auto* cache = mFrame->GetProperty(CachedFlexItemData::Prop());
   if (!cache || !cache->mFinalReflowMetrics) {
-    FLEX_LOG(
-        "[perf] Flex item %p needed a final reflow due to lacking a "
-        "cached mFinalReflowMetrics (maybe cache was cleared)",
-        mFrame);
+    FLEX_ITEM_LOG(mFrame,
+                  "[perf] Item needed a final reflow due to lacking a cached "
+                  "mFinalReflowMetrics (maybe cache was cleared)");
     return true;
   }
 
   // Does the cached size match our current size?
   if (cache->mFinalReflowMetrics->Size() != finalSize) {
-    FLEX_LOG(
-        "[perf] Flex item %p needed a final reflow due to having a "
-        "different content box size vs. its most recent final reflow",
-        mFrame);
+    FLEX_ITEM_LOG(mFrame,
+                  "[perf] Item needed a final reflow due to having a different "
+                  "content box size vs. its most recent final reflow");
     return true;
   }
 
@@ -2657,10 +2670,9 @@ bool FlexItem::NeedsFinalReflow(const ReflowInput& aParentReflowInput) const {
   // reflow.
   if (cache->mFinalReflowMetrics->BorderPadding() !=
       BorderPadding().ConvertTo(mWM, mCBWM)) {
-    FLEX_LOG(
-        "[perf] Flex item %p needed a final reflow due to having a "
-        "different border and padding vs. its most recent final reflow",
-        mFrame);
+    FLEX_ITEM_LOG(mFrame,
+                  "[perf] Item needed a final reflow due to having a different "
+                  "border and padding vs. its most recent final reflow");
     return true;
   }
 
@@ -2670,10 +2682,9 @@ bool FlexItem::NeedsFinalReflow(const ReflowInput& aParentReflowInput) const {
   if (cache->mFinalReflowMetrics->TreatBSizeAsIndefinite() !=
           mTreatBSizeAsIndefinite &&
       FrameHasRelativeBSizeDependency(mFrame)) {
-    FLEX_LOG(
-        "[perf] Flex item %p needed a final reflow due to having "
-        "its BSize change definiteness & having a rel-BSize child",
-        mFrame);
+    FLEX_ITEM_LOG(mFrame,
+                  "[perf] Item needed a final reflow due to having its BSize "
+                  "change definiteness & having a rel-BSize child");
     return true;
   }
 
@@ -2681,7 +2692,7 @@ bool FlexItem::NeedsFinalReflow(const ReflowInput& aParentReflowInput) const {
   // dirty, and our current conditions are sufficiently similar to the most
   // recent "final reflow" that it should have left our subtree in the correct
   // state.)
-  FLEX_LOG("[perf] Flex item %p didn't need a final reflow", mFrame);
+  FLEX_ITEM_LOG(mFrame, "[perf] Item didn't need a final reflow");
   return false;
 }
 
@@ -3148,8 +3159,8 @@ void FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize,
       availableFreeSpace -= item.MainSize();
     }
 
-    FLEX_LOG(" available free space: %" PRId64 "; flex items should \"%s\"",
-             availableFreeSpace.value, isUsingFlexGrow ? "grow" : "shrink");
+    FLEX_LOGV("Available free space: %" PRId64 "; flex items should \"%s\"",
+              availableFreeSpace.value, isUsingFlexGrow ? "grow" : "shrink");
 
     // The sign of our free space should agree with the type of flexing
     // (grow/shrink) that we're doing. Any disagreement should've made us use
@@ -3274,7 +3285,7 @@ void FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize,
           }
         }
 
-        FLEX_LOG(" Distributing available space:");
+        FLEX_LOGV("Distributing available space:");
         // Since this loop only operates on unfrozen flex items, we can break as
         // soon as we have seen all of them.
         numUnfrozenItemsToBeSeen = NumItems() - mNumFrozenItems;
@@ -3321,8 +3332,8 @@ void FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize,
 
             item.SetMainSize(item.MainSize() +
                              nscoord(sizeDelta.ToMinMaxClamped()));
-            FLEX_LOG("  flex item %p receives %" PRId64 ", for a total of %d",
-                     item.Frame(), sizeDelta.value, item.MainSize());
+            FLEX_LOGV("  Flex item %p receives %" PRId64 ", for a total of %d",
+                      item.Frame(), sizeDelta.value, item.MainSize());
           }
         }
 
@@ -3358,7 +3369,7 @@ void FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize,
 
     // Fix min/max violations:
     nscoord totalViolation = 0;  // keeps track of adjustments for min/max
-    FLEX_LOG(" Checking for violations:");
+    FLEX_LOGV("Checking for violations:");
 
     // Since this loop only operates on unfrozen flex items, we can break as
     // soon as we have seen all of them.
@@ -3390,7 +3401,7 @@ void FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize,
     FreezeOrRestoreEachFlexibleSize(totalViolation,
                                     iterationCounter + 1 == NumItems());
 
-    FLEX_LOG(" Total violation: %d", totalViolation);
+    FLEX_LOGV("Total violation: %d", totalViolation);
 
     if (mNumFrozenItems == NumItems()) {
       break;
@@ -4565,7 +4576,7 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
       "Unconstrained inline size; this should only result from huge sizes "
       "(not intrinsic sizing w/ orthogonal flows)");
 
-  FLEX_LOG("Reflow() for nsFlexContainerFrame %p", this);
+  FLEX_LOG("Reflowing flex container frame %p ...", this);
 
   if (IsFrameTreeTooDeep(aReflowInput, aReflowOutput, aStatus)) {
     return;
@@ -5273,8 +5284,8 @@ nsFlexContainerFrame::FlexLayoutResult nsFlexContainerFrame::DoFlexLayout(
         } else {
           sizeOverrides.mStyleBSize.emplace(item.StyleMainSize());
         }
-        FLEX_LOG("Sizing flex item %p in cross axis", item.Frame());
-        FLEX_LOGV(" Main size override: %d", item.MainSize());
+        FLEX_ITEM_LOG(item.Frame(), "Sizing item in cross axis");
+        FLEX_LOGV("Main size override: %d", item.MainSize());
 
         const WritingMode wm = item.GetWritingMode();
         LogicalSize availSize = aReflowInput.ComputedSize(wm);
@@ -5637,10 +5648,10 @@ std::tuple<nscoord, nsReflowStatus> nsFlexContainerFrame::ReflowChildren(
         // block-size and add it to
         // PerFragmentFlexData::mCumulativeContentBoxBSize even if we are not
         // laying out any child.
-        FLEX_LOG(
-            "[frag] Flex item %p needed to be pushed to container's "
-            "next-in-flow due to position below available space's block-end",
-            item.Frame());
+        FLEX_ITEM_LOG(
+            item.Frame(),
+            "[frag] Item needed to be pushed to container's next-in-flow due "
+            "to being positioned beyond block-end edge of available space");
         pushedItems.Insert(item.Frame());
         itemInPushedItems = true;
       } else if (item.NeedsFinalReflow(aReflowInput)) {
@@ -5677,11 +5688,10 @@ std::tuple<nscoord, nsReflowStatus> nsFlexContainerFrame::ReflowChildren(
           return true;
         }();
         if (shouldPushItem) {
-          FLEX_LOG(
-              "[frag] Flex item %p needed to be pushed to container's "
-              "next-in-flow because its block-size is larger than the "
-              "available space",
-              item.Frame());
+          FLEX_ITEM_LOG(
+              item.Frame(),
+              "[frag] Item needed to be pushed to container's next-in-flow "
+              "because its block-size is larger than the available space");
           pushedItems.Insert(item.Frame());
           itemInPushedItems = true;
         } else if (childReflowStatus.IsIncomplete()) {
@@ -6047,8 +6057,8 @@ void nsFlexContainerFrame::MoveFlexItemToFinalPosition(
                                           logicalOffsets, &pos, aContainerSize);
   }
 
-  FLEX_LOG("Moving flex item %p to its desired position %s", aItem.Frame(),
-           ToString(pos).c_str());
+  FLEX_ITEM_LOG(aItem.Frame(), "Moving item to its desired position %s",
+                ToString(pos).c_str());
   aItem.Frame()->SetPosition(outerWM, pos, aContainerSize);
   PositionFrameView(aItem.Frame());
   PositionChildViews(aItem.Frame());
@@ -6058,7 +6068,7 @@ nsReflowStatus nsFlexContainerFrame::ReflowFlexItem(
     const FlexboxAxisTracker& aAxisTracker, const ReflowInput& aReflowInput,
     const FlexItem& aItem, const LogicalPoint& aFramePos,
     const LogicalSize& aAvailableSize, const nsSize& aContainerSize) {
-  FLEX_LOG("Doing final reflow for flex item %p", aItem.Frame());
+  FLEX_ITEM_LOG(aItem.Frame(), "Doing final reflow");
 
   // Returns true if we should use 'auto' in block axis's StyleSizeOverrides to
   // allow fragmentation-imposed block-size growth.
@@ -6128,15 +6138,15 @@ nsReflowStatus nsFlexContainerFrame::ReflowFlexItem(
   // Override flex item's main size.
   if (aItem.IsInlineAxisMainAxis()) {
     sizeOverrides.mStyleISize.emplace(aItem.StyleMainSize());
-    FLEX_LOGV(" Main size (inline-size) override: %d", aItem.MainSize());
+    FLEX_LOGV("Main size (inline-size) override: %d", aItem.MainSize());
   } else {
     overrideBSizeWithAuto = ComputeBSizeOverrideWithAuto();
     if (overrideBSizeWithAuto) {
       sizeOverrides.mStyleBSize.emplace(StyleSize::Auto());
-      FLEX_LOGV(" Main size (block-size) override: Auto");
+      FLEX_LOGV("Main size (block-size) override: Auto");
     } else {
       sizeOverrides.mStyleBSize.emplace(aItem.StyleMainSize());
-      FLEX_LOGV(" Main size (block-size) override: %d", aItem.MainSize());
+      FLEX_LOGV("Main size (block-size) override: %d", aItem.MainSize());
     }
   }
 
@@ -6145,15 +6155,15 @@ nsReflowStatus nsFlexContainerFrame::ReflowFlexItem(
   if (aItem.IsStretched()) {
     if (aItem.IsInlineAxisCrossAxis()) {
       sizeOverrides.mStyleISize.emplace(aItem.StyleCrossSize());
-      FLEX_LOGV(" Cross size (inline-size) override: %d", aItem.CrossSize());
+      FLEX_LOGV("Cross size (inline-size) override: %d", aItem.CrossSize());
     } else {
       overrideBSizeWithAuto = ComputeBSizeOverrideWithAuto();
       if (overrideBSizeWithAuto) {
         sizeOverrides.mStyleBSize.emplace(StyleSize::Auto());
-        FLEX_LOGV(" Cross size (block-size) override: Auto");
+        FLEX_LOGV("Cross size (block-size) override: Auto");
       } else {
         sizeOverrides.mStyleBSize.emplace(aItem.StyleCrossSize());
-        FLEX_LOGV(" Cross size (block-size) override: %d", aItem.CrossSize());
+        FLEX_LOGV("Cross size (block-size) override: %d", aItem.CrossSize());
       }
     }
   }
@@ -6200,8 +6210,8 @@ nsReflowStatus nsFlexContainerFrame::ReflowFlexItem(
   // after this point, because some of its methods (e.g. SetComputedWidth)
   // internally call InitResizeFlags and stomp on mVResize & mHResize.
 
-  FLEX_LOG("Reflowing flex item %p at its desired position %s", aItem.Frame(),
-           ToString(aFramePos).c_str());
+  FLEX_ITEM_LOG(aItem.Frame(), "Reflowing item at its desired position %s",
+                ToString(aFramePos).c_str());
 
   // CachedFlexItemData is stored in item's writing mode, so we pass
   // aChildReflowInput into ReflowOutput's constructor.
