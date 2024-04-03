@@ -113,8 +113,6 @@ unsafe impl Send for CascadeDataCacheKey {}
 unsafe impl Sync for CascadeDataCacheKey {}
 
 trait CascadeDataCacheEntry: Sized {
-    /// Returns a reference to the cascade data.
-    fn cascade_data(&self) -> &CascadeData;
     /// Rebuilds the cascade data for the new stylesheet collection. The
     /// collection is guaranteed to be dirty.
     fn rebuild<S>(
@@ -269,10 +267,6 @@ lazy_static! {
 }
 
 impl CascadeDataCacheEntry for UserAgentCascadeData {
-    fn cascade_data(&self) -> &CascadeData {
-        &self.cascade_data
-    }
-
     fn rebuild<S>(
         device: &Device,
         quirks_mode: QuirksMode,
@@ -3368,10 +3362,6 @@ impl CascadeData {
 }
 
 impl CascadeDataCacheEntry for CascadeData {
-    fn cascade_data(&self) -> &CascadeData {
-        self
-    }
-
     fn rebuild<S>(
         device: &Device,
         quirks_mode: QuirksMode,
