@@ -270,14 +270,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
     }
 
     private fun initTranslationsAction(context: Context, view: View) {
-        val isEngineSupported =
-            context.components.core.store.state.translationEngine.isEngineSupported
-
-        if (isEngineSupported == true) {
-            FxNimbus.features.translations.recordExposure()
-        }
-
-        if (isEngineSupported != true ||
+        if (
             !FxNimbus.features.translations.value().mainFlowToolbarEnabled
         ) {
             return

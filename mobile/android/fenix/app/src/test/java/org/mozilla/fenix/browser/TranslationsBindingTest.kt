@@ -7,6 +7,7 @@ package org.mozilla.fenix.browser
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.state.action.TranslationsAction
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.TranslationsBrowserState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.translate.DetectedLanguages
@@ -52,6 +53,7 @@ class TranslationsBindingTest {
                 BrowserState(
                     tabs = listOf(tab),
                     selectedTabId = tabId,
+                    translationEngine = TranslationsBrowserState(isEngineSupported = true),
                 ),
             )
 
@@ -118,6 +120,7 @@ class TranslationsBindingTest {
                 BrowserState(
                     tabs = listOf(tab),
                     selectedTabId = tabId,
+                    translationEngine = TranslationsBrowserState(isEngineSupported = true),
                 ),
             )
 
@@ -174,6 +177,7 @@ class TranslationsBindingTest {
                 BrowserState(
                     tabs = listOf(tab),
                     selectedTabId = tabId,
+                    translationEngine = TranslationsBrowserState(isEngineSupported = true),
                 ),
             )
 
