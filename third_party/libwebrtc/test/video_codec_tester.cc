@@ -772,10 +772,12 @@ class VideoCodecAnalyzer : public VideoCodecTester::VideoCodecStats {
 
 class Decoder : public DecodedImageCallback {
  public:
-  Decoder(VideoDecoderFactory* decoder_factory,
+  Decoder(const Environment& env,
+          VideoDecoderFactory* decoder_factory,
           const DecoderSettings& decoder_settings,
           VideoCodecAnalyzer* analyzer)
-      : decoder_factory_(decoder_factory),
+      : env_(env),
+        decoder_factory_(decoder_factory),
         analyzer_(analyzer),
         pacer_(decoder_settings.pacing_settings) {
     RTC_CHECK(analyzer_) << "Analyzer must be provided";
@@ -792,7 +794,7 @@ class Decoder : public DecodedImageCallback {
   }
 
   void Initialize(const SdpVideoFormat& sdp_video_format) {
-    decoder_ = decoder_factory_->CreateVideoDecoder(sdp_video_format);
+    decoder_ = decoder_factory_->Create(env_, sdp_video_format);
     RTC_CHECK(decoder_) << "Could not create decoder for video format "
                         << sdp_video_format.ToString();
 
@@ -863,6 +865,7 @@ class Decoder : public DecodedImageCallback {
     return WEBRTC_VIDEO_CODEC_OK;
   }
 
+  const Environment env_;
   VideoDecoderFactory* decoder_factory_;
   std::unique_ptr<VideoDecoder> decoder_;
   VideoCodecAnalyzer* const analyzer_;
@@ -1476,13 +1479,14 @@ std::map<uint32_t, EncodingSettings> VideoCodecTester::CreateEncodingSettings(
 }
 
 std::unique_ptr<VideoCodecTester::VideoCodecStats>
-VideoCodecTester::RunDecodeTest(CodedVideoSource* video_source,
+VideoCodecTester::RunDecodeTest(const Environment& env,
+                                CodedVideoSource* video_source,
                                 VideoDecoderFactory* decoder_factory,
                                 const DecoderSettings& decoder_settings,
                                 const SdpVideoFormat& sdp_video_format) {
   std::unique_ptr<VideoCodecAnalyzer> analyzer =
       std::make_unique<VideoCodecAnalyzer>(/*video_source=*/nullptr);
-  Decoder decoder(decoder_factory, decoder_settings, analyzer.get());
+  Decoder decoder(env, decoder_factory, decoder_settings, analyzer.get());
   decoder.Initialize(sdp_video_format);
 
   while (auto frame = video_source->PullFrame()) {
@@ -1522,6 +1526,7 @@ VideoCodecTester::RunEncodeTest(
 
 std::unique_ptr<VideoCodecTester::VideoCodecStats>
 VideoCodecTester::RunEncodeDecodeTest(
+    const Environment& env,
     const VideoSourceSettings& source_settings,
     VideoEncoderFactory* encoder_factory,
     VideoDecoderFactory* decoder_factory,
@@ -1539,8 +1544,8 @@ VideoCodecTester::RunEncodeDecodeTest(
       ScalabilityModeToNumSpatialLayers(frame_settings.scalability_mode);
   std::vector<std::unique_ptr<Decoder>> decoders;
   for (int sidx = 0; sidx < num_spatial_layers; ++sidx) {
-    auto decoder = std::make_unique<Decoder>(decoder_factory, decoder_settings,
-                                             analyzer.get());
+    auto decoder = std::make_unique<Decoder>(env, decoder_factory,
+                                             decoder_settings, analyzer.get());
     decoder->Initialize(frame_settings.sdp_video_format);
     decoders.push_back(std::move(decoder));
   }

@@ -17,6 +17,8 @@
 #include <utility>
 #include <vector>
 
+#include "api/environment/environment.h"
+#include "api/environment/environment_factory.h"
 #include "api/test/mock_video_decoder.h"
 #include "api/test/mock_video_decoder_factory.h"
 #include "api/test/mock_video_encoder.h"
@@ -44,13 +46,12 @@ namespace {
 using ::testing::_;
 using ::testing::ElementsAre;
 using ::testing::Field;
-using ::testing::Invoke;
-using ::testing::InvokeWithoutArgs;
 using ::testing::NiceMock;
 using ::testing::Return;
 using ::testing::SizeIs;
 using ::testing::UnorderedElementsAreArray;
 using ::testing::Values;
+using ::testing::WithoutArgs;
 
 using VideoCodecStats = VideoCodecTester::VideoCodecStats;
 using VideoSourceSettings = VideoCodecTester::VideoSourceSettings;
@@ -200,30 +201,27 @@ class VideoCodecTesterTest : public ::testing::Test {
         });
 
     NiceMock<MockVideoDecoderFactory> decoder_factory;
-    ON_CALL(decoder_factory, CreateVideoDecoder)
-        .WillByDefault([&](const SdpVideoFormat&) {
-          // Video codec tester destroyes decoder at the end of test. Test
-          // decoder collects stats which we need to access after test. To keep
-          // the decode alive we wrap it into a wrapper and pass the wrapper to
-          // the tester.
-          class DecoderWrapper : public TestVideoDecoder {
-           public:
-            explicit DecoderWrapper(TestVideoDecoder* decoder)
-                : decoder_(decoder) {}
-            int32_t Decode(const EncodedImage& encoded_frame,
-                           int64_t render_time_ms) {
-              return decoder_->Decode(encoded_frame, render_time_ms);
-            }
-            int32_t RegisterDecodeCompleteCallback(
-                DecodedImageCallback* callback) {
-              return decoder_->RegisterDecodeCompleteCallback(callback);
-            }
-            TestVideoDecoder* decoder_;
-          };
-          decoders_.push_back(std::make_unique<NiceMock<TestVideoDecoder>>());
-          return std::make_unique<NiceMock<DecoderWrapper>>(
-              decoders_.back().get());
-        });
+    ON_CALL(decoder_factory, Create).WillByDefault(WithoutArgs([&] {
+      // Video codec tester destroyes decoder at the end of test. Test
+      // decoder collects stats which we need to access after test. To keep
+      // the decode alive we wrap it into a wrapper and pass the wrapper to
+      // the tester.
+      class DecoderWrapper : public TestVideoDecoder {
+       public:
+        explicit DecoderWrapper(TestVideoDecoder* decoder)
+            : decoder_(decoder) {}
+        int32_t Decode(const EncodedImage& encoded_frame,
+                       int64_t render_time_ms) {
+          return decoder_->Decode(encoded_frame, render_time_ms);
+        }
+        int32_t RegisterDecodeCompleteCallback(DecodedImageCallback* callback) {
+          return decoder_->RegisterDecodeCompleteCallback(callback);
+        }
+        TestVideoDecoder* decoder_;
+      };
+      decoders_.push_back(std::make_unique<NiceMock<TestVideoDecoder>>());
+      return std::make_unique<NiceMock<DecoderWrapper>>(decoders_.back().get());
+    }));
 
     int num_spatial_layers =
         ScalabilityModeToNumSpatialLayers(scalability_mode);
@@ -252,7 +250,7 @@ class VideoCodecTesterTest : public ::testing::Test {
 
     std::unique_ptr<VideoCodecStats> stats =
         VideoCodecTester::RunEncodeDecodeTest(
-            video_source_settings, &encoder_factory, &decoder_factory,
+            env_, video_source_settings, &encoder_factory, &decoder_factory,
             EncoderSettings{}, DecoderSettings{}, encoding_settings);
 
     remove(yuv_path.c_str());
@@ -260,6 +258,7 @@ class VideoCodecTesterTest : public ::testing::Test {
   }
 
  protected:
+  const Environment env_ = CreateEnvironment();
   std::vector<std::unique_ptr<TestVideoDecoder>> decoders_;
 };
 
@@ -605,6 +604,7 @@ class VideoCodecTesterTestPacing
   void TearDown() override { remove(source_yuv_file_path_.c_str()); }
 
  protected:
+  const Environment env_ = CreateEnvironment();
   std::string source_yuv_file_path_;
 };
 
@@ -644,15 +644,14 @@ TEST_P(VideoCodecTesterTestPacing, PaceDecode) {
   MockCodedVideoSource video_source(kNumFrames, kTargetFramerate);
 
   NiceMock<MockVideoDecoderFactory> decoder_factory;
-  ON_CALL(decoder_factory, CreateVideoDecoder(_))
-      .WillByDefault([](const SdpVideoFormat&) {
-        return std::make_unique<NiceMock<MockVideoDecoder>>();
-      });
+  ON_CALL(decoder_factory, Create).WillByDefault(WithoutArgs([] {
+    return std::make_unique<NiceMock<MockVideoDecoder>>();
+  }));
 
   DecoderSettings decoder_settings;
   decoder_settings.pacing_settings = pacing_settings;
   std::vector<Frame> frames =
-      VideoCodecTester::RunDecodeTest(&video_source, &decoder_factory,
+      VideoCodecTester::RunDecodeTest(env_, &video_source, &decoder_factory,
                                       decoder_settings, SdpVideoFormat("VP8"))
           ->Slice(/*filter=*/{}, /*merge=*/false);
   ASSERT_THAT(frames, SizeIs(kNumFrames));
