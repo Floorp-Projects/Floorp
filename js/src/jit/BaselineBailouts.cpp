@@ -517,7 +517,12 @@ void BaselineStackBuilder::setNextCallee(
     //
     // Also use the callee's own ICScript if we purged callee ICScripts.
     icScript_ = nextCallee->nonLazyScript()->jitScript()->icScript();
+
     if (trialInliningState != TrialInliningState::MonomorphicInlined) {
+      // Don't use specialized ICScripts for any of the callees if we had an
+      // inlining failure. We're now using the generic ICScript but compilation
+      // might have used the trial-inlined ICScript and these can have very
+      // different inlining graphs.
       canUseTrialInlinedICScripts_ = false;
     }
   }
