@@ -200,8 +200,6 @@ skip-if = [
   "http2",
 ]
 
-["test_bug871887.html"]
-
 ["test_bug912322.html"]
 
 ["test_bug916945.html"]
