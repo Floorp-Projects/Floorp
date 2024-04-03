@@ -441,14 +441,8 @@ void JSActor::QueryHandler::ResolvedCallback(JSContext* aCx,
     return;
   }
 
-  Maybe<ipc::StructuredCloneData> data{std::in_place};
-  data->InitScope(JS::StructuredCloneScope::DifferentProcess);
-
-  IgnoredErrorResult error;
-  data->Write(aCx, aValue, error);
-  if (NS_WARN_IF(error.Failed())) {
-    JS_ClearPendingException(aCx);
-
+  Maybe<ipc::StructuredCloneData> data = TryClone(aCx, aValue);
+  if (!data) {
     nsAutoCString msg;
     msg.Append(mActor->Name());
     msg.Append(':');
