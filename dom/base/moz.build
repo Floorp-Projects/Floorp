@@ -194,7 +194,6 @@ EXPORTS.mozilla.dom += [
     "External.h",
     "FilteredNodeIterator.h",
     "FormData.h",
-    "FragmentDirective.h",
     "FragmentOrElement.h",
     "FromParser.h",
     "GeneratedImageContent.h",
@@ -298,7 +297,6 @@ if CONFIG["FUZZING"]:
 
 if CONFIG["COMPILE_ENVIRONMENT"]:
     EXPORTS.mozilla.dom += [
-        "!fragmentdirectives_ffi_generated.h",
         "!GeneratedElementDocumentState.h",
         "RustTypes.h",
     ]
@@ -306,11 +304,6 @@ if CONFIG["COMPILE_ENVIRONMENT"]:
     CbindgenHeader(
         "GeneratedElementDocumentState.h",
         inputs=["rust"],
-    )
-
-    CbindgenHeader(
-        "fragmentdirectives_ffi_generated.h",
-        inputs=["fragmentdirectives"],
     )
 
 UNIFIED_SOURCES += [
@@ -357,7 +350,6 @@ UNIFIED_SOURCES += [
     "EventSourceEventService.cpp",
     "External.cpp",
     "FormData.cpp",
-    "FragmentDirective.cpp",
     "FragmentOrElement.cpp",
     "GeneratedImageContent.cpp",
     "GlobalTeardownObserver.cpp",
