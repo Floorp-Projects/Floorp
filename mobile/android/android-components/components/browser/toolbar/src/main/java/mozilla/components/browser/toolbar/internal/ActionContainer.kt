@@ -59,7 +59,6 @@ internal class ActionContainer @JvmOverloads constructor(
         }
 
         actions.add(wrapper)
-        actions.sortBy { it.actual.weight() }
     }
 
     /**
@@ -95,7 +94,6 @@ internal class ActionContainer @JvmOverloads constructor(
 
     fun invalidateActions() {
         TransitionManager.beginDelayedTransition(this)
-        actions.sortBy { it.actual.weight() }
         var updatedVisibility = View.GONE
 
         for (action in actions) {
@@ -120,17 +118,6 @@ internal class ActionContainer @JvmOverloads constructor(
         }
 
         visibility = updatedVisibility
-        reevaluateAndReorderActions()
-    }
-
-    private fun reevaluateAndReorderActions() {
-        // Remove all views and re-add them based on current visibility states and weights
-        removeAllViews()
-        actions.filter { it.actual.visible() }
-            .sortedBy { it.actual.weight() }
-            .forEach { action ->
-                addView(action.view)
-            }
     }
 
     fun autoHideAction(isVisible: Boolean) {
