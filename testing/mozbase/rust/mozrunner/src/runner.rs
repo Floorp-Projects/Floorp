@@ -381,7 +381,6 @@ pub mod platform {
 #[cfg(target_os = "macos")]
 pub mod platform {
     use crate::path::{find_binary, is_app_bundle, is_binary};
-    use dirs;
     use plist::Value;
     use std::path::PathBuf;
 
