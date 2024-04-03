@@ -10,12 +10,15 @@
 
 #import "RTCRtpTransceiver+Private.h"
 
+#import "RTCRtpCodecCapability+Private.h"
 #import "RTCRtpEncodingParameters+Private.h"
 #import "RTCRtpParameters+Private.h"
 #import "RTCRtpReceiver+Private.h"
 #import "RTCRtpSender+Private.h"
 #import "base/RTCLogging.h"
 #import "helpers/NSString+StdString.h"
+
+#include "api/rtp_parameters.h"
 
 NSString *const kRTCRtpTransceiverErrorDomain = @"org.webrtc.RTCRtpTranceiver";
 
@@ -103,6 +106,14 @@ NSString *const kRTCRtpTransceiverErrorDomain = @"org.webrtc.RTCRtpTranceiver";
 
 - (void)stopInternal {
   _nativeRtpTransceiver->StopInternal();
+}
+
+- (void)setCodecPreferences:(NSArray<RTC_OBJC_TYPE(RTCRtpCodecCapability) *> *)codecs {
+  std::vector<webrtc::RtpCodecCapability> codecCapabilities;
+  for (RTC_OBJC_TYPE(RTCRtpCodecCapability) * rtpCodecCapability in codecs) {
+    codecCapabilities.push_back(rtpCodecCapability.nativeRtpCodecCapability);
+  }
+  _nativeRtpTransceiver->SetCodecPreferences(codecCapabilities);
 }
 
 - (NSString *)description {
