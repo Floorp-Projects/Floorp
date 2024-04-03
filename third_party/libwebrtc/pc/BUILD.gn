@@ -970,6 +970,7 @@ rtc_source_set("rtc_stats_traversal") {
     "../api:scoped_refptr",
     "../rtc_base:checks",
   ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
 rtc_source_set("sdp_offer_answer") {
