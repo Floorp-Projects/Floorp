@@ -1,73 +1,67 @@
 From: Michael Froman <mjfroman@mac.com>
-Date: Thu, 19 May 2022 15:32:32 -0500
-Subject: Bug 1772380 - Build 1766646 - (fix-c89fdd716c) fixes for the
- refactored PlatformThread API;r?mjf
+Date: Thu, 28 Apr 2022 10:53:43 -0500
+Subject: Bug 1766646 - (fix-a0bb2ef2dc) add back VideoType enum values
 
 ---
- .../video_capture/linux/device_info_v4l2.cc   | 20 ++++++-------------
- .../video_capture/linux/device_info_v4l2.h    |  3 +--
- 2 files changed, 7 insertions(+), 16 deletions(-)
+ common_video/libyuv/include/webrtc_libyuv.h | 3 +++
+ common_video/libyuv/webrtc_libyuv.cc        | 9 +++++++++
+ 2 files changed, 12 insertions(+)
 
-diff --git a/modules/video_capture/linux/device_info_v4l2.cc b/modules/video_capture/linux/device_info_v4l2.cc
-index c5d33ff9a4..04caaea592 100644
---- a/modules/video_capture/linux/device_info_v4l2.cc
-+++ b/modules/video_capture/linux/device_info_v4l2.cc
-@@ -151,11 +151,6 @@ int DeviceInfoV4l2::ProcessInotifyEvents()
-     return 0;
- }
- 
--void DeviceInfoV4l2::InotifyEventThread(void* obj)
--{
--    static_cast<DeviceInfoLinux*> (obj)->InotifyProcess();
--}
--
- void DeviceInfoV4l2::InotifyProcess()
- {
-     _fd_v4l = inotify_init();
-@@ -181,16 +176,14 @@ void DeviceInfoV4l2::InotifyProcess()
- 
- DeviceInfoV4l2::DeviceInfoV4l2() : DeviceInfoImpl()
- #ifdef WEBRTC_LINUX
--    , _inotifyEventThread(new rtc::PlatformThread(
--                            InotifyEventThread, this, "InotifyEventThread"))
-     , _isShutdown(false)
- #endif
- {
- #ifdef WEBRTC_LINUX
--    if (_inotifyEventThread)
--    {
--        _inotifyEventThread->Start();
--    }
-+  _inotifyEventThread = rtc::PlatformThread::SpawnJoinable(
-+      [this] {
-+        InotifyProcess();
-+      }, "InotifyEventThread");
- #endif
- }
- 
-@@ -202,9 +195,8 @@ DeviceInfoV4l2::~DeviceInfoV4l2() {
- #ifdef WEBRTC_LINUX
-     _isShutdown = true;
- 
--    if (_inotifyEventThread) {
--        _inotifyEventThread->Stop();
--        _inotifyEventThread = nullptr;
-+    if (!_inotifyEventThread.empty()) {
-+      _inotifyEventThread.Finalize();
+diff --git a/common_video/libyuv/include/webrtc_libyuv.h b/common_video/libyuv/include/webrtc_libyuv.h
+index 68831c70ab..253a33294d 100644
+--- a/common_video/libyuv/include/webrtc_libyuv.h
++++ b/common_video/libyuv/include/webrtc_libyuv.h
+@@ -35,11 +35,14 @@ enum class VideoType {
+   kBGR24,
+   kARGB,
+   kABGR,
++  kARGB4444,
+   kRGB565,
++  kARGB1555,
+   kYUY2,
+   kYV12,
+   kUYVY,
+   kMJPEG,
++  kNV21,
+   kBGRA,
+   kNV12,
+ };
+diff --git a/common_video/libyuv/webrtc_libyuv.cc b/common_video/libyuv/webrtc_libyuv.cc
+index 31ba1feca3..05a4b184c2 100644
+--- a/common_video/libyuv/webrtc_libyuv.cc
++++ b/common_video/libyuv/webrtc_libyuv.cc
+@@ -24,6 +24,7 @@ size_t CalcBufferSize(VideoType type, int width, int height) {
+   RTC_DCHECK_GE(height, 0);
+   switch (type) {
+     case VideoType::kI420:
++    case VideoType::kNV21:
+     case VideoType::kIYUV:
+     case VideoType::kYV12:
+     case VideoType::kNV12: {
+@@ -31,7 +32,9 @@ size_t CalcBufferSize(VideoType type, int width, int height) {
+       int half_height = (height + 1) >> 1;
+       return width * height + half_width * half_height * 2;
      }
- #endif
- }
-diff --git a/modules/video_capture/linux/device_info_v4l2.h b/modules/video_capture/linux/device_info_v4l2.h
-index 119cb07ab8..0bec3eb765 100644
---- a/modules/video_capture/linux/device_info_v4l2.h
-+++ b/modules/video_capture/linux/device_info_v4l2.h
-@@ -60,8 +60,7 @@ class DeviceInfoV4l2 : public DeviceInfoImpl {
-   int EventCheck(int fd);
-   int HandleEvents(int fd);
-   int ProcessInotifyEvents();
--  std::unique_ptr<rtc::PlatformThread> _inotifyEventThread;
--  static void InotifyEventThread(void*);
-+  rtc::PlatformThread _inotifyEventThread;
-   void InotifyProcess();
-   int _fd_v4l, _fd_dev, _wd_v4l, _wd_dev; /* accessed on InotifyEventThread thread */
-   std::atomic<bool> _isShutdown;
++    case VideoType::kARGB4444:
+     case VideoType::kRGB565:
++    case VideoType::kARGB1555:
+     case VideoType::kYUY2:
+     case VideoType::kUYVY:
+       return width * height * 2;
+@@ -104,10 +107,16 @@ int ConvertVideoType(VideoType video_type) {
+       return libyuv::FOURCC_UYVY;
+     case VideoType::kMJPEG:
+       return libyuv::FOURCC_MJPG;
++    case VideoType::kNV21:
++      return libyuv::FOURCC_NV21;
+     case VideoType::kARGB:
+       return libyuv::FOURCC_ARGB;
+     case VideoType::kBGRA:
+       return libyuv::FOURCC_BGRA;
++    case VideoType::kARGB4444:
++      return libyuv::FOURCC_R444;
++    case VideoType::kARGB1555:
++      return libyuv::FOURCC_RGBO;
+     case VideoType::kNV12:
+       return libyuv::FOURCC_NV12;
+   }
