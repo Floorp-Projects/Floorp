@@ -522,7 +522,7 @@ index 9c2fad652f..f9e49db574 100644
  #include "call/audio_sender.h"
  #include "call/rtp_config.h"
 diff --git a/call/video_send_stream.h b/call/video_send_stream.h
-index c305d60bcc..2b4ea5b66a 100644
+index 2c3fe55f8d..ca900823c8 100644
 --- a/call/video_send_stream.h
 +++ b/call/video_send_stream.h
 @@ -23,7 +23,7 @@
