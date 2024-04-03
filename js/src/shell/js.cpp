@@ -5456,7 +5456,7 @@ static bool ModuleLink(JSContext* cx, unsigned argc, Value* vp) {
 
   Rooted<ModuleObject*> module(cx,
                                object->as<ShellModuleObjectWrapper>().get());
-  if (!js::ModuleLink(cx, module)) {
+  if (!JS::ModuleLink(cx, module)) {
     return false;
   }
 
@@ -5485,7 +5485,7 @@ static bool ModuleEvaluate(JSContext* cx, unsigned argc, Value* vp) {
 
     Rooted<ModuleObject*> module(cx,
                                  object->as<ShellModuleObjectWrapper>().get());
-    if (!js::ModuleEvaluate(cx, module, args.rval())) {
+    if (!JS::ModuleEvaluate(cx, module, args.rval())) {
       return false;
     }
   }

@@ -9,6 +9,7 @@
 #include "vm/Modules.h"
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
+#include "mozilla/ScopeExit.h"
 #include "mozilla/Utf8.h"        // mozilla::Utf8Unit
 
 #include <stdint.h>  // uint32_t
@@ -41,6 +42,12 @@
 using namespace js;
 
 using mozilla::Utf8Unit;
+
+static bool ModuleLink(JSContext* cx, Handle<ModuleObject*> module);
+static bool ModuleEvaluate(JSContext* cx, Handle<ModuleObject*> module,
+                           MutableHandle<Value> result);
+static bool SyntheticModuleEvaluate(JSContext* cx, Handle<ModuleObject*> module,
+                                    MutableHandle<Value> result);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Public API
@@ -184,7 +191,7 @@ JS_PUBLIC_API bool JS::ModuleLink(JSContext* cx, Handle<JSObject*> moduleArg) {
   CHECK_THREAD(cx);
   cx->releaseCheck(moduleArg);
 
-  return js::ModuleLink(cx, moduleArg.as<ModuleObject>());
+  return ::ModuleLink(cx, moduleArg.as<ModuleObject>());
 }
 
 JS_PUBLIC_API bool JS::ModuleEvaluate(JSContext* cx,
@@ -198,7 +205,7 @@ JS_PUBLIC_API bool JS::ModuleEvaluate(JSContext* cx,
     return SyntheticModuleEvaluate(cx, moduleRecord.as<ModuleObject>(), rval);
   }
 
-  return js::ModuleEvaluate(cx, moduleRecord.as<ModuleObject>(), rval);
+  return ::ModuleEvaluate(cx, moduleRecord.as<ModuleObject>(), rval);
 }
 
 JS_PUBLIC_API bool JS::ThrowOnModuleEvaluationFailure(
@@ -361,11 +368,12 @@ static ModuleObject* HostResolveImportedModule(
     JSContext* cx, Handle<ModuleObject*> module,
     Handle<ModuleRequestObject*> moduleRequest,
     ModuleStatus expectedMinimumStatus);
-static bool ModuleResolveExport(JSContext* cx, Handle<ModuleObject*> module,
-                                Handle<JSAtom*> exportName,
-                                MutableHandle<ResolveSet> resolveSet,
-                                MutableHandle<Value> result,
-                                ModuleErrorInfo* errorInfoOut = nullptr);
+static bool CyclicModuleResolveExport(JSContext* cx,
+                                      Handle<ModuleObject*> module,
+                                      Handle<JSAtom*> exportName,
+                                      MutableHandle<ResolveSet> resolveSet,
+                                      MutableHandle<Value> result,
+                                      ModuleErrorInfo* errorInfoOut = nullptr);
 static bool SyntheticModuleResolveExport(JSContext* cx,
                                          Handle<ModuleObject*> module,
                                          Handle<JSAtom*> exportName,
@@ -582,20 +590,20 @@ static ModuleObject* HostResolveImportedModule(
 //  - If the request is found to be ambiguous, the string `"ambiguous"` is
 //    returned.
 //
-bool js::ModuleResolveExport(JSContext* cx, Handle<ModuleObject*> module,
-                             Handle<JSAtom*> exportName,
-                             MutableHandle<Value> result,
-                             ModuleErrorInfo* errorInfoOut = nullptr) {
+static bool ModuleResolveExport(JSContext* cx, Handle<ModuleObject*> module,
+                                Handle<JSAtom*> exportName,
+                                MutableHandle<Value> result,
+                                ModuleErrorInfo* errorInfoOut = nullptr) {
   if (module->hasSyntheticModuleFields()) {
-    return ::SyntheticModuleResolveExport(cx, module, exportName, result,
-                                          errorInfoOut);
+    return SyntheticModuleResolveExport(cx, module, exportName, result,
+                                        errorInfoOut);
   }
 
   // Step 1. If resolveSet is not present, set resolveSet to a new empty List.
   Rooted<ResolveSet> resolveSet(cx);
 
-  return ::ModuleResolveExport(cx, module, exportName, &resolveSet, result,
-                               errorInfoOut);
+  return CyclicModuleResolveExport(cx, module, exportName, &resolveSet, result,
+                                   errorInfoOut);
 }
 
 static bool CreateResolvedBindingObject(JSContext* cx,
@@ -612,11 +620,12 @@ static bool CreateResolvedBindingObject(JSContext* cx,
   return true;
 }
 
-static bool ModuleResolveExport(JSContext* cx, Handle<ModuleObject*> module,
-                                Handle<JSAtom*> exportName,
-                                MutableHandle<ResolveSet> resolveSet,
-                                MutableHandle<Value> result,
-                                ModuleErrorInfo* errorInfoOut) {
+static bool CyclicModuleResolveExport(JSContext* cx,
+                                      Handle<ModuleObject*> module,
+                                      Handle<JSAtom*> exportName,
+                                      MutableHandle<ResolveSet> resolveSet,
+                                      MutableHandle<Value> result,
+                                      ModuleErrorInfo* errorInfoOut) {
   // Step 2. For each Record { [[Module]], [[ExportName]] } r of resolveSet, do:
   for (const auto& entry : resolveSet) {
     // Step 2.a. If module and r.[[Module]] are the same Module Record and
@@ -683,8 +692,8 @@ static bool ModuleResolveExport(JSContext* cx, Handle<ModuleObject*> module,
         // importedModule.ResolveExport(e.[[ImportName]],
         //                 resolveSet).
         name = e.importName();
-        return ModuleResolveExport(cx, importedModule, name, resolveSet, result,
-                                   errorInfoOut);
+        return CyclicModuleResolveExport(cx, importedModule, name, resolveSet,
+                                         result, errorInfoOut);
       }
     }
   }
@@ -721,8 +730,8 @@ static bool ModuleResolveExport(JSContext* cx, Handle<ModuleObject*> module,
 
     // Step 8.b. Let resolution be ? importedModule.ResolveExport(exportName,
     //           resolveSet).
-    if (!ModuleResolveExport(cx, importedModule, exportName, resolveSet,
-                             &resolution, errorInfoOut)) {
+    if (!CyclicModuleResolveExport(cx, importedModule, exportName, resolveSet,
+                                   &resolution, errorInfoOut)) {
       return false;
     }
 
@@ -1048,8 +1057,8 @@ static void ThrowResolutionError(JSContext* cx, Handle<ModuleObject*> module,
 
 // https://tc39.es/ecma262/#sec-source-text-module-record-initialize-environment
 // ES2023 16.2.1.6.4 InitializeEnvironment
-bool js::ModuleInitializeEnvironment(JSContext* cx,
-                                     Handle<ModuleObject*> module) {
+static bool ModuleInitializeEnvironment(JSContext* cx,
+                                        Handle<ModuleObject*> module) {
   MOZ_ASSERT(module->status() == ModuleStatus::Linking);
 
   // Step 1. For each ExportEntry Record e of module.[[IndirectExportEntries]],
@@ -1195,7 +1204,7 @@ bool js::ModuleInitializeEnvironment(JSContext* cx,
 
 // https://tc39.es/ecma262/#sec-moduledeclarationlinking
 // ES2023 16.2.1.5.1 Link
-bool js::ModuleLink(JSContext* cx, Handle<ModuleObject*> module) {
+static bool ModuleLink(JSContext* cx, Handle<ModuleObject*> module) {
   // Step 1. Assert: module.[[Status]] is not linking or evaluating.
   ModuleStatus status = module->status();
   if (status == ModuleStatus::Linking || status == ModuleStatus::Evaluating) {
@@ -1374,8 +1383,9 @@ static bool InnerModuleLinking(JSContext* cx, Handle<ModuleObject*> module,
   return true;
 }
 
-bool js::SyntheticModuleEvaluate(JSContext* cx, Handle<ModuleObject*> moduleArg,
-                                 MutableHandle<Value> result) {
+static bool SyntheticModuleEvaluate(JSContext* cx,
+                                    Handle<ModuleObject*> moduleArg,
+                                    MutableHandle<Value> result) {
   // Steps 1-12 happens elsewhere in the engine.
 
   // Step 13. Let pc be ! NewPromiseCapability(%Promise%).
@@ -1398,8 +1408,8 @@ bool js::SyntheticModuleEvaluate(JSContext* cx, Handle<ModuleObject*> moduleArg,
 
 // https://tc39.es/ecma262/#sec-moduleevaluation
 // ES2023 16.2.1.5.2 Evaluate
-bool js::ModuleEvaluate(JSContext* cx, Handle<ModuleObject*> moduleArg,
-                        MutableHandle<Value> result) {
+static bool ModuleEvaluate(JSContext* cx, Handle<ModuleObject*> moduleArg,
+                           MutableHandle<Value> result) {
   Rooted<ModuleObject*> module(cx, moduleArg);
 
   // Step 2. Assert: module.[[Status]] is linked, evaluating-async, or
