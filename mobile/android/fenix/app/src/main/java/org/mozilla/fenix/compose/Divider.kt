@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.theme.FirefoxTheme
@@ -23,14 +24,16 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * Generic divider.
  *
  * @param modifier [Modifier] used to be applied to the layout of the divider.
+ * @param color [Color] of the divider line.
  */
 @Composable
 fun Divider(
     modifier: Modifier = Modifier,
+    color: Color = FirefoxTheme.colors.borderPrimary,
 ) {
     androidx.compose.material.Divider(
         modifier = modifier,
-        color = FirefoxTheme.colors.borderPrimary,
+        color = color,
     )
 }
 
