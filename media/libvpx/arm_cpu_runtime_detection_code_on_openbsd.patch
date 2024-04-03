@@ -1,0 +1,41 @@
+# HG changeset patch
+# User Chun-Min Chang <chun.m.chang@gmail.com>
+
+Bug 1888772 - Allow ARM CPU runtime detection code to build on OpenBSD
+
+diff --git a/vpx_ports/aarch64_cpudetect.c b/vpx_ports/aarch64_cpudetect.c
+--- a/vpx_ports/aarch64_cpudetect.c
++++ b/vpx_ports/aarch64_cpudetect.c
+@@ -10,30 +10,30 @@
+
+ #include "./vpx_config.h"
+ #include "arm_cpudetect.h"
+
+ #if defined(__APPLE__)
+ #include <sys/sysctl.h>
+ #endif
+
+-#if !CONFIG_RUNTIME_CPU_DETECT
++#if !CONFIG_RUNTIME_CPU_DETECT || defined(__OpenBSD__)
+
+ static int arm_get_cpu_caps(void) {
+   // This function should actually be a no-op. There is no way to adjust any of
+   // these because the RTCD tables do not exist: the functions are called
+   // statically.
+   int flags = 0;
+ #if HAVE_NEON
+   flags |= HAS_NEON;
+ #endif  // HAVE_NEON
+   return flags;
+ }
+
+-#elif defined(__APPLE__)  // end !CONFIG_RUNTIME_CPU_DETECT
++#elif defined(__APPLE__)  // end !CONFIG_RUNTIME_CPU_DETECT || defined(__OpenBSD__)
+
+ // sysctlbyname() parameter documentation for instruction set characteristics:
+ // https://developer.apple.com/documentation/kernel/1387446-sysctlbyname/determining_instruction_set_characteristics
+ static INLINE int64_t have_feature(const char *feature) {
+   int64_t feature_present = 0;
+   size_t size = sizeof(feature_present);
+   if (sysctlbyname(feature, &feature_present, &size, NULL, 0) != 0) {
+     return 0;
