@@ -1,127 +1,74 @@
-From: Jan Grulich <jgrulich@redhat.com>
-Date: Tue, 13 Feb 2024 13:12:00 +0000
-Subject: Bug 1879752 - WebRTC backport: Video capture PipeWire - simplify
- thread and lock annotations r=pehrsons,webrtc-reviewers
+From: Dan Baker <dbaker@mozilla.com>
+Date: Thu, 14 Mar 2024 10:51:00 -0600
+Subject: Bug 1883116 - (fix-e79e722834) add enviroment_factory to libwebrtc
+ build and enforce providing clock and task_queue when creating Environment
 
-This is a simple backport of an WebRTC upstream change.
-
-Upstream commit: 541f202354e2b4906935c8db6e54386aa8bc8d1f
-
-Differential Revision: https://phabricator.services.mozilla.com/D201328
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/dc12e6eecaa8dc91ee0a517cfd27570691c441b9
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/2185cab977988fd4ab03b38dc67f9b06162444da
 ---
- .../linux/video_capture_pipewire.cc           | 25 ++++++++++++-------
- .../linux/video_capture_pipewire.h            | 14 +++++------
- 2 files changed, 22 insertions(+), 17 deletions(-)
+ BUILD.gn                               |  1 +
+ api/environment/environment_factory.cc | 10 ++++++++++
+ api/task_queue/BUILD.gn                |  5 +++++
+ 3 files changed, 16 insertions(+)
 
-diff --git a/modules/video_capture/linux/video_capture_pipewire.cc b/modules/video_capture/linux/video_capture_pipewire.cc
-index fb813e331f..8af483636a 100644
---- a/modules/video_capture/linux/video_capture_pipewire.cc
-+++ b/modules/video_capture/linux/video_capture_pipewire.cc
-@@ -121,7 +121,6 @@ static spa_pod* BuildFormat(spa_pod_builder* builder,
+diff --git a/BUILD.gn b/BUILD.gn
+index 7feca08e60..85ead4162f 100644
+--- a/BUILD.gn
++++ b/BUILD.gn
+@@ -580,6 +580,7 @@ if (!build_with_chromium) {
  
- int32_t VideoCaptureModulePipeWire::StartCapture(
-     const VideoCaptureCapability& capability) {
--  RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
-   RTC_DCHECK_RUN_ON(&api_checker_);
- 
-   if (initialized_) {
-@@ -134,10 +133,17 @@ int32_t VideoCaptureModulePipeWire::StartCapture(
- 
-   uint8_t buffer[1024] = {};
- 
-+  // We don't want members above to be guarded by capture_checker_ as
-+  // it's meant to be for members that are accessed on the API thread
-+  // only when we are not capturing. The code above can be called many
-+  // times while sharing instance of VideoCapturePipeWire between
-+  // websites and therefore it would not follow the requirements of this
-+  // checker.
-+  RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
-+  PipeWireThreadLoopLock thread_loop_lock(session_->pw_main_loop_);
-+
-   RTC_LOG(LS_VERBOSE) << "Creating new PipeWire stream for node " << node_id_;
- 
--  PipeWireThreadLoopLock thread_loop_lock(session_->pw_main_loop_);
--  RTC_CHECK_RUNS_SERIALIZED(&pipewire_checker_);
-   pw_properties* reuse_props =
-       pw_properties_new_string("pipewire.client.reuse=1");
-   stream_ = pw_stream_new(session_->pw_core_, "camera-stream", reuse_props);
-@@ -188,11 +194,13 @@ int32_t VideoCaptureModulePipeWire::StartCapture(
+     if (build_with_mozilla) {
+       deps += [
++        "api/environment:environment_factory",
+         "api/video:video_frame",
+         "api/video:video_rtp_headers",
+         "test:rtp_test_utils",
+diff --git a/api/environment/environment_factory.cc b/api/environment/environment_factory.cc
+index c0b681aa08..6f0ec40dbe 100644
+--- a/api/environment/environment_factory.cc
++++ b/api/environment/environment_factory.cc
+@@ -97,12 +97,22 @@ Environment EnvironmentFactory::CreateWithDefaults() && {
+   if (field_trials_ == nullptr) {
+     Set(std::make_unique<FieldTrialBasedConfig>());
+   }
++#if defined(WEBRTC_MOZILLA_BUILD)
++  // We want to use our clock, not GetRealTimeClockRaw, and we avoid
++  // building the code under third_party/libwebrtc/task_queue.  To
++  // ensure we're setting up things correctly, namely providing an
++  // Environment object with a preset task_queue_factory and clock,
++  // we'll do a release assert here.
++  RTC_CHECK(clock_);
++  RTC_CHECK(task_queue_factory_);
++#else
+   if (clock_ == nullptr) {
+     Set(Clock::GetRealTimeClock());
+   }
+   if (task_queue_factory_ == nullptr) {
+     Set(CreateDefaultTaskQueueFactory(field_trials_));
+   }
++#endif
+   if (event_log_ == nullptr) {
+     Set(std::make_unique<RtcEventLogNull>());
+   }
+diff --git a/api/task_queue/BUILD.gn b/api/task_queue/BUILD.gn
+index b9bc81171f..c24c22a1f6 100644
+--- a/api/task_queue/BUILD.gn
++++ b/api/task_queue/BUILD.gn
+@@ -88,6 +88,10 @@ rtc_library("task_queue_test") {
  }
  
- int32_t VideoCaptureModulePipeWire::StopCapture() {
--  RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
-   RTC_DCHECK_RUN_ON(&api_checker_);
- 
-   PipeWireThreadLoopLock thread_loop_lock(session_->pw_main_loop_);
--  RTC_CHECK_RUNS_SERIALIZED(&pipewire_checker_);
-+  // PipeWireSession is guarded by API checker so just make sure we do
-+  // race detection when the PipeWire loop is locked/stopped to not run
-+  // any callback at this point.
-+  RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
-   if (stream_) {
-     pw_stream_destroy(stream_);
-     stream_ = nullptr;
-@@ -225,14 +233,14 @@ void VideoCaptureModulePipeWire::OnStreamParamChanged(
-   VideoCaptureModulePipeWire* that =
-       static_cast<VideoCaptureModulePipeWire*>(data);
-   RTC_DCHECK(that);
--  RTC_CHECK_RUNS_SERIALIZED(&that->pipewire_checker_);
-+  RTC_CHECK_RUNS_SERIALIZED(&that->capture_checker_);
- 
-   if (format && id == SPA_PARAM_Format)
-     that->OnFormatChanged(format);
+ rtc_library("default_task_queue_factory") {
++# Mozilla - disable this entire target to avoid inclusion of code we want
++# to avoid.  Better here than trying to wack-a-mole for places that list
++# it as a dependency.
++if (!build_with_mozilla) {
+   visibility = [ "*" ]
+   if (!is_ios && !is_android) {
+     # Internally webrtc shouldn't rely on any specific TaskQueue implementation
+@@ -126,6 +130,7 @@ rtc_library("default_task_queue_factory") {
+     sources += [ "default_task_queue_factory_stdlib.cc" ]
+     deps += [ "../../rtc_base:rtc_task_queue_stdlib" ]
+   }
++} # of if (!build_with_mozilla) {
  }
  
- void VideoCaptureModulePipeWire::OnFormatChanged(const struct spa_pod* format) {
--  RTC_CHECK_RUNS_SERIALIZED(&pipewire_checker_);
-+  RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
- 
-   uint32_t media_type, media_subtype;
- 
-@@ -331,7 +339,6 @@ void VideoCaptureModulePipeWire::OnStreamStateChanged(
-   VideoCaptureModulePipeWire* that =
-       static_cast<VideoCaptureModulePipeWire*>(data);
-   RTC_DCHECK(that);
--  RTC_CHECK_RUNS_SERIALIZED(&that->capture_checker_);
- 
-   MutexLock lock(&that->api_lock_);
-   switch (state) {
-@@ -374,7 +381,7 @@ static VideoRotation VideorotationFromPipeWireTransform(uint32_t transform) {
- }
- 
- void VideoCaptureModulePipeWire::ProcessBuffers() {
--  RTC_CHECK_RUNS_SERIALIZED(&pipewire_checker_);
-+  RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
- 
-   while (pw_buffer* buffer = pw_stream_dequeue_buffer(stream_)) {
-     struct spa_meta_header* h;
-diff --git a/modules/video_capture/linux/video_capture_pipewire.h b/modules/video_capture/linux/video_capture_pipewire.h
-index 5d6794ed65..eeb3b9497c 100644
---- a/modules/video_capture/linux/video_capture_pipewire.h
-+++ b/modules/video_capture/linux/video_capture_pipewire.h
-@@ -43,18 +43,16 @@ class VideoCaptureModulePipeWire : public VideoCaptureImpl {
-   void OnFormatChanged(const struct spa_pod* format);
-   void ProcessBuffers();
- 
--  rtc::RaceChecker pipewire_checker_;
--
-   const rtc::scoped_refptr<PipeWireSession> session_
--      RTC_GUARDED_BY(capture_checker_);
-+      RTC_GUARDED_BY(api_checker_);
-+  bool initialized_ RTC_GUARDED_BY(api_checker_);
-+  bool started_ RTC_GUARDED_BY(api_lock_);
-   int node_id_ RTC_GUARDED_BY(capture_checker_);
-   VideoCaptureCapability configured_capability_
--      RTC_GUARDED_BY(pipewire_checker_);
--  bool initialized_ RTC_GUARDED_BY(capture_checker_);
--  bool started_ RTC_GUARDED_BY(api_lock_);
-+      RTC_GUARDED_BY(capture_checker_);
- 
--  struct pw_stream* stream_ RTC_GUARDED_BY(pipewire_checker_) = nullptr;
--  struct spa_hook stream_listener_ RTC_GUARDED_BY(pipewire_checker_);
-+  struct pw_stream* stream_ RTC_GUARDED_BY(capture_checker_) = nullptr;
-+  struct spa_hook stream_listener_ RTC_GUARDED_BY(capture_checker_);
- };
- }  // namespace videocapturemodule
- }  // namespace webrtc
+ rtc_library("pending_task_safety_flag") {
