@@ -1796,12 +1796,12 @@ linux64-aarch64/opt:
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
 
-linux-aarch64-shippable/opt:
+linux64-aarch64-shippable/opt:
     description: "Linux AArch64 (a.k.a. ARM64) Shippable"
     use-pgo: linux64-shippable/opt
     index:
         product: firefox
-        job-name: linux-aarch64-opt
+        job-name: linux64-aarch64-opt
         type: shippable
     attributes:
         shippable: true
@@ -1810,7 +1810,7 @@ linux-aarch64-shippable/opt:
     shipping-phase: build
     shipping-product: firefox
     treeherder:
-        platform: linux-aarch64-shippable/opt
+        platform: linux64-aarch64-shippable/opt
         symbol: Bpgo(B)
     worker-type: b-linux-xlarge-gcp
     worker:

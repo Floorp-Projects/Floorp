@@ -100,14 +100,14 @@ jobs:
                 - sysroot-x86_64-linux-gnu
                 - sysroot-wasm32-wasi
 
-    linux-aarch64-shippable/opt:
+    linux64-aarch64-shippable/opt:
         description: "Linux AArch64 (a.k.a. ARM64) Instrumented"
         index:
             product: firefox
-            job-name: instrumented-linux-aarch64
+            job-name: instrumented-linux64-aarch64
         shipping-product: firefox
         treeherder:
-            platform: linux-aarch64-shippable/opt
+            platform: linux64-aarch64-shippable/opt
         worker-type: b-linux-gcp
         run:
             config:

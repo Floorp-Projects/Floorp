@@ -937,7 +937,7 @@ def target_tasks_nightly_linux(full_task_graph, parameters, graph_config):
     nightly build process involves a pipeline of builds, signing,
     and, eventually, uploading the tasks to balrog."""
     filter = make_desktop_nightly_filter(
-        {"linux64-shippable", "linux-shippable", "linux-aarch64-shippable"}
+        {"linux64-shippable", "linux-shippable", "linux64-aarch64-shippable"}
     )
     return [l for l, t in full_task_graph.tasks.items() if filter(t, parameters)]
 
