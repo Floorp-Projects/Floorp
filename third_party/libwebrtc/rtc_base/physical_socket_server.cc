@@ -435,6 +435,31 @@ int PhysicalSocket::RecvFrom(void* buffer,
                              SocketAddress* out_addr,
                              int64_t* timestamp) {
   int received = DoReadFromSocket(buffer, length, out_addr, timestamp);
+
+  UpdateLastError();
+  int error = GetError();
+  bool success = (received >= 0) || IsBlockingError(error);
+  if (udp_ || success) {
+    EnableEvents(DE_READ);
+  }
+  if (!success) {
+    RTC_LOG_F(LS_VERBOSE) << "Error = " << error;
+  }
+  return received;
+}
+
+int PhysicalSocket::RecvFrom(ReceiveBuffer& buffer) {
+  int64_t timestamp = -1;
+  static constexpr int BUF_SIZE = 64 * 1024;
+  buffer.payload.EnsureCapacity(BUF_SIZE);
+
+  int received =
+      DoReadFromSocket(buffer.payload.data(), buffer.payload.capacity(),
+                       &buffer.source_address, &timestamp);
+  buffer.payload.SetSize(received > 0 ? received : 0);
+  if (received > 0 && timestamp != -1) {
+    buffer.arrival_time = webrtc::Timestamp::Micros(timestamp);
+  }
   UpdateLastError();
   int error = GetError();
   bool success = (received >= 0) || IsBlockingError(error);

@@ -20,6 +20,7 @@
 
 #include "absl/memory/memory.h"
 #include "absl/strings/string_view.h"
+#include "api/units/timestamp.h"
 #include "rtc_base/arraysize.h"
 #include "rtc_base/async_packet_socket.h"
 #include "rtc_base/async_udp_socket.h"
@@ -1092,11 +1093,11 @@ void SocketTest::SocketRecvTimestamp(const IPAddress& loopback) {
   int64_t send_time_1 = TimeMicros();
   socket->SendTo("foo", 3, address);
 
-  int64_t recv_timestamp_1;
   // Wait until data is available.
   EXPECT_TRUE_WAIT(sink.Check(socket.get(), SSE_READ), kTimeout);
-  char buffer[3];
-  ASSERT_GT(socket->RecvFrom(buffer, 3, nullptr, &recv_timestamp_1), 0);
+  rtc::Buffer buffer;
+  Socket::ReceiveBuffer receive_buffer_1(buffer);
+  ASSERT_GT(socket->RecvFrom(receive_buffer_1), 0);
 
   const int64_t kTimeBetweenPacketsMs = 100;
   Thread::SleepMs(kTimeBetweenPacketsMs);
@@ -1105,11 +1106,12 @@ void SocketTest::SocketRecvTimestamp(const IPAddress& loopback) {
   socket->SendTo("bar", 3, address);
   // Wait until data is available.
   EXPECT_TRUE_WAIT(sink.Check(socket.get(), SSE_READ), kTimeout);
-  int64_t recv_timestamp_2;
-  ASSERT_GT(socket->RecvFrom(buffer, 3, nullptr, &recv_timestamp_2), 0);
+  Socket::ReceiveBuffer receive_buffer_2(buffer);
+  ASSERT_GT(socket->RecvFrom(receive_buffer_2), 0);
 
   int64_t system_time_diff = send_time_2 - send_time_1;
-  int64_t recv_timestamp_diff = recv_timestamp_2 - recv_timestamp_1;
+  int64_t recv_timestamp_diff =
+      receive_buffer_2.arrival_time->us() - receive_buffer_1.arrival_time->us();
   // Compare against the system time at the point of sending, because
   // SleepMs may not sleep for exactly the requested time.
   EXPECT_NEAR(system_time_diff, recv_timestamp_diff, 10000);
