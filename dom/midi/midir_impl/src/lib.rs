@@ -5,7 +5,6 @@ use midir::{
     MidiOutputPort,
 };
 use nsstring::{nsAString, nsString};
-use std::boxed::Box;
 use std::ptr;
 use thin_vec::ThinVec;
 use uuid::Uuid;
