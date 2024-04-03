@@ -337,7 +337,7 @@ browsertime-benchmark:
                             # - [speedometer3, sp3] Perma fails on osx 10.15.x machines (Bug 1809535)
                             - [stylebench, sb]
                             - [sunspider, ss]
-                            - [unity-webgl, ugl]
+                            # - [unity-webgl, ugl] Almost Perma failing on osx 10.15.x machines (Bug 1888398)
                             - [webaudio, wa]
                         custom-car:
                             - [speedometer, sp]
