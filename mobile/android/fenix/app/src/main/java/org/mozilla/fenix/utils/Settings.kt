@@ -524,6 +524,14 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = true,
     )
 
+    /**
+     * Indicates if the user wants translations to automatically be offered as a popup of the dialog.
+     */
+    var offerTranslation: Boolean by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_translations_offer),
+        default = true,
+    )
+
     @VisibleForTesting
     internal fun timeNowInMillis(): Long = System.currentTimeMillis()
 

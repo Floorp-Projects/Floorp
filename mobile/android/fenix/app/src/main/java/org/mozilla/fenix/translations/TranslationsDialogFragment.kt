@@ -93,6 +93,7 @@ class TranslationsDialogFragment : BottomSheetDialogFragment() {
                 TranslationsDialogMiddleware(
                     browserStore = browserStore,
                     sessionId = args.sessionId,
+                    settings = requireContext().settings(),
                 ),
             ),
         )

@@ -133,6 +133,7 @@ object GeckoProvider {
             .aboutConfigEnabled(Config.channel.isBeta || Config.channel.isNightlyOrDebug)
             .extensionsProcessEnabled(true)
             .extensionsWebAPIEnabled(true)
+            .translationsOfferPopup(context.settings().offerTranslation)
             .build()
     }
 }
