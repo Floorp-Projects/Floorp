@@ -313,7 +313,7 @@ macosx64-x64-devedition/opt:
 
 macosx64-aarch64-devedition/opt:
     description: "MacOS X Dev Edition Aarch64 (shippable)"
-    use-pgo: macosx64-shippable/opt
+    use-pgo: macosx64-aarch64-shippable/opt
     attributes:
         enable-full-crashsymbols: true
         skip-verify-test-packaging: true
