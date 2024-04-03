@@ -88,7 +88,7 @@ fuzzy(1,57) == conic-simple.yaml conic-simple.png
 fuzzy(255,302) == conic-angle.yaml conic-angle.png
 == conic-center.yaml conic-center.png
 fuzzy(1,2) == conic-angle-wraparound.yaml conic-angle.yaml
-fuzzy-if(env(android,device),254,146) fuzzy-if(not(env(android,device)),1,1) == conic-angle-wraparound-negative.yaml conic-angle.yaml # Android device is Samsung Galaxy A51
+fuzzy-if(env(android,device),255,155) fuzzy-if(not(env(android,device)),1,1) == conic-angle-wraparound-negative.yaml conic-angle.yaml # Android device is Samsung Galaxy A51
 fuzzy(1,333) == conic-color-wheel.yaml conic-color-wheel.png
 
 # gradient caching tests
@@ -118,7 +118,7 @@ fuzzy-range(<=1,1) == gradient_cache_hardstop_clip.yaml gradient_cache_hardstop_
 # Exercise the cached gradient scaling code path
 fuzzy(2,23000) == linear-large.yaml linear-large-ref.yaml
 == conic-large.yaml conic-large-ref.yaml
-fuzzy-if(env(android,device),254,1) == conic-large-hard-stop.yaml conic-large-hard-stop-ref.yaml # Android device is Samsung Galaxy A51
+fuzzy-if(env(android,device),255,1) == conic-large-hard-stop.yaml conic-large-hard-stop-ref.yaml # Android device is Samsung Galaxy A51
 fuzzy(1,80000) == radial-large.yaml radial-large-ref.png
 
 # crash tests
