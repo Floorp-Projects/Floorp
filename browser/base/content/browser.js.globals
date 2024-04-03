@@ -33,7 +33,6 @@
   "gBrowserInit",
   "HandleAppCommandEvent",
   "BrowserCommands",
-  "BrowserStop",
   "kSkipCacheFlags",
   "loadOneOrMoreURIs",
   "openLocation",

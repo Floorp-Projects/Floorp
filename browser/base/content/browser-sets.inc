@@ -68,7 +68,7 @@
     <command id="Browser:ForwardOrForwardDuplicate" oncommand="BrowserCommands.forward(event);" disabled="true">
       <observes element="Browser:Forward" attribute="disabled"/>
     </command>
-    <command id="Browser:Stop"    oncommand="BrowserStop();" disabled="true"/>
+    <command id="Browser:Stop"    oncommand="BrowserCommands.stop();" disabled="true"/>
     <command id="Browser:Reload"  oncommand="if (event.shiftKey) BrowserCommands.reloadSkipCache(); else BrowserCommands.reload()" disabled="true"/>
     <command id="Browser:ReloadOrDuplicate" oncommand="BrowserCommands.reloadOrDuplicate(event)" disabled="true">
       <observes element="Browser:Reload" attribute="disabled"/>
