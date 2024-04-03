@@ -198,6 +198,8 @@ class nsStandardURL : public nsIFileURL,
 
   static nsresult NormalizeIPv4(const nsACString& host, nsCString& result);
 
+  static nsIIDNService* GetIDNService();
+
  protected:
   // enum used in a few places to specify how .ref attribute should be handled
   enum RefHandlingEnum { eIgnoreRef, eHonorRef, eReplaceRef };
