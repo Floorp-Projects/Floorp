@@ -3537,12 +3537,6 @@ already_AddRefed<AsyncPanZoomController> APZCTreeManager::CommonAncestor(
 }
 
 bool APZCTreeManager::IsFixedToRootContent(
-    const HitTestingTreeNode* aNode) const {
-  MutexAutoLock lock(mMapLock);
-  return IsFixedToRootContent(FixedPositionInfo(aNode), lock);
-}
-
-bool APZCTreeManager::IsFixedToRootContent(
     const FixedPositionInfo& aFixedInfo,
     const MutexAutoLock& aProofOfMapLock) const {
   ScrollableLayerGuid::ViewID fixedTarget = aFixedInfo.mFixedPosTarget;
