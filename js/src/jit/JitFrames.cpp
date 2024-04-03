@@ -760,7 +760,7 @@ void HandleException(ResumeFromException* rfe) {
 
     // JIT code can enter same-compartment realms, so reset cx->realm to
     // this frame's realm.
-    if (frame.isScripted()) {
+    if (frame.isScripted() || frame.isTrampolineNative()) {
       cx->setRealmForJitExceptionHandler(iter.realm());
     }
 
@@ -830,7 +830,7 @@ void HandleException(ResumeFromException* rfe) {
       if (rfe->kind == ExceptionResumeKind::ForcedReturnBaseline) {
         return;
       }
-    } else if (frame.type() == FrameType::TrampolineNative) {
+    } else if (frame.isTrampolineNative()) {
       UnwindTrampolineNativeFrame(cx->runtime(), frame);
     }
 

@@ -78,7 +78,7 @@ CalleeToken JSJitFrameIter::calleeToken() const {
 }
 
 JSFunction* JSJitFrameIter::callee() const {
-  MOZ_ASSERT(isScripted());
+  MOZ_ASSERT(isScripted() || isTrampolineNative());
   MOZ_ASSERT(isFunctionFrame());
   return CalleeTokenToFunction(calleeToken());
 }

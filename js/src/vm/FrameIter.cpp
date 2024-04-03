@@ -124,7 +124,12 @@ JS::Realm* JitFrameIter::realm() const {
     return asWasm().instance()->realm();
   }
 
-  return asJSJit().script()->realm();
+  if (asJSJit().isScripted()) {
+    return asJSJit().script()->realm();
+  }
+
+  MOZ_RELEASE_ASSERT(asJSJit().isTrampolineNative());
+  return asJSJit().callee()->realm();
 }
 
 uint8_t* JitFrameIter::resumePCinCurrentFrame() const {

@@ -135,3 +135,19 @@ function testBailout() {
   assertEq(arr.map(x => x.n).join(""), "0135");
 }
 testBailout();
+
+function testExceptionHandlerSwitchRealm() {
+  var g = newGlobal({sameCompartmentAs: this});
+  for (var i = 0; i < 25; i++) {
+    var ex = null;
+    try {
+      g.Array.prototype.toSorted.call([2, 3], () => {
+        throw "fit";
+      });
+    } catch (e) {
+      ex = e;
+    }
+    assertEq(ex, "fit");
+  }
+}
+testExceptionHandlerSwitchRealm();
