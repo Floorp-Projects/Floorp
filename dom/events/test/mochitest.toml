@@ -448,8 +448,6 @@ skip-if = [
 
 ["test_legacy_touch_api.html"]
 
-["test_marquee_events.html"]
-
 ["test_messageEvent.html"]
 
 ["test_messageEvent_init.html"]

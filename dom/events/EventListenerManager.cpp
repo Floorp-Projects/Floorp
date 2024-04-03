@@ -455,27 +455,6 @@ void EventListenerManager::AddEventListenerInternal(
           window->SetHasFormSelectEventListeners();
         }
         break;
-      case eMarqueeStart:
-        if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
-          if (Document* doc = window->GetExtantDoc()) {
-            doc->SetUseCounter(eUseCounter_custom_onstart);
-          }
-        }
-        break;
-      case eMarqueeBounce:
-        if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
-          if (Document* doc = window->GetExtantDoc()) {
-            doc->SetUseCounter(eUseCounter_custom_onbounce);
-          }
-        }
-        break;
-      case eMarqueeFinish:
-        if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
-          if (Document* doc = window->GetExtantDoc()) {
-            doc->SetUseCounter(eUseCounter_custom_onfinish);
-          }
-        }
-        break;
       case eScrollPortOverflow:
         if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
           if (Document* doc = window->GetExtantDoc()) {
@@ -605,18 +584,6 @@ void EventListenerManager::AddEventListenerInternal(
                                      ToChar(resolvedEventMessage))
                          .get());
         NS_ASSERTION(aTypeAtom != nsGkAtoms::onselect,
-                     nsPrintfCString("resolvedEventMessage=%s",
-                                     ToChar(resolvedEventMessage))
-                         .get());
-        NS_ASSERTION(aTypeAtom != nsGkAtoms::onstart,
-                     nsPrintfCString("resolvedEventMessage=%s",
-                                     ToChar(resolvedEventMessage))
-                         .get());
-        NS_ASSERTION(aTypeAtom != nsGkAtoms::onbounce,
-                     nsPrintfCString("resolvedEventMessage=%s",
-                                     ToChar(resolvedEventMessage))
-                         .get());
-        NS_ASSERTION(aTypeAtom != nsGkAtoms::onfinish,
                      nsPrintfCString("resolvedEventMessage=%s",
                                      ToChar(resolvedEventMessage))
                          .get());

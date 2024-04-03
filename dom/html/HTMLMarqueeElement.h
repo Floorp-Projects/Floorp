@@ -25,8 +25,6 @@ class HTMLMarqueeElement final : public nsGenericHTMLElement {
   static const int kDefaultScrollAmount = 6;
   static const int kDefaultScrollDelayMS = 85;
 
-  bool IsEventAttributeNameInternal(nsAtom* aName) override;
-
   void GetBehavior(nsAString& aValue);
   void SetBehavior(const nsAString& aValue, ErrorResult& aError) {
     SetHTMLAttr(nsGkAtoms::behavior, aValue, aError);
