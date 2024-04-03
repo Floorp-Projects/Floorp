@@ -162,10 +162,10 @@ pub fn push_quad(
     match strategy {
         QuadRenderStrategy::Direct => {}
         QuadRenderStrategy::Indirect => {
-            let segment = add_segment(
+            let task_id = add_render_task_with_mask(
                 pattern,
-                &clipped_surface_rect,
-                true,
+                clipped_surface_rect.size(),
+                clipped_surface_rect.min.to_f32(),
                 clip_chain,
                 prim_spatial_node_index,
                 pic_context.raster_spatial_node_index,
@@ -178,14 +178,15 @@ pub fn push_quad(
                 frame_state,
             );
 
+            let rect = clipped_surface_rect.to_f32().cast_unit();
             add_composite_prim(
                 pattern,
                 prim_instance_index,
-                segment.rect,
+                rect,
                 quad_flags,
                 frame_state,
                 targets,
-                &[segment],
+                &[QuadSegment { rect, task_id }],
             );
         }
         QuadRenderStrategy::Tiled { x_tiles, y_tiles } => {
@@ -226,16 +227,17 @@ pub fn push_quad(
                         continue;
                     }
 
-                    let create_task = true;
-                    let rect = DeviceIntRect {
+                    let int_rect = DeviceIntRect {
                         min: point2(x0, y0),
                         max: point2(x1, y1),
                     };
 
-                    let segment = add_segment(
+                    let rect = int_rect.to_f32();
+
+                    let task_id = add_render_task_with_mask(
                         pattern,
-                        &rect,
-                        create_task,
+                        int_rect.size(),
+                        rect.min,
                         clip_chain,
                         prim_spatial_node_index,
                         pic_context.raster_spatial_node_index,
@@ -247,7 +249,8 @@ pub fn push_quad(
                         needs_scissor,
                         frame_state,
                     );
-                    scratch.quad_segments.push(segment);
+
+                    scratch.quad_segments.push(QuadSegment { rect: rect.cast_unit(), task_id });
                 }
             }
 
@@ -350,29 +353,35 @@ pub fn push_quad(
 
                     let rect = DeviceIntRect::new(point2(x0, y0), point2(x1, y1));
 
-                    let rect = match rect.intersection(&clipped_surface_rect) {
+                    let device_rect = match rect.intersection(&clipped_surface_rect) {
                         Some(rect) => rect,
                         None => {
                             continue;
                         }
                     };
 
-                    let segment = add_segment(
-                        pattern,
-                        &rect,
-                        create_task,
-                        clip_chain,
-                        prim_spatial_node_index,
-                        pic_context.raster_spatial_node_index,
-                        main_prim_address,
-                        transform_id,
-                        aa_flags,
-                        quad_flags,
-                        device_pixel_scale,
-                        false,
-                        frame_state,
-                    );
-                    scratch.quad_segments.push(segment);
+                    let task_id = if create_task {
+                        add_render_task_with_mask(
+                            pattern,
+                            device_rect.size(),
+                            device_rect.min.to_f32(),
+                            clip_chain,
+                            prim_spatial_node_index,
+                            pic_context.raster_spatial_node_index,
+                            main_prim_address,
+                            transform_id,
+                            aa_flags,
+                            quad_flags,
+                            device_pixel_scale,
+                            false,
+                            frame_state,
+                        )
+                    } else {
+                        RenderTaskId::INVALID
+                    };
+
+                    let rect = device_rect.to_f32().cast_unit();
+                    scratch.quad_segments.push(QuadSegment { rect, task_id });
                 }
             }
 
@@ -462,10 +471,10 @@ fn get_prim_render_strategy(
     }
 }
 
-fn add_segment(
+fn add_render_task_with_mask(
     pattern: &Pattern,
-    rect: &DeviceIntRect,
-    create_task: bool,
+    task_size: DeviceIntSize,
+    content_origin: DevicePoint,
     clip_chain: &ClipChainInstance,
     prim_spatial_node_index: SpatialNodeIndex,
     raster_spatial_node_index: SpatialNodeIndex,
@@ -476,49 +485,39 @@ fn add_segment(
     device_pixel_scale: DevicePixelScale,
     needs_scissor_rect: bool,
     frame_state: &mut FrameBuildingState,
-) -> QuadSegment {
-    let task_size = rect.size();
-    let rect = rect.to_f32();
-    let content_origin = rect.min;
-
-    let task_id = if create_task {
-        let task_id = frame_state.rg_builder.add().init(RenderTask::new_dynamic(
-            task_size,
-            RenderTaskKind::new_prim(
-                pattern.kind,
-                pattern.shader_input,
-                prim_spatial_node_index,
-                raster_spatial_node_index,
-                device_pixel_scale,
-                content_origin,
-                prim_address_f,
-                transform_id,
-                aa_flags,
-                quad_flags,
-                clip_chain.clips_range,
-                needs_scissor_rect,
-            ),
-        ));
-
-        let masks = MaskSubPass {
-            clip_node_range: clip_chain.clips_range,
+) -> RenderTaskId {
+    let task_id = frame_state.rg_builder.add().init(RenderTask::new_dynamic(
+        task_size,
+        RenderTaskKind::new_prim(
+            pattern.kind,
+            pattern.shader_input,
             prim_spatial_node_index,
+            raster_spatial_node_index,
+            device_pixel_scale,
+            content_origin,
             prim_address_f,
-        };
+            transform_id,
+            aa_flags,
+            quad_flags,
+            clip_chain.clips_range,
+            needs_scissor_rect,
+        ),
+    ));
 
-        let task = frame_state.rg_builder.get_task_mut(task_id);
-        task.add_sub_pass(SubPass::Masks { masks });
-
-        frame_state
-            .surface_builder
-            .add_child_render_task(task_id, frame_state.rg_builder);
-
-        task_id
-    } else {
-        RenderTaskId::INVALID
+    let masks = MaskSubPass {
+        clip_node_range: clip_chain.clips_range,
+        prim_spatial_node_index,
+        prim_address_f,
     };
 
-    QuadSegment { rect: rect.cast_unit(), task_id }
+    let task = frame_state.rg_builder.get_task_mut(task_id);
+    task.add_sub_pass(SubPass::Masks { masks });
+
+    frame_state
+        .surface_builder
+        .add_child_render_task(task_id, frame_state.rg_builder);
+
+    task_id
 }
 
 fn add_composite_prim(
