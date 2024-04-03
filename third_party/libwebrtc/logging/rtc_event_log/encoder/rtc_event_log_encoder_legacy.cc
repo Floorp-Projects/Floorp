@@ -131,8 +131,6 @@ ConvertIceCandidatePairConfigType(IceCandidatePairConfigType type) {
 rtclog::IceCandidatePairConfig::IceCandidateType ConvertIceCandidateType(
     IceCandidateType type) {
   switch (type) {
-    case IceCandidateType::kUnknown:
-      return rtclog::IceCandidatePairConfig::UNKNOWN_CANDIDATE_TYPE;
     case IceCandidateType::kLocal:
       return rtclog::IceCandidatePairConfig::LOCAL;
     case IceCandidateType::kStun:
@@ -141,11 +139,11 @@ rtclog::IceCandidatePairConfig::IceCandidateType ConvertIceCandidateType(
       return rtclog::IceCandidatePairConfig::PRFLX;
     case IceCandidateType::kRelay:
       return rtclog::IceCandidatePairConfig::RELAY;
-    case IceCandidateType::kNumValues:
+    default:
+      // TODO(tommi): Remove the default handler when kNumValues is gone.
       RTC_DCHECK_NOTREACHED();
+      return rtclog::IceCandidatePairConfig::UNKNOWN_CANDIDATE_TYPE;
   }
-  RTC_DCHECK_NOTREACHED();
-  return rtclog::IceCandidatePairConfig::UNKNOWN_CANDIDATE_TYPE;
 }
 
 rtclog::IceCandidatePairConfig::Protocol ConvertIceCandidatePairProtocol(

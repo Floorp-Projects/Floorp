@@ -82,10 +82,9 @@ webrtc::IceCandidateType GetRtcEventLogCandidateType(const Candidate& c) {
     return webrtc::IceCandidateType::kStun;
   } else if (c.is_prflx()) {
     return webrtc::IceCandidateType::kPrflx;
-  } else if (c.is_relay()) {
-    return webrtc::IceCandidateType::kRelay;
   }
-  return webrtc::IceCandidateType::kUnknown;
+  RTC_DCHECK(c.is_relay());
+  return webrtc::IceCandidateType::kRelay;
 }
 
 webrtc::IceCandidatePairProtocol GetProtocolByString(
@@ -1366,14 +1365,13 @@ const webrtc::IceCandidatePairDescription& Connection::ToLogDescription() {
   const Candidate& local = local_candidate();
   const Candidate& remote = remote_candidate();
   const rtc::Network* network = port()->Network();
-  log_description_ = webrtc::IceCandidatePairDescription();
-  log_description_->local_candidate_type = GetRtcEventLogCandidateType(local);
+  log_description_ = webrtc::IceCandidatePairDescription(
+      GetRtcEventLogCandidateType(local), GetRtcEventLogCandidateType(remote));
   log_description_->local_relay_protocol =
       GetProtocolByString(local.relay_protocol());
   log_description_->local_network_type = ConvertNetworkType(network->type());
   log_description_->local_address_family =
       GetAddressFamilyByInt(local.address().family());
-  log_description_->remote_candidate_type = GetRtcEventLogCandidateType(remote);
   log_description_->remote_address_family =
       GetAddressFamilyByInt(remote.address().family());
   log_description_->candidate_pair_protocol =

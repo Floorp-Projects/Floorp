@@ -198,8 +198,6 @@ ConvertToProtoFormat(IceCandidatePairConfigType type) {
 rtclog2::IceCandidatePairConfig::IceCandidateType ConvertToProtoFormat(
     IceCandidateType type) {
   switch (type) {
-    case IceCandidateType::kUnknown:
-      return rtclog2::IceCandidatePairConfig::UNKNOWN_CANDIDATE_TYPE;
     case IceCandidateType::kLocal:
       return rtclog2::IceCandidatePairConfig::LOCAL;
     case IceCandidateType::kStun:

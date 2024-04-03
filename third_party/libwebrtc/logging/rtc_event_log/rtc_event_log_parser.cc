@@ -163,22 +163,29 @@ IceCandidatePairConfigType GetRuntimeIceCandidatePairConfigType(
   return IceCandidatePairConfigType::kAdded;
 }
 
-IceCandidateType GetRuntimeIceCandidateType(
-    rtclog::IceCandidatePairConfig::IceCandidateType type) {
-  switch (type) {
+// Converts a log type (proto based) to a matching `IceCandidateType` value
+// and checks for validity of the log type (since the enums aren't a perfect
+// match).
+bool GetRuntimeIceCandidateType(
+    rtclog::IceCandidatePairConfig::IceCandidateType log_type,
+    IceCandidateType& parsed_type) {
+  switch (log_type) {
     case rtclog::IceCandidatePairConfig::LOCAL:
-      return IceCandidateType::kLocal;
+      parsed_type = IceCandidateType::kLocal;
+      break;
     case rtclog::IceCandidatePairConfig::STUN:
-      return IceCandidateType::kStun;
+      parsed_type = IceCandidateType::kStun;
+      break;
     case rtclog::IceCandidatePairConfig::PRFLX:
-      return IceCandidateType::kPrflx;
+      parsed_type = IceCandidateType::kPrflx;
+      break;
     case rtclog::IceCandidatePairConfig::RELAY:
-      return IceCandidateType::kRelay;
-    case rtclog::IceCandidatePairConfig::UNKNOWN_CANDIDATE_TYPE:
-      return IceCandidateType::kUnknown;
+      parsed_type = IceCandidateType::kRelay;
+      break;
+    default:
+      return false;
   }
-  RTC_DCHECK_NOTREACHED();
-  return IceCandidateType::kUnknown;
+  return true;
 }
 
 IceCandidatePairProtocol GetRuntimeIceCandidatePairProtocol(
@@ -813,11 +820,32 @@ IceCandidateType GetRuntimeIceCandidateType(
       return IceCandidateType::kPrflx;
     case rtclog2::IceCandidatePairConfig::RELAY:
       return IceCandidateType::kRelay;
-    case rtclog2::IceCandidatePairConfig::UNKNOWN_CANDIDATE_TYPE:
-      return IceCandidateType::kUnknown;
+    default:
+      RTC_DCHECK_NOTREACHED();
+      return IceCandidateType::kLocal;
   }
-  RTC_DCHECK_NOTREACHED();
-  return IceCandidateType::kUnknown;
+}
+
+bool GetRuntimeIceCandidateType(
+    rtclog2::IceCandidatePairConfig::IceCandidateType log_type,
+    IceCandidateType& parsed_type) {
+  switch (log_type) {
+    case rtclog2::IceCandidatePairConfig::LOCAL:
+      parsed_type = IceCandidateType::kLocal;
+      break;
+    case rtclog2::IceCandidatePairConfig::STUN:
+      parsed_type = IceCandidateType::kStun;
+      break;
+    case rtclog2::IceCandidatePairConfig::PRFLX:
+      parsed_type = IceCandidateType::kPrflx;
+      break;
+    case rtclog2::IceCandidatePairConfig::RELAY:
+      parsed_type = IceCandidateType::kRelay;
+      break;
+    default:
+      return false;
+  }
+  return true;
 }
 
 IceCandidatePairProtocol GetRuntimeIceCandidatePairProtocol(
@@ -2142,8 +2170,8 @@ ParsedRtcEventLog::GetIceCandidatePairConfig(
   RTC_PARSE_CHECK_OR_RETURN(config.has_candidate_pair_id());
   res.candidate_pair_id = config.candidate_pair_id();
   RTC_PARSE_CHECK_OR_RETURN(config.has_local_candidate_type());
-  res.local_candidate_type =
-      GetRuntimeIceCandidateType(config.local_candidate_type());
+  RTC_PARSE_CHECK_OR_RETURN(GetRuntimeIceCandidateType(
+      config.local_candidate_type(), res.local_candidate_type));
   RTC_PARSE_CHECK_OR_RETURN(config.has_local_relay_protocol());
   res.local_relay_protocol =
       GetRuntimeIceCandidatePairProtocol(config.local_relay_protocol());
@@ -2154,8 +2182,8 @@ ParsedRtcEventLog::GetIceCandidatePairConfig(
   res.local_address_family =
       GetRuntimeIceCandidatePairAddressFamily(config.local_address_family());
   RTC_PARSE_CHECK_OR_RETURN(config.has_remote_candidate_type());
-  res.remote_candidate_type =
-      GetRuntimeIceCandidateType(config.remote_candidate_type());
+  RTC_PARSE_CHECK_OR_RETURN(GetRuntimeIceCandidateType(
+      config.remote_candidate_type(), res.remote_candidate_type));
   RTC_PARSE_CHECK_OR_RETURN(config.has_remote_address_family());
   res.remote_address_family =
       GetRuntimeIceCandidatePairAddressFamily(config.remote_address_family());
@@ -3498,8 +3526,8 @@ ParsedRtcEventLog::ParseStatus ParsedRtcEventLog::StoreIceCandidatePairConfig(
   RTC_PARSE_CHECK_OR_RETURN(proto.has_candidate_pair_id());
   ice_config.candidate_pair_id = proto.candidate_pair_id();
   RTC_PARSE_CHECK_OR_RETURN(proto.has_local_candidate_type());
-  ice_config.local_candidate_type =
-      GetRuntimeIceCandidateType(proto.local_candidate_type());
+  RTC_PARSE_CHECK_OR_RETURN(GetRuntimeIceCandidateType(
+      proto.local_candidate_type(), ice_config.local_candidate_type));
   RTC_PARSE_CHECK_OR_RETURN(proto.has_local_relay_protocol());
   ice_config.local_relay_protocol =
       GetRuntimeIceCandidatePairProtocol(proto.local_relay_protocol());
@@ -3510,8 +3538,8 @@ ParsedRtcEventLog::ParseStatus ParsedRtcEventLog::StoreIceCandidatePairConfig(
   ice_config.local_address_family =
       GetRuntimeIceCandidatePairAddressFamily(proto.local_address_family());
   RTC_PARSE_CHECK_OR_RETURN(proto.has_remote_candidate_type());
-  ice_config.remote_candidate_type =
-      GetRuntimeIceCandidateType(proto.remote_candidate_type());
+  RTC_PARSE_CHECK_OR_RETURN(GetRuntimeIceCandidateType(
+      proto.remote_candidate_type(), ice_config.remote_candidate_type));
   RTC_PARSE_CHECK_OR_RETURN(proto.has_remote_address_family());
   ice_config.remote_address_family =
       GetRuntimeIceCandidatePairAddressFamily(proto.remote_address_family());
