@@ -34,6 +34,9 @@ class UnboundHandlerException(message: String) : Exception(message)
 class NotificationsDelegate(
     val notificationManagerCompat: NotificationManagerCompat,
 ) {
+    var isRequestingPermission: Boolean = false
+        private set
+
     private var onPermissionGranted: OnPermissionGranted = { }
     private var onPermissionRejected: OnPermissionRejected = { }
     private val notificationPermissionHandler: MutableMap<AppCompatActivity, ActivityResultLauncher<String>> =
@@ -46,6 +49,7 @@ class NotificationsDelegate(
     fun bindToActivity(activity: AppCompatActivity) {
         val activityResultLauncher =
             activity.registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+                isRequestingPermission = false
                 if (granted) {
                     onPermissionGranted.invoke()
                 } else {
@@ -149,9 +153,12 @@ class NotificationsDelegate(
         if (showPermissionRationale) {
             showPermissionRationale(onPermissionGranted, onPermissionRejected)
         } else {
+            isRequestingPermission = false
             notificationPermissionHandler.entries.firstOrNull {
                 it.key.lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)
-            }?.value?.launch(POST_NOTIFICATIONS)
+            }?.value?.also {
+                isRequestingPermission = true
+            }?.launch(POST_NOTIFICATIONS)
         }
     }
 
