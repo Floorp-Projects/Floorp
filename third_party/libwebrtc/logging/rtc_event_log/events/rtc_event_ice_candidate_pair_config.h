@@ -32,14 +32,13 @@ enum class IceCandidatePairConfigType {
   kNumValues,
 };
 
-// TODO(qingsi): Change the names of candidate types to "host", "srflx", "prflx"
-// and "relay" after the naming is spec-compliant in the signaling part
+// TODO(tommi): Change the names of candidate types to "host", "srflx" for
+// spec-compliance.
 enum class IceCandidateType {
   kLocal,
   kStun,
   kPrflx,
   kRelay,
-  kNumValues,
 };
 
 enum class IceCandidatePairProtocol {

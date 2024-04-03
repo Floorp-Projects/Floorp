@@ -217,10 +217,27 @@ EventGenerator::NewProbeResultSuccess() {
   return std::make_unique<RtcEventProbeResultSuccess>(id, bitrate_bps);
 }
 
+constexpr uint32_t CandidateTypeCount() {
+  // This switch statement only exists to catch changes to the IceCandidateType
+  // enumeration. If you get an error here, please update the switch statement
+  // and the return value.
+  IceCandidateType type = IceCandidateType::kLocal;
+  switch (type) {
+    case IceCandidateType::kLocal:
+    case IceCandidateType::kStun:
+    case IceCandidateType::kPrflx:
+    case IceCandidateType::kRelay:
+      break;
+  }
+  return 4u;
+}
+
 std::unique_ptr<RtcEventIceCandidatePairConfig>
 EventGenerator::NewIceCandidatePairConfig() {
-  IceCandidateType local_candidate_type = static_cast<IceCandidateType>(
-      prng_.Rand(static_cast<uint32_t>(IceCandidateType::kNumValues) - 1));
+  static_assert(static_cast<int>(IceCandidateType::kLocal) == 0,
+                "Expect kLocal to be the first enum value, equal to 0");
+  IceCandidateType local_candidate_type =
+      static_cast<IceCandidateType>(prng_.Rand(CandidateTypeCount() - 1));
   IceCandidateNetworkType local_network_type =
       static_cast<IceCandidateNetworkType>(prng_.Rand(
           static_cast<uint32_t>(IceCandidateNetworkType::kNumValues) - 1));
@@ -228,8 +245,8 @@ EventGenerator::NewIceCandidatePairConfig() {
       static_cast<IceCandidatePairAddressFamily>(prng_.Rand(
           static_cast<uint32_t>(IceCandidatePairAddressFamily::kNumValues) -
           1));
-  IceCandidateType remote_candidate_type = static_cast<IceCandidateType>(
-      prng_.Rand(static_cast<uint32_t>(IceCandidateType::kNumValues) - 1));
+  IceCandidateType remote_candidate_type =
+      static_cast<IceCandidateType>(prng_.Rand(CandidateTypeCount() - 1));
   IceCandidatePairAddressFamily remote_address_family =
       static_cast<IceCandidatePairAddressFamily>(prng_.Rand(
           static_cast<uint32_t>(IceCandidatePairAddressFamily::kNumValues) -

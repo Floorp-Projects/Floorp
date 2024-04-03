@@ -206,8 +206,6 @@ rtclog2::IceCandidatePairConfig::IceCandidateType ConvertToProtoFormat(
       return rtclog2::IceCandidatePairConfig::PRFLX;
     case IceCandidateType::kRelay:
       return rtclog2::IceCandidatePairConfig::RELAY;
-    case IceCandidateType::kNumValues:
-      RTC_DCHECK_NOTREACHED();
   }
   RTC_DCHECK_NOTREACHED();
   return rtclog2::IceCandidatePairConfig::UNKNOWN_CANDIDATE_TYPE;
