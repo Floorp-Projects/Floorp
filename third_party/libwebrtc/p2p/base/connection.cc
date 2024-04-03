@@ -75,14 +75,14 @@ inline bool TooLongWithoutResponse(
 
 // Helper methods for converting string values of log description fields to
 // enum.
-webrtc::IceCandidateType GetCandidateTypeByString(absl::string_view type) {
-  if (type == LOCAL_PORT_TYPE) {
+webrtc::IceCandidateType GetRtcEventLogCandidateType(const Candidate& c) {
+  if (c.is_local()) {
     return webrtc::IceCandidateType::kLocal;
-  } else if (type == STUN_PORT_TYPE) {
+  } else if (c.is_stun()) {
     return webrtc::IceCandidateType::kStun;
-  } else if (type == PRFLX_PORT_TYPE) {
+  } else if (c.is_prflx()) {
     return webrtc::IceCandidateType::kPrflx;
-  } else if (type == RELAY_PORT_TYPE) {
+  } else if (c.is_relay()) {
     return webrtc::IceCandidateType::kRelay;
   }
   return webrtc::IceCandidateType::kUnknown;
@@ -1367,15 +1367,13 @@ const webrtc::IceCandidatePairDescription& Connection::ToLogDescription() {
   const Candidate& remote = remote_candidate();
   const rtc::Network* network = port()->Network();
   log_description_ = webrtc::IceCandidatePairDescription();
-  log_description_->local_candidate_type =
-      GetCandidateTypeByString(local.type());
+  log_description_->local_candidate_type = GetRtcEventLogCandidateType(local);
   log_description_->local_relay_protocol =
       GetProtocolByString(local.relay_protocol());
   log_description_->local_network_type = ConvertNetworkType(network->type());
   log_description_->local_address_family =
       GetAddressFamilyByInt(local.address().family());
-  log_description_->remote_candidate_type =
-      GetCandidateTypeByString(remote.type());
+  log_description_->remote_candidate_type = GetRtcEventLogCandidateType(remote);
   log_description_->remote_address_family =
       GetAddressFamilyByInt(remote.address().family());
   log_description_->candidate_pair_protocol =
