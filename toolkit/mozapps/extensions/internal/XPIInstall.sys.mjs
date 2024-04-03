@@ -234,7 +234,15 @@ class Package {
 
     let root = Ci.nsIX509CertDB.AddonsPublicRoot;
     if (
-      !AppConstants.MOZ_REQUIRE_SIGNING &&
+      (!AppConstants.MOZ_REQUIRE_SIGNING ||
+        // Allow mochitests to switch to dev-root on all channels.
+        Cu.isInAutomation ||
+        // Allow xpcshell tests to switch to dev-root on all channels,
+        // included tests where "security.turn_off_all_security_so_that_viruses_can_take_over_this_computer"
+        // pref is set to false and Cu.isInAutomation is going to be false (e.g. test_signed_langpack.js).
+        // TODO(Bug 1598804): we should be able to remove the following checks once Cu.isAutomation is fixed.
+        (Services.env.exists("XPCSHELL_TEST_PROFILE_DIR") &&
+          Services.appinfo.name === "XPCShell")) &&
       Services.prefs.getBoolPref(PREF_XPI_SIGNATURES_DEV_ROOT, false)
     ) {
       root = Ci.nsIX509CertDB.AddonsStageRoot;
