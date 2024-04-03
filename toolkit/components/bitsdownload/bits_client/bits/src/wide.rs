@@ -6,9 +6,8 @@
 
 // Minimal null-terminated wide string support from wio.
 
-use std::ffi::{OsStr, OsString};
-use std::os::windows::ffi::{OsStrExt, OsStringExt};
-use std::slice;
+use std::ffi::OsStr;
+use std::os::windows::ffi::OsStrExt;
 
 pub trait ToWideNull {
     fn to_wide_null(&self) -> Vec<u16>;
@@ -17,22 +16,5 @@ pub trait ToWideNull {
 impl<T: AsRef<OsStr>> ToWideNull for T {
     fn to_wide_null(&self) -> Vec<u16> {
         self.as_ref().encode_wide().chain(Some(0)).collect()
-    }
-}
-
-pub trait FromWidePtrNull {
-    unsafe fn from_wide_ptr_null(wide: *const u16) -> Self;
-}
-
-impl FromWidePtrNull for OsString {
-    unsafe fn from_wide_ptr_null(wide: *const u16) -> Self {
-        assert!(!wide.is_null());
-
-        for i in 0.. {
-            if *wide.offset(i) == 0 {
-                return Self::from_wide(&slice::from_raw_parts(wide, i as usize));
-            }
-        }
-        unreachable!()
     }
 }
