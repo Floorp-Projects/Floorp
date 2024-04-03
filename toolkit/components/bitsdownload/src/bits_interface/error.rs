@@ -13,7 +13,6 @@ use bits_client::{
 use comedy::error::HResult as ComedyError;
 use nserror::{nsresult, NS_ERROR_FAILURE};
 use nsstring::nsCString;
-use std::convert::From;
 use xpcom::interfaces::nsIBits;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
