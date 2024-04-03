@@ -11,6 +11,7 @@
 #ifndef MODULES_AUDIO_CODING_NETEQ_MOCK_MOCK_PACKET_ARRIVAL_HISTORY_H_
 #define MODULES_AUDIO_CODING_NETEQ_MOCK_MOCK_PACKET_ARRIVAL_HISTORY_H_
 
+#include "api/neteq/tick_timer.h"
 #include "modules/audio_coding/neteq/packet_arrival_history.h"
 #include "test/gmock.h"
 
@@ -18,12 +19,10 @@ namespace webrtc {
 
 class MockPacketArrivalHistory : public PacketArrivalHistory {
  public:
-  MockPacketArrivalHistory() : PacketArrivalHistory(0) {}
+  MockPacketArrivalHistory(const TickTimer* tick_timer)
+      : PacketArrivalHistory(tick_timer, 0) {}
 
-  MOCK_METHOD(int,
-              GetDelayMs,
-              (uint32_t rtp_timestamp, int64_t time_ms),
-              (const override));
+  MOCK_METHOD(int, GetDelayMs, (uint32_t rtp_timestamp), (const override));
   MOCK_METHOD(int, GetMaxDelayMs, (), (const override));
 };
 
