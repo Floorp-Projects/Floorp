@@ -1731,29 +1731,71 @@ TEST_F(MediaSessionDescriptionFactoryTest, TestOfferAnswerWithRtpExtensions) {
 }
 
 // Create a audio/video offer and answer and ensure that the
-// TransportSequenceNumber RTP header extensions are handled correctly. 02 is
-// supported and should take precedence even though not listed among locally
-// supported extensions.
+// TransportSequenceNumber RTP v1 and v2 header extensions are handled
+// correctly.
 TEST_F(MediaSessionDescriptionFactoryTest,
-       TestOfferAnswerWithTransportSequenceNumberInOffer) {
+       TestOfferAnswerWithTransportSequenceNumberV1LocalAndV1InOffer) {
   TestTransportSequenceNumberNegotiation(
       MAKE_VECTOR(kRtpExtensionTransportSequenceNumber01),   // Local.
       MAKE_VECTOR(kRtpExtensionTransportSequenceNumber01),   // Offer.
       MAKE_VECTOR(kRtpExtensionTransportSequenceNumber01));  // Expected answer.
 }
 TEST_F(MediaSessionDescriptionFactoryTest,
-       TestOfferAnswerWithTransportSequenceNumber01And02InOffer) {
+       TestOfferAnswerWithTransportSequenceNumberV1LocalAndV1V2InOffer) {
   TestTransportSequenceNumberNegotiation(
       MAKE_VECTOR(kRtpExtensionTransportSequenceNumber01),       // Local.
+      MAKE_VECTOR(kRtpExtensionTransportSequenceNumber01And02),  // Offer.
+      MAKE_VECTOR(kRtpExtensionTransportSequenceNumber01));  // Expected answer.
+}
+TEST_F(MediaSessionDescriptionFactoryTest,
+       TestOfferAnswerWithTransportSequenceNumberV1LocalAndV2InOffer) {
+  TestTransportSequenceNumberNegotiation(
+      MAKE_VECTOR(kRtpExtensionTransportSequenceNumber01),  // Local.
+      MAKE_VECTOR(kRtpExtensionTransportSequenceNumber02),  // Offer.
+      {});                                                  // Expected answer.
+}
+TEST_F(MediaSessionDescriptionFactoryTest,
+       TestOfferAnswerWithTransportSequenceNumberV2LocalAndV1InOffer) {
+  TestTransportSequenceNumberNegotiation(
+      MAKE_VECTOR(kRtpExtensionTransportSequenceNumber02),  // Local.
+      MAKE_VECTOR(kRtpExtensionTransportSequenceNumber01),  // Offer.
+      {});                                                  // Expected answer.
+}
+TEST_F(MediaSessionDescriptionFactoryTest,
+       TestOfferAnswerWithTransportSequenceNumberV2LocalAndV1V2InOffer) {
+  TestTransportSequenceNumberNegotiation(
+      MAKE_VECTOR(kRtpExtensionTransportSequenceNumber02),       // Local.
       MAKE_VECTOR(kRtpExtensionTransportSequenceNumber01And02),  // Offer.
       MAKE_VECTOR(kRtpExtensionTransportSequenceNumber02));  // Expected answer.
 }
 TEST_F(MediaSessionDescriptionFactoryTest,
-       TestOfferAnswerWithTransportSequenceNumber02InOffer) {
+       TestOfferAnswerWithTransportSequenceNumberV2LocalAndV2InOffer) {
   TestTransportSequenceNumberNegotiation(
-      MAKE_VECTOR(kRtpExtensionTransportSequenceNumber01),   // Local.
+      MAKE_VECTOR(kRtpExtensionTransportSequenceNumber02),   // Local.
       MAKE_VECTOR(kRtpExtensionTransportSequenceNumber02),   // Offer.
       MAKE_VECTOR(kRtpExtensionTransportSequenceNumber02));  // Expected answer.
+}
+TEST_F(MediaSessionDescriptionFactoryTest,
+       TestOfferAnswerWithTransportSequenceNumberV1V2LocalAndV1InOffer) {
+  TestTransportSequenceNumberNegotiation(
+      MAKE_VECTOR(kRtpExtensionTransportSequenceNumber01And02),  // Local.
+      MAKE_VECTOR(kRtpExtensionTransportSequenceNumber01),       // Offer.
+      MAKE_VECTOR(kRtpExtensionTransportSequenceNumber01));  // Expected answer.
+}
+TEST_F(MediaSessionDescriptionFactoryTest,
+       TestOfferAnswerWithTransportSequenceNumberV1V2LocalAndV2InOffer) {
+  TestTransportSequenceNumberNegotiation(
+      MAKE_VECTOR(kRtpExtensionTransportSequenceNumber01And02),  // Local.
+      MAKE_VECTOR(kRtpExtensionTransportSequenceNumber02),       // Offer.
+      MAKE_VECTOR(kRtpExtensionTransportSequenceNumber02));  // Expected answer.
+}
+TEST_F(MediaSessionDescriptionFactoryTest,
+       TestOfferAnswerWithTransportSequenceNumberV1V2LocalAndV1V2InOffer) {
+  TestTransportSequenceNumberNegotiation(
+      MAKE_VECTOR(kRtpExtensionTransportSequenceNumber01And02),  // Local.
+      MAKE_VECTOR(kRtpExtensionTransportSequenceNumber01And02),  // Offer.
+      MAKE_VECTOR(
+          kRtpExtensionTransportSequenceNumber01And02));  // Expected answer.
 }
 
 TEST_F(MediaSessionDescriptionFactoryTest,
