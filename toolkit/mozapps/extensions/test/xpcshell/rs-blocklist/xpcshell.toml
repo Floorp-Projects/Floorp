@@ -5,6 +5,7 @@ firefox-appdir = "browser"
 support-files = [
   "../data/**",
   "../../xpinstall/webmidi_permission.xpi",
+  "../../xpinstall/amosigned.xpi",
 ]
 
 ["test_android_blocklist_dump.js"]

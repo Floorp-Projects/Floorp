@@ -195,25 +195,25 @@ async function test_update_working(file1, file2, expectedSignedState) {
   await install.addon.uninstall();
 }
 
-add_task(async function setup() {
+add_setup(async function setup() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "4", "4");
   await promiseStartupManager();
 });
 
 // Try to install a broken add-on
-add_task(async function test_install_invalid_modified() {
+add_task(useAMOStageCert(), async function test_install_invalid_modified() {
   let file = createBrokenAddonModify(do_get_file(DATA + ADDONS.signed1));
   await test_install_broken(file, AddonManager.ERROR_CORRUPT_FILE);
   file.remove(true);
 });
 
-add_task(async function test_install_invalid_added() {
+add_task(useAMOStageCert(), async function test_install_invalid_added() {
   let file = createBrokenAddonAdd(do_get_file(DATA + ADDONS.signed1));
   await test_install_broken(file, AddonManager.ERROR_CORRUPT_FILE);
   file.remove(true);
 });
 
-add_task(async function test_install_invalid_removed() {
+add_task(useAMOStageCert(), async function test_install_invalid_removed() {
   let file = createBrokenAddonRemove(do_get_file(DATA + ADDONS.signed1));
   await test_install_broken(file, AddonManager.ERROR_CORRUPT_FILE);
   file.remove(true);
@@ -226,58 +226,62 @@ add_task(async function test_install_invalid_unsigned() {
 });
 
 // Try to install a signed add-on
-add_task(async function test_install_valid() {
+add_task(useAMOStageCert(), async function test_install_valid() {
   let file = do_get_file(DATA + ADDONS.signed1);
   await test_install_working(file, AddonManager.SIGNEDSTATE_SIGNED);
 });
 
 add_task(
-  {
-    pref_set: [["xpinstall.signatures.dev-root", true]],
-    // `xpinstall.signatures.dev-root` is not taken into account on release
-    // builds because `MOZ_REQUIRE_SIGNING` is set to `true`.
-    skip_if: () => AppConstants.MOZ_REQUIRE_SIGNING,
-  },
-  async function test_install_valid_file_with_different_root_cert() {
-    const TEST_CASES = [
-      {
-        title: "XPI without ID in manifest",
-        xpi: "data/webext-implicit-id.xpi",
-        expectedMessage:
-          /Cannot find id for addon .+ Preference xpinstall.signatures.dev-root is set/,
-      },
-      {
-        title: "XPI with ID in manifest",
-        xpi: DATA + ADDONS.signed1,
-        expectedMessage: /Add-on test@somewhere.com is not correctly signed/,
-      },
-    ];
+  useAMOStageCert(),
+  async function test_install_implicit_id_with_different_root_cert() {
+    info(
+      `test install error on fail to verify signature on XPI without ID in manifest`
+    );
 
-    for (const { title, xpi, expectedMessage } of TEST_CASES) {
-      info(`test_install_valid_file_with_different_root_cert: ${title}`);
+    const xpi = do_get_file("data/webext-implicit-id.xpi");
+    const expectedMessage =
+      /Cannot find id for addon .+ Preference xpinstall.signatures.dev-root is set/;
 
-      const file = do_get_file(xpi);
-
-      const awaitConsole = new Promise(resolve => {
-        Services.console.registerListener(function listener(message) {
-          if (expectedMessage.test(message.message)) {
-            Services.console.unregisterListener(listener);
-            resolve();
-          }
-        });
-      });
-
+    const { messages } = await AddonTestUtils.promiseConsoleOutput(async () => {
       await test_install_broken(
-        file,
+        xpi,
         AddonManager.ERROR_CORRUPT_FILE,
         // We don't expect the `addon` property on the `install` object to be
         // `null` because that seems to happen later (when the signature is
         // checked).
         false
       );
+    });
 
-      await awaitConsole;
-    }
+    AddonTestUtils.checkMessages(messages, {
+      expected: [{ message: expectedMessage }],
+    });
+  }
+);
+
+add_task(
+  async function test_install_stage_signed_invalid_with_prod_root_cert() {
+    info(
+      `test install error on fail to verify signature on XPI with ID in manifest`
+    );
+
+    const xpi = do_get_file(DATA + ADDONS.signed1);
+    const expectedMessage = /Add-on test@somewhere.com is not correctly signed/;
+
+    const { messages } = await AddonTestUtils.promiseConsoleOutput(async () => {
+      await test_install_broken(
+        xpi,
+        AddonManager.ERROR_CORRUPT_FILE,
+        // We don't expect the `addon` property on the `install` object to be
+        // `null` because that seems to happen later (when the signature is
+        // checked).
+        false
+      );
+    });
+
+    AddonTestUtils.checkMessages(messages, {
+      expected: [{ message: expectedMessage }],
+    });
   }
 );
 
@@ -304,21 +308,21 @@ add_task(async function test_install_valid_privileged() {
 });
 
 // Try to update to a broken add-on
-add_task(async function test_update_invalid_modified() {
+add_task(useAMOStageCert(), async function test_update_invalid_modified() {
   let file1 = do_get_file(DATA + ADDONS.signed1);
   let file2 = createBrokenAddonModify(do_get_file(DATA + ADDONS.signed2));
   await test_update_broken(file1, file2, AddonManager.ERROR_CORRUPT_FILE);
   file2.remove(true);
 });
 
-add_task(async function test_update_invalid_added() {
+add_task(useAMOStageCert(), async function test_update_invalid_added() {
   let file1 = do_get_file(DATA + ADDONS.signed1);
   let file2 = createBrokenAddonAdd(do_get_file(DATA + ADDONS.signed2));
   await test_update_broken(file1, file2, AddonManager.ERROR_CORRUPT_FILE);
   file2.remove(true);
 });
 
-add_task(async function test_update_invalid_removed() {
+add_task(useAMOStageCert(), async function test_update_invalid_removed() {
   let file1 = do_get_file(DATA + ADDONS.signed1);
   let file2 = createBrokenAddonRemove(do_get_file(DATA + ADDONS.signed2));
   await test_update_broken(file1, file2, AddonManager.ERROR_CORRUPT_FILE);
@@ -326,7 +330,7 @@ add_task(async function test_update_invalid_removed() {
 });
 
 // Try to update to an unsigned add-on
-add_task(async function test_update_invalid_unsigned() {
+add_task(useAMOStageCert(), async function test_update_invalid_unsigned() {
   let file1 = do_get_file(DATA + ADDONS.signed1);
   let file2 = do_get_file(DATA + ADDONS.unsigned);
   await test_update_broken(
@@ -337,7 +341,7 @@ add_task(async function test_update_invalid_unsigned() {
 });
 
 // Try to update to a signed add-on
-add_task(async function test_update_valid() {
+add_task(useAMOStageCert(), async function test_update_valid() {
   let file1 = do_get_file(DATA + ADDONS.signed1);
   let file2 = do_get_file(DATA + ADDONS.signed2);
   await test_update_working(file1, file2, AddonManager.SIGNEDSTATE_SIGNED);

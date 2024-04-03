@@ -1221,3 +1221,10 @@ async function installBuiltinExtension(extensionData, waitForStartup = true) {
   }
   return wrapper;
 }
+
+function useAMOStageCert() {
+  // NOTE: add_task internally calls add_test which mutate the add_task properties object,
+  // and so we should not reuse the same object as add_task options passed to multiple
+  // add_task calls.
+  return { pref_set: [["xpinstall.signatures.dev-root", true]] };
+}

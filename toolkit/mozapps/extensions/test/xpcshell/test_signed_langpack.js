@@ -32,7 +32,7 @@ async function installShouldFail(file) {
 // Test that the preference controlling langpack signing works properly
 // (and that the general preference for addon signing does not affect
 // language packs).
-add_task(async function () {
+add_task(useAMOStageCert(), async function () {
   AddonTestUtils.useRealCertChecks = true;
 
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9");
