@@ -160,6 +160,11 @@ class AbstractRange : public nsISupports,
    */
   bool IsInSelection(const mozilla::dom::Selection& aSelection) const;
 
+  /**
+   * Return true if aRoot is a UA shadow root.
+   */
+  static bool IsRootUAWidget(const nsINode* aRoot);
+
  protected:
   template <typename SPT, typename SRT, typename EPT, typename ERT,
             typename RangeType>

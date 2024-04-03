@@ -243,6 +243,14 @@ static CollapsePolicy ShouldCollapseBoundary(
       return CollapsePolicy::DefaultRangeAndCrossShadowBoundaryRanges;
     }
 
+    // Always collapse both ranges if the one of the roots is an UA widget
+    // regardless whether the boundaries are allowed to cross shadow boundary
+    // or not.
+    if (AbstractRange::IsRootUAWidget(aNewRoot) ||
+        AbstractRange::IsRootUAWidget(aRange->GetRoot())) {
+      return CollapsePolicy::DefaultRangeAndCrossShadowBoundaryRanges;
+    }
+
     // Different root, but same document. So we only collapse the
     // default range if boundaries are allowed to cross shadow boundary.
     return aAllowCrossShadowBoundary == AllowRangeCrossShadowBoundary::Yes
