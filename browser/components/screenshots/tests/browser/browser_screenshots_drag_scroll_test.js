@@ -353,8 +353,6 @@ add_task(async function test_scrollIfByEdge() {
 
       await helper.scrollContentWindow(windowX, windowY);
 
-      await TestUtils.waitForTick();
-
       helper.triggerUIFromToolbar();
       await helper.waitForOverlay();
 
@@ -363,17 +361,18 @@ add_task(async function test_scrollIfByEdge() {
       is(scrollX, windowX, "Window x position is 1000");
       is(scrollY, windowY, "Window y position is 1000");
 
-      let startX = 1100;
-      let startY = 1100;
+      let startX = 1200;
+      let startY = 1200;
       let endX = 1010;
       let endY = 1010;
 
-      // The window won't scroll if the state is draggingReady so we move to
-      // get into the dragging state and then move again to scroll the window
-      mouse.down(startX, startY);
-      await helper.assertStateChange("draggingReady");
-      mouse.move(1050, 1050);
-      await helper.assertStateChange("dragging");
+      await helper.dragOverlay(startX, startY, endX + 20, endY + 20);
+      await helper.scrollContentWindow(windowX, windowY);
+
+      await TestUtils.waitForTick();
+
+      mouse.down(endX + 20, endY + 20);
+      await helper.assertStateChange("resizing");
       mouse.move(endX, endY);
       mouse.up(endX, endY);
       await helper.assertStateChange("selected");
@@ -387,26 +386,64 @@ add_task(async function test_scrollIfByEdge() {
       is(scrollX, windowX, "Window x position is 990");
       is(scrollY, windowY, "Window y position is 990");
 
-      let contentInfo = await helper.getContentDimensions();
+      let screenshotExit = TestUtils.topicObserved("screenshots-exit");
+      helper.triggerUIFromToolbar();
+      await screenshotExit;
+    }
+  );
 
-      endX = windowX + contentInfo.clientWidth - 10;
-      endY = windowY + contentInfo.clientHeight - 10;
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: TEST_PAGE,
+    },
+    async browser => {
+      let helper = new ScreenshotsHelper(browser);
+
+      let windowX = 1000;
+      let windowY = 1000;
+
+      await helper.scrollContentWindow(windowX, windowY);
+
+      helper.triggerUIFromToolbar();
+      await helper.waitForOverlay();
+
+      let contentInfo = await helper.getContentDimensions();
+      let { scrollX, scrollY, clientWidth, clientHeight } = contentInfo;
+
+      let startX = windowX + clientWidth - 200;
+      let startY = windowX + clientHeight - 200;
+      let endX = windowX + clientWidth - 10;
+      let endY = windowY + clientHeight - 10;
+
+      await helper.dragOverlay(startX, startY, endX - 20, endY - 20);
+      await helper.scrollContentWindow(windowX, windowY);
+
+      await TestUtils.waitForTick();
 
       info(
         `starting to drag overlay to ${endX}, ${endY} in test\nclientInfo: ${JSON.stringify(
           contentInfo
         )}\n`
       );
-      await helper.dragOverlay(startX, startY, endX, endY, "selected");
+      mouse.down(endX - 20, endY - 20);
+      await helper.assertStateChange("resizing");
+      mouse.move(endX, endY);
+      mouse.up(endX, endY);
+      await helper.assertStateChange("selected");
 
-      windowX = 1000;
-      windowY = 1000;
+      windowX = 1010;
+      windowY = 1010;
       await helper.waitForScrollTo(windowX, windowY);
 
       ({ scrollX, scrollY } = await helper.getContentDimensions());
 
-      is(scrollX, windowX, "Window x position is 1000");
-      is(scrollY, windowY, "Window y position is 1000");
+      is(scrollX, windowX, "Window x position is 1010");
+      is(scrollY, windowY, "Window y position is 1010");
+
+      let screenshotExit = TestUtils.topicObserved("screenshots-exit");
+      helper.triggerUIFromToolbar();
+      await screenshotExit;
     }
   );
 });
@@ -428,13 +465,19 @@ add_task(async function test_scrollIfByEdgeWithKeyboard() {
       helper.triggerUIFromToolbar();
       await helper.waitForOverlay();
 
-      let { scrollX, scrollY, clientWidth, clientHeight } =
-        await helper.getContentDimensions();
+      let { scrollX, scrollY } = await helper.getContentDimensions();
 
       is(scrollX, windowX, "Window x position is 1000");
       is(scrollY, windowY, "Window y position is 1000");
 
-      await helper.dragOverlay(1020, 1020, 1120, 1120);
+      await helper.dragOverlay(
+        scrollX + 20,
+        scrollY + 20,
+        scrollX + 120,
+        scrollY + 120
+      );
+
+      await helper.scrollContentWindow(windowX, windowY);
 
       await helper.moveOverlayViaKeyboard("highlight", [
         { key: "ArrowLeft", options: { shiftKey: true } },
@@ -447,14 +490,36 @@ add_task(async function test_scrollIfByEdgeWithKeyboard() {
       windowY = 989;
       await helper.waitForScrollTo(windowX, windowY);
 
-      ({ scrollX, scrollY, clientWidth, clientHeight } =
-        await helper.getContentDimensions());
+      ({ scrollX, scrollY } = await helper.getContentDimensions());
 
       is(scrollX, windowX, "Window x position is 989");
       is(scrollY, windowY, "Window y position is 989");
 
-      mouse.click(1200, 1200);
-      await helper.assertStateChange("crosshairs");
+      let screenshotExit = TestUtils.topicObserved("screenshots-exit");
+      helper.triggerUIFromToolbar();
+      await screenshotExit;
+    }
+  );
+
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: TEST_PAGE,
+    },
+    async browser => {
+      let helper = new ScreenshotsHelper(browser);
+
+      let windowX = 989;
+      let windowY = 989;
+
+      await helper.scrollContentWindow(windowX, windowY);
+
+      helper.triggerUIFromToolbar();
+      await helper.waitForOverlay();
+
+      let { scrollX, scrollY, clientWidth, clientHeight } =
+        await helper.getContentDimensions();
+
       await helper.dragOverlay(
         scrollX + clientWidth - 100 - 20,
         scrollY + clientHeight - 100 - 20,
@@ -477,6 +542,10 @@ add_task(async function test_scrollIfByEdgeWithKeyboard() {
 
       is(scrollX, windowX, "Window x position is 1000");
       is(scrollY, windowY, "Window y position is 1000");
+
+      let screenshotExit = TestUtils.topicObserved("screenshots-exit");
+      helper.triggerUIFromToolbar();
+      await screenshotExit;
     }
   );
 });

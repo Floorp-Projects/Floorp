@@ -30,13 +30,12 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: var(--space-xsmall);
   cursor: pointer;
   text-align: center;
   user-select: none;
   white-space: nowrap;
-  min-height: 36px;
-  font-size: 15px;
-  min-width: 36px;
+  min-width: 32px;
 }
 
 .preview-button > img {
@@ -44,11 +43,23 @@ body {
   fill: currentColor;
   width: 16px;
   height: 16px;
+  pointer-events: none;
 }
 
-#download > img,
+#retry > img {
+  content: url("chrome://global/skin/icons/reload.svg");
+}
+
+#cancel > img {
+  content: url("chrome://global/skin/icons/close.svg");
+}
+
 #copy > img {
-  margin-inline-end: 5px;
+  content: url("chrome://global/skin/icons/edit-copy.svg");
+}
+
+#download > img {
+  content: url("chrome://browser/skin/downloads/downloads.svg");
 }
 
 .preview-image {
