@@ -11,9 +11,10 @@
 
 "use strict";
 
-const { EnterprisePolicyTesting } = ChromeUtils.importESModule(
-  "resource://testing-common/EnterprisePolicyTesting.sys.mjs"
-);
+const { EnterprisePolicyTesting, PoliciesPrefTracker } =
+  ChromeUtils.importESModule(
+    "resource://testing-common/EnterprisePolicyTesting.sys.mjs"
+  );
 
 const kEnabledPref = "enabled";
 const kPipeNamePref = "pipe_path_name";
@@ -31,6 +32,7 @@ const ca = Cc["@mozilla.org/contentanalysis;1"].getService(
 );
 
 add_task(async function test_ca_active() {
+  PoliciesPrefTracker.start();
   ok(!ca.isActive, "CA is inactive when pref and cmd line arg are missing");
 
   // Set the pref without enterprise policy.  CA should not be active.
@@ -64,9 +66,11 @@ add_task(async function test_ca_active() {
     },
   });
   ok(ca.isActive, "CA is active when enabled by enterprise policy pref");
+  PoliciesPrefTracker.stop();
 });
 
 add_task(async function test_ca_enterprise_config() {
+  PoliciesPrefTracker.start();
   const string1 = "this is a string";
   const string2 = "this is another string";
   const string3 = "an agent name";
@@ -135,6 +139,7 @@ add_task(async function test_ca_enterprise_config() {
     true,
     "default allow match"
   );
+  PoliciesPrefTracker.stop();
 });
 
 add_task(async function test_cleanup() {
@@ -142,4 +147,9 @@ add_task(async function test_cleanup() {
   await EnterprisePolicyTesting.setupPolicyEngineWithJson({
     policies: {},
   });
+  // These may have gotten set when ContentAnalysis was enabled through
+  // the policy and do not get cleared if there is no ContentAnalysis
+  // element - reset them manually here.
+  ca.isSetByEnterprisePolicy = false;
+  Services.prefs.setBoolPref("browser.contentanalysis." + kEnabledPref, false);
 });
