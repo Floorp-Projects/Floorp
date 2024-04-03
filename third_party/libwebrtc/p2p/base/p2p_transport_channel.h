@@ -370,7 +370,7 @@ class RTC_EXPORT P2PTransportChannel : public IceTransportInternal,
   }
 
   // Indicates if the given local port has been pruned.
-  bool IsPortPruned(const Port* port) const;
+  bool IsPortPruned(const PortInterface* port) const;
 
   // Indicates if the given remote candidate has been pruned.
   bool IsRemoteCandidatePruned(const Candidate& cand) const;

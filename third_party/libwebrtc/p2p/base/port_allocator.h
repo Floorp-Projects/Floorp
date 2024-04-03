@@ -11,18 +11,26 @@
 #ifndef P2P_BASE_PORT_ALLOCATOR_H_
 #define P2P_BASE_PORT_ALLOCATOR_H_
 
+#include <stdint.h>
+
 #include <deque>
 #include <memory>
 #include <string>
 #include <vector>
 
 #include "absl/strings/string_view.h"
+#include "absl/types/optional.h"
+#include "api/candidate.h"
 #include "api/sequence_checker.h"
 #include "api/transport/enums.h"
 #include "p2p/base/port.h"
 #include "p2p/base/port_interface.h"
+#include "p2p/base/transport_description.h"
+#include "rtc_base/checks.h"
 #include "rtc_base/helpers.h"
+#include "rtc_base/network.h"
 #include "rtc_base/proxy_info.h"
+#include "rtc_base/socket_address.h"
 #include "rtc_base/ssl_certificate.h"
 #include "rtc_base/system/rtc_export.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"

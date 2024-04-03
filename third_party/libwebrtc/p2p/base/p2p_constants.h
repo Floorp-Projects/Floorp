@@ -111,6 +111,19 @@ extern const int CONNECTION_RESPONSE_TIMEOUT;
 // it.
 extern const int MIN_CONNECTION_LIFETIME;
 
+// The type preference MUST be an integer from 0 to 126 inclusive.
+// https://datatracker.ietf.org/doc/html/rfc5245#section-4.1.2.1
+enum IcePriorityValue : uint8_t {
+  ICE_TYPE_PREFERENCE_RELAY_TLS = 0,
+  ICE_TYPE_PREFERENCE_RELAY_TCP = 1,
+  ICE_TYPE_PREFERENCE_RELAY_UDP = 2,
+  ICE_TYPE_PREFERENCE_PRFLX_TCP = 80,
+  ICE_TYPE_PREFERENCE_HOST_TCP = 90,
+  ICE_TYPE_PREFERENCE_SRFLX = 100,
+  ICE_TYPE_PREFERENCE_PRFLX = 110,
+  ICE_TYPE_PREFERENCE_HOST = 126
+};
+
 }  // namespace cricket
 
 #endif  // P2P_BASE_P2P_CONSTANTS_H_

@@ -11,13 +11,13 @@
 #include "p2p/base/port_allocator.h"
 
 #include <iterator>
+#include <optional>
 #include <set>
 #include <utility>
 
 #include "absl/strings/string_view.h"
 #include "p2p/base/ice_credentials_iterator.h"
 #include "rtc_base/checks.h"
-#include "rtc_base/logging.h"
 
 namespace cricket {
 
