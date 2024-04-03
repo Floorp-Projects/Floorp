@@ -39,7 +39,7 @@ std::unique_ptr<RtcEventLogEncoder> CreateEncoder(const Environment& env) {
     return std::make_unique<RtcEventLogEncoderLegacy>();
   } else {
     RTC_DLOG(LS_INFO) << "Creating new format encoder for RTC event log.";
-    return std::make_unique<RtcEventLogEncoderNewFormat>();
+    return std::make_unique<RtcEventLogEncoderNewFormat>(env.field_trials());
   }
 }
 
