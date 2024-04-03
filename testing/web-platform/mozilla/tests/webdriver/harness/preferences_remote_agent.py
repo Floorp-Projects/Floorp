@@ -31,7 +31,7 @@ def test_remote_agent_recommended_preferences_applied(browser, value):
     wait = Poll(
         None,
         timeout=5,
-        ignored_exceptions=FileNotFoundError,
+        ignored_exceptions=IOError,
         message="""Preference "remote.prefs.recommended.applied" is not true""",
     )
     wait.until(pref_is_set)
