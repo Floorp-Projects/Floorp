@@ -1120,6 +1120,7 @@ rtc_library("socket") {
   ]
   deps = [
     ":buffer",
+    ":checks",
     ":macromagic",
     ":socket_address",
     "../api/units:timestamp",
@@ -1756,6 +1757,7 @@ rtc_library("rtc_base_tests_utils") {
     ":async_socket",
     ":async_tcp_socket",
     ":async_udp_socket",
+    ":buffer",
     ":byte_buffer",
     ":checks",
     ":ip_address",
@@ -1775,6 +1777,7 @@ rtc_library("rtc_base_tests_utils") {
     ":stringutils",
     ":threading",
     ":timeutils",
+    "../api:array_view",
     "../api:make_ref_counted",
     "../api:refcountedbase",
     "../api:scoped_refptr",
@@ -1890,6 +1893,7 @@ if (rtc_include_tests) {
         ":threading",
         ":timeutils",
         "../api/units:time_delta",
+        "../api/units:timestamp",
         "../system_wrappers",
         "../test:field_trial",
         "../test:fileutils",
