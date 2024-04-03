@@ -50,6 +50,7 @@ job-defaults:
                             - linux-devedition
                             - linux64
                             - linux64-devedition
+                            - linux64-aarch64
                             - win32
                             - win32-devedition
                             - win64
@@ -64,6 +65,7 @@ job-defaults:
                                         "linux",
                                         "linux-devedition",
                                         "linux64",
+                                        "linux64-aarch64",
                                         "linux64-devedition",
                                         "macosx64",
                                         "macosx64-devedition",
@@ -90,6 +92,7 @@ job-defaults:
                             - linux
                             - linux-devedition
                             - linux64
+                            - linux64-aarch64
                             - linux64-devedition
                             - win32
                             - win32-devedition
@@ -105,6 +108,7 @@ job-defaults:
                                         "linux",
                                         "linux-devedition",
                                         "linux64",
+                                        "linux64-aarch64",
                                         "linux64-devedition",
                                         "macosx64",
                                         "macosx64-devedition",
