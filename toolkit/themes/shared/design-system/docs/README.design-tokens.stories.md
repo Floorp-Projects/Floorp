@@ -127,7 +127,7 @@ The modifier level helps further classify a design token's characteristic with f
 #### Variant
 A variant specifies a token from a group of tokens related by a common meaning but that have varying purpose.
 
-![Two examples: 
+![Two examples:
   one showing "success" as the 'Variant' part of the "icon-color-success" token. \
   another showing "critical" as the 'Variant' part of the "icon-color-critical" token. \
 ](./img/modifiers-variant-example.png)
