@@ -10,6 +10,11 @@ support-files = [
   "addons/set_homepage.xpi",
   "addons/set_newtab.xpi",
 ]
+skip-if = [
+  "os == 'linux' && os_version == '18.04' && asan", # manifest runs too long
+  "os == 'linux' && os_version == '18.04' && tsan", # manifest runs too long
+  "win11_2009 && asan", # manifest runs too long
+]
 
 ["browser_about_settings.js"]
 

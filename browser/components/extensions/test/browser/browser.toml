@@ -49,7 +49,10 @@ support-files = [
   "../../../../../toolkit/components/reader/tests/browser/readerModeNonArticle.html",
   "../../../../../toolkit/components/reader/tests/browser/readerModeArticle.html",
 ]
-skip-if = ["os == 'linux' && os_version == '18.04' && asan"] # Bug 1721945 - Software WebRender
+skip-if = [
+  "os == 'linux' && os_version == '18.04' && asan", # Bug 1721945 - Software WebRender
+  "os == 'linux' && os_version == '18.04' && tsan", # manifest runs too long
+]
 
 ["browser_AMBrowserExtensionsImport.js"]
 

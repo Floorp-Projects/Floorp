@@ -300,12 +300,7 @@ mochitest-browser-chrome:
     mozharness:
         mochitest-flavor: browser
         chunked: true
-    # Bug 1281241: migrating to m3.large instances
-    instance-size:
-        by-test-platform:
-            linux.*64-tsan-qr/opt: xlarge  # runs out of memory using 8GB
-            linux.*64-asan-qr/opt: xlarge  # runs out of memory using 8GB
-            default: default
+    instance-size: default
     allow-software-gl-layers: false
 
 mochitest-browser-chrome-failures:

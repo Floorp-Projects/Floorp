@@ -4,7 +4,11 @@ support-files = [
   "head.js",
   "head-common.js",
 ]
-
+skip-if = [
+  "os == 'linux' && os_version == '18.04' && asan", # long running manifest
+  "os == 'linux' && os_version == '18.04' && tsan", # long running manifest
+  "win11_2009 && asan", # long running manifest
+]
 prefs = [
   "browser.bookmarks.testing.skipDefaultBookmarksImport=true",
   "browser.urlbar.trending.featureGate=false",
