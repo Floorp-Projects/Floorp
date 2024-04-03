@@ -20,7 +20,7 @@
 use crate::parser::{Combinator, Component, RelativeSelector, Selector, SelectorImpl};
 use crate::sink::Push;
 use servo_arc::{Arc, ThinArc};
-use smallvec::{self, SmallVec};
+use smallvec::SmallVec;
 use std::cmp;
 use std::iter;
 use std::ptr;
