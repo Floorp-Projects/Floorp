@@ -132,10 +132,10 @@ async function test() {
                      `bottom left of scroller in testcase ${testId}`);
     }
 
-    // With the first two cases (circle masks) both WebRender and non-WebRender
-    // emit dispatch-to-content regions for the right side, so for now we just
-    // test for that. Eventually WebRender should be able to stop emitting DTC
-    // and we can update this test to be more precise in that case.
+    // With the first two cases (circle masks) WebRender emits dispatch-to-content
+    // regions for the right side, so for now we just test for that.
+    // Eventually WebRender should be able to stop emitting DTC
+    // and we can update this test to be more precise.
     // For the two rectangular test cases we get precise results rather than
     // dispatch-to-content.
     if (testId == 1 || testId == 2) {

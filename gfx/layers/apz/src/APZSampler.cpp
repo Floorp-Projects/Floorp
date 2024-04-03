@@ -125,19 +125,16 @@ AsyncTransform APZSampler::GetCurrentAsyncTransform(
 ParentLayerRect APZSampler::GetCompositionBounds(
     const LayersId& aLayersId, const ScrollableLayerGuid::ViewID& aScrollId,
     const MutexAutoLock& aProofOfMapLock) const {
-  // This function can get called on the compositor in case of non WebRender
-  // get called on the sampler thread in case of WebRender.
   AssertOnSamplerThread();
 
   RefPtr<AsyncPanZoomController> apzc =
       mApz->GetTargetAPZC(aLayersId, aScrollId, aProofOfMapLock);
   if (!apzc) {
-    // On WebRender it's possible that this function can get called even after
-    // the target APZC has been already destroyed because destroying the
-    // animation which triggers this function call is basically processed later
-    // than the APZC one, i.e. queue mCompositorAnimationsToDelete in
-    // WebRenderBridgeParent and then remove them in
-    // WebRenderBridgeParent::RemoveEpochDataPriorTo.
+    // It's possible that this function can get called even after the target
+    // APZC has been already destroyed because destroying the animation which
+    // triggers this function call is basically processed later than the APZC
+    // one, i.e. queue mCompositorAnimationsToDelete in WebRenderBridgeParent
+    // and then remove them in WebRenderBridgeParent::RemoveEpochDataPriorTo.
     return ParentLayerRect();
   }
 
