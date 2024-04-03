@@ -131,9 +131,9 @@ ConvertIceCandidatePairConfigType(IceCandidatePairConfigType type) {
 rtclog::IceCandidatePairConfig::IceCandidateType ConvertIceCandidateType(
     IceCandidateType type) {
   switch (type) {
-    case IceCandidateType::kLocal:
+    case IceCandidateType::kHost:
       return rtclog::IceCandidatePairConfig::LOCAL;
-    case IceCandidateType::kStun:
+    case IceCandidateType::kSrflx:
       return rtclog::IceCandidatePairConfig::STUN;
     case IceCandidateType::kPrflx:
       return rtclog::IceCandidatePairConfig::PRFLX;

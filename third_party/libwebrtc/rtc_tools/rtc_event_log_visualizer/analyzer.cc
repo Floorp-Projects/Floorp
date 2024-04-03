@@ -261,9 +261,9 @@ const char kNetworkTypeCellular[] = "cellular";
 
 absl::string_view GetIceCandidateTypeAsString(IceCandidateType type) {
   switch (type) {
-    case IceCandidateType::kLocal:
+    case IceCandidateType::kHost:
       return kIceCandidateTypeLocal;
-    case IceCandidateType::kStun:
+    case IceCandidateType::kSrflx:
       return kIceCandidateTypeStun;
     case IceCandidateType::kPrflx:
       return kIceCandidateTypePrflx;

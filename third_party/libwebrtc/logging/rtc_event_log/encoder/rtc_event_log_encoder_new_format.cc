@@ -200,9 +200,9 @@ ConvertToProtoFormat(IceCandidatePairConfigType type) {
 rtclog2::IceCandidatePairConfig::IceCandidateType ConvertToProtoFormat(
     IceCandidateType type) {
   switch (type) {
-    case IceCandidateType::kLocal:
+    case IceCandidateType::kHost:
       return rtclog2::IceCandidatePairConfig::LOCAL;
-    case IceCandidateType::kStun:
+    case IceCandidateType::kSrflx:
       return rtclog2::IceCandidatePairConfig::STUN;
     case IceCandidateType::kPrflx:
       return rtclog2::IceCandidatePairConfig::PRFLX;

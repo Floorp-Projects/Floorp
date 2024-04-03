@@ -77,9 +77,9 @@ inline bool TooLongWithoutResponse(
 // enum.
 webrtc::IceCandidateType GetRtcEventLogCandidateType(const Candidate& c) {
   if (c.is_local()) {
-    return webrtc::IceCandidateType::kLocal;
+    return webrtc::IceCandidateType::kHost;
   } else if (c.is_stun()) {
-    return webrtc::IceCandidateType::kStun;
+    return webrtc::IceCandidateType::kSrflx;
   } else if (c.is_prflx()) {
     return webrtc::IceCandidateType::kPrflx;
   }
