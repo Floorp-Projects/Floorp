@@ -25,4 +25,10 @@
         android:summary="@string/preferences_sync_debug_quit_button_summary"
         android:icon="@drawable/ic_close"
         app:isPreferenceVisible="false" />
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:key="@string/pref_key_use_react_fxa"
+        android:title="@string/preferences_use_react_fxa"
+        app:iconSpaceReserved="false"
+        />
 </PreferenceScreen>

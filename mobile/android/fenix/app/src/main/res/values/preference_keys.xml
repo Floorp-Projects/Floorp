@@ -49,6 +49,7 @@
     <string name="pref_key_allow_domestic_china_fxa_server" translatable="false">pref_key_allow_domestic_china_fxa_server</string>
     <string name="pref_key_sync_debug" translatable="false">pref_key_sync_debug</string>
     <string name="pref_key_override_fxa_server" translatable="false">pref_key_override_fxa_server</string>
+    <string name="pref_key_use_react_fxa" translatable="false">pref_key_use_react_fxa</string>
     <string name="pref_key_override_sync_tokenserver" translatable="false">pref_key_override_sync_tokenserver</string>
     <string name="pref_key_override_push_server" translatable="false">pref_key_override_push_server</string>
     <string name="pref_key_sync_debug_quit" translatable="false">pref_key_sync_debug_quit</string>
