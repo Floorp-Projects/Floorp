@@ -473,7 +473,8 @@
       __block BOOL completed = NO;
       [peerConnection
           offerForConstraints:constraints
-            completionHandler:^(RTCSessionDescription *_Nullable sdp, NSError *_Nullable error) {
+            completionHandler:^(RTC_OBJC_TYPE(RTCSessionDescription) *_Nullable sdp,
+                                NSError *_Nullable error) {
               XCTAssertNil(error);
               XCTAssertNotNil(sdp);
 
