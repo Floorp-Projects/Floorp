@@ -838,6 +838,8 @@ int LibvpxVp9Encoder::InitAndSetControlSettings(const VideoCodec* inst) {
       // 1:2 scaling in each dimension.
       svc_params_.scaling_factor_num[i] = scaling_factor_num;
       svc_params_.scaling_factor_den[i] = 256;
+      if (inst->mode != VideoCodecMode::kScreensharing)
+        scaling_factor_num /= 2;
     }
   }
 
