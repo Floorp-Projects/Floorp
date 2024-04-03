@@ -68,6 +68,9 @@ Review groups
    * - #firefox-svg-reviewers
      - SVG-related changes
      - `Member list <https://phabricator.services.mozilla.com/project/members/97/>`__
+   * - #frontend-codestyle-reviewers
+     - Changes to ESLint, Prettier or Stylelint configurations.
+     - `Member list <https://phabricator.services.mozilla.com/project/members/208/>`__
    * - #android-reviewers
      - Changes to Fenix, Focus and Android Components.
      - `Member list <https://phabricator.services.mozilla.com/project/members/200/>`__

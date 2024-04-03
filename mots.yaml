@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2024-03-28T00:01:46.798094'
+updated_at: '2024-04-03T10:44:37.118446'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -3713,6 +3713,7 @@ modules:
       - *standard8
       - *jandem
     meta:
+      review_group: frontend-codestyle-reviewers
 
   - name: mots config
     includes:
@@ -4214,5 +4215,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: b8eafef72542cfbba2860fac821841a77f75b1f9
-  export: 7a1fb8eb504221d61c112084fb9fe1b1c0be9bba
+  config: 20f0fcbf456adb6c635b7565b9f57d7b13f0bb85
+  export: a3e3795c00cfb9241207b69cdf1f8eb7639301fe
