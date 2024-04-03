@@ -7,6 +7,8 @@
 with Files("**"):
     BUG_COMPONENT = ("Firefox", "Profiles")
 
+JAR_MANIFESTS += ["jar.mn"]
+
 SPHINX_TREES["docs"] = "docs"
 
 XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.toml"]

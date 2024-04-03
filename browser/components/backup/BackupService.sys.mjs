@@ -62,6 +62,20 @@ export class BackupService {
   }
 
   /**
+   * Returns a reference to the BackupService singleton. If the singleton has
+   * not been initialized, an error is thrown.
+   *
+   * @static
+   * @returns {BackupService}
+   */
+  static get() {
+    if (!this.#instance) {
+      throw new Error("BackupService not initialized");
+    }
+    return this.#instance;
+  }
+
+  /**
    * Create a BackupService instance.
    *
    * @param {object} [backupResources=DefaultBackupResources] - Object containing BackupResource classes to associate with this service.
@@ -153,7 +167,7 @@ export class BackupService {
       // A pre-existing staging folder exists. A previous backup attempt must
       // have failed or been interrupted. We'll clear it out.
       lazy.logConsole.warn("A pre-existing staging folder exists. Clearing.");
-      await IOUtils.remove(stagingPath);
+      await IOUtils.remove(stagingPath, { recursive: true });
     }
     await IOUtils.makeDirectory(stagingPath);
 
