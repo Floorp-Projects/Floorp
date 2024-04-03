@@ -321,6 +321,16 @@ pub fn push_quad(
 
             scratch.quad_segments.clear();
 
+            fn should_create_task(mode: ClipMode, x: usize, y: usize) -> bool {
+                match mode {
+                    // Only create render tasks for the corners.
+                    ClipMode::Clip => x != 1 && y != 1,
+                    // Create render tasks for all segments (the
+                    // center will be skipped).
+                    ClipMode::ClipOut => true,
+                }
+            }
+
             for y in 0 .. y_coords.len()-1 {
                 let y0 = y_coords[y];
                 let y1 = y_coords[y+1];
@@ -330,26 +340,22 @@ pub fn push_quad(
                 }
 
                 for x in 0 .. x_coords.len()-1 {
+                    // We'll create render tasks and segments for the corners in a
+                    // separate loop.
+                    if should_create_task(mode, x, y) {
+                        continue;
+                    }
+
+                    if mode == ClipMode::ClipOut && x == 1 && y == 1 {
+                        continue;
+                    }
+
                     let x0 = x_coords[x];
                     let x1 = x_coords[x+1];
 
                     if x1 <= x0 {
                         continue;
                     }
-
-                    let create_task = match mode {
-                        ClipMode::Clip => {
-                            // Only create render tasks for the corners.
-                            x != 1 && y != 1
-                        }
-                        ClipMode::ClipOut => {
-                            if x == 1 && y == 1 {
-                                continue;
-                            }
-
-                            true
-                        }
-                    };
 
                     let rect = DeviceIntRect::new(point2(x0, y0), point2(x1, y1));
 
@@ -360,25 +366,75 @@ pub fn push_quad(
                         }
                     };
 
-                    let task_id = if create_task {
-                        add_render_task_with_mask(
-                            pattern,
-                            device_rect.size(),
-                            device_rect.min.to_f32(),
-                            clip_chain,
-                            prim_spatial_node_index,
-                            pic_context.raster_spatial_node_index,
-                            main_prim_address,
-                            transform_id,
-                            aa_flags,
-                            quad_flags,
-                            device_pixel_scale,
-                            false,
-                            frame_state,
-                        )
-                    } else {
-                        RenderTaskId::INVALID
+                    scratch.quad_segments.push(QuadSegment {
+                        rect: device_rect.to_f32().cast_unit(),
+                        task_id: RenderTaskId::INVALID,
+                    });
+                }
+            }
+
+            if !scratch.quad_segments.is_empty() {
+                add_pattern_prim(
+                    pattern,
+                    prim_instance_index,
+                    unclipped_surface_rect.cast_unit(),
+                    quad_flags,
+                    frame_state,
+                    targets,
+                    &scratch.quad_segments,
+                );
+            }
+
+            scratch.quad_segments.clear();
+            // Only create render tasks for the corners.
+            for y in 0 .. y_coords.len()-1 {
+                let y0 = y_coords[y];
+                let y1 = y_coords[y+1];
+
+                if y1 <= y0 {
+                    continue;
+                }
+
+                for x in 0 .. x_coords.len()-1 {
+                    if !should_create_task(mode, x, y) {
+                        continue;
+                    }
+
+                    if mode == ClipMode::ClipOut && x == 1 && y == 1 {
+                        continue;
+                    }
+
+                    let x0 = x_coords[x];
+                    let x1 = x_coords[x+1];
+
+                    if x1 <= x0 {
+                        continue;
+                    }
+
+                    let rect = DeviceIntRect::new(point2(x0, y0), point2(x1, y1));
+
+                    let device_rect = match rect.intersection(&clipped_surface_rect) {
+                        Some(rect) => rect,
+                        None => {
+                            continue;
+                        }
                     };
+
+                    let task_id = add_render_task_with_mask(
+                        pattern,
+                        device_rect.size(),
+                        device_rect.min.to_f32(),
+                        clip_chain,
+                        prim_spatial_node_index,
+                        pic_context.raster_spatial_node_index,
+                        main_prim_address,
+                        transform_id,
+                        aa_flags,
+                        quad_flags,
+                        device_pixel_scale,
+                        false,
+                        frame_state,
+                    );
 
                     let rect = device_rect.to_f32().cast_unit();
                     scratch.quad_segments.push(QuadSegment { rect, task_id });
@@ -518,6 +574,40 @@ fn add_render_task_with_mask(
         .add_child_render_task(task_id, frame_state.rg_builder);
 
     task_id
+}
+
+fn add_pattern_prim(
+    pattern: &Pattern,
+    prim_instance_index: PrimitiveInstanceIndex,
+    rect: LayoutRect,
+    quad_flags: QuadFlags,
+    frame_state: &mut FrameBuildingState,
+    targets: &[CommandBufferIndex],
+    segments: &[QuadSegment],
+) {
+    let prim_address = write_prim_blocks(
+        &mut frame_state.frame_gpu_data.f32,
+        rect,
+        rect,
+        pattern.base_color,
+        segments,
+    );
+
+    frame_state.set_segments(segments, targets);
+
+    frame_state.push_cmd(
+        &PrimitiveCommand::quad(
+            pattern.kind,
+            pattern.shader_input,
+            prim_instance_index,
+            prim_address,
+            TransformPaletteId::IDENTITY,
+            quad_flags,
+            // TODO(gw): No AA on composite, unless we use it to apply 2d clips
+            EdgeAaSegmentMask::empty(),
+        ),
+        targets,
+    );
 }
 
 fn add_composite_prim(
