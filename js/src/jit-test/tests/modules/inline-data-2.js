@@ -1,6 +1,6 @@
 let result = null;
 let error = null;
-let promise = import("nonexistent.js");
+let promise = import("javascript: export let b = 100;");
 promise.then((ns) => {
     result = ns;
 }).catch((e) => {
@@ -8,5 +8,5 @@ promise.then((ns) => {
 });
 
 drainJobQueue();
-assertEq(result, null);
-assertEq(error instanceof Error, true);
+assertEq(error, null);
+assertEq(result.b, 100);

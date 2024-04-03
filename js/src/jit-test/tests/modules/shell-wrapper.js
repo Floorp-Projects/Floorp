@@ -1,4 +1,3 @@
-// |jit-test| module
 // Test shell ModuleObject wrapper's accessors and methods
 
 load(libdir + "asserts.js");
@@ -49,10 +48,8 @@ const d = registerModule('d', parseModule(`
 f();
 `));
 moduleLink(d);
-try {
-  await moduleEvaluate(d);
-} catch (e) {
-}
+moduleEvaluate(d).catch(e => undefined);
+drainJobQueue();
 assertEq(d.evaluationError instanceof ReferenceError, true);
 testGetter(d, "evaluationError");
 
