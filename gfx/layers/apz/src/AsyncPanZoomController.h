@@ -1133,13 +1133,12 @@ class AsyncPanZoomController {
 
   UniquePtr<OverscrollEffectBase> mOverscrollEffect;
 
-  // Zoom animation id, used for zooming in WebRender. This should only be
-  // set on the APZC instance for the root content document (i.e. the one we
-  // support zooming on), and is only used if WebRender is enabled. The
-  // animation id itself refers to the transform animation id that was set on
-  // the stacking context in the WR display list. By changing the transform
-  // associated with this id, we can adjust the scaling that WebRender applies,
-  // thereby controlling the zoom.
+  // Zoom animation id, used for zooming. This should only be set on the APZC
+  // instance for the root content document (i.e. the one we support zooming
+  // on). The animation id itself refers to the transform animation id that was
+  // set on the stacking context in the WR display list. By changing the
+  // transform associated with this id, we can adjust the scaling that WebRender
+  // applies, thereby controlling the zoom.
   Maybe<uint64_t> mZoomAnimationId;
 
   // Position on screen where user first put their finger down.

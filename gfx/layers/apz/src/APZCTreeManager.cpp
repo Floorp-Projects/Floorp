@@ -145,8 +145,7 @@ struct APZCTreeManager::TreeBuildingState {
   // root node of the layers (sub-)tree, which may not be same as the RCD node
   // for the subtree, and so we need this mechanism to ensure it gets propagated
   // to the RCD's APZC instance. Once it is set on the APZC instance, the value
-  // is cleared back to Nothing(). Note that this is only used in the WebRender
-  // codepath.
+  // is cleared back to Nothing().
   Maybe<uint64_t> mZoomAnimationId;
 
   // See corresponding members of APZCTreeManager. These are the same thing, but
@@ -538,12 +537,9 @@ APZCTreeManager::UpdateHitTestingTree(const WebRenderScrollDataWrapper& aRoot,
           AsyncPanZoomController* apzc = node->GetApzc();
           aLayerMetrics.SetApzc(apzc);
 
-          // GetScrollbarAnimationId is only set when webrender is enabled,
-          // which limits the extra thumb mapping work to the webrender-enabled
-          // case where it is needed.
-          // Note also that when webrender is enabled, a "valid" animation id
-          // is always nonzero, so we don't need to worry about handling the
-          // case where WR is enabled and the animation id is zero.
+          // Note that a "valid" animation id is always nonzero, so we don't
+          // need to worry about handling the case where the animation id is
+          // zero.
           if (node->GetScrollbarAnimationId()) {
             if (node->IsScrollThumbNode()) {
               state.mScrollThumbs.push_back(node);
@@ -555,11 +551,9 @@ APZCTreeManager::UpdateHitTestingTree(const WebRenderScrollDataWrapper& aRoot,
             }
           }
 
-          // GetFixedPositionAnimationId is only set when webrender is enabled.
           if (node->GetFixedPositionAnimationId().isSome()) {
             state.mFixedPositionInfo.emplace_back(node);
           }
-          // GetStickyPositionAnimationId is only set when webrender is enabled.
           if (node->GetStickyPositionAnimationId().isSome()) {
             state.mStickyPositionInfo.emplace_back(node);
           }

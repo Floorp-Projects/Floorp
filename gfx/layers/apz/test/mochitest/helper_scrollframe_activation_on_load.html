@@ -41,9 +41,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1151663
       let config = getHitTestConfig();
 
       let heightMultiplier = SpecialPowers.getCharPref("apz.y_stationary_size_multiplier");
-      // With WebRender, the effective height multiplier can be reduced
-      // for alignment reasons. The reduction should be no more than a
-      // factor of two.
+      // The effective height multiplier can be reduced for alignment reasons.
+      // The reduction should be no more than a factor of two.
       heightMultiplier /= 2;
       info("effective displayport height multipler is " + heightMultiplier);
 

@@ -182,16 +182,16 @@ class HitTestingTreeNode {
 
   LayersId mLayersId;
 
-  // This is only set if WebRender is enabled, and only for HTTNs
-  // where IsScrollThumbNode() returns true. It holds the animation id that we
-  // use to move the thumb node to reflect async scrolling.
+  // This is only set for HTTNs where IsScrollThumbNode() returns true. It holds
+  // the animation id that we use to move the thumb node to reflect async
+  // scrolling.
   Maybe<uint64_t> mScrollbarAnimationId;
 
   // This is set for scrollbar Container and Thumb layers.
   ScrollbarData mScrollbarData;
 
-  // This is only set if WebRender is enabled. It holds the animation id that
-  // we use to adjust fixed position content for the toolbar.
+  // This holds the animation id that we use to adjust fixed position content
+  // for the toolbar.
   Maybe<uint64_t> mFixedPositionAnimationId;
 
   ScrollableLayerGuid::ViewID mFixedPosTarget;
@@ -200,8 +200,8 @@ class HitTestingTreeNode {
   ScrollableLayerGuid::ViewID mStickyPosTarget;
   LayerRectAbsolute mStickyScrollRangeOuter;
   LayerRectAbsolute mStickyScrollRangeInner;
-  // This is only set if WebRender is enabled. It holds the animation id that
-  // we use to adjust sticky position content for the toolbar.
+  // This holds the animation id that we use to adjust sticky position content
+  // for the toolbar.
   Maybe<uint64_t> mStickyPositionAnimationId;
 
   LayerIntRect mVisibleRect;

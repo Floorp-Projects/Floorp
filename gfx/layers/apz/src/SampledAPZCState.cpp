@@ -86,6 +86,8 @@ void SampledAPZCState::RemoveFractionalAsyncDelta() {
   // a snapshot of APZ state (decoupling it from APZ assumptions) and provides
   // it as an input to the compositor (so all compositor state should be
   // internally consistent based on this input).
+  // TODO(bug 1889267): Now that we use WebRender everywhere, can this hack be
+  // removed?
   if (mLayoutViewport.TopLeft() == mVisualScrollOffset) {
     return;
   }

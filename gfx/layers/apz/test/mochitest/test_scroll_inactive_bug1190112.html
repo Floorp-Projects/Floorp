@@ -523,8 +523,7 @@ async function test() {
   // Scroll inner again
   // Tick the refresh driver once to make sure the compositor has sent the
   // updated scroll offset for the outer scroller to WebRender, so that the
-  // hit-test in sendWheelAndPaint takes it into account. (This isn't needed
-  // if using non-WR layers, but doesn't hurt either).
+  // hit-test in sendWheelAndPaint takes it into account.
   var dwu = SpecialPowers.getDOMWindowUtils(window);
   dwu.advanceTimeAndRefresh(16);
   dwu.restoreNormalRefresh();

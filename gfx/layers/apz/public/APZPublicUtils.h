@@ -55,9 +55,8 @@ const ScreenMargin CalculatePendingDisplayPort(
  * between 1 and 8 inclusive. The multiplier is chosen based on the provided
  * base size, such that multiplier is larger when the base size is larger.
  * The exact details are somewhat arbitrary and tuned by hand.
- * This function is intended to only be used with WebRender, because that is
- * the codepath that wants to use a larger displayport alignment, because
- * moving the displayport is relatively expensive with WebRender.
+ * We use a large displayport alignment because moving the displayport is
+ * relatively expensive with WebRender.
  */
 gfx::IntSize GetDisplayportAlignmentMultiplier(const ScreenSize& aBaseSize);
 
