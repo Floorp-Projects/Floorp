@@ -10716,21 +10716,27 @@ ComputedStyle* nsIFrame::DoGetParentComputedStyle(
 }
 
 void nsIFrame::GetLastLeaf(nsIFrame** aFrame) {
-  if (!aFrame || !*aFrame) return;
-  nsIFrame* child = *aFrame;
-  // if we are a block frame then go for the last line of 'this'
-  while (1) {
-    child = child->PrincipalChildList().FirstChild();
-    if (!child) return;  // nothing to do
-    nsIFrame* siblingFrame;
-    nsIContent* content;
-    // ignore anonymous elements, e.g. mozTableAdd* mozTableRemove*
-    // see bug 278197 comment #12 #13 for details
-    while ((siblingFrame = child->GetNextSibling()) &&
-           (content = siblingFrame->GetContent()) &&
-           !content->IsRootOfNativeAnonymousSubtree())
-      child = siblingFrame;
-    *aFrame = child;
+  if (!aFrame || !*aFrame) {
+    return;
+  }
+  for (nsIFrame* maybeLastLeaf = (*aFrame)->PrincipalChildList().LastChild();
+       maybeLastLeaf;) {
+    nsIFrame* lastChildNotInSubTree = nullptr;
+    for (nsIFrame* child = maybeLastLeaf; child;
+         child = child->GetPrevSibling()) {
+      nsIContent* content = child->GetContent();
+      // ignore anonymous elements, e.g. mozTableAdd* mozTableRemove*
+      // see bug 278197 comment #12 #13 for details
+      if (content && !content->IsRootOfNativeAnonymousSubtree()) {
+        lastChildNotInSubTree = child;
+        break;
+      }
+    }
+    if (!lastChildNotInSubTree) {
+      return;
+    }
+    *aFrame = lastChildNotInSubTree;
+    maybeLastLeaf = lastChildNotInSubTree->PrincipalChildList().LastChild();
   }
 }
 
