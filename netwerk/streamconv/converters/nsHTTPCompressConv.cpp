@@ -21,7 +21,6 @@
 #include "nsIRequest.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "nsIThreadRetargetableRequest.h"
-#include "nsIChannel.h"
 
 // brotli headers
 #undef assert
@@ -144,35 +143,17 @@ nsHTTPCompressConv::MaybeRetarget(nsIRequest* request) {
   nsCOMPtr<nsISerialEventTarget> target;
   rv = req->GetDeliveryTarget(getter_AddRefs(target));
   if (NS_FAILED(rv) || !target || target->IsOnCurrentThread()) {
-    nsCOMPtr<nsIChannel> channel(do_QueryInterface(request));
-    int64_t length = -1;
-    if (channel) {
-      channel->GetContentLength(&length);
-      // If this fails we'll retarget
+    // No retargetting was performed.  Decompress off MainThread,
+    // and dispatch results back to MainThread
+    nsCOMPtr<nsISerialEventTarget> backgroundThread;
+    rv = NS_CreateBackgroundTaskQueue("nsHTTPCompressConv",
+                                      getter_AddRefs(backgroundThread));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = req->RetargetDeliveryTo(backgroundThread);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_SUCCEEDED(rv)) {
+      mDispatchToMainThread = true;
     }
-    if (length <= 0 ||
-        length >=
-            StaticPrefs::network_decompression_off_mainthread_min_size()) {
-      LOG(("MaybeRetarget: Retargeting to background thread: Length %ld",
-           length));
-      // No retargetting was performed.  Decompress off MainThread,
-      // and dispatch results back to MainThread.
-      // Don't do this if the input is small, if we know the length.
-      // If the length is 0 (unknown), always use OMT.
-      nsCOMPtr<nsISerialEventTarget> backgroundThread;
-      rv = NS_CreateBackgroundTaskQueue("nsHTTPCompressConv",
-                                        getter_AddRefs(backgroundThread));
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = req->RetargetDeliveryTo(backgroundThread);
-      NS_ENSURE_SUCCESS(rv, rv);
-      if (NS_SUCCEEDED(rv)) {
-        mDispatchToMainThread = true;
-      }
-    } else {
-      LOG(("MaybeRetarget: Not retargeting: Length %ld", length));
-    }
-  } else {
-    LOG(("MaybeRetarget: Don't need to retarget"));
   }
 
   return NS_OK;
