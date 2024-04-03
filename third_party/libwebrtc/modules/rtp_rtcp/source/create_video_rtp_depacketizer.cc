@@ -19,6 +19,9 @@
 #include "modules/rtp_rtcp/source/video_rtp_depacketizer_h264.h"
 #include "modules/rtp_rtcp/source/video_rtp_depacketizer_vp8.h"
 #include "modules/rtp_rtcp/source/video_rtp_depacketizer_vp9.h"
+#ifdef RTC_ENABLE_H265
+#include "modules/rtp_rtcp/source/video_rtp_depacketizer_h265.h"
+#endif
 
 namespace webrtc {
 
@@ -34,8 +37,11 @@ std::unique_ptr<VideoRtpDepacketizer> CreateVideoRtpDepacketizer(
     case kVideoCodecAV1:
       return std::make_unique<VideoRtpDepacketizerAv1>();
     case kVideoCodecH265:
-      // TODO(bugs.webrtc.org/13485): Implement VideoRtpDepacketizerH265.
+#ifdef RTC_ENABLE_H265
+      return std::make_unique<VideoRtpDepacketizerH265>();
+#else
       return nullptr;
+#endif
     case kVideoCodecGeneric:
     case kVideoCodecMultiplex:
       return std::make_unique<VideoRtpDepacketizerGeneric>();

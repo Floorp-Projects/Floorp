@@ -260,8 +260,11 @@ rtc_library("rtp_rtcp") {
 
   if (rtc_use_h265) {
     sources += [
+      "source/rtp_packet_h265_common.h",
       "source/rtp_packetizer_h265.cc",
       "source/rtp_packetizer_h265.h",
+      "source/video_rtp_depacketizer_h265.cc",
+      "source/video_rtp_depacketizer_h265.h",
     ]
   }
 
@@ -632,7 +635,10 @@ if (rtc_include_tests) {
       "source/video_rtp_depacketizer_vp9_unittest.cc",
     ]
     if (rtc_use_h265) {
-      sources += [ "source/rtp_packetizer_h265_unittest.cc" ]
+      sources += [
+        "source/rtp_packetizer_h265_unittest.cc",
+        "source/video_rtp_depacketizer_h265_unittest.cc",
+      ]
     }
 
     deps = [

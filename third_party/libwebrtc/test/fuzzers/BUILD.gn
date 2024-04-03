@@ -132,6 +132,11 @@ if (rtc_use_h265) {
       "../../modules/video_coding/",
     ]
   }
+
+  webrtc_fuzzer_test("h265_depacketizer_fuzzer") {
+    sources = [ "h265_depacketizer_fuzzer.cc" ]
+    deps = [ "../../modules/rtp_rtcp" ]
+  }
 }
 
 webrtc_fuzzer_test("forward_error_correction_fuzzer") {
