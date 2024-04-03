@@ -2634,7 +2634,7 @@ function HandleAppCommandEvent(evt) {
       break;
     case "Stop":
       if (XULBrowserWindow.stopCommand.getAttribute("disabled") != "true") {
-        BrowserStop();
+        BrowserCommands.stop();
       }
       break;
     case "Search":
@@ -2675,10 +2675,6 @@ function HandleAppCommandEvent(evt) {
   }
   evt.stopPropagation();
   evt.preventDefault();
-}
-
-function BrowserStop() {
-  gBrowser.webNavigation.stop(Ci.nsIWebNavigation.STOP_ALL);
 }
 
 function loadOneOrMoreURIs(aURIString, aTriggeringPrincipal, aCsp) {

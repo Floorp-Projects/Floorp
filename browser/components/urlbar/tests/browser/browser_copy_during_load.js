@@ -45,7 +45,7 @@ add_task(async function () {
       null,
       true
     );
-    BrowserStop();
+    BrowserCommands.stop();
     await browserStoppedPromise;
   });
 });

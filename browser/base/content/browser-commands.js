@@ -196,6 +196,10 @@ var BrowserCommands = {
     }
   },
 
+  stop() {
+    gBrowser.webNavigation.stop(Ci.nsIWebNavigation.STOP_ALL);
+  },
+
   home(aEvent) {
     if (aEvent?.button == 2) {
       // right-click: do nothing
