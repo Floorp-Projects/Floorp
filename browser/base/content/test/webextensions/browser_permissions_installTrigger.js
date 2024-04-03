@@ -9,6 +9,12 @@ async function installTrigger(filename) {
       ["extensions.InstallTriggerImpl.enabled", true],
       // Relax the user input requirements while running this test.
       ["xpinstall.userActivation.required", false],
+      // This test asserts that the extension icon is in the install dialog
+      // and so it requires the signature checks to be enabled (otherwise the
+      // extension icon is expected to be replaced by a warning icon) and the
+      // two test extension used by this test (browser_webext_nopermissions.xpi
+      // and browser_webext_permissions.xpi) are signed using AMO stage signatures.
+      ["xpinstall.signatures.dev-root", true],
     ],
   });
   BrowserTestUtils.startLoadingURIString(
