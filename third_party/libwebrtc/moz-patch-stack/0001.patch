@@ -1,420 +1,51 @@
 From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Wed, 3 Apr 2024 22:53:14 +0200
-Subject: (tmp-cherry-pick) Revert "Take out Fuchsia-only SDES-enabling
- parameters" (c0741e9f12)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Date: Wed, 3 Apr 2024 22:58:10 +0200
+Subject: (tmp-cherry-pick) Revert "Test new tree." (365cf14407)
 
-This reverts commit 59f3b35013a29f8c73a46fa6fd06aadc96aad892.
+This reverts commit c6675ed967b6ee72fa8dc98dce34bf949aec372f.
 
-Broke WebRTC into Chrome rolls:
-
-https://chromium-review.googlesource.com/c/chromium/src/+/5248171?tab=checks
-
-/../third_party/blink/renderer/modules/peerconnection/rtc_peer_connection_handler.cc:216:18: error: no member named 'enable_dtls_srtp' in 'webrtc::PeerConnectionInterface::RTCConfiguration'
-  216 |   configuration->enable_dtls_srtp = dtls_srtp_key_agreement;
-      |   ~~~~~~~~~~~~~  ^
+Reason for revert: Testing tree close
 
 Original change's description:
-> Take out Fuchsia-only SDES-enabling parameters
+> Test new tree.
 >
-> This does not remove all traces of SDES - we still need to delete
-> the cricket::CryptoParams struct and all code that uses it.
+> This CL should not land since the tree is closed.
 >
-> Bug: webrtc:11066, chromium:804275
-> Change-Id: I811c8d40da7f4af714d53376f24cd53332a15945
-> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/336780
-> Reviewed-by: Henrik Boström <hbos@webrtc.org>
-> Commit-Queue: Harald Alvestrand <hta@webrtc.org>
-> Cr-Commit-Position: refs/heads/main@{#41634}
+> [1] - https://ci.chromium.org/ui/labs/tree-status/webrtc
+>
+> No-Try: True
+> Bug: None
+> Change-Id: I398864f5ba7e684e2351681390a211a73e6ed466
+> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/337140
+> Auto-Submit: Mirko Bonadei <mbonadei@webrtc.org>
+> Reviewed-by: Christoffer Dewerin <jansson@google.com>
+> Reviewed-by: Christoffer Dewerin <jansson@webrtc.org>
+> Commit-Queue: Mirko Bonadei <mbonadei@webrtc.org>
+> Owners-Override: Mirko Bonadei <mbonadei@webrtc.org>
+> Cr-Commit-Position: refs/heads/main@{#41637}
 
-Bug: webrtc:11066, chromium:804275
-Change-Id: I2c2114873091e0c662977a6ef5723e6447166a65
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/337181
-Commit-Queue: Olga Sharonova <olka@webrtc.org>
-Reviewed-by: Henrik Boström <hbos@webrtc.org>
+Bug: None
+Change-Id: Iac4a12901263807ca3f57bcffa58d26f956efc9b
+No-Try: true
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/337121
+Owners-Override: Mirko Bonadei <mbonadei@webrtc.org>
 Bot-Commit: rubber-stamper@appspot.gserviceaccount.com <rubber-stamper@appspot.gserviceaccount.com>
-Owners-Override: Olga Sharonova <olka@webrtc.org>
-Cr-Commit-Position: refs/heads/main@{#41643}
+Reviewed-by: Christoffer Dewerin <jansson@webrtc.org>
+Commit-Queue: Mirko Bonadei <mbonadei@webrtc.org>
+Cr-Commit-Position: refs/heads/main@{#41638}
 ---
- api/peer_connection_interface.h       |   9 +
- pc/peer_connection.cc                 |  16 +-
- pc/peer_connection_crypto_unittest.cc | 249 ++++++++++++++++++++++++++
- pc/peer_connection_integrationtest.cc |  20 +++
- pc/sdp_offer_answer.cc                |   3 +
- 5 files changed, 296 insertions(+), 1 deletion(-)
+ whitespace.txt | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/api/peer_connection_interface.h b/api/peer_connection_interface.h
-index 7699f33438..3c225eb28a 100644
---- a/api/peer_connection_interface.h
-+++ b/api/peer_connection_interface.h
-@@ -451,6 +451,15 @@ class RTC_EXPORT PeerConnectionInterface : public webrtc::RefCountInterface {
-     // when switching from a static scene to one with motion.
-     absl::optional<int> screencast_min_bitrate;
+diff --git a/whitespace.txt b/whitespace.txt
+index 506c93ba09..e4ba9abb0d 100644
+--- a/whitespace.txt
++++ b/whitespace.txt
+@@ -1,6 +1,7 @@
+ You can modify this file to create no-op changelists.
+ Try to write something funny. And please don't add trailing whitespace.
  
-+#if defined(WEBRTC_FUCHSIA)
-+    // TODO(bugs.webrtc.org/11066): Remove entirely once Fuchsia does not use.
-+    // TODO(bugs.webrtc.org/9891) - Move to crypto_options
-+    // Can be used to disable DTLS-SRTP. This should never be done, but can be
-+    // useful for testing purposes, for example in setting up a loopback call
-+    // with a single PeerConnection.
-+    absl::optional<bool> enable_dtls_srtp;
-+#endif
 +
-     /////////////////////////////////////////////////
-     // The below fields are not part of the standard.
-     /////////////////////////////////////////////////
-diff --git a/pc/peer_connection.cc b/pc/peer_connection.cc
-index 3ab2c52130..dc784771f8 100644
---- a/pc/peer_connection.cc
-+++ b/pc/peer_connection.cc
-@@ -348,7 +348,15 @@ bool DtlsEnabled(const PeerConnectionInterface::RTCConfiguration& configuration,
-     return false;
- 
-   // Enable DTLS by default if we have an identity store or a certificate.
--  return (dependencies.cert_generator || !configuration.certificates.empty());
-+  bool default_enabled =
-+      (dependencies.cert_generator || !configuration.certificates.empty());
-+
-+#if defined(WEBRTC_FUCHSIA)
-+  // The `configuration` can override the default value.
-+  return configuration.enable_dtls_srtp.value_or(default_enabled);
-+#else
-+  return default_enabled;
-+#endif
- }
- 
- // Calls `ParseIceServersOrError` to extract ice server information from the
-@@ -408,6 +416,9 @@ bool PeerConnectionInterface::RTCConfiguration::operator==(
-     int max_ipv6_networks;
-     bool disable_link_local_networks;
-     absl::optional<int> screencast_min_bitrate;
-+#if defined(WEBRTC_FUCHSIA)
-+    absl::optional<bool> enable_dtls_srtp;
-+#endif
-     TcpCandidatePolicy tcp_candidate_policy;
-     CandidateNetworkPolicy candidate_network_policy;
-     int audio_jitter_buffer_max_packets;
-@@ -472,6 +483,9 @@ bool PeerConnectionInterface::RTCConfiguration::operator==(
-          max_ipv6_networks == o.max_ipv6_networks &&
-          disable_link_local_networks == o.disable_link_local_networks &&
-          screencast_min_bitrate == o.screencast_min_bitrate &&
-+#if defined(WEBRTC_FUCHSIA)
-+         enable_dtls_srtp == o.enable_dtls_srtp &&
-+#endif
-          ice_candidate_pool_size == o.ice_candidate_pool_size &&
-          prune_turn_ports == o.prune_turn_ports &&
-          turn_port_prune_policy == o.turn_port_prune_policy &&
-diff --git a/pc/peer_connection_crypto_unittest.cc b/pc/peer_connection_crypto_unittest.cc
-index 4274e88b07..3b3f502e1f 100644
---- a/pc/peer_connection_crypto_unittest.cc
-+++ b/pc/peer_connection_crypto_unittest.cc
-@@ -258,6 +258,233 @@ TEST_P(PeerConnectionCryptoTest, CorrectCryptoInAnswerWhenDtlsEnabled) {
-                              answer->description()));
- }
- 
-+#if defined(WEBRTC_FUCHSIA)
-+// When DTLS is disabled, the SDP offer/answer should include SDES cryptos and
-+// should not have a DTLS fingerprint.
-+TEST_P(PeerConnectionCryptoTest, CorrectCryptoInOfferWhenDtlsDisabled) {
-+  RTCConfiguration config;
-+  config.enable_dtls_srtp.emplace(false);
-+  auto caller = CreatePeerConnectionWithAudioVideo(config);
-+
-+  auto offer = caller->CreateOffer();
-+  ASSERT_TRUE(offer);
-+
-+  ASSERT_FALSE(offer->description()->contents().empty());
-+  EXPECT_TRUE(SdpContentsAll(HaveSdesCryptos(), offer->description()));
-+  EXPECT_TRUE(SdpContentsNone(HaveDtlsFingerprint(), offer->description()));
-+  EXPECT_TRUE(SdpContentsAll(HaveProtocol(cricket::kMediaProtocolSavpf),
-+                             offer->description()));
-+}
-+
-+TEST_P(PeerConnectionCryptoTest, CorrectCryptoInAnswerWhenDtlsDisabled) {
-+  RTCConfiguration config;
-+  config.enable_dtls_srtp.emplace(false);
-+  auto caller = CreatePeerConnectionWithAudioVideo(config);
-+  auto callee = CreatePeerConnectionWithAudioVideo(config);
-+
-+  callee->SetRemoteDescription(caller->CreateOffer());
-+  auto answer = callee->CreateAnswer();
-+  ASSERT_TRUE(answer);
-+
-+  ASSERT_FALSE(answer->description()->contents().empty());
-+  EXPECT_TRUE(SdpContentsAll(HaveSdesCryptos(), answer->description()));
-+  EXPECT_TRUE(SdpContentsNone(HaveDtlsFingerprint(), answer->description()));
-+  EXPECT_TRUE(SdpContentsAll(HaveProtocol(cricket::kMediaProtocolSavpf),
-+                             answer->description()));
-+}
-+
-+// When encryption is disabled, the SDP offer/answer should have neither a DTLS
-+// fingerprint nor any SDES crypto options.
-+TEST_P(PeerConnectionCryptoTest, CorrectCryptoInOfferWhenEncryptionDisabled) {
-+  PeerConnectionFactoryInterface::Options options;
-+  options.disable_encryption = true;
-+  pc_factory_->SetOptions(options);
-+
-+  RTCConfiguration config;
-+  config.enable_dtls_srtp.emplace(false);
-+  auto caller = CreatePeerConnectionWithAudioVideo(config);
-+
-+  auto offer = caller->CreateOffer();
-+  ASSERT_TRUE(offer);
-+
-+  ASSERT_FALSE(offer->description()->contents().empty());
-+  EXPECT_TRUE(SdpContentsNone(HaveSdesCryptos(), offer->description()));
-+  EXPECT_TRUE(SdpContentsNone(HaveDtlsFingerprint(), offer->description()));
-+  EXPECT_TRUE(SdpContentsAll(HaveProtocol(cricket::kMediaProtocolAvpf),
-+                             offer->description()));
-+}
-+
-+TEST_P(PeerConnectionCryptoTest, CorrectCryptoInAnswerWhenEncryptionDisabled) {
-+  PeerConnectionFactoryInterface::Options options;
-+  options.disable_encryption = true;
-+  pc_factory_->SetOptions(options);
-+
-+  RTCConfiguration config;
-+  config.enable_dtls_srtp.emplace(false);
-+  auto caller = CreatePeerConnectionWithAudioVideo(config);
-+  auto callee = CreatePeerConnectionWithAudioVideo(config);
-+
-+  callee->SetRemoteDescription(caller->CreateOffer());
-+  auto answer = callee->CreateAnswer();
-+  ASSERT_TRUE(answer);
-+
-+  ASSERT_FALSE(answer->description()->contents().empty());
-+  EXPECT_TRUE(SdpContentsNone(HaveSdesCryptos(), answer->description()));
-+  EXPECT_TRUE(SdpContentsNone(HaveDtlsFingerprint(), answer->description()));
-+  EXPECT_TRUE(SdpContentsAll(HaveProtocol(cricket::kMediaProtocolAvpf),
-+                             answer->description()));
-+}
-+
-+// CryptoOptions has been promoted to RTCConfiguration. As such if it is ever
-+// set in the configuration it should overrite the settings set in the factory.
-+TEST_P(PeerConnectionCryptoTest, RTCConfigurationCryptoOptionOverridesFactory) {
-+  PeerConnectionFactoryInterface::Options options;
-+  options.crypto_options.srtp.enable_gcm_crypto_suites = true;
-+  pc_factory_->SetOptions(options);
-+
-+  RTCConfiguration config;
-+  config.enable_dtls_srtp.emplace(false);
-+  CryptoOptions crypto_options;
-+  crypto_options.srtp.enable_gcm_crypto_suites = false;
-+  config.crypto_options = crypto_options;
-+  auto caller = CreatePeerConnectionWithAudioVideo(config);
-+
-+  auto offer = caller->CreateOffer();
-+  ASSERT_TRUE(offer);
-+
-+  ASSERT_FALSE(offer->description()->contents().empty());
-+  // This should exist if GCM is enabled see CorrectCryptoInOfferWithSdesAndGcm
-+  EXPECT_FALSE(SdpContentsAll(HaveSdesGcmCryptos(3), offer->description()));
-+}
-+
-+// When DTLS is disabled and GCM cipher suites are enabled, the SDP offer/answer
-+// should have the correct ciphers in the SDES crypto options.
-+// With GCM cipher suites enabled, there will be 3 cryptos in the offer and 1
-+// in the answer.
-+TEST_P(PeerConnectionCryptoTest, CorrectCryptoInOfferWithSdesAndGcm) {
-+  PeerConnectionFactoryInterface::Options options;
-+  options.crypto_options.srtp.enable_gcm_crypto_suites = true;
-+  pc_factory_->SetOptions(options);
-+
-+  RTCConfiguration config;
-+  config.enable_dtls_srtp.emplace(false);
-+  auto caller = CreatePeerConnectionWithAudioVideo(config);
-+
-+  auto offer = caller->CreateOffer();
-+  ASSERT_TRUE(offer);
-+
-+  ASSERT_FALSE(offer->description()->contents().empty());
-+  EXPECT_TRUE(SdpContentsAll(HaveSdesGcmCryptos(3), offer->description()));
-+}
-+
-+TEST_P(PeerConnectionCryptoTest, CorrectCryptoInAnswerWithSdesAndGcm) {
-+  PeerConnectionFactoryInterface::Options options;
-+  options.crypto_options.srtp.enable_gcm_crypto_suites = true;
-+  pc_factory_->SetOptions(options);
-+
-+  RTCConfiguration config;
-+  config.enable_dtls_srtp.emplace(false);
-+  auto caller = CreatePeerConnectionWithAudioVideo(config);
-+  auto callee = CreatePeerConnectionWithAudioVideo(config);
-+
-+  auto offer = caller->CreateOffer();
-+  for (cricket::ContentInfo& content : offer->description()->contents()) {
-+    auto cryptos = content.media_description()->cryptos();
-+    cryptos.erase(cryptos.begin());  // Assumes that non-GCM is the default.
-+    content.media_description()->set_cryptos(cryptos);
-+  }
-+
-+  callee->SetRemoteDescription(std::move(offer));
-+  auto answer = callee->CreateAnswer();
-+  ASSERT_TRUE(answer);
-+
-+  ASSERT_FALSE(answer->description()->contents().empty());
-+  EXPECT_TRUE(SdpContentsAll(HaveSdesGcmCryptos(1), answer->description()));
-+}
-+
-+TEST_P(PeerConnectionCryptoTest, CanSetSdesGcmRemoteOfferAndLocalAnswer) {
-+  PeerConnectionFactoryInterface::Options options;
-+  options.crypto_options.srtp.enable_gcm_crypto_suites = true;
-+  pc_factory_->SetOptions(options);
-+
-+  RTCConfiguration config;
-+  config.enable_dtls_srtp.emplace(false);
-+  auto caller = CreatePeerConnectionWithAudioVideo(config);
-+  auto callee = CreatePeerConnectionWithAudioVideo(config);
-+
-+  auto offer = caller->CreateOffer();
-+  ASSERT_TRUE(offer);
-+  ASSERT_TRUE(callee->SetRemoteDescription(std::move(offer)));
-+
-+  auto answer = callee->CreateAnswer();
-+  ASSERT_TRUE(answer);
-+  ASSERT_TRUE(callee->SetLocalDescription(std::move(answer)));
-+}
-+
-+// The following group tests that two PeerConnections can successfully exchange
-+// an offer/answer when DTLS is off and that they will refuse any offer/answer
-+// applied locally/remotely if it does not include SDES cryptos.
-+TEST_P(PeerConnectionCryptoTest, ExchangeOfferAnswerWhenSdesOn) {
-+  RTCConfiguration config;
-+  config.enable_dtls_srtp.emplace(false);
-+  auto caller = CreatePeerConnectionWithAudioVideo(config);
-+  auto callee = CreatePeerConnectionWithAudioVideo(config);
-+
-+  auto offer = caller->CreateOfferAndSetAsLocal();
-+  ASSERT_TRUE(offer);
-+  ASSERT_TRUE(callee->SetRemoteDescription(std::move(offer)));
-+
-+  auto answer = callee->CreateAnswerAndSetAsLocal();
-+  ASSERT_TRUE(answer);
-+  ASSERT_TRUE(caller->SetRemoteDescription(std::move(answer)));
-+}
-+TEST_P(PeerConnectionCryptoTest, FailToSetLocalOfferWithNoCryptosWhenSdesOn) {
-+  RTCConfiguration config;
-+  config.enable_dtls_srtp.emplace(false);
-+  auto caller = CreatePeerConnectionWithAudioVideo(config);
-+
-+  auto offer = caller->CreateOffer();
-+  SdpContentsForEach(RemoveSdesCryptos(), offer->description());
-+
-+  EXPECT_FALSE(caller->SetLocalDescription(std::move(offer)));
-+}
-+TEST_P(PeerConnectionCryptoTest, FailToSetRemoteOfferWithNoCryptosWhenSdesOn) {
-+  RTCConfiguration config;
-+  config.enable_dtls_srtp.emplace(false);
-+  auto caller = CreatePeerConnectionWithAudioVideo(config);
-+  auto callee = CreatePeerConnectionWithAudioVideo(config);
-+
-+  auto offer = caller->CreateOffer();
-+  SdpContentsForEach(RemoveSdesCryptos(), offer->description());
-+
-+  EXPECT_FALSE(callee->SetRemoteDescription(std::move(offer)));
-+}
-+TEST_P(PeerConnectionCryptoTest, FailToSetLocalAnswerWithNoCryptosWhenSdesOn) {
-+  RTCConfiguration config;
-+  config.enable_dtls_srtp.emplace(false);
-+  auto caller = CreatePeerConnectionWithAudioVideo(config);
-+  auto callee = CreatePeerConnectionWithAudioVideo(config);
-+
-+  callee->SetRemoteDescription(caller->CreateOfferAndSetAsLocal());
-+  auto answer = callee->CreateAnswer();
-+  SdpContentsForEach(RemoveSdesCryptos(), answer->description());
-+
-+  EXPECT_FALSE(callee->SetLocalDescription(std::move(answer)));
-+}
-+TEST_P(PeerConnectionCryptoTest, FailToSetRemoteAnswerWithNoCryptosWhenSdesOn) {
-+  RTCConfiguration config;
-+  config.enable_dtls_srtp.emplace(false);
-+  auto caller = CreatePeerConnectionWithAudioVideo(config);
-+  auto callee = CreatePeerConnectionWithAudioVideo(config);
-+
-+  callee->SetRemoteDescription(caller->CreateOfferAndSetAsLocal());
-+  auto answer = callee->CreateAnswerAndSetAsLocal();
-+  SdpContentsForEach(RemoveSdesCryptos(), answer->description());
-+
-+  EXPECT_FALSE(caller->SetRemoteDescription(std::move(answer)));
-+}
-+#endif
-+
- // The following group tests that two PeerConnections can successfully exchange
- // an offer/answer when DTLS is on and that they will refuse any offer/answer
- // applied locally/remotely if it does not include a DTLS fingerprint.
-@@ -318,6 +545,28 @@ TEST_P(PeerConnectionCryptoTest,
-   EXPECT_FALSE(caller->SetRemoteDescription(std::move(answer)));
- }
- 
-+#if defined(WEBRTC_FUCHSIA)
-+// Test that an offer/answer can be exchanged when encryption is disabled.
-+TEST_P(PeerConnectionCryptoTest, ExchangeOfferAnswerWhenNoEncryption) {
-+  PeerConnectionFactoryInterface::Options options;
-+  options.disable_encryption = true;
-+  pc_factory_->SetOptions(options);
-+
-+  RTCConfiguration config;
-+  config.enable_dtls_srtp.emplace(false);
-+  auto caller = CreatePeerConnectionWithAudioVideo(config);
-+  auto callee = CreatePeerConnectionWithAudioVideo(config);
-+
-+  auto offer = caller->CreateOfferAndSetAsLocal();
-+  ASSERT_TRUE(offer);
-+  ASSERT_TRUE(callee->SetRemoteDescription(std::move(offer)));
-+
-+  auto answer = callee->CreateAnswerAndSetAsLocal();
-+  ASSERT_TRUE(answer);
-+  ASSERT_TRUE(caller->SetRemoteDescription(std::move(answer)));
-+}
-+#endif
-+
- // Tests that a DTLS call can be established when the certificate is specified
- // in the PeerConnection config and no certificate generator is specified.
- TEST_P(PeerConnectionCryptoTest,
-diff --git a/pc/peer_connection_integrationtest.cc b/pc/peer_connection_integrationtest.cc
-index 24ca52f619..23c8b1690f 100644
---- a/pc/peer_connection_integrationtest.cc
-+++ b/pc/peer_connection_integrationtest.cc
-@@ -275,6 +275,26 @@ TEST_P(PeerConnectionIntegrationTest, EndToEndCallWithDtls) {
-   ASSERT_TRUE(ExpectNewFrames(media_expectations));
- }
- 
-+#if defined(WEBRTC_FUCHSIA)
-+// Uses SDES instead of DTLS for key agreement.
-+TEST_P(PeerConnectionIntegrationTest, EndToEndCallWithSdes) {
-+  PeerConnectionInterface::RTCConfiguration sdes_config;
-+  sdes_config.enable_dtls_srtp.emplace(false);
-+  ASSERT_TRUE(CreatePeerConnectionWrappersWithConfig(sdes_config, sdes_config));
-+  ConnectFakeSignaling();
-+
-+  // Do normal offer/answer and wait for some frames to be received in each
-+  // direction.
-+  caller()->AddAudioVideoTracks();
-+  callee()->AddAudioVideoTracks();
-+  caller()->CreateAndSetAndSignalOffer();
-+  ASSERT_TRUE_WAIT(SignalingStateStable(), kDefaultTimeout);
-+  MediaExpectations media_expectations;
-+  media_expectations.ExpectBidirectionalAudioAndVideo();
-+  ASSERT_TRUE(ExpectNewFrames(media_expectations));
-+}
-+#endif
-+
- // Basic end-to-end test specifying the `enable_encrypted_rtp_header_extensions`
- // option to offer encrypted versions of all header extensions alongside the
- // unencrypted versions.
-diff --git a/pc/sdp_offer_answer.cc b/pc/sdp_offer_answer.cc
-index 19cd9ba45c..67c8d10241 100644
---- a/pc/sdp_offer_answer.cc
-+++ b/pc/sdp_offer_answer.cc
-@@ -285,6 +285,9 @@ RTCError VerifyCrypto(const SessionDescription* desc,
-     if (content_info.rejected) {
-       continue;
-     }
-+#if !defined(WEBRTC_FUCHSIA)
-+    RTC_CHECK(dtls_enabled) << "SDES protocol is only allowed in Fuchsia";
-+#endif
-     const std::string& mid = content_info.name;
-     auto it = bundle_groups_by_mid.find(mid);
-     const cricket::ContentGroup* bundle =
+ Once upon a time there was a white elephant in Stockholm.
+ Why did the elephant get kicked out of the Swedish Parliament?
+ Because it kept making trunk calls!
