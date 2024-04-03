@@ -31,6 +31,7 @@ prefs = [
 ["browser_caching_description.js"]
 
 ["browser_caching_document_props.js"]
+prefs = ["dom.security.https_first=false"]
 
 ["browser_caching_domnodeid.js"]
 
