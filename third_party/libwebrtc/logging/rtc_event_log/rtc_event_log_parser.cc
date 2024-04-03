@@ -171,10 +171,10 @@ bool GetRuntimeIceCandidateType(
     IceCandidateType& parsed_type) {
   switch (log_type) {
     case rtclog::IceCandidatePairConfig::LOCAL:
-      parsed_type = IceCandidateType::kLocal;
+      parsed_type = IceCandidateType::kHost;
       break;
     case rtclog::IceCandidatePairConfig::STUN:
-      parsed_type = IceCandidateType::kStun;
+      parsed_type = IceCandidateType::kSrflx;
       break;
     case rtclog::IceCandidatePairConfig::PRFLX:
       parsed_type = IceCandidateType::kPrflx;
@@ -813,16 +813,16 @@ IceCandidateType GetRuntimeIceCandidateType(
     rtclog2::IceCandidatePairConfig::IceCandidateType type) {
   switch (type) {
     case rtclog2::IceCandidatePairConfig::LOCAL:
-      return IceCandidateType::kLocal;
+      return IceCandidateType::kHost;
     case rtclog2::IceCandidatePairConfig::STUN:
-      return IceCandidateType::kStun;
+      return IceCandidateType::kSrflx;
     case rtclog2::IceCandidatePairConfig::PRFLX:
       return IceCandidateType::kPrflx;
     case rtclog2::IceCandidatePairConfig::RELAY:
       return IceCandidateType::kRelay;
     default:
       RTC_DCHECK_NOTREACHED();
-      return IceCandidateType::kLocal;
+      return IceCandidateType::kHost;
   }
 }
 
@@ -831,10 +831,10 @@ bool GetRuntimeIceCandidateType(
     IceCandidateType& parsed_type) {
   switch (log_type) {
     case rtclog2::IceCandidatePairConfig::LOCAL:
-      parsed_type = IceCandidateType::kLocal;
+      parsed_type = IceCandidateType::kHost;
       break;
     case rtclog2::IceCandidatePairConfig::STUN:
-      parsed_type = IceCandidateType::kStun;
+      parsed_type = IceCandidateType::kSrflx;
       break;
     case rtclog2::IceCandidatePairConfig::PRFLX:
       parsed_type = IceCandidateType::kPrflx;
@@ -2270,13 +2270,13 @@ std::vector<InferredRouteChangeEvent> ParsedRtcEventLog::GetRouteChanges()
       if (candidate.remote_address_family ==
           IceCandidatePairAddressFamily::kIpv6)
         route.send_overhead += kIpv6Overhead - kIpv4Overhead;
-      if (candidate.remote_candidate_type != IceCandidateType::kLocal)
+      if (candidate.remote_candidate_type != IceCandidateType::kHost)
         route.send_overhead += kStunOverhead;
       route.return_overhead = kUdpOverhead + kSrtpOverhead + kIpv4Overhead;
       if (candidate.remote_address_family ==
           IceCandidatePairAddressFamily::kIpv6)
         route.return_overhead += kIpv6Overhead - kIpv4Overhead;
-      if (candidate.remote_candidate_type != IceCandidateType::kLocal)
+      if (candidate.remote_candidate_type != IceCandidateType::kHost)
         route.return_overhead += kStunOverhead;
       route_changes.push_back(route);
     }

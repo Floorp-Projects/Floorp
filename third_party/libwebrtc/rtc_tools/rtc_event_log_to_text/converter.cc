@@ -231,8 +231,8 @@ bool Convert(std::string inputfile,
                 {IceCandidatePairConfigType::kNumValues, "NUM_VALUES"}};
 
         static const std::map<IceCandidateType, std::string>
-            candidate_type_name{{IceCandidateType::kLocal, "LOCAL"},
-                                {IceCandidateType::kStun, "STUN"},
+            candidate_type_name{{IceCandidateType::kHost, "LOCAL"},
+                                {IceCandidateType::kSrflx, "STUN"},
                                 {IceCandidateType::kPrflx, "PRFLX"},
                                 {IceCandidateType::kRelay, "RELAY"}};
 
