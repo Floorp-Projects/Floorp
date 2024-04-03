@@ -75,6 +75,8 @@ class RtpTransportControllerSend final
       RtpVideoSenderInterface* rtp_video_sender) override;
 
   // Implements RtpTransportControllerSendInterface
+  void RegisterSendingRtpStream(RtpRtcpInterface& rtp_module) override;
+  void DeRegisterSendingRtpStream(RtpRtcpInterface& rtp_module) override;
   PacketRouter* packet_router() override;
 
   NetworkStateEstimateObserver* network_state_estimate_observer() override;

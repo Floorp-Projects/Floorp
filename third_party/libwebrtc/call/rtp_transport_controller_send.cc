@@ -159,6 +159,31 @@ void RtpTransportControllerSend::DestroyRtpVideoSender(
   video_rtp_senders_.erase(it);
 }
 
+void RtpTransportControllerSend::RegisterSendingRtpStream(
+    RtpRtcpInterface& rtp_module) {
+  RTC_DCHECK_RUN_ON(&sequence_checker_);
+  // Allow pacer to send packets using this module.
+  packet_router_.AddSendRtpModule(&rtp_module,
+                                  /*remb_candidate=*/true);
+}
+
+void RtpTransportControllerSend::DeRegisterSendingRtpStream(
+    RtpRtcpInterface& rtp_module) {
+  RTC_DCHECK_RUN_ON(&sequence_checker_);
+  // Disabling media, remove from packet router map to reduce size and
+  // prevent any stray packets in the pacer from asynchronously arriving
+  // to a disabled module.
+  packet_router_.RemoveSendRtpModule(&rtp_module);
+  // Clear the pacer queue of any packets pertaining to this module.
+  pacer_.RemovePacketsForSsrc(rtp_module.SSRC());
+  if (rtp_module.RtxSsrc().has_value()) {
+    pacer_.RemovePacketsForSsrc(*rtp_module.RtxSsrc());
+  }
+  if (rtp_module.FlexfecSsrc().has_value()) {
+    pacer_.RemovePacketsForSsrc(*rtp_module.FlexfecSsrc());
+  }
+}
+
 void RtpTransportControllerSend::UpdateControlState() {
   absl::optional<TargetTransferRate> update = control_handler_->GetUpdate();
   if (!update)

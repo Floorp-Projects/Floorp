@@ -75,6 +75,7 @@ using ::testing::Invoke;
 using ::testing::Mock;
 using ::testing::NiceMock;
 using ::testing::Return;
+using ::testing::SaveArg;
 
 constexpr int64_t kDefaultInitialBitrateBps = 333000;
 const double kDefaultBitratePriority = 0.5;
@@ -87,8 +88,7 @@ std::string GetAlrProbingExperimentString() {
 }
 class MockRtpVideoSender : public RtpVideoSenderInterface {
  public:
-  MOCK_METHOD(void, SetActiveModules, (const std::vector<bool>&), (override));
-  MOCK_METHOD(void, Stop, (), (override));
+  MOCK_METHOD(void, SetSending, (bool sending), (override));
   MOCK_METHOD(bool, IsActive, (), (override));
   MOCK_METHOD(void, OnNetworkAvailability, (bool), (override));
   MOCK_METHOD((std::map<uint32_t, RtpState>),
@@ -158,19 +158,11 @@ class VideoSendStreamImplTest : public ::testing::Test {
         .WillRepeatedly(Return(&packet_router_));
     EXPECT_CALL(transport_controller_, CreateRtpVideoSender)
         .WillRepeatedly(Return(&rtp_video_sender_));
-    ON_CALL(rtp_video_sender_, Stop()).WillByDefault(::testing::Invoke([&] {
-      active_modules_.clear();
+    ON_CALL(rtp_video_sender_, IsActive()).WillByDefault(Invoke([&]() {
+      return rtp_sending_;
     }));
-    ON_CALL(rtp_video_sender_, IsActive())
-        .WillByDefault(::testing::Invoke([&]() {
-          for (bool enabled : active_modules_) {
-            if (enabled)
-              return true;
-          }
-          return false;
-        }));
-    ON_CALL(rtp_video_sender_, SetActiveModules)
-        .WillByDefault(::testing::SaveArg<0>(&active_modules_));
+    ON_CALL(rtp_video_sender_, SetSending)
+        .WillByDefault(SaveArg<0>(&rtp_sending_));
   }
   ~VideoSendStreamImplTest() {}
 
@@ -225,7 +217,7 @@ class VideoSendStreamImplTest : public ::testing::Test {
   NiceMock<MockBitrateAllocator> bitrate_allocator_;
   NiceMock<MockVideoStreamEncoder>* video_stream_encoder_ = nullptr;
   NiceMock<MockRtpVideoSender> rtp_video_sender_;
-  std::vector<bool> active_modules_;
+  bool rtp_sending_ = false;
 
   RtcEventLogNull event_log_;
   VideoSendStream::Config config_;
