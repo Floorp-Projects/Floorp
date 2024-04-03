@@ -44,23 +44,8 @@ struct ModuleErrorInfo {
   bool isCircular = false;
 };
 
-bool ModuleResolveExport(JSContext* cx, Handle<ModuleObject*> module,
-                         Handle<JSAtom*> exportName,
-                         MutableHandle<Value> result,
-                         ModuleErrorInfo* errorInfoOut);
-
 ModuleNamespaceObject* GetOrCreateModuleNamespace(JSContext* cx,
                                                   Handle<ModuleObject*> module);
-
-bool ModuleInitializeEnvironment(JSContext* cx, Handle<ModuleObject*> module);
-
-bool ModuleLink(JSContext* cx, Handle<ModuleObject*> module);
-
-// Start evaluating the module. If TLA is enabled, result will be a promise.
-bool ModuleEvaluate(JSContext* cx, Handle<ModuleObject*> module,
-                    MutableHandle<Value> result);
-bool SyntheticModuleEvaluate(JSContext* cx, Handle<ModuleObject*> module,
-                             MutableHandle<Value> result);
 
 void AsyncModuleExecutionFulfilled(JSContext* cx, Handle<ModuleObject*> module);
 
