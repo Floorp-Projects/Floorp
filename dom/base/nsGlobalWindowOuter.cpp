@@ -3473,9 +3473,17 @@ nsresult nsGlobalWindowOuter::GetInnerSize(CSSSize& aSize) {
 
   aSize = CSSPixel::FromAppUnits(viewportSize);
 
-  if (StaticPrefs::dom_innerSize_rounded()) {
-    aSize.width = std::roundf(aSize.width);
-    aSize.height = std::roundf(aSize.height);
+  switch (StaticPrefs::dom_innerSize_rounding()) {
+    case 1:
+      aSize.width = std::roundf(aSize.width);
+      aSize.height = std::roundf(aSize.height);
+      break;
+    case 2:
+      aSize.width = std::truncf(aSize.width);
+      aSize.height = std::truncf(aSize.height);
+      break;
+    default:
+      break;
   }
 
   return NS_OK;
