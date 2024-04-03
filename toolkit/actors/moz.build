@@ -75,6 +75,8 @@ FINAL_TARGET_FILES.actors += [
     "UAWidgetsChild.sys.mjs",
     "UnselectedTabHoverChild.sys.mjs",
     "UnselectedTabHoverParent.sys.mjs",
+    "UserCharacteristicsChild.sys.mjs",
+    "UserCharacteristicsParent.sys.mjs",
     "ViewSourceChild.sys.mjs",
     "ViewSourcePageChild.sys.mjs",
     "ViewSourcePageParent.sys.mjs",

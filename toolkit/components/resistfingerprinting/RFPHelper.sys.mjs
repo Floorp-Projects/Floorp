@@ -43,6 +43,8 @@ class _RFPHelper {
     this._initialized = true;
 
     // Add unconditional observers
+    Services.obs.addObserver(this, "user-characteristics-populating-data");
+    Services.obs.addObserver(this, "user-characteristics-populating-data-done");
     Services.prefs.addObserver(kPrefResistFingerprinting, this);
     Services.prefs.addObserver(kPrefLetterboxing, this);
     XPCOMUtils.defineLazyPreferenceGetter(
@@ -80,6 +82,12 @@ class _RFPHelper {
 
   observe(subject, topic, data) {
     switch (topic) {
+      case "user-characteristics-populating-data":
+        this._registerUserCharacteristicsActor();
+        break;
+      case "user-characteristics-populating-data-done":
+        this._unregisterUserCharacteristicsActor();
+        break;
       case "nsPref:changed":
         this._handlePrefChanged(data);
         break;
@@ -95,6 +103,27 @@ class _RFPHelper {
       default:
         break;
     }
+  }
+
+  _registerUserCharacteristicsActor() {
+    log("_registerUserCharacteristicsActor()");
+    ChromeUtils.registerWindowActor("UserCharacteristics", {
+      parent: {
+        esModuleURI: "resource://gre/actors/UserCharacteristicsParent.sys.mjs",
+      },
+      child: {
+        esModuleURI: "resource://gre/actors/UserCharacteristicsChild.sys.mjs",
+        events: {
+          DOMContentLoaded: {},
+          pageshow: {},
+        },
+      },
+    });
+  }
+
+  _unregisterUserCharacteristicsActor() {
+    log("_unregisterUserCharacteristicsActor()");
+    ChromeUtils.unregisterWindowActor("UserCharacteristics");
   }
 
   handleEvent(aMessage) {
@@ -283,16 +312,16 @@ class _RFPHelper {
   _handleLetterboxingPrefChanged() {
     if (Services.prefs.getBoolPref(kPrefLetterboxing, false)) {
       Services.ww.registerNotification(this);
-      this._registerActor();
+      this._registerLetterboxingActor();
       this._attachAllWindows();
     } else {
-      this._unregisterActor();
+      this._unregisterLetterboxingActor();
       this._detachAllWindows();
       Services.ww.unregisterNotification(this);
     }
   }
 
-  _registerActor() {
+  _registerLetterboxingActor() {
     ChromeUtils.registerWindowActor("RFPHelper", {
       parent: {
         esModuleURI: "resource:///actors/RFPHelperParent.sys.mjs",
@@ -307,7 +336,7 @@ class _RFPHelper {
     });
   }
 
-  _unregisterActor() {
+  _unregisterLetterboxingActor() {
     ChromeUtils.unregisterWindowActor("RFPHelper");
   }
 

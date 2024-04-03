@@ -1,15 +1,18 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "nsUserCharacteristics.h"
 
 #include "nsID.h"
 #include "nsIUUIDGenerator.h"
+#include "nsIUserCharacteristicsPageService.h"
 #include "nsServiceManagerUtils.h"
 
+#include "mozilla/Components.h"
 #include "mozilla/Logging.h"
+#include "mozilla/dom/Promise-inl.h"
 #include "mozilla/glean/GleanPings.h"
 #include "mozilla/glean/GleanMetrics.h"
 
@@ -59,6 +62,15 @@ int MaxTouchPoints() {
 };  // namespace testing
 
 // ==================================================================
+void CanvasStuff() {
+  nsCOMPtr<nsIUserCharacteristicsPageService> ucp =
+      do_GetService("@mozilla.org/user-characteristics-page;1");
+  MOZ_ASSERT(ucp);
+
+  RefPtr<mozilla::dom::Promise> promise;
+  mozilla::Unused << ucp->CreateContentPage(getter_AddRefs(promise));
+}
+
 void PopulateCSSProperties() {
   glean::characteristics::prefers_reduced_transparency.Set(
       LookAndFeel::GetInt(LookAndFeel::IntID::PrefersReducedTransparency));
@@ -242,6 +254,13 @@ const auto* const kUUIDPref =
 nsresult nsUserCharacteristics::PopulateData(bool aTesting /* = false */) {
   MOZ_LOG(gUserCharacteristicsLog, LogLevel::Warning, ("Populating Data"));
   MOZ_ASSERT(XRE_IsParentProcess());
+
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  NS_ENSURE_TRUE(obs, NS_ERROR_NOT_AVAILABLE);
+
+  obs->NotifyObservers(nullptr, "user-characteristics-populating-data",
+                       nullptr);
+
   glean::characteristics::submission_schema.Set(kSubmissionSchema);
 
   nsAutoCString uuidString;
