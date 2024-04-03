@@ -702,7 +702,7 @@ if (is_linux || is_chromeos || is_win) {
       "../api/video_codecs:video_codecs_api",
       "../media:media_channel",
       "../media:rtc_media_base",
-      "../p2p:connection_and_port",
+      "../p2p:connection",
       "../p2p:rtc_p2p",
       "../pc:video_track_source",
       "../rtc_base:async_dns_resolver",

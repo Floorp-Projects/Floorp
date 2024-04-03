@@ -19,25 +19,26 @@
 #include <vector>
 
 #include "absl/algorithm/container.h"
-#include "absl/strings/escaping.h"
-#include "absl/strings/match.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/array_view.h"
 #include "api/units/timestamp.h"
-#include "p2p/base/port_allocator.h"
+#include "p2p/base/p2p_constants.h"
+#include "rtc_base/byte_buffer.h"
 #include "rtc_base/checks.h"
-#include "rtc_base/crc32.h"
 #include "rtc_base/helpers.h"
 #include "rtc_base/logging.h"
-#include "rtc_base/mdns_responder_interface.h"
-#include "rtc_base/message_digest.h"
+#include "rtc_base/net_helper.h"
 #include "rtc_base/network.h"
+#include "rtc_base/network/sent_packet.h"
+#include "rtc_base/network_constants.h"
 #include "rtc_base/numerics/safe_minmax.h"
+#include "rtc_base/socket.h"
+#include "rtc_base/socket_address.h"
 #include "rtc_base/string_encode.h"
 #include "rtc_base/string_utils.h"
 #include "rtc_base/strings/string_builder.h"
-#include "rtc_base/third_party/base64/base64.h"
+#include "rtc_base/time_utils.h"
 
 namespace cricket {
 namespace {
@@ -213,7 +214,7 @@ int Connection::ConnectionRequest::resend_delay() {
   return CONNECTION_RESPONSE_TIMEOUT;
 }
 
-Connection::Connection(rtc::WeakPtr<Port> port,
+Connection::Connection(rtc::WeakPtr<PortInterface> port,
                        size_t index,
                        const Candidate& remote_candidate)
     : network_thread_(port->thread()),
@@ -1784,7 +1785,7 @@ void Connection::ForgetLearnedState() {
   pings_since_last_response_.clear();
 }
 
-ProxyConnection::ProxyConnection(rtc::WeakPtr<Port> port,
+ProxyConnection::ProxyConnection(rtc::WeakPtr<PortInterface> port,
                                  size_t index,
                                  const Candidate& remote_candidate)
     : Connection(std::move(port), index, remote_candidate) {}

@@ -74,7 +74,7 @@ rtc_library("rtc_p2p") {
     ":basic_async_resolver_factory",
     ":basic_ice_controller",
     ":candidate_pair_interface",
-    ":connection_and_port",
+    ":connection",
     ":connection_info",
     ":ice_agent_interface",
     ":ice_controller_factory_interface",
@@ -169,6 +169,7 @@ rtc_library("rtc_p2p") {
   absl_deps = [
     "//third_party/abseil-cpp/absl/algorithm:container",
     "//third_party/abseil-cpp/absl/base:core_headers",
+    "//third_party/abseil-cpp/absl/functional:any_invocable",
     "//third_party/abseil-cpp/absl/memory",
     "//third_party/abseil-cpp/absl/strings",
     "//third_party/abseil-cpp/absl/types:optional",
@@ -187,7 +188,7 @@ rtc_source_set("active_ice_controller_factory_interface") {
 rtc_source_set("active_ice_controller_interface") {
   sources = [ "base/active_ice_controller_interface.h" ]
   deps = [
-    ":connection_and_port",
+    ":connection",
     ":ice_switch_reason",
     ":ice_transport_internal",
     ":transport_description",
@@ -248,14 +249,10 @@ rtc_source_set("candidate_pair_interface") {
 # This set of files is too intertwined to break into separate
 # targets at this point.
 # TODO(bugs.webrtc.org/15796): Finish breakup
-rtc_library("connection_and_port") {
+rtc_library("connection") {
   sources = [
     "base/connection.cc",
     "base/connection.h",
-    "base/port.cc",
-    "base/port.h",
-    "base/port_allocator.cc",
-    "base/port_allocator.h",
   ]
   deps = [
     ":candidate_pair_interface",
@@ -276,28 +273,37 @@ rtc_library("connection_and_port") {
     "../api/transport:enums",
     "../api/transport:field_trial_based_config",
     "../api/transport:stun_types",
+    "../api/units:time_delta",
     "../api/units:timestamp",
     "../logging:ice_log",
     "../rtc_base:async_packet_socket",
+    "../rtc_base:byte_buffer",
     "../rtc_base:callback_list",
     "../rtc_base:checks",
     "../rtc_base:crc32",
+    "../rtc_base:dscp",
     "../rtc_base:event_tracer",
+    "../rtc_base:ip_address",
     "../rtc_base:logging",
+    "../rtc_base:macromagic",
     "../rtc_base:mdns_responder_interface",
     "../rtc_base:net_helper",
     "../rtc_base:network",
+    "../rtc_base:network_constants",
     "../rtc_base:proxy_info",
     "../rtc_base:rate_tracker",
     "../rtc_base:rtc_numerics",
     "../rtc_base:safe_minmax",
+    "../rtc_base:socket",
     "../rtc_base:socket_address",
     "../rtc_base:ssl",
     "../rtc_base:stringutils",
     "../rtc_base:threading",
+    "../rtc_base:timeutils",
     "../rtc_base:weak_ptr",
     "../rtc_base/memory:always_valid_pointer",
     "../rtc_base/network:received_packet",
+    "../rtc_base/network:sent_packet",
     "../rtc_base/system:rtc_export",
     "../rtc_base/third_party/base64",
     "../rtc_base/third_party/sigslot",
@@ -305,6 +311,7 @@ rtc_library("connection_and_port") {
   absl_deps = [
     "//third_party/abseil-cpp/absl/algorithm:container",
     "//third_party/abseil-cpp/absl/base:core_headers",
+    "//third_party/abseil-cpp/absl/functional:any_invocable",
     "//third_party/abseil-cpp/absl/memory",
     "//third_party/abseil-cpp/absl/strings",
     "//third_party/abseil-cpp/absl/strings:string_view",
@@ -327,7 +334,7 @@ rtc_library("connection_info") {
 rtc_source_set("ice_agent_interface") {
   sources = [ "base/ice_agent_interface.h" ]
   deps = [
-    ":connection_and_port",
+    ":connection",
     ":ice_switch_reason",
     "../api:array_view",
   ]
@@ -339,7 +346,7 @@ rtc_library("ice_controller_interface") {
     "base/ice_controller_interface.h",
   ]
   deps = [
-    ":connection_and_port",
+    ":connection",
     ":ice_switch_reason",
     ":ice_transport_internal",
     "../rtc_base:checks",
@@ -382,9 +389,10 @@ rtc_library("ice_transport_internal") {
     "base/ice_transport_internal.h",
   ]
   deps = [
-    ":connection_and_port",
+    ":connection",
     ":p2p_constants",
     ":packet_transport_internal",
+    ":port",
     ":stun_dictionary",
     ":transport_description",
     "../api:candidate",
@@ -418,7 +426,7 @@ rtc_library("p2p_transport_channel") {
     ":active_ice_controller_factory_interface",
     ":basic_ice_controller",
     ":candidate_pair_interface",
-    ":connection_and_port",
+    ":connection",
     ":connection_info",
     ":ice_agent_interface",
     ":ice_controller_factory_interface",
@@ -427,6 +435,8 @@ rtc_library("p2p_transport_channel") {
     ":ice_transport_internal",
     ":p2p_constants",
     ":p2p_transport_channel_ice_field_trials",
+    ":port",
+    ":port_allocator",
     ":port_interface",
     ":regathering_controller",
     ":stun_dictionary",
@@ -487,7 +497,8 @@ rtc_library("packet_transport_internal") {
     "base/packet_transport_internal.h",
   ]
   deps = [
-    ":connection_and_port",
+    ":connection",
+    ":port",
     "../rtc_base:async_packet_socket",
     "../rtc_base:network_route",
     "../rtc_base:socket",
@@ -495,6 +506,94 @@ rtc_library("packet_transport_internal") {
     "../rtc_base/third_party/sigslot",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+}
+
+rtc_library("port") {
+  sources = [
+    "base/port.cc",
+    "base/port.h",
+  ]
+  deps = [
+    ":candidate_pair_interface",
+    ":connection",
+    ":connection_info",
+    ":p2p_constants",
+    ":port_interface",
+    ":stun_request",
+    ":transport_description",
+    "../api:array_view",
+    "../api:candidate",
+    "../api:field_trials_view",
+    "../api:packet_socket_factory",
+    "../api:rtc_error",
+    "../api:sequence_checker",
+    "../api/task_queue",
+    "../api/transport:field_trial_based_config",
+    "../api/transport:stun_types",
+    "../api/units:time_delta",
+    "../logging:ice_log",
+    "../rtc_base:async_packet_socket",
+    "../rtc_base:byte_buffer",
+    "../rtc_base:callback_list",
+    "../rtc_base:checks",
+    "../rtc_base:crc32",
+    "../rtc_base:dscp",
+    "../rtc_base:event_tracer",
+    "../rtc_base:ip_address",
+    "../rtc_base:logging",
+    "../rtc_base:macromagic",
+    "../rtc_base:mdns_responder_interface",
+    "../rtc_base:net_helper",
+    "../rtc_base:network",
+    "../rtc_base:proxy_info",
+    "../rtc_base:rate_tracker",
+    "../rtc_base:socket_address",
+    "../rtc_base:ssl",
+    "../rtc_base:stringutils",
+    "../rtc_base:timeutils",
+    "../rtc_base:weak_ptr",
+    "../rtc_base/memory:always_valid_pointer",
+    "../rtc_base/network:received_packet",
+    "../rtc_base/network:sent_packet",
+    "../rtc_base/system:rtc_export",
+    "../rtc_base/third_party/sigslot",
+  ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/base:core_headers",
+    "//third_party/abseil-cpp/absl/memory",
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/abseil-cpp/absl/strings:string_view",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
+}
+
+rtc_library("port_allocator") {
+  sources = [
+    "base/port_allocator.cc",
+    "base/port_allocator.h",
+  ]
+  deps = [
+    ":connection",
+    ":ice_credentials_iterator",
+    ":port",
+    ":port_interface",
+    ":transport_description",
+    "../api:candidate",
+    "../api:sequence_checker",
+    "../api/transport:enums",
+    "../rtc_base:checks",
+    "../rtc_base:network",
+    "../rtc_base:proxy_info",
+    "../rtc_base:socket_address",
+    "../rtc_base:ssl",
+    "../rtc_base:threading",
+    "../rtc_base/system:rtc_export",
+    "../rtc_base/third_party/sigslot",
+  ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/strings:string_view",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
 }
 
 rtc_library("port_interface") {
@@ -505,8 +604,10 @@ rtc_library("port_interface") {
   deps = [
     ":transport_description",
     "../api:candidate",
+    "../api:packet_socket_factory",
     "../rtc_base:async_packet_socket",
     "../rtc_base:callback_list",
+    "../rtc_base:proxy_info",
     "../rtc_base:socket_address",
   ]
   absl_deps = [
@@ -521,8 +622,9 @@ rtc_library("regathering_controller") {
     "base/regathering_controller.h",
   ]
   deps = [
-    ":connection_and_port",
+    ":connection",
     ":ice_transport_internal",
+    ":port_allocator",
     "../api/task_queue:pending_task_safety_flag",
     "../api/units:time_delta",
     "../rtc_base:threading",
@@ -590,7 +692,7 @@ rtc_library("wrapping_active_ice_controller") {
   deps = [
     ":active_ice_controller_interface",
     ":basic_ice_controller",
-    ":connection_and_port",
+    ":connection",
     ":ice_agent_interface",
     ":ice_controller_factory_interface",
     ":ice_controller_interface",
@@ -634,7 +736,7 @@ if (rtc_include_tests) {
     visibility = [ "*" ]
     sources = [ "base/fake_port_allocator.h" ]
     deps = [
-      ":connection_and_port",
+      ":connection",
       ":rtc_p2p",
       "../rtc_base:net_helpers",
       "../rtc_base:net_test_helpers",
@@ -663,7 +765,7 @@ if (rtc_include_tests) {
     deps = [
       ":active_ice_controller_factory_interface",
       ":active_ice_controller_interface",
-      ":connection_and_port",
+      ":connection",
       ":fake_ice_transport",
       ":fake_port_allocator",
       ":ice_agent_interface",
@@ -731,7 +833,7 @@ if (rtc_include_tests) {
       ":active_ice_controller_interface",
       ":async_stun_tcp_socket",
       ":basic_ice_controller",
-      ":connection_and_port",
+      ":connection",
       ":fake_ice_transport",
       ":fake_port_allocator",
       ":ice_credentials_iterator",
