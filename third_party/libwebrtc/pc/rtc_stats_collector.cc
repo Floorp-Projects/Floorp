@@ -72,7 +72,7 @@ namespace {
 const char kDirectionInbound = 'I';
 const char kDirectionOutbound = 'O';
 
-const char* kAudioPlayoutSingletonId = "AP";
+static constexpr char kAudioPlayoutSingletonId[] = "AP";
 
 // TODO(https://crbug.com/webrtc/10656): Consider making IDs less predictable.
 std::string RTCCertificateIDFromFingerprint(const std::string& fingerprint) {
