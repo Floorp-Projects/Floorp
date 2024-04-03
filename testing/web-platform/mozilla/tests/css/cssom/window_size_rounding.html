@@ -1,35 +1,41 @@
 <!doctype html>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src=/resources/testharness.js></script>
 <script src=/resources/testharnessreport.js></script>
-<pre>
+<iframe style="border: 0; padding: 0; width: 100.75px; height: 100.75px" srcdoc="<html style='width: 100vw; height: 100vh'>"></iframe>
 <script>
-test(function() {
-  let originalWidth = window.innerWidth;
-  let originalHeight = window.innerHeight;
+onload = function() {
+  test(() => {
+    assert_equals(window.devicePixelRatio, 1, `precondition: ${window.innerWidth}x${window.innerHeight}`);
 
-  assert_equals(window.devicePixelRatio, 1, `precondition: ${originalWidth}x${originalHeight}`);
+    // So that the 100.75 is fractional css pixel, but whole dev pixels, and representable in app units.
+    SpecialPowers.setFullZoom(window, 4);
 
-  // This precondition holds because of:
-  // https://searchfox.org/mozilla-central/rev/50215d649d4854812837f1343e8f47bd998dacb5/browser/base/content/browser.js#1717
-  //
-  // But if this test starts failing you can just update the assert and the
-  // factor below accordingly so that the asserts keep passing.
-  assert_equals(originalWidth, 1280, "precondition");
+    let win = document.querySelector("iframe").contentWindow;
+    const rounded = 101;
+    const truncated = 100;
+    const raw = 100.75;
 
-  // Set a fractional scale factor that guarantees that we get a fractional innerWidth
-  const kFactor = 1.5;
-  const kOneAppUnit = 1 / 60;
+    const rect = win.document.documentElement.getBoundingClientRect();
+    assert_equals(rect.height, raw);
+    assert_equals(rect.width, raw);
 
-  SpecialPowers.setFullZoom(window, kFactor);
-  assert_approx_equals(window.devicePixelRatio, kFactor, kOneAppUnit);
-  assert_not_equals(window.innerWidth, originalWidth);
-  assert_not_equals(window.innerHeight, originalHeight);
-  if (SpecialPowers.getBoolPref("dom.innerSize.rounded")) {
-    assert_equals(window.innerWidth, Math.round(originalWidth / kFactor));
-    assert_equals(window.innerHeight, Math.round(originalHeight / kFactor));
-  } else {
-    assert_not_equals(window.innerWidth, Math.round(window.innerWidth));
-  }
-  SpecialPowers.setFullZoom(window, 1); // Restore zoom so results can be seen fine...
-});
+    switch (SpecialPowers.getIntPref("dom.innerSize.rounding")) {
+      case 1:
+        assert_equals(win.innerWidth, rounded);
+        assert_equals(win.innerHeight, rounded);
+        break;
+      case 2:
+        assert_equals(win.innerWidth, truncated);
+        assert_equals(win.innerHeight, truncated);
+        break;
+      default:
+        assert_equals(win.innerWidth, raw);
+        assert_equals(win.innerHeight, raw);
+        break;
+    }
+
+    SpecialPowers.setFullZoom(window, 1);
+  })
+};
 </script>

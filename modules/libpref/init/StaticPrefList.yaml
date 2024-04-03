@@ -2779,7 +2779,11 @@
   value: false
   mirror: always
 
-# Whether innerWidth / innerHeight return rounded or fractional sizes.
+# How innerWidth / innerHeight return rounded or fractional sizes.
+#
+#   0 or others: Do not round at all.
+#   1: Round.
+#   2: Truncate.
 #
 # NOTE(emilio): Fractional sizes are not web-compatible, see the regressions
 # from bug 1676843, but we want to expose the fractional sizes (probably in
@@ -2787,9 +2791,9 @@
 # time being.
 #
 # [1]: https://github.com/w3c/csswg-drafts/issues/5260
-- name: dom.innerSize.rounded
-  type: bool
-  value: true
+- name: dom.innerSize.rounding
+  type: uint32_t
+  value: 2
   mirror: always
 
 # Whether we conform to Input Events Level 1 or Input Events Level 2.

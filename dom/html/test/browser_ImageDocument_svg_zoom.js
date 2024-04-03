@@ -13,7 +13,7 @@ function test_once() {
         `${rect.width}x${rect.height}, ${content.innerWidth}x${content.innerHeight}`
       );
       is(
-        Math.round(rect.height),
+        Math.trunc(rect.height),
         content.innerHeight,
         "Should fill the viewport and not overflow"
       );
