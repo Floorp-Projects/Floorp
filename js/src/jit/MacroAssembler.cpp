@@ -3168,6 +3168,8 @@ void MacroAssembler::emitMegamorphicCachedSetSlot(
   passABIArg(scratch2);
   callWithABI<Fn, NativeObject::growSlotsPure>();
   storeCallPointerResult(scratch2);
+
+  MOZ_ASSERT(!save.has(scratch2));
   PopRegsInMask(save);
 
   branchIfFalseBool(scratch2, &cacheMiss);
