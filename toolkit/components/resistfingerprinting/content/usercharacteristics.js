@@ -25,6 +25,7 @@ function debug(...args) {
 debug("Debug Line");
 debug("Another debug line, with", { an: "object" });
 
+// The first time we put a real value in here, please update browser_usercharacteristics.js
 let output = {
   foo: "Hello World",
 };
