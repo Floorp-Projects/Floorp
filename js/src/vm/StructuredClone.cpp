@@ -893,7 +893,7 @@ bool SCInput::readArray(T* p, size_t nelems) {
     // To avoid any way in which uninitialized data could escape, zero the array
     // if filling it failed.
     std::uninitialized_fill_n(p, nelems, 0);
-    return false;
+    return reportTruncated();
   }
 
   swapFromLittleEndianInPlace(p, nelems);
