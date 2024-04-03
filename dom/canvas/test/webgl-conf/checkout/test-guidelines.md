@@ -18,7 +18,7 @@ the WebGL Working Group when "official" snapshots are taken.
 These lines must appear in a comment at the top of every code file under sdk/tests/conformance
 
 ```
-Copyright (c) 2019 The Khronos Group Inc.
+Copyright (c) 2023 The Khronos Group Inc.
 Use of this source code is governed by an MIT-style license that can be
 found in the LICENSE.txt file.
 ```
@@ -102,7 +102,7 @@ found in the LICENSE.txt file.
 
         *   Tests that are short and run synchronously end with
 
-                <script src="../../resources/js-test-post.js"></script>
+                <script src="../../js/js-test-post.js"></script>
 
         *   Tests that take a long time use setTimeout so as not to freeze the browser.
 
@@ -144,7 +144,7 @@ found in the LICENSE.txt file.
 
         *   Vendors may place test harness specific code in the testing infrastructure.
 
-                resources/js-test-pre.js
+                js/js-test-pre.js
                 conformance/more/unit.js
 
     *   Indent with spaces not tabs. (not everyone uses your tab settings).

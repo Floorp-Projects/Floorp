@@ -21,7 +21,7 @@ UNNECESSARY EXECUTABLE PERMISSION:specs/1.0
 UNNECESSARY EXECUTABLE PERMISSION:specs/2.0
 
 ## Ignore INDENT TABS ##
- 
+
 INDENT TABS:*.frag
 INDENT TABS:*.vert
 #The original dEQP tests used tabs throughout.
@@ -46,7 +46,6 @@ INVALID UNICODE:conformance/glsl/misc/non-ascii.vert.html
 *:*.mp3
 *:*.m4a
 *:*.oga
-*:*.ogv
 *:*.webm
 *:*.mp4
 *:*.m4v
