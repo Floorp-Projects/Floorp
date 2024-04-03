@@ -36,10 +36,10 @@ use cssparser::{
 use itertools::Itertools;
 use selectors::SelectorList;
 use servo_arc::Arc;
-use smallbitvec::{self, SmallBitVec};
+use smallbitvec::SmallBitVec;
 use smallvec::SmallVec;
 use std::fmt::{self, Write};
-use std::iter::{DoubleEndedIterator, Zip};
+use std::iter::Zip;
 use std::slice::Iter;
 use style_traits::{CssWriter, ParseError, ParsingMode, StyleParseErrorKind, ToCss};
 use thin_vec::ThinVec;

@@ -9,7 +9,7 @@ use crate::values::computed::NonNegativeNumber;
 use crate::values::distance::{ComputeSquaredDistance, SquaredDistance};
 use crate::values::generics::ratio::Ratio as GenericRatio;
 use crate::{One, Zero};
-use std::cmp::{Ordering, PartialOrd};
+use std::cmp::Ordering;
 
 /// A computed <ratio> value.
 pub type Ratio = GenericRatio<NonNegativeNumber>;

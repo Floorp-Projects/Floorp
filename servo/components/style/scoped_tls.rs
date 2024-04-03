@@ -8,7 +8,6 @@
 #![deny(missing_docs)]
 
 use crate::global_style_data::STYLO_MAX_THREADS;
-use rayon;
 use std::cell::{Ref, RefCell, RefMut};
 use std::ops::DerefMut;
 

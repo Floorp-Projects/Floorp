@@ -28,7 +28,7 @@ use std::num::NonZeroUsize;
 use std::ops::Deref;
 use std::{slice, str};
 use style_traits::SpecifiedValueInfo;
-use to_shmem::{self, SharedMemoryBuilder, ToShmem};
+use to_shmem::{SharedMemoryBuilder, ToShmem};
 
 #[macro_use]
 #[allow(improper_ctypes, non_camel_case_types, missing_docs)]

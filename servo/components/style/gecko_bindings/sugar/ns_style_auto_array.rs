@@ -11,7 +11,7 @@ use crate::gecko_bindings::bindings::Gecko_EnsureStyleViewTimelineArrayLength;
 use crate::gecko_bindings::structs::nsStyleAutoArray;
 use crate::gecko_bindings::structs::{StyleAnimation, StyleTransition};
 use crate::gecko_bindings::structs::{StyleScrollTimeline, StyleViewTimeline};
-use std::iter::{once, Chain, IntoIterator, Once};
+use std::iter::{once, Chain, Once};
 use std::ops::{Index, IndexMut};
 use std::slice::{Iter, IterMut};
 

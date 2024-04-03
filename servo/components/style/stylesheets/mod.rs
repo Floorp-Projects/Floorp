@@ -46,7 +46,7 @@ use std::fmt;
 use std::mem::{self, ManuallyDrop};
 use style_traits::ParsingMode;
 #[cfg(feature = "gecko")]
-use to_shmem::{self, SharedMemoryBuilder, ToShmem};
+use to_shmem::{SharedMemoryBuilder, ToShmem};
 
 pub use self::container_rule::ContainerRule;
 pub use self::counter_style_rule::CounterStyleRule;

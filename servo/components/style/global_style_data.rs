@@ -10,9 +10,7 @@ use crate::gecko_bindings::bindings;
 use crate::parallel::STYLE_THREAD_STACK_SIZE_KB;
 use crate::shared_lock::SharedRwLock;
 use crate::thread_state;
-use gecko_profiler;
 use parking_lot::{Mutex, RwLock, RwLockReadGuard};
-use rayon;
 #[cfg(unix)]
 use std::os::unix::thread::{JoinHandleExt, RawPthread};
 #[cfg(windows)]

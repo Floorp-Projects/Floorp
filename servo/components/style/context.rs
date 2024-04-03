@@ -41,7 +41,6 @@ use style_traits::CSSPixel;
 use style_traits::DevicePixel;
 #[cfg(feature = "servo")]
 use style_traits::SpeculativePainter;
-use time;
 
 pub use selectors::matching::QuirksMode;
 

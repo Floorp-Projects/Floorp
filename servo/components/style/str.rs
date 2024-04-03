@@ -8,7 +8,6 @@
 
 use num_traits::ToPrimitive;
 use std::borrow::Cow;
-use std::convert::AsRef;
 use std::iter::{Filter, Peekable};
 use std::str::Split;
 

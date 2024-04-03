@@ -26,7 +26,6 @@ use crate::context::{StyleContext, ThreadLocalStyleContext};
 use crate::dom::{OpaqueNode, SendNode, TElement};
 use crate::scoped_tls::ScopedTLS;
 use crate::traversal::{DomTraversal, PerLevelTraversalData};
-use rayon;
 use std::collections::VecDeque;
 
 /// The minimum stack size for a thread in the styling pool, in kilobytes.

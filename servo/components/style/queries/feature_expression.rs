@@ -14,7 +14,7 @@ use crate::values::specified::{Integer, Length, Number, Resolution};
 use crate::values::{AtomString, CSSFloat};
 use crate::{Atom, Zero};
 use cssparser::{Parser, Token};
-use std::cmp::{Ordering, PartialOrd};
+use std::cmp::Ordering;
 use std::fmt::{self, Write};
 use style_traits::{CssWriter, ParseError, StyleParseErrorKind, ToCss};
 use selectors::kleene_value::KleeneValue;
