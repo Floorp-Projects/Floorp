@@ -402,8 +402,7 @@ class WebRtcVideoSendChannel : public MediaChannelUtil,
         const VideoCodec& codec) const;
     void ReconfigureEncoder(webrtc::SetParametersCallback callback);
 
-    // Calls Start or Stop according to whether or not `sending_` is true,
-    // and whether or not the encoding in `rtp_parameters_` is active.
+    // Calls Start or Stop according to whether or not `sending_` is true.
     void UpdateSendState();
 
     webrtc::DegradationPreference GetDegradationPreference() const

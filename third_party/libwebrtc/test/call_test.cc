@@ -657,9 +657,7 @@ void CallTest::StartVideoSources() {
 void CallTest::StartVideoStreams() {
   StartVideoSources();
   for (size_t i = 0; i < video_send_streams_.size(); ++i) {
-    std::vector<bool> active_rtp_streams(
-        video_send_configs_[i].rtp.ssrcs.size(), true);
-    video_send_streams_[i]->StartPerRtpStream(active_rtp_streams);
+    video_send_streams_[i]->Start();
   }
   for (VideoReceiveStreamInterface* video_recv_stream : video_receive_streams_)
     video_recv_stream->Start();
