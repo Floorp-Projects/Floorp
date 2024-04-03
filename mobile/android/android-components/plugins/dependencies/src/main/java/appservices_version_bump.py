@@ -4,20 +4,20 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-# Stand-alone script to update the application-services version pin in
-# ApplicationServices.kt to the latest available application-services
-# nightly build.
+# Helper script for mach vendor / updatebot to update the application-services
+# version pin in ApplicationServices.kt to the latest available
+# application-services nightly build.
 #
 # This script was adapted from https://github.com/mozilla-mobile/relbot/
-#
-# It is used primarily by updatebot and 'mach vendor' via moz.yaml.
 
+import datetime
 import logging
 import os
 import re
 from urllib.parse import quote_plus
 
 import requests
+from mozbuild.vendor.host_base import BaseHost
 
 log = logging.getLogger(__name__)
 logging.basicConfig(
@@ -110,17 +110,15 @@ def get_current_as_channel():
     return match_as_channel(content)
 
 
-def get_latest_as_version():
-    """Find the most recent nightly app-services version on Maven (as indicated by taskcluster index)"""
-
+def get_as_nightly_json(version="latest"):
     r = requests.get(
         taskcluster_indexed_artifact_url(
-            "project.application-services.v2.nightly.latest",
+            f"project.application-services.v2.nightly.{version}",
             "public/build/nightly.json",
         )
     )
     r.raise_for_status()
-    return r.json()["version"]
+    return r.json()
 
 
 def compare_as_versions(a, b):
@@ -150,10 +148,10 @@ def update_as_version(old_as_version, new_as_version):
     write_contents(path, new_content)
 
 
-def update_application_services():
-    """Find the most recent app-services nightly build version; if it is
-    newer than the current version in ApplicationServices.kt, then update
-    ApplicationServices.kt with the newer version number."""
+def update_application_services(revision):
+    """Find the app-services nightly build version corresponding to revision;
+    if it is newer than the current version in ApplicationServices.kt, then
+    update ApplicationServices.kt with the newer version number."""
     as_channel = get_current_as_channel()
     log.info(f"Current app-services channel is {as_channel}")
     if as_channel != "nightly":
@@ -166,13 +164,14 @@ def update_application_services():
         f"Current app-services {as_channel.capitalize()} version is {current_as_version}"
     )
 
-    latest_as_version = get_latest_as_version()
+    json = get_as_nightly_json(f"revision.{revision}")
+    target_as_version = json["version"]
     log.info(
-        f"Latest app-services {as_channel.capitalize()} version available "
-        f"is {latest_as_version}"
+        f"Target app-services {as_channel.capitalize()} version "
+        f"is {target_as_version}"
     )
 
-    if compare_as_versions(current_as_version, latest_as_version) >= 0:
+    if compare_as_versions(current_as_version, target_as_version) >= 0:
         log.warning(
             f"No newer app-services {as_channel.capitalize()} release found. Exiting."
         )
@@ -185,9 +184,33 @@ def update_application_services():
 
     update_as_version(
         current_as_version,
-        latest_as_version,
+        target_as_version,
     )
 
 
+class ASHost(BaseHost):
+    def upstream_tag(self, revision):
+        if revision == "HEAD":
+            index = "latest"
+        else:
+            index = f"revision.{revision}"
+        json = get_as_nightly_json(index)
+        timestamp = json["version"].rsplit(".", 1)[1]
+        return (
+            json["commit"],
+            datetime.datetime.strptime(timestamp, "%Y%m%d%H%M%S").isoformat(),
+        )
+
+
+def main():
+    import sys
+
+    if len(sys.argv) != 2:
+        print("Usage: {} <commit hash>".format(sys.argv[0]), file=sys.stderr)
+        sys.exit(1)
+
+    update_application_services(sys.argv[1])
+
+
 if __name__ == "__main__":
-    update_application_services()
+    main()

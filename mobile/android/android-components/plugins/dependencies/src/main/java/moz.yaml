@@ -55,7 +55,9 @@ updatebot:
 
 vendoring:
   url: https://github.com/mozilla/application-services
-  source-hosting: github
+  source-hosting: yaml-dir
+  source-host-path: appservices_version_bump.ASHost
+  tracking: tag
 
   skip-vendoring-steps:
     - fetch
@@ -69,4 +71,5 @@ vendoring:
     - action: run-script
       script: '{yaml_dir}/appservices_version_bump.py'
       cwd: '.'
-      args: []
+      args: ['{revision}']
+
