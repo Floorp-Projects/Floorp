@@ -77,7 +77,7 @@ To Setup Firefox for Android
     $ curl https://hg.mozilla.org/mozilla-central/raw-file/default/python/mozboot/bin/bootstrap.py -O
     $ python3 bootstrap.py
 
-More information on :ref:`building Firefox for Android <geckoview-contributor-guide>`
+More information on :ref:`building Firefox for Android <fenix-contributor-guide>`
 
 To set up your editor
 ---------------------
