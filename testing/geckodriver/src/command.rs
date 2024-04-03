@@ -7,7 +7,7 @@ use base64::prelude::BASE64_STANDARD;
 use base64::Engine;
 use hyper::Method;
 use serde::de::{self, Deserialize, Deserializer};
-use serde_json::{self, Value};
+use serde_json::Value;
 use std::env;
 use std::fs::File;
 use std::io::prelude::*;
