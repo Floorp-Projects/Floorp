@@ -73,3 +73,33 @@ addUiaTask(
   // The IA2 -> UIA proxy doesn't support FullDescription.
   { uiaEnabled: true, uiaDisabled: false }
 );
+
+/**
+ * Test the IsEnabled property.
+ */
+addUiaTask(
+  `
+<button id="button">button</button>
+<p id="p">p</p>
+  `,
+  async function testIsEnabled(browser) {
+    await definePyVar("doc", `getDocUia()`);
+    await assignPyVarToUiaWithId("button");
+    ok(await runPython(`button.CurrentIsEnabled`), "button has IsEnabled true");
+    // The IA2 -> UIA proxy doesn't fire IsEnabled prop change events.
+    if (gIsUiaEnabled) {
+      info("Setting disabled on button");
+      await setUpWaitForUiaPropEvent("IsEnabled", "button");
+      await invokeSetAttribute(browser, "button", "disabled", true);
+      await waitForUiaEvent();
+      ok(true, "Got IsEnabled prop change event on button");
+      ok(
+        !(await runPython(`button.CurrentIsEnabled`)),
+        "button has IsEnabled false"
+      );
+    }
+
+    await assignPyVarToUiaWithId("p");
+    ok(await runPython(`p.CurrentIsEnabled`), "p has IsEnabled true");
+  }
+);
