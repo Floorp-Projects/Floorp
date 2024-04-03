@@ -8,7 +8,6 @@ use std::borrow::Cow;
 use std::char;
 use std::error::Error;
 use std::io::{self, Write};
-use std::iter::Iterator;
 
 use std::str;
 use thiserror::Error;
