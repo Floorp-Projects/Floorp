@@ -156,9 +156,10 @@ PeekOffsetStruct::PeekOffsetStruct(nsSelectionAmount aAmount,
 
 }  // namespace mozilla
 
-// Array which contains index of each SelecionType in Selection::mDOMSelections.
-// For avoiding using if nor switch to retrieve the index, this needs to have
-// -1 for SelectionTypes which won't be created its Selection instance.
+// Array which contains index of each SelectionType in
+// Selection::mDOMSelections. For avoiding using if nor switch to retrieve the
+// index, this needs to have -1 for SelectionTypes which won't be created its
+// Selection instance.
 static const int8_t kIndexOfSelections[] = {
     -1,  // SelectionType::eInvalid
     -1,  // SelectionType::eNone
@@ -172,6 +173,7 @@ static const int8_t kIndexOfSelections[] = {
     7,   // SelectionType::eFind
     8,   // SelectionType::eURLSecondary
     9,   // SelectionType::eURLStrikeout
+    10,  // SelectionType::eTargetText
     -1,  // SelectionType::eHighlight
 };
 
