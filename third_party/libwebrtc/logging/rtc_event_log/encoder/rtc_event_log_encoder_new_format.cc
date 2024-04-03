@@ -10,8 +10,11 @@
 
 #include "logging/rtc_event_log/encoder/rtc_event_log_encoder_new_format.h"
 
+#include <type_traits>
+
 #include "absl/types/optional.h"
 #include "api/array_view.h"
+#include "api/field_trials_view.h"
 #include "api/network_state_predictor.h"
 #include "logging/rtc_event_log/dependency_descriptor_encoder_decoder.h"
 #include "logging/rtc_event_log/encoder/blob_encoding.h"
@@ -62,7 +65,6 @@
 #include "modules/rtp_rtcp/source/rtp_packet.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
-#include "system_wrappers/include/field_trial.h"
 
 // *.pb.h files are generated at build-time by the protobuf compiler.
 #ifdef WEBRTC_ANDROID_PLATFORM_BUILD
@@ -381,10 +383,12 @@ void EncodeRtcpPacket(rtc::ArrayView<const EventType*> batch,
   }
   proto_batch->set_raw_packet_blobs(EncodeBlobs(scrubed_packets));
 }
+}  // namespace
 
-template <typename EventType, typename ProtoType>
-void EncodeRtpPacket(const std::vector<const EventType*>& batch,
-                     ProtoType* proto_batch) {
+template <typename Batch, typename ProtoType>
+void RtcEventLogEncoderNewFormat::EncodeRtpPacket(const Batch& batch,
+                                                  ProtoType* proto_batch) {
+  using EventType = std::remove_pointer_t<typename Batch::value_type>;
   if (batch.empty()) {
     return;
   }
@@ -459,8 +463,7 @@ void EncodeRtpPacket(const std::vector<const EventType*>& batch,
   {
     // TODO(webrtc:14975) Remove this kill switch after DD in RTC event log has
     //                    been rolled out.
-    if (!webrtc::field_trial::IsDisabled(
-            "WebRTC-RtcEventLogEncodeDependencyDescriptor")) {
+    if (encode_dependency_descriptor_) {
       std::vector<rtc::ArrayView<const uint8_t>> raw_dds(batch.size());
       bool has_dd = false;
       for (size_t i = 0; i < batch.size(); ++i) {
@@ -674,15 +677,13 @@ void EncodeRtpPacket(const std::vector<const EventType*>& batch,
     proto_batch->set_voice_activity_deltas(encoded_deltas);
   }
 }
-}  // namespace
 
-RtcEventLogEncoderNewFormat::RtcEventLogEncoderNewFormat() {
-  encode_neteq_set_minimum_delay_kill_switch_ = false;
-  if (webrtc::field_trial::IsEnabled(
-          "WebRTC-RtcEventLogEncodeNetEqSetMinimumDelayKillSwitch")) {
-    encode_neteq_set_minimum_delay_kill_switch_ = true;
-  }
-}
+RtcEventLogEncoderNewFormat::RtcEventLogEncoderNewFormat(
+    const FieldTrialsView& field_trials)
+    : encode_neteq_set_minimum_delay_kill_switch_(field_trials.IsEnabled(
+          "WebRTC-RtcEventLogEncodeNetEqSetMinimumDelayKillSwitch")),
+      encode_dependency_descriptor_(!field_trials.IsDisabled(
+          "WebRTC-RtcEventLogEncodeDependencyDescriptor")) {}
 
 std::string RtcEventLogEncoderNewFormat::EncodeLogStart(int64_t timestamp_us,
                                                         int64_t utc_time_us) {

@@ -353,6 +353,7 @@ rtc_library("rtc_event_log_impl_encoder") {
 
   deps = [
     ":rtc_event_number_encodings",
+    "../api:field_trials_view",
     "../api:rtp_headers",
     "../api:rtp_parameters",
     "../api/transport:network_control",
@@ -362,7 +363,6 @@ rtc_library("rtc_event_log_impl_encoder") {
     "../rtc_base:checks",
     "../rtc_base:logging",
     "../rtc_base:safe_conversions",
-    "../system_wrappers:field_trial",
   ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/memory",
@@ -617,6 +617,7 @@ if (rtc_enable_protobuf) {
         "../api/environment:environment_factory",
         "../api/rtc_event_log",
         "../api/rtc_event_log:rtc_event_log_factory",
+        "../api/transport:field_trial_based_config",
         "../api/units:time_delta",
         "../api/units:timestamp",
         "../call",
