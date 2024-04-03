@@ -40,7 +40,7 @@ internal fun TranslationDialogBottomSheet(content: @Composable () -> Unit) {
     Column(
         modifier = Modifier
             .background(
-                color = FirefoxTheme.colors.layer2,
+                color = FirefoxTheme.colors.layer1,
                 shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
             )
             .nestedScroll(rememberNestedScrollInteropConnection()),
