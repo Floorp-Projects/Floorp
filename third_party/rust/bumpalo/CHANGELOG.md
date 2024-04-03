@@ -28,6 +28,126 @@ Released YYYY-MM-DD.
 
 --------------------------------------------------------------------------------
 
+## 3.15.4
+
+Released 2024-03-07.
+
+### Added
+
+* Added the `bumpalo::collections::Vec::extend_from_slices_copy` method, which
+  is a faster way to extend a vec from multiple slices when the element is
+  `Copy` than calling `extend_from_slice_copy` N times.
+
+--------------------------------------------------------------------------------
+
+## 3.15.3
+
+Released 2024-02-22.
+
+### Added
+
+* Added additional performance improvements to `bumpalo::collections::Vec`
+  related to reserving capacity.
+
+--------------------------------------------------------------------------------
+
+## 3.15.2
+
+Released 2024-02-21.
+
+### Added
+
+* Add a `bumpalo::collections::Vec::extend_from_slice_copy` method. This doesn't
+  exist on the standard library's `Vec` but they have access to specialization,
+  so their regular `extend_from_slice` has a specialization for `Copy`
+  types. Using this new method for `Copy` types is a ~80x performance
+  improvement over the plain `extend_from_slice` method.
+
+--------------------------------------------------------------------------------
+
+## 3.15.1
+
+Released 2024-02-20.
+
+### Fixed
+
+* Fixed the MSRV listed in `Cargo.toml`, whose update was forgotten when the
+  MSRV bumped in release 3.15.0.
+
+--------------------------------------------------------------------------------
+
+## 3.15.0
+
+Released 2024-02-15.
+
+### Changed
+
+* The minimum supported Rust version (MSRV) is now 1.73.0.
+* `bumpalo::collections::String::push_str` and
+  `bumpalo::collections::String::from_str_in` received significant performance
+  improvements.
+* Allocator trait methods are now marked `#[inline]`, increasing performance for
+  some callers.
+
+### Fixed
+
+* Fixed an edge-case bug in the `Allocator::shrink` method.
+
+--------------------------------------------------------------------------------
+
+## 3.14.0
+
+Released 2023-09-14.
+
+### Added
+
+* Added the `std` cargo feature, which enables implementations of `std` traits
+  for various things. Right now that is just `std::io::Write` for
+  `bumpalo::collections::Vec`, but could be more in the future.
+
+--------------------------------------------------------------------------------
+
+## 3.13.0
+
+Released 2023-05-22.
+
+### Added
+
+* New `"allocator-api2"` feature enables the use of the allocator API on
+  stable. This feature uses a crate that mirrors the API of the unstable Rust
+  `allocator_api` feature. If the feature is enabled, references to `Bump` will
+  implement `allocator_api2::Allocator`. This allows `Bump` to be used as an
+  allocator for collection types from `allocator-api2` and any other crates that
+  support `allocator-api2`.
+
+### Changed
+
+* The minimum supported Rust version (MSRV) is now 1.63.0.
+
+--------------------------------------------------------------------------------
+
+## 3.12.2
+
+Released 2023-05-09.
+
+### Changed
+
+* Added `rust-version` metadata to `Cargo.toml` which helps `cargo` with version
+  resolution.
+
+--------------------------------------------------------------------------------
+
+## 3.12.1
+
+Released 2023-04-21.
+
+### Fixed
+
+* Fixed a bug where `Bump::try_with_capacity(n)` where `n > isize::MAX` could
+  lead to attempts to create invalid `Layout`s.
+
+--------------------------------------------------------------------------------
+
 ## 3.12.0
 
 Released 2023-01-17.
@@ -489,7 +609,7 @@ Released 2019-12-20.
   from the allocated chunks are slightly different from the old
   `each_allocated_chunk`: only up to 16-byte alignment is supported now. If you
   allocate anything with greater alignment than that into the bump arena, there
-  might be uninitilized padding inserted in the chunks, and therefore it is no
+  might be uninitialized padding inserted in the chunks, and therefore it is no
   longer safe to read them via `MaybeUninit::assume_init`. See also the note
   about bump direction in the "changed" section; if you're iterating chunks,
   you're likely affected by that change!
@@ -528,7 +648,7 @@ Released 2019-05-20.
 
 * Fixed a bug where chunks were always deallocated with the default chunk
   layout, not the layout that the chunk was actually allocated with (i.e. if we
-  started growing largers chunks with larger layouts, we would deallocate those
+  started growing larger chunks with larger layouts, we would deallocate those
   chunks with an incorrect layout).
 
 --------------------------------------------------------------------------------

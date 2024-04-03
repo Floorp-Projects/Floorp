@@ -43,6 +43,7 @@ impl<'a> Parse<'a> for Wat<'a> {
         let _r = parser.register_annotation("custom");
         let _r = parser.register_annotation("producers");
         let _r = parser.register_annotation("name");
+        let _r = parser.register_annotation("metadata.code.branch_hint");
         let wat = if parser.peek2::<kw::module>()? {
             Wat::Module(parser.parens(|parser| parser.parse())?)
         } else if parser.peek2::<kw::component>()? {

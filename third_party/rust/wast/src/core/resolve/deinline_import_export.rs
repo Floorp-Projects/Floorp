@@ -85,6 +85,7 @@ pub fn run(fields: &mut Vec<ModuleField>) {
                                     } else {
                                         Instruction::I64Const(0)
                                     }]),
+                                    branch_hints: Vec::new(),
                                 },
                             },
                             data,
@@ -143,6 +144,7 @@ pub fn run(fields: &mut Vec<ModuleField>) {
                                 table: Index::Id(id),
                                 offset: Expression {
                                     instrs: Box::new([Instruction::I32Const(0)]),
+                                    branch_hints: Vec::new(),
                                 },
                             },
                             payload,

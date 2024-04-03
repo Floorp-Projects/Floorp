@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 
 use super::*;
-use crate::{encoding_size, CustomSection, Encode, ExportKind, NameMap, SectionId};
+use crate::{encoding_size, ExportKind, NameMap, SectionId};
 
 /// Encoding for the `component-name` custom section which assigns
 /// human-readable names to items within a component.

@@ -57,6 +57,13 @@ user-id = 128763
 user-login = "martinthomson"
 user-name = "Martin Thomson"
 
+[[publisher.bumpalo]]
+version = "3.15.4"
+when = "2024-03-07"
+user-id = 696
+user-login = "fitzgen"
+user-name = "Nick Fitzgerald"
+
 [[publisher.byteorder]]
 version = "1.4.3"
 when = "2021-03-10"
@@ -683,6 +690,12 @@ user-id = 1
 user-login = "alexcrichton"
 user-name = "Alex Crichton"
 
+[[publisher.wasm-encoder]]
+version = "0.201.0"
+when = "2024-02-27"
+user-id = 73222
+user-login = "wasmtime-publish"
+
 [[publisher.wasm-smith]]
 version = "0.15.0"
 when = "2024-01-24"
@@ -690,12 +703,24 @@ user-id = 1
 user-login = "alexcrichton"
 user-name = "Alex Crichton"
 
+[[publisher.wasm-smith]]
+version = "0.201.0"
+when = "2024-02-27"
+user-id = 73222
+user-login = "wasmtime-publish"
+
 [[publisher.wast]]
 version = "70.0.1"
 when = "2024-01-24"
 user-id = 1
 user-login = "alexcrichton"
 user-name = "Alex Crichton"
+
+[[publisher.wast]]
+version = "201.0.0"
+when = "2024-02-27"
+user-id = 73222
+user-login = "wasmtime-publish"
 
 [[publisher.winapi-util]]
 version = "0.1.5"
@@ -739,6 +764,13 @@ user-id = 696 # Nick Fitzgerald (fitzgen)
 start = "2020-01-14"
 end = "2024-04-21"
 notes = "I am an author of this crate."
+
+[[audits.bytecode-alliance.wildcard-audits.bumpalo]]
+who = "Nick Fitzgerald <fitzgen@gmail.com>"
+criteria = "safe-to-deploy"
+user-id = 696 # Nick Fitzgerald (fitzgen)
+start = "2019-03-16"
+end = "2024-03-10"
 
 [[audits.bytecode-alliance.wildcard-audits.derive_arbitrary]]
 who = "Nick Fitzgerald <fitzgen@gmail.com>"

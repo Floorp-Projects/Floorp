@@ -165,6 +165,7 @@ impl<'a> Parse<'a> for Data<'a> {
                     if parser.is_empty() {
                         return Ok(Expression {
                             instrs: [insn].into(),
+                            branch_hints: Vec::new(),
                         });
                     }
 
@@ -184,6 +185,7 @@ impl<'a> Parse<'a> for Data<'a> {
                     instrs.push(insn);
                     Ok(Expression {
                         instrs: instrs.into(),
+                        branch_hints: Vec::new(),
                     })
                 }
             })?;

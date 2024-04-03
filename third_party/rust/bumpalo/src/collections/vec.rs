@@ -104,6 +104,8 @@ use core::ops::{Index, IndexMut, RangeBounds};
 use core::ptr;
 use core::ptr::NonNull;
 use core::slice;
+#[cfg(feature = "std")]
+use std::io;
 
 unsafe fn arith_offset<T>(p: *const T, offset: isize) -> *const T {
     p.offset(offset)
@@ -1775,6 +1777,132 @@ impl<'bump, T: 'bump + Clone> Vec<'bump, T> {
     }
 }
 
+impl<'bump, T: 'bump + Copy> Vec<'bump, T> {
+    /// Helper method to copy all of the items in `other` and append them to the end of `self`.
+    ///
+    /// SAFETY:
+    ///   * The caller is responsible for:
+    ///       * calling [`reserve`](Self::reserve) beforehand to guarantee that there is enough
+    ///         capacity to store `other.len()` more items.
+    ///       * guaranteeing that `self` and `other` do not overlap.
+    unsafe fn extend_from_slice_copy_unchecked(&mut self, other: &[T]) {
+        let old_len = self.len();
+        debug_assert!(old_len + other.len() <= self.capacity());
+
+        // SAFETY:
+        // * `src` is valid for reads of `other.len()` values by virtue of being a `&[T]`.
+        // * `dst` is valid for writes of `other.len()` bytes because the caller of this
+        //   method is required to `reserve` capacity to store at least `other.len()` items
+        //   beforehand.
+        // * Because `src` is a `&[T]` and dst is a `&[T]` within the `Vec<T>`,
+        //   `copy_nonoverlapping`'s alignment requirements are met.
+        // * Caller is required to guarantee that the source and destination ranges cannot overlap
+        unsafe {
+            let src = other.as_ptr();
+            let dst = self.as_mut_ptr().add(old_len);
+            ptr::copy_nonoverlapping(src, dst, other.len());
+            self.set_len(old_len + other.len());
+        }
+    }
+
+
+    /// Copies all elements in the slice `other` and appends them to the `Vec`.
+    ///
+    /// Note that this function is same as [`extend_from_slice`] except that it is optimized for
+    /// slices of types that implement the `Copy` trait. If and when Rust gets specialization
+    /// this function will likely be deprecated (but still available).
+    ///
+    /// To copy and append the data from multiple source slices at once, see
+    /// [`extend_from_slices_copy`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bumpalo::{Bump, collections::Vec};
+    ///
+    /// let b = Bump::new();
+    ///
+    /// let mut vec = bumpalo::vec![in &b; 1];
+    /// vec.extend_from_slice_copy(&[2, 3, 4]);
+    /// assert_eq!(vec, [1, 2, 3, 4]);
+    /// ```
+    ///
+    /// ```
+    /// use bumpalo::{Bump, collections::Vec};
+    ///
+    /// let b = Bump::new();
+    ///
+    /// let mut vec = bumpalo::vec![in &b; 'H' as u8];
+    /// vec.extend_from_slice_copy("ello, world!".as_bytes());
+    /// assert_eq!(vec, "Hello, world!".as_bytes());
+    /// ```
+    ///
+    /// [`extend_from_slice`]: #method.extend_from_slice
+    /// [`extend_from_slices`]: #method.extend_from_slices
+    pub fn extend_from_slice_copy(&mut self, other: &[T]) {
+        // Reserve space in the Vec for the values to be added
+        self.reserve(other.len());
+
+        // Copy values into the space that was just reserved
+        // SAFETY:
+        // * `self` has enough capacity to store `other.len()` more items as `self.reserve(other.len())`
+        //   above guarantees that.
+        // * Source and destination data ranges cannot overlap as we just reserved the destination
+        //   range from the bump.
+        unsafe {
+            self.extend_from_slice_copy_unchecked(other);
+        }
+    }
+
+    /// For each slice in `slices`, copies all elements in the slice and appends them to the `Vec`.
+    ///
+    /// This method is equivalent to calling [`extend_from_slice_copy`] in a loop, but is able
+    /// to precompute the total amount of space to reserve in advance. This reduces the potential
+    /// maximum number of reallocations needed from one-per-slice to just one.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bumpalo::{Bump, collections::Vec};
+    ///
+    /// let b = Bump::new();
+    ///
+    /// let mut vec = bumpalo::vec![in &b; 1];
+    /// vec.extend_from_slices_copy(&[&[2, 3], &[], &[4]]);
+    /// assert_eq!(vec, [1, 2, 3, 4]);
+    /// ```
+    ///
+    /// ```
+    /// use bumpalo::{Bump, collections::Vec};
+    ///
+    /// let b = Bump::new();
+    ///
+    /// let mut vec = bumpalo::vec![in &b; 'H' as u8];
+    /// vec.extend_from_slices_copy(&["ello,".as_bytes(), &[], " world!".as_bytes()]);
+    /// assert_eq!(vec, "Hello, world!".as_bytes());
+    /// ```
+    ///
+    /// [`extend_from_slice_copy`]: #method.extend_from_slice_copy
+    pub fn extend_from_slices_copy(&mut self, slices: &[&[T]]) {
+        // Reserve the total amount of capacity we'll need to safely append the aggregated contents
+        // of each slice in `slices`.
+        let capacity_to_reserve: usize = slices.iter().map(|slice| slice.len()).sum();
+        self.reserve(capacity_to_reserve);
+
+        // SAFETY:
+        // * `dst` is valid for writes of `capacity_to_reserve` items as
+        //   `self.reserve(capacity_to_reserve)` above guarantees that.
+        // * Source and destination ranges cannot overlap as we just reserved the destination
+        //   range from the bump.
+        unsafe {
+            // Copy the contents of each slice onto the end of `self`
+            slices.iter().for_each(|slice| {
+                self.extend_from_slice_copy_unchecked(slice);
+            });
+        }
+    }
+}
+
 // This code generalises `extend_with_{element,default}`.
 trait ExtendWith<T> {
     fn next(&mut self) -> T;
@@ -2610,5 +2738,25 @@ where
         unsafe {
             self.vec.set_len(self.old_len - self.del);
         }
+    }
+}
+
+#[cfg(feature = "std")]
+impl<'bump> io::Write for Vec<'bump, u8> {
+    #[inline]
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        self.extend_from_slice_copy(buf);
+        Ok(buf.len())
+    }
+
+    #[inline]
+    fn write_all(&mut self, buf: &[u8]) -> io::Result<()> {
+        self.extend_from_slice_copy(buf);
+        Ok(())
+    }
+
+    #[inline]
+    fn flush(&mut self) -> io::Result<()> {
+        Ok(())
     }
 }

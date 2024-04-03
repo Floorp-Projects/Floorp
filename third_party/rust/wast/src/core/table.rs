@@ -253,6 +253,7 @@ impl<'a> ElemPayload<'a> {
                 ElemPayload::Exprs { exprs, .. } => {
                     let expr = Expression {
                         instrs: [Instruction::RefFunc(func)].into(),
+                        branch_hints: Vec::new(),
                     };
                     exprs.push(expr);
                 }

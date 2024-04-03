@@ -12,7 +12,7 @@
 [package]
 edition = "2021"
 name = "wasm-smith"
-version = "0.15.0"
+version = "0.201.0"
 authors = ["Nick Fitzgerald <fitzgen@gmail.com>"]
 exclude = ["/benches/corpus"]
 description = "A WebAssembly test case generator"
@@ -33,7 +33,6 @@ harness = false
 
 [dependencies.anyhow]
 version = "1.0.58"
-optional = true
 
 [dependencies.arbitrary]
 version = "1.1.0"
@@ -62,14 +61,14 @@ version = "1.0.166"
 optional = true
 
 [dependencies.wasm-encoder]
-version = "0.40.0"
+version = "0.201.0"
 
 [dependencies.wasmparser]
-version = "0.120.0"
+version = "0.201.0"
 optional = true
 
 [dependencies.wat]
-version = "1.0.84"
+version = "1.201.0"
 optional = true
 
 [dev-dependencies.criterion]
@@ -80,11 +79,10 @@ version = "0.8.4"
 features = ["small_rng"]
 
 [dev-dependencies.wasmparser]
-version = "0.120.0"
+version = "0.201.0"
 
 [features]
 _internal_cli = [
-    "anyhow",
     "clap",
     "flagset/serde",
     "serde",
@@ -99,3 +97,9 @@ wasmparser = [
 
 [target."cfg(not(target_family = \"wasm\"))".dev-dependencies.libfuzzer-sys]
 version = "0.4.0"
+
+[lints.clippy]
+all = "allow"
+
+[lints.rust]
+unsafe_code = "deny"

@@ -3188,6 +3188,11 @@ impl ConstExpr {
         Self { bytes }
     }
 
+    fn with_insn(mut self, insn: Instruction) -> Self {
+        insn.encode(&mut self.bytes);
+        self
+    }
+
     /// Create a constant expression containing a single `global.get` instruction.
     pub fn global_get(index: u32) -> Self {
         Self::new_insn(Instruction::GlobalGet(index))
@@ -3226,6 +3231,90 @@ impl ConstExpr {
     /// Create a constant expression containing a single `v128.const` instruction.
     pub fn v128_const(value: i128) -> Self {
         Self::new_insn(Instruction::V128Const(value))
+    }
+
+    /// Add a `global.get` instruction to this constant expression.
+    pub fn with_global_get(self, index: u32) -> Self {
+        self.with_insn(Instruction::GlobalGet(index))
+    }
+
+    /// Add a `ref.null` instruction to this constant expression.
+    pub fn with_ref_null(self, ty: HeapType) -> Self {
+        self.with_insn(Instruction::RefNull(ty))
+    }
+
+    /// Add a `ref.func` instruction to this constant expression.
+    pub fn with_ref_func(self, func: u32) -> Self {
+        self.with_insn(Instruction::RefFunc(func))
+    }
+
+    /// Add an `i32.const` instruction to this constant expression.
+    pub fn with_i32_const(self, value: i32) -> Self {
+        self.with_insn(Instruction::I32Const(value))
+    }
+
+    /// Add an `i64.const` instruction to this constant expression.
+    pub fn with_i64_const(self, value: i64) -> Self {
+        self.with_insn(Instruction::I64Const(value))
+    }
+
+    /// Add a `f32.const` instruction to this constant expression.
+    pub fn with_f32_const(self, value: f32) -> Self {
+        self.with_insn(Instruction::F32Const(value))
+    }
+
+    /// Add a `f64.const` instruction to this constant expression.
+    pub fn with_f64_const(self, value: f64) -> Self {
+        self.with_insn(Instruction::F64Const(value))
+    }
+
+    /// Add a `v128.const` instruction to this constant expression.
+    pub fn with_v128_const(self, value: i128) -> Self {
+        self.with_insn(Instruction::V128Const(value))
+    }
+
+    /// Add an `i32.add` instruction to this constant expression.
+    pub fn with_i32_add(self) -> Self {
+        self.with_insn(Instruction::I32Add)
+    }
+
+    /// Add an `i32.sub` instruction to this constant expression.
+    pub fn with_i32_sub(self) -> Self {
+        self.with_insn(Instruction::I32Sub)
+    }
+
+    /// Add an `i32.mul` instruction to this constant expression.
+    pub fn with_i32_mul(self) -> Self {
+        self.with_insn(Instruction::I32Mul)
+    }
+
+    /// Add an `i64.add` instruction to this constant expression.
+    pub fn with_i64_add(self) -> Self {
+        self.with_insn(Instruction::I64Add)
+    }
+
+    /// Add an `i64.sub` instruction to this constant expression.
+    pub fn with_i64_sub(self) -> Self {
+        self.with_insn(Instruction::I64Sub)
+    }
+
+    /// Add an `i64.mul` instruction to this constant expression.
+    pub fn with_i64_mul(self) -> Self {
+        self.with_insn(Instruction::I64Mul)
+    }
+
+    /// Returns the function, if any, referenced by this global.
+    pub fn get_ref_func(&self) -> Option<u32> {
+        let prefix = *self.bytes.get(0)?;
+        // 0xd2 == `ref.func` opcode, and if that's found then load the leb
+        // corresponding to the function index.
+        if prefix != 0xd2 {
+            return None;
+        }
+        leb128::read::unsigned(&mut &self.bytes[1..])
+            .ok()?
+            .try_into()
+            .ok()
     }
 }
 

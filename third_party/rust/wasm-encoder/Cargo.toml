@@ -12,7 +12,7 @@
 [package]
 edition = "2021"
 name = "wasm-encoder"
-version = "0.40.0"
+version = "0.201.0"
 authors = ["Nick Fitzgerald <fitzgen@gmail.com>"]
 description = """
 A low-level WebAssembly encoder.
@@ -27,7 +27,7 @@ repository = "https://github.com/bytecodealliance/wasm-tools/tree/main/crates/wa
 version = "0.2.4"
 
 [dependencies.wasmparser]
-version = "0.120.0"
+version = "0.201.0"
 optional = true
 
 [dev-dependencies.anyhow]
@@ -35,3 +35,9 @@ version = "1.0.58"
 
 [dev-dependencies.tempfile]
 version = "3.2.0"
+
+[lints.clippy]
+all = "allow"
+
+[lints.rust]
+unsafe_code = "deny"

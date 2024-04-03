@@ -1,11 +1,10 @@
 use super::{
-    CompositeType, Elements, FuncType, GlobalInitExpr, Instruction, InstructionKind::*,
-    InstructionKinds, Module, ValType,
+    CompositeType, Elements, FuncType, Instruction, InstructionKind::*, InstructionKinds, Module,
+    ValType,
 };
 use crate::{unique_string, MemoryOffsetChoices};
 use arbitrary::{Result, Unstructured};
 use std::collections::{BTreeMap, BTreeSet};
-use std::convert::TryFrom;
 use std::rc::Rc;
 use wasm_encoder::{
     ArrayType, BlockType, Catch, ConstExpr, ExportKind, FieldType, GlobalType, HeapType, MemArg,
@@ -648,6 +647,10 @@ pub(crate) struct CodeBuilderAllocations {
     global_dropped_f32: Option<u32>,
     global_dropped_f64: Option<u32>,
     global_dropped_v128: Option<u32>,
+
+    // Indicates that additional exports cannot be generated. This will be true
+    // if the `Config` specifies exactly which exports should be present.
+    disallow_exporting: bool,
 }
 
 pub(crate) struct CodeBuilder<'a> {
@@ -704,7 +707,7 @@ enum Float {
 }
 
 impl CodeBuilderAllocations {
-    pub(crate) fn new(module: &Module) -> Self {
+    pub(crate) fn new(module: &Module, disallow_exporting: bool) -> Self {
         let mut mutable_globals = BTreeMap::new();
         for (i, global) in module.globals.iter().enumerate() {
             if global.mutable {
@@ -741,14 +744,14 @@ impl CodeBuilderAllocations {
 
         let mut referenced_functions = BTreeSet::new();
         for (_, expr) in module.defined_globals.iter() {
-            if let GlobalInitExpr::FuncRef(i) = *expr {
+            if let Some(i) = expr.get_ref_func() {
                 referenced_functions.insert(i);
             }
         }
         for g in module.elems.iter() {
             match &g.items {
                 Elements::Expressions(e) => {
-                    let iter = e.iter().filter_map(|i| *i);
+                    let iter = e.iter().filter_map(|e| e.get_ref_func());
                     referenced_functions.extend(iter);
                 }
                 Elements::Functions(e) => {
@@ -769,6 +772,42 @@ impl CodeBuilderAllocations {
             }
         }
 
+        let mut global_dropped_i32 = None;
+        let mut global_dropped_i64 = None;
+        let mut global_dropped_f32 = None;
+        let mut global_dropped_f64 = None;
+        let mut global_dropped_v128 = None;
+
+        // If we can't export additional globals, try to use existing exported
+        // mutable globals for dropped values.
+        if disallow_exporting {
+            for (_, kind, index) in module.exports.iter() {
+                if *kind == ExportKind::Global {
+                    let ty = module.globals[*index as usize];
+                    if ty.mutable {
+                        match ty.val_type {
+                            ValType::I32 => {
+                                if global_dropped_i32.is_none() {
+                                    global_dropped_i32 = Some(*index)
+                                } else {
+                                    global_dropped_f32 = Some(*index)
+                                }
+                            }
+                            ValType::I64 => {
+                                if global_dropped_i64.is_none() {
+                                    global_dropped_i64 = Some(*index)
+                                } else {
+                                    global_dropped_f64 = Some(*index)
+                                }
+                            }
+                            ValType::V128 => global_dropped_v128 = Some(*index),
+                            _ => {}
+                        }
+                    }
+                }
+            }
+        }
+
         CodeBuilderAllocations {
             controls: Vec::with_capacity(4),
             operands: Vec::with_capacity(16),
@@ -782,13 +821,14 @@ impl CodeBuilderAllocations {
             memory32,
             memory64,
 
-            global_dropped_i32: None,
-            global_dropped_i64: None,
-            global_dropped_f32: None,
-            global_dropped_f64: None,
-            global_dropped_v128: None,
+            global_dropped_i32,
+            global_dropped_i64,
+            global_dropped_f32,
+            global_dropped_f64,
+            global_dropped_v128,
             globals_cnt: module.globals.len() as u32,
             new_globals: Vec::new(),
+            disallow_exporting,
         }
     }
 
@@ -822,18 +862,18 @@ impl CodeBuilderAllocations {
     pub fn finish(self, u: &mut Unstructured<'_>, module: &mut Module) -> arbitrary::Result<()> {
         // Any globals injected as part of dropping operands on the stack get
         // injected into the module here. Each global is then exported, most of
-        // the time, to ensure it's part of the "image" of this module available
-        // for differential execution for example.
+        // the time (if additional exports are allowed), to ensure it's part of
+        // the "image" of this module available for differential execution for
+        // example.
         for (ty, init) in self.new_globals {
             let global_idx = module.globals.len() as u32;
             module.globals.push(GlobalType {
                 val_type: ty,
                 mutable: true,
             });
-            let init = GlobalInitExpr::ConstExpr(init);
             module.defined_globals.push((global_idx, init));
 
-            if u.ratio(1, 100).unwrap_or(false) {
+            if self.disallow_exporting || u.ratio(1, 100).unwrap_or(false) {
                 continue;
             }
 
@@ -920,6 +960,33 @@ impl CodeBuilder<'_> {
     #[inline]
     fn push_operand(&mut self, ty: Option<ValType>) {
         self.allocs.operands.push(ty);
+    }
+
+    fn pop_label_types(&mut self, module: &Module, target: u32) {
+        let target = usize::try_from(target).unwrap();
+        let control = &self.allocs.controls[self.allocs.controls.len() - 1 - target];
+        debug_assert!(self.label_types_on_stack(module, control));
+        self.allocs
+            .operands
+            .truncate(self.allocs.operands.len() - control.label_types().len());
+    }
+
+    fn push_label_types(&mut self, target: u32) {
+        let target = usize::try_from(target).unwrap();
+        let control = &self.allocs.controls[self.allocs.controls.len() - 1 - target];
+        self.allocs
+            .operands
+            .extend(control.label_types().iter().copied().map(Some));
+    }
+
+    /// Pop the target label types, and then push them again.
+    ///
+    /// This is not a no-op due to subtyping: if we have a `T <: U` on the
+    /// stack, and the target label's type is `[U]`, then this will erase the
+    /// information about `T` and subsequent operations may only operate on `U`.
+    fn pop_push_label_types(&mut self, module: &Module, target: u32) {
+        self.pop_label_types(module, target);
+        self.push_label_types(target)
     }
 
     fn label_types_on_stack(&self, module: &Module, to_check: &Control) -> bool {
@@ -1087,12 +1154,7 @@ impl CodeBuilder<'_> {
     fn arbitrary_block_type(&self, u: &mut Unstructured, module: &Module) -> Result<BlockType> {
         let mut options: Vec<Box<dyn Fn(&mut Unstructured) -> Result<BlockType>>> = vec![
             Box::new(|_| Ok(BlockType::Empty)),
-            Box::new(|u| {
-                Ok(BlockType::Result(module.arbitrary_valtype(
-                    u,
-                    u32::try_from(module.types.len()).unwrap(),
-                )?))
-            }),
+            Box::new(|u| Ok(BlockType::Result(module.arbitrary_valtype(u)?))),
         ];
         if module.config.multi_value_enabled {
             for (i, ty) in module.func_types() {
@@ -1710,10 +1772,9 @@ fn br(
         .filter(|(_, l)| builder.label_types_on_stack(module, l))
         .nth(i)
         .unwrap();
-    let control = &builder.allocs.controls[builder.allocs.controls.len() - 1 - target];
-    let tys = control.label_types().to_vec();
-    builder.pop_operands(module, &tys);
-    instructions.push(Instruction::Br(target as u32));
+    let target = u32::try_from(target).unwrap();
+    builder.pop_label_types(module, target);
+    instructions.push(Instruction::Br(target));
     Ok(())
 }
 
@@ -1757,7 +1818,9 @@ fn br_if(
         .filter(|(_, l)| builder.label_types_on_stack(module, l))
         .nth(i)
         .unwrap();
-    instructions.push(Instruction::BrIf(target as u32));
+    let target = u32::try_from(target).unwrap();
+    builder.pop_push_label_types(module, target);
+    instructions.push(Instruction::BrIf(target));
     Ok(())
 }
 
@@ -2203,13 +2266,15 @@ fn br_on_null(
         .filter(|(_, l)| builder.label_types_on_stack(module, l))
         .nth(i)
         .unwrap();
+    let target = u32::try_from(target).unwrap();
 
+    builder.pop_push_label_types(module, target);
     builder.push_operands(&[ValType::Ref(RefType {
         nullable: false,
         heap_type,
     })]);
 
-    instructions.push(Instruction::BrOnNull(u32::try_from(target).unwrap()));
+    instructions.push(Instruction::BrOnNull(target));
     Ok(())
 }
 
@@ -2270,9 +2335,11 @@ fn br_on_non_null(
         .filter(|(_, l)| is_valid_br_on_non_null_control(module, l, builder))
         .nth(i)
         .unwrap();
+    let target = u32::try_from(target).unwrap();
 
+    builder.pop_push_label_types(module, target);
     builder.pop_ref_type();
-    instructions.push(Instruction::BrOnNonNull(u32::try_from(target).unwrap()));
+    instructions.push(Instruction::BrOnNonNull(target));
     Ok(())
 }
 
@@ -2354,6 +2421,7 @@ fn br_on_cast(
         .unwrap();
     let relative_depth = u32::try_from(relative_depth).unwrap();
 
+    let num_label_types = control.label_types().len();
     let to_ref_type = match control.label_types().last() {
         Some(ValType::Ref(r)) => *r,
         _ => unreachable!(),
@@ -2363,6 +2431,15 @@ fn br_on_cast(
     let from_ref_type = from_ref_type.unwrap_or(to_ref_type);
     let from_ref_type = module.arbitrary_super_type_of_ref_type(u, from_ref_type)?;
 
+    // Do `pop_push_label_types` but without its debug assert that the types are
+    // on the stack, since we know that we have a `from_ref_type` but the label
+    // requires a `to_ref_type`.
+    for _ in 0..num_label_types {
+        builder.pop_operand();
+    }
+    builder.push_label_types(relative_depth);
+
+    // Replace the label's `to_ref_type` with the type difference.
     builder.pop_operand();
     builder.push_operands(&[ValType::Ref(ref_type_difference(
         from_ref_type,
@@ -2433,7 +2510,7 @@ fn br_on_cast_fail(
     debug_assert!(n > 0);
 
     let i = u.int_in_range(0..=n - 1)?;
-    let (target, control) = builder
+    let (relative_depth, control) = builder
         .allocs
         .controls
         .iter()
@@ -2442,6 +2519,7 @@ fn br_on_cast_fail(
         .filter(|(_, l)| is_valid_br_on_cast_fail_control(module, builder, l, from_ref_type))
         .nth(i)
         .unwrap();
+    let relative_depth = u32::try_from(relative_depth).unwrap();
 
     let from_ref_type =
         from_ref_type.unwrap_or_else(|| match control.label_types().last().unwrap() {
@@ -2450,13 +2528,16 @@ fn br_on_cast_fail(
         });
     let to_ref_type = module.arbitrary_matching_ref_type(u, from_ref_type)?;
 
+    // Pop-push the label types and then replace its last reference type with
+    // our `to_ref_type`.
+    builder.pop_push_label_types(module, relative_depth);
     builder.pop_operand();
     builder.push_operand(Some(ValType::Ref(to_ref_type)));
 
     instructions.push(Instruction::BrOnCastFail {
         from_ref_type,
         to_ref_type,
-        relative_depth: u32::try_from(target).unwrap(),
+        relative_depth,
     });
     Ok(())
 }

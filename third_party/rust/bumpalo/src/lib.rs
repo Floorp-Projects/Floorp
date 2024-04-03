@@ -1,11 +1,8 @@
 #![doc = include_str!("../README.md")]
 #![deny(missing_debug_implementations)]
 #![deny(missing_docs)]
-#![no_std]
-#![cfg_attr(
-    feature = "allocator_api",
-    feature(allocator_api, nonnull_slice_from_raw_parts)
-)]
+#![cfg_attr(not(feature = "std"), no_std)]
+#![cfg_attr(feature = "allocator_api", feature(allocator_api))]
 
 #[doc(hidden)]
 pub extern crate alloc as core_alloc;
@@ -26,8 +23,12 @@ use core::ptr::{self, NonNull};
 use core::slice;
 use core::str;
 use core_alloc::alloc::{alloc, dealloc, Layout};
+
 #[cfg(feature = "allocator_api")]
 use core_alloc::alloc::{AllocError, Allocator};
+
+#[cfg(all(feature = "allocator-api2", not(feature = "allocator_api")))]
+use allocator_api2::alloc::{AllocError, Allocator};
 
 pub use alloc::AllocErr;
 
@@ -354,7 +355,7 @@ static EMPTY_CHUNK: EmptyChunkFooter = EmptyChunkFooter(ChunkFooter {
 
 impl EmptyChunkFooter {
     fn get(&'static self) -> NonNull<ChunkFooter> {
-        unsafe { NonNull::new_unchecked(&self.0 as *const ChunkFooter as *mut ChunkFooter) }
+        NonNull::from(&self.0)
     }
 }
 
@@ -406,6 +407,15 @@ unsafe fn dealloc_chunk_list(mut footer: NonNull<ChunkFooter>) {
 unsafe impl Send for Bump {}
 
 #[inline]
+fn is_pointer_aligned_to<T>(pointer: *mut T, align: usize) -> bool {
+    debug_assert!(align.is_power_of_two());
+
+    let pointer = pointer as usize;
+    let pointer_aligned = round_down_to(pointer, align);
+    pointer == pointer_aligned
+}
+
+#[inline]
 pub(crate) fn round_up_to(n: usize, divisor: usize) -> Option<usize> {
     debug_assert!(divisor > 0);
     debug_assert!(divisor.is_power_of_two());
@@ -417,6 +427,14 @@ pub(crate) fn round_down_to(n: usize, divisor: usize) -> usize {
     debug_assert!(divisor > 0);
     debug_assert!(divisor.is_power_of_two());
     n & !(divisor - 1)
+}
+
+/// Same as `round_down_to` but preserves pointer provenance.
+#[inline]
+pub(crate) fn round_mut_ptr_down_to(ptr: *mut u8, divisor: usize) -> *mut u8 {
+    debug_assert!(divisor > 0);
+    debug_assert!(divisor.is_power_of_two());
+    ptr.wrapping_sub(ptr as usize & (divisor - 1))
 }
 
 // After this point, we try to hit page boundaries instead of powers of 2
@@ -463,23 +481,13 @@ struct NewChunkMemoryDetails {
 
 /// Wrapper around `Layout::from_size_align` that adds debug assertions.
 #[inline]
-unsafe fn layout_from_size_align(size: usize, align: usize) -> Layout {
-    if cfg!(debug_assertions) {
-        Layout::from_size_align(size, align).unwrap()
-    } else {
-        Layout::from_size_align_unchecked(size, align)
-    }
+fn layout_from_size_align(size: usize, align: usize) -> Result<Layout, AllocErr> {
+    Layout::from_size_align(size, align).map_err(|_| AllocErr)
 }
 
 #[inline(never)]
 fn allocation_size_overflow<T>() -> T {
     panic!("requested allocation size overflowed")
-}
-
-// This can be migrated to directly use `usize::abs_diff` when the MSRV
-// reaches `1.60`
-fn abs_diff(a: usize, b: usize) -> usize {
-    usize::max(a, b) - usize::min(a, b)
 }
 
 impl Bump {
@@ -535,7 +543,7 @@ impl Bump {
             });
         }
 
-        let layout = unsafe { layout_from_size_align(capacity, 1) };
+        let layout = layout_from_size_align(capacity, 1)?;
 
         let chunk_footer = unsafe {
             Self::new_chunk(
@@ -589,7 +597,7 @@ impl Bump {
     /// assert!(bump.try_alloc(5).is_err());
     /// ```
     pub fn set_allocation_limit(&self, limit: Option<usize>) {
-        self.allocation_limit.set(limit)
+        self.allocation_limit.set(limit);
     }
 
     /// How much headroom an arena has before it hits its allocation
@@ -600,7 +608,7 @@ impl Bump {
             if allocated_bytes > allocation_limit {
                 None
             } else {
-                Some(abs_diff(allocation_limit, allocated_bytes))
+                Some(usize::abs_diff(allocation_limit, allocated_bytes))
             }
         })
     }
@@ -682,7 +690,7 @@ impl Bump {
             size,
         } = new_chunk_memory_details;
 
-        let layout = layout_from_size_align(size, align);
+        let layout = layout_from_size_align(size, align).ok()?;
 
         debug_assert!(size >= requested_layout.size());
 
@@ -801,7 +809,6 @@ impl Bump {
     /// assert_eq!(*x, "hello");
     /// ```
     #[inline(always)]
-    #[allow(clippy::mut_from_ref)]
     pub fn alloc<T>(&self, val: T) -> &mut T {
         self.alloc_with(|| val)
     }
@@ -821,7 +828,6 @@ impl Bump {
     /// assert_eq!(x, Ok(&mut "hello"));
     /// ```
     #[inline(always)]
-    #[allow(clippy::mut_from_ref)]
     pub fn try_alloc<T>(&self, val: T) -> Result<&mut T, AllocErr> {
         self.try_alloc_with(|| val)
     }
@@ -846,7 +852,6 @@ impl Bump {
     /// assert_eq!(*x, "hello");
     /// ```
     #[inline(always)]
-    #[allow(clippy::mut_from_ref)]
     pub fn alloc_with<F, T>(&self, f: F) -> &mut T
     where
         F: FnOnce() -> T,
@@ -866,7 +871,7 @@ impl Bump {
             // directly into the heap instead. It seems we get it to realize
             // this most consistently if we put this critical line into it's
             // own function instead of inlining it into the surrounding code.
-            ptr::write(ptr, f())
+            ptr::write(ptr, f());
         }
 
         let layout = Layout::new::<T>();
@@ -899,7 +904,6 @@ impl Bump {
     /// assert_eq!(x, Ok(&mut "hello"));
     /// ```
     #[inline(always)]
-    #[allow(clippy::mut_from_ref)]
     pub fn try_alloc_with<F, T>(&self, f: F) -> Result<&mut T, AllocErr>
     where
         F: FnOnce() -> T,
@@ -919,7 +923,7 @@ impl Bump {
             // directly into the heap instead. It seems we get it to realize
             // this most consistently if we put this critical line into it's
             // own function instead of inlining it into the surrounding code.
-            ptr::write(ptr, f())
+            ptr::write(ptr, f());
         }
 
         //SAFETY: Self-contained:
@@ -971,7 +975,6 @@ impl Bump {
     /// # Result::<_, ()>::Ok(())
     /// ```
     #[inline(always)]
-    #[allow(clippy::mut_from_ref)]
     pub fn alloc_try_with<F, T, E>(&self, f: F) -> Result<&mut T, E>
     where
         F: FnOnce() -> Result<T, E>,
@@ -1080,7 +1083,6 @@ impl Bump {
     /// # Result::<_, bumpalo::AllocOrInitError<()>>::Ok(())
     /// ```
     #[inline(always)]
-    #[allow(clippy::mut_from_ref)]
     pub fn try_alloc_try_with<F, T, E>(&self, f: F) -> Result<&mut T, AllocOrInitError<E>>
     where
         F: FnOnce() -> Result<T, E>,
@@ -1165,7 +1167,6 @@ impl Bump {
     /// assert_eq!(x, &[1, 2, 3]);
     /// ```
     #[inline(always)]
-    #[allow(clippy::mut_from_ref)]
     pub fn alloc_slice_copy<T>(&self, src: &[T]) -> &mut [T]
     where
         T: Copy,
@@ -1205,7 +1206,6 @@ impl Bump {
     /// assert_eq!(originals, clones);
     /// ```
     #[inline(always)]
-    #[allow(clippy::mut_from_ref)]
     pub fn alloc_slice_clone<T>(&self, src: &[T]) -> &mut [T]
     where
         T: Clone,
@@ -1236,7 +1236,6 @@ impl Bump {
     /// assert_eq!("hello world", hello);
     /// ```
     #[inline(always)]
-    #[allow(clippy::mut_from_ref)]
     pub fn alloc_str(&self, src: &str) -> &mut str {
         let buffer = self.alloc_slice_copy(src.as_bytes());
         unsafe {
@@ -1263,7 +1262,6 @@ impl Bump {
     /// assert_eq!(x, &[5, 10, 15, 20, 25]);
     /// ```
     #[inline(always)]
-    #[allow(clippy::mut_from_ref)]
     pub fn alloc_slice_fill_with<T, F>(&self, len: usize, mut f: F) -> &mut [T]
     where
         F: FnMut(usize) -> T,
@@ -1299,7 +1297,6 @@ impl Bump {
     /// assert_eq!(x, &[42, 42, 42, 42, 42]);
     /// ```
     #[inline(always)]
-    #[allow(clippy::mut_from_ref)]
     pub fn alloc_slice_fill_copy<T: Copy>(&self, len: usize, value: T) -> &mut [T] {
         self.alloc_slice_fill_with(len, |_| value)
     }
@@ -1324,7 +1321,6 @@ impl Bump {
     /// assert_eq!(&x[1], &s);
     /// ```
     #[inline(always)]
-    #[allow(clippy::mut_from_ref)]
     pub fn alloc_slice_fill_clone<T: Clone>(&self, len: usize, value: &T) -> &mut [T] {
         self.alloc_slice_fill_with(len, |_| value.clone())
     }
@@ -1347,7 +1343,6 @@ impl Bump {
     /// assert_eq!(x, [4, 9, 25]);
     /// ```
     #[inline(always)]
-    #[allow(clippy::mut_from_ref)]
     pub fn alloc_slice_fill_iter<T, I>(&self, iter: I) -> &mut [T]
     where
         I: IntoIterator<Item = T>,
@@ -1378,7 +1373,6 @@ impl Bump {
     /// assert_eq!(x, &[0, 0, 0, 0, 0]);
     /// ```
     #[inline(always)]
-    #[allow(clippy::mut_from_ref)]
     pub fn alloc_slice_fill_default<T: Default>(&self, len: usize) -> &mut [T] {
         self.alloc_slice_fill_with(len, |_| T::default())
     }
@@ -1435,11 +1429,10 @@ impl Bump {
             }
 
             let ptr = ptr.wrapping_sub(layout.size());
-            let rem = ptr as usize % layout.align();
-            let aligned_ptr = ptr.wrapping_sub(rem);
+            let aligned_ptr = round_mut_ptr_down_to(ptr, layout.align());
 
             if aligned_ptr >= start {
-                let aligned_ptr = NonNull::new_unchecked(aligned_ptr as *mut u8);
+                let aligned_ptr = NonNull::new_unchecked(aligned_ptr);
                 footer.ptr.set(aligned_ptr);
                 Some(aligned_ptr)
             } else {
@@ -1464,12 +1457,13 @@ impl Bump {
         let current_footer = self.current_chunk_footer.get();
         let current_footer = unsafe { current_footer.as_ref() };
 
-        current_footer as *const _ as usize - current_footer.data.as_ptr() as usize
+        current_footer.ptr.get().as_ptr() as usize - current_footer.data.as_ptr() as usize
     }
 
     /// Slow path allocation for when we need to allocate a new chunk from the
     /// parent bump set because there isn't enough room in our current chunk.
     #[inline(never)]
+    #[cold]
     fn alloc_layout_slow(&self, layout: Layout) -> Option<NonNull<u8>> {
         unsafe {
             let size = layout.size();
@@ -1488,21 +1482,14 @@ impl Bump {
                 .checked_mul(2)?
                 .max(min_new_chunk_size);
             let chunk_memory_details = iter::from_fn(|| {
-                let bypass_min_chunk_size_for_small_limits = match self.allocation_limit() {
-                    Some(limit)
-                        if layout.size() < limit
+                let bypass_min_chunk_size_for_small_limits = matches!(self.allocation_limit(), Some(limit) if layout.size() < limit
                             && base_size >= layout.size()
                             && limit < DEFAULT_CHUNK_SIZE_WITHOUT_FOOTER
-                            && self.allocated_bytes() == 0 =>
-                    {
-                        true
-                    }
-                    _ => false,
-                };
+                            && self.allocated_bytes() == 0);
 
                 if base_size >= min_new_chunk_size || bypass_min_chunk_size_for_small_limits {
                     let size = base_size;
-                    base_size = base_size / 2;
+                    base_size /= 2;
                     Bump::new_chunk_memory_details(Some(size), layout)
                 } else {
                     None
@@ -1537,14 +1524,14 @@ impl Bump {
             // at least the requested size.
             let mut ptr = new_footer.ptr.get().as_ptr().sub(size);
             // Round the pointer down to the requested alignment.
-            ptr = ptr.sub(ptr as usize % layout.align());
+            ptr = round_mut_ptr_down_to(ptr, layout.align());
             debug_assert!(
                 ptr as *const _ <= new_footer,
                 "{:p} <= {:p}",
                 ptr,
                 new_footer
             );
-            let ptr = NonNull::new_unchecked(ptr as *mut u8);
+            let ptr = NonNull::new_unchecked(ptr);
             new_footer.ptr.set(ptr);
 
             // Return a pointer to the freshly allocated region in this chunk.
@@ -1696,6 +1683,16 @@ impl Bump {
         unsafe { footer.as_ref().allocated_bytes }
     }
 
+    /// Calculates the number of bytes requested from the Rust allocator for this `Bump`.
+    ///
+    /// This number is equal to the [`allocated_bytes()`](Self::allocated_bytes) plus
+    /// the size of the bump metadata.
+    pub fn allocated_bytes_including_metadata(&self) -> usize {
+        let metadata_size =
+            unsafe { self.iter_allocated_chunks_raw().count() * mem::size_of::<ChunkFooter>() };
+        self.allocated_bytes() + metadata_size
+    }
+
     #[inline]
     unsafe fn is_last_allocation(&self, ptr: NonNull<u8>) -> bool {
         let footer = self.current_chunk_footer.get();
@@ -1720,13 +1717,31 @@ impl Bump {
         old_layout: Layout,
         new_layout: Layout,
     ) -> Result<NonNull<u8>, AllocErr> {
+        // If the new layout demands greater alignment than the old layout has,
+        // then either
+        //
+        // 1. the pointer happens to satisfy the new layout's alignment, so we
+        //    got lucky and can return the pointer as-is, or
+        //
+        // 2. the pointer is not aligned to the new layout's demanded alignment,
+        //    and we are unlucky.
+        //
+        // In the case of (2), to successfully "shrink" the allocation, we would
+        // have to allocate a whole new region for the new layout, without being
+        // able to free the old region. That is unacceptable, so simply return
+        // an allocation failure error instead.
+        if old_layout.align() < new_layout.align() {
+            if is_pointer_aligned_to(ptr.as_ptr(), new_layout.align()) {
+                return Ok(ptr);
+            } else {
+                return Err(AllocErr);
+            }
+        }
+
+        debug_assert!(is_pointer_aligned_to(ptr.as_ptr(), new_layout.align()));
+
         let old_size = old_layout.size();
         let new_size = new_layout.size();
-        let align_is_compatible = old_layout.align() >= new_layout.align();
-
-        if !align_is_compatible {
-            return Err(AllocErr);
-        }
 
         // This is how much space we would *actually* reclaim while satisfying
         // the requested alignment.
@@ -1736,7 +1751,32 @@ impl Bump {
                 // Only reclaim the excess space (which requires a copy) if it
                 // is worth it: we are actually going to recover "enough" space
                 // and we can do a non-overlapping copy.
-                && delta >= old_size / 2
+                //
+                // We do `(old_size + 1) / 2` so division rounds up rather than
+                // down. Consider when:
+                //
+                //     old_size = 5
+                //     new_size = 3
+                //
+                // If we do not take care to round up, this will result in:
+                //
+                //     delta = 2
+                //     (old_size / 2) = (5 / 2) = 2
+                //
+                // And the the check will succeed even though we are have
+                // overlapping ranges:
+                //
+                //     |--------old-allocation-------|
+                //     |------from-------|
+                //                 |-------to--------|
+                //     +-----+-----+-----+-----+-----+
+                //     |  a  |  b  |  c  |  .  |  .  |
+                //     +-----+-----+-----+-----+-----+
+                //
+                // But we MUST NOT have overlapping ranges because we use
+                // `copy_nonoverlapping` below! Therefore, we round the division
+                // up to avoid this issue.
+                && delta >= (old_size + 1) / 2
         {
             let footer = self.current_chunk_footer.get();
             let footer = footer.as_ref();
@@ -1751,9 +1791,11 @@ impl Bump {
             ptr::copy_nonoverlapping(ptr.as_ptr(), new_ptr.as_ptr(), new_size);
 
             return Ok(new_ptr);
-        } else {
-            return Ok(ptr);
         }
+
+        // If this wasn't the last allocation, or shrinking wasn't worth it,
+        // simply return the old pointer as-is.
+        Ok(ptr)
     }
 
     #[inline]
@@ -1772,7 +1814,7 @@ impl Bump {
             // reuse the currently allocated space.
             let delta = new_size - old_size;
             if let Some(p) =
-                self.try_alloc_layout_fast(layout_from_size_align(delta, old_layout.align()))
+                self.try_alloc_layout_fast(layout_from_size_align(delta, old_layout.align())?)
             {
                 ptr::copy(ptr.as_ptr(), p.as_ptr(), old_size);
                 return Ok(p);
@@ -1867,7 +1909,7 @@ unsafe impl<'a> alloc::Alloc for &'a Bump {
 
     #[inline]
     unsafe fn dealloc(&mut self, ptr: NonNull<u8>, layout: Layout) {
-        Bump::dealloc(self, ptr, layout)
+        Bump::dealloc(self, ptr, layout);
     }
 
     #[inline]
@@ -1883,7 +1925,7 @@ unsafe impl<'a> alloc::Alloc for &'a Bump {
             return self.try_alloc_layout(layout);
         }
 
-        let new_layout = layout_from_size_align(new_size, layout.align());
+        let new_layout = layout_from_size_align(new_size, layout.align())?;
         if new_size <= old_size {
             self.shrink(ptr, layout, new_layout)
         } else {
@@ -1892,18 +1934,23 @@ unsafe impl<'a> alloc::Alloc for &'a Bump {
     }
 }
 
-#[cfg(feature = "allocator_api")]
+#[cfg(any(feature = "allocator_api", feature = "allocator-api2"))]
 unsafe impl<'a> Allocator for &'a Bump {
+    #[inline]
     fn allocate(&self, layout: Layout) -> Result<NonNull<[u8]>, AllocError> {
         self.try_alloc_layout(layout)
-            .map(|p| NonNull::slice_from_raw_parts(p, layout.size()))
+            .map(|p| unsafe {
+                NonNull::new_unchecked(ptr::slice_from_raw_parts_mut(p.as_ptr(), layout.size()))
+            })
             .map_err(|_| AllocError)
     }
 
+    #[inline]
     unsafe fn deallocate(&self, ptr: NonNull<u8>, layout: Layout) {
         Bump::dealloc(self, ptr, layout)
     }
 
+    #[inline]
     unsafe fn shrink(
         &self,
         ptr: NonNull<u8>,
@@ -1911,10 +1958,13 @@ unsafe impl<'a> Allocator for &'a Bump {
         new_layout: Layout,
     ) -> Result<NonNull<[u8]>, AllocError> {
         Bump::shrink(self, ptr, old_layout, new_layout)
-            .map(|p| NonNull::slice_from_raw_parts(p, new_layout.size()))
+            .map(|p| unsafe {
+                NonNull::new_unchecked(ptr::slice_from_raw_parts_mut(p.as_ptr(), new_layout.size()))
+            })
             .map_err(|_| AllocError)
     }
 
+    #[inline]
     unsafe fn grow(
         &self,
         ptr: NonNull<u8>,
@@ -1922,10 +1972,13 @@ unsafe impl<'a> Allocator for &'a Bump {
         new_layout: Layout,
     ) -> Result<NonNull<[u8]>, AllocError> {
         Bump::grow(self, ptr, old_layout, new_layout)
-            .map(|p| NonNull::slice_from_raw_parts(p, new_layout.size()))
+            .map(|p| unsafe {
+                NonNull::new_unchecked(ptr::slice_from_raw_parts_mut(p.as_ptr(), new_layout.size()))
+            })
             .map_err(|_| AllocError)
     }
 
+    #[inline]
     unsafe fn grow_zeroed(
         &self,
         ptr: NonNull<u8>,
@@ -1953,7 +2006,6 @@ mod tests {
 
     // Uses private `alloc` module.
     #[test]
-    #[allow(clippy::cognitive_complexity)]
     fn test_realloc() {
         use crate::alloc::Alloc;
 
