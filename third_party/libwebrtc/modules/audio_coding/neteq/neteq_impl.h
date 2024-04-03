@@ -342,6 +342,9 @@ class NetEqImpl : public webrtc::NetEq {
   NetEqNetworkStatistics CurrentNetworkStatisticsInternal() const
       RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
+  NetEqController::PacketArrivedInfo ToPacketArrivedInfo(
+      const Packet& packet) const RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+
   Clock* const clock_;
 
   mutable Mutex mutex_;
@@ -363,6 +366,7 @@ class NetEqImpl : public webrtc::NetEq {
   const std::unique_ptr<PreemptiveExpandFactory> preemptive_expand_factory_
       RTC_GUARDED_BY(mutex_);
   const std::unique_ptr<StatisticsCalculator> stats_ RTC_GUARDED_BY(mutex_);
+  const bool enable_fec_delay_adaptation_ RTC_GUARDED_BY(mutex_);
 
   std::unique_ptr<BackgroundNoise> background_noise_ RTC_GUARDED_BY(mutex_);
   std::unique_ptr<NetEqController> controller_ RTC_GUARDED_BY(mutex_);
