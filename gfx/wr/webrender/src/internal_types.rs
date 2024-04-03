@@ -691,7 +691,6 @@ impl ResourceUpdateList {
 /// Wraps a frame_builder::Frame, but conceptually could hold more information
 pub struct RenderedDocument {
     pub frame: Frame,
-    pub is_new_scene: bool,
     pub profile: TransactionProfile,
     pub render_reasons: RenderReasons,
     pub frame_stats: Option<FullFrameStats>
