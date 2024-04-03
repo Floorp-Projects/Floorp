@@ -171,6 +171,35 @@ RtpTransceiver::RtpTransceiver(
           : media_engine()->voice().send_codecs());
   senders_.push_back(sender);
   receivers_.push_back(receiver);
+
+  // Set default header extensions depending on whether simulcast/SVC is used.
+  RtpParameters parameters = sender->internal()->GetParametersInternal();
+  bool uses_simulcast = parameters.encodings.size() > 1;
+  bool uses_svc = !parameters.encodings.empty() &&
+                  parameters.encodings[0].scalability_mode.has_value() &&
+                  parameters.encodings[0].scalability_mode !=
+                      ScalabilityModeToString(ScalabilityMode::kL1T1);
+  if (uses_simulcast || uses_svc) {
+    // Enable DD and VLA extensions, can be deactivated by the API.
+    // Skip this if the GFD extension was enabled via field trial
+    // for backward compability reasons.
+    bool uses_gfd =
+        absl::c_find_if(
+            header_extensions_to_negotiate_,
+            [](const RtpHeaderExtensionCapability& ext) {
+              return ext.uri == RtpExtension::kGenericFrameDescriptorUri00 &&
+                     ext.direction != webrtc::RtpTransceiverDirection::kStopped;
+            }) != header_extensions_to_negotiate_.end();
+    if (!uses_gfd) {
+      for (RtpHeaderExtensionCapability& ext :
+           header_extensions_to_negotiate_) {
+        if (ext.uri == RtpExtension::kVideoLayersAllocationUri ||
+            ext.uri == RtpExtension::kDependencyDescriptorUri) {
+          ext.direction = RtpTransceiverDirection::kSendRecv;
+        }
+      }
+    }
+  }
 }
 
 RtpTransceiver::~RtpTransceiver() {
