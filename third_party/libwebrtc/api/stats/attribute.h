@@ -23,14 +23,11 @@
 
 namespace webrtc {
 
-// TODO(https://crbug.com/webrtc/15164): Migrate all uses of RTCStatsMember to
-// absl::optional and delete this type alias.
-template <typename T>
-using RTCStatsMember = absl::optional<T>;
-
-// A light-weight wrapper of an RTCStats attribute (an individual metric).
+// A light-weight wrapper of an RTCStats attribute, i.e. an individual metric of
+// type absl::optional<T>.
 class RTC_EXPORT Attribute {
  public:
+  // All supported attribute types.
   typedef absl::variant<const absl::optional<bool>*,
                         const absl::optional<int32_t>*,
                         const absl::optional<uint32_t>*,
