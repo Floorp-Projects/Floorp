@@ -1402,9 +1402,6 @@ struct BaseCompiler final {
   // Used for common setup for catch and catch_all.
   void emitCatchSetup(LabelKind kind, Control& tryCatch,
                       const ResultType& resultType);
-  // Helper function used to generate landing pad code for the special
-  // case in which `delegate` jumps to a function's body block.
-  [[nodiscard]] bool emitBodyDelegateThrowPad();
 
   [[nodiscard]] bool emitTry();
   [[nodiscard]] bool emitTryTable();

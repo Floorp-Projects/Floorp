@@ -628,6 +628,22 @@ static WasmExceptionObject* GetOrWrapWasmException(JitActivation* activation,
   return nullptr;
 }
 
+static const wasm::TryNote* FindNonDelegateTryNote(const wasm::Code& code,
+                                                   const uint8_t* pc,
+                                                   Tier* tier) {
+  const wasm::TryNote* tryNote = code.lookupTryNote((void*)pc, tier);
+  while (tryNote && tryNote->isDelegate()) {
+    const wasm::CodeTier& codeTier = code.codeTier(*tier);
+    pc = codeTier.segment().base() + tryNote->delegateOffset();
+    const wasm::TryNote* delegateTryNote = code.lookupTryNote((void*)pc, tier);
+    MOZ_RELEASE_ASSERT(delegateTryNote == nullptr ||
+                       delegateTryNote->tryBodyBegin() <
+                           tryNote->tryBodyBegin());
+    tryNote = delegateTryNote;
+  }
+  return tryNote;
+}
+
 // Unwind the entire activation in response to a thrown exception. This function
 // is responsible for notifying the debugger of each unwound frame. The return
 // value is the new stack address which the calling stub will set to the sp
@@ -674,10 +690,10 @@ bool wasm::HandleThrow(JSContext* cx, WasmFrameIter& iter,
 
     // Only look for an exception handler if there's a catchable exception.
     if (wasmExn) {
+      Tier tier;
       const wasm::Code& code = iter.instance()->code();
       const uint8_t* pc = iter.resumePCinCurrentFrame();
-      Tier tier;
-      const wasm::TryNote* tryNote = code.lookupTryNote((void*)pc, &tier);
+      const wasm::TryNote* tryNote = FindNonDelegateTryNote(code, pc, &tier);
 
       if (tryNote) {
 #ifdef ENABLE_WASM_TAIL_CALLS
