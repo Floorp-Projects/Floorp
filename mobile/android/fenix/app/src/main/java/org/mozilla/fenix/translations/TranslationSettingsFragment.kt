@@ -113,6 +113,8 @@ class TranslationSettingsFragment : Fragment(), UserInteractionHandler {
                                 setting = checked,
                             ),
                         )
+                        // Ensures persistence of value
+                        requireContext().settings().offerTranslation = checked
                     },
                 ),
             )

@@ -10,6 +10,8 @@ import mozilla.components.concept.engine.translate.TranslationOperation
 import mozilla.components.concept.engine.translate.TranslationPageSettingOperation
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
+import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.utils.Settings
 
 /**
  * [Middleware] implementation for updating [BrowserStore] based on translation actions.
@@ -17,6 +19,7 @@ import mozilla.components.lib.state.MiddlewareContext
 class TranslationsDialogMiddleware(
     private val browserStore: BrowserStore,
     private val sessionId: String,
+    private val settings: Settings,
 ) : Middleware<TranslationsDialogState, TranslationsDialogAction> {
 
     @Suppress("LongMethod")
@@ -92,13 +95,19 @@ class TranslationsDialogMiddleware(
 
             is TranslationsDialogAction.UpdatePageSettingsValue -> {
                 when (action.type) {
-                    is TranslationPageSettingsOption.AlwaysOfferPopup -> browserStore.dispatch(
-                        TranslationsAction.UpdatePageSettingAction(
-                            tabId = sessionId,
-                            operation = TranslationPageSettingOperation.UPDATE_ALWAYS_OFFER_POPUP,
-                            setting = action.checkValue,
-                        ),
-                    )
+                    is TranslationPageSettingsOption.AlwaysOfferPopup -> {
+                        // Ensures the translations engine has the correct value
+                        browserStore.dispatch(
+                            TranslationsAction.UpdatePageSettingAction(
+                                tabId = sessionId,
+                                operation = TranslationPageSettingOperation.UPDATE_ALWAYS_OFFER_POPUP,
+                                setting = action.checkValue,
+                            ),
+                        )
+
+                        // Used to ensure setting persistence after a shutdown
+                        settings.offerTranslation = action.checkValue
+                    }
 
                     is TranslationPageSettingsOption.AlwaysTranslateLanguage -> browserStore.dispatch(
                         TranslationsAction.UpdatePageSettingAction(
