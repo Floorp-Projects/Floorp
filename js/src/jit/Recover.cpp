@@ -1891,37 +1891,6 @@ bool RArrayState::recover(JSContext* cx, SnapshotIterator& iter) const {
   return true;
 }
 
-bool MSetArrayLength::writeRecoverData(CompactBufferWriter& writer) const {
-  MOZ_ASSERT(canRecoverOnBailout());
-  // For simplicity, we capture directly the object instead of the elements
-  // pointer.
-  MOZ_ASSERT(elements()->type() != MIRType::Elements);
-  writer.writeUnsigned(uint32_t(RInstruction::Recover_SetArrayLength));
-  return true;
-}
-
-bool MSetArrayLength::canRecoverOnBailout() const {
-  return isRecoveredOnBailout();
-}
-
-RSetArrayLength::RSetArrayLength(CompactBufferReader& reader) {}
-
-bool RSetArrayLength::recover(JSContext* cx, SnapshotIterator& iter) const {
-  Rooted<ArrayObject*> obj(cx, &iter.readObject()->as<ArrayObject>());
-  RootedValue len(cx, iter.read());
-
-  RootedId id(cx, NameToId(cx->names().length));
-  Rooted<PropertyDescriptor> desc(
-      cx, PropertyDescriptor::Data(len, JS::PropertyAttribute::Writable));
-  ObjectOpResult error;
-  if (!ArraySetLength(cx, obj, id, desc, error)) {
-    return false;
-  }
-
-  iter.storeInstructionResult(ObjectValue(*obj));
-  return true;
-}
-
 bool MAssertRecoveredOnBailout::writeRecoverData(
     CompactBufferWriter& writer) const {
   MOZ_ASSERT(canRecoverOnBailout());
