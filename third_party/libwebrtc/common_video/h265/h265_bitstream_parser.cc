@@ -531,8 +531,7 @@ absl::optional<int> H265BitstreamParser::GetLastSliceQp() const {
   if (!last_slice_qp_delta_ || !last_slice_pps_id_) {
     return absl::nullopt;
   }
-  uint32_t pps_id = 0;
-  const H265PpsParser::PpsState* pps = GetPPS(pps_id);
+  const H265PpsParser::PpsState* pps = GetPPS(last_slice_pps_id_.value());
   if (!pps)
     return absl::nullopt;
   const int parsed_qp = 26 + pps->init_qp_minus26 + *last_slice_qp_delta_;
