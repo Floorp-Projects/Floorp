@@ -1,51 +1,94 @@
+.. _fenix-contributor-guide:
+
 Building Firefox for Android
 ============================
 
+1. Cloning the repo
+-------------------
+
 First, you'll want to `set up your machine to build Firefox </setup>`_.
-Follow the instructions there, choosing "GeckoView/Firefox for Android" as
-the bootstrap option.
+Follow the instructions there, choosing "GeckoView/Firefox for Android" or "GeckoView/Firefox for Android Artifact Mode" as
+the bootstrap option. Please refer to the "Bootstrap" section below to understand better those options.
 
 Once you're set up and have a GeckoView build from the above, please
 continue with the following steps.
 
-1. Clone the repository and initial setup
------------------------------------------
+2. Bootstrap
+------------
+
+If you intend to work mainly on GeckoView, you can find more information `here <geckoview/contributor/for-gecko-engineers.html>`_.
+
+Bootstrap configures everything for GeckoView and Fenix (Firefox for Android) development.
 
 .. code-block:: shell
 
-    git clone https://github.com/mozilla-mobile/firefox-android
-    cd firefox-android/fenix
-    echo dependencySubstitutions.geckoviewTopsrcdir=/path/to/mozilla-central > local.properties
+    ./mach bootstrap
 
-replace `/path/to/mozilla-central` with the location of your mozilla-central/mozilla-unified source tree.
+You should then choose one the following options:
 
-2. Build
---------
+A- You will not change any GeckoView code, or only Java and JS code on GeckoView:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Choose: ``3. GeckoView/Firefox for Android Artifact Mode``
+
+Artifact mode downloads pre-built C++ components rather than building them locally, trading bandwidth for time.
+(more on Artifact mode)
+
+B- You intend to change GeckoView code:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Choose: ``4. GeckoView/Firefox for Android``
+
+This will build GeckoView from scratch, and take more time than the option above.
+
+Once ``./mach bootstrap`` is complete, it will automatically write the configuration into a new ``mozconfig`` file.
+If you already have a ``mozconfig``, mach will instead output a new configuration that you should append to your existing file.
+
+3. Build GeckoView
+------------------
+
+You can now build GeckoView, using
 
 .. code-block:: shell
 
-    export JAVA_HOME=$HOME/.mozbuild/jdk/jdk-17.0.6+10
-    export ANDROID_HOME=$HOME/.mozbuild/android-sdk-<os_name>
-    ./gradlew clean app:assembleDebug
+    ./mach build
 
-`<os_name>` is either `linux`, `macosx` or `windows` depending on the OS you're building from.
+.. _build_fenix:
 
+4. Build Fenix or other Android projects Using Android Studio
+-------------------------------------------------------------
 
-For more details, check out the `more complete documentation <https://github.com/mozilla-mobile/firefox-android/tree/main/fenix>`_.
+1. **You will only work on one of those projects: Fenix, Focus, Android Components**
 
-3. Run
-------
+Open your project's folder on Android Studio. You can find it under: ``[your mozilla-central path]/mobile/android``
 
-From the gecko working directory:
+After ``./mach build`` completed successfully, you will need to use `File/Sync Project with Gradle files`.
+
+2. **You will work on GeckoView only, or GeckoView in integration with the other projects**
+
+Open the root folder (meaning the ``mozilla-central`` folder you just checked out) on Android Studio.
+From there, you should be able to choose the project you want to build.
+
+.. image:: img/android-studio-build-toolbar.png
+  :alt: Screenshot Android Studio's toolbar, showing the projects that can be built
+
+After ``./mach build`` completed successfully, you will need to do a full Gradle Sync.
+
+3. Run Fenix or other Android projects using command line
+---------------------------------------------------------
+
+From the root mozilla-central directory, you can run an emulator with the following command:
 
 .. code-block:: shell
 
     ./mach android-emulator
 
 
-From the firefox-android working directory:
+From the `mobile/android/fenix` working directory, build, install and launch Fenix with:
 
 .. code-block:: shell
 
-   ./gradlew :app:installFenixDebug
-   "$ANDROID_HOME/platform-tools/adb" shell am start -n org.mozilla.fenix.debug/org.mozilla.fenix.debug.App
+    export JAVA_HOME=$HOME/.mozbuild/jdk/jdk-<latest-version>
+    export ANDROID_HOME=$HOME/.mozbuild/android-sdk-<os_name>
+    ./gradlew :app:installFenixDebug
+    "$ANDROID_HOME/platform-tools/adb" shell am start -n org.mozilla.fenix.debug/org.mozilla.fenix.debug.App
