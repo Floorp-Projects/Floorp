@@ -72,4 +72,3 @@ vendoring:
       script: '{yaml_dir}/appservices_version_bump.py'
       cwd: '.'
       args: ['{revision}']
-
