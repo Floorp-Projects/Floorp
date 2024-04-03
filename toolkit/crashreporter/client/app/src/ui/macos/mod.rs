@@ -319,6 +319,10 @@ objc_class! {
                 }
 
                 w.setDelegate_(self.instance as _);
+                w.setMinSize_(cocoa::NSSize {
+                    width: style.horizontal_size_request.unwrap_or(0) as f64,
+                    height: style.vertical_size_request.unwrap_or(0) as f64,
+                });
 
                 if !title.is_empty() {
                     w.setTitle_(nsstring(title.as_str()));
