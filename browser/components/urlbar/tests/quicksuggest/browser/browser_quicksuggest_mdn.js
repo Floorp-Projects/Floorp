@@ -21,6 +21,9 @@ const REMOTE_SETTINGS_DATA = [
   },
 ];
 
+// Avoid timeouts in verify mode. They're especially common on Mac.
+requestLongerTimeout(5);
+
 add_setup(async function () {
   await QuickSuggestTestUtils.ensureQuickSuggestInit({
     remoteSettingsRecords: REMOTE_SETTINGS_DATA,
@@ -28,35 +31,37 @@ add_setup(async function () {
 });
 
 add_tasks_with_rust(async function basic() {
-  const suggestion = REMOTE_SETTINGS_DATA[0].attachment[0];
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: suggestion.keywords[0],
+  await BrowserTestUtils.withNewTab("about:blank", async () => {
+    const suggestion = REMOTE_SETTINGS_DATA[0].attachment[0];
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: suggestion.keywords[0],
+    });
+    Assert.equal(UrlbarTestUtils.getResultCount(window), 2);
+
+    const { element, result } = await UrlbarTestUtils.getDetailsOfResultAt(
+      window,
+      1
+    );
+    Assert.equal(
+      result.providerName,
+      UrlbarProviderQuickSuggest.name,
+      "The result should be from the expected provider"
+    );
+    Assert.equal(
+      result.payload.provider,
+      UrlbarPrefs.get("quickSuggestRustEnabled") ? "Mdn" : "MDNSuggestions"
+    );
+
+    const onLoad = BrowserTestUtils.browserLoaded(
+      gBrowser.selectedBrowser,
+      false,
+      result.payload.url
+    );
+    EventUtils.synthesizeMouseAtCenter(element.row, {});
+    await onLoad;
+    Assert.ok(true, "Expected page is loaded");
   });
-  Assert.equal(UrlbarTestUtils.getResultCount(window), 2);
-
-  const { element, result } = await UrlbarTestUtils.getDetailsOfResultAt(
-    window,
-    1
-  );
-  Assert.equal(
-    result.providerName,
-    UrlbarProviderQuickSuggest.name,
-    "The result should be from the expected provider"
-  );
-  Assert.equal(
-    result.payload.provider,
-    UrlbarPrefs.get("quickSuggestRustEnabled") ? "Mdn" : "MDNSuggestions"
-  );
-
-  const onLoad = BrowserTestUtils.browserLoaded(
-    gBrowser.selectedBrowser,
-    false,
-    result.payload.url
-  );
-  EventUtils.synthesizeMouseAtCenter(element.row, {});
-  await onLoad;
-  Assert.ok(true, "Expected page is loaded");
 
   await PlacesUtils.history.clear();
 });
