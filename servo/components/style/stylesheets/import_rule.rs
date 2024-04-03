@@ -20,7 +20,7 @@ use crate::values::CssUrl;
 use cssparser::{Parser, SourceLocation};
 use std::fmt::{self, Write};
 use style_traits::{CssWriter, ToCss};
-use to_shmem::{self, SharedMemoryBuilder, ToShmem};
+use to_shmem::{SharedMemoryBuilder, ToShmem};
 
 /// A sheet that is held from an import rule.
 #[cfg(feature = "gecko")]

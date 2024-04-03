@@ -13,9 +13,7 @@ use crate::dom::{SendNode, TElement, TNode};
 use crate::parallel;
 use crate::scoped_tls::ScopedTLS;
 use crate::traversal::{DomTraversal, PerLevelTraversalData, PreTraverseToken};
-use rayon;
 use std::collections::VecDeque;
-use time;
 
 #[cfg(feature = "servo")]
 fn should_report_statistics() -> bool {

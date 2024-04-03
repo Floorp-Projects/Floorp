@@ -21,7 +21,6 @@ use crate::values::specified::Percentage;
 use crate::values::{normalize, CustomIdent};
 use cssparser::color::OPAQUE;
 use cssparser::{color::PredefinedColorSpace, BasicParseErrorKind, ParseErrorKind, Parser, Token};
-use itoa;
 use std::fmt::{self, Write};
 use std::io::Write as IoWrite;
 use style_traits::{CssType, CssWriter, KeywordsCollectFn, ParseError, StyleParseErrorKind};
