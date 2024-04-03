@@ -22,6 +22,7 @@ support-files = [
   "../../../test/small-shot-mp3.mp4",
   "../../../test/small-shot.ogg",
   "../../../test/vp9-short.webm",
+  "../../../test/vp9.webm",
   "AutoplayTestUtils.js",
   "file_autoplay_gv_play_request_frame.html",
   "file_autoplay_gv_play_request_window.html",
