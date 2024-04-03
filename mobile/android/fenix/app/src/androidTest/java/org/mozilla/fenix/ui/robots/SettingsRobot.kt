@@ -526,8 +526,9 @@ class SettingsRobot {
         }
 
         fun openCustomizeSubMenu(interact: SettingsSubMenuCustomizeRobot.() -> Unit): SettingsSubMenuCustomizeRobot.Transition {
+            assertUIObjectExists(itemContainingText(getStringResource(R.string.preferences_customize)))
             Log.i(TAG, "openCustomizeSubMenu: Trying to click the \"Customize\" button")
-            onView(withText("Customize")).click()
+            itemContainingText(getStringResource(R.string.preferences_customize)).click()
             Log.i(TAG, "openCustomizeSubMenu: Clicked the \"Customize\" button")
 
             SettingsSubMenuCustomizeRobot().interact()
