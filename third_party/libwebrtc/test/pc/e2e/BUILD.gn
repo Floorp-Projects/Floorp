@@ -576,6 +576,7 @@ if (!build_with_chromium) {
       "../../../media:media_constants",
       "../../../media:rid_description",
       "../../../media:rtc_media_base",
+      "../../../p2p:p2p_constants",
       "../../../p2p:rtc_p2p",
       "../../../pc:sdp_utils",
       "../../../pc:session_description",

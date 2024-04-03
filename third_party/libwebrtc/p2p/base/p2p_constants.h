@@ -95,6 +95,8 @@ extern const int CONNECTION_WRITE_TIMEOUT;
 // Default value of IceConfig.stun_keepalive_interval;
 extern const int STUN_KEEPALIVE_INTERVAL;
 
+static const int MIN_PINGS_AT_WEAK_PING_INTERVAL = 3;
+
 // The following constants are used at the candidate pair level to determine the
 // state of a candidate pair.
 //
