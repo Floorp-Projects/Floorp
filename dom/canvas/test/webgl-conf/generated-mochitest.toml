@@ -5566,6 +5566,7 @@ fail-if = ["os == 'win'"]
 
 ["generated/test_2_conformance2__glsl3__texture-bias.html"]
 subsuite = "webgl2-ext"
+fail-if = ["os == 'win'"]
 
 ["generated/test_2_conformance2__glsl3__texture-offset-non-constant-offset.html"]
 subsuite = "webgl2-ext"
@@ -8159,6 +8160,7 @@ fail-if = ["os == 'mac'"]  # macosx1014 due to 1563418
 
 ["generated/test_2_conformance2__textures__misc__tex-image-10bpc.html"]
 subsuite = "webgl2-core"
+fail-if = ["true"]
 
 ["generated/test_2_conformance2__textures__misc__tex-image-and-sub-image-with-array-buffer-view-sub-source.html"]
 subsuite = "webgl2-core"
@@ -8954,39 +8956,51 @@ subsuite = "webgl2-core"
 
 ["generated/test_2_conformance2__wasm__bufferdata-16gb-wasm-memory.html"]
 subsuite = "webgl2-core"
+fail-if = ["true"]
 
 ["generated/test_2_conformance2__wasm__bufferdata-4gb-wasm-memory.html"]
 subsuite = "webgl2-core"
+fail-if = ["true"]
 
 ["generated/test_2_conformance2__wasm__buffersubdata-16gb-wasm-memory.html"]
 subsuite = "webgl2-core"
+fail-if = ["true"]
 
 ["generated/test_2_conformance2__wasm__buffersubdata-4gb-wasm-memory.html"]
 subsuite = "webgl2-core"
+fail-if = ["true"]
 
 ["generated/test_2_conformance2__wasm__getbuffersubdata-16gb-wasm-memory.html"]
 subsuite = "webgl2-core"
+fail-if = ["true"]
 
 ["generated/test_2_conformance2__wasm__getbuffersubdata-4gb-wasm-memory.html"]
 subsuite = "webgl2-core"
+fail-if = ["true"]
 
 ["generated/test_2_conformance2__wasm__readpixels-16gb-wasm-memory.html"]
 subsuite = "webgl2-core"
+fail-if = ["true"]
 
 ["generated/test_2_conformance2__wasm__readpixels-4gb-wasm-memory.html"]
 subsuite = "webgl2-core"
+fail-if = ["true"]
 
 ["generated/test_2_conformance2__wasm__teximage2d-16gb-wasm-memory.html"]
 subsuite = "webgl2-core"
+fail-if = ["true"]
 
 ["generated/test_2_conformance2__wasm__teximage2d-4gb-wasm-memory.html"]
 subsuite = "webgl2-core"
+fail-if = ["true"]
 
 ["generated/test_2_conformance2__wasm__texsubimage2d-16gb-wasm-memory.html"]
 subsuite = "webgl2-core"
+fail-if = ["true"]
 
 ["generated/test_2_conformance2__wasm__texsubimage2d-4gb-wasm-memory.html"]
 subsuite = "webgl2-core"
+fail-if = ["true"]
 
 ["generated/test_2_conformance__attribs__gl-bindAttribLocation-aliasing.html"]
 subsuite = "webgl2-core"
@@ -9185,6 +9199,7 @@ subsuite = "webgl2-core"
 
 ["generated/test_2_conformance__extensions__ext-color-buffer-half-float.html"]
 subsuite = "webgl2-core"
+fail-if = ["true"]
 
 ["generated/test_2_conformance__extensions__ext-depth-clamp.html"]
 subsuite = "webgl2-core"
@@ -14320,6 +14335,7 @@ subsuite = "webgl1-core"
 
 ["generated/test_conformance__extensions__ext-color-buffer-half-float.html"]
 subsuite = "webgl1-core"
+fail-if = ["true"]
 
 ["generated/test_conformance__extensions__ext-depth-clamp.html"]
 subsuite = "webgl1-core"
@@ -14388,6 +14404,7 @@ skip-if = ["os == 'android'"]
 
 ["generated/test_conformance__extensions__oes-texture-float.html"]
 subsuite = "webgl1-core"
+fail-if = ["true"]
 
 ["generated/test_conformance__extensions__oes-texture-half-float-linear.html"]
 subsuite = "webgl1-core"

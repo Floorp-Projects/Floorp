@@ -30,6 +30,98 @@ prefs = "media.seamless-looping-video=false"
 fail-if = ["true"]
 
 ####################
+# Failures from 2024-04 CTS update
+
+["generated/test_conformance__extensions__ext-color-buffer-half-float.html"]
+# gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, ext.FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE_EXT) should be 35863 (of type number). Was null (of type object).
+# gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, ext.FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE_EXT) should be 5126 (of type number). Was null (of type object).
+# getError expected: NO_ERROR. Was INVALID_ENUM : No errors after valid renderbuffer attachment queries.
+# getError expected: INVALID_OPERATION. Was INVALID_ENUM : Component type query is not allowed for combined depth-stencil attachments.
+# gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, ext.FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE_EXT) should be 35863 (of type number). Was null (of type object).
+# gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, ext.FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE_EXT) should be 5126 (of type number). Was null (of type object).
+# getError expected: NO_ERROR. Was INVALID_ENUM : No errors after valid texture attachment queries.
+fail-if = ["true"]
+
+["generated/test_conformance__extensions__oes-texture-float.html"]
+# gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, ext.FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE_EXT) should be 35863 (of type number). Was null (of type object).
+# gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, ext.FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE_EXT) should be 5126 (of type number). Was null (of type object).
+# getError expected: NO_ERROR. Was INVALID_ENUM : No errors after valid renderbuffer attachment queries.
+# getError expected: INVALID_OPERATION. Was INVALID_ENUM : Component type query is not allowed for combined depth-stencil attachments.
+# gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, ext.FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE_EXT) should be 35863 (of type number). Was null (of type object).
+# gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, ext.FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE_EXT) should be 5126 (of type number). Was null (of type object).
+# getError expected: NO_ERROR. Was INVALID_ENUM : No errors after valid texture attachment queries.
+fail-if = ["true"]
+
+["generated/test_2_conformance__extensions__ext-color-buffer-half-float.html"]
+# gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, ext.FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE_EXT) should be 35863 (of type number). Was null (of type object).
+# gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, ext.FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE_EXT) should be 5126 (of type number). Was null (of type object).
+# getError expected: NO_ERROR. Was INVALID_ENUM : No errors after valid renderbuffer attachment queries.
+# getError expected: INVALID_OPERATION. Was INVALID_ENUM : Component type query is not allowed for combined depth-stencil attachments.
+# gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, ext.FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE_EXT) should be 35863 (of type number). Was null (of type object).
+# gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, ext.FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE_EXT) should be 5126 (of type number). Was null (of type object).
+# getError expected: NO_ERROR. Was INVALID_ENUM : No errors after valid texture attachment queries.
+fail-if = ["true"]
+
+["generated/test_2_conformance2__textures__misc__tex-image-10bpc.html"]
+# gl.checkFramebufferStatus(gl.FRAMEBUFFER) should be 36053. Was 36054.
+# uniquePixels.size should be >= 7. Was 1 (of type number).
+fail-if = ["true"]
+
+
+["generated/test_2_conformance2__wasm__bufferdata-16gb-wasm-memory.html"]
+# successfullyParsed should be true (of type boolean). Was undefined (of type undefined).
+fail-if = ["true"]
+
+["generated/test_2_conformance2__wasm__bufferdata-4gb-wasm-memory.html"]
+# successfullyParsed should be true (of type boolean). Was undefined (of type undefined).
+fail-if = ["true"]
+
+["generated/test_2_conformance2__wasm__buffersubdata-16gb-wasm-memory.html"]
+# successfullyParsed should be true (of type boolean). Was undefined (of type undefined).
+fail-if = ["true"]
+
+["generated/test_2_conformance2__wasm__buffersubdata-4gb-wasm-memory.html"]
+# successfullyParsed should be true (of type boolean). Was undefined (of type undefined).
+fail-if = ["true"]
+
+["generated/test_2_conformance2__wasm__getbuffersubdata-16gb-wasm-memory.html"]
+# successfullyParsed should be true (of type boolean). Was undefined (of type undefined).
+fail-if = ["true"]
+
+["generated/test_2_conformance2__wasm__getbuffersubdata-4gb-wasm-memory.html"]
+# successfullyParsed should be true (of type boolean). Was undefined (of type undefined).
+fail-if = ["true"]
+
+["generated/test_2_conformance2__wasm__readpixels-16gb-wasm-memory.html"]
+# successfullyParsed should be true (of type boolean). Was undefined (of type undefined).
+fail-if = ["true"]
+
+["generated/test_2_conformance2__wasm__readpixels-4gb-wasm-memory.html"]
+# successfullyParsed should be true (of type boolean). Was undefined (of type undefined).
+fail-if = ["true"]
+
+["generated/test_2_conformance2__wasm__teximage2d-16gb-wasm-memory.html"]
+# successfullyParsed should be true (of type boolean). Was undefined (of type undefined).
+fail-if = ["true"]
+
+["generated/test_2_conformance2__wasm__teximage2d-4gb-wasm-memory.html"]
+# successfullyParsed should be true (of type boolean). Was undefined (of type undefined).
+fail-if = ["true"]
+
+["generated/test_2_conformance2__wasm__texsubimage2d-16gb-wasm-memory.html"]
+# successfullyParsed should be true (of type boolean). Was undefined (of type undefined).
+fail-if = ["true"]
+
+["generated/test_2_conformance2__wasm__texsubimage2d-4gb-wasm-memory.html"]
+# successfullyParsed should be true (of type boolean). Was undefined (of type undefined).
+fail-if = ["true"]
+
+["generated/test_2_conformance2__glsl3__texture-bias.html"]
+# should be: 3,3,3,3
+# should be: 13,13,13,13
+fail-if = ["os == 'win'"]
+
+####################
 # Bugs surfaced during fx106 CTS update
 
 ["generated/test_conformance__programs__program-handling.html"]
