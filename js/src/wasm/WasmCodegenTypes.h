@@ -671,20 +671,30 @@ struct TryNote {
   // Sentinel value to detect a try note that has not been given a try body.
   static const uint32_t BEGIN_NONE = UINT32_MAX;
 
+  // Sentinel value used in `entryPointOrIsDelegate_`.
+  static const uint32_t IS_DELEGATE = UINT32_MAX;
+
   // Begin code offset of the try body.
   uint32_t begin_;
   // Exclusive end code offset of the try body.
   uint32_t end_;
-  // The code offset of the landing pad.
-  uint32_t entryPoint_;
-  // Track offset from frame of stack pointer.
-  uint32_t framePushed_;
+  // Either a marker that this is a 'delegate' or else the code offset of the
+  // landing pad to jump to.
+  uint32_t entryPointOrIsDelegate_;
+  // If this is a delegate, then this is the code offset to delegate to,
+  // otherwise this is the offset from the frame pointer of the stack pointer
+  // to use when jumping to the landing pad.
+  uint32_t framePushedOrDelegateOffset_;
 
-  WASM_CHECK_CACHEABLE_POD(begin_, end_, entryPoint_, framePushed_);
+  WASM_CHECK_CACHEABLE_POD(begin_, end_, entryPointOrIsDelegate_,
+                           framePushedOrDelegateOffset_);
 
  public:
   explicit TryNote()
-      : begin_(BEGIN_NONE), end_(0), entryPoint_(0), framePushed_(0) {}
+      : begin_(BEGIN_NONE),
+        end_(0),
+        entryPointOrIsDelegate_(0),
+        framePushedOrDelegateOffset_(0) {}
 
   // Returns whether a try note has been assigned a range for the try body.
   bool hasTryBody() const { return begin_ != BEGIN_NONE; }
@@ -700,11 +710,27 @@ struct TryNote {
     return offset > begin_ && offset <= end_;
   }
 
+  // Check if the unwinder should delegate the handling of this try note to the
+  // try note given at the delegate offset.
+  bool isDelegate() const { return entryPointOrIsDelegate_ == IS_DELEGATE; }
+
+  // The code offset to delegate the handling of this try note to.
+  uint32_t delegateOffset() const {
+    MOZ_ASSERT(isDelegate());
+    return framePushedOrDelegateOffset_;
+  }
+
   // The code offset of the entry to the landing pad.
-  uint32_t landingPadEntryPoint() const { return entryPoint_; }
+  uint32_t landingPadEntryPoint() const {
+    MOZ_ASSERT(!isDelegate());
+    return entryPointOrIsDelegate_;
+  }
 
   // The stack frame pushed amount at the entry to the landing pad.
-  uint32_t landingPadFramePushed() const { return framePushed_; }
+  uint32_t landingPadFramePushed() const {
+    MOZ_ASSERT(!isDelegate());
+    return framePushedOrDelegateOffset_;
+  }
 
   // Set the beginning of the try body.
   void setTryBodyBegin(uint32_t begin) {
@@ -722,17 +748,29 @@ struct TryNote {
     MOZ_ASSERT(end_ > begin_);
   }
 
+  // Mark this try note as a delegate, requesting the unwinder to use the try
+  // note found at the delegate offset.
+  void setDelegate(uint32_t delegateOffset) {
+    entryPointOrIsDelegate_ = IS_DELEGATE;
+    framePushedOrDelegateOffset_ = delegateOffset;
+  }
+
   // Set the entry point and frame pushed of the landing pad.
   void setLandingPad(uint32_t entryPoint, uint32_t framePushed) {
-    entryPoint_ = entryPoint;
-    framePushed_ = framePushed;
+    MOZ_ASSERT(!isDelegate());
+    entryPointOrIsDelegate_ = entryPoint;
+    framePushedOrDelegateOffset_ = framePushed;
   }
 
   // Adjust all code offsets in this try note by a delta.
   void offsetBy(uint32_t offset) {
     begin_ += offset;
     end_ += offset;
-    entryPoint_ += offset;
+    if (isDelegate()) {
+      framePushedOrDelegateOffset_ += offset;
+    } else {
+      entryPointOrIsDelegate_ += offset;
+    }
   }
 
   bool operator<(const TryNote& other) const {
