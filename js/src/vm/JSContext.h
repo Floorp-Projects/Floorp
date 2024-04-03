@@ -510,6 +510,9 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
     return offsetof(JSContext, regExpSearcherLastLimit);
   }
 
+  // Whether we are currently executing the top level of a module.
+  js::ContextData<uint32_t> isEvaluatingModule;
+
  private:
   // Pools used for recycling name maps and vectors when parsing and
   // emitting bytecode. Purged on GC when there are no active script
