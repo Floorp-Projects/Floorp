@@ -2615,6 +2615,17 @@ static void BackfillCodecParameters(std::vector<cricket::Codec>& codecs) {
       if (!codec.GetParam(cricket::kH264FmtpPacketizationMode, &unused_value)) {
         codec.SetParam(cricket::kH264FmtpPacketizationMode, "0");
       }
+    } else if (absl::EqualsIgnoreCase(cricket::kAv1CodecName, codec.name)) {
+      // https://aomediacodec.github.io/av1-rtp-spec/#72-sdp-parameters
+      if (!codec.GetParam(cricket::kAv1FmtpProfile, &unused_value)) {
+        codec.SetParam(cricket::kAv1FmtpProfile, "0");
+      }
+      if (!codec.GetParam(cricket::kAv1FmtpLevelIdx, &unused_value)) {
+        codec.SetParam(cricket::kAv1FmtpLevelIdx, "5");
+      }
+      if (!codec.GetParam(cricket::kAv1FmtpTier, &unused_value)) {
+        codec.SetParam(cricket::kAv1FmtpTier, "0");
+      }
     }
   }
 }

@@ -13,12 +13,10 @@
 #include <map>
 #include <utility>
 
+#include "media/base/media_constants.h"
 #include "rtc_base/string_to_number.h"
 
 namespace webrtc {
-
-// Parameter name in the format parameter map for AV1 video.
-const char kAV1FmtpProfile[] = "profile";
 
 absl::string_view AV1ProfileToString(AV1Profile profile) {
   switch (profile) {
@@ -51,7 +49,7 @@ absl::optional<AV1Profile> StringToAV1Profile(absl::string_view str) {
 
 absl::optional<AV1Profile> ParseSdpForAV1Profile(
     const CodecParameterMap& params) {
-  const auto profile_it = params.find(kAV1FmtpProfile);
+  const auto profile_it = params.find(cricket::kAv1FmtpProfile);
   if (profile_it == params.end())
     return AV1Profile::kProfile0;
   const std::string& profile_str = profile_it->second;

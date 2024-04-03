@@ -20,6 +20,7 @@
 #endif
 #include "api/video_codecs/video_codec.h"
 #include "api/video_codecs/vp9_profile.h"
+#include "media/base/media_constants.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/strings/string_builder.h"
@@ -29,8 +30,7 @@ namespace webrtc {
 namespace {
 
 std::string H264GetPacketizationModeOrDefault(const CodecParameterMap& params) {
-  constexpr char kH264FmtpPacketizationMode[] = "packetization-mode";
-  const auto it = params.find(kH264FmtpPacketizationMode);
+  const auto it = params.find(cricket::kH264FmtpPacketizationMode);
   if (it != params.end()) {
     return it->second;
   }

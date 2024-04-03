@@ -5082,13 +5082,14 @@ TEST_F(WebRtcSdpTest, BackfillsDefaultFmtpValues) {
       "a=setup:actpass\r\n"
       "a=ice-ufrag:ETEn\r\n"
       "a=ice-pwd:OtSK0WpNtpUjkY4+86js7Z/l\r\n"
-      "m=video 9 UDP/TLS/RTP/SAVPF 96 97\r\n"
+      "m=video 9 UDP/TLS/RTP/SAVPF 96 97 98\r\n"
       "c=IN IP4 0.0.0.0\r\n"
       "a=rtcp-mux\r\n"
       "a=sendonly\r\n"
       "a=mid:0\r\n"
       "a=rtpmap:96 H264/90000\r\n"
       "a=rtpmap:97 VP9/90000\r\n"
+      "a=rtpmap:98 AV1/90000\r\n"
       "a=ssrc:1234 cname:test\r\n";
   JsepSessionDescription jdesc(kDummyType);
   EXPECT_TRUE(SdpDeserialize(sdp, &jdesc));
@@ -5097,7 +5098,7 @@ TEST_F(WebRtcSdpTest, BackfillsDefaultFmtpValues) {
   const auto* description = content.media_description();
   ASSERT_NE(description, nullptr);
   const std::vector<cricket::Codec> codecs = description->codecs();
-  ASSERT_EQ(codecs.size(), 2u);
+  ASSERT_EQ(codecs.size(), 3u);
   std::string value;
 
   EXPECT_EQ(codecs[0].name, "H264");
@@ -5107,4 +5108,13 @@ TEST_F(WebRtcSdpTest, BackfillsDefaultFmtpValues) {
   EXPECT_EQ(codecs[1].name, "VP9");
   EXPECT_TRUE(codecs[1].GetParam("profile-id", &value));
   EXPECT_EQ(value, "0");
+
+  EXPECT_EQ(codecs[2].name, "AV1");
+  EXPECT_TRUE(codecs[2].GetParam("profile", &value));
+  EXPECT_EQ(value, "0");
+  EXPECT_TRUE(codecs[2].GetParam("level-idx", &value));
+  EXPECT_EQ(value, "5");
+  EXPECT_TRUE(codecs[2].GetParam("tier", &value));
+  EXPECT_EQ(value, "0");
+  RTC_LOG(LS_ERROR) << sdp;
 }

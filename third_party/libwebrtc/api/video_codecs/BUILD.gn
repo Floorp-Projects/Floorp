@@ -85,6 +85,7 @@ rtc_library("video_codecs_api") {
     "..:scoped_refptr",
     "../../api:array_view",
     "../../api:rtp_parameters",
+    "../../media:media_constants",
     "../../modules/video_coding:codec_globals_headers",
     "../../rtc_base:checks",
     "../../rtc_base:logging",
