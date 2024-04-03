@@ -10,15 +10,31 @@
 #include "js/TypeDecls.h"
 #include "mozilla/dom/BindingDeclarations.h"
 
+#include "mozilla/dom/fragmentdirectives_ffi_generated.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsStringFwd.h"
 #include "nsWrapperCache.h"
 
+class nsINode;
+class nsRange;
 namespace mozilla::dom {
 class Document;
+class Text;
 
 /**
  * @brief The `FragmentDirective` class is the C++ representation of the
  * `Document.fragmentDirective` webidl property.
+ *
+ * This class also serves as the main interface to interact with the fragment
+ * directive from the C++ side. It allows to find text fragment ranges from a
+ * given list of `TextDirective`s using
+ * `FragmentDirective::FindTextFragmentsInDocument()`.
+ * To avoid Text Directives being applied multiple times, this class implements
+ * the `uninvoked directive` mechanism, which in the spec is defined to be part
+ * of the `Document` [0].
+ *
+ * [0]
+ * https://wicg.github.io/scroll-to-text-fragment/#document-uninvoked-directives
  */
 class FragmentDirective final : public nsISupports, public nsWrapperCache {
  public:
@@ -27,6 +43,10 @@ class FragmentDirective final : public nsISupports, public nsWrapperCache {
 
  public:
   explicit FragmentDirective(Document* aDocument);
+  FragmentDirective(Document* aDocument,
+                    nsTArray<TextDirective>&& aTextDirectives)
+      : mDocument(aDocument),
+        mUninvokedTextDirectives(std::move(aTextDirectives)) {}
 
  protected:
   ~FragmentDirective() = default;
@@ -37,8 +57,43 @@ class FragmentDirective final : public nsISupports, public nsWrapperCache {
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
+  /**
+   * @brief Sets Text Directives as "uninvoked directive".
+   */
+  void SetTextDirectives(nsTArray<TextDirective>&& aTextDirectives) {
+    mUninvokedTextDirectives = std::move(aTextDirectives);
+  }
+
+  /** Returns true if there are Text Directives that have not been applied to
+   * the `Document`.
+   */
+  bool HasUninvokedDirectives() const {
+    return !mUninvokedTextDirectives.IsEmpty();
+  };
+
+  /** Searches for the current uninvoked text directives and creates a range for
+   * each one that is found.
+   *
+   * When this method returns, the uninvoked directives for this document are
+   * cleared.
+   *
+   * This method tries to follow the specification as close as possible in how
+   * to find a matching range for a text directive. However, instead of using
+   * collator-based search, a standard case-insensitive search is used
+   * (`nsString::find()`).
+   */
+  nsTArray<RefPtr<nsRange>> FindTextFragmentsInDocument();
+
  private:
+  RefPtr<nsRange> FindRangeForTextDirective(
+      const TextDirective& aTextDirective);
+  RefPtr<nsRange> FindStringInRange(nsRange* aSearchRange,
+                                    const nsAString& aQuery,
+                                    bool aWordStartBounded,
+                                    bool aWordEndBounded);
+
   RefPtr<Document> mDocument;
+  nsTArray<TextDirective> mUninvokedTextDirectives;
 };
 
 }  // namespace mozilla::dom
