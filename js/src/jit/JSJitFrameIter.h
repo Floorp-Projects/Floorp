@@ -177,6 +177,9 @@ class JSJitFrameIter {
     return type_ == FrameType::BaselineInterpreterEntry;
   }
   bool isRectifier() const { return type_ == FrameType::Rectifier; }
+  bool isTrampolineNative() const {
+    return type_ == FrameType::TrampolineNative;
+  }
   bool isBareExit() const;
   bool isUnwoundJitExit() const;
   template <typename T>
