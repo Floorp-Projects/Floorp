@@ -304,7 +304,6 @@ impl AtlasAllocator for ShelfAllocator {
 
 pub struct CompactionChange {
     pub handle: TextureCacheHandle,
-    pub old_id: AllocId,
     pub old_tex: CacheTextureId,
     pub old_rect: DeviceIntRect,
     pub new_id: AllocId,
@@ -362,7 +361,6 @@ impl<P> AllocatorList<ShelfAllocator, P> {
             // Record the change so that the texture cache can do additional bookkeeping.
             changes.push(CompactionChange {
                 handle,
-                old_id: AllocId(alloc.id.serialize()),
                 old_tex: self.units[last_unit].texture_id,
                 old_rect: alloc.rectangle.cast_unit(),
                 new_id: AllocId(new_alloc.id.serialize()),

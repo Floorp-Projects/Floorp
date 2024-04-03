@@ -545,7 +545,6 @@ impl Document {
         self.frame_is_valid = true;
         self.dirty_rects_are_valid = true;
 
-        let is_new_scene = self.has_built_scene;
         self.has_built_scene = false;
 
         let frame_build_time_ms =
@@ -559,7 +558,6 @@ impl Document {
 
         RenderedDocument {
             frame,
-            is_new_scene,
             profile: self.profile.take_and_reset(),
             frame_stats: frame_stats,
             render_reasons,
@@ -1918,7 +1916,6 @@ impl RenderBackend {
                         id,
                         RenderedDocument {
                             frame,
-                            is_new_scene: true,
                             profile: TransactionProfile::new(),
                             render_reasons: RenderReasons::empty(),
                             frame_stats: None,
