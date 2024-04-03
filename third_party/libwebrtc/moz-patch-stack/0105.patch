@@ -1,33 +1,127 @@
-From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Fri, 2 Feb 2024 18:43:00 +0000
-Subject: Bug 1878010 - Fix webrtc::VideoCaptureFactory for BSD.
- r=grulja,gaston,webrtc-reviewers,mjf
+From: Jan Grulich <jgrulich@redhat.com>
+Date: Tue, 13 Feb 2024 13:12:00 +0000
+Subject: Bug 1879752 - WebRTC backport: Video capture PipeWire - simplify
+ thread and lock annotations r=pehrsons,webrtc-reviewers
 
-Differential Revision: https://phabricator.services.mozilla.com/D200427
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/f890637efe5abc0020fab83ff2224313cd0c8460
+This is a simple backport of an WebRTC upstream change.
+
+Upstream commit: 541f202354e2b4906935c8db6e54386aa8bc8d1f
+
+Differential Revision: https://phabricator.services.mozilla.com/D201328
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/dc12e6eecaa8dc91ee0a517cfd27570691c441b9
 ---
- modules/video_capture/video_capture_factory.cc | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ .../linux/video_capture_pipewire.cc           | 25 ++++++++++++-------
+ .../linux/video_capture_pipewire.h            | 14 +++++------
+ 2 files changed, 22 insertions(+), 17 deletions(-)
 
-diff --git a/modules/video_capture/video_capture_factory.cc b/modules/video_capture/video_capture_factory.cc
-index e085ac2df8..2790fbbe1c 100644
---- a/modules/video_capture/video_capture_factory.cc
-+++ b/modules/video_capture/video_capture_factory.cc
-@@ -24,7 +24,7 @@ rtc::scoped_refptr<VideoCaptureModule> VideoCaptureFactory::Create(
-     const char* deviceUniqueIdUTF8) {
- // This is only implemented on pure Linux and WEBRTC_LINUX is defined for
- // Android as well
--#if !defined(WEBRTC_LINUX) || defined(WEBRTC_ANDROID)
-+#if (!defined(WEBRTC_LINUX) && !defined(WEBRTC_BSD)) || defined(WEBRTC_ANDROID)
-   return nullptr;
- #else
-   return videocapturemodule::VideoCaptureImpl::Create(options,
-@@ -40,7 +40,7 @@ VideoCaptureModule::DeviceInfo* VideoCaptureFactory::CreateDeviceInfo(
-     VideoCaptureOptions* options) {
- // This is only implemented on pure Linux and WEBRTC_LINUX is defined for
- // Android as well
--#if !defined(WEBRTC_LINUX) || defined(WEBRTC_ANDROID)
-+#if (!defined(WEBRTC_LINUX) && !defined(WEBRTC_BSD)) || defined(WEBRTC_ANDROID)
-   return nullptr;
- #else
-   return videocapturemodule::VideoCaptureImpl::CreateDeviceInfo(options);
+diff --git a/modules/video_capture/linux/video_capture_pipewire.cc b/modules/video_capture/linux/video_capture_pipewire.cc
+index fb813e331f..8af483636a 100644
+--- a/modules/video_capture/linux/video_capture_pipewire.cc
++++ b/modules/video_capture/linux/video_capture_pipewire.cc
+@@ -121,7 +121,6 @@ static spa_pod* BuildFormat(spa_pod_builder* builder,
+ 
+ int32_t VideoCaptureModulePipeWire::StartCapture(
+     const VideoCaptureCapability& capability) {
+-  RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
+   RTC_DCHECK_RUN_ON(&api_checker_);
+ 
+   if (initialized_) {
+@@ -134,10 +133,17 @@ int32_t VideoCaptureModulePipeWire::StartCapture(
+ 
+   uint8_t buffer[1024] = {};
+ 
++  // We don't want members above to be guarded by capture_checker_ as
++  // it's meant to be for members that are accessed on the API thread
++  // only when we are not capturing. The code above can be called many
++  // times while sharing instance of VideoCapturePipeWire between
++  // websites and therefore it would not follow the requirements of this
++  // checker.
++  RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
++  PipeWireThreadLoopLock thread_loop_lock(session_->pw_main_loop_);
++
+   RTC_LOG(LS_VERBOSE) << "Creating new PipeWire stream for node " << node_id_;
+ 
+-  PipeWireThreadLoopLock thread_loop_lock(session_->pw_main_loop_);
+-  RTC_CHECK_RUNS_SERIALIZED(&pipewire_checker_);
+   pw_properties* reuse_props =
+       pw_properties_new_string("pipewire.client.reuse=1");
+   stream_ = pw_stream_new(session_->pw_core_, "camera-stream", reuse_props);
+@@ -188,11 +194,13 @@ int32_t VideoCaptureModulePipeWire::StartCapture(
+ }
+ 
+ int32_t VideoCaptureModulePipeWire::StopCapture() {
+-  RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
+   RTC_DCHECK_RUN_ON(&api_checker_);
+ 
+   PipeWireThreadLoopLock thread_loop_lock(session_->pw_main_loop_);
+-  RTC_CHECK_RUNS_SERIALIZED(&pipewire_checker_);
++  // PipeWireSession is guarded by API checker so just make sure we do
++  // race detection when the PipeWire loop is locked/stopped to not run
++  // any callback at this point.
++  RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
+   if (stream_) {
+     pw_stream_destroy(stream_);
+     stream_ = nullptr;
+@@ -225,14 +233,14 @@ void VideoCaptureModulePipeWire::OnStreamParamChanged(
+   VideoCaptureModulePipeWire* that =
+       static_cast<VideoCaptureModulePipeWire*>(data);
+   RTC_DCHECK(that);
+-  RTC_CHECK_RUNS_SERIALIZED(&that->pipewire_checker_);
++  RTC_CHECK_RUNS_SERIALIZED(&that->capture_checker_);
+ 
+   if (format && id == SPA_PARAM_Format)
+     that->OnFormatChanged(format);
+ }
+ 
+ void VideoCaptureModulePipeWire::OnFormatChanged(const struct spa_pod* format) {
+-  RTC_CHECK_RUNS_SERIALIZED(&pipewire_checker_);
++  RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
+ 
+   uint32_t media_type, media_subtype;
+ 
+@@ -331,7 +339,6 @@ void VideoCaptureModulePipeWire::OnStreamStateChanged(
+   VideoCaptureModulePipeWire* that =
+       static_cast<VideoCaptureModulePipeWire*>(data);
+   RTC_DCHECK(that);
+-  RTC_CHECK_RUNS_SERIALIZED(&that->capture_checker_);
+ 
+   MutexLock lock(&that->api_lock_);
+   switch (state) {
+@@ -374,7 +381,7 @@ static VideoRotation VideorotationFromPipeWireTransform(uint32_t transform) {
+ }
+ 
+ void VideoCaptureModulePipeWire::ProcessBuffers() {
+-  RTC_CHECK_RUNS_SERIALIZED(&pipewire_checker_);
++  RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
+ 
+   while (pw_buffer* buffer = pw_stream_dequeue_buffer(stream_)) {
+     struct spa_meta_header* h;
+diff --git a/modules/video_capture/linux/video_capture_pipewire.h b/modules/video_capture/linux/video_capture_pipewire.h
+index 5d6794ed65..eeb3b9497c 100644
+--- a/modules/video_capture/linux/video_capture_pipewire.h
++++ b/modules/video_capture/linux/video_capture_pipewire.h
+@@ -43,18 +43,16 @@ class VideoCaptureModulePipeWire : public VideoCaptureImpl {
+   void OnFormatChanged(const struct spa_pod* format);
+   void ProcessBuffers();
+ 
+-  rtc::RaceChecker pipewire_checker_;
+-
+   const rtc::scoped_refptr<PipeWireSession> session_
+-      RTC_GUARDED_BY(capture_checker_);
++      RTC_GUARDED_BY(api_checker_);
++  bool initialized_ RTC_GUARDED_BY(api_checker_);
++  bool started_ RTC_GUARDED_BY(api_lock_);
+   int node_id_ RTC_GUARDED_BY(capture_checker_);
+   VideoCaptureCapability configured_capability_
+-      RTC_GUARDED_BY(pipewire_checker_);
+-  bool initialized_ RTC_GUARDED_BY(capture_checker_);
+-  bool started_ RTC_GUARDED_BY(api_lock_);
++      RTC_GUARDED_BY(capture_checker_);
+ 
+-  struct pw_stream* stream_ RTC_GUARDED_BY(pipewire_checker_) = nullptr;
+-  struct spa_hook stream_listener_ RTC_GUARDED_BY(pipewire_checker_);
++  struct pw_stream* stream_ RTC_GUARDED_BY(capture_checker_) = nullptr;
++  struct spa_hook stream_listener_ RTC_GUARDED_BY(capture_checker_);
+ };
+ }  // namespace videocapturemodule
+ }  // namespace webrtc
