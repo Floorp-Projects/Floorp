@@ -26,7 +26,7 @@
   add_task(async function wait_for_media_ready() {
     await SpecialPowers.pushPrefEnv({"set": [["media.cache_size", 40000]]});
     await new Promise(resolve => {
-      video.src = "seek_with_sound.webm";
+      video.src = "seek_with_sound.ogg";
       video.addEventListener("loadedmetadata", resolve);
     });
   });

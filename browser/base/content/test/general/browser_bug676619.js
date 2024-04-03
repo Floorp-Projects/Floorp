@@ -116,8 +116,8 @@ async function runTest(url) {
   await BrowserTestUtils.browserLoaded(browser);
 
   await testLink("link1", "test.txt");
-  await testLink("link2", "video.webm");
-  await testLink("link3", "just some video.webm");
+  await testLink("link2", "video.ogg");
+  await testLink("link3", "just some video.ogg");
   await testLink("link4", "with-target.txt");
   await testLink("link5", "javascript.html");
   await testLink("link6", "test.blob");
@@ -132,8 +132,8 @@ async function runTest(url) {
   // Check that we enforce the correct extension if the website's
   // is bogus or missing. These extensions can differ slightly (ogx vs ogg,
   // htm vs html) on different OSes.
-  let webmExtension = getMIMEInfoForType("video/webm").primaryExtension;
-  await testLink("link13", "no file extension." + webmExtension);
+  let oggExtension = getMIMEInfoForType("application/ogg").primaryExtension;
+  await testLink("link13", "no file extension." + oggExtension);
 
   // See https://bugzilla.mozilla.org/show_bug.cgi?id=1690051#c8
   if (AppConstants.platform != "win") {

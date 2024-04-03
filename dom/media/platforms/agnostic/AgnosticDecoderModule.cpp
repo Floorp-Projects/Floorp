@@ -36,9 +36,8 @@ static bool IsAvailableInDefault(DecoderType type) {
     case DecoderType::AV1:
       return StaticPrefs::media_av1_enabled();
 #endif
-    case DecoderType::Theora:
-      return StaticPrefs::media_theora_enabled();
     case DecoderType::Opus:
+    case DecoderType::Theora:
     case DecoderType::Vorbis:
     case DecoderType::VPX:
     case DecoderType::Wave:
@@ -57,8 +56,7 @@ static bool IsAvailableInRdd(DecoderType type) {
     case DecoderType::Opus:
       return StaticPrefs::media_rdd_opus_enabled();
     case DecoderType::Theora:
-      return StaticPrefs::media_rdd_theora_enabled() &&
-             StaticPrefs::media_theora_enabled();
+      return StaticPrefs::media_rdd_theora_enabled();
     case DecoderType::Vorbis:
 #if defined(__MINGW32__)
       // If this is a MinGW build we need to force AgnosticDecoderModule to
@@ -131,8 +129,7 @@ media::DecodeSupportSet AgnosticDecoderModule::Supports(
       (AOMDecoder::IsAV1(mimeType) && IsAvailable(DecoderType::AV1)) ||
 #endif
       (VPXDecoder::IsVPX(mimeType) && IsAvailable(DecoderType::VPX)) ||
-      (TheoraDecoder::IsTheora(mimeType) && IsAvailable(DecoderType::Theora) &&
-       StaticPrefs::media_theora_enabled());
+      (TheoraDecoder::IsTheora(mimeType) && IsAvailable(DecoderType::Theora));
   MOZ_LOG(sPDMLog, LogLevel::Debug,
           ("Agnostic decoder %s requested type '%s'",
            supports ? "supports" : "rejects", mimeType.BeginReading()));
@@ -167,8 +164,7 @@ already_AddRefed<MediaDataDecoder> AgnosticDecoderModule::CreateVideoDecoder(
     }
   }
 #endif
-  else if (TheoraDecoder::IsTheora(aParams.mConfig.mMimeType) &&
-           StaticPrefs::media_theora_enabled()) {
+  else if (TheoraDecoder::IsTheora(aParams.mConfig.mMimeType)) {
     m = new TheoraDecoder(aParams);
   }
 

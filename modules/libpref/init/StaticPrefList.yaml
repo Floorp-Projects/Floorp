@@ -11186,12 +11186,6 @@
     mirror: always
 #endif
 
-# Bug 1860492 - Deprecate and remove theora
--  name: media.theora.enabled
-   type: RelaxedAtomicBool
-   value: @IS_NOT_NIGHTLY_BUILD@
-   mirror: always
-
 #---------------------------------------------------------------------------
 # Prefs starting with "memory."
 #---------------------------------------------------------------------------

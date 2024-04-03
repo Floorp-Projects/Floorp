@@ -96,8 +96,8 @@ function handleRequest(request, response) {
       break;
 
     case "media":
-      response.setHeader("Content-Type", "video/webm", false);
-      response.write(loadContentFromFile("tests/dom/media/test/vp9.webm"));
+      response.setHeader("Content-Type", "video/ogg", false);
+      response.write(loadContentFromFile("tests/dom/media/test/320x240.ogv"));
       break;
 
     case "iframe":

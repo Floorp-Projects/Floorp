@@ -22,7 +22,8 @@ promise_test(async () => {
     + 'VIDEO%26PartialContent';
 
   let v = document.createElement("video");
-  frame.src += "%26mp4";
+  if (v.canPlayType("video/ogv") == "")
+    frame.src += "%26mp4";
 
   document.body.appendChild(frame);
   await new Promise(resolve => frame.onload = resolve);

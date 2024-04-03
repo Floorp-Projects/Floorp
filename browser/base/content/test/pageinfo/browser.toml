@@ -5,7 +5,7 @@ support-files = [
   "image.html",
   "../general/audio.ogg",
   "../general/moz.png",
-  "../general/video.webm",
+  "../general/video.ogg",
 ]
 
 ["browser_pageinfo_iframe_media.js"]
