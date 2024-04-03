@@ -4,9 +4,9 @@
 
 use super::*;
 use authenticator::{
-    ctap2::commands::{PinUvAuthResult, StatusCode},
+    ctap2::commands::StatusCode,
     errors::{CommandError, HIDError},
-    BioEnrollmentCmd, CredManagementCmd, InteractiveRequest, InteractiveUpdate, PinError,
+    BioEnrollmentCmd, CredManagementCmd, InteractiveUpdate, PinError,
 };
 use serde::{Deserialize, Serialize};
 

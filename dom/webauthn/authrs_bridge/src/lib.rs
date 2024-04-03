@@ -33,7 +33,6 @@ use nserror::{
 };
 use nsstring::{nsACString, nsAString, nsCString, nsString};
 use serde::Serialize;
-use serde_cbor;
 use serde_json::json;
 use std::fmt::Write;
 use std::sync::mpsc::{channel, Receiver, RecvError, Sender};
