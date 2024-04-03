@@ -887,7 +887,7 @@
     <string name="enable_search_suggestions_yes">Kuvi</string>
 
     <!-- Message displayed when using a search engine that doesn't provide suggestions -->
-    <string name="no_suggestions_message">Iyo daa ka̱a̱ nánuku ntu xituvi tu\'un chineí nánukunu.</string>
+    <string name="no_suggestions_message">Daa ka̱a̱ nánuku ntu nkuvi xituvi daa tu\'un chineí nánukunu.</string>
 
     <!-- Button to dismiss the message displayed  when using a search engine that doesn't provide suggestions-->
     <string name="dismiss_no_suggestions_prompt_button">Xita</string>
