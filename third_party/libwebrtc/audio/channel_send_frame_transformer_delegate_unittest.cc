@@ -15,11 +15,11 @@
 #include <vector>
 
 #include "absl/memory/memory.h"
+#include "api/test/mock_frame_transformer.h"
+#include "api/test/mock_transformable_audio_frame.h"
 #include "rtc_base/task_queue_for_test.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
-#include "test/mock_frame_transformer.h"
-#include "test/mock_transformable_frame.h"
 
 namespace webrtc {
 namespace {

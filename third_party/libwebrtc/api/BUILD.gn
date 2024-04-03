@@ -1185,6 +1185,16 @@ if (rtc_include_tests) {
     ]
   }
 
+  rtc_library("mock_frame_transformer") {
+    visibility = [ "*" ]
+    testonly = true
+    sources = [ "test/mock_frame_transformer.h" ]
+    deps = [
+      ":frame_transformer_interface",
+      "../test:test_support",
+    ]
+  }
+
   rtc_library("mock_encoder_selector") {
     visibility = [ "*" ]
     testonly = true
