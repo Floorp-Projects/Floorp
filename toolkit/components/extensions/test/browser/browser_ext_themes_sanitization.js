@@ -114,9 +114,8 @@ add_task(async function test_sanitization_transparent() {
   await extension.startup();
 
   let navbar = document.querySelector("#nav-bar");
-  Assert.equal(
-    window.getComputedStyle(navbar).borderTopColor,
-    "rgba(0, 0, 0, 0)",
+  Assert.ok(
+    window.getComputedStyle(navbar).boxShadow.includes("rgba(0, 0, 0, 0)"),
     "Top separator should be transparent"
   );
 

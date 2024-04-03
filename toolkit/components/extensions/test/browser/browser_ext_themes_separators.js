@@ -48,9 +48,10 @@ add_task(async function test_support_separator_properties() {
   await deprecatedMessagePromise;
 
   let navbar = document.querySelector("#nav-bar");
-  Assert.equal(
-    window.getComputedStyle(navbar).borderTopColor,
-    `rgb(${hexToRGB(SEPARATOR_TOP_COLOR).join(", ")})`,
+  Assert.ok(
+    window
+      .getComputedStyle(navbar)
+      .boxShadow.includes(`rgb(${hexToRGB(SEPARATOR_TOP_COLOR).join(", ")})`),
     "Top separator color properly set"
   );
 
