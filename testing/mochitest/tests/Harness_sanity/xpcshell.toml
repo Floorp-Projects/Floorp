@@ -1,5 +1,7 @@
 [DEFAULT]
 
 ["test_SpecialPowersSandbox.js"]
+prefs = ["dom.security.https_first=false"] #Disable https-first because createHttpServer does not support https
 
 ["test_SpecialPowersSpawn.js"]
+prefs = ["dom.security.https_first=false"] #Disable https-first because createHttpServer does not support https
