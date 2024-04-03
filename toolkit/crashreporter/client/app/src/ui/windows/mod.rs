@@ -137,7 +137,7 @@ impl UI {
                 let w = top_level_window(
                     module,
                     AppWindow::new(
-                        WindowRenderer::new(module, window.element_type, &window.style),
+                        WindowRenderer::new(module, window.element_type),
                         Some(quit_token.clone()),
                     ),
                     &name,
@@ -336,12 +336,6 @@ impl CustomWindowClass for AppWindow {
                     return Some(0);
                 }
             }
-            win::WM_GETMINMAXINFO => {
-                let mut minmaxinfo = unsafe { (lparam as *mut win::MINMAXINFO).as_mut().unwrap() };
-                minmaxinfo.ptMinTrackSize.x = me.renderer.min_size.0.try_into().unwrap();
-                minmaxinfo.ptMinTrackSize.y = me.renderer.min_size.1.try_into().unwrap();
-                return Some(0);
-            }
             win::WM_SIZE => {
                 // When resized, recompute the layout.
                 let width = loword(lparam as _) as u32;
@@ -415,7 +409,6 @@ struct WindowRendererInner {
     /// changes. Unfortunately the win32 API doesn't have any nice ways to automatically perform
     /// layout.
     pub model: RefCell<Pin<Box<model::Window>>>,
-    pub min_size: (u32, u32),
     /// Mapping between model elements and windows.
     ///
     /// Element references pertain to elements in `model`.
@@ -425,15 +418,11 @@ struct WindowRendererInner {
 }
 
 impl WindowRenderer {
-    pub fn new(module: HINSTANCE, model: model::Window, style: &model::ElementStyle) -> Self {
+    pub fn new(module: HINSTANCE, model: model::Window) -> Self {
         WindowRenderer {
             inner: Rc::new(WindowRendererInner {
                 module,
                 model: RefCell::new(Box::pin(model)),
-                min_size: (
-                    style.horizontal_size_request.unwrap_or(0),
-                    style.vertical_size_request.unwrap_or(0),
-                ),
                 windows: Default::default(),
                 font: Font::caption(),
                 bold_font: Font::caption_bold().unwrap_or_else(Font::caption),
@@ -499,7 +488,7 @@ impl<'a> WindowChildRenderer<'a> {
         let style = model.style;
         let w = self
             .add_window(AppWindow::new(
-                WindowRenderer::new(self.renderer.module, model.element_type, &style),
+                WindowRenderer::new(self.renderer.module, model.element_type),
                 None,
             ))
             .size(
