@@ -1454,7 +1454,7 @@ index 5ec1fd4a83..e46e050609 100644
  
    int64_t _lastProcessFrameTimeNanos RTC_GUARDED_BY(capture_checker_);
 diff --git a/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.cc b/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.cc
-index e26169fd3d..5330eb7e8c 100644
+index b73fd100cf..acdae72277 100644
 --- a/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.cc
 +++ b/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.cc
 @@ -256,6 +256,7 @@ LibvpxVp9Encoder::LibvpxVp9Encoder(const cricket::VideoCodec& codec,
@@ -1473,7 +1473,7 @@ index e26169fd3d..5330eb7e8c 100644
  
    scalability_mode_ = inst->GetScalabilityMode();
    if (scalability_mode_.has_value()) {
-@@ -1151,6 +1153,14 @@ int LibvpxVp9Encoder::Encode(const VideoFrame& input_image,
+@@ -1153,6 +1155,14 @@ int LibvpxVp9Encoder::Encode(const VideoFrame& input_image,
      config_changed_ = false;
    }
  
@@ -1488,7 +1488,7 @@ index e26169fd3d..5330eb7e8c 100644
    RTC_DCHECK_EQ(input_image.width(), raw_->d_w);
    RTC_DCHECK_EQ(input_image.height(), raw_->d_h);
  
-@@ -1273,6 +1283,48 @@ int LibvpxVp9Encoder::Encode(const VideoFrame& input_image,
+@@ -1275,6 +1285,48 @@ int LibvpxVp9Encoder::Encode(const VideoFrame& input_image,
    return WEBRTC_VIDEO_CODEC_OK;
  }
  
