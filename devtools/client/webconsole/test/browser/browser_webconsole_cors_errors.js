@@ -6,6 +6,9 @@
 
 "use strict";
 
+// The test can take a bit long on slow machines.
+requestLongerTimeout(2);
+
 const TEST_URI =
   "http://example.com/browser/devtools/client/webconsole/test/browser/test-network-request.html";
 const BASE_CORS_ERROR_URL =
@@ -40,6 +43,7 @@ add_task(async function () {
   await checkCorsMessage(hud, message, "CORSDisabled");
   await pushPref("content.cors.disable", false);
 
+  await clearOutput(hud);
   info("Test CORSPreflightDidNotSucceed");
   onCorsMessage = waitForMessageByType(
     hud,
@@ -50,6 +54,7 @@ add_task(async function () {
   message = await onCorsMessage;
   await checkCorsMessage(hud, message, "CORSPreflightDidNotSucceed");
 
+  await clearOutput(hud);
   info("Test CORS did not succeed");
   onCorsMessage = waitForMessageByType(
     hud,
@@ -60,6 +65,7 @@ add_task(async function () {
   message = await onCorsMessage;
   await checkCorsMessage(hud, message, "CORSDidNotSucceed");
 
+  await clearOutput(hud);
   info("Test CORSExternalRedirectNotAllowed");
   onCorsMessage = waitForMessageByType(
     hud,
@@ -70,6 +76,7 @@ add_task(async function () {
   message = await onCorsMessage;
   await checkCorsMessage(hud, message, "CORSExternalRedirectNotAllowed");
 
+  await clearOutput(hud);
   info("Test CORSMissingAllowOrigin");
   onCorsMessage = waitForMessageByType(
     hud,
@@ -82,6 +89,7 @@ add_task(async function () {
   message = await onCorsMessage;
   await checkCorsMessage(hud, message, "CORSMissingAllowOrigin");
 
+  await clearOutput(hud);
   info("Test CORSMultipleAllowOriginNotAllowed");
   onCorsMessage = waitForMessageByType(
     hud,
@@ -94,6 +102,7 @@ add_task(async function () {
   message = await onCorsMessage;
   await checkCorsMessage(hud, message, "CORSMultipleAllowOriginNotAllowed");
 
+  await clearOutput(hud);
   info("Test CORSAllowOriginNotMatchingOrigin");
   onCorsMessage = waitForMessageByType(
     hud,
@@ -107,6 +116,7 @@ add_task(async function () {
   message = await onCorsMessage;
   await checkCorsMessage(hud, message, "CORSAllowOriginNotMatchingOrigin");
 
+  await clearOutput(hud);
   info("Test CORSNotSupportingCredentials");
   onCorsMessage = waitForMessageByType(
     hud,
@@ -118,6 +128,7 @@ add_task(async function () {
   message = await onCorsMessage;
   await checkCorsMessage(hud, message, "CORSNotSupportingCredentials");
 
+  await clearOutput(hud);
   info("Test CORSMethodNotFound");
   onCorsMessage = waitForMessageByType(
     hud,
@@ -129,6 +140,7 @@ add_task(async function () {
   message = await onCorsMessage;
   await checkCorsMessage(hud, message, "CORSMethodNotFound");
 
+  await clearOutput(hud);
   info("Test CORSMissingAllowCredentials");
   onCorsMessage = waitForMessageByType(
     hud,
@@ -140,6 +152,7 @@ add_task(async function () {
   message = await onCorsMessage;
   await checkCorsMessage(hud, message, "CORSMissingAllowCredentials");
 
+  await clearOutput(hud);
   info("Test CORSInvalidAllowMethod");
   onCorsMessage = waitForMessageByType(
     hud,
@@ -151,6 +164,7 @@ add_task(async function () {
   message = await onCorsMessage;
   await checkCorsMessage(hud, message, "CORSInvalidAllowMethod");
 
+  await clearOutput(hud);
   info("Test CORSInvalidAllowHeader");
   onCorsMessage = waitForMessageByType(
     hud,
@@ -162,6 +176,7 @@ add_task(async function () {
   message = await onCorsMessage;
   await checkCorsMessage(hud, message, "CORSInvalidAllowHeader");
 
+  await clearOutput(hud);
   info("Test CORSMissingAllowHeaderFromPreflight");
   onCorsMessage = waitForMessageByType(
     hud,
