@@ -21,7 +21,7 @@
 
     <command id="cmd_newNavigatorTab" oncommand="BrowserCommands.openTab({ event });"/>
     <command id="cmd_newNavigatorTabNoEvent" oncommand="BrowserCommands.openTab();"/>
-    <command id="Browser:OpenFile"  oncommand="BrowserOpenFileWindow();"/>
+    <command id="Browser:OpenFile"  oncommand="BrowserCommands.openFileWindow();"/>
     <command id="Browser:SavePage" oncommand="saveBrowser(gBrowser.selectedBrowser);"/>
 
     <command id="Browser:SendLink"

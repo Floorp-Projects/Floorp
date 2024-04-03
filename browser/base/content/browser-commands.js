@@ -342,4 +342,40 @@ var BrowserCommands = {
       "browser-open-newtab-start"
     );
   },
+
+  openFileWindow() {
+    // Get filepicker component.
+    try {
+      const nsIFilePicker = Ci.nsIFilePicker;
+      const fp = Cc["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
+      const fpCallback = function fpCallback_done(aResult) {
+        if (aResult == nsIFilePicker.returnOK) {
+          try {
+            if (fp.file) {
+              gLastOpenDirectory.path = fp.file.parent.QueryInterface(
+                Ci.nsIFile
+              );
+            }
+          } catch (ex) {}
+          openTrustedLinkIn(fp.fileURL.spec, "current");
+        }
+      };
+
+      fp.init(
+        window.browsingContext,
+        gNavigatorBundle.getString("openFile"),
+        nsIFilePicker.modeOpen
+      );
+      fp.appendFilters(
+        nsIFilePicker.filterAll |
+          nsIFilePicker.filterText |
+          nsIFilePicker.filterImages |
+          nsIFilePicker.filterXML |
+          nsIFilePicker.filterHTML |
+          nsIFilePicker.filterPDF
+      );
+      fp.displayDirectory = gLastOpenDirectory.path;
+      fp.open(fpCallback);
+    } catch (ex) {}
+  },
 };

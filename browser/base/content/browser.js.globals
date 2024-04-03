@@ -37,7 +37,6 @@
   "loadOneOrMoreURIs",
   "openLocation",
   "gLastOpenDirectory",
-  "BrowserOpenFileWindow",
   "BrowserCloseTabOrWindow",
   "BrowserTryToCloseWindow",
   "getLoadContext",
