@@ -157,6 +157,8 @@ AudioSendStream::AudioSendStream(
       event_log_(event_log),
       use_legacy_overhead_calculation_(
           field_trials_.IsEnabled("WebRTC-Audio-LegacyOverhead")),
+      enable_priority_bitrate_(
+          !field_trials_.IsDisabled("WebRTC-Audio-PriorityBitrate")),
       bitrate_allocator_(bitrate_allocator),
       rtp_transport_(rtp_transport),
       rtp_rtcp_module_(channel_send_->GetRtpRtcp()),
@@ -806,6 +808,10 @@ void AudioSendStream::ConfigureBitrateObserver() {
 
   if (allocation_settings_.priority_bitrate_raw) {
     priority_bitrate = *allocation_settings_.priority_bitrate_raw;
+  }
+
+  if (!enable_priority_bitrate_) {
+    priority_bitrate = DataRate::BitsPerSec(0);
   }
 
   bitrate_allocator_->AddObserver(

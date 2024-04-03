@@ -21,6 +21,7 @@
 #include "audio/audio_state.h"
 #include "audio/conversion.h"
 #include "audio/mock_voe_channel_proxy.h"
+#include "call/test/mock_bitrate_allocator.h"
 #include "call/test/mock_rtp_transport_controller_send.h"
 #include "logging/rtc_event_log/mock/mock_rtc_event_log.h"
 #include "modules/audio_device/include/mock_audio_device.h"
@@ -155,7 +156,6 @@ struct ConfigHelper {
             use_null_audio_processing
                 ? nullptr
                 : rtc::make_ref_counted<NiceMock<MockAudioProcessing>>()),
-        bitrate_allocator_(&limit_observer_),
         audio_encoder_(nullptr) {
     using ::testing::Invoke;
 
@@ -203,6 +203,7 @@ struct ConfigHelper {
   MockRtpRtcpInterface* rtp_rtcp() { return &rtp_rtcp_; }
   MockChannelSend* channel_send() { return channel_send_; }
   RtpTransportControllerSendInterface* transport() { return &rtp_transport_; }
+  MockBitrateAllocator* bitrate_allocator() { return &bitrate_allocator_; }
 
   static void AddBweToConfig(AudioSendStream::Config* config) {
     config->rtp.extensions.push_back(RtpExtension(
@@ -328,7 +329,7 @@ struct ConfigHelper {
   ::testing::NiceMock<MockRtpTransportControllerSend> rtp_transport_;
   ::testing::NiceMock<MockRtpRtcpInterface> rtp_rtcp_;
   ::testing::NiceMock<MockLimitObserver> limit_observer_;
-  BitrateAllocator bitrate_allocator_;
+  ::testing::NiceMock<MockBitrateAllocator> bitrate_allocator_;
   std::unique_ptr<AudioEncoder> audio_encoder_;
 };
 
@@ -924,5 +925,39 @@ TEST(AudioSendStreamTest, ReconfigureWithFrameEncryptor) {
     send_stream->Reconfigure(new_config, nullptr);
   }
 }
+
+TEST(AudioSendStreamTest, DefaultsHonorsPriorityBitrate) {
+  ConfigHelper helper(true, true, true);
+  ScopedKeyValueConfig field_trials(helper.field_trials,
+                                    "WebRTC-Audio-Allocation/prio_rate:20/");
+  auto send_stream = helper.CreateAudioSendStream();
+  EXPECT_CALL(*helper.bitrate_allocator(), AddObserver(send_stream.get(), _))
+      .WillOnce(Invoke(
+          [&](BitrateAllocatorObserver*, MediaStreamAllocationConfig config) {
+            EXPECT_EQ(config.priority_bitrate_bps, 20000);
+          }));
+  EXPECT_CALL(*helper.channel_send(), StartSend());
+  send_stream->Start();
+  EXPECT_CALL(*helper.channel_send(), StopSend());
+  send_stream->Stop();
+}
+
+TEST(AudioSendStreamTest, OverridesPriorityBitrate) {
+  ConfigHelper helper(true, true, true);
+  ScopedKeyValueConfig field_trials(helper.field_trials,
+                                    "WebRTC-Audio-Allocation/prio_rate:20/"
+                                    "WebRTC-Audio-PriorityBitrate/Disabled/");
+  auto send_stream = helper.CreateAudioSendStream();
+  EXPECT_CALL(*helper.bitrate_allocator(), AddObserver(send_stream.get(), _))
+      .WillOnce(Invoke(
+          [&](BitrateAllocatorObserver*, MediaStreamAllocationConfig config) {
+            EXPECT_EQ(config.priority_bitrate_bps, 0);
+          }));
+  EXPECT_CALL(*helper.channel_send(), StartSend());
+  send_stream->Start();
+  EXPECT_CALL(*helper.channel_send(), StopSend());
+  send_stream->Stop();
+}
+
 }  // namespace test
 }  // namespace webrtc
