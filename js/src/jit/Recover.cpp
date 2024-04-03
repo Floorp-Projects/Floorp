@@ -1624,8 +1624,7 @@ RNewPlainObject::RNewPlainObject(CompactBufferReader& reader) {
 }
 
 bool RNewPlainObject::recover(JSContext* cx, SnapshotIterator& iter) const {
-  Rooted<SharedShape*> shape(cx,
-                             &iter.read().toGCCellPtr().as<Shape>().asShared());
+  Rooted<SharedShape*> shape(cx, &iter.readGCCellPtr().as<Shape>().asShared());
 
   // See CodeGenerator::visitNewPlainObject.
   JSObject* resultObject =
