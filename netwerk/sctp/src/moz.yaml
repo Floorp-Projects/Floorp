@@ -10,8 +10,8 @@ origin:
 
   url: https://github.com/sctplab/usrsctp/blob/master/Manual.md
 
-  release: a0cbf4681474fab1e89d9e9e2d5c3694fce50359 (2023-09-13T13:37:16Z).
-  revision: a0cbf4681474fab1e89d9e9e2d5c3694fce50359
+  release: 2952e9324299c5729ba9f03a87924f787868e494 (2023-11-05T13:52:04Z).
+  revision: 2952e9324299c5729ba9f03a87924f787868e494
 
   license: BSD-3-Clause
 

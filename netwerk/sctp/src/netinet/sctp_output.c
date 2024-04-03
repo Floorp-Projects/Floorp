@@ -5023,7 +5023,9 @@ sctp_lowlevel_chunk_output(struct sctp_inpcb *inp,
 		sctphdr->dest_port = dest_port;
 		sctphdr->v_tag = v_tag;
 		sctphdr->checksum = 0;
-		if (SCTP_BASE_VAR(crc32c_offloaded) == 0) {
+		if (use_zero_crc) {
+			SCTP_STAT_INCR(sctps_sendzerocrc);
+		} else if (SCTP_BASE_VAR(crc32c_offloaded) == 0) {
 			sctphdr->checksum = sctp_calculate_cksum(m, 0);
 			SCTP_STAT_INCR(sctps_sendswcrc);
 		} else {
