@@ -495,16 +495,15 @@ bool MBigIntAdd::writeRecoverData(CompactBufferWriter& writer) const {
 RBigIntAdd::RBigIntAdd(CompactBufferReader& reader) {}
 
 bool RBigIntAdd::recover(JSContext* cx, SnapshotIterator& iter) const {
-  RootedValue lhs(cx, iter.read());
-  RootedValue rhs(cx, iter.read());
-  RootedValue result(cx);
+  Rooted<BigInt*> lhs(cx, iter.readBigInt());
+  Rooted<BigInt*> rhs(cx, iter.readBigInt());
 
-  MOZ_ASSERT(lhs.isBigInt() && rhs.isBigInt());
-  if (!js::AddValues(cx, &lhs, &rhs, &result)) {
+  BigInt* result = BigInt::add(cx, lhs, rhs);
+  if (!result) {
     return false;
   }
 
-  iter.storeInstructionResult(result);
+  iter.storeInstructionResult(BigIntValue(result));
   return true;
 }
 
@@ -517,16 +516,15 @@ bool MBigIntSub::writeRecoverData(CompactBufferWriter& writer) const {
 RBigIntSub::RBigIntSub(CompactBufferReader& reader) {}
 
 bool RBigIntSub::recover(JSContext* cx, SnapshotIterator& iter) const {
-  RootedValue lhs(cx, iter.read());
-  RootedValue rhs(cx, iter.read());
-  RootedValue result(cx);
+  Rooted<BigInt*> lhs(cx, iter.readBigInt());
+  Rooted<BigInt*> rhs(cx, iter.readBigInt());
 
-  MOZ_ASSERT(lhs.isBigInt() && rhs.isBigInt());
-  if (!js::SubValues(cx, &lhs, &rhs, &result)) {
+  BigInt* result = BigInt::sub(cx, lhs, rhs);
+  if (!result) {
     return false;
   }
 
-  iter.storeInstructionResult(result);
+  iter.storeInstructionResult(BigIntValue(result));
   return true;
 }
 
@@ -539,16 +537,15 @@ bool MBigIntMul::writeRecoverData(CompactBufferWriter& writer) const {
 RBigIntMul::RBigIntMul(CompactBufferReader& reader) {}
 
 bool RBigIntMul::recover(JSContext* cx, SnapshotIterator& iter) const {
-  RootedValue lhs(cx, iter.read());
-  RootedValue rhs(cx, iter.read());
-  RootedValue result(cx);
+  Rooted<BigInt*> lhs(cx, iter.readBigInt());
+  Rooted<BigInt*> rhs(cx, iter.readBigInt());
 
-  MOZ_ASSERT(lhs.isBigInt() && rhs.isBigInt());
-  if (!js::MulValues(cx, &lhs, &rhs, &result)) {
+  BigInt* result = BigInt::mul(cx, lhs, rhs);
+  if (!result) {
     return false;
   }
 
-  iter.storeInstructionResult(result);
+  iter.storeInstructionResult(BigIntValue(result));
   return true;
 }
 
@@ -561,18 +558,17 @@ bool MBigIntDiv::writeRecoverData(CompactBufferWriter& writer) const {
 RBigIntDiv::RBigIntDiv(CompactBufferReader& reader) {}
 
 bool RBigIntDiv::recover(JSContext* cx, SnapshotIterator& iter) const {
-  RootedValue lhs(cx, iter.read());
-  RootedValue rhs(cx, iter.read());
-  RootedValue result(cx);
-
-  MOZ_ASSERT(lhs.isBigInt() && rhs.isBigInt());
-  MOZ_ASSERT(!rhs.toBigInt()->isZero(),
+  Rooted<BigInt*> lhs(cx, iter.readBigInt());
+  Rooted<BigInt*> rhs(cx, iter.readBigInt());
+  MOZ_ASSERT(!rhs->isZero(),
              "division by zero throws and therefore can't be recovered");
-  if (!js::DivValues(cx, &lhs, &rhs, &result)) {
+
+  BigInt* result = BigInt::div(cx, lhs, rhs);
+  if (!result) {
     return false;
   }
 
-  iter.storeInstructionResult(result);
+  iter.storeInstructionResult(BigIntValue(result));
   return true;
 }
 
@@ -585,18 +581,17 @@ bool MBigIntMod::writeRecoverData(CompactBufferWriter& writer) const {
 RBigIntMod::RBigIntMod(CompactBufferReader& reader) {}
 
 bool RBigIntMod::recover(JSContext* cx, SnapshotIterator& iter) const {
-  RootedValue lhs(cx, iter.read());
-  RootedValue rhs(cx, iter.read());
-  RootedValue result(cx);
-
-  MOZ_ASSERT(lhs.isBigInt() && rhs.isBigInt());
-  MOZ_ASSERT(!rhs.toBigInt()->isZero(),
+  Rooted<BigInt*> lhs(cx, iter.readBigInt());
+  Rooted<BigInt*> rhs(cx, iter.readBigInt());
+  MOZ_ASSERT(!rhs->isZero(),
              "division by zero throws and therefore can't be recovered");
-  if (!js::ModValues(cx, &lhs, &rhs, &result)) {
+
+  BigInt* result = BigInt::mod(cx, lhs, rhs);
+  if (!result) {
     return false;
   }
 
-  iter.storeInstructionResult(result);
+  iter.storeInstructionResult(BigIntValue(result));
   return true;
 }
 
@@ -609,18 +604,17 @@ bool MBigIntPow::writeRecoverData(CompactBufferWriter& writer) const {
 RBigIntPow::RBigIntPow(CompactBufferReader& reader) {}
 
 bool RBigIntPow::recover(JSContext* cx, SnapshotIterator& iter) const {
-  RootedValue lhs(cx, iter.read());
-  RootedValue rhs(cx, iter.read());
-  RootedValue result(cx);
-
-  MOZ_ASSERT(lhs.isBigInt() && rhs.isBigInt());
-  MOZ_ASSERT(!rhs.toBigInt()->isNegative(),
+  Rooted<BigInt*> lhs(cx, iter.readBigInt());
+  Rooted<BigInt*> rhs(cx, iter.readBigInt());
+  MOZ_ASSERT(!rhs->isNegative(),
              "negative exponent throws and therefore can't be recovered");
-  if (!js::PowValues(cx, &lhs, &rhs, &result)) {
+
+  BigInt* result = BigInt::pow(cx, lhs, rhs);
+  if (!result) {
     return false;
   }
 
-  iter.storeInstructionResult(result);
+  iter.storeInstructionResult(BigIntValue(result));
   return true;
 }
 
@@ -633,16 +627,15 @@ bool MBigIntBitAnd::writeRecoverData(CompactBufferWriter& writer) const {
 RBigIntBitAnd::RBigIntBitAnd(CompactBufferReader& reader) {}
 
 bool RBigIntBitAnd::recover(JSContext* cx, SnapshotIterator& iter) const {
-  RootedValue lhs(cx, iter.read());
-  RootedValue rhs(cx, iter.read());
-  RootedValue result(cx);
+  Rooted<BigInt*> lhs(cx, iter.readBigInt());
+  Rooted<BigInt*> rhs(cx, iter.readBigInt());
 
-  MOZ_ASSERT(lhs.isBigInt() && rhs.isBigInt());
-  if (!js::BitAnd(cx, &lhs, &rhs, &result)) {
+  BigInt* result = BigInt::bitAnd(cx, lhs, rhs);
+  if (!result) {
     return false;
   }
 
-  iter.storeInstructionResult(result);
+  iter.storeInstructionResult(BigIntValue(result));
   return true;
 }
 
@@ -655,16 +648,15 @@ bool MBigIntBitOr::writeRecoverData(CompactBufferWriter& writer) const {
 RBigIntBitOr::RBigIntBitOr(CompactBufferReader& reader) {}
 
 bool RBigIntBitOr::recover(JSContext* cx, SnapshotIterator& iter) const {
-  RootedValue lhs(cx, iter.read());
-  RootedValue rhs(cx, iter.read());
-  RootedValue result(cx);
+  Rooted<BigInt*> lhs(cx, iter.readBigInt());
+  Rooted<BigInt*> rhs(cx, iter.readBigInt());
 
-  MOZ_ASSERT(lhs.isBigInt() && rhs.isBigInt());
-  if (!js::BitOr(cx, &lhs, &rhs, &result)) {
+  BigInt* result = BigInt::bitOr(cx, lhs, rhs);
+  if (!result) {
     return false;
   }
 
-  iter.storeInstructionResult(result);
+  iter.storeInstructionResult(BigIntValue(result));
   return true;
 }
 
@@ -677,16 +669,15 @@ bool MBigIntBitXor::writeRecoverData(CompactBufferWriter& writer) const {
 RBigIntBitXor::RBigIntBitXor(CompactBufferReader& reader) {}
 
 bool RBigIntBitXor::recover(JSContext* cx, SnapshotIterator& iter) const {
-  RootedValue lhs(cx, iter.read());
-  RootedValue rhs(cx, iter.read());
-  RootedValue result(cx);
+  Rooted<BigInt*> lhs(cx, iter.readBigInt());
+  Rooted<BigInt*> rhs(cx, iter.readBigInt());
 
-  MOZ_ASSERT(lhs.isBigInt() && rhs.isBigInt());
-  if (!js::BitXor(cx, &lhs, &rhs, &result)) {
+  BigInt* result = BigInt::bitXor(cx, lhs, rhs);
+  if (!result) {
     return false;
   }
 
-  iter.storeInstructionResult(result);
+  iter.storeInstructionResult(BigIntValue(result));
   return true;
 }
 
@@ -699,16 +690,15 @@ bool MBigIntLsh::writeRecoverData(CompactBufferWriter& writer) const {
 RBigIntLsh::RBigIntLsh(CompactBufferReader& reader) {}
 
 bool RBigIntLsh::recover(JSContext* cx, SnapshotIterator& iter) const {
-  RootedValue lhs(cx, iter.read());
-  RootedValue rhs(cx, iter.read());
-  RootedValue result(cx);
+  Rooted<BigInt*> lhs(cx, iter.readBigInt());
+  Rooted<BigInt*> rhs(cx, iter.readBigInt());
 
-  MOZ_ASSERT(lhs.isBigInt() && rhs.isBigInt());
-  if (!js::BitLsh(cx, &lhs, &rhs, &result)) {
+  BigInt* result = BigInt::lsh(cx, lhs, rhs);
+  if (!result) {
     return false;
   }
 
-  iter.storeInstructionResult(result);
+  iter.storeInstructionResult(BigIntValue(result));
   return true;
 }
 
@@ -721,16 +711,15 @@ bool MBigIntRsh::writeRecoverData(CompactBufferWriter& writer) const {
 RBigIntRsh::RBigIntRsh(CompactBufferReader& reader) {}
 
 bool RBigIntRsh::recover(JSContext* cx, SnapshotIterator& iter) const {
-  RootedValue lhs(cx, iter.read());
-  RootedValue rhs(cx, iter.read());
-  RootedValue result(cx);
+  Rooted<BigInt*> lhs(cx, iter.readBigInt());
+  Rooted<BigInt*> rhs(cx, iter.readBigInt());
 
-  MOZ_ASSERT(lhs.isBigInt() && rhs.isBigInt());
-  if (!js::BitRsh(cx, &lhs, &rhs, &result)) {
+  BigInt* result = BigInt::rsh(cx, lhs, rhs);
+  if (!result) {
     return false;
   }
 
-  iter.storeInstructionResult(result);
+  iter.storeInstructionResult(BigIntValue(result));
   return true;
 }
 
@@ -743,15 +732,14 @@ bool MBigIntIncrement::writeRecoverData(CompactBufferWriter& writer) const {
 RBigIntIncrement::RBigIntIncrement(CompactBufferReader& reader) {}
 
 bool RBigIntIncrement::recover(JSContext* cx, SnapshotIterator& iter) const {
-  RootedValue operand(cx, iter.read());
-  RootedValue result(cx);
+  Rooted<BigInt*> operand(cx, iter.readBigInt());
 
-  MOZ_ASSERT(operand.isBigInt());
-  if (!js::IncOperation(cx, operand, &result)) {
+  BigInt* result = BigInt::inc(cx, operand);
+  if (!result) {
     return false;
   }
 
-  iter.storeInstructionResult(result);
+  iter.storeInstructionResult(BigIntValue(result));
   return true;
 }
 
@@ -764,15 +752,14 @@ bool MBigIntDecrement::writeRecoverData(CompactBufferWriter& writer) const {
 RBigIntDecrement::RBigIntDecrement(CompactBufferReader& reader) {}
 
 bool RBigIntDecrement::recover(JSContext* cx, SnapshotIterator& iter) const {
-  RootedValue operand(cx, iter.read());
-  RootedValue result(cx);
+  Rooted<BigInt*> operand(cx, iter.readBigInt());
 
-  MOZ_ASSERT(operand.isBigInt());
-  if (!js::DecOperation(cx, operand, &result)) {
+  BigInt* result = BigInt::dec(cx, operand);
+  if (!result) {
     return false;
   }
 
-  iter.storeInstructionResult(result);
+  iter.storeInstructionResult(BigIntValue(result));
   return true;
 }
 
@@ -785,15 +772,14 @@ bool MBigIntNegate::writeRecoverData(CompactBufferWriter& writer) const {
 RBigIntNegate::RBigIntNegate(CompactBufferReader& reader) {}
 
 bool RBigIntNegate::recover(JSContext* cx, SnapshotIterator& iter) const {
-  RootedValue operand(cx, iter.read());
-  RootedValue result(cx);
+  Rooted<BigInt*> operand(cx, iter.readBigInt());
 
-  MOZ_ASSERT(operand.isBigInt());
-  if (!js::NegOperation(cx, &operand, &result)) {
+  BigInt* result = BigInt::neg(cx, operand);
+  if (!result) {
     return false;
   }
 
-  iter.storeInstructionResult(result);
+  iter.storeInstructionResult(BigIntValue(result));
   return true;
 }
 
@@ -806,15 +792,14 @@ bool MBigIntBitNot::writeRecoverData(CompactBufferWriter& writer) const {
 RBigIntBitNot::RBigIntBitNot(CompactBufferReader& reader) {}
 
 bool RBigIntBitNot::recover(JSContext* cx, SnapshotIterator& iter) const {
-  RootedValue operand(cx, iter.read());
-  RootedValue result(cx);
+  Rooted<BigInt*> operand(cx, iter.readBigInt());
 
-  MOZ_ASSERT(operand.isBigInt());
-  if (!js::BitNot(cx, &operand, &result)) {
+  BigInt* result = BigInt::bitNot(cx, operand);
+  if (!result) {
     return false;
   }
 
-  iter.storeInstructionResult(result);
+  iter.storeInstructionResult(BigIntValue(result));
   return true;
 }
 
