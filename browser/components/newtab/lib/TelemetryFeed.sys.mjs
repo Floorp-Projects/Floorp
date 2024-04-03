@@ -722,6 +722,7 @@ export class TelemetryFeed {
           shim,
           fetchTimestamp,
           firstVisibleTimestamp,
+          feature,
         } = action.data.value ?? {};
         if (
           action.data.source === "POPULAR_TOPICS" ||
@@ -730,6 +731,11 @@ export class TelemetryFeed {
           Glean.pocket.topicClick.record({
             newtab_visit_id: session.session_id,
             topic,
+          });
+        } else if (action.data.source === "FEATURE_HIGHLIGHT") {
+          Glean.newtab.tooltipClick.record({
+            newtab_visit_id: session.session_id,
+            feature,
           });
         } else if (["spoc", "organic"].includes(card_type)) {
           Glean.pocket.click.record({
