@@ -14,7 +14,7 @@ use crate::error::{ErrorStatus, WebDriverError, WebDriverResult};
 use crate::httpapi::{Route, VoidWebDriverExtensionRoute, WebDriverExtensionRoute};
 use crate::Parameters;
 use serde::de::{self, Deserialize, Deserializer};
-use serde_json::{self, Value};
+use serde_json::Value;
 
 #[derive(Debug, PartialEq)]
 pub enum WebDriverCommand<T: WebDriverExtensionCommand> {

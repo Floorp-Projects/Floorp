@@ -7,7 +7,6 @@ use http::StatusCode;
 use serde::de::{Deserialize, Deserializer};
 use serde::ser::{Serialize, Serializer};
 use std::borrow::Cow;
-use std::convert::From;
 use std::error;
 use std::io;
 use thiserror::Error;
