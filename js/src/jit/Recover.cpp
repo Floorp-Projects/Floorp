@@ -2046,7 +2046,7 @@ bool RBigIntAsIntN::recover(JSContext* cx, SnapshotIterator& iter) const {
   int32_t bits = iter.readInt32();
   MOZ_ASSERT(bits >= 0);
 
-  RootedBigInt input(cx, iter.read().toBigInt());
+  RootedBigInt input(cx, iter.readBigInt());
 
   BigInt* result = BigInt::asIntN(cx, input, bits);
   if (!result) {
@@ -2070,7 +2070,7 @@ bool RBigIntAsUintN::recover(JSContext* cx, SnapshotIterator& iter) const {
   int32_t bits = iter.readInt32();
   MOZ_ASSERT(bits >= 0);
 
-  RootedBigInt input(cx, iter.read().toBigInt());
+  RootedBigInt input(cx, iter.readBigInt());
 
   BigInt* result = BigInt::asUintN(cx, input, bits);
   if (!result) {
