@@ -18,14 +18,14 @@ case "$TARGET" in
   COMPRESS_EXT=zip
   . $GECKO_PATH/taskcluster/scripts/misc/vs-setup.sh
   # Bug 1584530: don't require the Microsoft MSVC runtime to be installed.
-  export RUSTFLAGS="-Ctarget-feature=+crt-static -C linker=$MOZ_FETCHES_DIR/clang/bin/lld-link"
+  RUSTFLAGS="-Ctarget-feature=+crt-static -C linker=$MOZ_FETCHES_DIR/clang/bin/lld-link"
   export TARGET_CFLAGS="-Xclang -ivfsoverlay -Xclang $MOZ_FETCHES_DIR/vs/overlay.yaml"
   export TARGET_CXXFLAGS="-Xclang -ivfsoverlay -Xclang $MOZ_FETCHES_DIR/vs/overlay.yaml"
   ;;
 # OSX cross builds are a bit harder
 *-apple-darwin)
   export PATH="$MOZ_FETCHES_DIR/clang/bin:$PATH"
-  export RUSTFLAGS="-C linker=$GECKO_PATH/taskcluster/scripts/misc/osx-cross-linker"
+  RUSTFLAGS="-C linker=$GECKO_PATH/taskcluster/scripts/misc/osx-cross-linker"
   if test "$TARGET" = "aarch64-apple-darwin"; then
       export MACOSX_DEPLOYMENT_TARGET=11.0
   else
@@ -33,11 +33,12 @@ case "$TARGET" in
   fi
   ;;
 aarch64-unknown-linux-musl)
-  export RUSTFLAGS="-C linker=$MOZ_FETCHES_DIR/clang/bin/clang -C link-arg=--target=$TARGET -C link-arg=-fuse-ld=lld"
+  RUSTFLAGS="-C linker=$MOZ_FETCHES_DIR/clang/bin/clang -C link-arg=--target=$TARGET -C link-arg=-fuse-ld=lld"
   ;;
 esac
 
 export PATH="$MOZ_FETCHES_DIR/rustc/bin:$PATH"
+export RUSTFLAGS="-Dwarnings $RUSTFLAGS"
 
 cd $GECKO_PATH/testing/geckodriver
 
