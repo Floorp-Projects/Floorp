@@ -297,6 +297,10 @@ var allowlist = [
   { file: "chrome://browser/content/screenshots/copy.svg" },
   { file: "chrome://browser/content/screenshots/download.svg" },
   { file: "chrome://browser/content/screenshots/download-white.svg" },
+    
+  // A debug tool that is only available in Nightly builds, and is accessed
+  // directly by developers via the chrome URI (bug 1888491)
+  { file: "chrome://browser/content/backup/debug.html" },  
 ];
 
 if (AppConstants.platform != "win") {
