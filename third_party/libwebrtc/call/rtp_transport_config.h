@@ -38,6 +38,10 @@ struct RtpTransportConfig {
 
   // The burst interval of the pacer, see TaskQueuePacedSender constructor.
   absl::optional<TimeDelta> pacer_burst_interval;
+
+  // A bandwith estimation probe may be sent on a writable Rtp stream that have
+  // RTX configured. It can be sent without first sending media packets.
+  bool allow_bandwidth_estimation_probe_without_media = false;
 };
 }  // namespace webrtc
 

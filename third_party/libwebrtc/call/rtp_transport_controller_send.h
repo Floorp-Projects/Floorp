@@ -150,6 +150,7 @@ class RtpTransportControllerSend final
 
   const Environment env_;
   SequenceChecker sequence_checker_;
+  const bool allow_bandwidth_estimation_probe_without_media_;
   TaskQueueBase* task_queue_;
   PacketRouter packet_router_;
   std::vector<std::unique_ptr<RtpVideoSenderInterface>> video_rtp_senders_

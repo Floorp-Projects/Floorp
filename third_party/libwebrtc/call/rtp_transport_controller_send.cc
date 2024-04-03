@@ -70,6 +70,8 @@ bool IsRelayed(const rtc::NetworkRoute& route) {
 RtpTransportControllerSend::RtpTransportControllerSend(
     const RtpTransportConfig& config)
     : env_(config.env),
+      allow_bandwidth_estimation_probe_without_media_(
+          config.allow_bandwidth_estimation_probe_without_media),
       task_queue_(TaskQueueBase::Current()),
       bitrate_configurator_(config.bitrate_config),
       pacer_started_(false),
@@ -165,6 +167,9 @@ void RtpTransportControllerSend::RegisterSendingRtpStream(
   // Allow pacer to send packets using this module.
   packet_router_.AddSendRtpModule(&rtp_module,
                                   /*remb_candidate=*/true);
+  pacer_.SetAllowProbeWithoutMediaPacket(
+      allow_bandwidth_estimation_probe_without_media_ &&
+      packet_router_.SupportsRtxPayloadPadding());
 }
 
 void RtpTransportControllerSend::DeRegisterSendingRtpStream(
@@ -182,6 +187,9 @@ void RtpTransportControllerSend::DeRegisterSendingRtpStream(
   if (rtp_module.FlexfecSsrc().has_value()) {
     pacer_.RemovePacketsForSsrc(*rtp_module.FlexfecSsrc());
   }
+  pacer_.SetAllowProbeWithoutMediaPacket(
+      allow_bandwidth_estimation_probe_without_media_ &&
+      packet_router_.SupportsRtxPayloadPadding());
 }
 
 void RtpTransportControllerSend::UpdateControlState() {

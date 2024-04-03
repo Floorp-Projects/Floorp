@@ -252,6 +252,10 @@ void PacingController::SetSendBurstInterval(TimeDelta burst_interval) {
   send_burst_interval_ = burst_interval;
 }
 
+void PacingController::SetAllowProbeWithoutMediaPacket(bool allow) {
+  prober_.SetAllowProbeWithoutMediaPacket(allow);
+}
+
 TimeDelta PacingController::ExpectedQueueTime() const {
   RTC_DCHECK_GT(adjusted_media_rate_, DataRate::Zero());
   return QueueSizeData() / adjusted_media_rate_;
