@@ -167,6 +167,8 @@ if (rtc_include_tests) {
       "../api:mock_audio_mixer",
       "../api:mock_frame_decryptor",
       "../api:mock_frame_encryptor",
+      "../api:mock_frame_transformer",
+      "../api:mock_transformable_audio_frame",
       "../api:scoped_refptr",
       "../api/audio:audio_frame_api",
       "../api/audio_codecs:audio_codecs_api",
@@ -210,8 +212,6 @@ if (rtc_include_tests) {
       "../system_wrappers",
       "../test:audio_codec_mocks",
       "../test:field_trial",
-      "../test:mock_frame_transformer",
-      "../test:mock_transformable_frame",
       "../test:mock_transport",
       "../test:rtp_test_utils",
       "../test:run_loop",
@@ -234,6 +234,7 @@ if (rtc_include_tests) {
     sources = [ "channel_receive_unittest.cc" ]
     deps = [
       ":audio",
+      "../api:mock_frame_transformer",
       "../api/audio_codecs:builtin_audio_decoder_factory",
       "../api/crypto:frame_decryptor_interface",
       "../api/task_queue:default_task_queue_factory",
@@ -245,7 +246,6 @@ if (rtc_include_tests) {
       "../rtc_base:logging",
       "../rtc_base:threading",
       "../test:audio_codec_mocks",
-      "../test:mock_frame_transformer",
       "../test:mock_transport",
       "../test:test_support",
       "../test/time_controller",

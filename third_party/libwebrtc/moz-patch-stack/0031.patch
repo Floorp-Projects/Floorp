@@ -206,7 +206,7 @@ index 571049f3e4..f393179bbb 100644
      } else {
        deps += [
 diff --git a/api/BUILD.gn b/api/BUILD.gn
-index 08e33ca92e..2041d567bd 100644
+index dce687e76b..fe97e1491a 100644
 --- a/api/BUILD.gn
 +++ b/api/BUILD.gn
 @@ -40,6 +40,9 @@ rtc_source_set("enable_media") {
@@ -470,7 +470,7 @@ index 84a0968ee9..c0209bf0d0 100644
  if (rtc_include_tests) {
    rtc_source_set("test_feedback_generator_interface") {
 diff --git a/call/BUILD.gn b/call/BUILD.gn
-index 41ed587950..cca88ea7bb 100644
+index f716f4571a..24b324fef8 100644
 --- a/call/BUILD.gn
 +++ b/call/BUILD.gn
 @@ -44,7 +44,7 @@ rtc_library("call_interfaces") {
@@ -1245,7 +1245,7 @@ index 77f5139a2f..486b37590c 100644
      deps += [
        "..:logging",
 diff --git a/test/BUILD.gn b/test/BUILD.gn
-index d6b2b989ad..b3f4548f2a 100644
+index 185f12c3ed..f7ab381f5e 100644
 --- a/test/BUILD.gn
 +++ b/test/BUILD.gn
 @@ -239,6 +239,7 @@ rtc_library("audio_test_common") {
@@ -1287,7 +1287,7 @@ index d6b2b989ad..b3f4548f2a 100644
      sources += [ "testsupport/jpeg_frame_writer.cc" ]
    } else {
      sources += [ "testsupport/jpeg_frame_writer_ios.cc" ]
-@@ -1333,6 +1341,7 @@ if (!build_with_chromium) {
+@@ -1311,6 +1319,7 @@ if (!build_with_chromium) {
    }
  }
  
@@ -1295,7 +1295,7 @@ index d6b2b989ad..b3f4548f2a 100644
  if (!build_with_chromium && is_android) {
    rtc_android_library("native_test_java") {
      testonly = true
-@@ -1346,6 +1355,7 @@ if (!build_with_chromium && is_android) {
+@@ -1324,6 +1333,7 @@ if (!build_with_chromium && is_android) {
      ]
    }
  }
@@ -1304,7 +1304,7 @@ index d6b2b989ad..b3f4548f2a 100644
  rtc_library("call_config_utils") {
    testonly = true
 diff --git a/video/BUILD.gn b/video/BUILD.gn
-index 0891a31f7b..2d6d8ab10c 100644
+index 5a114c5fb7..ddd938a1a7 100644
 --- a/video/BUILD.gn
 +++ b/video/BUILD.gn
 @@ -17,7 +17,7 @@ rtc_library("video_stream_encoder_interface") {
