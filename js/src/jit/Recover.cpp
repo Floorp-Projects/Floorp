@@ -1469,7 +1469,7 @@ bool MRegExpMatcher::writeRecoverData(CompactBufferWriter& writer) const {
 RRegExpMatcher::RRegExpMatcher(CompactBufferReader& reader) {}
 
 bool RRegExpMatcher::recover(JSContext* cx, SnapshotIterator& iter) const {
-  RootedObject regexp(cx, &iter.read().toObject());
+  RootedObject regexp(cx, iter.readObject());
   RootedString input(cx, iter.readString());
 
   // Int32 because |lastIndex| is computed from transpiled self-hosted call.
@@ -1590,7 +1590,7 @@ bool MNewObject::writeRecoverData(CompactBufferWriter& writer) const {
 RNewObject::RNewObject(CompactBufferReader& reader) {}
 
 bool RNewObject::recover(JSContext* cx, SnapshotIterator& iter) const {
-  RootedObject templateObject(cx, &iter.read().toObject());
+  RootedObject templateObject(cx, iter.readObject());
 
   // See CodeGenerator::visitNewObjectVMCall.
   // Note that recover instructions are only used if mode == ObjectCreate.
@@ -1678,7 +1678,7 @@ bool MNewTypedArray::writeRecoverData(CompactBufferWriter& writer) const {
 RNewTypedArray::RNewTypedArray(CompactBufferReader& reader) {}
 
 bool RNewTypedArray::recover(JSContext* cx, SnapshotIterator& iter) const {
-  RootedObject templateObject(cx, &iter.read().toObject());
+  RootedObject templateObject(cx, iter.readObject());
 
   size_t length = templateObject.as<FixedLengthTypedArrayObject>()->length();
   MOZ_ASSERT(length <= INT32_MAX,
@@ -1706,7 +1706,7 @@ RNewArray::RNewArray(CompactBufferReader& reader) {
 }
 
 bool RNewArray::recover(JSContext* cx, SnapshotIterator& iter) const {
-  RootedObject templateObject(cx, &iter.read().toObject());
+  RootedObject templateObject(cx, iter.readObject());
   Rooted<Shape*> shape(cx, templateObject->shape());
 
   ArrayObject* resultObject = NewArrayWithShape(cx, count_, shape);
@@ -1730,7 +1730,7 @@ RNewIterator::RNewIterator(CompactBufferReader& reader) {
 }
 
 bool RNewIterator::recover(JSContext* cx, SnapshotIterator& iter) const {
-  RootedObject templateObject(cx, &iter.read().toObject());
+  RootedObject templateObject(cx, iter.readObject());
 
   JSObject* resultObject = nullptr;
   switch (MNewIterator::Type(type_)) {
@@ -1762,8 +1762,8 @@ bool MLambda::writeRecoverData(CompactBufferWriter& writer) const {
 RLambda::RLambda(CompactBufferReader& reader) {}
 
 bool RLambda::recover(JSContext* cx, SnapshotIterator& iter) const {
-  RootedObject scopeChain(cx, &iter.read().toObject());
-  RootedFunction fun(cx, &iter.read().toObject().as<JSFunction>());
+  RootedObject scopeChain(cx, iter.readObject());
+  RootedFunction fun(cx, &iter.readObject()->as<JSFunction>());
 
   JSObject* resultObject = js::Lambda(cx, fun, scopeChain);
   if (!resultObject) {
@@ -1783,9 +1783,9 @@ bool MFunctionWithProto::writeRecoverData(CompactBufferWriter& writer) const {
 RFunctionWithProto::RFunctionWithProto(CompactBufferReader& reader) {}
 
 bool RFunctionWithProto::recover(JSContext* cx, SnapshotIterator& iter) const {
-  RootedObject scopeChain(cx, &iter.read().toObject());
-  RootedObject prototype(cx, &iter.read().toObject());
-  RootedFunction fun(cx, &iter.read().toObject().as<JSFunction>());
+  RootedObject scopeChain(cx, iter.readObject());
+  RootedObject prototype(cx, iter.readObject());
+  RootedFunction fun(cx, &iter.readObject()->as<JSFunction>());
 
   JSObject* resultObject =
       js::FunWithProtoOperation(cx, fun, scopeChain, prototype);
@@ -1806,7 +1806,7 @@ bool MNewCallObject::writeRecoverData(CompactBufferWriter& writer) const {
 RNewCallObject::RNewCallObject(CompactBufferReader& reader) {}
 
 bool RNewCallObject::recover(JSContext* cx, SnapshotIterator& iter) const {
-  Rooted<CallObject*> templateObj(cx, &iter.read().toObject().as<CallObject>());
+  Rooted<CallObject*> templateObj(cx, &iter.readObject()->as<CallObject>());
 
   Rooted<SharedShape*> shape(cx, templateObj->sharedShape());
 
@@ -1834,7 +1834,7 @@ bool MObjectKeys::writeRecoverData(CompactBufferWriter& writer) const {
 RObjectKeys::RObjectKeys(CompactBufferReader& reader) {}
 
 bool RObjectKeys::recover(JSContext* cx, SnapshotIterator& iter) const {
-  Rooted<JSObject*> obj(cx, &iter.read().toObject());
+  Rooted<JSObject*> obj(cx, iter.readObject());
 
   JSObject* resultKeys = ObjectKeys(cx, obj);
   if (!resultKeys) {
@@ -1857,7 +1857,7 @@ RObjectState::RObjectState(CompactBufferReader& reader) {
 }
 
 bool RObjectState::recover(JSContext* cx, SnapshotIterator& iter) const {
-  RootedObject object(cx, &iter.read().toObject());
+  RootedObject object(cx, iter.readObject());
   Handle<NativeObject*> nativeObject = object.as<NativeObject>();
   MOZ_ASSERT(!Watchtower::watchesPropertyModification(nativeObject));
   MOZ_ASSERT(nativeObject->slotSpan() == numSlots());
@@ -1883,7 +1883,7 @@ RArrayState::RArrayState(CompactBufferReader& reader) {
 }
 
 bool RArrayState::recover(JSContext* cx, SnapshotIterator& iter) const {
-  ArrayObject* object = &iter.read().toObject().as<ArrayObject>();
+  ArrayObject* object = &iter.readObject()->as<ArrayObject>();
 
   // Int32 because |initLength| is computed from MConstant.
   uint32_t initLength = iter.readInt32();
@@ -1923,7 +1923,7 @@ bool MSetArrayLength::canRecoverOnBailout() const {
 RSetArrayLength::RSetArrayLength(CompactBufferReader& reader) {}
 
 bool RSetArrayLength::recover(JSContext* cx, SnapshotIterator& iter) const {
-  Rooted<ArrayObject*> obj(cx, &iter.read().toObject().as<ArrayObject>());
+  Rooted<ArrayObject*> obj(cx, &iter.readObject()->as<ArrayObject>());
   RootedValue len(cx, iter.read());
 
   RootedId id(cx, NameToId(cx->names().length));
@@ -2092,7 +2092,7 @@ RCreateArgumentsObject::RCreateArgumentsObject(CompactBufferReader& reader) {}
 
 bool RCreateArgumentsObject::recover(JSContext* cx,
                                      SnapshotIterator& iter) const {
-  RootedObject callObject(cx, &iter.read().toObject());
+  RootedObject callObject(cx, iter.readObject());
   RootedObject result(
       cx, ArgumentsObject::createForIon(cx, iter.frame(), callObject));
   if (!result) {
@@ -2119,8 +2119,8 @@ RCreateInlinedArgumentsObject::RCreateInlinedArgumentsObject(
 
 bool RCreateInlinedArgumentsObject::recover(JSContext* cx,
                                             SnapshotIterator& iter) const {
-  RootedObject callObject(cx, &iter.read().toObject());
-  RootedFunction callee(cx, &iter.read().toObject().as<JSFunction>());
+  RootedObject callObject(cx, iter.readObject());
+  RootedFunction callee(cx, &iter.readObject()->as<JSFunction>());
 
   JS::RootedValueArray<ArgumentsObject::MaxInlinedArgs> argsArray(cx);
   for (uint32_t i = 0; i < numActuals_; i++) {

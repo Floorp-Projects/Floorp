@@ -519,6 +519,12 @@ class SnapshotIterator {
     return val.toBigInt();
   }
 
+  JSObject* readObject() {
+    Value val = read();
+    MOZ_RELEASE_ASSERT(val.isObject());
+    return &val.toObject();
+  }
+
   // Read the |Normal| value unless it is not available and that the snapshot
   // provides a |Default| value. This is useful to avoid invalidations of the
   // frame while we are only interested in a few properties which are provided
