@@ -199,8 +199,8 @@ class RTC_EXPORT Port : public PortInterface, public sigslot::has_slots<> {
   // Note that the port type does NOT uniquely identify different subclasses of
   // Port. Use the 2-tuple of the port type AND the protocol (GetProtocol()) to
   // uniquely identify subclasses. Whenever a new subclass of Port introduces a
-  // conflit in the value of the 2-tuple, make sure that the implementation that
-  // relies on this 2-tuple for RTTI is properly changed.
+  // conflict in the value of the 2-tuple, make sure that the implementation
+  // that relies on this 2-tuple for RTTI is properly changed.
   const absl::string_view Type() const override;
   const rtc::Network* Network() const override;
 
@@ -525,9 +525,8 @@ class RTC_EXPORT Port : public PortInterface, public sigslot::has_slots<> {
                              webrtc::FieldTrialBasedConfig>
       field_trials_;
 
-  bool MaybeObfuscateAddress(Candidate* c,
-                             absl::string_view type,
-                             bool is_final) RTC_RUN_ON(thread_);
+  bool MaybeObfuscateAddress(const Candidate& c, bool is_final)
+      RTC_RUN_ON(thread_);
 
   webrtc::CallbackList<PortInterface*> port_destroyed_callback_list_;
 };

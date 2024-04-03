@@ -259,14 +259,18 @@ void Port::AddAddress(const rtc::SocketAddress& address,
                       absl::string_view url,
                       bool is_final) {
   RTC_DCHECK_RUN_ON(thread_);
-  if (protocol == TCP_PROTOCOL_NAME && type == LOCAL_PORT_TYPE) {
-    RTC_DCHECK(!tcptype.empty());
-  }
 
   std::string foundation =
       ComputeFoundation(type, protocol, relay_protocol, base_address);
   Candidate c(component_, protocol, address, 0U, username_fragment(), password_,
               type, generation_, foundation, network_->id(), network_cost_);
+
+#if RTC_DCHECK_IS_ON
+  if (protocol == TCP_PROTOCOL_NAME && c.is_local()) {
+    RTC_DCHECK(!tcptype.empty());
+  }
+#endif
+
   c.set_relay_protocol(relay_protocol);
   c.set_priority(
       c.GetPriority(type_preference, network_->preference(), relay_preference,
@@ -279,26 +283,24 @@ void Port::AddAddress(const rtc::SocketAddress& address,
   c.set_url(url);
   c.set_related_address(related_address);
 
-  bool pending = MaybeObfuscateAddress(&c, type, is_final);
+  bool pending = MaybeObfuscateAddress(c, is_final);
 
   if (!pending) {
     FinishAddingAddress(c, is_final);
   }
 }
 
-bool Port::MaybeObfuscateAddress(Candidate* c,
-                                 absl::string_view type,
-                                 bool is_final) {
+bool Port::MaybeObfuscateAddress(const Candidate& c, bool is_final) {
   // TODO(bugs.webrtc.org/9723): Use a config to control the feature of IP
   // handling with mDNS.
   if (network_->GetMdnsResponder() == nullptr) {
     return false;
   }
-  if (type != LOCAL_PORT_TYPE) {
+  if (!c.is_local()) {
     return false;
   }
 
-  auto copy = *c;
+  auto copy = c;
   auto weak_ptr = weak_factory_.GetWeakPtr();
   auto callback = [weak_ptr, copy, is_final](const rtc::IPAddress& addr,
                                              absl::string_view name) mutable {

@@ -104,13 +104,7 @@ uint32_t ConvertIceTransportTypeToCandidateFilter(
 IceCandidatePairType GetIceCandidatePairCounter(
     const cricket::Candidate& local,
     const cricket::Candidate& remote) {
-  const auto& l = local.type();
-  const auto& r = remote.type();
-  const auto& host = cricket::LOCAL_PORT_TYPE;
-  const auto& srflx = cricket::STUN_PORT_TYPE;
-  const auto& relay = cricket::RELAY_PORT_TYPE;
-  const auto& prflx = cricket::PRFLX_PORT_TYPE;
-  if (l == host && r == host) {
+  if (local.is_local() && remote.is_local()) {
     bool local_hostname =
         !local.address().hostname().empty() && local.address().IsUnresolvedIP();
     bool remote_hostname = !remote.address().hostname().empty() &&
@@ -143,34 +137,41 @@ IceCandidatePairType GetIceCandidatePairCounter(
       }
     }
   }
-  if (l == host && r == srflx)
-    return kIceCandidatePairHostSrflx;
-  if (l == host && r == relay)
-    return kIceCandidatePairHostRelay;
-  if (l == host && r == prflx)
-    return kIceCandidatePairHostPrflx;
-  if (l == srflx && r == host)
-    return kIceCandidatePairSrflxHost;
-  if (l == srflx && r == srflx)
-    return kIceCandidatePairSrflxSrflx;
-  if (l == srflx && r == relay)
-    return kIceCandidatePairSrflxRelay;
-  if (l == srflx && r == prflx)
-    return kIceCandidatePairSrflxPrflx;
-  if (l == relay && r == host)
-    return kIceCandidatePairRelayHost;
-  if (l == relay && r == srflx)
-    return kIceCandidatePairRelaySrflx;
-  if (l == relay && r == relay)
-    return kIceCandidatePairRelayRelay;
-  if (l == relay && r == prflx)
-    return kIceCandidatePairRelayPrflx;
-  if (l == prflx && r == host)
-    return kIceCandidatePairPrflxHost;
-  if (l == prflx && r == srflx)
-    return kIceCandidatePairPrflxSrflx;
-  if (l == prflx && r == relay)
-    return kIceCandidatePairPrflxRelay;
+
+  if (local.is_local()) {
+    if (remote.is_stun())
+      return kIceCandidatePairHostSrflx;
+    if (remote.is_relay())
+      return kIceCandidatePairHostRelay;
+    if (remote.is_prflx())
+      return kIceCandidatePairHostPrflx;
+  } else if (local.is_stun()) {
+    if (remote.is_local())
+      return kIceCandidatePairSrflxHost;
+    if (remote.is_stun())
+      return kIceCandidatePairSrflxSrflx;
+    if (remote.is_relay())
+      return kIceCandidatePairSrflxRelay;
+    if (remote.is_prflx())
+      return kIceCandidatePairSrflxPrflx;
+  } else if (local.is_relay()) {
+    if (remote.is_local())
+      return kIceCandidatePairRelayHost;
+    if (remote.is_stun())
+      return kIceCandidatePairRelaySrflx;
+    if (remote.is_relay())
+      return kIceCandidatePairRelayRelay;
+    if (remote.is_prflx())
+      return kIceCandidatePairRelayPrflx;
+  } else if (local.is_prflx()) {
+    if (remote.is_local())
+      return kIceCandidatePairPrflxHost;
+    if (remote.is_stun())
+      return kIceCandidatePairPrflxSrflx;
+    if (remote.is_relay())
+      return kIceCandidatePairPrflxRelay;
+  }
+
   return kIceCandidatePairMax;
 }
 
