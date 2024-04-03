@@ -201,6 +201,12 @@ JS_PUBLIC_API bool JS::ModuleEvaluate(JSContext* cx,
   CHECK_THREAD(cx);
   cx->releaseCheck(moduleRecord);
 
+  cx->isEvaluatingModule++;
+  auto guard = mozilla::MakeScopeExit([cx] {
+    MOZ_ASSERT(cx->isEvaluatingModule != 0);
+    cx->isEvaluatingModule--;
+  });
+
   if (moduleRecord.as<ModuleObject>()->hasSyntheticModuleFields()) {
     return SyntheticModuleEvaluate(cx, moduleRecord.as<ModuleObject>(), rval);
   }

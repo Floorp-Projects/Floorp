@@ -1313,6 +1313,13 @@ static bool DrainJobQueue(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+  if (cx->isEvaluatingModule != 0) {
+    JS_ReportErrorASCII(
+        cx,
+        "Can't drain the job queue when executing the top level of a module");
+    return false;
+  }
+
   RunShellJobs(cx);
 
   if (GetShellContext(cx)->quitting) {

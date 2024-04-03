@@ -806,6 +806,7 @@ JS_PUBLIC_API void js::RestartDrainingJobQueue(JSContext* cx) {
 
 JS_PUBLIC_API void js::RunJobs(JSContext* cx) {
   MOZ_ASSERT(cx->jobQueue);
+  MOZ_ASSERT(cx->isEvaluatingModule == 0);
   cx->jobQueue->runJobs(cx);
   JS::ClearKeptObjects(cx);
 }
@@ -999,6 +1000,7 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
 #else
       regExpSearcherLastLimit(this, 0),
 #endif
+      isEvaluatingModule(this, 0),
       frontendCollectionPool_(this),
       suppressProfilerSampling(false),
       tempLifoAlloc_(this, (size_t)TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
