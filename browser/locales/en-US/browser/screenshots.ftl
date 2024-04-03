@@ -23,8 +23,6 @@ screenshots-copy-button-title =
   .title = Copy screenshot to clipboard
 screenshots-cancel-button-title =
   .title = Cancel
-screenshots-retry-button-title =
-  .title = Retry screenshot
 
 screenshots-meta-key = {
   PLATFORM() ->
@@ -58,3 +56,46 @@ screenshots-generic-error-details = We’re not sure what just happened. Care to
 
 screenshots-too-large-error-title = Your screenshot was cropped because it was too large
 screenshots-too-large-error-details = Try selecting a region that’s smaller than 32,700 pixels on its longest side or 124,900,000 pixels total area.
+
+screenshots-component-retry-button =
+  .title = Retry screenshot
+  .aria-label = Retry screenshot
+
+screenshots-component-cancel-button =
+  .title =
+    { PLATFORM() ->
+      [macos] Cancel (esc)
+     *[other] Cancel (Esc)
+    }
+  .aria-label = Cancel
+
+# Variables
+#   $shortcut (String) - A keyboard shortcut for copying the screenshot.
+screenshots-component-copy-button =
+  .title = Copy ({ $shortcut })
+  .aria-label = Copy
+
+screenshots-component-copy-button-label = Copy
+
+# Variables
+#   $shortcut (String) - A keyboard shortcut for saving/downloading the screenshot.
+screenshots-component-download-button =
+  .title = Download ({ $shortcut })
+  .aria-label = Download
+
+screenshots-component-download-button-label = Download
+
+## The below strings are used to capture keydown events so the strings should
+## not be changed unless the keyboard layout in the locale requires it.
+
+screenshots-component-download-key = S
+screenshots-component-copy-key = C
+
+##
+
+# This string represents the selection size area
+# "x" here represents "by" (i.e 123 by 456)
+# Variables:
+#   $width (Number) - The width of the selection region in pixels
+#   $height (Number) - The height of the selection region in pixels
+screenshots-overlay-selection-region-size-2 = { $width } x { $height }

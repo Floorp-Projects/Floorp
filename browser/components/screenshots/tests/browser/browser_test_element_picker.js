@@ -43,14 +43,14 @@ add_task(async function test_element_picker() {
       );
 
       mouse.click(10, 10);
-      await helper.waitForStateChange("crosshairs");
+      await helper.waitForStateChange(["crosshairs"]);
 
       let hoverElementRegionValid = await helper.isHoverElementRegionValid();
 
       ok(!hoverElementRegionValid, "Hover element rect is null");
 
       mouse.click(10, 10);
-      await helper.waitForStateChange("crosshairs");
+      await helper.waitForStateChange(["crosshairs"]);
     }
   );
 });
