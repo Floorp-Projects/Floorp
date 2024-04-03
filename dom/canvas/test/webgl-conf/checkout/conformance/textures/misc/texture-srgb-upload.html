@@ -62,12 +62,22 @@ function invoke(fn) { return fn(); }
 invoke(async () => {
     const video = document.createElement("video");
     video.src = DATA_URL_FOR_720p_png_bt709_bt709_tv_yuv420p_vp9_webm;
-    //video.src = "Big_Buck_Bunny_360_10s_1MB.mp4";
-    //video.src = "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
+    if (!video.canPlayType('video/webm')) {
+        debug('Browser can not play webm videos. Skipping test.');
+        finishTest();
+        return;
+    }
+
     video.muted = true;
     video.loop = true;
     video.crossOrigin = "anonymous";
-    await video.play();
+    try {
+        await video.play();
+    } catch (e) {
+        debug('Browser could not play this specific video. Skipping test.');
+        finishTest();
+        return;
+    }
 
     function renderTex(canvas, fn_tex_image) {
         const gl = canvas.gl = wtu.create3DContext(canvas);

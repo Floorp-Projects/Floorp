@@ -1,54 +1,17 @@
-commit 4f57098d0dbad68f41c87835fca5a6f0ba669350
-Author: Gregg Tavares <github@greggman.com>
-Date:   Thu Nov 24 10:29:32 2022 -0800
+commit cd04892d7d7ac986a83383b06bfa792c9c369f8c
+Author: Kelsey Gilbert <kelsey.gilbert@mozilla.com>
+Date:   Tue Apr 2 14:43:02 2024 -0700
 
-    Test calling getUniform from non-current program
-    
-    It's possible this is already tested but I didn't see anything
-    obvious and Firefox fails this test
+    Remove more theora/.ogv from sdk/*.
 
-commit d308751948807f08b36d06b0e8c835a1ffe078ae
-Author: Kelsey Gilbert <jdashg@gmail.com>
-Date:   Tue Oct 18 15:21:32 2022 -0700
-
-    Add conformance/textures/misc/texture-srgb-upload.html.
-    
-    Test for both webgl1+ext and webgl2.
-    Test uploads from ArrayBuffer and (inlined) video.
-    Ensure that srgb textures fetch/decode 0x7f as 0.21 not 0.5.
-    
-    Firefox bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1696693
-
-commit 50024c70fc8c8f1613275cffe90dea02a20297f3
-Author: Kelsey Gilbert <jdashg@gmail.com>
-Date:   Wed Aug 17 15:01:24 2022 -0700
-
-    Add test of gl_VertexID and gl_InstanceID.
-    
-    Includes details in new test about both state-of-specification, and known errata.
-    
-    Firefox bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1779800
-
-commit 92af460e46a82d60140b5a1df1379feb79730d3a
-Author: Kelsey Gilbert <jdashg@gmail.com>
-Date:   Tue Sep 6 15:21:32 2022 -0700
-
-    Add test for getUniformIndices.
-    
-    Also test to ensure that it returns the correct id by checking the name from getActiveUniform.
-    
-    Firefox bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1755973
-
-Cherries picked
+Above: cherries picked
 ================================================================================
-Merge base from: ups/main
+Below: merge base from: ups/main
 
-commit 4996b40a69857919579a12f828188c9f428c402c
-Author: Alexey Knyazev <3479527+lexaknyazev@users.noreply.github.com>
-Date:   Sat Aug 20 01:53:01 2022 +0400
+commit 4c5b8bfe586d983fae6a0571cc702f43e5f5b719
+Author: Ken Russell <kbrussel@alum.mit.edu>
+Date:   Tue Apr 2 14:17:01 2024 -0700
 
-    Allow makeXRCompatible in OffscreenCanvas contexts (#3480)
+    Verify invalidated uniform locations when there is no current program. (#3633)
     
-    Fixes failures of:
-    conformance/offscreencanvas/methods.html
-    conformance/offscreencanvas/methods-worker.html
+    Associated with crbug.com/331119482 .

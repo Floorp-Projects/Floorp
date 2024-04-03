@@ -11,7 +11,6 @@ blitframebuffer-size-overflow.html
 --min-version 2.0.1 blitframebuffer-stencil-only.html
 blitframebuffer-test.html
 --min-version 2.0.1 blitframebuffer-unaffected-by-colormask.html
---min-version 2.0.1 builtin-vert-attribs.html
 canvas-resizing-with-pbo-bound.html
 --min-version 2.0.1 clearbuffer-sub-source.html
 --min-version 2.0.1 clearbufferfv-with-alpha-false.html
