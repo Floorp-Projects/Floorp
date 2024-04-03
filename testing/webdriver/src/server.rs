@@ -10,7 +10,7 @@ use crate::httpapi::{
 use crate::response::{CloseWindowResponse, WebDriverResponse};
 use crate::Parameters;
 use bytes::Bytes;
-use http::{self, Method, StatusCode};
+use http::{Method, StatusCode};
 use std::marker::PhantomData;
 use std::net::{SocketAddr, TcpListener as StdTcpListener};
 use std::sync::mpsc::{channel, Receiver, Sender};
@@ -19,7 +19,7 @@ use std::thread;
 use tokio::net::TcpListener;
 use tokio_stream::wrappers::TcpListenerStream;
 use url::{Host, Url};
-use warp::{self, Buf, Filter, Rejection};
+use warp::{Buf, Filter, Rejection};
 
 // Silence warning about Quit being unused for now.
 #[allow(dead_code)]
