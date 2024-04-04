@@ -80,6 +80,26 @@ bool nsTransformedTextRun::SetPotentialLineBreaks(Range aRange,
   return changed;
 }
 
+void nsTransformedTextRun::SetEmergencyWrapPositions() {
+  // This parallels part of what gfxShapedText::SetupClusterBoundaries() does
+  // for normal textruns.
+  bool prevWasHyphen = false;
+  for (uint32_t pos : IntegerRange(mString.Length())) {
+    const char16_t ch = mString[pos];
+    if (prevWasHyphen) {
+      if (nsContentUtils::IsAlphanumeric(ch)) {
+        mCharacterGlyphs[pos].SetCanBreakBefore(
+            CompressedGlyph::FLAG_BREAK_TYPE_EMERGENCY_WRAP);
+      }
+      prevWasHyphen = false;
+    }
+    if (nsContentUtils::IsHyphen(ch) && pos &&
+        nsContentUtils::IsAlphanumeric(mString[pos - 1])) {
+      prevWasHyphen = true;
+    }
+  }
+}
+
 size_t nsTransformedTextRun::SizeOfExcludingThis(
     mozilla::MallocSizeOf aMallocSizeOf) {
   size_t total = gfxTextRun::SizeOfExcludingThis(aMallocSizeOf);
