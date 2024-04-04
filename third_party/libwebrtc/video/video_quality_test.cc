@@ -299,7 +299,7 @@ std::unique_ptr<VideoDecoder> VideoQualityTest::CreateVideoDecoder(
   std::unique_ptr<VideoDecoder> decoder;
   if (format.name == "multiplex") {
     decoder = std::make_unique<MultiplexDecoderAdapter>(
-        decoder_factory_.get(), SdpVideoFormat(cricket::kVp9CodecName));
+        env, decoder_factory_.get(), SdpVideoFormat(cricket::kVp9CodecName));
   } else if (format.name == "FakeCodec") {
     decoder = webrtc::FakeVideoDecoderFactory::CreateVideoDecoder();
   } else {

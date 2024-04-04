@@ -395,6 +395,7 @@ rtc_library("rtc_internal_video_codecs") {
     ":media_constants",
     ":rtc_media_base",
     ":rtc_simulcast_encoder_adapter",
+    "../api/environment",
     "../api/video:encoded_image",
     "../api/video:video_bitrate_allocation",
     "../api/video:video_frame",
