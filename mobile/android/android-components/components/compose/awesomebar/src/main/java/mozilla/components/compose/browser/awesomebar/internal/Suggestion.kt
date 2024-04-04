@@ -166,7 +166,7 @@ private fun AutocompleteButton(
     modifier: Modifier,
 ) {
     Image(
-        painterResource(iconsR.drawable.mozac_ic_append_up_24),
+        painterResource(iconsR.drawable.mozac_ic_append_up_left_24),
         colorFilter = ColorFilter.tint(colors.autocompleteIcon),
         contentDescription = stringResource(R.string.mozac_browser_awesomebar_edit_suggestion),
         modifier = modifier
