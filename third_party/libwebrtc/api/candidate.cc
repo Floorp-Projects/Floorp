@@ -10,6 +10,7 @@
 
 #include "api/candidate.h"
 
+#include "absl/base/attributes.h"
 #include "rtc_base/helpers.h"
 #include "rtc_base/ip_address.h"
 #include "rtc_base/logging.h"
@@ -17,10 +18,10 @@
 
 namespace cricket {
 
-const char LOCAL_PORT_TYPE[] = "local";
-const char STUN_PORT_TYPE[] = "stun";
-const char PRFLX_PORT_TYPE[] = "prflx";
-const char RELAY_PORT_TYPE[] = "relay";
+ABSL_CONST_INIT const absl::string_view LOCAL_PORT_TYPE = "local";
+ABSL_CONST_INIT const absl::string_view STUN_PORT_TYPE = "stun";
+ABSL_CONST_INIT const absl::string_view PRFLX_PORT_TYPE = "prflx";
+ABSL_CONST_INIT const absl::string_view RELAY_PORT_TYPE = "relay";
 
 Candidate::Candidate()
     : id_(rtc::CreateRandomString(8)),

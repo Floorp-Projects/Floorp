@@ -212,7 +212,7 @@ std::unique_ptr<cricket::Candidate> CreateFakeCandidate(
     int port,
     const std::string& protocol,
     const rtc::AdapterType adapter_type,
-    const std::string& candidate_type,
+    const absl::string_view candidate_type,
     uint32_t priority,
     const rtc::AdapterType underlying_type_for_vpn =
         rtc::ADAPTER_TYPE_UNKNOWN) {
