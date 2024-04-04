@@ -571,13 +571,6 @@ ChannelReceive::ChannelReceive(
 
   network_thread_checker_.Detach();
 
-  acm_receiver_.ResetInitialDelay();
-  acm_receiver_.SetMinimumDelay(0);
-  acm_receiver_.SetMaximumDelay(0);
-  acm_receiver_.FlushBuffers();
-
-  _outputAudioLevel.ResetLevelFullRange();
-
   rtp_receive_statistics_->EnableRetransmitDetection(remote_ssrc_, true);
   RtpRtcpInterface::Configuration configuration;
   configuration.clock = clock;
