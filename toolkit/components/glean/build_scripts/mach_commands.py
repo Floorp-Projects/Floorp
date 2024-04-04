@@ -235,3 +235,47 @@ def update_glean(command_context, version):
     """
 
     print(textwrap.dedent(instructions))
+
+
+@Command(
+    "event-into-legacy",
+    category="misc",
+    description="Create a Legacy Telemetry compatible event definition from an existing Glean Event metric.",
+)
+@CommandArgument(
+    "--append",
+    "-a",
+    action="store_true",
+    help="Append to toolkit/components/telemetry/Events.yaml (note: verify and make any necessary modifications before landing).",
+)
+@CommandArgument("event", default=None, nargs="?", type=str, help="Event name.")
+def event_into_legacy(command_context, event=None, append=False):
+    # Get the metrics_index's list of metrics indices
+    # by loading the index as a module.
+    import sys
+    from os import path
+
+    sys.path.append(path.join(path.dirname(__file__), path.pardir))
+
+    from metrics_index import metrics_yamls
+
+    sys.path.append(path.dirname(__file__))
+
+    from pathlib import Path
+
+    from translate_events import translate_event
+
+    legacy_yaml_path = path.join(
+        Path(command_context.topsrcdir),
+        "toolkit",
+        "components",
+        "telemetry",
+        "Events.yaml",
+    )
+
+    return translate_event(
+        event,
+        append,
+        [Path(command_context.topsrcdir) / x for x in metrics_yamls],
+        legacy_yaml_path,
+    )
