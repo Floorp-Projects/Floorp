@@ -1464,6 +1464,7 @@ if (rtc_include_tests) {
 
     sources = [
       "array_view_unittest.cc",
+      "candidate_unittest.cc",
       "field_trials_unittest.cc",
       "function_view_unittest.cc",
       "rtc_error_unittest.cc",
@@ -1479,6 +1480,7 @@ if (rtc_include_tests) {
 
     deps = [
       ":array_view",
+      ":candidate",
       ":create_time_controller",
       ":field_trials",
       ":field_trials_view",
@@ -1492,12 +1494,14 @@ if (rtc_include_tests) {
       ":scoped_refptr",
       ":sequence_checker",
       ":time_controller",
+      "../p2p:rtc_p2p",
       "../rtc_base:buffer",
       "../rtc_base:checks",
       "../rtc_base:gunit_helpers",
       "../rtc_base:platform_thread",
       "../rtc_base:rtc_event",
       "../rtc_base:rtc_task_queue",
+      "../rtc_base:ssl",
       "../rtc_base:task_queue_for_test",
       "../rtc_base/containers:flat_set",
       "../rtc_base/task_utils:repeating_task",
