@@ -11915,7 +11915,7 @@
 # (e.g. `<script>`) is enabled.
 - name: network.fetchpriority.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
 
 # Adjustments to apply to the internal priority of <link rel=preload as=script
