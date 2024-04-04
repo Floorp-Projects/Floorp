@@ -25,7 +25,7 @@ jobs:
         worker-type: b-linux-gcp
         worker:
             docker-image: {in-tree: updatebot}
-            max-run-time: 3600
+            max-run-time: 4500
             taskcluster-proxy: true
         scopes:
             - secrets:get:project/updatebot/{level}/try-sshkey
@@ -60,7 +60,7 @@ jobs:
             tier: 1
         worker-type: b-win2022
         worker:
-            max-run-time: 3600
+            max-run-time: 4500
             taskcluster-proxy: true
             # begin _GENERATE_DEPOT_TOOLS_BINARIES_
             # artifacts:
