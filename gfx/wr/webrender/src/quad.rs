@@ -441,15 +441,17 @@ pub fn push_quad(
                 }
             }
 
-            add_composite_prim(
-                pattern,
-                prim_instance_index,
-                unclipped_surface_rect.cast_unit(),
-                quad_flags,
-                frame_state,
-                targets,
-                &scratch.quad_segments,
-            );
+            if !scratch.quad_segments.is_empty() {
+                add_composite_prim(
+                    pattern,
+                    prim_instance_index,
+                    unclipped_surface_rect.cast_unit(),
+                    quad_flags,
+                    frame_state,
+                    targets,
+                    &scratch.quad_segments,
+                );
+            }
         }
     }
 }
