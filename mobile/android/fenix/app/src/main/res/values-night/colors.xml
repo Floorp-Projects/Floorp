@@ -151,7 +151,7 @@
 
     <!-- Normal theme colors for dark mode -->
     <color name="accent_normal_theme">@color/photonViolet50</color>
-    <color name="accent_high_contrast_normal_theme">@color/photonViolet40</color>
+    <color name="accent_high_contrast_normal_theme">@color/photonViolet20</color>
     <color name="neutral_normal_theme">@color/photonGrey20</color>
     <color name="neutral_faded_normal_theme">#1FFBFBFE</color>
     <color name="toggle_off_knob_normal_theme">@color/toggle_off_knob_dark_theme</color>
