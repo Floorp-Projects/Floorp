@@ -714,10 +714,11 @@ class ProviderInterventions extends UrlbarProvider {
       this.#pickResult(result, controller.browserWindow);
     }
 
-    for (let tip of this.tipsShownInCurrentEngagement) {
-      Services.telemetry.keyedScalarAdd("urlbar.tips", `${tip}-shown`, 1);
+    if (["engagement", "abandonment"].includes(state)) {
+      for (let tip of this.tipsShownInCurrentEngagement) {
+        Services.telemetry.keyedScalarAdd("urlbar.tips", `${tip}-shown`, 1);
+      }
     }
-
     this.tipsShownInCurrentEngagement.clear();
   }
 
