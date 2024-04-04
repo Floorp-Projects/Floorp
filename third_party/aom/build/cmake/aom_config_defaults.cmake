@@ -37,6 +37,7 @@ set_aom_detect_var(HAVE_NEON_DOTPROD 0
 set_aom_detect_var(HAVE_NEON_I8MM 0
                    "Enables Armv8.2-A Neon i8mm intrinsics optimizations.")
 set_aom_detect_var(HAVE_SVE 0 "Enables Armv8.2-A SVE intrinsics optimizations.")
+set_aom_detect_var(HAVE_SVE2 0 "Enables Armv9-A SVE2 intrinsics optimizations.")
 
 # PPC feature flags.
 set_aom_detect_var(HAVE_VSX 0 "Enables VSX optimizations.")
@@ -84,6 +85,9 @@ set_aom_config_var(CONFIG_AV1_TEMPORAL_DENOISING 0
 set_aom_config_var(CONFIG_MULTITHREAD 1 "Multithread support.")
 set_aom_config_var(CONFIG_OS_SUPPORT 0 "Internal flag.")
 set_aom_config_var(CONFIG_PIC 0 "Build with PIC enabled.")
+set_aom_config_var(CONFIG_QUANT_MATRIX 1
+                   "Build with quantization matrices for AV1 encoder."
+                   "AV1 decoder is always built with quantization matrices.")
 set_aom_config_var(CONFIG_REALTIME_ONLY 0
                    "Build for RTC-only. See aomcx.h for all disabled features.")
 set_aom_config_var(CONFIG_RUNTIME_CPU_DETECT 1 "Runtime CPU detection support.")
@@ -209,6 +213,8 @@ set_aom_option_var(
   "Enables Armv8.2-A Neon i8mm optimizations on AArch64 targets." ON)
 set_aom_option_var(ENABLE_SVE
                    "Enables Armv8.2-A SVE optimizations on AArch64 targets." ON)
+set_aom_option_var(ENABLE_SVE2
+                   "Enables Armv9-A SVE2 optimizations on AArch64 targets." ON)
 
 # VSX intrinsics flags.
 set_aom_option_var(ENABLE_VSX "Enables VSX optimizations on PowerPC targets."

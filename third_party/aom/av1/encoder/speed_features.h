@@ -587,6 +587,9 @@ typedef struct GLOBAL_MOTION_SPEED_FEATURES {
   // GF group
   int disable_gm_search_based_on_stats;
 
+  // Downsampling pyramid level to use for global motion estimation
+  int downsample_level;
+
   // Number of refinement steps to apply after initial model generation
   int num_refinement_steps;
 } GLOBAL_MOTION_SPEED_FEATURES;
@@ -1770,6 +1773,10 @@ typedef struct REAL_TIME_SPEED_FEATURES {
   // 2: aggrssive mode, where skip is done for all frames that
   // where rc->high_source_sad = 0 (no slide-changes).
   int skip_lf_screen;
+
+  // Threshold on the active/inactive region percent to disable
+  // the loopfilter and cdef. Setting to 100 disables this feature.
+  int thresh_active_maps_skip_lf_cdef;
 
   // For nonrd: early exit out of variance partition that sets the
   // block size to superblock size, and sets mode to zeromv-last skip.

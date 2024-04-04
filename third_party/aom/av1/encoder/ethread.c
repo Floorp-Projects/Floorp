@@ -12,6 +12,8 @@
 #include <assert.h>
 #include <stdbool.h>
 
+#include "aom_util/aom_pthread.h"
+
 #include "av1/common/warped_motion.h"
 #include "av1/common/thread_common.h"
 
@@ -1415,7 +1417,7 @@ static AOM_INLINE void sync_fpmt_workers(AV1_PRIMARY *ppi,
   int num_workers = ppi->p_mt_info.p_num_workers;
   int had_error = 0;
   // Points to error in the earliest display order frame in the parallel set.
-  const struct aom_internal_error_info *error;
+  const struct aom_internal_error_info *error = NULL;
 
   // Encoding ends.
   for (int i = num_workers - 1; i >= 0; --i) {
@@ -2227,8 +2229,8 @@ void av1_tpl_dealloc(AV1TplRowMultiThreadSync *tpl_sync) {
 }
 
 // Allocate memory for tpl row synchronization.
-void av1_tpl_alloc(AV1TplRowMultiThreadSync *tpl_sync, AV1_COMMON *cm,
-                   int mb_rows) {
+static void av1_tpl_alloc(AV1TplRowMultiThreadSync *tpl_sync, AV1_COMMON *cm,
+                          int mb_rows) {
   tpl_sync->rows = mb_rows;
 #if CONFIG_MULTITHREAD
   {

@@ -9,22 +9,28 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 #include <limits.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "aom_mem/aom_mem.h"
 #include "config/aom_config.h"
 #include "config/aom_version.h"
 
-#include "aom_ports/mem_ops.h"
-
+#include "aom/aomcx.h"
 #include "aom/aom_encoder.h"
+#include "aom/aom_external_partition.h"
+#include "aom/aom_image.h"
 #include "aom/internal/aom_codec_internal.h"
-
 #include "aom_dsp/flow_estimation/flow_estimation.h"
+#include "aom_mem/aom_mem.h"
+#include "aom_scale/yv12config.h"
+#include "aom_util/aom_pthread.h"
 
 #include "av1/av1_cx_iface.h"
 #include "av1/av1_iface_common.h"
+#include "av1/common/av1_common_int.h"
+#include "av1/common/enums.h"
+#include "av1/common/scale.h"
 #include "av1/encoder/bitstream.h"
 #include "av1/encoder/encoder.h"
 #include "av1/encoder/encoder_alloc.h"
@@ -32,6 +38,7 @@
 #include "av1/encoder/ethread.h"
 #include "av1/encoder/external_partition.h"
 #include "av1/encoder/firstpass.h"
+#include "av1/encoder/lookahead.h"
 #include "av1/encoder/rc_utils.h"
 #include "av1/arg_defs.h"
 
@@ -1836,6 +1843,11 @@ static aom_codec_err_t ctrl_set_enable_qm(aom_codec_alg_priv_t *ctx,
                                           va_list args) {
   struct av1_extracfg extra_cfg = ctx->extra_cfg;
   extra_cfg.enable_qm = CAST(AV1E_SET_ENABLE_QM, args);
+#if !CONFIG_QUANT_MATRIX
+  if (extra_cfg.enable_qm) {
+    ERROR("QM can't be enabled with CONFIG_QUANT_MATRIX=0.");
+  }
+#endif
   return update_extra_cfg(ctx, &extra_cfg);
 }
 static aom_codec_err_t ctrl_set_qm_y(aom_codec_alg_priv_t *ctx, va_list args) {
@@ -3072,11 +3084,36 @@ static aom_codec_err_t encoder_encode(aom_codec_alg_priv_t *ctx,
         ctx->pts_offset = ptsvol;
         ctx->pts_offset_initialized = 1;
       }
+      if (ptsvol < ctx->pts_offset) {
+        aom_internal_error(&ppi->error, AOM_CODEC_INVALID_PARAM,
+                           "pts is smaller than initial pts");
+      }
       ptsvol -= ctx->pts_offset;
+      if (ptsvol > INT64_MAX / cpi_data.timestamp_ratio->num) {
+        aom_internal_error(
+            &ppi->error, AOM_CODEC_INVALID_PARAM,
+            "conversion of relative pts to ticks would overflow");
+      }
       int64_t src_time_stamp =
           timebase_units_to_ticks(cpi_data.timestamp_ratio, ptsvol);
+#if ULONG_MAX > INT64_MAX
+      if (duration > INT64_MAX) {
+        aom_internal_error(&ppi->error, AOM_CODEC_INVALID_PARAM,
+                           "duration is too big");
+      }
+#endif
+      if (ptsvol > INT64_MAX - (int64_t)duration) {
+        aom_internal_error(&ppi->error, AOM_CODEC_INVALID_PARAM,
+                           "relative pts + duration is too big");
+      }
+      aom_codec_pts_t pts_end = ptsvol + (int64_t)duration;
+      if (pts_end > INT64_MAX / cpi_data.timestamp_ratio->num) {
+        aom_internal_error(
+            &ppi->error, AOM_CODEC_INVALID_PARAM,
+            "conversion of relative pts + duration to ticks would overflow");
+      }
       int64_t src_end_time_stamp =
-          timebase_units_to_ticks(cpi_data.timestamp_ratio, ptsvol + duration);
+          timebase_units_to_ticks(cpi_data.timestamp_ratio, pts_end);
 
       YV12_BUFFER_CONFIG sd;
       res = image2yuvconfig(img, &sd);
@@ -3110,7 +3147,7 @@ static aom_codec_err_t encoder_encode(aom_codec_alg_priv_t *ctx,
             subsampling_x, subsampling_y, use_highbitdepth, lag_in_frames,
             src_border_in_pixels, cpi->common.features.byte_alignment,
             ctx->num_lap_buffers, (cpi->oxcf.kf_cfg.key_freq_max == 0),
-            cpi->image_pyramid_levels);
+            cpi->alloc_pyramid);
       }
       if (!ppi->lookahead)
         aom_internal_error(&ppi->error, AOM_CODEC_MEM_ERROR,

@@ -8,16 +8,15 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef AOM_AOM_DSP_ARM_DOT_SVE_H_
-#define AOM_AOM_DSP_ARM_DOT_SVE_H_
+#ifndef AOM_AOM_DSP_ARM_AOM_NEON_SVE_BRIDGE_H_
+#define AOM_AOM_DSP_ARM_AOM_NEON_SVE_BRIDGE_H_
 
 #include <arm_neon_sve_bridge.h>
 
 #include "config/aom_dsp_rtcd.h"
 #include "config/aom_config.h"
 
-// Dot product instructions operating on 16-bit input elements are exclusive to
-// the SVE instruction set. However, we can access these instructions from a
+// We can access instructions exclusive to the SVE instruction set from a
 // predominantly Neon context by making use of the Neon-SVE bridge intrinsics
 // to reinterpret Neon vectors as SVE vectors - with the high part of the SVE
 // vector (if it's longer than 128 bits) being "don't care".
@@ -39,4 +38,19 @@ static INLINE int64x2_t aom_sdotq_s16(int64x2_t acc, int16x8_t x, int16x8_t y) {
                                    svset_neonq_s16(svundef_s16(), y)));
 }
 
-#endif  // AOM_AOM_DSP_ARM_DOT_SVE_H_
+#define aom_svdot_lane_s16(sum, s0, f, lane)                          \
+  svget_neonq_s64(svdot_lane_s64(svset_neonq_s64(svundef_s64(), sum), \
+                                 svset_neonq_s16(svundef_s16(), s0),  \
+                                 svset_neonq_s16(svundef_s16(), f), lane))
+
+static INLINE uint16x8_t aom_tbl_u16(uint16x8_t s, uint16x8_t tbl) {
+  return svget_neonq_u16(svtbl_u16(svset_neonq_u16(svundef_u16(), s),
+                                   svset_neonq_u16(svundef_u16(), tbl)));
+}
+
+static INLINE int16x8_t aom_tbl_s16(int16x8_t s, uint16x8_t tbl) {
+  return svget_neonq_s16(svtbl_s16(svset_neonq_s16(svundef_s16(), s),
+                                   svset_neonq_u16(svundef_u16(), tbl)));
+}
+
+#endif  // AOM_AOM_DSP_ARM_AOM_NEON_SVE_BRIDGE_H_

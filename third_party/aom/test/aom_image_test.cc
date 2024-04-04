@@ -47,6 +47,16 @@ TEST(AomImageTest, AomImgSetRectOverflow) {
             0);
 }
 
+TEST(AomImageTest, AomImgAllocNone) {
+  const int kWidth = 128;
+  const int kHeight = 128;
+
+  aom_image_t img;
+  aom_img_fmt_t format = AOM_IMG_FMT_NONE;
+  unsigned int align = 32;
+  ASSERT_EQ(aom_img_alloc(&img, format, kWidth, kHeight, align), nullptr);
+}
+
 TEST(AomImageTest, AomImgAllocNv12) {
   const int kWidth = 128;
   const int kHeight = 128;
@@ -54,7 +64,7 @@ TEST(AomImageTest, AomImgAllocNv12) {
   aom_image_t img;
   aom_img_fmt_t format = AOM_IMG_FMT_NV12;
   unsigned int align = 32;
-  EXPECT_NE(aom_img_alloc(&img, format, kWidth, kHeight, align), nullptr);
+  EXPECT_EQ(aom_img_alloc(&img, format, kWidth, kHeight, align), &img);
   EXPECT_EQ(img.stride[AOM_PLANE_U], img.stride[AOM_PLANE_Y]);
   EXPECT_EQ(img.stride[AOM_PLANE_V], 0);
   EXPECT_EQ(img.planes[AOM_PLANE_V], nullptr);

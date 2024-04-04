@@ -2144,8 +2144,9 @@ static void encode_b_nonrd(const AV1_COMP *const cpi, TileDataEnc *tile_data,
     }
     if (tile_data->allow_update_cdf) update_stats(&cpi->common, td);
   }
-  if (cpi->oxcf.q_cfg.aq_mode == CYCLIC_REFRESH_AQ && mbmi->skip_txfm &&
-      !cpi->rc.rtc_external_ratectrl && cm->seg.enabled)
+  if ((cpi->oxcf.q_cfg.aq_mode == CYCLIC_REFRESH_AQ ||
+       cpi->active_map.enabled) &&
+      mbmi->skip_txfm && !cpi->rc.rtc_external_ratectrl && cm->seg.enabled)
     av1_cyclic_reset_segment_skip(cpi, x, mi_row, mi_col, bsize, dry_run);
   // TODO(Ravi/Remya): Move this copy function to a better logical place
   // This function will copy the best mode information from block
@@ -2254,6 +2255,8 @@ static void pick_sb_modes_nonrd(AV1_COMP *const cpi, TileDataEnc *tile_data,
   const AQ_MODE aq_mode = cpi->oxcf.q_cfg.aq_mode;
   TxfmSearchInfo *txfm_info = &x->txfm_search_info;
   int i;
+  const int seg_skip =
+      segfeature_active(&cm->seg, mbmi->segment_id, SEG_LVL_SKIP);
 
   // This is only needed for real time/allintra row-mt enabled multi-threaded
   // encoding with cost update frequency set to COST_UPD_TILE/COST_UPD_OFF.
@@ -2276,15 +2279,17 @@ static void pick_sb_modes_nonrd(AV1_COMP *const cpi, TileDataEnc *tile_data,
   }
   for (i = 0; i < 2; ++i) pd[i].color_index_map = ctx->color_index_map[i];
 
-  x->force_zeromv_skip_for_blk =
-      get_force_zeromv_skip_flag_for_blk(cpi, x, bsize);
+  if (!seg_skip) {
+    x->force_zeromv_skip_for_blk =
+        get_force_zeromv_skip_flag_for_blk(cpi, x, bsize);
 
-  // Source variance may be already compute at superblock level, so no need
-  // to recompute, unless bsize < sb_size or source_variance is not yet set.
-  if (!x->force_zeromv_skip_for_blk &&
-      (x->source_variance == UINT_MAX || bsize < cm->seq_params->sb_size))
-    x->source_variance = av1_get_perpixel_variance_facade(
-        cpi, xd, &x->plane[0].src, bsize, AOM_PLANE_Y);
+    // Source variance may be already compute at superblock level, so no need
+    // to recompute, unless bsize < sb_size or source_variance is not yet set.
+    if (!x->force_zeromv_skip_for_blk &&
+        (x->source_variance == UINT_MAX || bsize < cm->seq_params->sb_size))
+      x->source_variance = av1_get_perpixel_variance_facade(
+          cpi, xd, &x->plane[0].src, bsize, AOM_PLANE_Y);
+  }
 
   // Save rdmult before it might be changed, so it can be restored later.
   const int orig_rdmult = x->rdmult;
@@ -2305,16 +2310,13 @@ static void pick_sb_modes_nonrd(AV1_COMP *const cpi, TileDataEnc *tile_data,
 #if CONFIG_COLLECT_COMPONENT_TIMING
     start_timing(cpi, nonrd_pick_inter_mode_sb_time);
 #endif
-    if (segfeature_active(&cm->seg, mbmi->segment_id, SEG_LVL_SKIP)) {
-      RD_STATS invalid_rd;
-      av1_invalid_rd_stats(&invalid_rd);
-      // TODO(kyslov): add av1_nonrd_pick_inter_mode_sb_seg_skip
-      av1_rd_pick_inter_mode_sb_seg_skip(cpi, tile_data, x, mi_row, mi_col,
-                                         rd_cost, bsize, ctx,
-                                         invalid_rd.rdcost);
-    } else {
-      av1_nonrd_pick_inter_mode_sb(cpi, tile_data, x, rd_cost, bsize, ctx);
+    if (seg_skip) {
+      x->force_zeromv_skip_for_blk = 1;
+      // TODO(marpan): Consider adding a function for nonrd:
+      // av1_nonrd_pick_inter_mode_sb_seg_skip(), instead of setting
+      // x->force_zeromv_skip flag and entering av1_nonrd_pick_inter_mode_sb().
     }
+    av1_nonrd_pick_inter_mode_sb(cpi, tile_data, x, rd_cost, bsize, ctx);
 #if CONFIG_COLLECT_COMPONENT_TIMING
     end_timing(cpi, nonrd_pick_inter_mode_sb_time);
 #endif
@@ -2322,10 +2324,12 @@ static void pick_sb_modes_nonrd(AV1_COMP *const cpi, TileDataEnc *tile_data,
   if (cpi->sf.rt_sf.skip_cdef_sb) {
     // cdef_strength is initialized to 1 which means skip_cdef, and is updated
     // here. Check to see is skipping cdef is allowed.
+    // Always allow cdef_skip for seg_skip = 1.
     const int allow_cdef_skipping =
-        cpi->rc.frames_since_key > 10 && !cpi->rc.high_source_sad &&
-        !(x->color_sensitivity[COLOR_SENS_IDX(AOM_PLANE_U)] ||
-          x->color_sensitivity[COLOR_SENS_IDX(AOM_PLANE_V)]);
+        seg_skip ||
+        (cpi->rc.frames_since_key > 10 && !cpi->rc.high_source_sad &&
+         !(x->color_sensitivity[COLOR_SENS_IDX(AOM_PLANE_U)] ||
+           x->color_sensitivity[COLOR_SENS_IDX(AOM_PLANE_V)]));
 
     // Find the corresponding 64x64 block. It'll be the 128x128 block if that's
     // the block size.

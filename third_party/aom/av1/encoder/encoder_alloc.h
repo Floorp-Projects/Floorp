@@ -439,8 +439,7 @@ static AOM_INLINE YV12_BUFFER_CONFIG *realloc_and_scale_source(
           &cpi->scaled_source, scaled_width, scaled_height,
           cm->seq_params->subsampling_x, cm->seq_params->subsampling_y,
           cm->seq_params->use_highbitdepth, AOM_BORDER_IN_PIXELS,
-          cm->features.byte_alignment, NULL, NULL, NULL,
-          cpi->image_pyramid_levels, 0))
+          cm->features.byte_alignment, NULL, NULL, NULL, cpi->alloc_pyramid, 0))
     aom_internal_error(cm->error, AOM_CODEC_MEM_ERROR,
                        "Failed to reallocate scaled source buffer");
   assert(cpi->scaled_source.y_crop_width == scaled_width);

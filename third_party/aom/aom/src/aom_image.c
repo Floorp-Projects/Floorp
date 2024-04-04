@@ -41,6 +41,8 @@ static aom_image_t *img_alloc_helper(
 
   if (img != NULL) memset(img, 0, sizeof(aom_image_t));
 
+  if (fmt == AOM_IMG_FMT_NONE) goto fail;
+
   /* Treat align==0 like align==1 */
   if (!buf_align) buf_align = 1;
 
