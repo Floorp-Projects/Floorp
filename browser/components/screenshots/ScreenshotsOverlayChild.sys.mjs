@@ -404,6 +404,12 @@ export class ScreenshotsOverlay {
    * @param {Event} event The pointerown event
    */
   handlePointerDown(event) {
+    // Early return if the event target is not within the screenshots component
+    // element.
+    if (!event.originalTarget.closest("#screenshots-component")) {
+      return;
+    }
+
     if (this.preEventHandler(event)) {
       return;
     }
