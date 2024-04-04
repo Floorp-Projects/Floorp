@@ -492,23 +492,27 @@ already_AddRefed<Promise> FileSystemWritableFileStream::Write(
   ArrayBufferViewOrArrayBufferOrBlobOrUTF8StringOrWriteParams data;
   if (!data.Init(aCx, aChunk)) {
     aError.StealExceptionFromJSContext(aCx);
+    // XXX(krosylight): The Streams spec does not provide a way to catch errors
+    // thrown from the write algorithm, and the File System spec does not try
+    // catching them either. This is unfortunate, as per the spec the type error
+    // from write() must immediately return a rejected promise without any file
+    // handle closure. For now we handle it here manually. See also:
+    // - https://github.com/whatwg/streams/issues/636
+    // - https://github.com/whatwg/fs/issues/153
+    if (IsOpen()) {
+      (void)BeginAbort();
+    }
     return nullptr;
   }
 
   // Step 2. Let p be a new promise.
-  RefPtr<Promise> promise = Promise::Create(GetParentObject(), aError);
-  if (aError.Failed()) {
-    return nullptr;
-  }
-
-  RefPtr<Promise> innerPromise = Promise::Create(GetParentObject(), aError);
-  if (aError.Failed()) {
-    return nullptr;
-  }
+  RefPtr<Promise> promise = Promise::CreateInfallible(GetParentObject());
 
   RefPtr<Command> command = CreateCommand();
 
   // Step 3.3.
+  // XXX: This should ideally be also handled by the streams but we don't
+  // currently have the hook. See https://github.com/whatwg/streams/issues/620.
   Write(data)->Then(
       GetCurrentSerialEventTarget(), __func__,
       [self = RefPtr{this}, command,
