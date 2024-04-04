@@ -24,7 +24,6 @@ use crate::stylesheets::import_rule::{ImportLayer, ImportRule, ImportSupportsCon
 use crate::stylesheets::keyframes_rule::parse_keyframe_list;
 use crate::stylesheets::layer_rule::{LayerBlockRule, LayerName, LayerStatementRule};
 use crate::stylesheets::scope_rule::{ScopeBounds, ScopeRule};
-use crate::stylesheets::starting_style_rule::StartingStyleRule;
 use crate::stylesheets::supports_rule::SupportsCondition;
 use crate::stylesheets::{
     AllowImportRules, CorsMode, CssRule, CssRuleType, CssRuleTypes, CssRules, DocumentRule,
@@ -237,8 +236,6 @@ pub enum AtRulePrelude {
     Layer(Vec<LayerName>),
     /// A @scope rule prelude.
     Scope(ScopeBounds),
-    /// A @starting-style prelude.
-    StartingStyle,
 }
 
 impl AtRulePrelude {
@@ -260,7 +257,6 @@ impl AtRulePrelude {
             Self::Namespace(..) => "namespace",
             Self::Layer(..) => "layer",
             Self::Scope(..) => "scope",
-            Self::StartingStyle => "starting-style",
         }
     }
 }
@@ -529,8 +525,7 @@ impl<'a, 'i> NestedRuleParser<'a, 'i> {
             AtRulePrelude::Container(..) |
             AtRulePrelude::Document(..) |
             AtRulePrelude::Layer(..) |
-            AtRulePrelude::Scope(..) |
-            AtRulePrelude::StartingStyle => true,
+            AtRulePrelude::Scope(..) => true,
 
             AtRulePrelude::Namespace(..) |
             AtRulePrelude::FontFace |
@@ -727,9 +722,6 @@ impl<'a, 'i> AtRuleParser<'i> for NestedRuleParser<'a, 'i> {
                 let bounds = ScopeBounds::parse(&self.context, input, self.in_style_rule());
                 AtRulePrelude::Scope(bounds)
             },
-            "starting-style" if static_prefs::pref!("layout.css.starting-style-at-rules.enabled") => {
-                AtRulePrelude::StartingStyle
-            },
             _ => {
                 if static_prefs::pref!("layout.css.margin-rules.enabled") {
                     if let Some(margin_rule_type) = MarginRuleType::match_name(&name) {
@@ -902,15 +894,6 @@ impl<'a, 'i> AtRuleParser<'i> for NestedRuleParser<'a, 'i> {
                     bounds,
                     rules: self
                         .parse_nested(input, CssRuleType::Scope)
-                        .into_rules(self.shared_lock, source_location),
-                    source_location,
-                }))
-            },
-            AtRulePrelude::StartingStyle => {
-                let source_location = start.source_location();
-                CssRule::StartingStyle(Arc::new(StartingStyleRule {
-                    rules: self
-                        .parse_nested(input, CssRuleType::StartingStyle)
                         .into_rules(self.shared_lock, source_location),
                     source_location,
                 }))

@@ -336,8 +336,7 @@ impl SanitizationKind {
             CssRule::LayerBlock(..) |
             // TODO(dshin): Same comment as Layer applies - shouldn't give away
             // something like display size - erring on the side of "safe" for now.
-            CssRule::Scope(..) |
-            CssRule::StartingStyle(..) => false,
+            CssRule::Scope(..) => false,
 
             CssRule::FontFace(..) | CssRule::Namespace(..) | CssRule::Style(..) => true,
 
