@@ -27,5 +27,13 @@ public class VideoDecoderFallback extends WrappedNativeVideoDecoder {
     return nativeCreateDecoder(fallback, primary);
   }
 
+  @Override
+  public long createNative(long webrtcEnvRef) {
+    return nativeCreate(webrtcEnvRef, fallback, primary);
+  }
+
   private static native long nativeCreateDecoder(VideoDecoder fallback, VideoDecoder primary);
+
+  private static native long nativeCreate(
+      long webrtcEnvRef, VideoDecoder fallback, VideoDecoder primary);
 }
