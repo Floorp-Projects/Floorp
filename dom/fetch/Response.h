@@ -43,9 +43,7 @@ class Response final : public FetchBody<Response>, public nsWrapperCache {
   }
 
   ResponseType Type() const { return mInternalResponse->Type(); }
-  void GetUrl(nsAString& aUrl) const {
-    CopyUTF8toUTF16(mInternalResponse->GetURL(), aUrl);
-  }
+  void GetUrl(nsACString& aUrl) const { aUrl = mInternalResponse->GetURL(); }
   bool Redirected() const { return mInternalResponse->IsRedirected(); }
   uint16_t Status() const { return mInternalResponse->GetStatus(); }
 
@@ -101,7 +99,7 @@ class Response final : public FetchBody<Response>, public nsWrapperCache {
   static already_AddRefed<Response> Error(const GlobalObject& aGlobal);
 
   static already_AddRefed<Response> Redirect(const GlobalObject& aGlobal,
-                                             const nsAString& aUrl,
+                                             const nsACString& aUrl,
                                              uint16_t aStatus,
                                              ErrorResult& aRv);
 

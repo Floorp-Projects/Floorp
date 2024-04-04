@@ -154,7 +154,7 @@ partial interface Document {
 
   [PutForwards=href, LegacyUnforgeable] readonly attribute Location? location;
   [SetterThrows]                           attribute DOMString domain;
-  readonly attribute DOMString referrer;
+  readonly attribute UTF8String referrer;
   [Throws] attribute DOMString cookie;
   readonly attribute DOMString lastModified;
   readonly attribute DOMString readyState;

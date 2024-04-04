@@ -37,7 +37,7 @@ namespace dom {
 
 class GlobalObject;
 class URLSearchParams;
-class USVStringSequenceSequenceOrUSVStringUSVStringRecordOrUSVString;
+class UTF8StringSequenceSequenceOrUTF8StringUTF8StringRecordOrUTF8String;
 template <typename T>
 class Optional;
 
@@ -66,42 +66,42 @@ class URLSearchParams final : public nsISupports, public nsWrapperCache {
 
   static already_AddRefed<URLSearchParams> Constructor(
       const GlobalObject& aGlobal,
-      const USVStringSequenceSequenceOrUSVStringUSVStringRecordOrUSVString&
+      const UTF8StringSequenceSequenceOrUTF8StringUTF8StringRecordOrUTF8String&
           aInit,
       ErrorResult& aRv);
 
   void ParseInput(const nsACString& aInput);
 
-  void Serialize(nsAString& aValue) const;
+  void Serialize(nsACString& aValue) const;
 
   uint32_t Size() const;
 
-  void Get(const nsAString& aName, nsString& aRetval);
+  void Get(const nsACString& aName, nsACString& aRetval);
 
-  void GetAll(const nsAString& aName, nsTArray<nsString>& aRetval);
+  void GetAll(const nsACString& aName, nsTArray<nsCString>& aRetval);
 
-  void Set(const nsAString& aName, const nsAString& aValue);
+  void Set(const nsACString& aName, const nsACString& aValue);
 
-  void Append(const nsAString& aName, const nsAString& aValue);
+  void Append(const nsACString& aName, const nsACString& aValue);
 
-  bool Has(const nsAString& aName, const Optional<nsAString>& aValue);
+  bool Has(const nsACString& aName, const Optional<nsACString>& aValue);
 
-  void Delete(const nsAString& aName, const Optional<nsAString>& aValue);
+  void Delete(const nsACString& aName, const Optional<nsACString>& aValue);
 
   uint32_t GetIterableLength() const;
-  const nsAString& GetKeyAtIndex(uint32_t aIndex) const;
-  const nsAString& GetValueAtIndex(uint32_t aIndex) const;
+  const nsACString& GetKeyAtIndex(uint32_t aIndex) const;
+  const nsACString& GetValueAtIndex(uint32_t aIndex) const;
 
   void Sort(ErrorResult& aRv);
 
-  void Stringify(nsString& aRetval) const { Serialize(aRetval); }
+  void Stringify(nsAString&) const;
 
   nsresult GetSendInfo(nsIInputStream** aBody, uint64_t* aContentLength,
                        nsACString& aContentTypeWithCharset,
                        nsACString& aCharset) const;
 
  private:
-  void AppendInternal(const nsAString& aName, const nsAString& aValue);
+  void AppendInternal(const nsACString& aName, const nsACString& aValue);
 
   void DeleteAll();
 

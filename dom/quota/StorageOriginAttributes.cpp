@@ -17,18 +17,17 @@ void StorageOriginAttributes::CreateSuffix(nsACString& aStr) const {
   nsCString str1;
 
   URLParams params;
-  nsAutoString value;
+  nsAutoCString value;
 
   if (mInIsolatedMozBrowser) {
-    params.Set(u"inBrowser"_ns, u"1"_ns);
+    params.Set("inBrowser"_ns, "1"_ns);
   }
 
   str1.Truncate();
-
   params.Serialize(value, true);
   if (!value.IsEmpty()) {
     str1.AppendLiteral("^");
-    str1.Append(NS_ConvertUTF16toUTF8(value));
+    str1.Append(value);
   }
 
   // Make sure that the string don't contain characters that would get replaced
@@ -67,22 +66,22 @@ bool StorageOriginAttributes::PopulateFromSuffix(const nsACString& aStr) {
     return false;
   }
 
-  bool ok =
-      URLParams::Parse(Substring(aStr, 1, aStr.Length() - 1), true,
-                       [this](const nsAString& aName, const nsAString& aValue) {
-                         if (aName.EqualsLiteral("inBrowser")) {
-                           if (!aValue.EqualsLiteral("1")) {
-                             return false;
-                           }
+  bool ok = URLParams::Parse(
+      Substring(aStr, 1, aStr.Length() - 1), true,
+      [this](const nsACString& aName, const nsACString& aValue) {
+        if (aName.EqualsLiteral("inBrowser")) {
+          if (!aValue.EqualsLiteral("1")) {
+            return false;
+          }
 
-                           mInIsolatedMozBrowser = true;
-                           return true;
-                         }
+          mInIsolatedMozBrowser = true;
+          return true;
+        }
 
-                         // Let OriginAttributes::PopulateFromSuffix parse other
-                         // origin attributes.
-                         return true;
-                       });
+        // Let OriginAttributes::PopulateFromSuffix parse other
+        // origin attributes.
+        return true;
+      });
   if (!ok) {
     return false;
   }

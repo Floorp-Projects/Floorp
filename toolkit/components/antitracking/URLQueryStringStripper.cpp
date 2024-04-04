@@ -261,9 +261,8 @@ nsresult URLQueryStringStripper::StripQueryString(nsIURI* aURI,
 
   URLParams params;
 
-  URLParams::Parse(query, false, [&](nsString&& name, nsString&& value) {
-    nsAutoString lowerCaseName;
-
+  URLParams::Parse(query, false, [&](nsCString&& name, nsCString&& value) {
+    nsAutoCString lowerCaseName;
     ToLowerCase(name, lowerCaseName);
 
     if (mList.Contains(lowerCaseName)) {
@@ -273,7 +272,7 @@ nsresult URLQueryStringStripper::StripQueryString(nsIURI* aURI,
       // this will only count query params listed in the Histogram definition.
       // Calls for any other query params will be discarded.
       nsAutoCString telemetryLabel("param_");
-      AppendUTF16toUTF8(lowerCaseName, telemetryLabel);
+      telemetryLabel.Append(lowerCaseName);
       Telemetry::AccumulateCategorical(
           Telemetry::QUERY_STRIPPING_COUNT_BY_PARAM, telemetryLabel);
 
@@ -289,13 +288,10 @@ nsresult URLQueryStringStripper::StripQueryString(nsIURI* aURI,
     return NS_OK;
   }
 
-  nsAutoString newQuery;
+  nsAutoCString newQuery;
   params.Serialize(newQuery, false);
 
-  Unused << NS_MutateURI(uri)
-                .SetQuery(NS_ConvertUTF16toUTF8(newQuery))
-                .Finalize(aOutput);
-
+  Unused << NS_MutateURI(uri).SetQuery(newQuery).Finalize(aOutput);
   return NS_OK;
 }
 
@@ -315,10 +311,10 @@ bool URLQueryStringStripper::CheckAllowList(nsIURI* aURI) {
   return mAllowList.Contains(baseDomain);
 }
 
-void URLQueryStringStripper::PopulateStripList(const nsAString& aList) {
+void URLQueryStringStripper::PopulateStripList(const nsACString& aList) {
   mList.Clear();
 
-  for (const nsAString& item : aList.Split(' ')) {
+  for (const nsACString& item : aList.Split(' ')) {
     mList.Insert(item);
   }
 }
@@ -333,7 +329,7 @@ void URLQueryStringStripper::PopulateAllowList(const nsACString& aList) {
 
 NS_IMETHODIMP
 URLQueryStringStripper::OnQueryStrippingListUpdate(
-    const nsAString& aStripList, const nsACString& aAllowList) {
+    const nsACString& aStripList, const nsACString& aAllowList) {
   PopulateStripList(aStripList);
   PopulateAllowList(aAllowList);
   return NS_OK;
@@ -349,8 +345,7 @@ URLQueryStringStripper::OnStripOnShareUpdate(const nsTArray<nsString>& aArgs,
       continue;
     }
     for (const auto& topLevelSite : rule.mTopLevelSites) {
-      mStripOnShareMap.InsertOrUpdate(NS_ConvertUTF16toUTF8(topLevelSite),
-                                      rule);
+      mStripOnShareMap.InsertOrUpdate(topLevelSite, rule);
     }
   }
   return NS_OK;
@@ -360,10 +355,9 @@ NS_IMETHODIMP
 URLQueryStringStripper::TestGetStripList(nsACString& aStripList) {
   aStripList.Truncate();
 
-  StringJoinAppend(aStripList, " "_ns, mList,
-                   [](auto& aResult, const auto& aValue) {
-                     aResult.Append(NS_ConvertUTF16toUTF8(aValue));
-                   });
+  StringJoinAppend(
+      aStripList, " "_ns, mList,
+      [](auto& aResult, const auto& aValue) { aResult.Append(aValue); });
   return NS_OK;
 }
 
@@ -398,8 +392,8 @@ nsresult URLQueryStringStripper::StripForCopyOrShareInternal(
 
   URLParams params;
 
-  URLParams::Parse(query, false, [&](nsString&& name, nsString&& value) {
-    nsAutoString lowerCaseName;
+  URLParams::Parse(query, false, [&](nsCString&& name, nsCString&& value) {
+    nsAutoCString lowerCaseName;
     ToLowerCase(name, lowerCaseName);
 
     // Look through the global rules.
@@ -434,8 +428,8 @@ nsresult URLQueryStringStripper::StripForCopyOrShareInternal(
     // it gets passed back into this method but with the recursive
     // stripping flag set to true
     if (!aStripNestedURIs) {
-      nsAutoString decodeValue;
-      URLParams::DecodeString(NS_ConvertUTF16toUTF8(value), decodeValue);
+      nsAutoCString decodeValue;
+      URLParams::DecodeString(value, decodeValue);
 
       nsCOMPtr<nsIURI> nestedURI;
       rv = NS_NewURI(getter_AddRefs(nestedURI), decodeValue);
@@ -459,7 +453,7 @@ nsresult URLQueryStringStripper::StripForCopyOrShareInternal(
       }
 
       // Encodes URI
-      nsAutoString encodedURI;
+      nsAutoCString encodedURI;
       URLParams::SerializeString(nestedURIString, encodedURI);
 
       params.Append(name, encodedURI);
@@ -470,12 +464,9 @@ nsresult URLQueryStringStripper::StripForCopyOrShareInternal(
     return true;
   });
 
-  nsAutoString newQuery;
+  nsAutoCString newQuery;
   params.Serialize(newQuery, false);
-
-  return NS_MutateURI(aURI)
-      .SetQuery(NS_ConvertUTF16toUTF8(newQuery))
-      .Finalize(strippedURI);
+  return NS_MutateURI(aURI).SetQuery(newQuery).Finalize(strippedURI);
 }
 
 }  // namespace mozilla

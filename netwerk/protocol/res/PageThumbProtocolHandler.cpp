@@ -304,9 +304,9 @@ nsresult PageThumbProtocolHandler::GetThumbnailPath(const nsACString& aPath,
   }
 
   // Extract URL from query string.
-  nsAutoString url;
+  nsAutoCString url;
   bool found =
-      URLParams::Extract(Substring(aPath, queryIndex + 1), u"url"_ns, url);
+      URLParams::Extract(Substring(aPath, queryIndex + 1), "url"_ns, url);
   if (!found || url.IsVoid()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -320,7 +320,8 @@ nsresult PageThumbProtocolHandler::GetThumbnailPath(const nsACString& aPath,
     }
     // Use PageThumbsStorageService to get the local file path of the screenshot
     // for the given URL.
-    rv = pageThumbsStorage->GetFilePathForURL(url, aThumbnailPath);
+    rv = pageThumbsStorage->GetFilePathForURL(NS_ConvertUTF8toUTF16(url),
+                                              aThumbnailPath);
 #ifdef MOZ_PLACES
   } else if (aHost.EqualsLiteral(PLACES_PREVIEWS_HOST)) {
     nsCOMPtr<nsIPlacesPreviewsHelperService> helper =
@@ -328,7 +329,7 @@ nsresult PageThumbProtocolHandler::GetThumbnailPath(const nsACString& aPath,
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
-    rv = helper->GetFilePathForURL(url, aThumbnailPath);
+    rv = helper->GetFilePathForURL(NS_ConvertUTF8toUTF16(url), aThumbnailPath);
 #endif
   } else {
     MOZ_ASSERT_UNREACHABLE("Unknown thumbnail host");

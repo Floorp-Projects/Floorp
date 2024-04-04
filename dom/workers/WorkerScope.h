@@ -68,7 +68,7 @@ template <typename T>
 class Optional;
 class Performance;
 class Promise;
-class RequestOrUSVString;
+class RequestOrUTF8String;
 template <typename T>
 class Sequence;
 class ServiceWorkerDescriptor;
@@ -326,7 +326,7 @@ class WorkerGlobalScope : public WorkerGlobalScopeBase {
                        JS::MutableHandle<JS::Value> aRetval,
                        ErrorResult& aError);
 
-  already_AddRefed<Promise> Fetch(const RequestOrUSVString& aInput,
+  already_AddRefed<Promise> Fetch(const RequestOrUTF8String& aInput,
                                   const RequestInit& aInit,
                                   CallerType aCallerType, ErrorResult& aRv);
 

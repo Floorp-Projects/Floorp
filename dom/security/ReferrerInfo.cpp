@@ -1078,11 +1078,9 @@ ReferrerInfo::Equals(nsIReferrerInfo* aOther, bool* aResult) {
 }
 
 NS_IMETHODIMP
-ReferrerInfo::GetComputedReferrerSpec(nsAString& aComputedReferrerSpec) {
+ReferrerInfo::GetComputedReferrerSpec(nsACString& aComputedReferrerSpec) {
   aComputedReferrerSpec.Assign(
-      mComputedReferrer.isSome()
-          ? NS_ConvertUTF8toUTF16(mComputedReferrer.value())
-          : EmptyString());
+      mComputedReferrer.isSome() ? mComputedReferrer.value() : EmptyCString());
   return NS_OK;
 }
 

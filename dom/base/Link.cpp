@@ -6,26 +6,21 @@
 
 #include "Link.h"
 
-#include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/BindContext.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/SVGAElement.h"
 #include "mozilla/dom/HTMLDNSPrefetch.h"
 #include "mozilla/IHistory.h"
-#include "mozilla/StaticPrefs_layout.h"
 #include "nsLayoutUtils.h"
-#include "nsIURL.h"
 #include "nsIURIMutator.h"
 #include "nsISizeOf.h"
 
-#include "nsEscape.h"
 #include "nsGkAtoms.h"
 #include "nsString.h"
-#include "mozAutoDocUpdate.h"
 
 #include "mozilla/Components.h"
 #include "nsAttrValueInlines.h"
-#include "HTMLLinkElement.h"
 
 namespace mozilla::dom {
 
@@ -133,7 +128,7 @@ nsIURI* Link::GetURI() const {
   return mCachedURI;
 }
 
-void Link::SetProtocol(const nsAString& aProtocol) {
+void Link::SetProtocol(const nsACString& aProtocol) {
   nsCOMPtr<nsIURI> uri(GetURI());
   if (!uri) {
     // Ignore failures to be compatible with NS4.
@@ -146,111 +141,100 @@ void Link::SetProtocol(const nsAString& aProtocol) {
   SetHrefAttribute(uri);
 }
 
-void Link::SetPassword(const nsAString& aPassword) {
+void Link::SetPassword(const nsACString& aPassword) {
   nsCOMPtr<nsIURI> uri(GetURI());
   if (!uri) {
     // Ignore failures to be compatible with NS4.
     return;
   }
 
-  nsresult rv = NS_MutateURI(uri)
-                    .SetPassword(NS_ConvertUTF16toUTF8(aPassword))
-                    .Finalize(uri);
+  nsresult rv = NS_MutateURI(uri).SetPassword(aPassword).Finalize(uri);
   if (NS_SUCCEEDED(rv)) {
     SetHrefAttribute(uri);
   }
 }
 
-void Link::SetUsername(const nsAString& aUsername) {
+void Link::SetUsername(const nsACString& aUsername) {
   nsCOMPtr<nsIURI> uri(GetURI());
   if (!uri) {
     // Ignore failures to be compatible with NS4.
     return;
   }
 
-  nsresult rv = NS_MutateURI(uri)
-                    .SetUsername(NS_ConvertUTF16toUTF8(aUsername))
-                    .Finalize(uri);
+  nsresult rv = NS_MutateURI(uri).SetUsername(aUsername).Finalize(uri);
   if (NS_SUCCEEDED(rv)) {
     SetHrefAttribute(uri);
   }
 }
 
-void Link::SetHost(const nsAString& aHost) {
+void Link::SetHost(const nsACString& aHost) {
   nsCOMPtr<nsIURI> uri(GetURI());
   if (!uri) {
     // Ignore failures to be compatible with NS4.
     return;
   }
 
-  nsresult rv =
-      NS_MutateURI(uri).SetHostPort(NS_ConvertUTF16toUTF8(aHost)).Finalize(uri);
+  nsresult rv = NS_MutateURI(uri).SetHostPort(aHost).Finalize(uri);
   if (NS_FAILED(rv)) {
     return;
   }
   SetHrefAttribute(uri);
 }
 
-void Link::SetHostname(const nsAString& aHostname) {
+void Link::SetHostname(const nsACString& aHostname) {
   nsCOMPtr<nsIURI> uri(GetURI());
   if (!uri) {
     // Ignore failures to be compatible with NS4.
     return;
   }
 
-  nsresult rv =
-      NS_MutateURI(uri).SetHost(NS_ConvertUTF16toUTF8(aHostname)).Finalize(uri);
+  nsresult rv = NS_MutateURI(uri).SetHost(aHostname).Finalize(uri);
   if (NS_FAILED(rv)) {
     return;
   }
   SetHrefAttribute(uri);
 }
 
-void Link::SetPathname(const nsAString& aPathname) {
+void Link::SetPathname(const nsACString& aPathname) {
   nsCOMPtr<nsIURI> uri(GetURI());
   if (!uri) {
     // Ignore failures to be compatible with NS4.
     return;
   }
 
-  nsresult rv = NS_MutateURI(uri)
-                    .SetFilePath(NS_ConvertUTF16toUTF8(aPathname))
-                    .Finalize(uri);
+  nsresult rv = NS_MutateURI(uri).SetFilePath(aPathname).Finalize(uri);
   if (NS_FAILED(rv)) {
     return;
   }
   SetHrefAttribute(uri);
 }
 
-void Link::SetSearch(const nsAString& aSearch) {
+void Link::SetSearch(const nsACString& aSearch) {
   nsCOMPtr<nsIURI> uri(GetURI());
   if (!uri) {
     // Ignore failures to be compatible with NS4.
     return;
   }
 
-  nsresult rv =
-      NS_MutateURI(uri).SetQuery(NS_ConvertUTF16toUTF8(aSearch)).Finalize(uri);
+  nsresult rv = NS_MutateURI(uri).SetQuery(aSearch).Finalize(uri);
   if (NS_FAILED(rv)) {
     return;
   }
   SetHrefAttribute(uri);
 }
 
-void Link::SetPort(const nsAString& aPort) {
+void Link::SetPort(const nsACString& aPort) {
   nsCOMPtr<nsIURI> uri(GetURI());
   if (!uri) {
     // Ignore failures to be compatible with NS4.
     return;
   }
-
-  nsresult rv;
-  nsAutoString portStr(aPort);
 
   // nsIURI uses -1 as default value.
+  nsresult rv;
   int32_t port = -1;
   if (!aPort.IsEmpty()) {
-    port = portStr.ToInteger(&rv);
+    port = aPort.ToInteger(&rv);
     if (NS_FAILED(rv)) {
       return;
     }
@@ -263,15 +247,14 @@ void Link::SetPort(const nsAString& aPort) {
   SetHrefAttribute(uri);
 }
 
-void Link::SetHash(const nsAString& aHash) {
+void Link::SetHash(const nsACString& aHash) {
   nsCOMPtr<nsIURI> uri(GetURI());
   if (!uri) {
     // Ignore failures to be compatible with NS4.
     return;
   }
 
-  nsresult rv =
-      NS_MutateURI(uri).SetRef(NS_ConvertUTF16toUTF8(aHash)).Finalize(uri);
+  nsresult rv = NS_MutateURI(uri).SetRef(aHash).Finalize(uri);
   if (NS_FAILED(rv)) {
     return;
   }
@@ -279,121 +262,102 @@ void Link::SetHash(const nsAString& aHash) {
   SetHrefAttribute(uri);
 }
 
-void Link::GetOrigin(nsAString& aOrigin) {
+void Link::GetOrigin(nsACString& aOrigin) {
   aOrigin.Truncate();
 
-  nsCOMPtr<nsIURI> uri(GetURI());
+  nsIURI* uri = GetURI();
   if (!uri) {
     return;
   }
 
-  nsString origin;
-  nsContentUtils::GetWebExposedOriginSerialization(uri, origin);
-  aOrigin.Assign(origin);
+  nsContentUtils::GetWebExposedOriginSerialization(uri, aOrigin);
 }
 
-void Link::GetProtocol(nsAString& _protocol) {
-  nsCOMPtr<nsIURI> uri(GetURI());
-  if (uri) {
-    nsAutoCString scheme;
-    (void)uri->GetScheme(scheme);
-    CopyASCIItoUTF16(scheme, _protocol);
+void Link::GetProtocol(nsACString& aProtocol) {
+  if (nsIURI* uri = GetURI()) {
+    (void)uri->GetScheme(aProtocol);
   }
-  _protocol.Append(char16_t(':'));
+  aProtocol.Append(':');
 }
 
-void Link::GetUsername(nsAString& aUsername) {
+void Link::GetUsername(nsACString& aUsername) {
   aUsername.Truncate();
 
-  nsCOMPtr<nsIURI> uri(GetURI());
+  nsIURI* uri = GetURI();
   if (!uri) {
     return;
   }
 
-  nsAutoCString username;
-  uri->GetUsername(username);
-  CopyASCIItoUTF16(username, aUsername);
+  uri->GetUsername(aUsername);
 }
 
-void Link::GetPassword(nsAString& aPassword) {
+void Link::GetPassword(nsACString& aPassword) {
   aPassword.Truncate();
 
-  nsCOMPtr<nsIURI> uri(GetURI());
+  nsIURI* uri = GetURI();
   if (!uri) {
     return;
   }
 
-  nsAutoCString password;
-  uri->GetPassword(password);
-  CopyASCIItoUTF16(password, aPassword);
+  uri->GetPassword(aPassword);
 }
 
-void Link::GetHost(nsAString& _host) {
-  _host.Truncate();
+void Link::GetHost(nsACString& aHost) {
+  aHost.Truncate();
 
-  nsCOMPtr<nsIURI> uri(GetURI());
+  nsIURI* uri = GetURI();
   if (!uri) {
     // Do not throw!  Not having a valid URI should result in an empty string.
     return;
   }
 
-  nsAutoCString hostport;
-  nsresult rv = uri->GetHostPort(hostport);
-  if (NS_SUCCEEDED(rv)) {
-    CopyUTF8toUTF16(hostport, _host);
-  }
+  uri->GetHostPort(aHost);
 }
 
-void Link::GetHostname(nsAString& _hostname) {
-  _hostname.Truncate();
+void Link::GetHostname(nsACString& aHostname) {
+  aHostname.Truncate();
 
-  nsCOMPtr<nsIURI> uri(GetURI());
+  nsIURI* uri = GetURI();
   if (!uri) {
     // Do not throw!  Not having a valid URI should result in an empty string.
     return;
   }
 
-  nsContentUtils::GetHostOrIPv6WithBrackets(uri, _hostname);
+  nsContentUtils::GetHostOrIPv6WithBrackets(uri, aHostname);
 }
 
-void Link::GetPathname(nsAString& _pathname) {
-  _pathname.Truncate();
+void Link::GetPathname(nsACString& aPathname) {
+  aPathname.Truncate();
 
-  nsCOMPtr<nsIURI> uri(GetURI());
+  nsIURI* uri = GetURI();
   if (!uri) {
     // Do not throw!  Not having a valid URI should result in an empty string.
     return;
   }
 
-  nsAutoCString file;
-  nsresult rv = uri->GetFilePath(file);
-  if (NS_SUCCEEDED(rv)) {
-    CopyUTF8toUTF16(file, _pathname);
-  }
+  uri->GetFilePath(aPathname);
 }
 
-void Link::GetSearch(nsAString& _search) {
-  _search.Truncate();
+void Link::GetSearch(nsACString& aSearch) {
+  aSearch.Truncate();
 
-  nsCOMPtr<nsIURI> uri(GetURI());
+  nsIURI* uri = GetURI();
   if (!uri) {
     // Do not throw!  Not having a valid URI or URL should result in an empty
     // string.
     return;
   }
 
-  nsAutoCString search;
-  nsresult rv = uri->GetQuery(search);
-  if (NS_SUCCEEDED(rv) && !search.IsEmpty()) {
-    _search.Assign(u'?');
-    AppendUTF8toUTF16(search, _search);
+  nsresult rv = uri->GetQuery(aSearch);
+  if (NS_SUCCEEDED(rv) && !aSearch.IsEmpty()) {
+    aSearch.Insert('?', 0);
   }
 }
 
-void Link::GetPort(nsAString& _port) {
-  _port.Truncate();
+void Link::GetPort(nsACString& aPort) {
+  aPort.Truncate();
 
-  nsCOMPtr<nsIURI> uri(GetURI());
+  nsIURI* uri = GetURI();
   if (!uri) {
     // Do not throw!  Not having a valid URI should result in an empty string.
     return;
@@ -404,27 +368,23 @@ void Link::GetPort(nsAString& _port) {
   // Note that failure to get the port from the URI is not necessarily a bad
   // thing.  Some URIs do not have a port.
   if (NS_SUCCEEDED(rv) && port != -1) {
-    nsAutoString portStr;
-    portStr.AppendInt(port, 10);
-    _port.Assign(portStr);
+    aPort.AppendInt(port, 10);
   }
 }
 
-void Link::GetHash(nsAString& _hash) {
-  _hash.Truncate();
+void Link::GetHash(nsACString& aHash) {
+  aHash.Truncate();
 
-  nsCOMPtr<nsIURI> uri(GetURI());
+  nsIURI* uri = GetURI();
   if (!uri) {
     // Do not throw!  Not having a valid URI should result in an empty
     // string.
     return;
   }
 
-  nsAutoCString ref;
-  nsresult rv = uri->GetRef(ref);
-  if (NS_SUCCEEDED(rv) && !ref.IsEmpty()) {
-    _hash.Assign(char16_t('#'));
-    AppendUTF8toUTF16(ref, _hash);
+  nsresult rv = uri->GetRef(aHash);
+  if (NS_SUCCEEDED(rv) && !aHash.IsEmpty()) {
+    aHash.Insert('#', 0);
   }
 }
 

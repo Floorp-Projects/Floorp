@@ -128,7 +128,7 @@ nsresult FetchUtil::SetRequestReferrer(nsIPrincipal* aPrincipal, Document* aDoc,
   MOZ_ASSERT(NS_IsMainThread());
 
   nsresult rv = NS_OK;
-  nsAutoString referrer;
+  nsAutoCString referrer;
   aRequest.GetReferrer(referrer);
 
   ReferrerPolicy policy = aRequest.ReferrerPolicy_();
@@ -154,7 +154,7 @@ nsresult FetchUtil::SetRequestReferrer(nsIPrincipal* aPrincipal, Document* aDoc,
   rv = aChannel->SetReferrerInfoWithoutClone(referrerInfo);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsAutoString computedReferrerSpec;
+  nsAutoCString computedReferrerSpec;
   referrerInfo = aChannel->GetReferrerInfo();
   if (referrerInfo) {
     Unused << referrerInfo->GetComputedReferrerSpec(computedReferrerSpec);
@@ -719,7 +719,7 @@ bool FetchUtil::StreamResponseToJS(JSContext* aCx, JS::Handle<JSObject*> aObj,
 
   switch (aMimeType) {
     case JS::MimeType::Wasm:
-      nsAutoString url;
+      nsAutoCString url;
       response->GetUrl(url);
 
       IgnoredErrorResult result;
@@ -728,9 +728,8 @@ bool FetchUtil::StreamResponseToJS(JSContext* aCx, JS::Handle<JSObject*> aObj,
       if (NS_WARN_IF(result.Failed())) {
         return ThrowException(aCx, JSMSG_WASM_ERROR_CONSUMING_RESPONSE);
       }
-      NS_ConvertUTF16toUTF8 urlUTF8(url);
       aConsumer->noteResponseURLs(
-          urlUTF8.get(), sourceMapUrl.IsVoid() ? nullptr : sourceMapUrl.get());
+          url.get(), sourceMapUrl.IsVoid() ? nullptr : sourceMapUrl.get());
       break;
   }
 

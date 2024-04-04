@@ -538,7 +538,7 @@ bool HTMLEditUtils::IsLink(const nsINode* aNode) {
     return false;
   }
 
-  nsAutoString tmpText;
+  nsAutoCString tmpText;
   anchor->GetHref(tmpText);
   return !tmpText.IsEmpty();
 }

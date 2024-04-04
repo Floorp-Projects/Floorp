@@ -358,10 +358,10 @@ nsresult NetworkLoadHandler::PrepareForRequest(nsIRequest* aRequest) {
   RefPtr<mozilla::dom::Response> response = new mozilla::dom::Response(
       mRequestHandle->GetCacheCreator()->Global(), std::move(ir), nullptr);
 
-  mozilla::dom::RequestOrUSVString request;
+  mozilla::dom::RequestOrUTF8String request;
 
   MOZ_ASSERT(!loadContext->mFullURL.IsEmpty());
-  request.SetAsUSVString().ShareOrDependUpon(loadContext->mFullURL);
+  request.SetAsUTF8String().ShareOrDependUpon(loadContext->mFullURL);
 
   // This JSContext will not end up executing JS code because here there are
   // no ReadableStreams involved.

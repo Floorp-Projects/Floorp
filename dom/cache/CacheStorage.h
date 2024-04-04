@@ -56,7 +56,7 @@ class CacheStorage final : public nsISupports,
 
   // webidl interface methods
   already_AddRefed<Promise> Match(JSContext* aCx,
-                                  const RequestOrUSVString& aRequest,
+                                  const RequestOrUTF8String& aRequest,
                                   const MultiCacheQueryOptions& aOptions,
                                   ErrorResult& aRv);
   already_AddRefed<Promise> Has(const nsAString& aKey, ErrorResult& aRv);

@@ -458,11 +458,8 @@ nsresult WorkletFetchHandler::StartFetch(JSContext* aCx, nsIURI* aURI,
     return NS_ERROR_FAILURE;
   }
 
-  RequestOrUSVString requestInput;
-
-  nsAutoString url;
-  CopyUTF8toUTF16(spec, url);
-  requestInput.SetAsUSVString().ShareOrDependUpon(url);
+  RequestOrUTF8String requestInput;
+  requestInput.SetAsUTF8String().ShareOrDependUpon(spec);
 
   RootedDictionary<RequestInit> requestInit(aCx);
   requestInit.mCredentials.Construct(mCredentials);
@@ -472,14 +469,10 @@ nsresult WorkletFetchHandler::StartFetch(JSContext* aCx, nsIURI* aURI,
   requestInit.mMode.Construct(RequestMode::Cors);
 
   if (aReferrer) {
-    nsAutoString referrer;
-    res = aReferrer->GetSpec(spec);
+    res = aReferrer->GetSpec(requestInit.mReferrer.Construct());
     if (NS_WARN_IF(NS_FAILED(res))) {
       return NS_ERROR_FAILURE;
     }
-
-    CopyUTF8toUTF16(spec, referrer);
-    requestInit.mReferrer.Construct(referrer);
   }
 
   nsCOMPtr<nsIGlobalObject> global =
@@ -502,7 +495,7 @@ nsresult WorkletFetchHandler::StartFetch(JSContext* aCx, nsIURI* aURI,
 
   request->OverrideContentPolicyType(mWorklet->Impl()->ContentPolicyType());
 
-  RequestOrUSVString finalRequestInput;
+  RequestOrUTF8String finalRequestInput;
   finalRequestInput.SetAsRequest() = request.unsafeGetRawPtr();
 
   RefPtr<Promise> fetchPromise = FetchRequest(

@@ -64,7 +64,7 @@ namespace ipc {
   ContentSecurityPolicy[] policyInfos;
   PrincipalInfo requestPrincipalInfo;
   nsCString selfURISpec;
-  nsString referrer;
+  nsCString referrer;
   uint64_t innerWindowID;
   bool skipAllowInlineStyleCheck;
 };

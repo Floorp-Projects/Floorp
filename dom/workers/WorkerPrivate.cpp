@@ -1443,8 +1443,8 @@ nsresult WorkerPrivate::SetCSPFromHeaderValues(
   }
   MOZ_ASSERT(selfURI, "need a self URI for CSP");
 
-  rv = csp->SetRequestContextWithPrincipal(mLoadInfo.mPrincipal, selfURI,
-                                           u""_ns, 0);
+  rv = csp->SetRequestContextWithPrincipal(mLoadInfo.mPrincipal, selfURI, ""_ns,
+                                           0);
   NS_ENSURE_SUCCESS(rv, rv);
 
   csp->EnsureEventTarget(mMainThreadEventTarget);

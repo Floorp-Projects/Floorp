@@ -114,7 +114,7 @@ class CompareNetwork final : public nsIStreamLoaderObserver,
     MOZ_ASSERT(NS_IsMainThread());
   }
 
-  nsresult Initialize(nsIPrincipal* aPrincipal, const nsAString& aURL,
+  nsresult Initialize(nsIPrincipal* aPrincipal, const nsACString& aURL,
                       Cache* const aCache);
 
   void Abort();
@@ -123,7 +123,7 @@ class CompareNetwork final : public nsIStreamLoaderObserver,
 
   void CacheFinish(nsresult aRv);
 
-  const nsString& URL() const {
+  const nsCString& URL() const {
     MOZ_ASSERT(NS_IsMainThread());
     return mURL;
   }
@@ -164,7 +164,7 @@ class CompareNetwork final : public nsIStreamLoaderObserver,
 
   nsCOMPtr<nsIChannel> mChannel;
   nsString mBuffer;
-  nsString mURL;
+  nsCString mURL;
   ChannelInfo mChannelInfo;
   RefPtr<InternalHeaders> mInternalHeaders;
   UniquePtr<PrincipalInfo> mPrincipalInfo;
@@ -204,7 +204,7 @@ class CompareCache final : public PromiseNativeHandler,
     MOZ_ASSERT(NS_IsMainThread());
   }
 
-  nsresult Initialize(Cache* const aCache, const nsAString& aURL);
+  nsresult Initialize(Cache* const aCache, const nsACString& aURL);
 
   void Finish(nsresult aStatus, bool aInCache);
 
@@ -231,7 +231,7 @@ class CompareCache final : public PromiseNativeHandler,
   RefPtr<CompareNetwork> mCN;
   nsCOMPtr<nsIInputStreamPump> mPump;
 
-  nsString mURL;
+  nsCString mURL;
   nsString mBuffer;
 
   enum {
@@ -262,7 +262,7 @@ class CompareManager final : public PromiseNativeHandler {
     MOZ_ASSERT(aRegistration);
   }
 
-  nsresult Initialize(nsIPrincipal* aPrincipal, const nsAString& aURL,
+  nsresult Initialize(nsIPrincipal* aPrincipal, const nsACString& aURL,
                       const nsAString& aCacheName);
 
   void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
@@ -326,7 +326,7 @@ class CompareManager final : public PromiseNativeHandler {
 
   void Cleanup();
 
-  nsresult FetchScript(const nsAString& aURL, bool aIsMainScript,
+  nsresult FetchScript(const nsACString& aURL, bool aIsMainScript,
                        Cache* const aCache = nullptr) {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -364,7 +364,7 @@ class CompareManager final : public PromiseNativeHandler {
       return;
     }
 
-    Optional<RequestOrUSVString> request;
+    Optional<RequestOrUTF8String> request;
     CacheQueryOptions options;
     ErrorResult error;
     RefPtr<Promise> promise = mOldCache->Keys(aCx, request, options, error);
@@ -407,7 +407,7 @@ class CompareManager final : public PromiseNativeHandler {
     mState = WaitingForScriptOrComparisonResult;
 
     bool hasMainScript = false;
-    AutoTArray<nsString, 8> urlList;
+    AutoTArray<nsCString, 8> urlList;
 
     // Extract the list of URLs in the old cache.
     for (uint32_t i = 0; i < len; ++i) {
@@ -423,14 +423,14 @@ class CompareManager final : public PromiseNativeHandler {
         return;
       };
 
-      nsString url;
+      nsCString url;
       request->GetUrl(url);
 
       if (!hasMainScript && url == mURL) {
         hasMainScript = true;
       }
 
-      urlList.AppendElement(url);
+      urlList.AppendElement(std::move(url));
     }
 
     // If the main script is missing, then something has gone wrong.  We
@@ -565,8 +565,8 @@ class CompareManager final : public PromiseNativeHandler {
     RefPtr<Response> response =
         new Response(aCache->GetGlobalObject(), std::move(ir), nullptr);
 
-    RequestOrUSVString request;
-    request.SetAsUSVString().ShareOrDependUpon(aCN->URL());
+    RequestOrUTF8String request;
+    request.SetAsUTF8String().ShareOrDependUpon(aCN->URL());
 
     // For now we have to wait until the Put Promise is fulfilled before we can
     // continue since Cache does not yet support starting a read that is being
@@ -592,7 +592,7 @@ class CompareManager final : public PromiseNativeHandler {
 
   nsTArray<RefPtr<CompareNetwork>> mCNList;
 
-  nsString mURL;
+  nsCString mURL;
   RefPtr<nsIPrincipal> mPrincipal;
 
   // Used for the old cache where saves the old source scripts.
@@ -622,7 +622,7 @@ class CompareManager final : public PromiseNativeHandler {
 NS_IMPL_ISUPPORTS0(CompareManager)
 
 nsresult CompareNetwork::Initialize(nsIPrincipal* aPrincipal,
-                                    const nsAString& aURL,
+                                    const nsACString& aURL,
                                     Cache* const aCache) {
   MOZ_ASSERT(aPrincipal);
   MOZ_ASSERT(NS_IsMainThread());
@@ -634,7 +634,7 @@ nsresult CompareNetwork::Initialize(nsIPrincipal* aPrincipal,
   }
 
   mURL = aURL;
-  mURLList.AppendElement(NS_ConvertUTF16toUTF8(mURL));
+  mURLList.AppendElement(mURL);
 
   nsCOMPtr<nsILoadGroup> loadGroup;
   rv = NS_NewLoadGroup(getter_AddRefs(loadGroup), aPrincipal);
@@ -1045,7 +1045,7 @@ CompareNetwork::OnStreamComplete(nsIStreamLoader* aLoader,
     ServiceWorkerManager::LocalizeAndReportToAllClients(
         mRegistration->Scope(), "ServiceWorkerRegisterNetworkError",
         nsTArray<nsString>{NS_ConvertUTF8toUTF16(mRegistration->Scope()),
-                           statusAsText, mURL});
+                           statusAsText, NS_ConvertUTF8toUTF16(mURL)});
 
     rv = NS_ERROR_FAILURE;
     return NS_OK;
@@ -1078,7 +1078,8 @@ CompareNetwork::OnStreamComplete(nsIStreamLoader* aLoader,
     ServiceWorkerManager::LocalizeAndReportToAllClients(
         mRegistration->Scope(), "ServiceWorkerRegisterMimeTypeError2",
         nsTArray<nsString>{NS_ConvertUTF8toUTF16(mRegistration->Scope()),
-                           NS_ConvertUTF8toUTF16(mimeType), mURL});
+                           NS_ConvertUTF8toUTF16(mimeType),
+                           NS_ConvertUTF8toUTF16(mURL)});
     rv = NS_ERROR_DOM_SECURITY_ERR;
     return rv;
   }
@@ -1115,7 +1116,7 @@ CompareNetwork::OnStreamComplete(nsIStreamLoader* aLoader,
   return NS_OK;
 }
 
-nsresult CompareCache::Initialize(Cache* const aCache, const nsAString& aURL) {
+nsresult CompareCache::Initialize(Cache* const aCache, const nsACString& aURL) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aCache);
   MOZ_DIAGNOSTIC_ASSERT(mState == WaitingForInitialization);
@@ -1125,8 +1126,8 @@ nsresult CompareCache::Initialize(Cache* const aCache, const nsAString& aURL) {
   AutoJSAPI jsapi;
   jsapi.Init();
 
-  RequestOrUSVString request;
-  request.SetAsUSVString().ShareOrDependUpon(aURL);
+  RequestOrUTF8String request;
+  request.SetAsUTF8String().ShareOrDependUpon(aURL);
   ErrorResult error;
   CacheQueryOptions params;
   RefPtr<Promise> promise = aCache->Match(jsapi.cx(), request, params, error);
@@ -1294,7 +1295,7 @@ void CompareCache::ManageValueResult(JSContext* aCx,
 }
 
 nsresult CompareManager::Initialize(nsIPrincipal* aPrincipal,
-                                    const nsAString& aURL,
+                                    const nsACString& aURL,
                                     const nsAString& aCacheName) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aPrincipal);
@@ -1489,7 +1490,7 @@ nsresult GenerateCacheName(nsAString& aName) {
 
 nsresult Compare(ServiceWorkerRegistrationInfo* aRegistration,
                  nsIPrincipal* aPrincipal, const nsAString& aCacheName,
-                 const nsAString& aURL, CompareCallback* aCallback) {
+                 const nsACString& aURL, CompareCallback* aCallback) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aRegistration);
   MOZ_ASSERT(aPrincipal);

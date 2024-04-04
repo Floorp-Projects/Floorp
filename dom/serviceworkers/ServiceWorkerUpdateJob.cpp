@@ -287,8 +287,7 @@ void ServiceWorkerUpdateJob::Update() {
   RefPtr<CompareCallback> callback = new CompareCallback(this);
 
   nsresult rv = serviceWorkerScriptCache::Compare(
-      mRegistration, mPrincipal, cacheName, NS_ConvertUTF8toUTF16(mScriptSpec),
-      callback);
+      mRegistration, mPrincipal, cacheName, mScriptSpec, callback);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     FailUpdateJob(rv);
     return;

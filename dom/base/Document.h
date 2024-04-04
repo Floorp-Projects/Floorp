@@ -3272,7 +3272,7 @@ class Document : public nsINode,
   void SetDomain(const nsAString& aDomain, mozilla::ErrorResult& rv);
   void GetCookie(nsAString& aCookie, mozilla::ErrorResult& rv);
   void SetCookie(const nsAString& aCookie, mozilla::ErrorResult& rv);
-  void GetReferrer(nsAString& aReferrer) const;
+  void GetReferrer(nsACString& aReferrer) const;
   void GetLastModified(nsAString& aLastModified) const;
   void GetReadyState(nsAString& aReadyState) const;
 

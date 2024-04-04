@@ -311,7 +311,7 @@ static bool SandboxFetch(JSContext* cx, JS::HandleObject scope,
   }
 
   BindingCallContext callCx(cx, "fetch");
-  RequestOrUSVString request;
+  RequestOrUTF8String request;
   if (!request.Init(callCx, args[0], "Argument 1")) {
     return false;
   }
@@ -1274,7 +1274,7 @@ nsresult ApplyAddonContentScriptCSP(nsISupports* prinOrSop) {
 
   csp = new nsCSPContext();
   MOZ_TRY(
-      csp->SetRequestContextWithPrincipal(clonedPrincipal, selfURI, u""_ns, 0));
+      csp->SetRequestContextWithPrincipal(clonedPrincipal, selfURI, ""_ns, 0));
 
   MOZ_TRY(csp->AppendPolicy(baseCSP, false, false));
 

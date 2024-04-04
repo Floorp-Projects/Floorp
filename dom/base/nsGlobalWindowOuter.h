@@ -105,7 +105,6 @@ class PostMessageData;
 class PostMessageEvent;
 class PrintPreviewResultInfo;
 struct RequestInit;
-class RequestOrUSVString;
 class Selection;
 struct SizeToContentConstraints;
 class SpeechSynthesis;

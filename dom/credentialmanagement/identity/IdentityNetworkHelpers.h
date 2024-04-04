@@ -28,7 +28,7 @@ RefPtr<TPromise> FetchJSONStructure(Request* aRequest) {
       new typename TPromise::Private(__func__);
 
   // Fetch the provided request
-  RequestOrUSVString fetchInput;
+  RequestOrUTF8String fetchInput;
   fetchInput.SetAsRequest() = aRequest;
   RootedDictionary<RequestInit> requestInit(RootingCx());
   IgnoredErrorResult error;

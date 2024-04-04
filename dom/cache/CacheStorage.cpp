@@ -298,7 +298,7 @@ CacheStorage::CacheStorage(nsresult aFailureResult)
 }
 
 already_AddRefed<Promise> CacheStorage::Match(
-    JSContext* aCx, const RequestOrUSVString& aRequest,
+    JSContext* aCx, const RequestOrUTF8String& aRequest,
     const MultiCacheQueryOptions& aOptions, ErrorResult& aRv) {
   NS_ASSERT_OWNINGTHREAD(CacheStorage);
 

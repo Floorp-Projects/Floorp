@@ -44,30 +44,30 @@ class URL final : public URLSearchParamsObserver, public nsWrapperCache {
                        JS::Handle<JSObject*> aGivenProto) override;
 
   static already_AddRefed<URL> Constructor(const GlobalObject& aGlobal,
-                                           const nsAString& aURL,
-                                           const Optional<nsAString>& aBase,
+                                           const nsACString& aURL,
+                                           const Optional<nsACString>& aBase,
                                            ErrorResult& aRv);
 
   static already_AddRefed<URL> Constructor(nsISupports* aParent,
-                                           const nsAString& aURL,
-                                           const nsAString& aBase,
+                                           const nsACString& aURL,
+                                           const nsACString& aBase,
                                            ErrorResult& aRv);
 
   static already_AddRefed<URL> Constructor(nsISupports* aParent,
-                                           const nsAString& aURL, nsIURI* aBase,
-                                           ErrorResult& aRv);
+                                           const nsACString& aURL,
+                                           nsIURI* aBase, ErrorResult& aRv);
 
   static void CreateObjectURL(const GlobalObject& aGlobal, Blob& aBlob,
-                              nsAString& aResult, ErrorResult& aRv);
+                              nsACString& aResult, ErrorResult& aRv);
 
   static void CreateObjectURL(const GlobalObject& aGlobal, MediaSource& aSource,
-                              nsAString& aResult, ErrorResult& aRv);
+                              nsACString& aResult, ErrorResult& aRv);
 
   static void RevokeObjectURL(const GlobalObject& aGlobal,
-                              const nsAString& aURL, ErrorResult& aRv);
+                              const nsACString& aURL, ErrorResult& aRv);
 
   static bool IsValidObjectURL(const GlobalObject& aGlobal,
-                               const nsAString& aURL, ErrorResult& aRv);
+                               const nsACString& aURL, ErrorResult& aRv);
 
   static already_AddRefed<URL> Parse(const GlobalObject& aGlobal,
                                      const nsACString& aURL,
@@ -76,51 +76,41 @@ class URL final : public URLSearchParamsObserver, public nsWrapperCache {
   static bool CanParse(const GlobalObject& aGlobal, const nsACString& aURL,
                        const Optional<nsACString>& aBase);
 
-  void GetHref(nsAString& aHref) const;
+  void GetHref(nsACString& aHref) const;
+  void SetHref(const nsACString& aHref, ErrorResult& aRv);
 
-  void SetHref(const nsAString& aHref, ErrorResult& aRv);
+  void GetOrigin(nsACString& aOrigin) const;
 
-  void GetOrigin(nsAString& aOrigin) const;
+  void GetProtocol(nsACString& aProtocol) const;
+  void SetProtocol(const nsACString& aProtocol);
 
-  void GetProtocol(nsAString& aProtocol) const;
+  void GetUsername(nsACString& aUsername) const;
+  void SetUsername(const nsACString& aUsername);
 
-  void SetProtocol(const nsAString& aProtocol);
+  void GetPassword(nsACString& aPassword) const;
+  void SetPassword(const nsACString& aPassword);
 
-  void GetUsername(nsAString& aUsername) const;
+  void GetHost(nsACString& aHost) const;
+  void SetHost(const nsACString& aHost);
 
-  void SetUsername(const nsAString& aUsername);
+  void GetHostname(nsACString& aHostname) const;
+  void SetHostname(const nsACString& aHostname);
 
-  void GetPassword(nsAString& aPassword) const;
+  void GetPort(nsACString& aPort) const;
+  void SetPort(const nsACString& aPort);
 
-  void SetPassword(const nsAString& aPassword);
+  void GetPathname(nsACString& aPathname) const;
+  void SetPathname(const nsACString& aPathname);
 
-  void GetHost(nsAString& aHost) const;
-
-  void SetHost(const nsAString& aHost);
-
-  void GetHostname(nsAString& aHostname) const;
-
-  void SetHostname(const nsAString& aHostname);
-
-  void GetPort(nsAString& aPort) const;
-
-  void SetPort(const nsAString& aPort);
-
-  void GetPathname(nsAString& aPathname) const;
-
-  void SetPathname(const nsAString& aPathname);
-
-  void GetSearch(nsAString& aSearch) const;
-
-  void SetSearch(const nsAString& aSearch);
+  void GetSearch(nsACString& aSearch) const;
+  void SetSearch(const nsACString& aSearch);
 
   URLSearchParams* SearchParams();
 
-  void GetHash(nsAString& aHost) const;
+  void GetHash(nsACString& aHash) const;
+  void SetHash(const nsACString& aHash);
 
-  void SetHash(const nsAString& aHash);
-
-  void ToJSON(nsAString& aResult) const { GetHref(aResult); }
+  void ToJSON(nsACString& aResult) const { GetHref(aResult); }
 
   // URLSearchParamsObserver
   void URLSearchParamsUpdated(URLSearchParams* aSearchParams) override;
@@ -137,7 +127,7 @@ class URL final : public URLSearchParamsObserver, public nsWrapperCache {
   void UpdateURLSearchParams();
 
  private:
-  void SetSearchInternal(const nsAString& aSearch);
+  void SetSearchInternal(const nsACString& aSearch);
 
   void CreateSearchParamsIfNeeded();
 

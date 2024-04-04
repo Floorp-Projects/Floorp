@@ -319,7 +319,7 @@ AddonContentPolicy::ValidateAddonCSP(const nsAString& aPolicyString,
   nsCOMPtr<nsIURI> selfURI;
   principal->GetURI(getter_AddRefs(selfURI));
   RefPtr<nsCSPContext> csp = new nsCSPContext();
-  rv = csp->SetRequestContextWithPrincipal(principal, selfURI, u""_ns, 0);
+  rv = csp->SetRequestContextWithPrincipal(principal, selfURI, ""_ns, 0);
   NS_ENSURE_SUCCESS(rv, rv);
   csp->AppendPolicy(aPolicyString, false, false);
 

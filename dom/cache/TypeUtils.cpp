@@ -74,7 +74,7 @@ nsTArray<HeadersEntry> ToHeadersEntryList(InternalHeaders* aHeaders) {
 }  // namespace
 
 SafeRefPtr<InternalRequest> TypeUtils::ToInternalRequest(
-    JSContext* aCx, const RequestOrUSVString& aIn, BodyAction aBodyAction,
+    JSContext* aCx, const RequestOrUTF8String& aIn, BodyAction aBodyAction,
     ErrorResult& aRv) {
   if (aIn.IsRequest()) {
     Request& request = aIn.GetAsRequest();
@@ -89,12 +89,12 @@ SafeRefPtr<InternalRequest> TypeUtils::ToInternalRequest(
     return request.GetInternalRequest();
   }
 
-  return ToInternalRequest(aIn.GetAsUSVString(), aRv);
+  return ToInternalRequest(aIn.GetAsUTF8String(), aRv);
 }
 
 SafeRefPtr<InternalRequest> TypeUtils::ToInternalRequest(
-    JSContext* aCx, const OwningRequestOrUSVString& aIn, BodyAction aBodyAction,
-    ErrorResult& aRv) {
+    JSContext* aCx, const OwningRequestOrUTF8String& aIn,
+    BodyAction aBodyAction, ErrorResult& aRv) {
   if (aIn.IsRequest()) {
     Request& request = aIn.GetAsRequest();
 
@@ -108,7 +108,7 @@ SafeRefPtr<InternalRequest> TypeUtils::ToInternalRequest(
     return request.GetInternalRequest();
   }
 
-  return ToInternalRequest(aIn.GetAsUSVString(), aRv);
+  return ToInternalRequest(aIn.GetAsUTF8String(), aRv);
 }
 
 void TypeUtils::ToCacheRequest(CacheRequest& aOut, const InternalRequest& aIn,
@@ -447,10 +447,10 @@ void TypeUtils::CheckAndSetBodyUsed(JSContext* aCx, Request& aRequest,
   }
 }
 
-SafeRefPtr<InternalRequest> TypeUtils::ToInternalRequest(const nsAString& aIn,
+SafeRefPtr<InternalRequest> TypeUtils::ToInternalRequest(const nsACString& aIn,
                                                          ErrorResult& aRv) {
-  RequestOrUSVString requestOrString;
-  requestOrString.SetAsUSVString().ShareOrDependUpon(aIn);
+  RequestOrUTF8String requestOrString;
+  requestOrString.SetAsUTF8String().ShareOrDependUpon(aIn);
 
   // Re-create a GlobalObject stack object so we can use webidl Constructors.
   AutoJSAPI jsapi;

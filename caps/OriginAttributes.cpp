@@ -233,7 +233,7 @@ void OriginAttributes::SetPartitionKey(const nsAString& aOther) {
 
 void OriginAttributes::CreateSuffix(nsACString& aStr) const {
   URLParams params;
-  nsAutoString value;
+  nsAutoCString value;
 
   //
   // Important: While serializing any string-valued attributes, perform a
@@ -245,35 +245,34 @@ void OriginAttributes::CreateSuffix(nsACString& aStr) const {
   if (mUserContextId != nsIScriptSecurityManager::DEFAULT_USER_CONTEXT_ID) {
     value.Truncate();
     value.AppendInt(mUserContextId);
-    params.Set(u"userContextId"_ns, value);
+    params.Set("userContextId"_ns, value);
   }
 
   if (mPrivateBrowsingId) {
     value.Truncate();
     value.AppendInt(mPrivateBrowsingId);
-    params.Set(u"privateBrowsingId"_ns, value);
+    params.Set("privateBrowsingId"_ns, value);
   }
 
   if (!mFirstPartyDomain.IsEmpty()) {
     nsAutoString sanitizedFirstPartyDomain(mFirstPartyDomain);
     sanitizedFirstPartyDomain.ReplaceChar(kSourceChar, kSanitizedChar);
-
-    params.Set(u"firstPartyDomain"_ns, sanitizedFirstPartyDomain);
+    params.Set("firstPartyDomain"_ns,
+               NS_ConvertUTF16toUTF8(sanitizedFirstPartyDomain));
   }
 
   if (!mGeckoViewSessionContextId.IsEmpty()) {
     nsAutoString sanitizedGeckoViewUserContextId(mGeckoViewSessionContextId);
     sanitizedGeckoViewUserContextId.ReplaceChar(
         dom::quota::QuotaManager::kReplaceChars16, kSanitizedChar);
-
-    params.Set(u"geckoViewUserContextId"_ns, sanitizedGeckoViewUserContextId);
+    params.Set("geckoViewUserContextId"_ns,
+               NS_ConvertUTF16toUTF8(sanitizedGeckoViewUserContextId));
   }
 
   if (!mPartitionKey.IsEmpty()) {
     nsAutoString sanitizedPartitionKey(mPartitionKey);
     sanitizedPartitionKey.ReplaceChar(kSourceChar, kSanitizedChar);
-
-    params.Set(u"partitionKey"_ns, sanitizedPartitionKey);
+    params.Set("partitionKey"_ns, NS_ConvertUTF16toUTF8(sanitizedPartitionKey));
   }
 
   aStr.Truncate();
@@ -281,7 +280,7 @@ void OriginAttributes::CreateSuffix(nsACString& aStr) const {
   params.Serialize(value, true);
   if (!value.IsEmpty()) {
     aStr.AppendLiteral("^");
-    aStr.Append(NS_ConvertUTF16toUTF8(value));
+    aStr.Append(value);
   }
 
 // In debug builds, check the whole string for illegal characters too (just in
@@ -338,7 +337,7 @@ bool OriginAttributes::PopulateFromSuffix(const nsACString& aStr) {
 
   return URLParams::Parse(
       Substring(aStr, 1, aStr.Length() - 1), true,
-      [this](const nsAString& aName, const nsAString& aValue) {
+      [this](const nsACString& aName, const nsACString& aValue) {
         if (aName.EqualsLiteral("inBrowser")) {
           if (!aValue.EqualsLiteral("1")) {
             return false;
@@ -374,21 +373,21 @@ bool OriginAttributes::PopulateFromSuffix(const nsACString& aStr) {
         }
 
         if (aName.EqualsLiteral("firstPartyDomain")) {
-          nsAutoString firstPartyDomain(aValue);
+          nsAutoCString firstPartyDomain(aValue);
           firstPartyDomain.ReplaceChar(kSanitizedChar, kSourceChar);
-          mFirstPartyDomain.Assign(firstPartyDomain);
+          mFirstPartyDomain.Assign(NS_ConvertUTF8toUTF16(firstPartyDomain));
           return true;
         }
 
         if (aName.EqualsLiteral("geckoViewUserContextId")) {
-          mGeckoViewSessionContextId.Assign(aValue);
+          mGeckoViewSessionContextId.Assign(NS_ConvertUTF8toUTF16(aValue));
           return true;
         }
 
         if (aName.EqualsLiteral("partitionKey")) {
-          nsAutoString partitionKey(aValue);
+          nsAutoCString partitionKey(aValue);
           partitionKey.ReplaceChar(kSanitizedChar, kSourceChar);
-          mPartitionKey.Assign(partitionKey);
+          mPartitionKey.Assign(NS_ConvertUTF8toUTF16(partitionKey));
           return true;
         }
 

@@ -324,7 +324,7 @@ Result<IPCInternalRequest, nsresult> GetIPCInternalRequest(
   RequestCredentials requestCredentials =
       InternalRequest::MapChannelToRequestCredentials(underlyingChannel);
 
-  nsAutoString referrer;
+  nsAutoCString referrer;
   ReferrerPolicy referrerPolicy = ReferrerPolicy::_empty;
   ReferrerPolicy environmentReferrerPolicy = ReferrerPolicy::_empty;
 

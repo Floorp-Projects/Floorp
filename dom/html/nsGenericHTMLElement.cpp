@@ -646,7 +646,6 @@ already_AddRefed<nsIURI> nsGenericHTMLElement::GetHrefURIForAnchors() const {
   // We use the nsAttrValue's copy of the URI string to avoid copying.
   nsCOMPtr<nsIURI> uri;
   GetURIAttr(nsGkAtoms::href, nullptr, getter_AddRefs(uri));
-
   return uri.forget();
 }
 
@@ -1661,34 +1660,50 @@ uint32_t nsGenericHTMLElement::GetDimensionAttrAsUnsignedInt(
 void nsGenericHTMLElement::GetURIAttr(nsAtom* aAttr, nsAtom* aBaseAttr,
                                       nsAString& aResult) const {
   nsCOMPtr<nsIURI> uri;
-  bool hadAttr = GetURIAttr(aAttr, aBaseAttr, getter_AddRefs(uri));
-  if (!hadAttr) {
+  const nsAttrValue* attr = GetURIAttr(aAttr, aBaseAttr, getter_AddRefs(uri));
+  if (!attr) {
     aResult.Truncate();
     return;
   }
-
   if (!uri) {
     // Just return the attr value
-    GetAttr(aAttr, aResult);
+    attr->ToString(aResult);
     return;
   }
-
   nsAutoCString spec;
   uri->GetSpec(spec);
   CopyUTF8toUTF16(spec, aResult);
 }
 
-bool nsGenericHTMLElement::GetURIAttr(nsAtom* aAttr, nsAtom* aBaseAttr,
-                                      nsIURI** aURI) const {
+void nsGenericHTMLElement::GetURIAttr(nsAtom* aAttr, nsAtom* aBaseAttr,
+                                      nsACString& aResult) const {
+  nsCOMPtr<nsIURI> uri;
+  const nsAttrValue* attr = GetURIAttr(aAttr, aBaseAttr, getter_AddRefs(uri));
+  if (!attr) {
+    aResult.Truncate();
+    return;
+  }
+  if (!uri) {
+    // Just return the attr value
+    nsAutoString value;
+    attr->ToString(value);
+    CopyUTF16toUTF8(value, aResult);
+    return;
+  }
+  uri->GetSpec(aResult);
+}
+
+const nsAttrValue* nsGenericHTMLElement::GetURIAttr(nsAtom* aAttr,
+                                                    nsAtom* aBaseAttr,
+                                                    nsIURI** aURI) const {
   *aURI = nullptr;
 
   const nsAttrValue* attr = mAttrs.GetAttr(aAttr);
   if (!attr) {
-    return false;
+    return nullptr;
   }
 
   nsCOMPtr<nsIURI> baseURI = GetBaseURI();
-
   if (aBaseAttr) {
     nsAutoString baseAttrValue;
     if (GetAttr(aBaseAttr, baseAttrValue)) {
@@ -1696,7 +1711,7 @@ bool nsGenericHTMLElement::GetURIAttr(nsAtom* aAttr, nsAtom* aBaseAttr,
       nsresult rv = nsContentUtils::NewURIWithDocumentCharset(
           getter_AddRefs(baseAttrURI), baseAttrValue, OwnerDoc(), baseURI);
       if (NS_FAILED(rv)) {
-        return true;
+        return attr;
       }
       baseURI.swap(baseAttrURI);
     }
@@ -1706,7 +1721,7 @@ bool nsGenericHTMLElement::GetURIAttr(nsAtom* aAttr, nsAtom* aBaseAttr,
   // return true, and *aURI will be null.
   nsContentUtils::NewURIWithDocumentCharset(aURI, attr->GetStringValue(),
                                             OwnerDoc(), baseURI);
-  return true;
+  return attr;
 }
 
 bool nsGenericHTMLElement::IsLabelable() const {

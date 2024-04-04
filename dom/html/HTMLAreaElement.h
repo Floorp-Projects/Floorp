@@ -64,12 +64,11 @@ class HTMLAreaElement final : public nsGenericHTMLElement, public Link {
     SetHTMLAttr(nsGkAtoms::shape, aShape, aError);
   }
 
-  // argument type nsAString for nsContextMenuInfo
-  void GetHref(nsAString& aValue) {
+  void GetHref(nsACString& aValue) {
     GetURIAttr(nsGkAtoms::href, nullptr, aValue);
   }
-  void SetHref(const nsAString& aHref, ErrorResult& aError) {
-    SetHTMLAttr(nsGkAtoms::href, aHref, aError);
+  void SetHref(const nsACString& aHref, ErrorResult& aError) {
+    SetHTMLAttr(nsGkAtoms::href, NS_ConvertUTF8toUTF16(aHref), aError);
   }
 
   void GetTarget(DOMString& aValue);
@@ -85,13 +84,11 @@ class HTMLAreaElement final : public nsGenericHTMLElement, public Link {
   }
 
   void GetPing(DOMString& aValue) { GetHTMLAttr(nsGkAtoms::ping, aValue); }
-
   void SetPing(const nsAString& aPing, ErrorResult& aError) {
     SetHTMLAttr(nsGkAtoms::ping, aPing, aError);
   }
 
   void GetRel(DOMString& aValue) { GetHTMLAttr(nsGkAtoms::rel, aValue); }
-
   void SetRel(const nsAString& aRel, ErrorResult& aError) {
     SetHTMLAttr(nsGkAtoms::rel, aRel, aError);
   }
@@ -140,9 +137,6 @@ class HTMLAreaElement final : public nsGenericHTMLElement, public Link {
   void SetNoHref(bool aValue, ErrorResult& aError) {
     SetHTMLBoolAttr(nsGkAtoms::nohref, aValue, aError);
   }
-
-  void ToString(nsAString& aSource);
-  void Stringify(nsAString& aResult) { GetHref(aResult); }
 
   void NodeInfoChanged(Document* aOldDoc) final {
     ClearHasPendingLinkUpdate();

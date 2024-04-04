@@ -64,25 +64,25 @@ class Link : public nsISupports {
   /**
    * Helper methods for modifying and obtaining parts of the URI of the Link.
    */
-  void SetProtocol(const nsAString& aProtocol);
-  void SetUsername(const nsAString& aUsername);
-  void SetPassword(const nsAString& aPassword);
-  void SetHost(const nsAString& aHost);
-  void SetHostname(const nsAString& aHostname);
-  void SetPathname(const nsAString& aPathname);
-  void SetSearch(const nsAString& aSearch);
-  void SetPort(const nsAString& aPort);
-  void SetHash(const nsAString& aHash);
-  void GetOrigin(nsAString& aOrigin);
-  void GetProtocol(nsAString& _protocol);
-  void GetUsername(nsAString& aUsername);
-  void GetPassword(nsAString& aPassword);
-  void GetHost(nsAString& _host);
-  void GetHostname(nsAString& _hostname);
-  void GetPathname(nsAString& _pathname);
-  void GetSearch(nsAString& _search);
-  void GetPort(nsAString& _port);
-  void GetHash(nsAString& _hash);
+  void SetProtocol(const nsACString& aProtocol);
+  void SetUsername(const nsACString& aUsername);
+  void SetPassword(const nsACString& aPassword);
+  void SetHost(const nsACString& aHost);
+  void SetHostname(const nsACString& aHostname);
+  void SetPathname(const nsACString& aPathname);
+  void SetSearch(const nsACString& aSearch);
+  void SetPort(const nsACString& aPort);
+  void SetHash(const nsACString& aHash);
+  void GetOrigin(nsACString& aOrigin);
+  void GetProtocol(nsACString& aProtocol);
+  void GetUsername(nsACString& aUsername);
+  void GetPassword(nsACString& aPassword);
+  void GetHost(nsACString& aHost);
+  void GetHostname(nsACString& aHostname);
+  void GetPathname(nsACString& aPathname);
+  void GetSearch(nsACString& aSearch);
+  void GetPort(nsACString& aPort);
+  void GetHash(nsACString& aHash);
 
   /**
    * Invalidates any link caching, and resets the state to the default.

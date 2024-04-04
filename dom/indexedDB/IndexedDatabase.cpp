@@ -391,7 +391,8 @@ JSObject* CommonStructuredCloneReadCallback(
             !StructuredCloneHolder::ReadString(aReader, value)) {
           return nullptr;
         }
-        params->Append(key, value);
+        params->Append(NS_ConvertUTF16toUTF8(key),
+                       NS_ConvertUTF16toUTF8(value));
       }
 
       if (!WrapAsJSObject(aCx, params, &result)) {

@@ -241,7 +241,7 @@ interface nsIContentSecurityPolicy : nsISerializable
   [must_use] void setRequestContextWithDocument(in Document aDocument);
   [must_use] void setRequestContextWithPrincipal(in nsIPrincipal aRequestPrincipal,
                                                  in nsIURI aSelfURI,
-                                                 in AString aReferrer,
+                                                 in ACString aReferrer,
                                                  in unsigned long long aInnerWindowId);
 
   /**
@@ -249,7 +249,7 @@ interface nsIContentSecurityPolicy : nsISerializable
    */
   [noscript, notxpcom, nostdcall] readonly attribute nsIPrincipal requestPrincipal;
   [noscript, notxpcom, nostdcall] readonly attribute nsIURI selfURI;
-  [noscript] readonly attribute AString referrer;
+  [noscript] readonly attribute ACString referrer;
   [noscript, notxpcom, nostdcall] readonly attribute unsigned long long innerWindowID;
 
   /**

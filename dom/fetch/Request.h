@@ -21,7 +21,7 @@ namespace mozilla::dom {
 
 class Headers;
 class InternalHeaders;
-class RequestOrUSVString;
+class RequestOrUTF8String;
 
 class Request final : public FetchBody<Request>, public nsWrapperCache {
   NS_DECL_ISUPPORTS_INHERITED
@@ -37,12 +37,7 @@ class Request final : public FetchBody<Request>, public nsWrapperCache {
     return Request_Binding::Wrap(aCx, this, aGivenProto);
   }
 
-  void GetUrl(nsAString& aUrl) const {
-    nsAutoCString url;
-    mRequest->GetURL(url);
-    CopyUTF8toUTF16(url, aUrl);
-  }
-
+  void GetUrl(nsACString& aUrl) const { mRequest->GetURL(aUrl); }
   void GetMethod(nsCString& aMethod) const { aMethod = mRequest->mMethod; }
 
   RequestMode Mode() const { return mRequest->mMode; }
@@ -74,7 +69,7 @@ class Request final : public FetchBody<Request>, public nsWrapperCache {
     return mRequest->IsContentPolicyTypeOverridden();
   }
 
-  void GetReferrer(nsAString& aReferrer) const {
+  void GetReferrer(nsACString& aReferrer) const {
     mRequest->GetReferrer(aReferrer);
   }
 
@@ -105,13 +100,13 @@ class Request final : public FetchBody<Request>, public nsWrapperCache {
   const nsAString& BodyLocalPath() const { return mRequest->BodyLocalPath(); }
 
   static SafeRefPtr<Request> Constructor(const GlobalObject& aGlobal,
-                                         const RequestOrUSVString& aInput,
+                                         const RequestOrUTF8String& aInput,
                                          const RequestInit& aInit,
                                          ErrorResult& rv);
 
   static SafeRefPtr<Request> Constructor(nsIGlobalObject* aGlobal,
                                          JSContext* aCx,
-                                         const RequestOrUSVString& aInput,
+                                         const RequestOrUTF8String& aInput,
                                          const RequestInit& aInit,
                                          const CallerType aCallerType,
                                          ErrorResult& rv);

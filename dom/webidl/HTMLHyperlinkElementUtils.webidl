@@ -12,25 +12,25 @@
 
 interface mixin HTMLHyperlinkElementUtils {
   [CEReactions, SetterThrows]
-  stringifier attribute USVString href;
+  stringifier attribute UTF8String href;
 
-  readonly attribute USVString origin;
+  readonly attribute UTF8String origin;
   [CEReactions]
-           attribute USVString protocol;
+           attribute UTF8String protocol;
   [CEReactions]
-           attribute USVString username;
+           attribute UTF8String username;
   [CEReactions]
-           attribute USVString password;
+           attribute UTF8String password;
   [CEReactions]
-           attribute USVString host;
+           attribute UTF8String host;
   [CEReactions]
-           attribute USVString hostname;
+           attribute UTF8String hostname;
   [CEReactions]
-           attribute USVString port;
+           attribute UTF8String port;
   [CEReactions]
-           attribute USVString pathname;
+           attribute UTF8String pathname;
   [CEReactions]
-           attribute USVString search;
+           attribute UTF8String search;
   [CEReactions]
-           attribute USVString hash;
+           attribute UTF8String hash;
 };

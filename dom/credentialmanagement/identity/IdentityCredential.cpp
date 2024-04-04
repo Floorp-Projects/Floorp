@@ -602,15 +602,14 @@ RefPtr<IdentityCredential::GetTokenPromise> IdentityCredential::FetchToken(
       MakeSafeRefPtr<InternalRequest>(tokenLocation, fragment);
   internalRequest->SetMethod("POST"_ns);
   URLParams bodyValue;
-  bodyValue.Set(u"account_id"_ns, aAccount.mId);
-  bodyValue.Set(u"client_id"_ns, aProvider.mClientId);
+  bodyValue.Set("account_id"_ns, NS_ConvertUTF16toUTF8(aAccount.mId));
+  bodyValue.Set("client_id"_ns, aProvider.mClientId);
   if (aProvider.mNonce.WasPassed()) {
-    bodyValue.Set(u"nonce"_ns, aProvider.mNonce.Value());
+    bodyValue.Set("nonce"_ns, aProvider.mNonce.Value());
   }
-  bodyValue.Set(u"disclosure_text_shown"_ns, u"false"_ns);
-  nsString bodyString;
-  bodyValue.Serialize(bodyString, true);
-  nsCString bodyCString = NS_ConvertUTF16toUTF8(bodyString);
+  bodyValue.Set("disclosure_text_shown"_ns, "false"_ns);
+  nsAutoCString bodyCString;
+  bodyValue.Serialize(bodyCString, true);
   nsCOMPtr<nsIInputStream> streamBody;
   rv = NS_NewCStringInputStream(getter_AddRefs(streamBody), bodyCString);
   if (NS_FAILED(rv)) {
@@ -1097,7 +1096,7 @@ already_AddRefed<Promise> IdentityCredential::LogoutRPs(
         nsContentPolicyType::TYPE_WEB_IDENTITY);
     RefPtr<Request> domRequest =
         new Request(global, std::move(internalRequest), nullptr);
-    RequestOrUSVString fetchInput;
+    RequestOrUTF8String fetchInput;
     fetchInput.SetAsRequest() = domRequest;
     RootedDictionary<RequestInit> requestInit(RootingCx());
     IgnoredErrorResult error;

@@ -1134,16 +1134,15 @@ GetQueryParamFunction::OnFunctionCall(mozIStorageValueArray* aArguments,
 
   RefPtr<nsVariant> result = new nsVariant();
   if (!queryString.IsEmpty() && !paramName.IsEmpty()) {
-    URLParams::Parse(
-        queryString, true,
-        [&paramName, &result](const nsAString& aName, const nsAString& aValue) {
-          NS_ConvertUTF16toUTF8 name(aName);
-          if (!paramName.Equals(name)) {
-            return true;
-          }
-          result->SetAsAString(aValue);
-          return false;
-        });
+    URLParams::Parse(queryString, true,
+                     [&paramName, &result](const nsACString& aName,
+                                           const nsACString& aValue) {
+                       if (!paramName.Equals(aName)) {
+                         return true;
+                       }
+                       result->SetAsACString(aValue);
+                       return false;
+                     });
   }
 
   result.forget(_result);
