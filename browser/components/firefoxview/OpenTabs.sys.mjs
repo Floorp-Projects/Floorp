@@ -33,6 +33,7 @@ const TAB_CHANGE_EVENTS = Object.freeze([
 ]);
 const TAB_RECENCY_CHANGE_EVENTS = Object.freeze([
   "activate",
+  "sizemodechange",
   "TabAttrModified",
   "TabClose",
   "TabOpen",
@@ -72,6 +73,10 @@ export function lastSeenActiveSort(a, b) {
  */
 class OpenTabsTarget extends EventTarget {
   #changedWindowsByType = {
+    TabChange: new Set(),
+    TabRecencyChange: new Set(),
+  };
+  #sourceEventsByType = {
     TabChange: new Set(),
     TabRecencyChange: new Set(),
   };
@@ -223,6 +228,9 @@ class OpenTabsTarget extends EventTarget {
     for (let changedWindows of Object.values(this.#changedWindowsByType)) {
       changedWindows.clear();
     }
+    for (let sourceEvents of Object.values(this.#sourceEventsByType)) {
+      sourceEvents.clear();
+    }
     this.#watchedWindows.clear();
     this.#dispatchChangesTask?.disarm();
   }
@@ -245,9 +253,16 @@ class OpenTabsTarget extends EventTarget {
     tabContainer.addEventListener("TabUnpinned", this);
     tabContainer.addEventListener("TabSelect", this);
     win.addEventListener("activate", this);
+    win.addEventListener("sizemodechange", this);
 
-    this.#scheduleEventDispatch("TabChange", {});
-    this.#scheduleEventDispatch("TabRecencyChange", {});
+    this.#scheduleEventDispatch("TabChange", {
+      sourceWindowId: win.windowGlobalChild.innerWindowId,
+      sourceEvent: "watchWindow",
+    });
+    this.#scheduleEventDispatch("TabRecencyChange", {
+      sourceWindowId: win.windowGlobalChild.innerWindowId,
+      sourceEvent: "watchWindow",
+    });
   }
 
   /**
@@ -270,9 +285,16 @@ class OpenTabsTarget extends EventTarget {
       tabContainer.removeEventListener("TabSelect", this);
       tabContainer.removeEventListener("TabUnpinned", this);
       win.removeEventListener("activate", this);
+      win.removeEventListener("sizemodechange", this);
 
-      this.#scheduleEventDispatch("TabChange", {});
-      this.#scheduleEventDispatch("TabRecencyChange", {});
+      this.#scheduleEventDispatch("TabChange", {
+        sourceWindowId: win.windowGlobalChild.innerWindowId,
+        sourceEvent: "unwatchWindow",
+      });
+      this.#scheduleEventDispatch("TabRecencyChange", {
+        sourceWindowId: win.windowGlobalChild.innerWindowId,
+        sourceEvent: "unwatchWindow",
+      });
     }
   }
 
@@ -281,11 +303,12 @@ class OpenTabsTarget extends EventTarget {
    * Repeated calls within approx 16ms will be consolidated
    * into one event dispatch.
    */
-  #scheduleEventDispatch(eventType, { sourceWindowId } = {}) {
+  #scheduleEventDispatch(eventType, { sourceWindowId, sourceEvent } = {}) {
     if (!this.haveListenersForEvent(eventType)) {
       return;
     }
 
+    this.#sourceEventsByType[eventType].add(sourceEvent);
     this.#changedWindowsByType[eventType].add(sourceWindowId);
     // Queue up an event dispatch - we use a deferred task to make this less noisy by
     // consolidating multiple change events into one.
@@ -302,16 +325,18 @@ class OpenTabsTarget extends EventTarget {
     for (let [eventType, changedWindowIds] of Object.entries(
       this.#changedWindowsByType
     )) {
+      let sourceEvents = this.#sourceEventsByType[eventType];
       if (this.haveListenersForEvent(eventType) && changedWindowIds.size) {
-        this.dispatchEvent(
-          new CustomEvent(eventType, {
-            detail: {
-              windowIds: [...changedWindowIds],
-            },
-          })
-        );
+        let changeEvent = new CustomEvent(eventType, {
+          detail: {
+            windowIds: [...changedWindowIds],
+            sourceEvents: [...sourceEvents],
+          },
+        });
+        this.dispatchEvent(changeEvent);
         changedWindowIds.clear();
       }
+      sourceEvents?.clear();
     }
   }
 
@@ -362,11 +387,13 @@ class OpenTabsTarget extends EventTarget {
     if (TAB_RECENCY_CHANGE_EVENTS.includes(type)) {
       this.#scheduleEventDispatch("TabRecencyChange", {
         sourceWindowId: win.windowGlobalChild.innerWindowId,
+        sourceEvent: type,
       });
     }
     if (TAB_CHANGE_EVENTS.includes(type)) {
       this.#scheduleEventDispatch("TabChange", {
         sourceWindowId: win.windowGlobalChild.innerWindowId,
+        sourceEvent: type,
       });
     }
   }
