@@ -643,6 +643,8 @@ std::vector<webrtc::RtpHeaderExtensionCapability>
 WebRtcVoiceEngine::GetRtpHeaderExtensions() const {
   RTC_DCHECK(signal_thread_checker_.IsCurrent());
   std::vector<webrtc::RtpHeaderExtensionCapability> result;
+  // id is *not* incremented for non-default extensions, UsedIds needs to
+  // resolve conflicts.
   int id = 1;
   for (const auto& uri : {webrtc::RtpExtension::kAudioLevelUri,
                           webrtc::RtpExtension::kAbsSendTimeUri,
@@ -651,7 +653,7 @@ WebRtcVoiceEngine::GetRtpHeaderExtensions() const {
     result.emplace_back(uri, id++, webrtc::RtpTransceiverDirection::kSendRecv);
   }
   for (const auto& uri : {webrtc::RtpExtension::kAbsoluteCaptureTimeUri}) {
-    result.emplace_back(uri, id++, webrtc::RtpTransceiverDirection::kStopped);
+    result.emplace_back(uri, id, webrtc::RtpTransceiverDirection::kStopped);
   }
   return result;
 }
