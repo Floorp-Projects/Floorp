@@ -59,7 +59,7 @@ class MockChannelSend {
 };
 
 std::unique_ptr<TransformableAudioFrameInterface> CreateMockReceiverFrame(
-    std::vector<const uint32_t> csrcs) {
+    const std::vector<uint32_t>& csrcs) {
   std::unique_ptr<MockTransformableAudioFrame> mock_frame =
       std::make_unique<NiceMock<MockTransformableAudioFrame>>();
   rtc::ArrayView<const uint8_t> payload(mock_data);
@@ -168,7 +168,7 @@ TEST(ChannelSendFrameTransformerDelegateTest,
   delegate->Init();
   ASSERT_TRUE(callback);
 
-  std::vector<const uint32_t> csrcs = {123, 234, 345, 456};
+  const std::vector<uint32_t> csrcs = {123, 234, 345, 456};
   EXPECT_CALL(mock_channel, SendFrame).Times(0);
   EXPECT_CALL(mock_channel, SendFrame(_, 0, 0, ElementsAreArray(mock_data), _,
                                       ElementsAreArray(csrcs)));
