@@ -109,6 +109,11 @@ async function startTest(test, token) {
   let tests = gPlayTests;
   // Filter out bug1377278.webm due to bug 1541401.
   tests = tests.filter(t => !t.name.includes("1377278"));
+  // bug 1372457, bug 1526207 for drawImage -- restrict to codecs that can be
+  // decoded in software.
+  if (navigator.userAgent.includes("Android")) {
+    tests = tests.filter(t => !t.name.includes("mp4"));
+  }
 
   manager.runTests(tests, async (test, token) => {
     try {

@@ -31,7 +31,7 @@ function check() {
 
   // Debug info for Bug 608634
   ok(true, "iframe src=" + document.body.getElementsByTagName("iframe")[0].src);
-  is(v.readyState, v.HAVE_NOTHING, "Ready state");
+  is(v.readyState, v.HAVE_NOTHING, "Ready state for " + document.body.getElementsByTagName("iframe")[0].src);
 
   isnot(v.error, null, "Error object");
   is(v.networkState, v.NETWORK_NO_SOURCE, "Network state");
