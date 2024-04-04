@@ -134,7 +134,7 @@
     },
     "partnerCode": {
       "title": "Partner Code",
-      "description": "The partner code for the engine or variant. This will be inserted into parameters which include '{pc}'",
+      "description": "The partner code for the engine or variant. This will be inserted into parameters which include '{partnerCode}'",
       "type": "string",
       "pattern": "^[a-zA-Z0-9-_]*$"
     },
@@ -191,7 +191,7 @@
               },
               "value": {
                 "title": "Value",
-                "description": "The parameter value, this may be a static value, or additionally contain a parameter replacement, e.g. {inputEncoding}. For the partner code parameter, this field should be {pc}.",
+                "description": "The parameter value, this may be a static value, or additionally contain a parameter replacement, e.g. {inputEncoding}. For the partner code parameter, this field should be {partnerCode}.",
                 "type": "string",
                 "pattern": "^[a-zA-Z0-9-_{}]*$"
               },
