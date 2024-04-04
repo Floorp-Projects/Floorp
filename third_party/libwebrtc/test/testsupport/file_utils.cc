@@ -36,7 +36,7 @@
 
 #include <sys/stat.h>  // To check for directory existence.
 #ifndef S_ISDIR        // Not defined in stat.h on Windows.
-#define S_ISDIR(mode) (((mode)&S_IFMT) == S_IFDIR)
+#define S_ISDIR(mode) (((mode) & S_IFMT) == S_IFDIR)
 #endif
 
 #include <stdio.h>
@@ -237,7 +237,12 @@ std::string ResourcePath(absl::string_view name, absl::string_view extension) {
 std::string JoinFilename(absl::string_view dir, absl::string_view name) {
   RTC_CHECK(!dir.empty()) << "Special cases not implemented.";
   rtc::StringBuilder os;
-  os << dir << kPathDelimiter << name;
+  os << dir;
+  // If the directory path already ends with a path delimiter don't append it
+  if (dir.back() != kPathDelimiter.back()) {
+    os << kPathDelimiter;
+  }
+  os << name;
   return os.Release();
 }
 
