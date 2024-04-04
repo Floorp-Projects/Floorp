@@ -61,10 +61,16 @@ export class BackupResource {
    * Get the total size of a directory.
    *
    * @param {string} directoryPath - path to a directory.
+   * @param {object}   options - A set of additional optional parameters.
+   * @param {Function} [options.shouldExclude] - an optional callback which based on file path and file type should return true
+   * if the file should be excluded from the computed directory size.
    * @returns {Promise<number|null>} - the size of all descendants of the directory in kilobytes, or null if the
    * directory does not exist, the path is not a directory or the size is unknown.
    */
-  static async getDirectorySize(directoryPath) {
+  static async getDirectorySize(
+    directoryPath,
+    { shouldExclude = () => false } = {}
+  ) {
     if (!(await IOUtils.exists(directoryPath))) {
       return null;
     }
@@ -85,6 +91,10 @@ export class BackupResource {
         childFilePath
       );
 
+      if (shouldExclude(childFilePath, childType, directoryPath)) {
+        continue;
+      }
+
       if (childSize >= 0) {
         let nearestTenthKb = bytesToFuzzyKilobytes(childSize);
 
@@ -92,7 +102,9 @@ export class BackupResource {
       }
 
       if (childType == "directory") {
-        let childDirectorySize = await this.getDirectorySize(childFilePath);
+        let childDirectorySize = await this.getDirectorySize(childFilePath, {
+          shouldExclude,
+        });
         if (Number.isInteger(childDirectorySize)) {
           size += childDirectorySize;
         }
