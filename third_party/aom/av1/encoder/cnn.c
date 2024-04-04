@@ -138,14 +138,16 @@ static bool concat_tensor(const TENSOR *src, TENSOR *dst) {
   return true;
 }
 
-int check_tensor_equal_dims(TENSOR *t1, TENSOR *t2) {
+#ifndef NDEBUG
+static int check_tensor_equal_dims(TENSOR *t1, TENSOR *t2) {
   return (t1->width == t2->width && t1->height == t2->height);
 }
 
-int check_tensor_equal_size(TENSOR *t1, TENSOR *t2) {
+static int check_tensor_equal_size(TENSOR *t1, TENSOR *t2) {
   return (t1->channels == t2->channels && t1->width == t2->width &&
           t1->height == t2->height);
 }
+#endif  // NDEBUG
 
 void av1_find_cnn_layer_output_size(int in_width, int in_height,
                                     const CNN_LAYER_CONFIG *layer_config,
@@ -189,8 +191,8 @@ void av1_find_cnn_layer_output_size(int in_width, int in_height,
   }
 }
 
-void find_cnn_out_channels(const CNN_LAYER_CONFIG *layer_config,
-                           int channels_per_branch[]) {
+static void find_cnn_out_channels(const CNN_LAYER_CONFIG *layer_config,
+                                  int channels_per_branch[]) {
   int branch = layer_config->branch;
   const CNN_BRANCH_CONFIG *branch_config = &layer_config->branch_config;
   for (int b = 0; b < CNN_MAX_BRANCHES; ++b) {

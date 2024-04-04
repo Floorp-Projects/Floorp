@@ -15,7 +15,6 @@
 #include "aom/aomcx.h"
 #include "aom_dsp/aom_dsp_common.h"
 #include "av1/encoder/encoder.h"
-#include "common/tools_common.h"
 #include "third_party/googletest/src/googletest/include/gtest/gtest.h"
 #include "test/codec_factory.h"
 #include "test/encode_test_driver.h"
@@ -662,6 +661,45 @@ TEST_P(ResizeRealtimeTest, TestExternalResizeWorks) {
   set_scale_mode3_ = false;
   mismatch_psnr_ = 0.0;
   mismatch_nframes_ = 0;
+  DefaultConfig();
+  // Test external resizing with start resolution equal to
+  // 1. kInitialWidth and kInitialHeight
+  // 2. down-scaled kInitialWidth and kInitialHeight
+  for (int i = 0; i < 2; i++) {
+    video.change_start_resln_ = static_cast<bool>(i);
+
+    ASSERT_NO_FATAL_FAILURE(RunLoop(&video));
+
+    // Check we decoded the same number of frames as we attempted to encode
+    ASSERT_EQ(frame_info_list_.size(), video.limit());
+    for (const auto &info : frame_info_list_) {
+      const unsigned int frame = static_cast<unsigned>(info.pts);
+      unsigned int expected_w;
+      unsigned int expected_h;
+      ScaleForFrameNumber(frame, kInitialWidth, kInitialHeight,
+                          video.flag_codec_, video.change_start_resln_,
+                          &expected_w, &expected_h);
+      EXPECT_EQ(expected_w, info.w)
+          << "Frame " << frame << " had unexpected width";
+      EXPECT_EQ(expected_h, info.h)
+          << "Frame " << frame << " had unexpected height";
+      EXPECT_EQ(static_cast<unsigned int>(0), GetMismatchFrames());
+    }
+    frame_info_list_.clear();
+  }
+}
+
+TEST_P(ResizeRealtimeTest, TestExternalResizeWorksUsePSNR) {
+  ResizingVideoSource video;
+  video.flag_codec_ = 1;
+  change_bitrate_ = false;
+  set_scale_mode_ = false;
+  set_scale_mode2_ = false;
+  set_scale_mode3_ = false;
+  mismatch_psnr_ = 0.0;
+  mismatch_nframes_ = 0;
+  init_flags_ = AOM_CODEC_USE_PSNR;
+  cfg_.rc_dropframe_thresh = 30;
   DefaultConfig();
   // Test external resizing with start resolution equal to
   // 1. kInitialWidth and kInitialHeight

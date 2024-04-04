@@ -3391,8 +3391,8 @@ int av1_write_uleb_obu_size(size_t obu_header_size, size_t obu_payload_size,
   return AOM_CODEC_OK;
 }
 
-size_t av1_obu_memmove(size_t obu_header_size, size_t obu_payload_size,
-                       uint8_t *data) {
+static size_t obu_memmove(size_t obu_header_size, size_t obu_payload_size,
+                          uint8_t *data) {
   const size_t length_field_size = aom_uleb_size_in_bytes(obu_payload_size);
   const size_t move_dst_offset = length_field_size + obu_header_size;
   const size_t move_src_offset = obu_header_size;
@@ -3581,7 +3581,7 @@ static void write_large_scale_tile_obu_size(
   *total_size += lst_obu->tg_hdr_size;
   const uint32_t obu_payload_size = *total_size - lst_obu->tg_hdr_size;
   const size_t length_field_size =
-      av1_obu_memmove(lst_obu->tg_hdr_size, obu_payload_size, dst);
+      obu_memmove(lst_obu->tg_hdr_size, obu_payload_size, dst);
   if (av1_write_uleb_obu_size(lst_obu->tg_hdr_size, obu_payload_size, dst) !=
       AOM_CODEC_OK)
     assert(0);
@@ -3806,7 +3806,7 @@ void av1_write_last_tile_info(
   const uint32_t obu_payload_size =
       (uint32_t)(*curr_tg_data_size) - obu_header_size;
   const size_t length_field_size =
-      av1_obu_memmove(obu_header_size, obu_payload_size, curr_tg_start);
+      obu_memmove(obu_header_size, obu_payload_size, curr_tg_start);
   if (av1_write_uleb_obu_size(obu_header_size, obu_payload_size,
                               curr_tg_start) != AOM_CODEC_OK) {
     assert(0);
@@ -4015,8 +4015,8 @@ static void write_tile_obu_size(AV1_COMP *const cpi, uint8_t *const dst,
 // to pack the smaller bitstream of such frames. This function computes the
 // number of required number of workers based on setup time overhead and job
 // dispatch time overhead for given tiles and available workers.
-int calc_pack_bs_mt_workers(const TileDataEnc *tile_data, int num_tiles,
-                            int avail_workers, bool pack_bs_mt_enabled) {
+static int calc_pack_bs_mt_workers(const TileDataEnc *tile_data, int num_tiles,
+                                   int avail_workers, bool pack_bs_mt_enabled) {
   if (!pack_bs_mt_enabled) return 1;
 
   uint64_t frame_abs_sum_level = 0;
@@ -4141,8 +4141,7 @@ static size_t av1_write_metadata_array(AV1_COMP *const cpi, uint8_t *dst) {
                                                OBU_METADATA, 0, dst);
         obu_payload_size =
             av1_write_metadata_obu(current_metadata, dst + obu_header_size);
-        length_field_size =
-            av1_obu_memmove(obu_header_size, obu_payload_size, dst);
+        length_field_size = obu_memmove(obu_header_size, obu_payload_size, dst);
         if (av1_write_uleb_obu_size(obu_header_size, obu_payload_size, dst) ==
             AOM_CODEC_OK) {
           const size_t obu_size = obu_header_size + obu_payload_size;
@@ -4192,7 +4191,7 @@ int av1_pack_bitstream(AV1_COMP *const cpi, uint8_t *dst, size_t *size,
     obu_payload_size =
         av1_write_sequence_header_obu(cm->seq_params, data + obu_header_size);
     const size_t length_field_size =
-        av1_obu_memmove(obu_header_size, obu_payload_size, data);
+        obu_memmove(obu_header_size, obu_payload_size, data);
     if (av1_write_uleb_obu_size(obu_header_size, obu_payload_size, data) !=
         AOM_CODEC_OK) {
       return AOM_CODEC_ERROR;
@@ -4217,7 +4216,7 @@ int av1_pack_bitstream(AV1_COMP *const cpi, uint8_t *dst, size_t *size,
     obu_payload_size = write_frame_header_obu(cpi, &cpi->td.mb.e_mbd, &saved_wb,
                                               data + obu_header_size, 1);
 
-    length_field = av1_obu_memmove(obu_header_size, obu_payload_size, data);
+    length_field = obu_memmove(obu_header_size, obu_payload_size, data);
     if (av1_write_uleb_obu_size(obu_header_size, obu_payload_size, data) !=
         AOM_CODEC_OK) {
       return AOM_CODEC_ERROR;

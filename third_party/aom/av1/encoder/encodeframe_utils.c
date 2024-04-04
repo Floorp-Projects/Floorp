@@ -15,6 +15,7 @@
 
 #include "av1/encoder/encoder.h"
 #include "av1/encoder/encodeframe_utils.h"
+#include "av1/encoder/encoder_utils.h"
 #include "av1/encoder/rdopt.h"
 
 void av1_set_ssim_rdmult(const AV1_COMP *const cpi, int *errorperbit,
@@ -306,6 +307,7 @@ void av1_update_state(const AV1_COMP *const cpi, ThreadData *td,
     // Else for cyclic refresh mode update the segment map, set the segment id
     // and then update the quantizer.
     if (cpi->oxcf.q_cfg.aq_mode == CYCLIC_REFRESH_AQ &&
+        mi_addr->segment_id != AM_SEGMENT_ID_INACTIVE &&
         !cpi->rc.rtc_external_ratectrl) {
       av1_cyclic_refresh_update_segment(cpi, x, mi_row, mi_col, bsize,
                                         ctx->rd_stats.rate, ctx->rd_stats.dist,
@@ -1430,6 +1432,10 @@ void av1_source_content_sb(AV1_COMP *cpi, MACROBLOCK *x, TileDataEnc *tile_data,
     x->content_state_sb.lighting_change = 1;
   if ((tmp_sse - tmp_variance) < (sum_sq_thresh >> 1))
     x->content_state_sb.low_sumdiff = 1;
+
+  if (tmp_sse > ((avg_source_sse_threshold_high * 7) >> 3) &&
+      !x->content_state_sb.lighting_change && !x->content_state_sb.low_sumdiff)
+    x->sb_force_fixed_part = 0;
 
   if (!cpi->sf.rt_sf.use_rtc_tf || cpi->rc.high_source_sad ||
       cpi->rc.frame_source_sad > 20000 || cpi->svc.number_spatial_layers > 1)

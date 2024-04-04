@@ -712,20 +712,6 @@ int av1_get_refresh_frame_flags(
 }
 
 #if !CONFIG_REALTIME_ONLY
-void setup_mi(AV1_COMP *const cpi, YV12_BUFFER_CONFIG *src) {
-  AV1_COMMON *const cm = &cpi->common;
-  const int num_planes = av1_num_planes(cm);
-  MACROBLOCK *const x = &cpi->td.mb;
-  MACROBLOCKD *const xd = &x->e_mbd;
-
-  av1_setup_src_planes(x, src, 0, 0, num_planes, cm->seq_params->sb_size);
-
-  av1_setup_block_planes(xd, cm->seq_params->subsampling_x,
-                         cm->seq_params->subsampling_y, num_planes);
-
-  set_mi_offsets(&cm->mi_params, xd, 0, 0);
-}
-
 // Apply temporal filtering to source frames and encode the filtered frame.
 // If the current frame does not require filtering, this function is identical
 // to av1_encode() except that tpl is not performed.
@@ -819,7 +805,7 @@ static int denoise_and_encode(AV1_COMP *const cpi, uint8_t *const dest,
           oxcf->frm_dim_cfg.height, cm->seq_params->subsampling_x,
           cm->seq_params->subsampling_y, cm->seq_params->use_highbitdepth,
           cpi->oxcf.border_in_pixels, cm->features.byte_alignment, NULL, NULL,
-          NULL, cpi->image_pyramid_levels, 0);
+          NULL, cpi->alloc_pyramid, 0);
       if (ret)
         aom_internal_error(cm->error, AOM_CODEC_MEM_ERROR,
                            "Failed to allocate tf_buf_second_arf");
@@ -923,7 +909,7 @@ static int denoise_and_encode(AV1_COMP *const cpi, uint8_t *const dest,
   if (apply_filtering && is_psnr_calc_enabled(cpi)) {
     cpi->source = av1_realloc_and_scale_if_required(
         cm, source_buffer, &cpi->scaled_source, cm->features.interp_filter, 0,
-        false, true, cpi->oxcf.border_in_pixels, cpi->image_pyramid_levels);
+        false, true, cpi->oxcf.border_in_pixels, cpi->alloc_pyramid);
     cpi->unscaled_source = source_buffer;
   }
 #if CONFIG_COLLECT_COMPONENT_TIMING
@@ -1702,8 +1688,7 @@ int av1_encode_strategy(AV1_COMP *const cpi, size_t *const size,
 
   // This is used in rtc temporal filter case. Use true source in the PSNR
   // calculation.
-  if (is_psnr_calc_enabled(cpi) && cpi->sf.rt_sf.use_rtc_tf &&
-      cpi->common.current_frame.frame_type != KEY_FRAME) {
+  if (is_psnr_calc_enabled(cpi) && cpi->sf.rt_sf.use_rtc_tf) {
     assert(cpi->orig_source.buffer_alloc_sz > 0);
     cpi->source = &cpi->orig_source;
   }
@@ -1758,9 +1743,9 @@ int av1_encode_strategy(AV1_COMP *const cpi, size_t *const size,
       cpi->svc.temporal_layer_id == 0 &&
       cpi->unscaled_source->y_width == cpi->svc.source_last_TL0.y_width &&
       cpi->unscaled_source->y_height == cpi->svc.source_last_TL0.y_height) {
-    aom_yv12_copy_y(cpi->unscaled_source, &cpi->svc.source_last_TL0);
-    aom_yv12_copy_u(cpi->unscaled_source, &cpi->svc.source_last_TL0);
-    aom_yv12_copy_v(cpi->unscaled_source, &cpi->svc.source_last_TL0);
+    aom_yv12_copy_y(cpi->unscaled_source, &cpi->svc.source_last_TL0, 1);
+    aom_yv12_copy_u(cpi->unscaled_source, &cpi->svc.source_last_TL0, 1);
+    aom_yv12_copy_v(cpi->unscaled_source, &cpi->svc.source_last_TL0, 1);
   }
 
   return AOM_CODEC_OK;
