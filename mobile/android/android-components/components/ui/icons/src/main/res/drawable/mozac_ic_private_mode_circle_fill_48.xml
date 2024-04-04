@@ -6,8 +6,7 @@
     android:width="48dp"
     android:height="48dp"
     android:viewportWidth="48"
-    android:viewportHeight="48"
-    tools:ignore="ExtraText">
+    android:viewportHeight="48">
     <path
         android:fillColor="?mozac_ic_private_mode_circle_fill_background_color"
         android:pathData="M24,24m-20,0a20,20 0,1 1,40 0a20,20 0,1 1,-40 0" />

@@ -3,8 +3,10 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
-    <!-- Background color for mozac_ic_private_mode_circle_fill_48 -->
+    <!-- Background color for mozac_ic_private_mode_circle_fill_20,
+    mozac_ic_private_mode_circle_fill_24 and mozac_ic_private_mode_circle_fill_48 -->
     <attr name="mozac_ic_private_mode_circle_fill_background_color" format="reference" />
-    <!-- Icon color for mozac_ic_private_mode_circle_fill_48 -->
+    <!-- Icon color for mozac_ic_private_mode_circle_fill_20,
+    mozac_ic_private_mode_circle_fill_24 and mozac_ic_private_mode_circle_fill_48 -->
     <attr name="mozac_ic_private_mode_circle_fill_icon_color" format="reference" />
 </resources>
