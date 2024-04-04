@@ -225,7 +225,7 @@ add_task(
     mockMLBF({
       blocked: ["langpack-klingon@firefox.mozilla.org:1.0"],
       notblocked: [],
-      generationTime: 1546297200000, // 1 jan 2019 = after the cert's notBefore
+      generationTime: 1712243366640, // 4 apr 2024 = after the cert's notBefore
     });
     await ExtensionBlocklistMLBF._onUpdate();
 
@@ -240,12 +240,16 @@ add_task(
       Assert.equal(
         addon.blocklistState,
         Ci.nsIBlocklistService.STATE_NOT_BLOCKED,
-        "Langpacks cannot be blocked via the MLBF"
+        "Langpacks cannot be blocked via the MLBF on nightly"
       );
     } else {
       // On non-Nightly, langpacks are submitted through AMO so we will enforce
       // the MLBF blocklist for them.
-      Assert.equal(addon.blocklistState, Ci.nsIBlocklistService.STATE_BLOCKED);
+      Assert.equal(
+        addon.blocklistState,
+        Ci.nsIBlocklistService.STATE_BLOCKED,
+        "Langpacks can be blocked via the MLBF on non-Nightly channels"
+      );
     }
     await addon.uninstall();
   }
