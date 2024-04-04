@@ -361,7 +361,7 @@ class PeerConnectionIceTest
                  << " != " << b.address().ToString();
   }
   if (a.type() != b.type()) {
-    failure_info << "\ntype: " << a.type() << " != " << b.type();
+    failure_info << "\ntype: " << a.type_name() << " != " << b.type_name();
   }
   std::string failure_info_str = failure_info.str();
   if (failure_info_str.empty()) {

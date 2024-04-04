@@ -589,9 +589,9 @@ class P2PTransportChannelTestBase : public ::testing::Test,
   // on the local and remote candidate of ep1_ch1, match.  This can be
   // used in an EXPECT_TRUE_WAIT.
   bool CheckCandidate1(const Result& expected) {
-    const std::string& local_type = LocalCandidate(ep1_ch1())->type();
+    auto local_type = LocalCandidate(ep1_ch1())->type();
     const std::string& local_protocol = LocalCandidate(ep1_ch1())->protocol();
-    const std::string& remote_type = RemoteCandidate(ep1_ch1())->type();
+    auto remote_type = RemoteCandidate(ep1_ch1())->type();
     const std::string& remote_protocol = RemoteCandidate(ep1_ch1())->protocol();
     return (local_protocol == expected.controlling_protocol &&
             remote_protocol == expected.controlled_protocol &&
@@ -608,9 +608,9 @@ class P2PTransportChannelTestBase : public ::testing::Test,
       return;
     }
 
-    const std::string& local_type = LocalCandidate(ep1_ch1())->type();
+    auto local_type = LocalCandidate(ep1_ch1())->type();
     const std::string& local_protocol = LocalCandidate(ep1_ch1())->protocol();
-    const std::string& remote_type = RemoteCandidate(ep1_ch1())->type();
+    auto remote_type = RemoteCandidate(ep1_ch1())->type();
     const std::string& remote_protocol = RemoteCandidate(ep1_ch1())->protocol();
     EXPECT_EQ(expected.controlling_type, local_type);
     EXPECT_EQ(expected.controlled_type, remote_type);
@@ -622,9 +622,9 @@ class P2PTransportChannelTestBase : public ::testing::Test,
   // on the local and remote candidate of ep2_ch1, match.  This can be
   // used in an EXPECT_TRUE_WAIT.
   bool CheckCandidate2(const Result& expected) {
-    const std::string& local_type = LocalCandidate(ep2_ch1())->type();
+    auto local_type = LocalCandidate(ep2_ch1())->type();
     const std::string& local_protocol = LocalCandidate(ep2_ch1())->protocol();
-    const std::string& remote_type = RemoteCandidate(ep2_ch1())->type();
+    auto remote_type = RemoteCandidate(ep2_ch1())->type();
     const std::string& remote_protocol = RemoteCandidate(ep2_ch1())->protocol();
     return (local_protocol == expected.controlled_protocol &&
             remote_protocol == expected.controlling_protocol &&
@@ -641,9 +641,9 @@ class P2PTransportChannelTestBase : public ::testing::Test,
       return;
     }
 
-    const std::string& local_type = LocalCandidate(ep2_ch1())->type();
+    auto local_type = LocalCandidate(ep2_ch1())->type();
     const std::string& local_protocol = LocalCandidate(ep2_ch1())->protocol();
-    const std::string& remote_type = RemoteCandidate(ep2_ch1())->type();
+    auto remote_type = RemoteCandidate(ep2_ch1())->type();
     const std::string& remote_protocol = RemoteCandidate(ep2_ch1())->protocol();
     EXPECT_EQ(expected.controlled_type, local_type);
     EXPECT_EQ(expected.controlling_type, remote_type);

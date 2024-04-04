@@ -1120,7 +1120,7 @@ bool ParseCandidate(absl::string_view message,
       return ParseFailed(first_line, "Unsupported transport type.", error);
   }
 
-  std::string candidate_type;
+  absl::string_view candidate_type;
   const absl::string_view type = fields[7];
   if (type == kCandidateHost) {
     candidate_type = cricket::LOCAL_PORT_TYPE;

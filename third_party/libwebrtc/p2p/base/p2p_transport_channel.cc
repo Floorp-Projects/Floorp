@@ -1416,7 +1416,8 @@ bool P2PTransportChannel::CreateConnection(PortInterface* port,
     if ((port->Type() != remote_candidate.type()) &&
         (port->Type() == RELAY_PORT_TYPE || remote_candidate.is_relay())) {
       RTC_LOG(LS_INFO) << ToString() << ": skip creating connection "
-                       << port->Type() << " to " << remote_candidate.type();
+                       << port->Type() << " to "
+                       << remote_candidate.type_name();
       return false;
     }
   }
