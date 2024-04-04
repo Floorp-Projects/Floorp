@@ -985,7 +985,8 @@ class Encoder : public EncodedImageCallback {
       // layer >X receive encoded lower layers.
       int num_spatial_layers =
           ScalabilityModeToNumSpatialLayers(last_superframe_->scalability_mode);
-      for (int sidx = *last_superframe_->encoded_frame.SpatialIndex() + 1;
+      for (int sidx =
+               last_superframe_->encoded_frame.SpatialIndex().value_or(0) + 1;
            sidx < num_spatial_layers; ++sidx) {
         last_superframe_->encoded_frame.SetSpatialIndex(sidx);
         DeliverEncodedFrame(last_superframe_->encoded_frame);

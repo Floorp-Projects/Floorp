@@ -1014,6 +1014,7 @@ if (rtc_include_tests) {
       "../../modules/video_coding/svc:scalability_mode_util",
       "../../rtc_base:logging",
       "../../rtc_base:stringutils",
+      "../../test:explicit_key_value_config",
       "../../test:fileutils",
       "../../test:test_flags",
       "../../test:test_main",
