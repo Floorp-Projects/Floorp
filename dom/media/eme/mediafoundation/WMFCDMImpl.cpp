@@ -31,7 +31,8 @@ bool WMFCDMImpl::GetCapabilities(bool aIsHardwareDecryption,
   bool ok = false;
   media::Await(
       do_AddRef(backgroundTaskQueue),
-      mCDM->GetCapabilities(aIsHardwareDecryption),
+      mCDM->GetCapabilities(
+          MFCDMCapabilitiesRequest{mKeySystem, aIsHardwareDecryption}),
       [&ok, &aOutConfigs,
        aIsHardwareDecryption](const MFCDMCapabilitiesIPDL& capabilities) {
         EME_LOG("capabilities: keySystem=%s (hw-secure=%d)",
