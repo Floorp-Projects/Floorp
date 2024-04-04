@@ -68,7 +68,7 @@ def ts_interface(iface):
 
 def ts_typedefs(idl):
     for p in idl.getNames():
-        if isinstance(p, xpidl.Typedef) and not p.substitute:
+        if isinstance(p, xpidl.Typedef):
             try:
                 yield (p.name, p.realtype.tsType())
             except xpidl.TSNoncompat:
