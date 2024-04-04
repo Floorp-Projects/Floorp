@@ -9199,7 +9199,6 @@ subsuite = "webgl2-core"
 
 ["generated/test_2_conformance__extensions__ext-color-buffer-half-float.html"]
 subsuite = "webgl2-core"
-fail-if = ["true"]
 
 ["generated/test_2_conformance__extensions__ext-depth-clamp.html"]
 subsuite = "webgl2-core"
@@ -14335,7 +14334,6 @@ subsuite = "webgl1-core"
 
 ["generated/test_conformance__extensions__ext-color-buffer-half-float.html"]
 subsuite = "webgl1-core"
-fail-if = ["true"]
 
 ["generated/test_conformance__extensions__ext-depth-clamp.html"]
 subsuite = "webgl1-core"
@@ -14404,7 +14402,6 @@ skip-if = ["os == 'android'"]
 
 ["generated/test_conformance__extensions__oes-texture-float.html"]
 subsuite = "webgl1-core"
-fail-if = ["true"]
 
 ["generated/test_conformance__extensions__oes-texture-half-float-linear.html"]
 subsuite = "webgl1-core"
