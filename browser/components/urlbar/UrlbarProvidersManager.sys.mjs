@@ -337,8 +337,7 @@ class ProvidersManager {
    * urlbar.  For details on parameters, see UrlbarProvider.onEngagement().
    *
    * @param {string} state
-   *   The state of the engagement, one of: start, engagement, abandonment,
-   *   discard
+   *   The state of the engagement, one of: engagement, abandonment
    * @param {UrlbarQueryContext} queryContext
    *   The engagement's query context, if available.
    * @param {object} details

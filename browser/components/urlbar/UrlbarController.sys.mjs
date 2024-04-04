@@ -795,13 +795,6 @@ class TelemetryEvent {
       interactionType: this._getStartInteractionType(event, searchString),
       searchString,
     };
-
-    this._controller.manager.notifyEngagementChange(
-      "start",
-      queryContext,
-      {},
-      this._controller
-    );
   }
 
   /**
@@ -869,15 +862,6 @@ class TelemetryEvent {
     const startEventInfo = this._startEventInfo;
 
     if (!this._category || !startEventInfo) {
-      if (this._discarded && this._category && details?.selType !== "dismiss") {
-        let { queryContext } = this._controller._lastQueryContextWrapper || {};
-        this._controller.manager.notifyEngagementChange(
-          "discard",
-          queryContext,
-          {},
-          this._controller
-        );
-      }
       return;
     }
     if (
