@@ -1,14 +1,14 @@
 What Needs My Attention
 =======================
 
-Bugzilla’s `What needs my attention?`_ (a.k.a What Should I Work On Next) dashboard helps us to focus on the top-most important or urgent engineering tasks for releasing Firefox.
+Bugzilla’s `What needs my attention?`_ dashboard helps us to focus on the top-most important or urgent engineering tasks for releasing Firefox.
 
 The dashboard is not designed for including everything on a person’s plate. It doesn’t attempt to prioritize normal work - it is just for the things that are more important than the normal stuff. It’s about individual engineer prioritization rather than team prioritization and it doesn’t claim to include all sources of high priority work (e.g. triage, responding to requests from HR, etc).
 
 The dashboard is available to Mozilla engineers, using the icon
 
-	.. image:: ../assets/icon_assignments.png
-	  :alt: Notification Icon
+	.. image:: ../assets/icon_engineering.png
+	  :alt: Engineering Icon
 
 in the top right hand corner, after you log into Bugzilla.
 
