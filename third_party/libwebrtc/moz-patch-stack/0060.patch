@@ -8,10 +8,10 @@ Subject: Bug 1766646 - (fix-f137b75a4d) specify default constructor on
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/modules/congestion_controller/goog_cc/loss_based_bwe_v2.cc b/modules/congestion_controller/goog_cc/loss_based_bwe_v2.cc
-index 95f821352a..8e1a3c4698 100644
+index 7deeb7ad64..2f47ee0f18 100644
 --- a/modules/congestion_controller/goog_cc/loss_based_bwe_v2.cc
 +++ b/modules/congestion_controller/goog_cc/loss_based_bwe_v2.cc
-@@ -546,7 +546,7 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
+@@ -549,7 +549,7 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
    if (!enabled.Get()) {
      return config;
    }

@@ -700,8 +700,12 @@ bool SendSideBandwidthEstimation::LossBasedBandwidthEstimatorV2Enabled() const {
 
 bool SendSideBandwidthEstimation::LossBasedBandwidthEstimatorV2ReadyForUse()
     const {
-  return LossBasedBandwidthEstimatorV2Enabled() &&
-         loss_based_bandwidth_estimator_v2_->IsReady();
+  return loss_based_bandwidth_estimator_v2_->IsReady();
+}
+
+bool SendSideBandwidthEstimation::PaceAtLossBasedEstimate() const {
+  return LossBasedBandwidthEstimatorV2ReadyForUse() &&
+         loss_based_bandwidth_estimator_v2_->PaceAtLossBasedEstimate();
 }
 
 }  // namespace webrtc
