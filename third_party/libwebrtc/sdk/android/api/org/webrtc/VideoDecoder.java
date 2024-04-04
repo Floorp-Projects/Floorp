@@ -70,12 +70,6 @@ public interface VideoDecoder {
    */
   @CalledByNative
   default long createNative(long webrtcEnvRef) {
-    return createNativeVideoDecoder();
-  }
-
-  @CalledByNative
-  @Deprecated
-  default long createNativeVideoDecoder() {
     return 0;
   }
 

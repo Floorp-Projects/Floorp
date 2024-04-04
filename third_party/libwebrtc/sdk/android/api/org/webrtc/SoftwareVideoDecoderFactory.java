@@ -31,11 +31,6 @@ public class SoftwareVideoDecoderFactory implements VideoDecoderFactory {
     }
     return new WrappedNativeVideoDecoder() {
       @Override
-      public long createNativeVideoDecoder() {
-        return nativeCreateDecoder(nativeFactory, info);
-      }
-
-      @Override
       public long createNative(long webrtcEnvRef) {
         return nativeCreate(nativeFactory, webrtcEnvRef, info);
       }
@@ -48,8 +43,6 @@ public class SoftwareVideoDecoderFactory implements VideoDecoderFactory {
   }
 
   private static native long nativeCreateFactory();
-
-  private static native long nativeCreateDecoder(long factory, VideoCodecInfo videoCodecInfo);
 
   private static native boolean nativeIsSupported(long factory, VideoCodecInfo info);
 
