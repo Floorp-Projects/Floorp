@@ -11,7 +11,6 @@
 
 #include "nscore.h"
 #include "nsID.h"
-typedef int64_t PRTime;
 
 /*
  * Forward declarations for new string types
@@ -29,10 +28,6 @@ class Promise;
 } // namespace dom
 } // namespace mozilla
 
-/*
- * Start commenting out the C++ versions of the below in the output header
- */
-#if 0
 %}
 
 typedef long long PRTime;
@@ -85,10 +80,3 @@ typedef long long PRTime;
               native jsid(jsid);
 
 [ptr, promise] native Promise(ignored);
-
-%{C++
-/*
- * End commenting out the C++ versions of the above in the output header
- */
-#endif
-%}
