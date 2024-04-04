@@ -19,28 +19,28 @@ const kMessages = [
   kMessageNotificationDeleteKo,
 ];
 
-export function NotificationStorage() {
-  this._requests = {};
-  this._requestCount = 0;
+export class NotificationStorage {
+  #requests = {};
+  #requestCount = 0;
 
-  Services.obs.addObserver(this, "xpcom-shutdown");
+  constructor() {
+    Services.obs.addObserver(this, "xpcom-shutdown");
 
-  // Register for message listeners.
-  this.registerListeners();
-}
+    // Register for message listeners.
+    this.registerListeners();
+  }
 
-NotificationStorage.prototype = {
   registerListeners() {
     for (let message of kMessages) {
       Services.cpmm.addMessageListener(message, this);
     }
-  },
+  }
 
   unregisterListeners() {
     for (let message of kMessages) {
       Services.cpmm.removeMessageListener(message, this);
     }
-  },
+  }
 
   observe(aSubject, aTopic) {
     if (DEBUG) {
@@ -50,7 +50,7 @@ NotificationStorage.prototype = {
       Services.obs.removeObserver(this, "xpcom-shutdown");
       this.unregisterListeners();
     }
-  },
+  }
 
   put(
     origin,
@@ -89,14 +89,14 @@ NotificationStorage.prototype = {
       origin,
       notification,
     });
-  },
+  }
 
   get(origin, tag, callback) {
     if (DEBUG) {
       debug("GET: " + origin + " " + tag);
     }
-    this._fetchFromDB(origin, tag, callback);
-  },
+    this.#fetchFromDB(origin, tag, callback);
+  }
 
   delete(origin, id) {
     if (DEBUG) {
@@ -106,15 +106,15 @@ NotificationStorage.prototype = {
       origin,
       id,
     });
-  },
+  }
 
   receiveMessage(message) {
-    var request = this._requests[message.data.requestID];
+    var request = this.#requests[message.data.requestID];
 
     switch (message.name) {
       case kMessageNotificationGetAllOk:
-        delete this._requests[message.data.requestID];
-        this._returnNotifications(
+        delete this.#requests[message.data.requestID];
+        this.#returnNotifications(
           message.data.notifications,
           request.origin,
           request.tag,
@@ -123,7 +123,7 @@ NotificationStorage.prototype = {
         break;
 
       case kMessageNotificationGetAllKo:
-        delete this._requests[message.data.requestID];
+        delete this.#requests[message.data.requestID];
         try {
           request.callback.done();
         } catch (e) {
@@ -148,24 +148,24 @@ NotificationStorage.prototype = {
         }
         break;
     }
-  },
+  }
 
-  _fetchFromDB(origin, tag, callback) {
+  #fetchFromDB(origin, tag, callback) {
     var request = {
       origin,
       tag,
       callback,
     };
-    var requestID = this._requestCount++;
-    this._requests[requestID] = request;
+    var requestID = this.#requestCount++;
+    this.#requests[requestID] = request;
     Services.cpmm.sendAsyncMessage("Notification:GetAll", {
       origin,
       tag,
       requestID,
     });
-  },
+  }
 
-  _returnNotifications(notifications, origin, tag, callback) {
+  #returnNotifications(notifications, origin, tag, callback) {
     // Pass each notification back separately.
     // The callback is called asynchronously to match the behaviour when
     // fetching from the database.
@@ -199,7 +199,7 @@ NotificationStorage.prototype = {
         debug("Error calling callback done: " + e);
       }
     }
-  },
+  }
 
-  QueryInterface: ChromeUtils.generateQI(["nsINotificationStorage"]),
-};
+  QueryInterface = ChromeUtils.generateQI(["nsINotificationStorage"]);
+}
