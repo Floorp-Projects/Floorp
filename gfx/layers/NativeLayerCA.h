@@ -143,7 +143,7 @@ class NativeLayerRootCA : public NativeLayerRoot {
 
   void SetWindowIsFullscreen(bool aFullscreen);
 
-  VideoLowPowerType CheckVideoLowPower();
+  VideoLowPowerType CheckVideoLowPower(const MutexAutoLock& aProofOfLock);
 
  protected:
   explicit NativeLayerRootCA(CALayer* aLayer);
@@ -335,8 +335,7 @@ class NativeLayerCA : public NativeLayer {
   Maybe<SurfaceWithInvalidRegion> GetUnusedSurfaceAndCleanUp(
       const MutexAutoLock& aProofOfLock);
 
-  bool IsVideo();
-  bool IsVideoAndLocked(const MutexAutoLock& aProofOfLock);
+  bool IsVideo(const MutexAutoLock& aProofOfLock);
   bool ShouldSpecializeVideo(const MutexAutoLock& aProofOfLock);
   bool HasExtent() const { return mHasExtent; }
   void SetHasExtent(bool aHasExtent) { mHasExtent = aHasExtent; }
@@ -484,6 +483,7 @@ class NativeLayerCA : public NativeLayer {
   bool mSpecializeVideo = false;
   bool mHasExtent = false;
   bool mIsDRM = false;
+  bool mIsTextureHostVideo = false;
 
 #ifdef NIGHTLY_BUILD
   // Track the consistency of our caller's API usage. Layers that are drawn

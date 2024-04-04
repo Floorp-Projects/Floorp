@@ -330,37 +330,38 @@ bool NativeLayerRootCA::CommitToScreen() {
                                    mWindowIsFullscreen);
 
     mCommitPending = false;
-  }
 
-  if (StaticPrefs::gfx_webrender_debug_dump_native_layer_tree_to_file()) {
-    static uint32_t sFrameID = 0;
-    uint32_t frameID = sFrameID++;
+    if (StaticPrefs::gfx_webrender_debug_dump_native_layer_tree_to_file()) {
+      static uint32_t sFrameID = 0;
+      uint32_t frameID = sFrameID++;
 
-    NSString* dirPath =
-        [NSString stringWithFormat:@"%@/Desktop/nativelayerdumps-%d",
-                                   NSHomeDirectory(), getpid()];
-    if ([NSFileManager.defaultManager createDirectoryAtPath:dirPath
-                                withIntermediateDirectories:YES
-                                                 attributes:nil
-                                                      error:nullptr]) {
-      NSString* filename =
-          [NSString stringWithFormat:@"frame-%d.html", frameID];
-      NSString* filePath = [dirPath stringByAppendingPathComponent:filename];
-      DumpLayerTreeToFile([filePath UTF8String]);
-    } else {
-      NSLog(@"Failed to create directory %@", dirPath);
+      NSString* dirPath =
+          [NSString stringWithFormat:@"%@/Desktop/nativelayerdumps-%d",
+                                     NSHomeDirectory(), getpid()];
+      if ([NSFileManager.defaultManager createDirectoryAtPath:dirPath
+                                  withIntermediateDirectories:YES
+                                                   attributes:nil
+                                                        error:nullptr]) {
+        NSString* filename =
+            [NSString stringWithFormat:@"frame-%d.html", frameID];
+        NSString* filePath = [dirPath stringByAppendingPathComponent:filename];
+        DumpLayerTreeToFile([filePath UTF8String]);
+      } else {
+        NSLog(@"Failed to create directory %@", dirPath);
+      }
     }
-  }
 
-  // Decide if we are going to emit telemetry about video low power on this
-  // commit.
-  static const int32_t TELEMETRY_COMMIT_PERIOD =
-      StaticPrefs::gfx_core_animation_low_power_telemetry_frames_AtStartup();
-  mTelemetryCommitCount = (mTelemetryCommitCount + 1) % TELEMETRY_COMMIT_PERIOD;
-  if (mTelemetryCommitCount == 0) {
-    // Figure out if we are hitting video low power mode.
-    VideoLowPowerType videoLowPower = CheckVideoLowPower();
-    EmitTelemetryForVideoLowPower(videoLowPower);
+    // Decide if we are going to emit telemetry about video low power on this
+    // commit.
+    static const int32_t TELEMETRY_COMMIT_PERIOD =
+        StaticPrefs::gfx_core_animation_low_power_telemetry_frames_AtStartup();
+    mTelemetryCommitCount =
+        (mTelemetryCommitCount + 1) % TELEMETRY_COMMIT_PERIOD;
+    if (mTelemetryCommitCount == 0) {
+      // Figure out if we are hitting video low power mode.
+      VideoLowPowerType videoLowPower = CheckVideoLowPower(lock);
+      EmitTelemetryForVideoLowPower(videoLowPower);
+    }
   }
 
   return true;
@@ -579,7 +580,8 @@ void NativeLayerRootCA::SetWindowIsFullscreen(bool aFullscreen) {
   return components[componentCount - 1] >= 1.0f;
 }
 
-VideoLowPowerType NativeLayerRootCA::CheckVideoLowPower() {
+VideoLowPowerType NativeLayerRootCA::CheckVideoLowPower(
+    const MutexAutoLock& aProofOfLock) {
   // This deteremines whether the current layer contents qualify for the
   // macOS Core Animation video low power mode. Those requirements are
   // summarized at
@@ -609,7 +611,7 @@ VideoLowPowerType NativeLayerRootCA::CheckVideoLowPower() {
 
       secondCALayer = topCALayer;
       topCALayer = topLayer->UnderlyingCALayer(WhichRepresentation::ONSCREEN);
-      topLayerIsVideo = topLayer->IsVideo();
+      topLayerIsVideo = topLayer->IsVideo(aProofOfLock);
       if (topLayerIsVideo) {
         ++videoLayerCount;
       }
@@ -835,9 +837,8 @@ NativeLayerCA::NativeLayerCA(bool aIsOpaque)
       mIsOpaque(aIsOpaque) {
 #ifdef NIGHTLY_BUILD
   if (StaticPrefs::gfx_core_animation_specialize_video_log()) {
-    NSLog(@"VIDEO_LOG: NativeLayerCA: %p is being created to host video, which "
-          @"will force a video "
-          @"layer rebuild.",
+    NSLog(@"VIDEO_LOG: NativeLayerCA: %p is being created to host an external "
+          @"image, which may force a video layer rebuild.",
           this);
   }
 #endif
@@ -864,7 +865,7 @@ NativeLayerCA::~NativeLayerCA() {
   if (mHasEverAttachExternalImage &&
       StaticPrefs::gfx_core_animation_specialize_video_log()) {
     NSLog(@"VIDEO_LOG: ~NativeLayerCA: %p is being destroyed after hosting "
-          @"video.",
+          @"an external image.",
           this);
   }
 #endif
@@ -902,6 +903,9 @@ void NativeLayerCA::AttachExternalImage(wr::RenderTextureHost* aExternalImage) {
     return;
   }
 
+  // Determine if TextureHost is a video surface.
+  mIsTextureHostVideo = gfx::Info(mTextureHost->GetFormat())->isYuv;
+
   gfx::IntSize oldSize = mSize;
   mSize = texture->GetSize(0);
   bool changedSizeAndDisplayRect = (mSize != oldSize);
@@ -933,18 +937,15 @@ void NativeLayerCA::AttachExternalImage(wr::RenderTextureHost* aExternalImage) {
   });
 }
 
-bool NativeLayerCA::IsVideo() {
-  // Anything with a texture host is considered a video source.
-  return mTextureHost;
-}
-
-bool NativeLayerCA::IsVideoAndLocked(const MutexAutoLock& aProofOfLock) {
-  // Anything with a texture host is considered a video source.
-  return mTextureHost;
+bool NativeLayerCA::IsVideo(const MutexAutoLock& aProofOfLock) {
+  // If we have a texture host, we've checked to see if it's providing video.
+  // And if we don't have a texture host, it isn't video, so we just check
+  // the value we've computed.
+  return mIsTextureHostVideo;
 }
 
 bool NativeLayerCA::ShouldSpecializeVideo(const MutexAutoLock& aProofOfLock) {
-  if (!IsVideoAndLocked(aProofOfLock)) {
+  if (!IsVideo(aProofOfLock)) {
     // Only videos are eligible.
     return false;
   }
@@ -1410,6 +1411,8 @@ void NativeLayerCA::NotifySurfaceReady() {
       mInProgressSurface,
       "NotifySurfaceReady called without preceding call to NextSurface");
 
+  mIsTextureHostVideo = false;
+
   if (mInProgressLockedIOSurface) {
     mInProgressLockedIOSurface->Unlock(false);
     mInProgressLockedIOSurface = nullptr;
@@ -1465,7 +1468,7 @@ void NativeLayerCA::ForAllRepresentations(F aFn) {
 NativeLayerCA::UpdateType NativeLayerCA::HasUpdate(
     WhichRepresentation aRepresentation) {
   MutexAutoLock lock(mMutex);
-  return GetRepresentation(aRepresentation).HasUpdate(IsVideoAndLocked(lock));
+  return GetRepresentation(aRepresentation).HasUpdate(IsVideo(lock));
 }
 
 /* static */
@@ -1510,7 +1513,7 @@ bool NativeLayerCA::ApplyChanges(WhichRepresentation aRepresentation,
       .ApplyChanges(aUpdate, mSize, mIsOpaque, mPosition, mTransform,
                     mDisplayRect, mClipRect, mBackingScale, mSurfaceIsFlipped,
                     mSamplingFilter, mSpecializeVideo, surface, mColor, mIsDRM,
-                    IsVideo());
+                    IsVideo(lock));
 }
 
 CALayer* NativeLayerCA::UnderlyingCALayer(WhichRepresentation aRepresentation) {
