@@ -1811,13 +1811,26 @@ public class WebExtension {
     public final @NonNull Image icon;
 
     /**
-     * API permissions requested or granted to this extension.
+     * List of permissions to be prompted to the users.
+     *
+     * <p>Permission identifiers match entries in the manifest, see <a
+     * href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/permissions#API_permissions">
+     * API permissions </a>.
+     *
+     * @deprecated Use {@link MetaData#promptPermissions} instead.
+     */
+    @Deprecated
+    @DeprecationSchedule(id = "web-extension-permission", version = 131)
+    public final @NonNull String[] permissions;
+
+    /**
+     * List of permissions to be prompted to the users.
      *
      * <p>Permission identifiers match entries in the manifest, see <a
      * href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/permissions#API_permissions">
      * API permissions </a>.
      */
-    public final @NonNull String[] permissions;
+    public final @NonNull String[] promptPermissions;
 
     /**
      * API <a
@@ -2043,6 +2056,7 @@ public class WebExtension {
     protected MetaData() {
       icon = null;
       permissions = null;
+      promptPermissions = null;
       optionalPermissions = null;
       grantedOptionalPermissions = null;
       grantedOptionalOrigins = null;
@@ -2077,6 +2091,7 @@ public class WebExtension {
     /* package */ MetaData(final GeckoBundle bundle) {
       // We only expose permissions that the embedder should prompt for
       permissions = bundle.getStringArray("promptPermissions");
+      promptPermissions = bundle.getStringArray("promptPermissions");
       optionalPermissions = bundle.getStringArray("optionalPermissions");
       grantedOptionalPermissions = bundle.getStringArray("grantedOptionalPermissions");
       optionalOrigins = bundle.getStringArray("optionalOrigins");
