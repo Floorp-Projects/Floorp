@@ -454,6 +454,7 @@ INSTANTIATE_TEST_SUITE_P(
         Values(UseDependencyDescriptor::Disabled,
                UseDependencyDescriptor::Enabled)),
     SvcTestNameGenerator);
+#endif
 
 INSTANTIATE_TEST_SUITE_P(
     SvcTestAV1,
@@ -502,7 +503,5 @@ INSTANTIATE_TEST_SUITE_P(
             }),
             Values(UseDependencyDescriptor::Enabled)),
     SvcTestNameGenerator);
-
-#endif
 
 }  // namespace webrtc
