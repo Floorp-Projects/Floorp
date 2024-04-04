@@ -497,6 +497,7 @@ if (rtc_include_tests && !build_with_chromium && !build_with_mozilla) {
       "../../rtc_base:race_checker",
       "../../rtc_base:rtc_event",
       "../../rtc_base:safe_conversions",
+      "../../rtc_base:ssl",
       "../../rtc_base:timeutils",
       "../../rtc_base/synchronization:mutex",
       "../../system_wrappers",
