@@ -24,6 +24,7 @@
 #include "common_audio/wav_header.h"
 #include "modules/audio_device/include/audio_device_defines.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/helpers.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "test/gmock.h"
@@ -41,7 +42,7 @@ void RunWavTest(const std::vector<int16_t>& input_samples,
 
   const std::string output_filename =
       test::OutputPath() + "BoundedWavFileWriterTest_" + test_info->name() +
-      "_" + std::to_string(std::rand()) + ".wav";
+      "_" + rtc::CreateRandomUuid() + ".wav";
 
   static const size_t kSamplesPerFrame = 8;
   static const int kSampleRate = kSamplesPerFrame * 100;
