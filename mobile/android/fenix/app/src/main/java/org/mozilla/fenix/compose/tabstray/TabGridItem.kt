@@ -29,19 +29,19 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
-import androidx.compose.material.DismissValue
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.Text
-import androidx.compose.material.rememberDismissState
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.dimensionResource
@@ -62,7 +62,8 @@ import mozilla.components.ui.colors.PhotonColors
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.Divider
 import org.mozilla.fenix.compose.HorizontalFadingEdgeBox
-import org.mozilla.fenix.compose.SwipeToDismiss
+import org.mozilla.fenix.compose.SwipeToDismissBox
+import org.mozilla.fenix.compose.SwipeToDismissState
 import org.mozilla.fenix.compose.TabThumbnail
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.tabstray.TabsTrayTestTag
@@ -81,12 +82,13 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * @param multiSelectionSelected Indicates if the item should be render as multi selection selected
  * option.
  * @param shouldClickListen Whether or not the item should stop listening to click events.
+ * @param swipingEnabled Whether or not the item is swipeable.
  * @param onCloseClick Callback to handle the click event of the close button.
  * @param onMediaClick Callback to handle when the media item is clicked.
  * @param onClick Callback to handle when item is clicked.
  * @param onLongClick Optional callback to handle when item is long clicked.
  */
-@OptIn(ExperimentalMaterialApi::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 @Suppress("MagicNumber", "LongMethod")
 fun TabGridItem(
@@ -96,6 +98,7 @@ fun TabGridItem(
     multiSelectionEnabled: Boolean = false,
     multiSelectionSelected: Boolean = false,
     shouldClickListen: Boolean = true,
+    swipingEnabled: Boolean = true,
     onCloseClick: (tab: TabSessionState) -> Unit,
     onMediaClick: (tab: TabSessionState) -> Unit,
     onClick: (tab: TabSessionState) -> Unit,
@@ -111,29 +114,35 @@ fun TabGridItem(
         Modifier
     }
 
-    val dismissState = rememberDismissState(
-        confirmStateChange = { dismissValue ->
-            if (dismissValue == DismissValue.DismissedToEnd || dismissValue == DismissValue.DismissedToStart) {
-                onCloseClick(tab)
-            }
-            false
-        },
-    )
-
     // Used to propagate the ripple effect to the whole tab
     val interactionSource = remember { MutableInteractionSource() }
 
-    SwipeToDismiss(
-        state = dismissState,
-        enabled = !multiSelectionEnabled,
-        backgroundContent = {},
+    val density = LocalDensity.current
+    val swipeState = remember(multiSelectionEnabled, swipingEnabled) {
+        SwipeToDismissState(
+            density = density,
+            enabled = !multiSelectionEnabled && swipingEnabled,
+        )
+    }
+    val swipingActive by remember(swipeState.swipingActive) {
+        derivedStateOf {
+            swipeState.swipingActive
+        }
+    }
+
+    SwipeToDismissBox(
         modifier = Modifier.zIndex(
-            if (dismissState.dismissDirection == null) {
-                0f
+            if (swipingActive) {
+                10f
             } else {
                 1f
             },
         ),
+        state = swipeState,
+        backgroundContent = {},
+        onItemDismiss = {
+            onCloseClick(tab)
+        },
     ) {
         Box(
             modifier = Modifier
