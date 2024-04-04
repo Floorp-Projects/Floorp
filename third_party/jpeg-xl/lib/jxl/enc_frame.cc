@@ -1786,8 +1786,8 @@ size_t TOCBucket(size_t group_size) {
 
 size_t TOCSize(const std::vector<size_t>& group_sizes) {
   size_t toc_bits = 0;
-  for (size_t i = 0; i < group_sizes.size(); i++) {
-    toc_bits += kTOCBits[TOCBucket(group_sizes[i])];
+  for (size_t group_size : group_sizes) {
+    toc_bits += kTOCBits[TOCBucket(group_size)];
   }
   return (toc_bits + 7) / 8;
 }
@@ -1795,8 +1795,8 @@ size_t TOCSize(const std::vector<size_t>& group_sizes) {
 PaddedBytes EncodeTOC(const std::vector<size_t>& group_sizes, AuxOut* aux_out) {
   BitWriter writer;
   BitWriter::Allotment allotment(&writer, 32 * group_sizes.size());
-  for (size_t i = 0; i < group_sizes.size(); i++) {
-    JXL_CHECK(U32Coder::Write(kTocDist, group_sizes[i], &writer));
+  for (size_t group_size : group_sizes) {
+    JXL_CHECK(U32Coder::Write(kTocDist, group_size, &writer));
   }
   writer.ZeroPadToByte();  // before first group
   allotment.ReclaimAndCharge(&writer, kLayerTOC, aux_out);
@@ -1854,13 +1854,13 @@ void RemoveUnusedHistograms(std::vector<uint8_t>& context_map,
                             EntropyEncodingData& codes) {
   std::vector<int> remap(256, -1);
   std::vector<uint8_t> inv_remap;
-  for (size_t i = 0; i < context_map.size(); ++i) {
-    const uint8_t histo_ix = context_map[i];
+  for (uint8_t& context : context_map) {
+    const uint8_t histo_ix = context;
     if (remap[histo_ix] == -1) {
       remap[histo_ix] = inv_remap.size();
       inv_remap.push_back(histo_ix);
     }
-    context_map[i] = remap[histo_ix];
+    context = remap[histo_ix];
   }
   EntropyEncodingData new_codes;
   new_codes.use_prefix_code = codes.use_prefix_code;

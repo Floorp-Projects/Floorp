@@ -78,8 +78,8 @@ Status JPEGData::VisitFields(Visitor* visitor) {
     if (marker_order.size() > 16384) {
       return JXL_FAILURE("Too many markers: %" PRIuS "\n", marker_order.size());
     }
-    for (size_t i = 0; i < marker_order.size(); i++) {
-      JXL_RETURN_IF_ERROR(VisitMarker(&marker_order[i], visitor, &info));
+    for (uint8_t& marker : marker_order) {
+      JXL_RETURN_IF_ERROR(VisitMarker(&marker, visitor, &info));
     }
     if (!marker_order.empty()) {
       // Last marker should always be EOI marker.
@@ -175,8 +175,8 @@ Status JPEGData::VisitFields(Visitor* visitor) {
     components.resize(num_components);
   }
   if (component_type == JPEGComponentType::kCustom) {
-    for (size_t i = 0; i < components.size(); i++) {
-      JXL_RETURN_IF_ERROR(visitor->Bits(8, 0, &components[i].id));
+    for (auto& component : components) {
+      JXL_RETURN_IF_ERROR(visitor->Bits(8, 0, &component.id));
     }
   } else if (component_type == JPEGComponentType::kGray) {
     components[0].id = 1;
@@ -322,11 +322,11 @@ Status JPEGData::VisitFields(Visitor* visitor) {
       scan.extra_zero_runs.resize(num_extra_zero_runs);
     }
     last_block_idx = -1;
-    for (size_t i = 0; i < scan.extra_zero_runs.size(); ++i) {
-      uint32_t& block_idx = scan.extra_zero_runs[i].block_idx;
-      JXL_RETURN_IF_ERROR(visitor->U32(
-          Val(1), BitsOffset(2, 2), BitsOffset(4, 5), BitsOffset(8, 20), 1,
-          &scan.extra_zero_runs[i].num_extra_zero_runs));
+    for (auto& extra_zero_run : scan.extra_zero_runs) {
+      uint32_t& block_idx = extra_zero_run.block_idx;
+      JXL_RETURN_IF_ERROR(visitor->U32(Val(1), BitsOffset(2, 2),
+                                       BitsOffset(4, 5), BitsOffset(8, 20), 1,
+                                       &extra_zero_run.num_extra_zero_runs));
       block_idx -= last_block_idx + 1;
       JXL_RETURN_IF_ERROR(visitor->U32(Val(0), BitsOffset(3, 1),
                                        BitsOffset(5, 9), BitsOffset(28, 41), 0,

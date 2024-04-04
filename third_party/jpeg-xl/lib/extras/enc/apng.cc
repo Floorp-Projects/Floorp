@@ -73,17 +73,30 @@ class APNGEncoder : public Encoder {
   }
   Status Encode(const PackedPixelFile& ppf, EncodedImage* encoded_image,
                 ThreadPool* pool) const override {
+    // Encode main image frames
     JXL_RETURN_IF_ERROR(VerifyBasicInfo(ppf.info));
     encoded_image->icc.clear();
     encoded_image->bitstreams.resize(1);
-    return EncodePackedPixelFileToAPNG(ppf, pool,
-                                       &encoded_image->bitstreams.front());
+    JXL_RETURN_IF_ERROR(EncodePackedPixelFileToAPNG(
+        ppf, pool, &encoded_image->bitstreams.front()));
+
+    // Encode extra channels
+    for (size_t i = 0; i < ppf.extra_channels_info.size(); ++i) {
+      encoded_image->extra_channel_bitstreams.emplace_back();
+      auto& ec_bitstreams = encoded_image->extra_channel_bitstreams.back();
+      ec_bitstreams.emplace_back();
+      JXL_RETURN_IF_ERROR(EncodePackedPixelFileToAPNG(
+          ppf, pool, &ec_bitstreams.back(), true, i));
+    }
+    return true;
   }
 
  private:
   Status EncodePackedPixelFileToAPNG(const PackedPixelFile& ppf,
                                      ThreadPool* pool,
-                                     std::vector<uint8_t>* bytes) const;
+                                     std::vector<uint8_t>* bytes,
+                                     bool encode_extra_channels = false,
+                                     size_t extra_channel_index = 0) const;
 };
 
 void PngWrite(png_structp png_ptr, png_bytep data, png_size_t length) {
@@ -266,15 +279,21 @@ void MaybeAddCLLi(const JxlColorEncoding& c_enc, const float intensity_target,
 }
 
 Status APNGEncoder::EncodePackedPixelFileToAPNG(
-    const PackedPixelFile& ppf, ThreadPool* pool,
-    std::vector<uint8_t>* bytes) const {
-  size_t xsize = ppf.info.xsize;
-  size_t ysize = ppf.info.ysize;
-  bool has_alpha = ppf.info.alpha_bits != 0;
-  bool is_gray = ppf.info.num_color_channels == 1;
-  size_t color_channels = ppf.info.num_color_channels;
+    const PackedPixelFile& ppf, ThreadPool* pool, std::vector<uint8_t>* bytes,
+    bool encode_extra_channels, size_t extra_channel_index) const {
+  JxlExtraChannelInfo ec_info{};
+  if (encode_extra_channels) {
+    if (ppf.extra_channels_info.size() <= extra_channel_index) {
+      return JXL_FAILURE("Invalid index for extra channel");
+    }
+    ec_info = ppf.extra_channels_info[extra_channel_index].ec_info;
+  }
+
+  bool has_alpha = !encode_extra_channels && (ppf.info.alpha_bits != 0);
+  bool is_gray = encode_extra_channels || (ppf.info.num_color_channels == 1);
+  size_t color_channels =
+      encode_extra_channels ? 1 : ppf.info.num_color_channels;
   size_t num_channels = color_channels + (has_alpha ? 1 : 0);
-  size_t num_samples = num_channels * xsize * ysize;
 
   if (!ppf.info.have_animation && ppf.frames.size() != 1) {
     return JXL_FAILURE("Invalid number of frames");
@@ -284,9 +303,24 @@ Status APNGEncoder::EncodePackedPixelFileToAPNG(
   size_t anim_chunks = 0;
 
   for (const auto& frame : ppf.frames) {
-    JXL_RETURN_IF_ERROR(VerifyPackedImage(frame.color, ppf.info));
+    const PackedImage& color = encode_extra_channels
+                                   ? frame.extra_channels[extra_channel_index]
+                                   : frame.color;
 
-    const PackedImage& color = frame.color;
+    size_t xsize = color.xsize;
+    size_t ysize = color.ysize;
+    size_t num_samples = num_channels * xsize * ysize;
+
+    uint32_t bits_per_sample = encode_extra_channels ? ec_info.bits_per_sample
+                                                     : ppf.info.bits_per_sample;
+    if (!encode_extra_channels) {
+      JXL_RETURN_IF_ERROR(VerifyPackedImage(color, ppf.info));
+    } else {
+      JXL_RETURN_IF_ERROR(VerifyFormat(color.format));
+      JXL_RETURN_IF_ERROR(VerifyBitDepth(color.format.data_type,
+                                         bits_per_sample,
+                                         ec_info.exponent_bits_per_sample));
+    }
     const JxlPixelFormat format = color.format;
     const uint8_t* in = reinterpret_cast<const uint8_t*>(color.pixels());
     size_t data_bits_per_sample = PackedImage::BitsPerChannel(format.data_type);
@@ -297,24 +331,23 @@ Status APNGEncoder::EncodePackedPixelFileToAPNG(
     std::vector<uint8_t> out(out_size);
 
     if (format.data_type == JXL_TYPE_UINT8) {
-      if (ppf.info.bits_per_sample < 8) {
-        float mul = 255.0 / ((1u << ppf.info.bits_per_sample) - 1);
+      if (bits_per_sample < 8) {
+        float mul = 255.0 / ((1u << bits_per_sample) - 1);
         for (size_t i = 0; i < num_samples; ++i) {
-          out[i] = static_cast<uint8_t>(in[i] * mul + 0.5);
+          out[i] = static_cast<uint8_t>(std::lroundf(in[i] * mul));
         }
       } else {
         memcpy(out.data(), in, out_size);
       }
     } else if (format.data_type == JXL_TYPE_UINT16) {
-      if (ppf.info.bits_per_sample < 16 ||
-          format.endianness != JXL_BIG_ENDIAN) {
-        float mul = 65535.0 / ((1u << ppf.info.bits_per_sample) - 1);
+      if (bits_per_sample < 16 || format.endianness != JXL_BIG_ENDIAN) {
+        float mul = 65535.0 / ((1u << bits_per_sample) - 1);
         const uint8_t* p_in = in;
         uint8_t* p_out = out.data();
         for (size_t i = 0; i < num_samples; ++i, p_in += 2, p_out += 2) {
           uint32_t val = (format.endianness == JXL_BIG_ENDIAN ? LoadBE16(p_in)
                                                               : LoadLE16(p_in));
-          StoreBE16(static_cast<uint32_t>(val * mul + 0.5), p_out);
+          StoreBE16(static_cast<uint32_t>(std::lroundf(val * mul)), p_out);
         }
       } else {
         memcpy(out.data(), in, out_size);
@@ -344,7 +377,7 @@ Status APNGEncoder::EncodePackedPixelFileToAPNG(
     png_set_IHDR(png_ptr, info_ptr, width, height, bit_depth, color_type,
                  PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_BASE,
                  PNG_FILTER_TYPE_BASE);
-    if (count == 0) {
+    if (count == 0 && !encode_extra_channels) {
       if (!MaybeAddSRGB(ppf.color_encoding, png_ptr, info_ptr)) {
         MaybeAddCICP(ppf.color_encoding, png_ptr, info_ptr);
         if (!ppf.icc.empty()) {

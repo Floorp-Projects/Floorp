@@ -941,7 +941,7 @@ TEST(RoundtripTest, TestICCProfile) {
   JxlDecoderDestroy(dec);
 }
 
-TEST(RoundtripTest, JXL_TRANSCODE_JPEG_TEST(TestJPEGReconstruction)) {
+JXL_TRANSCODE_JPEG_TEST(RoundtripTest, TestJPEGReconstruction) {
   TEST_LIBJPEG_SUPPORT();
   const std::string jpeg_path = "jxl/flower/flower.png.im_q85_420.jpg";
   const std::vector<uint8_t> orig = jxl::test::ReadTestData(jpeg_path);

@@ -13,33 +13,37 @@
 #include "lib/jxl/common.h"
 
 #ifdef JXL_DISABLE_SLOW_TESTS
-#define JXL_SLOW_TEST(X) DISABLED_##X
+#define JXL_SLOW_TEST(T, C) TEST(T, DISABLED_##C)
 #else
-#define JXL_SLOW_TEST(X) X
+#define JXL_SLOW_TEST(T, C) TEST(T, C)
 #endif  // JXL_DISABLE_SLOW_TESTS
 
 #if JPEGXL_ENABLE_TRANSCODE_JPEG
-#define JXL_TRANSCODE_JPEG_TEST(X) X
+#define JXL_TRANSCODE_JPEG_TEST(T, C) TEST(T, C)
 #else
-#define JXL_TRANSCODE_JPEG_TEST(X) DISABLED_##X
+#define JXL_TRANSCODE_JPEG_TEST(T, C) TEST(T, DISABLED_##C)
 #endif  // JPEGXL_ENABLE_TRANSCODE_JPEG
 
 #if JPEGXL_ENABLE_BOXES
-#define JXL_BOXES_TEST(X) X
+#define JXL_BOXES_TEST(T, C) TEST(T, C)
+#define JXL_BOXES_TEST_P(T, C) TEST_P(T, C)
 #else
-#define JXL_BOXES_TEST(X) DISABLED_##X
+#define JXL_BOXES_TEST(T, C) TEST(T, DISABLED_##C)
+#define JXL_BOXES_TEST_P(T, C) TEST_P(T, DISABLED_##C)
 #endif  // JPEGXL_ENABLE_BOXES
 
 #ifdef THREAD_SANITIZER
-#define JXL_TSAN_SLOW_TEST(X) DISABLED_##X
+#define JXL_TSAN_SLOW_TEST(T, C) TEST(T, DISABLED_##C)
 #else
-#define JXL_TSAN_SLOW_TEST(X) X
+#define JXL_TSAN_SLOW_TEST(T, C) TEST(T, C)
 #endif  // THREAD_SANITIZER
 
 #if defined(__x86_64__)
-#define JXL_X86_64_TEST(X) X
+#define JXL_X86_64_TEST(T, C) TEST(T, C)
+#define JXL_X86_64_TEST_P(T, C) TEST_P(T, C)
 #else
-#define JXL_X86_64_TEST(X) DISABLED_##X
+#define JXL_X86_64_TEST(T, C) TEST(T, DISABLED_##C)
+#define JXL_X86_64_TEST_P(T, C) TEST_P(T, C)
 #endif  // defined(__x86_64__)
 
 // googletest before 1.10 didn't define INSTANTIATE_TEST_SUITE_P() but instead

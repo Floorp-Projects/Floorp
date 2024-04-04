@@ -362,7 +362,7 @@ Status ModularFrameDecoder::DecodeGroup(
   // Undo global transforms that have been pushed to the group level
   if (!use_full_image) {
     JXL_ASSERT(render_pipeline_input);
-    for (auto t : global_transform) {
+    for (const auto& t : global_transform) {
       JXL_RETURN_IF_ERROR(t.Inverse(gi, global_header.wp_header));
     }
     JXL_RETURN_IF_ERROR(ModularImageToDecodedRect(

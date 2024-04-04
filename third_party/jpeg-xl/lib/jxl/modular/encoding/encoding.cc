@@ -113,7 +113,7 @@ FlatTree FilterTree(const Tree &global_tree,
       }
     }
 
-    for (size_t j = 0; j < 2; j++) mark_property(flat.properties[j]);
+    for (int16_t property : flat.properties) mark_property(property);
     mark_property(flat.property0);
     output.push_back(flat);
   }
@@ -159,9 +159,9 @@ Status DecodeModularChannelMAANS(BitReader *br, ANSSymbolReader *reader,
 
   // From here on, tree lookup returns a *clustered* context ID.
   // This avoids an extra memory lookup after tree traversal.
-  for (size_t i = 0; i < tree.size(); i++) {
-    if (tree[i].property0 == -1) {
-      tree[i].childID = context_map[tree[i].childID];
+  for (auto &node : tree) {
+    if (node.property0 == -1) {
+      node.childID = context_map[node.childID];
     }
   }
 
@@ -538,8 +538,8 @@ Status ModularDecode(BitReader *br, Image &image, GroupHeader &header,
     // Don't do/undo transforms if header is incomplete.
     header.transforms.clear();
     image.transform = header.transforms;
-    for (size_t c = 0; c < image.channel.size(); c++) {
-      ZeroFillImage(&image.channel[c].plane);
+    for (auto &ch : image.channel) {
+      ZeroFillImage(&ch.plane);
     }
     return Status(StatusCode::kNotEnoughBytes);
   }

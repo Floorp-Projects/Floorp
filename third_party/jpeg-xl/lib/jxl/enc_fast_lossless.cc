@@ -202,8 +202,8 @@ size_t TOCBucket(size_t group_size) {
 
 size_t TOCSize(const std::vector<size_t>& group_sizes) {
   size_t toc_bits = 0;
-  for (size_t i = 0; i < group_sizes.size(); i++) {
-    toc_bits += kTOCBits[TOCBucket(group_sizes[i])];
+  for (size_t group_size : group_sizes) {
+    toc_bits += kTOCBits[TOCBucket(group_size)];
   }
   return (toc_bits + 7) / 8;
 }
@@ -328,8 +328,8 @@ struct PrefixCode {
   template <typename T>
   static void ComputeCodeLengthsNonZeroImpl(const uint64_t* freqs, size_t n,
                                             size_t precision, T infty,
-                                            uint8_t* min_limit,
-                                            uint8_t* max_limit,
+                                            const uint8_t* min_limit,
+                                            const uint8_t* max_limit,
                                             uint8_t* nbits) {
     assert(precision < 15);
     assert(n <= kMaxNumSymbols);
@@ -454,8 +454,8 @@ struct PrefixCode {
     uint8_t min_lengths[kNumLZ77] = {};
     uint8_t l = 15 - level1_nbits[numraw];
     uint8_t max_lengths[kNumLZ77];
-    for (size_t i = 0; i < kNumLZ77; i++) {
-      max_lengths[i] = l;
+    for (uint8_t& max_length : max_lengths) {
+      max_length = l;
     }
     size_t num_lz77 = kNumLZ77;
     while (num_lz77 > 0 && lz77_counts[num_lz77 - 1] == 0) num_lz77--;
@@ -487,11 +487,11 @@ struct PrefixCode {
   void WriteTo(BitWriter* writer) const {
     uint64_t code_length_counts[18] = {};
     code_length_counts[17] = 3 + 2 * (kNumLZ77 - 1);
-    for (size_t i = 0; i < kNumRawSymbols; i++) {
-      code_length_counts[raw_nbits[i]]++;
+    for (uint8_t raw_nbit : raw_nbits) {
+      code_length_counts[raw_nbit]++;
     }
-    for (size_t i = 0; i < kNumLZ77; i++) {
-      code_length_counts[lz77_nbits[i]]++;
+    for (uint8_t lz77_nbit : lz77_nbits) {
+      code_length_counts[lz77_nbit]++;
     }
     uint8_t code_length_nbits[18] = {};
     uint8_t code_length_nbits_min[18] = {};
@@ -527,9 +527,8 @@ struct PrefixCode {
                          code_length_bits, 18);
     // Encode raw bit code lengths.
     // Max bits written in this loop: 19 * 5 = 95
-    for (size_t i = 0; i < kNumRawSymbols; i++) {
-      writer->Write(code_length_nbits[raw_nbits[i]],
-                    code_length_bits[raw_nbits[i]]);
+    for (uint8_t raw_nbit : raw_nbits) {
+      writer->Write(code_length_nbits[raw_nbit], code_length_bits[raw_nbit]);
     }
     size_t num_lz77 = kNumLZ77;
     while (lz77_nbits[num_lz77 - 1] == 0) {
@@ -590,8 +589,8 @@ struct JxlFastLosslessFrameState {
 
 size_t JxlFastLosslessOutputSize(const JxlFastLosslessFrameState* frame) {
   size_t total_size_groups = 0;
-  for (size_t i = 0; i < frame->group_data.size(); i++) {
-    total_size_groups += SectionSize(frame->group_data[i]);
+  for (const auto& section : frame->group_data) {
+    total_size_groups += SectionSize(section);
   }
   return frame->header.bytes_written + total_size_groups;
 }
@@ -719,11 +718,10 @@ void JxlFastLosslessPrepareHeader(JxlFastLosslessFrameState* frame,
   output->Write(1, 0);      // No TOC permutation
   output->ZeroPadToByte();  // TOC is byte-aligned.
   assert(add_image_header || output->bytes_written <= kMaxFrameHeaderSize);
-  for (size_t i = 0; i < frame->group_sizes.size(); i++) {
-    size_t sz = frame->group_sizes[i];
-    size_t bucket = TOCBucket(sz);
+  for (size_t group_size : frame->group_sizes) {
+    size_t bucket = TOCBucket(group_size);
     output->Write(2, bucket);
-    output->Write(kTOCBits[bucket] - 2, sz - kGroupSizeOffset[bucket]);
+    output->Write(kTOCBits[bucket] - 2, group_size - kGroupSizeOffset[bucket]);
   }
   output->ZeroPadToByte();  // Groups are byte-aligned.
 }

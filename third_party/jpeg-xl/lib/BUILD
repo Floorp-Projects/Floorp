@@ -3,6 +3,9 @@
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 
+load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
+load("@bazel_skylib//rules:expand_template.bzl", "expand_template")
+
 # Load sources/headers/tests lists.
 load(
     "jxl_lists.bzl",
@@ -57,8 +60,6 @@ load(
     "libjxl_test_shards",
     "libjxl_test_timeouts",
 )
-load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
-load("@bazel_skylib//rules:expand_template.bzl", "expand_template")
 
 DEFAULT_VISIBILITY = ["//:__subpackages__"]
 

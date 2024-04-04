@@ -8,12 +8,10 @@
 #ifndef LIB_JXL_BUTTERAUGLI_BUTTERAUGLI_H_
 #define LIB_JXL_BUTTERAUGLI_BUTTERAUGLI_H_
 
-#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include <atomic>
-#include <cmath>
 #include <cstddef>
 #include <memory>
 
@@ -21,7 +19,10 @@
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/image.h"
 
+#if !defined(BUTTERAUGLI_ENABLE_CHECKS)
 #define BUTTERAUGLI_ENABLE_CHECKS 0
+#endif
+
 #define BUTTERAUGLI_RESTRICT JXL_RESTRICT
 
 // This is the main interface to butteraugli image similarity

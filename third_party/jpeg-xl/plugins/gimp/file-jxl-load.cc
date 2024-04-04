@@ -39,10 +39,10 @@ bool LoadJpegXlImage(const gchar *const filename, gint32 *const image_id) {
   GimpColorProfile *profile_icc = nullptr;
   GimpColorProfile *profile_int = nullptr;
   bool is_linear = false;
-  unsigned long xsize = 0;
-  unsigned long ysize = 0;
-  long crop_x0 = 0;
-  long crop_y0 = 0;
+  uint32_t xsize = 0;
+  uint32_t ysize = 0;
+  int32_t crop_x0 = 0;
+  int32_t crop_y0 = 0;
   size_t layer_idx = 0;
   uint32_t frame_duration = 0;
   double tps_denom = 1.f;

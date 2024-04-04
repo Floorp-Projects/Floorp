@@ -381,9 +381,11 @@ class BlobsReaderPNG {
 
     // We need 2*bytes for the hex values plus 1 byte every 36 values,
     // plus terminal \n for length.
-    const unsigned long needed_bytes =
-        bytes_to_decode * 2 + 1 + DivCeil(bytes_to_decode, 36);
-    if (needed_bytes != static_cast<size_t>(encoded_end - pos)) {
+    size_t tail = static_cast<size_t>(encoded_end - pos);
+    bool ok = ((tail / 2) >= bytes_to_decode);
+    if (ok) tail -= 2 * static_cast<size_t>(bytes_to_decode);
+    ok = ok && (tail == 1 + DivCeil(bytes_to_decode, 36));
+    if (!ok) {
       return JXL_FAILURE("Not enough bytes to parse %d bytes in hex",
                          bytes_to_decode);
     }
@@ -439,7 +441,7 @@ struct APNGFrame {
   Status Resize(size_t new_size) {
     if (new_size > pixels_size) {
       pixels.reset(malloc(new_size));
-      if (!pixels.get()) {
+      if (!pixels) {
         // TODO(szabadka): use specialized OOM error code
         return JXL_FAILURE("Failed to allocate memory for image buffer");
       }
@@ -462,7 +464,7 @@ struct Reader {
   bool Eof() const { return next == last; }
 };
 
-const unsigned long cMaxPNGSize = 1000000UL;
+const uint32_t cMaxPNGSize = 1000000UL;
 const size_t kMaxPNGChunkSize = 1lu << 30;  // 1 GB
 
 void info_fn(png_structp png_ptr, png_infop info_ptr) {
@@ -641,17 +643,17 @@ Status DecodeImageAPNG(const Span<const uint8_t> bytes,
   bool have_srgb = false;
   bool errorstate = true;
   if (id == kId_IHDR && chunkIHDR.size() == 25) {
-    unsigned int x0 = 0;
-    unsigned int y0 = 0;
-    unsigned int delay_num = 1;
-    unsigned int delay_den = 10;
-    unsigned int dop = 0;
-    unsigned int bop = 0;
+    uint32_t x0 = 0;
+    uint32_t y0 = 0;
+    uint32_t delay_num = 1;
+    uint32_t delay_den = 10;
+    uint32_t dop = 0;
+    uint32_t bop = 0;
 
-    unsigned int w = png_get_uint_32(chunkIHDR.data() + 8);
-    unsigned int h = png_get_uint_32(chunkIHDR.data() + 12);
-    unsigned int w0 = w;
-    unsigned int h0 = h;
+    uint32_t w = png_get_uint_32(chunkIHDR.data() + 8);
+    uint32_t h = png_get_uint_32(chunkIHDR.data() + 12);
+    uint32_t w0 = w;
+    uint32_t h0 = h;
     if (w > cMaxPNGSize || h > cMaxPNGSize) {
       return false;
     }

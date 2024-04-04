@@ -6,6 +6,10 @@
 // This C++ example decodes a JPEG XL image progressively (input bytes are
 // passed in chunks). The example outputs the intermediate steps to PAM files.
 
+#ifndef __STDC_FORMAT_MACROS
+#define __STDC_FORMAT_MACROS
+#endif
+
 #include <inttypes.h>
 #include <jxl/decode.h>
 #include <jxl/decode_cxx.h>
@@ -174,7 +178,7 @@ bool LoadFile(const char* filename, std::vector<uint8_t>* out) {
     return false;
   }
 
-  long size = ftell(file);
+  long size = ftell(file);  // NOLINT
   // Avoid invalid file or directory.
   if (size >= LONG_MAX || size < 0) {
     fclose(file);
@@ -220,7 +224,7 @@ int main(int argc, char* argv[]) {
   }
   size_t chunksize = jxl.size();
   if (argc > 3) {
-    long cs = atol(argv[3]);
+    long cs = atol(argv[3]);  // NOLINT
     if (cs < 100) {
       fprintf(stderr, "Chunk size is too low, try at least 100 bytes\n");
       return 1;

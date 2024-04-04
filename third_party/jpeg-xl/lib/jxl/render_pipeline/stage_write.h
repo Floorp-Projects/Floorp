@@ -9,13 +9,14 @@
 #include <functional>
 
 #include "lib/jxl/dec_cache.h"
+#include "lib/jxl/dec_xyb.h"
 #include "lib/jxl/image_bundle.h"
 #include "lib/jxl/render_pipeline/render_pipeline_stage.h"
 
 namespace jxl {
 
 std::unique_ptr<RenderPipelineStage> GetWriteToImageBundleStage(
-    ImageBundle* image_bundle, ColorEncoding color_encoding);
+    ImageBundle* image_bundle, const OutputEncodingInfo& output_encoding_info);
 
 // Gets a stage to write color channels to an Image3F.
 std::unique_ptr<RenderPipelineStage> GetWriteToImage3FStage(Image3F* image);

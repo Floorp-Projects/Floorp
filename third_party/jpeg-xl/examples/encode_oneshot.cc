@@ -48,7 +48,7 @@ bool ReadPFM(const char* filename, std::vector<float>* pixels, uint32_t* xsize,
     return false;
   }
 
-  long size = ftell(file);
+  long size = ftell(file);  // NOLINT
   // Avoid invalid file or directory.
   if (size >= LONG_MAX || size < 0) {
     fclose(file);
@@ -64,7 +64,7 @@ bool ReadPFM(const char* filename, std::vector<float>* pixels, uint32_t* xsize,
   data.resize(size);
 
   size_t readsize = fread(data.data(), 1, size, file);
-  if (static_cast<long>(readsize) != size) {
+  if (static_cast<long>(readsize) != size) {  // NOLINT
     fclose(file);
     return false;
   }

@@ -34,8 +34,8 @@ class QuantizedSplineEncoder {
         tokens->emplace_back(kDCTContext, PackSigned(dct[i]));
       }
     };
-    for (int c = 0; c < 3; ++c) {
-      encode_dct(spline.color_dct_[c]);
+    for (const auto& dct : spline.color_dct_) {
+      encode_dct(dct);
     }
     encode_dct(spline.sigma_dct_);
   }

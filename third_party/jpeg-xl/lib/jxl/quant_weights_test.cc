@@ -164,7 +164,7 @@ TEST(QuantWeightsTest, RAW) {
                                        QuantEncoding::Library(0));
   std::vector<int> matrix(3 * 32 * 32);
   Rng rng(0);
-  for (size_t i = 0; i < matrix.size(); i++) matrix[i] = rng.UniformI(1, 256);
+  for (int& v : matrix) v = rng.UniformI(1, 256);
   encodings[DequantMatrices::kQuantTable[AcStrategy::DCT32X32]] =
       QuantEncoding::RAW(matrix, 2);
   RoundtripMatrices(encodings);

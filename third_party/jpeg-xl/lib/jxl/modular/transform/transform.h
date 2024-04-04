@@ -134,7 +134,7 @@ class Transform : public Fields {
   JXL_FIELDS_NAME(Transform)
 
   Status Inverse(Image &input, const weighted::Header &wp_header,
-                 ThreadPool *pool = nullptr);
+                 ThreadPool *pool = nullptr) const;
   Status MetaApply(Image &input);
 };
 

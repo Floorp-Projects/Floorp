@@ -135,19 +135,25 @@ bool CheckColorSpaceComponents(int num_components, J_COLOR_SPACE colorspace) {
       return num_components == 1;
     case JCS_RGB:
     case JCS_YCbCr:
+#ifdef JCS_EXTENSIONS
     case JCS_EXT_RGB:
     case JCS_EXT_BGR:
+#endif
       return num_components == 3;
     case JCS_CMYK:
     case JCS_YCCK:
+#ifdef JCS_EXTENSIONS
     case JCS_EXT_RGBX:
     case JCS_EXT_BGRX:
     case JCS_EXT_XBGR:
     case JCS_EXT_XRGB:
+#endif
+#ifdef JCS_ALPHA_EXTENSIONS
     case JCS_EXT_RGBA:
     case JCS_EXT_BGRA:
     case JCS_EXT_ABGR:
     case JCS_EXT_ARGB:
+#endif
       return num_components == 4;
     default:
       // Unrecognized colorspaces can have any number of channels, since no

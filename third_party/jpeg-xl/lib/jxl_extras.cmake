@@ -118,7 +118,7 @@ foreach(LIB ${JXL_EXTRAS_OBJECT_LIBRARIES})
   target_compile_options("${LIB}" PRIVATE "${JPEGXL_INTERNAL_FLAGS}")
   target_compile_definitions("${LIB}" PRIVATE -DJXL_EXPORT=)
   set_property(TARGET "${LIB}" PROPERTY POSITION_INDEPENDENT_CODE ON)
-  target_include_directories("${LIB}" PRIVATE
+  target_include_directories("${LIB}" BEFORE PRIVATE
     ${PROJECT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_BINARY_DIR}/include

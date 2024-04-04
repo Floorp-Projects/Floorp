@@ -80,15 +80,15 @@ void TestLosslessGroups(size_t group_size_shift) {
 
 TEST(ModularTest, RoundtripLosslessGroups128) { TestLosslessGroups(0); }
 
-TEST(ModularTest, JXL_TSAN_SLOW_TEST(RoundtripLosslessGroups512)) {
+JXL_TSAN_SLOW_TEST(ModularTest, RoundtripLosslessGroups512) {
   TestLosslessGroups(2);
 }
 
-TEST(ModularTest, JXL_TSAN_SLOW_TEST(RoundtripLosslessGroups1024)) {
+JXL_TSAN_SLOW_TEST(ModularTest, RoundtripLosslessGroups1024) {
   TestLosslessGroups(3);
 }
 
-TEST(ModularTest, RoundtripLosslessCustomWP_PermuteRCT) {
+TEST(ModularTest, RoundtripLosslessCustomWpPermuteRCT) {
   const std::vector<uint8_t> orig =
       ReadTestData("external/wesaturate/500px/u76c0g_bliznaca_srgb8.png");
   TestImage t;
@@ -144,6 +144,7 @@ TEST(ModularTest, RoundtripLossyDeltaPaletteWP) {
   cparams.SetLossless();
   cparams.lossy_palette = true;
   cparams.palette_colors = 0;
+  // TODO(jon): this is currently ignored, and Avg4 is always used instead
   cparams.options.predictor = jxl::Predictor::Weighted;
 
   CodecInOut io_out;
@@ -154,12 +155,12 @@ TEST(ModularTest, RoundtripLossyDeltaPaletteWP) {
 
   size_t compressed_size;
   JXL_EXPECT_OK(Roundtrip(&io, cparams, {}, &io_out, _, &compressed_size));
-  EXPECT_LE(compressed_size, 7000u);
+  EXPECT_LE(compressed_size, 6500u);
   EXPECT_SLIGHTLY_BELOW(
       ButteraugliDistance(io.frames, io_out.frames, ButteraugliParams(),
                           *JxlGetDefaultCms(),
                           /*distmap=*/nullptr),
-      10.1);
+      1.5);
 }
 
 TEST(ModularTest, RoundtripLossy) {
@@ -346,8 +347,8 @@ TEST_P(ModularTestParam, RoundtripLossless) {
       const float* in = io.Main().color()->PlaneRow(c, y);
       const float* out = io2.Main().color()->PlaneRow(c, y);
       for (size_t x = 0; x < xsize; x++) {
-        uint32_t uin = in[x] * factor + 0.5;
-        uint32_t uout = out[x] * factor + 0.5;
+        uint32_t uin = std::lroundf(in[x] * factor);
+        uint32_t uout = std::lroundf(out[x] * factor);
         // check that the integer values are identical
         if (uin != uout) different++;
       }

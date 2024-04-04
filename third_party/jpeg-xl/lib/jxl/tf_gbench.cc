@@ -46,7 +46,9 @@ namespace {
 #define RUN_BENCHMARK_SCALAR(F, I)                           \
   constexpr size_t kNum = 1 << 12;                           \
   /* Three parallel runs, as this will run on R, G and B. */ \
-  float sum1 = 0, sum2 = 0, sum3 = 0;                        \
+  float sum1 = 0;                                            \
+  float sum2 = 0;                                            \
+  float sum3 = 0;                                            \
   for (auto _ : state) {                                     \
     float x = 1e-5;                                          \
     float v1 = 1e-5;                                         \

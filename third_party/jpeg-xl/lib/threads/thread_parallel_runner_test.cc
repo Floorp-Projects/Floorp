@@ -34,7 +34,7 @@ TEST(ThreadParallelRunnerTest, TestPool) {
       for (int begin = 0; begin < 32; ++begin) {
         std::fill(mementos.begin(), mementos.end(), 0);
         EXPECT_TRUE(RunOnPool(
-            &pool, begin, begin + num_tasks, jxl::ThreadPool::NoInit,
+            pool.get(), begin, begin + num_tasks, jxl::ThreadPool::NoInit,
             [begin, num_tasks, &mementos](const int task, const int thread) {
               // Parameter is in the given range
               EXPECT_GE(task, begin);
@@ -63,7 +63,7 @@ TEST(ThreadParallelRunnerTest, TestSmallAssignments) {
     std::atomic<int> num_calls{0};
 
     EXPECT_TRUE(RunOnPool(
-        &pool, 0, num_threads, jxl::ThreadPool::NoInit,
+        pool.get(), 0, num_threads, jxl::ThreadPool::NoInit,
         [&num_calls, num_threads, &id_bits](const int task, const int thread) {
           num_calls.fetch_add(1, std::memory_order_relaxed);
 
@@ -101,7 +101,7 @@ TEST(ThreadParallelRunnerTest, TestCounter) {
 
   const int kNumTasks = kNumThreads * 19;
   EXPECT_TRUE(RunOnPool(
-      &pool, 0, kNumTasks, jxl::ThreadPool::NoInit,
+      pool.get(), 0, kNumTasks, jxl::ThreadPool::NoInit,
       [&counters](const int task, const int thread) {
         counters[thread].counter += task;
       },

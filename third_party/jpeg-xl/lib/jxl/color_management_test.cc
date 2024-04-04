@@ -434,7 +434,7 @@ TEST_F(ColorManagementTest, GoldenXYBCube) {
       for (size_t ib = 0; ib < 2; ++ib) {
         const jxl::cms::ColorCube0D& out_f = cube[ix][iy][ib];
         for (int i = 0; i < 3; ++i) {
-          int32_t val = static_cast<int32_t>(0.5f + 65535 * out_f[i]);
+          int32_t val = static_cast<int32_t>(std::lroundf(65535 * out_f[i]));
           ASSERT_TRUE(val >= 0 && val <= 65535);
           actual.push_back(val);
         }
