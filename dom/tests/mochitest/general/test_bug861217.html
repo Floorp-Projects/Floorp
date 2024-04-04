@@ -48,7 +48,34 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=861217
 SimpleTest.waitForExplicitFinish();
 
 /** Test for Bug 861217 **/
-function runTest() {
+async function runTest() {
+  // This test needs to be run on environments where the zoom level == 1, but
+  // there are a couple of cases it's not run on such kind of environments.
+  // 1) run this test solely like mach mochitest dom/tests/mochitest/general/test_bug861217.html .
+  //    In this case the zoom level is smaller than 1 since there's no meta viewport.
+  // 2) run test test along with other tests in the same directory.
+  //    In this case this test runs inside an iframe in the mochitest harness'
+  //    top level document which doesn't have any meta viewport either.
+  // To avoid these situations we forcibly set the zoom level 1 here.
+  const resolution = await SpecialPowers.spawn(window.top, [], () => {
+    return SpecialPowers.getDOMWindowUtils(content.window).getResolution();
+  });
+
+  SimpleTest.registerCleanupFunction(async () => {
+    await SpecialPowers.spawn(window.top, [resolution], (aResolution) => {
+      SpecialPowers.getDOMWindowUtils(content.window).setResolutionAndScaleTo(aResolution);
+    });
+  });
+  await SpecialPowers.spawn(window.top, [], () => {
+    SpecialPowers.getDOMWindowUtils(content.window).setResolutionAndScaleTo(1.0);
+  });
+  await SimpleTest.promiseWaitForCondition(async () => {
+    const resolution = await SpecialPowers.spawn(window.top, [], () => {
+      return SpecialPowers.getDOMWindowUtils(content.window).getResolution();
+    });
+    return resolution == 1.0;
+  }, "Waiting for zoom level 1.0");
+
   var tableCell1 = document.getElementById("tableCell1"),
       bcr1 = tableCell1.getBoundingClientRect(),
       tableCell2 = document.getElementById("tableCell2"),
