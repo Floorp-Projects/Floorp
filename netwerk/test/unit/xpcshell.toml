@@ -1277,4 +1277,6 @@ skip-if = [
 
 ["test_xmlhttprequest.js"]
 
+["test_connection_coalescing.js"]
+
 ["test_default_uri_bypass.js"]
