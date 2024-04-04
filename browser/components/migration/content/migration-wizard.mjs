@@ -583,9 +583,14 @@ export class MigrationWizard extends HTMLElement {
       "div[name='page-selection']"
     );
 
+    let header = selectionPage.querySelector(".migration-wizard-header");
+    let selectionHeaderString = this.getAttribute("selection-header-string");
+
     if (this.hasAttribute("selection-header-string")) {
-      selectionPage.querySelector(".migration-wizard-header").textContent =
-        this.getAttribute("selection-header-string");
+      header.textContent = selectionHeaderString;
+      header.toggleAttribute("hidden", !selectionHeaderString);
+    } else {
+      header.removeAttribute("hidden");
     }
 
     let selectionSubheaderString = this.getAttribute(

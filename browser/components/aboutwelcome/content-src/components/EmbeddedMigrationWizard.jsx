@@ -43,7 +43,7 @@ export const EmbeddedMigrationWizard = ({ handleAction, content }) => {
       data-import-complete-success-string={
         options?.data_import_complete_success_string || ""
       }
-      selection-header-string={options?.selection_header_string || ""}
+      selection-header-string={options?.selection_header_string}
       selection-subheader-string={options?.selection_subheader_string || ""}
       hide-select-all={options?.hide_select_all || false}
       checkbox-margin-inline={options?.checkbox_margin_inline || ""}
