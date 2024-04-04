@@ -334,7 +334,11 @@ class ProviderTopSites extends UrlbarProvider {
   }
 
   onEngagement(state, queryContext) {
-    if (!queryContext.isPrivate && this.sponsoredSites) {
+    if (
+      !queryContext.isPrivate &&
+      this.sponsoredSites &&
+      ["engagement", "abandonment"].includes(state)
+    ) {
       for (let site of this.sponsoredSites) {
         Services.telemetry.keyedScalarAdd(
           SCALAR_CATEGORY_TOPSITES,

@@ -110,21 +110,32 @@ async function doTest({
   let provider = new TestProvider();
   UrlbarProvidersManager.registerProvider(provider);
 
+  let startPromise = provider.promiseEngagement();
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window: win,
     value: "test",
     fireInputEvent: true,
   });
 
+  let [state, queryContext, details, controller] = await startPromise;
+  Assert.equal(
+    controller.input.isPrivate,
+    expectedIsPrivate,
+    "Start isPrivate"
+  );
+  Assert.equal(state, "start", "Start state");
+
+  // `queryContext` isn't always defined for `start`, and `onEngagement`
+  // shouldn't rely on it being defined on start, but there's no good reason to
+  // assert that it's not defined here.
+
+  // Similarly, `details` is never defined for `start`, but there's no good
+  // reason to assert that it's not defined.
+
   let endPromise = provider.promiseEngagement();
   let { result, element } = (await endEngagement()) ?? {};
 
-  let [state, queryContext, details, controller] = await endPromise;
-
-  Assert.ok(
-    ["engagement", "abandonment"].includes(state),
-    "State should be either 'engagement' or 'abandonment'"
-  );
+  [state, queryContext, details, controller] = await endPromise;
   Assert.equal(controller.input.isPrivate, expectedIsPrivate, "End isPrivate");
   Assert.equal(state, expectedEndState, "End state");
   Assert.ok(queryContext, "End queryContext");

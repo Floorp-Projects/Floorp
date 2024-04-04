@@ -237,7 +237,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
 
     // Reset the Merino session ID when a session ends. By design for the user's
     // privacy, we don't keep it around between engagements.
-    if (!details.isSessionOngoing) {
+    if (state != "start" && !details.isSessionOngoing) {
       this.#merino?.resetSession();
     }
 
