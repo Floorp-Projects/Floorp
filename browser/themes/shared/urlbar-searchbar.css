@@ -195,13 +195,11 @@
   position: absolute;
   width: 100%;
   height: var(--urlbar-height);
-  top: calc((var(--urlbar-toolbar-height) - var(--urlbar-height)) / 2);
-  left: 0;
-}
 
-#urlbar[breakout] > #urlbar-input-container {
-  width: 100%;
-  height: 100%;
+  > #urlbar-input-container {
+    width: 100%;
+    height: 100%;
+  }
 }
 
 #urlbar:not([open]) > .urlbarView,
@@ -221,12 +219,12 @@
   top: 0;
   left: calc(-1 * var(--urlbar-margin-inline));
   width: calc(100% + 2 * var(--urlbar-margin-inline));
-}
 
-#urlbar[breakout][breakout-extend] > #urlbar-input-container {
-  height: var(--urlbar-toolbar-height);
-  padding-block: calc((var(--urlbar-toolbar-height) - var(--urlbar-height)) / 2 + var(--urlbar-container-padding));
-  padding-inline: calc(var(--urlbar-margin-inline) + var(--urlbar-container-padding));
+  > #urlbar-input-container {
+    height: var(--urlbar-container-height);
+    padding-block: calc((var(--urlbar-container-height) - var(--urlbar-height)) / 2 + var(--urlbar-container-padding));
+    padding-inline: calc(var(--urlbar-margin-inline) + var(--urlbar-container-padding));
+  }
 }
 
 #urlbar.searchButton[breakout][breakout-extend] > #urlbar-input-container > #urlbar-search-button {
