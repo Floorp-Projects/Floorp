@@ -222,7 +222,7 @@ abstract class BaseBrowserFragment :
         get() = _browserToolbarView!!
 
     private var _bottomToolbarContainerView: BottomToolbarContainerView? = null
-    private val bottomToolbarContainerView: BottomToolbarContainerView
+    protected val bottomToolbarContainerView: BottomToolbarContainerView
         get() = _bottomToolbarContainerView!!
 
     protected val readerViewFeature = ViewBoundFeatureWrapper<ReaderViewFeature>()

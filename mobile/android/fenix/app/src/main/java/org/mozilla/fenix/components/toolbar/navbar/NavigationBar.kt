@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import mozilla.components.browser.menu.view.MenuButton
+import mozilla.components.browser.state.selector.findCustomTab
 import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.selector.selectedTab
@@ -171,6 +172,58 @@ fun HomeNavBar(
     }
 }
 
+/**
+ * Top-level UI for displaying the CustomTab navigation bar.
+ *
+ * @param customTabSessionId the tab's session.
+ * @param browserStore The [BrowserStore] instance used to observe tabs state.
+ * @param menuButton A [MenuButton] to be used as an [AndroidView]. The view implementation
+ * contains the builder for the menu, so for the time being we are not implementing it as a composable.
+ * @param onBackButtonClick Invoked when the user clicks the back button in the nav bar.
+ * @param onBackButtonLongPress Invoked when the user long-presses the back button in the nav bar.
+ * @param onForwardButtonClick Invoked when the user clicks the forward button in the nav bar.
+ * @param onForwardButtonLongPress Invoked when the user long-presses the forward button in the nav bar.
+ * @param onOpenInBrowserButtonClick Invoked when the user clicks the open in fenix button in the nav bar.
+ */
+@Composable
+@Suppress("LongParameterList")
+fun CustomTabNavBar(
+    customTabSessionId: String,
+    browserStore: BrowserStore,
+    menuButton: MenuButton,
+    onBackButtonClick: () -> Unit,
+    onBackButtonLongPress: () -> Unit,
+    onForwardButtonClick: () -> Unit,
+    onForwardButtonLongPress: () -> Unit,
+    onOpenInBrowserButtonClick: () -> Unit,
+) {
+    // A follow up: https://bugzilla.mozilla.org/show_bug.cgi?id=1888573
+    val canGoBack by browserStore.observeAsState(initialValue = false) {
+        it.findCustomTab(customTabSessionId)?.content?.canGoBack ?: false
+    }
+    val canGoForward by browserStore.observeAsState(initialValue = false) {
+        it.findCustomTab(customTabSessionId)?.content?.canGoForward ?: false
+    }
+
+    NavBar {
+        BackButton(
+            onBackButtonClick = onBackButtonClick,
+            onBackButtonLongPress = onBackButtonLongPress,
+            enabled = canGoBack,
+        )
+
+        ForwardButton(
+            onForwardButtonClick = onForwardButtonClick,
+            onForwardButtonLongPress = onForwardButtonLongPress,
+            enabled = canGoForward,
+        )
+
+        OpenInBrowserButton(onOpenInBrowserButtonClick = onOpenInBrowserButtonClick)
+
+        MenuButton(menuButton = menuButton)
+    }
+}
+
 @Composable
 private fun NavBar(
     content: @Composable RowScope.() -> Unit,
@@ -280,6 +333,21 @@ private fun TabsButton(
 }
 
 @Composable
+private fun OpenInBrowserButton(
+    onOpenInBrowserButtonClick: () -> Unit,
+) {
+    IconButton(
+        onClick = onOpenInBrowserButtonClick,
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.mozac_ic_open_in),
+            stringResource(R.string.browser_menu_open_in_fenix, R.string.app_name),
+            tint = FirefoxTheme.colors.iconPrimary,
+        )
+    }
+}
+
+@Composable
 private fun HomeNavBarPreviewRoot(isPrivateMode: Boolean) {
     val context = LocalContext.current
     val colorId = if (isPrivateMode) {
@@ -337,6 +405,36 @@ private fun OpenTabNavBarNavBarPreviewRoot(isPrivateMode: Boolean) {
     )
 }
 
+@Composable
+private fun CustomTabNavBarPreviewRoot(isPrivateMode: Boolean) {
+    val context = LocalContext.current
+    val colorId = if (isPrivateMode) {
+        // private mode preview keeps using black colour as textPrimary
+        ThemeManager.resolveAttribute(R.attr.textOnColorPrimary, context)
+    } else {
+        ThemeManager.resolveAttribute(R.attr.textPrimary, context)
+    }
+    val menuButton = MenuButton(context).apply {
+        setColorFilter(
+            ContextCompat.getColor(
+                context,
+                colorId,
+            ),
+        )
+    }
+
+    CustomTabNavBar(
+        customTabSessionId = "",
+        browserStore = BrowserStore(),
+        onBackButtonClick = {},
+        onBackButtonLongPress = {},
+        onForwardButtonClick = {},
+        onForwardButtonLongPress = {},
+        menuButton = menuButton,
+        onOpenInBrowserButtonClick = {},
+    )
+}
+
 @LightDarkPreview
 @Composable
 private fun HomeNavBarPreview() {
@@ -366,5 +464,21 @@ private fun OpenTabNavBarPreview() {
 private fun OpenTabNavBarPrivatePreview() {
     FirefoxTheme(theme = Theme.Private) {
         OpenTabNavBarNavBarPreviewRoot(isPrivateMode = true)
+    }
+}
+
+@LightDarkPreview
+@Composable
+private fun CustomTabNavBarPreview() {
+    FirefoxTheme {
+        CustomTabNavBarPreviewRoot(isPrivateMode = false)
+    }
+}
+
+@Preview
+@Composable
+private fun CustomTabNavBarPrivatePreview() {
+    FirefoxTheme(theme = Theme.Private) {
+        CustomTabNavBarPreviewRoot(isPrivateMode = true)
     }
 }
