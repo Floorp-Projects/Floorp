@@ -32,7 +32,7 @@ support-files = [
   "file_thirdPartyChild.script.js",
   "file_thirdPartyChild.sharedworker.js",
   "file_thirdPartyChild.track.vtt",
-  "file_thirdPartyChild.video.ogv",
+  "file_thirdPartyChild.video.webm",
   "file_thirdPartyChild.worker.fetch.html",
   "file_thirdPartyChild.worker.js",
   "file_thirdPartyChild.worker.request.html",
