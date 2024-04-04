@@ -120,6 +120,28 @@ TEST_F(FileUtilsTest, OutputPathFromRootWorkingDir) {
   ASSERT_THAT(result, EndsWith(expected_end));
 }
 
+TEST_F(FileUtilsTest, RandomOutputPathFromUnchangedWorkingDir) {
+  rtc::SetRandomTestMode(true);
+  std::string fixed_first_uuid = "def01482-f829-429a-bfd4-841706e92cdd";
+  std::string expected_end = ExpectedRootDirByPlatform() + fixed_first_uuid +
+                             std::string(kPathDelimiter);
+  std::string result = webrtc::test::OutputPathWithRandomDirectory();
+
+  ASSERT_THAT(result, EndsWith(expected_end));
+}
+
+TEST_F(FileUtilsTest, RandomOutputPathFromRootWorkingDir) {
+  ASSERT_EQ(0, chdir(kPathDelimiter.data()));
+
+  rtc::SetRandomTestMode(true);
+  std::string fixed_first_uuid = "def01482-f829-429a-bfd4-841706e92cdd";
+  std::string expected_end = ExpectedRootDirByPlatform() + fixed_first_uuid +
+                             std::string(kPathDelimiter);
+  std::string result = webrtc::test::OutputPathWithRandomDirectory();
+
+  ASSERT_THAT(result, EndsWith(expected_end));
+}
+
 TEST_F(FileUtilsTest, TempFilename) {
   std::string temp_filename = webrtc::test::TempFilename(
       webrtc::test::OutputPath(), "TempFilenameTest");
