@@ -1767,6 +1767,17 @@ bool nsContentUtils::IsAlphanumericOrSymbol(uint32_t aChar) {
          cat == nsUGenCategory::kSymbol;
 }
 
+// static
+bool nsContentUtils::IsHyphen(uint32_t aChar) {
+  // Characters treated as hyphens for the purpose of "emergency" breaking
+  // when the content would otherwise overflow.
+  return aChar == uint32_t('-') ||  // HYPHEN-MINUS
+         aChar == 0x2010 ||         // HYPHEN
+         aChar == 0x2012 ||         // FIGURE DASH
+         aChar == 0x2013 ||         // EN DASH
+         aChar == 0x058A;           // ARMENIAN HYPHEN
+}
+
 /* static */
 bool nsContentUtils::IsHTMLWhitespace(char16_t aChar) {
   return aChar == char16_t(0x0009) || aChar == char16_t(0x000A) ||

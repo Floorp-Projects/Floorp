@@ -729,15 +729,6 @@ void gfxShapedText::SetupClusterBoundaries(uint32_t aOffset,
   // preceding letter by any letter-spacing or justification.
   const char16_t kBengaliVirama = 0x09CD;
   const char16_t kBengaliYa = 0x09AF;
-  // Characters treated as hyphens for the purpose of "emergency" breaking
-  // when the content would otherwise overflow.
-  auto isHyphen = [](char16_t c) {
-    return c == char16_t('-') ||  // HYPHEN-MINUS
-           c == 0x2010 ||         // HYPHEN
-           c == 0x2012 ||         // FIGURE DASH
-           c == 0x2013 ||         // EN DASH
-           c == 0x058A;           // ARMENIAN HYPHEN
-  };
   bool prevWasHyphen = false;
   while (pos < aLength) {
     const char16_t ch = aString[pos];
@@ -750,7 +741,7 @@ void gfxShapedText::SetupClusterBoundaries(uint32_t aOffset,
     }
     if (ch == char16_t(' ') || ch == kIdeographicSpace) {
       glyphs[pos].SetIsSpace();
-    } else if (isHyphen(ch) && pos &&
+    } else if (nsContentUtils::IsHyphen(ch) && pos &&
                nsContentUtils::IsAlphanumeric(aString[pos - 1])) {
       prevWasHyphen = true;
     } else if (ch == kBengaliYa) {
