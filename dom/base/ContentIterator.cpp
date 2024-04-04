@@ -611,26 +611,38 @@ nsIContent* ContentIteratorBase<NodeType>::GetDeepFirstChild(
   }
 
   nsIContent* node = aRoot;
-  nsIContent* child = node->GetFirstChild();
+  nsIContent* child = nullptr;
 
-  if (!child) {
-    if (ShadowRoot* shadowRoot =
-            IteratorHelpers::GetShadowRoot(node, aAllowCrossShadowBoundary)) {
-      // If this node doesn't have a child, but it's also a shadow host
-      // that can be selected, we go into this shadow tree.
-      child = shadowRoot->GetFirstChild();
-    }
+  if (ShadowRoot* shadowRoot =
+          IteratorHelpers::GetShadowRoot(node, aAllowCrossShadowBoundary)) {
+    // When finding the deepest child of node, if this node has a
+    // web exposed shadow root, we use this shadow root to find the deepest
+    // child.
+    // If the first candidate should be a slotted content,
+    // shadowRoot->GetFirstChild() should be able to return the <slot> element.
+    // It's probably correct I think. Then it's up to the caller of this
+    // iterator to decide whether to use the slot's assigned nodes or not.
+    MOZ_ASSERT(aAllowCrossShadowBoundary);
+    child = shadowRoot->GetFirstChild();
+  } else {
+    child = node->GetFirstChild();
   }
 
-  // FIXME(sefeng): This is problematic for slotted contents
   while (child) {
     node = child;
-    child = node->GetFirstChild();
-    if (!child) {
-      if (ShadowRoot* shadowRoot =
-              IteratorHelpers::GetShadowRoot(node, aAllowCrossShadowBoundary)) {
-        child = shadowRoot->GetFirstChild();
-      }
+    if (ShadowRoot* shadowRoot =
+            IteratorHelpers::GetShadowRoot(node, aAllowCrossShadowBoundary)) {
+      // When finding the deepest child of node, if this node has a
+      // web exposed shadow root, we use this shadow root to find the deepest
+      // child.
+      // If the first candidate should be a slotted content,
+      // shadowRoot->GetFirstChild() should be able to return the <slot>
+      // element. It's probably correct I think. Then it's up to the caller of
+      // this iterator to decide whether to use the slot's assigned nodes or
+      // not.
+      child = shadowRoot->GetFirstChild();
+    } else {
+      child = node->GetFirstChild();
     }
   }
 
