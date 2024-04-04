@@ -10,15 +10,19 @@ add_task(async function enableHtmlViews() {
   });
 });
 
-async function testOptionsInTab({ id, options_ui_options }) {
+async function testOptionsInTab({
+  id,
+  options_ui_options = {},
+  manifest = {
+    manifest_version: 2,
+    options_ui: { page: "options.html", ...options_ui_options },
+  },
+}) {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       name: "Prefs extension",
       browser_specific_settings: { gecko: { id } },
-      options_ui: {
-        page: "options.html",
-        ...options_ui_options,
-      },
+      ...manifest,
     },
     background() {
       browser.test.sendMessage(
@@ -84,8 +88,13 @@ async function testOptionsInTab({ id, options_ui_options }) {
 }
 
 add_task(async function testPreferencesLink() {
-  let id = "prefs@mochi.test";
+  let id = "options_ui_open_in_tab@mochi.test";
   await testOptionsInTab({ id, options_ui_options: { open_in_tab: true } });
+});
+
+add_task(async function testOptionsPageOpensInNewTab() {
+  let id = "options_page@mochi.test";
+  await testOptionsInTab({ id, manifest: { options_page: "options.html" } });
 });
 
 add_task(async function testPreferencesInlineDisabled() {

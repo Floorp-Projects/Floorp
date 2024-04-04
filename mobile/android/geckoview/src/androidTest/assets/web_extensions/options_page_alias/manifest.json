@@ -1,0 +1,12 @@
+{
+  "manifest_version": 2,
+  "name": "options_page_alias",
+  "version": "1.0",
+  "description": "A test add-on using options_page instead of options_ui.page",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "options_page_alias@tests.mozilla.org"
+    }
+  },
+  "options_page": "dummy.html"
+}
