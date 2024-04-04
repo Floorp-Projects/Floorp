@@ -56,10 +56,11 @@ class RemoteDragStartData;
 }  // namespace dom
 
 class OverOutElementsWrapper final : public nsISupports {
-  ~OverOutElementsWrapper();
+  ~OverOutElementsWrapper() = default;
 
  public:
-  OverOutElementsWrapper();
+  enum class BoundaryEventType : bool { Mouse, Pointer };
+  explicit OverOutElementsWrapper(BoundaryEventType aType) : mType(aType) {}
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(OverOutElementsWrapper)
@@ -134,6 +135,8 @@ class OverOutElementsWrapper final : public nsISupports {
   // "out" event target or the deepest leave event target.  If it's removed from
   // the DOM tree, this is set to nullptr.
   nsCOMPtr<nsIContent> mDispatchingOutOrDeepestLeaveEventTarget;
+
+  const BoundaryEventType mType;
 
   // Once the last "over" element is removed from the tree, this is set
   // to false.  Then, mDeepestEnterEventTarget may be an ancestor of the
