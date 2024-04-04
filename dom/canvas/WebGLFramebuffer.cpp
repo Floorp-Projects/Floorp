@@ -352,8 +352,15 @@ Maybe<double> WebGLFBAttachPoint::GetParameter(WebGLContext* webgl,
     case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_ALPHA_SIZE:
     case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_DEPTH_SIZE:
     case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_STENCIL_SIZE:
-    case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE:
       isPNameValid = webgl->IsWebGL2();
+      break;
+
+    case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE:
+      isPNameValid = (webgl->IsWebGL2() ||
+                      webgl->IsExtensionEnabled(
+                          WebGLExtensionID::WEBGL_color_buffer_float) ||
+                      webgl->IsExtensionEnabled(
+                          WebGLExtensionID::EXT_color_buffer_half_float));
       break;
 
     case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING:
@@ -404,7 +411,14 @@ Maybe<double> WebGLFBAttachPoint::GetParameter(WebGLContext* webgl,
       break;
 
     case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE:
-      MOZ_ASSERT(attachment != LOCAL_GL_DEPTH_STENCIL_ATTACHMENT);
+      if (attachment == LOCAL_GL_DEPTH_STENCIL_ATTACHMENT) {
+        webgl->ErrorInvalidOperation(
+            "Querying"
+            " FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE"
+            " against DEPTH_STENCIL_ATTACHMENT is an"
+            " error.");
+        return Nothing();
+      }
 
       if (format->unsizedFormat == webgl::UnsizedFormat::DEPTH_STENCIL) {
         MOZ_ASSERT(attachment == LOCAL_GL_DEPTH_ATTACHMENT ||
@@ -1222,17 +1236,6 @@ Maybe<double> WebGLFramebuffer::GetAttachmentParameter(GLenum attachEnum,
   auto attach = maybeAttach.value();
 
   if (mContext->IsWebGL2() && attachEnum == LOCAL_GL_DEPTH_STENCIL_ATTACHMENT) {
-    // There are a couple special rules for this one.
-
-    if (pname == LOCAL_GL_FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE) {
-      mContext->ErrorInvalidOperation(
-          "Querying"
-          " FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE"
-          " against DEPTH_STENCIL_ATTACHMENT is an"
-          " error.");
-      return Nothing();
-    }
-
     if (mDepthAttachment.Renderbuffer() != mStencilAttachment.Renderbuffer() ||
         mDepthAttachment.Texture() != mStencilAttachment.Texture()) {
       mContext->ErrorInvalidOperation(
