@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_CSSPageRule_h
 #define mozilla_dom_CSSPageRule_h
 
-#include "mozilla/css/Rule.h"
+#include "mozilla/css/GroupRule.h"
 #include "mozilla/ServoBindingTypes.h"
 
 #include "nsDOMCSSDeclaration.h"
@@ -53,13 +53,14 @@ class CSSPageRuleDeclaration final : public nsDOMCSSDeclaration {
   RefPtr<DeclarationBlock> mDecls;
 };
 
-class CSSPageRule final : public css::Rule {
+class CSSPageRule final : public css::GroupRule {
  public:
   CSSPageRule(RefPtr<StyleLockedPageRule> aRawRule, StyleSheet* aSheet,
               css::Rule* aParentRule, uint32_t aLine, uint32_t aColumn);
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(CSSPageRule, css::Rule)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(CSSPageRule,
+                                                         css::GroupRule)
 
   bool IsCCLeaf() const final;
 
@@ -75,6 +76,8 @@ class CSSPageRule final : public css::Rule {
   void SetSelectorText(const nsACString& aSelectorText);
 
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const final;
+
+  already_AddRefed<StyleLockedCssRules> GetOrCreateRawRules() final;
 
 #ifdef DEBUG
   void List(FILE* out = stdout, int32_t aIndent = 0) const final;

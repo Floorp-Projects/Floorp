@@ -8,10 +8,8 @@
  */
 
 // https://drafts.csswg.org/cssom/#the-csspagerule-interface
-// Per spec, this should inherit from CSSGroupingRule, but we don't
-// implement this yet.
 [Exposed=Window]
-interface CSSPageRule : CSSRule {
+interface CSSPageRule : CSSGroupingRule {
   attribute UTF8String selectorText;
   [SameObject, PutForwards=cssText] readonly attribute CSSStyleDeclaration style;
 };
