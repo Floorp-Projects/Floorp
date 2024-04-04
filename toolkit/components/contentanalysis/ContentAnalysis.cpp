@@ -956,6 +956,7 @@ nsresult ContentAnalysis::CancelWithError(nsCString aRequestToken,
           // May be shutting down
           return;
         }
+        owner->SetLastResult(aResult);
         nsCOMPtr<nsIObserverService> obsServ =
             mozilla::services::GetObserverService();
         bool allow = Preferences::GetBool(kDefaultAllowPref);
@@ -1184,6 +1185,8 @@ void ContentAnalysis::IssueResponse(RefPtr<ContentAnalysisResponse>& response) {
     LOGE("Content analysis couldn't get request token from response!");
     return;
   }
+  // Successfully made a request to the agent, so mark that we succeeded
+  mLastResult = NS_OK;
 
   Maybe<CallbackData> maybeCallbackData;
   {
@@ -1469,6 +1472,12 @@ nsresult ContentAnalysis::RunAcknowledgeTask(
   return rv;
 }
 
+bool ContentAnalysis::LastRequestSucceeded() {
+  return mLastResult != NS_ERROR_NOT_AVAILABLE &&
+         mLastResult != NS_ERROR_INVALID_SIGNATURE &&
+         mLastResult != NS_ERROR_FAILURE;
+}
+
 NS_IMETHODIMP
 ContentAnalysis::GetDiagnosticInfo(JSContext* aCx,
                                    mozilla::dom::Promise** aPromise) {
@@ -1488,7 +1497,7 @@ ContentAnalysis::GetDiagnosticInfo(JSContext* aCx,
         std::string agentPath = client->GetAgentInfo().binary_path;
         nsString agentWidePath = NS_ConvertUTF8toUTF16(agentPath);
         auto info = MakeRefPtr<ContentAnalysisDiagnosticInfo>(
-            true, std::move(agentWidePath), false,
+            self->LastRequestSucceeded(), std::move(agentWidePath), false,
             self ? self->mRequestCount : 0);
         promise->MaybeResolve(info);
       },
