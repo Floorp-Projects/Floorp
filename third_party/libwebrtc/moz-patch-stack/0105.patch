@@ -1,74 +1,28 @@
-From: Dan Baker <dbaker@mozilla.com>
-Date: Thu, 14 Mar 2024 10:51:00 -0600
-Subject: Bug 1883116 - (fix-e79e722834) add enviroment_factory to libwebrtc
- build and enforce providing clock and task_queue when creating Environment
+From: Jan Grulich <jgrulich@redhat.com>
+Date: Wed, 6 Mar 2024 10:19:00 +0000
+Subject: Bug 1882438 - WebRTC backport: PipeWire camera - use length of device
+ id instead display name r=pehrsons,webrtc-reviewers
 
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/2185cab977988fd4ab03b38dc67f9b06162444da
+This is a simple backport of an WebRTC upstream change.
+
+Upstream commit: 16ac10d9f75cde959f00df062f544c49941882da
+
+Differential Revision: https://phabricator.services.mozilla.com/D203099
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b572eb8b39b03f714234afff4bd80b4612439521
 ---
- BUILD.gn                               |  1 +
- api/environment/environment_factory.cc | 10 ++++++++++
- api/task_queue/BUILD.gn                |  5 +++++
- 3 files changed, 16 insertions(+)
+ modules/video_capture/linux/device_info_pipewire.cc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/BUILD.gn b/BUILD.gn
-index 7feca08e60..85ead4162f 100644
---- a/BUILD.gn
-+++ b/BUILD.gn
-@@ -580,6 +580,7 @@ if (!build_with_chromium) {
+diff --git a/modules/video_capture/linux/device_info_pipewire.cc b/modules/video_capture/linux/device_info_pipewire.cc
+index f9f08a9c27..31d922035b 100644
+--- a/modules/video_capture/linux/device_info_pipewire.cc
++++ b/modules/video_capture/linux/device_info_pipewire.cc
+@@ -96,7 +96,7 @@ int32_t DeviceInfoPipeWire::CreateCapabilityMap(
+       continue;
  
-     if (build_with_mozilla) {
-       deps += [
-+        "api/environment:environment_factory",
-         "api/video:video_frame",
-         "api/video:video_rtp_headers",
-         "test:rtp_test_utils",
-diff --git a/api/environment/environment_factory.cc b/api/environment/environment_factory.cc
-index c0b681aa08..6f0ec40dbe 100644
---- a/api/environment/environment_factory.cc
-+++ b/api/environment/environment_factory.cc
-@@ -97,12 +97,22 @@ Environment EnvironmentFactory::CreateWithDefaults() && {
-   if (field_trials_ == nullptr) {
-     Set(std::make_unique<FieldTrialBasedConfig>());
-   }
-+#if defined(WEBRTC_MOZILLA_BUILD)
-+  // We want to use our clock, not GetRealTimeClockRaw, and we avoid
-+  // building the code under third_party/libwebrtc/task_queue.  To
-+  // ensure we're setting up things correctly, namely providing an
-+  // Environment object with a preset task_queue_factory and clock,
-+  // we'll do a release assert here.
-+  RTC_CHECK(clock_);
-+  RTC_CHECK(task_queue_factory_);
-+#else
-   if (clock_ == nullptr) {
-     Set(Clock::GetRealTimeClock());
-   }
-   if (task_queue_factory_ == nullptr) {
-     Set(CreateDefaultTaskQueueFactory(field_trials_));
-   }
-+#endif
-   if (event_log_ == nullptr) {
-     Set(std::make_unique<RtcEventLogNull>());
-   }
-diff --git a/api/task_queue/BUILD.gn b/api/task_queue/BUILD.gn
-index b9bc81171f..c24c22a1f6 100644
---- a/api/task_queue/BUILD.gn
-+++ b/api/task_queue/BUILD.gn
-@@ -88,6 +88,10 @@ rtc_library("task_queue_test") {
- }
- 
- rtc_library("default_task_queue_factory") {
-+# Mozilla - disable this entire target to avoid inclusion of code we want
-+# to avoid.  Better here than trying to wack-a-mole for places that list
-+# it as a dependency.
-+if (!build_with_mozilla) {
-   visibility = [ "*" ]
-   if (!is_ios && !is_android) {
-     # Internally webrtc shouldn't rely on any specific TaskQueue implementation
-@@ -126,6 +130,7 @@ rtc_library("default_task_queue_factory") {
-     sources += [ "default_task_queue_factory_stdlib.cc" ]
-     deps += [ "../../rtc_base:rtc_task_queue_stdlib" ]
-   }
-+} # of if (!build_with_mozilla) {
- }
- 
- rtc_library("pending_task_safety_flag") {
+     _captureCapabilities = node.capabilities();
+-    _lastUsedDeviceNameLength = node.display_name().length();
++    _lastUsedDeviceNameLength = node.unique_id().length();
+     _lastUsedDeviceName = static_cast<char*>(
+         realloc(_lastUsedDeviceName, _lastUsedDeviceNameLength + 1));
+     memcpy(_lastUsedDeviceName, deviceUniqueIdUTF8,
