@@ -480,25 +480,6 @@ void MediaKeySystemAccessManager::RequestMediaKeySystemAccess(
     return;
   }
 
-  nsCOMPtr<Document> doc = mWindow->GetExtantDoc();
-  nsTHashMap<nsCharPtrHashKey, bool> warnings;
-  std::function<void(const char*)> deprecationWarningLogFn =
-      [&](const char* aMsgName) {
-        EME_LOG(
-            "MediaKeySystemAccessManager::DeprecationWarningLambda Logging "
-            "deprecation warning '%s' to WebConsole.",
-            aMsgName);
-        warnings.InsertOrUpdate(aMsgName, true);
-        AutoTArray<nsString, 1> params;
-        nsString& uri = *params.AppendElement();
-        if (doc) {
-          Unused << doc->GetDocumentURI(uri);
-        }
-        nsContentUtils::ReportToConsole(nsIScriptError::warningFlag, "Media"_ns,
-                                        doc, nsContentUtils::eDOM_PROPERTIES,
-                                        aMsgName, params);
-      };
-
   bool isPrivateBrowsing =
       mWindow->GetExtantDoc() &&
       mWindow->GetExtantDoc()->NodePrincipal()->GetPrivateBrowsingId() > 0;
@@ -520,7 +501,7 @@ void MediaKeySystemAccessManager::RequestMediaKeySystemAccess(
   MediaKeySystemConfiguration config;
   if (MediaKeySystemAccess::GetSupportedConfig(
           aRequest->mKeySystem, aRequest->mConfigs, config, &diagnostics,
-          isPrivateBrowsing, deprecationWarningLogFn)) {
+          isPrivateBrowsing, mWindow->GetExtantDoc())) {
     aRequest->mSupportedConfig = Some(config);
     // The app gets the final say on if we provide access or not.
     CheckDoesAppAllowProtectedMedia(std::move(aRequest));

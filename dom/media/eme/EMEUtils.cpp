@@ -10,8 +10,10 @@
 #include "MediaData.h"
 #include "KeySystemConfig.h"
 #include "mozilla/StaticPrefs_media.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/KeySystemNames.h"
 #include "mozilla/dom/UnionTypes.h"
+#include "nsContentUtils.h"
 
 #ifdef MOZ_WMF_CDM
 #  include "mozilla/PMFCDM.h"
@@ -246,6 +248,23 @@ bool DoesKeySystemSupportHardwareDecryption(const nsAString& aKeySystem) {
   }
 #endif
   return false;
+}
+
+void DeprecationWarningLog(const dom::Document* aDocument,
+                           const char* aMsgName) {
+  if (!aDocument || !aMsgName) {
+    return;
+  }
+  EME_LOG("DeprecationWarning Logging deprecation warning '%s' to WebConsole.",
+          aMsgName);
+  nsTHashMap<nsCharPtrHashKey, bool> warnings;
+  warnings.InsertOrUpdate(aMsgName, true);
+  AutoTArray<nsString, 1> params;
+  nsString& uri = *params.AppendElement();
+  Unused << aDocument->GetDocumentURI(uri);
+  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag, "Media"_ns,
+                                  aDocument, nsContentUtils::eDOM_PROPERTIES,
+                                  aMsgName, params);
 }
 
 }  // namespace mozilla
