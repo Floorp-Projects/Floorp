@@ -25,7 +25,6 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/array_view.h"
-#include "api/crypto_params.h"
 #include "api/jsep_session_description.h"
 #include "api/media_types.h"
 #include "api/rtp_parameters.h"
@@ -59,7 +58,6 @@ using cricket::AudioContentDescription;
 using cricket::Candidate;
 using cricket::ContentGroup;
 using cricket::ContentInfo;
-using cricket::CryptoParams;
 using cricket::ICE_CANDIDATE_COMPONENT_RTCP;
 using cricket::ICE_CANDIDATE_COMPONENT_RTP;
 using cricket::kFecSsrcGroupSemantics;
@@ -1343,20 +1341,6 @@ class WebRtcSdpTest : public ::testing::Test {
     // rtcp_reduced_size
     EXPECT_EQ(cd1->rtcp_reduced_size(), cd2->rtcp_reduced_size());
 
-    // cryptos
-    EXPECT_EQ(cd1->cryptos().size(), cd2->cryptos().size());
-    if (cd1->cryptos().size() != cd2->cryptos().size()) {
-      ADD_FAILURE();
-      return;
-    }
-    for (size_t i = 0; i < cd1->cryptos().size(); ++i) {
-      const CryptoParams c1 = cd1->cryptos().at(i);
-      const CryptoParams c2 = cd2->cryptos().at(i);
-      EXPECT_TRUE(c1.Matches(c2));
-      EXPECT_EQ(c1.key_params, c2.key_params);
-      EXPECT_EQ(c1.session_params, c2.session_params);
-    }
-
     // protocol
     // Use an equivalence class here, for old and new versions of the
     // protocol description.
@@ -1629,11 +1613,6 @@ class WebRtcSdpTest : public ::testing::Test {
                      absl::WrapUnique(audio_desc_));
     desc_.AddContent(kVideoContentName, MediaProtocolType::kRtp,
                      absl::WrapUnique(video_desc_));
-  }
-
-  void RemoveCryptos() {
-    audio_desc_->set_cryptos(std::vector<CryptoParams>());
-    video_desc_->set_cryptos(std::vector<CryptoParams>());
   }
 
   // Removes everything in StreamParams from the session description that is

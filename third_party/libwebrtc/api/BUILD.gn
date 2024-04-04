@@ -301,7 +301,6 @@ if (!build_with_mozilla) {
   visibility = [ "*" ]
   cflags = []
   sources = [
-    "crypto_params.h",
     "data_channel_interface.cc",
     "data_channel_interface.h",
     "jsep.cc",

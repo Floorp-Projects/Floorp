@@ -160,8 +160,6 @@ class MediaSessionDescriptionFactory {
                         const VideoCodecs& recv_codecs);
   RtpHeaderExtensions filtered_rtp_header_extensions(
       RtpHeaderExtensions extensions) const;
-  SecurePolicy secure() const { return secure_; }
-  void set_secure(SecurePolicy s) { secure_ = s; }
 
   void set_enable_encrypted_rtp_header_extensions(bool enable) {
     enable_encrypted_rtp_header_extensions_ = enable;
@@ -320,9 +318,6 @@ class MediaSessionDescriptionFactory {
   webrtc::AlwaysValidPointer<rtc::UniqueRandomIdGenerator> const
       ssrc_generator_;
   bool enable_encrypted_rtp_header_extensions_ = false;
-  // TODO(zhihuang): Rename secure_ to sdec_policy_; rename the related getter
-  // and setter.
-  SecurePolicy secure_ = SEC_DISABLED;
   const TransportDescriptionFactory* transport_desc_factory_;
 };
 
