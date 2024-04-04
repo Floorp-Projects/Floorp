@@ -535,7 +535,7 @@ index 2c3fe55f8d..ca900823c8 100644
  #include "api/video/video_content_type.h"
  #include "api/video/video_frame.h"
 diff --git a/common_audio/BUILD.gn b/common_audio/BUILD.gn
-index 620d01e6d5..69e42a35aa 100644
+index 2ae6d32710..a45214f754 100644
 --- a/common_audio/BUILD.gn
 +++ b/common_audio/BUILD.gn
 @@ -267,14 +267,10 @@ if (current_cpu == "x86" || current_cpu == "x64") {
@@ -755,7 +755,7 @@ index 8b23955d5b..a49df7e7d2 100644
  }
  
 diff --git a/modules/audio_device/BUILD.gn b/modules/audio_device/BUILD.gn
-index baba0a36d9..700ddae5db 100644
+index 2088e74dcd..1672be3f95 100644
 --- a/modules/audio_device/BUILD.gn
 +++ b/modules/audio_device/BUILD.gn
 @@ -30,6 +30,7 @@ rtc_source_set("audio_device_default") {
