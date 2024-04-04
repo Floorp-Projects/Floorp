@@ -62,6 +62,16 @@ export const ThemeVariableMap = [
     },
   ],
   [
+    "--tabs-navbar-separator-style",
+    {
+      lwtProperty: "toolbar_top_separator",
+      processColor(rgbaChannels) {
+        // If the separator is transparent, we don't want it to take space.
+        return rgbaChannels?.a === 0 ? "none" : null;
+      },
+    },
+  ],
+  [
     "--toolbarseparator-color",
     {
       lwtProperty: "toolbar_vertical_separator",
