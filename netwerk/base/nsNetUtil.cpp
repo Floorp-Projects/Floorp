@@ -1816,6 +1816,26 @@ class TlsAutoIncrement {
   T& mVar;
 };
 
+static nsTHashSet<nsCString> sSimpleURISchemes;
+static StaticRWLock sSchemeLock;
+
+namespace mozilla::net {
+
+void ParseSimpleURISchemes(const nsACString& schemeList) {
+  StaticAutoWriteLock lock(sSchemeLock);
+
+  sSimpleURISchemes.Clear();
+  for (const auto& scheme : schemeList.Split(',')) {
+    nsAutoCString s(scheme);
+    s.CompressWhitespace();
+    if (!s.IsEmpty()) {
+      sSimpleURISchemes.Insert(s);
+    }
+  }
+}
+
+}  // namespace mozilla::net
+
 nsresult NS_NewURI(nsIURI** aURI, const nsACString& aSpec,
                    const char* aCharset /* = nullptr */,
                    nsIURI* aBaseURI /* = nullptr */) {
@@ -2003,6 +2023,14 @@ nsresult NS_NewURI(nsIURI** aURI, const nsACString& aSpec,
   }
 #endif
 
+  auto mustUseSimpleURI = [](const nsCString& scheme) -> bool {
+    if (!StaticPrefs::network_url_some_schemes_bypass_defaultURI_fallback()) {
+      return false;
+    }
+    StaticAutoReadLock lock(sSchemeLock);
+    return sSimpleURISchemes.Contains(scheme);
+  };
+
   if (aBaseURI) {
     nsAutoCString newSpec;
     rv = aBaseURI->Resolve(aSpec, newSpec);
@@ -2016,6 +2044,12 @@ nsresult NS_NewURI(nsIURI** aURI, const nsACString& aSpec,
     }
 
     if (StaticPrefs::network_url_useDefaultURI()) {
+      if (mustUseSimpleURI(scheme)) {
+        return NS_MutateURI(new nsSimpleURI::Mutator())
+            .SetSpec(newSpec)
+            .Finalize(aURI);
+      }
+
       return NS_MutateURI(new DefaultURI::Mutator())
           .SetSpec(newSpec)
           .Finalize(aURI);
@@ -2027,6 +2061,11 @@ nsresult NS_NewURI(nsIURI** aURI, const nsACString& aSpec,
   }
 
   if (StaticPrefs::network_url_useDefaultURI()) {
+    if (mustUseSimpleURI(scheme)) {
+      return NS_MutateURI(new nsSimpleURI::Mutator())
+          .SetSpec(aSpec)
+          .Finalize(aURI);
+    }
     return NS_MutateURI(new DefaultURI::Mutator())
         .SetSpec(aSpec)
         .Finalize(aURI);
