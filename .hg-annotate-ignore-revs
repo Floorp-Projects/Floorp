@@ -424,3 +424,9 @@ b747274f1da3e93a8bed6b8c8df6299ceb354417 - Butkovits Atila - Backed out changese
 53b1fa0faa6d78f7cf72f9cbe3dc85221a04eea3 - Alex Lopez - Bug 1696251: Allow mach commands as stand-alone functions and adapt existing commands. r=mhentges,webdriver-reviewers,perftest-reviewers,sparky,whimboo
 c38d34be7c3f757510f037fef5a78ea08af32980 - Butkovits Atila - Backed out changeset 53b1fa0faa6d (bug 1696251) for breaking the static-analysis integration. a=backout
 1fa64c7fe170ab629768d6ed27c5840555773709 - Agi Sferro - Bug 1571899 - Format Java codebase with google-java-formatter. r=owlish
+f33f6df1506d783ee73b44644075019abd553d92 - Gabriel Luong - [components] Issue https://github.com/mozilla-mobile/android-components/issues/12939: Address all ktlint issues
+cf81cd045940cfec093361d3a0e28a1cea7010ba - Mugurell - [components] For https://github.com/mozilla-mobile/android-components/issues/12930 - Fix old but now blocking ktlint issues
+aa74a8261c8b8f38d2c523eb6cfb1a3ed0c9489d - mcarare - [components] For https://github.com/mozilla-mobile/android-components/issues/12500: Fix ktlint issues
+292fe93bbed06ddbbc94a1183213ea81e3cfc1f7 - Alexandru2909 - [components] For https://github.com/mozilla-mobile/android-components/issues/12151 - Fix ktlint issues for GeckoPromptDelegate.kt
+dbd0e6f8d5b8a00de1ac340cd454ff039099ea7c - Gabriel Luong - [fenix] For https://github.com/mozilla-mobile/fenix/issues/27667 - Remove import-ordering from the list of disabled ktlint rules
+422049f09fc2fa9463b31faa5a0f6cb7a7a21814 - mcarare - [fenix] For https://github.com/mozilla-mobile/fenix/issues/26844: Fix ktlint issues and remove them from baseline.

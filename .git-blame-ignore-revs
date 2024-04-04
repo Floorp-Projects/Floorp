@@ -1972,3 +1972,15 @@ eb735ac57e701c05a1deac60d563150c33a6a0e7 # cinnabar
 # 1fa64c7fe170ab629768d6ed27c5840555773709 - Agi Sferro - Bug 1571899 - Format Java codebase with google-java-formatter. r=owlish
 2f6419a88cd8f752fa0913d58960b5c10d42bc59 # cinnabar
 e8e0f7e153bd672200afa3c4997869a13cc99ee5 # gecko-dev
+# f33f6df1506d783ee73b44644075019abd553d92 - Gabriel Luong - [components] Issue https://github.com/mozilla-mobile/android-components/issues/12939: Address all ktlint issues
+d9d783b6981b6726b2a88cbdbe7114796d640bc4
+# cf81cd045940cfec093361d3a0e28a1cea7010ba - Mugurell - [components] For https://github.com/mozilla-mobile/android-components/issues/12930 - Fix old but now blocking ktlint issues
+c0adf74966aab87d37964e29b58720cc56522fac
+# aa74a8261c8b8f38d2c523eb6cfb1a3ed0c9489d - mcarare - [components] For https://github.com/mozilla-mobile/android-components/issues/12500: Fix ktlint issues
+5039c5e30d23d1822c1ae5adda429f7fb2eb9e5c
+# 292fe93bbed06ddbbc94a1183213ea81e3cfc1f7 - Alexandru2909 - [components] For https://github.com/mozilla-mobile/android-components/issues/12151 - Fix ktlint issues for GeckoPromptDelegate.kt
+f6757db01e205aa308e9e5dfb2013f4313da268b
+# dbd0e6f8d5b8a00de1ac340cd454ff039099ea7c - Gabriel Luong - [fenix] For https://github.com/mozilla-mobile/fenix/issues/27667 - Remove import-ordering from the list of disabled ktlint rules
+ab3fb399381a370d790724524214f90feb8c237c
+# 422049f09fc2fa9463b31faa5a0f6cb7a7a21814 - mcarare - [fenix] For https://github.com/mozilla-mobile/fenix/issues/26844: Fix ktlint issues and remove them from baseline.
+296836d1757ed782072f1c01f66c24fd982d5ca7
