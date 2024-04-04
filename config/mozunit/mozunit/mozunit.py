@@ -166,10 +166,11 @@ class _MockBaseOpen(object):
         self,
         name,
         mode="r",
-        buffering=None,
+        buffering=-1,
         encoding=None,
-        newline=None,
         errors=None,
+        newline=None,
+        closefd=True,
         opener=None,
     ):
         # open() can be called with an integer "name" (i.e. a file descriptor).
@@ -181,8 +182,9 @@ class _MockBaseOpen(object):
                 mode=mode,
                 buffering=buffering,
                 encoding=encoding,
-                newline=newline,
                 errors=errors,
+                newline=newline,
+                closefd=closefd,
                 opener=opener,
             )
         # buffering is ignored.
