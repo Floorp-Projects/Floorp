@@ -30,7 +30,7 @@
       ifr.addEventListener("load", resolve);
     }).then(() => new Promise(resolve => {
       video = ifr.contentDocument.getElementById("video");
-      video.src = "seek_with_sound.ogg";
+      video.src = "seek_with_sound.webm";
       video.addEventListener("loadedmetadata", resolve);
     })).then(() => new Promise(resolve => {
       const available = video.ownerDocument.fullscreenEnabled;
