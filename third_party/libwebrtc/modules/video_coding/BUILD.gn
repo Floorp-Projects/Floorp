@@ -529,6 +529,7 @@ rtc_library("webrtc_multiplex") {
     ":video_coding_utility",
     "../../api:fec_controller_api",
     "../../api:scoped_refptr",
+    "../../api/environment",
     "../../api/video:encoded_image",
     "../../api/video:video_frame",
     "../../api/video:video_rtp_headers",

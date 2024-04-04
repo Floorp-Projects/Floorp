@@ -16,6 +16,8 @@
 #include <vector>
 
 #include "absl/types/optional.h"
+#include "api/environment/environment.h"
+#include "api/environment/environment_factory.h"
 #include "api/scoped_refptr.h"
 #include "api/test/mock_video_decoder_factory.h"
 #include "api/test/mock_video_encoder_factory.h"
@@ -63,7 +65,8 @@ class TestMultiplexAdapter : public VideoCodecUnitTest,
  protected:
   std::unique_ptr<VideoDecoder> CreateDecoder() override {
     return std::make_unique<MultiplexDecoderAdapter>(
-        decoder_factory_.get(), SdpVideoFormat(kMultiplexAssociatedCodecName),
+        env_, decoder_factory_.get(),
+        SdpVideoFormat(kMultiplexAssociatedCodecName),
         supports_augmenting_data_);
   }
 
@@ -182,9 +185,9 @@ class TestMultiplexAdapter : public VideoCodecUnitTest,
     EXPECT_CALL(*decoder_factory_, Die);
     // The decoders/encoders will be owned by the caller of
     // CreateVideoDecoder()/CreateVideoEncoder().
-    EXPECT_CALL(*decoder_factory_, CreateVideoDecoder)
-        .Times(2)
-        .WillRepeatedly([] { return VP9Decoder::Create(); });
+    EXPECT_CALL(*decoder_factory_, Create).Times(2).WillRepeatedly([] {
+      return VP9Decoder::Create();
+    });
 
     EXPECT_CALL(*encoder_factory_, Die);
     EXPECT_CALL(*encoder_factory_, CreateVideoEncoder)
@@ -194,6 +197,7 @@ class TestMultiplexAdapter : public VideoCodecUnitTest,
     VideoCodecUnitTest::SetUp();
   }
 
+  const Environment env_ = CreateEnvironment();
   const std::unique_ptr<webrtc::MockVideoDecoderFactory> decoder_factory_;
   const std::unique_ptr<webrtc::MockVideoEncoderFactory> encoder_factory_;
   const bool supports_augmenting_data_;

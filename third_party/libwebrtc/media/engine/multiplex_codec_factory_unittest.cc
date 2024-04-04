@@ -10,8 +10,10 @@
 
 #include "media/engine/multiplex_codec_factory.h"
 
+#include <memory>
 #include <utility>
 
+#include "api/environment/environment_factory.h"
 #include "api/video_codecs/sdp_video_format.h"
 #include "api/video_codecs/video_decoder.h"
 #include "api/video_codecs/video_encoder.h"
@@ -22,12 +24,13 @@
 
 namespace webrtc {
 
-TEST(MultiplexDecoderFactory, CreateVideoDecoder) {
-  std::unique_ptr<VideoDecoderFactory> internal_factory(
-      new InternalDecoderFactory());
+TEST(MultiplexDecoderFactoryTest, CreateVideoDecoder) {
+  std::unique_ptr<VideoDecoderFactory> internal_factory =
+      std::make_unique<InternalDecoderFactory>();
   MultiplexDecoderFactory factory(std::move(internal_factory));
-  std::unique_ptr<VideoDecoder> decoder =
-      factory.CreateVideoDecoder(SdpVideoFormat(
+  std::unique_ptr<VideoDecoder> decoder = factory.Create(
+      CreateEnvironment(),
+      SdpVideoFormat(
           cricket::kMultiplexCodecName,
           {{cricket::kCodecParamAssociatedCodecName, cricket::kVp9CodecName}}));
   EXPECT_TRUE(decoder);
