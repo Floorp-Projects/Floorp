@@ -93,6 +93,10 @@ class RTC_EXPORT Candidate {
 
   const std::string& type() const { return type_; }
 
+  // Returns the name of the candidate type as specified in
+  // https://datatracker.ietf.org/doc/html/rfc5245#section-15.1
+  absl::string_view type_name() const;
+
   // Setting the type requires a constant string (e.g.
   // cricket::LOCAL_PORT_TYPE). The type should really be an enum rather than a
   // string, but until we make that change the lifetime attribute helps us lock
