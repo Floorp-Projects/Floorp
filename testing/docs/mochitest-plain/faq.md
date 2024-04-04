@@ -268,7 +268,7 @@ state available to SJS scripts running in Mochitest:
 function handleRequest(req, res) {
   var file;
   getObjectState("SERVER_ROOT", function(serverRoot) {
-    file = serverRoot.getFile("tests/content/media/test/320x240.ogv");
+    file = serverRoot.getFile("tests/content/media/test/320x240.webm");
   });
   // file is now an XPCOM object referring to the given file
   res.write("file: " + file);
