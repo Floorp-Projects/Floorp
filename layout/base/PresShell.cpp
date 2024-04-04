@@ -14,6 +14,7 @@
 #include "mozilla/dom/AncestorIterator.h"
 #include "mozilla/dom/FontFaceSet.h"
 #include "mozilla/dom/ElementBinding.h"
+#include "mozilla/dom/FragmentDirective.h"
 #include "mozilla/dom/LargestContentfulPaint.h"
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/PerformanceMainThread.h"
@@ -3289,6 +3290,46 @@ nsresult PresShell::ScrollToAnchor() {
   return ScrollContentIntoView(
       lastAnchor, ScrollAxis(WhereToScroll::Start, WhenToScroll::Always),
       ScrollAxis(), ScrollFlags::AnchorScrollFlags);
+}
+
+bool PresShell::HighlightAndGoToTextFragment(bool aScrollToTextFragment) {
+  MOZ_ASSERT(mDocument);
+  if (!StaticPrefs::dom_text_fragments_enabled()) {
+    return false;
+  }
+  const RefPtr<FragmentDirective> fragmentDirective =
+      mDocument->FragmentDirective();
+
+  nsTArray<RefPtr<nsRange>> textDirectiveRanges =
+      fragmentDirective->FindTextFragmentsInDocument();
+  if (textDirectiveRanges.IsEmpty()) {
+    return false;
+  }
+
+  const RefPtr<Selection> targetTextSelection =
+      GetCurrentSelection(SelectionType::eTargetText);
+  if (!targetTextSelection) {
+    return false;
+  }
+  for (RefPtr<nsRange> range : textDirectiveRanges) {
+    targetTextSelection->AddRangeAndSelectFramesAndNotifyListeners(
+        *range, IgnoreErrors());
+  }
+  if (!aScrollToTextFragment) {
+    return false;
+  }
+
+  // Scroll the last text directive into view.
+  nsRange* lastRange = textDirectiveRanges.LastElement();
+  MOZ_ASSERT(lastRange);
+  if (RefPtr<nsIContent> lastRangeStartContent =
+          nsIContent::FromNode(lastRange->GetStartContainer())) {
+    return ScrollContentIntoView(
+               lastRangeStartContent,
+               ScrollAxis(WhereToScroll::Center, WhenToScroll::Always),
+               ScrollAxis(), ScrollFlags::AnchorScrollFlags) == NS_OK;
+  }
+  return false;
 }
 
 /*

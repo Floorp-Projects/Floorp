@@ -1610,6 +1610,18 @@ class PresShell final : public nsStubDocumentObserver,
   MOZ_CAN_RUN_SCRIPT nsresult ScrollToAnchor();
 
   /**
+   * Finds text fragments ranes in the document, highlights the ranges and
+   * scrolls to the last text fragment range on the page if
+   * `aScrollToTextFragment` is true.
+   *
+   * @param aScrollToTextFragment If true, scrolls the view to the last text
+   *                              fragment.
+   * @return True if scrolling happened.
+   */
+  MOZ_CAN_RUN_SCRIPT bool HighlightAndGoToTextFragment(
+      bool aScrollToTextFragment);
+
+  /**
    * When scroll anchoring adjusts positions in the root frame during page load,
    * it may move our scroll position in the root frame.
    *

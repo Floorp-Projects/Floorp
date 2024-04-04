@@ -34,6 +34,7 @@
 #include "mozilla/Unused.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentInlines.h"
+#include "mozilla/dom/FragmentDirective.h"
 #include "mozilla/dom/LocationBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "ReferrerInfo.h"
@@ -105,6 +106,9 @@ nsresult Location::GetURI(nsIURI** aURI, bool aGetInnermostURI) {
   }
 
   NS_ASSERTION(uri, "nsJARURI screwed up?");
+
+  // Remove the fragment directive from the url hash.
+  FragmentDirective::ParseAndRemoveFragmentDirectiveFromFragment(uri);
   nsCOMPtr<nsIURI> exposableURI = net::nsIOService::CreateExposableURI(uri);
   exposableURI.forget(aURI);
   return NS_OK;
