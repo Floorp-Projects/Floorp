@@ -565,6 +565,16 @@ static void InvalidateImages(nsIFrame* aFrame, imgIRequest* aRequest,
       }
     }
   }
+#ifdef XP_MACOSX
+  else if (aFrame->HasAnyStateBits(NS_FRAME_IN_POPUP)) {
+    // On macOS popups are painted with fallback rendering so they don't have
+    // webrender user data to tell us if the frame was painted last time, so we
+    // just have to invalidate always. Bug 1754796 tracks making popups on macOS
+    // use webrender. (On other platforms tooltips type popups are still
+    // rendered with fallback, but we don't expect them to have images.)
+    invalidateFrame = true;
+  }
+#endif
 
   // Update ancestor rendering observers (-moz-element etc)
   //
