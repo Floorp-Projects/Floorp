@@ -27,7 +27,7 @@ static int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
   if (ret != NS_OK) return 0;
 
   ret =
-      csp->SetRequestContextWithPrincipal(selfURIPrincipal, selfURI, u""_ns, 0);
+      csp->SetRequestContextWithPrincipal(selfURIPrincipal, selfURI, ""_ns, 0);
   if (ret != NS_OK) return 0;
 
   NS_ConvertASCIItoUTF16 policy(reinterpret_cast<const char*>(data), size);
