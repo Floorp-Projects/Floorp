@@ -29,7 +29,7 @@
           ],
           "dimensions": {
             "device_status": "available",
-            "os": "iOS-16.6",
+            "os": "iOS-16.7.1",
             "pool": "chrome.tests"
           },
           "named_caches": [
@@ -69,7 +69,7 @@
           ],
           "dimensions": {
             "device_status": "available",
-            "os": "iOS-16.6",
+            "os": "iOS-16.7.1",
             "pool": "chrome.tests"
           },
           "named_caches": [
@@ -110,7 +110,7 @@
           ],
           "dimensions": {
             "device_status": "available",
-            "os": "iOS-16.6",
+            "os": "iOS-16.7.1",
             "pool": "chrome.tests"
           },
           "hard_timeout": 7200,
@@ -153,7 +153,7 @@
           ],
           "dimensions": {
             "device_status": "available",
-            "os": "iOS-16.6",
+            "os": "iOS-16.7.1",
             "pool": "chrome.tests"
           },
           "named_caches": [
@@ -194,7 +194,7 @@
           ],
           "dimensions": {
             "device_status": "available",
-            "os": "iOS-16.6",
+            "os": "iOS-16.7.1",
             "pool": "chrome.tests"
           },
           "named_caches": [
@@ -234,7 +234,7 @@
           ],
           "dimensions": {
             "device_status": "available",
-            "os": "iOS-16.6",
+            "os": "iOS-16.7.1",
             "pool": "chrome.tests"
           },
           "named_caches": [
@@ -274,7 +274,7 @@
           ],
           "dimensions": {
             "device_status": "available",
-            "os": "iOS-16.6",
+            "os": "iOS-16.7.1",
             "pool": "chrome.tests"
           },
           "named_caches": [
@@ -314,7 +314,7 @@
           ],
           "dimensions": {
             "device_status": "available",
-            "os": "iOS-16.6",
+            "os": "iOS-16.7.1",
             "pool": "chrome.tests"
           },
           "named_caches": [
@@ -354,7 +354,7 @@
           ],
           "dimensions": {
             "device_status": "available",
-            "os": "iOS-16.6",
+            "os": "iOS-16.7.1",
             "pool": "chrome.tests"
           },
           "named_caches": [
@@ -394,7 +394,7 @@
           ],
           "dimensions": {
             "device_status": "available",
-            "os": "iOS-16.6",
+            "os": "iOS-16.7.1",
             "pool": "chrome.tests"
           },
           "named_caches": [
@@ -494,7 +494,7 @@
           ],
           "dimensions": {
             "device_status": "available",
-            "os": "iOS-16.6",
+            "os": "iOS-16.7.1",
             "pool": "chrome.tests"
           },
           "named_caches": [
@@ -534,7 +534,7 @@
           ],
           "dimensions": {
             "device_status": "available",
-            "os": "iOS-16.6",
+            "os": "iOS-16.7.1",
             "pool": "chrome.tests"
           },
           "named_caches": [
@@ -575,7 +575,7 @@
           ],
           "dimensions": {
             "device_status": "available",
-            "os": "iOS-16.6",
+            "os": "iOS-16.7.1",
             "pool": "chrome.tests"
           },
           "hard_timeout": 7200,
@@ -618,7 +618,7 @@
           ],
           "dimensions": {
             "device_status": "available",
-            "os": "iOS-16.6",
+            "os": "iOS-16.7.1",
             "pool": "chrome.tests"
           },
           "named_caches": [
@@ -659,7 +659,7 @@
           ],
           "dimensions": {
             "device_status": "available",
-            "os": "iOS-16.6",
+            "os": "iOS-16.7.1",
             "pool": "chrome.tests"
           },
           "named_caches": [
@@ -699,7 +699,7 @@
           ],
           "dimensions": {
             "device_status": "available",
-            "os": "iOS-16.6",
+            "os": "iOS-16.7.1",
             "pool": "chrome.tests"
           },
           "named_caches": [
@@ -739,7 +739,7 @@
           ],
           "dimensions": {
             "device_status": "available",
-            "os": "iOS-16.6",
+            "os": "iOS-16.7.1",
             "pool": "chrome.tests"
           },
           "named_caches": [
@@ -779,7 +779,7 @@
           ],
           "dimensions": {
             "device_status": "available",
-            "os": "iOS-16.6",
+            "os": "iOS-16.7.1",
             "pool": "chrome.tests"
           },
           "named_caches": [
@@ -819,7 +819,7 @@
           ],
           "dimensions": {
             "device_status": "available",
-            "os": "iOS-16.6",
+            "os": "iOS-16.7.1",
             "pool": "chrome.tests"
           },
           "named_caches": [
@@ -859,7 +859,7 @@
           ],
           "dimensions": {
             "device_status": "available",
-            "os": "iOS-16.6",
+            "os": "iOS-16.7.1",
             "pool": "chrome.tests"
           },
           "named_caches": [
