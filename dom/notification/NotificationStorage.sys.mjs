@@ -114,12 +114,7 @@ export class NotificationStorage {
     switch (message.name) {
       case kMessageNotificationGetAllOk:
         delete this.#requests[message.data.requestID];
-        this.#returnNotifications(
-          message.data.notifications,
-          request.origin,
-          request.tag,
-          request.callback
-        );
+        this.#returnNotifications(message.data.notifications, request.callback);
         break;
 
       case kMessageNotificationGetAllKo:
@@ -165,7 +160,7 @@ export class NotificationStorage {
     });
   }
 
-  #returnNotifications(notifications, origin, tag, callback) {
+  #returnNotifications(notifications, callback) {
     // Pass each notification back separately.
     // The callback is called asynchronously to match the behaviour when
     // fetching from the database.
