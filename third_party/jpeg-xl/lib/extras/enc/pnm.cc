@@ -87,8 +87,8 @@ class PNMEncoder : public BasePNMEncoder {
   }
 
  private:
-  Status EncodeImage(const PackedImage& image, size_t bits_per_sample,
-                     std::vector<uint8_t>* bytes) const {
+  static Status EncodeImage(const PackedImage& image, size_t bits_per_sample,
+                            std::vector<uint8_t>* bytes) {
     uint32_t maxval = (1u << bits_per_sample) - 1;
     char type = image.format.num_channels == 1 ? '5' : '6';
     char header[kMaxHeaderSize];
@@ -161,8 +161,8 @@ class PFMEncoder : public BasePNMEncoder {
   }
 
  private:
-  Status EncodeImage(const PackedImage& image,
-                     std::vector<uint8_t>* bytes) const {
+  static Status EncodeImage(const PackedImage& image,
+                            std::vector<uint8_t>* bytes) {
     char type = image.format.num_channels == 1 ? 'f' : 'F';
     double scale = image.format.endianness == JXL_LITTLE_ENDIAN ? -1.0 : 1.0;
     char header[kMaxHeaderSize];

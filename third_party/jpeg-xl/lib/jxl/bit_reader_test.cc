@@ -53,7 +53,7 @@ struct Symbol {
 TEST(BitReaderTest, TestRoundTrip) {
   test::ThreadPoolForTests pool(8);
   EXPECT_TRUE(RunOnPool(
-      &pool, 0, 1000, ThreadPool::NoInit,
+      pool.get(), 0, 1000, ThreadPool::NoInit,
       [](const uint32_t task, size_t /* thread */) {
         constexpr size_t kMaxBits = 8000;
         BitWriter writer;
@@ -87,7 +87,7 @@ TEST(BitReaderTest, TestRoundTrip) {
 TEST(BitReaderTest, TestSkip) {
   test::ThreadPoolForTests pool(8);
   EXPECT_TRUE(RunOnPool(
-      &pool, 0, 96, ThreadPool::NoInit,
+      pool.get(), 0, 96, ThreadPool::NoInit,
       [](const uint32_t task, size_t /* thread */) {
         constexpr size_t kSize = 100;
 

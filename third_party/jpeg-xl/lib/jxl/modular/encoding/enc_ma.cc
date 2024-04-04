@@ -197,7 +197,7 @@ void FindBestSplit(TreeSamples &tree_samples, float threshold,
       float rcost = std::numeric_limits<float>::max();
       Predictor lpred = Predictor::Zero;
       Predictor rpred = Predictor::Zero;
-      float Cost() { return lcost + rcost; }
+      float Cost() const { return lcost + rcost; }
     };
 
     SplitInfo best_split_static_constant;
@@ -242,14 +242,14 @@ void FindBestSplit(TreeSamples &tree_samples, float threshold,
     // The multiplier ranges cut halfway through the current ranges of static
     // properties. We do this even if the current node is not a leaf, to
     // minimize the number of nodes in the resulting tree.
-    for (size_t i = 0; i < mul_info.size(); i++) {
+    for (const auto &mmi : mul_info) {
       uint32_t axis;
       uint32_t val;
       IntersectionType t =
-          BoxIntersects(static_prop_range, mul_info[i].range, axis, val);
+          BoxIntersects(static_prop_range, mmi.range, axis, val);
       if (t == IntersectionType::kNone) continue;
       if (t == IntersectionType::kInside) {
-        (*tree)[pos].multiplier = mul_info[i].multiplier;
+        (*tree)[pos].multiplier = mmi.multiplier;
         break;
       }
       if (t == IntersectionType::kPartial) {

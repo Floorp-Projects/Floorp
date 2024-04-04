@@ -36,7 +36,7 @@ void jpegli_CreateDecompress(j_decompress_ptr cinfo, int version,
 void jpegli_stdio_src(j_decompress_ptr cinfo, FILE *infile);
 
 void jpegli_mem_src(j_decompress_ptr cinfo, const unsigned char *inbuffer,
-                    unsigned long insize);
+                    unsigned long insize /* NOLINT */);
 
 int jpegli_read_header(j_decompress_ptr cinfo, boolean require_image);
 

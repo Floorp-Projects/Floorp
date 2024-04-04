@@ -116,9 +116,9 @@ Status DequantMatricesEncode(const DequantMatrices& matrices, BitWriter* writer,
   bool all_default = true;
   const std::vector<QuantEncoding>& encodings = matrices.encodings();
 
-  for (size_t i = 0; i < encodings.size(); i++) {
-    if (encodings[i].mode != QuantEncoding::kQuantModeLibrary ||
-        encodings[i].predefined != 0) {
+  for (const auto& encoding : encodings) {
+    if (encoding.mode != QuantEncoding::kQuantModeLibrary ||
+        encoding.predefined != 0) {
       all_default = false;
     }
   }

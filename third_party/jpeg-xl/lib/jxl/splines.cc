@@ -94,11 +94,11 @@ void DrawSegment(DF df, const SplineSegment& segment, const bool add,
 
 void DrawSegment(const SplineSegment& segment, const bool add, const size_t y,
                  const ssize_t x0, ssize_t x1, float* JXL_RESTRICT rows[3]) {
-  ssize_t x =
-      std::max<ssize_t>(x0, segment.center_x - segment.maximum_distance + 0.5f);
+  ssize_t x = std::max<ssize_t>(
+      x0, std::llround(segment.center_x - segment.maximum_distance));
   // one-past-the-end
-  x1 =
-      std::min<ssize_t>(x1, segment.center_x + segment.maximum_distance + 1.5f);
+  x1 = std::min<ssize_t>(
+      x1, std::llround(segment.center_x + segment.maximum_distance) + 1);
   HWY_FULL(float) df;
   for (; x + static_cast<ssize_t>(Lanes(df)) <= x1; x += Lanes(df)) {
     DrawSegment(df, segment, add, y, x, rows);
@@ -550,8 +550,8 @@ Status QuantizedSpline::Decode(const std::vector<uint8_t>& context_map,
     }
     return true;
   };
-  for (int c = 0; c < 3; ++c) {
-    JXL_RETURN_IF_ERROR(decode_dct(color_dct_[c]));
+  for (auto& dct : color_dct_) {
+    JXL_RETURN_IF_ERROR(decode_dct(dct));
   }
   JXL_RETURN_IF_ERROR(decode_dct(sigma_dct_));
   return true;

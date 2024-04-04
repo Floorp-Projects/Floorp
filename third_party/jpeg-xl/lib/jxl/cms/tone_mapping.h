@@ -22,8 +22,8 @@ class Rec2408ToneMapperBase {
   explicit Rec2408ToneMapperBase(std::pair<float, float> source_range,
                                  std::pair<float, float> target_range,
                                  const Vector3& primaries_luminances)
-      : source_range_(source_range),
-        target_range_(target_range),
+      : source_range_(std::move(source_range)),
+        target_range_(std::move(target_range)),
         red_Y_(primaries_luminances[0]),
         green_Y_(primaries_luminances[1]),
         blue_Y_(primaries_luminances[2]) {}
@@ -56,7 +56,7 @@ class Rec2408ToneMapperBase {
   }
 
  protected:
-  float InvEOTF(const float luminance) const {
+  static float InvEOTF(const float luminance) {
     return TF_PQ_Base::EncodedFromDisplay(/*display_intensity_target=*/1.0,
                                           luminance);
   }

@@ -549,8 +549,8 @@ int VerifyLevelSettings(const JxlEncoder* enc, std::string* debug_string) {
     if (debug_string) *debug_string = "Too many extra channels";
     return 10;
   }
-  for (size_t i = 0; i < m.extra_channel_info.size(); ++i) {
-    if (m.extra_channel_info[i].type == jxl::ExtraChannel::kBlack) {
+  for (const auto& eci : m.extra_channel_info) {
+    if (eci.type == jxl::ExtraChannel::kBlack) {
       if (debug_string) *debug_string = "CMYK channel not allowed";
       return 10;
     }
@@ -1514,6 +1514,10 @@ float JxlEncoderDistanceFromQuality(float quality) {
 JxlEncoderStatus JxlEncoderFrameSettingsSetOption(
     JxlEncoderFrameSettings* frame_settings, JxlEncoderFrameSettingId option,
     int64_t value) {
+  // Tri-state to bool convertors.
+  const auto default_to_true = [](int64_t v) { return v != 0; };
+  const auto default_to_false = [](int64_t v) { return v == 1; };
+
   // check if value is -1, 0 or 1 for Override-type options
   switch (option) {
     case JXL_ENC_FRAME_SETTING_NOISE:
@@ -1680,7 +1684,7 @@ JxlEncoderStatus JxlEncoderFrameSettingsSetOption(
       // See the logic in cjxl. Similar for other settings. This should be
       // handled in the encoder during JxlEncoderProcessOutput (or,
       // alternatively, in the cjxl binary like now)
-      frame_settings->values.cparams.lossy_palette = (value == 1);
+      frame_settings->values.cparams.lossy_palette = default_to_false(value);
       break;
     case JXL_ENC_FRAME_SETTING_COLOR_TRANSFORM:
       if (value < -1 || value > 2) {
@@ -1734,11 +1738,8 @@ JxlEncoderStatus JxlEncoderFrameSettingsSetOption(
       }
       break;
     case JXL_ENC_FRAME_SETTING_JPEG_RECON_CFL:
-      if (value == -1) {
-        frame_settings->values.cparams.force_cfl_jpeg_recompression = true;
-      } else {
-        frame_settings->values.cparams.force_cfl_jpeg_recompression = value;
-      }
+      frame_settings->values.cparams.force_cfl_jpeg_recompression =
+          default_to_true(value);
       break;
     case JXL_ENC_FRAME_INDEX_BOX:
       if (value < 0 || value > 1) {
@@ -1752,7 +1753,8 @@ JxlEncoderStatus JxlEncoderFrameSettingsSetOption(
                            "Float option, try setting it with "
                            "JxlEncoderFrameSettingsSetFloatOption");
     case JXL_ENC_FRAME_SETTING_JPEG_COMPRESS_BOXES:
-      frame_settings->values.cparams.jpeg_compress_boxes = value;
+      frame_settings->values.cparams.jpeg_compress_boxes =
+          default_to_true(value);
       break;
     case JXL_ENC_FRAME_SETTING_BUFFERING:
       if (value < -1 || value > 3) {
@@ -1762,20 +1764,21 @@ JxlEncoderStatus JxlEncoderFrameSettingsSetOption(
       frame_settings->values.cparams.buffering = value;
       break;
     case JXL_ENC_FRAME_SETTING_JPEG_KEEP_EXIF:
-      frame_settings->values.cparams.jpeg_keep_exif = value;
+      frame_settings->values.cparams.jpeg_keep_exif = default_to_true(value);
       break;
     case JXL_ENC_FRAME_SETTING_JPEG_KEEP_XMP:
-      frame_settings->values.cparams.jpeg_keep_xmp = value;
+      frame_settings->values.cparams.jpeg_keep_xmp = default_to_true(value);
       break;
     case JXL_ENC_FRAME_SETTING_JPEG_KEEP_JUMBF:
-      frame_settings->values.cparams.jpeg_keep_jumbf = value;
+      frame_settings->values.cparams.jpeg_keep_jumbf = default_to_true(value);
       break;
     case JXL_ENC_FRAME_SETTING_USE_FULL_IMAGE_HEURISTICS:
       if (value < 0 || value > 1) {
         return JXL_API_ERROR(frame_settings->enc, JXL_ENC_ERR_NOT_SUPPORTED,
                              "Option value has to be 0 or 1");
       }
-      frame_settings->values.cparams.use_full_image_heuristics = value;
+      frame_settings->values.cparams.use_full_image_heuristics =
+          default_to_false(value);
       break;
 
     default:

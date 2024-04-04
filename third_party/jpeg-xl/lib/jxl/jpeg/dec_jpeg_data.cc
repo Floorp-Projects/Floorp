@@ -106,15 +106,14 @@ Status DecodeJPEGData(Span<const uint8_t> encoded, JPEGData* jpeg_data) {
     }
   }
   // TODO(eustas): actually inject ICC profile and check it fits perfectly.
-  for (size_t i = 0; i < jpeg_data->com_data.size(); i++) {
-    auto& marker = jpeg_data->com_data[i];
+  for (auto& marker : jpeg_data->com_data) {
     JXL_RETURN_IF_ERROR(br_read(marker));
     if (marker[1] * 256u + marker[2] + 1u != marker.size()) {
       return JXL_FAILURE("Incorrect marker size");
     }
   }
-  for (size_t i = 0; i < jpeg_data->inter_marker_data.size(); i++) {
-    JXL_RETURN_IF_ERROR(br_read(jpeg_data->inter_marker_data[i]));
+  for (auto& data : jpeg_data->inter_marker_data) {
+    JXL_RETURN_IF_ERROR(br_read(data));
   }
   JXL_RETURN_IF_ERROR(br_read(jpeg_data->tail_data));
 

@@ -18,10 +18,10 @@ class MemoryMappedFile {
   static StatusOr<MemoryMappedFile> Init(const char* path);
   const uint8_t* data() const;
   size_t size() const;
-  MemoryMappedFile();
-  ~MemoryMappedFile();
-  MemoryMappedFile(MemoryMappedFile&&) noexcept;
-  MemoryMappedFile& operator=(MemoryMappedFile&&) noexcept;
+  MemoryMappedFile();                                        // NOLINT
+  ~MemoryMappedFile();                                       // NOLINT
+  MemoryMappedFile(MemoryMappedFile&&) noexcept;             // NOLINT
+  MemoryMappedFile& operator=(MemoryMappedFile&&) noexcept;  // NOLINT
 
  private:
   std::unique_ptr<MemoryMappedFileImpl> impl_;

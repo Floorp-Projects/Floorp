@@ -180,8 +180,7 @@ class ThreadPoolForTests {
   }
   ThreadPoolForTests(const ThreadPoolForTests&) = delete;
   ThreadPoolForTests& operator&(const ThreadPoolForTests&) = delete;
-  // TODO(eustas): avoid unary `&` overload?
-  ThreadPool* operator&() { return pool_.get(); }
+  ThreadPool* get() { return pool_.get(); }
 
  private:
   JxlThreadParallelRunnerPtr runner_;

@@ -183,12 +183,12 @@ static Status ToneMapPixel(const JxlColorEncoding& c, const float in[3],
   const float f_y = lab_f(xyz[1] / kYn);
   const float f_z = lab_f(xyz[2] / kZn);
 
-  pcslab_out[0] =
-      static_cast<uint8_t>(.5f + 255.f * Clamp1(1.16f * f_y - .16f, 0.f, 1.f));
+  pcslab_out[0] = static_cast<uint8_t>(
+      std::lroundf(255.f * Clamp1(1.16f * f_y - .16f, 0.f, 1.f)));
   pcslab_out[1] = static_cast<uint8_t>(
-      .5f + 128.f + Clamp1(500 * (f_x - f_y), -128.f, 127.f));
+      std::lroundf(128.f + Clamp1(500 * (f_x - f_y), -128.f, 127.f)));
   pcslab_out[2] = static_cast<uint8_t>(
-      .5f + 128.f + Clamp1(200 * (f_y - f_z), -128.f, 127.f));
+      std::lroundf(128.f + Clamp1(200 * (f_y - f_z), -128.f, 127.f)));
 
   return true;
 }
@@ -581,7 +581,8 @@ static void CreateICCCurvCurvTag(const std::vector<uint16_t>& curve,
 }
 
 // Writes 12 + 4*params.size() bytes
-static Status CreateICCCurvParaTag(std::vector<float> params, size_t curve_type,
+static Status CreateICCCurvParaTag(const std::vector<float>& params,
+                                   size_t curve_type,
                                    std::vector<uint8_t>* tags) {
   WriteICCTag("para", tags->size(), tags);
   WriteICCUint32(0, tags->size(), tags);
@@ -637,7 +638,7 @@ static Status CreateICCLutAtoBTagForXYB(std::vector<uint8_t>* tags) {
       for (size_t ib = 0; ib < 2; ++ib) {
         const jxl::cms::ColorCube0D& out_f = cube[ix][iy][ib];
         for (int i = 0; i < 3; ++i) {
-          int32_t val = static_cast<int32_t>(0.5f + 65535 * out_f[i]);
+          int32_t val = static_cast<int32_t>(std::lroundf(65535 * out_f[i]));
           JXL_DASSERT(val >= 0 && val <= 65535);
           WriteICCUint16(val, tags->size(), tags);
         }

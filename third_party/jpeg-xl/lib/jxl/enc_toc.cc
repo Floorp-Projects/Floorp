@@ -32,9 +32,9 @@ Status WriteGroupOffsets(const std::vector<BitWriter>& group_codes,
   }
   writer->ZeroPadToByte();  // before TOC entries
 
-  for (size_t i = 0; i < group_codes.size(); i++) {
-    JXL_ASSERT(group_codes[i].BitsWritten() % kBitsPerByte == 0);
-    const size_t group_size = group_codes[i].BitsWritten() / kBitsPerByte;
+  for (const auto& bw : group_codes) {
+    JXL_ASSERT(bw.BitsWritten() % kBitsPerByte == 0);
+    const size_t group_size = bw.BitsWritten() / kBitsPerByte;
     JXL_RETURN_IF_ERROR(U32Coder::Write(kTocDist, group_size, writer));
   }
   writer->ZeroPadToByte();  // before first group

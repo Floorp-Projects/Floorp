@@ -28,7 +28,7 @@ struct ICCReader {
   }
 
  private:
-  Status CheckEOI(BitReader* reader);
+  static Status CheckEOI(BitReader* reader);
   size_t i_ = 0;
   size_t bits_to_skip_ = 0;
   size_t used_bits_base_ = 0;

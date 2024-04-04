@@ -20,7 +20,7 @@ void TranscodeWithJpegli(const std::vector<uint8_t>& jpeg_input,
   jpeg_decompress_struct dinfo = {};
   jpeg_compress_struct cinfo = {};
   uint8_t* transcoded_data = nullptr;
-  unsigned long transcoded_size;
+  unsigned long transcoded_size;  // NOLINT
   const auto try_catch_block = [&]() -> bool {
     ERROR_HANDLER_SETUP(jpegli);
     dinfo.err = cinfo.err;

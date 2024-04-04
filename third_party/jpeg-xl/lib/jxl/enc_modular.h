@@ -107,7 +107,6 @@ class ModularFrameEncoder {
   std::vector<size_t> tree_splits_;
   std::vector<std::vector<uint32_t>> gi_channel_;
   std::vector<size_t> image_widths_;
-  Predictor delta_pred_ = Predictor::Average4;
 
   struct GroupParams {
     Rect rect;

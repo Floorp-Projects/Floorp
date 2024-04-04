@@ -186,13 +186,13 @@ constexpr bool fast_mode = true;
 TEST(GradientTest, SteepGradient) {
   test::ThreadPoolForTests pool(8);
   // Relatively steep gradients, colors from the sky of stp.png
-  TestGradient(&pool, 0xd99d58, 0x889ab1, 512, 512, 90, fast_mode, 3.0);
+  TestGradient(pool.get(), 0xd99d58, 0x889ab1, 512, 512, 90, fast_mode, 3.0);
 }
 
 TEST(GradientTest, SubtleGradient) {
   test::ThreadPoolForTests pool(8);
   // Very subtle gradient
-  TestGradient(&pool, 0xb89b7b, 0xa89b8d, 512, 512, 90, fast_mode, 4.0);
+  TestGradient(pool.get(), 0xb89b7b, 0xa89b8d, 512, 512, 90, fast_mode, 4.0);
 }
 
 }  // namespace

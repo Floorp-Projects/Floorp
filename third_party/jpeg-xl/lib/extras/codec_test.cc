@@ -26,6 +26,7 @@
 #include "lib/extras/enc/encode.h"
 #include "lib/extras/packed_image.h"
 #include "lib/jxl/base/byte_order.h"
+#include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/random.h"
 #include "lib/jxl/base/span.h"
 #include "lib/jxl/base/status.h"
@@ -333,10 +334,10 @@ TEST(CodecTest, TestRoundTrip) {
             params.add_alpha = add_alpha;
             params.big_endian = big_endian;
             params.add_extra_channels = false;
-            TestRoundTrip(params, &pool);
+            TestRoundTrip(params, pool.get());
             if (codec == Codec::kPNM && add_alpha) {
               params.add_extra_channels = true;
-              TestRoundTrip(params, &pool);
+              TestRoundTrip(params, pool.get());
             }
           }
         }
@@ -369,7 +370,7 @@ TEST(CodecTest, LosslessPNMRoundtrip) {
       EncodedImage encoded;
       auto encoder = Encoder::FromExtension(extension);
       ASSERT_TRUE(encoder.get());
-      ASSERT_TRUE(encoder->Encode(ppf, &encoded, &pool));
+      ASSERT_TRUE(encoder->Encode(ppf, &encoded, pool.get()));
       ASSERT_EQ(encoded.bitstreams.size(), 1);
       ASSERT_EQ(orig.size(), encoded.bitstreams[0].size());
       EXPECT_EQ(0,

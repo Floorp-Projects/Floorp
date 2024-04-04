@@ -45,7 +45,7 @@ class CmsStage : public RenderPipelineStage {
                     size_t xextra, size_t xsize, size_t xpos, size_t ypos,
                     size_t thread_id) const final {
     JXL_ASSERT(xsize <= xsize_);
-    // TODO(firsching): handle grey case seperately
+    // TODO(firsching): handle grey case separately
     //  interleave
     float* JXL_RESTRICT row0 = GetInputRow(input_rows, 0, 0);
     float* JXL_RESTRICT row1 = GetInputRow(input_rows, 1, 0);

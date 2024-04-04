@@ -63,7 +63,7 @@ struct State {
   pixel_type_w pred = 0;  // *before* removing the added bits.
   std::vector<uint32_t> pred_errors[kNumPredictors];
   std::vector<int32_t> error;
-  const Header header;
+  const Header &header;
 
   // Allows to approximate division by a number from 1 to 64.
   //  for (int i = 0; i < 64; i++) divlookup[i] = (1 << 24) / (i + 1);
@@ -82,7 +82,7 @@ struct State {
     return static_cast<uint64_t>(x) << kPredExtraBits;
   }
 
-  State(Header header, size_t xsize, size_t ysize) : header(header) {
+  State(const Header &header, size_t xsize, size_t ysize) : header(header) {
     // Extra margin to avoid out-of-bounds writes.
     // All have space for two rows of data.
     for (auto &pred_error : pred_errors) {

@@ -17,11 +17,11 @@
 #define PLUG_IN_BINARY "file-jxl"
 #define SAVE_PROC "file-jxl-save"
 
-#define SCALE_WIDTH 200
-
 namespace jxl {
 
 namespace {
+
+constexpr size_t kScaleWidth = 200;
 
 #ifndef g_clear_signal_handler
 // g_clear_signal_handler was added in glib 2.62
@@ -292,7 +292,7 @@ bool JpegXlSaveGui::SaveDialog() {
       "\n\td\u00A0=\u00A06\tPoor";
 
   entry_distance = reinterpret_cast<GtkAdjustment*>(
-      gimp_scale_entry_new(GTK_TABLE(table), 0, 0, "Distance", SCALE_WIDTH, 0,
+      gimp_scale_entry_new(GTK_TABLE(table), 0, 0, "Distance", kScaleWidth, 0,
                            jxl_save_opts.distance, 0.0, 15.0, 0.001, 1.0, 3,
                            true, 0.0, 0.0, distance_help, SAVE_PROC));
   gimp_scale_entry_set_logarithmic(reinterpret_cast<GtkObject*>(entry_distance),
@@ -303,7 +303,7 @@ bool JpegXlSaveGui::SaveDialog() {
       "JPEG-style Quality is remapped to distance.  "
       "Values roughly match libjpeg quality settings.";
   entry_quality = reinterpret_cast<GtkAdjustment*>(gimp_scale_entry_new(
-      GTK_TABLE(table), 0, 1, "Quality", SCALE_WIDTH, 0, jxl_save_opts.quality,
+      GTK_TABLE(table), 0, 1, "Quality", kScaleWidth, 0, jxl_save_opts.quality,
       8.26, 100.0, 1.0, 10.0, 2, true, 0.0, 0.0, quality_help, SAVE_PROC));
 
   // Distance and Quality Signals
@@ -325,7 +325,7 @@ bool JpegXlSaveGui::SaveDialog() {
       "As\u00A0a\u00A0result, image quality may be decreased.  "
       "Default\u00A0=\u00A03.";
   entry_effort = reinterpret_cast<GtkAdjustment*>(
-      gimp_scale_entry_new(GTK_TABLE(table), 0, 3, "Speed", SCALE_WIDTH, 0,
+      gimp_scale_entry_new(GTK_TABLE(table), 0, 3, "Speed", kScaleWidth, 0,
                            10 - jxl_save_opts.encoding_effort, 1, 9, 1, 2, 0,
                            true, 0.0, 0.0, effort_help, SAVE_PROC));
 
@@ -419,7 +419,7 @@ bool JpegXlSaveGui::SaveDialog() {
 
   entry_faster = reinterpret_cast<GtkAdjustment*>(
       gimp_scale_entry_new(GTK_TABLE(table), 0, 0, "Faster Decoding",
-                           SCALE_WIDTH, 0, jxl_save_opts.faster_decoding, 0, 4,
+                           kScaleWidth, 0, jxl_save_opts.faster_decoding, 0, 4,
                            1, 1, 0, true, 0.0, 0.0, faster_help, SAVE_PROC));
 
   // Faster Decoding Signals

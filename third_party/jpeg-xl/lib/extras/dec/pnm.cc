@@ -332,7 +332,7 @@ struct PNMChunkedInputFrame {
         METHOD_TO_C_CALLBACK(&PNMChunkedInputFrame::ReleaseCurrentData)};
   }
 
-  void GetColorChannelsPixelFormat(JxlPixelFormat* pixel_format) {
+  void /* NOLINT */ GetColorChannelsPixelFormat(JxlPixelFormat* pixel_format) {
     *pixel_format = format;
   }
 
@@ -349,12 +349,14 @@ struct PNMChunkedInputFrame {
 
   void GetExtraChannelPixelFormat(size_t ec_index,
                                   JxlPixelFormat* pixel_format) {
+    (void)this;
     JXL_ABORT("Not implemented");
   }
 
   const void* GetExtraChannelDataAt(size_t ec_index, size_t xpos, size_t ypos,
                                     size_t xsize, size_t ysize,
                                     size_t* row_offset) {
+    (void)this;
     JXL_ABORT("Not implemented");
   }
 

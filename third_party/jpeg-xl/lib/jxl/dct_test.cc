@@ -160,7 +160,7 @@ void TestInverseT(float accuracy) {
   test::ThreadPoolForTests pool(N < 32 ? 0 : 8);
   enum { kBlockSize = N * N };
   EXPECT_TRUE(RunOnPool(
-      &pool, 0, kBlockSize, ThreadPool::NoInit,
+      pool.get(), 0, kBlockSize, ThreadPool::NoInit,
       [accuracy](const uint32_t task, size_t /*thread*/) {
         const size_t i = static_cast<size_t>(task);
         HWY_ALIGN float x[kBlockSize] = {0.0f};

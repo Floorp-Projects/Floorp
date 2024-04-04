@@ -2475,7 +2475,7 @@ void TestPartialStream(bool reconstructible_jpeg) {
 TEST(DecodeTest, PixelPartialTest) { TestPartialStream(false); }
 
 // Tests the return status when trying to decode JPEG bytes on incomplete file.
-TEST(DecodeTest, JXL_TRANSCODE_JPEG_TEST(JPEGPartialTest)) {
+JXL_TRANSCODE_JPEG_TEST(DecodeTest, JPEGPartialTest) {
   TEST_LIBJPEG_SUPPORT();
   TestPartialStream(true);
 }
@@ -4195,7 +4195,7 @@ TEST(DecodeTest, InputHandlingTestOneShot) {
   }
 }
 
-TEST(DecodeTest, JXL_TRANSCODE_JPEG_TEST(InputHandlingTestJPEGOneshot)) {
+JXL_TRANSCODE_JPEG_TEST(DecodeTest, InputHandlingTestJPEGOneshot) {
   TEST_LIBJPEG_SUPPORT();
   size_t xsize = 123;
   size_t ysize = 77;
@@ -4976,7 +4976,7 @@ void VerifyJPEGReconstruction(jxl::Span<const uint8_t> container,
   EXPECT_EQ(0, memcmp(reconstructed_buffer.data(), jpeg_bytes.data(), used));
 }
 
-TEST(DecodeTest, JXL_TRANSCODE_JPEG_TEST(JPEGReconstructTestCodestream)) {
+JXL_TRANSCODE_JPEG_TEST(DecodeTest, JPEGReconstructTestCodestream) {
   TEST_LIBJPEG_SUPPORT();
   size_t xsize = 123;
   size_t ysize = 77;
@@ -4994,7 +4994,7 @@ TEST(DecodeTest, JXL_TRANSCODE_JPEG_TEST(JPEGReconstructTestCodestream)) {
   VerifyJPEGReconstruction(jxl::Bytes(compressed), jxl::Bytes(jpeg_codestream));
 }
 
-TEST(DecodeTest, JXL_TRANSCODE_JPEG_TEST(JPEGReconstructionTest)) {
+JXL_TRANSCODE_JPEG_TEST(DecodeTest, JPEGReconstructionTest) {
   const std::string jpeg_path = "jxl/flower/flower.png.im_q85_420.jpg";
   const std::vector<uint8_t> orig = jxl::test::ReadTestData(jpeg_path);
   jxl::CodecInOut orig_io;
@@ -5024,7 +5024,7 @@ TEST(DecodeTest, JXL_TRANSCODE_JPEG_TEST(JPEGReconstructionTest)) {
   VerifyJPEGReconstruction(jxl::Bytes(container), jxl::Bytes(orig));
 }
 
-TEST(DecodeTest, JXL_TRANSCODE_JPEG_TEST(JPEGReconstructionMetadataTest)) {
+JXL_TRANSCODE_JPEG_TEST(DecodeTest, JPEGReconstructionMetadataTest) {
   const std::string jpeg_path = "jxl/jpeg_reconstruction/1x1_exif_xmp.jpg";
   const std::string jxl_path = "jxl/jpeg_reconstruction/1x1_exif_xmp.jxl";
   const std::vector<uint8_t> jpeg = jxl::test::ReadTestData(jpeg_path);
@@ -5135,7 +5135,7 @@ TEST(DecodeTest, ExtentedBoxSizeTest) {
   JxlDecoderDestroy(dec);
 }
 
-TEST(DecodeTest, JXL_BOXES_TEST(BoxTest)) {
+JXL_BOXES_TEST(DecodeTest, BoxTest) {
   size_t xsize = 1;
   size_t ysize = 1;
   std::vector<uint8_t> pixels = jxl::test::GetSomeTestImage(xsize, ysize, 4, 0);
@@ -5212,7 +5212,7 @@ TEST(DecodeTest, JXL_BOXES_TEST(BoxTest)) {
   JxlDecoderDestroy(dec);
 }
 
-TEST(DecodeTest, JXL_BOXES_TEST(ExifBrobBoxTest)) {
+JXL_BOXES_TEST(DecodeTest, ExifBrobBoxTest) {
   size_t xsize = 1;
   size_t ysize = 1;
   std::vector<uint8_t> pixels = jxl::test::GetSomeTestImage(xsize, ysize, 4, 0);
@@ -5394,7 +5394,7 @@ TEST(DecodeTest, JXL_BOXES_TEST(ExifBrobBoxTest)) {
   }
 }
 
-TEST(DecodeTest, JXL_BOXES_TEST(PartialCodestreamBoxTest)) {
+JXL_BOXES_TEST(DecodeTest, PartialCodestreamBoxTest) {
   size_t xsize = 23;
   size_t ysize = 81;
   std::vector<uint8_t> pixels = jxl::test::GetSomeTestImage(xsize, ysize, 4, 0);

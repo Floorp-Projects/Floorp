@@ -43,7 +43,7 @@ FILE* MemOpen(const std::vector<uint8_t>& data) {
   FILE* src = tmpfile();
   if (!src) return nullptr;
   fwrite(data.data(), 1, data.size(), src);
-  rewind(src);
+  fseek(src, 0, SEEK_SET);
   return src;
 }
 }  // namespace

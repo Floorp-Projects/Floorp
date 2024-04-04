@@ -82,7 +82,6 @@ JXL_GTEST_INSTANTIATE_TEST_SUITE_P(
 
 TEST_P(SpeedTierTest, Roundtrip) {
   const SpeedTierTestParams& params = GetParam();
-  test::ThreadPoolForTests pool(8);
   const std::vector<uint8_t> orig = jxl::test::ReadTestData(
       "external/wesaturate/500px/u76c0g_bliznaca_srgb8.png");
   test::TestImage t;

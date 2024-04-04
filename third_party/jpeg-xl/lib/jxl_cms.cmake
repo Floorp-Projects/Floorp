@@ -23,7 +23,7 @@ target_include_directories(jxl_cms PRIVATE
 generate_export_header(jxl_cms
   BASE_NAME JXL_CMS
   EXPORT_FILE_NAME include/jxl/jxl_cms_export.h)
-target_include_directories(jxl_cms PUBLIC
+target_include_directories(jxl_cms BEFORE PUBLIC
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>")
 
 set(JPEGXL_CMS_LIBRARY_REQUIRES "")

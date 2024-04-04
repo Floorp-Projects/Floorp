@@ -69,7 +69,7 @@ TEST(EncodeAPITest, ReuseCinfoSameImageTwice) {
   CompressParams jparams;
   GenerateInput(PIXELS, jparams, &input);
   uint8_t* buffer = nullptr;
-  unsigned long buffer_size = 0;
+  unsigned long buffer_size = 0;  // NOLINT
   std::vector<uint8_t> compressed0;
   std::vector<uint8_t> compressed1;
   jpeg_compress_struct cinfo;
@@ -117,7 +117,7 @@ std::vector<TestConfig> GenerateBasicConfigs() {
 TEST(EncodeAPITest, ReuseCinfoSameMemOutput) {
   std::vector<TestConfig> all_configs = GenerateBasicConfigs();
   uint8_t* buffer = nullptr;
-  unsigned long buffer_size = 0;
+  unsigned long buffer_size = 0;  // NOLINT
   {
     jpeg_compress_struct cinfo;
     const auto try_catch_block = [&]() -> bool {
@@ -161,7 +161,7 @@ TEST(EncodeAPITest, ReuseCinfoSameStdOutput) {
     jpegli_destroy_compress(&cinfo);
   }
   size_t total_size = ftell(tmpf);
-  rewind(tmpf);
+  fseek(tmpf, 0, SEEK_SET);
   std::vector<uint8_t> compressed(total_size);
   JXL_CHECK(total_size == fread(compressed.data(), 1, total_size, tmpf));
   fclose(tmpf);
@@ -181,7 +181,7 @@ TEST(EncodeAPITest, ReuseCinfoChangeParams) {
   CompressParams jparams;
   DecompressParams dparams;
   uint8_t* buffer = nullptr;
-  unsigned long buffer_size = 0;
+  unsigned long buffer_size = 0;  // NOLINT
   std::vector<uint8_t> compressed;
   jpeg_compress_struct cinfo;
   const auto max_rms = [](int q, int hs, int vs) {
@@ -246,9 +246,9 @@ TEST(EncodeAPITest, ReuseCinfoChangeParams) {
 
 TEST(EncodeAPITest, AbbreviatedStreams) {
   uint8_t* table_stream = nullptr;
-  unsigned long table_stream_size = 0;
+  unsigned long table_stream_size = 0;  // NOLINT
   uint8_t* data_stream = nullptr;
-  unsigned long data_stream_size = 0;
+  unsigned long data_stream_size = 0;  // NOLINT
   {
     jpeg_compress_struct cinfo;
     const auto try_catch_block = [&]() -> bool {

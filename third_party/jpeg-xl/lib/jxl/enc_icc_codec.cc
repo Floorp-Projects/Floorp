@@ -127,8 +127,8 @@ Status PredictICC(const uint8_t* icc, size_t size, PaddedBytes* result) {
   }
   if (size <= kICCHeaderSize) {
     EncodeVarInt(0, result);  // 0 commands
-    for (size_t i = 0; i < data.size(); i++) {
-      result->push_back(data[i]);
+    for (uint8_t b : data) {
+      result->push_back(b);
     }
     return true;
   }
@@ -403,11 +403,11 @@ Status PredictICC(const uint8_t* icc, size_t size, PaddedBytes* result) {
           data.push_back(icc[last0++]);
         }
       }
-      for (size_t i = 0; i < commands_add.size(); i++) {
-        commands.push_back(commands_add[i]);
+      for (uint8_t b : commands_add) {
+        commands.push_back(b);
       }
-      for (size_t i = 0; i < data_add.size(); i++) {
-        data.push_back(data_add[i]);
+      for (uint8_t b : data_add) {
+        data.push_back(b);
       }
       last0 = pos;
     }
@@ -417,11 +417,11 @@ Status PredictICC(const uint8_t* icc, size_t size, PaddedBytes* result) {
   }
 
   EncodeVarInt(commands.size(), result);
-  for (size_t i = 0; i < commands.size(); i++) {
-    result->push_back(commands[i]);
+  for (uint8_t b : commands) {
+    result->push_back(b);
   }
-  for (size_t i = 0; i < data.size(); i++) {
-    result->push_back(data[i]);
+  for (uint8_t b : data) {
+    result->push_back(b);
   }
 
   return true;

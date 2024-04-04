@@ -149,9 +149,9 @@ Status ProcessTile(const CompressParams& cparams,
     float* JXL_RESTRICT row_out = sqrsum_00_row + y * sqrsum_00_stride;
     for (size_t x = 0; x < rect.xsize() * 2; x++) {
       auto sum = Zero(df4);
-      for (size_t iy = 0; iy < 4; iy++) {
+      for (auto& row : rows_in) {
         for (size_t ix = 0; ix < 4; ix += Lanes(df4)) {
-          sum = Add(sum, LoadU(df4, rows_in[iy] + x * 4 + ix + 2));
+          sum = Add(sum, LoadU(df4, row + x * 4 + ix + 2));
         }
       }
       row_out[x] = GetLane(Sqrt(SumOfLanes(df4, sum))) * (1.0f / 4.0f);

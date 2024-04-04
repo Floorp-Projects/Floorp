@@ -12,9 +12,10 @@ namespace jpegli {
 void init_mem_source(j_decompress_ptr cinfo) {}
 void init_stdio_source(j_decompress_ptr cinfo) {}
 
-void skip_input_data(j_decompress_ptr cinfo, long num_bytes) {
+void skip_input_data(j_decompress_ptr cinfo, long num_bytes /* NOLINT */) {
   if (num_bytes <= 0) return;
-  while (num_bytes > static_cast<long>(cinfo->src->bytes_in_buffer)) {
+  while (num_bytes >
+         static_cast<long>(cinfo->src->bytes_in_buffer)) {  // NOLINT
     num_bytes -= cinfo->src->bytes_in_buffer;
     (*cinfo->src->fill_input_buffer)(cinfo);
   }
@@ -53,7 +54,7 @@ struct StdioSourceManager {
 }  // namespace jpegli
 
 void jpegli_mem_src(j_decompress_ptr cinfo, const unsigned char* inbuffer,
-                    unsigned long insize) {
+                    unsigned long insize /* NOLINT */) {
   if (cinfo->src && cinfo->src->init_source != jpegli::init_mem_source) {
     JPEGLI_ERROR("jpegli_mem_src: a different source manager was already set");
   }

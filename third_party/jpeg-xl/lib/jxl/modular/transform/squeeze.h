@@ -29,9 +29,9 @@
 #include "lib/jxl/modular/modular_image.h"
 #include "lib/jxl/modular/transform/transform.h"
 
-#define JXL_MAX_FIRST_PREVIEW_SIZE 8
-
 namespace jxl {
+
+constexpr size_t kMaxFirstPreviewSize = 8;
 
 /*
         int avg=(A+B)>>1;

@@ -385,8 +385,8 @@ bool EncodeDHT(const JPEGData& jpg, SerializationState* state) {
   for (size_t i = state->dht_index; i < huffman_code.size(); ++i) {
     const JPEGHuffmanCode& huff = huffman_code[i];
     marker_len += kJpegHuffmanMaxBitLength;
-    for (size_t j = 0; j < huff.counts.size(); ++j) {
-      marker_len += huff.counts[j];
+    for (uint32_t count : huff.counts) {
+      marker_len += count;
     }
     if (huff.is_last) break;
   }

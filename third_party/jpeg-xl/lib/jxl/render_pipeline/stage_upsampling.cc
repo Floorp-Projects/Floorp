@@ -110,7 +110,7 @@ class UpsamplingStage : public RenderPipelineStage {
                       ssize_t x0, ssize_t x1) const {
     static HWY_FULL(float) df;
     using V = hwy::HWY_NAMESPACE::Vec<HWY_FULL(float)>;
-    V ups0, ups1, ups2, ups3, ups4, ups5, ups6, ups7;
+    V ups0, ups1, ups2, ups3, ups4, ups5, ups6, ups7;  // NOLINT
     (void)ups2, (void)ups3, (void)ups4, (void)ups5, (void)ups6, (void)ups7;
     // Once we have C++17 available, change this back to `V* ups[N]` and
     // initialize using `if constexpr` below.

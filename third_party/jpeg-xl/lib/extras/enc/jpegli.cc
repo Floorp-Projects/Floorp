@@ -390,7 +390,7 @@ Status EncodeJpeg(const PackedPixelFile& ppf, const JpegSettings& jpeg_settings,
   // before the call to setjmp().
   std::vector<uint8_t> pixels;
   unsigned char* output_buffer = nullptr;
-  unsigned long output_size = 0;
+  unsigned long output_size = 0;  // NOLINT
   std::vector<uint8_t> row_bytes;
   size_t rowlen = RoundUpTo(ppf.info.xsize, MaxVectorSize());
   hwy::AlignedFreeUniquePtr<float[]> xyb_tmp =

@@ -237,9 +237,9 @@ StatusOr<std::vector<PatchInfo>> FindTextLikePatches(
 
   auto is_same = [&opsin_rows, opsin_stride](std::pair<uint32_t, uint32_t> p1,
                                              std::pair<uint32_t, uint32_t> p2) {
-    for (size_t c = 0; c < 3; c++) {
-      float v1 = opsin_rows[c][p1.second * opsin_stride + p1.first];
-      float v2 = opsin_rows[c][p2.second * opsin_stride + p2.first];
+    for (auto& opsin_row : opsin_rows) {
+      float v1 = opsin_row[p1.second * opsin_stride + p1.first];
+      float v2 = opsin_row[p2.second * opsin_stride + p2.first];
       if (std::fabs(v1 - v2) > 1e-4) {
         return false;
       }
@@ -556,8 +556,8 @@ StatusOr<std::vector<PatchInfo>> FindTextLikePatches(
 
   size_t max_patch_size = 0;
 
-  for (size_t i = 0; i < info.size(); i++) {
-    size_t pixels = info[i].first.xsize * info[i].first.ysize;
+  for (const auto& patch : info) {
+    size_t pixels = patch.first.xsize * patch.first.ysize;
     if (pixels > max_patch_size) max_patch_size = pixels;
   }
 
@@ -605,10 +605,10 @@ Status FindBestPatchDictionary(const Image3F& opsin,
   size_t max_y_size = 0;
   size_t total_pixels = 0;
 
-  for (size_t i = 0; i < info.size(); i++) {
-    size_t pixels = info[i].first.xsize * info[i].first.ysize;
-    if (max_x_size < info[i].first.xsize) max_x_size = info[i].first.xsize;
-    if (max_y_size < info[i].first.ysize) max_y_size = info[i].first.ysize;
+  for (const auto& patch : info) {
+    size_t pixels = patch.first.xsize * patch.first.ysize;
+    if (max_x_size < patch.first.xsize) max_x_size = patch.first.xsize;
+    if (max_y_size < patch.first.ysize) max_y_size = patch.first.ysize;
     total_pixels += pixels;
   }
 

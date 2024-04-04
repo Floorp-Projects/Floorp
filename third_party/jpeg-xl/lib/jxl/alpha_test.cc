@@ -13,6 +13,16 @@
 namespace jxl {
 namespace {
 
+AlphaBlendingInputLayer makeAbil(const Color& rgb, const float& a) {
+  const float* data = rgb.data();
+  return {data, data + 1, data + 2, &a};
+}
+
+AlphaBlendingOutput makeAbo(Color& rgb, float& a) {
+  float* data = rgb.data();
+  return {data, data + 1, data + 2, &a};
+}
+
 TEST(AlphaTest, BlendingWithNonPremultiplied) {
   const Color bg_rgb{100, 110, 120};
   const float bg_a = 180.f / 255;
@@ -22,16 +32,16 @@ TEST(AlphaTest, BlendingWithNonPremultiplied) {
   Color out_rgb;
   float out_a;
   PerformAlphaBlending(
-      /*bg=*/{&bg_rgb[0], &bg_rgb[1], &bg_rgb[2], &bg_a},
-      /*fg=*/{&fg_rgb[0], &fg_rgb[1], &fg_rgb[2], &fg_a},
-      /*out=*/{&out_rgb[0], &out_rgb[1], &out_rgb[2], &out_a}, 1,
+      /*bg=*/makeAbil(bg_rgb, bg_a),
+      /*fg=*/makeAbil(fg_rgb, fg_a),
+      /*out=*/makeAbo(out_rgb, out_a), 1,
       /*alpha_is_premultiplied=*/false, /*clamp=*/false);
   EXPECT_ARRAY_NEAR(out_rgb, (Color{77.2f, 83.0f, 90.6f}), 0.05f);
   EXPECT_NEAR(out_a, 3174.f / 4095, 1e-5);
   PerformAlphaBlending(
-      /*bg=*/{&bg_rgb[0], &bg_rgb[1], &bg_rgb[2], &bg_a},
-      /*fg=*/{&fg_rgb[0], &fg_rgb[1], &fg_rgb[2], &fg_a2},
-      /*out=*/{&out_rgb[0], &out_rgb[1], &out_rgb[2], &out_a}, 1,
+      /*bg=*/makeAbil(bg_rgb, bg_a),
+      /*fg=*/makeAbil(fg_rgb, fg_a2),
+      /*out=*/makeAbo(out_rgb, out_a), 1,
       /*alpha_is_premultiplied=*/false, /*clamp=*/true);
   EXPECT_ARRAY_NEAR(out_rgb, fg_rgb, 0.05f);
   EXPECT_NEAR(out_a, 1.0f, 1e-5);
@@ -46,16 +56,16 @@ TEST(AlphaTest, BlendingWithPremultiplied) {
   Color out_rgb;
   float out_a;
   PerformAlphaBlending(
-      /*bg=*/{&bg_rgb[0], &bg_rgb[1], &bg_rgb[2], &bg_a},
-      /*fg=*/{&fg_rgb[0], &fg_rgb[1], &fg_rgb[2], &fg_a},
-      /*out=*/{&out_rgb[0], &out_rgb[1], &out_rgb[2], &out_a}, 1,
+      /*bg=*/makeAbil(bg_rgb, bg_a),
+      /*fg=*/makeAbil(fg_rgb, fg_a),
+      /*out=*/makeAbo(out_rgb, out_a), 1,
       /*alpha_is_premultiplied=*/true, /*clamp=*/false);
   EXPECT_ARRAY_NEAR(out_rgb, (Color{101.5f, 105.1f, 114.8f}), 0.05f);
   EXPECT_NEAR(out_a, 3174.f / 4095, 1e-5);
   PerformAlphaBlending(
-      /*bg=*/{&bg_rgb[0], &bg_rgb[1], &bg_rgb[2], &bg_a},
-      /*fg=*/{&fg_rgb[0], &fg_rgb[1], &fg_rgb[2], &fg_a2},
-      /*out=*/{&out_rgb[0], &out_rgb[1], &out_rgb[2], &out_a}, 1,
+      /*bg=*/makeAbil(bg_rgb, bg_a),
+      /*fg=*/makeAbil(fg_rgb, fg_a2),
+      /*out=*/makeAbo(out_rgb, out_a), 1,
       /*alpha_is_premultiplied=*/true, /*clamp=*/true);
   EXPECT_ARRAY_NEAR(out_rgb, fg_rgb, 0.05f);
   EXPECT_NEAR(out_a, 1.0f, 1e-5);

@@ -22,7 +22,7 @@ static inline double alpha(int u) { return u == 0 ? 0.7071067811865475 : 1.0; }
 
 // N-DCT on M columns, divided by sqrt(N). Matches the definition in the spec.
 template <size_t N, size_t M>
-void DCT1D(double block[N * M], double out[N * M]) {
+void DCT1D(const double block[N * M], double out[N * M]) {
   std::vector<double> matrix(N * N);
   const double scale = std::sqrt(2.0) / N;
   for (size_t y = 0; y < N; y++) {
@@ -43,7 +43,7 @@ void DCT1D(double block[N * M], double out[N * M]) {
 // N-IDCT on M columns, multiplied by sqrt(N). Matches the definition in the
 // spec.
 template <size_t N, size_t M>
-void IDCT1D(double block[N * M], double out[N * M]) {
+void IDCT1D(const double block[N * M], double out[N * M]) {
   std::vector<double> matrix(N * N);
   const double scale = std::sqrt(2.0);
   for (size_t y = 0; y < N; y++) {
@@ -63,7 +63,7 @@ void IDCT1D(double block[N * M], double out[N * M]) {
 }
 
 template <size_t N, size_t M>
-void TransposeBlock(double in[N * M], double out[M * N]) {
+void TransposeBlock(const double in[N * M], double out[M * N]) {
   for (size_t x = 0; x < N; x++) {
     for (size_t y = 0; y < M; y++) {
       out[y * N + x] = in[x * M + y];

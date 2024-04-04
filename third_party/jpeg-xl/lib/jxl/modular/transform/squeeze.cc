@@ -385,21 +385,21 @@ void DefaultSqueezeParameters(std::vector<SqueezeParams> *parameters,
   params.in_place = true;
 
   if (!wide) {
-    if (h > JXL_MAX_FIRST_PREVIEW_SIZE) {
+    if (h > kMaxFirstPreviewSize) {
       params.horizontal = false;
       parameters->push_back(params);
       h = (h + 1) / 2;
       JXL_DEBUG_V(7, "Vertical (%" PRIuS "x%" PRIuS "), ", w, h);
     }
   }
-  while (w > JXL_MAX_FIRST_PREVIEW_SIZE || h > JXL_MAX_FIRST_PREVIEW_SIZE) {
-    if (w > JXL_MAX_FIRST_PREVIEW_SIZE) {
+  while (w > kMaxFirstPreviewSize || h > kMaxFirstPreviewSize) {
+    if (w > kMaxFirstPreviewSize) {
       params.horizontal = true;
       parameters->push_back(params);
       w = (w + 1) / 2;
       JXL_DEBUG_V(7, "Horizontal (%" PRIuS "x%" PRIuS "), ", w, h);
     }
-    if (h > JXL_MAX_FIRST_PREVIEW_SIZE) {
+    if (h > kMaxFirstPreviewSize) {
       params.horizontal = false;
       parameters->push_back(params);
       h = (h + 1) / 2;
@@ -424,13 +424,13 @@ Status MetaSqueeze(Image &image, std::vector<SqueezeParams> *parameters) {
     DefaultSqueezeParameters(parameters, image);
   }
 
-  for (size_t i = 0; i < parameters->size(); i++) {
+  for (auto &parameter : *parameters) {
     JXL_RETURN_IF_ERROR(
-        CheckMetaSqueezeParams((*parameters)[i], image.channel.size()));
-    bool horizontal = (*parameters)[i].horizontal;
-    bool in_place = (*parameters)[i].in_place;
-    uint32_t beginc = (*parameters)[i].begin_c;
-    uint32_t endc = (*parameters)[i].begin_c + (*parameters)[i].num_c - 1;
+        CheckMetaSqueezeParams(parameter, image.channel.size()));
+    bool horizontal = parameter.horizontal;
+    bool in_place = parameter.in_place;
+    uint32_t beginc = parameter.begin_c;
+    uint32_t endc = parameter.begin_c + parameter.num_c - 1;
 
     uint32_t offset;
     if (beginc < image.nb_meta_channels) {
@@ -441,7 +441,7 @@ Status MetaSqueeze(Image &image, std::vector<SqueezeParams> *parameters) {
         return JXL_FAILURE(
             "Invalid squeeze: meta channels require in-place residuals");
       }
-      image.nb_meta_channels += (*parameters)[i].num_c;
+      image.nb_meta_channels += parameter.num_c;
     }
     if (in_place) {
       offset = endc + 1;

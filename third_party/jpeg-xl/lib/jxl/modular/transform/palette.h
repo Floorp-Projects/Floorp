@@ -30,6 +30,8 @@ static constexpr int kSmallCube = 4;
 static constexpr int kSmallCubeBits = 2;
 // kSmallCube ** 3
 static constexpr int kLargeCubeOffset = kSmallCube * kSmallCube * kSmallCube;
+static constexpr int kImplicitPaletteSize =
+    kLargeCubeOffset + kLargeCube * kLargeCube * kLargeCube;
 
 static inline pixel_type Scale(uint64_t value, uint64_t bit_depth,
                                uint64_t denom) {
