@@ -64,6 +64,10 @@ Candidate::Candidate(const Candidate&) = default;
 
 Candidate::~Candidate() = default;
 
+void Candidate::generate_id() {
+  id_ = rtc::CreateRandomString(8);
+}
+
 bool Candidate::is_local() const {
   return type_ == LOCAL_PORT_TYPE;
 }
