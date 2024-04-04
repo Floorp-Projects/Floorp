@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2024-04-03T10:44:37.118446'
+updated_at: '2024-04-04T15:12:38.005844'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -2406,6 +2406,7 @@ modules:
       web applications.
     includes:
       - dom/push/**/*
+      - dom/interfaces/push/**/*
     meta:
       owners_emeritus:
         - Doug Turner
@@ -2415,7 +2416,7 @@ modules:
         - Dragana Damjanovic
         - *mt
       components:
-        - 'Core::DOM: Notifications'
+        - 'Core::DOM: Push Subscriptions'
     peers: []
     machine_name: core_push_subscriptions
 
@@ -4215,5 +4216,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: 20f0fcbf456adb6c635b7565b9f57d7b13f0bb85
-  export: a3e3795c00cfb9241207b69cdf1f8eb7639301fe
+  config: c9645255ff00ef25e720b97598b197ef4bad5104
+  export: 9fbb92d32d9584feca3512b44f329d6ade33ea7f
