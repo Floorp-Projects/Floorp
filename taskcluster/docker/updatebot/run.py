@@ -192,6 +192,7 @@ localconfig = {
     "General": {
         "env": OPERATING_MODE,
         "gecko-path": GECKO_DEV_PATH,
+        "soft_timeout": 3600,
     },
     "Logging": {
         "local": True,
