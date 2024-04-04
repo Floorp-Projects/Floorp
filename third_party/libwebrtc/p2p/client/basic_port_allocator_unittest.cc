@@ -112,8 +112,6 @@ static const char kTurnPassword[] = "test";
 // Add some margin of error for slow bots.
 static const int kStunTimeoutMs = cricket::STUN_TOTAL_TIMEOUT;
 
-constexpr uint64_t kTiebreakerDefault = 44444;
-
 namespace {
 
 void CheckStunKeepaliveIntervalOfAllReadyPorts(
@@ -176,7 +174,6 @@ class BasicPortAllocatorTestBase : public ::testing::Test,
         &network_manager_, &socket_factory_, stun_servers, &field_trials_);
     allocator_->Initialize();
     allocator_->set_step_delay(kMinimumStepDelay);
-    allocator_->SetIceTiebreaker(kTiebreakerDefault);
     webrtc::metrics::Reset();
   }
 
@@ -214,7 +211,6 @@ class BasicPortAllocatorTestBase : public ::testing::Test,
     allocator_.reset(
         new BasicPortAllocator(&network_manager_, &socket_factory_));
     allocator_->Initialize();
-    allocator_->SetIceTiebreaker(kTiebreakerDefault);
     allocator_->set_step_delay(kMinimumStepDelay);
   }
   // Endpoint is behind a NAT, with STUN specified.
@@ -299,7 +295,6 @@ class BasicPortAllocatorTestBase : public ::testing::Test,
         this, &BasicPortAllocatorTestBase::OnCandidatesRemoved);
     session->SignalCandidatesAllocationDone.connect(
         this, &BasicPortAllocatorTestBase::OnCandidatesAllocationDone);
-    session->set_ice_tiebreaker(kTiebreakerDefault);
     return session;
   }
 
