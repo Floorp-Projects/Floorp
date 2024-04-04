@@ -15,6 +15,8 @@
 #include <memory>
 #include <vector>
 
+#include "api/environment/environment.h"
+#include "api/environment/environment_factory.h"
 #include "api/video/encoded_image.h"
 #include "api/video_codecs/sdp_video_format.h"
 #include "api/video_codecs/video_encoder.h"
@@ -258,8 +260,9 @@ SimulcastTestFixtureImpl::SimulcastTestFixtureImpl(
     std::unique_ptr<VideoDecoderFactory> decoder_factory,
     SdpVideoFormat video_format)
     : codec_type_(PayloadStringToCodecType(video_format.name)) {
+  Environment env = CreateEnvironment();
   encoder_ = encoder_factory->CreateVideoEncoder(video_format);
-  decoder_ = decoder_factory->CreateVideoDecoder(video_format);
+  decoder_ = decoder_factory->Create(env, video_format);
   SetUpCodec((codec_type_ == kVideoCodecVP8 || codec_type_ == kVideoCodecH264)
                  ? kDefaultTemporalLayerProfile
                  : kNoTemporalLayerProfile);

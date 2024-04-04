@@ -820,6 +820,8 @@ if (rtc_include_tests) {
       "../../api:mock_video_decoder",
       "../../api:mock_video_encoder",
       "../../api:simulcast_test_fixture_api",
+      "../../api/environment",
+      "../../api/environment:environment_factory",
       "../../api/video:encoded_image",
       "../../api/video:video_frame",
       "../../api/video:video_rtp_headers",
