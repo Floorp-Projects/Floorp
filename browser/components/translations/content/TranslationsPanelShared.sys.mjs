@@ -64,9 +64,11 @@ export class TranslationsPanelShared {
    * @param {FullPageTranslationsPanel | SelectTranslationsPanel} panel
    *   - The panel for which to ensure language lists are built.
    */
-  static async ensureLangListsBuilt(document, panel) {
+  static async ensureLangListsBuilt(document, panel, innerWindowId) {
     const { id } = panel;
-    switch (TranslationsPanelShared.#langListsInitState.get(id)) {
+    switch (
+      TranslationsPanelShared.#langListsInitState.get(`${id}-${innerWindowId}`)
+    ) {
       case "initialized":
         // This has already been initialized.
         return;

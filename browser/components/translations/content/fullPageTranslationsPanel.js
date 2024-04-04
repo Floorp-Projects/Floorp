@@ -423,7 +423,8 @@ var FullPageTranslationsPanel = new (class {
     try {
       await TranslationsPanelShared.ensureLangListsBuilt(
         document,
-        this.elements.panel
+        this.elements.panel,
+        gBrowser.selectedBrowser.innerWindowID
       );
     } catch (error) {
       this.console?.error(error);
