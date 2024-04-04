@@ -65,7 +65,7 @@ class WebrtcMediaDataEncoder : public RefCountedWebrtcVideoEncoder {
   MediaResult mError = NS_OK;
 
   VideoInfo mInfo;
-  webrtc::SdpVideoFormat::Parameters mFormatParams;
+  webrtc::CodecParameterMap mFormatParams;
   webrtc::CodecSpecificInfo mCodecSpecific;
   webrtc::BitrateAdjuster mBitrateAdjuster;
   uint32_t mMaxFrameRate = {0};

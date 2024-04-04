@@ -190,7 +190,7 @@ webrtc::VideoCodecType SupportedCodecType(webrtc::VideoCodecType aType) {
 rtc::scoped_refptr<webrtc::VideoEncoderConfig::EncoderSpecificSettings>
 ConfigureVideoEncoderSettings(const VideoCodecConfig& aConfig,
                               const WebrtcVideoConduit* aConduit,
-                              webrtc::SdpVideoFormat::Parameters& aParameters) {
+                              webrtc::CodecParameterMap& aParameters) {
   bool is_screencast =
       aConduit->CodecMode() == webrtc::VideoCodecMode::kScreensharing;
   // No automatic resizing when using simulcast or screencast.
