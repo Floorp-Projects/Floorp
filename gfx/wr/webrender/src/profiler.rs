@@ -95,6 +95,8 @@ static PROFILER_PRESETS: &'static[(&'static str, &'static str)] = &[
     (&"GPU samplers", &"Alpha targets samplers,Transparent pass samplers,Opaque pass samplers,Total samplers"),
 
     (&"Render reasons", &"Reason scene, Reason animated property, Reason resource update, Reason async image, Reason clear resources, Reason APZ, Reason resize, Reason widget, Reason cache flush, Reason snapshot, Reason resource hook, Reason config change, Reason content sync, Reason flush, On vsync, Reason testing, Reason other"),
+
+    (&"Slow frame breakdown", &"Total slow frames CPU, Total slow frames GPU, Slow: frame build, Slow: upload, Slow: render, Slow: draw calls, Slow: targets, Slow: blobs"),
 ];
 
 fn find_preset(name: &str) -> Option<&'static str> {
@@ -256,7 +258,16 @@ pub const RENDER_REASON_VSYNC: usize = 119;
 pub const TEXTURES_CREATED: usize = 120;
 pub const TEXTURES_DELETED: usize = 121;
 
-pub const NUM_PROFILER_EVENTS: usize = 122;
+pub const SLOW_FRAME_CPU_COUNT: usize = 122;
+pub const SLOW_FRAME_GPU_COUNT: usize = 123;
+pub const SLOW_FRAME_BUILD_COUNT: usize = 124;
+pub const SLOW_UPLOAD_COUNT: usize = 125;
+pub const SLOW_RENDER_COUNT: usize = 126;
+pub const SLOW_DRAW_CALLS_COUNT: usize = 127;
+pub const SLOW_TARGETS_COUNT: usize = 128;
+pub const SLOW_BLOB_COUNT: usize = 129;
+
+pub const NUM_PROFILER_EVENTS: usize = 130;
 
 pub struct Profiler {
     counters: Vec<Counter>,
@@ -269,6 +280,23 @@ pub struct Profiler {
 
     // For FPS computation. Updated in update().
     frame_timestamps_within_last_second: Vec<u64>,
+
+    /// Total number of slow frames on the CPU.
+    slow_frame_cpu_count: u64,
+    /// Total number of slow frames on the GPU.
+    slow_frame_gpu_count: u64,
+    /// Slow frames dominated by frame building.
+    slow_frame_build_count: u64,
+    /// Slow frames dominated by draw call submission.
+    slow_render_count: u64,
+    /// Slow frames dominated by texture uploads.
+    slow_upload_count: u64,
+    /// Slow renders with a high number of draw calls.
+    slow_draw_calls_count: u64,
+    /// Slow renders with a high number of render targets.
+    slow_targets_count: u64,
+    /// Slow uploads with a high number of blob tiles.
+    slow_blob_count: u64,
 
     ui: Vec<Item>,
 }
@@ -433,6 +461,15 @@ impl Profiler {
 
             int("Textures created", "", TEXTURES_CREATED, expected(0..5)),
             int("Textures deleted", "", TEXTURES_DELETED, Expected::none()),
+
+            int("Total slow frames CPU", "", SLOW_FRAME_CPU_COUNT, Expected::none()),
+            int("Total slow frames GPU", "", SLOW_FRAME_GPU_COUNT, Expected::none()),
+            int("Slow: frame build", "%", SLOW_FRAME_BUILD_COUNT, Expected::none()),
+            int("Slow: upload", "%", SLOW_UPLOAD_COUNT, Expected::none()),
+            int("Slow: render", "%", SLOW_RENDER_COUNT, Expected::none()),
+            int("Slow: draw calls", "%", SLOW_DRAW_CALLS_COUNT, Expected::none()),
+            int("Slow: targets", "%", SLOW_TARGETS_COUNT, Expected::none()),
+            int("Slow: blobs", "%", SLOW_BLOB_COUNT, Expected::none()),
         ];
 
         let mut counters = Vec::with_capacity(profile_counters.len());
@@ -452,6 +489,16 @@ impl Profiler {
 
             num_graph_samples: 500, // Would it be useful to control this via a pref?
             frame_timestamps_within_last_second: Vec::new(),
+
+            slow_frame_cpu_count: 0,
+            slow_frame_gpu_count: 0,
+            slow_frame_build_count: 0,
+            slow_render_count: 0,
+            slow_upload_count: 0,
+            slow_draw_calls_count: 0,
+            slow_targets_count: 0,
+            slow_blob_count: 0,
+
             ui: Vec::new(),
         }
     }
@@ -460,7 +507,7 @@ impl Profiler {
     /// a specific counter.
     ///
     /// This is useful to monitor slow frame and slow transactions.
-    fn update_slow_event(&mut self, dst_counter: usize, counters: &[usize], threshold: f64) {
+    fn update_slow_event(&mut self, dst_counter: usize, counters: &[usize], threshold: f64) -> bool {
         let mut total = 0.0;
         for &counter in counters {
             if self.counters[counter].value.is_finite() {
@@ -470,6 +517,61 @@ impl Profiler {
 
         if total > threshold {
             self.counters[dst_counter].set(total);
+            return true;
+        }
+
+        false
+    }
+
+    fn classify_slow_cpu_frame(&mut self) {
+        let is_apz = self.counters[RENDER_REASON_ANIMATED_PROPERTY].value > 0.5
+            || self.counters[RENDER_REASON_APZ].value > 0.5;
+
+        if !is_apz {
+            // Only consider slow frames affecting scrolling for now.
+            return;
+        }
+
+        let frame_build = self.counters[FRAME_BUILDING_TIME].value;
+        let uploads = self.counters[TEXTURE_CACHE_UPDATE_TIME].value;
+        let renderer = self.counters[RENDERER_TIME].value - uploads;
+        let mut reasons = [
+            (frame_build, &mut self.slow_frame_build_count, SLOW_FRAME_BUILD_COUNT,),
+            (renderer, &mut self.slow_render_count, SLOW_RENDER_COUNT,),
+            (uploads, &mut self.slow_upload_count, SLOW_UPLOAD_COUNT,),
+        ];
+
+        reasons.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap());
+
+        *reasons[0].1 += 1;
+        let reason = reasons[0].2;
+        std::mem::drop(reasons);
+
+        self.slow_frame_cpu_count += 1;
+
+        if reason == SLOW_RENDER_COUNT {
+            let draw_calls = self.counters[DRAW_CALLS].value;
+            if draw_calls > 200.0 {
+                self.slow_draw_calls_count += 1;
+            }
+
+            let render_passes = self.counters[COLOR_PASSES].value + self.counters[ALPHA_PASSES].value;
+            if render_passes > 20.0 {
+                self.slow_targets_count += 1;
+            }
+        }
+
+        if reason == SLOW_UPLOAD_COUNT {
+            let count = self.counters[TEXTURE_UPLOADS].value;
+            let blob_tiles = self.counters[RASTERIZED_BLOB_TILES].value;
+            // This is an approximation: we rasterize blobs for the whole displayport and
+            // only upload blob tiles for the current viewport. That said, the presence of
+            // a high number of blob tiles compared to the total number of uploads is still
+            // a good indication that blob images are the likely cause of the slow upload
+            // time, or at least contributing to it to a large extent.
+            if blob_tiles > count * 0.5 {
+                self.slow_blob_count += 1;
+            }
         }
     }
 
@@ -484,7 +586,7 @@ impl Profiler {
         self.frame_timestamps_within_last_second.retain(|t| *t > one_second_ago);
         self.frame_timestamps_within_last_second.push(now);
 
-        self.update_slow_event(
+        let slow_cpu = self.update_slow_event(
             SLOW_FRAME,
             &[TOTAL_FRAME_CPU_TIME],
             15.0,
@@ -494,6 +596,20 @@ impl Profiler {
             &[DISPLAY_LIST_BUILD_TIME, CONTENT_SEND_TIME, SCENE_BUILD_TIME],
             80.0
         );
+
+        if slow_cpu {
+            self.classify_slow_cpu_frame();
+        }
+
+        let div = 100.0 / self.slow_frame_cpu_count as f64;
+        self.counters[SLOW_FRAME_CPU_COUNT].set(self.slow_frame_cpu_count as f64);
+        self.counters[SLOW_FRAME_GPU_COUNT].set(self.slow_frame_gpu_count as f64);
+        self.counters[SLOW_FRAME_BUILD_COUNT].set(self.slow_frame_build_count as f64 * div);
+        self.counters[SLOW_RENDER_COUNT].set(self.slow_render_count as f64 * div);
+        self.counters[SLOW_UPLOAD_COUNT].set(self.slow_upload_count as f64 * div);
+        self.counters[SLOW_DRAW_CALLS_COUNT].set(self.slow_draw_calls_count as f64 * div);
+        self.counters[SLOW_TARGETS_COUNT].set(self.slow_targets_count as f64 * div);
+        self.counters[SLOW_BLOB_COUNT].set(self.slow_blob_count as f64 * div);
 
         for counter in &mut self.counters {
             counter.update(update_avg);
@@ -517,7 +633,11 @@ impl Profiler {
           samples: gpu_queries
         });
 
-        self.counters[GPU_TIME].set_f64(ns_to_ms(gpu_time_ns));
+        let gpu_time = ns_to_ms(gpu_time_ns);
+        self.counters[GPU_TIME].set_f64(gpu_time);
+        if gpu_time > 12.0 {
+            self.slow_frame_gpu_count += 1;
+        }
     }
 
     // Find the index of a counter by its name.
