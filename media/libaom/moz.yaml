@@ -54,3 +54,6 @@ vendoring:
     - action: run-script
       script: '{yaml_dir}/generate_sources_mozbuild.sh'
       cwd: '{yaml_dir}'
+
+  patches:
+    - 0001-errno.patch
