@@ -34,7 +34,7 @@ https_first_disabled = true
 
 ["browser_sitespecific_video_zoom.js"]
 https_first_disabled = true
-support-files = ["../general/video.ogg"]
+support-files = ["../general/video.webm"]
 skip-if = [
   "os == 'win' && debug", # Bug 1315042
   "verify && debug && os == 'linux'", # Bug 1315042
