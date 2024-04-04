@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
@@ -8,6 +7,6 @@
     android:viewportWidth="24"
     android:viewportHeight="24">
     <path
-        android:pathData="M20 13.5a0.745 0.745 0 0 0 0.53-0.22A0.75 0.75 0 0 0 20 12h-5.7l-0.8-0.8V5.5a0.75 0.75 0 0 0-1.5 0v5.7L11.2 12H5.5a0.75 0.75 0 0 0 0 1.5h5.7l0.8 0.8V20a0.75 0.75 0 0 0 1.5 0v-5.7l0.8-0.8H20z"
-        android:fillColor="@color/mozac_ui_icons_fill" />
+        android:fillColor="@color/mozac_ui_icons_fill"
+        android:pathData="M11.125 12.875v7.875h1.75v-7.875h7.875v-1.75h-7.875V3.25h-1.75v7.875H3.25v1.75h7.875z" />
 </vector>

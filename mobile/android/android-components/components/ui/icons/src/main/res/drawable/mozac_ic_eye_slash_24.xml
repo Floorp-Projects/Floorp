@@ -1,13 +1,24 @@
-<?xml version="1.0" encoding="utf-8"?><!-- This Source Code Form is subject to the terms of the Mozilla Public
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:width="24dp"
     android:height="24dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
     <path
-        android:fillAlpha="0.8"
         android:fillColor="@color/mozac_ui_icons_fill"
-        android:pathData="M5.28 3.22a0.75 0.75 0 1 0-1.061 1.061l2.308 2.308A11.18 11.18 0 0 0 2 11.994v1.012C3.656 17.195 7.634 20 12 20c2.182 0 4.259-0.711 6.005-1.934l2.715 2.715a0.748 0.748 0 0 0 1.06 0 0.75 0.75 0 0 0 0-1.061L5.28 3.22zm5.547 7.668l2.785 2.785A1.993 1.993 0 0 1 10 12.5c0-0.664 0.328-1.248 0.827-1.612zM12 18.5c-3.629 0-7.011-2.316-8.5-5.791V12.29a9.637 9.637 0 0 1 4.133-4.597l2.132 2.132A3.474 3.474 0 0 0 8.5 12.5c0 1.93 1.57 3.5 3.5 3.5a3.47 3.47 0 0 0 2.674-1.265l2.25 2.25C15.466 17.947 13.764 18.5 12 18.5zM12 5c-0.842 0-1.669 0.107-2.468 0.305l1.288 1.288A8.573 8.573 0 0 1 12 6.5c3.629 0 7.011 2.316 8.5 5.791v0.419a9.701 9.701 0 0 1-1.341 2.223l1.074 1.074A11.303 11.303 0 0 0 22 13.006v-1.012C20.344 7.805 16.366 5 12 5z" />
+        android:fillType="evenOdd"
+        android:pathData="M8.227 5.99l-3.74-3.74L3.25 3.488 6.573 6.81A10.552 10.552 0 0 0 2.2 12.065a0.885 0.885 0 0 0 0 0.621c1.54 4.064 5.479 6.795 9.8 6.795a10.4 10.4 0 0 0 5.595-1.648l2.917 2.917 1.238-1.238-2.75-2.75 0.004-0.003-1.221-1.22-0.004 0.003-2.475-2.476 0.001-0.006-3.99-3.99-0.006 0.001-1.71-1.71h0.006L8.232 5.986 8.227 5.988zm4.988 7.463l-2.293-2.293a1.622 1.622 0 0 0-0.547 1.215 1.623 1.623 0 0 0 2.84 1.078zm-4.59-1.078a3.36 3.36 0 0 1 1.06-2.453L7.838 8.077a8.7 8.7 0 0 0-3.88 4.298C5.337 15.64 8.457 17.731 12 17.731c1.57 0 3.054-0.411 4.342-1.152l-1.889-1.888A3.365 3.365 0 0 1 12 15.75a3.379 3.379 0 0 1-3.375-3.375z"
+        tools:ignore="VectorRaster"
+        tools:targetApi="n" />
+    <path
+        android:fillColor="@color/mozac_ui_icons_fill"
+        android:pathData="M11.427 7.061a6.95 6.95 0 0 0 0.203-0.018c0.122-0.012 0.245-0.024 0.37-0.024 3.544 0 6.664 2.091 8.04 5.356a8.909 8.909 0 0 1-1.233 2.066l1.236 1.236a10.466 10.466 0 0 0 1.757-2.992 0.885 0.885 0 0 0 0-0.621C20.26 8 16.321 5.269 12 5.269c-0.726 0-1.439 0.083-2.134 0.231l1.561 1.561z"
+        tools:ignore="VectorRaster" />
+    <path
+        android:fillColor="@color/mozac_ui_icons_fill"
+        android:pathData="M14.526 10.16a3.381 3.381 0 0 0-0.311-0.311l0.311 0.311z"
+        tools:ignore="VectorRaster" />
 </vector>
