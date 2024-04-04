@@ -105,7 +105,7 @@ class BrowserIcons constructor(
     private val decoders: List<ImageDecoder> = listOf(
         AndroidImageDecoder(),
         ICOIconDecoder(),
-        SvgIconDecoder(context),
+        SvgIconDecoder(),
     ),
     private val processors: List<IconProcessor> = listOf(
         MemoryIconProcessor(sharedMemoryCache),
