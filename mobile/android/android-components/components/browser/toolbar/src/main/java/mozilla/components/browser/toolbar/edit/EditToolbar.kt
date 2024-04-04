@@ -31,6 +31,7 @@ import mozilla.components.concept.toolbar.AutocompleteDelegate
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.utils.NamedThreadFactory
+import mozilla.components.support.ktx.android.view.showKeyboard
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
 import java.util.concurrent.Executors
 import mozilla.components.ui.colors.R as colorsR
@@ -226,6 +227,7 @@ class EditToolbar internal constructor(
                     isFocusableInTouchMode = true
                 }
                 requestFocus()
+                showKeyboard()
             }
         }
     }
