@@ -5,18 +5,23 @@ function check_ogg(v, enabled, finish) {
 
   function basic_test() {
     return new Promise(function (resolve) {
-      // Ogg types
-      check("video/ogg", "maybe");
+      if (SpecialPowers.getBoolPref("media.theora.enabled")) {
+        check("video/ogg", "maybe");
+        check("video/ogg; codecs=vorbis", "probably");
+        check("video/ogg; codecs=vorbis,theora", "probably");
+        check('video/ogg; codecs="vorbis, theora"', "probably");
+        check("video/ogg; codecs=theora", "probably");
+      } else {
+        check("video/ogg", "");
+        check("video/ogg; codecs=vorbis", "");
+        check("video/ogg; codecs=vorbis,theora", "");
+        check('video/ogg; codecs="vorbis, theora"', "");
+        check("video/ogg; codecs=theora", "");
+      }
       check("audio/ogg", "maybe");
       check("application/ogg", "maybe");
 
-      // Supported Ogg codecs
       check("audio/ogg; codecs=vorbis", "probably");
-      check("video/ogg; codecs=vorbis", "probably");
-      check("video/ogg; codecs=vorbis,theora", "probably");
-      check('video/ogg; codecs="vorbis, theora"', "probably");
-      check("video/ogg; codecs=theora", "probably");
-
       resolve();
     });
   }

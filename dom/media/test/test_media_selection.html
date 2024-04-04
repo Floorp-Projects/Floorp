@@ -111,7 +111,7 @@ for (var i = 0; i < gSmallTests.length; ++i) {
     checkMetadata(t.name, e, t);
   }}(test);
 
-  var otherType = type.match(/^video\//) ? "audio/x-wav" : "video/ogg";
+  var otherType = type.match(/^video\//) ? "audio/x-wav" : "video/webm";
   subtests.push(maketest(set_src, src, null, check),
                 maketest(add_source, src, null, check),
                 maketest(add_source, src, type, check),
