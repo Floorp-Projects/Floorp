@@ -1918,11 +1918,10 @@ static uint32_t ExtractJsFrames(
 // Merges the profiling stack, native stack, and JS stack, outputting the
 // details to aCollector.
 static void MergeStacks(
-    uint32_t aFeatures, bool aIsSynchronous,
+    bool aIsSynchronous,
     const ThreadRegistration::UnlockedReaderAndAtomicRWOnThread& aThreadData,
-    const Registers& aRegs, const NativeStack& aNativeStack,
-    ProfilerStackCollector& aCollector, JsFrame* aJsFrames,
-    uint32_t aJsFramesCount) {
+    const NativeStack& aNativeStack, ProfilerStackCollector& aCollector,
+    JsFrame* aJsFrames, uint32_t aJsFramesCount) {
   // WARNING: this function runs within the profiler's "critical section".
   // WARNING: this function might be called while the profiler is inactive, and
   //          cannot rely on ActivePS.
@@ -2571,13 +2570,13 @@ static inline void DoSharedSample(
     DoNativeBacktrace(aThreadData, aRegs, nativeStack,
                       stackWalkControlIfSupported);
 
-    MergeStacks(aFeatures, aIsSynchronous, aThreadData, aRegs, nativeStack,
-                collector, aJsFrames, jsFramesCount);
+    MergeStacks(aIsSynchronous, aThreadData, nativeStack, collector, aJsFrames,
+                jsFramesCount);
   } else
 #endif
   {
-    MergeStacks(aFeatures, aIsSynchronous, aThreadData, aRegs, nativeStack,
-                collector, aJsFrames, jsFramesCount);
+    MergeStacks(aIsSynchronous, aThreadData, nativeStack, collector, aJsFrames,
+                jsFramesCount);
 
     // We can't walk the whole native stack, but we can record the top frame.
     if (aCaptureOptions == StackCaptureOptions::Full) {
@@ -7157,13 +7156,13 @@ static void profiler_suspend_and_sample_thread(
 #    error "Invalid configuration"
 #  endif
 
-      MergeStacks(aFeatures, !aLockIfAsynchronousSampling, aThreadData, aRegs,
-                  nativeStack, aCollector, aJsFrames, jsFramesCount);
+      MergeStacks(!aLockIfAsynchronousSampling, aThreadData, nativeStack,
+                  aCollector, aJsFrames, jsFramesCount);
     } else
 #endif
     {
-      MergeStacks(aFeatures, !aLockIfAsynchronousSampling, aThreadData, aRegs,
-                  nativeStack, aCollector, aJsFrames, jsFramesCount);
+      MergeStacks(!aLockIfAsynchronousSampling, aThreadData, nativeStack,
+                  aCollector, aJsFrames, jsFramesCount);
 
       aCollector.CollectNativeLeafAddr((void*)aRegs.mPC);
     }
