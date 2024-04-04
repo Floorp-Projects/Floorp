@@ -105,8 +105,7 @@ ProbeControllerConfig::ProbeControllerConfig(
       probe_on_max_allocated_bitrate_change("probe_max_allocation", true),
       first_allocation_probe_scale("alloc_p1", 1),
       second_allocation_probe_scale("alloc_p2", 2),
-      allocation_allow_further_probing("alloc_probe_further", false),
-      allocation_probe_max("alloc_probe_max", DataRate::PlusInfinity()),
+      allocation_probe_limit_by_current_scale("alloc_current_bwe_limit"),
       min_probe_packets_sent("min_probe_packets_sent", 5),
       min_probe_duration("min_probe_duration", TimeDelta::Millis(15)),
       loss_limited_probe_scale("loss_limited_scale", 1.5),
@@ -118,7 +117,7 @@ ProbeControllerConfig::ProbeControllerConfig(
        &further_exponential_probe_scale, &further_probe_threshold,
        &alr_probing_interval, &alr_probe_scale,
        &probe_on_max_allocated_bitrate_change, &first_allocation_probe_scale,
-       &second_allocation_probe_scale, &allocation_allow_further_probing,
+       &second_allocation_probe_scale, &allocation_probe_limit_by_current_scale,
        &min_probe_duration, &network_state_estimate_probing_interval,
        &probe_if_estimate_lower_than_network_state_estimate_ratio,
        &estimate_lower_than_network_state_estimate_probing_interval,
@@ -138,7 +137,7 @@ ProbeControllerConfig::ProbeControllerConfig(
       key_value_config->Lookup("WebRTC-Bwe-AlrProbing"));
   ParseFieldTrial(
       {&first_allocation_probe_scale, &second_allocation_probe_scale,
-       &allocation_allow_further_probing, &allocation_probe_max},
+       &allocation_probe_limit_by_current_scale},
       key_value_config->Lookup("WebRTC-Bwe-AllocationProbing"));
   ParseFieldTrial({&min_probe_packets_sent, &min_probe_duration},
                   key_value_config->Lookup("WebRTC-Bwe-ProbingBehavior"));
@@ -220,19 +219,31 @@ std::vector<ProbeClusterConfig> ProbeController::OnMaxTotalAllocatedBitrate(
 
     DataRate first_probe_rate = max_total_allocated_bitrate *
                                 config_.first_allocation_probe_scale.Value();
-    DataRate probe_cap = config_.allocation_probe_max.Get();
-    first_probe_rate = std::min(first_probe_rate, probe_cap);
+    DataRate current_bwe_limit =
+        !config_.allocation_probe_limit_by_current_scale
+            ? DataRate::PlusInfinity()
+            : estimated_bitrate_ *
+                  config_.allocation_probe_limit_by_current_scale.Value();
+    bool limited_by_current_bwe = current_bwe_limit < first_probe_rate;
+    if (limited_by_current_bwe) {
+      first_probe_rate = current_bwe_limit;
+    }
+
     std::vector<DataRate> probes = {first_probe_rate};
-    if (config_.second_allocation_probe_scale) {
+    if (!limited_by_current_bwe && config_.second_allocation_probe_scale) {
       DataRate second_probe_rate =
           max_total_allocated_bitrate *
           config_.second_allocation_probe_scale.Value();
-      second_probe_rate = std::min(second_probe_rate, probe_cap);
+      limited_by_current_bwe = current_bwe_limit < second_probe_rate;
+      if (limited_by_current_bwe) {
+        second_probe_rate = current_bwe_limit;
+      }
       if (second_probe_rate > first_probe_rate)
         probes.push_back(second_probe_rate);
     }
-    return InitiateProbing(at_time, probes,
-                           config_.allocation_allow_further_probing.Get());
+    bool allow_further_probing = limited_by_current_bwe;
+
+    return InitiateProbing(at_time, probes, allow_further_probing);
   }
   max_total_allocated_bitrate_ = max_total_allocated_bitrate;
   return std::vector<ProbeClusterConfig>();

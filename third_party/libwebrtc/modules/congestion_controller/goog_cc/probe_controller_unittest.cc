@@ -213,6 +213,42 @@ TEST(ProbeControllerTest, ProbesOnMaxAllocatedBitrateIncreaseOnlyWhenInAlr) {
   EXPECT_TRUE(probes.empty());
 }
 
+TEST(ProbeControllerTest, ProbesOnMaxAllocatedBitrateLimitedByCurrentBwe) {
+  ProbeControllerFixture fixture(
+      "WebRTC-Bwe-ProbingConfiguration/"
+      "alloc_current_bwe_limit:1.5/");
+  ASSERT_TRUE(kMaxBitrate > 1.5 * kStartBitrate);
+  std::unique_ptr<ProbeController> probe_controller =
+      fixture.CreateController();
+  ASSERT_THAT(
+      probe_controller->OnNetworkAvailability({.network_available = true}),
+      IsEmpty());
+  auto probes = probe_controller->SetBitrates(
+      kMinBitrate, kStartBitrate, kMaxBitrate, fixture.CurrentTime());
+  probes = probe_controller->SetEstimatedBitrate(
+      kStartBitrate, BandwidthLimitedCause::kDelayBasedLimited,
+      fixture.CurrentTime());
+
+  // Wait long enough to time out exponential probing.
+  fixture.AdvanceTime(kExponentialProbingTimeout);
+  probes = probe_controller->Process(fixture.CurrentTime());
+  EXPECT_TRUE(probes.empty());
+
+  // Probe when in alr.
+  probe_controller->SetAlrStartTimeMs(fixture.CurrentTime().ms());
+  probes = probe_controller->OnMaxTotalAllocatedBitrate(kMaxBitrate,
+                                                        fixture.CurrentTime());
+  EXPECT_EQ(probes.size(), 1u);
+  EXPECT_EQ(probes.at(0).target_data_rate, 1.5 * kStartBitrate);
+
+  // Continue probing if probe succeeds.
+  probes = probe_controller->SetEstimatedBitrate(
+      1.5 * kStartBitrate, BandwidthLimitedCause::kDelayBasedLimited,
+      fixture.CurrentTime());
+  EXPECT_EQ(probes.size(), 1u);
+  EXPECT_GT(probes.at(0).target_data_rate, 1.5 * kStartBitrate);
+}
+
 TEST(ProbeControllerTest, CanDisableProbingOnMaxTotalAllocatedBitrateIncrease) {
   ProbeControllerFixture fixture(
       "WebRTC-Bwe-ProbingConfiguration/"
