@@ -1074,23 +1074,21 @@ static bool GetSupportedConfig(const KeySystemConfig& aKeySystem,
 
 /* static */
 bool MediaKeySystemAccess::GetSupportedConfig(
-    const nsAString& aKeySystem,
-    const Sequence<MediaKeySystemConfiguration>& aConfigs,
-    MediaKeySystemConfiguration& aOutConfig,
-    DecoderDoctorDiagnostics* aDiagnostics, bool aIsPrivateBrowsing,
+    MediaKeySystemAccessRequest* aRequest,
+    MediaKeySystemConfiguration& aOutConfig, bool aIsPrivateBrowsing,
     const Document* aDocument) {
   nsTArray<KeySystemConfig> implementations;
   const bool isHardwareDecryptionRequest =
-      CheckIfHarewareDRMConfigExists(aConfigs) ||
-      DoesKeySystemSupportHardwareDecryption(aKeySystem);
-  if (!GetKeySystemConfigs(aKeySystem, isHardwareDecryptionRequest,
+      CheckIfHarewareDRMConfigExists(aRequest->mConfigs) ||
+      DoesKeySystemSupportHardwareDecryption(aRequest->mKeySystem);
+  if (!GetKeySystemConfigs(aRequest->mKeySystem, isHardwareDecryptionRequest,
                            implementations)) {
     return false;
   }
   for (const auto& implementation : implementations) {
-    for (const MediaKeySystemConfiguration& candidate : aConfigs) {
+    for (const MediaKeySystemConfiguration& candidate : aRequest->mConfigs) {
       if (mozilla::dom::GetSupportedConfig(implementation, candidate,
-                                           aOutConfig, aDiagnostics,
+                                           aOutConfig, &aRequest->mDiagnostics,
                                            aIsPrivateBrowsing, aDocument)) {
         return true;
       }
