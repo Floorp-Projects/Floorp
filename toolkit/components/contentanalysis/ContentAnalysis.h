@@ -126,6 +126,7 @@ class ContentAnalysis final : public nsIContentAnalysis {
 
   ContentAnalysis();
   nsCString GetUserActionId();
+  void SetLastResult(nsresult aLastResult) { mLastResult = aLastResult; }
 
  private:
   ~ContentAnalysis();
@@ -154,6 +155,7 @@ class ContentAnalysis final : public nsIContentAnalysis {
       content_analysis::sdk::ContentAnalysisRequest&& aRequest,
       const std::shared_ptr<content_analysis::sdk::Client>& aClient);
   void IssueResponse(RefPtr<ContentAnalysisResponse>& response);
+  bool LastRequestSucceeded();
 
   // Did the URL filter completely handle the request or do we need to check
   // with the agent.
@@ -172,6 +174,7 @@ class ContentAnalysis final : public nsIContentAnalysis {
   bool mClientCreationAttempted;
 
   bool mSetByEnterprise;
+  nsresult mLastResult = NS_OK;
 
   class CallbackData final {
    public:
