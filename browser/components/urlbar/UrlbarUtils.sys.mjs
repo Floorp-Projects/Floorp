@@ -2433,21 +2433,12 @@ export class UrlbarProvider {
    * @param {string} _state
    *   The state of the engagement, one of the following strings:
    *
-   *   start
-   *       A new query has started in the urlbar.
    *   engagement
    *       The user picked a result in the urlbar or used paste-and-go.
    *   abandonment
    *       The urlbar was blurred (i.e., lost focus).
-   *   discard
-   *       This doesn't correspond to a user action, but it means that the
-   *       urlbar has discarded the engagement for some reason, and the
-   *       `onEngagement` implementation should ignore it.
-   *
    * @param {UrlbarQueryContext} _queryContext
-   *   The engagement's query context.  This is *not* guaranteed to be defined
-   *   when `state` is "start".  It will always be defined for "engagement" and
-   *   "abandonment".
+   *   The engagement's query context.
    * @param {object} _details
    *   This object is non-empty only when `state` is "engagement" or
    *   "abandonment", and it describes the search string and engaged result.
