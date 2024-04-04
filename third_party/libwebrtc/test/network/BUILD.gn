@@ -130,7 +130,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../../media:rtc_audio_video",
       "../../modules/audio_device:test_audio_device_module",
       "../../p2p:basic_packet_socket_factory",
-      "../../p2p:basic_port_allocator_and_turn_port",
+      "../../p2p:basic_port_allocator",
       "../../p2p:rtc_p2p",
       "../../pc:pc_test_utils",
       "../../pc:peerconnection_wrapper",
