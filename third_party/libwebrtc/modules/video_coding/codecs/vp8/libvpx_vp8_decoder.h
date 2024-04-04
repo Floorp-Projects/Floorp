@@ -14,6 +14,8 @@
 #include <memory>
 
 #include "absl/types/optional.h"
+#include "api/environment/environment.h"
+#include "api/field_trials_view.h"
 #include "api/video/encoded_image.h"
 #include "api/video_codecs/video_decoder.h"
 #include "common_video/include/video_frame_buffer_pool.h"
@@ -26,7 +28,10 @@ namespace webrtc {
 
 class LibvpxVp8Decoder : public VideoDecoder {
  public:
+  // TODO: bugs.webrtc.org/15791 - Delete default constructor when
+  // Environment is always propagated.
   LibvpxVp8Decoder();
+  explicit LibvpxVp8Decoder(const Environment& env);
   ~LibvpxVp8Decoder() override;
 
   bool Configure(const Settings& settings) override;
@@ -56,6 +61,7 @@ class LibvpxVp8Decoder : public VideoDecoder {
 
  private:
   class QpSmoother;
+  explicit LibvpxVp8Decoder(const FieldTrialsView& field_trials);
   int ReturnFrame(const vpx_image_t* img,
                   uint32_t timeStamp,
                   int qp,

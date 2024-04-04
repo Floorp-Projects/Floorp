@@ -46,7 +46,7 @@ Cr-Commit-Position: refs/heads/main@{#41742}
  delete mode 100644 modules/video_coding/h26x_packet_buffer_unittest.cc
 
 diff --git a/modules/video_coding/BUILD.gn b/modules/video_coding/BUILD.gn
-index 6e62b9ace3..31de2956f3 100644
+index 35fb2b49bc..1cdc83662c 100644
 --- a/modules/video_coding/BUILD.gn
 +++ b/modules/video_coding/BUILD.gn
 @@ -124,10 +124,10 @@ rtc_library("packet_buffer") {
@@ -63,7 +63,7 @@ index 6e62b9ace3..31de2956f3 100644
    ]
    deps = [
      ":codec_globals_headers",
-@@ -1164,9 +1164,9 @@ if (rtc_include_tests) {
+@@ -1167,9 +1167,9 @@ if (rtc_include_tests) {
        "frame_dependencies_calculator_unittest.cc",
        "frame_helpers_unittest.cc",
        "generic_decoder_unittest.cc",
@@ -74,7 +74,7 @@ index 6e62b9ace3..31de2956f3 100644
        "histogram_unittest.cc",
        "loss_notification_controller_unittest.cc",
        "nack_requester_unittest.cc",
-@@ -1201,7 +1201,7 @@ if (rtc_include_tests) {
+@@ -1204,7 +1204,7 @@ if (rtc_include_tests) {
        ":encoded_frame",
        ":frame_dependencies_calculator",
        ":frame_helpers",
