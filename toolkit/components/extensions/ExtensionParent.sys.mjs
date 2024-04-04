@@ -245,10 +245,8 @@ let apiManager = new (class extends SchemaAPIManager {
 // to relevant child messengers.  Also handles Native messaging and GeckoView.
 /** @typedef {typeof ProxyMessenger} NativeMessenger */
 const ProxyMessenger = {
-  /** @type {Map<number, ParentPort>} */
+  /** @type {Map<number, Partial<ParentPort>&Promise<ParentPort>>} */
   ports: new Map(),
-  /** @type {Map<number, Promise>} */
-  portPromises: new Map(),
 
   init() {
     this.conduit = new lazy.BroadcastConduit(ProxyMessenger, {
@@ -365,25 +363,17 @@ const ProxyMessenger = {
     }
 
     // PortMessages that follow will need to wait for the port to be opened.
-    let { promise, resolve, reject } = Promise.withResolvers();
-    this.portPromises.set(arg.portId, promise);
+    /** @type {callback} */
+    let resolvePort;
+    this.ports.set(arg.portId, new Promise(res => (resolvePort = res)));
 
-    try {
-      let kind = await this.normalizeArgs(arg, sender);
-      let all = await this.conduit.castPortConnect(kind, arg);
+    let kind = await this.normalizeArgs(arg, sender);
+    let all = await this.conduit.castPortConnect(kind, arg);
+    resolvePort();
 
-      // If there are no active onConnect listeners.
-      if (!all.some(x => x.value)) {
-        throw new ExtensionError(ERROR_NO_RECEIVERS);
-      }
-
-      resolve();
-    } catch (err) {
-      // Throw _and_ reject with error, so everything awaiting this port fails.
-      reject(err);
-      throw err;
-    } finally {
-      this.portPromises.delete(arg.portId);
+    // If there are no active onConnect listeners.
+    if (!all.some(x => x.value)) {
+      throw new ExtensionError(ERROR_NO_RECEIVERS);
     }
   },
 
@@ -397,7 +387,7 @@ const ProxyMessenger = {
     // NOTE: the following await make sure we await for promised ports
     // (ports that were not yet open when added to the Map,
     // see recvPortConnect).
-    await this.portPromises.get(sender.portId);
+    await this.ports.get(sender.portId);
     this.sendPortMessage(sender.portId, holder, !sender.source);
   },
 
