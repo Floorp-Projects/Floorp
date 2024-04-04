@@ -382,6 +382,7 @@ if (!build_with_mozilla) {
     "neteq:neteq_api",
     "rtc_event_log",
     "task_queue",
+    "transport:bandwidth_estimation_settings",
     "transport:bitrate_settings",
     "transport:enums",
     "transport:network_control",

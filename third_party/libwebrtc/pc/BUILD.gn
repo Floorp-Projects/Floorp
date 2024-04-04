@@ -426,6 +426,7 @@ rtc_source_set("peer_connection_proxy") {
   deps = [
     ":proxy",
     "../api:libjingle_peerconnection_api",
+    "../api/transport:bandwidth_estimation_settings",
   ]
 }
 

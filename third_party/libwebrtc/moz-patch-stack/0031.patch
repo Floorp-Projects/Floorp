@@ -206,7 +206,7 @@ index 571049f3e4..f393179bbb 100644
      } else {
        deps += [
 diff --git a/api/BUILD.gn b/api/BUILD.gn
-index 1f03468d65..82eb7ffcd0 100644
+index 61c000d3f0..b1759f5fb2 100644
 --- a/api/BUILD.gn
 +++ b/api/BUILD.gn
 @@ -40,6 +40,9 @@ rtc_source_set("enable_media") {
@@ -290,7 +290,7 @@ index 1f03468d65..82eb7ffcd0 100644
    visibility = [ "*" ]
    cflags = []
    sources = [
-@@ -389,6 +416,7 @@ rtc_library("libjingle_peerconnection_api") {
+@@ -390,6 +417,7 @@ rtc_library("libjingle_peerconnection_api") {
      "//third_party/abseil-cpp/absl/types:optional",
    ]
  }
@@ -298,7 +298,7 @@ index 1f03468d65..82eb7ffcd0 100644
  
  rtc_source_set("frame_transformer_interface") {
    visibility = [ "*" ]
-@@ -562,6 +590,7 @@ rtc_source_set("peer_network_dependencies") {
+@@ -563,6 +591,7 @@ rtc_source_set("peer_network_dependencies") {
  }
  
  rtc_source_set("peer_connection_quality_test_fixture_api") {
@@ -306,7 +306,7 @@ index 1f03468d65..82eb7ffcd0 100644
    visibility = [ "*" ]
    testonly = true
    sources = [ "test/peerconnection_quality_test_fixture.h" ]
-@@ -611,6 +640,7 @@ rtc_source_set("peer_connection_quality_test_fixture_api") {
+@@ -612,6 +641,7 @@ rtc_source_set("peer_connection_quality_test_fixture_api") {
      "//third_party/abseil-cpp/absl/types:optional",
    ]
  }
@@ -314,7 +314,7 @@ index 1f03468d65..82eb7ffcd0 100644
  
  rtc_source_set("frame_generator_api") {
    visibility = [ "*" ]
-@@ -730,6 +760,7 @@ rtc_library("create_frame_generator") {
+@@ -731,6 +761,7 @@ rtc_library("create_frame_generator") {
    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
  }
  
@@ -322,7 +322,7 @@ index 1f03468d65..82eb7ffcd0 100644
  rtc_library("create_peer_connection_quality_test_frame_generator") {
    visibility = [ "*" ]
    testonly = true
-@@ -746,6 +777,7 @@ rtc_library("create_peer_connection_quality_test_frame_generator") {
+@@ -747,6 +778,7 @@ rtc_library("create_peer_connection_quality_test_frame_generator") {
    ]
    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
  }
@@ -330,7 +330,7 @@ index 1f03468d65..82eb7ffcd0 100644
  
  rtc_source_set("libjingle_logging_api") {
    visibility = [ "*" ]
-@@ -925,6 +957,7 @@ rtc_source_set("refcountedbase") {
+@@ -926,6 +958,7 @@ rtc_source_set("refcountedbase") {
    ]
  }
  
@@ -338,7 +338,7 @@ index 1f03468d65..82eb7ffcd0 100644
  rtc_library("ice_transport_factory") {
    visibility = [ "*" ]
    sources = [
-@@ -948,6 +981,7 @@ rtc_library("ice_transport_factory") {
+@@ -949,6 +982,7 @@ rtc_library("ice_transport_factory") {
      "rtc_event_log:rtc_event_log",
    ]
  }
@@ -450,10 +450,10 @@ index 1b9425d719..afdf47dfc9 100644
  rtc_library("default_task_queue_factory") {
    visibility = [ "*" ]
 diff --git a/api/transport/BUILD.gn b/api/transport/BUILD.gn
-index 84a0968ee9..c0209bf0d0 100644
+index f7a27c5899..21559815ca 100644
 --- a/api/transport/BUILD.gn
 +++ b/api/transport/BUILD.gn
-@@ -91,6 +91,7 @@ rtc_source_set("sctp_transport_factory_interface") {
+@@ -97,6 +97,7 @@ rtc_source_set("sctp_transport_factory_interface") {
  }
  
  rtc_source_set("stun_types") {
@@ -461,7 +461,7 @@ index 84a0968ee9..c0209bf0d0 100644
    visibility = [ "*" ]
    sources = [
      "stun.cc",
-@@ -111,6 +112,7 @@ rtc_source_set("stun_types") {
+@@ -117,6 +118,7 @@ rtc_source_set("stun_types") {
    ]
    absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
  }
@@ -470,7 +470,7 @@ index 84a0968ee9..c0209bf0d0 100644
  if (rtc_include_tests) {
    rtc_source_set("test_feedback_generator_interface") {
 diff --git a/call/BUILD.gn b/call/BUILD.gn
-index f716f4571a..24b324fef8 100644
+index 7c24834f1d..2c761bf001 100644
 --- a/call/BUILD.gn
 +++ b/call/BUILD.gn
 @@ -44,7 +44,7 @@ rtc_library("call_interfaces") {
@@ -482,7 +482,7 @@ index f716f4571a..24b324fef8 100644
      "../api:scoped_refptr",
      "../api:transport_api",
      "../api/adaptation:resource_adaptation_api",
-@@ -345,6 +345,16 @@ rtc_library("call") {
+@@ -346,6 +346,16 @@ rtc_library("call") {
      "//third_party/abseil-cpp/absl/strings",
      "//third_party/abseil-cpp/absl/types:optional",
    ]
@@ -499,7 +499,7 @@ index f716f4571a..24b324fef8 100644
  }
  
  rtc_source_set("receive_stream_interface") {
-@@ -372,7 +382,7 @@ rtc_library("video_stream_api") {
+@@ -373,7 +383,7 @@ rtc_library("video_stream_api") {
      "../api:frame_transformer_interface",
      "../api:rtp_headers",
      "../api:rtp_parameters",

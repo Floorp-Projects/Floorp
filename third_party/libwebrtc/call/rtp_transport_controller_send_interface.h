@@ -24,6 +24,7 @@
 #include "api/fec_controller.h"
 #include "api/frame_transformer_interface.h"
 #include "api/rtc_event_log/rtc_event_log.h"
+#include "api/transport/bandwidth_estimation_settings.h"
 #include "api/transport/bitrate_settings.h"
 #include "api/units/timestamp.h"
 #include "call/rtp_config.h"
@@ -124,6 +125,9 @@ class RtpTransportControllerSendInterface {
   // settings.
   virtual void SetAllocatedSendBitrateLimits(
       BitrateAllocationLimits limits) = 0;
+
+  virtual void ReconfigureBandwidthEstimation(
+      const BandwidthEstimationSettings& settings) = 0;
 
   virtual void SetPacingFactor(float pacing_factor) = 0;
   virtual void SetQueueTimeLimit(int limit_ms) = 0;
