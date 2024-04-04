@@ -589,7 +589,7 @@ class WebExtensionTest : BaseSessionTest() {
     }
 
     @Test
-    fun optionsPageMetadata() {
+    fun optionsUIPageMetadata() {
         // dummy.xpi is not signed, but it could be
         sessionRule.setPrefsUntilTestEnd(
             mapOf(
@@ -611,6 +611,7 @@ class WebExtensionTest : BaseSessionTest() {
                     assertTrue(extension.metaData.baseUrl.matches("^moz-extension://[0-9a-f\\-]*/$".toRegex()))
                     assertNotNull(extension.metaData.optionsPageUrl)
                     assertTrue((extension.metaData.optionsPageUrl ?: "").matches("^moz-extension://[0-9a-f\\-]*/options.html$".toRegex()))
+                    assertEquals(true, extension.metaData.openOptionsPageInTab)
                     onReadyResult.complete(null)
                     super.onReady(extension)
                 }
@@ -637,6 +638,41 @@ class WebExtensionTest : BaseSessionTest() {
 
         sessionRule.waitForResult(onReadyResult)
         sessionRule.waitForResult(controller.uninstall(dummy))
+    }
+
+    @Test
+    fun optionsPageAliasMetadata() {
+        // NOTE: This test case tests options_page is considered an alternative alias for
+        // options_ui.page and the metadata to be set so that it is opened in a tab.
+
+        // Wait for the onReady AddonManagerDelegate method to be called, and assert
+        // that the baseUrl and optionsPageUrl are both available as expected.
+        val onReadyResult = GeckoResult<Void>()
+        sessionRule.addExternalDelegateUntilTestEnd(
+            WebExtensionController.AddonManagerDelegate::class,
+            { delegate -> controller.setAddonManagerDelegate(delegate) },
+            { controller.setAddonManagerDelegate(null) },
+            object : WebExtensionController.AddonManagerDelegate {
+                @AssertCalled(count = 1)
+                override fun onReady(extension: WebExtension) {
+                    assertNotNull(extension.metaData.baseUrl)
+                    assertTrue(extension.metaData.baseUrl.matches("^moz-extension://[0-9a-f\\-]*/$".toRegex()))
+                    assertEquals("${extension.metaData.baseUrl}dummy.html", extension.metaData.optionsPageUrl)
+                    assertEquals(true, extension.metaData.openOptionsPageInTab)
+                    onReadyResult.complete(null)
+                    super.onReady(extension)
+                }
+            },
+        )
+
+        val testExt = sessionRule.waitForResult(
+            controller.installBuiltIn(
+                "resource://android/assets/web_extensions/options_page_alias/",
+            ),
+        )
+
+        sessionRule.waitForResult(onReadyResult)
+        sessionRule.waitForResult(controller.uninstall(testExt))
     }
 
     @Test

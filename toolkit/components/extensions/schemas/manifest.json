@@ -173,11 +173,15 @@
             "optional": true
           },
 
+          "options_page": {
+            "$ref": "ExtensionURL",
+            "optional": true,
+            "description": "Alias property for options_ui.page, ignored when options_ui.page is set. When using this property the options page is always opened in a new tab."
+          },
+
           "options_ui": {
             "type": "object",
-
             "optional": true,
-
             "properties": {
               "page": { "$ref": "ExtensionURL" },
               "browser_style": {

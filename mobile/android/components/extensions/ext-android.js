@@ -610,15 +610,15 @@ extensions.on("page-shutdown", (type, context) => {
 /* eslint-enable mozilla/balanced-listeners */
 
 global.openOptionsPage = async extension => {
-  const { options_ui } = extension.manifest;
+  const { optionsPageProperties } = extension;
   const extensionId = extension.id;
 
-  if (options_ui.open_in_tab) {
+  if (optionsPageProperties.open_in_tab) {
     // Delegate new tab creation and open the options page in the new tab.
     const tab = await GeckoViewTabBridge.createNewTab({
       extensionId,
       createProperties: {
-        url: options_ui.page,
+        url: optionsPageProperties.page,
         active: true,
       },
     });
@@ -626,7 +626,7 @@ global.openOptionsPage = async extension => {
     const { browser } = tab;
     const flags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
 
-    browser.fixupAndLoadURIString(options_ui.page, {
+    browser.fixupAndLoadURIString(optionsPageProperties.page, {
       flags,
       triggeringPrincipal: extension.principal,
     });

@@ -316,6 +316,73 @@ add_task(async function test_options_ui() {
   );
 
   await addon.uninstall();
+
+  info("Test again with options_page manifest property");
+  const ID3 = "options_page_alias@tests.mozilla.org";
+  addon = await promiseInstallWebExtension({
+    manifest: {
+      browser_specific_settings: { gecko: { id: ID3 } },
+      options_page: "options.html",
+    },
+  });
+
+  checkAddon(ID3, addon, {
+    optionsType: AddonManager.OPTIONS_TYPE_TAB,
+  });
+
+  ok(
+    OPTIONS_RE.test(addon.optionsURL),
+    "Addon should have a moz-extension: options URL for /options.html"
+  );
+
+  await addon.uninstall();
+
+  info("Test options_page and options_page set to a different page");
+
+  const ID4 = "options_page_warning@tests.mozilla.org";
+  addon = await promiseInstallWebExtension({
+    manifest: {
+      browser_specific_settings: { gecko: { id: ID4 } },
+      options_page: "options_page.html",
+      options_ui: {
+        page: "options.html",
+        open_in_tab: false,
+      },
+    },
+  });
+
+  checkAddon(ID4, addon, {
+    optionsType: AddonManager.OPTIONS_TYPE_INLINE_BROWSER,
+  });
+
+  ok(
+    OPTIONS_RE.test(addon.optionsURL),
+    "Addon should have a moz-extension: options URL for /options.html"
+  );
+
+  await addon.uninstall();
+
+  info("Test options_page and options_page are both set to the same page");
+
+  const ID5 = "options_page_and_ui_same_page@tests.mozilla.org";
+  addon = await promiseInstallWebExtension({
+    manifest: {
+      browser_specific_settings: { gecko: { id: ID5 } },
+      options_page: "options.html",
+      options_ui: { page: "options.html" },
+    },
+  });
+
+  checkAddon(ID5, addon, {
+    optionsType: AddonManager.OPTIONS_TYPE_INLINE_BROWSER,
+  });
+
+  ok(
+    OPTIONS_RE.test(addon.optionsURL),
+    "Addon should have a moz-extension: options URL for /options.html"
+  );
+
+  await addon.uninstall();
 });
 
 // Test that experiments permissions add the appropriate dependencies.

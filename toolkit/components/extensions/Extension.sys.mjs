@@ -1120,6 +1120,24 @@ export class ExtensionData {
     return !(this.isPrivileged && this.hasPermission("mozillaAddons"));
   }
 
+  get optionsPageProperties() {
+    let page = this.manifest.options_ui?.page ?? this.manifest.options_page;
+    if (!page) {
+      return null;
+    }
+    return {
+      page,
+      open_in_tab: this.manifest.options_ui
+        ? this.manifest.options_ui.open_in_tab ?? false
+        : true,
+      // `options_ui.browser_style` is assigned the proper default value
+      // (true for MV2 and false for MV3 when not explicitly set),
+      // in `#parseBrowserStyleInManifest` (called when we are loading
+      // and parse manifest data from the `parseManifest` method).
+      browser_style: this.manifest.options_ui?.browser_style ?? false,
+    };
+  }
+
   /**
    * Given an array of host and permissions, generate a structured permissions object
    * that contains seperate host origins and permissions arrays.
@@ -1658,6 +1676,8 @@ export class ExtensionData {
       );
     }
 
+    // manifest.options_page opens the extension page in a new tab
+    // and so we will not need to special handling browser_style.
     if (manifest.options_ui) {
       if (manifest.options_ui.open_in_tab) {
         // browser_style:true has no effect when open_in_tab is true.

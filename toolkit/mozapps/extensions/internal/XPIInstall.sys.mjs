@@ -526,17 +526,18 @@ async function loadManifestFromWebManifest(aPackage, aLocation) {
     addon.siteOrigin = manifest.install_origins[0];
   }
 
-  if (manifest.options_ui) {
+  const { optionsPageProperties } = extension;
+  if (optionsPageProperties) {
     // Store just the relative path here, the AddonWrapper getURL
     // wrapper maps this to a full URL.
-    addon.optionsURL = manifest.options_ui.page;
-    if (manifest.options_ui.open_in_tab) {
+    addon.optionsURL = optionsPageProperties.page;
+    if (optionsPageProperties.open_in_tab) {
       addon.optionsType = AddonManager.OPTIONS_TYPE_TAB;
     } else {
       addon.optionsType = AddonManager.OPTIONS_TYPE_INLINE_BROWSER;
     }
 
-    addon.optionsBrowserStyle = manifest.options_ui.browser_style;
+    addon.optionsBrowserStyle = optionsPageProperties.browser_style;
   }
 
   // WebExtensions don't use iconURLs

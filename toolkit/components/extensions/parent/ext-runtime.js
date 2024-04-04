@@ -248,7 +248,7 @@ this.runtime = class extends ExtensionAPIPersistent {
         },
 
         openOptionsPage: function () {
-          if (!extension.manifest.options_ui) {
+          if (!extension.optionsPageProperties) {
             return Promise.reject({ message: "No `options_ui` declared" });
           }
 
