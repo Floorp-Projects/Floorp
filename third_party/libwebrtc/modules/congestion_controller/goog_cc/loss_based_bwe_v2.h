@@ -74,6 +74,7 @@ class LossBasedBweV2 {
       rtc::ArrayView<const PacketResult> packet_results,
       DataRate delay_based_estimate,
       bool in_alr);
+  bool PaceAtLossBasedEstimate() const;
 
   // For unit testing only.
   void SetBandwidthEstimate(DataRate bandwidth_estimate);
@@ -124,6 +125,7 @@ class LossBasedBweV2 {
     bool use_byte_loss_rate = false;
     TimeDelta padding_duration = TimeDelta::Zero();
     bool bound_best_candidate = false;
+    bool pace_at_loss_based_estimate = false;
   };
 
   struct Derivatives {
