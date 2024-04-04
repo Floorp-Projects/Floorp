@@ -135,12 +135,20 @@ class UnderlyingSinkAlgorithmsWrapper : public UnderlyingSinkAlgorithmsBase {
     aRetVal.setUndefined();
   }
 
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> WriteCallback(
+      JSContext* aCx, JS::Handle<JS::Value> aChunk,
+      WritableStreamDefaultController& aController, ErrorResult& aRv) final;
+
   MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> CloseCallback(
       JSContext* aCx, ErrorResult& aRv) final;
 
   MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> AbortCallback(
       JSContext* aCx, const Optional<JS::Handle<JS::Value>>& aReason,
       ErrorResult& aRv) final;
+
+  virtual already_AddRefed<Promise> WriteCallbackImpl(
+      JSContext* aCx, JS::Handle<JS::Value> aChunk,
+      WritableStreamDefaultController& aController, ErrorResult& aRv) = 0;
 
   virtual already_AddRefed<Promise> CloseCallbackImpl(JSContext* aCx,
                                                       ErrorResult& aRv) {
@@ -169,7 +177,7 @@ class WritableStreamToOutput final : public UnderlyingSinkAlgorithmsWrapper,
 
   // Streams algorithms
 
-  already_AddRefed<Promise> WriteCallback(
+  already_AddRefed<Promise> WriteCallbackImpl(
       JSContext* aCx, JS::Handle<JS::Value> aChunk,
       WritableStreamDefaultController& aController, ErrorResult& aRv) override;
 
