@@ -911,7 +911,6 @@ mobile/android/geckoview/src/androidTest/assets/www/autoplay.html
 mobile/android/geckoview/src/androidTest/assets/www/badVideoPath.html
 mobile/android/geckoview/src/androidTest/assets/www/context_menu_video.html
 mobile/android/geckoview/src/androidTest/assets/www/mp4.html
-mobile/android/geckoview/src/androidTest/assets/www/ogg.html
 mobile/android/geckoview/src/androidTest/assets/www/webm.html
 netwerk/test/browser/103_preload_iframe.html
 netwerk/test/browser/post.html
