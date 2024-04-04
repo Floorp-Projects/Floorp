@@ -881,7 +881,7 @@ license file's hash.
             mozpath.normsep(os.path.normcase(self.topsrcdir)),
         )
 
-        cargo_config = os.path.join(self.topsrcdir, ".cargo", "config.in")
+        cargo_config = os.path.join(self.topsrcdir, ".cargo", "config.toml.in")
         with open(cargo_config, "w", encoding="utf-8", newline="\n") as fh:
             fh.write(
                 CARGO_CONFIG_TEMPLATE.format(
