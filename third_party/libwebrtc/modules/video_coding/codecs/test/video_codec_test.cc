@@ -29,6 +29,7 @@
 #include "rtc_base/logging.h"
 #include "rtc_base/strings/string_builder.h"
 #include "test/explicit_key_value_config.h"
+#include "test/field_trial.h"
 #include "test/gtest.h"
 #include "test/test_flags.h"
 #include "test/testsupport/file_utils.h"
@@ -533,6 +534,7 @@ INSTANTIATE_TEST_SUITE_P(
     FramerateAdaptationTest::TestParamsToString);
 
 TEST(VideoCodecTest, DISABLED_EncodeDecode) {
+  ScopedFieldTrials field_trials(absl::GetFlag(FLAGS_field_trials));
   const Environment env =
       CreateEnvironment(std::make_unique<ExplicitKeyValueConfig>(
           absl::GetFlag(FLAGS_field_trials)));
