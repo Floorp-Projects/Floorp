@@ -15,6 +15,7 @@
 #include <string>
 #include <vector>
 
+#include "api/environment/environment.h"
 #include "api/fec_controller.h"
 #include "api/rtc_event_log/rtc_event_log_factory.h"
 #include "api/task_queue/task_queue_base.h"
@@ -79,6 +80,7 @@ class VideoQualityTest : public test::CallTest,
       size_t video_idx);
   void SetupThumbnailCapturers(size_t num_thumbnail_streams);
   std::unique_ptr<VideoDecoder> CreateVideoDecoder(
+      const Environment& env,
       const SdpVideoFormat& format);
   std::unique_ptr<VideoEncoder> CreateVideoEncoder(const SdpVideoFormat& format,
                                                    VideoAnalyzer* analyzer);
