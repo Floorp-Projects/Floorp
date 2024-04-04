@@ -27,7 +27,7 @@ add_setup(async function () {
 
 add_task(async () => {
   const url =
-    "http://mochi.test:8888/browser/dom/base/test/fullscreen/dummy_page.html";
+    "https://example.com/browser/dom/base/test/fullscreen/dummy_page.html";
   const name = "foo";
 
   await BrowserTestUtils.withNewTab(

@@ -17,7 +17,7 @@ var gPrevTrusted = SpecialPowers.getBoolPref("full-screen-api.allow-trusted-requ
 var newwindow;
 
 // Ensure "fullscreen" permissions are not present on the test URI.
-var uri = Services.io.newURI("http://mochi.test:8888");
+var uri = Services.io.newURI("https://example.com");
 var principal = Services.scriptSecurityManager.createContentPrincipal(uri, {});
 Services.perms.removeFromPrincipal(principal, "fullscreen");
 
