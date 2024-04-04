@@ -2321,7 +2321,7 @@
           "--platform",
           "iPhone 14",
           "--version",
-          "17.0",
+          "17.4",
           "--out-dir",
           "${ISOLATED_OUTDIR}",
           "--xctest",
@@ -2332,7 +2332,7 @@
         "merge": {
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
-        "name": "apprtcmobile_tests iPhone 14 17.0",
+        "name": "apprtcmobile_tests iPhone 14 17.4",
         "resultdb": {
           "enable": true,
           "has_native_resultdb_integration": true
@@ -2363,7 +2363,7 @@
         },
         "test": "apprtcmobile_tests",
         "test_id_prefix": "ninja://examples:apprtcmobile_tests/",
-        "variant_id": "iPhone 14 17.0"
+        "variant_id": "iPhone 14 17.4"
       },
       {
         "args": [
@@ -2468,7 +2468,7 @@
           "--platform",
           "iPhone 14",
           "--version",
-          "17.0",
+          "17.4",
           "--out-dir",
           "${ISOLATED_OUTDIR}",
           "--xctest",
@@ -2478,7 +2478,7 @@
         "merge": {
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
-        "name": "audio_decoder_unittests iPhone 14 17.0",
+        "name": "audio_decoder_unittests iPhone 14 17.4",
         "resultdb": {
           "enable": true,
           "has_native_resultdb_integration": true
@@ -2509,7 +2509,7 @@
         },
         "test": "audio_decoder_unittests",
         "test_id_prefix": "ninja://modules/audio_coding:audio_decoder_unittests/",
-        "variant_id": "iPhone 14 17.0"
+        "variant_id": "iPhone 14 17.4"
       },
       {
         "args": [
@@ -2612,7 +2612,7 @@
           "--platform",
           "iPhone 14",
           "--version",
-          "17.0",
+          "17.4",
           "--out-dir",
           "${ISOLATED_OUTDIR}",
           "--xctest",
@@ -2622,7 +2622,7 @@
         "merge": {
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
-        "name": "common_audio_unittests iPhone 14 17.0",
+        "name": "common_audio_unittests iPhone 14 17.4",
         "resultdb": {
           "enable": true,
           "has_native_resultdb_integration": true
@@ -2653,7 +2653,7 @@
         },
         "test": "common_audio_unittests",
         "test_id_prefix": "ninja://common_audio:common_audio_unittests/",
-        "variant_id": "iPhone 14 17.0"
+        "variant_id": "iPhone 14 17.4"
       },
       {
         "args": [
@@ -2756,7 +2756,7 @@
           "--platform",
           "iPhone 14",
           "--version",
-          "17.0",
+          "17.4",
           "--out-dir",
           "${ISOLATED_OUTDIR}",
           "--xctest",
@@ -2766,7 +2766,7 @@
         "merge": {
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
-        "name": "common_video_unittests iPhone 14 17.0",
+        "name": "common_video_unittests iPhone 14 17.4",
         "resultdb": {
           "enable": true,
           "has_native_resultdb_integration": true
@@ -2797,7 +2797,7 @@
         },
         "test": "common_video_unittests",
         "test_id_prefix": "ninja://common_video:common_video_unittests/",
-        "variant_id": "iPhone 14 17.0"
+        "variant_id": "iPhone 14 17.4"
       },
       {
         "args": [
@@ -2900,7 +2900,7 @@
           "--platform",
           "iPhone 14",
           "--version",
-          "17.0",
+          "17.4",
           "--out-dir",
           "${ISOLATED_OUTDIR}",
           "--xctest",
@@ -2910,7 +2910,7 @@
         "merge": {
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
-        "name": "dcsctp_unittests iPhone 14 17.0",
+        "name": "dcsctp_unittests iPhone 14 17.4",
         "resultdb": {
           "enable": true,
           "has_native_resultdb_integration": true
@@ -2941,7 +2941,7 @@
         },
         "test": "dcsctp_unittests",
         "test_id_prefix": "ninja://net/dcsctp:dcsctp_unittests/",
-        "variant_id": "iPhone 14 17.0"
+        "variant_id": "iPhone 14 17.4"
       },
       {
         "args": [
@@ -3044,7 +3044,7 @@
           "--platform",
           "iPhone 14",
           "--version",
-          "17.0",
+          "17.4",
           "--out-dir",
           "${ISOLATED_OUTDIR}",
           "--xctest",
@@ -3054,7 +3054,7 @@
         "merge": {
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
-        "name": "modules_tests iPhone 14 17.0",
+        "name": "modules_tests iPhone 14 17.4",
         "resultdb": {
           "enable": true,
           "has_native_resultdb_integration": true
@@ -3086,7 +3086,7 @@
         },
         "test": "modules_tests",
         "test_id_prefix": "ninja://modules:modules_tests/",
-        "variant_id": "iPhone 14 17.0"
+        "variant_id": "iPhone 14 17.4"
       },
       {
         "args": [
@@ -3191,7 +3191,7 @@
           "--platform",
           "iPhone 14",
           "--version",
-          "17.0",
+          "17.4",
           "--out-dir",
           "${ISOLATED_OUTDIR}",
           "--xctest",
@@ -3201,7 +3201,7 @@
         "merge": {
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
-        "name": "modules_unittests iPhone 14 17.0",
+        "name": "modules_unittests iPhone 14 17.4",
         "resultdb": {
           "enable": true,
           "has_native_resultdb_integration": true
@@ -3234,7 +3234,7 @@
         },
         "test": "modules_unittests",
         "test_id_prefix": "ninja://modules:modules_unittests/",
-        "variant_id": "iPhone 14 17.0"
+        "variant_id": "iPhone 14 17.4"
       },
       {
         "args": [
@@ -3341,7 +3341,7 @@
           "--platform",
           "iPhone 14",
           "--version",
-          "17.0",
+          "17.4",
           "--out-dir",
           "${ISOLATED_OUTDIR}",
           "--xctest",
@@ -3351,7 +3351,7 @@
         "merge": {
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
-        "name": "rtc_media_unittests iPhone 14 17.0",
+        "name": "rtc_media_unittests iPhone 14 17.4",
         "resultdb": {
           "enable": true,
           "has_native_resultdb_integration": true
@@ -3382,7 +3382,7 @@
         },
         "test": "rtc_media_unittests",
         "test_id_prefix": "ninja://media:rtc_media_unittests/",
-        "variant_id": "iPhone 14 17.0"
+        "variant_id": "iPhone 14 17.4"
       },
       {
         "args": [
@@ -3485,7 +3485,7 @@
           "--platform",
           "iPhone 14",
           "--version",
-          "17.0",
+          "17.4",
           "--out-dir",
           "${ISOLATED_OUTDIR}",
           "--xctest",
@@ -3495,7 +3495,7 @@
         "merge": {
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
-        "name": "rtc_pc_unittests iPhone 14 17.0",
+        "name": "rtc_pc_unittests iPhone 14 17.4",
         "resultdb": {
           "enable": true,
           "has_native_resultdb_integration": true
@@ -3526,7 +3526,7 @@
         },
         "test": "rtc_pc_unittests",
         "test_id_prefix": "ninja://pc:rtc_pc_unittests/",
-        "variant_id": "iPhone 14 17.0"
+        "variant_id": "iPhone 14 17.4"
       },
       {
         "args": [
@@ -3629,7 +3629,7 @@
           "--platform",
           "iPhone 14",
           "--version",
-          "17.0",
+          "17.4",
           "--out-dir",
           "${ISOLATED_OUTDIR}",
           "--xctest",
@@ -3639,7 +3639,7 @@
         "merge": {
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
-        "name": "rtc_stats_unittests iPhone 14 17.0",
+        "name": "rtc_stats_unittests iPhone 14 17.4",
         "resultdb": {
           "enable": true,
           "has_native_resultdb_integration": true
@@ -3670,7 +3670,7 @@
         },
         "test": "rtc_stats_unittests",
         "test_id_prefix": "ninja://stats:rtc_stats_unittests/",
-        "variant_id": "iPhone 14 17.0"
+        "variant_id": "iPhone 14 17.4"
       },
       {
         "args": [
@@ -3773,7 +3773,7 @@
           "--platform",
           "iPhone 14",
           "--version",
-          "17.0",
+          "17.4",
           "--out-dir",
           "${ISOLATED_OUTDIR}",
           "--xctest",
@@ -3783,7 +3783,7 @@
         "merge": {
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
-        "name": "rtc_unittests iPhone 14 17.0",
+        "name": "rtc_unittests iPhone 14 17.4",
         "resultdb": {
           "enable": true,
           "has_native_resultdb_integration": true
@@ -3815,7 +3815,7 @@
         },
         "test": "rtc_unittests",
         "test_id_prefix": "ninja://:rtc_unittests/",
-        "variant_id": "iPhone 14 17.0"
+        "variant_id": "iPhone 14 17.4"
       },
       {
         "args": [
@@ -3920,7 +3920,7 @@
           "--platform",
           "iPhone 14",
           "--version",
-          "17.0",
+          "17.4",
           "--out-dir",
           "${ISOLATED_OUTDIR}",
           "--xctest",
@@ -3931,7 +3931,7 @@
         "merge": {
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
-        "name": "sdk_framework_unittests iPhone 14 17.0",
+        "name": "sdk_framework_unittests iPhone 14 17.4",
         "resultdb": {
           "enable": true,
           "has_native_resultdb_integration": true
@@ -3962,7 +3962,7 @@
         },
         "test": "sdk_framework_unittests",
         "test_id_prefix": "ninja://sdk:sdk_framework_unittests/",
-        "variant_id": "iPhone 14 17.0"
+        "variant_id": "iPhone 14 17.4"
       },
       {
         "args": [
@@ -4067,7 +4067,7 @@
           "--platform",
           "iPhone 14",
           "--version",
-          "17.0",
+          "17.4",
           "--out-dir",
           "${ISOLATED_OUTDIR}",
           "--xctest",
@@ -4078,7 +4078,7 @@
         "merge": {
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
-        "name": "sdk_unittests iPhone 14 17.0",
+        "name": "sdk_unittests iPhone 14 17.4",
         "resultdb": {
           "enable": true,
           "has_native_resultdb_integration": true
@@ -4109,7 +4109,7 @@
         },
         "test": "sdk_unittests",
         "test_id_prefix": "ninja://sdk:sdk_unittests/",
-        "variant_id": "iPhone 14 17.0"
+        "variant_id": "iPhone 14 17.4"
       },
       {
         "args": [
@@ -4214,7 +4214,7 @@
           "--platform",
           "iPhone 14",
           "--version",
-          "17.0",
+          "17.4",
           "--out-dir",
           "${ISOLATED_OUTDIR}",
           "--xctest",
@@ -4224,7 +4224,7 @@
         "merge": {
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
-        "name": "svc_tests iPhone 14 17.0",
+        "name": "svc_tests iPhone 14 17.4",
         "resultdb": {
           "enable": true,
           "has_native_resultdb_integration": true
@@ -4257,7 +4257,7 @@
         },
         "test": "svc_tests",
         "test_id_prefix": "ninja://pc:svc_tests/",
-        "variant_id": "iPhone 14 17.0"
+        "variant_id": "iPhone 14 17.4"
       },
       {
         "args": [
@@ -4364,7 +4364,7 @@
           "--platform",
           "iPhone 14",
           "--version",
-          "17.0",
+          "17.4",
           "--out-dir",
           "${ISOLATED_OUTDIR}",
           "--xctest",
@@ -4374,7 +4374,7 @@
         "merge": {
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
-        "name": "system_wrappers_unittests iPhone 14 17.0",
+        "name": "system_wrappers_unittests iPhone 14 17.4",
         "resultdb": {
           "enable": true,
           "has_native_resultdb_integration": true
@@ -4405,7 +4405,7 @@
         },
         "test": "system_wrappers_unittests",
         "test_id_prefix": "ninja://system_wrappers:system_wrappers_unittests/",
-        "variant_id": "iPhone 14 17.0"
+        "variant_id": "iPhone 14 17.4"
       },
       {
         "args": [
@@ -4508,7 +4508,7 @@
           "--platform",
           "iPhone 14",
           "--version",
-          "17.0",
+          "17.4",
           "--out-dir",
           "${ISOLATED_OUTDIR}",
           "--xctest",
@@ -4518,7 +4518,7 @@
         "merge": {
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
-        "name": "test_support_unittests iPhone 14 17.0",
+        "name": "test_support_unittests iPhone 14 17.4",
         "resultdb": {
           "enable": true,
           "has_native_resultdb_integration": true
@@ -4549,7 +4549,7 @@
         },
         "test": "test_support_unittests",
         "test_id_prefix": "ninja://test:test_support_unittests/",
-        "variant_id": "iPhone 14 17.0"
+        "variant_id": "iPhone 14 17.4"
       },
       {
         "args": [
@@ -4652,7 +4652,7 @@
           "--platform",
           "iPhone 14",
           "--version",
-          "17.0",
+          "17.4",
           "--out-dir",
           "${ISOLATED_OUTDIR}",
           "--xctest",
@@ -4662,7 +4662,7 @@
         "merge": {
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
-        "name": "tools_unittests iPhone 14 17.0",
+        "name": "tools_unittests iPhone 14 17.4",
         "resultdb": {
           "enable": true,
           "has_native_resultdb_integration": true
@@ -4693,7 +4693,7 @@
         },
         "test": "tools_unittests",
         "test_id_prefix": "ninja://rtc_tools:tools_unittests/",
-        "variant_id": "iPhone 14 17.0"
+        "variant_id": "iPhone 14 17.4"
       },
       {
         "args": [
@@ -4796,7 +4796,7 @@
           "--platform",
           "iPhone 14",
           "--version",
-          "17.0",
+          "17.4",
           "--out-dir",
           "${ISOLATED_OUTDIR}",
           "--xctest",
@@ -4806,7 +4806,7 @@
         "merge": {
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
-        "name": "video_engine_tests iPhone 14 17.0",
+        "name": "video_engine_tests iPhone 14 17.4",
         "resultdb": {
           "enable": true,
           "has_native_resultdb_integration": true
@@ -4838,7 +4838,7 @@
         },
         "test": "video_engine_tests",
         "test_id_prefix": "ninja://:video_engine_tests/",
-        "variant_id": "iPhone 14 17.0"
+        "variant_id": "iPhone 14 17.4"
       },
       {
         "args": [
@@ -4943,7 +4943,7 @@
           "--platform",
           "iPhone 14",
           "--version",
-          "17.0",
+          "17.4",
           "--out-dir",
           "${ISOLATED_OUTDIR}",
           "--xctest",
@@ -4953,7 +4953,7 @@
         "merge": {
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
-        "name": "voip_unittests iPhone 14 17.0",
+        "name": "voip_unittests iPhone 14 17.4",
         "resultdb": {
           "enable": true,
           "has_native_resultdb_integration": true
@@ -4984,7 +4984,7 @@
         },
         "test": "voip_unittests",
         "test_id_prefix": "ninja://:voip_unittests/",
-        "variant_id": "iPhone 14 17.0"
+        "variant_id": "iPhone 14 17.4"
       },
       {
         "args": [
@@ -5087,7 +5087,7 @@
           "--platform",
           "iPhone 14",
           "--version",
-          "17.0",
+          "17.4",
           "--out-dir",
           "${ISOLATED_OUTDIR}",
           "--xctest",
@@ -5097,7 +5097,7 @@
         "merge": {
           "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
         },
-        "name": "webrtc_nonparallel_tests iPhone 14 17.0",
+        "name": "webrtc_nonparallel_tests iPhone 14 17.4",
         "resultdb": {
           "enable": true,
           "has_native_resultdb_integration": true
@@ -5128,7 +5128,7 @@
         },
         "test": "webrtc_nonparallel_tests",
         "test_id_prefix": "ninja://:webrtc_nonparallel_tests/",
-        "variant_id": "iPhone 14 17.0"
+        "variant_id": "iPhone 14 17.4"
       },
       {
         "args": [
