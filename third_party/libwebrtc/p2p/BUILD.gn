@@ -19,7 +19,6 @@ rtc_library("rtc_p2p") {
   visibility = [ "*" ]
   sources = [
     # TODO(bugs.webrtc.org/15769): Finish cleanup and remove.
-
     "base/active_ice_controller_factory_interface.h",  # To be removed (Chrome)
     "base/active_ice_controller_interface.h",  # To be removed (Internal)
     "base/basic_ice_controller.h",  # To be removed (Chrome)
@@ -258,13 +257,53 @@ rtc_library("basic_packet_socket_factory") {
   absl_deps = [ "//third_party/abseil-cpp/absl/memory" ]
 }
 
+rtc_library("basic_port_allocator") {
+  sources = [
+    "client/basic_port_allocator.cc",
+    "client/basic_port_allocator.h",
+  ]
+  deps = [
+    ":basic_packet_socket_factory",
+    ":port",
+    ":port_allocator",
+    ":relay_port_factory_interface",
+    ":rtc_p2p",
+    ":stun_port",
+    ":tcp_port",
+    ":turn_port",
+    ":turn_port_factory",
+    ":udp_port",
+    "../api:field_trials_view",
+    "../api:turn_customizer",
+    "../api/task_queue:pending_task_safety_flag",
+    "../api/transport:field_trial_based_config",
+    "../api/units:time_delta",
+    "../rtc_base:checks",
+    "../rtc_base:event_tracer",
+    "../rtc_base:logging",
+    "../rtc_base:macromagic",
+    "../rtc_base:network",
+    "../rtc_base:network_constants",
+    "../rtc_base:ssl",
+    "../rtc_base:stringutils",
+    "../rtc_base:threading",
+    "../rtc_base/experiments:field_trial_parser",
+    "../rtc_base/memory:always_valid_pointer",
+    "../rtc_base/network:received_packet",
+    "../rtc_base/system:rtc_export",
+    "../system_wrappers:metrics",
+  ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/algorithm:container",
+    "//third_party/abseil-cpp/absl/memory",
+    "//third_party/abseil-cpp/absl/strings:string_view",
+  ]
+}
+
 rtc_source_set("candidate_pair_interface") {
   sources = [ "base/candidate_pair_interface.h" ]
 }
 
-# This set of files is too intertwined to break into separate
-# targets at this point.
-# TODO(bugs.webrtc.org/15796): Finish breakup
 rtc_library("connection") {
   sources = [
     "base/connection.cc",
@@ -857,7 +896,7 @@ rtc_library("transport_description_factory") {
   ]
   deps = [
     ":ice_credentials_iterator",
-    ":rtc_p2p",
+    ":transport_description",
     "../api:field_trials_view",
     "../rtc_base:logging",
     "../rtc_base:ssl",
@@ -869,6 +908,7 @@ rtc_source_set("transport_info") {
   deps = [
     ":p2p_constants",
     ":rtc_p2p",
+    ":transport_description",
     "../api:candidate",
     "../rtc_base:ssl",
   ]
@@ -879,51 +919,32 @@ rtc_source_set("udp_port") {
   deps = [ ":stun_port" ]
 }
 
-rtc_library("basic_port_allocator_and_turn_port") {
+rtc_library("turn_port") {
   sources = [
     "base/turn_port.cc",
     "base/turn_port.h",
-    "client/basic_port_allocator.cc",
-    "client/basic_port_allocator.h",
-    "client/turn_port_factory.cc",
-    "client/turn_port_factory.h",
   ]
   deps = [
-    ":basic_packet_socket_factory",
     ":connection",
     ":p2p_constants",
     ":port",
     ":port_allocator",
     ":relay_port_factory_interface",
-    ":stun_port",
-    ":tcp_port",
-    ":udp_port",
     "../api:async_dns_resolver",
-    "../api:field_trials_view",
     "../api:turn_customizer",
     "../api/task_queue",
     "../api/task_queue:pending_task_safety_flag",
-    "../api/transport:field_trial_based_config",
     "../api/transport:stun_types",
-    "../api/units:time_delta",
     "../rtc_base:async_packet_socket",
     "../rtc_base:byte_order",
     "../rtc_base:checks",
-    "../rtc_base:event_tracer",
     "../rtc_base:logging",
-    "../rtc_base:macromagic",
     "../rtc_base:net_helpers",
-    "../rtc_base:network",
-    "../rtc_base:network_constants",
     "../rtc_base:socket_address",
     "../rtc_base:ssl",
     "../rtc_base:stringutils",
-    "../rtc_base:threading",
     "../rtc_base/experiments:field_trial_parser",
-    "../rtc_base/memory:always_valid_pointer",
     "../rtc_base/network:received_packet",
-    "../rtc_base/system:rtc_export",
-    "../system_wrappers:metrics",
   ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/algorithm:container",
@@ -931,6 +952,21 @@ rtc_library("basic_port_allocator_and_turn_port") {
     "//third_party/abseil-cpp/absl/strings",
     "//third_party/abseil-cpp/absl/strings:string_view",
     "//third_party/abseil-cpp/absl/types:optional",
+  ]
+}
+
+rtc_library("turn_port_factory") {
+  sources = [
+    "client/turn_port_factory.cc",
+    "client/turn_port_factory.h",
+  ]
+  deps = [
+    ":port",
+    ":port_allocator",
+    ":relay_port_factory_interface",
+    ":rtc_p2p",
+    ":turn_port",
+    "../rtc_base:async_packet_socket",
   ]
 }
 
@@ -996,7 +1032,7 @@ if (rtc_include_tests) {
     deps = [
       ":basic_packet_socket_factory",
       ":connection",
-      ":rtc_p2p",
+      ":port_allocator",
       ":udp_port",
       "../rtc_base:net_helpers",
       "../rtc_base:net_test_helpers",
@@ -1037,7 +1073,6 @@ if (rtc_include_tests) {
       ":ice_transport_internal",
       ":p2p_server_utils",
       ":packet_transport_internal",
-      ":rtc_p2p",
       ":transport_description",
       "../api:dtls_transport_interface",
       "../api:libjingle_peerconnection_api",
@@ -1096,7 +1131,7 @@ if (rtc_include_tests) {
       ":async_stun_tcp_socket",
       ":basic_ice_controller",
       ":basic_packet_socket_factory",
-      ":basic_port_allocator_and_turn_port",
+      ":basic_port_allocator",
       ":connection",
       ":dtls_transport",
       ":fake_ice_transport",
@@ -1108,6 +1143,8 @@ if (rtc_include_tests) {
       ":p2p_test_utils",
       ":p2p_transport_channel",
       ":packet_transport_internal",
+      ":port",
+      ":port_allocator",
       ":port_interface",
       ":pseudo_tcp",
       ":regathering_controller",
@@ -1119,6 +1156,7 @@ if (rtc_include_tests) {
       ":tcp_port",
       ":transport_description",
       ":transport_description_factory",
+      ":turn_port",
       ":wrapping_active_ice_controller",
       "../api:array_view",
       "../api:candidate",
@@ -1254,7 +1292,6 @@ if (rtc_include_tests) {
       ":basic_packet_socket_factory",
       ":libstunprober",
       ":p2p_test_utils",
-      ":rtc_p2p",
       "../rtc_base:checks",
       "../rtc_base:gunit_helpers",
       "../rtc_base:ip_address",

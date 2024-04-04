@@ -206,7 +206,7 @@ index 571049f3e4..f393179bbb 100644
      } else {
        deps += [
 diff --git a/api/BUILD.gn b/api/BUILD.gn
-index dce687e76b..fe97e1491a 100644
+index 1f03468d65..82eb7ffcd0 100644
 --- a/api/BUILD.gn
 +++ b/api/BUILD.gn
 @@ -40,6 +40,9 @@ rtc_source_set("enable_media") {
@@ -290,7 +290,7 @@ index dce687e76b..fe97e1491a 100644
    visibility = [ "*" ]
    cflags = []
    sources = [
-@@ -388,6 +415,7 @@ rtc_library("libjingle_peerconnection_api") {
+@@ -389,6 +416,7 @@ rtc_library("libjingle_peerconnection_api") {
      "//third_party/abseil-cpp/absl/types:optional",
    ]
  }
@@ -298,7 +298,7 @@ index dce687e76b..fe97e1491a 100644
  
  rtc_source_set("frame_transformer_interface") {
    visibility = [ "*" ]
-@@ -561,6 +589,7 @@ rtc_source_set("peer_network_dependencies") {
+@@ -562,6 +590,7 @@ rtc_source_set("peer_network_dependencies") {
  }
  
  rtc_source_set("peer_connection_quality_test_fixture_api") {
@@ -306,7 +306,7 @@ index dce687e76b..fe97e1491a 100644
    visibility = [ "*" ]
    testonly = true
    sources = [ "test/peerconnection_quality_test_fixture.h" ]
-@@ -610,6 +639,7 @@ rtc_source_set("peer_connection_quality_test_fixture_api") {
+@@ -611,6 +640,7 @@ rtc_source_set("peer_connection_quality_test_fixture_api") {
      "//third_party/abseil-cpp/absl/types:optional",
    ]
  }
@@ -314,7 +314,7 @@ index dce687e76b..fe97e1491a 100644
  
  rtc_source_set("frame_generator_api") {
    visibility = [ "*" ]
-@@ -729,6 +759,7 @@ rtc_library("create_frame_generator") {
+@@ -730,6 +760,7 @@ rtc_library("create_frame_generator") {
    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
  }
  
@@ -322,7 +322,7 @@ index dce687e76b..fe97e1491a 100644
  rtc_library("create_peer_connection_quality_test_frame_generator") {
    visibility = [ "*" ]
    testonly = true
-@@ -745,6 +776,7 @@ rtc_library("create_peer_connection_quality_test_frame_generator") {
+@@ -746,6 +777,7 @@ rtc_library("create_peer_connection_quality_test_frame_generator") {
    ]
    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
  }
@@ -330,7 +330,7 @@ index dce687e76b..fe97e1491a 100644
  
  rtc_source_set("libjingle_logging_api") {
    visibility = [ "*" ]
-@@ -924,6 +956,7 @@ rtc_source_set("refcountedbase") {
+@@ -925,6 +957,7 @@ rtc_source_set("refcountedbase") {
    ]
  }
  
@@ -338,7 +338,7 @@ index dce687e76b..fe97e1491a 100644
  rtc_library("ice_transport_factory") {
    visibility = [ "*" ]
    sources = [
-@@ -946,6 +979,7 @@ rtc_library("ice_transport_factory") {
+@@ -948,6 +981,7 @@ rtc_library("ice_transport_factory") {
      "rtc_event_log:rtc_event_log",
    ]
  }
