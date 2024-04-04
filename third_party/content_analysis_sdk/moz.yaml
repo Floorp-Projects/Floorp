@@ -17,6 +17,9 @@ vendoring:
   source-hosting: github
   exclude:
     - .gitattributes
+  keep:
+    - demo/handler_misbehaving.h
+    - demo/modes.h
   patches:
     - agent_improvements.patch
 
