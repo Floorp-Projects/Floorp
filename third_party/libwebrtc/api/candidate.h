@@ -32,10 +32,10 @@ namespace cricket {
 
 // TODO(tommi): These are temporarily here, moved from `port.h` and will
 // eventually be removed once we use enums instead of strings for these values.
-RTC_EXPORT extern const char LOCAL_PORT_TYPE[];
-RTC_EXPORT extern const char STUN_PORT_TYPE[];
-RTC_EXPORT extern const char PRFLX_PORT_TYPE[];
-RTC_EXPORT extern const char RELAY_PORT_TYPE[];
+RTC_EXPORT extern const absl::string_view LOCAL_PORT_TYPE;
+RTC_EXPORT extern const absl::string_view STUN_PORT_TYPE;
+RTC_EXPORT extern const absl::string_view PRFLX_PORT_TYPE;
+RTC_EXPORT extern const absl::string_view RELAY_PORT_TYPE;
 
 // TURN servers are limited to 32 in accordance with
 // https://w3c.github.io/webrtc-pc/#dom-rtcconfiguration-iceservers
