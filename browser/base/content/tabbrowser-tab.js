@@ -259,6 +259,14 @@
       return this._lastAccessed == Infinity ? Date.now() : this._lastAccessed;
     }
 
+    /**
+     * Returns a timestamp which attempts to represent the last time the user saw this tab.
+     * If the tab has not been active in this session, any lastAccessed is used. We
+     * differentiate between selected and explicitly visible; a selected tab in a hidden
+     * window is last seen when that window and tab were last visible.
+     * We use the application start time as a fallback value when no other suitable value
+     * is available.
+     */
     get lastSeenActive() {
       const isForegroundWindow =
         this.ownerGlobal ==
@@ -270,8 +278,16 @@
       if (this._lastSeenActive) {
         return this._lastSeenActive;
       }
-      // Use the application start time as the fallback value
-      return Services.startup.getStartupInfo().start.getTime();
+
+      const appStartTime = Services.startup.getStartupInfo().start.getTime();
+      if (!this._lastAccessed || this._lastAccessed >= appStartTime) {
+        // When the tab was created this session but hasn't been seen by the user,
+        // default to the application start time.
+        return appStartTime;
+      }
+      // The tab was restored from a previous session but never seen.
+      // Use the lastAccessed as the best proxy for when the user might have seen it.
+      return this._lastAccessed;
     }
 
     get _overPlayingIcon() {

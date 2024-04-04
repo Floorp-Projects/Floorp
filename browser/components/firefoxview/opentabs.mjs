@@ -1024,7 +1024,7 @@ function getTabListItems(tabs, isRecentBrowsing) {
           ? JSON.stringify({ tabTitle: tab.label })
           : null,
       tabElement: tab,
-      time: tab.lastAccessed,
+      time: tab.lastSeenActive,
       title: tab.label,
       url,
     };
