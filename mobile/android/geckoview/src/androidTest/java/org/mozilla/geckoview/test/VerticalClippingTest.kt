@@ -11,7 +11,6 @@ import androidx.test.filters.MediumTest
 import org.hamcrest.Matchers
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.notNullValue
-import org.junit.Assume.assumeThat
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.GeckoResult
@@ -71,8 +70,6 @@ class VerticalClippingTest : BaseSessionTest() {
     @WithDisplay(height = SCREEN_HEIGHT, width = SCREEN_WIDTH)
     @Test
     fun verticalClippingSucceeds() {
-        // Disable failing test on Webrender. Bug 1670267
-        assumeThat(sessionRule.env.isWebrender, equalTo(false))
         sessionRule.display?.setVerticalClipping(45)
         mainSession.loadTestPath(FIXED_BOTTOM)
         sessionRule.waitUntilCalled(object : ContentDelegate {
