@@ -32,6 +32,7 @@ export class CredentialsAndSecurityBackupResource extends BackupResource {
       "logins-backup.json",
       "autofill-profiles.json",
       "credentialstate.sqlite",
+      "signedInUser.json",
     ];
     let credentialsSize = 0;
 

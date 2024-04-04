@@ -17,7 +17,6 @@ export class MiscDataBackupResource extends BackupResource {
   async measure(profilePath = PathUtils.profileDir) {
     const files = [
       "times.json",
-      "signedInUser.json",
       "enumerate_devices.txt",
       "protections.sqlite",
       "SiteSecurityServiceState.bin",
