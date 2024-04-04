@@ -143,7 +143,7 @@ class NativeLayerRootCA : public NativeLayerRoot {
 
   void SetWindowIsFullscreen(bool aFullscreen);
 
-  VideoLowPowerType CheckVideoLowPower(const MutexAutoLock& aProofOfLock);
+  VideoLowPowerType CheckVideoLowPower();
 
  protected:
   explicit NativeLayerRootCA(CALayer* aLayer);
@@ -153,7 +153,8 @@ class NativeLayerRootCA : public NativeLayerRoot {
     explicit Representation(CALayer* aRootCALayer);
     ~Representation();
     void Commit(WhichRepresentation aRepresentation,
-                const nsTArray<RefPtr<NativeLayerCA>>& aSublayers);
+                const nsTArray<RefPtr<NativeLayerCA>>& aSublayers,
+                bool aWindowIsFullscreen);
     CALayer* mRootCALayer = nullptr;  // strong
     bool mMutatedLayerStructure = false;
   };
@@ -268,6 +269,8 @@ class NativeLayerCA : public NativeLayer {
 
   void AttachExternalImage(wr::RenderTextureHost* aExternalImage) override;
 
+  void SetRootWindowIsFullscreen(bool aFullscreen);
+
  protected:
   friend class NativeLayerRootCA;
 
@@ -332,7 +335,8 @@ class NativeLayerCA : public NativeLayer {
   Maybe<SurfaceWithInvalidRegion> GetUnusedSurfaceAndCleanUp(
       const MutexAutoLock& aProofOfLock);
 
-  bool IsVideo(const MutexAutoLock& aProofOfLock);
+  bool IsVideo();
+  bool IsVideoAndLocked(const MutexAutoLock& aProofOfLock);
   bool ShouldSpecializeVideo(const MutexAutoLock& aProofOfLock);
   bool HasExtent() const { return mHasExtent; }
   void SetHasExtent(bool aHasExtent) { mHasExtent = aHasExtent; }
@@ -476,10 +480,10 @@ class NativeLayerCA : public NativeLayer {
   bool mSurfaceIsFlipped = false;
   CFTypeRefPtr<CGColorRef> mColor;
   const bool mIsOpaque = false;
+  bool mRootWindowIsFullscreen = false;
   bool mSpecializeVideo = false;
   bool mHasExtent = false;
   bool mIsDRM = false;
-  bool mIsTextureHostVideo = false;
 
 #ifdef NIGHTLY_BUILD
   // Track the consistency of our caller's API usage. Layers that are drawn
