@@ -365,7 +365,7 @@ class GeckoWebExtension(
                 creatorUrl = it.creatorUrl,
                 reviewUrl = it.reviewUrl,
                 version = it.version,
-                permissions = it.permissions.toList(),
+                permissions = it.promptPermissions.toList(),
                 optionalPermissions = it.optionalPermissions.toList(),
                 grantedOptionalPermissions = it.grantedOptionalPermissions.toList(),
                 grantedOptionalOrigins = it.grantedOptionalOrigins.toList(),

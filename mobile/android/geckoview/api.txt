@@ -2689,7 +2689,8 @@ package org.mozilla.geckoview {
     field @NonNull public final String[] optionalPermissions;
     field @Nullable public final String optionsPageUrl;
     field @NonNull public final String[] origins;
-    field @NonNull public final String[] permissions;
+    field @Deprecated @DeprecationSchedule(id="web-extension-permission",version=131) @NonNull public final String[] permissions;
+    field @NonNull public final String[] promptPermissions;
     field public final int reviewCount;
     field @Nullable public final String reviewUrl;
     field public final int signedState;

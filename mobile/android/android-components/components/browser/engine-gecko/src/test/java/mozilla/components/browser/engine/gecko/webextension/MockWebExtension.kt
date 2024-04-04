@@ -63,7 +63,7 @@ fun mockNativeWebExtensionMetaData(
 ): WebExtension.MetaData {
     val metadata: WebExtension.MetaData = mock()
     ReflectionUtils.setField(metadata, "icon", icon)
-    ReflectionUtils.setField(metadata, "permissions", permissions)
+    ReflectionUtils.setField(metadata, "promptPermissions", permissions)
     ReflectionUtils.setField(metadata, "optionalPermissions", optionalPermissions)
     ReflectionUtils.setField(metadata, "grantedOptionalPermissions", grantedOptionalPermissions)
     ReflectionUtils.setField(metadata, "optionalOrigins", optionalOrigins)
