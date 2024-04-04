@@ -120,6 +120,12 @@ class MediaKeySession final : public DOMEventTargetHelper,
   already_AddRefed<DetailedPromise> MakePromise(ErrorResult& aRv,
                                                 const nsACString& aName);
 
+  // EME spec, starting from 6.6.2.7
+  // https://w3c.github.io/encrypted-media/
+  void CompleteGenerateRequest(const nsString& aInitDataType,
+                               nsTArray<uint8_t>& aData,
+                               DetailedPromise* aPromise);
+
   RefPtr<DetailedPromise> mClosed;
 
   RefPtr<MediaKeyError> mMediaKeyError;

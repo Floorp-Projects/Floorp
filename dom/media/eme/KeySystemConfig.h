@@ -11,6 +11,7 @@
 #include "nsTArray.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/dom/MediaKeysBinding.h"
+#include "mozilla/dom/MediaKeySystemAccessBinding.h"
 
 namespace mozilla {
 
@@ -20,6 +21,9 @@ struct KeySystemConfig {
  public:
   using SupportedConfigsPromise =
       MozPromise<nsTArray<KeySystemConfig>, bool /* aIgnored */,
+                 /* IsExclusive = */ true>;
+  using KeySystemConfigPromise =
+      MozPromise<dom::MediaKeySystemConfiguration, bool /* aIgnored */,
                  /* IsExclusive = */ true>;
 
   // EME MediaKeysRequirement:
@@ -136,9 +140,8 @@ struct KeySystemConfig {
     Software,
     Hardware,
   };
-  static void CreateKeySystemConfigs(
-      const nsTArray<KeySystemConfigRequest>& aRequests,
-      nsTArray<KeySystemConfig>& aOutConfigs);
+  static RefPtr<SupportedConfigsPromise> CreateKeySystemConfigs(
+      const nsTArray<KeySystemConfigRequest>& aRequests);
   static void GetGMPKeySystemConfigs(dom::Promise* aPromise);
 
   KeySystemConfig() = default;
@@ -175,10 +178,6 @@ struct KeySystemConfig {
   KeySystemConfig& operator=(KeySystemConfig&&) = default;
 
   nsString GetDebugInfo() const;
-
-  // Return true if the given key system is equal to `mKeySystem`, or it can be
-  // mapped to the same key system
-  bool IsSameKeySystem(const nsAString& aKeySystem) const;
 
   nsString mKeySystem;
   nsTArray<nsString> mInitDataTypes;
