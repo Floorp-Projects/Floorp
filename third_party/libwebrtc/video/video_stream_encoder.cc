@@ -2102,6 +2102,8 @@ EncodedImage VideoStreamEncoder::AugmentEncodedImage(
             .Parse(codec_type, stream_idx, image_copy.data(), image_copy.size())
             .value_or(-1);
   }
+  TRACE_EVENT2("webrtc", "VideoStreamEncoder::AugmentEncodedImage",
+               "stream_idx", stream_idx, "qp", image_copy.qp_);
   RTC_LOG(LS_VERBOSE) << __func__ << " ntp time " << encoded_image.NtpTimeMs()
                       << " stream_idx " << stream_idx << " qp "
                       << image_copy.qp_;

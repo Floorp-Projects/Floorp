@@ -322,7 +322,7 @@ index 1634678aeb..17146ce205 100644
 -
  #endif  // MODULES_VIDEO_CODING_INCLUDE_VIDEO_ERROR_CODES_H_
 diff --git a/video/video_stream_encoder.cc b/video/video_stream_encoder.cc
-index 6f398ec455..3730f6eecb 100644
+index 73cd7826f9..ae55bfda23 100644
 --- a/video/video_stream_encoder.cc
 +++ b/video/video_stream_encoder.cc
 @@ -937,8 +937,6 @@ void VideoStreamEncoder::ConfigureEncoder(VideoEncoderConfig config,
