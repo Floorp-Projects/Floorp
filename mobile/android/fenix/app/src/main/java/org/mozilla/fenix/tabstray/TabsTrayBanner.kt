@@ -24,6 +24,7 @@ import androidx.compose.material.ripple.RippleAlpha
 import androidx.compose.material.ripple.RippleTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -304,6 +305,16 @@ private fun MultiSelectBanner(
     onShareSelectedTabs: () -> Unit,
 ) {
     var showMenu by remember { mutableStateOf(false) }
+    val buttonsEnabled by remember(selectedTabCount) {
+        derivedStateOf {
+            selectedTabCount > 0
+        }
+    }
+    val buttonTint = if (buttonsEnabled) {
+        FirefoxTheme.colors.iconOnColor
+    } else {
+        FirefoxTheme.colors.iconOnColorDisabled
+    }
 
     Row(
         modifier = Modifier
@@ -332,32 +343,38 @@ private fun MultiSelectBanner(
         IconButton(
             onClick = onSaveToCollectionsClick,
             modifier = Modifier.testTag(TabsTrayTestTag.collectionsButton),
-            enabled = selectedTabCount > 0,
+            enabled = buttonsEnabled,
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_tab_collection),
                 contentDescription = stringResource(
                     id = R.string.tab_tray_collection_button_multiselect_content_description,
                 ),
-                tint = FirefoxTheme.colors.iconOnColor,
+                tint = buttonTint,
             )
         }
 
-        IconButton(onClick = onShareSelectedTabs) {
+        IconButton(
+            onClick = onShareSelectedTabs,
+            enabled = buttonsEnabled,
+        ) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_share),
                 contentDescription = stringResource(
                     id = R.string.tab_tray_multiselect_share_content_description,
                 ),
-                tint = FirefoxTheme.colors.iconOnColor,
+                tint = buttonTint,
             )
         }
 
-        IconButton(onClick = { showMenu = true }) {
+        IconButton(
+            onClick = { showMenu = true },
+            enabled = buttonsEnabled,
+        ) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_menu),
                 contentDescription = stringResource(id = R.string.tab_tray_multiselect_menu_content_description),
-                tint = FirefoxTheme.colors.iconOnColor,
+                tint = buttonTint,
             )
 
             ContextualMenu(
@@ -415,6 +432,14 @@ private fun TabsTrayBannerMultiselectPreview() {
                 ),
             ),
         ),
+    )
+}
+
+@LightDarkPreview
+@Composable
+private fun TabsTrayBannerMultiselectNoTabsSelectedPreview() {
+    TabsTrayBannerPreviewRoot(
+        selectMode = TabsTrayState.Mode.Select(selectedTabs = setOf()),
     )
 }
 
