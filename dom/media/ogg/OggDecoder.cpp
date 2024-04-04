@@ -24,7 +24,10 @@ bool OggDecoder::IsSupportedType(const MediaContainerType& aContainerType) {
     return false;
   }
 
-  const bool isOggVideo = (aContainerType.Type() != MEDIAMIMETYPE(AUDIO_OGG));
+  const bool isOggVideo = (aContainerType.Type() == MEDIAMIMETYPE(VIDEO_OGG));
+  if (isOggVideo && !StaticPrefs::media_theora_enabled()) {
+    return false;
+  }
 
   const MediaCodecs& codecs = aContainerType.ExtendedType().Codecs();
   if (codecs.IsEmpty()) {
@@ -40,8 +43,9 @@ bool OggDecoder::IsSupportedType(const MediaContainerType& aContainerType) {
     }
     // Note: Only accept Theora in a video container type, not in an audio
     // container type.
-    if (isOggVideo && codec.EqualsLiteral("theora")) {
-      continue;
+    if (aContainerType.Type() != MEDIAMIMETYPE(AUDIO_OGG) &&
+        codec.EqualsLiteral("theora")) {
+      return StaticPrefs::media_theora_enabled();
     }
     // Some unsupported codec.
     return false;
