@@ -11,6 +11,7 @@ import io
 import json
 import logging
 import os
+from multiprocessing import Pool
 
 import mozpack.path as mozpath
 from mach.mixin.logging import LoggingMixin
@@ -20,6 +21,39 @@ from mozbuild.util import FileAvoidWrite
 
 # There are various imports in this file in functions to avoid adding
 # dependencies to config.status. See bug 949875.
+
+
+class WebIDLPool:
+    """
+    Distribute generation load across several processes, avoiding redundant state
+    copies.
+    """
+
+    GeneratorState = None
+
+    def __init__(self, GeneratorState, *, processes=None):
+        # As a special case, don't spawn an extra process if processes=1
+        if processes == 1:
+            WebIDLPool._init(GeneratorState)
+
+            class SeqPool:
+                def map(self, *args):
+                    return list(map(*args))
+
+            self.pool = SeqPool()
+        else:
+            self.pool = Pool(initializer=WebIDLPool._init, initargs=(GeneratorState,))
+
+    def run(self, filenames):
+        return self.pool.map(WebIDLPool._run, filenames)
+
+    @staticmethod
+    def _init(GeneratorState):
+        WebIDLPool.GeneratorState = GeneratorState
+
+    @staticmethod
+    def _run(filename):
+        return WebIDLPool.GeneratorState._generate_build_files_for_webidl(filename)
 
 
 class BuildResult(object):
@@ -256,7 +290,7 @@ class WebIDLCodegenManager(LoggingMixin):
 
         return self._config
 
-    def generate_build_files(self):
+    def generate_build_files(self, *, processes=None):
         """Generate files required for the build.
 
         This function is in charge of generating all the .h/.cpp files derived
@@ -284,6 +318,9 @@ class WebIDLCodegenManager(LoggingMixin):
            file.
         3. If an output file is missing, ensure it is present by performing
            necessary regeneration.
+
+        if `processes` is set to None, run in parallel using the
+        multiprocess.Pool default. If set to 1, don't use extra processes.
         """
         # Despite #1 above, we assume the build system is smart enough to not
         # invoke us if nothing has changed. Therefore, any invocation means
@@ -316,11 +353,20 @@ class WebIDLCodegenManager(LoggingMixin):
             d.identifier.name for d in self._config.getDictionariesConvertibleFromJS()
         )
 
+        # Distribute the generation load across several processes. This requires
+        # a) that `self' is serializable and b) that `self' is unchanged by
+        # _generate_build_files_for_webidl(...)
+        ordered_changed_inputs = sorted(changed_inputs)
+        pool = WebIDLPool(self, processes=processes)
+        generation_results = pool.run(ordered_changed_inputs)
+
         # Generate bindings from .webidl files.
-        for filename in sorted(changed_inputs):
+        for filename, generation_result in zip(
+            ordered_changed_inputs, generation_results
+        ):
             basename = mozpath.basename(filename)
             result.inputs.add(filename)
-            written, deps = self._generate_build_files_for_webidl(filename)
+            written, deps = generation_result
             result.created |= written[0]
             result.updated |= written[1]
             result.unchanged |= written[2]
@@ -565,6 +611,8 @@ class WebIDLCodegenManager(LoggingMixin):
 
         return paths
 
+    # Parallelization of the generation step relies on this method not changing
+    # the internal state of the object
     def _generate_build_files_for_webidl(self, filename):
         from Codegen import CGBindingRoot, CGEventRoot
 
