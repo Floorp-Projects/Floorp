@@ -7,6 +7,10 @@ support-files = [
   "image.png",
   "video.sjs",
 ]
+# The video used in those tests crash the Android emulator's VP9 decoder.
+prefs = [
+  "media.android-media-codec.enabled=false",
+]
 
 ["test_canvas2d_crossorigin.html"]
 skip-if = [
