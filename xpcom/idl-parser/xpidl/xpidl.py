@@ -184,19 +184,26 @@ class Builtin(object):
 builtinNames = [
     Builtin("boolean", "bool", "bool", "boolean"),
     Builtin("void", "void", "libc::c_void", "void"),
-    Builtin("octet", "uint8_t", "u8", "u8", False, True),
-    Builtin("short", "int16_t", "i16", "i16", True, True),
-    Builtin("long", "int32_t", "i32", "i32", True, True),
-    Builtin("long long", "int64_t", "i64", "i64", True, True),
-    Builtin("unsigned short", "uint16_t", "u16", "u16", False, True),
-    Builtin("unsigned long", "uint32_t", "u32", "u32", False, True),
-    Builtin("unsigned long long", "uint64_t", "u64", "u64", False, True),
+    Builtin("int8_t", "int8_t", "i8", "i8", True, True),
+    Builtin("int16_t", "int16_t", "i16", "i16", True, True),
+    Builtin("int32_t", "int32_t", "i32", "i32", True, True),
+    Builtin("int64_t", "int64_t", "i64", "i64", True, True),
+    Builtin("uint8_t", "uint8_t", "u8", "u8", False, True),
+    Builtin("uint16_t", "uint16_t", "u16", "u16", False, True),
+    Builtin("uint32_t", "uint32_t", "u32", "u32", False, True),
+    Builtin("uint64_t", "uint64_t", "u64", "u64", False, True),
+    Builtin("nsresult", "nsresult", "nserror::nsresult", "nsresult"),
     Builtin("float", "float", "libc::c_float", "float"),
     Builtin("double", "double", "libc::c_double", "double"),
     Builtin("char", "char", "libc::c_char", "string"),
     Builtin("string", "char *", "*const libc::c_char", "string"),
     Builtin("wchar", "char16_t", "u16", "string"),
     Builtin("wstring", "char16_t *", "*const u16", "string"),
+    # NOTE: char16_t is the same type as `wchar` in C++, however it is reflected
+    # into JS as an integer, allowing it to be used in constants.
+    # This inconsistency sucks, but reflects existing usage so unfortunately
+    # isn't very easy to change.
+    Builtin("char16_t", "char16_t", "u16", "u16", False, True),
     # As seen in mfbt/RefCountType.h, this type has special handling to
     # maintain binary compatibility with MSCOM's IUnknown that cannot be
     # expressed in XPIDL.
@@ -208,9 +215,23 @@ builtinNames = [
     ),
 ]
 
+# Allow using more C-style names for the basic integer types.
+builtinAlias = [
+    ("octet", "uint8_t"),
+    ("unsigned short", "uint16_t"),
+    ("unsigned long", "uint32_t"),
+    ("unsigned long long", "uint64_t"),
+    ("short", "int16_t"),
+    ("long", "int32_t"),
+    ("long long", "int64_t"),
+]
+
 builtinMap = {}
 for b in builtinNames:
     builtinMap[b.name] = b
+
+for alias, name in builtinAlias:
+    builtinMap[alias] = builtinMap[name]
 
 
 class Location(object):
@@ -486,14 +507,6 @@ class Typedef(object):
         self.location = location
         self.doccomments = doccomments
 
-        # C++ stdint types and the bool typedef from nsrootidl.idl are marked
-        # with [substitute], and emit as the underlying builtin type directly.
-        self.substitute = False
-        for name, value, aloc in attlist:
-            if name != "substitute" or value is not None:
-                raise IDLError(f"Unexpected attribute {name}({value})", aloc)
-            self.substitute = True
-
     def __eq__(self, other):
         return self.name == other.name and self.type == other.type
 
@@ -505,24 +518,12 @@ class Typedef(object):
             raise IDLError("Unsupported typedef target type", self.location)
 
     def nativeType(self, calltype):
-        if self.substitute:
-            return self.realtype.nativeType(calltype)
-
         return "%s %s" % (self.name, "*" if "out" in calltype else "")
 
     def rustType(self, calltype):
-        if self.substitute:
-            return self.realtype.rustType(calltype)
-
-        if self.name == "nsresult":
-            return "%s::nserror::nsresult" % ("*mut " if "out" in calltype else "")
-
         return "%s%s" % ("*mut " if "out" in calltype else "", self.name)
 
     def tsType(self):
-        if self.substitute:
-            return self.realtype.tsType()
-
         return self.name
 
     def __str__(self):
@@ -1081,7 +1082,7 @@ class ConstMember(object):
             basetype = basetype.realtype
         if not isinstance(basetype, Builtin) or not basetype.maybeConst:
             raise IDLError(
-                "const may only be a short or long type, not %s" % self.type,
+                "const may only be an integer type, not %s" % self.type.name,
                 self.location,
             )
 
@@ -1440,9 +1441,9 @@ class Method(object):
                         "size_is parameter of an input must also be an input",
                         p.location,
                     )
-                if getBuiltinOrNativeTypeName(size_param.realtype) != "unsigned long":
+                if getBuiltinOrNativeTypeName(size_param.realtype) != "uint32_t":
                     raise IDLError(
-                        "size_is parameter must have type 'unsigned long'",
+                        "size_is parameter must have type 'uint32_t'",
                         p.location,
                     )
             if p.iid_is:
@@ -1688,8 +1689,8 @@ TypeId = namedtuple("TypeId", "name params")
 
 
 # Make str(TypeId) produce a nicer value
-TypeId.__str__ = (
-    lambda self: "%s<%s>" % (self.name, ", ".join(str(p) for p in self.params))
+TypeId.__str__ = lambda self: (
+    "%s<%s>" % (self.name, ", ".join(str(p) for p in self.params))
     if self.params is not None
     else self.name
 )

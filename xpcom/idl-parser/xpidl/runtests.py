@@ -102,7 +102,7 @@ void bar();
         self.assertEqual(xpidl.TypeId("long"), m.params[2].type)
         self.assertEqual("in", m.params[2].paramtype)
         self.assertTrue(isinstance(m.params[2].realtype, xpidl.LegacyArray))
-        self.assertEqual("long", m.params[2].realtype.type.name)
+        self.assertEqual("int32_t", m.params[2].realtype.type.name)
 
     def testAttribute(self):
         i = self.p.parse(
