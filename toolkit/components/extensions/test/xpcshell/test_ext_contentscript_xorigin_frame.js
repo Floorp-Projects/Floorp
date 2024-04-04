@@ -5,6 +5,12 @@ const server = createHttpServer({
 });
 server.registerDirectory("/data/", do_get_file("data"));
 
+// By default, fission.webContentIsolationStrategy=1 (IsolateHighValue). When
+// Fission is enabled on Android, the pref value 2 (IsolateHighValue) will be
+// used instead. Set to 1 (IsolateEverything) to make sure the subframe in this
+// test gets its own process, independently of the default prefs on Android.
+Services.prefs.setIntPref("fission.webContentIsolationStrategy", 1);
+
 add_task(async function test_process_switch_cross_origin_frame() {
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {
