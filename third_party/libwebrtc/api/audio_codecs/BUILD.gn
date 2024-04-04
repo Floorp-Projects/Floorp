@@ -42,6 +42,7 @@ rtc_library("audio_codecs_api") {
     "../../rtc_base:refcount",
     "../../rtc_base:sanitizer",
     "../../rtc_base/system:rtc_export",
+    "../units:data_rate",
     "../units:time_delta",
   ]
   absl_deps = [

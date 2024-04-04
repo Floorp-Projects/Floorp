@@ -216,6 +216,8 @@ class AudioSendStream final : public webrtc::AudioSendStream,
       false;
   absl::optional<std::pair<TimeDelta, TimeDelta>> frame_length_range_
       RTC_GUARDED_BY(worker_thread_checker_);
+  absl::optional<std::pair<DataRate, DataRate>> bitrate_range_
+      RTC_GUARDED_BY(worker_thread_checker_);
 };
 }  // namespace internal
 }  // namespace webrtc
