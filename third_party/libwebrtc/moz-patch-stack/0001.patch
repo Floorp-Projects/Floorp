@@ -1,38 +1,416 @@
-From: Sergey Silkin <ssilkin@webrtc.org>
-Date: Wed, 21 Feb 2024 10:35:54 +0100
-Subject: (cherry-pick-branch-heads/6261) [M122 Merge] Limit max frame size in
- DAV1D decoder
+From: Andreas Pehrson <apehrson@mozilla.com>
+Date: Thu, 4 Apr 2024 10:40:08 +0200
+Subject: (tmp-cherry-pick) Revert "Extends WebRTC logs for software encoder
+ fallback" (23c32da48a)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-(cherry picked from commit 74a4038eaddcac773b9fc172ad446df6eb704b11)
+This reverts commit 050ffefd854f8a57071992238723259e9ae0d85a.
 
-Bug: chromium:325284120
-Change-Id: Iea0aea0a17bb0b1f73b3c1cbd408b7a6cd2b216e
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/340180
-Commit-Queue: Sergey Silkin <ssilkin@webrtc.org>
-Reviewed-by: Erik Språng <sprang@webrtc.org>
-Cr-Original-Commit-Position: refs/heads/main@{#41776}
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/340580
-Reviewed-by: Philip Eliasson <philipel@webrtc.org>
-Commit-Queue: Erik Språng <sprang@webrtc.org>
-Cr-Commit-Position: refs/branch-heads/6261@{#1}
-Cr-Branched-From: be2786cd2383b7ec5d158add166275d19e246763-refs/heads/main@{#41596}
+Reason for revert: Breaks downstream project.
+
+Original change's description:
+> Extends WebRTC logs for software encoder fallback
+>
+> This CL extends logging related to HW->SW fallbacks on the encoder
+> side in WebRTC. The goal is to make it easier to track down the
+> different steps taken when setting up the video encoder and why/when
+> HW encoding fails.
+>
+> Current logs are added on several lines which makes regexp searching
+> difficult. This CL adds all related information on one line instead.
+>
+> Three new search tags are also added VSE (VideoStreamEncoder), VESFW
+> (VideoEncoderSoftwareFallbackWrapper) and SEA (SimulcastEncoderAdapter). The idea is to allow searching for the tags to see correlated logs.
+>
+> It has been verified that these added logs also show up in WebRTC
+> logs in Meet.
+>
+> Logs from the GPU process are not included due to the sandboxed
+> nature which makes it much more complex to add to the native
+> WebRTC log. I think that these simple logs will provide value as is.
+>
+> Example: https://gist.github.com/henrik-and/41946f7f0b10774241bd14d7687f770b
+>
+> Bug: b/322132132
+> Change-Id: Iec58c9741a9dd6bab3236a88e9a6e45440f5d980
+> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/339260
+> Commit-Queue: Henrik Andreassson <henrika@webrtc.org>
+> Reviewed-by: Ilya Nikolaevskiy <ilnik@webrtc.org>
+> Reviewed-by: Henrik Boström <hbos@webrtc.org>
+> Cr-Commit-Position: refs/heads/main@{#41733}
+
+Bug: b/322132132
+Change-Id: I24d0a4e71a43ac192485f1af208563a51d919865
+No-Presubmit: true
+No-Tree-Checks: true
+No-Try: true
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/339661
+Bot-Commit: rubber-stamper@appspot.gserviceaccount.com <rubber-stamper@appspot.gserviceaccount.com>
+Owners-Override: Mirko Bonadei <mbonadei@webrtc.org>
+Commit-Queue: Mirko Bonadei <mbonadei@webrtc.org>
+Cr-Commit-Position: refs/heads/main@{#41735}
 ---
- modules/video_coding/codecs/av1/dav1d_decoder.cc | 2 ++
- 1 file changed, 2 insertions(+)
+ api/video_codecs/video_codec.cc               | 30 -----------
+ api/video_codecs/video_codec.h                |  4 --
+ ...video_encoder_software_fallback_wrapper.cc | 17 +-----
+ media/engine/simulcast_encoder_adapter.cc     | 15 +-----
+ modules/video_coding/BUILD.gn                 |  1 -
+ .../video_coding/include/video_error_codes.cc | 43 ---------------
+ .../video_coding/include/video_error_codes.h  | 10 ++--
+ video/video_stream_encoder.cc                 | 53 +++++++++----------
+ 8 files changed, 31 insertions(+), 142 deletions(-)
+ delete mode 100644 modules/video_coding/include/video_error_codes.cc
 
-diff --git a/modules/video_coding/codecs/av1/dav1d_decoder.cc b/modules/video_coding/codecs/av1/dav1d_decoder.cc
-index 6a787ff935..d658e401e8 100644
---- a/modules/video_coding/codecs/av1/dav1d_decoder.cc
-+++ b/modules/video_coding/codecs/av1/dav1d_decoder.cc
-@@ -87,6 +87,8 @@ bool Dav1dDecoder::Configure(const Settings& settings) {
-   s.n_threads = std::max(2, settings.number_of_cores());
-   s.max_frame_delay = 1;   // For low latency decoding.
-   s.all_layers = 0;        // Don't output a frame for every spatial layer.
-+  // Limit max frame size to avoid OOM'ing fuzzers. crbug.com/325284120.
-+  s.frame_size_limit = 16384 * 16384;
-   s.operating_point = 31;  // Decode all operating points.
+diff --git a/api/video_codecs/video_codec.cc b/api/video_codecs/video_codec.cc
+index 82c9bfc8ea..39a345d699 100644
+--- a/api/video_codecs/video_codec.cc
++++ b/api/video_codecs/video_codec.cc
+@@ -16,7 +16,6 @@
  
-   return dav1d_open(&context_, &s) == 0;
+ #include "absl/strings/match.h"
+ #include "rtc_base/checks.h"
+-#include "rtc_base/strings/string_builder.h"
+ 
+ namespace webrtc {
+ namespace {
+@@ -74,35 +73,6 @@ VideoCodec::VideoCodec()
+       codec_specific_(),
+       complexity_(VideoCodecComplexity::kComplexityNormal) {}
+ 
+-std::string VideoCodec::ToString() const {
+-  char string_buf[2048];
+-  rtc::SimpleStringBuilder ss(string_buf);
+-
+-  ss << "VideoCodec {" << "type: " << CodecTypeToPayloadString(codecType)
+-     << ", mode: "
+-     << (mode == VideoCodecMode::kRealtimeVideo ? "RealtimeVideo"
+-                                                : "Screensharing");
+-  if (IsSinglecast()) {
+-    absl::optional<ScalabilityMode> scalability_mode = GetScalabilityMode();
+-    if (scalability_mode.has_value()) {
+-      ss << ", Singlecast: {" << width << "x" << height << " "
+-         << ScalabilityModeToString(*scalability_mode)
+-         << (active ? ", active" : ", inactive") << "}";
+-    }
+-  } else {
+-    ss << ", Simulcast: {";
+-    for (size_t i = 0; i < numberOfSimulcastStreams; ++i) {
+-      const SimulcastStream stream = simulcastStream[i];
+-      ss << "[" << stream.width << "x" << stream.height << " "
+-         << ScalabilityModeToString(stream.GetScalabilityMode())
+-         << (stream.active ? ", active" : ", inactive") << "]";
+-    }
+-    ss << "}";
+-  }
+-  ss << "}";
+-  return ss.str();
+-}
+-
+ VideoCodecVP8* VideoCodec::VP8() {
+   RTC_DCHECK_EQ(codecType, kVideoCodecVP8);
+   return &codec_specific_.VP8;
+diff --git a/api/video_codecs/video_codec.h b/api/video_codecs/video_codec.h
+index e48ffd4b5f..a596af1528 100644
+--- a/api/video_codecs/video_codec.h
++++ b/api/video_codecs/video_codec.h
+@@ -141,9 +141,6 @@ class RTC_EXPORT VideoCodec {
+   bool GetFrameDropEnabled() const;
+   void SetFrameDropEnabled(bool enabled);
+ 
+-  bool IsSinglecast() const { return numberOfSimulcastStreams <= 1; }
+-  bool IsSimulcast() const { return !IsSinglecast(); }
+-
+   // Public variables. TODO(hta): Make them private with accessors.
+   VideoCodecType codecType;
+ 
+@@ -196,7 +193,6 @@ class RTC_EXPORT VideoCodec {
+ 
+   bool operator==(const VideoCodec& other) const = delete;
+   bool operator!=(const VideoCodec& other) const = delete;
+-  std::string ToString() const;
+ 
+   // Accessors for codec specific information.
+   // There is a const version of each that returns a reference,
+diff --git a/api/video_codecs/video_encoder_software_fallback_wrapper.cc b/api/video_codecs/video_encoder_software_fallback_wrapper.cc
+index 5f34694ae1..d35c9f9950 100644
+--- a/api/video_codecs/video_encoder_software_fallback_wrapper.cc
++++ b/api/video_codecs/video_encoder_software_fallback_wrapper.cc
+@@ -264,17 +264,14 @@ void VideoEncoderSoftwareFallbackWrapper::PrimeEncoder(
+ }
+ 
+ bool VideoEncoderSoftwareFallbackWrapper::InitFallbackEncoder(bool is_forced) {
+-  RTC_LOG(LS_WARNING) << "[VESFW] " << __func__
+-                      << "(is_forced=" << (is_forced ? "true" : "false") << ")";
++  RTC_LOG(LS_WARNING) << "Encoder falling back to software encoding.";
+ 
+   RTC_DCHECK(encoder_settings_.has_value());
+   const int ret = fallback_encoder_->InitEncode(&codec_settings_,
+                                                 encoder_settings_.value());
+ 
+   if (ret != WEBRTC_VIDEO_CODEC_OK) {
+-    RTC_LOG(LS_ERROR)
+-        << "[VESFW] software-encoder fallback initialization failed with"
+-        << " error code: " << WebRtcVideoCodecErrorToString(ret);
++    RTC_LOG(LS_ERROR) << "Failed to initialize software-encoder fallback.";
+     fallback_encoder_->Release();
+     return false;
+   }
+@@ -308,12 +305,6 @@ void VideoEncoderSoftwareFallbackWrapper::SetFecControllerOverride(
+ int32_t VideoEncoderSoftwareFallbackWrapper::InitEncode(
+     const VideoCodec* codec_settings,
+     const VideoEncoder::Settings& settings) {
+-  RTC_LOG(LS_INFO) << "[VESFW] " << __func__
+-                   << "(codec=" << codec_settings->ToString()
+-                   << ", settings={number_of_cores: "
+-                   << settings.number_of_cores
+-                   << ", max_payload_size: " << settings.max_payload_size
+-                   << "})";
+   // Store settings, in case we need to dynamically switch to the fallback
+   // encoder after a failed Encode call.
+   codec_settings_ = *codec_settings;
+@@ -336,8 +327,6 @@ int32_t VideoEncoderSoftwareFallbackWrapper::InitEncode(
+     PrimeEncoder(current_encoder());
+     return ret;
+   }
+-  RTC_LOG(LS_WARNING) << "[VESFW] Hardware encoder initialization failed with"
+-                      << " error code: " << WebRtcVideoCodecErrorToString(ret);
+ 
+   // Try to instantiate software codec.
+   if (InitFallbackEncoder(/*is_forced=*/false)) {
+@@ -346,8 +335,6 @@ int32_t VideoEncoderSoftwareFallbackWrapper::InitEncode(
+   }
+ 
+   // Software encoder failed too, use original return code.
+-  RTC_LOG(LS_WARNING)
+-      << "[VESFW] Software fallback encoder initialization also failed.";
+   encoder_state_ = EncoderState::kUninitialized;
+   return ret;
+ }
+diff --git a/media/engine/simulcast_encoder_adapter.cc b/media/engine/simulcast_encoder_adapter.cc
+index cb31306a60..4853e68996 100644
+--- a/media/engine/simulcast_encoder_adapter.cc
++++ b/media/engine/simulcast_encoder_adapter.cc
+@@ -360,14 +360,8 @@ int SimulcastEncoderAdapter::InitEncode(
+   bool separate_encoders_needed =
+       !encoder_context->encoder().GetEncoderInfo().supports_simulcast ||
+       active_streams_count == 1;
+-  RTC_LOG(LS_INFO) << "[SEA] InitEncode: total_streams_count: "
+-                   << total_streams_count_
+-                   << ", active_streams_count: " << active_streams_count
+-                   << ", separate_encoders_needed: "
+-                   << (separate_encoders_needed ? "true" : "false");
+   // Singlecast or simulcast with simulcast-capable underlaying encoder.
+   if (total_streams_count_ == 1 || !separate_encoders_needed) {
+-    RTC_LOG(LS_INFO) << "[SEA] InitEncode: Single-encoder mode";
+     int ret = encoder_context->encoder().InitEncode(&codec_, settings);
+     if (ret >= 0) {
+       stream_contexts_.emplace_back(
+@@ -383,8 +377,7 @@ int SimulcastEncoderAdapter::InitEncode(
+ 
+     encoder_context->Release();
+     if (total_streams_count_ == 1) {
+-      RTC_LOG(LS_ERROR) << "[SEA] InitEncode: failed with error code: "
+-                        << WebRtcVideoCodecErrorToString(ret);
++      // Failed to initialize singlecast encoder.
+       return ret;
+     }
+   }
+@@ -412,16 +405,10 @@ int SimulcastEncoderAdapter::InitEncode(
+         /*is_lowest_quality_stream=*/stream_idx == lowest_quality_stream_idx,
+         /*is_highest_quality_stream=*/stream_idx == highest_quality_stream_idx);
+ 
+-    RTC_LOG(LS_INFO) << "[SEA] Multi-encoder mode: initializing stream: "
+-                     << stream_idx << ", active: "
+-                     << (codec_.simulcastStream[stream_idx].active ? "true"
+-                                                                   : "false");
+     int ret = encoder_context->encoder().InitEncode(&stream_codec, settings);
+     if (ret < 0) {
+       encoder_context.reset();
+       Release();
+-      RTC_LOG(LS_ERROR) << "[SEA] InitEncode: failed with error code: "
+-                        << WebRtcVideoCodecErrorToString(ret);
+       return ret;
+     }
+ 
+diff --git a/modules/video_coding/BUILD.gn b/modules/video_coding/BUILD.gn
+index 2208b9d967..ce0a9f1e5e 100644
+--- a/modules/video_coding/BUILD.gn
++++ b/modules/video_coding/BUILD.gn
+@@ -286,7 +286,6 @@ rtc_library("video_codec_interface") {
+     "include/video_codec_interface.cc",
+     "include/video_codec_interface.h",
+     "include/video_coding_defines.h",
+-    "include/video_error_codes.cc",
+     "include/video_error_codes.h",
+     "video_coding_defines.cc",
+   ]
+diff --git a/modules/video_coding/include/video_error_codes.cc b/modules/video_coding/include/video_error_codes.cc
+deleted file mode 100644
+index c806753ea7..0000000000
+--- a/modules/video_coding/include/video_error_codes.cc
++++ /dev/null
+@@ -1,43 +0,0 @@
+-/*
+- *  Copyright (c) 2024 The WebRTC project authors. All Rights Reserved.
+- *
+- *  Use of this source code is governed by a BSD-style license
+- *  that can be found in the LICENSE file in the root of the source
+- *  tree. An additional intellectual property rights grant can be found
+- *  in the file PATENTS.  All contributing project authors may
+- *  be found in the AUTHORS file in the root of the source tree.
+- */
+-
+-#include "modules/video_coding/include/video_error_codes.h"
+-
+-namespace webrtc {
+-const char* WebRtcVideoCodecErrorToString(int32_t error_code) {
+-  switch (error_code) {
+-    case WEBRTC_VIDEO_CODEC_TARGET_BITRATE_OVERSHOOT:
+-      return "WEBRTC_VIDEO_CODEC_TARGET_BITRATE_OVERSHOOT";
+-    case WEBRTC_VIDEO_CODEC_OK_REQUEST_KEYFRAME:
+-      return "WEBRTC_VIDEO_CODEC_OK_REQUEST_KEYFRAME";
+-    case WEBRTC_VIDEO_CODEC_NO_OUTPUT:
+-      return "WEBRTC_VIDEO_CODEC_NO_OUTPUT";
+-    case WEBRTC_VIDEO_CODEC_ERROR:
+-      return "WEBRTC_VIDEO_CODEC_ERROR";
+-    case WEBRTC_VIDEO_CODEC_MEMORY:
+-      return "WEBRTC_VIDEO_CODEC_MEMORY";
+-    case WEBRTC_VIDEO_CODEC_ERR_PARAMETER:
+-      return "WEBRTC_VIDEO_CODEC_ERR_PARAMETER";
+-    case WEBRTC_VIDEO_CODEC_TIMEOUT:
+-      return "WEBRTC_VIDEO_CODEC_TIMEOUT";
+-    case WEBRTC_VIDEO_CODEC_UNINITIALIZED:
+-      return "WEBRTC_VIDEO_CODEC_UNINITIALIZED";
+-    case WEBRTC_VIDEO_CODEC_FALLBACK_SOFTWARE:
+-      return "WEBRTC_VIDEO_CODEC_FALLBACK_SOFTWARE";
+-    case WEBRTC_VIDEO_CODEC_ERR_SIMULCAST_PARAMETERS_NOT_SUPPORTED:
+-      return "WEBRTC_VIDEO_CODEC_ERR_SIMULCAST_PARAMETERS_NOT_SUPPORTED";
+-    case WEBRTC_VIDEO_CODEC_ENCODER_FAILURE:
+-      return "WEBRTC_VIDEO_CODEC_ENCODER_FAILURE";
+-    default:
+-      return "WEBRTC_VIDEO_CODEC_UNKNOWN";
+-  }
+-}
+-
+-}  // namespace webrtc
+diff --git a/modules/video_coding/include/video_error_codes.h b/modules/video_coding/include/video_error_codes.h
+index 1634678aeb..17146ce205 100644
+--- a/modules/video_coding/include/video_error_codes.h
++++ b/modules/video_coding/include/video_error_codes.h
+@@ -11,7 +11,9 @@
+ #ifndef MODULES_VIDEO_CODING_INCLUDE_VIDEO_ERROR_CODES_H_
+ #define MODULES_VIDEO_CODING_INCLUDE_VIDEO_ERROR_CODES_H_
+ 
+-#include <stdint.h>
++// NOTE: in sync with video_coding_module_defines.h
++
++// Define return values
+ 
+ #define WEBRTC_VIDEO_CODEC_TARGET_BITRATE_OVERSHOOT 5
+ #define WEBRTC_VIDEO_CODEC_OK_REQUEST_KEYFRAME 4
+@@ -26,10 +28,4 @@
+ #define WEBRTC_VIDEO_CODEC_ERR_SIMULCAST_PARAMETERS_NOT_SUPPORTED -15
+ #define WEBRTC_VIDEO_CODEC_ENCODER_FAILURE -16
+ 
+-namespace webrtc {
+-
+-const char* WebRtcVideoCodecErrorToString(int32_t error_code);
+-
+-}  // namespace webrtc
+-
+ #endif  // MODULES_VIDEO_CODING_INCLUDE_VIDEO_ERROR_CODES_H_
+diff --git a/video/video_stream_encoder.cc b/video/video_stream_encoder.cc
+index 6f398ec455..3730f6eecb 100644
+--- a/video/video_stream_encoder.cc
++++ b/video/video_stream_encoder.cc
+@@ -937,8 +937,6 @@ void VideoStreamEncoder::ConfigureEncoder(VideoEncoderConfig config,
+ void VideoStreamEncoder::ReconfigureEncoder() {
+   // Running on the encoder queue.
+   RTC_DCHECK(pending_encoder_reconfiguration_);
+-  RTC_LOG(LS_INFO) << "[VSE] " << __func__
+-                   << " [encoder_config=" << encoder_config_.ToString() << "]";
+ 
+   bool encoder_reset_required = false;
+   if (pending_encoder_creation_) {
+@@ -1156,38 +1154,37 @@ void VideoStreamEncoder::ReconfigureEncoder() {
+ 
+   char log_stream_buf[4 * 1024];
+   rtc::SimpleStringBuilder log_stream(log_stream_buf);
+-  log_stream << "ReconfigureEncoder: simulcast streams: ";
++  log_stream << "ReconfigureEncoder:\n";
++  log_stream << "Simulcast streams:\n";
+   for (size_t i = 0; i < codec.numberOfSimulcastStreams; ++i) {
+-    log_stream << "{" << i << ": " << codec.simulcastStream[i].width << "x"
+-               << codec.simulcastStream[i].height << " "
+-               << ScalabilityModeToString(
+-                      codec.simulcastStream[i].GetScalabilityMode())
+-               << ", min_kbps: " << codec.simulcastStream[i].minBitrate
+-               << ", target_kbps: " << codec.simulcastStream[i].targetBitrate
+-               << ", max_kbps: " << codec.simulcastStream[i].maxBitrate
+-               << ", max_fps: " << codec.simulcastStream[i].maxFramerate
+-               << ", max_qp: " << codec.simulcastStream[i].qpMax << ", num_tl: "
+-               << codec.simulcastStream[i].numberOfTemporalLayers
+-               << ", active: "
+-               << (codec.simulcastStream[i].active ? "true" : "false") << "}";
++    log_stream << i << ": " << codec.simulcastStream[i].width << "x"
++               << codec.simulcastStream[i].height
++               << " min_kbps: " << codec.simulcastStream[i].minBitrate
++               << " target_kbps: " << codec.simulcastStream[i].targetBitrate
++               << " max_kbps: " << codec.simulcastStream[i].maxBitrate
++               << " max_fps: " << codec.simulcastStream[i].maxFramerate
++               << " max_qp: " << codec.simulcastStream[i].qpMax
++               << " num_tl: " << codec.simulcastStream[i].numberOfTemporalLayers
++               << " active: "
++               << (codec.simulcastStream[i].active ? "true" : "false") << "\n";
+   }
+   if (encoder_config_.codec_type == kVideoCodecVP9 ||
+       encoder_config_.codec_type == kVideoCodecAV1) {
+-    log_stream << ", spatial layers: ";
++    log_stream << "Spatial layers:\n";
+     for (int i = 0; i < GetNumSpatialLayers(codec); ++i) {
+-      log_stream << "{" << i << ": " << codec.spatialLayers[i].width << "x"
++      log_stream << i << ": " << codec.spatialLayers[i].width << "x"
+                  << codec.spatialLayers[i].height
+-                 << ", min_kbps: " << codec.spatialLayers[i].minBitrate
+-                 << ", target_kbps: " << codec.spatialLayers[i].targetBitrate
+-                 << ", max_kbps: " << codec.spatialLayers[i].maxBitrate
+-                 << ", max_fps: " << codec.spatialLayers[i].maxFramerate
+-                 << ", max_qp: " << codec.spatialLayers[i].qpMax << ", num_tl: "
+-                 << codec.spatialLayers[i].numberOfTemporalLayers
+-                 << ", active: "
+-                 << (codec.spatialLayers[i].active ? "true" : "false") << "}";
++                 << " min_kbps: " << codec.spatialLayers[i].minBitrate
++                 << " target_kbps: " << codec.spatialLayers[i].targetBitrate
++                 << " max_kbps: " << codec.spatialLayers[i].maxBitrate
++                 << " max_fps: " << codec.spatialLayers[i].maxFramerate
++                 << " max_qp: " << codec.spatialLayers[i].qpMax
++                 << " num_tl: " << codec.spatialLayers[i].numberOfTemporalLayers
++                 << " active: "
++                 << (codec.spatialLayers[i].active ? "true" : "false") << "\n";
+     }
+   }
+-  RTC_LOG(LS_INFO) << "[VSE] " << log_stream.str();
++  RTC_LOG(LS_INFO) << log_stream.str();
+ 
+   codec.startBitrate = std::max(encoder_target_bitrate_bps_.value_or(0) / 1000,
+                                 codec.minBitrate);
+@@ -1322,7 +1319,7 @@ void VideoStreamEncoder::ReconfigureEncoder() {
+                         << " max frame rate " << codec.maxFramerate
+                         << " max payload size " << max_data_payload_length_;
+   } else {
+-    RTC_LOG(LS_ERROR) << "[VSE] Failed to configure encoder.";
++    RTC_LOG(LS_ERROR) << "Failed to configure encoder.";
+     rate_allocator_ = nullptr;
+   }
+ 
+@@ -1920,7 +1917,7 @@ void VideoStreamEncoder::EncodeVideoFrame(const VideoFrame& video_frame,
+     stream_resource_manager_.ConfigureQualityScaler(info);
+     stream_resource_manager_.ConfigureBandwidthQualityScaler(info);
+ 
+-    RTC_LOG(LS_INFO) << "[VSE] Encoder info changed to " << info.ToString();
++    RTC_LOG(LS_INFO) << "Encoder info changed to " << info.ToString();
+   }
+ 
+   if (bitrate_adjuster_) {
