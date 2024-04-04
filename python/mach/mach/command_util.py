@@ -92,6 +92,9 @@ MACH_COMMANDS = {
     "environment": MachCommandReference("python/mozbuild/mozbuild/mach_commands.py"),
     "eslint": MachCommandReference("tools/lint/mach_commands.py"),
     "esmify": MachCommandReference("tools/esmify/mach_commands.py"),
+    "event-into-legacy": MachCommandReference(
+        "toolkit/components/glean/build_scripts/mach_commands.py"
+    ),
     "fetch-condprofile": MachCommandReference("testing/condprofile/mach_commands.py"),
     "file-info": MachCommandReference(
         "python/mozbuild/mozbuild/frontend/mach_commands.py"
