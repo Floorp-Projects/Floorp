@@ -280,10 +280,10 @@ class NetEq {
 
   // Enables post-decode VAD. When enabled, GetAudio() will return
   // kOutputVADPassive when the signal contains no speech.
-  virtual void EnableVad() = 0;
+  virtual void EnableVad() {}
 
   // Disables post-decode VAD.
-  virtual void DisableVad() = 0;
+  virtual void DisableVad() {}
 
   // Returns the RTP timestamp for the last sample delivered by GetAudio().
   // The return value will be empty if no valid timestamp is available.
