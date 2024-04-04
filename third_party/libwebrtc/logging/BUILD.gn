@@ -688,6 +688,7 @@ rtc_library("ice_log") {
 
   deps = [
     ":rtc_event_field",
+    "../api:candidate",
     "../api:dtls_transport_interface",
     "../api:libjingle_logging_api",
     "../api/rtc_event_log",
