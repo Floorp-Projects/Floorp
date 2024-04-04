@@ -87,6 +87,7 @@ using mozilla::dom::ServiceWorkerDescriptor;
 #define WEBRTC_PREF_PREFIX "media.peerconnection."
 #define NETWORK_DNS_PREF "network.dns."
 #define FORCE_EXTERNAL_PREF_PREFIX "network.protocol-handler.external."
+#define SIMPLE_URI_SCHEMES_PREF "network.url.simple_uri_schemes"
 
 nsIOService* gIOService;
 static bool gHasWarnedUploadChannel2;
@@ -211,6 +212,7 @@ static const char* gCallbackPrefs[] = {
     NECKO_BUFFER_CACHE_SIZE_PREF,
     NETWORK_CAPTIVE_PORTAL_PREF,
     FORCE_EXTERNAL_PREF_PREFIX,
+    SIMPLE_URI_SCHEMES_PREF,
     nullptr,
 };
 
@@ -1527,6 +1529,15 @@ void nsIOService::PrefsChanged(const char* pref) {
     }
     AutoWriteLock lock(mLock);
     mForceExternalSchemes = std::move(forceExternalSchemes);
+  }
+
+  if (!pref || strncmp(pref, SIMPLE_URI_SCHEMES_PREF,
+                       strlen(SIMPLE_URI_SCHEMES_PREF)) == 0) {
+    LOG((
+        "simple_uri_schemes pref change observed, updating the scheme list\n"));
+    nsAutoCString schemeList;
+    Preferences::GetCString(SIMPLE_URI_SCHEMES_PREF, schemeList);
+    mozilla::net::ParseSimpleURISchemes(schemeList);
   }
 }
 

@@ -12761,6 +12761,19 @@
   value: false
   mirror: always
 
+# Allows use of a protocol exception list that will bypass defaultURI parser
+- name: network.url.some_schemes_bypass_defaultURI_fallback
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+# A list of schemes to allow for bypassing defaultURI as default
+# This is only used when network.url.some_schemes_bypass_defaultURI_fallback is true
+- name: network.url.simple_uri_schemes
+  type: String
+  value: ""
+  mirror: never
+
 # The maximum allowed length for a URL - 32MB default.
 # If 0 that means no limit.
 - name: network.url.max-length

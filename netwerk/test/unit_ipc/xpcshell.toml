@@ -70,6 +70,7 @@ support-files = [
   "!/netwerk/test/unit/test_http3_prio_helpers.js",
   "!/netwerk/test/unit/http2-ca.pem",
   "!/netwerk/test/unit/test_orb_empty_header.js",
+  "!/netwerk/test/unit/test_default_uri_bypass.js",
   "child_is_proxy_used.js",
   "child_cookie_header.js",
   "child_dns_by_type_resolve.js",
@@ -238,4 +239,7 @@ prefs = ["network.allow_raw_sockets_in_content_processes=true"]
 skip-if = ["os == 'android'"]
 
 ["test_xmlhttprequest_wrap.js"]
+prefs = ["network.allow_raw_sockets_in_content_processes=true"]
+
+["test_default_uri_bypass_wrap.js"]
 prefs = ["network.allow_raw_sockets_in_content_processes=true"]
