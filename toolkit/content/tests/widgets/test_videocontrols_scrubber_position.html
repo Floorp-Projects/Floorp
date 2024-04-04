@@ -26,7 +26,7 @@ const video = document.getElementById("video");
 add_task(async function setup() {
   await new Promise(resolve => {
     video.addEventListener("canplaythrough", resolve, {once: true});
-    video.src = "seek_with_sound.ogg";
+    video.src = "seek_with_sound.webm";
   });
 
   // Check initial state upon load
