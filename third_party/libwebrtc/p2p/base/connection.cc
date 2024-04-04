@@ -1330,11 +1330,11 @@ std::string Connection::ToString() const {
   const Candidate& local = local_candidate();
   const Candidate& remote = remote_candidate();
   ss << local.id() << ":" << local.component() << ":" << local.generation()
-     << ":" << local.type() << ":" << local.protocol() << ":"
+     << ":" << local.type_name() << ":" << local.protocol() << ":"
      << local.address().ToSensitiveString() << "->" << remote.id() << ":"
-     << remote.component() << ":" << remote.priority() << ":" << remote.type()
-     << ":" << remote.protocol() << ":" << remote.address().ToSensitiveString()
-     << "|";
+     << remote.component() << ":" << remote.priority() << ":"
+     << remote.type_name() << ":" << remote.protocol() << ":"
+     << remote.address().ToSensitiveString() << "|";
 
   ss << CONNECT_STATE_ABBREV[connected_] << RECEIVE_STATE_ABBREV[receiving_]
      << WRITE_STATE_ABBREV[write_state_] << ICESTATE[static_cast<int>(state_)]

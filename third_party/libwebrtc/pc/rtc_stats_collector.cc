@@ -164,19 +164,6 @@ std::string RTCMediaSourceStatsIDFromKindAndAttachment(
   return sb.str();
 }
 
-const char* CandidateTypeToRTCIceCandidateType(const cricket::Candidate& c) {
-  if (c.is_local())
-    return "host";
-  if (c.is_stun())
-    return "srflx";
-  if (c.is_prflx())
-    return "prflx";
-  if (c.is_relay())
-    return "relay";
-  RTC_DCHECK_NOTREACHED();
-  return nullptr;
-}
-
 const char* DataStateToRTCDataChannelState(
     DataChannelInterface::DataState state) {
   switch (state) {
@@ -998,8 +985,7 @@ const std::string& ProduceIceCandidateStats(Timestamp timestamp,
     candidate_stats->address = candidate.address().ipaddr().ToString();
     candidate_stats->port = static_cast<int32_t>(candidate.address().port());
     candidate_stats->protocol = candidate.protocol();
-    candidate_stats->candidate_type =
-        CandidateTypeToRTCIceCandidateType(candidate);
+    candidate_stats->candidate_type = candidate.type_name();
     candidate_stats->priority = static_cast<int32_t>(candidate.priority());
     candidate_stats->foundation = candidate.foundation();
     auto related_address = candidate.related_address();
