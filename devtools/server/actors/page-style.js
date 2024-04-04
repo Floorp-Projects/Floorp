@@ -704,6 +704,7 @@ class PageStyleActor extends Actor {
       case "::first-line":
       case "::selection":
       case "::highlight":
+      case "::target-text":
         return true;
       case "::marker":
         return this._nodeIsListItem(node);

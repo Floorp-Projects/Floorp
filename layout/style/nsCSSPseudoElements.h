@@ -130,6 +130,8 @@ class nsCSSPseudoElements {
     switch (aType) {
       case Type::highlight:
         return mozilla::StaticPrefs::dom_customHighlightAPI_enabled();
+      case Type::targetText:
+        return mozilla::StaticPrefs::dom_text_fragments_enabled();
       case Type::sliderTrack:
       case Type::sliderThumb:
       case Type::sliderFill:

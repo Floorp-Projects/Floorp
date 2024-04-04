@@ -65,6 +65,7 @@ class MOZ_STACK_CLASS nsTextPaintStyle {
    */
   bool GetSelectionColors(nscolor* aForeColor, nscolor* aBackColor);
   void GetHighlightColors(nscolor* aForeColor, nscolor* aBackColor);
+  void GetTargetTextColors(nscolor* aForeColor, nscolor* aBackColor);
   // Computes colors for custom highlights.
   // Returns false if there are no rules associated with `aHighlightName`.
   bool GetCustomHighlightTextColor(nsAtom* aHighlightName, nscolor* aForeColor);

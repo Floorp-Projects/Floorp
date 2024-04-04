@@ -937,6 +937,8 @@ class nsIFrame : public nsQueryFrame {
   already_AddRefed<ComputedStyle> ComputeHighlightSelectionStyle(
       nsAtom* aHighlightName);
 
+  already_AddRefed<ComputedStyle> ComputeTargetTextStyle() const;
+
   /**
    * Accessor functions for geometric parent.
    */
