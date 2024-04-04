@@ -1015,6 +1015,7 @@ if (rtc_include_tests) {
       "../../rtc_base:logging",
       "../../rtc_base:stringutils",
       "../../test:explicit_key_value_config",
+      "../../test:field_trial",
       "../../test:fileutils",
       "../../test:test_flags",
       "../../test:test_main",
