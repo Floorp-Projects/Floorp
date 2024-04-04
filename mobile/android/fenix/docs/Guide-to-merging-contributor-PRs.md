@@ -18,7 +18,7 @@ gh pr checkout 1234 # for https://github.com/mozilla-mobile/firefox-android/pull
 3. Review the code to make sure everything is clean.
 
 4. ~~Once a Firefox Android team member has reviewed the PR and deemed it safe, comment the following to start UI tests.
-   ```bors try```~~  
+   ```bors try```~~
    `Bors` public instance is now offline, as they announced in [their newsletter](https://bugzilla.mozilla.org/show_bug.cgi?id=1850420). Please refer to section "Process for running UI tests on a contributor PR" above.
 
 

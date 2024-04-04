@@ -132,7 +132,7 @@ class RemoteSettingsClientTest {
                 "fields": "{
                 \"codeParamName\":\"tt\",
                 \"components\":[
-                {\"included\":{\"children\":[{\"countChildren\":true,\"selector\":\".product-ads-carousel__item\"}], \"parent\":{\"selector\":\".product-ads-carousel\"}, \"related\":{\"selector\":\".snippet__control\"}},\"type\":\"ad_carousel\"}, 
+                {\"included\":{\"children\":[{\"countChildren\":true,\"selector\":\".product-ads-carousel__item\"}], \"parent\":{\"selector\":\".product-ads-carousel\"}, \"related\":{\"selector\":\".snippet__control\"}},\"type\":\"ad_carousel\"},
                 {\"included\":{\"children\":[{\"selector\":\".result__extra-content .deep-links--descriptions\",\"type\":\"ad_sitelink\"}], \"parent\":{\"selector\":\".ad-result\"}},\"type\":\"ad_link\"},
                 {\"included\":{\"children\":[{\"selector\":\".search-form__input, .search-form__submit\"}],\"parent\":{\"selector\":\"form.search-form\"},\"related\":{\"selector\":\".search-form__suggestions\"}},\"topDown\":true,\"type\":\"incontent_searchbox\"},
                 {\"default\":true,\"type\":\"ad_link\"}

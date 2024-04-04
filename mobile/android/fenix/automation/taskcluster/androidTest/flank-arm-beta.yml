@@ -37,4 +37,3 @@ flank:
   num-test-runs: 1
   output-style: compact
   full-junit-result: true
-

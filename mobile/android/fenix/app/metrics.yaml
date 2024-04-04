@@ -137,7 +137,7 @@ events:
           include:
           add_to_homescreen, add_to_top_sites, addons_manager, back, back_long_press,
           bookmark, bookmarks, desktop_view_off, desktop_view_on, downloads,
-          find_in_page, forward, forward_long_press, history, new_tab, open_in_app, 
+          find_in_page, forward, forward_long_press, history, new_tab, open_in_app,
           open_in_fenix, quit, reader_mode_appearance, reload, remove_from_top_sites,
           save_to_collection, set_default_browser, settings, share, stop,
           sync_account, translate and print_content.
@@ -867,7 +867,7 @@ translations:
         description: |
           A string containing the name of the item the user tapped. These items
           include:
-          main_flow_toolbar, main_flow_browser, page_settings, global_settings, 
+          main_flow_toolbar, main_flow_browser, page_settings, global_settings,
           global_lang_settings, global_site_settings, downloads
         type: string
     bugs:
@@ -885,13 +885,13 @@ translations:
     type: event
     description: |
       The translations engine decided the user may be interested in a translation or that the user
-      should be offered a translation. 
+      should be offered a translation.
       An "expected" event means the user is expected to want to translate and we should show the feature on the toolbar.
       An "offer" event means we should popup the translations dialog.
     extra_keys:
       item:
         description: |
-          A string containing the type of signal sent by the translations engine. 
+          A string containing the type of signal sent by the translations engine.
           These signals include:
           expected, offer
         type: string
@@ -911,13 +911,13 @@ translations:
     extra_keys:
       to_language:
         description: |
-          A string containing the BCP 47 that the user is translating the page to. Predefined based 
+          A string containing the BCP 47 that the user is translating the page to. Predefined based
           on published translation models. For example, possible values are:
           "en", "es", "fr", and all other translations engine "to" language codes.
         type: string
       from_language:
         description: |
-          A string containing the BCP 47 that the user is translating the page from. Predefined based 
+          A string containing the BCP 47 that the user is translating the page from. Predefined based
           on published translation models. For example, possible values are:
           "en", "es", "fr", and all other translations engine "from" language codes.
         type: string
@@ -950,7 +950,7 @@ translations:
     extra_keys:
       error:
         description: |
-          A string containing the name of the error that occurred. Possible values are predefined 
+          A string containing the name of the error that occurred. Possible values are predefined
           in TranslationError and include:
           unknown, unexpected-null, missing-session-coordinator, engine-not-supported, unknown-engine-support
           could-not-translate, could-not-restore, could-not-determine-translation-download-size, could-not-load-languages,
@@ -970,7 +970,7 @@ translations:
   engine_supported:
     type: event
     description: |
-      The translations engine for translating pages is only supported on certain devices. 
+      The translations engine for translating pages is only supported on certain devices.
       This probe indicates if the device supports the translations engine or not.
     extra_keys:
       support:
@@ -10822,7 +10822,7 @@ shopping:
       source:
         description: |
           The method used to close the bottom sheet. Possible values are: `sheet_slide`,
-          `link_opened`, `click_outside`, `back_pressed`, `handle_clicked`, `not_now` 
+          `link_opened`, `click_outside`, `back_pressed`, `handle_clicked`, `not_now`
           or `opt_out`.
         type: string
     send_in_pings:

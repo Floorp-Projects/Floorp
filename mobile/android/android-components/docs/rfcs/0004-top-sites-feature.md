@@ -121,6 +121,3 @@ class TopSitesFeature(
 ## Unresolved questions
 
 * When the user removes a top site from the UI that comes from `TopSitesStorage`, we remove it from the storage. When a top site comes from frecent, what do we do? Should we be removing the frecent result?
-
-
-

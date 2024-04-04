@@ -50,7 +50,7 @@ classDiagram
     class NavHostActivityInterface {
         fun getSupportActionBarAndInflateIfNecessary()
     }
-    
+
     class HomeActivity {
         override fun getSupportActionBarAndInflateIfNecessary()
         override fun onCreate() calls super
@@ -68,7 +68,7 @@ classDiagram
         override fun onActionModeFinished() calls super
         override fun onBackPressed()
         override fun onActivityResult() calls super
-        override fun onKeyDown() calls super 
+        override fun onKeyDown() calls super
         override fun onKeyUp() calls super
         override fun onKeyLongPress() calls super
         override fun onUserLeaveHint() calls super
@@ -94,7 +94,7 @@ classDiagram
 
     class AuthCustomActivity {
          override fun onResume() calls super
-    }  
+    }
     ExternalAppBrowserActivity <|-- AuthCustomActivity
 ```
 
@@ -102,10 +102,10 @@ classDiagram
 
 1. `HomeActivity` is used as a 'base' `Activity` for `ExternalAppBrowserActivity` and `AuthCustomTabActivity`.
 
-2. `ExternalAppBrowserActivity` overrides the following `AppCompatActivity` functions: 
+2. `ExternalAppBrowserActivity` overrides the following `AppCompatActivity` functions:
 * `onResume()`
-* `onDestroy()` 
-* `onProvideAssistContent()` 
+* `onDestroy()`
+* `onProvideAssistContent()`
 
 which all depend on the `super` (`HomeActivity`) definitions prior to adding the `ExternalAppBrowserActivity` behaviour. `onResume()` is further propagated to `AuthCustomTabActivity` which depends on the `ExternalAppBrowserActivity` implementation.
 
@@ -153,7 +153,7 @@ The next steps are less clearly defined and require more investigation on the co
 * No immediate tangible user facing improvements.
 
 ## Rationale and alternatives
-### Rationale 
+### Rationale
 * It is well established best practice to ['Prefer composition over inheritence'](https://en.wikipedia.org/wiki/Composition_over_inheritance). An implementation of this principal is also exemplified in AC UI classes, see Reference Browser UI classes e.g. `BrowserActivity` & `BaseBrowserFragment`.
 * [Separation of concerns](https://developer.android.com/topic/architecture#separation-of-concerns).
 > The most important principle to follow is separation of concerns. It's a common mistake to write all your code in an Activity or a Fragment. These UI-based classes should only contain logic that handles UI and operating system interactions. By keeping these classes as lean as possible, you can avoid many problems related to the component lifecycle, and improve the testability of these classes.
