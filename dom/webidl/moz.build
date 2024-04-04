@@ -238,6 +238,9 @@ with Files("NavigationPreloadManager.webidl"):
 with Files("Net*"):
     BUG_COMPONENT = ("Core", "Networking")
 
+with Files("Notification*"):
+    BUG_COMPONENT = ("Core", "DOM: Notifications")
+
 with Files("OfflineAudio*"):
     BUG_COMPONENT = ("Core", "Web Audio")
 
@@ -275,7 +278,7 @@ with Files("ProgressEvent.webidl"):
     BUG_COMPONENT = ("Core", "DOM: Events")
 
 with Files("Push*"):
-    BUG_COMPONENT = ("Core", "DOM: Notifications")
+    BUG_COMPONENT = ("Core", "DOM: Push Subscriptions")
 
 with Files("RTC*"):
     BUG_COMPONENT = ("Core", "WebRTC")
