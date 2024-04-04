@@ -20,9 +20,11 @@ namespace cricket {
 TEST(CandidateTest, Id) {
   Candidate c;
   EXPECT_EQ(c.id().size(), 8u);
-  std::string new_id = "12345678";
-  c.set_id(new_id);
-  EXPECT_EQ(new_id, c.id());
+  std::string current_id = c.id();
+  // Generate a new ID.
+  c.generate_id();
+  EXPECT_EQ(c.id().size(), 8u);
+  EXPECT_NE(current_id, c.id());
 }
 
 TEST(CandidateTest, Component) {

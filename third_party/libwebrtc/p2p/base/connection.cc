@@ -1689,10 +1689,9 @@ void Connection::MaybeUpdateLocalCandidate(StunRequest* request,
     return;
   }
   const uint32_t priority = priority_attr->value();
-  std::string id = rtc::CreateRandomString(8);
 
   // Create a peer-reflexive candidate based on the local candidate.
-  local_candidate_.set_id(id);
+  local_candidate_.generate_id();
   local_candidate_.set_type(PRFLX_PORT_TYPE);
   // Set the related address and foundation attributes before changing the
   // address.

@@ -63,8 +63,12 @@ class RTC_EXPORT Candidate {
   Candidate(const Candidate&);
   ~Candidate();
 
+  // 8 character long randomized ID string for logging purposes.
   const std::string& id() const { return id_; }
-  void set_id(absl::string_view id) { Assign(id_, id); }
+  // Generates a new, 8 character long, id.
+  void generate_id();
+  // TODO(tommi): Callers should use generate_id(). Remove.
+  [[deprecated]] void set_id(absl::string_view id) { Assign(id_, id); }
 
   int component() const { return component_; }
   void set_component(int component) { component_ = component; }
