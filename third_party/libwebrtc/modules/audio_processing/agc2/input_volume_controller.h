@@ -50,7 +50,7 @@ class InputVolumeController final {
     // Limited to values higher than 0.
     int clipped_wait_frames = 300;
     // Enables clipping prediction functionality.
-    bool enable_clipping_predictor = false;
+    bool enable_clipping_predictor = true;
     // Speech level target range (dBFS). If the speech level is in the range
     // [`target_range_min_dbfs`, `target_range_max_dbfs`], no input volume
     // adjustments are done based on the speech level. For speech levels below
