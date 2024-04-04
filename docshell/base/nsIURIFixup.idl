@@ -200,5 +200,5 @@ interface nsIURIFixup : nsISupports
      *
      * @param aDomain A domain name to query.
      */
-    bool isDomainKnown(in AUTF8String aDomain);
+    boolean isDomainKnown(in AUTF8String aDomain);
 };

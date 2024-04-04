@@ -31,5 +31,5 @@ interface nsIEventSourceEventService : nsISupports
   [must_use] void removeListener(in unsigned long long aInnerWindowID,
                                  in nsIEventSourceEventListener aListener);
 
-  [must_use] bool hasListenerFor(in unsigned long long aInnerWindowID);
+  [must_use] boolean hasListenerFor(in unsigned long long aInnerWindowID);
 };

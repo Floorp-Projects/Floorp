@@ -1112,7 +1112,7 @@ interface nsIDOMWindowUtils : nsISupports {
   /**
    * Returns true if a flush of the given type is needed.
    */
-  bool needsFlush(in long aFlushtype);
+  boolean needsFlush(in long aFlushtype);
 
   /**
    * Flush pending layout-type notification without flushing throttled
@@ -1627,14 +1627,14 @@ interface nsIDOMWindowUtils : nsISupports {
    * Reports whether the current state is test-controlled refreshes
    * (see advanceTimeAndRefresh and restoreNormalRefresh above).
    */
-  readonly attribute bool isTestControllingRefreshes;
+  readonly attribute boolean isTestControllingRefreshes;
 
   /**
    * Reports whether APZ is enabled on the widget that this window is attached
    * to. If there is no widget it will report the default platform value of
    * whether or not APZ is enabled.
    */
-  readonly attribute bool asyncPanZoomEnabled;
+  readonly attribute boolean asyncPanZoomEnabled;
 
   /**
    * Set async scroll offset on an element. The next composite will render
@@ -1659,7 +1659,7 @@ interface nsIDOMWindowUtils : nsISupports {
    * false, an error occurred or a flush is not needed, and the notification
    * will not fire. This is intended to be used by test code only!
    */
-  bool flushApzRepaints();
+  boolean flushApzRepaints();
 
   /**
    * Sets a flag on the element to forcibly disable APZ on it. This affects
@@ -1843,7 +1843,7 @@ interface nsIDOMWindowUtils : nsISupports {
    */
   void disableDialogs();
   void enableDialogs();
-  bool areDialogsEnabled();
+  boolean areDialogsEnabled();
   void resetDialogAbuseState();
 
   const unsigned long AGENT_SHEET = 0;
@@ -1949,7 +1949,7 @@ interface nsIDOMWindowUtils : nsISupports {
    * it would mark the document with the ChromeOnly userHasInteracted
    * property.
    */
-  bool isKeyboardEventUserActivity(in Event aKeyboardEvent);
+  boolean isKeyboardEventUserActivity(in Event aKeyboardEvent);
 
   /**
    * Get the content- and compositor-side APZ test data instances.
@@ -2008,7 +2008,7 @@ interface nsIDOMWindowUtils : nsISupports {
    *
    * May throw NS_ERROR_NOT_AVAILABLE.
    */
-  readonly attribute bool refreshDriverHasPendingTick;
+  readonly attribute boolean refreshDriverHasPendingTick;
 
   /**
    * Controls the amount of chrome that should be visible on each side of
@@ -2061,7 +2061,7 @@ interface nsIDOMWindowUtils : nsISupports {
    *
    * @param aSheetType One of the nsIStyleSheetService.*_SHEET constants.
    */
-  bool hasRuleProcessorUsedByMultipleStyleSets(in unsigned long aSheetType);
+  boolean hasRuleProcessorUsedByMultipleStyleSets(in unsigned long aSheetType);
 
   /**
    * Enable or disable displayport suppression. This is intended to be used by
@@ -2207,7 +2207,7 @@ interface nsIDOMWindowUtils : nsISupports {
    *
    * Throws if there's no document or the property is invalid.
    */
-  bool isCssPropertyRecordedInUseCounter(in ACString aProperty);
+  boolean isCssPropertyRecordedInUseCounter(in ACString aProperty);
 
   /**
    * Calls SetInitialViewport on the MobileViewportManager, which effectively
@@ -2216,7 +2216,7 @@ interface nsIDOMWindowUtils : nsISupports {
    */
   void resetMobileViewportManager();
 
-  bool isCoepCredentialless();
+  boolean isCoepCredentialless();
 
   /**
    * Change the DPI setting for the primary monitor.
@@ -2279,7 +2279,7 @@ interface nsIDOMWindowUtils : nsISupports {
   unsigned long long getLayersId();
 
   // Returns true if we are effectively throttling frame requests.
-  readonly attribute bool effectivelyThrottlesFrameRequests;
+  readonly attribute boolean effectivelyThrottlesFrameRequests;
 
   // Returns the ID for the underlying window widget, which can
   // be compared against the rawId from a nsIMediaDevice to determine
@@ -2291,7 +2291,7 @@ interface nsIDOMWindowUtils : nsISupports {
   readonly attribute AString webrtcRawDeviceId;
 
   // Used for testing to check the suspend status.
-  readonly attribute bool suspendedByBrowsingContextGroup;
+  readonly attribute boolean suspendedByBrowsingContextGroup;
 
   // Whether there's any scroll-linked effect in this document. This is only
   // meaningful after the script in question tried to mutate something in a
@@ -2299,7 +2299,7 @@ interface nsIDOMWindowUtils : nsISupports {
   //
   // See https://firefox-source-docs.mozilla.org/performance/scroll-linked_effects.html
   // about scroll-linked effects.
-  readonly attribute bool hasScrollLinkedEffect;
+  readonly attribute boolean hasScrollLinkedEffect;
 
   // Returns the current orientation lock value in browsing context.
   // This value is defined in hal/HalScreenConfiguration.h

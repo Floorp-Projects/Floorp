@@ -46,7 +46,7 @@ interface nsIXULStore: nsISupports
    * @param id - identifier of the node
    * @param attr - attribute
    */
-  bool hasValue(in AString doc, in AString id, in AString attr);
+  boolean hasValue(in AString doc, in AString id, in AString attr);
 
   /**
    * Retrieves a value in the store, or an empty string if it does not exist.

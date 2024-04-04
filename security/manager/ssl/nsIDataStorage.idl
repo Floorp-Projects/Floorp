@@ -103,7 +103,7 @@ interface nsIDataStorage : nsISupports {
   // Returns true if this data storage is ready to be used. To avoid blocking
   // when calling other nsIDataStorage functions, callers may wish to first
   // ensure this function returns true.
-  bool isReady();
+  boolean isReady();
 
   // Read all of the data items.
   // This operation may block the current thread until the background task

@@ -33,7 +33,7 @@ interface nsIDebug2 : nsISupports
      * Whether a debugger is currently attached.
      * Supports Windows + Mac
      */
-    readonly attribute bool isDebuggerAttached;
+    readonly attribute boolean isDebuggerAttached;
 
     /**
      * Show an assertion and trigger nsIDebug2.break().

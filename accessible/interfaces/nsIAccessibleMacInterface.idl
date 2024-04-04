@@ -67,7 +67,7 @@ interface nsIAccessibleMacInterface : nsISupports
    * Returns true if the given attribute is settable on the object.
    * Emulates `AXUIElementIsAttributeSettable`.
    **/
-  bool isAttributeSettable(in AString attributeName);
+  boolean isAttributeSettable(in AString attributeName);
 
   /**
    * Sets the given attribute with the given value on the object.

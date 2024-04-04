@@ -129,8 +129,8 @@ interface nsIExternalProtocolService : nsISupports
                [optional] in nsIPrincipal aTriggeringPrincipal,
                [optional] in nsIPrincipal aRedirectPrincipal,
                [optional] in BrowsingContext aBrowsingContext,
-               [optional] in bool aWasTriggeredExternally,
-               [optional] in bool aHasValidUserGestureActivation);
+               [optional] in boolean aWasTriggeredExternally,
+               [optional] in boolean aHasValidUserGestureActivation);
 
   /**
    * Gets a human-readable description for the application responsible for
@@ -151,5 +151,5 @@ interface nsIExternalProtocolService : nsISupports
    *
    * @param aScheme The scheme to look up. For example, "mms".
    */
-  bool isCurrentAppOSDefaultForProtocol(in AUTF8String aScheme);
+  boolean isCurrentAppOSDefaultForProtocol(in AUTF8String aScheme);
 };

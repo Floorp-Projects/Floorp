@@ -43,7 +43,7 @@ interface nsIDirectTaskDispatcher : nsISupports
   /**
    * Returns true if any direct tasks are pending.
    */
-  [noscript] bool haveDirectTasks();
+  [noscript] boolean haveDirectTasks();
 
   %{C++
   // Infallible version of the above. Will assert that it is successful.

@@ -312,14 +312,14 @@ interface nsIAlertsDoNotDisturb : nsISupports
    * code to show an alert. e.g. on OS X, the system will take care not
    * disrupting a user if we simply create a notification like usual.
    */
-  attribute bool manualDoNotDisturb;
+  attribute boolean manualDoNotDisturb;
 
   /**
    * Toggles a mode for the service to suppress all notifications from
    * being dispatched when sharing the screen via the getMediaDisplay
    * API.
    */
-  attribute bool suppressForScreenSharing;
+  attribute boolean suppressForScreenSharing;
 };
 
 [scriptable, uuid(fc6d7f0a-0cf6-4268-8c71-ab640842b9b1)]

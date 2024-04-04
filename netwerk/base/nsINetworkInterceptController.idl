@@ -97,7 +97,7 @@ interface nsIInterceptedChannel : nsISupports
                                   in nsIInterceptedBodyCallback callback,
                                   in nsICacheInfoChannel channel,
                                   in ACString finalURLSpec,
-                                  in bool responseRedirected);
+                                  in boolean responseRedirected);
 
     /**
      * Instruct a channel that has been intercepted that response synthesis
@@ -155,7 +155,7 @@ interface nsIInterceptedChannel : nsISupports
      * network or not.
      */
     [noscript]
-    bool GetIsReset();
+    boolean GetIsReset();
 
 %{C++
     already_AddRefed<nsIConsoleReportCollector>
@@ -239,7 +239,7 @@ interface nsINetworkInterceptController : nsISupports
      * @param aChannel The channel that may be intercepted.  It will
      *                 be in the state prior to calling OnStartRequest().
      */
-    bool shouldPrepareForIntercept(in nsIURI aURI, in nsIChannel aChannel);
+    boolean shouldPrepareForIntercept(in nsIURI aURI, in nsIChannel aChannel);
 
     /**
      * Notification when a given intercepted channel is prepared to accept a synthesized

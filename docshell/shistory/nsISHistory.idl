@@ -273,19 +273,19 @@ interface nsISHistory: nsISupports
 
   [notxpcom] void EnsureCorrectEntryAtCurrIndex(in nsISHEntry aEntry);
 
-  [notxpcom] void EvictDocumentViewersOrReplaceEntry(in nsISHEntry aNewSHEntry, in bool aReplace);
+  [notxpcom] void EvictDocumentViewersOrReplaceEntry(in nsISHEntry aNewSHEntry, in boolean aReplace);
 
   nsISHEntry createEntry();
 
-  [noscript] void AddToRootSessionHistory(in bool aCloneChildren, in nsISHEntry aOSHE,
+  [noscript] void AddToRootSessionHistory(in boolean aCloneChildren, in nsISHEntry aOSHE,
                                           in BrowsingContext aRootBC, in nsISHEntry aEntry,
                                           in unsigned long aLoadType,
-                                          in bool aShouldPersist,
+                                          in boolean aShouldPersist,
                                           out MaybeInt32 aPreviousEntryIndex,
                                           out MaybeInt32 aLoadedEntryIndex);
 
   [noscript] void AddChildSHEntryHelper(in nsISHEntry aCloneRef, in nsISHEntry aNewEntry,
-                                        in BrowsingContext aRootBC, in bool aCloneChildren);
+                                        in BrowsingContext aRootBC, in boolean aCloneChildren);
 
   [noscript, notxpcom] boolean isEmptyOrHasEntriesForSingleTopLevelPage();
 };

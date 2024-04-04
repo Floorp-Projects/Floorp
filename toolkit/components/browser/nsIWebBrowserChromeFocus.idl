@@ -21,12 +21,12 @@ interface nsIWebBrowserChromeFocus : nsISupports
      * focus the parent window.
      */
 
-    void focusNextElement(in bool aForDocumentNavigation);
+    void focusNextElement(in boolean aForDocumentNavigation);
 
     /**
      * Set the focus at the previous focusable element in the chrome.
      */
 
-    void focusPrevElement(in bool aForDocumentNavigation);
+    void focusPrevElement(in boolean aForDocumentNavigation);
 
 };

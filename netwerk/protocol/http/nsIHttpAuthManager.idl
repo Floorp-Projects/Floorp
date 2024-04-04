@@ -63,7 +63,7 @@ interface nsIHttpAuthManager : nsISupports
                                     out AString aUserDomain,
                                     out AString aUserName,
                                     out AString aUserPassword,
-                                    [optional] in bool aIsPrivate,
+                                    [optional] in boolean aIsPrivate,
                                     [optional] in nsIPrincipal aPrincipal);
 
     /**

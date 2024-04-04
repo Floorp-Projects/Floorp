@@ -105,7 +105,7 @@ interface nsIHttpChannelInternal : nsISupports
      * Returns true in case this channel is used for auth;
      * (the response header includes 'www-authenticate').
      */
-    [noscript, must_use] readonly attribute bool isAuthChannel;
+    [noscript, must_use] readonly attribute boolean isAuthChannel;
 
     /**
      * This flag is set to force relevant cookies to be sent with this load
@@ -458,7 +458,7 @@ interface nsIHttpChannelInternal : nsISupports
         in nsILoadInfo_CrossOriginOpenerPolicy aInitiatorPolicy);
 
     [noscript]
-    bool hasCrossOriginOpenerPolicyMismatch();
+    boolean hasCrossOriginOpenerPolicyMismatch();
 
     [noscript]
     nsILoadInfo_CrossOriginEmbedderPolicy getResponseEmbedderPolicy(in boolean aIsOriginTrialCoepCredentiallessEnabled);

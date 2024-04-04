@@ -101,7 +101,7 @@ interface nsIAppWindow : nsISupports
    * Locks the aspect ratio for a window.
    * @param aShouldLock boolean
    */
-  void lockAspectRatio(in bool aShouldLock);
+  void lockAspectRatio(in boolean aShouldLock);
 
   const unsigned long lowestZ = 0;
   const unsigned long loweredZ = 4;  /* "alwaysLowered" attribute */

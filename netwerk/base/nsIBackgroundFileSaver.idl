@@ -130,7 +130,7 @@ interface nsIBackgroundFileSaver : nsISupports
    *        rather than deleted, if the operation fails or is canceled.  This is
    *        generally set for downloads that use temporary ".part" files.
    */
-  void setTarget(in nsIFile aTarget, in bool aKeepPartial);
+  void setTarget(in nsIFile aTarget, in boolean aKeepPartial);
 
   /**
    * Terminates access to the output file, then notifies the observer with the

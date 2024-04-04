@@ -22,7 +22,7 @@ interface nsISystemProxySettings : nsISupports
      * provided for implementations that do not block but use other main thread only
      * functions such as dbus.
      */
-    readonly attribute bool mainThreadOnly;
+    readonly attribute boolean mainThreadOnly;
 
     /**
      * If non-empty, use this PAC file. If empty, call getProxyForURI instead.
@@ -43,5 +43,5 @@ interface nsISystemProxySettings : nsISupports
     /**
      * Check if system settings are configured to use WPAD
      */
-    readonly attribute bool systemWPADSetting;
+    readonly attribute boolean systemWPADSetting;
 };

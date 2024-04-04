@@ -27,7 +27,7 @@ interface nsICrashReporter : nsISupports
    * because the JS engine relies on proper exception handler chaining.
    */
   [noscript]
-  void setEnabled(in bool enabled);
+  void setEnabled(in boolean enabled);
 
   /**
    * Get or set the URL to which crash reports will be submitted.

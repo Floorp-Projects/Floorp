@@ -11,7 +11,7 @@
 interface nsICredentialParameters : nsISupports
 {
     readonly attribute ACString credentialId;
-    readonly attribute bool isResidentCredential;
+    readonly attribute boolean isResidentCredential;
     readonly attribute ACString rpId;
     readonly attribute ACString privateKey;
     readonly attribute ACString userHandle;
@@ -37,7 +37,7 @@ interface nsIWebAuthnAutoFillEntry: nsISupports
 interface nsIWebAuthnService : nsISupports
 {
     // IsUserVerifyingPlatformAuthenticatorAvailable
-    readonly attribute bool isUVPAA;
+    readonly attribute boolean isUVPAA;
 
     void makeCredential(
         in uint64_t aTransactionId,
@@ -83,7 +83,7 @@ interface nsIWebAuthnService : nsISupports
     void resumeConditionalGet(in uint64_t aTransactionId);
 
     void pinCallback(in uint64_t aTransactionId, in ACString aPin);
-    void resumeMakeCredential(in uint64_t aTransactionId, in bool aForceNoneAttestation);
+    void resumeMakeCredential(in uint64_t aTransactionId, in boolean aForceNoneAttestation);
     void selectionCallback(in uint64_t aTransactionId, in uint64_t aIndex);
 
     // Adds a virtual (software) authenticator for use in tests (particularly
@@ -92,10 +92,10 @@ interface nsIWebAuthnService : nsISupports
     uint64_t addVirtualAuthenticator(
         in ACString protocol,
         in ACString transport,
-        in bool hasResidentKey,
-        in bool hasUserVerification,
-        in bool isUserConsenting,
-        in bool isUserVerified);
+        in boolean hasResidentKey,
+        in boolean hasUserVerification,
+        in boolean isUserConsenting,
+        in boolean isUserVerified);
 
     // Removes a previously-added virtual authenticator, as identified by its
     // id. See
@@ -107,7 +107,7 @@ interface nsIWebAuthnService : nsISupports
     void addCredential(
         in uint64_t authenticatorId,
         in ACString credentialId,
-        in bool isResidentCredential,
+        in boolean isResidentCredential,
         in ACString rpId,
         in ACString privateKey,
         in ACString userHandle,
@@ -127,7 +127,7 @@ interface nsIWebAuthnService : nsISupports
 
     // Sets the "isUserVerified" bit on a virtual authenticator. See
     // https://w3c.github.io/webauthn/#sctn-automation-set-user-verified
-    void setUserVerified(in uint64_t authenticatorId, in bool isUserVerified);
+    void setUserVerified(in uint64_t authenticatorId, in boolean isUserVerified);
 
     // about:webauthn-specific functions
     void listen();

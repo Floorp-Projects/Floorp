@@ -10,7 +10,7 @@ interface nsIX509Cert;
 [scriptable, function, uuid(6b00d96d-fb8a-4c9f-9632-c9e1235befce)]
 interface nsIClientAuthDialogCallback : nsISupports
 {
-  void certificateChosen(in nsIX509Cert cert, in bool rememberDecision);
+  void certificateChosen(in nsIX509Cert cert, in boolean rememberDecision);
 };
 
 /**

@@ -46,7 +46,7 @@ interface nsITLSSocketControl : nsISupports {
     /* If 0RTT handshake was applied and some data has been sent, as soon as
      * the handshake finishes this attribute will be set to appropriate value.
      */
-    readonly attribute bool earlyDataAccepted;
+    readonly attribute boolean earlyDataAccepted;
 
     /* When 0RTT is performed, PR_Write will not drive the handshake forward.
      * It must be forced by calling this function.

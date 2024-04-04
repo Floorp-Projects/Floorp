@@ -201,5 +201,5 @@ interface nsIEffectiveTLDService : nsISupports
      * @param aInput The host to be analyzed.
      * @param aHost  The host to compare to.
      */
-    bool hasRootDomain(in AUTF8String aInput, in AUTF8String aHost);
+    boolean hasRootDomain(in AUTF8String aInput, in AUTF8String aHost);
 };

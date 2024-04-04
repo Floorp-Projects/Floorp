@@ -111,12 +111,12 @@ interface nsIDNSAddrRecord : nsIDNSRecord
     /**
      * Record retreived with TRR.
      */
-    bool IsTRR();
+    boolean IsTRR();
 
     /**
      * Record is resolved in socket process.
      */
-    bool resolvedInSocketProcess();
+    boolean resolvedInSocketProcess();
 
     /**
      * This attribute is only set if TRR is used and it measures time between

@@ -36,7 +36,7 @@ interface nsIDumpGCAndCCLogsCallback : nsISupports
    */
   void onDump(in nsIFile aGCLog,
               in nsIFile aCCLog,
-              in bool aIsParent);
+              in boolean aIsParent);
 
   /**
    * Called when GC/CC logging has finished, after all calls to |onDump|.
@@ -153,8 +153,8 @@ interface nsIMemoryInfoDumper : nsISupports
    *
    */
   void dumpGCAndCCLogsToFile(in AString aIdentifier,
-                             in bool aDumpAllTraces,
-                             in bool aDumpChildProcesses,
+                             in boolean aDumpAllTraces,
+                             in boolean aDumpChildProcesses,
                              in nsIDumpGCAndCCLogsCallback aCallback);
 
   /**
@@ -162,6 +162,6 @@ interface nsIMemoryInfoDumper : nsISupports
    * sink object instead of accessing the filesystem directly, and
    * dumps the current process only.
    */
-  void dumpGCAndCCLogsToSink(in bool aDumpAllTraces,
+  void dumpGCAndCCLogsToSink(in boolean aDumpAllTraces,
                              in nsICycleCollectorLogSink aSink);
 };

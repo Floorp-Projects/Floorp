@@ -73,7 +73,7 @@ interface nsITextInputProcessorNotification : nsISupports
    * This is true if selection has a range.  Otherwise, i.e., there is no
    * range such as after calling Selection.removeAllRanges, this is false.
    */
-  readonly attribute bool hasRange;
+  readonly attribute boolean hasRange;
 
   /**
    * Be careful, line breakers in the editor are treated as native line

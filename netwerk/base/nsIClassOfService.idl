@@ -26,7 +26,7 @@ native ClassOfService(mozilla::net::ClassOfService);
 interface nsIClassOfService : nsISupports
 {
   attribute unsigned long classFlags;
-  attribute bool incremental;
+  attribute boolean incremental;
 
   void clearClassFlags(in unsigned long flags);
   void addClassFlags(in unsigned long flags);

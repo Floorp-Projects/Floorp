@@ -7,5 +7,5 @@
 [scriptable, function, uuid(b4b1449d-0ef0-47f5-b62e-adc57fd49702)]
 interface nsIPrivacyTransitionObserver : nsISupports
 {
-  void privateModeChanged(in bool enabled);
+  void privateModeChanged(in boolean enabled);
 };

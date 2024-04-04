@@ -10,7 +10,7 @@ interface nsICaptivePortalServiceCallback : nsISupports
   /**
    * Invoke callbacks after captive portal detection finished.
    */
-  void complete(in bool success, in nsresult error);
+  void complete(in boolean success, in nsresult error);
 };
 
 /**

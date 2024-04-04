@@ -16,7 +16,7 @@ interface nsICaptivePortalCallback : nsISupports
   /**
    * Invoke callbacks after captive portal detection finished.
    */
-  void complete(in bool success);
+  void complete(in boolean success);
 };
 
 [scriptable, uuid(2f827c5a-f551-477f-af09-71adbfbd854a)]

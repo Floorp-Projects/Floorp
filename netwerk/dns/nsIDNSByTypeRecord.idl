@@ -102,7 +102,7 @@ interface nsISVCBRecord : nsISupports {
   readonly attribute ACString selectedAlpn;
   readonly attribute ACString echConfig;
   readonly attribute ACString ODoHConfig;
-  readonly attribute bool hasIPHintAddress;
+  readonly attribute boolean hasIPHintAddress;
   readonly attribute Array<nsISVCParam> values;
 };
 

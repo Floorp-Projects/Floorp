@@ -331,14 +331,14 @@ interface nsISHEntry : nsISupports
                            in nsIURI originalURI,
                            in nsIURI resultPrincipalURI,
                            in nsIURI unstrippedURI,
-                           in bool loadReplace,
+                           in boolean loadReplace,
                            in nsIReferrerInfo referrerInfo,
                            in AString srcdoc,
-                           in bool srcdocEntry,
+                           in boolean srcdocEntry,
                            in nsIURI baseURI,
-                           in bool saveLayoutState,
-                           in bool expired,
-                           in bool userActivation);
+                           in boolean saveLayoutState,
+                           in boolean expired,
+                           in boolean userActivation);
 
     nsISHEntry clone();
 
@@ -413,7 +413,7 @@ interface nsISHEntry : nsISupports
      * Add a new child SHEntry. If offset is -1 adds to the end of the list.
      */
     void AddChild(in nsISHEntry aChild, in long aOffset,
-                  [optional,default(false)] in bool aUseRemoteSubframes);
+                  [optional,default(false)] in boolean aUseRemoteSubframes);
 
     /**
      * Remove a child SHEntry.

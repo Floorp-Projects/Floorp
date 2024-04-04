@@ -91,7 +91,7 @@ interface nsIScriptError : nsIConsoleMessage
     // Error created from a Promise rejection.
     readonly attribute boolean isPromiseRejection;
 
-    [noscript] void initIsPromiseRejection(in bool isPromiseRejection);
+    [noscript] void initIsPromiseRejection(in boolean isPromiseRejection);
 
     // The "exception" value generated when an uncaught exception is thrown
     // by JavaScript. This can be any value, e.g.
@@ -135,8 +135,8 @@ interface nsIScriptError : nsIConsoleMessage
               in uint32_t columnNumber,
               in uint32_t flags,
               in ACString category,
-              [optional] in bool fromPrivateWindow,
-              [optional] in bool fromChromeContext);
+              [optional] in boolean fromPrivateWindow,
+              [optional] in boolean fromChromeContext);
 
     /* This should be called instead of nsIScriptError.init to
      * initialize with a window id.  The window id should be for the
@@ -158,7 +158,7 @@ interface nsIScriptError : nsIConsoleMessage
                           in uint32_t flags,
                           in ACString category,
                           in unsigned long long innerWindowID,
-                          [optional] in bool fromChromeContext);
+                          [optional] in boolean fromChromeContext);
 
     /* This is the same function as initWithWindowID, but it expects an already
      * sanitized sourceName.
@@ -172,7 +172,7 @@ interface nsIScriptError : nsIConsoleMessage
                                  in uint32_t flags,
                                  in ACString category,
                                  in unsigned long long innerWindowID,
-                                 [optional] in bool fromChromeContext);
+                                 [optional] in boolean fromChromeContext);
 
     /* This is the same function as initWithWindowID with an uri as a source parameter.
      */
@@ -184,7 +184,7 @@ interface nsIScriptError : nsIConsoleMessage
                            in uint32_t flags,
                            in ACString category,
                            in unsigned long long innerWindowID,
-                           [optional] in bool fromChromeContext);
+                           [optional] in boolean fromChromeContext);
 
     /* Initialize the script source ID in a new error. */
     void initSourceId(in uint32_t sourceId);

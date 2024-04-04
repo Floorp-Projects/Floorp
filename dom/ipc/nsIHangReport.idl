@@ -47,5 +47,5 @@ interface nsIHangReport : nsISupports
 
   // Inquire whether the report is for a content process loaded by the given
   // frameloader, or any descendents in its BrowsingContext tree.
-  bool isReportForBrowserOrChildren(in FrameLoader aFrameLoader);
+  boolean isReportForBrowserOrChildren(in FrameLoader aFrameLoader);
 };

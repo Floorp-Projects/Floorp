@@ -44,7 +44,7 @@ interface nsIOpenSignedAppFileCallback : nsISupports
 [scriptable, function, uuid(07c08655-8b11-4650-b6c4-0c145595ceb5)]
 interface nsIAsyncBoolCallback : nsISupports
 {
-    void onResult(in bool result);
+    void onResult(in boolean result);
 };
 
 /**
@@ -60,7 +60,7 @@ interface nsIAsyncBoolCallback : nsISupports
 interface nsICertVerificationCallback : nsISupports {
   void verifyCertFinished(in int32_t aPRErrorCode,
                           in Array<nsIX509Cert> aVerifiedChain,
-                          in bool aHasEVPolicy);
+                          in boolean aHasEVPolicy);
 };
 
 /**

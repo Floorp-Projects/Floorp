@@ -47,14 +47,14 @@ interface nsIClientAuthRememberService : nsISupports
                                   in nsIX509Cert aClientCert);
 
   [must_use, noscript]
-  bool hasRememberedDecision(in ACString aHostName,
-                             in const_OriginAttributesRef aOriginAttributes,
-                             out ACString aCertDBKey);
+  boolean hasRememberedDecision(in ACString aHostName,
+                                in const_OriginAttributesRef aOriginAttributes,
+                                out ACString aCertDBKey);
 
   [implicit_jscontext]
-  bool hasRememberedDecisionScriptable(in ACString aHostName,
-                                       in jsval originAttributes,
-                                       out ACString aCertDBKey);
+  boolean hasRememberedDecisionScriptable(in ACString aHostName,
+                                          in jsval originAttributes,
+                                          out ACString aCertDBKey);
 
   [must_use]
   void clearRememberedDecisions();

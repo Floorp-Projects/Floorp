@@ -359,7 +359,7 @@ interface nsIChannel : nsIRequest
      * Note: May have the wrong value if called before OnStartRequest as we
      * don't know the MIME type yet.
      */
-    readonly attribute bool isDocument;
+    readonly attribute boolean isDocument;
 
 %{ C++
   inline bool IsDocument()

@@ -55,9 +55,9 @@ interface nsISynthVoiceRegistry : nsISupports
 
   AString getVoice(in uint32_t aIndex);
 
-  bool isDefaultVoice(in AString aUri);
+  boolean isDefaultVoice(in AString aUri);
 
-  bool isLocalVoice(in AString aUri);
+  boolean isLocalVoice(in AString aUri);
 
   AString getVoiceLang(in AString aUri);
 

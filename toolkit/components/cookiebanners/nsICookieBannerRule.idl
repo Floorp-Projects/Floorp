@@ -85,7 +85,7 @@ interface nsICookieBannerRule : nsISupports {
      * aOptIn - The CSS selector for selecting the opt-in banner button
      */
     void addClickRule(in ACString aPresence,
-                      [optional] in bool aSkipPresenceVisibilityCheck,
+                      [optional] in boolean aSkipPresenceVisibilityCheck,
                       [optional] in nsIClickRule_RunContext aRunContext,
                       [optional] in ACString aHide,
                       [optional] in ACString aOptOut,

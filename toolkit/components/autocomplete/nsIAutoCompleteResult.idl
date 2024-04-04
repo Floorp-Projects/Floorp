@@ -83,7 +83,7 @@ interface nsIAutoCompleteResult : nsISupports
   /**
    * True if the value at the given index is removable.
    */
-  bool isRemovableAt(in long rowIndex);
+  boolean isRemovableAt(in long rowIndex);
 
   /**
    * Remove the value at the given index from the autocomplete results.

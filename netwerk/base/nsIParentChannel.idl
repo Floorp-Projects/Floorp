@@ -62,7 +62,7 @@ interface nsIParentChannel : nsIStreamListener
    *        with the URI of the window.
    */
   [noscript] void notifyClassificationFlags(in uint32_t aClassificationFlags,
-                                            in bool aIsThirdParty);
+                                            in boolean aIsThirdParty);
 
   /**
    * Called to invoke deletion of the IPC protocol.

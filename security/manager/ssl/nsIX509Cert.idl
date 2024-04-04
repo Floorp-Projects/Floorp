@@ -196,5 +196,5 @@ interface nsIX509Cert : nsISupports {
   void SerializeToIPC(in IpcMessageWriterPtr aWriter);
 
   [notxpcom, noscript]
-  bool DeserializeFromIPC(in IpcMessageReaderPtr aReader);
+  boolean DeserializeFromIPC(in IpcMessageReaderPtr aReader);
 };

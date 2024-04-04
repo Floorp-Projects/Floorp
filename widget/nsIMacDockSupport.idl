@@ -41,7 +41,7 @@ interface nsIMacDockSupport : nsISupports
    * True if this app is in the list of apps that are persisted to the macOS
    * Dock (as if the user selected "Keep in Dock").
    */
-  readonly attribute bool isAppInDock;
+  readonly attribute boolean isAppInDock;
 
   /**
    * Ensure that there is a tile for this app in the list of apps that are
@@ -66,6 +66,6 @@ interface nsIMacDockSupport : nsISupports
    * @return true if the app was already in the list of persisted apps or if it
    *   was successfully added, else returns false.
    */
-  bool ensureAppIsPinnedToDock([optional] in AString aAppPath,
-                               [optional] in AString aAppToReplacePath);
+  boolean ensureAppIsPinnedToDock([optional] in AString aAppPath,
+                                  [optional] in AString aAppToReplacePath);
 };

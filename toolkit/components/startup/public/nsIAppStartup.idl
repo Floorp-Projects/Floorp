@@ -81,7 +81,7 @@ interface nsIAppStartup : nsISupports
      * was called (and therefore the application crashed).
      * @return whether safe mode is necessary
      */
-    bool trackStartupCrashBegin();
+    boolean trackStartupCrashBegin();
 
     /**
      * We have succesfully started without crashing. Clear flags that were
@@ -149,7 +149,7 @@ interface nsIAppStartup : nsISupports
      *         of a hidden window or if the user disallowed a window
      *         to be closed.
      */
-    bool quit(in uint32_t aMode, [optional] in int32_t aExitCode);
+    boolean quit(in uint32_t aMode, [optional] in int32_t aExitCode);
 
     /**
     * These values must match the xpcom/base/ShutdownPhase.h values.
@@ -190,7 +190,7 @@ interface nsIAppStartup : nsISupports
      *
      * @return true if we are in or beyond the given phase.
      */
-    bool isInOrBeyondShutdownPhase(in nsIAppStartup_IDLShutdownPhase aPhase);
+    boolean isInOrBeyondShutdownPhase(in nsIAppStartup_IDLShutdownPhase aPhase);
 
     /**
      * True if the application is in the process of shutting down.
@@ -240,7 +240,7 @@ interface nsIAppStartup : nsISupports
     /**
      * Whether or not we showed the startup skeleton UI.
      */
-    readonly attribute bool showedPreXULSkeletonUI;
+    readonly attribute boolean showedPreXULSkeletonUI;
 
     /**
      * Returns an object with main, process, firstPaint, sessionRestored properties.

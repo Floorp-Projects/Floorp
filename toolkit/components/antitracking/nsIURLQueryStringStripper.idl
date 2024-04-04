@@ -23,7 +23,7 @@ interface nsIURLQueryStringStripper : nsISupports {
   // Strip the query parameters that are in the strip list. Return the amount of
   // query parameters that have been stripped. Returns 0 if no query parameters
   // have been stripped or the feature is disabled.
-  uint32_t strip(in nsIURI aURI, in bool aIsPBM, out nsIURI aOutput);
+  uint32_t strip(in nsIURI aURI, in boolean aIsPBM, out nsIURI aOutput);
 
   // Strip the query parameters that are in the stripForCopy/Share strip list.
   // Returns ether the stripped URI or null if no query parameters have been stripped

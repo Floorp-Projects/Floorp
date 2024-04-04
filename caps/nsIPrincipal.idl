@@ -72,7 +72,7 @@ interface nsIPrincipal : nsISupports
      * May be called from any thread.
      */
 
-    boolean equalsForPermission(in nsIPrincipal other, in bool aExactHost);
+    boolean equalsForPermission(in nsIPrincipal other, in boolean aExactHost);
 
     /**
      * Like equals, but takes document.domain changes into account.
@@ -424,7 +424,7 @@ interface nsIPrincipal : nsISupports
      *
      * May be called from any thread.
      */
-    bool allowsRelaxStrictFileOriginPolicy(in nsIURI aURI);
+    boolean allowsRelaxStrictFileOriginPolicy(in nsIURI aURI);
 
 
     /*
@@ -433,7 +433,7 @@ interface nsIPrincipal : nsISupports
      * May be called from any thread.
      */
     [noscript]
-    ACString getPrefLightCacheKey(in nsIURI aURI ,in bool aWithCredentials,
+    ACString getPrefLightCacheKey(in nsIURI aURI ,in boolean aWithCredentials,
                                   in const_OriginAttributes aOriginAttributes);
 
 
@@ -444,7 +444,7 @@ interface nsIPrincipal : nsISupports
      *
      * NOTE: Main-Thread Only.
      */
-    bool hasFirstpartyStorageAccess(in mozIDOMWindow aWindow, out uint32_t rejectedReason);
+    boolean hasFirstpartyStorageAccess(in mozIDOMWindow aWindow, out uint32_t rejectedReason);
 
 
     /*

@@ -58,5 +58,5 @@ interface nsIRandomAccessStream : nsISeekableStream
 
   [notxpcom, nostdcall] RandomAccessStreamParams serialize(in nsIInterfaceRequestor aCallbacks);
 
-  [notxpcom, nostdcall] bool deserialize(inout RandomAccessStreamParamsRef params);
+  [notxpcom, nostdcall] boolean deserialize(inout RandomAccessStreamParamsRef params);
 };

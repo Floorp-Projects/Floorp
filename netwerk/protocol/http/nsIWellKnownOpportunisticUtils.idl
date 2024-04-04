@@ -19,5 +19,5 @@ interface nsIWellKnownOpportunisticUtils : nsISupports
     [must_use] void verify(in ACString aJSON,
                in ACString  aOrigin);
 
-    [must_use] readonly attribute bool valid;
+    [must_use] readonly attribute boolean valid;
 };

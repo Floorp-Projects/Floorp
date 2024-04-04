@@ -17,7 +17,7 @@ interface nsPISocketTransportService : nsIRoutedSocketTransportService
    * init/shutdown routines.
    */
   void init();
-  void shutdown(in bool aXpcomShutdown);
+  void shutdown(in boolean aXpcomShutdown);
 
   /**
    * controls the TCP sender window clamp

@@ -225,7 +225,7 @@ interface nsIZipReaderCache : nsISupports
     /**
      * returns true if this zipreader already has this file cached
      */
-    bool isCached(in nsIFile zipFile);
+    boolean isCached(in nsIFile zipFile);
 
     /**
      * Returns a (possibly shared) nsIZipReader for a zip inside another zip
