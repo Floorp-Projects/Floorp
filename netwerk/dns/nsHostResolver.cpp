@@ -1673,6 +1673,15 @@ nsHostResolver::LookupStatus nsHostResolver::CompleteLookupByTypeLocked(
   MOZ_ASSERT(rec->pb == pb);
   MOZ_ASSERT(!rec->IsAddrRecord());
 
+  if (rec->LoadNative()) {
+    // If this was resolved using the native resolver
+    // we also need to update the global count.
+    if (rec->LoadUsingAnyThread()) {
+      mActiveAnyThreadCount--;
+      rec->StoreUsingAnyThread(false);
+    }
+  }
+
   RefPtr<TypeHostRecord> typeRec = do_QueryObject(rec);
   MOZ_ASSERT(typeRec);
 
