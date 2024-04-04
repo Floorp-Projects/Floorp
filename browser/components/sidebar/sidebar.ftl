@@ -9,13 +9,15 @@ sidebar-launcher-insights =
 ##   $date (string) - Date to be formatted based on locale
 
 sidebar-history-date-today =
-  .heading = Today - { DATETIME($date, dateStyle: "full") }
+  .heading = Today — { DATETIME($date, dateStyle: "full") }
 sidebar-history-date-yesterday =
-  .heading = Yesterday - { DATETIME($date, dateStyle: "full") }
+  .heading = Yesterday — { DATETIME($date, dateStyle: "full") }
 sidebar-history-date-this-month =
   .heading = { DATETIME($date, dateStyle: "full") }
 sidebar-history-date-prev-month =
   .heading = { DATETIME($date, month: "long", year: "numeric") }
+
+##
 
 # "Search" is a noun (as in "Results of the search for")
 # Variables:
