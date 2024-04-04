@@ -3348,3 +3348,207 @@ add_task(async function test_nested_prefs_enroll_both() {
     branch: DEFAULT,
   });
 });
+
+const TYPED_FEATURE = new ExperimentFeature("test-typed-prefs", {
+  description: "Test feature that sets each type of pref",
+  owner: "test@test.test",
+  hasExposure: false,
+  variables: {
+    string: {
+      type: "string",
+      description: "test string variable",
+      setPref: {
+        branch: "default",
+        pref: "nimbus.test-only.types.string",
+      },
+    },
+    int: {
+      type: "int",
+      description: "test int variable",
+      setPref: {
+        branch: "default",
+        pref: "nimbus.test-only.types.int",
+      },
+    },
+    boolean: {
+      type: "boolean",
+      description: "test boolean variable",
+      setPref: {
+        branch: "default",
+        pref: "nimbus.test-only.types.boolean",
+      },
+    },
+    json: {
+      type: "json",
+      description: "test json variable",
+      setPref: {
+        branch: "default",
+        pref: "nimbus.test-only.types.json",
+      },
+    },
+  },
+});
+
+add_task(async function test_setPref_types() {
+  const featureCleanup = ExperimentTestUtils.addTestFeatures(TYPED_FEATURE);
+
+  const store = ExperimentFakes.store();
+  const manager = ExperimentFakes.manager(store);
+
+  await manager.onStartup();
+  await assertEmptyStore(store);
+
+  const json = {
+    foo: "foo",
+    bar: 12345,
+    baz: true,
+    qux: null,
+    quux: ["corge"],
+  };
+
+  const experimentCleanup = await ExperimentFakes.enrollWithFeatureConfig(
+    {
+      featureId: TYPED_FEATURE.featureId,
+      value: {
+        string: "hello, world",
+        int: 12345,
+        boolean: true,
+        json,
+      },
+    },
+    { manager }
+  );
+
+  const defaultBranch = Services.prefs.getDefaultBranch(null);
+
+  Assert.equal(
+    defaultBranch.getPrefType("nimbus.test-only.types.string"),
+    Services.prefs.PREF_STRING
+  );
+  Assert.equal(
+    defaultBranch.getStringPref("nimbus.test-only.types.string"),
+    "hello, world"
+  );
+
+  Assert.equal(
+    defaultBranch.getPrefType("nimbus.test-only.types.int"),
+    Services.prefs.PREF_INT
+  );
+  Assert.equal(defaultBranch.getIntPref("nimbus.test-only.types.int"), 12345);
+
+  Assert.equal(
+    defaultBranch.getPrefType("nimbus.test-only.types.boolean"),
+    Services.prefs.PREF_BOOL
+  );
+  Assert.equal(
+    defaultBranch.getBoolPref("nimbus.test-only.types.boolean"),
+    true
+  );
+
+  Assert.equal(
+    defaultBranch.getPrefType("nimbus.test-only.types.json"),
+    Services.prefs.PREF_STRING
+  );
+
+  const jsonPrefValue = JSON.parse(
+    defaultBranch.getStringPref("nimbus.test-only.types.json")
+  );
+
+  Assert.deepEqual(json, jsonPrefValue);
+
+  await experimentCleanup();
+  featureCleanup();
+
+  await assertEmptyStore(store, { cleanup: true });
+});
+
+add_task(async function test_setPref_types_restore() {
+  const featureCleanup = ExperimentTestUtils.addTestFeatures(TYPED_FEATURE);
+
+  const json = {
+    foo: "foo",
+    bar: 12345,
+    baz: true,
+    qux: null,
+    quux: ["corge"],
+  };
+
+  {
+    const store = ExperimentFakes.store();
+    const manager = ExperimentFakes.manager(store);
+
+    await manager.onStartup();
+    await assertEmptyStore(store);
+
+    await ExperimentFakes.enrollWithFeatureConfig(
+      {
+        featureId: TYPED_FEATURE.featureId,
+        value: {
+          string: "hello, world",
+          int: 12345,
+          boolean: true,
+          json,
+        },
+      },
+      { manager }
+    );
+
+    store._store.saveSoon();
+    await store._store.finalize();
+
+    for (const varDef of Object.values(TYPED_FEATURE.manifest.variables)) {
+      Services.prefs.deleteBranch(varDef.setPref.pref);
+    }
+
+    removePrefObservers(manager);
+    assertNoObservers(manager);
+  }
+
+  const store = ExperimentFakes.store();
+  const manager = ExperimentFakes.manager(store);
+
+  await manager.onStartup();
+
+  const defaultBranch = Services.prefs.getDefaultBranch(null);
+  Assert.equal(
+    defaultBranch.getPrefType("nimbus.test-only.types.string"),
+    Services.prefs.PREF_STRING
+  );
+  Assert.equal(
+    defaultBranch.getStringPref("nimbus.test-only.types.string"),
+    "hello, world"
+  );
+
+  Assert.equal(
+    defaultBranch.getPrefType("nimbus.test-only.types.int"),
+    Services.prefs.PREF_INT
+  );
+  Assert.equal(defaultBranch.getIntPref("nimbus.test-only.types.int"), 12345);
+
+  Assert.equal(
+    defaultBranch.getPrefType("nimbus.test-only.types.boolean"),
+    Services.prefs.PREF_BOOL
+  );
+  Assert.equal(
+    defaultBranch.getBoolPref("nimbus.test-only.types.boolean"),
+    true
+  );
+
+  Assert.equal(
+    defaultBranch.getPrefType("nimbus.test-only.types.json"),
+    Services.prefs.PREF_STRING
+  );
+
+  const jsonPrefValue = JSON.parse(
+    defaultBranch.getStringPref("nimbus.test-only.types.json")
+  );
+
+  Assert.deepEqual(json, jsonPrefValue);
+
+  const enrollment = store.getExperimentForFeature(TYPED_FEATURE.featureId);
+  manager.unenroll(enrollment.slug);
+  store._deleteForTests(enrollment.slug);
+
+  await assertEmptyStore(store, { cleanup: true });
+  featureCleanup();
+});
