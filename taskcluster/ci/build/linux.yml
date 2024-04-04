@@ -1835,6 +1835,7 @@ linux64-aarch64-shippable/opt:
         secrets: true
         tooltool-downloads: public
     run-on-projects: ['mozilla-central']
+    run-on-releases: ['nightly']
     fetches:
         toolchain:
             - linux64-clang
