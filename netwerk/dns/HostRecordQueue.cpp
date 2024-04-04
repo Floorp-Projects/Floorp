@@ -166,6 +166,10 @@ void HostRecordQueue::MoveToAnotherPendingQ(nsHostRecord* aRec,
   }
 
   aRec->remove();
+  // We just removed from pending queue. Insert record will
+  // increment this value again.
+  mPendingCount--;
+
   InsertRecord(aRec, aFlags, aProofOfLock);
 }
 
