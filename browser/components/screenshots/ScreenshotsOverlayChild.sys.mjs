@@ -853,9 +853,9 @@ export class ScreenshotsOverlay {
    */
   setFocusToActionButton() {
     if (lazy.SCREENSHOTS_LAST_SAVED_METHOD === "copy") {
-      this.copyButton.focus({ focusVisible: true });
+      this.copyButton.focus({ focusVisible: true, preventScroll: true });
     } else {
-      this.downloadButton.focus({ focusVisible: true });
+      this.downloadButton.focus({ focusVisible: true, preventScroll: true });
     }
   }
 
