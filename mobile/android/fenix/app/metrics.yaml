@@ -45,7 +45,7 @@ events:
       source:
         description: |
           The view the user was on when they initiated the search (For example:
-          `HOME`, `HOME_NAV_SEARCH`, `HOME_QR`, `HOME_VOICE` or `BROWSER`)
+          `HOME`, `HOME_QR`, `HOME_VOICE` or `BROWSER`)
         type: string
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/959
@@ -11514,6 +11514,179 @@ debug_drawer:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1876596
     data_reviews:
       - https://github.com/mozilla-mobile/firefox-android/pull/5356
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
+
+navigation_bar:
+  home_search_tapped:
+    type: event
+    description: |
+      When navigation bar search button is tapped by the user.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1889484
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1889484
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
+  home_tab_tray_tapped:
+    type: event
+    description: |
+      When navigation bar tab tray button is tapped by the user.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1889484
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1889484
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
+  home_menu_tapped:
+    type: event
+    description: |
+      When navigation bar menu button is tapped by the user.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1889484
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1889484
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
+  browser_back_tapped:
+    type: event
+    description: |
+      When navigation bar back button is tapped by the user.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1889484
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1889484
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
+  browser_back_long_tapped:
+    type: event
+    description: |
+      When navigation bar back button is long tapped by the user.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1889484
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1889484
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
+  browser_forward_tapped:
+    type: event
+    description: |
+      When navigation bar forward button is tapped by the user.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1889484
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1889484
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
+  browser_forward_long_tapped:
+    type: event
+    description: |
+      When navigation bar forward button is long tapped by the user.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1889484
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1889484
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
+  browser_tab_tray_tapped:
+    type: event
+    description: |
+      When navigation bar tab tray button is tapped by the user.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1889484
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1889484
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
+  browser_menu_tapped:
+    type: event
+    description: |
+      When navigation bar menu button is tapped by the user.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1889484
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1889484
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
+  browser_home_tapped:
+    type: event
+    description: |
+      When navigation bar home button is tapped by the user.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1889484
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1889484
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
+
+address_toolbar:
+  share_tapped:
+    type: event
+    description: |
+      When share button is tapped on the toolbar.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1889484
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1889484
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
+  reload_tapped:
+    type: event
+    description: |
+      When reload button is tapped on the toolbar.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1889484
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1889484
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
+  cancel_tapped:
+    type: event
+    description: |
+      When cancel button is tapped on the toolbar.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1889484
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1889484
     data_sensitivity:
       - interaction
     notification_emails:

@@ -78,16 +78,14 @@ import mozilla.components.feature.top.sites.TopSitesFrecencyConfig
 import mozilla.components.feature.top.sites.TopSitesProviderConfig
 import mozilla.components.lib.state.ext.consumeFlow
 import mozilla.components.lib.state.ext.consumeFrom
-import mozilla.components.lib.state.ext.flow
 import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.ui.colors.PhotonColors
 import org.mozilla.fenix.BrowserDirection
-import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.HomeScreen
 import org.mozilla.fenix.GleanMetrics.Homepage
+import org.mozilla.fenix.GleanMetrics.NavigationBar
 import org.mozilla.fenix.GleanMetrics.PrivateBrowsingShortcutCfr
-import org.mozilla.fenix.GleanMetrics.StartOnHome
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
@@ -464,6 +462,7 @@ class HomeFragment : Fragment() {
             }
 
             val menuButton = MenuButton(requireContext())
+            menuButton.recordClickEvent = { NavigationBar.homeMenuTapped.record(NoExtras()) }
             HomeMenuView(
                 view = binding.root,
                 context = requireContext(),
@@ -491,6 +490,7 @@ class HomeFragment : Fragment() {
                                 browserStore = requireContext().components.core.store,
                                 menuButton = menuButton,
                                 onSearchButtonClick = {
+                                    NavigationBar.homeSearchTapped.record(NoExtras())
                                     val directions =
                                         NavGraphDirections.actionGlobalSearchDialog(
                                             sessionId = null,
@@ -501,11 +501,9 @@ class HomeFragment : Fragment() {
                                         directions,
                                         BrowserAnimator.getToolbarNavOptions(activity),
                                     )
-
-                                    Events.searchBarTapped.record(Events.SearchBarTappedExtra("HOME_NAV_SEARCH"))
                                 },
                                 onTabsButtonClick = {
-                                    StartOnHome.openTabsTray.record(NoExtras())
+                                    NavigationBar.homeTabTrayTapped.record(NoExtras())
                                     findNavController().nav(
                                         findNavController().currentDestination?.id,
                                         NavGraphDirections.actionGlobalTabsTrayFragment(

@@ -120,6 +120,7 @@ import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.MediaState
+import org.mozilla.fenix.GleanMetrics.NavigationBar
 import org.mozilla.fenix.GleanMetrics.PullToRefreshInBrowser
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.IntentReceiverActivity
@@ -503,6 +504,7 @@ abstract class BaseBrowserFragment :
                         ThemeManager.resolveAttribute(R.attr.textPrimary, context),
                     ),
                 )
+                recordClickEvent = { NavigationBar.browserMenuTapped.record(NoExtras()) }
             }
 
             _bottomToolbarContainerView = BottomToolbarContainerView(
@@ -523,27 +525,31 @@ abstract class BaseBrowserFragment :
                                 browserStore = context.components.core.store,
                                 menuButton = menuButton,
                                 onBackButtonClick = {
+                                    NavigationBar.browserBackTapped.record(NoExtras())
                                     browserToolbarInteractor.onBrowserToolbarMenuItemTapped(
                                         ToolbarMenu.Item.Back(viewHistory = false),
                                     )
                                 },
                                 onBackButtonLongPress = {
+                                    NavigationBar.browserBackLongTapped.record(NoExtras())
                                     browserToolbarInteractor.onBrowserToolbarMenuItemTapped(
                                         ToolbarMenu.Item.Back(viewHistory = true),
                                     )
                                 },
                                 onForwardButtonClick = {
+                                    NavigationBar.browserForwardTapped.record(NoExtras())
                                     browserToolbarInteractor.onBrowserToolbarMenuItemTapped(
                                         ToolbarMenu.Item.Forward(viewHistory = false),
                                     )
                                 },
                                 onForwardButtonLongPress = {
+                                    NavigationBar.browserForwardLongTapped.record(NoExtras())
                                     browserToolbarInteractor.onBrowserToolbarMenuItemTapped(
                                         ToolbarMenu.Item.Forward(viewHistory = true),
                                     )
                                 },
                                 onHomeButtonClick = {
-                                    Events.browserToolbarHomeTapped.record(NoExtras())
+                                    NavigationBar.browserHomeTapped.record(NoExtras())
                                     browserAnimator.captureEngineViewAndDrawStatically {
                                         findNavController().navigate(
                                             BrowserFragmentDirections.actionGlobalHome(),
@@ -551,6 +557,7 @@ abstract class BaseBrowserFragment :
                                     }
                                 },
                                 onTabsButtonClick = {
+                                    NavigationBar.browserTabTrayTapped.record(NoExtras())
                                     thumbnailsFeature.get()?.requestScreenshot()
                                     findNavController().nav(
                                         R.id.browserFragment,
