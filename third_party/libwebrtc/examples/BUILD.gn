@@ -809,6 +809,7 @@ if (is_linux || is_chromeos || is_win) {
     sources = [ "turnserver/turnserver_main.cc" ]
     deps = [
       ":read_auth_file",
+      "../p2p:basic_packet_socket_factory",
       "../p2p:p2p_server_utils",
       "../p2p:port_interface",
       "../p2p:rtc_p2p",
@@ -951,6 +952,7 @@ if (!build_with_chromium) {
     testonly = true
     sources = [ "stunprober/main.cc" ]
     deps = [
+      "../p2p:basic_packet_socket_factory",
       "../p2p:libstunprober",
       "../p2p:rtc_p2p",
       "../rtc_base:checks",
