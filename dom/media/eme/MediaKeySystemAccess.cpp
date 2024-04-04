@@ -235,33 +235,35 @@ static nsTArray<KeySystemConfig> GetSupportedKeySystems(
     const nsAString& aKeySystem, bool aIsHardwareDecryption) {
   using DecryptionInfo = KeySystemConfig::DecryptionInfo;
   nsTArray<KeySystemConfig> keySystemConfigs;
+  nsTArray<KeySystemConfigRequest> requests;
+
   // Software Widevine and Clearkey
   if (IsWidevineKeySystem(aKeySystem) || IsClearkeyKeySystem(aKeySystem)) {
-    Unused << KeySystemConfig::CreateKeySystemConfigs(
-        aKeySystem, DecryptionInfo::Software, keySystemConfigs);
+    requests.AppendElement(
+        KeySystemConfigRequest{aKeySystem, DecryptionInfo::Software});
   }
 #ifdef MOZ_WMF_CDM
   if (IsPlayReadyEnabled()) {
     // PlayReady software and hardware
     if (aKeySystem.EqualsLiteral(kPlayReadyKeySystemName) ||
         aKeySystem.EqualsLiteral(kPlayReadyKeySystemHardware)) {
-      Unused << KeySystemConfig::CreateKeySystemConfigs(
-          NS_ConvertUTF8toUTF16(kPlayReadyKeySystemName),
-          DecryptionInfo::Software, keySystemConfigs);
+      requests.AppendElement(
+          KeySystemConfigRequest{NS_ConvertUTF8toUTF16(kPlayReadyKeySystemName),
+                                 DecryptionInfo::Software});
       if (aIsHardwareDecryption) {
-        Unused << KeySystemConfig::CreateKeySystemConfigs(
+        requests.AppendElement(KeySystemConfigRequest{
             NS_ConvertUTF8toUTF16(kPlayReadyKeySystemName),
-            DecryptionInfo::Hardware, keySystemConfigs);
-        Unused << KeySystemConfig::CreateKeySystemConfigs(
+            DecryptionInfo::Hardware});
+        requests.AppendElement(KeySystemConfigRequest{
             NS_ConvertUTF8toUTF16(kPlayReadyKeySystemHardware),
-            DecryptionInfo::Hardware, keySystemConfigs);
+            DecryptionInfo::Hardware});
       }
     }
     // PlayReady clearlead
     if (aKeySystem.EqualsLiteral(kPlayReadyHardwareClearLeadKeySystemName)) {
-      Unused << KeySystemConfig::CreateKeySystemConfigs(
+      requests.AppendElement(KeySystemConfigRequest{
           NS_ConvertUTF8toUTF16(kPlayReadyHardwareClearLeadKeySystemName),
-          DecryptionInfo::Hardware, keySystemConfigs);
+          DecryptionInfo::Hardware});
     }
   }
 
@@ -269,18 +271,19 @@ static nsTArray<KeySystemConfig> GetSupportedKeySystems(
     // Widevine hardware
     if (aKeySystem.EqualsLiteral(kWidevineExperimentKeySystemName) ||
         (IsWidevineKeySystem(aKeySystem) && aIsHardwareDecryption)) {
-      Unused << KeySystemConfig::CreateKeySystemConfigs(
+      requests.AppendElement(KeySystemConfigRequest{
           NS_ConvertUTF8toUTF16(kWidevineExperimentKeySystemName),
-          DecryptionInfo::Hardware, keySystemConfigs);
+          DecryptionInfo::Hardware});
     }
     // Widevine clearlead
     if (aKeySystem.EqualsLiteral(kWidevineExperiment2KeySystemName)) {
-      Unused << KeySystemConfig::CreateKeySystemConfigs(
+      requests.AppendElement(KeySystemConfigRequest{
           NS_ConvertUTF8toUTF16(kWidevineExperiment2KeySystemName),
-          DecryptionInfo::Hardware, keySystemConfigs);
+          DecryptionInfo::Hardware});
     }
   }
 #endif
+  KeySystemConfig::CreateKeySystemConfigs(requests, keySystemConfigs);
   return keySystemConfigs;
 }
 
