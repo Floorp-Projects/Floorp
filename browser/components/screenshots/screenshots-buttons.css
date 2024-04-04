@@ -25,7 +25,8 @@
 .full-page, .visible-page {
   -moz-context-properties: fill, stroke;
   fill: currentColor;
-  stroke: var(--color-accent-primary);
+  /* stroke is the secondary fill color used to define the viewport shape in the SVGs */
+  stroke: var(--color-gray-60);
   background-position: center top;
   background-repeat: no-repeat;
   background-size: 46px 46px;

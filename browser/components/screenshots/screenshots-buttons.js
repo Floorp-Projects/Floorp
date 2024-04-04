@@ -13,28 +13,40 @@
   });
 
   class ScreenshotsButtons extends MozXULElement {
+    static #template = null;
+
     static get markup() {
       return `
-      <html:link rel="stylesheet" href="chrome://global/skin/global.css"/>
-      <html:link rel="stylesheet" href="chrome://browser/content/screenshots/screenshots-buttons.css"/>
-      <html:button class="visible-page footer-button" data-l10n-id="screenshots-save-visible-button"></html:button>
-      <html:button class="full-page footer-button" data-l10n-id="screenshots-save-page-button"></html:button>
+        <html:link rel="stylesheet" href="chrome://global/skin/global.css" />
+        <html:link rel="stylesheet" href="chrome://browser/content/screenshots/screenshots-buttons.css" />
+        <html:moz-button-group>
+          <html:button class="visible-page footer-button" data-l10n-id="screenshots-save-visible-button"></html:button>
+          <html:button class="full-page footer-button primary" data-l10n-id="screenshots-save-page-button"></html:button>
+        </html:moz-button-group>
       `;
+    }
+
+    static get fragment() {
+      if (!ScreenshotsButtons.#template) {
+        ScreenshotsButtons.#template = MozXULElement.parseXULToFragment(
+          ScreenshotsButtons.markup
+        );
+      }
+      return ScreenshotsButtons.#template;
     }
 
     connectedCallback() {
       const shadowRoot = this.attachShadow({ mode: "open" });
       document.l10n.connectRoot(shadowRoot);
 
-      let fragment = MozXULElement.parseXULToFragment(this.constructor.markup);
-      this.shadowRoot.append(fragment);
+      this.shadowRoot.append(ScreenshotsButtons.fragment);
 
-      let visibleButton = shadowRoot.querySelector(".visible-page");
+      let visibleButton = this.shadowRoot.querySelector(".visible-page");
       visibleButton.onclick = function () {
         ScreenshotsUtils.doScreenshot(gBrowser.selectedBrowser, "visible");
       };
 
-      let fullpageButton = shadowRoot.querySelector(".full-page");
+      let fullpageButton = this.shadowRoot.querySelector(".full-page");
       fullpageButton.onclick = function () {
         ScreenshotsUtils.doScreenshot(gBrowser.selectedBrowser, "full_page");
       };
@@ -49,7 +61,8 @@
      * This will default to the visible page button.
      * @param {String} buttonToFocus
      */
-    focusButton(buttonToFocus) {
+    async focusButton(buttonToFocus) {
+      await this.shadowRoot.querySelector("moz-button-group").updateComplete;
       if (buttonToFocus === "fullpage") {
         this.shadowRoot
           .querySelector(".full-page")
