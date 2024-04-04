@@ -2608,6 +2608,14 @@ static void BackfillCodecParameters(std::vector<cricket::Codec>& codecs) {
       if (!codec.GetParam(cricket::kAv1FmtpTier, &unused_value)) {
         codec.SetParam(cricket::kAv1FmtpTier, "0");
       }
+    } else if (absl::EqualsIgnoreCase(cricket::kH265CodecName, codec.name)) {
+      // https://datatracker.ietf.org/doc/html/draft-aboba-avtcore-hevc-webrtc
+      if (!codec.GetParam(cricket::kH265FmtpLevelId, &unused_value)) {
+        codec.SetParam(cricket::kH265FmtpLevelId, "93");
+      }
+      if (!codec.GetParam(cricket::kH265FmtpTxMode, &unused_value)) {
+        codec.SetParam(cricket::kH265FmtpTxMode, "SRST");
+      }
     }
   }
 }
