@@ -39,10 +39,7 @@ skip-if = [
 ]
 
 ["test_ext_contentscript_xorigin_frame.js"]
-skip-if = [
-  "os == 'linux' && socketprocess_networking", # Bug 1759035
-  "os == 'android' && fission", # Bug 1888231
-]
+skip-if = ["os == 'linux' && socketprocess_networking"] # Bug 1759035
 
 ["test_ext_ipcBlob.js"]
 skip-if = [
