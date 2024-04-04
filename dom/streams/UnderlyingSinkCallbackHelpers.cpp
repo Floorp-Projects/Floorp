@@ -111,6 +111,24 @@ already_AddRefed<Promise> UnderlyingSinkAlgorithms::AbortCallback(
 }
 
 // https://streams.spec.whatwg.org/#writable-set-up
+// This one is not covered by the above section as the spec expects any spec
+// implementation to explicitly return a promise for this callback. It's still
+// useful for Gecko as error handling is very frequently done with
+// ErrorResult instead of a rejected promise. See also
+// https://github.com/whatwg/streams/issues/1253.
+already_AddRefed<Promise> UnderlyingSinkAlgorithmsWrapper::WriteCallback(
+    JSContext* aCx, JS::Handle<JS::Value> aChunk,
+    WritableStreamDefaultController& aController, ErrorResult& aRv) {
+  nsCOMPtr<nsIGlobalObject> global = xpc::CurrentNativeGlobal(aCx);
+  return PromisifyAlgorithm(
+      global,
+      [&](ErrorResult& aRv) {
+        return WriteCallbackImpl(aCx, aChunk, aController, aRv);
+      },
+      aRv);
+}
+
+// https://streams.spec.whatwg.org/#writable-set-up
 // Step 2.1: Let closeAlgorithmWrapper be an algorithm that runs these steps:
 already_AddRefed<Promise> UnderlyingSinkAlgorithmsWrapper::CloseCallback(
     JSContext* aCx, ErrorResult& aRv) {
@@ -182,19 +200,20 @@ WritableStreamToOutput::OnOutputStreamReady(nsIAsyncOutputStream* aStream) {
   return NS_OK;
 }
 
-already_AddRefed<Promise> WritableStreamToOutput::WriteCallback(
+already_AddRefed<Promise> WritableStreamToOutput::WriteCallbackImpl(
     JSContext* aCx, JS::Handle<JS::Value> aChunk,
-    WritableStreamDefaultController& aController, ErrorResult& aError) {
+    WritableStreamDefaultController& aController, ErrorResult& aRv) {
   ArrayBufferViewOrArrayBuffer data;
   if (!data.Init(aCx, aChunk)) {
-    aError.StealExceptionFromJSContext(aCx);
+    aRv.MightThrowJSException();
+    aRv.StealExceptionFromJSContext(aCx);
     return nullptr;
   }
   // buffer/bufferView
   MOZ_ASSERT(data.IsArrayBuffer() || data.IsArrayBufferView());
 
-  RefPtr<Promise> promise = Promise::Create(mParent, aError);
-  if (NS_WARN_IF(aError.Failed())) {
+  RefPtr<Promise> promise = Promise::Create(mParent, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
 

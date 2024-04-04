@@ -87,7 +87,7 @@ class WritableStreamRTCFrameSink final
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(WritableStreamRTCFrameSink,
                                            UnderlyingSinkAlgorithmsWrapper)
 
-  already_AddRefed<Promise> WriteCallback(
+  already_AddRefed<Promise> WriteCallbackImpl(
       JSContext* aCx, JS::Handle<JS::Value> aChunk,
       WritableStreamDefaultController& aController,
       ErrorResult& aError) override;

@@ -148,7 +148,7 @@ WritableStreamRTCFrameSink::WritableStreamRTCFrameSink(
 
 WritableStreamRTCFrameSink::~WritableStreamRTCFrameSink() = default;
 
-already_AddRefed<Promise> WritableStreamRTCFrameSink::WriteCallback(
+already_AddRefed<Promise> WritableStreamRTCFrameSink::WriteCallbackImpl(
     JSContext* aCx, JS::Handle<JS::Value> aChunk,
     WritableStreamDefaultController& aController, ErrorResult& aError) {
   // Spec does not say to do this right now. Might be a spec bug, needs

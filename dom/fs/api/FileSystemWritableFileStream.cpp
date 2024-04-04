@@ -86,7 +86,7 @@ class WritableFileStreamUnderlyingSinkAlgorithms final
       FileSystemWritableFileStream& aStream)
       : mStream(&aStream) {}
 
-  already_AddRefed<Promise> WriteCallback(
+  already_AddRefed<Promise> WriteCallbackImpl(
       JSContext* aCx, JS::Handle<JS::Value> aChunk,
       WritableStreamDefaultController& aController, ErrorResult& aRv) override;
 
@@ -974,7 +974,7 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(WritableFileStreamUnderlyingSinkAlgorithms,
 // Step 3 of
 // https://fs.spec.whatwg.org/#create-a-new-filesystemwritablefilestream
 already_AddRefed<Promise>
-WritableFileStreamUnderlyingSinkAlgorithms::WriteCallback(
+WritableFileStreamUnderlyingSinkAlgorithms::WriteCallbackImpl(
     JSContext* aCx, JS::Handle<JS::Value> aChunk,
     WritableStreamDefaultController& aController, ErrorResult& aRv) {
   return mStream->Write(aCx, aChunk, aRv);
