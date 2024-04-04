@@ -675,5 +675,137 @@ INSTANTIATE_TEST_SUITE_P(
         std::make_tuple(PacingSettings{.mode = PacingMode::kConstantRate,
                                        .constant_rate = Frequency::Hertz(20)},
                         /*expected_delta_ms=*/50)));
+
+struct EncodingSettingsTestParameters {
+  std::string codec_type;
+  std::string scalability_mode;
+  std::vector<int> bitrate_kbps;
+  std::vector<int> expected_bitrate_kbps;
+};
+
+class VideoCodecTesterTestEncodingSettings
+    : public ::testing::TestWithParam<EncodingSettingsTestParameters> {};
+
+TEST_P(VideoCodecTesterTestEncodingSettings, CreateEncodingSettings) {
+  EncodingSettingsTestParameters test_params = GetParam();
+  std::map<uint32_t, EncodingSettings> encoding_settings =
+      VideoCodecTester::CreateEncodingSettings(
+          test_params.codec_type, test_params.scalability_mode, /*width=*/1280,
+          /*height=*/720, test_params.bitrate_kbps, /*framerate_fps=*/30,
+          /*num_frames=*/1);
+  ASSERT_THAT(encoding_settings, SizeIs(1));
+  const std::map<LayerId, LayerSettings>& layers_settings =
+      encoding_settings.begin()->second.layers_settings;
+  std::vector<int> configured_bitrate_kbps;
+  std::transform(layers_settings.begin(), layers_settings.end(),
+                 std::back_inserter(configured_bitrate_kbps),
+                 [](const auto& layer_settings) {
+                   return layer_settings.second.bitrate.kbps();
+                 });
+  EXPECT_EQ(configured_bitrate_kbps, test_params.expected_bitrate_kbps);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    Vp8,
+    VideoCodecTesterTestEncodingSettings,
+    Values(EncodingSettingsTestParameters{.codec_type = "VP8",
+                                          .scalability_mode = "L1T1",
+                                          .bitrate_kbps = {1},
+                                          .expected_bitrate_kbps = {1}},
+           EncodingSettingsTestParameters{.codec_type = "VP8",
+                                          .scalability_mode = "L1T1",
+                                          .bitrate_kbps = {10000},
+                                          .expected_bitrate_kbps = {10000}},
+           EncodingSettingsTestParameters{
+               .codec_type = "VP8",
+               .scalability_mode = "L1T3",
+               .bitrate_kbps = {1000},
+               .expected_bitrate_kbps = {400, 200, 400}},
+           EncodingSettingsTestParameters{
+               .codec_type = "VP8",
+               .scalability_mode = "S3T3",
+               .bitrate_kbps = {100},
+               .expected_bitrate_kbps = {40, 20, 40, 0, 0, 0, 0, 0, 0}},
+           EncodingSettingsTestParameters{
+               .codec_type = "VP8",
+               .scalability_mode = "S3T3",
+               .bitrate_kbps = {10000},
+               .expected_bitrate_kbps = {60, 30, 60, 200, 100, 200, 1000, 500,
+                                         1000}},
+           EncodingSettingsTestParameters{
+               .codec_type = "VP8",
+               .scalability_mode = "S3T3",
+               .bitrate_kbps = {100, 200, 300, 400, 500, 600, 700, 800, 900},
+               .expected_bitrate_kbps = {100, 200, 300, 400, 500, 600, 700, 800,
+                                         900}}));
+
+INSTANTIATE_TEST_SUITE_P(
+    Vp9,
+    VideoCodecTesterTestEncodingSettings,
+    Values(EncodingSettingsTestParameters{.codec_type = "VP9",
+                                          .scalability_mode = "L1T1",
+                                          .bitrate_kbps = {1},
+                                          .expected_bitrate_kbps = {1}},
+           EncodingSettingsTestParameters{.codec_type = "VP9",
+                                          .scalability_mode = "L1T1",
+                                          .bitrate_kbps = {10000},
+                                          .expected_bitrate_kbps = {10000}},
+           EncodingSettingsTestParameters{
+               .codec_type = "VP9",
+               .scalability_mode = "L1T3",
+               .bitrate_kbps = {1000},
+               .expected_bitrate_kbps = {540, 163, 297}},
+           EncodingSettingsTestParameters{
+               .codec_type = "VP9",
+               .scalability_mode = "L3T3",
+               .bitrate_kbps = {100},
+               .expected_bitrate_kbps = {54, 16, 30, 0, 0, 0, 0, 0, 0}},
+           EncodingSettingsTestParameters{
+               .codec_type = "VP9",
+               .scalability_mode = "L3T3",
+               .bitrate_kbps = {10000},
+               .expected_bitrate_kbps = {77, 23, 42, 226, 68, 124, 823, 249,
+                                         452}},
+           EncodingSettingsTestParameters{
+               .codec_type = "VP9",
+               .scalability_mode = "L3T3",
+               .bitrate_kbps = {100, 200, 300, 400, 500, 600, 700, 800, 900},
+               .expected_bitrate_kbps = {100, 200, 300, 400, 500, 600, 700, 800,
+                                         900}}));
+
+INSTANTIATE_TEST_SUITE_P(
+    Av1,
+    VideoCodecTesterTestEncodingSettings,
+    Values(EncodingSettingsTestParameters{.codec_type = "AV1",
+                                          .scalability_mode = "L1T1",
+                                          .bitrate_kbps = {1},
+                                          .expected_bitrate_kbps = {1}},
+           EncodingSettingsTestParameters{.codec_type = "AV1",
+                                          .scalability_mode = "L1T1",
+                                          .bitrate_kbps = {10000},
+                                          .expected_bitrate_kbps = {10000}},
+           EncodingSettingsTestParameters{
+               .codec_type = "AV1",
+               .scalability_mode = "L1T3",
+               .bitrate_kbps = {1000},
+               .expected_bitrate_kbps = {540, 163, 297}},
+           EncodingSettingsTestParameters{
+               .codec_type = "AV1",
+               .scalability_mode = "L3T3",
+               .bitrate_kbps = {100},
+               .expected_bitrate_kbps = {54, 16, 30, 0, 0, 0, 0, 0, 0}},
+           EncodingSettingsTestParameters{
+               .codec_type = "AV1",
+               .scalability_mode = "L3T3",
+               .bitrate_kbps = {10000},
+               .expected_bitrate_kbps = {77, 23, 42, 226, 68, 124, 823, 249,
+                                         452}},
+           EncodingSettingsTestParameters{
+               .codec_type = "AV1",
+               .scalability_mode = "L3T3",
+               .bitrate_kbps = {100, 200, 300, 400, 500, 600, 700, 800, 900},
+               .expected_bitrate_kbps = {100, 200, 300, 400, 500, 600, 700, 800,
+                                         900}}));
+
 }  // namespace test
 }  // namespace webrtc
