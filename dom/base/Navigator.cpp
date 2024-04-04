@@ -167,6 +167,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Navigator)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mVRServiceTest)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSharePromise)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mXRSystem)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mClipboard)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 void Navigator::Invalidate() {
@@ -246,6 +247,8 @@ void Navigator::Invalidate() {
   }
 
   mSharePromise = nullptr;
+
+  mClipboard = nullptr;
 }
 
 void Navigator::GetUserAgent(nsAString& aUserAgent, CallerType aCallerType,
