@@ -19,6 +19,7 @@ kind-dependencies:
 
 only-for-build-platforms:
     - linux64-shippable/opt
+    - linux64-aarch64-shippable/opt
     - linux-shippable/opt
     - macosx64-shippable/opt
     - win32-shippable/opt
@@ -65,7 +66,8 @@ jobs:
             job-name:
                 by-build-platform:
                     linux(?!64).*: linux-opt
-                    linux64.*: linux64-opt
+                    linux64(?!-aarch64).*: linux64-opt
+                    linux64-aarch64.*: linux64-aarch64-opt
                     macosx64.*: macosx64-opt
                     win32.*: win32-opt
                     win64.*: win64-opt
@@ -81,6 +83,8 @@ jobs:
                 by-build-platform:
                     linux64: linux64/opt
                     linux64-shippable: linux64-shippable/opt
+                    linux64-aarch64: linux64-aarch64/opt
+                    linux64-aarch64-shippable: linux64-aarch64-shippable/opt
                     linux: linux32/opt
                     linux-shippable: linux32-shippable/opt
                     macosx64: osx-cross/opt
