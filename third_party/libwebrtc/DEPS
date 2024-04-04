@@ -10,7 +10,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': '224f3cf6ba715fcddd26ca796bbf146e496bc789',
+  'chromium_revision': '9983c30299b6895ddefcde2e0cb3fb8f9db135b3',
 
   # Fetch the prebuilt binaries for llvm-cov and llvm-profdata. Needed to
   # process the raw profiles produced by instrumented targets (built with
@@ -50,7 +50,7 @@ vars = {
 deps = {
   # TODO(kjellander): Move this to be Android-only.
   'src/base':
-    'https://chromium.googlesource.com/chromium/src/base@6dbc4c091bec1b885393b556cb0180aa05dfddda',
+    'https://chromium.googlesource.com/chromium/src/base@1613c3fb683884b2e37648035a330720d7423a62',
   'src/build':
     'https://chromium.googlesource.com/chromium/src/build@f4542781a50accded1af4b2eca91e26bb532d35e',
   'src/buildtools':
@@ -61,13 +61,13 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@e6de825b662928f94b72198e5b416d1352f00cd4',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@8ef68e5171b2bf0a0700ba7d0281bf02a769c61a',
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@2c38863320d2a33a9f69b9705f2bd776a7ea3075',
+    'https://chromium.googlesource.com/chromium/src/testing@065afd5a19a71be5ff9bdec2af3d7c4f9e03688b',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@6ae371969a79d98d6ba894ed86e7449e6146adad',
+    'https://chromium.googlesource.com/chromium/src/third_party@b17629eef8fd18764bfb99f94594513056b6777d',
 
   'src/buildtools/linux64': {
     'packages': [
@@ -189,7 +189,7 @@ deps = {
   'src/third_party/breakpad/breakpad':
     'https://chromium.googlesource.com/breakpad/breakpad.git@6551ac3632eb7236642366f70a2eb865b87a3329',
   'src/third_party/catapult':
-    'https://chromium.googlesource.com/catapult.git@432aa4ae6c6931b15f595218bffb6c63512ac179',
+    'https://chromium.googlesource.com/catapult.git@c2c3cef34d1a1cee17fffcf34c98a6a9a352d064',
   'src/third_party/ced/src': {
     'url': 'https://chromium.googlesource.com/external/github.com/google/compact_enc_det.git@ba412eaaacd3186085babcd901679a48863c7dd5',
   },
@@ -302,7 +302,7 @@ deps = {
       'condition': 'checkout_android',
   },
   'src/third_party/perfetto':
-    'https://android.googlesource.com/platform/external/perfetto.git@3deb2358149574207c12407c7a6b2a885a5cef3b',
+    'https://android.googlesource.com/platform/external/perfetto.git@786ec3a414ad41aa627a88b83c7fd9bae5d59136',
   'src/third_party/libvpx/source/libvpx':
     'https://chromium.googlesource.com/webm/libvpx.git@c35f3e9e3512d0012180ad8de8834d8813a80b73',
   'src/third_party/libyuv':
@@ -355,7 +355,7 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@71ab0c4b0b0764a91fc90a7db4af03231790cc24',
+    'https://chromium.googlesource.com/chromium/src/tools@e232065eb79f27308bdefac7130c8ce9d50e0434',
 
   'src/third_party/accessibility_test_framework': {
       'packages': [
