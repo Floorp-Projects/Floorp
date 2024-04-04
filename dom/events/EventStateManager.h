@@ -73,7 +73,8 @@ class OverOutElementsWrapper final : public nsISupports {
     mDispatchingOverEventTarget = aOverEventTarget;
     mDeepestEnterEventTargetIsOverEventTarget = true;
   }
-  void DidDispatchOverAndEnterEvent() { mDispatchingOverEventTarget = nullptr; }
+  void DidDispatchOverAndEnterEvent(
+      nsIContent* aOriginalOverTargetInComposedDoc);
   [[nodiscard]] bool IsDispatchingOverEventOn(
       nsIContent* aOverEventTarget) const {
     MOZ_ASSERT(aOverEventTarget);

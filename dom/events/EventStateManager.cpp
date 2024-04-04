@@ -358,6 +358,53 @@ void OverOutElementsWrapper::ContentRemoved(nsIContent& aContent) {
   mDeepestEnterEventTargetIsOverEventTarget = false;
 }
 
+void OverOutElementsWrapper::DidDispatchOverAndEnterEvent(
+    nsIContent* aOriginalOverTargetInComposedDoc) {
+  mDispatchingOverEventTarget = nullptr;
+
+  // Pointer Events define that once the `pointerover` event target is removed
+  // from the tree, `pointerout` should not be fired on that and the closest
+  // connected ancestor at the target removal should be kept as the deepest
+  // `pointerleave` target.  Therefore, we don't need the special handling for
+  // `pointerout` event target if the last `pointerover` target is temporarily
+  // removed from the tree.
+  if (mType == OverOutElementsWrapper::BoundaryEventType::Pointer) {
+    return;
+  }
+
+  // Assume that the caller checks whether aOriginalOverTarget is in the
+  // original document.  If we don't enable the strict mouse/pointer event
+  // boundary event dispatching by the pref (see below),
+  // mDeepestEnterEventTarget is set to nullptr when the last "over" target is
+  // removed.  Therefore, we cannot check whether aOriginalOverTarget is in the
+  // original document here.
+  if (!aOriginalOverTargetInComposedDoc) {
+    return;
+  }
+  MOZ_ASSERT_IF(mDeepestEnterEventTarget,
+                mDeepestEnterEventTarget->GetComposedDoc() ==
+                    aOriginalOverTargetInComposedDoc->GetComposedDoc());
+  // If the "mouseover" event target is removed temporarily while we're
+  // dispatching "mouseover" and "mouseenter" events and the target gets back
+  // under the deepest enter event target, we should restore the "mouseover"
+  // target.
+  if ((!StaticPrefs::
+           dom_events_mouse_pointer_boundary_keep_enter_targets_after_over_target_removed() &&
+       !mDeepestEnterEventTarget) ||
+      (!mDeepestEnterEventTargetIsOverEventTarget && mDeepestEnterEventTarget &&
+       nsContentUtils::ContentIsFlattenedTreeDescendantOf(
+           aOriginalOverTargetInComposedDoc, mDeepestEnterEventTarget))) {
+    mDeepestEnterEventTarget = aOriginalOverTargetInComposedDoc;
+    mDeepestEnterEventTargetIsOverEventTarget = true;
+    LogModule* const logModule = mType == BoundaryEventType::Mouse
+                                     ? sMouseBoundaryLog
+                                     : sPointerBoundaryLog;
+    MOZ_LOG(logModule, LogLevel::Info,
+            ("The \"over\" event target (%p) is restored",
+             mDeepestEnterEventTarget.get()));
+  }
+}
+
 /******************************************************************/
 /* mozilla::EventStateManager                                     */
 /******************************************************************/
@@ -5060,8 +5107,11 @@ void EventStateManager::NotifyMouseOver(WidgetMouseEvent* aMouseEvent,
   enterDispatcher.Dispatch();
 
   MOZ_LOG(logModule, LogLevel::Info,
-          ("Dispatched \"over\" and \"enter\" events"));
-  wrapper->DidDispatchOverAndEnterEvent();
+          ("Dispatched \"over\" and \"enter\" events (the original \"over\" "
+           "event target was in the document %p, and now in %p)",
+           aContent->GetComposedDoc(), mDocument.get()));
+  wrapper->DidDispatchOverAndEnterEvent(
+      aContent->GetComposedDoc() == mDocument ? aContent : nullptr);
 }
 
 // Returns the center point of the window's client area. This is
