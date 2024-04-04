@@ -2341,6 +2341,7 @@ static bool ParseMsidAttribute(absl::string_view line,
   // Note that JSEP stipulates not sending msid-appdata so
   // a=msid:<stream id> <track id>
   // is supported for backward compability reasons only.
+  // RFC 8830 section 2 states that duplicate a=msid:stream track is illegal.
   std::vector<std::string> fields;
   size_t num_fields = rtc::tokenize(line.substr(kLinePrefixLength),
                                     kSdpDelimiterSpaceChar, &fields);
@@ -2670,6 +2671,21 @@ static std::unique_ptr<MediaContentDescription> ParseContentDescription(
   return media_desc;
 }
 
+bool HasDuplicateMsidLines(cricket::SessionDescription* desc) {
+  std::set<std::pair<std::string, std::string>> seen_msids;
+  for (const cricket::ContentInfo& content : desc->contents()) {
+    for (const cricket::StreamParams& stream :
+         content.media_description()->streams()) {
+      auto msid = std::pair(stream.first_stream_id(), stream.id);
+      if (seen_msids.find(msid) != seen_msids.end()) {
+        return true;
+      }
+      seen_msids.insert(std::move(msid));
+    }
+  }
+  return false;
+}
+
 bool ParseMediaDescription(
     absl::string_view message,
     const TransportDescription& session_td,
@@ -2851,6 +2867,11 @@ bool ParseMediaDescription(
                      content_rejected, bundle_only, std::move(content));
     // Create TransportInfo with the media level "ice-pwd" and "ice-ufrag".
     desc->AddTransportInfo(TransportInfo(content_name, transport));
+  }
+  // Apply whole-description sanity checks
+  if (HasDuplicateMsidLines(desc)) {
+    ParseFailed(message, *pos, "Duplicate a=msid lines detected", error);
+    return false;
   }
 
   desc->set_msid_signaling(msid_signaling);
