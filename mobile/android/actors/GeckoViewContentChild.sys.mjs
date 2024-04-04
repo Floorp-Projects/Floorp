@@ -154,7 +154,36 @@ export class GeckoViewContentChild extends GeckoViewActorChild {
           }, "apz-repaints-flushed");
         };
 
-        zoomToFocusedInput();
+        const { force } = message.data;
+
+        let gotResize = false;
+        const onResize = function () {
+          gotResize = true;
+          if (dwu.isMozAfterPaintPending) {
+            contentWindow.windowRoot.addEventListener(
+              "MozAfterPaint",
+              () => zoomToFocusedInput(),
+              { capture: true, once: true }
+            );
+          } else {
+            zoomToFocusedInput();
+          }
+        };
+
+        contentWindow.addEventListener("resize", onResize, { capture: true });
+
+        // When the keyboard is displayed, we can get one resize event,
+        // multiple resize events, or none at all. Try to handle all these
+        // cases by allowing resizing within a set interval, and still zoom to
+        // input if there is no resize event at the end of the interval.
+        contentWindow.setTimeout(() => {
+          contentWindow.removeEventListener("resize", onResize, {
+            capture: true,
+          });
+          if (!gotResize && force) {
+            onResize();
+          }
+        }, 500);
         break;
       }
       case "RestoreSessionState": {

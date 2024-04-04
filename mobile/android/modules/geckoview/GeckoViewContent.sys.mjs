@@ -193,48 +193,14 @@ export class GeckoViewContent extends GeckoViewModule {
         }
         break;
       }
-      case "GeckoView:ZoomToInput": {
-        const sendZoomToFocusedInputMessage = function () {
-          // For ZoomToInput we just need to send the message to the current focused one.
-          const actor =
-            Services.focus.focusedContentBrowsingContext.currentWindowGlobal.getActor(
-              "GeckoViewContent"
-            );
-
-          actor.sendAsyncMessage(aEvent, aData);
-        };
-
-        const { force } = aData;
-        let gotResize = false;
-        const onResize = function () {
-          gotResize = true;
-          if (this.window.windowUtils.isMozAfterPaintPending) {
-            this.window.addEventListener(
-              "MozAfterPaint",
-              () => sendZoomToFocusedInputMessage(),
-              { capture: true, once: true }
-            );
-          } else {
-            sendZoomToFocusedInputMessage();
-          }
-        };
-
-        this.window.addEventListener("resize", onResize, { capture: true });
-
-        // When the keyboard is displayed, we can get one resize event,
-        // multiple resize events, or none at all. Try to handle all these
-        // cases by allowing resizing within a set interval, and still zoom to
-        // input if there is no resize event at the end of the interval.
-        this.window.setTimeout(() => {
-          this.window.removeEventListener("resize", onResize, {
-            capture: true,
-          });
-          if (!gotResize && force) {
-            onResize();
-          }
-        }, 500);
+      case "GeckoView:ZoomToInput":
+        // For ZoomToInput we just need to send the message to the current focused one.
+        const actor =
+          Services.focus.focusedContentBrowsingContext.currentWindowGlobal.getActor(
+            "GeckoViewContent"
+          );
+        actor.sendAsyncMessage(aEvent, aData);
         break;
-      }
       case "GeckoView:ScrollBy":
         // Unclear if that actually works with oop iframes?
         this.sendToAllChildren(aEvent, aData);
