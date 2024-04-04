@@ -2,22 +2,29 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /*
-   This test checks the recent-browsing view of open tabs in about:firefoxview next
+   This test checks that the recent-browsing view of open tabs in about:firefoxview
    presents the correct tab data in the correct order.
 */
+SimpleTest.requestCompleteLog();
+
+const { ObjectUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/ObjectUtils.sys.mjs"
+);
+let origBrowserState;
 
 const tabURL1 = "data:,Tab1";
 const tabURL2 = "data:,Tab2";
 const tabURL3 = "data:,Tab3";
 const tabURL4 = "data:,Tab4";
 
-let gInitialTab;
-let gInitialTabURL;
-
 add_setup(function () {
-  gInitialTab = gBrowser.selectedTab;
-  gInitialTabURL = tabUrl(gInitialTab);
+  origBrowserState = SessionStore.getBrowserState();
 });
+
+async function cleanup() {
+  await switchToWindow(window);
+  await SessionStoreTestUtils.promiseBrowserState(origBrowserState);
+}
 
 function tabUrl(tab) {
   return tab.linkedBrowser.currentURI?.spec;
@@ -35,6 +42,12 @@ async function minimizeWindow(win) {
     "Docshell should be Inactive"
   );
   ok(win.document.hidden, "Top level window should be hidden");
+}
+
+function getAllSelectedTabURLs() {
+  return BrowserWindowTracker.orderedWindows.map(win =>
+    tabUrl(win.gBrowser.selectedTab)
+  );
 }
 
 async function restoreWindow(win) {
@@ -93,86 +106,91 @@ async function restoreWindow(win) {
   ok(!win.document.hidden, "Top level window should be visible");
 }
 
-async function prepareOpenTabs(urls, win = window) {
-  const reusableTabURLs = ["about:newtab", "about:blank"];
-  const gBrowser = win.gBrowser;
-
-  for (let url of urls) {
-    if (
-      gBrowser.visibleTabs.length == 1 &&
-      reusableTabURLs.includes(gBrowser.selectedBrowser.currentURI.spec)
-    ) {
-      // we'll load into this tab rather than opening a new one
-      info(
-        `Loading ${url} into blank tab: ${gBrowser.selectedBrowser.currentURI.spec}`
-      );
-      BrowserTestUtils.startLoadingURIString(gBrowser.selectedBrowser, url);
-      await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, null, url);
-    } else {
-      info(`Loading ${url} into new tab`);
-      await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
-    }
-    await new Promise(res => win.requestAnimationFrame(res));
+async function prepareOpenWindowsAndTabs(windowsData) {
+  // windowsData selected tab URL should be unique so we can map tab URL to window
+  const browserState = {
+    windows: windowsData.map((winData, index) => {
+      const tabs = winData.tabs.map(url => ({
+        entries: [{ url, triggeringPrincipal_base64 }],
+      }));
+      return {
+        tabs,
+        selected: winData.selectedIndex + 1,
+        zIndex: index + 1,
+      };
+    }),
+  };
+  await SessionStoreTestUtils.promiseBrowserState(browserState);
+  await NonPrivateTabs.readyWindowsPromise;
+  const selectedTabURLOrder = browserState.windows.map(winData => {
+    return winData.tabs[winData.selected - 1].entries[0].url;
+  });
+  const windowByTabURL = new Map();
+  for (let win of BrowserWindowTracker.orderedWindows) {
+    windowByTabURL.set(tabUrl(win.gBrowser.selectedTab), win);
   }
-  Assert.equal(
-    gBrowser.visibleTabs.length,
-    urls.length,
-    `Prepared ${urls.length} tabs as expected`
+  is(
+    windowByTabURL.size,
+    windowsData.length,
+    "The tab URL to window mapping includes an entry for each window"
   );
-  Assert.equal(
-    tabUrl(gBrowser.selectedTab),
-    urls[urls.length - 1],
-    "The selectedTab is the last of the URLs given as expected"
+  info(
+    `After promiseBrowserState, selected tab order is: ${Array.from(
+      windowByTabURL.keys()
+    )}`
+  );
+
+  // Make any corrections to the window order by selecting each in reverse order
+  for (let url of selectedTabURLOrder.toReversed()) {
+    await switchToWindow(windowByTabURL.get(url));
+  }
+  // Verify windows are in the expected order
+  Assert.deepEqual(
+    getAllSelectedTabURLs(),
+    selectedTabURLOrder,
+    "The windows and their selected tabs are in the expected order"
+  );
+  Assert.deepEqual(
+    BrowserWindowTracker.orderedWindows.map(win =>
+      win.gBrowser.visibleTabs.map(tab => tabUrl(tab))
+    ),
+    windowsData.map(winData => winData.tabs),
+    "We opened all the tabs in each window"
   );
 }
 
-async function cleanup(...windowsToClose) {
-  await Promise.all(
-    windowsToClose.map(win => BrowserTestUtils.closeWindow(win))
-  );
-
-  while (gBrowser.visibleTabs.length > 1) {
-    await SessionStoreTestUtils.closeTab(gBrowser.tabs.at(-1));
-  }
-  if (gBrowser.selectedBrowser.currentURI.spec !== gInitialTabURL) {
-    BrowserTestUtils.startLoadingURIString(
-      gBrowser.selectedBrowser,
-      gInitialTabURL
-    );
-    await BrowserTestUtils.browserLoaded(
-      gBrowser.selectedBrowser,
-      null,
-      gInitialTabURL
-    );
-  }
-}
-
-function getOpenTabsComponent(browser) {
+function getRecentOpenTabsComponent(browser) {
   return browser.contentDocument.querySelector(
     "view-recentbrowsing view-opentabs"
   );
 }
 
-async function checkTabList(browser, expected) {
-  const tabsView = getOpenTabsComponent(browser);
+async function checkRecentTabList(browser, expected) {
+  const tabsView = getRecentOpenTabsComponent(browser);
   const [openTabsCard] = getOpenTabsCards(tabsView);
   await openTabsCard.updateComplete;
 
   const tabListRows = await getTabRowsForCard(openTabsCard);
   Assert.ok(tabListRows, "Found the tab list element");
   let actual = Array.from(tabListRows).map(row => row.url);
-  Assert.deepEqual(
-    actual,
-    expected,
-    "Tab list has items with URLs in the expected order"
+  await BrowserTestUtils.waitForCondition(
+    () => ObjectUtils.deepEqual(actual, expected),
+    "Waiting for tab list to hvae items with URLs in the expected order"
   );
 }
 
 add_task(async function test_single_window_tabs() {
-  await prepareOpenTabs([tabURL1, tabURL2]);
+  const testData = [
+    {
+      tabs: [tabURL1, tabURL2],
+      selectedIndex: 1, // the 2nd tab should be selected
+    },
+  ];
+  await prepareOpenWindowsAndTabs(testData);
+
   await openFirefoxViewTab(window).then(async viewTab => {
     const browser = viewTab.linkedBrowser;
-    await checkTabList(browser, [tabURL2, tabURL1]);
+    await checkRecentTabList(browser, [tabURL2, tabURL1]);
 
     // switch to the first tab
     let promiseHidden = BrowserTestUtils.waitForEvent(
@@ -192,25 +210,62 @@ add_task(async function test_single_window_tabs() {
   // and check the results in the open tabs section of Recent Browsing
   await openFirefoxViewTab(window).then(async viewTab => {
     const browser = viewTab.linkedBrowser;
-    await checkTabList(browser, [tabURL1, tabURL2]);
+    await checkRecentTabList(browser, [tabURL1, tabURL2]);
   });
   await cleanup();
 });
 
 add_task(async function test_multiple_window_tabs() {
   const fxViewURL = getFirefoxViewURL();
-  const win1 = window;
+  const testData = [
+    {
+      // this window should be active after restore
+      tabs: [tabURL1, tabURL2],
+      selectedIndex: 0, // tabURL1 should be selected
+    },
+    {
+      tabs: [tabURL3, tabURL4],
+      selectedIndex: 0, // tabURL3 should be selected
+    },
+  ];
+  await prepareOpenWindowsAndTabs(testData);
+
+  Assert.deepEqual(
+    getAllSelectedTabURLs(),
+    [tabURL1, tabURL3],
+    "The windows and their selected tabs are in the expected order"
+  );
   let tabChangeRaised;
-  await prepareOpenTabs([tabURL1, tabURL2]);
-  const win2 = await BrowserTestUtils.openNewBrowserWindow();
-  await prepareOpenTabs([tabURL3, tabURL4], win2);
+  const [win1, win2] = BrowserWindowTracker.orderedWindows;
+
+  info(`Switch to window 1's 2nd tab: ${tabUrl(win1.gBrowser.visibleTabs[1])}`);
+  await BrowserTestUtils.switchTab(gBrowser, win1.gBrowser.visibleTabs[1]);
+  await switchToWindow(win2);
+
+  Assert.deepEqual(
+    getAllSelectedTabURLs(),
+    [tabURL3, tabURL2],
+    `Window 2 has selected the ${tabURL3} tab, window 1 has ${tabURL2}`
+  );
+  info(`Switch to window 2's 2nd tab: ${tabUrl(win2.gBrowser.visibleTabs[1])}`);
+  tabChangeRaised = BrowserTestUtils.waitForEvent(
+    NonPrivateTabs,
+    "TabRecencyChange"
+  );
+  await BrowserTestUtils.switchTab(win2.gBrowser, win2.gBrowser.visibleTabs[1]);
+  await tabChangeRaised;
+  Assert.deepEqual(
+    getAllSelectedTabURLs(),
+    [tabURL4, tabURL2],
+    `window 2 has selected the ${tabURL4} tab, ${tabURL2} remains selected in window 1`
+  );
 
   // to avoid confusing the results by activating different windows,
   // check fxview in the current window - which is win2
   info("Switching to fxview tab in win2");
   await openFirefoxViewTab(win2).then(async viewTab => {
     const browser = viewTab.linkedBrowser;
-    await checkTabList(browser, [tabURL4, tabURL3, tabURL2, tabURL1]);
+    await checkRecentTabList(browser, [tabURL4, tabURL3, tabURL2, tabURL1]);
 
     Assert.equal(
       tabUrl(win2.gBrowser.selectedTab),
@@ -218,7 +273,7 @@ add_task(async function test_multiple_window_tabs() {
       `The selected tab in window 2 is ${fxViewURL}`
     );
 
-    info("Switching to first tab (tab3) in win2");
+    info("Switching to first tab in win2");
     tabChangeRaised = BrowserTestUtils.waitForEvent(
       NonPrivateTabs,
       "TabRecencyChange"
@@ -231,20 +286,20 @@ add_task(async function test_multiple_window_tabs() {
       win2.gBrowser,
       win2.gBrowser.visibleTabs[0]
     );
-    Assert.equal(
-      tabUrl(win2.gBrowser.selectedTab),
-      tabURL3,
-      `The selected tab in window 2 is ${tabURL3}`
-    );
     await tabChangeRaised;
     await promiseHidden;
+    Assert.deepEqual(
+      getAllSelectedTabURLs(),
+      [tabURL3, tabURL2],
+      `window 2 has switched to ${tabURL3}, ${tabURL2} remains selected in window 1`
+    );
   });
 
   info("Opening fxview in win2 to confirm tab3 is most recent");
   await openFirefoxViewTab(win2).then(async viewTab => {
     const browser = viewTab.linkedBrowser;
     info("Check result of selecting 1ist tab in window 2");
-    await checkTabList(browser, [tabURL3, tabURL4, tabURL2, tabURL1]);
+    await checkRecentTabList(browser, [tabURL3, tabURL4, tabURL2, tabURL1]);
   });
 
   info("Focusing win1, where tab2 should be selected");
@@ -254,10 +309,10 @@ add_task(async function test_multiple_window_tabs() {
   );
   await switchToWindow(win1);
   await tabChangeRaised;
-  Assert.equal(
-    tabUrl(win1.gBrowser.selectedTab),
-    tabURL2,
-    `The selected tab in window 1 is ${tabURL2}`
+  Assert.deepEqual(
+    getAllSelectedTabURLs(),
+    [tabURL2, fxViewURL],
+    `The selected tab in window 1 is ${tabURL2}, ${fxViewURL} remains selected in window 2`
   );
 
   info("Opening fxview in win1 to confirm tab2 is most recent");
@@ -266,7 +321,7 @@ add_task(async function test_multiple_window_tabs() {
     info(
       "In fxview, check result  of activating window 1, where tab 2 is selected"
     );
-    await checkTabList(browser, [tabURL2, tabURL3, tabURL4, tabURL1]);
+    await checkRecentTabList(browser, [tabURL2, tabURL3, tabURL4, tabURL1]);
 
     let promiseHidden = BrowserTestUtils.waitForEvent(
       browser.contentDocument,
@@ -284,45 +339,50 @@ add_task(async function test_multiple_window_tabs() {
     await promiseHidden;
     await tabChangeRaised;
   });
+  Assert.deepEqual(
+    getAllSelectedTabURLs(),
+    [tabURL1, fxViewURL],
+    `The selected tab in window 1 is ${tabURL1}, ${fxViewURL} remains selected in window 2`
+  );
 
   // check result in the fxview in the 1st window
   info("Opening fxview in win1 to confirm tab1 is most recent");
   await openFirefoxViewTab(win1).then(async viewTab => {
     const browser = viewTab.linkedBrowser;
     info("Check result of selecting 1st tab in win1");
-    await checkTabList(browser, [tabURL1, tabURL2, tabURL3, tabURL4]);
+    await checkRecentTabList(browser, [tabURL1, tabURL2, tabURL3, tabURL4]);
   });
 
-  await cleanup(win2);
+  await cleanup();
 });
 
 add_task(async function test_windows_activation() {
-  const win1 = window;
-  await prepareOpenTabs([tabURL1], win1);
-  let fxViewTab;
+  // use Session restore to batch-open windows and tabs
+  const testData = [
+    {
+      // this window should be active after restore
+      tabs: [tabURL1],
+      selectedIndex: 0, // tabURL1 should be selected
+    },
+    {
+      tabs: [tabURL2],
+      selectedIndex: 0, // tabURL2 should be selected
+    },
+    {
+      tabs: [tabURL3],
+      selectedIndex: 0, // tabURL3 should be selected
+    },
+  ];
+  await prepareOpenWindowsAndTabs(testData);
+
   let tabChangeRaised;
+  const [win1, win2] = BrowserWindowTracker.orderedWindows;
+
   info("switch to firefox-view and leave it selected");
-  await openFirefoxViewTab(win1).then(tab => (fxViewTab = tab));
-
-  const win2 = await BrowserTestUtils.openNewBrowserWindow();
-  await switchToWindow(win2);
-  await prepareOpenTabs([tabURL2], win2);
-
-  const win3 = await BrowserTestUtils.openNewBrowserWindow();
-  await switchToWindow(win3);
-  await prepareOpenTabs([tabURL3], win3);
-
-  tabChangeRaised = BrowserTestUtils.waitForEvent(
-    NonPrivateTabs,
-    "TabRecencyChange"
-  );
-  info("Switching back to win 1");
-  await switchToWindow(win1);
-  info("Waiting for tabChangeRaised to resolve");
-  await tabChangeRaised;
-
-  const browser = fxViewTab.linkedBrowser;
-  await checkTabList(browser, [tabURL3, tabURL2, tabURL1]);
+  await openFirefoxViewTab(win1).then(async viewTab => {
+    const browser = viewTab.linkedBrowser;
+    await checkRecentTabList(browser, [tabURL1, tabURL2, tabURL3]);
+  });
 
   info("switch to win2 and confirm its selected tab becomes most recent");
   tabChangeRaised = BrowserTestUtils.waitForEvent(
@@ -331,24 +391,52 @@ add_task(async function test_windows_activation() {
   );
   await switchToWindow(win2);
   await tabChangeRaised;
-  await checkTabList(browser, [tabURL2, tabURL3, tabURL1]);
-  await cleanup(win2, win3);
+  await openFirefoxViewTab(win1).then(async viewTab => {
+    await checkRecentTabList(viewTab.linkedBrowser, [
+      tabURL2,
+      tabURL1,
+      tabURL3,
+    ]);
+  });
+  await cleanup();
 });
 
 add_task(async function test_minimize_restore_windows() {
-  const win1 = window;
-  let tabChangeRaised;
-  await prepareOpenTabs([tabURL1, tabURL2]);
-  const win2 = await BrowserTestUtils.openNewBrowserWindow();
-  await prepareOpenTabs([tabURL3, tabURL4], win2);
-  await NonPrivateTabs.readyWindowsPromise;
+  const fxViewURL = getFirefoxViewURL();
+  const testData = [
+    {
+      // this window should be active after restore
+      tabs: [tabURL1, tabURL2],
+      selectedIndex: 1, // tabURL2 should be selected
+    },
+    {
+      tabs: [tabURL3, tabURL4],
+      selectedIndex: 0, // tabURL3 should be selected
+    },
+  ];
+  await prepareOpenWindowsAndTabs(testData);
+  const [win1, win2] = BrowserWindowTracker.orderedWindows;
+
+  // switch to the last (tabURL4) tab in window 2
+  await switchToWindow(win2);
+  let tabChangeRaised = BrowserTestUtils.waitForEvent(
+    NonPrivateTabs,
+    "TabRecencyChange"
+  );
+  await BrowserTestUtils.switchTab(win2.gBrowser, win2.gBrowser.visibleTabs[1]);
+  await tabChangeRaised;
+  Assert.deepEqual(
+    getAllSelectedTabURLs(),
+    [tabURL4, tabURL2],
+    "The windows and their selected tabs are in the expected order"
+  );
 
   // to avoid confusing the results by activating different windows,
   // check fxview in the current window - which is win2
   info("Opening fxview in win2 to confirm tab4 is most recent");
   await openFirefoxViewTab(win2).then(async viewTab => {
     const browser = viewTab.linkedBrowser;
-    await checkTabList(browser, [tabURL4, tabURL3, tabURL2, tabURL1]);
+    await checkRecentTabList(browser, [tabURL4, tabURL3, tabURL2, tabURL1]);
 
     let promiseHidden = BrowserTestUtils.waitForEvent(
       browser.contentDocument,
@@ -366,6 +454,11 @@ add_task(async function test_minimize_restore_windows() {
     await promiseHidden;
     await tabChangeRaised;
   });
+  Assert.deepEqual(
+    getAllSelectedTabURLs(),
+    [tabURL3, tabURL2],
+    `Window 2 has ${tabURL3} selected, window 1 remains at ${tabURL2}`
+  );
 
   // then minimize the window, focusing the 1st window
   info("Minimizing win2, leaving tab 3 selected");
@@ -378,32 +471,41 @@ add_task(async function test_minimize_restore_windows() {
   await switchToWindow(win1);
   await tabChangeRaised;
 
-  Assert.equal(
-    tabUrl(win1.gBrowser.selectedTab),
-    tabURL2,
-    `The selected tab in window 1 is ${tabURL2}`
+  Assert.deepEqual(
+    getAllSelectedTabURLs(),
+    [tabURL2, tabURL3],
+    `Window 1 has ${tabURL2} selected, window 2 remains at ${tabURL3}`
   );
 
   info("Opening fxview in win1 to confirm tab2 is most recent");
   await openFirefoxViewTab(win1).then(async viewTab => {
     const browser = viewTab.linkedBrowser;
-    await checkTabList(browser, [tabURL2, tabURL3, tabURL4, tabURL1]);
+    await checkRecentTabList(browser, [tabURL2, tabURL3, tabURL4, tabURL1]);
     info(
       "Restoring win2 and focusing it - which should make its selected tab most recent"
     );
     tabChangeRaised = BrowserTestUtils.waitForEvent(
       NonPrivateTabs,
-      "TabRecencyChange"
+      "TabRecencyChange",
+      false,
+      event => event.detail.sourceEvents?.includes("activate")
     );
     await restoreWindow(win2);
     await switchToWindow(win2);
+    // make sure we wait for the activate event from OpenTabs.
     await tabChangeRaised;
+
+    Assert.deepEqual(
+      getAllSelectedTabURLs(),
+      [tabURL3, fxViewURL],
+      `Window 2 was restored and has ${tabURL3} selected, window 1 remains at ${fxViewURL}`
+    );
 
     info(
       "Checking tab order in fxview in win1, to confirm tab3 is most recent"
     );
-    await checkTabList(browser, [tabURL3, tabURL2, tabURL4, tabURL1]);
+    await checkRecentTabList(browser, [tabURL3, tabURL2, tabURL4, tabURL1]);
   });
-
-  await cleanup(win2);
+  info("test done, waiting for cleanup");
+  await cleanup();
 });
