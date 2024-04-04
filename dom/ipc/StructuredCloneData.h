@@ -93,20 +93,14 @@ class SharedJSAllocatedData final {
  *   to send a structured clone that may include blobs or transferables such as
  *   message ports.
  * - To send the data, instantiate a StructuredCloneData instance and Write()
- *   into it like a normal structure clone.  When you are ready to send the
- *   ClonedMessageData-bearing IPC message, use the appropriate
- *   BuildClonedMessageDataFor{Parent,Child,BackgroundParent,BackgroundChild}
+ *   into it like a normal structured clone.  When you are ready to send the
+ *   ClonedMessageData-bearing IPC message, call the BuildClonedMessageData
  *   method to populate the ClonedMessageData and then send it before your
  *   StructuredCloneData instance is destroyed.  (Buffer borrowing is used
  *   under-the-hood to avoid duplicating the serialized data, requiring this.)
- * - To receive the data, instantiate a StructuredCloneData and use the
- *   appropriate {Borrow,Copy,Steal}FromClonedMessageDataFor{Parent,Child,
- *   BackgroundParent,BackgroundChild} method.  See the memory management
- *   section for more info.
- *
- * Variations:
- * - If transferables are not allowed (ex: BroadcastChannel), then use the
- *   StructuredCloneDataNoTransfers subclass instead of StructuredCloneData.
+ * - To receive the data, instantiate a StructuredCloneData and then call
+ *   the BorrowFromClonedMessageData method.  See the memory management
+ *   section for more information.
  *
  * ## Memory Management ##
  *
@@ -135,11 +129,11 @@ class SharedJSAllocatedData final {
  *
  * 1: Specifically, in the Write() case an owning SharedJSAllocatedData is
  *    created efficiently (by stealing from StructuredCloneHolder).  The
- *    BuildClonedMessageDataFor* method can be called at any time and it will
+ *    BuildClonedMessageData method can be called at any time and it will
  *    borrow the underlying memory.  While it would be even better if
  *    SerializedStructuredCloneBuffer could hold a SharedJSAllocatedData ref,
- *    there's no reason you can't wait to BuildClonedMessageDataFor* until you
- *    need to make the IPC Send* call.
+ *    there's no reason you can't wait to call the BuildClonedMessageData
+ *    method until you need to make the IPC Send* call.
  */
 class StructuredCloneData : public StructuredCloneHolder {
  public:
