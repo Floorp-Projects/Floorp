@@ -74,6 +74,3 @@ adb shell am start -n org.mozilla.fenix.debug/mozilla.telemetry.glean.debug.Glea
 4. See the results on  https://debug-ping-preview.firebaseapp.com/
 
 The parameters `sendPing` can be  `metrics` or `events` depending or your needs, additionally `debugViewTag` can be customize  to your preferred tag `debugViewTag your-metrics-ping`.
-
-
-

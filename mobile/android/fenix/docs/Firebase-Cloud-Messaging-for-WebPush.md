@@ -29,8 +29,8 @@ Created a new subscription: [context data]
 
 **Q. Why are credentials stored in Google Drive?**
   * Firebase services require a credential file, typically named `google-services.json`, which are retrieved from the Firebase console for all the applications in that project. Our requirements are somewhat unique, so we generate our own XML file from `google-services.json` and use that.
-    According to [Firebase engineers](https://groups.google.com/forum/#!msg/firebase-talk/bamCgTDajkw/uVEJXjtiBwAJ), it should be safe to commit our `google-services.json` but we avoid doing that as there are other forks of Fenix that must not use these credentials. 
-    For example, the Google I/O app commits [their release version](https://github.com/google/iosched/blob/b428d2be4bb96bd423e47cb709c906ce5d02150f/mobile/google-services.json) of the file to Github as well. 
+    According to [Firebase engineers](https://groups.google.com/forum/#!msg/firebase-talk/bamCgTDajkw/uVEJXjtiBwAJ), it should be safe to commit our `google-services.json` but we avoid doing that as there are other forks of Fenix that must not use these credentials.
+    For example, the Google I/O app commits [their release version](https://github.com/google/iosched/blob/b428d2be4bb96bd423e47cb709c906ce5d02150f/mobile/google-services.json) of the file to Github as well.
 
 **Q. What are the special requirements which mean we can't directly use `google-services.json`?**
 

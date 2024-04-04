@@ -36,4 +36,3 @@ There are two releases this covers: the current changes in the Fenix Nightly cha
 - [ ] If nothing is concerning, release management officially tags the Release Candidate as Production release, (usually 1 week after 1st Release Candidate)
 - [ ] Check Sentry for new crashes. Follow instructions for [Crash Monitoring](https://github.com/mozilla-mobile/fenix/wiki/Crash-Monitoring). File issues and triage.
 - [ ] If nothing concerning, release management bumps releases(5%, 25%, 100%)
-

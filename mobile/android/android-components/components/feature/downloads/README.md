@@ -18,7 +18,7 @@ The `AbstractFetchDownloadService` also requires extra permissions needed to pos
 - `android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK`
 
 The implementing service in the client app also needs to declare `dataSync` as `foregroundServiceType` in the manifest for
-Android 14 compatibility. Adding the `FOREGROUND_SERVICE_DATA_SYNC` permission in the app manifest is not needed since it is declared in feature-downloads module. 
+Android 14 compatibility. Adding the `FOREGROUND_SERVICE_DATA_SYNC` permission in the app manifest is not needed since it is declared in feature-downloads module.
 
 ### DownloadsFeature
 Feature implementation for proving download functionality for the selected session.

@@ -14,7 +14,7 @@ features:
     variables:
       refresh-interval-foreground:
         description: |
-          The minimum interval in minutes between fetching experiment 
+          The minimum interval in minutes between fetching experiment
           recipes in the foreground.
         type: Int
         default: 60 # 1 hour

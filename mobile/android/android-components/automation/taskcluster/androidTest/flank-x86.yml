@@ -7,7 +7,7 @@ gcloud:
   async: false
   num-flaky-test-attempts: 1
 
-  app: /app/path 
+  app: /app/path
   test: /test/path
 
   auto-google-login: false
