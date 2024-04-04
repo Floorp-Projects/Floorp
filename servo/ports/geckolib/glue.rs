@@ -2409,7 +2409,8 @@ impl_basic_rule_funcs! { (Namespace, NamespaceRule, NamespaceRule),
     changed: Servo_StyleSet_NamespaceRuleChanged,
 }
 
-impl_basic_rule_funcs! { (Page, PageRule, Locked<PageRule>),
+impl_group_rule_funcs! { (Page, PageRule, Locked<PageRule>),
+    get_rules: Servo_PageRule_GetRules,
     getter: Servo_CssRules_GetPageRuleAt,
     debug: Servo_PageRule_Debug,
     to_css: Servo_PageRule_GetCssText,

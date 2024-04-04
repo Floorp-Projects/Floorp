@@ -94,20 +94,20 @@ CSSPageRuleDeclaration::GetParsingEnvironment(
 CSSPageRule::CSSPageRule(RefPtr<StyleLockedPageRule> aRawRule,
                          StyleSheet* aSheet, css::Rule* aParentRule,
                          uint32_t aLine, uint32_t aColumn)
-    : css::Rule(aSheet, aParentRule, aLine, aColumn),
+    : css::GroupRule(aSheet, aParentRule, aLine, aColumn),
       mRawRule(std::move(aRawRule)),
       mDecls(Servo_PageRule_GetStyle(mRawRule).Consume()) {}
 
-NS_IMPL_ADDREF_INHERITED(CSSPageRule, css::Rule)
-NS_IMPL_RELEASE_INHERITED(CSSPageRule, css::Rule)
+NS_IMPL_ADDREF_INHERITED(CSSPageRule, css::GroupRule)
+NS_IMPL_RELEASE_INHERITED(CSSPageRule, css::GroupRule)
 
 // QueryInterface implementation for PageRule
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(CSSPageRule)
-NS_INTERFACE_MAP_END_INHERITING(css::Rule)
+NS_INTERFACE_MAP_END_INHERITING(css::GroupRule)
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(CSSPageRule)
 
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(CSSPageRule, css::Rule)
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(CSSPageRule, css::GroupRule)
   // Keep this in sync with IsCCLeaf.
 
   // Trace the wrapper for our declaration.  This just expands out
@@ -124,14 +124,14 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(CSSPageRule)
   // Note that this has to happen before unlinking css::Rule.
   tmp->UnlinkDeclarationWrapper(tmp->mDecls);
   tmp->mDecls.mDecls->SetOwningRule(nullptr);
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END_INHERITED(css::Rule)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END_INHERITED(css::GroupRule)
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(CSSPageRule, css::Rule)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(CSSPageRule, css::GroupRule)
   // Keep this in sync with IsCCLeaf.
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 bool CSSPageRule::IsCCLeaf() const {
-  if (!Rule::IsCCLeaf()) {
+  if (!GroupRule::IsCCLeaf()) {
     return false;
   }
 
@@ -147,7 +147,7 @@ StyleCssRuleType CSSPageRule::Type() const { return StyleCssRuleType::Page; }
 
 size_t CSSPageRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
   // TODO Implement this!
-  return aMallocSizeOf(this);
+  return GroupRule::SizeOfExcludingThis(aMallocSizeOf) + aMallocSizeOf(this);
 }
 
 #ifdef DEBUG
@@ -186,6 +186,10 @@ void CSSPageRule::SetSelectorText(const nsACString& aSelectorText) {
       sheet->RuleChanged(this, StyleRuleChangeKind::Generic);
     }
   }
+}
+
+already_AddRefed<StyleLockedCssRules> CSSPageRule::GetOrCreateRawRules() {
+  return Servo_PageRule_GetRules(mRawRule).Consume();
 }
 
 nsICSSDeclaration* CSSPageRule::Style() { return &mDecls; }
