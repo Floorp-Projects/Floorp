@@ -67,6 +67,7 @@ mozannotation_server  = { path = "../../../crashreporter/mozannotation_server", 
 gecko-profiler = { path = "../../../../tools/profiler/rust-api"}
 midir_impl = { path = "../../../../dom/midi/midir_impl", optional = true }
 dom = { path = "../../../../dom/base/rust" }
+dom_fragmentdirectives = { path="../../../../dom/base/fragmentdirectives" }
 origin-trials-ffi = { path = "../../../../dom/origin-trials/ffi" }
 jog = { path = "../../../components/glean/bindings/jog" }
 dap_ffi = { path = "../../../components/telemetry/dap/ffi" }
