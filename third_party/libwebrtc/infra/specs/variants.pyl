@@ -35,6 +35,6 @@
       '17.0',
     ],
     'identifier': 'iPhone 14 17.0',
-    'mixins': ['xcode_15_main', 'ios_runtime_cache_17_0'],
+    'mixins': ['xcode_15_main', 'ios_runtime_cache_17_4'],
   },
 }
