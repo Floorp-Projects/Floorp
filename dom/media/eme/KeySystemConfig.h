@@ -9,6 +9,7 @@
 
 #include "nsString.h"
 #include "nsTArray.h"
+#include "mozilla/MozPromise.h"
 #include "mozilla/dom/MediaKeysBinding.h"
 
 namespace mozilla {
@@ -17,6 +18,10 @@ struct KeySystemConfigRequest;
 
 struct KeySystemConfig {
  public:
+  using SupportedConfigsPromise =
+      MozPromise<nsTArray<KeySystemConfig>, bool /* aIgnored */,
+                 /* IsExclusive = */ true>;
+
   // EME MediaKeysRequirement:
   // https://www.w3.org/TR/encrypted-media/#dom-mediakeysrequirement
   enum class Requirement {
