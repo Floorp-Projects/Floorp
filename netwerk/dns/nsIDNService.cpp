@@ -288,6 +288,10 @@ nsresult nsIDNService::ACEtoUTF8(const nsACString& input, nsACString& _retval,
   input.EndReading(end);
   _retval.Truncate();
 
+  if (input.IsEmpty()) {
+    return NS_OK;
+  }
+
   nsAutoCString tld;
   nsCString::const_iterator it = end, tldEnd = end;
   --it;
