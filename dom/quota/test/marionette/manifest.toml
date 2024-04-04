@@ -3,5 +3,3 @@ support-files = ["quota_test_case.py"]
 
 ["dummy.py"]
 skip-if = ["true"]
-
-["test_private_repository_cleanup.py"]
