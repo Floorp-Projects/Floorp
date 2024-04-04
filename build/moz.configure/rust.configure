@@ -766,17 +766,14 @@ def cargo_incremental(
 set_config("CARGO_INCREMENTAL", cargo_incremental)
 
 
-@depends(rust_compile_flags, "--enable-warnings-as-errors", rustc_info)
-def rust_flags(compile_flags, warnings_as_errors, rustc_info):
+@depends(rust_compile_flags, "--enable-warnings-as-errors")
+def rust_flags(compile_flags, warnings_as_errors):
     warning_flags = []
 
     # Note that cargo passes --cap-lints warn to rustc for third-party code, so
     # we don't need a very complicated setup.
     if warnings_as_errors:
         warning_flags.append("-Dwarnings")
-        # Work around https://github.com/rust-lang/rust/issues/84428
-        if rustc_info.version >= "1.52":
-            warning_flags.append("-Aproc-macro-back-compat")
     else:
         warning_flags.extend(("--cap-lints", "warn"))
 
