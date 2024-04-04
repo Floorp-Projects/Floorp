@@ -2671,3 +2671,16 @@ httpsFirst:
       setPref:
         branch: default
         pref: dom.security.https_only_fire_http_request_background_timer_ms
+
+tabPreview:
+  description: Prefs to control Tab Previews
+  owner: dwalker@mozilla.com
+  hasExposure: false
+  variables:
+    tabPreviewsEnabled:
+      type: boolean
+      setPref:
+        branch: default
+        pref: browser.tabs.cardPreview.enabled
+      description: >-
+        When true, users will see the new card preview when hovering a tab, instead of the standard tooltip
