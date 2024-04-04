@@ -439,7 +439,7 @@ class RTC_EXPORT P2PTransportChannel : public IceTransportInternal,
       RTC_GUARDED_BY(network_thread_);
   IceMode remote_ice_mode_ RTC_GUARDED_BY(network_thread_);
   IceRole ice_role_ RTC_GUARDED_BY(network_thread_);
-  uint64_t tiebreaker_ RTC_GUARDED_BY(network_thread_);
+  uint64_t ice_tiebreaker_ RTC_GUARDED_BY(network_thread_);
   IceGatheringState gathering_state_ RTC_GUARDED_BY(network_thread_);
   std::unique_ptr<webrtc::BasicRegatheringController> regathering_controller_
       RTC_GUARDED_BY(network_thread_);
