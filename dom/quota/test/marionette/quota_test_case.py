@@ -10,6 +10,51 @@ from marionette_harness import MarionetteTestCase
 
 
 class QuotaTestCase(MarionetteTestCase):
+    def executeAsyncScript(self, script, script_args):
+        res = self.marionette.execute_async_script(
+            """
+            const resolve = arguments[arguments.length - 1];
+
+            class RequestError extends Error {
+              constructor(resultCode, resultName) {
+                super(`Request failed (code: ${resultCode}, name: ${resultName})`);
+                this.name = "RequestError";
+                this.resultCode = resultCode;
+                this.resultName = resultName;
+              }
+            }
+
+            async function requestFinished(request) {
+              await new Promise(function (resolve) {
+                request.callback = function () {
+                  resolve();
+                };
+              });
+
+              if (request.resultCode !== Cr.NS_OK) {
+                throw new RequestError(request.resultCode, request.resultName);
+              }
+
+              return request.result;
+            }
+            """
+            + script
+            + """
+            main()
+              .then(function(result) {
+                resolve(result);
+              })
+              .catch(function() {
+                resolve(null);
+              });;
+            """,
+            script_args=script_args,
+            new_sandbox=False,
+        )
+
+        assert res is not None
+        return res
+
     def ensureInvariantHolds(self, op):
         maxWaitTime = 60
         Wait(self.marionette, timeout=maxWaitTime).until(
@@ -25,26 +70,22 @@ class QuotaTestCase(MarionetteTestCase):
 
     def getFullOriginMetadata(self, persistenceType, origin):
         with self.marionette.using_context("chrome"):
-            res = self.marionette.execute_async_script(
+            res = self.executeAsyncScript(
                 """
-                    const [persistenceType, origin, resolve] = arguments;
+                const [persistenceType, origin] = arguments;
 
-                    const principal = Services.scriptSecurityManager.
-                        createContentPrincipalFromOrigin(origin);
+                async function main() {
+                  const principal = Services.scriptSecurityManager.
+                    createContentPrincipalFromOrigin(origin);
 
-                    const request = Services.qms.getFullOriginMetadata(
-                        persistenceType, principal);
+                  const request = Services.qms.getFullOriginMetadata(
+                    persistenceType, principal);
+                  const metadata = await requestFinished(request);
 
-                    request.callback = function() {
-                      if (request.resultCode != Cr.NS_OK) {
-                        resolve(null);
-                      } else {
-                        resolve(request.result);
-                      }
-                    }
+                  return metadata;
+                }
                 """,
                 script_args=(persistenceType, origin),
-                new_sandbox=False,
             )
 
             assert res is not None
@@ -64,31 +105,26 @@ class QuotaTestCase(MarionetteTestCase):
         # This method is used to force sqlite to write journal file contents to
         # main sqlite database file
 
-        script = """
-            const [resolve] = arguments
-
-            let origin = '%s';
-            let persistenceType = '%s';
-            let client = '%s';
-            let principal = Services.scriptSecurityManager.
-                                createContentPrincipalFromOrigin(origin);
-
-            let req = Services.qms.resetStoragesForPrincipal(principal, persistenceType, client);
-            req.callback = () => {
-                if (req.resultCode == Cr.NS_OK) {
-                    resolve(true);
-                } else {
-                    resolve(false);
-                }
-            }
-            """ % (
-            origin,
-            persistenceType,
-            client,
-        )
-
         with self.marionette.using_context(self.marionette.CONTEXT_CHROME):
-            return self.marionette.execute_async_script(script)
+            res = self.executeAsyncScript(
+                """
+                const [origin, persistenceType, client] = arguments;
+
+                async function main() {
+                  const principal = Services.scriptSecurityManager.
+                    createContentPrincipalFromOrigin(origin);
+
+                  const request = Services.qms.resetStoragesForPrincipal(principal, persistenceType, client);
+                  await requestFinished(request);
+
+                  return true;
+                }
+                """,
+                script_args=(origin, persistenceType, client),
+            )
+
+            assert res is not None
+            return res
 
     @contextmanager
     def using_new_window(self, path, private=False):
