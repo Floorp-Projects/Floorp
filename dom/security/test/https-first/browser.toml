@@ -7,7 +7,7 @@ support-files = ["file_beforeunload_permit_http.html"]
 support-files = [
   "file_mixed_content_auto_upgrade.html",
   "pass.png",
-  "test.ogv",
+  "test.webm",
   "test.wav",
 ]
 

@@ -15,7 +15,7 @@ support-files = [
 support-files = [
   "file_csp_block_all_mixedcontent_and_mixed_content_display_upgrade.html",
   "pass.png",
-  "test.ogv",
+  "test.webm",
   "test.wav",
 ]
 
