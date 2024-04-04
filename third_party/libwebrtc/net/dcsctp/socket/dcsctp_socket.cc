@@ -22,7 +22,6 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/array_view.h"
-#include "api/task_queue/task_queue_base.h"
 #include "net/dcsctp/packet/chunk/abort_chunk.h"
 #include "net/dcsctp/packet/chunk/chunk.h"
 #include "net/dcsctp/packet/chunk/cookie_ack_chunk.h"
@@ -120,8 +119,12 @@ Capabilities ComputeCapabilities(const DcSctpOptions& options,
     capabilities.reconfig = true;
   }
 
-  if (options.enable_zero_checksum &&
-      parameters.get<ZeroChecksumAcceptableChunkParameter>().has_value()) {
+  if (options.zero_checksum_alternate_error_detection_method !=
+          ZeroChecksumAlternateErrorDetectionMethod::None() &&
+      parameters.get<ZeroChecksumAcceptableChunkParameter>().has_value() &&
+      parameters.get<ZeroChecksumAcceptableChunkParameter>()
+              ->error_detection_method() ==
+          options.zero_checksum_alternate_error_detection_method) {
     capabilities.zero_checksum = true;
   }
 
@@ -134,6 +137,7 @@ Capabilities ComputeCapabilities(const DcSctpOptions& options,
 }
 
 void AddCapabilityParameters(const DcSctpOptions& options,
+                             bool support_zero_checksum,
                              Parameters::Builder& builder) {
   std::vector<uint8_t> chunk_types = {ReConfigChunk::kType};
 
@@ -145,8 +149,11 @@ void AddCapabilityParameters(const DcSctpOptions& options,
     chunk_types.push_back(IDataChunk::kType);
     chunk_types.push_back(IForwardTsnChunk::kType);
   }
-  if (options.enable_zero_checksum) {
-    builder.Add(ZeroChecksumAcceptableChunkParameter());
+  if (support_zero_checksum) {
+    RTC_DCHECK(options.zero_checksum_alternate_error_detection_method !=
+               ZeroChecksumAlternateErrorDetectionMethod::None());
+    builder.Add(ZeroChecksumAcceptableChunkParameter(
+        options.zero_checksum_alternate_error_detection_method));
   }
   builder.Add(SupportedExtensionsParameter(std::move(chunk_types)));
 }
@@ -282,7 +289,11 @@ void DcSctpSocket::SetState(State state, absl::string_view reason) {
 
 void DcSctpSocket::SendInit() {
   Parameters::Builder params_builder;
-  AddCapabilityParameters(options_, params_builder);
+  AddCapabilityParameters(
+      options_, /*support_zero_checksum=*/
+      options_.zero_checksum_alternate_error_detection_method !=
+          ZeroChecksumAlternateErrorDetectionMethod::None(),
+      params_builder);
   InitChunk init(/*initiate_tag=*/connect_params_.verification_tag,
                  /*a_rwnd=*/options_.max_receiver_window_buffer_size,
                  options_.announced_maximum_outgoing_streams,
@@ -1227,7 +1238,7 @@ void DcSctpSocket::HandleInit(const CommonHeader& header,
                       chunk->initial_tsn(), my_initial_tsn, chunk->a_rwnd(),
                       tie_tag, capabilities)
               .Serialize()));
-  AddCapabilityParameters(options_, params_builder);
+  AddCapabilityParameters(options_, capabilities.zero_checksum, params_builder);
 
   InitAckChunk init_ack(/*initiate_tag=*/my_verification_tag,
                         options_.max_receiver_window_buffer_size,
