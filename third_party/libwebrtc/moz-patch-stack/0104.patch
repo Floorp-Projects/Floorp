@@ -1,33 +1,107 @@
-From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Fri, 2 Feb 2024 18:43:00 +0000
-Subject: Bug 1878010 - Fix webrtc::VideoCaptureFactory for BSD.
- r=grulja,gaston,webrtc-reviewers,mjf
+From: Michael Froman <mfroman@mozilla.com>
+Date: Mon, 18 Dec 2023 15:00:00 +0000
+Subject: Bug 1867099 - revert libwebrtc 8602f604e0. r=bwc
 
-Differential Revision: https://phabricator.services.mozilla.com/D200427
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/f890637efe5abc0020fab83ff2224313cd0c8460
+Upstream 8602f604e0 removed code sending BYEs which breaks some of
+our wpt.  They've opened a bug for a real fix here:
+https://bugs.chromium.org/p/webrtc/issues/detail?id=15664
+
+I've opened Bug 1870643 to track the real fix and upstream bug.
+
+Differential Revision: https://phabricator.services.mozilla.com/D196729
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/d92a578327f524ec3e1c144c82492a4c76b8266f
 ---
- modules/video_capture/video_capture_factory.cc | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ call/rtp_video_sender.cc                      |  1 +
+ modules/rtp_rtcp/source/rtcp_sender.cc        | 19 +++++++++++++++++--
+ .../rtp_rtcp/source/rtcp_sender_unittest.cc   |  5 +++--
+ modules/rtp_rtcp/source/rtp_rtcp_impl.cc      |  1 +
+ modules/rtp_rtcp/source/rtp_rtcp_interface.h  |  2 +-
+ 5 files changed, 23 insertions(+), 5 deletions(-)
 
-diff --git a/modules/video_capture/video_capture_factory.cc b/modules/video_capture/video_capture_factory.cc
-index e085ac2df8..2790fbbe1c 100644
---- a/modules/video_capture/video_capture_factory.cc
-+++ b/modules/video_capture/video_capture_factory.cc
-@@ -24,7 +24,7 @@ rtc::scoped_refptr<VideoCaptureModule> VideoCaptureFactory::Create(
-     const char* deviceUniqueIdUTF8) {
- // This is only implemented on pure Linux and WEBRTC_LINUX is defined for
- // Android as well
--#if !defined(WEBRTC_LINUX) || defined(WEBRTC_ANDROID)
-+#if (!defined(WEBRTC_LINUX) && !defined(WEBRTC_BSD)) || defined(WEBRTC_ANDROID)
-   return nullptr;
- #else
-   return videocapturemodule::VideoCaptureImpl::Create(options,
-@@ -40,7 +40,7 @@ VideoCaptureModule::DeviceInfo* VideoCaptureFactory::CreateDeviceInfo(
-     VideoCaptureOptions* options) {
- // This is only implemented on pure Linux and WEBRTC_LINUX is defined for
- // Android as well
--#if !defined(WEBRTC_LINUX) || defined(WEBRTC_ANDROID)
-+#if (!defined(WEBRTC_LINUX) && !defined(WEBRTC_BSD)) || defined(WEBRTC_ANDROID)
-   return nullptr;
- #else
-   return videocapturemodule::VideoCaptureImpl::CreateDeviceInfo(options);
+diff --git a/call/rtp_video_sender.cc b/call/rtp_video_sender.cc
+index 580850359c..ac5540a7f2 100644
+--- a/call/rtp_video_sender.cc
++++ b/call/rtp_video_sender.cc
+@@ -492,6 +492,7 @@ void RtpVideoSender::SetActiveModulesLocked(bool sending) {
+   active_ = sending;
+   for (size_t i = 0; i < rtp_streams_.size(); ++i) {
+     RtpRtcpInterface& rtp_module = *rtp_streams_[i].rtp_rtcp;
++    // Sends a kRtcpByeCode when going from true to false.
+     rtp_module.SetSendingStatus(sending);
+     rtp_module.SetSendingMediaStatus(sending);
+     if (sending) {
+diff --git a/modules/rtp_rtcp/source/rtcp_sender.cc b/modules/rtp_rtcp/source/rtcp_sender.cc
+index 099b0be1a3..971f49b949 100644
+--- a/modules/rtp_rtcp/source/rtcp_sender.cc
++++ b/modules/rtp_rtcp/source/rtcp_sender.cc
+@@ -212,8 +212,23 @@ bool RTCPSender::Sending() const {
+ 
+ void RTCPSender::SetSendingStatus(const FeedbackState& feedback_state,
+                                   bool sending) {
+-  MutexLock lock(&mutex_rtcp_sender_);
+-  sending_ = sending;
++  bool sendRTCPBye = false;
++  {
++    MutexLock lock(&mutex_rtcp_sender_);
++
++    if (method_ != RtcpMode::kOff) {
++      if (sending == false && sending_ == true) {
++        // Trigger RTCP bye
++        sendRTCPBye = true;
++      }
++    }
++    sending_ = sending;
++  }
++  if (sendRTCPBye) {
++    if (SendRTCP(feedback_state, kRtcpBye) != 0) {
++      RTC_LOG(LS_WARNING) << "Failed to send RTCP BYE";
++    }
++  }
+ }
+ 
+ void RTCPSender::SetNonSenderRttMeasurement(bool enabled) {
+diff --git a/modules/rtp_rtcp/source/rtcp_sender_unittest.cc b/modules/rtp_rtcp/source/rtcp_sender_unittest.cc
+index 002a5f86f1..1dcb628722 100644
+--- a/modules/rtp_rtcp/source/rtcp_sender_unittest.cc
++++ b/modules/rtp_rtcp/source/rtcp_sender_unittest.cc
+@@ -328,12 +328,13 @@ TEST_F(RtcpSenderTest, SendBye) {
+   EXPECT_EQ(kSenderSsrc, parser()->bye()->sender_ssrc());
+ }
+ 
+-TEST_F(RtcpSenderTest, StopSendingDoesNotTriggersBye) {
++TEST_F(RtcpSenderTest, StopSendingTriggersBye) {
+   auto rtcp_sender = CreateRtcpSender(GetDefaultConfig());
+   rtcp_sender->SetRTCPStatus(RtcpMode::kReducedSize);
+   rtcp_sender->SetSendingStatus(feedback_state(), true);
+   rtcp_sender->SetSendingStatus(feedback_state(), false);
+-  EXPECT_EQ(0, parser()->bye()->num_packets());
++  EXPECT_EQ(1, parser()->bye()->num_packets());
++  EXPECT_EQ(kSenderSsrc, parser()->bye()->sender_ssrc());
+ }
+ 
+ TEST_F(RtcpSenderTest, SendFir) {
+diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl.cc b/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
+index cca9a40250..a63067141d 100644
+--- a/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
++++ b/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
+@@ -296,6 +296,7 @@ RTCPSender::FeedbackState ModuleRtpRtcpImpl::GetFeedbackState() {
+ 
+ int32_t ModuleRtpRtcpImpl::SetSendingStatus(const bool sending) {
+   if (rtcp_sender_.Sending() != sending) {
++    // Sends RTCP BYE when going from true to false
+     rtcp_sender_.SetSendingStatus(GetFeedbackState(), sending);
+   }
+   return 0;
+diff --git a/modules/rtp_rtcp/source/rtp_rtcp_interface.h b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
+index f196d11b58..bc8da63ab6 100644
+--- a/modules/rtp_rtcp/source/rtp_rtcp_interface.h
++++ b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
+@@ -277,7 +277,7 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
+   // Returns the FlexFEC SSRC, if there is one.
+   virtual absl::optional<uint32_t> FlexfecSsrc() const = 0;
+ 
+-  // Sets sending status.
++  // Sets sending status. Sends kRtcpByeCode when going from true to false.
+   // Returns -1 on failure else 0.
+   virtual int32_t SetSendingStatus(bool sending) = 0;
+ 
