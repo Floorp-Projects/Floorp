@@ -54,6 +54,7 @@
 
 #include "absl/strings/string_view.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/helpers.h"
 #include "rtc_base/string_utils.h"
 #include "rtc_base/strings/string_builder.h"
 #include "test/testsupport/file_utils_override.h"
@@ -92,6 +93,13 @@ bool DirExists(absl::string_view directory_name) {
 
 std::string OutputPath() {
   return webrtc::test::internal::OutputPath();
+}
+
+std::string OutputPathWithRandomDirectory() {
+  std::string path = webrtc::test::internal::OutputPath();
+  std::string rand_dir = path + rtc::CreateRandomUuid();
+
+  return CreateDir(rand_dir) ? rand_dir + std::string(kPathDelimiter) : path;
 }
 
 std::string WorkingDir() {

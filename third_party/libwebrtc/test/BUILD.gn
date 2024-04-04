@@ -869,6 +869,7 @@ rtc_library("fileutils") {
     ":fileutils_override_api",
     ":fileutils_override_impl",
     "../rtc_base:checks",
+    "../rtc_base:ssl",
     "../rtc_base:stringutils",
   ]
   absl_deps = [
