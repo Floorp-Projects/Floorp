@@ -19,7 +19,6 @@ makeTable(
   [undefined], {
     // All video names
     'four-colors-vp8-bt601.webm': ['video/webm; codecs=vp8'],
-    'four-colors-theora-bt601.ogv': ['video/ogg; codecs=theora'],
     'four-colors-h264-bt601.mp4': ['video/mp4; codecs=avc1.4d400c'],
     'four-colors-vp9-bt601.webm': ['video/webm; codecs=vp9'],
     'four-colors-vp9-bt709.webm': ['video/webm; codecs=vp9'],
@@ -61,13 +60,6 @@ const kBt601Yellow = convertToUnorm8(kBt601PixelValue.yellow);
 export const kVideoExpectations = [
 {
   videoName: 'four-colors-vp8-bt601.webm',
-  _redExpectation: kBt601Red,
-  _greenExpectation: kBt601Green,
-  _blueExpectation: kBt601Blue,
-  _yellowExpectation: kBt601Yellow
-},
-{
-  videoName: 'four-colors-theora-bt601.ogv',
   _redExpectation: kBt601Red,
   _greenExpectation: kBt601Green,
   _blueExpectation: kBt601Blue,
