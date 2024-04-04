@@ -10,6 +10,6 @@
  */
 [GenerateInitFromJSON]
 dictionary StripRule {
-  sequence<DOMString> queryParams = [];
-  sequence<DOMString> topLevelSites = [];
+  sequence<UTF8String> queryParams = [];
+  sequence<UTF8String> topLevelSites = [];
 };

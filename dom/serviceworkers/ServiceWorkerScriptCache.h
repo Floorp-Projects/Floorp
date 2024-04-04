@@ -45,7 +45,7 @@ class CompareCallback {
 
 nsresult Compare(ServiceWorkerRegistrationInfo* aRegistration,
                  nsIPrincipal* aPrincipal, const nsAString& aCacheName,
-                 const nsAString& aURL, CompareCallback* aCallback);
+                 const nsACString& aURL, CompareCallback* aCallback);
 
 }  // namespace serviceWorkerScriptCache
 

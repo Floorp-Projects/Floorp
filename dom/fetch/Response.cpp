@@ -84,53 +84,42 @@ already_AddRefed<Response> Response::Error(const GlobalObject& aGlobal) {
 
 /* static */
 already_AddRefed<Response> Response::Redirect(const GlobalObject& aGlobal,
-                                              const nsAString& aUrl,
+                                              const nsACString& aUrl,
                                               uint16_t aStatus,
                                               ErrorResult& aRv) {
-  nsAutoString parsedURL;
+  nsAutoCString parsedURL;
 
   if (NS_IsMainThread()) {
     nsIURI* baseURI = nullptr;
     nsCOMPtr<nsPIDOMWindowInner> inner(
         do_QueryInterface(aGlobal.GetAsSupports()));
-    Document* doc = inner ? inner->GetExtantDoc() : nullptr;
-    if (doc) {
+    if (Document* doc = inner ? inner->GetExtantDoc() : nullptr) {
       baseURI = doc->GetBaseURI();
     }
-    // Don't use NS_ConvertUTF16toUTF8 because that doesn't let us handle OOM.
-    nsAutoCString url;
-    if (!AppendUTF16toUTF8(aUrl, url, fallible)) {
-      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
-      return nullptr;
-    }
-
     nsCOMPtr<nsIURI> resolvedURI;
-    nsresult rv = NS_NewURI(getter_AddRefs(resolvedURI), url, nullptr, baseURI);
+    nsresult rv =
+        NS_NewURI(getter_AddRefs(resolvedURI), aUrl, nullptr, baseURI);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      aRv.ThrowTypeError<MSG_INVALID_URL>(url);
+      aRv.ThrowTypeError<MSG_INVALID_URL>(aUrl);
       return nullptr;
     }
 
-    nsAutoCString spec;
-    rv = resolvedURI->GetSpec(spec);
+    rv = resolvedURI->GetSpec(parsedURL);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      aRv.ThrowTypeError<MSG_INVALID_URL>(url);
+      aRv.ThrowTypeError<MSG_INVALID_URL>(aUrl);
       return nullptr;
     }
-
-    CopyUTF8toUTF16(spec, parsedURL);
   } else {
     WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
     MOZ_ASSERT(worker);
     worker->AssertIsOnWorkerThread();
 
-    NS_ConvertUTF8toUTF16 baseURL(worker->GetLocationInfo().mHref);
+    const auto& baseURL = worker->GetLocationInfo().mHref;
     RefPtr<URL> url =
         URL::Constructor(aGlobal.GetAsSupports(), aUrl, baseURL, aRv);
     if (aRv.Failed()) {
       return nullptr;
     }
-
     url->GetHref(parsedURL);
   }
 
@@ -152,8 +141,7 @@ already_AddRefed<Response> Response::Redirect(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  r->GetInternalHeaders()->Set("Location"_ns, NS_ConvertUTF16toUTF8(parsedURL),
-                               aRv);
+  r->GetInternalHeaders()->Set("Location"_ns, parsedURL, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }

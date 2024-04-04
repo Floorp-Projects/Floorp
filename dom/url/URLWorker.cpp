@@ -18,11 +18,11 @@ namespace mozilla::dom {
 class CreateURLRunnable : public WorkerMainThreadRunnable {
  private:
   BlobImpl* mBlobImpl;
-  nsAString& mURL;
+  nsACString& mURL;
 
  public:
   CreateURLRunnable(WorkerPrivate* aWorkerPrivate, BlobImpl* aBlobImpl,
-                    nsAString& aURL)
+                    nsACString& aURL)
       : WorkerMainThreadRunnable(aWorkerPrivate, "URL :: CreateURL"_ns),
         mBlobImpl(aBlobImpl),
         mURL(aURL) {
@@ -42,17 +42,13 @@ class CreateURLRunnable : public WorkerMainThreadRunnable {
     nsAutoString partKey;
     cookieJarSettings->GetPartitionKey(partKey);
 
-    nsAutoCString url;
     nsresult rv = BlobURLProtocolHandler::AddDataEntry(
-        mBlobImpl, principal, NS_ConvertUTF16toUTF8(partKey), url);
-
+        mBlobImpl, principal, NS_ConvertUTF16toUTF8(partKey), mURL);
     if (NS_FAILED(rv)) {
       NS_WARNING("Failed to add data entry for the blob!");
-      SetDOMStringToNull(mURL);
+      mURL.SetIsVoid(true);
       return false;
     }
-
-    CopyUTF8toUTF16(url, mURL);
     return true;
   }
 };
@@ -60,17 +56,15 @@ class CreateURLRunnable : public WorkerMainThreadRunnable {
 // This class revokes an URL on the main thread.
 class RevokeURLRunnable : public WorkerMainThreadRunnable {
  private:
-  const nsString mURL;
+  const nsCString mURL;
 
  public:
-  RevokeURLRunnable(WorkerPrivate* aWorkerPrivate, const nsAString& aURL)
+  RevokeURLRunnable(WorkerPrivate* aWorkerPrivate, const nsACString& aURL)
       : WorkerMainThreadRunnable(aWorkerPrivate, "URL :: RevokeURL"_ns),
         mURL(aURL) {}
 
   bool MainThreadRun() override {
     AssertIsOnMainThread();
-
-    NS_ConvertUTF16toUTF8 url(mURL);
 
     nsCOMPtr<nsICookieJarSettings> cookieJarSettings =
         mWorkerPrivate->CookieJarSettings();
@@ -78,8 +72,8 @@ class RevokeURLRunnable : public WorkerMainThreadRunnable {
     nsAutoString partKey;
     cookieJarSettings->GetPartitionKey(partKey);
 
-    BlobURLProtocolHandler::RemoveDataEntry(url, mWorkerPrivate->GetPrincipal(),
-                                            NS_ConvertUTF16toUTF8(partKey));
+    BlobURLProtocolHandler::RemoveDataEntry(
+        mURL, mWorkerPrivate->GetPrincipal(), NS_ConvertUTF16toUTF8(partKey));
     return true;
   }
 };
@@ -87,11 +81,11 @@ class RevokeURLRunnable : public WorkerMainThreadRunnable {
 // This class checks if an URL is valid on the main thread.
 class IsValidURLRunnable : public WorkerMainThreadRunnable {
  private:
-  const nsString mURL;
+  const nsCString mURL;
   bool mValid;
 
  public:
-  IsValidURLRunnable(WorkerPrivate* aWorkerPrivate, const nsAString& aURL)
+  IsValidURLRunnable(WorkerPrivate* aWorkerPrivate, const nsACString& aURL)
       : WorkerMainThreadRunnable(aWorkerPrivate, "URL :: IsValidURL"_ns),
         mURL(aURL),
         mValid(false) {}
@@ -99,8 +93,7 @@ class IsValidURLRunnable : public WorkerMainThreadRunnable {
   bool MainThreadRun() override {
     AssertIsOnMainThread();
 
-    NS_ConvertUTF16toUTF8 url(mURL);
-    mValid = BlobURLProtocolHandler::HasDataEntry(url);
+    mValid = BlobURLProtocolHandler::HasDataEntry(mURL);
 
     return true;
   }
@@ -110,7 +103,8 @@ class IsValidURLRunnable : public WorkerMainThreadRunnable {
 
 /* static */
 void URLWorker::CreateObjectURL(const GlobalObject& aGlobal, Blob& aBlob,
-                                nsAString& aResult, mozilla::ErrorResult& aRv) {
+                                nsACString& aResult,
+                                mozilla::ErrorResult& aRv) {
   JSContext* cx = aGlobal.Context();
   WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(cx);
 
@@ -128,12 +122,12 @@ void URLWorker::CreateObjectURL(const GlobalObject& aGlobal, Blob& aBlob,
   WorkerGlobalScope* scope = workerPrivate->GlobalScope();
   MOZ_ASSERT(scope);
 
-  scope->RegisterHostObjectURI(NS_ConvertUTF16toUTF8(aResult));
+  scope->RegisterHostObjectURI(aResult);
 }
 
 /* static */
 void URLWorker::RevokeObjectURL(const GlobalObject& aGlobal,
-                                const nsAString& aUrl, ErrorResult& aRv) {
+                                const nsACString& aUrl, ErrorResult& aRv) {
   JSContext* cx = aGlobal.Context();
   WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(cx);
 
@@ -148,12 +142,12 @@ void URLWorker::RevokeObjectURL(const GlobalObject& aGlobal,
   WorkerGlobalScope* scope = workerPrivate->GlobalScope();
   MOZ_ASSERT(scope);
 
-  scope->UnregisterHostObjectURI(NS_ConvertUTF16toUTF8(aUrl));
+  scope->UnregisterHostObjectURI(aUrl);
 }
 
 /* static */
 bool URLWorker::IsValidObjectURL(const GlobalObject& aGlobal,
-                                 const nsAString& aUrl, ErrorResult& aRv) {
+                                 const nsACString& aUrl, ErrorResult& aRv) {
   JSContext* cx = aGlobal.Context();
   WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(cx);
 

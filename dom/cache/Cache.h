@@ -22,10 +22,10 @@ class ErrorResult;
 
 namespace dom {
 
-class OwningRequestOrUSVString;
+class OwningRequestOrUTF8String;
 class Promise;
 struct CacheQueryOptions;
-class RequestOrUSVString;
+class RequestOrUTF8String;
 class Response;
 template <typename T>
 class Optional;
@@ -46,27 +46,27 @@ class Cache final : public nsISupports,
 
   // webidl interface methods
   already_AddRefed<Promise> Match(JSContext* aCx,
-                                  const RequestOrUSVString& aRequest,
+                                  const RequestOrUTF8String& aRequest,
                                   const CacheQueryOptions& aOptions,
                                   ErrorResult& aRv);
   already_AddRefed<Promise> MatchAll(
-      JSContext* aCx, const Optional<RequestOrUSVString>& aRequest,
+      JSContext* aCx, const Optional<RequestOrUTF8String>& aRequest,
       const CacheQueryOptions& aOptions, ErrorResult& aRv);
   already_AddRefed<Promise> Add(JSContext* aContext,
-                                const RequestOrUSVString& aRequest,
+                                const RequestOrUTF8String& aRequest,
                                 CallerType aCallerType, ErrorResult& aRv);
   already_AddRefed<Promise> AddAll(
-      JSContext* aContext, const Sequence<OwningRequestOrUSVString>& aRequests,
+      JSContext* aContext, const Sequence<OwningRequestOrUTF8String>& aRequests,
       CallerType aCallerType, ErrorResult& aRv);
   already_AddRefed<Promise> Put(JSContext* aCx,
-                                const RequestOrUSVString& aRequest,
+                                const RequestOrUTF8String& aRequest,
                                 Response& aResponse, ErrorResult& aRv);
   already_AddRefed<Promise> Delete(JSContext* aCx,
-                                   const RequestOrUSVString& aRequest,
+                                   const RequestOrUTF8String& aRequest,
                                    const CacheQueryOptions& aOptions,
                                    ErrorResult& aRv);
   already_AddRefed<Promise> Keys(JSContext* aCx,
-                                 const Optional<RequestOrUSVString>& aRequest,
+                                 const Optional<RequestOrUTF8String>& aRequest,
                                  const CacheQueryOptions& aParams,
                                  ErrorResult& aRv);
 

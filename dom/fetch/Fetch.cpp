@@ -470,7 +470,7 @@ class MainThreadFetchRunnable : public Runnable {
 };
 
 already_AddRefed<Promise> FetchRequest(nsIGlobalObject* aGlobal,
-                                       const RequestOrUSVString& aInput,
+                                       const RequestOrUTF8String& aInput,
                                        const RequestInit& aInit,
                                        CallerType aCallerType,
                                        ErrorResult& aRv) {

@@ -21,22 +21,20 @@ namespace dom {
 class URLWorker final {
  public:
   static already_AddRefed<URLWorker> Constructor(
-      const GlobalObject& aGlobal, const nsAString& aURL,
-      const Optional<nsAString>& aBase, ErrorResult& aRv);
+      const GlobalObject& aGlobal, const nsACString& aURL,
+      const Optional<nsACString>& aBase, ErrorResult& aRv);
 
   static already_AddRefed<URLWorker> Constructor(const GlobalObject& aGlobal,
-                                                 const nsAString& aURL,
-                                                 const nsAString& aBase,
+                                                 const nsACString& aURL,
+                                                 const nsACString& aBase,
                                                  ErrorResult& aRv);
 
   static void CreateObjectURL(const GlobalObject& aGlobal, Blob& aBlob,
-                              nsAString& aResult, mozilla::ErrorResult& aRv);
-
+                              nsACString& aResult, mozilla::ErrorResult& aRv);
   static void RevokeObjectURL(const GlobalObject& aGlobal,
-                              const nsAString& aUrl, ErrorResult& aRv);
-
+                              const nsACString& aUrl, ErrorResult& aRv);
   static bool IsValidObjectURL(const GlobalObject& aGlobal,
-                               const nsAString& aUrl, ErrorResult& aRv);
+                               const nsACString& aUrl, ErrorResult& aRv);
 };
 
 }  // namespace dom

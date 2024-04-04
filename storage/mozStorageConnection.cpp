@@ -1157,8 +1157,8 @@ nsresult Connection::initialize(nsIFileURL* aFileURL) {
 
   MOZ_ALWAYS_TRUE(
       URLParams::Parse(query, true,
-                       [&hasKey, &hasDirectoryLockId](const nsAString& aName,
-                                                      const nsAString& aValue) {
+                       [&hasKey, &hasDirectoryLockId](
+                           const nsACString& aName, const nsACString& aValue) {
                          if (aName.EqualsLiteral("key")) {
                            hasKey = true;
                            return true;

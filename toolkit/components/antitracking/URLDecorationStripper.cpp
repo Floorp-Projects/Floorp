@@ -22,8 +22,8 @@ namespace mozilla {
 
 nsresult URLDecorationStripper::StripTrackingIdentifiers(nsIURI* aURI,
                                                          nsACString& aOutSpec) {
-  nsAutoString tokenList;
-  nsresult rv = Preferences::GetString(kPrefName, tokenList);
+  nsAutoCString tokenList;
+  nsresult rv = Preferences::GetCString(kPrefName, tokenList);
   ToLowerCase(tokenList);
 
   nsAutoCString path;
@@ -34,12 +34,12 @@ nsresult URLDecorationStripper::StripTrackingIdentifiers(nsIURI* aURI,
   int32_t queryBegins = path.FindChar('?');
   // Only positive values are valid since the path must begin with a '/'.
   if (queryBegins > 0) {
-    for (const nsAString& token : tokenList.Split(' ')) {
+    for (const nsACString& token : tokenList.Split(' ')) {
       if (token.IsEmpty()) {
         continue;
       }
 
-      nsAutoString value;
+      nsAutoCString value;
       if (URLParams::Extract(Substring(path, queryBegins + 1), token, value) &&
           !value.IsVoid()) {
         // Tracking identifier found in the URL!

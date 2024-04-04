@@ -305,18 +305,15 @@ void CacheLoadHandler::Load(Cache* aCache) {
     return;
   }
 
-  nsAutoCString spec;
-  rv = uri->GetSpec(spec);
+  MOZ_ASSERT(loadContext->mFullURL.IsEmpty());
+  rv = uri->GetSpec(loadContext->mFullURL);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     Fail(rv);
     return;
   }
 
-  MOZ_ASSERT(loadContext->mFullURL.IsEmpty());
-  CopyUTF8toUTF16(spec, loadContext->mFullURL);
-
-  mozilla::dom::RequestOrUSVString request;
-  request.SetAsUSVString().ShareOrDependUpon(loadContext->mFullURL);
+  mozilla::dom::RequestOrUTF8String request;
+  request.SetAsUTF8String().ShareOrDependUpon(loadContext->mFullURL);
 
   mozilla::dom::CacheQueryOptions params;
 

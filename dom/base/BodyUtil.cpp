@@ -422,9 +422,10 @@ already_AddRefed<FormData> BodyUtil::ConsumeFormData(
   if (isValidUrlEncodedMimeType) {
     RefPtr<FormData> fd = new FormData(aParent);
     DebugOnly<bool> status = URLParams::Parse(
-        aStr, true, [&fd](const nsAString& aName, const nsAString& aValue) {
-          ErrorResult rv;
-          fd->Append(aName, aValue, rv);
+        aStr, true, [&fd](const nsACString& aName, const nsACString& aValue) {
+          IgnoredErrorResult rv;
+          fd->Append(NS_ConvertUTF8toUTF16(aName),
+                     NS_ConvertUTF8toUTF16(aValue), rv);
           MOZ_ASSERT(!rv.Failed());
           return true;
         });

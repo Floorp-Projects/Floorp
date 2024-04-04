@@ -14,16 +14,13 @@ namespace mozilla::dom {
 class URLMainThread final {
  public:
   static void CreateObjectURL(const GlobalObject& aGlobal, Blob& aBlob,
-                              nsAString& aResult, ErrorResult& aRv);
-
+                              nsACString& aResult, ErrorResult& aRv);
   static void CreateObjectURL(const GlobalObject& aGlobal, MediaSource& aSource,
-                              nsAString& aResult, ErrorResult& aRv);
-
+                              nsACString& aResult, ErrorResult& aRv);
   static void RevokeObjectURL(const GlobalObject& aGlobal,
-                              const nsAString& aURL, ErrorResult& aRv);
-
+                              const nsACString& aURL, ErrorResult& aRv);
   static bool IsValidObjectURL(const GlobalObject& aGlobal,
-                               const nsAString& aURL, ErrorResult& aRv);
+                               const nsACString& aURL, ErrorResult& aRv);
 };
 
 }  // namespace mozilla::dom

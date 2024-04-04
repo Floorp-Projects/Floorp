@@ -249,7 +249,7 @@ nsresult CSPToCSPInfo(nsIContentSecurityPolicy* aCSP, CSPInfo* aCSPInfo) {
     selfURI->GetSpec(selfURISpec);
   }
 
-  nsAutoString referrer;
+  nsAutoCString referrer;
   aCSP->GetReferrer(referrer);
 
   uint64_t windowID = aCSP->GetInnerWindowID();

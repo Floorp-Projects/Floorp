@@ -130,7 +130,7 @@ class WorkerLoadContext : public JS::loader::LoadContextBase {
   /* TODO: Split out a ServiceWorkerLoadContext */
   // This full URL string is populated only if this object is used in a
   // ServiceWorker.
-  nsString mFullURL;
+  nsCString mFullURL;
 
   // This promise is set only when the script is for a ServiceWorker but
   // it's not in the cache yet. The promise is resolved when the full body is

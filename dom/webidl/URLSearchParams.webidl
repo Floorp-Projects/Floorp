@@ -16,21 +16,21 @@
 [Exposed=(Window,Worker,WorkerDebugger)]
 interface URLSearchParams {
   [Throws]
-  constructor(optional (sequence<sequence<USVString>> or
-                        record<USVString, USVString> or USVString) init = "");
+  constructor(optional (sequence<sequence<UTF8String>> or
+                        record<UTF8String, UTF8String> or UTF8String) init = "");
 
   readonly attribute unsigned long size;
 
-  undefined append(USVString name, USVString value);
-  undefined delete(USVString name, optional USVString value);
-  USVString? get(USVString name);
-  sequence<USVString> getAll(USVString name);
-  boolean has(USVString name, optional USVString value);
-  undefined set(USVString name, USVString value);
+  undefined append(UTF8String name, UTF8String value);
+  undefined delete(UTF8String name, optional UTF8String value);
+  UTF8String? get(UTF8String name);
+  sequence<UTF8String> getAll(UTF8String name);
+  boolean has(UTF8String name, optional UTF8String value);
+  undefined set(UTF8String name, UTF8String value);
 
   [Throws]
   undefined sort();
 
-  iterable<USVString, USVString>;
+  iterable<UTF8String, UTF8String>;
   stringifier;
 };

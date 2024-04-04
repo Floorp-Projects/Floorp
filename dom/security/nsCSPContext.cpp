@@ -450,15 +450,14 @@ nsCSPContext::AppendPolicy(const nsAString& aPolicyString, bool aReportOnly,
   if (policy) {
     if (policy->hasDirective(
             nsIContentSecurityPolicy::UPGRADE_IF_INSECURE_DIRECTIVE)) {
-      nsAutoCString selfURIspec, referrer;
+      nsAutoCString selfURIspec;
       if (mSelfURI) {
         mSelfURI->GetAsciiSpec(selfURIspec);
       }
-      CopyUTF16toUTF8(mReferrer, referrer);
       CSPCONTEXTLOG(
           ("nsCSPContext::AppendPolicy added UPGRADE_IF_INSECURE_DIRECTIVE "
            "self-uri=%s referrer=%s",
-           selfURIspec.get(), referrer.get()));
+           selfURIspec.get(), mReferrer.get()));
     }
 
     mPolicies.AppendElement(policy);
@@ -787,7 +786,7 @@ nsCSPContext::SetRequestContextWithDocument(Document* aDocument) {
 NS_IMETHODIMP
 nsCSPContext::SetRequestContextWithPrincipal(nsIPrincipal* aRequestPrincipal,
                                              nsIURI* aSelfURI,
-                                             const nsAString& aReferrer,
+                                             const nsACString& aReferrer,
                                              uint64_t aInnerWindowId) {
   NS_ENSURE_ARG(aRequestPrincipal);
 
@@ -812,9 +811,8 @@ nsIPrincipal* nsCSPContext::GetRequestPrincipal() { return mLoadingPrincipal; }
 nsIURI* nsCSPContext::GetSelfURI() { return mSelfURI; }
 
 NS_IMETHODIMP
-nsCSPContext::GetReferrer(nsAString& outReferrer) {
-  outReferrer.Truncate();
-  outReferrer.Append(mReferrer);
+nsCSPContext::GetReferrer(nsACString& outReferrer) {
+  outReferrer.Assign(mReferrer);
   return NS_OK;
 }
 
@@ -987,7 +985,7 @@ nsresult nsCSPContext::GatherSecurityPolicyViolationEventData(
   CopyUTF8toUTF16(reportDocumentURI, aViolationEventInit.mDocumentURI);
 
   // referrer
-  aViolationEventInit.mReferrer = mReferrer;
+  CopyUTF8toUTF16(mReferrer, aViolationEventInit.mReferrer);
 
   // blocked-uri
   if (aBlockedURI) {

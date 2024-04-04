@@ -108,7 +108,7 @@ interface nsIReferrerInfo : nsISerializable
   /**
   * Indicates if the referrer should not be sent or not even when it's available.
   */
-  readonly attribute AString computedReferrerSpec;
+  readonly attribute ACString computedReferrerSpec;
 
   /**
    * Get the computed referrer, if one has been set. The computed referrer is

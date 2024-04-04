@@ -7,7 +7,7 @@
  * https://fetch.spec.whatwg.org/#request-class
  */
 
-typedef (Request or USVString) RequestInfo;
+typedef (Request or UTF8String) RequestInfo;
 typedef unsigned long nsContentPolicyType;
 
 [Exposed=(Window,Worker)]
@@ -21,11 +21,11 @@ interface Request {
   constructor(RequestInfo input, optional RequestInit init = {});
 
   readonly attribute ByteString method;
-  readonly attribute USVString url;
+  readonly attribute UTF8String url;
   [SameObject, BinaryName="headers_"] readonly attribute Headers headers;
 
   readonly attribute RequestDestination destination;
-  readonly attribute USVString referrer;
+  readonly attribute UTF8String referrer;
   [BinaryName="referrerPolicy_"]
   readonly attribute ReferrerPolicy referrerPolicy;
   readonly attribute RequestMode mode;
@@ -59,7 +59,7 @@ dictionary RequestInit {
   ByteString method;
   HeadersInit headers;
   BodyInit? body;
-  USVString referrer;
+  UTF8String referrer;
   ReferrerPolicy referrerPolicy;
   RequestMode mode;
   /**

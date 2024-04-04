@@ -60,23 +60,24 @@ JSObject* URLSearchParams::WrapObject(JSContext* aCx,
 /* static */
 already_AddRefed<URLSearchParams> URLSearchParams::Constructor(
     const GlobalObject& aGlobal,
-    const USVStringSequenceSequenceOrUSVStringUSVStringRecordOrUSVString& aInit,
+    const UTF8StringSequenceSequenceOrUTF8StringUTF8StringRecordOrUTF8String&
+        aInit,
     ErrorResult& aRv) {
   RefPtr<URLSearchParams> sp =
       new URLSearchParams(aGlobal.GetAsSupports(), nullptr);
 
-  if (aInit.IsUSVString()) {
-    NS_ConvertUTF16toUTF8 input(aInit.GetAsUSVString());
+  if (aInit.IsUTF8String()) {
+    const auto& input = aInit.GetAsUTF8String();
     if (StringBeginsWith(input, "?"_ns)) {
       sp->ParseInput(Substring(input, 1, input.Length() - 1));
     } else {
       sp->ParseInput(input);
     }
-  } else if (aInit.IsUSVStringSequenceSequence()) {
-    const Sequence<Sequence<nsString>>& list =
-        aInit.GetAsUSVStringSequenceSequence();
+  } else if (aInit.IsUTF8StringSequenceSequence()) {
+    const Sequence<Sequence<nsCString>>& list =
+        aInit.GetAsUTF8StringSequenceSequence();
     for (uint32_t i = 0; i < list.Length(); ++i) {
-      const Sequence<nsString>& item = list[i];
+      const Sequence<nsCString>& item = list[i];
       if (item.Length() != 2) {
         nsPrintfCString err("Expected 2 items in pair but got %zu",
                             item.Length());
@@ -85,9 +86,9 @@ already_AddRefed<URLSearchParams> URLSearchParams::Constructor(
       }
       sp->Append(item[0], item[1]);
     }
-  } else if (aInit.IsUSVStringUSVStringRecord()) {
-    const Record<nsString, nsString>& record =
-        aInit.GetAsUSVStringUSVStringRecord();
+  } else if (aInit.IsUTF8StringUTF8StringRecord()) {
+    const Record<nsCString, nsCString>& record =
+        aInit.GetAsUTF8StringUTF8StringRecord();
     for (auto& entry : record.Entries()) {
       sp->Append(entry.mKey, entry.mValue);
     }
@@ -104,35 +105,36 @@ void URLSearchParams::ParseInput(const nsACString& aInput) {
 
 uint32_t URLSearchParams::Size() const { return mParams->Length(); }
 
-void URLSearchParams::Get(const nsAString& aName, nsString& aRetval) {
+void URLSearchParams::Get(const nsACString& aName, nsACString& aRetval) {
   return mParams->Get(aName, aRetval);
 }
 
-void URLSearchParams::GetAll(const nsAString& aName,
-                             nsTArray<nsString>& aRetval) {
+void URLSearchParams::GetAll(const nsACString& aName,
+                             nsTArray<nsCString>& aRetval) {
   return mParams->GetAll(aName, aRetval);
 }
 
-void URLSearchParams::Set(const nsAString& aName, const nsAString& aValue) {
+void URLSearchParams::Set(const nsACString& aName, const nsACString& aValue) {
   mParams->Set(aName, aValue);
   NotifyObserver();
 }
 
-void URLSearchParams::Append(const nsAString& aName, const nsAString& aValue) {
+void URLSearchParams::Append(const nsACString& aName,
+                             const nsACString& aValue) {
   mParams->Append(aName, aValue);
   NotifyObserver();
 }
 
-bool URLSearchParams::Has(const nsAString& aName,
-                          const Optional<nsAString>& aValue) {
+bool URLSearchParams::Has(const nsACString& aName,
+                          const Optional<nsACString>& aValue) {
   if (!aValue.WasPassed()) {
     return mParams->Has(aName);
   }
   return mParams->Has(aName, aValue.Value());
 }
 
-void URLSearchParams::Delete(const nsAString& aName,
-                             const Optional<nsAString>& aValue) {
+void URLSearchParams::Delete(const nsACString& aName,
+                             const Optional<nsACString>& aValue) {
   if (!aValue.WasPassed()) {
     mParams->Delete(aName);
     NotifyObserver();
@@ -144,8 +146,15 @@ void URLSearchParams::Delete(const nsAString& aName,
 
 void URLSearchParams::DeleteAll() { mParams->DeleteAll(); }
 
-void URLSearchParams::Serialize(nsAString& aValue) const {
+void URLSearchParams::Serialize(nsACString& aValue) const {
   mParams->Serialize(aValue, true);
+}
+
+// TODO(emilio): Allow stringifier attributes with CString return values.
+void URLSearchParams::Stringify(nsAString& aValue) const {
+  nsAutoCString serialized;
+  mParams->Serialize(serialized, true);
+  CopyUTF8toUTF16(serialized, aValue);
 }
 
 void URLSearchParams::NotifyObserver() {
@@ -158,11 +167,11 @@ uint32_t URLSearchParams::GetIterableLength() const {
   return mParams->Length();
 }
 
-const nsAString& URLSearchParams::GetKeyAtIndex(uint32_t aIndex) const {
+const nsACString& URLSearchParams::GetKeyAtIndex(uint32_t aIndex) const {
   return mParams->GetKeyAtIndex(aIndex);
 }
 
-const nsAString& URLSearchParams::GetValueAtIndex(uint32_t aIndex) const {
+const nsACString& URLSearchParams::GetValueAtIndex(uint32_t aIndex) const {
   return mParams->GetValueAtIndex(aIndex);
 }
 
@@ -182,11 +191,10 @@ nsresult URLSearchParams::GetSendInfo(nsIInputStream** aBody,
       "application/x-www-form-urlencoded;charset=UTF-8");
   aCharset.AssignLiteral("UTF-8");
 
-  nsAutoString serialized;
+  nsAutoCString serialized;
   Serialize(serialized);
-  NS_ConvertUTF16toUTF8 converted(serialized);
-  *aContentLength = converted.Length();
-  return NS_NewCStringInputStream(aBody, std::move(converted));
+  *aContentLength = serialized.Length();
+  return NS_NewCStringInputStream(aBody, std::move(serialized));
 }
 
 }  // namespace mozilla::dom

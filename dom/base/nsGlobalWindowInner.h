@@ -120,7 +120,7 @@ class OwningExternalOrWindowProxy;
 class Promise;
 class PostMessageEvent;
 struct RequestInit;
-class RequestOrUSVString;
+class RequestOrUTF8String;
 class SharedWorker;
 class Selection;
 struct SizeToContentConstraints;
@@ -671,7 +671,7 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   already_AddRefed<mozilla::dom::cache::CacheStorage> GetCaches(
       mozilla::ErrorResult& aRv);
   already_AddRefed<mozilla::dom::Promise> Fetch(
-      const mozilla::dom::RequestOrUSVString& aInput,
+      const mozilla::dom::RequestOrUTF8String& aInput,
       const mozilla::dom::RequestInit& aInit,
       mozilla::dom::CallerType aCallerType, mozilla::ErrorResult& aRv);
   MOZ_CAN_RUN_SCRIPT void Print(mozilla::ErrorResult& aError);

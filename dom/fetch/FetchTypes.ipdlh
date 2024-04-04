@@ -59,7 +59,7 @@ struct IPCInternalRequest {
   int64_t bodySize;
   nsCString preferredAlternativeDataType;
   uint32_t contentPolicyType;
-  nsString referrer;
+  nsCString referrer;
   ReferrerPolicy referrerPolicy;
   ReferrerPolicy environmentReferrerPolicy;
   RequestMode requestMode;

@@ -92,8 +92,6 @@ void HTMLAreaElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
       aNamespaceID, aName, aValue, aOldValue, aSubjectPrincipal, aNotify);
 }
 
-void HTMLAreaElement::ToString(nsAString& aSource) { GetHref(aSource); }
-
 already_AddRefed<nsIURI> HTMLAreaElement::GetHrefURI() const {
   if (nsCOMPtr<nsIURI> uri = GetCachedURI()) {
     return uri.forget();

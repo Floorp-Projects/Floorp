@@ -30,9 +30,9 @@ struct MultiCacheQueryOptions;
 class InternalHeaders;
 class InternalRequest;
 class InternalResponse;
-class OwningRequestOrUSVString;
+class OwningRequestOrUTF8String;
 class Request;
-class RequestOrUSVString;
+class RequestOrUTF8String;
 class Response;
 
 namespace cache {
@@ -64,12 +64,12 @@ class TypeUtils {
   virtual mozilla::ipc::PBackgroundChild* GetIPCManager() = 0;
 
   SafeRefPtr<InternalRequest> ToInternalRequest(JSContext* aCx,
-                                                const RequestOrUSVString& aIn,
+                                                const RequestOrUTF8String& aIn,
                                                 BodyAction aBodyAction,
                                                 ErrorResult& aRv);
 
   SafeRefPtr<InternalRequest> ToInternalRequest(
-      JSContext* aCx, const OwningRequestOrUSVString& aIn,
+      JSContext* aCx, const OwningRequestOrUTF8String& aIn,
       BodyAction aBodyAction, ErrorResult& aRv);
 
   void ToCacheRequest(CacheRequest& aOut, const InternalRequest& aIn,
@@ -120,7 +120,7 @@ class TypeUtils {
   void CheckAndSetBodyUsed(JSContext* aCx, Request& aRequest,
                            BodyAction aBodyAction, ErrorResult& aRv);
 
-  SafeRefPtr<InternalRequest> ToInternalRequest(const nsAString& aIn,
+  SafeRefPtr<InternalRequest> ToInternalRequest(const nsACString& aIn,
                                                 ErrorResult& aRv);
 
   void SerializeCacheStream(nsIInputStream* aStream,

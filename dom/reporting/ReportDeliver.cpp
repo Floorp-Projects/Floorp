@@ -213,7 +213,7 @@ void SendReports(nsTArray<ReportDeliver::ReportData>& aReports,
   RefPtr<Request> request =
       new Request(globalObject, std::move(internalRequest), nullptr);
 
-  RequestOrUSVString fetchInput;
+  RequestOrUTF8String fetchInput;
   fetchInput.SetAsRequest() = request;
 
   RootedDictionary<RequestInit> requestInit(RootingCx());

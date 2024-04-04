@@ -59,7 +59,7 @@ struct CacheRequest
   nsCString urlFragment;
   HeadersEntry[] headers;
   HeadersGuardEnum headersGuard;
-  nsString referrer;
+  nsCString referrer;
   ReferrerPolicy referrerPolicy;
   RequestMode mode;
   RequestCredentials credentials;

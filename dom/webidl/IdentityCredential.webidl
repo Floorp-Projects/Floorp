@@ -23,8 +23,8 @@ dictionary IdentityCredentialRequestOptions {
 [GenerateConversionToJS]
 dictionary IdentityProviderConfig {
  required UTF8String configURL;
- required USVString clientId;
- USVString nonce;
+ required UTF8String clientId;
+ UTF8String nonce;
 };
 
 // https://fedidcg.github.io/FedCM/#dictdef-identityproviderwellknown
@@ -35,7 +35,7 @@ dictionary IdentityProviderWellKnown {
 
 // https://fedidcg.github.io/FedCM/#dictdef-identityprovidericon
 dictionary IdentityProviderIcon {
-  required USVString url;
+  required UTF8String url;
   unsigned long size;
 };
 

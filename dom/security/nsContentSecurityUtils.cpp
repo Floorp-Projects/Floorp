@@ -1065,7 +1065,7 @@ nsresult CheckCSPFrameAncestorPolicy(nsIChannel* aChannel,
   csp->SuppressParserLogMessages();
 
   nsCOMPtr<nsIURI> selfURI;
-  nsAutoString referrerSpec;
+  nsAutoCString referrerSpec;
   if (httpChannel) {
     aChannel->GetURI(getter_AddRefs(selfURI));
     nsCOMPtr<nsIReferrerInfo> referrerInfo = httpChannel->GetReferrerInfo();

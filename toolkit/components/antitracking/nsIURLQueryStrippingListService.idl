@@ -22,7 +22,7 @@ interface nsIURLQueryStrippingListObserver : nsISupports
    *        A comma-separated list of hosts (eTLD+1) that are exempt from query
    *        stripping.
    */
-  void onQueryStrippingListUpdate(in AString aStripList, in ACString aAllowList);
+  void onQueryStrippingListUpdate(in ACString aStripList, in ACString aAllowList);
 
   /**
    * Called by nsIQueryStrippingListService when the list of query stripping
