@@ -611,25 +611,14 @@
   margin-inline-start: 0.35em;
 }
 
-.urlbarView-userContext-iconMode {
-  display: none;
-}
-
-.urlbarView-userContext-textMode {
-  display: inline-block;
-  > span {
-    font-variant: small-caps;
-  }
+.urlbarView-userContext-textMode > span {
+  font-variant: small-caps;
 }
 
 /* Display userContext icon instead of text, when window is too narrow. */
-.urlbarView-results[wrap] {
-  .urlbarView-userContext-textMode {
-    display: none;
-  }
-  .urlbarView-userContext-iconMode {
-    display: inline-block;
-  }
+.urlbarView-results[wrap] .urlbarView-userContext-textMode,
+.urlbarView-results:not([wrap]) .urlbarView-userContext-iconMode {
+  display: none;
 }
 
 /* Tail suggestions */
@@ -722,17 +711,16 @@
     color: var(--urlbar-box-text-color);
     background-color: var(--urlbar-box-focus-bgcolor);
     border-radius: var(--toolbarbutton-border-radius);
-    padding: 6px 8px;
-
-    &.urlbarView-userContext {
-      padding-top: 2px;
-    }
-    margin-block: -6px;
+    padding: 4px 8px;
+    margin-block: -2px;
     margin-inline-start: 8px;
 
     :root[uidensity=compact] & {
       padding: 3px 6px;
-      margin-block: -3px;
+    }
+
+    &.urlbarView-userContext {
+      padding-top: 0;
     }
   }
 
