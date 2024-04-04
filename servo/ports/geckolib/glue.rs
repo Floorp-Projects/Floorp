@@ -138,7 +138,7 @@ use style::stylesheets::{
     CssRules, CssRulesHelpers, DocumentRule, FontFaceRule, FontFeatureValuesRule,
     FontPaletteValuesRule, ImportRule, KeyframesRule, LayerBlockRule, LayerStatementRule,
     MediaRule, NamespaceRule, Origin, OriginSet, PagePseudoClassFlags, PageRule, PropertyRule,
-    SanitizationData, SanitizationKind, StartingStyleRule, StyleRule, StylesheetContents,
+    SanitizationData, SanitizationKind, StyleRule, StylesheetContents,
     StylesheetLoader as StyleStylesheetLoader, SupportsRule, UrlExtraData, ScopeRule,
 };
 use style::stylist::{add_size_of_ua_cache, AuthorStylesEnabled, RuleInclusion, Stylist};
@@ -2497,14 +2497,6 @@ impl_group_rule_funcs! { (Scope, ScopeRule, ScopeRule),
     debug: Servo_ScopeRule_Debug,
     to_css: Servo_ScopeRule_GetCssText,
     changed: Servo_StyleSet_ScopeRuleChanged,
-}
-
-impl_group_rule_funcs! { (StartingStyle, StartingStyleRule, StartingStyleRule),
-    get_rules: Servo_StartingStyleRule_GetRules,
-    getter: Servo_CssRules_GetStartingStyleRuleAt,
-    debug: Servo_StartingStyleRule_Debug,
-    to_css: Servo_StartingStyleRule_GetCssText,
-    changed: Servo_StyleSet_StartingStyleRuleChanged,
 }
 
 #[no_mangle]

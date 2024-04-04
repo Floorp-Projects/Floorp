@@ -23,7 +23,6 @@ mod property_rule;
 mod rule_list;
 mod rule_parser;
 mod rules_iterator;
-mod starting_style_rule;
 mod style_rule;
 mod stylesheet;
 pub mod supports_rule;
@@ -71,7 +70,6 @@ pub use self::rules_iterator::{AllRules, EffectiveRules};
 pub use self::rules_iterator::{
     EffectiveRulesIterator, NestedRuleIterationCondition, RulesIterator,
 };
-pub use self::starting_style_rule::StartingStyleRule;
 pub use self::style_rule::StyleRule;
 pub use self::scope_rule::ScopeRule;
 pub use self::stylesheet::{AllowImportRules, SanitizationData, SanitizationKind};
@@ -274,7 +272,6 @@ pub enum CssRule {
     LayerBlock(Arc<LayerBlockRule>),
     LayerStatement(Arc<LayerStatementRule>),
     Scope(Arc<ScopeRule>),
-    StartingStyle(Arc<StartingStyleRule>),
 }
 
 impl CssRule {
@@ -319,9 +316,6 @@ impl CssRule {
             CssRule::Document(ref arc) => {
                 arc.unconditional_shallow_size_of(ops) + arc.size_of(guard, ops)
             },
-            CssRule::StartingStyle(ref arc) => {
-                arc.unconditional_shallow_size_of(ops) + arc.size_of(guard, ops)
-            }
             // TODO(emilio): Add memory reporting for these rules.
             CssRule::LayerBlock(_) | CssRule::LayerStatement(_) => 0,
             CssRule::Scope(ref rule) => {
@@ -366,8 +360,6 @@ pub enum CssRuleType {
     // 20 is an arbitrary number to use for Property.
     Property = 20,
     Scope = 21,
-    // https://drafts.csswg.org/css-transitions-2/#the-cssstartingstylerule-interface
-    StartingStyle = 22,
 }
 
 impl CssRuleType {
@@ -456,7 +448,6 @@ impl CssRule {
             CssRule::LayerStatement(_) => CssRuleType::LayerStatement,
             CssRule::Container(_) => CssRuleType::Container,
             CssRule::Scope(_) => CssRuleType::Scope,
-            CssRule::StartingStyle(_) => CssRuleType::StartingStyle,
         }
     }
 
@@ -594,10 +585,7 @@ impl DeepCloneWithLock for CssRule {
             },
             CssRule::Scope(ref arc) => {
                 CssRule::Scope(Arc::new(arc.deep_clone_with_lock(lock, guard, params)))
-            },
-            CssRule::StartingStyle(ref arc) => {
-                CssRule::StartingStyle(Arc::new(arc.deep_clone_with_lock(lock, guard, params)))
-            },
+            }
         }
     }
 }
@@ -624,7 +612,6 @@ impl ToCssWithGuard for CssRule {
             CssRule::LayerStatement(ref rule) => rule.to_css(guard, dest),
             CssRule::Container(ref rule) => rule.to_css(guard, dest),
             CssRule::Scope(ref rule) => rule.to_css(guard, dest),
-            CssRule::StartingStyle(ref rule) => rule.to_css(guard, dest),
         }
     }
 }
