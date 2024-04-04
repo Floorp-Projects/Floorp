@@ -496,22 +496,28 @@ void MediaKeySystemAccessManager::RequestMediaKeySystemAccess(
   //         3. Let the cdm implementation value be implementation.
   //      2. Resolve promise with access and abort the parallel steps of this
   //      algorithm.
-  MediaKeySystemConfiguration config;
-  if (MediaKeySystemAccess::GetSupportedConfig(
-          aRequest.get(), config, isPrivateBrowsing, mWindow->GetExtantDoc())) {
-    aRequest->mSupportedConfig = Some(config);
-    // The app gets the final say on if we provide access or not.
-    CheckDoesAppAllowProtectedMedia(std::move(aRequest));
-    return;
-  }
-  // 4. Reject promise with a NotSupportedError.
-
-  // Not to inform user, because nothing to do if the corresponding keySystem
-  // configuration is not supported.
-  aRequest->RejectPromiseWithNotSupportedError(
-      "Key system configuration is not supported"_ns);
-  aRequest->mDiagnostics.StoreMediaKeySystemAccess(
-      mWindow->GetExtantDoc(), aRequest->mKeySystem, false, __func__);
+  MediaKeySystemAccess::GetSupportedConfig(aRequest.get(), isPrivateBrowsing,
+                                           mWindow->GetExtantDoc())
+      ->Then(GetMainThreadSerialEventTarget(), __func__,
+             [self = RefPtr<MediaKeySystemAccessManager>{this}, this,
+              request = UniquePtr<PendingRequest>{std::move(aRequest)}](
+                 const KeySystemConfig::KeySystemConfigPromise::
+                     ResolveOrRejectValue& aResult) mutable {
+               if (aResult.IsResolve()) {
+                 request->mSupportedConfig = Some(aResult.ResolveValue());
+                 // The app gets the final say on if we provide access or not.
+                 CheckDoesAppAllowProtectedMedia(std::move(request));
+               } else {
+                 // 4. Reject promise with a NotSupportedError.
+                 // Not to inform user, because nothing to do if the
+                 // corresponding keySystem configuration is not supported.
+                 request->RejectPromiseWithNotSupportedError(
+                     "Key system configuration is not supported"_ns);
+                 request->mDiagnostics.StoreMediaKeySystemAccess(
+                     mWindow->GetExtantDoc(), request->mKeySystem, false,
+                     __func__);
+               }
+             });
 }
 
 void MediaKeySystemAccessManager::ProvideAccess(

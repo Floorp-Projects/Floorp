@@ -16,52 +16,6 @@
 
 namespace mozilla {
 
-bool WMFCDMImpl::GetCapabilities(bool aIsHardwareDecryption,
-                                 nsTArray<KeySystemConfig>& aOutConfigs) {
-  MOZ_ASSERT(NS_IsMainThread());
-  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
-    return false;
-  }
-
-  // TODO : remove media::await to make this async
-  nsCOMPtr<nsISerialEventTarget> backgroundTaskQueue;
-  NS_CreateBackgroundTaskQueue(__func__, getter_AddRefs(backgroundTaskQueue));
-  if (!mCDM) {
-    mCDM = MakeRefPtr<MFCDMChild>(mKeySystem);
-  }
-  bool ok = false;
-  media::Await(
-      do_AddRef(backgroundTaskQueue),
-      mCDM->GetCapabilities(
-          MFCDMCapabilitiesRequest{mKeySystem, aIsHardwareDecryption}),
-      [&ok, &aOutConfigs,
-       aIsHardwareDecryption](const MFCDMCapabilitiesIPDL& capabilities) {
-        EME_LOG("capabilities: keySystem=%s (hw-secure=%d)",
-                NS_ConvertUTF16toUTF8(capabilities.keySystem()).get(),
-                aIsHardwareDecryption);
-        MOZ_ASSERT(aIsHardwareDecryption ==
-                   capabilities.isHardwareDecryption());
-        for (const auto& v : capabilities.videoCapabilities()) {
-          EME_LOG("capabilities: video=%s",
-                  NS_ConvertUTF16toUTF8(v.contentType()).get());
-        }
-        for (const auto& a : capabilities.audioCapabilities()) {
-          EME_LOG("capabilities: audio=%s",
-                  NS_ConvertUTF16toUTF8(a.contentType()).get());
-        }
-        for (const auto& v : capabilities.encryptionSchemes()) {
-          EME_LOG("capabilities: encryptionScheme=%s", EncryptionSchemeStr(v));
-        }
-        KeySystemConfig* config = aOutConfigs.AppendElement();
-        MFCDMCapabilitiesIPDLToKeySystemConfig(capabilities, *config);
-        ok = true;
-      },
-      [](nsresult rv) {
-        EME_LOG("Fail to get key system capabilities. rv=%x", uint32_t(rv));
-      });
-  return ok;
-}
-
 RefPtr<WMFCDMImpl::InitPromise> WMFCDMImpl::Init(
     const WMFCDMImpl::InitParams& aParams) {
   if (!mCDM) {

@@ -10,7 +10,6 @@
 
 #include "DecoderDoctorDiagnostics.h"
 #include "DecoderTraits.h"
-#include "KeySystemConfig.h"
 #include "MP4Decoder.h"
 #include "MediaContainerType.h"
 #include "WebMDecoder.h"
@@ -231,10 +230,10 @@ static KeySystemConfig::EMECodecString ToEMEAPICodecString(
   return ""_ns;
 }
 
-static nsTArray<KeySystemConfig> GetSupportedKeySystems(
-    const nsAString& aKeySystem, bool aIsHardwareDecryption) {
+static RefPtr<KeySystemConfig::SupportedConfigsPromise>
+GetSupportedKeySystemConfigs(const nsAString& aKeySystem,
+                             bool aIsHardwareDecryption) {
   using DecryptionInfo = KeySystemConfig::DecryptionInfo;
-  nsTArray<KeySystemConfig> keySystemConfigs;
   nsTArray<KeySystemConfigRequest> requests;
 
   // Software Widevine and Clearkey
@@ -283,38 +282,31 @@ static nsTArray<KeySystemConfig> GetSupportedKeySystems(
     }
   }
 #endif
-  KeySystemConfig::CreateKeySystemConfigs(requests, keySystemConfigs);
-  return keySystemConfigs;
-}
-
-static bool GetKeySystemConfigs(
-    const nsAString& aKeySystem, bool aIsHardwareDecryption,
-    nsTArray<KeySystemConfig>& aOutKeySystemConfig) {
-  bool foundConfigs = false;
-  for (auto& config :
-       GetSupportedKeySystems(aKeySystem, aIsHardwareDecryption)) {
-    if (config.IsSameKeySystem(aKeySystem)) {
-      aOutKeySystemConfig.AppendElement(std::move(config));
-      foundConfigs = true;
-    }
-  }
-  return foundConfigs;
+  return KeySystemConfig::CreateKeySystemConfigs(requests);
 }
 
 /* static */
-bool MediaKeySystemAccess::KeySystemSupportsInitDataType(
+RefPtr<GenericPromise> MediaKeySystemAccess::KeySystemSupportsInitDataType(
     const nsAString& aKeySystem, const nsAString& aInitDataType,
     bool aIsHardwareDecryption) {
-  nsTArray<KeySystemConfig> implementations;
-  GetKeySystemConfigs(aKeySystem, aIsHardwareDecryption, implementations);
-  bool containInitType = false;
-  for (const auto& config : implementations) {
-    if (config.mInitDataTypes.Contains(aInitDataType)) {
-      containInitType = true;
-      break;
-    }
-  }
-  return containInitType;
+  RefPtr<GenericPromise::Private> promise =
+      new GenericPromise::Private(__func__);
+  GetSupportedKeySystemConfigs(aKeySystem, aIsHardwareDecryption)
+      ->Then(GetMainThreadSerialEventTarget(), __func__,
+             [promise, initDataType = nsString{std::move(aInitDataType)}](
+                 const KeySystemConfig::SupportedConfigsPromise::
+                     ResolveOrRejectValue& aResult) {
+               if (aResult.IsResolve()) {
+                 for (const auto& config : aResult.ResolveValue()) {
+                   if (config.mInitDataTypes.Contains(initDataType)) {
+                     promise->Resolve(true, __func__);
+                     return;
+                   }
+                 }
+               }
+               promise->Reject(NS_ERROR_DOM_MEDIA_CDM_ERR, __func__);
+             });
+  return promise.forget();
 }
 
 enum CodecType { Audio, Video, Invalid };
@@ -1073,28 +1065,42 @@ static bool GetSupportedConfig(const KeySystemConfig& aKeySystem,
 }
 
 /* static */
-bool MediaKeySystemAccess::GetSupportedConfig(
-    MediaKeySystemAccessRequest* aRequest,
-    MediaKeySystemConfiguration& aOutConfig, bool aIsPrivateBrowsing,
-    const Document* aDocument) {
+RefPtr<KeySystemConfig::KeySystemConfigPromise>
+MediaKeySystemAccess::GetSupportedConfig(MediaKeySystemAccessRequest* aRequest,
+                                         bool aIsPrivateBrowsing,
+                                         const Document* aDocument) {
   nsTArray<KeySystemConfig> implementations;
   const bool isHardwareDecryptionRequest =
       CheckIfHarewareDRMConfigExists(aRequest->mConfigs) ||
       DoesKeySystemSupportHardwareDecryption(aRequest->mKeySystem);
-  if (!GetKeySystemConfigs(aRequest->mKeySystem, isHardwareDecryptionRequest,
-                           implementations)) {
-    return false;
-  }
-  for (const auto& implementation : implementations) {
-    for (const MediaKeySystemConfiguration& candidate : aRequest->mConfigs) {
-      if (mozilla::dom::GetSupportedConfig(implementation, candidate,
-                                           aOutConfig, &aRequest->mDiagnostics,
-                                           aIsPrivateBrowsing, aDocument)) {
-        return true;
-      }
-    }
-  }
-  return false;
+
+  RefPtr<KeySystemConfig::KeySystemConfigPromise::Private> promise =
+      new KeySystemConfig::KeySystemConfigPromise::Private(__func__);
+  GetSupportedKeySystemConfigs(aRequest->mKeySystem,
+                               isHardwareDecryptionRequest)
+      ->Then(GetMainThreadSerialEventTarget(), __func__,
+             [promise, aRequest, aIsPrivateBrowsing,
+              document = RefPtr<const Document>{aDocument}](
+                 const KeySystemConfig::SupportedConfigsPromise::
+                     ResolveOrRejectValue& aResult) {
+               if (aResult.IsResolve()) {
+                 MediaKeySystemConfiguration outConfig;
+                 for (const auto& implementation : aResult.ResolveValue()) {
+                   for (const MediaKeySystemConfiguration& candidate :
+                        aRequest->mConfigs) {
+                     if (mozilla::dom::GetSupportedConfig(
+                             implementation, candidate, outConfig,
+                             &aRequest->mDiagnostics, aIsPrivateBrowsing,
+                             document)) {
+                       promise->Resolve(std::move(outConfig), __func__);
+                       return;
+                     }
+                   }
+                 }
+               }
+               promise->Reject(false, __func__);
+             });
+  return promise.forget();
 }
 
 /* static */
