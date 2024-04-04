@@ -24,9 +24,6 @@ skip-if = ["!debug"]
 ["test_feature_fileioall.js"]
 skip-if = ["release_or_beta"]
 
-# The sanitizer checks appears to overwrite our own memory hooks in xpcshell tests,
-# and no allocation markers are gathered. Skip this test in that configuration.
-
 ["test_feature_java.js"]
 skip-if = ["os != 'android'"]
 
@@ -50,6 +47,12 @@ skip-if = [
   "socketprocess_networking",
 ]
 
+["test_feature_posix_signals.js"]
+skip-if = [
+  "ccov",
+  "os == 'win'",
+]
+
 # Native stackwalking is somewhat unreliable depending on the platform.
 #
 # We don't have frame pointers on macOS release and beta, so stack walking does not
@@ -60,6 +63,9 @@ skip-if = [
 #
 # For sanitizer builds, there were many intermittents, and we're not getting much
 # additional coverage there, so it's better to be a bit more reliable.
+
+# The sanitizer checks appears to overwrite our own memory hooks in xpcshell tests,
+# and no allocation markers are gathered. Skip this test in that configuration.
 
 ["test_feature_stackwalking.js"]
 skip-if = [

@@ -551,7 +551,11 @@ SamplerThread::SamplerThread(PSLockRef aLock, uint32_t aActivityGeneration,
 }
 
 SamplerThread::~SamplerThread() {
-  pthread_join(mThread, nullptr);
+  if (pthread_equal(mThread, pthread_self())) {
+    pthread_detach(mThread);
+  } else {
+    pthread_join(mThread, nullptr);
+  }
   // Just in the unlikely case some callbacks were added between the end of the
   // thread and now.
   InvokePostSamplingCallbacks(std::move(mPostSamplingCallbackList),
