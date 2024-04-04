@@ -1,6 +1,60 @@
 {
   "data": [
     {
+      "name": "lex.50.50.lten.s2t.bin",
+      "schema": 1712019552519,
+      "toLang": "en",
+      "version": "1.0a2",
+      "fileType": "lex",
+      "fromLang": "lt",
+      "attachment": {
+        "hash": "fcb332258413ccd775f22f6ef86e8f662274dde500541f8ef2c019040093aa9c",
+        "size": 4180224,
+        "filename": "lex.50.50.lten.s2t.bin",
+        "location": "main-workspace/translations-models/6fe59304-2a5b-4da6-bd2f-18ba4ddd1c41.bin",
+        "mimetype": "application/octet-stream"
+      },
+      "filter_expression": "env.channel == 'default' || env.channel == 'nightly'",
+      "id": "5109e947-b8e8-40d2-bfcf-e6a23e27b0dc",
+      "last_modified": 1712068183362
+    },
+    {
+      "name": "model.lten.intgemm.alphas.bin",
+      "schema": 1712019556899,
+      "toLang": "en",
+      "version": "1.0a2",
+      "fileType": "model",
+      "fromLang": "lt",
+      "attachment": {
+        "hash": "7a47a0602d7d3da39914ae4f4eb7985f1de0c2cf6740bdbae294456c97cdfb5d",
+        "size": 17141051,
+        "filename": "model.lten.intgemm.alphas.bin",
+        "location": "main-workspace/translations-models/2bab163d-7bc3-40d5-ad94-aeb26049bbc3.bin",
+        "mimetype": "application/octet-stream"
+      },
+      "filter_expression": "env.channel == 'default' || env.channel == 'nightly'",
+      "id": "60631420-3179-4eb4-aca8-da7aef59032d",
+      "last_modified": 1712068183359
+    },
+    {
+      "name": "vocab.lten.spm",
+      "schema": 1712019566702,
+      "toLang": "en",
+      "version": "1.0a2",
+      "fileType": "vocab",
+      "fromLang": "lt",
+      "attachment": {
+        "hash": "6c0f8852b12896461956324c669720714ecf2c3141e5084d33182d52bcbe0cff",
+        "size": 804973,
+        "filename": "vocab.lten.spm",
+        "location": "main-workspace/translations-models/412f7ecf-aa11-41dc-a9a2-3540213ea062.spm",
+        "mimetype": "text/plain"
+      },
+      "filter_expression": "env.channel == 'default' || env.channel == 'nightly'",
+      "id": "e6f0b29c-a795-4496-a847-e2029b3afa1c",
+      "last_modified": 1712068183356
+    },
+    {
       "name": "model.enca.intgemm.alphas.bin",
       "schema": 1710172593713,
       "toLang": "ca",
@@ -2719,5 +2773,5 @@
       "last_modified": 1701186751412
     }
   ],
-  "timestamp": 1710173317976
+  "timestamp": 1712068183362
 }
