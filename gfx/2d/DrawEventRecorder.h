@@ -84,7 +84,8 @@ class DrawEventRecorderPrivate : public DrawEventRecorder {
 
   virtual void RecordEvent(const RecordedEvent& aEvent) = 0;
 
-  void RecordEvent(DrawTargetRecording* aDT, const RecordedEvent& aEvent) {
+  void RecordEvent(const DrawTargetRecording* aDT,
+                   const RecordedEvent& aEvent) {
     ReferencePtr dt = aDT;
     if (mCurrentDT != dt) {
       SetDrawTarget(dt);
@@ -94,7 +95,7 @@ class DrawEventRecorderPrivate : public DrawEventRecorder {
 
   void SetDrawTarget(ReferencePtr aDT);
 
-  void ClearDrawTarget(DrawTargetRecording* aDT) {
+  void ClearDrawTarget(const DrawTargetRecording* aDT) {
     ReferencePtr dt = aDT;
     if (mCurrentDT == dt) {
       mCurrentDT = nullptr;

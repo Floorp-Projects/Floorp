@@ -431,6 +431,7 @@ already_AddRefed<gfx::DrawTargetRecording> CanvasChild::CreateDrawTarget(
       gfx::BackendType::SKIA, gfx::IntSize(1, 1), aFormat);
   RefPtr<gfx::DrawTargetRecording> dt = MakeAndAddRef<gfx::DrawTargetRecording>(
       mRecorder, aTextureId, aTextureOwnerId, dummyDt, aSize);
+  dt->SetOptimizeTransform(true);
 
   mTextureInfo.insert({aTextureId, {}});
 
