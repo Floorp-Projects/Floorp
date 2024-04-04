@@ -2253,10 +2253,6 @@ export class UrlbarInput {
           "--urlbar-height",
           px(getBoundsWithoutFlushing(this.textbox).height)
         );
-        this.textbox.style.setProperty(
-          "--urlbar-toolbar-height",
-          px(getBoundsWithoutFlushing(this._toolbar).height)
-        );
 
         this.setAttribute("breakout", "true");
         this.textbox.parentNode.setAttribute("breakout", "true");
