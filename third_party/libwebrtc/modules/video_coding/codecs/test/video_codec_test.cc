@@ -28,6 +28,7 @@
 #include "modules/video_coding/svc/scalability_mode_util.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/strings/string_builder.h"
+#include "test/explicit_key_value_config.h"
 #include "test/gtest.h"
 #include "test/test_flags.h"
 #include "test/testsupport/file_utils.h"
@@ -60,6 +61,7 @@ ABSL_FLAG(double,
           30.0,
           "Encode target frame rate of the top temporal layer in fps.");
 ABSL_FLAG(int, num_frames, 300, "Number of frames to encode and/or decode.");
+ABSL_FLAG(std::string, field_trials, "", "Field trials to apply.");
 ABSL_FLAG(std::string, test_name, "", "Test name.");
 ABSL_FLAG(bool, dump_decoder_input, false, "Dump decoder input.");
 ABSL_FLAG(bool, dump_decoder_output, false, "Dump decoder output.");
@@ -531,7 +533,10 @@ INSTANTIATE_TEST_SUITE_P(
     FramerateAdaptationTest::TestParamsToString);
 
 TEST(VideoCodecTest, DISABLED_EncodeDecode) {
-  const Environment env = CreateEnvironment();
+  const Environment env =
+      CreateEnvironment(std::make_unique<ExplicitKeyValueConfig>(
+          absl::GetFlag(FLAGS_field_trials)));
+
   std::vector<std::string> bitrate_str = absl::GetFlag(FLAGS_bitrate_kbps);
   std::vector<int> bitrate_kbps;
   std::transform(bitrate_str.begin(), bitrate_str.end(),
