@@ -148,7 +148,7 @@ add_task(async function test_placesBackupResource() {
 add_task(async function test_credentialsAndSecurityBackupResource() {
   Services.fog.testResetFOG();
 
-  const EXPECTED_CREDENTIALS_KILOBYTES_SIZE = 403;
+  const EXPECTED_CREDENTIALS_KILOBYTES_SIZE = 413;
   const EXPECTED_SECURITY_KILOBYTES_SIZE = 231;
 
   // Create resource files in temporary directory
@@ -161,6 +161,7 @@ add_task(async function test_credentialsAndSecurityBackupResource() {
     ["logins-backup.json", 1],
     ["autofill-profiles.json", 1],
     ["credentialstate.sqlite", 100],
+    ["signedInUser.json", 5],
   ]);
 
   for (let [mockFileName, mockFileSize] of mockCredentialsFiles) {
@@ -296,11 +297,10 @@ add_task(async function test_preferencesBackupResource() {
 add_task(async function test_miscDataBackupResource() {
   Services.fog.testResetFOG();
 
-  const EXPECTED_MISC_KILOBYTES_SIZE = 251;
+  const EXPECTED_MISC_KILOBYTES_SIZE = 241;
   const tempDir = PathUtils.tempDir;
   const mockFiles = new Map([
     ["times.json", 5],
-    ["signedInUser.json", 5],
     ["enumerate_devices.txt", 1],
     ["protections.sqlite", 100],
     ["SiteSecurityServiceState.bin", 10],
