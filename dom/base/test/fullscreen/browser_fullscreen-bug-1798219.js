@@ -52,7 +52,7 @@ async function waitAndCheckFullscreenState(aWindow) {
 
 add_task(async () => {
   const URL =
-    "http://mochi.test:8888/browser/dom/base/test/fullscreen/file_fullscreen-bug-1798219.html";
+    "https://example.com/browser/dom/base/test/fullscreen/file_fullscreen-bug-1798219.html";
   // We need this dummy tab which load the same URL as test tab to keep the
   // original content process alive after test page navigates away.
   let dummyTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, URL);
@@ -90,7 +90,7 @@ add_task(async () => {
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
-      url: "http://mochi.test:8888/browser/dom/base/test/fullscreen/file_fullscreen-bug-1798219-2.html",
+      url: "https://example.com/browser/dom/base/test/fullscreen/file_fullscreen-bug-1798219-2.html",
     },
     async function (browser) {
       // Open a new window to run the tests, the original window will keep the

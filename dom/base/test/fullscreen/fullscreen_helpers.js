@@ -8,15 +8,14 @@ const TEST_URLS = [
   `data:text/html,
     <div name="div" id="div" style="width: 100px; height: 100px; background: red;">
     <iframe id="iframe" allowfullscreen="yes"
-     src="http://mochi.test:8888/browser/dom/base/test/fullscreen/file_fullscreen-iframe-middle.html"></iframe>
+     src="https://example.com/browser/dom/base/test/fullscreen/file_fullscreen-iframe-middle.html"></iframe>
     </div>`,
   // toplevel and inner most iframe are in same process, and middle iframe is
   // in a different process.
-  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
-  `http://example.org/browser/dom/base/test/fullscreen/file_fullscreen-iframe-top.html`,
+  `https://example.org/browser/dom/base/test/fullscreen/file_fullscreen-iframe-top.html`,
   // toplevel and middle iframe are in same process, and inner most iframe is
   // in a different process.
-  `http://mochi.test:8888/browser/dom/base/test/fullscreen/file_fullscreen-iframe-top.html`,
+  `https://example.com/browser/dom/base/test/fullscreen/file_fullscreen-iframe-top.html`,
 ];
 
 function waitRemoteFullscreenExitEvents(aBrowsingContexts) {

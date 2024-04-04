@@ -54,7 +54,7 @@ function preventBFCache(aBrowsingContext, aPrevent) {
         await BrowserTestUtils.withNewTab(
           {
             gBrowser,
-            url: "http://mochi.test:8888/browser/dom/base/test/fullscreen/dummy_page.html",
+            url: "https://example.com/browser/dom/base/test/fullscreen/dummy_page.html",
           },
           async function (browser) {
             // Maybe prevent BFCache on initial page.
@@ -66,7 +66,7 @@ function preventBFCache(aBrowsingContext, aPrevent) {
             // Navigate to fullscreen page.
             const url = crossOrigin
               ? "https://example.org/browser/dom/base/test/fullscreen/file_fullscreen-iframe-inner.html"
-              : "http://mochi.test:8888/browser/dom/base/test/fullscreen/file_fullscreen-iframe-inner.html";
+              : "https://example.com/browser/dom/base/test/fullscreen/file_fullscreen-iframe-inner.html";
             const loaded = BrowserTestUtils.browserLoaded(browser, false, url);
             BrowserTestUtils.startLoadingURIString(browser, url);
             await loaded;
