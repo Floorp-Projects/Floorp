@@ -20,18 +20,16 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
-import androidx.compose.material.DismissValue
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.Text
-import androidx.compose.material.rememberDismissState
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
@@ -45,7 +43,9 @@ import mozilla.components.browser.state.state.createTab
 import mozilla.components.support.ktx.kotlin.MAX_URI_LENGTH
 import mozilla.components.ui.colors.PhotonColors
 import org.mozilla.fenix.R
-import org.mozilla.fenix.compose.SwipeToDismiss
+import org.mozilla.fenix.compose.DismissibleItemBackground
+import org.mozilla.fenix.compose.SwipeToDismissBox
+import org.mozilla.fenix.compose.SwipeToDismissState
 import org.mozilla.fenix.compose.TabThumbnail
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.ext.toShortUrl
@@ -65,12 +65,13 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * @param multiSelectionSelected Indicates if the item should be render as multi selection selected
  * option.
  * @param shouldClickListen Whether or not the item should stop listening to click events.
+ * @param swipingEnabled Whether or not the item is swipeable.
  * @param onCloseClick Callback to handle the click event of the close button.
  * @param onMediaClick Callback to handle when the media item is clicked.
  * @param onClick Callback to handle when item is clicked.
  * @param onLongClick Optional callback to handle when item is long clicked.
  */
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterialApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 @Suppress("MagicNumber", "LongMethod")
 fun TabListItem(
@@ -80,6 +81,7 @@ fun TabListItem(
     multiSelectionEnabled: Boolean = false,
     multiSelectionSelected: Boolean = false,
     shouldClickListen: Boolean = true,
+    swipingEnabled: Boolean = true,
     onCloseClick: (tab: TabSessionState) -> Unit,
     onMediaClick: (tab: TabSessionState) -> Unit,
     onClick: (tab: TabSessionState) -> Unit,
@@ -90,17 +92,6 @@ fun TabListItem(
     } else {
         FirefoxTheme.colors.layer1
     }
-
-    val dismissState = rememberDismissState(
-        confirmStateChange = { dismissValue ->
-            if (dismissValue == DismissValue.DismissedToEnd || dismissValue == DismissValue.DismissedToStart) {
-                onCloseClick(tab)
-                true
-            } else {
-                false
-            }
-        },
-    )
 
     // Used to propagate the ripple effect to the whole tab
     val interactionSource = remember { MutableInteractionSource() }
@@ -126,11 +117,24 @@ fun TabListItem(
         )
     }
 
-    SwipeToDismiss(
-        state = dismissState,
-        enabled = !multiSelectionEnabled,
+    val density = LocalDensity.current
+    val swipeState = remember(multiSelectionEnabled, swipingEnabled) {
+        SwipeToDismissState(
+            density = density,
+            enabled = !multiSelectionEnabled && swipingEnabled,
+        )
+    }
+
+    SwipeToDismissBox(
+        state = swipeState,
+        onItemDismiss = {
+            onCloseClick(tab)
+        },
         backgroundContent = {
-            DismissedTabBackground(dismissState.dismissDirection, RoundedCornerShape(0.dp))
+            DismissibleItemBackground(
+                isSwipeActive = swipeState.swipingActive,
+                isSwipingToStart = swipeState.isSwipingToStart,
+            )
         },
     ) {
         Row(
