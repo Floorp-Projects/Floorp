@@ -2639,7 +2639,8 @@ bool arena_t::SplitRun(arena_run_t* aRun, size_t aSize, bool aLarge,
   size_t rem_pages = total_pages - need_pages;
 
 #ifdef MALLOC_DECOMMIT
-  for (size_t i = 0; i < need_pages; i++) {
+  size_t i = 0;
+  while (i < need_pages) {
     // Commit decommitted pages if necessary.  If a decommitted
     // page is encountered, commit all needed adjacent decommitted
     // pages in one operation, in order to reduce system call
@@ -2685,6 +2686,9 @@ bool arena_t::SplitRun(arena_run_t* aRun, size_t aSize, bool aLarge,
       }
 
       mNumFresh += j;
+      i += j;
+    } else {
+      i++;
     }
   }
 #endif
