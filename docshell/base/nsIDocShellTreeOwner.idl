@@ -109,5 +109,5 @@ interface nsIDocShellTreeOwner : nsISupports
   Returns true if there is a primary content shell or a primary
   remote tab.
   */
-  readonly attribute bool hasPrimaryContent;
+  readonly attribute boolean hasPrimaryContent;
 };

@@ -75,7 +75,7 @@ interface mozISpellCheckingEngine : nsISupports {
    *
    * @returns True if the dictionary was found and removed.
    */
-  bool removeDictionary(in AString lang, in nsIURI file);
+  boolean removeDictionary(in AString lang, in nsIURI file);
 };
 
 %{C++

@@ -106,7 +106,7 @@ interface nsIFile : nsISupports
      *       ancestor directories (and return an error instead).
      */
     [must_use] void create(in unsigned long type, in unsigned long permissions,
-                           [optional,default(false)] in bool skipAncestors);
+                           [optional,default(false)] in boolean skipAncestors);
 
     /**
      *  Accessor to the leaf name of the file itself.

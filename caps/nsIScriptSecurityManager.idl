@@ -157,7 +157,7 @@ interface nsIScriptSecurityManager : nsISupports
      * prefs to be allowed to use file:// URIs.
      * @param aUri the URI to be tested
      */
-    bool inFileURIAllowlist(in nsIURI aUri);
+    boolean inFileURIAllowlist(in nsIURI aUri);
 
     ///////////////// Principals ///////////////////////
 
@@ -331,7 +331,7 @@ interface nsIScriptSecurityManager : nsISupports
      * of javascript.enabled. Otherwise, it returns the same value, but taking
      * the various blocklist/allowlist exceptions into account.
      */
-    bool policyAllowsScript(in nsIURI aDomain);
+    boolean policyAllowsScript(in nsIURI aDomain);
 };
 
 %{C++

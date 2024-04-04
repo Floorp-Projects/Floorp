@@ -25,11 +25,11 @@ interface nsIWorkerDebugger : nsISupports
   const unsigned long TYPE_SHARED = 1;
   const unsigned long TYPE_SERVICE = 2;
 
-  readonly attribute bool isClosed;
+  readonly attribute boolean isClosed;
 
-  readonly attribute bool isChrome;
+  readonly attribute boolean isChrome;
 
-  readonly attribute bool isInitialized;
+  readonly attribute boolean isInitialized;
 
   readonly attribute nsIWorkerDebugger parent;
 

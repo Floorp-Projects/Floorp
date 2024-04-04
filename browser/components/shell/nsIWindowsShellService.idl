@@ -112,7 +112,7 @@ interface nsIWindowsShellService : nsISupports
    *                          successful or rejects with an nserror.
    */
   [implicit_jscontext]
-  Promise pinCurrentAppToTaskbarAsync(in bool aPrivateBrowsing);
+  Promise pinCurrentAppToTaskbarAsync(in boolean aPrivateBrowsing);
 
   /*
    * Do a dry run of pinCurrentAppToTaskbar().
@@ -128,7 +128,7 @@ interface nsIWindowsShellService : nsISupports
    * @returns same as pinCurrentAppToTaskbarAsync()
    */
   [implicit_jscontext]
-  Promise checkPinCurrentAppToTaskbarAsync(in bool aPrivateBrowsing);
+  Promise checkPinCurrentAppToTaskbarAsync(in boolean aPrivateBrowsing);
 
   /*
    * Search for the current executable among taskbar pins
@@ -247,7 +247,7 @@ interface nsIWindowsShellService : nsISupports
   AString classifyShortcut(in AString aPath);
 
   [implicit_jscontext]
-  Promise hasMatchingShortcut(in AString aAUMID, in bool aPrivateBrowsing);
+  Promise hasMatchingShortcut(in AString aAUMID, in boolean aPrivateBrowsing);
 
   /*
    * Check if setDefaultBrowserUserChoice() is expected to succeed.
@@ -257,7 +257,7 @@ interface nsIWindowsShellService : nsISupports
    *
    * @return true if the check succeeds, false otherwise.
    */
-  bool canSetDefaultBrowserUserChoice();
+  boolean canSetDefaultBrowserUserChoice();
 
   /*
    * checkAllProgIDsExist() and checkBrowserUserChoiceHashes() are components
@@ -265,8 +265,8 @@ interface nsIWindowsShellService : nsISupports
    *
    * @return true if the check succeeds, false otherwise.
    */
-  bool checkAllProgIDsExist();
-  bool checkBrowserUserChoiceHashes();
+  boolean checkAllProgIDsExist();
+  boolean checkBrowserUserChoiceHashes();
 
   /*
    * Determines whether or not Firefox is the "Default Handler", i.e.,

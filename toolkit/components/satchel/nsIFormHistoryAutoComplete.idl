@@ -20,7 +20,7 @@ interface nsIFormHistoryAutoComplete: nsISupports {
                                  in AString aSearchString,
                                  in HTMLInputElement aField,
                                  in nsIAutoCompleteResult aPreviousResult,
-                                 in bool aAddDatalist,
+                                 in boolean aAddDatalist,
                                  in nsIFormFillCompleteObserver aListener);
 
     /**

@@ -18,11 +18,11 @@ interface nsIPushSubscription : nsISupports
   readonly attribute long long pushCount;
   readonly attribute long long lastPush;
   readonly attribute long quota;
-  readonly attribute bool isSystemSubscription;
+  readonly attribute boolean isSystemSubscription;
   readonly attribute jsval p256dhPrivateKey;
 
-  bool quotaApplies();
-  bool isExpired();
+  boolean quotaApplies();
+  boolean isExpired();
 
   Array<uint8_t> getKey(in AString name);
 };
@@ -50,7 +50,7 @@ interface nsIPushSubscription : nsISupports
 [scriptable, uuid(d574118f-61a9-4270-b1f6-4461aa85c4f5), function]
 interface nsIUnsubscribeResultCallback : nsISupports
 {
-  void onUnsubscribe(in nsresult status, in bool success);
+  void onUnsubscribe(in nsresult status, in boolean success);
 };
 
 /**

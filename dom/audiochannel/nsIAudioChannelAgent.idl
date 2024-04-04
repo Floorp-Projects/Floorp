@@ -36,7 +36,7 @@ interface nsIAudioChannelAgentCallback : nsISupports
   /**
    * Notified when the window volume/mute is changed
    */
-  void windowVolumeChanged(in float aVolume, in bool aMuted);
+  void windowVolumeChanged(in float aVolume, in boolean aMuted);
 
    /**
    * Notified when the window needs to be suspended or resumed.
@@ -46,7 +46,7 @@ interface nsIAudioChannelAgentCallback : nsISupports
   /**
    * Notified when the capture state is changed.
    */
-  void windowAudioCaptureChanged(in bool aCapture);
+  void windowAudioCaptureChanged(in boolean aCapture);
 };
 
 /**

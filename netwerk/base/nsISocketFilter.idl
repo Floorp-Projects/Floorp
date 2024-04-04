@@ -22,10 +22,10 @@ interface nsISocketFilter : nsISupports
   const long SF_INCOMING = 0;
   const long SF_OUTGOING = 1;
 
-  bool filterPacket([const]in NetAddrPtr remote_addr,
-                    [const, array, size_is(len)]in uint8_t data,
-                    in unsigned long len,
-                    in long direction);
+  boolean filterPacket([const]in NetAddrPtr remote_addr,
+                       [const, array, size_is(len)]in uint8_t data,
+                       in unsigned long len,
+                       in long direction);
 };
 
 /**

@@ -39,7 +39,7 @@ interface nsIDeviceSensors : nsISupports
   /**
    * Returns true if the given window has any listeners of the given type
    */
-  bool hasWindowListener(in unsigned long aType, in nsIDOMWindow aWindow);
+  boolean hasWindowListener(in unsigned long aType, in nsIDOMWindow aWindow);
 
   // Holds pointers, not AddRef objects -- it is up to the caller
   // to call RemoveWindowListener before the window is deleted.

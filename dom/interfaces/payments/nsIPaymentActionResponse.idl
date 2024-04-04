@@ -176,14 +176,14 @@ interface nsIPaymentCanMakeActionResponse : nsIPaymentActionResponse
   /**
    *  The result of canMakePayment action.
    */
-  readonly attribute bool result;
+  readonly attribute boolean result;
 
   /**
    *  The initial method.
    *  @param aRequestId - the request identifier of the payment request.
    *  @param aResult - the canMakePayment result.
    */
-  void init(in AString aRequestId, in bool aResult);
+  void init(in AString aRequestId, in boolean aResult);
 };
 
 /**
@@ -266,7 +266,7 @@ interface nsIPaymentAbortActionResponse : nsIPaymentActionResponse
   /**
    *  Check if the abort action is succeeded
    */
-  bool isSucceeded();
+  boolean isSucceeded();
 };
 
 [builtinclass, scriptable, uuid(62c01e69-9ca4-4060-99e4-b95f628c8e6d)]
@@ -289,7 +289,7 @@ interface nsIPaymentCompleteActionResponse : nsIPaymentActionResponse
   /**
    *  Check if the complete action is succeeded.
    */
-  bool isCompleted();
+  boolean isCompleted();
 };
 
 [builtinclass, scriptable, uuid(2035e0a9-c9ab-4c9f-b8e9-28b2ed61548c)]

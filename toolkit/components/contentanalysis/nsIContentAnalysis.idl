@@ -201,14 +201,14 @@ interface nsIContentAnalysis : nsISupports
    * into the parent process to determine whether content analysis is actually
    * active.
    */
-  readonly attribute bool mightBeActive;
+  readonly attribute boolean mightBeActive;
 
   /**
    * True if content-analysis activation was determined by enterprise policy,
    * as opposed to enabled with the `allow-content-analysis` command-line
    * parameter.
    */
-  attribute bool isSetByEnterprisePolicy;
+  attribute boolean isSetByEnterprisePolicy;
 
   /**
    * Consults content analysis server, if any, to request a permission
@@ -229,7 +229,7 @@ interface nsIContentAnalysis : nsISupports
    *        calling nsIContentAnalysisResponse::acknowledge() if the Promise is resolved.
    */
   [implicit_jscontext]
-  Promise analyzeContentRequest(in nsIContentAnalysisRequest aCar, in bool aAutoAcknowledge);
+  Promise analyzeContentRequest(in nsIContentAnalysisRequest aCar, in boolean aAutoAcknowledge);
 
   /**
    * Same functionality as AnalyzeContentRequest(), but more convenient to call
@@ -245,7 +245,7 @@ interface nsIContentAnalysis : nsISupports
    * @param callback
    *        Callbacks to be called when the agent sends a response message (or when there is an error).
    */
-  void analyzeContentRequestCallback(in nsIContentAnalysisRequest aCar, in bool aAutoAcknowledge, in nsIContentAnalysisCallback callback);
+  void analyzeContentRequestCallback(in nsIContentAnalysisRequest aCar, in boolean aAutoAcknowledge, in nsIContentAnalysisCallback callback);
 
   /**
    * Cancels the request that is in progress. This may not actually cancel the request
@@ -261,7 +261,7 @@ interface nsIContentAnalysis : nsISupports
    * Indicates that the user has responded to a WARN dialog. aAllowContent represents
    * whether the user wants to allow the request to go through.
    */
-  void respondToWarnDialog(in ACString aRequestToken, in bool aAllowContent);
+  void respondToWarnDialog(in ACString aRequestToken, in boolean aAllowContent);
 
   /**
    * Cancels all outstanding DLP requests. Used on shutdown.

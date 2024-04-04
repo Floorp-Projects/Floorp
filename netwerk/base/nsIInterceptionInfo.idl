@@ -66,8 +66,8 @@ interface nsIInterceptionInfo : nsISupports
    * The InterceptedHttpChannel is a third party channel or not.
    */
   [noscript, notxpcom, nostdcall, binaryname(FromThirdParty)]
-  bool binaryFromThirdParty();
+  boolean binaryFromThirdParty();
 
   [noscript, notxpcom, nostdcall, binaryname(SetFromThirdParty)]
-  void binarySetFromThirdParty(in bool aFromThirdParty);
+  void binarySetFromThirdParty(in boolean aFromThirdParty);
 };

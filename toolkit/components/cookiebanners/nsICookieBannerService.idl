@@ -58,13 +58,13 @@ interface nsICookieBannerService : nsISupports {
    * this will return none, only reject rules or accept rules if there is no
    * reject rule available.
    */
-  Array<nsICookieRule> getCookiesForURI(in nsIURI aURI, in bool aIsPrivateBrowsing);
+  Array<nsICookieRule> getCookiesForURI(in nsIURI aURI, in boolean aIsPrivateBrowsing);
 
   /**
    * Look up the click rules for a given domain.
    */
   Array<nsIClickRule> getClickRulesForDomain(in ACString aDomain,
-                                             in bool aIsTopLevel);
+                                             in boolean aIsTopLevel);
 
   /**
    * Insert a cookie banner rule for a domain. If there was previously a rule
@@ -131,28 +131,28 @@ interface nsICookieBannerService : nsISupports {
    * this session.
    */
   boolean shouldStopBannerClickingForSite(in ACString aSite,
-                                          in bool aIsTopLevel,
-                                          in bool aIsPrivate);
+                                          in boolean aIsTopLevel,
+                                          in boolean aIsPrivate);
 
   /**
    * Mark that the cookie banner handling code was executed for the given site
    * for this session.
    */
   void markSiteExecuted(in ACString aSite,
-                        in bool aIsTopLevel,
-                        in bool aIsPrivate);
+                        in boolean aIsTopLevel,
+                        in boolean aIsPrivate);
 
   /*
    * Remove the executed record for a given site under the private browsing
    * session or the normal session.
    */
-  void removeExecutedRecordForSite(in ACString aSite, in bool aIsPrivate);
+  void removeExecutedRecordForSite(in ACString aSite, in boolean aIsPrivate);
 
   /**
    * Remove all the record of sites where cookie banner handling has been
    * executed under the private browsing session or normal session.
    */
-  void removeAllExecutedRecords(in bool aIsPrivate);
+  void removeAllExecutedRecords(in boolean aIsPrivate);
 
   /**
    * Clears the in-memory set that we use to maintain the domains that we have

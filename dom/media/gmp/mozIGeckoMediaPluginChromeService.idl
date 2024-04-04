@@ -27,7 +27,7 @@ interface mozIGeckoMediaPluginChromeService : nsISupports
    * @note Main-thread API.
    */
   void removeAndDeletePluginDirectory(in AString directory,
-                                      [optional] in bool defer);
+                                      [optional] in boolean defer);
 
   /**
    * Clears storage data associated with the site and the originAttributes
@@ -48,7 +48,7 @@ interface mozIGeckoMediaPluginChromeService : nsISupports
    * persistently on disk. Private Browsing and local content are not
    * allowed to store persistent data.
    */
-  bool isPersistentStorageAllowed(in ACString nodeId);
+  boolean isPersistentStorageAllowed(in ACString nodeId);
 
   /**
    * Returns the directory to use as the base for storing data about GMPs.

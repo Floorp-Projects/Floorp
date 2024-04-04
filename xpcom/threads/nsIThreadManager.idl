@@ -23,7 +23,7 @@ interface nsINestedEventLoopCondition : nsISupports
   /**
    * Returns true if the current nested event loop should stop spinning.
    */
-  bool isDone();
+  boolean isDone();
 };
 
 /**

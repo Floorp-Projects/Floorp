@@ -204,7 +204,7 @@ interface nsICertStorage : nsISupports {
    * revocation information.
    */
   [must_use]
-  bool isCertRevokedByStash(in Array<octet> issuerSPKI, in Array<octet> serialNumber);
+  boolean isCertRevokedByStash(in Array<octet> issuerSPKI, in Array<octet> serialNumber);
 
   /**
    * Trust flags to use when adding a adding a certificate.

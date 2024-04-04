@@ -135,7 +135,7 @@ interface nsIDragSession : nsISupports
   /**
    * Returns true if current session was started with synthesized drag start.
    */
-  [notxpcom, nostdcall] bool isSynthesizedForTests();
+  [notxpcom, nostdcall] boolean isSynthesizedForTests();
 
   /**
    * Sets drag end point of synthesized session when the test does not dispatch
@@ -147,5 +147,5 @@ interface nsIDragSession : nsISupports
    * Returns true if the session is for dragging text in a text in text control
    * element.
    */
-  [notxpcom, nostdcall] bool isDraggingTextInTextControl();
+  [notxpcom, nostdcall] boolean isDraggingTextInTextControl();
 };

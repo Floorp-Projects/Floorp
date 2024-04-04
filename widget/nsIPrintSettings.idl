@@ -203,7 +203,7 @@ interface nsIPrintSettings : nsISupports
    * to make best use of the space on the sheet. Specifically, this returns
    * true IFF `numPagesPerSheet` is set to 2 or 6 pages-per-sheet.
    */
-  [noscript, notxpcom, nostdcall] bool HasOrthogonalPagesPerSheet();
+  [noscript, notxpcom, nostdcall] boolean HasOrthogonalPagesPerSheet();
 
   /**
    * Makes a new copy
@@ -220,7 +220,7 @@ interface nsIPrintSettings : nsISupports
    * therefore print. The printer name is ignored and it allows for a small
    * delta in sizes to allow for rounding differences.
    */
-  bool equivalentTo(in nsIPrintSettings aPrintSettings);
+  boolean equivalentTo(in nsIPrintSettings aPrintSettings);
 
   /**
    * The edge measurements define the positioning of the headers

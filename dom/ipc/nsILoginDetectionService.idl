@@ -18,5 +18,5 @@ interface nsILoginDetectionService : nsISupports
    * Returns true if we have loaded logins from the password manager.
    * This is now used by testcase only.
    */
-  bool isLoginsLoaded();
+  boolean isLoginsLoaded();
 };

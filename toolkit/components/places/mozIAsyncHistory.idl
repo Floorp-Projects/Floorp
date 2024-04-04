@@ -107,8 +107,8 @@ interface mozIVisitInfoCallback : nsISupports
    * handleResult and handleError, respectively, if/once
    * results/errors occur.
    */
-  readonly attribute bool ignoreResults;
-  readonly attribute bool ignoreErrors;
+  readonly attribute boolean ignoreResults;
+  readonly attribute boolean ignoreErrors;
 };
 
 [scriptable, function, uuid(994092bf-936f-449b-8dd6-0941e024360d)]

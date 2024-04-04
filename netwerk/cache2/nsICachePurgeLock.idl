@@ -23,7 +23,7 @@ interface nsICachePurgeLock : nsISupports {
      * Returns true if another instance also holds the lock.
      * Throws if called before lock was called, or after unlock was called.
      */
-    bool isOtherInstanceRunning();
+    boolean isOtherInstanceRunning();
 
     /**
      * Releases the lock.

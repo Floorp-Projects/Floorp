@@ -145,5 +145,5 @@ interface nsIBrowser : nsISupports
    * If this method returns `true`, Gecko will assume frontend handled resuming
    * the load, and will not attempt to resume the load itself.
    */
-  bool finishChangeRemoteness(in uint64_t aPendingSwitchId);
+  boolean finishChangeRemoteness(in uint64_t aPendingSwitchId);
 };

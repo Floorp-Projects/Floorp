@@ -204,7 +204,7 @@ interface nsIHttpChannel : nsIIdentChannel
      * Call this method to see if we need to strip the request body headers
      * for the new http channel. This should be called during redirection.
      */
-    [must_use] bool ShouldStripRequestBodyHeader(in ACString aMethod);
+    [must_use] boolean ShouldStripRequestBodyHeader(in ACString aMethod);
 
     /**
      * This attribute of the channel indicates whether or not

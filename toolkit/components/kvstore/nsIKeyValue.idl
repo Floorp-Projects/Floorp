@@ -174,7 +174,7 @@ interface nsIKeyValuePair : nsISupports {
  */
 [scriptable, builtinclass, rust_sync, uuid(b9ba7116-b7ff-4717-9a28-a08e6879b199)]
 interface nsIKeyValueEnumerator : nsISupports {
-    bool hasMoreElements();
+    boolean hasMoreElements();
     nsIKeyValuePair getNext();
 };
 

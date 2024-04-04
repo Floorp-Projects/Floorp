@@ -31,7 +31,7 @@ interface nsIClearDataService : nsISupports
    * @param aCallback this callback will be executed when the operation is
    *                  completed.
    */
-  void deleteDataFromLocalFiles(in bool aIsUserRequest,
+  void deleteDataFromLocalFiles(in boolean aIsUserRequest,
                                 in uint32_t aFlags,
                                 in nsIClearDataCallback aCallback);
 
@@ -50,7 +50,7 @@ interface nsIClearDataService : nsISupports
    * @deprecated Use deleteDataFromBaseDomain instead.
    */
   void deleteDataFromHost(in AUTF8String aHost,
-                          in bool aIsUserRequest,
+                          in boolean aIsUserRequest,
                           in uint32_t aFlags,
                           in nsIClearDataCallback aCallback);
 
@@ -76,7 +76,7 @@ interface nsIClearDataService : nsISupports
    * may fall back to clearing by principal or host.
    */
   void deleteDataFromBaseDomain(in AUTF8String aDomainOrHost,
-                                in bool aIsUserRequest,
+                                in boolean aIsUserRequest,
                                 in uint32_t aFlags,
                                 in nsIClearDataCallback aCallback);
 
@@ -93,7 +93,7 @@ interface nsIClearDataService : nsISupports
    *                  completed.
    */
   void deleteDataFromPrincipal(in nsIPrincipal aPrincipal,
-                               in bool aIsUserRequest,
+                               in boolean aIsUserRequest,
                                in uint32_t aFlags,
                                in nsIClearDataCallback aCallback);
 
@@ -111,7 +111,7 @@ interface nsIClearDataService : nsISupports
    *                  completed.
    */
   void deleteDataInTimeRange(in PRTime aFrom, in PRTime aTo,
-                             in bool aIsUserRequest,
+                             in boolean aIsUserRequest,
                              in uint32_t aFlags,
                              in nsIClearDataCallback aCallback);
 

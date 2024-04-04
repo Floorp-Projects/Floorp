@@ -106,5 +106,5 @@ interface nsIThreadObserver : nsISupports
    *   |mayWait| flag was false when calling nsIThread::ProcessNextEvent().
    */
   void afterProcessNextEvent(in nsIThreadInternal thread,
-                             in bool eventWasProcessed);
+                             in boolean eventWasProcessed);
 };

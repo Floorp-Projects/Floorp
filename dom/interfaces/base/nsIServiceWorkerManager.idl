@@ -31,7 +31,7 @@ interface nsIServiceWorkerUnregisterCallback : nsISupports
 {
   // aState is true if the unregistration succeded.
   // It's false if this ServiceWorkerRegistration doesn't exist.
-  void unregisterSucceeded(in bool aState);
+  void unregisterSucceeded(in boolean aState);
   void unregisterFailed();
 };
 
@@ -61,7 +61,7 @@ interface nsIServiceWorkerInfo : nsISupports
   // Return whether the ServiceWorker has a "fetch" event listener. Throws if
   // this is unknown because the worker's main script hasn't finished executing
   // (when exposed as evaluatingWorker).
-  readonly attribute bool handlesFetchEvents;
+  readonly attribute boolean handlesFetchEvents;
 
   readonly attribute PRTime installedTime;
   readonly attribute PRTime activatedTime;
@@ -250,8 +250,8 @@ interface nsIServiceWorkerManager : nsISupports
   nsIServiceWorkerRegistrationInfo getRegistrationByPrincipal(in nsIPrincipal aPrincipal,
                                                               in AString aScope);
 
-  [notxpcom, nostdcall] bool StartControlling(in const_ClientInfoRef aClientInfo,
-                                              in const_ServiceWorkerDescriptorRef aServiceWorker);
+  [notxpcom, nostdcall] boolean StartControlling(in const_ClientInfoRef aClientInfo,
+                                                 in const_ServiceWorkerDescriptorRef aServiceWorker);
 
   // Testing
   AString getScopeForUrl(in nsIPrincipal aPrincipal, in AString aPath);

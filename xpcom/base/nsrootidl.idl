@@ -38,7 +38,6 @@ class Promise;
 // [substitute] typedefs emit the underlying builtin type directly, and
 // avoid polluting bindings for other languages with C++ stdint types.
 
-[substitute]  typedef boolean             bool     ;
 [substitute]  typedef octet               uint8_t  ;
 [substitute]  typedef unsigned short      uint16_t ;
 [substitute]  typedef unsigned long       uint32_t ;

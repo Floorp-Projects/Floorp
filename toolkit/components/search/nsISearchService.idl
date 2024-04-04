@@ -290,13 +290,13 @@ interface nsISearchService : nsISupports
    * @return |true| if the search service is now initialized, |false| if
    * initialization has not been triggered yet.
    */
-  readonly attribute bool isInitialized;
+  readonly attribute boolean isInitialized;
 
   /**
    * Determine whether initialization has been completed successfully.
    *
    */
-  readonly attribute bool hasSuccessfullyInitialized;
+  readonly attribute boolean hasSuccessfullyInitialized;
 
 
   /**

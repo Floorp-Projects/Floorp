@@ -53,7 +53,7 @@ interface nsILocalFileWin : nsIFile
      * Throws NS_ERROR_FILE_INVALID_PATH for an invalid file.
      * Throws NS_ERROR_FAILURE if the set or get fails.
      */
-    attribute bool readOnly;
+    attribute boolean readOnly;
 
     /**
      * Setting this to true will prepend the prefix "\\?\" to all parsed file

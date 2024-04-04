@@ -196,9 +196,9 @@ interface nsIHttpActivityDistributor : nsIHttpActivityObserver
     /**
      * C++ friendly getter
      */
-    [noscript, notxpcom] bool Activated();
-    [noscript, notxpcom] bool ObserveProxyResponseEnabled();
-    [noscript, notxpcom] bool ObserveConnectionEnabled();
+    [noscript, notxpcom] boolean Activated();
+    [noscript, notxpcom] boolean ObserveProxyResponseEnabled();
+    [noscript, notxpcom] boolean ObserveConnectionEnabled();
 
     /**
      * When true, the ACTIVITY_SUBTYPE_PROXY_RESPONSE_HEADER will be sent to

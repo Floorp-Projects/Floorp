@@ -34,7 +34,7 @@ interface nsINSSComponent : nsISupports {
    * bytes) is the certificate we use in tests to simulate a built-in root
    * certificate. Returns false in non-debug builds.
    */
-  [noscript] bool isCertTestBuiltInRoot(in Array<octet> cert);
+  [noscript] boolean isCertTestBuiltInRoot(in Array<octet> cert);
 
   /**
    * If enabled by the preference "security.enterprise_roots.enabled", returns

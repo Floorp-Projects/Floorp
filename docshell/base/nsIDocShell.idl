@@ -279,7 +279,7 @@ interface nsIDocShell : nsIDocShellTreeItem
    * next element in the parent should be returned. Returns true if focus was
    * successfully taken by the tree owner.
    */
-  bool tabToTreeOwner(in boolean forward, in boolean forDocumentNavigation);
+  boolean tabToTreeOwner(in boolean forward, in boolean forDocumentNavigation);
 
   /**
    * Current busy state for DocShell
@@ -522,7 +522,7 @@ interface nsIDocShell : nsIDocShellTreeItem
    * @param end           timestamp when reflow ended, in milliseconds since
    *                      navigationStart (accurate to 1/1000 of a ms)
    */
-  [noscript] void notifyReflowObservers(in bool interruptible,
+  [noscript] void notifyReflowObservers(in boolean interruptible,
                                         in DOMHighResTimeStamp start,
                                         in DOMHighResTimeStamp end);
 
@@ -553,7 +553,7 @@ interface nsIDocShell : nsIDocShellTreeItem
    * True iff asynchronous panning and zooming is enabled for this
    * docshell.
    */
-  readonly attribute bool asyncPanZoomEnabled;
+  readonly attribute boolean asyncPanZoomEnabled;
 
   /**
    * Indicates whether the UI may enable the character encoding menu. The UI
@@ -595,8 +595,8 @@ interface nsIDocShell : nsIDocShellTreeItem
    * without any actual visual representation. They have to be marked
    * at construction time, to avoid any painting activity.
    */
-  [noscript, notxpcom] bool IsInvisible();
-  [noscript, notxpcom] void SetInvisible(in bool aIsInvisibleDocshell);
+  [noscript, notxpcom] boolean IsInvisible();
+  [noscript, notxpcom] void SetInvisible(in boolean aIsInvisibleDocshell);
 
 /**
  * Get the script global for the document in this docshell.
@@ -679,7 +679,7 @@ interface nsIDocShell : nsIDocShellTreeItem
    * Returns true if the current load is a forced reload,
    * e.g. started by holding shift whilst triggering reload.
    */
-  readonly attribute bool isForceReloading;
+  readonly attribute boolean isForceReloading;
 
   Array<float> getColorMatrix();
 

@@ -380,7 +380,7 @@ interface nsIApplicationUpdateService : nsISupports
    *          check starting does not necessarily mean that the check will
    *          succeed or that an update will be downloaded.
    */
-  bool checkForBackgroundUpdates();
+  boolean checkForBackgroundUpdates();
 
   /**
    * Selects the best update to install from a list of available updates.
@@ -654,7 +654,7 @@ interface nsIUpdateProcessor : nsISupports
    * @throws  NS_ERROR_NOT_IMPLEMENTED
    *          If this is called on a non-Windows platform.
    */
-  bool getServiceRegKeyExists();
+  boolean getServiceRegKeyExists();
 
   /**
   * Attempts to restart the application manually on program exit with the same
@@ -724,7 +724,7 @@ interface nsIUpdateSyncManager : nsISupports
    * Returns whether another instance of this application is running.
    * @returns true if another instance has the lock open, false if not
    */
-  bool isOtherInstanceRunning();
+  boolean isOtherInstanceRunning();
 
   /**
    * Should only be used for testing.

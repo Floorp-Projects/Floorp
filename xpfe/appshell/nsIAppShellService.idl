@@ -52,7 +52,7 @@ interface nsIAppShellService : nsISupports
    * @param aChromeMask Used to specify chrome flags that should be set on the
    *                    window. See nsIWebBrowserChrome for flag definitions.
    */
-  nsIWindowlessBrowser createWindowlessBrowser([optional] in bool aIsChrome,
+  nsIWindowlessBrowser createWindowlessBrowser([optional] in boolean aIsChrome,
                                                [optional] in uint32_t aChromeMask);
 
   [noscript]
@@ -123,6 +123,6 @@ interface nsIAppShellService : nsISupports
    * is already enabled has no effect.
    * @return true if tracking succeeded.
    */
-  bool startEventLoopLagTracking();
+  boolean startEventLoopLagTracking();
   void stopEventLoopLagTracking();
 };

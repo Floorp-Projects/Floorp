@@ -82,7 +82,7 @@ interface WebTransportSessionEventListener : nsISupports {
   // This is used internally to pass the reference of WebTransportSession
   // object to WebTransportSessionProxy.
   void onSessionReadyInternal(in Http3WebTransportSessionPtr aSession);
-  void onSessionClosed(in bool aCleanly,
+  void onSessionClosed(in boolean aCleanly,
                        in uint32_t aErrorCode,
                        in ACString aReason);
 
@@ -121,7 +121,7 @@ interface WebTransportSessionEventListener : nsISupports {
 [uuid(faad75bd-83c6-420b-9fdb-a70bd70be449)]
 interface WebTransportConnectionSettings : nsISupports {
   // WebTransport specific connection information
-  readonly attribute bool dedicated;
+  readonly attribute boolean dedicated;
   void getServerCertificateHashes(out Array<nsIWebTransportHash> aServerCertHashes);
 };
 

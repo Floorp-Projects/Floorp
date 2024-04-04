@@ -256,7 +256,7 @@ interface nsISFVService: nsISupports
      * The following functions create bare item of specific type.
      */
     nsISFVInteger newInteger(in long long value);
-    nsISFVBool newBool(in bool value);
+    nsISFVBool newBool(in boolean value);
     nsISFVDecimal newDecimal(in double value);
     nsISFVString newString(in ACString value);
     nsISFVByteSeq newByteSequence(in ACString value);

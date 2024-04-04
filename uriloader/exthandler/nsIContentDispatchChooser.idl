@@ -36,5 +36,5 @@ interface nsIContentDispatchChooser : nsISupports {
            in nsIURI aURI,
            in nsIPrincipal aTriggeringPrincipal,
            in BrowsingContext aBrowsingContext,
-           [optional] in bool aWasTriggeredExternally);
+           [optional] in boolean aWasTriggeredExternally);
 };

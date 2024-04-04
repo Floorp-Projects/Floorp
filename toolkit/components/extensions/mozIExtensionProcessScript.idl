@@ -17,5 +17,5 @@ interface mozIExtensionProcessScript : nsISupports
                             in mozIDOMWindow window);
 
   void initExtensionDocument(in nsISupports extension, in Document doc,
-                             in bool privileged);
+                             in boolean privileged);
 };

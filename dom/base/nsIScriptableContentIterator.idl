@@ -64,7 +64,7 @@ interface nsIScriptableContentIterator : nsISupports
   readonly attribute Node currentNode;
 
   // See ContentIteratorBase::IsDone()
-  readonly attribute bool isDone;
+  readonly attribute boolean isDone;
 
   // See ContentIteratorBase::PositionAt(nsINode*)
   void positionAt(in Node aNode);

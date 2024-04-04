@@ -39,12 +39,12 @@ interface nsIAboutThirdParty : nsISupports
   /**
    * Returns true if DynamicBlocklist is available.
    */
-  readonly attribute bool isDynamicBlocklistAvailable;
+  readonly attribute boolean isDynamicBlocklistAvailable;
 
   /**
    * Returns true if DynamicBlocklist is available but disabled.
    */
-  readonly attribute bool isDynamicBlocklistDisabled;
+  readonly attribute boolean isDynamicBlocklistDisabled;
 
   /**
    * Add or remove an entry from the dynamic blocklist and save

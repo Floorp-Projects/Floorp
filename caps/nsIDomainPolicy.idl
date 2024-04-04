@@ -66,11 +66,11 @@ interface nsIDomainSet : nsISupports
     /*
      * Returns true if a given domain is in the set.
      */
-    bool contains(in nsIURI aDomain);
+    boolean contains(in nsIURI aDomain);
 
     /*
      * Returns true if a given domain is a subdomain of one of the entries in
      * the set.
      */
-    bool containsSuperDomain(in nsIURI aDomain);
+    boolean containsSuperDomain(in nsIURI aDomain);
 };

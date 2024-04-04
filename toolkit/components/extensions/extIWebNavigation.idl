@@ -17,8 +17,8 @@ interface extIWebNavigation : nsISupports
   void onHistoryChange(in BrowsingContext bc,
                        in jsval transitionData,
                        in nsIURI location,
-                       in bool isHistoryStateUpdated,
-                       in bool isReferenceFragmentUpdated);
+                       in boolean isHistoryStateUpdated,
+                       in boolean isReferenceFragmentUpdated);
 
   void onStateChange(in BrowsingContext bc,
                      in nsIURI requestURI,

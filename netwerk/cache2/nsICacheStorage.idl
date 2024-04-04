@@ -121,7 +121,7 @@ interface nsICacheStorage : nsISupports
    */
   void getCacheIndexEntryAttrs(in nsIURI aURI,
                                in ACString aIdExtension,
-                               out bool aHasAltData,
+                               out boolean aHasAltData,
                                out uint32_t aSizeInKB);
   /**
    * Asynchronously removes an entry belonging to the URI from the cache.

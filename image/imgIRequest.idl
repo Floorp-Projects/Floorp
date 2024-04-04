@@ -131,12 +131,12 @@ interface imgIRequest : nsIRequest
   /**
    * true if the loading of the image required cross-origin redirects.
    */
-  readonly attribute bool hadCrossOriginRedirects;
+  readonly attribute boolean hadCrossOriginRedirects;
 
   /**
    * Whether the request is multipart (ie, multipart/x-mixed-replace)
    */
-  readonly attribute bool multipart;
+  readonly attribute boolean multipart;
 
   /**
    * The CORS mode that this image was loaded with (a mozilla::CORSMode).

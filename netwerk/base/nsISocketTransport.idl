@@ -132,7 +132,7 @@ interface nsISocketTransport : nsITransport
     /**
      * True to set addr and port reuse socket options.
      */
-    void setReuseAddrPort(in bool reuseAddrPort);
+    void setReuseAddrPort(in boolean reuseAddrPort);
 
     /**
      * Values for the aType parameter passed to get/setTimeout.
@@ -349,7 +349,7 @@ interface nsISocketTransport : nsITransport
     /**
      * IP address resolved using TRR.
      */
-    bool resolvedByTRR();
+    boolean resolvedByTRR();
 
     /**
      * Returns the effectiveTRRMode used for the DNS resolution.

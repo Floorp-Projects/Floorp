@@ -23,9 +23,9 @@ interface nsIWebAuthnRegisterResult : nsISupports {
 
     readonly attribute Array<AString> transports;
 
-    readonly attribute bool hmacCreateSecret;
+    readonly attribute boolean hmacCreateSecret;
 
-    [must_use] attribute bool credPropsRk;
+    [must_use] attribute boolean credPropsRk;
 
     [must_use] readonly attribute AString authenticatorAttachment;
 };
@@ -56,7 +56,7 @@ interface nsIWebAuthnSignResult : nsISupports {
     [must_use] readonly attribute ACString userName;
 
     // appId field of AuthenticationExtensionsClientOutputs (Optional)
-    [must_use] attribute bool usedAppId;
+    [must_use] attribute boolean usedAppId;
 
     [must_use] readonly attribute AString authenticatorAttachment;
 };

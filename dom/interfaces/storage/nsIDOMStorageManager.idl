@@ -61,7 +61,7 @@ interface nsIDOMStorageManager : nsISupports
                         in nsIPrincipal aPrincipal,
                         in nsIPrincipal aStoragePrincipal,
                         in AString aDocumentURI,
-                        [optional] in bool aPrivate);
+                        [optional] in boolean aPrivate);
   /**
    * DEPRECATED.  The only good reason to use this was if you were writing a
    * test and wanted to hackily determine if a preload happened.  That's now
@@ -85,7 +85,7 @@ interface nsIDOMStorageManager : nsISupports
   Storage getStorage(in mozIDOMWindow aWindow,
                      in nsIPrincipal aPrincipal,
                      in nsIPrincipal aStoragePrincipal,
-                     [optional] in bool aPrivate);
+                     [optional] in boolean aPrivate);
 
   /**
    * Clones given storage into this storage manager.
@@ -112,8 +112,8 @@ interface nsIDOMStorageManager : nsISupports
    *         by this storage manager.
    *    false otherwise
    */
-  bool checkStorage(in nsIPrincipal aPrincipal,
-                    in Storage aStorage);
+  boolean checkStorage(in nsIPrincipal aPrincipal,
+                       in Storage aStorage);
 };
 
 [uuid(b3bfbbd0-e738-4cbf-b0f0-b65f25265e82)]

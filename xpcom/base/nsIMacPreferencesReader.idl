@@ -22,7 +22,7 @@ interface nsIMacPreferencesReader : nsISupports
    *
    * @return true if macOS policies are enabled, false otherwise.
    */
-  bool policiesEnabled();
+  boolean policiesEnabled();
 
   /**
    * This method reads and returns the macOS preferences.

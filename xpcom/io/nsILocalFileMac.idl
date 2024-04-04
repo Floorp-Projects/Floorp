@@ -176,7 +176,7 @@ interface nsILocalFileMac : nsIFile
      *
      * @return Whether or not the extended attribute is present.
      */
-    bool hasXAttr(in ACString aAttrName);
+    boolean hasXAttr(in ACString aAttrName);
 
     /**
      * Get the value of the extended attribute.
