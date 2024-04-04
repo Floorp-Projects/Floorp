@@ -212,6 +212,27 @@ newtab:
       - newtab
     lifetime: application
 
+  tooltip_click:
+    type: event
+    description: >
+      Recorded when a feature highlight tooltip is opened.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1888983
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1888983
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - sdowne@mozilla.com
+    expires: never
+    extra_keys:
+      newtab_visit_id: *newtab_visit_id
+      feature:
+        description: The feature that was clicked on.
+        type: string
+    send_in_pings:
+      - newtab
+
 newtab.search:
   enabled:
     lifetime: application

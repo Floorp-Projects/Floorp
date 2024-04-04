@@ -13,7 +13,7 @@ export function SponsoredContentHighlight({ position, dispatch }) {
         position={position}
         ariaLabel="Sponsored content supports our mission to build a better web."
         title="Sponsored content more info"
-        source="FEATURE_HIGHLIGHT_SPONSORED_CONTENT"
+        feature="SPONSORED_CONTENT_INFO"
         dispatch={dispatch}
         message={
           <span>

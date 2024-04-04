@@ -2860,6 +2860,38 @@ add_task(async function test_handleDiscoveryStreamUserEvent_popular_click() {
   sandbox.restore();
 });
 
+add_task(async function test_handleDiscoveryStreamUserEvent_tooltip_click() {
+  info(
+    "TelemetryFeed.handleDiscoveryStreamUserEvent instruments a " +
+      "tooltip click"
+  );
+
+  let sandbox = sinon.createSandbox();
+  let instance = new TelemetryFeed();
+  Services.fog.testResetFOG();
+  const feature = "SPONSORED_CONTENT_INFO";
+  let action = ac.DiscoveryStreamUserEvent({
+    event: "CLICK",
+    source: "FEATURE_HIGHLIGHT",
+    value: {
+      feature,
+    },
+  });
+
+  const SESSION_ID = "decafc0ffee";
+  sandbox.stub(instance.sessions, "get").returns({ session_id: SESSION_ID });
+
+  instance.handleDiscoveryStreamUserEvent(action);
+  let tooltipClicks = Glean.newtab.tooltipClick.testGetValue();
+  Assert.equal(tooltipClicks.length, 1, "Recorded 1 click");
+  Assert.deepEqual(tooltipClicks[0].extra, {
+    newtab_visit_id: SESSION_ID,
+    feature,
+  });
+
+  sandbox.restore();
+});
+
 add_task(
   async function test_handleDiscoveryStreamUserEvent_organic_top_stories_click() {
     info(
