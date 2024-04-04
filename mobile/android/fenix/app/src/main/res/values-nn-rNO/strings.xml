@@ -212,7 +212,7 @@
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">Legg til på startskjermen</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
-    <string name="browser_menu_install_on_homescreen">Installer</string>
+    <string name="browser_menu_install_on_homescreen" moz:removedIn="126" tools:ignore="UnusedResources">Installer</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">Synkroniser på nytt</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -895,9 +895,9 @@
 
     <!-- Inactive tabs -->
     <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
-    <string name="preferences_inactive_tabs">Flytt gamle faner til inaktive</string>
+    <string name="preferences_inactive_tabs">Flytt gamle faner til uverksame</string>
     <!-- Title of inactive tabs preference -->
-    <string name="preferences_inactive_tabs_title">Faner du ikkje har vist på to veker, vert flytta til den inaktive delen.</string>
+    <string name="preferences_inactive_tabs_title">Faner du ikkje har vist på to veker, vert flytta til den uverksame delen.</string>
 
     <!-- Studies -->
     <!-- Title of the remove studies button -->
@@ -2119,15 +2119,15 @@
 
     <!-- Inactive tabs in the tabs tray -->
     <!-- Title text displayed in the tabs tray when a tab has been unused for 14 days. -->
-    <string name="inactive_tabs_title">Inaktive faner</string>
+    <string name="inactive_tabs_title">Uverksame faner</string>
     <!-- Content description for closing all inactive tabs -->
     <string name="inactive_tabs_delete_all">Lat att alle inaktive faner</string>
 
     <!-- Content description for expanding the inactive tabs section. -->
-    <string name="inactive_tabs_expand_content_description">Utvid inaktive faner</string>
+    <string name="inactive_tabs_expand_content_description">Utvid uverksame faner</string>
 
     <!-- Content description for collapsing the inactive tabs section. -->
-    <string name="inactive_tabs_collapse_content_description">Fald saman inaktive faner</string>
+    <string name="inactive_tabs_collapse_content_description">Fald saman uverksame faner</string>
 
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
@@ -2532,9 +2532,9 @@
     <!-- The title of the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_title">Antal faner</string>
     <!-- The active tab count category in the tab count section in Tab Tools. -->
-    <string name="debug_drawer_tab_tools_tab_count_normal">Aktiv</string>
+    <string name="debug_drawer_tab_tools_tab_count_normal">Verksam</string>
     <!-- The inactive tab count category in the tab count section in Tab Tools. -->
-    <string name="debug_drawer_tab_tools_tab_count_inactive">Inaktiv</string>
+    <string name="debug_drawer_tab_tools_tab_count_inactive">Uverksam</string>
     <!-- The private tab count category in the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_private">Privat</string>
     <!-- The total tab count category in the tab count section in Tab Tools. -->
@@ -2544,9 +2544,9 @@
     <!-- The label of the text field in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_text_field_label">Tal på faner som skal opprettast</string>
     <!-- The button text to add tabs to the active tab group in the tab creation tool. -->
-    <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_active">Legg til i aktive faner</string>
+    <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_active">Legg til i verksame faner</string>
     <!-- The button text to add tabs to the inactive tab group in the tab creation tool. -->
-    <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_inactive">Legg til i inaktive faner</string>
+    <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_inactive">Legg til i uverksame faner</string>
     <!-- The button text to add tabs to the private tab group in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_private">Legg til i private faner</string>
 </resources>
