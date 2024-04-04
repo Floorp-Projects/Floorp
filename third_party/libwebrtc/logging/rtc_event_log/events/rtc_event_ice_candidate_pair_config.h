@@ -18,6 +18,7 @@
 #include <vector>
 
 #include "absl/strings/string_view.h"
+#include "api/candidate.h"
 #include "api/rtc_event_log/rtc_event.h"
 #include "api/units/timestamp.h"
 #include "logging/rtc_event_log/events/rtc_event_field_encoding_parser.h"
@@ -30,14 +31,6 @@ enum class IceCandidatePairConfigType {
   kDestroyed,
   kSelected,
   kNumValues,
-};
-
-// TODO(tommi): Move this definition to candidate.h.
-enum class IceCandidateType {
-  kHost,
-  kSrflx,
-  kPrflx,
-  kRelay,
 };
 
 enum class IceCandidatePairProtocol {

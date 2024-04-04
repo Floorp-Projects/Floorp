@@ -24,6 +24,10 @@
 #include "rtc_base/socket_address.h"
 #include "rtc_base/system/rtc_export.h"
 
+namespace webrtc {
+enum class IceCandidateType : int { kHost, kSrflx, kPrflx, kRelay };
+}  // namespace webrtc
+
 namespace cricket {
 
 // TODO(tommi): These are temporarily here, moved from `port.h` and will
