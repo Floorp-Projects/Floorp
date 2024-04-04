@@ -75,7 +75,7 @@ static const char* PacketModeStr(const webrtc::CodecSpecificInfo& aInfo) {
 }
 
 static std::pair<H264_PROFILE, H264_LEVEL> ConvertProfileLevel(
-    const webrtc::SdpVideoFormat::Parameters& aParameters) {
+    const webrtc::CodecParameterMap& aParameters) {
   const absl::optional<webrtc::H264ProfileLevelId> profileLevel =
       webrtc::ParseSdpForH264ProfileLevelId(aParameters);
 
@@ -143,9 +143,9 @@ WebrtcMediaDataEncoder::~WebrtcMediaDataEncoder() {
   }
 }
 
-static void InitCodecSpecficInfo(
-    webrtc::CodecSpecificInfo& aInfo, const webrtc::VideoCodec* aCodecSettings,
-    const webrtc::SdpVideoFormat::Parameters& aParameters) {
+static void InitCodecSpecficInfo(webrtc::CodecSpecificInfo& aInfo,
+                                 const webrtc::VideoCodec* aCodecSettings,
+                                 const webrtc::CodecParameterMap& aParameters) {
   MOZ_ASSERT(aCodecSettings);
 
   aInfo.codecType = aCodecSettings->codecType;

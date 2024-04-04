@@ -907,7 +907,7 @@ RtpExtList WebrtcAudioConduit::FilterExtensions(LocalDirection aDirection,
 
 webrtc::SdpAudioFormat WebrtcAudioConduit::CodecConfigToLibwebrtcFormat(
     const AudioCodecConfig& aConfig) {
-  webrtc::SdpAudioFormat::Parameters parameters;
+  webrtc::CodecParameterMap parameters;
   if (aConfig.mName == kOpusCodecName) {
     if (aConfig.mChannels == 2) {
       parameters[kCodecParamStereo] = kParamValueTrue;
