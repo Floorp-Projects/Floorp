@@ -6,7 +6,6 @@
 
 EXTRA_JS_MODULES += [
     "BrowserSearchTelemetry.sys.mjs",
-    "DomainToCategoriesMap.worker.mjs",
     "SearchOneOffs.sys.mjs",
     "SearchSERPTelemetry.sys.mjs",
     "SearchUIUtils.sys.mjs",

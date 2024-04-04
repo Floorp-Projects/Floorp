@@ -10,6 +10,8 @@ ChromeUtils.defineESModuleGetters(this, {
   Region: "resource://gre/modules/Region.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
   SEARCH_TELEMETRY_SHARED: "resource:///modules/SearchSERPTelemetry.sys.mjs",
+  SearchSERPDomainToCategoriesMap:
+    "resource:///modules/SearchSERPTelemetry.sys.mjs",
   SearchSERPTelemetry: "resource:///modules/SearchSERPTelemetry.sys.mjs",
   SearchSERPTelemetryUtils: "resource:///modules/SearchSERPTelemetry.sys.mjs",
   SearchTestUtils: "resource://testing-common/SearchTestUtils.sys.mjs",
@@ -495,6 +497,14 @@ function waitForAllCategorizedEvents() {
 
 function waitForDomainToCategoriesUpdate() {
   return TestUtils.topicObserved("domain-to-categories-map-update-complete");
+}
+
+function waitForDomainToCategoriesInit() {
+  return TestUtils.topicObserved("domain-to-categories-map-init");
+}
+
+function waitForDomainToCategoriesUninit() {
+  return TestUtils.topicObserved("domain-to-categories-map-uninit");
 }
 
 registerCleanupFunction(async () => {

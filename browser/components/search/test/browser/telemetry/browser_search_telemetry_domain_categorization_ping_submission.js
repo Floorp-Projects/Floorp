@@ -268,10 +268,10 @@ add_task(async function test_no_observers_added_if_pref_is_off() {
     Services.obs.enumerateObservers("user-interaction-inactive")
   ).length;
 
-  Services.prefs.setBoolPref(
-    "browser.search.serpEventTelemetryCategorization.enabled",
-    false
-  );
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.search.serpEventTelemetryCategorization.enabled", false]],
+  });
+  await waitForDomainToCategoriesUninit();
 
   let prefOffActiveObserverCount = Array.from(
     Services.obs.enumerateObservers("user-interaction-active")
@@ -290,4 +290,7 @@ add_task(async function test_no_observers_added_if_pref_is_off() {
     1,
     "There should be one fewer inactive observer when the pref is off."
   );
+
+  await SpecialPowers.popPrefEnv();
+  await waitForDomainToCategoriesInit();
 });

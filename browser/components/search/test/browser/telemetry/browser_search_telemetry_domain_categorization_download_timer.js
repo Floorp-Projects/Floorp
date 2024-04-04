@@ -76,17 +76,28 @@ const db = client.db;
 
 // Shorten the timer so that tests don't have to wait too long.
 const TIMEOUT_IN_MS = 250;
+let didPushPrefEnv = false;
 add_setup(async function () {
   SearchSERPTelemetry.overrideSearchTelemetryForTests(TEST_PROVIDER_INFO);
   await waitForIdle();
 
   await db.clear();
 
-  // Set the state of the pref to false so that tests toggle the preference,
-  // triggering the map to be updated.
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.search.serpEventTelemetryCategorization.enabled", false]],
-  });
+  // If the pref is by default on, disable it as the following tests toggle
+  // the preference to check what happens when the preference is off and the
+  // preference is turned on.
+  if (
+    Services.prefs.getBoolPref(
+      "browser.search.serpEventTelemetryCategorization.enabled"
+    )
+  ) {
+    didPushPrefEnv = true;
+    let promise = waitForDomainToCategoriesUninit();
+    await SpecialPowers.pushPrefEnv({
+      set: [["browser.search.serpEventTelemetryCategorization.enabled", false]],
+    });
+    await promise;
+  }
 
   let defaultDownloadSettings = {
     ...TELEMETRY_CATEGORIZATION_DOWNLOAD_SETTINGS,
@@ -104,6 +115,12 @@ add_setup(async function () {
   TELEMETRY_CATEGORIZATION_DOWNLOAD_SETTINGS.maxAdjust = 0;
 
   registerCleanupFunction(async () => {
+    // Manually pop the preference so that we wait for the map to be ready
+    // for the next test.
+    if (didPushPrefEnv) {
+      await SpecialPowers.popPrefEnv();
+      await waitForDomainToCategoriesInit();
+    }
     SearchSERPTelemetry.overrideSearchTelemetryForTests();
     resetTelemetry();
     TELEMETRY_CATEGORIZATION_DOWNLOAD_SETTINGS = {
@@ -167,6 +184,7 @@ add_task(async function test_download_after_failure() {
 
   // Clean up.
   await SpecialPowers.popPrefEnv();
+  await waitForDomainToCategoriesUninit();
   await resetCategorizationCollection(record);
 });
 
@@ -215,6 +233,7 @@ add_task(async function test_download_after_multiple_failures() {
 
   // Clean up.
   await SpecialPowers.popPrefEnv();
+  await waitForDomainToCategoriesUninit();
   await resetCategorizationCollection(record);
 });
 
@@ -246,6 +265,7 @@ add_task(async function test_cancel_download_timer() {
   });
   await SpecialPowers.popPrefEnv();
   await observeCancel;
+  await waitForDomainToCategoriesUninit();
 
   // To ensure we don't attempt another download, wait a bit over how long the
   // the download error should take.
@@ -264,7 +284,6 @@ add_task(async function test_cancel_download_timer() {
   Assert.ok(SearchSERPDomainToCategoriesMap.empty, "Map is empty");
 
   // Clean up.
-  await SpecialPowers.popPrefEnv();
   await resetCategorizationCollection(record);
 });
 
@@ -311,6 +330,7 @@ add_task(async function test_download_adjust() {
 
   // Clean up.
   await SpecialPowers.popPrefEnv();
+  await waitForDomainToCategoriesUninit();
   await resetCategorizationCollection(record);
   TELEMETRY_CATEGORIZATION_DOWNLOAD_SETTINGS.base = TIMEOUT_IN_MS;
   TELEMETRY_CATEGORIZATION_DOWNLOAD_SETTINGS.minAdjust = 0;
