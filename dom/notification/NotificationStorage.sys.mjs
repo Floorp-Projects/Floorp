@@ -145,13 +145,20 @@ export class NotificationStorage {
     }
   }
 
+  #getUniqueRequestID() {
+    // This assumes the count will never go above MAX_SAFE_INTEGER, as
+    // notifications are not supposed to happen that frequently.
+    this.#requestCount += 1;
+    return this.#requestCount;
+  }
+
   #fetchFromDB(origin, tag, callback) {
     var request = {
       origin,
       tag,
       callback,
     };
-    var requestID = this.#requestCount++;
+    var requestID = this.#getUniqueRequestID();
     this.#requests[requestID] = request;
     Services.cpmm.sendAsyncMessage("Notification:GetAll", {
       origin,
