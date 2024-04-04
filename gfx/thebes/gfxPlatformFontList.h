@@ -124,7 +124,7 @@ class ShmemCharMapHashEntry final : public PLDHashEntryHdr {
     return aCharMap->GetChecksum();
   }
 
-  enum { ALLOW_MEMMOVE = true };
+  enum { ALLOW_MEMMOVE = false };  // because of the Pointer member
 
  private:
   // charMaps are stored in the shared memory that FontList objects point to,
