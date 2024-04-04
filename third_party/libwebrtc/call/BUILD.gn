@@ -121,6 +121,7 @@ rtc_library("rtp_interfaces") {
     "../api/crypto:options",
     "../api/environment",
     "../api/rtc_event_log",
+    "../api/transport:bandwidth_estimation_settings",
     "../api/transport:bitrate_settings",
     "../api/transport:network_control",
     "../api/units:time_delta",
