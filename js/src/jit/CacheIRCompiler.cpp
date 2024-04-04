@@ -1364,6 +1364,8 @@ bool jit::TraceWeakCacheIRStub(JSTracer* trc, T* stub,
                                const CacheIRStubInfo* stubInfo) {
   using Type = StubField::Type;
 
+  bool isDead = false;
+
   uint32_t field = 0;
   size_t offset = 0;
   while (true) {
@@ -1374,7 +1376,7 @@ bool jit::TraceWeakCacheIRStub(JSTracer* trc, T* stub,
             stubInfo->getStubField<T, Type::WeakShape>(stub, offset);
         auto r = TraceWeakEdge(trc, &shapeField, "cacheir-weak-shape");
         if (r.isDead()) {
-          return false;
+          isDead = true;
         }
         break;
       }
@@ -1383,7 +1385,7 @@ bool jit::TraceWeakCacheIRStub(JSTracer* trc, T* stub,
             stubInfo->getStubField<T, Type::WeakObject>(stub, offset);
         auto r = TraceWeakEdge(trc, &objectField, "cacheir-weak-object");
         if (r.isDead()) {
-          return false;
+          isDead = true;
         }
         break;
       }
@@ -1392,7 +1394,7 @@ bool jit::TraceWeakCacheIRStub(JSTracer* trc, T* stub,
             stubInfo->getStubField<T, Type::WeakBaseScript>(stub, offset);
         auto r = TraceWeakEdge(trc, &scriptField, "cacheir-weak-script");
         if (r.isDead()) {
-          return false;
+          isDead = true;
         }
         break;
       }
@@ -1402,12 +1404,13 @@ bool jit::TraceWeakCacheIRStub(JSTracer* trc, T* stub,
         auto r = TraceWeakEdge(trc, &getterSetterField,
                                "cacheir-weak-getter-setter");
         if (r.isDead()) {
-          return false;
+          isDead = true;
         }
         break;
       }
       case Type::Limit:
-        return true;  // Done.
+        // Done.
+        return !isDead;
       case Type::RawInt32:
       case Type::RawPointer:
       case Type::Shape:
