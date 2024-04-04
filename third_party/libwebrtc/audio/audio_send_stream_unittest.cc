@@ -959,5 +959,31 @@ TEST(AudioSendStreamTest, OverridesPriorityBitrate) {
   send_stream->Stop();
 }
 
+TEST(AudioSendStreamTest, UseEncoderBitrateRange) {
+  ConfigHelper helper(true, true, true);
+  std::pair<DataRate, DataRate> bitrate_range{DataRate::BitsPerSec(5000),
+                                              DataRate::BitsPerSec(10000)};
+  EXPECT_CALL(helper.mock_encoder_factory(), MakeAudioEncoderMock(_, _, _, _))
+      .WillOnce(Invoke([&](int payload_type, const SdpAudioFormat& format,
+                           absl::optional<AudioCodecPairId> codec_pair_id,
+                           std::unique_ptr<AudioEncoder>* return_value) {
+        auto mock_encoder = SetupAudioEncoderMock(payload_type, format);
+        EXPECT_CALL(*mock_encoder, GetBitrateRange())
+            .WillRepeatedly(Return(bitrate_range));
+        *return_value = std::move(mock_encoder);
+      }));
+  auto send_stream = helper.CreateAudioSendStream();
+  EXPECT_CALL(*helper.bitrate_allocator(), AddObserver(send_stream.get(), _))
+      .WillOnce(Invoke(
+          [&](BitrateAllocatorObserver*, MediaStreamAllocationConfig config) {
+            EXPECT_EQ(config.min_bitrate_bps, bitrate_range.first.bps());
+            EXPECT_EQ(config.max_bitrate_bps, bitrate_range.second.bps());
+          }));
+  EXPECT_CALL(*helper.channel_send(), StartSend());
+  send_stream->Start();
+  EXPECT_CALL(*helper.channel_send(), StopSend());
+  send_stream->Stop();
+}
+
 }  // namespace test
 }  // namespace webrtc

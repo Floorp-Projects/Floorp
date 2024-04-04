@@ -333,6 +333,7 @@ void AudioSendStream::ConfigureStream(
       return;
     }
     frame_length_range_ = encoder->GetFrameLengthRange();
+    bitrate_range_ = encoder->GetBitrateRange();
   });
 
   if (sending_) {
@@ -848,6 +849,12 @@ AudioSendStream::GetMinMaxBitrateConstraints() const {
     constraints.min = *allocation_settings_.min_bitrate;
   if (allocation_settings_.max_bitrate)
     constraints.max = *allocation_settings_.max_bitrate;
+
+  // Use encoder defined bitrate range if available.
+  if (bitrate_range_) {
+    constraints.min = bitrate_range_->first;
+    constraints.max = bitrate_range_->second;
+  }
 
   RTC_DCHECK_GE(constraints.min, DataRate::Zero());
   RTC_DCHECK_GE(constraints.max, DataRate::Zero());
