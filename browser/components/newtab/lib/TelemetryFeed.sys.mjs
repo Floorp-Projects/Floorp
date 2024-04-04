@@ -714,8 +714,8 @@ export class TelemetryFeed {
     });
     const session = this.sessions.get(au.getPortIdOfSender(action));
     switch (action.data?.event) {
-      case "CLICK":
-        const { card_type, topic, recommendation_id, tile_id, shim } =
+      case "CLICK": {
+        const { card_type, topic, recommendation_id, tile_id, shim, feature } =
           action.data.value ?? {};
         if (
           action.data.source === "POPULAR_TOPICS" ||
@@ -724,6 +724,11 @@ export class TelemetryFeed {
           Glean.pocket.topicClick.record({
             newtab_visit_id: session.session_id,
             topic,
+          });
+        } else if (action.data.source === "FEATURE_HIGHLIGHT") {
+          Glean.newtab.tooltipClick.record({
+            newtab_visit_id: session.session_id,
+            feature,
           });
         } else if (["spoc", "organic"].includes(card_type)) {
           Glean.pocket.click.record({
@@ -739,6 +744,7 @@ export class TelemetryFeed {
           }
         }
         break;
+      }
       case "SAVE_TO_POCKET":
         Glean.pocket.save.record({
           newtab_visit_id: session.session_id,

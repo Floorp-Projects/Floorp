@@ -2269,7 +2269,7 @@ function FeatureHighlight({
   position = "top-left",
   title,
   ariaLabel,
-  source = "FEATURE_HIGHLIGHT_DEFAULT",
+  feature = "FEATURE_HIGHLIGHT_DEFAULT",
   dispatch = () => {},
   windowObj = __webpack_require__.g
 }) {
@@ -2287,12 +2287,17 @@ function FeatureHighlight({
     };
   }, [windowObj]);
   const onToggleClick = (0,external_React_namespaceObject.useCallback)(() => {
+    if (!opened) {
+      dispatch(actionCreators.DiscoveryStreamUserEvent({
+        event: "CLICK",
+        source: "FEATURE_HIGHLIGHT",
+        value: {
+          feature
+        }
+      }));
+    }
     setOpened(!opened);
-    dispatch(actionCreators.DiscoveryStreamUserEvent({
-      event: "CLICK",
-      source
-    }));
-  }, [dispatch, source, opened]);
+  }, [dispatch, feature, opened]);
   const openedClassname = opened ? `opened` : `closed`;
   return /*#__PURE__*/external_React_default().createElement("div", {
     ref: ref,
@@ -2332,7 +2337,7 @@ function SponsoredContentHighlight({
     position: position,
     ariaLabel: "Sponsored content supports our mission to build a better web.",
     title: "Sponsored content more info",
-    source: "FEATURE_HIGHLIGHT_SPONSORED_CONTENT",
+    feature: "SPONSORED_CONTENT_INFO",
     dispatch: dispatch,
     message: /*#__PURE__*/external_React_default().createElement("span", null, "Sponsored content supports our mission to build a better web.", " ", /*#__PURE__*/external_React_default().createElement(SafeAnchor, {
       dispatch: dispatch,
