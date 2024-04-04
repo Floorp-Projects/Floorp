@@ -16,7 +16,6 @@
 #include <vector>
 
 #include "absl/types/optional.h"
-#include "api/crypto_params.h"
 #include "api/dtls_transport_interface.h"
 #include "api/rtc_error.h"
 #include "p2p/base/dtls_transport_internal.h"

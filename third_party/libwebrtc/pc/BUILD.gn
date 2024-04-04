@@ -218,7 +218,6 @@ rtc_source_set("jsep_transport") {
     ":rtp_transport_internal",
     ":sctp_transport",
     ":session_description",
-    ":srtp_filter",
     ":srtp_transport",
     ":transport_stats",
     "../api:array_view",
@@ -573,29 +572,6 @@ rtc_source_set("sctp_utils") {
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
-rtc_source_set("srtp_filter") {
-  visibility = [ ":*" ]
-  sources = [
-    "srtp_filter.cc",
-    "srtp_filter.h",
-  ]
-  deps = [
-    ":session_description",
-    "../api:array_view",
-    "../api:libjingle_peerconnection_api",
-    "../api:sequence_checker",
-    "../rtc_base:buffer",
-    "../rtc_base:logging",
-    "../rtc_base:ssl",
-    "../rtc_base:zero_memory",
-    "../rtc_base/third_party/base64",
-  ]
-  absl_deps = [
-    "//third_party/abseil-cpp/absl/strings",
-    "//third_party/abseil-cpp/absl/types:optional",
-  ]
-}
-
 rtc_source_set("srtp_session") {
   visibility = [ ":*" ]
   sources = [
@@ -2048,7 +2024,6 @@ if (rtc_include_tests && !build_with_chromium) {
       "rtp_transport_unittest.cc",
       "sctp_transport_unittest.cc",
       "session_description_unittest.cc",
-      "srtp_filter_unittest.cc",
       "srtp_session_unittest.cc",
       "srtp_transport_unittest.cc",
       "test/rtp_transport_test_util.h",
@@ -2083,7 +2058,6 @@ if (rtc_include_tests && !build_with_chromium) {
       ":rtp_transport_internal",
       ":sctp_transport",
       ":session_description",
-      ":srtp_filter",
       ":srtp_session",
       ":srtp_transport",
       ":used_ids",
