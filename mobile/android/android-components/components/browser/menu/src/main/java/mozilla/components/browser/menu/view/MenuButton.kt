@@ -103,6 +103,8 @@ class MenuButton @JvmOverloads constructor(
             if (value == null) menu = null
         }
 
+    var recordClickEvent: () -> Unit = {}
+
     @VisibleForTesting internal var menu: BrowserMenu? = null
 
     private val menuIcon: ImageView
@@ -130,6 +132,7 @@ class MenuButton @JvmOverloads constructor(
      */
     override fun onClick(v: View) {
         this.hideKeyboard()
+        recordClickEvent()
 
         // If a legacy menu is open, dismiss it.
         if (menu != null) {

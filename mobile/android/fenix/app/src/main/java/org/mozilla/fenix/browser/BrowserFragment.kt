@@ -34,6 +34,7 @@ import mozilla.components.feature.tabs.WindowFeature
 import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
+import org.mozilla.fenix.GleanMetrics.AddressToolbar
 import org.mozilla.fenix.GleanMetrics.ReaderMode
 import org.mozilla.fenix.GleanMetrics.Shopping
 import org.mozilla.fenix.HomeActivity
@@ -263,7 +264,10 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                 contentDescription = getString(R.string.browser_menu_share),
                 weight = { SHARE_WEIGHT },
                 iconTintColorResource = ThemeManager.resolveAttribute(R.attr.textPrimary, context),
-                listener = { browserToolbarInteractor.onShareActionClicked() },
+                listener = {
+                    AddressToolbar.shareTapped.record((NoExtras()))
+                    browserToolbarInteractor.onShareActionClicked()
+                },
             )
 
         browserToolbarView.view.addPageAction(sharePageAction)
@@ -355,8 +359,10 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                 },
                 listener = {
                     if (getCurrentTab()?.content?.loading == true) {
+                        AddressToolbar.cancelTapped.record((NoExtras()))
                         browserToolbarInteractor.onBrowserToolbarMenuItemTapped(ToolbarMenu.Item.Stop)
                     } else {
+                        AddressToolbar.reloadTapped.record((NoExtras()))
                         browserToolbarInteractor.onBrowserToolbarMenuItemTapped(
                             ToolbarMenu.Item.Reload(bypassCache = false),
                         )
