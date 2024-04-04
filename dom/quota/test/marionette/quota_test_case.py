@@ -69,7 +69,7 @@ class QuotaTestCase(MarionetteTestCase):
         return None
 
     def getFullOriginMetadata(self, persistenceType, origin):
-        with self.marionette.using_context("chrome"):
+        with self.marionette.using_context(self.marionette.CONTEXT_CHROME):
             res = self.executeAsyncScript(
                 """
                 const [persistenceType, origin] = arguments;
@@ -98,8 +98,63 @@ class QuotaTestCase(MarionetteTestCase):
         sanitizedStorageOrigin = storageOrigin.replace(":", "+").replace("/", "+")
 
         return os.path.join(
-            profilePath, "storage", persistenceType, sanitizedStorageOrigin, client
+            self.getRepositoryPath(persistenceType), sanitizedStorageOrigin, client
         )
+
+    def getRepositoryPath(self, persistenceType):
+        profilePath = self.marionette.instance.profile.profile
+        assert profilePath is not None
+
+        return os.path.join(profilePath, "storage", persistenceType)
+
+    def initStorage(self):
+        with self.marionette.using_context(self.marionette.CONTEXT_CHROME):
+            return self.executeAsyncScript(
+                """
+                async function main() {
+                    let req = Services.qms.init();
+                    await requestFinished(req);
+
+                    return true;
+                }
+                """,
+                script_args=(),
+            )
+
+    def initTemporaryOrigin(self, persistenceType, origin):
+        with self.marionette.using_context(self.marionette.CONTEXT_CHROME):
+            return self.executeAsyncScript(
+                """
+                const [persistenceType, origin] = arguments;
+                async function main() {
+                    const principal = Services.scriptSecurityManager.
+                                        createContentPrincipalFromOrigin(origin);
+
+                    let req = Services.qms.initializeTemporaryOrigin(persistenceType, principal);
+                    await requestFinished(req)
+
+                    return true;
+                }
+                """,
+                script_args=(
+                    persistenceType,
+                    origin,
+                ),
+            )
+
+    def initTemporaryStorage(self):
+        with self.marionette.using_context(self.marionette.CONTEXT_CHROME):
+            return self.executeAsyncScript(
+                """
+                async function main() {
+                    const req = Services.qms.initTemporaryStorage();
+                    await requestFinished(req);
+
+                    return true;
+                }
+                """,
+                script_args=(),
+            )
 
     def resetStoragesForPrincipal(self, origin, persistenceType, client):
         # This method is used to force sqlite to write journal file contents to
@@ -127,7 +182,7 @@ class QuotaTestCase(MarionetteTestCase):
             return res
 
     @contextmanager
-    def using_new_window(self, path, private=False):
+    def using_new_window(self, path, private=False, skipCleanup=False):
         """
         This helper method is created to ensure that a temporary
         window required inside the test scope is lifetime'd properly
@@ -145,5 +200,6 @@ class QuotaTestCase(MarionetteTestCase):
             yield (origin, "private" if private else "default")
 
         finally:
-            self.marionette.close()
-            self.marionette.switch_to_window(oldWindow)
+            if not skipCleanup:
+                self.marionette.close()
+                self.marionette.switch_to_window(oldWindow)
