@@ -71,6 +71,10 @@ log "Change the directory to the cloned repo"
 log ${tmpclonedir}
 cd ${tmpclonedir}
 
+log "Patching line segmenter data to fix https://github.com/unicode-org/icu4x/pull/4389"
+# This manually patch can be removed once we upgrade to ICU4X 1.5
+wget --unlink -q -O ${tmpclonedir}/provider/datagen/data/segmenter/line.toml https://raw.githubusercontent.com/unicode-org/icu4x/e080ecd12e38d6aecc99cd0cfe8c21595c4ce6ff/provider/datagen/data/segmenter/line.toml
+
 log "Copy icu_capi crate to local since we need a patched version"
 rm -rf ${top_src_dir}/intl/icu_capi
 wget -O icu_capi.tar.gz https://crates.io/api/v1/crates/icu_capi/${icu4x_version}/download
