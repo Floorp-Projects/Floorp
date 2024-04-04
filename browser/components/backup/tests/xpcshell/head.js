@@ -63,13 +63,17 @@ async function createKilobyteSizedFile(path, sizeInKB) {
 }
 
 /**
- * Remove a file or directory at a path if it exists and files are unlocked.
+ * Remove a file if it exists and is unlocked.
  *
- * @param {string} path path to remove.
+ * @param {string} path path to the file to remove.
  */
-async function maybeRemovePath(path) {
+async function maybeRemoveFile(path) {
+  if (await IOUtils.exists(path)) {
+    return;
+  }
+
   try {
-    await IOUtils.remove(path, { ignoreAbsent: true, recursive: true });
+    await IOUtils.remove(path);
   } catch (error) {
     // Sometimes remove() throws when the file is not unlocked soon
     // enough.
