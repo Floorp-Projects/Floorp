@@ -153,7 +153,7 @@ with Files("tests/clear-site-data/**"):
     BUG_COMPONENT = ("Core", "DOM: Security")
 
 with Files("tests/clipboard-apis/**"):
-    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+    BUG_COMPONENT = ("Core", "DOM: Copy & Paste and Drag & Drop")
 
 with Files("tests/common/**"):
     BUG_COMPONENT = ("Testing", "web-platform-tests")
