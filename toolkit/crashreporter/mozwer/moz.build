@@ -10,6 +10,13 @@ OS_LIBS += [
     "advapi32",
     "bcrypt",
 ]
+# Version string comparison is generally wrong, but by the time it would
+# actually matter, either bug 1489995 would be fixed, or the build would
+# require version >= 1.78.
+if CONFIG["RUSTC_VERSION"] and CONFIG["RUSTC_VERSION"] >= "1.78.0":
+    OS_LIBS += [
+        "synchronization",
+    ]
 
 DEFFILE = "mozwer.def"
 USE_STATIC_LIBS = True
