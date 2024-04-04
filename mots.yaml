@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2024-04-04T15:12:38.005844'
+updated_at: '2024-04-04T19:44:57.780772'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -845,7 +845,7 @@ people:
     nick: ryan.sleevi
   - &saschanaz
     bmo_id: 473060
-    name: Kagami
+    name: Kagami Rosylight
     nick: saschanaz
   - &Sasha
     bmo_id: 704132
@@ -2252,6 +2252,28 @@ modules:
       - *Mardak
       - *mossop
     machine_name: core_nodejs_usage_tools_and_style
+
+  - name: 'Core: Notifications'
+    description: The infrastructure for Web Notifications API and the Firefox Desktop
+      notifications.
+    includes:
+      - dom/notification/**/*
+      - toolkit/components/alerts/**/*
+      - toolkit/system/gnome/nsAlertsIconListener*
+      - toolkit/system/gnome/nsSystemAlertsService*
+      - widget/windows/ToastNotification*
+      - widget/cocoa/OSXNotificationCenter*
+    meta:
+      group: dev-platform
+      components:
+        - 'Core::DOM: Notifications'
+        - Toolkit::Alerts Service
+    owners:
+      - *saschanaz
+    peers:
+      - *nalexander
+      - *nrishel
+    machine_name: core_notifications
 
   - name: 'Core: NSPR'
     description: Netscape Portable Runtime
@@ -4216,5 +4238,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: c9645255ff00ef25e720b97598b197ef4bad5104
-  export: 9fbb92d32d9584feca3512b44f329d6ade33ea7f
+  config: 1650f8aa7595ca3b30f71f18cad0b42b9e957137
+  export: 760771e343bdf7a45922c80e4643fe0f71fd3be6
