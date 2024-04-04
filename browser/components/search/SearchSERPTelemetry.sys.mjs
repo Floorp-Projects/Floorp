@@ -7,12 +7,12 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  BasePromiseWorker: "resource://gre/modules/PromiseWorker.sys.mjs",
   BrowserSearchTelemetry: "resource:///modules/BrowserSearchTelemetry.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
   SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
+  Sqlite: "resource://gre/modules/Sqlite.sys.mjs",
 });
 
 ChromeUtils.defineLazyGetter(lazy, "gCryptoHash", () => {
@@ -52,6 +52,9 @@ export const SEARCH_TELEMETRY_SHARED = {
 const impressionIdsWithoutEngagementsSet = new Set();
 
 export const CATEGORIZATION_SETTINGS = {
+  STORE_SCHEMA: 1,
+  STORE_FILE: "domain_to_categories.sqlite",
+  STORE_NAME: "domain_to_categories",
   MAX_DOMAINS_TO_CATEGORIZE: 10,
   MINIMUM_SCORE: 0,
   STARTING_RANK: 2,
@@ -86,7 +89,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
     if (newValue) {
       SearchSERPCategorization.init();
     } else {
-      SearchSERPCategorization.uninit();
+      SearchSERPCategorization.uninit({ deleteMap: true });
     }
   }
 );
@@ -1853,18 +1856,18 @@ class ContentHandler {
  * Categorizes SERPs.
  */
 class SERPCategorizer {
-  init() {
+  async init() {
     if (lazy.serpEventTelemetryCategorization) {
       lazy.logConsole.debug("Initialize SERP categorizer.");
-      SearchSERPDomainToCategoriesMap.init();
+      await SearchSERPDomainToCategoriesMap.init();
       SearchSERPCategorizationEventScheduler.init();
       SERPCategorizationRecorder.init();
     }
   }
 
-  uninit() {
+  async uninit({ deleteMap = false } = {}) {
     lazy.logConsole.debug("Uninit SERP categorizer.");
-    SearchSERPDomainToCategoriesMap.uninit();
+    await SearchSERPDomainToCategoriesMap.uninit(deleteMap);
     SearchSERPCategorizationEventScheduler.uninit();
     SERPCategorizationRecorder.uninit();
   }
@@ -2249,10 +2252,8 @@ class CategorizationRecorder {
  */
 
 /**
- * Maps domain to categories, with its data synced using Remote Settings. The
- * data is downloaded from Remote Settings and stored in a map in a worker
- * thread to avoid processing the data from the attachments from occupying
- * the main thread.
+ * Maps domain to categories. Data is downloaded from Remote Settings and
+ * stored inside DomainToCategoriesStore.
  */
 class DomainToCategoriesMap {
   /**
@@ -2300,40 +2301,63 @@ class DomainToCategoriesMap {
   #downloadRetries = 0;
 
   /**
-   * Whether the mappings are empty.
+   * A reference to the data store.
+   *
+   * @type {DomainToCategoriesStore | null}
    */
-  #empty = true;
-
-  /**
-   * @type {BasePromiseWorker|null} Worker used to access the raw domain
-   * to categories map data.
-   */
-  #worker = null;
+  #store = null;
 
   /**
    * Runs at application startup with startup idle tasks. If the SERP
    * categorization preference is enabled, it creates a Remote Settings
-   * client to listen to updates, and populates the map.
+   * client to listen to updates, and populates the store.
    */
   async init() {
     if (this.#init) {
       return;
     }
     lazy.logConsole.debug("Initializing domain-to-categories map.");
-    this.#worker = new lazy.BasePromiseWorker(
-      "resource:///modules/DomainToCategoriesMap.worker.mjs",
-      { type: "module" }
-    );
-    await this.#setupClientAndMap();
+
+    // Set early to allow un-init from an initialization.
     this.#init = true;
+
+    try {
+      await this.#setupClientAndStore();
+    } catch (ex) {
+      lazy.logConsole.error(ex);
+      await this.uninit();
+      return;
+    }
+
+    // If we don't have a client and store, it likely means an un-init process
+    // started during the initialization process.
+    if (this.#client && this.#store) {
+      lazy.logConsole.debug("Initialized domain-to-categories map.");
+      Services.obs.notifyObservers(null, "domain-to-categories-map-init");
+    }
   }
 
-  uninit() {
+  async uninit(shouldDeleteStore) {
     if (this.#init) {
       lazy.logConsole.debug("Un-initializing domain-to-categories map.");
-      this.#clearClientAndWorker();
+      this.#clearClient();
       this.#cancelAndNullifyTimer();
+
+      if (this.#store) {
+        if (shouldDeleteStore) {
+          try {
+            await this.#store.dropData();
+          } catch (ex) {
+            lazy.logConsole.error(ex);
+          }
+        }
+        await this.#store.uninit();
+        this.#store = null;
+      }
+
+      lazy.logConsole.debug("Un-initialized domain-to-categories map.");
       this.#init = false;
+      Services.obs.notifyObservers(null, "domain-to-categories-map-uninit");
     }
   }
 
@@ -2346,14 +2370,14 @@ class DomainToCategoriesMap {
    *  for the domain is available, return an empty array.
    */
   async get(domain) {
-    if (this.empty) {
+    if (!this.#store || this.#store.empty || !this.#store.ready) {
       return [];
     }
     lazy.gCryptoHash.init(lazy.gCryptoHash.SHA256);
     let bytes = new TextEncoder().encode(domain);
     lazy.gCryptoHash.update(bytes, domain.length);
     let hash = lazy.gCryptoHash.finish(true);
-    let rawValues = await this.#worker.post("getScores", [hash]);
+    let rawValues = await this.#store.getCategories(hash);
     if (rawValues?.length) {
       let output = [];
       // Transform data into a more readable format.
@@ -2380,12 +2404,15 @@ class DomainToCategoriesMap {
   }
 
   /**
-   * Whether the map is empty of data.
+   * Whether the store is empty of data.
    *
    * @returns {boolean}
    */
   get empty() {
-    return this.#empty;
+    if (!this.#store) {
+      return true;
+    }
+    return this.#store.empty;
   }
 
   /**
@@ -2395,15 +2422,26 @@ class DomainToCategoriesMap {
    * @param {object} domainToCategoriesMap
    *   An object where the key is a hashed domain and the value is an array
    *   containing an arbitrary number of DomainCategoryScores.
+   * @param {number} version
+   *   The version number for the store.
    */
-  async overrideMapForTests(domainToCategoriesMap) {
-    let hasResults = await this.#worker.post("overrideMapForTests", [
-      domainToCategoriesMap,
-    ]);
-    this.#empty = !hasResults;
+  async overrideMapForTests(domainToCategoriesMap, version = 1) {
+    if (Cu.isInAutomation || Services.env.exists("XPCSHELL_TEST_PROFILE_DIR")) {
+      await this.#store.init();
+      await this.#store.dropData();
+      await this.#store.insertObject(domainToCategoriesMap, version);
+    }
   }
 
-  async #setupClientAndMap() {
+  /**
+   * Connect with Remote Settings and retrieve the records associated with
+   * categorization. Then, check if the records match the store version. If
+   * no records exist, return early. If records exist but the version stored
+   * on the records differ from the store version, then attempt to
+   * empty the store and fill it with data from downloaded attachments. Only
+   * reuse the store if the version in each record matches the store.
+   */
+  async #setupClientAndStore() {
     if (this.#client && !this.empty) {
       return;
     }
@@ -2413,28 +2451,39 @@ class DomainToCategoriesMap {
     this.#onSettingsSync = event => this.#sync(event.data);
     this.#client.on("sync", this.#onSettingsSync);
 
+    this.#store = new DomainToCategoriesStore();
+    await this.#store.init();
+
     let records = await this.#client.get();
-    await this.#clearAndPopulateMap(records);
+    // Even though records don't exist, this is still technically initialized
+    // since the next sync from Remote Settings will populate the store with
+    // records.
+    if (!records.length) {
+      lazy.logConsole.debug("No records found for domain-to-categories map.");
+      return;
+    }
+
+    this.#version = this.#retrieveLatestVersion(records);
+    let storeVersion = await this.#store.getVersion();
+    if (storeVersion == this.#version && !this.#store.empty) {
+      lazy.logConsole.debug("Reuse existing domain-to-categories map.");
+      Services.obs.notifyObservers(
+        null,
+        "domain-to-categories-map-update-complete"
+      );
+      return;
+    }
+
+    await this.#clearAndPopulateStore(records);
   }
 
-  #clearClientAndWorker() {
+  #clearClient() {
     if (this.#client) {
       lazy.logConsole.debug("Removing Remote Settings client.");
       this.#client.off("sync", this.#onSettingsSync);
       this.#client = null;
       this.#onSettingsSync = null;
       this.#downloadRetries = 0;
-    }
-
-    if (!this.#empty) {
-      lazy.logConsole.debug("Clearing domain-to-categories map.");
-      this.#empty = true;
-      this.#version = null;
-    }
-
-    if (this.#worker) {
-      this.#worker.terminate();
-      this.#worker = null;
     }
   }
 
@@ -2482,27 +2531,50 @@ class DomainToCategoriesMap {
     // again in case there's a new download error.
     this.#downloadRetries = 0;
 
-    this.#clearAndPopulateMap(data?.current);
+    try {
+      await this.#clearAndPopulateStore(data?.current);
+    } catch (ex) {
+      lazy.logConsole.error("Error populating map: ", ex);
+      await this.uninit();
+    }
   }
 
   /**
-   * Clear the existing map and populate it with attachments found in the
+   * Clear the existing store and populate it with attachments found in the
    * records. If no attachments are found, or no record containing an
    * attachment contained the latest version, then nothing will change.
    *
    * @param {Array<DomainToCategoriesRecord>} records
    *  The records containing attachments.
-   *
+   * @throws {Error}
+   *  Will throw if it was not able to drop the store data, or it was unable
+   *  to insert data into the store.
    */
-  async #clearAndPopulateMap(records) {
-    // Empty map so that if there are errors in the download process, callers
-    // querying the map won't use information we know is already outdated.
-    await this.#worker.post("emptyMap");
+  async #clearAndPopulateStore(records) {
+    // If we don't have a handle to a store, it would mean that it was removed
+    // during an uninitialization process.
+    if (!this.#store) {
+      lazy.logConsole.debug(
+        "Could not populate store because no store was available."
+      );
+      return;
+    }
 
-    this.#empty = true;
+    if (!this.#store.ready) {
+      lazy.logConsole.debug(
+        "Could not populate store because it was not ready."
+      );
+      return;
+    }
+
+    // Empty table so that if there are errors in the download process, callers
+    // querying the map won't use information we know is probably outdated.
+    await this.#store.dropData();
+
     this.#version = null;
     this.#cancelAndNullifyTimer();
 
+    // A collection with no records is still a valid init state.
     if (!records?.length) {
       lazy.logConsole.debug("No records found for domain-to-categories map.");
       return;
@@ -2523,41 +2595,24 @@ class DomainToCategoriesMap {
       fileContents.push(result.buffer);
     }
     ChromeUtils.addProfilerMarker(
-      "SearchSERPTelemetry.#clearAndPopulateMap",
+      "SearchSERPTelemetry.#clearAndPopulateStore",
       start,
       "Download attachments."
     );
 
-    // Attachments should have a version number.
     this.#version = this.#retrieveLatestVersion(records);
-
     if (!this.#version) {
       lazy.logConsole.debug("Could not find a version number for any record.");
       return;
     }
 
-    Services.tm.idleDispatchToMainThread(async () => {
-      start = Cu.now();
-      let hasResults;
-      try {
-        hasResults = await this.#worker.post("populateMap", [fileContents]);
-      } catch (ex) {
-        console.error(ex);
-      }
+    await this.#store.insertFileContents(fileContents, this.#version);
 
-      this.#empty = !hasResults;
-
-      ChromeUtils.addProfilerMarker(
-        "SearchSERPTelemetry.#clearAndPopulateMap",
-        start,
-        "Convert contents to JSON."
-      );
-      lazy.logConsole.debug("Updated domain-to-categories map.");
-      Services.obs.notifyObservers(
-        null,
-        "domain-to-categories-map-update-complete"
-      );
-    });
+    lazy.logConsole.debug("Finished updating domain-to-categories store.");
+    Services.obs.notifyObservers(
+      null,
+      "domain-to-categories-map-update-complete"
+    );
   }
 
   #cancelAndNullifyTimer() {
@@ -2571,7 +2626,8 @@ class DomainToCategoriesMap {
   #createTimerToPopulateMap() {
     if (
       this.#downloadRetries >=
-      TELEMETRY_CATEGORIZATION_DOWNLOAD_SETTINGS.maxTriesPerSession
+        TELEMETRY_CATEGORIZATION_DOWNLOAD_SETTINGS.maxTriesPerSession ||
+      !this.#client
     ) {
       return;
     }
@@ -2591,11 +2647,524 @@ class DomainToCategoriesMap {
       async () => {
         this.#downloadRetries += 1;
         let records = await this.#client.get();
-        this.#clearAndPopulateMap(records);
+        try {
+          await this.#clearAndPopulateStore(records);
+        } catch (ex) {
+          lazy.logConsole.error("Error populating store: ", ex);
+          await this.uninit();
+        }
       },
       delay,
       Ci.nsITimer.TYPE_ONE_SHOT
     );
+  }
+}
+
+/**
+ * Handles the storage of data containing domains to categories.
+ */
+export class DomainToCategoriesStore {
+  #init = false;
+
+  /**
+   * The connection to the store.
+   *
+   * @type {object | null}
+   */
+  #connection = null;
+
+  /**
+   * Reference for the shutdown blocker in case we need to remove it before
+   * shutdown.
+   *
+   * @type {Function | null}
+   */
+  #asyncShutdownBlocker = null;
+
+  /**
+   * Whether the store is empty of data.
+   *
+   * @type {boolean}
+   */
+  #empty = true;
+
+  /**
+   * For a particular subset of errors, we'll attempt to rebuild the database
+   * from scratch.
+   */
+  #rebuildableErrors = ["NS_ERROR_FILE_CORRUPTED"];
+
+  /**
+   * Initializes the store. If the store is initialized it should have cached
+   * a connection to the store and ensured the store exists.
+   */
+  async init() {
+    if (this.#init) {
+      return;
+    }
+    lazy.logConsole.debug("Initializing domain-to-categories store.");
+
+    // Attempts to cache a connection to the store.
+    // If a failure occured, try to re-build the store.
+    let rebuiltStore = false;
+    try {
+      await this.#initConnection();
+    } catch (ex1) {
+      lazy.logConsole.error(`Error initializing a connection: ${ex1}`);
+      if (this.#rebuildableErrors.includes(ex1.name)) {
+        try {
+          await this.#rebuildStore();
+        } catch (ex2) {
+          await this.#closeConnection();
+          lazy.logConsole.error(`Could not rebuild store: ${ex2}`);
+          return;
+        }
+        rebuiltStore = true;
+      }
+    }
+
+    // If we don't have a connection, bail because the browser could be
+    // shutting down ASAP, or re-creating the store is impossible.
+    if (!this.#connection) {
+      lazy.logConsole.debug(
+        "Bailing from DomainToCategoriesStore.init because connection doesn't exist."
+      );
+      return;
+    }
+
+    // If we weren't forced to re-build the store, we only have the connection.
+    // We want to ensure the store exists so calls to public methods can pass
+    // without throwing errors due to the absence of the store.
+    if (!rebuiltStore) {
+      try {
+        await this.#initSchema();
+      } catch (ex) {
+        lazy.logConsole.error(`Error trying to create store: ${ex}`);
+        await this.#closeConnection();
+        return;
+      }
+    }
+
+    lazy.logConsole.debug("Initialized domain-to-categories store.");
+    this.#init = true;
+  }
+
+  async uninit() {
+    if (this.#init) {
+      lazy.logConsole.debug("Un-initializing domain-to-categories store.");
+      await this.#closeConnection();
+      this.#asyncShutdownBlocker = null;
+      lazy.logConsole.debug("Un-initialized domain-to-categories store.");
+    }
+  }
+
+  /**
+   * Whether the store has an open connection to the physical store.
+   *
+   * @returns {boolean}
+   */
+  get ready() {
+    return this.#init;
+  }
+
+  /**
+   * Whether the store is devoid of data.
+   *
+   * @returns {boolean}
+   */
+  get empty() {
+    return this.#empty;
+  }
+
+  /**
+   * Clears information in the store. If dropping data encountered a failure,
+   * try to delete the file containing the store and re-create it.
+   *
+   * @throws {Error} Will throw if it was unable to clear information from the
+   * store.
+   */
+  async dropData() {
+    if (!this.#connection) {
+      return;
+    }
+    let tableExists = await this.#connection.tableExists(
+      CATEGORIZATION_SETTINGS.STORE_NAME
+    );
+    if (tableExists) {
+      lazy.logConsole.debug("Drop domain_to_categories.");
+      // This can fail if the permissions of the store are read-only.
+      await this.#connection.executeTransaction(async () => {
+        await this.#connection.execute(`DROP TABLE domain_to_categories`);
+        const createDomainToCategoriesTable = `
+            CREATE TABLE IF NOT EXISTS
+              domain_to_categories (
+                string_id
+                  TEXT PRIMARY KEY NOT NULL,
+                categories
+                  TEXT
+              );
+            `;
+        await this.#connection.execute(createDomainToCategoriesTable);
+        await this.#connection.execute(`DELETE FROM moz_meta`);
+        await this.#connection.executeCached(
+          `
+              INSERT INTO
+                moz_meta (key, value)
+              VALUES
+                (:key, :value)
+              ON CONFLICT DO UPDATE SET
+                value = :value
+            `,
+          { key: "version", value: 0 }
+        );
+      });
+
+      this.#empty = true;
+    }
+  }
+
+  /**
+   * Given file contents, try moving them into the store. If a failure occurs,
+   * it will attempt to drop existing data to ensure callers aren't accessing
+   * a partially filled store.
+   *
+   * @param {Array<ArrayBuffer>} fileContents
+   *   Contents to convert.
+   * @param {number} version
+   *   The version for the store.
+   * @throws {Error}
+   *   Will throw if the insertion failed and dropData was unable to run
+   *   successfully.
+   */
+  async insertFileContents(fileContents, version) {
+    if (!this.#init || !fileContents?.length || !version) {
+      return;
+    }
+
+    try {
+      await this.#insert(fileContents, version);
+    } catch (ex) {
+      lazy.logConsole.error(`Could not insert file contents: ${ex}`);
+      await this.dropData();
+    }
+  }
+
+  /**
+   * Convenience function to make it trivial to insert Javascript objects into
+   * the store. This avoids having to set up the collection in Remote Settings.
+   *
+   * @param {object} domainToCategoriesMap
+   *   An object whose keys should be hashed domains with values containing
+   *   an array of integers.
+   * @param {number} version
+   *   The version for the store.
+   * @returns {boolean}
+   *   Whether the operation was successful.
+   */
+  async insertObject(domainToCategoriesMap, version) {
+    if (!Cu.isInAutomation || !this.#init) {
+      return false;
+    }
+    let buffer = new TextEncoder().encode(
+      JSON.stringify(domainToCategoriesMap)
+    ).buffer;
+    await this.insertFileContents([buffer], version);
+    return true;
+  }
+
+  /**
+   * Retrieves domains mapped to the key.
+   *
+   * @param {string} key
+   *   The value to lookup in the store.
+   * @returns {Array<number>}
+   *   An array of numbers corresponding to the category and score. If the key
+   *   does not exist in the store or the store is having issues retrieving the
+   *   value, returns an empty array.
+   */
+  async getCategories(key) {
+    if (!this.#init) {
+      return [];
+    }
+
+    let rows;
+    try {
+      rows = await this.#connection.executeCached(
+        `
+        SELECT
+          categories
+        FROM
+          domain_to_categories
+        WHERE
+          string_id = :key
+      `,
+        {
+          key,
+        }
+      );
+    } catch (ex) {
+      lazy.logConsole.error(`Could not retrieve from the store: ${ex}`);
+      return [];
+    }
+
+    if (!rows.length) {
+      return [];
+    }
+    return JSON.parse(rows[0].getResultByName("categories")) ?? [];
+  }
+
+  /**
+   * Retrieves the version number of the store.
+   *
+   * @returns {number}
+   *   The version number. Returns 0 if the version was never set or if there
+   *   was an issue accessing the version number.
+   */
+  async getVersion() {
+    if (this.#connection) {
+      let rows;
+      try {
+        rows = await this.#connection.executeCached(
+          `
+          SELECT
+            value
+          FROM
+            moz_meta
+          WHERE
+            key = "version"
+          `
+        );
+      } catch (ex) {
+        lazy.logConsole.error(`Could not retrieve version of the store: ${ex}`);
+        return 0;
+      }
+      if (rows.length) {
+        return parseInt(rows[0].getResultByName("value")) ?? 0;
+      }
+    }
+    return 0;
+  }
+
+  /**
+   * Test only function allowing tests to delete the store.
+   */
+  async testDelete() {
+    if (Cu.isInAutomation) {
+      await this.#closeConnection();
+      await this.#delete();
+    }
+  }
+
+  /**
+   * If a connection is available, close it and remove shutdown blockers.
+   */
+  async #closeConnection() {
+    this.#init = false;
+    this.#empty = true;
+    if (this.#asyncShutdownBlocker) {
+      lazy.Sqlite.shutdown.removeBlocker(this.#asyncShutdownBlocker);
+      this.#asyncShutdownBlocker = null;
+    }
+
+    if (this.#connection) {
+      lazy.logConsole.debug("Closing connection.");
+      // An error could occur while closing the connection. We suppress the
+      // error since it is not a critical part of the browser.
+      try {
+        await this.#connection.close();
+      } catch (ex) {
+        lazy.logConsole.error(ex);
+      }
+      this.#connection = null;
+    }
+  }
+
+  /**
+   * Initialize the schema for the store.
+   *
+   * @throws {Error}
+   *   Will throw if a permissions error prevents creating the store.
+   */
+  async #initSchema() {
+    if (!this.#connection) {
+      return;
+    }
+    lazy.logConsole.debug("Create store.");
+    // Creation can fail if the store is read only.
+    await this.#connection.executeTransaction(async () => {
+      // Let outer try block handle the exception.
+      const createDomainToCategoriesTable = `
+          CREATE TABLE IF NOT EXISTS
+            domain_to_categories (
+              string_id
+                TEXT PRIMARY KEY NOT NULL,
+              categories
+                TEXT
+            ) WITHOUT ROWID;
+        `;
+      await this.#connection.execute(createDomainToCategoriesTable);
+      const createMetaTable = `
+          CREATE TABLE IF NOT EXISTS
+            moz_meta (
+              key
+                TEXT PRIMARY KEY NOT NULL,
+              value
+                INTEGER
+            ) WITHOUT ROWID;
+          `;
+      await this.#connection.execute(createMetaTable);
+      await this.#connection.setSchemaVersion(
+        CATEGORIZATION_SETTINGS.STORE_SCHEMA
+      );
+    });
+
+    let rows = await this.#connection.executeCached(
+      "SELECT count(*) = 0 FROM domain_to_categories"
+    );
+    this.#empty = !!rows[0].getResultByIndex(0);
+  }
+
+  /**
+   * Attempt to delete the store.
+   *
+   * @throws {Error}
+   *   Will throw if the permissions for the file prevent its deletion.
+   */
+  async #delete() {
+    lazy.logConsole.debug("Attempt to delete the store.");
+    try {
+      await IOUtils.remove(
+        PathUtils.join(
+          PathUtils.profileDir,
+          CATEGORIZATION_SETTINGS.STORE_FILE
+        ),
+        { ignoreAbsent: true }
+      );
+    } catch (ex) {
+      lazy.logConsole.error(ex);
+    }
+    this.#empty = true;
+    lazy.logConsole.debug("Store was deleted.");
+  }
+
+  /**
+   * Tries to establish a connection to the store.
+   *
+   * @throws {Error}
+   *   Will throw if there was an issue establishing a connection or adding
+   *   adding a shutdown blocker.
+   */
+  async #initConnection() {
+    if (this.#connection) {
+      return;
+    }
+
+    // This could fail if the store is corrupted.
+    this.#connection = await lazy.Sqlite.openConnection({
+      path: PathUtils.join(
+        PathUtils.profileDir,
+        CATEGORIZATION_SETTINGS.STORE_FILE
+      ),
+    });
+
+    await this.#connection.execute("PRAGMA journal_mode = TRUNCATE");
+
+    this.#asyncShutdownBlocker = async () => {
+      await this.#connection.close();
+      this.#connection = null;
+    };
+
+    // This could fail if we're adding it during shutdown. In this case,
+    // don't throw but close the connection.
+    try {
+      lazy.Sqlite.shutdown.addBlocker(
+        "SearchSERPTelemetry:DomainToCategoriesSqlite closing",
+        this.#asyncShutdownBlocker
+      );
+    } catch (ex) {
+      lazy.logConsole.error(ex);
+      await this.#closeConnection();
+    }
+  }
+
+  /**
+   * Inserts into the store.
+   *
+   * @param {Array<ArrayBuffer>} fileContents
+   *   The data that should be converted and inserted into the store.
+   * @param {number} version
+   *   The version number that should be inserted into the store.
+   * @throws {Error}
+   *   Will throw if a connection is not present, if the store is not
+   *   able to be updated (permissions error, corrupted file), or there is
+   *   something wrong with the file contents.
+   */
+  async #insert(fileContents, version) {
+    let start = Cu.now();
+    await this.#connection.executeTransaction(async () => {
+      lazy.logConsole.debug("Insert into domain_to_categories table.");
+      for (let fileContent of fileContents) {
+        await this.#connection.executeCached(
+          `
+            INSERT INTO
+              domain_to_categories (string_id, categories)
+            SELECT
+              json_each.key AS string_id,
+              json_each.value AS categories
+            FROM
+              json_each(json(:obj))
+          `,
+          {
+            obj: new TextDecoder().decode(fileContent),
+          }
+        );
+      }
+      // Once the insertions have successfully completed, update the version.
+      await this.#connection.executeCached(
+        `
+          INSERT INTO
+            moz_meta (key, value)
+          VALUES
+            (:key, :value)
+          ON CONFLICT DO UPDATE SET
+            value = :value
+        `,
+        { key: "version", value: version }
+      );
+    });
+    ChromeUtils.addProfilerMarker(
+      "DomainToCategoriesSqlite.#insert",
+      start,
+      "Move file contents into table."
+    );
+
+    if (fileContents?.length) {
+      this.#empty = false;
+    }
+  }
+
+  /**
+   * Deletes and re-build's the store. Used in cases where we encounter a
+   * failure and we want to try fixing the error by starting with an
+   * entirely fresh store.
+   *
+   * @throws {Error}
+   *   Will throw if a connection could not be established, if it was
+   *   unable to delete the store, or it was unable to build a new store.
+   */
+  async #rebuildStore() {
+    lazy.logConsole.debug("Try rebuilding store.");
+    // Step 1. Close all connections.
+    await this.#closeConnection();
+
+    // Step 2. Delete the existing store.
+    await this.#delete();
+
+    // Step 3. Re-establish the connection.
+    await this.#initConnection();
+
+    // Step 4. If a connection exists, try creating the store.
+    await this.#initSchema();
   }
 }
 

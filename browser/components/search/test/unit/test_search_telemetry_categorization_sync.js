@@ -9,6 +9,7 @@
 
 ChromeUtils.defineESModuleGetters(this, {
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
+  SearchSERPCategorization: "resource:///modules/SearchSERPTelemetry.sys.mjs",
   SearchSERPDomainToCategoriesMap:
     "resource:///modules/SearchSERPTelemetry.sys.mjs",
   TELEMETRY_CATEGORIZATION_KEY:
@@ -158,7 +159,7 @@ add_task(async function test_initial_import() {
 
   // Clean up.
   await db.clear();
-  SearchSERPDomainToCategoriesMap.uninit();
+  await SearchSERPDomainToCategoriesMap.uninit(true);
 });
 
 add_task(async function test_update_records() {
@@ -219,7 +220,7 @@ add_task(async function test_update_records() {
 
   // Clean up.
   await db.clear();
-  SearchSERPDomainToCategoriesMap.uninit();
+  await SearchSERPDomainToCategoriesMap.uninit(true);
 });
 
 add_task(async function test_delayed_initial_import() {
@@ -273,7 +274,7 @@ add_task(async function test_delayed_initial_import() {
 
   // Clean up.
   await db.clear();
-  SearchSERPDomainToCategoriesMap.uninit();
+  await SearchSERPDomainToCategoriesMap.uninit(true);
 });
 
 add_task(async function test_remove_record() {
@@ -332,7 +333,7 @@ add_task(async function test_remove_record() {
 
   // Clean up.
   await db.clear();
-  SearchSERPDomainToCategoriesMap.uninit();
+  await SearchSERPDomainToCategoriesMap.uninit(true);
 });
 
 add_task(async function test_different_versions_coexisting() {
@@ -380,7 +381,7 @@ add_task(async function test_different_versions_coexisting() {
 
   // Clean up.
   await db.clear();
-  SearchSERPDomainToCategoriesMap.uninit();
+  await SearchSERPDomainToCategoriesMap.uninit(true);
 });
 
 add_task(async function test_download_error() {
@@ -449,5 +450,67 @@ add_task(async function test_download_error() {
 
   // Clean up.
   await db.clear();
-  SearchSERPDomainToCategoriesMap.uninit();
+  await SearchSERPDomainToCategoriesMap.uninit(true);
+});
+
+add_task(async function test_mock_restart() {
+  info("Create record containing domain_category_mappings_2a.json attachment.");
+  let record2a = await mockRecordWithCachedAttachment(RECORDS.record2a);
+  await db.create(record2a);
+
+  info("Create record containing domain_category_mappings_2b.json attachment.");
+  let record2b = await mockRecordWithCachedAttachment(RECORDS.record2b);
+  await db.create(record2b);
+
+  info("Add data to Remote Settings DB.");
+  await db.importChanges({}, Date.now());
+
+  info("Initialize search categorization mappings.");
+  let promise = waitForDomainToCategoriesUpdate();
+  await SearchSERPCategorization.init();
+  await promise;
+
+  Assert.deepEqual(
+    await SearchSERPDomainToCategoriesMap.get("example.com"),
+    [
+      {
+        category: 1,
+        score: 80,
+      },
+    ],
+    "Should have a record."
+  );
+
+  Assert.equal(
+    SearchSERPDomainToCategoriesMap.version,
+    2,
+    "Version should be the latest."
+  );
+
+  info("Mock a restart by un-initializing the map.");
+  await SearchSERPCategorization.uninit();
+  promise = waitForDomainToCategoriesUpdate();
+  await SearchSERPCategorization.init();
+  await promise;
+
+  Assert.deepEqual(
+    await SearchSERPDomainToCategoriesMap.get("example.com"),
+    [
+      {
+        category: 1,
+        score: 80,
+      },
+    ],
+    "Should have a record."
+  );
+
+  Assert.equal(
+    SearchSERPDomainToCategoriesMap.version,
+    2,
+    "Version should be the latest."
+  );
+
+  // Clean up.
+  await db.clear();
+  await SearchSERPDomainToCategoriesMap.uninit(true);
 });
