@@ -522,6 +522,7 @@ VideoSendStreamImpl::~VideoSendStreamImpl() {
   RTC_DCHECK_RUN_ON(&thread_checker_);
   RTC_LOG(LS_INFO) << "~VideoSendStreamImpl: " << config_.ToString();
   RTC_DCHECK(!started());
+  RTC_DCHECK(!IsRunning());
   transport_->DestroyRtpVideoSender(rtp_video_sender_);
 }
 
@@ -764,7 +765,7 @@ void VideoSendStreamImpl::OnVideoLayersAllocationUpdated(
 
 void VideoSendStreamImpl::SignalEncoderActive() {
   RTC_DCHECK_RUN_ON(&thread_checker_);
-  if (rtp_video_sender_->IsActive()) {
+  if (IsRunning()) {
     RTC_LOG(LS_INFO) << "SignalEncoderActive, Encoder is active.";
     bitrate_allocator_->AddObserver(this, GetAllocationConfig());
   }
