@@ -571,7 +571,6 @@ impl From<QuadInstance> for PrimitiveInstanceData {
     }
 }
 
-#[derive(Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 pub struct QuadSegment {
     pub rect: LayoutRect,
