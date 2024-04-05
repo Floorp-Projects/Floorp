@@ -164,10 +164,6 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
             }
         }.toSet()
 
-    private fun invalidateOptionsMenu() {
-        activity?.invalidateOptionsMenu()
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
