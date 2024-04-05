@@ -65,7 +65,7 @@ class VideoEncoder final : public EncoderTemplate<VideoEncoderTraits> {
 
  protected:
   virtual RefPtr<EncodedVideoChunk> EncodedDataToOutputType(
-      nsIGlobalObject* aGlobal, RefPtr<MediaRawData>& aData) override;
+      nsIGlobalObject* aGlobal, const RefPtr<MediaRawData>& aData) override;
 
   virtual VideoDecoderConfigInternal EncoderConfigToDecoderConfig(
       nsIGlobalObject* aGlobal /* TODO: delete */,
