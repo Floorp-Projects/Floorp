@@ -704,6 +704,7 @@ const GRANTED_WITHOUT_USER_PROMPT = [
   "theme",
   "unlimitedStorage",
   "webRequest",
+  "webRequestAuthProvider",
   "webRequestBlocking",
   "webRequestFilterResponse",
   "webRequestFilterResponse.serviceWorkerScript",

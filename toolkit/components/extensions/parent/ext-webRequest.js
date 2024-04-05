@@ -64,7 +64,11 @@ function registerEvent(
     filter2.incognito = filter.incognito;
   }
 
-  let blockingAllowed = extension.hasPermission("webRequestBlocking");
+  let blockingAllowed =
+    eventName == "onAuthRequired"
+      ? extension.hasPermission("webRequestBlocking") ||
+        extension.hasPermission("webRequestAuthProvider")
+      : extension.hasPermission("webRequestBlocking");
 
   let info2 = [];
   if (info) {
