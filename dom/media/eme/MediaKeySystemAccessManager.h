@@ -5,6 +5,7 @@
 #ifndef DOM_MEDIA_MEDIAKEYSYSTEMACCESSMANAGER_H_
 #define DOM_MEDIA_MEDIAKEYSYSTEMACCESSMANAGER_H_
 
+#include "DecoderDoctorDiagnostics.h"
 #include "mozilla/dom/MediaKeySystemAccess.h"
 #include "mozilla/MozPromise.h"
 #include "nsCycleCollectionParticipant.h"
@@ -95,6 +96,7 @@ struct MediaKeySystemAccessRequest {
   const nsString mKeySystem;
   // The config(s) passed for this request.
   const Sequence<MediaKeySystemConfiguration> mConfigs;
+  DecoderDoctorDiagnostics mDiagnostics;
 };
 
 class MediaKeySystemAccessManager final : public nsIObserver, public nsINamed {
