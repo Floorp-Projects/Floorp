@@ -4,7 +4,7 @@
 
 "use strict";
 
-/* exported gIsUiaEnabled, addUiaTask, definePyVar, assignPyVarToUiaWithId, setUpWaitForUiaEvent, setUpWaitForUiaPropEvent, waitForUiaEvent, testPatternAbsent */
+/* exported gIsUiaEnabled, addUiaTask, definePyVar, assignPyVarToUiaWithId, setUpWaitForUiaEvent, setUpWaitForUiaPropEvent, waitForUiaEvent, testPatternAbsent, testPythonRaises */
 
 // Load the shared-head file first.
 Services.scriptloader.loadSubScript(
@@ -112,4 +112,17 @@ async function testPatternAbsent(id, patternName) {
     return bool(getUiaPattern(el, "${patternName}"))
   `);
   ok(!hasPattern, `${id} doesn't have ${patternName} pattern`);
+}
+
+/**
+ * Verify that a Python expression raises an exception.
+ */
+async function testPythonRaises(expression, message) {
+  let failed = false;
+  try {
+    await runPython(expression);
+  } catch {
+    failed = true;
+  }
+  ok(failed, message);
 }
