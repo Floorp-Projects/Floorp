@@ -35,7 +35,7 @@ void ShaderModule::Cleanup() {
     return;
   }
 
-  if (bridge->IsOpen()) {
+  if (bridge->CanSend()) {
     bridge->SendShaderModuleDrop(mId);
   }
 

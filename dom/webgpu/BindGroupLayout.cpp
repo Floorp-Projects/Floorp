@@ -33,7 +33,7 @@ void BindGroupLayout::Cleanup() {
   }
 
   if (mOwning) {
-    if (bridge->IsOpen()) {
+    if (bridge->CanSend()) {
       bridge->SendBindGroupLayoutDrop(mId);
     }
 

@@ -33,7 +33,7 @@ void ComputePipeline::Cleanup() {
   mValid = false;
 
   auto bridge = mParent->GetBridge();
-  if (bridge->IsOpen()) {
+  if (bridge->CanSend()) {
     bridge->SendComputePipelineDrop(mId);
     if (mImplicitPipelineLayoutId) {
       bridge->SendImplicitLayoutDrop(mImplicitPipelineLayoutId,
