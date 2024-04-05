@@ -181,6 +181,8 @@ def process_results(flank_config: str, test_type: str = "instrumentation") -> No
         flank_config,
     ]
     if exit_code == 0:
+        # parse_ui_test_script error messages are pretty generic; only
+        # report them if errors have not already been reported
         command.append("--report-treeherder-failures")
     run_command(
         command,

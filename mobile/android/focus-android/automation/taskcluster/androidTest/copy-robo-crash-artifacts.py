@@ -32,6 +32,8 @@ Output:
 
 import json
 import logging
+import os
+import re
 import subprocess
 import sys
 from enum import Enum
@@ -189,6 +191,36 @@ def gsutil_cp(artifact, dest):
         logging.error(f"Error executing gsutil: {e}")
 
 
+def parse_crash_log(log_path):
+    crashes_reported = 0
+    if os.path.isfile(log_path):
+        with open(log_path) as f:
+            contents = f.read()
+            proc = "unknown"
+            match = re.search(r"Process: (.*)\n", contents, re.MULTILINE)
+            if match and len(match.groups()) == 1:
+                proc = match.group(1)
+            # Isolate the crash stack and reformat it for treeherder.
+            # Variation in stacks makes the regex tricky!
+            # Example:
+            # java.lang.NullPointerException
+            #     at org.mozilla.fenix.library.bookmarks.BookmarkFragment.getBookmarkInteractor(BookmarkFragment.kt:72)
+            #     at org.mozilla.fenix.library.bookmarks.BookmarkFragment.refreshBookmarks(BookmarkFragment.kt:297) ...
+            # Example:
+            # java.lang.IllegalStateException: pending state not allowed
+            #     at org.mozilla.fenix.onboarding.OnboardingFragment.onCreate(OnboardingFragment.kt:83)
+            #     at androidx.fragment.app.Fragment.performCreate(Fragment.java:3094) ...
+            match = re.search(
+                r"\n([\w\.]+[:\s\w\.\'\"]+)\s*(at\s.*\n)", contents, re.MULTILINE
+            )
+            if match and len(match.groups()) == 2:
+                top_frame = match.group(1).rstrip() + " " + match.group(2)
+                remainder = contents[match.span()[1] :]
+                logging.error(f"PROCESS-CRASH | {proc} | {top_frame}{remainder}")
+                crashes_reported = 1
+    return crashes_reported
+
+
 def process_artifacts(artifact_type):
     """
     Process the artifacts based on the specified artifact type.
@@ -196,7 +228,7 @@ def process_artifacts(artifact_type):
     Args:
         artifact_type (ArtifactType): The type of artifact to process.
     Returns:
-        None
+        Number of crashes reported in treeherder format.
     """
     matrix_ids_artifact = load_matrix_ids_artifact(
         Worker.RESULTS_DIR.value + "/" + ArtifactType.MATRIX_IDS.value
@@ -206,11 +238,12 @@ def process_artifacts(artifact_type):
 
     if not root_gcs_path:
         logging.error("Could not find root GCS path in matrix file.")
-        return
+        return 0
 
     if not failed_device_names:
-        return
+        return 0
 
+    crashes_reported = 0
     for device in failed_device_names:
         artifacts = fetch_artifacts(root_gcs_path, device, artifact_type.value)
         if not artifacts:
@@ -219,13 +252,18 @@ def process_artifacts(artifact_type):
 
         for artifact in artifacts:
             gsutil_cp(artifact, Worker.RESULTS_DIR.value)
+            crashes_reported += parse_crash_log(
+                os.path.join(Worker.RESULTS_DIR.value, os.path.basename(artifact))
+            )
+
+    return crashes_reported
 
 
 def main():
     setup_logging()
     check_gsutil_availability()
-    process_artifacts(ArtifactType.CRASH_LOG)
+    return process_artifacts(ArtifactType.CRASH_LOG)
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
