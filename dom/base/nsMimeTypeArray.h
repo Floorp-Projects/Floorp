@@ -83,9 +83,7 @@ class nsMimeType final : public nsWrapperCache {
     retval.SetKnownLiveString(kMimeDescription);
   }
 
-  already_AddRefed<nsPluginElement> EnabledPlugin() const {
-    return do_AddRef(mPluginElement);
-  }
+  already_AddRefed<nsPluginElement> EnabledPlugin() const;
 
   void GetSuffixes(mozilla::dom::DOMString& retval) const {
     retval.SetKnownLiveString(kMimeSuffix);

@@ -94,3 +94,7 @@ JSObject* nsMimeType::WrapObject(JSContext* aCx,
                                  JS::Handle<JSObject*> aGivenProto) {
   return MimeType_Binding::Wrap(aCx, this, aGivenProto);
 }
+
+already_AddRefed<nsPluginElement> nsMimeType::EnabledPlugin() const {
+  return do_AddRef(mPluginElement);
+}
