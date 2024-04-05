@@ -28,7 +28,7 @@ from talos import results, talosconfig, utils
 from talos.cmanager import CounterManagement
 from talos.ffsetup import FFSetup
 from talos.talos_process import run_browser
-from talos.utils import TalosCrash, TalosError, TalosRegression, run_in_debug_mode
+from talos.utils import TalosCrash, TalosRegression, run_in_debug_mode
 
 LOG = get_proxy_logger()
 
@@ -67,18 +67,7 @@ class TTest(object):
         if platform.system() == "Linux":
             return "linux"
         elif platform.system() in ("Windows", "Microsoft"):
-            if "6.1" in platform.version():  # w7
-                return "w7"
-            elif "6.2" in platform.version():  # w8
-                return "w8"
-            # Bug 1264325 - FIXME: with python 2.7.11: reports win8 instead of 8.1
-            elif "6.3" in platform.version():
-                return "w8"
-            # Bug 1264325 - FIXME: with python 2.7.11: reports win8 instead of 10
-            elif "10.0" in platform.version():
-                return "w8"
-            else:
-                raise TalosError("unsupported windows version")
+            return "win"
         elif platform.system() == "Darwin":
             return "mac"
 
