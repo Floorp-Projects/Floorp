@@ -116,13 +116,15 @@ private fun PocketTopics(
 
         Spacer(Modifier.height(16.dp))
 
-        PocketStoriesCategories(
-            categories = categories,
-            selections = categoriesSelections,
-            modifier = Modifier.fillMaxWidth(),
-            categoryColors = categoryColors,
-            onCategoryClick = onCategoryClick,
-        )
+        if (categories.isNotEmpty()) {
+            PocketStoriesCategories(
+                categories = categories,
+                selections = categoriesSelections,
+                modifier = Modifier.fillMaxWidth(),
+                categoryColors = categoryColors,
+                onCategoryClick = onCategoryClick,
+            )
+        }
     }
 }
 
