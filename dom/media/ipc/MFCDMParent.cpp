@@ -767,6 +767,7 @@ void MFCDMParent::GetCapabilities(const nsString& aKeySystem,
 
   const bool isHardwareDecryption =
       aFlags.contains(CapabilitesFlag::HarewareDecryption);
+  aCapabilitiesOut.isHardwareDecryption() = isHardwareDecryption;
   // Return empty capabilites for SWDRM on Windows 10 because it has the process
   // leaking problem.
   if (!IsWin11OrLater() && !isHardwareDecryption) {
@@ -987,7 +988,6 @@ void MFCDMParent::GetCapabilities(const nsString& aKeySystem,
       KeySystemConfig::SessionType::Temporary);
   aCapabilitiesOut.sessionTypes().AppendElement(
       KeySystemConfig::SessionType::PersistentLicense);
-  aCapabilitiesOut.isHardwareDecryption() = isHardwareDecryption;
 
   // Cache capabilities for reuse.
   sCapabilities.AppendElement(aCapabilitiesOut);
