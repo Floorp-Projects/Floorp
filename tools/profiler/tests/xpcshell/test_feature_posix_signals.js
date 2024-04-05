@@ -112,8 +112,36 @@ async function cleanupAfterTest() {
 //  may cause a mismatch if we test on on, say, a gnu hurd kernel, or on a
 // linux kernel running on sparc, but the feature will not break - only
 // the testing.
-// const SIGUSR1 = Services.appinfo.OS === "Darwin" ? 30 : 10;
+const SIGUSR1 = Services.appinfo.OS === "Darwin" ? 30 : 10;
 const SIGUSR2 = Services.appinfo.OS === "Darwin" ? 31 : 12;
+
+add_task(async () => {
+  info("Test that starting the profiler with a posix signal works.");
+  registerCleanupFunction(cleanupAfterTest);
+
+  Assert.ok(
+    !Services.profiler.IsActive(),
+    "The profiler should not begin the test active."
+  );
+
+  // Get the process ID
+  let pid = Services.appinfo.processID;
+
+  // Try and start the profiler using a signal.
+  let result = raiseSignal(pid, SIGUSR1);
+  Assert.ok(result, "Raising a signal should succeed");
+
+  // Wait for us to sample at least once (proving that we're running!)
+  // This will hang if the profiler is running.
+  await Services.profiler.waitOnePeriodicSampling();
+  Assert.ok(Services.profiler.IsActive(), "The profiler should now be active.");
+
+  await Services.profiler.StopProfiler();
+  Assert.ok(
+    !Services.profiler.IsActive(),
+    "The profiler should now be inactive."
+  );
+});
 
 add_task(async () => {
   info("Test that stopping the profiler with a posix signal works.");
