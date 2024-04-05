@@ -27,6 +27,7 @@ import java.util.Locale;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoSystemStateListener;
 import org.mozilla.gecko.util.GeckoBundle;
+import org.mozilla.gecko.util.LocaleUtils;
 
 @AnyThread
 public final class GeckoRuntimeSettings extends RuntimeSettings {
@@ -1072,24 +1073,14 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
       final String[] locales = new String[localeList.size()];
       for (int i = 0; i < localeList.size(); i++) {
         // accept-language should be language or language-region format.
-        locales[i] = getLanguageTagForAcceptLanguage(localeList.get(i));
+        locales[i] = LocaleUtils.getLanguageTagForAcceptLanguage(localeList.get(i));
       }
       return locales;
     }
     final String[] locales = new String[1];
     final Locale locale = Locale.getDefault();
-    locales[0] = getLanguageTagForAcceptLanguage(locale);
+    locales[0] = LocaleUtils.getLanguageTagForAcceptLanguage(locale);
     return locales;
-  }
-
-  private static String getLanguageTagForAcceptLanguage(final Locale locale) {
-    final StringBuilder out = new StringBuilder(locale.getLanguage());
-    final String country = locale.getCountry();
-    if (!TextUtils.isEmpty(country)) {
-      out.append('-').append(country);
-    }
-    // e.g. "en", "en-US"
-    return out.toString();
   }
 
   /**
