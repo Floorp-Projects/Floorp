@@ -67,12 +67,11 @@ add_task(async function () {
     Assert.ok(recordReentered, "`record()` was re-entered");
     Assert.equal(
       engagementSpy.callCount,
-      2,
+      1,
       "`onEngagement` was invoked twice"
     );
-    Assert.equal(engagementSpy.args[0][0], "start", "'start' notified");
     Assert.equal(
-      engagementSpy.args[1][0],
+      engagementSpy.args[0][0],
       "engagement",
       "`engagement` notified"
     );

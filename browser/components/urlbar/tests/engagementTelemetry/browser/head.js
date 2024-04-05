@@ -211,12 +211,7 @@ async function doTest(testFn) {
   await QuickSuggest.blockedSuggestions.clear();
   await QuickSuggest.blockedSuggestions._test_readyPromise;
   await updateTopSites(() => true);
-
-  try {
-    await BrowserTestUtils.withNewTab(gBrowser, testFn);
-  } catch (e) {
-    console.error(e);
-  }
+  await BrowserTestUtils.withNewTab(gBrowser, testFn);
 }
 
 async function initGroupTest() {
