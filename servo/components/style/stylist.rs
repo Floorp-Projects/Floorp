@@ -3260,7 +3260,8 @@ impl CascadeData {
                 CssRule::LayerStatement(..) |
                 CssRule::FontPaletteValues(..) |
                 CssRule::FontFeatureValues(..) |
-                CssRule::Scope(..) => {
+                CssRule::Scope(..) |
+                CssRule::StartingStyle(..) => {
                     // Not affected by device changes.
                     continue;
                 },
