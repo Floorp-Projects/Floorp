@@ -147,8 +147,6 @@ class VideoEncoderTraits {
 
   static bool IsSupported(const ConfigTypeInternal& aConfig);
   static bool CanEncodeVideo(const ConfigTypeInternal& aConfig);
-  static Result<UniquePtr<TrackInfo>, nsresult> CreateTrackInfo(
-      const ConfigTypeInternal& aConfig);
   static bool Validate(const ConfigType& aConfig, nsCString& aErrorMessage);
   static RefPtr<ConfigTypeInternal> CreateConfigInternal(
       const ConfigType& aConfig);
