@@ -37,7 +37,6 @@ use cocoa::{
     NSTextField_NSTextFieldConvenience, NSView_NSConstraintBasedLayoutInstallingConstraints,
     NSView_NSConstraintBasedLayoutLayering, NSView_NSSafeAreas, PNSObject,
 };
-use once_cell::sync::Lazy;
 
 /// https://developer.apple.com/documentation/foundation/1497293-string_encodings/nsutf8stringencoding?language=objc
 const NSUTF8StringEncoding: cocoa::NSStringEncoding = 4;
@@ -184,9 +183,10 @@ fn enqueue<F: Fn() + 'static>(f: F) {
     // # Safety
     // The array is static and cannot be changed.
     unsafe impl Sync for RunloopModes {}
-    unsafe impl Send for RunloopModes {}
 
-    static RUNLOOP_MODES: Lazy<RunloopModes> = Lazy::new(RunloopModes::new);
+    lazy_static::lazy_static! {
+        static ref RUNLOOP_MODES: RunloopModes = RunloopModes::new();
+    }
 
     unsafe {
         cocoa::NSRunLoop::mainRunLoop().performInModes_block_(RUNLOOP_MODES.0, &*block);
