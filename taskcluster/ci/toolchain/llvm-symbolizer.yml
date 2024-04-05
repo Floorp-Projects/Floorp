@@ -18,8 +18,10 @@ linux32-llvm-symbolizer-17:
         arguments:
             - i686-unknown-linux-gnu
             - build/build-clang/clang-17.json
+            - build/build-clang/llvm-symbolizer-17.json
         resources:
             - build/build-clang/clang-17.json
+            - build/build-clang/llvm-symbolizer-17.json
             - taskcluster/scripts/misc/build-llvm-common.sh
         toolchain-alias:
             by-project:
@@ -40,8 +42,10 @@ linux64-llvm-symbolizer-17:
         arguments:
             - x86_64-unknown-linux-gnu
             - build/build-clang/clang-17.json
+            - build/build-clang/llvm-symbolizer-17.json
         resources:
             - build/build-clang/clang-17.json
+            - build/build-clang/llvm-symbolizer-17.json
             - taskcluster/scripts/misc/build-llvm-common.sh
         toolchain-alias:
             by-project:
@@ -62,8 +66,10 @@ macosx64-llvm-symbolizer-17:
         arguments:
             - x86_64-apple-darwin
             - build/build-clang/clang-17.json
+            - build/build-clang/llvm-symbolizer-17.json
         resources:
             - build/build-clang/clang-17.json
+            - build/build-clang/llvm-symbolizer-17.json
             - taskcluster/scripts/misc/build-llvm-common.sh
         toolchain-alias:
             by-project:
@@ -84,8 +90,10 @@ macosx64-aarch64-llvm-symbolizer-17:
         arguments:
             - aarch64-apple-darwin
             - build/build-clang/clang-17.json
+            - build/build-clang/llvm-symbolizer-17.json
         resources:
             - build/build-clang/clang-17.json
+            - build/build-clang/llvm-symbolizer-17.json
             - taskcluster/scripts/misc/build-llvm-common.sh
         toolchain-alias:
             by-project:
@@ -106,8 +114,10 @@ win64-llvm-symbolizer-17:
         arguments:
             - x86_64-pc-windows-msvc
             - build/build-clang/clang-17.json
+            - build/build-clang/llvm-symbolizer-17.json
         resources:
             - build/build-clang/clang-17.json
+            - build/build-clang/llvm-symbolizer-17.json
             - taskcluster/scripts/misc/build-llvm-common.sh
         toolchain-alias:
             by-project:
@@ -128,8 +138,10 @@ linux32-llvm-symbolizer-18:
         arguments:
             - i686-unknown-linux-gnu
             - build/build-clang/clang-18.json
+            - build/build-clang/llvm-symbolizer-18.json
         resources:
             - build/build-clang/clang-18.json
+            - build/build-clang/llvm-symbolizer-18.json
             - taskcluster/scripts/misc/build-llvm-common.sh
     fetches:
         fetch:
@@ -146,8 +158,10 @@ linux64-llvm-symbolizer-18:
         arguments:
             - x86_64-unknown-linux-gnu
             - build/build-clang/clang-18.json
+            - build/build-clang/llvm-symbolizer-18.json
         resources:
             - build/build-clang/clang-18.json
+            - build/build-clang/llvm-symbolizer-18.json
             - taskcluster/scripts/misc/build-llvm-common.sh
     fetches:
         fetch:
@@ -164,8 +178,10 @@ macosx64-llvm-symbolizer-18:
         arguments:
             - x86_64-apple-darwin
             - build/build-clang/clang-18.json
+            - build/build-clang/llvm-symbolizer-18.json
         resources:
             - build/build-clang/clang-18.json
+            - build/build-clang/llvm-symbolizer-18.json
             - taskcluster/scripts/misc/build-llvm-common.sh
     fetches:
         fetch:
@@ -182,8 +198,10 @@ macosx64-aarch64-llvm-symbolizer-18:
         arguments:
             - aarch64-apple-darwin
             - build/build-clang/clang-18.json
+            - build/build-clang/llvm-symbolizer-18.json
         resources:
             - build/build-clang/clang-18.json
+            - build/build-clang/llvm-symbolizer-18.json
             - taskcluster/scripts/misc/build-llvm-common.sh
     fetches:
         fetch:
@@ -200,8 +218,10 @@ win64-llvm-symbolizer-18:
         arguments:
             - x86_64-pc-windows-msvc
             - build/build-clang/clang-18.json
+            - build/build-clang/llvm-symbolizer-18.json
         resources:
             - build/build-clang/clang-18.json
+            - build/build-clang/llvm-symbolizer-18.json
             - taskcluster/scripts/misc/build-llvm-common.sh
     fetches:
         fetch:
@@ -220,8 +240,10 @@ linux32-llvm-symbolizer-trunk:
         arguments:
             - i686-unknown-linux-gnu
             - build/build-clang/clang-trunk.json
+            - build/build-clang/llvm-symbolizer-trunk.json
         resources:
             - build/build-clang/clang-trunk.json
+            - build/build-clang/llvm-symbolizer-trunk.json
             - taskcluster/scripts/misc/build-llvm-common.sh
         toolchain-alias:
             by-project:
@@ -244,8 +266,10 @@ linux64-llvm-symbolizer-trunk:
         arguments:
             - x86_64-unknown-linux-gnu
             - build/build-clang/clang-trunk.json
+            - build/build-clang/llvm-symbolizer-trunk.json
         resources:
             - build/build-clang/clang-trunk.json
+            - build/build-clang/llvm-symbolizer-trunk.json
             - taskcluster/scripts/misc/build-llvm-common.sh
         toolchain-alias:
             by-project:
@@ -268,8 +292,10 @@ macosx64-llvm-symbolizer-trunk:
         arguments:
             - x86_64-apple-darwin
             - build/build-clang/clang-trunk.json
+            - build/build-clang/llvm-symbolizer-trunk.json
         resources:
             - build/build-clang/clang-trunk.json
+            - build/build-clang/llvm-symbolizer-trunk.json
             - taskcluster/scripts/misc/build-llvm-common.sh
         toolchain-alias:
             by-project:
@@ -292,8 +318,10 @@ macosx64-aarch64-llvm-symbolizer-trunk:
         arguments:
             - aarch64-apple-darwin
             - build/build-clang/clang-trunk.json
+            - build/build-clang/llvm-symbolizer-trunk.json
         resources:
             - build/build-clang/clang-trunk.json
+            - build/build-clang/llvm-symbolizer-trunk.json
             - taskcluster/scripts/misc/build-llvm-common.sh
         toolchain-alias:
             by-project:
@@ -316,8 +344,10 @@ win64-llvm-symbolizer-trunk:
         arguments:
             - x86_64-pc-windows-msvc
             - build/build-clang/clang-trunk.json
+            - build/build-clang/llvm-symbolizer-trunk.json
         resources:
             - build/build-clang/clang-trunk.json
+            - build/build-clang/llvm-symbolizer-trunk.json
             - taskcluster/scripts/misc/build-llvm-common.sh
         toolchain-alias:
             by-project:
