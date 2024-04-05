@@ -200,13 +200,7 @@ addUiaTask(
         "summary has ExpandCollapseState_Expanded"
       );
       info("Calling Expand on summary");
-      let failed = false;
-      try {
-        await runPython(`pattern.Expand()`);
-      } catch {
-        failed = true;
-      }
-      ok(failed, "Expand on summary failed");
+      await testPythonRaises(`pattern.Expand()`, "Expand on summary failed");
       info("Calling Collapse on summary");
       await setUpWaitForUiaPropEvent(
         "ExpandCollapseExpandCollapseState",
@@ -224,13 +218,10 @@ addUiaTask(
         "summary has ExpandCollapseState_Collapsed"
       );
       info("Calling Collapse on summary");
-      failed = false;
-      try {
-        await runPython(`pattern.Collapse()`);
-      } catch {
-        failed = true;
-      }
-      ok(failed, "Collapse on summary failed");
+      await testPythonRaises(
+        `pattern.Collapse()`,
+        "Collapse on summary failed"
+      );
     }
 
     await assignPyVarToUiaWithId("popup");
