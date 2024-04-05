@@ -9,7 +9,6 @@
             "type": "string",
             "enum": [
               "webRequest",
-              "webRequestAuthProvider",
               "webRequestBlocking",
               "webRequestFilterResponse",
               "webRequestFilterResponse.serviceWorkerScript"
@@ -83,7 +82,7 @@
         "id": "OnAuthRequiredOptions",
         "type": "string",
         "enum": ["responseHeaders", "blocking", "asyncBlocking"],
-        "postprocess": "webRequestBlockingOrAuthProviderPermissionRequired"
+        "postprocess": "webRequestBlockingPermissionRequired"
       },
       {
         "id": "OnResponseStartedOptions",

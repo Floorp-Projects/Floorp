@@ -58,7 +58,6 @@ add_task(async function setup() {
     "search",
     "tabHide",
     "tabs",
-    "webRequestAuthProvider",
     "webRequestBlocking",
     "webRequestFilterResponse",
     "webRequestFilterResponse.serviceWorkerScript",
