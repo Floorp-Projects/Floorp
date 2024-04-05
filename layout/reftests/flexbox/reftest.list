@@ -75,7 +75,6 @@ fuzzy(0-3,0-10) == flexbox-dyn-insertAroundSpan-3.xhtml flexbox-dyn-insertAround
 == flexbox-position-absolute-2.xhtml  flexbox-position-absolute-2-ref.xhtml
 == flexbox-position-absolute-3.xhtml  flexbox-position-absolute-3-ref.xhtml
 == flexbox-position-absolute-4.xhtml  flexbox-position-absolute-4-ref.xhtml
-== flexbox-position-fixed-3.xhtml     flexbox-position-fixed-3-ref.xhtml
 fuzzy-if(Android,0-16,0-400) == flexbox-position-fixed-1.xhtml     flexbox-position-fixed-1-ref.xhtml
 fuzzy-if(Android,0-16,0-400) == flexbox-position-fixed-2.xhtml     flexbox-position-fixed-2-ref.xhtml
 == flexbox-position-fixed-3.xhtml     flexbox-position-fixed-3-ref.xhtml
