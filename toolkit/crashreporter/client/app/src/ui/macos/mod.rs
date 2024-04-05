@@ -804,6 +804,22 @@ impl ViewRenderer {
                     unimplemented!("ElementStyle::enabled doesn't support ReadOnly")
                 }
             }
+        } else if let Ok(text) = cocoa::NSText::try_from(view) {
+            let normally_editable = unsafe { text.isEditable() } != 0;
+            match &style.enabled {
+                Property::Static(e) => {
+                    unsafe { text.setEditable_((*e && normally_editable).into()) };
+                }
+                Property::Binding(b) => {
+                    b.on_change(move |&enabled| unsafe {
+                        text.setEditable_((enabled && normally_editable).into());
+                    });
+                    unsafe { text.setEditable_((*b.borrow() && normally_editable).into()) };
+                }
+                Property::ReadOnly(_) => {
+                    unimplemented!("ElementStyle::enabled doesn't support ReadOnly")
+                }
+            }
         }
 
         unsafe { view.setNeedsDisplay_(runtime::YES) };

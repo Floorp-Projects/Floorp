@@ -193,6 +193,8 @@ impl ReportCrashUI {
         }});
 
         let input_enabled = submit_state.mapped(|s| s == &SubmitState::Initial);
+        let send_report_and_input_enabled =
+            data::Synchronized::join(send_report, &input_enabled, |s, e| *s && *e);
 
         let submit_status_text = submit_state.mapped(cc! { (config) move |s| {
             config.string(match s {
@@ -232,9 +234,8 @@ impl ReportCrashUI {
                     Label text(config.string("crashreporter-plea")),
                     Checkbox["send"] checked(send_report) label(config.string("crashreporter-send-report"))
                         enabled(&input_enabled),
-                    VBox margin_start(20) visible(send_report) spacing(5)
-                         halign(Alignment::Fill) valign(Alignment::Fill) {
-                        Button["details"] enabled(&input_enabled) on_click(cc! { (config, details, show_details, logic) move || {
+                    VBox margin_start(20) spacing(5) halign(Alignment::Fill) valign(Alignment::Fill) {
+                        Button["details"] enabled(&send_report_and_input_enabled) on_click(cc! { (config, details, show_details, logic) move || {
                                 // Immediately display the window to feel responsive, even if forming
                                 // the details string takes a little while (it really shouldn't
                                 // though).
@@ -249,11 +250,11 @@ impl ReportCrashUI {
                             TextBox["comment"] placeholder(config.string("crashreporter-comment-prompt"))
                                 content(comment)
                                 editable(true)
-                                enabled(&input_enabled)
+                                enabled(&send_report_and_input_enabled)
                                 halign(Alignment::Fill) valign(Alignment::Fill)
                         },
                         Checkbox["include-url"] checked(include_address)
-                            label(config.string("crashreporter-include-url")) enabled(&input_enabled),
+                            label(config.string("crashreporter-include-url")) enabled(&send_report_and_input_enabled),
                         Label text(&submit_status_text) margin_top(20),
                         Progress halign(Alignment::Fill) visible(&progress_visible),
                     },
