@@ -48,6 +48,7 @@ class MachCommandReference:
 
 
 MACH_COMMANDS = {
+    "addstory": MachCommandReference("toolkit/content/widgets/mach_commands.py"),
     "addtest": MachCommandReference("testing/mach_commands.py"),
     "addwidget": MachCommandReference("toolkit/content/widgets/mach_commands.py"),
     "android": MachCommandReference("mobile/android/mach_commands.py"),
