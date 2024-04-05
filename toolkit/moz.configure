@@ -2783,7 +2783,8 @@ with only_when(compile_environment & wasm_sandboxing.hunspell):
 
 @depends(milestone)
 def new_notification_store(milestone):
-    return False
+    if milestone.is_nightly:
+        return True
 
 
 set_config("MOZ_NEW_NOTIFICATION_STORE", True, when=new_notification_store)
