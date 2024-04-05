@@ -206,3 +206,16 @@ def addstory(command_context, name, project_name, path):
                 html_lit_import=html_lit_import,
             )
         )
+
+
+@Command(
+    "buildtokens",
+    category="misc",
+    description="Build the design tokens CSS files",
+)
+def buildtokens(command_context):
+    run_mach(
+        command_context,
+        "npm",
+        args=["run", "build", "--prefix=toolkit/themes/shared/design-system"],
+    )

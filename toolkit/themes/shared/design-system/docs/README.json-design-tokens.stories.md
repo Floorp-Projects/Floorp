@@ -10,7 +10,7 @@ In order for us to be able to define design tokens in one place (the JSON file) 
 Here's how to build design tokens for desktop:
 
 ```sh
-$ ./mach npm run build --prefix=toolkit/themes/shared/design-system
+$ ./mach buildtokens
 ```
 
 If successful, you should see Style Dictionary building all of our tokens files within the `design-system` folder. Otherwise, Style Dictionary can also generate helpful errors to help you debug.
