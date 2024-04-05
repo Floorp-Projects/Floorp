@@ -13,7 +13,6 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   AddonManagerPrivate: "resource://gre/modules/AddonManager.sys.mjs",
-  Extension: "resource://gre/modules/Extension.sys.mjs",
   ExtensionParent: "resource://gre/modules/ExtensionParent.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   JSONFile: "resource://gre/modules/JSONFile.sys.mjs",
@@ -348,50 +347,6 @@ export var ExtensionPermissions = {
     return this._getCached(extensionId);
   },
 
-  /**
-   * Validate and normalize passed in `perms`, including a fixup to
-   * include all possible "all sites" permissions when appropriate.
-   *
-   * @throws if an origin or permission is not part of optional permissions.
-   *
-   * @typedef {object} Perms
-   * @property {string[]} origins
-   * @property {string[]} permissions
-   *
-   * @param {Perms} perms api permissions and origins to be added/removed.
-   * @param {Perms} optional permissions and origins from the manifest.
-   * @returns {Perms} normalized
-   */
-  normalizeOptional(perms, optional) {
-    let allSites = false;
-    let patterns = new MatchPatternSet(optional.origins, { ignorePath: true });
-    let normalized = Object.assign({}, perms);
-
-    for (let o of perms.origins) {
-      if (!patterns.subsumes(new MatchPattern(o))) {
-        throw new Error(`${o} was not declared in the manifest`);
-      }
-      // If this is one of the "all sites" permissions
-      allSites ||= lazy.Extension.isAllSitesPermission(o);
-    }
-
-    if (allSites) {
-      // Grant/revoke ALL "all sites" optional permissions from the manifest.
-      let origins = perms.origins.concat(
-        optional.origins.filter(o => lazy.Extension.isAllSitesPermission(o))
-      );
-      normalized.origins = Array.from(new Set(origins));
-    }
-
-    for (let p of perms.permissions) {
-      if (!optional.permissions.includes(p)) {
-        throw new Error(`${p} was not declared in optional_permissions`);
-      }
-    }
-
-    return normalized;
-  },
-
   _fixupAllUrlsPerms(perms) {
     // Unfortunately, we treat <all_urls> as an API permission as well.
     // If it is added to either, ensure it is added to both.
@@ -407,7 +362,7 @@ export var ExtensionPermissions = {
    * in the format that is passed to browser.permissions.request().
    *
    * @param {string} extensionId The extension id
-   * @param {Perms} perms Object with permissions and origins array.
+   * @param {object} perms Object with permissions and origins array.
    * @param {EventEmitter} [emitter] optional object implementing emitter interfaces
    */
   async add(extensionId, perms, emitter) {
@@ -446,7 +401,7 @@ export var ExtensionPermissions = {
    * in the format that is passed to browser.permissions.request().
    *
    * @param {string} extensionId The extension id
-   * @param {Perms} perms Object with permissions and origins array.
+   * @param {object} perms Object with permissions and origins array.
    * @param {EventEmitter} [emitter] optional object implementing emitter interfaces
    */
   async remove(extensionId, perms, emitter) {
