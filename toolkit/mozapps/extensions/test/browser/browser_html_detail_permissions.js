@@ -613,7 +613,7 @@ add_task(async function testPermissionsViewStates() {
   let card = getAddonCard(view, addon.id);
   await Assert.rejects(
     card.setAddonPermission("webRequest", "permission", "add"),
-    /permission missing from manifest/,
+    /was not declared in optional_permissions/,
     "unable to set the addon permission"
   );
 
