@@ -6,11 +6,13 @@
 package org.mozilla.gecko;
 
 import android.content.Context;
+import android.os.Build;
 import android.provider.Settings.Secure;
 import android.view.View;
 import android.view.inputmethod.InputMethodInfo;
 import android.view.inputmethod.InputMethodManager;
 import java.util.Collection;
+import java.util.Locale;
 
 public final class InputMethods {
   public static final String METHOD_ANDROID_LATINIME = "com.android.inputmethod.latin/.LatinIME";
@@ -97,6 +99,13 @@ public final class InputMethods {
   public static boolean needsRestartOnReplaceRemove(final Context context) {
     final String inputMethod = getCurrentInputMethod(context);
     return METHOD_SONY.equals(inputMethod);
+  }
+
+  // Workaround for bug 1818268 - Unexpected crash on Galaxy J7
+  public static boolean dontOverrideCommitText() {
+    return Build.VERSION.SDK_INT == 23
+        && Build.MANUFACTURER.toLowerCase(Locale.ROOT).equals("samsung")
+        && Build.MODEL.startsWith("SM-J700F");
   }
 
   // TODO: Replace usages by definition in EditorInfoCompat once available (bug 1385726).
