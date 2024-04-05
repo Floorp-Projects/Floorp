@@ -12,8 +12,8 @@
 using namespace mozilla;
 
 ViewRegion::~ViewRegion() {
-  for (size_t i = 0; i < mViews.Length(); i++) {
-    [mViews[i] removeFromSuperview];
+  for (NSView* view : mViews) {
+    [view removeFromSuperview];
   }
 }
 
@@ -33,34 +33,31 @@ bool ViewRegion::UpdateRegion(const LayoutDeviceIntRegion& aRegion,
   nsTArray<NSView*> viewsToRecycle = std::move(mViews);
   // The mViews array is now empty.
 
-  size_t i = 0;
-  for (auto iter = aRegion.RectIter();
-       !iter.Done() || i < viewsToRecycle.Length(); i++) {
-    if (!iter.Done()) {
-      NSView* view = nil;
-      NSRect rect = aCoordinateConverter.DevPixelsToCocoaPoints(iter.Get());
-      if (i < viewsToRecycle.Length()) {
-        view = viewsToRecycle[i];
-      } else {
-        view = aViewCreationCallback();
-        [aContainerView addSubview:view];
-
-        // Now that the view is in the view hierarchy, it'll be kept alive by
-        // its superview, so we can drop our reference.
-        [view release];
-      }
-      if (!NSEqualRects(rect, [view frame])) {
-        [view setFrame:rect];
-      }
-      [view setNeedsDisplay:YES];
-      mViews.AppendElement(view);
-      iter.Next();
+  size_t viewsRecycled = 0;
+  for (auto iter = aRegion.RectIter(); !iter.Done(); iter.Next()) {
+    NSRect rect = aCoordinateConverter.DevPixelsToCocoaPoints(iter.Get());
+    NSView* view = nil;
+    if (viewsRecycled < viewsToRecycle.Length()) {
+      view = viewsToRecycle[viewsRecycled++];
     } else {
-      // Our new region is made of fewer rects than the old region, so we can
-      // remove this view. We only have a weak reference to it, so removing it
-      // from the view hierarchy will release it.
-      [viewsToRecycle[i] removeFromSuperview];
+      view = aViewCreationCallback();
+      [aContainerView addSubview:view];
+
+      // Now that the view is in the view hierarchy, it'll be kept alive by
+      // its superview, so we can drop our reference.
+      [view release];
     }
+    if (!NSEqualRects(rect, view.frame)) {
+      view.frame = rect;
+    }
+    view.needsDisplay = YES;
+    mViews.AppendElement(view);
+  }
+  for (NSView* view : Span(viewsToRecycle).From(viewsRecycled)) {
+    // Our new region is made of fewer rects than the old region, so we can
+    // remove this view. We only have a weak reference to it, so removing it
+    // from the view hierarchy will release it.
+    [view removeFromSuperview];
   }
 
   mRegion = aRegion;
