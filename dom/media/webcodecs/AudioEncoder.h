@@ -63,7 +63,7 @@ class AudioEncoder final : public EncoderTemplate<AudioEncoderTraits> {
 
  protected:
   virtual RefPtr<EncodedAudioChunk> EncodedDataToOutputType(
-      nsIGlobalObject* aGlobalObject, RefPtr<MediaRawData>& aData) override;
+      nsIGlobalObject* aGlobalObject, const RefPtr<MediaRawData>& aData) override;
 
   virtual AudioDecoderConfigInternal EncoderConfigToDecoderConfig(
       nsIGlobalObject* aGlobal, const RefPtr<MediaRawData>& aRawData,

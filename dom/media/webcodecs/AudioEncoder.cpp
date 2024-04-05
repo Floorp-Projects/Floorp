@@ -445,7 +445,7 @@ already_AddRefed<Promise> AudioEncoder::IsConfigSupported(
 }
 
 RefPtr<EncodedAudioChunk> AudioEncoder::EncodedDataToOutputType(
-    nsIGlobalObject* aGlobalObject, RefPtr<MediaRawData>& aData) {
+    nsIGlobalObject* aGlobalObject, const RefPtr<MediaRawData>& aData) {
   AssertIsOnOwningThread();
 
   // Package into an EncodedAudioChunk
