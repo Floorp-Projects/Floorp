@@ -18,6 +18,18 @@ function sendMessage(page, msg, data) {
   return MessageChannel.sendMessage(page.browser.messageManager, msg, data);
 }
 
+add_setup(() => {
+  // Make sure to invalidate WebExtensions API schemas that may be cached
+  // in the StartupCache when this test runs with conditioned-profiles.
+  //
+  // These tests are subject to be hitting failures consistently on
+  // landing API schema changes to the WebExtensions API permissions.
+  // or other API schema properties that are explicitly covered by
+  // this tests (e.g. errors expected to be emitted by postprocess
+  // helper functions).
+  Services.obs.notifyObservers(null, "startupcache-invalidate");
+});
+
 add_task(async function test_permissions() {
   function background() {
     browser.webRequest.onBeforeRequest.addListener(
@@ -113,11 +125,14 @@ add_task(async function test_permissions() {
   await contentPage.close();
 });
 
-add_task(async function test_no_webRequestBlocking_error() {
+add_task(async function test_missing_required_perm_for_blocking_error() {
   function background() {
     const expectedError =
       "Using webRequest.addListener with the blocking option " +
       "requires the 'webRequestBlocking' permission.";
+    const expectedErrorOnAuthRequired =
+      "Using webRequest.onAuthRequired.addListener with the blocking option " +
+      "requires either the 'webRequestBlocking' or 'webRequestAuthProvider' permission.";
 
     const blockingEvents = [
       "onBeforeRequest",
@@ -135,7 +150,9 @@ add_task(async function test_no_webRequestBlocking_error() {
             ["blocking"]
           );
         },
-        expectedError,
+        eventName === "onAuthRequired"
+          ? expectedErrorOnAuthRequired
+          : expectedError,
         `Got the expected exception for a blocking webRequest.${eventName} listener`
       );
     }
