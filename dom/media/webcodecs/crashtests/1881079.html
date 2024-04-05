@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<script>
+document.addEventListener("DOMContentLoaded", async () => {
+  const encoder = new VideoEncoder({
+    'output': (e) => {},
+    'error': (e) => {},
+  })
+  encoder.configure({
+    'codec': '󠋚᩿',
+    'width': 2147483648,
+    'height': 60,
+  })
+  encoder.reset()
+  encoder.configure({
+    'codec': '󠋚᩿',
+    'width': 4294967295,
+    'height': 29,
+  })
+  const decoder = new VideoDecoder({
+    'output': (e) => {},
+    'error': (e) => {},
+  })
+  decoder.configure({
+    'codec': '󠋚᩿',
+    'width': 2147483648,
+    'height': 60,
+  })
+  decoder.reset()
+  decoder.configure({
+    'codec': '󠋚᩿',
+    'width': 4294967295,
+    'height': 29,
+  })
+})
+</script>
