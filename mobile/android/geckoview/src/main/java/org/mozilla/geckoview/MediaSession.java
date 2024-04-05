@@ -415,7 +415,7 @@ public class MediaSession {
     public String toString() {
       final StringBuilder builder = new StringBuilder("Metadata {");
       builder
-          .append(", title=")
+          .append("title=")
           .append(title)
           .append(", artist=")
           .append(artist)
