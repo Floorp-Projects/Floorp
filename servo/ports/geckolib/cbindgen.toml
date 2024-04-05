@@ -51,6 +51,7 @@ derive_neq = true
 "feature = servo" = "CBINDGEN_IS_SERVO"
 "feature = servo-layout-2013" = "CBINDGEN_IS_SERVO"
 "feature = servo-layout-2020" = "CBINDGEN_IS_SERVO"
+"feature = track_alloc_size" = "CBINDGEN_IS_SERVO"
 # These will always be defined.
 "feature = gecko" = "CBINDGEN_IS_GECKO"
 "feature = cbindgen" = "CBINDGEN_IS_GECKO"

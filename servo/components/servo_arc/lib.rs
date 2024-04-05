@@ -120,6 +120,8 @@ impl<T> UniqueArc<T> {
                 .unwrap_or_else(|| alloc::handle_alloc_error(layout))
                 .cast::<ArcInner<mem::MaybeUninit<T>>>();
             ptr::write(&mut p.as_mut().count, atomic::AtomicUsize::new(1));
+            #[cfg(feature = "track_alloc_size")]
+            ptr::write(&mut p.as_mut().alloc_size, layout.size());
 
             #[cfg(feature = "gecko_refcount_logging")]
             {
@@ -169,9 +171,24 @@ unsafe impl<T: ?Sized + Sync + Send> Send for Arc<T> {}
 unsafe impl<T: ?Sized + Sync + Send> Sync for Arc<T> {}
 
 /// The object allocated by an Arc<T>
+///
+/// See https://github.com/mozilla/cbindgen/issues/937 for the derive-{eq,neq}=false. But we don't
+/// use those anyways so we can just disable them.
+/// cbindgen:derive-eq=false
+/// cbindgen:derive-neq=false
 #[repr(C)]
 struct ArcInner<T: ?Sized> {
     count: atomic::AtomicUsize,
+    // NOTE(emilio): This needs to be here so that HeaderSlice<> is deallocated properly if the
+    // allocator relies on getting the right Layout. We don't need to track the right alignment,
+    // since we know that statically.
+    //
+    // This member could be completely avoided once min_specialization feature is stable (by
+    // implementing a trait for HeaderSlice that gives you the right layout). For now, servo-only
+    // since Gecko doesn't need it (its allocator doesn't need the size for the alignments we care
+    // about). See https://github.com/rust-lang/rust/issues/31844.
+    #[cfg(feature = "track_alloc_size")]
+    alloc_size: usize,
     data: T,
 }
 
@@ -190,24 +207,31 @@ impl<T> Arc<T> {
     /// Construct an `Arc<T>`
     #[inline]
     pub fn new(data: T) -> Self {
-        let ptr = Box::into_raw(Box::new(ArcInner {
-            count: atomic::AtomicUsize::new(1),
-            data,
-        }));
+        let layout = Layout::new::<ArcInner<T>>();
+        let p = unsafe {
+            let ptr = ptr::NonNull::new(alloc::alloc(layout))
+                .unwrap_or_else(|| alloc::handle_alloc_error(layout))
+                .cast::<ArcInner<T>>();
+            ptr::write(ptr.as_ptr(), ArcInner {
+                count: atomic::AtomicUsize::new(1),
+                #[cfg(feature = "track_alloc_size")]
+                alloc_size: layout.size(),
+                data,
+            });
+            ptr
+        };
 
         #[cfg(feature = "gecko_refcount_logging")]
         unsafe {
             // FIXME(emilio): Would be so amazing to have
             // std::intrinsics::type_name() around, so that we could also report
             // a real size.
-            NS_LogCtor(ptr as *mut _, b"ServoArc\0".as_ptr() as *const _, 8);
+            NS_LogCtor(p.as_ptr() as *mut _, b"ServoArc\0".as_ptr() as *const _, 8);
         }
 
-        unsafe {
-            Arc {
-                p: ptr::NonNull::new_unchecked(ptr),
-                phantom: PhantomData,
-            }
+        Arc {
+            p,
+            phantom: PhantomData,
         }
     }
 
@@ -264,10 +288,13 @@ impl<T> Arc<T> {
     where
         F: FnOnce(Layout) -> *mut u8,
     {
-        let ptr = alloc(Layout::new::<ArcInner<T>>()) as *mut ArcInner<T>;
+        let layout = Layout::new::<ArcInner<T>>();
+        let ptr = alloc(layout) as *mut ArcInner<T>;
 
         let x = ArcInner {
             count: atomic::AtomicUsize::new(STATIC_REFCOUNT),
+            #[cfg(feature = "track_alloc_size")]
+            alloc_size: layout.size(),
             data,
         };
 
@@ -335,7 +362,14 @@ impl<T: ?Sized> Arc<T> {
     #[inline(never)]
     unsafe fn drop_slow(&mut self) {
         self.record_drop();
-        let _ = Box::from_raw(self.ptr());
+        let inner = self.ptr();
+
+        let layout = Layout::for_value(&*inner);
+        #[cfg(feature = "track_alloc_size")]
+        let layout = Layout::from_size_align_unchecked((*inner).alloc_size, layout.align());
+
+        std::ptr::drop_in_place(inner);
+        alloc::dealloc(inner as *mut _, layout);
     }
 
     /// Test pointer equality between the two Arcs, i.e. they must be the _same_
@@ -709,11 +743,6 @@ impl<H, T> HeaderSlice<H, T> {
     }
 }
 
-#[inline(always)]
-fn divide_rounding_up(dividend: usize, divisor: usize) -> usize {
-    (dividend + divisor - 1) / divisor
-}
-
 impl<H, T> Arc<HeaderSlice<H, T>> {
     /// Creates an Arc for a HeaderSlice using the given header struct and
     /// iterator to generate the slice.
@@ -740,26 +769,17 @@ impl<H, T> Arc<HeaderSlice<H, T>> {
     {
         assert_ne!(size_of::<T>(), 0, "Need to think about ZST");
 
-        let size = size_of::<ArcInner<HeaderSlice<H, T>>>() + size_of::<T>() * num_items;
-        let inner_align = align_of::<ArcInner<HeaderSlice<H, T>>>();
-        debug_assert!(inner_align >= align_of::<T>());
-
-        let ptr: *mut ArcInner<HeaderSlice<H, T>>;
-        unsafe {
+        let layout = Layout::new::<ArcInner<HeaderSlice<H, T>>>();
+        debug_assert!(layout.align() >= align_of::<T>());
+        debug_assert!(layout.align() >= align_of::<usize>());
+        let array_layout = Layout::array::<T>(num_items).expect("Overflow");
+        let (layout, _offset) = layout.extend(array_layout).expect("Overflow");
+        let p = unsafe {
             // Allocate the buffer.
-            let layout = if inner_align <= align_of::<usize>() {
-                Layout::from_size_align_unchecked(size, align_of::<usize>())
-            } else if inner_align <= align_of::<u64>() {
-                // On 32-bit platforms <T> may have 8 byte alignment while usize
-                // has 4 byte aligment.  Use u64 to avoid over-alignment.
-                // This branch will compile away in optimized builds.
-                Layout::from_size_align_unchecked(size, align_of::<u64>())
-            } else {
-                panic!("Over-aligned type not handled");
-            };
-
             let buffer = alloc(layout);
-            ptr = buffer as *mut ArcInner<HeaderSlice<H, T>>;
+            let mut p = ptr::NonNull::new(buffer)
+                .unwrap_or_else(|| alloc::handle_alloc_error(layout))
+                .cast::<ArcInner<HeaderSlice<H, T>>>();
 
             // Write the data.
             //
@@ -770,11 +790,13 @@ impl<H, T> Arc<HeaderSlice<H, T>> {
             } else {
                 atomic::AtomicUsize::new(1)
             };
-            ptr::write(&mut ((*ptr).count), count);
-            ptr::write(&mut ((*ptr).data.header), header);
-            ptr::write(&mut ((*ptr).data.len), num_items);
+            ptr::write(&mut p.as_mut().count, count);
+            #[cfg(feature = "track_alloc_size")]
+            ptr::write(&mut p.as_mut().alloc_size, layout.size());
+            ptr::write(&mut p.as_mut().data.header, header);
+            ptr::write(&mut p.as_mut().data.len, num_items);
             if num_items != 0 {
-                let mut current = std::ptr::addr_of_mut!((*ptr).data.data) as *mut T;
+                let mut current = std::ptr::addr_of_mut!(p.as_mut().data.data) as *mut T;
                 for _ in 0..num_items {
                     ptr::write(
                         current,
@@ -787,20 +809,21 @@ impl<H, T> Arc<HeaderSlice<H, T>> {
                 // We should have consumed the buffer exactly, maybe accounting
                 // for some padding from the alignment.
                 debug_assert!(
-                    (buffer.add(size) as usize - current as *mut u8 as usize) < inner_align
+                    (buffer.add(layout.size()) as usize - current as *mut u8 as usize) < layout.align()
                 );
             }
             assert!(
                 items.next().is_none(),
                 "ExactSizeIterator under-reported length"
             );
-        }
+            p
+        };
         #[cfg(feature = "gecko_refcount_logging")]
         unsafe {
             if !is_static {
                 // FIXME(emilio): Would be so amazing to have
                 // std::intrinsics::type_name() around.
-                NS_LogCtor(ptr as *mut _, b"ServoArc\0".as_ptr() as *const _, 8)
+                NS_LogCtor(p.as_ptr() as *mut _, b"ServoArc\0".as_ptr() as *const _, 8)
             }
         }
 
@@ -810,11 +833,10 @@ impl<H, T> Arc<HeaderSlice<H, T>> {
             size_of::<usize>(),
             "The Arc should be thin"
         );
-        unsafe {
-            Arc {
-                p: ptr::NonNull::new_unchecked(ptr),
-                phantom: PhantomData,
-            }
+
+        Arc {
+            p,
+            phantom: PhantomData,
         }
     }
 
@@ -826,18 +848,7 @@ impl<H, T> Arc<HeaderSlice<H, T>> {
         I: Iterator<Item = T>,
     {
         Arc::from_header_and_iter_alloc(
-            |layout| {
-                // align will only ever be align_of::<usize>() or align_of::<u64>()
-                let align = layout.align();
-                unsafe {
-                    if align == mem::align_of::<usize>() {
-                        Self::allocate_buffer::<usize>(layout.size())
-                    } else {
-                        assert_eq!(align, mem::align_of::<u64>());
-                        Self::allocate_buffer::<u64>(layout.size())
-                    }
-                }
-            },
+            |layout| unsafe { alloc::alloc(layout) },
             header,
             items,
             num_items,
@@ -854,17 +865,6 @@ impl<H, T> Arc<HeaderSlice<H, T>> {
     {
         let len = items.len();
         Self::from_header_and_iter_with_size(header, items, len)
-    }
-
-    #[inline]
-    unsafe fn allocate_buffer<W>(size: usize) -> *mut u8 {
-        // We use Vec because the underlying allocation machinery isn't
-        // available in stable Rust. To avoid alignment issues, we allocate
-        // words rather than bytes, rounding up to the nearest word size.
-        let words_to_allocate = divide_rounding_up(size, mem::size_of::<W>());
-        let mut vec = Vec::<W>::with_capacity(words_to_allocate);
-        vec.set_len(words_to_allocate);
-        Box::into_raw(vec.into_boxed_slice()) as *mut W as *mut u8
     }
 }
 
