@@ -296,8 +296,7 @@ void DecoderTemplate<DecoderType>::CloseInternal(const nsresult& aResult) {
   if (r.isErr()) {
     nsCString name;
     GetErrorName(r.unwrapErr(), name);
-    LOGE("Error in ResetInternal: %s", name.get());
-    MOZ_CRASH();
+    LOGE("Error in ResetInternal during CloseInternal: %s", name.get());
   }
   mState = CodecState::Closed;
   nsCString error;
@@ -473,7 +472,6 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessConfigureMessage(
     mProcessingMessage.reset();
     QueueATask("Error while configuring decoder",
                [self = RefPtr{this}]() MOZ_CAN_RUN_SCRIPT_BOUNDARY {
-                 MOZ_ASSERT(self->mState != CodecState::Closed);
                  self->CloseInternal(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
                });
     return MessageProcessedResult::Processed;
