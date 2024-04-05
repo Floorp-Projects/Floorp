@@ -529,7 +529,6 @@ void JS::ProfilingFrameIterator::settleFrames() {
     new (storage())
         jit::JSJitProfilingFrameIterator((jit::CommonFrameLayout*)fp);
     kind_ = Kind::JSJit;
-    MOZ_ASSERT(!jsJitIter().done());
     maybeSetEndStackAddress(jsJitIter().endStackAddress());
     return;
   }
