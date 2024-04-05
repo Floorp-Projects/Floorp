@@ -2661,6 +2661,7 @@ void MacroAssembler::loadMegamorphicSetPropCache(Register dest) {
 
 void MacroAssembler::lookupStringInAtomCacheLastLookups(Register str,
                                                         Register scratch,
+                                                        Register output,
                                                         Label* fail) {
   Label found;
 
@@ -2680,7 +2681,7 @@ void MacroAssembler::lookupStringInAtomCacheLastLookups(Register str,
   // and jump back up to our usual atom handling code
   bind(&found);
   size_t atomOffset = StringToAtomCache::LastLookup::offsetOfAtom();
-  loadPtr(Address(scratch, atomOffset), str);
+  loadPtr(Address(scratch, atomOffset), output);
 }
 
 void MacroAssembler::loadAtomHash(Register id, Register outHash, Label* done) {
@@ -2740,7 +2741,7 @@ void MacroAssembler::loadAtomOrSymbolAndHash(ValueOperand value, Register outId,
   loadAtomHash(outId, outHash, &done);
 
   bind(&nonAtom);
-  lookupStringInAtomCacheLastLookups(outId, outHash, cacheMiss);
+  lookupStringInAtomCacheLastLookups(outId, outHash, outId, cacheMiss);
   jump(&atom);
 
   bind(&done);

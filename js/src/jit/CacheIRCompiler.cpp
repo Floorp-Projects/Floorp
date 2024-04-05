@@ -2838,7 +2838,7 @@ bool CacheIRCompiler::emitStringToAtom(StringOperandId stringId) {
   masm.branchTest32(Assembler::NonZero, Address(str, JSString::offsetOfFlags()),
                     Imm32(JSString::ATOM_BIT), &done);
 
-  masm.lookupStringInAtomCacheLastLookups(str, scratch, &vmCall);
+  masm.lookupStringInAtomCacheLastLookups(str, scratch, str, &vmCall);
   masm.jump(&done);
 
   masm.bind(&vmCall);
