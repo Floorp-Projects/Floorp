@@ -63,7 +63,7 @@ server.registerPathHandler("/authenticate.sjs", (request, response) => {
   }
 });
 
-function getExtension(bgConfig) {
+function getExtension(bgConfig, permissions = ["webRequestBlocking"]) {
   function background(config) {
     let path = config.path;
     browser.webRequest.onBeforeRequest.addListener(
@@ -125,18 +125,18 @@ function getExtension(bgConfig) {
 
   return ExtensionTestUtils.loadExtension({
     manifest: {
-      permissions: ["webRequest", "webRequestBlocking", bgConfig.path],
+      permissions: [bgConfig.path, "webRequest", ...permissions],
     },
     background: `(${background})(${JSON.stringify(bgConfig)})`,
   });
 }
 
-add_task(async function test_webRequest_auth() {
+async function test_webRequest_auth(permissions) {
   let config = {
     path: `${BASE_URL}/*`,
     realm: `webRequest_auth${Math.random()}`,
     onBeforeRequest: {
-      extra: ["blocking"],
+      extra: permissions.includes("webRequestBlocking") ? ["blocking"] : [],
     },
     onAuthRequired: {
       extra: ["blocking"],
@@ -149,7 +149,7 @@ add_task(async function test_webRequest_auth() {
     },
   };
 
-  let extension = getExtension(config);
+  let extension = getExtension(config, permissions);
   await extension.startup();
 
   let requestUrl = `${BASE_URL}/authenticate.sjs?realm=${config.realm}`;
@@ -174,6 +174,14 @@ add_task(async function test_webRequest_auth() {
 
   await contentPage.close();
   await extension.unload();
+}
+
+add_task(async function test_webRequest_auth_with_webRequestBlocking() {
+  await test_webRequest_auth(["webRequestBlocking"]);
+});
+
+add_task(async function test_webRequest_auth_with_webRequestAuthProvider() {
+  await test_webRequest_auth(["webRequestAuthProvider"]);
 });
 
 add_task(async function test_webRequest_auth_cancelled() {
