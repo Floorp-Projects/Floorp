@@ -21,3 +21,12 @@
     grid-template-columns: min-content 3fr min-content 2fr 1fr 1fr min-content min-content;
   }
 }
+
+virtual-list {
+  grid-column: span 9;
+
+  .top-padding,
+  .bottom-padding {
+    grid-column: span 9;
+  }
+}
