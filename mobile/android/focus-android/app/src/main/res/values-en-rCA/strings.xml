@@ -84,7 +84,11 @@
     <string name="share_dialog_title">Share via</string>
 
     <string name="notification_erase_title_android_14">Erase browsing history?</string>
-    <string name="notification_erase_text_android_14">Tap or clear this notification to securely erase your browsing history.</string>
+    <string name="notification_erase_text_android_14" moz:RemovedIn="124" tools:ignore="UnusedResources">Tap or clear this notification to securely erase your browsing history.</string>
+
+    <!-- Text shown in the notification description that pops up to remind the user that a browsing session is active
+    for Android 14+. -->
+    <string name="notification_erase_text_android_14_1">Tap or swipe this notification to securely erase your browsing history.</string>
 
     <string name="notification_erase_text">Erase browsing history</string>
 

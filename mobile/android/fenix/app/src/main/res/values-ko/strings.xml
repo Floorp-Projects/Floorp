@@ -192,11 +192,13 @@
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">중지</string>
     <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_add_ons">부가 기능</string>
+    <string name="browser_menu_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">부가 기능</string>
+    <!-- Browser menu button that opens the extensions manager -->
+    <string name="browser_menu_extensions">확장 기능</string>
     <!-- Browser menu button that opens account settings -->
     <string name="browser_menu_account_settings">계정 정보</string>
     <!-- Text displayed when there are no add-ons to be shown -->
-    <string name="no_add_ons">부가 기능 없음</string>
+    <string name="no_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">부가 기능 없음</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">도움말</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -212,7 +214,7 @@
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">홈 화면에 추가</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
-    <string name="browser_menu_install_on_homescreen">설치</string>
+    <string name="browser_menu_install_on_homescreen" moz:removedIn="126" tools:ignore="UnusedResources">설치</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">다시 동기화</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -250,6 +252,15 @@
 
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">홈페이지 개인화</string>
+
+    <!-- Browser menu label to sign in to sync on the device using Mozilla accounts -->
+    <string name="browser_menu_sign_in" tools:ignore="UnusedResources">로그인</string>
+    <!-- Browser menu caption label for the "Sign in" browser menu item described in browser_menu_sign_in -->
+    <string name="browser_menu_sign_in_caption" tools:ignore="UnusedResources">비밀번호, 탭 등을 동기화하세요</string>
+
+    <!-- Extensions management fragment -->
+    <!-- Text displayed when there are no extensions to be shown -->
+    <string name="extensions_management_no_extensions">확장 기능 없음</string>
 
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
@@ -607,10 +618,14 @@
     <string name="quit_application">변경 사항을 적용하기 위해 애플리케이션을 종료하는 중…</string>
 
     <!-- Preference for add_ons -->
-    <string name="preferences_addons">부가 기능</string>
+    <string name="preferences_addons" moz:removedIn="126" tools:ignore="UnusedResources">부가 기능</string>
 
+    <!-- Preference for extensions -->
+    <string name="preferences_extensions">확장 기능</string>
     <!-- Preference for installing a local add-on -->
-    <string name="preferences_install_local_addon">파일에서 부가 기능 설치</string>
+    <string name="preferences_install_local_addon" moz:removedIn="126" tools:ignore="UnusedResources">파일에서 부가 기능 설치</string>
+    <!-- Preference for installing a local extension -->
+    <string name="preferences_install_local_extension">파일에서 확장 기능 설치</string>
     <!-- Preference for notifications -->
     <string name="preferences_notifications">알림</string>
 
@@ -621,7 +636,9 @@
 
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
-    <string name="preferences_customize_amo_collection">사용자 지정 부가 기능 모음집</string>
+    <string name="preferences_customize_amo_collection" moz:removedIn="126" tools:ignore="UnusedResources">사용자 지정 부가 기능 모음집</string>
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_extension_collection">사용자 지정 확장 기능 모음집</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">확인</string>
     <!-- Button caption to abort the add-on collection configuration -->
@@ -631,7 +648,10 @@
     <!-- Hint displayed on input field for custom collection user ID-->
     <string name="customize_addon_collection_user_hint">모음집 소유자 (사용자 ID)</string>
     <!-- Toast shown after confirming the custom add-on collection configuration -->
-    <string name="toast_customize_addon_collection_done">부가 기능 모음집이 변경되었습니다. 변경 사항을 적용하기 위해 애플리케이션을 종료하는 중…</string>
+    <string name="toast_customize_addon_collection_done" moz:removedIn="126" tools:ignore="UnusedResources">부가 기능 모음집이 변경되었습니다. 변경 사항을 적용하기 위해 애플리케이션을 종료하는 중…</string>
+
+    <!-- Toast shown after confirming the custom extension collection configuration -->
+    <string name="toast_customize_extension_collection_done">확장 기능 모음집이 변경되었습니다. 변경 사항을 적용하기 위해 애플리케이션을 종료하는 중…</string>
 
     <!-- Customize Home -->
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
@@ -687,22 +707,38 @@
 
     <!-- Add-ons general availability nimbus message-->
     <!-- Title of the Nimbus message for add-ons general availability-->
-    <string name="addon_ga_message_title" tools:ignore="UnusedResources">새 부가 기능 지금 사용 가능</string>
+    <string name="addon_ga_message_title" moz:removedIn="126" tools:ignore="UnusedResources">새 부가 기능 지금 사용 가능</string>
+    <!-- Title of the Nimbus message for extension general availability-->
+    <string name="addon_ga_message_title_2" tools:ignore="UnusedResources">새 확장 기능 지금 사용 가능</string>
     <!-- Body of the Nimbus message for add-ons general availability. 'Firefox' intentionally hardcoded here-->
     <string name="addon_ga_message_body" tools:ignore="UnusedResources">Firefox를 자신만의 것으로 만들 수 있는 100개 이상의 새로운 확장 기능을 확인해 보세요.</string>
     <!-- Button text of the Nimbus message for add-ons general availability. -->
-    <string name="addon_ga_message_button" tools:ignore="UnusedResources">부가 기능 살펴보기</string>
+    <string name="addon_ga_message_button" moz:removedIn="126" tools:ignore="UnusedResources">부가 기능 살펴보기</string>
 
-    <!-- Add-on process crash dialog to user -->
+    <!-- Button text of the Nimbus message for extensions general availability. -->
+    <string name="addon_ga_message_button_2" tools:ignore="UnusedResources">확장 기능 탐색하기</string>
+
+    <!-- Extension process crash dialog to user -->
     <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
-    <string name="addon_process_crash_dialog_title" tools:ignore="UnusedResources">부가 기능이 일시적으로 비활성화됨</string>
+    <string name="addon_process_crash_dialog_title" moz:removedIn="126" tools:ignore="UnusedResources">부가 기능이 일시적으로 비활성화됨</string>
+    <!-- Title of the extension crash dialog shown to the user when enough errors have occurred with extensions and they need to be temporarily disabled -->
+    <string name="extension_process_crash_dialog_title">확장 기능이 일시적으로 비활성화됨</string>
     <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
-    <string name="addon_process_crash_dialog_message" tools:ignore="UnusedResources">하나 이상의 부가 기능이 작동을 중지하여 시스템이 불안정해졌습니다. %1$s가 부가 기능을 다시 시작하지 못했습니다.\n\n현재 세션 중에는 부가 기능이 다시 시작되지 않습니다.\n\n부가 기능을 제거하거나 비활성화하면 이 문제가 해결될 수도 있습니다.</string>
+    <string name="addon_process_crash_dialog_message" moz:removedIn="126" tools:ignore="UnusedResources">하나 이상의 부가 기능이 작동을 중지하여 시스템이 불안정해졌습니다. %1$s가 부가 기능을 다시 시작하지 못했습니다.\n\n현재 세션 중에는 부가 기능이 다시 시작되지 않습니다.\n\n부가 기능을 제거하거나 비활성화하면 이 문제가 해결될 수도 있습니다.</string>
+    <!-- This is a message shown to the user when too many errors have occurred with the extensions process and they have been disabled.
+    The user can decide if they would like to continue trying to start extensions or if they'd rather continue without them.
+    The first parameter is the application name. -->
+    <string name="extension_process_crash_dialog_message">하나 이상의 확장 기능이 작동을 중지하여 시스템이 불안정해졌습니다. %1$s가 확장 기능을 다시 시작하지 못했습니다.\n\n현재 세션 중에는 확장 기능이 다시 시작되지 않습니다.\n\n확장 기능을 제거하거나 비활성화하면 이 문제가 해결될 수도 있습니다.</string>
     <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
-    <string name="addon_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">부가 기능을 다시 시작해 보기</string>
+    <string name="addon_process_crash_dialog_retry_button_text" moz:removedIn="126" tools:ignore="UnusedResources">부가 기능을 다시 시작해 보기</string>
 
+    <!-- Button text on the extension crash dialog to prompt the user to try restarting the extensions but the dialog will reappear if it is unsuccessful again -->
+    <string name="extension_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">확장 기능을 다시 시작해 보기</string>
     <!-- The user will continue with all add-ons disabled -->
-    <string name="addon_process_crash_dialog_disable_addons_button_text" tools:ignore="UnusedResources">부가 기능을 비활성화하고 계속</string>
+    <string name="addon_process_crash_dialog_disable_addons_button_text" moz:removedIn="126" tools:ignore="UnusedResources">부가 기능을 비활성화하고 계속</string>
+
+    <!-- Button text on the extension crash dialog to prompt the user to continue with all extensions disabled. -->
+    <string name="extension_process_crash_dialog_disable_extensions_button_text">확장 기능을 비활성화하고 계속</string>
 
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->
@@ -2394,24 +2430,14 @@
     <string name="review_quality_check_contextual_onboarding_learn_more">Mozilla의 %1$s 기능을 사용하여 편향되고 허위 리뷰를 방지하는 데 도움을 드립니다. AI 모델은 쇼핑하는 동안 사용자를 보호하기 위해 항상 개선되고 있습니다. %2$s</string>
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">더 알아보기</string>
-    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is the Fakespot product name. Following parameters are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy and review_quality_check_contextual_onboarding_terms_use. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
-    <string name="review_quality_check_contextual_onboarding_caption" moz:RemovedIn="123" tools:ignore="UnusedResources">&quot;사용해보기&quot;를 선택하면 Mozilla %2$s 및 %3$s의 %1$s에 동의하게 됩니다.</string>
-    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. Parameter is the Fakespot product name. After the colon, what appears are two links, each on their own line. The first link is to a Privacy policy (review_quality_check_contextual_onboarding_privacy_policy_2). The second link is to Terms of use (review_quality_check_contextual_onboarding_terms_use_2). -->
-    <string name="review_quality_check_contextual_onboarding_caption_2" moz:RemovedIn="123" tools:ignore="UnusedResources">&quot;사용해보기&quot;를 선택하면 %1$s의 다음 사항에 동의하게 됩니다:</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is Firefox app name, third parameter is the Fakespot product name. Second & fourth are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy_3 and review_quality_check_contextual_onboarding_terms_use. -->
     <string name="review_quality_check_contextual_onboarding_caption_3" moz:RemovedIn="124" tools:ignore="UnusedResources">“사용해보기”를 선택하면 %1$s의 %2$s와 %3$s의 %4$s에 동의하게 됩니다.</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is Firefox app name, third parameter is the Fakespot product name. Second & fourth are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy_3 and review_quality_check_contextual_onboarding_terms_use. -->
     <string name="review_quality_check_contextual_onboarding_caption_4">“사용해보기”를 선택하면 %1$s의 %2$s와 %3$s의 %4$s에 동의하게 됩니다.</string>
-    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy" moz:RemovedIn="123" tools:ignore="UnusedResources">개인정보처리방침</string>
-    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy_2" moz:RemovedIn="123" tools:ignore="UnusedResources">개인정보처리방침</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy notice. -->
     <string name="review_quality_check_contextual_onboarding_privacy_policy_3">개인 정보 보호 정책</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
     <string name="review_quality_check_contextual_onboarding_terms_use">사용 약관</string>
-    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
-    <string name="review_quality_check_contextual_onboarding_terms_use_2" moz:RemovedIn="123" tools:ignore="UnusedResources">사용 약관</string>
     <!-- Text for opt-in button from the review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_primary_button_text">사용해보기</string>
     <!-- Text for opt-out button from the review quality check contextual onboarding card. -->
@@ -2657,6 +2683,8 @@
     <!-- Additional information for the data saving mode warning dialog used by the translations feature. This text explains the reason a download is required for a translation. -->
     <string name="download_language_file_dialog_message_all_languages">개인 정보 보호를 위해 언어 일부분을 캐시에 다운로드합니다.</string>
 
+    <!-- Additional information for the data saving mode warning dialog used by the translations feature. This text explains the reason a download is required for a translation without mentioning the cache. -->
+    <string name="download_language_file_dialog_message_all_languages_no_cache">개인 정보 보호를 위해 언어 일부분을 다운로드합니다.</string>
     <!-- Checkbox label text on the data saving mode warning dialog used by the translations feature. This checkbox allows users to ignore the data usage warnings. -->
     <string name="download_language_file_dialog_checkbox_text">항상 데이터 절약 모드에서 다운로드</string>
     <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to confirm they wish to continue and download the language file. -->

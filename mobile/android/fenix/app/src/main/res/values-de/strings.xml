@@ -189,11 +189,13 @@
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Anhalten</string>
     <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_add_ons">Add-ons</string>
+    <string name="browser_menu_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Add-ons</string>
+    <!-- Browser menu button that opens the extensions manager -->
+    <string name="browser_menu_extensions">Erweiterungen</string>
     <!-- Browser menu button that opens account settings -->
     <string name="browser_menu_account_settings">Kontoinformationen</string>
     <!-- Text displayed when there are no add-ons to be shown -->
-    <string name="no_add_ons">Hier sind keine Add-ons</string>
+    <string name="no_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Hier sind keine Add-ons</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Hilfe</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -209,7 +211,7 @@
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">Zum Startbildschirm hinzufügen</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
-    <string name="browser_menu_install_on_homescreen">Installieren</string>
+    <string name="browser_menu_install_on_homescreen" moz:removedIn="126" tools:ignore="UnusedResources">Installieren</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">Neu synchronisieren</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -247,6 +249,15 @@
 
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">Startbildschirm anpassen</string>
+
+    <!-- Browser menu label to sign in to sync on the device using Mozilla accounts -->
+    <string name="browser_menu_sign_in" tools:ignore="UnusedResources">Anmelden</string>
+    <!-- Browser menu caption label for the "Sign in" browser menu item described in browser_menu_sign_in -->
+    <string name="browser_menu_sign_in_caption" tools:ignore="UnusedResources">Synchronisieren Sie Passwörter, Tabs und mehr</string>
+
+    <!-- Extensions management fragment -->
+    <!-- Text displayed when there are no extensions to be shown -->
+    <string name="extensions_management_no_extensions">Keine Erweiterungen vorhanden</string>
 
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
@@ -602,10 +613,14 @@
     <string name="quit_application">Beenden der Anwendung, um Änderungen zu übernehmen…</string>
 
     <!-- Preference for add_ons -->
-    <string name="preferences_addons">Add-ons</string>
+    <string name="preferences_addons" moz:removedIn="126" tools:ignore="UnusedResources">Add-ons</string>
 
+    <!-- Preference for extensions -->
+    <string name="preferences_extensions">Erweiterungen</string>
     <!-- Preference for installing a local add-on -->
-    <string name="preferences_install_local_addon">Add-on aus Datei installieren</string>
+    <string name="preferences_install_local_addon" moz:removedIn="126" tools:ignore="UnusedResources">Add-on aus Datei installieren</string>
+    <!-- Preference for installing a local extension -->
+    <string name="preferences_install_local_extension">Erweiterung aus Datei installieren</string>
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Benachrichtigungen</string>
 
@@ -616,7 +631,9 @@
 
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
-    <string name="preferences_customize_amo_collection">Benutzerdefinierte Add-on-Sammlung</string>
+    <string name="preferences_customize_amo_collection" moz:removedIn="126" tools:ignore="UnusedResources">Benutzerdefinierte Add-on-Sammlung</string>
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_extension_collection">Benutzerdefinierte Erweiterungssammlung</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">OK</string>
     <!-- Button caption to abort the add-on collection configuration -->
@@ -626,7 +643,10 @@
     <!-- Hint displayed on input field for custom collection user ID-->
     <string name="customize_addon_collection_user_hint">Sammlungsbesitzer (Benutzer-ID)</string>
     <!-- Toast shown after confirming the custom add-on collection configuration -->
-    <string name="toast_customize_addon_collection_done">Add-on-Sammlung geändert. Anwendung wird beendet, um Änderungen zu übernehmen…</string>
+    <string name="toast_customize_addon_collection_done" moz:removedIn="126" tools:ignore="UnusedResources">Add-on-Sammlung geändert. Anwendung wird beendet, um Änderungen zu übernehmen…</string>
+
+    <!-- Toast shown after confirming the custom extension collection configuration -->
+    <string name="toast_customize_extension_collection_done">Erweiterungssammlung geändert. Beenden der Anwendung, um Änderungen zu übernehmen…</string>
 
     <!-- Customize Home -->
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
@@ -681,21 +701,37 @@
 
     <!-- Add-ons general availability nimbus message-->
     <!-- Title of the Nimbus message for add-ons general availability-->
-    <string name="addon_ga_message_title" tools:ignore="UnusedResources">Neue Add-ons jetzt verfügbar</string>
+    <string name="addon_ga_message_title" moz:removedIn="126" tools:ignore="UnusedResources">Neue Add-ons jetzt verfügbar</string>
+    <!-- Title of the Nimbus message for extension general availability-->
+    <string name="addon_ga_message_title_2" tools:ignore="UnusedResources">Neue Erweiterungen sind jetzt verfügbar</string>
     <!-- Body of the Nimbus message for add-ons general availability. 'Firefox' intentionally hardcoded here-->
     <string name="addon_ga_message_body" tools:ignore="UnusedResources">Sehen Sie sich über 100 neue Erweiterungen an, mit denen Sie Firefox an Ihre Bedürfnisse anpassen können.</string>
     <!-- Button text of the Nimbus message for add-ons general availability. -->
-    <string name="addon_ga_message_button" tools:ignore="UnusedResources">Entdecken Sie weitere Add-ons</string>
+    <string name="addon_ga_message_button" moz:removedIn="126" tools:ignore="UnusedResources">Entdecken Sie weitere Add-ons</string>
 
-    <!-- Add-on process crash dialog to user -->
+    <!-- Button text of the Nimbus message for extensions general availability. -->
+    <string name="addon_ga_message_button_2" tools:ignore="UnusedResources">Entdecken Sie Erweiterungen</string>
+
+    <!-- Extension process crash dialog to user -->
     <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
-    <string name="addon_process_crash_dialog_title" tools:ignore="UnusedResources">Add-ons sind temporär deaktiviert</string>
+    <string name="addon_process_crash_dialog_title" moz:removedIn="126" tools:ignore="UnusedResources">Add-ons sind temporär deaktiviert</string>
+    <!-- Title of the extension crash dialog shown to the user when enough errors have occurred with extensions and they need to be temporarily disabled -->
+    <string name="extension_process_crash_dialog_title">Erweiterungen sind temporär deaktiviert</string>
     <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
-    <string name="addon_process_crash_dialog_message" tools:ignore="UnusedResources">Ein oder mehrere Add-ons funktionieren nicht mehr und machen Ihr System instabil. %1$s hat erfolglos versucht, das Add-on oder die Add-ons neu zu starten.\n\nAdd-ons werden während Ihrer aktuellen Sitzung nicht neu gestartet.\n\nEntfernen oder Deaktivieren von Add-ons kann dieses Problem beheben.</string>
+    <string name="addon_process_crash_dialog_message" moz:removedIn="126" tools:ignore="UnusedResources">Ein oder mehrere Add-ons funktionieren nicht mehr und machen Ihr System instabil. %1$s hat erfolglos versucht, das Add-on oder die Add-ons neu zu starten.\n\nAdd-ons werden während Ihrer aktuellen Sitzung nicht neu gestartet.\n\nEntfernen oder Deaktivieren von Add-ons kann dieses Problem beheben.</string>
+    <!-- This is a message shown to the user when too many errors have occurred with the extensions process and they have been disabled.
+    The user can decide if they would like to continue trying to start extensions or if they'd rather continue without them.
+    The first parameter is the application name. -->
+    <string name="extension_process_crash_dialog_message">Eine oder mehrere Erweiterungen funktionieren nicht mehr und machen Ihr System instabil. %1$s hat fehlgeschlagen, die Erweiterung(en) neu gestartet.\n\nErweiterungen werden während Ihrer aktuellen Sitzung nicht neu gestartet.\n\nEntfernen oder Deaktivieren der Erweiterungen könnte dieses Problem beheben.</string>
     <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
-    <string name="addon_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">Versuchen, die Add-ons neu zu starten</string>
+    <string name="addon_process_crash_dialog_retry_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Versuchen, die Add-ons neu zu starten</string>
+    <!-- Button text on the extension crash dialog to prompt the user to try restarting the extensions but the dialog will reappear if it is unsuccessful again -->
+    <string name="extension_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">Versuchen Sie, die Erweiterungen neu zu starten</string>
     <!-- The user will continue with all add-ons disabled -->
-    <string name="addon_process_crash_dialog_disable_addons_button_text" tools:ignore="UnusedResources">Mit deaktivierten Add-ons fortfahren</string>
+    <string name="addon_process_crash_dialog_disable_addons_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Mit deaktivierten Add-ons fortfahren</string>
+
+    <!-- Button text on the extension crash dialog to prompt the user to continue with all extensions disabled. -->
+    <string name="extension_process_crash_dialog_disable_extensions_button_text">Mit deaktivierten Erweiterungen weitermachen</string>
 
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->
@@ -2374,24 +2410,14 @@
     <string name="review_quality_check_contextual_onboarding_learn_more">Wir nutzen das Potenzial von %1$s von Mozilla, um Ihnen dabei zu helfen, voreingenommene und nicht authentische Bewertungen zu vermeiden. Unser KI-Modell wird ständig verbessert, um Sie beim Einkaufen zu schützen. %2$s</string>
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">Weitere Informationen</string>
-    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is the Fakespot product name. Following parameters are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy and review_quality_check_contextual_onboarding_terms_use. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
-    <string name="review_quality_check_contextual_onboarding_caption" moz:RemovedIn="123" tools:ignore="UnusedResources">Indem Sie „Ja, ausprobieren“ auswählen, stimmen Sie der %2$s und den %3$s von %1$s zu, das von Mozilla angeboten wird.</string>
-    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. Parameter is the Fakespot product name. After the colon, what appears are two links, each on their own line. The first link is to a Privacy policy (review_quality_check_contextual_onboarding_privacy_policy_2). The second link is to Terms of use (review_quality_check_contextual_onboarding_terms_use_2). -->
-    <string name="review_quality_check_contextual_onboarding_caption_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Indem Sie „Ja, ausprobieren“ auswählen, stimmen Sie dem folgenden von %1$s zu:</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is Firefox app name, third parameter is the Fakespot product name. Second & fourth are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy_3 and review_quality_check_contextual_onboarding_terms_use. -->
     <string name="review_quality_check_contextual_onboarding_caption_3" moz:RemovedIn="124" tools:ignore="UnusedResources">Indem Sie „Ja, ausprobieren“ auswählen, stimmen Sie dem %2$s von %1$s und dem %4$s von %3$s zu.</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is Firefox app name, third parameter is the Fakespot product name. Second & fourth are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy_3 and review_quality_check_contextual_onboarding_terms_use. -->
     <string name="review_quality_check_contextual_onboarding_caption_4">Indem Sie „Ja, ausprobieren“ auswählen, stimmen Sie dem %2$s von %1$s und dem %4$s von %3$s zu.</string>
-    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy" moz:RemovedIn="123" tools:ignore="UnusedResources">Datenschutzerklärung</string>
-    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Datenschutzrichtlinie</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy notice. -->
     <string name="review_quality_check_contextual_onboarding_privacy_policy_3">Datenschutzhinweis</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
     <string name="review_quality_check_contextual_onboarding_terms_use">Nutzungsbedingungen</string>
-    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
-    <string name="review_quality_check_contextual_onboarding_terms_use_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Nutzungsbedingungen</string>
     <!-- Text for opt-in button from the review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_primary_button_text">Ja, ausprobieren</string>
     <!-- Text for opt-out button from the review quality check contextual onboarding card. -->
@@ -2632,6 +2658,8 @@
     <string name="download_language_file_dialog_title">Im Datensparmodus herunterladen (%1$s)?</string>
     <!-- Additional information for the data saving mode warning dialog used by the translations feature. This text explains the reason a download is required for a translation. -->
     <string name="download_language_file_dialog_message_all_languages">Wir laden Teile von Sprachen in Ihren Cache herunter, um die Übersetzungen privat zu halten.</string>
+    <!-- Additional information for the data saving mode warning dialog used by the translations feature. This text explains the reason a download is required for a translation without mentioning the cache. -->
+    <string name="download_language_file_dialog_message_all_languages_no_cache">Wir laden Teile von Sprachen herunter, um Übersetzungen privat zu halten.</string>
     <!-- Checkbox label text on the data saving mode warning dialog used by the translations feature. This checkbox allows users to ignore the data usage warnings. -->
     <string name="download_language_file_dialog_checkbox_text">Immer im Datensparmodus herunterladen</string>
     <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to confirm they wish to continue and download the language file. -->

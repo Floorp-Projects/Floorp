@@ -160,8 +160,12 @@
     <string name="mozac_feature_prompts_select_address_2">ᱴᱷᱤᱠᱬᱟᱹ ᱢᱮᱴᱟᱣ ᱢᱮ</string>
     <!-- Content description for expanding the select addresses options in the select address prompt. -->
     <string name="mozac_feature_prompts_expand_address_content_description" moz:removedIn="125" tools:ignore="UnusedResources">ᱵᱟᱛᱟᱣᱟᱠᱟᱱ ᱞᱚᱜᱤᱱ ᱠᱚ ᱯᱟᱥᱱᱟᱣ ᱪᱷᱚᱭ ᱢᱮ</string>
+    <!-- Content description for expanding the saved addresses options in the select address prompt. -->
+    <string name="mozac_feature_prompts_expand_address_content_description_2">ᱥᱟᱧᱪᱟᱣ ᱟᱠᱟᱱ ᱴᱷᱤᱠᱬᱟᱹ ᱠᱚ ᱯᱟᱥᱱᱟᱣ ᱢᱮ</string>
     <!-- Content description for collapsing the select address options in the select address prompt. -->
     <string name="mozac_feature_prompts_collapse_address_content_description" moz:removedIn="125" tools:ignore="UnusedResources">ᱵᱟᱛᱟᱣᱟᱠᱟᱱ ᱞᱚᱜᱤᱱ ᱠᱚ ᱦᱚᱯᱚᱱ ᱪᱷᱚᱭ ᱢᱮ</string>
+    <!-- Content description for collapsing the saved address options in the select address prompt. -->
+    <string name="mozac_feature_prompts_collapse_address_content_description_2">ᱥᱟᱧᱪᱟᱣᱟᱜ ᱴᱷᱤᱠᱬᱟᱹ ᱠᱚ ᱠᱷᱩᱞᱟᱹᱭ ᱢᱮ</string>
     <!-- Text for the manage addresses button. -->
     <string name="mozac_feature_prompts_manage_address">ᱴᱷᱤᱠᱬᱟᱹᱤᱭᱟᱹ ᱡᱚᱛᱚᱱ ᱮᱢ</string>
 
