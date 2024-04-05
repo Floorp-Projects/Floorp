@@ -1004,6 +1004,9 @@ void ServoStyleSet::RuleChangedInternal(StyleSheet& aSheet, css::Rule& aRule,
     CASE_FOR(LayerStatement, LayerStatement)
     CASE_FOR(Container, Container)
     CASE_FOR(Scope, Scope)
+    case StyleCssRuleType::StartingStyle:
+      // TODO: Implement this in the following patch.
+      break;
     // @namespace can only be inserted / removed when there are only other
     // @namespace and @import rules, and can't be mutated.
     case StyleCssRuleType::Namespace:
