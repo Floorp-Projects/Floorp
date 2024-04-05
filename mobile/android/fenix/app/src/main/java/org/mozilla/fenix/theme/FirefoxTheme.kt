@@ -98,9 +98,9 @@ private val darkColorPalette = FirefoxColors(
     layerAccent = PhotonColors.Violet40,
     layerAccentNonOpaque = PhotonColors.Violet50A32,
     layerAccentOpaque = Color(0xFF423262),
-    scrim = PhotonColors.DarkGrey90A95,
-    gradientStart = PhotonColors.Violet70,
-    gradientEnd = PhotonColors.Violet40,
+    layerScrim = PhotonColors.DarkGrey90A95,
+    layerGradientStart = PhotonColors.Violet70,
+    layerGradientEnd = PhotonColors.Violet40,
     layerWarning = PhotonColors.Yellow70A77,
     layerConfirmation = PhotonColors.Green80,
     layerError = PhotonColors.Pink80,
@@ -176,9 +176,9 @@ private val lightColorPalette = FirefoxColors(
     layerAccent = PhotonColors.Ink20,
     layerAccentNonOpaque = PhotonColors.Violet70A12,
     layerAccentOpaque = Color(0xFFEAE4F9),
-    scrim = PhotonColors.DarkGrey30A95,
-    gradientStart = PhotonColors.Violet70,
-    gradientEnd = PhotonColors.Violet40,
+    layerScrim = PhotonColors.DarkGrey30A95,
+    layerGradientStart = PhotonColors.Violet70,
+    layerGradientEnd = PhotonColors.Violet40,
     layerWarning = PhotonColors.Yellow20,
     layerConfirmation = PhotonColors.Green20,
     layerError = PhotonColors.Red10,
@@ -268,9 +268,9 @@ class FirefoxColors(
     layerAccent: Color,
     layerAccentNonOpaque: Color,
     layerAccentOpaque: Color,
-    scrim: Color,
-    gradientStart: Color,
-    gradientEnd: Color,
+    layerScrim: Color,
+    layerGradientStart: Color,
+    layerGradientEnd: Color,
     layerWarning: Color,
     layerConfirmation: Color,
     layerError: Color,
@@ -373,15 +373,15 @@ class FirefoxColors(
     var layerAccentOpaque by mutableStateOf(layerAccentOpaque)
         private set
 
-    var scrim by mutableStateOf(scrim)
+    var layerScrim by mutableStateOf(layerScrim)
         private set
 
     // Tooltip
-    var gradientStart by mutableStateOf(gradientStart)
+    var layerGradientStart by mutableStateOf(layerGradientStart)
         private set
 
     // Tooltip
-    var gradientEnd by mutableStateOf(gradientEnd)
+    var layerGradientEnd by mutableStateOf(layerGradientEnd)
         private set
 
     // Warning background
@@ -645,9 +645,9 @@ class FirefoxColors(
         layerAccent = other.layerAccent
         layerAccentNonOpaque = other.layerAccentNonOpaque
         layerAccentOpaque = other.layerAccentOpaque
-        scrim = other.scrim
-        gradientStart = other.gradientStart
-        gradientEnd = other.gradientEnd
+        layerScrim = other.layerScrim
+        layerGradientStart = other.layerGradientStart
+        layerGradientEnd = other.layerGradientEnd
         layerWarning = other.layerWarning
         layerConfirmation = other.layerConfirmation
         layerError = other.layerError
@@ -727,9 +727,9 @@ class FirefoxColors(
         layerAccent: Color = this.layerAccent,
         layerAccentNonOpaque: Color = this.layerAccentNonOpaque,
         layerAccentOpaque: Color = this.layerAccentOpaque,
-        scrim: Color = this.scrim,
-        gradientStart: Color = this.gradientStart,
-        gradientEnd: Color = this.gradientEnd,
+        layerScrim: Color = this.layerScrim,
+        layerGradientStart: Color = this.layerGradientStart,
+        layerGradientEnd: Color = this.layerGradientEnd,
         layerWarning: Color = this.layerWarning,
         layerConfirmation: Color = this.layerConfirmation,
         layerError: Color = this.layerError,
@@ -803,9 +803,9 @@ class FirefoxColors(
         layerAccent = layerAccent,
         layerAccentNonOpaque = layerAccentNonOpaque,
         layerAccentOpaque = layerAccentOpaque,
-        scrim = scrim,
-        gradientStart = gradientStart,
-        gradientEnd = gradientEnd,
+        layerScrim = layerScrim,
+        layerGradientStart = layerGradientStart,
+        layerGradientEnd = layerGradientEnd,
         layerWarning = layerWarning,
         layerConfirmation = layerConfirmation,
         layerError = layerError,

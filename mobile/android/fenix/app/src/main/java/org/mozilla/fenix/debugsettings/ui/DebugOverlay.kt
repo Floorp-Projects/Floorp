@@ -114,7 +114,7 @@ fun DebugOverlay(
                         }
                     },
                     drawerBackgroundColor = FirefoxTheme.colors.layer1,
-                    scrimColor = FirefoxTheme.colors.scrim,
+                    scrimColor = FirefoxTheme.colors.layerScrim,
                     drawerState = drawerState,
                     content = {},
                 )
