@@ -250,17 +250,33 @@ already_AddRefed<Promise> MediaKeySession::GenerateRequest(
   // cdm implementation value does not support initDataType as an
   // Initialization Data Type, return a promise rejected with a
   // NotSupportedError. String comparison is case-sensitive.
-  if (!MediaKeySystemAccess::KeySystemSupportsInitDataType(
-          mKeySystem, aInitDataType, mHardwareDecryption)) {
-    promise->MaybeRejectWithNotSupportedError(
-        "Unsupported initDataType passed to MediaKeySession.generateRequest()");
-    EME_LOG(
-        "MediaKeySession[%p,'%s'] GenerateRequest() failed, unsupported "
-        "initDataType",
-        this, NS_ConvertUTF16toUTF8(mSessionId).get());
-    return promise.forget();
-  }
+  MediaKeySystemAccess::KeySystemSupportsInitDataType(mKeySystem, aInitDataType,
+                                                      mHardwareDecryption)
+      ->Then(GetMainThreadSerialEventTarget(), __func__,
+             [self = RefPtr<MediaKeySession>{this}, this,
+              initDataType = nsString{aInitDataType},
+              initData = std::move(data), promise](
+                 const GenericPromise::ResolveOrRejectValue& aResult) mutable {
+               if (aResult.IsReject()) {
+                 promise->MaybeRejectWithNotSupportedError(
+                     "Unsupported initDataType passed to "
+                     "MediaKeySession.generateRequest()");
+                 EME_LOG(
+                     "MediaKeySession[%p,'%s'] GenerateRequest() failed, "
+                     "unsupported "
+                     "initDataType",
+                     this, NS_ConvertUTF16toUTF8(mSessionId).get());
+                 return;
+               }
+               // Run rest of steps in the spec, starting from 6.6.2.7
+               CompleteGenerateRequest(initDataType, initData, promise);
+             });
+  return promise.forget();
+}
 
+void MediaKeySession::CompleteGenerateRequest(const nsString& aInitDataType,
+                                              nsTArray<uint8_t>& aData,
+                                              DetailedPromise* aPromise) {
   // Let init data be a copy of the contents of the initData parameter.
   // Note: Handled by the CopyArrayBufferViewOrArrayBufferData call above.
 
@@ -270,42 +286,41 @@ already_AddRefed<Promise> MediaKeySession::GenerateRequest(
 
   // Run the following steps in parallel:
 
-  // If the init data is not valid for initDataType, reject promise with
-  // a newly created TypeError.
-  if (!ValidateInitData(data, aInitDataType)) {
+  // If the init data is not valid for initDataType, reject promise with a newly
+  // created TypeError.
+  if (!ValidateInitData(aData, aInitDataType)) {
     // If the preceding step failed, reject promise with a newly created
     // TypeError.
-    promise->MaybeRejectWithTypeError(
-        "initData sanitization failed in MediaKeySession.generateRequest()");
+    aPromise->MaybeRejectWithTypeError(
+        "initData sanitization failed in "
+        "MediaKeySession.generateRequest()");
     EME_LOG(
-        "MediaKeySession[%p,'%s'] GenerateRequest() initData sanitization "
+        "MediaKeySession[%p,'%s'] GenerateRequest() initData "
+        "sanitization "
         "failed",
         this, NS_ConvertUTF16toUTF8(mSessionId).get());
-    return promise.forget();
+    return;
   }
 
   // Let sanitized init data be a validated and sanitized version of init data.
 
   // If sanitized init data is empty, reject promise with a NotSupportedError.
 
-  // Note: Remaining steps of generateRequest method continue in CDM.
+  // Note: Remaining steps of generateRequest method continue in  CDM.
 
   // Convert initData to hex for easier logging.
-  // Note: CreateSession() std::move()s the data out of the array, so we have
-  // to copy it here.
-  nsAutoCString hexInitData(ToHexString(data));
-  PromiseId pid = mKeys->StorePromise(promise);
+  // Note: CreateSession() std::move()s the data out of the array, so we have to
+  // copy it here.
+  nsAutoCString hexInitData(ToHexString(aData));
+  PromiseId pid = mKeys->StorePromise(aPromise);
   mKeys->ConnectPendingPromiseIdWithToken(pid, Token());
   mKeys->GetCDMProxy()->CreateSession(Token(), mSessionType, pid, aInitDataType,
-                                      data);
-
+                                      aData);
   EME_LOG(
       "MediaKeySession[%p,'%s'] GenerateRequest() sent, "
       "promiseId=%d initData='%s' initDataType='%s'",
       this, NS_ConvertUTF16toUTF8(mSessionId).get(), pid, hexInitData.get(),
       NS_ConvertUTF16toUTF8(aInitDataType).get());
-
-  return promise.forget();
 }
 
 already_AddRefed<Promise> MediaKeySession::Load(const nsAString& aSessionId,
