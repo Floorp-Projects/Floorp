@@ -101,8 +101,8 @@ def guess_mozinfo_from_task(task, repo=""):
         ("linux", "1804"): "18.04",
         ("macosx", "1015"): "10.15",
         ("macosx", "1100"): "11.00",
+        ("windows", "7"): "6.1",
         ("windows", "10"): "10.0",
-        ("windows", "11"): "11.0",
     }
     for (name, old_ver), new_ver in os_versions.items():
         if p_os["name"] == name and p_os["version"] == old_ver:
