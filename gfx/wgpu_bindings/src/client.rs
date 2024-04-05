@@ -525,6 +525,20 @@ pub extern "C" fn wgpu_client_make_buffer_id(
 }
 
 #[no_mangle]
+pub extern "C" fn wgpu_client_free_buffer_id(
+    client: &Client,
+    id: id::BufferId,
+) {
+    let backend = id.backend();
+    client
+        .identities
+        .lock()
+        .select(backend)
+        .buffers
+        .free(id)
+}
+
+#[no_mangle]
 pub extern "C" fn wgpu_client_create_texture(
     client: &Client,
     device_id: id::DeviceId,
@@ -553,6 +567,21 @@ pub extern "C" fn wgpu_client_create_texture(
 
     id
 }
+
+#[no_mangle]
+pub extern "C" fn wgpu_client_free_texture_id(
+    client: &Client,
+    id: id::TextureId,
+) {
+    let backend = id.backend();
+    client
+        .identities
+        .lock()
+        .select(backend)
+        .textures
+        .free(id)
+}
+
 
 #[no_mangle]
 pub extern "C" fn wgpu_client_create_texture_view(
@@ -590,6 +619,20 @@ pub extern "C" fn wgpu_client_create_texture_view(
 }
 
 #[no_mangle]
+pub extern "C" fn wgpu_client_free_texture_view_id(
+    client: &Client,
+    id: id::TextureViewId,
+) {
+    let backend = id.backend();
+    client
+        .identities
+        .lock()
+        .select(backend)
+        .texture_views
+        .free(id)
+}
+
+#[no_mangle]
 pub extern "C" fn wgpu_client_create_sampler(
     client: &Client,
     device_id: id::DeviceId,
@@ -624,6 +667,20 @@ pub extern "C" fn wgpu_client_create_sampler(
 }
 
 #[no_mangle]
+pub extern "C" fn wgpu_client_free_sampler_id(
+    client: &Client,
+    id: id::SamplerId,
+) {
+    let backend = id.backend();
+    client
+        .identities
+        .lock()
+        .select(backend)
+        .samplers
+        .free(id)
+}
+
+#[no_mangle]
 pub extern "C" fn wgpu_client_make_encoder_id(
     client: &Client,
     device_id: id::DeviceId,
@@ -637,6 +694,21 @@ pub extern "C" fn wgpu_client_make_encoder_id(
         .process(backend)
         .transmute()
 }
+
+#[no_mangle]
+pub extern "C" fn wgpu_client_free_command_encoder_id(
+    client: &Client,
+    id: id::CommandEncoderId,
+) {
+    let backend = id.backend();
+    client
+        .identities
+        .lock()
+        .select(backend)
+        .command_buffers
+        .free(id.transmute())
+}
+
 
 #[no_mangle]
 pub extern "C" fn wgpu_client_create_command_encoder(
@@ -700,6 +772,7 @@ pub extern "C" fn wgpu_device_create_render_bundle_encoder(
     }
 }
 
+
 #[no_mangle]
 pub unsafe extern "C" fn wgpu_render_bundle_encoder_destroy(
     pass: *mut wgc::command::RenderBundleEncoder,
@@ -753,6 +826,20 @@ pub unsafe extern "C" fn wgpu_client_create_render_bundle_error(
     let action = DeviceAction::CreateRenderBundleError(id, label);
     *bb = make_byte_buf(&action);
     id
+}
+
+#[no_mangle]
+pub extern "C" fn wgpu_client_free_render_bundle_id(
+    client: &Client,
+    id: id::RenderBundleId,
+) {
+    let backend = id.backend();
+    client
+        .identities
+        .lock()
+        .select(backend)
+        .render_bundles
+        .free(id)
 }
 
 #[repr(C)]
@@ -986,6 +1073,20 @@ pub unsafe extern "C" fn wgpu_client_create_bind_group_layout(
 }
 
 #[no_mangle]
+pub extern "C" fn wgpu_client_free_bind_group_layout_id(
+    client: &Client,
+    id: id::BindGroupLayoutId,
+) {
+    let backend = id.backend();
+    client
+        .identities
+        .lock()
+        .select(backend)
+        .bind_group_layouts
+        .free(id)
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn wgpu_client_render_pipeline_get_bind_group_layout(
     client: &Client,
     pipeline_id: id::RenderPipelineId,
@@ -1059,6 +1160,20 @@ pub unsafe extern "C" fn wgpu_client_create_pipeline_layout(
 }
 
 #[no_mangle]
+pub extern "C" fn wgpu_client_free_pipeline_layout_id(
+    client: &Client,
+    id: id::PipelineLayoutId,
+) {
+    let backend = id.backend();
+    client
+        .identities
+        .lock()
+        .select(backend)
+        .pipeline_layouts
+        .free(id)
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn wgpu_client_create_bind_group(
     client: &Client,
     device_id: id::DeviceId,
@@ -1106,6 +1221,20 @@ pub unsafe extern "C" fn wgpu_client_create_bind_group(
 }
 
 #[no_mangle]
+pub extern "C" fn wgpu_client_free_bind_group_id(
+    client: &Client,
+    id: id::BindGroupId,
+) {
+    let backend = id.backend();
+    client
+        .identities
+        .lock()
+        .select(backend)
+        .bind_groups
+        .free(id)
+}
+
+#[no_mangle]
 pub extern "C" fn wgpu_client_make_shader_module_id(
     client: &Client,
     device_id: id::DeviceId,
@@ -1117,6 +1246,20 @@ pub extern "C" fn wgpu_client_make_shader_module_id(
         .select(backend)
         .shader_modules
         .process(backend)
+}
+
+#[no_mangle]
+pub extern "C" fn wgpu_client_free_shader_module_id(
+    client: &Client,
+    id: id::ShaderModuleId,
+) {
+    let backend = id.backend();
+    client
+        .identities
+        .lock()
+        .select(backend)
+        .shader_modules
+        .free(id)
 }
 
 #[no_mangle]
@@ -1161,6 +1304,20 @@ pub unsafe extern "C" fn wgpu_client_create_compute_pipeline(
 }
 
 #[no_mangle]
+pub extern "C" fn wgpu_client_free_compute_pipeline_id(
+    client: &Client,
+    id: id::ComputePipelineId,
+) {
+    let backend = id.backend();
+    client
+        .identities
+        .lock()
+        .select(backend)
+        .compute_pipelines
+        .free(id)
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn wgpu_client_create_render_pipeline(
     client: &Client,
     device_id: id::DeviceId,
@@ -1201,6 +1358,20 @@ pub unsafe extern "C" fn wgpu_client_create_render_pipeline(
     let action = DeviceAction::CreateRenderPipeline(id, wgpu_desc, implicit);
     *bb = make_byte_buf(&action);
     id
+}
+
+#[no_mangle]
+pub extern "C" fn wgpu_client_free_render_pipeline_id(
+    client: &Client,
+    id: id::RenderPipelineId,
+) {
+    let backend = id.backend();
+    client
+        .identities
+        .lock()
+        .select(backend)
+        .render_pipelines
+        .free(id)
 }
 
 #[no_mangle]

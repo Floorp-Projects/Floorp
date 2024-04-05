@@ -27,13 +27,21 @@ CanvasContext* TextureView::GetTargetContext() const {
 }  // namespace webgpu
 
 void TextureView::Cleanup() {
-  if (mValid && mParent && mParent->GetParentDevice()) {
-    mValid = false;
-    auto bridge = mParent->GetParentDevice()->GetBridge();
-    if (bridge && bridge->IsOpen()) {
-      bridge->SendTextureViewDrop(mId);
-    }
+  if (!mValid) {
+    return;
   }
+  mValid = false;
+
+  auto bridge = mParent->GetParentDevice()->GetBridge();
+  if (!bridge) {
+    return;
+  }
+
+  if (bridge->CanSend()) {
+    bridge->SendTextureViewDrop(mId);
+  }
+
+  wgpu_client_free_texture_view_id(bridge->GetClient(), mId);
 }
 
 }  // namespace mozilla::webgpu

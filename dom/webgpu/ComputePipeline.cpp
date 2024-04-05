@@ -27,16 +27,27 @@ ComputePipeline::ComputePipeline(Device* const aParent, RawId aId,
 ComputePipeline::~ComputePipeline() { Cleanup(); }
 
 void ComputePipeline::Cleanup() {
-  if (mValid && mParent) {
-    mValid = false;
-    auto bridge = mParent->GetBridge();
-    if (bridge && bridge->IsOpen()) {
-      bridge->SendComputePipelineDrop(mId);
-      if (mImplicitPipelineLayoutId) {
-        bridge->SendImplicitLayoutDrop(mImplicitPipelineLayoutId,
-                                       mImplicitBindGroupLayoutIds);
-      }
+  if (mValid) {
+    return;
+  }
+  mValid = false;
+
+  auto bridge = mParent->GetBridge();
+  if (bridge->IsOpen()) {
+    bridge->SendComputePipelineDrop(mId);
+    if (mImplicitPipelineLayoutId) {
+      bridge->SendImplicitLayoutDrop(mImplicitPipelineLayoutId,
+                                     mImplicitBindGroupLayoutIds);
     }
+  }
+
+  if (mImplicitPipelineLayoutId) {
+    wgpu_client_free_pipeline_layout_id(bridge->GetClient(),
+                                        mImplicitPipelineLayoutId);
+  }
+
+  for (const auto& id : mImplicitBindGroupLayoutIds) {
+    wgpu_client_free_bind_group_layout_id(bridge->GetClient(), id);
   }
 }
 

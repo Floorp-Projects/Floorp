@@ -27,16 +27,31 @@ RenderPipeline::RenderPipeline(Device* const aParent, RawId aId,
 RenderPipeline::~RenderPipeline() { Cleanup(); }
 
 void RenderPipeline::Cleanup() {
-  if (mValid && mParent) {
-    mValid = false;
-    auto bridge = mParent->GetBridge();
-    if (bridge && bridge->IsOpen()) {
-      bridge->SendRenderPipelineDrop(mId);
-      if (mImplicitPipelineLayoutId) {
-        bridge->SendImplicitLayoutDrop(mImplicitPipelineLayoutId,
-                                       mImplicitBindGroupLayoutIds);
-      }
+  if (!mValid) {
+    return;
+  }
+  mValid = false;
+
+  auto bridge = mParent->GetBridge();
+  if (!bridge) {
+    return;
+  }
+
+  if (bridge->CanSend()) {
+    bridge->SendRenderPipelineDrop(mId);
+    if (mImplicitPipelineLayoutId) {
+      bridge->SendImplicitLayoutDrop(mImplicitPipelineLayoutId,
+                                     mImplicitBindGroupLayoutIds);
     }
+  }
+
+  if (mImplicitPipelineLayoutId) {
+    wgpu_client_free_pipeline_layout_id(bridge->GetClient(),
+                                        mImplicitPipelineLayoutId);
+  }
+
+  for (const auto& id : mImplicitBindGroupLayoutIds) {
+    wgpu_client_free_bind_group_layout_id(bridge->GetClient(), id);
   }
 }
 

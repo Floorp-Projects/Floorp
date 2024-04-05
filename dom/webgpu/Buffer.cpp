@@ -24,7 +24,7 @@ GPU_IMPL_JS_WRAP(Buffer)
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(Buffer)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Buffer)
-  tmp->Drop();
+  tmp->Cleanup();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mParent)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -51,7 +51,7 @@ Buffer::Buffer(Device* const aParent, RawId aId, BufferAddress aSize,
 }
 
 Buffer::~Buffer() {
-  Drop();
+  Cleanup();
   mozilla::DropJSObjects(this);
 }
 
@@ -136,11 +136,10 @@ already_AddRefed<Buffer> Buffer::Create(Device* aDevice, RawId aDeviceId,
   return buffer.forget();
 }
 
-void Buffer::Drop() {
+void Buffer::Cleanup() {
   if (!mValid) {
     return;
   }
-
   mValid = false;
 
   AbortMapRequest();
@@ -158,9 +157,16 @@ void Buffer::Drop() {
 
   GetDevice().UntrackBuffer(this);
 
-  if (GetDevice().IsBridgeAlive()) {
-    GetDevice().GetBridge()->SendBufferDrop(mId);
+  auto bridge = GetDevice().GetBridge();
+  if (!bridge) {
+    return;
   }
+
+  if (bridge->CanSend()) {
+    bridge->SendBufferDrop(mId);
+  }
+
+  wgpu_client_free_buffer_id(bridge->GetClient(), mId);
 }
 
 void Buffer::SetMapped(BufferAddress aOffset, BufferAddress aSize,

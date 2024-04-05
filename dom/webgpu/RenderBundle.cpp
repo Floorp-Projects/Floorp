@@ -23,13 +23,20 @@ RenderBundle::RenderBundle(Device* const aParent, RawId aId)
 RenderBundle::~RenderBundle() { Cleanup(); }
 
 void RenderBundle::Cleanup() {
-  if (mValid && mParent) {
-    mValid = false;
-    auto bridge = mParent->GetBridge();
-    if (bridge && bridge->IsOpen()) {
-      bridge->SendRenderBundleDrop(mId);
-    }
+  if (!mValid) {
+    return;
   }
+  mValid = false;
+
+  auto bridge = mParent->GetBridge();
+  if (!bridge) {
+    return;
+  }
+
+  if (bridge->IsOpen()) {
+    bridge->SendRenderBundleDrop(mId);
+  }
+  wgpu_client_free_render_bundle_id(bridge->GetClient(), mId);
 }
 
 }  // namespace mozilla::webgpu
