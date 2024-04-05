@@ -25,7 +25,6 @@ ChromeUtils.defineESModuleGetters(
 
 // TargetActorRegistery has to be shared between all devtools instances
 // and so is loaded into the shared global.
-// eslint-disable-next-line mozilla/reject-multiple-getters-calls
 ChromeUtils.defineESModuleGetters(
   lazy,
   {
