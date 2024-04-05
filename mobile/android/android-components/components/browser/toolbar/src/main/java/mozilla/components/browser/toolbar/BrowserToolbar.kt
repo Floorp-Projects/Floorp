@@ -76,6 +76,7 @@ class BrowserToolbar @JvmOverloads constructor(
     @VisibleForTesting
     internal var searchTerms: String = ""
     private var urlCommitListener: ((String) -> Boolean)? = null
+    var isNavBarEnabled: Boolean = false
 
     /**
      * Toolbar in "display mode".
