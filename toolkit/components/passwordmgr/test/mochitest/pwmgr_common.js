@@ -1051,6 +1051,23 @@ SimpleTest.registerCleanupFunction(() => {
   });
 });
 
+// This is a version of LoginHelper.loginToVanillaObject that is adapted to run
+// as content JS instead of chrome JS. This is needed to make it return a
+// content JS object because the structured cloning we use to send it over
+// JS IPC can't deal with a cross compartment wrapper.
+function loginToVanillaObject(login) {
+  let obj = {};
+  for (let i in SpecialPowers.do_QueryInterface(
+    login,
+    SpecialPowers.Ci.nsILoginMetaInfo
+  )) {
+    if (typeof login[i] !== "function") {
+      obj[i] = login[i];
+    }
+  }
+  return obj;
+}
+
 /**
  * Proxy for Services.logins (nsILoginManager).
  * Only supports arguments which support structured clone plus {nsILoginInfo}
@@ -1067,7 +1084,7 @@ this.LoginManager = new Proxy(
             SpecialPowers.call_Instanceof(val, SpecialPowers.Ci.nsILoginInfo)
           ) {
             loginInfoIndices.push(index);
-            return LoginHelper.loginToVanillaObject(val);
+            return loginToVanillaObject(val);
           }
 
           return val;
