@@ -12,9 +12,6 @@ const { MiscDataBackupResource } = ChromeUtils.importESModule(
 const { PlacesBackupResource } = ChromeUtils.importESModule(
   "resource:///modules/backup/PlacesBackupResource.sys.mjs"
 );
-const { PreferencesBackupResource } = ChromeUtils.importESModule(
-  "resource:///modules/backup/PreferencesBackupResource.sys.mjs"
-);
 const { AddonsBackupResource } = ChromeUtils.importESModule(
   "resource:///modules/backup/AddonsBackupResource.sys.mjs"
 );
@@ -28,10 +25,6 @@ const { FormHistoryBackupResource } = ChromeUtils.importESModule(
 
 const { SessionStoreBackupResource } = ChromeUtils.importESModule(
   "resource:///modules/backup/SessionStoreBackupResource.sys.mjs"
-);
-
-const { TelemetryTestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/TelemetryTestUtils.sys.mjs"
 );
 
 add_setup(() => {
@@ -152,33 +145,25 @@ add_task(async function test_credentialsAndSecurityBackupResource() {
   const EXPECTED_SECURITY_KILOBYTES_SIZE = 231;
 
   // Create resource files in temporary directory
-  const tempDir = PathUtils.tempDir;
+  const tempDir = await IOUtils.createUniqueDirectory(
+    PathUtils.tempDir,
+    "CredentialsAndSecurityBackupResource-measurement-test"
+  );
 
-  // Set up credentials files
-  const mockCredentialsFiles = new Map([
-    ["key4.db", 300],
-    ["logins.json", 1],
-    ["logins-backup.json", 1],
-    ["autofill-profiles.json", 1],
-    ["credentialstate.sqlite", 100],
-    ["signedInUser.json", 5],
-  ]);
+  const mockFiles = [
+    // Set up credentials files
+    { path: "key4.db", sizeInKB: 300 },
+    { path: "logins.json", sizeInKB: 1 },
+    { path: "logins-backup.json", sizeInKB: 1 },
+    { path: "autofill-profiles.json", sizeInKB: 1 },
+    { path: "credentialstate.sqlite", sizeInKB: 100 },
+    { path: "signedInUser.json", sizeInKB: 5 },
+    // Set up security files
+    { path: "cert9.db", sizeInKB: 230 },
+    { path: "pkcs11.txt", sizeInKB: 1 },
+  ];
 
-  for (let [mockFileName, mockFileSize] of mockCredentialsFiles) {
-    let tempPath = PathUtils.join(tempDir, mockFileName);
-    await createKilobyteSizedFile(tempPath, mockFileSize);
-  }
-
-  // Set up security files
-  const mockSecurityFiles = new Map([
-    ["cert9.db", 230],
-    ["pkcs11.txt", 1],
-  ]);
-
-  for (let [mockFileName, mockFileSize] of mockSecurityFiles) {
-    let tempPath = PathUtils.join(tempDir, mockFileName);
-    await createKilobyteSizedFile(tempPath, mockFileSize);
-  }
+  await createTestFiles(tempDir, mockFiles);
 
   let credentialsAndSecurityBackupResource =
     new CredentialsAndSecurityBackupResource();
@@ -217,78 +202,7 @@ add_task(async function test_credentialsAndSecurityBackupResource() {
   );
 
   // Cleanup
-  for (let mockFileName of mockCredentialsFiles.keys()) {
-    let tempPath = PathUtils.join(tempDir, mockFileName);
-    await IOUtils.remove(tempPath);
-  }
-  for (let mockFileName of mockSecurityFiles.keys()) {
-    let tempPath = PathUtils.join(tempDir, mockFileName);
-    await IOUtils.remove(tempPath);
-  }
-});
-
-add_task(async function test_preferencesBackupResource() {
-  Services.fog.testResetFOG();
-
-  const EXPECTED_PREFERENCES_KILOBYTES_SIZE = 415;
-  const tempDir = PathUtils.tempDir;
-  const mockFiles = new Map([
-    ["prefs.js", 20],
-    ["xulstore.json", 1],
-    ["permissions.sqlite", 100],
-    ["content-prefs.sqlite", 260],
-    ["containers.json", 1],
-    ["handlers.json", 1],
-    ["search.json.mozlz4", 1],
-    ["user.js", 2],
-  ]);
-  const mockChromeDirFiles = new Map([
-    ["userChrome.css", 5],
-    ["userContent.css", 5],
-    ["css/mockStyles.css", 5],
-  ]);
-
-  for (let [mockFilePath, mockFileSize] of mockFiles) {
-    let tempPath = PathUtils.join(tempDir, mockFilePath);
-    await createKilobyteSizedFile(tempPath, mockFileSize);
-  }
-
-  for (let [mockFilePath, mockFileSize] of mockChromeDirFiles) {
-    // To avoid issues with forward or backward slashes when testing
-    // on windows or macOS/linux, split and remake the filepath using `PathUtils.join`.
-    let processedMockFileName = mockFilePath.split(/[\\\/]/);
-    let tempPath = PathUtils.join(tempDir, "chrome", ...processedMockFileName);
-    await createKilobyteSizedFile(tempPath, mockFileSize);
-  }
-
-  let preferencesBackupResource = new PreferencesBackupResource();
-  await preferencesBackupResource.measure(tempDir);
-
-  let measurement = Glean.browserBackup.preferencesSize.testGetValue();
-  let scalars = TelemetryTestUtils.getProcessScalars("parent", false, false);
-
-  TelemetryTestUtils.assertScalar(
-    scalars,
-    "browser.backup.preferences_size",
-    measurement,
-    "Glean and telemetry measurements for preferences data should be equal"
-  );
-  Assert.equal(
-    measurement,
-    EXPECTED_PREFERENCES_KILOBYTES_SIZE,
-    "Should have collected the correct glean measurement for preferences files"
-  );
-
-  for (let mockFileName of mockFiles.keys()) {
-    let tempPath = PathUtils.join(tempDir, mockFileName);
-    await IOUtils.remove(tempPath);
-  }
-
-  for (let mockFilePath of mockChromeDirFiles.keys()) {
-    let processedMockFilePath = mockFilePath.split(/[\\\/]/);
-    let tempPath = PathUtils.join(tempDir, "chrome", processedMockFilePath);
-    await IOUtils.remove(tempPath, { recursive: true });
-  }
+  await maybeRemovePath(tempDir);
 });
 
 /**
@@ -298,36 +212,25 @@ add_task(async function test_miscDataBackupResource() {
   Services.fog.testResetFOG();
 
   const EXPECTED_MISC_KILOBYTES_SIZE = 241;
-  const tempDir = PathUtils.tempDir;
-  const mockFiles = new Map([
-    ["times.json", 5],
-    ["enumerate_devices.txt", 1],
-    ["protections.sqlite", 100],
-    ["SiteSecurityServiceState.bin", 10],
-  ]);
+  const tempDir = await IOUtils.createUniqueDirectory(
+    PathUtils.tempDir,
+    "MiscDataBackupResource-measurement-test"
+  );
 
-  for (let [mockFileName, mockFileSize] of mockFiles) {
-    let tempPath = PathUtils.join(tempDir, mockFileName);
-    await createKilobyteSizedFile(tempPath, mockFileSize);
-  }
+  const mockFiles = [
+    { path: "times.json", sizeInKB: 5 },
+    { path: "enumerate_devices.txt", sizeInKB: 1 },
+    { path: "protections.sqlite", sizeInKB: 100 },
+    { path: "SiteSecurityServiceState.bin", sizeInKB: 10 },
+    { path: ["storage", "permanent", "chrome", "123ABC.sqlite"], sizeInKB: 40 },
+    { path: ["storage", "permanent", "chrome", "456DEF.sqlite"], sizeInKB: 40 },
+    {
+      path: ["storage", "permanent", "chrome", "mockIDBDir", "890HIJ.sqlite"],
+      sizeInKB: 40,
+    },
+  ];
 
-  const mockChromeIndexedDBDirFiles = new Map([
-    ["123ABC.sqlite", 40],
-    ["456DEF.sqlite", 40],
-    ["mockIDBDir/890HIJ.sqlite", 40],
-  ]);
-
-  for (let [mockFilePath, mockFileSize] of mockChromeIndexedDBDirFiles) {
-    let processedMockFileName = mockFilePath.split(/[\\\/]/);
-    let tempPath = PathUtils.join(
-      tempDir,
-      "storage",
-      "permanent",
-      "chrome",
-      ...processedMockFileName
-    );
-    await createKilobyteSizedFile(tempPath, mockFileSize);
-  }
+  await createTestFiles(tempDir, mockFiles);
 
   let miscDataBackupResource = new MiscDataBackupResource();
   await miscDataBackupResource.measure(tempDir);
@@ -347,10 +250,7 @@ add_task(async function test_miscDataBackupResource() {
     "Should have collected the correct glean measurement for misc files"
   );
 
-  for (let mockFileName of mockFiles.keys()) {
-    let tempPath = PathUtils.join(tempDir, mockFileName);
-    await maybeRemovePath(tempPath);
-  }
+  await maybeRemovePath(tempDir);
 });
 
 /**
