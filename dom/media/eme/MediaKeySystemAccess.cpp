@@ -19,6 +19,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_media.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/KeySystemNames.h"
 #include "mozilla/dom/MediaKeySession.h"
 #include "mozilla/dom/MediaKeySystemAccessBinding.h"
@@ -489,7 +490,7 @@ static Sequence<MediaKeySystemMediaCapability> GetSupportedCapabilities(
     const nsTArray<MediaKeySystemMediaCapability>& aRequestedCapabilities,
     const MediaKeySystemConfiguration& aPartialConfig,
     const KeySystemConfig& aKeySystem, DecoderDoctorDiagnostics* aDiagnostics,
-    const std::function<void(const char*)>& aDeprecationLogFn) {
+    const Document* aDocument) {
   // Let local accumulated configuration be a local copy of partial
   // configuration. (Note: It's not necessary for us to maintain a local copy,
   // as we don't need to test whether capabilites from previous calls to this
@@ -624,7 +625,7 @@ static Sequence<MediaKeySystemMediaCapability> GetSupportedCapabilities(
     // If media types is empty:
     if (codecs.IsEmpty()) {
       // Log deprecation warning to encourage authors to not do this!
-      aDeprecationLogFn("MediaEMENoCodecsDeprecatedWarning");
+      DeprecationWarningLog(aDocument, "MediaEMENoCodecsDeprecatedWarning");
       // TODO: Remove this once we're sure it doesn't break the web.
       // If container normatively implies a specific set of codecs and codec
       // constraints: Let parameters be that set.
@@ -823,12 +824,12 @@ static Sequence<nsString> UnboxSessionTypes(
 }
 
 // 3.1.1.2 Get Supported Configuration and Consent
-static bool GetSupportedConfig(
-    const KeySystemConfig& aKeySystem,
-    const MediaKeySystemConfiguration& aCandidate,
-    MediaKeySystemConfiguration& aOutConfig,
-    DecoderDoctorDiagnostics* aDiagnostics, bool aInPrivateBrowsing,
-    const std::function<void(const char*)>& aDeprecationLogFn) {
+static bool GetSupportedConfig(const KeySystemConfig& aKeySystem,
+                               const MediaKeySystemConfiguration& aCandidate,
+                               MediaKeySystemConfiguration& aOutConfig,
+                               DecoderDoctorDiagnostics* aDiagnostics,
+                               bool aInPrivateBrowsing,
+                               const Document* aDocument) {
   EME_LOG("Compare implementation '%s'\n with request '%s'",
           NS_ConvertUTF16toUTF8(aKeySystem.GetDebugInfo()).get(),
           ToCString(aCandidate).get());
@@ -956,7 +957,7 @@ static bool GetSupportedConfig(
     // TODO: Most sites using EME still don't pass capabilities, so we
     // can't reject on it yet without breaking them. So add this later.
     // Log deprecation warning to encourage authors to not do this!
-    aDeprecationLogFn("MediaEMENoCapabilitiesDeprecatedWarning");
+    DeprecationWarningLog(aDocument, "MediaEMENoCapabilitiesDeprecatedWarning");
   }
 
   // If the videoCapabilities member in candidate configuration is non-empty:
@@ -967,7 +968,7 @@ static bool GetSupportedConfig(
     // and restrictions.
     Sequence<MediaKeySystemMediaCapability> caps =
         GetSupportedCapabilities(Video, aCandidate.mVideoCapabilities, config,
-                                 aKeySystem, aDiagnostics, aDeprecationLogFn);
+                                 aKeySystem, aDiagnostics, aDocument);
     // If video capabilities is null, return NotSupported.
     if (caps.IsEmpty()) {
       EME_LOG(
@@ -993,7 +994,7 @@ static bool GetSupportedConfig(
     // restrictions.
     Sequence<MediaKeySystemMediaCapability> caps =
         GetSupportedCapabilities(Audio, aCandidate.mAudioCapabilities, config,
-                                 aKeySystem, aDiagnostics, aDeprecationLogFn);
+                                 aKeySystem, aDiagnostics, aDocument);
     // If audio capabilities is null, return NotSupported.
     if (caps.IsEmpty()) {
       EME_LOG(
@@ -1078,7 +1079,7 @@ bool MediaKeySystemAccess::GetSupportedConfig(
     const Sequence<MediaKeySystemConfiguration>& aConfigs,
     MediaKeySystemConfiguration& aOutConfig,
     DecoderDoctorDiagnostics* aDiagnostics, bool aIsPrivateBrowsing,
-    const std::function<void(const char*)>& aDeprecationLogFn) {
+    const Document* aDocument) {
   nsTArray<KeySystemConfig> implementations;
   const bool isHardwareDecryptionRequest =
       CheckIfHarewareDRMConfigExists(aConfigs) ||
@@ -1089,9 +1090,9 @@ bool MediaKeySystemAccess::GetSupportedConfig(
   }
   for (const auto& implementation : implementations) {
     for (const MediaKeySystemConfiguration& candidate : aConfigs) {
-      if (mozilla::dom::GetSupportedConfig(
-              implementation, candidate, aOutConfig, aDiagnostics,
-              aIsPrivateBrowsing, aDeprecationLogFn)) {
+      if (mozilla::dom::GetSupportedConfig(implementation, candidate,
+                                           aOutConfig, aDiagnostics,
+                                           aIsPrivateBrowsing, aDocument)) {
         return true;
       }
     }
