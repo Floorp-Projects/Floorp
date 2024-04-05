@@ -12,6 +12,7 @@ using mozilla::CryptoScheme from "MediaData.h";
 using mozilla::dom::MediaKeyMessageType from "mozilla/dom/MediaKeyMessageEventBinding.h";
 using mozilla::dom::MediaKeyStatus from "mozilla/dom/MediaKeyStatusMapBinding.h";
 using mozilla::dom::HDCPVersion from "mozilla/dom/MediaKeysBinding.h";
+using mozilla::KeySystemConfigRequest from "mozilla/KeySystemConfig.h";
 
 namespace mozilla {
 
@@ -96,12 +97,17 @@ union MFCDMSessionResult {
   nsresult;
 };
 
+struct MFCDMCapabilitiesRequest {
+  nsString keySystem;
+  bool isHardwareDecryption;
+};
+
 [ManualDealloc]
 async protocol PMFCDM
 {
   manager PRemoteDecoderManager;
 parent:
-  async GetCapabilities(bool isHwSecured) returns (MFCDMCapabilitiesResult result);
+  async GetCapabilities(MFCDMCapabilitiesRequest request) returns (MFCDMCapabilitiesResult result);
   async Init(MFCDMInitParamsIPDL params) returns (MFCDMInitResult result);
   async CreateSessionAndGenerateRequest(MFCDMCreateSessionParamsIPDL type)
       returns (MFCDMSessionResult result);
