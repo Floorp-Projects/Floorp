@@ -227,6 +227,10 @@ const POLICIES_TESTS = [
       "privacy.clearOnShutdown.sessions": true,
       "privacy.clearOnShutdown.siteSettings": true,
       "privacy.clearOnShutdown.offlineApps": true,
+      "privacy.clearOnShutdown_v2.historyFormDataAndDownloads": true,
+      "privacy.clearOnShutdown_v2.cookiesAndStorage": true,
+      "privacy.clearOnShutdown_v2.cache": true,
+      "privacy.clearOnShutdown_v2.siteSettings": true,
     },
   },
 
@@ -244,6 +248,10 @@ const POLICIES_TESTS = [
       "privacy.clearOnShutdown.sessions": false,
       "privacy.clearOnShutdown.siteSettings": false,
       "privacy.clearOnShutdown.offlineApps": false,
+      "privacy.clearOnShutdown_v2.historyFormDataAndDownloads": false,
+      "privacy.clearOnShutdown_v2.cookiesAndStorage": false,
+      "privacy.clearOnShutdown_v2.cache": false,
+      "privacy.clearOnShutdown_v2.siteSettings": false,
     },
   },
 
@@ -261,6 +269,9 @@ const POLICIES_TESTS = [
       "privacy.clearOnShutdown.formdata": false,
       "privacy.clearOnShutdown.history": false,
       "privacy.clearOnShutdown.sessions": false,
+      "privacy.clearOnShutdown_v2.historyFormDataAndDownloads": false,
+      "privacy.clearOnShutdown_v2.cookiesAndStorage": false,
+      "privacy.clearOnShutdown_v2.cache": true,
     },
   },
 
@@ -278,6 +289,9 @@ const POLICIES_TESTS = [
       "privacy.clearOnShutdown.formdata": false,
       "privacy.clearOnShutdown.history": false,
       "privacy.clearOnShutdown.sessions": false,
+      "privacy.clearOnShutdown_v2.historyFormDataAndDownloads": false,
+      "privacy.clearOnShutdown_v2.cookiesAndStorage": true,
+      "privacy.clearOnShutdown_v2.cache": false,
     },
   },
 
@@ -295,6 +309,9 @@ const POLICIES_TESTS = [
       "privacy.clearOnShutdown.formdata": false,
       "privacy.clearOnShutdown.history": false,
       "privacy.clearOnShutdown.sessions": false,
+      "privacy.clearOnShutdown_v2.historyFormDataAndDownloads": false,
+      "privacy.clearOnShutdown_v2.cookiesAndStorage": false,
+      "privacy.clearOnShutdown_v2.cache": false,
     },
   },
 
@@ -312,6 +329,9 @@ const POLICIES_TESTS = [
       "privacy.clearOnShutdown.formdata": true,
       "privacy.clearOnShutdown.history": false,
       "privacy.clearOnShutdown.sessions": false,
+      "privacy.clearOnShutdown_v2.historyFormDataAndDownloads": false,
+      "privacy.clearOnShutdown_v2.cookiesAndStorage": false,
+      "privacy.clearOnShutdown_v2.cache": false,
     },
   },
 
@@ -329,6 +349,9 @@ const POLICIES_TESTS = [
       "privacy.clearOnShutdown.formdata": false,
       "privacy.clearOnShutdown.history": true,
       "privacy.clearOnShutdown.sessions": false,
+      "privacy.clearOnShutdown_v2.historyFormDataAndDownloads": true,
+      "privacy.clearOnShutdown_v2.cookiesAndStorage": false,
+      "privacy.clearOnShutdown_v2.cache": false,
     },
   },
 
@@ -346,6 +369,9 @@ const POLICIES_TESTS = [
       "privacy.clearOnShutdown.formdata": false,
       "privacy.clearOnShutdown.history": false,
       "privacy.clearOnShutdown.sessions": true,
+      "privacy.clearOnShutdown_v2.historyFormDataAndDownloads": false,
+      "privacy.clearOnShutdown_v2.cookiesAndStorage": false,
+      "privacy.clearOnShutdown_v2.cache": false,
     },
   },
 
@@ -364,6 +390,10 @@ const POLICIES_TESTS = [
       "privacy.clearOnShutdown.history": false,
       "privacy.clearOnShutdown.sessions": false,
       "privacy.clearOnShutdown.siteSettings": true,
+      "privacy.clearOnShutdown_v2.historyFormDataAndDownloads": false,
+      "privacy.clearOnShutdown_v2.cookiesAndStorage": false,
+      "privacy.clearOnShutdown_v2.cache": false,
+      "privacy.clearOnShutdown_v2.siteSettings": true,
     },
   },
 
@@ -382,6 +412,9 @@ const POLICIES_TESTS = [
       "privacy.clearOnShutdown.history": false,
       "privacy.clearOnShutdown.sessions": false,
       "privacy.clearOnShutdown.offlineApps": true,
+      "privacy.clearOnShutdown_v2.historyFormDataAndDownloads": false,
+      "privacy.clearOnShutdown_v2.cookiesAndStorage": false,
+      "privacy.clearOnShutdown_v2.cache": false,
     },
   },
 
@@ -396,6 +429,7 @@ const POLICIES_TESTS = [
     lockedPrefs: {
       "privacy.sanitize.sanitizeOnShutdown": true,
       "privacy.clearOnShutdown.cache": true,
+      "privacy.clearOnShutdown_v2.cache": true,
     },
     unlockedPrefs: {
       "privacy.clearOnShutdown.cookies": false,
@@ -403,6 +437,8 @@ const POLICIES_TESTS = [
       "privacy.clearOnShutdown.formdata": false,
       "privacy.clearOnShutdown.history": false,
       "privacy.clearOnShutdown.sessions": false,
+      "privacy.clearOnShutdown_v2.historyFormDataAndDownloads": false,
+      "privacy.clearOnShutdown_v2.cookiesAndStorage": false,
     },
   },
 
@@ -418,12 +454,15 @@ const POLICIES_TESTS = [
       "privacy.sanitize.sanitizeOnShutdown": true,
       "privacy.clearOnShutdown.cache": true,
       "privacy.clearOnShutdown.cookies": false,
+      "privacy.clearOnShutdown_v2.cache": true,
+      "privacy.clearOnShutdown_v2.cookiesAndStorage": false,
     },
     unlockedPrefs: {
       "privacy.clearOnShutdown.downloads": false,
       "privacy.clearOnShutdown.formdata": false,
       "privacy.clearOnShutdown.history": false,
       "privacy.clearOnShutdown.sessions": false,
+      "privacy.clearOnShutdown_v2.historyFormDataAndDownloads": false,
     },
   },
 
@@ -442,6 +481,9 @@ const POLICIES_TESTS = [
       "privacy.clearOnShutdown.formdata": false,
       "privacy.clearOnShutdown.history": false,
       "privacy.clearOnShutdown.sessions": false,
+      "privacy.clearOnShutdown_v2.historyFormDataAndDownloads": false,
+      "privacy.clearOnShutdown_v2.cookiesAndStorage": false,
+      "privacy.clearOnShutdown_v2.cache": true,
     },
   },
 
