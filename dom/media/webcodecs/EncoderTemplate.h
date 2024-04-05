@@ -148,10 +148,14 @@ class EncoderTemplate : public DOMEventTargetHelper {
   void StartBlockingMessageQueue();
   void StopBlockingMessageQueue();
 
+  MOZ_CAN_RUN_SCRIPT
+  void OutputEncodedData(const nsTArray<RefPtr<MediaRawData>>&& aData);
+
   CodecState State() const { return mState; };
 
   uint32_t EncodeQueueSize() const { return mEncodeQueueSize; };
 
+  MOZ_CAN_RUN_SCRIPT
   void Configure(const ConfigType& aConfig, ErrorResult& aRv);
 
   void EncodeAudioData(InputType& aInput, ErrorResult& aRv);
@@ -184,23 +188,17 @@ class EncoderTemplate : public DOMEventTargetHelper {
   }
 
   Result<Ok, nsresult> ResetInternal(const nsresult& aResult);
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  Result<Ok, nsresult> CloseInternal(const nsresult& aResult);
+  MOZ_CAN_RUN_SCRIPT
+  Result<Ok, nsresult> CloseInternalWithAbort();
+  MOZ_CAN_RUN_SCRIPT
+  void CloseInternal(const nsresult& aResult);
 
   MOZ_CAN_RUN_SCRIPT void ReportError(const nsresult& aResult);
+
   MOZ_CAN_RUN_SCRIPT void OutputEncodedVideoData(
-      nsTArray<RefPtr<MediaRawData>>&& aData);
+      const nsTArray<RefPtr<MediaRawData>>&& aData);
   MOZ_CAN_RUN_SCRIPT void OutputEncodedAudioData(
-      nsTArray<RefPtr<MediaRawData>>&& aData);
-
-  class ErrorRunnable;
-  void ScheduleReportError(const nsresult& aResult);
-
-  class OutputRunnable;
-  void ScheduleOutputEncodedData(nsTArray<RefPtr<MediaRawData>>&& aData,
-                                 const nsACString& aLabel);
-
-  void ScheduleClose(const nsresult& aResult);
+      const nsTArray<RefPtr<MediaRawData>>&& aData);
 
   void ScheduleDequeueEvent();
   nsresult FireEvent(nsAtom* aTypeWithOn, const nsAString& aEventType);
@@ -210,6 +208,9 @@ class EncoderTemplate : public DOMEventTargetHelper {
 
   void ProcessControlMessageQueue();
   void CancelPendingControlMessages(const nsresult& aResult);
+
+  template <typename Func>
+  void QueueATask(const char* aName, Func&& aSteps);
 
   MessageProcessedResult ProcessConfigureMessage(
       RefPtr<ConfigureMessage> aMessage);

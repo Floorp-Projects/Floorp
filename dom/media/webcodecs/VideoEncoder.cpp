@@ -124,7 +124,7 @@ nsCString VideoEncoderConfigInternal::ToString() const {
   nsCString rv;
 
   rv.AppendLiteral("Codec: ");
-  rv.Append(mCodec);
+  rv.Append(NS_ConvertUTF16toUTF8(mCodec));
   rv.AppendPrintf(" [%" PRIu32 "x%" PRIu32 "],", mWidth, mHeight);
   if (mDisplayWidth.isSome()) {
     rv.AppendPrintf(", display[%" PRIu32 "x%" PRIu32 "]", mDisplayWidth.value(),
