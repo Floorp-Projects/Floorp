@@ -1106,7 +1106,7 @@ nsresult nsStandardURL::BuildNormalizedSpec(const char* spec,
     }
   }
 
-  if (mDirectory.mLen > 1) {
+  if (mDirectory.mLen > 0) {
     netCoalesceFlags coalesceFlag = NET_COALESCE_NORMAL;
     if (SegmentIs(buf, mScheme, "ftp")) {
       coalesceFlag =

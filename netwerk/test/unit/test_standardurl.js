@@ -1051,3 +1051,8 @@ add_task(async function test_bug1648493() {
   equal(url.spec, "t://%C3%83%C2%A7:%C3%83%C2%AA@example.com/");
   equal(url.username, "%C3%83%C2%A7");
 });
+
+add_task(async function test_bug1873976() {
+  let url = Services.io.newURI("file:.");
+  equal(url.spec, "file:///");
+});
