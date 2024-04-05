@@ -576,7 +576,7 @@ WebProtocolHandlerRegistrar.prototype = {
                     true
                   );
                   newitem.messageL10nId =
-                    "protocolhandler-mailto-handler-confirm-message";
+                    "protocolhandler-mailto-handler-confirm";
                   newitem.removeChild(newitem.buttonContainer);
                   newitem.setAttribute("type", "success"); // from moz-message-bar.css
                   newitem.eventCallback = null; // disable show only once per day for success
