@@ -54,6 +54,7 @@ template struct StyleStrong<StyleLockedFontFaceRule>;
 template struct StyleStrong<StyleLockedCounterStyleRule>;
 template struct StyleStrong<StyleContainerRule>;
 template struct StyleStrong<StyleScopeRule>;
+template struct StyleStrong<StyleStartingStyleRule>;
 
 template <typename T>
 inline void StyleOwnedSlice<T>::Clear() {

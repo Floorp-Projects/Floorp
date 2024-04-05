@@ -1,5 +1,8 @@
 [DEFAULT]
-prefs = ["dom.svg.pathSeg.enabled=false"]
+prefs = [
+  "dom.svg.pathSeg.enabled=false",
+  "layout.css.starting-style-at-rules.enabled=true",
+]
 support-files = [
   "497633.html",
   "fail.png",
