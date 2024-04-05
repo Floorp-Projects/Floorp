@@ -59,9 +59,10 @@ class DOMMediaStream : public DOMEventTargetHelper,
  public:
   typedef dom::MediaTrackConstraints MediaTrackConstraints;
 
-  class TrackListener {
+  class TrackListener : public nsISupports {
    public:
-    virtual ~TrackListener() = default;
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTION_CLASS(TrackListener)
 
     /**
      * Called when the DOMMediaStream has a live track added, either by
@@ -94,6 +95,9 @@ class DOMMediaStream : public DOMEventTargetHelper,
      * Called when the DOMMediaStream has become inaudible.
      */
     virtual void NotifyInaudible(){};
+
+   protected:
+    virtual ~TrackListener() = default;
   };
 
   explicit DOMMediaStream(nsPIDOMWindowInner* aWindow);
@@ -236,7 +240,7 @@ class DOMMediaStream : public DOMEventTargetHelper,
   nsTArray<nsCOMPtr<nsISupports>> mConsumersToKeepAlive;
 
   // The track listeners subscribe to changes in this stream's track set.
-  nsTArray<TrackListener*> mTrackListeners;
+  nsTArray<RefPtr<TrackListener>> mTrackListeners;
 
   // True if this stream has live tracks.
   bool mActive = false;
