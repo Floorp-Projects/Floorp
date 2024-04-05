@@ -264,6 +264,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                 it.view.hidePageActionSeparator()
             } else {
                 it.view.showPageActionSeparator()
+                it.view.isNavBarEnabled = true
             }
             inlineAutocompleteEditText = it.view.findViewById(R.id.mozac_browser_toolbar_edit_url_view)
             inlineAutocompleteEditText.increaseTapArea(TAP_INCREASE_DPS_4)

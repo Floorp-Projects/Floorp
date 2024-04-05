@@ -101,6 +101,7 @@ class ToolbarView(
                     R.color.suggestion_highlight_color,
                 ),
                 clear = context.getColorFromAttr(R.attr.textPrimary),
+                erase = context.getColorFromAttr(R.attr.textPrimary),
                 pageActionSeparator = context.getColorFromAttr(R.attr.borderToolbarDivider),
             )
 
@@ -120,7 +121,7 @@ class ToolbarView(
             private = isPrivate
 
             setOnEditListener(
-                object : mozilla.components.concept.toolbar.Toolbar.OnEditListener {
+                object : Toolbar.OnEditListener {
                     override fun onCancelEditing(): Boolean {
                         interactor.onEditingCanceled()
                         // We need to return false to not show display mode

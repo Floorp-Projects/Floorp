@@ -75,6 +75,7 @@ class EditToolbar internal constructor(
      */
     data class Colors(
         @ColorInt val clear: Int,
+        @ColorInt val erase: Int,
         @ColorInt val icon: Int?,
         @ColorInt val hint: Int,
         @ColorInt val text: Int,
@@ -99,6 +100,11 @@ class EditToolbar internal constructor(
         editActionsStart = rootView.findViewById(R.id.mozac_browser_toolbar_edit_actions_start),
         editActionsEnd = rootView.findViewById(R.id.mozac_browser_toolbar_edit_actions_end),
         clear = rootView.findViewById<ImageView>(R.id.mozac_browser_toolbar_clear_view).apply {
+            setOnClickListener {
+                onClear()
+            }
+        },
+        erase = rootView.findViewById<ImageView>(R.id.mozac_browser_toolbar_erase_view).apply {
             setOnClickListener {
                 onClear()
             }
@@ -138,6 +144,7 @@ class EditToolbar internal constructor(
      */
     var colors: Colors = Colors(
         clear = ContextCompat.getColor(context, colorsR.color.photonWhite),
+        erase = ContextCompat.getColor(context, colorsR.color.photonWhite),
         icon = null,
         hint = views.url.currentHintTextColor,
         text = views.url.currentTextColor,
@@ -149,6 +156,8 @@ class EditToolbar internal constructor(
             field = value
 
             views.clear.setColorFilter(value.clear)
+
+            views.erase.setColorFilter(value.erase)
 
             if (value.icon != null) {
                 views.icon.setColorFilter(value.icon)
@@ -287,7 +296,8 @@ class EditToolbar internal constructor(
         } else {
             views.url.setText(url, shouldAutoComplete)
         }
-        views.clear.isVisible = url.isNotBlank()
+        views.clear.isVisible = url.isNotBlank() && !toolbar.isNavBarEnabled
+        views.erase.isVisible = url.isNotBlank() && toolbar.isNavBarEnabled
 
         if (shouldHighlight) {
             views.url.setSelection(views.url.text.length - url.length, views.url.text.length)
@@ -353,7 +363,8 @@ class EditToolbar internal constructor(
     }
 
     private fun onTextChanged(text: String) {
-        views.clear.isVisible = text.isNotBlank()
+        views.clear.isVisible = text.isNotBlank() && !toolbar.isNavBarEnabled
+        views.erase.isVisible = text.isNotBlank() && toolbar.isNavBarEnabled
         views.editActionsEnd.autoHideAction(text.isEmpty())
 
         /*
@@ -398,6 +409,7 @@ internal class EditToolbarViews(
     val editActionsStart: ActionContainer,
     val editActionsEnd: ActionContainer,
     val clear: ImageView,
+    val erase: ImageView,
     val url: InlineAutocompleteEditText,
     val pageActionSeparator: View,
 )
