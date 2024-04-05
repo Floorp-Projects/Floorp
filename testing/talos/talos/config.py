@@ -50,6 +50,7 @@ DEFAULTS = dict(
         tploadnocache=False,
         tpscrolltest=False,
         win_counters=[],
+        w7_counters=[],
         linux_counters=[],
         mac_counters=[],
         xperf_counters=[],
@@ -117,6 +118,7 @@ def fix_xperf(config):
     # BBB: remove doubly-quoted xperf values from command line
     # (needed for buildbot)
     # https://bugzilla.mozilla.org/show_bug.cgi?id=704654#c43
+    win7_path = "c:/Program Files/Microsoft Windows Performance Toolkit/xperf.exe"
     if config["xperf_path"]:
         xperf_path = config["xperf_path"]
         quotes = ('"', "'")
@@ -124,6 +126,13 @@ def fix_xperf(config):
             if xperf_path.startswith(quote) and xperf_path.endswith(quote):
                 config["xperf_path"] = xperf_path[1:-1]
                 break
+        if not os.path.exists(config["xperf_path"]):
+            # look for old win7 path
+            if not os.path.exists(win7_path):
+                raise ConfigurationError(
+                    "xperf.exe cannot be found at the path specified"
+                )
+            config["xperf_path"] = win7_path
 
 
 @validator
@@ -171,6 +180,11 @@ def determine_local_symbols_path(config):
         config["symbols_path"] = os.path.join(
             os.environ["MOZ_DEVELOPER_OBJ_DIR"], "dist", "crashreporter-symbols"
         )
+
+
+def get_counters(config):
+    counters = set()
+    return counters
 
 
 def get_active_tests(config):
@@ -267,6 +281,7 @@ def get_test(config, global_overrides, counters, test_instance):
             "linux_counters",
             "mac_counters",
             "win_counters",
+            "w7_counters",
             "xperf_counters",
         )
         for key in keys:
@@ -285,7 +300,7 @@ def get_test(config, global_overrides, counters, test_instance):
 
 @validator
 def tests(config):
-    counters = set()
+    counters = get_counters(config)
     global_overrides = get_global_overrides(config)
     activeTests = get_active_tests(config)
     test_dict = test.test_dict()

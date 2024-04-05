@@ -377,6 +377,10 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
             "--suppress-handler-traceback",
         ]
 
+        is_windows_7 = (
+            mozinfo.info["os"] == "win" and mozinfo.info["os_version"] == "6.1"
+        )
+
         if self.repeat > 0:
             # repeat should repeat the original test, so +1 for first run
             cmd.append("--repeat=%s" % (self.repeat + 1))
@@ -386,6 +390,8 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
             or mozinfo.info["tsan"]
             or "wdspec" in test_types
             or not c["disable_fission"]
+            # Bug 1392106 - skia error 0x80070005: Access is denied.
+            or is_windows_7
             and mozinfo.info["debug"]
         ):
             processes = 1
@@ -402,7 +408,11 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
         else:
             cmd += ["--binary=%s" % self.binary_path, "--product=firefox"]
 
-        cmd += ["--install-fonts"]
+        if is_windows_7:
+            # On Windows 7 --install-fonts fails, so fall back to a Firefox-specific codepath
+            self._install_fonts()
+        else:
+            cmd += ["--install-fonts"]
 
         for test_type in test_types:
             cmd.append("--test-type=%s" % test_type)

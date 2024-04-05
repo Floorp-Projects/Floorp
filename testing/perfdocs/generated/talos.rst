@@ -1243,6 +1243,7 @@ For the sample commands found below, note that the capitalization used is import
    * tpmozafterpaint: False
    * tppagecycles: 5
    * unit: ms
+   * w7_counters: None
    * win_counters: None
    * Command
 
@@ -1998,6 +1999,7 @@ For the sample commands found below, note that the capitalization used is import
    * tpmozafterpaint: False
    * tppagecycles: 5
    * unit: ms
+   * w7_counters: None
    * win_counters: None
    * Command
 
@@ -2325,6 +2327,7 @@ For the sample commands found below, note that the capitalization used is import
    * tpmozafterpaint: False
    * tppagecycles: 5
    * unit: ms
+   * w7_counters: None
    * win_counters: None
    * Command
 
@@ -2882,6 +2885,7 @@ For the sample commands found below, note that the capitalization used is import
    * tpmozafterpaint: False
    * tppagecycles: 25
    * unit: frame interval
+   * w7_counters: None
    * win_counters: None
    * Command
 
@@ -3202,6 +3206,7 @@ For the sample commands found below, note that the capitalization used is import
    * tpmozafterpaint: False
    * tppagecycles: 5
    * unit: ms
+   * w7_counters: None
    * win_counters: None
    * Command
 
@@ -4170,6 +4175,7 @@ For the sample commands found below, note that the capitalization used is import
    * tpmozafterpaint: False
    * tppagecycles: 5
    * unit: ms
+   * w7_counters: None
    * win_counters: None
    * Command
 
@@ -4491,6 +4497,7 @@ For the sample commands found below, note that the capitalization used is import
    * tpmozafterpaint: False
    * tppagecycles: 5
    * unit: ms
+   * w7_counters: None
    * win_counters: None
    * Command
 
@@ -4812,6 +4819,7 @@ For the sample commands found below, note that the capitalization used is import
    * tpmozafterpaint: False
    * tppagecycles: 5
    * unit: ms
+   * w7_counters: None
    * win_counters: None
    * Command
 
@@ -5133,6 +5141,7 @@ For the sample commands found below, note that the capitalization used is import
    * tpmozafterpaint: False
    * tppagecycles: 5
    * unit: ms
+   * w7_counters: None
    * win_counters: None
    * Command
 
@@ -5454,6 +5463,7 @@ For the sample commands found below, note that the capitalization used is import
    * tpmozafterpaint: False
    * tppagecycles: 5
    * unit: ms
+   * w7_counters: None
    * win_counters: None
    * Command
 
@@ -5775,6 +5785,7 @@ For the sample commands found below, note that the capitalization used is import
    * tpmozafterpaint: False
    * tppagecycles: 5
    * unit: ms
+   * w7_counters: None
    * win_counters: None
    * Command
 
@@ -6096,6 +6107,7 @@ For the sample commands found below, note that the capitalization used is import
    * tpmozafterpaint: False
    * tppagecycles: 5
    * unit: ms
+   * w7_counters: None
    * win_counters: None
    * Command
 
@@ -6417,6 +6429,7 @@ For the sample commands found below, note that the capitalization used is import
    * tpmozafterpaint: False
    * tppagecycles: 5
    * unit: ms
+   * w7_counters: None
    * win_counters: None
    * Command
 
@@ -6738,6 +6751,7 @@ For the sample commands found below, note that the capitalization used is import
    * tpmozafterpaint: False
    * tppagecycles: 5
    * unit: ms
+   * w7_counters: None
    * win_counters: None
    * Command
 
@@ -7059,6 +7073,7 @@ For the sample commands found below, note that the capitalization used is import
    * tpmozafterpaint: False
    * tppagecycles: 5
    * unit: ms
+   * w7_counters: None
    * win_counters: None
    * Command
 
@@ -7380,6 +7395,7 @@ For the sample commands found below, note that the capitalization used is import
    * tpmozafterpaint: False
    * tppagecycles: 5
    * unit: ms
+   * w7_counters: None
    * win_counters: None
    * Command
 
@@ -7701,6 +7717,7 @@ For the sample commands found below, note that the capitalization used is import
    * tpmozafterpaint: False
    * tppagecycles: 5
    * unit: ms
+   * w7_counters: None
    * win_counters: None
    * Command
 
@@ -8629,6 +8646,7 @@ For the sample commands found below, note that the capitalization used is import
    * tpmozafterpaint: False
    * tppagecycles: 10
    * unit: score
+   * w7_counters: None
    * win_counters: None
    * Command
 
@@ -8840,6 +8858,7 @@ For the sample commands found below, note that the capitalization used is import
    * tpmozafterpaint: False
    * tppagecycles: 10
    * unit: ms
+   * w7_counters: None
    * win_counters: None
    * Command
 
@@ -10711,6 +10730,7 @@ For the sample commands found below, note that the capitalization used is import
    * tpmozafterpaint: False
    * tppagecycles: 25
    * unit: ms
+   * w7_counters: None
    * win_counters: None
    * Command
 
@@ -10925,6 +10945,7 @@ For the sample commands found below, note that the capitalization used is import
    * tppagecycles: 1
    * tptimeout: 10000
    * unit: ms
+   * w7_counters: []
    * win_counters: []
    * xperf_counters: ['main_startup_fileio', 'main_startup_netio', 'main_normal_fileio', 'main_normal_netio', 'nonmain_startup_fileio', 'nonmain_normal_fileio', 'nonmain_normal_netio', 'mainthread_readcount', 'mainthread_readbytes', 'mainthread_writecount', 'mainthread_writebytes', 'time_to_session_store_window_restored_ms']
    * xperf_providers: ['PROC_THREAD', 'LOADER', 'HARD_FAULTS', 'FILENAME', 'FILE_IO', 'FILE_IO_INIT']
@@ -11087,6 +11108,7 @@ For the sample commands found below, note that the capitalization used is import
    * tppagecycles: 25
    * tptimeout: 5000
    * unit: ms
+   * w7_counters: ['% Processor Time']
    * win_counters: ['% Processor Time']
    * Command
 
