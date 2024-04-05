@@ -46,6 +46,14 @@ ruleTester.run("reject-multiple-getters-calls", rule, {
         });
       }
     `,
+    `
+      ChromeUtils.defineESModuleGetters(lazy, {
+        AppConstants: "resource://gre/modules/AppConstants.sys.mjs",
+      }, { global: "current" });
+      ChromeUtils.defineESModuleGetters(lazy, {
+        PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+      }, { global: "shared" });
+    `,
   ],
   invalid: [
     invalidCode(`
@@ -55,6 +63,14 @@ ruleTester.run("reject-multiple-getters-calls", rule, {
       ChromeUtils.defineESModuleGetters(lazy, {
         PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
       });
+    `),
+    invalidCode(`
+      ChromeUtils.defineESModuleGetters(lazy, {
+        AppConstants: "resource://gre/modules/AppConstants.sys.mjs",
+      }, { global: "current" });
+      ChromeUtils.defineESModuleGetters(lazy, {
+        PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+      }, { global: "current" });
     `),
   ],
 });

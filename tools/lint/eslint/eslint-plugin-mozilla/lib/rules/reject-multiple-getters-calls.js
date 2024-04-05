@@ -56,6 +56,24 @@ module.exports = {
             return;
           }
 
+          if (node.arguments.length >= 3) {
+            const options = node.arguments[2];
+            let globalOption = null;
+            if (options.type == "ObjectExpression") {
+              for (const prop of options.properties) {
+                if (
+                  prop.type == "Property" &&
+                  isIdentifier(prop.key, "global")
+                ) {
+                  globalOption = helpers.getASTSource(prop.value);
+                }
+              }
+            }
+            if (globalOption) {
+              target += "+" + globalOption;
+            }
+          }
+
           const parent = stmt.parent;
           let targets;
           if (parentToTargets.has(parent)) {
