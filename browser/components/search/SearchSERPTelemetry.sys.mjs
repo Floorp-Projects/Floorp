@@ -1784,6 +1784,8 @@ class ContentHandler {
     let item = this._findItemForBrowser(browser);
     let telemetryState = item.browserTelemetryStateMap.get(browser);
     if (lazy.serpEventTelemetryCategorization && telemetryState) {
+      lazy.logConsole.debug("Ad domains:", Array.from(info.adDomains));
+      lazy.logConsole.debug("Non ad domains:", Array.from(info.nonAdDomains));
       let result = await SearchSERPCategorization.maybeCategorizeSERP(
         info.nonAdDomains,
         info.adDomains,
@@ -2217,6 +2219,7 @@ class CategorizationRecorder {
   }
 
   submitPing(reason) {
+    lazy.logConsole.debug("Submitting SERP categorization ping:", reason);
     GleanPings.serpCategorization.submit(reason);
   }
 
