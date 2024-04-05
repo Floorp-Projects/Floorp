@@ -182,11 +182,11 @@ export class URLQueryStrippingListService {
     }
 
     // Get the list from pref.
-    this._onPrefUpdate(
+    await this._onPrefUpdate(
       PREF_STRIP_LIST_NAME,
       Services.prefs.getStringPref(PREF_STRIP_LIST_NAME, "")
     );
-    this._onPrefUpdate(
+    await this._onPrefUpdate(
       PREF_ALLOW_LIST_NAME,
       Services.prefs.getStringPref(PREF_ALLOW_LIST_NAME, "")
     );
