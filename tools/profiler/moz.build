@@ -85,6 +85,10 @@ if CONFIG["MOZ_GECKO_PROFILER"]:
             UNIFIED_SOURCES += [
                 "core/PowerCounters-linux.cpp",
             ]
+        elif CONFIG["TARGET_CPU"] == "aarch64" and CONFIG["OS_TARGET"] == "Android":
+            SOURCES += [
+                "core/PowerCounters-android.cpp",
+            ]
         if CONFIG["TARGET_CPU"] == "arm" and CONFIG["OS_TARGET"] != "FreeBSD":
             SOURCES += [
                 "core/EHABIStackWalk.cpp",

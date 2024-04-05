@@ -19,10 +19,39 @@ class ProcessPower;
 #if defined(GP_PLAT_amd64_darwin)
 class RAPL;
 #endif
+#if defined(GP_PLAT_arm64_android)
+
+/*
+ * These declarations come from:
+ * https://cs.android.com/android/platform/superproject/main/+/main:external/perfetto/src/android_internal/power_stats.h;l=34-52;drc=1777bdef274bcfbccd4e6f8b6d00a1bac48a8645
+ */
+
+struct RailDescriptor {
+  // Index corresponding to the rail
+  uint32_t index;
+  // Name of the rail
+  char rail_name[64];
+  // Name of the subsystem to which this rail belongs
+  char subsys_name[64];
+  // Hardware sampling rate
+  uint32_t sampling_rate;
+};
+
+struct RailEnergyData {
+  // Index corresponding to RailDescriptor.index
+  uint32_t index;
+  // Time since device boot(CLOCK_BOOTTIME) in milli-seconds
+  uint64_t timestamp;
+  // Accumulated energy since device boot in microwatt-seconds (uWs)
+  uint64_t energy;
+};
+bool GetRailEnergyData(RailEnergyData*, size_t* size_of_arr);
+#endif
 
 class PowerCounters {
  public:
-#if defined(_MSC_VER) || defined(GP_OS_darwin) || defined(GP_PLAT_amd64_linux)
+#if defined(_MSC_VER) || defined(GP_OS_darwin) || \
+    defined(GP_PLAT_amd64_linux) || defined(GP_PLAT_arm64_android)
   explicit PowerCounters();
   ~PowerCounters();
   void Sample();
@@ -46,6 +75,12 @@ class PowerCounters {
 #endif
 #if defined(GP_PLAT_amd64_darwin)
   RAPL* mRapl;
+#endif
+#if defined(GP_PLAT_arm64_android)
+  void* mLibperfettoModule = nullptr;
+  decltype(&GetRailEnergyData) mGetRailEnergyData = nullptr;
+  mozilla::Vector<RailDescriptor> mRailDescriptors;
+  mozilla::Vector<RailEnergyData> mRailEnergyData;
 #endif
 };
 
