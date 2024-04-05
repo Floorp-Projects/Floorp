@@ -25,7 +25,8 @@ class MFCDMChild final : public PMFCDMChild {
   explicit MFCDMChild(const nsAString& aKeySystem);
 
   using CapabilitiesPromise = MozPromise<MFCDMCapabilitiesIPDL, nsresult, true>;
-  RefPtr<CapabilitiesPromise> GetCapabilities(bool aIsHWSecured);
+  RefPtr<CapabilitiesPromise> GetCapabilities(
+      MFCDMCapabilitiesRequest&& aRequest);
 
   template <typename PromiseType>
   already_AddRefed<PromiseType> InvokeAsync(

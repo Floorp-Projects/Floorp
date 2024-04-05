@@ -148,7 +148,7 @@ void MFCDMChild::Shutdown() {
 }
 
 RefPtr<MFCDMChild::CapabilitiesPromise> MFCDMChild::GetCapabilities(
-    bool aIsHWSecured) {
+    MFCDMCapabilitiesRequest&& aRequest) {
   MOZ_ASSERT(mManagerThread);
 
   if (mShutdown) {
@@ -160,23 +160,21 @@ RefPtr<MFCDMChild::CapabilitiesPromise> MFCDMChild::GetCapabilities(
     return CapabilitiesPromise::CreateAndReject(mState, __func__);
   }
 
-  auto doSend = [self = RefPtr{this}, aIsHWSecured, this]() {
-    SendGetCapabilities(aIsHWSecured)
-        ->Then(
-            mManagerThread, __func__,
-            [self, this](MFCDMCapabilitiesResult&& aResult) {
-              if (aResult.type() == MFCDMCapabilitiesResult::Tnsresult) {
-                mCapabilitiesPromiseHolder.RejectIfExists(
-                    aResult.get_nsresult(), __func__);
-                return;
-              }
-              mCapabilitiesPromiseHolder.ResolveIfExists(
-                  std::move(aResult.get_MFCDMCapabilitiesIPDL()), __func__);
-            },
-            [self, this](const mozilla::ipc::ResponseRejectReason& aReason) {
-              mCapabilitiesPromiseHolder.RejectIfExists(NS_ERROR_FAILURE,
-                                                        __func__);
-            });
+  auto doSend = [self = RefPtr{this}, request = std::move(aRequest), this]() {
+    SendGetCapabilities(request)->Then(
+        mManagerThread, __func__,
+        [self, this](MFCDMCapabilitiesResult&& aResult) {
+          if (aResult.type() == MFCDMCapabilitiesResult::Tnsresult) {
+            mCapabilitiesPromiseHolder.RejectIfExists(aResult.get_nsresult(),
+                                                      __func__);
+            return;
+          }
+          mCapabilitiesPromiseHolder.ResolveIfExists(
+              std::move(aResult.get_MFCDMCapabilitiesIPDL()), __func__);
+        },
+        [self, this](const mozilla::ipc::ResponseRejectReason& aReason) {
+          mCapabilitiesPromiseHolder.RejectIfExists(NS_ERROR_FAILURE, __func__);
+        });
   };
 
   return InvokeAsync(doSend, __func__, mCapabilitiesPromiseHolder);
