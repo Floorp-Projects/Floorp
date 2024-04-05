@@ -748,12 +748,10 @@ void TextureClient::ReadUnlock() {
 }
 
 bool TextureClient::Lock(OpenMode aMode) {
-  MOZ_ASSERT(IsValid());
-  MOZ_ASSERT(!mIsLocked);
-  if (!IsValid()) {
+  if (NS_WARN_IF(!IsValid())) {
     return false;
   }
-  if (mIsLocked) {
+  if (NS_WARN_IF(mIsLocked)) {
     return mOpenMode == aMode;
   }
 

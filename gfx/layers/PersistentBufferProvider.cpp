@@ -663,14 +663,15 @@ PersistentBufferProviderShared::BorrowSnapshot(gfx::DrawTarget* aTarget) {
 
   if (mDrawTarget) {
     auto back = GetTexture(mBack);
-    MOZ_ASSERT(back && back->IsLocked());
+    if (NS_WARN_IF(!back) || NS_WARN_IF(!back->IsLocked())) {
+      return nullptr;
+    }
     mSnapshot = back->BorrowSnapshot();
     return do_AddRef(mSnapshot);
   }
 
   auto front = GetTexture(mFront);
-  if (!front || front->IsLocked()) {
-    MOZ_ASSERT(false);
+  if (NS_WARN_IF(!front) || NS_WARN_IF(front->IsLocked())) {
     return nullptr;
   }
 
