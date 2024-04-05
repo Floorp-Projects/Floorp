@@ -559,10 +559,9 @@ var FullPageTranslationsPanel = new (class {
       const { cancelButton, errorHintAction } = this.elements;
 
       this.#showError({
-        message: "full-page-translations-panel-error-load-languages",
-        hint: "full-page-translations-panel-error-load-languages-hint",
-        actionText:
-          "full-page-translations-panel-error-load-languages-hint-button",
+        message: "translations-panel-error-load-languages",
+        hint: "translations-panel-error-load-languages-hint",
+        actionText: "translations-panel-error-load-languages-hint-button",
         actionCommand: () => this.#reloadLangList(actor),
       });
 
@@ -1381,7 +1380,7 @@ var FullPageTranslationsPanel = new (class {
     }
     this.elements.error.hidden = false;
     this.#showError({
-      message: "full-page-translations-panel-error-translating",
+      message: "translations-panel-error-translating",
     });
     const targetButton = button.hidden ? this.elements.appMenuButton : button;
 
