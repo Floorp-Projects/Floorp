@@ -14,6 +14,7 @@
 #include "nsSerializationHelper.h"
 #include "mozilla/Base64.h"
 #include "nsEscape.h"
+#include "nsURLHelper.h"
 
 using namespace mozilla;
 
@@ -438,4 +439,11 @@ TEST(TestStandardURL, ParseIPv4Num)
   uint32_t number;
   Test_ParseIPv4Number("0x10"_ns, 16, number, 255);
   ASSERT_EQ(number, (uint32_t)16);
+}
+
+TEST(TestStandardURL, CoalescePath)
+{
+  char buf[100] = "/.";
+  net_CoalesceDirs(NET_COALESCE_NORMAL, buf);
+  ASSERT_EQ(nsCString(buf), "/"_ns);
 }
