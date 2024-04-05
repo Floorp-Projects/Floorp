@@ -569,7 +569,9 @@ void SelectBitrates(uint32_t aBitsPerSecond, uint8_t aNumVideoTracks,
  */
 class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
                                public DOMMediaStream::TrackListener {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Session)
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(Session,
+                                           DOMMediaStream::TrackListener)
 
   struct TrackTypeComparator {
     enum Type {
@@ -1169,6 +1171,14 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
   // Shutdown blocker unique for this Session. Main thread only.
   RefPtr<ShutdownBlocker> mShutdownBlocker;
 };
+
+NS_IMPL_CYCLE_COLLECTION_INHERITED(MediaRecorder::Session,
+                                   DOMMediaStream::TrackListener, mMediaStream,
+                                   mMediaStreamTracks)
+NS_IMPL_ADDREF_INHERITED(MediaRecorder::Session, DOMMediaStream::TrackListener)
+NS_IMPL_RELEASE_INHERITED(MediaRecorder::Session, DOMMediaStream::TrackListener)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MediaRecorder::Session)
+NS_INTERFACE_MAP_END_INHERITING(DOMMediaStream::TrackListener)
 
 MediaRecorder::~MediaRecorder() {
   LOG(LogLevel::Debug, ("~MediaRecorder (%p)", this));

@@ -40,7 +40,6 @@ class MediaStreamAudioSourceNodeEngine final : public AudioNodeEngine {
 
 class MediaStreamAudioSourceNode
     : public AudioNode,
-      public DOMMediaStream::TrackListener,
       public PrincipalChangeObserver<MediaStreamTrack> {
  public:
   static already_AddRefed<MediaStreamAudioSourceNode> Create(
@@ -87,9 +86,28 @@ class MediaStreamAudioSourceNode
                           ErrorResult& aRv);
 
   // From DOMMediaStream::TrackListener.
-  void NotifyTrackAdded(const RefPtr<MediaStreamTrack>& aTrack) override;
-  void NotifyTrackRemoved(const RefPtr<MediaStreamTrack>& aTrack) override;
-  void NotifyAudible() override;
+  void NotifyTrackAdded(const RefPtr<MediaStreamTrack>& aTrack);
+  void NotifyTrackRemoved(const RefPtr<MediaStreamTrack>& aTrack);
+  void NotifyAudible();
+
+  class TrackListener final : public DOMMediaStream::TrackListener {
+   public:
+    NS_DECL_ISUPPORTS_INHERITED
+    NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(TrackListener,
+                                             DOMMediaStream::TrackListener)
+    explicit TrackListener(MediaStreamAudioSourceNode* aNode) : mNode(aNode) {}
+    void NotifyTrackAdded(const RefPtr<MediaStreamTrack>& aTrack) override {
+      mNode->NotifyTrackAdded(aTrack);
+    }
+    void NotifyTrackRemoved(const RefPtr<MediaStreamTrack>& aTrack) override {
+      mNode->NotifyTrackRemoved(aTrack);
+    }
+    void NotifyAudible() override { mNode->NotifyAudible(); }
+
+   private:
+    virtual ~TrackListener() = default;
+    RefPtr<MediaStreamAudioSourceNode> mNode;
+  };
 
   // From PrincipalChangeObserver<MediaStreamTrack>.
   void PrincipalChanged(MediaStreamTrack* aMediaStreamTrack) override;
@@ -120,6 +138,7 @@ class MediaStreamAudioSourceNode
 
   // On construction we set this to the first audio track of mInputStream.
   RefPtr<MediaStreamTrack> mInputTrack;
+  RefPtr<TrackListener> mListener;
 };
 
 }  // namespace mozilla::dom

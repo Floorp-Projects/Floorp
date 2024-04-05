@@ -1455,7 +1455,7 @@ class HTMLMediaElement : public nsGenericHTMLElement,
 
   // Holds a reference to the stream connecting this stream to the window
   // capture sink.
-  UniquePtr<MediaStreamWindowCapturer> mStreamWindowCapturer;
+  RefPtr<MediaStreamWindowCapturer> mStreamWindowCapturer;
 
   // Holds references to the DOM wrappers for the MediaStreams that we're
   // writing to.
@@ -1770,7 +1770,7 @@ class HTMLMediaElement : public nsGenericHTMLElement,
 
   RefPtr<VideoTrackList> mVideoTrackList;
 
-  UniquePtr<MediaStreamTrackListener> mMediaStreamTrackListener;
+  RefPtr<MediaStreamTrackListener> mMediaStreamTrackListener;
 
   // The principal guarding mVideoFrameContainer access when playing a
   // MediaStream.

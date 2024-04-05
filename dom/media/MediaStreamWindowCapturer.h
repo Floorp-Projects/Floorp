@@ -24,7 +24,9 @@ class MediaInputPort;
 class MediaStreamWindowCapturer : public DOMMediaStream::TrackListener {
  public:
   MediaStreamWindowCapturer(DOMMediaStream* aStream, uint64_t aWindowId);
-  ~MediaStreamWindowCapturer();
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(MediaStreamWindowCapturer,
+                                           DOMMediaStream::TrackListener)
 
   void NotifyTrackAdded(const RefPtr<dom::MediaStreamTrack>& aTrack) override;
   void NotifyTrackRemoved(const RefPtr<dom::MediaStreamTrack>& aTrack) override;
@@ -41,6 +43,7 @@ class MediaStreamWindowCapturer : public DOMMediaStream::TrackListener {
   const uint64_t mWindowId;
 
  protected:
+  ~MediaStreamWindowCapturer();
   void AddTrack(dom::AudioStreamTrack* aTrack);
   void RemoveTrack(dom::AudioStreamTrack* aTrack);
 

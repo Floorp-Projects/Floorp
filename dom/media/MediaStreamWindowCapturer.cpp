@@ -13,6 +13,15 @@ namespace mozilla {
 using dom::AudioStreamTrack;
 using dom::MediaStreamTrack;
 
+NS_IMPL_CYCLE_COLLECTION_INHERITED(MediaStreamWindowCapturer,
+                                   DOMMediaStream::TrackListener)
+NS_IMPL_ADDREF_INHERITED(MediaStreamWindowCapturer,
+                         DOMMediaStream::TrackListener)
+NS_IMPL_RELEASE_INHERITED(MediaStreamWindowCapturer,
+                          DOMMediaStream::TrackListener)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MediaStreamWindowCapturer)
+NS_INTERFACE_MAP_END_INHERITING(DOMMediaStream::TrackListener)
+
 MediaStreamWindowCapturer::CapturedTrack::CapturedTrack(
     MediaStreamTrack* aTrack, uint64_t aWindowID)
     : mTrack(aTrack),
@@ -28,7 +37,6 @@ MediaStreamWindowCapturer::CapturedTrack::~CapturedTrack() {
 MediaStreamWindowCapturer::MediaStreamWindowCapturer(DOMMediaStream* aStream,
                                                      uint64_t aWindowId)
     : mStream(aStream), mWindowId(aWindowId) {
-  mStream->RegisterTrackListener(this);
   nsTArray<RefPtr<AudioStreamTrack>> tracks;
   mStream->GetAudioTracks(tracks);
   for (const auto& t : tracks) {
@@ -39,11 +47,7 @@ MediaStreamWindowCapturer::MediaStreamWindowCapturer(DOMMediaStream* aStream,
   }
 }
 
-MediaStreamWindowCapturer::~MediaStreamWindowCapturer() {
-  if (mStream) {
-    mStream->UnregisterTrackListener(this);
-  }
-}
+MediaStreamWindowCapturer::~MediaStreamWindowCapturer() = default;
 
 void MediaStreamWindowCapturer::NotifyTrackAdded(
     const RefPtr<MediaStreamTrack>& aTrack) {
