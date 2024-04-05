@@ -6,7 +6,6 @@
 
 use crate::std::path::Path;
 use libloading::{Library, Symbol};
-use once_cell::sync::Lazy;
 use std::ffi::{c_char, c_long, c_uint, CStr, CString};
 
 // Constants lifted from `curl.h`
@@ -149,9 +148,12 @@ library_binding! {
     fn curl_mime_free(CurlMime);
 }
 
+lazy_static::lazy_static! {
+    static ref CURL: std::io::Result<Curl> = Curl::load();
+}
+
 /// Load libcurl if possible.
 pub fn load() -> std::io::Result<&'static Curl> {
-    static CURL: Lazy<std::io::Result<Curl>> = Lazy::new(Curl::load);
     CURL.as_ref().map_err(error_other)
 }
 
