@@ -677,8 +677,6 @@ export var Policies = {
         "browser.download.dir",
         replacePathVariables(param)
       );
-      // If a custom download directory is being used, just lock folder list to 2.
-      setAndLockPref("browser.download.folderList", 2);
     },
   },
 
