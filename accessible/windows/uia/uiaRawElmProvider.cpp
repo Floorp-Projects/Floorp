@@ -70,6 +70,10 @@ void uiaRawElmProvider::RaiseUiaEventForGeckoEvent(Accessible* aAcc,
     return;
   }
   PROPERTYID property = 0;
+  _variant_t newVal;
+  bool gotNewVal = false;
+  // For control pattern properties, we can't use GetPropertyValue. In those
+  // cases, we must set newVal appropriately and set gotNewVal to true.
   switch (aGeckoEvent) {
     case nsIAccessibleEvent::EVENT_DESCRIPTION_CHANGE:
       property = UIA_FullDescriptionPropertyId;
@@ -80,13 +84,20 @@ void uiaRawElmProvider::RaiseUiaEventForGeckoEvent(Accessible* aAcc,
     case nsIAccessibleEvent::EVENT_NAME_CHANGE:
       property = UIA_NamePropertyId;
       break;
+    case nsIAccessibleEvent::EVENT_TEXT_VALUE_CHANGE:
+      property = UIA_ValueValuePropertyId;
+      newVal.vt = VT_BSTR;
+      uia->get_Value(&newVal.bstrVal);
+      gotNewVal = true;
+      break;
   }
-  // Don't pointlessly query the property value if no UIA clients are listening.
   if (property && ::UiaClientsAreListening()) {
     // We can't get the old value. Thankfully, clients don't seem to need it.
     _variant_t oldVal;
-    _variant_t newVal;
-    uia->GetPropertyValue(property, &newVal);
+    if (!gotNewVal) {
+      // This isn't a pattern property, so we can use GetPropertyValue.
+      uia->GetPropertyValue(property, &newVal);
+    }
     ::UiaRaiseAutomationPropertyChangedEvent(uia, property, oldVal, newVal);
   }
 }
@@ -154,6 +165,8 @@ uiaRawElmProvider::QueryInterface(REFIID aIid, void** aInterface) {
     *aInterface = static_cast<IScrollItemProvider*>(this);
   } else if (aIid == IID_IToggleProvider) {
     *aInterface = static_cast<IToggleProvider*>(this);
+  } else if (aIid == IID_IValueProvider) {
+    *aInterface = static_cast<IValueProvider*>(this);
   } else {
     return E_NOINTERFACE;
   }
@@ -276,6 +289,12 @@ uiaRawElmProvider::GetPatternProvider(
       if (HasTogglePattern()) {
         RefPtr<IToggleProvider> toggle = this;
         toggle.forget(aPatternProvider);
+      }
+      return S_OK;
+    case UIA_ValuePatternId:
+      if (HasValuePattern()) {
+        RefPtr<IValueProvider> value = this;
+        value.forget(aPatternProvider);
       }
       return S_OK;
   }
@@ -678,6 +697,58 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY STDMETHODIMP uiaRawElmProvider::ScrollIntoView() {
   return S_OK;
 }
 
+// IValueProvider methods
+
+STDMETHODIMP
+uiaRawElmProvider::SetValue(__RPC__in LPCWSTR aVal) {
+  Accessible* acc = Acc();
+  if (!acc) {
+    return CO_E_OBJNOTCONNECTED;
+  }
+  HyperTextAccessibleBase* ht = acc->AsHyperTextBase();
+  if (!ht || !acc->IsTextRole()) {
+    return UIA_E_INVALIDOPERATION;
+  }
+  if (acc->State() & (states::READONLY | states::UNAVAILABLE)) {
+    return UIA_E_INVALIDOPERATION;
+  }
+  nsAutoString text(aVal);
+  ht->ReplaceText(text);
+  return S_OK;
+}
+
+STDMETHODIMP
+uiaRawElmProvider::get_Value(__RPC__deref_out_opt BSTR* aRetVal) {
+  if (!aRetVal) {
+    return E_INVALIDARG;
+  }
+  *aRetVal = nullptr;
+  Accessible* acc = Acc();
+  if (!acc) {
+    return CO_E_OBJNOTCONNECTED;
+  }
+  nsAutoString value;
+  acc->Value(value);
+  *aRetVal = ::SysAllocStringLen(value.get(), value.Length());
+  if (!*aRetVal) {
+    return E_OUTOFMEMORY;
+  }
+  return S_OK;
+}
+
+STDMETHODIMP
+uiaRawElmProvider::get_IsReadOnly(__RPC__out BOOL* aRetVal) {
+  if (!aRetVal) {
+    return E_INVALIDARG;
+  }
+  Accessible* acc = Acc();
+  if (!acc) {
+    return CO_E_OBJNOTCONNECTED;
+  }
+  *aRetVal = acc->State() & states::READONLY;
+  return S_OK;
+}
+
 // Private methods
 
 bool uiaRawElmProvider::IsControl() {
@@ -771,4 +842,15 @@ bool uiaRawElmProvider::HasExpandCollapsePattern() {
   Accessible* acc = Acc();
   MOZ_ASSERT(acc);
   return acc->State() & (states::EXPANDABLE | states::HASPOPUP);
+}
+
+bool uiaRawElmProvider::HasValuePattern() const {
+  Accessible* acc = Acc();
+  MOZ_ASSERT(acc);
+  if (acc->HasNumericValue() || acc->IsCombobox() || acc->IsHTMLLink() ||
+      acc->IsTextField()) {
+    return true;
+  }
+  const nsRoleMapEntry* roleMapEntry = acc->ARIARoleMap();
+  return roleMapEntry && roleMapEntry->Is(nsGkAtoms::textbox);
 }
