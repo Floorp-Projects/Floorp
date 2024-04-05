@@ -2451,45 +2451,27 @@ class AddonCard extends HTMLElement {
 
   async setAddonPermission(permission, type, action) {
     let { addon } = this;
-    let origins = [],
-      permissions = [];
+    let perms = { origins: [], permissions: [] };
+
     if (!["add", "remove"].includes(action)) {
       throw new Error("invalid action for permission change");
     }
-    if (type == "permission") {
-      if (
-        action == "add" &&
-        !addon.optionalPermissions.permissions.includes(permission)
-      ) {
-        throw new Error("permission missing from manifest");
-      }
-      permissions = [permission];
-    } else if (type == "origin") {
-      if (action === "add") {
-        let { origins } = addon.optionalPermissions;
-        let patternSet = new MatchPatternSet(origins, { ignorePath: true });
-        if (!patternSet.subsumes(new MatchPattern(permission))) {
-          throw new Error("origin missing from manifest");
-        }
-      }
-      origins = [permission];
 
-      // If this is one of the "all sites" permissions
-      if (Extension.isAllSitesPermission(permission)) {
-        // Grant/revoke ALL "all sites" optional permissions from the manifest.
-        origins = addon.optionalPermissions.origins.filter(perm =>
-          Extension.isAllSitesPermission(perm)
-        );
-      }
+    if (type === "permission") {
+      perms.permissions = [permission];
+    } else if (type === "origin") {
+      perms.origins = [permission];
     } else {
       throw new Error("unknown permission type changed");
     }
-    let policy = WebExtensionPolicy.getByID(addon.id);
-    ExtensionPermissions[action](
-      addon.id,
-      { origins, permissions },
-      policy?.extension
+
+    let normalized = ExtensionPermissions.normalizeOptional(
+      perms,
+      addon.optionalPermissions
     );
+
+    let policy = WebExtensionPolicy.getByID(addon.id);
+    ExtensionPermissions[action](addon.id, normalized, policy?.extension);
   }
 
   async handleEvent(e) {
