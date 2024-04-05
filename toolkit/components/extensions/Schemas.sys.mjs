@@ -262,6 +262,23 @@ const POSTPROCESSORS = {
 
     return string;
   },
+  webRequestBlockingOrAuthProviderPermissionRequired(string, context) {
+    if (
+      string === "blocking" &&
+      !(
+        context.hasPermission("webRequestBlocking") ||
+        context.hasPermission("webRequestAuthProvider")
+      )
+    ) {
+      throw new context.cloneScope.Error(
+        "Using webRequest.onAuthRequired.addListener with the " +
+          "blocking option requires either the 'webRequestBlocking' " +
+          "or 'webRequestAuthProvider'permission."
+      );
+    }
+
+    return string;
+  },
   requireBackgroundServiceWorkerEnabled(value, context) {
     if (WebExtensionPolicy.backgroundServiceWorkerEnabled) {
       return value;
