@@ -68,6 +68,7 @@ MACH_COMMANDS = {
         "python/mozbuild/mozbuild/build_commands.py",
     ),
     "buildsymbols": MachCommandReference("python/mozbuild/mozbuild/mach_commands.py"),
+    "buildtokens": MachCommandReference("toolkit/content/widgets/mach_commands.py"),
     "busted": MachCommandReference("tools/mach_commands.py"),
     "cargo": MachCommandReference("python/mozbuild/mozbuild/mach_commands.py"),
     "clang-format": MachCommandReference(
