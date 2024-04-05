@@ -23,11 +23,10 @@ const CATEGORY_UPDATE_TIMER = "update-timer";
 
 let gSandbox;
 
-add_setup(async () => {
+add_setup(() => {
   gSandbox = sinon.createSandbox();
   initUpdateTimerManager();
   Services.prefs.setBoolPref(PREF_CONTENT_RELEVANCY_ENABLED, true);
-  await ContentRelevancyManager.init();
 
   registerCleanupFunction(() => {
     Services.prefs.clearUserPref(PREF_CONTENT_RELEVANCY_ENABLED);
@@ -36,10 +35,13 @@ add_setup(async () => {
 });
 
 add_task(async function test_init() {
+  ContentRelevancyManager.init();
+
   Assert.ok(ContentRelevancyManager.initialized, "Init should succeed");
 });
 
 add_task(async function test_uninit() {
+  ContentRelevancyManager.init();
   ContentRelevancyManager.uninit();
 
   Assert.ok(!ContentRelevancyManager.initialized, "Uninit should succeed");
@@ -50,7 +52,7 @@ add_task(async function test_timer() {
   Services.prefs.setIntPref(PREF_TIMER_INTERVAL, 0);
   gSandbox.spy(ContentRelevancyManager, "notify");
 
-  await ContentRelevancyManager.init();
+  ContentRelevancyManager.init();
 
   await TestUtils.waitForCondition(
     () => ContentRelevancyManager.notify.calledOnce,
@@ -66,6 +68,8 @@ add_task(async function test_feature_toggling() {
   // Set the timer interval to 0 will trigger the timer right away.
   Services.prefs.setIntPref(PREF_TIMER_INTERVAL, 0);
   gSandbox.spy(ContentRelevancyManager, "notify");
+
+  ContentRelevancyManager.init();
 
   // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
   await new Promise(resolve => setTimeout(resolve, 1100));
@@ -89,6 +93,8 @@ add_task(async function test_feature_toggling() {
 });
 
 add_task(async function test_call_disable_twice() {
+  ContentRelevancyManager.init();
+
   Services.prefs.setBoolPref(PREF_CONTENT_RELEVANCY_ENABLED, false);
   await TestUtils.waitForTick();
 
@@ -96,26 +102,6 @@ add_task(async function test_call_disable_twice() {
   await TestUtils.waitForTick();
 
   Assert.ok(true, "`#disable` should be safe to call multiple times");
-
-  Services.prefs.clearUserPref(PREF_CONTENT_RELEVANCY_ENABLED);
-});
-
-add_task(async function test_doClassification() {
-  Services.prefs.setBoolPref(PREF_CONTENT_RELEVANCY_ENABLED, true);
-  await TestUtils.waitForCondition(() => ContentRelevancyManager._isStoreReady);
-  await ContentRelevancyManager._test_doClassification([]);
-
-  // Disable it to reset the store.
-  Services.prefs.setBoolPref(PREF_CONTENT_RELEVANCY_ENABLED, false);
-  await TestUtils.waitForTick();
-
-  await Assert.rejects(
-    ContentRelevancyManager._test_doClassification([]),
-    /Store is not available/,
-    "Should throw with an unset store"
-  );
-
-  Services.prefs.clearUserPref(PREF_CONTENT_RELEVANCY_ENABLED);
 });
 
 /**

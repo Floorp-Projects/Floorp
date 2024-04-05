@@ -1,7 +1,3 @@
 [DEFAULT]
-head = "head.js"
-firefox-appdir = "browser"
 
 ["test_ContentRelevancyManager.js"]
-
-["test_InputUtils.js"]
