@@ -656,6 +656,11 @@ import org.mozilla.gecko.util.ThreadUtils;
           && mKeyInputConnection.commitText(text, newCursorPosition);
     }
 
+    // Bug 1818268 - Unexpected crash on Galaxy J7
+    if (InputMethods.dontOverrideCommitText()) {
+      return super.commitText(text, newCursorPosition);
+    }
+
     // Default implementation is
     // 1. Set selection
     // 2. Call Editable.replace
