@@ -11,6 +11,7 @@ import io
 import json
 import logging
 import os
+import sys
 from multiprocessing import Pool
 
 import mozpack.path as mozpath
@@ -22,6 +23,10 @@ from mozbuild.util import FileAvoidWrite
 # There are various imports in this file in functions to avoid adding
 # dependencies to config.status. See bug 949875.
 
+# Limit the count on Windows, because of bug 1889842 and also the
+# inefficiency of fork on Windows.
+DEFAULT_PROCESS_COUNT = 4 if sys.platform == "win32" else os.cpu_count()
+
 
 class WebIDLPool:
     """
@@ -32,6 +37,9 @@ class WebIDLPool:
     GeneratorState = None
 
     def __init__(self, GeneratorState, *, processes=None):
+        if processes is None:
+            processes = DEFAULT_PROCESS_COUNT
+
         # As a special case, don't spawn an extra process if processes=1
         if processes == 1:
             WebIDLPool._init(GeneratorState)
@@ -42,7 +50,11 @@ class WebIDLPool:
 
             self.pool = SeqPool()
         else:
-            self.pool = Pool(initializer=WebIDLPool._init, initargs=(GeneratorState,))
+            self.pool = Pool(
+                initializer=WebIDLPool._init,
+                initargs=(GeneratorState,),
+                processes=processes,
+            )
 
     def run(self, filenames):
         return self.pool.map(WebIDLPool._run, filenames)
