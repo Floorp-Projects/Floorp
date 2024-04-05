@@ -489,6 +489,33 @@ SubDialog.prototype = {
   },
 
   async resizeDialog() {
+    this.resizeHorizontally();
+    this.resizeVertically();
+
+    this._overlay.dispatchEvent(
+      new CustomEvent("dialogopen", {
+        bubbles: true,
+        detail: { dialog: this },
+      })
+    );
+    this._overlay.style.visibility = "inherit";
+    this._overlay.style.opacity = ""; // XXX: focus hack continued from _onContentLoaded
+
+    if (this._box.getAttribute("resizable") == "true") {
+      this._onResize = this._onResize.bind(this);
+      this._resizeObserver = new this._window.MutationObserver(this._onResize);
+      this._resizeObserver.observe(this._box, { attributes: true });
+    }
+
+    this._trapFocus();
+
+    this._resizeCallback?.({
+      title: this._titleElement,
+      frame: this._frame,
+    });
+  },
+
+  resizeHorizontally() {
     // Do this on load to wait for the CSS to load and apply before calculating the size.
     let docEl = this._frame.contentDocument.documentElement;
 
@@ -534,30 +561,6 @@ SubDialog.prototype = {
       boxMinWidth = `min(80vw, ${boxMinWidth})`;
     }
     this._box.style.minWidth = boxMinWidth;
-
-    this.resizeVertically();
-
-    this._overlay.dispatchEvent(
-      new CustomEvent("dialogopen", {
-        bubbles: true,
-        detail: { dialog: this },
-      })
-    );
-    this._overlay.style.visibility = "inherit";
-    this._overlay.style.opacity = ""; // XXX: focus hack continued from _onContentLoaded
-
-    if (this._box.getAttribute("resizable") == "true") {
-      this._onResize = this._onResize.bind(this);
-      this._resizeObserver = new this._window.MutationObserver(this._onResize);
-      this._resizeObserver.observe(this._box, { attributes: true });
-    }
-
-    this._trapFocus();
-
-    this._resizeCallback?.({
-      title: this._titleElement,
-      frame: this._frame,
-    });
   },
 
   resizeVertically() {
