@@ -64,7 +64,7 @@ class MediaKeySystemAccess final : public nsISupports, public nsWrapperCache {
       const Sequence<MediaKeySystemConfiguration>& aConfigs,
       MediaKeySystemConfiguration& aOutConfig,
       DecoderDoctorDiagnostics* aDiagnostics, bool aIsPrivateBrowsing,
-      const std::function<void(const char*)>& aDeprecationLogFn);
+      const Document* aDocument);
 
   static bool KeySystemSupportsInitDataType(const nsAString& aKeySystem,
                                             const nsAString& aInitDataType,
