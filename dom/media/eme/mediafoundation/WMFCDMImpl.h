@@ -119,6 +119,26 @@ class WMFCDMImpl final {
   MozPromiseHolder<InitPromise> mInitPromiseHolder;
 };
 
+// A helper class to get multiple capabilities from different key systems.
+class WMFCDMCapabilites final {
+ public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WMFCDMCapabilites);
+  WMFCDMCapabilites() = default;
+
+  using SupportedConfigsPromise = KeySystemConfig::SupportedConfigsPromise;
+  RefPtr<SupportedConfigsPromise> GetCapabilities(
+      const nsTArray<KeySystemConfigRequest>& aRequests);
+
+ private:
+  ~WMFCDMCapabilites();
+
+  nsTArray<RefPtr<MFCDMChild>> mCDMs;
+  MozPromiseHolder<SupportedConfigsPromise> mCapabilitiesPromiseHolder;
+  MozPromiseRequestHolder<
+      MFCDMChild::CapabilitiesPromise::AllSettledPromiseType>
+      mCapabilitiesPromisesRequest;
+};
+
 }  // namespace mozilla
 
 #endif  // DOM_MEDIA_EME_MEDIAFOUNDATION_WMFCDMIMPL_H_
