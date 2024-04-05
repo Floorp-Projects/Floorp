@@ -40,6 +40,8 @@ static inline void profiler_init(void* stackTop) {}
 static inline void profiler_shutdown(
     IsFastShutdown aIsFastShutdown = IsFastShutdown::No) {}
 
+static inline void profiler_lookup_download_directory() {}
+
 #else  // !MOZ_GECKO_PROFILER
 
 #  include "BaseProfiler.h"
