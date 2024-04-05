@@ -13,6 +13,8 @@
 
 namespace mozilla {
 
+struct KeySystemConfigRequest;
+
 struct KeySystemConfig {
  public:
   // EME MediaKeysRequirement:
@@ -129,9 +131,9 @@ struct KeySystemConfig {
     Software,
     Hardware,
   };
-  static bool CreateKeySystemConfigs(const nsAString& aKeySystem,
-                                     const DecryptionInfo aDecryption,
-                                     nsTArray<KeySystemConfig>& aOutConfigs);
+  static void CreateKeySystemConfigs(
+      const nsTArray<KeySystemConfigRequest>& aRequests,
+      nsTArray<KeySystemConfig>& aOutConfigs);
   static void GetGMPKeySystemConfigs(dom::Promise* aPromise);
 
   KeySystemConfig() = default;
@@ -184,6 +186,22 @@ struct KeySystemConfig {
   ContainerSupport mMP4;
   ContainerSupport mWebM;
   bool mIsHDCP22Compatible = false;
+
+ private:
+  static void CreateClearKeyKeySystemConfigs(
+      const KeySystemConfigRequest& aRequest,
+      nsTArray<KeySystemConfig>& aOutConfigs);
+  static void CreateWivineL3KeySystemConfigs(
+      const KeySystemConfigRequest& aRequest,
+      nsTArray<KeySystemConfig>& aOutConfigs);
+};
+
+struct KeySystemConfigRequest final {
+  KeySystemConfigRequest(const nsAString& aKeySystem,
+                         KeySystemConfig::DecryptionInfo aDecryption)
+      : mKeySystem(aKeySystem), mDecryption(aDecryption) {}
+  const nsAString& mKeySystem;
+  const KeySystemConfig::DecryptionInfo mDecryption;
 };
 
 KeySystemConfig::SessionType ConvertToKeySystemConfigSessionType(
