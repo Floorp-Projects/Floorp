@@ -409,6 +409,8 @@ GeckoView setup and contribution docs live in `geckoview.dev <https://geckoview.
 More documentation about contribution
 -------------------------------------
 
+:ref:`How to Contribute Code to Firefox`
+
 :ref:`Contributing to Mozilla projects`
 
 https://mozilla-version-control-tools.readthedocs.io/en/latest/devguide/contributing.html
