@@ -22,12 +22,22 @@ BindGroupLayout::BindGroupLayout(Device* const aParent, RawId aId, bool aOwning)
 BindGroupLayout::~BindGroupLayout() { Cleanup(); }
 
 void BindGroupLayout::Cleanup() {
-  if (mValid && mParent) {
-    mValid = false;
-    auto bridge = mParent->GetBridge();
-    if (mOwning && bridge && bridge->IsOpen()) {
+  if (!mValid) {
+    return;
+  }
+  mValid = false;
+
+  auto bridge = mParent->GetBridge();
+  if (!bridge) {
+    return;
+  }
+
+  if (mOwning) {
+    if (bridge->IsOpen()) {
       bridge->SendBindGroupLayoutDrop(mId);
     }
+
+    wgpu_client_free_bind_group_layout_id(bridge->GetClient(), mId);
   }
 }
 

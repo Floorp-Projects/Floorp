@@ -25,13 +25,21 @@ ShaderModule::ShaderModule(Device* const aParent, RawId aId,
 ShaderModule::~ShaderModule() { Cleanup(); }
 
 void ShaderModule::Cleanup() {
-  if (mValid && mParent) {
-    mValid = false;
-    auto bridge = mParent->GetBridge();
-    if (bridge && bridge->IsOpen()) {
-      bridge->SendShaderModuleDrop(mId);
-    }
+  if (!mValid) {
+    return;
   }
+  mValid = false;
+
+  auto bridge = mParent->GetBridge();
+  if (!bridge) {
+    return;
+  }
+
+  if (bridge->IsOpen()) {
+    bridge->SendShaderModuleDrop(mId);
+  }
+
+  wgpu_client_free_shader_module_id(bridge->GetClient(), mId);
 }
 
 already_AddRefed<dom::Promise> ShaderModule::CompilationInfo(ErrorResult& aRv) {

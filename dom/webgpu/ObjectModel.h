@@ -26,28 +26,38 @@ class ChildOf {
   nsIGlobalObject* GetParentObject() const;
 };
 
+/// Most WebGPU DOM objects inherit from this class.
+///
+/// mValid should only be used in the destruction steps in Cleanup() to check
+/// whether they have already run. This is because the destruction steps can be
+/// triggered by either the object's destructor or the cycle collector
+/// attempting to break a cycle. As a result, all methods accessible from JS can
+/// assume that mValid is true.
+///
+/// Similarly, pointers to the device and the IPDL actor (bridge) can be assumed
+/// to be non-null whenever the object is accessible from JS but not during
+/// cleanup as they might have been snatched by cycle collection.
+///
+/// The general pattern is that all objects should implement Cleanup more or
+/// less the same way. Cleanup should be the only function sending the
+/// corresponding Drop message and cleanup should *never* be called by anything
+/// other than the object destructor or the cycle collector.
+///
+/// These rules guarantee that:
+/// - The Drop message is called only once and that no other IPC message
+/// referring
+///   to the same object is send after Drop.
+/// - Any method outside of the destruction sequence can assume the pointers are
+///   non-null. They only have to check that the IPDL actor can send messages
+///   using `WebGPUChild::CanSend()`.
 class ObjectBase : public nsWrapperCache {
  protected:
   virtual ~ObjectBase() = default;
 
-  // False if this object is definitely invalid.
-  //
-  // See WebGPU §3.2, "Invalid Internal Objects & Contagious Invalidity".
-  //
-  // There could also be state in the GPU process indicating that our
-  // counterpart object there is invalid; certain GPU process operations will
-  // report an error back to use if we try to use it. But if it's useful to know
-  // whether the object is "definitely invalid", this should suffice.
+  /// False during the destruction sequence of the object.
   bool mValid = true;
 
  public:
-  // Return true if this WebGPU object may be valid.
-  //
-  // This is used by methods that want to know whether somebody other than
-  // `this` is valid. Generally, WebGPU object methods check `this->mValid`
-  // directly.
-  bool IsValid() const { return mValid; }
-
   void GetLabel(nsAString& aValue) const;
   void SetLabel(const nsAString& aLabel);
 

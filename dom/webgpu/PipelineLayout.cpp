@@ -22,13 +22,17 @@ PipelineLayout::PipelineLayout(Device* const aParent, RawId aId)
 PipelineLayout::~PipelineLayout() { Cleanup(); }
 
 void PipelineLayout::Cleanup() {
-  if (mValid && mParent) {
-    mValid = false;
-    auto bridge = mParent->GetBridge();
-    if (bridge && bridge->IsOpen()) {
-      bridge->SendPipelineLayoutDrop(mId);
-    }
+  if (!mValid) {
+    return;
   }
+  mValid = false;
+
+  auto bridge = mParent->GetBridge();
+  if (bridge->IsOpen()) {
+    bridge->SendPipelineLayoutDrop(mId);
+  }
+
+  wgpu_client_free_pipeline_layout_id(bridge->GetClient(), mId);
 }
 
 }  // namespace mozilla::webgpu

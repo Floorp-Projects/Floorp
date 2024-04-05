@@ -22,13 +22,21 @@ BindGroup::BindGroup(Device* const aParent, RawId aId)
 BindGroup::~BindGroup() { Cleanup(); }
 
 void BindGroup::Cleanup() {
-  if (mValid && mParent) {
-    mValid = false;
-    auto bridge = mParent->GetBridge();
-    if (bridge && bridge->IsOpen()) {
-      bridge->SendBindGroupDrop(mId);
-    }
+  if (!mValid) {
+    return;
   }
+  mValid = false;
+
+  auto bridge = mParent->GetBridge();
+  if (!bridge) {
+    return;
+  }
+
+  if (bridge->CanSend()) {
+    bridge->SendBindGroupDrop(mId);
+  }
+
+  wgpu_client_free_bind_group_id(bridge->GetClient(), mId);
 }
 
 }  // namespace mozilla::webgpu

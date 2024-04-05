@@ -85,9 +85,16 @@ void CommandEncoder::Cleanup() {
     return;
   }
   mValid = false;
+
+  if (!mBridge) {
+    return;
+  }
+
   if (mBridge->IsOpen()) {
     mBridge->SendCommandEncoderDrop(mId);
   }
+
+  wgpu_client_free_command_encoder_id(mBridge->GetClient(), mId);
 }
 
 void CommandEncoder::TrackPresentationContext(CanvasContext* aTargetContext) {

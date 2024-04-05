@@ -46,21 +46,21 @@ Texture::Texture(Device* const aParent, RawId aId,
 }
 
 void Texture::Cleanup() {
-  if (!mParent) {
+  if (!mValid) {
+    return;
+  }
+  mValid = false;
+
+  auto bridge = mParent->GetBridge();
+  if (!bridge) {
     return;
   }
 
-  auto bridge = mParent->GetBridge();
-  if (bridge && bridge->IsOpen()) {
+  if (bridge->CanSend()) {
     bridge->SendTextureDrop(mId);
   }
 
-  // After cleanup is called, no other method should ever be called on the
-  // object so we don't have to null-check mParent in other places.
-  // This serves the purpose of preventing SendTextureDrop from happening
-  // twice. TODO: Does it matter for breaking cycles too? Cleanup is called
-  // by the macros that deal with cycle colleciton.
-  mParent = nullptr;
+  wgpu_client_free_texture_id(bridge->GetClient(), mId);
 }
 
 Texture::~Texture() { Cleanup(); }

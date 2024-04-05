@@ -69,7 +69,7 @@ class Buffer final : public ObjectBase, public ChildOf<Device> {
          ipc::WritableSharedMemoryMapping&& aShmem);
   virtual ~Buffer();
   Device& GetDevice() { return *mParent; }
-  void Drop();
+  void Cleanup();
   void UnmapArrayBuffers(JSContext* aCx, ErrorResult& aRv);
   void RejectMapRequest(dom::Promise* aPromise, nsACString& message);
   void AbortMapRequest();
