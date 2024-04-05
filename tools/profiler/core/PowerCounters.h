@@ -53,15 +53,23 @@ class PowerCounters {
 #if defined(_MSC_VER) || defined(GP_OS_darwin) || \
     defined(GP_PLAT_amd64_linux) || defined(GP_PLAT_arm64_android)
   explicit PowerCounters();
-  ~PowerCounters();
-  void Sample();
 #else
   explicit PowerCounters(){};
-  ~PowerCounters(){};
+#endif
+#if defined(_MSC_VER) || defined(GP_PLAT_amd64_darwin) || \
+    defined(GP_PLAT_arm64_android)
+  ~PowerCounters();
+#else
+  ~PowerCounters() = default;
+#endif
+#if defined(_MSC_VER) || defined(GP_PLAT_amd64_darwin) || \
+    defined(GP_PLAT_arm64_android)
+  void Sample();
+#else
   void Sample(){};
 #endif
 
-  using CountVector = mozilla::Vector<BaseProfilerCount*, 4>;
+  using CountVector = mozilla::Vector<mozilla::UniquePtr<BaseProfilerCount>, 4>;
   const CountVector& GetCounters() { return mCounters; }
 
  private:
@@ -70,11 +78,8 @@ class PowerCounters {
 #if defined(_MSC_VER)
   mozilla::Vector<mozilla::UniquePtr<PowerMeterDevice>> mPowerMeterDevices;
 #endif
-#if defined(GP_PLAT_arm64_darwin)
-  mozilla::UniquePtr<ProcessPower> mProcessPower;
-#endif
 #if defined(GP_PLAT_amd64_darwin)
-  RAPL* mRapl;
+  mozilla::UniquePtr<RAPL> mRapl;
 #endif
 #if defined(GP_PLAT_arm64_android)
   void* mLibperfettoModule = nullptr;

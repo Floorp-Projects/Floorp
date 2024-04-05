@@ -865,7 +865,7 @@ class ActivePS {
     if (ProfilerFeature::HasPower(aFeatures)) {
       mMaybePowerCounters = new PowerCounters();
       for (const auto& powerCounter : mMaybePowerCounters->GetCounters()) {
-        locked_profiler_add_sampled_counter(aLock, powerCounter);
+        locked_profiler_add_sampled_counter(aLock, powerCounter.get());
       }
     }
 
@@ -961,7 +961,7 @@ class ActivePS {
     if (sInstance->mMaybePowerCounters) {
       for (const auto& powerCounter :
            sInstance->mMaybePowerCounters->GetCounters()) {
-        locked_profiler_remove_sampled_counter(aLock, powerCounter);
+        locked_profiler_remove_sampled_counter(aLock, powerCounter.get());
       }
       delete sInstance->mMaybePowerCounters;
       sInstance->mMaybePowerCounters = nullptr;

@@ -36,12 +36,4 @@ class ProcessPower final : public BaseProfilerCount {
   }
 };
 
-PowerCounters::PowerCounters() : mProcessPower(new ProcessPower()) {
-  if (mProcessPower) {
-    (void)mCounters.append(mProcessPower.get());
-  }
-}
-
-PowerCounters::~PowerCounters() { mCounters.clear(); }
-
-void PowerCounters::Sample() {}
+PowerCounters::PowerCounters() { (void)mCounters.append(new ProcessPower()); }

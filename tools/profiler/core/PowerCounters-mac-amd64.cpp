@@ -350,13 +350,7 @@ class RAPL {
     }
   }
 
-  ~RAPL() {
-    free(mPkes);
-    delete mPkg;
-    delete mCores;
-    delete mGpu;
-    delete mRam;
-  }
+  ~RAPL() { free(mPkes); }
 
   void Sample() {
     constexpr uint64_t kSupportedVersion = 1;
@@ -403,14 +397,14 @@ class RAPL {
 
 PowerCounters::PowerCounters() {
   // RAPL values are global, so only sample them on the parent.
-  mRapl = XRE_IsParentProcess() ? new RAPL(mCounters) : nullptr;
+  if (XRE_IsParentProcess()) {
+    mRapl = mozilla::MakeUnique<RAPL>(mCounters);
+  }
 }
 
-PowerCounters::~PowerCounters() {
-  mCounters.clear();
-  delete mRapl;
-  mRapl = nullptr;
-}
+// This default destructor can not be defined in the header file as it depends
+// on the full definition of RAPL which lives in this file.
+PowerCounters::~PowerCounters() {}
 
 void PowerCounters::Sample() {
   if (mRapl) {
