@@ -9,23 +9,12 @@
 
 #include "nsString.h"
 #include "nsTArray.h"
-#include "mozilla/MozPromise.h"
 #include "mozilla/dom/MediaKeysBinding.h"
-#include "mozilla/dom/MediaKeySystemAccessBinding.h"
 
 namespace mozilla {
 
-struct KeySystemConfigRequest;
-
 struct KeySystemConfig {
  public:
-  using SupportedConfigsPromise =
-      MozPromise<nsTArray<KeySystemConfig>, bool /* aIgnored */,
-                 /* IsExclusive = */ true>;
-  using KeySystemConfigPromise =
-      MozPromise<dom::MediaKeySystemConfiguration, bool /* aIgnored */,
-                 /* IsExclusive = */ true>;
-
   // EME MediaKeysRequirement:
   // https://www.w3.org/TR/encrypted-media/#dom-mediakeysrequirement
   enum class Requirement {
@@ -140,8 +129,9 @@ struct KeySystemConfig {
     Software,
     Hardware,
   };
-  static RefPtr<SupportedConfigsPromise> CreateKeySystemConfigs(
-      const nsTArray<KeySystemConfigRequest>& aRequests);
+  static bool CreateKeySystemConfigs(const nsAString& aKeySystem,
+                                     const DecryptionInfo aDecryption,
+                                     nsTArray<KeySystemConfig>& aOutConfigs);
   static void GetGMPKeySystemConfigs(dom::Promise* aPromise);
 
   KeySystemConfig() = default;
@@ -179,6 +169,10 @@ struct KeySystemConfig {
 
   nsString GetDebugInfo() const;
 
+  // Return true if the given key system is equal to `mKeySystem`, or it can be
+  // mapped to the same key system
+  bool IsSameKeySystem(const nsAString& aKeySystem) const;
+
   nsString mKeySystem;
   nsTArray<nsString> mInitDataTypes;
   Requirement mPersistentState = Requirement::NotAllowed;
@@ -190,22 +184,6 @@ struct KeySystemConfig {
   ContainerSupport mMP4;
   ContainerSupport mWebM;
   bool mIsHDCP22Compatible = false;
-
- private:
-  static void CreateClearKeyKeySystemConfigs(
-      const KeySystemConfigRequest& aRequest,
-      nsTArray<KeySystemConfig>& aOutConfigs);
-  static void CreateWivineL3KeySystemConfigs(
-      const KeySystemConfigRequest& aRequest,
-      nsTArray<KeySystemConfig>& aOutConfigs);
-};
-
-struct KeySystemConfigRequest final {
-  KeySystemConfigRequest(const nsAString& aKeySystem,
-                         KeySystemConfig::DecryptionInfo aDecryption)
-      : mKeySystem(aKeySystem), mDecryption(aDecryption) {}
-  const nsAString& mKeySystem;
-  const KeySystemConfig::DecryptionInfo mDecryption;
 };
 
 KeySystemConfig::SessionType ConvertToKeySystemConfigSessionType(
