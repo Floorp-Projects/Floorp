@@ -39,7 +39,6 @@ async function test_bfcache_telemetry(probeInParent) {
 
 add_task(async () => {
   await test_bfcache_telemetry(
-    Services.appinfo.sessionHistoryInParent &&
-      Services.prefs.getBoolPref("fission.bfcacheInParent")
+    Services.prefs.getBoolPref("fission.bfcacheInParent")
   );
 });
