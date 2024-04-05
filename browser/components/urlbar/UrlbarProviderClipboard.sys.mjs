@@ -144,9 +144,6 @@ class ProviderClipboard extends UrlbarProvider {
   }
 
   onEngagement(state, queryContext, details, controller) {
-    if (!["engagement", "abandonment"].includes(state)) {
-      return;
-    }
     const visibleResults = controller.view?.visibleResults ?? [];
     for (const result of visibleResults) {
       if (
