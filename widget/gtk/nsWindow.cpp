@@ -3763,6 +3763,8 @@ void nsWindow::RequestRepaint(LayoutDeviceIntRegion& aRepaintRegion) {
   KnowsCompositor* knowsCompositor = renderer->AsKnowsCompositor();
 
   if (knowsCompositor && layerManager && mCompositorSession) {
+    LOG("nsWindow::RequestRepaint()");
+
     if (!mConfiguredClearColor && !IsPopup()) {
       layerManager->WrBridge()->SendSetDefaultClearColor(LookAndFeel::Color(
           LookAndFeel::ColorID::Window, PreferenceSheet::ColorSchemeForChrome(),
@@ -3778,9 +3780,13 @@ void nsWindow::RequestRepaint(LayoutDeviceIntRegion& aRepaintRegion) {
 }
 
 gboolean nsWindow::OnExposeEvent(cairo_t* cr) {
+  LOG("nsWindow::OnExposeEvent GdkWindow [%p] XID [0x%lx]", mGdkWindow,
+      GetX11Window());
+
   // This might destroy us.
   NotifyOcclusionState(OcclusionState::VISIBLE);
   if (mIsDestroyed) {
+    LOG("destroyed after NotifyOcclusionState()");
     return FALSE;
   }
 
@@ -3788,25 +3794,26 @@ gboolean nsWindow::OnExposeEvent(cairo_t* cr) {
   // May run event loop and destroy us.
   MaybeDispatchResized();
   if (mIsDestroyed) {
+    LOG("destroyed after MaybeDispatchResized()");
     return FALSE;
   }
 
   // Windows that are not visible will be painted after they become visible.
   if (!mGdkWindow || !mHasMappedToplevel) {
+    LOG("quit, !mGdkWindow || !mHasMappedToplevel");
     return FALSE;
   }
 #ifdef MOZ_WAYLAND
   if (GdkIsWaylandDisplay() && !moz_container_wayland_can_draw(mContainer)) {
+    LOG("quit, !moz_container_wayland_can_draw()");
     return FALSE;
   }
 #endif
 
   if (!GetListener()) {
+    LOG("quit, !GetListener()");
     return FALSE;
   }
-
-  LOG("nsWindow::OnExposeEvent GdkWindow [%p] XID [0x%lx]", mGdkWindow,
-      GetX11Window());
 
   LayoutDeviceIntRegion exposeRegion;
   if (!ExtractExposeRegion(exposeRegion, cr)) {
@@ -3830,19 +3837,24 @@ gboolean nsWindow::OnExposeEvent(cairo_t* cr) {
   // If the window has been destroyed during the will paint notification,
   // there is nothing left to do.
   if (!mGdkWindow || mIsDestroyed) {
+    LOG("quit, !mGdkWindow || mIsDestroyed");
     return TRUE;
   }
 
   // Re-get all rendering components since the will paint notification
   // might have killed it.
   nsIWidgetListener* listener = GetListener();
-  if (!listener) return FALSE;
+  if (!listener) {
+    LOG("quit, !listener");
+    return FALSE;
+  }
 
   WindowRenderer* renderer = GetWindowRenderer();
   WebRenderLayerManager* layerManager = renderer->AsWebRender();
   KnowsCompositor* knowsCompositor = renderer->AsKnowsCompositor();
 
   if (knowsCompositor && layerManager && layerManager->NeedsComposite()) {
+    LOG("needs composite, ScheduleComposite() call");
     layerManager->ScheduleComposite(wr::RenderReasons::WIDGET);
     layerManager->SetNeedsComposite(false);
   }
@@ -3873,11 +3885,13 @@ gboolean nsWindow::OnExposeEvent(cairo_t* cr) {
   }
 
   if (region.IsEmpty()) {
+    LOG("quit, region.IsEmpty()");
     return TRUE;
   }
 
   // If this widget uses OMTC...
   if (renderer->GetBackendType() == LayersBackend::LAYERS_WR) {
+    LOG("redirect painting to OMTC rendering...");
     listener->PaintWindow(this, region);
 
     // Re-get the listener since the will paint notification might have
@@ -5408,8 +5422,8 @@ void nsWindow::OnScaleChanged(bool aNotify) {
 
   NotifyAPZOfDPIChange();
 
-  LOG("OnScaleChanged %d, %f -> %d, %f\n", int(mCeiledScaleFactor),
-      mFractionalScaleFactor, newCeiled, newFractional);
+  LOG("OnScaleChanged %d, %f -> %d, %f Notify %d\n", int(mCeiledScaleFactor),
+      mFractionalScaleFactor, newCeiled, newFractional, aNotify);
 
   mCeiledScaleFactor = newCeiled;
   mFractionalScaleFactor = newFractional;
