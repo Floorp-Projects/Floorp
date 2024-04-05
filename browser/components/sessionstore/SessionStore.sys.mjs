@@ -2156,7 +2156,7 @@ var SessionStoreInternal = {
         // Save non-private windows if they have at
         // least one saveable tab or are the last window.
         if (!winData.isPrivate) {
-          this.maybeSaveClosedWindow(winData, isLastWindow, true);
+          this.maybeSaveClosedWindow(winData, isLastWindow);
 
           if (!isLastWindow && winData.closedId > -1) {
             this._addClosedAction(
@@ -2232,7 +2232,7 @@ var SessionStoreInternal = {
    *        to call this method again asynchronously (for example, after
    *        a window flush).
    */
-  maybeSaveClosedWindow(winData, isLastWindow, recordTelemetry = false) {
+  maybeSaveClosedWindow(winData, isLastWindow) {
     // Make sure SessionStore is still running, and make sure that we
     // haven't chosen to forget this window.
     if (
@@ -2293,13 +2293,9 @@ var SessionStoreInternal = {
           this._removeClosedWindow(winIndex);
           return;
         }
-        // we only do this after the TabStateFlusher promise resolves in ssi_onClose
-        if (recordTelemetry) {
-          let closedTabsHistogram = Services.telemetry.getHistogramById(
-            "FX_SESSION_RESTORE_CLOSED_TABS_NOT_SAVED"
-          );
-          closedTabsHistogram.add(winData._closedTabs.length);
-        }
+        this._log.warn(
+          `Discarding window with 0 saveable tabs and ${winData._closedTabs.length} closed tabs`
+        );
       }
     }
   },

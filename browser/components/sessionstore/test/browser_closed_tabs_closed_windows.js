@@ -81,10 +81,6 @@ async function prepareClosedData() {
   const testWindow7 = await BrowserTestUtils.openNewBrowserWindow();
   await openAndCloseTab(testWindow7, TEST_URLS[4]);
 
-  let closedTabsHistogram = TelemetryTestUtils.getAndClearHistogram(
-    "FX_SESSION_RESTORE_CLOSED_TABS_NOT_SAVED"
-  );
-
   await BrowserTestUtils.closeWindow(testWindow1);
   closedIds.testWindow1 = SessionStore.getClosedWindowData()[0].closedId;
   await BrowserTestUtils.closeWindow(testWindow2);
@@ -100,13 +96,7 @@ async function prepareClosedData() {
   );
 
   await BrowserTestUtils.closeWindow(testWindow6);
-  TelemetryTestUtils.assertHistogram(closedTabsHistogram, 0, 1);
-  closedTabsHistogram.clear();
-
   await BrowserTestUtils.closeWindow(testWindow7);
-  TelemetryTestUtils.assertHistogram(closedTabsHistogram, 1, 1);
-  closedTabsHistogram.clear();
-
   return closedIds;
 }
 
