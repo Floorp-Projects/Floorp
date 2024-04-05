@@ -2435,15 +2435,7 @@ export class LoginManagerChild extends JSWindowActorChild {
     if (isSubmission) {
       // Notify `PasswordManager:onFormSubmit` as long as we detect submission event on a
       // valid form with a password field.
-      this.sendAsyncMessage(
-        "PasswordManager:onFormSubmit",
-        {},
-        {
-          fields,
-          isSubmission,
-          triggeredByFillingGenerated,
-        }
-      );
+      this.sendAsyncMessage("PasswordManager:onFormSubmit", {});
     }
   }
 
