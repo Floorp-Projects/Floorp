@@ -5301,31 +5301,6 @@ static void profiler_stop_signal_handler(int signal, siginfo_t* info,
   // the sampling thread to stop and dump the data in the profiler.
   gStopAndDumpFromSignal = true;
 }
-
-static void profiler_start_signal_handler(int signal, siginfo_t* info,
-                                          void* context) {
-  // Starting the profiler from a signal handler is a risky business: Both of
-  // the main tasks that we would like to accomplish (allocating memory, and
-  // starting a thread) are illegal within a UNIX signal handler. Conversely,
-  // we cannot dispatch to the main thread, as this may be "stuck" (why else
-  // would we be using a signal handler to start the profiler?). We meet this
-  // in the middle, and dispatch a runnable to the background thread to start
-  // the profiler, and hope that it works!
-  // These defaults are designed to (mostly) match those from the "Firefox"
-  // set of preferences, configuration of them is TODO, see Bug 1866007
-  NS_DispatchBackgroundTask(
-      NS_NewRunnableFunction("Profiler start callback", [] {
-        uint32_t features = ProfilerFeature::JS | ProfilerFeature::StackWalk |
-                            ProfilerFeature::CPUUtilization;
-        // as we often don't know what threads we'll care about, tell the
-        // profiler to profile all threads.
-        const char* filters[] = {"*"};
-        profiler_start(PROFILER_DEFAULT_SIGHANDLE_ENTRIES,
-                       PROFILER_DEFAULT_INTERVAL, features, filters,
-                       MOZ_ARRAY_LENGTH(filters), 0);
-      }));
-}
-
 #endif
 
 // This may fail if we have previously had an issue finding the download
@@ -5400,15 +5375,6 @@ void profiler_dump_and_stop() {
 
 void profiler_init_signal_handlers() {
 #if !defined(XP_WIN) && !defined(MOZ_CODE_COVERAGE)
-  // Set a handler to start the profiler
-  struct sigaction prof_start_sa {};
-  memset(&prof_start_sa, 0, sizeof(struct sigaction));
-  prof_start_sa.sa_sigaction = profiler_start_signal_handler;
-  prof_start_sa.sa_flags = SA_RESTART | SA_SIGINFO;
-  sigemptyset(&prof_start_sa.sa_mask);
-  DebugOnly<int> rstart = sigaction(SIGUSR1, &prof_start_sa, nullptr);
-  MOZ_ASSERT(rstart == 0, "Failed to install Profiler SIGUSR1 handler");
-
   // Set a handler to stop the profiler
   struct sigaction prof_stop_sa {};
   memset(&prof_stop_sa, 0, sizeof(struct sigaction));
