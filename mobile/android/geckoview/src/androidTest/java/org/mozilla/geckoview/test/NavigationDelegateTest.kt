@@ -2223,6 +2223,30 @@ class NavigationDelegateTest : BaseSessionTest() {
         )
     }
 
+    @Test fun loadUriInPrivateSessionReferrerSession() {
+        val uri = "https://example.com/bar"
+        val referrer = "https://example.org/"
+
+        mainSession.loadUri(referrer)
+        mainSession.waitForPageStop()
+
+        val privateSettings = GeckoSessionSettings.Builder().usePrivateMode(true).build()
+        val newSession = sessionRule.createOpenSession(privateSettings)
+        newSession.load(
+            Loader()
+                .uri(uri)
+                .referrer(mainSession)
+                .flags(GeckoSession.LOAD_FLAGS_NONE),
+        )
+        newSession.waitForPageStop()
+
+        assertThat(
+            "Referrer should not sent",
+            newSession.evaluateJS("document.referrer") as String,
+            equalTo(""),
+        )
+    }
+
     @Test fun loadUriReferrerSessionFileUrl() {
         val uri = "file:///system/etc/fonts.xml"
         val referrer = "https://example.org"

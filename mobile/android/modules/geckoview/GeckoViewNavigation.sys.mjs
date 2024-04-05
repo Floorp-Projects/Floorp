@@ -189,13 +189,18 @@ export class GeckoViewNavigation extends GeckoViewModule {
           triggeringPrincipal = referrerWindow.browser.contentPrincipal;
           csp = referrerWindow.browser.csp;
 
+          const { contentPrincipal } = this.browser;
+          const isNormal = contentPrincipal.privateBrowsingId == 0;
+          const referrerIsPrivate = triggeringPrincipal.privateBrowsingId != 0;
+
           const referrerPolicy = referrerWindow.browser.referrerInfo
             ? referrerWindow.browser.referrerInfo.referrerPolicy
             : Ci.nsIReferrerInfo.EMPTY;
 
           referrerInfo = new lazy.ReferrerInfo(
             referrerPolicy,
-            true,
+            // Don't `sendReferrer` if the private session (current) is opened by a normal session (referrer)
+            isNormal || referrerIsPrivate,
             referrerWindow.browser.documentURI
           );
         } else if (referrerUri) {
