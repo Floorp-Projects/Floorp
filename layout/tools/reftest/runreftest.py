@@ -482,22 +482,6 @@ class RefTest(object):
             if options.thisChunk:
                 prefs["reftest.thisChunk"] = options.thisChunk
 
-        # Bug 1262954: For winXP + e10s disable acceleration
-        if (
-            platform.system() in ("Windows", "Microsoft")
-            and "5.1" in platform.version()
-            and options.e10s
-        ):
-            prefs["layers.acceleration.disabled"] = True
-
-        # Bug 1300355: Disable canvas cache for win7 as it uses
-        # too much memory and causes OOMs.
-        if (
-            platform.system() in ("Windows", "Microsoft")
-            and "6.1" in platform.version()
-        ):
-            prefs["reftest.nocache"] = True
-
         if options.marionette:
             # options.marionette can specify host:port
             port = options.marionette.split(":")[1]

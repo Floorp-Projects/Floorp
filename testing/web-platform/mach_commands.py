@@ -111,7 +111,6 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
 
     def kwargs_firefox(self, kwargs):
         """Setup kwargs specific to running Firefox and other gecko browsers"""
-        import mozinfo
         from wptrunner import wptcommandline
 
         kwargs = self.kwargs_common(kwargs)
@@ -143,15 +142,6 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
 
         if kwargs["install_fonts"] is None:
             kwargs["install_fonts"] = True
-
-        if (
-            kwargs["install_fonts"]
-            and mozinfo.info["os"] == "win"
-            and mozinfo.info["os_version"] == "6.1"
-        ):
-            # On Windows 7 --install-fonts fails, so fall back to a Firefox-specific codepath
-            self.setup_fonts_firefox()
-            kwargs["install_fonts"] = False
 
         if kwargs["preload_browser"] is None:
             kwargs["preload_browser"] = False
