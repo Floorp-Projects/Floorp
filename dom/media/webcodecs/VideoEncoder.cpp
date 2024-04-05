@@ -558,7 +558,7 @@ already_AddRefed<Promise> VideoEncoder::IsConfigSupported(
 }
 
 RefPtr<EncodedVideoChunk> VideoEncoder::EncodedDataToOutputType(
-    nsIGlobalObject* aGlobalObject, RefPtr<MediaRawData>& aData) {
+    nsIGlobalObject* aGlobalObject, const RefPtr<MediaRawData>& aData) {
   AssertIsOnOwningThread();
 
   MOZ_RELEASE_ASSERT(aData->mType == MediaData::Type::RAW_DATA);
