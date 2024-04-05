@@ -28,7 +28,7 @@
 # a range insert and an append
 == insertmultiplemultiple-2.html insertmultiplemultiple-ref.html
 # multiple range inserts and an append
-== insertmultiplemultiple-2.html insertmultiplemultiple-ref.html
+== insertmultiplemultiple-3.html insertmultiplemultiple-ref.html
 
 # testing bindings that have multiple insertion points
 == multipleinsertionpoints-ref2-shadow.xhtml multipleinsertionpoints-ref.xhtml
