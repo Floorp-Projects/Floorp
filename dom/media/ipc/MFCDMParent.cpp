@@ -994,18 +994,17 @@ void MFCDMParent::GetCapabilities(const nsString& aKeySystem,
 }
 
 mozilla::ipc::IPCResult MFCDMParent::RecvGetCapabilities(
-    const MFCDMCapabilitiesRequest& aRequest,
-    GetCapabilitiesResolver&& aResolver) {
+    const bool aIsHWSecure, GetCapabilitiesResolver&& aResolver) {
   MFCDM_REJECT_IF(!mFactory, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
   MFCDMCapabilitiesIPDL capabilities;
   CapabilitesFlagSet flags;
-  if (aRequest.isHardwareDecryption()) {
+  if (aIsHWSecure) {
     flags += CapabilitesFlag::HarewareDecryption;
   }
-  if (RequireClearLead(aRequest.keySystem())) {
+  if (RequireClearLead(mKeySystem)) {
     flags += CapabilitesFlag::NeedClearLeadCheck;
   }
-  GetCapabilities(aRequest.keySystem(), flags, mFactory.Get(), capabilities);
+  GetCapabilities(mKeySystem, flags, mFactory.Get(), capabilities);
   aResolver(std::move(capabilities));
   return IPC_OK();
 }

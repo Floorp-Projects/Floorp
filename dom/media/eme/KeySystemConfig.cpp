@@ -68,262 +68,221 @@ bool KeySystemConfig::Supports(const nsAString& aKeySystem) {
   return false;
 }
 
-/* static */ void KeySystemConfig::CreateClearKeyKeySystemConfigs(
-    const KeySystemConfigRequest& aRequest,
+/* static */
+bool KeySystemConfig::CreateKeySystemConfigs(
+    const nsAString& aKeySystem, const DecryptionInfo aDecryption,
     nsTArray<KeySystemConfig>& aOutConfigs) {
-  KeySystemConfig* config = aOutConfigs.AppendElement();
-  config->mKeySystem = aRequest.mKeySystem;
-  config->mInitDataTypes.AppendElement(u"cenc"_ns);
-  config->mInitDataTypes.AppendElement(u"keyids"_ns);
-  config->mInitDataTypes.AppendElement(u"webm"_ns);
-  config->mPersistentState = Requirement::Optional;
-  config->mDistinctiveIdentifier = Requirement::NotAllowed;
-  config->mSessionTypes.AppendElement(SessionType::Temporary);
-  config->mEncryptionSchemes.AppendElement(u"cenc"_ns);
-  config->mEncryptionSchemes.AppendElement(u"cbcs"_ns);
-  config->mEncryptionSchemes.AppendElement(u"cbcs-1-9"_ns);
-  if (StaticPrefs::media_clearkey_persistent_license_enabled()) {
-    config->mSessionTypes.AppendElement(SessionType::PersistentLicense);
+  if (!Supports(aKeySystem)) {
+    return false;
   }
+
+  if (IsClearkeyKeySystem(aKeySystem)) {
+    KeySystemConfig* config = aOutConfigs.AppendElement();
+    config->mKeySystem = aKeySystem;
+    config->mInitDataTypes.AppendElement(u"cenc"_ns);
+    config->mInitDataTypes.AppendElement(u"keyids"_ns);
+    config->mInitDataTypes.AppendElement(u"webm"_ns);
+    config->mPersistentState = Requirement::Optional;
+    config->mDistinctiveIdentifier = Requirement::NotAllowed;
+    config->mSessionTypes.AppendElement(SessionType::Temporary);
+    config->mEncryptionSchemes.AppendElement(u"cenc"_ns);
+    config->mEncryptionSchemes.AppendElement(u"cbcs"_ns);
+    config->mEncryptionSchemes.AppendElement(u"cbcs-1-9"_ns);
+    if (StaticPrefs::media_clearkey_persistent_license_enabled()) {
+      config->mSessionTypes.AppendElement(SessionType::PersistentLicense);
+    }
 #if defined(XP_WIN)
-  // Clearkey CDM uses WMF's H.264 decoder on Windows.
-  if (WMFDecoderModule::CanCreateMFTDecoder(WMFStreamType::H264)) {
-    config->mMP4.SetCanDecryptAndDecode(EME_CODEC_H264);
-  } else {
-    config->mMP4.SetCanDecrypt(EME_CODEC_H264);
-  }
+    // Clearkey CDM uses WMF's H.264 decoder on Windows.
+    if (WMFDecoderModule::CanCreateMFTDecoder(WMFStreamType::H264)) {
+      config->mMP4.SetCanDecryptAndDecode(EME_CODEC_H264);
+    } else {
+      config->mMP4.SetCanDecrypt(EME_CODEC_H264);
+    }
 #else
-  config->mMP4.SetCanDecrypt(EME_CODEC_H264);
+    config->mMP4.SetCanDecrypt(EME_CODEC_H264);
 #endif
-  config->mMP4.SetCanDecrypt(EME_CODEC_AAC);
-  config->mMP4.SetCanDecrypt(EME_CODEC_FLAC);
-  config->mMP4.SetCanDecrypt(EME_CODEC_OPUS);
-  config->mMP4.SetCanDecrypt(EME_CODEC_VP9);
+    config->mMP4.SetCanDecrypt(EME_CODEC_AAC);
+    config->mMP4.SetCanDecrypt(EME_CODEC_FLAC);
+    config->mMP4.SetCanDecrypt(EME_CODEC_OPUS);
+    config->mMP4.SetCanDecrypt(EME_CODEC_VP9);
 #ifdef MOZ_AV1
-  config->mMP4.SetCanDecrypt(EME_CODEC_AV1);
+    config->mMP4.SetCanDecrypt(EME_CODEC_AV1);
 #endif
-  config->mWebM.SetCanDecrypt(EME_CODEC_VORBIS);
-  config->mWebM.SetCanDecrypt(EME_CODEC_OPUS);
-  config->mWebM.SetCanDecrypt(EME_CODEC_VP8);
-  config->mWebM.SetCanDecrypt(EME_CODEC_VP9);
+    config->mWebM.SetCanDecrypt(EME_CODEC_VORBIS);
+    config->mWebM.SetCanDecrypt(EME_CODEC_OPUS);
+    config->mWebM.SetCanDecrypt(EME_CODEC_VP8);
+    config->mWebM.SetCanDecrypt(EME_CODEC_VP9);
 #ifdef MOZ_AV1
-  config->mWebM.SetCanDecrypt(EME_CODEC_AV1);
+    config->mWebM.SetCanDecrypt(EME_CODEC_AV1);
 #endif
 
-  if (StaticPrefs::media_clearkey_test_key_systems_enabled()) {
-    // Add testing key systems. These offer the same capabilities as the
-    // base clearkey system, so just clone clearkey and change the name.
-    KeySystemConfig clearkeyWithProtectionQuery{*config};
-    clearkeyWithProtectionQuery.mKeySystem.AssignLiteral(
-        kClearKeyWithProtectionQueryKeySystemName);
-    aOutConfigs.AppendElement(std::move(clearkeyWithProtectionQuery));
+    if (StaticPrefs::media_clearkey_test_key_systems_enabled()) {
+      // Add testing key systems. These offer the same capabilities as the
+      // base clearkey system, so just clone clearkey and change the name.
+      KeySystemConfig clearkeyWithProtectionQuery{*config};
+      clearkeyWithProtectionQuery.mKeySystem.AssignLiteral(
+          kClearKeyWithProtectionQueryKeySystemName);
+      aOutConfigs.AppendElement(std::move(clearkeyWithProtectionQuery));
+    }
+    return true;
   }
-}
 
-/* static */ void KeySystemConfig::CreateWivineL3KeySystemConfigs(
-    const KeySystemConfigRequest& aRequest,
-    nsTArray<KeySystemConfig>& aOutConfigs) {
-  KeySystemConfig* config = aOutConfigs.AppendElement();
-  config->mKeySystem = aRequest.mKeySystem;
-  config->mInitDataTypes.AppendElement(u"cenc"_ns);
-  config->mInitDataTypes.AppendElement(u"keyids"_ns);
-  config->mInitDataTypes.AppendElement(u"webm"_ns);
-  config->mPersistentState = Requirement::Optional;
-  config->mDistinctiveIdentifier = Requirement::NotAllowed;
-  config->mSessionTypes.AppendElement(SessionType::Temporary);
+  if (IsWidevineKeySystem(aKeySystem)) {
+    KeySystemConfig* config = aOutConfigs.AppendElement();
+    config->mKeySystem = aKeySystem;
+    config->mInitDataTypes.AppendElement(u"cenc"_ns);
+    config->mInitDataTypes.AppendElement(u"keyids"_ns);
+    config->mInitDataTypes.AppendElement(u"webm"_ns);
+    config->mPersistentState = Requirement::Optional;
+    config->mDistinctiveIdentifier = Requirement::NotAllowed;
+    config->mSessionTypes.AppendElement(SessionType::Temporary);
 #ifdef MOZ_WIDGET_ANDROID
-  config->mSessionTypes.AppendElement(SessionType::PersistentLicense);
+    config->mSessionTypes.AppendElement(SessionType::PersistentLicense);
 #endif
-  config->mAudioRobustness.AppendElement(u"SW_SECURE_CRYPTO"_ns);
-  config->mVideoRobustness.AppendElement(u"SW_SECURE_CRYPTO"_ns);
-  config->mVideoRobustness.AppendElement(u"SW_SECURE_DECODE"_ns);
-  config->mEncryptionSchemes.AppendElement(u"cenc"_ns);
-  config->mEncryptionSchemes.AppendElement(u"cbcs"_ns);
-  config->mEncryptionSchemes.AppendElement(u"cbcs-1-9"_ns);
+    config->mAudioRobustness.AppendElement(u"SW_SECURE_CRYPTO"_ns);
+    config->mVideoRobustness.AppendElement(u"SW_SECURE_CRYPTO"_ns);
+    config->mVideoRobustness.AppendElement(u"SW_SECURE_DECODE"_ns);
+    config->mEncryptionSchemes.AppendElement(u"cenc"_ns);
+    config->mEncryptionSchemes.AppendElement(u"cbcs"_ns);
+    config->mEncryptionSchemes.AppendElement(u"cbcs-1-9"_ns);
 
 #if defined(MOZ_WIDGET_ANDROID)
-  // MediaDrm.isCryptoSchemeSupported only allows passing
-  // "video/mp4" or "video/webm" for mimetype string.
-  // See
-  // https://developer.android.com/reference/android/media/MediaDrm.html#isCryptoSchemeSupported(java.util.UUID,
-  // java.lang.String) for more detail.
-  typedef struct {
-    const nsCString& mMimeType;
-    const nsCString& mEMECodecType;
-    const char16_t* mCodecType;
-    KeySystemConfig::ContainerSupport* mSupportType;
-  } DataForValidation;
+    // MediaDrm.isCryptoSchemeSupported only allows passing
+    // "video/mp4" or "video/webm" for mimetype string.
+    // See
+    // https://developer.android.com/reference/android/media/MediaDrm.html#isCryptoSchemeSupported(java.util.UUID,
+    // java.lang.String) for more detail.
+    typedef struct {
+      const nsCString& mMimeType;
+      const nsCString& mEMECodecType;
+      const char16_t* mCodecType;
+      KeySystemConfig::ContainerSupport* mSupportType;
+    } DataForValidation;
 
-  DataForValidation validationList[] = {
-      {nsCString(VIDEO_MP4), EME_CODEC_H264, java::MediaDrmProxy::AVC,
-       &config->mMP4},
-      {nsCString(VIDEO_MP4), EME_CODEC_VP9, java::MediaDrmProxy::AVC,
-       &config->mMP4},
+    DataForValidation validationList[] = {
+        {nsCString(VIDEO_MP4), EME_CODEC_H264, java::MediaDrmProxy::AVC,
+         &config->mMP4},
+        {nsCString(VIDEO_MP4), EME_CODEC_VP9, java::MediaDrmProxy::AVC,
+         &config->mMP4},
 #  ifdef MOZ_AV1
-      {nsCString(VIDEO_MP4), EME_CODEC_AV1, java::MediaDrmProxy::AV1,
-       &config->mMP4},
+        {nsCString(VIDEO_MP4), EME_CODEC_AV1, java::MediaDrmProxy::AV1,
+         &config->mMP4},
 #  endif
-      {nsCString(AUDIO_MP4), EME_CODEC_AAC, java::MediaDrmProxy::AAC,
-       &config->mMP4},
-      {nsCString(AUDIO_MP4), EME_CODEC_FLAC, java::MediaDrmProxy::FLAC,
-       &config->mMP4},
-      {nsCString(AUDIO_MP4), EME_CODEC_OPUS, java::MediaDrmProxy::OPUS,
-       &config->mMP4},
-      {nsCString(VIDEO_WEBM), EME_CODEC_VP8, java::MediaDrmProxy::VP8,
-       &config->mWebM},
-      {nsCString(VIDEO_WEBM), EME_CODEC_VP9, java::MediaDrmProxy::VP9,
-       &config->mWebM},
+        {nsCString(AUDIO_MP4), EME_CODEC_AAC, java::MediaDrmProxy::AAC,
+         &config->mMP4},
+        {nsCString(AUDIO_MP4), EME_CODEC_FLAC, java::MediaDrmProxy::FLAC,
+         &config->mMP4},
+        {nsCString(AUDIO_MP4), EME_CODEC_OPUS, java::MediaDrmProxy::OPUS,
+         &config->mMP4},
+        {nsCString(VIDEO_WEBM), EME_CODEC_VP8, java::MediaDrmProxy::VP8,
+         &config->mWebM},
+        {nsCString(VIDEO_WEBM), EME_CODEC_VP9, java::MediaDrmProxy::VP9,
+         &config->mWebM},
 #  ifdef MOZ_AV1
-      {nsCString(VIDEO_WEBM), EME_CODEC_AV1, java::MediaDrmProxy::AV1,
-       &config->mWebM},
+        {nsCString(VIDEO_WEBM), EME_CODEC_AV1, java::MediaDrmProxy::AV1,
+         &config->mWebM},
 #  endif
-      {nsCString(AUDIO_WEBM), EME_CODEC_VORBIS, java::MediaDrmProxy::VORBIS,
-       &config->mWebM},
-      {nsCString(AUDIO_WEBM), EME_CODEC_OPUS, java::MediaDrmProxy::OPUS,
-       &config->mWebM},
-  };
+        {nsCString(AUDIO_WEBM), EME_CODEC_VORBIS, java::MediaDrmProxy::VORBIS,
+         &config->mWebM},
+        {nsCString(AUDIO_WEBM), EME_CODEC_OPUS, java::MediaDrmProxy::OPUS,
+         &config->mWebM},
+    };
 
-  for (const auto& data : validationList) {
-    if (java::MediaDrmProxy::IsCryptoSchemeSupported(kWidevineKeySystemName,
-                                                     data.mMimeType)) {
-      if (!AndroidDecoderModule::SupportsMimeType(data.mMimeType).isEmpty()) {
-        data.mSupportType->SetCanDecryptAndDecode(data.mEMECodecType);
-      } else {
-        data.mSupportType->SetCanDecrypt(data.mEMECodecType);
+    for (const auto& data : validationList) {
+      if (java::MediaDrmProxy::IsCryptoSchemeSupported(kWidevineKeySystemName,
+                                                       data.mMimeType)) {
+        if (!AndroidDecoderModule::SupportsMimeType(data.mMimeType).isEmpty()) {
+          data.mSupportType->SetCanDecryptAndDecode(data.mEMECodecType);
+        } else {
+          data.mSupportType->SetCanDecrypt(data.mEMECodecType);
+        }
       }
     }
-  }
 #else
 #  if defined(XP_WIN)
-  // Widevine CDM doesn't include an AAC decoder. So if WMF can't
-  // decode AAC, and a codec wasn't specified, be conservative
-  // and reject the MediaKeys request, since we assume Widevine
-  // will be used with AAC.
-  if (WMFDecoderModule::CanCreateMFTDecoder(WMFStreamType::AAC)) {
-    config->mMP4.SetCanDecrypt(EME_CODEC_AAC);
-  }
+    // Widevine CDM doesn't include an AAC decoder. So if WMF can't
+    // decode AAC, and a codec wasn't specified, be conservative
+    // and reject the MediaKeys request, since we assume Widevine
+    // will be used with AAC.
+    if (WMFDecoderModule::CanCreateMFTDecoder(WMFStreamType::AAC)) {
+      config->mMP4.SetCanDecrypt(EME_CODEC_AAC);
+    }
 #  else
-  config->mMP4.SetCanDecrypt(EME_CODEC_AAC);
+    config->mMP4.SetCanDecrypt(EME_CODEC_AAC);
 #  endif
-  config->mMP4.SetCanDecrypt(EME_CODEC_FLAC);
-  config->mMP4.SetCanDecrypt(EME_CODEC_OPUS);
-  config->mMP4.SetCanDecryptAndDecode(EME_CODEC_H264);
-  config->mMP4.SetCanDecryptAndDecode(EME_CODEC_VP9);
+    config->mMP4.SetCanDecrypt(EME_CODEC_FLAC);
+    config->mMP4.SetCanDecrypt(EME_CODEC_OPUS);
+    config->mMP4.SetCanDecryptAndDecode(EME_CODEC_H264);
+    config->mMP4.SetCanDecryptAndDecode(EME_CODEC_VP9);
 #  ifdef MOZ_AV1
-  config->mMP4.SetCanDecryptAndDecode(EME_CODEC_AV1);
+    config->mMP4.SetCanDecryptAndDecode(EME_CODEC_AV1);
 #  endif
-  config->mWebM.SetCanDecrypt(EME_CODEC_VORBIS);
-  config->mWebM.SetCanDecrypt(EME_CODEC_OPUS);
-  config->mWebM.SetCanDecryptAndDecode(EME_CODEC_VP8);
-  config->mWebM.SetCanDecryptAndDecode(EME_CODEC_VP9);
+    config->mWebM.SetCanDecrypt(EME_CODEC_VORBIS);
+    config->mWebM.SetCanDecrypt(EME_CODEC_OPUS);
+    config->mWebM.SetCanDecryptAndDecode(EME_CODEC_VP8);
+    config->mWebM.SetCanDecryptAndDecode(EME_CODEC_VP9);
 #  ifdef MOZ_AV1
-  config->mWebM.SetCanDecryptAndDecode(EME_CODEC_AV1);
+    config->mWebM.SetCanDecryptAndDecode(EME_CODEC_AV1);
 #  endif
 #endif
+    return true;
+  }
+#ifdef MOZ_WMF_CDM
+  if (IsPlayReadyKeySystemAndSupported(aKeySystem) ||
+      IsWidevineExperimentKeySystemAndSupported(aKeySystem)) {
+    RefPtr<WMFCDMImpl> cdm = MakeRefPtr<WMFCDMImpl>(aKeySystem);
+    return cdm->GetCapabilities(aDecryption == DecryptionInfo::Hardware,
+                                aOutConfigs);
+  }
+#endif
+  return false;
 }
 
-/* static */
-RefPtr<KeySystemConfig::SupportedConfigsPromise>
-KeySystemConfig::CreateKeySystemConfigs(
-    const nsTArray<KeySystemConfigRequest>& aRequests) {
-  // Create available configs for all supported key systems in the request, but
-  // some of them might not be created immediately.
-
-  nsTArray<KeySystemConfig> outConfigs;
-  nsTArray<KeySystemConfigRequest> asyncRequests;
-
-  for (const auto& request : aRequests) {
-    const nsAString& keySystem = request.mKeySystem;
-    if (!Supports(keySystem)) {
-      continue;
-    }
-
-    if (IsClearkeyKeySystem(keySystem)) {
-      CreateClearKeyKeySystemConfigs(request, outConfigs);
-    } else if (IsWidevineKeySystem(keySystem)) {
-      CreateWivineL3KeySystemConfigs(request, outConfigs);
-    }
+bool KeySystemConfig::IsSameKeySystem(const nsAString& aKeySystem) const {
 #ifdef MOZ_WMF_CDM
-    else if (IsPlayReadyKeySystemAndSupported(keySystem) ||
-             IsWidevineExperimentKeySystemAndSupported(keySystem)) {
-      asyncRequests.AppendElement(request);
-    }
-#endif
-  }
-
-#ifdef MOZ_WMF_CDM
-  if (!asyncRequests.IsEmpty()) {
-    RefPtr<SupportedConfigsPromise::Private> promise =
-        new SupportedConfigsPromise::Private(__func__);
-    RefPtr<WMFCDMCapabilites> cdm = new WMFCDMCapabilites();
-    cdm->GetCapabilities(asyncRequests)
-        ->Then(GetMainThreadSerialEventTarget(), __func__,
-               [syncConfigs = std::move(outConfigs),
-                promise](SupportedConfigsPromise::ResolveOrRejectValue&&
-                             aResult) mutable {
-                 // Return the capabilities we already know
-                 if (aResult.IsReject()) {
-                   promise->Resolve(std::move(syncConfigs), __func__);
-                   return;
-                 }
-                 // Merge sync results with async results
-                 auto& asyncConfigs = aResult.ResolveValue();
-                 asyncConfigs.AppendElements(std::move(syncConfigs));
-                 promise->Resolve(std::move(asyncConfigs), __func__);
-               });
-    return promise;
+  // We want to map Widevine experiment key system to normal Widevine key system
+  // as well.
+  if (IsWidevineExperimentKeySystemAndSupported(mKeySystem)) {
+    return mKeySystem.Equals(aKeySystem) ||
+           aKeySystem.EqualsLiteral(kWidevineKeySystemName);
   }
 #endif
-  return SupportedConfigsPromise::CreateAndResolve(std::move(outConfigs),
-                                                   __func__);
+  return mKeySystem.Equals(aKeySystem);
 }
 
 /* static */
 void KeySystemConfig::GetGMPKeySystemConfigs(dom::Promise* aPromise) {
   MOZ_ASSERT(aPromise);
-
-  // Generate config requests
+  nsTArray<KeySystemConfig> keySystemConfigs;
   const nsTArray<nsString> keySystemNames{
       NS_ConvertUTF8toUTF16(kClearKeyKeySystemName),
       NS_ConvertUTF8toUTF16(kWidevineKeySystemName),
   };
-  nsTArray<KeySystemConfigRequest> requests;
-  for (const auto& keySystem : keySystemNames) {
+  FallibleTArray<dom::CDMInformation> cdmInfo;
+  for (const auto& name : keySystemNames) {
 #ifdef MOZ_WMF_CDM
-    if (IsWMFClearKeySystemAndSupported(keySystem)) {
+    if (IsWMFClearKeySystemAndSupported(name)) {
       // Using wmf clearkey, not gmp clearkey.
       continue;
     }
 #endif
-    requests.AppendElement(
-        KeySystemConfigRequest{keySystem, DecryptionInfo::Software});
+    if (KeySystemConfig::CreateKeySystemConfigs(
+            name, KeySystemConfig::DecryptionInfo::Software,
+            keySystemConfigs)) {
+      auto* info = cdmInfo.AppendElement(fallible);
+      if (!info) {
+        aPromise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
+        return;
+      }
+      MOZ_ASSERT(keySystemConfigs.Length() == cdmInfo.Length());
+      info->mKeySystemName = name;
+      info->mCapabilities = keySystemConfigs.LastElement().GetDebugInfo();
+      info->mClearlead = DoesKeySystemSupportClearLead(name);
+      // TODO : ask real CDM
+      info->mIsHDCP22Compatible = false;
+    }
   }
-
-  // Get supported configs
-  KeySystemConfig::CreateKeySystemConfigs(requests)->Then(
-      GetMainThreadSerialEventTarget(), __func__,
-      [promise = RefPtr<dom::Promise>{aPromise}](
-          const SupportedConfigsPromise::ResolveOrRejectValue& aResult) {
-        if (aResult.IsResolve()) {
-          // Generate CDMInformation from configs
-          FallibleTArray<dom::CDMInformation> cdmInfo;
-          for (const auto& config : aResult.ResolveValue()) {
-            auto* info = cdmInfo.AppendElement(fallible);
-            if (!info) {
-              promise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
-              return;
-            }
-            info->mKeySystemName = config.mKeySystem;
-            info->mCapabilities = config.GetDebugInfo();
-            info->mClearlead = DoesKeySystemSupportClearLead(config.mKeySystem);
-            // TODO : ask real CDM
-            info->mIsHDCP22Compatible = false;
-          }
-          promise->MaybeResolve(cdmInfo);
-        } else {
-          promise->MaybeReject(NS_ERROR_DOM_MEDIA_CDM_ERR);
-        }
-      });
+  aPromise->MaybeResolve(cdmInfo);
 }
 
 nsString KeySystemConfig::GetDebugInfo() const {

@@ -34,6 +34,10 @@ class WMFCDMImpl final {
 
   explicit WMFCDMImpl(const nsAString& aKeySystem) : mKeySystem(aKeySystem) {}
 
+  // TODO: make this async?
+  bool GetCapabilities(bool aIsHardwareDecryption,
+                       nsTArray<KeySystemConfig>& aOutConfigs);
+
   using InitPromise = GenericPromise;
   struct InitParams {
     nsString mOrigin;
@@ -113,26 +117,6 @@ class WMFCDMImpl final {
   RefPtr<MFCDMChild> mCDM;
 
   MozPromiseHolder<InitPromise> mInitPromiseHolder;
-};
-
-// A helper class to get multiple capabilities from different key systems.
-class WMFCDMCapabilites final {
- public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WMFCDMCapabilites);
-  WMFCDMCapabilites() = default;
-
-  using SupportedConfigsPromise = KeySystemConfig::SupportedConfigsPromise;
-  RefPtr<SupportedConfigsPromise> GetCapabilities(
-      const nsTArray<KeySystemConfigRequest>& aRequests);
-
- private:
-  ~WMFCDMCapabilites();
-
-  nsTArray<RefPtr<MFCDMChild>> mCDMs;
-  MozPromiseHolder<SupportedConfigsPromise> mCapabilitiesPromiseHolder;
-  MozPromiseRequestHolder<
-      MFCDMChild::CapabilitiesPromise::AllSettledPromiseType>
-      mCapabilitiesPromisesRequest;
 };
 
 }  // namespace mozilla
