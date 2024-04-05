@@ -9,6 +9,10 @@ EXTRA_JS_MODULES += [
     "ContentRelevancyManager.sys.mjs",
 ]
 
+EXTRA_JS_MODULES["contentrelevancy/private"] += [
+    "private/InputUtils.sys.mjs",
+]
+
 XPCSHELL_TESTS_MANIFESTS += [
     "tests/xpcshell/xpcshell.toml",
 ]
