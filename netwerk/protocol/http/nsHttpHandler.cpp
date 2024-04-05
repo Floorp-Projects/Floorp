@@ -1397,13 +1397,6 @@ void nsHttpHandler::PrefsChanged(const char* pref) {
     }
   }
 
-  if (PREF_CHANGED(HTTP_PREF("max_response_header_size"))) {
-    rv = Preferences::GetInt(HTTP_PREF("max_response_header_size"), &val);
-    if (NS_SUCCEEDED(rv)) {
-      mMaxHttpResponseHeaderSize = val;
-    }
-  }
-
   if (PREF_CHANGED(HTTP_PREF("throttle.enable"))) {
     rv = Preferences::GetBool(HTTP_PREF("throttle.enable"), &mThrottleEnabled);
     if (NS_SUCCEEDED(rv) && mConnMgr) {
