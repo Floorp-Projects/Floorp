@@ -14,123 +14,560 @@
 
 const workerURL = 'http://mochi.test:8888/tests/dom/workers/test/importScripts_3rdParty_worker.js';
 
-const sameOriginURL = 'http://mochi.test:8888/tests/dom/workers/test/invalid.js'
+const sameOriginBaseURL = 'http://mochi.test:8888/tests/dom/workers/test';
+const crossOriginBaseURL = "https://example.com/tests/dom/workers/test";
 
-var tests = [
-  function() {
-    var worker = new Worker("importScripts_3rdParty_worker.js");
-    worker.onmessage = function(event) {
-      ok("result" in event.data && event.data.result, "It seems we don't share data!");
-      next();
-    };
+const workerRelativeUrl = 'importScripts_3rdParty_worker.js';
+const workerAbsoluteUrl = `${sameOriginBaseURL}/${workerRelativeUrl}`
 
-    worker.postMessage({ url: sameOriginURL, test: 'try', nested: false });
-  },
+/**
+ * This file tests cross-origin error muting in importScripts for workers.  In
+ * particular, we want to test:
+ * - The errors thrown by the parsing phase of importScripts().
+ * - The errors thrown by the top-level evaluation phase of importScripts().
+ * - If the error is reported to the parent's Worker binding, including through
+ *   nested workers, as well as the contents of the error.
+ * - For errors:
+ *   - What type of exception is reported?
+ *   - What fileName is reported on the exception?
+ *   - What are the contents of the stack on the exception?
+ *
+ * Relevant specs:
+ * - https://html.spec.whatwg.org/multipage/webappapis.html#fetch-a-classic-worker-imported-script
+ * - https://html.spec.whatwg.org/multipage/webappapis.html#creating-a-classic-script
+ *
+ * The situation and motivation for error muting is:
+ * - JS scripts are allowed to be loaded cross-origin without CORS for legacy
+ *   reasons.  If a script is cross-origin, its "muted errors" is set to true.
+ *   - The fetch will set the "use-URL-credentials" flag
+ *     https://fetch.spec.whatwg.org/#concept-request-use-url-credentials-flag
+ *     but will have the default "credentials" mode of "omit"
+ *     https://fetch.spec.whatwg.org/#concept-request-credentials-mode which
+ *     means that username/password will be propagated.
+ * - For legacy reasons, JS scripts aren't required to have an explicit JS MIME
+ *   type which allows attacks that attempt to load a known-non JS file as JS
+ *   in order to derive information from the errors or from side-effects to the
+ *   global for code that does parse and evaluate as legal JS.
+ **/
 
-  function() {
-    var worker = new Worker("importScripts_3rdParty_worker.js");
-    worker.onmessage = function(event) {
-      ok("result" in event.data && event.data.result, "It seems we don't share data in nested workers!");
-      next();
-    };
 
-    worker.postMessage({ url: sameOriginURL, test: 'try', nested: true });
-  },
-
-  function() {
-    var worker = new Worker("importScripts_3rdParty_worker.js");
-    worker.onmessage = function(event) {
-      ok("result" in event.data && event.data.result, "It seems we don't share data via eventListener!");
-      next();
-    };
-
-    worker.postMessage({ url: sameOriginURL, test: 'eventListener', nested: false });
-  },
-
-  function() {
-    var worker = new Worker("importScripts_3rdParty_worker.js");
-    worker.onmessage = function(event) {
-      ok("result" in event.data && event.data.result, "It seems we don't share data in nested workers via eventListener!");
-      next();
-    };
-
-    worker.postMessage({ url: sameOriginURL, test: 'eventListener', nested: true });
-  },
-
-  function() {
-    var worker = new Worker("importScripts_3rdParty_worker.js");
-    worker.onmessage = function(event) {
-      ok("result" in event.data && event.data.result, "It seems we don't share data via onerror!");
-      next();
-    };
-    worker.onerror = function(event) {
-      event.preventDefault();
+ /**
+  * - `sameOrigin`: Describes the exception we expect to see for a same-origin
+  *   import.
+  * - `crossOrigin`: Describes the exception we expect to see for a cross-origin
+  *   import (from example.com while the worker is the mochitest origin).
+  *
+  * The exception fields are:
+  * - `exceptionName`: The `name` of the Error object.
+  * - `thrownFile`: Describes the filename we expect to see on the error:
+  *   - `importing-worker-script`: The worker script that's doing the importing
+  *     will be the source of the exception, not the imported script.
+  *   - `imported-script-no-redirect`: The (absolute-ified) script as passed to
+  *     importScript(s), regardless of any redirects that occur.
+  *   - `post-redirect-imported-script`: The name of the actual URL that was
+  *     loaded following any redirects.
+  */
+const scriptPermutations = [
+  {
+    name: 'Invalid script that generates a syntax error',
+    script: 'invalid.js',
+    sameOrigin: {
+      exceptionName: 'SyntaxError',
+      thrownFile: 'post-redirect-imported-script',
+      isDOMException: false,
+      message: "expected expression, got end of script"
+    },
+    crossOrigin: {
+      exceptionName: 'NetworkError',
+      thrownFile: 'importing-worker-script',
+      isDOMException: true,
+      code: DOMException.NETWORK_ERR,
+      message: "A network error occurred."
     }
-
-    worker.postMessage({ url: sameOriginURL, test: 'onerror', nested: false });
   },
-
-  function() {
-    var worker = new Worker("importScripts_3rdParty_worker.js");
-    worker.onerror = function(event) {
-      event.preventDefault();
-      ok(event instanceof ErrorEvent, "ErrorEvent received.");
-      is(event.filename, workerURL, "ErrorEvent.filename is correct");
-      next();
-    };
-
-    worker.postMessage({ url: sameOriginURL, test: 'none', nested: false });
+  {
+    // What happens if the script is a 404?
+    // This test case primarily exists to document what we expect to happen in
+    // this case.
+    name: 'Nonexistent script',
+    script: 'script_does_not_exist.js',
+    sameOrigin: {
+      exceptionName: 'NetworkError',
+      thrownFile: 'importing-worker-script',
+      isDOMException: true,
+      code: DOMException.NETWORK_ERR,
+      message: x => `WorkerGlobalScope.importScripts: Failed to load worker script at ${x.importUrl} (nsresult = 0x80530013)`,
+    },
+    crossOrigin: {
+      exceptionName: 'NetworkError',
+      thrownFile: 'importing-worker-script',
+      isDOMException: true,
+      code: DOMException.NETWORK_ERR,
+      message: x => `WorkerGlobalScope.importScripts: Failed to load worker script at ${x.importUrl} (nsresult = 0x80530013)`,
+    }
   },
-
-  function() {
-    var worker = new Worker("importScripts_3rdParty_worker.js");
-    worker.addEventListener("error", function(event) {
-      event.preventDefault();
-      ok(event instanceof ErrorEvent, "ErrorEvent received.");
-      is(event.filename, workerURL, "ErrorEvent.filename is correct");
-      next();
-    });
-
-    worker.postMessage({ url: sameOriginURL, test: 'none', nested: false });
+  {
+    name: 'Script that throws during toplevel execution',
+    script: 'toplevel_throws.js',
+    sameOrigin: {
+      exceptionName: 'Error',
+      thrownFile: 'post-redirect-imported-script',
+      isDOMException: false,
+      message: "Toplevel-Throw-Payload",
+    },
+    crossOrigin: {
+      exceptionName: 'NetworkError',
+      thrownFile: 'importing-worker-script',
+      isDOMException: true,
+      code: DOMException.NETWORK_ERR,
+      message: "A network error occurred."
+    }
   },
-
-  function() {
-    var worker = new Worker("importScripts_3rdParty_worker.js");
-    worker.onerror = function(event) {
-      ok(false, "No error should be received!");
-    };
-
-    worker.onmessage = function(event) {
-      ok("error" in event.data && event.data.error, "The error has been fully received from a nested worker");
-      next();
-    };
-    worker.postMessage({ url: sameOriginURL, test: 'none', nested: true });
+  {
+    name: 'Script that exposes a method that throws',
+    script: 'call_throws.js',
+    sameOrigin: {
+      exceptionName: 'Error',
+      thrownFile: 'post-redirect-imported-script',
+      isDOMException: false,
+      message: "Method-Throw-Payload"
+    },
+    crossOrigin: {
+      exceptionName: 'Error',
+      thrownFile: 'imported-script-no-redirect',
+      isDOMException: false,
+      message: "Method-Throw-Payload"
+    }
   },
+];
 
-  function() {
-    var url = URL.createObjectURL(new Blob(["%&%^&%^"]));
-    var worker = new Worker(url);
-    worker.onerror = function(event) {
-      event.preventDefault();
-      ok(event instanceof Event, "Event received.");
-      next();
-    };
+/**
+ * Special fields:
+ * - `transformScriptImport`: A function that takes the script name as input and
+ *   produces the actual path to use for import purposes, allowing the addition
+ *   of a redirect.
+ * - `expectedURLAfterRedirect`: A function that takes the script name as
+ *   input and produces the expected script name post-redirect (if there is a
+ *   redirect).  In particular, our `redirect_with_query_args.sjs` helper will
+ *   perform a same-origin redirect and append "?SECRET_DATA" onto the end of
+ *   the redirected URL at this time.
+ * - `partOfTheURLToNotExposeToJS`: A string snippet that is present in the
+ *   post-redirect contents that should absolutely not show up in the error's
+ *   stack if the redirect isn't exposed.  This is a secondary check to the
+ *   result of expectedURLAfterRedirect.
+ */
+const urlPermutations = [
+  {
+    name: 'No Redirect',
+    transformScriptImport: x => x,
+    expectedURLAfterRedirect: x => x,
+    // No redirect means nothing to be paranoid about.
+    partOfTheURLToNotExposeToJS: null,
+  },
+  {
+    name: 'Same-Origin Redirect With Query Args',
+    // We mangle the script into uppercase and the redirector undoes this in
+    // order to minimize the similarity of the pre-redirect and post-redirect
+    // strings.
+    transformScriptImport: x => `redirect_with_query_args.sjs?${x.toUpperCase()}`,
+    expectedURLAfterRedirect: x => `${x}?SECRET_DATA`,
+    // The redirect will add this when it formulates the redirected URL, and the
+    // test wants to make sure this doesn't show up in filenames or stacks
+    // unless the thrownFile is set to 'post-redirect-imported-script'.
+    partOfTheURLToNotExposeToJS: 'SECRET_DATA',
+  }
+];
+const nestedPermutations = [
+  {
+    name: 'Window Parent',
+    nested: false,
+  },
+  {
+    name: 'Worker Parent',
+    nested: true,
   }
 ];
 
-function next() {
-  if (!tests.length) {
-    SimpleTest.finish();
-    return;
+ // NOTE: These implementations are copied from importScripts_3rdParty_worker.js
+ // for reasons of minimizing the number of calls to importScripts for
+ // debugging.
+ function normalizeError(err) {
+  if (!err) {
+    return null;
   }
 
-  var test = tests.shift();
-  test();
+  const isDOMException = "filename" in err;
+
+  return {
+    message: err.message,
+    name: err.name,
+    isDOMException,
+    code: err.code,
+    // normalize to fileName
+    fileName: isDOMException ? err.filename : err.fileName,
+    hasFileName: !!err.fileName,
+    hasFilename: !!err.filename,
+    lineNumber: err.lineNumber,
+    columnNumber: err.columnNumber,
+    stack: err.stack,
+    stringified: err.toString(),
+  };
 }
 
-SimpleTest.waitForExplicitFinish();
-next();
+function normalizeErrorEvent(event) {
+  if (!event) {
+    return null;
+  }
 
+  return {
+    message: event.message,
+    filename: event.filename,
+    lineno: event.lineno,
+    colno: event.colno,
+    error: normalizeError(event.error),
+    stringified: event.toString(),
+  };
+}
+// End duplicated code.
+
+
+/**
+ * Validate the received error against our expectations and provided context.
+ *
+ * For `expectation`, see the `scriptPermutations` doc-block which documents
+ * its `sameOrigin` and `crossOrigin` properties which are what we expect here.
+ *
+ * The `context` should include:
+ * - `workerUrl`: The absolute URL of the toplevel worker script that the worker
+ *   is running which is the code that calls `importScripts`.
+ * - `importUrl`: The absolute URL provided to the call to `importScripts`.
+ *   This is the pre-redirect URL if a redirect is involved.
+ * - `postRedirectUrl`: The same as `importUrl` unless a redirect is involved,
+ *   in which case this will be a different URL.
+ * - `isRedirected`: Boolean indicating whether a redirect was involved.  This
+ *   is a convenience variable that's derived from the above 2 URL's for now.
+ * - `shouldNotInclude`: Provided by the URL permutation, this is used to check
+ *   that post-redirect data does not creep into the exception unless the
+ *   expected `thrownFile` is `post-redirect-imported-script`.
+ */
+function checkError(label, expectation, context, err) {
+  info(`## Checking error: ${JSON.stringify(err)}`);
+  is(err.name, expectation.exceptionName,
+     `${label}: Error name matches "${expectation.exceptionName}"?`);
+  is(err.isDOMException, expectation.isDOMException,
+     `${label}: Is a DOM Exception == ${expectation.isDOMException}?`);
+  if (expectation.code) {
+    is(err.code, expectation.code,
+       `${label}: Code matches ${expectation.code}?`);
+  }
+
+  let expectedFile;
+  switch (expectation.thrownFile) {
+    case 'importing-worker-script':
+      expectedFile = context.workerUrl;
+      break;
+    case 'imported-script-no-redirect':
+      expectedFile = context.importUrl;
+      break;
+    case 'post-redirect-imported-script':
+      expectedFile = context.postRedirectUrl;
+      break;
+    default:
+      ok(false, `Unexpected thrownFile parameter: ${expectation.thrownFile}`);
+      return;
+  }
+
+  is(err.fileName, expectedFile,
+     `${label}: Filename from ${expectation.thrownFile} is ${expectedFile}`);
+
+
+  let expMessage = expectation.message;
+  if (typeof(expMessage) === "function") {
+    expMessage = expectation.message(context);
+  }
+  is(err.message, expMessage,
+      `${label}: Message is ${expMessage}`);
+
+  // If this is a redirect and we expect the error to not be surfacing any
+  // post-redirect information and there's a `shouldNotInclude` string, then
+  // check to make sure it's not present.
+  if (context.isRedirected && context.shouldNotInclude) {
+    if (expectation.thrownFile !== 'post-redirect-imported-script') {
+      ok(!err.stack.includes(context.shouldNotInclude),
+        `${label}: Stack should not include ${context.shouldNotInclude}:\n${err.stack}`);
+      ok(!err.stringified.includes(context.shouldNotInclude),
+        `${label}: Stringified error should not include ${context.shouldNotInclude}:\n${err.stringified}`);
+    } else if (expectation.exceptionName !== 'SyntaxError') {
+      // We do expect the shouldNotInclude to be present for
+      // 'post-redirect-imported-script' as long as the exception isn't a
+      // SyntaxError.  SyntaxError stacks inherently do not include the filename
+      // of the file with the syntax problem as a stack frame.
+      ok(err.stack.includes(context.shouldNotInclude),
+         `${label}: Stack should include ${context.shouldNotInclude}:\n${err.stack}`);
+    }
+  }
+  let expStringified = `${err.name}: ${expMessage}`;
+  is(err.stringified, expStringified,
+    `${label}: Stringified error should be: ${expStringified}`);
+
+  // Add some whitespace in our output.
+  info("");
+}
+
+function checkErrorEvent(label, expectation, context, event, viaTask=false) {
+  info(`## Checking error event: ${JSON.stringify(event)}`);
+
+  let expectedFile;
+  switch (expectation.thrownFile) {
+    case 'importing-worker-script':
+      expectedFile = context.workerUrl;
+      break;
+    case 'imported-script-no-redirect':
+      expectedFile = context.importUrl;
+      break;
+    case 'post-redirect-imported-script':
+      expectedFile = context.postRedirectUrl;
+      break;
+    default:
+      ok(false, `Unexpected thrownFile parameter: ${expectation.thrownFile}`);
+      return;
+  }
+
+  is(event.filename, expectedFile,
+     `${label}: Filename from ${expectation.thrownFile} is ${expectedFile}`);
+
+  let expMessage = expectation.message;
+  if (typeof(expMessage) === "function") {
+    expMessage = expectation.message(context);
+  }
+  // The error event message prepends the exception name to the Error's message.
+  expMessage = `${expectation.exceptionName}: ${expMessage}`;
+
+  is(event.message, expMessage,
+      `${label}: Message is ${expMessage}`);
+
+  // If this is a redirect and we expect the error to not be surfacing any
+  // post-redirect information and there's a `shouldNotInclude` string, then
+  // check to make sure it's not present.
+  //
+  // Note that `stringified` may not be present for the "onerror" case.
+  if (context.isRedirected &&
+      expectation.thrownFile !== 'post-redirect-imported-script' &&
+      context.shouldNotInclude &&
+      event.stringified) {
+    ok(!event.stringified.includes(context.shouldNotInclude),
+       `${label}: Stringified error should not include ${context.shouldNotInclude}:\n${event.stringified}`);
+  }
+  if (event.stringified) {
+    is(event.stringified, "[object ErrorEvent]",
+      `${label}: Stringified event should be "[object ErrorEvent]"`);
+  }
+
+  // If we received the error via a task queued because it was not handled in
+  // the worker, then per
+  // https://html.spec.whatwg.org/multipage/workers.html#runtime-script-errors-2
+  // the error will be null.
+  if (viaTask) {
+    is(event.error, null,
+      `${label}: Error is null because it came from an HTML 10.2.5 task.`);
+  } else {
+    checkError(label, expectation, context, event.error);
+  }
+}
+
+/**
+ * Helper to spawn a worker, postMessage it the given args, and return the
+ * worker's response payload and the first "error" received on the Worker
+ * binding by the time the message handler resolves.  The worker logic makes
+ * sure to delay its postMessage using setTimeout(0) so error events will always
+ * arrive before any message that is sent.
+ *
+ * If args includes a truthy `nested` value, then the `message` and
+ * `bindingErrorEvent` are as perceived by the parent worker.
+ */
+function asyncWorkerImport(args) {
+  const worker = new Worker(workerRelativeUrl);
+  const promise = new Promise((resolve, reject) => {
+    // The first "error" received on the Worker binding.
+    let firstErrorEvent = null;
+
+    worker.onmessage = function(event) {
+      let message = event.data;
+      // For the nested case, unwrap and normalize things.
+      if (args.nested) {
+        firstErrorEvent = message.errorEvent;
+        message = message.nestedMessage;
+        // We need to re-set the argument to be nested because it was set to
+        // false so that only a single level of nesting occurred.
+        message.args.nested = true;
+      }
+
+      // Make sure the args we receive from the worker are the same as the ones
+      // we sent.
+      is(JSON.stringify(message.args), JSON.stringify(args),
+         "Worker re-transmitted args match sent args.");
+
+      resolve({
+        message,
+        bindingErrorEvent: firstErrorEvent
+      });
+      worker.terminate();
+    };
+    worker.onerror = function(event) {
+      // We don't want this to bubble to the window and cause a test failure.
+      event.preventDefault();
+
+      if (firstErrorEvent) {
+        ok(false, "Worker binding received more than one error");
+        reject(new Error("multiple error events received"));
+        return;
+      }
+      firstErrorEvent = normalizeErrorEvent(event);
+    }
+  });
+  info("Sending args to worker: " + JSON.stringify(args));
+  worker.postMessage(args);
+
+  return promise;
+}
+
+function makeTestPermutations() {
+  for (const urlPerm of urlPermutations) {
+    for (const scriptPerm of scriptPermutations) {
+      for (const nestedPerm of nestedPermutations) {
+        const testName =
+          `${nestedPerm.name}: ${urlPerm.name}: ${scriptPerm.name}`;
+        const caseFunc = async () => {
+          // Make the test name much more obvious when viewing logs.
+          info(`#############################################################`);
+          info(`### ${testName}`);
+          let result, errorEvent;
+
+          const scriptName = urlPerm.transformScriptImport(scriptPerm.script);
+          const redirectedUrl = urlPerm.expectedURLAfterRedirect(scriptPerm.script);
+
+          // ### Same-Origin Import
+          // ## What does the error look like when caught?
+          ({ message, bindingErrorEvent } = await asyncWorkerImport(
+            {
+              url: `${sameOriginBaseURL}/${scriptName}`,
+              mode: "catch",
+              nested: nestedPerm.nested,
+            }));
+
+          const sameOriginContext = {
+            workerUrl: workerAbsoluteUrl,
+            importUrl: message.args.url,
+            postRedirectUrl: `${sameOriginBaseURL}/${redirectedUrl}`,
+            isRedirected: message.args.url !== redirectedUrl,
+            shouldNotInclude: urlPerm.partOfTheURLToNotExposeToJS,
+          };
+
+          checkError(
+            `${testName}: Same-Origin Thrown`,
+            scriptPerm.sameOrigin,
+            sameOriginContext,
+            message.error);
+
+          // ## What does the error events look like when not caught?
+          ({ message, bindingErrorEvent } = await asyncWorkerImport(
+            {
+              url: `${sameOriginBaseURL}/${scriptName}`,
+              mode: "uncaught",
+              nested: nestedPerm.nested,
+            }));
+
+          // The worker will have captured the error event twice, once via
+          // onerror and once via an "error" event listener.  It will have not
+          // invoked preventDefault(), so the worker's parent will also have
+          // received a copy of the error event as well.
+          checkErrorEvent(
+            `${testName}: Same-Origin Worker global onerror handler`,
+            scriptPerm.sameOrigin,
+            sameOriginContext,
+            message.onerrorEvent);
+          checkErrorEvent(
+            `${testName}: Same-Origin Worker global error listener`,
+            scriptPerm.sameOrigin,
+            sameOriginContext,
+            message.listenerEvent);
+          // Binding events
+          checkErrorEvent(
+            `${testName}: Same-Origin Parent binding onerror`,
+            scriptPerm.sameOrigin,
+            sameOriginContext,
+            bindingErrorEvent, "via-task");
+
+          // ### Cross-Origin Import
+          // ## What does the error look like when caught?
+          ({ message, bindingErrorEvent } = await asyncWorkerImport(
+            {
+              url: `${crossOriginBaseURL}/${scriptName}`,
+              mode: "catch",
+              nested: nestedPerm.nested,
+            }));
+
+          const crossOriginContext = {
+            workerUrl: workerAbsoluteUrl,
+            importUrl: message.args.url,
+            postRedirectUrl: `${crossOriginBaseURL}/${redirectedUrl}`,
+            isRedirected: message.args.url !== redirectedUrl,
+            shouldNotInclude: urlPerm.partOfTheURLToNotExposeToJS,
+          };
+
+          checkError(
+            `${testName}: Cross-Origin Thrown`,
+            scriptPerm.crossOrigin,
+            crossOriginContext,
+            message.error);
+
+          // ## What does the error events look like when not caught?
+          ({ message, bindingErrorEvent } = await asyncWorkerImport(
+            {
+              url: `${crossOriginBaseURL}/${scriptName}`,
+              mode: "uncaught",
+              nested: nestedPerm.nested,
+            }));
+
+          // The worker will have captured the error event twice, once via
+          // onerror and once via an "error" event listener.  It will have not
+          // invoked preventDefault(), so the worker's parent will also have
+          // received a copy of the error event as well.
+          checkErrorEvent(
+            `${testName}: Cross-Origin Worker global onerror handler`,
+            scriptPerm.crossOrigin,
+            crossOriginContext,
+            message.onerrorEvent);
+          checkErrorEvent(
+            `${testName}: Cross-Origin Worker global error listener`,
+            scriptPerm.crossOrigin,
+            crossOriginContext,
+            message.listenerEvent);
+          // Binding events
+          checkErrorEvent(
+            `${testName}: Cross-Origin Parent binding onerror`,
+            scriptPerm.crossOrigin,
+            crossOriginContext,
+            bindingErrorEvent, "via-task");
+        };
+
+        // The mochitest framework uses the name of the caseFunc, which by default
+        // will be inferred and set on the configurable `name` property.  It's not
+        // writable though, so we need to clobber the property.  Devtools will
+        // xray through this name but this works for the test framework.
+        Object.defineProperty(
+          caseFunc,
+          'name',
+          {
+            value: testName,
+            writable: false
+          });
+        add_task(caseFunc);
+      }
+    }
+  }
+}
+makeTestPermutations();
 </script>
 </body>
 </html>
