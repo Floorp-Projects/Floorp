@@ -702,6 +702,20 @@ class FullPageTranslationsTestUtils {
   }
 
   /**
+   * Asserts that the FullPageTranslationsPanel error has the expected l10nId.
+   *
+   * @param {string} l10nId - The expected data-l10n-id of the error.
+   */
+  static #assertPanelErrorL10nId(l10nId) {
+    const { errorMessage } = FullPageTranslationsPanel.elements;
+    is(
+      errorMessage.getAttribute("data-l10n-id"),
+      l10nId,
+      "The translations panel error message should match the expected data-l10n-id"
+    );
+  }
+
+  /**
    * Asserts that the mainViewId of the panel matches the given string.
    *
    * @param {string} expectedId
@@ -743,6 +757,9 @@ class FullPageTranslationsTestUtils {
     });
     FullPageTranslationsTestUtils.#assertPanelHeaderL10nId(
       "translations-panel-header"
+    );
+    FullPageTranslationsTestUtils.#assertPanelErrorL10nId(
+      "translations-panel-error-translating"
     );
   }
 
