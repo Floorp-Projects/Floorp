@@ -141,6 +141,23 @@ impl<T> Synchronized<T> {
         self.update_on_change(&s, f);
         s
     }
+
+    pub fn join<A: 'static, B: 'static, F: Fn(&A, &B) -> T + Clone + 'static>(
+        a: &Synchronized<A>,
+        b: &Synchronized<B>,
+        f: F,
+    ) -> Self
+    where
+        T: 'static,
+    {
+        let s = Synchronized::new(f(&*a.borrow(), &*b.borrow()));
+        let update = cc! { (a,b,s) move || {
+            *s.borrow_mut() = f(&*a.borrow(), &*b.borrow());
+        }};
+        a.on_change(cc! { (update) move |_| update()});
+        b.on_change(move |_| update());
+        s
+    }
 }
 
 /// A runtime value that can be fetched on-demand (read-only).
