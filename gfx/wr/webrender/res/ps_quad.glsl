@@ -37,12 +37,9 @@
 #include shared,rect,transform,render_task,gpu_buffer
 
 flat varying mediump vec4 v_color;
-flat varying mediump vec4 v_uv_sample_bounds;
-// x: (in ps_quad_textured) has edge flags
-// y: has uv rect
-// z: (in ps_quad_textured) sample as mask
+// w: has edge flags
+// x,y,z are avaible for patterns to use.
 flat varying lowp ivec4 v_flags;
-varying highp vec2 v_uv;
 
 #ifndef SWGL_ANTIALIAS
 varying highp vec2 vLocalPos;
@@ -74,20 +71,22 @@ varying highp vec2 vLocalPos;
 
 PER_INSTANCE in ivec4 aData;
 
+struct QuadSegment {
+    RectWithEndpoint rect;
+    RectWithEndpoint uv_rect;
+};
+
 struct PrimitiveInfo {
     vec2 local_pos;
 
     RectWithEndpoint local_prim_rect;
     RectWithEndpoint local_clip_rect;
 
+    QuadSegment segment;
+
     int edge_flags;
     int quad_flags;
     ivec2 pattern_input;
-};
-
-struct QuadSegment {
-    RectWithEndpoint rect;
-    vec4 uv_rect;
 };
 
 struct QuadPrimitive {
@@ -102,7 +101,7 @@ QuadSegment fetch_segment(int base, int index) {
     vec4 texels[2] = fetch_from_gpu_buffer_2f(base + 3 + index * 2);
 
     seg.rect = RectWithEndpoint(texels[0].xy, texels[0].zw);
-    seg.uv_rect = texels[1];
+    seg.uv_rect = RectWithEndpoint(texels[1].xy, texels[1].zw);
 
     return seg;
 }
@@ -232,7 +231,7 @@ PrimitiveInfo quad_primive_info(void) {
     QuadSegment seg;
     if (qi.segment_index == INVALID_SEGMENT_INDEX) {
         seg.rect = prim.bounds;
-        seg.uv_rect = vec4(0.0);
+        seg.uv_rect = RectWithEndpoint(vec2(0.0), vec2(0.0));
     } else {
         seg = fetch_segment(qi.prim_address_f, qi.segment_index);
     }
@@ -325,35 +324,13 @@ PrimitiveInfo quad_primive_info(void) {
         qi.quad_flags
     );
 
-    if (seg.uv_rect.xy == seg.uv_rect.zw) {
-        v_color = prim.color;
-        v_flags.y = 0;
-    } else {
-        v_color = vec4(1.0);
-        v_flags.y = 1;
-
-        vec2 f = (vi.local_pos - seg.rect.p0) / (seg.rect.p1 - seg.rect.p0);
-
-        vec2 uv = mix(
-            seg.uv_rect.xy,
-            seg.uv_rect.zw,
-            f
-        );
-
-        vec2 texture_size = vec2(TEX_SIZE(sColor0));
-
-        v_uv = uv / texture_size;
-
-        v_uv_sample_bounds = vec4(
-            seg.uv_rect.xy + vec2(0.5),
-            seg.uv_rect.zw - vec2(0.5)
-        ) / texture_size.xyxy;
-    }
+    v_color = prim.color;
 
     return PrimitiveInfo(
         vi.local_pos,
         prim.bounds,
         prim.clip,
+        seg,
         qi.edge_flags,
         qi.quad_flags,
         qh.pattern_input
@@ -372,9 +349,9 @@ void antialiasing_vertex(PrimitiveInfo prim) {
     vLocalPos = prim.local_pos;
 
     if (prim.edge_flags == 0) {
-        v_flags.x = 0;
+        v_flags.w = 0;
     } else {
-        v_flags.x = 1;
+        v_flags.w = 1;
     }
 #endif
 }
@@ -392,7 +369,7 @@ vec4 pattern_fragment(vec4 base_color);
 float antialiasing_fragment() {
     float alpha = 1.0;
 #ifndef SWGL_ANTIALIAS
-    if (v_flags.x != 0) {
+    if (v_flags.w != 0) {
         alpha = init_transform_fs(vLocalPos);
     }
 #endif
