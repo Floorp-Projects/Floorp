@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXTRA_JS_MODULES += [
+    "generated/RustRelevancy.sys.mjs",
     "generated/RustRemoteSettings.sys.mjs",
     "generated/RustSuggest.sys.mjs",
     "generated/RustSync15.sys.mjs",
