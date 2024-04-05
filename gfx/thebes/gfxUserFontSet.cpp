@@ -1104,6 +1104,10 @@ void gfxUserFontSet::ForgetLocalFaces() {
 }
 
 void gfxUserFontSet::ForgetLocalFace(gfxUserFontFamily* aFontFamily) {
+  // Entries for which we might need to cancel a current loader.
+  AutoTArray<RefPtr<gfxUserFontEntry>, 8> entriesToCancel;
+
+  // Lock the font family while we iterate over its entries.
   aFontFamily->ReadLock();
   const auto& fonts = aFontFamily->GetFontList();
   for (const auto& f : fonts) {
@@ -1114,23 +1118,28 @@ void gfxUserFontSet::ForgetLocalFace(gfxUserFontFamily* aFontFamily) {
         ufe->GetPlatformFontEntry()->IsLocalUserFont()) {
       ufe->mPlatformFontEntry = nullptr;
     }
-    // We need to re-evaluate the source list in the context of the new
-    // platform fontlist, whether or not the entry actually used a local()
-    // source last time, as one might be newly available.
+    // If the entry had a local source, we need to re-evaluate the source list
+    // in the context of the new platform fontlist, whether or not the entry
+    // actually used a local() source last time, as one might have been added.
     if (ufe->mSeenLocalSource) {
-      if (auto* loader = ufe->GetLoader()) {
-        // If there's a loader, we need to cancel it, because we'll trigger a
-        // fresh load if required when we re-resolve the font...
-        loader->Cancel();
-        RemoveLoader(loader);
-      } else {
-        // ...otherwise, just reset our state so that we'll re-evaluate the
-        // source list from the beginning.
-        ufe->LoadCanceled();
-      }
+      entriesToCancel.AppendElement(ufe);
     }
   }
   aFontFamily->ReadUnlock();
+
+  // Cancel any current loaders and reset the state of the affected entries.
+  for (auto& ufe : entriesToCancel) {
+    if (auto* loader = ufe->GetLoader()) {
+      // If there's a loader, we need to cancel it, because we'll trigger a
+      // fresh load if required when we re-resolve the font...
+      loader->Cancel();
+      RemoveLoader(loader);
+    } else {
+      // ...otherwise, just reset our state so that we'll re-evaluate the
+      // source list from the beginning.
+      ufe->LoadCanceled();
+    }
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
