@@ -415,10 +415,10 @@ function compare_mobile_experiments() {
 
   ( ${DIFF} fenix-experiments-old.json fenix-experiments-new.json; ${DIFF} focus-experiments-old.json focus-experiments-new.json ) > "${EXPERIMENTER_DIFF_ARTIFACT}"
   if [ -s "${EXPERIMENTER_DIFF_ARTIFACT}" ]; then
+    return 0
+  else
     # no change
     return 1
-  else
-    return 0
   fi
 }
 
