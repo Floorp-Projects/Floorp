@@ -276,12 +276,3 @@ PowerCounters::PowerCounters() {
     }
   }
 }
-
-PowerCounters::~PowerCounters() {
-  for (auto* raplEvent : mCounters) {
-    delete raplEvent;
-  }
-  mCounters.clear();
-}
-
-void PowerCounters::Sample() {}

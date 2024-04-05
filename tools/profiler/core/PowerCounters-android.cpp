@@ -165,10 +165,6 @@ PowerCounters::~PowerCounters() {
   if (mLibperfettoModule) {
     dlclose(mLibperfettoModule);
   }
-  for (auto* railEnergy : mCounters) {
-    delete railEnergy;
-  }
-  mCounters.clear();
 }
 void PowerCounters::Sample() {
   // Energy meters are global, so only sample them on the parent.
