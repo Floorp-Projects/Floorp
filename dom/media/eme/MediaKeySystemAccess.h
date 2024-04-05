@@ -59,12 +59,10 @@ class MediaKeySystemAccess final : public nsISupports, public nsWrapperCache {
                               const nsAString& aKeySystem,
                               MediaKeySystemStatus aStatus);
 
-  static bool GetSupportedConfig(
-      const nsAString& aKeySystem,
-      const Sequence<MediaKeySystemConfiguration>& aConfigs,
-      MediaKeySystemConfiguration& aOutConfig,
-      DecoderDoctorDiagnostics* aDiagnostics, bool aIsPrivateBrowsing,
-      const Document* aDocument);
+  static bool GetSupportedConfig(MediaKeySystemAccessRequest* aRequest,
+                                 MediaKeySystemConfiguration& aOutConfig,
+                                 bool aIsPrivateBrowsing,
+                                 const Document* aDocument);
 
   static bool KeySystemSupportsInitDataType(const nsAString& aKeySystem,
                                             const nsAString& aInitDataType,
