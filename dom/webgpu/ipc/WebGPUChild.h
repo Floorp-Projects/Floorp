@@ -58,8 +58,6 @@ class WebGPUChild final : public PWebGPUChild, public SupportsWeakPtr {
  public:
   explicit WebGPUChild();
 
-  bool IsOpen() const { return CanSend(); }
-
   RefPtr<AdapterPromise> InstanceRequestAdapter(
       const dom::GPURequestAdapterOptions& aOptions);
   Maybe<DeviceRequest> AdapterRequestDevice(RawId aSelfId,

@@ -28,8 +28,11 @@ void Sampler::Cleanup() {
 
   mValid = false;
   auto bridge = mParent->GetBridge();
+  if (!bridge) {
+    return;
+  }
 
-  if (bridge->IsOpen()) {
+  if (bridge->CanSend()) {
     bridge->SendSamplerDrop(mId);
   }
 

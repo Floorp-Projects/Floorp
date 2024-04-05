@@ -155,7 +155,7 @@ void CanvasContext::Configure(const dom::GPUCanvasConfiguration& aConfig) {
 }
 
 void CanvasContext::Unconfigure() {
-  if (mBridge && mBridge->IsOpen() && mRemoteTextureOwnerId) {
+  if (mBridge && mBridge->CanSend() && mRemoteTextureOwnerId) {
     mBridge->SendSwapChainDrop(
         *mRemoteTextureOwnerId,
         layers::ToRemoteTextureTxnType(mFwdTransactionTracker),
@@ -225,7 +225,7 @@ void CanvasContext::MaybeQueueSwapChainPresent() {
 
 Maybe<layers::SurfaceDescriptor> CanvasContext::SwapChainPresent() {
   mPendingSwapChainPresent = false;
-  if (!mBridge || !mBridge->IsOpen() || mRemoteTextureOwnerId.isNothing() ||
+  if (!mBridge || !mBridge->CanSend() || mRemoteTextureOwnerId.isNothing() ||
       !mTexture) {
     return Nothing();
   }
@@ -337,7 +337,7 @@ already_AddRefed<mozilla::gfx::SourceSurface> CanvasContext::GetSurfaceSnapshot(
     return nullptr;
   }
 
-  if (!mBridge || !mBridge->IsOpen() || mRemoteTextureOwnerId.isNothing()) {
+  if (!mBridge || !mBridge->CanSend() || mRemoteTextureOwnerId.isNothing()) {
     return nullptr;
   }
 

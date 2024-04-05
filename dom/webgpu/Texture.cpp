@@ -113,7 +113,7 @@ already_AddRefed<TextureView> Texture::CreateView(
 
 void Texture::Destroy() {
   auto bridge = mParent->GetBridge();
-  if (bridge && bridge->IsOpen()) {
+  if (bridge && bridge->CanSend()) {
     bridge->SendTextureDestroy(mId, mParent->GetId());
   }
 }

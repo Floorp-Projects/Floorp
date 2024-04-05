@@ -33,7 +33,7 @@ void RenderBundle::Cleanup() {
     return;
   }
 
-  if (bridge->IsOpen()) {
+  if (bridge->CanSend()) {
     bridge->SendRenderBundleDrop(mId);
   }
   wgpu_client_free_render_bundle_id(bridge->GetClient(), mId);
