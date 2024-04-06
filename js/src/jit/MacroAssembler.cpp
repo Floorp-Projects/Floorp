@@ -7805,6 +7805,24 @@ void MacroAssembler::loadArgumentsObjectLength(Register obj, Register output,
   rshift32(Imm32(ArgumentsObject::PACKED_BITS_COUNT), output);
 }
 
+void MacroAssembler::loadArgumentsObjectLength(Register obj, Register output) {
+  // Get initial length value.
+  unboxInt32(Address(obj, ArgumentsObject::getInitialLengthSlotOffset()),
+             output);
+
+#ifdef DEBUG
+  // Assert length hasn't been overridden.
+  Label ok;
+  branchTest32(Assembler::Zero, output,
+               Imm32(ArgumentsObject::LENGTH_OVERRIDDEN_BIT), &ok);
+  assumeUnreachable("arguments object length has been overridden");
+  bind(&ok);
+#endif
+
+  // Shift out arguments length and return it.
+  rshift32(Imm32(ArgumentsObject::PACKED_BITS_COUNT), output);
+}
+
 void MacroAssembler::branchTestArgumentsObjectFlags(Register obj, Register temp,
                                                     uint32_t flags,
                                                     Condition cond,

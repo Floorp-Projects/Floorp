@@ -5291,6 +5291,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                         Label* fail);
 
   void loadArgumentsObjectLength(Register obj, Register output, Label* fail);
+  void loadArgumentsObjectLength(Register obj, Register output);
 
   void branchTestArgumentsObjectFlags(Register obj, Register temp,
                                       uint32_t flags, Condition cond,
