@@ -22,8 +22,9 @@ const CATEGORY_EXTENSION_SCRIPTS_DEVTOOLS = "webextension-scripts-devtools";
 
 import { ExtensionCommon } from "resource://gre/modules/ExtensionCommon.sys.mjs";
 import {
-  ExtensionChild,
+  ChildAPIManager,
   ExtensionActivityLogChild,
+  Messenger,
 } from "resource://gre/modules/ExtensionChild.sys.mjs";
 import { ExtensionUtils } from "resource://gre/modules/ExtensionUtils.sys.mjs";
 
@@ -31,8 +32,6 @@ const { getInnerWindowID, promiseEvent } = ExtensionUtils;
 
 const { BaseContext, CanOfAPIs, SchemaAPIManager, redefineGetter } =
   ExtensionCommon;
-
-const { ChildAPIManager, Messenger } = ExtensionChild;
 
 const initializeBackgroundPage = context => {
   // Override the `alert()` method inside background windows;
@@ -188,7 +187,7 @@ export class ExtensionBaseContextChild extends BaseContext {
    * This ExtensionBaseContextChild represents an addon execution environment
    * that is running in an addon or devtools child process.
    *
-   * @param {BrowserExtensionContent} extension This context's owner.
+   * @param {ExtensionChild} extension This context's owner.
    * @param {object} params
    * @param {string} params.envType One of "addon_child" or "devtools_child".
    * @param {nsIDOMWindow} params.contentWindow The window where the addon runs.
@@ -301,7 +300,7 @@ class ExtensionPageContextChild extends ExtensionBaseContextChild {
    * This is the child side of the ExtensionPageContextParent class
    * defined in ExtensionParent.sys.mjs.
    *
-   * @param {BrowserExtensionContent} extension This context's owner.
+   * @param {ExtensionChild} extension This context's owner.
    * @param {object} params
    * @param {nsIDOMWindow} params.contentWindow The window where the addon runs.
    * @param {string} params.viewType One of "background", "popup", "sidebar" or "tab".
@@ -340,7 +339,7 @@ export class DevToolsContextChild extends ExtensionBaseContextChild {
    * environment that has access to the devtools API namespace and to the same subset
    * of APIs available in a content script execution environment.
    *
-   * @param {BrowserExtensionContent} extension This context's owner.
+   * @param {ExtensionChild} extension This context's owner.
    * @param {object} params
    * @param {nsIDOMWindow} params.contentWindow The window where the addon runs.
    * @param {string} params.viewType One of "devtools_page" or "devtools_panel".
@@ -424,7 +423,7 @@ export var ExtensionPageChild = {
   /**
    * Create a privileged context at initial-document-element-inserted.
    *
-   * @param {BrowserExtensionContent} extension
+   * @param {ExtensionChild} extension
    *     The extension for which the context should be created.
    * @param {nsIDOMWindow} contentWindow The global of the page.
    */

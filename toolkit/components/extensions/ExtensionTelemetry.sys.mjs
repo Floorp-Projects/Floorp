@@ -146,7 +146,7 @@ class ExtensionTelemetryMetric {
    * @param {string} metric
    *        The Glean timing_distribution metric to record (used to retrieve the Glean metric type from the
    *        GLEAN_METRICS_TYPES map).
-   * @param {Extension | BrowserExtensionContent} extension
+   * @param {Extension | ExtensionChild} extension
    *        The extension to record the telemetry for.
    * @param {any | undefined} [obj = extension]
    *        An optional object the timing_distribution method call should be related to
@@ -242,7 +242,7 @@ class ExtensionTelemetryMetric {
    * @param {string} metric
    *        The metric to record (used to retrieve the base histogram id from the _histogram object).
    * @param {object}                              options
-   * @param {Extension | BrowserExtensionContent} options.extension
+   * @param {Extension | ExtensionChild} options.extension
    *        The extension to record the telemetry for.
    * @param {string | undefined}                  [options.category]
    *        An optional histogram category.

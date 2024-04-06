@@ -234,7 +234,7 @@ class NoCloneSpreadArgs {
 const LISTENERS = Symbol("listeners");
 const ONCE_MAP = Symbol("onceMap");
 
-class EventEmitter {
+export class EventEmitter {
   constructor() {
     this[LISTENERS] = new Map();
     this[ONCE_MAP] = new WeakMap();
@@ -353,7 +353,7 @@ class EventEmitter {
  * that inherits from this class, the derived class is instantiated
  * once for each extension that uses the API.
  */
-class ExtensionAPI extends EventEmitter {
+export class ExtensionAPI extends EventEmitter {
   constructor(extension) {
     super();
 
@@ -468,7 +468,7 @@ class ExtensionAPIPersistent extends ExtensionAPI {
  *
  * @abstract
  */
-class BaseContext {
+export class BaseContext {
   /** @type {boolean} */
   isTopContext;
   /** @type {string} */
@@ -1037,7 +1037,7 @@ class BaseContext {
  *
  * @interface
  */
-class SchemaAPIInterface {
+export class SchemaAPIInterface {
   /**
    * Calls this as a function that returns its return value.
    *
