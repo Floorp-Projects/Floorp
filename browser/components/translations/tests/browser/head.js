@@ -1416,6 +1416,22 @@ class SelectTranslationsTestUtils {
   }
 
   /**
+   * Elements that should always be visible in the SelectTranslationsPanel.
+   */
+  static #alwaysPresentElements = {
+    betaIcon: true,
+    copyButton: true,
+    doneButton: true,
+    fromLabel: true,
+    fromMenuList: true,
+    header: true,
+    multiview: true,
+    toLabel: true,
+    toMenuList: true,
+    translatedTextArea: true,
+  };
+
+  /**
    * Asserts that for each provided expectation, the visible state of the corresponding
    * element in FullPageTranslationsPanel.elements both exists and matches the visibility expectation.
    *
@@ -1426,16 +1442,7 @@ class SelectTranslationsTestUtils {
     SharedTranslationsTestUtils._assertPanelElementVisibility(
       SelectTranslationsPanel.elements,
       {
-        betaIcon: false,
-        copyButton: false,
-        doneButton: false,
-        fromLabel: false,
-        fromMenuList: false,
-        header: false,
-        textArea: false,
-        toLabel: false,
-        toMenuList: false,
-        translateFullPageButton: false,
+        ...SelectTranslationsTestUtils.#alwaysPresentElements,
         // Overwrite any of the above defaults with the passed in expectations.
         ...expectations,
       }
@@ -1455,25 +1462,60 @@ class SelectTranslationsTestUtils {
   }
 
   /**
-   * Asserts that panel element visibility matches the default panel view.
+   * Asserts that the SelectTranslationsPanel UI matches the expected
+   * state when the panel has completed its translation.
    */
-  static assertPanelViewDefault() {
-    info("Checking that the select-translations panel shows the default view");
+  static assertPanelViewTranslated() {
     SelectTranslationsTestUtils.#assertPanelMainViewId(
       "select-translations-panel-view-default"
     );
     SelectTranslationsTestUtils.#assertPanelElementVisibility({
-      betaIcon: true,
-      fromLabel: true,
-      fromMenuList: true,
-      header: true,
-      textArea: true,
-      toLabel: true,
-      toMenuList: true,
-      copyButton: true,
-      doneButton: true,
-      translateFullPageButton: true,
+      ...SelectTranslationsTestUtils.#alwaysPresentElements,
     });
+    SelectTranslationsTestUtils.#assertPanelHasTranslatedText();
+    SelectTranslationsTestUtils.#assertPanelTextAreaOverflow();
+  }
+
+  /**
+   * Asserts that the SelectTranslationsPanel translated text area is
+   * both scrollable and scrolled to the top.
+   */
+  static #assertPanelTextAreaOverflow() {
+    const { translatedTextArea } = SelectTranslationsPanel.elements;
+    is(
+      translatedTextArea.style.overflow,
+      "auto",
+      "The translated-text area should be scrollable."
+    );
+    if (translatedTextArea.scrollHeight > translatedTextArea.clientHeight) {
+      is(
+        translatedTextArea.scrollTop,
+        0,
+        "The translated-text area should be scrolled to the top."
+      );
+    }
+  }
+
+  /**
+   * Asserts that the SelectTranslationsPanel UI contains the
+   * translated text.
+   */
+  static #assertPanelHasTranslatedText() {
+    const { translatedTextArea, fromMenuList, toMenuList } =
+      SelectTranslationsPanel.elements;
+    const fromLanguage = fromMenuList.value;
+    const toLanguage = toMenuList.value;
+    const translatedSuffix = ` [${fromLanguage} to ${toLanguage}]`;
+    ok(
+      translatedTextArea.value.endsWith(translatedSuffix),
+      `Translated text should match ${fromLanguage} to ${toLanguage}`
+    );
+    is(
+      SelectTranslationsPanel.getSourceText().length,
+      SelectTranslationsPanel.getTranslatedText().length -
+        translatedSuffix.length,
+      "Expected translated text length to correspond to the source text length."
+    );
   }
 
   /**
@@ -1622,6 +1664,29 @@ class SelectTranslationsTestUtils {
   }
 
   /**
+   * Handles language-model downloads for the SelectTranslationsPanel, ensuring that expected
+   * UI states match based on the resolved download state.
+   *
+   * @param {object} options - Configuration options for downloads.
+   * @param {function(number): Promise<void>} options.downloadHandler - The function to resolve or reject the downloads.
+   * @param {boolean} [options.pivotTranslation] - Whether to expect a pivot translation.
+   *
+   * @returns {Promise<void>}
+   */
+  static async handleDownloads({ downloadHandler, pivotTranslation }) {
+    if (downloadHandler) {
+      const { translatedTextArea } = SelectTranslationsPanel.elements;
+      const overflowEnabled = BrowserTestUtils.waitForMutationCondition(
+        translatedTextArea,
+        { attributes: true, attributeFilter: ["style"] },
+        () => translatedTextArea.style.overflow === "auto"
+      );
+      await downloadHandler(pivotTranslation ? 2 : 1);
+      await overflowEnabled;
+    }
+  }
+
+  /**
    * Opens the Select Translations panel via the context menu based on specified options.
    *
    * @param {Function} runInPage - A content-exposed function to run within the context of the page.
@@ -1665,13 +1730,31 @@ class SelectTranslationsTestUtils {
     );
 
     const menuItem = getById("context-translate-selection");
-    const { onOpenPanel } = options;
 
     await SelectTranslationsTestUtils.waitForPanelPopupEvent(
       "popupshown",
-      () => click(menuItem),
-      onOpenPanel
+      async () => {
+        click(menuItem);
+        await closeContextMenuIfOpen();
+      },
+      async () => {
+        const { onOpenPanel } = options;
+        await SelectTranslationsTestUtils.handleDownloads(options);
+        if (onOpenPanel) {
+          await onOpenPanel();
+        }
+      }
     );
+
+    const { expectedFromLanguage, expectedToLanguage } = options;
+    if (expectedFromLanguage !== undefined) {
+      SelectTranslationsTestUtils.assertSelectedFromLanguage(
+        expectedFromLanguage
+      );
+    }
+    if (expectedToLanguage !== undefined) {
+      SelectTranslationsTestUtils.assertSelectedToLanguage(expectedToLanguage);
+    }
   }
 
   /**

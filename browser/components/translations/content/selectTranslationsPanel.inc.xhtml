@@ -9,7 +9,9 @@
          role="alertdialog"
          noautofocus="true"
          aria-labelledby="translations-panel-header"
-         orient="vertical">
+         orient="vertical"
+         onpopupshown="SelectTranslationsPanel.handlePanelPopupShownEvent(event)"
+         onpopuphidden="SelectTranslationsPanel.handlePanelPopupHiddenEvent(event)">
     <panelmultiview id="select-translations-panel-multiview" mainViewId="select-translations-panel-view-default">
       <panelview id="select-translations-panel-view-default"
                  class="PanelUI-subView translations-panel-view"
@@ -73,7 +75,7 @@
         </vbox>
         <vbox class="select-translations-panel-content">
           <html:textarea id="select-translations-panel-translation-area"
-                         data-l10n-id="select-translations-panel-placeholder-text"
+                         data-l10n-id="select-translations-panel-idle-placeholder-text"
                          readonly="true"
                          tabindex="0">
           </html:textarea>

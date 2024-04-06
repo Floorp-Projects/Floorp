@@ -47,5 +47,8 @@ select-translations-panel-done-button = Done
 # Text displayed on translate-full-page button.
 select-translations-panel-translate-full-page-button = Translate full page
 
-# Text displayed as a placeholder in the translated text area.
-select-translations-panel-placeholder-text = Translated text will appear here.
+# Text displayed as a placeholder when the panel is idle.
+select-translations-panel-idle-placeholder-text = Translated text will appear here.
+
+# Text displayed as a placeholder when the panel is actively translating.
+select-translations-panel-translating-placeholder-text = Translating…
