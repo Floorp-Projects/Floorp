@@ -327,11 +327,12 @@ bool js::Nursery::init(AutoLockGCBgAlloc& lock) {
 js::Nursery::~Nursery() { disable(); }
 
 void js::Nursery::enable() {
-  MOZ_ASSERT(isEmpty());
-  MOZ_ASSERT(!gc->isVerifyPreBarriersEnabled());
   if (isEnabled()) {
     return;
   }
+
+  MOZ_ASSERT(isEmpty());
+  MOZ_ASSERT(!gc->isVerifyPreBarriersEnabled());
 
   {
     AutoLockGCBgAlloc lock(gc);
@@ -519,13 +520,19 @@ void js::Nursery::setSemispaceEnabled(bool enabled) {
     return;
   }
 
-  if (!isEmpty()) {
-    gc->minorGC(JS::GCReason::EVICT_NURSERY);
+  bool wasEnabled = isEnabled();
+  if (wasEnabled) {
+    if (!isEmpty()) {
+      gc->minorGC(JS::GCReason::EVICT_NURSERY);
+    }
+    disable();
   }
 
-  disable();
   semispaceEnabled_ = enabled;
-  enable();
+
+  if (wasEnabled) {
+    enable();
+  }
 }
 
 bool js::Nursery::isEmpty() const {
