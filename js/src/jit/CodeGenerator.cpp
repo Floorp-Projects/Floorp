@@ -6538,9 +6538,7 @@ void CodeGenerator::emitPushArguments(LApplyArgsObj* apply, Register scratch) {
   Register argsObj = ToRegister(apply->getArgsObj());
 
   // Load argc into tmpArgc.
-  Address lengthAddr(argsObj, ArgumentsObject::getInitialLengthSlotOffset());
-  masm.unboxInt32(lengthAddr, tmpArgc);
-  masm.rshift32(Imm32(ArgumentsObject::PACKED_BITS_COUNT), tmpArgc);
+  masm.loadArgumentsObjectLength(argsObj, tmpArgc);
 
   // Allocate space on the stack for arguments. This modifies scratch.
   emitAllocateSpaceForApply(tmpArgc, scratch);
