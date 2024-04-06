@@ -2206,10 +2206,7 @@ module.exports = {
       },
     },
     {
-      files: ["**"],
-      excludedFiles: [
-        // Devtools code, see bug 1525652.
-        "devtools/**",
+      files: [
         // Tests specific to JSM
         "dom/encoding/test/test_stringencoding.xhtml",
         "dom/url/tests/test_bug883784.xhtml",
@@ -2224,7 +2221,7 @@ module.exports = {
         "js/xpconnect/loader/XPCOMUtils.sys.mjs",
       ],
       rules: {
-        "mozilla/reject-chromeutils-import": "error",
+        "mozilla/reject-chromeutils-import": "off",
       },
     },
     {

@@ -8,9 +8,9 @@
 
 const { gBrowser, MozillaFileLogger, requestIdleCallback } = dampWindow;
 
-const { AddonManager } = require("resource://gre/modules/AddonManager.jsm");
+const { AddonManager } = require("resource://gre/modules/AddonManager.sys.mjs");
 
-const DampLoadParentModule = require("damp-test/actors/DampLoadParent.jsm");
+const DampLoadParentModule = require("damp-test/actors/DampLoadParent.sys.mjs");
 const DAMP_TESTS = require("damp-test/damp-tests.js");
 
 // Record allocation count in new subtests if DEBUG_DEVTOOLS_ALLOCATIONS is set to
@@ -66,7 +66,7 @@ Damp.prototype = {
       try {
         const {
           TalosParentProfiler,
-        } = require("resource://talos-powers/TalosParentProfiler.jsm");
+        } = require("resource://talos-powers/TalosParentProfiler.sys.mjs");
         return TalosParentProfiler;
       } catch (err) {
         await new Promise(resolve => setTimeout(resolve, 500));
