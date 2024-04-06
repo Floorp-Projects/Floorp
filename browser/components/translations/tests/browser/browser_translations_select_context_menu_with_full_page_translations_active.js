@@ -12,7 +12,7 @@
 add_task(
   async function test_translate_selection_menuitem_with_text_selected_and_full_page_translations_active() {
     const { cleanup, resolveDownloads, runInPage } = await loadTestPage({
-      page: SPANISH_PAGE_URL,
+      page: SELECT_TEST_PAGE_URL,
       languagePairs: LANGUAGE_PAIRS,
       prefs: [["browser.translations.select.enable", true]],
     });
@@ -27,8 +27,8 @@ add_task(
     await SelectTranslationsTestUtils.assertContextMenuTranslateSelectionItem(
       runInPage,
       {
-        selectSpanishParagraph: true,
-        openAtSpanishParagraph: true,
+        selectSpanishSentence: true,
+        openAtSpanishSentence: true,
         expectMenuItemVisible: true,
         expectedTargetLanguage: "en",
       },
@@ -52,8 +52,8 @@ add_task(
     await SelectTranslationsTestUtils.assertContextMenuTranslateSelectionItem(
       runInPage,
       {
-        selectSpanishParagraph: true,
-        openAtSpanishParagraph: true,
+        selectSpanishSentence: true,
+        openAtSpanishSentence: true,
         expectMenuItemVisible: false,
       },
       "The translate-selection context menu item should be unavailable while full-page translations is active."
@@ -70,8 +70,8 @@ add_task(
     await SelectTranslationsTestUtils.assertContextMenuTranslateSelectionItem(
       runInPage,
       {
-        selectSpanishParagraph: true,
-        openAtSpanishParagraph: true,
+        selectSpanishSentence: true,
+        openAtSpanishSentence: true,
         expectMenuItemVisible: true,
         expectedTargetLanguage: "en",
       },
@@ -91,7 +91,7 @@ add_task(
 add_task(
   async function test_translate_selection_menuitem_with_link_clicked_and_full_page_translations_active() {
     const { cleanup, resolveDownloads, runInPage } = await loadTestPage({
-      page: SPANISH_PAGE_URL,
+      page: SELECT_TEST_PAGE_URL,
       languagePairs: LANGUAGE_PAIRS,
       prefs: [["browser.translations.select.enable", true]],
     });
@@ -106,7 +106,7 @@ add_task(
     await SelectTranslationsTestUtils.assertContextMenuTranslateSelectionItem(
       runInPage,
       {
-        selectSpanishParagraph: false,
+        selectSpanishSentence: false,
         openAtSpanishHyperlink: true,
         expectMenuItemVisible: true,
         expectedTargetLanguage: "en",
@@ -131,7 +131,7 @@ add_task(
     await SelectTranslationsTestUtils.assertContextMenuTranslateSelectionItem(
       runInPage,
       {
-        selectSpanishParagraph: false,
+        selectSpanishSentence: false,
         openAtSpanishHyperlink: true,
         expectMenuItemVisible: false,
       },
@@ -149,7 +149,7 @@ add_task(
     await SelectTranslationsTestUtils.assertContextMenuTranslateSelectionItem(
       runInPage,
       {
-        selectSpanishParagraph: false,
+        selectSpanishSentence: false,
         openAtSpanishHyperlink: true,
         expectMenuItemVisible: true,
         expectedTargetLanguage: "en",

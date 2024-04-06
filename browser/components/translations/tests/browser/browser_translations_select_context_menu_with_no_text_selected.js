@@ -10,7 +10,7 @@
 add_task(
   async function test_translate_selection_menuitem_is_unavailable_when_no_text_is_selected() {
     const { cleanup, runInPage } = await loadTestPage({
-      page: SPANISH_PAGE_URL,
+      page: SELECT_TEST_PAGE_URL,
       languagePairs: LANGUAGE_PAIRS,
       prefs: [["browser.translations.select.enable", true]],
     });
@@ -25,8 +25,8 @@ add_task(
     await SelectTranslationsTestUtils.assertContextMenuTranslateSelectionItem(
       runInPage,
       {
-        selectSpanishParagraph: false,
-        openAtSpanishParagraph: true,
+        selectSpanishSentence: false,
+        openAtSpanishSentence: true,
         expectMenuItemVisible: false,
       },
       "The translate-selection context menu item should be unavailable when no text is selected."

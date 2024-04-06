@@ -12,7 +12,7 @@
 add_task(
   async function test_translate_selection_menuitem_when_selected_text_is_not_preferred_language() {
     const { cleanup, runInPage } = await loadTestPage({
-      page: SPANISH_PAGE_URL,
+      page: SELECT_TEST_PAGE_URL,
       languagePairs: LANGUAGE_PAIRS,
       prefs: [["browser.translations.select.enable", true]],
     });
@@ -27,8 +27,8 @@ add_task(
     await SelectTranslationsTestUtils.assertContextMenuTranslateSelectionItem(
       runInPage,
       {
-        selectSpanishParagraph: true,
-        openAtSpanishParagraph: true,
+        selectSpanishSentence: true,
+        openAtSpanishSentence: true,
         expectMenuItemVisible: true,
         expectedTargetLanguage: "en",
       },
@@ -49,21 +49,21 @@ add_task(
 add_task(
   async function test_translate_selection_menuitem_when_selected_text_is_preferred_language() {
     const { cleanup, runInPage } = await loadTestPage({
-      page: ENGLISH_PAGE_URL,
+      page: SELECT_TEST_PAGE_URL,
       languagePairs: LANGUAGE_PAIRS,
       prefs: [["browser.translations.select.enable", true]],
     });
 
     await FullPageTranslationsTestUtils.assertTranslationsButton(
-      { button: false },
+      { button: true, circleArrows: false, locale: false, icon: true },
       "The button is available."
     );
 
     await SelectTranslationsTestUtils.assertContextMenuTranslateSelectionItem(
       runInPage,
       {
-        selectFirstParagraph: true,
-        openAtFirstParagraph: true,
+        selectEnglishSentence: true,
+        openAtEnglishSentence: true,
         expectMenuItemVisible: true,
         expectedTargetLanguage: null,
       },

@@ -12,7 +12,7 @@
 add_task(
   async function test_translate_selection_menuitem_translate_link_text_to_target_language() {
     const { cleanup, runInPage } = await loadTestPage({
-      page: SPANISH_PAGE_URL,
+      page: SELECT_TEST_PAGE_URL,
       languagePairs: LANGUAGE_PAIRS,
       prefs: [["browser.translations.select.enable", true]],
     });
@@ -25,7 +25,7 @@ add_task(
     await SelectTranslationsTestUtils.assertContextMenuTranslateSelectionItem(
       runInPage,
       {
-        selectSpanishParagraph: false,
+        selectSpanishSentence: false,
         openAtSpanishHyperlink: true,
         expectMenuItemVisible: true,
         expectedTargetLanguage: "en",
@@ -47,7 +47,7 @@ add_task(
 add_task(
   async function test_translate_selection_menuitem_translate_link_text_in_preferred_language() {
     const { cleanup, runInPage } = await loadTestPage({
-      page: SPANISH_PAGE_URL,
+      page: SELECT_TEST_PAGE_URL,
       languagePairs: LANGUAGE_PAIRS,
       prefs: [["browser.translations.select.enable", true]],
     });
@@ -60,7 +60,7 @@ add_task(
     await SelectTranslationsTestUtils.assertContextMenuTranslateSelectionItem(
       runInPage,
       {
-        selectSpanishParagraph: false,
+        selectSpanishSentence: false,
         openAtEnglishHyperlink: true,
         expectMenuItemVisible: true,
         expectedTargetLanguage: null,
@@ -82,7 +82,7 @@ add_task(
 add_task(
   async function test_translate_selection_menuitem_selected_text_takes_precedence_over_link_text() {
     const { cleanup, runInPage } = await loadTestPage({
-      page: SPANISH_PAGE_URL,
+      page: SELECT_TEST_PAGE_URL,
       languagePairs: LANGUAGE_PAIRS,
       prefs: [["browser.translations.select.enable", true]],
     });
@@ -95,7 +95,7 @@ add_task(
     await SelectTranslationsTestUtils.assertContextMenuTranslateSelectionItem(
       runInPage,
       {
-        selectSpanishParagraph: true,
+        selectSpanishSentence: true,
         openAtEnglishHyperlink: true,
         expectMenuItemVisible: true,
         expectedTargetLanguage: "en",

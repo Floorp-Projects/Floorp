@@ -19,7 +19,7 @@
 add_task(
   async function test_translate_selection_menuitem_is_unavailable_with_feature_disabled_and_no_text_selected() {
     const { cleanup, runInPage } = await loadTestPage({
-      page: SPANISH_PAGE_URL,
+      page: SELECT_TEST_PAGE_URL,
       languagePairs: LANGUAGE_PAIRS,
       prefs: [["browser.translations.select.enable", false]],
     });
@@ -34,8 +34,8 @@ add_task(
     await SelectTranslationsTestUtils.assertContextMenuTranslateSelectionItem(
       runInPage,
       {
-        selectSpanishParagraph: false,
-        openAtSpanishParagraph: true,
+        selectSpanishSentence: false,
+        openAtSpanishSentence: true,
         expectMenuItemVisible: false,
       },
       "The translate-selection context menu item should be unavailable when the feature is disabled."
@@ -54,7 +54,7 @@ add_task(
 add_task(
   async function test_translate_selection_menuitem_is_unavailable_with_feature_disabled_and_text_selected() {
     const { cleanup, runInPage } = await loadTestPage({
-      page: SPANISH_PAGE_URL,
+      page: SELECT_TEST_PAGE_URL,
       languagePairs: LANGUAGE_PAIRS,
       prefs: [["browser.translations.select.enable", false]],
     });
@@ -69,8 +69,8 @@ add_task(
     await SelectTranslationsTestUtils.assertContextMenuTranslateSelectionItem(
       runInPage,
       {
-        selectSpanishParagraph: true,
-        openAtSpanishParagraph: true,
+        selectSpanishSentence: true,
+        openAtSpanishSentence: true,
         expectMenuItemVisible: false,
       },
       "The translate-selection context menu item should be unavailable when the feature is disabled."
@@ -89,7 +89,7 @@ add_task(
 add_task(
   async function test_translate_selection_menuitem_is_unavailable_with_feature_disabled_and_clicking_a_hyperlink() {
     const { cleanup, runInPage } = await loadTestPage({
-      page: SPANISH_PAGE_URL,
+      page: SELECT_TEST_PAGE_URL,
       languagePairs: LANGUAGE_PAIRS,
       prefs: [["browser.translations.select.enable", false]],
     });
@@ -102,7 +102,7 @@ add_task(
     await SelectTranslationsTestUtils.assertContextMenuTranslateSelectionItem(
       runInPage,
       {
-        selectSpanishParagraph: false,
+        selectSpanishSentence: false,
         openAtSpanishHyperlink: true,
         expectMenuItemVisible: false,
       },
