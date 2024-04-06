@@ -1,5 +1,5 @@
-import { applyUserJS } from "./applyUserJS";
-import { loadStyleSheetWithNsStyleSheetService } from "./stylesheetService";
+import { applyUserJS } from "./applyUserJS.js";
+import { loadStyleSheetWithNsStyleSheetService } from "./stylesheetService.js";
 
 export async function setBrowserDesign() {
   console.log("setBrowserDesign");

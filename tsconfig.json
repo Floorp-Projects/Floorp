@@ -5,9 +5,13 @@
   "compilerOptions": {
     "useDefineForClassFields": true,
     "lib": ["es2022", "DOM"],
-    "module": "NodeNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "noEmit": true,
     "allowJs": true,
-    "checkJs": true
+    "checkJs": true,
+    "jsx": "preserve",
+    "jsxImportSource": "solid-js"
   },
   "exclude": ["dist/**"]
 }
