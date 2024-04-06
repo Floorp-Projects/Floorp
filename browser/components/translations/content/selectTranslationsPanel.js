@@ -122,15 +122,18 @@ var SelectTranslationsPanel = new (class {
   }
 
   /**
-   * Builds the <menulist> of languages for both the "from" and "to". This can be
-   * called every time the popup is shown, as it will retry when there is an error
-   * (such as a network error) or be a noop if it's already initialized.
+   * Ensures that the from-language and to-language dropdowns are built.
+   *
+   * This can be called every time the popup is shown, since it will retry
+   * when there is an error (such as a network error) or be a no-op if the
+   * dropdowns have already been initialized.
    */
   async #ensureLangListsBuilt() {
     try {
       await TranslationsPanelShared.ensureLangListsBuilt(
         document,
-        this.elements.panel
+        this.elements.panel,
+        gBrowser.selectedBrowser.innerWindowID
       );
     } catch (error) {
       this.console?.error(error);
@@ -138,52 +141,43 @@ var SelectTranslationsPanel = new (class {
   }
 
   /**
-   * Updates the language dropdown based on the provided language tag.
+   * Initializes the selected value of the given language dropdown based on the language tag.
    *
    * @param {string} langTag - A BCP-47 language tag.
-   * @param {Element} menuList - The dropdown menu element that will be updated based on language support.
+   * @param {Element} menuList - The menu list element to update.
+   *
    * @returns {Promise<void>}
    */
-  async #updateLanguageDropdown(langTag, menuList) {
-    const langTagIsSupported =
+  async #initializeLanguageMenuList(langTag, menuList) {
+    const isLangTagSupported =
       menuList.id === this.elements.fromMenuList.id
         ? await TranslationsParent.isSupportedAsFromLang(langTag)
         : await TranslationsParent.isSupportedAsToLang(langTag);
 
-    if (langTagIsSupported) {
+    if (isLangTagSupported) {
       // Remove the data-l10n-id because the menulist label will
       // be populated from the supported language's display name.
-      menuList.value = langTag;
       menuList.removeAttribute("data-l10n-id");
+      menuList.value = langTag;
     } else {
-      // Set the data-l10n-id placeholder because no valid
-      // language will be selected when the panel opens.
-      menuList.value = undefined;
-      document.l10n.setAttributes(
-        menuList,
-        "translations-panel-choose-language"
-      );
-      await document.l10n.translateElements([menuList]);
+      await this.#deselectLanguage(menuList);
     }
   }
 
   /**
-   * Updates the language selection dropdowns based on the given langPairPromise.
+   * Initializes the selected values of the from-language and to-language menu
+   * lists based on the result of the given language pair promise.
    *
    * @param {Promise<{fromLang?: string, toLang?: string}>} langPairPromise
+   *
    * @returns {Promise<void>}
    */
-  async #updateLanguageDropdowns(langPairPromise) {
+  async #initializeLanguageMenuLists(langPairPromise) {
     const { fromLang, toLang } = await langPairPromise;
-
-    this.console?.debug(`fromLang(${fromLang})`);
-    this.console?.debug(`toLang(${toLang})`);
-
     const { fromMenuList, toMenuList } = this.elements;
-
     await Promise.all([
-      this.#updateLanguageDropdown(fromLang, fromMenuList),
-      this.#updateLanguageDropdown(toLang, toMenuList),
+      this.#initializeLanguageMenuList(fromLang, fromMenuList),
+      this.#initializeLanguageMenuList(toLang, toMenuList),
     ]);
   }
 
@@ -199,7 +193,7 @@ var SelectTranslationsPanel = new (class {
     this.console?.log("Showing a translation panel.");
 
     await this.#ensureLangListsBuilt();
-    await this.#updateLanguageDropdowns(langPairPromise);
+    await this.#initializeLanguageMenuLists(langPairPromise);
 
     // TODO(Bug 1878721) Rework the logic of where to open the panel.
     //
@@ -216,5 +210,17 @@ var SelectTranslationsPanel = new (class {
       position: "bottomright topright",
       triggerEvent: event,
     }).catch(error => this.console?.error(error));
+  }
+
+  /**
+   * Clears the selected language and ensures that the menu list displays
+   * the proper placeholder text.
+   *
+   * @param {Element} menuList - The target menu list element to update.
+   */
+  async #deselectLanguage(menuList) {
+    menuList.value = "";
+    document.l10n.setAttributes(menuList, "translations-panel-choose-language");
+    await document.l10n.translateElements([menuList]);
   }
 })();
