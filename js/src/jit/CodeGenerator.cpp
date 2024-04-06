@@ -6842,17 +6842,17 @@ void CodeGenerator::emitApplyGeneric(T* apply) {
   emitRestoreStackPointerFromFP();
 }
 
-void CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric* apply) {
+template <typename T>
+void CodeGenerator::emitApplyArgsGuard(T* apply) {
   LSnapshot* snapshot = apply->snapshot();
   Register argcreg = ToRegister(apply->getArgc());
 
   // Ensure that we have a reasonable number of arguments.
   bailoutCmp32(Assembler::Above, argcreg, Imm32(JIT_ARGS_LENGTH_MAX), snapshot);
-
-  emitApplyGeneric(apply);
 }
 
-void CodeGenerator::visitApplyArgsObj(LApplyArgsObj* apply) {
+template <typename T>
+void CodeGenerator::emitApplyArgsObjGuard(T* apply) {
   Register argsObj = ToRegister(apply->getArgsObj());
   Register temp = ToRegister(apply->getTempObject());
 
@@ -6860,59 +6860,50 @@ void CodeGenerator::visitApplyArgsObj(LApplyArgsObj* apply) {
   masm.loadArgumentsObjectLength(argsObj, temp, &bail);
   masm.branch32(Assembler::Above, temp, Imm32(JIT_ARGS_LENGTH_MAX), &bail);
   bailoutFrom(&bail, apply->snapshot());
+}
 
+template <typename T>
+void CodeGenerator::emitApplyArrayGuard(T* apply) {
+  LSnapshot* snapshot = apply->snapshot();
+  Register elements = ToRegister(apply->getElements());
+  Register tmp = ToRegister(apply->getTempObject());
+
+  Address length(elements, ObjectElements::offsetOfLength());
+  masm.load32(length, tmp);
+
+  // Ensure that we have a reasonable number of arguments.
+  bailoutCmp32(Assembler::Above, tmp, Imm32(JIT_ARGS_LENGTH_MAX), snapshot);
+
+  // Ensure that the array does not contain an uninitialized tail.
+
+  Address initializedLength(elements,
+                            ObjectElements::offsetOfInitializedLength());
+  masm.sub32(initializedLength, tmp);
+  bailoutCmp32(Assembler::NotEqual, tmp, Imm32(0), snapshot);
+}
+
+void CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric* apply) {
+  emitApplyArgsGuard(apply);
+  emitApplyGeneric(apply);
+}
+
+void CodeGenerator::visitApplyArgsObj(LApplyArgsObj* apply) {
+  emitApplyArgsObjGuard(apply);
   emitApplyGeneric(apply);
 }
 
 void CodeGenerator::visitApplyArrayGeneric(LApplyArrayGeneric* apply) {
-  LSnapshot* snapshot = apply->snapshot();
-  Register tmp = ToRegister(apply->getTempObject());
-
-  Address length(ToRegister(apply->getElements()),
-                 ObjectElements::offsetOfLength());
-  masm.load32(length, tmp);
-
-  // Ensure that we have a reasonable number of arguments.
-  bailoutCmp32(Assembler::Above, tmp, Imm32(JIT_ARGS_LENGTH_MAX), snapshot);
-
-  // Ensure that the array does not contain an uninitialized tail.
-
-  Address initializedLength(ToRegister(apply->getElements()),
-                            ObjectElements::offsetOfInitializedLength());
-  masm.sub32(initializedLength, tmp);
-  bailoutCmp32(Assembler::NotEqual, tmp, Imm32(0), snapshot);
-
+  emitApplyArrayGuard(apply);
   emitApplyGeneric(apply);
 }
 
 void CodeGenerator::visitConstructArgsGeneric(LConstructArgsGeneric* lir) {
-  LSnapshot* snapshot = lir->snapshot();
-  Register argcreg = ToRegister(lir->getArgc());
-
-  // Ensure that we have a reasonable number of arguments.
-  bailoutCmp32(Assembler::Above, argcreg, Imm32(JIT_ARGS_LENGTH_MAX), snapshot);
-
+  emitApplyArgsGuard(lir);
   emitApplyGeneric(lir);
 }
 
 void CodeGenerator::visitConstructArrayGeneric(LConstructArrayGeneric* lir) {
-  LSnapshot* snapshot = lir->snapshot();
-  Register tmp = ToRegister(lir->getTempObject());
-
-  Address length(ToRegister(lir->getElements()),
-                 ObjectElements::offsetOfLength());
-  masm.load32(length, tmp);
-
-  // Ensure that we have a reasonable number of arguments.
-  bailoutCmp32(Assembler::Above, tmp, Imm32(JIT_ARGS_LENGTH_MAX), snapshot);
-
-  // Ensure that the array does not contain an uninitialized tail.
-
-  Address initializedLength(ToRegister(lir->getElements()),
-                            ObjectElements::offsetOfInitializedLength());
-  masm.sub32(initializedLength, tmp);
-  bailoutCmp32(Assembler::NotEqual, tmp, Imm32(0), snapshot);
-
+  emitApplyArrayGuard(lir);
   emitApplyGeneric(lir);
 }
 
