@@ -124,8 +124,6 @@
         this.shadowRoot.appendChild(document.createElement("slot"));
       }
 
-      this.mSelectedInternal = null;
-      this.mAttributeObserver = null;
       this.setInitialSelection();
     }
 
@@ -292,6 +290,10 @@
       if (this.getAttribute("noinitialselection") === "true") {
         return;
       }
+
+      this.mSelectedInternal = null;
+      this.mAttributeObserver = null;
+
       var popup = this.menupopup;
       if (popup) {
         var arr = popup.getElementsByAttribute("selected", "true");
