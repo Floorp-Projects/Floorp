@@ -5602,7 +5602,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   void loadMegamorphicCache(Register dest);
   void lookupStringInAtomCacheLastLookups(Register str, Register scratch,
-                                          Label* fail);
+                                          Register output, Label* fail);
   void loadMegamorphicSetPropCache(Register dest);
 
   void loadAtomOrSymbolAndHash(ValueOperand value, Register outId,
