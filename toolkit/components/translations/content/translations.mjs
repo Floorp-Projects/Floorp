@@ -10,6 +10,8 @@
    AT_logError, AT_createTranslationsPort, AT_isHtmlTranslation,
    AT_isTranslationEngineSupported, AT_identifyLanguage */
 
+import { Translator } from "chrome://global/content/translations/Translator.mjs";
+
 // Allow tests to override this value so that they can run faster.
 // This is the delay in milliseconds.
 window.DEBOUNCE_DELAY = 200;
@@ -66,7 +68,7 @@ class TranslationsState {
    * The translator is only valid for a single language pair, and needs
    * to be recreated if the language pair changes.
    *
-   * @type {null | Promise<Translator>}
+   * @type {null | Translator}
    */
   translator = null;
 
@@ -133,42 +135,28 @@ class TranslationsState {
     onDebounce: async () => {
       // The contents of "this" can change between async steps, store a local variable
       // binding of these values.
-      const {
-        fromLanguage,
-        toLanguage,
-        messageToTranslate,
-        translator: translatorPromise,
-      } = this;
+      const { fromLanguage, toLanguage, messageToTranslate, translator } = this;
 
       if (!this.isTranslationEngineSupported) {
         // Never translate when the engine isn't supported.
         return;
       }
 
-      if (
-        !fromLanguage ||
-        !toLanguage ||
-        !messageToTranslate ||
-        !translatorPromise
-      ) {
+      if (!fromLanguage || !toLanguage || !messageToTranslate || !translator) {
         // Not everything is set for translation.
         this.ui.updateTranslation("");
         return;
       }
 
-      const [translator] = await Promise.all([
-        // Ensure the engine is ready to go.
-        translatorPromise,
-        // Ensure the previous translation has finished so that only the latest
-        // translation goes through.
-        this.translationRequest,
-      ]);
+      // Ensure the previous translation has finished so that only the latest
+      // translation goes through.
+      await this.translationRequest;
 
       if (
         // Check if the current configuration has changed and if this is stale. If so
         // then skip this request, as there is already a newer request with more up to
         // date information.
-        this.translator !== translatorPromise ||
+        this.translator !== translator ||
         this.fromLanguage !== fromLanguage ||
         this.toLanguage !== toLanguage ||
         this.messageToTranslate !== messageToTranslate
@@ -177,8 +165,10 @@ class TranslationsState {
       }
 
       const start = performance.now();
-
-      this.translationRequest = translator.translate(messageToTranslate);
+      this.translationRequest = this.translator.translate(
+        messageToTranslate,
+        AT_isHtmlTranslation()
+      );
       const translation = await this.translationRequest;
 
       // The measure events will show up in the Firefox Profiler.
@@ -236,15 +226,40 @@ class TranslationsState {
       `Creating a new translator for "${this.fromLanguage}" to "${this.toLanguage}"`
     );
 
-    this.translator = Translator.create(this.fromLanguage, this.toLanguage);
-    this.maybeRequestTranslation();
+    const translationPortPromise = (fromLanguage, toLanguage) => {
+      const { promise, resolve } = Promise.withResolvers();
+
+      const getResponse = ({ data }) => {
+        if (
+          data.type == "GetTranslationsPort" &&
+          data.fromLanguage === fromLanguage &&
+          data.toLanguage === toLanguage
+        ) {
+          window.removeEventListener("message", getResponse);
+          resolve(data.port);
+        }
+      };
+
+      window.addEventListener("message", getResponse);
+      AT_createTranslationsPort(fromLanguage, toLanguage);
+
+      return promise;
+    };
 
     try {
-      await this.translator;
+      const translatorPromise = Translator.create(
+        this.fromLanguage,
+        this.toLanguage,
+        translationPortPromise
+      );
       const duration = performance.now() - start;
+
       // Signal to tests that the translator was created so they can exit.
       window.postMessage("translator-ready");
       AT_log(`Created a new Translator in ${duration / 1000} seconds`);
+
+      this.translator = await translatorPromise;
+      this.maybeRequestTranslation();
     } catch (error) {
       this.ui.showInfo("about-translations-engine-error");
       AT_logError("Failed to get the Translations worker", error);
@@ -654,138 +669,4 @@ function debounce({ onDebounce, doEveryTime }) {
       onDebounce(...args);
     }, timeLeft);
   };
-}
-
-/**
- * Perform transalations over a `MessagePort`. This class manages the communications to
- * the translations engine.
- */
-class Translator {
-  /**
-   * @type {MessagePort}
-   */
-  #port;
-
-  /**
-   * An id for each message sent. This is used to match up the request and response.
-   */
-  #nextMessageId = 0;
-
-  /**
-   * Tie together a message id to a resolved response.
-   *
-   * @type {Map<number, TranslationRequest>}
-   */
-  #requests = new Map();
-
-  engineStatus = "initializing";
-
-  /**
-   * @param {MessagePort} port
-   */
-  constructor(port) {
-    this.#port = port;
-
-    // Create a promise that will be resolved when the engine is ready.
-    let engineLoaded;
-    let engineFailed;
-    this.ready = new Promise((resolve, reject) => {
-      engineLoaded = resolve;
-      engineFailed = reject;
-    });
-
-    // Match up a response on the port to message that was sent.
-    port.onmessage = ({ data }) => {
-      switch (data.type) {
-        case "TranslationsPort:TranslationResponse": {
-          const { targetText, messageId } = data;
-          // A request may not match match a messageId if there is a race during the pausing
-          // and discarding of the queue.
-          this.#requests.get(messageId)?.resolve(targetText);
-          break;
-        }
-        case "TranslationsPort:GetEngineStatusResponse": {
-          if (data.status === "ready") {
-            engineLoaded();
-          } else {
-            engineFailed();
-          }
-          break;
-        }
-        default:
-          AT_logError("Unknown translations port message: " + data.type);
-          break;
-      }
-    };
-
-    port.postMessage({ type: "TranslationsPort:GetEngineStatusRequest" });
-  }
-
-  /**
-   * Opens up a port and creates a new translator.
-   *
-   * @param {string} fromLanguage
-   * @param {string} toLanguage
-   * @returns {Promise<Translator>}
-   */
-  static create(fromLanguage, toLanguage) {
-    return new Promise((resolve, reject) => {
-      AT_createTranslationsPort(fromLanguage, toLanguage);
-
-      function getResponse({ data }) {
-        if (
-          data.type == "GetTranslationsPort" &&
-          fromLanguage === data.fromLanguage &&
-          toLanguage === data.toLanguage
-        ) {
-          // The response matches, resolve the port.
-          const translator = new Translator(data.port);
-
-          // Resolve the translator once it is ready, or propagate the rejection
-          // if it failed.
-          translator.ready.then(() => resolve(translator), reject);
-          window.removeEventListener("message", getResponse);
-        }
-      }
-
-      // Listen for a response for the message port.
-      window.addEventListener("message", getResponse);
-    });
-  }
-
-  /**
-   * Send a request to translate text to the Translations Engine. If it returns `null`
-   * then the request is stale. A rejection means there was an error in the translation.
-   * This request may be queued.
-   *
-   * @param {string} sourceText
-   * @returns {Promise<string>}
-   */
-  translate(sourceText) {
-    return new Promise((resolve, reject) => {
-      const messageId = this.#nextMessageId++;
-      // Store the "resolve" for the promise. It will be matched back up with the
-      // `messageId` in #handlePortMessage.
-      const isHTML = AT_isHtmlTranslation();
-      this.#requests.set(messageId, {
-        sourceText,
-        isHTML,
-        resolve,
-        reject,
-      });
-      this.#port.postMessage({
-        type: "TranslationsPort:TranslationRequest",
-        messageId,
-        sourceText,
-        isHTML,
-      });
-    });
-  }
-
-  /**
-   * Close the port and remove any pending or queued requests.
-   */
-  destroy() {
-    this.#port.close();
-  }
 }
