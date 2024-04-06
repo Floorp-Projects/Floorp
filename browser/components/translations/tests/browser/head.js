@@ -1490,6 +1490,11 @@ class SelectTranslationsTestUtils {
     SelectTranslationsTestUtils.#assertPanelElementVisibility({
       ...SelectTranslationsTestUtils.#alwaysPresentElements,
     });
+    SelectTranslationsTestUtils.#assertConditionalUIEnabled({
+      textArea: true,
+      copyButton: true,
+      translateFullPageButton: true,
+    });
     SelectTranslationsTestUtils.#assertPanelHasTranslatedText();
     SelectTranslationsTestUtils.#assertPanelTextAreaOverflow();
   }
@@ -1550,6 +1555,11 @@ class SelectTranslationsTestUtils {
       ...SelectTranslationsTestUtils.#alwaysPresentElements,
     });
     await SelectTranslationsTestUtils.#assertPanelHasIdlePlaceholder();
+    SelectTranslationsTestUtils.#assertConditionalUIEnabled({
+      textArea: false,
+      copyButton: false,
+      translateFullPageButton: false,
+    });
     SelectTranslationsTestUtils.assertSelectedFromLanguage(null);
   }
 
@@ -1570,6 +1580,11 @@ class SelectTranslationsTestUtils {
       ...SelectTranslationsTestUtils.#alwaysPresentElements,
     });
     SelectTranslationsTestUtils.assertSelectedToLanguage(null);
+    SelectTranslationsTestUtils.#assertConditionalUIEnabled({
+      textArea: false,
+      copyButton: false,
+      translateFullPageButton: false,
+    });
     await SelectTranslationsTestUtils.#assertPanelHasIdlePlaceholder();
   }
 
@@ -1603,6 +1618,11 @@ class SelectTranslationsTestUtils {
       expected,
       "Active translation text area should have the translating placeholder."
     );
+    SelectTranslationsTestUtils.#assertConditionalUIEnabled({
+      textArea: true,
+      copyButton: false,
+      translateFullPageButton: true,
+    });
   }
 
   /**
@@ -1624,6 +1644,44 @@ class SelectTranslationsTestUtils {
       SelectTranslationsPanel.getTranslatedText().length -
         translatedSuffix.length,
       "Expected translated text length to correspond to the source text length."
+    );
+    SelectTranslationsTestUtils.#assertConditionalUIEnabled({
+      textArea: true,
+      copyButton: true,
+      translateFullPageButton: true,
+    });
+  }
+
+  /**
+   * Asserts the enabled state of action buttons in the SelectTranslationsPanel.
+   *
+   * @param {boolean} expectEnabled - Whether the buttons should be enabled (true) or not (false).
+   */
+  static #assertConditionalUIEnabled({
+    copyButton: copyButtonEnabled,
+    translateFullPageButton: translateFullPageButtonEnabled,
+    textArea: textAreaEnabled,
+  }) {
+    const { copyButton, translateFullPageButton, textArea } =
+      SelectTranslationsPanel.elements;
+    is(
+      copyButton.disabled,
+      !copyButtonEnabled,
+      `The copy button should be ${copyButtonEnabled ? "enabled" : "disabled"}.`
+    );
+    is(
+      translateFullPageButton.disabled,
+      !translateFullPageButtonEnabled,
+      `The translate-full-page button should be ${
+        translateFullPageButtonEnabled ? "enabled" : "disabled"
+      }.`
+    );
+    is(
+      textArea.disabled,
+      !textAreaEnabled,
+      `The translated-text area should be ${
+        textAreaEnabled ? "enabled" : "disabled"
+      }.`
     );
   }
 
