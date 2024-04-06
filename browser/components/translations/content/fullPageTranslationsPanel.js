@@ -374,21 +374,6 @@ var FullPageTranslationsPanel = new (class {
   }
 
   /**
-   * @returns {TranslationsParent}
-   */
-  #getTranslationsActor() {
-    const actor =
-      gBrowser.selectedBrowser.browsingContext.currentWindowGlobal.getActor(
-        "Translations"
-      );
-
-    if (!actor) {
-      throw new Error("Unable to get the TranslationsParent");
-    }
-    return actor;
-  }
-
-  /**
    * Fetches the language tags for the document and the user and caches the results
    * Use `#getCachedDetectedLanguages` when the lang tags do not need to be re-fetched.
    * This requires a bit of work to do, so prefer the cached version when possible.
@@ -396,8 +381,9 @@ var FullPageTranslationsPanel = new (class {
    * @returns {Promise<LangTags>}
    */
   async #fetchDetectedLanguages() {
-    this.detectedLanguages =
-      await this.#getTranslationsActor().getDetectedLanguages();
+    this.detectedLanguages = await TranslationsParent.getTranslationsActor(
+      gBrowser.selectedBrowser
+    ).getDetectedLanguages();
     return this.detectedLanguages;
   }
 
@@ -438,7 +424,9 @@ var FullPageTranslationsPanel = new (class {
    * @param {TranslationsLanguageState} languageState
    */
   #updateViewFromTranslationStatus(
-    languageState = this.#getTranslationsActor().languageState
+    languageState = TranslationsParent.getTranslationsActor(
+      gBrowser.selectedBrowser
+    ).languageState
   ) {
     const { translateButton, toMenuList, fromMenuList, header, cancelButton } =
       this.elements;
@@ -722,8 +710,9 @@ var FullPageTranslationsPanel = new (class {
     const neverTranslateSiteMenuItems = panel.ownerDocument.querySelectorAll(
       ".never-translate-site-menuitem"
     );
-    const neverTranslateSite =
-      await this.#getTranslationsActor().shouldNeverTranslateSite();
+    const neverTranslateSite = await TranslationsParent.getTranslationsActor(
+      gBrowser.selectedBrowser
+    ).shouldNeverTranslateSite();
 
     for (const menuitem of neverTranslateSiteMenuItems) {
       menuitem.setAttribute("checked", neverTranslateSite ? "true" : "false");
@@ -801,7 +790,9 @@ var FullPageTranslationsPanel = new (class {
   async #showRevisitView({ fromLanguage, toLanguage }) {
     const { fromMenuList, toMenuList, intro } = this.elements;
     if (!this.#isShowingDefaultView()) {
-      await this.#showDefaultView(this.#getTranslationsActor());
+      await this.#showDefaultView(
+        TranslationsParent.getTranslationsActor(gBrowser.selectedBrowser)
+      );
     }
     intro.hidden = true;
     fromMenuList.value = fromLanguage;
@@ -897,7 +888,7 @@ var FullPageTranslationsPanel = new (class {
     PanelMultiView.hidePopup(panel);
 
     await this.#showDefaultView(
-      this.#getTranslationsActor(),
+      TranslationsParent.getTranslationsActor(gBrowser.selectedBrowser),
       true /* force this view to be shown */
     );
 
@@ -1120,7 +1111,9 @@ var FullPageTranslationsPanel = new (class {
     const { button } = this.buttonElements;
 
     const { requestedTranslationPair, locationChangeId } =
-      this.#getTranslationsActor().languageState;
+      TranslationsParent.getTranslationsActor(
+        gBrowser.selectedBrowser
+      ).languageState;
 
     // Store this value because it gets modified when #showDefaultView is called below.
     const isFirstUserInteraction = !this._hasShownPanel;
@@ -1132,7 +1125,9 @@ var FullPageTranslationsPanel = new (class {
         this.console?.error(error);
       });
     } else {
-      await this.#showDefaultView(this.#getTranslationsActor()).catch(error => {
+      await this.#showDefaultView(
+        TranslationsParent.getTranslationsActor(gBrowser.selectedBrowser)
+      ).catch(error => {
         this.console?.error(error);
       });
     }
@@ -1148,8 +1143,9 @@ var FullPageTranslationsPanel = new (class {
     if (!TranslationsParent.isActiveLocation(locationChangeId)) {
       this.console?.log(`A translation panel open request was stale.`, {
         locationChangeId,
-        newlocationChangeId:
-          this.#getTranslationsActor().languageState.locationChangeId,
+        newlocationChangeId: TranslationsParent.getTranslationsActor(
+          gBrowser.selectedBrowser
+        ).languageState.locationChangeId,
         currentURISpec: gBrowser.currentURI.spec,
       });
       return;
@@ -1173,7 +1169,9 @@ var FullPageTranslationsPanel = new (class {
    */
   #isTranslationsActive() {
     const { requestedTranslationPair } =
-      this.#getTranslationsActor().languageState;
+      TranslationsParent.getTranslationsActor(
+        gBrowser.selectedBrowser
+      ).languageState;
     return requestedTranslationPair !== null;
   }
 
@@ -1183,7 +1181,9 @@ var FullPageTranslationsPanel = new (class {
   async onTranslate() {
     PanelMultiView.hidePopup(this.elements.panel);
 
-    const actor = this.#getTranslationsActor();
+    const actor = TranslationsParent.getTranslationsActor(
+      gBrowser.selectedBrowser
+    );
     actor.translate(
       this.elements.fromMenuList.value,
       this.elements.toMenuList.value,
@@ -1331,8 +1331,9 @@ var FullPageTranslationsPanel = new (class {
    */
   async onNeverTranslateSite() {
     const pageAction = this.getCheckboxPageActionFor().neverTranslateSite();
-    const toggledOn =
-      await this.#getTranslationsActor().toggleNeverTranslateSitePermissions();
+    const toggledOn = await TranslationsParent.getTranslationsActor(
+      gBrowser.selectedBrowser
+    ).toggleNeverTranslateSitePermissions();
     TranslationsParent.telemetry().panel().onNeverTranslateSite(toggledOn);
     this.#updateSettingsMenuSiteCheckboxStates();
     await this.#doPageAction(pageAction);
@@ -1349,7 +1350,9 @@ var FullPageTranslationsPanel = new (class {
       throw new Error("Expected to have a document language tag.");
     }
 
-    this.#getTranslationsActor().restorePage(docLangTag);
+    TranslationsParent.getTranslationsActor(
+      gBrowser.selectedBrowser
+    ).restorePage(docLangTag);
   }
 
   /**

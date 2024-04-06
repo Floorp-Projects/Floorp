@@ -2494,23 +2494,6 @@ class nsContextMenu {
   }
 
   /**
-   * Retrieves an instance of the TranslationsParent actor.
-   * @returns {TranslationsParent} - The TranslationsParent actor.
-   * @throws Throws if an instance of the actor cannot be retrieved.
-   */
-  static #getTranslationsActor() {
-    const actor =
-      gBrowser.selectedBrowser.browsingContext.currentWindowGlobal.getActor(
-        "Translations"
-      );
-
-    if (!actor) {
-      throw new Error("Unable to get the TranslationsParent");
-    }
-    return actor;
-  }
-
-  /**
    * Determines if Full Page Translations is currently active on this page.
    *
    * @returns {boolean}
@@ -2518,7 +2501,9 @@ class nsContextMenu {
   static #isFullPageTranslationsActive() {
     try {
       const { requestedTranslationPair } =
-        this.#getTranslationsActor().languageState;
+        TranslationsParent.getTranslationsActor(
+          gBrowser.selectedBrowser
+        ).languageState;
       return requestedTranslationPair !== null;
     } catch {
       // Failed to retrieve the Full Page Translations actor, do nothing.
