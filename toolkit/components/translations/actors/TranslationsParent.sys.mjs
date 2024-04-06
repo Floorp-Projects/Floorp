@@ -477,6 +477,24 @@ export class TranslationsParent extends JSWindowActorParent {
   }
 
   /**
+   * Retrieves the Translations actor from the current browser context.
+   *
+   * @param {object} browser - The browser object from which to get the context.
+   *
+   * @returns {object} The Translations actor for handling translation actions.
+   * @throws {Error} Throws an error if the TranslationsParent actor cannot be found.
+   */
+  static getTranslationsActor(browser) {
+    const actor =
+      browser.browsingContext.currentWindowGlobal.getActor("Translations");
+
+    if (!actor) {
+      throw new Error("Unable to get the TranslationsParent actor.");
+    }
+    return actor;
+  }
+
+  /**
    * Detect if Wasm SIMD is supported, and cache the value. It's better to check
    * for support before downloading large binary blobs to a user who can't even
    * use the feature. This function also respects mocks and simulating unsupported
