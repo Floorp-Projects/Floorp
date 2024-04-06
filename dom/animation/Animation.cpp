@@ -10,7 +10,6 @@
 #include "AnimationUtils.h"
 #include "mozAutoDocUpdate.h"
 #include "mozilla/dom/AnimationBinding.h"
-#include "mozilla/dom/AnimationPlaybackEvent.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/DocumentTimeline.h"
@@ -644,7 +643,8 @@ void Animation::Cancel(PostRestyleMode aPostRestyle) {
     }
     ResetFinishedPromise();
 
-    QueuePlaybackEvent(u"cancel"_ns, GetTimelineCurrentTimeAsTimeStamp());
+    QueuePlaybackEvent(nsGkAtoms::oncancel,
+                       GetTimelineCurrentTimeAsTimeStamp());
   }
 
   StickyTimeDuration activeTime =
@@ -1187,7 +1187,7 @@ void Animation::Remove() {
   UpdateEffect(PostRestyleMode::IfNeeded);
   PostUpdate();
 
-  QueuePlaybackEvent(u"remove"_ns, GetTimelineCurrentTimeAsTimeStamp());
+  QueuePlaybackEvent(nsGkAtoms::onremove, GetTimelineCurrentTimeAsTimeStamp());
 }
 
 bool Animation::HasLowerCompositeOrderThan(const Animation& aOther) const {
@@ -1866,10 +1866,11 @@ void Animation::DoFinishNotificationImmediately(MicroTaskRunnable* aAsync) {
 
   MaybeResolveFinishedPromise();
 
-  QueuePlaybackEvent(u"finish"_ns, AnimationTimeToTimeStamp(EffectEnd()));
+  QueuePlaybackEvent(nsGkAtoms::onfinish,
+                     AnimationTimeToTimeStamp(EffectEnd()));
 }
 
-void Animation::QueuePlaybackEvent(const nsAString& aName,
+void Animation::QueuePlaybackEvent(nsAtom* aOnEvent,
                                    TimeStamp&& aScheduledEventTime) {
   // Use document for timing.
   // https://drafts.csswg.org/web-animations-1/#document-for-timing
@@ -1883,20 +1884,19 @@ void Animation::QueuePlaybackEvent(const nsAString& aName,
     return;
   }
 
-  AnimationPlaybackEventInit init;
-  if (aName.EqualsLiteral("finish") || aName.EqualsLiteral("remove")) {
-    init.mCurrentTime = GetCurrentTimeAsDouble();
+  Nullable<double> currentTime;
+  if (aOnEvent == nsGkAtoms::onfinish || aOnEvent == nsGkAtoms::onremove) {
+    currentTime = GetCurrentTimeAsDouble();
   }
+
+  Nullable<double> timelineTime;
   if (mTimeline) {
-    init.mTimelineTime = mTimeline->GetCurrentTimeAsDouble();
+    timelineTime = mTimeline->GetCurrentTimeAsDouble();
   }
 
-  RefPtr<AnimationPlaybackEvent> event =
-      AnimationPlaybackEvent::Constructor(this, aName, init);
-  event->SetTrusted(true);
-
-  presContext->AnimationEventDispatcher()->QueueEvent(AnimationEventInfo(
-      std::move(event), std::move(aScheduledEventTime), this));
+  presContext->AnimationEventDispatcher()->QueueEvent(
+      AnimationEventInfo(aOnEvent, currentTime, timelineTime,
+                         std::move(aScheduledEventTime), this));
 }
 
 bool Animation::IsRunningOnCompositor() const {
