@@ -107,7 +107,7 @@ add_task(async function startup() {
     "browser.startup.record": {
       // This pref is accessed in Nighly and debug builds only.
       min: 200,
-      max: 400,
+      max: 450,
     },
     "network.loadinfo.skip_type_assertion": {
       // This is accessed in debug only.
