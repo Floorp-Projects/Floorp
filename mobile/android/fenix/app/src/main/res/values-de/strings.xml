@@ -646,7 +646,7 @@
     <string name="toast_customize_addon_collection_done" moz:removedIn="126" tools:ignore="UnusedResources">Add-on-Sammlung geändert. Anwendung wird beendet, um Änderungen zu übernehmen…</string>
 
     <!-- Toast shown after confirming the custom extension collection configuration -->
-    <string name="toast_customize_extension_collection_done">Erweiterungssammlung geändert. Beenden der Anwendung, um Änderungen zu übernehmen…</string>
+    <string name="toast_customize_extension_collection_done">Erweiterungssammlung geändert. Anwendung wird beendet, um Änderungen zu übernehmen…</string>
 
     <!-- Customize Home -->
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
@@ -722,7 +722,7 @@
     <!-- This is a message shown to the user when too many errors have occurred with the extensions process and they have been disabled.
     The user can decide if they would like to continue trying to start extensions or if they'd rather continue without them.
     The first parameter is the application name. -->
-    <string name="extension_process_crash_dialog_message">Eine oder mehrere Erweiterungen funktionieren nicht mehr und machen Ihr System instabil. %1$s hat fehlgeschlagen, die Erweiterung(en) neu gestartet.\n\nErweiterungen werden während Ihrer aktuellen Sitzung nicht neu gestartet.\n\nEntfernen oder Deaktivieren der Erweiterungen könnte dieses Problem beheben.</string>
+    <string name="extension_process_crash_dialog_message">Eine oder mehrere Erweiterungen funktionieren nicht mehr und machen Ihr System instabil. %1$s hat erfolglos versucht, die Erweiterung(en) neu zu starten.\n\nErweiterungen werden während Ihrer aktuellen Sitzung nicht neu gestartet.\n\nEntfernen oder Deaktivieren von Erweiterungen kann dieses Problem beheben.</string>
     <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
     <string name="addon_process_crash_dialog_retry_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Versuchen, die Add-ons neu zu starten</string>
     <!-- Button text on the extension crash dialog to prompt the user to try restarting the extensions but the dialog will reappear if it is unsuccessful again -->
@@ -731,7 +731,7 @@
     <string name="addon_process_crash_dialog_disable_addons_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Mit deaktivierten Add-ons fortfahren</string>
 
     <!-- Button text on the extension crash dialog to prompt the user to continue with all extensions disabled. -->
-    <string name="extension_process_crash_dialog_disable_extensions_button_text">Mit deaktivierten Erweiterungen weitermachen</string>
+    <string name="extension_process_crash_dialog_disable_extensions_button_text">Mit deaktivierten Erweiterungen fortfahren</string>
 
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->

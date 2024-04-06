@@ -634,7 +634,7 @@
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
     <string name="preferences_customize_amo_collection" moz:removedIn="126" tools:ignore="UnusedResources">Anpassad tilläggssamling</string>
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
-    <string name="preferences_customize_extension_collection">Anpassad samling av tillägg</string>
+    <string name="preferences_customize_extension_collection">Anpassad tilläggssamling</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">OK</string>
     <!-- Button caption to abort the add-on collection configuration -->
@@ -706,7 +706,7 @@
     <!-- Title of the Nimbus message for add-ons general availability-->
     <string name="addon_ga_message_title" moz:removedIn="126" tools:ignore="UnusedResources">Nya tillägg finns nu tillgängliga</string>
     <!-- Title of the Nimbus message for extension general availability-->
-    <string name="addon_ga_message_title_2" tools:ignore="UnusedResources">Nya tillägg tillgängliga nu</string>
+    <string name="addon_ga_message_title_2" tools:ignore="UnusedResources">Nya tillägg finns tillgängliga</string>
     <!-- Body of the Nimbus message for add-ons general availability. 'Firefox' intentionally hardcoded here-->
     <string name="addon_ga_message_body" tools:ignore="UnusedResources">Kolla in över 100 nya tillägg som låter dig göra Firefox till din egen.</string>
     <!-- Button text of the Nimbus message for add-ons general availability. -->
@@ -725,7 +725,7 @@
     <!-- This is a message shown to the user when too many errors have occurred with the extensions process and they have been disabled.
     The user can decide if they would like to continue trying to start extensions or if they'd rather continue without them.
     The first parameter is the application name. -->
-    <string name="extension_process_crash_dialog_message">En eller flera utökningar slutade fungera, vilket gjorde ditt system instabilt. %1$s försökte inte starta om tillägget.\n\nTillägg kommer inte att startas om under din nuvarande session.\n\nOm du tar bort eller inaktiverar tillägg kan det här problemet lösas.</string>
+    <string name="extension_process_crash_dialog_message">Ett eller flera tillägg slutade fungera, vilket gjorde ditt system instabilt. %1$s försökte inte starta om tillägget.\n\nTillägg kommer inte att startas om under din nuvarande session.\n\nOm du tar bort eller inaktiverar tillägg kan det här problemet lösas.</string>
     <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
     <string name="addon_process_crash_dialog_retry_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Testa att starta om tillägg</string>
     <!-- Button text on the extension crash dialog to prompt the user to try restarting the extensions but the dialog will reappear if it is unsuccessful again -->

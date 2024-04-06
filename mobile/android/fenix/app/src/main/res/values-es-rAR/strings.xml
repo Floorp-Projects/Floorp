@@ -368,7 +368,7 @@
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources">Más de 100 millones de personas protegen su privacidad eligiendo un navegador respaldado por una organización sin fines de lucro.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-    <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources">¿Rastreadores conocidos? Bloqueados automáticamente. Extensiones? Probá las 700. ¿PDFs? Nuestro lector incorporado los hace fáciles de administrar.</string>
+    <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources">¿Rastreadores conocidos? Bloqueados automáticamente. ¿Extensiones? Probá las 700. ¿PDFs? Nuestro lector incorporado los hace fáciles de administrar.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_2" moz:RemovedIn="124" tools:ignore="UnusedResources">Nuestro navegador respaldado sin fines de lucro ayuda a evitar que las empresas te sigan en secreto por la web.\n\nMás información en nuestro aviso de privacidad.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
@@ -621,7 +621,7 @@
     <!-- Preference for installing a local add-on -->
     <string name="preferences_install_local_addon" moz:removedIn="126" tools:ignore="UnusedResources">Instalar complemento desde archivo</string>
     <!-- Preference for installing a local extension -->
-    <string name="preferences_install_local_extension">Instalar extensión desde el archivo</string>
+    <string name="preferences_install_local_extension">Instalar extensión desde archivo</string>
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Notificaciones</string>
 
@@ -634,7 +634,7 @@
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
     <string name="preferences_customize_amo_collection" moz:removedIn="126" tools:ignore="UnusedResources">Colección personalizada de complementos</string>
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
-    <string name="preferences_customize_extension_collection">Colección de extensiones personalizadas</string>
+    <string name="preferences_customize_extension_collection">Colección personalizada de extensiones</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">Aceptar</string>
     <!-- Button caption to abort the add-on collection configuration -->
@@ -720,6 +720,10 @@
     <string name="extension_process_crash_dialog_title">Las extensiones están temporalmente deshabilitadas</string>
     <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
     <string name="addon_process_crash_dialog_message" moz:removedIn="126" tools:ignore="UnusedResources">Uno o más complementos dejaron de funcionar, haciendo que el sistema sea inestable. %1$s intentó reiniciar el(los) complemento(s) sin éxito.\n\nLos complementos no se reiniciarán durante la sesión actual.\n\nQuitar o deshabilitar los complementos puede solucionar este problema.</string>
+    <!-- This is a message shown to the user when too many errors have occurred with the extensions process and they have been disabled.
+    The user can decide if they would like to continue trying to start extensions or if they'd rather continue without them.
+    The first parameter is the application name. -->
+    <string name="extension_process_crash_dialog_message">Una o más extensiones dejaron de funcionar, haciendo que el sistema sea inestable. %1$s intentó reiniciar la(s) extensión(es) sin éxito.\n\nLas extensiones no se reiniciarán durante la sesión actual.\n\nQuitar o deshabilitar las extensiones puede solucionar este problema.</string>
     <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
     <string name="addon_process_crash_dialog_retry_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Probá reiniciar los complementos</string>
     <!-- Button text on the extension crash dialog to prompt the user to try restarting the extensions but the dialog will reappear if it is unsuccessful again -->
@@ -2650,7 +2654,7 @@
     <!-- Additional information for the data saving mode warning dialog used by the translations feature. This text explains the reason a download is required for a translation. -->
     <string name="download_language_file_dialog_message_all_languages">Descargamos idiomas parcialmente al caché para mantener las traducciones privadas.</string>
     <!-- Additional information for the data saving mode warning dialog used by the translations feature. This text explains the reason a download is required for a translation without mentioning the cache. -->
-    <string name="download_language_file_dialog_message_all_languages_no_cache">Descargamos algunos idiomas para mantener las traducciones privadas.</string>
+    <string name="download_language_file_dialog_message_all_languages_no_cache">Descargamos idiomas parcialmente para mantener las traducciones privadas.</string>
     <!-- Checkbox label text on the data saving mode warning dialog used by the translations feature. This checkbox allows users to ignore the data usage warnings. -->
     <string name="download_language_file_dialog_checkbox_text">Descargar siempre en modo de ahorro de datos</string>
     <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to confirm they wish to continue and download the language file. -->

@@ -163,7 +163,7 @@
     <!-- The content of the "crash" notification in the add-ons manager -->
     <string name="mozac_feature_addons_manager_notification_content_text" moz:removedIn="126" tools:ignore="UnusedResources">Ett eller flera tillägg slutade fungera, vilket gjorde ditt system instabilt.</string>
     <!-- The content of the "crash" notification in the extensions manager -->
-    <string name="mozac_feature_extensions_manager_notification_content_text">En eller flera utökningar slutade fungera, vilket gjorde ditt system instabilt.</string>
+    <string name="mozac_feature_extensions_manager_notification_content_text">Ett eller flera tillägg slutade fungera, vilket gjorde ditt system instabilt.</string>
     <!-- Button to re-enable the add-ons in the "crash" notification -->
     <string name="mozac_feature_addons_manager_notification_restart_button" moz:removedIn="126" tools:ignore="UnusedResources">Starta om tillägg</string>
     <!-- Button to re-enable the extensions in the "crash" notification -->

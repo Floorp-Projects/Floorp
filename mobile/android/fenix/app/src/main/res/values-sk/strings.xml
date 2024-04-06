@@ -188,11 +188,13 @@
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Zastaviť</string>
     <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_add_ons">Doplnky</string>
+    <string name="browser_menu_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Doplnky</string>
+    <!-- Browser menu button that opens the extensions manager -->
+    <string name="browser_menu_extensions">Rozšírenia</string>
     <!-- Browser menu button that opens account settings -->
     <string name="browser_menu_account_settings">Informácie o účte</string>
     <!-- Text displayed when there are no add-ons to be shown -->
-    <string name="no_add_ons">Nemáte žiadne doplnky</string>
+    <string name="no_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Nemáte žiadne doplnky</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Pomocník</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -208,7 +210,7 @@
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">Pridať na úvodnú obrazovku</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
-    <string name="browser_menu_install_on_homescreen">Nainštalovať</string>
+    <string name="browser_menu_install_on_homescreen" moz:removedIn="126" tools:ignore="UnusedResources">Nainštalovať</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">Synchronizovať znova</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -247,6 +249,16 @@
 
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">Upraviť domovskú stránku</string>
+
+    <!-- Browser menu label to sign in to sync on the device using Mozilla accounts -->
+    <string name="browser_menu_sign_in" tools:ignore="UnusedResources">Prihlásiť sa</string>
+
+    <!-- Browser menu caption label for the "Sign in" browser menu item described in browser_menu_sign_in -->
+    <string name="browser_menu_sign_in_caption" tools:ignore="UnusedResources">Synchronizujte heslá, karty a ďalšie položky</string>
+
+    <!-- Extensions management fragment -->
+    <!-- Text displayed when there are no extensions to be shown -->
+    <string name="extensions_management_no_extensions">Nie sú tu žiadne rozšírenia</string>
 
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
@@ -606,10 +618,14 @@
     <string name="quit_application">Ukončuje sa aplikácia a aplikujú sa zmeny…</string>
 
     <!-- Preference for add_ons -->
-    <string name="preferences_addons">Doplnky</string>
+    <string name="preferences_addons" moz:removedIn="126" tools:ignore="UnusedResources">Doplnky</string>
 
+    <!-- Preference for extensions -->
+    <string name="preferences_extensions">Rozšírenia</string>
     <!-- Preference for installing a local add-on -->
-    <string name="preferences_install_local_addon">Nainštalovať doplnok zo súboru</string>
+    <string name="preferences_install_local_addon" moz:removedIn="126" tools:ignore="UnusedResources">Nainštalovať doplnok zo súboru</string>
+    <!-- Preference for installing a local extension -->
+    <string name="preferences_install_local_extension">Nainštalovať rozšírenie zo súboru</string>
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Upozornenia</string>
 
@@ -620,7 +636,9 @@
 
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
-    <string name="preferences_customize_amo_collection">Vlastná kolekcia doplnkov</string>
+    <string name="preferences_customize_amo_collection" moz:removedIn="126" tools:ignore="UnusedResources">Vlastná kolekcia doplnkov</string>
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_extension_collection">Vlastná kolekcia rozšírení</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">OK</string>
     <!-- Button caption to abort the add-on collection configuration -->
@@ -631,7 +649,10 @@
     <!-- Hint displayed on input field for custom collection user ID-->
     <string name="customize_addon_collection_user_hint">Vlastník kolekcie (ID používateľa)</string>
     <!-- Toast shown after confirming the custom add-on collection configuration -->
-    <string name="toast_customize_addon_collection_done">Kolekcia doplnkov bola upravená. Aplikácia sa ukončuje a zmeny budú použité…</string>
+    <string name="toast_customize_addon_collection_done" moz:removedIn="126" tools:ignore="UnusedResources">Kolekcia doplnkov bola upravená. Aplikácia sa ukončuje a zmeny budú použité…</string>
+
+    <!-- Toast shown after confirming the custom extension collection configuration -->
+    <string name="toast_customize_extension_collection_done">Kolekcia rozšírení bola upravená. Aplikácia sa ukončuje a zmeny budú použité…</string>
 
     <!-- Customize Home -->
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
@@ -687,21 +708,37 @@
 
     <!-- Add-ons general availability nimbus message-->
     <!-- Title of the Nimbus message for add-ons general availability-->
-    <string name="addon_ga_message_title" tools:ignore="UnusedResources">K dispozícii sú nové doplnky</string>
+    <string name="addon_ga_message_title" moz:removedIn="126" tools:ignore="UnusedResources">K dispozícii sú nové doplnky</string>
+    <!-- Title of the Nimbus message for extension general availability-->
+    <string name="addon_ga_message_title_2" tools:ignore="UnusedResources">K dispozícii sú nové rozšírenia</string>
     <!-- Body of the Nimbus message for add-ons general availability. 'Firefox' intentionally hardcoded here-->
     <string name="addon_ga_message_body" tools:ignore="UnusedResources">Pozrite si viac ako 100 nových rozšírení, ktoré vám umožnia prispôsobiť si váš Firefox.</string>
     <!-- Button text of the Nimbus message for add-ons general availability. -->
-    <string name="addon_ga_message_button" tools:ignore="UnusedResources">Preskúmať doplnky</string>
+    <string name="addon_ga_message_button" moz:removedIn="126" tools:ignore="UnusedResources">Preskúmať doplnky</string>
 
-    <!-- Add-on process crash dialog to user -->
+    <!-- Button text of the Nimbus message for extensions general availability. -->
+    <string name="addon_ga_message_button_2" tools:ignore="UnusedResources">Pozrite si ďalšie rozšírenia</string>
+
+    <!-- Extension process crash dialog to user -->
     <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
-    <string name="addon_process_crash_dialog_title" tools:ignore="UnusedResources">Doplnky sú dočasne zakázané</string>
+    <string name="addon_process_crash_dialog_title" moz:removedIn="126" tools:ignore="UnusedResources">Doplnky sú dočasne zakázané</string>
+    <!-- Title of the extension crash dialog shown to the user when enough errors have occurred with extensions and they need to be temporarily disabled -->
+    <string name="extension_process_crash_dialog_title">Rozšírenia sú dočasne zakázané</string>
     <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
-    <string name="addon_process_crash_dialog_message" tools:ignore="UnusedResources">Jeden alebo viac doplnkov prestal fungovať, čo spôsobilo, že váš systém je nestabilný. %1$s sa neúspešne pokúsil reštartovať tieto doplnky.\n\nDoplnky sa počas vašej aktuálnej relácie nereštartujú.\n\nTento problém môžete vyriešiť odstránením alebo zakázaním doplnkov.</string>
+    <string name="addon_process_crash_dialog_message" moz:removedIn="126" tools:ignore="UnusedResources">Jeden alebo viac doplnkov prestal fungovať, čo spôsobilo, že váš systém je nestabilný. %1$s sa neúspešne pokúsil reštartovať tieto doplnky.\n\nDoplnky sa počas vašej aktuálnej relácie nereštartujú.\n\nTento problém môžete vyriešiť odstránením alebo zakázaním doplnkov.</string>
+    <!-- This is a message shown to the user when too many errors have occurred with the extensions process and they have been disabled.
+    The user can decide if they would like to continue trying to start extensions or if they'd rather continue without them.
+    The first parameter is the application name. -->
+    <string name="extension_process_crash_dialog_message">Jedno alebo viac rozšírení prestalo fungovať, v dôsledku čoho je váš systém nestabilný. %1$s sa neúspešne pokúsil reštartovať rozšírenia.\n\nRozšírenia sa počas vašej aktuálnej relácie nereštartujú.\n\nTento problém môžete vyriešiť odstránením alebo zakázaním rozšírení.</string>
     <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
-    <string name="addon_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">Skúsiť reštartovať doplnky</string>
+    <string name="addon_process_crash_dialog_retry_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Skúsiť reštartovať doplnky</string>
+    <!-- Button text on the extension crash dialog to prompt the user to try restarting the extensions but the dialog will reappear if it is unsuccessful again -->
+    <string name="extension_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">Skúsiť reštartovať rozšírenia</string>
     <!-- The user will continue with all add-ons disabled -->
-    <string name="addon_process_crash_dialog_disable_addons_button_text" tools:ignore="UnusedResources">Pokračovať so zakázanými doplnkami</string>
+    <string name="addon_process_crash_dialog_disable_addons_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Pokračovať so zakázanými doplnkami</string>
+
+    <!-- Button text on the extension crash dialog to prompt the user to continue with all extensions disabled. -->
+    <string name="extension_process_crash_dialog_disable_extensions_button_text">Pokračovať so zakázanými rozšíreniami</string>
 
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->
@@ -2353,24 +2390,14 @@
     <string name="review_quality_check_contextual_onboarding_learn_more">Pomocou nástroja %1$s od Mozilly vám pomôžeme vyhnúť sa neobjektívnym a neautentickým recenziám. Náš AI model sa neustále zlepšuje, aby vás chránil pri nakupovaní. %2$s</string>
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">Ďalšie informácie</string>
-    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is the Fakespot product name. Following parameters are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy and review_quality_check_contextual_onboarding_terms_use. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
-    <string name="review_quality_check_contextual_onboarding_caption" moz:RemovedIn="123" tools:ignore="UnusedResources">Výberom možnosti “Áno, vyskúšať” vyjadrujete súhlas s %1$s a %2$s služby %3$s od Mozilly.</string>
-    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. Parameter is the Fakespot product name. After the colon, what appears are two links, each on their own line. The first link is to a Privacy policy (review_quality_check_contextual_onboarding_privacy_policy_2). The second link is to Terms of use (review_quality_check_contextual_onboarding_terms_use_2). -->
-    <string name="review_quality_check_contextual_onboarding_caption_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Zvolením možnosti „Áno, vyskúšať“ vyjadrujete súhlas s nasledujúcim dokumentami od %1$s:</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is Firefox app name, third parameter is the Fakespot product name. Second & fourth are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy_3 and review_quality_check_contextual_onboarding_terms_use. -->
     <string name="review_quality_check_contextual_onboarding_caption_3" moz:RemovedIn="124" tools:ignore="UnusedResources">Výberom možnosti “Áno, vyskúšať” vyjadrujete súhlas s %2$s prehliadača %1$s a %4$s spoločnosti %3$s.</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is Firefox app name, third parameter is the Fakespot product name. Second & fourth are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy_3 and review_quality_check_contextual_onboarding_terms_use. -->
     <string name="review_quality_check_contextual_onboarding_caption_4">Výberom možnosti “Áno, vyskúšať” vyjadrujete súhlas s %2$s prehliadača %1$s a %4$s spoločnosti %3$s.</string>
-    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy" moz:RemovedIn="123" tools:ignore="UnusedResources">Zásadami ochrany osobných údajov</string>
-    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Zásady ochrany osobných údajov</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy notice. -->
     <string name="review_quality_check_contextual_onboarding_privacy_policy_3">Vyhlásení o ochrane osobných údajov</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
     <string name="review_quality_check_contextual_onboarding_terms_use">Podmienkami používania</string>
-    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
-    <string name="review_quality_check_contextual_onboarding_terms_use_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Podmienky používania</string>
     <!-- Text for opt-in button from the review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_primary_button_text">Áno, vyskúšať</string>
     <!-- Text for opt-out button from the review quality check contextual onboarding card. -->
@@ -2613,6 +2640,8 @@
     <string name="download_language_file_dialog_title">Stiahnuť potrebné jazykové údaje v režime šetrenia dát (%1$s)?</string>
     <!-- Additional information for the data saving mode warning dialog used by the translations feature. This text explains the reason a download is required for a translation. -->
     <string name="download_language_file_dialog_message_all_languages">Aby boli preklady súkromné, sťahujeme čiastočné údaje pre jazyky do vašej vyrovnávacej pamäte.</string>
+    <!-- Additional information for the data saving mode warning dialog used by the translations feature. This text explains the reason a download is required for a translation without mentioning the cache. -->
+    <string name="download_language_file_dialog_message_all_languages_no_cache">Sťahujeme čiastočné údaje pre jazyky, aby boli preklady súkromné.</string>
     <!-- Checkbox label text on the data saving mode warning dialog used by the translations feature. This checkbox allows users to ignore the data usage warnings. -->
     <string name="download_language_file_dialog_checkbox_text">Vždy sťahovať v režime šetrenia dát</string>
     <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to confirm they wish to continue and download the language file. -->

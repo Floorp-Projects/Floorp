@@ -632,7 +632,7 @@
     <string name="toast_customize_addon_collection_done" moz:removedIn="126" tools:ignore="UnusedResources">Modificouse a colección de complementos. Vaise saír da aplicación para aplicar os cambios…</string>
 
     <!-- Toast shown after confirming the custom extension collection configuration -->
-    <string name="toast_customize_extension_collection_done">Colección de extensión modificada. Saíndo da aplicación para aplicar os cambios...</string>
+    <string name="toast_customize_extension_collection_done">Colección de extensión modificada. Saíndo da aplicación para aplicar os cambios…</string>
 
     <!-- Customize Home -->
     <!-- Header text for jumping back into the recent tab in customize the home screen -->

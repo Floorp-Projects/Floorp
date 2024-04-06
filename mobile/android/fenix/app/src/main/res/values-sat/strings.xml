@@ -187,11 +187,13 @@
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">ᱛᱤᱸᱜᱩ</string>
     <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_add_ons">ᱮᱰ-ᱟᱸᱱᱥ</string>
+    <string name="browser_menu_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">ᱮᱰ-ᱟᱸᱱᱥ</string>
+    <!-- Browser menu button that opens the extensions manager -->
+    <string name="browser_menu_extensions">ᱮᱠᱥᱴᱮᱱᱥᱚᱱᱠᱚ</string>
     <!-- Browser menu button that opens account settings -->
     <string name="browser_menu_account_settings">ᱠᱷᱟᱛᱟ ᱵᱤᱵᱨᱚᱬ</string>
     <!-- Text displayed when there are no add-ons to be shown -->
-    <string name="no_add_ons">ᱱᱚᱰᱮ ᱮᱰ-ᱟᱸᱱᱥ ᱠᱚ ᱵᱟᱹᱱᱩᱜᱼᱟ</string>
+    <string name="no_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">ᱱᱚᱰᱮ ᱮᱰ-ᱟᱸᱱᱥ ᱠᱚ ᱵᱟᱹᱱᱩᱜᱼᱟ</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">ᱜᱚᱲᱚ</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -243,6 +245,15 @@
 
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">ᱚᱲᱟᱜᱥᱟᱦᱴᱟ ᱠᱩᱥᱤᱛᱮ ᱫᱚᱦᱚᱭ ᱢᱮ</string>
+
+    <!-- Browser menu label to sign in to sync on the device using Mozilla accounts -->
+    <string name="browser_menu_sign_in" tools:ignore="UnusedResources">ᱵᱚᱞᱚᱱ ᱥᱩᱦᱤ</string>
+    <!-- Browser menu caption label for the "Sign in" browser menu item described in browser_menu_sign_in -->
+    <string name="browser_menu_sign_in_caption" tools:ignore="UnusedResources">ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ, ᱴᱮᱵᱽ ᱟᱨ ᱟᱨᱦᱚᱸ ᱟᱭᱢᱟ ᱡᱤᱱᱤᱥᱠᱚ ᱟᱹᱭᱩᱨ ᱢᱤᱫ ᱢᱮ</string>
+
+    <!-- Extensions management fragment -->
+    <!-- Text displayed when there are no extensions to be shown -->
+    <string name="extensions_management_no_extensions">ᱪᱮᱫ ᱦᱚᱸ ᱮᱠᱥᱯᱮᱨᱤᱢᱮᱱᱴ ᱱᱚᱰᱮ ᱵᱟᱹᱱᱩᱜ ᱠᱟᱫᱟ</string>
 
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
@@ -427,6 +438,10 @@
     <string name="preferences_search_engines_suggestions">ᱥᱮᱸᱫᱽᱨᱟ ᱤᱧᱡᱤᱱ ᱠᱷᱚᱱ ᱵᱟᱛᱟᱣᱟᱜᱠᱚ</string>
     <!-- Preference Category for settings related to Search address bar -->
     <string name="preferences_settings_address_bar">ᱴᱷᱤᱠᱬᱟᱹ ᱵᱟᱨ ᱠᱩᱥᱤᱭᱟᱜ</string>
+    <!-- Preference Category for settings to Firefox Suggest -->
+    <string name="preference_search_address_bar_fx_suggest">ᱴᱷᱤᱠᱬᱟᱹ ᱵᱟᱨ - Firefox Suggest</string>
+    <!-- Preference link to Learn more about Firefox Suggest -->
+    <string name="preference_search_learn_about_fx_suggest">Firefox Suggest ᱵᱟᱵᱚᱛ ᱰᱷᱮᱨ ᱥᱮᱬᱟᱭ ᱢᱮ</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">ᱜᱩᱜᱚᱞ ᱯᱞᱮ ᱨᱮ ᱫᱚᱨ ᱢᱮ</string>
     <!-- Preference linking to about page for Fenix
@@ -453,6 +468,10 @@
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">ᱠᱷᱟᱹᱞᱤᱼHTTPS ᱢᱳᱰ</string>
 
+    <!-- Label for cookie banner section in quick settings panel. -->
+    <string name="cookie_banner_blocker">ᱠᱩᱠᱤ ᱵᱮᱱᱚᱨ ᱟᱠᱚᱴᱤᱭᱟᱹ</string>
+    <!-- Preference for removing cookie/consent banners from sites automatically in private mode. See reduce_cookie_banner_summary for additional context. -->
+    <string name="preferences_cookie_banner_reduction_private_mode">ᱯᱨᱟᱭᱣᱮᱴ ᱵᱽᱨᱟᱣᱡᱤᱝ ᱨᱮ ᱠᱩᱠᱤ ᱵᱮᱱᱚᱨ ᱟᱠᱚᱴᱤᱭᱟᱹ</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">ᱱᱚᱶᱟ ᱥᱟᱭᱤᱴ ᱞᱟᱹᱜᱤᱫ ᱵᱚᱱᱫ ᱜᱮᱭᱟ</string>
     <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
@@ -470,9 +489,16 @@
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site">ᱥᱟᱭᱟᱴ ᱱᱤᱛᱚᱜ ᱥᱟᱵ ᱨᱮ ᱵᱟᱹᱱᱩᱜᱼᱟ</string>
 
+    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_on_for_site_1">%1$s ᱞᱟᱹᱜᱤᱫ ᱠᱩᱠᱤ ᱵᱮᱱᱚᱨ ᱟᱠᱚᱴᱤᱭᱟᱹ ᱮᱢ ᱪᱷᱚᱭ ᱢᱮ?</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_off_for_site_1">%1$s ᱞᱟᱹᱜᱤᱫ ᱠᱩᱠᱤ ᱵᱮᱱᱚᱨ ᱟᱠᱚᱴᱤᱭᱟᱹ ᱵᱚᱸᱫᱚ ᱪᱷᱚᱭ ᱢᱮ?</string>
     <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name-->
     <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request_2">ᱱᱚᱶᱟ ᱥᱟᱭᱤᱴ ᱨᱮ %1$s ᱫᱚ ᱟᱡ ᱛᱮ ᱠᱩᱠᱤ ᱱᱚᱦᱚᱨ ᱵᱟᱝ ᱢᱟᱱᱟ ᱫᱟᱲᱮᱭᱟᱜ ᱠᱟᱱᱟᱭ ᱾ ᱵᱷᱚᱵᱤᱥᱚᱛ ᱨᱮ ᱱᱚᱶᱟ ᱥᱟᱭᱤᱴ ᱜᱚᱲᱚ ᱮᱢ ᱞᱟᱹᱜᱤᱫ ᱱᱮᱦᱚᱨ ᱵᱷᱮᱡᱟ ᱫᱟᱲᱮᱭᱟᱜᱼᱟᱢ ᱾
 </string>
+
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_off_for_site_1">ᱵᱚᱸᱫᱚᱭ ᱢᱮ ᱟᱨ %1$s ᱫᱚ ᱠᱩᱠᱤ ᱠᱚ ᱢᱮᱴᱟᱣ ᱠᱟᱛᱮ ᱱᱚᱣᱟ ᱥᱟᱦᱴᱟ ᱨᱤᱞᱚᱰ ᱟ ᱾ ᱱᱚᱶᱟ ᱫᱚ ᱟᱢ ᱵᱟᱦᱨᱮ ᱩᱰᱩᱠ ᱢᱮᱭᱟᱭ ᱥᱮ ᱠᱤᱨᱤᱧ ᱠᱟᱨᱴ ᱠᱷᱟᱹᱞᱤ ᱟ ᱾</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">ᱵᱮᱰᱷᱟᱣ ᱠᱟᱱᱟ ᱨᱩᱠᱷᱤᱭᱟᱹ ᱞᱟᱹᱜᱤᱫ ᱛᱮ HTTPS ᱫᱟᱱᱟᱝ ᱵᱮᱵᱷᱟᱨ ᱛᱮ ᱥᱟᱭᱤᱴ ᱠᱚ ᱥᱟᱞᱟᱜ ᱟᱡ ᱛᱮ ᱡᱩᱲᱟᱹᱣ ᱵᱤᱲᱟᱹᱣ ᱾</string>
@@ -557,7 +583,7 @@
     <string name="quit_application">ᱵᱚᱫᱚᱞ ᱫᱚᱦᱚ ᱞᱟᱹᱜᱤᱫ ᱮᱯᱞᱤᱠᱮᱥᱚᱱ ᱵᱚᱸᱫᱚᱜ ᱠᱟᱱᱟ…</string>
 
     <!-- Preference for add_ons -->
-    <string name="preferences_addons">ᱮᱰ-ᱟᱸᱱᱥ</string>
+    <string name="preferences_addons" moz:removedIn="126" tools:ignore="UnusedResources">ᱮᱰ-ᱟᱸᱱᱥ</string>
     <!-- Preference for notifications -->
     <string name="preferences_notifications">ᱤᱛᱞᱟᱹᱭ ᱠᱚ</string>
 
@@ -569,7 +595,7 @@
 
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
-    <string name="preferences_customize_amo_collection">ᱠᱟᱹᱥᱴᱚᱢ ᱮᱰᱰᱼᱚᱱ ᱛᱩᱢᱟᱹᱞ</string>
+    <string name="preferences_customize_amo_collection" moz:removedIn="126" tools:ignore="UnusedResources">ᱠᱟᱹᱥᱴᱚᱢ ᱮᱰᱰᱼᱚᱱ ᱛᱩᱢᱟᱹᱞ</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">ᱴᱷᱤᱠ</string>
     <!-- Button caption to abort the add-on collection configuration -->
@@ -579,7 +605,7 @@
     <!-- Hint displayed on input field for custom collection user ID-->
     <string name="customize_addon_collection_user_hint">ᱛᱩᱢᱟᱹᱞ ᱢᱟᱞᱤᱠ (ᱵᱮᱵᱷᱟᱨᱤᱭᱟᱹ ID)</string>
     <!-- Toast shown after confirming the custom add-on collection configuration -->
-    <string name="toast_customize_addon_collection_done">ᱮᱰᱼᱚᱱ ᱛᱩᱢᱟᱹᱞ ᱵᱚᱫᱚᱞᱮᱱᱟ ᱾ ᱵᱚᱫᱚᱞ ᱠᱚ ᱫᱚᱦᱚ ᱞᱟᱹᱜᱤᱫ ᱮᱯᱞᱤᱠᱮᱥᱚᱱ ᱵᱚᱸᱫᱚᱜ ᱠᱟᱱᱟ…</string>
+    <string name="toast_customize_addon_collection_done" moz:removedIn="126" tools:ignore="UnusedResources">ᱮᱰᱼᱚᱱ ᱛᱩᱢᱟᱹᱞ ᱵᱚᱫᱚᱞᱮᱱᱟ ᱾ ᱵᱚᱫᱚᱞ ᱠᱚ ᱫᱚᱦᱚ ᱞᱟᱹᱜᱤᱫ ᱮᱯᱞᱤᱠᱮᱥᱚᱱ ᱵᱚᱸᱫᱚᱜ ᱠᱟᱱᱟ…</string>
 
     <!-- Customize Home -->
     <!-- Header text for jumping back into the recent tab in customize the home screen -->

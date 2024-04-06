@@ -193,11 +193,13 @@
 
 
     <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_add_ons">Дополнения</string>
+    <string name="browser_menu_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Дополнения</string>
+    <!-- Browser menu button that opens the extensions manager -->
+    <string name="browser_menu_extensions">Расширения</string>
     <!-- Browser menu button that opens account settings -->
     <string name="browser_menu_account_settings">Ваш аккаунт</string>
     <!-- Text displayed when there are no add-ons to be shown -->
-    <string name="no_add_ons">Дополнения отсутствуют</string>
+    <string name="no_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Дополнения отсутствуют</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Справка</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -213,7 +215,7 @@
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">На домашний экран</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
-    <string name="browser_menu_install_on_homescreen">Установить</string>
+    <string name="browser_menu_install_on_homescreen" moz:removedIn="126" tools:ignore="UnusedResources">Установить</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">Повторная синхронизация</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -251,6 +253,15 @@
 
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">Изменить вид</string>
+
+    <!-- Browser menu label to sign in to sync on the device using Mozilla accounts -->
+    <string name="browser_menu_sign_in" tools:ignore="UnusedResources">Войти</string>
+    <!-- Browser menu caption label for the "Sign in" browser menu item described in browser_menu_sign_in -->
+    <string name="browser_menu_sign_in_caption" tools:ignore="UnusedResources">Синхронизируйте пароли, вкладки и многое другое</string>
+
+    <!-- Extensions management fragment -->
+    <!-- Text displayed when there are no extensions to be shown -->
+    <string name="extensions_management_no_extensions">Здесь нет расширений</string>
 
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
@@ -606,10 +617,14 @@
     <string name="quit_application">Выход из приложения для применения изменений…</string>
 
     <!-- Preference for add_ons -->
-    <string name="preferences_addons">Дополнения</string>
+    <string name="preferences_addons" moz:removedIn="126" tools:ignore="UnusedResources">Дополнения</string>
 
+    <!-- Preference for extensions -->
+    <string name="preferences_extensions">Расширения</string>
     <!-- Preference for installing a local add-on -->
-    <string name="preferences_install_local_addon">Установить дополнение из файла</string>
+    <string name="preferences_install_local_addon" moz:removedIn="126" tools:ignore="UnusedResources">Установить дополнение из файла</string>
+    <!-- Preference for installing a local extension -->
+    <string name="preferences_install_local_extension">Установить расширение из файла</string>
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Уведомления</string>
 
@@ -620,7 +635,9 @@
 
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
-    <string name="preferences_customize_amo_collection">Собственный сборник дополнений</string>
+    <string name="preferences_customize_amo_collection" moz:removedIn="126" tools:ignore="UnusedResources">Собственный сборник дополнений</string>
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_extension_collection">Коллекция пользовательских расширений</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">OK</string>
     <!-- Button caption to abort the add-on collection configuration -->
@@ -630,7 +647,10 @@
     <!-- Hint displayed on input field for custom collection user ID-->
     <string name="customize_addon_collection_user_hint">Владелец сборника (идентификатор пользователя)</string>
     <!-- Toast shown after confirming the custom add-on collection configuration -->
-    <string name="toast_customize_addon_collection_done">Сборник дополнений был изменён. Закрываем приложение, чтобы применить изменения…</string>
+    <string name="toast_customize_addon_collection_done" moz:removedIn="126" tools:ignore="UnusedResources">Сборник дополнений был изменён. Закрываем приложение, чтобы применить изменения…</string>
+
+    <!-- Toast shown after confirming the custom extension collection configuration -->
+    <string name="toast_customize_extension_collection_done">Коллекция расширений изменёна. Выход из приложения для применения изменений…</string>
 
     <!-- Customize Home -->
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
@@ -685,22 +705,38 @@
 
     <!-- Add-ons general availability nimbus message-->
     <!-- Title of the Nimbus message for add-ons general availability-->
-    <string name="addon_ga_message_title" tools:ignore="UnusedResources">Доступны новые дополнения</string>
+    <string name="addon_ga_message_title" moz:removedIn="126" tools:ignore="UnusedResources">Доступны новые дополнения</string>
 
+    <!-- Title of the Nimbus message for extension general availability-->
+    <string name="addon_ga_message_title_2" tools:ignore="UnusedResources">Доступны новые расширения</string>
     <!-- Body of the Nimbus message for add-ons general availability. 'Firefox' intentionally hardcoded here-->
     <string name="addon_ga_message_body" tools:ignore="UnusedResources">Ознакомьтесь с более чем 100 новыми расширениями, которые позволят вам сделать Firefox своим собственным.</string>
     <!-- Button text of the Nimbus message for add-ons general availability. -->
-    <string name="addon_ga_message_button" tools:ignore="UnusedResources">Исследуйте дополнения</string>
+    <string name="addon_ga_message_button" moz:removedIn="126" tools:ignore="UnusedResources">Исследуйте дополнения</string>
 
-    <!-- Add-on process crash dialog to user -->
+    <!-- Button text of the Nimbus message for extensions general availability. -->
+    <string name="addon_ga_message_button_2" tools:ignore="UnusedResources">Откройте для себя расширения</string>
+
+    <!-- Extension process crash dialog to user -->
     <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
-    <string name="addon_process_crash_dialog_title" tools:ignore="UnusedResources">Дополнения временно отключены</string>
+    <string name="addon_process_crash_dialog_title" moz:removedIn="126" tools:ignore="UnusedResources">Дополнения временно отключены</string>
+    <!-- Title of the extension crash dialog shown to the user when enough errors have occurred with extensions and they need to be temporarily disabled -->
+    <string name="extension_process_crash_dialog_title">Расширения временно отключены</string>
     <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
-    <string name="addon_process_crash_dialog_message" tools:ignore="UnusedResources">Одно или несколько дополнений перестали работать, что сделало вашу систему нестабильной. %1$s безуспешно пытался перезапустить дополнения.\n\nДополнения не будут перезапущены во время текущего сеанса.\n\nУдаление или отключение дополнений может решить эту проблему.</string>
+    <string name="addon_process_crash_dialog_message" moz:removedIn="126" tools:ignore="UnusedResources">Одно или несколько дополнений перестали работать, что сделало вашу систему нестабильной. %1$s безуспешно пытался перезапустить дополнения.\n\nДополнения не будут перезапущены во время текущего сеанса.\n\nУдаление или отключение дополнений может решить эту проблему.</string>
+    <!-- This is a message shown to the user when too many errors have occurred with the extensions process and they have been disabled.
+    The user can decide if they would like to continue trying to start extensions or if they'd rather continue without them.
+    The first parameter is the application name. -->
+    <string name="extension_process_crash_dialog_message">Одно или несколько расширений перестали работать, что сделало вашу систему нестабильной. %1$s безуспешно пытался перезапустить расширение(я).\n\nРасширения не будут перезапущены во время вашего текущего сеанса.\n\nУдаление или отключение расширений может решить эту проблему.</string>
     <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
-    <string name="addon_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">Попробовать перезапустить дополнения</string>
+    <string name="addon_process_crash_dialog_retry_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Попробовать перезапустить дополнения</string>
+    <!-- Button text on the extension crash dialog to prompt the user to try restarting the extensions but the dialog will reappear if it is unsuccessful again -->
+    <string name="extension_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">Попробуйте перезапустить расширения</string>
     <!-- The user will continue with all add-ons disabled -->
-    <string name="addon_process_crash_dialog_disable_addons_button_text" tools:ignore="UnusedResources">Продолжить с отключенными дополнениями</string>
+    <string name="addon_process_crash_dialog_disable_addons_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Продолжить с отключенными дополнениями</string>
+
+    <!-- Button text on the extension crash dialog to prompt the user to continue with all extensions disabled. -->
+    <string name="extension_process_crash_dialog_disable_extensions_button_text">Продолжить с отключенными расширениями</string>
 
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->
@@ -2369,24 +2405,14 @@
     <string name="review_quality_check_contextual_onboarding_learn_more">Используя возможности %1$s от Mozilla, мы помогаем вам избежать предвзятых и недостоверных отзывов. Наша модель искусственного интеллекта постоянно совершенствуется, чтобы защитить вас во время покупок. %2$s</string>
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">Узнать больше</string>
-    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is the Fakespot product name. Following parameters are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy and review_quality_check_contextual_onboarding_terms_use. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
-    <string name="review_quality_check_contextual_onboarding_caption" moz:RemovedIn="123" tools:ignore="UnusedResources">Выбрав «Да, попробовать», вы соглашаетесь с %1$s принимая %2$s и %3$s от Mozilla.</string>
-    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. Parameter is the Fakespot product name. After the colon, what appears are two links, each on their own line. The first link is to a Privacy policy (review_quality_check_contextual_onboarding_privacy_policy_2). The second link is to Terms of use (review_quality_check_contextual_onboarding_terms_use_2). -->
-    <string name="review_quality_check_contextual_onboarding_caption_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Выбирая «Да, попробовать», вы соглашаетесь со следующим от %1$s:</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is Firefox app name, third parameter is the Fakespot product name. Second & fourth are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy_3 and review_quality_check_contextual_onboarding_terms_use. -->
     <string name="review_quality_check_contextual_onboarding_caption_3" moz:RemovedIn="124" tools:ignore="UnusedResources">Выбрав «Да, попробовать», вы соглашаетесь с %2$s %1$s и %4$s %3$s.</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is Firefox app name, third parameter is the Fakespot product name. Second & fourth are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy_3 and review_quality_check_contextual_onboarding_terms_use. -->
     <string name="review_quality_check_contextual_onboarding_caption_4">Выбрав «Да, попробовать», вы соглашаетесь с %2$s %1$s и %4$s %3$s.</string>
-    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy" moz:RemovedIn="123" tools:ignore="UnusedResources">политику приватности</string>
-    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Политика конфиденциальности</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy notice. -->
     <string name="review_quality_check_contextual_onboarding_privacy_policy_3">уведомление о конфиденциальности</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
     <string name="review_quality_check_contextual_onboarding_terms_use">условия использования</string>
-    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
-    <string name="review_quality_check_contextual_onboarding_terms_use_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Условия использования</string>
     <!-- Text for opt-in button from the review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_primary_button_text">Да, попробовать</string>
     <!-- Text for opt-out button from the review quality check contextual onboarding card. -->
@@ -2628,6 +2654,8 @@
     <string name="download_language_file_dialog_title">Загрузить в режиме сохранения трафика (%1$s)?</string>
     <!-- Additional information for the data saving mode warning dialog used by the translations feature. This text explains the reason a download is required for a translation. -->
     <string name="download_language_file_dialog_message_all_languages">Мы загружаем в ваш кеш неполные языки, чтобы обеспечить конфиденциальность переводов.</string>
+    <!-- Additional information for the data saving mode warning dialog used by the translations feature. This text explains the reason a download is required for a translation without mentioning the cache. -->
+    <string name="download_language_file_dialog_message_all_languages_no_cache">Мы загружаем неполные языки, чтобы обеспечить приватность переводов.</string>
     <!-- Checkbox label text on the data saving mode warning dialog used by the translations feature. This checkbox allows users to ignore the data usage warnings. -->
     <string name="download_language_file_dialog_checkbox_text">Всегда загружать в режиме сохранения трафика</string>
     <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to confirm they wish to continue and download the language file. -->
