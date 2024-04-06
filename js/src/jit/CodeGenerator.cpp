@@ -6524,11 +6524,11 @@ void CodeGenerator::emitPushArguments(Register argcreg, Register scratch,
   masm.bind(&end);
 }
 
-void CodeGenerator::emitPushArguments(LApplyArgsGeneric* apply,
-                                      Register scratch) {
+void CodeGenerator::emitPushArguments(LApplyArgsGeneric* apply) {
   // Holds the function nargs.
   Register argcreg = ToRegister(apply->getArgc());
   Register copyreg = ToRegister(apply->getTempObject());
+  Register scratch = ToRegister(apply->getTempForArgCopy());
   uint32_t extraFormals = apply->numExtraFormals();
 
   // Allocate space on the stack for arguments.
@@ -6540,12 +6540,13 @@ void CodeGenerator::emitPushArguments(LApplyArgsGeneric* apply,
   masm.pushValue(ToValue(apply, LApplyArgsGeneric::ThisIndex));
 }
 
-void CodeGenerator::emitPushArguments(LApplyArgsObj* apply, Register scratch) {
-  // argc and argsObj are mapped to the same calltemp register.
-  MOZ_ASSERT(apply->getArgsObj() == apply->getArgc());
-
-  Register tmpArgc = ToRegister(apply->getTempObject());
+void CodeGenerator::emitPushArguments(LApplyArgsObj* apply) {
   Register argsObj = ToRegister(apply->getArgsObj());
+  Register tmpArgc = ToRegister(apply->getTempObject());
+  Register scratch = ToRegister(apply->getTempForArgCopy());
+
+  // argc and argsObj are mapped to the same calltemp register.
+  MOZ_ASSERT(argsObj == ToRegister(apply->getArgc()));
 
   // Load argc into tmpArgc.
   masm.loadArgumentsObjectLength(argsObj, tmpArgc);
@@ -6616,39 +6617,41 @@ void CodeGenerator::emitPushArrayAsArguments(Register tmpArgc,
   masm.bind(&epilogue);
 }
 
-void CodeGenerator::emitPushArguments(LApplyArrayGeneric* apply,
-                                      Register scratch) {
+void CodeGenerator::emitPushArguments(LApplyArrayGeneric* apply) {
+  Register elements = ToRegister(apply->getElements());
   Register tmpArgc = ToRegister(apply->getTempObject());
-  Register elementsAndArgc = ToRegister(apply->getElements());
+  Register scratch = ToRegister(apply->getTempForArgCopy());
+
+  // argc and elements are mapped to the same calltemp register.
+  MOZ_ASSERT(elements == ToRegister(apply->getArgc()));
 
   // Invariants guarded in the caller:
   //  - the array is not too long
   //  - the array length equals its initialized length
 
   // The array length is our argc for the purposes of allocating space.
-  Address length(ToRegister(apply->getElements()),
-                 ObjectElements::offsetOfLength());
-  masm.load32(length, tmpArgc);
+  masm.load32(Address(elements, ObjectElements::offsetOfLength()), tmpArgc);
 
   // Allocate space for the values.
   emitAllocateSpaceForApply(tmpArgc, scratch);
 
   // After this call "elements" has become "argc".
   size_t elementsOffset = 0;
-  emitPushArrayAsArguments(tmpArgc, elementsAndArgc, scratch, elementsOffset);
+  emitPushArrayAsArguments(tmpArgc, elements, scratch, elementsOffset);
 
   // Push |this|.
   masm.pushValue(ToValue(apply, LApplyArrayGeneric::ThisIndex));
 }
 
-void CodeGenerator::emitPushArguments(LConstructArgsGeneric* construct,
-                                      Register scratch) {
-  MOZ_ASSERT(scratch == ToRegister(construct->getNewTarget()));
-
+void CodeGenerator::emitPushArguments(LConstructArgsGeneric* construct) {
   // Holds the function nargs.
   Register argcreg = ToRegister(construct->getArgc());
   Register copyreg = ToRegister(construct->getTempObject());
+  Register scratch = ToRegister(construct->getTempForArgCopy());
   uint32_t extraFormals = construct->numExtraFormals();
+
+  // newTarget and scratch are mapped to the same calltemp register.
+  MOZ_ASSERT(scratch == ToRegister(construct->getNewTarget()));
 
   // Allocate space for the values.
   // After this call "newTarget" has become "scratch".
@@ -6660,29 +6663,31 @@ void CodeGenerator::emitPushArguments(LConstructArgsGeneric* construct,
   masm.pushValue(ToValue(construct, LConstructArgsGeneric::ThisIndex));
 }
 
-void CodeGenerator::emitPushArguments(LConstructArrayGeneric* construct,
-                                      Register scratch) {
-  MOZ_ASSERT(scratch == ToRegister(construct->getNewTarget()));
-
+void CodeGenerator::emitPushArguments(LConstructArrayGeneric* construct) {
+  Register elements = ToRegister(construct->getElements());
   Register tmpArgc = ToRegister(construct->getTempObject());
-  Register elementsAndArgc = ToRegister(construct->getElements());
+  Register scratch = ToRegister(construct->getTempForArgCopy());
+
+  // argc and elements are mapped to the same calltemp register.
+  MOZ_ASSERT(elements == ToRegister(construct->getArgc()));
+
+  // newTarget and scratch are mapped to the same calltemp register.
+  MOZ_ASSERT(scratch == ToRegister(construct->getNewTarget()));
 
   // Invariants guarded in the caller:
   //  - the array is not too long
   //  - the array length equals its initialized length
 
   // The array length is our argc for the purposes of allocating space.
-  Address length(ToRegister(construct->getElements()),
-                 ObjectElements::offsetOfLength());
-  masm.load32(length, tmpArgc);
+  masm.load32(Address(elements, ObjectElements::offsetOfLength()), tmpArgc);
 
   // Allocate space for the values.
+  // After this call "newTarget" has become "scratch".
   emitAllocateSpaceForConstructAndPushNewTarget(tmpArgc, scratch);
 
-  // After this call "elements" has become "argc" and "newTarget" has become
-  // "scratch".
+  // After this call "elements" has become "argc".
   size_t elementsOffset = 0;
-  emitPushArrayAsArguments(tmpArgc, elementsAndArgc, scratch, elementsOffset);
+  emitPushArrayAsArguments(tmpArgc, elements, scratch, elementsOffset);
 
   // Push |this|.
   masm.pushValue(ToValue(construct, LConstructArrayGeneric::ThisIndex));
@@ -6708,11 +6713,11 @@ void CodeGenerator::emitApplyGeneric(T* apply) {
   // argc must not be referenced before the call to emitPushArguments() and
   // elements/argsObj must not be referenced after it returns.
   //
-  // In the case of ConstructArray or ConstructArgs, also overwrite newTarget
-  // with scratch; newTarget must not be referenced after this point.
+  // In the case of ConstructArray or ConstructArgs, also overwrite newTarget;
+  // newTarget must not be referenced after this point.
   //
   // objreg is dead across this call.
-  emitPushArguments(apply, scratch);
+  emitPushArguments(apply);
 
   masm.checkStackAlignment();
 

@@ -239,11 +239,11 @@ class CodeGenerator final : public CodeGeneratorSpecific {
                          uint32_t extraFormals);
   void emitPushArrayAsArguments(Register tmpArgc, Register srcBaseAndArgc,
                                 Register scratch, size_t argvSrcOffset);
-  void emitPushArguments(LApplyArgsGeneric* apply, Register scratch);
-  void emitPushArguments(LApplyArgsObj* apply, Register scratch);
-  void emitPushArguments(LApplyArrayGeneric* apply, Register scratch);
-  void emitPushArguments(LConstructArgsGeneric* construct, Register scratch);
-  void emitPushArguments(LConstructArrayGeneric* construct, Register scratch);
+  void emitPushArguments(LApplyArgsGeneric* apply);
+  void emitPushArguments(LApplyArgsObj* apply);
+  void emitPushArguments(LApplyArrayGeneric* apply);
+  void emitPushArguments(LConstructArgsGeneric* construct);
+  void emitPushArguments(LConstructArrayGeneric* construct);
 
   template <typename T>
   void emitApplyNative(T* apply);
