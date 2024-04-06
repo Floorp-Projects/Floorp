@@ -11,6 +11,7 @@ import { ExtensionUtils } from "resource://gre/modules/ExtensionUtils.sys.mjs";
 
 var { DefaultMap, DefaultWeakMap } = ExtensionUtils;
 
+/** @type {Lazy} */
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -921,7 +922,8 @@ class InjectionContext extends Context {
    * @param {string} _namespace The full path to the namespace of the API, minus
    *     the name of the method or property. E.g. "storage.local".
    * @param {string} _name The name of the method, property or event.
-   * @returns {SchemaAPIInterface} The implementation of the API.
+   * @returns {import("ExtensionCommon.sys.mjs").SchemaAPIInterface}
+   *          The implementation of the API.
    */
   getImplementation(_namespace, _name) {
     throw new Error("Not implemented");
@@ -1142,7 +1144,7 @@ const FORMATS = {
   },
 
   strictRelativeUrl(string, context) {
-    void FORMATS.unresolvedRelativeUrl(string, context);
+    void FORMATS.unresolvedRelativeUrl(string);
     return FORMATS.relativeUrl(string, context);
   },
 
@@ -1237,8 +1239,8 @@ const FORMATS = {
     throw new Error(errorMessage);
   },
 
-  manifestShortcutKeyOrEmpty(string, context) {
-    return string === "" ? "" : FORMATS.manifestShortcutKey(string, context);
+  manifestShortcutKeyOrEmpty(string) {
+    return string === "" ? "" : FORMATS.manifestShortcutKey(string);
   },
 
   versionString(string, context) {
@@ -1487,26 +1489,33 @@ class Type extends Entry {
     }
   }
 
-  // Takes a value, checks that it has the correct type, and returns a
-  // "normalized" version of the value. The normalized version will
-  // include "nulls" in place of omitted optional properties. The
-  // result of this function is either {error: "Some type error"} or
-  // {value: <normalized-value>}.
+  /**
+   * Takes a value, checks that it has the correct type, and returns a
+   * "normalized" version of the value. The normalized version will
+   * include "nulls" in place of omitted optional properties. The
+   * result of this function is either {error: "Some type error"} or
+   * {value: <normalized-value>}.
+   */
   normalize(value, context) {
     return context.error("invalid type");
   }
 
-  // Unlike normalize, this function does a shallow check to see if
-  // |baseType| (one of the possible getValueBaseType results) is
-  // valid for this type. It returns true or false. It's used to fill
-  // in optional arguments to functions before actually type checking
-
-  checkBaseType() {
+  /**
+   * Unlike normalize, this function does a shallow check to see if
+   * |baseType| (one of the possible getValueBaseType results) is
+   * valid for this type. It returns true or false. It's used to fill
+   * in optional arguments to functions before actually type checking
+   *
+   * @param {string} _baseType
+   */
+  checkBaseType(_baseType) {
     return false;
   }
 
-  // Helper method that simply relies on checkBaseType to implement
-  // normalize. Subclasses can choose to use it or not.
+  /**
+   * Helper method that simply relies on checkBaseType to implement
+   * normalize. Subclasses can choose to use it or not.
+   */
   normalizeBase(type, value, context) {
     if (this.checkBaseType(getValueBaseType(value))) {
       this.checkDeprecated(context, value);
@@ -3475,22 +3484,26 @@ class SchemaRoots extends Namespaces {
  * other schema roots. May extend a base namespace, in which case schemas in
  * this root may refer to types in a base, but not vice versa.
  *
- * @param {SchemaRoot|Array<SchemaRoot>|null} base
- *        A base schema root (or roots) from which to derive, or null.
- * @param {Map<string, Array|StructuredCloneHolder>} schemaJSON
- *        A map of schema URLs and corresponding JSON blobs from which to
- *        populate this root namespace.
+ * @implements {SchemaInject}
  */
 export class SchemaRoot extends Namespace {
+  /**
+   * @param {SchemaRoot|SchemaRoot[]} base
+   *        A base schema root (or roots) from which to derive, or null.
+   * @param {Map<string, Array|StructuredCloneHolder>} schemaJSON
+   *        A map of schema URLs and corresponding JSON blobs from which to
+   *        populate this root namespace.
+   */
   constructor(base, schemaJSON) {
     super(null, "", []);
 
     if (Array.isArray(base)) {
-      base = new SchemaRoots(this, base);
+      this.base = new SchemaRoots(this, base);
+    } else {
+      this.base = base;
     }
 
     this.root = this;
-    this.base = base;
     this.schemaJSON = schemaJSON;
   }
 
@@ -3572,7 +3585,7 @@ export class SchemaRoot extends Namespace {
   parseSchemas() {
     for (let [key, schema] of this.schemaJSON.entries()) {
       try {
-        if (typeof schema.deserialize === "function") {
+        if (StructuredCloneHolder.isInstance(schema)) {
           schema = schema.deserialize(globalThis, isParentProcess);
 
           // If we're in the parent process, we need to keep the
@@ -3624,7 +3637,7 @@ export class SchemaRoot extends Namespace {
    *
    * @param {object} dest The root namespace for the APIs.
    *     This object is usually exposed to extensions as "chrome" or "browser".
-   * @param {object} wrapperFuncs An implementation of the InjectionContext
+   * @param {InjectionContext} wrapperFuncs An implementation of the InjectionContext
    *     interface, which runs the actual functionality of the generated API.
    */
   inject(dest, wrapperFuncs) {
@@ -3668,6 +3681,11 @@ export class SchemaRoot extends Namespace {
   }
 }
 
+/**
+ * @typedef {{ inject: typeof Schemas.inject }} SchemaInject
+ *          Interface SchemaInject as used by SchemaApiManager,
+ *          with the one method shared across Schemas and SchemaRoot.
+ */
 export var Schemas = {
   initialized: false,
 
@@ -3693,6 +3711,7 @@ export var Schemas = {
     extContext => new Context(extContext)
   ),
 
+  /** @returns {SchemaRoot} */
   get rootSchema() {
     if (!this.initialized) {
       this.init();
@@ -3850,7 +3869,7 @@ export var Schemas = {
    *
    * @param {object} dest The root namespace for the APIs.
    *     This object is usually exposed to extensions as "chrome" or "browser".
-   * @param {object} wrapperFuncs An implementation of the InjectionContext
+   * @param {InjectionContext} wrapperFuncs An implementation of the InjectionContext
    *     interface, which runs the actual functionality of the generated API.
    */
   inject(dest, wrapperFuncs) {
@@ -3915,6 +3934,7 @@ export var Schemas = {
         ? `${apiNamespace}.${apiName}.${requestType}`
         : `${apiNamespace}.${apiName}`
     ).split(".");
+    /** @type {Namespace|CallEntry} */
     let apiSchema = this.getNamespace(ns);
 
     // Keep track of the current schema path, populated while navigating the nested API schema
@@ -3943,7 +3963,7 @@ export var Schemas = {
       throw new Error(`API Schema not found for ${schemaPath.join(".")}`);
     }
 
-    if (!apiSchema.checkParameters) {
+    if (!(apiSchema instanceof CallEntry)) {
       throw new Error(
         `Unexpected API Schema type for ${schemaPath.join(
           "."

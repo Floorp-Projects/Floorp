@@ -45,7 +45,7 @@ function getParentFrameId(bc) {
 /**
  * Convert a BrowsingContext into internal FrameDetail json.
  *
- * @param {BrowsingContext} bc
+ * @param {CanonicalBrowsingContext} bc
  * @returns {FrameDetail}
  */
 function getFrameDetail(bc) {

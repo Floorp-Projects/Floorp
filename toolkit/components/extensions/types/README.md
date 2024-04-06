@@ -21,11 +21,11 @@ viability and benefits of doing this for a "typical" component.
 
 ## How to use and expectations
 
-Use [npm or yarn to install][download] TypeScript.
-Then run `tsc` in the extensions directory to check types:
+Mach now comes with a `ts` command for type checking code using the built-in
+gecko typelibs:
 
 ```
-mozilla-central/toolkit/components/extensions $ tsc
+mozilla-central $ ./mach ts check toolkit/components/extensions/
 ```
 
 You can also use an editor which supports the [language server][langserv].
@@ -64,6 +64,9 @@ These fall under 5 main categories:
  5) Don't re-use local variables unnecessarily with different types.
     * (general good practice, local variables are "free")
 
+ 6) Use `export` on individual classes instead of grouping into "namespaces".
+    * (idiomatic/ergonomic/modern JS, grouping was a leftover from JSMs)
+
 ### @ts-ignore recommendations
 
 *Don't* use `@ts-ignore` for class fields and function or method signatures.
@@ -75,7 +78,7 @@ These fall under 5 main categories:
    parts of the codebase.
 
 
-[handbook]: https://www.typescriptlang.org/docs/handbook/type-checking-javascript-files.html
+[handbook]: https://www.typescriptlang.org/docs/handbook/intro-to-js-ts.html
 
 [jsdoc]: https://www.typescriptlang.org/docs/handbook/jsdoc-supported-types.html
 

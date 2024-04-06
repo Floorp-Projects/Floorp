@@ -5,6 +5,7 @@
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { IndexedDB } from "resource://gre/modules/IndexedDB.sys.mjs";
 
+/** @type {Lazy} */
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -800,6 +801,8 @@ export var ExtensionStorageIDB = {
    * into an ExtensionError (e.g. DataCloneError and QuotaExceededError instances raised
    * from the internal IndexedDB operations have to be converted into an ExtensionError
    * to be accessible to the extension code).
+   *
+   * @typedef {import("ExtensionUtils.sys.mjs").ExtensionError} ExtensionError
    *
    * @param {object} params
    * @param {Error|ExtensionError|DOMException} params.error

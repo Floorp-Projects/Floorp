@@ -14,6 +14,7 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
+/** @type {Lazy} */
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -388,7 +389,7 @@ export class ExtensionAPI extends EventEmitter {
 
   /**
    * @param {string} _id
-   * @param {Record<string, JSONValue>} _manifest
+   * @param {object} _manifest
    */
   static onUpdate(_id, _manifest) {}
 }
@@ -553,10 +554,7 @@ export class BaseContext {
    * Opens a conduit linked to this context, populating related address fields.
    * Only available in child contexts with an associated contentWindow.
    *
-   * @param {object} subject
-   * @param {ConduitAddress} address
-   * @returns {import("ConduitsChild.sys.mjs").PointConduit}
-   * @type {ConduitOpen}
+   * @type {ConduitGen}
    */
   openConduit(subject, address) {
     let wgc = this.contentWindow.windowGlobalChild;
@@ -614,7 +612,7 @@ export class BaseContext {
   // All child contexts must implement logActivity.  This is handled if the child
   // context subclasses ExtensionBaseContextChild.  ProxyContextParent overrides
   // this with a noop for parent contexts.
-  logActivity() {
+  logActivity(_type, _name, _data) {
     throw new Error(`Not implemented for ${this.envType}`);
   }
 
@@ -822,7 +820,7 @@ export class BaseContext {
    * exception error.
    *
    * @param {Error|object} error
-   * @param {SavedFrame?} [caller]
+   * @param {nsIStackFrame?} [caller]
    * @returns {Error}
    */
   normalizeError(error, caller) {
@@ -864,7 +862,7 @@ export class BaseContext {
    *
    * @param {object} error An object with a `message` property. May
    *     optionally be an `Error` object belonging to the target scope.
-   * @param {SavedFrame?} caller
+   * @param {nsIStackFrame?} caller
    *        The optional caller frame which triggered this callback, to be used
    *        in error reporting.
    * @param {Function} callback The callback to call.
@@ -885,7 +883,7 @@ export class BaseContext {
   /**
    * Captures the most recent stack frame which belongs to the extension.
    *
-   * @returns {SavedFrame?}
+   * @returns {nsIStackFrame?}
    */
   getCaller() {
     return ChromeUtils.getCallerLocation(this.principal);
@@ -1483,7 +1481,7 @@ class SchemaAPIManager extends EventEmitter {
    *     "addon" - An addon process.
    *     "content" - A content process.
    *     "devtools" - A devtools process.
-   * @param {import("Schemas.sys.mjs").SchemaRoot} [schema]
+   * @param {import("Schemas.sys.mjs").SchemaInject} [schema]
    */
   constructor(processType, schema) {
     super();
@@ -2023,10 +2021,14 @@ export function LocaleData(data) {
   this.locales = data.locales || new Map();
   this.warnedMissingKeys = new Set();
 
-  // Map(locale-name -> Map(message-key -> localized-string))
-  //
-  // Contains a key for each loaded locale, each of which is a
-  // Map of message keys to their localized strings.
+  /**
+   * Map(locale-name -> Map(message-key -> localized-string))
+   *
+   * Contains a key for each loaded locale, each of which is a
+   * Map of message keys to their localized strings.
+   *
+   * @type {Map<string, Map<string, string>>}
+   */
   this.messages = data.messages || new Map();
 
   if (data.builtinMessages) {

@@ -6,6 +6,7 @@ import { ExtensionCommon } from "resource://gre/modules/ExtensionCommon.sys.mjs"
 
 import { ExtensionUtils } from "resource://gre/modules/ExtensionUtils.sys.mjs";
 
+/** @type {Lazy} */
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {

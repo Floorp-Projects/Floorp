@@ -8,6 +8,7 @@ import { computeSha1HashAsString } from "resource://gre/modules/addons/crypto-ut
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
+/** @type {Lazy} */
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -405,6 +406,8 @@ export var ExtensionPermissions = {
   /**
    * Add new permissions for the given extension.  `permissions` is
    * in the format that is passed to browser.permissions.request().
+   *
+   * @typedef {import("ExtensionCommon.sys.mjs").EventEmitter} EventEmitter
    *
    * @param {string} extensionId The extension id
    * @param {Perms} perms Object with permissions and origins array.

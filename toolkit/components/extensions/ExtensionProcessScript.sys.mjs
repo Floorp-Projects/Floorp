@@ -11,6 +11,7 @@
 
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
+/** @type {Lazy} */
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -342,7 +343,7 @@ ExtensionManager = {
                   perms.delete(perm);
                 }
               }
-              policy.permissions = perms;
+              policy.permissions = Array.from(perms);
             }
           }
 

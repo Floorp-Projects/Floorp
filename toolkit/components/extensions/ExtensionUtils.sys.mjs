@@ -122,9 +122,9 @@ function getInnerWindowID(window) {
  * A set with a limited number of slots, which flushes older entries as
  * newer ones are added.
  *
- * @param {integer} limit
+ * @param {number} limit
  *        The maximum size to trim the set to after it grows too large.
- * @param {integer} [slop = limit * .25]
+ * @param {number} [slop = limit * .25]
  *        The number of extra entries to allow in the set after it
  *        reaches the size limit, before it is truncated to the limit.
  * @param {Iterable} [iterable]

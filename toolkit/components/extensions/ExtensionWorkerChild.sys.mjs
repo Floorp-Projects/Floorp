@@ -340,7 +340,7 @@ class WebIDLChildAPIManager extends ChildAPIManager {
    *        The object that represents the API request received
    *        (including arguments, an event listener wrapper etc)
    *
-   * @returns {mozIExtensionAPIRequestResult}
+   * @returns {Partial<mozIExtensionAPIRequestResult>}
    *          Result for the API request, either a value to be returned
    *          (which has to be a value that can be structure cloned
    *          if the request was originated from the worker thread) or
@@ -372,9 +372,8 @@ class WebIDLChildAPIManager extends ChildAPIManager {
    * into the expected mozIExtensionAPIRequestResult.
    *
    * @param {Error | WorkerExtensionError} error
-   * @returns {mozIExtensionAPIRequestResult}
+   * @returns {Partial<mozIExtensionAPIRequestResult>}
    */
-
   handleExtensionError(error) {
     // Propagate an extension error to the caller on the worker thread.
     if (error instanceof this.context.Error) {
@@ -401,7 +400,6 @@ class WebIDLChildAPIManager extends ChildAPIManager {
    * @returns {any}
    * @throws {Error | WorkerExtensionError}
    */
-
   callAPIImplementation(request, impl) {
     const { requestType, normalizedArgs } = request;
 
@@ -658,7 +656,7 @@ class WorkerContextChild extends BaseContext {
    * Captures the most recent stack frame from the WebIDL API request being
    * processed.
    *
-   * @returns {SavedFrame?}
+   * @returns {nsIStackFrame}
    */
   getCaller() {
     return this.webidlAPIRequest?.callerSavedFrame;

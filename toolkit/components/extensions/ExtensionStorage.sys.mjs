@@ -8,6 +8,7 @@ import { ExtensionUtils } from "resource://gre/modules/ExtensionUtils.sys.mjs";
 
 const { DefaultWeakMap, ExtensionError } = ExtensionUtils;
 
+/** @type {Lazy} */
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -89,7 +90,7 @@ function serialize(name, anonymizedName, value) {
 }
 
 export var ExtensionStorage = {
-  // Map<extension-id, Promise<JSONFile>>
+  /** @type {Map<string, Promise<typeof lazy.JSONFile>>} */
   jsonFilePromises: new Map(),
 
   listeners: new Map(),
@@ -157,7 +158,7 @@ export var ExtensionStorage = {
    *
    * @param {any} value
    *        The value to sanitize.
-   * @param {Context} context
+   * @param {BaseContext} context
    *        The extension context in which to sanitize the value
    * @returns {value}
    *        The sanitized value.
