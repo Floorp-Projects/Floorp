@@ -12,6 +12,9 @@
  * @property {ConduitID} [sender]
  * @property {boolean} query
  * @property {object} arg
+ *
+ * @typedef {import("ConduitsParent.sys.mjs").ConduitAddress} ConduitAddress
+ * @typedef {import("ConduitsParent.sys.mjs").ConduitID} ConduitID
  */
 
 /**
@@ -46,19 +49,29 @@ export class BaseConduit {
   }
 
   /**
-   * Internal, partially @abstract, uses the actor to send the message/query.
+   * Internal, uses the actor to send the message/query.
    *
    * @param {string} method
    * @param {boolean} query Flag indicating a response is expected.
-   * @param {JSWindowActor} actor
+   * @param {JSWindowActorChild|JSWindowActorParent} actor
    * @param {MessageData} data
    * @returns {Promise?}
    */
-  _send(method, query, actor, data) {
+  _doSend(method, query, actor, data) {
     if (query) {
       return actor.sendQuery(method, data);
     }
     actor.sendAsyncMessage(method, data);
+  }
+
+  /**
+   * Internal @abstract, used by sendX stubs.
+   *
+   * @param {string} _name
+   * @param {boolean} _query
+   */
+  _send(_name, _query, ..._args) {
+    throw new Error(`_send not implemented for ${this.constructor.name}`);
   }
 
   /**
@@ -89,6 +102,7 @@ export class BaseConduit {
  * one specific ConduitsChild actor.
  */
 export class PointConduit extends BaseConduit {
+  /** @type {ConduitGen} */
   constructor(subject, address, actor) {
     super(subject, address);
     this.actor = actor;
@@ -108,7 +122,7 @@ export class PointConduit extends BaseConduit {
       throw new Error(`send${method} on closed conduit ${this.id}`);
     }
     let sender = this.id;
-    return super._send(method, query, this.actor, { arg, query, sender });
+    return super._doSend(method, query, this.actor, { arg, query, sender });
   }
 
   /**
@@ -156,9 +170,7 @@ export class ConduitsChild extends JSWindowActorChild {
   /**
    * Public entry point a child-side subject uses to open a conduit.
    *
-   * @param {object} subject
-   * @param {ConduitAddress} address
-   * @returns {PointConduit}
+   * @type {ConduitGen}
    */
   openConduit(subject, address) {
     let conduit = new PointConduit(subject, address, this);
@@ -211,6 +223,5 @@ export class ProcessConduitsChild extends JSProcessActorChild {
 
   openConduit = ConduitsChild.prototype.openConduit;
   receiveMessage = ConduitsChild.prototype.receiveMessage;
-  willDestroy = ConduitsChild.prototype.willDestroy;
   didDestroy = ConduitsChild.prototype.didDestroy;
 }

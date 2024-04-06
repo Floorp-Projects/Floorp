@@ -14,6 +14,7 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
+/** @type {Lazy} */
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -457,7 +458,7 @@ GlobalManager = {
   extensionMap: new Map(),
   initialized: false,
 
-  /** @type {WeakMap<Browser, object>} Extension Context init data. */
+  /** @type {WeakMap<XULBrowserElement, object>} Extension Context init data. */
   frameData: new WeakMap(),
 
   init(extension) {
@@ -970,7 +971,6 @@ ParentAPIManager = {
         throw new Error(`Bad sender context envType: ${sender.envType}`);
       }
 
-      let isBackgroundWorker = false;
       if (JSWindowActorParent.isInstance(actor)) {
         const target = actor.browsingContext.top.embedderElement;
         let processMessageManager =
@@ -986,6 +986,22 @@ ParentAPIManager = {
         if (processMessageManager !== extension.parentMessageManager) {
           throw new Error(
             "Attempt to create privileged extension parent from incorrect child process"
+          );
+        }
+
+        if (envType == "addon_parent") {
+          context = new ExtensionPageContextParent(
+            envType,
+            extension,
+            data,
+            actor.browsingContext
+          );
+        } else if (envType == "devtools_parent") {
+          context = new DevToolsExtensionPageContextParent(
+            envType,
+            extension,
+            data,
+            actor.browsingContext
           );
         }
       } else if (JSProcessActorParent.isInstance(actor)) {
@@ -1005,30 +1021,12 @@ ParentAPIManager = {
             `Unexpected viewType ${data.viewType} on an extension process actor`
           );
         }
-        isBackgroundWorker = true;
+        context = new BackgroundWorkerContextParent(envType, extension, data);
       } else {
         // Unreacheable: JSWindowActorParent and JSProcessActorParent are the
         // only actors.
         throw new Error(
           "Attempt to create privileged extension parent via incorrect actor"
-        );
-      }
-
-      if (isBackgroundWorker) {
-        context = new BackgroundWorkerContextParent(envType, extension, data);
-      } else if (envType == "addon_parent") {
-        context = new ExtensionPageContextParent(
-          envType,
-          extension,
-          data,
-          actor.browsingContext
-        );
-      } else if (envType == "devtools_parent") {
-        context = new DevToolsExtensionPageContextParent(
-          envType,
-          extension,
-          data,
-          actor.browsingContext
         );
       }
     } else if (envType == "content_parent") {
@@ -1349,11 +1347,9 @@ class HiddenXULWindow {
 
     // The windowless browser is a thin wrapper around a docShell that keeps
     // its related resources alive. It implements nsIWebNavigation and
-    // forwards its methods to the underlying docShell. That .docShell
-    // needs `QueryInterface(nsIWebNavigation)` to give us access to the
-    // webNav methods that are already available on the windowless browser.
+    // forwards its methods to the underlying docShell.
     let chromeShell = windowlessBrowser.docShell;
-    chromeShell.QueryInterface(Ci.nsIWebNavigation);
+    let webNav = chromeShell.QueryInterface(Ci.nsIWebNavigation);
 
     if (lazy.PrivateBrowsingUtils.permanentPrivateBrowsing) {
       let attrs = chromeShell.getOriginAttributes();
@@ -1362,13 +1358,13 @@ class HiddenXULWindow {
     }
 
     windowlessBrowser.browsingContext.useGlobalHistory = false;
-    chromeShell.loadURI(DUMMY_PAGE_URI, {
+    webNav.loadURI(DUMMY_PAGE_URI, {
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     });
 
     await promiseObserved(
       "chrome-document-global-created",
-      win => win.document == chromeShell.document
+      win => win.document == webNav.document
     );
     await promiseDocumentLoaded(windowlessBrowser.document);
     if (this.unloaded) {
@@ -1385,7 +1381,7 @@ class HiddenXULWindow {
    *        An object that contains the xul attributes to set of the newly
    *        created browser XUL element.
    *
-   * @returns {Promise<XULElement>}
+   * @returns {Promise<XULBrowserElement>}
    *          A Promise which resolves to the newly created browser XUL element.
    */
   async createBrowserElement(xulAttributes) {
@@ -1467,16 +1463,17 @@ const SharedWindow = {
  * to inherits the shared boilerplate code needed to create a parent document for the hidden
  * extension pages (e.g. the background page, the devtools page) in the BackgroundPage and
  * DevToolsPage classes.
- *
- * @param {Extension} extension
- *        The Extension which owns the hidden extension page created (used to decide
- *        if the hidden extension page parent doc is going to be a windowlessBrowser or
- *        a visible XUL window).
- * @param {string} viewType
- *        The viewType of the WebExtension page that is going to be loaded
- *        in the created browser element (e.g. "background" or "devtools_page").
  */
 class HiddenExtensionPage {
+  /**
+   * @param {Extension} extension
+   *        The Extension which owns the hidden extension page created (used to decide
+   *        if the hidden extension page parent doc is going to be a windowlessBrowser or
+   *        a visible XUL window).
+   * @param {string} viewType
+   *        The viewType of the WebExtension page that is going to be loaded
+   *        in the created browser element (e.g. "background" or "devtools_page").
+   */
   constructor(extension, viewType) {
     if (!extension || !viewType) {
       throw new Error("extension and viewType parameters are mandatory");
@@ -1544,6 +1541,9 @@ class HiddenExtensionPage {
   }
 }
 
+/** @typedef {import("resource://devtools/server/actors/descriptors/webextension.js")
+              .WebExtensionDescriptorActor} WebExtensionDescriptorActor */
+
 /**
  * This object provides utility functions needed by the devtools actors to
  * be able to connect and debug an extension (which can run in the main or in
@@ -1554,9 +1554,9 @@ const DebugUtils = {
   // which are used to connect the webextension patent actor to the extension process.
   hiddenXULWindow: null,
 
-  // Map<extensionId, Promise<XULElement>>
+  /** @type {Map<string, Promise<XULBrowserElement> & { browser: XULBrowserElement }>} */
   debugBrowserPromises: new Map(),
-  // DefaultWeakMap<Promise<browser XULElement>, Set<WebExtensionParentActor>>
+  /** @type {WeakMap<Promise<XULBrowserElement>, Set<WebExtensionDescriptorActor>>} */
   debugActors: new DefaultWeakMap(() => new Set()),
 
   _extensionUpdatedWatcher: null,
@@ -1705,10 +1705,10 @@ const DebugUtils = {
    * Retrieve a XUL browser element which has been configured to be able to connect
    * the devtools actor with the process where the extension is running.
    *
-   * @param {WebExtensionParentActor} webExtensionParentActor
+   * @param {WebExtensionDescriptorActor} webExtensionParentActor
    *        The devtools actor that is retrieving the browser element.
    *
-   * @returns {Promise<XULElement>}
+   * @returns {Promise<XULBrowserElement>}
    *          A promise which resolves to the configured browser XUL element.
    */
   async getExtensionProcessBrowser(webExtensionParentActor) {
@@ -1762,7 +1762,7 @@ const DebugUtils = {
    * it destroys the XUL browser element, and it also destroy the hidden XUL window
    * if it is not currently needed.
    *
-   * @param {WebExtensionParentActor} webExtensionParentActor
+   * @param {WebExtensionDescriptorActor} webExtensionParentActor
    *        The devtools actor that has retrieved an addon debug browser element.
    */
   async releaseExtensionProcessBrowser(webExtensionParentActor) {
@@ -1792,7 +1792,7 @@ const DebugUtils = {
  * was received by the message manager. The promise is rejected if the message
  * manager was closed before a message was received.
  *
- * @param {nsIMessageListenerManager} messageManager
+ * @param {MessageListenerManager} messageManager
  *        The message manager on which to listen for messages.
  * @param {string} messageName
  *        The message to listen for.

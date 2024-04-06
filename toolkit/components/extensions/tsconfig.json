@@ -1,15 +1,11 @@
 {
-  "include": ["*.mjs", "types/globals.ts"],
-  "exclude": [],
+  "include": ["*.mjs", "types/*.ts"],
 
   "compilerOptions": {
     "checkJs": true,
-    "target": "ESNEXT",
-
-    "declaration": true,
-    "outDir": "./types",
-    "typeRoots": [],
     "noEmit": true,
+    "target": "es2022",
+    "types": ["gecko"],
 
     // prettier-ignore
     "paths": {
@@ -39,11 +35,12 @@
       "resource://gre/modules/Schemas.sys.mjs": ["./Schemas.sys.mjs"],
       "resource://gre/modules/WebNavigationFrames.sys.mjs": ["./WebNavigationFrames.sys.mjs"],
       "resource://gre/modules/WebRequest.sys.mjs": ["./webrequest/WebRequest.sys.mjs"],
+      "resource://testing-common/ExtensionTestCommon.sys.mjs": ["./ExtensionTestCommon.sys.mjs"],
 
       // External.
       "resource://gre/modules/addons/crypto-utils.sys.mjs": ["../../mozapps/extensions/internal/crypto-utils.sys.mjs"],
       "resource://gre/modules/XPCOMUtils.sys.mjs": ["../../../js/xpconnect/loader/XPCOMUtils.sys.mjs"],
-      "resource://testing-common/ExtensionTestCommon.sys.mjs": ["./ExtensionTestCommon.sys.mjs"],
+      "resource://devtools/server/actors/descriptors/webextension.js": ["./types/globals.ts"],
 
       // Types for external modules which need fixing, but we don't wanna touch.
       "resource://testing-common/XPCShellContentUtils.sys.mjs": ["./types/XPCShellContentUtils.sys.d.mts"],

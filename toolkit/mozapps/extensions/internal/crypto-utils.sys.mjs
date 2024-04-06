@@ -50,7 +50,7 @@ export function computeSha1HashAsString(input) {
 /**
  * Returns the string representation (hex) of a given CryptoHashInstance.
  *
- * @param {CryptoHash} aCrypto
+ * @param {nsICryptoHash} aCrypto
  * @returns {string}
  *          The hex representation of a SHA256 hash.
  */

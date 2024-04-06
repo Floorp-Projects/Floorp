@@ -68,7 +68,7 @@ export function getTrimmedString(str) {
  * If the resulting string is longer than 80 characters it is going to be
  * trimmed using the `getTrimmedString` helper function.
  *
- * @param {Error | DOMException | Components.Exception} error
+ * @param {Error | DOMException | ReturnType<typeof Components.Exception>} error
  *        The error object to convert into a string representation.
  *
  * @returns {string}
@@ -207,7 +207,7 @@ class ExtensionTelemetryMetric {
    *        The stopwatch method to call ("start", "finish" or "cancel").
    * @param {string} metric
    *        The stopwatch metric to record (used to retrieve the base histogram id from the HISTOGRAMS_IDS object).
-   * @param {Extension | BrowserExtensionContent} extension
+   * @param {Extension | ExtensionChild} extension
    *        The extension to record the telemetry for.
    * @param {any | undefined} [obj = extension]
    *        An optional telemetry stopwatch object (which defaults to the extension parameter when missing).
@@ -324,6 +324,8 @@ const metricsCache = new Map();
  *      ExtensionTelemetry.extensionStartup.stopwatchStart(extension);
  *      ExtensionTelemetry.browserActionPreloadResult.histogramAdd({category: "Shown", extension});
  */
+/** @type {Record<string, ExtensionTelemetryMetric>} */
+// @ts-ignore no easy way in TS to say Proxy is a different type from target.
 export var ExtensionTelemetry = new Proxy(metricsCache, {
   get(target, prop) {
     // NOTE: if we would be start adding glean probes that do not have a unified

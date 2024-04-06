@@ -7,6 +7,7 @@
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 import { XPCShellContentUtils } from "resource://testing-common/XPCShellContentUtils.sys.mjs";
 
+/** @type {Lazy} */
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -32,9 +33,9 @@ let BASE_MANIFEST = Object.freeze({
 });
 
 class ExtensionWrapper {
-  /** @type {AddonWrapper} */
+  /** @type {import("resource://gre/modules/addons/XPIDatabase.sys.mjs").AddonWrapper} */
   addon;
-  /** @type {Promise<AddonWrapper>} */
+  /** @type {Promise} */
   addonPromise;
   /** @type {nsIFile[]} */
   cleanupFiles;

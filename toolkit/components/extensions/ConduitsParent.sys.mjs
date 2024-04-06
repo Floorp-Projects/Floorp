@@ -29,6 +29,7 @@
  * @property {string} [url]
  * @property {number} [frameId]
  * @property {string} [workerScriptURL]
+ * @property {number} [workerDescriptorId]
  * @property {string} [extensionId]
  * @property {string} [envType]
  * @property {string} [instanceId]
@@ -299,7 +300,7 @@ export class BroadcastConduit extends BaseConduit {
     if (method === "RunListener" && arg.path.startsWith("webRequest.")) {
       return actor.batch(method, { target, arg, query, sender });
     }
-    return super._send(method, query, actor, { target, arg, query, sender });
+    return super._doSend(method, query, actor, { target, arg, query, sender });
   }
 
   /**
@@ -482,6 +483,5 @@ export class ConduitsParent extends JSWindowActorParent {
  */
 export class ProcessConduitsParent extends JSProcessActorParent {
   receiveMessage = ConduitsParent.prototype.receiveMessage;
-  willDestroy = ConduitsParent.prototype.willDestroy;
   didDestroy = ConduitsParent.prototype.didDestroy;
 }

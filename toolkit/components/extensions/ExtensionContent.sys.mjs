@@ -7,6 +7,7 @@
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
+/** @type {Lazy} */
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -164,6 +165,7 @@ class ScriptCache extends CacheMap {
     super(
       SCRIPT_EXPIRY_TIMEOUT_MS,
       url => {
+        /** @type {Promise<PrecompiledScript> & { script?: PrecompiledScript }} */
         let promise = ChromeUtils.compileScript(url, options);
         promise.then(script => {
           promise.script = script;
@@ -599,7 +601,7 @@ class Script {
    * @param {ContentScriptContextChild} context
    *        The document to block the parsing on, if the scripts are not yet precompiled and cached.
    *
-   * @returns {Array<PreloadedScript> | Promise<Array<PreloadedScript>>}
+   * @returns {PrecompiledScript[] | Promise<PrecompiledScript[]>}
    *          Returns an array of preloaded scripts if they are already available, or a promise which
    *          resolves to the array of the preloaded scripts once they are precompiled and cached.
    */
@@ -1002,7 +1004,7 @@ class ContentScriptContextChild extends BaseContext {
 // Responsible for creating ExtensionContexts and injecting content
 // scripts into them when new documents are created.
 DocumentManager = {
-  // Map[windowId -> Map[ExtensionChild -> ContentScriptContextChild]]
+  /** @type {Map<number, Map<ExtensionChild, ContentScriptContextChild>>} */
   contexts: new Map(),
 
   initialized: false,
