@@ -284,6 +284,19 @@ async function toggleReaderMode() {
  */
 class SharedTranslationsTestUtils {
   /**
+   * Asserts that the specified element currently has focus.
+   *
+   * @param {Element} element - The element to check for focus.
+   */
+  static _assertHasFocus(element) {
+    is(
+      document.activeElement,
+      element,
+      `The element '${element.id}' should have focus.`
+    );
+  }
+
+  /**
    * Asserts that the mainViewId of the panel matches the given string.
    *
    * @param {FullPageTranslationsPanel | SelectTranslationsPanel} panel
@@ -1521,6 +1534,62 @@ class SelectTranslationsTestUtils {
   }
 
   /**
+   * Asserts that the SelectTranslationsPanel UI matches the expected
+   * state when no from-language is selected in the panel.
+   */
+  static async assertPanelViewNoFromLangSelected() {
+    SelectTranslationsTestUtils.#assertPanelMainViewId(
+      "select-translations-panel-view-default"
+    );
+    const { textArea } = SelectTranslationsPanel.elements;
+    ok(
+      !textArea.classList.contains("translating"),
+      "The textarea should not have the translating class."
+    );
+    SelectTranslationsTestUtils.#assertPanelElementVisibility({
+      ...SelectTranslationsTestUtils.#alwaysPresentElements,
+    });
+    await SelectTranslationsTestUtils.#assertPanelHasIdlePlaceholder();
+    SelectTranslationsTestUtils.assertSelectedFromLanguage(null);
+  }
+
+  /**
+   * Asserts that the SelectTranslationsPanel UI matches the expected
+   * state when no to-language is selected in the panel.
+   */
+  static async assertPanelViewNoToLangSelected() {
+    SelectTranslationsTestUtils.#assertPanelMainViewId(
+      "select-translations-panel-view-default"
+    );
+    const { textArea } = SelectTranslationsPanel.elements;
+    ok(
+      !textArea.classList.contains("translating"),
+      "The textarea should not have the translating class."
+    );
+    SelectTranslationsTestUtils.#assertPanelElementVisibility({
+      ...SelectTranslationsTestUtils.#alwaysPresentElements,
+    });
+    SelectTranslationsTestUtils.assertSelectedToLanguage(null);
+    await SelectTranslationsTestUtils.#assertPanelHasIdlePlaceholder();
+  }
+
+  /**
+   * Asserts that the SelectTranslationsPanel UI contains the
+   * idle placeholder text.
+   */
+  static async #assertPanelHasIdlePlaceholder() {
+    const { textArea } = SelectTranslationsPanel.elements;
+    const expected = await document.l10n.formatValue(
+      "select-translations-panel-idle-placeholder-text"
+    );
+    is(
+      textArea.value,
+      expected,
+      "Translated text area should be the idle placeholder."
+    );
+  }
+
+  /**
    * Asserts that the SelectTranslationsPanel UI contains the
    * translating placeholder text.
    */
@@ -1734,6 +1803,106 @@ class SelectTranslationsTestUtils {
         textArea,
         { attributes: true, attributeFilter: ["style"] },
         () => textArea.style.overflow === "auto"
+      );
+    }
+  }
+
+  /**
+   * Switches the selected from-language to the provided language tags
+   *
+   * @param {string[]} langTags - An array of BCP-47 language tags.
+   * @param {object} options - Configuration options for the language change.
+   * @param {boolean} options.openDropdownMenu - Determines whether the language change should be made via a dropdown menu or directly.
+   *
+   * @returns {Promise<void>}
+   */
+  static async changeSelectedFromLanguage(langTags, options) {
+    const { fromMenuList, fromMenuPopup } = SelectTranslationsPanel.elements;
+    const { openDropdownMenu } = options;
+
+    const switchFn = openDropdownMenu
+      ? SelectTranslationsTestUtils.#changeSelectedLanguageViaDropdownMenu
+      : SelectTranslationsTestUtils.#changeSelectedLanguageDirectly;
+
+    await switchFn(langTags, {
+      menuList: fromMenuList,
+      menuPopup: fromMenuPopup,
+    });
+  }
+
+  /**
+   * Switches the selected to-language to the provided language tag.
+   *
+   * @param {string[]} langTags - An array of BCP-47 language tags.
+   * @param {object} options - Options for selecting paragraphs and opening the context menu.
+   * @param {boolean} options.openDropdownMenu - Determines whether the language change should be made via a dropdown menu or directly.
+   *
+   * @returns {Promise<void>}
+   */
+  static async changeSelectedToLanguage(langTags, options) {
+    const { toMenuList, toMenuPopup } = SelectTranslationsPanel.elements;
+    const { openDropdownMenu } = options;
+
+    const switchFn = openDropdownMenu
+      ? SelectTranslationsTestUtils.#changeSelectedLanguageViaDropdownMenu
+      : SelectTranslationsTestUtils.#changeSelectedLanguageDirectly;
+
+    await switchFn(langTags, { menuList: toMenuList, menuPopup: toMenuPopup });
+  }
+
+  /**
+   * Directly changes the selected language to each provided language tag without using a dropdown menu.
+   *
+   * @param {string[]} langTags - An array of BCP-47 language tags for direct selection.
+   * @param {object} elements - Elements required for changing the selected language.
+   * @param {Element} elements.menuList - The menu list element where languages are directly changed.
+   *
+   * @returns {Promise<void>}
+   */
+  static async #changeSelectedLanguageDirectly(langTags, elements) {
+    const { menuList } = elements;
+
+    for (const langTag of langTags) {
+      const menuListUpdated = BrowserTestUtils.waitForMutationCondition(
+        menuList,
+        { attributes: true, attributeFilter: ["value"] },
+        () => menuList.value === langTag
+      );
+
+      menuList.value = langTag;
+      menuList.dispatchEvent(new Event("command"));
+      await menuListUpdated;
+    }
+  }
+
+  /**
+   * Changes the selected language by opening the dropdown menu for each provided language tag.
+   *
+   * @param {string[]} langTags - An array of BCP-47 language tags for selection via dropdown.
+   * @param {object} elements - Elements involved in the dropdown language selection process.
+   * @param {Element} elements.menuList - The element that triggers the dropdown menu.
+   * @param {Element} elements.menuPopup - The dropdown menu element containing selectable languages.
+   *
+   * @returns {Promise<void>}
+   */
+  static async #changeSelectedLanguageViaDropdownMenu(langTags, elements) {
+    const { menuList, menuPopup } = elements;
+    for (const langTag of langTags) {
+      await SelectTranslationsTestUtils.waitForPanelPopupEvent(
+        "popupshown",
+        () => click(menuList)
+      );
+
+      const menuItem = menuPopup.querySelector(`[value="${langTag}"]`);
+      await SelectTranslationsTestUtils.waitForPanelPopupEvent(
+        "popuphidden",
+        () => {
+          click(menuItem);
+          // Synthesizing a click on the menuitem isn't closing the popup
+          // as a click normally would, so this tab keypress is added to
+          // ensure the popup closes.
+          EventUtils.synthesizeKey("KEY_Tab");
+        }
       );
     }
   }

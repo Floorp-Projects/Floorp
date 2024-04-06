@@ -46,7 +46,8 @@
                         size="large"
                         data-l10n-id="translations-panel-choose-language"
                         aria-labelledby="translations-panel-from-label"
-                        noinitialselection="true">
+                        noinitialselection="true"
+                        oncommand="SelectTranslationsPanel.onChangeFromLanguage(event)">
                 <menupopup id="select-translations-panel-from-menupopup"
                            class="translations-panel-language-menupopup-from">
                   <!-- The list of <menuitem> will be dynamically inserted. -->
@@ -64,7 +65,8 @@
                         size="large"
                         data-l10n-id="translations-panel-choose-language"
                         aria-labelledby="translations-panel-to-label"
-                        noinitialselection="true">
+                        noinitialselection="true"
+                        oncommand="SelectTranslationsPanel.onChangeToLanguage(event)">
                 <menupopup id="select-translations-panel-to-menupopup"
                            class="translations-panel-language-menupopup-to">
                   <!-- The list of <menuitem> will be dynamically inserted. -->
