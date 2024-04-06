@@ -1,0 +1,80 @@
+<window title="Menulist Initial Selection Connected Callback Test"
+        onload="setTimeout(runTest, 0)"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+<script>
+<![CDATA[
+SimpleTest.waitForExplicitFinish();
+
+async function runTest() {
+  const panel = document.querySelector("panel");
+
+  // Dynamically initialize two menulists, one with the noinitialselection
+  // attribute and one without, but ensure that their delayConnectedCallback
+  // functions always return true to ensure that connectedCallback will not run yet.
+  const menulist1 = document.createXULElement("menulist");
+  menulist1.delayConnectedCallback = () => true;
+  menulist1.setAttribute("id", "menulist1");
+  menulist1.appendItem(/* label */ "One",   /* id */ "1");
+  menulist1.appendItem(/* label */ "Two",   /* id */ "2");
+  menulist1.appendItem(/* label */ "Three", /* id */ "3");
+  is(menulist1.menupopup.querySelectorAll('menuitem[selected="true"]').length, 0, "menulist1 should have no selected items yet.");
+
+  const menulist2 = document.createXULElement("menulist");
+  menulist2.delayConnectedCallback = () => true;
+  menulist2.setAttribute("id", "menulist2");
+  menulist2.setAttribute("noinitialselection", "true");
+  menulist2.appendItem(/* label */ "Four", /* id */ "4");
+  menulist2.appendItem(/* label */ "Five", /* id */ "5");
+  menulist2.appendItem(/* label */ "Six",  /* id */ "6");
+  is(menulist2.menupopup.querySelectorAll('menuitem[selected="true"]').length, 0, "menulist2 should have no selected items yet.");
+
+  // Set their values before allowing connectedCallback to run, simulating
+  // a race condition where an initial value is manually set before the
+  // connectedCallback is invoked.
+  menulist1.value = "2";
+  panel.appendChild(menulist1);
+  menulist1.delayConnectedCallback = () => false;
+  menulist1.connectedCallback();
+
+  menulist2.value = "5";
+  panel.appendChild(menulist2);
+  menulist2.delayConnectedCallback = () => false;
+  menulist2.connectedCallback();
+
+  const panelShown = new Promise(r => panel.addEventListener("popupshown", r, { once: true }));
+  info("opening panel");
+  panel.openPopup(null, { x: 0, y: 0 });
+  await panelShown;
+  info("panel opened");
+
+  is(menulist1.value, "2", "menulist1 should have the second menuitem's value");
+  is(menulist1.label, "Two", "menulist1 should have the second menuitem's label");
+  is(menulist1.menupopup.querySelectorAll('menuitem[selected="true"]').length, 1, "menulist1 should have only one selected item.");
+
+  is(menulist2.value, "5", "menulist2 should not be selected to the second item's value");
+  is(menulist2.label, "Five", "menulist2 should not be selected to the second item's value");
+  is(menulist2.menupopup.querySelectorAll('menuitem[selected="true"]').length, 1, "menulist2 should have only one selected item.");
+
+  menulist1.value = "3";
+  menulist2.value = "6";
+
+  is(menulist1.value, "3", "menulist1 should have the third menuitem's value");
+  is(menulist1.label, "Three", "menulist1 should have the third menuitem's label");
+  is(menulist1.menupopup.querySelectorAll('menuitem[selected="true"]').length, 1, "menulist1 should have only one selected item.");
+
+  is(menulist2.value, "6", "menulist2 should not be selected to the third item's value");
+  is(menulist2.label, "Six", "menulist2 should not be selected to the third item's value");
+  is(menulist2.menupopup.querySelectorAll('menuitem[selected="true"]').length, 1, "menulist2 should have only one selected item.");
+
+  SimpleTest.finish();
+}
+
+]]>
+</script>
+<panel></panel>
+</window>
+
+
