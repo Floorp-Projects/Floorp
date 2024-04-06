@@ -6376,7 +6376,13 @@ void CodeGenerator::emitAllocateSpaceForApply(Register argcreg,
                "Stack padding assumes that the frameSize is correct");
     MOZ_ASSERT(JitStackValueAlignment == 2);
     Label noPaddingNeeded;
-    // if the number of arguments is odd, then we do not need any padding.
+    // If the number of arguments is odd, then we do not need any padding.
+    //
+    // Note: The |JitStackValueAlignment == 2| condition requires that the
+    // overall number of values on the stack is even. When we have an odd number
+    // of arguments, we don't need any padding, because the |thisValue| is
+    // pushed after the arguments, so the overall number of values on the stack
+    // is even.
     masm.branchTestPtr(Assembler::NonZero, argcreg, Imm32(1), &noPaddingNeeded);
     masm.addPtr(Imm32(1), scratch);
     masm.bind(&noPaddingNeeded);
@@ -6388,13 +6394,13 @@ void CodeGenerator::emitAllocateSpaceForApply(Register argcreg,
   masm.subFromStackPtr(scratch);
 
 #ifdef DEBUG
-  // Put a magic value in the space reserved for padding. Note, this code
-  // cannot be merged with the previous test, as not all architectures can
-  // write below their stack pointers.
+  // Put a magic value in the space reserved for padding. Note, this code cannot
+  // be merged with the previous test, as not all architectures can write below
+  // their stack pointers.
   if (JitStackValueAlignment > 1) {
     MOZ_ASSERT(JitStackValueAlignment == 2);
     Label noPaddingNeeded;
-    // if the number of arguments is odd, then we do not need any padding.
+    // If the number of arguments is odd, then we do not need any padding.
     masm.branchTestPtr(Assembler::NonZero, argcreg, Imm32(1), &noPaddingNeeded);
     BaseValueIndex dstPtr(masm.getStackPointer(), argcreg);
     masm.storeValue(MagicValue(JS_ARG_POISON), dstPtr);
@@ -6409,8 +6415,8 @@ void CodeGenerator::emitAllocateSpaceForConstructAndPushNewTarget(
     Register argcreg, Register newTargetAndScratch) {
   // Align the JitFrameLayout on the JitStackAlignment. Contrary to
   // |emitAllocateSpaceForApply()|, we're always pushing a magic value, because
-  // we can't write to |newTargetAndScratch| before |new.target| has
-  // been pushed onto the stack.
+  // we can't write to |newTargetAndScratch| before |new.target| has been pushed
+  // onto the stack.
   if (JitStackValueAlignment > 1) {
     MOZ_ASSERT(frameSize() % JitStackAlignment == 0,
                "Stack padding assumes that the frameSize is correct");
@@ -6418,6 +6424,12 @@ void CodeGenerator::emitAllocateSpaceForConstructAndPushNewTarget(
 
     Label noPaddingNeeded;
     // If the number of arguments is even, then we do not need any padding.
+    //
+    // Note: The |JitStackValueAlignment == 2| condition requires that the
+    // overall number of values on the stack is even. When we have an even
+    // number of arguments, we don't need any padding, because |new.target| is
+    // is pushed before the arguments and |thisValue| is pushed after all
+    // arguments, so the overall number of values on the stack is even.
     masm.branchTestPtr(Assembler::Zero, argcreg, Imm32(1), &noPaddingNeeded);
     masm.pushValue(MagicValue(JS_ARG_POISON));
     masm.bind(&noPaddingNeeded);
@@ -6443,9 +6455,8 @@ void CodeGenerator::emitCopyValuesForApply(Register argvSrcBase,
   Label loop;
   masm.bind(&loop);
 
-  // As argvIndex is off by 1, and we use the decBranchPtr instruction
-  // to loop back, we have to substract the size of the word which are
-  // copied.
+  // As argvIndex is off by 1, and we use the decBranchPtr instruction to loop
+  // back, we have to substract the size of the word which are copied.
   BaseValueIndex srcPtr(argvSrcBase, argvIndex,
                         int32_t(argvSrcOffset) - sizeof(void*));
   BaseValueIndex dstPtr(masm.getStackPointer(), argvIndex,
@@ -6494,6 +6505,9 @@ void CodeGenerator::emitPushArguments(Register argcreg, Register scratch,
   // clang-format on
 
   // Compute the source and destination offsets into the stack.
+  //
+  // The |extraFormals| parameter is used when copying rest-parameters and
+  // allows to skip the initial parameters before the actual rest-parameters.
   Register argvSrcBase = FramePointer;
   size_t argvSrcOffset =
       JitFrameLayout::offsetOfActualArgs() + extraFormals * sizeof(JS::Value);
@@ -6506,17 +6520,18 @@ void CodeGenerator::emitPushArguments(Register argcreg, Register scratch,
   emitCopyValuesForApply(argvSrcBase, argvIndex, copyreg, argvSrcOffset,
                          argvDstOffset);
 
-  // Join with all arguments copied and the extra stack usage computed.
+  // Join with all arguments copied.
   masm.bind(&end);
 }
 
 void CodeGenerator::emitPushArguments(LApplyArgsGeneric* apply,
                                       Register scratch) {
-  // Holds the function nargs. Initially the number of args to the caller.
+  // Holds the function nargs.
   Register argcreg = ToRegister(apply->getArgc());
   Register copyreg = ToRegister(apply->getTempObject());
   uint32_t extraFormals = apply->numExtraFormals();
 
+  // Allocate space on the stack for arguments.
   emitAllocateSpaceForApply(argcreg, scratch);
 
   emitPushArguments(argcreg, scratch, copyreg, extraFormals);
@@ -6535,10 +6550,10 @@ void CodeGenerator::emitPushArguments(LApplyArgsObj* apply, Register scratch) {
   // Load argc into tmpArgc.
   masm.loadArgumentsObjectLength(argsObj, tmpArgc);
 
-  // Allocate space on the stack for arguments. This modifies scratch.
+  // Allocate space on the stack for arguments.
   emitAllocateSpaceForApply(tmpArgc, scratch);
 
-  // Load arguments data
+  // Load arguments data.
   masm.loadPrivate(Address(argsObj, ArgumentsObject::getDataSlotOffset()),
                    argsObj);
   size_t argsSrcOffset = ArgumentsData::offsetOfArgs();
@@ -6547,6 +6562,7 @@ void CodeGenerator::emitPushArguments(LApplyArgsObj* apply, Register scratch) {
   // After this call, the argsObj register holds the argument count instead.
   emitPushArrayAsArguments(tmpArgc, argsObj, scratch, argsSrcOffset);
 
+  // Push |this|.
   masm.pushValue(ToValue(apply, LApplyArgsObj::ThisIndex));
 }
 
@@ -6570,31 +6586,32 @@ void CodeGenerator::emitPushArrayAsArguments(Register tmpArgc,
 
   // Skip the copy of arguments if there are none.
   masm.branchTestPtr(Assembler::Zero, tmpArgc, tmpArgc, &noCopy);
+  {
+    // Copy the values. This code is skipped entirely if there are no values.
+    size_t argvDstOffset = 0;
 
-  // Copy the values.  This code is skipped entirely if there are
-  // no values.
-  size_t argvDstOffset = 0;
+    Register argvSrcBase = srcBaseAndArgc;
 
-  Register argvSrcBase = srcBaseAndArgc;
-  Register copyreg = scratch;
+    // Stash away |tmpArgc| and adjust argvDstOffset accordingly.
+    masm.push(tmpArgc);
+    Register argvIndex = tmpArgc;
+    argvDstOffset += sizeof(void*);
 
-  masm.push(tmpArgc);
-  Register argvIndex = tmpArgc;
-  argvDstOffset += sizeof(void*);
+    // Copy
+    emitCopyValuesForApply(argvSrcBase, argvIndex, scratch, argvSrcOffset,
+                           argvDstOffset);
 
-  // Copy
-  emitCopyValuesForApply(argvSrcBase, argvIndex, copyreg, argvSrcOffset,
-                         argvDstOffset);
-
-  // Restore.
-  masm.pop(srcBaseAndArgc);  // srcBaseAndArgc now contains argc.
-  masm.jump(&epilogue);
-
-  // Clear argc if we skipped the copy step.
+    // Restore.
+    masm.pop(srcBaseAndArgc);  // srcBaseAndArgc now contains argc.
+    masm.jump(&epilogue);
+  }
   masm.bind(&noCopy);
-  masm.movePtr(ImmWord(0), srcBaseAndArgc);
+  {
+    // Clear argc if we skipped the copy step.
+    masm.movePtr(ImmWord(0), srcBaseAndArgc);
+  }
 
-  // Join with all arguments copied and the extra stack usage computed.
+  // Join with all arguments copied.
   // Note, "srcBase" has become "argc".
   masm.bind(&epilogue);
 }
@@ -6628,7 +6645,7 @@ void CodeGenerator::emitPushArguments(LConstructArgsGeneric* construct,
                                       Register scratch) {
   MOZ_ASSERT(scratch == ToRegister(construct->getNewTarget()));
 
-  // Holds the function nargs. Initially the number of args to the caller.
+  // Holds the function nargs.
   Register argcreg = ToRegister(construct->getArgc());
   Register copyreg = ToRegister(construct->getTempObject());
   uint32_t extraFormals = construct->numExtraFormals();
@@ -6686,11 +6703,10 @@ void CodeGenerator::emitApplyGeneric(T* apply) {
 
   // Copy the arguments of the current function.
   //
-  // In the case of ApplyArray, ConstructArray, or ApplyArgsObj, also
-  // compute argc. The argc register and the elements/argsObj register
-  // are the same; argc must not be referenced before the call to
-  // emitPushArguments() and elements/argsObj must not be referenced
-  // after it returns.
+  // In the case of ApplyArray, ConstructArray, or ApplyArgsObj, also compute
+  // argc. The argc register and the elements/argsObj register are the same;
+  // argc must not be referenced before the call to emitPushArguments() and
+  // elements/argsObj must not be referenced after it returns.
   //
   // In the case of ConstructArray or ConstructArgs, also overwrite newTarget
   // with scratch; newTarget must not be referenced after this point.
@@ -6798,8 +6814,8 @@ void CodeGenerator::emitApplyGeneric(T* apply) {
 
   masm.bind(&end);
 
-  // If the return value of the constructing function is Primitive,
-  // replace the return value with the Object from CreateThis.
+  // If the return value of the constructing function is Primitive, replace the
+  // return value with the Object from CreateThis.
   if (constructing) {
     Label notPrimitive;
     masm.branchTestPrimitive(Assembler::NotEqual, JSReturnOperand,
