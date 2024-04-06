@@ -895,8 +895,48 @@ html {
         }
       }
 
+      // duplicate the above styles for no-rdm. unfortunately SASS won't allow
+      // us to combine these selectors.
+      &:where([no-rdm='true']) {
+        .tiles-theme-section {
+          margin-inline-start: -10px;
+        }
+
+        &[reverse-split] {
+          flex-direction: row-reverse;
+
+          .section-main {
+            .main-content {
+              border-radius: inherit;
+            }
+
+            margin: auto;
+            margin-inline-end: 0;
+            border-radius: 8px 0 0 8px;
+
+            &:dir(rtl) {
+              border-radius: 0 8px 8px 0;
+              margin: auto;
+              margin-inline-end: 0;
+            }
+          }
+
+          .section-secondary {
+            margin: auto;
+            margin-inline-start: 0;
+            border-radius: 0 8px 8px 0;
+
+            &:dir(rtl) {
+              border-radius: 8px 0 0 8px;
+              margin: auto;
+              margin-inline-start: 0;
+            }
+          }
+        }
+      }
+
       @media only screen and (width <= 800px) {
-        &:not([no-rdm]) {
+        &:where(:not([no-rdm])) {
           flex-direction: column;
           min-height: $small-main-section-height + $small-secondary-section-height;
 
