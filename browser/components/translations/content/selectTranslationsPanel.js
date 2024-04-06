@@ -177,6 +177,43 @@ var SelectTranslationsPanel = new (class {
   }
 
   /**
+   * Attempts to determine the best language tag to use as the source language for translation.
+   * If the detected language is not supported, attempts to fallback to the document's language tag.
+   *
+   * @param {string} textToTranslate - The text for which the language detection and target language retrieval are performed.
+   *
+   * @returns {Promise<string>} - The code of a supported language, a supported document language, or the top detected language.
+   */
+  async getTopSupportedDetectedLanguage(textToTranslate) {
+    // First see if any of the detected languages are supported and return it if so.
+    const { language, languages } = await LanguageDetector.detectLanguage(
+      textToTranslate
+    );
+    for (const { languageCode } of languages) {
+      const isSupported = await TranslationsParent.isSupportedAsFromLang(
+        languageCode
+      );
+      if (isSupported) {
+        return languageCode;
+      }
+    }
+
+    // Since none of the detected languages were supported, check to see if the
+    // document has a specified language tag that is supported.
+    const actor = TranslationsParent.getTranslationsActor(
+      gBrowser.selectedBrowser
+    );
+    const detectedLanguages = actor.languageState.detectedLanguages;
+    if (detectedLanguages?.isDocLangTagSupported) {
+      return detectedLanguages.docLangTag;
+    }
+
+    // No supported language was found, so return the top detected language
+    // to inform the panel's unsupported language state.
+    return language;
+  }
+
+  /**
    * Detects the language of the provided text and retrieves a language pair for translation
    * based on user settings.
    *
@@ -187,9 +224,7 @@ var SelectTranslationsPanel = new (class {
    */
   async getLangPairPromise(textToTranslate) {
     const [fromLang, toLang] = await Promise.all([
-      LanguageDetector.detectLanguage(textToTranslate).then(
-        ({ language }) => language
-      ),
+      SelectTranslationsPanel.getTopSupportedDetectedLanguage(textToTranslate),
       TranslationsParent.getTopPreferredSupportedToLang(),
     ]);
 
