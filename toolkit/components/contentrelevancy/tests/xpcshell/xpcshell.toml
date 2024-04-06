@@ -3,6 +3,7 @@ head = "head.js"
 firefox-appdir = "browser"
 
 ["test_ContentRelevancyManager.js"]
+skip-if = ["os == 'android'"] # bug 1886601
 
 ["test_InputUtils.js"]
 skip-if = ["os == 'android'"] # bug 1886601
