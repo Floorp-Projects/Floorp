@@ -14,6 +14,8 @@ add_task(
       page: SELECT_TEST_PAGE_URL,
       languagePairs: [
         // Do not include Spanish.
+        { fromLang: "fa", toLang: "en" },
+        { fromLang: "en", toLang: "fa" },
         { fromLang: "fi", toLang: "en" },
         { fromLang: "en", toLang: "fi" },
         { fromLang: "fr", toLang: "en" },
@@ -36,7 +38,7 @@ add_task(
     });
 
     await SelectTranslationsTestUtils.changeSelectedFromLanguage(
-      ["fi", "fr", "sl", "uk"],
+      ["fa", "fi", "fr", "sl", "uk"],
       {
         openDropdownMenu: true,
         downloadHandler: resolveDownloads,
@@ -60,6 +62,8 @@ add_task(
       languagePairs: [
         { fromLang: "es", toLang: "en" },
         { fromLang: "en", toLang: "es" },
+        { fromLang: "fa", toLang: "en" },
+        { fromLang: "en", toLang: "fa" },
         { fromLang: "fi", toLang: "en" },
         { fromLang: "en", toLang: "fi" },
         { fromLang: "fr", toLang: "en" },
@@ -81,7 +85,7 @@ add_task(
     });
 
     await SelectTranslationsTestUtils.changeSelectedToLanguage(
-      ["es", "fi", "fr", "sl", "uk"],
+      ["es", "fa", "fi", "fr", "sl", "uk"],
       {
         openDropdownMenu: true,
         downloadHandler: resolveDownloads,
