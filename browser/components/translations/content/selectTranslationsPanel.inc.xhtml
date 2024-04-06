@@ -49,6 +49,7 @@
                         noinitialselection="true"
                         oncommand="SelectTranslationsPanel.onChangeFromLanguage(event)">
                 <menupopup id="select-translations-panel-from-menupopup"
+                           onpopupshown="SelectTranslationsPanel.handlePanelPopupShownEvent(event)"
                            class="translations-panel-language-menupopup-from">
                   <!-- The list of <menuitem> will be dynamically inserted. -->
                 </menupopup>
@@ -68,6 +69,7 @@
                         noinitialselection="true"
                         oncommand="SelectTranslationsPanel.onChangeToLanguage(event)">
                 <menupopup id="select-translations-panel-to-menupopup"
+                           onpopupshown="SelectTranslationsPanel.handlePanelPopupShownEvent(event)"
                            class="translations-panel-language-menupopup-to">
                   <!-- The list of <menuitem> will be dynamically inserted. -->
                 </menupopup>
