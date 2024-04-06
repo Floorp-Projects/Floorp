@@ -1438,7 +1438,6 @@ class SelectTranslationsTestUtils {
     fromLabel: true,
     fromMenuList: true,
     header: true,
-    multiview: true,
     toLabel: true,
     toMenuList: true,
     textArea: true,
@@ -1463,25 +1462,10 @@ class SelectTranslationsTestUtils {
   }
 
   /**
-   * Asserts that the mainViewId of the panel matches the given string.
-   *
-   * @param {string} expectedId
-   */
-  static #assertPanelMainViewId(expectedId) {
-    SharedTranslationsTestUtils._assertPanelMainViewId(
-      SelectTranslationsPanel,
-      expectedId
-    );
-  }
-
-  /**
    * Asserts that the SelectTranslationsPanel UI matches the expected
    * state when the panel has completed its translation.
    */
   static assertPanelViewTranslated() {
-    SelectTranslationsTestUtils.#assertPanelMainViewId(
-      "select-translations-panel-view-default"
-    );
     const { textArea } = SelectTranslationsPanel.elements;
     ok(
       !textArea.classList.contains("translating"),
@@ -1564,9 +1548,6 @@ class SelectTranslationsTestUtils {
    * state when the panel is actively translating text.
    */
   static assertPanelViewActivelyTranslating() {
-    SelectTranslationsTestUtils.#assertPanelMainViewId(
-      "select-translations-panel-view-default"
-    );
     const { textArea } = SelectTranslationsPanel.elements;
     ok(
       textArea.classList.contains("translating"),
@@ -1583,9 +1564,6 @@ class SelectTranslationsTestUtils {
    * state when no from-language is selected in the panel.
    */
   static async assertPanelViewNoFromLangSelected() {
-    SelectTranslationsTestUtils.#assertPanelMainViewId(
-      "select-translations-panel-view-default"
-    );
     const { textArea } = SelectTranslationsPanel.elements;
     ok(
       !textArea.classList.contains("translating"),
@@ -1608,9 +1586,6 @@ class SelectTranslationsTestUtils {
    * state when no to-language is selected in the panel.
    */
   static async assertPanelViewNoToLangSelected() {
-    SelectTranslationsTestUtils.#assertPanelMainViewId(
-      "select-translations-panel-view-default"
-    );
     const { textArea } = SelectTranslationsPanel.elements;
     ok(
       !textArea.classList.contains("translating"),
