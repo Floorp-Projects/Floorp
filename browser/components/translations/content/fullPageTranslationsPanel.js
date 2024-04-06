@@ -1205,7 +1205,7 @@ var FullPageTranslationsPanel = new (class {
     this.#updateSettingsMenuLanguageCheckboxStates();
     this.#updateSettingsMenuSiteCheckboxStates();
     const popup = button.ownerDocument.getElementById(
-      "translations-panel-settings-menupopup"
+      "full-page-translations-panel-settings-menupopup"
     );
     popup.openPopup(button, "after_end");
   }

@@ -364,18 +364,19 @@ async function closeAllOpenPanelsAndMenus() {
  */
 async function closePopupIfOpen(popupElementId) {
   await waitForCondition(async () => {
-    const contextMenu = document.getElementById(popupElementId);
-    if (!contextMenu) {
+    const popupElement = document.getElementById(popupElementId);
+    if (!popupElement) {
       return true;
     }
-    if (contextMenu.state === "closed") {
+    if (popupElement.state === "closed") {
       return true;
     }
     let popuphiddenPromise = BrowserTestUtils.waitForEvent(
-      contextMenu,
+      popupElement,
       "popuphidden"
     );
-    PanelMultiView.hidePopup(contextMenu);
+    popupElement.hidePopup();
+    PanelMultiView.hidePopup(popupElement);
     await popuphiddenPromise;
     return false;
   });
