@@ -219,7 +219,13 @@ nsresult nsWebPDecoder::CreateFrame(const OrientedIntRect& aFrameRect) {
     PostHasTransparency();
   }
 
-  WebPInitDecBuffer(&mBuffer);
+  if (!WebPInitDecBuffer(&mBuffer)) {
+    MOZ_LOG(
+        sWebPLog, LogLevel::Error,
+        ("[this=%p] nsWebPDecoder::CreateFrame -- WebPInitDecBuffer failed\n",
+         this));
+    return NS_ERROR_FAILURE;
+  }
 
   switch (SurfaceFormat::OS_RGBA) {
     case SurfaceFormat::B8G8R8A8:
