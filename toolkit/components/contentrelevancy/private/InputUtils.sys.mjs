@@ -5,6 +5,7 @@
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  Dedupe: "resource://activity-stream/common/Dedupe.sys.mjs",
   NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
 });
 
@@ -23,7 +24,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
  *   visit in the past 3 days. see more details at:
  *   `/browser/components/urlbar/docs/ranking.rst`
  * @returns {Array}
- *   An array of URLs. Note that the actual number could be less than this.
+ *   An array of URLs. Note that the actual number could be less than `maxUrls`.
  */
 export async function getTopFrecentUrls(
   maxUrls,
@@ -57,7 +58,7 @@ export async function getTopFrecentUrls(
  * @param {number} maxUrls
  *   The maximum number of URLs to fetch.
  * @returns {Array}
- *   An array of URLs. Note that the actual number could be less than this.
+ *   An array of URLs. Note that the actual number could be less than `maxUrls`.
  */
 export async function getMostRecentUrls(maxUrls) {
   const options = {
@@ -73,4 +74,29 @@ export async function getMostRecentUrls(maxUrls) {
   );
 
   return records.map(site => site.url);
+}
+
+/**
+ * Get the URLs as a combination of the top frecent and the most recent
+ * browsing history.
+ *
+ * It will fetch `maxUrls` URLs from top frecent URLs and use most recent URLs
+ * as a fallback if the former is insufficient. Duplicates will be removed
+ * As a result, the returned URLs might be fewer than requested.
+ *
+ * @param {number} maxUrls
+ *   The maximum number of URLs to fetch.
+ * @returns {Array}
+ *   An array of URLs.
+ */
+export async function getFrecentRecentCombinedUrls(maxUrls) {
+  let urls = await getTopFrecentUrls(maxUrls);
+  if (urls.length < maxUrls) {
+    const n = Math.round((maxUrls - urls.length) * 1.2); // Over-fetch for deduping
+    const recentUrls = await getMostRecentUrls(n);
+    const deduper = new lazy.Dedupe();
+    urls = deduper.group(urls, recentUrls).flat().slice(0, maxUrls);
+  }
+
+  return urls;
 }
