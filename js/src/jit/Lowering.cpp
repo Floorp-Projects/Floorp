@@ -654,12 +654,23 @@ void LIRGenerator::visitApplyArgs(MApplyArgs* apply) {
   static_assert(CallTempReg2 != JSReturnReg_Type);
   static_assert(CallTempReg2 != JSReturnReg_Data);
 
-  LApplyArgsGeneric* lir = new (alloc()) LApplyArgsGeneric(
-      useFixedAtStart(apply->getFunction(), CallTempReg3),
-      useFixedAtStart(apply->getArgc(), CallTempReg0),
-      useBoxFixedAtStart(apply->getThis(), CallTempReg4, CallTempReg5),
-      tempFixed(CallTempReg1),   // object register
-      tempFixed(CallTempReg2));  // stack counter register
+  auto function = useFixedAtStart(apply->getFunction(), CallTempReg3);
+  auto argc = useFixedAtStart(apply->getArgc(), CallTempReg0);
+  auto thisValue =
+      useBoxFixedAtStart(apply->getThis(), CallTempReg4, CallTempReg5);
+  auto tempObj = tempFixed(CallTempReg1);      // object register
+  auto tempCounter = tempFixed(CallTempReg2);  // stack counter register
+
+  auto* target = apply->getSingleTarget();
+
+  LInstruction* lir;
+  if (target && target->isNativeWithoutJitEntry()) {
+    lir = new (alloc())
+        LApplyArgsNative(function, argc, thisValue, tempObj, tempCounter);
+  } else {
+    lir = new (alloc())
+        LApplyArgsGeneric(function, argc, thisValue, tempObj, tempCounter);
+  }
 
   // Bailout is needed in the case of too many values in the arguments array.
   assignSnapshot(lir, apply->bailoutKind());
@@ -675,12 +686,23 @@ void LIRGenerator::visitApplyArgsObj(MApplyArgsObj* apply) {
   static_assert(CallTempReg2 != JSReturnReg_Type);
   static_assert(CallTempReg2 != JSReturnReg_Data);
 
-  LApplyArgsObj* lir = new (alloc()) LApplyArgsObj(
-      useFixedAtStart(apply->getFunction(), CallTempReg3),
-      useFixedAtStart(apply->getArgsObj(), CallTempReg0),
-      useBoxFixedAtStart(apply->getThis(), CallTempReg4, CallTempReg5),
-      tempFixed(CallTempReg1),   // object register
-      tempFixed(CallTempReg2));  // stack counter register
+  auto function = useFixedAtStart(apply->getFunction(), CallTempReg3);
+  auto argsObj = useFixedAtStart(apply->getArgsObj(), CallTempReg0);
+  auto thisValue =
+      useBoxFixedAtStart(apply->getThis(), CallTempReg4, CallTempReg5);
+  auto tempObj = tempFixed(CallTempReg1);      // object register
+  auto tempCounter = tempFixed(CallTempReg2);  // stack counter register
+
+  auto* target = apply->getSingleTarget();
+
+  LInstruction* lir;
+  if (target && target->isNativeWithoutJitEntry()) {
+    lir = new (alloc())
+        LApplyArgsObjNative(function, argsObj, thisValue, tempObj, tempCounter);
+  } else {
+    lir = new (alloc())
+        LApplyArgsObj(function, argsObj, thisValue, tempObj, tempCounter);
+  }
 
   // Bailout is needed in the case of too many values in the arguments array.
   assignSnapshot(lir, apply->bailoutKind());
@@ -696,12 +718,23 @@ void LIRGenerator::visitApplyArray(MApplyArray* apply) {
   static_assert(CallTempReg2 != JSReturnReg_Type);
   static_assert(CallTempReg2 != JSReturnReg_Data);
 
-  LApplyArrayGeneric* lir = new (alloc()) LApplyArrayGeneric(
-      useFixedAtStart(apply->getFunction(), CallTempReg3),
-      useFixedAtStart(apply->getElements(), CallTempReg0),
-      useBoxFixedAtStart(apply->getThis(), CallTempReg4, CallTempReg5),
-      tempFixed(CallTempReg1),   // object register
-      tempFixed(CallTempReg2));  // stack counter register
+  auto function = useFixedAtStart(apply->getFunction(), CallTempReg3);
+  auto elements = useFixedAtStart(apply->getElements(), CallTempReg0);
+  auto thisValue =
+      useBoxFixedAtStart(apply->getThis(), CallTempReg4, CallTempReg5);
+  auto tempObj = tempFixed(CallTempReg1);      // object register
+  auto tempCounter = tempFixed(CallTempReg2);  // stack counter register
+
+  auto* target = apply->getSingleTarget();
+
+  LInstruction* lir;
+  if (target && target->isNativeWithoutJitEntry()) {
+    lir = new (alloc())
+        LApplyArrayNative(function, elements, thisValue, tempObj, tempCounter);
+  } else {
+    lir = new (alloc())
+        LApplyArrayGeneric(function, elements, thisValue, tempObj, tempCounter);
+  }
 
   // Bailout is needed in the case of too many values in the array, or empty
   // space at the end of the array.
@@ -721,12 +754,26 @@ void LIRGenerator::visitConstructArgs(MConstructArgs* mir) {
   static_assert(CallTempReg2 != JSReturnReg_Type);
   static_assert(CallTempReg2 != JSReturnReg_Data);
 
-  auto* lir = new (alloc()) LConstructArgsGeneric(
-      useFixedAtStart(mir->getFunction(), CallTempReg3),
-      useFixedAtStart(mir->getArgc(), CallTempReg0),
-      useFixedAtStart(mir->getNewTarget(), CallTempReg1),
-      useBoxFixedAtStart(mir->getThis(), CallTempReg4, CallTempReg5),
-      tempFixed(CallTempReg2));
+  auto function = useFixedAtStart(mir->getFunction(), CallTempReg3);
+  auto argc = useFixedAtStart(mir->getArgc(), CallTempReg0);
+  auto newTarget = useFixedAtStart(mir->getNewTarget(), CallTempReg1);
+  auto temp = tempFixed(CallTempReg2);
+
+  auto* target = mir->getSingleTarget();
+
+  LInstruction* lir;
+  if (target && target->isNativeWithoutJitEntry()) {
+    auto temp2 = tempFixed(CallTempReg4);
+
+    lir = new (alloc())
+        LConstructArgsNative(function, argc, newTarget, temp, temp2);
+  } else {
+    auto thisValue =
+        useBoxFixedAtStart(mir->getThis(), CallTempReg4, CallTempReg5);
+
+    lir = new (alloc())
+        LConstructArgsGeneric(function, argc, newTarget, thisValue, temp);
+  }
 
   // Bailout is needed in the case of too many values in the arguments array.
   assignSnapshot(lir, mir->bailoutKind());
@@ -745,12 +792,26 @@ void LIRGenerator::visitConstructArray(MConstructArray* mir) {
   static_assert(CallTempReg2 != JSReturnReg_Type);
   static_assert(CallTempReg2 != JSReturnReg_Data);
 
-  auto* lir = new (alloc()) LConstructArrayGeneric(
-      useFixedAtStart(mir->getFunction(), CallTempReg3),
-      useFixedAtStart(mir->getElements(), CallTempReg0),
-      useFixedAtStart(mir->getNewTarget(), CallTempReg1),
-      useBoxFixedAtStart(mir->getThis(), CallTempReg4, CallTempReg5),
-      tempFixed(CallTempReg2));
+  auto function = useFixedAtStart(mir->getFunction(), CallTempReg3);
+  auto elements = useFixedAtStart(mir->getElements(), CallTempReg0);
+  auto newTarget = useFixedAtStart(mir->getNewTarget(), CallTempReg1);
+  auto temp = tempFixed(CallTempReg2);
+
+  auto* target = mir->getSingleTarget();
+
+  LInstruction* lir;
+  if (target && target->isNativeWithoutJitEntry()) {
+    auto temp2 = tempFixed(CallTempReg4);
+
+    lir = new (alloc())
+        LConstructArrayNative(function, elements, newTarget, temp, temp2);
+  } else {
+    auto thisValue =
+        useBoxFixedAtStart(mir->getThis(), CallTempReg4, CallTempReg5);
+
+    lir = new (alloc())
+        LConstructArrayGeneric(function, elements, newTarget, thisValue, temp);
+  }
 
   // Bailout is needed in the case of too many values in the array, or empty
   // space at the end of the array.

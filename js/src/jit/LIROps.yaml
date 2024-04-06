@@ -632,6 +632,21 @@
 - name: ConstructArrayGeneric
   gen_boilerplate: false
 
+- name: ApplyArgsNative
+  gen_boilerplate: false
+
+- name: ApplyArgsObjNative
+  gen_boilerplate: false
+
+- name: ApplyArrayNative
+  gen_boilerplate: false
+
+- name: ConstructArgsNative
+  gen_boilerplate: false
+
+- name: ConstructArrayNative
+  gen_boilerplate: false
+
 - name: TestIAndBranch
   gen_boilerplate: false
 

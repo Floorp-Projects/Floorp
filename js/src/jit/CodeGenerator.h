@@ -246,6 +246,20 @@ class CodeGenerator final : public CodeGeneratorSpecific {
   void emitPushArguments(LConstructArrayGeneric* construct, Register scratch);
 
   template <typename T>
+  void emitApplyNative(T* apply);
+  template <typename T>
+  void emitCallInvokeNativeFunction(T* apply);
+  template <typename T>
+  void emitPushNativeArguments(T* apply);
+  template <typename T>
+  void emitPushArrayAsNativeArguments(T* apply);
+  void emitPushArguments(LApplyArgsNative* apply);
+  void emitPushArguments(LApplyArgsObjNative* apply);
+  void emitPushArguments(LApplyArrayNative* apply);
+  void emitPushArguments(LConstructArgsNative* construct);
+  void emitPushArguments(LConstructArrayNative* construct);
+
+  template <typename T>
   void emitApplyArgsGuard(T* apply);
 
   template <typename T>

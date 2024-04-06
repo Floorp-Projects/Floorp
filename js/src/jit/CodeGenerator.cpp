@@ -6707,27 +6707,9 @@ void CodeGenerator::emitApplyGeneric(T* apply) {
 
   bool constructing = apply->mir()->isConstructing();
 
-  // If the function is native, only emit the call to InvokeFunction.
-  if (apply->hasSingleTarget() &&
-      apply->getSingleTarget()->isNativeWithoutJitEntry()) {
-    emitCallInvokeFunction(apply);
-
-#ifdef DEBUG
-    // Native constructors are guaranteed to return an Object value, so we never
-    // have to replace a primitive result with the previously allocated Object
-    // from CreateThis.
-    if (constructing) {
-      Label notPrimitive;
-      masm.branchTestPrimitive(Assembler::NotEqual, JSReturnOperand,
-                               &notPrimitive);
-      masm.assumeUnreachable("native constructors don't return primitives");
-      masm.bind(&notPrimitive);
-    }
-#endif
-
-    emitRestoreStackPointerFromFP();
-    return;
-  }
+  // If the function is native, the call is compiled through emitApplyNative.
+  MOZ_ASSERT_IF(apply->hasSingleTarget(),
+                !apply->getSingleTarget()->isNativeWithoutJitEntry());
 
   Label end, invoke;
 
@@ -6843,6 +6825,194 @@ void CodeGenerator::emitApplyGeneric(T* apply) {
 }
 
 template <typename T>
+void CodeGenerator::emitCallInvokeNativeFunction(T* apply) {
+  Register argv = ToRegister(apply->getTempObject());
+
+  // Push the space used by the arguments.
+  masm.moveStackPtrTo(argv);
+
+  pushArg(argv);                                       // argv.
+  pushArg(ToRegister(apply->getArgc()));               // argc.
+  pushArg(Imm32(apply->mir()->ignoresReturnValue()));  // ignoresReturnValue.
+  pushArg(Imm32(apply->mir()->isConstructing()));      // isConstructing.
+
+  using Fn =
+      bool (*)(JSContext*, bool, bool, uint32_t, Value*, MutableHandleValue);
+  callVM<Fn, jit::InvokeNativeFunction>(apply);
+}
+
+template <typename T>
+void CodeGenerator::emitPushNativeArguments(T* apply) {
+  Register argc = ToRegister(apply->getArgc());
+  Register tmpArgc = ToRegister(apply->getTempObject());
+  Register scratch = ToRegister(apply->getTempForArgCopy());
+  uint32_t extraFormals = apply->numExtraFormals();
+
+  // Push arguments.
+  Label noCopy;
+  masm.branchTestPtr(Assembler::Zero, argc, argc, &noCopy);
+  {
+    // Use scratch register to calculate stack space (no padding needed).
+    masm.movePtr(argc, scratch);
+
+    // Reserve space for copying the arguments.
+    NativeObject::elementsSizeMustNotOverflow();
+    masm.lshiftPtr(Imm32(ValueShift), scratch);
+    masm.subFromStackPtr(scratch);
+
+    // Compute the source and destination offsets into the stack.
+    Register argvSrcBase = FramePointer;
+    size_t argvSrcOffset =
+        JitFrameLayout::offsetOfActualArgs() + extraFormals * sizeof(JS::Value);
+    size_t argvDstOffset = 0;
+
+    Register argvIndex = tmpArgc;
+    masm.move32(argc, argvIndex);
+
+    // Copy arguments.
+    emitCopyValuesForApply(argvSrcBase, argvIndex, scratch, argvSrcOffset,
+                           argvDstOffset);
+  }
+  masm.bind(&noCopy);
+}
+
+template <typename T>
+void CodeGenerator::emitPushArrayAsNativeArguments(T* apply) {
+  Register argc = ToRegister(apply->getArgc());
+  Register elements = ToRegister(apply->getElements());
+  Register tmpArgc = ToRegister(apply->getTempObject());
+  Register scratch = ToRegister(apply->getTempForArgCopy());
+
+  // NB: argc and elements are mapped to the same register.
+  MOZ_ASSERT(argc == elements);
+
+  // Invariants guarded in the caller:
+  //  - the array is not too long
+  //  - the array length equals its initialized length
+
+  // The array length is our argc.
+  masm.load32(Address(elements, ObjectElements::offsetOfLength()), tmpArgc);
+
+  // Skip the copy of arguments if there are none.
+  Label noCopy;
+  masm.branchTestPtr(Assembler::Zero, tmpArgc, tmpArgc, &noCopy);
+  {
+    // |tmpArgc| is off-by-one, so adjust the offset accordingly.
+    BaseObjectElementIndex srcPtr(elements, tmpArgc,
+                                  -int32_t(sizeof(JS::Value)));
+
+    Label loop;
+    masm.bind(&loop);
+    masm.pushValue(srcPtr, scratch);
+    masm.decBranchPtr(Assembler::NonZero, tmpArgc, Imm32(1), &loop);
+  }
+  masm.bind(&noCopy);
+
+  // Set argc in preparation for emitCallInvokeNativeFunction.
+  masm.load32(Address(elements, ObjectElements::offsetOfLength()), argc);
+}
+
+void CodeGenerator::emitPushArguments(LApplyArgsNative* apply) {
+  emitPushNativeArguments(apply);
+}
+
+void CodeGenerator::emitPushArguments(LApplyArrayNative* apply) {
+  emitPushArrayAsNativeArguments(apply);
+}
+
+void CodeGenerator::emitPushArguments(LConstructArgsNative* construct) {
+  emitPushNativeArguments(construct);
+}
+
+void CodeGenerator::emitPushArguments(LConstructArrayNative* construct) {
+  emitPushArrayAsNativeArguments(construct);
+}
+
+void CodeGenerator::emitPushArguments(LApplyArgsObjNative* apply) {
+  Register argc = ToRegister(apply->getArgc());
+  Register argsObj = ToRegister(apply->getArgsObj());
+  Register tmpArgc = ToRegister(apply->getTempObject());
+  Register scratch = ToRegister(apply->getTempForArgCopy());
+
+  // NB: argc and argsObj are mapped to the same register.
+  MOZ_ASSERT(argc == argsObj);
+
+  // Load argc into tmpArgc.
+  masm.loadArgumentsObjectLength(argsObj, tmpArgc);
+
+  // Push arguments.
+  Label noCopy, epilogue;
+  masm.branchTestPtr(Assembler::Zero, tmpArgc, tmpArgc, &noCopy);
+  {
+    // Use scratch register to calculate stack space (no padding needed).
+    masm.movePtr(tmpArgc, scratch);
+
+    // Reserve space for copying the arguments.
+    NativeObject::elementsSizeMustNotOverflow();
+    masm.lshiftPtr(Imm32(ValueShift), scratch);
+    masm.subFromStackPtr(scratch);
+
+    // Load arguments data.
+    Register argvSrcBase = argsObj;
+    masm.loadPrivate(Address(argsObj, ArgumentsObject::getDataSlotOffset()),
+                     argvSrcBase);
+    size_t argvSrcOffset = ArgumentsData::offsetOfArgs();
+    size_t argvDstOffset = 0;
+
+    // Stash away |tmpArgc| and adjust argvDstOffset accordingly.
+    masm.push(tmpArgc);
+    argvDstOffset += sizeof(void*);
+
+    // Copy the values.
+    emitCopyValuesForApply(argvSrcBase, tmpArgc, scratch, argvSrcOffset,
+                           argvDstOffset);
+
+    // Set argc in preparation for emitCallInvokeNativeFunction.
+    masm.pop(argc);
+    masm.jump(&epilogue);
+  }
+  masm.bind(&noCopy);
+  {
+    // Set argc in preparation for emitCallInvokeNativeFunction.
+    masm.movePtr(ImmWord(0), argc);
+  }
+  masm.bind(&epilogue);
+}
+
+template <typename T>
+void CodeGenerator::emitApplyNative(T* apply) {
+  MOZ_ASSERT(apply->mir()->getSingleTarget()->isNativeWithoutJitEntry());
+
+  constexpr bool isConstructing = T::isConstructing();
+  MOZ_ASSERT(isConstructing == apply->mir()->isConstructing(),
+             "isConstructing condition must be consistent");
+
+  // Push newTarget.
+  if constexpr (isConstructing) {
+    masm.pushValue(JSVAL_TYPE_OBJECT, ToRegister(apply->getNewTarget()));
+  }
+
+  // Push arguments.
+  emitPushArguments(apply);
+
+  // Push |this|.
+  if constexpr (isConstructing) {
+    masm.pushValue(MagicValue(JS_IS_CONSTRUCTING));
+  } else {
+    masm.pushValue(ToValue(apply, T::ThisIndex));
+  }
+
+  // Push callee.
+  masm.pushValue(JSVAL_TYPE_OBJECT, ToRegister(apply->getFunction()));
+
+  // Call the native function.
+  emitCallInvokeNativeFunction(apply);
+
+  // Pop arguments and continue.
+  emitRestoreStackPointerFromFP();
+}
+
+template <typename T>
 void CodeGenerator::emitApplyArgsGuard(T* apply) {
   LSnapshot* snapshot = apply->snapshot();
   Register argcreg = ToRegister(apply->getArgc());
@@ -6905,6 +7075,31 @@ void CodeGenerator::visitConstructArgsGeneric(LConstructArgsGeneric* lir) {
 void CodeGenerator::visitConstructArrayGeneric(LConstructArrayGeneric* lir) {
   emitApplyArrayGuard(lir);
   emitApplyGeneric(lir);
+}
+
+void CodeGenerator::visitApplyArgsNative(LApplyArgsNative* lir) {
+  emitApplyArgsGuard(lir);
+  emitApplyNative(lir);
+}
+
+void CodeGenerator::visitApplyArgsObjNative(LApplyArgsObjNative* lir) {
+  emitApplyArgsObjGuard(lir);
+  emitApplyNative(lir);
+}
+
+void CodeGenerator::visitApplyArrayNative(LApplyArrayNative* lir) {
+  emitApplyArrayGuard(lir);
+  emitApplyNative(lir);
+}
+
+void CodeGenerator::visitConstructArgsNative(LConstructArgsNative* lir) {
+  emitApplyArgsGuard(lir);
+  emitApplyNative(lir);
+}
+
+void CodeGenerator::visitConstructArrayNative(LConstructArrayNative* lir) {
+  emitApplyArrayGuard(lir);
+  emitApplyNative(lir);
 }
 
 void CodeGenerator::visitBail(LBail* lir) { bailout(lir->snapshot()); }

@@ -354,6 +354,10 @@ struct LastArg<HeadType, TailTypes...> {
                                   uint32_t argc, Value* argv,
                                   MutableHandleValue rval);
 
+[[nodiscard]] bool InvokeNativeFunction(JSContext* cx, bool constructing,
+                                        bool ignoresReturnValue, uint32_t argc,
+                                        Value* argv, MutableHandleValue rval);
+
 bool InvokeFromInterpreterStub(JSContext* cx,
                                InterpreterStubExitFrameLayout* frame);
 void* GetContextSensitiveInterpreterStub();
