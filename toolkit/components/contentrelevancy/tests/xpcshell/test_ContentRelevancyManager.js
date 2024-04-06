@@ -53,7 +53,7 @@ add_task(async function test_timer() {
   await ContentRelevancyManager.init();
 
   await TestUtils.waitForCondition(
-    () => ContentRelevancyManager.notify.calledOnce,
+    () => ContentRelevancyManager.notify.called,
     "The timer callback should be called"
   );
 
@@ -79,7 +79,7 @@ add_task(async function test_feature_toggling() {
   await TestUtils.waitForTick();
 
   await TestUtils.waitForCondition(
-    () => ContentRelevancyManager.notify.calledOnce,
+    () => ContentRelevancyManager.notify.called,
     "The timer callback should be called"
   );
 

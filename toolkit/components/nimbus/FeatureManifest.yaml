@@ -2672,6 +2672,32 @@ httpsFirst:
         branch: default
         pref: dom.security.https_only_fire_http_request_background_timer_ms
 
+contentRelevancy:
+  description: >-
+    A feature for interest-based content relevance ranking and personalization
+    for Firefox.
+  owner: disco-team@mozilla.com
+  hasExposure: false
+  variables:
+    enabled:
+      description: Enable this feature
+      type: boolean
+      fallbackPref: toolkit.contentRelevancy.enabled
+    maxInputUrls:
+      description: The maximum number of input URLs for interest classification
+      type: int
+    minInputUrls:
+      description: The minimal number of input URLs for interest classification
+      type: int
+    timerInterval:
+      description: >-
+        The interval (in seconds) of the background update timer for the content
+        relevancy manager
+      type: int
+      setPref:
+        branch: user
+        pref: toolkit.contentRelevancy.timerInterval
+
 tabPreview:
   description: Prefs to control Tab Previews
   owner: dwalker@mozilla.com

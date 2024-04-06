@@ -7,10 +7,9 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  getTopFrecentUrls:
+  getFrecentRecentCombinedUrls:
     "resource://gre/modules/contentrelevancy/private/InputUtils.sys.mjs",
-  getMostRecentUrls:
-    "resource://gre/modules/contentrelevancy/private/InputUtils.sys.mjs",
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   RelevancyStore: "resource://gre/modules/RustRelevancy.sys.mjs",
 });
 
@@ -21,8 +20,6 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIUpdateTimerManager"
 );
 
-const PREF_CONTENT_RELEVANCY_ENABLED = "toolkit.contentRelevancy.enabled";
-
 // Constants used by `nsIUpdateTimerManager` for a cross-session timer.
 const TIMER_ID = "content-relevancy-timer";
 const PREF_TIMER_LAST_UPDATE = `app.update.lastUpdateTime.${TIMER_ID}`;
@@ -30,11 +27,19 @@ const PREF_TIMER_INTERVAL = "toolkit.contentRelevancy.timerInterval";
 // Set the timer interval to 1 day for validation.
 const DEFAULT_TIMER_INTERVAL_SECONDS = 1 * 24 * 60 * 60;
 
-// Default total URLs to fetch from Places.
-const DEFAULT_TOTAL_URLS = 100;
+// Default maximum input URLs to fetch from Places.
+const DEFAULT_MAX_URLS = 100;
+// Default minimal input URLs for clasification.
+const DEFAULT_MIN_URLS = 0;
 
 // File name of the relevancy database
 const RELEVANCY_STORE_FILENAME = "content-relevancy.sqlite";
+
+// Nimbus variables
+const NIMBUS_VARIABLE_ENABLED = "enabled";
+const NIMBUS_VARIABLE_MAX_INPUT_URLS = "maxInputUrls";
+const NIMBUS_VARIABLE_MIN_INPUT_URLS = "minInputUrls";
+const NIMBUS_VARIABLE_TIMER_INTERVAL = "timerInterval";
 
 ChromeUtils.defineLazyGetter(lazy, "log", () => {
   return console.createInstance({
@@ -68,11 +73,13 @@ class RelevancyManager {
 
     lazy.log.info("Initializing the manager");
 
-    Services.prefs.addObserver(PREF_CONTENT_RELEVANCY_ENABLED, this);
     if (this.shouldEnable) {
       await this.#enable();
     }
 
+    this._nimbusUpdateCallback = this.#onNimbusUpdate.bind(this);
+    // This will handle both Nimbus updates and pref changes.
+    lazy.NimbusFeatures.contentRelevancy.onUpdate(this._nimbusUpdateCallback);
     this.#initialized = true;
   }
 
@@ -83,7 +90,7 @@ class RelevancyManager {
 
     lazy.log.info("Uninitializing the manager");
 
-    Services.prefs.removeObserver(PREF_CONTENT_RELEVANCY_ENABLED, this);
+    lazy.NimbusFeatures.contentRelevancy.offUpdate(this._nimbusUpdateCallback);
     this.#disable();
 
     this.#initialized = false;
@@ -93,7 +100,11 @@ class RelevancyManager {
    * Determine whether the feature should be enabled based on prefs and Nimbus.
    */
   get shouldEnable() {
-    return Services.prefs.getBoolPref(PREF_CONTENT_RELEVANCY_ENABLED, false);
+    return (
+      lazy.NimbusFeatures.contentRelevancy.getVariable(
+        NIMBUS_VARIABLE_ENABLED
+      ) ?? false
+    );
   }
 
   #startUpTimer() {
@@ -109,10 +120,14 @@ class RelevancyManager {
       lazy.log.debug("Last timer tick: none");
     }
 
-    const interval = Services.prefs.getIntPref(
-      PREF_TIMER_INTERVAL,
-      DEFAULT_TIMER_INTERVAL_SECONDS
-    );
+    const interval =
+      lazy.NimbusFeatures.contentRelevancy.getVariable(
+        NIMBUS_VARIABLE_TIMER_INTERVAL
+      ) ??
+      Services.prefs.getIntPref(
+        PREF_TIMER_INTERVAL,
+        DEFAULT_TIMER_INTERVAL_SECONDS
+      );
     lazy.timerManager.registerTimer(
       TIMER_ID,
       this,
@@ -129,15 +144,17 @@ class RelevancyManager {
   }
 
   async #enable() {
-    // Init the relevancy store.
-    const path = this.#storePath;
-    lazy.log.info(`Initializing RelevancyStore: ${path}`);
+    if (!this.#_store) {
+      // Init the relevancy store.
+      const path = this.#storePath;
+      lazy.log.info(`Initializing RelevancyStore: ${path}`);
 
-    try {
-      this.#_store = await lazy.RelevancyStore.init(path);
-    } catch (error) {
-      lazy.log.error(`Error initializing RelevancyStore: ${error}`);
-      return;
+      try {
+        this.#_store = await lazy.RelevancyStore.init(path);
+      } catch (error) {
+        lazy.log.error(`Error initializing RelevancyStore: ${error}`);
+        return;
+      }
     }
 
     this.#startUpTimer();
@@ -176,9 +193,12 @@ class RelevancyManager {
   /**
    * Perform classification based on browsing history.
    *
-   * It will fetch up to `DEFAULT_TOTAL_URLS` (could be fewer) URLs from
-   * top frecent URLs and use most recent URLs as a fallback if the former is
-   * insufficient.
+   * It will fetch up to `DEFAULT_MAX_URLS` (or the corresponding Nimbus value)
+   * URLs from top frecent URLs and use most recent URLs as a fallback if the
+   * former is insufficient. The returned URLs might be fewer than requested.
+   *
+   * The classification will not be performed if the total number of input URLs
+   * is less than `DEFAULT_MIN_URLS` (or the corresponding Nimbus value).
    */
   async #doClassification() {
     if (this.isInProgress) {
@@ -194,12 +214,19 @@ class RelevancyManager {
 
     try {
       lazy.log.info("Fetching input data for interest classification");
-      let urls = await lazy.getTopFrecentUrls(DEFAULT_TOTAL_URLS);
-      if (urls.length < DEFAULT_TOTAL_URLS) {
-        const recentUrls = await lazy.getMostRecentUrls(
-          DEFAULT_TOTAL_URLS - urls.length
-        );
-        urls = [...urls, ...recentUrls];
+
+      const maxUrls =
+        lazy.NimbusFeatures.contentRelevancy.getVariable(
+          NIMBUS_VARIABLE_MAX_INPUT_URLS
+        ) ?? DEFAULT_MAX_URLS;
+      const minUrls =
+        lazy.NimbusFeatures.contentRelevancy.getVariable(
+          NIMBUS_VARIABLE_MIN_INPUT_URLS
+        ) ?? DEFAULT_MIN_URLS;
+      const urls = await lazy.getFrecentRecentCombinedUrls(maxUrls);
+      if (urls.length < minUrls) {
+        lazy.log.info("Aborting interest classification: insufficient input");
+        return;
       }
 
       lazy.log.info("Starting interest classification");
@@ -269,16 +296,10 @@ class RelevancyManager {
   }
 
   /**
-   * nsIObserver
+   * Nimbus update listener.
    */
-  async observe(subj, topic, data) {
-    switch (topic) {
-      case "nsPref:changed":
-        if (data === PREF_CONTENT_RELEVANCY_ENABLED) {
-          await this.#toggleFeature();
-        }
-        break;
-    }
+  #onNimbusUpdate(_event, _reason) {
+    this.#toggleFeature();
   }
 
   // The `RustRelevancy` store.

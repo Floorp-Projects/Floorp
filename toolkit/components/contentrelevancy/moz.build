@@ -17,6 +17,10 @@ XPCSHELL_TESTS_MANIFESTS += [
     "tests/xpcshell/xpcshell.toml",
 ]
 
+BROWSER_CHROME_MANIFESTS += [
+    "tests/browser/browser.toml",
+]
+
 SPHINX_TREES["/toolkit/components/contentrelevancy"] = "docs"
 
 with Files("docs/**"):
