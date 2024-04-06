@@ -13,7 +13,21 @@ ChromeUtils.defineESModuleGetters(lazy, {
  * the FullPageTranslationsPanel and SelectTranslationsPanel classes.
  */
 export class TranslationsPanelShared {
+  /**
+   * @type {Map<string, string>}
+   */
   static #langListsInitState = new Map();
+
+  /**
+   * Clears cached data regarding the initialization state of the
+   * FullPageTranslationsPanel or the SelectTranslationsPanel.
+   *
+   * This is only needed for test runners to ensure that each test
+   * starts from a clean slate.
+   */
+  static clearCache() {
+    this.#langListsInitState = new Map();
+  }
 
   /**
    * Defines lazy getters for accessing elements in the document based on provided entries.
@@ -100,6 +114,9 @@ export class TranslationsPanelShared {
     );
 
     for (const popup of fromPopups) {
+      while (popup.firstChild) {
+        popup.firstChild.remove();
+      }
       for (const { langTag, displayName } of fromLanguages) {
         const fromMenuItem = document.createXULElement("menuitem");
         fromMenuItem.setAttribute("value", langTag);
@@ -109,6 +126,9 @@ export class TranslationsPanelShared {
     }
 
     for (const popup of toPopups) {
+      while (popup.firstChild) {
+        popup.firstChild.remove();
+      }
       for (const { langTag, displayName } of toLanguages) {
         const toMenuItem = document.createXULElement("menuitem");
         toMenuItem.setAttribute("value", langTag);
