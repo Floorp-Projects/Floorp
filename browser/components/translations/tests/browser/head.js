@@ -299,53 +299,26 @@ class SharedTranslationsTestUtils {
   }
 
   /**
-   * Asserts that the selected from-language matches the provided arguments.
+   * Asserts that the selected language in the menu matches the langTag or l10nId.
    *
-   * @param {FullPageTranslationsPanel | SelectTranslationsPanel} panel
-   *  - The UI component or panel whose selected from-language is being asserted.
-   * @param {object} options - An object containing assertion parameters.
-   * @param {string} [options.langTag] - A BCP-47 language tag.
-   * @param {string} [options.l10nId] - A localization identifier.
+   * @param {Element} menuList - The menu list element to check.
+   * @param {object} options - Options containing 'langTag' and 'l10nId' to assert against.
+   * @param {string} [options.langTag] - The BCP-47 language tag to match.
+   * @param {string} [options.l10nId] - The localization Id to match.
    */
-  static _assertSelectedFromLanguage(panel, { langTag, l10nId }) {
-    const { fromMenuList } = panel.elements;
-    is(
-      fromMenuList.value,
-      langTag,
-      "Expected selected from-language to match the given language tag"
-    );
-    if (l10nId) {
-      is(
-        fromMenuList.getAttribute("data-l10n-id"),
-        l10nId,
-        "Expected selected from-language to match the given l10n id"
-      );
-    }
-  }
-
-  /**
-   * Asserts that the selected to-language matches the provided arguments.
-   *
-   * @param {FullPageTranslationsPanel | SelectTranslationsPanel} panel
-   *  - The UI component or panel whose selected from-language is being asserted.
-   * @param {object} options - An object containing assertion parameters.
-   * @param {string} [options.langTag] - A BCP-47 language tag.
-   * @param {string} [options.l10nId] - A localization identifier.
-   */
-  static _assertSelectedToLanguage(panel, { langTag, l10nId }) {
-    const { toMenuList } = panel.elements;
+  static _assertSelectedLanguage(menuList, { langTag, l10nId }) {
     if (langTag) {
       is(
-        toMenuList.value,
+        menuList.value,
         langTag,
-        "Expected selected to-language to match the given language tag"
+        `Expected ${menuList.id} selection to match '${langTag}'`
       );
     }
     if (l10nId) {
       is(
-        toMenuList.getAttribute("data-l10n-id"),
+        menuList.getAttribute("data-l10n-id"),
         l10nId,
-        "Expected selected to-language to match the given l10n id"
+        `Expected ${menuList.id} l10nId to match '${l10nId}'`
       );
     }
   }
@@ -855,25 +828,31 @@ class FullPageTranslationsTestUtils {
   /**
    * Asserts that the selected from-language matches the provided language tag.
    *
-   * @param {string} langTag - A BCP-47 language tag.
+   * @param {object} options - Options containing 'langTag' and 'l10nId' to assert against.
+   * @param {string} [options.langTag] - The BCP-47 language tag to match.
+   * @param {string} [options.l10nId] - The localization Id to match.
    */
   static assertSelectedFromLanguage({ langTag, l10nId }) {
-    SharedTranslationsTestUtils._assertSelectedFromLanguage(
-      FullPageTranslationsPanel,
-      { langTag, l10nId }
-    );
+    const { fromMenuList } = FullPageTranslationsPanel.elements;
+    SharedTranslationsTestUtils._assertSelectedLanguage(fromMenuList, {
+      langTag,
+      l10nId,
+    });
   }
 
   /**
    * Asserts that the selected to-language matches the provided language tag.
    *
-   * @param {string} langTag - A BCP-47 language tag.
+   * @param {object} options - Options containing 'langTag' and 'l10nId' to assert against.
+   * @param {string} [options.langTag] - The BCP-47 language tag to match.
+   * @param {string} [options.l10nId] - The localization Id to match.
    */
   static assertSelectedToLanguage({ langTag, l10nId }) {
-    SharedTranslationsTestUtils._assertSelectedToLanguage(
-      FullPageTranslationsPanel,
-      { langTag, l10nId }
-    );
+    const { toMenuList } = FullPageTranslationsPanel.elements;
+    SharedTranslationsTestUtils._assertSelectedLanguage(toMenuList, {
+      langTag,
+      l10nId,
+    });
   }
 
   /**
@@ -1502,11 +1481,9 @@ class SelectTranslationsTestUtils {
    *
    * @param {string} langTag - A BCP-47 language tag.
    */
-  static assertSelectedFromLanguage({ langTag, l10nId }) {
-    SharedTranslationsTestUtils._assertSelectedFromLanguage(
-      SelectTranslationsPanel,
-      { langTag, l10nId }
-    );
+  static assertSelectedFromLanguage(langTag = null) {
+    const { fromMenuList } = SelectTranslationsPanel.elements;
+    SelectTranslationsTestUtils.#assertSelectedLanguage(fromMenuList, langTag);
   }
 
   /**
@@ -1514,11 +1491,29 @@ class SelectTranslationsTestUtils {
    *
    * @param {string} langTag - A BCP-47 language tag.
    */
-  static assertSelectedToLanguage({ langTag, l10nId }) {
-    SharedTranslationsTestUtils._assertSelectedToLanguage(
-      SelectTranslationsPanel,
-      { langTag, l10nId }
-    );
+  static assertSelectedToLanguage(langTag = null) {
+    const { toMenuList } = SelectTranslationsPanel.elements;
+    SelectTranslationsTestUtils.#assertSelectedLanguage(toMenuList, langTag);
+  }
+
+  /**
+   * Asserts the selected language in the given  menu list if a langTag is provided.
+   * If no langTag is given, asserts that the menulist displays the localized placeholder.
+   *
+   * @param {object} menuList - The menu list object to check.
+   * @param {string} [langTag] - The optional language tag to assert against.
+   */
+  static #assertSelectedLanguage(menuList, langTag) {
+    if (langTag) {
+      SharedTranslationsTestUtils._assertSelectedLanguage(menuList, {
+        langTag,
+      });
+    } else {
+      SharedTranslationsTestUtils._assertSelectedLanguage(menuList, {
+        l10nId: "translations-panel-choose-language",
+      });
+      SharedTranslationsTestUtils._assertHasFocus(menuList);
+    }
   }
 
   /**
