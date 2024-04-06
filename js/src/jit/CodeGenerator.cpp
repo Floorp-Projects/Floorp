@@ -20237,7 +20237,8 @@ void CodeGenerator::visitToHashableString(LToHashableString* ins) {
                     Address(input, JSString::offsetOfFlags()),
                     Imm32(JSString::ATOM_BIT), &isAtom);
 
-  masm.lookupStringInAtomCacheLastLookups(input, output, ool->entry());
+  masm.lookupStringInAtomCacheLastLookups(input, output, output, ool->entry());
+  masm.jump(ool->rejoin());
   masm.bind(&isAtom);
   masm.movePtr(input, output);
   masm.bind(ool->rejoin());
