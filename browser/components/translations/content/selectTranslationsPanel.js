@@ -271,12 +271,14 @@ var SelectTranslationsPanel = new (class {
    * Opens the panel, ensuring the panel's UI and state are initialized correctly.
    *
    * @param {Event} event - The triggering event for opening the panel.
+   * @param {number} screenX - The x-axis location of the screen at which to open the popup.
+   * @param {number} screenY - The y-axis location of the screen at which to open the popup.
    * @param {string} sourceText - The text to translate.
    * @param {Promise} langPairPromise - Promise resolving to language pair data for initializing dropdowns.
    *
    * @returns {Promise<void>}
    */
-  async open(event, sourceText, langPairPromise) {
+  async open(event, screenX, screenY, sourceText, langPairPromise) {
     if (this.#isOpen()) {
       return;
     }
@@ -291,31 +293,22 @@ var SelectTranslationsPanel = new (class {
 
     this.#displayIdlePlaceholder();
     this.#maybeRequestTranslation();
-
-    await this.#openPopup(event);
+    await this.#openPopup(event, screenX, screenY);
   }
 
   /**
-   * Opens a the panel popup.
+   * Opens a the panel popup at a location on the screen.
    *
    * @param {Event} event - The event that triggers the popup opening.
-   *
-   * @returns {Promise<void>}
+   * @param {number} screenX - The x-axis location of the screen at which to open the popup.
+   * @param {number} screenY - The y-axis location of the screen at which to open the popup.
    */
-  async #openPopup(event) {
+  async #openPopup(event, screenX, screenY) {
+    await window.ensureCustomElements("moz-button-group");
+
     this.console?.log("Showing SelectTranslationsPanel");
     const { panel } = this.elements;
-
-    // TODO(Bug 1878721) Rework the logic of where to open the panel.
-    //
-    // For the moment, the Select Translations panel opens at the
-    // AppMenu Button, but it will eventually need to open near
-    // to the selected content.
-    const appMenuButton = document.getElementById("PanelUI-menu-button");
-    await PanelMultiView.openPopup(panel, appMenuButton, {
-      position: "bottomright topright",
-      triggerEvent: event,
-    }).catch(error => this.console?.error(error));
+    panel.openPopupAtScreen(screenX, screenY, /* isContextMenu */ false, event);
   }
 
   /**
