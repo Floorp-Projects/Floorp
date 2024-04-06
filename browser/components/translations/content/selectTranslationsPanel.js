@@ -725,6 +725,7 @@ var SelectTranslationsPanel = new (class {
   #displayIdlePlaceholder() {
     const { textArea } = SelectTranslationsPanel.elements;
     textArea.value = this.#idlePlaceholderText;
+    this.#updateTextDirection();
     this.#updateConditionalUIEnabledState();
     this.#maybeFocusMenuList();
   }
@@ -735,6 +736,7 @@ var SelectTranslationsPanel = new (class {
   #displayTranslatingPlaceholder() {
     const { textArea } = SelectTranslationsPanel.elements;
     textArea.value = this.#translatingPlaceholderText;
+    this.#updateTextDirection();
     this.#updateConditionalUIEnabledState();
     this.#indicateTranslatedTextArea({ overflow: "hidden" });
   }
@@ -743,8 +745,10 @@ var SelectTranslationsPanel = new (class {
    * Displays the translated text for the translation state's "translated" phase.
    */
   #displayTranslatedText() {
+    const { toLanguage } = this.#getSelectedLanguagePair();
     const { textArea } = SelectTranslationsPanel.elements;
     textArea.value = this.getTranslatedText();
+    this.#updateTextDirection(toLanguage);
     this.#updateConditionalUIEnabledState();
     this.#indicateTranslatedTextArea({ overflow: "auto" });
   }
@@ -781,6 +785,22 @@ var SelectTranslationsPanel = new (class {
         this.#displayTranslatedText();
         break;
       }
+    }
+  }
+
+  /**
+   * Sets the text direction attribute in the text areas based on the specified language.
+   * Uses the given language tag if provided, otherwise uses the current app locale.
+   *
+   * @param {string} [langTag] - The language tag to determine text direction.
+   */
+  #updateTextDirection(langTag) {
+    const { textArea } = this.elements;
+    if (langTag) {
+      const scriptDirection = Services.intl.getScriptDirection(langTag);
+      textArea.setAttribute("dir", scriptDirection);
+    } else {
+      textArea.removeAttribute("dir");
     }
   }
 

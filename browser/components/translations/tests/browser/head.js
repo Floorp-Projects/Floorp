@@ -1500,6 +1500,20 @@ class SelectTranslationsTestUtils {
     SelectTranslationsTestUtils.#assertPanelTextAreaOverflow();
   }
 
+  static #assertPanelTextAreaDirection(langTag = null) {
+    const expectedTextDirection = langTag
+      ? Services.intl.getScriptDirection(langTag)
+      : null;
+    const { textArea } = SelectTranslationsPanel.elements;
+    const actualTextDirection = textArea.getAttribute("dir");
+
+    is(
+      actualTextDirection,
+      expectedTextDirection,
+      `The text direction should be ${expectedTextDirection}`
+    );
+  }
+
   /**
    * Asserts that the SelectTranslationsPanel translated text area is
    * both scrollable and scrolled to the top.
@@ -1628,6 +1642,7 @@ class SelectTranslationsTestUtils {
       expected,
       "Translated text area should be the idle placeholder."
     );
+    SelectTranslationsTestUtils.#assertPanelTextAreaDirection();
   }
 
   /**
@@ -1644,6 +1659,7 @@ class SelectTranslationsTestUtils {
       expected,
       "Active translation text area should have the translating placeholder."
     );
+    SelectTranslationsTestUtils.#assertPanelTextAreaDirection();
     SelectTranslationsTestUtils.#assertConditionalUIEnabled({
       textArea: true,
       copyButton: false,
@@ -1671,6 +1687,7 @@ class SelectTranslationsTestUtils {
         translatedSuffix.length,
       "Expected translated text length to correspond to the source text length."
     );
+    SelectTranslationsTestUtils.#assertPanelTextAreaDirection(toLanguage);
     SelectTranslationsTestUtils.#assertConditionalUIEnabled({
       textArea: true,
       copyButton: true,
