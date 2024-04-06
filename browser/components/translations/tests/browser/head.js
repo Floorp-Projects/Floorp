@@ -1243,7 +1243,7 @@ class FullPageTranslationsTestUtils {
    *
    * @param {string} langTag - A BCP-47 language tag.
    */
-  static switchSelectedFromLanguage(langTag) {
+  static changeSelectedFromLanguage(langTag) {
     logAction(langTag);
     const { fromMenuList } = FullPageTranslationsPanel.elements;
     fromMenuList.value = langTag;
@@ -1255,7 +1255,7 @@ class FullPageTranslationsTestUtils {
    *
    * @param {string} langTag - A BCP-47 language tag.
    */
-  static switchSelectedToLanguage(langTag) {
+  static changeSelectedToLanguage(langTag) {
     logAction(langTag);
     const { toMenuList } = FullPageTranslationsPanel.elements;
     toMenuList.value = langTag;

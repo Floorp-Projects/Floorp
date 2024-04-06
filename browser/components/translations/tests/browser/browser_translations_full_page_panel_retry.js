@@ -37,7 +37,7 @@ add_task(async function test_translations_panel_retry() {
     onOpenPanel: FullPageTranslationsTestUtils.assertPanelViewRevisit,
   });
 
-  FullPageTranslationsTestUtils.switchSelectedToLanguage("fr");
+  FullPageTranslationsTestUtils.changeSelectedToLanguage("fr");
 
   await FullPageTranslationsTestUtils.clickTranslateButton({
     downloadHandler: resolveDownloads,
