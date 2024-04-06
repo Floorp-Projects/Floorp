@@ -245,6 +245,15 @@ class CodeGenerator final : public CodeGeneratorSpecific {
   void emitPushArguments(LConstructArgsGeneric* construct, Register scratch);
   void emitPushArguments(LConstructArrayGeneric* construct, Register scratch);
 
+  template <typename T>
+  void emitApplyArgsGuard(T* apply);
+
+  template <typename T>
+  void emitApplyArgsObjGuard(T* apply);
+
+  template <typename T>
+  void emitApplyArrayGuard(T* apply);
+
   template <class GetInlinedArgument>
   void emitGetInlinedArgument(GetInlinedArgument* lir, Register index,
                               ValueOperand output);
