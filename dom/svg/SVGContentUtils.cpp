@@ -493,6 +493,14 @@ static gfx::Matrix GetCTMInternal(SVGElement* aElement, bool aScreenCTM,
     return ret;
   };
 
+  auto postTranslateFrameOffset = [](nsIFrame* aFrame, nsIFrame* aAncestorFrame,
+                                     gfx::Matrix& aMatrix) {
+    auto point = aFrame->GetOffsetTo(aAncestorFrame);
+    aMatrix =
+        aMatrix.PostTranslate(nsPresContext::AppUnitsToFloatCSSPixels(point.x),
+                              nsPresContext::AppUnitsToFloatCSSPixels(point.y));
+  };
+
   gfxMatrix matrix = getLocalTransformHelper(aElement, aHaveRecursed);
 
   SVGElement* element = aElement;
@@ -548,6 +556,11 @@ static gfx::Matrix GetCTMInternal(SVGElement* aElement, bool aScreenCTM,
   if (auto* ancestorSVG = SVGElement::FromNode(ancestor)) {
     return tm * GetCTMInternal(ancestorSVG, true, true);
   }
+  nsIFrame* parentFrame = frame->GetParent();
+  if (!parentFrame) {
+    return tm;
+  }
+  postTranslateFrameOffset(frame, parentFrame, tm);
 
   nsIContent* nearestSVGAncestor = ancestor;
   while (nearestSVGAncestor && !nearestSVGAncestor->IsSVGElement()) {
@@ -566,7 +579,7 @@ static gfx::Matrix GetCTMInternal(SVGElement* aElement, bool aScreenCTM,
     return tm;
   }
   auto transformToAncestor = nsLayoutUtils::GetTransformToAncestor(
-      RelativeTo{frame, ViewportType::Layout},
+      RelativeTo{parentFrame, ViewportType::Layout},
       RelativeTo{ancestorFrame, ViewportType::Layout}, nsIFrame::IN_CSS_UNITS);
   gfx::Matrix result2d;
   if (transformToAncestor.CanDraw2D(&result2d)) {
@@ -575,10 +588,7 @@ static gfx::Matrix GetCTMInternal(SVGElement* aElement, bool aScreenCTM,
     // The transform from our outer SVG matrix to the root is a 3D
     // transform. We can't really process that so give up and just
     // return the overall translation from the outer SVG to the root.
-    auto point = frame->GetOffsetTo(ancestorFrame);
-    float x = nsPresContext::AppUnitsToFloatCSSPixels(point.x);
-    float y = nsPresContext::AppUnitsToFloatCSSPixels(point.y);
-    tm = tm.PostTranslate(x, y);
+    postTranslateFrameOffset(parentFrame, ancestorFrame, tm);
   }
   return nearestSVGAncestor
              ? tm * GetCTMInternal(static_cast<SVGElement*>(nearestSVGAncestor),
