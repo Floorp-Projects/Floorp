@@ -45,6 +45,49 @@ var SelectTranslationsPanel = new (class {
   }
 
   /**
+   * The textarea height for shorter text.
+   */
+  #shortTextHeight = "8em";
+
+  /**
+   * Retrieves the read-only textarea height for shorter text.
+   *
+   * @see #shortTextHeight
+   */
+  get shortTextHeight() {
+    return this.#shortTextHeight;
+  }
+
+  /**
+   * The textarea height for shorter text.
+   */
+  #longTextHeight = "16em";
+
+  /**
+   * Retrieves the read-only textarea height for longer text.
+   *
+   * @see #longTextHeight
+   */
+  get longTextHeight() {
+    return this.#longTextHeight;
+  }
+
+  /**
+   * The threshold used to determine when the panel should
+   * use the short text-height vs. the long-text height.
+   */
+  #textLengthThreshold = 800;
+
+  /**
+   * Retrieves the read-only text-length threshold.
+   *
+   * @see #textLengthThreshold
+   */
+  get textLengthThreshold() {
+    return this.#textLengthThreshold;
+  }
+
+  /**
    * The localized placeholder text to display when idle.
    *
    * @type {string}
@@ -277,16 +320,24 @@ var SelectTranslationsPanel = new (class {
   }
 
   /**
-   * Adds the source text to the translation state.
+   * Adds the source text to the translation state and adapts the size of the text area based
+   * on the length of the text.
    *
    * @param {string} sourceText - The text to translate.
    *
    * @returns {Promise<void>}
    */
   #registerSourceText(sourceText) {
+    const { textArea } = this.elements;
     this.#changeStateTo("idle", /* retainEntries */ false, {
       sourceText,
     });
+
+    if (sourceText.length < SelectTranslationsPanel.textLengthThreshold) {
+      textArea.style.height = SelectTranslationsPanel.shortTextHeight;
+    } else {
+      textArea.style.height = SelectTranslationsPanel.longTextHeight;
+    }
   }
 
   /**
