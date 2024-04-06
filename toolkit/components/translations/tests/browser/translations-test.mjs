@@ -38,20 +38,35 @@ export function getSelectors() {
     getHeader() {
       return content.document.querySelector("header");
     },
-    getFirstParagraph() {
-      return content.document.querySelector("p:first-of-type");
-    },
     getLastParagraph() {
       return content.document.querySelector("p:last-of-type");
     },
-    getSpanishParagraph() {
-      return content.document.getElementById("spanish-paragraph");
+    getFrenchSection() {
+      return content.document.getElementById("french-section");
     },
-    getSpanishHyperlink() {
-      return content.document.getElementById("spanish-hyperlink");
+    getEnglishSection() {
+      return content.document.getElementById("english-section");
+    },
+    getSpanishSection() {
+      return content.document.getElementById("spanish-section");
+    },
+    getFrenchSentence() {
+      return content.document.getElementById("french-sentence");
+    },
+    getEnglishSentence() {
+      return content.document.getElementById("english-sentence");
+    },
+    getSpanishSentence() {
+      return content.document.getElementById("spanish-sentence");
     },
     getEnglishHyperlink() {
       return content.document.getElementById("english-hyperlink");
+    },
+    getFrenchHyperlink() {
+      return content.document.getElementById("french-hyperlink");
+    },
+    getSpanishHyperlink() {
+      return content.document.getElementById("spanish-hyperlink");
     },
   };
 }

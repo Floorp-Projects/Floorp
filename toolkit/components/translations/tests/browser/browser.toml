@@ -9,6 +9,7 @@ support-files = [
   "translations-tester-es-2.html",
   "translations-tester-fr.html",
   "translations-tester-no-tag.html",
+  "translations-tester-select.html",
   "translations-tester-shadow-dom-es.html",
   "translations-tester-shadow-dom-mutation-es.html",
   "translations-tester-shadow-dom-mutation-es-2.html",
