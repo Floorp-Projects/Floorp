@@ -49,7 +49,7 @@ ChromeUtils.defineLazyGetter(lazy, "isContentScriptProcess", () => {
 });
 
 var extensions = new DefaultWeakMap(policy => {
-  return new lazy.ExtensionChild.BrowserExtensionContent(policy);
+  return new lazy.ExtensionChild(policy);
 });
 
 var pendingExtensions = new Map();

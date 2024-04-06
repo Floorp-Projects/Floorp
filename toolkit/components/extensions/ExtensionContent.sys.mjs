@@ -39,8 +39,10 @@ const ScriptError = Components.Constructor(
 );
 
 import {
+  ChildAPIManager,
   ExtensionChild,
   ExtensionActivityLogChild,
+  Messenger,
 } from "resource://gre/modules/ExtensionChild.sys.mjs";
 import { ExtensionCommon } from "resource://gre/modules/ExtensionCommon.sys.mjs";
 import { ExtensionUtils } from "resource://gre/modules/ExtensionUtils.sys.mjs";
@@ -62,8 +64,6 @@ const {
   redefineGetter,
   runSafeSyncWithoutClone,
 } = ExtensionCommon;
-
-const { BrowserExtensionContent, ChildAPIManager, Messenger } = ExtensionChild;
 
 ChromeUtils.defineLazyGetter(lazy, "isContentScriptProcess", () => {
   return (
@@ -282,49 +282,37 @@ class CSSCodeCache extends BaseCSSCache {
   }
 }
 
-defineLazyGetter(
-  BrowserExtensionContent.prototype,
-  "staticScripts",
-  function () {
-    return new ScriptCache({ hasReturnValue: false }, this);
-  }
-);
+defineLazyGetter(ExtensionChild.prototype, "staticScripts", function () {
+  return new ScriptCache({ hasReturnValue: false }, this);
+});
 
-defineLazyGetter(
-  BrowserExtensionContent.prototype,
-  "dynamicScripts",
-  function () {
-    return new ScriptCache({ hasReturnValue: true }, this);
-  }
-);
+defineLazyGetter(ExtensionChild.prototype, "dynamicScripts", function () {
+  return new ScriptCache({ hasReturnValue: true }, this);
+});
 
-defineLazyGetter(BrowserExtensionContent.prototype, "userCSS", function () {
+defineLazyGetter(ExtensionChild.prototype, "userCSS", function () {
   return new CSSCache(Ci.nsIStyleSheetService.USER_SHEET, this);
 });
 
-defineLazyGetter(BrowserExtensionContent.prototype, "authorCSS", function () {
+defineLazyGetter(ExtensionChild.prototype, "authorCSS", function () {
   return new CSSCache(Ci.nsIStyleSheetService.AUTHOR_SHEET, this);
 });
 
 // These two caches are similar to the above but specialized to cache the cssCode
 // using an hash computed from the cssCode string as the key (instead of the generated data
 // URI which can be pretty long for bigger injected cssCode).
-defineLazyGetter(BrowserExtensionContent.prototype, "userCSSCode", function () {
+defineLazyGetter(ExtensionChild.prototype, "userCSSCode", function () {
   return new CSSCodeCache(Ci.nsIStyleSheetService.USER_SHEET, this);
 });
 
-defineLazyGetter(
-  BrowserExtensionContent.prototype,
-  "authorCSSCode",
-  function () {
-    return new CSSCodeCache(Ci.nsIStyleSheetService.AUTHOR_SHEET, this);
-  }
-);
+defineLazyGetter(ExtensionChild.prototype, "authorCSSCode", function () {
+  return new CSSCodeCache(Ci.nsIStyleSheetService.AUTHOR_SHEET, this);
+});
 
 // Represents a content script.
 class Script {
   /**
-   * @param {BrowserExtensionContent} extension
+   * @param {ExtensionChild} extension
    * @param {WebExtensionContentScript|object} matcher
    *        An object with a "matchesWindowGlobal" method and content script
    *        execution details. This is usually a plain WebExtensionContentScript
@@ -667,7 +655,7 @@ class Script {
 // Represents a user script.
 class UserScript extends Script {
   /**
-   * @param {BrowserExtensionContent} extension
+   * @param {ExtensionChild} extension
    * @param {WebExtensionContentScript|object} matcher
    *        An object with a "matchesWindowGlobal" method and content script
    *        execution details.
@@ -1115,8 +1103,6 @@ DocumentManager = {
 };
 
 export var ExtensionContent = {
-  BrowserExtensionContent,
-
   contentScripts,
 
   shutdownExtension(extension) {

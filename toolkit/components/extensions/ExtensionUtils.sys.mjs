@@ -43,7 +43,7 @@ function promiseTimeout(delay) {
  * An Error subclass for which complete error messages are always passed
  * to extensions, rather than being interpreted as an unknown error.
  */
-class ExtensionError extends DOMException {
+export class ExtensionError extends DOMException {
   constructor(message) {
     super(message, "ExtensionError");
   }
@@ -67,7 +67,7 @@ function filterStack(error) {
  * only logged internally and raised to the worker script as
  * the generic unexpected error).
  */
-class WorkerExtensionError extends DOMException {
+export class WorkerExtensionError extends DOMException {
   constructor(message) {
     super(message, "Error");
   }
@@ -345,5 +345,4 @@ export var ExtensionUtils = {
   DefaultWeakMap,
   ExtensionError,
   LimitedSet,
-  WorkerExtensionError,
 };

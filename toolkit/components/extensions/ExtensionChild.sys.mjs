@@ -144,7 +144,7 @@ const StrongPromise = {
 Services.obs.addObserver(StrongPromise, "extensions-onMessage-witness");
 
 // Simple single-event emitter-like helper, exposes the EventManager api.
-class SimpleEventAPI extends EventManager {
+export class SimpleEventAPI extends EventManager {
   constructor(context, name) {
     let fires = new Set();
     let register = fire => {
@@ -162,7 +162,7 @@ class SimpleEventAPI extends EventManager {
 }
 
 // runtime.OnMessage event helper, handles custom async/sendResponse logic.
-class MessageEvent extends SimpleEventAPI {
+export class MessageEvent extends SimpleEventAPI {
   emit(holder, sender) {
     if (!this.fires.size || !this.context.active) {
       return { received: false };
@@ -229,7 +229,7 @@ function holdMessage(name, anonymizedName, data, native = null) {
 }
 
 // Implements the runtime.Port extension API object.
-class Port {
+export class Port {
   /**
    * @param {BaseContext} context The context that owns this port.
    * @param {number} portId Uniquely identifies this port's channel.
@@ -310,7 +310,7 @@ class Port {
  * Each extension context gets its own Messenger object. It handles the
  * basics of sendMessage, onMessage, connect and onConnect.
  */
-class Messenger {
+export class Messenger {
   constructor(context) {
     this.context = context;
     this.conduit = context.openConduit(this, {
@@ -382,8 +382,11 @@ var ExtensionManager = {
   extensions: new Map(),
 };
 
-// Represents a browser extension in the content process.
-class BrowserExtensionContent extends EventEmitter {
+/**
+ * Represents an extension instance in the child process.
+ * Corresponds to the @see {Extension} instance in the parent.
+ */
+export class ExtensionChild extends EventEmitter {
   constructor(policy) {
     super();
 
@@ -580,7 +583,7 @@ class BrowserExtensionContent extends EventEmitter {
 /**
  * An object that runs an remote implementation of an API.
  */
-class ProxyAPIImplementation extends SchemaAPIInterface {
+export class ProxyAPIImplementation extends SchemaAPIInterface {
   /**
    * @param {string} namespace The full path to the namespace that contains the
    *     `name` member. This may contain dots, e.g. "storage.local".
@@ -680,7 +683,7 @@ class ProxyAPIImplementation extends SchemaAPIInterface {
   }
 }
 
-class ChildLocalAPIImplementation extends LocalAPIImplementation {
+export class ChildLocalAPIImplementation extends LocalAPIImplementation {
   constructor(pathObj, namespace, name, childApiManager) {
     super(pathObj, name, childApiManager.context);
     this.childApiManagerId = childApiManager.id;
@@ -730,7 +733,7 @@ class ChildLocalAPIImplementation extends LocalAPIImplementation {
 // JSProcessActor Conduits actors (see ConduitsChild.sys.mjs) to communicate
 // with the ParentAPIManager singleton in ExtensionParent.sys.mjs.
 // It handles asynchronous function calls as well as event listeners.
-class ChildAPIManager {
+export class ChildAPIManager {
   constructor(context, messageManager, localAPICan, contextData) {
     this.context = context;
     this.messageManager = messageManager;
@@ -1012,14 +1015,3 @@ class ChildAPIManager {
     this.permissionsChangedCallbacks.add(callback);
   }
 }
-
-export var ExtensionChild = {
-  BrowserExtensionContent,
-  ChildAPIManager,
-  ChildLocalAPIImplementation,
-  MessageEvent,
-  Messenger,
-  Port,
-  ProxyAPIImplementation,
-  SimpleEventAPI,
-};
