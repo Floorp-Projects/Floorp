@@ -7,7 +7,7 @@
   width: 31em;
 }
 
-:where(#full-page-translations-panel) :is(description, label, menulist) {
+:where(.translations-panel) :is(description, label, menulist) {
   margin: 0;
 }
 
@@ -132,6 +132,7 @@ h1.translations-panel-header-wrapper {
   background-color: transparent;
   font: message-box;
   font-weight: var(--font-weight-bold);
+
   &::before {
     content: url(chrome://global/skin/icons/edit-copy.svg);
     fill: currentColor;
@@ -146,15 +147,33 @@ h1.translations-panel-header-wrapper {
 }
 
 .select-translations-panel-label {
-  margin-inline: 2px;
+  margin-block: var(--arrowpanel-padding) 6px;
 }
 
 #select-translations-panel-lang-selection {
   gap: 6px;
 }
 
-#select-translations-panel-translation-area {
+.select-translations-panel-text-area {
   height: 8em;
-  margin-inline: 5px;
   resize: none;
+
+  &:disabled {
+    color: var(--panel-disabled-color);
+    border-color: var(--panel-disabled-color);
+  }
+
+  &.translating {
+    -moz-context-properties: fill;
+    fill: currentColor;
+    background-image: url("chrome://global/skin/icons/loading.svg");
+    background-repeat: no-repeat;
+    background-position: 8px 8px;
+    background-size: var(--size-item-small);
+    padding-inline-start: calc(var(--size-item-small) + (2 * var(--space-small)));
+
+    &:-moz-locale-dir(rtl) {
+      background-position-x: right 8px;
+    }
+  }
 }
