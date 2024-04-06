@@ -658,18 +658,18 @@ void LIRGenerator::visitApplyArgs(MApplyArgs* apply) {
   auto argc = useFixedAtStart(apply->getArgc(), CallTempReg0);
   auto thisValue =
       useBoxFixedAtStart(apply->getThis(), CallTempReg4, CallTempReg5);
-  auto tempObj = tempFixed(CallTempReg1);      // object register
-  auto tempCounter = tempFixed(CallTempReg2);  // stack counter register
+  auto tempObj = tempFixed(CallTempReg1);   // object register
+  auto tempCopy = tempFixed(CallTempReg2);  // copy register
 
   auto* target = apply->getSingleTarget();
 
   LInstruction* lir;
   if (target && target->isNativeWithoutJitEntry()) {
     lir = new (alloc())
-        LApplyArgsNative(function, argc, thisValue, tempObj, tempCounter);
+        LApplyArgsNative(function, argc, thisValue, tempObj, tempCopy);
   } else {
     lir = new (alloc())
-        LApplyArgsGeneric(function, argc, thisValue, tempObj, tempCounter);
+        LApplyArgsGeneric(function, argc, thisValue, tempObj, tempCopy);
   }
 
   // Bailout is needed in the case of too many values in the arguments array.
@@ -690,18 +690,18 @@ void LIRGenerator::visitApplyArgsObj(MApplyArgsObj* apply) {
   auto argsObj = useFixedAtStart(apply->getArgsObj(), CallTempReg0);
   auto thisValue =
       useBoxFixedAtStart(apply->getThis(), CallTempReg4, CallTempReg5);
-  auto tempObj = tempFixed(CallTempReg1);      // object register
-  auto tempCounter = tempFixed(CallTempReg2);  // stack counter register
+  auto tempObj = tempFixed(CallTempReg1);   // object register
+  auto tempCopy = tempFixed(CallTempReg2);  // copy register
 
   auto* target = apply->getSingleTarget();
 
   LInstruction* lir;
   if (target && target->isNativeWithoutJitEntry()) {
     lir = new (alloc())
-        LApplyArgsObjNative(function, argsObj, thisValue, tempObj, tempCounter);
+        LApplyArgsObjNative(function, argsObj, thisValue, tempObj, tempCopy);
   } else {
     lir = new (alloc())
-        LApplyArgsObj(function, argsObj, thisValue, tempObj, tempCounter);
+        LApplyArgsObj(function, argsObj, thisValue, tempObj, tempCopy);
   }
 
   // Bailout is needed in the case of too many values in the arguments array.
@@ -722,18 +722,18 @@ void LIRGenerator::visitApplyArray(MApplyArray* apply) {
   auto elements = useFixedAtStart(apply->getElements(), CallTempReg0);
   auto thisValue =
       useBoxFixedAtStart(apply->getThis(), CallTempReg4, CallTempReg5);
-  auto tempObj = tempFixed(CallTempReg1);      // object register
-  auto tempCounter = tempFixed(CallTempReg2);  // stack counter register
+  auto tempObj = tempFixed(CallTempReg1);   // object register
+  auto tempCopy = tempFixed(CallTempReg2);  // copy register
 
   auto* target = apply->getSingleTarget();
 
   LInstruction* lir;
   if (target && target->isNativeWithoutJitEntry()) {
     lir = new (alloc())
-        LApplyArrayNative(function, elements, thisValue, tempObj, tempCounter);
+        LApplyArrayNative(function, elements, thisValue, tempObj, tempCopy);
   } else {
     lir = new (alloc())
-        LApplyArrayGeneric(function, elements, thisValue, tempObj, tempCounter);
+        LApplyArrayGeneric(function, elements, thisValue, tempObj, tempCopy);
   }
 
   // Bailout is needed in the case of too many values in the array, or empty

@@ -649,14 +649,14 @@ class LApplyArgsGeneric
   LIR_HEADER(ApplyArgsGeneric)
 
   LApplyArgsGeneric(const LAllocation& func, const LAllocation& argc,
-                    const LBoxAllocation& thisv, const LDefinition& tmpobjreg,
-                    const LDefinition& tmpcopy)
+                    const LBoxAllocation& thisv, const LDefinition& tmpObjReg,
+                    const LDefinition& tmpCopy)
       : LCallInstructionHelper(classOpcode) {
     setOperand(0, func);
     setOperand(1, argc);
     setBoxOperand(ThisIndex, thisv);
-    setTemp(0, tmpobjreg);
-    setTemp(1, tmpcopy);
+    setTemp(0, tmpObjReg);
+    setTemp(1, tmpCopy);
   }
 
   MApplyArgs* mir() const { return mir_->toApplyArgs(); }
@@ -712,14 +712,14 @@ class LApplyArrayGeneric
   LIR_HEADER(ApplyArrayGeneric)
 
   LApplyArrayGeneric(const LAllocation& func, const LAllocation& elements,
-                     const LBoxAllocation& thisv, const LDefinition& tmpobjreg,
-                     const LDefinition& tmpcopy)
+                     const LBoxAllocation& thisv, const LDefinition& tmpObjReg,
+                     const LDefinition& tmpCopy)
       : LCallInstructionHelper(classOpcode) {
     setOperand(0, func);
     setOperand(1, elements);
     setBoxOperand(ThisIndex, thisv);
-    setTemp(0, tmpobjreg);
-    setTemp(1, tmpcopy);
+    setTemp(0, tmpObjReg);
+    setTemp(1, tmpCopy);
   }
 
   MApplyArray* mir() const { return mir_->toApplyArray(); }
@@ -746,13 +746,13 @@ class LConstructArgsGeneric
   LConstructArgsGeneric(const LAllocation& func, const LAllocation& argc,
                         const LAllocation& newTarget,
                         const LBoxAllocation& thisv,
-                        const LDefinition& tmpobjreg)
+                        const LDefinition& tmpObjReg)
       : LCallInstructionHelper(classOpcode) {
     setOperand(0, func);
     setOperand(1, argc);
     setOperand(2, newTarget);
     setBoxOperand(ThisIndex, thisv);
-    setTemp(0, tmpobjreg);
+    setTemp(0, tmpObjReg);
   }
 
   MConstructArgs* mir() const { return mir_->toConstructArgs(); }
@@ -784,13 +784,13 @@ class LConstructArrayGeneric
   LConstructArrayGeneric(const LAllocation& func, const LAllocation& elements,
                          const LAllocation& newTarget,
                          const LBoxAllocation& thisv,
-                         const LDefinition& tmpobjreg)
+                         const LDefinition& tmpObjReg)
       : LCallInstructionHelper(classOpcode) {
     setOperand(0, func);
     setOperand(1, elements);
     setOperand(2, newTarget);
     setBoxOperand(ThisIndex, thisv);
-    setTemp(0, tmpobjreg);
+    setTemp(0, tmpObjReg);
   }
 
   MConstructArray* mir() const { return mir_->toConstructArray(); }
