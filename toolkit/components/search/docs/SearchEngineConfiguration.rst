@@ -9,19 +9,23 @@ user's region and locale.
 Configuration Management
 ========================
 
-The application stores a dump of the configuration that is used for first
-initialisation. Subsequent updates to the configuration are either updates to the
-static dump, or they may be served via remote servers.
+The configuration is delivered and managed via `remote settings`_. There are
+:searchfox:`dumps <services/settings/dumps/main/>` of the configuration
+that are shipped with the application, for use on first startup of a fresh profile,
+or when a client has not been able to receive remote settings updates for
+whatever reason.
 
-The mechanism of delivering the settings dumps to the Search Service is
-`the remote settings`_.
-
-Remote settings
----------------
+Remote Settings Bucket
+----------------------
 
 The remote settings bucket for the search engine configuration list is
-``search-config``. The version that is currently being delivered
-to clients can be `viewed live`_.
+``search-config-v2``. The version that is currently being delivered
+to clients can be `viewed live`_. There are additional remote settings buckets
+with information for each search engine. These buckets are listed below.
+
+- `search-config-icons`_ is a mapping of icons to a search engine.
+- `search-config-overrides-v2`_ contains information that may override engines
+  properties in search-config-v2.
 
 Configuration Schema
 ====================
@@ -30,43 +34,13 @@ The configuration format is defined via a `JSON schema`_. The search engine
 configuration schema is `stored in mozilla-central`_ and is uploaded to the
 Remote Settings server at convenient times after it changes.
 
-An outline of the schema may be found on the `Search Configuration Schema`_ page.
+An outline of the schemas may be found on the `Search Configuration Schema`_ page.
 
-Updating Search Engine WebExtensions
-====================================
-
-Updates for application provided search engine WebExtensions are provided via
-`Normandy`_.
-
-It is likely that updates for search engine WebExtensions will be
-received separately to configuration updates which may or may not be directly
-related. As a result several situations may occur:
-
-    - The updated WebExtension is for an app-provided engine already in-use by
-      the user.
-
-      - In this case, the search service will apply the changes to the
-        app-provided engine's data.
-
-    - A WebExtension addition/update is for an app-provided engine that is not
-      in-use by the user, or not in the configuration.
-
-      - In this case, the search service will ignore the WebExtension.
-      - If the configuration (search or user) is updated later and the
-        new engine is added, then the Search Service will start to use the
-        new engine.
-
-    - A configuration update is received that needs a WebExtension that is
-      not found locally.
-
-      - In this case, the search service will ignore the missing engine and
-        continue without it.
-      - When the WebExtension is delivered, the search engine will then be
-        installed and added.
-
-.. _the remote settings: /services/settings/index.html
+.. _remote settings: /services/settings/index.html
 .. _JSON schema: https://json-schema.org/
 .. _stored in mozilla-central: https://searchfox.org/mozilla-central/source/toolkit/components/search/schema/
 .. _Search Configuration Schema: SearchConfigurationSchema.html
-.. _viewed live: https://firefox.settings.services.mozilla.com/v1/buckets/main/collections/search-config/records
-.. _Normandy: /toolkit/components/normandy/normandy/services.html
+.. _viewed live: https://firefox.settings.services.mozilla.com/v1/buckets/main/collections/search-config-v2/records
+.. _search-config-icons: https://firefox.settings.services.mozilla.com/v1/buckets/main/collections/search-config-icons/records
+.. _search-config-overrides-v2: https://firefox.settings.services.mozilla.com/v1/buckets/main/collections/search-config-overrides-v2/records
+.. _search-default-override-allowlist: https://firefox.settings.services.mozilla.com/v1/buckets/main/collections/search-default-override-allowlist/records
