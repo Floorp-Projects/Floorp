@@ -205,7 +205,7 @@
     <!-- This is the caption for the add-on installation progress overlay -->
     <string name="mozac_add_on_install_progress_caption" moz:removedIn="126" tools:ignore="UnusedResources">Descargando e comprobando o complemento…</string>
     <!-- This is the caption for the extension installation progress overlay -->
-    <string name="mozac_extension_install_progress_caption">Descargando e verificando a extensión...</string>
+    <string name="mozac_extension_install_progress_caption">Descargando e verificando a extensión…</string>
     <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->
     <string name="mozac_feature_addons_failed_to_query_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Produciuse un erro ao consultar os complementos!</string>
     <!-- Error shown when something unexpected happened while trying to get the extension list from the server -->

@@ -227,11 +227,11 @@
     <!-- Text shown when attempting to install an add-on and the downloaded file is corrupted. -->
     <string name="mozac_feature_addons_failed_to_install_corrupt_error" moz:removedIn="126" tools:ignore="UnusedResources">Tutón přidatk njeda so instalować, dokelž zda so, zo je wobškodźeny.</string>
     <!-- Text shown when attempting to install an extension and the downloaded file is corrupted. -->
-    <string name="mozac_feature_addons_extension_failed_to_install_corrupt_error">Tute rozšěrjenje njeda so instalować, dokelž zda so, zo je wobškodźeny.</string>
+    <string name="mozac_feature_addons_extension_failed_to_install_corrupt_error">Tute rozšěrjenje njeda so instalować, dokelž zda so, zo je wobškodźene.</string>
     <!-- Text shown when attempting to install an add-on and an error occurred because the extension was not signed. -->
     <string name="mozac_feature_addons_failed_to_install_not_signed_error" moz:removedIn="126" tools:ignore="UnusedResources">Tutón přidatk njeda so instalować, dokelž njeje přepruwowany.</string>
     <!-- Text shown when attempting to install an add-on and an error occurred because the extension was not signed. -->
-    <string name="mozac_feature_addons_extension_failed_to_install_not_signed_error">Tute rozšěrjenje njeda so instalować, dokelž njeje přepruwowany.</string>
+    <string name="mozac_feature_addons_extension_failed_to_install_not_signed_error">Tute rozšěrjenje njeda so instalować, dokelž njeje přepruwowane.</string>
     <!-- Text shown when attempting to install an add-on and an error occurred because the extension was incompatible. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
     <string name="mozac_feature_addons_failed_to_install_incompatible_error">%1$s njeda so instalować, dokelž z %2$s %3$s kompatibelny njeje.</string>
     <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->

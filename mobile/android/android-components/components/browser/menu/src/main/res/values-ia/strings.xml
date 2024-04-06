@@ -1,15 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
     <!-- Content description (not visible, for screen readers etc.): Description for the overflow menu button in the browser toolbar. -->
     <string name="mozac_browser_menu_button">Menu</string>
     <!-- Content description (not visible, for screen readers etc.): Indicates the overflow menu has a highlight -->
     <string name="mozac_browser_menu_highlighted">Evidentiate</string>
     <!-- Label for add-ons submenu section -->
-    <string name="mozac_browser_menu_addons">Additivos</string>
+    <string name="mozac_browser_menu_addons" moz:removedIn="126" tools:ignore="UnusedResources">Additivos</string>
+    <!-- Label for extensions submenu section -->
+    <string name="mozac_browser_menu_extensions">Extensiones</string>
     <!-- Label for add-ons sub menu item for add-ons manager -->
-    <string name="mozac_browser_menu_addons_manager">Gestor de additivos</string>
+    <string name="mozac_browser_menu_addons_manager" moz:removedIn="126" tools:ignore="UnusedResources">Gestor de additivos</string>
+    <!-- Label for extensions sub menu item for extensions manager -->
+    <string name="mozac_browser_menu_extensions_manager">Gestor de extensiones</string>
     <!-- Content description for the action bar "up" button -->
     <string name="action_bar_up_description">Navigar</string>
     <!-- Content description for the action bar "up" button of the add-ons sub menu item -->
-    <string name="mozac_browser_menu_addons_description">Additivos, navigar retro</string>
+    <string name="mozac_browser_menu_addons_description" moz:removedIn="126" tools:ignore="UnusedResources">Additivos, navigar retro</string>
+    <!-- Content description for the action bar "up" button of the extensions sub menu item -->
+    <string name="mozac_browser_menu_extensions_content_description">Extensiones, remontar</string>
 </resources>
