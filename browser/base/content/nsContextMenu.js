@@ -2517,7 +2517,11 @@ class nsContextMenu {
    * @param {Event} event - The triggering event for opening the panel.
    */
   openSelectTranslationsPanel(event) {
-    SelectTranslationsPanel.open(event, this.#translationsLangPairPromise);
+    SelectTranslationsPanel.open(
+      event,
+      this.#getTextToTranslate(),
+      this.#translationsLangPairPromise
+    );
   }
 
   /**
@@ -2568,6 +2572,17 @@ class nsContextMenu {
   }
 
   /**
+   * Fetches text for translation, prioritizing selected text over link text.
+   *
+   * @returns {string} The text to translate.
+   */
+  #getTextToTranslate() {
+    return this.isTextSelected
+      ? this.selectionInfo.fullText.trim()
+      : this.linkTextStr.trim();
+  }
+
+  /**
    * Displays or hides the translate-selection item in the context menu.
    */
   showTranslateSelectionItem() {
@@ -2581,10 +2596,7 @@ class nsContextMenu {
       "browser.translations.select.enable"
     );
 
-    // Selected text takes precedence over link text.
-    const textToTranslate = this.isTextSelected
-      ? this.selectedText.trim()
-      : this.linkTextStr.trim();
+    const textToTranslate = this.#getTextToTranslate();
 
     translateSelectionItem.hidden =
       // Only show the item if the feature is enabled.

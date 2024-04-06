@@ -688,6 +688,42 @@ export class TranslationsParent extends JSWindowActorParent {
     return TranslationsParent.#preferredLanguages;
   }
 
+  /**
+   * Requests a new translations port.
+   *
+   * @param {number} innerWindowId - The id of the current window.
+   * @param {string} fromLanguage - The BCP-47 from-language tag.
+   * @param {string} toLanguage - The BCP-47 to-language tag.
+   *
+   * @returns {Promise<MessagePort | undefined>} The port for communication with the translation engine, or undefined on failure.
+   */
+  static async requestTranslationsPort(
+    innerWindowId,
+    fromLanguage,
+    toLanguage
+  ) {
+    let translationsEngineParent;
+    try {
+      translationsEngineParent =
+        await lazy.EngineProcess.getTranslationsEngineParent();
+    } catch (error) {
+      console.error("Failed to get the translation engine process", error);
+      return undefined;
+    }
+
+    // The MessageChannel will be used for communicating directly between the content
+    // process and the engine's process.
+    const { port1, port2 } = new MessageChannel();
+    translationsEngineParent.startTranslation(
+      fromLanguage,
+      toLanguage,
+      port1,
+      innerWindowId
+    );
+
+    return port2;
+  }
+
   async receiveMessage({ name, data }) {
     switch (name) {
       case "Translations:ReportLangTags": {
