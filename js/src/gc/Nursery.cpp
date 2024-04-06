@@ -1803,15 +1803,29 @@ void js::Nursery::trackTrailerOnPromotion(void* buffer, gc::Cell* owner,
 }
 
 void Nursery::requestMinorGC(JS::GCReason reason) {
+  JS::HeapState heapState = runtime()->heapState();
+#ifdef DEBUG
+  if (heapState == JS::HeapState::Idle ||
+      heapState == JS::HeapState::MinorCollecting) {
+    MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime()));
+  } else if (heapState == JS::HeapState::MajorCollecting) {
+    // The GC runs sweeping tasks that may access the storebuffer in parallel
+    // and these require taking the store buffer lock.
+    MOZ_ASSERT(CurrentThreadIsGCSweeping());
+    runtime()->gc.assertCurrentThreadHasLockedStoreBuffer();
+  } else {
+    MOZ_CRASH("Unexpected heap state");
+  }
+#endif
+
   MOZ_ASSERT(reason != JS::GCReason::NO_REASON);
-  MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime()));
   MOZ_ASSERT(isEnabled());
 
   if (minorGCRequested()) {
     return;
   }
 
-  if (JS::RuntimeHeapIsMinorCollecting()) {
+  if (heapState == JS::HeapState::MinorCollecting) {
     // This can happen when we promote a lot of data to the second generation in
     // a semispace collection. This can trigger a GC due to the amount of store
     // buffer entries added.
@@ -1824,7 +1838,7 @@ void Nursery::requestMinorGC(JS::GCReason reason) {
   toSpace.position_ = chunk(currentChunk()).end();
 
   minorGCTriggerReason_ = reason;
-  runtime()->mainContextFromOwnThread()->requestInterrupt(
+  runtime()->mainContextFromAnyThread()->requestInterrupt(
       InterruptReason::MinorGC);
 }
 
