@@ -119,11 +119,13 @@ var SelectTranslationsPanel = new (class {
         doneButton: "select-translations-panel-done-button",
         fromLabel: "select-translations-panel-from-label",
         fromMenuList: "select-translations-panel-from",
+        fromMenuPopup: "select-translations-panel-from-menupopup",
         header: "select-translations-panel-header",
         multiview: "select-translations-panel-multiview",
         textArea: "select-translations-panel-text-area",
         toLabel: "select-translations-panel-to-label",
         toMenuList: "select-translations-panel-to",
+        toMenuPopup: "select-translations-panel-to-menupopup",
         translateFullPageButton:
           "select-translations-panel-translate-full-page-button",
       });
@@ -332,6 +334,22 @@ var SelectTranslationsPanel = new (class {
   }
 
   /**
+   * Handles events when the panels select from-language is changed.
+   */
+  onChangeFromLanguage() {
+    const { toMenuList } = this.elements;
+    this.#maybeStealLanguageFrom(toMenuList);
+  }
+
+  /**
+   * Handles events when the panels select to-language is changed.
+   */
+  onChangeToLanguage() {
+    const { fromMenuList } = this.elements;
+    this.#maybeStealLanguageFrom(fromMenuList);
+  }
+
+  /**
    * Clears the selected language and ensures that the menu list displays
    * the proper placeholder text.
    *
@@ -341,6 +359,41 @@ var SelectTranslationsPanel = new (class {
     menuList.value = "";
     document.l10n.setAttributes(menuList, "translations-panel-choose-language");
     await document.l10n.translateElements([menuList]);
+  }
+
+  /**
+   * Deselects the language from the target menu list if both menu lists
+   * have the same language selected, simulating the effect of one menu
+   * list stealing the selected language value from the other.
+   *
+   * @param {Element} menuList - The target menu list element to update.
+   */
+  async #maybeStealLanguageFrom(menuList) {
+    const { fromLanguage, toLanguage } = this.#getSelectedLanguagePair();
+    if (fromLanguage === toLanguage) {
+      await this.#deselectLanguage(menuList);
+      this.#maybeFocusMenuList(menuList);
+    }
+  }
+
+  /**
+   * Focuses on the given menu list if provided and empty, or defaults to focusing one
+   * of the from-menu or to-menu lists if either is empty.
+   *
+   * @param {Element} [menuList] - The menu list to focus if specified.
+   */
+  #maybeFocusMenuList(menuList) {
+    if (menuList && !menuList.value) {
+      menuList.focus({ focusVisible: true });
+      return;
+    }
+
+    const { fromMenuList, toMenuList } = this.elements;
+    if (!fromMenuList.value) {
+      fromMenuList.focus({ focusVisible: true });
+    } else if (!toMenuList.value) {
+      toMenuList.focus({ focusVisible: true });
+    }
   }
 
   /**
@@ -611,6 +664,7 @@ var SelectTranslationsPanel = new (class {
   #displayIdlePlaceholder() {
     const { textArea } = SelectTranslationsPanel.elements;
     textArea.value = this.#idlePlaceholderText;
+    this.#maybeFocusMenuList();
   }
 
   /**
