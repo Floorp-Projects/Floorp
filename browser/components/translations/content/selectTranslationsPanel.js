@@ -164,7 +164,6 @@ var SelectTranslationsPanel = new (class {
         fromMenuList: "select-translations-panel-from",
         fromMenuPopup: "select-translations-panel-from-menupopup",
         header: "select-translations-panel-header",
-        multiview: "select-translations-panel-multiview",
         textArea: "select-translations-panel-text-area",
         toLabel: "select-translations-panel-to-label",
         toMenuList: "select-translations-panel-to",
