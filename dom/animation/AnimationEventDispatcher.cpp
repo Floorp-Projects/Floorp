@@ -91,10 +91,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(AnimationEventDispatcher)
       ImplCycleCollectionTraverse(
           cb, target->mElement,
           "mozilla::AnimationEventDispatcher.mPendingEvents.mTarget");
-    } else {
-      ImplCycleCollectionTraverse(
-          cb, info.mData.as<AnimationEventInfo::WebAnimationData>().mEvent,
-          "mozilla::AnimationEventDispatcher.mPendingEvents.mEvent");
     }
     ImplCycleCollectionTraverse(
         cb, info.mAnimation,

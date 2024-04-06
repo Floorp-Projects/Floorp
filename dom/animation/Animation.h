@@ -26,6 +26,7 @@ struct JSContext;
 class nsCSSPropertyIDSet;
 class nsIFrame;
 class nsIGlobalObject;
+class nsAtom;
 
 namespace mozilla {
 
@@ -449,8 +450,7 @@ class Animation : public DOMEventTargetHelper,
   void DoFinishNotification(SyncNotifyFlag aSyncNotifyFlag);
   friend class AsyncFinishNotification;
   void DoFinishNotificationImmediately(MicroTaskRunnable* aAsync = nullptr);
-  void QueuePlaybackEvent(const nsAString& aName,
-                          TimeStamp&& aScheduledEventTime);
+  void QueuePlaybackEvent(nsAtom* aOnEvent, TimeStamp&& aScheduledEventTime);
 
   /**
    * Remove this animation from the pending animation tracker and reset

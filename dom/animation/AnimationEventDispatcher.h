@@ -12,6 +12,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ContentEvents.h"
 #include "mozilla/EventDispatcher.h"
+#include "mozilla/EventListenerManager.h"
 #include "mozilla/Variant.h"
 #include "mozilla/dom/AnimationPlaybackEvent.h"
 #include "mozilla/dom/KeyframeEffect.h"
@@ -44,7 +45,10 @@ struct AnimationEventInfo {
   };
 
   struct WebAnimationData {
-    RefPtr<dom::AnimationPlaybackEvent> mEvent;
+    const RefPtr<nsAtom> mOnEvent;
+    const dom::Nullable<double> mCurrentTime;
+    const dom::Nullable<double> mTimelineTime;
+    const TimeStamp mEventEnqueueTimeStamp{TimeStamp::Now()};
   };
 
   using Data = Variant<CssAnimationData, CssTransitionData, WebAnimationData>;
@@ -100,12 +104,15 @@ struct AnimationEventInfo {
   }
 
   // For web animation events
-  AnimationEventInfo(RefPtr<dom::AnimationPlaybackEvent>&& aEvent,
+  AnimationEventInfo(nsAtom* aOnEvent,
+                     const dom::Nullable<double>& aCurrentTime,
+                     const dom::Nullable<double>& aTimelineTime,
                      TimeStamp&& aScheduledEventTimeStamp,
                      dom::Animation* aAnimation)
       : mAnimation(aAnimation),
         mScheduledEventTimeStamp(std::move(aScheduledEventTimeStamp)),
-        mData(WebAnimationData{std::move(aEvent)}) {}
+        mData(WebAnimationData{RefPtr{aOnEvent}, aCurrentTime, aTimelineTime}) {
+  }
 
   AnimationEventInfo(const AnimationEventInfo& aOther) = delete;
   AnimationEventInfo& operator=(const AnimationEventInfo& aOther) = delete;
@@ -137,10 +144,27 @@ struct AnimationEventInfo {
   // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void Dispatch(nsPresContext* aPresContext) {
     if (mData.is<WebAnimationData>()) {
-      RefPtr playbackEvent = mData.as<WebAnimationData>().mEvent;
+      const auto& data = mData.as<WebAnimationData>();
+      EventListenerManager* elm = mAnimation->GetExistingListenerManager();
+      if (!elm || !elm->HasListenersFor(data.mOnEvent)) {
+        return;
+      }
+
+      dom::AnimationPlaybackEventInit init;
+      init.mCurrentTime = data.mCurrentTime;
+      init.mTimelineTime = data.mTimelineTime;
+      MOZ_ASSERT(nsDependentAtomString(data.mOnEvent).Find(u"on"_ns) == 0,
+                 "mOnEvent atom should start with 'on'!");
+      RefPtr<dom::AnimationPlaybackEvent> event =
+          dom::AnimationPlaybackEvent::Constructor(
+              mAnimation, Substring(nsDependentAtomString(data.mOnEvent), 2),
+              init);
+      event->SetTrusted(true);
+      event->WidgetEventPtr()->AssignEventTime(
+          WidgetEventTime(data.mEventEnqueueTimeStamp));
       RefPtr target = mAnimation;
       EventDispatcher::DispatchDOMEvent(target, nullptr /* WidgetEvent */,
-                                        playbackEvent, aPresContext,
+                                        event, aPresContext,
                                         nullptr /* nsEventStatus */);
       return;
     }
