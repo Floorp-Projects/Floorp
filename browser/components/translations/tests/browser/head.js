@@ -1428,7 +1428,7 @@ class SelectTranslationsTestUtils {
     multiview: true,
     toLabel: true,
     toMenuList: true,
-    translatedTextArea: true,
+    textArea: true,
   };
 
   /**
@@ -1469,6 +1469,11 @@ class SelectTranslationsTestUtils {
     SelectTranslationsTestUtils.#assertPanelMainViewId(
       "select-translations-panel-view-default"
     );
+    const { textArea } = SelectTranslationsPanel.elements;
+    ok(
+      !textArea.classList.contains("translating"),
+      "The textarea should not have the translating class."
+    );
     SelectTranslationsTestUtils.#assertPanelElementVisibility({
       ...SelectTranslationsTestUtils.#alwaysPresentElements,
     });
@@ -1481,15 +1486,15 @@ class SelectTranslationsTestUtils {
    * both scrollable and scrolled to the top.
    */
   static #assertPanelTextAreaOverflow() {
-    const { translatedTextArea } = SelectTranslationsPanel.elements;
+    const { textArea } = SelectTranslationsPanel.elements;
     is(
-      translatedTextArea.style.overflow,
+      textArea.style.overflow,
       "auto",
       "The translated-text area should be scrollable."
     );
-    if (translatedTextArea.scrollHeight > translatedTextArea.clientHeight) {
+    if (textArea.scrollHeight > textArea.clientHeight) {
       is(
-        translatedTextArea.scrollTop,
+        textArea.scrollTop,
         0,
         "The translated-text area should be scrolled to the top."
       );
@@ -1497,17 +1502,52 @@ class SelectTranslationsTestUtils {
   }
 
   /**
+   * Asserts that the SelectTranslationsPanel UI matches the expected
+   * state when the panel is actively translating text.
+   */
+  static assertPanelViewActivelyTranslating() {
+    SelectTranslationsTestUtils.#assertPanelMainViewId(
+      "select-translations-panel-view-default"
+    );
+    const { textArea } = SelectTranslationsPanel.elements;
+    ok(
+      textArea.classList.contains("translating"),
+      "The textarea should have the translating class."
+    );
+    SelectTranslationsTestUtils.#assertPanelElementVisibility({
+      ...SelectTranslationsTestUtils.#alwaysPresentElements,
+    });
+    SelectTranslationsTestUtils.#assertPanelHasTranslatingPlaceholder();
+  }
+
+  /**
+   * Asserts that the SelectTranslationsPanel UI contains the
+   * translating placeholder text.
+   */
+  static async #assertPanelHasTranslatingPlaceholder() {
+    const { textArea } = SelectTranslationsPanel.elements;
+    const expected = await document.l10n.formatValue(
+      "select-translations-panel-translating-placeholder-text"
+    );
+    is(
+      textArea.value,
+      expected,
+      "Active translation text area should have the translating placeholder."
+    );
+  }
+
+  /**
    * Asserts that the SelectTranslationsPanel UI contains the
    * translated text.
    */
   static #assertPanelHasTranslatedText() {
-    const { translatedTextArea, fromMenuList, toMenuList } =
+    const { textArea, fromMenuList, toMenuList } =
       SelectTranslationsPanel.elements;
     const fromLanguage = fromMenuList.value;
     const toLanguage = toMenuList.value;
     const translatedSuffix = ` [${fromLanguage} to ${toLanguage}]`;
     ok(
-      translatedTextArea.value.endsWith(translatedSuffix),
+      textArea.value.endsWith(translatedSuffix),
       `Translated text should match ${fromLanguage} to ${toLanguage}`
     );
     is(
@@ -1674,15 +1714,27 @@ class SelectTranslationsTestUtils {
    * @returns {Promise<void>}
    */
   static async handleDownloads({ downloadHandler, pivotTranslation }) {
+    const { textArea } = SelectTranslationsPanel.elements;
+
     if (downloadHandler) {
-      const { translatedTextArea } = SelectTranslationsPanel.elements;
-      const overflowEnabled = BrowserTestUtils.waitForMutationCondition(
-        translatedTextArea,
-        { attributes: true, attributeFilter: ["style"] },
-        () => translatedTextArea.style.overflow === "auto"
-      );
+      if (textArea.style.overflow !== "hidden") {
+        await BrowserTestUtils.waitForMutationCondition(
+          textArea,
+          { attributes: true, attributeFilter: ["style"] },
+          () => textArea.style.overflow === "hidden"
+        );
+      }
+
+      await SelectTranslationsTestUtils.assertPanelViewActivelyTranslating();
       await downloadHandler(pivotTranslation ? 2 : 1);
-      await overflowEnabled;
+    }
+
+    if (textArea.style.overflow === "hidden") {
+      await BrowserTestUtils.waitForMutationCondition(
+        textArea,
+        { attributes: true, attributeFilter: ["style"] },
+        () => textArea.style.overflow === "auto"
+      );
     }
   }
 
