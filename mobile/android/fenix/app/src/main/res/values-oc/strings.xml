@@ -186,11 +186,13 @@
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Arrestar</string>
     <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_add_ons">Moduls</string>
+    <string name="browser_menu_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Moduls</string>
+    <!-- Browser menu button that opens the extensions manager -->
+    <string name="browser_menu_extensions">Extensions</string>
     <!-- Browser menu button that opens account settings -->
     <string name="browser_menu_account_settings">Informacion compte</string>
     <!-- Text displayed when there are no add-ons to be shown -->
-    <string name="no_add_ons">Cap d’extension aquí</string>
+    <string name="no_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Cap d’extension aquí</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Ajuda</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -206,7 +208,7 @@
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">Apondre a l’ecran d’acuèlh</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
-    <string name="browser_menu_install_on_homescreen">Installar</string>
+    <string name="browser_menu_install_on_homescreen" moz:removedIn="126" tools:ignore="UnusedResources">Installar</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">Tornar sincronizar</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -243,6 +245,15 @@
 
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">Personalizar la pagina d’acuèlh</string>
+
+    <!-- Browser menu label to sign in to sync on the device using Mozilla accounts -->
+    <string name="browser_menu_sign_in" tools:ignore="UnusedResources">Connexion</string>
+    <!-- Browser menu caption label for the "Sign in" browser menu item described in browser_menu_sign_in -->
+    <string name="browser_menu_sign_in_caption" tools:ignore="UnusedResources">Sincronizar los senhals, onglets e encara mai</string>
+
+    <!-- Extensions management fragment -->
+    <!-- Text displayed when there are no extensions to be shown -->
+    <string name="extensions_management_no_extensions">Cap d’extension aquí</string>
 
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
@@ -598,10 +609,14 @@
     <string name="quit_application">Tampadura de l’aplicacion per aplicar las modificacions…</string>
 
     <!-- Preference for add_ons -->
-    <string name="preferences_addons">Moduls complementaris</string>
+    <string name="preferences_addons" moz:removedIn="126" tools:ignore="UnusedResources">Moduls complementaris</string>
 
+    <!-- Preference for extensions -->
+    <string name="preferences_extensions">Extensions</string>
     <!-- Preference for installing a local add-on -->
-    <string name="preferences_install_local_addon">Installar un modul d’un fichièr estant</string>
+    <string name="preferences_install_local_addon" moz:removedIn="126" tools:ignore="UnusedResources">Installar un modul d’un fichièr estant</string>
+    <!-- Preference for installing a local extension -->
+    <string name="preferences_install_local_extension">Installar una extension d’un fichièr estant</string>
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Notificacions</string>
 
@@ -612,7 +627,9 @@
 
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
-    <string name="preferences_customize_amo_collection">Colleccion de moduls personalizada</string>
+    <string name="preferences_customize_amo_collection" moz:removedIn="126" tools:ignore="UnusedResources">Colleccion de moduls personalizada</string>
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_extension_collection">Colleccion d’extensions personalizada</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">D’acòrdi</string>
     <!-- Button caption to abort the add-on collection configuration -->
@@ -624,7 +641,10 @@
     <string name="customize_addon_collection_user_hint">Proprietari de la colleccion (ID utilizaire)</string>
 
     <!-- Toast shown after confirming the custom add-on collection configuration -->
-    <string name="toast_customize_addon_collection_done">Colleccion de moduls complementaris modificada. Tampadura de l’aplicacion per aplicar las modificacions…</string>
+    <string name="toast_customize_addon_collection_done" moz:removedIn="126" tools:ignore="UnusedResources">Colleccion de moduls complementaris modificada. Tampadura de l’aplicacion per aplicar las modificacions…</string>
+
+    <!-- Toast shown after confirming the custom extension collection configuration -->
+    <string name="toast_customize_extension_collection_done">Colleccion d’extensions modificada. Tampadura de l’aplicacion per aplicar las modificacions…</string>
 
     <!-- Customize Home -->
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
@@ -682,21 +702,37 @@
 
     <!-- Add-ons general availability nimbus message-->
     <!-- Title of the Nimbus message for add-ons general availability-->
-    <string name="addon_ga_message_title" tools:ignore="UnusedResources">Moduls novèls disponibles</string>
+    <string name="addon_ga_message_title" moz:removedIn="126" tools:ignore="UnusedResources">Moduls novèls disponibles</string>
+    <!-- Title of the Nimbus message for extension general availability-->
+    <string name="addon_ga_message_title_2" tools:ignore="UnusedResources">Extensions novèlas ara disponiblas</string>
     <!-- Body of the Nimbus message for add-ons general availability. 'Firefox' intentionally hardcoded here-->
     <string name="addon_ga_message_body" tools:ignore="UnusedResources">Descobrissètz mai de 100 extensions novèlas que permeton de personalizar Firefox.</string>
     <!-- Button text of the Nimbus message for add-ons general availability. -->
-    <string name="addon_ga_message_button" tools:ignore="UnusedResources">Percórrer los moduls</string>
+    <string name="addon_ga_message_button" moz:removedIn="126" tools:ignore="UnusedResources">Percórrer los moduls</string>
 
-    <!-- Add-on process crash dialog to user -->
+    <!-- Button text of the Nimbus message for extensions general availability. -->
+    <string name="addon_ga_message_button_2" tools:ignore="UnusedResources">Percórrer las extensions</string>
+
+    <!-- Extension process crash dialog to user -->
     <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
-    <string name="addon_process_crash_dialog_title" tools:ignore="UnusedResources">Los moduls son temporàriament desactivats</string>
+    <string name="addon_process_crash_dialog_title" moz:removedIn="126" tools:ignore="UnusedResources">Los moduls son temporàriament desactivats</string>
+    <!-- Title of the extension crash dialog shown to the user when enough errors have occurred with extensions and they need to be temporarily disabled -->
+    <string name="extension_process_crash_dialog_title">Las extensions son temporàriament desactivadas</string>
     <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
-    <string name="addon_process_crash_dialog_message" tools:ignore="UnusedResources">Un o mai d’un modul complementari an quitat de foncionar, çò que fa venir lo sistèma instable. %1$s a pas capitat a reaviar los moduls.\n\n Se relançaràn pas los moduls pendent la session actuala.\n\nLa supression o desactivacion dels moduls pòt corregir aquesta anomalia.</string>
+    <string name="addon_process_crash_dialog_message" moz:removedIn="126" tools:ignore="UnusedResources">Un o mai d’un modul complementari an quitat de foncionar, çò que fa venir lo sistèma instable. %1$s a pas capitat a reaviar los moduls.\n\n Se relançaràn pas los moduls pendent la session actuala.\n\nLa supression o desactivacion dels moduls pòt corregir aquesta anomalia.</string>
+    <!-- This is a message shown to the user when too many errors have occurred with the extensions process and they have been disabled.
+    The user can decide if they would like to continue trying to start extensions or if they'd rather continue without them.
+    The first parameter is the application name. -->
+    <string name="extension_process_crash_dialog_message">Un o mai d’una extension an quitat de foncionar, çò que fa venir lo sistèma instable. %1$s a pas capitat a reaviar las extensions.\n\n Se relançaràn pas las extensions pendent la session actuala.\n\nLa supression o desactivacion de las extensions pòt corregir aquesta anomalia.</string>
     <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
-    <string name="addon_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">Relançar los moduls</string>
+    <string name="addon_process_crash_dialog_retry_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Relançar los moduls</string>
+    <!-- Button text on the extension crash dialog to prompt the user to try restarting the extensions but the dialog will reappear if it is unsuccessful again -->
+    <string name="extension_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">Ensajatz de relançar las extensions</string>
     <!-- The user will continue with all add-ons disabled -->
-    <string name="addon_process_crash_dialog_disable_addons_button_text" tools:ignore="UnusedResources">Contunhar amb los moduls desactivats</string>
+    <string name="addon_process_crash_dialog_disable_addons_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Contunhar amb los moduls desactivats</string>
+
+    <!-- Button text on the extension crash dialog to prompt the user to continue with all extensions disabled. -->
+    <string name="extension_process_crash_dialog_disable_extensions_button_text">Contunhar amb las extensions desactivadas</string>
 
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->
@@ -2633,6 +2669,8 @@ Exemple :\nhttps://suggestqueries.google.com/complete/search?client=firefox&amp
     <string name="download_language_file_dialog_title">Telecargar en mòde estalvi de donadas (%1$s) ?</string>
     <!-- Additional information for the data saving mode warning dialog used by the translations feature. This text explains the reason a download is required for a translation. -->
     <string name="download_language_file_dialog_message_all_languages">Telecargam parcialament de lengas dins vòstre cache per que las traduccions demòren privadas.</string>
+    <!-- Additional information for the data saving mode warning dialog used by the translations feature. This text explains the reason a download is required for a translation without mentioning the cache. -->
+    <string name="download_language_file_dialog_message_all_languages_no_cache">Telecargam parcialament de lengas per que las traduccions demòren privadas.</string>
     <!-- Checkbox label text on the data saving mode warning dialog used by the translations feature. This checkbox allows users to ignore the data usage warnings. -->
     <string name="download_language_file_dialog_checkbox_text">Totjorn telecargar en mòde estalvi de donadas</string>
     <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to confirm they wish to continue and download the language file. -->

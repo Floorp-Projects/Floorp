@@ -103,8 +103,8 @@
     <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
       <p>Vafrinn hefur hætt að reyna að ná í umbeðinn hlut. Vefsvæðið er að endursenda beiðnina á þann hátt að því mun aldrei ljúka.</p>
       <ul>
-        <li>Hefurðu lokað á eða gert smákökur óvirkar frá þessu vefsvæð?</li>
-        <li>Ef þú velur að taka á móti smákökum frá þessu vefsvæði og það lagar ekki vandamálið, er netþjónninn sjálfur líklega rangt stilltur en ekki tölvan þín.</li>
+        <li>Hefurðu lokað á eða gert vefkökur óvirkar frá þessu vefsvæð?</li>
+        <li>Ef þú velur að taka á móti vefkökum frá þessu vefsvæði og það lagar ekki vandamálið, er netþjónninn sjálfur líklega rangt stilltur en ekki tölvan þín.</li>
       </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->

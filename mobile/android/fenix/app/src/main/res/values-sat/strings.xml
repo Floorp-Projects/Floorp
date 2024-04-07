@@ -500,6 +500,14 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site_1">ᱵᱚᱸᱫᱚᱭ ᱢᱮ ᱟᱨ %1$s ᱫᱚ ᱠᱩᱠᱤ ᱠᱚ ᱢᱮᱴᱟᱣ ᱠᱟᱛᱮ ᱱᱚᱣᱟ ᱥᱟᱦᱴᱟ ᱨᱤᱞᱚᱰ ᱟ ᱾ ᱱᱚᱶᱟ ᱫᱚ ᱟᱢ ᱵᱟᱦᱨᱮ ᱩᱰᱩᱠ ᱢᱮᱭᱟᱭ ᱥᱮ ᱠᱤᱨᱤᱧ ᱠᱟᱨᱴ ᱠᱷᱟᱹᱞᱤ ᱟ ᱾</string>
 
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_3">ᱮᱢ ᱪᱷᱟᱭ ᱢᱮ ᱟᱨ %1$s ᱫᱚ ᱱᱚᱣᱟ ᱥᱟᱭᱤᱴᱨᱮ ᱡᱷᱚᱛᱚ ᱠᱩᱠᱤ ᱵᱮᱱᱟᱨ ᱠᱚ ᱟᱡ ᱛᱮ ᱢᱟᱱᱟ ᱞᱟᱹᱜᱤᱫ ᱮ ᱠᱩᱨᱩᱢᱩᱴᱩᱭᱟ ᱾</string>
+    <!--Title for the cookie banner re-engagement CFR, the placeholder is replaced with app name -->
+    <string name="cookie_banner_cfr_title">%1$s ᱫᱚ ᱟᱢ ᱞᱟᱹᱜᱤᱫ ᱱᱤᱛ ᱜᱮ ᱠᱩᱠᱤ ᱢᱟᱱᱟ ᱠᱮᱜᱼᱟᱭ</string>
+
+    <!--Message for the cookie banner re-engagement CFR -->
+    <string name="cookie_banner_cfr_message">ᱱᱤᱭᱟᱹ ᱥᱟᱭᱤᱴ ᱨᱮ ᱟᱢᱟᱜ ᱴᱨᱮᱠᱤᱝ ᱠᱚᱢ ᱜᱮ ᱦᱩᱭᱩᱜᱼᱟ, ᱠᱚᱢ ᱩᱞᱢᱟᱹᱞ ᱦᱩᱭᱩᱜᱼᱟ ᱾</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">ᱵᱮᱰᱷᱟᱣ ᱠᱟᱱᱟ ᱨᱩᱠᱷᱤᱭᱟᱹ ᱞᱟᱹᱜᱤᱫ ᱛᱮ HTTPS ᱫᱟᱱᱟᱝ ᱵᱮᱵᱷᱟᱨ ᱛᱮ ᱥᱟᱭᱤᱴ ᱠᱚ ᱥᱟᱞᱟᱜ ᱟᱡ ᱛᱮ ᱡᱩᱲᱟᱹᱣ ᱵᱤᱲᱟᱹᱣ ᱾</string>
     <!-- Summary of https only preference if https only is set to off -->
@@ -522,8 +530,12 @@
     <string name="errorpage_httpsonly_message_summary">ᱢᱮᱱᱠᱷᱟᱱ, ᱱᱚᱶᱟ ᱦᱚᱸ ᱦᱩᱭ ᱫᱟᱲᱮᱭᱟᱜᱼᱟ ᱡᱮ ᱢᱤᱫᱴᱟᱝ ᱢᱩᱸᱦᱟᱹ ᱤᱡ ᱦᱚᱸ ᱛᱟᱦᱮᱸ ᱠᱚᱜᱼᱟᱭ ᱾ ᱟᱢ ᱡᱩᱫᱤ ᱣᱮᱵᱽᱥᱟᱭᱤᱴ ᱥᱮᱫ ᱞᱟᱦᱟᱜ ᱠᱷᱟᱱ ᱫᱚᱢ, ᱟᱢ ᱫᱚ ᱡᱟᱦᱟᱱᱟᱜ ᱥᱚᱢᱵᱮᱫᱚᱱ ᱡᱤᱱᱤᱥ ᱟᱞᱚᱢ ᱟᱫᱮᱨ ᱛᱟᱢᱟᱸ ᱾ ᱡᱤᱫᱤ ᱟᱢ ᱞᱟᱦᱟᱜ ᱠᱷᱟᱱ, HTTPSᱼᱢᱳᱰ ᱫᱚ ᱥᱟᱭᱤᱴ ᱞᱟᱹᱜᱤᱫ ᱛᱤᱱᱟᱹᱜ ᱜᱟᱱ ᱚᱠᱛᱚ ᱞᱟᱹᱜᱤᱫ ᱵᱚᱸᱫᱚᱜᱼᱟ ᱾</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">ᱟᱹᱛᱩᱨ ᱫᱟᱲᱮᱭᱟᱜ</string>
+    <!-- Preference to override the Mozilla account server -->
+    <string name="preferences_override_account_server">ᱢᱚᱱᱮᱛᱮᱭᱟᱜ Mozilla ᱠᱷᱟᱛᱟ ᱥᱟᱹᱨᱣᱟᱹᱨ</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">ᱠᱩᱥᱤᱭᱟᱜ ᱥᱭᱝᱠ ᱥᱟᱹᱨᱣᱟᱹᱨ</string>
+    <!-- Toast shown after updating the Mozilla account/Sync server override preferences -->
+    <string name="toast_override_account_sync_server_done">Mozilla ᱠᱷᱟᱛᱟ/ ᱥᱭᱝᱠ ᱠᱟᱹᱨᱣᱟᱹᱨ ᱵᱚᱫᱚᱞᱮᱱᱟ ᱾ ᱵᱚᱫᱚᱞ ᱠᱚ ᱫᱚᱦᱚ ᱞᱟᱹᱜᱤᱫ ᱮᱯᱞᱤᱠᱮᱥᱚᱱ ᱵᱚᱸᱫᱚᱜ ᱠᱟᱱᱟ…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">ᱠᱷᱟᱛᱟ</string>
     <!-- Preference for changing where the toolbar is positioned -->
@@ -538,6 +550,8 @@
     <string name="preferences_customize">ᱠᱩᱥᱤᱭᱟᱜ ᱛᱮᱭᱟᱨ</string>
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description_2">ᱟᱢᱟᱜ ᱴᱮᱵᱽ ᱠᱚ, ᱵᱩᱠᱢᱟᱨᱠ ᱠᱚ, ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱠᱚ ᱟᱨ ᱵᱟᱹᱲᱛᱤ ᱠᱚ ᱛᱚᱞ ᱡᱚᱠᱷᱟᱭ ᱞᱟᱹᱜᱤᱫ ᱥᱩᱦᱤ ᱮᱢ ᱢᱮ ᱾</string>
+    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
+    <string name="preferences_account_default_name_2">Mozilla ᱠᱷᱟᱛᱟ</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
     <string name="preferences_account_sync_error">ᱥᱭᱝᱠ ᱠᱚ ᱪᱟᱹᱞᱩ ᱫᱚᱦᱚ ᱞᱟᱹᱜᱤᱫ ᱫᱩᱦᱲᱟᱹ ᱡᱩᱰᱟᱹᱣ</string>
     <!-- Preference for language -->
@@ -566,6 +580,16 @@
     <string name="preferences_account_settings">ᱠᱷᱟᱛᱟ ᱨᱮᱭᱟᱜ ᱥᱟᱡᱟᱣ ᱠᱚ</string>
     <!-- Preference for enabling url autocomplete-->
     <string name="preferences_enable_autocomplete_urls">URLs ᱟᱡ ᱛᱮ ᱯᱩᱨᱟᱹᱣᱼᱜ ᱢᱟ</string>
+    <!-- Preference title for switch preference to show sponsored Firefox Suggest search suggestions -->
+    <string name="preferences_show_sponsored_suggestions">ᱰᱷᱟᱶᱨᱟ ᱠᱚᱣᱟᱜ ᱵᱟᱛᱟᱣᱠᱚ</string>
+    <!-- Summary for preference to show sponsored Firefox Suggest search suggestions.
+         The first parameter is the name of the application. -->
+    <string name="preferences_show_sponsored_suggestions_summary">ᱚᱠᱛᱚ-ᱠᱟᱹᱣᱰᱤ ᱥᱚᱯᱚᱱᱥᱟᱨ ᱥᱟᱠᱟᱢ ᱛᱮ %1$s ᱠᱚ ᱥᱚᱦᱚᱫ ᱢᱮ</string>
+    <!-- Preference title for switch preference to show Firefox Suggest search suggestions for web content.
+         The first parameter is the name of the application. -->
+    <string name="preferences_show_nonsponsored_suggestions">%1$s ᱠᱷᱚᱱ ᱵᱟᱛᱟᱣᱟᱜ</string>
+    <!-- Summary for preference to show Firefox Suggest search suggestions for web content -->
+    <string name="preferences_show_nonsponsored_suggestions_summary">ᱣᱮᱵᱽ ᱠᱷᱚᱱ ᱟᱢᱟᱜ ᱥᱮᱸᱫᱽᱨᱟ ᱵᱟᱵᱚᱛ ᱵᱟᱛᱟᱣᱠᱚ ᱧᱟᱢ ᱢᱮ</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">ᱞᱤᱝᱠ ᱠᱚ ᱮᱯ ᱨᱮ ᱡᱷᱤᱡᱽ ᱢᱮ</string>
 
@@ -584,6 +608,12 @@
 
     <!-- Preference for add_ons -->
     <string name="preferences_addons" moz:removedIn="126" tools:ignore="UnusedResources">ᱮᱰ-ᱟᱸᱱᱥ</string>
+    <!-- Preference for extensions -->
+    <string name="preferences_extensions">ᱯᱟᱥᱱᱟᱣ ᱠᱚ</string>
+    <!-- Preference for installing a local add-on -->
+    <string name="preferences_install_local_addon" moz:removedIn="126" tools:ignore="UnusedResources">ᱨᱮᱫᱽ ᱠᱷᱚᱱ ᱮᱰ-ᱚᱱ ᱵᱚᱦᱟᱞ ᱢᱮ</string>
+    <!-- Preference for installing a local extension -->
+    <string name="preferences_install_local_extension">ᱨᱮᱫᱽ ᱠᱷᱚᱱ ᱮᱠᱥᱴᱮᱱᱥᱚᱱ ᱵᱚᱦᱟᱞ ᱢᱮ</string>
     <!-- Preference for notifications -->
     <string name="preferences_notifications">ᱤᱛᱞᱟᱹᱭ ᱠᱚ</string>
 
@@ -596,6 +626,8 @@
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
     <string name="preferences_customize_amo_collection" moz:removedIn="126" tools:ignore="UnusedResources">ᱠᱟᱹᱥᱴᱚᱢ ᱮᱰᱰᱼᱚᱱ ᱛᱩᱢᱟᱹᱞ</string>
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_extension_collection">ᱠᱟᱹᱥᱴᱚᱢ ᱮᱠᱥᱴᱮᱱᱥᱚᱱ ᱛᱩᱢᱟᱹᱞ</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">ᱴᱷᱤᱠ</string>
     <!-- Button caption to abort the add-on collection configuration -->
@@ -606,6 +638,9 @@
     <string name="customize_addon_collection_user_hint">ᱛᱩᱢᱟᱹᱞ ᱢᱟᱞᱤᱠ (ᱵᱮᱵᱷᱟᱨᱤᱭᱟᱹ ID)</string>
     <!-- Toast shown after confirming the custom add-on collection configuration -->
     <string name="toast_customize_addon_collection_done" moz:removedIn="126" tools:ignore="UnusedResources">ᱮᱰᱼᱚᱱ ᱛᱩᱢᱟᱹᱞ ᱵᱚᱫᱚᱞᱮᱱᱟ ᱾ ᱵᱚᱫᱚᱞ ᱠᱚ ᱫᱚᱦᱚ ᱞᱟᱹᱜᱤᱫ ᱮᱯᱞᱤᱠᱮᱥᱚᱱ ᱵᱚᱸᱫᱚᱜ ᱠᱟᱱᱟ…</string>
+
+    <!-- Toast shown after confirming the custom extension collection configuration -->
+    <string name="toast_customize_extension_collection_done">ᱮᱠᱥᱴᱮᱱᱥᱚᱱ ᱛᱩᱢᱟᱹᱞ ᱵᱚᱫᱚᱞᱮᱱᱟ ᱾ ᱵᱚᱫᱚᱞ ᱠᱚ ᱫᱚᱦᱚ ᱞᱟᱹᱜᱤᱫ ᱮᱯᱞᱤᱠᱮᱥᱚᱱ ᱵᱚᱸᱫᱚᱜ ᱠᱟᱱᱟ…</string>
 
     <!-- Customize Home -->
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
@@ -660,9 +695,44 @@
     <!-- Wallpaper onboarding dialog learn more button text. The button navigates to the wallpaper settings screen. -->
     <string name="wallpapers_onboarding_dialog_explore_more_button_text">ᱰᱷᱮᱨ ᱠᱟᱱᱛᱷᱪᱤᱛᱟᱹᱨ ᱠᱚ ᱥᱮᱸᱫᱽᱨᱟᱭ ᱢᱮ</string>
 
+    <!-- Add-ons general availability nimbus message-->
+    <!-- Title of the Nimbus message for add-ons general availability-->
+    <string name="addon_ga_message_title" moz:removedIn="126" tools:ignore="UnusedResources">ᱱᱟᱶᱟ ᱮᱰ-ᱚᱱᱥᱠᱚ ᱱᱤᱛᱚᱜ ᱢᱮᱱᱟᱜ-ᱟ</string>
+    <!-- Title of the Nimbus message for extension general availability-->
+    <string name="addon_ga_message_title_2" tools:ignore="UnusedResources">ᱱᱟᱶᱟ ᱮᱠᱥᱴᱮᱱᱥᱚᱱ ᱱᱤᱛᱚᱜ ᱢᱮᱱᱟᱜᱼᱟ</string>
+
+    <!-- Body of the Nimbus message for add-ons general availability. 'Firefox' intentionally hardcoded here-->
+    <string name="addon_ga_message_body" tools:ignore="UnusedResources">100+ ᱱᱟᱣᱟ ᱮᱠᱥᱴᱮᱱᱥᱟᱱ ᱠᱚ ᱧᱮᱞ ᱢᱮ ᱡᱟᱦᱟᱸ ᱫᱚ ᱟᱢᱟᱜ Firefox ᱵᱮᱱᱟᱣ ᱮᱫᱟ ᱾</string>
+    <!-- Button text of the Nimbus message for add-ons general availability. -->
+    <string name="addon_ga_message_button" moz:removedIn="126" tools:ignore="UnusedResources">ᱮᱰ-ᱚᱱ ᱯᱟᱧᱡᱟᱭ ᱢᱮ</string>
+    <!-- Button text of the Nimbus message for extensions general availability. -->
+    <string name="addon_ga_message_button_2" tools:ignore="UnusedResources">ᱮᱠᱥᱴᱮᱱᱥᱚᱱᱠᱚ ᱯᱟᱧᱡᱟᱭ ᱢᱮ</string>
+
+    <!-- Extension process crash dialog to user -->
+    <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
+    <string name="addon_process_crash_dialog_title" moz:removedIn="126" tools:ignore="UnusedResources">ᱮᱰᱼᱚᱱ ᱫᱚ ᱛᱤᱱᱟᱹᱜ ᱜᱷᱟᱹᱬᱤᱡ ᱞᱟᱹᱜᱤᱫ ᱵᱚᱸᱫ ᱠᱟᱱᱟ</string>
+    <!-- Title of the extension crash dialog shown to the user when enough errors have occurred with extensions and they need to be temporarily disabled -->
+    <string name="extension_process_crash_dialog_title">ᱮᱠᱥᱴᱮᱱᱥᱚᱱ ᱫᱚ ᱛᱤᱱᱟᱹᱜ ᱜᱷᱟᱹᱬᱤᱡ ᱞᱟᱹᱜᱤᱫ ᱵᱚᱸᱫ ᱠᱟᱱᱟ</string>
+    <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
+    <string name="addon_process_crash_dialog_message" moz:removedIn="126" tools:ignore="UnusedResources">ᱢᱤᱫ ᱟᱨᱵᱟᱝ ᱵᱟᱹᱲᱛᱤ ᱮᱰᱼᱚᱱ ᱠᱚ ᱠᱟᱹᱢᱤ ᱵᱚᱫᱚ ᱠᱮᱫᱟ, ᱡᱟᱦᱟᱸ ᱠᱷᱟᱹᱛᱤᱨ ᱟᱢᱟᱜ ᱥᱤᱥᱛᱚᱢ ᱴᱷᱤᱠ ᱥᱮ ᱵᱟᱭ ᱠᱟᱹᱢᱤᱭᱟᱭ ᱾ %1$s ᱫᱚ ᱮᱰᱼᱚᱱ ᱫᱩᱦᱲᱟᱹ ᱮᱦᱚᱵ ᱵᱟᱭ ᱜᱟᱱ ᱪᱷᱚ ᱞᱮᱫᱟᱭ ᱾\n\nᱮᱰ-ᱚᱱ ᱨᱮ ᱟᱢᱟᱜ ᱱᱤᱛᱚᱜᱟᱜ ᱠᱟᱹᱢᱤᱦᱚᱨᱟ ᱫᱚ ᱫᱩᱦᱲᱟᱹ ᱵᱟᱝ ᱮᱦᱚᱵᱚᱜᱼᱟ ᱾\n\nᱮᱰ-ᱟᱩᱱ ᱠᱚ ᱚᱪᱚᱜ ᱥᱮ ᱵᱚᱸᱫ ᱞᱮᱠᱷᱟᱱ ᱱᱚᱶᱟ ᱢᱩᱫᱟᱹ ᱴᱷᱤᱠᱚᱜᱼᱟ ᱾</string>
+    <!-- This is a message shown to the user when too many errors have occurred with the extensions process and they have been disabled.
+    The user can decide if they would like to continue trying to start extensions or if they'd rather continue without them.
+    The first parameter is the application name. -->
+    <string name="extension_process_crash_dialog_message">ᱢᱤᱫ ᱟᱨᱵᱟᱝ ᱵᱟᱹᱲᱛᱤ ᱮᱠᱥᱴᱮᱱᱥᱚᱱ ᱠᱚ ᱠᱟᱹᱢᱤ ᱵᱚᱫᱚ ᱠᱮᱫᱟ, ᱡᱟᱦᱟᱸ ᱠᱷᱟᱹᱛᱤᱨ ᱟᱢᱟᱜ ᱥᱤᱥᱛᱚᱢ ᱴᱷᱤᱠ ᱥᱮ ᱵᱟᱭ ᱠᱟᱹᱢᱤᱭᱟᱭ ᱾ %1$s ᱫᱚ ᱮᱠᱥᱴᱮᱱᱥᱚᱱ ᱫᱩᱦᱲᱟᱹ ᱮᱦᱚᱵ ᱵᱟᱭ ᱜᱟᱱ ᱪᱷᱚ ᱞᱮᱫᱟᱭ ᱾\n\nᱮᱠᱥᱴᱮᱱᱥᱚᱱ ᱨᱮ ᱟᱢᱟᱜ ᱱᱤᱛᱚᱜᱟᱜ ᱠᱟᱹᱢᱤᱦᱚᱨᱟ ᱫᱚ ᱫᱩᱦᱲᱟᱹ ᱵᱟᱝ ᱮᱦᱚᱵᱚᱜᱼᱟ ᱾\n\nᱮᱠᱥᱴᱮᱱᱥᱚᱱ ᱠᱚ ᱚᱪᱚᱜ ᱥᱮ ᱵᱚᱸᱫ ᱞᱮᱠᱷᱟᱱ ᱱᱚᱶᱟ ᱢᱩᱫᱟᱹ ᱴᱷᱤᱠᱚᱜᱼᱟ ᱾</string>
+    <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
+    <string name="addon_process_crash_dialog_retry_button_text" moz:removedIn="126" tools:ignore="UnusedResources">ᱮᱰ-ᱚᱱ ᱫᱩᱦᱲᱟᱹ ᱮᱛᱦᱚᱵ ᱵᱤᱲᱟᱹᱣ ᱢᱮ</string>
+    <!-- Button text on the extension crash dialog to prompt the user to try restarting the extensions but the dialog will reappear if it is unsuccessful again -->
+    <string name="extension_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">ᱮᱠᱮᱴᱮᱱᱮᱚᱱ ᱫᱩᱦᱲᱟᱹ ᱮᱛᱦᱚᱵ ᱵᱤᱲᱟᱹᱣ ᱢᱮ</string>
+    <!-- The user will continue with all add-ons disabled -->
+    <string name="addon_process_crash_dialog_disable_addons_button_text" moz:removedIn="126" tools:ignore="UnusedResources">ᱮᱰ-ᱚᱱ ᱵᱚᱸᱫ ᱠᱟᱛᱮ ᱞᱟᱦᱟᱜ ᱢᱮ</string>
+    <!-- Button text on the extension crash dialog to prompt the user to continue with all extensions disabled. -->
+    <string name="extension_process_crash_dialog_disable_extensions_button_text">ᱮᱠᱥᱴᱮᱱᱥᱚᱱ ᱵᱚᱸᱫ ᱠᱟᱛᱮ ᱞᱟᱦᱟᱜ ᱢᱮ</string>
+
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->
     <string name="preferences_manage_account">ᱠᱷᱟᱛᱟ ᱢᱮᱱᱮᱡᱽ ᱢᱮ</string>
+    <!-- Summary of the preference for managing your account via accounts.firefox.com. -->
+    <string name="preferences_manage_account_summary">ᱟᱢᱟᱜ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱵᱚᱫᱚᱞ ᱢᱮ, ᱰᱟᱴᱟ ᱡᱟᱣᱨᱟ ᱢᱮᱱᱮᱡᱽ ᱢᱮ, ᱟᱨ ᱵᱟᱝ ᱟᱢᱟᱜ ᱠᱷᱟᱛᱟ ᱢᱮᱴᱟᱣ ᱢᱮ</string>
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">ᱱᱤᱛᱚᱜ ᱥᱭᱝᱠ ᱢᱮ</string>
     <!-- Preference category for sync -->
@@ -673,6 +743,8 @@
     <string name="preferences_sync_bookmarks">ᱵᱩᱠᱢᱟᱨᱠ ᱠᱚ</string>
     <!-- Preference for syncing logins -->
     <string name="preferences_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱵᱚᱞᱚᱱ ᱠᱚ</string>
+    <!-- Preference for syncing passwords -->
+    <string name="preferences_sync_logins_2">ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱠᱚ</string>
     <!-- Preference for syncing tabs -->
     <string name="preferences_sync_tabs_2">ᱡᱷᱤᱡᱽ ᱠᱟᱱ ᱴᱮᱵᱽ ᱠᱚ</string>
     <!-- Preference for signing out -->
@@ -698,6 +770,8 @@
 
     <!-- Preference for syncing credit cards -->
     <string name="preferences_sync_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱠᱨᱮᱰᱤᱴ ᱠᱟᱰ</string>
+    <!-- Preference for syncing payment methods -->
+    <string name="preferences_sync_credit_cards_2">ᱜᱚᱱᱚᱝ ᱦᱚᱨᱟᱠᱚ</string>
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">ᱴᱷᱤᱠᱬᱟᱤᱭᱟᱹ</string>
 
@@ -1288,6 +1362,10 @@
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">ᱯᱨᱟᱭᱣᱮᱴ ᱴᱮᱵᱽ ᱠᱚ ᱵᱚᱸᱫᱚᱭ ᱢᱮ</string>
 
+    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active for Android 14+ -->
+    <string name="notification_erase_title_android_14">ᱯᱨᱟᱭᱣᱮᱴ ᱴᱮᱵᱽ ᱠᱚ ᱵᱚᱸᱫᱚᱭᱟᱢ ᱥᱮ ?</string>
+    <string name="notification_erase_text_android_14">ᱯᱨᱟᱭᱵᱷᱮᱴ ᱴᱮᱵᱽ ᱠᱚ ᱵᱚᱸᱫ ᱞᱟᱹᱜᱤᱫ ᱱᱚᱶᱟ ᱱᱚᱴᱤᱯᱷᱤᱠᱮᱥᱚᱱ ᱴᱤᱯᱟᱹᱣ ᱢᱮ ᱥᱮ ᱠᱷᱚᱥᱨᱚᱫ ᱢᱮ ᱾</string>
+
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">ᱢᱟᱨᱠᱮᱴᱤᱝ</string>
 
@@ -1340,6 +1418,8 @@
     <string name="snackbar_private_tab_closed">ᱱᱤᱡᱮᱨᱟᱜ ᱴᱮᱵᱽ ᱵᱚᱸᱫᱚᱭᱮᱱᱟ</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
     <string name="snackbar_private_tabs_closed">ᱯᱨᱟᱭᱣᱮᱴ ᱴᱮᱵᱽ ᱠᱚ ᱵᱚᱸᱫᱚᱭᱮᱱᱟ</string>
+    <!-- Text shown in snackbar when user erases their private browsing data -->
+    <string name="snackbar_private_data_deleted">ᱱᱤᱡᱚᱨᱟᱜ ᱵᱽᱨᱟᱣᱩᱡᱤᱝ ᱰᱟᱴᱟ ᱢᱮᱴᱟᱣᱮᱱᱟ</string>
     <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">ᱚᱱᱰᱩ</string>
     <!-- Text shown in snackbar when user removes a top site -->
@@ -1523,6 +1603,8 @@
     <string name="preference_enhanced_tracking_protection_custom_cookies_4">ᱠᱷᱚᱛᱚ ᱠᱩᱩᱠᱤ ᱠᱚ (ᱱᱚᱶᱟ ᱫᱚ ᱣᱮᱵᱥᱟᱭᱤᱴ ᱠᱚ ᱨᱟᱹᱯᱩᱫᱟᱭ)</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_5">ᱡᱷᱚᱛᱚ ᱥᱟᱭᱤᱴ ᱠᱩᱠᱤᱡᱽ ᱠᱚ ᱛᱷᱚᱞᱚᱜᱽ ᱠᱟᱜ ᱢᱮ</string>
+    <!-- Preference for Global Privacy Control for the custom privacy settings for Global Privacy Control. '&amp;' is replaced with the ampersand symbol: &-->
+    <string name="preference_enhanced_tracking_protection_custom_global_privacy_control">ᱣᱮᱵᱽᱥᱟᱭᱤᱴ ᱵᱟᱛᱟᱣᱠᱚᱢ ᱡᱮ ᱰᱟᱴᱟ ᱫᱚ ᱟᱞᱚ ᱠᱚ ᱦᱵᱹᱴᱤᱧ ᱢᱟᱸ ᱥᱮ ᱟᱹᱠᱷᱨᱤᱧ ᱢᱟᱸ</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">ᱯᱟᱧᱡᱟ ᱫᱟᱱᱟᱲ ᱡᱤᱱᱤᱥ</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
@@ -1638,8 +1720,12 @@
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱵᱚᱞᱚᱱ ᱠᱚ ᱟᱨ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱠᱚ</string>
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords_2">ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱠᱚ</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
     <string name="preferences_passwords_save_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱞᱚᱜᱤᱱ ᱠᱚ ᱟᱨ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱠᱚ ᱥᱟᱺᱪᱟᱣ ᱢᱮ</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_2">ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱠᱚ ᱥᱟᱺᱪᱟᱣ ᱢᱮ</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">ᱥᱟᱺᱪᱟᱣ ᱞᱟᱹᱜᱤᱫᱛᱮ ᱠᱩᱠᱞᱤ</string>
     <!-- Preference option for never saving passwords in Fenix -->
@@ -1657,16 +1743,29 @@
     <!-- Preference option for adding a login -->
     <string name="preferences_logins_add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱵᱚᱞᱚ ᱥᱮᱞᱮᱫ ᱢᱮ</string>
 
+    <!-- Preference option for adding a password -->
+    <string name="preferences_logins_add_login_2">ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱥᱮᱞᱮᱫ ᱢᱮ</string>
+
     <!-- Preference for syncing saved passwords in Fenix -->
     <string name="preferences_passwords_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱞᱚᱜᱤᱱ ᱠᱚ ᱥᱭᱝᱠ ᱢᱮ</string>
+    <!-- Preference for syncing saved passwords in Fenix -->
+    <string name="preferences_passwords_sync_logins_2">ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽᱠᱚ ᱟᱹᱭᱩᱨ ᱢᱤᱫ ᱢᱮ</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
     <string name="preferences_passwords_sync_logins_across_devices" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱡᱷᱚᱛᱚ ᱥᱟᱫᱷᱚᱱ ᱵᱷᱤᱛᱨᱤ ᱨᱮ ᱵᱚᱞᱚ ᱠᱚ ᱥᱭᱝᱠ ᱢᱮ</string>
+    <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices_2">ᱡᱷᱚᱛᱚ ᱥᱟᱫᱷᱚᱱ ᱵᱷᱤᱛᱨᱤ ᱨᱮ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱟᱹᱭᱩᱨ ᱢᱤᱫ ᱢᱮ</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱥᱟᱺᱪᱟᱣᱟᱠᱟᱱ ᱞᱚᱜᱤᱱ ᱠᱚ</string>
+    <!-- Preference to access list of saved passwords -->
+    <string name="preferences_passwords_saved_logins_2">ᱥᱟᱧᱪᱟᱣ ᱠᱟᱱ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱠᱚ</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
     <string name="preferences_passwords_saved_logins_description_empty_text" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱞᱚᱜᱤᱱ ᱚᱠᱟ %s ᱨᱮ ᱥᱟᱺᱪᱟᱣ ᱟᱨ ᱥᱭᱝᱠ ᱥᱟᱱᱟᱢ ᱠᱟᱱᱟ ᱚᱱᱟ ᱠᱚ ᱱᱚᱰᱮ ᱫᱮᱠᱷᱟᱣᱜᱼᱟ ᱾</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text_2">ᱟᱢ %s ᱨᱮ ᱚᱞ ᱟᱠᱟᱱ ᱥᱮ ᱟᱹᱭᱩᱨ ᱢᱤᱫ ᱟᱠᱟᱱ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱠᱚ ᱱᱚᱸᱰᱮ ᱞᱤᱥᱴᱤ ᱟ ᱾ ᱟᱢ ᱡᱟᱦᱟᱸᱱ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱮᱢ ᱥᱟᱧᱪᱟᱣ ᱟ ᱚᱱᱟ ᱠᱚᱫᱚ ᱫᱟᱱᱟᱝᱟᱜᱼᱟ ᱾</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱥᱭᱝᱠ ᱵᱟᱵᱚᱛ ᱡᱟᱹᱥᱛᱤ ᱵᱟᱰᱟᱭ ᱢᱮ ᱾</string>
+    <!-- Clickable text for opening an external link for more information about Sync. -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2">ᱥᱭᱝᱠ ᱵᱟᱵᱚᱛ ᱰᱷᱮᱨ ᱵᱟᱰᱟᱭ ᱢᱮ</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">ᱪᱷᱟᱰᱟ ᱠᱚ</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
