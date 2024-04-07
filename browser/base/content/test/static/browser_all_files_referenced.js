@@ -102,13 +102,6 @@ if (AppConstants.MOZ_BACKGROUNDTASKS) {
   gExceptionPaths.push("resource://app/modules/backgroundtasks/");
 }
 
-if (AppConstants.NIGHTLY_BUILD) {
-  // This is nightly-only debug tool.
-  gExceptionPaths.push(
-    "chrome://browser/content/places/interactionsViewer.html"
-  );
-}
-
 // Each allowlist entry should have a comment indicating which file is
 // referencing the listed file in a way that the test can't detect, or a
 // bug number to remove or use the file if it is indeed currently unreferenced.
@@ -297,11 +290,20 @@ var allowlist = [
   { file: "chrome://browser/content/screenshots/copy.svg" },
   { file: "chrome://browser/content/screenshots/download.svg" },
   { file: "chrome://browser/content/screenshots/download-white.svg" },
-
-  // A debug tool that is only available in Nightly builds, and is accessed
-  // directly by developers via the chrome URI (bug 1888491)
-  { file: "chrome://browser/content/backup/debug.html" },
 ];
+
+if (AppConstants.NIGHTLY_BUILD) {
+  allowlist.push(
+    ...[
+      // This is nightly-only debug tool.
+      { file: "chrome://browser/content/places/interactionsViewer.html" },
+
+      // A debug tool that is only available in Nightly builds, and is accessed
+      // directly by developers via the chrome URI (bug 1888491)
+      { file: "chrome://browser/content/backup/debug.html" },
+    ]
+  );
+}
 
 if (AppConstants.platform != "win") {
   // toolkit/mozapps/defaultagent/Notification.cpp
