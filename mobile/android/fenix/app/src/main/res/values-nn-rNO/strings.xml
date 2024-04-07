@@ -192,11 +192,13 @@
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Stopp</string>
     <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_add_ons">Tillegg</string>
+    <string name="browser_menu_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Tillegg</string>
+    <!-- Browser menu button that opens the extensions manager -->
+    <string name="browser_menu_extensions">Utvidingar</string>
     <!-- Browser menu button that opens account settings -->
     <string name="browser_menu_account_settings">Kontoinformasjon</string>
     <!-- Text displayed when there are no add-ons to be shown -->
-    <string name="no_add_ons">Ingen tillegg her</string>
+    <string name="no_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Ingen tillegg her</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Hjelp</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -249,6 +251,15 @@
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">Tilpasse startsida</string>
 
+    <!-- Browser menu label to sign in to sync on the device using Mozilla accounts -->
+    <string name="browser_menu_sign_in" tools:ignore="UnusedResources">Logg inn</string>
+    <!-- Browser menu caption label for the "Sign in" browser menu item described in browser_menu_sign_in -->
+    <string name="browser_menu_sign_in_caption" tools:ignore="UnusedResources">Synkroniser passord, faner, og meir</string>
+
+    <!-- Extensions management fragment -->
+    <!-- Text displayed when there are no extensions to be shown -->
+    <string name="extensions_management_no_extensions">Ingen utvidingar her</string>
+
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">Startskjerm</string>
@@ -258,6 +269,11 @@
     <string name="browser_toolbar_erase">Slett nettlesarhistorikk</string>
     <!-- Content description for the translate page toolbar button that opens the translations dialog when no translation has occurred. -->
     <string name="browser_toolbar_translate">Omset sida</string>
+
+    <!-- Content description (not visible, for screen readers etc.) for the translate page toolbar button that opens the translations dialog when the page is translated successfully.
+         The first parameter is the name of the language that is displayed in the original page. (For example: English)
+         The second parameter is the name of the language which the page was translated to. (For example: French) -->
+    <string name="browser_toolbar_translated_successfully">Sida er omsett frå %1$s til %2$s.</string>
 
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
@@ -333,8 +349,19 @@
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
     <string name="onboarding_home_enable_notifications_negative_button" moz:removedIn="124" tools:ignore="UnusedResources">Ikkje no</string>
 
+    <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
+    <!-- Description for learning more about our privacy notice. -->
+    <string name="juno_onboarding_privacy_notice_text">Firefox personvernerklæring</string>
+    <!-- Description for learning more about our privacy notice. -->
+    <string name="juno_onboarding_privacy_notice_text_2" moz:removedIn="125" tools:ignore="UnusedResources">Les meir i personvernerklæringa vår</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">Vi vernar deg gjerne</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources">Meir enn 100 millionar menneske beskyttar personvernet sitt ved å velje ein nettleser som er støtta av ein ideell organisasjon.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources">Kjende sporarar? Blokkert automatisk. Utvidingar Prøv alle 700. PDF-filer? Den innebygde lesaren vår gjer det enkelt å administrere dei.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_2" moz:RemovedIn="124" tools:ignore="UnusedResources">Den ideelle nettlesaren vår hindrar selskap i å spore aktiviteten din i løynd på nettet.\n\nLes meir i personvernerklæringa vår.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
     <string name="juno_onboarding_default_browser_description_link_text" moz:RemovedIn="124" tools:ignore="UnusedResources">peronvernerklæring</string>
@@ -344,6 +371,9 @@
     <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">Ikkje no</string>
     <!-- Title for sign in to sync screen. -->
     <string name="juno_onboarding_sign_in_title_2">Krypter dataa dine når du arbeider på tvers av einingar</string>
+    <!-- Description for sign in to sync screen. Nimbus experiments do not support string placeholders.
+     Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_sign_in_description_2">Når du er innlogga og synkronisert, er du tryggare. Firefox krypterer passorda, bokmerka med meir.</string>
     <!-- Text for the button to sign in to sync on the device -->
     <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Logg inn</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -568,10 +598,10 @@
     <string name="quit_application">Avsluttar applikasjonen for å leggje til endringar…</string>
 
     <!-- Preference for add_ons -->
-    <string name="preferences_addons">Tillegg</string>
+    <string name="preferences_addons" moz:removedIn="126" tools:ignore="UnusedResources">Tillegg</string>
 
     <!-- Preference for installing a local add-on -->
-    <string name="preferences_install_local_addon">Installer utviding frå fil</string>
+    <string name="preferences_install_local_addon" moz:removedIn="126" tools:ignore="UnusedResources">Installer utviding frå fil</string>
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Varsel</string>
 
@@ -582,7 +612,7 @@
 
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
-    <string name="preferences_customize_amo_collection">Tilpassa tilleggssamling</string>
+    <string name="preferences_customize_amo_collection" moz:removedIn="126" tools:ignore="UnusedResources">Tilpassa tilleggssamling</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">OK</string>
     <!-- Button caption to abort the add-on collection configuration -->
@@ -592,7 +622,7 @@
     <!-- Hint displayed on input field for custom collection user ID-->
     <string name="customize_addon_collection_user_hint">Samlingseigar (brukar-ID)</string>
     <!-- Toast shown after confirming the custom add-on collection configuration -->
-    <string name="toast_customize_addon_collection_done">Tilleggssamling endra. Avsluttar applikasjonen for å bruke endringar…</string>
+    <string name="toast_customize_addon_collection_done" moz:removedIn="126" tools:ignore="UnusedResources">Tilleggssamling endra. Avsluttar applikasjonen for å bruke endringar…</string>
 
     <!-- Customize Home -->
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
@@ -648,23 +678,23 @@
 
     <!-- Add-ons general availability nimbus message-->
     <!-- Title of the Nimbus message for add-ons general availability-->
-    <string name="addon_ga_message_title" tools:ignore="UnusedResources">Nye utvidingar tilgjengelege no</string>
+    <string name="addon_ga_message_title" moz:removedIn="126" tools:ignore="UnusedResources">Nye utvidingar tilgjengelege no</string>
 
     <!-- Body of the Nimbus message for add-ons general availability. 'Firefox' intentionally hardcoded here-->
     <string name="addon_ga_message_body" tools:ignore="UnusedResources">Sjekk ut 100+ nye utvidingar som lèt deg gjere Firefox til din eigen.</string>
     <!-- Button text of the Nimbus message for add-ons general availability. -->
-    <string name="addon_ga_message_button" tools:ignore="UnusedResources">Utforsk utvidingar</string>
+    <string name="addon_ga_message_button" moz:removedIn="126" tools:ignore="UnusedResources">Utforsk utvidingar</string>
 
-    <!-- Add-on process crash dialog to user -->
+    <!-- Extension process crash dialog to user -->
     <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
-    <string name="addon_process_crash_dialog_title" tools:ignore="UnusedResources">Tillegg er mellombels deaktivert</string>
+    <string name="addon_process_crash_dialog_title" moz:removedIn="126" tools:ignore="UnusedResources">Tillegg er mellombels deaktivert</string>
     <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
-    <string name="addon_process_crash_dialog_message" tools:ignore="UnusedResources">Eitt eller fleire tillegg slutta å fungere, noko som gjorde systemet ditt ustabilt. %1$s prøvde utan hell å starte tillegget/tillegga på nytt.\n\nTillegg vil ikkje bli starta på nytt under gjeldande økt.\n\nDersom du fjernar eller deaktiverer tillegg, kan dette løyse problemet.</string>
+    <string name="addon_process_crash_dialog_message" moz:removedIn="126" tools:ignore="UnusedResources">Eitt eller fleire tillegg slutta å fungere, noko som gjorde systemet ditt ustabilt. %1$s prøvde utan hell å starte tillegget/tillegga på nytt.\n\nTillegg vil ikkje bli starta på nytt under gjeldande økt.\n\nDersom du fjernar eller deaktiverer tillegg, kan dette løyse problemet.</string>
     <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
-    <string name="addon_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">Prøv å starte tillegga på nytt</string>
+    <string name="addon_process_crash_dialog_retry_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Prøv å starte tillegga på nytt</string>
 
     <!-- The user will continue with all add-ons disabled -->
-    <string name="addon_process_crash_dialog_disable_addons_button_text" tools:ignore="UnusedResources">Hald fram med deaktiverte tillegg</string>
+    <string name="addon_process_crash_dialog_disable_addons_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Hald fram med deaktiverte tillegg</string>
 
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->

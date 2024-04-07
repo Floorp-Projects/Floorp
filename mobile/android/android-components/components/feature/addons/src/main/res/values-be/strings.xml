@@ -87,13 +87,13 @@
     <!-- The rating of the add-on. -->
     <string name="mozac_feature_addons_rating">Ацэнка</string>
     <!-- A link that points to the detail page of the add-on. -->
-    <string name="mozac_feature_addons_more_info_link">Падрабязней аб гэтым дадатку</string>
+    <string name="mozac_feature_addons_more_info_link" moz:removedIn="126" tools:ignore="UnusedResources">Падрабязней аб гэтым дадатку</string>
     <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">Налады</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_settings_on">Укл.</string>
     <!-- Indicates the add-on is disabled. -->
-    <string name="mozac_feature_addons_settings_off">Выкл.</string>
+    <string name="mozac_feature_addons_settings_off" moz:removedIn="125" tools:ignore="UnusedResources">Выкл.</string>
     <!-- Indicates the add-on is allowed in private browsing mode. -->
     <string name="mozac_feature_addons_settings_allow_in_private_browsing">Дазволена ў прыватным агляданні</string>
     <!-- Indicates the add-on is allowed in private browsing mode. -->
@@ -103,7 +103,7 @@
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_enabled">Уключаны</string>
     <!-- Indicates the add-on is disabled. -->
-    <string name="mozac_feature_addons_disabled">Выключаны</string>
+    <string name="mozac_feature_addons_disabled" moz:removedIn="125" tools:ignore="UnusedResources">Выключаны</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the installed section. -->
     <string name="mozac_feature_addons_installed_section">Усталявана</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the recommended section. -->
@@ -153,13 +153,15 @@
     <!-- Label for add-ons sub menu item for add-ons manager-->
     <string name="mozac_feature_addons_addons_manager">Менеджар дадаткаў</string>
     <!-- The title of the "crash" notification in the add-ons manager -->
-    <string name="mozac_feature_addons_manager_notification_title_text">Дадаткі часова адключаны</string>
+    <string name="mozac_feature_addons_manager_notification_title_text" moz:removedIn="126" tools:ignore="UnusedResources">Дадаткі часова адключаны</string>
     <!-- The content of the "crash" notification in the add-ons manager -->
-    <string name="mozac_feature_addons_manager_notification_content_text">Адзін або некалькі дадатковых кампанентаў перасталі працаваць, што зрабіла вашу сістэму нестабільнай.</string>
+    <string name="mozac_feature_addons_manager_notification_content_text" moz:removedIn="126" tools:ignore="UnusedResources">Адзін або некалькі дадатковых кампанентаў перасталі працаваць, што зрабіла вашу сістэму нестабільнай.</string>
     <!-- Button to re-enable the add-ons in the "crash" notification -->
-    <string name="mozac_feature_addons_manager_notification_restart_button">Перазапусціць дадаткі</string>
+    <string name="mozac_feature_addons_manager_notification_restart_button" moz:removedIn="126" tools:ignore="UnusedResources">Перазапусціць дадаткі</string>
     <!-- Button in the add-ons manager that opens AMO in a tab -->
-    <string name="mozac_feature_addons_find_more_addons_button_text">Знайсці больш дадаткаў</string>
+    <string name="mozac_feature_addons_find_more_addons_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Знайсці больш дадаткаў</string>
+    <!-- Button in the extensions manager that opens AMO in a tab -->
+    <string name="mozac_feature_addons_find_more_extensions_button_text">Знайсці іншыя пашырэнні</string>
     <!-- The label of the allow button, this will be shown to the user when an add-on needs new permissions, with the button the user will indicate that they want to accept the new permissions and update the add-on-->
     <string name="mozac_feature_addons_updater_notification_allow_button">Дазволіць</string>
     <!-- The label of the deny button on a notification, this will be shown to the user when an add-on needs new permissions. Indicates the user denies the new permissions and prevents the add-on from be updated-->
@@ -171,13 +173,15 @@
     <!-- The content of the notification displayed when an add-on needs a new permission-->
     <string name="mozac_feature_addons_updater_notification_content_singular">Патрэбен новы дазвол</string>
     <!-- Name of the "notification channel" used for displaying a notification for updating an add-on. See https://developer.android.com/training/notify-user/channels -->
-    <string name="mozac_feature_addons_updater_notification_channel">Абнаўленні дадаткаў</string>
+    <string name="mozac_feature_addons_updater_notification_channel" moz:removedIn="126" tools:ignore="UnusedResources">Абнаўленні дадаткаў</string>
+    <!-- Name of the "notification channel" used for displaying a notification for updating an extension. See https://developer.android.com/training/notify-user/channels -->
+    <string name="mozac_feature_addons_updater_notification_channel_2">Абнаўленні пашырэнняў</string>
     <!-- Name of the "notification channel" used for displaying a notification for new supported add-ons. See https://developer.android.com/training/notify-user/channels -->
-    <string name="mozac_feature_addons_supported_checker_notification_channel">Пошук дададкаў, якія падтрымліваюцца.</string>
+    <string name="mozac_feature_addons_supported_checker_notification_channel" tools:ignore="UnusedResources">Пошук дададкаў, якія падтрымліваюцца.</string>
     <!-- The tile of the notification, this will be shown to the user when one newly supported add-on is available.-->
-    <string name="mozac_feature_addons_supported_checker_notification_title">Даступны новы дадатак</string>
+    <string name="mozac_feature_addons_supported_checker_notification_title" tools:ignore="UnusedResources">Даступны новы дадатак</string>
     <!-- The tile of the notification, this will be shown to the user when more than one newly supported add-ons are available.-->
-    <string name="mozac_feature_addons_supported_checker_notification_title_plural">Даступныя новыя дадаткі</string>
+    <string name="mozac_feature_addons_supported_checker_notification_title_plural" tools:ignore="UnusedResources">Даступныя новыя дадаткі</string>
     <!-- The content of the notification, this will be shown to the user when one newly supported add-on is available. %1$s is the add-on name and %2$s is the app name (in most cases Firefox). -->
     <string name="mozac_feature_addons_supported_checker_notification_content_one">Дадаць %1$s да %2$s</string>
     <!-- The content of the notification, this will be shown to the user when two newly supported add-ons are available. %1$s is the first add-on name. %2$s is the second add-on name. %3$s is the app name (in most cases Firefox). -->
@@ -185,13 +189,13 @@
     <!-- The content of the notification, this will be shown to the user when more than two newly supported add-ons are available. %1$s is the app name (in most cases Firefox). -->
     <string name="mozac_feature_addons_supported_checker_notification_content_more_than_two">Дадаць іх да %1$s</string>
     <!-- This is the caption for not yet supported screen caption -->
-    <string name="mozac_feature_addons_not_yet_supported_caption">Тэхналогія дадаткаў Firefox мадэрнізуецца. Гэтыя дадаткі выкарыстоўваюць фрэймворкі, якія не сумяшчальныя з Firefox версіі 75 і вышэй.</string>
+    <string name="mozac_feature_addons_not_yet_supported_caption" moz:removedIn="126" tools:ignore="UnusedResources">Тэхналогія дадаткаў Firefox мадэрнізуецца. Гэтыя дадаткі выкарыстоўваюць фрэймворкі, якія не сумяшчальныя з Firefox версіі 75 і вышэй.</string>
     <!-- This is the caption for not yet supported screen caption -->
     <string name="mozac_feature_addons_not_yet_supported_caption2">Зараз мы ствараем падтрымку для пачатковага набору рэкамендаваных пашырэнняў.</string>
     <!-- This is the caption for the add-on installation progress overlay -->
-    <string name="mozac_add_on_install_progress_caption">Спампоўка і праверка дадатку…</string>
+    <string name="mozac_add_on_install_progress_caption" moz:removedIn="126" tools:ignore="UnusedResources">Спампоўка і праверка дадатку…</string>
     <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->
-    <string name="mozac_feature_addons_failed_to_query_add_ons">Не атрымалася запытацца на дадаткі</string>
+    <string name="mozac_feature_addons_failed_to_query_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Не атрымалася запытацца на дадаткі</string>
     <!-- Error shown when unable to find a translation for an add-on field. %1$s is the locale of the user and %2$s is the default language of the add-on -->
     <string name="mozac_feature_addons_failed_to_translate">Пераклад не знойдзены, ні для лакалі %1$s, ні для прадвызначанай мовы %2$s</string>
     <!-- Text shown after successfully installed an add-on. %1$s is the add-on name. -->
@@ -199,13 +203,13 @@
     <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_install">Не атрымалася ўсталяваць %1$s</string>
     <!-- Text shown after failing to install an add-on for which we don't have its name. -->
-    <string name="mozac_feature_addons_failed_to_install_generic">Не ўдалося ўсталяваць гэты дадатак.</string>
+    <string name="mozac_feature_addons_failed_to_install_generic" moz:removedIn="126" tools:ignore="UnusedResources">Не ўдалося ўсталяваць гэты дадатак.</string>
     <!-- Text shown when attempting to install an add-on and a network error happened. -->
-    <string name="mozac_feature_addons_failed_to_install_network_error">Немагчыма сцягнуць гэты дадатак, бо злучэнне не ўдалося.</string>
+    <string name="mozac_feature_addons_failed_to_install_network_error" moz:removedIn="126" tools:ignore="UnusedResources">Немагчыма сцягнуць гэты дадатак, бо злучэнне не ўдалося.</string>
     <!-- Text shown when attempting to install an add-on and the downloaded file is corrupted. -->
-    <string name="mozac_feature_addons_failed_to_install_corrupt_error">Гэты дадатак не можа быць усталяваны, бо ён выглядае пашкоджаным.</string>
+    <string name="mozac_feature_addons_failed_to_install_corrupt_error" moz:removedIn="126" tools:ignore="UnusedResources">Гэты дадатак не можа быць усталяваны, бо ён выглядае пашкоджаным.</string>
     <!-- Text shown when attempting to install an add-on and an error occurred because the extension was not signed. -->
-    <string name="mozac_feature_addons_failed_to_install_not_signed_error">Гэты дадатак не можа быць усталяваны, бо ён не правераны.</string>
+    <string name="mozac_feature_addons_failed_to_install_not_signed_error" moz:removedIn="126" tools:ignore="UnusedResources">Гэты дадатак не можа быць усталяваны, бо ён не правераны.</string>
     <!-- Text shown when attempting to install an add-on and an error occurred because the extension was incompatible. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
     <string name="mozac_feature_addons_failed_to_install_incompatible_error">%1$s не можа быць усталяваны, бо ён несумяшчальны з %2$s %3$s.</string>
     <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
@@ -229,9 +233,11 @@
     <!-- Label shown to indicate that the add-on was migrated from a previous version of the app. %1$s is the app name most of the case it will be Firefox. -->
     <string name="mozac_feature_addons_migrated_from_a_previous_version_label" tools:ignore="UnusedResources">Гэты дадатак перанесены з папярэдняй версіі %1$s</string>
     <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter. -->
-    <string name="mozac_feature_addons_unsupported_caption">1 дадатак</string>
+    <string name="mozac_feature_addons_unsupported_caption" moz:removedIn="126" tools:ignore="UnusedResources">1 дадатак</string>
+    <!-- Text shown in not yet supported add-ons section. -->
+    <string name="mozac_feature_addons_unsupported_caption_2">1 пашырэнне</string>
     <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter - plural. %1$s is the number of unsupported add-ons -->
-    <string name="mozac_feature_addons_unsupported_caption_plural">Дадаткаў: %1$s</string>
+    <string name="mozac_feature_addons_unsupported_caption_plural" moz:removedIn="126" tools:ignore="UnusedResources">Дадаткаў: %1$s</string>
     <!-- Text link to a sumo page for learning more about unsupported add-ons. -->
     <string name="mozac_feature_addons_unsupported_learn_more">Даведацца больш</string>
     <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated. -->
