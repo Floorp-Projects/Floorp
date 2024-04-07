@@ -1448,14 +1448,18 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
   // maintain when doing text-wrap: balance.
   struct BalanceTarget {
     // If line-clamp is in effect, mContent and mOffset indicate the starting
-    // position of the first line after the clamp limit. If line-clamp is not
-    // in use, mContent is null and mOffset is the total number of lines that
-    // the block must contain.
+    // position of the first line after the clamp limit, and mBlockCoord is the
+    // block-axis offset of its position.
+    // If line-clamp is not in use, mContent is null, mOffset is the total
+    // number of lines that the block must contain, and mBlockCoord is its end
+    // edge in the block direction.
     nsIContent* mContent = nullptr;
     int32_t mOffset = -1;
+    nscoord mBlockCoord = 0;
 
     bool operator==(const BalanceTarget& aOther) const {
-      return mContent == aOther.mContent && mOffset == aOther.mOffset;
+      return mContent == aOther.mContent && mOffset == aOther.mOffset &&
+             mBlockCoord == aOther.mBlockCoord;
     }
     bool operator!=(const BalanceTarget& aOther) const {
       return !(*this == aOther);
@@ -1501,7 +1505,7 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
       auto* textFrame = static_cast<nsTextFrame*>(firstChild);
       offset = textFrame->GetContentOffset();
     }
-    return BalanceTarget{content, offset};
+    return BalanceTarget{content, offset, iter.get()->BStart()};
   };
 
   // "balancing" is implemented by shortening the effective inline-size of the
@@ -1540,6 +1544,7 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
         // no balancing is needed; just break from the balance loop.
         break;
       }
+      balanceTarget.mBlockCoord = mLines.back()->BEnd();
       // Initialize the amount of inset to try, and the iteration step size.
       balanceStep = aReflowInput.ComputedISize() / balanceTarget.mOffset;
       trialState.ResetForBalance(balanceStep);
@@ -1576,7 +1581,8 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
       }
       int32_t numLines =
           countLinesUpTo(StaticPrefs::layout_css_text_wrap_balance_limit());
-      return numLines == balanceTarget.mOffset;
+      return numLines == balanceTarget.mOffset &&
+             mLines.back()->BEnd() == balanceTarget.mBlockCoord;
     };
 
     // If we're in the process of a balance operation, check whether we've
