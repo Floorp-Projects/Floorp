@@ -65,9 +65,7 @@ class ScreenshotsPreview extends HTMLElement {
 
     document.l10n.setAttributes(
       this._cancelButton,
-      AppConstants.platform === "macosx"
-        ? "screenshots-component-cancel-mac-button"
-        : "screenshots-component-cancel-button"
+      "screenshots-component-cancel-button"
     );
 
     document.l10n.setAttributes(
