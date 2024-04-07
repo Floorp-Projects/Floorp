@@ -3150,8 +3150,8 @@ export class UrlbarInput {
       this.select();
       this.window.goDoCommand("cmd_paste");
       this.setResultForCurrentValue(null);
-      this.controller.clearLastQueryContextCache();
       this.handleCommand();
+      this.controller.clearLastQueryContextCache();
 
       this._suppressStartQuery = false;
     });
