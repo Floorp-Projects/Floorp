@@ -226,7 +226,16 @@ add_task(async function test_user_defined_commands() {
   }
 
   function background() {
-    browser.commands.onCommand.addListener(commandName => {
+    browser.commands.onCommand.addListener(async (commandName, tab) => {
+      let [expectedTab] = await browser.tabs.query({
+        currentWindow: true,
+        active: true,
+      });
+      browser.test.assertEq(
+        tab.id,
+        expectedTab.id,
+        "Expected onCommand listener to pass the current tab"
+      );
       browser.test.sendMessage("oncommand", commandName);
     });
     browser.test.sendMessage("ready");
@@ -408,8 +417,9 @@ add_task(async function test_commands_event_page() {
       },
     },
     background() {
-      browser.commands.onCommand.addListener(name => {
+      browser.commands.onCommand.addListener((name, tab) => {
         browser.test.assertEq(name, "toggle-feature", "command received");
+        browser.test.assertTrue(!!tab, "tab received");
         browser.test.sendMessage("onCommand");
       });
       browser.test.sendMessage("ready");
