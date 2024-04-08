@@ -2,7 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 import copy
+import json
 import os
+import pathlib
 import re
 import sys
 
@@ -198,6 +200,77 @@ def get_global_overrides(config):
     return global_overrides
 
 
+def setup_pdfpaint_test(config, test_instance):
+    # Get the root of the location of the PDFs artifact
+    if os.environ.get("MOZ_FETCHES_DIR", None):
+        pdfs_root = pathlib.Path(os.environ.get("MOZ_FETCHES_DIR"), "talos-pdfs")
+    else:
+        pdfs_root = pathlib.Path(os.environ.get("MOZBUILD_PATH"), "talos-pdfs")
+    if not pdfs_root.exists():
+        raise Exception(f"Cannot find webserver root: {pdfs_root}")
+
+    pdfpaint_manifest_path = pathlib.Path(pdfs_root, "pdfpaint.manifest")
+    test_manifest_path = pathlib.Path(pdfs_root, "test_manifest.json")
+    test_manifest = json.loads(test_manifest_path.read_text(encoding="utf8"))
+
+    # If a pdfpaint test was specified, prevent any chunking
+    chunk_number = config.get("pdfpaint_chunk", None)
+    pdfpaint_test = None
+    if config.get("pdfpaint_name") is not None:
+        chunk_number = None
+        pdfpaint_test = config["pdfpaint_name"]
+
+    # Gather all the pdf files that can be used in the test, and write
+    # all the pdfs to be tested to the manifest file
+    start_ind = 0
+    end_ind = None
+    pdfs_per_chunk = 100
+    if chunk_number is not None:
+        start_ind = pdfs_per_chunk * (chunk_number - 1)
+        end_ind = pdfs_per_chunk * chunk_number
+
+    pdf_files = set()
+    for pdf_info in test_manifest:
+        if pdf_info.get("password", None) is not None:
+            # PDFs that require passwords cause timeouts
+            continue
+
+        pdf_name = pathlib.Path(pdf_info["file"]).name
+        if (
+            config.get("pdfpaint_name", None) is not None
+            and config["pdfpaint_name"] != pdf_name
+        ):
+            # If a user passed a name of a pdf, skip all the others
+            continue
+
+        pdf_files.add(pdf_name)
+
+    if start_ind > len(pdf_files):
+        raise ConfigurationError(
+            f"Chunk {chunk_number} contains no PDFs to test. "
+            f"For {len(pdf_files)} PDFs, the max chunk is "
+            f"{int((len(pdf_files)-1)/pdfs_per_chunk)+1}."
+        )
+
+    with pdfpaint_manifest_path.open("w") as f:
+        for pdf_file in sorted(list(pdf_files))[start_ind:end_ind]:
+            print(f"http://localhost/tests/pdfpaint/pdfs/{pdf_file}{os.linesep}")
+            f.write(f"http://localhost/tests/pdfpaint/pdfs/{pdf_file}{os.linesep}")
+
+    # Make a symbolic link to the mozbuild pdf folder since the talos
+    # webserver depends on having the doc root as the talos folder for getInfo.html
+    symlink_dest = pathlib.Path(__file__).parent / "tests" / "pdfpaint" / "pdfs"
+    symlink_dest.unlink(missing_ok=True)
+    symlink_dest.symlink_to(pdfs_root, target_is_directory=True)
+    test_instance.tpmanifest = str(pdfpaint_manifest_path)
+
+    # Increase the pagecycles for each pdf to 5 if we're running chunks, otherwise
+    # it can take a very long time to complete testing of all pdfs
+    if chunk_number is not None or pdfpaint_test is not None:
+        print("Setting pdfpaint tppagecycles to 5")
+        test_instance.tppagecycles = 5
+
+
 def get_test_host(manifest_line):
     match = re.match(r"^http://localhost/page_load_test/tp5n/([^/]+)/", manifest_line)
     host = match.group(1)
@@ -247,6 +320,9 @@ def get_test(config, global_overrides, counters, test_instance):
         test_instance.tphero = hero
     if pdfPaint is not None:
         test_instance.pdfpaint = pdfPaint
+
+    if test_instance.pdfpaint:
+        setup_pdfpaint_test(config, test_instance)
 
     # fix up url
     url = getattr(test_instance, "url", None)
@@ -358,6 +434,11 @@ def get_config(argv=None):
         # args needs to be reparsed now
     elif not cli_opts.activeTests:
         raise ConfigurationError("--activeTests or --suite required!")
+
+    if cli_opts.pdfpaint_chunk is not None and cli_opts.pdfpaint_chunk < 1:
+        raise ConfigurationError(
+            "pdfpaint chunk must be a positive integer greater than or equal to 1"
+        )
 
     cli_opts = parse_args(argv=argv)
     setup_logging("talos", cli_opts, {"tbpl": sys.stdout})

@@ -607,7 +607,13 @@ suites:
                 - source:
                 - type: `Page load`_
                 - reporting: time from *performance.timing.navigationStart* to *pagerendered* event in ms (lower is better)
-                - data: load a PDF 20 times
+                - data: loads a PDF 5 times
+                - description:
+                    Runs through a set of chunks. Each chunk runs 100 PDFs with 5 iterations each.
+                    If --pdfPaintChunk is not used when running the test locally, all PDFs will be tested
+                    by default with only 1 cycle each. The PDFs that are run are found in the Mozilla pdf.js
+                    repository, and this test pulls those in for testing locally through a toolchain artifact
+                    called talos-pdfs.
             perf_reftest: >
                 - contact: :emilio and css/layout team
                 - source: `perf-reftest <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/perf-reftest>`__

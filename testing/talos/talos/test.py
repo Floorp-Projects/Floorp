@@ -419,8 +419,9 @@ class pdfpaint(PageloaderTest):
     """
 
     tpmanifest = "${talos}/tests/pdfpaint/pdfpaint.manifest"
-    tppagecycles = 20
-    timeout = 600
+    tppagecycles = 1
+    timeout = 1800
+    tptimeout = 60000
     pdfpaint = True
     unit = "ms"
 

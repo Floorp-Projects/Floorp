@@ -280,6 +280,18 @@ class Talos(
                     "help": "Take a screenshot when the test fails.",
                 },
             ],
+            [
+                ["--pdfPaintChunk"],
+                {
+                    "type": "int",
+                    "dest": "pdfpaint_chunk",
+                    "default": None,
+                    "help": (
+                        "Chunk of the pdfpaint test to run (each chunk runs at most 100 pdfs). "
+                        "Defaults to None to run all the pdfs at the same time."
+                    ),
+                },
+            ],
         ]
         + testing_config_options
         + copy.deepcopy(code_coverage_config_options)
@@ -558,6 +570,8 @@ class Talos(
             kw_options["symbolsPath"] = self.symbols_path
         if self.config.get("project", None):
             kw_options["project"] = self.config["project"]
+        if self.config.get("pdfpaint_chunk", None):
+            kw_options["pdfPaintChunk"] = str(self.config["pdfpaint_chunk"])
 
         kw_options.update(kw)
         # talos expects tests to be in the format (e.g.) 'ts:tp5:tsvg'
@@ -850,6 +864,9 @@ class Talos(
         env["MOZ_UPLOAD_DIR"] = self.query_abs_dirs()["abs_blob_upload_dir"]
         if not self.run_local:
             env["MINIDUMP_STACKWALK"] = self.query_minidump_stackwalk()
+            env["MOZ_FETCHES_DIR"] = os.environ.get("MOZ_FETCHES_DIR")
+        else:
+            env["MOZBUILD_PATH"] = self.config.get("mozbuild_path")
         env["MINIDUMP_SAVE_PATH"] = self.query_abs_dirs()["abs_blob_upload_dir"]
         env["RUST_BACKTRACE"] = "full"
         if not os.path.isdir(env["MOZ_UPLOAD_DIR"]):

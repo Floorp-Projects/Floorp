@@ -4,6 +4,11 @@
 
 // given an array of strings, finds the longest common prefix
 function findCommonPrefixLength(strs) {
+  if (strs.every(str => str.includes("/pdfs/"))) {
+    // In all cases for pdfpaint PDFs, return the full file name
+    return strs[0].lastIndexOf("/") + 1;
+  }
+
   if (strs.length < 2) {
     // only one page in the manifest
     // i.e. http://localhost/tests/perf-reftest/bloom-basic.html

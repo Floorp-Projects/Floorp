@@ -262,6 +262,7 @@ testing/talos/talos/fis/tp5n
 testing/talos/talos/tests/tp5n.zip
 testing/talos/talos/tests/tp5n.tar.gz
 testing/talos/talos/tests/tp5n
+testing/talos/talos/tests/pdfpaint/pdfs
 testing/talos/talos/tests/devtools/damp.manifest.develop
 testing/talos/talos/startup_test/startup_about_home_paint/startup_about_home_paint.manifest.develop
 testing/talos/talos/webextensions/

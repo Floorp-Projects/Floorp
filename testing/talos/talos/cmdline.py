@@ -223,6 +223,26 @@ def create_parser(mach_interface=False):
         dest="pdfpaint",
         help="Wait for the first page of a PDF to be rendered",
     )
+    add_arg(
+        "--pdfPaintChunk",
+        type=int,
+        default=None,
+        dest="pdfpaint_chunk",
+        help=(
+            "Chunk of the pdfpaint test to run (each chunk runs at most 100 pdfs). "
+            "Defaults to None to run all the pdfs at the same time."
+        ),
+    )
+    add_arg(
+        "--pdfPaintName",
+        type=str,
+        default=None,
+        dest="pdfpaint_name",
+        help=(
+            "Name of a pdfpaint test to run (e.g. xfa_imm5257e.pdf). Chunking will be "
+            "ignored/disabled if this option is used."
+        ),
+    )
     add_arg("--webServer", dest="webserver", help="DEPRECATED")
     if not mach_interface:
         add_arg(

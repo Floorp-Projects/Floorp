@@ -7992,186 +7992,24 @@ For the sample commands found below, note that the capitalization used is import
    * source:
    * type: `Page load`_
    * reporting: time from *performance.timing.navigationStart* to *pagerendered* event in ms (lower is better)
-   * data: load a PDF 20 times
+   * data: loads a PDF 5 times
+   * description:
+    Runs through a set of chunks. Each chunk runs 100 PDFs with 5 iterations each.
+    If --pdfPaintChunk is not used when running the test locally, all PDFs will be tested
+    by default with only 1 cycle each. The PDFs that are run are found in the Mozilla pdf.js
+    repository, and this test pulls those in for testing locally through a toolchain artifact
+    called talos-pdfs.
    * pdfpaint: True
-   * timeout: 600
+   * timeout: 1800
    * tpmanifest: ${talos}/tests/pdfpaint/pdfpaint.manifest
-   * tppagecycles: 20
+   * tppagecycles: 1
+   * tptimeout: 60000
    * unit: ms
    * Command
 
    .. code-block::
 
       ./mach talos-test -a pdfpaint
-
-   * **Test Task**:
-
-   .. list-table:: **test-linux1804-64-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **talos-other**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-other-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-linux1804-64-shippable-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **talos-other**
-        - ✅
-        - ✅
-        - ❌
-        - ❌
-      * - **talos-other-profiling**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-other-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-macosx1015-64-shippable-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **talos-other**
-        - ✅
-        - ✅
-        - ❌
-        - ❌
-      * - **talos-other-profiling**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-other-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-windows10-32-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **talos-other**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-other-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-windows10-32-shippable-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **talos-other**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-other-profiling**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-other-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-windows10-64-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **talos-other**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-other-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-windows10-64-shippable-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **talos-other**
-        - ✅
-        - ✅
-        - ❌
-        - ❌
-      * - **talos-other-profiling**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-other-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ❌
-
 
 
 .. dropdown:: perf_reftest
