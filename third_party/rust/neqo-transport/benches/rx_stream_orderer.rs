@@ -11,14 +11,14 @@ fn rx_stream_orderer() {
     let mut rx = RxStreamOrderer::new();
     let data: &[u8] = &[0; 1337];
 
-    for i in 0..100000 {
+    for i in 0..100_000 {
         rx.inbound_frame(i * 1337, data);
     }
 }
 
 fn criterion_benchmark(c: &mut Criterion) {
     c.bench_function("RxStreamOrderer::inbound_frame()", |b| {
-        b.iter(rx_stream_orderer)
+        b.iter(rx_stream_orderer);
     });
 }
 

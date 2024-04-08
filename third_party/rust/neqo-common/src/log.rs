@@ -50,7 +50,7 @@ fn since_start() -> Duration {
     START_TIME.get_or_init(Instant::now).elapsed()
 }
 
-pub fn init() {
+pub fn init(level_filter: Option<log::LevelFilter>) {
     static INIT_ONCE: Once = Once::new();
 
     if ::log::STATIC_MAX_LEVEL == ::log::LevelFilter::Off {
@@ -59,6 +59,9 @@ pub fn init() {
 
     INIT_ONCE.call_once(|| {
         let mut builder = Builder::from_env("RUST_LOG");
+        if let Some(filter) = level_filter {
+            builder.filter_level(filter);
+        }
         builder.format(|buf, record| {
             let elapsed = since_start();
             writeln!(
@@ -71,9 +74,9 @@ pub fn init() {
             )
         });
         if let Err(e) = builder.try_init() {
-            do_log!(::log::Level::Info, "Logging initialization error {:?}", e);
+            do_log!(::log::Level::Warn, "Logging initialization error {:?}", e);
         } else {
-            do_log!(::log::Level::Info, "Logging initialized");
+            do_log!(::log::Level::Debug, "Logging initialized");
         }
     });
 }
@@ -81,32 +84,32 @@ pub fn init() {
 #[macro_export]
 macro_rules! log_invoke {
     ($lvl:expr, $ctx:expr, $($arg:tt)*) => ( {
-        ::neqo_common::log::init();
+        ::neqo_common::log::init(None);
         ::neqo_common::do_log!($lvl, "[{}] {}", $ctx, format!($($arg)*));
     } )
 }
 #[macro_export]
 macro_rules! qerror {
     ([$ctx:expr], $($arg:tt)*) => (::neqo_common::log_invoke!(::log::Level::Error, $ctx, $($arg)*););
-    ($($arg:tt)*) => ( { ::neqo_common::log::init(); ::neqo_common::do_log!(::log::Level::Error, $($arg)*); } );
+    ($($arg:tt)*) => ( { ::neqo_common::log::init(None); ::neqo_common::do_log!(::log::Level::Error, $($arg)*); } );
 }
 #[macro_export]
 macro_rules! qwarn {
     ([$ctx:expr], $($arg:tt)*) => (::neqo_common::log_invoke!(::log::Level::Warn, $ctx, $($arg)*););
-    ($($arg:tt)*) => ( { ::neqo_common::log::init(); ::neqo_common::do_log!(::log::Level::Warn, $($arg)*); } );
+    ($($arg:tt)*) => ( { ::neqo_common::log::init(None); ::neqo_common::do_log!(::log::Level::Warn, $($arg)*); } );
 }
 #[macro_export]
 macro_rules! qinfo {
     ([$ctx:expr], $($arg:tt)*) => (::neqo_common::log_invoke!(::log::Level::Info, $ctx, $($arg)*););
-    ($($arg:tt)*) => ( { ::neqo_common::log::init(); ::neqo_common::do_log!(::log::Level::Info, $($arg)*); } );
+    ($($arg:tt)*) => ( { ::neqo_common::log::init(None); ::neqo_common::do_log!(::log::Level::Info, $($arg)*); } );
 }
 #[macro_export]
 macro_rules! qdebug {
     ([$ctx:expr], $($arg:tt)*) => (::neqo_common::log_invoke!(::log::Level::Debug, $ctx, $($arg)*););
-    ($($arg:tt)*) => ( { ::neqo_common::log::init(); ::neqo_common::do_log!(::log::Level::Debug, $($arg)*); } );
+    ($($arg:tt)*) => ( { ::neqo_common::log::init(None); ::neqo_common::do_log!(::log::Level::Debug, $($arg)*); } );
 }
 #[macro_export]
 macro_rules! qtrace {
     ([$ctx:expr], $($arg:tt)*) => (::neqo_common::log_invoke!(::log::Level::Trace, $ctx, $($arg)*););
-    ($($arg:tt)*) => ( { ::neqo_common::log::init(); ::neqo_common::do_log!(::log::Level::Trace, $($arg)*); } );
+    ($($arg:tt)*) => ( { ::neqo_common::log::init(None); ::neqo_common::do_log!(::log::Level::Trace, $($arg)*); } );
 }
