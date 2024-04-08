@@ -1,6 +1,6 @@
 [package]
 name = "goblin"
-version = "0.6.999"
+version = "0.7.999"
 edition = "2018"
 license = "MIT/Apache-2.0"
 
@@ -8,4 +8,19 @@ license = "MIT/Apache-2.0"
 path = "lib.rs"
 
 [dependencies.goblin]
-version = "0.7.0"
+version = "0.8.0"
+
+default-features = false
+
+[features]
+alloc = ["goblin/alloc"]
+archive = ["goblin/archive"]
+default = ["goblin/default"]
+elf32 = ["goblin/elf32"]
+elf64 = ["goblin/elf64"]
+endian_fd = ["goblin/endian_fd"]
+mach32 = ["goblin/mach32"]
+mach64 = ["goblin/mach64"]
+pe32 = ["goblin/pe32"]
+pe64 = ["goblin/pe64"]
+std = ["goblin/std"]
