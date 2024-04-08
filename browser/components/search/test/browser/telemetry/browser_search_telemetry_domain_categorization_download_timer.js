@@ -76,7 +76,6 @@ const db = client.db;
 
 // Shorten the timer so that tests don't have to wait too long.
 const TIMEOUT_IN_MS = 250;
-let didPushPrefEnv = false;
 add_setup(async function () {
   SearchSERPTelemetry.overrideSearchTelemetryForTests(TEST_PROVIDER_INFO);
   await waitForIdle();
@@ -91,7 +90,6 @@ add_setup(async function () {
       "browser.search.serpEventTelemetryCategorization.enabled"
     )
   ) {
-    didPushPrefEnv = true;
     let promise = waitForDomainToCategoriesUninit();
     await SpecialPowers.pushPrefEnv({
       set: [["browser.search.serpEventTelemetryCategorization.enabled", false]],
@@ -115,10 +113,14 @@ add_setup(async function () {
   TELEMETRY_CATEGORIZATION_DOWNLOAD_SETTINGS.maxAdjust = 0;
 
   registerCleanupFunction(async () => {
-    // Manually pop the preference so that we wait for the map to be ready
-    // for the next test.
-    if (didPushPrefEnv) {
-      await SpecialPowers.popPrefEnv();
+    // Manually unload the pref so that we can check if we should wait for the
+    // the categories map to be initialized.
+    await SpecialPowers.popPrefEnv();
+    if (
+      Services.prefs.getBoolPref(
+        "browser.search.serpEventTelemetryCategorization.enabled"
+      )
+    ) {
       await waitForDomainToCategoriesInit();
     }
     SearchSERPTelemetry.overrideSearchTelemetryForTests();

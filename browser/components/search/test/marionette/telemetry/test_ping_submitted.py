@@ -15,12 +15,32 @@ class TestPingSubmitted(MarionetteTestCase):
 
         self.marionette.enforce_gecko_prefs(
             {
-                "browser.search.serpEventTelemetryCategorization.enabled": True,
                 "datareporting.healthreport.uploadEnabled": True,
                 "telemetry.fog.test.localhost_port": 3000,
                 "browser.search.log": True,
             }
         )
+        # The categorization ping is submitted on startup. If anything delays
+        # its initialization, turning the preference on and immediately
+        # attaching a categorization event could result in the ping being
+        # submitted after the test event is reported but before the browser
+        # restarts.
+        script = """
+            let [outerResolve] = arguments;
+            (async () => {
+                if (!Services.prefs.getBoolPref("browser.search.serpEventTelemetryCategorization.enabled")) {
+                    let inited = new Promise(innerResolve => {
+                    Services.obs.addObserver(function callback() {
+                        Services.obs.removeObserver(callback, "categorization-recorder-init");
+                        innerResolve();
+                    }, "categorization-recorder-init");
+                    });
+                    Services.prefs.setBoolPref("browser.search.serpEventTelemetryCategorization.enabled", true);
+                    await inited;
+                }
+            })().then(outerResolve);
+        """
+        self.marionette.execute_async_script(script)
 
     def test_ping_submit_on_start(self):
         # Record an event for the ping to eventually submit.
@@ -48,14 +68,13 @@ class TestPingSubmitted(MarionetteTestCase):
             """
         )
 
-        self.assertEqual(
-            self.marionette.execute_script(
+        Wait(self.marionette, timeout=60).until(
+            lambda _: self.marionette.execute_script(
                 """
-            return Glean.serp.categorization.testGetValue()?.length ?? 0;
+            return (Glean.serp.categorization.testGetValue()?.length ?? 0) == 1;
                 """
             ),
-            1,
-            msg="Should have recorded a SERP categorization event before restart.",
+            message="Should have recorded a SERP categorization event before restart.",
         )
 
         self.marionette.restart(clean=False, in_app=True)
@@ -66,6 +85,5 @@ class TestPingSubmitted(MarionetteTestCase):
             return (Glean.serp.categorization.testGetValue()?.length ?? 0) == 0;
                 """
             ),
-            0,
             message="SERP categorization should have been sent some time after restart.",
         )
