@@ -38,8 +38,7 @@ class nsMathMLContainerFrame : public nsContainerFrame, public nsMathMLFrame {
   nsMathMLContainerFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
                          ClassID aID)
       : nsContainerFrame(aStyle, aPresContext, aID),
-        mIntrinsicWidth(NS_INTRINSIC_ISIZE_UNKNOWN),
-        mBlockStartAscent(0) {}
+        mIntrinsicWidth(NS_INTRINSIC_ISIZE_UNKNOWN) {}
 
   NS_DECL_QUERYFRAME_TARGET(nsMathMLContainerFrame)
   NS_DECL_QUERYFRAME
@@ -347,7 +346,7 @@ class nsMathMLContainerFrame : public nsContainerFrame, public nsMathMLFrame {
 
   nscoord mIntrinsicWidth;
 
-  nscoord mBlockStartAscent;
+  nscoord mBlockStartAscent = 0;
 
  private:
   class RowChildFrameIterator;
@@ -429,8 +428,7 @@ class nsMathMLmathBlockFrame final : public nsBlockFrame {
  protected:
   explicit nsMathMLmathBlockFrame(ComputedStyle* aStyle,
                                   nsPresContext* aPresContext)
-      : nsBlockFrame(aStyle, aPresContext, kClassID) {
-  }
+      : nsBlockFrame(aStyle, aPresContext, kClassID) {}
   virtual ~nsMathMLmathBlockFrame() = default;
 };
 
