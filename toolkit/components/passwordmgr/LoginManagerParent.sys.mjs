@@ -1541,6 +1541,10 @@ export class LoginManagerParent extends JSWindowActorParent {
 
     return gRecipeManager.initializationPromise;
   }
+
+  async searchAutoCompleteEntries(searchString, data) {
+    return this.doAutocompleteSearch(data.formOrigin, data);
+  }
 }
 
 LoginManagerParent.SUGGEST_IMPORT_DEBOUNCE_MS = 10000;

@@ -34,6 +34,11 @@ interface nsIAutoCompletePopup : nsISupports
   readonly attribute boolean popupOpen;
 
   /*
+   * Don't rollup the popup when the search string becomes "".
+   */
+  boolean getNoRollupOnEmptySearch(in Element element);
+
+  /*
    * Bind the popup to an input object and display it with the given coordinates
    *
    * @param input - The input object that the popup will be bound to
