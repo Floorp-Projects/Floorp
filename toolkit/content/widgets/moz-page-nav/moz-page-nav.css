@@ -20,6 +20,7 @@
   position: sticky;
   top: 0;
   height: 100vh;
+  display: block;
   width: var(--page-nav-width);
 
   @media (prefers-reduced-motion) {
@@ -38,7 +39,7 @@ nav {
   grid-template-rows: min-content 1fr auto;
   gap: var(--page-nav-gap);
   margin-block: var(--page-nav-margin-top) var(--page-nav-margin-bottom);
-  height: calc(100vh - var(--page-nav-margin-top) - var(--page-nav-margin-bottom));
+  height: calc(100% - var(--page-nav-margin-top) - var(--page-nav-margin-bottom));
   @media (max-width: 52rem) {
     grid-template-rows: 1fr auto;
   }
