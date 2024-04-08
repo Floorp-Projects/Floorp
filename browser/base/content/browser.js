@@ -3005,10 +3005,6 @@ function getDefaultHomePage() {
   return url;
 }
 
-function BrowserFullScreen() {
-  window.fullScreen = !window.fullScreen || BrowserHandler.kiosk;
-}
-
 // TODO: can we pull getPEMString in from pippki.js instead of
 // duplicating them here?
 function getPEMString(cert) {

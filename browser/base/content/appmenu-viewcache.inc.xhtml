@@ -124,7 +124,7 @@
 # in the middle of the fullscreen transition otherwise.
                        oncommand="
                          this.closest('panel').hidePopup();
-                         setTimeout(() => BrowserFullScreen(), 0);
+                         setTimeout(() => BrowserCommands.fullScreen(), 0);
                        "
                        tooltip="dynamic-shortcut-tooltip">
            <observes element="View:FullScreen" attribute="checked"/>
