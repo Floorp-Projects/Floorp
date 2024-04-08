@@ -3311,7 +3311,11 @@ void nsCycleCollector::SuspectNurseryEntries() {
   while (gNurseryPurpleBufferEntryCount) {
     NurseryPurpleBufferEntry& entry =
         gNurseryPurpleBufferEntry[--gNurseryPurpleBufferEntryCount];
-    mPurpleBuf.Put(entry.mPtr, entry.mParticipant, entry.mRefCnt);
+    if (!entry.mRefCnt->IsPurple() && IsIdle()) {
+      entry.mRefCnt->RemoveFromPurpleBuffer();
+    } else {
+      mPurpleBuf.Put(entry.mPtr, entry.mParticipant, entry.mRefCnt);
+    }
   }
 }
 
