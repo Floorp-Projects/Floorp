@@ -1770,12 +1770,18 @@
     <string name="preferences_passwords_exceptions">ᱪᱷᱟᱰᱟ ᱠᱚ</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description_empty" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱵᱚᱞᱚᱱ ᱥᱩᱦᱤ ᱟᱨ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱠᱚ ᱡᱟ ᱵᱟᱝ ᱥᱟᱺᱪᱟᱣ ᱠᱟᱱᱟ ᱚᱱᱟᱠᱩ ᱱᱚᱰᱮ ᱩᱫᱩᱜᱚᱣᱟ ᱾</string>
+    <!-- Empty description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
+    <string name="preferences_passwords_exceptions_description_empty_2">%s ᱫᱚ ᱱᱚᱰᱮ ᱞᱤᱥᱴᱤ ᱠᱟᱱ ᱥᱟᱭᱤᱴᱠᱚᱨᱮ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱵᱟᱭ ᱥᱟᱧᱪᱟᱣ ᱟ ᱾</string>
     <!-- Description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱞᱚᱜᱤᱱᱥ ᱟᱨ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱫᱚ ᱱᱚᱶᱟ ᱥᱟᱭᱤᱴ ᱞᱟᱹᱜᱤᱫ ᱵᱟᱝ ᱥᱟᱺᱪᱟᱣᱜᱼᱟ ᱾</string>
+    <!-- Description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
+    <string name="preferences_passwords_exceptions_description_2">%s ᱫᱚ ᱱᱚᱰᱮ ᱢᱮᱱᱟᱜ ᱞᱤᱥᱴᱤ ᱠᱟᱱ ᱥᱟᱭᱤᱴᱠᱚᱨᱮ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱵᱟᱭ ᱥᱟᱧᱪᱟᱣ ᱟ ᱾</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">ᱡᱷᱚᱛᱚ ᱪᱷᱟᱰᱟᱠᱚ ᱢᱮᱴᱟᱣ ᱢᱮ</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱞᱚᱜᱤᱱ ᱠᱚ ᱥᱮᱸᱫᱽᱨᱟᱭ ᱢᱮ</string>
+    <!-- Hint for search box in passwords list -->
+    <string name="preferences_passwords_saved_logins_search_2">ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱠᱚ ᱫᱮᱠᱷᱟᱣ ᱢᱮ</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">ᱥᱟᱭᱤᱴ</string>
     <!-- The header for the username for a login -->
@@ -1804,10 +1810,16 @@
     <string name="saved_login_hide_password">ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱩᱠᱩ</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
     <string name="logins_biometric_prompt_message" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱥᱟᱺᱪᱟᱣᱠᱟᱱ ᱵᱚᱞᱚᱱ ᱥᱩᱦᱤ ᱠᱚ ᱧᱮᱞ ᱞᱟᱹᱜᱤᱫ ᱛᱮ ᱚᱱᱞᱚᱠ ᱢᱮ</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
+    <string name="logins_biometric_prompt_message_2">ᱥᱟᱧᱪᱟᱣᱟᱠᱟᱱ ᱠᱟᱰ ᱠᱚ ᱧᱮᱞ ᱞᱟᱹᱜᱤᱫ ᱠᱷᱩᱞᱟᱹᱭ ᱢᱮ</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱟᱢᱟᱜ ᱞᱚᱜᱤᱱ ᱠᱚ ᱟᱨ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱠᱚ ᱡᱟᱯᱛᱤ ᱢᱮ</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title_2">ᱟᱢᱟᱜ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱠᱚ ᱨᱩᱠᱷᱤᱭᱟᱹᱭ ᱢᱮ</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱥᱟᱫᱷᱚᱱ ᱠᱩᱞᱩᱯ ᱪᱤᱱᱦᱟᱹ, ᱯᱤᱱ, ᱟᱨ ᱵᱟᱝ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱞᱟᱜᱟᱣᱢᱮ ᱟᱢᱟᱜ ᱥᱟᱺᱪᱟᱣ ᱞᱚᱜᱤᱱ ᱠᱚ ᱮᱢᱟᱱ ᱨᱩᱠᱷᱭᱟ ᱞᱟᱹᱜᱤᱫ ᱡᱩᱫᱤ ᱚᱞᱜᱟ ᱦᱚᱲ ᱴᱷᱮᱱ ᱟᱢᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱛᱟᱦᱮᱸᱱ ᱠᱷᱟᱱ ᱾</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message_2">ᱥᱟᱫᱷᱚᱱ ᱠᱩᱞᱩᱯ ᱪᱤᱱᱦᱟᱹ, ᱯᱤᱱ, ᱟᱨ ᱵᱟᱝ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱟᱢᱟᱜ ᱥᱟᱧᱪᱟᱣ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ  ᱠᱚ ᱮᱢᱟᱱ ᱨᱩᱠᱷᱭᱟ ᱞᱟᱹᱜᱤᱫ ᱡᱩᱫᱤ ᱚᱞᱜᱟ ᱦᱚᱲ ᱴᱷᱮᱱ ᱟᱢᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱛᱟᱦᱮᱸᱱ ᱠᱷᱟᱱ ᱾</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">ᱛᱟᱭᱚᱢ ᱛᱮ</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1826,6 +1838,9 @@
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱞᱚᱜᱤᱱ ᱢᱮᱱᱭᱩ ᱥᱟᱞᱟᱭ ᱢᱮ</string>
 
+    <!-- Content description (not visible, for screen readers etc.) -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2">ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱢᱮᱱᱩ ᱥᱮᱴ ᱢᱮ</string>
+
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->
     <string name="preferences_autofill">ᱟᱡ ᱛᱮ ᱯᱩᱨᱟᱹᱣ</string>
@@ -1834,10 +1849,16 @@
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱠᱨᱮᱰᱤᱴ ᱠᱟᱰ</string>
 
+    <!-- Preference and title for managing the settings for payment methods -->
+    <string name="preferences_credit_cards_2">ᱜᱚᱱᱚᱝ ᱦᱚᱨᱟᱠᱚ</string>
     <!-- Preference for saving and autofilling credit cards -->
     <string name="preferences_credit_cards_save_and_autofill_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱥᱟᱺᱪᱟᱣ ᱟᱨ ᱠᱟᱰ ᱠᱚ ᱟᱡ ᱛᱮ ᱯᱮᱨᱮᱡᱽ ᱢᱮ</string>
+    <!-- Preference for saving and autofilling credit cards -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_2">ᱯᱮᱢᱮᱱᱴ ᱦᱚᱨᱟ ᱥᱟᱧᱪᱟᱣ ᱢᱮ ᱟᱨ ᱯᱮᱨᱮᱪ ᱢᱮ</string>
     <!-- Preference summary for saving and autofilling credit card data -->
     <string name="preferences_credit_cards_save_and_autofill_cards_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱰᱟᱴᱟ ᱫᱚ ᱮᱱᱠᱨᱤᱯᱴᱮᱰ ᱠᱟᱱᱟ</string>
+    <!-- Preference summary for saving and autofilling payment method data. Parameter will be replaced by app name. -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2">%s ᱫᱚ ᱟᱢ ᱡᱟᱦᱟᱸ ᱥᱟᱧᱪᱟᱣ ᱮᱫ ᱡᱷᱚᱛᱚ ᱛᱚᱨᱠᱟᱠᱚ ᱨᱩᱠᱷᱤᱭᱟᱹ ᱟ</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">ᱡᱷᱚᱛᱚ ᱥᱟᱫᱷᱚᱱ ᱵᱷᱤᱛᱨᱤ ᱨᱮ ᱠᱟᱰ ᱥᱭᱝᱠ ᱢᱮ</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
@@ -1846,16 +1867,25 @@
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱠᱨᱮᱰᱤᱴ ᱠᱟᱰ ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
 
+    <!-- Preference option for adding a card -->
+    <string name="preferences_credit_cards_add_credit_card_2">ᱠᱟᱰ ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱥᱟᱺᱪᱟᱣ ᱠᱟᱰ ᱠᱚ ᱢᱮᱱᱮᱡᱽ ᱢᱮ</string>
+    <!-- Preference option for managing saved cards -->
+    <string name="preferences_credit_cards_manage_saved_cards_2">ᱠᱟᱰ ᱢᱮᱱᱮᱡᱽ ᱢᱮ</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">ᱴᱷᱤᱠᱬᱟᱹ ᱥᱮᱞᱮᱫ ᱢᱮ</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">ᱴᱷᱤᱠᱬᱟᱹᱤᱭᱟᱹ ᱡᱚᱛᱚᱱ ᱮᱢ</string>
     <!-- Preference for saving and autofilling addresses -->
     <string name="preferences_addresses_save_and_autofill_addresses" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱴᱷᱤᱬᱟᱹᱤᱭᱟᱹ ᱥᱟᱺᱪᱟᱣ ᱟᱨ ᱟᱡ ᱛᱮ ᱯᱮᱨᱮᱡ ᱢᱮ</string>
+    <!-- Preference for saving and filling addresses -->
+    <string name="preferences_addresses_save_and_autofill_addresses_2">ᱴᱷᱤᱬᱟᱹᱤᱭᱟᱹ ᱥᱟᱧᱪᱟᱣ ᱟᱨ ᱟᱡ ᱛᱮ ᱯᱮᱨᱮᱡ ᱢᱮ</string>
     <!-- Preference summary for saving and autofilling address data -->
     <string name="preferences_addresses_save_and_autofill_addresses_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱮᱞ, ᱤᱢᱮᱞ ᱟᱨ ᱵᱷᱮᱡᱟ ᱴᱷᱤᱠᱬᱟᱹ ᱞᱮᱠᱷᱟ ᱵᱤᱵᱨᱚᱬ ᱢᱮᱥᱟᱭ ᱢᱮ</string>
+
+    <!-- Preference summary for saving and filling address data -->
+    <string name="preferences_addresses_save_and_autofill_addresses_summary_2">ᱯᱷᱚᱱ ᱱᱚᱢᱵᱚᱨ ᱟᱨ ᱤᱼᱢᱮᱞ ᱴᱷᱤᱠᱬᱟᱹ ᱥᱮᱞᱮᱫ ᱢᱮᱱᱟᱜᱼᱟ</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">ᱠᱟᱰ ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
@@ -1878,6 +1908,8 @@
     <string name="credit_cards_delete_card_button">ᱠᱟᱰ ᱢᱮᱴᱟᱣ ᱢᱮ</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱪᱮᱫ ᱟᱢ ᱜᱚᱴᱟ ᱛᱮ ᱢᱮᱱᱟᱢᱼᱟ ᱱᱚᱶᱟ ᱠᱨᱮᱰᱤᱴ ᱠᱟᱰ ᱢᱮᱴᱟᱣ ᱞᱟ.ᱜᱤᱛ ᱛᱮ?</string>
+    <!-- The text for the confirmation message of "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_confirmation_2">ᱠᱟᱰ ᱢᱮᱴᱟᱣᱟᱢ ᱥᱮ ?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">ᱢᱮᱴᱟᱣ ᱢᱮ</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1890,12 +1922,18 @@
     <string name="credit_cards_saved_cards">ᱥᱟᱺᱪᱟᱣ ᱠᱟᱱ ᱠᱟᱰ</string>
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱴᱷᱤᱠ ᱠᱨᱮᱰᱤᱴ ᱠᱟᱰ ᱮᱞ ᱟᱫᱮᱨ ᱢᱮ</string>
+    <!-- Error message for card number validation -->
+    <string name="credit_cards_number_validation_error_message_2">ᱢᱤᱫᱴᱟᱝ ᱴᱷᱤᱠ ᱠᱨᱮᱰᱤᱴ ᱠᱟᱰ ᱮᱞ ᱟᱫᱮᱨ ᱢᱮ</string>
     <!-- Error message for credit card name on card validation -->
     <string name="credit_cards_name_on_card_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱱᱚᱶᱟ ᱡᱟᱭᱜᱟ ᱯᱮᱨᱮᱡᱽ ᱢᱮ</string>
+    <!-- Error message for card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message_2">ᱧᱩᱛᱩᱢ ᱥᱮᱞᱮᱫ ᱢᱮ</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">ᱥᱟᱺᱪᱟᱣᱟᱠᱟᱱ ᱠᱟᱰ ᱠᱚ ᱧᱮᱞ ᱞᱟᱹᱜᱤᱫ ᱠᱷᱩᱞᱟᱹᱭ ᱢᱮ</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱟᱢᱟᱜ ᱠᱨᱮᱰᱤᱴ ᱠᱟᱰ ᱨᱩᱠᱷᱤᱭᱟᱹᱭ ᱢᱮ</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title_2">ᱟᱢᱟᱜ ᱥᱟᱧᱪᱟᱣ ᱠᱟᱱ ᱜᱚᱱᱚᱝ ᱛᱚᱨᱠᱟᱠᱚ ᱨᱩᱠᱷᱤᱭᱟᱹᱭ ᱢᱮ</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">ᱥᱟᱫᱷᱚᱱ ᱠᱩᱞᱩᱯ ᱪᱤᱱᱦᱟᱹ, ᱯᱤᱱ, ᱟᱨ ᱵᱟᱝ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱟᱢᱟᱜ ᱥᱟᱺᱪᱟᱣ ᱠᱨᱮᱰᱤᱴ ᱠᱟᱰ ᱠᱚ ᱮᱢᱟᱱ ᱨᱩᱠᱷᱭᱟ ᱞᱟᱹᱜᱤᱫ ᱡᱩᱫᱤ ᱚᱞᱜᱟ ᱦᱚᱲ ᱴᱷᱮᱱ ᱟᱢᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱛᱟᱦᱮᱸᱱ ᱠᱷᱟᱱ ᱾</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->

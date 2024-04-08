@@ -158,12 +158,20 @@
     <string name="mozac_feature_addons_addons_manager">ተጨማሪዎች አስተዳዳሪ</string>
     <!-- The title of the "crash" notification in the add-ons manager -->
     <string name="mozac_feature_addons_manager_notification_title_text" moz:removedIn="126" tools:ignore="UnusedResources">ተጨማሪዎች ለጊዜው ተሰናክለዋል</string>
+    <!-- The title of the "crash" notification in the extensions manager -->
+    <string name="mozac_feature_extensions_manager_notification_title_text">ቅጥያዎች ለጊዜው ተሰናክለዋል</string>
     <!-- The content of the "crash" notification in the add-ons manager -->
     <string name="mozac_feature_addons_manager_notification_content_text" moz:removedIn="126" tools:ignore="UnusedResources">አንድ ወይም ከዚያ በላይ ተጨማሪዎች መስራት አቁመዋል፣ ይህም ስርዓትዎ ያልተረጋጋ እንዲሆን አድርጎታል።</string>
+    <!-- The content of the "crash" notification in the extensions manager -->
+    <string name="mozac_feature_extensions_manager_notification_content_text">አንድ ወይም ከዚያ በላይ ቅጥያዎች መስራት አቁመዋል፣ ይህም ስርዓትዎ ያልተረጋጋ እንዲሆን አድርጎታል።</string>
     <!-- Button to re-enable the add-ons in the "crash" notification -->
     <string name="mozac_feature_addons_manager_notification_restart_button" moz:removedIn="126" tools:ignore="UnusedResources">ተጨማሪዎችን እንደገና ያስጀምሩ</string>
+    <!-- Button to re-enable the extensions in the "crash" notification -->
+    <string name="mozac_feature_extensions_manager_notification_restart_button">ቅጥያዎችን እንደገና ያስጀምሩ</string>
     <!-- Button in the add-ons manager that opens AMO in a tab -->
     <string name="mozac_feature_addons_find_more_addons_button_text" moz:removedIn="126" tools:ignore="UnusedResources">የበለጠ ተጨማሪዎችን ያግኙ</string>
+    <!-- Button in the extensions manager that opens AMO in a tab -->
+    <string name="mozac_feature_addons_find_more_extensions_button_text">ተጨማሪ ቅጥያዎችን ያግኙ</string>
     <!-- The label of the allow button, this will be shown to the user when an add-on needs new permissions, with the button the user will indicate that they want to accept the new permissions and update the add-on-->
     <string name="mozac_feature_addons_updater_notification_allow_button">ፍቀድ</string>
     <!-- The label of the deny button on a notification, this will be shown to the user when an add-on needs new permissions. Indicates the user denies the new permissions and prevents the add-on from be updated-->
@@ -176,6 +184,8 @@
     <string name="mozac_feature_addons_updater_notification_content_singular">አዲስ ፈቃድ ያስፈልጋል</string>
     <!-- Name of the "notification channel" used for displaying a notification for updating an add-on. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_feature_addons_updater_notification_channel" moz:removedIn="126" tools:ignore="UnusedResources">ተጨማሪ ዝመናዎች</string>
+    <!-- Name of the "notification channel" used for displaying a notification for updating an extension. See https://developer.android.com/training/notify-user/channels -->
+    <string name="mozac_feature_addons_updater_notification_channel_2">የቅጥያ ዝማኔዎች</string>
     <!-- Name of the "notification channel" used for displaying a notification for new supported add-ons. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_feature_addons_supported_checker_notification_channel" tools:ignore="UnusedResources">የሚደገፉ ተጨማሪዎች አረጋጋጭ</string>
     <!-- The tile of the notification, this will be shown to the user when one newly supported add-on is available.-->
@@ -194,8 +204,12 @@
     <string name="mozac_feature_addons_not_yet_supported_caption2">በአሁኑ ጊዜ ለሚመከሩ ቅጥያዎች የመጀመሪያ ምርጫ ድጋፍን እየገነባን ነው።</string>
     <!-- This is the caption for the add-on installation progress overlay -->
     <string name="mozac_add_on_install_progress_caption" moz:removedIn="126" tools:ignore="UnusedResources">ተጨማሪን በማውረድ እና በማረጋገጥ ላይ…</string>
+    <!-- This is the caption for the extension installation progress overlay -->
+    <string name="mozac_extension_install_progress_caption">ቅጥያ በማውረድ እና በማረጋገጥ ላይ…</string>
     <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->
     <string name="mozac_feature_addons_failed_to_query_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">ተጨማሪዎችን መጠየቅ አልተሳካም!</string>
+    <!-- Error shown when something unexpected happened while trying to get the extension list from the server -->
+    <string name="mozac_feature_addons_failed_to_query_extensions">ቅጥያዎችን መጠየቅ አልተሳካም!</string>
     <!-- Error shown when unable to find a translation for an add-on field. %1$s is the locale of the user and %2$s is the default language of the add-on -->
     <string name="mozac_feature_addons_failed_to_translate">ለአካባቢ %1$sም ሆነ ነባሪ ቋንቋ %2$s ፣ትርጉም አልተገኘም</string>
     <!-- Text shown after successfully installed an add-on. %1$s is the add-on name. -->
@@ -204,12 +218,20 @@
     <string name="mozac_feature_addons_failed_to_install">%1$sን መጫን አልተሳካም</string>
     <!-- Text shown after failing to install an add-on for which we don't have its name. -->
     <string name="mozac_feature_addons_failed_to_install_generic" moz:removedIn="126" tools:ignore="UnusedResources">ይህን ተጨማሪ መጫን አልተሳካም።</string>
+    <!-- Text shown after failing to install an extension for which we don't have its name. -->
+    <string name="mozac_feature_addons_extension_failed_to_install">ይህን ቅጥያ መጫን አልተሳካም።</string>
     <!-- Text shown when attempting to install an add-on and a network error happened. -->
     <string name="mozac_feature_addons_failed_to_install_network_error" moz:removedIn="126" tools:ignore="UnusedResources">በግንኙነት ችግር ምክንያት ይህ ተጨማሪ ሊወርድ አልቻለም።</string>
+    <!-- Text shown when attempting to install an extension and a network error happened. -->
+    <string name="mozac_feature_addons_extension_failed_to_install_network_error">በግንኙነት ችግር ምክንያት ይህ ቅጥያ ሊወርድ አልቻለም።</string>
     <!-- Text shown when attempting to install an add-on and the downloaded file is corrupted. -->
     <string name="mozac_feature_addons_failed_to_install_corrupt_error" moz:removedIn="126" tools:ignore="UnusedResources">ይህ ተጨማሪ የተበላሸ መስሎ ስለታየ ሊጫን አልቻለም።</string>
+    <!-- Text shown when attempting to install an extension and the downloaded file is corrupted. -->
+    <string name="mozac_feature_addons_extension_failed_to_install_corrupt_error">ይህ ቅጥያ የተበላሸ ስለሚመስል መጫን አልተቻለም።</string>
     <!-- Text shown when attempting to install an add-on and an error occurred because the extension was not signed. -->
     <string name="mozac_feature_addons_failed_to_install_not_signed_error" moz:removedIn="126" tools:ignore="UnusedResources">ይህ ተጨማሪ ስላልተረጋገጠ ሊጫን አልቻለም።</string>
+    <!-- Text shown when attempting to install an add-on and an error occurred because the extension was not signed. -->
+    <string name="mozac_feature_addons_extension_failed_to_install_not_signed_error">ይህ ቅጥያ ስላልተረጋገጠ ሊጫን አልቻለም።</string>
     <!-- Text shown when attempting to install an add-on and an error occurred because the extension was incompatible. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
     <string name="mozac_feature_addons_failed_to_install_incompatible_error">%1$s ከ%2$s %3$s ጋር ተኳሃኝ ስላልሆነ ሊጫን አልቻለም።</string>
     <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
@@ -234,8 +256,12 @@
     <string name="mozac_feature_addons_migrated_from_a_previous_version_label" tools:ignore="UnusedResources">ይህ ተጨማሪ ከቀድሞው የ%1$s ስሪት የተሸጋገረ ነው</string>
     <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter. -->
     <string name="mozac_feature_addons_unsupported_caption" moz:removedIn="126" tools:ignore="UnusedResources">1 ተጨማሪ</string>
+    <!-- Text shown in not yet supported add-ons section. -->
+    <string name="mozac_feature_addons_unsupported_caption_2">1 ቅጥያ</string>
     <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter - plural. %1$s is the number of unsupported add-ons -->
     <string name="mozac_feature_addons_unsupported_caption_plural" moz:removedIn="126" tools:ignore="UnusedResources">%1$s ተጨማሪዎች</string>
+    <!-- Text shown in not yet supported add-ons section - plural. %1$s is the number of unsupported extensions. -->
+    <string name="mozac_feature_addons_unsupported_caption_plural_2">%1$s ቅጥያዎች</string>
     <!-- Text link to a sumo page for learning more about unsupported add-ons. -->
     <string name="mozac_feature_addons_unsupported_learn_more">ተጨማሪ ይወቁ</string>
     <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated. -->
