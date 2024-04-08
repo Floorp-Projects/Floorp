@@ -77,11 +77,6 @@ add_setup(async function () {
   // Enable local telemetry recording for the duration of the tests.
   let oldCanRecord = Services.telemetry.canRecordExtended;
   Services.telemetry.canRecordExtended = true;
-
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.search.serpEventTelemetry.enabled", true]],
-  });
-
   await db.clear();
 
   let promise = waitForDomainToCategoriesUpdate();
@@ -92,6 +87,17 @@ add_setup(async function () {
   await promise;
 
   registerCleanupFunction(async () => {
+    // Manually unload the pref so that we can check if we should wait for the
+    // the categories map to be un-initialized.
+    await SpecialPowers.popPrefEnv();
+    if (
+      !Services.prefs.getBoolPref(
+        "browser.search.serpEventTelemetryCategorization.enabled"
+      )
+    ) {
+      await waitForDomainToCategoriesUninit();
+    }
+
     SearchSERPTelemetry.overrideSearchTelemetryForTests();
     Services.telemetry.canRecordExtended = oldCanRecord;
     resetTelemetry();

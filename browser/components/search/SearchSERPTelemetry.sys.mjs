@@ -2159,6 +2159,7 @@ class CategorizationRecorder {
     Services.obs.addObserver(this, "user-interaction-inactive");
     this.#init = true;
     this.submitPing("startup");
+    Services.obs.notifyObservers(null, "categorization-recorder-init");
   }
 
   uninit() {

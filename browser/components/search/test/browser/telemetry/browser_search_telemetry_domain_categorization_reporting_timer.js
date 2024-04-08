@@ -87,9 +87,20 @@ add_setup(async function () {
   await promise;
 
   registerCleanupFunction(async () => {
-    // The scheduler uses the mock idle service.
-    SearchSERPCategorizationEventScheduler.uninit();
-    SearchSERPCategorizationEventScheduler.init();
+    // Manually unload the pref so that we can check if we should wait for the
+    // the categories map to be un-initialized.
+    await SpecialPowers.popPrefEnv();
+    if (
+      !Services.prefs.getBoolPref(
+        "browser.search.serpEventTelemetryCategorization.enabled"
+      )
+    ) {
+      await waitForDomainToCategoriesUninit();
+    } else {
+      // The scheduler uses the mock idle service.
+      SearchSERPCategorizationEventScheduler.uninit();
+      SearchSERPCategorizationEventScheduler.init();
+    }
     SearchSERPTelemetry.overrideSearchTelemetryForTests();
     resetTelemetry();
   });
