@@ -158,7 +158,7 @@ export var UrlbarTestUtils = {
         lazy.UrlbarPrefs.get("trimURLs") &&
         value != lazy.BrowserUIUtils.trimURL(value)
       ) {
-        window.gURLBar._setValue(value, false);
+        window.gURLBar._setValue(value);
         fireInputEvent = true;
       } else {
         window.gURLBar.value = value;
@@ -1315,10 +1315,7 @@ export var UrlbarTestUtils = {
       // Set most of the string directly instead of going through sendString,
       // so that we don't make life unnecessarily hard for consumers by
       // possibly starting multiple searches.
-      win.gURLBar._setValue(
-        text.substr(0, text.length - 1),
-        false /* allowTrim = */
-      );
+      win.gURLBar._setValue(text.substr(0, text.length - 1));
     }
     this.EventUtils.sendString(text.substr(-1, 1), win);
   },
