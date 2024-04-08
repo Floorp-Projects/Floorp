@@ -35,6 +35,17 @@ pub struct UI {
 impl UI {
     pub fn run_loop(&self, app: Application) {
         unsafe {
+            let stream = gtk::g_memory_input_stream_new_from_data(
+                super::icon::PNG_DATA.as_ptr() as _,
+                super::icon::PNG_DATA.len() as i64,
+                None,
+            );
+            let icon_pixbuf =
+                gtk::gdk_pixbuf_new_from_stream(stream, std::ptr::null_mut(), std::ptr::null_mut());
+            gtk::g_object_unref(stream as _);
+
+            gtk::gtk_window_set_default_icon(icon_pixbuf);
+
             let app_ptr = gtk::gtk_application_new(
                 std::ptr::null(),
                 gtk::GApplicationFlags_G_APPLICATION_FLAGS_NONE,
@@ -54,6 +65,7 @@ impl UI {
             gtk::g_application_run(app_ptr as *mut gtk::GApplication, 0, std::ptr::null_mut());
             self.running.store(false, Relaxed);
             gtk::g_object_unref(app_ptr as *mut _);
+            gtk::g_object_unref(icon_pixbuf as _);
         }
     }
 

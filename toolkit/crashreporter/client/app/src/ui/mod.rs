@@ -20,6 +20,16 @@ use ui_impl::UI;
 
 mod model;
 
+#[cfg(any(target_os = "linux", target_os = "windows"))]
+mod icon {
+    // Must be DWORD-aligned for Win32 CreateIconFromResource.
+    #[repr(align(4))]
+    struct Aligned<Bytes: ?Sized>(Bytes);
+    static PNG_DATA_ALIGNMENT: &'static Aligned<[u8]> =
+        &Aligned(*include_bytes!("crashreporter.png"));
+    pub static PNG_DATA: &'static [u8] = &PNG_DATA_ALIGNMENT.0;
+}
+
 #[cfg(test)]
 pub mod test {
     pub mod model {
