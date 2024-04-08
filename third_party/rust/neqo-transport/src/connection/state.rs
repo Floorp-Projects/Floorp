@@ -209,10 +209,7 @@ pub enum StateSignaling {
 impl StateSignaling {
     pub fn handshake_done(&mut self) {
         if !matches!(self, Self::Idle) {
-            debug_assert!(
-                false,
-                "StateSignaling must be in Idle state but is in {self:?} state.",
-            );
+            debug_assert!(false, "StateSignaling must be in Idle state.");
             return;
         }
         *self = Self::HandshakeDone;

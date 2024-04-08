@@ -98,7 +98,7 @@ impl Http3ServerHandler {
     ///
     /// An error will be returned if stream does not exist.
     pub fn stream_close_send(&mut self, stream_id: StreamId, conn: &mut Connection) -> Res<()> {
-        qdebug!([self], "Close sending side stream={}.", stream_id);
+        qinfo!([self], "Close sending side stream={}.", stream_id);
         self.base_handler.stream_close_send(conn, stream_id)?;
         self.base_handler.stream_has_pending_data(stream_id);
         self.needs_processing = true;
@@ -408,7 +408,7 @@ impl Http3ServerHandler {
         stream_id: StreamId,
         buf: &mut [u8],
     ) -> Res<(usize, bool)> {
-        qdebug!([self], "read_data from stream {}.", stream_id);
+        qinfo!([self], "read_data from stream {}.", stream_id);
         let res = self.base_handler.read_data(conn, stream_id, buf);
         if let Err(e) = &res {
             if e.connection_error() {

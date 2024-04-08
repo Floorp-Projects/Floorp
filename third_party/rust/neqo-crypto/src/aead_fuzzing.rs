@@ -4,63 +4,84 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![cfg(feature = "disable-encryption")]
-
 use std::fmt;
 
 use crate::{
     constants::{Cipher, Version},
     err::{sec::SEC_ERROR_BAD_DATA, Error, Res},
     p11::SymKey,
+    RealAead,
 };
 
-pub const AEAD_NULL_TAG: &[u8] = &[0x0a; 16];
+pub const FIXED_TAG_FUZZING: &[u8] = &[0x0a; 16];
 
-pub struct AeadNull {}
+pub struct FuzzingAead {
+    real: Option<RealAead>,
+}
 
-impl AeadNull {
-    #[allow(clippy::missing_errors_doc)]
-    pub fn new(_version: Version, _cipher: Cipher, _secret: &SymKey, _prefix: &str) -> Res<Self> {
-        Ok(Self {})
+impl FuzzingAead {
+    pub fn new(
+        fuzzing: bool,
+        version: Version,
+        cipher: Cipher,
+        secret: &SymKey,
+        prefix: &str,
+    ) -> Res<Self> {
+        let real = if fuzzing {
+            None
+        } else {
+            Some(RealAead::new(false, version, cipher, secret, prefix)?)
+        };
+        Ok(Self { real })
     }
 
     #[must_use]
     pub fn expansion(&self) -> usize {
-        AEAD_NULL_TAG.len()
+        if let Some(aead) = &self.real {
+            aead.expansion()
+        } else {
+            FIXED_TAG_FUZZING.len()
+        }
     }
 
-    #[allow(clippy::missing_errors_doc)]
     pub fn encrypt<'a>(
         &self,
-        _count: u64,
-        _aad: &[u8],
+        count: u64,
+        aad: &[u8],
         input: &[u8],
         output: &'a mut [u8],
     ) -> Res<&'a [u8]> {
+        if let Some(aead) = &self.real {
+            return aead.encrypt(count, aad, input, output);
+        }
+
         let l = input.len();
         output[..l].copy_from_slice(input);
-        output[l..l + 16].copy_from_slice(AEAD_NULL_TAG);
+        output[l..l + 16].copy_from_slice(FIXED_TAG_FUZZING);
         Ok(&output[..l + 16])
     }
 
-    #[allow(clippy::missing_errors_doc)]
     pub fn decrypt<'a>(
         &self,
-        _count: u64,
-        _aad: &[u8],
+        count: u64,
+        aad: &[u8],
         input: &[u8],
         output: &'a mut [u8],
     ) -> Res<&'a [u8]> {
-        if input.len() < AEAD_NULL_TAG.len() {
+        if let Some(aead) = &self.real {
+            return aead.decrypt(count, aad, input, output);
+        }
+
+        if input.len() < FIXED_TAG_FUZZING.len() {
             return Err(Error::from(SEC_ERROR_BAD_DATA));
         }
 
-        let len_encrypted = input.len() - AEAD_NULL_TAG.len();
+        let len_encrypted = input.len() - FIXED_TAG_FUZZING.len();
         // Check that:
         // 1) expansion is all zeros and
         // 2) if the encrypted data is also supplied that at least some values are no zero
         //    (otherwise padding will be interpreted as a valid packet)
-        if &input[len_encrypted..] == AEAD_NULL_TAG
+        if &input[len_encrypted..] == FIXED_TAG_FUZZING
             && (len_encrypted == 0 || input[..len_encrypted].iter().any(|x| *x != 0x0))
         {
             output[..len_encrypted].copy_from_slice(&input[..len_encrypted]);
@@ -71,8 +92,12 @@ impl AeadNull {
     }
 }
 
-impl fmt::Debug for AeadNull {
+impl fmt::Debug for FuzzingAead {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "[NULL AEAD]")
+        if let Some(a) = &self.real {
+            a.fmt(f)
+        } else {
+            write!(f, "[FUZZING AEAD]")
+        }
     }
 }
