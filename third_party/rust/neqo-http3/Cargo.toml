@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.74.0"
 name = "neqo-http3"
-version = "0.7.3"
+version = "0.7.2"
 authors = ["The Neqo Authors <necko@mozilla.com>"]
 homepage = "https://github.com/mozilla/neqo/"
 license = "MIT OR Apache-2.0"
@@ -62,9 +62,9 @@ default-features = false
 path = "../test-fixture"
 
 [features]
-disable-encryption = [
-    "neqo-transport/disable-encryption",
-    "neqo-crypto/disable-encryption",
+fuzzing = [
+    "neqo-transport/fuzzing",
+    "neqo-crypto/fuzzing",
 ]
 
 [lints.clippy.pedantic]

@@ -1378,7 +1378,7 @@ fn main() -> Result<(), io::Error> {
         }
     });
 
-    init_db(PathBuf::from(args[1].clone())).unwrap();
+    init_db(PathBuf::from(args[1].clone()));
 
     let mut servers_runner = ServersRunner::new()?;
     servers_runner.init();

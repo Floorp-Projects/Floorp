@@ -116,6 +116,12 @@ fn transfer() {
     assert!(fin3);
 }
 
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+struct IdEntry {
+    sendorder: StreamOrder,
+    stream_id: StreamId,
+}
+
 // tests stream sendorder priorization
 fn sendorder_test(order_of_sendorder: &[Option<SendOrder>]) {
     let mut client = default_client();

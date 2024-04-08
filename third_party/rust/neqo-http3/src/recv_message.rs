@@ -271,7 +271,7 @@ impl RecvMessage {
                         }
                         (None, false) => break Ok(()),
                         (Some(frame), fin) => {
-                            qdebug!(
+                            qinfo!(
                                 [self],
                                 "A new frame has been received: {:?}; state={:?} fin={}",
                                 frame,
