@@ -59,7 +59,7 @@ const STATE_ORDER = [
  *  whether or not we need to import tokens-shared.css.
  * @returns {string} Formatted comment header string
  */
-let customFileHeader = surface => {
+let customFileHeader = ({ surface, platform }) => {
   let licenseString = [
     "/* This Source Code Form is subject to the terms of the Mozilla Public",
     " * License, v. 2.0. If a copy of the MPL was not distributed with this",
@@ -74,9 +74,10 @@ let customFileHeader = surface => {
   let cssImport = surface
     ? `@import url("chrome://global/skin/design-system/tokens-shared.css");\n\n`
     : "";
-  let layerString = !surface
-    ? `@layer tokens-foundation, tokens-prefers-contrast, tokens-forced-colors;\n\n`
-    : "";
+  let layerString =
+    !surface && !platform
+      ? `@layer tokens-foundation, tokens-prefers-contrast, tokens-forced-colors;\n\n`
+      : "";
 
   return [
     licenseString + "\n\n" + commentString + "\n\n" + cssImport + layerString,
@@ -108,7 +109,7 @@ function formatBaseTokenNames(str) {
  */
 const createDesktopFormat = surface => args => {
   return formatBaseTokenNames(
-    customFileHeader(surface) +
+    customFileHeader({ surface }) +
       formatTokens({
         surface,
         args,
@@ -386,12 +387,114 @@ function formatVariables({ format, dictionary, outputReferences, formatting }) {
   return outputParts.join("\n");
 }
 
+// Easy way to grab variable values later for display.
+let variableLookupTable = {};
+
+function storybookJSFormat(args) {
+  let dictionary = Object.assign({}, args.dictionary);
+  let resolvedTokens = dictionary.allTokens.map(token => {
+    let tokenVal = resolveReferences(dictionary, token.original);
+    return {
+      name: token.name,
+      ...tokenVal,
+    };
+  });
+  dictionary.allTokens = dictionary.allProperties = resolvedTokens;
+
+  let parsedData = JSON.parse(
+    formatBaseTokenNames(
+      StyleDictionary.format["javascript/module-flat"]({
+        ...args,
+        dictionary,
+      })
+    )
+      .trim()
+      .replaceAll(/(^module\.exports\s*=\s*|\;$)/g, "")
+  );
+  let storybookTables = formatTokensTablesData(parsedData);
+
+  return `${customFileHeader({ platform: "storybook" })}
+  export const storybookTables = ${JSON.stringify(storybookTables)};
+
+  export const variableLookupTable = ${JSON.stringify(variableLookupTable)};
+  `;
+}
+
+function resolveReferences(dictionary, originalVal) {
+  let resolvedValues = {};
+  Object.entries(originalVal).forEach(([key, value]) => {
+    if (typeof value === "object" && value != null) {
+      resolvedValues[key] = resolveReferences(dictionary, value);
+    } else {
+      let resolvedVal = getValueWithReferences(dictionary, value);
+      resolvedValues[key] = resolvedVal;
+    }
+  });
+  return resolvedValues;
+}
+
+function getValueWithReferences(dictionary, value) {
+  let valWithRefs = value;
+  if (dictionary.usesReference(value)) {
+    dictionary.getReferences(value).forEach(ref => {
+      valWithRefs = valWithRefs.replace(
+        `{${ref.path.join(".")}}`,
+        `var(--${ref.name})`
+      );
+    });
+  }
+  return valWithRefs;
+}
+
+function formatTokensTablesData(tokensData) {
+  let tokensTables = {};
+  Object.entries(tokensData).forEach(([key, value]) => {
+    variableLookupTable[key] = value;
+    let formattedToken = {
+      value,
+      name: `--${key}`,
+    };
+
+    let tableName = getTableName(key);
+    if (tokensTables[tableName]) {
+      tokensTables[tableName].push(formattedToken);
+    } else {
+      tokensTables[tableName] = [formattedToken];
+    }
+  });
+  return tokensTables;
+}
+
+const SINGULAR_TABLE_CATEGORIES = [
+  "button",
+  "color",
+  "link",
+  "size",
+  "space",
+  "opacity",
+  "outline",
+  "padding",
+  "margin",
+];
+
+function getTableName(tokenName) {
+  let replacePattern = /^(button-|input-text-|focus-|checkbox-)/;
+  if (tokenName.match(replacePattern)) {
+    tokenName = tokenName.replace(replacePattern, "");
+  }
+  let [category, type] = tokenName.split("-");
+  return SINGULAR_TABLE_CATEGORIES.includes(category) || !type
+    ? category
+    : `${category}-${type}`;
+}
+
 module.exports = {
   source: ["design-tokens.json"],
   format: {
     "css/variables/shared": createDesktopFormat(),
     "css/variables/brand": createDesktopFormat("brand"),
     "css/variables/platform": createDesktopFormat("platform"),
+    "javascript/storybook": storybookJSFormat,
   },
   platforms: {
     css: {
@@ -421,6 +524,22 @@ module.exports = {
           filter: token =>
             typeof token.original.value == "object" &&
             token.original.value.platform,
+        },
+      ],
+    },
+    storybook: {
+      options: {
+        outputReferences: true,
+        showFileHeader: false,
+      },
+      transforms: [
+        ...StyleDictionary.transformGroup.css,
+        ...["shared", "platform", "brand"].map(createLightDarkTransform),
+      ],
+      files: [
+        {
+          destination: "tokens-storybook.mjs",
+          format: "javascript/storybook",
         },
       ],
     },

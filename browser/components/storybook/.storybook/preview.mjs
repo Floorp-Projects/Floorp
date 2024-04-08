@@ -113,6 +113,7 @@ export default {
         title: "On this page",
       },
     },
+    options: { showPanel: true },
   },
 };
 
