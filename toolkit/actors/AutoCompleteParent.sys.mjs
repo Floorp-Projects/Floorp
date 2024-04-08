@@ -376,7 +376,7 @@ export class AutoCompleteParent extends JSWindowActorParent {
     }
   }
 
-  receiveMessage(message) {
+  async receiveMessage(message) {
     let browser = this.browsingContext.top.embedderElement;
 
     if (
@@ -432,6 +432,12 @@ export class AutoCompleteParent extends JSWindowActorParent {
         }
         this.closePopup();
         break;
+      }
+
+      case "AutoComplete:StartSearch": {
+        const { searchString, data } = message.data;
+        const result = await this.#startSearch(searchString, data);
+        return result;
       }
     }
     // Returning false to pacify ESLint, but this return value is
@@ -491,6 +497,45 @@ export class AutoCompleteParent extends JSWindowActorParent {
         isPopupSelection: aIsPopupSelection,
       });
     }
+  }
+
+  // This defines the supported autocomplete providers and the prioity to show the autocomplete
+  // entry.
+  #AUTOCOMPLETE_PROVIDERS = ["FormAutofill", "LoginManager", "FormHistory"];
+
+  /**
+   * Search across multiple module to gather autocomplete entries for a given search string.
+   *
+   * @param {string} searchString
+   *                 The input string used to query autocomplete entries across different
+   *                 autocomplete providers.
+   * @param {Array<Object>} providers
+   *                        An array of objects where each object has a `name` used to identify the actor
+   *                        name of the provider and `options` that are passed to the `searchAutoCompleteEntries`
+   *                        method of the actor.
+   * @returns {Array<Object>} An array of results objects with `name` of the provider and `entries`
+   *          that are returned from the provider module's `searchAutoCompleteEntries` method.
+   */
+  async #startSearch(searchString, providers) {
+    for (const name of this.#AUTOCOMPLETE_PROVIDERS) {
+      const provider = providers.find(p => p.actorName == name);
+      if (!provider) {
+        continue;
+      }
+      const { actorName, options } = provider;
+      const actor =
+        this.browsingContext.currentWindowGlobal.getActor(actorName);
+      const entries = await actor?.searchAutoCompleteEntries(
+        searchString,
+        options
+      );
+
+      // We have not yet supported showing autocomplete entries from multiple providers,
+      if (entries) {
+        return [{ actorName, ...entries }];
+      }
+    }
+    return [];
   }
 
   stopSearch() {}

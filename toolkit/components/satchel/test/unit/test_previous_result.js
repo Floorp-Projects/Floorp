@@ -19,7 +19,7 @@ var aaListener = {
 function run_test() {
   do_test_pending();
   let search = Cc[
-    "@mozilla.org/autocomplete/search;1?name=form-history"
+    "@mozilla.org/autocomplete/search;1?name=form-fill-controller"
   ].getService(Ci.nsIAutoCompleteSearch);
   search.startSearch("aa", "", null, aaListener);
 }

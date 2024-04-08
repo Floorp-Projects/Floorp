@@ -13,6 +13,10 @@ ChromeUtils.defineESModuleGetters(lazy, {
   LoginHelper: "resource://gre/modules/LoginHelper.sys.mjs",
 });
 
+const gFormFillController = Cc[
+  "@mozilla.org/satchel/form-fill-controller;1"
+].getService(Ci.nsIFormFillController);
+
 let autoCompleteListeners = new Set();
 
 export class AutoCompleteChild extends JSWindowActorChild {
@@ -189,6 +193,129 @@ export class AutoCompleteChild extends JSWindowActorChild {
     }
 
     return results;
+  }
+
+  // Store the input to interested autocomplete providers mapping
+  #providersByInput = new WeakMap();
+
+  providersByInput(input) {
+    // This functions returns the interested providers that have called
+    // `markAsAutoCompletableField` for the given input and also the hard-coded
+    // autocomplete providers based on input type.
+    const providers = new Set(this.#providersByInput.get(input));
+
+    // The current design is that FormHisotry doesn't call `markAsAutoCompletable`
+    // for every eligilbe input. Instead, when FormFillController receives a focus event,
+    // it would control the <input> if the <input> is eligible to show form history.
+    // Because of the design, we need to ask FormHistory whether to search for autocomplete entries
+    // for every startSearch call
+    // TODO: uncomment after integrating FormHisotry with AutoCompleteChild
+    // providers.add(input.ownerGlobal.windowGlobalChild.getActor("FormHistory"));
+    return providers;
+  }
+
+  /**
+   * This API should be used by an autocomplete entry provider to mark an input field
+   * as eligible for autocomplete for its type.
+   * When users click on an autocompletable input, we will search autocomplete entries
+   * from all the providers that have called this API for the given <input>.
+   *
+   * An autocomplete provider should be a JSWindowActor and implements the following
+   * functions:
+   * - string actorName()
+   * - bool shouldSearchForAutoComplete(element);
+   * - jsval getAutoCompleteSearchOption(element);
+   * - jsval searchResultToAutoCompleteResult(searchString, element, record);
+   * See `FormAutofillChild` for example
+   *
+   * @param input - The HTML <input> element that is considered autocompletable by the
+   *                given provider
+   * @param provider - A module that provides autocomplete entries for a <input>, for example,
+   *                   FormAutofill provides address or credit card autocomplete entries,
+   *                   LoginManager provides logins entreis.
+   */
+  markAsAutoCompletableField(input, provider) {
+    gFormFillController.markAsAutoCompletableField(input);
+
+    let providers = this.#providersByInput.get(input);
+    if (!providers) {
+      providers = new Set();
+      this.#providersByInput.set(input, providers);
+    }
+    providers.add(provider);
+  }
+
+  // Record the current ongoing search request. This is used by stopSearch
+  // to prevent notifying the autocomplete controller after receiving search request
+  // results that were issued prior to the call to stop the search.
+  #ongoingSearches = new Set();
+
+  async startSearch(searchString, input, listener) {
+    // TODO: This should be removed once we implement triggering autocomplete
+    // from the parent.
+    this.lastProfileAutoCompleteFocusedInput = input;
+
+    // For all the autocomplete entry providers that previsouly marked
+    // this <input> as autocompletable, ask the provider whether we should
+    // search for autocomplete entries in the parent. This is because the current
+    // design doesn't rely on the provider constantly monitor the <input> and
+    // then mark/unmark an input. The provider generally calls the
+    // `markAsAutoCompletbleField` when it sees an <input> is eliglbe for autocomplete.
+    // Here we ask the provider to exam the <input> more detailedly to see
+    // whether we need to search for autocomplete entries at the time users
+    // click on the <input>
+    const providers = this.providersByInput(input);
+    const data = Array.from(providers)
+      .filter(p => p.shouldSearchForAutoComplete(input, searchString))
+      .map(p => ({
+        actorName: p.actorName,
+        options: p.getAutoCompleteSearchOption(input, searchString),
+      }));
+
+    let result = [];
+
+    // We don't return empty result when no provider requests seaching entries in the
+    // parent because for some special cases, the autocomplete entries are coming
+    // from the content. For example, <datalist>.
+    if (data.length) {
+      const promise = this.sendQuery("AutoComplete:StartSearch", {
+        searchString,
+        data,
+      });
+      this.#ongoingSearches.add(promise);
+      result = await promise;
+
+      // If the search is stopped, don't report back.
+      if (!this.#ongoingSearches.delete(promise)) {
+        return;
+      }
+    }
+
+    for (const provider of providers) {
+      // Search result could be empty. However, an autocomplete provider might
+      // want to show an autoclmplete popup when there is no search result. For example,
+      // <datalist> for FormHisotry, insecure warning for LoginManager.
+      const searchResult = result.find(r => r.actorName == provider.actorName);
+      const acResult = provider.searchResultToAutoCompleteResult(
+        searchString,
+        input,
+        searchResult
+      );
+
+      // We have not yet supported showing autocomplete entries from multiple providers,
+      // Note: The prioty is defined in AutoCompleteParent.
+      if (acResult) {
+        this.lastProfileAutoCompleteResult = acResult;
+        listener.onSearchCompletion(acResult);
+        return;
+      }
+    }
+    this.lastProfileAutoCompleteResult = null;
+  }
+
+  stopSearch() {
+    this.lastProfileAutoCompleteResult = null;
+    this.#ongoingSearches.clear();
   }
 }
 
