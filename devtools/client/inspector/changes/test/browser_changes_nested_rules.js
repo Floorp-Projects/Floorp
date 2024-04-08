@@ -12,7 +12,7 @@
 // --- @container myContainer (width > 10px) {
 // ----- div {
 // ------- & > span { … }
-// ------- .mySpan {
+// ------- & .mySpan {
 // --------- &:not(:focus) {
 
 const spanNotFocusedRule = `&:not(:focus) {
@@ -94,7 +94,7 @@ const EXPECTED_AFTER_SPAN_PROP_CHANGES = EXPECTED_AFTER_DIV_PROP_CHANGE.map(
   })
 ).concat([
   {
-    text: ".mySpan {",
+    text: "& .mySpan {",
     copyRuleClipboard:
       applyModificationAfterSpanPropertiesChange(spanClassRule),
   },

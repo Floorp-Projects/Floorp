@@ -211,7 +211,7 @@ async function checkCopyNestedRule(view) {
   const expectedNested = `html {
   body {
     @container (1px < width) {
-      #nested {
+      & #nested {
         background: tomato;
         color: gold;
       }

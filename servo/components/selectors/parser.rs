@@ -445,6 +445,13 @@ pub enum ParseRelative {
     No,
 }
 
+impl ParseRelative {
+    #[inline]
+    pub(crate) fn needs_implicit_parent_selector(self) -> bool {
+        matches!(self, Self::ForNesting)
+    }
+}
+
 impl<Impl: SelectorImpl> SelectorList<Impl> {
     /// Returns a selector list with a single `&`
     pub fn ampersand() -> Self {
@@ -952,7 +959,7 @@ impl<Impl: SelectorImpl> Selector<Impl> {
             }
         }
         let spec = SpecificityAndFlags { specificity, flags };
-        Selector(builder.build_with_specificity_and_flags(spec))
+        Selector(builder.build_with_specificity_and_flags(spec, ParseRelative::No))
     }
 
     #[inline]
@@ -980,9 +987,6 @@ impl<Impl: SelectorImpl> Selector<Impl> {
             }
 
             let result = SelectorList::from_iter(orig.iter().map(|s| {
-                if !s.has_parent_selector() {
-                    return s.clone();
-                }
                 s.replace_parent_selector(parent)
             }));
 
@@ -1050,82 +1054,53 @@ impl<Impl: SelectorImpl> Selector<Impl> {
             flags: &mut SelectorFlags,
             flags_to_propagate: SelectorFlags,
         ) -> Selector<Impl> {
-            if !orig.has_parent_selector() {
-                return orig.clone();
-            }
             let new_selector = orig.replace_parent_selector(parent);
             *specificity += Specificity::from(new_selector.specificity() - orig.specificity());
             flags.insert(new_selector.flags().intersection(flags_to_propagate));
             new_selector
         }
 
-        let mut items = if !self.has_parent_selector() {
-            // Implicit `&` plus descendant combinator.
-            let iter = self.iter_raw_match_order();
-            let len = iter.len() + 2;
-            specificity += Specificity::from(parent_specificity_and_flags.specificity);
-            flags.insert(
-                parent_specificity_and_flags
-                    .flags
-                    .intersection(SelectorFlags::for_nesting()),
-            );
-            let iter = iter
-                .cloned()
-                .chain(std::iter::once(Component::Combinator(
-                    Combinator::Descendant,
-                )))
-                .chain(std::iter::once(Component::Is(parent.clone())));
-            UniqueArc::from_header_and_iter_with_size(Default::default(), iter, len)
-        } else {
-            let iter = self.iter_raw_match_order().map(|component| {
-                use self::Component::*;
-                match *component {
-                    LocalName(..) |
-                    ID(..) |
-                    Class(..) |
-                    AttributeInNoNamespaceExists { .. } |
-                    AttributeInNoNamespace { .. } |
-                    AttributeOther(..) |
-                    ExplicitUniversalType |
-                    ExplicitAnyNamespace |
-                    ExplicitNoNamespace |
-                    DefaultNamespace(..) |
-                    Namespace(..) |
-                    Root |
-                    Empty |
-                    Scope |
-                    Nth(..) |
-                    NonTSPseudoClass(..) |
-                    PseudoElement(..) |
-                    Combinator(..) |
-                    Host(None) |
-                    Part(..) |
-                    Invalid(..) |
-                    RelativeSelectorAnchor => component.clone(),
-                    ParentSelector => {
-                        specificity += Specificity::from(parent_specificity_and_flags.specificity);
-                        flags.insert(
-                            parent_specificity_and_flags
-                                .flags
-                                .intersection(SelectorFlags::for_nesting()),
-                        );
-                        Is(parent.clone())
-                    },
-                    Negation(ref selectors) => {
-                        Negation(
-                            replace_parent_on_selector_list(
-                                selectors.slice(),
-                                parent,
-                                &mut specificity,
-                                &mut flags,
-                                /* propagate_specificity = */ true,
-                                SelectorFlags::for_nesting(),
-                            )
-                            .unwrap_or_else(|| selectors.clone()),
-                        )
-                    },
-                    Is(ref selectors) => {
-                        Is(replace_parent_on_selector_list(
+        if !self.has_parent_selector() {
+            return self.clone();
+        }
+
+        let iter = self.iter_raw_match_order().map(|component| {
+            use self::Component::*;
+            match *component {
+                LocalName(..) |
+                ID(..) |
+                Class(..) |
+                AttributeInNoNamespaceExists { .. } |
+                AttributeInNoNamespace { .. } |
+                AttributeOther(..) |
+                ExplicitUniversalType |
+                ExplicitAnyNamespace |
+                ExplicitNoNamespace |
+                DefaultNamespace(..) |
+                Namespace(..) |
+                Root |
+                Empty |
+                Scope |
+                Nth(..) |
+                NonTSPseudoClass(..) |
+                PseudoElement(..) |
+                Combinator(..) |
+                Host(None) |
+                Part(..) |
+                Invalid(..) |
+                RelativeSelectorAnchor => component.clone(),
+                ParentSelector => {
+                    specificity += Specificity::from(parent_specificity_and_flags.specificity);
+                    flags.insert(
+                        parent_specificity_and_flags
+                            .flags
+                            .intersection(SelectorFlags::for_nesting()),
+                    );
+                    Is(parent.clone())
+                },
+                Negation(ref selectors) => {
+                    Negation(
+                        replace_parent_on_selector_list(
                             selectors.slice(),
                             parent,
                             &mut specificity,
@@ -1133,64 +1108,75 @@ impl<Impl: SelectorImpl> Selector<Impl> {
                             /* propagate_specificity = */ true,
                             SelectorFlags::for_nesting(),
                         )
-                        .unwrap_or_else(|| selectors.clone()))
-                    },
-                    Where(ref selectors) => {
-                        Where(
-                            replace_parent_on_selector_list(
-                                selectors.slice(),
-                                parent,
-                                &mut specificity,
-                                &mut flags,
-                                /* propagate_specificity = */ false,
-                                SelectorFlags::for_nesting(),
-                            )
-                            .unwrap_or_else(|| selectors.clone()),
-                        )
-                    },
-                    Has(ref selectors) => Has(replace_parent_on_relative_selector_list(
-                        selectors,
+                        .unwrap_or_else(|| selectors.clone()),
+                    )
+                },
+                Is(ref selectors) => {
+                    Is(replace_parent_on_selector_list(
+                        selectors.slice(),
                         parent,
                         &mut specificity,
                         &mut flags,
+                        /* propagate_specificity = */ true,
                         SelectorFlags::for_nesting(),
                     )
-                    .into_boxed_slice()),
-
-                    Host(Some(ref selector)) => Host(Some(replace_parent_on_selector(
-                        selector,
-                        parent,
-                        &mut specificity,
-                        &mut flags,
-                        SelectorFlags::for_nesting() - SelectorFlags::HAS_NON_FEATURELESS_COMPONENT,
-                    ))),
-                    NthOf(ref data) => {
-                        let selectors = replace_parent_on_selector_list(
-                            data.selectors(),
+                    .unwrap_or_else(|| selectors.clone()))
+                },
+                Where(ref selectors) => {
+                    Where(
+                        replace_parent_on_selector_list(
+                            selectors.slice(),
                             parent,
                             &mut specificity,
                             &mut flags,
-                            /* propagate_specificity = */ true,
+                            /* propagate_specificity = */ false,
                             SelectorFlags::for_nesting(),
-                        );
-                        NthOf(match selectors {
-                            Some(s) => {
-                                NthOfSelectorData::new(data.nth_data(), s.slice().iter().cloned())
-                            },
-                            None => data.clone(),
-                        })
-                    },
-                    Slotted(ref selector) => Slotted(replace_parent_on_selector(
-                        selector,
+                        )
+                        .unwrap_or_else(|| selectors.clone()),
+                    )
+                },
+                Has(ref selectors) => Has(replace_parent_on_relative_selector_list(
+                    selectors,
+                    parent,
+                    &mut specificity,
+                    &mut flags,
+                    SelectorFlags::for_nesting(),
+                )
+                .into_boxed_slice()),
+
+                Host(Some(ref selector)) => Host(Some(replace_parent_on_selector(
+                    selector,
+                    parent,
+                    &mut specificity,
+                    &mut flags,
+                    SelectorFlags::for_nesting() - SelectorFlags::HAS_NON_FEATURELESS_COMPONENT,
+                ))),
+                NthOf(ref data) => {
+                    let selectors = replace_parent_on_selector_list(
+                        data.selectors(),
                         parent,
                         &mut specificity,
                         &mut flags,
+                        /* propagate_specificity = */ true,
                         SelectorFlags::for_nesting(),
-                    )),
-                }
-            });
-            UniqueArc::from_header_and_iter(Default::default(), iter)
-        };
+                    );
+                    NthOf(match selectors {
+                        Some(s) => {
+                            NthOfSelectorData::new(data.nth_data(), s.slice().iter().cloned())
+                        },
+                        None => data.clone(),
+                    })
+                },
+                Slotted(ref selector) => Slotted(replace_parent_on_selector(
+                    selector,
+                    parent,
+                    &mut specificity,
+                    &mut flags,
+                    SelectorFlags::for_nesting(),
+                )),
+            }
+        });
+        let mut items = UniqueArc::from_header_and_iter(Default::default(), iter);
         *items.header_mut() = SpecificityAndFlags {
             specificity: specificity.into(),
             flags,
@@ -2668,7 +2654,7 @@ where
 
         builder.push_combinator(combinator);
     }
-    return Ok(Selector(builder.build()));
+    return Ok(Selector(builder.build(parse_relative)));
 }
 
 fn try_parse_combinator<'i, 't, P, Impl>(input: &mut CssParser<'i, 't>) -> Result<Combinator, ()> {
@@ -4400,7 +4386,7 @@ pub mod tests {
             parse("#foo:has(:is(.bar, div .baz).bar)").unwrap()
         );
 
-        let child = parse("#foo").unwrap();
+        let child = parse_relative_expected("#foo", ParseRelative::ForNesting, Some("& #foo")).unwrap();
         assert_eq!(
             child.replace_parent_selector(&parent),
             parse(":is(.bar, div .baz) #foo").unwrap()

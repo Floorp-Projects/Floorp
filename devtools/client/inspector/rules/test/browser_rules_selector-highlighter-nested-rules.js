@@ -88,8 +88,8 @@ add_task(async function () {
   );
   ok(highlighterData.isShown, "The selector highlighter was shown");
 
-  info(`Clicking on ".title" selector icon`);
-  highlighterData = await clickSelectorIcon(view, ".title");
+  info(`Clicking on "& .title" selector icon`);
+  highlighterData = await clickSelectorIcon(view, "& .title");
   is(
     highlighterData.nodeFront.nodeName.toLowerCase(),
     "h1",
