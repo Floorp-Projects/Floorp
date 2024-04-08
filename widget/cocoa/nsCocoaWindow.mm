@@ -3489,11 +3489,6 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
 
 @end
 
-@interface NSView (NSThemeFrame)
-- (void)_drawTitleStringInClip:(NSRect)aRect;
-- (void)_maskCorners:(NSUInteger)aFlags clipRect:(NSRect)aRect;
-@end
-
 @interface MOZTitlebarAccessoryView : NSView
 @end
 
@@ -3725,18 +3720,6 @@ static bool ShouldShiftByMenubarHeightInFullscreen(nsCocoaWindow* aWindow) {
 
 - (void)windowMainStateChanged {
   [[self mainChildView] ensureNextCompositeIsAtomicWithMainThreadPaint];
-}
-
-- (CGFloat)titlebarHeight {
-  // We use the original content rect here, not what we return from
-  // [self contentRectForFrameRect:], because that would give us a
-  // titlebarHeight of zero.
-  NSRect frameRect = self.frame;
-  NSUInteger styleMask = self.styleMask;
-  styleMask &= ~NSWindowStyleMaskFullSizeContentView;
-  NSRect originalContentRect = [NSWindow contentRectForFrameRect:frameRect
-                                                       styleMask:styleMask];
-  return NSMaxY(frameRect) - NSMaxY(originalContentRect);
 }
 
 // Extending the content area into the title bar works by resizing the
