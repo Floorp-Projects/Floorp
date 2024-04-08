@@ -560,6 +560,51 @@ Result<Ok, nsresult> Key::EncodeString(const Span<const T> aInput,
 #define KEY_MAXIMUM_BUFFER_LENGTH \
   ::mozilla::detail::nsTStringLengthStorage<char>::kMax
 
+void Key::ReserveAutoIncrementKey(bool aFirstOfArray) {
+  // Allocate memory for the new size
+  uint32_t oldLen = mBuffer.Length();
+  char* buffer;
+  if (!mBuffer.GetMutableData(&buffer, oldLen + 1 + sizeof(double))) {
+    return;
+  }
+
+  // Remember the offset of the buffer to be updated later.
+  mAutoIncrementKeyOffsets.AppendElement(oldLen + 1);
+
+  // Fill the type.
+  buffer += oldLen;
+  *(buffer++) = aFirstOfArray ? (eMaxType + eFloat) : eFloat;
+
+  // Fill up with 0xFF to reserve the buffer in fixed size because the encoded
+  // string could be trimmed if ended with padding zeros.
+  mozilla::BigEndian::writeUint64(buffer, UINT64_MAX);
+}
+
+void Key::MaybeUpdateAutoIncrementKey(int64_t aKey) {
+  if (mAutoIncrementKeyOffsets.IsEmpty()) {
+    return;
+  }
+
+  for (uint32_t offset : mAutoIncrementKeyOffsets) {
+    char* buffer;
+    MOZ_ALWAYS_TRUE(mBuffer.GetMutableData(&buffer));
+    buffer += offset;
+    WriteDoubleToUint64(buffer, double(aKey));
+  }
+
+  TrimBuffer();
+}
+
+void Key::WriteDoubleToUint64(char* aBuffer, double aValue) {
+  MOZ_ASSERT(aBuffer);
+
+  uint64_t bits = BitwiseCast<uint64_t>(aValue);
+  const uint64_t signbit = FloatingPoint<double>::kSignBit;
+  uint64_t number = bits & signbit ? (-bits) : (bits | signbit);
+
+  mozilla::BigEndian::writeUint64(aBuffer, number);
+}
+
 template <typename T>
 Result<Ok, nsresult> Key::EncodeAsString(const Span<const T> aInput,
                                          uint8_t aType) {
@@ -797,13 +842,8 @@ Result<Ok, nsresult> Key::EncodeNumber(double aFloat, uint8_t aType) {
 
   *(buffer++) = aType;
 
-  uint64_t bits = BitwiseCast<uint64_t>(aFloat);
-  // Note: The subtraction from 0 below is necessary to fix
-  // MSVC build warning C4146 (negating an unsigned value).
-  const uint64_t signbit = FloatingPoint<double>::kSignBit;
-  uint64_t number = bits & signbit ? (0 - bits) : (bits | signbit);
+  WriteDoubleToUint64(buffer, aFloat);
 
-  mozilla::BigEndian::writeUint64(buffer, number);
   return Ok();
 }
 

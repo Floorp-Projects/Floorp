@@ -329,8 +329,9 @@ bool KeyPath::AppendStringWithValidation(const nsAString& aString) {
   return false;
 }
 
-nsresult KeyPath::ExtractKey(JSContext* aCx, const JS::Value& aValue,
-                             Key& aKey) const {
+nsresult KeyPath::ExtractKey(JSContext* aCx, const JS::Value& aValue, Key& aKey,
+                             const VoidOrObjectStoreKeyPathString&
+                                 aAutoIncrementedObjectStoreKeyPath) const {
   uint32_t len = mStrings.Length();
   JS::Rooted<JS::Value> value(aCx);
 
@@ -341,6 +342,17 @@ nsresult KeyPath::ExtractKey(JSContext* aCx, const JS::Value& aValue,
         GetJSValFromKeyPathString(aCx, aValue, mStrings[i], value.address(),
                                   DoNotCreateProperties, nullptr, nullptr);
     if (NS_FAILED(rv)) {
+      if (!aAutoIncrementedObjectStoreKeyPath.IsVoid() &&
+          mStrings[i].Equals(aAutoIncrementedObjectStoreKeyPath)) {
+        // We are extracting index keys of an object to be added if
+        // object store key path for a string key is provided.
+        // Because the autoIncrement primary key is part of
+        // this index key but is not defined in |aValue|, so we reserve
+        // the space here to update the key later in parent.
+        aKey.ReserveAutoIncrementKey(IsArray() && i == 0);
+        continue;
+      }
+
       return rv;
     }
 
