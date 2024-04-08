@@ -1627,7 +1627,7 @@ class nsContextMenu {
   }
 
   viewInfo() {
-    BrowserPageInfo(
+    BrowserCommands.pageInfo(
       this.contentData.docLocation,
       null,
       null,
@@ -1637,7 +1637,7 @@ class nsContextMenu {
   }
 
   viewImageInfo() {
-    BrowserPageInfo(
+    BrowserCommands.pageInfo(
       this.contentData.docLocation,
       "mediaTab",
       this.imageInfo,
@@ -1661,7 +1661,7 @@ class nsContextMenu {
   }
 
   viewFrameInfo() {
-    BrowserPageInfo(
+    BrowserCommands.pageInfo(
       this.contentData.docLocation,
       null,
       null,

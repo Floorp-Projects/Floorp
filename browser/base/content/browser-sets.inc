@@ -40,8 +40,8 @@
     <command id="cmd_quitApplication" oncommand="goQuitApplication(event)"/>
 
     <command id="View:AboutProcesses" oncommand="switchToTabHavingURI('about:processes', true)"/>
-    <command id="View:PageInfo" oncommand="BrowserPageInfo();"/>
     <command id="View:PageSource" oncommand="BrowserCommands.viewSource(window.gBrowser.selectedBrowser);"/>
+    <command id="View:PageInfo" oncommand="BrowserCommands.pageInfo();"/>
     <command id="View:FullScreen" oncommand="BrowserFullScreen();"/>
     <command id="View:ReaderView" oncommand="AboutReaderParent.toggleReaderMode(event);"/>
     <command id="View:PictureInPicture" oncommand="PictureInPicture.onCommand(event);"/>

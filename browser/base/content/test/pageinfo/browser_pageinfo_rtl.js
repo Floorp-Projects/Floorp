@@ -1,6 +1,6 @@
 async function testPageInfo() {
   await BrowserTestUtils.withNewTab("https://example.com", async function () {
-    let pageInfo = BrowserPageInfo();
+    let pageInfo = BrowserCommands.pageInfo();
     await BrowserTestUtils.waitForEvent(pageInfo, "page-info-init");
     is(
       getComputedStyle(pageInfo.document.documentElement).direction,

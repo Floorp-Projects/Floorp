@@ -10,7 +10,7 @@ add_task(async function test_all_images_mentioned() {
   await BrowserTestUtils.withNewTab(
     TEST_PATH + "iframes.html",
     async function () {
-      let pageInfo = BrowserPageInfo(
+      let pageInfo = BrowserCommands.pageInfo(
         gBrowser.selectedBrowser.currentURI.spec,
         "mediaTab"
       );

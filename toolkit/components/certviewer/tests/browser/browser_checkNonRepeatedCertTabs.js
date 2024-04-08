@@ -56,7 +56,7 @@ add_task(async function testGoodCert() {
   info(`Loading ${url}`);
   await BrowserTestUtils.withNewTab({ gBrowser, url }, async function () {
     info("Opening pageinfo");
-    let pageInfo = BrowserPageInfo(url, "securityTab", {});
+    let pageInfo = BrowserCommands.pageInfo(url, "securityTab", {});
     await BrowserTestUtils.waitForEvent(pageInfo, "load");
 
     let securityTab = pageInfo.document.getElementById("securityTab");

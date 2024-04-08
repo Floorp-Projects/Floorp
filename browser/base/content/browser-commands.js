@@ -521,4 +521,52 @@ var BrowserCommands = {
       URL: browser.currentURI.spec,
     });
   },
+
+  /**
+   * @param documentURL URL of the document to view, or null for this window's document
+   * @param initialTab name of the initial tab to display, or null for the first tab
+   * @param imageElement image to load in the Media Tab of the Page Info window; can be null/omitted
+   * @param browsingContext the browsingContext of the frame that we want to view information about; can be null/omitted
+   * @param browser the browser containing the document we're interested in inspecting; can be null/omitted
+   */
+  pageInfo(documentURL, initialTab, imageElement, browsingContext, browser) {
+    const args = { initialTab, imageElement, browsingContext, browser };
+
+    documentURL =
+      documentURL || window.gBrowser.selectedBrowser.currentURI.spec;
+
+    const isPrivate = PrivateBrowsingUtils.isWindowPrivate(window);
+
+    // Check for windows matching the url
+    for (const currentWindow of Services.wm.getEnumerator(
+      "Browser:page-info"
+    )) {
+      if (currentWindow.closed) {
+        continue;
+      }
+      if (
+        currentWindow.document.documentElement.getAttribute("relatedUrl") ==
+          documentURL &&
+        PrivateBrowsingUtils.isWindowPrivate(currentWindow) == isPrivate
+      ) {
+        currentWindow.focus();
+        currentWindow.resetPageInfo(args);
+        return currentWindow;
+      }
+    }
+
+    // We didn't find a matching window, so open a new one.
+    let options = "chrome,toolbar,dialog=no,resizable";
+
+    // Ensure the window groups correctly in the Windows taskbar
+    if (isPrivate) {
+      options += ",private";
+    }
+    return openDialog(
+      "chrome://browser/content/pageinfo/pageInfo.xhtml",
+      "",
+      options,
+      args
+    );
+  },
 };

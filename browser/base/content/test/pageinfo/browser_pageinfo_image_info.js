@@ -28,7 +28,7 @@ add_task(async function () {
     };
   });
 
-  let pageInfo = BrowserPageInfo(
+  let pageInfo = BrowserCommands.pageInfo(
     browser.currentURI.spec,
     "mediaTab",
     imageInfo

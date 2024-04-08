@@ -39,7 +39,6 @@
   "gLastOpenDirectory",
   "getLoadContext",
   "readFromClipboard",
-  "BrowserPageInfo",
   "UpdateUrlbarSearchSplitterState",
   "UpdatePopupNotificationsVisibility",
   "PageProxyClickHandler",
