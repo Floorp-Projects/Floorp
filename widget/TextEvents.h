@@ -1527,12 +1527,16 @@ class InternalLegacyTextEvent : public InternalUIEvent {
   }
 
   nsString mData;
+  RefPtr<dom::DataTransfer> mDataTransfer;
+  EditorInputType mInputType = EditorInputType::eUnknown;
 
   void AssignLegacyTextEventData(const InternalLegacyTextEvent& aEvent,
                                  bool aCopyTargets) {
     AssignUIEventData(aEvent, aCopyTargets);
 
     mData = aEvent.mData;
+    mDataTransfer = aEvent.mDataTransfer;
+    mInputType = aEvent.mInputType;
   }
 };
 
