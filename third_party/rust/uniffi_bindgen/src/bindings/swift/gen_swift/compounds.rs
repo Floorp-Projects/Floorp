@@ -30,8 +30,9 @@ impl CodeType for OptionalCodeType {
 
     fn literal(&self, literal: &Literal) -> String {
         match literal {
-            Literal::Null => "nil".into(),
-            _ => super::SwiftCodeOracle.find(&self.inner).literal(literal),
+            Literal::None => "nil".into(),
+            Literal::Some { inner } => super::SwiftCodeOracle.find(&self.inner).literal(inner),
+            _ => panic!("Invalid literal for Optional type: {literal:?}"),
         }
     }
 }

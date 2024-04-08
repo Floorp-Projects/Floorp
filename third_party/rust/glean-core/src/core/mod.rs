@@ -120,6 +120,7 @@ where
 ///     rate_limit: None,
 ///     enable_event_timestamps: true,
 ///     experimentation_id: None,
+///     enable_internal_pings: true,
 /// };
 /// let mut glean = Glean::new(cfg).unwrap();
 /// let ping = PingType::new("sample", true, false, true, true, vec![]);
@@ -208,7 +209,7 @@ impl Glean {
             core_metrics: CoreMetrics::new(),
             additional_metrics: AdditionalMetrics::new(),
             database_metrics: DatabaseMetrics::new(),
-            internal_pings: InternalPings::new(),
+            internal_pings: InternalPings::new(cfg.enable_internal_pings),
             upload_manager,
             data_path: PathBuf::from(&cfg.data_path),
             application_id,
@@ -288,7 +289,9 @@ impl Glean {
         }
 
         // We set this only for non-subprocess situations.
-        glean.schedule_metrics_pings = cfg.use_core_mps;
+        // If internal pings are disabled, we don't set up the MPS either,
+        // it wouldn't send any data anyway.
+        glean.schedule_metrics_pings = cfg.enable_internal_pings && cfg.use_core_mps;
 
         // We only scan the pendings pings directories **after** dealing with the upload state.
         // If upload is disabled, we delete all pending pings files
@@ -305,6 +308,7 @@ impl Glean {
         data_path: &str,
         application_id: &str,
         upload_enabled: bool,
+        enable_internal_pings: bool,
     ) -> Self {
         let cfg = InternalConfiguration {
             data_path: data_path.into(),
@@ -320,6 +324,7 @@ impl Glean {
             rate_limit: None,
             enable_event_timestamps: true,
             experimentation_id: None,
+            enable_internal_pings,
         };
 
         let mut glean = Self::new(cfg).unwrap();

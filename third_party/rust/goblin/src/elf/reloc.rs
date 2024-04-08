@@ -51,7 +51,7 @@
 //! | `R_X86_64_GOTPC32`        | 26    | 32        | GOT + A - P       |
 //! | `R_X86_64_SIZE32`         | 32    | 32        | Z + A             |
 //! | `R_X86_64_SIZE64`         | 33    | 64        | Z + A             |
-//! | `R_X86_64_GOTPC32_TLSDESC`  34    | 32        |                   |
+//! | `R_X86_64_GOTPC32_TLSDESC`| 34    | 32        |                   |
 //! | `R_X86_64_TLSDESC_CALL`   | 35    | NONE      |                   |
 //! | `R_X86_64_TLSDESC`        | 36    | 64 × 2    |                   |
 //! | `R_X86_64_IRELATIVE`      | 37    | 64        | indirect (B + A)  |

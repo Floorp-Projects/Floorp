@@ -314,6 +314,31 @@ impl<T> Sender<T> {
             _ => unreachable!(),
         }
     }
+
+    /// Consumes the Sender, returning a raw pointer to the channel on the heap.
+    ///
+    /// This is intended to simplify using oneshot channels with some FFI code. The only safe thing
+    /// to do with the returned pointer is to later reconstruct the Sender with [Sender::from_raw].
+    /// Memory will leak if the Sender is never reconstructed.
+    pub fn into_raw(self) -> *mut () {
+        let raw = self.channel_ptr.as_ptr() as *mut ();
+        mem::forget(self);
+        raw
+    }
+
+    /// Consumes a raw pointer from [Sender::into_raw], recreating the Sender.
+    ///
+    /// # Safety
+    ///
+    /// This pointer must have come from [`Sender<T>::into_raw`] with the same message type, `T`.
+    /// At most one Sender must exist for a channel at any point in time.
+    /// Constructing multiple Senders from the same raw pointer leads to undefined behavior.
+    pub unsafe fn from_raw(raw: *mut ()) -> Self {
+        Self {
+            channel_ptr: NonNull::new_unchecked(raw as *mut Channel<T>),
+            _invariant: PhantomData,
+        }
+    }
 }
 
 impl<T> Drop for Sender<T> {
@@ -816,6 +841,30 @@ impl<T> Receiver<T> {
             _ => unreachable!(),
         }
     }
+
+    /// Consumes the Receiver, returning a raw pointer to the channel on the heap.
+    ///
+    /// This is intended to simplify using oneshot channels with some FFI code. The only safe thing
+    /// to do with the returned pointer is to later reconstruct the Receiver with
+    /// [Receiver::from_raw]. Memory will leak if the Receiver is never reconstructed.
+    pub fn into_raw(self) -> *mut () {
+        let raw = self.channel_ptr.as_ptr() as *mut ();
+        mem::forget(self);
+        raw
+    }
+
+    /// Consumes a raw pointer from [Receiver::into_raw], recreating the Receiver.
+    ///
+    /// # Safety
+    ///
+    /// This pointer must have come from [`Receiver<T>::into_raw`] with the same message type, `T`.
+    /// At most one Receiver must exist for a channel at any point in time.
+    /// Constructing multiple Receivers from the same raw pointer leads to undefined behavior.
+    pub unsafe fn from_raw(raw: *mut ()) -> Self {
+        Self {
+            channel_ptr: NonNull::new_unchecked(raw as *mut Channel<T>),
+        }
+    }
 }
 
 #[cfg(feature = "async")]
@@ -1178,7 +1227,7 @@ fn receiver_waker_size() {
         (false, false) => 0,
         (false, true) => 16,
         (true, false) => 8,
-        (true, true) => 24,
+        (true, true) => 16,
     };
     assert_eq!(mem::size_of::<ReceiverWaker>(), expected);
 }

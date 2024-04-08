@@ -3,24 +3,32 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use super::CodeType;
+use crate::interface::ObjectImpl;
 
 #[derive(Debug)]
 pub struct ObjectCodeType {
-    id: String,
+    name: String,
+    imp: ObjectImpl,
 }
 
 impl ObjectCodeType {
-    pub fn new(id: String) -> Self {
-        Self { id }
+    pub fn new(name: String, imp: ObjectImpl) -> Self {
+        Self { name, imp }
     }
 }
 
 impl CodeType for ObjectCodeType {
     fn type_label(&self) -> String {
-        super::SwiftCodeOracle.class_name(&self.id)
+        super::SwiftCodeOracle.class_name(&self.name)
     }
 
     fn canonical_name(&self) -> String {
-        format!("Type{}", self.id)
+        format!("Type{}", self.name)
+    }
+
+    fn initialization_fn(&self) -> Option<String> {
+        self.imp
+            .has_callback_interface()
+            .then(|| format!("uniffiCallbackInit{}", self.name))
     }
 }

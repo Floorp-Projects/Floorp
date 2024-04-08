@@ -71,6 +71,22 @@ impl From<StandardFields32> for StandardFields {
     }
 }
 
+impl From<StandardFields> for StandardFields32 {
+    fn from(fields: StandardFields) -> Self {
+        StandardFields32 {
+            magic: fields.magic,
+            major_linker_version: fields.major_linker_version,
+            minor_linker_version: fields.minor_linker_version,
+            size_of_code: fields.size_of_code as u32,
+            size_of_initialized_data: fields.size_of_initialized_data as u32,
+            size_of_uninitialized_data: fields.size_of_uninitialized_data as u32,
+            address_of_entry_point: fields.address_of_entry_point as u32,
+            base_of_code: fields.base_of_code as u32,
+            base_of_data: fields.base_of_data,
+        }
+    }
+}
+
 impl From<StandardFields64> for StandardFields {
     fn from(fields: StandardFields64) -> Self {
         StandardFields {
@@ -83,6 +99,21 @@ impl From<StandardFields64> for StandardFields {
             address_of_entry_point: u64::from(fields.address_of_entry_point),
             base_of_code: u64::from(fields.base_of_code),
             base_of_data: 0,
+        }
+    }
+}
+
+impl From<StandardFields> for StandardFields64 {
+    fn from(fields: StandardFields) -> Self {
+        StandardFields64 {
+            magic: fields.magic,
+            major_linker_version: fields.major_linker_version,
+            minor_linker_version: fields.minor_linker_version,
+            size_of_code: fields.size_of_code as u32,
+            size_of_initialized_data: fields.size_of_initialized_data as u32,
+            size_of_uninitialized_data: fields.size_of_uninitialized_data as u32,
+            address_of_entry_point: fields.address_of_entry_point as u32,
+            base_of_code: fields.base_of_code as u32,
         }
     }
 }
@@ -208,6 +239,36 @@ impl From<WindowsFields32> for WindowsFields {
     }
 }
 
+impl TryFrom<WindowsFields64> for WindowsFields32 {
+    type Error = crate::error::Error;
+
+    fn try_from(value: WindowsFields64) -> Result<Self, Self::Error> {
+        Ok(WindowsFields32 {
+            image_base: value.image_base.try_into()?,
+            section_alignment: value.section_alignment,
+            file_alignment: value.file_alignment,
+            major_operating_system_version: value.major_operating_system_version,
+            minor_operating_system_version: value.minor_operating_system_version,
+            major_image_version: value.major_image_version,
+            minor_image_version: value.minor_image_version,
+            major_subsystem_version: value.major_subsystem_version,
+            minor_subsystem_version: value.minor_subsystem_version,
+            win32_version_value: value.win32_version_value,
+            size_of_image: value.size_of_image,
+            size_of_headers: value.size_of_headers,
+            check_sum: value.check_sum,
+            subsystem: value.subsystem,
+            dll_characteristics: value.dll_characteristics,
+            size_of_stack_reserve: value.size_of_stack_reserve.try_into()?,
+            size_of_stack_commit: value.size_of_stack_commit.try_into()?,
+            size_of_heap_reserve: value.size_of_heap_reserve.try_into()?,
+            size_of_heap_commit: value.size_of_heap_commit.try_into()?,
+            loader_flags: value.loader_flags,
+            number_of_rva_and_sizes: value.number_of_rva_and_sizes,
+        })
+    }
+}
+
 // impl From<WindowsFields32> for WindowsFields {
 //     fn from(windows: WindowsFields32) -> Self {
 //         WindowsFields {
@@ -286,6 +347,28 @@ impl<'a> ctx::TryFromCtx<'a, Endian> for OptionalHeader {
             },
             0,
         )) // TODO: FIXME
+    }
+}
+
+impl ctx::TryIntoCtx<scroll::Endian> for OptionalHeader {
+    type Error = error::Error;
+
+    fn try_into_ctx(self, bytes: &mut [u8], ctx: scroll::Endian) -> Result<usize, Self::Error> {
+        let offset = &mut 0;
+        match self.standard_fields.magic {
+            MAGIC_32 => {
+                bytes.gwrite_with::<StandardFields32>(self.standard_fields.into(), offset, ctx)?;
+                bytes.gwrite_with(WindowsFields32::try_from(self.windows_fields)?, offset, ctx)?;
+                bytes.gwrite_with(self.data_directories, offset, ctx)?;
+            }
+            MAGIC_64 => {
+                bytes.gwrite_with::<StandardFields64>(self.standard_fields.into(), offset, ctx)?;
+                bytes.gwrite_with(self.windows_fields, offset, ctx)?;
+                bytes.gwrite_with(self.data_directories, offset, ctx)?;
+            }
+            _ => panic!(),
+        }
+        Ok(*offset)
     }
 }
 

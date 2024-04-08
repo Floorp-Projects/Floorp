@@ -1,5 +1,6 @@
 use crate::error;
 use alloc::string::ToString;
+use alloc::vec::Vec;
 use scroll::Pread;
 
 use super::options;
@@ -177,4 +178,19 @@ where
         .ok_or_else(|| error::Error::Malformed(directory.virtual_address.to_string()))?;
     let result: T = bytes.pread_with(offset, scroll::LE)?;
     Ok(result)
+}
+
+pub(crate) fn pad(length: usize, alignment: Option<usize>) -> Option<Vec<u8>> {
+    match alignment {
+        Some(alignment) => {
+            let overhang = length % alignment;
+            if overhang != 0 {
+                let repeat = alignment - overhang;
+                Some(vec![0u8; repeat])
+            } else {
+                None
+            }
+        }
+        None => None,
+    }
 }

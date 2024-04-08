@@ -5,6 +5,7 @@
 use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand};
 use uniffi_bindgen::bindings::TargetLanguage;
+use uniffi_bindgen::BindingGeneratorDefault;
 
 // Structs to help our cmdline parsing. Note that docstrings below form part
 // of the "help" output.
@@ -35,7 +36,7 @@ enum Commands {
         #[clap(long, short)]
         no_format: bool,
 
-        /// Path to the optional uniffi config file. If not provided, uniffi-bindgen will try to guess it from the UDL's file location.
+        /// Path to optional uniffi config file. This config is merged with the `uniffi.toml` config present in each crate, with its values taking precedence.
         #[clap(long, short)]
         config: Option<Utf8PathBuf>,
 
@@ -95,21 +96,29 @@ pub fn run_main() -> anyhow::Result<()> {
                 if lib_file.is_some() {
                     panic!("--lib-file is not compatible with --library.")
                 }
-                if config.is_some() {
-                    panic!("--config is not compatible with --library.  The config file(s) will be found automatically.")
-                }
                 let out_dir = out_dir.expect("--out-dir is required when using --library");
                 if language.is_empty() {
                     panic!("please specify at least one language with --language")
                 }
                 uniffi_bindgen::library_mode::generate_bindings(
-                    &source, crate_name, &language, &out_dir, !no_format,
+                    &source,
+                    crate_name,
+                    &BindingGeneratorDefault {
+                        target_languages: language,
+                        try_format_code: !no_format,
+                    },
+                    config.as_deref(),
+                    &out_dir,
+                    !no_format,
                 )?;
             } else {
                 uniffi_bindgen::generate_bindings(
                     &source,
                     config.as_deref(),
-                    language,
+                    BindingGeneratorDefault {
+                        target_languages: language,
+                        try_format_code: !no_format,
+                    },
                     out_dir.as_deref(),
                     lib_file.as_deref(),
                     crate_name.as_deref(),

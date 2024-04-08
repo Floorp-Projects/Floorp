@@ -16,8 +16,8 @@
 ///   - UniFFI can figure out the package/module names for each crate, eliminating the external
 ///     package maps.
 use crate::{
-    bindings::TargetLanguage, load_initial_config, macro_metadata, BindingGenerator,
-    BindingGeneratorDefault, BindingsConfig, ComponentInterface, Result,
+    load_initial_config, macro_metadata, BindingGenerator, BindingsConfig, ComponentInterface,
+    Result,
 };
 use anyhow::{bail, Context};
 use camino::Utf8Path;
@@ -33,21 +33,21 @@ use uniffi_meta::{
 /// Generate foreign bindings
 ///
 /// Returns the list of sources used to generate the bindings, in no particular order.
-pub fn generate_bindings(
+pub fn generate_bindings<T: BindingGenerator + ?Sized>(
     library_path: &Utf8Path,
     crate_name: Option<String>,
-    target_languages: &[TargetLanguage],
+    binding_generator: &T,
+    config_file_override: Option<&Utf8Path>,
     out_dir: &Utf8Path,
     try_format_code: bool,
-) -> Result<Vec<Source<crate::Config>>> {
+) -> Result<Vec<Source<T::Config>>> {
     generate_external_bindings(
-        BindingGeneratorDefault {
-            target_languages: target_languages.into(),
-            try_format_code,
-        },
+        binding_generator,
         library_path,
-        crate_name,
+        crate_name.clone(),
+        config_file_override,
         out_dir,
+        try_format_code,
     )
 }
 
@@ -55,10 +55,12 @@ pub fn generate_bindings(
 ///
 /// Returns the list of sources used to generate the bindings, in no particular order.
 pub fn generate_external_bindings<T: BindingGenerator>(
-    binding_generator: T,
+    binding_generator: &T,
     library_path: &Utf8Path,
     crate_name: Option<String>,
+    config_file_override: Option<&Utf8Path>,
     out_dir: &Utf8Path,
+    try_format_code: bool,
 ) -> Result<Vec<Source<T::Config>>> {
     let cargo_metadata = MetadataCommand::new()
         .exec()
@@ -66,7 +68,12 @@ pub fn generate_external_bindings<T: BindingGenerator>(
     let cdylib_name = calc_cdylib_name(library_path);
     binding_generator.check_library_path(library_path, cdylib_name)?;
 
-    let mut sources = find_sources(&cargo_metadata, library_path, cdylib_name)?;
+    let mut sources = find_sources(
+        &cargo_metadata,
+        library_path,
+        cdylib_name,
+        config_file_override,
+    )?;
     for i in 0..sources.len() {
         // Partition up the sources list because we're eventually going to call
         // `update_from_dependency_configs()` which requires an exclusive reference to one source and
@@ -101,7 +108,7 @@ pub fn generate_external_bindings<T: BindingGenerator>(
     }
 
     for source in sources.iter() {
-        binding_generator.write_bindings(&source.ci, &source.config, out_dir)?;
+        binding_generator.write_bindings(&source.ci, &source.config, out_dir, try_format_code)?;
     }
 
     Ok(sources)
@@ -118,10 +125,10 @@ pub struct Source<Config: BindingsConfig> {
 
 // If `library_path` is a C dynamic library, return its name
 pub fn calc_cdylib_name(library_path: &Utf8Path) -> Option<&str> {
-    let cdylib_extentions = [".so", ".dll", ".dylib"];
+    let cdylib_extensions = [".so", ".dll", ".dylib"];
     let filename = library_path.file_name()?;
     let filename = filename.strip_prefix("lib").unwrap_or(filename);
-    for ext in cdylib_extentions {
+    for ext in cdylib_extensions {
         if let Some(f) = filename.strip_suffix(ext) {
             return Some(f);
         }
@@ -133,6 +140,7 @@ fn find_sources<Config: BindingsConfig>(
     cargo_metadata: &cargo_metadata::Metadata,
     library_path: &Utf8Path,
     cdylib_name: Option<&str>,
+    config_file_override: Option<&Utf8Path>,
 ) -> Result<Vec<Source<Config>>> {
     let items = macro_metadata::extract_from_library(library_path)?;
     let mut metadata_groups = create_metadata_groups(&items);
@@ -178,7 +186,7 @@ fn find_sources<Config: BindingsConfig>(
                 ci.add_metadata(metadata)?;
             };
             ci.add_metadata(group)?;
-            let mut config = load_initial_config::<Config>(crate_root, None)?;
+            let mut config = load_initial_config::<Config>(crate_root, config_file_override)?;
             if let Some(cdylib_name) = cdylib_name {
                 config.update_from_cdylib_name(cdylib_name);
             }

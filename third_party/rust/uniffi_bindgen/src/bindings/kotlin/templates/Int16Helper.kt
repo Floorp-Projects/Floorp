@@ -11,7 +11,7 @@ public object FfiConverterShort: FfiConverter<Short, Short> {
         return value
     }
 
-    override fun allocationSize(value: Short) = 2
+    override fun allocationSize(value: Short) = 2UL
 
     override fun write(value: Short, buf: ByteBuffer) {
         buf.putShort(value)

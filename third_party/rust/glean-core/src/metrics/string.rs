@@ -149,10 +149,8 @@ impl StringMetric {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::test_get_num_recorded_errors;
     use crate::tests::new_glean;
     use crate::util::truncate_string_at_boundary;
-    use crate::ErrorType;
     use crate::Lifetime;
 
     #[test]

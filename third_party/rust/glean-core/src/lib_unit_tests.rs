@@ -6,12 +6,10 @@
 // the lib.rs file.
 
 use std::collections::HashSet;
-use std::iter::FromIterator;
 
 use serde_json::json;
 
 use super::*;
-use crate::metrics::{StringMetric, TimeUnit, TimespanMetric, TimingDistributionMetric};
 
 const GLOBAL_APPLICATION_ID: &str = "org.mozilla.glean.test.app";
 pub fn new_glean(tempdir: Option<tempfile::TempDir>) -> (Glean, tempfile::TempDir) {
@@ -21,7 +19,7 @@ pub fn new_glean(tempdir: Option<tempfile::TempDir>) -> (Glean, tempfile::TempDi
         None => tempfile::tempdir().unwrap(),
     };
     let tmpname = dir.path().display().to_string();
-    let glean = Glean::with_options(&tmpname, GLOBAL_APPLICATION_ID, true);
+    let glean = Glean::with_options(&tmpname, GLOBAL_APPLICATION_ID, true, true);
     (glean, dir)
 }
 
@@ -41,7 +39,7 @@ fn path_is_constructed_from_data() {
 fn experiment_id_and_branch_get_truncated_if_too_long() {
     let t = tempfile::tempdir().unwrap();
     let name = t.path().display().to_string();
-    let glean = Glean::with_options(&name, "org.mozilla.glean.tests", true);
+    let glean = Glean::with_options(&name, "org.mozilla.glean.tests", true, true);
 
     // Generate long strings for the used ids.
     let very_long_id = "test-experiment-id".repeat(10);
@@ -82,7 +80,7 @@ fn experiment_id_and_branch_get_truncated_if_too_long() {
 fn limits_on_experiments_extras_are_applied_correctly() {
     let t = tempfile::tempdir().unwrap();
     let name = t.path().display().to_string();
-    let glean = Glean::with_options(&name, "org.mozilla.glean.tests", true);
+    let glean = Glean::with_options(&name, "org.mozilla.glean.tests", true, true);
 
     let experiment_id = "test-experiment_id".to_string();
     let branch_id = "test-branch-id".to_string();
@@ -138,7 +136,7 @@ fn limits_on_experiments_extras_are_applied_correctly() {
 fn experiments_status_is_correctly_toggled() {
     let t = tempfile::tempdir().unwrap();
     let name = t.path().display().to_string();
-    let glean = Glean::with_options(&name, "org.mozilla.glean.tests", true);
+    let glean = Glean::with_options(&name, "org.mozilla.glean.tests", true, true);
 
     // Define the experiment's data.
     let experiment_id: String = "test-toggle-experiment".into();
@@ -199,6 +197,7 @@ fn experimentation_id_is_set_correctly() {
         rate_limit: None,
         enable_event_timestamps: true,
         experimentation_id: Some(experimentation_id.to_string()),
+        enable_internal_pings: true,
     })
     .unwrap();
 
@@ -219,7 +218,7 @@ fn client_id_and_first_run_date_must_be_regenerated() {
     let dir = tempfile::tempdir().unwrap();
     let tmpname = dir.path().display().to_string();
     {
-        let glean = Glean::with_options(&tmpname, GLOBAL_APPLICATION_ID, true);
+        let glean = Glean::with_options(&tmpname, GLOBAL_APPLICATION_ID, true, true);
 
         glean.data_store.as_ref().unwrap().clear_all();
 
@@ -236,7 +235,7 @@ fn client_id_and_first_run_date_must_be_regenerated() {
     }
 
     {
-        let glean = Glean::with_options(&tmpname, GLOBAL_APPLICATION_ID, true);
+        let glean = Glean::with_options(&tmpname, GLOBAL_APPLICATION_ID, true, true);
         assert!(glean
             .core_metrics
             .client_id
@@ -339,7 +338,7 @@ fn client_id_is_managed_correctly_when_toggling_uploading() {
 fn client_id_is_set_to_known_value_when_uploading_disabled_at_start() {
     let dir = tempfile::tempdir().unwrap();
     let tmpname = dir.path().display().to_string();
-    let glean = Glean::with_options(&tmpname, GLOBAL_APPLICATION_ID, false);
+    let glean = Glean::with_options(&tmpname, GLOBAL_APPLICATION_ID, false, true);
 
     assert_eq!(
         *KNOWN_CLIENT_ID,
@@ -355,7 +354,7 @@ fn client_id_is_set_to_known_value_when_uploading_disabled_at_start() {
 fn client_id_is_set_to_random_value_when_uploading_enabled_at_start() {
     let dir = tempfile::tempdir().unwrap();
     let tmpname = dir.path().display().to_string();
-    let glean = Glean::with_options(&tmpname, GLOBAL_APPLICATION_ID, true);
+    let glean = Glean::with_options(&tmpname, GLOBAL_APPLICATION_ID, true, true);
 
     let current_client_id = glean
         .core_metrics
@@ -369,7 +368,7 @@ fn client_id_is_set_to_random_value_when_uploading_enabled_at_start() {
 fn enabling_when_already_enabled_is_a_noop() {
     let dir = tempfile::tempdir().unwrap();
     let tmpname = dir.path().display().to_string();
-    let mut glean = Glean::with_options(&tmpname, GLOBAL_APPLICATION_ID, true);
+    let mut glean = Glean::with_options(&tmpname, GLOBAL_APPLICATION_ID, true, true);
 
     assert!(!glean.set_upload_enabled(true));
 }
@@ -378,7 +377,7 @@ fn enabling_when_already_enabled_is_a_noop() {
 fn disabling_when_already_disabled_is_a_noop() {
     let dir = tempfile::tempdir().unwrap();
     let tmpname = dir.path().display().to_string();
-    let mut glean = Glean::with_options(&tmpname, GLOBAL_APPLICATION_ID, false);
+    let mut glean = Glean::with_options(&tmpname, GLOBAL_APPLICATION_ID, false, true);
 
     assert!(!glean.set_upload_enabled(false));
 }
@@ -601,14 +600,14 @@ fn test_first_run() {
     let dir = tempfile::tempdir().unwrap();
     let tmpname = dir.path().display().to_string();
     {
-        let glean = Glean::with_options(&tmpname, GLOBAL_APPLICATION_ID, true);
+        let glean = Glean::with_options(&tmpname, GLOBAL_APPLICATION_ID, true, true);
         // Check that this is indeed the first run.
         assert!(glean.is_first_run());
     }
 
     {
         // Other runs must be not marked as "first run".
-        let glean = Glean::with_options(&tmpname, GLOBAL_APPLICATION_ID, true);
+        let glean = Glean::with_options(&tmpname, GLOBAL_APPLICATION_ID, true, true);
         assert!(!glean.is_first_run());
     }
 }
@@ -618,7 +617,7 @@ fn test_dirty_bit() {
     let dir = tempfile::tempdir().unwrap();
     let tmpname = dir.path().display().to_string();
     {
-        let glean = Glean::with_options(&tmpname, GLOBAL_APPLICATION_ID, true);
+        let glean = Glean::with_options(&tmpname, GLOBAL_APPLICATION_ID, true, true);
         // The dirty flag must not be set the first time Glean runs.
         assert!(!glean.is_dirty_flag_set());
 
@@ -630,7 +629,7 @@ fn test_dirty_bit() {
     {
         // Check that next time Glean runs, it correctly picks up the "dirty flag".
         // It is expected to be 'true'.
-        let glean = Glean::with_options(&tmpname, GLOBAL_APPLICATION_ID, true);
+        let glean = Glean::with_options(&tmpname, GLOBAL_APPLICATION_ID, true, true);
         assert!(glean.is_dirty_flag_set());
 
         // Set the dirty flag to false.
@@ -641,7 +640,7 @@ fn test_dirty_bit() {
     {
         // Check that next time Glean runs, it correctly picks up the "dirty flag".
         // It is expected to be 'false'.
-        let glean = Glean::with_options(&tmpname, GLOBAL_APPLICATION_ID, true);
+        let glean = Glean::with_options(&tmpname, GLOBAL_APPLICATION_ID, true, true);
         assert!(!glean.is_dirty_flag_set());
     }
 }
@@ -1065,7 +1064,7 @@ fn test_empty_application_id() {
     let dir = tempfile::tempdir().unwrap();
     let tmpname = dir.path().display().to_string();
 
-    let glean = Glean::with_options(&tmpname, "", true);
+    let glean = Glean::with_options(&tmpname, "", true, true);
     // Check that this is indeed the first run.
     assert!(glean.is_first_run());
 }
@@ -1080,7 +1079,7 @@ fn records_database_file_size() {
     let tmpname = dir.path().display().to_string();
 
     // Initialize Glean once to ensure we create the database and did not error.
-    let glean = Glean::with_options(&tmpname, GLOBAL_APPLICATION_ID, true);
+    let glean = Glean::with_options(&tmpname, GLOBAL_APPLICATION_ID, true, true);
     let database_size = &glean.database_metrics.size;
     let data = database_size.get_value(&glean, "metrics");
 
@@ -1089,7 +1088,7 @@ fn records_database_file_size() {
     drop(glean);
 
     // Initialize Glean again to record file size.
-    let glean = Glean::with_options(&tmpname, GLOBAL_APPLICATION_ID, true);
+    let glean = Glean::with_options(&tmpname, GLOBAL_APPLICATION_ID, true, true);
 
     let database_size = &glean.database_metrics.size;
     let data = database_size.get_value(&glean, "metrics");
@@ -1160,4 +1159,47 @@ fn test_activity_api() {
 
     // Check that we set everything we needed for the 'inactive' status.
     assert!(!glean.is_dirty_flag_set());
+}
+
+#[test]
+fn disabled_pings_are_not_submitted() {
+    let _ = env_logger::builder().is_test(true).try_init();
+
+    let dir = tempfile::tempdir().unwrap();
+    let (mut glean, _t) = new_glean(Some(dir));
+
+    let ping = PingType::new_internal("custom-disabled", true, false, true, true, vec![], false);
+    glean.register_ping_type(&ping);
+
+    // We need to store a metric as an empty ping is not stored.
+    let counter = CounterMetric::new(CommonMetricData {
+        name: "counter".into(),
+        category: "local".into(),
+        send_in_pings: vec!["custom-disabled".into()],
+        ..Default::default()
+    });
+    counter.add_sync(&glean, 1);
+
+    assert!(!ping.submit_sync(&glean, None));
+}
+
+#[test]
+fn internal_pings_can_be_disabled() {
+    let _ = env_logger::builder().is_test(true).try_init();
+
+    let dir = tempfile::tempdir().unwrap();
+    let tmpname = dir.path().display().to_string();
+    let glean = Glean::with_options(&tmpname, GLOBAL_APPLICATION_ID, true, false);
+
+    // We need to store a metric as an empty ping is not stored.
+    let counter = CounterMetric::new(CommonMetricData {
+        name: "counter".into(),
+        category: "local".into(),
+        send_in_pings: vec!["baseline".into()],
+        ..Default::default()
+    });
+    counter.add_sync(&glean, 1);
+
+    let submitted = glean.internal_pings.baseline.submit_sync(&glean, None);
+    assert!(!submitted);
 }

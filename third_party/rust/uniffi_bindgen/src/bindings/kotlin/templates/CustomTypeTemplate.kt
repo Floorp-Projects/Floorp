@@ -49,7 +49,7 @@ public object {{ ffi_converter_name }}: FfiConverter<{{ name }}, {{ ffi_type_nam
         return {{ config.into_custom.render("builtinValue") }}
     }
 
-    override fun allocationSize(value: {{ name }}): Int {
+    override fun allocationSize(value: {{ name }}): ULong {
         val builtinValue = {{ config.from_custom.render("value") }}
         return {{ builtin|allocation_size_fn }}(builtinValue)
     }

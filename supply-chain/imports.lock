@@ -226,15 +226,15 @@ user-login = "jrmuizel"
 user-name = "Jeff Muizelaar"
 
 [[publisher.glean]]
-version = "58.1.0"
-when = "2024-03-12"
+version = "59.0.0"
+when = "2024-03-28"
 user-id = 48
 user-login = "badboy"
 user-name = "Jan-Erik Rediger"
 
 [[publisher.glean-core]]
-version = "58.1.0"
-when = "2024-03-12"
+version = "59.0.0"
+when = "2024-03-28"
 user-id = 48
 user-login = "badboy"
 user-name = "Jan-Erik Rediger"
@@ -602,58 +602,67 @@ user-login = "Manishearth"
 user-name = "Manish Goregaokar"
 
 [[publisher.uniffi]]
-version = "0.25.3"
-when = "2023-12-07"
-user-id = 127697
-user-login = "bendk"
+version = "0.27.1"
+when = "2024-04-03"
+user-id = 111105
+user-login = "mhammond"
+user-name = "Mark Hammond"
 
 [[publisher.uniffi_bindgen]]
-version = "0.25.3"
-when = "2023-12-07"
-user-id = 127697
-user-login = "bendk"
+version = "0.27.1"
+when = "2024-04-03"
+user-id = 111105
+user-login = "mhammond"
+user-name = "Mark Hammond"
 
 [[publisher.uniffi_build]]
-version = "0.25.3"
-when = "2023-12-07"
-user-id = 127697
-user-login = "bendk"
+version = "0.27.1"
+when = "2024-04-03"
+user-id = 111105
+user-login = "mhammond"
+user-name = "Mark Hammond"
 
 [[publisher.uniffi_checksum_derive]]
-version = "0.25.3"
-when = "2023-12-07"
-user-id = 127697
-user-login = "bendk"
+version = "0.27.1"
+when = "2024-04-03"
+user-id = 111105
+user-login = "mhammond"
+user-name = "Mark Hammond"
 
 [[publisher.uniffi_core]]
-version = "0.25.3"
-when = "2023-12-07"
-user-id = 127697
-user-login = "bendk"
+version = "0.27.1"
+when = "2024-04-03"
+user-id = 111105
+user-login = "mhammond"
+user-name = "Mark Hammond"
 
 [[publisher.uniffi_macros]]
-version = "0.25.3"
-when = "2023-12-07"
-user-id = 127697
-user-login = "bendk"
+version = "0.27.1"
+when = "2024-04-03"
+user-id = 111105
+user-login = "mhammond"
+user-name = "Mark Hammond"
 
 [[publisher.uniffi_meta]]
-version = "0.25.3"
-when = "2023-12-07"
-user-id = 127697
-user-login = "bendk"
+version = "0.27.1"
+when = "2024-04-03"
+user-id = 111105
+user-login = "mhammond"
+user-name = "Mark Hammond"
 
 [[publisher.uniffi_testing]]
-version = "0.25.3"
-when = "2023-12-07"
-user-id = 127697
-user-login = "bendk"
+version = "0.27.1"
+when = "2024-04-03"
+user-id = 111105
+user-login = "mhammond"
+user-name = "Mark Hammond"
 
 [[publisher.uniffi_udl]]
-version = "0.25.3"
-when = "2023-12-07"
-user-id = 127697
-user-login = "bendk"
+version = "0.27.1"
+when = "2024-04-03"
+user-id = 111105
+user-login = "mhammond"
+user-name = "Mark Hammond"
 
 [[publisher.utf8_iter]]
 version = "1.0.3"
@@ -684,43 +693,28 @@ user-login = "alexcrichton"
 user-name = "Alex Crichton"
 
 [[publisher.wasm-encoder]]
-version = "0.40.0"
-when = "2024-01-24"
-user-id = 1
-user-login = "alexcrichton"
-user-name = "Alex Crichton"
-
-[[publisher.wasm-encoder]]
 version = "0.201.0"
 when = "2024-02-27"
 user-id = 73222
 user-login = "wasmtime-publish"
 
 [[publisher.wasm-smith]]
-version = "0.15.0"
-when = "2024-01-24"
-user-id = 1
-user-login = "alexcrichton"
-user-name = "Alex Crichton"
-
-[[publisher.wasm-smith]]
 version = "0.201.0"
 when = "2024-02-27"
 user-id = 73222
 user-login = "wasmtime-publish"
-
-[[publisher.wast]]
-version = "70.0.1"
-when = "2024-01-24"
-user-id = 1
-user-login = "alexcrichton"
-user-name = "Alex Crichton"
 
 [[publisher.wast]]
 version = "201.0.0"
 when = "2024-02-27"
 user-id = 73222
 user-login = "wasmtime-publish"
+
+[[publisher.weedle2]]
+version = "5.0.0"
+when = "2024-01-24"
+user-id = 127697
+user-login = "bendk"
 
 [[publisher.winapi-util]]
 version = "0.1.5"
@@ -780,45 +774,6 @@ start = "2020-01-14"
 end = "2024-04-27"
 notes = "I am an author of this crate"
 
-[[audits.bytecode-alliance.wildcard-audits.wasm-encoder]]
-who = "Alex Crichton <alex@alexcrichton.com>"
-criteria = "safe-to-deploy"
-user-id = 1 # Alex Crichton (alexcrichton)
-start = "2020-12-11"
-end = "2024-04-14"
-notes = """
-This is a Bytecode Alliance authored crate maintained in the `wasm-tools`
-repository of which I'm one of the primary maintainers and publishers for.
-I am employed by a member of the Bytecode Alliance and plan to continue doing
-so and will actively maintain this crate over time.
-"""
-
-[[audits.bytecode-alliance.wildcard-audits.wasm-smith]]
-who = "Alex Crichton <alex@alexcrichton.com>"
-criteria = "safe-to-deploy"
-user-id = 1 # Alex Crichton (alexcrichton)
-start = "2020-09-03"
-end = "2024-04-14"
-notes = """
-This is a Bytecode Alliance authored crate maintained in the `wasm-tools`
-repository of which I'm one of the primary maintainers and publishers for.
-I am employed by a member of the Bytecode Alliance and plan to continue doing
-so and will actively maintain this crate over time.
-"""
-
-[[audits.bytecode-alliance.wildcard-audits.wast]]
-who = "Alex Crichton <alex@alexcrichton.com>"
-criteria = "safe-to-deploy"
-user-id = 1 # Alex Crichton (alexcrichton)
-start = "2019-10-16"
-end = "2024-04-14"
-notes = """
-This is a Bytecode Alliance authored crate maintained in the `wasm-tools`
-repository of which I'm one of the primary maintainers and publishers for.
-I am employed by a member of the Bytecode Alliance and plan to continue doing
-so and will actively maintain this crate over time.
-"""
-
 [[audits.bytecode-alliance.audits.adler]]
 who = "Alex Crichton <alex@alexcrichton.com>"
 criteria = "safe-to-deploy"
@@ -872,12 +827,6 @@ all as expected.
 who = "Benjamin Bouvier <public@benj.me>"
 criteria = "safe-to-deploy"
 delta = "0.9.0 -> 0.10.2"
-
-[[audits.bytecode-alliance.audits.bumpalo]]
-who = "Nick Fitzgerald <fitzgen@gmail.com>"
-criteria = "safe-to-deploy"
-version = "3.11.1"
-notes = "I am the author of this crate."
 
 [[audits.bytecode-alliance.audits.cargo-platform]]
 who = "Pat Hickey <phickey@fastly.com>"
@@ -1335,6 +1284,20 @@ criteria = "safe-to-run"
 version = "0.2.3"
 aggregated-from = "https://chromium.googlesource.com/chromiumos/third_party/rust_crates/+/refs/heads/main/cargo-vet/audits.toml?format=TEXT"
 
+[[audits.google.audits.unicode-linebreak]]
+who = "Lukasz Anforowicz <lukasza@chromium.org>"
+criteria = "safe-to-deploy"
+version = "0.1.5"
+notes = """
+Grepped for `-i cipher`, `-i crypto`, `'\bfs\b'``, `'\bnet\b'``, `'\bunsafe\b'``
+and there were no hits.
+
+Version `0.1.2` of this crate has been added to Chromium in
+https://source.chromium.org/chromium/chromium/src/+/591a0f30c5eac93b6a3d981c2714ffa4db28dbcb
+The CL description contains a link to a Google-internal document with audit details.
+"""
+aggregated-from = "https://chromium.googlesource.com/chromium/src/+/main/third_party/rust/chromium_crates_io/supply-chain/audits.toml?format=TEXT"
+
 [[audits.google.audits.version_check]]
 who = "George Burgess IV <gbiv@google.com>"
 criteria = "safe-to-deploy"
@@ -1440,6 +1403,87 @@ who = "Brandon Pitman <bran@bran.land>"
 criteria = "safe-to-deploy"
 delta = "0.10.7 -> 0.10.8"
 
+[[audits.mozilla.wildcard-audits.uniffi]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+user-id = 111105 # Mark Hammond (mhammond)
+start = "2021-11-22"
+end = "2024-11-28"
+aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-chain/audits.toml"
+
+[[audits.mozilla.wildcard-audits.uniffi_bindgen]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+user-id = 111105 # Mark Hammond (mhammond)
+start = "2021-11-22"
+end = "2024-11-28"
+aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-chain/audits.toml"
+
+[[audits.mozilla.wildcard-audits.uniffi_build]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+user-id = 111105 # Mark Hammond (mhammond)
+start = "2021-11-22"
+end = "2024-11-28"
+aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-chain/audits.toml"
+
+[[audits.mozilla.wildcard-audits.uniffi_checksum_derive]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+user-id = 111105 # Mark Hammond (mhammond)
+start = "2023-11-20"
+end = "2024-11-28"
+aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-chain/audits.toml"
+
+[[audits.mozilla.wildcard-audits.uniffi_core]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+user-id = 111105 # Mark Hammond (mhammond)
+start = "2023-11-20"
+end = "2024-11-28"
+aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-chain/audits.toml"
+
+[[audits.mozilla.wildcard-audits.uniffi_macros]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+user-id = 111105 # Mark Hammond (mhammond)
+start = "2021-11-22"
+end = "2024-11-28"
+aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-chain/audits.toml"
+
+[[audits.mozilla.wildcard-audits.uniffi_meta]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+user-id = 111105 # Mark Hammond (mhammond)
+start = "2023-11-20"
+end = "2024-11-28"
+aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-chain/audits.toml"
+
+[[audits.mozilla.wildcard-audits.uniffi_testing]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+user-id = 111105 # Mark Hammond (mhammond)
+start = "2023-11-20"
+end = "2024-11-28"
+aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-chain/audits.toml"
+
+[[audits.mozilla.wildcard-audits.uniffi_udl]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+user-id = 111105 # Mark Hammond (mhammond)
+start = "2023-11-20"
+end = "2024-11-28"
+aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-chain/audits.toml"
+
+[[audits.mozilla.wildcard-audits.weedle2]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+user-id = 127697 # bendk
+start = "2022-06-16"
+end = "2025-03-05"
+notes = "Maintained by Mozilla"
+aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-chain/audits.toml"
+
 [[audits.mozilla.wildcard-audits.zeitstempel]]
 who = "Jan-Erik Rediger <jrediger@mozilla.com>"
 criteria = "safe-to-deploy"
@@ -1487,6 +1531,13 @@ no unsafe code.
 """
 aggregated-from = "https://raw.githubusercontent.com/mozilla/cargo-vet/main/supply-chain/audits.toml"
 
+[[audits.mozilla.audits.goblin]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.7.1 -> 0.8.0"
+notes = "MSRV bump, no unsafe changes"
+aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-chain/audits.toml"
+
 [[audits.mozilla.audits.lazy_static]]
 who = "Nika Layzell <nika@thelayzells.com>"
 criteria = "safe-to-deploy"
@@ -1508,9 +1559,40 @@ delta = "0.4.18 -> 0.4.20"
 notes = "Only cfg attribute and internal macro changes and module refactorings"
 aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-chain/audits.toml"
 
+[[audits.mozilla.audits.oneshot-uniffi]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.1.5 -> 0.1.6"
+notes = "Synced with the orginal crate, no new unsafe"
+aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-chain/audits.toml"
+
 [[audits.mozilla.audits.rkv]]
 who = "Kagami Sascha Rosylight <krosylight@mozilla.com>"
 criteria = "safe-to-deploy"
 delta = "0.18.4 -> 0.19.0"
 notes = "Maintained by Mozilla, no addition of unsafe blocks"
+aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-chain/audits.toml"
+
+[[audits.mozilla.audits.scroll]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.11.0 -> 0.12.0"
+aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-chain/audits.toml"
+
+[[audits.mozilla.audits.scroll_derive]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.11.1 -> 0.12.0"
+aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-chain/audits.toml"
+
+[[audits.mozilla.audits.smawk]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+version = "0.3.2"
+aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-chain/audits.toml"
+
+[[audits.mozilla.audits.textwrap]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+version = "0.15.0"
 aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-chain/audits.toml"

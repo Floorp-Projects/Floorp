@@ -3,24 +3,60 @@ use crate::pe::{optional_header, section_table, symbol};
 use crate::strtab;
 use alloc::vec::Vec;
 use log::debug;
-use scroll::{IOread, IOwrite, Pread, Pwrite, SizeWith};
+use scroll::{ctx, IOread, IOwrite, Pread, Pwrite, SizeWith};
 
 /// DOS header present in all PE binaries
 #[repr(C)]
-#[derive(Debug, PartialEq, Copy, Clone, Default)]
+#[derive(Debug, PartialEq, Copy, Clone, Default, Pwrite)]
 pub struct DosHeader {
     /// Magic number: 5a4d
     pub signature: u16,
-    /// Pointer to PE header, always at offset 0x3c
+    /// e_cblp
+    pub bytes_on_last_page: u16,
+    /// e_cp
+    pub pages_in_file: u16,
+    /// e_crlc
+    pub relocations: u16,
+    /// e_cparhdr
+    pub size_of_header_in_paragraphs: u16,
+    /// e_minalloc
+    pub minimum_extra_paragraphs_needed: u16,
+    /// e_maxalloc
+    pub maximum_extra_paragraphs_needed: u16,
+    /// e_ss
+    pub initial_relative_ss: u16,
+    /// e_sp
+    pub initial_sp: u16,
+    /// e_csum
+    pub checksum: u16,
+    /// e_ip
+    pub initial_ip: u16,
+    /// e_cs
+    pub initial_relative_cs: u16,
+    /// e_lfarlc
+    pub file_address_of_relocation_table: u16,
+    /// e_ovno
+    pub overlay_number: u16,
+    /// e_res[4]
+    pub reserved: [u16; 4],
+    /// e_oemid
+    pub oem_id: u16,
+    /// e_oeminfo
+    pub oem_info: u16,
+    /// e_res2[10]
+    pub reserved2: [u16; 10],
+    /// e_lfanew: pointer to PE header, always at offset 0x3c
     pub pe_pointer: u32,
 }
 
 pub const DOS_MAGIC: u16 = 0x5a4d;
 pub const PE_POINTER_OFFSET: u32 = 0x3c;
+pub const DOS_STUB_OFFSET: u32 = PE_POINTER_OFFSET + (core::mem::size_of::<u32>() as u32);
 
 impl DosHeader {
     pub fn parse(bytes: &[u8]) -> error::Result<Self> {
-        let signature = bytes.pread_with(0, scroll::LE).map_err(|_| {
+        let mut offset = 0;
+        let signature = bytes.gread_with(&mut offset, scroll::LE).map_err(|_| {
             error::Error::Malformed(format!("cannot parse DOS signature (offset {:#x})", 0))
         })?;
         if signature != DOS_MAGIC {
@@ -29,6 +65,33 @@ impl DosHeader {
                 signature
             )));
         }
+
+        let bytes_on_last_page = bytes.gread_with(&mut offset, scroll::LE)?;
+        let pages_in_file = bytes.gread_with(&mut offset, scroll::LE)?;
+        let relocations = bytes.gread_with(&mut offset, scroll::LE)?;
+        let size_of_header_in_paragraphs = bytes.gread_with(&mut offset, scroll::LE)?;
+        let minimum_extra_paragraphs_needed = bytes.gread_with(&mut offset, scroll::LE)?;
+        let maximum_extra_paragraphs_needed = bytes.gread_with(&mut offset, scroll::LE)?;
+        let initial_relative_ss = bytes.gread_with(&mut offset, scroll::LE)?;
+        let initial_sp = bytes.gread_with(&mut offset, scroll::LE)?;
+        let checksum = bytes.gread_with(&mut offset, scroll::LE)?;
+        let initial_ip = bytes.gread_with(&mut offset, scroll::LE)?;
+        let initial_relative_cs = bytes.gread_with(&mut offset, scroll::LE)?;
+        let file_address_of_relocation_table = bytes.gread_with(&mut offset, scroll::LE)?;
+        let overlay_number = bytes.gread_with(&mut offset, scroll::LE)?;
+        let reserved = [0x0; 4];
+        offset += core::mem::size_of_val(&reserved);
+        let oem_id = bytes.gread_with(&mut offset, scroll::LE)?;
+        let oem_info = bytes.gread_with(&mut offset, scroll::LE)?;
+        let reserved2 = [0x0; 10];
+        offset += core::mem::size_of_val(&reserved2);
+
+        debug_assert!(
+            offset == PE_POINTER_OFFSET as usize,
+            "expected offset ({:#x}) after reading DOS header to be at 0x3C",
+            offset
+        );
+
         let pe_pointer = bytes
             .pread_with(PE_POINTER_OFFSET as usize, scroll::LE)
             .map_err(|_| {
@@ -37,6 +100,7 @@ impl DosHeader {
                     PE_POINTER_OFFSET
                 ))
             })?;
+
         let pe_signature: u32 =
             bytes
                 .pread_with(pe_pointer as usize, scroll::LE)
@@ -52,10 +116,45 @@ impl DosHeader {
                 pe_signature
             )));
         }
+
         Ok(DosHeader {
             signature,
+            bytes_on_last_page,
+            pages_in_file,
+            relocations,
+            size_of_header_in_paragraphs,
+            minimum_extra_paragraphs_needed,
+            maximum_extra_paragraphs_needed,
+            initial_relative_ss,
+            initial_sp,
+            checksum,
+            initial_ip,
+            initial_relative_cs,
+            file_address_of_relocation_table,
+            overlay_number,
+            reserved,
+            oem_id,
+            oem_info,
+            reserved2,
             pe_pointer,
         })
+    }
+}
+
+#[repr(C)]
+#[derive(Debug, PartialEq, Copy, Clone, Pread, Pwrite)]
+/// The DOS stub program which should be executed in DOS mode
+pub struct DosStub(pub [u8; 0x40]);
+impl Default for DosStub {
+    fn default() -> Self {
+        // "This program cannot be run in DOS mode" error program
+        Self([
+            0x0E, 0x1F, 0xBA, 0x0E, 0x00, 0xB4, 0x09, 0xCD, 0x21, 0xB8, 0x01, 0x4C, 0xCD, 0x21,
+            0x54, 0x68, 0x69, 0x73, 0x20, 0x70, 0x72, 0x6F, 0x67, 0x72, 0x61, 0x6D, 0x20, 0x63,
+            0x61, 0x6E, 0x6E, 0x6F, 0x74, 0x20, 0x62, 0x65, 0x20, 0x72, 0x75, 0x6E, 0x20, 0x69,
+            0x6E, 0x20, 0x44, 0x4F, 0x53, 0x20, 0x6D, 0x6F, 0x64, 0x65, 0x2E, 0x0D, 0x0D, 0x0A,
+            0x24, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        ])
     }
 }
 
@@ -163,14 +262,24 @@ impl CoffHeader {
     }
 
     /// Return the COFF symbol table.
-    pub fn symbols<'a>(&self, bytes: &'a [u8]) -> error::Result<symbol::SymbolTable<'a>> {
+    pub fn symbols<'a>(&self, bytes: &'a [u8]) -> error::Result<Option<symbol::SymbolTable<'a>>> {
         let offset = self.pointer_to_symbol_table as usize;
         let number = self.number_of_symbol_table as usize;
-        symbol::SymbolTable::parse(bytes, offset, number)
+        if offset == 0 {
+            Ok(None)
+        } else {
+            symbol::SymbolTable::parse(bytes, offset, number).map(Some)
+        }
     }
 
     /// Return the COFF string table.
-    pub fn strings<'a>(&self, bytes: &'a [u8]) -> error::Result<strtab::Strtab<'a>> {
+    pub fn strings<'a>(&self, bytes: &'a [u8]) -> error::Result<Option<strtab::Strtab<'a>>> {
+        // > The file offset of the COFF symbol table, or zero if no COFF symbol table is present.
+        // > This value should be zero for an image because COFF debugging information is deprecated.
+        if self.pointer_to_symbol_table == 0 {
+            return Ok(None);
+        }
+
         let mut offset = self.pointer_to_symbol_table as usize
             + symbol::SymbolTable::size(self.number_of_symbol_table as usize);
 
@@ -180,13 +289,15 @@ impl CoffHeader {
         // The offset needs to be advanced in order to read the strings.
         offset += length_field_size;
 
-        Ok(strtab::Strtab::parse(bytes, offset, length, 0)?)
+        Ok(Some(strtab::Strtab::parse(bytes, offset, length, 0)?))
     }
 }
 
 #[derive(Debug, PartialEq, Copy, Clone, Default)]
 pub struct Header {
     pub dos_header: DosHeader,
+    /// DOS program for legacy loaders
+    pub dos_stub: DosStub,
     /// PE Magic: PE\0\0, little endian
     pub signature: u32,
     pub coff_header: CoffHeader,
@@ -196,6 +307,12 @@ pub struct Header {
 impl Header {
     pub fn parse(bytes: &[u8]) -> error::Result<Self> {
         let dos_header = DosHeader::parse(&bytes)?;
+        let dos_stub = bytes.pread(DOS_STUB_OFFSET as usize).map_err(|_| {
+            error::Error::Malformed(format!(
+                "cannot parse DOS stub (offset {:#x})",
+                DOS_STUB_OFFSET
+            ))
+        })?;
         let mut offset = dos_header.pe_pointer as usize;
         let signature = bytes.gread_with(&mut offset, scroll::LE).map_err(|_| {
             error::Error::Malformed(format!("cannot parse PE signature (offset {:#x})", offset))
@@ -208,10 +325,27 @@ impl Header {
         };
         Ok(Header {
             dos_header,
+            dos_stub,
             signature,
             coff_header,
             optional_header,
         })
+    }
+}
+
+impl ctx::TryIntoCtx<scroll::Endian> for Header {
+    type Error = error::Error;
+
+    fn try_into_ctx(self, bytes: &mut [u8], ctx: scroll::Endian) -> Result<usize, Self::Error> {
+        let offset = &mut 0;
+        bytes.gwrite_with(self.dos_header, offset, ctx)?;
+        bytes.gwrite_with(self.dos_stub, offset, ctx)?;
+        bytes.gwrite_with(self.signature, offset, scroll::LE)?;
+        bytes.gwrite_with(self.coff_header, offset, ctx)?;
+        if let Some(opt_header) = self.optional_header {
+            bytes.gwrite_with(opt_header, offset, ctx)?;
+        }
+        Ok(*offset)
     }
 }
 

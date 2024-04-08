@@ -10,6 +10,8 @@
 ::uniffi::ffi_converter_forward!(r#{{ name }}, ::{{ crate_name|crate_name_rs }}::UniFfiTag, crate::UniFfiTag);
 {%- when ExternalKind::Interface %}
 ::uniffi::ffi_converter_arc_forward!(r#{{ name }}, ::{{ crate_name|crate_name_rs }}::UniFfiTag, crate::UniFfiTag);
+{%- when ExternalKind::Trait %}
+::uniffi::ffi_converter_arc_forward!(dyn r#{{ name }}, ::{{ crate_name|crate_name_rs }}::UniFfiTag, crate::UniFfiTag);
 {%- endmatch %}
 {% endif %}
 {%- endfor %}

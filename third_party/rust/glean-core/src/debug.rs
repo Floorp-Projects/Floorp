@@ -240,7 +240,6 @@ fn validate_source_tags(tags: &Vec<String>) -> bool {
 #[cfg(test)]
 mod test {
     use super::*;
-    use std::env;
 
     #[test]
     fn debug_option_is_correctly_loaded_from_env() {

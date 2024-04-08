@@ -8,5 +8,5 @@ class _UniffiConverterUInt16(_UniffiConverterPrimitiveInt):
         return buf.read_u16()
 
     @staticmethod
-    def write_unchecked(value, buf):
+    def write(value, buf):
         buf.write_u16(value)

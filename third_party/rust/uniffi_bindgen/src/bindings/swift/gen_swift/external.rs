@@ -17,7 +17,7 @@ impl ExternalCodeType {
 
 impl CodeType for ExternalCodeType {
     fn type_label(&self) -> String {
-        self.name.clone()
+        super::SwiftCodeOracle.class_name(&self.name)
     }
 
     fn canonical_name(&self) -> String {
