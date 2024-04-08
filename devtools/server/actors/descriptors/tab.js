@@ -21,12 +21,17 @@ const {
   connectToFrame,
 } = require("resource://devtools/server/connectors/frame-connector.js");
 const lazy = {};
-ChromeUtils.defineESModuleGetters(lazy, {
-  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
-});
+ChromeUtils.defineESModuleGetters(
+  lazy,
+  {
+    PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+  },
+  { global: "contextual" }
+);
 
 const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
+  "resource://gre/modules/AppConstants.sys.mjs",
+  { global: "contextual" }
 );
 const {
   createBrowserElementSessionContext,
