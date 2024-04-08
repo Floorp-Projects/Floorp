@@ -248,8 +248,6 @@ class FontFaceSetImpl : public nsISupports, public gfxUserFontSet {
 
   virtual TimeStamp GetNavigationStartTimeStamp() = 0;
 
-  mutable RecursiveMutex mMutex;
-
   FontFaceSet* MOZ_NON_OWNING_REF mOwner MOZ_GUARDED_BY(mMutex);
 
   // The document's node principal, which is the principal font loads for
