@@ -754,8 +754,12 @@ class nsWindow final : public nsBaseWidget {
   bool mIsAlert = false;
   bool mIsPerformingDwmFlushHack = false;
   bool mDraggingWindowWithMouse = false;
-  DWORD_PTR mOldStyle = 0;
-  DWORD_PTR mOldExStyle = 0;
+  // Partial cached window-styles, for when going fullscreen. (Only window-
+  // decoration-related flags are saved here.)
+  struct WindowStyles {
+    LONG_PTR style, exStyle;
+  };
+  mozilla::Maybe<WindowStyles> mOldStyles;
   nsNativeDragTarget* mNativeDragTarget = nullptr;
   HKL mLastKeyboardLayout = 0;
   mozilla::CheckInvariantWrapper<FrameState> mFrameState;
