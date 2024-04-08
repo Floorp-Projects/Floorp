@@ -24,6 +24,7 @@ extern "C" {}
 use super::model::{self, Application, Element, ElementStyle, TypedElement};
 use crate::data::Property;
 use font::Font;
+use once_cell::sync::Lazy;
 use quit_token::QuitToken;
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -287,6 +288,25 @@ impl window::WindowClass for AppWindow {
 }
 
 impl CustomWindowClass for AppWindow {
+    fn icon() -> win::HICON {
+        static ICON: Lazy<win::HICON> = Lazy::new(|| unsafe {
+            // If CreateIconFromResource fails it returns NULL, which is fine (a default icon will be
+            // used).
+            win::CreateIconFromResource(
+                // We take advantage of the fact that since Windows Vista, an RT_ICON resource entry
+                // can simply be a PNG image.
+                super::icon::PNG_DATA.as_ptr(),
+                super::icon::PNG_DATA.len() as u32,
+                true.into(),
+                // The 0x00030000 constant isn't available anywhere; the docs basically say to just
+                // pass it...
+                0x00030000,
+            )
+        });
+
+        *ICON
+    }
+
     fn message(
         data: &RefCell<Self>,
         hwnd: HWND,
