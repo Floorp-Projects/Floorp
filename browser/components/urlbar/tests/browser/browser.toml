@@ -284,6 +284,8 @@ support-files = [
 
 ["browser_keyword_select_and_type.js"]
 
+["browser_less_common_selection_manipulations.js"]
+
 ["browser_loadRace.js"]
 
 ["browser_locationBarCommand.js"]
