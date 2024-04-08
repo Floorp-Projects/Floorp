@@ -1,0 +1,17 @@
+[package]
+name = "scroll"
+version = "0.11.999"
+edition = "2018"
+license = "MIT/Apache-2.0"
+
+[lib]
+path = "lib.rs"
+
+[dependencies.scroll]
+version = "0.12.0"
+default-features = false
+
+[features]
+default = ["scroll/default"]
+derive = ["scroll/derive"]
+std = ["scroll/std"]

@@ -32,6 +32,8 @@ packages = [
     # transition to syn 2 is underway.
     "syn",
     "synstructure",
+    # Requires an update to clap v4
+    "textwrap",
     # Can be fixed by removing time dependency - see bug 1765324
     "wasi",
 ]

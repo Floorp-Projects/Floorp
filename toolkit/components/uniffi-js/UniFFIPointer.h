@@ -35,6 +35,8 @@ class UniFFIPointer final : public nsISupports, public nsWrapperCache {
                        JS::Handle<JSObject*> aGivenProto) override;
   nsISupports* GetParentObject() { return nullptr; }
 
+  UniFFIPointer* Clone();
+
   /**
    * returns the raw pointer `UniFFIPointer` holds
    * This is safe because:

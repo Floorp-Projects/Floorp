@@ -27,7 +27,7 @@ Result<OwnedRustBuffer, nsCString> OwnedRustBuffer::FromArrayBuffer(
 
         RustCallStatus status{};
         RustBuffer buf = uniffi_rustbuffer_alloc(
-            static_cast<int32_t>(aData.Length()), &status);
+            static_cast<uint64_t>(aData.Length()), &status);
         buf.len = aData.Length();
         if (status.code != 0) {
           if (status.error_buf.data) {
@@ -84,7 +84,7 @@ RustBuffer OwnedRustBuffer::IntoRustBuffer() {
 JSObject* OwnedRustBuffer::IntoArrayBuffer(JSContext* cx) {
   JS::Rooted<JSObject*> obj(cx);
   {
-    int32_t len = mBuf.len;
+    auto len = mBuf.len;
     void* data = mBuf.data;
     auto userData = MakeUnique<OwnedRustBuffer>(std::move(*this));
     UniquePtr<void, JS::BufferContentsDeleter> dataPtr{
