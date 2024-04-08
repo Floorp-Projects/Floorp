@@ -51,6 +51,7 @@ void nsHTMLButtonControlFrame::Init(nsIContent* aContent,
 }
 
 NS_QUERYFRAME_HEAD(nsHTMLButtonControlFrame)
+  NS_QUERYFRAME_ENTRY(nsHTMLButtonControlFrame)
   NS_QUERYFRAME_ENTRY(nsIFormControlFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
