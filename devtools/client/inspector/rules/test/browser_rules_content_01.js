@@ -103,7 +103,7 @@ add_task(async function () {
       matches: true,
     },
     {
-      selector: ".unmatched",
+      selector: "& .unmatched",
       matches: false,
     },
   ]);

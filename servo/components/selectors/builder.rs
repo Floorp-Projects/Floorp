@@ -6,59 +6,45 @@
 //!
 //! Our selector representation is designed to optimize matching, and has
 //! several requirements:
-//! * All simple selectors and combinators are stored inline in the same buffer
-//!   as Component instances.
-//! * We store the top-level compound selectors from right to left, i.e. in
-//!   matching order.
-//! * We store the simple selectors for each combinator from left to right, so
-//!   that we match the cheaper simple selectors first.
+//! * All simple selectors and combinators are stored inline in the same buffer as Component
+//!   instances.
+//! * We store the top-level compound selectors from right to left, i.e. in matching order.
+//! * We store the simple selectors for each combinator from left to right, so that we match the
+//!   cheaper simple selectors first.
 //!
-//! Meeting all these constraints without extra memmove traffic during parsing
-//! is non-trivial. This module encapsulates those details and presents an
-//! easy-to-use API for the parser.
+//! For example, the selector:
+//!
+//!   .bar:hover > .baz:nth-child(2) + .qux
+//!
+//! Gets stored as:
+//!
+//!   [.qux,  + , .baz, :nth-child(2),  > , .bar, :hover]
+//!
+//! Meeting all these constraints without extra memmove traffic during parsing is non-trivial. This
+//! module encapsulates those details and presents an easy-to-use API for the parser.
 
-use crate::parser::{Combinator, Component, RelativeSelector, Selector, SelectorImpl};
+use crate::parser::{Combinator, Component, RelativeSelector, Selector, SelectorImpl, ParseRelative};
 use crate::sink::Push;
 use servo_arc::{Arc, ThinArc};
 use smallvec::SmallVec;
 use std::cmp;
-use std::iter;
-use std::ptr;
 use std::slice;
 
-/// Top-level SelectorBuilder struct. This should be stack-allocated by the
-/// consumer and never moved (because it contains a lot of inline data that
-/// would be slow to memmov).
+/// Top-level SelectorBuilder struct. This should be stack-allocated by the consumer and never
+/// moved (because it contains a lot of inline data that would be slow to memmove).
 ///
-/// After instantation, callers may call the push_simple_selector() and
-/// push_combinator() methods to append selector data as it is encountered
-/// (from left to right). Once the process is complete, callers should invoke
-/// build(), which transforms the contents of the SelectorBuilder into a heap-
-/// allocated Selector and leaves the builder in a drained state.
+/// After instantiation, callers may call the push_simple_selector() and push_combinator() methods
+/// to append selector data as it is encountered (from left to right). Once the process is
+/// complete, callers should invoke build(), which transforms the contents of the SelectorBuilder
+/// into a heap- allocated Selector and leaves the builder in a drained state.
 #[derive(Debug)]
 pub struct SelectorBuilder<Impl: SelectorImpl> {
-    /// The entire sequence of simple selectors, from left to right, without combinators.
-    ///
-    /// We make this large because the result of parsing a selector is fed into a new
-    /// Arc-ed allocation, so any spilled vec would be a wasted allocation. Also,
-    /// Components are large enough that we don't have much cache locality benefit
-    /// from reserving stack space for fewer of them.
-    simple_selectors: SmallVec<[Component<Impl>; 32]>,
-    /// The combinators, and the length of the compound selector to their left.
-    combinators: SmallVec<[(Combinator, usize); 16]>,
-    /// The length of the current compount selector.
-    current_len: usize,
-}
-
-impl<Impl: SelectorImpl> Default for SelectorBuilder<Impl> {
-    #[inline(always)]
-    fn default() -> Self {
-        SelectorBuilder {
-            simple_selectors: SmallVec::new(),
-            combinators: SmallVec::new(),
-            current_len: 0,
-        }
-    }
+    /// The entire sequence of components. We make this large because the result of parsing a
+    /// selector is fed into a new Arc-ed allocation, so any spilled vec would be a wasted
+    /// allocation. Also, Components are large enough that we don't have much cache locality
+    /// benefit from reserving stack space for fewer of them.
+    components: SmallVec<[Component<Impl>; 32]>,
+    last_compound_start: Option<usize>,
 }
 
 impl<Impl: SelectorImpl> Push<Component<Impl>> for SelectorBuilder<Impl> {
@@ -71,99 +57,113 @@ impl<Impl: SelectorImpl> SelectorBuilder<Impl> {
     /// Pushes a simple selector onto the current compound selector.
     #[inline(always)]
     pub fn push_simple_selector(&mut self, ss: Component<Impl>) {
-        assert!(!ss.is_combinator());
-        self.simple_selectors.push(ss);
-        self.current_len += 1;
+        debug_assert!(!ss.is_combinator());
+        self.components.push(ss);
     }
 
-    /// Completes the current compound selector and starts a new one, delimited
-    /// by the given combinator.
+    /// Completes the current compound selector and starts a new one, delimited by the given
+    /// combinator.
     #[inline(always)]
     pub fn push_combinator(&mut self, c: Combinator) {
-        self.combinators.push((c, self.current_len));
-        self.current_len = 0;
+        self.reverse_last_compound();
+        self.components.push(Component::Combinator(c));
+        self.last_compound_start = Some(self.components.len());
+    }
+
+    fn reverse_last_compound(&mut self) {
+        let start = self.last_compound_start.unwrap_or(0);
+        self.components[start..].reverse();
     }
 
     /// Returns true if combinators have ever been pushed to this builder.
     #[inline(always)]
     pub fn has_combinators(&self) -> bool {
-        !self.combinators.is_empty()
+        self.last_compound_start.is_some()
     }
 
     /// Consumes the builder, producing a Selector.
     #[inline(always)]
-    pub fn build(&mut self) -> ThinArc<SpecificityAndFlags, Component<Impl>> {
+    pub fn build(&mut self, parse_relative: ParseRelative) -> ThinArc<SpecificityAndFlags, Component<Impl>> {
         // Compute the specificity and flags.
-        let sf = specificity_and_flags(self.simple_selectors.iter());
-        self.build_with_specificity_and_flags(sf)
+        let sf = specificity_and_flags(self.components.iter());
+        self.build_with_specificity_and_flags(sf, parse_relative)
     }
 
-    /// Builds with an explicit SpecificityAndFlags. This is separated from build() so
-    /// that unit tests can pass an explicit specificity.
+    /// Builds with an explicit SpecificityAndFlags. This is separated from build() so that unit
+    /// tests can pass an explicit specificity.
     #[inline(always)]
     pub(crate) fn build_with_specificity_and_flags(
         &mut self,
-        spec: SpecificityAndFlags,
+        mut spec: SpecificityAndFlags,
+        parse_relative: ParseRelative,
     ) -> ThinArc<SpecificityAndFlags, Component<Impl>> {
-        // Create the Arc using an iterator that drains our buffers.
-        // Panic-safety: if SelectorBuilderIter is not iterated to the end, some simple selectors
-        // will safely leak.
-        let raw_simple_selectors = unsafe {
-            let simple_selectors_len = self.simple_selectors.len();
-            self.simple_selectors.set_len(0);
-            std::slice::from_raw_parts(self.simple_selectors.as_ptr(), simple_selectors_len)
-        };
-        let (rest, current) = split_from_end(raw_simple_selectors, self.current_len);
-        let iter = SelectorBuilderIter {
-            current_simple_selectors: current.iter(),
-            rest_of_simple_selectors: rest,
-            combinators: self.combinators.drain(..).rev(),
+        let implicit_parent = parse_relative.needs_implicit_parent_selector() &&
+            !spec.flags.contains(SelectorFlags::HAS_PARENT);
+
+        let parent_selector_and_combinator;
+        let implicit_parent = if implicit_parent {
+            spec.flags.insert(SelectorFlags::HAS_PARENT);
+            parent_selector_and_combinator = [
+                Component::Combinator(Combinator::Descendant),
+                Component::ParentSelector,
+            ];
+            &parent_selector_and_combinator[..]
+        } else {
+            &[]
         };
 
-        Arc::from_header_and_iter(spec, iter)
+        // As an optimization, for a selector without combinators, we can just keep the order
+        // as-is.
+        if self.last_compound_start.is_none() {
+            return Arc::from_header_and_iter(spec, ExactChain(self.components.drain(..), implicit_parent.iter().cloned()));
+        }
+
+        self.reverse_last_compound();
+        Arc::from_header_and_iter(spec, ExactChain(self.components.drain(..).rev(), implicit_parent.iter().cloned()))
     }
 }
 
-struct SelectorBuilderIter<'a, Impl: SelectorImpl> {
-    current_simple_selectors: slice::Iter<'a, Component<Impl>>,
-    rest_of_simple_selectors: &'a [Component<Impl>],
-    combinators: iter::Rev<smallvec::Drain<'a, [(Combinator, usize); 16]>>,
+
+impl<Impl: SelectorImpl> Default for SelectorBuilder<Impl> {
+    #[inline(always)]
+    fn default() -> Self {
+        SelectorBuilder {
+            components: SmallVec::new(),
+            last_compound_start: None,
+        }
+    }
 }
 
-impl<'a, Impl: SelectorImpl> ExactSizeIterator for SelectorBuilderIter<'a, Impl> {
+// This is effectively a Chain<>, but Chain isn't an ExactSizeIterator, see
+// https://github.com/rust-lang/rust/issues/34433
+struct ExactChain<A, B>(A, B);
+
+impl<A, B, Item> ExactSizeIterator for ExactChain<A, B>
+where
+    A: ExactSizeIterator<Item = Item>,
+    B: ExactSizeIterator<Item = Item>,
+{
     fn len(&self) -> usize {
-        self.current_simple_selectors.len() +
-            self.rest_of_simple_selectors.len() +
-            self.combinators.len()
+        self.0.len() + self.1.len()
     }
 }
 
-impl<'a, Impl: SelectorImpl> Iterator for SelectorBuilderIter<'a, Impl> {
-    type Item = Component<Impl>;
+impl<A, B, Item> Iterator for ExactChain<A, B>
+where
+    A: ExactSizeIterator<Item = Item>,
+    B: ExactSizeIterator<Item = Item>,
+{
+    type Item = Item;
+
     #[inline(always)]
     fn next(&mut self) -> Option<Self::Item> {
-        if let Some(simple_selector_ref) = self.current_simple_selectors.next() {
-            // Move a simple selector out of this slice iterator.
-            // This is safe because we’ve called SmallVec::set_len(0) above,
-            // so SmallVec::drop won’t drop this simple selector.
-            unsafe { Some(ptr::read(simple_selector_ref)) }
-        } else {
-            self.combinators.next().map(|(combinator, len)| {
-                let (rest, current) = split_from_end(self.rest_of_simple_selectors, len);
-                self.rest_of_simple_selectors = rest;
-                self.current_simple_selectors = current.iter();
-                Component::Combinator(combinator)
-            })
-        }
+        self.0.next().or_else(|| self.1.next())
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        (self.len(), Some(self.len()))
+        let len = self.len();
+        (len, Some(len))
     }
-}
-
-fn split_from_end<T>(s: &[T], at: usize) -> (&[T], &[T]) {
-    s.split_at(s.len() - at)
 }
 
 /// Flags that indicate at which point of parsing a selector are we.
