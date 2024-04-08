@@ -4,8 +4,6 @@
  */
 
 use remote_settings::RemoteSettingsConfig;
-#[cfg(feature = "benchmark_api")]
-pub mod benchmarks;
 mod config;
 mod db;
 mod error;
@@ -28,7 +26,7 @@ pub(crate) type Result<T> = std::result::Result<T, error::Error>;
 pub type SuggestApiResult<T> = std::result::Result<T, error::SuggestApiError>;
 
 /// A query for suggestions to show in the address bar.
-#[derive(Clone, Debug, Default)]
+#[derive(Debug, Default)]
 pub struct SuggestionQuery {
     pub keyword: String,
     pub providers: Vec<SuggestionProvider>,

@@ -3,10 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use super::CodeType;
-use crate::{
-    backend::{Literal, Type},
-    bindings::python::gen_python::AsCodeType,
-};
+use crate::backend::{Literal, Type};
 
 #[derive(Debug)]
 pub struct OptionalCodeType {
@@ -36,9 +33,8 @@ impl CodeType for OptionalCodeType {
 
     fn literal(&self, literal: &Literal) -> String {
         match literal {
-            Literal::None => "None".into(),
-            Literal::Some { inner } => super::PythonCodeOracle.find(&self.inner).literal(inner),
-            _ => panic!("Invalid literal for Optional type: {literal:?}"),
+            Literal::Null => "None".into(),
+            _ => super::PythonCodeOracle.find(&self.inner).literal(literal),
         }
     }
 }
@@ -92,11 +88,7 @@ impl MapCodeType {
 
 impl CodeType for MapCodeType {
     fn type_label(&self) -> String {
-        format!(
-            "dict[{}, {}]",
-            self.key.as_codetype().type_label(),
-            self.value.as_codetype().type_label()
-        )
+        "dict".to_string()
     }
 
     fn canonical_name(&self) -> String {

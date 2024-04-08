@@ -334,7 +334,7 @@ export class RelevancyStore {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                1, // relevancy:uniffi_relevancy_fn_constructor_relevancystore_new
+                0, // relevancy:uniffi_relevancy_fn_constructor_relevancystore_new
                 FfiConverterString.lower(dbpath),
             )
         }
@@ -349,7 +349,7 @@ export class RelevancyStore {
         const liftError = (data) => FfiConverterTypeRelevancyApiError.lift(data);
         const functionCall = () => {
             return UniFFIScaffolding.callAsync(
-                2, // relevancy:uniffi_relevancy_fn_method_relevancystore_calculate_metrics
+                1, // relevancy:uniffi_relevancy_fn_method_relevancystore_calculate_metrics
                 FfiConverterTypeRelevancyStore.lower(this),
             )
         }
@@ -373,7 +373,7 @@ export class RelevancyStore {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                3, // relevancy:uniffi_relevancy_fn_method_relevancystore_ingest
+                2, // relevancy:uniffi_relevancy_fn_method_relevancystore_ingest
                 FfiConverterTypeRelevancyStore.lower(this),
                 FfiConverterSequencestring.lower(topUrls),
             )
@@ -390,7 +390,7 @@ export class RelevancyStore {
         const liftError = (data) => FfiConverterTypeRelevancyApiError.lift(data);
         const functionCall = () => {
             return UniFFIScaffolding.callAsync(
-                4, // relevancy:uniffi_relevancy_fn_method_relevancystore_user_interest_vector
+                3, // relevancy:uniffi_relevancy_fn_method_relevancystore_user_interest_vector
                 FfiConverterTypeRelevancyStore.lower(this),
             )
         }
@@ -416,7 +416,7 @@ export class FfiConverterTypeRelevancyStore extends FfiConverter {
         if (!(ptr instanceof UniFFIPointer)) {
             throw new UniFFITypeError("Object is not a 'RelevancyStore' instance");
         }
-        return ptr.clone();
+        return ptr;
     }
 
     static read(dataStream) {

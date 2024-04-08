@@ -1,6 +1,6 @@
 use crate::argument::ArgumentList;
 use crate::attribute::ExtendedAttributeList;
-use crate::common::{Docstring, Identifier, Parenthesized};
+use crate::common::{Identifier, Parenthesized};
 use crate::types::{AttributedType, ReturnType};
 
 /// Parses namespace members declaration
@@ -13,7 +13,6 @@ ast_types! {
         ///
         /// (( )) means ( ) chars
         Operation(struct OperationNamespaceMember<'a> {
-            docstring: Option<Docstring>,
             attributes: Option<ExtendedAttributeList<'a>>,
             return_type: ReturnType<'a>,
             identifier: Option<Identifier<'a>>,
@@ -22,7 +21,6 @@ ast_types! {
         }),
         /// Parses `[attribute]? readonly attributetype type identifier;`
         Attribute(struct AttributeNamespaceMember<'a> {
-            docstring: Option<Docstring>,
             attributes: Option<ExtendedAttributeList<'a>>,
             readonly: term!(readonly),
             attribute: term!(attribute),

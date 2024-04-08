@@ -360,8 +360,9 @@ impl Dispatcher {
 #[cfg(test)]
 mod test {
     use super::*;
-    use std::sync::atomic::AtomicU8;
-    use std::sync::Mutex;
+    use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
+    use std::sync::{Arc, Mutex};
+    use std::{thread, time::Duration};
 
     fn enable_test_logging() {
         // When testing we want all logs to go to stdout/stderr by default,

@@ -325,7 +325,7 @@ export class Sprite {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                120, // sprites:uniffi_uniffi_sprites_fn_constructor_sprite_new
+                110, // sprites:uniffi_uniffi_sprites_fn_constructor_sprite_new
                 FfiConverterOptionalTypePoint.lower(initialPosition),
             )
         }
@@ -361,7 +361,7 @@ export class Sprite {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                121, // sprites:uniffi_uniffi_sprites_fn_constructor_sprite_new_relative_to
+                111, // sprites:uniffi_uniffi_sprites_fn_constructor_sprite_new_relative_to
                 FfiConverterTypePoint.lower(reference),
                 FfiConverterTypeVector.lower(direction),
             )
@@ -377,7 +377,7 @@ export class Sprite {
         const liftError = null;
         const functionCall = () => {
             return UniFFIScaffolding.callAsync(
-                122, // sprites:uniffi_uniffi_sprites_fn_method_sprite_get_position
+                112, // sprites:uniffi_uniffi_sprites_fn_method_sprite_get_position
                 FfiConverterTypeSprite.lower(this),
             )
         }
@@ -401,7 +401,7 @@ export class Sprite {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                123, // sprites:uniffi_uniffi_sprites_fn_method_sprite_move_by
+                113, // sprites:uniffi_uniffi_sprites_fn_method_sprite_move_by
                 FfiConverterTypeSprite.lower(this),
                 FfiConverterTypeVector.lower(direction),
             )
@@ -426,7 +426,7 @@ export class Sprite {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                124, // sprites:uniffi_uniffi_sprites_fn_method_sprite_move_to
+                114, // sprites:uniffi_uniffi_sprites_fn_method_sprite_move_to
                 FfiConverterTypeSprite.lower(this),
                 FfiConverterTypePoint.lower(position),
             )
@@ -453,7 +453,7 @@ export class FfiConverterTypeSprite extends FfiConverter {
         if (!(ptr instanceof UniFFIPointer)) {
             throw new UniFFITypeError("Object is not a 'Sprite' instance");
         }
-        return ptr.clone();
+        return ptr;
     }
 
     static read(dataStream) {
@@ -678,7 +678,7 @@ export function translate(position,direction) {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                125, // sprites:uniffi_uniffi_sprites_fn_func_translate
+                115, // sprites:uniffi_uniffi_sprites_fn_func_translate
                 FfiConverterTypePoint.lower(position),
                 FfiConverterTypeVector.lower(direction),
             )

@@ -6,25 +6,21 @@ use super::CodeType;
 
 #[derive(Debug)]
 pub struct CallbackInterfaceCodeType {
-    name: String,
+    id: String,
 }
 
 impl CallbackInterfaceCodeType {
-    pub fn new(name: String) -> Self {
-        Self { name }
+    pub fn new(id: String) -> Self {
+        Self { id }
     }
 }
 
 impl CodeType for CallbackInterfaceCodeType {
     fn type_label(&self) -> String {
-        super::SwiftCodeOracle.class_name(&self.name)
+        super::SwiftCodeOracle.class_name(&self.id)
     }
 
     fn canonical_name(&self) -> String {
         format!("CallbackInterface{}", self.type_label())
-    }
-
-    fn initialization_fn(&self) -> Option<String> {
-        Some(format!("uniffiCallbackInit{}", self.name))
     }
 }

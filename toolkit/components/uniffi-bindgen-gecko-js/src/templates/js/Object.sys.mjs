@@ -55,7 +55,7 @@ export class {{ ffi_converter }} extends FfiConverter {
         if (!(ptr instanceof UniFFIPointer)) {
             throw new UniFFITypeError("Object is not a '{{ object.nm() }}' instance");
         }
-        return ptr.clone();
+        return ptr;
     }
 
     static read(dataStream) {

@@ -3,32 +3,25 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use super::CodeType;
-use crate::{interface::ObjectImpl, ComponentInterface};
+use crate::ComponentInterface;
 
 #[derive(Debug)]
 pub struct ObjectCodeType {
-    name: String,
-    imp: ObjectImpl,
+    id: String,
 }
 
 impl ObjectCodeType {
-    pub fn new(name: String, imp: ObjectImpl) -> Self {
-        Self { name, imp }
+    pub fn new(id: String) -> Self {
+        Self { id }
     }
 }
 
 impl CodeType for ObjectCodeType {
     fn type_label(&self, ci: &ComponentInterface) -> String {
-        super::KotlinCodeOracle.class_name(ci, &self.name)
+        super::KotlinCodeOracle.class_name(ci, &self.id)
     }
 
     fn canonical_name(&self) -> String {
-        format!("Type{}", self.name)
-    }
-
-    fn initialization_fn(&self) -> Option<String> {
-        self.imp
-            .has_callback_interface()
-            .then(|| format!("uniffiCallbackInterface{}.register", self.name))
+        format!("Type{}", self.id)
     }
 }
