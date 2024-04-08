@@ -6813,6 +6813,10 @@ static bool NewGlobal(JSContext* cx, unsigned argc, Value* vp) {
     creationOptions.setNewCompartmentAndZone();
   }
 
+  // Ensure the target compartment/zone is kept alive when sameCompartmentAs or
+  // sameZoneAs is used.
+  Rooted<JSObject*> compartmentRoot(cx);
+
   JS::AutoHoldPrincipals principals(cx);
 
   if (args.length() == 1 && args[0].isObject()) {
@@ -6830,15 +6834,16 @@ static bool NewGlobal(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
     if (v.isObject()) {
-      creationOptions.setNewCompartmentInExistingZone(
-          UncheckedUnwrap(&v.toObject()));
+      compartmentRoot = UncheckedUnwrap(&v.toObject());
+      creationOptions.setNewCompartmentInExistingZone(compartmentRoot);
     }
 
     if (!JS_GetProperty(cx, opts, "sameCompartmentAs", &v)) {
       return false;
     }
     if (v.isObject()) {
-      creationOptions.setExistingCompartment(UncheckedUnwrap(&v.toObject()));
+      compartmentRoot = UncheckedUnwrap(&v.toObject());
+      creationOptions.setExistingCompartment(compartmentRoot);
     }
 
     if (!JS_GetProperty(cx, opts, "newCompartment", &v)) {
