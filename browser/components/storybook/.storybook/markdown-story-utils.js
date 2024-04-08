@@ -121,19 +121,21 @@ function getStoryTitle(resourcePath) {
  * @returns Path used to import a component into a story.
  */
 function getImportPath(resourcePath) {
+  // We need to normalize the path for this logic to work cross-platform.
+  let normalizedPath = resourcePath.split(path.sep).join("/");
   // Limiting this to toolkit widgets for now since we don't have any
   // interactive examples in other docs stories.
-  if (!resourcePath.includes("toolkit/content/widgets")) {
+  if (!normalizedPath.includes("toolkit/content/widgets")) {
     return "";
   }
-  let componentName = getComponentName(resourcePath);
+  let componentName = getComponentName(normalizedPath);
   let fileExtension = "";
   if (componentName) {
-    let mjsPath = resourcePath.replace(
+    let mjsPath = normalizedPath.replace(
       "README.stories.md",
       `${componentName}.mjs`
     );
-    let jsPath = resourcePath.replace(
+    let jsPath = normalizedPath.replace(
       "README.stories.md",
       `${componentName}.js`
     );
