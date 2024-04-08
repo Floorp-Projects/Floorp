@@ -198,19 +198,22 @@ export class AutoCompleteChild extends JSWindowActorChild {
   // Store the input to interested autocomplete providers mapping
   #providersByInput = new WeakMap();
 
+  // This functions returns the interested providers that have called
+  // `markAsAutoCompletableField` for the given input and also the hard-coded
+  // autocomplete providers based on input type.
   providersByInput(input) {
-    // This functions returns the interested providers that have called
-    // `markAsAutoCompletableField` for the given input and also the hard-coded
-    // autocomplete providers based on input type.
     const providers = new Set(this.#providersByInput.get(input));
 
-    // The current design is that FormHisotry doesn't call `markAsAutoCompletable`
-    // for every eligilbe input. Instead, when FormFillController receives a focus event,
-    // it would control the <input> if the <input> is eligible to show form history.
-    // Because of the design, we need to ask FormHistory whether to search for autocomplete entries
-    // for every startSearch call
-    // TODO: uncomment after integrating FormHisotry with AutoCompleteChild
-    // providers.add(input.ownerGlobal.windowGlobalChild.getActor("FormHistory"));
+    if (!input.hasBeenTypePassword) {
+      // The current design is that FormHisotry doesn't call `markAsAutoCompletable`
+      // for every eligilbe input. Instead, when FormFillController receives a focus event,
+      // it would control the <input> if the <input> is eligible to show form history.
+      // Because of the design, we need to ask FormHistory whether to search for autocomplete entries
+      // for every startSearch call
+      providers.add(
+        input.ownerGlobal.windowGlobalChild.getActor("FormHistory")
+      );
+    }
     return providers;
   }
 
