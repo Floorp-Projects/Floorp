@@ -1218,7 +1218,9 @@ void ContentAnalysis::IssueResponse(RefPtr<ContentAnalysisResponse>& response) {
 
   LOGD("Content analysis resolving response promise for token %s",
        responseRequestToken.get());
-  nsIContentAnalysisResponse::Action action = response->GetAction();
+  nsIContentAnalysisResponse::Action action;
+  DebugOnly<nsresult> rv = response->GetAction(&action);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
   nsCOMPtr<nsIObserverService> obsServ =
       mozilla::services::GetObserverService();
   if (action == nsIContentAnalysisResponse::Action::eWarn) {
@@ -1380,7 +1382,9 @@ ContentAnalysis::RespondToWarnDialog(const nsACString& aRequestToken,
           return;
         }
         entry->mResponse->ResolveWarnAction(aAllowContent);
-        auto action = entry->mResponse->GetAction();
+        nsIContentAnalysisResponse::Action action;
+        DebugOnly<nsresult> rv = entry->mResponse->GetAction(&action);
+        MOZ_ASSERT(NS_SUCCEEDED(rv));
         if (entry->mCallbackData.AutoAcknowledge()) {
           RefPtr<ContentAnalysisAcknowledgement> acknowledgement =
               new ContentAnalysisAcknowledgement(
