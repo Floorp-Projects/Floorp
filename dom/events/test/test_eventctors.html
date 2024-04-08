@@ -924,6 +924,28 @@ is(e.dataTransfer, null, "InputEvent.dataTransfer should be null in default");
 is(e.inputType, "", "InputEvent.inputType should be empty string in default");
 is(e.isComposing, false, "InputEvent.isComposing should be false in default");
 
+// TextEvent
+if (SpecialPowers.getBoolPref("dom.events.textevent.enabled")) {
+  try {
+    e = new TextEvent();
+    ok(false, "TextEvent should not have constructor");
+  } catch (exp) {
+    ok(true, "TextEvent does not have a constructor");
+  }
+  try {
+    e = new TextEvent("foo");
+    ok(false, "TextEvent should not have constructor");
+  } catch (exp) {
+    ok(true, "TextEvent does not have a constructor taking a event type");
+  }
+  try {
+    e = new TextEvent("foo", {});
+    ok(false, "TextEvent should not have constructor");
+  } catch (exp) {
+    ok(true, "TextEvent does not have a constructor taking event type and a dictionary");
+  }
+}
+
 </script>
 </pre>
 </body>

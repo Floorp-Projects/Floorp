@@ -432,6 +432,9 @@ NS_EVENT_MESSAGE_FIRST_LAST(eGamepadEvent, eGamepadButtonDown,
 NS_EVENT_MESSAGE(eEditorInput)
 NS_EVENT_MESSAGE(eEditorBeforeInput)
 
+// textInput event which is a default action of beforeinput
+NS_EVENT_MESSAGE(eLegacyTextInput)
+
 // selection events
 NS_EVENT_MESSAGE(eSelectStart)
 NS_EVENT_MESSAGE(eSelectionChange)
