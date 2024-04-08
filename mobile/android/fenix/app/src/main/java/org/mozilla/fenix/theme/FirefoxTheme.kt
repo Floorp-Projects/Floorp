@@ -107,6 +107,7 @@ private val darkColorPalette = FirefoxColors(
     layerInfo = PhotonColors.Blue50,
     layerSearch = PhotonColors.DarkGrey80,
     actionPrimary = PhotonColors.Violet60,
+    actionPrimaryDisabled = PhotonColors.Violet60A50,
     actionSecondary = PhotonColors.LightGrey30,
     actionTertiary = PhotonColors.DarkGrey10,
     actionQuarternary = PhotonColors.DarkGrey80,
@@ -132,6 +133,7 @@ private val darkColorPalette = FirefoxColors(
     textOnColorPrimary = PhotonColors.LightGrey05,
     textOnColorSecondary = PhotonColors.LightGrey40,
     textActionPrimary = PhotonColors.LightGrey05,
+    textActionPrimaryDisabled = PhotonColors.LightGrey05A40,
     textActionSecondary = PhotonColors.DarkGrey90,
     textActionTertiary = PhotonColors.LightGrey05,
     textActionTertiaryActive = PhotonColors.LightGrey05,
@@ -185,6 +187,7 @@ private val lightColorPalette = FirefoxColors(
     layerInfo = PhotonColors.Blue50A44,
     layerSearch = PhotonColors.LightGrey30,
     actionPrimary = PhotonColors.Ink20,
+    actionPrimaryDisabled = PhotonColors.Ink20A50,
     actionSecondary = PhotonColors.LightGrey30,
     actionTertiary = PhotonColors.LightGrey40,
     actionQuarternary = PhotonColors.LightGrey10,
@@ -210,6 +213,7 @@ private val lightColorPalette = FirefoxColors(
     textOnColorPrimary = PhotonColors.LightGrey05,
     textOnColorSecondary = PhotonColors.LightGrey40,
     textActionPrimary = PhotonColors.LightGrey05,
+    textActionPrimaryDisabled = PhotonColors.LightGrey05A60,
     textActionSecondary = PhotonColors.DarkGrey90,
     textActionTertiary = PhotonColors.DarkGrey90,
     textActionTertiaryActive = PhotonColors.LightGrey05,
@@ -277,6 +281,7 @@ class FirefoxColors(
     layerInfo: Color,
     layerSearch: Color,
     actionPrimary: Color,
+    actionPrimaryDisabled: Color,
     actionSecondary: Color,
     actionTertiary: Color,
     actionQuarternary: Color,
@@ -302,6 +307,7 @@ class FirefoxColors(
     textOnColorPrimary: Color,
     textOnColorSecondary: Color,
     textActionPrimary: Color,
+    textActionPrimaryDisabled: Color,
     textActionSecondary: Color,
     textActionTertiary: Color,
     textActionTertiaryActive: Color,
@@ -410,6 +416,10 @@ class FirefoxColors(
     var actionPrimary by mutableStateOf(actionPrimary)
         private set
 
+    // Primary disabled button background
+    var actionPrimaryDisabled by mutableStateOf(actionPrimaryDisabled)
+        private set
+
     // Secondary button
     var actionSecondary by mutableStateOf(actionSecondary)
         private set
@@ -510,6 +520,10 @@ class FirefoxColors(
 
     // Action Primary text
     var textActionPrimary by mutableStateOf(textActionPrimary)
+        private set
+
+    // Disabled Action Primary text
+    var textActionPrimaryDisabled by mutableStateOf(textActionPrimaryDisabled)
         private set
 
     // Action Secondary text
@@ -654,6 +668,7 @@ class FirefoxColors(
         layerInfo = other.layerInfo
         layerSearch = other.layerSearch
         actionPrimary = other.actionPrimary
+        actionPrimaryDisabled = other.actionPrimaryDisabled
         actionSecondary = other.actionSecondary
         actionTertiary = other.actionTertiary
         actionQuarternary = other.actionQuarternary
@@ -679,6 +694,7 @@ class FirefoxColors(
         textOnColorPrimary = other.textOnColorPrimary
         textOnColorSecondary = other.textOnColorSecondary
         textActionPrimary = other.textActionPrimary
+        textActionPrimaryDisabled = other.textActionPrimaryDisabled
         textActionSecondary = other.textActionSecondary
         textActionTertiary = other.textActionTertiary
         textActionTertiaryActive = other.textActionTertiaryActive
@@ -736,6 +752,7 @@ class FirefoxColors(
         layerInfo: Color = this.layerInfo,
         layerSearch: Color = this.layerSearch,
         actionPrimary: Color = this.actionPrimary,
+        actionPrimaryDisabled: Color = this.actionPrimaryDisabled,
         actionSecondary: Color = this.actionSecondary,
         actionTertiary: Color = this.actionTertiary,
         actionQuarternary: Color = this.actionQuarternary,
@@ -761,6 +778,7 @@ class FirefoxColors(
         textOnColorPrimary: Color = this.textOnColorPrimary,
         textOnColorSecondary: Color = this.textOnColorSecondary,
         textActionPrimary: Color = this.textActionPrimary,
+        textActionPrimaryDisabled: Color = this.textActionPrimaryDisabled,
         textActionSecondary: Color = this.textActionSecondary,
         textActionTertiary: Color = this.textActionTertiary,
         textActionTertiaryActive: Color = this.textActionTertiaryActive,
@@ -812,6 +830,7 @@ class FirefoxColors(
         layerInfo = layerInfo,
         layerSearch = layerSearch,
         actionPrimary = actionPrimary,
+        actionPrimaryDisabled = actionPrimaryDisabled,
         actionSecondary = actionSecondary,
         actionTertiary = actionTertiary,
         actionQuarternary = actionQuarternary,
@@ -837,6 +856,7 @@ class FirefoxColors(
         textOnColorPrimary = textOnColorPrimary,
         textOnColorSecondary = textOnColorSecondary,
         textActionPrimary = textActionPrimary,
+        textActionPrimaryDisabled = textActionPrimaryDisabled,
         textActionSecondary = textActionSecondary,
         textActionTertiary = textActionTertiary,
         textActionTertiaryActive = textActionTertiaryActive,

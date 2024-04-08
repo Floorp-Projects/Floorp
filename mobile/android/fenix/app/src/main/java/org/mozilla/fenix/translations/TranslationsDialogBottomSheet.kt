@@ -51,7 +51,6 @@ import org.mozilla.fenix.compose.LinkTextState
 import org.mozilla.fenix.compose.MenuItem
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.compose.button.PrimaryButton
-import org.mozilla.fenix.compose.button.TertiaryButton
 import org.mozilla.fenix.compose.button.TextButton
 import org.mozilla.fenix.shopping.ui.ReviewQualityCheckInfoCard
 import org.mozilla.fenix.shopping.ui.ReviewQualityCheckInfoType
@@ -718,7 +717,7 @@ private fun TranslationsDialogActionButtons(
             }
 
             else -> {
-                TertiaryButton(
+                PrimaryButton(
                     text = positiveButtonText,
                     enabled = false,
                     modifier = Modifier.wrapContentSize(),
