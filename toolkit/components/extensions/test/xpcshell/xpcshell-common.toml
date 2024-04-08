@@ -361,7 +361,6 @@ skip-if = ["true"] # This test no longer tests what it is meant to test.
 skip-if = [
   "appname == 'thunderbird'",
   "os == 'android'", # Bug 1350559
-  "condprof", # Bug 1820569 expected failure hit due to cached schema data
 ]
 
 ["test_ext_permissions_api.js"]
@@ -590,7 +589,6 @@ skip-if = [
 ["test_ext_webRequest_auth.js"]
 skip-if = [
    "os == 'android' && debug",
-   "condprof", # Bug 1820569 expected failure hit due to cached schema data
 ]
 
 ["test_ext_webRequest_cached.js"]
@@ -622,7 +620,6 @@ skip-if = ["tsan"] # Bug 1683730
 ["test_ext_webRequest_permission.js"]
 skip-if = [
   "os == 'android' && debug",
-  "condprof", # Bug 1820569 expected failure hit due to cached schema data
 ]
 
 ["test_ext_webRequest_redirectProperty.js"]
