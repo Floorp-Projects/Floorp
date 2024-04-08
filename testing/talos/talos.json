@@ -19,7 +19,6 @@
         "tabpaint",
         "cpstartup",
         "startup_about_home_paint",
-        "pdfpaint",
         "cross_origin_pageload",
         "startup_about_home_paint_cached"
       ]
@@ -121,6 +120,9 @@
     "realworld-webextensions": {
       "tests": ["startup_about_home_paint_realworld_webextensions"],
       "webextensions_zip": "webextensions.zip"
+    },
+    "pdfpaint": {
+      "tests": ["pdfpaint"]
     }
   }
 }
