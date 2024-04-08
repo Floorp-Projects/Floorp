@@ -463,7 +463,6 @@ export class ExtensionShortcuts {
         let win = event.target.ownerGlobal;
         action.triggerAction(win);
       } else {
-        this.extension.tabManager.addActiveTabPermission();
         this.onCommand(name);
       }
     });

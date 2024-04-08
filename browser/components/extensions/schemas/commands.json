@@ -104,6 +104,12 @@
           {
             "name": "command",
             "type": "string"
+          },
+          {
+            "name": "tab",
+            "$ref": "tags.Tab",
+            "optional": true,
+            "description": "Details of the $(ref:tabs.Tab) where the command was activated."
           }
         ]
       },
