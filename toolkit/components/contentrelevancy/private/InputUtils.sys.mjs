@@ -5,7 +5,6 @@
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  Dedupe: "resource://activity-stream/common/Dedupe.sys.mjs",
   NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
 });
 
@@ -94,9 +93,26 @@ export async function getFrecentRecentCombinedUrls(maxUrls) {
   if (urls.length < maxUrls) {
     const n = Math.round((maxUrls - urls.length) * 1.2); // Over-fetch for deduping
     const recentUrls = await getMostRecentUrls(n);
-    const deduper = new lazy.Dedupe();
-    urls = deduper.group(urls, recentUrls).flat().slice(0, maxUrls);
+    urls = dedupUrls(urls, recentUrls).slice(0, maxUrls);
   }
 
   return urls;
+}
+
+/**
+ * A helper to deduplicate items from any number of grouped URLs.
+ *
+ * Note:
+ *   - Currently, all the elements (URLs) of the input arrays are treated as keys.
+ *   - It doesn't assume the uniqueness within the group, therefore, in-group
+ *     duplicates will be deduped as well.
+ *
+ * @param {Array} groups
+ *   Contains an arbitrary number of arrays of URLs.
+ * @returns {Array}
+ *   An array of unique URLs from the input groups.
+ */
+function dedupUrls(...groups) {
+  const uniques = new Set(groups.flat());
+  return [...uniques];
 }
