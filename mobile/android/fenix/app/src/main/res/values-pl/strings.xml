@@ -186,11 +186,13 @@
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Zatrzymaj</string>
     <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_add_ons">Dodatki</string>
+    <string name="browser_menu_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Dodatki</string>
+    <!-- Browser menu button that opens the extensions manager -->
+    <string name="browser_menu_extensions">Rozszerzenia</string>
     <!-- Browser menu button that opens account settings -->
     <string name="browser_menu_account_settings">Informacje o koncie</string>
     <!-- Text displayed when there are no add-ons to be shown -->
-    <string name="no_add_ons">Nie ma żadnych dodatków</string>
+    <string name="no_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Nie ma żadnych dodatków</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Pomoc</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -206,7 +208,7 @@
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">Dodaj do ekranu głównego</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
-    <string name="browser_menu_install_on_homescreen">Zainstaluj</string>
+    <string name="browser_menu_install_on_homescreen" moz:removedIn="126" tools:ignore="UnusedResources">Zainstaluj</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">Synchronizuj ponownie</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -244,6 +246,15 @@
 
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">Dostosuj stronę startową</string>
+
+    <!-- Browser menu label to sign in to sync on the device using Mozilla accounts -->
+    <string name="browser_menu_sign_in" tools:ignore="UnusedResources">Zaloguj się</string>
+    <!-- Browser menu caption label for the "Sign in" browser menu item described in browser_menu_sign_in -->
+    <string name="browser_menu_sign_in_caption" tools:ignore="UnusedResources">Synchronizuj hasła, karty i nie tylko</string>
+
+    <!-- Extensions management fragment -->
+    <!-- Text displayed when there are no extensions to be shown -->
+    <string name="extensions_management_no_extensions">Nie ma żadnych rozszerzeń</string>
 
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
@@ -599,10 +610,14 @@
     <string name="quit_application">Wyłączanie aplikacji, aby zastosować zmiany…</string>
 
     <!-- Preference for add_ons -->
-    <string name="preferences_addons">Dodatki</string>
+    <string name="preferences_addons" moz:removedIn="126" tools:ignore="UnusedResources">Dodatki</string>
 
+    <!-- Preference for extensions -->
+    <string name="preferences_extensions">Rozszerzenia</string>
     <!-- Preference for installing a local add-on -->
-    <string name="preferences_install_local_addon">Zainstaluj dodatek z pliku</string>
+    <string name="preferences_install_local_addon" moz:removedIn="126" tools:ignore="UnusedResources">Zainstaluj dodatek z pliku</string>
+    <!-- Preference for installing a local extension -->
+    <string name="preferences_install_local_extension">Zainstaluj rozszerzenie z pliku</string>
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Powiadomienia</string>
 
@@ -613,7 +628,9 @@
 
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
-    <string name="preferences_customize_amo_collection">Inna kolekcja dodatków</string>
+    <string name="preferences_customize_amo_collection" moz:removedIn="126" tools:ignore="UnusedResources">Inna kolekcja dodatków</string>
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_extension_collection">Inna kolekcja rozszerzeń</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">OK</string>
     <!-- Button caption to abort the add-on collection configuration -->
@@ -624,7 +641,10 @@
     <!-- Hint displayed on input field for custom collection user ID-->
     <string name="customize_addon_collection_user_hint">Właściciel kolekcji (identyfikator użytkownika)</string>
     <!-- Toast shown after confirming the custom add-on collection configuration -->
-    <string name="toast_customize_addon_collection_done">Zmieniono kolekcję dodatków. Wyłączanie aplikacji, aby zastosować zmiany…</string>
+    <string name="toast_customize_addon_collection_done" moz:removedIn="126" tools:ignore="UnusedResources">Zmieniono kolekcję dodatków. Wyłączanie aplikacji, aby zastosować zmiany…</string>
+
+    <!-- Toast shown after confirming the custom extension collection configuration -->
+    <string name="toast_customize_extension_collection_done">Zmieniono kolekcję rozszerzeń. Wyłączanie aplikacji, aby zastosować zmiany…</string>
 
     <!-- Customize Home -->
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
@@ -679,22 +699,38 @@
 
     <!-- Add-ons general availability nimbus message-->
     <!-- Title of the Nimbus message for add-ons general availability-->
-    <string name="addon_ga_message_title" tools:ignore="UnusedResources">Dostępne są nowe dodatki</string>
+    <string name="addon_ga_message_title" moz:removedIn="126" tools:ignore="UnusedResources">Dostępne są nowe dodatki</string>
+    <!-- Title of the Nimbus message for extension general availability-->
+    <string name="addon_ga_message_title_2" tools:ignore="UnusedResources">Dostępne są nowe rozszerzenia</string>
     <!-- Body of the Nimbus message for add-ons general availability. 'Firefox' intentionally hardcoded here-->
     <string name="addon_ga_message_body" tools:ignore="UnusedResources">Wypróbuj ponad 100 nowych rozszerzeń, dzięki którym możesz dostosować Firefoksa do swoich potrzeb.</string>
     <!-- Button text of the Nimbus message for add-ons general availability. -->
-    <string name="addon_ga_message_button" tools:ignore="UnusedResources">Przeglądaj dodatki</string>
+    <string name="addon_ga_message_button" moz:removedIn="126" tools:ignore="UnusedResources">Przeglądaj dodatki</string>
 
-    <!-- Add-on process crash dialog to user -->
+    <!-- Button text of the Nimbus message for extensions general availability. -->
+    <string name="addon_ga_message_button_2" tools:ignore="UnusedResources">Przeglądaj rozszerzenia</string>
+
+    <!-- Extension process crash dialog to user -->
     <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
-    <string name="addon_process_crash_dialog_title" tools:ignore="UnusedResources">Dodatki zostały tymczasowo wyłączone</string>
+    <string name="addon_process_crash_dialog_title" moz:removedIn="126" tools:ignore="UnusedResources">Dodatki zostały tymczasowo wyłączone</string>
 
+    <!-- Title of the extension crash dialog shown to the user when enough errors have occurred with extensions and they need to be temporarily disabled -->
+    <string name="extension_process_crash_dialog_title">Rozszerzenia zostały tymczasowo wyłączone</string>
     <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
-    <string name="addon_process_crash_dialog_message" tools:ignore="UnusedResources">Co najmniej jeden dodatek przestał działać, przez co system stał się niestabilny. %1$s bezskutecznie próbował ponownie włączyć dodatki.\n\nDodatki nie zostaną ponownie włączone w czasie tej sesji.\n\nUsunięcie lub wyłączenie dodatków może naprawić ten problem.</string>
+    <string name="addon_process_crash_dialog_message" moz:removedIn="126" tools:ignore="UnusedResources">Co najmniej jeden dodatek przestał działać, przez co system stał się niestabilny. %1$s bezskutecznie próbował ponownie włączyć dodatki.\n\nDodatki nie zostaną ponownie włączone w czasie tej sesji.\n\nUsunięcie lub wyłączenie dodatków może naprawić ten problem.</string>
+    <!-- This is a message shown to the user when too many errors have occurred with the extensions process and they have been disabled.
+    The user can decide if they would like to continue trying to start extensions or if they'd rather continue without them.
+    The first parameter is the application name. -->
+    <string name="extension_process_crash_dialog_message">Co najmniej jedno rozszerzenie przestało działać, przez co system stał się niestabilny. %1$s bezskutecznie próbował ponownie włączyć rozszerzenia.\n\nRozszerzenia nie zostaną ponownie włączone w czasie tej sesji.\n\nUsunięcie lub wyłączenie rozszerzeń może naprawić ten problem.</string>
     <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
-    <string name="addon_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">Spróbuj ponownie włączyć dodatki</string>
+    <string name="addon_process_crash_dialog_retry_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Spróbuj ponownie włączyć dodatki</string>
+    <!-- Button text on the extension crash dialog to prompt the user to try restarting the extensions but the dialog will reappear if it is unsuccessful again -->
+    <string name="extension_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">Spróbuj ponownie włączyć rozszerzenia</string>
     <!-- The user will continue with all add-ons disabled -->
-    <string name="addon_process_crash_dialog_disable_addons_button_text" tools:ignore="UnusedResources">Kontynuuj z wyłączonymi dodatkami</string>
+    <string name="addon_process_crash_dialog_disable_addons_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Kontynuuj z wyłączonymi dodatkami</string>
+
+    <!-- Button text on the extension crash dialog to prompt the user to continue with all extensions disabled. -->
+    <string name="extension_process_crash_dialog_disable_extensions_button_text">Kontynuuj z wyłączonymi rozszerzeniami</string>
 
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->
@@ -2442,6 +2478,8 @@
     <string name="download_language_file_dialog_title">Na pewno pobrać w trybie oszczędzania danych (%1$s)?</string>
     <!-- Additional information for the data saving mode warning dialog used by the translations feature. This text explains the reason a download is required for a translation. -->
     <string name="download_language_file_dialog_message_all_languages">Pobieramy częściowe języki do pamięci podręcznej urządzenia, aby zachować prywatność tłumaczeń.</string>
+    <!-- Additional information for the data saving mode warning dialog used by the translations feature. This text explains the reason a download is required for a translation without mentioning the cache. -->
+    <string name="download_language_file_dialog_message_all_languages_no_cache">Pobieramy częściowe języki, aby zachować prywatność tłumaczeń.</string>
     <!-- Checkbox label text on the data saving mode warning dialog used by the translations feature. This checkbox allows users to ignore the data usage warnings. -->
     <string name="download_language_file_dialog_checkbox_text">Pobieraj także w trybie oszczędzania danych</string>
     <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to confirm they wish to continue and download the language file. -->

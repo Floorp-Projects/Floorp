@@ -642,7 +642,7 @@
     <string name="toast_customize_addon_collection_done" moz:removedIn="126" tools:ignore="UnusedResources">Coleção de extras modificada. A sair da aplicação para aplicar alterações…</string>
 
     <!-- Toast shown after confirming the custom extension collection configuration -->
-    <string name="toast_customize_extension_collection_done">Coleção de extensões modificada. A encerrar a aplicação para aplicar as alterações…</string>
+    <string name="toast_customize_extension_collection_done">Coleção de extensões modificada. A fechar a aplicação para aplicar as alterações…</string>
 
     <!-- Customize Home -->
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
@@ -719,7 +719,7 @@
     <!-- This is a message shown to the user when too many errors have occurred with the extensions process and they have been disabled.
     The user can decide if they would like to continue trying to start extensions or if they'd rather continue without them.
     The first parameter is the application name. -->
-    <string name="extension_process_crash_dialog_message">Uma ou mais extensões pararam de funcionar, tornando o sistema instável. %1$s tentou sem sucesso reiniciar a(s) extensão(ões).\n\nAs extensões não serão reiniciadas durante a sessão atual.\n\nRemover ou desativar as extensões pode resolver este problema.</string>
+    <string name="extension_process_crash_dialog_message">Uma ou mais extensões deixaram de funcionar, tornando o sistema instável. %1$s tentou reiniciar a(s) extensão(ões) sem sucesso.\n\nAs extensões não serão reiniciadas durante a sessão atual.\n\nRemover ou desativar as extensões poderá corrigir este problema.</string>
     <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
     <string name="addon_process_crash_dialog_retry_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Experimente reiniciar as extensões</string>
     <!-- Button text on the extension crash dialog to prompt the user to try restarting the extensions but the dialog will reappear if it is unsuccessful again -->

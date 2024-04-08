@@ -185,11 +185,13 @@
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Կանգնեցնել</string>
     <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_add_ons">Հավելումներ</string>
+    <string name="browser_menu_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Հավելումներ</string>
+    <!-- Browser menu button that opens the extensions manager -->
+    <string name="browser_menu_extensions">Ընդլայնումներ</string>
     <!-- Browser menu button that opens account settings -->
     <string name="browser_menu_account_settings">Հաշվի տվյալներ</string>
     <!-- Text displayed when there are no add-ons to be shown -->
-    <string name="no_add_ons">Հավելումներ չկան</string>
+    <string name="no_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Հավելումներ չկան</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Օգնություն</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -242,6 +244,15 @@
 
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">Հարմարեցնել տնայինը</string>
+
+    <!-- Browser menu label to sign in to sync on the device using Mozilla accounts -->
+    <string name="browser_menu_sign_in" tools:ignore="UnusedResources">Մուտք գործել</string>
+    <!-- Browser menu caption label for the "Sign in" browser menu item described in browser_menu_sign_in -->
+    <string name="browser_menu_sign_in_caption" tools:ignore="UnusedResources">Համաժամացրեք գաղտնաբառերը, ներդիրները և ավելին</string>
+
+    <!-- Extensions management fragment -->
+    <!-- Text displayed when there are no extensions to be shown -->
+    <string name="extensions_management_no_extensions">Այստեղ ընդլայնումներ չկան</string>
 
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
@@ -594,10 +605,14 @@
     <string name="quit_application">Փոփոխությունները գործադրելու համար դուրս է գալիս հավելվածից…</string>
 
     <!-- Preference for add_ons -->
-    <string name="preferences_addons">Հավելումներ</string>
+    <string name="preferences_addons" moz:removedIn="126" tools:ignore="UnusedResources">Հավելումներ</string>
 
+    <!-- Preference for extensions -->
+    <string name="preferences_extensions">Ընդլայնումներ</string>
     <!-- Preference for installing a local add-on -->
-    <string name="preferences_install_local_addon">Տեղադրեք հավելումը ֆայլից</string>
+    <string name="preferences_install_local_addon" moz:removedIn="126" tools:ignore="UnusedResources">Տեղադրեք հավելումը ֆայլից</string>
+    <!-- Preference for installing a local extension -->
+    <string name="preferences_install_local_extension">Տեղադրել ընդլայնումը ֆայլից</string>
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Ծանուցումներ</string>
 
@@ -608,7 +623,9 @@
 
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
-    <string name="preferences_customize_amo_collection">Հավելումների հատուկ հավաքածու</string>
+    <string name="preferences_customize_amo_collection" moz:removedIn="126" tools:ignore="UnusedResources">Հավելումների հատուկ հավաքածու</string>
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_extension_collection">Հարմարեցված ընդլայնման հավաքածու</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">Լավ</string>
     <!-- Button caption to abort the add-on collection configuration -->
@@ -618,7 +635,10 @@
     <!-- Hint displayed on input field for custom collection user ID-->
     <string name="customize_addon_collection_user_hint">Հավաքածուի սեփականատեր (օգտվողի ID)</string>
     <!-- Toast shown after confirming the custom add-on collection configuration -->
-    <string name="toast_customize_addon_collection_done">Հավելումների հավաքածուն փոփոխվել է: Հավելվածը փակելիս փոփոխությունները կգործադրվեն:</string>
+    <string name="toast_customize_addon_collection_done" moz:removedIn="126" tools:ignore="UnusedResources">Հավելումների հավաքածուն փոփոխվել է: Հավելվածը փակելիս փոփոխությունները կգործադրվեն:</string>
+
+    <!-- Toast shown after confirming the custom extension collection configuration -->
+    <string name="toast_customize_extension_collection_done">Ընդլայնման հավաքածուն փոփոխվել է: Հավելվածը փակելիս փոփոխությունները կգործադրվեն:</string>
 
     <!-- Customize Home -->
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
@@ -673,21 +693,37 @@
 
     <!-- Add-ons general availability nimbus message-->
     <!-- Title of the Nimbus message for add-ons general availability-->
-    <string name="addon_ga_message_title" tools:ignore="UnusedResources">Այժմ հասանելի են նոր հավելումներ</string>
+    <string name="addon_ga_message_title" moz:removedIn="126" tools:ignore="UnusedResources">Այժմ հասանելի են նոր հավելումներ</string>
+    <!-- Title of the Nimbus message for extension general availability-->
+    <string name="addon_ga_message_title_2" tools:ignore="UnusedResources">Այժմ հասանելի են նոր ընդլայնումներ</string>
     <!-- Body of the Nimbus message for add-ons general availability. 'Firefox' intentionally hardcoded here-->
     <string name="addon_ga_message_body" tools:ignore="UnusedResources">Ստուգեք 100+ նոր ընդլայնումներ, որոնք թույլ են տալիս Firefox-ը դարձնել ձեր սեփականը:</string>
     <!-- Button text of the Nimbus message for add-ons general availability. -->
-    <string name="addon_ga_message_button" tools:ignore="UnusedResources">Ուսումնասիրեք հավելումները</string>
+    <string name="addon_ga_message_button" moz:removedIn="126" tools:ignore="UnusedResources">Ուսումնասիրեք հավելումները</string>
 
-    <!-- Add-on process crash dialog to user -->
+    <!-- Button text of the Nimbus message for extensions general availability. -->
+    <string name="addon_ga_message_button_2" tools:ignore="UnusedResources">Ուսումնասիրեք ընդլայնումները</string>
+
+    <!-- Extension process crash dialog to user -->
     <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
-    <string name="addon_process_crash_dialog_title" tools:ignore="UnusedResources">Հավելումները ժամանակավորապես անջատված են</string>
+    <string name="addon_process_crash_dialog_title" moz:removedIn="126" tools:ignore="UnusedResources">Հավելումները ժամանակավորապես անջատված են</string>
+    <!-- Title of the extension crash dialog shown to the user when enough errors have occurred with extensions and they need to be temporarily disabled -->
+    <string name="extension_process_crash_dialog_title">Ընդլայնումները ժամանակավորապես անջատված են</string>
     <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
-    <string name="addon_process_crash_dialog_message" tools:ignore="UnusedResources">Մեկ կամ մի քանի հավելում դադարել են գործել: %1$s-ն անհաջող փորձեց վերամեկնարկել հավելում(ներ)ը:\n\nՀավելումները չեն վերամեկնարկի ընթացիկ աշխատաշրջանում:\n\nՀավելումների հեռացումը կամ անջատումը կարող է ուղղել այս խնդիրը:</string>
+    <string name="addon_process_crash_dialog_message" moz:removedIn="126" tools:ignore="UnusedResources">Մեկ կամ մի քանի հավելում դադարել են գործել: %1$s-ն անհաջող փորձեց վերամեկնարկել հավելում(ներ)ը:\n\nՀավելումները չեն վերամեկնարկի ընթացիկ աշխատաշրջանում:\n\nՀավելումների հեռացումը կամ անջատումը կարող է ուղղել այս խնդիրը:</string>
+    <!-- This is a message shown to the user when too many errors have occurred with the extensions process and they have been disabled.
+    The user can decide if they would like to continue trying to start extensions or if they'd rather continue without them.
+    The first parameter is the application name. -->
+    <string name="extension_process_crash_dialog_message">Մեկ կամ մի քանի ընդլայնում դադարել են գործել՝ ձեր համակարգը անկայուն դարձնելով: %1$s-ն անհաջող փորձեց վերամեկնարկել ընդլայնում(ներ)ը:\n\nԸնդլայնումները չեն վերամեկնարկի ընթացիկ աշխատաշրջանում:\n\nԸնդլայնումների հեռացումը կամ անջատումը կարող է ուղղել այս խնդիրը:</string>
     <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
-    <string name="addon_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">Փորձեք վերագործարկել հավելումները</string>
+    <string name="addon_process_crash_dialog_retry_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Փորձեք վերագործարկել հավելումները</string>
+    <!-- Button text on the extension crash dialog to prompt the user to try restarting the extensions but the dialog will reappear if it is unsuccessful again -->
+    <string name="extension_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">Փորձեք վերամեկնարկել ընդլայնումները</string>
     <!-- The user will continue with all add-ons disabled -->
-    <string name="addon_process_crash_dialog_disable_addons_button_text" tools:ignore="UnusedResources">Շարունակեք հավելումներն անջատված</string>
+    <string name="addon_process_crash_dialog_disable_addons_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Շարունակեք հավելումներն անջատված</string>
+
+    <!-- Button text on the extension crash dialog to prompt the user to continue with all extensions disabled. -->
+    <string name="extension_process_crash_dialog_disable_extensions_button_text">Շարունակել՝ անջատված ընդլայնումներով</string>
 
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->
@@ -2583,6 +2619,8 @@
     <string name="download_language_file_dialog_title">Ներբեռնե՞լ, քանի դեռ տվյալների պահպանման կերպում է (%1$s):</string>
     <!-- Additional information for the data saving mode warning dialog used by the translations feature. This text explains the reason a download is required for a translation. -->
     <string name="download_language_file_dialog_message_all_languages">Մենք ներբեռնում ենք մասնակի լեզուներ ձեր շտեմում՝ թարգմանությունները մասնավոր պահելու համար:</string>
+    <!-- Additional information for the data saving mode warning dialog used by the translations feature. This text explains the reason a download is required for a translation without mentioning the cache. -->
+    <string name="download_language_file_dialog_message_all_languages_no_cache">Մենք ներբեռնում ենք մասնակի լեզուներ՝ թարգմանությունները գաղտնի պահելու համար:</string>
     <!-- Checkbox label text on the data saving mode warning dialog used by the translations feature. This checkbox allows users to ignore the data usage warnings. -->
     <string name="download_language_file_dialog_checkbox_text">Միշտ ներբեռնել տվյալների պահպանման կերպում</string>
     <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to confirm they wish to continue and download the language file. -->
