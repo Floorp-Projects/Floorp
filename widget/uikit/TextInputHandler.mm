@@ -10,6 +10,7 @@
 
 #include "mozilla/EventForwards.h"
 #include "mozilla/Logging.h"
+#include "mozilla/MacStringHelpers.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEvents.h"
@@ -22,21 +23,6 @@
 mozilla::LazyLogModule gIMELog("TextInputHandler");
 
 namespace mozilla::widget {
-
-static void GetStringForNSString(const NSString* aSrc, nsAString& aDist) {
-  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
-
-  if (!aSrc) {
-    aDist.Truncate();
-    return;
-  }
-
-  aDist.SetLength([aSrc length]);
-  [aSrc getCharacters:reinterpret_cast<unichar*>(aDist.BeginWriting())
-                range:NSMakeRange(0, [aSrc length])];
-
-  NS_OBJC_END_TRY_IGNORE_BLOCK;
-}
 
 NS_IMPL_ISUPPORTS(TextInputHandler, TextEventDispatcherListener,
                   nsISupportsWeakReference)
@@ -63,7 +49,7 @@ void TextInputHandler::WillDispatchKeyboardEvent(
 
 bool TextInputHandler::InsertText(NSString* aText) {
   nsString str;
-  GetStringForNSString(aText, str);
+  CopyNSStringToXPCOMString(aText, str);
 
   MOZ_LOG(gIMELog, LogLevel::Info,
           ("%p TextInputHandler::InsertText(aText=%s)", this,
