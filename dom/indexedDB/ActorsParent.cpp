@@ -3637,7 +3637,7 @@ class ObjectStoreAddOrPutRequestOp final : public NormalTransactionOp {
   };
   class SCInputStream;
 
-  const ObjectStoreAddPutParams mParams;
+  ObjectStoreAddPutParams mParams;
   Maybe<UniqueIndexTable> mUniqueIndexTable;
 
   // This must be non-const so that we can update the mNextAutoIncrementId field
@@ -6453,9 +6453,9 @@ class DeserializeIndexValueHelper final : public Runnable {
       value.setUndefined();
 
       ErrorResult rv;
-      IDBObjectStore::AppendIndexUpdateInfo(mIndexID, mKeyPath, mMultiEntry,
-                                            mLocale, jsapi.cx(), value,
-                                            &mUpdateInfoArray, &rv);
+      IDBObjectStore::AppendIndexUpdateInfo(
+          mIndexID, mKeyPath, mMultiEntry, &mUpdateInfoArray,
+          /* aAutoIncrementedObjectStoreKeyPath */ VoidString(), &rv);
       return rv.Failed() ? rv.StealNSResult() : NS_OK;
     }
 #endif
@@ -6493,9 +6493,9 @@ class DeserializeIndexValueHelper final : public Runnable {
            [this](const nsresult rv) { OperationCompleted(rv); });
 
     ErrorResult errorResult;
-    IDBObjectStore::AppendIndexUpdateInfo(mIndexID, mKeyPath, mMultiEntry,
-                                          mLocale, cx, value, &mUpdateInfoArray,
-                                          &errorResult);
+    IDBObjectStore::AppendIndexUpdateInfo(
+        mIndexID, mKeyPath, mMultiEntry, mLocale, cx, value, &mUpdateInfoArray,
+        /* aAutoIncrementedObjectStoreKeyPath */ VoidString(), &errorResult);
     QM_TRY(OkIf(!errorResult.Failed()), NS_OK,
            ([this, &errorResult](const NotOk) {
              OperationCompleted(errorResult.StealNSResult());
@@ -18653,6 +18653,11 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
         }
 
         QM_TRY(key.SetFromInteger(autoIncrementNum));
+
+        // Update index keys if primary key is preserved in child.
+        for (auto& updateInfo : mParams.indexUpdateInfos()) {
+          updateInfo.value().MaybeUpdateAutoIncrementKey(autoIncrementNum);
+        }
       } else if (key.IsFloat()) {
         double numericKey = key.ToFloat();
         numericKey = std::min(numericKey, double(1LL << 53));

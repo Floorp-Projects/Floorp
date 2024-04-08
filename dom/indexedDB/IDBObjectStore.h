@@ -48,6 +48,7 @@ class IDBObjectStore final : public nsISupports, public nsWrapperCache {
   using KeyPath = indexedDB::KeyPath;
   using ObjectStoreSpec = indexedDB::ObjectStoreSpec;
   using StructuredCloneReadInfoChild = indexedDB::StructuredCloneReadInfoChild;
+  using VoidOrObjectStoreKeyPathString = nsAString;
 
   // For AddOrPut() and DeleteInternal().
   // TODO Consider removing this, and making the functions public?
@@ -98,11 +99,12 @@ class IDBObjectStore final : public nsISupports, public nsWrapperCache {
   [[nodiscard]] static RefPtr<IDBObjectStore> Create(
       SafeRefPtr<IDBTransaction> aTransaction, ObjectStoreSpec& aSpec);
 
-  static void AppendIndexUpdateInfo(int64_t aIndexID, const KeyPath& aKeyPath,
-                                    bool aMultiEntry, const nsCString& aLocale,
-                                    JSContext* aCx, JS::Handle<JS::Value> aVal,
-                                    nsTArray<IndexUpdateInfo>* aUpdateInfoArray,
-                                    ErrorResult* aRv);
+  static void AppendIndexUpdateInfo(
+      int64_t aIndexID, const KeyPath& aKeyPath, bool aMultiEntry,
+      const nsCString& aLocale, JSContext* aCx, JS::Handle<JS::Value> aVal,
+      nsTArray<IndexUpdateInfo>* aUpdateInfoArray,
+      const VoidOrObjectStoreKeyPathString& aAutoIncrementedObjectStoreKeyPath,
+      ErrorResult* aRv);
 
   static void ClearCloneReadInfo(
       indexedDB::StructuredCloneReadInfoChild& aReadInfo);

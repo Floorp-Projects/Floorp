@@ -31,10 +31,12 @@ struct ParamTraits<mozilla::dom::indexedDB::Key> {
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, aParam.mBuffer);
+    WriteParam(aWriter, aParam.mAutoIncrementKeyOffsets);
   }
 
   static bool Read(MessageReader* aReader, paramType* aResult) {
-    return ReadParam(aReader, &aResult->mBuffer);
+    return ReadParam(aReader, &aResult->mBuffer) &&
+           ReadParam(aReader, &aResult->mAutoIncrementKeyOffsets);
   }
 };
 

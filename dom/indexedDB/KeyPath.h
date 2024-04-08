@@ -45,6 +45,8 @@ class KeyPath {
   KeyPath() : mType(KeyPathType::NonExistent) { MOZ_COUNT_CTOR(KeyPath); }
 
  public:
+  using VoidOrObjectStoreKeyPathString = nsAString;
+
   enum class KeyPathType { NonExistent, String, Array, EndGuard };
 
   void SetType(KeyPathType aType);
@@ -76,7 +78,10 @@ class KeyPath {
   static Result<KeyPath, nsresult> Parse(
       const Nullable<OwningStringOrStringSequence>& aValue);
 
-  nsresult ExtractKey(JSContext* aCx, const JS::Value& aValue, Key& aKey) const;
+  nsresult ExtractKey(
+      JSContext* aCx, const JS::Value& aValue, Key& aKey,
+      const VoidOrObjectStoreKeyPathString& aAutoIncrementedObjectStoreKeyPath =
+          VoidString()) const;
 
   nsresult ExtractKeyAsJSVal(JSContext* aCx, const JS::Value& aValue,
                              JS::Value* aOutVal) const;
