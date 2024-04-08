@@ -6580,8 +6580,8 @@ void nsWindow::PauseCompositorFlickering() {
 
   CompositorBridgeChild* remoteRenderer = GetRemoteRenderer();
   if (remoteRenderer) {
-    remoteRenderer->SendPause();
     mCompositorState = COMPOSITOR_PAUSED_FLICKERING;
+    remoteRenderer->SendPause();
     mCompositorPauseTimeoutID = (int)g_timeout_add(
         COMPOSITOR_PAUSE_TIMEOUT,
         [](void* data) -> gint {
@@ -9968,6 +9968,12 @@ bool nsWindow::SetEGLNativeWindowSize(
     const LayoutDeviceIntSize& aEGLWindowSize) {
   if (!GdkIsWaylandDisplay() || !mIsMapped) {
     return true;
+  }
+
+  if (mCompositorState == COMPOSITOR_PAUSED_FLICKERING) {
+    LOG("nsWindow::SetEGLNativeWindowSize() return, "
+        "COMPOSITOR_PAUSED_FLICKERING is set");
+    return false;
   }
 
   gint scale = GdkCeiledScaleFactor();
