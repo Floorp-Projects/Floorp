@@ -9121,23 +9121,20 @@ pub extern "C" fn Servo_GetSelectorWarnings(
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_GetRuleBodyTextOffsets(
+pub extern "C" fn Servo_GetRuleBodyText(
     initial_text: &nsACString,
-    result_start_offset: &mut u32,
-    result_end_offset: &mut u32,
-) -> bool {
+    ret_val: &mut nsACString,
+) {
     let css_text = unsafe { initial_text.as_str_unchecked() };
     let mut input = ParserInput::new(&css_text);
     let mut input = Parser::new(&mut input);
 
-    let mut start_offset = 0;
     let mut found_start = false;
 
     // Search forward for the opening brace.
     while let Ok(token) = input.next() {
         match *token {
             Token::CurlyBracketBlock => {
-                start_offset = input.position().byte_index();
                 found_start = true;
                 break;
             },
@@ -9145,13 +9142,14 @@ pub extern "C" fn Servo_GetRuleBodyTextOffsets(
         }
 
         if token.is_parse_error() {
-            return false;
+            break;
         }
     }
 
 
     if !found_start {
-        return false;
+        ret_val.set_is_void(true);
+        return;
     }
 
     let token_start = input.position();
@@ -9161,18 +9159,14 @@ pub extern "C" fn Servo_GetRuleBodyTextOffsets(
             Ok(())
         }
     );
-    let mut end_offset = input.position().byte_index();
+
     // We're not guaranteed to have a closing bracket, but when we do, we need to move
     // the end offset before it.
-    let token_slice = input.slice_from(token_start);
+    let mut token_slice = input.slice_from(token_start);
     if token_slice.ends_with("}") {
-        end_offset = end_offset - 1;
+        token_slice = token_slice.strip_suffix("}").unwrap();
     }
-
-    *result_start_offset = start_offset as u32;
-    *result_end_offset = end_offset as u32;
-
-    return true;
+    ret_val.assign(token_slice);
 }
 
 #[no_mangle]

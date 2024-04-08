@@ -39,7 +39,7 @@ const TEST_DATA = [
     input: "#id{color:red;background:yellow;}",
     line: 1,
     column: 1,
-    expected: { offset: 4, text: "color:red;background:yellow;" },
+    expected: "color:red;background:yellow;",
   },
   {
     desc: "Multiple rules test case",
@@ -48,14 +48,14 @@ const TEST_DATA = [
       "{ position:absolute; line-height: 45px}",
     line: 1,
     column: 34,
-    expected: { offset: 56, text: " position:absolute; line-height: 45px" },
+    expected: " position:absolute; line-height: 45px",
   },
   {
     desc: "Unclosed rule",
     input: "#id{color:red;background:yellow;",
     line: 1,
     column: 1,
-    expected: { offset: 4, text: "color:red;background:yellow;" },
+    expected: "color:red;background:yellow;",
   },
   {
     desc: "Multi-lines CSS",
@@ -72,7 +72,7 @@ const TEST_DATA = [
     ].join("\n"),
     line: 7,
     column: 1,
-    expected: { offset: 116, text: "\n  color: purple;\n" },
+    expected: "\n  color: purple;\n",
   },
   {
     desc: "Multi-lines CSS and multi-line rule",
@@ -98,75 +98,64 @@ const TEST_DATA = [
     ].join("\n"),
     line: 5,
     column: 1,
-    expected: {
-      offset: 30,
-      text: "\n    margin: 0;\n    padding: 15px 15px 2px 15px;\n    color: red;\n",
-    },
+    expected:
+      "\n    margin: 0;\n    padding: 15px 15px 2px 15px;\n    color: red;\n",
   },
   {
     desc: "Content string containing a } character",
     input: "   #id{border:1px solid red;content: '}';color:red;}",
     line: 1,
     column: 4,
-    expected: {
-      offset: 7,
-      text: "border:1px solid red;content: '}';color:red;",
-    },
+    expected: "border:1px solid red;content: '}';color:red;",
   },
   {
     desc: "Attribute selector containing a { character",
     input: `div[data-x="{"]{color: gold}`,
     line: 1,
     column: 1,
-    expected: {
-      offset: 16,
-      text: "color: gold",
-    },
+    expected: "color: gold",
   },
   {
     desc: "Rule contains no tokens",
     input: "div{}",
     line: 1,
     column: 1,
-    expected: { offset: 4, text: "" },
+    expected: "",
   },
   {
     desc: "Rule contains invalid declaration",
     input: `#id{color;}`,
     line: 1,
     column: 1,
-    expected: { offset: 4, text: "color;" },
+    expected: "color;",
   },
   {
     desc: "Rule contains invalid declaration",
     input: `#id{-}`,
     line: 1,
     column: 1,
-    expected: { offset: 4, text: "-" },
+    expected: "-",
   },
   {
     desc: "Rule contains nested rule",
     input: `#id{background: gold; .nested{color:blue;} color: tomato;  }`,
     line: 1,
     column: 1,
-    expected: {
-      offset: 4,
-      text: "background: gold; .nested{color:blue;} color: tomato;  ",
-    },
+    expected: "background: gold; .nested{color:blue;} color: tomato;  ",
   },
   {
     desc: "Rule contains nested rule with invalid declaration",
     input: `#id{.nested{color;}}`,
     line: 1,
     column: 1,
-    expected: { offset: 4, text: ".nested{color;}" },
+    expected: ".nested{color;}",
   },
   {
     desc: "Rule contains unicode chars",
     input: `#id /*🙃*/ {content: "☃️";}`,
     line: 1,
     column: 1,
-    expected: { offset: 12, text: `content: "☃️";` },
+    expected: `content: "☃️";`,
   },
 ];
 
@@ -192,7 +181,7 @@ function run_test() {
       }
     }
     if (output) {
-      deepEqual(output, test.expected);
+      Assert.equal(output, test.expected);
     }
   }
 }

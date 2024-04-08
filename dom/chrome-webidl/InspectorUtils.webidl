@@ -89,16 +89,16 @@ namespace InspectorUtils {
   sequence<DOMString> getRegisteredCssHighlights(Document document, optional boolean activeOnly = false);
   sequence<InspectorCSSPropertyDefinition> getCSSRegisteredProperties(Document document);
 
-  // Get the start and end offsets of the first rule body within initialText
+  // Get the first rule body text within initialText
   // Consider the following example:
   // p {
   //  line-height: 2em;
   //  color: blue;
   // }
-  // Calling the function with the whole text above would return offsets we can use to
-  // get "line-height: 2em; color: blue;"
+  // Calling the function with the whole text above would return:
+  // "line-height: 2em; color: blue;"
   // Returns null when opening curly bracket wasn't found in initialText
-  InspectorGetRuleBodyTextResult? getRuleBodyTextOffsets(UTF8String initialText);
+  UTF8String? getRuleBodyText(UTF8String initialText);
 
   // Returns string where the rule body text at passed line and column in styleSheetText
   // is replaced by newBodyText.
@@ -183,11 +183,6 @@ dictionary InspectorCSSPropertyDefinition {
   required boolean inherits;
   required UTF8String? initialValue;
   required boolean fromJS;
-};
-
-dictionary InspectorGetRuleBodyTextResult {
-  required double startOffset;
-  required double endOffset;
 };
 
 dictionary InspectorStyleSheetRuleCountAndAtRulesResult {

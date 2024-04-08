@@ -724,7 +724,7 @@ class StyleRuleActor extends Actor {
       const cssText = await this.pageStyle.styleSheetsManager.getText(
         resourceId
       );
-      const { text } = getRuleText(cssText, this.line, this.column);
+      const text = getRuleText(cssText, this.line, this.column);
       // Cache the result on the rule actor to avoid parsing again next time
       this._failedToGetRuleText = false;
       this.authoredText = text;
