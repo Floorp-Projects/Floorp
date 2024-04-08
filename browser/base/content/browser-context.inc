@@ -439,7 +439,7 @@
                 oncommand="gContextMenu.viewPartialSource();"/>
       <menuitem id="context-viewsource"
                 data-l10n-id="main-context-menu-view-page-source"
-                oncommand="BrowserViewSource(gContextMenu.browser);"/>
+                oncommand="BrowserCommands.viewSource(gContextMenu.browser);"/>
       <menuitem id="context-inspect-a11y"
                 hidden="true"
                 data-l10n-id="main-context-menu-inspect-a11y-properties"

@@ -33,7 +33,7 @@ add_task(async function () {
 
     // Make sure we can view-source on the data URI page.
     let promiseTab = BrowserTestUtils.waitForNewTab(gBrowser, DATA_URI_SOURCE);
-    BrowserViewSource(fileBrowser);
+    BrowserCommands.viewSource(fileBrowser);
     let viewSourceTab = await promiseTab;
     registerCleanupFunction(async function () {
       BrowserTestUtils.removeTab(viewSourceTab);

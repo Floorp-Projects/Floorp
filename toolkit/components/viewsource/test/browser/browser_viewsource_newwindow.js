@@ -33,7 +33,7 @@ add_task(async function () {
     },
     async browser => {
       let winPromise = waitForNewViewSourceWindow("view-source:" + PAGE);
-      BrowserViewSource(browser);
+      BrowserCommands.viewSource(browser);
       let win = await winPromise;
 
       ok(win, "View Source opened up in a new window.");

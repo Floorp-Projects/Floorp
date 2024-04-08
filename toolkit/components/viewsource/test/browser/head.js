@@ -43,7 +43,7 @@ async function waitForViewSourceTab(open) {
  */
 function openViewSourceForBrowser(browser) {
   return waitForViewSourceTab(() => {
-    window.BrowserViewSource(browser);
+    window.BrowserCommands.viewSource(browser);
   });
 }
 

@@ -62,8 +62,8 @@ var gViewSourceUtils = {
     }
     // Try existing browsers first.
     let browserWin = Services.wm.getMostRecentWindow("navigator:browser");
-    if (browserWin && browserWin.BrowserViewSourceOfDocument) {
-      browserWin.BrowserViewSourceOfDocument(aArgs);
+    if (browserWin && browserWin.BrowserCommands.viewSourceOfDocument) {
+      browserWin.BrowserCommands.viewSourceOfDocument(aArgs);
       return;
     }
     // No browser window created yet, try to create one.
