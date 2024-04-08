@@ -1364,7 +1364,7 @@ export class UrlbarInput {
     // The value setter clobbers the actiontype attribute, so we need this
     // helper to restore it afterwards.
     const setValueAndRestoreActionType = (value, allowTrim) => {
-      this._setValue(value, allowTrim);
+      this._setValue(value, { allowTrim });
 
       switch (result.type) {
         case lazy.UrlbarUtils.RESULT_TYPE.TAB_SWITCH:
@@ -1555,7 +1555,7 @@ export class UrlbarInput {
       !this.value.endsWith(" ")
     ) {
       this._autofillPlaceholder = null;
-      this._setValue(this.window.gBrowser.userTypedValue, false);
+      this._setValue(this.window.gBrowser.userTypedValue);
     }
 
     return false;
@@ -1940,7 +1940,7 @@ export class UrlbarInput {
   }
 
   set value(val) {
-    this._setValue(val, true);
+    this._setValue(val, { allowTrim: true });
   }
 
   get lastSearchString() {
@@ -2107,7 +2107,7 @@ export class UrlbarInput {
     this.searchMode = searchMode;
 
     let value = result.payload.query?.trimStart() || "";
-    this._setValue(value, false);
+    this._setValue(value);
 
     if (startQuery) {
       this.startQuery({ allowAutofill: false });
@@ -2262,7 +2262,16 @@ export class UrlbarInput {
     });
   }
 
-  _setValue(val, allowTrim) {
+  /**
+   * Sets the input field value.
+   *
+   * @param {string} val The new value to set.
+   * @param {object} [options] Options for setting.
+   * @param {boolean} [options.allowTrim] Whether the value can be trimmed.
+   *
+   * @returns {string} The set value.
+   */
+  _setValue(val, { allowTrim = false } = {}) {
     // Don't expose internal about:reader URLs to the user.
     let originalUrl = lazy.ReaderMode.getOriginalUrlObjectForDisplay(val);
     if (originalUrl) {
@@ -2726,7 +2735,7 @@ export class UrlbarInput {
   }) {
     // The autofilled value may be a URL that includes a scheme at the
     // beginning.  Do not allow it to be trimmed.
-    this._setValue(value, false);
+    this._setValue(value);
     this.inputField.setSelectionRange(selectionStart, selectionEnd);
     this._autofillPlaceholder = {
       value,
@@ -3502,7 +3511,7 @@ export class UrlbarInput {
       }
       if (untrim) {
         this._focusUntrimmedValue = this._untrimmedValue;
-        this._setValue(this._focusUntrimmedValue, false);
+        this._setValue(this._focusUntrimmedValue);
       }
     }
 
