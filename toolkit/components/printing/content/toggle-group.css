@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
 /*
  * A radiogroup styled to hide the radio buttons
  * and present tab-like labels as buttons
@@ -10,6 +9,7 @@
 
 .toggle-group {
   display: inline-flex;
+  min-height: var(--button-min-height-small);
 }
 
 .toggle-group-label {
@@ -26,21 +26,21 @@
 }
 
 .toggle-group-label-iconic::before {
-  width: 16px;
-  height: 16px;
+  width: var(--size-item-small);
+  height: var(--size-item-small);
   margin-inline-end: 5px;
   -moz-context-properties: fill;
   fill: currentColor;
 }
 
 .toggle-group-label:first-of-type {
-  border-start-start-radius: 4px;
-  border-end-start-radius: 4px;
+  border-start-start-radius: var(--border-radius-small);
+  border-end-start-radius: var(--border-radius-small);
 }
 
 .toggle-group-label:last-of-type {
-  border-start-end-radius: 4px;
-  border-end-end-radius: 4px;
+  border-start-end-radius: var(--border-radius-small);
+  border-end-end-radius: var(--border-radius-small);
 }
 
 .toggle-group-input:disabled + .toggle-group-label {

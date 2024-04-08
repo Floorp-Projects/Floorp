@@ -2,7 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-html, body {
+:root {
+  font: menu;
+}
+
+:root,
+body {
   height: 100vh;
 }
 
@@ -13,21 +18,17 @@ body {
   overflow: hidden;
 }
 
-body[loading] #print {
-  visibility: hidden;
-}
-
 *[hidden] {
   display: none !important;
 }
 
 .section-block {
-  margin: 16px;
-}
+  margin: var(--space-large);
 
-.section-block .block-label {
-  display: block;
-  margin-bottom: 8px;
+  .block-label {
+    display: block;
+    margin-bottom: var(--space-small);
+  }
 }
 
 .row {
@@ -35,23 +36,23 @@ body[loading] #print {
   flex-direction: column;
   width: 100%;
   min-height: 1.8em;
-  margin-block: 2px;
-}
+  margin-block: var(--space-xxsmall);
 
-.row.cols-2 {
-  flex-direction: row;
-  align-items: center;
-}
+  &.cols-2 {
+    flex-direction: row;
+    align-items: center;
 
-#scale .row.cols-2,
-#more-settings-options > .row.cols-2 {
-  /* The margin-block of the checkboxes/radiobuttons
-     already provide the needed vertical spacing. */
-  margin-block: 0;
+    #scale &,
+    #more-settings-options > & {
+      /* The margin-block of the checkboxes/radiobuttons
+         already provide the needed vertical spacing. */
+      margin-block: 0;
+    }
+  }
 }
 
 hr {
-  margin: 0 8px;
+  margin: 0 var(--space-small);
 }
 
 .header-container {
@@ -60,65 +61,35 @@ hr {
   justify-content: space-between;
   align-items: center;
   flex: 0 1 auto;
-  padding: 8px 18px;
-}
-.header-container > h2 {
-  margin: 0;
-  font-size: 17px;
-  line-height: 1;
+  padding: var(--space-small) var(--space-large);
+
+  > h2 {
+    margin: 0;
+    line-height: 1;
+  }
 }
 
 #sheet-count {
-  font-size: 11px;
-  padding: 3px 8px;
+  font: message-box;
+  padding-block: var(--space-xsmall);
   margin: 0;
+
+  &[loading],
+  body[invalid] & {
+    visibility: hidden;
+  }
 }
 
-#sheet-count[loading],
-body[invalid] #sheet-count {
-  visibility: hidden;
-}
-
-form#print {
+#print {
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
   justify-content: flex-start;
   overflow: hidden;
-  font: menu;
-}
 
-select {
-  margin: 0;
-  width: 100%;
-}
-
-select:not([size], [multiple])[iconic] {
-  padding-inline-start: calc(8px + 16px + 4px); /* spacing before image + image width + spacing after image */
-  background-size: auto 12px, 16px;
-  background-position: right 19px center, left 8px center;
-}
-
-select:not([size], [multiple])[iconic]:dir(rtl) {
-  background-position-x: left 19px, right 8px;
-}
-
-#printer-picker {
-  background-image: url("chrome://global/skin/icons/arrow-down-12.svg"), url("chrome://global/skin/icons/print.svg");
-}
-
-#printer-picker[output="pdf"] {
-  background-image: url("chrome://global/skin/icons/arrow-down-12.svg"), url("chrome://global/skin/icons/page-portrait.svg");
-}
-
-input[type="number"],
-input[type="text"] {
-  padding: 2px;
-  padding-inline-start: 8px;
-}
-
-.toggle-group-label {
-  padding: 4px 8px;
+  body[loading] & {
+    visibility: hidden;
+  }
 }
 
 .body-container {
@@ -126,29 +97,165 @@ input[type="text"] {
   overflow: auto;
 }
 
-.twisty > summary {
-  list-style: none;
+select {
+  margin: 0;
+  width: 100%;
+
+  &:not([size], [multiple])[iconic] {
+    padding-inline-start: calc(8px + 16px + 4px); /* spacing before image + image width + spacing after image */
+    background-size: auto 12px, 16px;
+    background-position: right 19px center, left 8px center;
+
+    &:dir(rtl) {
+      background-position-x: left 19px, right 8px;
+    }
+  }
+}
+
+#printer-picker {
+  background-image: url("chrome://global/skin/icons/arrow-down-12.svg"), url("chrome://global/skin/icons/print.svg");
+
+  &[output="pdf"] {
+    background-image: url("chrome://global/skin/icons/arrow-down-12.svg"), url("chrome://global/skin/icons/page-portrait.svg");
+  }
+}
+
+input:is([type="number"], [type="text"]) {
+  padding: var(--space-xxsmall);
+  padding-inline-start: var(--space-small);
+}
+
+input[type="number"].photon-number {
+  box-sizing: content-box;
+  min-height: unset;
+  padding: 0;
+  padding-inline-start: var(--space-small);
+  margin: 0;
+  height: 1.5em;
+  width: 4em;
+
+  &::-moz-number-spin-box {
+    height: 100%;
+    max-height: 100%;
+    border-inline-start: 1px solid var(--in-content-box-border-color);
+    width: 1em;
+    border-start-end-radius: var(--border-radius-small);
+    border-end-end-radius: var(--border-radius-small);
+  }
+
+  &:hover::-moz-number-spin-box {
+    border-color: var(--in-content-border-hover);
+  }
+
+  &::-moz-number-spin-up,
+  &::-moz-number-spin-down {
+    appearance: none;
+    border: 0;
+    border-radius: 0;
+    background-color: var(--in-content-button-background);
+    background-image: url("chrome://global/skin/icons/arrow-down.svg");
+    background-repeat: no-repeat;
+    background-size: 8px;
+    background-position: center;
+    -moz-context-properties: fill;
+    fill: currentColor;
+
+    &:hover {
+      background-color: var(--in-content-button-background-hover);
+      color: var(--in-content-button-text-color-hover);
+    }
+  }
+
+  &::-moz-number-spin-up {
+    background-image: url("chrome://global/skin/icons/arrow-up.svg");
+  }
+}
+
+input:is([type="checkbox"], [type="radio"]):disabled + label,
+input[type="radio"]:disabled + span > label {
+  opacity: 0.5;
+}
+
+#custom-range {
+  margin: 0;
+  margin-top: var(--space-xsmall);
+  width: 100%;
+}
+
+#percent-scale {
+  margin-inline-start: var(--space-xsmall);
+
+  &:disabled {
+    /* Let clicks on the disabled input select the radio button */
+    pointer-events: none;
+  }
+}
+
+.toggle-group-label {
+  padding: var(--space-xsmall) var(--space-small);
+
+  #landscape + &::before {
+    content: url("chrome://global/skin/icons/page-landscape.svg");
+  }
+
+  #portrait + &::before {
+    content: url("chrome://global/skin/icons/page-portrait.svg");
+  }
+}
+
+#more-settings {
+  > summary {
+    list-style: none;
+    display: flex;
+    cursor: pointer;
+    align-items: center;
+
+    > .twisty {
+      background-image: url("chrome://global/skin/icons/arrow-down-12.svg");
+      background-repeat: no-repeat;
+      background-position: center;
+      -moz-context-properties: fill;
+      fill: currentColor;
+      width: 12px;
+      height: 12px;
+    }
+
+    > .label {
+      flex-grow: 1;
+    }
+  }
+
+  &[open] > summary > .twisty {
+    background-image: url("chrome://global/skin/icons/arrow-up-12.svg");
+  }
+}
+
+.vertical-margins,
+.horizontal-margins {
   display: flex;
-  cursor: pointer;
-  align-items: center;
+  gap: var(--space-large);
+  margin-block: var(--space-xsmall);
+
+  > .margin-pair {
+    width: calc(50% - (2 * var(--space-xsmall))); /* Half minus the gap */
+
+    > .margin-descriptor {
+      display: block;
+      text-align: center;
+      margin-top: var(--space-xxsmall);
+    }
+
+    > .margin-input {
+      width: 100%;
+      box-sizing: border-box;
+    }
+  }
 }
 
-#more-settings > summary > .twisty {
-  background-image: url("chrome://global/skin/icons/arrow-down-12.svg");
-  background-repeat: no-repeat;
-  background-position: center;
-  -moz-context-properties: fill;
-  fill: currentColor;
-  width: 12px;
-  height: 12px;
-}
-
-#more-settings > summary > .label {
-  flex-grow: 1;
-}
-
-#more-settings[open] > summary > .twisty {
-  background-image: url("chrome://global/skin/icons/arrow-up-12.svg");
+.horizontal-margins:dir(rtl) {
+  /* Swap between the left and right margin inputs to match their position
+   * in the form to their physical location they represent. */
+  flex-direction: row-reverse;
 }
 
 #open-dialog-link {
@@ -156,22 +263,22 @@ input[type="text"] {
   justify-content: space-between;
   align-items: center;
   gap: var(--space-xsmall);
-}
 
-#open-dialog-link::after {
-  display: block;
-  flex-shrink: 0;
-  content: "";
-  background: url(chrome://global/skin/icons/open-in-new.svg) no-repeat center;
-  background-size: 12px;
-  -moz-context-properties: fill;
-  fill: currentColor;
-  width: 12px;
-  height: 12px;
-}
+  &::after {
+    display: block;
+    flex-shrink: 0;
+    content: "";
+    background: url(chrome://global/skin/icons/open-in-new.svg) no-repeat center;
+    background-size: 12px;
+    -moz-context-properties: fill;
+    fill: currentColor;
+    width: 12px;
+    height: 12px;
+  }
 
-#open-dialog-link:dir(rtl)::after {
-  scale: -1 1;
+  &:dir(rtl)::after {
+    transform: scaleX(-1);
+  }
 }
 
 .footer-container {
@@ -184,116 +291,16 @@ input[type="text"] {
     url("chrome://global/skin/icons/loading@2x.png") 2x
   );
   background-repeat: no-repeat;
-  background-size: 16px;
+  background-size: var(--size-item-small);
   background-position: left center;
-  padding-inline-start: 20px;
-}
+  padding-inline-start: calc(var(--size-item-small) + var(--space-xsmall));
 
-#print-progress:dir(rtl) {
-  background-position-x: right;
-}
-
-#custom-range {
-  margin: 0;
-  margin-top: var(--space-xsmall);
-  width: 100%;
-}
-
-.vertical-margins,
-.horizontal-margins {
-  display: flex;
-  gap: 20px;
-  margin-block: 5px;
-}
-
-.margin-pair {
-  width: calc(50% - 10px); /* Half minus the gap */
-}
-
-.margin-input {
-  /* FIXME: Important is needed to override the photon-number styles below,
-   * probably should be refactored */
-  width: 100% !important;
-  box-sizing: border-box !important;
-}
-
-.margin-descriptor {
-  text-align: center;
-  display: block;
-  margin-top: 2px;
-}
-
-.toggle-group #landscape + .toggle-group-label::before {
-  content: url("chrome://global/skin/icons/page-landscape.svg");
-}
-.toggle-group #portrait + .toggle-group-label::before {
-  content: url("chrome://global/skin/icons/page-portrait.svg");
+  &:dir(rtl) {
+    background-position-x: right;
+  }
 }
 
 .error-message {
-  font-size: 12px;
   color: var(--text-color-error);
-  margin-top: 4px;
-}
-
-#percent-scale {
-  margin-inline-start: 4px;
-}
-
-#percent-scale:disabled {
-  /* Let clicks on the disabled input select the radio button */
-  pointer-events: none;
-}
-
-input[type="number"].photon-number {
-  box-sizing: content-box;
-  min-height: unset;
-  padding: 0;
-  padding-inline-start: 8px;
-  margin: 0;
-  height: 1.5em;
-  width: 4em;
-}
-
-input[type="number"].photon-number::-moz-number-spin-box {
-  height: 100%;
-  max-height: 100%;
-  border-inline-start: 1px solid var(--in-content-box-border-color);
-  width: 1em;
-  border-start-end-radius: 4px;
-  border-end-end-radius: 4px;
-}
-
-input[type="number"].photon-number:hover::-moz-number-spin-box {
-  border-color: var(--in-content-border-hover);
-}
-
-input[type="number"].photon-number::-moz-number-spin-up,
-input[type="number"].photon-number::-moz-number-spin-down {
-  border: 0;
-  border-radius: 0;
-  background-color: var(--in-content-button-background);
-  background-image: url("chrome://global/skin/icons/arrow-down.svg");
-  background-repeat: no-repeat;
-  background-size: 8px;
-  background-position: center;
-  -moz-context-properties: fill;
-  fill: currentColor;
-  appearance: none;
-}
-
-input[type="number"].photon-number::-moz-number-spin-up {
-  background-image: url("chrome://global/skin/icons/arrow-up.svg");
-}
-
-input[type="number"].photon-number::-moz-number-spin-up:hover,
-input[type="number"].photon-number::-moz-number-spin-down:hover {
-  background-color: var(--in-content-button-background-hover);
-  color: var(--in-content-button-text-color-hover);
-}
-
-input[type="checkbox"]:disabled + label,
-input[type="radio"]:disabled + label,
-input[type="radio"]:disabled + span > label {
-  opacity: 0.5;
+  margin-top: var(--space-xsmall);
 }
