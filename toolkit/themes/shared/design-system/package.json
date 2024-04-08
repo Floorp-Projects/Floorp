@@ -4,7 +4,7 @@
   "description": "Package file for node modules used to create our CSS tokens from a JSON source of truth.",
   "license": "MPL-2.0",
   "scripts": {
-    "build": "(npm ls || npm ci) && style-dictionary build --config ./tokens-config.js",
+    "build": "(npm ls || npm ci) && style-dictionary build --config ./tokens-config.js && prettier ./tokens-storybook.mjs --write",
     "test": "(npm ls || npm ci) && node tests/try-runner.js"
   },
   "devDependencies": {
