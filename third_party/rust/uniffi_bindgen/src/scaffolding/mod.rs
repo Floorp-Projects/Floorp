@@ -45,7 +45,6 @@ mod filters {
                 format!("std::sync::Arc<{}>", imp.rust_name_for(name))
             }
             Type::CallbackInterface { name, .. } => format!("Box<dyn r#{name}>"),
-            Type::ForeignExecutor => "::uniffi::ForeignExecutor".into(),
             Type::Optional { inner_type } => {
                 format!("std::option::Option<{}>", type_rs(inner_type)?)
             }
@@ -64,41 +63,12 @@ mod filters {
                 kind: ExternalKind::Interface,
                 ..
             } => format!("::std::sync::Arc<r#{name}>"),
-            Type::External { name, .. } => format!("r#{name}"),
-        })
-    }
-
-    // Map a type to Rust code that specifies the FfiConverter implementation.
-    //
-    // This outputs something like `<MyStruct as Lift<crate::UniFfiTag>>`
-    pub fn ffi_trait(type_: &Type, trait_name: &str) -> Result<String, askama::Error> {
-        Ok(match type_ {
             Type::External {
                 name,
-                kind: ExternalKind::Interface,
+                kind: ExternalKind::Trait,
                 ..
-            } => {
-                format!("<::std::sync::Arc<r#{name}> as ::uniffi::{trait_name}<crate::UniFfiTag>>")
-            }
-            _ => format!(
-                "<{} as ::uniffi::{trait_name}<crate::UniFfiTag>>",
-                type_rs(type_)?
-            ),
-        })
-    }
-
-    pub fn return_type<T: Callable>(callable: &T) -> Result<String, askama::Error> {
-        let return_type = match callable.return_type() {
-            Some(t) => type_rs(&t)?,
-            None => "()".to_string(),
-        };
-        match callable.throws_type() {
-            Some(t) => type_rs(&t)?,
-            None => "()".to_string(),
-        };
-        Ok(match callable.throws_type() {
-            Some(e) => format!("::std::result::Result<{return_type}, {}>", type_rs(&e)?),
-            None => return_type,
+            } => format!("::std::sync::Arc<dyn r#{name}>"),
+            Type::External { name, .. } => format!("r#{name}"),
         })
     }
 

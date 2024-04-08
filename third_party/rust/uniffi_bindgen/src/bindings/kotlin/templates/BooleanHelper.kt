@@ -11,7 +11,7 @@ public object FfiConverterBoolean: FfiConverter<Boolean, Byte> {
         return if (value) 1.toByte() else 0.toByte()
     }
 
-    override fun allocationSize(value: Boolean) = 1
+    override fun allocationSize(value: Boolean) = 1UL
 
     override fun write(value: Boolean, buf: ByteBuffer) {
         buf.put(lower(value))

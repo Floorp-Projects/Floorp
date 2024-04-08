@@ -12,11 +12,12 @@
 [package]
 edition = "2021"
 name = "uniffi_build"
-version = "0.25.3"
+version = "0.27.1"
 authors = ["Firefox Sync Team <sync-team@mozilla.com>"]
 description = "a multi-language bindings generator for rust (build script helpers)"
 homepage = "https://mozilla.github.io/uniffi-rs"
 documentation = "https://mozilla.github.io/uniffi-rs"
+readme = "README.md"
 keywords = [
     "ffi",
     "bindgen",
@@ -31,7 +32,7 @@ version = "1"
 version = "1.0.8"
 
 [dependencies.uniffi_bindgen]
-version = "=0.25.3"
+version = "=0.27.1"
 default-features = false
 
 [features]

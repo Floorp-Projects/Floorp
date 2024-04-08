@@ -3,6 +3,12 @@
 
 class {{ ffi_converter_name }}(_UniffiConverterRustBuffer):
     @classmethod
+    def check_lower(cls, items):
+        for (key, value) in items.items():
+            {{ key_ffi_converter }}.check_lower(key)
+            {{ value_ffi_converter }}.check_lower(value)
+
+    @classmethod
     def write(cls, items, buf):
         buf.write_i32(len(items))
         for (key, value) in items.items():

@@ -26,6 +26,6 @@ impl CodeType for CallbackInterfaceCodeType {
     }
 
     fn initialization_fn(&self) -> Option<String> {
-        Some(format!("{}.register", self.ffi_converter_name()))
+        Some(format!("uniffiCallbackInterface{}.register", self.id))
     }
 }

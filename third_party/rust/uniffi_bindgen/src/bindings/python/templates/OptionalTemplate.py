@@ -2,6 +2,11 @@
 
 class {{ ffi_converter_name }}(_UniffiConverterRustBuffer):
     @classmethod
+    def check_lower(cls, value):
+        if value is not None:
+            {{ inner_ffi_converter }}.check_lower(value)
+
+    @classmethod
     def write(cls, value, buf):
         if value is None:
             buf.write_u8(0)

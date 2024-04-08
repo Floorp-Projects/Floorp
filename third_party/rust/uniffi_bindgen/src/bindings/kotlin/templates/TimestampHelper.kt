@@ -14,7 +14,7 @@ public object FfiConverterTimestamp: FfiConverterRustBuffer<java.time.Instant> {
     }
 
     // 8 bytes for seconds, 4 bytes for nanoseconds
-    override fun allocationSize(value: java.time.Instant) = 12
+    override fun allocationSize(value: java.time.Instant) = 12UL
 
     override fun write(value: java.time.Instant, buf: ByteBuffer) {
         var epochOffset = java.time.Duration.between(java.time.Instant.EPOCH, value)

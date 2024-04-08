@@ -23,7 +23,7 @@
 
 use self::argument::ArgumentList;
 use self::attribute::ExtendedAttributeList;
-use self::common::{Braced, Identifier, Parenthesized, PunctuatedNonEmpty};
+use self::common::{Braced, Docstring, Identifier, Parenthesized, PunctuatedNonEmpty};
 use self::dictionary::DictionaryMembers;
 use self::interface::{Inheritance, InterfaceMembers};
 use self::literal::StringLit;
@@ -109,6 +109,7 @@ ast_types! {
         }),
         /// Parses `[attributes]? callback interface identifier ( : inheritance )? { members };`
         CallbackInterface(struct CallbackInterfaceDefinition<'a> {
+            docstring: Option<Docstring>,
             attributes: Option<ExtendedAttributeList<'a>>,
             callback: term!(callback),
             interface: term!(interface),
@@ -119,6 +120,7 @@ ast_types! {
         }),
         /// Parses `[attributes]? interface identifier ( : inheritance )? { members };`
         Interface(struct InterfaceDefinition<'a> {
+            docstring: Option<Docstring>,
             attributes: Option<ExtendedAttributeList<'a>>,
             interface: term!(interface),
             identifier: Identifier<'a>,
@@ -137,6 +139,7 @@ ast_types! {
         }),
         /// Parses `[attributes]? namespace identifier { members };`
         Namespace(struct NamespaceDefinition<'a> {
+            docstring: Option<Docstring>,
             attributes: Option<ExtendedAttributeList<'a>>,
             namespace: term!(namespace),
             identifier: Identifier<'a>,
@@ -145,6 +148,7 @@ ast_types! {
         }),
         /// Parses `[attributes]? dictionary identifier ( : inheritance )? { members };`
         Dictionary(struct DictionaryDefinition<'a> {
+            docstring: Option<Docstring>,
             attributes: Option<ExtendedAttributeList<'a>>,
             dictionary: term!(dictionary),
             identifier: Identifier<'a>,
@@ -191,6 +195,7 @@ ast_types! {
         }),
         /// Parses `[attributes]? enum identifier { values };`
         Enum(struct EnumDefinition<'a> {
+            docstring: Option<Docstring>,
             attributes: Option<ExtendedAttributeList<'a>>,
             enum_: term!(enum),
             identifier: Identifier<'a>,
@@ -224,8 +229,15 @@ ast_types! {
     }
 }
 
+ast_types! {
+    struct EnumVariant<'a> {
+        docstring: Option<Docstring>,
+        value: StringLit<'a>,
+    }
+}
+
 /// Parses a non-empty enum value list
-pub type EnumValueList<'a> = PunctuatedNonEmpty<StringLit<'a>, term!(,)>;
+pub type EnumValueList<'a> = PunctuatedNonEmpty<EnumVariant<'a>, term!(,)>;
 
 #[cfg(test)]
 mod test {

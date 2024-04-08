@@ -47,20 +47,49 @@ pub enum FfiType {
     /// A borrowed reference to some raw bytes owned by foreign language code.
     /// The provider of this reference must keep it alive for the duration of the receiving call.
     ForeignBytes,
-    /// Pointer to a callback function that handles all callbacks on the foreign language side.
-    ForeignCallback,
-    /// Pointer-sized opaque handle that represents a foreign executor.  Foreign bindings can
-    /// either use an actual pointer or a usized integer.
-    ForeignExecutorHandle,
-    /// Pointer to the callback function that's invoked to schedule calls with a ForeignExecutor
-    ForeignExecutorCallback,
-    /// Pointer to a Rust future
-    RustFutureHandle,
-    /// Continuation function for a Rust future
-    RustFutureContinuationCallback,
-    RustFutureContinuationData,
-    // TODO: you can imagine a richer structural typesystem here, e.g. `Ref<String>` or something.
-    // We don't need that yet and it's possible we never will, so it isn't here for now.
+    /// Pointer to a callback function.  The inner value which matches one of the callback
+    /// definitions in [crate::ComponentInterface::ffi_definitions].
+    Callback(String),
+    /// Pointer to a FFI struct (e.g. a VTable).  The inner value matches one of the struct
+    /// definitions in [crate::ComponentInterface::ffi_definitions].
+    Struct(String),
+    /// Opaque 64-bit handle
+    ///
+    /// These are used to pass objects across the FFI.
+    Handle,
+    RustCallStatus,
+    /// Pointer to an FfiType.
+    Reference(Box<FfiType>),
+    /// Opaque pointer
+    VoidPointer,
+}
+
+impl FfiType {
+    pub fn reference(self) -> FfiType {
+        FfiType::Reference(Box::new(self))
+    }
+
+    /// Unique name for an FFI return type
+    pub fn return_type_name(return_type: Option<&FfiType>) -> String {
+        match return_type {
+            Some(t) => match t {
+                FfiType::UInt8 => "u8".to_owned(),
+                FfiType::Int8 => "i8".to_owned(),
+                FfiType::UInt16 => "u16".to_owned(),
+                FfiType::Int16 => "i16".to_owned(),
+                FfiType::UInt32 => "u32".to_owned(),
+                FfiType::Int32 => "i32".to_owned(),
+                FfiType::UInt64 => "u64".to_owned(),
+                FfiType::Int64 => "i64".to_owned(),
+                FfiType::Float32 => "f32".to_owned(),
+                FfiType::Float64 => "f64".to_owned(),
+                FfiType::RustArcPtr(_) => "pointer".to_owned(),
+                FfiType::RustBuffer(_) => "rust_buffer".to_owned(),
+                _ => unimplemented!("FFI return type: {t:?}"),
+            },
+            None => "void".to_owned(),
+        }
+    }
 }
 
 /// When passing data across the FFI, each `Type` value will be lowered into a corresponding
@@ -94,7 +123,6 @@ impl From<&Type> for FfiType {
             Type::Object { name, .. } => FfiType::RustArcPtr(name.to_owned()),
             // Callback interfaces are passed as opaque integer handles.
             Type::CallbackInterface { .. } => FfiType::UInt64,
-            Type::ForeignExecutor => FfiType::ForeignExecutorHandle,
             // Other types are serialized into a bytebuffer and deserialized on the other side.
             Type::Enum { .. }
             | Type::Record { .. }
@@ -106,6 +134,11 @@ impl From<&Type> for FfiType {
             Type::External {
                 name,
                 kind: ExternalKind::Interface,
+                ..
+            }
+            | Type::External {
+                name,
+                kind: ExternalKind::Trait,
                 ..
             } => FfiType::RustArcPtr(name.clone()),
             Type::External {
@@ -131,6 +164,24 @@ impl From<&&Type> for FfiType {
     }
 }
 
+/// An Ffi definition
+#[derive(Debug, Clone)]
+pub enum FfiDefinition {
+    Function(FfiFunction),
+    CallbackFunction(FfiCallbackFunction),
+    Struct(FfiStruct),
+}
+
+impl FfiDefinition {
+    pub fn name(&self) -> &str {
+        match self {
+            Self::Function(f) => f.name(),
+            Self::CallbackFunction(f) => f.name(),
+            Self::Struct(s) => s.name(),
+        }
+    }
+}
+
 /// Represents an "extern C"-style function that will be part of the FFI.
 ///
 /// These can't be declared explicitly in the UDL, but rather, are derived automatically
@@ -150,6 +201,19 @@ pub struct FfiFunction {
 }
 
 impl FfiFunction {
+    pub fn callback_init(module_path: &str, trait_name: &str, vtable_name: String) -> Self {
+        Self {
+            name: uniffi_meta::init_callback_vtable_fn_symbol_name(module_path, trait_name),
+            arguments: vec![FfiArgument {
+                name: "vtable".to_string(),
+                type_: FfiType::Struct(vtable_name).reference(),
+            }],
+            return_type: None,
+            has_rust_call_status_arg: false,
+            ..Self::default()
+        }
+    }
+
     pub fn name(&self) -> &str {
         &self.name
     }
@@ -181,7 +245,7 @@ impl FfiFunction {
     ) {
         self.arguments = args.into_iter().collect();
         if self.is_async() {
-            self.return_type = Some(FfiType::RustFutureHandle);
+            self.return_type = Some(FfiType::Handle);
             self.has_rust_call_status_arg = false;
         } else {
             self.return_type = return_type;
@@ -212,11 +276,110 @@ pub struct FfiArgument {
 }
 
 impl FfiArgument {
+    pub fn new(name: impl Into<String>, type_: FfiType) -> Self {
+        Self {
+            name: name.into(),
+            type_,
+        }
+    }
+
     pub fn name(&self) -> &str {
         &self.name
     }
+
     pub fn type_(&self) -> FfiType {
         self.type_.clone()
+    }
+}
+
+/// Represents an "extern C"-style callback function
+///
+/// These are defined in the foreign code and passed to Rust as a function pointer.
+#[derive(Debug, Default, Clone)]
+pub struct FfiCallbackFunction {
+    // Name for this function type. This matches the value inside `FfiType::Callback`
+    pub(super) name: String,
+    pub(super) arguments: Vec<FfiArgument>,
+    pub(super) return_type: Option<FfiType>,
+    pub(super) has_rust_call_status_arg: bool,
+}
+
+impl FfiCallbackFunction {
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    pub fn arguments(&self) -> Vec<&FfiArgument> {
+        self.arguments.iter().collect()
+    }
+
+    pub fn return_type(&self) -> Option<&FfiType> {
+        self.return_type.as_ref()
+    }
+
+    pub fn has_rust_call_status_arg(&self) -> bool {
+        self.has_rust_call_status_arg
+    }
+}
+
+/// Represents a repr(C) struct used in the FFI
+#[derive(Debug, Default, Clone)]
+pub struct FfiStruct {
+    pub(super) name: String,
+    pub(super) fields: Vec<FfiField>,
+}
+
+impl FfiStruct {
+    /// Get the name of this struct
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    /// Get the fields for this struct
+    pub fn fields(&self) -> &[FfiField] {
+        &self.fields
+    }
+}
+
+/// Represents a field of an [FfiStruct]
+#[derive(Debug, Clone)]
+pub struct FfiField {
+    pub(super) name: String,
+    pub(super) type_: FfiType,
+}
+
+impl FfiField {
+    pub fn new(name: impl Into<String>, type_: FfiType) -> Self {
+        Self {
+            name: name.into(),
+            type_,
+        }
+    }
+
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    pub fn type_(&self) -> FfiType {
+        self.type_.clone()
+    }
+}
+
+impl From<FfiFunction> for FfiDefinition {
+    fn from(value: FfiFunction) -> FfiDefinition {
+        FfiDefinition::Function(value)
+    }
+}
+
+impl From<FfiStruct> for FfiDefinition {
+    fn from(value: FfiStruct) -> FfiDefinition {
+        FfiDefinition::Struct(value)
+    }
+}
+
+impl From<FfiCallbackFunction> for FfiDefinition {
+    fn from(value: FfiCallbackFunction) -> FfiDefinition {
+        FfiDefinition::CallbackFunction(value)
     }
 }
 

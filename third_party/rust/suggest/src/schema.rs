@@ -15,7 +15,7 @@ use sql_support::open_database::{self, ConnectionInitializer};
 ///     [`SuggestConnectionInitializer::upgrade_from`].
 ///    a. If suggestions should be re-ingested after the migration, call `clear_database()` inside
 ///       the migration.
-pub const VERSION: u32 = 17;
+pub const VERSION: u32 = 18;
 
 /// The current Suggest database schema.
 pub const SQL: &str = "
@@ -124,10 +124,8 @@ pub const SQL: &str = "
         FOREIGN KEY(suggestion_id) REFERENCES suggestions(id) ON DELETE CASCADE
     );
 
-    -- Just store the MD5 hash of the dismissed suggestion.  The collision rate is low and the
-    -- impact of a collision is not showing a suggestion, which is not that bad.
     CREATE TABLE dismissed_suggestions (
-        url_hash INTEGER PRIMARY KEY
+        url TEXT PRIMARY KEY
     ) WITHOUT ROWID;
 ";
 
@@ -170,6 +168,17 @@ impl ConnectionInitializer for SuggestConnectionInitializer {
                     "
                     CREATE TABLE dismissed_suggestions (
                         url_hash INTEGER PRIMARY KEY
+                    ) WITHOUT ROWID;",
+                    (),
+                )?;
+                Ok(())
+            }
+            17 => {
+                tx.execute(
+                    "
+                    DROP TABLE dismissed_suggestions;
+                    CREATE TABLE dismissed_suggestions (
+                        url TEXT PRIMARY KEY
                     ) WITHOUT ROWID;",
                     (),
                 )?;

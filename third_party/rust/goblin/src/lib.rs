@@ -42,13 +42,17 @@
 //!                 Object::PE(pe) => {
 //!                     println!("pe: {:#?}", &pe);
 //!                 },
+//!                 Object::COFF(coff) => {
+//!                     println!("coff: {:#?}", &coff);
+//!                 },
 //!                 Object::Mach(mach) => {
 //!                     println!("mach: {:#?}", &mach);
 //!                 },
 //!                 Object::Archive(archive) => {
 //!                     println!("archive: {:#?}", &archive);
 //!                 },
-//!                 Object::Unknown(magic) => { println!("unknown magic: {:#x}", magic) }
+//!                 Object::Unknown(magic) => { println!("unknown magic: {:#x}", magic) },
+//!                 _ => { }
 //!             }
 //!         }
 //!     }
@@ -218,12 +222,14 @@ pub struct HintData {
 }
 
 #[derive(Debug)]
+#[non_exhaustive]
 /// A hint at the underlying binary format for 16 bytes of arbitrary data
 pub enum Hint {
     Elf(HintData),
     Mach(HintData),
     MachFat(usize),
     PE,
+    COFF,
     Archive,
     Unknown(u64),
 }
@@ -253,10 +259,14 @@ if_everything! {
             Ok(Hint::Elf(HintData { is_lsb, is_64 }))
         } else if &bytes[0..archive::SIZEOF_MAGIC] == archive::MAGIC {
             Ok(Hint::Archive)
-        } else if (&bytes[0..2]).pread_with::<u16>(0, LE)? == pe::header::DOS_MAGIC {
-            Ok(Hint::PE)
         } else {
-            mach::peek_bytes(bytes)
+            match *&bytes[0..2].pread_with::<u16>(0, LE)? {
+                pe::header::DOS_MAGIC => Ok(Hint::PE),
+                pe::header::COFF_MACHINE_X86 |
+                pe::header::COFF_MACHINE_X86_64 |
+                pe::header::COFF_MACHINE_ARM64 => Ok(Hint::COFF),
+                _ => mach::peek_bytes(bytes)
+            }
         }
     }
 
@@ -273,12 +283,15 @@ if_everything! {
 
     #[derive(Debug)]
     #[allow(clippy::large_enum_variant)]
+    #[non_exhaustive]
     /// A parseable object that goblin understands
     pub enum Object<'a> {
         /// An ELF32/ELF64!
         Elf(elf::Elf<'a>),
         /// A PE32/PE32+!
         PE(pe::PE<'a>),
+        /// A COFF
+        COFF(pe::Coff<'a>),
         /// A 32/64-bit Mach-o binary _OR_ it is a multi-architecture binary container!
         Mach(mach::Mach<'a>),
         /// A Unix archive
@@ -296,7 +309,8 @@ if_everything! {
                     Hint::Mach(_) | Hint::MachFat(_) => Ok(Object::Mach(mach::Mach::parse(bytes)?)),
                     Hint::Archive => Ok(Object::Archive(archive::Archive::parse(bytes)?)),
                     Hint::PE => Ok(Object::PE(pe::PE::parse(bytes)?)),
-                    Hint::Unknown(magic) => Ok(Object::Unknown(magic))
+                    Hint::COFF => Ok(Object::COFF(pe::Coff::parse(bytes)?)),
+                    Hint::Unknown(magic) => Ok(Object::Unknown(magic)),
                 }
             } else {
                 Err(error::Error::Malformed(format!("Object is too small.")))

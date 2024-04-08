@@ -14,7 +14,7 @@ public object FfiConverterDuration: FfiConverterRustBuffer<java.time.Duration> {
     }
 
     // 8 bytes for seconds, 4 bytes for nanoseconds
-    override fun allocationSize(value: java.time.Duration) = 12
+    override fun allocationSize(value: java.time.Duration) = 12UL
 
     override fun write(value: java.time.Duration, buf: ByteBuffer) {
         if (value.seconds < 0) {

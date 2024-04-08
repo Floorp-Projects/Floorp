@@ -22,8 +22,8 @@ use std::convert::TryFrom;
 use anyhow::{bail, Result};
 
 use super::TypeCollector;
-use crate::attributes::{InterfaceAttributes, TypedefAttributes};
-use uniffi_meta::Type;
+use crate::attributes::{InterfaceAttributes, RustKind, TypedefAttributes};
+use uniffi_meta::{ObjectImpl, Type};
 
 /// Trait to help with an early "type discovery" phase when processing the UDL.
 ///
@@ -75,7 +75,7 @@ impl TypeFinder for weedle::InterfaceDefinition<'_> {
                 Type::Object {
                     name,
                     module_path: types.module_path(),
-                    imp: attrs.object_impl(),
+                    imp: attrs.object_impl()?,
                 },
             )
         }
@@ -111,7 +111,6 @@ impl TypeFinder for weedle::EnumDefinition<'_> {
 
 impl TypeFinder for weedle::TypedefDefinition<'_> {
     fn add_type_definitions_to(&self, types: &mut TypeCollector) -> Result<()> {
-        let name = self.identifier.0;
         let attrs = TypedefAttributes::try_from(self.attributes.as_ref())?;
         // If we wanted simple `typedef`s, it would be as easy as:
         // > let t = types.resolve_type_expression(&self.type_)?;
@@ -122,29 +121,52 @@ impl TypeFinder for weedle::TypedefDefinition<'_> {
             // `FfiConverter` implementation.
             let builtin = types.resolve_type_expression(&self.type_)?;
             types.add_type_definition(
-                name,
+                self.identifier.0,
                 Type::Custom {
                     module_path: types.module_path(),
-                    name: name.to_string(),
+                    name: self.identifier.0.to_string(),
                     builtin: builtin.into(),
                 },
             )
         } else {
-            let kind = attrs.external_kind().expect("External missing");
-            let tagged = attrs.external_tagged().expect("External missing");
+            let module_path = types.module_path();
+            let name = self.identifier.0.to_string();
+            let ty = match attrs.rust_kind() {
+                Some(RustKind::Object) => Type::Object {
+                    module_path,
+                    name,
+                    imp: ObjectImpl::Struct,
+                },
+                Some(RustKind::Trait) => Type::Object {
+                    module_path,
+                    name,
+                    imp: ObjectImpl::Trait,
+                },
+                Some(RustKind::CallbackTrait) => Type::Object {
+                    module_path,
+                    name,
+                    imp: ObjectImpl::CallbackTrait,
+                },
+                Some(RustKind::Record) => Type::Record { module_path, name },
+                Some(RustKind::Enum) => Type::Enum { module_path, name },
+                Some(RustKind::CallbackInterface) => Type::CallbackInterface { module_path, name },
+                // must be external
+                None => {
+                    let kind = attrs.external_kind().expect("External missing kind");
+                    let tagged = attrs.external_tagged().expect("External missing tagged");
+                    Type::External {
+                        name,
+                        namespace: "".to_string(), // we don't know this yet
+                        module_path: attrs.get_crate_name(),
+                        kind,
+                        tagged,
+                    }
+                }
+            };
             // A crate which can supply an `FfiConverter`.
             // We don't reference `self._type`, so ideally we could insist on it being
             // the literal 'extern' but that's tricky
-            types.add_type_definition(
-                name,
-                Type::External {
-                    name: name.to_string(),
-                    namespace: "".to_string(), // we don't know this yet
-                    module_path: attrs.get_crate_name(),
-                    kind,
-                    tagged,
-                },
-            )
+            types.add_type_definition(self.identifier.0, ty)
         }
     }
 }
@@ -152,7 +174,7 @@ impl TypeFinder for weedle::TypedefDefinition<'_> {
 impl TypeFinder for weedle::CallbackInterfaceDefinition<'_> {
     fn add_type_definitions_to(&self, types: &mut TypeCollector) -> Result<()> {
         if self.attributes.is_some() {
-            bail!("no typedef attributes are currently supported");
+            bail!("no callback interface attributes are currently supported");
         }
         let name = self.identifier.0.to_string();
         types.add_type_definition(

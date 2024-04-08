@@ -10,24 +10,48 @@ use std::fmt::Debug;
 
 use anyhow::{Context, Result};
 use askama::Template;
-use heck::{ToLowerCamelCase, ToUpperCamelCase};
+use camino::Utf8Path;
+use heck::{ToLowerCamelCase, ToShoutySnakeCase, ToUpperCamelCase};
 use serde::{Deserialize, Serialize};
 
 use super::Bindings;
 use crate::backend::TemplateExpression;
+use crate::bindings::swift;
 use crate::interface::*;
-use crate::BindingsConfig;
+use crate::{BindingGenerator, BindingsConfig};
 
 mod callback_interface;
 mod compounds;
 mod custom;
 mod enum_;
-mod executor;
 mod external;
 mod miscellany;
 mod object;
 mod primitives;
 mod record;
+
+pub struct SwiftBindingGenerator;
+impl BindingGenerator for SwiftBindingGenerator {
+    type Config = Config;
+
+    fn write_bindings(
+        &self,
+        ci: &ComponentInterface,
+        config: &Config,
+        out_dir: &Utf8Path,
+        try_format_code: bool,
+    ) -> Result<()> {
+        swift::write_bindings(config, ci, out_dir, try_format_code)
+    }
+
+    fn check_library_path(
+        &self,
+        _library_path: &Utf8Path,
+        _cdylib_name: Option<&str>,
+    ) -> Result<()> {
+        Ok(())
+    }
+}
 
 /// A trait tor the implementation.
 trait CodeType: Debug {
@@ -196,6 +220,8 @@ pub struct Config {
     ffi_module_filename: Option<String>,
     generate_module_map: Option<bool>,
     omit_argument_labels: Option<bool>,
+    generate_immutable_records: Option<bool>,
+    experimental_sendable_value_types: Option<bool>,
     #[serde(default)]
     custom_types: HashMap<String, CustomTypeConfig>,
 }
@@ -260,6 +286,16 @@ impl Config {
     /// Whether to omit argument labels in Swift function definitions.
     pub fn omit_argument_labels(&self) -> bool {
         self.omit_argument_labels.unwrap_or(false)
+    }
+
+    /// Whether to generate immutable records (`let` instead of `var`)
+    pub fn generate_immutable_records(&self) -> bool {
+        self.generate_immutable_records.unwrap_or(false)
+    }
+
+    /// Whether to mark value types as 'Sendable'
+    pub fn experimental_sendable_value_types(&self) -> bool {
+        self.experimental_sendable_value_types.unwrap_or(false)
     }
 }
 
@@ -400,7 +436,6 @@ pub struct SwiftWrapper<'a> {
     ci: &'a ComponentInterface,
     type_helper_code: String,
     type_imports: BTreeSet<String>,
-    has_async_fns: bool,
 }
 impl<'a> SwiftWrapper<'a> {
     pub fn new(config: Config, ci: &'a ComponentInterface) -> Self {
@@ -412,7 +447,6 @@ impl<'a> SwiftWrapper<'a> {
             ci,
             type_helper_code,
             type_imports,
-            has_async_fns: ci.has_async_fns(),
         }
     }
 
@@ -425,10 +459,6 @@ impl<'a> SwiftWrapper<'a> {
             .iter_types()
             .map(|t| SwiftCodeOracle.find(t))
             .filter_map(|ct| ct.initialization_fn())
-            .chain(
-                self.has_async_fns
-                    .then(|| "uniffiInitContinuationCallback".into()),
-            )
             .collect()
     }
 }
@@ -464,12 +494,11 @@ impl SwiftCodeOracle {
             Type::Duration => Box::new(miscellany::DurationCodeType),
 
             Type::Enum { name, .. } => Box::new(enum_::EnumCodeType::new(name)),
-            Type::Object { name, .. } => Box::new(object::ObjectCodeType::new(name)),
+            Type::Object { name, imp, .. } => Box::new(object::ObjectCodeType::new(name, imp)),
             Type::Record { name, .. } => Box::new(record::RecordCodeType::new(name)),
             Type::CallbackInterface { name, .. } => {
                 Box::new(callback_interface::CallbackInterfaceCodeType::new(name))
             }
-            Type::ForeignExecutor => Box::new(executor::ForeignExecutorCodeType),
             Type::Optional { inner_type } => {
                 Box::new(compounds::OptionalCodeType::new(*inner_type))
             }
@@ -509,7 +538,22 @@ impl SwiftCodeOracle {
         nm.to_string().to_lower_camel_case()
     }
 
-    fn ffi_type_label_raw(&self, ffi_type: &FfiType) -> String {
+    /// Get the idiomatic Swift rendering of an FFI callback function name
+    fn ffi_callback_name(&self, nm: &str) -> String {
+        format!("Uniffi{}", nm.to_upper_camel_case())
+    }
+
+    /// Get the idiomatic Swift rendering of an FFI struct name
+    fn ffi_struct_name(&self, nm: &str) -> String {
+        format!("Uniffi{}", nm.to_upper_camel_case())
+    }
+
+    /// Get the idiomatic Swift rendering of an if guard name
+    fn if_guard_name(&self, nm: &str) -> String {
+        format!("UNIFFI_FFIDEF_{}", nm.to_shouty_snake_case())
+    }
+
+    fn ffi_type_label(&self, ffi_type: &FfiType) -> String {
         match ffi_type {
             FfiType::Int8 => "Int8".into(),
             FfiType::UInt8 => "UInt8".into(),
@@ -521,40 +565,74 @@ impl SwiftCodeOracle {
             FfiType::UInt64 => "UInt64".into(),
             FfiType::Float32 => "Float".into(),
             FfiType::Float64 => "Double".into(),
+            FfiType::Handle => "UInt64".into(),
             FfiType::RustArcPtr(_) => "UnsafeMutableRawPointer".into(),
             FfiType::RustBuffer(_) => "RustBuffer".into(),
+            FfiType::RustCallStatus => "RustCallStatus".into(),
             FfiType::ForeignBytes => "ForeignBytes".into(),
-            FfiType::ForeignCallback => "ForeignCallback".into(),
-            FfiType::ForeignExecutorHandle => "Int".into(),
-            FfiType::ForeignExecutorCallback => "ForeignExecutorCallback".into(),
-            FfiType::RustFutureContinuationCallback => "UniFfiRustFutureContinuation".into(),
-            FfiType::RustFutureHandle | FfiType::RustFutureContinuationData => {
-                "UnsafeMutableRawPointer".into()
+            // Note: @escaping is required for Swift versions before 5.7 for callbacks passed into
+            // async functions. Swift 5.7 and later does not require it.  We should probably remove
+            // it once we upgrade our minimum requirement to 5.7 or later.
+            FfiType::Callback(name) => format!("@escaping {}", self.ffi_callback_name(name)),
+            FfiType::Struct(name) => self.ffi_struct_name(name),
+            FfiType::Reference(inner) => {
+                format!("UnsafeMutablePointer<{}>", self.ffi_type_label(inner))
             }
+            FfiType::VoidPointer => "UnsafeMutableRawPointer".into(),
         }
     }
 
-    fn ffi_type_label(&self, ffi_type: &FfiType) -> String {
-        match ffi_type {
-            FfiType::ForeignCallback
-            | FfiType::ForeignExecutorCallback
-            | FfiType::RustFutureHandle
-            | FfiType::RustFutureContinuationCallback
-            | FfiType::RustFutureContinuationData => {
-                format!("{} _Nonnull", self.ffi_type_label_raw(ffi_type))
-            }
-            _ => self.ffi_type_label_raw(ffi_type),
+    /// Default values for FFI types
+    ///
+    /// Used to set a default return value when returning an error
+    fn ffi_default_value(&self, return_type: Option<&FfiType>) -> String {
+        match return_type {
+            Some(t) => match t {
+                FfiType::UInt8
+                | FfiType::Int8
+                | FfiType::UInt16
+                | FfiType::Int16
+                | FfiType::UInt32
+                | FfiType::Int32
+                | FfiType::UInt64
+                | FfiType::Int64 => "0".to_owned(),
+                FfiType::Float32 | FfiType::Float64 => "0.0".to_owned(),
+                FfiType::RustArcPtr(_) => "nil".to_owned(),
+                FfiType::RustBuffer(_) => "RustBuffer.empty()".to_owned(),
+                _ => unimplemented!("FFI return type: {t:?}"),
+            },
+            // When we need to use a value for void returns, we use a `u8` placeholder
+            None => "0".to_owned(),
         }
     }
 
     fn ffi_canonical_name(&self, ffi_type: &FfiType) -> String {
-        self.ffi_type_label_raw(ffi_type)
+        self.ffi_type_label(ffi_type)
+    }
+
+    /// Get the name of the protocol and class name for an object.
+    ///
+    /// If we support callback interfaces, the protocol name is the object name, and the class name is derived from that.
+    /// Otherwise, the class name is the object name and the protocol name is derived from that.
+    ///
+    /// This split determines what types `FfiConverter.lower()` inputs.  If we support callback
+    /// interfaces, `lower` must lower anything that implements the protocol.  If not, then lower
+    /// only lowers the concrete class.
+    fn object_names(&self, obj: &Object) -> (String, String) {
+        let class_name = self.class_name(obj.name());
+        if obj.has_callback_interface() {
+            let impl_name = format!("{class_name}Impl");
+            (class_name, impl_name)
+        } else {
+            (format!("{class_name}Protocol"), class_name)
+        }
     }
 }
 
 pub mod filters {
     use super::*;
     pub use crate::backend::filters::*;
+    use uniffi_meta::LiteralMetadata;
 
     fn oracle() -> &'static SwiftCodeOracle {
         &SwiftCodeOracle
@@ -564,12 +642,28 @@ pub mod filters {
         Ok(oracle().find(&as_type.as_type()).type_label())
     }
 
+    pub fn return_type_name(as_type: Option<&impl AsType>) -> Result<String, askama::Error> {
+        Ok(match as_type {
+            Some(as_type) => oracle().find(&as_type.as_type()).type_label(),
+            None => "()".to_owned(),
+        })
+    }
+
     pub fn canonical_name(as_type: &impl AsType) -> Result<String, askama::Error> {
         Ok(oracle().find(&as_type.as_type()).canonical_name())
     }
 
     pub fn ffi_converter_name(as_type: &impl AsType) -> Result<String, askama::Error> {
         Ok(oracle().find(&as_type.as_type()).ffi_converter_name())
+    }
+
+    pub fn ffi_error_converter_name(as_type: &impl AsType) -> Result<String, askama::Error> {
+        // special handling for types used as errors.
+        let mut name = oracle().find(&as_type.as_type()).ffi_converter_name();
+        if matches!(&as_type.as_type(), Type::Object { .. }) {
+            name.push_str("__as_error")
+        }
+        Ok(name)
     }
 
     pub fn lower_fn(as_type: &impl AsType) -> Result<String, askama::Error> {
@@ -595,6 +689,16 @@ pub mod filters {
         Ok(oracle().find(&as_type.as_type()).literal(literal))
     }
 
+    // Get the idiomatic Swift rendering of an individual enum variant's discriminant
+    pub fn variant_discr_literal(e: &Enum, index: &usize) -> Result<String, askama::Error> {
+        let literal = e.variant_discr(*index).expect("invalid index");
+        match literal {
+            LiteralMetadata::UInt(v, _, _) => Ok(v.to_string()),
+            LiteralMetadata::Int(v, _, _) => Ok(v.to_string()),
+            _ => unreachable!("expected an UInt!"),
+        }
+    }
+
     /// Get the Swift type for an FFIType
     pub fn ffi_type_name(ffi_type: &FfiType) -> Result<String, askama::Error> {
         Ok(oracle().ffi_type_label(ffi_type))
@@ -602,6 +706,10 @@ pub mod filters {
 
     pub fn ffi_canonical_name(ffi_type: &FfiType) -> Result<String, askama::Error> {
         Ok(oracle().ffi_canonical_name(ffi_type))
+    }
+
+    pub fn ffi_default_value(return_type: Option<FfiType>) -> Result<String, askama::Error> {
+        Ok(oracle().ffi_default_value(return_type.as_ref()))
     }
 
     /// Like `ffi_type_name`, but used in `BridgingHeaderTemplate.h` which uses a slightly different
@@ -618,18 +726,17 @@ pub mod filters {
             FfiType::UInt64 => "uint64_t".into(),
             FfiType::Float32 => "float".into(),
             FfiType::Float64 => "double".into(),
+            FfiType::Handle => "uint64_t".into(),
             FfiType::RustArcPtr(_) => "void*_Nonnull".into(),
             FfiType::RustBuffer(_) => "RustBuffer".into(),
+            FfiType::RustCallStatus => "RustCallStatus".into(),
             FfiType::ForeignBytes => "ForeignBytes".into(),
-            FfiType::ForeignCallback => "ForeignCallback _Nonnull".into(),
-            FfiType::ForeignExecutorCallback => "UniFfiForeignExecutorCallback _Nonnull".into(),
-            FfiType::ForeignExecutorHandle => "size_t".into(),
-            FfiType::RustFutureContinuationCallback => {
-                "UniFfiRustFutureContinuation _Nonnull".into()
+            FfiType::Callback(name) => {
+                format!("{} _Nonnull", SwiftCodeOracle.ffi_callback_name(name))
             }
-            FfiType::RustFutureHandle | FfiType::RustFutureContinuationData => {
-                "void* _Nonnull".into()
-            }
+            FfiType::Struct(name) => SwiftCodeOracle.ffi_struct_name(name),
+            FfiType::Reference(inner) => format!("{}* _Nonnull", header_ffi_type_name(inner)?),
+            FfiType::VoidPointer => "void* _Nonnull".into(),
         })
     }
 
@@ -664,6 +771,30 @@ pub mod filters {
         Ok(oracle().enum_variant_name(nm))
     }
 
+    /// Get the idiomatic Swift rendering of an FFI callback function name
+    pub fn ffi_callback_name(nm: &str) -> Result<String, askama::Error> {
+        Ok(oracle().ffi_callback_name(nm))
+    }
+
+    /// Get the idiomatic Swift rendering of an FFI struct name
+    pub fn ffi_struct_name(nm: &str) -> Result<String, askama::Error> {
+        Ok(oracle().ffi_struct_name(nm))
+    }
+
+    /// Get the idiomatic Swift rendering of an if guard name
+    pub fn if_guard_name(nm: &str) -> Result<String, askama::Error> {
+        Ok(oracle().if_guard_name(nm))
+    }
+
+    /// Get the idiomatic Swift rendering of docstring
+    pub fn docstring(docstring: &str, spaces: &i32) -> Result<String, askama::Error> {
+        let middle = textwrap::indent(&textwrap::dedent(docstring), " * ");
+        let wrapped = format!("/**\n{middle}\n */");
+
+        let spaces = usize::try_from(*spaces).unwrap_or_default();
+        Ok(textwrap::indent(&wrapped, &" ".repeat(spaces)))
+    }
+
     pub fn error_handler(result: &ResultType) -> Result<String, askama::Error> {
         Ok(match &result.throws_type {
             Some(t) => format!("{}.lift", ffi_converter_name(t)?),
@@ -684,5 +815,9 @@ pub mod filters {
                 None => "".into(),
             }
         ))
+    }
+
+    pub fn object_names(obj: &Object) -> Result<(String, String), askama::Error> {
+        Ok(SwiftCodeOracle.object_names(obj))
     }
 }

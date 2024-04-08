@@ -14,7 +14,6 @@
 
 use std::collections::HashMap;
 use std::collections::VecDeque;
-use std::convert::TryInto;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::{Arc, RwLock, RwLockWriteGuard};
@@ -856,9 +855,6 @@ pub fn chunked_log_info(_path: &str, payload: &str) {
 
 #[cfg(test)]
 mod test {
-    use std::thread;
-    use std::time::Duration;
-
     use uuid::Uuid;
 
     use super::*;

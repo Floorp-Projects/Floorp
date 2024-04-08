@@ -20,13 +20,13 @@ https://docs.rs/goblin/
 
 ### Usage
 
-Goblin requires `rustc` 1.60.0 (Rust 2021 edition).
+Goblin requires `rustc` 1.63.0 (Rust 2021 edition).
 
 Add to your `Cargo.toml`
 
 ```toml
 [dependencies]
-goblin = "0.7"
+goblin = "0.8"
 ```
 
 ### Features
@@ -190,6 +190,7 @@ In lexicographic order:
 [@baloo]: https://github.com/baloo
 [@burjui]: https://github.com/burjui
 [@connorkuehl]: https://github.com/connorkuehl
+[@crzysdrs]: https://github.com/crzysdrs
 [@dancrossnyc]: https://github.com/dancrossnyc
 [@dureuill]: https://github.com/dureuill
 [@Evian-Zhang]: https://github.com/Evian-Zhang
@@ -238,6 +239,7 @@ In lexicographic order:
 [@sanxiyn]: https://github.com/sanxiyn
 [@skdltmxn]: https://github.com/skdltmxn
 [@sollyucko]: https://github.com/sollyucko
+[@suttonbradley]: https://github.com/suttonbradley
 [@Swatinem]: https://github.com/Swatinem
 [@SweetVishnya]: https://github.com/SweetVishnya
 [@SquareMan]: https://github.com/SquareMan
@@ -248,6 +250,7 @@ In lexicographic order:
 [@Tiwalun]: https://github.com/Tiwalun
 [@track-5]: https://github.com/track-5
 [@tux3]: https://github.com/tux3
+[@vadimcn]: https://github.com/vadimcn
 [@wickerwacka]: https://github.com/wickerwaka
 [@willglynn]: https://github.com/willglynn
 [@woodruffw]: https://github.com/woodruffw

@@ -29,7 +29,7 @@ log = "0.4"
 md-5 = "0.10"
 parking_lot = ">=0.11,<=0.12"
 thiserror = "1.0"
-uniffi = "0.25.2"
+uniffi = "0.27.1"
 url = "2.5"
 
 [dependencies.error-support]
@@ -43,5 +43,5 @@ features = ["bundled"]
 path = "../support/sql"
 
 [build-dependencies.uniffi]
-version = "0.25.2"
+version = "0.27.1"
 features = ["build"]

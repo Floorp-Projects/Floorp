@@ -24,24 +24,10 @@
 
 typedef struct RustBuffer
 {
-    int32_t capacity;
-    int32_t len;
+    uint64_t capacity;
+    uint64_t len;
     uint8_t *_Nullable data;
 } RustBuffer;
-
-typedef int32_t (*ForeignCallback)(uint64_t, int32_t, const uint8_t *_Nonnull, int32_t, RustBuffer *_Nonnull);
-
-// Task defined in Rust that Swift executes
-typedef void (*UniFfiRustTaskCallback)(const void * _Nullable, int8_t);
-
-// Callback to execute Rust tasks using a Swift Task
-//
-// Args:
-//   executor: ForeignExecutor lowered into a size_t value
-//   delay: Delay in MS
-//   task: UniFfiRustTaskCallback to call
-//   task_data: data to pass the task callback
-typedef int8_t (*UniFfiForeignExecutorCallback)(size_t, uint32_t, UniFfiRustTaskCallback _Nullable, const void * _Nullable);
 
 typedef struct ForeignBytes
 {
@@ -59,11 +45,29 @@ typedef struct RustCallStatus {
 // ⚠️ increment the version suffix in all instances of UNIFFI_SHARED_HEADER_V4 in this file.           ⚠️
 #endif // def UNIFFI_SHARED_H
 
-// Continuation callback for UniFFI Futures
-typedef void (*UniFfiRustFutureContinuation)(void * _Nonnull, int8_t);
-
-// Scaffolding functions
-{%- for func in ci.iter_ffi_function_definitions() %}
+{%- for def in ci.ffi_definitions() %}
+#ifndef {{ def.name()|if_guard_name }}
+#define {{ def.name()|if_guard_name }}
+{%- match def %}
+{% when FfiDefinition::CallbackFunction(callback) %}
+typedef
+    {%- match callback.return_type() %}{% when Some(return_type) %} {{ return_type|header_ffi_type_name }} {% when None %} void {% endmatch -%}
+    (*{{ callback.name()|ffi_callback_name }})(
+        {%- for arg in callback.arguments() -%}
+        {{ arg.type_().borrow()|header_ffi_type_name }}
+        {%- if !loop.last || callback.has_rust_call_status_arg() %}, {% endif %}
+        {%- endfor -%}
+        {%- if callback.has_rust_call_status_arg() %}
+        RustCallStatus *_Nonnull uniffiCallStatus
+        {%- endif %}
+    );
+{% when FfiDefinition::Struct(struct) %}
+typedef struct {{ struct.name()|ffi_struct_name }} {
+    {%- for field in struct.fields() %}
+    {{ field.type_().borrow()|header_ffi_type_name }} {{ field.name()|var_name }};
+    {%- endfor %}
+} {{ struct.name()|ffi_struct_name }};
+{% when FfiDefinition::Function(func) %}
 {% match func.return_type() -%}{%- when Some with (type_) %}{{ type_|header_ffi_type_name }}{% when None %}void{% endmatch %} {{ func.name() }}(
     {%- if func.arguments().len() > 0 %}
         {%- for arg in func.arguments() %}
@@ -74,6 +78,8 @@ typedef void (*UniFfiRustFutureContinuation)(void * _Nonnull, int8_t);
         {%- if func.has_rust_call_status_arg() %}RustCallStatus *_Nonnull out_status{%- else %}void{% endif %}
     {% endif %}
 );
+{%- endmatch %}
+#endif
 {%- endfor %}
 
 {% import "macros.swift" as swift %}

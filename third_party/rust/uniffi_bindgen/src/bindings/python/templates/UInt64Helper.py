@@ -8,5 +8,5 @@ class _UniffiConverterUInt64(_UniffiConverterPrimitiveInt):
         return buf.read_u64()
 
     @staticmethod
-    def write_unchecked(value, buf):
+    def write(value, buf):
         buf.write_u64(value)

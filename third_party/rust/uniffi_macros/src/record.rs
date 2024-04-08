@@ -1,17 +1,20 @@
 use proc_macro2::{Ident, Span, TokenStream};
-use quote::{quote, ToTokens};
-use syn::{
-    parse::{Parse, ParseStream},
-    Data, DataStruct, DeriveInput, Field, Lit, Token,
-};
+use quote::quote;
+use syn::{parse::ParseStream, Data, DataStruct, DeriveInput, Field, Token};
 
-use crate::util::{
-    create_metadata_items, derive_all_ffi_traits, either_attribute_arg, ident_to_string, kw,
-    mod_path, tagged_impl_header, try_metadata_value_from_usize, try_read_field, AttributeSliceExt,
-    UniffiAttributeArgs,
+use crate::{
+    default::{default_value_metadata_calls, DefaultValue},
+    util::{
+        create_metadata_items, derive_all_ffi_traits, either_attribute_arg, extract_docstring,
+        ident_to_string, kw, mod_path, tagged_impl_header, try_metadata_value_from_usize,
+        try_read_field, AttributeSliceExt, UniffiAttributeArgs,
+    },
 };
 
 pub fn expand_record(input: DeriveInput, udl_mode: bool) -> syn::Result<TokenStream> {
+    if let Some(e) = input.attrs.uniffi_attr_args_not_allowed_here() {
+        return Err(e);
+    }
     let record = match input.data {
         Data::Struct(s) => s,
         _ => {
@@ -23,10 +26,12 @@ pub fn expand_record(input: DeriveInput, udl_mode: bool) -> syn::Result<TokenStr
     };
 
     let ident = &input.ident;
+    let docstring = extract_docstring(&input.attrs)?;
     let ffi_converter = record_ffi_converter_impl(ident, &record, udl_mode)
         .unwrap_or_else(syn::Error::into_compile_error);
     let meta_static_var = (!udl_mode).then(|| {
-        record_meta_static_var(ident, &record).unwrap_or_else(syn::Error::into_compile_error)
+        record_meta_static_var(ident, docstring, &record)
+            .unwrap_or_else(syn::Error::into_compile_error)
     });
 
     Ok(quote! {
@@ -78,35 +83,9 @@ fn write_field(f: &Field) -> TokenStream {
     }
 }
 
-pub enum FieldDefault {
-    Literal(Lit),
-    Null(kw::None),
-}
-
-impl ToTokens for FieldDefault {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        match self {
-            FieldDefault::Literal(lit) => lit.to_tokens(tokens),
-            FieldDefault::Null(kw) => kw.to_tokens(tokens),
-        }
-    }
-}
-
-impl Parse for FieldDefault {
-    fn parse(input: ParseStream<'_>) -> syn::Result<Self> {
-        let lookahead = input.lookahead1();
-        if lookahead.peek(kw::None) {
-            let none_kw: kw::None = input.parse()?;
-            Ok(Self::Null(none_kw))
-        } else {
-            Ok(Self::Literal(input.parse()?))
-        }
-    }
-}
-
 #[derive(Default)]
 pub struct FieldAttributeArguments {
-    pub(crate) default: Option<FieldDefault>,
+    pub(crate) default: Option<DefaultValue>,
 }
 
 impl UniffiAttributeArgs for FieldAttributeArguments {
@@ -128,6 +107,7 @@ impl UniffiAttributeArgs for FieldAttributeArguments {
 
 pub(crate) fn record_meta_static_var(
     ident: &Ident,
+    docstring: String,
     record: &DataStruct,
 ) -> syn::Result<TokenStream> {
     let name = ident_to_string(ident);
@@ -144,17 +124,9 @@ pub(crate) fn record_meta_static_var(
                 .parse_uniffi_attr_args::<FieldAttributeArguments>()?;
 
             let name = ident_to_string(f.ident.as_ref().unwrap());
+            let docstring = extract_docstring(&f.attrs)?;
             let ty = &f.ty;
-            let default = match attrs.default {
-                Some(default) => {
-                    let default_value = default_value_concat_calls(default)?;
-                    quote! {
-                        .concat_bool(true)
-                        #default_value
-                    }
-                }
-                None => quote! { .concat_bool(false) },
-            };
+            let default = default_value_metadata_calls(&attrs.default)?;
 
             // Note: fields need to implement both `Lower` and `Lift` to be used in a record.  The
             // TYPE_ID_META should be the same for both traits.
@@ -162,6 +134,7 @@ pub(crate) fn record_meta_static_var(
                 .concat_str(#name)
                 .concat(<#ty as ::uniffi::Lower<crate::UniFfiTag>>::TYPE_ID_META)
                 #default
+                .concat_long_str(#docstring)
             })
         })
         .collect::<syn::Result<_>>()?;
@@ -175,50 +148,8 @@ pub(crate) fn record_meta_static_var(
                 .concat_str(#name)
                 .concat_value(#fields_len)
                 #concat_fields
+                .concat_long_str(#docstring)
         },
         None,
     ))
-}
-
-fn default_value_concat_calls(default: FieldDefault) -> syn::Result<TokenStream> {
-    match default {
-        FieldDefault::Literal(Lit::Int(i)) if !i.suffix().is_empty() => Err(
-            syn::Error::new_spanned(i, "integer literals with suffix not supported here"),
-        ),
-        FieldDefault::Literal(Lit::Float(f)) if !f.suffix().is_empty() => Err(
-            syn::Error::new_spanned(f, "float literals with suffix not supported here"),
-        ),
-
-        FieldDefault::Literal(Lit::Str(s)) => Ok(quote! {
-            .concat_value(::uniffi::metadata::codes::LIT_STR)
-            .concat_str(#s)
-        }),
-        FieldDefault::Literal(Lit::Int(i)) => {
-            let digits = i.base10_digits();
-            Ok(quote! {
-                .concat_value(::uniffi::metadata::codes::LIT_INT)
-                .concat_str(#digits)
-            })
-        }
-        FieldDefault::Literal(Lit::Float(f)) => {
-            let digits = f.base10_digits();
-            Ok(quote! {
-                .concat_value(::uniffi::metadata::codes::LIT_FLOAT)
-                .concat_str(#digits)
-            })
-        }
-        FieldDefault::Literal(Lit::Bool(b)) => Ok(quote! {
-            .concat_value(::uniffi::metadata::codes::LIT_BOOL)
-            .concat_bool(#b)
-        }),
-
-        FieldDefault::Literal(_) => Err(syn::Error::new_spanned(
-            default,
-            "this type of literal is not currently supported as a default",
-        )),
-
-        FieldDefault::Null(_) => Ok(quote! {
-            .concat_value(::uniffi::metadata::codes::LIT_NULL)
-        }),
-    }
 }
