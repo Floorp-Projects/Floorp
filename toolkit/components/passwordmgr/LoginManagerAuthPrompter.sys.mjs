@@ -711,7 +711,7 @@ LoginManagerAuthPrompter.prototype = {
 
       ok = await Services.prompt.asyncPromptAuth(
         this._browser?.browsingContext,
-        LoginManagerAuthPrompter.promptAuthModalType,
+        Ci.nsIPrompt.MODAL_TYPE_TAB,
         aChannel,
         aLevel,
         aAuthInfo
@@ -1115,10 +1115,3 @@ ChromeUtils.defineLazyGetter(LoginManagerAuthPrompter.prototype, "log", () => {
   let logger = lazy.LoginHelper.createLogger("LoginManagerAuthPrompter");
   return logger.log.bind(logger);
 });
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  LoginManagerAuthPrompter,
-  "promptAuthModalType",
-  "prompts.modalType.httpAuth",
-  Services.prompt.MODAL_TYPE_WINDOW
-);

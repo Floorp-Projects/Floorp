@@ -25,11 +25,6 @@ const { LENGTH: GENERATED_PASSWORD_LENGTH, REGEX: GENERATED_PASSWORD_REGEX } =
 const LOGIN_FIELD_UTILS = LoginTestUtils.loginField;
 const TESTS_DIR = "/tests/toolkit/components/passwordmgr/test/";
 
-// Depending on pref state we either show auth prompts as windows or on tab level.
-let authPromptModalType = SpecialPowers.Services.prefs.getIntPref(
-  "prompts.modalType.httpAuth"
-);
-
 /**
  * Recreate a DOM tree using the outerHTML to ensure that any event listeners
  * and internal state for the elements are removed.

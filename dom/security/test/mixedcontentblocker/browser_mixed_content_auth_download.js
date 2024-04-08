@@ -12,10 +12,6 @@ const { PromptTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/PromptTestUtils.sys.mjs"
 );
 
-let authPromptModalType = Services.prefs.getIntPref(
-  "prompts.modalType.httpAuth"
-);
-
 const downloadMonitoringView = {
   _listeners: [],
   onDownloadAdded(download) {
@@ -107,7 +103,7 @@ async function runTest(url, link, checkFunction, description) {
   // Wait for the auth prompt, enter the login details and close the prompt
   await PromptTestUtils.handleNextPrompt(
     gBrowser.selectedBrowser,
-    { modalType: authPromptModalType, promptType: "promptUserAndPass" },
+    { modalType: Ci.nsIPrompt.MODAL_TYPE_TAB, promptType: "promptUserAndPass" },
     { buttonNumClick: 0, loginInput: "user", passwordInput: "pass" }
   );
   await checkPromise;

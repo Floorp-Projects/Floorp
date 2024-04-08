@@ -127,12 +127,6 @@ async function checkDialog(
   });
 }
 
-add_setup(async function () {
-  await SpecialPowers.pushPrefEnv({
-    set: [["prompts.modalType.httpAuth", Ci.nsIPrompt.MODAL_TYPE_TAB]],
-  });
-});
-
 add_task(async function test_check_prompt_origin_display() {
   await checkAlert("https://example.com/", { value: "example.com" });
   // eslint-disable-next-line @microsoft/sdl/no-insecure-url

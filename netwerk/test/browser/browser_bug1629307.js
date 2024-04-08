@@ -24,7 +24,7 @@ add_task(async function () {
   PromptTestUtils.handleNextPrompt(
     window,
     {
-      modalType: Services.prefs.getIntPref("prompts.modalType.httpAuth"),
+      modalType: Ci.nsIPrompt.MODAL_TYPE_TAB,
       promptType: "promptUserAndPass",
     },
     { buttonNumClick: 1 }
@@ -59,7 +59,7 @@ add_task(async function () {
   PromptTestUtils.handleNextPrompt(
     window,
     {
-      modalType: Services.prefs.getIntPref("prompts.modalType.httpAuth"),
+      modalType: Ci.nsIPrompt.MODAL_TYPE_TAB,
       promptType: "promptUserAndPass",
     },
     { buttonNumClick: 1 }

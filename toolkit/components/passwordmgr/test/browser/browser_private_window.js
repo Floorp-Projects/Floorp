@@ -77,7 +77,7 @@ async function loadAccessRestrictedURL(browser, url, username, password) {
   // Wait for the auth prompt, enter the login details and close the prompt
   await PromptTestUtils.handleNextPrompt(
     browser,
-    { modalType: authPromptModalType, promptType: "promptUserAndPass" },
+    { modalType: Ci.nsIPrompt.MODAL_TYPE_TAB, promptType: "promptUserAndPass" },
     { buttonNumClick: 0, loginInput: username, passwordInput: password }
   );
 
@@ -106,13 +106,11 @@ const authUrl = `https://example.com/${DIRECTORY_PATH}authenticate.sjs`;
 
 let normalWin;
 let privateWin;
-let authPromptModalType;
 
 // XXX: Note that tasks are currently run in sequence. Some tests may assume the state
 // resulting from successful or unsuccessful logins in previous tasks
 
 add_task(async function test_setup() {
-  authPromptModalType = Services.prefs.getIntPref("prompts.modalType.httpAuth");
   normalWin = await BrowserTestUtils.openNewBrowserWindow({ private: false });
   privateWin = await BrowserTestUtils.openNewBrowserWindow({ private: true });
   Services.logins.removeAllUserFacingLogins();
