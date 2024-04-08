@@ -25,8 +25,10 @@ not-for-kind-dependencies:
 only-for-build-platforms:
     - win32-shippable/opt
     - win64-shippable/opt
+    - win64-aarch64-shippable/opt
     - win32-devedition/opt
     - win64-devedition/opt
+    - win64-aarch64-devedition/opt
 
 jobs:
     repackage-shippable-l10n-msix:
