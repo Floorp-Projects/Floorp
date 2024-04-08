@@ -1442,13 +1442,8 @@ class WidgetSelectionEvent : public WidgetGUIEvent {
  ******************************************************************************/
 
 class InternalEditorInputEvent : public InternalUIEvent {
- private:
-  InternalEditorInputEvent()
-      : mData(VoidString()),
-        mInputType(EditorInputType::eUnknown),
-        mIsComposing(false) {}
-
  public:
+  InternalEditorInputEvent() = delete;
   virtual InternalEditorInputEvent* AsEditorInputEvent() override {
     return this;
   }
@@ -1457,9 +1452,7 @@ class InternalEditorInputEvent : public InternalUIEvent {
                            nsIWidget* aWidget = nullptr,
                            const WidgetEventTime* aTime = nullptr)
       : InternalUIEvent(aIsTrusted, aMessage, aWidget, eEditorInputEventClass,
-                        aTime),
-        mData(VoidString()),
-        mInputType(EditorInputType::eUnknown) {}
+                        aTime) {}
 
   virtual WidgetEvent* Duplicate() const override {
     MOZ_ASSERT(mClass == eEditorInputEventClass,
@@ -1472,13 +1465,13 @@ class InternalEditorInputEvent : public InternalUIEvent {
     return result;
   }
 
-  nsString mData;
+  nsString mData = VoidString();
   RefPtr<dom::DataTransfer> mDataTransfer;
   OwningNonNullStaticRangeArray mTargetRanges;
 
-  EditorInputType mInputType;
+  EditorInputType mInputType = EditorInputType::eUnknown;
 
-  bool mIsComposing;
+  bool mIsComposing = false;
 
   void AssignEditorInputEventData(const InternalEditorInputEvent& aEvent,
                                   bool aCopyTargets) {
@@ -1502,8 +1495,45 @@ class InternalEditorInputEvent : public InternalUIEvent {
 
  private:
   static const char16_t* const kInputTypeNames[];
-  typedef nsTHashMap<nsStringHashKey, EditorInputType> InputTypeHashtable;
+  using InputTypeHashtable = nsTHashMap<nsStringHashKey, EditorInputType>;
   static InputTypeHashtable* sInputTypeHashtable;
+};
+
+/******************************************************************************
+ * mozilla::InternalLegacyTextEvent
+ ******************************************************************************/
+
+class InternalLegacyTextEvent : public InternalUIEvent {
+ public:
+  InternalLegacyTextEvent() = delete;
+
+  virtual InternalLegacyTextEvent* AsLegacyTextEvent() override { return this; }
+
+  InternalLegacyTextEvent(bool aIsTrusted, EventMessage aMessage,
+                          nsIWidget* aWidget = nullptr,
+                          const WidgetEventTime* aTime = nullptr)
+      : InternalUIEvent(aIsTrusted, aMessage, aWidget, eLegacyTextEventClass,
+                        aTime) {}
+
+  virtual WidgetEvent* Duplicate() const override {
+    MOZ_ASSERT(mClass == eLegacyTextEventClass,
+               "Duplicate() must be overridden by sub class");
+    // Not copying widget, it is a weak reference.
+    InternalLegacyTextEvent* result =
+        new InternalLegacyTextEvent(false, mMessage, nullptr, this);
+    result->AssignLegacyTextEventData(*this, true);
+    result->mFlags = mFlags;
+    return result;
+  }
+
+  nsString mData;
+
+  void AssignLegacyTextEventData(const InternalLegacyTextEvent& aEvent,
+                                 bool aCopyTargets) {
+    AssignUIEventData(aEvent, aCopyTargets);
+
+    mData = aEvent.mData;
+  }
 };
 
 }  // namespace mozilla

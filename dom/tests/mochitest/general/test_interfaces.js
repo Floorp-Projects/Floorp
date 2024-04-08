@@ -1376,6 +1376,12 @@ let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "TextEncoderStream", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
+  {
+    name: "TextEvent",
+    insecureContext: true,
+    disabled: !SpecialPowers.getBoolPref("dom.events.textevent.enabled"),
+  },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "TextMetrics", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "TextTrack", insecureContext: true },
