@@ -35,7 +35,7 @@ add_task(async function () {
   let fullScreenEntered = TestUtils.waitForCondition(
     () => document.documentElement.getAttribute("sizemode") == "fullscreen"
   );
-  BrowserFullScreen();
+  BrowserCommands.fullScreen();
   await fullScreenEntered;
 
   tab2.linkedBrowser.focus();
@@ -54,7 +54,7 @@ add_task(async function () {
   let fullScreenExited = TestUtils.waitForCondition(
     () => document.documentElement.getAttribute("sizemode") != "fullscreen"
   );
-  BrowserFullScreen();
+  BrowserCommands.fullScreen();
   await fullScreenExited;
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);

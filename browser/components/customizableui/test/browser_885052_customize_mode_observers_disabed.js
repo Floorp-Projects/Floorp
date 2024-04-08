@@ -34,7 +34,7 @@ add_task(async function () {
     "Should not be in fullscreen sizemode before we enter fullscreen."
   );
 
-  BrowserFullScreen();
+  BrowserCommands.fullScreen();
   await TestUtils.waitForCondition(() => isFullscreenSizeMode());
   ok(
     fullscreenButton.checked,
@@ -62,7 +62,7 @@ add_task(async function () {
 
   await endCustomizing();
 
-  BrowserFullScreen();
+  BrowserCommands.fullScreen();
   fullscreenButton = document.getElementById("fullscreen-button");
   await TestUtils.waitForCondition(() => !isFullscreenSizeMode());
   ok(

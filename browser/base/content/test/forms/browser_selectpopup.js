@@ -708,7 +708,7 @@ add_task(async function test_mousemove_correcttarget() {
       window,
       "sizemodechange"
     );
-    BrowserFullScreen();
+    BrowserCommands.fullScreen();
     await sizeModeChanged;
     await popupHiddenPromise;
   }

@@ -569,4 +569,8 @@ var BrowserCommands = {
       args
     );
   },
+
+  fullScreen() {
+    window.fullScreen = !window.fullScreen || BrowserHandler.kiosk;
+  },
 };

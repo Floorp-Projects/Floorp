@@ -45,7 +45,6 @@
   "BrowserOnClick",
   "getMeOutOfHere",
   "getDefaultHomePage",
-  "BrowserFullScreen",
   "getPEMString",
   "browserDragAndDrop",
   "homeButtonObserver",
