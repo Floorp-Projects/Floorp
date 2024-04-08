@@ -37,6 +37,11 @@ sealed class DebugDrawerAction : Action {
          * [NavigateTo] action fired when the debug drawer needs to navigate to [TabToolsScreen].
          */
         object TabTools : NavigateTo()
+
+        /**
+         * [NavigateTo] action fired when the debug drawer needs to navigate to [LoginsScreen].
+         */
+        object Logins : NavigateTo()
     }
 
     /**

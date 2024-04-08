@@ -9,27 +9,33 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.navigation.compose.rememberNavController
+import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.storage.LoginsStorage
 import mozilla.components.lib.state.ext.observeAsState
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
+import org.mozilla.fenix.debugsettings.logins.FakeLoginsStorage
+import org.mozilla.fenix.debugsettings.logins.LoginsTools
 import org.mozilla.fenix.debugsettings.navigation.DebugDrawerRoute
 import org.mozilla.fenix.debugsettings.store.DebugDrawerAction
 import org.mozilla.fenix.debugsettings.store.DebugDrawerNavigationMiddleware
 import org.mozilla.fenix.debugsettings.store.DebugDrawerStore
 import org.mozilla.fenix.debugsettings.store.DrawerStatus
-import org.mozilla.fenix.debugsettings.tabs.TabTools
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
 
 /**
  * Overlay for presenting Fenix-wide debugging content.
  *
- * @param browserStore [BrowserStore] used to access tab data for [TabTools].
+ * @param browserStore [BrowserStore] used to access [BrowserState].
+ * @param loginsStorage [LoginsStorage] used to access logins for [LoginsTools].
  * @param inactiveTabsEnabled Whether the inactive tabs feature is enabled.
  */
 @Composable
 fun FenixOverlay(
     browserStore: BrowserStore,
+    loginsStorage: LoginsStorage,
     inactiveTabsEnabled: Boolean,
 ) {
     val navController = rememberNavController()
@@ -49,6 +55,7 @@ fun FenixOverlay(
             debugDrawerStore = debugDrawerStore,
             browserStore = browserStore,
             inactiveTabsEnabled = inactiveTabsEnabled,
+            loginsStorage = loginsStorage,
         )
     }
     val drawerStatus by debugDrawerStore.observeAsState(initialValue = DrawerStatus.Closed) { state ->
@@ -76,8 +83,12 @@ fun FenixOverlay(
 @LightDarkPreview
 @Composable
 private fun FenixOverlayPreview() {
+    val selectedTab = createTab("https://mozilla.org")
     FenixOverlay(
-        browserStore = BrowserStore(),
+        browserStore = BrowserStore(
+            BrowserState(selectedTabId = selectedTab.id, tabs = listOf(selectedTab)),
+        ),
         inactiveTabsEnabled = true,
+        loginsStorage = FakeLoginsStorage(),
     )
 }
