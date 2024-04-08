@@ -39,8 +39,7 @@ import mozilla.components.concept.menu.candidate.TextStyle
 class TwoStateBrowserMenuImageText(
     private val primaryLabel: String,
     private val secondaryLabel: String,
-    @ColorRes private val textColorResource: Int = NO_ID,
-    enabled: Boolean = true,
+    @ColorRes internal val textColorResource: Int = NO_ID,
     @DrawableRes val primaryStateIconResource: Int,
     @DrawableRes val secondaryStateIconResource: Int,
     @ColorRes iconTintColorResource: Int = NO_ID,
@@ -55,7 +54,6 @@ class TwoStateBrowserMenuImageText(
     primaryStateIconResource,
     iconTintColorResource,
     textColorResource,
-    enabled,
     isCollapsingMenuLimit,
     isSticky,
     primaryStateAction,

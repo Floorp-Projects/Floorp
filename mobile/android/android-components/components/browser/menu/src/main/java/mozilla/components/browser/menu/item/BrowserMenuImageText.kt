@@ -53,10 +53,9 @@ open class BrowserMenuImageText(
     @DrawableRes
     internal val imageResource: Int,
     @ColorRes
-    open var iconTintColorResource: Int = NO_ID,
+    internal val iconTintColorResource: Int = NO_ID,
     @ColorRes
     private val textColorResource: Int = NO_ID,
-    open var enabled: Boolean = true,
     override val isCollapsingMenuLimit: Boolean = false,
     override val isSticky: Boolean = false,
     private val listener: () -> Unit = {},
@@ -70,19 +69,17 @@ open class BrowserMenuImageText(
         bindText(view)
 
         bindImage(view)
+
         view.setOnClickListener {
             listener.invoke()
             menu.dismiss()
         }
-        view.isEnabled = enabled
-        view.contentDescription = label
     }
 
     private fun bindText(view: View) {
         val textView = view.findViewById<TextView>(R.id.text)
         textView.text = label
         textView.setColorResource(textColorResource)
-        textView.isEnabled = enabled
     }
 
     private fun bindImage(view: View) {
