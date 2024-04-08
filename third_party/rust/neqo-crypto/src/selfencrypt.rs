@@ -47,7 +47,7 @@ impl SelfEncrypt {
         debug_assert_eq!(salt.len(), Self::SALT_LENGTH);
         let salt = hkdf::import_key(self.version, salt)?;
         let secret = hkdf::extract(self.version, self.cipher, Some(&salt), k)?;
-        Aead::new(false, self.version, self.cipher, &secret, "neqo self")
+        Aead::new(self.version, self.cipher, &secret, "neqo self")
     }
 
     /// Rotate keys.  This causes any previous key that is being held to be replaced by the current

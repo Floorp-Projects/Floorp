@@ -127,6 +127,76 @@ fn reorder_server_initial() {
     assert_eq!(*client.state(), State::Confirmed);
 }
 
+fn set_payload(server_packet: &Option<Datagram>, client_dcid: &[u8], payload: &[u8]) -> Datagram {
+    let (server_initial, _server_hs) = split_datagram(server_packet.as_ref().unwrap());
+    let (protected_header, _, _, orig_payload) =
+        decode_initial_header(&server_initial, Role::Server);
+
+    // Now decrypt the packet.
+    let (aead, hp) = initial_aead_and_hp(client_dcid, Role::Server);
+    let (mut header, pn) = remove_header_protection(&hp, protected_header, orig_payload);
+    assert_eq!(pn, 0);
+    // Re-encode the packet number as four bytes, so we have enough material for the header
+    // protection sample if payload is empty.
+    let pn_pos = header.len() - 2;
+    header[pn_pos] = u8::try_from(4 + aead.expansion()).unwrap();
+    header.resize(header.len() + 3, 0);
+    header[0] |= 0b0000_0011; // Set the packet number length to 4.
+
+    // And build a packet containing the given payload.
+    let mut packet = header.clone();
+    packet.resize(header.len() + payload.len() + aead.expansion(), 0);
+    aead.encrypt(pn, &header, payload, &mut packet[header.len()..])
+        .unwrap();
+    apply_header_protection(&hp, &mut packet, protected_header.len()..header.len());
+    Datagram::new(
+        server_initial.source(),
+        server_initial.destination(),
+        server_initial.tos(),
+        server_initial.ttl(),
+        packet,
+    )
+}
+
+/// Test that the stack treats a packet without any frames as a protocol violation.
+#[test]
+fn packet_without_frames() {
+    let mut client = new_client(
+        ConnectionParameters::default().versions(Version::Version1, vec![Version::Version1]),
+    );
+    let mut server = default_server();
+
+    let client_initial = client.process_output(now());
+    let (_, client_dcid, _, _) =
+        decode_initial_header(client_initial.as_dgram_ref().unwrap(), Role::Client);
+
+    let server_packet = server.process(client_initial.as_dgram_ref(), now()).dgram();
+    let modified = set_payload(&server_packet, client_dcid, &[]);
+    client.process_input(&modified, now());
+    assert_eq!(
+        client.state(),
+        &State::Closed(ConnectionError::Transport(Error::ProtocolViolation))
+    );
+}
+
+/// Test that the stack permits a packet containing only padding.
+#[test]
+fn packet_with_only_padding() {
+    let mut client = new_client(
+        ConnectionParameters::default().versions(Version::Version1, vec![Version::Version1]),
+    );
+    let mut server = default_server();
+
+    let client_initial = client.process_output(now());
+    let (_, client_dcid, _, _) =
+        decode_initial_header(client_initial.as_dgram_ref().unwrap(), Role::Client);
+
+    let server_packet = server.process(client_initial.as_dgram_ref(), now()).dgram();
+    let modified = set_payload(&server_packet, client_dcid, &[0]);
+    client.process_input(&modified, now());
+    assert_eq!(client.state(), &State::WaitInitial);
+}
+
 /// Overflow the crypto buffer.
 #[allow(clippy::similar_names)] // For ..._scid and ..._dcid, which are fine.
 #[test]

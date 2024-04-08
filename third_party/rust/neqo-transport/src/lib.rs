@@ -6,7 +6,7 @@
 
 #![allow(clippy::module_name_repetitions)] // This lint doesn't work here.
 
-use neqo_common::qinfo;
+use neqo_common::qwarn;
 use neqo_crypto::Error as CryptoError;
 
 mod ackrate;
@@ -165,7 +165,7 @@ impl Error {
 
 impl From<CryptoError> for Error {
     fn from(err: CryptoError) -> Self {
-        qinfo!("Crypto operation failed {:?}", err);
+        qwarn!("Crypto operation failed {:?}", err);
         match err {
             CryptoError::EchRetry(config) => Self::EchRetry(config),
             _ => Self::CryptoError(err),

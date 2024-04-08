@@ -54,10 +54,8 @@ impl Datagram {
         self.ttl
     }
 
-    #[cfg(feature = "udp")]
-    #[must_use]
-    pub(crate) fn into_data(self) -> Vec<u8> {
-        self.d
+    pub fn set_tos(&mut self, tos: IpTos) {
+        self.tos = tos;
     }
 }
 
@@ -83,6 +81,12 @@ impl std::fmt::Debug for Datagram {
     }
 }
 
+impl From<Datagram> for Vec<u8> {
+    fn from(datagram: Datagram) -> Self {
+        datagram.d
+    }
+}
+
 #[cfg(test)]
 use test_fixture::datagram;
 
@@ -90,8 +94,7 @@ use test_fixture::datagram;
 fn fmt_datagram() {
     let d = datagram([0; 1].to_vec());
     assert_eq!(
-        format!("{d:?}"),
+        &format!("{d:?}"),
         "Datagram IpTos(Cs0, NotEct) TTL Some(128) [fe80::1]:443->[fe80::1]:443: [1]: 00"
-            .to_string()
     );
 }

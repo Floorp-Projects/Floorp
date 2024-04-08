@@ -16,9 +16,10 @@ use neqo_common::{event::Provider, qdebug, Datagram};
 use neqo_crypto::{
     constants::TLS_CHACHA20_POLY1305_SHA256, generate_ech_keys, AuthenticationStatus,
 };
+#[cfg(not(feature = "disable-encryption"))]
+use test_fixture::datagram;
 use test_fixture::{
-    assertions, assertions::assert_coalesced_0rtt, datagram, fixture_init, now, split_datagram,
-    DEFAULT_ADDR,
+    assertions, assertions::assert_coalesced_0rtt, fixture_init, now, split_datagram, DEFAULT_ADDR,
 };
 
 use super::{
@@ -458,7 +459,7 @@ fn coalesce_05rtt() {
     assert_eq!(client.stats().dropped_rx, 0); // No Initial padding.
     assert_eq!(client.stats().packets_rx, 4);
     assert_eq!(client.stats().saved_datagrams, 1);
-    assert_eq!(client.stats().frame_rx.padding, 1); // Padding uses frames.
+    assert!(client.stats().frame_rx.padding > 0); // Padding uses frames.
 
     // Allow the handshake to complete.
     now += RTT / 2;
@@ -605,7 +606,7 @@ fn reorder_1rtt() {
     }
 }
 
-#[cfg(not(feature = "fuzzing"))]
+#[cfg(not(feature = "disable-encryption"))]
 #[test]
 fn corrupted_initial() {
     let mut client = default_client();
@@ -808,7 +809,7 @@ fn anti_amplification() {
     assert_eq!(*server.state(), State::Confirmed);
 }
 
-#[cfg(not(feature = "fuzzing"))]
+#[cfg(not(feature = "disable-encryption"))]
 #[test]
 fn garbage_initial() {
     let mut client = default_client();
