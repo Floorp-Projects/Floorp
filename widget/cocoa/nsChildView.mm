@@ -742,11 +742,11 @@ void nsChildView::Resize(double aWidth, double aHeight, bool aRepaint) {
   mBounds.height = height;
 
   ManipulateViewWithoutNeedingDisplay(mView, ^{
-    [mView setFrame:DevPixelsToCocoaPoints(mBounds)];
+    mView.frame = DevPixelsToCocoaPoints(mBounds);
   });
 
   if (mVisible && aRepaint) {
-    [[mView pixelHostingView] setNeedsDisplay:YES];
+    mView.pixelHostingView.needsDisplay = YES;
   }
 
   ReportSizeEvent();
@@ -782,11 +782,11 @@ void nsChildView::Resize(double aX, double aY, double aWidth, double aHeight,
   }
 
   ManipulateViewWithoutNeedingDisplay(mView, ^{
-    [mView setFrame:DevPixelsToCocoaPoints(mBounds)];
+    mView.frame = DevPixelsToCocoaPoints(mBounds);
   });
 
   if (mVisible && aRepaint) {
-    [[mView pixelHostingView] setNeedsDisplay:YES];
+    mView.pixelHostingView.needsDisplay = YES;
   }
 
   if (isMoving) {
@@ -1799,7 +1799,7 @@ mozilla::VibrancyManager& nsChildView::EnsureVibrancyManager() {
   MOZ_ASSERT(mView, "Only call this once we have a view!");
   if (!mVibrancyManager) {
     mVibrancyManager =
-        MakeUnique<VibrancyManager>(*this, [mView vibrancyViewsContainer]);
+        MakeUnique<VibrancyManager>(*this, mView.vibrancyViewsContainer);
   }
   return *mVibrancyManager;
 }
@@ -1862,7 +1862,7 @@ void nsChildView::UpdateWindowDraggingRegion(
   // Suppress calls to setNeedsDisplay during NSView geometry changes.
   ManipulateViewWithoutNeedingDisplay(mView, ^() {
     changed = mNonDraggableRegion.UpdateRegion(
-        nonDraggable, *this, [mView nonDraggableViewsContainer], ^() {
+        nonDraggable, *this, mView.nonDraggableViewsContainer, ^() {
           return [[NonDraggableView alloc] initWithFrame:NSZeroRect];
         });
   });
@@ -2163,22 +2163,22 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
     mCancelSwipeAnimation = nil;
 #endif
 
+    auto bounds = self.bounds;
     mNonDraggableViewsContainer =
-        [[ViewRegionContainerView alloc] initWithFrame:[self bounds]];
+        [[ViewRegionContainerView alloc] initWithFrame:bounds];
     mVibrancyViewsContainer =
-        [[ViewRegionContainerView alloc] initWithFrame:[self bounds]];
+        [[ViewRegionContainerView alloc] initWithFrame:bounds];
 
-    [mNonDraggableViewsContainer
-        setAutoresizingMask:NSViewWidthSizable | NSViewHeightSizable];
-    [mVibrancyViewsContainer
-        setAutoresizingMask:NSViewWidthSizable | NSViewHeightSizable];
+    mNonDraggableViewsContainer.autoresizingMask =
+        mVibrancyViewsContainer.autoresizingMask =
+            NSViewWidthSizable | NSViewHeightSizable;
 
     [self addSubview:mNonDraggableViewsContainer];
     [self addSubview:mVibrancyViewsContainer];
 
-    mPixelHostingView = [[PixelHostingView alloc] initWithFrame:[self bounds]];
-    [mPixelHostingView
-        setAutoresizingMask:NSViewWidthSizable | NSViewHeightSizable];
+    mPixelHostingView = [[PixelHostingView alloc] initWithFrame:bounds];
+    mPixelHostingView.autoresizingMask =
+        NSViewWidthSizable | NSViewHeightSizable;
 
     [self addSubview:mPixelHostingView];
 
@@ -2187,7 +2187,7 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
     mRootCALayer.bounds = NSZeroRect;
     mRootCALayer.anchorPoint = NSZeroPoint;
     mRootCALayer.contentsGravity = kCAGravityTopLeft;
-    [[mPixelHostingView layer] addSublayer:mRootCALayer];
+    [mPixelHostingView.layer addSublayer:mRootCALayer];
 
     mLastPressureStage = 0;
   }
@@ -2363,7 +2363,7 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
     // This call will cause updateRootCALayer to be called during the upcoming
     // main thread CoreAnimation transaction. It will also trigger a transaction
     // if no transaction is currently pending.
-    [[mPixelHostingView layer] setNeedsDisplay];
+    [mPixelHostingView.layer setNeedsDisplay];
   }
 }
 
