@@ -1,10 +1,5 @@
 [DEFAULT]
-support-files = [
-  "!/toolkit/components/satchel/test/subtst_privbrowsing.html",
-  "formhistory_autocomplete.sqlite",
-]
-
-["browser_autocomplete.js"]
+support-files = ["!/toolkit/components/satchel/test/subtst_privbrowsing.html"]
 
 ["browser_close_tab.js"]
 

@@ -96,9 +96,9 @@ add_task(async function test_not_reopened_after_selecting() {
   listenForUnexpectedPopupShown();
 
   await SpecialPowers.spawn(getIframeBrowsingContext(window), [], function() {
-    const actor = content.windowGlobalChild.getActor("AutoComplete");
+    let formFillController = SpecialPowers.getFormFillController();
     let usernameField = this.content.document.getElementById("form-basic-username");
-    actor.markAsAutoCompletableField(usernameField);
+    formFillController.markAsLoginManagerField(usernameField);
   });
 
   info("Waiting to see if a popupshown occurs");

@@ -34,8 +34,11 @@ add_task(async function test() {
       await BrowserTestUtils.waitForCondition(() => {
         return autoCompletePopup.popupOpen;
       });
+      const listItemElems = itemsBox.querySelectorAll(
+        ".autocomplete-richlistitem"
+      );
       Assert.equal(
-        autoCompletePopup.matchCount,
+        listItemElems.length,
         mockHistory.length,
         "ensure result length"
       );
@@ -54,9 +57,6 @@ add_task(async function test() {
       );
 
       // mouseover the second item
-      const listItemElems = itemsBox.querySelectorAll(
-        ".autocomplete-richlistitem"
-      );
       EventUtils.synthesizeMouseAtCenter(listItemElems[1], {
         type: "mouseover",
       });

@@ -6,6 +6,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   FormHistoryAutoCompleteResult:
     "resource://gre/modules/FormHistoryAutoComplete.sys.mjs",
+  FormHistoryClient: "resource://gre/modules/FormHistoryAutoComplete.sys.mjs",
 
   SearchSuggestionController:
     "resource://gre/modules/SearchSuggestionController.sys.mjs",
@@ -155,6 +156,10 @@ class SuggestAutoComplete {
     // Bug 1822297: This re-uses the wrappers from Satchel, to avoid re-writing
     // our own nsIAutoCompleteSimpleResult implementation for now. However,
     // we should do that at some stage to remove the dependency on satchel.
+    let client = new lazy.FormHistoryClient({
+      formField: null,
+      inputName: this.#suggestionController.formHistoryParam,
+    });
     let formHistoryEntries = (results?.formHistoryResults ?? []).map(
       historyEntry => ({
         // We supply the comments field so that autocomplete does not kick
@@ -165,7 +170,7 @@ class SuggestAutoComplete {
       })
     );
     let autoCompleteResult = new lazy.FormHistoryAutoCompleteResult(
-      null,
+      client,
       formHistoryEntries,
       this.#suggestionController.formHistoryParam,
       searchString

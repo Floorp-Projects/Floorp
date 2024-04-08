@@ -16,6 +16,8 @@ support-files = [
 
 ["test_async_expire.js"]
 
+["test_autocomplete.js"]
+
 ["test_db_access_denied.js"]
 skip-if = ["os != 'linux'"] # simulates insufficiant file permissions
 
@@ -37,3 +39,5 @@ skip-if = ["condprof"]  # Bug 1769154 - not supported
 ["test_history_sources.js"]
 
 ["test_notify.js"]
+
+["test_previous_result.js"]
