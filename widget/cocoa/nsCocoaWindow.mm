@@ -3512,10 +3512,12 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
 @implementation FullscreenTitlebarTracker
 - (FullscreenTitlebarTracker*)init {
   [super init];
-  self.view =
-      [[[MOZTitlebarAccessoryView alloc] initWithFrame:NSZeroRect] autorelease];
   self.hidden = YES;
   return self;
+}
+- (void)loadView {
+  self.view =
+      [[[MOZTitlebarAccessoryView alloc] initWithFrame:NSZeroRect] autorelease];
 }
 @end
 
