@@ -152,7 +152,7 @@ def browsertime_path():
 
 def visualmetrics_path():
     """The path to the `visualmetrics.py` script."""
-    return mozpath.join(package_path(), "browsertime", "visualmetrics-portable.py")
+    return mozpath.join(package_path(), "visualmetrics", "visualmetrics-portable.py")
 
 
 def host_platform():
