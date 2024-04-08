@@ -25,6 +25,13 @@ intl/unicharutil/util/nsSpecialCasingData.cpp
 intl/unicharutil/util/nsUnicodePropertyData.cpp
 mobile/locales/l10n-changesets.json
 mobile/locales/l10n-onchange-changesets.json
+mobile/android/**/.build-cache
+mobile/android/**/.gradle
+mobile/android/**/build
+mobile/android/**/bin
+mobile/android/**/generated
+mobile/android/**\/local.properties
+mobile/android/**\/manifest.json
 node_modules/
 python/mozperftest/mozperftest/tests/data/
 security/manager/tools/KnownRootHashes.json
