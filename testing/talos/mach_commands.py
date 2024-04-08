@@ -12,6 +12,7 @@ import sys
 
 import six
 from mach.decorators import Command
+from mach.util import get_state_dir
 from mozbuild.base import BinaryNotFoundException, MozbuildObject
 
 HERE = os.path.dirname(os.path.realpath(__file__))
@@ -82,6 +83,7 @@ class TalosRunner(MozbuildObject):
                 "win32": "python3.manifest",
                 "win64": "python3_x64.manifest",
             },
+            "mozbuild_path": get_state_dir(),
         }
 
     def make_args(self):
@@ -117,6 +119,16 @@ def create_parser():
     return create_parser(mach_interface=True)
 
 
+def setup_toolchain_artifacts(args, command_context):
+    if not any(arg.lower() == "pdfpaint" for arg in args):
+        return
+
+    from mozbuild.bootstrap import bootstrap_toolchain
+
+    print("Setting up pdfpaint PDFs...")
+    bootstrap_toolchain("talos-pdfs")
+
+
 @Command(
     "talos-test",
     category="testing",
@@ -127,7 +139,9 @@ def run_talos_test(command_context, **kwargs):
     talos = command_context._spawn(TalosRunner)
 
     try:
-        return talos.run_test(sys.argv[2:])
+        args = sys.argv[2:]
+        setup_toolchain_artifacts(args, command_context)
+        return talos.run_test(args)
     except Exception as e:
         print(str(e))
         return 1
