@@ -121,6 +121,6 @@ add_task(async function () {
   await resetDownloads();
 
   const closePromise = BrowserTestUtils.windowClosed(privateWindow);
-  privateWindow.BrowserTryToCloseWindow();
+  privateWindow.BrowserCommands.tryToCloseWindow();
   await closePromise;
 });

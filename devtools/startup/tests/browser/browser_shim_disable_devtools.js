@@ -134,7 +134,7 @@ add_task(async function () {
 
   info("Close the test window");
   const winClosed = BrowserTestUtils.windowClosed(win);
-  win.BrowserTryToCloseWindow();
+  win.BrowserCommands.tryToCloseWindow();
   await winClosed;
 });
 

@@ -57,7 +57,7 @@ add_task(async function closeWindowWithMultipleTabsIncludingOneBeforeUnload() {
   );
   let windowClosedPromise = BrowserTestUtils.domWindowClosed(newWin);
   expectingDialog = true;
-  newWin.BrowserTryToCloseWindow();
+  newWin.BrowserCommands.tryToCloseWindow();
   await windowClosedPromise;
   ok(!expectingDialog, "There should have been a dialog.");
   ok(newWin.closed, "Window should be closed.");

@@ -216,12 +216,12 @@ function onStateRestored() {
                 newWin.gBrowser.removeTab(newTab);
                 newWin.gBrowser.removeTab(newTab2);
               }
-              newWin.BrowserTryToCloseWindow();
+              newWin.BrowserCommands.tryToCloseWindow();
             },
             { capture: true, once: true }
           );
         } else {
-          newWin.BrowserTryToCloseWindow();
+          newWin.BrowserCommands.tryToCloseWindow();
         }
       });
     },

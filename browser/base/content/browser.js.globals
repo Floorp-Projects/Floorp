@@ -37,8 +37,6 @@
   "loadOneOrMoreURIs",
   "openLocation",
   "gLastOpenDirectory",
-  "BrowserCloseTabOrWindow",
-  "BrowserTryToCloseWindow",
   "getLoadContext",
   "readFromClipboard",
   "BrowserViewSourceOfDocument",
