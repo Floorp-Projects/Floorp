@@ -64,6 +64,8 @@ skip-if = [
 
 ["browser_hide_tooltip.js"]
 
+["browser_isactiveintab.js"]
+
 ["browser_layers_unloaded_while_interruptingJS.js"]
 
 ["browser_memory_distribution_telemetry.js"]
