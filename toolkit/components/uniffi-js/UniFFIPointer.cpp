@@ -111,8 +111,7 @@ bool UniFFIPointer::IsSamePtrType(const UniFFIPointerType* aType) const {
 }
 
 UniFFIPointer* UniFFIPointer::Clone() {
-  MOZ_LOG(sUniFFIPointerLogger, LogLevel::Info,
-          ("[UniFFI] cloning pointer"));
+  MOZ_LOG(sUniFFIPointerLogger, LogLevel::Info, ("[UniFFI] cloning pointer"));
   RustCallStatus status{};
   auto cloned = this->mType->clone(this->mPtr, &status);
   MOZ_DIAGNOSTIC_ASSERT(status.code == RUST_CALL_SUCCESS,
