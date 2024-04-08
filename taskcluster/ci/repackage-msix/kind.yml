@@ -19,11 +19,14 @@ kind-dependencies:
 only-for-build-platforms:
     - win32/opt
     - win64/opt
+    - win64-aarch64/opt
     - win64/debug
     - win32-shippable/opt
     - win64-shippable/opt
+    - win64-aarch64-shippable/opt
     - win32-devedition/opt
     - win64-devedition/opt
+    - win64-aarch-devedition/opt
 
 jobs:
     repackage-msix:
