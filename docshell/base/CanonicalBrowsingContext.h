@@ -136,11 +136,16 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   UniquePtr<LoadingSessionHistoryInfo> ReplaceLoadingSessionHistoryEntryForLoad(
       LoadingSessionHistoryInfo* aInfo, nsIChannel* aNewChannel);
 
-  using PrintPromise = MozPromise</* unused */ bool, nsresult, false>;
+  using PrintPromise =
+      MozPromise<MaybeDiscardedBrowsingContext, nsresult, false>;
   MOZ_CAN_RUN_SCRIPT RefPtr<PrintPromise> Print(nsIPrintSettings*);
   MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> PrintJS(nsIPrintSettings*,
                                                        ErrorResult&);
-
+  MOZ_CAN_RUN_SCRIPT RefPtr<PrintPromise> PrintWithNoContentAnalysis(
+      nsIPrintSettings* aPrintSettings, bool aForceStaticDocument,
+      const MaybeDiscardedBrowsingContext& aClonedStaticBrowsingContext);
+  MOZ_CAN_RUN_SCRIPT void ReleaseClonedPrint(
+      const MaybeDiscardedBrowsingContext& aClonedStaticBrowsingContext);
   // Call the given callback on all top-level descendant BrowsingContexts.
   // Return Callstate::Stop from the callback to stop calling further children.
   //
