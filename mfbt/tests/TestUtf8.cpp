@@ -24,12 +24,6 @@ using mozilla::IsUtf8;
 using mozilla::Span;
 using mozilla::Utf8Unit;
 
-// Disable the C++ 2a warning. See bug #1509926
-#if defined(__clang__) && (__clang_major__ >= 6)
-#  pragma clang diagnostic push
-#  pragma clang diagnostic ignored "-Wc++2a-compat"
-#endif
-
 static void TestUtf8Unit() {
   Utf8Unit c('A');
   MOZ_RELEASE_ASSERT(c.toChar() == 'A');
@@ -749,7 +743,3 @@ int main() {
   TestDecodeOneUtf8CodePoint();
   return 0;
 }
-
-#if defined(__clang__) && (__clang_major__ >= 6)
-#  pragma clang diagnostic pop
-#endif
