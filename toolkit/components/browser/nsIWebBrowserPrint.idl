@@ -30,7 +30,7 @@ native PrintPreviewResolver(std::function<void(const mozilla::dom::PrintPreviewR
  * nsIWebBrowserPrint corresponds to the main interface
  * for printing an embedded Gecko web browser window/document
  */
-[scriptable, uuid(c9a934ed-fff1-4971-bfba-6c25ad70e1e6)]
+[scriptable, builtinclass, uuid(c9a934ed-fff1-4971-bfba-6c25ad70e1e6)]
 interface nsIWebBrowserPrint : nsISupports
 {
   /**
@@ -84,6 +84,13 @@ interface nsIWebBrowserPrint : nsISupports
    * the print preview viewport. Fix in bug 1669762.
    */
   readonly attribute long printPreviewCurrentPageNumber;
+
+  /*
+   * Whether the document to print needs to have its window closed after printing
+   * is done - see OPEN_PRINT_BROWSER and specifically handleStaticCloneCreatedForPrint().
+   * This is set if the document is not a static clone.
+   */
+  [infallible] attribute boolean closeWindowAfterPrint;
 
   /**
    * Print the specified DOM window
