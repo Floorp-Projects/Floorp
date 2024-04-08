@@ -8839,6 +8839,13 @@
   value: false
   mirror: always
 
+# Enable relative color syntax: https://drafts.csswg.org/css-color-5/#relative-colors
+- name: layout.css.relative-color-syntax.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
 # Is CSS error reporting enabled?
 - name: layout.css.report_errors
   type: bool
