@@ -39,8 +39,6 @@
   "gLastOpenDirectory",
   "getLoadContext",
   "readFromClipboard",
-  "BrowserViewSourceOfDocument",
-  "BrowserViewSource",
   "BrowserPageInfo",
   "UpdateUrlbarSearchSplitterState",
   "UpdatePopupNotificationsVisibility",

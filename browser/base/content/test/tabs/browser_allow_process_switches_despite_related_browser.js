@@ -13,7 +13,7 @@ add_task(async function () {
   });
 
   let promiseTab = BrowserTestUtils.waitForNewTab(gBrowser, DATA_URI_SOURCE);
-  BrowserViewSource(tab.linkedBrowser);
+  BrowserCommands.viewSource(tab.linkedBrowser);
   let viewSourceTab = await promiseTab;
   registerCleanupFunction(async function () {
     BrowserTestUtils.removeTab(viewSourceTab);
