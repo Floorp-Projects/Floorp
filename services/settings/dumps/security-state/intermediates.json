@@ -1,6 +1,60 @@
 {
   "data": [
     {
+      "schema": 1712310550077,
+      "derHash": "w+vOp+axOsPrOnnwWBnmfWiTxlZC9Q2bXhZHyyZQa44=",
+      "subject": "CN=Security Communication ECC RootCA1,O=SECOM Trust Systems CO.\\,LTD.,C=JP",
+      "subjectDN": "MGExCzAJBgNVBAYTAkpQMSUwIwYDVQQKExxTRUNPTSBUcnVzdCBTeXN0ZW1zIENPLixMVEQuMSswKQYDVQQDEyJTZWN1cml0eSBDb21tdW5pY2F0aW9uIEVDQyBSb290Q0Ex",
+      "whitelist": false,
+      "attachment": {
+        "hash": "49bb804fc27ee287203f35432fa03118cbda037f2cc4b15a762a27278f2a430a",
+        "size": 1455,
+        "filename": "Mym_oTtgB6tfw3E_CssolCbi-8mcxcEQqRSxOVcWALY=.pem",
+        "location": "security-state-staging/intermediates/85f47822-4d0f-454d-9d84-f0ce5fc4d157.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "Mym/oTtgB6tfw3E/CssolCbi+8mcxcEQqRSxOVcWALY=",
+      "crlite_enrolled": false,
+      "id": "cdfe2baf-ce8e-4ff0-a638-e40128c6f4ee",
+      "last_modified": 1712311023721
+    },
+    {
+      "schema": 1712310549735,
+      "derHash": "nCgDadBy+J2cm2JkC78vKNLzDs7pdZhUAx1cXFPo0bY=",
+      "subject": "CN=JPRS OV ECC CA 2024 G1,O=Japan Registry Services Co.\\, Ltd.,C=JP",
+      "subjectDN": "MFoxCzAJBgNVBAYTAkpQMSowKAYDVQQKEyFKYXBhbiBSZWdpc3RyeSBTZXJ2aWNlcyBDby4sIEx0ZC4xHzAdBgNVBAMTFkpQUlMgT1YgRUNDIENBIDIwMjQgRzE=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "8f21756b90356734138db1717baa7cd355f39bc01d0bbefcd782b6a73bb40267",
+        "size": 1284,
+        "filename": "v_cVY7f6bXpCh2OYwK6wmEE9ZIaufUJmoSlpxWvjBDI=.pem",
+        "location": "security-state-staging/intermediates/5d677b3c-4524-4ee7-a2b9-388e7d90dc2c.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "v/cVY7f6bXpCh2OYwK6wmEE9ZIaufUJmoSlpxWvjBDI=",
+      "crlite_enrolled": false,
+      "id": "f9ed868e-cbce-49b9-85ff-1b7d8f9771e7",
+      "last_modified": 1712311023718
+    },
+    {
+      "schema": 1712310549107,
+      "derHash": "G5AdVQpaUfZzcnnGAhRF8FG9KTAVYSpbqj+FiIKe5po=",
+      "subject": "CN=JPRS DV ECC CA 2024 G1,O=Japan Registry Services Co.\\, Ltd.,C=JP",
+      "subjectDN": "MFoxCzAJBgNVBAYTAkpQMSowKAYDVQQKEyFKYXBhbiBSZWdpc3RyeSBTZXJ2aWNlcyBDby4sIEx0ZC4xHzAdBgNVBAMTFkpQUlMgRFYgRUNDIENBIDIwMjQgRzE=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "3749489691bfad9b5833e7e64c622b11fa2a70217f4d99f59629a2e6e864a189",
+        "size": 1284,
+        "filename": "d7IsXA0lsOv-SgxZRrDbM-A_cNQoAtC0iZ2kRR58b5c=.pem",
+        "location": "security-state-staging/intermediates/57cb9705-521a-4177-82fa-7c562bc5aef7.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "d7IsXA0lsOv+SgxZRrDbM+A/cNQoAtC0iZ2kRR58b5c=",
+      "crlite_enrolled": false,
+      "id": "cc33f7ee-ac11-426c-9210-dd79e9bde3ae",
+      "last_modified": 1712311023716
+    },
+    {
       "schema": 1711724029637,
       "derHash": "TkLi2IxOTbWRnHkATRycDpwtb7tFPaHWQtPTD3jAVy4=",
       "subject": "CN=Certigna Server Authentication ACME FR CA G2,O=Certigna,C=FR",
@@ -12907,24 +12961,6 @@
       "last_modified": 1666727870028
     },
     {
-      "schema": 1666727330223,
-      "derHash": "0zqEf2QDd74K4aQpFToH6HyIJ/pIQLUVi83LheEKRTo=",
-      "subject": "CN=VR IDENT EV SSL CA 2020,O=Fiducia & GAD IT AG,C=DE",
-      "subjectDN": "ME0xCzAJBgNVBAYTAkRFMRwwGgYDVQQKDBNGaWR1Y2lhICYgR0FEIElUIEFHMSAwHgYDVQQDDBdWUiBJREVOVCBFViBTU0wgQ0EgMjAyMA==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "a95e7ccf2ef4b020f65fbd061c44e49d966821be27623376e3f16a8a3ebd371f",
-        "size": 2361,
-        "filename": "te09bIALahNazDua57TEibeM7CatIkOAT8t-qu_Kdro=.pem",
-        "location": "security-state-staging/intermediates/e8b0b0a2-f7f0-4893-b9ef-32f493e8a146.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "te09bIALahNazDua57TEibeM7CatIkOAT8t+qu/Kdro=",
-      "crlite_enrolled": false,
-      "id": "92b7ea6b-c8ed-47fc-bd89-4834ef4a3ad5",
-      "last_modified": 1666727870010
-    },
-    {
       "schema": 1666727401140,
       "derHash": "y2Zmsyv/Lv7cxBh98Umm00pdELcWW5z/KmfA4xGu7tc=",
       "subject": "CN=QuoVadis Europe EV SSL CA G1,O=QuoVadis Trustlink B.V.,C=NL",
@@ -12977,24 +13013,6 @@
       "crlite_enrolled": false,
       "id": "3157d9c2-162a-4e53-9f7b-3bde40d1cd54",
       "last_modified": 1666727869969
-    },
-    {
-      "schema": 1666727372418,
-      "derHash": "NH0Y3Mwu/FGpIOen+7B7+9o1YTaB+C3KXExyuwyDwDU=",
-      "subject": "CN=VR IDENT SSL CA 2020,O=Fiducia & GAD IT AG,C=DE",
-      "subjectDN": "MEoxCzAJBgNVBAYTAkRFMRwwGgYDVQQKDBNGaWR1Y2lhICYgR0FEIElUIEFHMR0wGwYDVQQDDBRWUiBJREVOVCBTU0wgQ0EgMjAyMA==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "4158e246be129509cb8d8eb14b647517fea0196e81a9d593f4b8f64a11a6414f",
-        "size": 2357,
-        "filename": "fQUctsUYoew1aFnAFT0prf-kJmkVNqkPo2jJ5Jm9RaA=.pem",
-        "location": "security-state-staging/intermediates/ada7bb67-cb15-43b5-9c74-259e711941b5.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "fQUctsUYoew1aFnAFT0prf+kJmkVNqkPo2jJ5Jm9RaA=",
-      "crlite_enrolled": false,
-      "id": "2b1f7c04-dd89-4f96-ad7d-e4e167a9099d",
-      "last_modified": 1666727869953
     },
     {
       "schema": 1666727415303,
@@ -30601,5 +30619,5 @@
       "last_modified": 1559865884636
     }
   ],
-  "timestamp": 1711810623303
+  "timestamp": 1712311023721
 }
