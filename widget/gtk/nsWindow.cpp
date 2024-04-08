@@ -9609,7 +9609,12 @@ nsWindow::GtkWindowDecoration nsWindow::GetSystemGtkWindowDecoration() {
       return *csdOverride == '0' ? GTK_DECORATION_NONE : GTK_DECORATION_CLIENT;
     }
 
-    if (GetDesktopEnvironmentIdentifier().EqualsLiteral("i3")) {
+    // TODO: Consider switching this to GetDesktopEnvironmentIdentifier().
+    const char* currentDesktop = getenv("XDG_CURRENT_DESKTOP");
+    if (!currentDesktop) {
+      return GTK_DECORATION_NONE;
+    }
+    if (strstr(currentDesktop, "i3")) {
       return GTK_DECORATION_NONE;
     }
 
