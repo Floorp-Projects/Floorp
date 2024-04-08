@@ -95,7 +95,9 @@ private fun Button(
  * @param text The button text to be displayed.
  * @param modifier [Modifier] to be applied to the layout.
  * @param enabled Controls the enabled state of the button.
- * When false, this button will not be clickable
+ * When false, this button will not be clickable.
+ * Whenever [textColor] and [backgroundColor] are not defaults, and [enabled] is false,
+ * then the default color state for a disabled button will be presented.
  * @param textColor [Color] to apply to the button text.
  * @param backgroundColor The background [Color] of the button.
  * @param icon Optional [Painter] used to display an [Icon] before the button text.
@@ -113,10 +115,22 @@ fun PrimaryButton(
     iconModifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
+    var buttonTextColor = textColor
+    var buttonBackgroundColor = backgroundColor
+
+    // If not enabled and using default colors, then use the disabled button color defaults.
+    if (!enabled &&
+        textColor == FirefoxTheme.colors.textActionPrimary &&
+        backgroundColor == FirefoxTheme.colors.actionPrimary
+    ) {
+        buttonTextColor = FirefoxTheme.colors.textActionPrimaryDisabled
+        buttonBackgroundColor = FirefoxTheme.colors.actionPrimaryDisabled
+    }
+
     Button(
         text = text,
-        textColor = textColor,
-        backgroundColor = backgroundColor,
+        textColor = buttonTextColor,
+        backgroundColor = buttonBackgroundColor,
         modifier = modifier,
         enabled = enabled,
         icon = icon,
