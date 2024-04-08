@@ -376,6 +376,13 @@ const kEventConstructors = {
                                                          return new TCPServerSocketEvent(aName, aProps);
                                                        },
                                              },
+  TextEvent :                                { create (aName, aProps) {
+                                                         var e = document.createEvent("textevent");
+                                                         e.initTextEvent("textInput", aProps.bubbles, aProps.cancelable,
+                                                                         aProps.view, aProps.data);
+                                                         return e;
+                                                       },
+                                             },
   TimeEvent:                                 { create: null
                                                // Cannot create untrusted event from JS
                                              },
@@ -477,7 +484,8 @@ function test() {
 SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv(
   {"set": [["dom.w3c_touch_events.legacy_apis.enabled", true],
-           ["layout.css.content-visibility.enabled", true]]},
+           ["layout.css.content-visibility.enabled", true],
+           ["dom.events.textevent.enabled", true]]},
   function() {
     test();
     SimpleTest.finish();
