@@ -493,6 +493,9 @@ with Files("tests/imagebitmap-renderingcontext/**"):
 with Files("tests/images/**"):
     BUG_COMPONENT = ("Testing", "web-platform-tests")
 
+with Files("tests/import-maps/**"):
+    BUG_COMPONENT = ("Core", "JavaScript Engine")
+
 with Files("tests/infrastructure/**"):
     BUG_COMPONENT = ("Testing", "web-platform-tests")
 
@@ -505,15 +508,33 @@ with Files("tests/interfaces/**"):
 with Files("tests/intersection-observer/**"):
     BUG_COMPONENT = ("Core", "Layout")
 
+with Files("tests/jpegxl/**"):
+    BUG_COMPONENT = ("Core", "Graphics: ImageLib")
+
 with Files("tests/js/**"):
     BUG_COMPONENT = ("Core", "JavaScript Engine")
+
+with Files("tests/js-self-profiling/**"):
+    BUG_COMPONENT = ("Core", "Performance Engineering")
 
 # To be implemented in bug 1348405
 with Files("tests/keyboard-lock/**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
+with Files("tests/keyboard-map/**"):
+    BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
+
+with Files("tests/largest-contentful-paint/**"):
+    BUG_COMPONENT = ("Core", "DOM: Performance")
+
+with Files("tests/layout-instability/**"):
+    BUG_COMPONENT = ("Core", "Layout")
+
 # No reference to longtask in bugzilla or codebase
 with Files("tests/longtask-timing/**"):
+    BUG_COMPONENT = ("Core", "DOM: Performance")
+
+with Files("tests/long-animation-frame  /**"):
     BUG_COMPONENT = ("Core", "DOM: Performance")
 
 # depends on generic-sensor, check bug 1359076
@@ -541,14 +562,26 @@ with Files("tests/mediacapture-fromelement/**"):
 with Files("tests/mediacapture-image/**"):
     BUG_COMPONENT = ("Core", "Audio/Video: Recording")
 
+with Files("tests/mediacapture-insertable-stream/**"):
+    BUG_COMPONENT = ("Core", "Audio/Video: MediaStreamGraph")
+
 with Files("tests/mediacapture-record/**"):
     BUG_COMPONENT = ("Core", "Audio/Video: Recording")
 
 with Files("tests/mediacapture-streams/**"):
     BUG_COMPONENT = ("Core", "Audio/Video: MediaStreamGraph")
 
+with Files("tests/merchant-validation/**"):
+    BUG_COMPONENT = ("Core", "DOM: Web Payments")
+
+with Files("tests/mimesniff/**"):
+    BUG_COMPONENT = ("Firefox", "File Handling")
+
 with Files("tests/mixed-content/**"):
     BUG_COMPONENT = ("Core", "DOM: Security")
+
+with Files("tests/navigation-api/**"):
+    BUG_COMPONENT = ("Core", "DOM: Navigation")
 
 with Files("tests/navigation-timing/**"):
     BUG_COMPONENT = ("Core", "DOM: Performance")
@@ -604,6 +637,9 @@ with Files("tests/secure-payment-confirmation/**"):
 with Files("tests/performance-timeline/**"):
     BUG_COMPONENT = ("Core", "DOM: Performance")
 
+with Files("tests/permissions-policy/**"):
+    BUG_COMPONENT = ("Core", "DOM: Security")
+
 with Files("tests/picture-in-picture/**"):
     BUG_COMPONENT = ("Toolkit", "Video/Audio Controls")
 
@@ -622,6 +658,9 @@ with Files("tests/presentation-api/**"):
 with Files("tests/proximity/**"):
     BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
 
+with Files("tests/push-api/**"):
+    BUG_COMPONENT = ("Core", "DOM: Push Subscriptions")
+
 with Files("tests/quirks/**"):
     BUG_COMPONENT = ("Core", "Layout")
 
@@ -630,6 +669,9 @@ with Files("tests/remote-playback/**"):
 
 with Files("tests/referrer-policy/**"):
     BUG_COMPONENT = ("Core", "DOM: Security")
+
+with Files("tests/reporting/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
 with Files("tests/requestidlecallback/**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
@@ -647,16 +689,22 @@ with Files("tests/resources/**"):
 with Files("tests/sanitizer-api/**"):
     BUG_COMPONENT = ("Core", "DOM: Security")
 
+with Files("tests/scheduler/**"):
+    BUG_COMPONENT = ("Core", "DOM: Performance")
+
 with Files("tests/screen-capture/**"):
     BUG_COMPONENT = ("Core", "WebRTC: Audio/Video")
 
 with Files("tests/screen-orientation/**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
+with Files("tests/screen-wake-lock/**"):
+    BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
+
 with Files("tests/scroll-animations/**"):
     BUG_COMPONENT = ("Core", "Layout")
 
-with Files("tests/scroll-to-text-fragments/**"):
+with Files("tests/scroll-to-text-fragment/**"):
     BUG_COMPONENT = ("Core", "DOM: Navigation")
 
 with Files("tests/secure-contexts/**"):
@@ -682,6 +730,9 @@ with Files("tests/speech-api/**"):
 
 with Files("tests/storage/**"):
     BUG_COMPONENT = ("Core", "Storage: Quota Manager")
+
+with Files("tests/storage-access-api/**"):
+    BUG_COMPONENT = ("Core", "Privacy: Anti-Tracking")
 
 with Files("tests/streams/**"):
     BUG_COMPONENT = ("Core", "DOM: Streams")
