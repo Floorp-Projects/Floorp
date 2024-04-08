@@ -225,8 +225,6 @@ EVENT(gotpointercapture, ePointerGotCapture, EventNameType_All,
 EVENT(lostpointercapture, ePointerLostCapture, EventNameType_All,
       ePointerEventClass)
 EVENT(selectstart, eSelectStart, EventNameType_HTMLXUL, eBasicEventClass)
-NON_IDL_EVENT(textInput, eLegacyTextInput, EventNameType_None,
-              eLegacyTextEventClass)
 
 EVENT(contextlost, eContextLost, EventNameType_HTML, eBasicEventClass)
 EVENT(contextrestored, eContextRestored, EventNameType_HTML, eBasicEventClass)

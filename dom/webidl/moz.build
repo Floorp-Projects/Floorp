@@ -325,9 +325,6 @@ with Files("SubtleCrypto.webidl"):
 with Files("TCP*"):
     BUG_COMPONENT = ("Core", "DOM: Networking")
 
-with Files("TextEvent.webidl"):
-    BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
-
 with Files("TextTrack*"):
     BUG_COMPONENT = ("Core", "Audio/Video")
 
@@ -972,7 +969,6 @@ WEBIDL_FILES = [
     "TextDecoderStream.webidl",
     "TextEncoder.webidl",
     "TextEncoderStream.webidl",
-    "TextEvent.webidl",
     "TextTrack.webidl",
     "TextTrackCue.webidl",
     "TextTrackCueList.webidl",

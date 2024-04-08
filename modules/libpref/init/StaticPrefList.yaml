@@ -2610,13 +2610,6 @@
   value: true
   mirror: always
 
-# Expose Window.TextEvent and make the builtin editors dispatch `textInput`
-# event as a default action of `beforeinput`.
-- name: dom.events.textevent.enabled
-  type: bool
-  value: false
-  mirror: always
-
 # Whether to expose test interfaces of various sorts
 - name: dom.expose_test_interfaces
   type: bool
