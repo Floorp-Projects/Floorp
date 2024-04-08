@@ -945,7 +945,7 @@ class HomeFragment : Fragment() {
             },
             operation = { },
             elevation = TOAST_ELEVATION,
-            anchorView = null,
+            anchorView = snackbarAnchorView,
         )
 
         lifecycleScope.launch(IO) {
