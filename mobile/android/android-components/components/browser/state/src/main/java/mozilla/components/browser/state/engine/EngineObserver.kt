@@ -474,7 +474,7 @@ internal class EngineObserver(
     }
 
     override fun onTranslateOffer() {
-        store.dispatch(TranslationsAction.TranslateOfferAction(tabId))
+        store.dispatch(TranslationsAction.TranslateOfferAction(tabId = tabId, isOfferTranslate = true))
     }
 
     override fun onTranslateStateChange(state: TranslationEngineState) {

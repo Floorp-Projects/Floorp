@@ -37,7 +37,7 @@ internal object TranslationsStateReducer {
         is TranslationsAction.TranslateOfferAction -> {
             state.copyWithTranslationsState(action.tabId) {
                 it.copy(
-                    isOfferTranslate = true,
+                    isOfferTranslate = action.isOfferTranslate,
                 )
             }
         }
