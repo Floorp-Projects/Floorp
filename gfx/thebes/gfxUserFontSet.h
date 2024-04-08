@@ -11,9 +11,11 @@
 #include "gfxFontEntry.h"
 #include "gfxFontUtils.h"
 #include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/FontPropertyTypes.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/RecursiveMutex.h"
 #include "mozilla/RefPtr.h"
 #include "nsCOMPtr.h"
 #include "nsHashKeys.h"
@@ -314,7 +316,11 @@ class gfxUserFontSet {
   uint64_t GetGeneration() { return mGeneration; }
 
   // increment the generation on font load
-  void IncrementGeneration(bool aIsRebuild = false);
+  void IncrementGeneration(bool aIsRebuild = false) {
+    mozilla::RecursiveMutexAutoLock lock(mMutex);
+    IncrementGenerationLocked(aIsRebuild);
+  }
+  void IncrementGenerationLocked(bool aIsRebuild = false) MOZ_REQUIRES(mMutex);
 
   // Generation is bumped on font loads but that doesn't affect name-style
   // mappings. Rebuilds do however affect name-style mappings so need to
@@ -551,6 +557,8 @@ class gfxUserFontSet {
   // performance stats
   uint32_t mDownloadCount;
   uint64_t mDownloadSize;
+
+  mutable mozilla::RecursiveMutex mMutex;
 };
 
 // acts a placeholder until the real font is downloaded

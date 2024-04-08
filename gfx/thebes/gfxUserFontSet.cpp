@@ -981,7 +981,8 @@ gfxUserFontSet::gfxUserFontSet()
       mLocalRulesUsed(false),
       mRebuildLocalRules(false),
       mDownloadCount(0),
-      mDownloadSize(0) {
+      mDownloadSize(0),
+      mMutex("gfxUserFontSet") {
   IncrementGeneration(true);
 }
 
@@ -1064,7 +1065,7 @@ void gfxUserFontSet::AddUserFontEntry(const nsCString& aFamilyName,
   }
 }
 
-void gfxUserFontSet::IncrementGeneration(bool aIsRebuild) {
+void gfxUserFontSet::IncrementGenerationLocked(bool aIsRebuild) {
   // add one, increment again if zero
   do {
     mGeneration = ++sFontSetGeneration;

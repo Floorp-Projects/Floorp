@@ -227,7 +227,7 @@ void FontFaceSetWorkerImpl::FlushUserFontSet() {
   }
 
   if (modified) {
-    IncrementGeneration(true);
+    IncrementGenerationLocked(true);
     mHasLoadingFontFacesIsDirty = true;
     CheckLoadingStarted();
     CheckLoadingFinished();

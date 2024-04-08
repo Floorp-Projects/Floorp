@@ -70,8 +70,7 @@ using namespace mozilla::dom;
 NS_IMPL_ISUPPORTS0(FontFaceSetImpl)
 
 FontFaceSetImpl::FontFaceSetImpl(FontFaceSet* aOwner)
-    : mMutex("mozilla::dom::FontFaceSetImpl"),
-      mOwner(aOwner),
+    : mOwner(aOwner),
       mStatus(FontFaceSetLoadStatus::Loaded),
       mNonRuleFacesDirty(false),
       mHasLoadingFontFaces(false),
@@ -891,7 +890,7 @@ void FontFaceSetImpl::OnLoadingFinished() {
 void FontFaceSetImpl::RefreshStandardFontLoadPrincipal() {
   RecursiveMutexAutoLock lock(mMutex);
   mAllowedFontLoads.Clear();
-  IncrementGeneration(false);
+  IncrementGenerationLocked(false);
 }
 
 // -- gfxUserFontSet
