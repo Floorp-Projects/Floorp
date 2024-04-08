@@ -2,7 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import json
 import os
+import pathlib
+import shutil
+import tempfile
+
+import pytest
 
 here = os.path.realpath(__file__)
 __TESTS_DIR = os.path.join(os.path.dirname(os.path.dirname(here)), "tests")
@@ -45,3 +51,26 @@ def patched_build_manifest(config, manifestName):
 
     # return new manifest
     return newManifestName
+
+
+@pytest.fixture(scope="module")
+def pdfpaint_dir_info():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        try:
+            # Setup the temporary files
+            tmpdir_path = pathlib.Path(tmpdir)
+            talos_pdfs_dir = pathlib.Path(tmpdir_path, "talos-pdfs")
+            talos_pdfs_dir.mkdir(parents=True, exist_ok=True)
+
+            pdf_count = 101
+            pdf_manifest_json = []
+            for i in range(pdf_count):
+                pdf_manifest_json.append({"file": str(i)})
+
+            pdf_manifest = talos_pdfs_dir / "test_manifest.json"
+            with pdf_manifest.open("w", encoding="utf-8") as f:
+                json.dump(pdf_manifest_json, f)
+
+            yield tmpdir_path, pdf_count
+        finally:
+            shutil.rmtree(tmpdir)
