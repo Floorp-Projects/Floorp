@@ -99,6 +99,14 @@ namespace InspectorUtils {
   // get "line-height: 2em; color: blue;"
   // Returns null when opening curly bracket wasn't found in initialText
   InspectorGetRuleBodyTextResult? getRuleBodyTextOffsets(UTF8String initialText);
+
+  // Returns string where the rule body text at passed line and column in styleSheetText
+  // is replaced by newBodyText.
+  UTF8String? replaceBlockRuleBodyTextInStylesheet(
+    UTF8String styleSheetText,
+    unsigned long line,
+    unsigned long column,
+    UTF8String newBodyText);
 };
 
 dictionary SupportsOptions {

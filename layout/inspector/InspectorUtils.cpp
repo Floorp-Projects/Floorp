@@ -1019,5 +1019,13 @@ void InspectorUtils::GetRuleBodyTextOffsets(
   offsets.mEndOffset = resultEndOffset;
 }
 
+/* static */
+void InspectorUtils::ReplaceBlockRuleBodyTextInStylesheet(
+    GlobalObject&, const nsACString& aStyleSheetText, uint32_t aLine,
+    uint32_t aColumn, const nsACString& aNewBodyText,
+    nsACString& aNewStyleSheetText) {
+  Servo_ReplaceBlockRuleBodyTextInStylesheetText(
+      &aStyleSheetText, aLine, aColumn, &aNewBodyText, &aNewStyleSheetText);
+}
 }  // namespace dom
 }  // namespace mozilla

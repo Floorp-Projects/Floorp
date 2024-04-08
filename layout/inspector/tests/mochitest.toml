@@ -79,6 +79,8 @@ skip-if = ["os == 'android'"]
 
 ["test_parseStyleSheet_nested.html"]
 
+["test_replaceBlockRuleBodyTextInStylesheet.html"]
+
 ["test_rgba_to_color_name.html"]
 
 ["test_selectormatcheselement.html"]

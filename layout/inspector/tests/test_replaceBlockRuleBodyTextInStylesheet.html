@@ -1,0 +1,149 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test InspectorUtils::replaceBlockRuleBodyTextInStylesheet</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <style>
+#test-simple {
+  color: #f0c;
+}
+#test-unicode,[data-unicode="🦄👨‍👩‍👧‍👦"]::after {
+  content: /* test comment */ "👨‍👩‍👧‍👦🦄";
+  outline: 2px solid salmon;
+}
+#test-empty {} /* 🛠️⚒️🛠️ */ #test-same-line { font-size: 3em; }
+#test-nested-parent {
+  color: tomato;
+  #test-nested-child {
+    background: gold;
+  }
+}
+  </style>
+  <script>SimpleTest.waitForExplicitFinish();</script>
+  <script defer>
+    const InspectorUtils = SpecialPowers.InspectorUtils;
+    const stylesheet = document.styleSheets[1];
+    const authoredStyleSheetText = document.querySelector("style").textContent;
+
+    const existingRulesAuthoredText = [
+`#test-simple {
+  color: #f0c;
+}`,
+`#test-unicode,[data-unicode="🦄👨‍👩‍👧‍👦"]::after {
+  content: /* test comment */ "👨‍👩‍👧‍👦🦄";
+  outline: 2px solid salmon;
+}`,
+`#test-empty {}`,
+`#test-same-line { font-size: 3em; }`,
+`#test-nested-parent {
+  color: tomato;
+  #test-nested-child {
+    background: gold;
+  }
+}`,
+`#test-nested-child {
+    background: gold;
+  }`,
+];
+
+    const replaceBlockRuleBodyTextInStylesheet = (rule, newBodyText) => {
+      return InspectorUtils.replaceBlockRuleBodyTextInStylesheet(
+        authoredStyleSheetText,
+        InspectorUtils.getRelativeRuleLine(rule),
+        InspectorUtils.getRuleColumn(rule),
+        newBodyText
+      )};
+
+    info("Check a simple case");
+    let newBodyText = `border-color: cyan;`;
+    is(
+      replaceBlockRuleBodyTextInStylesheet(stylesheet.cssRules[0], newBodyText),
+      authoredStyleSheetText.replace(
+        existingRulesAuthoredText[0],
+        `#test-simple {${newBodyText}}`,
+      ),
+      "Got the expected result for #test-simple"
+    );
+
+    info("Check that the rule body can be emptied");
+    is(
+      replaceBlockRuleBodyTextInStylesheet(stylesheet.cssRules[0], ""),
+      authoredStyleSheetText.replace(
+        existingRulesAuthoredText[0],
+        `#test-simple {}`,
+      ),
+      "Successfuly removed rule content for #test-simple"
+    );
+
+    info("Check that it can handle unicode characters");
+    newBodyText = `content: "o 🦊 o";`;
+    is(
+      replaceBlockRuleBodyTextInStylesheet(stylesheet.cssRules[1], newBodyText),
+      authoredStyleSheetText.replace(existingRulesAuthoredText[1],
+        `#test-unicode,[data-unicode="🦄👨‍👩‍👧‍👦"]::after {${newBodyText}}`,
+      ),
+      "Got the expected result for #test-unicode"
+    );
+
+    info("Check that it can replace content of an empty rule");
+    newBodyText = `font-family: "Zilla;"`;
+    is(
+      replaceBlockRuleBodyTextInStylesheet(stylesheet.cssRules[2], newBodyText),
+      authoredStyleSheetText.replace(
+        existingRulesAuthoredText[2],
+        `#test-empty {${newBodyText}}`,
+      ),
+      "Got the expected result for #test-empty"
+    );
+
+    info("Check that it can handle a rule on a same line as another rule");
+    newBodyText = `color: pink;`;
+    is(
+      replaceBlockRuleBodyTextInStylesheet(stylesheet.cssRules[3], newBodyText),
+      authoredStyleSheetText.replace(
+        existingRulesAuthoredText[3],
+        `#test-same-line {${newBodyText}}`,
+      ),
+      "Got the expected result for #test-same-line"
+    );
+
+    info("Check that it can handle a rule with a child rule");
+    newBodyText = `background: silver;
+    & > span {
+      color: white;
+    }`;
+    is(
+      replaceBlockRuleBodyTextInStylesheet(stylesheet.cssRules[4], newBodyText),
+      authoredStyleSheetText.replace(
+        existingRulesAuthoredText[4],
+        `#test-nested-parent {${newBodyText}}`,
+      ),
+      "Got the expected result for #test-nested-parent"
+    );
+
+    info("Check that it can handle a nested rule");
+    newBodyText = `color: white;height: 100%;`;
+    is(
+      replaceBlockRuleBodyTextInStylesheet(stylesheet.cssRules[4].cssRules[0], newBodyText),
+      authoredStyleSheetText.replace(
+        existingRulesAuthoredText[5],
+        `#test-nested-child {${newBodyText}}`,
+      ),
+      "Got the expected result for #test-nested-child"
+    );
+
+    SimpleTest.finish();
+  </script>
+</head>
+<body>
+<h1>Test InspectorUtils::replaceBlockRuleBodyTextInStylesheet</h1>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
