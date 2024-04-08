@@ -275,6 +275,14 @@ class InspectorUtils {
   static void GetRuleBodyTextOffsets(
       GlobalObject&, const nsACString& aInitialText,
       Nullable<InspectorGetRuleBodyTextResult>& aResult);
+
+  /**
+   * Replace the rule body text in aStyleSheetText at passed line and column
+   */
+  static void ReplaceBlockRuleBodyTextInStylesheet(
+      GlobalObject&, const nsACString& aStyleSheetText, uint32_t aLine,
+      uint32_t aColumn, const nsACString& aNewBodyText,
+      nsACString& aNewStyleSheetText);
 };
 
 }  // namespace mozilla::dom

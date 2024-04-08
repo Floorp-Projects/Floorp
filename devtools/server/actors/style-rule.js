@@ -823,18 +823,20 @@ class StyleRuleActor extends Actor {
         this.pageStyle.styleSheetsManager.getStyleSheetResourceId(
           this._parentSheet
         );
-      let cssText = await this.pageStyle.styleSheetsManager.getText(resourceId);
 
-      const { offset, text } = getRuleText(cssText, this.line, this.column);
+      const sheetText = await this.pageStyle.styleSheetsManager.getText(
+        resourceId
+      );
+      const cssText = InspectorUtils.replaceBlockRuleBodyTextInStylesheet(
+        sheetText,
+        this.line,
+        this.column,
+        newText
+      );
 
       // setStyleSheetText will parse the stylesheet which can be costly, so only do it
       // if the text has actually changed.
-      if (text !== newText) {
-        cssText =
-          cssText.substring(0, offset) +
-          newText +
-          cssText.substring(offset + text.length);
-
+      if (sheetText !== newText) {
         await this.pageStyle.styleSheetsManager.setStyleSheetText(
           resourceId,
           cssText,
