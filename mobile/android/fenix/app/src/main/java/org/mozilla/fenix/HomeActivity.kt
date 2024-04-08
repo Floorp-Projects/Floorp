@@ -277,6 +277,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
                                 FenixOverlay(
                                     browserStore = components.core.store,
                                     inactiveTabsEnabled = settings().inactiveTabsAreEnabled,
+                                    loginsStorage = components.core.passwordsStorage,
                                 )
                             }
                         } else {

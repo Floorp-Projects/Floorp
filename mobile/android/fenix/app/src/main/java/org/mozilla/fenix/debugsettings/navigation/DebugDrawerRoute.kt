@@ -6,8 +6,11 @@ package org.mozilla.fenix.debugsettings.navigation
 
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
+import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.storage.LoginsStorage
 import org.mozilla.fenix.R
+import org.mozilla.fenix.debugsettings.logins.LoginsTools
 import org.mozilla.fenix.debugsettings.store.DebugDrawerAction
 import org.mozilla.fenix.debugsettings.store.DebugDrawerStore
 import org.mozilla.fenix.debugsettings.tabs.TabTools as TabToolsScreen
@@ -27,6 +30,10 @@ enum class DebugDrawerRoute(val route: String, @StringRes val title: Int) {
         route = "tab_tools",
         title = R.string.debug_drawer_tab_tools_title,
     ),
+    Logins(
+        route = "logins",
+        title = R.string.debug_drawer_logins_title,
+    ),
     ;
 
     companion object {
@@ -34,12 +41,14 @@ enum class DebugDrawerRoute(val route: String, @StringRes val title: Int) {
          * Transforms the values of [DebugDrawerRoute] into a list of [DebugDrawerDestination]s.
          *
          * @param debugDrawerStore [DebugDrawerStore] used to dispatch navigation actions.
-         * @param browserStore [BrowserStore] used to add tabs in [TabToolsScreen].
+         * @param browserStore [BrowserStore] used to access [BrowserState].
+         * @param loginsStorage [LoginsStorage] used to access logins for [LoginsScreen].
          * @param inactiveTabsEnabled Whether the inactive tabs feature is enabled.
          */
         fun generateDebugDrawerDestinations(
             debugDrawerStore: DebugDrawerStore,
             browserStore: BrowserStore,
+            loginsStorage: LoginsStorage,
             inactiveTabsEnabled: Boolean,
         ): List<DebugDrawerDestination> =
             DebugDrawerRoute.values().map { debugDrawerRoute ->
@@ -54,6 +63,18 @@ enum class DebugDrawerRoute(val route: String, @StringRes val title: Int) {
                             TabToolsScreen(
                                 store = browserStore,
                                 inactiveTabsEnabled = inactiveTabsEnabled,
+                            )
+                        }
+                    }
+
+                    Logins -> {
+                        onClick = {
+                            debugDrawerStore.dispatch(DebugDrawerAction.NavigateTo.Logins)
+                        }
+                        content = {
+                            LoginsTools(
+                                browserStore = browserStore,
+                                loginsStorage = loginsStorage,
                             )
                         }
                     }
