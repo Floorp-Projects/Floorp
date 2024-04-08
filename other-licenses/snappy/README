@@ -1,17 +1,20 @@
 See src/README for the README that ships with snappy.
 
 Mozilla does not modify the actual snappy source with the exception of the
-'snappy-stubs-public.h' header. We have replaced its build system with our own.
+'snappy-stubs-public.h' header and one small patch to resolve implicit
+constructor warnings. We have replaced its build system with our own.
 
 Snappy comes from:
   https://github.com/google/snappy
 
-We are currently using revision: 1.1.9
+We are currently using revision: 1.2.0
 
 To upgrade to a newer version:
-  1. Check out the new code using subversion.
+  1. Check out the new code using git.
   2. Update 'snappy-stubs-public.h' in this directory with any changes that were
-     made to 'snappy-stubs-public.h.in' in the new source.
+     made to 'snappy-stubs-public.h.in' in the new source. Note that we don't
+     bother trying to detect the availability of sys/uio.h and unconditionally
+     define the iovec type instead for all platforms.
   3. Copy the major/minor/patch versions from 'CMakeLists.txt' into
      'snappy-stubs-public.h'.
   4. Copy all source files from the new version into the src subdirectory. The
@@ -23,4 +26,5 @@ To upgrade to a newer version:
        - 'testdata' subdirectory
        - 'third_party' subdirectory
   5. Update the revision stamp in this file.
+  6. Apply 01-explicit.patch.
 
