@@ -345,7 +345,6 @@ class PageloaderTest(Test):
         "gecko_profile_extra_threads",
         "tptimeout",
         "win_counters",
-        "w7_counters",
         "linux_counters",
         "mac_counters",
         "tpscrolltest",
@@ -542,7 +541,7 @@ class tart(PageloaderTest):
     tploadnocache = True
     tpmozafterpaint = False
     gecko_profile_interval = 10
-    win_counters = w7_counters = linux_counters = mac_counters = None
+    win_counters = linux_counters = mac_counters = None
     """
     ASAP mode
     The recording API is broken with OMTC before ~2013-11-27
@@ -577,7 +576,7 @@ class damp(PageloaderTest):
     tpmozafterpaint = False
     gecko_profile_interval = 10
     gecko_profile_extra_threads = "DOM Worker"
-    win_counters = w7_counters = linux_counters = mac_counters = None
+    win_counters = linux_counters = mac_counters = None
     filters = filter.ignore_first.prepare(1) + filter.median.prepare()
     preferences = {"devtools.memory.enabled": True}
     unit = "ms"
@@ -604,7 +603,7 @@ class glterrain(PageloaderTest):
     tpchrome = False
     timeout = 600
     gecko_profile_interval = 10
-    win_counters = w7_counters = linux_counters = mac_counters = None
+    win_counters = linux_counters = mac_counters = None
     """ ASAP mode """
     preferences = {
         "layout.frame_rate": 0,
@@ -632,7 +631,7 @@ class glvideo(PageloaderTest):
     timeout = 600
     gecko_profile_interval = 2
     gecko_profile_extra_threads = "CanvasRenderer,CanvasWorker,MediaSupervisor"
-    win_counters = w7_counters = linux_counters = mac_counters = None
+    win_counters = linux_counters = mac_counters = None
     filters = filter.ignore_first.prepare(1) + filter.median.prepare()
     unit = "ms"
 
@@ -654,7 +653,7 @@ class canvas2dvideo(PageloaderTest):
     timeout = 600
     gecko_profile_interval = 2
     gecko_profile_extra_threads = "CanvasRenderer,CanvasWorker,MediaSupervisor"
-    win_counters = w7_counters = linux_counters = mac_counters = None
+    win_counters = linux_counters = mac_counters = None
     filters = filter.ignore_first.prepare(1) + filter.median.prepare()
     unit = "ms"
 
@@ -676,7 +675,7 @@ class offscreencanvas_webcodecs_main_webgl_h264(PageloaderTest):
     timeout = 600
     gecko_profile_interval = 2
     gecko_profile_extra_threads = "CanvasRenderer,MediaSupervisor"
-    win_counters = w7_counters = linux_counters = mac_counters = None
+    win_counters = linux_counters = mac_counters = None
     preferences = {
         "dom.media.webcodecs.enabled": True,
         "dom.media.webcodecs.force-osx-h264-enabled": True,
@@ -702,7 +701,7 @@ class offscreencanvas_webcodecs_main_webgl_vp9(PageloaderTest):
     timeout = 600
     gecko_profile_interval = 2
     gecko_profile_extra_threads = "CanvasRenderer,MediaSupervisor"
-    win_counters = w7_counters = linux_counters = mac_counters = None
+    win_counters = linux_counters = mac_counters = None
     preferences = {
         "dom.media.webcodecs.enabled": True,
         "dom.media.webcodecs.force-osx-h264-enabled": True,
@@ -728,7 +727,7 @@ class offscreencanvas_webcodecs_main_webgl_av1(PageloaderTest):
     timeout = 600
     gecko_profile_interval = 2
     gecko_profile_extra_threads = "CanvasRenderer,MediaSupervisor"
-    win_counters = w7_counters = linux_counters = mac_counters = None
+    win_counters = linux_counters = mac_counters = None
     preferences = {
         "dom.media.webcodecs.enabled": True,
         "dom.media.webcodecs.force-osx-h264-enabled": True,
@@ -754,7 +753,7 @@ class offscreencanvas_webcodecs_worker_webgl_h264(PageloaderTest):
     timeout = 600
     gecko_profile_interval = 2
     gecko_profile_extra_threads = "DOM Worker,CanvasRenderer,MediaSupervisor"
-    win_counters = w7_counters = linux_counters = mac_counters = None
+    win_counters = linux_counters = mac_counters = None
     preferences = {
         "dom.media.webcodecs.enabled": True,
         "dom.media.webcodecs.force-osx-h264-enabled": True,
@@ -780,7 +779,7 @@ class offscreencanvas_webcodecs_worker_webgl_vp9(PageloaderTest):
     timeout = 600
     gecko_profile_interval = 2
     gecko_profile_extra_threads = "DOM Worker,CanvasRenderer,MediaSupervisor"
-    win_counters = w7_counters = linux_counters = mac_counters = None
+    win_counters = linux_counters = mac_counters = None
     preferences = {
         "dom.media.webcodecs.enabled": True,
         "dom.media.webcodecs.force-osx-h264-enabled": True,
@@ -806,7 +805,7 @@ class offscreencanvas_webcodecs_worker_webgl_av1(PageloaderTest):
     timeout = 600
     gecko_profile_interval = 2
     gecko_profile_extra_threads = "DOM Worker,CanvasRenderer,MediaSupervisor"
-    win_counters = w7_counters = linux_counters = mac_counters = None
+    win_counters = linux_counters = mac_counters = None
     preferences = {
         "dom.media.webcodecs.enabled": True,
         "dom.media.webcodecs.force-osx-h264-enabled": True,
@@ -834,7 +833,7 @@ class offscreencanvas_webcodecs_main_2d_h264(PageloaderTest):
     timeout = 600
     gecko_profile_interval = 2
     gecko_profile_extra_threads = "CanvasRenderer,CanvasWorker,MediaSupervisor"
-    win_counters = w7_counters = linux_counters = mac_counters = None
+    win_counters = linux_counters = mac_counters = None
     preferences = {
         "dom.media.webcodecs.enabled": True,
         "dom.media.webcodecs.force-osx-h264-enabled": True,
@@ -862,7 +861,7 @@ class offscreencanvas_webcodecs_main_2d_vp9(PageloaderTest):
     timeout = 600
     gecko_profile_interval = 2
     gecko_profile_extra_threads = "CanvasRenderer,CanvasWorker,MediaSupervisor"
-    win_counters = w7_counters = linux_counters = mac_counters = None
+    win_counters = linux_counters = mac_counters = None
     preferences = {
         "dom.media.webcodecs.enabled": True,
         "dom.media.webcodecs.force-osx-h264-enabled": True,
@@ -890,7 +889,7 @@ class offscreencanvas_webcodecs_main_2d_av1(PageloaderTest):
     timeout = 600
     gecko_profile_interval = 2
     gecko_profile_extra_threads = "CanvasRenderer,CanvasWorker,MediaSupervisor"
-    win_counters = w7_counters = linux_counters = mac_counters = None
+    win_counters = linux_counters = mac_counters = None
     preferences = {
         "dom.media.webcodecs.enabled": True,
         "dom.media.webcodecs.force-osx-h264-enabled": True,
@@ -918,7 +917,7 @@ class offscreencanvas_webcodecs_worker_2d_h264(PageloaderTest):
     gecko_profile_extra_threads = (
         "DOM Worker,CanvasRenderer,CanvasWorker,MediaSupervisor"
     )
-    win_counters = w7_counters = linux_counters = mac_counters = None
+    win_counters = linux_counters = mac_counters = None
     preferences = {
         "dom.media.webcodecs.enabled": True,
         "dom.media.webcodecs.force-osx-h264-enabled": True,
@@ -946,7 +945,7 @@ class offscreencanvas_webcodecs_worker_2d_vp9(PageloaderTest):
     gecko_profile_extra_threads = (
         "DOM Worker,CanvasRenderer,CanvasWorker,MediaSupervisor"
     )
-    win_counters = w7_counters = linux_counters = mac_counters = None
+    win_counters = linux_counters = mac_counters = None
     preferences = {
         "dom.media.webcodecs.enabled": True,
         "dom.media.webcodecs.force-osx-h264-enabled": True,
@@ -974,7 +973,7 @@ class offscreencanvas_webcodecs_worker_2d_av1(PageloaderTest):
     gecko_profile_extra_threads = (
         "DOM Worker,CanvasRenderer,CanvasWorker,MediaSupervisor"
     )
-    win_counters = w7_counters = linux_counters = mac_counters = None
+    win_counters = linux_counters = mac_counters = None
     preferences = {
         "dom.media.webcodecs.enabled": True,
         "dom.media.webcodecs.force-osx-h264-enabled": True,
@@ -1003,7 +1002,6 @@ class tp5n(PageloaderTest):
     tpmozafterpaint = True
     tptimeout = 10000
     mainthread = True
-    w7_counters = []
     win_counters = []
     linux_counters = []
     mac_counters = []
@@ -1057,7 +1055,6 @@ class tp5o(PageloaderTest):
     multidomain = True
     tpmanifest = "${talos}/fis/tp5n/tp5o.manifest"
     win_counters = ["% Processor Time"]
-    w7_counters = ["% Processor Time"]
     linux_counters = ["XRes"]
     mac_counters = []
     responsiveness = True
@@ -1456,7 +1453,7 @@ class displaylist_mutate(PageloaderTest):
     tpchrome = False
     timeout = 600
     gecko_profile_interval = 2
-    win_counters = w7_counters = linux_counters = mac_counters = None
+    win_counters = linux_counters = mac_counters = None
     filters = filter.ignore_first.prepare(1) + filter.median.prepare()
     """ASAP mode"""
     preferences = {
@@ -1482,7 +1479,7 @@ class rasterflood_svg(PageloaderTest):
     tpchrome = False
     timeout = 600
     gecko_profile_interval = 2
-    win_counters = w7_counters = linux_counters = mac_counters = None
+    win_counters = linux_counters = mac_counters = None
     filters = filter.ignore_first.prepare(1) + filter.median.prepare()
     """ASAP mode"""
     preferences = {
@@ -1507,7 +1504,7 @@ class rasterflood_gradient(PageloaderTest):
     tpchrome = False
     timeout = 600
     gecko_profile_interval = 2
-    win_counters = w7_counters = linux_counters = mac_counters = None
+    win_counters = linux_counters = mac_counters = None
     filters = filter.ignore_first.prepare(1) + filter.median.prepare()
     """ASAP mode"""
     preferences = {
