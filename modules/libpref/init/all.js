@@ -3698,10 +3698,6 @@ pref("browser.ml.logLevel", "Error");
 // To disable blocking of auth prompts, set the limit to -1.
 pref("prompts.authentication_dialog_abuse_limit", 2);
 
-// The prompt type to use for http auth prompts
-// content: 1, tab: 2, window: 3
-pref("prompts.modalType.httpAuth", 2);
-
 pref("dom.payments.request.supportedRegions", "US,CA");
 
 #ifdef MOZ_ASAN_REPORTER

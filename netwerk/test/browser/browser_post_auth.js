@@ -43,7 +43,7 @@ add_task(async function () {
   let promptPromise = PromptTestUtils.handleNextPrompt(
     tab.linkedBrowser,
     {
-      modalType: Services.prefs.getIntPref("prompts.modalType.httpAuth"),
+      modalType: Ci.nsIPrompt.MODAL_TYPE_TAB,
       promptType: "promptUserAndPass",
     },
     { buttonNumClick: 0, loginInput: "user", passwordInput: "pass" }
