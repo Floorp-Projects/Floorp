@@ -59,7 +59,6 @@
 <body>
 <div id="display">
   <input id="input-text">
-  <div contenteditable id="contenteditable"><br></div>
   <button id="button">button</button>
   <a id="a" href="about:blank">hyper link</a>
   <span id="pointer-target">span</span>
@@ -353,44 +352,6 @@ const kTests = [
     },
     todoMismatch: [ ],
   },
-  { description: "InternalLegacyTextEvent (input at key input)",
-    targetID: "input-text", eventType: "textInput",
-    dispatchEvent() {
-      const input = document.getElementById(this.targetID);
-      input.value = "";
-      input.focus();
-      synthesizeNativeKey(KEYBOARD_LAYOUT_EN_US, kIsWin ? WIN_VK_B : MAC_VK_ANSI_B,
-                          { shiftKey: true }, "B", "B");
-      observeKeyUpOnContent(KeyboardEvent.DOM_VK_B, runNextTest);
-      return true;
-    },
-    canRun() {
-      return (kIsMac || kIsWin);
-    },
-    todoMismatch: [],
-  },
-  { description: "InternalLegacyTextEvent (paste)",
-    targetID: "contenteditable", eventType: "textInput",
-    async dispatchEvent() {
-      const editingHost = document.getElementById(this.targetID);
-      editingHost.innerHTML = "abc";
-      editingHost.focus();
-      getSelection().selectAllChildren(editingHost);
-      synthesizeNativeKey(KEYBOARD_LAYOUT_EN_US, kIsWin ? WIN_VK_C : MAC_VK_ANSI_C,
-                          { accelKey: true }, "", "c");
-      const waitForInput = new Promise(resolve => {
-        editingHost.addEventListener("input", resolve, {once: true});
-      });
-      // In this case, TextEvent.data is stored with a dataTransfer.
-      synthesizeNativeKey(KEYBOARD_LAYOUT_EN_US, kIsWin ? WIN_VK_V : MAC_VK_ANSI_V,
-                          { accelKey: true }, "", "v");
-      await waitForInput;
-    },
-    canRun() {
-      return (kIsMac || kIsWin);
-    },
-    todoMismatch: [],
-  },
   { description: "WidgetMouseScrollEvent (DOMMouseScroll, vertical)",
     targetID: "input-text", eventType: "DOMMouseScroll",
     dispatchEvent() {
@@ -654,7 +615,7 @@ const kTests = [
   },
 ];
 
-async function doTest(aTest) {
+function doTest(aTest) {
   if (!aTest.canRun()) {
     SimpleTest.executeSoon(runNextTest);
     return;
@@ -689,7 +650,7 @@ async function doTest(aTest) {
       runNextTest();
     }
   };
-  var testWillCallRunNextTest = await aTest.dispatchEvent();
+  var testWillCallRunNextTest = aTest.dispatchEvent();
 }
 
 var gIndex = -1;
@@ -734,8 +695,7 @@ function init() {
                                     ["mousewheel.with_alt.action", 0],
                                     ["mousewheel.with_alt.action.override_x", -1],
                                     ["mousewheel.with_meta.action", 0],
-                                    ["mousewheel.with_meta.action.override_x", -1],
-                                    ["dom.events.textevent.enabled", true]]}, runNextTest);
+                                    ["mousewheel.with_meta.action.override_x", -1]]}, runNextTest);
 }
 
 function finish() {

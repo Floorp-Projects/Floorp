@@ -81,18 +81,15 @@ enum class EditAction {
   // new non-empty composition string and IME selections.
   eUpdateComposition,
 
-  // eUpdateCompositionToCommit indicates that user commits composition with
-  // the new data.  That means that there will be no IME selections, but the
-  // composition continues until the following eCompositionEnd event.
-  eUpdateCompositionToCommit,
-
-  // eCommitComposition indicates that user commits composition and ends the
-  // composition.
+  // eCommitComposition indicates that user commits composition.
   eCommitComposition,
 
-  // eCancelComposition indicates that user cancels composition and ends the
-  // composition with empty string.
+  // eCancelComposition indicates that user cancels composition.
   eCancelComposition,
+
+  // eDeleteByComposition indicates that user starts composition with
+  // empty string and there was selected content.
+  eDeleteByComposition,
 
   // eUndo/eRedo indicate to undo/redo a transaction.
   eUndo,
@@ -550,7 +547,6 @@ inline EditorInputType ToInputType(EditAction aEditAction) {
     case EditAction::ePasteAsQuotation:
       return EditorInputType::eInsertFromPasteAsQuotation;
     case EditAction::eUpdateComposition:
-    case EditAction::eUpdateCompositionToCommit:
       return EditorInputType::eInsertCompositionText;
     case EditAction::eCommitComposition:
       if (StaticPrefs::dom_input_events_conform_to_level_1()) {
@@ -562,6 +558,13 @@ inline EditorInputType ToInputType(EditAction aEditAction) {
         return EditorInputType::eInsertCompositionText;
       }
       return EditorInputType::eDeleteCompositionText;
+    case EditAction::eDeleteByComposition:
+      if (StaticPrefs::dom_input_events_conform_to_level_1()) {
+        // XXX Or EditorInputType::eDeleteContent?  I don't know which IME may
+        //     causes this situation.
+        return EditorInputType::eInsertCompositionText;
+      }
+      return EditorInputType::eDeleteByComposition;
     case EditAction::eInsertLinkElement:
       return EditorInputType::eInsertLink;
     case EditAction::eDeleteWordBackward:
@@ -710,9 +713,9 @@ inline bool MayEditActionDeleteSelection(const EditAction aEditAction) {
       return false;
 
     case EditAction::eUpdateComposition:
-    case EditAction::eUpdateCompositionToCommit:
     case EditAction::eCommitComposition:
     case EditAction::eCancelComposition:
+    case EditAction::eDeleteByComposition:
       return true;
 
     case EditAction::eUndo:
