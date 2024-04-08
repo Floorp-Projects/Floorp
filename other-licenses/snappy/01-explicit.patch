@@ -1,0 +1,22 @@
+diff --git a/other-licenses/snappy/src/snappy.h b/other-licenses/snappy/src/snappy.h
+--- a/other-licenses/snappy/src/snappy.h
++++ b/other-licenses/snappy/src/snappy.h
+@@ -60,17 +60,17 @@ namespace snappy {
+     // 9 in the future.
+     // If you played with other compression algorithms, level 1 is equivalent to
+     // fast mode (level 1) of LZ4, level 2 is equivalent to LZ4's level 2 mode
+     // and compresses somewhere around zstd:-3 and zstd:-2 but generally with
+     // faster decompression speeds than snappy:1 and zstd:-3.
+     int level = DefaultCompressionLevel();
+ 
+     constexpr CompressionOptions() = default;
+-    constexpr CompressionOptions(int compression_level)
++    constexpr explicit CompressionOptions(int compression_level)
+         : level(compression_level) {}
+     static constexpr int MinCompressionLevel() { return 1; }
+     static constexpr int MaxCompressionLevel() { return 2; }
+     static constexpr int DefaultCompressionLevel() { return 1; }
+   };
+ 
+   // ------------------------------------------------------------------------
+   // Generic compression/decompression routines.

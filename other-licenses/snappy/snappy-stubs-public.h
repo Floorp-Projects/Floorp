@@ -1,5 +1,4 @@
 // Copyright 2011 Google Inc. All Rights Reserved.
-// Author: sesse@google.com (Steinar H. Gunderson)
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
@@ -39,8 +38,8 @@
 #include <cstddef>
 
 #define SNAPPY_MAJOR 1
-#define SNAPPY_MINOR 1
-#define SNAPPY_PATCHLEVEL 9
+#define SNAPPY_MINOR 2
+#define SNAPPY_PATCHLEVEL 0
 #define SNAPPY_VERSION \
   ((SNAPPY_MAJOR << 16) | (SNAPPY_MINOR << 8) | SNAPPY_PATCHLEVEL)
 
