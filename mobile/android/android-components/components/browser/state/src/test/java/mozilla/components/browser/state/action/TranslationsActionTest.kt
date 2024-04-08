@@ -63,10 +63,15 @@ class TranslationsActionTest {
     fun `WHEN a TranslateOfferAction is dispatched THEN update translation expected status`() {
         assertEquals(false, tabState().translationsState.isOfferTranslate)
 
-        store.dispatch(TranslationsAction.TranslateOfferAction(tabId = tab.id))
+        store.dispatch(TranslationsAction.TranslateOfferAction(tabId = tab.id, isOfferTranslate = true))
             .joinBlocking()
 
         assertEquals(true, tabState().translationsState.isOfferTranslate)
+
+        store.dispatch(TranslationsAction.TranslateOfferAction(tabId = tab.id, isOfferTranslate = false))
+            .joinBlocking()
+
+        assertFalse(tabState().translationsState.isOfferTranslate)
     }
 
     @Test
@@ -122,7 +127,7 @@ class TranslationsActionTest {
         assertFalse(tabState().translationsState.isOfferTranslate)
 
         // Initial Offer State
-        store.dispatch(TranslationsAction.TranslateOfferAction(tabId = tab.id)).joinBlocking()
+        store.dispatch(TranslationsAction.TranslateOfferAction(tabId = tab.id, true)).joinBlocking()
         assertTrue(tabState().translationsState.isOfferTranslate)
 
         // Action
@@ -189,7 +194,7 @@ class TranslationsActionTest {
         assertFalse(tabState().translationsState.isOfferTranslate)
 
         // Engine is sending a translation offer action
-        store.dispatch(TranslationsAction.TranslateOfferAction(tabId = tab.id))
+        store.dispatch(TranslationsAction.TranslateOfferAction(tabId = tab.id, isOfferTranslate = true))
             .joinBlocking()
 
         // Initial expected translation state

@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.mapNotNull
+import mozilla.components.browser.state.action.TranslationsAction
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TranslationsState
@@ -102,6 +103,12 @@ class TranslationsBinding(
                 }
 
                 if (isEngineSupported == true && sessionTranslationsState.isOfferTranslate) {
+                    browserStore.dispatch(
+                        TranslationsAction.TranslateOfferAction(
+                            tabId = state.sessionState.id,
+                            isOfferTranslate = false,
+                        ),
+                    )
                     onShowTranslationsDialog()
                 }
             }

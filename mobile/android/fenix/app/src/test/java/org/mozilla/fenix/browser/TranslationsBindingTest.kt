@@ -22,6 +22,7 @@ import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 
@@ -191,9 +192,38 @@ class TranslationsBindingTest {
             browserStore.dispatch(
                 TranslationsAction.TranslateOfferAction(
                     tabId = tab.id,
+                    isOfferTranslate = true,
                 ),
             ).joinBlocking()
 
             verify(onShowTranslationsDialog).invoke()
+        }
+
+    @Test
+    fun `GIVEN translationState WHEN translation state isOfferTranslate is false THEN do not invoke onShowTranslationsDialog callback`() =
+        runTestOnMain {
+            browserStore = BrowserStore(
+                BrowserState(
+                    tabs = listOf(tab),
+                    selectedTabId = tabId,
+                    translationEngine = TranslationsBrowserState(isEngineSupported = true),
+                ),
+            )
+
+            val binding = TranslationsBinding(
+                browserStore = browserStore,
+                onStateUpdated = onIconChanged,
+                onShowTranslationsDialog = onShowTranslationsDialog,
+            )
+            binding.start()
+
+            browserStore.dispatch(
+                TranslationsAction.TranslateOfferAction(
+                    tabId = tab.id,
+                    isOfferTranslate = false,
+                ),
+            ).joinBlocking()
+
+            verify(onShowTranslationsDialog, never()).invoke()
         }
 }

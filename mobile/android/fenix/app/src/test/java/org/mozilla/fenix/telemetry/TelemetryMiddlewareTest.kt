@@ -458,7 +458,7 @@ class TelemetryMiddlewareTest {
     fun `WHEN TranslateOfferAction is dispatched THEN update telemetry`() {
         assertNull(Translations.offerEvent.testGetValue())
 
-        store.dispatch(TranslationsAction.TranslateOfferAction(tabId = "1")).joinBlocking()
+        store.dispatch(TranslationsAction.TranslateOfferAction(tabId = "1", true)).joinBlocking()
 
         val telemetry = Translations.offerEvent.testGetValue()?.firstOrNull()
         assertEquals("offer", telemetry?.extra?.get("item"))

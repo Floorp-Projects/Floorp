@@ -883,9 +883,11 @@ sealed class TranslationsAction : BrowserAction() {
      * translations are an option.
      *
      * @property tabId The ID of the tab the [EngineSession] should be linked to.
+     * @property isOfferTranslate If the engine should offer translating the page to the user.
      */
     data class TranslateOfferAction(
         override val tabId: String,
+        val isOfferTranslate: Boolean,
     ) : TranslationsAction(), ActionWithTab
 
     /**
