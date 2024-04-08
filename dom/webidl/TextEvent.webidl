@@ -10,6 +10,7 @@
 [Pref="dom.events.textevent.enabled", Exposed=Window]
 interface TextEvent : UIEvent
 {
+  [NeedsSubjectPrincipal]
   readonly attribute DOMString data;
 
   undefined initTextEvent(DOMString type,

@@ -1361,6 +1361,8 @@ class EditorBase : public nsIEditor,
       }
     }
 
+    void MarkEditActionCanceled();
+
     EditorBase& mEditorBase;
     RefPtr<Selection> mSelection;
     nsTArray<OwningNonNull<Selection>> mRetiredSelections;
