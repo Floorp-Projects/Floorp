@@ -16,6 +16,11 @@ use cssparser::{match_ignore_ascii_case, CowRcStr, Parser, Token};
 use std::str::FromStr;
 use style_traits::{ParseError, StyleParseErrorKind};
 
+#[inline]
+fn rcs_enabled() -> bool {
+    static_prefs::pref!("layout.css.relative-color-syntax.enabled")
+}
+
 impl From<u8> for ColorComponent<u8> {
     #[inline]
     fn from(value: u8) -> Self {
@@ -157,6 +162,31 @@ impl ColorComponent<NumberOrPercentage> {
     }
 }
 
+/// Parse the relative color syntax "from" syntax `from <color>`.
+fn parse_origin_color<'i, 't, P>(
+    color_parser: &P,
+    arguments: &mut Parser<'i, 't>,
+) -> Result<Option<P::Output>, ParseError<'i>>
+where
+    P: ColorParser<'i>,
+{
+    if !rcs_enabled() {
+        return Ok(None);
+    }
+
+    // Not finding the from keyword is not an error, it just means we don't
+    // have an origin color.
+    if arguments
+        .try_parse(|p| p.expect_ident_matching("from"))
+        .is_err()
+    {
+        return Ok(None);
+    }
+
+    // We still fail if we can't parse the origin color.
+    parse_color_with(color_parser, arguments).map(|color| Some(color))
+}
+
 #[inline]
 fn parse_rgb<'i, 't, P>(
     color_parser: &P,
@@ -165,14 +195,18 @@ fn parse_rgb<'i, 't, P>(
 where
     P: ColorParser<'i>,
 {
+    let origin_color = parse_origin_color(color_parser, arguments)?;
+
     let location = arguments.current_source_location();
 
     let maybe_red = color_parser.parse_number_or_percentage(arguments, true)?;
 
     // If the first component is not "none" and is followed by a comma, then we
-    // are parsing the legacy syntax.
-    let is_legacy_syntax =
-        !maybe_red.is_none() && arguments.try_parse(|p| p.expect_comma()).is_ok();
+    // are parsing the legacy syntax.  Legacy syntax also doesn't support an
+    // origin color.
+    let is_legacy_syntax = origin_color.is_none()
+        && !maybe_red.is_none()
+        && arguments.try_parse(|p| p.expect_comma()).is_ok();
 
     let (red, green, blue, alpha) = if is_legacy_syntax {
         let Ok(is_percentage) = maybe_red.is_percentage() else {
@@ -231,11 +265,15 @@ fn parse_hsl<'i, 't, P>(
 where
     P: ColorParser<'i>,
 {
+    let origin_color = parse_origin_color(color_parser, arguments)?;
+
     let hue = color_parser.parse_number_or_angle(arguments, true)?;
 
     // If the hue is not "none" and is followed by a comma, then we are parsing
-    // the legacy syntax.
-    let is_legacy_syntax = !hue.is_none() && arguments.try_parse(|p| p.expect_comma()).is_ok();
+    // the legacy syntax. Legacy syntax also doesn't support an origin color.
+    let is_legacy_syntax = origin_color.is_none()
+        && !hue.is_none()
+        && arguments.try_parse(|p| p.expect_comma()).is_ok();
 
     let (saturation, lightness, alpha) = if is_legacy_syntax {
         let saturation = color_parser
@@ -274,6 +312,8 @@ fn parse_hwb<'i, 't, P>(
 where
     P: ColorParser<'i>,
 {
+    let _origin_color = parse_origin_color(color_parser, arguments)?;
+
     let (hue, whiteness, blackness, alpha) = parse_components(
         color_parser,
         arguments,
@@ -301,6 +341,8 @@ fn parse_lab_like<'i, 't, P>(
 where
     P: ColorParser<'i>,
 {
+    let _origin_color = parse_origin_color(color_parser, arguments)?;
+
     let (lightness, a, b, alpha) = parse_components(
         color_parser,
         arguments,
@@ -328,6 +370,8 @@ fn parse_lch_like<'i, 't, P>(
 where
     P: ColorParser<'i>,
 {
+    let _origin_color = parse_origin_color(color_parser, arguments)?;
+
     let (lightness, chroma, hue, alpha) = parse_components(
         color_parser,
         arguments,
@@ -348,6 +392,8 @@ fn parse_color_with_color_space<'i, 't, P>(
 where
     P: ColorParser<'i>,
 {
+    let _origin_color = parse_origin_color(color_parser, arguments)?;
+
     let color_space = {
         let location = arguments.current_source_location();
 
