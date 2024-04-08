@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 with Files("**"):
-    BUG_COMPONENT = ("Firefox", "Translation")
+    BUG_COMPONENT = ("Firefox", "Translations")
 
 EXTRA_JS_MODULES.translation = [
     "cld2/cld-worker.js",
