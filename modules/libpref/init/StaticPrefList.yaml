@@ -3837,10 +3837,10 @@
   value: 120000
   mirror: always
 
-# SetDocumentURI security option, enforces origin check
+# Enforce origin check whenever a content process tries to set a document URI
 - name: dom.security.setdocumenturi
   type: bool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
   mirror: always
 
 # Whether or not selection events on text controls are enabled.
