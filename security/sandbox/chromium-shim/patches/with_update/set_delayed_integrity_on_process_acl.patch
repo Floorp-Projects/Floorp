@@ -1,0 +1,39 @@
+# HG changeset patch
+# User Bob Owen <bobowencode@gmail.com>
+# Date 1709836178 0
+#      Thu Mar 07 18:29:38 2024 +0000
+# Node ID 2b9ab7e6c5a1630b497fe1543634cbaebdc395f8
+# Parent  f9c20c064d639a146ffa09ec832aee6dff44643d
+Bug 1889932 p1: Set process ACL to the delayed integrity level in LowerToken. r=yjuglaret!
+
+This allows us to maintain the same access to our process when the integrity
+level on our access token is dropped.
+
+Differential Revision: https://phabricator.services.mozilla.com/D206784
+
+diff --git a/security/sandbox/chromium/sandbox/win/src/restricted_token_utils.cc b/security/sandbox/chromium/sandbox/win/src/restricted_token_utils.cc
+--- a/security/sandbox/chromium/sandbox/win/src/restricted_token_utils.cc
++++ b/security/sandbox/chromium/sandbox/win/src/restricted_token_utils.cc
+@@ -302,16 +302,22 @@ DWORD SetTokenIntegrityLevel(HANDLE toke
+ DWORD SetProcessIntegrityLevel(IntegrityLevel integrity_level) {
+   // We don't check for an invalid level here because we'll just let it
+   // fail on the SetTokenIntegrityLevel call later on.
+   if (integrity_level == INTEGRITY_LEVEL_LAST) {
+     // No mandatory level specified, we don't change it.
+     return ERROR_SUCCESS;
+   }
+ 
++  // Set integrity level for our process ACL, so we retain access to it.
++  // We ignore failures because this is not a security measure, but some
++  // functionality may fail later in the process.
++  SetObjectIntegrityLabel(::GetCurrentProcess(), SE_KERNEL_OBJECT, L"",
++                          GetIntegrityLevelString(integrity_level));
++
+   HANDLE token_handle;
+   if (!::OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_DEFAULT,
+                           &token_handle))
+     return ::GetLastError();
+ 
+   base::win::ScopedHandle token(token_handle);
+ 
+   return SetTokenIntegrityLevel(token.Get(), integrity_level);
