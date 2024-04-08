@@ -10,6 +10,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/AutoRestore.h"
+#include "mozilla/MacStringHelpers.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/StaticPrefs_intl.h"
@@ -321,13 +322,13 @@ static const char* GetCharacters(const nsAString& aString) {
   }
 
   // the result will be freed automatically by cocoa.
-  NSString* result = nsCocoaUtils::ToNSString(escapedStr);
+  NSString* result = XPCOMStringToNSString(escapedStr);
   return [result UTF8String];
 }
 
 static const char* GetCharacters(const NSString* aString) {
   nsAutoString str;
-  nsCocoaUtils::GetStringForNSString(aString, str);
+  CopyNSStringToXPCOMString(aString, str);
   return GetCharacters(str);
 }
 
@@ -835,7 +836,7 @@ bool TISInputSourceWrapper::GetStringProperty(const CFStringRef aKey,
                                               nsAString& aStr) {
   CFStringRef str;
   GetStringProperty(aKey, str);
-  nsCocoaUtils::GetStringForNSString((const NSString*)str, aStr);
+  CopyNSStringToXPCOMString((const NSString*)str, aStr);
   return !aStr.IsEmpty();
 }
 
@@ -883,8 +884,7 @@ bool TISInputSourceWrapper::GetPrimaryLanguage(nsAString& aPrimaryLanguage) {
   NS_ENSURE_TRUE(mInputSource, false);
   CFStringRef primaryLanguage;
   NS_ENSURE_TRUE(GetPrimaryLanguage(primaryLanguage), false);
-  nsCocoaUtils::GetStringForNSString((const NSString*)primaryLanguage,
-                                     aPrimaryLanguage);
+  CopyNSStringToXPCOMString((const NSString*)primaryLanguage, aPrimaryLanguage);
   return !aPrimaryLanguage.IsEmpty();
 }
 
@@ -985,7 +985,7 @@ void TISInputSourceWrapper::ComputeInsertStringForCharCode(
     } else {
       // If the caller isn't sure what string will be input, let's use
       // characters of NSEvent.
-      nsCocoaUtils::GetStringForNSString([aNativeKeyEvent characters], aResult);
+      CopyNSStringToXPCOMString([aNativeKeyEvent characters], aResult);
     }
 
     // If control key is pressed and the eventChars is a non-printable control
@@ -1156,8 +1156,8 @@ void TISInputSourceWrapper::InitKeyEvent(NSEvent* aNativeKeyEvent,
     // non-ASCII capable layout to ASCII capable, or from Dvorak to QWERTY.
     // KeyboardEvent.key value should be the switched layout's character.
     else if (aKeyEvent.IsMeta()) {
-      nsCocoaUtils::GetStringForNSString([aNativeKeyEvent characters],
-                                         aKeyEvent.mKeyValue);
+      CopyNSStringToXPCOMString([aNativeKeyEvent characters],
+                                aKeyEvent.mKeyValue);
     }
     // If control key is pressed, some keys may produce printable character via
     // [aNativeKeyEvent characters].  Otherwise, translate input character of
@@ -1188,8 +1188,8 @@ void TISInputSourceWrapper::InitKeyEvent(NSEvent* aNativeKeyEvent,
           [aNativeKeyEvent modifierFlags]);
       aKeyEvent.mKeyValue = TranslateToChar(nativeKeyCode, state, kbType);
     } else {
-      nsCocoaUtils::GetStringForNSString([aNativeKeyEvent characters],
-                                         aKeyEvent.mKeyValue);
+      CopyNSStringToXPCOMString([aNativeKeyEvent characters],
+                                aKeyEvent.mKeyValue);
       // If the key value is empty, the event may be a dead key event.
       // If TranslateToChar() returns non-zero value, that means that
       // the key may input a character with different dead key state.
@@ -1207,8 +1207,8 @@ void TISInputSourceWrapper::InitKeyEvent(NSEvent* aNativeKeyEvent,
     if (aKeyEvent.mKeyNameIndex == KEY_NAME_INDEX_USE_STRING &&
         (aKeyEvent.mKeyValue.IsEmpty() ||
          IsControlChar(aKeyEvent.mKeyValue[0]))) {
-      nsCocoaUtils::GetStringForNSString(
-          [aNativeKeyEvent charactersIgnoringModifiers], aKeyEvent.mKeyValue);
+      CopyNSStringToXPCOMString([aNativeKeyEvent charactersIgnoringModifiers],
+                                aKeyEvent.mKeyValue);
       // But don't expose it if it's a control character.
       if (!aKeyEvent.mKeyValue.IsEmpty() &&
           IsControlChar(aKeyEvent.mKeyValue[0])) {
@@ -1243,7 +1243,7 @@ void TISInputSourceWrapper::WillDispatchKeyboardEvent(
 
   if (MOZ_LOG_TEST(gKeyLog, LogLevel::Info)) {
     nsAutoString chars;
-    nsCocoaUtils::GetStringForNSString([aNativeKeyEvent characters], chars);
+    CopyNSStringToXPCOMString([aNativeKeyEvent characters], chars);
     NS_ConvertUTF16toUTF8 utf8Chars(chars);
     char16_t uniChar = static_cast<char16_t>(aKeyEvent.mCharCode);
     MOZ_LOG(
@@ -2428,7 +2428,7 @@ void TextInputHandler::InsertText(NSString* aString,
   NSRange selectedRange = SelectedRange();
 
   nsAutoString str;
-  nsCocoaUtils::GetStringForNSString(aString, str);
+  CopyNSStringToXPCOMString(aString, str);
 
   AutoInsertStringClearer clearer(currentKeyEvent);
   if (currentKeyEvent) {
@@ -3849,7 +3849,7 @@ bool IMEInputHandler::DispatchCompositionCommitEvent(
       mSelectedRange.location += aCommitString->Length();
     } else if (mIMECompositionString) {
       nsAutoString commitString;
-      nsCocoaUtils::GetStringForNSString(mIMECompositionString, commitString);
+      CopyNSStringToXPCOMString(mIMECompositionString, commitString);
       mSelectedRange.location += commitString.Length();
     }
     mSelectedRange.length = 0;
@@ -4037,7 +4037,7 @@ void IMEInputHandler::InsertTextAsCommittingComposition(
   }
 
   nsString str;
-  nsCocoaUtils::GetStringForNSString(aString, str);
+  CopyNSStringToXPCOMString(aString, str);
 
   if (!IsIMEComposing()) {
     MOZ_DIAGNOSTIC_ASSERT(!str.IsEmpty());
@@ -4171,7 +4171,7 @@ void IMEInputHandler::SetMarkedText(NSAttributedString* aAttrString,
   }
 
   nsString str;
-  nsCocoaUtils::GetStringForNSString([aAttrString string], str);
+  CopyNSStringToXPCOMString([aAttrString string], str);
 
   mMarkedRange.length = str.Length();
 
@@ -4272,7 +4272,7 @@ NSAttributedString* IMEInputHandler::GetAttributedSubstringFromRange(
 
     if (MOZ_LOG_TEST(gIMELog, LogLevel::Info)) {
       nsAutoString str;
-      nsCocoaUtils::GetStringForNSString(nsstr, str);
+      CopyNSStringToXPCOMString(nsstr, str);
       MOZ_LOG(gIMELog, LogLevel::Info,
               ("%p   IMEInputHandler::GetAttributedSubstringFromRange, "
                "computed with mIMECompositionString (result string=\"%s\")",
@@ -5051,18 +5051,17 @@ nsresult TextInputHandlerBase::SynthesizeNativeKeyEvent(
   bool sendFlagsChangedEvent = IsModifierKey(aNativeKeyCode);
   NSEventType eventType =
       sendFlagsChangedEvent ? NSEventTypeFlagsChanged : NSEventTypeKeyDown;
-  NSEvent* downEvent =
-      [NSEvent keyEventWithType:eventType
-                             location:NSMakePoint(0, 0)
-                        modifierFlags:modifierFlags
-                            timestamp:0
-                         windowNumber:windowNumber
-                              context:nil
-                           characters:nsCocoaUtils::ToNSString(aCharacters)
-          charactersIgnoringModifiers:nsCocoaUtils::ToNSString(
-                                          aUnmodifiedCharacters)
-                            isARepeat:NO
-                              keyCode:aNativeKeyCode];
+  NSEvent* downEvent = [NSEvent
+                 keyEventWithType:eventType
+                         location:NSMakePoint(0, 0)
+                    modifierFlags:modifierFlags
+                        timestamp:0
+                     windowNumber:windowNumber
+                          context:nil
+                       characters:XPCOMStringToNSString(aCharacters)
+      charactersIgnoringModifiers:XPCOMStringToNSString(aUnmodifiedCharacters)
+                        isARepeat:NO
+                          keyCode:aNativeKeyCode];
 
   NSEvent* upEvent = sendFlagsChangedEvent
                          ? nil
@@ -5232,7 +5231,7 @@ bool TextInputHandlerBase::SetSelection(NSRange& aRange) {
     return false;
   }
   nsAutoString nativeChars;
-  nsCocoaUtils::GetStringForNSString([aNativeEvent characters], nativeChars);
+  CopyNSStringToXPCOMString([aNativeEvent characters], nativeChars);
 
   // this is not character inputting event, simply.
   if (nativeChars.IsEmpty() ||
@@ -5314,7 +5313,7 @@ void TextInputHandlerBase::KeyEventState::InitKeyEvent(
   if (!mInsertedString.IsEmpty()) {
     nsAutoString unhandledString;
     GetUnhandledString(unhandledString);
-    NSString* unhandledNSString = nsCocoaUtils::ToNSString(unhandledString);
+    NSString* unhandledNSString = XPCOMStringToNSString(unhandledString);
     // If the key event's some characters were already handled by
     // InsertString() calls, we need to create a dummy event which doesn't
     // include the handled characters.
@@ -5345,7 +5344,7 @@ void TextInputHandlerBase::KeyEventState::GetUnhandledString(
     return;
   }
   nsAutoString characters;
-  nsCocoaUtils::GetStringForNSString([mKeyEvent characters], characters);
+  CopyNSStringToXPCOMString([mKeyEvent characters], characters);
   if (characters.IsEmpty()) {
     return;
   }
@@ -5373,8 +5372,7 @@ TextInputHandlerBase::AutoInsertStringClearer::~AutoInsertStringClearer() {
     // If inserting string is a part of characters of the event,
     // we should record it as inserted string.
     nsAutoString characters;
-    nsCocoaUtils::GetStringForNSString([mState->mKeyEvent characters],
-                                       characters);
+    CopyNSStringToXPCOMString([mState->mKeyEvent characters], characters);
     nsAutoString insertedString(mState->mInsertedString);
     insertedString += *mState->mInsertString;
     if (StringBeginsWith(characters, insertedString)) {
