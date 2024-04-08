@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
-use api::{units::*, PremultipliedColorF};
+use api::{units::*, PremultipliedColorF, ClipMode};
 use api::{ColorF, ImageFormat, LineOrientation, BorderStyle};
 use crate::batch::{AlphaBatchBuilder, AlphaBatchContainer, BatchTextures};
 use crate::batch::{ClipBatcher, BatchBuilder, INVALID_SEGMENT_INDEX, ClipMaskInstanceList};
@@ -1018,6 +1018,8 @@ fn build_mask_tasks(
                 (clip_address, fast_path)
             }
             ClipItemKind::Rectangle { rect, mode, .. } => {
+                assert_eq!(mode, ClipMode::Clip);
+
                 let mut writer = gpu_buffer_builder.f32.write_blocks(3);
                 writer.push_one(rect);
                 writer.push_one([0.0, 0.0, 0.0, 0.0]);
