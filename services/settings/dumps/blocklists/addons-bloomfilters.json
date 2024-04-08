@@ -3,6 +3,21 @@
     {
       "stash": {
         "blocked": [
+          "premiumblocker@addon:1.0",
+          "premiumblocker@addon:1.2",
+          "premiumblocker@addon:1.1"
+        ],
+        "unblocked": []
+      },
+      "schema": 1712314258197,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1712342104382,
+      "id": "928afd6e-3aec-466b-8c59-bcfd8007ff13",
+      "last_modified": 1712342161400
+    },
+    {
+      "stash": {
+        "blocked": [
           "{7f72ddf5-1bd4-4515-81ca-82d58e0bf6b2}:1.0.0",
           "{33bd1745-0a29-41b6-84a7-3029a3fe3719}:1.1.15",
           "{7f72ddf5-1bd4-4515-81ca-82d58e0bf6b2}:1.0.2",
@@ -305,5 +320,5 @@
       "last_modified": 1707395854769
     }
   ],
-  "timestamp": 1711564561309
+  "timestamp": 1712342161400
 }
