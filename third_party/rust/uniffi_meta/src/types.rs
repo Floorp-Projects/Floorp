@@ -21,12 +21,8 @@ use crate::Checksum;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Checksum, Ord, PartialOrd)]
 pub enum ObjectImpl {
-    // A single Rust type
     Struct,
-    // A trait that's can be implemented by Rust types
     Trait,
-    // A trait + a callback interface -- can be implemented by both Rust and foreign types.
-    CallbackTrait,
 }
 
 impl ObjectImpl {
@@ -35,26 +31,27 @@ impl ObjectImpl {
     /// Includes `r#`, traits get a leading `dyn`. If we ever supported associated types, then
     /// this would also include them.
     pub fn rust_name_for(&self, name: &str) -> String {
-        if self.is_trait_interface() {
+        if self == &ObjectImpl::Trait {
             format!("dyn r#{name}")
         } else {
             format!("r#{name}")
         }
     }
 
-    pub fn is_trait_interface(&self) -> bool {
-        matches!(self, Self::Trait | Self::CallbackTrait)
-    }
-
-    pub fn has_callback_interface(&self) -> bool {
-        matches!(self, Self::CallbackTrait)
+    // uniffi_meta and procmacro support tend to carry around `is_trait` bools. This makes that
+    // mildly less painful
+    pub fn from_is_trait(is_trait: bool) -> Self {
+        if is_trait {
+            ObjectImpl::Trait
+        } else {
+            ObjectImpl::Struct
+        }
     }
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Checksum, Ord, PartialOrd)]
 pub enum ExternalKind {
     Interface,
-    Trait,
     // Either a record or enum
     DataClass,
 }
@@ -88,6 +85,7 @@ pub enum Type {
         // How the object is implemented.
         imp: ObjectImpl,
     },
+    ForeignExecutor,
     // Types defined in the component API, each of which has a string name.
     Record {
         module_path: String,

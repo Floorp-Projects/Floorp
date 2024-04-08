@@ -2,10 +2,7 @@
 
 ["test_arithmetic.js"]
 
-# Temporarily disabled until we can re-enable callback support
-#
-# I think this can be done when we implement https://bugzilla.mozilla.org/show_bug.cgi?id=1888668
-# ["test_callbacks.js"]
+["test_callbacks.js"]
 
 ["test_custom_types.js"]
 

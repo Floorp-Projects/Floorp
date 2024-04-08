@@ -5,29 +5,27 @@
 #}
 
 {%- macro to_ffi_call(func) -%}
-{%- call _to_ffi_call_with_prefix_arg("", func) %}
+    {%- match func.throws_type() -%}
+    {%- when Some with (e) -%}
+_rust_call_with_error({{ e|ffi_converter_name }},
+    {%- else -%}
+_rust_call(
+    {%- endmatch -%}
+    _UniffiLib.{{ func.ffi_func().name() }},
+    {%- call arg_list_lowered(func) -%}
+)
 {%- endmacro -%}
 
 {%- macro to_ffi_call_with_prefix(prefix, func) -%}
-{%- call _to_ffi_call_with_prefix_arg(format!("{},", prefix), func) %}
-{%- endmacro -%}
-
-{%- macro _to_ffi_call_with_prefix_arg(prefix, func) -%}
-{%- match func.throws_type() -%}
-{%-     when Some with (e) -%}
-{%-         match e -%}
-{%-             when Type::Enum { name, module_path } -%}
-_rust_call_with_error({{ e|ffi_converter_name }},
-{%-             when Type::Object { name, module_path, imp } -%}
-_rust_call_with_error({{ e|ffi_converter_name }}__as_error,
-{%-             else %}
-# unsupported error type!
-{%-         endmatch %}
-{%- else -%}
+    {%- match func.throws_type() -%}
+    {%- when Some with (e) -%}
+_rust_call_with_error(
+    {{ e|ffi_converter_name }},
+    {%- else -%}
 _rust_call(
-{%- endmatch -%}
+    {%- endmatch -%}
     _UniffiLib.{{ func.ffi_func().name() }},
-    {{- prefix }}
+    {{- prefix }},
     {%- call arg_list_lowered(func) -%}
 )
 {%- endmacro -%}
@@ -38,19 +36,6 @@ _rust_call(
         {%- if !loop.last %},{% endif %}
     {%- endfor %}
 {%- endmacro -%}
-
-{%- macro docstring_value(maybe_docstring, indent_spaces) %}
-{%- match maybe_docstring %}
-{%- when Some(docstring) %}
-{{ docstring|docstring(indent_spaces) }}
-{{ "" }}
-{%- else %}
-{%- endmatch %}
-{%- endmacro %}
-
-{%- macro docstring(defn, indent_spaces) %}
-{%- call docstring_value(defn.docstring(), indent_spaces) %}
-{%- endmacro %}
 
 {#-
 // Arglist as used in Python declarations of methods, functions and constructors.
@@ -91,7 +76,6 @@ _rust_call(
     if {{ arg.name()|var_name }} is _DEFAULT:
         {{ arg.name()|var_name }} = {{ literal|literal_py(arg.as_type().borrow()) }}
     {%- endmatch %}
-    {{ arg|check_lower_fn }}({{ arg.name()|var_name }})
     {% endfor -%}
 {%- endmacro -%}
 
@@ -107,7 +91,6 @@ _rust_call(
         if {{ arg.name()|var_name }} is _DEFAULT:
             {{ arg.name()|var_name }} = {{ literal|literal_py(arg.as_type().borrow()) }}
         {%- endmatch %}
-        {{ arg|check_lower_fn }}({{ arg.name()|var_name }})
         {% endfor -%}
 {%- endmacro -%}
 
@@ -117,18 +100,11 @@ _rust_call(
 {%- macro method_decl(py_method_name, meth) %}
 {%  if meth.is_async() %}
 
-{%-     match meth.return_type() %}
-{%-         when Some with (return_type) %}
-    async def {{ py_method_name }}(self, {% call arg_list_decl(meth) %}) -> "{{ return_type|type_name }}":
-{%-         when None %}
-    async def {{ py_method_name }}(self, {% call arg_list_decl(meth) %}) -> None:
-{%      endmatch %}
-
-        {%- call docstring(meth, 8) %}
+    def {{ py_method_name }}(self, {% call arg_list_decl(meth) %}):
         {%- call setup_args_extra_indent(meth) %}
-        return await _uniffi_rust_call_async(
+        return _uniffi_rust_call_async(
             _UniffiLib.{{ meth.ffi_func().name() }}(
-                self._uniffi_clone_pointer(), {% call arg_list_lowered(meth) %}
+                self._pointer, {% call arg_list_lowered(meth) %}
             ),
             _UniffiLib.{{ meth.ffi_rust_future_poll(ci) }},
             _UniffiLib.{{ meth.ffi_rust_future_complete(ci) }},
@@ -140,7 +116,13 @@ _rust_call(
             {%- when None %}
             lambda val: None,
             {% endmatch %}
-            {% call error_ffi_converter(meth) %}
+            # Error FFI converter
+            {%- match meth.throws_type() %}
+            {%- when Some(e) %}
+            {{ e|ffi_converter_name }},
+            {%- when None %}
+            None,
+            {%- endmatch %}
         )
 
 {%- else -%}
@@ -149,36 +131,17 @@ _rust_call(
 {%-         when Some with (return_type) %}
 
     def {{ py_method_name }}(self, {% call arg_list_decl(meth) %}) -> "{{ return_type|type_name }}":
-        {%- call docstring(meth, 8) %}
         {%- call setup_args_extra_indent(meth) %}
         return {{ return_type|lift_fn }}(
-            {% call to_ffi_call_with_prefix("self._uniffi_clone_pointer()", meth) %}
+            {% call to_ffi_call_with_prefix("self._pointer", meth) %}
         )
 
 {%-         when None %}
 
-    def {{ py_method_name }}(self, {% call arg_list_decl(meth) %}) -> None:
-        {%- call docstring(meth, 8) %}
+    def {{ py_method_name }}(self, {% call arg_list_decl(meth) %}):
         {%- call setup_args_extra_indent(meth) %}
-        {% call to_ffi_call_with_prefix("self._uniffi_clone_pointer()", meth) %}
+        {% call to_ffi_call_with_prefix("self._pointer", meth) %}
 {%      endmatch %}
 {%  endif %}
 
-{% endmacro %}
-
-{%- macro error_ffi_converter(func) %}
-    # Error FFI converter
-{%  match func.throws_type() %}
-{%-     when Some(e) %}
-{%-         match e -%}
-{%-             when Type::Enum { name, module_path } -%}
-    {{ e|ffi_converter_name }},
-{%-             when Type::Object { name, module_path, imp } -%}
-    {{ e|ffi_converter_name }}__as_error,
-{%-             else %}
-    # unsupported error type!
-{%-         endmatch %}
-{%-     when None %}
-    None,
-{%-  endmatch %}
 {% endmacro %}

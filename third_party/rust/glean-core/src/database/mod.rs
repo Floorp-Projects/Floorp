@@ -824,6 +824,7 @@ mod test {
     use super::*;
     use crate::tests::new_glean;
     use std::collections::HashMap;
+    use std::path::Path;
     use tempfile::tempdir;
 
     #[test]

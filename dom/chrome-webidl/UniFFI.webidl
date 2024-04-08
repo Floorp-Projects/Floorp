@@ -35,9 +35,7 @@ typedef unsigned long long UniFFICallbackObjectHandle;
 
 // Opaque type used to represent a pointer from Rust
 [ChromeOnly, Exposed=Window]
-interface UniFFIPointer {
-    UniFFIPointer clone();
-};
+interface UniFFIPointer {};
 
 // Types that can be passed or returned from scaffolding functions
 //

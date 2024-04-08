@@ -1,14 +1,10 @@
 
 class _UniffiRustBuffer(ctypes.Structure):
     _fields_ = [
-        ("capacity", ctypes.c_uint64),
-        ("len", ctypes.c_uint64),
+        ("capacity", ctypes.c_int32),
+        ("len", ctypes.c_int32),
         ("data", ctypes.POINTER(ctypes.c_char)),
     ]
-
-    @staticmethod
-    def default():
-        return _UniffiRustBuffer(0, 0, None)
 
     @staticmethod
     def alloc(size):
@@ -140,6 +136,9 @@ class _UniffiRustBufferStream:
 
     def read_double(self):
         return self._unpack_from(8, ">d")
+
+    def read_c_size_t(self):
+        return self._unpack_from(ctypes.sizeof(ctypes.c_size_t) , "@N")
 
 class _UniffiRustBufferBuilder:
     """

@@ -56,13 +56,6 @@ pub struct RustCallStatus {
 }
 
 impl RustCallStatus {
-    pub fn new() -> Self {
-        Self {
-            code: RustCallStatusCode::Success,
-            error_buf: MaybeUninit::new(RustBuffer::new()),
-        }
-    }
-
     pub fn cancelled() -> Self {
         Self {
             code: RustCallStatusCode::Cancelled,
@@ -109,7 +102,7 @@ pub enum RustCallStatusCode {
 /// Handle a scaffolding calls
 ///
 /// `callback` is responsible for making the actual Rust call and returning a special result type:
-///   - For successful calls, return `Ok(value)`
+///   - For successfull calls, return `Ok(value)`
 ///   - For errors that should be translated into thrown exceptions in the foreign code, serialize
 ///     the error into a `RustBuffer`, then return `Ok(buf)`
 ///   - The success type, must implement `FfiDefault`.

@@ -25,7 +25,6 @@ pub use uniffi_meta::{AsType, ExternalKind, NamespaceMetadata, ObjectImpl, Type,
 pub(crate) struct TypeUniverse {
     /// The unique prefixes that we'll use for namespacing when exposing this component's API.
     pub namespace: NamespaceMetadata,
-    pub namespace_docstring: Option<String>,
 
     // Named type definitions (including aliases).
     type_definitions: HashMap<String, Type>,
@@ -84,6 +83,9 @@ impl TypeUniverse {
             Type::Bytes => self.add_type_definition("bytes", type_)?,
             Type::Timestamp => self.add_type_definition("timestamp", type_)?,
             Type::Duration => self.add_type_definition("duration", type_)?,
+            Type::ForeignExecutor => {
+                self.add_type_definition("ForeignExecutor", type_)?;
+            }
             Type::Object { name, .. }
             | Type::Record { name, .. }
             | Type::Enum { name, .. }
@@ -116,7 +118,6 @@ impl TypeUniverse {
         Ok(())
     }
 
-    #[cfg(test)]
     /// Check if a [Type] is present
     pub fn contains(&self, type_: &Type) -> bool {
         self.all_known_types.contains(type_)
