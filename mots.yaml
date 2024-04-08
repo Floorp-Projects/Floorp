@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2024-04-04T19:44:57.780772'
+updated_at: '2024-04-08T10:57:11.999960'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -47,6 +47,10 @@ people:
     bmo_id: 517691
     name: Alastor Wu
     nick: alwu
+  - &amejia
+    bmo_id: 623634
+    name: Arturo Mejia
+    nick: amejia
   - &aminomancer
     bmo_id: 636965
     name: Shane Hughes
@@ -127,6 +131,10 @@ people:
     bmo_id: 458623
     name: Bob Owen
     nick: bobowen
+  - &boek
+    bmo_id: 599885
+    name: Jeff Boek
+    nick: boek
   - &bomsy
     bmo_id: 656417
     name: Hubert Boma Manilla
@@ -369,6 +377,14 @@ people:
     bmo_id: 159069
     name: ''
     nick: Gijs
+  - &giorga
+    bmo_id: 698576
+    name: Iorga Gabriel
+    nick: giorga
+  - &gl
+    bmo_id: 475223
+    name: Gabriel
+    nick: gl
   - &glandium
     bmo_id: 47192
     name: Mike Hommey
@@ -516,6 +532,10 @@ people:
     bmo_id: 541747
     name: Jamie Nicol
     nick: jnicol
+  - &jonalmeida
+    bmo_id: 541581
+    name: Jonathan Almeida
+    nick: jonalmeida
   - &jonco
     bmo_id: 443194
     name: Jon Coppeard
@@ -571,6 +591,10 @@ people:
     bmo_id: 274246
     name: Karl Tomlinson
     nick: karlt
+  - &kaya
+    bmo_id: 712933
+    name: Kayacan Kaya
+    nick: kaya
   - &kcochrane
     bmo_id: 707663
     name: Kelly Cochrane
@@ -659,10 +683,18 @@ people:
     bmo_id: 275214
     name: Matjaz Horvat
     nick: mathjazz
+  - &matttighe
+    bmo_id: 701804
+    name: Matt Tighe
+    nick: matt-tighe
   - &MattN
     bmo_id: 305228
     name: Matthew N
     nick: MattN
+  - &mcarare
+    bmo_id: 648814
+    name: Mihai Adrian Carare
+    nick: mcarare
   - &mccr8
     bmo_id: 406194
     name: Andrew McCreight
@@ -831,6 +863,10 @@ people:
     bmo_id: 447061
     name: Rob Wu
     nick: robwu
+  - &royang
+    bmo_id: 644746
+    name: Roger Yang
+    nick: royang
   - &rpl
     bmo_id: 339062
     name: Luca Greco
@@ -839,6 +875,10 @@ people:
     bmo_id: 11099
     name: Robert Relyea
     nick: rrelyea
+  - &rsainani
+    bmo_id: 718207
+    name: Rahul Sainani
+    nick: rsainani
   - &ryansleevi
     bmo_id: 381992
     name: Ryan Sleevi
@@ -1040,6 +1080,20 @@ modules:
     peers: []
     machine_name: _firefoxtoplevel
 
+  - machine_name: android_components
+    name: Android Components
+    description: A collection of independent, reusable Android library components
+      to make it easier to build browsers and browser-like applications.
+    includes:
+      - mobile/android/android-components/**/*
+    excludes: []
+    owners:
+      - *amejia
+      - *matttighe
+    peers:
+      - *kaya
+      - *jonalmeida
+    meta:
   - machine_name: code_coverage
     name: Code Coverage
     description: Tools for code coverage instrumentation, and coverage data parsing
@@ -1617,6 +1671,10 @@ modules:
       - mobile/android/**/*
       - widget/android/**/*
       - hal/android/**/*
+    excludes:
+      - mobile/android/fenix/**/*
+      - mobile/android/focus-android/**/*
+      - mobile/android/android-components/**/*
     meta:
       owners_emeritus:
         - James Willcox
@@ -3719,6 +3777,31 @@ modules:
       url: http://firefox-dev.tools/
       components:
         - DevTools
+  - machine_name: fenix
+    name: Fenix
+    description: Android Project to build Firefox for Android
+    includes:
+      - mobile/android/fenix/**/*
+    excludes: []
+    owners:
+      - *boek
+      - *gl
+    peers:
+      - *royang
+      - *rsainani
+    meta:
+  - machine_name: focus_android
+    name: Focus for Android
+    description: Android Project to build Focus for Android
+    includes:
+      - mobile/android/focus-android/**/*
+    excludes: []
+    owners:
+      - *mcarare
+      - *royang
+    peers:
+      - *giorga
+    meta:
   - machine_name: javascript_usage
     name: JavaScript usage, tools, and style
     description: Aspects of JavaScript use such as language feature usage, tooling
@@ -4238,5 +4321,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: 1650f8aa7595ca3b30f71f18cad0b42b9e957137
-  export: 760771e343bdf7a45922c80e4643fe0f71fd3be6
+  config: f44a92767545e44e9d7057d1a95b14d48268e776
+  export: 4909805439d7d674cf2642bcb374af27aebf6eb6
