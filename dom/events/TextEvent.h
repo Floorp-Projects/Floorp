@@ -12,6 +12,8 @@
 #include "mozilla/dom/TextEventBinding.h"
 #include "mozilla/EventForwards.h"
 
+class nsIPrincipal;
+
 namespace mozilla::dom {
 
 class TextEvent : public UIEvent {
@@ -26,7 +28,7 @@ class TextEvent : public UIEvent {
     return TextEvent_Binding::Wrap(aCx, this, aGivenProto);
   }
 
-  void GetData(nsAString& aData) const;
+  void GetData(nsAString& aData, nsIPrincipal& aSubjectPrincipal) const;
   void InitTextEvent(const nsAString& typeArg, bool canBubbleArg,
                      bool cancelableArg, nsGlobalWindowInner* viewArg,
                      const nsAString& dataArg);

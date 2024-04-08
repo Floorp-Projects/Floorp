@@ -34,6 +34,7 @@
 #include "ErrorList.h"
 #include "gfxFontUtils.h"  // for gfxFontUtils
 #include "mozilla/Assertions.h"
+#include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/intl/BidiEmbeddingLevel.h"
 #include "mozilla/BasePrincipal.h"            // for BasePrincipal
 #include "mozilla/CheckedInt.h"               // for CheckedInt
@@ -3714,32 +3715,20 @@ nsresult EditorBase::OnCompositionChange(
     return NS_ERROR_FAILURE;
   }
 
-  AutoEditActionDataSetter editActionData(*this,
-                                          EditAction::eUpdateComposition);
+  AutoEditActionDataSetter editActionData(
+      *this,
+      // We need to distinguish whether the composition change is followed by
+      // compositionend or not (i.e., wether IME has already ended the
+      // composition or still has the composition) because we need to dispatch
+      // `textInput` event only for the last composition change.
+      aCompositionChangeEvent.IsFollowedByCompositionEnd()
+          ? EditAction::eUpdateCompositionToCommit
+          : EditAction::eUpdateComposition);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
-
-  // If:
-  // - new composition string is not empty,
-  // - there is no composition string in the DOM tree,
-  // - and there is non-collapsed Selection,
-  // the selected content will be removed by this composition.
-  if (aCompositionChangeEvent.mData.IsEmpty() &&
-      mComposition->String().IsEmpty() && !SelectionRef().IsCollapsed()) {
-    editActionData.UpdateEditAction(EditAction::eDeleteByComposition);
-  }
-
-  // If Input Events Level 2 is enabled, EditAction::eDeleteByComposition is
-  // mapped to EditorInputType::eDeleteByComposition and it requires null
-  // for InputEvent.data.  Therefore, only otherwise, we should set data.
-  if (ToInputType(editActionData.GetEditAction()) !=
-      EditorInputType::eDeleteByComposition) {
-    MOZ_ASSERT(ToInputType(editActionData.GetEditAction()) ==
-               EditorInputType::eInsertCompositionText);
-    MOZ_ASSERT(!aCompositionChangeEvent.mData.IsVoid());
-    editActionData.SetData(aCompositionChangeEvent.mData);
-  }
+  MOZ_ASSERT(!aCompositionChangeEvent.mData.IsVoid());
+  editActionData.SetData(aCompositionChangeEvent.mData);
 
   // If we're an `HTMLEditor` and this is second or later composition change,
   // we should set target range to the range of composition string.
@@ -6513,6 +6502,13 @@ nsresult EditorBase::AutoEditActionDataSetter::MaybeFlushPendingNotifications()
   return NS_OK;
 }
 
+void EditorBase::AutoEditActionDataSetter::MarkEditActionCanceled() {
+  mBeforeInputEventCanceled = true;
+  if (mEditorBase.IsHTMLEditor()) {
+    mEditorBase.AsHTMLEditor()->mHasBeforeInputBeenCanceled = true;
+  }
+}
+
 nsresult EditorBase::AutoEditActionDataSetter::MaybeDispatchBeforeInputEvent(
     nsIEditor::EDirection aDeleteDirectionAndAmount /* = nsIEditor::eNone */) {
   MOZ_ASSERT(!HasTriedToDispatchBeforeInputEvent(),
@@ -6637,11 +6633,79 @@ nsresult EditorBase::AutoEditActionDataSetter::MaybeDispatchBeforeInputEvent(
     NS_WARNING("nsContentUtils::DispatchInputEvent() failed");
     return rv;
   }
-  mBeforeInputEventCanceled = status == nsEventStatus_eConsumeNoDefault;
-  if (mBeforeInputEventCanceled && mEditorBase.IsHTMLEditor()) {
-    mEditorBase.AsHTMLEditor()->mHasBeforeInputBeenCanceled = true;
+  if (status == nsEventStatus_eConsumeNoDefault) {
+    MarkEditActionCanceled();
+    return NS_ERROR_EDITOR_ACTION_CANCELED;
   }
-  return mBeforeInputEventCanceled ? NS_ERROR_EDITOR_ACTION_CANCELED : NS_OK;
+
+  nsCOMPtr<nsIWidget> widget = editorBase->GetWidget();
+  if (!StaticPrefs::dom_events_textevent_enabled() ||
+      !targetElement->IsInComposedDoc() || !widget) {
+    return NS_OK;
+  }
+  nsString textInputData;
+  RefPtr<DataTransfer> textInputDataTransfer;
+  switch (inputType) {
+    case EditorInputType::eInsertCompositionText:
+      // If the composition is still being composed, we should not dispatch
+      // textInput event, but we need to dispatch it for the last composition
+      // change because web apps should know the inserting commit string as
+      // same as input from keyboard.
+      if (mEditAction == EditAction::eUpdateComposition) {
+        return NS_OK;
+      }
+      [[fallthrough]];
+    case EditorInputType::eInsertText:
+      textInputData = mData;
+      break;
+    case EditorInputType::eInsertFromDrop:
+    case EditorInputType::eInsertFromPaste:
+    case EditorInputType::eInsertFromPasteAsQuotation:
+      if (mDataTransfer) {
+        textInputDataTransfer = mDataTransfer;
+      } else {
+        textInputData = mData;
+      }
+      break;
+    case EditorInputType::eInsertLineBreak:
+    case EditorInputType::eInsertParagraph:
+      // Don't dispatch `textInput` on <input> because Chrome does not do it.
+      // On the other hand, we need to dispatch it on <textarea> and
+      // contenteditable.
+      if (mEditorBase.IsTextEditor() && mEditorBase.IsSingleLineEditor()) {
+        return NS_OK;
+      }
+      textInputData.Assign(u'\n');
+      break;
+    default:
+      return NS_OK;
+  }
+
+  InternalLegacyTextEvent textEvent(true, eLegacyTextInput, widget);
+  textEvent.mData = std::move(textInputData);
+  textEvent.mDataTransfer = std::move(textInputDataTransfer);
+  textEvent.mInputType = inputType;
+  // Make it always cancelable even though we ignore it when inserting or
+  // deleting composition.  This is compatible with Chrome.
+  // However, if and only if it's unsafe, let's set it not cancelable because of
+  // asynchronous dispatching.
+  textEvent.mFlags.mCancelable = nsContentUtils::IsSafeToRunScript();
+
+  status = nsEventStatus_eIgnore;
+  rv = AsyncEventDispatcher::RunDOMEventWhenSafe(*targetElement, textEvent,
+                                                 &status);
+  if (NS_WARN_IF(mEditorBase.Destroyed())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  if (NS_FAILED(rv)) {
+    NS_WARNING("AsyncEventDispatcher::RunDOMEventWhenSafe() failed");
+    return rv;
+  }
+  if (status == nsEventStatus_eConsumeNoDefault) {
+    MarkEditActionCanceled();
+    return NS_ERROR_EDITOR_ACTION_CANCELED;
+  }
+  return NS_OK;
 }
 
 /*****************************************************************************
