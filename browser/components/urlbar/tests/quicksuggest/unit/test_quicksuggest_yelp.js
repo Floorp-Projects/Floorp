@@ -26,6 +26,21 @@ const REMOTE_SETTINGS_RECORDS = [
   },
 ];
 
+const AB_RESULT = {
+  url: "https://www.yelp.com/search?find_desc=ab&find_loc=Yokohama%2C+Kanagawa",
+  originalUrl: "https://www.yelp.com/search?find_desc=ab",
+  displayUrl: "yelp.com/search?find_desc=ab&find_loc=Yokohama,+Kanagawa",
+  title: "ab in Yokohama, Kanagawa",
+};
+
+const ALONGERKEYWORD_RESULT = {
+  url: "https://www.yelp.com/search?find_desc=alongerkeyword&find_loc=Yokohama%2C+Kanagawa",
+  originalUrl: "https://www.yelp.com/search?find_desc=alongerkeyword",
+  displayUrl:
+    "yelp.com/search?find_desc=alongerkeyword&find_loc=Yokohama,+Kanagawa",
+  title: "alongerkeyword in Yokohama, Kanagawa",
+};
+
 add_setup(async function () {
   Services.prefs.setBoolPref("browser.search.suggest.enabled", false);
 
@@ -139,12 +154,7 @@ add_task(async function basic() {
     {
       description: "Subject exact match with length < minKeywordLength",
       query: "ab",
-      expected: {
-        url: "https://www.yelp.com/search?find_desc=ab&find_loc=Yokohama%2C+Kanagawa",
-        originalUrl: "https://www.yelp.com/search?find_desc=ab",
-        displayUrl: "yelp.com/search?find_desc=ab&find_loc=Yokohama,+Kanagawa",
-        title: "ab in Yokohama, Kanagawa",
-      },
+      expected: AB_RESULT,
     },
     {
       description:
@@ -174,65 +184,35 @@ add_task(async function basic() {
     {
       description: "Query length == minKeywordLength, subject not exact match",
       query: "along",
-      expected: {
-        url: "https://www.yelp.com/search?find_desc=alongerkeyword&find_loc=Yokohama%2C+Kanagawa",
-        originalUrl: "https://www.yelp.com/search?find_desc=alongerkeyword",
-        displayUrl:
-          "yelp.com/search?find_desc=alongerkeyword&find_loc=Yokohama,+Kanagawa",
-        title: "alongerkeyword in Yokohama, Kanagawa",
-      },
+      expected: ALONGERKEYWORD_RESULT,
     },
     {
       description:
         "Query length == minKeywordLength, subject not exact match, showLessFrequentlyCount non-zero",
       query: "along",
       showLessFrequentlyCount: 1,
-      expected: {
-        url: "https://www.yelp.com/search?find_desc=alongerkeyword&find_loc=Yokohama%2C+Kanagawa",
-        originalUrl: "https://www.yelp.com/search?find_desc=alongerkeyword",
-        displayUrl:
-          "yelp.com/search?find_desc=alongerkeyword&find_loc=Yokohama,+Kanagawa",
-        title: "alongerkeyword in Yokohama, Kanagawa",
-      },
+      expected: ALONGERKEYWORD_RESULT,
     },
     {
       description:
         "Query length == minKeywordLength + showLessFrequentlyCount, subject not exact match",
       query: "alonge",
       showLessFrequentlyCount: 1,
-      expected: {
-        url: "https://www.yelp.com/search?find_desc=alongerkeyword&find_loc=Yokohama%2C+Kanagawa",
-        originalUrl: "https://www.yelp.com/search?find_desc=alongerkeyword",
-        displayUrl:
-          "yelp.com/search?find_desc=alongerkeyword&find_loc=Yokohama,+Kanagawa",
-        title: "alongerkeyword in Yokohama, Kanagawa",
-      },
+      expected: ALONGERKEYWORD_RESULT,
     },
     {
       description:
         "Query length < minKeywordLength + showLessFrequentlyCount, subject not exact match",
       query: "alonge",
       showLessFrequentlyCount: 2,
-      expected: {
-        url: "https://www.yelp.com/search?find_desc=alongerkeyword&find_loc=Yokohama%2C+Kanagawa",
-        originalUrl: "https://www.yelp.com/search?find_desc=alongerkeyword",
-        displayUrl:
-          "yelp.com/search?find_desc=alongerkeyword&find_loc=Yokohama,+Kanagawa",
-        title: "alongerkeyword in Yokohama, Kanagawa",
-      },
+      expected: ALONGERKEYWORD_RESULT,
     },
     {
       description:
         "Query length == minKeywordLength + showLessFrequentlyCount, subject not exact match",
       query: "alonger",
       showLessFrequentlyCount: 2,
-      expected: {
-        url: "https://www.yelp.com/search?find_desc=alongerkeyword&find_loc=Yokohama%2C+Kanagawa",
-        originalUrl: "https://www.yelp.com/search?find_desc=alongerkeyword",
-        displayUrl:
-          "yelp.com/search?find_desc=alongerkeyword&find_loc=Yokohama,+Kanagawa",
-        title: "alongerkeyword in Yokohama, Kanagawa",
-      },
+      expected: ALONGERKEYWORD_RESULT,
     },
   ];
 
@@ -632,8 +612,9 @@ add_task(async function notInterested() {
 
 // Tests the "show less frequently" behavior.
 add_task(async function showLessFrequently() {
-  UrlbarPrefs.set("yelp.showLessFrequentlyCount", 0);
-  UrlbarPrefs.set("yelp.minKeywordLength", 0);
+  UrlbarPrefs.clear("yelp.showLessFrequentlyCount");
+  UrlbarPrefs.clear("yelp.minKeywordLength");
+
   let cleanUpNimbus = await UrlbarTestUtils.initNimbusFeature({
     yelpMinKeywordLength: 0,
     yelpShowLessFrequentlyCap: 3,
@@ -789,6 +770,298 @@ add_task(async function rustProviders() {
   UrlbarPrefs.clear("suggest.yelp");
   await QuickSuggestTestUtils.forceSync();
 });
+
+add_task(async function minKeywordLength_noPrefValue() {
+  await doMinKeywordLengthTest({
+    // expected min length: 5 (Nimbus value)
+    prefValue: null,
+    nimbusValue: 5,
+    tests: [
+      {
+        query: "al",
+        expected: null,
+      },
+      {
+        query: "alo",
+        expected: null,
+      },
+      {
+        query: "alon",
+        expected: null,
+      },
+      {
+        query: "along",
+        expected: ALONGERKEYWORD_RESULT,
+      },
+      {
+        query: "alongerkeyword",
+        expected: ALONGERKEYWORD_RESULT,
+      },
+      {
+        query: "best a",
+        expected: null,
+      },
+      {
+        query: "best al",
+        expected: {
+          url: "https://www.yelp.com/search?find_desc=best+alongerkeyword&find_loc=Yokohama%2C+Kanagawa",
+          originalUrl:
+            "https://www.yelp.com/search?find_desc=best+alongerkeyword",
+          displayUrl:
+            "yelp.com/search?find_desc=best+alongerkeyword&find_loc=Yokohama,+Kanagawa",
+          title: "best alongerkeyword in Yokohama, Kanagawa",
+        },
+      },
+      {
+        query: "ab",
+        expected: AB_RESULT,
+      },
+    ],
+  });
+});
+
+add_task(async function minKeywordLength_smallerPrefValue() {
+  await doMinKeywordLengthTest({
+    // expected min length: 4 (pref value)
+    prefValue: 4,
+    nimbusValue: 5,
+    tests: [
+      {
+        query: "al",
+        expected: null,
+      },
+      {
+        query: "alo",
+        expected: null,
+      },
+      {
+        query: "alon",
+        expected: ALONGERKEYWORD_RESULT,
+      },
+      {
+        query: "along",
+        expected: ALONGERKEYWORD_RESULT,
+      },
+      {
+        query: "alongerkeyword",
+        expected: ALONGERKEYWORD_RESULT,
+      },
+      {
+        query: "best a",
+        expected: null,
+      },
+      {
+        query: "best al",
+        expected: {
+          url: "https://www.yelp.com/search?find_desc=best+alongerkeyword&find_loc=Yokohama%2C+Kanagawa",
+          originalUrl:
+            "https://www.yelp.com/search?find_desc=best+alongerkeyword",
+          displayUrl:
+            "yelp.com/search?find_desc=best+alongerkeyword&find_loc=Yokohama,+Kanagawa",
+          title: "best alongerkeyword in Yokohama, Kanagawa",
+        },
+      },
+      {
+        query: "ab",
+        expected: AB_RESULT,
+      },
+    ],
+  });
+});
+
+add_task(async function minKeywordLength_largerPrefValue() {
+  await doMinKeywordLengthTest({
+    // expected min length: 6 (pref value)
+    prefValue: 6,
+    nimbusValue: 5,
+    tests: [
+      {
+        query: "al",
+        expected: null,
+      },
+      {
+        query: "alo",
+        expected: null,
+      },
+      {
+        query: "alon",
+        expected: null,
+      },
+      {
+        query: "along",
+        expected: null,
+      },
+      {
+        query: "alonge",
+        expected: ALONGERKEYWORD_RESULT,
+      },
+      {
+        query: "alongerkeyword",
+        expected: ALONGERKEYWORD_RESULT,
+      },
+      {
+        query: "best a",
+        expected: null,
+      },
+      {
+        query: "best al",
+        expected: {
+          url: "https://www.yelp.com/search?find_desc=best+alongerkeyword&find_loc=Yokohama%2C+Kanagawa",
+          originalUrl:
+            "https://www.yelp.com/search?find_desc=best+alongerkeyword",
+          displayUrl:
+            "yelp.com/search?find_desc=best+alongerkeyword&find_loc=Yokohama,+Kanagawa",
+          title: "best alongerkeyword in Yokohama, Kanagawa",
+        },
+      },
+      {
+        query: "ab",
+        expected: AB_RESULT,
+      },
+    ],
+  });
+});
+
+add_task(async function minKeywordLength_onlyPrefValue() {
+  await doMinKeywordLengthTest({
+    // expected min length: 5 (pref value)
+    prefValue: 5,
+    nimbusValue: null,
+    tests: [
+      {
+        query: "al",
+        expected: null,
+      },
+      {
+        query: "alo",
+        expected: null,
+      },
+      {
+        query: "alon",
+        expected: null,
+      },
+      {
+        query: "along",
+        expected: ALONGERKEYWORD_RESULT,
+      },
+      {
+        query: "alongerkeyword",
+        expected: ALONGERKEYWORD_RESULT,
+      },
+      {
+        query: "best a",
+        expected: null,
+      },
+      {
+        query: "best al",
+        expected: {
+          url: "https://www.yelp.com/search?find_desc=best+alongerkeyword&find_loc=Yokohama%2C+Kanagawa",
+          originalUrl:
+            "https://www.yelp.com/search?find_desc=best+alongerkeyword",
+          displayUrl:
+            "yelp.com/search?find_desc=best+alongerkeyword&find_loc=Yokohama,+Kanagawa",
+          title: "best alongerkeyword in Yokohama, Kanagawa",
+        },
+      },
+      {
+        query: "ab",
+        expected: AB_RESULT,
+      },
+    ],
+  });
+});
+
+// When no min length is defined in Nimbus or the pref, we should fall back to
+// the hardcoded value of 2 in the Rust component.
+add_task(async function minKeywordLength_noNimbusOrPrefValue() {
+  await doMinKeywordLengthTest({
+    // expected min length: 2 (hardcoded)
+    prefValue: null,
+    nimbusValue: null,
+    tests: [
+      {
+        query: "al",
+        expected: ALONGERKEYWORD_RESULT,
+      },
+      {
+        query: "alo",
+        expected: ALONGERKEYWORD_RESULT,
+      },
+      {
+        query: "alon",
+        expected: ALONGERKEYWORD_RESULT,
+      },
+      {
+        query: "along",
+        expected: ALONGERKEYWORD_RESULT,
+      },
+      {
+        query: "alongerkeyword",
+        expected: ALONGERKEYWORD_RESULT,
+      },
+      {
+        query: "best a",
+        expected: null,
+      },
+      {
+        query: "best al",
+        expected: {
+          url: "https://www.yelp.com/search?find_desc=best+alongerkeyword&find_loc=Yokohama%2C+Kanagawa",
+          originalUrl:
+            "https://www.yelp.com/search?find_desc=best+alongerkeyword",
+          displayUrl:
+            "yelp.com/search?find_desc=best+alongerkeyword&find_loc=Yokohama,+Kanagawa",
+          title: "best alongerkeyword in Yokohama, Kanagawa",
+        },
+      },
+      {
+        query: "ab",
+        expected: AB_RESULT,
+      },
+    ],
+  });
+});
+
+async function doMinKeywordLengthTest({ prefValue, nimbusValue, tests }) {
+  // Set or clear the pref.
+  let originalPrefValue = Services.prefs.prefHasUserValue(
+    "browser.urlbar.yelp.minKeywordLength"
+  )
+    ? UrlbarPrefs.get("yelp.minKeywordLength")
+    : null;
+  if (typeof prefValue == "number") {
+    UrlbarPrefs.set("yelp.minKeywordLength", prefValue);
+  } else {
+    UrlbarPrefs.clear("yelp.minKeywordLength");
+  }
+
+  // Set up Nimbus.
+  let cleanUpNimbus;
+  if (typeof nimbusValue == "number") {
+    cleanUpNimbus = await UrlbarTestUtils.initNimbusFeature({
+      yelpMinKeywordLength: nimbusValue,
+    });
+  }
+
+  for (let { query, expected } of tests) {
+    info("Running min keyword length test with query: " + query);
+    await check_results({
+      context: createContext(query, {
+        providers: [UrlbarProviderQuickSuggest.name],
+        isPrivate: false,
+      }),
+      matches: expected ? [makeExpectedResult(expected)] : [],
+    });
+  }
+
+  await cleanUpNimbus?.();
+
+  if (originalPrefValue === null) {
+    UrlbarPrefs.clear("yelp.minKeywordLength");
+  } else {
+    UrlbarPrefs.set("yelp.minKeywordLength", originalPrefValue);
+  }
+}
 
 function makeExpectedResult({
   url,

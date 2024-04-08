@@ -227,19 +227,11 @@ export class YelpSuggestions extends BaseFeature {
   }
 
   get #minKeywordLength() {
-    // It's unusual to get both a Nimbus variable and its fallback pref at the
-    // same time, but we have a good reason. To recap, if a variable doesn't
-    // have a value, then the value of its fallback will be returned; otherwise
-    // the variable value will be returned. That's usually what we want, but for
-    // Yelp, we set the pref each time the user clicks "show less frequently",
-    // and we want the variable to act only as an initial min length. In other
-    // words, if the pref has a user value (because we set it), use it;
-    // otherwise use the initial value defined by the variable.
-    return Math.max(
-      lazy.UrlbarPrefs.get("yelpMinKeywordLength") || 0,
-      lazy.UrlbarPrefs.get("yelp.minKeywordLength") || 0,
-      0
-    );
+    let minLength =
+      lazy.UrlbarPrefs.get("yelp.minKeywordLength") ||
+      lazy.UrlbarPrefs.get("yelpMinKeywordLength") ||
+      0;
+    return Math.max(minLength, 0);
   }
 
   async #fetchCity() {
