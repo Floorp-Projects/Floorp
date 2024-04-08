@@ -270,9 +270,6 @@ inline bool IsCancelableBeforeInputEvent(EditorInputType aInputType) {
       return true;
     case EditorInputType::eInsertLink:
       return true;
-    case EditorInputType::eDeleteByComposition:
-      MOZ_ASSERT(!StaticPrefs::dom_input_events_conform_to_level_1());
-      return true;
     case EditorInputType::eDeleteCompositionText:
       MOZ_ASSERT(!StaticPrefs::dom_input_events_conform_to_level_1());
       return false;
