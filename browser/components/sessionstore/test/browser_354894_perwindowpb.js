@@ -21,7 +21,7 @@
  * not enabled on that platform (platform shim; the application is kept running
  * although there are no windows left)
  * @note There is a difference when closing a browser window with
- * BrowserTryToCloseWindow() as opposed to close(). The former will make
+ * BrowserCommands.tryToCloseWindow() as opposed to close(). The former will make
  * nsSessionStore restore a window next time it gets a chance and will post
  * notifications. The latter won't.
  */
@@ -182,7 +182,7 @@ function injectTestTabs(win) {
 }
 
 /**
- * Attempts to close a window via BrowserTryToCloseWindow so that
+ * Attempts to close a window via BrowserCommands.tryToCloseWindow so that
  * we get the browser-lastwindow-close-requested and
  * browser-lastwindow-close-granted observer notifications.
  *
@@ -195,7 +195,7 @@ function injectTestTabs(win) {
 function closeWindowForRestoration(win) {
   return new Promise(resolve => {
     let closePromise = BrowserTestUtils.windowClosed(win);
-    win.BrowserTryToCloseWindow();
+    win.BrowserCommands.tryToCloseWindow();
     if (!win.closed) {
       resolve(false);
       return;

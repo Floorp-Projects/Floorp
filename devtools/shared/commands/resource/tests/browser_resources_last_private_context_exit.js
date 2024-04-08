@@ -66,7 +66,7 @@ add_task(async function () {
   });
 
   info("Close the second private window");
-  secondPrivateWindow.BrowserTryToCloseWindow();
+  secondPrivateWindow.BrowserCommands.tryToCloseWindow();
 
   // Let a chance to an unexpected async event to be fired
   await wait(1000);
@@ -80,7 +80,7 @@ add_task(async function () {
   info(
     "close the private window and check if LAST_PRIVATE_CONTEXT_EXIT resource is sent"
   );
-  privateWindow.BrowserTryToCloseWindow();
+  privateWindow.BrowserCommands.tryToCloseWindow();
 
   info("Wait for LAST_PRIVATE_CONTEXT_EXIT");
   await waitFor(() => availableResources.length == 1);

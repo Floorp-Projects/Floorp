@@ -37,7 +37,7 @@ add_task(async function closing_last_window_equals_quitting() {
   Services.obs.addObserver(obs, "browser-lastwindow-close-requested");
   let newWin = await BrowserTestUtils.openNewBrowserWindow();
   let closedPromise = BrowserTestUtils.windowClosed(newWin);
-  newWin.BrowserTryToCloseWindow();
+  newWin.BrowserCommands.tryToCloseWindow();
   await closedPromise;
   is(observed, 1, "Got a notification for closing the normal window.");
   Services.obs.removeObserver(obs, "browser-lastwindow-close-requested");
@@ -68,12 +68,12 @@ add_task(async function closing_last_window_equals_quitting() {
   });
   let popupWin = await popupPromise;
   let closedPromise = BrowserTestUtils.windowClosed(newWin);
-  newWin.BrowserTryToCloseWindow();
+  newWin.BrowserCommands.tryToCloseWindow();
   await closedPromise;
   is(observed, 0, "Got no notification for closing the normal window.");
 
   closedPromise = BrowserTestUtils.windowClosed(popupWin);
-  popupWin.BrowserTryToCloseWindow();
+  popupWin.BrowserCommands.tryToCloseWindow();
   await closedPromise;
   is(
     observed,

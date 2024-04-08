@@ -31,7 +31,7 @@ add_task(
     info("Opening Firefox View tab...");
     await openFirefoxViewTab(win);
     info("Trigger warnAboutClosingWindow()");
-    win.BrowserTryToCloseWindow();
+    win.BrowserCommands.tryToCloseWindow();
     await BrowserTestUtils.closeWindow(win);
     ok(!dialogObserver.wasOpened, "Dialog was not opened");
     dialogObserver.cleanup();

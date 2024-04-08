@@ -4,7 +4,7 @@ function test() {
 
   whenDelayedStartupFinished(privateWin, function () {
     privateWin.BrowserCommands.openTab();
-    privateWin.BrowserTryToCloseWindow();
+    privateWin.BrowserCommands.tryToCloseWindow();
     ok(true, "didn't prompt");
 
     executeSoon(finish);

@@ -378,4 +378,40 @@ var BrowserCommands = {
       fp.open(fpCallback);
     } catch (ex) {}
   },
+
+  closeTabOrWindow(event) {
+    // If we're not a browser window, just close the window.
+    if (window.location.href != AppConstants.BROWSER_CHROME_URL) {
+      closeWindow(true);
+      return;
+    }
+
+    // In a multi-select context, close all selected tabs
+    if (gBrowser.multiSelectedTabsCount) {
+      gBrowser.removeMultiSelectedTabs();
+      return;
+    }
+
+    // Keyboard shortcuts that would close a tab that is pinned select the first
+    // unpinned tab instead.
+    if (
+      event &&
+      (event.ctrlKey || event.metaKey || event.altKey) &&
+      gBrowser.selectedTab.pinned
+    ) {
+      if (gBrowser.visibleTabs.length > gBrowser._numPinnedTabs) {
+        gBrowser.tabContainer.selectedIndex = gBrowser._numPinnedTabs;
+      }
+      return;
+    }
+
+    // If the current tab is the last one, this will close the window.
+    gBrowser.removeCurrentTab({ animate: true });
+  },
+
+  tryToCloseWindow(event) {
+    if (WindowIsClosing(event)) {
+      window.close();
+    } // WindowIsClosing does all the necessary checks
+  },
 };

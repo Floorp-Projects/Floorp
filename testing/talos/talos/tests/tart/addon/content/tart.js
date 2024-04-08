@@ -146,7 +146,7 @@ Tart.prototype = {
 
   clickCloseCurrentTab() {
     this._endDetection = this.tabDetector;
-    this._win.BrowserCloseTabOrWindow();
+    this._win.BrowserCommands.closeTabOrWindow();
     return this._win.gBrowser.selectedTab;
   },
 
