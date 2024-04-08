@@ -28,6 +28,7 @@
 #include "nsCSSFrameConstructor.h"
 #include "nsDisplayList.h"
 #include "nsFieldSetFrame.h"
+#include "nsHTMLButtonControlFrame.h"
 #include "nsGfxScrollFrame.h"
 #include "nsHashKeys.h"
 #include "nsIFrameInlines.h"  // for nsIFrame::GetLogicalNormalPosition (don't remove)
@@ -3688,38 +3689,56 @@ static Subgrid* SubgridComputeMarginBorderPadding(
   SizeComputationInput sz(subgridFrame, nullptr, cbWM, pmPercentageBasis);
   subgrid->mMarginBorderPadding =
       sz.ComputedLogicalMargin(cbWM) + sz.ComputedLogicalBorderPadding(cbWM);
+  if (aGridItem.mFrame == subgridFrame) {
+    return subgrid;
+  }
 
-  if (aGridItem.mFrame != subgridFrame) {
-    nsHTMLScrollFrame* scrollFrame =
-        do_QueryFrame(aGridItem.mFrame->GetScrollTargetFrame());
-    if (scrollFrame) {
-      MOZ_ASSERT(
-          sz.ComputedLogicalMargin(cbWM) == LogicalMargin(cbWM) &&
-              sz.ComputedLogicalBorder(cbWM) == LogicalMargin(cbWM),
-          "A scrolled inner frame should not have any margin or border!");
-
-      // Add the margin and border from the (outer) scroll frame.
-      SizeComputationInput szScrollFrame(aGridItem.mFrame, nullptr, cbWM,
-                                         pmPercentageBasis);
-      subgrid->mMarginBorderPadding +=
-          szScrollFrame.ComputedLogicalMargin(cbWM) +
-          szScrollFrame.ComputedLogicalBorder(cbWM);
-
-      nsMargin ssz = scrollFrame->IntrinsicScrollbarGutterSize();
-      subgrid->mMarginBorderPadding += LogicalMargin(cbWM, ssz);
+  bool scroller = false;
+  nsIFrame* outerFrame = [&]() -> nsIFrame* {
+    if (nsHTMLScrollFrame* scrollFrame =
+            do_QueryFrame(aGridItem.mFrame->GetScrollTargetFrame())) {
+      scroller = true;
+      return scrollFrame;
     }
+    if (nsHTMLButtonControlFrame* f = do_QueryFrame(aGridItem.mFrame)) {
+      return f;
+    }
+    return nullptr;
+  }();
 
-    if (aGridItem.mFrame->IsFieldSetFrame()) {
-      const auto* f = static_cast<nsFieldSetFrame*>(aGridItem.mFrame);
-      const auto* inner = f->GetInner();
-      auto wm = inner->GetWritingMode();
-      LogicalPoint pos = inner->GetLogicalPosition(aGridItem.mFrame->GetSize());
-      // The legend is always on the BStart side and it inflates the fieldset's
-      // "border area" size.  The inner frame's b-start pos equals that size.
-      LogicalMargin offsets(wm, pos.B(wm), 0, 0, 0);
-      subgrid->mMarginBorderPadding += offsets.ConvertTo(cbWM, wm);
+  if (outerFrame) {
+    MOZ_ASSERT(sz.ComputedLogicalMargin(cbWM) == LogicalMargin(cbWM) &&
+                   sz.ComputedLogicalBorder(cbWM) == LogicalMargin(cbWM),
+               "A scrolled inner frame / button content frame "
+               "should not have any margin or border / padding!");
+
+    // Add the margin and border from the (outer) frame. Padding is factored-in
+    // for scrollers already (except for the scrollbar gutter), but not for
+    // button-content.
+    SizeComputationInput szOuterFrame(outerFrame, nullptr, cbWM,
+                                      pmPercentageBasis);
+    subgrid->mMarginBorderPadding += szOuterFrame.ComputedLogicalMargin(cbWM) +
+                                     szOuterFrame.ComputedLogicalBorder(cbWM);
+    if (scroller) {
+      nsMargin ssz = static_cast<nsHTMLScrollFrame*>(outerFrame)
+                         ->IntrinsicScrollbarGutterSize();
+      subgrid->mMarginBorderPadding += LogicalMargin(cbWM, ssz);
+    } else {
+      subgrid->mMarginBorderPadding +=
+          szOuterFrame.ComputedLogicalPadding(cbWM);
     }
   }
+
+  if (nsFieldSetFrame* f = do_QueryFrame(aGridItem.mFrame)) {
+    const auto* inner = f->GetInner();
+    auto wm = inner->GetWritingMode();
+    LogicalPoint pos = inner->GetLogicalPosition(aGridItem.mFrame->GetSize());
+    // The legend is always on the BStart side and it inflates the fieldset's
+    // "border area" size.  The inner frame's b-start pos equals that size.
+    LogicalMargin offsets(wm, pos.B(wm), 0, 0, 0);
+    subgrid->mMarginBorderPadding += offsets.ConvertTo(cbWM, wm);
+  }
+
   return subgrid;
 }
 
