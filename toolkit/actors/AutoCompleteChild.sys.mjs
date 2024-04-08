@@ -195,6 +195,11 @@ export class AutoCompleteChild extends JSWindowActorChild {
     return results;
   }
 
+  getNoRollupOnEmptySearch(input) {
+    const providers = this.providersByInput(input);
+    return Array.from(providers).find(p => p.actorName == "LoginManager");
+  }
+
   // Store the input to interested autocomplete providers mapping
   #providersByInput = new WeakMap();
 
@@ -204,7 +209,11 @@ export class AutoCompleteChild extends JSWindowActorChild {
   providersByInput(input) {
     const providers = new Set(this.#providersByInput.get(input));
 
-    if (!input.hasBeenTypePassword) {
+    if (input.hasBeenTypePassword) {
+      providers.add(
+        input.ownerGlobal.windowGlobalChild.getActor("LoginManager")
+      );
+    } else {
       // The current design is that FormHisotry doesn't call `markAsAutoCompletable`
       // for every eligilbe input. Instead, when FormFillController receives a focus event,
       // it would control the <input> if the <input> is eligible to show form history.
