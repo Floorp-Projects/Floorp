@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -42,6 +43,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * @param title The primary text of the info message.
  * @param type The [ReviewQualityCheckInfoType] of message to display.
  * @param modifier Modifier to be applied to the card.
+ * @param verticalRowAlignment An optional adjustment of how the row of text aligns.
  * @param description The optional secondary piece of text.
  * @param footer An optional piece of text with a clickable link.
  * @param buttonText The text to show in the optional button.
@@ -51,6 +53,7 @@ fun ReviewQualityCheckInfoCard(
     title: String,
     type: ReviewQualityCheckInfoType,
     modifier: Modifier = Modifier,
+    verticalRowAlignment: Alignment.Vertical = Alignment.Top,
     description: String? = null,
     footer: Pair<String, LinkTextState>? = null,
     buttonText: InfoCardButtonText? = null,
@@ -66,7 +69,9 @@ fun ReviewQualityCheckInfoCard(
     ) {
         val titleContentDescription = headingResource(title)
 
-        Row {
+        Row(
+            verticalAlignment = verticalRowAlignment,
+        ) {
             when (type) {
                 ReviewQualityCheckInfoType.Warning -> {
                     InfoCardIcon(iconId = R.drawable.mozac_ic_warning_fill_24)
