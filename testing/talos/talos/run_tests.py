@@ -16,7 +16,6 @@ import six
 from mozgeckoprofiler import view_gecko_profile
 from mozlog import get_proxy_logger
 from wptserve import server
-from wptserve.handlers import handler
 
 from talos import utils
 from talos.config import ConfigurationError, get_configs
@@ -94,19 +93,9 @@ def setup_webserver(webserver):
     """Set up a new web server with wptserve."""
     LOG.info("starting webserver on %r" % webserver)
 
-    @handler
-    def tracemonkey_pdf_handler(request, response):
-        """Handler for the talos pdfpaint test."""
-        headers = [("Content-Type", "application/pdf")]
-        with open("%s/tests/pdfpaint/tracemonkey.pdf" % here, "rb") as file:
-            content = file.read()
-        return headers, content
-
     host, port = webserver.split(":")
     httpd = server.WebTestHttpd(host=host, port=int(port), doc_root=here)
-    httpd.router.register(
-        "GET", "tests/pdfpaint/tracemonkey.pdf", tracemonkey_pdf_handler
-    )
+
     return httpd
 
 
