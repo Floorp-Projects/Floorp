@@ -150,6 +150,7 @@ std::vector<webrtc::VideoStream> VideoStreamFactory::CreateEncoderStreams(
           : aConfig.number_of_streams;
 
   MOZ_RELEASE_ASSERT(streamCount >= 1, "Should request at least one stream");
+  MOZ_RELEASE_ASSERT(streamCount <= aConfig.simulcast_layers.size());
 
   std::vector<webrtc::VideoStream> streams;
   streams.reserve(streamCount);
@@ -160,10 +161,10 @@ std::vector<webrtc::VideoStream> VideoStreamFactory::CreateEncoderStreams(
   }
 
   for (size_t idx = 0; idx < streamCount; ++idx) {
-    webrtc::VideoStream video_stream;
+    webrtc::VideoStream video_stream = aConfig.simulcast_layers[idx];
     auto& encoding = mCodecConfig.mEncodings[idx];
-    video_stream.active = encoding.active;
     MOZ_ASSERT(encoding.constraints.scaleDownBy >= 1.0);
+    MOZ_ASSERT(video_stream.active == encoding.active);
 
     gfx::IntSize newSize(0, 0);
 
