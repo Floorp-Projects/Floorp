@@ -777,3 +777,41 @@ talos-realworld-webextensions-profiling:
         extra-options:
             - --suite=realworld-webextensions
             - --gecko-profile
+
+talos-pdfpaint:
+    description: Talos pdfpaint
+    try-name: pdfpaint
+    treeherder-symbol: T(pdfpaint)
+    variants:
+        - webrender-sw
+    run-on-projects:
+        by-variant:
+            webrender-sw:
+                by-test-platform:
+                    (linux1804|windows10|macosx1015)-64-shippable-qr.*: [trunk]
+                    default: []
+            default:
+                by-test-platform:
+                    windows.*-32-shippable.*/.*: []
+                    (linux|windows|macos)(?!.*shippable).*: []
+                    (linux|windows10-64|macos)(?!.*-qr).*: []
+                    default: [trunk]
+    max-run-time: 1800
+    mozharness:
+        extra-options:
+            - --suite=pdfpaint
+    fetches:
+        toolchain:
+            by-test-platform:
+                win.*:
+                    - win32-minidump-stackwalk
+                    - win32-fix-stacks
+                    - talos-pdfs
+                macosx1015.*:
+                    - macosx64-minidump-stackwalk
+                    - macosx64-fix-stacks
+                    - talos-pdfs
+                default:
+                    - linux64-minidump-stackwalk
+                    - linux64-fix-stacks
+                    - talos-pdfs

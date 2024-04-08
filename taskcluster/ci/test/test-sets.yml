@@ -55,6 +55,7 @@ talos:
     - talos-tabswitch
     - talos-realworld-webextensions
     - talos-webgl
+    - talos-pdfpaint
     # - talos-h1 Bug 1487031 - Disabled for not finding actionable regressions
     # - talos-h2 Bug 1487031 - Disabled for not finding actionable regressions
 
@@ -342,6 +343,7 @@ windows-talos:
     - talos-tabswitch
     - talos-realworld-webextensions
     - talos-webgl
+    - talos-pdfpaint
     # - talos-h1 Bug 1487031 - Disabled for not finding actionable regressions
 
 windows-ref-hw-tests:
@@ -421,6 +423,7 @@ macosx64-talos:
     - talos-realworld-webextensions
     - talos-webgl
     - talos-tabswitch
+    - talos-pdfpaint
     # - talos-h1 # too long to unpack profile- Bug 1442893
 
 macosx1400-64-qr-tests:
