@@ -179,9 +179,9 @@ x
   x
 </button>
 
-<button aria-labelledby="span4" aria-label="foo" data-expectedlabel="foo" data-testname="button's hidden referenced name (visibility:hidden) with hidden aria-labelledby traversal falls back to aria-label" class="ex">
-  <span id="span4">
-    <span id="span5" style="visibility:hidden;">label</span>
+<button aria-labelledby="span5" aria-label="foo" data-expectedlabel="foo" data-testname="button's hidden referenced name (visibility:hidden) with hidden aria-labelledby traversal falls back to aria-label" class="ex">
+  <span id="span5">
+    <span id="span6" style="visibility:hidden;">label</span>
   </span>
   x
 </button>
@@ -193,8 +193,8 @@ x
 </span>
 
 <!-- Step 2B: LabelledBy supercedes 2D: AriaLabel, also see wpt/accname/name/comp_labelledby.html -->
-<a href="#" aria-labelledby="span6" aria-label="foo" data-expectedlabel="label" data-testname="link's aria-labelledby name supercedes aria-label" class="ex">x</a>
-<span id="span6">label</span>
+<a href="#" aria-labelledby="span7" aria-label="foo" data-expectedlabel="label" data-testname="link's aria-labelledby name supercedes aria-label" class="ex">x</a>
+<span id="span7">label</span>
 
 <!-- Step 2C: Embedded Control labelling supercedes 2D: AriaLabel, see wpt/accname/name/comp_embedded_control.html -->
 
