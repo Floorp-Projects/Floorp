@@ -429,10 +429,9 @@ urlbar:
         * Remove the forcast text from the summary text.
     yelpMinKeywordLength:
       type: int
-      fallbackPref: browser.urlbar.yelp.minKeywordLength
       description: >-
-        If the length of user's query is less than this value plus
-        "yelp.showLessFrequentlyCount", Yelp suggestion never be shown.
+        The minimum prefix length of a Yelp keyword the user must type to
+        trigger the suggestion.
     yelpFeatureGate:
       type: boolean
       fallbackPref: browser.urlbar.yelp.featureGate

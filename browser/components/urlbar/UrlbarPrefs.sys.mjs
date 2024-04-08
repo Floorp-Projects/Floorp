@@ -485,9 +485,9 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Feature gate pref for Yelp suggestions in the urlbar.
   ["yelp.featureGate", false],
 
-  // The minimum number of characters the user must type to trigger a Yelp
-  // suggestion (excluding full keywords that are shorter than this).
-  ["yelp.minKeywordLength", 5],
+  // The minimum prefix length of a Yelp keyword the user must type to trigger
+  // the suggestion. 0 means the min length should be taken from Nimbus.
+  ["yelp.minKeywordLength", 0],
 
   // Whether Yelp suggestions should be shown as top picks. This is a fallback
   // pref for the `yelpSuggestPriority` Nimbus variable.
@@ -526,6 +526,7 @@ const NIMBUS_DEFAULTS = {
   weatherKeywordsMinimumLength: 0,
   weatherKeywordsMinimumLengthCap: 0,
   weatherSimpleUI: false,
+  yelpMinKeywordLength: 0,
 };
 
 // Maps preferences under browser.urlbar.suggest to behavior names, as defined
