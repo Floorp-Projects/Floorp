@@ -7,6 +7,7 @@ package mozilla.components.feature.privatemode.notification
 import android.app.Notification
 import android.app.NotificationManager
 import android.app.Service
+import android.content.ComponentName
 import android.content.Intent
 import android.content.SharedPreferences
 import androidx.core.app.NotificationCompat
@@ -21,6 +22,7 @@ import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.privatemode.notification.AbstractPrivateNotificationService.Companion.ACTION_ERASE
+import mozilla.components.feature.privatemode.notification.AbstractPrivateNotificationService.Companion.defaultIgnoreTaskActions
 import mozilla.components.support.base.android.NotificationsDelegate
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.ext.joinBlocking
@@ -39,6 +41,7 @@ import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.anyLong
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito
+import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import java.util.Locale
@@ -106,6 +109,38 @@ class AbstractPrivateNotificationServiceTest {
     }
 
     @Test
+    fun `WHEN task is removed with ignored intents THEN do nothing`() {
+        val service = spy(MockService())
+
+        val mockTaskActions = listOf("action1", "action2")
+        whenever(service.ignoreTaskActions()).then { mockTaskActions }
+
+        (mockTaskActions + defaultIgnoreTaskActions).forEach { it ->
+            service.onTaskRemoved(Intent(it))
+
+            verify(service.store, never()).dispatch(TabListAction.RemoveAllPrivateTabsAction)
+            verify(service, never()).stopForegroundCompat(true)
+            verify(service, never()).stopSelf()
+        }
+
+        val mockTaskCompoentClasses = listOf(
+            "org.mozilla.fenix.IntentReceiverActivity",
+            "org.mozilla.fenix.customtabs.ExternalAppBrowserActivity",
+            "comp1",
+            "comp2",
+        )
+        whenever(service.ignoreTaskComponentClasses()).then { mockTaskCompoentClasses }
+
+        mockTaskCompoentClasses.forEach { it ->
+            service.onTaskRemoved(Intent().setComponent(ComponentName(testContext, it)))
+
+            verify(service.store, never()).dispatch(TabListAction.RemoveAllPrivateTabsAction)
+            verify(service, never()).stopForegroundCompat(true)
+            verify(service, never()).stopSelf()
+        }
+    }
+
+    @Test
     fun `WHEN a locale change is made in the browser store THEN the service should notify`() {
         val service = spy(MockServiceWithStore())
         attachContext(service)
@@ -127,6 +162,9 @@ class AbstractPrivateNotificationServiceTest {
         override fun notifyLocaleChanged() {
             // NOOP
         }
+
+        override fun ignoreTaskActions(): List<String> = mock()
+        override fun ignoreTaskComponentClasses(): List<String> = mock()
     }
 
     private open class MockServiceWithStore : AbstractPrivateNotificationService() {
@@ -141,6 +179,9 @@ class AbstractPrivateNotificationServiceTest {
         override fun notifyLocaleChanged() {
             // NOOP
         }
+
+        override fun ignoreTaskActions(): List<String> = mock()
+        override fun ignoreTaskComponentClasses(): List<String> = mock()
     }
 
     private fun attachContext(service: Service) {

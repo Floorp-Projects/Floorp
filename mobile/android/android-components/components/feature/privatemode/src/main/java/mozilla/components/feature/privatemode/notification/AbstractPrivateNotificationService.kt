@@ -13,6 +13,7 @@ import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import android.os.IBinder
 import androidx.annotation.CallSuper
+import androidx.annotation.VisibleForTesting
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationCompat.VISIBILITY_SECRET
 import androidx.core.app.NotificationManagerCompat.IMPORTANCE_LOW
@@ -203,7 +204,10 @@ abstract class AbstractPrivateNotificationService(
     final override fun onBind(intent: Intent?): IBinder? = null
 
     final override fun onTaskRemoved(rootIntent: Intent) {
-        if (rootIntent.action in ignoreTaskActions || rootIntent.component?.className in ignoreTaskComponentClasses) {
+        if (rootIntent.action in defaultIgnoreTaskActions ||
+            rootIntent.action in ignoreTaskActions() ||
+            rootIntent.component?.className in ignoreTaskComponentClasses()
+        ) {
             // The app may have multiple tasks (e.g. for PWAs). If tasks get removed that are not
             // the main browser task then we do not want to remove all private tabs here.
             // I am not sure whether we can reliably identify the main task since it can be launched
@@ -222,6 +226,20 @@ abstract class AbstractPrivateNotificationService(
         stopSelf()
     }
 
+    /**
+     * Builds a list of Intent actions that will get ignored
+     * when they are in the root intent that gets passed to onTaskRemoved().
+     *
+     */
+    abstract fun ignoreTaskActions(): List<String>
+
+    /**
+     * Builds a list of Intent components' qualified class name that will get ignored
+     * when they are in the root intent that gets passed to onTaskRemoved().
+     *
+     */
+    abstract fun ignoreTaskComponentClasses(): List<String>
+
     companion object {
         private const val NOTIFICATION_TAG =
             "mozilla.components.feature.privatemode.notification.AbstractPrivateNotificationService"
@@ -233,16 +251,11 @@ abstract class AbstractPrivateNotificationService(
             importance = IMPORTANCE_LOW,
         )
 
-        // List of Intent actions that will get ignored when they are in the root intent that gets
-        // passed to onTaskRemoved().
-        private val ignoreTaskActions = listOf(
+        // List of default Intent actions that will get ignored
+        // when they are in the root intent that gets passed to onTaskRemoved().
+        @VisibleForTesting
+        internal val defaultIgnoreTaskActions = listOf(
             "mozilla.components.feature.pwa.VIEW_PWA",
-        )
-
-        // List of Intent components classes that will get ignored when they are in the root intent
-        // that gets passed to onTaskRemoved().
-        private val ignoreTaskComponentClasses = listOf(
-            "org.mozilla.fenix.customtabs.ExternalAppBrowserActivity",
         )
     }
 }

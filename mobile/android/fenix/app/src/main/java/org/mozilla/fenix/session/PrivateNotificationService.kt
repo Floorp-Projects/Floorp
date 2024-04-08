@@ -14,7 +14,9 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.privatemode.notification.AbstractPrivateNotificationService
 import mozilla.components.support.base.android.NotificationsDelegate
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.IntentReceiverActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.customtabs.ExternalAppBrowserActivity
 import org.mozilla.fenix.ext.components
 import java.util.Locale
 
@@ -94,4 +96,11 @@ class PrivateNotificationService : AbstractPrivateNotificationService() {
             startActivity(homeScreenIntent)
         }
     }
+
+    override fun ignoreTaskComponentClasses(): List<String> = listOf(
+        ExternalAppBrowserActivity::class.qualifiedName!!,
+        IntentReceiverActivity::class.qualifiedName!!,
+    )
+
+    override fun ignoreTaskActions(): List<String> = listOf()
 }
