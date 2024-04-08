@@ -21,12 +21,6 @@
 #include "mozilla/java/EventCallbackWrappers.h"
 #include "mozilla/jni/GeckoBundleUtils.h"
 
-// Disable the C++ 2a warning. See bug #1509926
-#if defined(__clang__)
-#  pragma clang diagnostic push
-#  pragma clang diagnostic ignored "-Wc++2a-compat"
-#endif
-
 namespace mozilla {
 namespace widget {
 
@@ -770,7 +764,3 @@ nsresult EventDispatcher::UnboxBundle(JSContext* aCx, jni::Object::Param aData,
 
 }  // namespace widget
 }  // namespace mozilla
-
-#if defined(__clang__)
-#  pragma clang diagnostic pop
-#endif
