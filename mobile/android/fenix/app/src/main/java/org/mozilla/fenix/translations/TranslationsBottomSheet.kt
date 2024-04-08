@@ -214,34 +214,36 @@ private fun getTranslationSwitchItemList(
             )
         }
 
-        alwaysTranslateLanguage?.let {
-            translationSwitchItemList.add(
-                TranslationSwitchItem(
-                    type = TranslationPageSettingsOption.AlwaysTranslateLanguage(),
-                    textLabel = context.getString(
-                        R.string.translation_option_bottom_sheet_always_translate_in_language,
-                        initialFrom?.localizedDisplayName,
+        if (initialFrom != null) {
+            alwaysTranslateLanguage?.let {
+                translationSwitchItemList.add(
+                    TranslationSwitchItem(
+                        type = TranslationPageSettingsOption.AlwaysTranslateLanguage(),
+                        textLabel = context.getString(
+                            R.string.translation_option_bottom_sheet_always_translate_in_language,
+                            initialFrom.localizedDisplayName,
+                        ),
+                        isChecked = it,
+                        isEnabled = neverTranslateSite != true,
+                        onStateChange = onStateChange,
                     ),
-                    isChecked = it,
-                    isEnabled = neverTranslateSite != true,
-                    onStateChange = onStateChange,
-                ),
-            )
-        }
+                )
+            }
 
-        neverTranslateLanguage?.let {
-            translationSwitchItemList.add(
-                TranslationSwitchItem(
-                    type = TranslationPageSettingsOption.NeverTranslateLanguage(),
-                    textLabel = context.getString(
-                        R.string.translation_option_bottom_sheet_never_translate_in_language,
-                        initialFrom?.localizedDisplayName,
+            neverTranslateLanguage?.let {
+                translationSwitchItemList.add(
+                    TranslationSwitchItem(
+                        type = TranslationPageSettingsOption.NeverTranslateLanguage(),
+                        textLabel = context.getString(
+                            R.string.translation_option_bottom_sheet_never_translate_in_language,
+                            initialFrom.localizedDisplayName,
+                        ),
+                        isChecked = it,
+                        isEnabled = neverTranslateSite != true,
+                        onStateChange = onStateChange,
                     ),
-                    isChecked = it,
-                    isEnabled = neverTranslateSite != true,
-                    onStateChange = onStateChange,
-                ),
-            )
+                )
+            }
         }
 
         translationPageSettings.neverTranslateSite?.let {

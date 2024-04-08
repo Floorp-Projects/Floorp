@@ -120,8 +120,6 @@ fun TranslationsDialogBottomSheet(
 
         DialogContentBaseOnTranslationState(
             translationsDialogState = translationsDialogState,
-            learnMoreUrl = learnMoreUrl,
-            onLearnMoreClicked = onLearnMoreClicked,
             onPositiveButtonClicked = onPositiveButtonClicked,
             onNegativeButtonClicked = onNegativeButtonClicked,
             onFromDropdownSelected = onFromDropdownSelected,
@@ -134,8 +132,6 @@ fun TranslationsDialogBottomSheet(
  * Dialog content will adapt based on the [TranslationsDialogState].
  *
  * @param translationsDialogState The current state of the Translations bottom sheet dialog.
- * @param learnMoreUrl The learn more link for translations website.
- * @param onLearnMoreClicked Invoked when the user clicks on the learn more button.
  * @param onPositiveButtonClicked Invoked when the user clicks on the positive button.
  * @param onNegativeButtonClicked Invoked when the user clicks on the negative button.
  * @param onFromDropdownSelected Invoked when the user selects an item on the from dropdown.
@@ -145,8 +141,6 @@ fun TranslationsDialogBottomSheet(
 @Composable
 private fun DialogContentBaseOnTranslationState(
     translationsDialogState: TranslationsDialogState,
-    learnMoreUrl: String,
-    onLearnMoreClicked: () -> Unit,
     onPositiveButtonClicked: () -> Unit,
     onNegativeButtonClicked: () -> Unit,
     onFromDropdownSelected: (Language) -> Unit,
@@ -155,8 +149,6 @@ private fun DialogContentBaseOnTranslationState(
     if (translationsDialogState.error != null) {
         DialogContentAnErrorOccurred(
             translationsDialogState = translationsDialogState,
-            learnMoreUrl = learnMoreUrl,
-            onLearnMoreClicked = onLearnMoreClicked,
             onFromDropdownSelected = onFromDropdownSelected,
             onToDropdownSelected = onToDropdownSelected,
             onPositiveButtonClicked = onPositiveButtonClicked,
@@ -241,8 +233,6 @@ private fun DialogContentTranslated(
  * Dialog content if an [TranslationError] appears during the translation process.
  *
  * @param translationsDialogState The current state of the Translations bottom sheet dialog.
- * @param learnMoreUrl The learn more link for translations website.
- * @param onLearnMoreClicked Invoked when the user clicks on the learn more button.
  * @param onFromDropdownSelected Invoked when the user selects an item on the from dropdown.
  * @param onToDropdownSelected Invoked when the user selects an item on the to dropdown.
  * @param onPositiveButtonClicked Invoked when the user clicks on the positive button.
@@ -252,8 +242,6 @@ private fun DialogContentTranslated(
 @Composable
 private fun DialogContentAnErrorOccurred(
     translationsDialogState: TranslationsDialogState,
-    learnMoreUrl: String,
-    onLearnMoreClicked: () -> Unit,
     onFromDropdownSelected: (Language) -> Unit,
     onToDropdownSelected: (Language) -> Unit,
     onPositiveButtonClicked: () -> Unit,
@@ -263,8 +251,6 @@ private fun DialogContentAnErrorOccurred(
         TranslationErrorWarning(
             translationError = translationError,
             documentLangDisplayName = translationsDialogState.documentLangDisplayName,
-            learnMoreUrl = learnMoreUrl,
-            onLearnMoreClicked = onLearnMoreClicked,
         )
 
         Spacer(modifier = Modifier.height(14.dp))
@@ -275,6 +261,7 @@ private fun DialogContentAnErrorOccurred(
                 translateToLanguages = translationsDialogState.toLanguages,
                 initialFrom = translationsDialogState.initialFrom,
                 initialTo = translationsDialogState.initialTo,
+                translationError = translationError,
                 onFromDropdownSelected = onFromDropdownSelected,
                 onToDropdownSelected = onToDropdownSelected,
             )
@@ -317,6 +304,7 @@ private fun TranslationsDialogContent(
     translateToLanguages: List<Language>? = null,
     initialFrom: Language? = null,
     initialTo: Language? = null,
+    translationError: TranslationError? = null,
     onFromDropdownSelected: (Language) -> Unit,
     onToDropdownSelected: (Language) -> Unit,
 ) {
@@ -327,6 +315,7 @@ private fun TranslationsDialogContent(
                 translateToLanguages = translateToLanguages,
                 initialFrom = initialFrom,
                 initialTo = initialTo,
+                translationError = translationError,
                 onFromDropdownSelected = onFromDropdownSelected,
                 onToDropdownSelected = onToDropdownSelected,
             )
@@ -338,6 +327,7 @@ private fun TranslationsDialogContent(
                 translateToLanguages = translateToLanguages,
                 initialFrom = initialFrom,
                 initialTo = initialTo,
+                translationError = translationError,
                 onFromDropdownSelected = onFromDropdownSelected,
                 onToDropdownSelected = onToDropdownSelected,
             )
@@ -353,13 +343,22 @@ private fun TranslationsDialogContentInPortraitMode(
     translateToLanguages: List<Language>? = null,
     initialFrom: Language? = null,
     initialTo: Language? = null,
+    translationError: TranslationError? = null,
     onFromDropdownSelected: (Language) -> Unit,
     onToDropdownSelected: (Language) -> Unit,
 ) {
     Column {
+        // The LanguageNotSupportedError has a slightly different presentation on this screen.
+        val header =
+            if (translationError is TranslationError.LanguageNotSupportedError) {
+                stringResource(id = R.string.translations_bottom_sheet_translate_from_unsupported_language)
+            } else {
+                stringResource(id = R.string.translations_bottom_sheet_translate_from)
+            }
+
         translateFromLanguages?.let {
             TranslationsDropdown(
-                header = stringResource(id = R.string.translations_bottom_sheet_translate_from),
+                header = header,
                 modifier = Modifier.fillMaxWidth(),
                 isInLandscapeMode = false,
                 translateLanguages = translateFromLanguages,
@@ -370,15 +369,17 @@ private fun TranslationsDialogContentInPortraitMode(
             Spacer(modifier = Modifier.height(16.dp))
         }
 
-        translateToLanguages?.let {
-            TranslationsDropdown(
-                header = stringResource(id = R.string.translations_bottom_sheet_translate_to),
-                modifier = Modifier.fillMaxWidth(),
-                isInLandscapeMode = false,
-                translateLanguages = it,
-                initiallySelected = initialTo,
-                onLanguageSelection = onToDropdownSelected,
-            )
+        if (translationError !is TranslationError.LanguageNotSupportedError) {
+            translateToLanguages?.let {
+                TranslationsDropdown(
+                    header = stringResource(id = R.string.translations_bottom_sheet_translate_to),
+                    modifier = Modifier.fillMaxWidth(),
+                    isInLandscapeMode = false,
+                    translateLanguages = it,
+                    initiallySelected = initialTo,
+                    onLanguageSelection = onToDropdownSelected,
+                )
+            }
         }
     }
 }
@@ -389,14 +390,23 @@ private fun TranslationsDialogContentInLandscapeMode(
     translateToLanguages: List<Language>? = null,
     initialFrom: Language? = null,
     initialTo: Language? = null,
+    translationError: TranslationError? = null,
     onFromDropdownSelected: (Language) -> Unit,
     onToDropdownSelected: (Language) -> Unit,
 ) {
     Column {
         Row {
+            // The LanguageNotSupportedError has a slightly different presentation on this screen.
+            val header =
+                if (translationError is TranslationError.LanguageNotSupportedError) {
+                    stringResource(id = R.string.translations_bottom_sheet_translate_from_unsupported_language)
+                } else {
+                    stringResource(id = R.string.translations_bottom_sheet_translate_from)
+                }
+
             translateFromLanguages?.let {
                 TranslationsDropdown(
-                    header = stringResource(id = R.string.translations_bottom_sheet_translate_from),
+                    header = header,
                     modifier = Modifier.weight(1f),
                     isInLandscapeMode = true,
                     translateLanguages = translateFromLanguages,
@@ -407,15 +417,17 @@ private fun TranslationsDialogContentInLandscapeMode(
                 Spacer(modifier = Modifier.width(16.dp))
             }
 
-            translateToLanguages?.let {
-                TranslationsDropdown(
-                    header = stringResource(id = R.string.translations_bottom_sheet_translate_to),
-                    modifier = Modifier.weight(1f),
-                    isInLandscapeMode = true,
-                    translateLanguages = it,
-                    initiallySelected = initialTo,
-                    onLanguageSelection = onToDropdownSelected,
-                )
+            if (translationError !is TranslationError.LanguageNotSupportedError) {
+                translateToLanguages?.let {
+                    TranslationsDropdown(
+                        header = stringResource(id = R.string.translations_bottom_sheet_translate_to),
+                        modifier = Modifier.weight(1f),
+                        isInLandscapeMode = true,
+                        translateLanguages = it,
+                        initiallySelected = initialTo,
+                        onLanguageSelection = onToDropdownSelected,
+                    )
+                }
             }
         }
     }
@@ -464,8 +476,6 @@ private fun TranslationsDialogHeader(
 private fun TranslationErrorWarning(
     translationError: TranslationError,
     documentLangDisplayName: String? = null,
-    learnMoreUrl: String,
-    onLearnMoreClicked: () -> Unit,
 ) {
     val modifier = Modifier
         .padding(top = 8.dp)
@@ -489,9 +499,6 @@ private fun TranslationErrorWarning(
         }
 
         is TranslationError.LanguageNotSupportedError -> {
-            val learnMoreText =
-                stringResource(id = R.string.translation_error_language_not_supported_learn_more)
-
             documentLangDisplayName?.let {
                 ReviewQualityCheckInfoCard(
                     title = stringResource(
@@ -499,14 +506,8 @@ private fun TranslationErrorWarning(
                         it,
                     ),
                     type = ReviewQualityCheckInfoType.Info,
+                    verticalRowAlignment = Alignment.CenterVertically,
                     modifier = modifier,
-                    footer = stringResource(
-                        id = R.string.translation_error_language_not_supported_learn_more,
-                    ) to LinkTextState(
-                        text = learnMoreText,
-                        url = learnMoreUrl,
-                        onClick = { onLearnMoreClicked() },
-                    ),
                 )
             }
         }
