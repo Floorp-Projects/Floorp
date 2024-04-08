@@ -440,6 +440,10 @@ class WidgetEvent : public WidgetEventTime {
         mFlags.mCancelable = false;
         mFlags.mBubbles = mFlags.mIsTrusted;
         break;
+      case eLegacyTextEventClass:
+        mFlags.mCancelable = mFlags.mIsTrusted && mMessage == eLegacyTextInput;
+        mFlags.mBubbles = mFlags.mIsTrusted && mMessage == eLegacyTextInput;
+        break;
       case eMouseEventClass:
         mFlags.mCancelable =
             (mMessage != eMouseEnter && mMessage != eMouseLeave);

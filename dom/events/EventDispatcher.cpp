@@ -47,6 +47,7 @@
 #include "mozilla/dom/SimpleGestureEvent.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/StorageEvent.h"
+#include "mozilla/dom/TextEvent.h"
 #include "mozilla/dom/TimeEvent.h"
 #include "mozilla/dom/TouchEvent.h"
 #include "mozilla/dom/TransitionEvent.h"
@@ -1404,6 +1405,9 @@ nsresult EventDispatcher::DispatchDOMEvent(EventTarget* aTarget,
       case eEditorInputEventClass:
         return NS_NewDOMInputEvent(aOwner, aPresContext,
                                    aEvent->AsEditorInputEvent());
+      case eLegacyTextEventClass:
+        return NS_NewDOMTextEvent(aOwner, aPresContext,
+                                  aEvent->AsLegacyTextEvent());
       case eDragEventClass:
         return NS_NewDOMDragEvent(aOwner, aPresContext, aEvent->AsDragEvent());
       case eClipboardEventClass:
@@ -1448,9 +1452,14 @@ nsresult EventDispatcher::DispatchDOMEvent(EventTarget* aTarget,
   if (aEventType.LowerCaseEqualsLiteral("keyboardevent")) {
     return NS_NewDOMKeyboardEvent(aOwner, aPresContext, nullptr);
   }
-  if (aEventType.LowerCaseEqualsLiteral("compositionevent") ||
-      aEventType.LowerCaseEqualsLiteral("textevent")) {
+  if (aEventType.LowerCaseEqualsLiteral("compositionevent")) {
     return NS_NewDOMCompositionEvent(aOwner, aPresContext, nullptr);
+  }
+  if (aEventType.LowerCaseEqualsLiteral("textevent")) {
+    if (!StaticPrefs::dom_events_textevent_enabled()) {
+      return NS_NewDOMCompositionEvent(aOwner, aPresContext, nullptr);
+    }
+    return NS_NewDOMTextEvent(aOwner, aPresContext, nullptr);
   }
   if (aEventType.LowerCaseEqualsLiteral("mutationevent") ||
       aEventType.LowerCaseEqualsLiteral("mutationevents")) {
