@@ -59,7 +59,7 @@ add_task(async function test_pageinfo_permissions() {
   ];
 
   await BrowserTestUtils.withNewTab(TEST_ORIGIN, async function () {
-    let pageInfo = BrowserPageInfo(TEST_ORIGIN, "permTab");
+    let pageInfo = BrowserCommands.pageInfo(TEST_ORIGIN, "permTab");
     await BrowserTestUtils.waitForEvent(pageInfo, "load");
 
     for (let i = 0; i < permissions.length; i++) {

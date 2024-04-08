@@ -336,7 +336,7 @@ add_task(async function test_pbm_dark_page_info() {
     await BrowserTestUtils.withNewTab(
       { gBrowser: win.gBrowser, url: "https://example.com" },
       async () => {
-        let pageInfo = win.BrowserPageInfo(null, "securityTab");
+        let pageInfo = win.BrowserCommands.pageInfo(null, "securityTab");
         await BrowserTestUtils.waitForEvent(pageInfo, "page-info-init");
 
         let prefersColorScheme = await getPrefersColorSchemeInfo({

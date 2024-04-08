@@ -285,7 +285,7 @@ add_task(async function testPageInfoMediaSaveAs() {
   );
 
   info("Open the media panel of the pageinfo.");
-  let pageInfo = BrowserPageInfo(
+  let pageInfo = BrowserCommands.pageInfo(
     gBrowser.selectedBrowser.currentURI.spec,
     "mediaTab"
   );

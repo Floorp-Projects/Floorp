@@ -9,7 +9,7 @@ add_task(async function () {
     "https://example.com"
   );
   let browser = tab.linkedBrowser;
-  let pageInfo = BrowserPageInfo(browser.currentURI.spec);
+  let pageInfo = BrowserCommands.pageInfo(browser.currentURI.spec);
   await BrowserTestUtils.waitForEvent(pageInfo, "page-info-init");
   Assert.strictEqual(
     pageInfo.docShell.QueryInterface(Ci.nsILoadContext).usePrivateBrowsing,
@@ -25,7 +25,7 @@ add_task(async function () {
     "https://example.com"
   );
   let privateBrowser = privateTab.linkedBrowser;
-  let privatePageInfo = privateWindow.BrowserPageInfo(
+  let privatePageInfo = privateWindow.BrowserCommands.pageInfo(
     privateBrowser.currentURI.spec
   );
   await BrowserTestUtils.waitForEvent(privatePageInfo, "page-info-init");

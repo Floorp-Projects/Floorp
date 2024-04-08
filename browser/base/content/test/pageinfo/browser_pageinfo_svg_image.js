@@ -7,7 +7,7 @@ add_task(async function () {
   BrowserTestUtils.startLoadingURIString(gBrowser.selectedBrowser, URI);
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, false, URI);
 
-  const pageInfo = BrowserPageInfo(
+  const pageInfo = BrowserCommands.pageInfo(
     gBrowser.selectedBrowser.currentURI.spec,
     "mediaTab"
   );

@@ -8,7 +8,7 @@ const LOW_TLS_VERSION = "https://tls1.example.com/";
 
 async function testPermissions(defaultPermission) {
   await BrowserTestUtils.withNewTab(TEST_ORIGIN, async function () {
-    let pageInfo = BrowserPageInfo(TEST_ORIGIN, "permTab");
+    let pageInfo = BrowserCommands.pageInfo(TEST_ORIGIN, "permTab");
     await BrowserTestUtils.waitForEvent(pageInfo, "load");
 
     let defaultCheckbox = await TestUtils.waitForCondition(() =>
@@ -94,7 +94,7 @@ add_task(async function test_CertificateError() {
 
   await pageLoaded;
 
-  let pageInfo = BrowserPageInfo(TEST_ORIGIN_CERT_ERROR, "permTab");
+  let pageInfo = BrowserCommands.pageInfo(TEST_ORIGIN_CERT_ERROR, "permTab");
   await BrowserTestUtils.waitForEvent(pageInfo, "load");
   let permissionTab = pageInfo.document.getElementById("permTab");
   await TestUtils.waitForCondition(
@@ -145,7 +145,7 @@ add_task(async function test_NetworkError() {
 
   await pageLoaded;
 
-  let pageInfo = BrowserPageInfo(LOW_TLS_VERSION, "permTab");
+  let pageInfo = BrowserCommands.pageInfo(LOW_TLS_VERSION, "permTab");
   await BrowserTestUtils.waitForEvent(pageInfo, "load");
   let permissionTab = pageInfo.document.getElementById("permTab");
   await TestUtils.waitForCondition(
@@ -193,7 +193,7 @@ add_task(async function test_default_geo_permission() {
 // Test special behavior for cookie permissions.
 add_task(async function test_cookie_permission() {
   await BrowserTestUtils.withNewTab(TEST_ORIGIN, async function () {
-    let pageInfo = BrowserPageInfo(TEST_ORIGIN, "permTab");
+    let pageInfo = BrowserCommands.pageInfo(TEST_ORIGIN, "permTab");
     await BrowserTestUtils.waitForEvent(pageInfo, "load");
 
     let defaultCheckbox = await TestUtils.waitForCondition(() =>

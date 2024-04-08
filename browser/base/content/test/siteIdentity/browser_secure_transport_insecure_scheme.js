@@ -19,7 +19,7 @@ const NOT_SECURE_LABEL = Services.prefs.getBoolPref(
  * @param {string} uri - URI of the page to test with.
  */
 async function testPageInfoNotEncrypted(uri) {
-  let pageInfo = BrowserPageInfo(uri, "securityTab");
+  let pageInfo = BrowserCommands.pageInfo(uri, "securityTab");
   await BrowserTestUtils.waitForEvent(pageInfo, "load");
   let pageInfoDoc = pageInfo.document;
   let securityTab = pageInfoDoc.getElementById("securityTab");

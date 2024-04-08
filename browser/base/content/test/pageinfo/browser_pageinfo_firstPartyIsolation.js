@@ -76,7 +76,7 @@ async function test() {
   // Pass a dummy imageElement, if there isn't an imageElement, pageInfo.js
   // will do a preview, however this sometimes will cause intermittent failures,
   // see bug 1403365.
-  let pageInfo = BrowserPageInfo(url, "mediaTab", {});
+  let pageInfo = BrowserCommands.pageInfo(url, "mediaTab", {});
   info("waitForEvent pageInfo");
   await BrowserTestUtils.waitForEvent(pageInfo, "load");
 
