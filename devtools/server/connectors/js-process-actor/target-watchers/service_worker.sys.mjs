@@ -28,7 +28,7 @@ class ServiceWorkerTargetWatcherClass extends WorkerTargetWatcherClass {
    *        See ContentProcessWatcherRegistry
    */
   async updateBrowserElementHost(watcherDataObject) {
-    const { watcherActorID, sessionData } = watcherDataObject;
+    const { sessionData } = watcherDataObject;
 
     // Create target actor matching this new host.
     // Note that we may be navigating to the same host name and the target will already exist.
@@ -41,13 +41,7 @@ class ServiceWorkerTargetWatcherClass extends WorkerTargetWatcherClass {
         this.shouldHandleWorker(sessionData, dbg, "service_worker") &&
         !alreadyCreated
       ) {
-        promises.push(
-          this.createWorkerTargetActor({
-            watcherActorID,
-            sessionData,
-            dbg,
-          })
-        );
+        promises.push(this.createWorkerTargetActor(watcherDataObject, dbg));
       }
     }
     await Promise.all(promises);
