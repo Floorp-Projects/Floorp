@@ -8,14 +8,10 @@ const { PromiseTestUtils } = ChromeUtils.importESModule(
 );
 
 /**
- * Check that if we're using a window-modal prompt,
- * the next synchronous window-internal modal prompt aborts rather than
- * leaving us in a deadlock about how to enter modal state.
+ * Check that the next synchronous window-internal modal prompt aborts rather
+ * than leaving us in a deadlock about how to enter modal state.
  */
 add_task(async function test_check_multiple_prompts() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["prompts.windowPromptSubDialog", true]],
-  });
   let container = document.getElementById("window-modal-dialog");
   let dialogPromise = BrowserTestUtils.promiseAlertDialogOpen();
 

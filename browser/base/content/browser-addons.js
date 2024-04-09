@@ -1046,15 +1046,10 @@ var gExtensionsNotifications = {
 var BrowserAddonUI = {
   async promptRemoveExtension(addon) {
     let { name } = addon;
-    let [title, btnTitle, message] = await lazy.l10n.formatValues([
+    let [title, btnTitle] = await lazy.l10n.formatValues([
       { id: "addon-removal-title", args: { name } },
       { id: "addon-removal-button" },
-      { id: "addon-removal-message", args: { name } },
     ]);
-
-    if (Services.prefs.getBoolPref("prompts.windowPromptSubDialog", false)) {
-      message = null;
-    }
 
     let {
       BUTTON_TITLE_IS_STRING: titleString,
@@ -1082,7 +1077,7 @@ var BrowserAddonUI = {
     let result = confirmEx(
       window,
       title,
-      message,
+      null,
       btnFlags,
       btnTitle,
       /* button1 */ null,
