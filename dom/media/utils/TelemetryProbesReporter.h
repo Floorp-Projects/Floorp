@@ -79,7 +79,8 @@ class TelemetryProbesReporter final {
                            const double aLoadedMetadataTime,
                            const double aTotalWaitingDataTime,
                            const double aTotalBufferingTime,
-                           const FirstFrameLoadedFlagSet aFlags);
+                           const FirstFrameLoadedFlagSet aFlags,
+                           const MediaInfo& aInfo);
 
   double GetTotalVideoPlayTimeInSeconds() const;
   double GetTotalVideoHDRPlayTimeInSeconds() const;
