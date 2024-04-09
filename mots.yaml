@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2024-04-09T20:01:48.094116+00:00'
+updated_at: '2024-04-09T20:10:05.250319+00:00'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -33,7 +33,7 @@ people:
     nick: agi
   - &aglavic
     bmo_id: 692423
-    name: Andrej Glavic
+    name: Andrej
     nick: aglavic
   - &ahal
     bmo_id: 382067
@@ -235,10 +235,10 @@ people:
     bmo_id: 468905
     name: Danny Coates
     nick: dcoates
-  - &deantessman
+  - &deanis74
     bmo_id: 7924
-    name: Dean Tessman
-    nick: dean_tessman
+    name: ''
+    nick: deanis74
   - &deian
     bmo_id: 637163
     name: Deian Stefan
@@ -251,14 +251,14 @@ people:
     bmo_id: 278074
     name: Daniel Holbert
     nick: dholbert
-  - &dimi
-    bmo_id: 468232
-    name: Dimi Lee
-    nick: dimi
   - &djackson
     bmo_id: 644159
     name: Dennis Jackson
     nick: djackson
+  - &dlee
+    bmo_id: 468232
+    name: Dimi Lee
+    nick: dlee
   - &dlrobertson
     bmo_id: 705145
     name: Dan Robertson
@@ -349,14 +349,14 @@ people:
     bmo_id: 149052
     name: Florian Quèze
     nick: florian
+  - &fredwang
+    bmo_id: 739410
+    name: Frédéric Wang
+    nick: fred.wang
   - &freddy
     bmo_id: 428608
     name: Frederik Braun
     nick: freddy
-  - &fredw
-    bmo_id: 739410
-    name: Frédéric Wang
-    nick: fredw
   - &froydnj
     bmo_id: 417288
     name: Nathan Froyd
@@ -383,7 +383,7 @@ people:
     nick: giorga
   - &gl
     bmo_id: 475223
-    name: Gabriel
+    name: Gabriel Luong
     nick: gl
   - &glandium
     bmo_id: 47192
@@ -464,10 +464,6 @@ people:
     bmo_id: 8340
     name: Jan Varga
     nick: janv
-  - &jari
-    bmo_id: 689836
-    name: Jari Jalkanen
-    nick: jari
   - &jchen
     bmo_id: 281508
     name: ''
@@ -516,6 +512,10 @@ people:
     bmo_id: 279663
     name: Jim Mathies
     nick: jimm
+  - &jjalkanen
+    bmo_id: 689836
+    name: Jari Jalkanen
+    nick: jjalkanen
   - &jld
     bmo_id: 462836
     name: Jed Davis
@@ -711,10 +711,6 @@ people:
     bmo_id: 607045
     name: Matthew Gaudet
     nick: mgaudet
-  - &mhowell
-    bmo_id: 550257
-    name: Molly Howell
-    nick: mhowell
   - &micah
     bmo_id: 585815
     name: Micah Tigley
@@ -723,14 +719,14 @@ people:
     bmo_id: 547538
     name: Miko Mynttinen
     nick: mikokm
-  - &mixedpuppy
-    bmo_id: 443354
-    name: Shane Caraveo
-    nick: mixedpuppy
   - &mkaply
     bmo_id: 7313
     name: Mike Kaply
     nick: mkaply
+  - &molly
+    bmo_id: 550257
+    name: Molly Howell
+    nick: molly
   - &morgan
     bmo_id: 618000
     name: Morgan Reschenberg
@@ -885,12 +881,16 @@ people:
     nick: ryan.sleevi
   - &saschanaz
     bmo_id: 473060
-    name: Kagami Rosylight
+    name: Kagami
     nick: saschanaz
   - &Sasha
     bmo_id: 704132
     name: Alexandra Borovova
     nick: Sasha
+  - &scaraveo
+    bmo_id: 443354
+    name: ''
+    nick: scaraveo
   - &sclements
     bmo_id: 603840
     name: Sarah Clements
@@ -1181,7 +1181,7 @@ modules:
       - *timhuang
     peers:
       - *bvandersloot
-      - *dimi
+      - *dlee
       - *pbz
     machine_name: core_antitracking
 
@@ -1478,7 +1478,7 @@ modules:
     owners:
       - *handyman
     peers:
-      - *mhowell
+      - *molly
     machine_name: core_dll_services
 
   - name: 'Core: docshell'
@@ -1856,7 +1856,7 @@ modules:
       - *janv
     peers:
       - *asuth
-      - *jari
+      - *jjalkanen
     machine_name: core_indexeddb
 
   - name: 'Core: IPC'
@@ -2086,7 +2086,7 @@ modules:
     owners:
       - *emilio
     peers:
-      - *fredw
+      - *fredwang
       - *jfkthame
     machine_name: core_mathml
 
@@ -3063,7 +3063,7 @@ modules:
       - *cmartin
     peers:
       - *handyman
-      - *mhowell
+      - *molly
     machine_name: core_widget_windows
 
   - name: 'Core: XML'
@@ -3099,7 +3099,7 @@ modules:
       peers_emeritus:
         - Josh 'timeless' Soref
     peers:
-      - *deantessman
+      - *deanis74
     machine_name: core_xpapps
 
   - name: 'Core: XPCOM'
@@ -3259,7 +3259,7 @@ modules:
             - Andrew Swan
             - Kris Maglione
         owners:
-          - *mixedpuppy
+          - *scaraveo
           - *rpl
         peers:
           - *rpl
@@ -3277,7 +3277,7 @@ modules:
             - Robert Strong
             - Andrew Swan
         owners:
-          - *mixedpuppy
+          - *scaraveo
           - *mstriemer
         peers:
           - *rpl
@@ -3293,7 +3293,7 @@ modules:
         owners:
           - *bytesized
         peers:
-          - *mhowell
+          - *molly
         machine_name: application_update
         meta:
           peers_emeritus:
@@ -3438,7 +3438,7 @@ modules:
           - *serg
         peers:
           - *tgiles
-          - *dimi
+          - *dlee
         machine_name: form_autofill
 
       - name: In-product Messaging
@@ -3480,7 +3480,7 @@ modules:
         owners:
           - *rkraesig
         peers:
-          - *mhowell
+          - *molly
           - *gstoll
           - *handyman
         machine_name: launcher_process
@@ -3535,7 +3535,7 @@ modules:
           - *serg
         peers:
           - *tgiles
-          - *dimi
+          - *dlee
           - *sfoster
         machine_name: password_manager
 
@@ -3549,7 +3549,7 @@ modules:
         meta:
           owners_emeritus:
             - *micah
-            - *mhowell
+            - *molly
         excludes: []
         owners:
           - *mconley
@@ -3711,7 +3711,7 @@ modules:
           components:
             - Firefox::Installer
         owners:
-          - *mhowell
+          - *molly
         peers:
           - *agashlin
           - *nalexander
@@ -4198,7 +4198,7 @@ modules:
       - *dao
       - *mak
       - *mconley
-      - *mhowell
+      - *molly
     submodules:
 
       - name: Application Startup
@@ -4268,7 +4268,7 @@ modules:
             - Andrew Swan
             - Kris Maglione
         owners:
-          - *mixedpuppy
+          - *scaraveo
           - *zombie
         peers:
           - *rpl
@@ -4307,7 +4307,7 @@ modules:
       - netwerk/url-classifier/**/*
     excludes: []
     owners:
-      - *dimi
+      - *dlee
       - *groovecoder
     peers:
       - *timhuang
@@ -4322,5 +4322,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: 21ccb66794bdc087a3d8d24d81b66c10d105f07c
-  export: 3d6646af4f3bf5d6091f1b3c46ceaeb78f282b3d
+  config: 65aa296735762ec4d0ef10de19e83fc19537ff02
+  export: 56ea460c0108eebb8a9de57b729558024ec4b4ad
