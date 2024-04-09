@@ -6,6 +6,7 @@
 #include "HTMLSelectAccessible.h"
 
 #include "LocalAccessible-inl.h"
+#include "DocAccessible-inl.h"
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
 #include "DocAccessible.h"
