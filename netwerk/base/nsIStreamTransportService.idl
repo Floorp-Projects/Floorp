@@ -37,6 +37,7 @@ interface nsIStreamTransportService : nsISupports
     nsITransport createInputTransport(in nsIInputStream aStream,
                                       in boolean aCloseWhenDone);
 
+    [noscript]
     void InputAvailable(in nsIInputStream aStream,
                         in nsIInputAvailableCallback aCallback);
 };

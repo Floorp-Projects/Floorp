@@ -26,7 +26,7 @@ interface nsIAsyncVerifyRedirectReadyCallback : nsISupports
  * Implemented by chrome side of IPC protocols that support redirect responses.
  */
 
-[scriptable, uuid(3ed1d288-5324-46ee-8a98-33ac37d1080b)]
+[uuid(3ed1d288-5324-46ee-8a98-33ac37d1080b)]
 interface nsIParentRedirectingChannel : nsIParentChannel
 {
   /**

@@ -625,6 +625,16 @@ def link_and_write(files, outfile, outheader):
         iids.add(interface["uuid"])
         names.add(interface["name"])
 
+    # All forwards referenced from scriptable members must be known (as scriptable).
+    for iface in interfaces:
+        for ref in iface["needs_scriptable"]:
+            if not ref in names:
+                raise Exception(
+                    f"Scriptable member in {iface['name']} references unknown {ref}. "
+                    "Forward must be a known and [scriptable] interface, "
+                    "or the referencing member marked with [noscript]."
+                )
+
     link_to_cpp(interfaces, outfile, outheader)
 
 

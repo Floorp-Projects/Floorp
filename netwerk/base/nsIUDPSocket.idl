@@ -116,7 +116,7 @@ interface nsIUDPSocket : nsISupports
      * If it is used off the socket thread there is a risk of triggering a bug
      * in OS thatcan cause a crash.
      */
-    void syncListen(in nsIUDPSocketSyncListener aListener);
+    [noscript] void syncListen(in nsIUDPSocketSyncListener aListener);
 
     /**
      * connect

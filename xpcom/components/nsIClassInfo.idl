@@ -28,7 +28,7 @@ interface nsIClassInfo : nsISupports
      * Return an object to assist XPConnect in supplying JavaScript-specific
      * behavior to callers of the instance object, or null if not needed.
      */
-    nsIXPCScriptable getScriptableHelper();
+    [noscript] nsIXPCScriptable getScriptableHelper();
 
     /**
      * A contract ID through which an instance of this class can be created
