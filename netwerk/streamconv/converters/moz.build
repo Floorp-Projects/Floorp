@@ -29,3 +29,7 @@ LOCAL_INCLUDES += [
     "/modules/brotli/dec",
     "/netwerk/base",
 ]
+
+DIRS += [
+    "/third_party/zstd",
+]
