@@ -259,14 +259,22 @@ already_AddRefed<gfxFont> gfxFontEntry::FindOrMakeFont(
 }
 
 uint16_t gfxFontEntry::UnitsPerEm() {
+  {
+    AutoReadLock lock(mLock);
+    if (mUnitsPerEm) {
+      return mUnitsPerEm;
+    }
+  }
+
+  AutoTable headTable(this, TRUETYPE_TAG('h', 'e', 'a', 'd'));
+  AutoWriteLock lock(mLock);
+
   if (!mUnitsPerEm) {
-    AutoTable headTable(this, TRUETYPE_TAG('h', 'e', 'a', 'd'));
     if (headTable) {
       uint32_t len;
       const HeadTable* head =
           reinterpret_cast<const HeadTable*>(hb_blob_get_data(headTable, &len));
       if (len >= sizeof(HeadTable)) {
-        mUnitsPerEm = head->unitsPerEm;
         if (int16_t(head->xMax) > int16_t(head->xMin) &&
             int16_t(head->yMax) > int16_t(head->yMin)) {
           mXMin = head->xMin;
@@ -274,6 +282,7 @@ uint16_t gfxFontEntry::UnitsPerEm() {
           mXMax = head->xMax;
           mYMax = head->yMax;
         }
+        mUnitsPerEm = head->unitsPerEm;
       }
     }
 
@@ -283,12 +292,13 @@ uint16_t gfxFontEntry::UnitsPerEm() {
       mUnitsPerEm = kInvalidUPEM;
     }
   }
+
   return mUnitsPerEm;
 }
 
 bool gfxFontEntry::HasSVGGlyph(uint32_t aGlyphId) {
-  NS_ASSERTION(mSVGInitialized,
-               "SVG data has not yet been loaded. TryGetSVGData() first.");
+  MOZ_ASSERT(mSVGInitialized,
+             "SVG data has not yet been loaded. TryGetSVGData() first.");
   return GetSVGGlyphs()->HasSVGGlyph(aGlyphId);
 }
 
@@ -306,8 +316,8 @@ bool gfxFontEntry::GetSVGGlyphExtents(DrawTarget* aDrawTarget,
 
 void gfxFontEntry::RenderSVGGlyph(gfxContext* aContext, uint32_t aGlyphId,
                                   SVGContextPaint* aContextPaint) {
-  NS_ASSERTION(mSVGInitialized,
-               "SVG data has not yet been loaded. TryGetSVGData() first.");
+  MOZ_ASSERT(mSVGInitialized,
+             "SVG data has not yet been loaded. TryGetSVGData() first.");
   GetSVGGlyphs()->RenderGlyph(aContext, aGlyphId, aContextPaint);
 }
 
