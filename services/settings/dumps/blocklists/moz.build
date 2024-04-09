@@ -19,7 +19,6 @@ FINAL_TARGET_FILES.defaults.settings.blocklists += [
 if not CONFIG["MOZ_BUILD_APP"].startswith("mobile/"):
     FINAL_TARGET_FILES.defaults.settings.blocklists += [
         "addons-bloomfilters.json",
-        "plugins.json"
     ]
 
     FINAL_TARGET_FILES.defaults.settings.blocklists["addons-bloomfilters"] += [
