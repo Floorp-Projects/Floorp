@@ -106,8 +106,9 @@ class TenuringTracer final : public JSTracer {
   JSString* promoteOrForward(JSString* str);
   JS::BigInt* promoteOrForward(JS::BigInt* bip);
 
+  // Returns whether any cells in the arena require sweeping.
   template <typename T>
-  void traceBufferedCells(Arena* arena, ArenaCellSet* cells);
+  bool traceBufferedCells(Arena* arena, ArenaCellSet* cells);
 
   class AutoPromotedAnyToNursery;
 
