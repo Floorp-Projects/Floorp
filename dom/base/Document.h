@@ -3369,7 +3369,6 @@ class Document : public nsINode,
                                                bool aFocusPreviousElement,
                                                bool aFireEvents);
 
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY void HideAllPopoversWithoutRunningScript();
   // Hides the given popover element, see
   // https://html.spec.whatwg.org/multipage/popover.html#hide-popover-algorithm
   MOZ_CAN_RUN_SCRIPT void HidePopover(Element& popover,
@@ -4158,7 +4157,8 @@ class Document : public nsINode,
   // Apply the fullscreen state to the document, and trigger related
   // events. It returns false if the fullscreen element ready check
   // fails and nothing gets changed.
-  bool ApplyFullscreen(UniquePtr<FullscreenRequest>);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY bool ApplyFullscreen(
+      UniquePtr<FullscreenRequest>);
 
   void RemoveDocStyleSheetsFromStyleSets();
   void ResetStylesheetsToURI(nsIURI* aURI);

@@ -15101,11 +15101,6 @@ void Document::HideAllPopoversUntil(nsINode& aEndpoint,
   } while (repeatingHide);
 }
 
-MOZ_CAN_RUN_SCRIPT_BOUNDARY void
-Document::HideAllPopoversWithoutRunningScript() {
-  return HideAllPopoversUntil(*this, false, false);
-}
-
 void Document::HidePopover(Element& aPopover, bool aFocusPreviousElement,
                            bool aFireEvents, ErrorResult& aRv) {
   RefPtr<nsGenericHTMLElement> popoverHTMLEl =
@@ -15560,13 +15555,21 @@ bool Document::HasPendingFullscreenRequests() {
   return !iter.AtEnd();
 }
 
+MOZ_CAN_RUN_SCRIPT_BOUNDARY
 bool Document::ApplyFullscreen(UniquePtr<FullscreenRequest> aRequest) {
   if (!FullscreenElementReadyCheck(*aRequest)) {
     return false;
   }
 
+  Element* elem = aRequest->Element();
+
+  RefPtr<nsINode> hideUntil = elem->GetTopmostPopoverAncestor(nullptr, false);
+  if (!hideUntil) {
+    hideUntil = OwnerDoc();
+  }
+
   RefPtr<Document> doc = aRequest->Document();
-  doc->HideAllPopoversWithoutRunningScript();
+  doc->HideAllPopoversUntil(*hideUntil, false, true);
 
   // Stash a reference to any existing fullscreen doc, we'll use this later
   // to detect if the origin which is fullscreen has changed.
@@ -15592,7 +15595,6 @@ bool Document::ApplyFullscreen(UniquePtr<FullscreenRequest> aRequest) {
   // Set the fullscreen element. This sets the fullscreen style on the
   // element, and the fullscreen-ancestor styles on ancestors of the element
   // in this document.
-  Element* elem = aRequest->Element();
   SetFullscreenElement(*elem);
   // Set the iframe fullscreen flag.
   if (auto* iframe = HTMLIFrameElement::FromNode(elem)) {
