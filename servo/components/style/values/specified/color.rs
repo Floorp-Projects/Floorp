@@ -7,7 +7,9 @@
 use super::AllowQuirks;
 use crate::color::component::ColorComponent;
 use crate::color::convert::normalize_hue;
-use crate::color::parsing::{self, FromParsedColor, NumberOrAngle, NumberOrPercentage};
+use crate::color::parsing::{
+    self, ColorParser, FromParsedColor, NumberOrAngle, NumberOrPercentage,
+};
 use crate::color::{mix::ColorInterpolationMethod, AbsoluteColor, ColorSpace};
 use crate::media_queries::Device;
 use crate::parser::{Parse, ParserContext};
@@ -620,55 +622,6 @@ impl FromParsedColor for Color {
     }
 }
 
-struct ColorParser<'a, 'b: 'a>(&'a ParserContext<'b>);
-
-impl<'a, 'b: 'a, 'i: 'a> parsing::ColorParser<'i> for ColorParser<'a, 'b> {
-    fn parse_number_or_angle<'t>(
-        &self,
-        input: &mut Parser<'i, 't>,
-        allow_none: bool,
-    ) -> Result<ColorComponent<NumberOrAngle>, ParseError<'i>> {
-        ColorComponent::parse(self.0, input, allow_none)
-    }
-
-    fn parse_percentage<'t>(
-        &self,
-        input: &mut Parser<'i, 't>,
-        allow_none: bool,
-    ) -> Result<ColorComponent<f32>, ParseError<'i>> {
-        let location = input.current_source_location();
-
-        // We can use the [NumberOrPercentage] type here, because parsing it
-        // doesn't have any more overhead than just parsing a percentage on its
-        // own.
-        Ok(
-            match ColorComponent::<NumberOrPercentage>::parse(self.0, input, allow_none)? {
-                ColorComponent::None => ColorComponent::None,
-                ColorComponent::Value(NumberOrPercentage::Percentage { unit_value }) => {
-                    ColorComponent::Value(unit_value)
-                },
-                _ => return Err(location.new_custom_error(StyleParseErrorKind::UnspecifiedError)),
-            },
-        )
-    }
-
-    fn parse_number<'t>(
-        &self,
-        input: &mut Parser<'i, 't>,
-        allow_none: bool,
-    ) -> Result<ColorComponent<f32>, ParseError<'i>> {
-        ColorComponent::parse(self.0, input, allow_none)
-    }
-
-    fn parse_number_or_percentage<'t>(
-        &self,
-        input: &mut Parser<'i, 't>,
-        allow_none: bool,
-    ) -> Result<ColorComponent<NumberOrPercentage>, ParseError<'i>> {
-        ColorComponent::parse(self.0, input, allow_none)
-    }
-}
-
 /// Whether to preserve authored colors during parsing. That's useful only if we
 /// plan to serialize the color back.
 #[derive(Copy, Clone)]
@@ -705,7 +658,7 @@ impl Color {
             },
         };
 
-        let color_parser = ColorParser(&*context);
+        let color_parser = ColorParser { context: &context };
         match input.try_parse(|i| parsing::parse_color_with(&color_parser, i)) {
             Ok(mut color) => {
                 if let Color::Absolute(ref mut absolute) = color {
