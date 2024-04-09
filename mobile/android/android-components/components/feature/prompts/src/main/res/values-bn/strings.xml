@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
     <!-- Text for confirmation for a positive action in dialog  -->
     <string name="mozac_feature_prompts_ok">ঠিক আছে</string>
     <!-- Text for confirmation for a negative action in dialog.  -->
@@ -92,4 +92,5 @@
     <string name="mozac_feature_prompt_repost_positive_button_text">তথ্য আবার পাঠাও</string>
     <!-- Pressing this will dismiss the dialog and not refresh the webpage -->
     <string name="mozac_feature_prompt_repost_negative_button_text">বাতিল</string>
-</resources>
+
+    </resources>

@@ -2163,14 +2163,8 @@
     <string name="review_quality_check_no_analysis_link">Gwiriañ perzhded an alioù</string>
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">Gouzout hiroc’h</string>
-    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy" moz:RemovedIn="123" tools:ignore="UnusedResources">politikerezh a-fet buhez prevez</string>
-    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Politikerezh a-fet buhez prevez</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
     <string name="review_quality_check_contextual_onboarding_terms_use">termenoù implij</string>
-    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
-    <string name="review_quality_check_contextual_onboarding_terms_use_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Termenoù implij</string>
     <!-- Text for opt-in button from the review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_primary_button_text">Ya, esaeañ anezhañ</string>
     <!-- Text for opt-out button from the review quality check contextual onboarding card. -->
@@ -2261,6 +2255,7 @@
     <string name="translation_error_language_not_supported_warning_text">Hon digarezit, n’eo ket skoret ar yezh &quot;%1$s&quot; c’hoazh.</string>
     <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
     <string name="translation_error_language_not_supported_learn_more">Gouzout hiroc’h</string>
+
 
     <!-- Toggle switch label that allows a user to set if they would like to never be offered a translation of the given language. The first parameter is the language name, for example, "Spanish". -->
     <string name="translation_option_bottom_sheet_never_translate_in_language">Na dreiñ biken %1$s</string>

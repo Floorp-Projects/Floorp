@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://schemas.android.com/apk/res-auto">
     <!-- Text displayed when choosing which app to call with after selecting a phone number-->
     <string name="mozac_support_ktx_menu_call_with">…arqalı qońıraw etiw</string>
     <!-- Text displayed when choosing which app to email with after selecting an email address-->

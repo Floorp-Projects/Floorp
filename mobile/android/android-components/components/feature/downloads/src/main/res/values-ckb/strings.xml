@@ -42,4 +42,5 @@
     <string name="mozac_feature_downloads_third_party_app_chooser_dialog_title">کردار تەواوبکە بەبەکارهێنانی</string>
     <!-- Message that appears when trying to download with an external app fails. %1$s will be replaced with the name the external app. -->--&gt;
     <string name="mozac_feature_downloads_unable_to_open_third_party_app">نەتوانرا %1$s بکرێتەوە</string>
+
     </resources>

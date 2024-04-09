@@ -35,4 +35,4 @@
     <string name="mozac_feature_sitepermissions_persistent_storage_title">Tugotan ang %1$s magbutang ug data sa permanent storage</string>
     <!-- Title of a dialog to use EME. %1$s will be replaced with the URL of the current page -->
     <string name="mozac_feature_sitepermissions_media_key_system_access_title">Tugotan ang %1$s mag play ang DRM controlled content?</string>
-</resources>
+    </resources>

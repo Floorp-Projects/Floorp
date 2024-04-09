@@ -20,4 +20,5 @@
 
     <!-- Label of notification showing that the crash report service is running. %1$s will be replaced with the name of the organization (e.g. Mozilla). -->
     <string name="mozac_lib_send_crash_report_in_progress">Son drio mandare ƚa segnaƚasion de aresto anomaƚo a %1$s</string>
-</resources>
+
+    </resources>

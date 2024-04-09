@@ -1,13 +1,32 @@
-<?xml version='1.0' encoding='utf-8'?>
-<resources>
-  <string name="action_cancel">Dooda nisin</string>
-  <string name="action_ok">Lą́\'ąą</string>
-  <string name="urlbar_hint">Hanítą́ \'éí doodaii\' addressígíí biih níłtązh</string>
-  <string name="teaser">T\'áá bí nanil\'ingo hainitá.</string>
-  <string name="feedback_erase">Hanítá baa hane\' yę́ę \'ígíí nits\'ą́ą́\' k\'éé\'óólchxǫ\'.</string>
-  <string name="search_hint">Hanį́tá %1$s</string>
-  <string name="menu_share">"Ła\' bił \'ííshjání \'ádeeshłííł nisin "</string>
-  <string name="menu_report_site_issue">Siteígíí ba\'at\'e\' hólǫ́ léi\' \'áko \'éí baa hodeeshnih nisin</string>
-  <string name="menu_open_with_default_browser2">Tsésǫ\' \'ániidígíí léi\' biyi\'jį\' \'ąą \'ádeeshłííł nisin %1$s.</string>
-  <string name="menu_whats_new">Ha\'át\'íí \'ániidígo \'ádaalyaa dóó łahgo \'ádaalyaa?</string>
-</resources>
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:moz="http://mozac.org/tools" xmlns:tools="http://schemas.android.com/tools">
+    <!-- ####################################################################################### -->
+    <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
+    <!-- ## into a separate file like strings_references.xml                                  ## -->
+    <!-- ####################################################################################### -->
+
+    <string name="action_cancel">Dooda nisin</string>
+    <string name="action_ok">Lą́\'ąą</string>
+
+    <string name="urlbar_hint">Hanítą́ \'éí doodaii\' addressígíí biih níłtązh</string>
+
+    <string name="teaser">T\'áá bí nanil\'ingo hainitá.</string>
+
+    <string name="feedback_erase">Hanítá baa hane\' yę́ę \'ígíí nits\'ą́ą́\' k\'éé\'óólchxǫ\'.</string>
+
+    <string name="search_hint">Hanį́tá %1$s</string>
+
+    <string name="menu_share">&quot;Ła\' bił \'ííshjání \'ádeeshłííł nisin &quot;</string>
+
+    <string name="menu_report_site_issue">Siteígíí ba\'at\'e\' hólǫ́ léi\' \'áko \'éí baa hodeeshnih nisin</string>
+
+    <string name="menu_open_with_default_browser2">Tsésǫ\' \'ániidígíí léi\' biyi\'jį\' \'ąą \'ádeeshłííł nisin %1$s.</string>
+
+
+    <!-- Tips displayed on the home view -->
+
+    <!-- Tracking protection bottom sheet -->
+
+     <!-- Promote SearchWidget Dialog -->
+
+    </resources>

@@ -47,8 +47,6 @@
     <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
     <string name="menu_add_to_home_screen">होम स्क्रीन में जोड़ि‍यै</string>
 
-    <!-- Menu item: Shows information about features and changes that are new to this version -->
-    <string name="menu_whats_new" moz:RemovedIn="116" tools:ignore="UnusedResources">नया की छै</string>
     <string name="menu_settings">सेटिंग्स</string>
     <string name="menu_about">के संबंध में</string>
     <string name="menu_help">मदत</string>

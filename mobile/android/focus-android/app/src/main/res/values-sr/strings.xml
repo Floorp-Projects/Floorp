@@ -52,8 +52,6 @@
     <!-- Menu item: Remove the current site as a shortcut from the Home screen -->
     <string name="menu_remove_from_shortcuts">Уклони из пречица</string>
 
-    <!-- Menu item: Shows information about features and changes that are new to this version -->
-    <string name="menu_whats_new">Шта је ново</string>
     <string name="menu_settings">Поставке</string>
     <string name="menu_about">О Focus-у за Android</string>
     <string name="menu_help">Помоћ</string>

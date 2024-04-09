@@ -85,6 +85,7 @@
     <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
     <string name="tcp_cfr_learn_more">Barrachd fiosrachaidh mu làn-dìon o bhriosgaidean</string>
 
+
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">Tha feum air inntrigeadh dhan chamara. Tadhail air roghainnean Android, thoir gnogag air na ceadan is an uairsin air “Ceadaich”.</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
@@ -217,6 +218,7 @@
 
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">Gnàthaich an duilleag-dhachaigh</string>
+
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">Sgrìn dachaigh</string>
@@ -232,8 +234,6 @@
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Sganaich</string>
-    <!-- Button in the search view that lets a user change their search engine -->
-    <string name="search_engine_button">Einnseanan-luirg</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Roghainnean an einnsein-luirg</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
@@ -295,20 +295,6 @@
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
     <string name="onboarding_home_enable_notifications_negative_button">Chan ann an-dràsta</string>
 
-    <!-- Juno first user onboarding flow experiment -->
-    <!-- Title for set firefox as default browser screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_default_browser_title">Cleachd %s mar am brabhsair bunaiteach agad</string>
-    <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
-        Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Cleachd Firefox mar am brabhsair bunaiteach agad</string>
-    <!-- Description for set firefox as default browser screen.
-        The first parameter is the Firefox brand name.
-        The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
-    <string name="juno_onboarding_default_browser_description">Tha daoine nas cudromaiche dha %1$s na prothaid agus dìonaidh e do phrìobhaideachd le bhith a’ bacadh gleusan a thracaicheadh tu air feadh làraichean.\n\nGheibh thu barrachd fiosrachaidh ann an %2$s againn.</string>
-    <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
-        Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">Tha daoine nas cudromaiche dha Firefox na prothaid agus dìonaidh e do phrìobhaideachd le bhith a’ bacadh gleusan a thracaicheadh tu air feadh làraichean.\n\nGheibh thu barrachd fiosrachaidh ann an aithris na prìobhaideachd againn.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
     <string name="juno_onboarding_default_browser_description_link_text">aithris na prìobhaideachd</string>
@@ -316,27 +302,11 @@
     <string name="juno_onboarding_default_browser_positive_button">Suidhich mar am brabhsair bunaiteach</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_default_browser_negative_button">Chan ann an-dràsta</string>
-    <!-- Title for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_title">Leum eadar am fòn is an laptop agad</string>
 
-    <!-- Description for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_description">Faigh greim air na tabaichean is faclan-faire a th’ agad air uidheaman eile is lean ort far an do stad thu.</string>
     <!-- Text for the button to sign in to sync on the device -->
     <string name="juno_onboarding_sign_in_positive_button">Clàraich a-steach</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_sign_in_negative_button">Chan ann an-dràsta</string>
-    <!-- Title for enable notification permission screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_title">’S urrainn dhut barrachd a dhèanamh le %s ma bhios na brathan an comas agad</string>
-    <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
-        Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">’S urrainn dhut barrachd a dhèanamh le Firefox ma bhios na brathan an comas agad</string>
-    <!-- Description for enable notification permission screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_description">Cuir tabaichean eadar uidheaman, stiùirich na luchdaich thu a-nuas is faigh gliocasan airson %s a chur gu làn-fheum.</string>
-    <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
-       Note: The word "Firefox" should NOT be translated   -->
-    <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">Cuir tabaichean eadar uidheaman, stiùirich na luchdaich thu a-nuas is faigh gliocasan airson Firefox a chur gu làn-fheum.</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="juno_onboarding_enable_notifications_positive_button">Cuir na brathan air</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -362,8 +332,6 @@
     <string name="preferences_category_about">Mu dhèidhinn</string>
     <!-- Preference category for settings related to changing the default search engine -->
     <string name="preferences_category_select_default_search_engine" tools:ignore="UnusedResources">Tagh aonan</string>
-    <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts" tools:ignore="UnusedResources">Stiùrich na h-ath-ghoiridean luirg</string>
     <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
     <string name="preferences_manage_search_shortcuts_summary" tools:ignore="UnusedResources">Deasaich na h-einnseanan a tha ri fhaicinn ann an clàr-taice an luirg</string>
     <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
@@ -372,8 +340,6 @@
     <string name="preferences_default_search_engine">An t-einnsean-luirg bunaiteach</string>
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">Lorg</string>
-    <!-- Preference for settings related to Search address bar -->
-    <string name="preferences_search_address_bar">Bàr an t-seòlaidh</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">Rangaich e air Google Play</string>
     <!-- Preference linking to about page for Fenix
@@ -401,65 +367,25 @@
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">Modh HTTPS a-mhàin</string>
 
-    <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
-    <string name="preferences_cookie_banner_reduction">Nas lugha de bhrataichean bhriosgaidean</string>
-    <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
-    <string name="reduce_cookie_banner_option">Faic nas lugha de bhrataichean bhriosgaidean</string>
-    <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
-    <string name="reduce_cookie_banner_option_off">Dheth</string>
-    <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
-    <string name="reduce_cookie_banner_option_on">Air</string>
-    <!-- Summary for the preference for rejecting all cookies whenever possible. The first parameter is the application name -->
-    <string name="reduce_cookie_banner_summary_1">Feuchaidh %1$s ri iarrtasan bhriosgaidean air brataichean bhriosgaidean a dhiùltadh gu fèin-obrachail.</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">Dheth air an làrach seo</string>
     <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_cancel_button">Sguir dheth</string>
     <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
-    <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button" moz:RemovedIn="115" tools:ignore="UnusedResources">Iarr taic</string>
-    <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button_2">Cuir an t-iarrtas</string>
     <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
-    <string name="cookie_banner_handling_details_site_is_not_supported_title" moz:RemovedIn="114" tools:ignore="UnusedResources">Nas lugha de bhrataichean bhriosgaidean</string>
-    <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_title_2">A bheil thu airson taic ris an làrach seo iarraidh?</string>
-    <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
-    <string name="cookie_banner_handling_report_site_snack_bar_text" moz:RemovedIn="114" tools:ignore="UnusedResources">Chaidh an t-iarrtas airson taic ris an làrach a chur.</string>
     <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
     <string name="cookie_banner_handling_report_site_snack_bar_text_2">Chaidh an t-iarrtas a chur</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">Air air an làrach seo</string>
     <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
-    <string name="reduce_cookie_banner_unsupported_site_request_submitted" moz:RemovedIn="114" tools:ignore="UnusedResources">Chaidh an t-iarrtas airson taic ris an làrach a chur</string>
-    <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site_request_submitted_2">Chaidh an t-iarrtas airson taic a chur</string>
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site">Chan eil taic ris an làrach seo an-dràsta fhèin</string>
 
-    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
-    <string name="reduce_cookie_banner_details_panel_title_on_for_site">A bheil thu airson gleus lùghdachadh brataichean nam briosgaidean a chur air airson %1$s?</string>
-    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
-    <string name="reduce_cookie_banner_details_panel_title_off_for_site">A bheil thu airson gleus lùghdachadh brataichean nam briosgaidean a chur dheth airson %1$s?</string>
-    <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar.-->
-    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request" moz:RemovedIn="114" tools:ignore="UnusedResources">Chan eil gleus lùghdachadh brataichean nam briosgaidean a’ cur taic ris an làrach seo aig an àm seo. A bheil thu airson ’s gun toir an sgioba againn sùil air, feuch an cuir sinn taic ris san àm ri teachd?</string>
     <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name-->
     <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request_2">Chan urrainn dha %1$s iarrtasan airson bhriosgaidean air an làrach seo a dhiùltadh gu fèin-obrachail. ’S urrainn dhut iarrtas a chur gun tèid taic a chur ris an làrach seo san àm ri teachd.</string>
-    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_off_for_site">Falamhaichidh %1$s briosgaidean na làraich seo ’s ath-nuadhaichidh e an duilleag. Ma dh’fhalamhaicheas tu na briosgaidean air fad, dh’fhaoidte gun tèid do chlàradh a-mach ’s gum fàgaidh na cairtean seopadaireachd agad falamh.</string>
-    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">Feuchaidh %1$s ri gach iarrtas airson briosgaidean a dhiùltadh air làraichean ris a bheil taic.</string>
-    <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_dialog_title">A bheil thu airson cead a thoirt dha %1$s brataichean bhriosgaidean a dhiùltadh?</string>
-
-    <!-- Body text for the cookie banner re-engagement dialog use. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_dialog_body">’S urrainn dha %1$s iomadh iarrtas airson briosgaidean a dhiùltadh gu fèin-obrachail.</string>
-    <!-- Remind me later text button for the onboarding dialog -->
-    <string name="reduce_cookie_banner_dialog_not_now_button">Chan ann an-dràsta</string>
-    <!-- Snack text for the cookie banner dialog, after user hit the dismiss banner button -->
-    <string name="reduce_cookie_banner_dialog_snackbar_text">Chì thu nas lugha de dh’iarrtasan airson briosgaidean</string>
-
-    <!-- Change setting text button, for the cookie banner re-engagement dialog -->
-    <string name="reduce_cookie_banner_dialog_change_setting_button">Ceadaich</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Nì seo oidhirp leis fhèin ceangal a dhèanamh ri làraichean le pròtacal crioptachadh HTTPS airson tèarainteachd a bharrachd.</string>
@@ -483,12 +409,8 @@
     <string name="errorpage_httpsonly_message_summary">Ge-tà, dh’fhaoidte gu bheil neach-ionnsaigh na lùib ann. Ma leanas tu air adhart gun làrach-lìn, na cuir a-steach fiosrachadh dìomhair sam bith. Ma leanas tu air adhart, thèid am modh HTTPS a-mhàin a chur dheth gu sealach air an làrach ud.</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">So-ruigsinneachd</string>
-    <!-- Preference to override the Firefox Account server -->
-    <string name="preferences_override_fxa_server">Frithealaiche chunntasan Firefox gnàthaichte</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">Frithealaiche sioncronachaidh gnàthaichte</string>
-    <!-- Toast shown after updating the FxA/Sync server override preferences -->
-    <string name="toast_override_fxa_sync_server_done">Chaidh frithealaichte nan cunntasan Firefox no an t-sioncronachaidh atharrachadh. Fàg an aplacaid gus na h-atharraichean a chur an gnìomh…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Cunntas</string>
     <!-- Preference for changing where the toolbar is positioned -->
@@ -503,8 +425,6 @@
     <string name="preferences_customize">Gnàthaich</string>
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description_2">Clàraich a-steach gus na tabaichean, comharran-lìn, faclan-faire is mòran a bharrachd a shioncronachadh.</string>
-    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
-    <string name="preferences_account_default_name">Cunntas Firefox</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
     <string name="preferences_account_sync_error">Ceangail ris às ùr airson leantainn air an t-sioncronachadh</string>
     <!-- Preference for language -->
@@ -515,8 +435,6 @@
     <string name="preferences_data_collection">Cruinneachadh dàta</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Dì-bhugachadh cèin slighe USB</string>
-    <!-- Preference title for switch preference to show search engines -->
-    <string name="preferences_show_search_engines">Seall na h-einnseanan-luirg</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Seall molaidhean luirg</string>
     <!-- Preference title for switch preference to show voice search button -->
@@ -545,6 +463,7 @@
     <string name="preferences_open_links_in_apps_never">Chan ann idir</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Manaidsear nan luchdadh a-nuas on taobh a-muigh</string>
+
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Tuilleadain</string>
 
@@ -609,24 +528,12 @@
     <string name="wallpaper_learn_more">Barrachd fiosrachaidh</string>
     <!-- Text for classic wallpapers title. The first parameter is the Firefox name. -->
     <string name="wallpaper_classic_title">%s clasaigeach</string>
-    <!-- Text for limited edition wallpapers title. -->
-    <string name="wallpaper_limited_edition_title">Tionndadh cuingichte</string>
-    <!-- Description text for the limited edition wallpapers with learn more link. The first parameter is the learn more string defined in wallpaper_learn_more-->
-    <string name="wallpaper_limited_edition_description_with_learn_more">Cruinneachadh ùr nan guthan neo-eisimeileach. %s</string>
-    <!-- Description text for the limited edition wallpapers. -->
-    <string name="wallpaper_limited_edition_description">Cruinneachadh ùr nan guthan neo-eisimeileach.</string>
     <!-- Wallpaper onboarding dialog header text. -->
     <string name="wallpapers_onboarding_dialog_title_text">Feuch steall dhathan air</string>
     <!-- Wallpaper onboarding dialog body text. -->
     <string name="wallpapers_onboarding_dialog_body_text">Tagh pàipear-balla a tha a’ còrdadh riut-sa.</string>
     <!-- Wallpaper onboarding dialog learn more button text. The button navigates to the wallpaper settings screen. -->
     <string name="wallpapers_onboarding_dialog_explore_more_button_text">Rùraich pàipearan-balla eile</string>
-
-    <!-- Add-on Installation from AMO-->
-    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
-    <string name="addon_not_supported_error">Chan eil taic ris an tuilleadan seo</string>
-    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
-    <string name="addon_already_installed">Chaidh an tuilleadan seo a stàladh mu thràth</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -922,9 +829,9 @@
     <string name="collection_open_tabs">Fosgail na tabaichean</string>
     <!-- Hint for adding name of a collection -->
     <string name="collection_name_hint">Ainm a’ chruinneachaidh</string>
-	<!-- Text for the menu button to rename a top site -->
+    <!-- Text for the menu button to rename a top site -->
 	<string name="rename_top_site">Thoir ainm ùr air</string>
-	<!-- Text for the menu button to remove a top site -->
+    <!-- Text for the menu button to remove a top site -->
 	<string name="remove_top_site">Thoir air falbh</string>
 
     <!-- Text for the menu button to delete a top site from history -->
@@ -1236,6 +1143,7 @@
     <!-- Notifications -->
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">Dùin na tabaichean prìobhaideach</string>
+
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">Margaideachd</string>
 
@@ -1331,13 +1239,9 @@
     <string name="preferences_delete_browsing_data_tabs_title_2">Tabaichean fosgailte</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">Tabaichean (%d)</string>
-    <!-- Title for the data and history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_data_title">An eachdraidh brabhsaidh agus dàta nan làrach</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">Seòlaidhean (%d)</string>
-    <!-- Title for the cookies item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cookies">Briosgaidean</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies_subtitle">Thèid do chlàradh a-mach às a’ mhòrchuid de làraichean</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
@@ -1391,63 +1295,8 @@
     <!-- Text for the snackbar confirmation that the history group was deleted -->
     <string name="delete_history_group_snackbar">Chaidh am buidheann a sguabadh às</string>
 
-    <!-- Onboarding -->
-    <!-- Text for onboarding welcome header. -->
-    <string name="onboarding_header_2">Fàilte gu eadar-lìon ùr</string>
-    <!-- Text for the onboarding welcome message. -->
-    <string name="onboarding_message">Brabhsair a chaidh a dhealbhadh do dhaoine ’s chan ann airson prothaid.</string>
-    <!-- Text for the Firefox account onboarding sign in card header. -->
-    <string name="onboarding_account_sign_in_header">Lean ort far an do stad thu roimhe</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account. -->
-    <string name="onboarding_manual_sign_in_description">Sioncronaich tabaichean is faclan-faire air feadh uidheaman airson leumadh eadar sgrìnichean gun chnap-starra.</string>
-    <!-- Text for the button to manually sign into Firefox account. -->
-    <string name="onboarding_firefox_account_sign_in">Clàraich a-steach</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Tha an sioncronachadh air</string>
-    <!-- Text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header">Brabhsair a dhìonas do phrìobhaideachd a ghnàth</string>
-    <!-- Text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string name="onboarding_tracking_protection_description_old">Cuiridh %1$s casg gu fèin-obrachail air companaidhean o leantainn ort gu dìomhair air feadh an lìn.</string>
-    <!-- Text for the tracking protection card description. -->
-    <string name="onboarding_tracking_protection_description">Le làn-dìon o bhriosgaidean a chuireas stad air tracaichean a chleachdas briosgaidean gus do leantainn air feadh an lìn gu dìomhair.</string>
-    <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button_2">Stannardach (bun-roghainn)</string>
-    <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_3">Cothromaichte do phrìobhaideachd is dèanadas. Thèid duilleagan a luchdadh gu h-àbhaisteach.</string>
-
-    <!-- text for tracking protection radio button option for strict level of blocking -->
-    <string name="onboarding_tracking_protection_strict_option">Teann</string>
-    <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_3">Bacaidh seo barrachd dhe na tracaichean ach an dèid duilleagan a luchdadh nas luaithe ach dh’fhaoidte gum bris cuid a ghleusan air duilleagan.</string>
-    <!-- text for the toolbar position card header  -->
-    <string name="onboarding_toolbar_placement_header_1">Tagh na thèid a chur an àite a’ bhàr-inneal</string>
-    <!-- Text for the toolbar position card description -->
-    <string name="onboarding_toolbar_placement_description">Cùm aig a’ bhonn e no gluais gun bhàrr e.</string>
-    <!-- Text for the privacy notice onboarding card header -->
-    <string name="onboarding_privacy_notice_header_1">Cùm smachd air an dàta agad</string>
-    <!-- Text for the privacy notice onboarding card description. -->
-    <string name="onboarding_privacy_notice_description">Bheir Firefox smachd dhut air na cho-roinneas tu air loidhne agus na cho-roinneas tu leinn.</string>
-    <!-- Text for the button to read the privacy notice -->
-    <string name="onboarding_privacy_notice_read_button">Leugh sanas na prìobhaideachd againn</string>
-
-    <!-- Text for the conclusion onboarding message -->
-    <string name="onboarding_conclusion_header">A bheil thu deiseil airson eadar-lìon mìorbhaileach?</string>
-    <!-- text for the button to finish onboarding -->
-    <string name="onboarding_finish">Tòisich air brabhsadh</string>
-
-    <!-- Onboarding theme -->
-    <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header">Tagh ùrlar dhut</string>
-    <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description_2">Caomhain am bataraidh is do shùilean leis a’ mhodh dorcha.</string>
-    <!-- Automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_title">Gu fèin-obrachail</string>
-    <!-- Summary of automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_summary">Leanaidh e roghainnean an uidheim agad</string>
-    <!-- Theme setting for dark mode -->
-    <string name="onboarding_theme_dark_title">An t-ùrlar dorcha</string>
-    <!-- Theme setting for light mode -->
-    <string name="onboarding_theme_light_title">An t-ùrlar soilleir</string>
 
     <!-- Text shown in snackbar when multiple tabs have been sent to device -->
     <string name="sync_sent_tabs_snackbar">Chaidh na tabaichean a chur!</string>
@@ -1484,12 +1333,8 @@
     <string name="etp_settings">Roghainnean an dìon</string>
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">Dìon adhartach o thracadh</string>
-    <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title" moz:removedIn="114" tools:ignore="UnusedResources">Dèan brabhsadh gun daoine a’ cumail sùil ort</string>
     <!-- Preference summary for enhanced tracking protection settings on/off switch -->
     <string name="preference_enhanced_tracking_protection_summary">Le làn-dìon o bhriosgaidean a-nis, am balla-bacaidh as treasa againn fhathast an aghaidh gleusan a thracaicheas tu air feadh làraichean.</string>
-    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation" moz:removedIn="114" tools:ignore="UnusedResources">Cùm an dàta agad agad fhèin. Dìonaidh %s thu o mhòran dhe na tracaichean as cumanta a leanas mun cuairt thu air an lìon.</string>
     <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
     <string name="preference_enhanced_tracking_protection_explanation_2">Dìonaidh %s thu o mhòran dhe na tracaichean as cumanta a leanas mun cuairt thu air an lìon.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
@@ -1497,15 +1342,11 @@
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Stannardach (bun-roghainn)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_4" moz:removedIn="114" tools:ignore="UnusedResources">Cothromaichte do phrìobhaideachd is dèanadas. Thèid duilleagan a luchdadh gu h-àbhaisteach.</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description_5">Thèid duilleagan a luchdadh mar bu chòir ach bacaidh e nas lugha de thracaichean.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Na thèid a bhacadh leis an dìon stannardach on tracadh</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Teann</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_3" moz:removedIn="114" tools:ignore="UnusedResources">Bacaidh seo barrachd dhe na tracaichean ach an dèid duilleagan a luchdadh nas luaithe ach dh’fhaoidte gum bris cuid a ghleusan air duilleagan.</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description_4">Dìon o thracadh agus dèanadas nas fheàrr ach bidh làraichean ann nach obraich buileach mar bu chòir.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
@@ -1865,27 +1706,17 @@
     <string name="search_engine_add_custom_search_engine_button_content_description" tools:ignore="UnusedResources">Cuir einnsean-luirg ùr ris</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">Deasaich an t-einnsean-luirg</string>
-    <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
-    <string name="search_engine_add_button_content_description">Cuir ris</string>
-    <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
-    <string name="search_engine_add_custom_search_engine_edit_button_content_description">Sàbhail</string>
     <!-- Text for the menu button to edit a search engine -->
     <string name="search_engine_edit">Deasaich</string>
     <!-- Text for the menu button to delete a search engine -->
     <string name="search_engine_delete">Sguab às</string>
 
-    <!-- Text for the button to create a custom search engine on the Add search engine screen -->
-    <string name="search_add_custom_engine_label_other">Eile</string>
     <!-- Label for the TextField in which user enters custom search engine name -->
     <string name="search_add_custom_engine_name_label" tools:ignore="UnusedResources">Ainm</string>
-    <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
-    <string name="search_add_custom_engine_name_hint">Ainm</string>
     <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
     <string name="search_add_custom_engine_name_hint_2" tools:ignore="UnusedResources">Ainm an einnsein-luirg</string>
     <!-- Label for the TextField in which user enters custom search engine URL -->
     <string name="search_add_custom_engine_url_label" tools:ignore="UnusedResources">URL sreang an luirg</string>
-    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint">An t-sreang luirg a thèid a chleachdadh</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint_2" tools:ignore="UnusedResources">An URL a thèid a chleachdadh airson lorg</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
@@ -2022,13 +1853,13 @@
 
     <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
     <string name="top_sites_toggle_top_recent_sites_4">Ath-ghoiridean</string>
-	<!-- Title text displayed in the rename top site dialog. -->
+    <!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Ainm</string>
     <!-- Hint for renaming title of a shortcut -->
     <string name="shortcut_name_hint">Ainm na h-ath-ghoirid</string>
-	<!-- Button caption to confirm the renaming of the top site. -->
+    <!-- Button caption to confirm the renaming of the top site. -->
 	<string name="top_sites_rename_dialog_ok">Ceart ma-thà</string>
-	<!-- Dialog button text for canceling the rename top site prompt. -->
+    <!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Sguir dheth</string>
 
     <!-- Text for the menu button to open the homepage settings. -->
@@ -2117,4 +1948,8 @@
     <string name="a11y_action_label_read_article">leugh an t-artaigeal</string>
     <!-- Action label for links to the Firefox Pocket website. Talkback will append this to say "Double tap to open link to learn more". -->
     <string name="a11y_action_label_pocket_learn_more">fosgail an ceangal airson barrachd fiosrachaidh</string>
-</resources>
+
+    <!-- Translations feature-->
+
+
+    </resources>

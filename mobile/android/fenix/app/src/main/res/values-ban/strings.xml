@@ -11,15 +11,13 @@
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Ten, suksma</string>
 
+
     <!-- Text for the positive action button to go to Settings for auto close tabs. -->
     <string name="tab_tray_close_tabs_banner_positive_button_text">Cingak opsi</string>
 
 
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">Cingak makejang</string>
-    <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
-        %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
-    <string name="recent_tabs_search_term_count_2">%d situs</string>
 
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
@@ -44,14 +42,10 @@
     <string name="preferences_search">Rereh</string>
 
 
-    <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
-    <string name="search_engine_add_custom_search_engine_edit_button_content_description">Raksa</string>
     <!-- Text for the menu button to edit a search engine -->
     <string name="search_engine_edit">Uah</string>
 
-    <!-- Text for the button to create a custom search engine on the Add search engine screen -->
-    <string name="search_add_custom_engine_label_other">Liyanan</string>
-    <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
-    <string name="search_add_custom_engine_name_hint">Aran</string>
+    <!-- Translations feature-->
+
 
     </resources>

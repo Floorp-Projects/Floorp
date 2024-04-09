@@ -42,4 +42,5 @@
     <string name="mozac_feature_downloads_third_party_app_chooser_dialog_title">આની મદદથી ક્રિયા પૂર્ણ કરો</string>
     <!-- Message that appears when trying to download with an external app fails. %1$s will be replaced with the name the external app. -->--&gt;
     <string name="mozac_feature_downloads_unable_to_open_third_party_app">%1$s ખોલવામાં અસમર્થ</string>
-</resources>
+
+    </resources>

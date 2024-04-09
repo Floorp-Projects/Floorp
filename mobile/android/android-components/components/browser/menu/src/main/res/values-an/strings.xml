@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
     <!-- Content description (not visible, for screen readers etc.): Description for the overflow menu button in the browser toolbar. -->
     <string name="mozac_browser_menu_button">Menú</string>
     <!-- Content description (not visible, for screen readers etc.): Indicates the overflow menu has a highlight -->
@@ -8,4 +8,4 @@
     <string name="mozac_browser_menu_addons">Complementos</string>
     <!-- Label for add-ons sub menu item for add-ons manager -->
     <string name="mozac_browser_menu_addons_manager">Chestor de complementos</string>
-</resources>
+    </resources>

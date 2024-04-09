@@ -46,8 +46,6 @@
     <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
     <string name="menu_add_to_home_screen">Adaugă la ecranul principal</string>
 
-    <!-- Menu item: Shows information about features and changes that are new to this version -->
-    <string name="menu_whats_new">Ce este nou</string>
     <string name="menu_settings">Setări</string>
     <string name="menu_about">Despre</string>
     <string name="menu_help">Ajutor</string>
@@ -111,10 +109,6 @@
          %1$s will be replaced by the app name (e.g. Firefox Focus) -->
     <string name="shortcut_erase_and_open_long_label">Șterge și deschide %1$s</string>
 
-
-    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
-         Clicking this action will launch Focus and perform a search in the default search engine. -->
-    <string name="text_selection_search_action">Caută într-un mod privat</string>
 
     <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
          Argument 2 is the url for the learn-more link. -->
@@ -660,7 +654,7 @@
 
     <!-- Tracking protection bottom sheet -->
 
-    <!-- Promote SearchWidget Dialog -->
+     <!-- Promote SearchWidget Dialog -->
 
     !-- Content description (not visible, for screen readers etc.): This is the description for
     picture of search widget from promote search widget dialog. --&gt;

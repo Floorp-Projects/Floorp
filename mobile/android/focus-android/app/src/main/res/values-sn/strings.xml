@@ -1,152 +1,251 @@
-<?xml version='1.0' encoding='utf-8'?>
-<resources>
-  <string name="action_cancel">Kanzura</string>
-  <string name="action_ok">Zvakanaka</string>
-  <string name="action_save">Sevha</string>
-  <string name="urlbar_hint">Tsvaga kana kunyora kero</string>
-  <string name="teaser">Tsvaga zvakawanzika.\nTsvaga. Dzima. Dzokorora.</string>
-  <string name="feedback_erase">Zvawaiita paindaneti zvadzimwa.</string>
-  <string name="feedback_erase_custom_tab">Zvawaiita paindaneti zvadzimwa.</string>
-  <string name="search_hint">Tsvaga %1$s</string>
-  <string name="menu_share">Paradzira…</string>
-  <string name="menu_report_site_issue">Mhan\'ara Mhosho Pano</string>
-  <string name="menu_open_with_default_browser2">Vhurira mu %1$s</string>
-  <string name="menu_open_with_a_browser2">Vhurira mu…</string>
-  <string name="menu_add_to_home_screen">Isa pa peji Repekutanga</string>
-  <string name="menu_whats_new">Ndezvipi zvitsva</string>
-  <string name="menu_settings">Gadziriso</string>
-  <string name="menu_about">Nezvedu</string>
-  <string name="menu_help">Rubatsiro</string>
-  <string name="menu_rights">Kodzero dzako</string>
-  <string name="menu_trackers_blocked_title">Zvinotevera zvavharwa</string>
-  <string name="menu_trackers_blocked_subtitle">Kuita izvi zvingagadzirisa zvimwe zvinetso zvepasaiti</string>
-  <string name="menu_content_blocking">Kubhuloka kondendi</string>
-  <string name="menu_content_blocking_subtitle">Bvisa kugadzirisa dzimwe nzvimbo</string>
-  <string name="menu_custom_tab_branding">Zvasimbiswa na%1$s</string>
-  <string name="share_dialog_title">Govera uchishandisa</string>
-  <string name="notification_erase_text">Dzima nhoroondo yezvakatsvakwa</string>
-  <string name="notification_action_open">Vhura</string>
-  <string name="notification_action_erase_and_open">Dzima neku Vhura</string>
-  <string name="shortcut_erase_short_label">Dzima</string>
-  <string name="shortcut_erase_long_label">Dzima zvawaita paindaneti</string>
-  <string name="shortcut_erase_and_open_short_label">Dzima wovhura</string>
-  <string name="shortcut_erase_and_open_long_label">Dzima wovhura %1$s</string>
-  <string name="text_selection_search_action">Tsvaga pachivande</string>
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:moz="http://mozac.org/tools" xmlns:tools="http://schemas.android.com/tools">
+    <!-- ####################################################################################### -->
+    <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
+    <!-- ## into a separate file like strings_references.xml                                  ## -->
+    <!-- ####################################################################################### -->
 
-  <string name="preference_privacy_and_security_header">Kuchengeteka ne Puraivhesi</string>
-  <string name="preference_privacy_and_security_summary">Kuchengeta, makuki, kusarudzwa kwe data</string>
-  <string name="preference_search_summary">Ita zvisizvo, zvakakwana</string>
-  <string name="preference_mozilla_summary">Nezvedu %1$s, rubatsiro</string>
-  <string name="preference_category_tracking_protection">Kuchengetedzwa pakuteverwa</string>
-  <string name="preference_category_web_content">Zviri paindaneti</string>
-  <string name="preference_category_switching_apps">Kuchinja maapurikesheni</string>
-  <string name="preference_category_general">Zvechigarire</string>
-  <string name="preference_general_summary">Bhurauza rechigarire, matebhu, mutauro</string>
-  <string name="preference_category_data_collection_use">Kutorwa kweData nekushandiswa kwaro</string>
-  <string name="preference_category_search">Tsvaga</string>
-  <string name="preference_show_search_suggestions">Tsvaga mazano ekutsvaga</string>
-  <string name="preference_show_search_suggestions_summary">%1$s ichatumira zvaunonyora mu adhiresi bha yako ye injini yekutsvaga</string>
-  <string name="preference_search_engine_default">Zvagara zviripo</string>
-  <string name="preference_search_engine_label">Injini yekutsvaga</string>
-  <string name="preference_state_on">Batira</string>
-  <string name="preference_state_off">Dzimwa</string>
-  <string name="preference_subitem_autocomplete">URL Yapedziswa</string>
-  <string name="preference_switch_autocomplete_topsites">Masaiti anoendwa zvakanyanya</string>
-  <string name="preference_autocomplete_topsite_summary">Batidza kuti otokombuliti iitike pamanzwi anosvika 450 akakurumbira URLs mu adhiresi bha.</string>
-  <string name="preference_switch_autocomplete_user_list">Pema Saitsi awa isa woga</string>
-  <string name="preference_autocomplete_user_list_summary">Batidza kuti otokombuliti iitike pamanzwi anosvika 450 akakurumbira URLs mu adhiresi bha.</string>
-  <string name="preference_category_autocomplete_manage_sites">Ronga masaitsi</string>
-  <string name="preference_autocomplete_subitem_manage_sites">Ronga masaitsi</string>
-  <string name="preference_autocomplete_action_add">+ Wedzera yaunodao URL</string>
-  <string name="preference_autocomplete_title_add">Wedzera yaunodao URL</string>
-  <string name="custom_autocomplete_quick_add">Wedzera yaunodao URL</string>
-  <string name="add_custom_autocomplete_label">Isa ringi ku atokombuliti</string>
-  <string name="preference_category_cookies">Makuki uye Site Data</string>
-  <string name="preference_category_data_choices">Zvaungada kuti zvibude</string>
-  <string name="preference_autocomplete_title_remove">Bvisa aunoda aya URLs</string>
-  <string name="preference_autocomplete_learn_more">Dzidza zvimwe</string>
-  <string name="preference_autocomplete_custom_summary">Wedzera uye gadzirisa aunoda anozvipedzisa URLs.</string>
-  <string name="preference_autocomplete_add_title">URL yaurikuda kuisa</string>
-  <string name="preference_autocomplete_add_hint">Isa kana kunonyora kero</string>
-  <string name="preference_autocomplete_add_example2">Muenzaniso: mozilla.org</string>
-  <string name="preference_autocomplete_add_example">Muenzaniso: muenzaniso.com</string>
-  <string name="preference_autocomplete_add_confirmation">Itsva URL yakawedzerwa.</string>
-  <string name="preference_autocomplete_menu_remove">Bvisa</string>
-  <string name="preference_autocomplete_action_remove_content_description">Bvisa</string>
-  <string name="preference_autocomplete_add_error">Tarisa kaviri URL yawaisa.</string>
-  <string name="preference_language">Mutauro</string>
-  <string name="preference_language_systemdefault">Magariro azvo musisitimu</string>
-  <string name="preference_category_privacy">Vanza</string>
-  <string name="preference_privacy_block_ads">Vharira tunotsvaka kwauri twemaadhivhetsi</string>
-  <string name="preference_privacy_block_ads_summary">Zvimwe zvinoshambadzirwa zvinotengeswa nzvimbo yekushanyira nzvimbo, kunyange kana iwe usingadi kubaya adhivheti racho</string>
-  <string name="preference_privacy_block_analytics">Vharira tunotsvaka kwauri twemaadhivhetsi</string>
-  <string name="preference_privacy_block_analytics_summary">Inoshandiswa kuunganidza, kuongorora uye kuenzanisa zvinhu zvakadai sokubaya uye kudzika</string>
-  <string name="preference_privacy_block_social">Vharira tunotsvaka twehupenyu</string>
-  <string name="preference_privacy_block_social_summary">Yakabudiswa panzvimbo dzekutsvaga kutarisa kushanyira kwako uye kuratidza kushanda sezvikwata zvekugovera</string>
-  <string name="preference_privacy_block_content">Vharira vamwe vateereri vezvinhu</string>
-  <string name="preference_privacy_block_content_summary2">Ukabatidza mamwe mapeji anogona kushanda neutowo usiri iwo</string>
-  <string name="preference_privacy_category_cookies">Vhara makuki</string>
-  <string name="preference_privacy_should_block_cookies_no_option">Kwete</string>
-  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Vharira 3-party tracker cookies chete</string>
-  <string name="preference_privacy_should_block_cookies_third_party_only_option">Vharira 3-party tracker cookies chete</string>
-  <string name="preference_privacy_should_block_cookies_yes_option">Hongu</string>
-  <string name="preference_security_biometric">Shandisa munwe kuvhura app</string>
-  <string name="preference_security_biometric_summary">Mifananidzo yako yeminwe inogona kuzarura %1$s kana URL isati yavhurwa mu-app. Simba richashandurwa.</string>
-  <string name="preference_privacy_secure_mode">Hauchaoneke</string>
-  <string name="preference_privacy_stealth_summary">Viga mapepa epakombiyuta paunoshandura mapurogiramu uye udzivise kutora masikirini shoti.</string>
-  <string name="preference_category_security">Chengetedzo</string>
-  <string name="preference_category_performance">Maitiro</string>
-  <string name="preference_performance_block_webfonts">Vhara runyoro rwepaDande</string>
-  <string name="preference_performance_block_webfonts_summary">Izvozvo zvinogona kukonzera kushaikwa kwemaayikoni kana mifananidzo</string>
-  <string name="preference_performance_block_javascript">Vhara JavaScript</string>
-  <string name="preference_performance_block_javascript_summary">Mapeji anogona kuvhura nokukurumidza, asi anogonawo kutanga kuita zvisingatarisirwe</string>
-  <string name="preference_default_browser2">Ita %1$s bhurauza rechigarire</string>
-  <string name="preference_category_mozilla">Mozilla</string>
-  <string name="preference_mozilla_telemetry2">Tumira data maererano nemashandisirwo</string>
-  <string name="preference_mozilla_telemetry_summary">Dzidza zvimwe</string>
-  <string name="preference_mozilla_telemetry_summary2">Mozilla inoedza kuunganidza chete zvatinoda kupa nekuvandudza %1$s kune munhu wose.</string>
-  <string name="preference_privacy_notice">Chiziviso pamusoro pekuvanza</string>
-  <string name="preference_about">Nezvedu %1$s</string>
-  <string name="preference_search_installed_search_engines">Mainjini ekutsvaga akaiswa</string>
-  <string name="preference_search_restore">Dzorera mainjini okutsvaga echigaririre</string>
-  <string name="preference_search_add2">+ Wedzera imwe injini yekutsvaga</string>
-  <string name="preference_search_remove_title">Bvisa mainjini ekutsvaga</string>
-  <string name="preference_search_remove">Bvisa</string>
-  <string name="preference_homescreen_tips">Ratidza mazano ezvikwangwani</string>
-  <string name="action_option_add_search_engine">Wedzera injini yekutsvaga</string>
-  <string name="search_add_manually_name_hint">Zita reinjini yekutsvaga</string>
-  <string name="search_add_manually_string">Manzwi ekushandisa pakutsvaga</string>
-  <string name="search_add_manually_save">Sevha</string>
-  <string name="search_add_manually_example">Muenzaniso: muenzaniso.com/search/?q=%s</string>
-  <string name="search_add_confirmation">Injini yekutsvaga itsva yaiswa.</string>
-  <string name="search_add_error_empty_name">Nyora zita reinjini yekutsvaga</string>
-  <string name="search_add_error_duplicate_name">Imwe injini yekutsvaga yakaiswa irikutoshandisa zita iroro.</string>
-  <string name="search_add_error_empty_search">Nyora mazwi ekutsvagisa</string>
-  <string name="search_add_error_format">Cherechedza kuti tsananguro yekutsvaga yakafanana nemuenzaniso here</string>
-  <string name="content_description_clear_input">Dzima zvaiswa</string>
-  <string name="content_description_dismiss_input">Siyana nazvo</string>
-  <string name="content_description_erase">Bvisa zvawambotsvaga padande</string>
-  <string name="content_description_tab_counter">Matebhu akavhurika: %1$s</string>
-  <string name="content_description_lock">Pinda zvakachengetedzwa</string>
-  <string name="accessibility_announcement_loading">Zvavakuda kuita</string>
-  <string name="accessibility_announcement_loading_finished">Webhusaiti yavhurwa</string>
-  <string name="content_description_menu">Dzimwe sarudzo</string>
-  <string name="indicator_content_description_menu">Button rinoratidza zvimwe zvingaratidzwa</string>
-  <string name="content_description_forward">Enda kumberi</string>
-  <string name="content_description_reload">Vhura webhusaiti zvakare</string>
-  <string name="content_description_back">Dzoka kumashure</string>
-  <string name="content_description_stop">Mira kuvhura webhusaiti</string>
-  <string name="content_description_customtab_exit">Dzoka ku app yekupedzisira</string>
-  <string name="content_description_trackers_blocked">Nhamba yezvinotevera zvakavharwa</string>
-  <string name="content_description_blocking_switch">Vharira tunotsvaka kwauri</string>
-  <string name="your_rights">Kodzero dzako</string>
-  <string name="external_app_prompt_title">Vhura link mune imwe app</string>
-  <string name="external_app_prompt">Unogona kusiya %1$s kuti ugovhura zvinoenda kuna %2$s.</string>
-  <string name="external_app_prompt_no_app_title">Tsvaga app inokwanisa kuvhura link</string>
-  <string name="external_app_prompt_no_app">Tashaiwa app mufoni yako inokwanisa kuvhura link. Unokwanisa kusiya %1$s kuti ugotsaga %2$s kune app inozvikwanisa.</string>
-  <string name="external_multiple_apps_matched_exit">Wafunga kusiya kutsvaga pachivande?</string>
-  <string name="download_snackbar_finished">%1$s zvapera</string>
-  <string name="download_snackbar_open">Vhura</string>
+    <string name="action_cancel">Kanzura</string>
+    <string name="action_ok">Zvakanaka</string>
+
+    <string name="action_save">Sevha</string>
+
+    <string name="urlbar_hint">Tsvaga kana kunyora kero</string>
+
+    <string name="teaser">Tsvaga zvakawanzika.\nTsvaga. Dzima. Dzokorora.</string>
+
+    <string name="feedback_erase">Zvawaiita paindaneti zvadzimwa.</string>
+
+    <string name="feedback_erase_custom_tab">Zvawaiita paindaneti zvadzimwa.</string>
+
+    <string name="search_hint">Tsvaga %1$s</string>
+
+    <string name="menu_share">Paradzira…</string>
+
+    <string name="menu_report_site_issue">Mhan\'ara Mhosho Pano</string>
+
+    <string name="menu_open_with_default_browser2">Vhurira mu %1$s</string>
+
+    <string name="menu_open_with_a_browser2">Vhurira mu…</string>
+
+    <string name="menu_add_to_home_screen">Isa pa peji Repekutanga</string>
+
+    <string name="menu_settings">Gadziriso</string>
+    <string name="menu_about">Nezvedu</string>
+    <string name="menu_help">Rubatsiro</string>
+    <string name="menu_rights">Kodzero dzako</string>
+
+    <string name="menu_trackers_blocked_title">Zvinotevera zvavharwa</string>
+
+    <string name="menu_trackers_blocked_subtitle">Kuita izvi zvingagadzirisa zvimwe zvinetso zvepasaiti</string>
+
+    <string name="menu_content_blocking">Kubhuloka kondendi</string>
+    <string name="menu_content_blocking_subtitle">Bvisa kugadzirisa dzimwe nzvimbo</string>
+
+    <string name="menu_custom_tab_branding">Zvasimbiswa na%1$s</string>
+
+    <string name="share_dialog_title">Govera uchishandisa</string>
+
+    <string name="notification_erase_text">Dzima nhoroondo yezvakatsvakwa</string>
+
+    <string name="notification_action_open">Vhura</string>
+
+    <string name="notification_action_erase_and_open">Dzima neku Vhura</string>
+
+    <string name="shortcut_erase_short_label">Dzima</string>
+
+    <string name="shortcut_erase_long_label">Dzima zvawaita paindaneti</string>
+
+
+    <string name="shortcut_erase_and_open_short_label">Dzima wovhura</string>
+
+    <string name="shortcut_erase_and_open_long_label">Dzima wovhura %1$s</string>
+
+    <string name="preference_privacy_and_security_header">Kuchengeteka ne Puraivhesi</string>
+
+    <string name="preference_privacy_and_security_summary">Kuchengeta, makuki, kusarudzwa kwe data</string>
+
+    <string name="preference_search_summary">Ita zvisizvo, zvakakwana</string>
+
+    <string name="preference_mozilla_summary">Nezvedu %1$s, rubatsiro</string>
+
+    <string name="preference_category_web_content">Zviri paindaneti</string>
+
+    <string name="preference_category_switching_apps">Kuchinja maapurikesheni</string>
+
+    <string name="preference_category_general">Zvechigarire</string>
+
+    <string name="preference_category_data_collection_use">Kutorwa kweData nekushandiswa kwaro</string>
+
+    <string name="preference_category_search">Tsvaga</string>
+
+    <string name="preference_show_search_suggestions">Tsvaga mazano ekutsvaga</string>
+    <string name="preference_show_search_suggestions_summary">%1$s ichatumira zvaunonyora mu adhiresi bha yako ye injini yekutsvaga</string>
+
+    <string name="preference_search_engine_default">Zvagara zviripo</string>
+
+    <string name="preference_search_engine_label">Injini yekutsvaga</string>
+
+    <string name="preference_state_on">Batira</string>
+
+    <string name="preference_state_off">Dzimwa</string>
+
+    <string name="preference_subitem_autocomplete">URL Yapedziswa</string>
+
+    <string name="preference_switch_autocomplete_topsites">Masaiti anoendwa zvakanyanya</string>
+
+    <string name="preference_switch_autocomplete_user_list">Pema Saitsi awa isa woga</string>
+
+    <string name="preference_category_autocomplete_manage_sites">Ronga masaitsi</string>
+
+    <string name="preference_autocomplete_subitem_manage_sites">Ronga masaitsi</string>
+
+    <string name="preference_autocomplete_action_add">+ Wedzera yaunodao URL</string>
+
+    <string name="preference_autocomplete_title_add">Wedzera yaunodao URL</string>
+
+    <string name="custom_autocomplete_quick_add">Wedzera yaunodao URL</string>
+
+    <string name="add_custom_autocomplete_label">Isa ringi ku atokombuliti</string>
+
+    <string name="preference_category_cookies">Makuki uye Site Data</string>
+
+    <string name="preference_category_data_choices">Zvaungada kuti zvibude</string>
+
+    <string name="preference_autocomplete_title_remove">Bvisa aunoda aya URLs</string>
+
+    <string name="preference_autocomplete_learn_more">Dzidza zvimwe</string>
+
+    <string name="preference_autocomplete_custom_summary">Wedzera uye gadzirisa aunoda anozvipedzisa URLs.</string>
+
+    <string name="preference_autocomplete_add_title">URL yaurikuda kuisa</string>
+
+    <string name="preference_autocomplete_add_hint">Isa kana kunonyora kero</string>
+
+    <string name="preference_autocomplete_add_example2">Muenzaniso: mozilla.org</string>
+
+    <string name="preference_autocomplete_add_example">Muenzaniso: muenzaniso.com</string>
+
+    <string name="preference_autocomplete_add_confirmation">Itsva URL yakawedzerwa.</string>
+
+    <string name="preference_autocomplete_menu_remove">Bvisa</string>
+
+    <string name="preference_autocomplete_action_remove_content_description">Bvisa</string>
+
+    <string name="preference_autocomplete_add_error">Tarisa kaviri URL yawaisa.</string>
+
+    <string name="preference_language">Mutauro</string>
+    <string name="preference_language_systemdefault">Magariro azvo musisitimu</string>
+
+    <string name="preference_category_privacy">Vanza</string>
+    <string name="preference_privacy_block_ads">Vharira tunotsvaka kwauri twemaadhivhetsi</string>
+    <string name="preference_privacy_block_ads_summary">Zvimwe zvinoshambadzirwa zvinotengeswa nzvimbo yekushanyira nzvimbo, kunyange kana iwe usingadi kubaya adhivheti racho</string>
+    <string name="preference_privacy_block_analytics">Vharira tunotsvaka kwauri twemaadhivhetsi</string>
+    <string name="preference_privacy_block_analytics_summary">Inoshandiswa kuunganidza, kuongorora uye kuenzanisa zvinhu zvakadai sokubaya uye kudzika</string>
+    <string name="preference_privacy_block_social">Vharira tunotsvaka twehupenyu</string>
+    <string name="preference_privacy_block_social_summary">Yakabudiswa panzvimbo dzekutsvaga kutarisa kushanyira kwako uye kuratidza kushanda sezvikwata zvekugovera</string>
+    <string name="preference_privacy_block_content">Vharira vamwe vateereri vezvinhu</string>
+    <string name="preference_privacy_block_content_summary2">Ukabatidza mamwe mapeji anogona kushanda neutowo usiri iwo</string>
+    <string name="preference_privacy_category_cookies">Vhara makuki</string>
+
+    <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Vharira 3-party tracker cookies chete</string>
+    <string name="preference_privacy_should_block_cookies_third_party_only_option">Vharira 3-party tracker cookies chete</string>
+
+    <string name="preference_security_biometric">Shandisa munwe kuvhura app</string>
+
+    <string name="preference_privacy_secure_mode">Hauchaoneke</string>
+    <string name="preference_privacy_stealth_summary">Viga mapepa epakombiyuta paunoshandura mapurogiramu uye udzivise kutora masikirini shoti.</string>
+
+    <string name="preference_category_security">Chengetedzo</string>
+
+    <string name="preference_category_performance">Maitiro</string>
+    <string name="preference_performance_block_webfonts">Vhara runyoro rwepaDande</string>
+    <string name="preference_performance_block_webfonts_summary">Izvozvo zvinogona kukonzera kushaikwa kwemaayikoni kana mifananidzo</string>
+
+    <string name="preference_performance_block_javascript">Vhara JavaScript</string>
+    <string name="preference_performance_block_javascript_summary">Mapeji anogona kuvhura nokukurumidza, asi anogonawo kutanga kuita zvisingatarisirwe</string>
+
+    <string name="preference_default_browser2">Ita %1$s bhurauza rechigarire</string>
+
+    <string name="preference_category_mozilla">Mozilla</string>
+    <string name="preference_mozilla_telemetry2">Tumira data maererano nemashandisirwo</string>
+
+    <string name="preference_mozilla_telemetry_summary">Dzidza zvimwe</string>
+
+    <string name="preference_mozilla_telemetry_summary2">Mozilla inoedza kuunganidza chete zvatinoda kupa nekuvandudza %1$s kune munhu wose.</string>
+
+    <string name="preference_privacy_notice">Chiziviso pamusoro pekuvanza</string>
+
+    <string name="preference_about">Nezvedu %1$s</string>
+
+    <string name="preference_search_installed_search_engines">Mainjini ekutsvaga akaiswa</string>
+
+    <string name="preference_search_restore">Dzorera mainjini okutsvaga echigaririre</string>
+
+    <string name="preference_search_add2">+ Wedzera imwe injini yekutsvaga</string>
+    <string name="preference_search_remove_title">Bvisa mainjini ekutsvaga</string>
+    <string name="preference_search_remove">Bvisa</string>
+
+    <string name="action_option_add_search_engine">Wedzera injini yekutsvaga</string>
+
+    <string name="search_add_manually_name_hint">Zita reinjini yekutsvaga</string>
+    <string name="search_add_manually_string">Manzwi ekushandisa pakutsvaga</string>
+    <string name="search_add_manually_save">Sevha</string>
+
+    <string name="search_add_manually_example">Muenzaniso: muenzaniso.com/search/?q=%s</string>
+
+    <string name="search_add_confirmation">Injini yekutsvaga itsva yaiswa.</string>
+
+    <string name="search_add_error_empty_name">Nyora zita reinjini yekutsvaga</string>
+    <string name="search_add_error_duplicate_name">Imwe injini yekutsvaga yakaiswa irikutoshandisa zita iroro.</string>
+
+    <string name="search_add_error_empty_search">Nyora mazwi ekutsvagisa</string>
+
+    <string name="search_add_error_format">Cherechedza kuti tsananguro yekutsvaga yakafanana nemuenzaniso here</string>
+
+    <string name="content_description_clear_input">Dzima zvaiswa</string>
+
+    <string name="content_description_dismiss_input">Siyana nazvo</string>
+
+    <string name="content_description_erase">Bvisa zvawambotsvaga padande</string>
+
+    <string name="content_description_tab_counter">Matebhu akavhurika: %1$s</string>
+
+    <string name="content_description_lock">Pinda zvakachengetedzwa</string>
+
+    <string name="accessibility_announcement_loading">Zvavakuda kuita</string>
+
+    <string name="accessibility_announcement_loading_finished">Webhusaiti yavhurwa</string>
+
+    <string name="content_description_menu">Dzimwe sarudzo</string>
+
+    <string name="indicator_content_description_menu">Button rinoratidza zvimwe zvingaratidzwa</string>
+
+    <string name="content_description_forward">Enda kumberi</string>
+
+    <string name="content_description_reload">Vhura webhusaiti zvakare</string>
+
+    <string name="content_description_back">Dzoka kumashure</string>
+
+    <string name="content_description_stop">Mira kuvhura webhusaiti</string>
+
+    <string name="content_description_customtab_exit">Dzoka ku app yekupedzisira</string>
+
+    <string name="content_description_trackers_blocked">Nhamba yezvinotevera zvakavharwa</string>
+
+    <string name="content_description_blocking_switch">Vharira tunotsvaka kwauri</string>
+
+    <string name="your_rights">Kodzero dzako</string>
+
+    <string name="external_app_prompt_title">Vhura link mune imwe app</string>
+    <string name="external_app_prompt">Unogona kusiya %1$s kuti ugovhura zvinoenda kuna %2$s.</string>
+    <string name="external_app_prompt_no_app_title">Tsvaga app inokwanisa kuvhura link</string>
+    <string name="external_app_prompt_no_app">Tashaiwa app mufoni yako inokwanisa kuvhura link. Unokwanisa kusiya %1$s kuti ugotsaga %2$s kune app inozvikwanisa.</string>
+    <string name="external_multiple_apps_matched_exit">Wafunga kusiya kutsvaga pachivande?</string>
+
+    <string name="download_snackbar_finished">%1$s zvapera</string>
+
+    <string name="download_snackbar_open">Vhura</string>
 
 
 
@@ -177,90 +276,128 @@
 
 
   <string name="firstrun_defaultbrowser_title">Shandisa simba rako rechivande</string>
-  <string name="firstrun_defaultbrowser_text2">Tora browsing pachedu kune imwe inotevera. Chengetedza zvikwereti nezvimwe zvinhu zvinogona kukutevera pazvikwata uye kuvhara pasi peji kutengesa nguva.</string>
-  <string name="firstrun_search_title">Kutsvaga kwako, inzira yako</string>
-  <string name="firstrun_search_text">Kutsvaka chimwe chinhu chakasiyana? Sarudza imwe shandiso yekutsvaga injini muZvirevo.</string>
-  <string name="firstrun_shortcut_title">Wedzera zvidzitiro pamba peimba yako</string>
-  <string name="firstrun_shortcut_text">Dzokera kunzvimbo dzako dzaunoda mu %1$s nokukurumidza. Ingosarudza \"Wedzera Pamba peji\" kubva ku %1$s menyu.</string>
-  <string name="firstrun_privacy_title">Ita kuchengeteka kwako chive chijairire</string>
-  <string name="firstrun_privacy_text">Ita %1$s sechitsvaga chako chekutsvaga uye uwane mararamiro ehupfumi hwepachivande paunotanga mapepa ewebhu kubva kune mamwe maitiro.</string>
-  <string name="firstrun_close_button">Horait, Ndazvibata!</string>
-  <string name="firstrun_skip_button">Svetuka</string>
-  <string name="firstrun_next_button">Enda mberi</string>
-  <string name="content_blocking_disabled">-</string>
-  <string name="dialog_addtohomescreen_action_add">Wedzera</string>
-  <string name="dialog_addtohomescreen_action_cancel">Kanzura</string>
-  <string name="dialog_addtohomescreen_tracking_protection">Shortcut ichazaruka neTracking Protection yakavharwa</string>
-  <string name="notification_browsing_session_channel_name">Sesheni yekutsvaga pachivande</string>
-  <string name="notification_browsing_session_channel_description">Izaziso dzinokubvumira kuti usasase %1$s svondo yako nepombi. Iwe haufaniri kuzarura purogiramu yacho kana kuona kuti chii chiri kushanda mu browser yako.</string>
-  <string name="tabs_tray_action_erase">Bvisa zvawamboona</string>
-  <string name="download_firefox">Dounirodha Firefox</string>
-  <string name="your_rights_content1">%1$s yakasununguka uye yakasununguka purogiramu software yakagadzirwa naMozilla nevamwe vanobatsira.</string>
+    <string name="firstrun_defaultbrowser_text2">Tora browsing pachedu kune imwe inotevera. Chengetedza zvikwereti nezvimwe zvinhu zvinogona kukutevera pazvikwata uye kuvhara pasi peji kutengesa nguva.</string>
+
+    <string name="firstrun_search_title">Kutsvaga kwako, inzira yako</string>
+    <string name="firstrun_search_text">Kutsvaka chimwe chinhu chakasiyana? Sarudza imwe shandiso yekutsvaga injini muZvirevo.</string>
+
+    <string name="firstrun_shortcut_title">Wedzera zvidzitiro pamba peimba yako</string>
+    <string name="firstrun_shortcut_text">Dzokera kunzvimbo dzako dzaunoda mu %1$s nokukurumidza. Ingosarudza \&quot;Wedzera Pamba peji\&quot; kubva ku %1$s menyu.</string>
+
+    <string name="firstrun_privacy_title">Ita kuchengeteka kwako chive chijairire</string>
+    <string name="firstrun_privacy_text">Ita %1$s sechitsvaga chako chekutsvaga uye uwane mararamiro ehupfumi hwepachivande paunotanga mapepa ewebhu kubva kune mamwe maitiro.</string>
+
+    <string name="firstrun_close_button">Horait, Ndazvibata!</string>
+    <string name="firstrun_skip_button">Svetuka</string>
+    <string name="firstrun_next_button">Enda mberi</string>
+
+    <string name="content_blocking_disabled">-</string>
+
+    <string name="dialog_addtohomescreen_action_add">Wedzera</string>
+
+    <string name="dialog_addtohomescreen_action_cancel">Kanzura</string>
+
+    <string name="notification_browsing_session_channel_name">Sesheni yekutsvaga pachivande</string>
+
+    <string name="notification_browsing_session_channel_description">Izaziso dzinokubvumira kuti usasase %1$s svondo yako nepombi. Iwe haufaniri kuzarura purogiramu yacho kana kuona kuti chii chiri kushanda mu browser yako.</string>
+
+    <string name="tabs_tray_action_erase">Bvisa zvawamboona</string>
+
+    <string name="download_firefox">Dounirodha Firefox</string>
+
+    <string name="your_rights_content1">%1$s yakasununguka uye yakasununguka purogiramu software yakagadzirwa naMozilla nevamwe vanobatsira.</string>
 
 
 
 
   <string name="gv_prompt_username_hint">Zita rekushandisa</string>
-  <string name="gv_prompt_password_hint">Pasiwedhi</string>
-  <string name="gv_prompt_clear">Bvisa</string>
-  <string name="security_popup_secure_connection">Konekisheni yakachengeteka</string>
-  <string name="security_popup_insecure_connection">Konekisheni haina kuchengeteka</string>
-  <string name="security_popup_security_verified">Zvabvumikiswa na: %1$s</string>
-  <string name="site_security_icon_content_description">Saiti Sekiyuriti</string>
-  <string name="preference_autocomplete_duplicate_url_error">URL yagara iriko</string>
-  <string name="find_in_page">Tsvaga mupeji</string>
-  <string name="find_in_page_input">Tsvaga papeji</string>
-  <string name="find_in_page_result">%1$d/%2$d</string>
-  <string name="accessibility_find_in_page_result">%1$d ezvimwe %2$d</string>
-  <string name="accessibility_next_result">Tarisa zvinotevera zvabuda</string>
-  <string name="accessibility_previous_result">Tarisa zvirikumashure zvabuda</string>
-  <string name="accessibility_dismiss_find_in_page">Bvisa peji rakutsvaga</string>
+    <string name="gv_prompt_password_hint">Pasiwedhi</string>
+    <string name="gv_prompt_clear">Bvisa</string>
+
+    <string name="security_popup_secure_connection">Konekisheni yakachengeteka</string>
+    <string name="security_popup_insecure_connection">Konekisheni haina kuchengeteka</string>
+    <string name="security_popup_security_verified">Zvabvumikiswa na: %1$s</string>
+
+    <string name="site_security_icon_content_description">Saiti Sekiyuriti</string>
+    <string name="preference_autocomplete_duplicate_url_error">URL yagara iriko</string>
+
+    <string name="find_in_page">Tsvaga mupeji</string>
+
+    <string name="find_in_page_input">Tsvaga papeji</string>
+
+    <string name="find_in_page_result">%1$d/%2$d</string>
+    <string name="accessibility_find_in_page_result">%1$d ezvimwe %2$d</string>
+
+    <string name="accessibility_next_result">Tarisa zvinotevera zvabuda</string>
+    <string name="accessibility_previous_result">Tarisa zvirikumashure zvabuda</string>
+    <string name="accessibility_dismiss_find_in_page">Bvisa peji rakutsvaga</string>
 
 
 
   <string name="preference_performance_request_desktop_site">Kumbira peji repadhesikitopu</string>
-  <string name="custom_tab_copy_url_action">URL yakopwa</string>
-  <string name="preference_advanced_summary">Maturuzi evanogadzira</string>
-  <string name="preference_category_advanced">Zviriadhivhanzidhi</string>
-  <string name="preference_remote_debugging">Kugadzirisa usiripanzvimbo ne USB/Wi-Fi</string>
-  <string name="biometric_auth_title">Vhura %1$s</string>
-  <string name="biometric_auth_description">Bata panoiswa chigunwe kuti zvivhure.</string>
-  <string name="biometric_auth_new_session">Sesheni Itsva</string>
-  <string name="biometric_auth_image_description">Ayikoni yepikicha yechigunwe</string>
-  <string name="biometric_auth_not_recognized_error">Hatina kuziva chigunwe chako. Edza zvakare.</string>
-  <string name="biometric_auth_moved_too_quickly">Chigunwe chamhanya zvakanyanya. Edza zvakare.</string>
-  <string name="enable_search_suggestion_title">Ungada kubatidza betsero yekutsvaga here?</string>
-  <string name="enable_search_suggestion_subtitle">Kuti uwane betsero yekutsvaga, %1$s inoda kutumira zvawanyora kune chikamu chinonyorwa mashoko ekutsvaga kuinjini yekutsvaga yawasarudza. %2$s.</string>
-  <string name="enable_search_suggestion_subtitle_learnmore">Dzidza zvimwe</string>
-  <string name="enable_search_suggestions_no">Kwete</string>
-  <string name="enable_search_suggestions_yes">Hongu</string>
-  <string name="no_suggestions_message">Mimwe injini dzinotsvaga haigone kuratidza mazano.</string>
-  <string name="dismiss_no_suggestions_prompt_button">Siyana nazvo</string>
-  <string name="tip_disable_tracking_protection">Site yaita zvisingatarisirwi?\n Edza kubvisa Kuchengetedzwa Kwekutevera</string>
-  <string name="tip_add_to_homescreen">Iva one-tap-access kune masayiti ako anoshandisa%1$s Menyu &gt; Wedzera kusikirini rekutanga</string>
-  <string name="tip_set_default_browser">Vhura mazano ose mu %1$s\n Ita %1$s sechekutsvagisa</string>
-  <string name="tip_autocomplete_url">Ma URLs echikwata zvemasayiti aunonyanya kushandisa\n Dhinda kwenguva ipi neipi URL mubhare rekero</string>
-  <string name="tip_open_in_new_tab">Vhura lingi mune imwe tebhu\n Dhinda kwenguva refu chero chibatanidza pane peji</string>
-  <string name="tip_request_desktop">Pane kuti uone yakazara desktop site?%1$s Menyu &gt; Kumbira nzvimbo ye desktop</string>
-  <string name="tip_disable_tips2">Dzima mazano papeji yekutangisa</string>
-  <string name="tip_explain_allowlist">Nzvimbo yakatendwa?\n Chibvumirano chinodzivisa Kuchengetedzwa Kwekuchengetedza kwemasayithi ounoziva uye kuvimba.</string>
-  <string name="new_tab_opened_snackbar">Tebhu idzva yavhurwa</string>
-  <string name="open_new_tab_snackbar">Chinja</string>
-  <string name="preference_open_new_tab">Chinja ringi kune tebhu idzva pakarepo</string>
-  <string name="preference_category_safe_browsing">Kutsvaga Kwakachengeteka</string>
-  <string name="preference_safe_browsing_title">Chengetedza nzvimbo dzingangove dzine ngozi uye dzinonyengedza</string>
-  <string name="preference_safe_browsing_summary">Vharira nzvimbo dzinonyengedza kunze uye dzekurwisa, nzvimbo dzisina kuwanikwa, uye dzisina kuwanikwa software.</string>
-  <string name="preference_exceptions">Zvisarudzo</string>
-  <string name="preference_exceptions_description">Wadzima Content Blocking nekuda kwemawebsite aya.</string>
-  <string name="preference_exceptions_menu_remove">Bvisa</string>
-  <string name="preference_exceptions_remove_all_button_label">Bvisa mawebhusaiti ese</string>
-  <string name="tab_crash_report_title">Tebhu rakirasha</string>
-  <string name="tab_crash_report_headline">Ruregerero. Taita dambudziko ne tebhu iri.</string>
-  <string name="tab_crash_report_description">Sekuchengetedzwa kwepachivande, hatina kumbochengetedza uye hatigoni kudzorera tabu iyi.</string>
-  <string name="tab_crash_report_close_tab_button_label">Vhara Tebhu</string>
+
+    <string name="custom_tab_copy_url_action">URL yakopwa</string>
+
+    <string name="preference_advanced_summary">Maturuzi evanogadzira</string>
+
+    <string name="preference_category_advanced">Zviriadhivhanzidhi</string>
+
+    <string name="preference_remote_debugging">Kugadzirisa usiripanzvimbo ne USB/Wi-Fi</string>
+
+    <string name="biometric_auth_image_description">Ayikoni yepikicha yechigunwe</string>
+
+    <string name="biometric_auth_not_recognized_error">Hatina kuziva chigunwe chako. Edza zvakare.</string>
+
+    <string name="biometric_auth_moved_too_quickly">Chigunwe chamhanya zvakanyanya. Edza zvakare.</string>
+
+    <string name="enable_search_suggestions_no">Kwete</string>
+
+    <string name="enable_search_suggestions_yes">Hongu</string>
+
+    <string name="no_suggestions_message">Mimwe injini dzinotsvaga haigone kuratidza mazano.</string>
+
+    <string name="dismiss_no_suggestions_prompt_button">Siyana nazvo</string>
+
+    <!-- Tips displayed on the home view -->
+
+    <string name="tip_disable_tracking_protection">Site yaita zvisingatarisirwi?\n Edza kubvisa Kuchengetedzwa Kwekutevera</string>
+
+    <string name="tip_add_to_homescreen">Iva one-tap-access kune masayiti ako anoshandisa%1$s Menyu &gt; Wedzera kusikirini rekutanga</string>
+
+    <string name="tip_set_default_browser">Vhura mazano ose mu %1$s\n Ita %1$s sechekutsvagisa</string>
+
+    <string name="tip_autocomplete_url">Ma URLs echikwata zvemasayiti aunonyanya kushandisa\n Dhinda kwenguva ipi neipi URL mubhare rekero</string>
+
+    <string name="tip_open_in_new_tab">Vhura lingi mune imwe tebhu\n Dhinda kwenguva refu chero chibatanidza pane peji</string>
+
+    <string name="tip_disable_tips2">Dzima mazano papeji yekutangisa</string>
+
+    <string name="new_tab_opened_snackbar">Tebhu idzva yavhurwa</string>
+
+    <string name="open_new_tab_snackbar">Chinja</string>
+
+    <string name="preference_open_new_tab">Chinja ringi kune tebhu idzva pakarepo</string>
+
+    <string name="preference_safe_browsing_title">Chengetedza nzvimbo dzingangove dzine ngozi uye dzinonyengedza</string>
+    <string name="preference_safe_browsing_summary">Vharira nzvimbo dzinonyengedza kunze uye dzekurwisa, nzvimbo dzisina kuwanikwa, uye dzisina kuwanikwa software.</string>
+
+    <string name="preference_exceptions">Zvisarudzo</string>
+    <string name="preference_exceptions_description">Wadzima Content Blocking nekuda kwemawebsite aya.</string>
+    <string name="preference_exceptions_menu_remove">Bvisa</string>
+    <string name="preference_exceptions_remove_all_button_label">Bvisa mawebhusaiti ese</string>
+
+    <string name="tab_crash_report_title">Tebhu rakirasha</string>
+    <string name="tab_crash_report_headline">Ruregerero. Taita dambudziko ne tebhu iri.</string>
+    <string name="tab_crash_report_description">Sekuchengetedzwa kwepachivande, hatina kumbochengetedza uye hatigoni kudzorera tabu iyi.</string>
+    <string name="tab_crash_report_close_tab_button_label">Vhara Tebhu</string>
 
 
 
 
   <string name="crash_report_send_crash_label">Tumira ripoti yekuparara kuMozilla</string>
-</resources>
+
+    <!-- Tracking protection bottom sheet -->
+
+     <!-- Promote SearchWidget Dialog -->
+
+    </resources>

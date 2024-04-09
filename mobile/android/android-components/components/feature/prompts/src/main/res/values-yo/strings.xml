@@ -125,4 +125,5 @@
     <string name="mozac_feature_prompts_collapse_address_content_description">Wó àwọn àdírẹ́sì tí a dábàá</string>
     <!-- Text for the manage addresses button. -->
     <string name="mozac_feature_prompts_manage_address">Ṣàkóso àwọn àdírẹ́sì</string>
-</resources>
+
+    </resources>

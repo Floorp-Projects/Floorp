@@ -52,8 +52,6 @@
     <!-- Menu item: Remove the current site as a shortcut from the Home screen -->
     <string name="menu_remove_from_shortcuts">Hapuskan dari Pintasan</string>
 
-    <!-- Menu item: Shows information about features and changes that are new to this version -->
-    <string name="menu_whats_new" moz:RemovedIn="116" tools:ignore="UnusedResources">Yang Baru</string>
     <string name="menu_settings">Pengaturan</string>
     <string name="menu_about">Tentang</string>
     <string name="menu_help">Bantuan</string>

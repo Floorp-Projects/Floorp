@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
     <!-- Text for confirmation for a positive action in dialog  -->
     <string name="mozac_feature_prompts_ok">pona</string>
     <!-- Text for confirmation for a negative action in dialog.  -->
@@ -74,4 +74,5 @@
     <string name="mozac_feature_prompts_collapse_credit_cards_content_description">o lukin lili e lipu mani</string>
     <!-- Option in the expanded select credit card prompt that links to credit cards settings -->
     <string name="mozac_feature_prompts_manage_credit_cards">o ante e lipu mani</string>
-</resources>
+
+    </resources>

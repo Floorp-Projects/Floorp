@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
 
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_5">സ്വകാര്യം %s</string>
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_4">%s(സ്വകാര്യം)</string>
+
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">കൂടുതൽ ഐച്ഛികങ്ങൾ</string>
@@ -19,39 +20,18 @@
 
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">നിങ്ങളുടെ സ്വകാര്യ ടാബുകൾ ഇവിടെ കാണിക്കും.</string>
-    <!-- Message announced to the user when tab tray is selected with 1 tab -->
-    <string name="open_tab_tray_single">1 തുറന്നിരിക്കുന്ന ടാബ്. ടാബുകൾ മാറ്റാൻ അമർത്തുക.</string>
-    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
-    <string name="open_tab_tray_plural">%1$s തുറന്നിരിക്കുന്ന ടാബുകൾ. ടാബുകൾ മാറ്റാൻ ഇത് അമർത്തുക.</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s നിർമ്മിച്ചത് മോസില്ലയാണ്.</string>
 
-    <!-- Private Browsing -->
-    <!-- Title for private session option -->
-    <string name="private_browsing_title">താങ്കൾ ഒരു സ്വകാര്യ സെഷനിലാണ്</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="private_browsing_placeholder_description_2">%1$s നിങ്ങളുടെ തിരയലും ബ്രൗസിംഗ് ചരിത്രവും സ്വകാര്യ ടാബുകൾ അടയ്ക്കുമ്പോൾ അല്ലെങ്കിൽ അപ്ലിക്കേഷനിൽ നിന്ന് പുറത്തുകടക്കുമ്പോൾ അവ മായ്‌ക്കുന്നു. ഇത് നിങ്ങളെ വെബ്‌സൈറ്റുകളിലേക്കോ ഇൻറർനെറ്റ് സേവന ദാതാവിലേക്കോ അജ്ഞാതനാക്കില്ലെങ്കിലും, ഈ ഉപകരണം ഉപയോഗിക്കുന്ന മറ്റെതൊരാളിൽ നിന്നും നിങ്ങൾ ഓൺലൈനിൽ ചെയ്യുന്നത് സ്വകാര്യമായി സൂക്ഷിക്കുന്നത് എളുപ്പമാക്കുന്നു.</string>
     <string name="private_browsing_common_myths">സ്വകാര്യ ബ്രൗസിങ്ങിനെക്കുറിച്ചുള്ള പൊതുവായ മിഥ്യാധാരണകൾ</string>
-    <!-- Delete session button to erase your history in a private session -->
-    <string name="private_browsing_delete_session">സെഷൻ നീക്കം ചെയ്യുക</string>
 
-    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message -->
-    <string name="cfr_message">നിങ്ങളുടെ ഹോം സ്‌ക്രീനിൽ നിന്ന് സ്വകാര്യ ടാബുകൾ തുറക്കാൻ ഒരു കുറുക്കുവഴി ചേർക്കുക.</string>
-    <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text">കുറുക്കുവഴി ചേർക്കുക</string>
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">വേണ്ട, നന്ദി</string>
 
-    <!-- Search widget "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
-    <string name="search_widget_cfr_message">ഫയർഫോക്സിലേക്ക് വേഗത്തിൽ എത്തുക. നിങ്ങളുടെ ഹോം സ്‌ക്രീനിൽ ഒരു വിജറ്റ് ചേർക്കുക.</string>
-    <!-- Text for the positive button -->
-    <string name="search_widget_cfr_pos_button_text">വിഡ്ജറ്റ് ചേർക്കുക</string>
-    <!-- Text for the negative button -->
-    <string name="search_widget_cfr_neg_button_text">ഇപ്പോള്‍ വേണ്ട</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -59,12 +39,6 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">പുതിയ സ്വകാര്യ ടാബ്</string>
 
-    <!-- Heading for the Top Sites block -->
-    <string name="home_screen_top_sites_heading">പ്രധാന സൈറ്റുകൾ</string>
-
-    <!-- Browser Fragment -->
-    <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
-    <string name="browser_tabs_button">തുറന്ന ടാബുകള്‍</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
     <string name="browser_menu_back">പുറകോട്ട്</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
@@ -73,10 +47,6 @@
     <string name="browser_menu_refresh">പുതുക്കുക</string>
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">നിർത്തുക</string>
-    <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
-    <string name="browser_menu_bookmark">അടയാളക്കുറിപ്പു് ചേർക്കുക</string>
-    <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
-    <string name="browser_menu_edit_bookmark">അടയാളക്കുറിപ്പ് തിരുത്തുക</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">ആഡ്-ഓണുകള്‍</string>
     <!-- Text displayed when there are no add-ons to be shown -->
@@ -95,20 +65,12 @@
     <string name="browser_menu_add_to_homescreen">ഹോം സ്ക്രീനിലേക്ക് ചേർക്കുക</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">ഇൻസ്റ്റാൾ ചെയ്യുക</string>
-    <!-- Menu option on the toolbar that takes you to synced tabs page-->
-    <string name="synced_tabs">സമന്വയിപ്പിച്ച ടാബുകള്‍</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">പേജിൽ കണ്ടെത്തുക</string>
-    <!-- Browser menu button that creates a private tab -->
-    <string name="browser_menu_private_tab">സ്വകാര്യ ടാബ്</string>
-    <!-- Browser menu button that creates a new tab -->
-    <string name="browser_menu_new_tab">പുതിയ ടാബ്</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">ശേഖരത്തിലേക്ക് സംരക്ഷിക്കുക</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">പങ്കിടുക</string>
-    <!-- Share menu title, displayed when a user is sharing their current site -->
-    <string name="menu_share_with">… നോട് പങ്കിടുക</string>
     <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_open_in_fenix">%1$s ൽ തുറക്കുക</string>
@@ -125,17 +87,9 @@
     <!-- Browser menu button to open the current page in an external app -->
     <string name="browser_menu_open_app_link">ആപ്പിൽ തുറക്കുക</string>
 
-    <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
-    <string name="browser_menu_read_appearance">ദൃശ്യപരത</string>
-    <!-- Error message to show when the user tries to access a scheme not
-        handled by the app (Ex: blob, tel etc) -->
-    <string name="unknown_scheme_error_message">ബന്ധിപ്പിക്കാൻ കഴിയുന്നില്ല. തിരിച്ചറിയാൻ കഴിയാത്ത URL സ്കീം.</string>
-
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">തിരഞ്ഞെടുത്ത ഭാഷ</string>
-    <!-- Content description for search icon -->
-    <string name="a11y_search_icon_content_description">തിരയുക</string>
     <!-- Text for default locale item -->
     <string name="default_locale_text">ഉപകരണത്തിന്റെ ഭാഷ തന്നെ ഉപയോഗിക്കുക</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
@@ -144,14 +98,8 @@
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">സ്കാൻ ചെയ്യുക</string>
-    <!-- Button in the search view that lets a user search by using a shortcut -->
-    <string name="search_shortcuts_button">കുറുക്കുവഴികൾ</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">തിരച്ചിൽ ക്രമീകരണങ്ങൾ</string>
-    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with">ഇതുപയോഗിച്ച് തിരയുക</string>
-    <!-- Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with_2">ഇത്തവണ ഇതുപയോഗിച്ച് തിരയുക:</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">ക്ലിപ്പ്ബോർഡിൽ നിന്ന് കണ്ണി പൂരിപ്പിക്കുക</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
@@ -162,8 +110,6 @@
     <string name="search_suggestions_onboarding_title">സ്വകാര്യ സെഷനുകളിൽ തിരയൽ നിർദ്ദേശങ്ങൾ അനുവദിക്കണോ?</string>
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">നിങ്ങളുടെ സ്ഥിരസ്ഥിതി സെര്‍ച്ച് എഞ്ചിനുമായി വിലാസ ബാറിൽ നിങ്ങൾ എഴുതുന്നതെല്ലാം %s ആയി പങ്കിടും</string>
-    <!-- Search suggestion onboarding hint Learn more link text -->
-    <string name="search_suggestions_onboarding_learn_more_link">കൂടുതല്‍ അറിയുക</string>
 
     <!-- Search Widget -->
     <!-- Text preview for smaller sized widgets -->
@@ -177,8 +123,6 @@
     <!-- Preferences -->
     <!-- Title for the settings page-->
     <string name="settings">ക്രമീകരണങ്ങൾ</string>
-    <!-- Preference category for basic settings -->
-    <string name="preferences_category_basics">അടിസ്ഥാനകാര്യങ്ങൾ</string>
     <!-- Preference category for general settings -->
     <string name="preferences_category_general">പൊതുവായവ</string>
     <!-- Preference category for all links about Fenix -->
@@ -187,29 +131,15 @@
     <string name="preferences_default_search_engine">സ്വതവേയുള്ള സെര്‍ച്ച് എഞ്ചിന്‍</string>
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">തിരയുക</string>
-    <!-- Preference for settings related to Search address bar -->
-    <string name="preferences_search_address_bar">അഡ്രസ്സ് ബാര്‍</string>
-    <!-- Preference linking to help about Fenix -->
-    <string name="preferences_help">സഹായം</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">ഗൂഗിൾ പ്ലേയിൽ വിലയിരുത്തുക</string>
-    <!-- Preference for giving feedback about Fenix -->
-    <string name="preferences_feedback">പ്രതികരണം നല്‍കുക</string>
     <!-- Preference linking to about page for Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="preferences_about">%1$s നെ കുറിച്ച്</string>
-    <!-- Preference linking to the your rights SUMO page -->
-    <string name="preferences_your_rights">താങ്കളുടെ അവകാശങ്ങള്‍</string>
-    <!-- Preference for settings related to saved passwords -->
-    <string name="preferences_passwords">രഹസ്യവാക്കുകൾ</string>
-    <!-- Preference for settings related to saved credit cards and addresses -->
-    <string name="preferences_credit_cards_addresses">ക്രെഡിറ്റ് കാർഡുകളും വിലാസങ്ങളും</string>
     <!-- Preference for settings related to changing the default browser -->
     <string name="preferences_set_as_default_browser">സ്വതേയുള്ള ബ്രൗസര്‍ ആക്കുക</string>
     <!-- Preference category for advanced settings -->
     <string name="preferences_category_advanced">സങ്കീര്‍ണ്ണമായവ</string>
-    <!-- Preference category for privacy settings -->
-    <string name="preferences_category_privacy">സ്വകാര്യത</string>
     <!-- Preference category for privacy and security settings -->
     <string name="preferences_category_privacy_security">സ്വകാര്യതയും സുരക്ഷയും</string>
     <!-- Preference for advanced site permissions -->
@@ -223,28 +153,19 @@
 
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">സ്വകാര്യ ബ്രൗസിംഗ് കുറുക്കുവഴി ചേർക്കുക</string>
+
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">ആക്സസ്സെബിലിറ്റി</string>
-    <!-- Preference to override the Firefox Account server -->
-    <string name="preferences_override_fxa_server">ഇഷ്‌ടാനുസൃത ഫയർഫോക്‌സ് അക്കൗണ്ട് സെർവർ</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">ഇഷ്‌ടാനുസൃത സമന്വയ സെർവർ</string>
-    <!-- Toast shown after updating the FxA/Sync server override preferences -->
-    <string name="toast_override_fxa_sync_server_done">ഫയർ‌ഫോക്സ് അകൗണ്ട്/സമന്വയ സെർവർ പരിഷ്‌ക്കരിച്ചു. മാറ്റങ്ങൾ പ്രയോഗിക്കുന്നതിന് അപ്ലിക്കേഷനിൽ നിന്നു പുറത്തുകടക്കുന്നു…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">അക്കൗണ്ട്</string>
-    <!-- Preference shown on banner to sign into account -->
-    <string name="preferences_sign_in">പ്രവേശിക്കുക</string>
     <!-- Preference for changing where the toolbar is positioned -->
     <string name="preferences_toolbar">ടൂള്‍ബാര്‍</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">കെട്ടും മട്ടും</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">ഇച്ഛാനുസൃതമാക്കുക</string>
-    <!-- Preference description for banner about signing in -->
-    <string name="preferences_sign_in_description">നിങ്ങളുടെ ഫയർഫോക്സ് അക്കൗണ്ട് ഉപയോഗിച്ച് അടയാളക്കുറിപ്പുകളും ചരിത്രവും അങ്ങനെ മറ്റു പലതും സമന്വയിപ്പിക്കുക</string>
-    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
-    <string name="preferences_account_default_name">ഫയർഫോക്സ് അക്കൗണ്ട്</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
     <string name="preferences_account_sync_error">സമന്വയം പുനരാരംഭിക്കുന്നതിന് വീണ്ടും ബന്ധിപ്പിക്കുക</string>
     <!-- Preference for language -->
@@ -253,14 +174,8 @@
     <string name="preferences_data_choices">ഡേറ്റാ ഐച്ഛികങ്ങൾ</string>
     <!-- Preference for data collection -->
     <string name="preferences_data_collection">ഡാറ്റ ശേഖരണം</string>
-    <!-- Preference linking to the privacy notice -->
-    <string name="preferences_privacy_link">സ്വകാര്യതാ അറിയിപ്പ്</string>
-    <!-- Preference category for developer tools -->
-    <string name="developer_tools_category">ഡെവലപ്പര്‍ ഉപകരണങ്ങള്‍</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">USB വഴിയുള്ള റിമോട്ട് ഡീബഗ്ഗിംഗ്</string>
-    <!-- Preference title for switch preference to show search shortcuts -->
-    <string name="preferences_show_search_shortcuts">തിരയൽ കുറുക്കുവഴികൾ കാണിക്കുക</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">തിരയല്‍ നിര്‍ദ്ദേശങ്ങള്‍ കാണിക്കുക</string>
     <!-- Preference title for switch preference to show voice search button -->
@@ -277,6 +192,7 @@
     <string name="preferences_account_settings">അക്കൗണ്ട് ക്രമീകരണങ്ങൾ</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">ആപ്പുകളിൽ കണ്ണികൾ തുറക്കുക</string>
+
     <!-- Preference for add_ons -->
     <string name="preferences_addons">ആഡ്-ഓണുകള്‍</string>
 
@@ -322,22 +238,11 @@
     <string name="fxa_received_tab_channel_description">മറ്റ് ഫയർഫോക്സ് ഉപകരണങ്ങളിൽ നിന്ന് ലഭിച്ച ടാബുകൾക്കായുള്ള അറിയിപ്പുകൾ.</string>
     <!--  The body for these is the URL of the tab received  -->
     <string name="fxa_tab_received_notification_name">ടാബ് ലഭിച്ചു</string>
-    <!-- When multiple tabs have been received -->
-    <string name="fxa_tabs_received_notification_name">ടാബുകൾ ലഭിച്ചു</string>
     <!-- %s is the device name -->
     <string name="fxa_tab_received_from_notification_name">%s ല്‍ നിന്നുള്ള ടാബ്</string>
 
-    <!-- Advanced Preferences -->
-    <!-- Preference for tracking protection settings -->
-    <string name="preferences_tracking_protection_settings">പിന്തുടരൽ സുരക്ഷ</string>
-    <!-- Preference switch for tracking protection -->
-    <string name="preferences_tracking_protection">പിന്തുടരൽ സുരക്ഷ</string>
-    <!-- Preference switch description for tracking protection -->
-    <string name="preferences_tracking_protection_description">താങ്കളെ ഓൺലൈനിൽ പിന്തുടരുന്ന ഉള്ളടക്കവും സ്ക്രിപ്റ്റുകളും തടയുക</string>
     <!-- Preference for tracking protection exceptions -->
     <string name="preferences_tracking_protection_exceptions">ഒഴിവാക്കലുകള്‍</string>
-    <!-- Preference description for tracking protection exceptions -->
-    <string name="preferences_tracking_protection_exceptions_description">ഈ വെബ്സൈറ്റുകളിൽ പിന്തുടരൽ സുരക്ഷ ഓഫാണ്</string>
 
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">എല്ലാ സൈറ്റുകൾക്കും ഓണാക്കുക</string>
@@ -346,37 +251,13 @@
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">കൂടുതല്‍ അറിയുക</string>
 
-    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
-    <string name="preferences_tracking_protection_turned_off_globally">ആഗോളതലത്തിൽ ഓഫാക്കി, അത് ഓണാക്കാൻ ക്രമീകരണങ്ങളിലേക്ക് പോകുക.</string>
-
-    <!-- Preference switch for Telemetry -->
-    <string name="preferences_telemetry">ടെലിമെട്രി</string>
     <!-- Preference switch for usage and technical data collection -->
     <string name="preference_usage_data">ഉപയോഗവും സാങ്കേതിക ഡാറ്റയും</string>
     <!-- Preference description for usage and technical data collection -->
     <string name="preferences_usage_data_description">പ്രകടനം, ഉപയോഗം, ഹാർഡ്‌വെയർ തുടങ്ങിയ വിവരങ്ങൾ മോഡില്ലയുമായിമായി പങ്കു വെച്ച്  %1$s മെച്ചപ്പെടുത്തുവാൻ സഹായിക്കുക</string>
     <!-- Preference switch for marketing data collection -->
     <string name="preferences_marketing_data">വിപണനത്തിനായുള്ള ഡാറ്റ</string>
-    <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
-    <string name="preferences_marketing_data_description">%1$sൽ നിങ്ങൾ ഉപയോഗിക്കുന്ന സവിശേഷതകളുമായി ബന്ധപ്പെട്ട ഡാറ്റ ഞങ്ങളുടെ വിപണനസഹായിയായ Leanplumഉമായി പങ്കുവെയ്ക്കുന്നു.</string>
-    <!-- Title for experiments preferences -->
-    <string name="preference_experiments">പരീക്ഷണങ്ങള്‍</string>
-    <!-- Summary for experiments preferences -->
-    <string name="preference_experiments_summary">പരീക്ഷണാത്മക സവിശേഷതകൾക്കായി ഇൻസ്റ്റാൾ ചെയ്യാനും ഡാറ്റ ശേഖരിക്കാനും മോസില്ലയെ അനുവദിക്കുന്നു</string>
-    <!-- Preference switch for crash reporter -->
-    <string name="preferences_crash_reporter">തകരാർ റിപ്പോർട്ടർ</string>
-    <!-- Preference switch for Mozilla location service -->
-    <string name="preferences_mozilla_location_service">മോസില്ല ലൊക്കേഷൻ സേവനം</string>
-    <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preferences_fenix_health_report">%s ആരോഗ്യ റിപ്പോർട്ട്</string>
 
-    <!-- Turn On Sync Preferences -->
-    <!-- Header of the Turn on Sync preference view -->
-    <string name="preferences_sync">സിങ്ക് ഓണാക്കുക</string>
-    <!-- Preference for pairing -->
-    <string name="preferences_sync_pair">ഡെസ്ക്ടോപ്പ് ഫയർഫോക്സിൽ ജോടിയാക്കൽ കോഡ് സ്കാൻ ചെയ്യുക</string>
-    <!-- Preference for account login -->
-    <string name="preferences_sync_sign_in">പ്രവേശിക്കുക</string>
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">വീണ്ടും ബന്ധിപ്പിക്കുന്നതിന് പ്രവേശിക്കുക</string>
     <!-- Preference for removing FxA account -->
@@ -385,10 +266,6 @@
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
     <string name="pair_instructions_2"><![CDATA[<b>firefox.com/pair</b> ൽ കാണിച്ചിരിക്കുന്ന QR കോഡ് സ്കാൻ ചെയ്യുക]]></string>
-    <!-- Button to open camera for pairing -->
-    <string name="pair_open_camera">ക്യാമറ തുറക്കുക</string>
-    <!-- Button to cancel pairing -->
-    <string name="pair_cancel">റദ്ദാക്കുക</string>
 
     <!-- Toolbar Preferences -->
     <!-- Preference for using top toolbar -->
@@ -407,11 +284,6 @@
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">ഉപകരണ തീം പിന്തുടരുക</string>
 
-    <!-- Library -->
-    <!-- Option in Library to open Sessions page -->
-    <string name="library_sessions">സെഷനുകൾ</string>
-    <!-- Option in Library to open Screenshots page -->
-    <string name="library_screenshots">സ്ക്രീൻഷോട്ടുകൾ</string>
     <!-- Option in Library to open Downloads page -->
     <string name="library_downloads">ഡൗണ്‍ലോഡുകള്‍</string>
     <!-- Option in library to open Bookmarks page -->
@@ -426,25 +298,15 @@
     <string name="library_desktop_bookmarks_unfiled">മറ്റു് അടയാളക്കുറിപ്പുകള്‍</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">ചരിത്രം</string>
-    <!-- Option in Library to open Synced Tabs page -->
-    <string name="library_synced_tabs">സമന്വയിപ്പിച്ച ടാബുകള്‍</string>
-    <!-- Option in Library to open Reading List -->
-    <string name="library_reading_list">വായനാ പട്ടിക</string>
 
-    <!-- Menu Item Label for Search in Library -->
-    <string name="library_search">തിരയുക</string>
     <!-- Settings Page Title -->
     <string name="settings_title">ക്രമീകരണങ്ങള്‍</string>
-    <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
-    <string name="content_description_history_menu">ചരിത്ര ഇന മെനു</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">അടയ്ക്കുക</string>
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">തുറന്നിരുന്ന ടാബുകള്‍</string>
-    <!-- Title for the list of tabs in the current private session -->
-    <string name="tabs_header_private_title">സ്വകാര്യ സെഷൻ</string>
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_tabs_title">സ്വകാര്യ ടാബുകൾ</string>
 
@@ -454,20 +316,10 @@
     <string name="add_private_tab">സ്വകാര്യ ടാബ് ചേർക്കുക</string>
     <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
     <string name="tab_drawer_fab_content">സ്വകാര്യം</string>
-    <!-- Text shown as the title of the open tab tray -->
-    <string name="tab_tray_title">തുറന്നിരിക്കുന്ന ടാബുകള്‍</string>
-    <!-- Text shown in the menu for saving tabs to a collection -->
-    <string name="tab_tray_menu_item_save">ശേഖരത്തിലേക്ക് സംരക്ഷിക്കുക</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">എല്ലാ ടാബുകളും പങ്കിടുക</string>
     <!-- Text shown in the menu for closing all tabs -->
     <string name="tab_tray_menu_item_close">എല്ലാ ടാബുകളും അടയ്ക്കുക</string>
-    <!-- Shortcut action to open new tab -->
-    <string name="tab_tray_menu_open_new_tab">പുതിയ ടാബ്</string>
-    <!-- Shortcut action to open the home screen -->
-    <string name="tab_tray_menu_home">പൂമുഖത്തേയ്ക്കു് പോകുക</string>
-    <!-- Shortcut action to toggle private mode -->
-    <string name="tab_tray_menu_toggle">ടാബ് രീതി മാറ്റുക</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">ശേഖരത്തിൽ നിന്ന് ടാബ് നീക്കം ചെയ്യുക</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
@@ -476,26 +328,8 @@
     <string name="close_tab_title">%s ടാബ് അടയ്ക്കുക</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
     <string name="open_tabs_menu">ടാബുകളുടെ മെനു തുറക്കുക</string>
-    <!-- Open tabs menu item to close all tabs -->
-    <string name="tabs_menu_close_all_tabs">എല്ലാ ടാബുകളും അടയ്ക്കുക</string>
-    <!-- Open tabs menu item to share all tabs -->
-    <string name="tabs_menu_share_tabs">ടാബുകൾ പങ്കിടുക</string>
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">ശേഖരത്തിലേക്ക് ടാബുകൾ സംരക്ഷിക്കുക</string>
-    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string name="tab_menu">ടാബ് മെനു</string>
-    <!-- Tab menu item to share the tab -->
-    <string name="tab_share">ടാബ് പങ്കിടുക</string>
-    <!-- Button in the current session menu. Deletes the session when pressed -->
-    <string name="current_session_delete">നീക്കം ചെയ്യുക</string>
-    <!-- Button in the current session menu. Saves the session when pressed -->
-    <string name="current_session_save">സംരക്ഷിക്കുക</string>
-    <!-- Button in the current session menu. Opens the share menu when pressed -->
-    <string name="current_session_share">പങ്കിടുക</string>
-    <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
-    <string name="current_session_image">നിലവിലെ സെഷൻ ചിത്രം</string>
-    <!-- Button to save the current set of tabs into a collection -->
-    <string name="save_to_collection">ശേഖരത്തിലേക്ക് സംരക്ഷിക്കുക</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">ശേഖരം നീക്കം ചെയ്യുക</string>
     <!-- Text for the menu button to rename a collection -->
@@ -510,32 +344,15 @@
     <!-- History -->
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">നാള്‍വഴികൾ ഇല്ലാതാക്കുക</string>
-    <!-- Text for the dialog to confirm clearing all history -->
-    <string name="history_delete_all_dialog">നിങ്ങളുടെ നാൾവഴികൾ മായിക്കാൻ നിങ്ങൾക്ക് സമ്മതമാണോ?</string>
     <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
     <string name="history_delete_multiple_items_snackbar">ചരിത്രം ഇല്ലാതാക്കി</string>
     <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. The first parameter is the shortened URL of the deleted history item. -->
     <string name="history_delete_single_item_snackbar">%1$s നീക്കം ചെയ്തു</string>
-    <!-- Text for positive action to delete history in deleting history dialog -->
-    <string name="history_clear_dialog">മായ്ക്കുക</string>
-    <!-- History overflow menu copy button -->
-    <string name="history_menu_copy_button">പകര്‍ത്തുക</string>
-    <!-- History overflow menu share button -->
-    <string name="history_menu_share_button">പങ്കിടുക</string>
-    <!-- History overflow menu open in new tab button -->
-    <string name="history_menu_open_in_new_tab_button">പുതിയ ടാബില്‍ തുറക്കുക</string>
-    <!-- History overflow menu open in private tab button -->
-    <string name="history_menu_open_in_private_tab_button">സ്വകാര്യ ടാബിൽ തുറക്കുക</string>
     <!-- Text for the button to delete a single history item -->
     <string name="history_delete_item">നീക്കം ചെയ്യുക</string>
     <!-- History multi select title in app bar
     The first parameter is the number of bookmarks selected -->
     <string name="history_multi_select_title">%1$d തിരഞ്ഞെടുത്തിരിക്കുന്നു</string>
-    <!-- Text for the button to clear selected history items. The first parameter
-        is a digit showing the number of items you have selected -->
-    <string name="history_delete_some">%1$d ഇനങ്ങൾ ഇല്ലാതാക്കുക</string>
-    <!-- Text for the header that groups the history for last 24 hours -->
-    <string name="history_24_hours">കഴിഞ്ഞ 24 മണിക്കൂര്‍</string>
     <!-- Text for the header that groups the history the past 7 days -->
     <string name="history_7_days">കഴിഞ്ഞ 7 ദിവസം</string>
     <!-- Text for the header that groups the history the past 30 days -->
@@ -546,11 +363,10 @@
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">ഇവിടെ ചരിത്രമൊന്നുമില്ല</string>
 
+
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
     <string name="tab_crash_title_2">ക്ഷമിക്കണം. %1$s ന് ആ പേജ് ലഭ്യമാക്കാൻ കഴിഞ്ഞില്ല.</string>
-    <!-- Description text displayed on the tab crash page -->
-    <string name="tab_crash_description">താങ്കൾക്ക് ചുവടെയുള്ള ഈ ടാബ് പുനഃസ്ഥാപിക്കാൻ ശ്രമിക്കുകയോ അടയ്ക്കുകയോ ചെയ്യാം.</string>
     <!-- Send crash report checkbox text on the tab crash page -->
     <string name="tab_crash_send_report">തകരാർ റിപ്പോ‍ർട്ട് മോസില്ലയിലേക്ക് അയയ്ക്കുക</string>
     <!-- Close tab button text on the tab crash page -->
@@ -559,36 +375,17 @@
     <!-- Restore tab button text on the tab crash page -->
     <string name="tab_crash_restore">ടാബ് പുനസ്ഥാപിക്കുക</string>
 
-    <!-- Content Description for session item menu button -->
-    <string name="content_description_session_menu">സെഷൻ ഐച്ഛികങ്ങൾ</string>
-
-    <!-- Content Description for session item share button -->
-    <string name="content_description_session_share">സെഷൻ പങ്കിടുക</string>
-
-    <!-- Bookmarks -->
-    <!-- Content description for bookmarks library menu -->
-    <string name="bookmark_menu_content_description">അടയാളക്കുറിപ്പുകള്‍</string>
-    <!-- Screen title for editing bookmarks -->
-    <string name="bookmark_edit">അടയാളക്കുറിപ്പ് തിരുത്തുക</string>
-    <!-- Screen title for selecting a bookmarks folder -->
-    <string name="bookmark_select_folder">ഫോൾഡർ തിരഞ്ഞെടുക്കുക</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
     <string name="bookmark_delete_folder_confirmation_dialog">ഈ ഫോൾഡർ നീക്കം ചെയ്യണമെന്ന് താങ്കൾക്ക് ഉറപ്പാണോ?</string>
-    <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
-    <string name="bookmark_delete_folder_snackbar">%1$s നീക്കം ചെയ്തു</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">ഫോൾഡർ ചേർക്കുക</string>
 
-    <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
-    <string name="bookmark_created_snackbar">അടയാളക്കുറിപ്പ് സൃഷ്ടിച്ചു.</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
     <string name="bookmark_saved_snackbar">അടയാളക്കുറിപ്പ് സൂക്ഷിച്ചു!</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
     <string name="edit_bookmark_snackbar_action">തിരുത്തുക</string>
     <!-- Bookmark overflow menu edit button -->
     <string name="bookmark_menu_edit_button">തിരുത്തുക</string>
-    <!-- Bookmark overflow menu select button -->
-    <string name="bookmark_menu_select_button">തിരഞ്ഞെടുക്കുക</string>
     <!-- Bookmark overflow menu copy button -->
     <string name="bookmark_menu_copy_button">പകര്‍ത്തുക</string>
     <!-- Bookmark overflow menu share button -->
@@ -634,9 +431,6 @@
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">പൂർവസ്ഥിതിയാക്കുക</string>
 
-    <!-- Site Permissions -->
-    <!-- Site permissions preferences header -->
-    <string name="permissions_header">അനുമതികൾ</string>
     <!-- Button label that take the user to the Android App setting -->
     <string name="phone_feature_go_to_settings">സജ്ജീകരണങ്ങളിലേക്കു പോവുക</string>
     <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
@@ -645,8 +439,6 @@
     <string name="quick_settings_sheet">ദ്രുത ക്രമീകരണ ഷീറ്റ്</string>
     <!-- Label that indicates that this option it the recommended one -->
     <string name="phone_feature_recommended">ശുപാർശ ചെയ്തത്</string>
-    <!-- button that allows editing site permissions settings -->
-    <string name="quick_settings_sheet_manage_site_permissions">സൈറ്റ് അനുമതികൾ നിയന്ത്രിക്കുക</string>
     <!-- Button label for clearing all the information of site permissions-->
     <string name="clear_permissions">അനുമതികൾ ഇല്ലാതാക്കുക</string>
     <!-- Button label for clearing a site permission-->
@@ -673,8 +465,6 @@
     <string name="phone_feature_blocked_by_android">ആൻഡ്രോയിഡ് തടഞ്ഞു</string>
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">വിട്ടുവീഴ്ചകള്‍</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on">ഓണ്‍</string>
 
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">ഓഫ്</string>
@@ -698,10 +488,6 @@
     <string name="collections_header">ശേഖരങ്ങൾ</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">ശേഖരണ മെനു</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header1">നിങ്ങൾക്ക് പ്രാധാന്യമുള്ള കാര്യങ്ങൾ ശേഖരിക്കുക</string>
-    <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">അതിവേഗ ഉപയോഗത്തിനായി സമാന തിരയലുകൾ, സൈറ്റുകൾ, ടാബുകൾ എന്നിവ ഒരുമിച്ച് ചേർക്കുക.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">ടാബുകൾ തിരഞ്ഞെടുക്കുക</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -736,16 +522,11 @@
     <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
     <string name="create_collection_default_name">%d ശേഖരം</string>
 
-    <!-- Share -->
-    <!-- Share screen header -->
-    <string name="share_header">അയച്ച് പങ്കിടുക</string>
     <!-- Share screen header -->
     <string name="share_header_2">പങ്കിടുക</string>
     <!-- Content description (not visible, for screen readers etc.):
         "Share" button. Opens the share menu when pressed. -->
     <string name="share_button_content_description">പങ്കിടുക</string>
-    <!-- Sub-header in the dialog to share a link to another app -->
-    <string name="share_link_subheader">ഒരു കണ്ണി പങ്കിടുക</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">ഉപകരണത്തിലേക്ക് അയക്കു</string>
     <!-- Sub-header in the dialog to share a link to an app from the full list -->
@@ -754,7 +535,7 @@
     <string name="share_link_recent_apps_subheader">സമീപകാലത്ത് ഉപയോഗിച്ചവ</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">സമന്വയിപ്പിക്കാനായി പ്രവേശിക്കുക</string>
-    <!-- An option from the share dialog to send link to all other sync devices -->
+     <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">എല്ലാ ഉപകരണങ്ങളിലേക്കും അയയ്ക്കുക</string>
     <!-- An option from the share dialog to reconnect to sync -->
     <string name="sync_reconnect">സമന്വയിക്കാൻ വീണ്ടും ബന്ധിപ്പിക്കുക</string>
@@ -777,48 +558,26 @@
     <!-- Text for the button to connect another device -->
     <string name="sync_add_new_device_connect_button">മറ്റൊരു ഉപകരണം ബന്ധിപ്പിക്കുക…</string>
 
-    <!-- Notifications -->
-    <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
-    <string name="notification_pbm_channel_name">സ്വകാര്യ ബ്രൗസിങ് സെഷൻ</string>
-    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
-    <string name="notification_pbm_delete_text">സ്വകാര്യ ടാബുകൾ നീക്കം ചെയ്യുക</string>
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">സ്വകാര്യ ടാബുകള്‍ അടയ്ക്കുക</string>
-    <!-- Notification action to open Fenix and resume the current browsing session. -->
-    <string name="notification_pbm_action_open">തുറക്കുക</string>
-    <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
-    <string name="notification_pbm_action_delete_and_open">നീക്കം ചെയ്തിട്ട് തുറക്കുക</string>
-    <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
-    <string name="notification_powered_by_channel_name">അവതരിപ്പിക്കുന്നത്</string>
+
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">ശേഖരം ഇല്ലാതാക്കി</string>
     <!-- Text shown in snackbar when user renames a collection -->
     <string name="snackbar_collection_renamed">ശേഖരത്തിന്റെ പേരുമാറ്റി</string>
-    <!-- Text shown in snackbar when user deletes a tab -->
-    <string name="snackbar_tab_deleted">ടാബ് നീക്കം ചെയ്തു</string>
-    <!-- Text shown in snackbar when user deletes all tabs -->
-    <string name="snackbar_tabs_deleted">ടാബുകൾ നീക്കം ചെയ്തു</string>
     <!-- Text shown in snackbar when user closes a tab -->
     <string name="snackbar_tab_closed">ടാബ് അടച്ചു</string>
 
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">ടാബുകൾ അടച്ചു</string>
-    <!-- Text shown in snackbar when user adds a site to top sites -->
-    <string name="snackbar_added_to_top_sites">മികച്ച സൈറ്റുകളിൽ ചേർത്തു!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">സ്വകാര്യ ടാബ് അടച്ചു</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
     <string name="snackbar_private_tabs_closed">സ്വകാര്യ ടാബുകൾ അടച്ചു</string>
-    <!-- Text shown in snackbar when user deletes all private tabs -->
-    <string name="snackbar_private_tabs_deleted">സ്വകാര്യ ടാബുകൾ നീക്കം ചെയ്തു</string>
     <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">തിരിച്ചാക്കുക</string>
     <!-- Text shown in snackbar when user removes a top site -->
     <string name="snackbar_top_site_removed">സൈറ്റ് നീക്കം ചെയ്തു</string>
-    <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
-    <string name="a11y_dialog_deleted_undo">തിരിച്ചാക്കുക</string>
-    <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
-    <string name="a11y_dialog_deleted_confirm">സ്ഥിരീകരിക്കുക</string>
     <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
         First parameter is the name of the app, second parameter is the URL or text scanned-->
     <string name="qr_scanner_confirmation_dialog_message">%2$s തുറക്കാൻ %1$s നെ അനുവദിക്കുക</string>
@@ -830,8 +589,6 @@
     <string name="tab_collection_dialog_message">%1$s നീക്കം ചെയ്യണമെന്ന് താങ്കൾക്ക് ഉറപ്പാണോ?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">നീക്കം ചെയ്യുക</string>
-    <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
-    <string name="tab_collection_dialog_negative">റദ്ദാക്കുക</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">സ്ക്രീൻ പൂര്‍ണ്ണവലിപ്പത്തിലാക്കുന്നു</string>
     <!-- Message for copying the URL via long press on the toolbar -->
@@ -855,18 +612,11 @@
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d ടാബുകL</string>
 
-    <!-- Title for the data and history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_data_title">ബ്രൗസിങ്ങ് ചരിത്രവും സൈറ്റ് ഡാറ്റയും</string>
+    <!-- Title for history items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_history_title">ചരിത്രം</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d വിലാസങ്ങൾ</string>
-    <!-- Title for history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_history_title">ചരിത്രം</string>
-    <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
-        number of history pages the user has -->
-    <string name="preferences_delete_browsing_data_browsing_history_subtitle">%d പേജുകൾ</string>
-    <!-- Title for the cookies item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cookies">കുക്കികള്‍</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies_subtitle">മിക്ക സൈറ്റുകളിൽ നിന്നും നിങ്ങൾ പുറത്തിറങ്ങും</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
@@ -880,14 +630,10 @@
     <!-- Title for the Delete browsing data on quit preference -->
     <string name="preferences_delete_browsing_data_on_quit">പുറത്ത് കടക്കുമ്പോൾ ബ്രൗസിങ്ങ് ഡാറ്റ നീക്കം ചെയ്യുക</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
-    <string name="preference_summary_delete_browsing_data_on_quit">പ്രധാന മെനുവിൽ നിന്ന് &quot;പുറത്തുകടക്കുക&quot; തിരഞ്ഞെടുക്കുമ്പോൾ ബ്രൗസിംഗ് ഡാറ്റ തനിയേ നീക്കം ചെയ്യുന്നു</string>
-    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit_2">പ്രധാന മെനുവിൽ നിന്ന് \&quot;പുറത്തുകടക്കുക\&quot; തിരഞ്ഞെടുക്കുമ്പോൾ ബ്രൗസിംഗ് ഡാറ്റ തനിയേ നീക്കം ചെയ്യുന്നു</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">പുറത്ത് കടക്കുക</string>
 
-    <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message">ഇത് താങ്കളുടെ എല്ലാ ബ്രൗസിങ്ങ് ഡാറ്റയും നീക്കം ചെയ്യും</string>
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">%s തിരഞ്ഞെടുത്ത ബ്രൗസിങ്ങ് ഡാറ്റ നീക്കം ചെയ്യും.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
@@ -899,126 +645,8 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">ബ്രൗസിംഗ് ഡാറ്റ നീക്കം ചെയ്യുന്നു…</string>
 
-    <!-- Tips -->
-    <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_header">ഫയർഫോക്സ് പ്രിവ്യൂ ഇപ്പോൾ ഫയർഫോക്സ് നൈറ്റ്‌ലി ആണ്</string>
-
-    <!-- text for firefox preview moving tip description -->
-    <string name="tip_firefox_preview_moved_description">ഫയർഫോക്സ് നൈറ്റ്ലി എല്ലാ ദിവസവും രാത്രി അപ്ഡേറ്റ് ആവുകയും പരീക്ഷണാത്മക സവിശേഷതകൾ നേടുകയും ചെയ്യുന്നു.
-        എന്നിരുന്നാലും, ഇതിന് സ്ഥിരത കുറവായേക്കാം. നല്ല സ്ഥിരതയുള്ള അനുഭവത്തിനായി ഞങ്ങളുടെ ബീറ്റാ ബ്രൗസർ ഡൗൺലോഡ് ചെയ്യുക.</string>
-    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_button_2">ആൻഡ്രോയിഡിനായുള്ള ഫയർഫോക്സ് ബീറ്റ നേടുക</string>
-
-    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_header_preview_installed">ഫയർഫോക്സ് നൈറ്റ്ലി മാറിയിരിക്കുന്നു</string>
-    <!-- text for firefox preview moving tip description -->
-    <string name="tip_firefox_preview_moved_description_preview_installed">ഈ ആപ്പിന് ഇനി സുരക്ഷാ പുതുക്കലുകൾ  ലഭിക്കില്ല. ഈ ആപ്പ് ഉപയോഗിക്കുന്നത് നിർത്തി പുതിയ നൈറ്റ്ലിയിലേക്ക് മാറുക.
-        \n\nതാങ്കളുടെ അടയാളക്കുറിപ്പുകളും, ലോഗിനുകളും ചരിത്രവും മറ്റൊരു ആപ്പിലേക്ക് കൈമാറാൻ, ഒരു ഫയർഫോക്സ് അക്കൗണ്ട് സൃഷ്ടിക്കുക.</string>
-    <!-- text for firefox preview moving tip button  -->
-    <string name="tip_firefox_preview_moved_button_preview_installed">പുതിയ നൈറ്റ്ലിയിലേക്ക് മാറുക</string>
-
-    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_header_preview_not_installed">ഫയർഫോക്സ് നൈറ്റ്ലി മാറിയിരിക്കുന്നു</string>
-    <!-- text for firefox preview moving tip description -->
-    <string name="tip_firefox_preview_moved_description_preview_not_installed">.ഈ അപ്ലിക്കേഷന് ഇനി സുരക്ഷാ അപ്‌ഡേറ്റുകൾ ലഭിക്കില്ല. ഈ അപ്ലിക്കേഷൻ ഉപയോഗിക്കുന്നത് നിർത്തി പുതിയ നൈറ്റ്ലിയിലേക്ക് മാറുക.
-· \n\n നിങ്ങളുടെ ബുക്ക്മാർക്കുകളും ലോഗിനുകളും ചരിത്രവും മറ്റൊരു അപ്ലിക്കേഷനിലേക്ക് കൈമാറാൻ, ഒരു ഫയർഫോക്സ് അക്കൗണ്ട് സൃഷ്ടിക്കുക.</string>
-    <!-- text for firefox preview moving tip button  -->
-    <string name="tip_firefox_preview_moved_button_preview_not_installed">പുതിയ നൈറ്റ്ലി നേടുക</string>
-
-    <!-- Onboarding -->
-    <!-- Text for onboarding welcome message
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_header">%s ലേക്ക് സ്വാഗതം!</string>
-    <!-- text for the Firefox Accounts section header -->
-    <string name="onboarding_fxa_section_header">നിലവിൽ അക്കൗണ്ട് ഉണ്ടോ?</string>
-    <!-- text for the Firefox Preview feature section header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_feature_section_header">%s നെ പറ്റി അറിയുക</string>
-    <!-- text for the "What's New" onboarding card header -->
-    <string name="onboarding_whats_new_header1">പുതിയതെന്താണെന്ന് കാണുക</string>
-    <!-- text for the "what's new" onboarding card description
-    The first parameter is the short name of the app (e.g. Firefox) -->
-    <string name="onboarding_whats_new_description">പുനർ‌രൂപകൽപ്പന ചെയ്‌ത %sനെക്കുറിച്ച് ചോദ്യങ്ങളുണ്ടോ? എന്താണ് മാറിയതെന്ന് അറിയണോ?</string>
-    <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
-    <string name="onboarding_whats_new_description_linktext">ഉത്തരങ്ങൾ ഇവിടെ നേടുക</string>
-    <!-- text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_firefox_account_header">%s പരമാവധി പ്രയോജനപ്പെടുത്തുക.</string>
-    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
-        another Firefox browser. (The word `Firefox` should not be translated)
-        The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">ഈ ഫോണിലെ മറ്റൊരു ഫയർ‌ഫോക്സ് ബ്രൗസറിൽ‌ നിങ്ങൾ‌ %s ആയി പ്രവേശിച്ചു. ഈ അക്കൗണ്ട് ഉപയോഗിച്ച് പ്രവേശിക്കാൻ നിങ്ങൾ ആഗ്രഹിക്കുന്നുണ്ടോ?</string>
-    <!-- text for the button to confirm automatic sign-in -->
-    <string name="onboarding_firefox_account_auto_signin_confirm">ഉവ്വ, പ്രവേശിക്കുക</string>
-    <!-- text for the automatic sign-in button while signing in is in process -->
-    <string name="onboarding_firefox_account_signing_in">പ്രവേശിക്കുന്നു…</string>
-    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
-    <string name="onboarding_firefox_account_sign_in">ഫയര്‍ഫോക്സിലേക്ക് പ്രവേശിക്കുക</string>
-    <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
-    <string name="onboarding_firefox_account_stay_signed_out">പുറത്തിറങ്ങിയതായി തുടരുക</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">സിങ്ക് ഓണാണ്</string>
-    <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
-    <string name="onboarding_firefox_account_automatic_signin_failed">പ്രവേശിക്കുന്നതിൽ പരാജയപ്പെട്ടു</string>
-    <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_2">സ്വതവേയുള്ള സ്വകാര്യത</string>
-    <!-- text for the tracking protection card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description_2">സ്വകാര്യത, സുരക്ഷാ ക്രമീകരണങ്ങൾ താങ്കളെ പിന്തുടരുന്ന ട്രാക്കറുകൾ, മാൽവെയർ, കമ്പനികൾ എന്നിവയെ തടയുന്നു.</string>
-    <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button_2">സ്റ്റാൻഡേർഡ് (തനതായിട്ടുള്ളത്)</string>
-    <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_2">കുറച്ച് ട്രാക്കറുകളെ തടയുന്നു. പേജുകൾ സാധാരണ പോലെ ലഭ്യമാവും.</string>
-    <!-- text for tracking protection radio button option for strict level of blocking -->
-    <string name="onboarding_tracking_protection_strict_button">കർശനം (ശുപാർശചെയ്യുന്നു)</string>
-    <!-- text for tracking protection radio button option for strict level of blocking -->
-    <string name="onboarding_tracking_protection_strict_option">കർശനം</string>
-    <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_2">കൂടുതൽ ട്രാക്കറുകൾ, പരസ്യങ്ങൾ, പോപ്പ്അപ്പുകൾ എന്നിവ തടയുന്നു. പേജുകൾ വേഗത്തിൽ ലോഡുചെയ്യുന്നു, പക്ഷേ ചില പ്രവർത്തനങ്ങൾ ലഭ്യമായിരിക്കില്ല.</string>
-    <!-- text for the toolbar position card header
-        In English this is an idiom for "choose a side as in an argument or fight"
-        but it is ok to make this more literally about "choosing a position in a physical space -->
-    <string name="onboarding_toolbar_position_header">ഒരു നിലപാട് എടുക്കുക</string>
-    <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_position_description">ചുവടെയുള്ള ടൂൾബാർ ഉപയോഗിച്ച് ഒറ്റ കൈ ബ്രൗസിംഗ് പരീക്ഷിക്കുക അല്ലെങ്കിൽ മുകളിലേക്ക് നീക്കുക.</string>
-    <!-- text for the private browsing onboarding card header -->
-    <string name="onboarding_private_browsing_header">സ്വകാര്യമായി ബ്രൗസ് ചെയ്യുക</string>
-    <!-- text for the private browsing onboarding card description
-    The first parameter is an icon that represents private browsing -->
-    <string name="onboarding_private_browsing_description1">ഒരു സ്വകാര്യ ടാബ് ഒരിക്കൽ തുറക്കുക: %s ഐക്കൺ അമർത്തുക.</string>
-    <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
-    <string name="onboarding_private_browsing_always_description">എല്ലാ സമയത്തും സ്വകാര്യ ടാബുകൾ തുറക്കുക: നിങ്ങളുടെ സ്വകാര്യ ബ്രൗസിംഗ് ക്രമീകരണങ്ങൾ പുനക്രമീകരിക്കുക.</string>
-    <!-- text for the private browsing onbording card button, that launches settings -->
-    <string name="onboarding_private_browsing_button">ക്രമീകരണങ്ങൾ തുറക്കുക</string>
-    <!-- text for the privacy notice onboarding card header -->
-    <string name="onboarding_privacy_notice_header">താങ്കളുടെ സ്വകാര്യത</string>
-    <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_privacy_notice_description">താങ്കൾ ഓൺലൈനിലും ഞങ്ങളുമായും പങ്കിടുന്ന കാര്യങ്ങളെ നിയന്ത്രിക്കാൻ
-        ഞങ്ങൾ %s രൂപകൽപന ചെയ്തിരിക്കുന്നു</string>
-    <!-- Text for the button to read the privacy notice -->
-    <string name="onboarding_privacy_notice_read_button">ഞങ്ങളുടെ സ്വകാര്യതാ അറിയിപ്പ് വായിക്കുക</string>
-    <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
-    <string name="onboarding_close">അടയ്ക്കുക</string>
-
-    <!-- text for the button to finish onboarding -->
-    <string name="onboarding_finish">ബ്രൗസിങ് തുടങ്ങൂക</string>
-
-    <!-- Onboarding theme -->
-    <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header">കെട്ടും മട്ടും തിരഞ്ഞെടുക്കുക</string>
-
-    <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description1">ഇരുണ്ട മോഡ് പ്രവർത്തനക്ഷമമാക്കുന്നതിലൂടെ കാഴ്ചശക്തിയും ബാറ്ററിയും സംരക്ഷിക്കുക.</string>
-    <!-- Automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_title">സ്വയം</string>
-    <!-- Summary of automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_summary">നിങ്ങളുടെ ഉപകരണത്തിന്റെ ക്രമീകരണം പിൻതുടരുന്നു</string>
-    <!-- Theme setting for dark mode -->
-    <string name="onboarding_theme_dark_title">ഇരുണ്ട തീം</string>
-
-    <!-- Theme setting for light mode -->
-    <string name="onboarding_theme_light_title">ലൈറ്റ് തീം</string>
 
     <!-- Text shown in snackbar when multiple tabs have been sent to device -->
     <string name="sync_sent_tabs_snackbar">ടാബുകൾ അയച്ചു!</string>
@@ -1039,8 +667,6 @@
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">പകരം ഇമെയിൽ ഉപയോഗിക്കുക</string>
 
-    <!-- Text shown in confirmation dialog to sign out of account -->
-    <string name="sign_out_confirmation_message">താങ്കളുടെ അക്കൗണ്ടുമായി സമന്വയിപ്പിക്കുന്നത് ഫയർഫോക്സ് നിർത്തും പക്ഷേ ഈ ഉപകരണത്തിലുള്ള താങ്കളുടെ ബ്രൗസിങ്ങ് ഡാറ്റയൊന്നും നീക്കം ചെയ്യില്ല.</string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="sign_out_confirmation_message_2">താങ്കളുടെ അക്കൗണ്ടുമായി സമന്വയിപ്പിക്കുന്നത് %s നിർത്തും പക്ഷേ ഈ ഉപകരണത്തിലുള്ള താങ്കളുടെ ബ്രൗസിങ്ങ് ഡാറ്റയൊന്നും നീക്കം ചെയ്യില്ല.</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
@@ -1056,23 +682,15 @@
     <string name="etp_settings">പരിരക്ഷാ ക്രമീകരണങ്ങൾ</string>
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">മെച്ചപ്പെട്ട ട്രാക്കിംഗ് പരിരക്ഷണം</string>
-    <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title">പിന്തുടരപ്പെടാതെ ബ്രൗസുചെയ്യുക</string>
-    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation">താങ്കളുടെ ഡാറ്റ താങ്കളുടേത് മാത്രമായി സൂക്ഷിക്കുക. ഓൺലൈനിൽ പിന്തുടരുന്ന മിക്ക ട്രാക്കറുകളിൽ നിന്നും %s താങ്കളെ പരിരക്ഷിക്കുന്നു.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">കൂടുതല്‍ അറിയുക</string>
 
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">സ്റ്റാൻഡേർഡ് (തനതായിട്ടുള്ളത്)</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_3">കുറച്ച് ട്രാക്കറുകൾ തടയുന്നു. പേജുകൾ സാധാരണ പോലെ ലോഡുചെയ്യും.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">സ്റ്റാൻഡേർഡ് ട്രാക്കിംഗ് പരിരക്ഷണം എന്തെല്ലാം തടഞ്ഞു</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">കർശനം</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_2">കൂടുതൽ ട്രാക്കറുകൾ, പരസ്യങ്ങൾ, പോപ്പ്അപ്പുകൾ എന്നിവ തടയുന്നു. പേജുകൾ വേഗത്തിൽ ലോഡുചെയ്യുന്നു, പക്ഷേ ചില പ്രവർത്തനങ്ങൾ ലഭ്യമായേക്കില്ല.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">കർശന ട്രാക്കിംഗ് സംരക്ഷണം എന്തെല്ലാം തടയുന്നു</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1099,8 +717,6 @@
     <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">എല്ലാ ടാബുകളിലും</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">സ്വകാര്യ ടാബുകളിൽ മാത്രം</string>
-    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
-    <string name="preference_enhanced_tracking_protection_custom_tracking_content_3">ഇച്ഛാനുസൃത ടാബുകളിൽ മാത്രം</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">ക്രിപ്റ്റോമൈനേഴ്സ്</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1128,8 +744,6 @@
     <string name="etp_tracking_content_title">പിന്തുടരുന്ന ഉള്ളടക്കം</string>
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">പിന്തുടരൽ കോഡ് അടങ്ങിയിരിക്കുന്ന പുറത്തുനിന്നുള്ള പരസ്യങ്ങൾ, വീഡിയോകൾ, മറ്റ് ഉള്ളടക്കം എന്നിവയുടെ ലഭ്യമാക്കൽ നിർത്തുന്നു. ചില വെബ്‌സൈറ്റ് പ്രവർത്തനങ്ങളെ ബാധിച്ചേക്കാം.</string>
-    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_cfr_message">പരിചയ്ക്ക് പർപ്പിൾ നിറമാകുമ്പോളെല്ലാം, %s ഒരു സൈറ്റിലെ ട്രാക്കറുകളെ തടഞ്ഞിട്ടുണ്ട്. കൂടുതൽ വിവരങ്ങൾക്കായി അമർത്തുക.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">ഈ സൈറ്റിനായി പരിരക്ഷകൾ ഓണാണ്</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1139,10 +753,6 @@
     <!-- Content description (not visible, for screen readers etc.): Navigate
     back from ETP details (Ex: Tracking content) -->
     <string name="etp_back_button_content_description">പുറകോട്ട് പോവുക</string>
-    <!-- About page Your rights link text -->
-    <string name="about_your_rights">താങ്കളുടെ അവകാശങ്ങള്‍</string>
-    <!-- About page link text to open open source licenses screen -->
-    <string name="about_open_source_licenses">ഞങ്ങൾ ഉപയോഗിക്കുന്ന ഓപ്പൺ സോഴ്‌സ് ലൈബ്രറികൾ</string>
     <!-- About page link text to open what's new link -->
     <string name="about_whats_new">%s- ൽ പുതിയതെന്താണ്</string>
     <!-- Open source licenses page title
@@ -1166,11 +776,6 @@
     <string name="about_debug_menu_toast_progress">ഡീബഗ് മെനു: പ്രവർത്തനക്ഷമമാക്കാൻ %1$d ക്ലിക്ക് അവശേഷിക്കുന്നു</string>
     <string name="about_debug_menu_toast_done">ഡീബഗ് മെനു പ്രവർത്തനക്ഷമമാക്കി</string>
 
-    <!-- Content description of the tab counter toolbar button when one tab is open -->
-    <string name="tab_counter_content_description_one_tab">1 ടാബ്</string>
-    <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
-    <string name="tab_counter_content_description_multi_tab">%d ടാബുകൾ</string>
-
     <!-- Browser long press popup menu -->
     <!-- Copy the current url -->
     <string name="browser_toolbar_long_press_popup_copy">പകര്‍ത്തുക</string>
@@ -1192,9 +797,6 @@
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">കുറുക്കുവഴിയുടെ പേര്</string>
 
-    <!-- Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">പെട്ടെന്ന് ലഭ്യമാവാനും ഒരു ആപ്പ്-പോലുള്ള അനുഭവത്തോടെ വേഗത്തിൽ ബ്രൗസ് ചെയ്യാനും ഈ വെബ്സൈറ്റിനെ താങ്കളുടെ ഫോണിന്റെ പൂമുഖത്തേക്ക് എളുപ്പത്തിൽ ചേർക്കാവുന്നതാണ്.</string>
-
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">ലോഗിനുകളും പാസ്‌വേഡുകളും</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
@@ -1203,18 +805,9 @@
     <string name="preferences_passwords_save_logins_ask_to_save">സൂക്ഷിക്കാൻ ആവശ്യപ്പെടുക</string>
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">ഒരിക്കലും സൂക്ഷിക്കേണ്ട</string>
-    <!-- Preference for autofilling saved logins in Fenix -->
-    <string name="preferences_passwords_autofill">സ്വയം പൂരിപ്പിക്കുക</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">ലോഗിനുകൾ സമന്വയിപ്പിക്കുക</string>
-    <!-- Syncing saved logins in Fenix is on -->
-    <string name="preferences_passwords_sync_logins_on">ഓണ്‍</string>
-    <!-- Syncing saved logins in Fenix is off -->
-    <string name="preferences_passwords_sync_logins_off">ഓഫ്</string>
-    <!-- Syncing saved logins in Fenix needs reconnect to sync -->
-    <string name="preferences_passwords_sync_logins_reconnect">വീണ്ടും ബന്ധിപ്പിക്കുക</string>
-    <!-- Syncing saved logins in Fenix needs login -->
-    <string name="preferences_passwords_sync_logins_sign_in">സമന്വയിപ്പിക്കാനായി പ്രവേശിക്കുക</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">സൂക്ഷിച്ചിട്ടുള്ള പ്രവേശനങ്ങള്‍</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
@@ -1229,42 +822,20 @@
     <string name="preferences_passwords_exceptions_description">ഈ സൈറ്റുകൾക്കായി ലോഗിനുകളും രഹസ്യവാക്കുകളും സംരക്ഷിക്കില്ല.</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">ലോഗിനുകളിൽ തിരയുക</string>
-    <!-- Option to sort logins list A-Z, alphabetically -->
-    <string name="preferences_passwords_saved_logins_alphabetically">അക്ഷരമാലാക്രമത്തില്‍</string>
-    <!-- Option to sort logins list by most recently used -->
-    <string name="preferences_passwords_saved_logins_recently_used">സമീപകാലത്ത് ഉപയോഗിച്ചവ</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">സൈറ്റ്‌</string>
     <!-- The header for the username for a login -->
     <string name="preferences_passwords_saved_logins_username">ഉപയോക്തൃനാമം</string>
     <!-- The header for the password for a login -->
     <string name="preferences_passwords_saved_logins_password">രഹസ്യവാക്ക്</string>
-    <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
-    <string name="preferences_passwords_saved_logins_enter_pin">നിങ്ങളുടെ പിൻ വീണ്ടും നൽകുക</string>
-    <!-- Message displayed in security prompt to access saved logins -->
-    <string name="preferences_passwords_saved_logins_enter_pin_description">നിങ്ങളുടെ സംരക്ഷിച്ച ലോഗിനുകൾ കാണാൻ അൺലോക്കുചെയ്യുക</string>
-    <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
-    <string name="logins_insecure_connection_warning">ഈ ബന്ധം സുരക്ഷിതമല്ല. ഇവിടെ നല്‍കിയ പ്രവേശനങ്ങളിൽ വിട്ടുവീഴ്ചകള്‍ ഉണ്ടായിട്ടുണ്ടാകാം</string>
-    <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
-    <string name="logins_insecure_connection_warning_learn_more">കൂടുതല്‍ അറിയുക</string>
-    <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
-    <string name="logins_doorhanger_save">താങ്കൾക്ക് %s ഈ ലോഗിൻ സംരക്ഷിക്കണമെന്നുണ്ടോ?</string>
-    <!-- Positive confirmation that Fenix should save the new or updated login -->
-    <string name="logins_doorhanger_save_confirmation">സംരക്ഷിക്കുക</string>
-    <!-- Negative confirmation that Fenix should not save the new or updated login -->
-    <string name="logins_doorhanger_save_dont_save">സംരക്ഷിക്കേണ്ട</string>
     <!-- Shown in snackbar to tell user that the password has been copied -->
     <string name="logins_password_copied">ക്ലിപ്പ്ബോര്‍ഡിലേക്കു് രഹസ്യവാക്ക് പകര്‍ത്തി</string>
     <!-- Shown in snackbar to tell user that the username has been copied -->
     <string name="logins_username_copied">ഉപയോക്തൃനാമം ക്ലിപ്പ്ബോർഡിലേക്ക് പകർത്തി</string>
-    <!-- Shown in snackbar to tell user that the site has been copied -->
-    <string name="logins_site_copied">സൈറ്റ് ക്ലിപ്പ്ബോർഡിലേക്ക് പകർത്തിയിരിക്കുന്നു</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">രഹസ്യവാക്ക് പകര്‍ത്തുക</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
     <string name="saved_login_copy_username">ഉപയോക്തൃനാമം പകര്‍ത്തുക</string>
-    <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
-    <string name="saved_login_copy_site">സൈറ്റ് പകർത്തുക</string>
     <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
     <string name="saved_login_reveal_password">രഹസ്യവാക്ക് കാണിക്കുക</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
@@ -1297,35 +868,19 @@
     <string name="search_engine_add_custom_search_engine_title">തിരച്ചിൽ യന്ത്രം ചേർക്കുക</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">തിരച്ചിൽ എഞ്ചിൻ തിരുത്തുക</string>
-    <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
-    <string name="search_engine_add_button_content_description">ചേർക്കുക</string>
-    <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
-    <string name="search_engine_add_custom_search_engine_edit_button_content_description">സൂക്ഷിക്കുക</string>
     <!-- Text for the menu button to edit a search engine -->
     <string name="search_engine_edit">തിരുത്തുക</string>
     <!-- Text for the menu button to delete a search engine -->
     <string name="search_engine_delete">നീക്കം ചെയ്യുക</string>
 
-    <!-- Text for the button to create a custom search engine on the Add search engine screen -->
-    <string name="search_add_custom_engine_label_other">മറ്റുള്ളവ</string>
-    <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
-    <string name="search_add_custom_engine_name_hint">പേര്</string>
-    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint">തിരയാനുള്ള വാചകം</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_search_string_example" formatted="false">അന്വേഷണ വാചകത്തിന് പകരം “%s” എന്നത് ഉപയോഗിക്കുക. ഉദാഹരണം: \nhttps://www.google.com/search?q=%s</string>
-    <!-- Text for the button to learn more about adding a custom search engine -->
-    <string name="search_add_custom_engine_learn_more_label">കൂടുതല്‍ അറിയുക</string>
 
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">ഇഷ്‌ടാനുസൃത തിരച്ചിൽ എഞ്ചിന്റെ വിശദാംശങ്ങൾ</string>
-    <!-- Accessibility description for the 'Learn more' link -->
-    <string name="search_add_custom_engine_learn_more_description">കൂടുതലറിയാനുള്ള കണ്ണി</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">തിരച്ചിൽ എഞ്ചിൻ പേര് നൽകുക</string>
-    <!-- Text shown when a user tries to add a search engine that already exists -->
-    <string name="search_add_custom_engine_error_existing_name">“%s” എന്ന പേരിലുള്ള തിരച്ചിൽ എഞ്ചിൻ ഇതിനകം നിലവിലുണ്ട്.</string>
     <!-- Text shown when a user leaves the search string field empty -->
     <string name="search_add_custom_engine_error_empty_search_string">തിരയുന്നതിനായി ഒരു വാചകം നൽകുക</string>
     <!-- Text shown when a user leaves out the required template string -->
@@ -1339,19 +894,6 @@
     <!-- Text shown when a user successfully deletes a custom search engine -->
     <string name="search_delete_search_engine_success_message">%s നീക്കം ചെയ്തു</string>
 
-    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
-    <string name="migration_title">ഏറ്റവും നവീനമായ %s ലേക്ക് സ്വാഗതം</string>
-    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
-    <string name="migration_description">ഓൺലൈനിൽ കൂടുതൽ കാര്യങ്ങൾ ചെയ്യുന്നതിന് താങ്കളെ സഹായിക്കുന്നതിനു വേണ്ടിയുള്ള സവിശേഷതകളും മികച്ച പ്രവർത്തനക്ഷമതയുമുള്ള പൂർണ്ണമായും നവീകരിക്കപ്പെട്ട ഒരു ബ്രൗസർ കാത്തിരിക്കുന്നു.\n\n താങ്കളുടെ താഴെ പറയുന്ന ഉള്ളടക്കങ്ങളോട് കൂടി ഞങ്ങൾ %s പുതുക്കുന്നത് വരെ ദയവായി കാത്തിരിക്കൂ</string>
-    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
-    <string name="migration_updating_app_button_text">%s പുതുക്കുന്നു…</string>
-    <!-- Text on the enabled button. Placeholder replaced with app name-->
-    <string name="migration_update_app_button">%s തുടങ്ങുക</string>
-    <!-- Accessibility description text for a completed migration item -->
-    <string name="migration_icon_description">സ്ഥലം മാറ്റം പൂർത്തിയായി</string>
-    <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
-    <string name="migration_text_passwords">രഹസ്യവാക്കുകൾ</string>
-
     <!-- Heading for the instructions to allow a permission -->
     <string name="phone_feature_blocked_intro">ഇത് അനുവദിക്കുന്നതിന്:</string>
 
@@ -1362,10 +904,6 @@
     <!-- Third step for the allowing a permission (Fore example: Camera) -->
     <string name="phone_feature_blocked_step_feature"><![CDATA[3. <b>%1$s</b> ഓണാക്കുക]]></string>
 
-    <!-- Label that indicates a site is using a secure connection -->
-    <string name="quick_settings_sheet_secure_connection">സുരക്ഷിത കണക്ഷന്‍</string>
-    <!-- Label that indicates a site is using a insecure connection -->
-    <string name="quick_settings_sheet_insecure_connection">സുരക്ഷിതമല്ലാത്ത കണക്ഷന്‍</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
     <string name="confirm_clear_permissions_on_all_sites">എല്ലാ സൈറ്റുകളിലെയും എല്ലാ അനുമതികളും മായ്‌ക്കണമെന്ന് താങ്കൾക്ക് ഉറപ്പാണോ?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
@@ -1374,12 +912,8 @@
     <string name="confirm_clear_permission_site">ഈ സൈറ്റിനായുള്ള ഈ അനുമതി മായ്‌ക്കണമെന്ന് താങ്കൾക്ക് ഉറപ്പാണോ?</string>
     <!-- label shown when there are not site exceptions to show in the site exception settings -->
     <string name="no_site_exceptions">സൈറ്റ് ഒഴിവാക്കലുകളൊന്നുമില്ല</string>
-    <!-- Label for the Pocket default top site -->
-    <string name="pocket_top_articles">മികച്ച ലേഖനങ്ങൾ</string>
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">ഈ അടയാളക്കുറിപ്പ് നീക്കം ചെയ്യണമെന്ന് താങ്കൾക്ക് ഉറപ്പാണോ?</string>
-    <!-- Browser menu button that adds a top site to the home fragment -->
-    <string name="browser_menu_add_to_top_sites">മികച്ച സൈറ്റുകളിലേക്ക് ചേർക്കുക</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
     <string name="certificate_info_verified_by">പരിശോധിച്ചത്: %1$s</string>
@@ -1401,8 +935,6 @@
     <string name="saved_login_password_description">ലോഗിനിന്റെ രഹസ്യവാക്കിനായുള്ള തിരുത്താനാകുന്ന ടെക്സ്റ്റ് ഫീൽഡ്.</string>
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">ലോഗിനിലുള്ള മാറ്റങ്ങൾ സംരക്ഷിക്കുക.</string>
-    <!--  The button description to discard changes to an edited login. -->
-    <string name="discard_changes">മാറ്റങ്ങൾ ഉപേക്ഷിക്കുക</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">തിരുത്തുക</string>
     <!--  The error message in edit login view when password field is blank. -->
@@ -1414,9 +946,6 @@
     <!--  The error message in edit login view when a duplicate username exists. -->
     <string name="saved_login_duplicate">അതെ പേരിൽ മറ്റൊരു ഉപയോക്താവ് നിലവിലുണ്ട്</string>
 
-    <!-- Synced Tabs -->
-    <!-- Text displayed when user is not logged into a Firefox Account -->
-    <string name="synced_tabs_connect_to_sync_account">ഫയർഫോക്സ് അക്കൗണ്ടുമായി ബന്ധിപ്പിക്കുക.</string>
     <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">മറ്റൊരു ഉപകരണം ബന്ധിപ്പിക്കുക.</string>
     <!-- Text displayed asking user to re-authenticate -->
@@ -1430,12 +959,10 @@
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
     <string name="synced_tabs_sign_in_button">സമന്വയിപ്പിക്കാനായി പ്രവേശിക്കുക</string>
 
-    <!-- Top Sites -->
-    <!-- Title text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_title">മികച്ച സൈറ്റുകളുടെ പരിധി കഴിഞ്ഞു</string>
-    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content">ഒരു പുതിയ മികച്ച സൈറ്റ് ചേർക്കാൻ, ഒരെണ്ണം നീക്കംചെയ്യുക. സൈറ്റ് ദീർഘനേരം അമർത്തി നീക്കംചെയ്യുക എന്നത് തിരഞ്ഞെടുക്കുക.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">ശരി, മനസ്സിലായി</string>
 
-</resources>
+    <!-- Translations feature-->
+
+
+    </resources>

@@ -126,4 +126,5 @@
     <string name="mozac_feature_prompts_collapse_address_content_description">Sutraukti siūlomus adresus</string>
     <!-- Text for the manage addresses button. -->
     <string name="mozac_feature_prompts_manage_address">Tvarkyti adresus</string>
-</resources>
+
+    </resources>

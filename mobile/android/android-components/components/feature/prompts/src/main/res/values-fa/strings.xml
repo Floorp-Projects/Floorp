@@ -131,10 +131,8 @@
     <string name="mozac_feature_prompts_account_picture">تصویر حساب</string>
     <!-- Title of the Identity Credential provider dialog choose. -->
     <string name="mozac_feature_prompts_identity_credentials_choose_provider">انتخاب یک فراهم‌کنندهٔ ورود</string>
-    <!-- Title of an account picker dialog for identity credentials. -->
-    <string name="mozac_feature_prompts_identity_credentials_choose_account">حسابی انتخاب کنید</string>
     <!-- Title of the Identity Credential privacy policy dialog title. The %1$s will be replaced with the name of the provider. -->
     <string name="mozac_feature_prompts_identity_credentials_privacy_policy_title">استفاده از %1$s به عنوان یک فراهم‌کننده</string>
     <!-- Title of the Identity Credential privacy policy dialog description. The %1$s will be replaced with the name of the provider, %2$s will be replaced with the account, %3$s will be replaced with the privacy policy url and  %4$s will be replaced with the terms of service. -->
     <string name="mozac_feature_prompts_identity_credentials_privacy_policy_description"><![CDATA[ورود به %1$s با یک حساب %2$s تحت <a href="%3$s">سیاست حفظ محرمانگی</a> و <a href="%4$s">شرایط ارائهٔ خدمات</a> آن‌هاست]]></string>
-</resources>
+    </resources>

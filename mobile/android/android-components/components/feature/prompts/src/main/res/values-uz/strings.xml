@@ -125,4 +125,5 @@
     <string name="mozac_feature_prompts_collapse_address_content_description">Tavsiya etilgan manzillarni yigʻish</string>
     <!-- Text for the manage addresses button. -->
     <string name="mozac_feature_prompts_manage_address">Manzillarni boshqarish</string>
-</resources>
+
+    </resources>

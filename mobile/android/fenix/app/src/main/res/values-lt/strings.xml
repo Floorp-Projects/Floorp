@@ -81,6 +81,7 @@
     <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
     <string name="tcp_cfr_learn_more">Sužinokite apie visapusišką slapukų apsaugą</string>
 
+
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">Reikia kameros prieigos. Eikite į „Android“ nustatymus, bakstelėkite „leidimus“, tada bakstelėkite „leisti“.</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
@@ -210,6 +211,7 @@
 
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">Tvarkyti pradžios tinklalapį</string>
+
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">Pradžios ekranas</string>
@@ -225,8 +227,6 @@
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Nuskaityti</string>
-    <!-- Button in the search view that lets a user change their search engine -->
-    <string name="search_engine_button">Ieškyklė</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Ieškyklės nuostatos</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
@@ -267,8 +267,6 @@
     <string name="preferences_default_search_engine">Numatytoji ieškyklė</string>
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">Paieška</string>
-    <!-- Preference for settings related to Search address bar -->
-    <string name="preferences_search_address_bar">Adreso juosta</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">Įvertinti per „Google Play“</string>
     <!-- Preference linking to about page for Fenix
@@ -295,12 +293,8 @@
 
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Pritaikymas neįgaliesiems</string>
-    <!-- Preference to override the Firefox Account server -->
-    <string name="preferences_override_fxa_server">Kitas „Firefox“ paskyrų serveris</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">Kitas „Sync“ serveris</string>
-    <!-- Toast shown after updating the FxA/Sync server override preferences -->
-    <string name="toast_override_fxa_sync_server_done">Pakeistas „Firefox“ paskyrų/sinchronizavimo serveris. Išeinama iš programos, kad būtų pritaikyti pakeitimai…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Paskyra</string>
     <!-- Preference for changing where the toolbar is positioned -->
@@ -313,8 +307,6 @@
     <string name="preferences_gestures">Gestai</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Tinkinimas</string>
-    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
-    <string name="preferences_account_default_name">„Firefox“ paskyra</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
     <string name="preferences_account_sync_error">Prisijunkite, norėdami tęsti sinchronizavimą</string>
     <!-- Preference for language -->
@@ -326,8 +318,6 @@
 
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Nuotolinis derinimas per USB</string>
-    <!-- Preference title for switch preference to show search engines -->
-    <string name="preferences_show_search_engines">Rodyti ieškykles</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Rodyti paieškos siūlymus</string>
     <!-- Preference title for switch preference to show voice search button -->
@@ -350,6 +340,7 @@
     <string name="preferences_open_links_in_apps">Atverti saitus programose</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Išorinė atsiuntimų tvarkytuvė</string>
+
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Priedai</string>
 
@@ -391,12 +382,6 @@
     <string name="wallpaper_updated_snackbar_message">Fonas pakeistas!</string>
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">Rodyti</string>
-
-    <!-- Add-on Installation from AMO-->
-    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
-    <string name="addon_not_supported_error">Priedas nepalaikomas</string>
-    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
-    <string name="addon_already_installed">Priedas jau įdiegtas</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -665,7 +650,7 @@
     <string name="collection_name_hint">Rinkinio pavadinimas</string>
     <!-- Text for the menu button to rename a top site -->
 	<string name="rename_top_site">Pervadinti</string>
-	<!-- Text for the menu button to remove a top site -->
+    <!-- Text for the menu button to remove a top site -->
 	<string name="remove_top_site">Pašalinti</string>
 
     <!-- Text for the menu button to delete a top site from history -->
@@ -943,6 +928,7 @@
     <!-- Notifications -->
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">Užverti privačiąsias korteles</string>
+
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">Rinkodara</string>
 
@@ -1008,13 +994,9 @@
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">Kortelių: %d</string>
 
-    <!-- Title for the data and history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_data_title">Naršymo žurnalas ir svetainių duomenys</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">Adresų: %d</string>
-    <!-- Title for the cookies item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cookies">Slapukai</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies_subtitle">Būsite atjungti iš daugumos svetainių</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
@@ -1046,42 +1028,8 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Šalinami naršymo duomenys…</string>
 
-    <!-- Text for the button to learn more about signing in to your Firefox account. -->
-    <string name="onboarding_manual_sign_in_description">Turėkite savo „Firefox“ adresyną, žurnalą, ir slaptažodžius šiame įrenginyje.</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">„Sync“ įjungta</string>
-
-    <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button_2">Standartinė (numatytoji)</string>
-    <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_3">Subalansuota privatumui ir našumui. Tinklalapiai įkeliami įprastai.</string>
-    <!-- text for tracking protection radio button option for strict level of blocking -->
-    <string name="onboarding_tracking_protection_strict_option">Griežta</string>
-
-    <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_3">Blokuojama daugiau stebėjimų elementų, tad tinklalapiai įkeliami sparčiau, tačiau gali sutrikti dalis funkcionalumo.</string>
-    <!-- text for the toolbar position card header  -->
-    <string name="onboarding_toolbar_placement_header_1">Pasirinkite priemonių juostos vietą</string>
-    <!-- Text for the button to read the privacy notice -->
-    <string name="onboarding_privacy_notice_read_button">Mūsų privatumo pranešimas</string>
-
-    <!-- text for the button to finish onboarding -->
-    <string name="onboarding_finish">Pradėti naršymą</string>
-
-    <!-- Onboarding theme -->
-    <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header">Pasirinkite apvalkalą</string>
-
-    <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description_2">Pataupykite bateriją ir savo regėjimą su tamsia veiksena.</string>
-    <!-- Automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_title">Automatinis</string>
-    <!-- Summary of automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_summary">Prisitaiko prie jūsų įrenginio nuostatų</string>
-    <!-- Theme setting for dark mode -->
-    <string name="onboarding_theme_dark_title">Tamsus apvalkalas</string>
-    <!-- Theme setting for light mode -->
-    <string name="onboarding_theme_light_title">Šviesus apvalkalas</string>
 
     <!-- Text shown in snackbar when multiple tabs have been sent to device -->
     <string name="sync_sent_tabs_snackbar">Kortelės išsiųstos!</string>
@@ -1118,22 +1066,14 @@
     <string name="etp_settings">Apsaugos nuostatos</string>
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">Išplėsta apsauga nuo stebėjimo</string>
-    <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title" moz:removedIn="114" tools:ignore="UnusedResources">Nebūkite stebimi naršant</string>
-    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation" moz:removedIn="114" tools:ignore="UnusedResources">Jūsų duomenys skirti tik jums. „%s“ saugo jus nuo daugelio dažniausių stebėjimo elementų, stebinčių jūsų veiklą internete.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Sužinoti daugiau</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Standartinė (numatytoji)</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_4" moz:removedIn="114" tools:ignore="UnusedResources">Subalansuota privatumui ir našumui. Tinklalapiai įkeliami įprastai.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Ką blokuoja numatytoji apsauga nuo stebėjimo</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Griežta</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_3" moz:removedIn="114" tools:ignore="UnusedResources">Blokuojama daugiau stebėjimų elementų, tad tinklalapiai įkeliami sparčiau, tačiau gali sutrikti dalis funkcionalumo.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Ką blokuoja griežta apsauga nuo stebėjimo</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1421,22 +1361,11 @@
     <string name="search_engine_add_custom_search_engine_title">Pridėti ieškyklę</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">Redaguoti ieškyklę</string>
-    <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
-    <string name="search_engine_add_button_content_description">Pridėti</string>
-    <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
-    <string name="search_engine_add_custom_search_engine_edit_button_content_description">Įrašyti</string>
 
     <!-- Text for the menu button to edit a search engine -->
     <string name="search_engine_edit">Keisti</string>
     <!-- Text for the menu button to delete a search engine -->
     <string name="search_engine_delete">Pašalinti</string>
-
-    <!-- Text for the button to create a custom search engine on the Add search engine screen -->
-    <string name="search_add_custom_engine_label_other">Kita</string>
-    <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
-    <string name="search_add_custom_engine_name_hint">Pavadinimas</string>
-    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint">Paieškos eilutės struktūra</string>
 
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_search_string_example" formatted="false">Vietoje užklausos įrašykite „%s“. Pvz.:\nhttps://www.google.com/search?q=%s</string>
@@ -1556,11 +1485,11 @@
 
     <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
     <string name="top_sites_toggle_top_recent_sites_4">Leistukai</string>
-	<!-- Title text displayed in the rename top site dialog. -->
+    <!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Pavadinimas</string>
     <!-- Button caption to confirm the renaming of the top site. -->
 	<string name="top_sites_rename_dialog_ok">Gerai</string>
-	<!-- Dialog button text for canceling the rename top site prompt. -->
+    <!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Atsisakyti</string>
 
     <!-- Text for the menu button to open the homepage settings. -->
@@ -1613,5 +1542,8 @@
     <string name="pocket_stories_feature_caption">„Firefox“ šeimos dalis. %s</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">Sužinoti daugiau</string>
+
+    <!-- Translations feature-->
+
 
     </resources>

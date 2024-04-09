@@ -1,152 +1,251 @@
-<?xml version='1.0' encoding='utf-8'?>
-<resources>
-  <string name="action_cancel">Tubspach</string>
-  <string name="action_ok">Jan ik yooch</string>
-  <string name="action_save">Chkwaach</string>
-  <string name="urlbar_hint">Tñur paa eemch ŕmee solch</string>
-  <string name="teaser">Byaw´i Sal amchu. Sal m´am. Mtkryee. Mtkweek miyi.</string>
-  <string name="feedback_erase">Chumŕmee m´amu hay payt ŕputub bwiir.</string>
-  <string name="feedback_erase_custom_tab">Chumŕmee m´amu hay payt ŕputub bwiir.</string>
-  <string name="search_hint">%1$s chŕmee</string>
-  <string name="menu_share">Mkwimu…</string>
-  <string name="menu_report_site_issue">Wawchuha klyeebha paytum jwaknaabchu</string>
-  <string name="menu_open_with_default_browser2">%1$s em msol</string>
-  <string name="menu_open_with_a_browser2">Em msol…</string>
-  <string name="menu_add_to_home_screen">Jabchu namaan ch hal mchmi</string>
-  <string name="menu_whats_new">Baam yak</string>
-  <string name="menu_settings">Chajaanch</string>
-  <string name="menu_about">Sak ntpach</string>
-  <string name="menu_help">Chbtaarch</string>
-  <string name="menu_rights">Mir mir mwii</string>
-  <string name="menu_trackers_blocked_title">Chŕmechu ŕ´ap</string>
-  <string name="menu_trackers_blocked_subtitle">Chwichu yak yoya mchubowutemum amchuhal chatewulim chajankyawyu</string>
-  <string name="menu_content_blocking">Mtbspachmwir amchu ñulyoom mchajanhikyawa</string>
-  <string name="menu_content_blocking_subtitle">Mtubspach amchu ñulyom mchajanhikyawa</string>
-  <string name="menu_custom_tab_branding">%1$s em ntpachu</string>
-  <string name="share_dialog_title">Sam paa m´em</string>
-  <string name="notification_erase_text">Sal amchu mujiñ</string>
-  <string name="notification_action_open">Sol</string>
-  <string name="notification_action_erase_and_open">Ŕmar e sol</string>
-  <string name="shortcut_erase_short_label">Ŕmar</string>
-  <string name="shortcut_erase_long_label">Sal amchu mujiñ</string>
-  <string name="shortcut_erase_and_open_short_label">Ŕmar e sol</string>
-  <string name="shortcut_erase_and_open_long_label">Ŕmar e sol %1$s</string>
-  <string name="text_selection_search_action">Jabchu tpaay chŕmee</string>
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:moz="http://mozac.org/tools" xmlns:tools="http://schemas.android.com/tools">
+    <!-- ####################################################################################### -->
+    <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
+    <!-- ## into a separate file like strings_references.xml                                  ## -->
+    <!-- ####################################################################################### -->
 
-  <string name="preference_privacy_and_security_header">Jabchu tpaay ŕbokjanchu</string>
-  <string name="preference_privacy_and_security_summary">Kabwik chŕmeechu, cookies ee tñurya</string>
-  <string name="preference_search_summary">Bu januliwu chiich, yemik maat chulwiyu</string>
-  <string name="preference_mozilla_summary">%1$s chŕmechum, nyamch</string>
-  <string name="preference_category_tracking_protection">Kabwik ŕmechu ŕboochu</string>
-  <string name="preference_category_web_content">Web chapayt wii</string>
-  <string name="preference_category_switching_apps">Aplicación jkayum tyak</string>
-  <string name="preference_category_general">Payt</string>
-  <string name="preference_general_summary">Sal amchu yooch, muul chmichu, kwaawchu</string>
-  <string name="preference_category_data_collection_use">Tñur kabwik ñum tchech chu chyunk</string>
-  <string name="preference_category_search">Ŕmee</string>
-  <string name="preference_show_search_suggestions">Kabwik chŕmecuhu mukunabchu</string>
-  <string name="preference_show_search_suggestions_summary">%1$s ey ñukwee ñumtñurum bar chŕmechuhal kwiima</string>
-  <string name="preference_search_engine_default">Ñub ik chmiich</string>
-  <string name="preference_search_engine_label">Chŕmeechu</string>
-  <string name="preference_state_on">Chubowu</string>
-  <string name="preference_state_off">Ŕ\'am</string>
-  <string name="preference_subitem_autocomplete">URL yeemik chublwi</string>
-  <string name="preference_switch_autocomplete_topsites">Amchu kajan kajanu</string>
-  <string name="preference_autocomplete_topsite_summary">Nmakchum 450 chayoomm chublwiich paa katee uchu URLs wachu tñurchuhal.</string>
-  <string name="preference_switch_autocomplete_user_list">Wachuha sal chmiich</string>
-  <string name="preference_autocomplete_user_list_summary">Mnmakchum 450 chayoomm chublwich paa katee URLs tñur chmichu hal chmii.</string>
-  <string name="preference_category_autocomplete_manage_sites">Waachu ñumtrcheech</string>
-  <string name="preference_autocomplete_subitem_manage_sites">Waachu numtrcheech</string>
-  <string name="preference_autocomplete_action_add">+ URL yeemik wii jam sal chmii</string>
-  <string name="preference_autocomplete_title_add">URL yeemik wii jam sal chmii</string>
-  <string name="custom_autocomplete_quick_add">URL yeemik wii jam sal chmii</string>
-  <string name="add_custom_autocomplete_label">Jabchu yemik matchublwiibu</string>
-  <string name="preference_category_cookies">Cookies e tñur wawchu</string>
-  <string name="preference_category_data_choices">Tñurch t\'t orrum nyaamch</string>
-  <string name="preference_autocomplete_title_remove">URLs yemi wiiha ujiiñ</string>
-  <string name="preference_autocomplete_learn_more">Terabum ŕpo</string>
-  <string name="preference_autocomplete_custom_summary">URLs yemi wiha ñumchublwiha ŕmee sal chmii.</string>
-  <string name="preference_autocomplete_add_title">URL ha sal chmii</string>
-  <string name="preference_autocomplete_add_hint">URL tublich sal chmii</string>
-  <string name="preference_autocomplete_add_example2">Yabwika: mozilla.org</string>
-  <string name="preference_autocomplete_add_example">Yabwika: example.com</string>
-  <string name="preference_autocomplete_add_confirmation">URL jkaay yemi wii sal chmii.</string>
-  <string name="preference_autocomplete_menu_remove">Ujiñ</string>
-  <string name="preference_autocomplete_action_remove_content_description">Ujiñ</string>
-  <string name="preference_autocomplete_add_error">URL sal mukjabha mtkweek m´uu.</string>
-  <string name="preference_language">Paa kwawchu</string>
-  <string name="preference_language_systemdefault">Sistem kablwiwu ha sal chmii</string>
-  <string name="preference_category_privacy">Jabchu tpaay</string>
-  <string name="preference_privacy_block_ads">Chapayt kwaaw kwimchu ŕmewu mnmakum kjkeetem</string>
-  <string name="preference_privacy_block_ads_summary">Chapayt paa chu uubchu ñulyook sal m´amuhal chŕmeewu, may kos myootemkabyuso</string>
-  <string name="preference_privacy_block_analytics">Chapayt kŕmeechu chkk uu kajanu ha kos mnmakum kjkeetem</string>
-  <string name="preference_privacy_block_analytics_summary">Ya chapayt myoowu, uukjanuk pay chapayt wichu tawiin nkyuchu</string>
-  <string name="preference_privacy_block_social">Paa waach chkŕmeech paa tketch</string>
-  <string name="preference_privacy_block_social_summary">Wawchul wak sal ñmbaamum m´uu ñwak kabyuk trchech chuha tawinch paa wak ik</string>
-  <string name="preference_privacy_block_content">Chapyt kŕmeech paa t´t kyaata ñwak chapayt jkay ya</string>
-  <string name="preference_privacy_block_content_summary2">Ñumchubowum jabchu ñulyook kos janu bootem</string>
-  <string name="preference_privacy_category_cookies">Cookies tket</string>
-  <string name="preference_privacy_should_block_cookies_no_option">Pem</string>
-  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">T´am 3 nyumuk cookies uj nyaamch jmuuk jmuukum</string>
-  <string name="preference_privacy_should_block_cookies_third_party_only_option">Cookies jkayha paa t´tkyat</string>
-  <string name="preference_privacy_should_block_cookies_yes_option">E\'e</string>
-  <string name="preference_security_biometric">Ŕalum mchknaa sak muyok mjab hikyawa</string>
-  <string name="preference_security_biometric_summary">Mŕal yal hay chsol kyaaw yuyi %1$s o URL ŕit kur sol ñwam. Sigiil hay yemik soola.</string>
-  <string name="preference_privacy_secure_mode">Ŕpoobtem</string>
-  <string name="preference_privacy_stealth_summary">Jabchu web ha tjoot aplicación jkaay chkwa ñwam</string>
-  <string name="preference_category_security">Kryek janu</string>
-  <string name="preference_category_performance">Kabyuk trchech chu</string>
-  <string name="preference_performance_block_webfonts">Tñur web wi tkat</string>
-  <string name="preference_performance_block_webfonts_summary">Icon ee paa tñurch hal chapayt kamjwilchuhal aaw yome</string>
-  <string name="preference_performance_block_javascript">JavaScript tket</string>
-  <string name="preference_performance_block_javascript_summary">Jabchuhay wayiibrab jukewu yuso, kabyuu imyus kabyuwuha kos ŕpoochtema</string>
-  <string name="preference_default_browser2">%1$s ha sal amchu jaan myoobka</string>
-  <string name="preference_category_mozilla">Mozilla</string>
-  <string name="preference_mozilla_telemetry2">Kamwiik daatha mwiruha m´emch</string>
-  <string name="preference_mozilla_telemetry_summary">Terabum ŕpo</string>
-  <string name="preference_mozilla_telemetry_summary2">Mozilla hay chmwiwuha paytum chyunk ka %1$s paytum wichkyaaw chajaanrab hikyawa.</string>
-  <string name="preference_privacy_notice">Kabwik yemi wii jan yuwuha</string>
-  <string name="preference_about">%1$s kabyuwuh</string>
-  <string name="preference_search_installed_search_engines">Motor chŕmechu ñuk chkwachumyok</string>
-  <string name="preference_search_restore">Motor chajaana januwa chŕmeech hay jan hikyawa</string>
-  <string name="preference_search_add2">+ Motor jkaay chŕmeech kyaaw jkaay sal chmii</string>
-  <string name="preference_search_remove_title">Motor chŕmeechu ujiñ</string>
-  <string name="preference_search_remove">Ujiiñ</string>
-  <string name="preference_homescreen_tips">Pantallhak paa chknauwch sak chmiich</string>
-  <string name="action_option_add_search_engine">Chŕmeechu sal chmii</string>
-  <string name="search_add_manually_name_hint">Motor chŕmechu muul</string>
-  <string name="search_add_manually_string">Caden ŕmee ñum trchech hi kyawa</string>
-  <string name="search_add_manually_save">Chkwaach</string>
-  <string name="search_add_manually_example">Yabwika: example.com/search/?q=%s</string>
-  <string name="search_add_confirmation">Motor chŕmeechu jkaay kur sal chmiich.</string>
-  <string name="search_add_error_empty_name">Motor sal amchu muul sal chmiich</string>
-  <string name="search_add_error_duplicate_name">Motor chŕmechu kur sal chmiichum sal yak muul ñu mul.</string>
-  <string name="search_add_error_empty_search">Caden chŕmechu ukjabch</string>
-  <string name="search_add_error_format">Caden chŕmechu hay tñurchu sal kyakham nyamuha uuch</string>
-  <string name="content_description_clear_input">Tñurchi tkyeech</string>
-  <string name="content_description_dismiss_input">Kos ñul uuten</string>
-  <string name="content_description_erase">Sal amchu mujiñ</string>
-  <string name="content_description_tab_counter">Tñur chiichu sool: %1$s</string>
-  <string name="content_description_lock">Tublich chu jan</string>
-  <string name="accessibility_announcement_loading">Jukewu</string>
-  <string name="accessibility_announcement_loading_finished">Web wawu jukeewu</string>
-  <string name="content_description_menu">Chwichu terab</string>
-  <string name="indicator_content_description_menu">Tawiinchu chaterab kyaaw</string>
-  <string name="content_description_forward">Jiboom kyaamch</string>
-  <string name="content_description_reload">Web tkweek jukewu</string>
-  <string name="content_description_back">Sal amchu tkweek jabch</string>
-  <string name="content_description_stop">Web jabchuha chubŕkwich</string>
-  <string name="content_description_customtab_exit">Aplicación jubo kyakhal tkweek</string>
-  <string name="content_description_trackers_blocked">Chŕibchu chapayt ŕmeechuy ŕ´ap kyo</string>
-  <string name="content_description_blocking_switch">Chkŕmeech paa tketch</string>
-  <string name="your_rights">Mir mir mwii</string>
-  <string name="external_app_prompt_title">Jabchu aplicación jkayk solch</string>
-  <string name="external_app_prompt">%1$s hal mchpaa pay jabchu %2$s msol.</string>
-  <string name="external_app_prompt_no_app_title">Aplicacion ŕit jabchu solum mŕmee</string>
-  <string name="external_app_prompt_no_app">Aplicacion dispositiiv mwi ŕitulik yak yoya soltema. %1$s myaam %2$s mŕmee aplicación ŕit kwa solhikyawa.</string>
-  <string name="external_multiple_apps_matched_exit">Sal amchu jabch tpaay al chpaa?</string>
-  <string name="download_snackbar_finished">%1$s byir</string>
-  <string name="download_snackbar_open">Sol</string>
+    <string name="action_cancel">Tubspach</string>
+    <string name="action_ok">Jan ik yooch</string>
+
+    <string name="action_save">Chkwaach</string>
+
+    <string name="urlbar_hint">Tñur paa eemch ŕmee solch</string>
+
+    <string name="teaser">Byaw´i Sal amchu. Sal m´am. Mtkryee. Mtkweek miyi.</string>
+
+    <string name="feedback_erase">Chumŕmee m´amu hay payt ŕputub bwiir.</string>
+
+    <string name="feedback_erase_custom_tab">Chumŕmee m´amu hay payt ŕputub bwiir.</string>
+
+    <string name="search_hint">%1$s chŕmee</string>
+
+    <string name="menu_share">Mkwimu…</string>
+
+    <string name="menu_report_site_issue">Wawchuha klyeebha paytum jwaknaabchu</string>
+
+    <string name="menu_open_with_default_browser2">%1$s em msol</string>
+
+    <string name="menu_open_with_a_browser2">Em msol…</string>
+
+    <string name="menu_add_to_home_screen">Jabchu namaan ch hal mchmi</string>
+
+    <string name="menu_settings">Chajaanch</string>
+    <string name="menu_about">Sak ntpach</string>
+    <string name="menu_help">Chbtaarch</string>
+    <string name="menu_rights">Mir mir mwii</string>
+
+    <string name="menu_trackers_blocked_title">Chŕmechu ŕ´ap</string>
+
+    <string name="menu_trackers_blocked_subtitle">Chwichu yak yoya mchubowutemum amchuhal chatewulim chajankyawyu</string>
+
+    <string name="menu_content_blocking">Mtbspachmwir amchu ñulyoom mchajanhikyawa</string>
+    <string name="menu_content_blocking_subtitle">Mtubspach amchu ñulyom mchajanhikyawa</string>
+
+    <string name="menu_custom_tab_branding">%1$s em ntpachu</string>
+
+    <string name="share_dialog_title">Sam paa m´em</string>
+
+    <string name="notification_erase_text">Sal amchu mujiñ</string>
+
+    <string name="notification_action_open">Sol</string>
+
+    <string name="notification_action_erase_and_open">Ŕmar e sol</string>
+
+    <string name="shortcut_erase_short_label">Ŕmar</string>
+
+    <string name="shortcut_erase_long_label">Sal amchu mujiñ</string>
+
+
+    <string name="shortcut_erase_and_open_short_label">Ŕmar e sol</string>
+
+    <string name="shortcut_erase_and_open_long_label">Ŕmar e sol %1$s</string>
+
+    <string name="preference_privacy_and_security_header">Jabchu tpaay ŕbokjanchu</string>
+
+    <string name="preference_privacy_and_security_summary">Kabwik chŕmeechu, cookies ee tñurya</string>
+
+    <string name="preference_search_summary">Bu januliwu chiich, yemik maat chulwiyu</string>
+
+    <string name="preference_mozilla_summary">%1$s chŕmechum, nyamch</string>
+
+    <string name="preference_category_web_content">Web chapayt wii</string>
+
+    <string name="preference_category_switching_apps">Aplicación jkayum tyak</string>
+
+    <string name="preference_category_general">Payt</string>
+
+    <string name="preference_category_data_collection_use">Tñur kabwik ñum tchech chu chyunk</string>
+
+    <string name="preference_category_search">Ŕmee</string>
+
+    <string name="preference_show_search_suggestions">Kabwik chŕmecuhu mukunabchu</string>
+    <string name="preference_show_search_suggestions_summary">%1$s ey ñukwee ñumtñurum bar chŕmechuhal kwiima</string>
+
+    <string name="preference_search_engine_default">Ñub ik chmiich</string>
+
+    <string name="preference_search_engine_label">Chŕmeechu</string>
+
+    <string name="preference_state_on">Chubowu</string>
+
+    <string name="preference_state_off">Ŕ\'am</string>
+
+    <string name="preference_subitem_autocomplete">URL yeemik chublwi</string>
+
+    <string name="preference_switch_autocomplete_topsites">Amchu kajan kajanu</string>
+
+    <string name="preference_switch_autocomplete_user_list">Wachuha sal chmiich</string>
+
+    <string name="preference_category_autocomplete_manage_sites">Waachu ñumtrcheech</string>
+
+    <string name="preference_autocomplete_subitem_manage_sites">Waachu numtrcheech</string>
+
+    <string name="preference_autocomplete_action_add">+ URL yeemik wii jam sal chmii</string>
+
+    <string name="preference_autocomplete_title_add">URL yeemik wii jam sal chmii</string>
+
+    <string name="custom_autocomplete_quick_add">URL yeemik wii jam sal chmii</string>
+
+    <string name="add_custom_autocomplete_label">Jabchu yemik matchublwiibu</string>
+
+    <string name="preference_category_cookies">Cookies e tñur wawchu</string>
+
+    <string name="preference_category_data_choices">Tñurch t\'t orrum nyaamch</string>
+
+    <string name="preference_autocomplete_title_remove">URLs yemi wiiha ujiiñ</string>
+
+    <string name="preference_autocomplete_learn_more">Terabum ŕpo</string>
+
+    <string name="preference_autocomplete_custom_summary">URLs yemi wiha ñumchublwiha ŕmee sal chmii.</string>
+
+    <string name="preference_autocomplete_add_title">URL ha sal chmii</string>
+
+    <string name="preference_autocomplete_add_hint">URL tublich sal chmii</string>
+
+    <string name="preference_autocomplete_add_example2">Yabwika: mozilla.org</string>
+
+    <string name="preference_autocomplete_add_example">Yabwika: example.com</string>
+
+    <string name="preference_autocomplete_add_confirmation">URL jkaay yemi wii sal chmii.</string>
+
+    <string name="preference_autocomplete_menu_remove">Ujiñ</string>
+
+    <string name="preference_autocomplete_action_remove_content_description">Ujiñ</string>
+
+    <string name="preference_autocomplete_add_error">URL sal mukjabha mtkweek m´uu.</string>
+
+    <string name="preference_language">Paa kwawchu</string>
+    <string name="preference_language_systemdefault">Sistem kablwiwu ha sal chmii</string>
+
+    <string name="preference_category_privacy">Jabchu tpaay</string>
+    <string name="preference_privacy_block_ads">Chapayt kwaaw kwimchu ŕmewu mnmakum kjkeetem</string>
+    <string name="preference_privacy_block_ads_summary">Chapayt paa chu uubchu ñulyook sal m´amuhal chŕmeewu, may kos myootemkabyuso</string>
+    <string name="preference_privacy_block_analytics">Chapayt kŕmeechu chkk uu kajanu ha kos mnmakum kjkeetem</string>
+    <string name="preference_privacy_block_analytics_summary">Ya chapayt myoowu, uukjanuk pay chapayt wichu tawiin nkyuchu</string>
+    <string name="preference_privacy_block_social">Paa waach chkŕmeech paa tketch</string>
+    <string name="preference_privacy_block_social_summary">Wawchul wak sal ñmbaamum m´uu ñwak kabyuk trchech chuha tawinch paa wak ik</string>
+    <string name="preference_privacy_block_content">Chapyt kŕmeech paa t´t kyaata ñwak chapayt jkay ya</string>
+    <string name="preference_privacy_block_content_summary2">Ñumchubowum jabchu ñulyook kos janu bootem</string>
+    <string name="preference_privacy_category_cookies">Cookies tket</string>
+
+    <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">T´am 3 nyumuk cookies uj nyaamch jmuuk jmuukum</string>
+    <string name="preference_privacy_should_block_cookies_third_party_only_option">Cookies jkayha paa t´tkyat</string>
+
+    <string name="preference_security_biometric">Ŕalum mchknaa sak muyok mjab hikyawa</string>
+
+    <string name="preference_privacy_secure_mode">Ŕpoobtem</string>
+    <string name="preference_privacy_stealth_summary">Jabchu web ha tjoot aplicación jkaay chkwa ñwam</string>
+
+    <string name="preference_category_security">Kryek janu</string>
+
+    <string name="preference_category_performance">Kabyuk trchech chu</string>
+    <string name="preference_performance_block_webfonts">Tñur web wi tkat</string>
+    <string name="preference_performance_block_webfonts_summary">Icon ee paa tñurch hal chapayt kamjwilchuhal aaw yome</string>
+
+    <string name="preference_performance_block_javascript">JavaScript tket</string>
+    <string name="preference_performance_block_javascript_summary">Jabchuhay wayiibrab jukewu yuso, kabyuu imyus kabyuwuha kos ŕpoochtema</string>
+
+    <string name="preference_default_browser2">%1$s ha sal amchu jaan myoobka</string>
+
+    <string name="preference_category_mozilla">Mozilla</string>
+    <string name="preference_mozilla_telemetry2">Kamwiik daatha mwiruha m´emch</string>
+
+    <string name="preference_mozilla_telemetry_summary">Terabum ŕpo</string>
+
+    <string name="preference_mozilla_telemetry_summary2">Mozilla hay chmwiwuha paytum chyunk ka %1$s paytum wichkyaaw chajaanrab hikyawa.</string>
+
+    <string name="preference_privacy_notice">Kabwik yemi wii jan yuwuha</string>
+
+    <string name="preference_about">%1$s kabyuwuh</string>
+
+    <string name="preference_search_installed_search_engines">Motor chŕmechu ñuk chkwachumyok</string>
+
+    <string name="preference_search_restore">Motor chajaana januwa chŕmeech hay jan hikyawa</string>
+
+    <string name="preference_search_add2">+ Motor jkaay chŕmeech kyaaw jkaay sal chmii</string>
+    <string name="preference_search_remove_title">Motor chŕmeechu ujiñ</string>
+    <string name="preference_search_remove">Ujiiñ</string>
+
+    <string name="action_option_add_search_engine">Chŕmeechu sal chmii</string>
+
+    <string name="search_add_manually_name_hint">Motor chŕmechu muul</string>
+    <string name="search_add_manually_string">Caden ŕmee ñum trchech hi kyawa</string>
+    <string name="search_add_manually_save">Chkwaach</string>
+
+    <string name="search_add_manually_example">Yabwika: example.com/search/?q=%s</string>
+
+    <string name="search_add_confirmation">Motor chŕmeechu jkaay kur sal chmiich.</string>
+
+    <string name="search_add_error_empty_name">Motor sal amchu muul sal chmiich</string>
+    <string name="search_add_error_duplicate_name">Motor chŕmechu kur sal chmiichum sal yak muul ñu mul.</string>
+
+    <string name="search_add_error_empty_search">Caden chŕmechu ukjabch</string>
+
+    <string name="search_add_error_format">Caden chŕmechu hay tñurchu sal kyakham nyamuha uuch</string>
+
+    <string name="content_description_clear_input">Tñurchi tkyeech</string>
+
+    <string name="content_description_dismiss_input">Kos ñul uuten</string>
+
+    <string name="content_description_erase">Sal amchu mujiñ</string>
+
+    <string name="content_description_tab_counter">Tñur chiichu sool: %1$s</string>
+
+    <string name="content_description_lock">Tublich chu jan</string>
+
+    <string name="accessibility_announcement_loading">Jukewu</string>
+
+    <string name="accessibility_announcement_loading_finished">Web wawu jukeewu</string>
+
+    <string name="content_description_menu">Chwichu terab</string>
+
+    <string name="indicator_content_description_menu">Tawiinchu chaterab kyaaw</string>
+
+    <string name="content_description_forward">Jiboom kyaamch</string>
+
+    <string name="content_description_reload">Web tkweek jukewu</string>
+
+    <string name="content_description_back">Sal amchu tkweek jabch</string>
+
+    <string name="content_description_stop">Web jabchuha chubŕkwich</string>
+
+    <string name="content_description_customtab_exit">Aplicación jubo kyakhal tkweek</string>
+
+    <string name="content_description_trackers_blocked">Chŕibchu chapayt ŕmeechuy ŕ´ap kyo</string>
+
+    <string name="content_description_blocking_switch">Chkŕmeech paa tketch</string>
+
+    <string name="your_rights">Mir mir mwii</string>
+
+    <string name="external_app_prompt_title">Jabchu aplicación jkayk solch</string>
+    <string name="external_app_prompt">%1$s hal mchpaa pay jabchu %2$s msol.</string>
+    <string name="external_app_prompt_no_app_title">Aplicacion ŕit jabchu solum mŕmee</string>
+    <string name="external_app_prompt_no_app">Aplicacion dispositiiv mwi ŕitulik yak yoya soltema. %1$s myaam %2$s mŕmee aplicación ŕit kwa solhikyawa.</string>
+    <string name="external_multiple_apps_matched_exit">Sal amchu jabch tpaay al chpaa?</string>
+
+    <string name="download_snackbar_finished">%1$s byir</string>
+
+    <string name="download_snackbar_open">Sol</string>
 
 
 
@@ -177,54 +276,79 @@
 
 
   <string name="firstrun_defaultbrowser_title">Myeemik chumwiwuha ta mwiluk</string>
-  <string name="firstrun_defaultbrowser_text2">Sal amchu ksool tpayha myaabraab mwaam. Cehapayt jkay knawchu ee jkay sal yak chumwiwu hal jaab wawchu t´t´orum kyakhal unuu tñur kwimch kajanha chmii chum.</string>
-  <string name="firstrun_search_title">Myeemik, chmŕmeewu</string>
-  <string name="firstrun_search_text">¿Ñukwee jkaayum yakum mŕmee´e? Chajanchu kur sal chmiich ha chubowu wiiha myok.</string>
-  <string name="firstrun_shortcut_title">Pantaal kajanha wayiibraw sal mchmii</string>
-  <string name="firstrun_shortcut_text">Amchu jnmiraabhal %1$s hal khal koha wamyiibraw sal mtkweek. \"Tñur kwimch namanchuhal mchmii\" im myok %1$s chnamanchuhal.</string>
-  <string name="firstrun_privacy_title">Myeemik chmwiwuha myok majanuk</string>
-  <string name="firstrun_privacy_text">%1$s ha sal amchu kajan mik mchmii pay sal amchu myeemik mwii ha kabuwu ha m´uk aplicación o tñur kwimch web hal amchu ha payrum m´uu.</string>
-  <string name="firstrun_close_button">¡M´eb´e!</string>
-  <string name="firstrun_skip_button">Kos ñulm´ebtem</string>
-  <string name="firstrun_next_button">Nulkpeeb</string>
-  <string name="content_blocking_disabled">-</string>
-  <string name="dialog_addtohomescreen_action_add">Sal chmii</string>
-  <string name="dialog_addtohomescreen_action_cancel">Tubspach</string>
-  <string name="dialog_addtohomescreen_tracking_protection">Mir mir januk jabchuha ñsool ŕbok janchu ha kos bootem sola</string>
-  <string name="notification_browsing_session_channel_name">Chyunch sal amchu ŕ´aap</string>
-  <string name="notification_browsing_session_channel_description">Chknaabchuhay chynchu ha %1$s ah ŕmara tawinch ŕisum. Kos aplicación ha msol yaŕaaltem o sal amchuhay boo kwawu uch yutem.</string>
-  <string name="tabs_tray_action_erase">Sal amchu mujiñ</string>
-  <string name="download_firefox">Firefox munaal</string>
-  <string name="your_rights_content1">%1$s software kos codig wiiytem solkyoha Mozilla ha ee jkay kubtar cyobchya.</string>
+    <string name="firstrun_defaultbrowser_text2">Sal amchu ksool tpayha myaabraab mwaam. Cehapayt jkay knawchu ee jkay sal yak chumwiwu hal jaab wawchu t´t´orum kyakhal unuu tñur kwimch kajanha chmii chum.</string>
 
-  <string name="gv_prompt_username_hint">M´mulha myoka</string>
-  <string name="gv_prompt_password_hint">Ŕ\' amu</string>
-  <string name="gv_prompt_clear">Tkryee</string>
-  <string name="security_popup_secure_connection">Tublich chu jan</string>
-  <string name="security_popup_insecure_connection">Tublich chu kos jaan tpaay</string>
-  <string name="security_popup_security_verified">Say uu: %1$s</string>
-  <string name="find_in_page">Chŕmeechu myook</string>
-  <string name="find_in_page_input">Chŕmeechu myook</string>
-  <string name="find_in_page_result">%1$d/%2$d</string>
+    <string name="firstrun_search_title">Myeemik, chmŕmeewu</string>
+    <string name="firstrun_search_text">¿Ñukwee jkaayum yakum mŕmee´e? Chajanchu kur sal chmiich ha chubowu wiiha myok.</string>
 
+    <string name="firstrun_shortcut_title">Pantaal kajanha wayiibraw sal mchmii</string>
+    <string name="firstrun_shortcut_text">Amchu jnmiraabhal %1$s hal khal koha wamyiibraw sal mtkweek. \&quot;Tñur kwimch namanchuhal mchmii\&quot; im myok %1$s chnamanchuhal.</string>
 
-  <string name="preference_performance_request_desktop_site">Trchechu mk\' kaab</string>
-  <string name="custom_tab_copy_url_action">URL tñurch</string>
-  <string name="preference_remote_debugging">Ñulyomuk tkryeechu USB/Wi-Fi nyaam</string>
-  <string name="biometric_auth_title">Soolch %1$s</string>
-  <string name="preference_safe_browsing_title">Waachu klyeeb´e paa wakyaw mŕ´am</string>
-  <string name="preference_safe_browsing_summary">Amchu chknarp ee paa jwakyaa ŕ ´amcha, amchu malware ee amchu software kos yaŕaalch tpaay mtket.</string>
-  <string name="preference_exceptions">Kos ñul´ebchtpaay</string>
-  <string name="preference_exceptions_description">Chapayt sal kyaak amchu yak yoya mtket.</string>
-  <string name="preference_exceptions_menu_remove">Ujiiñ</string>
-  <string name="preference_exceptions_remove_all_button_label">Amchu ha paytum ujiiñ</string>
-  <string name="tab_crash_report_title">Tñur chmiichu hay kos jantem</string>
-  <string name="tab_crash_report_headline">Tuñur chmiichuhal trchech upaar um unuuch. Ñubyu kwal ibtem.</string>
-  <string name="tab_crash_report_description">Ñul amchu kŕ´apchuwukyawa kos chapayt chwatem, sakyaaw kos tkweek chajaantem.</string>
-  <string name="tab_crash_report_close_tab_button_label">Tñur chiichu ŕ´aap</string>
+    <string name="firstrun_privacy_title">Myeemik chmwiwuha myok majanuk</string>
+    <string name="firstrun_privacy_text">%1$s ha sal amchu kajan mik mchmii pay sal amchu myeemik mwii ha kabuwu ha m´uk aplicación o tñur kwimch web hal amchu ha payrum m´uu.</string>
+
+    <string name="firstrun_close_button">¡M´eb´e!</string>
+    <string name="firstrun_skip_button">Kos ñulm´ebtem</string>
+    <string name="firstrun_next_button">Nulkpeeb</string>
+
+    <string name="content_blocking_disabled">-</string>
+
+    <string name="dialog_addtohomescreen_action_add">Sal chmii</string>
+
+    <string name="dialog_addtohomescreen_action_cancel">Tubspach</string>
+
+    <string name="notification_browsing_session_channel_name">Chyunch sal amchu ŕ´aap</string>
+
+    <string name="notification_browsing_session_channel_description">Chknaabchuhay chynchu ha %1$s ah ŕmara tawinch ŕisum. Kos aplicación ha msol yaŕaaltem o sal amchuhay boo kwawu uch yutem.</string>
+
+    <string name="tabs_tray_action_erase">Sal amchu mujiñ</string>
+
+    <string name="download_firefox">Firefox munaal</string>
+
+    <string name="your_rights_content1">%1$s software kos codig wiiytem solkyoha Mozilla ha ee jkay kubtar cyobchya.</string>
+
+    <string name="gv_prompt_username_hint">M´mulha myoka</string>
+    <string name="gv_prompt_password_hint">Ŕ\' amu</string>
+    <string name="gv_prompt_clear">Tkryee</string>
+
+    <string name="security_popup_secure_connection">Tublich chu jan</string>
+    <string name="security_popup_insecure_connection">Tublich chu kos jaan tpaay</string>
+    <string name="security_popup_security_verified">Say uu: %1$s</string>
+
+    <string name="find_in_page">Chŕmeechu myook</string>
+
+    <string name="find_in_page_input">Chŕmeechu myook</string>
+
+    <string name="find_in_page_result">%1$d/%2$d</string>
+
+    <string name="preference_performance_request_desktop_site">Trchechu mk\' kaab</string>
+
+    <string name="custom_tab_copy_url_action">URL tñurch</string>
+
+    <string name="preference_remote_debugging">Ñulyomuk tkryeechu USB/Wi-Fi nyaam</string>
+
+    <!-- Tips displayed on the home view -->
+
+    <string name="preference_safe_browsing_title">Waachu klyeeb´e paa wakyaw mŕ´am</string>
+    <string name="preference_safe_browsing_summary">Amchu chknarp ee paa jwakyaa ŕ ´amcha, amchu malware ee amchu software kos yaŕaalch tpaay mtket.</string>
+
+    <string name="preference_exceptions">Kos ñul´ebchtpaay</string>
+    <string name="preference_exceptions_description">Chapayt sal kyaak amchu yak yoya mtket.</string>
+    <string name="preference_exceptions_menu_remove">Ujiiñ</string>
+    <string name="preference_exceptions_remove_all_button_label">Amchu ha paytum ujiiñ</string>
+
+    <string name="tab_crash_report_title">Tñur chmiichu hay kos jantem</string>
+    <string name="tab_crash_report_headline">Tuñur chmiichuhal trchech upaar um unuuch. Ñubyu kwal ibtem.</string>
+    <string name="tab_crash_report_description">Ñul amchu kŕ´apchuwukyawa kos chapayt chwatem, sakyaaw kos tkweek chajaantem.</string>
+    <string name="tab_crash_report_close_tab_button_label">Tñur chiichu ŕ´aap</string>
 
 
 
 
   <string name="crash_report_send_crash_label">Wuñparum Mozilla kwiim</string>
-</resources>
+
+    <!-- Tracking protection bottom sheet -->
+
+     <!-- Promote SearchWidget Dialog -->
+
+    </resources>

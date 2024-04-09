@@ -54,8 +54,6 @@
     <!-- Menu item: Remove the current site as a shortcut from the Home screen -->
     <string name="menu_remove_from_shortcuts">La sojsa el unq´a eexhlale´ uve´ jik kuxh alejata´</string>
 
-    <!-- Menu item: Shows information about features and changes that are new to this version -->
-    <string name="menu_whats_new">Ka\'t ootzib\'al</string>
     <string name="menu_settings">B\'an tuche\'</string>
     <string name="menu_about">Ti\' uvaa\'</string>
     <string name="menu_help">Lochb\'al</string>

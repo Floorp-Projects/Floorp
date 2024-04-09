@@ -45,11 +45,6 @@
 
     <string name="private_browsing_common_myths">نجی براؤزنگ کے بارے میں عمومی فرضی داستان</string>
 
-    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message -->
-    <string name="cfr_message" moz:removedIn="109" tools:ignore="UnusedResources">اپنے ہوم اسکرین سے نجی ٹیب کھولنے کے لئے ایک شارٹ کٹ جوڑیں۔</string>
-    <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text" moz:removedIn="109" tools:ignore="UnusedResources">شارٹ کٹ شامل کریں</string>
     <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">نہیں شکریہ</string>
 
@@ -57,6 +52,7 @@
     <string name="open_in_app_cfr_positive_button_text">سیٹنگز پر جائیں</string>
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">برخاست کریں</string>
+
 
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">کیمرے تک رسائی کی ضرورت ہے۔ Android کی ترتیبات پر جائیں ، اجازتیں ٹیپ کریں ، اور اجازت پر ٹیپ کریں۔</string>
@@ -181,8 +177,6 @@
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">سکین کریں</string>
-    <!-- Button in the search view that lets a user change their search engine -->
-    <string name="search_engine_button">تلاش انجن</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">انجن سیٹنگز تلاش کریں</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
@@ -221,8 +215,6 @@
     <string name="preferences_default_search_engine">طےشدہ تلاش انجن</string>
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">تلاش کریں</string>
-    <!-- Preference for settings related to Search address bar -->
-    <string name="preferences_search_address_bar">پتہ کی بار</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">Google Play پر شرح کاری کریں</string>
     <!-- Preference linking to about page for Fenix
@@ -249,12 +241,8 @@
 
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">رسائی پزیری</string>
-    <!-- Preference to override the Firefox Account server -->
-    <string name="preferences_override_fxa_server">مخصوص Firefox Account سرور</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">منپسند سنک سرور</string>
-    <!-- Toast shown after updating the FxA/Sync server override preferences -->
-    <string name="toast_override_fxa_sync_server_done">Firefox Account/Sync سرور بدل دیا گیا۔ تبدیلیاں لاگو کرنے کے لیے ایپلیکیشن کو بند کیا جا رہا ہے…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">اکائونٹ</string>
     <!-- Preference for changing where the toolbar is positioned -->
@@ -267,8 +255,6 @@
     <string name="preferences_gestures">اشارے</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">تخصیص کریں</string>
-    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
-    <string name="preferences_account_default_name">Firefox اکاؤنٹ</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
     <string name="preferences_account_sync_error">سینک کرنے کو دوبارہ شروع کرنے کے لئے پھر سے جوڑیں</string>
     <!-- Preference for language -->
@@ -279,8 +265,6 @@
     <string name="preferences_data_collection">ڈیٹا مجموعہ</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">USB کے ذریعے بعید ٹھیک کاری</string>
-    <!-- Preference title for switch preference to show search engines -->
-    <string name="preferences_show_search_engines">تلاش انجن دکھایں</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">تلاش تجاویز دکھائیں</string>
     <!-- Preference title for switch preference to show voice search button -->
@@ -302,6 +286,7 @@
 
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">بیرونی ڈاؤن لوڈ مینیجر</string>
+
     <!-- Preference for add_ons -->
     <string name="preferences_addons">ایڈ اون</string>
 
@@ -332,12 +317,6 @@
 
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">نظارہ</string>
-
-    <!-- Add-on Installation from AMO-->
-    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
-    <string name="addon_not_supported_error">ایڈ آن کی معاونت نہیں ہے</string>
-    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
-    <string name="addon_already_installed">ایڈ آن پہلے ہی نصب ہے</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -471,13 +450,6 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">بند کریں</string>
 
-    <!-- Text to show users they have one site in the history group section of the History fragment.
-    %d is a placeholder for the number of sites in the group. -->
-    <string name="history_search_group_site">%d سائٹ</string>
-    <!-- Text to show users they have multiple sites in the history group section of the History fragment.
-    %d is a placeholder for the number of sites in the group. -->
-    <string name="history_search_group_sites">%dسائٹس</string>
-
     <!-- Option in library for Recently Closed Tabs -->
     <string name="library_recently_closed_tabs">حالیہ بند کیے گئے ٹیب</string>
     <!-- Option in library to open Recently Closed Tabs page -->
@@ -609,9 +581,9 @@
     <string name="collection_open_tabs">ٹیب کھولیں</string>
     <!-- Hint for adding name of a collection -->
     <string name="collection_name_hint">مجموعہ کا نام</string>
-	<!-- Text for the menu button to rename a top site -->
+    <!-- Text for the menu button to rename a top site -->
 	<string name="rename_top_site">نام تبدیل کریں</string>
-	<!-- Text for the menu button to remove a top site -->
+    <!-- Text for the menu button to remove a top site -->
 	<string name="remove_top_site">ہٹائیں</string>
 
     <!-- Text for the menu button to delete a top site from history -->
@@ -772,8 +744,6 @@
     <string name="phone_feature_blocked_by_android">Android کے ذریعہ مسدود ہے</string>
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">استثنيات</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on" moz:removedIn="111" tools:ignore="UnusedResources">چالو</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">بند</string>
     <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
@@ -890,10 +860,6 @@
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">مارکیٹنگ</string>
 
-    <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
-    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
-    <string name="notification_default_browser_title">%1$s تیز اور نجی ہے۔</string>
-
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">مجموعہ حذف ہوگیا</string>
@@ -953,13 +919,9 @@
     <string name="preferences_delete_browsing_data_tabs_title_2">ٹیبز کھولیں</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d ٹیب</string>
-    <!-- Title for the data and history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_data_title">براؤزنگ کی تاریخ اور سائٹ کا ڈیٹا</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d ایڈریسیس</string>
-    <!-- Title for the cookies item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cookies">کوکیز</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies_subtitle">آپ کو زیادہ تر سائٹوں سے لاگ آؤٹ کر دیا جائےگا</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
@@ -993,33 +955,6 @@
 
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Sync چالو ہے</string>
-    <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button_2">معیاری (پہلے سے طے شدہ)</string>
-    <!-- text for tracking protection radio button option for strict level of blocking -->
-    <string name="onboarding_tracking_protection_strict_option">سخت</string>
-    <!-- text for the toolbar position card header  -->
-    <string name="onboarding_toolbar_placement_header_1">اپنے ٹول بار کی جگہ کا انتخاب کریں</string>
-
-    <!-- Text for the button to read the privacy notice -->
-    <string name="onboarding_privacy_notice_read_button">ہماری رازداری نوٹس پڑھیں</string>
-
-    <!-- text for the button to finish onboarding -->
-    <string name="onboarding_finish">براؤزنگ شروع کریں</string>
-
-    <!-- Onboarding theme -->
-    <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header">اپنے تھیم کا انتخاب کریں</string>
-    <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description_2">ڈارک موڈ کے ساتھ کچھ بیٹری اور اپنی بینائی کو بچائیں۔</string>
-    <!-- Automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_title">خود بخود</string>
-    <!-- Summary of automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_summary">آپ کے آلے کی ترتیبات کو اپناتا ہے۔</string>
-    <!-- Theme setting for dark mode -->
-    <string name="onboarding_theme_dark_title">سیاہ تھیم</string>
-
-    <!-- Theme setting for light mode -->
-    <string name="onboarding_theme_light_title">لائٹ تھیم</string>
 
     <!-- Text shown in snackbar when multiple tabs have been sent to device -->
     <string name="sync_sent_tabs_snackbar">ٹیب بھیج دیا گیا</string>
@@ -1052,8 +987,6 @@
     <string name="etp_settings">تحفظ کی سیٹنگز</string>
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">توسيعى سراغ کاری تحفظ</string>
-    <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title">بغیر پیروی کیے براؤز کریں</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">مزید سیکھیں</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
@@ -1336,22 +1269,10 @@
     <string name="search_engine_add_custom_search_engine_title">تلاش انجن شامل کریں</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">تلاش انجن تدوین کریں</string>
-    <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
-    <string name="search_engine_add_button_content_description">شامل کریں</string>
-    <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
-    <string name="search_engine_add_custom_search_engine_edit_button_content_description">محفوظ کریں</string>
     <!-- Text for the menu button to edit a search engine -->
     <string name="search_engine_edit">تدوین</string>
     <!-- Text for the menu button to delete a search engine -->
     <string name="search_engine_delete">حذف</string>
-
-    <!-- Text for the button to create a custom search engine on the Add search engine screen -->
-    <string name="search_add_custom_engine_label_other">دوسرا</string>
-    <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
-    <string name="search_add_custom_engine_name_hint">نام</string>
-
-    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint">استعمال کرنے کے لیئے اسٹرنگ تلاش کریں</string>
 
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">مخصوص تلاش انجن کی تفصلات</string>
@@ -1464,7 +1385,7 @@
 	<string name="top_sites_rename_dialog_title">نام</string>
     <!-- Button caption to confirm the renaming of the top site. -->
 	<string name="top_sites_rename_dialog_ok">ٹھیک ہے</string>
-	<!-- Dialog button text for canceling the rename top site prompt. -->
+    <!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">منسوخ کریں</string>
 
     <!-- Text for the menu button to open the homepage settings. -->
@@ -1503,5 +1424,8 @@
     <string name="pocket_stories_feature_caption">%s کے خاندان کا حصہ</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">مزید سیکھیں</string>
+
+    <!-- Translations feature-->
+
 
     </resources>

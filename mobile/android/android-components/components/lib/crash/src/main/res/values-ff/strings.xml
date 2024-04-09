@@ -26,4 +26,5 @@
 
     <!-- Text shown instead of crash list if no crashes have been submitted yet -->
     <string name="mozac_lib_crash_no_crashes">Alaa jaŋte hookre neldaa.</string>
-</resources>
+
+    </resources>

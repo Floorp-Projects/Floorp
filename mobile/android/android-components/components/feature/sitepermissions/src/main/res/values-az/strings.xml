@@ -33,4 +33,4 @@
     <string name="mozac_feature_sitepermissions_never_allow">Heç vaxt</string>
     <!-- Title of a dialog to require to save data in persistent storage. %1$s will be replaced with the URL of the current page -->
     <string name="mozac_feature_sitepermissions_persistent_storage_title">%1$s üçün qalıcı yaddaşda məlumat saxlamağa icazə verilsin?</string>
-</resources>
+    </resources>

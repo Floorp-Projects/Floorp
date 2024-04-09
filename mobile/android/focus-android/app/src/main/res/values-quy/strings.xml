@@ -1,128 +1,216 @@
-<?xml version='1.0' encoding='utf-8'?>
-<resources>
-  <string name="action_cancel">Tatiy</string>
-  <string name="action_ok">ARI</string>
-  <string name="action_save">Jallich\'ay</string>
-  <string name="urlbar_hint">Mask\'ay mana chay dirección ñisqaman yaykuy</string>
-  <string name="teaser">Sapanmanta asuy t\'aqwiriy. T\'aqwiriy. Pichay. Kutikipay.</string>
-  <string name="feedback_erase">Ñawpa yaykusqa t\'aqwiriyniyki picharpakun.</string>
-  <string name="search_hint">Mask\'ay kaypaq %1$s</string>
-  <string name="menu_share">Qunakuy…</string>
-  <string name="menu_report_site_issue">Kitiqpata Ch\'ampanta Willay</string>
-  <string name="menu_open_with_default_browser2">Kichariy kaypi %1$s</string>
-  <string name="menu_open_with_a_browser2">Kichariy kaypi…</string>
-  <string name="menu_add_to_home_screen">Qallariy pantallaman yapaykuy</string>
-  <string name="menu_whats_new">Musuq imakuna</string>
-  <string name="menu_settings">Allinchaykuna</string>
-  <string name="menu_about">Kaymanta</string>
-  <string name="menu_help">Yanapay</string>
-  <string name="menu_rights">Derechosniyki</string>
-  <string name="menu_trackers_blocked_title">Mask\'achiqkuna ch\'atasqa</string>
-  <string name="menu_custom_tab_branding">Kallpachasqa kaywan %1$s</string>
-  <string name="share_dialog_title">Via ñisqata qunakuy</string>
-  <string name="notification_erase_text">Ñawpa yaykusqa t\'aqwiriyta pichay</string>
-  <string name="notification_action_open">Kichay</string>
-  <string name="notification_action_erase_and_open">Pichaytaq kichariytaq</string>
-  <string name="shortcut_erase_short_label">Pichay</string>
-  <string name="shortcut_erase_long_label">Ñawpa yaykusqa t\'aqwiriyta pichay</string>
-  <string name="text_selection_search_action">Asuy mask\'ay</string>
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:moz="http://mozac.org/tools" xmlns:tools="http://schemas.android.com/tools">
+    <!-- ####################################################################################### -->
+    <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
+    <!-- ## into a separate file like strings_references.xml                                  ## -->
+    <!-- ####################################################################################### -->
 
-  <string name="preference_privacy_and_security_header">Asuy chanta Takya</string>
-  <string name="preference_privacy_and_security_summary">Tarichiqkunamanta, cookies kaqkunamanta, willaykunamanta ima akllaykuna</string>
-  <string name="preference_search_summary">Akllasqañajinata churay, sapanmanta junt\'achiy</string>
-  <string name="preference_mozilla_summary">Kaymanta %1$s, yanapay</string>
-  <string name="preference_category_tracking_protection">Tarichiqkunamanta jark\'ana</string>
-  <string name="preference_category_web_content">Web kaqmanta Tiyapuynin</string>
-  <string name="preference_category_switching_apps">Apps kaqkunata tikraychaspa</string>
-  <string name="preference_category_general">Jatunnin</string>
-  <string name="preference_category_data_collection_use">Willaykunamanta tantaynin chanta llamk\'aynin ima</string>
-  <string name="preference_category_search">Mask\'ay</string>
-  <string name="preference_search_engine_default">Ajinaña jamuq</string>
-  <string name="preference_state_on">Jap\'ichisqa</string>
-  <string name="preference_state_off">Wañuchisqa</string>
-  <string name="preference_subitem_autocomplete">URL sapanmanta junt\'achiy</string>
-  <string name="preference_autocomplete_action_add">+ sapanchaykunata yapay URL</string>
-  <string name="preference_autocomplete_title_add">Sapanchaykunata yapay URL</string>
-  <string name="custom_autocomplete_quick_add">Sapanchaykunata yapay URL</string>
-  <string name="preference_category_cookies">Cookies chanta Kitimanta Willaykuna</string>
-  <string name="preference_category_data_choices">Willaykunamanta Akllaykuna</string>
-  <string name="preference_autocomplete_title_remove">Sapanchasqa URLs raqpay</string>
-  <string name="preference_autocomplete_learn_more">Astawan yachay</string>
-  <string name="preference_autocomplete_custom_summary">Yapay chanta kamachiy sapanchasqa sapanmanta junt\'achiyta URLs.</string>
-  <string name="preference_autocomplete_add_title">URL yapanapaq</string>
-  <string name="preference_autocomplete_add_hint">Mach\'ay mana chay URL qillqay</string>
-  <string name="preference_autocomplete_add_example2">Kayjina: mozilla.org</string>
-  <string name="preference_autocomplete_add_example">Kayjina: example.com</string>
-  <string name="preference_autocomplete_add_confirmation">Musuq sapanchasqa URL yapasqa.</string>
-  <string name="preference_autocomplete_menu_remove">Raqpay</string>
-  <string name="preference_autocomplete_action_remove_content_description">Raqpay</string>
-  <string name="preference_autocomplete_add_error">Watiqmanta qhawaykuy kay URL qillqasqaykita.</string>
-  <string name="preference_language">Runasimi</string>
-  <string name="preference_language_systemdefault">Sistemaqpata ajinaña jamuynin</string>
-  <string name="preference_category_privacy">Asuy</string>
-  <string name="preference_privacy_block_ads">Publicidadmanta tarichiqkunata ch\'ataykuy</string>
-  <string name="preference_privacy_block_ads_summary">Wakin willaykuna, manapis qam paykunaman yaykuykuqtiykipis, yaykusqaykita kay web raphikunaman tarinku</string>
-  <string name="preference_privacy_block_analytics">Analiticos tarichiqkunata ch\'ataykuy</string>
-  <string name="preference_privacy_block_analytics_summary">Kaywan llamk\'akun ruwaykunaykita tantanapaq, qhawaykachanapaq chanta tupunapaq ima, kikinta imaynatachus jukta akllaptiyki mana chay raphinta suchuptiykijina</string>
-  <string name="preference_privacy_block_social">Social tarichiqkunata ch\'ataykuy</string>
-  <string name="preference_privacy_block_social_summary">Raphikunapi yapasqa kachkanku yaykuyniykita tarinankupaq chanta llamk\'ayta rikuchinanpaq, kikin botonesjina qunakunapaq</string>
-  <string name="preference_privacy_block_content">Wak tiyapuykunamanta tarichiqkunata ch\'ataykuy</string>
-  <string name="preference_privacy_block_content_summary2">Kawsachiyqa wakin raphikuna mana suyaq llamk\'achiy kanankuta ruwachinman</string>
-  <string name="preference_privacy_category_cookies">Cookies ch\'ataykuy</string>
-  <string name="preference_privacy_should_block_cookies_no_option">Mana</string>
-  <string name="preference_privacy_should_block_cookies_third_party_only_option">Cookies 3 ñiqi kaqkunallaqpata ch\'ataykuy</string>
-  <string name="preference_privacy_should_block_cookies_yes_option">Ari</string>
-  <string name="preference_privacy_secure_mode">Mana rikukuq</string>
-  <string name="preference_privacy_stealth_summary">Web raphikunata pakay ruwaykunata chhalaptiyki</string>
-  <string name="preference_category_performance">Llamk\'ay thaskiynin</string>
-  <string name="preference_performance_block_webfonts">Web paqariykunata ch\'ataykuy</string>
-  <string name="preference_performance_block_webfonts_summary">Unanchakunata mana chay rikch\'aykunata pisichiy atinman</string>
-  <string name="preference_performance_block_javascript">JavaScript ch\'ataykuy</string>
-  <string name="preference_performance_block_javascript_summary">Raphikuna aswan utqhayta chaqnanay atinkuman, ichaqa mana suyaq kaqjinata llamk\'ay atillankutaq</string>
-  <string name="preference_default_browser2">Tikray %1$s ajinaña churasqa t\'aqwiriqniykipi</string>
-  <string name="preference_category_mozilla">Mozilla</string>
-  <string name="preference_mozilla_telemetry2">Llamk\'akusqamanta willaykunata kachay</string>
-  <string name="preference_mozilla_telemetry_summary">Astawan yachay</string>
-  <string name="preference_mozilla_telemetry_summary2">Mozilla aswan munasqallata tantananpaq kaypachakun qusunankupaq chanta allinchanankupaq %1$s tukuypaq.</string>
-  <string name="preference_privacy_notice">Asuymanta willay</string>
-  <string name="preference_about">Kaymanta %1$s</string>
-  <string name="preference_search_installed_search_engines">Mask\'aq motores chantisqa</string>
-  <string name="preference_search_restore">Ajinaña jamuq mask\'aq motoresta jamuyninman kutichiy</string>
-  <string name="preference_search_add2">+ Wak mask\'aq motorta yapay</string>
-  <string name="preference_search_remove_title">Mask\'aq motoresta raqpay</string>
-  <string name="preference_search_remove">Raqpay</string>
-  <string name="action_option_add_search_engine">Mask\'aq motorta yapay</string>
-  <string name="search_add_manually_name_hint">Mask\'aq motorpata sutin</string>
-  <string name="search_add_manually_string">Mayqin mask\'aq wallqawanchus llamk\'akunqa</string>
-  <string name="search_add_manually_save">Jallich\'ay</string>
-  <string name="search_add_manually_example">Kayjina: example.com/search/?q=%s</string>
-  <string name="search_add_confirmation">Musuq mask\'aq motor yapasqa.</string>
-  <string name="search_add_error_empty_name">Mask\'aq motor sutinta qillqay</string>
-  <string name="search_add_error_duplicate_name">Juk chantisqa mask\'aq motor chay sutiwan llamk\'achkanña.</string>
-  <string name="search_add_error_empty_search">Mask\'aq wallqata qillqay</string>
-  <string name="search_add_error_format">Qhawaykachay mask\'aq wallqaqa kikin kananta ejemplo rikukuywan</string>
-  <string name="content_description_clear_input">Registrota pichay</string>
-  <string name="content_description_dismiss_input">Wich\'uy</string>
-  <string name="content_description_erase">Ñawpa yaykusqa t\'aqwiriyta pichay</string>
-  <string name="content_description_tab_counter">Tikllakuna kichasqa: %1$s</string>
-  <string name="content_description_lock">Takya t\'inkiy</string>
-  <string name="accessibility_announcement_loading">Chaqnanachkan</string>
-  <string name="accessibility_announcement_loading_finished">Web raphi chaqnanasqa</string>
-  <string name="content_description_menu">Aswan akllaykuna</string>
-  <string name="content_description_forward">Ñawpaqman riy</string>
-  <string name="content_description_reload">Watiqmanta chaqnanay web raphita</string>
-  <string name="content_description_back">Ñawpa raphiman riy</string>
-  <string name="content_description_stop">Kay raphiqpata chaqnanayninta sayay</string>
-  <string name="content_description_customtab_exit">Ñawpa aplicacionman kutiy</string>
-  <string name="content_description_blocking_switch">Tarichiqkunata ch\'ataykuy</string>
-  <string name="your_rights">Derechosniyki</string>
-  <string name="external_app_prompt_title">T\'inkiyta kichariy wak aplicaciónwan</string>
-  <string name="external_app_prompt">Lluqsiy atiwaq kaymanta %1$s kay t\'inkiyta kaypi %2$s kichanaykipaq.</string>
-  <string name="external_app_prompt_no_app_title">Juk aplicación tariy mayqinchus kay t\'inkiyta kichariy atinanpaq</string>
-  <string name="external_app_prompt_no_app">Ni mayqin aplicaciones kay dispositivoykiqpata kay t\'inkiyta kichariy atinchu. Lluqsiy atiwaq kaymanta %1$s mask\'anaykipaq kaypi %2$s juk tupakuq aplicacionta.</string>
-  <string name="external_multiple_apps_matched_exit">¿Asuy t\'aqwiriymanta lluqsinkichu?</string>
-  <string name="download_snackbar_finished">%1$s tukusqa</string>
-  <string name="download_snackbar_open">Kichay</string>
+    <string name="action_cancel">Tatiy</string>
+    <string name="action_ok">ARI</string>
+
+    <string name="action_save">Jallich\'ay</string>
+
+    <string name="urlbar_hint">Mask\'ay mana chay dirección ñisqaman yaykuy</string>
+
+    <string name="teaser">Sapanmanta asuy t\'aqwiriy. T\'aqwiriy. Pichay. Kutikipay.</string>
+
+    <string name="feedback_erase">Ñawpa yaykusqa t\'aqwiriyniyki picharpakun.</string>
+
+    <string name="search_hint">Mask\'ay kaypaq %1$s</string>
+
+    <string name="menu_share">Qunakuy…</string>
+
+    <string name="menu_report_site_issue">Kitiqpata Ch\'ampanta Willay</string>
+
+    <string name="menu_open_with_default_browser2">Kichariy kaypi %1$s</string>
+
+    <string name="menu_open_with_a_browser2">Kichariy kaypi…</string>
+
+    <string name="menu_add_to_home_screen">Qallariy pantallaman yapaykuy</string>
+
+    <string name="menu_settings">Allinchaykuna</string>
+    <string name="menu_about">Kaymanta</string>
+    <string name="menu_help">Yanapay</string>
+    <string name="menu_rights">Derechosniyki</string>
+
+    <string name="menu_trackers_blocked_title">Mask\'achiqkuna ch\'atasqa</string>
+
+    <string name="menu_custom_tab_branding">Kallpachasqa kaywan %1$s</string>
+
+    <string name="share_dialog_title">Via ñisqata qunakuy</string>
+
+    <string name="notification_erase_text">Ñawpa yaykusqa t\'aqwiriyta pichay</string>
+
+    <string name="notification_action_open">Kichay</string>
+
+    <string name="notification_action_erase_and_open">Pichaytaq kichariytaq</string>
+
+    <string name="shortcut_erase_short_label">Pichay</string>
+
+    <string name="shortcut_erase_long_label">Ñawpa yaykusqa t\'aqwiriyta pichay</string>
+
+
+    <string name="preference_privacy_and_security_header">Asuy chanta Takya</string>
+
+    <string name="preference_privacy_and_security_summary">Tarichiqkunamanta, cookies kaqkunamanta, willaykunamanta ima akllaykuna</string>
+
+    <string name="preference_search_summary">Akllasqañajinata churay, sapanmanta junt\'achiy</string>
+
+    <string name="preference_mozilla_summary">Kaymanta %1$s, yanapay</string>
+
+    <string name="preference_category_web_content">Web kaqmanta Tiyapuynin</string>
+
+    <string name="preference_category_switching_apps">Apps kaqkunata tikraychaspa</string>
+
+    <string name="preference_category_general">Jatunnin</string>
+
+    <string name="preference_category_data_collection_use">Willaykunamanta tantaynin chanta llamk\'aynin ima</string>
+
+    <string name="preference_category_search">Mask\'ay</string>
+
+    <string name="preference_search_engine_default">Ajinaña jamuq</string>
+
+    <string name="preference_state_on">Jap\'ichisqa</string>
+
+    <string name="preference_state_off">Wañuchisqa</string>
+
+    <string name="preference_subitem_autocomplete">URL sapanmanta junt\'achiy</string>
+
+    <string name="preference_autocomplete_action_add">+ sapanchaykunata yapay URL</string>
+
+    <string name="preference_autocomplete_title_add">Sapanchaykunata yapay URL</string>
+
+    <string name="custom_autocomplete_quick_add">Sapanchaykunata yapay URL</string>
+
+    <string name="preference_category_cookies">Cookies chanta Kitimanta Willaykuna</string>
+
+    <string name="preference_category_data_choices">Willaykunamanta Akllaykuna</string>
+
+    <string name="preference_autocomplete_title_remove">Sapanchasqa URLs raqpay</string>
+
+    <string name="preference_autocomplete_learn_more">Astawan yachay</string>
+
+    <string name="preference_autocomplete_custom_summary">Yapay chanta kamachiy sapanchasqa sapanmanta junt\'achiyta URLs.</string>
+
+    <string name="preference_autocomplete_add_title">URL yapanapaq</string>
+
+    <string name="preference_autocomplete_add_hint">Mach\'ay mana chay URL qillqay</string>
+
+    <string name="preference_autocomplete_add_example2">Kayjina: mozilla.org</string>
+
+    <string name="preference_autocomplete_add_example">Kayjina: example.com</string>
+
+    <string name="preference_autocomplete_add_confirmation">Musuq sapanchasqa URL yapasqa.</string>
+
+    <string name="preference_autocomplete_menu_remove">Raqpay</string>
+
+    <string name="preference_autocomplete_action_remove_content_description">Raqpay</string>
+
+    <string name="preference_autocomplete_add_error">Watiqmanta qhawaykuy kay URL qillqasqaykita.</string>
+
+    <string name="preference_language">Runasimi</string>
+    <string name="preference_language_systemdefault">Sistemaqpata ajinaña jamuynin</string>
+
+    <string name="preference_category_privacy">Asuy</string>
+    <string name="preference_privacy_block_ads">Publicidadmanta tarichiqkunata ch\'ataykuy</string>
+    <string name="preference_privacy_block_ads_summary">Wakin willaykuna, manapis qam paykunaman yaykuykuqtiykipis, yaykusqaykita kay web raphikunaman tarinku</string>
+    <string name="preference_privacy_block_analytics">Analiticos tarichiqkunata ch\'ataykuy</string>
+    <string name="preference_privacy_block_analytics_summary">Kaywan llamk\'akun ruwaykunaykita tantanapaq, qhawaykachanapaq chanta tupunapaq ima, kikinta imaynatachus jukta akllaptiyki mana chay raphinta suchuptiykijina</string>
+    <string name="preference_privacy_block_social">Social tarichiqkunata ch\'ataykuy</string>
+    <string name="preference_privacy_block_social_summary">Raphikunapi yapasqa kachkanku yaykuyniykita tarinankupaq chanta llamk\'ayta rikuchinanpaq, kikin botonesjina qunakunapaq</string>
+    <string name="preference_privacy_block_content">Wak tiyapuykunamanta tarichiqkunata ch\'ataykuy</string>
+    <string name="preference_privacy_block_content_summary2">Kawsachiyqa wakin raphikuna mana suyaq llamk\'achiy kanankuta ruwachinman</string>
+    <string name="preference_privacy_category_cookies">Cookies ch\'ataykuy</string>
+
+    <string name="preference_privacy_should_block_cookies_third_party_only_option">Cookies 3 ñiqi kaqkunallaqpata ch\'ataykuy</string>
+
+    <string name="preference_privacy_secure_mode">Mana rikukuq</string>
+    <string name="preference_privacy_stealth_summary">Web raphikunata pakay ruwaykunata chhalaptiyki</string>
+
+    <string name="preference_category_performance">Llamk\'ay thaskiynin</string>
+    <string name="preference_performance_block_webfonts">Web paqariykunata ch\'ataykuy</string>
+    <string name="preference_performance_block_webfonts_summary">Unanchakunata mana chay rikch\'aykunata pisichiy atinman</string>
+
+    <string name="preference_performance_block_javascript">JavaScript ch\'ataykuy</string>
+    <string name="preference_performance_block_javascript_summary">Raphikuna aswan utqhayta chaqnanay atinkuman, ichaqa mana suyaq kaqjinata llamk\'ay atillankutaq</string>
+
+    <string name="preference_default_browser2">Tikray %1$s ajinaña churasqa t\'aqwiriqniykipi</string>
+
+    <string name="preference_category_mozilla">Mozilla</string>
+    <string name="preference_mozilla_telemetry2">Llamk\'akusqamanta willaykunata kachay</string>
+
+    <string name="preference_mozilla_telemetry_summary">Astawan yachay</string>
+
+    <string name="preference_mozilla_telemetry_summary2">Mozilla aswan munasqallata tantananpaq kaypachakun qusunankupaq chanta allinchanankupaq %1$s tukuypaq.</string>
+
+    <string name="preference_privacy_notice">Asuymanta willay</string>
+
+    <string name="preference_about">Kaymanta %1$s</string>
+
+    <string name="preference_search_installed_search_engines">Mask\'aq motores chantisqa</string>
+
+    <string name="preference_search_restore">Ajinaña jamuq mask\'aq motoresta jamuyninman kutichiy</string>
+
+    <string name="preference_search_add2">+ Wak mask\'aq motorta yapay</string>
+    <string name="preference_search_remove_title">Mask\'aq motoresta raqpay</string>
+    <string name="preference_search_remove">Raqpay</string>
+
+    <string name="action_option_add_search_engine">Mask\'aq motorta yapay</string>
+
+    <string name="search_add_manually_name_hint">Mask\'aq motorpata sutin</string>
+    <string name="search_add_manually_string">Mayqin mask\'aq wallqawanchus llamk\'akunqa</string>
+    <string name="search_add_manually_save">Jallich\'ay</string>
+
+    <string name="search_add_manually_example">Kayjina: example.com/search/?q=%s</string>
+
+    <string name="search_add_confirmation">Musuq mask\'aq motor yapasqa.</string>
+
+    <string name="search_add_error_empty_name">Mask\'aq motor sutinta qillqay</string>
+    <string name="search_add_error_duplicate_name">Juk chantisqa mask\'aq motor chay sutiwan llamk\'achkanña.</string>
+
+    <string name="search_add_error_empty_search">Mask\'aq wallqata qillqay</string>
+
+    <string name="search_add_error_format">Qhawaykachay mask\'aq wallqaqa kikin kananta ejemplo rikukuywan</string>
+
+    <string name="content_description_clear_input">Registrota pichay</string>
+
+    <string name="content_description_dismiss_input">Wich\'uy</string>
+
+    <string name="content_description_erase">Ñawpa yaykusqa t\'aqwiriyta pichay</string>
+
+    <string name="content_description_tab_counter">Tikllakuna kichasqa: %1$s</string>
+
+    <string name="content_description_lock">Takya t\'inkiy</string>
+
+    <string name="accessibility_announcement_loading">Chaqnanachkan</string>
+
+    <string name="accessibility_announcement_loading_finished">Web raphi chaqnanasqa</string>
+
+    <string name="content_description_menu">Aswan akllaykuna</string>
+
+    <string name="content_description_forward">Ñawpaqman riy</string>
+
+    <string name="content_description_reload">Watiqmanta chaqnanay web raphita</string>
+
+    <string name="content_description_back">Ñawpa raphiman riy</string>
+
+    <string name="content_description_stop">Kay raphiqpata chaqnanayninta sayay</string>
+
+    <string name="content_description_customtab_exit">Ñawpa aplicacionman kutiy</string>
+
+    <string name="content_description_blocking_switch">Tarichiqkunata ch\'ataykuy</string>
+
+    <string name="your_rights">Derechosniyki</string>
+
+    <string name="external_app_prompt_title">T\'inkiyta kichariy wak aplicaciónwan</string>
+    <string name="external_app_prompt">Lluqsiy atiwaq kaymanta %1$s kay t\'inkiyta kaypi %2$s kichanaykipaq.</string>
+    <string name="external_app_prompt_no_app_title">Juk aplicación tariy mayqinchus kay t\'inkiyta kichariy atinanpaq</string>
+    <string name="external_app_prompt_no_app">Ni mayqin aplicaciones kay dispositivoykiqpata kay t\'inkiyta kichariy atinchu. Lluqsiy atiwaq kaymanta %1$s mask\'anaykipaq kaypi %2$s juk tupakuq aplicacionta.</string>
+    <string name="external_multiple_apps_matched_exit">¿Asuy t\'aqwiriymanta lluqsinkichu?</string>
+
+    <string name="download_snackbar_finished">%1$s tukusqa</string>
+
+    <string name="download_snackbar_open">Kichay</string>
 
 
 
@@ -152,41 +240,63 @@
 
 
   <string name="firstrun_defaultbrowser_title">Asuykita kallpachay</string>
-  <string name="firstrun_defaultbrowser_text2">Qhipan ñiqiman kay asuy t\'aqwiriyta apay. Willaykunata chanta wak tiyapuykunata ima ch\'ataykuy mayqinkunachus tarisuy atinkuman kitinninta chanta raphikunaqpata chaqnanayninta jayrayan ima.</string>
-  <string name="firstrun_search_title">Mask\'ayniyki, munasqaykimanjina</string>
-  <string name="firstrun_search_text">¿Jukjinatachu mask\'achkanki? Wak ajinaña jamuq mask\'aq motorta akllay configuracionpi.</string>
-  <string name="firstrun_shortcut_title">Qallariy pantallaykiman chiqan yaykunata yapay</string>
-  <string name="firstrun_shortcut_text">Aswan munasqa kitikunaykita watiqmanta watukuy kaypi %1$s utqhaytapacha. Akllay \"Qallariy pantallaman yapay\" kay %1$s menu kaqpi.</string>
-  <string name="firstrun_privacy_title">Asuymanta juk sapakuti ruwayta ruway</string>
-  <string name="firstrun_privacy_text">Churaykuy kayta %1$s ajinaña jamuq t\'aqwiriqjinata chanta asuy t\'aqwiriy allin jamuyninta qhawaykachay ima kay web raphikunata kicharispa wak aplicacionesmantapacha.</string>
-  <string name="firstrun_close_button">¡Ari, jap\'iqasqa!</string>
-  <string name="firstrun_skip_button">Phinkiy</string>
-  <string name="firstrun_next_button">Qhipan</string>
-  <string name="content_blocking_disabled">-</string>
-  <string name="dialog_addtohomescreen_action_add">Yapay</string>
-  <string name="dialog_addtohomescreen_action_cancel">Tatiy</string>
-  <string name="dialog_addtohomescreen_tracking_protection">Chiqan yaykuna kicharikunqa kay wañuchisqa tarichiq jark\'akuywan</string>
-  <string name="notification_browsing_session_channel_name">Asuy t\'aqwiriymanta sesión</string>
-  <string name="notification_browsing_session_channel_description">Willaykuqkuna sesion kaqta pichay atichisunki kaymanta %1$s juk ñit\'iywan. Mana aplicacionta kicharinallaykiñachu tiyan nitaq qhawayta imachus t\'aqwiriqpi llamk\'akuchkanta.</string>
-  <string name="tabs_tray_action_erase">Ñawpa yaykusqa t\'aqwiriyta pichay</string>
-  <string name="download_firefox">Firefox kaqta uraykuchiy</string>
-  <string name="your_rights_content1">%1$s kaqqa juk software kichasqa codigoyuqtaq chanta qhasitaq, Mozillawan chanta wak yanapaqkunawan ima paqarichisqa.</string>
+    <string name="firstrun_defaultbrowser_text2">Qhipan ñiqiman kay asuy t\'aqwiriyta apay. Willaykunata chanta wak tiyapuykunata ima ch\'ataykuy mayqinkunachus tarisuy atinkuman kitinninta chanta raphikunaqpata chaqnanayninta jayrayan ima.</string>
+
+    <string name="firstrun_search_title">Mask\'ayniyki, munasqaykimanjina</string>
+    <string name="firstrun_search_text">¿Jukjinatachu mask\'achkanki? Wak ajinaña jamuq mask\'aq motorta akllay configuracionpi.</string>
+
+    <string name="firstrun_shortcut_title">Qallariy pantallaykiman chiqan yaykunata yapay</string>
+    <string name="firstrun_shortcut_text">Aswan munasqa kitikunaykita watiqmanta watukuy kaypi %1$s utqhaytapacha. Akllay \&quot;Qallariy pantallaman yapay\&quot; kay %1$s menu kaqpi.</string>
+
+    <string name="firstrun_privacy_title">Asuymanta juk sapakuti ruwayta ruway</string>
+    <string name="firstrun_privacy_text">Churaykuy kayta %1$s ajinaña jamuq t\'aqwiriqjinata chanta asuy t\'aqwiriy allin jamuyninta qhawaykachay ima kay web raphikunata kicharispa wak aplicacionesmantapacha.</string>
+
+    <string name="firstrun_close_button">¡Ari, jap\'iqasqa!</string>
+    <string name="firstrun_skip_button">Phinkiy</string>
+    <string name="firstrun_next_button">Qhipan</string>
+
+    <string name="content_blocking_disabled">-</string>
+
+    <string name="dialog_addtohomescreen_action_add">Yapay</string>
+
+    <string name="dialog_addtohomescreen_action_cancel">Tatiy</string>
+
+    <string name="notification_browsing_session_channel_name">Asuy t\'aqwiriymanta sesión</string>
+
+    <string name="notification_browsing_session_channel_description">Willaykuqkuna sesion kaqta pichay atichisunki kaymanta %1$s juk ñit\'iywan. Mana aplicacionta kicharinallaykiñachu tiyan nitaq qhawayta imachus t\'aqwiriqpi llamk\'akuchkanta.</string>
+
+    <string name="tabs_tray_action_erase">Ñawpa yaykusqa t\'aqwiriyta pichay</string>
+
+    <string name="download_firefox">Firefox kaqta uraykuchiy</string>
+
+    <string name="your_rights_content1">%1$s kaqqa juk software kichasqa codigoyuqtaq chanta qhasitaq, Mozillawan chanta wak yanapaqkunawan ima paqarichisqa.</string>
 
 
 
 
   <string name="gv_prompt_username_hint">Yaykuq suti</string>
-  <string name="gv_prompt_password_hint">Pakasqa willay</string>
-  <string name="gv_prompt_clear">Pichay</string>
-  <string name="security_popup_secure_connection">Takya t\'inkiy</string>
-  <string name="security_popup_insecure_connection">Mana takya t\'inkiy</string>
-  <string name="security_popup_security_verified">Qhawaychasqa kaywan: %1$s</string>
-  <string name="site_security_icon_content_description">Kitimanta takya</string>
-  <string name="preference_autocomplete_duplicate_url_error">Kay URL kanña</string>
-  <string name="find_in_page">Kay raphipi tariy</string>
+    <string name="gv_prompt_password_hint">Pakasqa willay</string>
+    <string name="gv_prompt_clear">Pichay</string>
+
+    <string name="security_popup_secure_connection">Takya t\'inkiy</string>
+    <string name="security_popup_insecure_connection">Mana takya t\'inkiy</string>
+    <string name="security_popup_security_verified">Qhawaychasqa kaywan: %1$s</string>
+
+    <string name="site_security_icon_content_description">Kitimanta takya</string>
+    <string name="preference_autocomplete_duplicate_url_error">Kay URL kanña</string>
+
+    <string name="find_in_page">Kay raphipi tariy</string>
 
 
 
   <string name="preference_performance_request_desktop_site">Escritoriomanta kitita mañay</string>
-  <string name="custom_tab_copy_url_action">URL kikinchasqa</string>
-</resources>
+
+    <string name="custom_tab_copy_url_action">URL kikinchasqa</string>
+
+    <!-- Tips displayed on the home view -->
+
+    <!-- Tracking protection bottom sheet -->
+
+     <!-- Promote SearchWidget Dialog -->
+
+    </resources>

@@ -39,4 +39,5 @@
 
     <!-- Content description for close button -->
     <string name="mozac_feature_downloads_button_close">അടയ്ക്കുക</string>
-</resources>
+
+    </resources>

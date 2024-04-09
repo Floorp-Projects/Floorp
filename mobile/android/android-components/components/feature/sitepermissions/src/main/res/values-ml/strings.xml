@@ -31,4 +31,4 @@
     <string name="mozac_feature_sitepermissions_always_allow">എപ്പോഴും</string>
     <!-- Text for a negative button in a permission request dialog. This will never allow and remember the decision of the user, this is the special case of the notification permission, that is only ask one time-->
     <string name="mozac_feature_sitepermissions_never_allow">ഒരിക്കലും അരുത്</string>
-</resources>
+    </resources>

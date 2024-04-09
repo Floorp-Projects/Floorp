@@ -2131,8 +2131,6 @@
     <string name="review_quality_check_grade_d_f_description">අවිශ්වසනීය සමාලෝචන</string>
     <!-- Text for title presenting the reliability of a product's reviews. -->
     <string name="review_quality_check_grade_title">මෙම සමාලෝචන කෙතරම් විශ්වසනීය ද?</string>
-    <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
-    <string name="review_quality_check_adjusted_rating_description" moz:RemovedIn="122" tools:ignore="UnusedResources">අවිශ්වසනීය සමාලෝචන ඉවත් කර ඇත</string>
     <!-- Title for section explaining how we analyze the reliability of a product's reviews. -->
     <string name="review_quality_check_explanation_title">සමාලෝචනයක ගුණත්‍වය තීරණය කරන්නේ කෙසේද?</string>
     <!-- Text for learn more caption presenting a link with information about review quality. First parameter is for clickable text defined in review_quality_check_info_learn_more_link. -->
@@ -2157,10 +2155,6 @@
     <string name="review_quality_check_no_reviews_warning_title">ප්‍රමාණවත් සමාලෝචන නැත</string>
     <!-- Title for warning card informing the user that the current product is currently not available. -->
     <string name="review_quality_check_product_availability_warning_title">නිෂ්පාදනය නොතිබේ</string>
-    <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
-    <string name="review_quality_check_reanalysis_in_progress_warning_title" moz:RemovedIn="122">සමාලෝචනයේ ගුණත්‍වය පරීක්‍ෂා වෙමින්</string>
-    <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_title" moz:RemovedIn="122">සමාලෝචනයේ ගුණත්‍වය පරීක්‍ෂා වෙමින්</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
     <string name="review_quality_check_analysis_in_progress_warning_body">මෙයට තත්. 60 ක් පමණ ගත වනු ඇත.</string>
     <!-- Title for info card displayed after the user reports a product is back in stock. -->
@@ -2189,14 +2183,8 @@
     <string name="review_quality_check_no_analysis_link">සමාලෝචනයේ ගුණත්‍වය බලන්න</string>
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">තව දැනගන්න</string>
-    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy">පෞද්ගලිකත්‍ව ප්‍රතිපත්තිය</string>
-    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy_2" moz:RemovedIn="123" tools:ignore="UnusedResources">රහස්‍යතා ප්‍රතිපත්තිය</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
     <string name="review_quality_check_contextual_onboarding_terms_use">භාවිත නියම</string>
-    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
-    <string name="review_quality_check_contextual_onboarding_terms_use_2" moz:RemovedIn="123" tools:ignore="UnusedResources">භාවිත නියම</string>
     <!-- Text for opt-in button from the review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_primary_button_text">ඔව්, උත්සාහ කරමු</string>
     <!-- Text for opt-out button from the review quality check contextual onboarding card. -->
@@ -2270,6 +2258,7 @@
     <string name="translation_error_could_not_translate_warning_text">පරිවර්තන ගැටලුවක් මතු විය. නැවත උත්සාහ කරන්න.</string>
     <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
     <string name="translation_error_language_not_supported_learn_more">තව දැනගන්න</string>
+
 
     <!-- Translations options dialog -->
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->

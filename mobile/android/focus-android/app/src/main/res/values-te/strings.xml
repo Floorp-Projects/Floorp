@@ -45,8 +45,6 @@
     <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
     <string name="menu_add_to_home_screen">ముంగిలి తెరకు చేర్చు</string>
 
-    <!-- Menu item: Shows information about features and changes that are new to this version -->
-    <string name="menu_whats_new">కొత్తది ఏమిటి</string>
     <string name="menu_settings">అమరికలు</string>
     <string name="menu_about">గురించి</string>
     <string name="menu_help">సహాయం</string>
@@ -100,10 +98,6 @@
          of 25 characters. -->
     <string name="shortcut_erase_long_label">విహరణ చరిత్రను తుడిచివేయి</string>
 
-
-    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
-         Clicking this action will launch Focus and perform a search in the default search engine. -->
-    <string name="text_selection_search_action">అంతరంగికంగా వెతుకు</string>
 
     <!-- Header for the Privacy and Security settings menu -->
     <string name="preference_privacy_and_security_header">అంతరంగికత &amp; భద్రత</string>
@@ -295,10 +289,6 @@
     <string name="preference_search_remove_title">శోధన యంత్రమును తొలగించు</string>
     <string name="preference_search_remove">తీసివేయి</string>
 
-    <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
-     a user first launches the app. -->
-    <string moz:removedIn="105" name="preference_homescreen_tips" tools:ignore="UnusedResources">ముంగిలి తెర చిట్కాలను చూపించు</string>
-
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">శోధన యంత్రాన్ని చేర్చు</string>
 
@@ -424,12 +414,7 @@
 
 
 
-  <!-- Onboarding: Title -->
-    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
-    <string moz:removedIn="106" name="onboarding_title">%1$sకి స్వాగతం!</string>
-
-
-    <!-- First run tour (Default browser): Title -->
+  <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">మీ ప్రైవసీని శక్తిమంతం చేసుకోండి</string>
 
     <!-- First run tour (Search): Title -->
@@ -566,17 +551,6 @@
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">USB/Wi-Fi ద్వారా రిమోట్ డీబగ్గింగ్</string>
 
-    <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
-     %1$s is replaced with the app name -->
-    <string moz:removedIn="103" name="biometric_auth_title">%1$s‌కు తాళంతీయండి</string>
-
-    <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
-    <string moz:removedIn="103" name="biometric_auth_description">కొనసాగించడానికి వేలిముద్ర సెన్సారును తాకండి.</string>
-
-    <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
-     When pressed, the user's previous session is cleared, and authentication is not required. -->
-    <string moz:removedIn="103" name="biometric_auth_new_session">కొత్త సెషన్</string>
-
     <!-- Description for the fingerprint authentication image. Used for accessibility purposes. -->
     <string name="biometric_auth_image_description">వేలిముద్ర చిహ్నం</string>
 
@@ -678,7 +652,7 @@
     <!-- Preference for using dark theme -->
     <string name="preference_dark_theme">చీకటి</string>
 
-    <!-- Sessions List -->
+     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">ట్యాబును మూసివేయి</string>
 

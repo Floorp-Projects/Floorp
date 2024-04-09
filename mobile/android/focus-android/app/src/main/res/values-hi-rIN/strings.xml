@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:moz="http://mozac.org/tools" xmlns:tools="http://schemas.android.com/tools">
     <!-- ####################################################################################### -->
     <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
     <!-- ## into a separate file like strings_references.xml                                  ## -->
@@ -52,8 +52,6 @@
     <!-- Menu item: Remove the current site as a shortcut from the Home screen -->
     <string name="menu_remove_from_shortcuts">शॉर्टकट से हटाएँ</string>
 
-    <!-- Menu item: Shows information about features and changes that are new to this version -->
-    <string name="menu_whats_new">क्या नया है</string>
     <string name="menu_settings">सेटिंग</string>
     <string name="menu_about">परिचय</string>
     <string name="menu_help">सहायता</string>
@@ -117,10 +115,6 @@
          %1$s will be replaced by the app name (e.g. Firefox Focus) -->
     <string name="shortcut_erase_and_open_long_label">मिटाएँ और %1$s खोलें</string>
 
-
-    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
-         Clicking this action will launch Focus and perform a search in the default search engine. -->
-    <string name="text_selection_search_action">निजी तौर पर खोज</string>
 
     <!-- Header for the Privacy and Security settings menu -->
     <string name="preference_privacy_and_security_header">गोपनीयता और सुरक्षा</string>
@@ -273,10 +267,6 @@
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">ऐप्प को अनलॉक करने के लिए फिंगरप्रिंट का इस्तेमाल करें</string>
-    <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
-        open when the app was last run to ensure that only the phone's owner can view a previous session.
-        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
-    <string name="preference_security_biometric_summary">यदि ऐप्प में पहले ही कोई URL खुली हो तो आपकी फिंगरप्रिंट %1$s को अनलॉक कर सकती है. गोपनीयता चालू हो जायेगी।</string>
 
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
          and prevents the user from taking screenshots or casting the app to other displays. -->
@@ -337,10 +327,6 @@
     <string name="preference_search_add3">अन्य सर्च इंजन जोड़ें</string>
     <!-- Explanation text above the list of search engines-->
     <string name="preference_select_preferred_engine">अपना पसंदीदा इंजन चुनें:</string>
-
-    <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
-     a user first launches the app. -->
-    <string name="preference_homescreen_tips">मूल पटल युक्तियाँ दिखाएँ</string>
 
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">खोज इंजन जोड़ें</string>
@@ -615,17 +601,6 @@
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">यूएसबी/वाई-फाई से दूरस्थ दोषसुधार</string>
 
-    <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
-     %1$s is replaced with the app name -->
-    <string name="biometric_auth_title">%1$s को खोलें</string>
-
-    <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
-    <string name="biometric_auth_description">जारी रखने के लिए फिंगरप्रिंट संवेदक स्पर्श करें।</string>
-
-    <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
-     When pressed, the user's previous session is cleared, and authentication is not required. -->
-    <string name="biometric_auth_new_session">नया सत्र</string>
-
     <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
     while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
     <string name="biometric_auth_open_link_new_session">लिंक नए सत्र में खोलें</string>
@@ -691,8 +666,6 @@
     <!-- Preference for switching to a new tab immediately after opening -->
     <string name="preference_open_new_tab">तुरंत नए टैब में लिंक पर जाएँ</string>
 
-    <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
-    <string name="preference_category_safe_browsing">सुरक्षित ब्राउजिंग</string>
     <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_safe_browsing_title">ख़तरनाक और संदेहास्पद साइटों को ब्लॉक करें</string>
     <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
@@ -770,5 +743,7 @@
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">उपकरण थीम को फॉलो करें</string>
 
+
+    <!-- Promote SearchWidget Dialog -->
 
     </resources>

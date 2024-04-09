@@ -131,8 +131,6 @@
     <string name="preferences_default_search_engine">Motô de riçerca predefinio</string>
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">Çerca</string>
-    <!-- Preference for settings related to Search address bar -->
-    <string name="preferences_search_address_bar">Bara di indirissi</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">Vota in sce Google Play</string>
     <!-- Preference linking to about page for Fenix
@@ -158,12 +156,8 @@
 
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Acesibilitæ</string>
-    <!-- Preference to override the Firefox Account server -->
-    <string name="preferences_override_fxa_server">Server personalizou pe-o conto Firefox</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">Server personalizou pe Sync</string>
-    <!-- Toast shown after updating the FxA/Sync server override preferences -->
-    <string name="toast_override_fxa_sync_server_done">O server pe-o conto Firefox/Sync cangiou. L\'aplicaçion a saiâ serâ pe aplicâ i cangiamenti…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Conto</string>
     <!-- Preference for changing where the toolbar is positioned -->
@@ -172,8 +166,6 @@
     <string name="preferences_theme">Tema</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Personalizza</string>
-    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
-    <string name="preferences_account_default_name">Conto Firefox</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
     <string name="preferences_account_sync_error">Conetite torna pe repigiâ a scioncronizaçion</string>
     <!-- Preference for language -->
@@ -200,6 +192,7 @@
     <string name="preferences_account_settings">Detalli do conto</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Arvi colegamenti inte app</string>
+
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Conponenti azonti</string>
 
@@ -620,13 +613,9 @@
     <string name="preferences_delete_browsing_data_tabs_title_2">Feuggi averti</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d feuggi</string>
-    <!-- Title for the data and history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_data_title">Stöia da navagaçion e dæti di sciti</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d indirissi</string>
-    <!-- Title for the cookies item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cookies">Cookie</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies_subtitle">Ti saiæ sconesso da-a magiô parte di sciti</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
@@ -659,28 +648,6 @@
 
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Sincronizaçion ativa</string>
-    <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button_2">Normale (predefinio)</string>
-
-    <!-- text for tracking protection radio button option for strict level of blocking -->
-    <string name="onboarding_tracking_protection_strict_option">Restritivo</string>
-    <!-- Text for the button to read the privacy notice -->
-    <string name="onboarding_privacy_notice_read_button">Lezzi a nòstra informativa in sciâ privacy</string>
-
-    <!-- text for the button to finish onboarding -->
-    <string name="onboarding_finish">Iniçia a navegâ</string>
-
-    <!-- Onboarding theme -->
-    <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header">Çerni o teu tema</string>
-    <!-- Automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_title">Aotomatico</string>
-    <!-- Summary of automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_summary">O se adatta a-e inpostaçioin do dispoxitivo</string>
-    <!-- Theme setting for dark mode -->
-    <string name="onboarding_theme_dark_title">Tema scuo</string>
-    <!-- Theme setting for light mode -->
-    <string name="onboarding_theme_light_title">Tema ciæo</string>
 
     <!-- Text shown in snackbar when multiple tabs have been sent to device -->
     <string name="sync_sent_tabs_snackbar">Feuggi mandæ!</string>
@@ -715,10 +682,6 @@
     <string name="etp_settings">Preferense proteçion</string>
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">Proteçion anti-traciamento avansâ</string>
-    <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title" moz:removedIn="114" tools:ignore="UnusedResources">Navega sensa ese ascorio</string>
-    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation" moz:removedIn="114" tools:ignore="UnusedResources">Mantegni i teu dæti pe ti mæximmo. %s o te protezze da-a magiô parte di elementi che te tracian in linia.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Atre informaçioin</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
@@ -907,21 +870,11 @@
     <string name="search_engine_add_custom_search_engine_title">Azonzi motô de riçerca</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">Cangia motô de riçerca</string>
-    <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
-    <string name="search_engine_add_button_content_description">Azonzi</string>
-    <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
-    <string name="search_engine_add_custom_search_engine_edit_button_content_description">Sarva</string>
     <!-- Text for the menu button to edit a search engine -->
     <string name="search_engine_edit">Cangia</string>
     <!-- Text for the menu button to delete a search engine -->
     <string name="search_engine_delete">Scancella</string>
 
-    <!-- Text for the button to create a custom search engine on the Add search engine screen -->
-    <string name="search_add_custom_engine_label_other">Atro</string>
-    <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
-    <string name="search_add_custom_engine_name_hint">Nomme</string>
-    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint">Stringa de riçerca da deuviâ</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_search_string_example" formatted="false">Cangia a ciave de riçerca con “%s”. Ezenpio:\nhttps://www.google.com/search?q=%s</string>
 
@@ -1008,5 +961,8 @@
 
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Va ben, ò capio</string>
+
+    <!-- Translations feature-->
+
 
     </resources>

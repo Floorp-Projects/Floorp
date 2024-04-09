@@ -1,152 +1,251 @@
-<?xml version='1.0' encoding='utf-8'?>
-<resources>
-  <string name="action_cancel">বাতিল</string>
-  <string name="action_ok">ঠিক আছে</string>
-  <string name="action_save">সংরক্ষণ</string>
-  <string name="urlbar_hint">অনুসন্ধান করুন বা ঠিকানা লিখুন</string>
-  <string name="teaser">স্বয়ংক্রিয় প্রাইভেন্ট ব্রাউজিং। \nব্রাউজ করুন। মুছে দিন। আবার করুন।</string>
-  <string name="feedback_erase">আপনার ব্রাউজিংয়ের পূর্ববর্তী তথ্য মুছে ফেলা হয়েছে।</string>
-  <string name="feedback_erase_custom_tab">ট্যাব এর ব্রাউজিং ইতিহাস মুছে ফেলা হয়েছে।</string>
-  <string name="search_hint">%1$s এর জন্যে অনুসন্ধান করুন</string>
-  <string name="menu_share">শেয়ার…</string>
-  <string name="menu_report_site_issue">সাইট ইস্যু রিপোর্ট করুন</string>
-  <string name="menu_open_with_default_browser2">%1$s এ খুলুন</string>
-  <string name="menu_open_with_a_browser2">খুলুন…</string>
-  <string name="menu_add_to_home_screen">নীড় স্ক্রিনে যোগ</string>
-  <string name="menu_whats_new">নতুন কি আছে</string>
-  <string name="menu_settings">সেটিং</string>
-  <string name="menu_about">পরিচিতি</string>
-  <string name="menu_help">সহায়তা</string>
-  <string name="menu_rights">আপনার অধিকারসমূহ</string>
-  <string name="menu_trackers_blocked_title">ট্র্যাকার ব্লক করা হয়েছে্যা</string>
-  <string name="menu_trackers_blocked_subtitle">বন্ধ করলে, চালু কিছু সাইটের সমস্যা ঠিক হতে পারে</string>
-  <string name="menu_content_blocking">কন্টেন্ট ব্লকিং</string>
-  <string name="menu_content_blocking_subtitle">কিছু সাইট ফিক্স করা বন্ধ</string>
-  <string name="menu_custom_tab_branding">%1$s পরিচালিত</string>
-  <string name="share_dialog_title">শেয়ারের মাধ্যম</string>
-  <string name="notification_erase_text">ব্রাউজিং ইতিহাস মুছে দিন</string>
-  <string name="notification_action_open">খুলুন</string>
-  <string name="notification_action_erase_and_open">মুছুন এবং খুলুন</string>
-  <string name="shortcut_erase_short_label">মুছুন</string>
-  <string name="shortcut_erase_long_label">ব্রাউজিং ইতিহাস মুছুন</string>
-  <string name="shortcut_erase_and_open_short_label">মুছে ফেলুন এবং খুলুন</string>
-  <string name="shortcut_erase_and_open_long_label">মুছে ফেলুন এবং %1$s খুলুন</string>
-  <string name="text_selection_search_action">ব্যক্তিগতভাবে অনুসন্ধান</string>
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:moz="http://mozac.org/tools" xmlns:tools="http://schemas.android.com/tools">
+    <!-- ####################################################################################### -->
+    <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
+    <!-- ## into a separate file like strings_references.xml                                  ## -->
+    <!-- ####################################################################################### -->
 
-  <string name="preference_privacy_and_security_header">গোপনীয়তা ও নিরাপত্তা</string>
-  <string name="preference_privacy_and_security_summary">ট্র্যাকিং, কুকিজ, লগইন, ডাটা পছন্দ</string>
-  <string name="preference_search_summary">ডিফল্ট সেট করুন, অটোকমপ্লিট</string>
-  <string name="preference_mozilla_summary">%1$s সম্বন্ধে, সাহায্য</string>
-  <string name="preference_category_tracking_protection">ট্র্যাকিং সুরক্ষা</string>
-  <string name="preference_category_web_content">ওয়েব কনটেন্ট</string>
-  <string name="preference_category_switching_apps">সুইচিং অ্যাপস</string>
-  <string name="preference_category_general">সাধারণ</string>
-  <string name="preference_general_summary">ডিফল্ট ব্রাউজার, ট্যাব, ভাষা</string>
-  <string name="preference_category_data_collection_use">ডাটা সংগ্রহ ও ব্যবহার</string>
-  <string name="preference_category_search">অনুসন্ধান</string>
-  <string name="preference_show_search_suggestions">অনুসন্ধান পরামর্শ নিন</string>
-  <string name="preference_show_search_suggestions_summary">আপনার অনুসন্ধান ইঞ্জিনে ঠিকানা বারে আপনি যা টাইপ করেন, %1$s তা পাঠাবে</string>
-  <string name="preference_search_engine_default">পূর্বনির্ধারিত</string>
-  <string name="preference_search_engine_label">অনুসন্ধান ইঞ্জিন</string>
-  <string name="preference_state_on">চালু</string>
-  <string name="preference_state_off">বন্ধ</string>
-  <string name="preference_subitem_autocomplete">URL অটোকমপ্লিট</string>
-  <string name="preference_switch_autocomplete_topsites">শীর্ষস্থানীয় সাইটের জন্য</string>
-  <string name="preference_autocomplete_topsite_summary">অ্যাড্রেস বারে 450 টিরও বেশি জনপ্রিয় URL স্বয়ংপূরণ করা সক্ষম করুন।</string>
-  <string name="preference_switch_autocomplete_user_list">আপনি যেসব সাইট যোগ করবেন তার জন্যে</string>
-  <string name="preference_autocomplete_user_list_summary">অ্যাড্রেস বারে 450 টিরও বেশি জনপ্রিয় URL স্বয়ংপূরণ করা সক্ষম করুন।</string>
-  <string name="preference_category_autocomplete_manage_sites">সাইট ব্যবস্থাপনা করুন</string>
-  <string name="preference_autocomplete_subitem_manage_sites">সাইট ব্যবস্থাপনা</string>
-  <string name="preference_autocomplete_action_add">+ কাস্টোম URL যোগ করুন</string>
-  <string name="preference_autocomplete_title_add">কাস্টোম URL যোগ করুন</string>
-  <string name="custom_autocomplete_quick_add">কাস্টোম URL যোগ করুন</string>
-  <string name="add_custom_autocomplete_label">স্বয়ংপূরণে লিঙ্ক যোগ করুন</string>
-  <string name="preference_category_cookies">কুকি ও সাইট ডাটা</string>
-  <string name="preference_category_data_choices">ডাটা পছন্দ</string>
-  <string name="preference_autocomplete_title_remove">কাস্টোম URL মুছে দিন</string>
-  <string name="preference_autocomplete_learn_more">আরও জানুন</string>
-  <string name="preference_autocomplete_custom_summary">কাস্টোম অটোকমপ্লিট URLs যোগ এবং ম্যানেজ করুন।</string>
-  <string name="preference_autocomplete_add_title">URL যোগ করতে</string>
-  <string name="preference_autocomplete_add_hint">URL পেস্ট অথবা প্রবেশ করান</string>
-  <string name="preference_autocomplete_add_example2">উদাহরণ: mozilla.org</string>
-  <string name="preference_autocomplete_add_example">উদাহরণ: example.com</string>
-  <string name="preference_autocomplete_add_confirmation">নতুন কাস্টোম URL যোগ করা হয়েছে।</string>
-  <string name="preference_autocomplete_menu_remove">অপসারণ</string>
-  <string name="preference_autocomplete_action_remove_content_description">অপসারণ</string>
-  <string name="preference_autocomplete_add_error">যে URL টি আপনি দিলেন তা ডবল চেক করুন।</string>
-  <string name="preference_language">ভাষা</string>
-  <string name="preference_language_systemdefault">সিস্টেম ডিফল্ট</string>
-  <string name="preference_category_privacy">গোপনীয়তা</string>
-  <string name="preference_privacy_block_ads">বিজ্ঞাপন গোয়েন্দা আটক করুন</string>
-  <string name="preference_privacy_block_ads_summary">কিছু বিজ্ঞাপন, আপনি তাতে ক্লিক না করলেও কি সাইট ব্রাউজ করছেন তা ট্র্যাক করে</string>
-  <string name="preference_privacy_block_analytics">এনালেটিকস গোয়েন্দা আটক করুন</string>
-  <string name="preference_privacy_block_analytics_summary">ট্যাপিং বা স্ক্রলিং এর মত কর্মকান্ডের হিসেব রাখতে, বিশ্লেষণ করতে ব্যবহৃত হয়</string>
-  <string name="preference_privacy_block_social">সোশ্যাল নেটওয়ার্ক গোয়েন্দা আটক করুন</string>
-  <string name="preference_privacy_block_social_summary">সাইটে আপনার ব্রাউজ ট্র্যাক করতে এবং শেয়ার বোতামের মত ফাংশনালিটি দেখাতে সাইটে এম্বেড রয়েছে</string>
-  <string name="preference_privacy_block_content">অন্যন্য কনটেন্ট গোয়েন্দা আটক করুন</string>
-  <string name="preference_privacy_block_content_summary2">সক্রিয় করলে কিছু পাতা অপ্রত্যাশিত আচরণ করতে পারে</string>
-  <string name="preference_privacy_category_cookies">কুকি ব্লক কর</string>
-  <string name="preference_privacy_should_block_cookies_no_option">না</string>
-  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">শুধুমাত্র তৃতীয় পক্ষের ট্র্যাকার কুকিজ ব্লক কর</string>
-  <string name="preference_privacy_should_block_cookies_third_party_only_option">"কেবল ৩য়-পক্ষীয় কুকি ব্লক কর "</string>
-  <string name="preference_privacy_should_block_cookies_yes_option">হ্যাঁ</string>
-  <string name="preference_security_biometric">অ্যাপ আনলক করার জন্য আঙ্গুলের ছাপ ব্যবহার করুন</string>
-  <string name="preference_security_biometric_summary">একটি URL যদি ইতিমধ্যে অ্যাপ এ খোলা থাকে আপনার আঙ্গুলের ছাপ %1$s আনলক করতে পারবে। স্টিল্থ্ চালু করা হবে।</string>
-  <string name="preference_privacy_secure_mode">অদৃশ্য</string>
-  <string name="preference_privacy_stealth_summary">অ্যাপ্লিকেশন পরিবর্তনের সময় ওয়েব পেজ লুকান এবং স্ক্রিনশট গ্রহণ ব্লক করুন।</string>
-  <string name="preference_category_security">নিরাপত্তা</string>
-  <string name="preference_category_performance">কর্মক্ষমতা</string>
-  <string name="preference_performance_block_webfonts">ওয়েব ফন্ট ব্লক করুন</string>
-  <string name="preference_performance_block_webfonts_summary">ছবি অথবা আইকন দৃশ্যমান নাও হতে পারে</string>
-  <string name="preference_performance_block_javascript">JavaScript ব্লক কর</string>
-  <string name="preference_performance_block_javascript_summary">পাতা সম্ভবত দ্রুত লোড হচ্ছে, কিন্তু অনাকাঙ্খিত ভাল দেখাচ্ছে না</string>
-  <string name="preference_default_browser2">%1$s কে ডিফল্ট ব্রাউজার করুন</string>
-  <string name="preference_category_mozilla">Mozilla</string>
-  <string name="preference_mozilla_telemetry2">ব্যবহারের তথ্য পাঠাও</string>
-  <string name="preference_mozilla_telemetry_summary">আরও জানুন</string>
-  <string name="preference_mozilla_telemetry_summary2">Mozilla কেবলমাত্র সংগ্রহ করা চেষ্টা করে যা প্রত্যেকের জন্য %1$s প্রদান এবং উন্নতি করতে হবে।</string>
-  <string name="preference_privacy_notice">গোপনীয়তা নীতি</string>
-  <string name="preference_about">%1$s সম্পর্কে</string>
-  <string name="preference_search_installed_search_engines">ইন্সটল করা অনুসন্ধান ইঞ্জিন</string>
-  <string name="preference_search_restore">ডিফল্ট অনুসন্ধান ইঞ্জিন পুনরুদ্ধার</string>
-  <string name="preference_search_add2">+ অন্য অনুসন্ধান ইঞ্জিন যোগ করুন</string>
-  <string name="preference_search_remove_title">অনুসন্ধান ইঞ্জিন অপসারণ করুন</string>
-  <string name="preference_search_remove">অপসারণ</string>
-  <string name="preference_homescreen_tips">হোম স্ক্রিন টিপস দেখান</string>
-  <string name="action_option_add_search_engine">অনুসন্ধান ইঞ্জিন যোগ</string>
-  <string name="search_add_manually_name_hint">অনুসন্ধান ইঞ্জিন নাম</string>
-  <string name="search_add_manually_string">ব্যবহারের জন্য অনুসন্ধান বাক্য</string>
-  <string name="search_add_manually_save">সংরক্ষণ</string>
-  <string name="search_add_manually_example">উদাহরণ: example.com/search/?q=%s</string>
-  <string name="search_add_confirmation">নতুন অনুসন্ধান ইঞ্জিন যোগ হয়েছে।</string>
-  <string name="search_add_error_empty_name">অনুসন্ধান ইঞ্জিনের নাম দিন</string>
-  <string name="search_add_error_duplicate_name">ইনস্টল করা কোন অনুসন্ধান ইঞ্জিন ইতিমধ্যে এই নাম ব্যবহার করছে।</string>
-  <string name="search_add_error_empty_search">অনুসন্ধান বাক্য দিন</string>
-  <string name="search_add_error_format">সার্চ স্ট্রিংটি যেটি উদাহরণ ফরম্যাটের সাথে মেলে তা চেক করুন</string>
-  <string name="content_description_clear_input">ইনপুট পরিস্কার</string>
-  <string name="content_description_dismiss_input">খারিজ</string>
-  <string name="content_description_erase">ব্রাউজিং ইতিহাস পরিষ্কার করুন</string>
-  <string name="content_description_tab_counter">ট্যাব খোলা: %1$s</string>
-  <string name="content_description_lock">সুরক্ষিত কানেকশন</string>
-  <string name="accessibility_announcement_loading">লোড হচ্ছে</string>
-  <string name="accessibility_announcement_loading_finished">ওয়েবসাইট লোড হয়েছে</string>
-  <string name="content_description_menu">আরও বিকল্পসমূহ</string>
-  <string name="indicator_content_description_menu">আরো অপশন বাটন</string>
-  <string name="content_description_forward">সামনে পরিভ্রমণ করুন</string>
-  <string name="content_description_reload">ওয়েবসাইট রিলোড করুন</string>
-  <string name="content_description_back">পেছনে পরিভ্রমণ করুন</string>
-  <string name="content_description_stop">ওয়েবসাইট লোডিং বন্ধ করুন</string>
-  <string name="content_description_customtab_exit">আগের অ্যাপে ফিরে যাও</string>
-  <string name="content_description_trackers_blocked">ব্লক করা ট্র্যাকারের সংখ্যা</string>
-  <string name="content_description_blocking_switch">ট্র্যাকার ব্লক করুন</string>
-  <string name="your_rights">আপনার অধিকারসমূহ</string>
-  <string name="external_app_prompt_title">নতুন অ্যাপে লিংক খুলুন</string>
-  <string name="external_app_prompt">লিংকটি %2$s এ খুলতে, আপনি %1$s কে ছেড়ে দিতে পারেন।</string>
-  <string name="external_app_prompt_no_app_title">একটি অ্যাপ অনুসন্ধান করো যা লিংখটি খুলতে পারবে</string>
-  <string name="external_app_prompt_no_app">আপনার ডিভাইসের কোন অ্যাপই এই লিঙ্কটি খুলতে সক্ষম হয়নি। %2$s অনুসন্ধান করে একটি অ্যাপ বের করার জন্যে আপনি %1$s কে দ্বায়িত্ব দিতে পারেন।</string>
-  <string name="external_multiple_apps_matched_exit">আপনি কি ব্যক্তিগত ব্রাউজিং বন্ধ করবেন?</string>
-  <string name="download_snackbar_finished">%1$s সম্পন্ন হয়েছে</string>
-  <string name="download_snackbar_open">খুলুন</string>
+    <string name="action_cancel">বাতিল</string>
+    <string name="action_ok">ঠিক আছে</string>
+
+    <string name="action_save">সংরক্ষণ</string>
+
+    <string name="urlbar_hint">অনুসন্ধান করুন বা ঠিকানা লিখুন</string>
+
+    <string name="teaser">স্বয়ংক্রিয় প্রাইভেন্ট ব্রাউজিং। \nব্রাউজ করুন। মুছে দিন। আবার করুন।</string>
+
+    <string name="feedback_erase">আপনার ব্রাউজিংয়ের পূর্ববর্তী তথ্য মুছে ফেলা হয়েছে।</string>
+
+    <string name="feedback_erase_custom_tab">ট্যাব এর ব্রাউজিং ইতিহাস মুছে ফেলা হয়েছে।</string>
+
+    <string name="search_hint">%1$s এর জন্যে অনুসন্ধান করুন</string>
+
+    <string name="menu_share">শেয়ার…</string>
+
+    <string name="menu_report_site_issue">সাইট ইস্যু রিপোর্ট করুন</string>
+
+    <string name="menu_open_with_default_browser2">%1$s এ খুলুন</string>
+
+    <string name="menu_open_with_a_browser2">খুলুন…</string>
+
+    <string name="menu_add_to_home_screen">নীড় স্ক্রিনে যোগ</string>
+
+    <string name="menu_settings">সেটিং</string>
+    <string name="menu_about">পরিচিতি</string>
+    <string name="menu_help">সহায়তা</string>
+    <string name="menu_rights">আপনার অধিকারসমূহ</string>
+
+    <string name="menu_trackers_blocked_title">ট্র্যাকার ব্লক করা হয়েছে্যা</string>
+
+    <string name="menu_trackers_blocked_subtitle">বন্ধ করলে, চালু কিছু সাইটের সমস্যা ঠিক হতে পারে</string>
+
+    <string name="menu_content_blocking">কন্টেন্ট ব্লকিং</string>
+    <string name="menu_content_blocking_subtitle">কিছু সাইট ফিক্স করা বন্ধ</string>
+
+    <string name="menu_custom_tab_branding">%1$s পরিচালিত</string>
+
+    <string name="share_dialog_title">শেয়ারের মাধ্যম</string>
+
+    <string name="notification_erase_text">ব্রাউজিং ইতিহাস মুছে দিন</string>
+
+    <string name="notification_action_open">খুলুন</string>
+
+    <string name="notification_action_erase_and_open">মুছুন এবং খুলুন</string>
+
+    <string name="shortcut_erase_short_label">মুছুন</string>
+
+    <string name="shortcut_erase_long_label">ব্রাউজিং ইতিহাস মুছুন</string>
+
+
+    <string name="shortcut_erase_and_open_short_label">মুছে ফেলুন এবং খুলুন</string>
+
+    <string name="shortcut_erase_and_open_long_label">মুছে ফেলুন এবং %1$s খুলুন</string>
+
+    <string name="preference_privacy_and_security_header">গোপনীয়তা ও নিরাপত্তা</string>
+
+    <string name="preference_privacy_and_security_summary">ট্র্যাকিং, কুকিজ, লগইন, ডাটা পছন্দ</string>
+
+    <string name="preference_search_summary">ডিফল্ট সেট করুন, অটোকমপ্লিট</string>
+
+    <string name="preference_mozilla_summary">%1$s সম্বন্ধে, সাহায্য</string>
+
+    <string name="preference_category_web_content">ওয়েব কনটেন্ট</string>
+
+    <string name="preference_category_switching_apps">সুইচিং অ্যাপস</string>
+
+    <string name="preference_category_general">সাধারণ</string>
+
+    <string name="preference_category_data_collection_use">ডাটা সংগ্রহ ও ব্যবহার</string>
+
+    <string name="preference_category_search">অনুসন্ধান</string>
+
+    <string name="preference_show_search_suggestions">অনুসন্ধান পরামর্শ নিন</string>
+    <string name="preference_show_search_suggestions_summary">আপনার অনুসন্ধান ইঞ্জিনে ঠিকানা বারে আপনি যা টাইপ করেন, %1$s তা পাঠাবে</string>
+
+    <string name="preference_search_engine_default">পূর্বনির্ধারিত</string>
+
+    <string name="preference_search_engine_label">অনুসন্ধান ইঞ্জিন</string>
+
+    <string name="preference_state_on">চালু</string>
+
+    <string name="preference_state_off">বন্ধ</string>
+
+    <string name="preference_subitem_autocomplete">URL অটোকমপ্লিট</string>
+
+    <string name="preference_switch_autocomplete_topsites">শীর্ষস্থানীয় সাইটের জন্য</string>
+
+    <string name="preference_switch_autocomplete_user_list">আপনি যেসব সাইট যোগ করবেন তার জন্যে</string>
+
+    <string name="preference_category_autocomplete_manage_sites">সাইট ব্যবস্থাপনা করুন</string>
+
+    <string name="preference_autocomplete_subitem_manage_sites">সাইট ব্যবস্থাপনা</string>
+
+    <string name="preference_autocomplete_action_add">+ কাস্টোম URL যোগ করুন</string>
+
+    <string name="preference_autocomplete_title_add">কাস্টোম URL যোগ করুন</string>
+
+    <string name="custom_autocomplete_quick_add">কাস্টোম URL যোগ করুন</string>
+
+    <string name="add_custom_autocomplete_label">স্বয়ংপূরণে লিঙ্ক যোগ করুন</string>
+
+    <string name="preference_category_cookies">কুকি ও সাইট ডাটা</string>
+
+    <string name="preference_category_data_choices">ডাটা পছন্দ</string>
+
+    <string name="preference_autocomplete_title_remove">কাস্টোম URL মুছে দিন</string>
+
+    <string name="preference_autocomplete_learn_more">আরও জানুন</string>
+
+    <string name="preference_autocomplete_custom_summary">কাস্টোম অটোকমপ্লিট URLs যোগ এবং ম্যানেজ করুন।</string>
+
+    <string name="preference_autocomplete_add_title">URL যোগ করতে</string>
+
+    <string name="preference_autocomplete_add_hint">URL পেস্ট অথবা প্রবেশ করান</string>
+
+    <string name="preference_autocomplete_add_example2">উদাহরণ: mozilla.org</string>
+
+    <string name="preference_autocomplete_add_example">উদাহরণ: example.com</string>
+
+    <string name="preference_autocomplete_add_confirmation">নতুন কাস্টোম URL যোগ করা হয়েছে।</string>
+
+    <string name="preference_autocomplete_menu_remove">অপসারণ</string>
+
+    <string name="preference_autocomplete_action_remove_content_description">অপসারণ</string>
+
+    <string name="preference_autocomplete_add_error">যে URL টি আপনি দিলেন তা ডবল চেক করুন।</string>
+
+    <string name="preference_language">ভাষা</string>
+    <string name="preference_language_systemdefault">সিস্টেম ডিফল্ট</string>
+
+    <string name="preference_category_privacy">গোপনীয়তা</string>
+    <string name="preference_privacy_block_ads">বিজ্ঞাপন গোয়েন্দা আটক করুন</string>
+    <string name="preference_privacy_block_ads_summary">কিছু বিজ্ঞাপন, আপনি তাতে ক্লিক না করলেও কি সাইট ব্রাউজ করছেন তা ট্র্যাক করে</string>
+    <string name="preference_privacy_block_analytics">এনালেটিকস গোয়েন্দা আটক করুন</string>
+    <string name="preference_privacy_block_analytics_summary">ট্যাপিং বা স্ক্রলিং এর মত কর্মকান্ডের হিসেব রাখতে, বিশ্লেষণ করতে ব্যবহৃত হয়</string>
+    <string name="preference_privacy_block_social">সোশ্যাল নেটওয়ার্ক গোয়েন্দা আটক করুন</string>
+    <string name="preference_privacy_block_social_summary">সাইটে আপনার ব্রাউজ ট্র্যাক করতে এবং শেয়ার বোতামের মত ফাংশনালিটি দেখাতে সাইটে এম্বেড রয়েছে</string>
+    <string name="preference_privacy_block_content">অন্যন্য কনটেন্ট গোয়েন্দা আটক করুন</string>
+    <string name="preference_privacy_block_content_summary2">সক্রিয় করলে কিছু পাতা অপ্রত্যাশিত আচরণ করতে পারে</string>
+    <string name="preference_privacy_category_cookies">কুকি ব্লক কর</string>
+
+    <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">শুধুমাত্র তৃতীয় পক্ষের ট্র্যাকার কুকিজ ব্লক কর</string>
+    <string name="preference_privacy_should_block_cookies_third_party_only_option">&quot;কেবল ৩য়-পক্ষীয় কুকি ব্লক কর &quot;</string>
+
+    <string name="preference_security_biometric">অ্যাপ আনলক করার জন্য আঙ্গুলের ছাপ ব্যবহার করুন</string>
+
+    <string name="preference_privacy_secure_mode">অদৃশ্য</string>
+    <string name="preference_privacy_stealth_summary">অ্যাপ্লিকেশন পরিবর্তনের সময় ওয়েব পেজ লুকান এবং স্ক্রিনশট গ্রহণ ব্লক করুন।</string>
+
+    <string name="preference_category_security">নিরাপত্তা</string>
+
+    <string name="preference_category_performance">কর্মক্ষমতা</string>
+    <string name="preference_performance_block_webfonts">ওয়েব ফন্ট ব্লক করুন</string>
+    <string name="preference_performance_block_webfonts_summary">ছবি অথবা আইকন দৃশ্যমান নাও হতে পারে</string>
+
+    <string name="preference_performance_block_javascript">JavaScript ব্লক কর</string>
+    <string name="preference_performance_block_javascript_summary">পাতা সম্ভবত দ্রুত লোড হচ্ছে, কিন্তু অনাকাঙ্খিত ভাল দেখাচ্ছে না</string>
+
+    <string name="preference_default_browser2">%1$s কে ডিফল্ট ব্রাউজার করুন</string>
+
+    <string name="preference_category_mozilla">Mozilla</string>
+    <string name="preference_mozilla_telemetry2">ব্যবহারের তথ্য পাঠাও</string>
+
+    <string name="preference_mozilla_telemetry_summary">আরও জানুন</string>
+
+    <string name="preference_mozilla_telemetry_summary2">Mozilla কেবলমাত্র সংগ্রহ করা চেষ্টা করে যা প্রত্যেকের জন্য %1$s প্রদান এবং উন্নতি করতে হবে।</string>
+
+    <string name="preference_privacy_notice">গোপনীয়তা নীতি</string>
+
+    <string name="preference_about">%1$s সম্পর্কে</string>
+
+    <string name="preference_search_installed_search_engines">ইন্সটল করা অনুসন্ধান ইঞ্জিন</string>
+
+    <string name="preference_search_restore">ডিফল্ট অনুসন্ধান ইঞ্জিন পুনরুদ্ধার</string>
+
+    <string name="preference_search_add2">+ অন্য অনুসন্ধান ইঞ্জিন যোগ করুন</string>
+    <string name="preference_search_remove_title">অনুসন্ধান ইঞ্জিন অপসারণ করুন</string>
+    <string name="preference_search_remove">অপসারণ</string>
+
+    <string name="action_option_add_search_engine">অনুসন্ধান ইঞ্জিন যোগ</string>
+
+    <string name="search_add_manually_name_hint">অনুসন্ধান ইঞ্জিন নাম</string>
+    <string name="search_add_manually_string">ব্যবহারের জন্য অনুসন্ধান বাক্য</string>
+    <string name="search_add_manually_save">সংরক্ষণ</string>
+
+    <string name="search_add_manually_example">উদাহরণ: example.com/search/?q=%s</string>
+
+    <string name="search_add_confirmation">নতুন অনুসন্ধান ইঞ্জিন যোগ হয়েছে।</string>
+
+    <string name="search_add_error_empty_name">অনুসন্ধান ইঞ্জিনের নাম দিন</string>
+    <string name="search_add_error_duplicate_name">ইনস্টল করা কোন অনুসন্ধান ইঞ্জিন ইতিমধ্যে এই নাম ব্যবহার করছে।</string>
+
+    <string name="search_add_error_empty_search">অনুসন্ধান বাক্য দিন</string>
+
+    <string name="search_add_error_format">সার্চ স্ট্রিংটি যেটি উদাহরণ ফরম্যাটের সাথে মেলে তা চেক করুন</string>
+
+    <string name="content_description_clear_input">ইনপুট পরিস্কার</string>
+
+    <string name="content_description_dismiss_input">খারিজ</string>
+
+    <string name="content_description_erase">ব্রাউজিং ইতিহাস পরিষ্কার করুন</string>
+
+    <string name="content_description_tab_counter">ট্যাব খোলা: %1$s</string>
+
+    <string name="content_description_lock">সুরক্ষিত কানেকশন</string>
+
+    <string name="accessibility_announcement_loading">লোড হচ্ছে</string>
+
+    <string name="accessibility_announcement_loading_finished">ওয়েবসাইট লোড হয়েছে</string>
+
+    <string name="content_description_menu">আরও বিকল্পসমূহ</string>
+
+    <string name="indicator_content_description_menu">আরো অপশন বাটন</string>
+
+    <string name="content_description_forward">সামনে পরিভ্রমণ করুন</string>
+
+    <string name="content_description_reload">ওয়েবসাইট রিলোড করুন</string>
+
+    <string name="content_description_back">পেছনে পরিভ্রমণ করুন</string>
+
+    <string name="content_description_stop">ওয়েবসাইট লোডিং বন্ধ করুন</string>
+
+    <string name="content_description_customtab_exit">আগের অ্যাপে ফিরে যাও</string>
+
+    <string name="content_description_trackers_blocked">ব্লক করা ট্র্যাকারের সংখ্যা</string>
+
+    <string name="content_description_blocking_switch">ট্র্যাকার ব্লক করুন</string>
+
+    <string name="your_rights">আপনার অধিকারসমূহ</string>
+
+    <string name="external_app_prompt_title">নতুন অ্যাপে লিংক খুলুন</string>
+    <string name="external_app_prompt">লিংকটি %2$s এ খুলতে, আপনি %1$s কে ছেড়ে দিতে পারেন।</string>
+    <string name="external_app_prompt_no_app_title">একটি অ্যাপ অনুসন্ধান করো যা লিংখটি খুলতে পারবে</string>
+    <string name="external_app_prompt_no_app">আপনার ডিভাইসের কোন অ্যাপই এই লিঙ্কটি খুলতে সক্ষম হয়নি। %2$s অনুসন্ধান করে একটি অ্যাপ বের করার জন্যে আপনি %1$s কে দ্বায়িত্ব দিতে পারেন।</string>
+    <string name="external_multiple_apps_matched_exit">আপনি কি ব্যক্তিগত ব্রাউজিং বন্ধ করবেন?</string>
+
+    <string name="download_snackbar_finished">%1$s সম্পন্ন হয়েছে</string>
+
+    <string name="download_snackbar_open">খুলুন</string>
 
 
 
@@ -177,90 +276,128 @@
 
 
   <string name="firstrun_defaultbrowser_title">আপনার গোপনীয়তা কঠোর করুন</string>
-  <string name="firstrun_defaultbrowser_text2">ব্যাক্তিগত ব্রাউজিং কে আরেক উচ্চতায় নিয়ে যান। বিজ্ঞাপন আর অন্যান্য কনটেন্ট ব্লক করুন, যারা আপনাকে সকল ওয়েবসাইটে অনুসরণ করে বেড়ায় আর আপনার পেজ লোডিং টাইম অনেকগুন বাড়িয়ে দেয়।</string>
-  <string name="firstrun_search_title">আপনি খুঁজবেন, আমার মত করে</string>
-  <string name="firstrun_search_text">অন্য কিছু খুঁজছেন? সেটিংস এ অন্য ডিফল্ট সার্চ ইঞ্জিন পছন্দ করুন।</string>
-  <string name="firstrun_shortcut_title">নীড় স্ক্রিনে শর্টকাট যোগ করুন</string>
-  <string name="firstrun_shortcut_text">%1$s এ আপনার প্রিয় সাইটে দ্রুত ফিরে আসুন। শুধু %1$s মেনু থেকে \"হোম স্ক্রীনে যোগ করুন\" নির্বাচন করুন।</string>
-  <string name="firstrun_privacy_title">গোপনীয়তাকে অভ্যাসে পরিনত করুন</string>
-  <string name="firstrun_privacy_text">আপনার ডিফল্ট ব্রাউজার হিসাবে %1$s সেট করুন এবং অন্য অ্যাপ্লিকেশন থেকে ওয়েবপেজ খুললে আপনি ব্যক্তিগত ব্রাউজিং এর সুবিধা পাবেন।</string>
-  <string name="firstrun_close_button">ঠিক আছে, বুঝতে পেরেছি!</string>
-  <string name="firstrun_skip_button">উপেক্ষা</string>
-  <string name="firstrun_next_button">পরবর্তী</string>
-  <string name="content_blocking_disabled">-</string>
-  <string name="dialog_addtohomescreen_action_add">যোগ</string>
-  <string name="dialog_addtohomescreen_action_cancel">বাতিল</string>
-  <string name="dialog_addtohomescreen_tracking_protection">শর্টকাট ট্র্যাকিং সুরক্ষা নিষ্ক্রিয়তার মাধ্যমে খুলবে</string>
-  <string name="notification_browsing_session_channel_name">ব্যক্তিগত ব্রাউজিং সেশন</string>
-  <string name="notification_browsing_session_channel_description">নোাটফিকেশন ট্যাপ করে আপনার %1$s সেশন মুছে ফেলা যাবে। আপনাকে অ্যাপ্লিকেশন খুলতে বা ব্রাউজারে কি চলছে তা দেখার প্রয়োজন হবে না।</string>
-  <string name="tabs_tray_action_erase">ব্রাউজিং ইতিহাস পরিষ্কার করুন</string>
-  <string name="download_firefox">Firefox ডাউনলোড করুন</string>
-  <string name="your_rights_content1">%1$s হল Mozilla এবং অন্যান্য অবদানকারীর দ্বারা তৈরি ফ্রি এবং ওপেনসোর্স সফটওয়্যার।</string>
+    <string name="firstrun_defaultbrowser_text2">ব্যাক্তিগত ব্রাউজিং কে আরেক উচ্চতায় নিয়ে যান। বিজ্ঞাপন আর অন্যান্য কনটেন্ট ব্লক করুন, যারা আপনাকে সকল ওয়েবসাইটে অনুসরণ করে বেড়ায় আর আপনার পেজ লোডিং টাইম অনেকগুন বাড়িয়ে দেয়।</string>
+
+    <string name="firstrun_search_title">আপনি খুঁজবেন, আমার মত করে</string>
+    <string name="firstrun_search_text">অন্য কিছু খুঁজছেন? সেটিংস এ অন্য ডিফল্ট সার্চ ইঞ্জিন পছন্দ করুন।</string>
+
+    <string name="firstrun_shortcut_title">নীড় স্ক্রিনে শর্টকাট যোগ করুন</string>
+    <string name="firstrun_shortcut_text">%1$s এ আপনার প্রিয় সাইটে দ্রুত ফিরে আসুন। শুধু %1$s মেনু থেকে \&quot;হোম স্ক্রীনে যোগ করুন\&quot; নির্বাচন করুন।</string>
+
+    <string name="firstrun_privacy_title">গোপনীয়তাকে অভ্যাসে পরিনত করুন</string>
+    <string name="firstrun_privacy_text">আপনার ডিফল্ট ব্রাউজার হিসাবে %1$s সেট করুন এবং অন্য অ্যাপ্লিকেশন থেকে ওয়েবপেজ খুললে আপনি ব্যক্তিগত ব্রাউজিং এর সুবিধা পাবেন।</string>
+
+    <string name="firstrun_close_button">ঠিক আছে, বুঝতে পেরেছি!</string>
+    <string name="firstrun_skip_button">উপেক্ষা</string>
+    <string name="firstrun_next_button">পরবর্তী</string>
+
+    <string name="content_blocking_disabled">-</string>
+
+    <string name="dialog_addtohomescreen_action_add">যোগ</string>
+
+    <string name="dialog_addtohomescreen_action_cancel">বাতিল</string>
+
+    <string name="notification_browsing_session_channel_name">ব্যক্তিগত ব্রাউজিং সেশন</string>
+
+    <string name="notification_browsing_session_channel_description">নোাটফিকেশন ট্যাপ করে আপনার %1$s সেশন মুছে ফেলা যাবে। আপনাকে অ্যাপ্লিকেশন খুলতে বা ব্রাউজারে কি চলছে তা দেখার প্রয়োজন হবে না।</string>
+
+    <string name="tabs_tray_action_erase">ব্রাউজিং ইতিহাস পরিষ্কার করুন</string>
+
+    <string name="download_firefox">Firefox ডাউনলোড করুন</string>
+
+    <string name="your_rights_content1">%1$s হল Mozilla এবং অন্যান্য অবদানকারীর দ্বারা তৈরি ফ্রি এবং ওপেনসোর্স সফটওয়্যার।</string>
 
 
 
 
   <string name="gv_prompt_username_hint">ব্যবহারকারীর নাম</string>
-  <string name="gv_prompt_password_hint">পাসওয়ার্ড</string>
-  <string name="gv_prompt_clear">পরিষ্কার</string>
-  <string name="security_popup_secure_connection">নিরাপদ সংযোগ</string>
-  <string name="security_popup_insecure_connection">অনিরাপদ সংযোগ</string>
-  <string name="security_popup_security_verified">যাচাইকারী: %1$s</string>
-  <string name="site_security_icon_content_description">সাইট নিরাপত্তা</string>
-  <string name="preference_autocomplete_duplicate_url_error">URL ইতোমধ্যেই আছে</string>
-  <string name="find_in_page">পাতায় অনুসন্ধান</string>
-  <string name="find_in_page_input">পাতায় অনুসন্ধান</string>
-  <string name="find_in_page_result">%1$d/%2$d</string>
-  <string name="accessibility_find_in_page_result">%2$d এর %1$d</string>
-  <string name="accessibility_next_result">পরবর্তী ফলাফল খুঁজুন</string>
-  <string name="accessibility_previous_result">পূর্ববর্তী ফলাফল খুঁজুন</string>
-  <string name="accessibility_dismiss_find_in_page">পাতায় খোঁজা বাতিল করুন</string>
+    <string name="gv_prompt_password_hint">পাসওয়ার্ড</string>
+    <string name="gv_prompt_clear">পরিষ্কার</string>
+
+    <string name="security_popup_secure_connection">নিরাপদ সংযোগ</string>
+    <string name="security_popup_insecure_connection">অনিরাপদ সংযোগ</string>
+    <string name="security_popup_security_verified">যাচাইকারী: %1$s</string>
+
+    <string name="site_security_icon_content_description">সাইট নিরাপত্তা</string>
+    <string name="preference_autocomplete_duplicate_url_error">URL ইতোমধ্যেই আছে</string>
+
+    <string name="find_in_page">পাতায় অনুসন্ধান</string>
+
+    <string name="find_in_page_input">পাতায় অনুসন্ধান</string>
+
+    <string name="find_in_page_result">%1$d/%2$d</string>
+    <string name="accessibility_find_in_page_result">%2$d এর %1$d</string>
+
+    <string name="accessibility_next_result">পরবর্তী ফলাফল খুঁজুন</string>
+    <string name="accessibility_previous_result">পূর্ববর্তী ফলাফল খুঁজুন</string>
+    <string name="accessibility_dismiss_find_in_page">পাতায় খোঁজা বাতিল করুন</string>
 
 
 
   <string name="preference_performance_request_desktop_site">ডেস্কটপ সাইটের অনুরোধ</string>
-  <string name="custom_tab_copy_url_action">URL কপি হয়েছে</string>
-  <string name="preference_advanced_summary">ডেভেলপার টুল</string>
-  <string name="preference_category_advanced">বিস্তৃত</string>
-  <string name="preference_remote_debugging">ইউএসবি/ওয়াইফাই এর মাধ্যমে রিমোট ডিবাগিং</string>
-  <string name="biometric_auth_title">আনলক %1$s</string>
-  <string name="biometric_auth_description">চালিয়ে যেতে আঙ্গুলের ছাপ সেন্সর স্পর্শ করুন।</string>
-  <string name="biometric_auth_new_session">নতুন সেশন</string>
-  <string name="biometric_auth_image_description">আঙ্গুলের ছাপ আইকন</string>
-  <string name="biometric_auth_not_recognized_error">আঙ্গুলের ছাপ চেনা যাচ্ছে না। আবার চেষ্টা করুন।</string>
-  <string name="biometric_auth_moved_too_quickly">আঙ্গুল খুব দ্রুত সরে গেছে। আবার চেষ্টা করুন।</string>
-  <string name="enable_search_suggestion_title">আপনি কি অনুসন্ধান পরামর্শ সক্রিয় করতে চান?</string>
-  <string name="enable_search_suggestion_subtitle">অনুসন্ধানের পরামর্শ পেতে হলে, %1$s আপনি অ্যাড্রেস বারে যা টাইপ করেন সেটি আপনার বাছাইকৃত অনুসন্ধান ইঞ্জিনের নিকট পাঠাতে হবে। %2$s।</string>
-  <string name="enable_search_suggestion_subtitle_learnmore">আরও জানুন</string>
-  <string name="enable_search_suggestions_no">না</string>
-  <string name="enable_search_suggestions_yes">হ্যাঁ</string>
-  <string name="no_suggestions_message">কিছু সার্চ ইঞ্জিন পরামর্শ প্রদর্শন করতে পারবে না।</string>
-  <string name="dismiss_no_suggestions_prompt_button">বাতিল</string>
-  <string name="tip_disable_tracking_protection">সাইট অপ্রত্যাশিত আচরণ করছে?\n ট্র্যাকিং সুরক্ষা বন্ধ করে দেখুন</string>
-  <string name="tip_add_to_homescreen">আপনার দ্বারা অধিক ব্যবহার হওয়া সাইটসমূহে এক ট্যাপে চলে যান %1$s মেনু &gt; হোম স্ক্রিনে যোগ করুন</string>
-  <string name="tip_set_default_browser">%1$s এর মধ্যে প্রতিটি লিঙ্ক খুলুন\n ডিফল্ট ব্রাউজার হিসাবে %1$s সেট করুন</string>
-  <string name="tip_autocomplete_url">আপনার সবচে বেশী ব্যবহৃত স্বয়ংপূরণ URLs\n অ্যাড্রেস বারে যেকোনো URL লং-প্রেস করুন</string>
-  <string name="tip_open_in_new_tab">একটি নতুন ট্যাব একটি লিঙ্ক খুলুন\n কোন পেজে কোন লিংক লং-প্রেস করুন</string>
-  <string name="tip_request_desktop">এর বদলে সম্পূর্ণ ডেস্কটপ সাইট দেখবেন?%1$s মেনু &gt; ডেস্কটপ সাইট অনুরোধ করুন</string>
-  <string name="tip_disable_tips2">স্টার্ট স্ক্রিনে টিপস বন্ধ করুন</string>
-  <string name="tip_explain_allowlist">বিশ্বস্ত সাইট?\n Allowlist আপনার পরিচিত এবং বিশ্বাসযোগ্য সাইটের জন্য ট্র্যাকিং সুরক্ষা অক্ষম করে।</string>
-  <string name="new_tab_opened_snackbar">নতুন ট্যাব খোলা হয়েছে</string>
-  <string name="open_new_tab_snackbar">পরিবর্তন</string>
-  <string name="preference_open_new_tab">অবিলম্বে নতুন ট্যাব লিঙ্ক স্যুইচ করুন</string>
-  <string name="preference_category_safe_browsing">নিরাপদ ব্রাউজিং</string>
-  <string name="preference_safe_browsing_title">সম্ভাব্য বিপজ্জনক এবং প্রতারণামূলক সাইট ব্লক করুন</string>
-  <string name="preference_safe_browsing_summary">প্রতারণামূলক এবং আক্রমণ সাইট, ম্যালওয়্যার সাইট, এবং অবাঞ্ছিত সফ্টওয়্যারের সাইট ব্লক করুন।</string>
-  <string name="preference_exceptions">ব্যতিক্রম</string>
-  <string name="preference_exceptions_description">আপনি এই ওয়েবসাইটগুলির জন্য সামগ্রী অবরোধ নিষ্ক্রিয় করেছেন।</string>
-  <string name="preference_exceptions_menu_remove">অপসারণ করুন</string>
-  <string name="preference_exceptions_remove_all_button_label">সব ওয়েবসাইট অপসারণ করুন</string>
-  <string name="tab_crash_report_title">ট্যাব ক্র্যাশ হয়েছে</string>
-  <string name="tab_crash_report_headline">দুঃখিত। আমদের এই ট্যাবের সাথে একটি সমস্যা হচ্ছে।</string>
-  <string name="tab_crash_report_description">ব্যক্তিগত ব্রাউজার হিসাবে, আমরা কখনও সংরক্ষণ এবং এই ট্যাব পুনরুদ্ধার করতে পারব না।</string>
-  <string name="tab_crash_report_close_tab_button_label">ট্যাব বন্ধ করুন</string>
+
+    <string name="custom_tab_copy_url_action">URL কপি হয়েছে</string>
+
+    <string name="preference_advanced_summary">ডেভেলপার টুল</string>
+
+    <string name="preference_category_advanced">বিস্তৃত</string>
+
+    <string name="preference_remote_debugging">ইউএসবি/ওয়াইফাই এর মাধ্যমে রিমোট ডিবাগিং</string>
+
+    <string name="biometric_auth_image_description">আঙ্গুলের ছাপ আইকন</string>
+
+    <string name="biometric_auth_not_recognized_error">আঙ্গুলের ছাপ চেনা যাচ্ছে না। আবার চেষ্টা করুন।</string>
+
+    <string name="biometric_auth_moved_too_quickly">আঙ্গুল খুব দ্রুত সরে গেছে। আবার চেষ্টা করুন।</string>
+
+    <string name="enable_search_suggestions_no">না</string>
+
+    <string name="enable_search_suggestions_yes">হ্যাঁ</string>
+
+    <string name="no_suggestions_message">কিছু সার্চ ইঞ্জিন পরামর্শ প্রদর্শন করতে পারবে না।</string>
+
+    <string name="dismiss_no_suggestions_prompt_button">বাতিল</string>
+
+    <!-- Tips displayed on the home view -->
+
+    <string name="tip_disable_tracking_protection">সাইট অপ্রত্যাশিত আচরণ করছে?\n ট্র্যাকিং সুরক্ষা বন্ধ করে দেখুন</string>
+
+    <string name="tip_add_to_homescreen">আপনার দ্বারা অধিক ব্যবহার হওয়া সাইটসমূহে এক ট্যাপে চলে যান %1$s মেনু &gt; হোম স্ক্রিনে যোগ করুন</string>
+
+    <string name="tip_set_default_browser">%1$s এর মধ্যে প্রতিটি লিঙ্ক খুলুন\n ডিফল্ট ব্রাউজার হিসাবে %1$s সেট করুন</string>
+
+    <string name="tip_autocomplete_url">আপনার সবচে বেশী ব্যবহৃত স্বয়ংপূরণ URLs\n অ্যাড্রেস বারে যেকোনো URL লং-প্রেস করুন</string>
+
+    <string name="tip_open_in_new_tab">একটি নতুন ট্যাব একটি লিঙ্ক খুলুন\n কোন পেজে কোন লিংক লং-প্রেস করুন</string>
+
+    <string name="tip_disable_tips2">স্টার্ট স্ক্রিনে টিপস বন্ধ করুন</string>
+
+    <string name="new_tab_opened_snackbar">নতুন ট্যাব খোলা হয়েছে</string>
+
+    <string name="open_new_tab_snackbar">পরিবর্তন</string>
+
+    <string name="preference_open_new_tab">অবিলম্বে নতুন ট্যাব লিঙ্ক স্যুইচ করুন</string>
+
+    <string name="preference_safe_browsing_title">সম্ভাব্য বিপজ্জনক এবং প্রতারণামূলক সাইট ব্লক করুন</string>
+    <string name="preference_safe_browsing_summary">প্রতারণামূলক এবং আক্রমণ সাইট, ম্যালওয়্যার সাইট, এবং অবাঞ্ছিত সফ্টওয়্যারের সাইট ব্লক করুন।</string>
+
+    <string name="preference_exceptions">ব্যতিক্রম</string>
+    <string name="preference_exceptions_description">আপনি এই ওয়েবসাইটগুলির জন্য সামগ্রী অবরোধ নিষ্ক্রিয় করেছেন।</string>
+    <string name="preference_exceptions_menu_remove">অপসারণ করুন</string>
+    <string name="preference_exceptions_remove_all_button_label">সব ওয়েবসাইট অপসারণ করুন</string>
+
+    <string name="tab_crash_report_title">ট্যাব ক্র্যাশ হয়েছে</string>
+    <string name="tab_crash_report_headline">দুঃখিত। আমদের এই ট্যাবের সাথে একটি সমস্যা হচ্ছে।</string>
+    <string name="tab_crash_report_description">ব্যক্তিগত ব্রাউজার হিসাবে, আমরা কখনও সংরক্ষণ এবং এই ট্যাব পুনরুদ্ধার করতে পারব না।</string>
+    <string name="tab_crash_report_close_tab_button_label">ট্যাব বন্ধ করুন</string>
 
 
 
 
   <string name="crash_report_send_crash_label">Mozilla কে ক্র্যাশ রিপোর্ট পাঠান</string>
-</resources>
+
+    <!-- Tracking protection bottom sheet -->
+
+     <!-- Promote SearchWidget Dialog -->
+
+    </resources>

@@ -1,152 +1,251 @@
-<?xml version='1.0' encoding='utf-8'?>
-<resources>
-  <string name="action_cancel">Ləğv et</string>
-  <string name="action_ok">Tamam</string>
-  <string name="action_save">Saxla</string>
-  <string name="urlbar_hint">Ünvanı daxil et və ya axtar</string>
-  <string name="teaser">Avtomatik məxfi səyahət.\nGəz. Poz. Təkrarla.</string>
-  <string name="feedback_erase">Səyahət tarixçəniz silindi.</string>
-  <string name="feedback_erase_custom_tab">Vərəqin tarixçəsi pozuldu.</string>
-  <string name="search_hint">%1$s üçün axtar</string>
-  <string name="menu_share">Paylaş…</string>
-  <string name="menu_report_site_issue">Sayt Problemini Bildir</string>
-  <string name="menu_open_with_default_browser2">%1$s ilə aç</string>
-  <string name="menu_open_with_a_browser2">Bununla aç…</string>
-  <string name="menu_add_to_home_screen">Ana Ekrana əlavə et</string>
-  <string name="menu_whats_new">Yeniliklər</string>
-  <string name="menu_settings">Tənzimləmələr</string>
-  <string name="menu_about">Haqqında</string>
-  <string name="menu_help">Kömək</string>
-  <string name="menu_rights">Hüquqlarınız</string>
-  <string name="menu_trackers_blocked_title">İzləyicilər bloklandı</string>
-  <string name="menu_trackers_blocked_subtitle">Bunu söndürmə bəzi sayt uyğunsuzluqlarını həll edə bilər</string>
-  <string name="menu_content_blocking">Məzmun Əngəlləmə</string>
-  <string name="menu_content_blocking_subtitle">Bəzi saytlardakı problemləri həll etmək üçün söndürün</string>
-  <string name="menu_custom_tab_branding">%1$s Tərəfindən</string>
-  <string name="share_dialog_title">Bununla paylaş:</string>
-  <string name="notification_erase_text">Səyahət keçmişini poz</string>
-  <string name="notification_action_open">Aç</string>
-  <string name="notification_action_erase_and_open">Poz və Aç</string>
-  <string name="shortcut_erase_short_label">Poz</string>
-  <string name="shortcut_erase_long_label">Səyahət keçmişini poz</string>
-  <string name="shortcut_erase_and_open_short_label">Poz və Aç</string>
-  <string name="shortcut_erase_and_open_long_label">Poz və %1$s tətbiqini aç</string>
-  <string name="text_selection_search_action">Məxfi Axtar</string>
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:moz="http://mozac.org/tools" xmlns:tools="http://schemas.android.com/tools">
+    <!-- ####################################################################################### -->
+    <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
+    <!-- ## into a separate file like strings_references.xml                                  ## -->
+    <!-- ####################################################################################### -->
 
-  <string name="preference_privacy_and_security_header">Məxfilik və Təhlükəsizlik</string>
-  <string name="preference_privacy_and_security_summary">İzlənmə, çərəzlər, məlumat seçimləri</string>
-  <string name="preference_search_summary">Əsas olaraq qur, avto tamamlama</string>
-  <string name="preference_mozilla_summary">%1$s haqqında, kömək</string>
-  <string name="preference_category_tracking_protection">İzlənmə Qoruması</string>
-  <string name="preference_category_web_content">Web Məzmun</string>
-  <string name="preference_category_switching_apps">Tətbiq Keçidi</string>
-  <string name="preference_category_general">Ümumi</string>
-  <string name="preference_general_summary">Əsas səyyah, vərəqlər və dil</string>
-  <string name="preference_category_data_collection_use">Məlumat yığılması və istifadəsi</string>
-  <string name="preference_category_search">Axtar</string>
-  <string name="preference_show_search_suggestions">Axtarış təkliflərini al</string>
-  <string name="preference_show_search_suggestions_summary">%1$s ünvan sətrində yazdıqlarınızı axtarış mühərriyinizə göndərəcək</string>
-  <string name="preference_search_engine_default">İlkin hal</string>
-  <string name="preference_search_engine_label">Axtarış mühərriyi</string>
-  <string name="preference_state_on">Açıq</string>
-  <string name="preference_state_off">Bağlı</string>
-  <string name="preference_subitem_autocomplete">Ünvan Avtomatik Tamamlama</string>
-  <string name="preference_switch_autocomplete_topsites">Çox istifadə edilən saytlar üçün</string>
-  <string name="preference_autocomplete_topsite_summary">Ünvan sətrində məşhur 450 saytı avtomatik tamamlamaq üçün aktivləşdirin.</string>
-  <string name="preference_switch_autocomplete_user_list">Əlavə etdiyiniz saytlar üçün</string>
-  <string name="preference_autocomplete_user_list_summary">Ünvan sətrində məşhur 450 saytı avtomatik tamamlamaq üçün aktivləşdirin.</string>
-  <string name="preference_category_autocomplete_manage_sites">Saytları idarə et</string>
-  <string name="preference_autocomplete_subitem_manage_sites">Saytları idarə et</string>
-  <string name="preference_autocomplete_action_add">+ Fərdi ünvan əlavə et</string>
-  <string name="preference_autocomplete_title_add">Fərdi ünvan əlavə et</string>
-  <string name="custom_autocomplete_quick_add">Fərdi ünvan əlavə et</string>
-  <string name="add_custom_autocomplete_label">Avtomatik tamamlama üçün keçid əlavə edin</string>
-  <string name="preference_category_cookies">Çərəzlər və Sayt Məlumatları</string>
-  <string name="preference_category_data_choices">Məlumat Seçimləri</string>
-  <string name="preference_autocomplete_title_remove">Fərdi ünvanı sil</string>
-  <string name="preference_autocomplete_learn_more">Ətraflı öyrən</string>
-  <string name="preference_autocomplete_custom_summary">Avtomatik tamamlanacaq fərdi ünvanları idarə edin.</string>
-  <string name="preference_autocomplete_add_title">Əlavə ediləcək ünvan</string>
-  <string name="preference_autocomplete_add_hint">Ünvanı yapışdırın və ya daxil edin</string>
-  <string name="preference_autocomplete_add_example2">Məsələn: mozilla.org</string>
-  <string name="preference_autocomplete_add_example">Məsələn: example.com</string>
-  <string name="preference_autocomplete_add_confirmation">Yeni fərdi ünvan əlavə edildi.</string>
-  <string name="preference_autocomplete_menu_remove">Sil</string>
-  <string name="preference_autocomplete_action_remove_content_description">Sil</string>
-  <string name="preference_autocomplete_add_error">Daxil etdiyiniz ünvanı bir də yoxlayın.</string>
-  <string name="preference_language">Dil</string>
-  <string name="preference_language_systemdefault">Sistemin dili</string>
-  <string name="preference_category_privacy">Məxfilik</string>
-  <string name="preference_privacy_block_ads">Reklam izləyicilərini əngəllə</string>
-  <string name="preference_privacy_block_ads_summary">Bəzi reklamlar onlara klikləməsəniz belə sayt ziyarətlərinizi izləyirlər</string>
-  <string name="preference_privacy_block_analytics">Analiz izləyicilərini əngəllə</string>
-  <string name="preference_privacy_block_analytics_summary">Toxunma və sürüşdürmə kimi aktivlikləri yığıb, ölçüb, analiz etmək üçün işlədilir</string>
-  <string name="preference_privacy_block_social">Sosial izləyiciləri əngəllə</string>
-  <string name="preference_privacy_block_social_summary">Ziyarətinizi izləmək və paylaşma düymələri kimi funksionallıqları göstərmək üçün saytlara yerləşdirilir</string>
-  <string name="preference_privacy_block_content">Digər məzmun izləyicilərini əngəllə</string>
-  <string name="preference_privacy_block_content_summary2">Aktivləşdirmə bəzi səhifələrdə gözlənilməz səhvlərə səbəb ola bilər</string>
-  <string name="preference_privacy_category_cookies">Çərəzləri əngəllə</string>
-  <string name="preference_privacy_should_block_cookies_no_option">Xeyr</string>
-  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Ancaq 3cü tərəf izləmə çərəzlərini əngəllə</string>
-  <string name="preference_privacy_should_block_cookies_third_party_only_option">Ancaq 3cü tərəf çərəzləri əngəllə</string>
-  <string name="preference_privacy_should_block_cookies_yes_option">Bəli</string>
-  <string name="preference_security_biometric">Tətbiqi açmaq üçün barmaq izi işlət</string>
-  <string name="preference_security_biometric_summary">Əgər ünvan artıq tətbiqdə açıqdırsa barmaq iziniz %1$s səyyahının kilidini aça bilər. Görünməzlik aktivləşdiriləcək.</string>
-  <string name="preference_privacy_secure_mode">Görünməzlik</string>
-  <string name="preference_privacy_stealth_summary">Tətbiqlər arası keçərkən saytları gizlət və ekran görüntüləri çəkməyi əngəllə.</string>
-  <string name="preference_category_security">Təhlükəsizlik</string>
-  <string name="preference_category_performance">Məhsuldarlıq</string>
-  <string name="preference_performance_block_webfonts">Web şriftlərini əngəllə</string>
-  <string name="preference_performance_block_webfonts_summary">Əksik icon və şəkillərə səbəb ola bilər</string>
-  <string name="preference_performance_block_javascript">JavaScript-i əngəllə</string>
-  <string name="preference_performance_block_javascript_summary">Səhifələr daha sürətli yüklənə bilər, ancaq səhv işləyə bilərlər</string>
-  <string name="preference_default_browser2">%1$s səyyahını əsas et</string>
-  <string name="preference_category_mozilla">Mozilla</string>
-  <string name="preference_mozilla_telemetry2">İstifadə məlumatlarını göndər</string>
-  <string name="preference_mozilla_telemetry_summary">Ətraflı öyrən</string>
-  <string name="preference_mozilla_telemetry_summary2">Mozilla ancaq %1$s səyyahını hamı üçün yaxşılaşdırmağa lazım olan məlumatları yığır.</string>
-  <string name="preference_privacy_notice">Məxfilik Bildirişi</string>
-  <string name="preference_about">%1$s Haqqında</string>
-  <string name="preference_search_installed_search_engines">Quraşdırılmış axtarış mühərrikləri</string>
-  <string name="preference_search_restore">İlkin axtarış nizamlarını bərpa et</string>
-  <string name="preference_search_add2">+ Digər axtarış mühərriyini əlavə et</string>
-  <string name="preference_search_remove_title">Axtarış mühərriklərini sil</string>
-  <string name="preference_search_remove">Sil</string>
-  <string name="preference_homescreen_tips">Ana Ekranı məsləhətlərini göstər</string>
-  <string name="action_option_add_search_engine">Axtarış mühərriyini əlavə et</string>
-  <string name="search_add_manually_name_hint">Axtarış mühərriyinin adı</string>
-  <string name="search_add_manually_string">İstifadə ediləcək axtarış sətri</string>
-  <string name="search_add_manually_save">Saxla</string>
-  <string name="search_add_manually_example">Məsələn: mozillaz.org/search/?q=%s</string>
-  <string name="search_add_confirmation">Yeni axtarış mühərriyi əlavə edildi.</string>
-  <string name="search_add_error_empty_name">Axtarış mühərriyinin adını daxil edin</string>
-  <string name="search_add_error_duplicate_name">Qurulu axtarış mühərriyi artıq bu adı işlədir.</string>
-  <string name="search_add_error_empty_search">Axtarış mətnini daxil edin</string>
-  <string name="search_add_error_format">Axtarış mətninin nümunədəki formata uyğun olduğunu yoxlayın</string>
-  <string name="content_description_clear_input">Girişi təmizlə</string>
-  <string name="content_description_dismiss_input">Ləğv et</string>
-  <string name="content_description_erase">Səyahət tarixçəsini təmizlə</string>
-  <string name="content_description_tab_counter">Açıq vərəqlər: %1$s</string>
-  <string name="content_description_lock">Təhlükəsiz əlaqə</string>
-  <string name="accessibility_announcement_loading">Yüklənir</string>
-  <string name="accessibility_announcement_loading_finished">Sayt yükləndi</string>
-  <string name="content_description_menu">Digər seçimlər</string>
-  <string name="indicator_content_description_menu">Daha çox seçim düyməsi</string>
-  <string name="content_description_forward">İrəli keç</string>
-  <string name="content_description_reload">Saytı yenilə</string>
-  <string name="content_description_back">Geri get</string>
-  <string name="content_description_stop">Səhifəni yükləməyi dayandır</string>
-  <string name="content_description_customtab_exit">Əvvəlki tətbiqə qayıt</string>
-  <string name="content_description_trackers_blocked">Əngəllənmiş izləyicilərin sayı</string>
-  <string name="content_description_blocking_switch">İzləyiciləri əngəllə</string>
-  <string name="your_rights">Hüquqlarınız</string>
-  <string name="external_app_prompt_title">Keçidi başqa tətbiqdə aç</string>
-  <string name="external_app_prompt">%1$s səyyahını tərk edərək keçidi %2$s üzərində aça bilərsiz.</string>
-  <string name="external_app_prompt_no_app_title">Keçid aça bilən tətbiq tap</string>
-  <string name="external_app_prompt_no_app">Cihazınızdakı heç bir tətbiq bu keçidi aça bilmir. %1$s səyyahını tərk edərək %2$s ilə bunu bacaran tətbiq axtara bilərsiz.</string>
-  <string name="external_multiple_apps_matched_exit">Məxfi Səyahətdən çıxırsın?</string>
-  <string name="download_snackbar_finished">%1$s endirildi</string>
-  <string name="download_snackbar_open">Aç</string>
+    <string name="action_cancel">Ləğv et</string>
+    <string name="action_ok">Tamam</string>
+
+    <string name="action_save">Saxla</string>
+
+    <string name="urlbar_hint">Ünvanı daxil et və ya axtar</string>
+
+    <string name="teaser">Avtomatik məxfi səyahət.\nGəz. Poz. Təkrarla.</string>
+
+    <string name="feedback_erase">Səyahət tarixçəniz silindi.</string>
+
+    <string name="feedback_erase_custom_tab">Vərəqin tarixçəsi pozuldu.</string>
+
+    <string name="search_hint">%1$s üçün axtar</string>
+
+    <string name="menu_share">Paylaş…</string>
+
+    <string name="menu_report_site_issue">Sayt Problemini Bildir</string>
+
+    <string name="menu_open_with_default_browser2">%1$s ilə aç</string>
+
+    <string name="menu_open_with_a_browser2">Bununla aç…</string>
+
+    <string name="menu_add_to_home_screen">Ana Ekrana əlavə et</string>
+
+    <string name="menu_settings">Tənzimləmələr</string>
+    <string name="menu_about">Haqqında</string>
+    <string name="menu_help">Kömək</string>
+    <string name="menu_rights">Hüquqlarınız</string>
+
+    <string name="menu_trackers_blocked_title">İzləyicilər bloklandı</string>
+
+    <string name="menu_trackers_blocked_subtitle">Bunu söndürmə bəzi sayt uyğunsuzluqlarını həll edə bilər</string>
+
+    <string name="menu_content_blocking">Məzmun Əngəlləmə</string>
+    <string name="menu_content_blocking_subtitle">Bəzi saytlardakı problemləri həll etmək üçün söndürün</string>
+
+    <string name="menu_custom_tab_branding">%1$s Tərəfindən</string>
+
+    <string name="share_dialog_title">Bununla paylaş:</string>
+
+    <string name="notification_erase_text">Səyahət keçmişini poz</string>
+
+    <string name="notification_action_open">Aç</string>
+
+    <string name="notification_action_erase_and_open">Poz və Aç</string>
+
+    <string name="shortcut_erase_short_label">Poz</string>
+
+    <string name="shortcut_erase_long_label">Səyahət keçmişini poz</string>
+
+
+    <string name="shortcut_erase_and_open_short_label">Poz və Aç</string>
+
+    <string name="shortcut_erase_and_open_long_label">Poz və %1$s tətbiqini aç</string>
+
+    <string name="preference_privacy_and_security_header">Məxfilik və Təhlükəsizlik</string>
+
+    <string name="preference_privacy_and_security_summary">İzlənmə, çərəzlər, məlumat seçimləri</string>
+
+    <string name="preference_search_summary">Əsas olaraq qur, avto tamamlama</string>
+
+    <string name="preference_mozilla_summary">%1$s haqqında, kömək</string>
+
+    <string name="preference_category_web_content">Web Məzmun</string>
+
+    <string name="preference_category_switching_apps">Tətbiq Keçidi</string>
+
+    <string name="preference_category_general">Ümumi</string>
+
+    <string name="preference_category_data_collection_use">Məlumat yığılması və istifadəsi</string>
+
+    <string name="preference_category_search">Axtar</string>
+
+    <string name="preference_show_search_suggestions">Axtarış təkliflərini al</string>
+    <string name="preference_show_search_suggestions_summary">%1$s ünvan sətrində yazdıqlarınızı axtarış mühərriyinizə göndərəcək</string>
+
+    <string name="preference_search_engine_default">İlkin hal</string>
+
+    <string name="preference_search_engine_label">Axtarış mühərriyi</string>
+
+    <string name="preference_state_on">Açıq</string>
+
+    <string name="preference_state_off">Bağlı</string>
+
+    <string name="preference_subitem_autocomplete">Ünvan Avtomatik Tamamlama</string>
+
+    <string name="preference_switch_autocomplete_topsites">Çox istifadə edilən saytlar üçün</string>
+
+    <string name="preference_switch_autocomplete_user_list">Əlavə etdiyiniz saytlar üçün</string>
+
+    <string name="preference_category_autocomplete_manage_sites">Saytları idarə et</string>
+
+    <string name="preference_autocomplete_subitem_manage_sites">Saytları idarə et</string>
+
+    <string name="preference_autocomplete_action_add">+ Fərdi ünvan əlavə et</string>
+
+    <string name="preference_autocomplete_title_add">Fərdi ünvan əlavə et</string>
+
+    <string name="custom_autocomplete_quick_add">Fərdi ünvan əlavə et</string>
+
+    <string name="add_custom_autocomplete_label">Avtomatik tamamlama üçün keçid əlavə edin</string>
+
+    <string name="preference_category_cookies">Çərəzlər və Sayt Məlumatları</string>
+
+    <string name="preference_category_data_choices">Məlumat Seçimləri</string>
+
+    <string name="preference_autocomplete_title_remove">Fərdi ünvanı sil</string>
+
+    <string name="preference_autocomplete_learn_more">Ətraflı öyrən</string>
+
+    <string name="preference_autocomplete_custom_summary">Avtomatik tamamlanacaq fərdi ünvanları idarə edin.</string>
+
+    <string name="preference_autocomplete_add_title">Əlavə ediləcək ünvan</string>
+
+    <string name="preference_autocomplete_add_hint">Ünvanı yapışdırın və ya daxil edin</string>
+
+    <string name="preference_autocomplete_add_example2">Məsələn: mozilla.org</string>
+
+    <string name="preference_autocomplete_add_example">Məsələn: example.com</string>
+
+    <string name="preference_autocomplete_add_confirmation">Yeni fərdi ünvan əlavə edildi.</string>
+
+    <string name="preference_autocomplete_menu_remove">Sil</string>
+
+    <string name="preference_autocomplete_action_remove_content_description">Sil</string>
+
+    <string name="preference_autocomplete_add_error">Daxil etdiyiniz ünvanı bir də yoxlayın.</string>
+
+    <string name="preference_language">Dil</string>
+    <string name="preference_language_systemdefault">Sistemin dili</string>
+
+    <string name="preference_category_privacy">Məxfilik</string>
+    <string name="preference_privacy_block_ads">Reklam izləyicilərini əngəllə</string>
+    <string name="preference_privacy_block_ads_summary">Bəzi reklamlar onlara klikləməsəniz belə sayt ziyarətlərinizi izləyirlər</string>
+    <string name="preference_privacy_block_analytics">Analiz izləyicilərini əngəllə</string>
+    <string name="preference_privacy_block_analytics_summary">Toxunma və sürüşdürmə kimi aktivlikləri yığıb, ölçüb, analiz etmək üçün işlədilir</string>
+    <string name="preference_privacy_block_social">Sosial izləyiciləri əngəllə</string>
+    <string name="preference_privacy_block_social_summary">Ziyarətinizi izləmək və paylaşma düymələri kimi funksionallıqları göstərmək üçün saytlara yerləşdirilir</string>
+    <string name="preference_privacy_block_content">Digər məzmun izləyicilərini əngəllə</string>
+    <string name="preference_privacy_block_content_summary2">Aktivləşdirmə bəzi səhifələrdə gözlənilməz səhvlərə səbəb ola bilər</string>
+    <string name="preference_privacy_category_cookies">Çərəzləri əngəllə</string>
+
+    <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Ancaq 3cü tərəf izləmə çərəzlərini əngəllə</string>
+    <string name="preference_privacy_should_block_cookies_third_party_only_option">Ancaq 3cü tərəf çərəzləri əngəllə</string>
+
+    <string name="preference_security_biometric">Tətbiqi açmaq üçün barmaq izi işlət</string>
+
+    <string name="preference_privacy_secure_mode">Görünməzlik</string>
+    <string name="preference_privacy_stealth_summary">Tətbiqlər arası keçərkən saytları gizlət və ekran görüntüləri çəkməyi əngəllə.</string>
+
+    <string name="preference_category_security">Təhlükəsizlik</string>
+
+    <string name="preference_category_performance">Məhsuldarlıq</string>
+    <string name="preference_performance_block_webfonts">Web şriftlərini əngəllə</string>
+    <string name="preference_performance_block_webfonts_summary">Əksik icon və şəkillərə səbəb ola bilər</string>
+
+    <string name="preference_performance_block_javascript">JavaScript-i əngəllə</string>
+    <string name="preference_performance_block_javascript_summary">Səhifələr daha sürətli yüklənə bilər, ancaq səhv işləyə bilərlər</string>
+
+    <string name="preference_default_browser2">%1$s səyyahını əsas et</string>
+
+    <string name="preference_category_mozilla">Mozilla</string>
+    <string name="preference_mozilla_telemetry2">İstifadə məlumatlarını göndər</string>
+
+    <string name="preference_mozilla_telemetry_summary">Ətraflı öyrən</string>
+
+    <string name="preference_mozilla_telemetry_summary2">Mozilla ancaq %1$s səyyahını hamı üçün yaxşılaşdırmağa lazım olan məlumatları yığır.</string>
+
+    <string name="preference_privacy_notice">Məxfilik Bildirişi</string>
+
+    <string name="preference_about">%1$s Haqqında</string>
+
+    <string name="preference_search_installed_search_engines">Quraşdırılmış axtarış mühərrikləri</string>
+
+    <string name="preference_search_restore">İlkin axtarış nizamlarını bərpa et</string>
+
+    <string name="preference_search_add2">+ Digər axtarış mühərriyini əlavə et</string>
+    <string name="preference_search_remove_title">Axtarış mühərriklərini sil</string>
+    <string name="preference_search_remove">Sil</string>
+
+    <string name="action_option_add_search_engine">Axtarış mühərriyini əlavə et</string>
+
+    <string name="search_add_manually_name_hint">Axtarış mühərriyinin adı</string>
+    <string name="search_add_manually_string">İstifadə ediləcək axtarış sətri</string>
+    <string name="search_add_manually_save">Saxla</string>
+
+    <string name="search_add_manually_example">Məsələn: mozillaz.org/search/?q=%s</string>
+
+    <string name="search_add_confirmation">Yeni axtarış mühərriyi əlavə edildi.</string>
+
+    <string name="search_add_error_empty_name">Axtarış mühərriyinin adını daxil edin</string>
+    <string name="search_add_error_duplicate_name">Qurulu axtarış mühərriyi artıq bu adı işlədir.</string>
+
+    <string name="search_add_error_empty_search">Axtarış mətnini daxil edin</string>
+
+    <string name="search_add_error_format">Axtarış mətninin nümunədəki formata uyğun olduğunu yoxlayın</string>
+
+    <string name="content_description_clear_input">Girişi təmizlə</string>
+
+    <string name="content_description_dismiss_input">Ləğv et</string>
+
+    <string name="content_description_erase">Səyahət tarixçəsini təmizlə</string>
+
+    <string name="content_description_tab_counter">Açıq vərəqlər: %1$s</string>
+
+    <string name="content_description_lock">Təhlükəsiz əlaqə</string>
+
+    <string name="accessibility_announcement_loading">Yüklənir</string>
+
+    <string name="accessibility_announcement_loading_finished">Sayt yükləndi</string>
+
+    <string name="content_description_menu">Digər seçimlər</string>
+
+    <string name="indicator_content_description_menu">Daha çox seçim düyməsi</string>
+
+    <string name="content_description_forward">İrəli keç</string>
+
+    <string name="content_description_reload">Saytı yenilə</string>
+
+    <string name="content_description_back">Geri get</string>
+
+    <string name="content_description_stop">Səhifəni yükləməyi dayandır</string>
+
+    <string name="content_description_customtab_exit">Əvvəlki tətbiqə qayıt</string>
+
+    <string name="content_description_trackers_blocked">Əngəllənmiş izləyicilərin sayı</string>
+
+    <string name="content_description_blocking_switch">İzləyiciləri əngəllə</string>
+
+    <string name="your_rights">Hüquqlarınız</string>
+
+    <string name="external_app_prompt_title">Keçidi başqa tətbiqdə aç</string>
+    <string name="external_app_prompt">%1$s səyyahını tərk edərək keçidi %2$s üzərində aça bilərsiz.</string>
+    <string name="external_app_prompt_no_app_title">Keçid aça bilən tətbiq tap</string>
+    <string name="external_app_prompt_no_app">Cihazınızdakı heç bir tətbiq bu keçidi aça bilmir. %1$s səyyahını tərk edərək %2$s ilə bunu bacaran tətbiq axtara bilərsiz.</string>
+    <string name="external_multiple_apps_matched_exit">Məxfi Səyahətdən çıxırsın?</string>
+
+    <string name="download_snackbar_finished">%1$s endirildi</string>
+
+    <string name="download_snackbar_open">Aç</string>
 
 
 
@@ -177,90 +276,128 @@
 
 
   <string name="firstrun_defaultbrowser_title">Məxfiliyinizi gücləndirin</string>
-  <string name="firstrun_defaultbrowser_text2">Məxfi səyahəti fərqli səviyyəyə götürün. Saytlar üzərindən sizə izləyə biləcək reklam və digər məzmunları bloklayın və yüklənmə sürətini artırın.</string>
-  <string name="firstrun_search_title">Sizin axtarış, sizin qaydalar</string>
-  <string name="firstrun_search_text">Fərqli şeylər axtarırsız? Tənzimləmələrdən fərqli axtarış mühərriyi seçin.</string>
-  <string name="firstrun_shortcut_title">Ana ekranınıza keçidlər əlavə edin</string>
-  <string name="firstrun_shortcut_text">%1$s üzərindəki sevimli saytlarınıza cəld girin. %1$s menyusundan \"Ana ekrana əlavə et\" seçməyiniz kifayətdir.</string>
-  <string name="firstrun_privacy_title">Məxfiliyi vərdiş halına gətirin</string>
-  <string name="firstrun_privacy_text">Əsas səyyahınız olaraq %1$s seçin və digər tətbiqlərdən keçid açarkən məxfi səyahətin üstünlüklərindən faydalanın.</string>
-  <string name="firstrun_close_button">Tamam, başa düşdüm!</string>
-  <string name="firstrun_skip_button">Keç</string>
-  <string name="firstrun_next_button">Sonrakı</string>
-  <string name="content_blocking_disabled">-</string>
-  <string name="dialog_addtohomescreen_action_add">Əlavə et</string>
-  <string name="dialog_addtohomescreen_action_cancel">Ləğv et</string>
-  <string name="dialog_addtohomescreen_tracking_protection">Qısayol İzlənmə Qoruması sönülü olaraq açılacaq</string>
-  <string name="notification_browsing_session_channel_name">Məxfi səyahət sessiyası</string>
-  <string name="notification_browsing_session_channel_description">Bildirişlər tək toxunuşla %1$s sessiyanınızı pozmağa imkan verəcək. Tətbiqi açmağa və ya səyyahınızda nəyin işlədiyinə baxmağa ehtiyyacınız yoxdur.</string>
-  <string name="tabs_tray_action_erase">Səyahət keçmişini poz</string>
-  <string name="download_firefox">Firefox Endir</string>
-  <string name="your_rights_content1">%1$s Mozilla və digər töhfəverənlər tərəfindən yaradılmış azad və açıq qaynaqlı proqramdır.</string>
+    <string name="firstrun_defaultbrowser_text2">Məxfi səyahəti fərqli səviyyəyə götürün. Saytlar üzərindən sizə izləyə biləcək reklam və digər məzmunları bloklayın və yüklənmə sürətini artırın.</string>
+
+    <string name="firstrun_search_title">Sizin axtarış, sizin qaydalar</string>
+    <string name="firstrun_search_text">Fərqli şeylər axtarırsız? Tənzimləmələrdən fərqli axtarış mühərriyi seçin.</string>
+
+    <string name="firstrun_shortcut_title">Ana ekranınıza keçidlər əlavə edin</string>
+    <string name="firstrun_shortcut_text">%1$s üzərindəki sevimli saytlarınıza cəld girin. %1$s menyusundan \&quot;Ana ekrana əlavə et\&quot; seçməyiniz kifayətdir.</string>
+
+    <string name="firstrun_privacy_title">Məxfiliyi vərdiş halına gətirin</string>
+    <string name="firstrun_privacy_text">Əsas səyyahınız olaraq %1$s seçin və digər tətbiqlərdən keçid açarkən məxfi səyahətin üstünlüklərindən faydalanın.</string>
+
+    <string name="firstrun_close_button">Tamam, başa düşdüm!</string>
+    <string name="firstrun_skip_button">Keç</string>
+    <string name="firstrun_next_button">Sonrakı</string>
+
+    <string name="content_blocking_disabled">-</string>
+
+    <string name="dialog_addtohomescreen_action_add">Əlavə et</string>
+
+    <string name="dialog_addtohomescreen_action_cancel">Ləğv et</string>
+
+    <string name="notification_browsing_session_channel_name">Məxfi səyahət sessiyası</string>
+
+    <string name="notification_browsing_session_channel_description">Bildirişlər tək toxunuşla %1$s sessiyanınızı pozmağa imkan verəcək. Tətbiqi açmağa və ya səyyahınızda nəyin işlədiyinə baxmağa ehtiyyacınız yoxdur.</string>
+
+    <string name="tabs_tray_action_erase">Səyahət keçmişini poz</string>
+
+    <string name="download_firefox">Firefox Endir</string>
+
+    <string name="your_rights_content1">%1$s Mozilla və digər töhfəverənlər tərəfindən yaradılmış azad və açıq qaynaqlı proqramdır.</string>
 
 
 
 
   <string name="gv_prompt_username_hint">İstifadəçi adı</string>
-  <string name="gv_prompt_password_hint">Parol</string>
-  <string name="gv_prompt_clear">Təmizlə</string>
-  <string name="security_popup_secure_connection">Təhlükəsiz Əlaqə</string>
-  <string name="security_popup_insecure_connection">Təhlükəli Əlaqə</string>
-  <string name="security_popup_security_verified">Doğrulayan: %1$s</string>
-  <string name="site_security_icon_content_description">Sayt Təhlükəsizliyi</string>
-  <string name="preference_autocomplete_duplicate_url_error">URL artıq mövcuddur</string>
-  <string name="find_in_page">Səhifədə Tap</string>
-  <string name="find_in_page_input">Səhifədə tap</string>
-  <string name="find_in_page_result">%1$d/%2$d</string>
-  <string name="accessibility_find_in_page_result">%2$d nəticədən %1$d dənəsi</string>
-  <string name="accessibility_next_result">Sonrakı nəticəni tap</string>
-  <string name="accessibility_previous_result">Əvvəlki nəticəni tap</string>
-  <string name="accessibility_dismiss_find_in_page">Səhifədə axtarışı qapat</string>
+    <string name="gv_prompt_password_hint">Parol</string>
+    <string name="gv_prompt_clear">Təmizlə</string>
+
+    <string name="security_popup_secure_connection">Təhlükəsiz Əlaqə</string>
+    <string name="security_popup_insecure_connection">Təhlükəli Əlaqə</string>
+    <string name="security_popup_security_verified">Doğrulayan: %1$s</string>
+
+    <string name="site_security_icon_content_description">Sayt Təhlükəsizliyi</string>
+    <string name="preference_autocomplete_duplicate_url_error">URL artıq mövcuddur</string>
+
+    <string name="find_in_page">Səhifədə Tap</string>
+
+    <string name="find_in_page_input">Səhifədə tap</string>
+
+    <string name="find_in_page_result">%1$d/%2$d</string>
+    <string name="accessibility_find_in_page_result">%2$d nəticədən %1$d dənəsi</string>
+
+    <string name="accessibility_next_result">Sonrakı nəticəni tap</string>
+    <string name="accessibility_previous_result">Əvvəlki nəticəni tap</string>
+    <string name="accessibility_dismiss_find_in_page">Səhifədə axtarışı qapat</string>
 
 
 
   <string name="preference_performance_request_desktop_site">Masaüstü saytını istə</string>
-  <string name="custom_tab_copy_url_action">URL köçürüldü</string>
-  <string name="preference_advanced_summary">Tərtibatçı alətləri</string>
-  <string name="preference_category_advanced">Təkmilləşmiş</string>
-  <string name="preference_remote_debugging">USB/Wi-Fi ilə məsafəli sazlama</string>
-  <string name="biometric_auth_title">%1$s kilidini aç</string>
-  <string name="biometric_auth_description">Davam etmək üçün barmaq izi oxuyucusuna toxunun.</string>
-  <string name="biometric_auth_new_session">Yeni Sessiya</string>
-  <string name="biometric_auth_image_description">Barmaq izi ikonu</string>
-  <string name="biometric_auth_not_recognized_error">Barmaq izi tanınmadı. Təkrar yoxlayın.</string>
-  <string name="biometric_auth_moved_too_quickly">Barmaq çox sürətli hərəkət elədi. Təkrar yoxlayın.</string>
-  <string name="enable_search_suggestion_title">Axtarış məsləhətlərini aktiv etmək istərdiniz?</string>
-  <string name="enable_search_suggestion_subtitle">Axtarış məsləhətlərini almaq üçün %1$s ünvan sətrinə yazdıqlarınızı seçdiyiniz axtarış mühərriyinə göndərməlidir. %2$s.</string>
-  <string name="enable_search_suggestion_subtitle_learnmore">Ətraflı öyrən</string>
-  <string name="enable_search_suggestions_no">Xeyr</string>
-  <string name="enable_search_suggestions_yes">Bəli</string>
-  <string name="no_suggestions_message">Bəzi axtarış mühərrikləri məsləhətləri göstərə bilmirlər.</string>
-  <string name="dismiss_no_suggestions_prompt_button">Qapat</string>
-  <string name="tip_disable_tracking_protection">Sayt gözlənilməyən hərəkətlər edir?\n İzləmə Qorumasınını söndürməyi yoxlayın</string>
-  <string name="tip_add_to_homescreen">Çox işlətdiyiniz saytları tək toxunuşla açın%1$s Menyu &gt; Ana Ekrana əlavə et</string>
-  <string name="tip_set_default_browser">Bütün keçidləri %1$s ilə açın\n %1$s əsas səyyahınız olsun</string>
-  <string name="tip_autocomplete_url">Çox işlətdiyiniz saytlar üçün avto doldurma\n Ünvan sətrindəki hər hansı bir ünvana uzun basın</string>
-  <string name="tip_open_in_new_tab">Keçidi yeni vərəqdə açın\n Səhifədə hər hansı bir keçidə uzun basın</string>
-  <string name="tip_request_desktop">Bütöv masaüstü saytını görmək istəyirsiniz?%1$s Menyu &gt; Masaüstü saytını istə</string>
-  <string name="tip_disable_tips2">Ana ekranındakı məsləhətləri söndür</string>
-  <string name="tip_explain_allowlist">Güvəndiyiniz saytdır?\n İcazə siyahısı tanıdığınız və güvəndiyiniz saytlarda İzlənmə Qorumasını söndürür.</string>
-  <string name="new_tab_opened_snackbar">Yeni vərəq açıldı</string>
-  <string name="open_new_tab_snackbar">Keç</string>
-  <string name="preference_open_new_tab">Yeni vərəqdəki keçidə dərhal keç</string>
-  <string name="preference_category_safe_browsing">Təhlükəsiz Səyahət</string>
-  <string name="preference_safe_browsing_title">Potensial təhlükəli və aldadıcı saytları əngəllə</string>
-  <string name="preference_safe_browsing_summary">Zərərverici, aldadıcı, istənməyən saytları əngəllə.</string>
-  <string name="preference_exceptions">İstisnalar</string>
-  <string name="preference_exceptions_description">Bu saytlar üçün Məzmun Əngəlləməni söndürmüsünüz.</string>
-  <string name="preference_exceptions_menu_remove">Sil</string>
-  <string name="preference_exceptions_remove_all_button_label">Bütün saytları sil</string>
-  <string name="tab_crash_report_title">Vərəq Çökdü</string>
-  <string name="tab_crash_report_headline">Üzr istəyirik. Bu vərəqlə əlaqədar problemimiz var.</string>
-  <string name="tab_crash_report_description">Məxfi səyyah olaraq biz heç vaxt vərəqləri saxlamırıq və bu səbəbdən də bu vərəqi bərpa edə bilməyəcik.</string>
-  <string name="tab_crash_report_close_tab_button_label">Vərəqi Qapat</string>
+
+    <string name="custom_tab_copy_url_action">URL köçürüldü</string>
+
+    <string name="preference_advanced_summary">Tərtibatçı alətləri</string>
+
+    <string name="preference_category_advanced">Təkmilləşmiş</string>
+
+    <string name="preference_remote_debugging">USB/Wi-Fi ilə məsafəli sazlama</string>
+
+    <string name="biometric_auth_image_description">Barmaq izi ikonu</string>
+
+    <string name="biometric_auth_not_recognized_error">Barmaq izi tanınmadı. Təkrar yoxlayın.</string>
+
+    <string name="biometric_auth_moved_too_quickly">Barmaq çox sürətli hərəkət elədi. Təkrar yoxlayın.</string>
+
+    <string name="enable_search_suggestions_no">Xeyr</string>
+
+    <string name="enable_search_suggestions_yes">Bəli</string>
+
+    <string name="no_suggestions_message">Bəzi axtarış mühərrikləri məsləhətləri göstərə bilmirlər.</string>
+
+    <string name="dismiss_no_suggestions_prompt_button">Qapat</string>
+
+    <!-- Tips displayed on the home view -->
+
+    <string name="tip_disable_tracking_protection">Sayt gözlənilməyən hərəkətlər edir?\n İzləmə Qorumasınını söndürməyi yoxlayın</string>
+
+    <string name="tip_add_to_homescreen">Çox işlətdiyiniz saytları tək toxunuşla açın%1$s Menyu &gt; Ana Ekrana əlavə et</string>
+
+    <string name="tip_set_default_browser">Bütün keçidləri %1$s ilə açın\n %1$s əsas səyyahınız olsun</string>
+
+    <string name="tip_autocomplete_url">Çox işlətdiyiniz saytlar üçün avto doldurma\n Ünvan sətrindəki hər hansı bir ünvana uzun basın</string>
+
+    <string name="tip_open_in_new_tab">Keçidi yeni vərəqdə açın\n Səhifədə hər hansı bir keçidə uzun basın</string>
+
+    <string name="tip_disable_tips2">Ana ekranındakı məsləhətləri söndür</string>
+
+    <string name="new_tab_opened_snackbar">Yeni vərəq açıldı</string>
+
+    <string name="open_new_tab_snackbar">Keç</string>
+
+    <string name="preference_open_new_tab">Yeni vərəqdəki keçidə dərhal keç</string>
+
+    <string name="preference_safe_browsing_title">Potensial təhlükəli və aldadıcı saytları əngəllə</string>
+    <string name="preference_safe_browsing_summary">Zərərverici, aldadıcı, istənməyən saytları əngəllə.</string>
+
+    <string name="preference_exceptions">İstisnalar</string>
+    <string name="preference_exceptions_description">Bu saytlar üçün Məzmun Əngəlləməni söndürmüsünüz.</string>
+    <string name="preference_exceptions_menu_remove">Sil</string>
+    <string name="preference_exceptions_remove_all_button_label">Bütün saytları sil</string>
+
+    <string name="tab_crash_report_title">Vərəq Çökdü</string>
+    <string name="tab_crash_report_headline">Üzr istəyirik. Bu vərəqlə əlaqədar problemimiz var.</string>
+    <string name="tab_crash_report_description">Məxfi səyyah olaraq biz heç vaxt vərəqləri saxlamırıq və bu səbəbdən də bu vərəqi bərpa edə bilməyəcik.</string>
+    <string name="tab_crash_report_close_tab_button_label">Vərəqi Qapat</string>
 
 
 
 
   <string name="crash_report_send_crash_label">Çökmə hesabatını Mozillaya göndər</string>
-</resources>
+
+    <!-- Tracking protection bottom sheet -->
+
+     <!-- Promote SearchWidget Dialog -->
+
+    </resources>

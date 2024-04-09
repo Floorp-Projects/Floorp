@@ -13,4 +13,4 @@
     <string name="mozac_browser_toolbar_content_description_site_info">സൈറ്റ് വിവരങ്ങള്‍</string>
     <!-- Announcement made by the screen reader when the progress bar is shown and a page is loading -->
     <string name="mozac_browser_toolbar_progress_loading">ലഭ്യമാക്കുന്നു</string>
-</resources>
+    </resources>

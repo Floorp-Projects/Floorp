@@ -53,8 +53,6 @@
     <!-- Menu item: Remove the current site as a shortcut from the Home screen -->
     <string name="menu_remove_from_shortcuts">Mté dónt kúe</string>
 
-    <!-- Menu item: Shows information about features and changes that are new to this version -->
-    <string name="menu_whats_new">Ko kùb</string>
     <string name="menu_settings">Thús kùey</string>
     <string name="menu_about">Chò nàk ná</string>
     <string name="menu_help">Lì ché</string>

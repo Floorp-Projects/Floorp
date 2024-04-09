@@ -52,8 +52,6 @@
     <!-- Menu item: Remove the current site as a shortcut from the Home screen -->
     <string name="menu_remove_from_shortcuts">Dilea a skochfordhow</string>
 
-    <!-- Menu item: Shows information about features and changes that are new to this version -->
-    <string name="menu_whats_new">Pandr\'yw nowydh</string>
     <string name="menu_settings">Dewisyow</string>
     <string name="menu_about">A-dro</string>
     <string name="menu_help">Gweres</string>

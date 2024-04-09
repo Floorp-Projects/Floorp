@@ -32,4 +32,4 @@
     <string name="mozac_feature_contextmenu_open_link_in_external_app">ബാഹ്യ ആപ്പിൽ കണ്ണി തുറക്കുക</string>
     <!-- Action shown in a text selection context menu. This will prompt a share of the selected text. -->
     <string name="mozac_selection_context_menu_share">പങ്കിടുക</string>
-</resources>
+    </resources>

@@ -43,8 +43,6 @@
     <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
     <string name="menu_add_to_home_screen">Voeg by tuisskerm</string>
 
-    <!-- Menu item: Shows information about features and changes that are new to this version -->
-    <string name="menu_whats_new">Wat’s nuut?</string>
     <string name="menu_settings">Instellings</string>
     <string name="menu_about">Inligting hieroor</string>
     <string name="menu_help">Hulp</string>
@@ -81,10 +79,6 @@
          of 25 characters. -->
     <string name="shortcut_erase_long_label">Skrap leesgeskiedenis</string>
 
-
-    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
-         Clicking this action will launch Focus and perform a search in the default search engine. -->
-    <string name="text_selection_search_action">Soek privaat</string>
 
     <!-- Header for the Privacy and Security settings menu -->
     <string name="preference_privacy_and_security_header">Privaatheid en sekuriteit</string>
@@ -246,5 +240,7 @@
     <!-- Tips displayed on the home view -->
 
     <!-- Tracking protection bottom sheet -->
+
+     <!-- Promote SearchWidget Dialog -->
 
     </resources>
