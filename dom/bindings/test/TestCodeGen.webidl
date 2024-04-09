@@ -1083,7 +1083,7 @@ interface TestInterface {
   undefined passUnionArrayBuffer((DOMString or ArrayBuffer) foo);
   undefined passUnionAllowSharedArrayBuffer((DOMString or [AllowShared] ArrayBuffer) foo);
 
-  // If you add things here, add them to TestExampleGen and TestJSImplGen as well
+  // If you add things here, add them to TestExampleGen as well
 };
 
 [LegacyFactoryFunction=Test3((long or record<DOMString, any>) arg1),
