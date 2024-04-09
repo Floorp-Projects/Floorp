@@ -46,13 +46,15 @@ add_task(async function test_webauthn_modal_request_cancels_conditional_get() {
   ok(active, "conditional request should still be active");
 
   let promptPromise = promiseNotification("webauthn-prompt-register-direct");
-  let modalPromise = promiseWebAuthnMakeCredential(tab, "direct");
+  let modalPromise = promiseWebAuthnMakeCredential(tab, "direct")
+    .then(arrivingHereIsBad)
+    .catch(gExpectNotAllowedError);
 
   await condPromise;
 
   ok(!active, "conditional request should not be active");
 
-  // Proceed through the consent prompt
+  // Cancel the modal request with the button.
   await promptPromise;
   PopupNotifications.panel.firstElementChild.secondaryButton.click();
   await modalPromise;
