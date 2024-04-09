@@ -24,7 +24,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
 );
 
 var logConsole;
-function log(msg) {
+function log(...msgs) {
   if (!logConsole) {
     logConsole = console.createInstance({
       prefix: "Sanitizer",
@@ -32,7 +32,7 @@ function log(msg) {
     });
   }
 
-  logConsole.log(msg);
+  logConsole.log(...msgs);
 }
 
 // Used as unique id for pending sanitizations.
@@ -164,6 +164,7 @@ export var Sanitizer = {
     // First, collect pending sanitizations from the last session, before we
     // add pending sanitizations for this session.
     let pendingSanitizations = getAndClearPendingSanitizations();
+    log("Pending sanitizations:", pendingSanitizations);
 
     // Check if we should sanitize on shutdown.
     this.shouldSanitizeOnShutdown = Services.prefs.getBoolPref(
@@ -1020,6 +1021,7 @@ async function sanitizeInternal(items, aItemsToClear, options) {
   // Array of objects in form { name, promise }.
   // `name` is the item's name and `promise` may be a promise, if the
   // sanitization is asynchronous, or the function return value, otherwise.
+  log("Running sanitization for:", itemsToClear);
   let handles = [];
   for (let name of itemsToClear) {
     progress[name] = "blocking";
@@ -1048,7 +1050,7 @@ async function sanitizeInternal(items, aItemsToClear, options) {
   }
   await Promise.all(handles.map(h => h.promise));
 
-  // Sanitization is complete.
+  log("All sanitizations are complete");
   TelemetryStopwatch.finish("FX_SANITIZE_TOTAL", refObj);
   if (!progress.isShutdown) {
     removePendingSanitization(uid);
