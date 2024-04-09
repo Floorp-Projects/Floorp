@@ -1159,9 +1159,9 @@ class GeckoEngineSession(
 
             return when {
                 maybeInterceptRequest(request, false) != null ->
-                    GeckoResult.fromValue(AllowOrDeny.DENY)
+                    GeckoResult.deny()
                 request.target == NavigationDelegate.TARGET_WINDOW_NEW ->
-                    GeckoResult.fromValue(AllowOrDeny.ALLOW)
+                    GeckoResult.allow()
                 else -> {
                     notifyObservers {
                         onLoadRequest(
@@ -1171,7 +1171,7 @@ class GeckoEngineSession(
                         )
                     }
 
-                    GeckoResult.fromValue(AllowOrDeny.ALLOW)
+                    GeckoResult.allow()
                 }
             }
         }
@@ -1181,15 +1181,15 @@ class GeckoEngineSession(
             request: NavigationDelegate.LoadRequest,
         ): GeckoResult<AllowOrDeny> {
             if (request.target == NavigationDelegate.TARGET_WINDOW_NEW) {
-                return GeckoResult.fromValue(AllowOrDeny.ALLOW)
+                return GeckoResult.allow()
             }
 
             return if (maybeInterceptRequest(request, true) != null) {
-                GeckoResult.fromValue(AllowOrDeny.DENY)
+                GeckoResult.deny()
             } else {
                 // Not notifying session observer because of performance concern and currently there
                 // is no use case.
-                GeckoResult.fromValue(AllowOrDeny.ALLOW)
+                GeckoResult.allow()
             }
         }
 

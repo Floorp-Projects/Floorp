@@ -1475,7 +1475,7 @@ public class WebExtensionController {
     if (delegate != null) {
       result = delegate.onCloseTab(extension, message.session);
     } else {
-      result = GeckoResult.fromValue(AllowOrDeny.DENY);
+      result = GeckoResult.deny();
     }
 
     message.callback.resolveTo(

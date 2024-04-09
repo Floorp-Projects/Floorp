@@ -263,7 +263,7 @@ public class GeckoResult<T> {
   @AnyThread
   @NonNull
   public static GeckoResult<AllowOrDeny> deny() {
-    return GeckoResult.fromValue(AllowOrDeny.DENY);
+    return GeckoResult.deny();
   }
 
   /**
@@ -272,7 +272,7 @@ public class GeckoResult<T> {
   @AnyThread
   @NonNull
   public static GeckoResult<AllowOrDeny> allow() {
-    return GeckoResult.fromValue(AllowOrDeny.ALLOW);
+    return GeckoResult.allow();
   }
 
   // The default dispatcher for listeners on this GeckoResult. Other dispatchers can be specified
