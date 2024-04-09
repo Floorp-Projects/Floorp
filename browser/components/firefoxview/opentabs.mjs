@@ -38,6 +38,9 @@ ChromeUtils.defineLazyGetter(lazy, "fxAccounts", () => {
   ).getFxAccountsSingleton();
 });
 
+const TOPIC_DEVICESTATE_CHANGED = "firefox-view.devicestate.changed";
+const TOPIC_DEVICELIST_UPDATED = "fxaccounts:devicelist_updated";
+
 /**
  * A collection of open tabs grouped by window.
  *
@@ -661,7 +664,7 @@ customElements.define("view-opentabs-card", OpenTabsInViewCard);
 class OpenTabsContextMenu extends MozLitElement {
   static properties = {
     devices: { type: Array },
-    triggerNode: { type: Object },
+    triggerNode: { hasChanged: () => true, type: Object },
   };
 
   static queries = {
@@ -671,6 +674,7 @@ class OpenTabsContextMenu extends MozLitElement {
   constructor() {
     super();
     this.triggerNode = null;
+    this.boundObserve = (...args) => this.observe(...args);
     this.devices = [];
   }
 
@@ -680,6 +684,28 @@ class OpenTabsContextMenu extends MozLitElement {
 
   get ownerViewPage() {
     return this.ownerDocument.querySelector("view-opentabs");
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+    this.fetchDevicesPromise = this.fetchDevices();
+    Services.obs.addObserver(this.boundObserve, TOPIC_DEVICELIST_UPDATED);
+    Services.obs.addObserver(this.boundObserve, TOPIC_DEVICESTATE_CHANGED);
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    Services.obs.removeObserver(this.boundObserve, TOPIC_DEVICELIST_UPDATED);
+    Services.obs.removeObserver(this.boundObserve, TOPIC_DEVICESTATE_CHANGED);
+  }
+
+  observe(_subject, topic, _data) {
+    if (
+      topic == TOPIC_DEVICELIST_UPDATED ||
+      topic == TOPIC_DEVICESTATE_CHANGED
+    ) {
+      this.fetchDevicesPromise = this.fetchDevices();
+    }
   }
 
   async fetchDevices() {
@@ -701,7 +727,7 @@ class OpenTabsContextMenu extends MozLitElement {
       return;
     }
     this.triggerNode = triggerNode;
-    await this.fetchDevices();
+    await this.fetchDevicesPromise;
     await this.getUpdateComplete();
     this.panelList.toggle(originalEvent);
   }
