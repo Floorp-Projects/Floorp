@@ -174,7 +174,7 @@ public class TestRunnerActivity extends Activity {
         public GeckoResult<AllowOrDeny> onLoadRequest(
             final GeckoSession session, final LoadRequest request) {
           // Allow Gecko to load all URIs
-          return GeckoResult.allow();
+          return GeckoResult.fromValue(AllowOrDeny.ALLOW);
         }
 
         @Override
@@ -296,7 +296,7 @@ public class TestRunnerActivity extends Activity {
         public GeckoResult<AllowOrDeny> onCloseTab(
             @Nullable final WebExtension source, @NonNull final GeckoSession session) {
           closeSession(session);
-          return GeckoResult.allow();
+          return GeckoResult.fromValue(AllowOrDeny.ALLOW);
         }
 
         @Override
@@ -310,7 +310,7 @@ public class TestRunnerActivity extends Activity {
             mOwnedSessions.addFirst(session);
           }
 
-          return GeckoResult.allow();
+          return GeckoResult.fromValue(AllowOrDeny.ALLOW);
         }
       };
 
