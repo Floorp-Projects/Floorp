@@ -61,11 +61,7 @@ export class PreferencesBackupResource extends BackupResource {
     let prefsDestFile = await IOUtils.getFile(prefsDestPath);
     await Services.prefs.backupPrefFile(prefsDestFile);
 
-    // `backup` must return some JSON serializable object which can be passed
-    // to `restore` to restore the resource. In this case, there's no
-    // extra information we need to pass along, so we just return the empty
-    // object.
-    return {};
+    return null;
   }
 
   async measure(profilePath = PathUtils.profileDir) {
