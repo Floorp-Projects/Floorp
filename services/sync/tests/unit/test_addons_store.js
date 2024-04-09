@@ -43,7 +43,7 @@ AddonTestUtils.overrideCertDB();
 Services.prefs.setBoolPref("extensions.experiments.enabled", true);
 
 const SYSTEM_ADDON_ID = "system1@tests.mozilla.org";
-add_task(async function setupSystemAddon() {
+add_setup(async function setupSystemAddon() {
   const distroDir = FileUtils.getDir("ProfD", ["sysfeatures", "app0"]);
   distroDir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
   AddonTestUtils.registerDirectory("XREAppFeat", distroDir);
@@ -137,6 +137,28 @@ const MISSING_SEARCH_RESULT = {
   ],
 };
 
+const AMOSIGNED_SHA1_SEARCH_RESULT = {
+  next: null,
+  results: [
+    {
+      name: "Test Extension",
+      type: "extension",
+      guid: "amosigned-xpi@tests.mozilla.org",
+      current_version: {
+        version: "2.1",
+        files: [
+          {
+            platform: "all",
+            size: 4287,
+            url: "http://localhost:8888/amosigned-sha1only.xpi",
+          },
+        ],
+      },
+      last_updated: "2024-03-21T16:00:06.640Z",
+    },
+  ],
+};
+
 const XPIS = {};
 for (let [name, files] of Object.entries(ADDONS)) {
   XPIS[name] = AddonTestUtils.createTempWebExtensionFile(files);
@@ -215,6 +237,18 @@ function createAndStartHTTPServer(port) {
     );
     server.registerFile("/addon1.xpi", XPIS.test_addon1);
 
+    server.registerPathHandler(
+      "/search/guid:amosigned-xpi%40tests.mozilla.org",
+      (req, resp) => {
+        resp.setHeader("Content-type", "application/json", true);
+        resp.write(JSON.stringify(AMOSIGNED_SHA1_SEARCH_RESULT));
+      }
+    );
+    server.registerFile(
+      "/amosigned-sha1only.xpi",
+      do_get_file("amosigned-sha1only.xpi")
+    );
+
     server.start(port);
 
     return server;
@@ -237,7 +271,7 @@ async function checkReconcilerUpToDate(addon) {
   deepEqual(stateBefore, stateAfter);
 }
 
-add_task(async function setup() {
+add_setup(async function setup() {
   await Service.engineManager.register(AddonsEngine);
   engine = Service.engineManager.get("addons");
   store = engine._store;
@@ -560,6 +594,57 @@ add_task(async function test_create() {
   await uninstallAddon(newAddon, reconciler);
 
   await promiseStopServer(server);
+});
+
+add_task(async function test_weak_signature_restrictions() {
+  _("Ensure installing add-ons with a weak signature fails when restricted.");
+
+  // Ensure restrictions on weak signatures are enabled (this should be removed when
+  // the new behavior is riding the train).
+  const resetWeakSignaturePref =
+    AddonTestUtils.setWeakSignatureInstallAllowed(false);
+  const server = createAndStartHTTPServer(HTTP_PORT);
+  const ID_TEST_SHA1 = "amosigned-xpi@tests.mozilla.org";
+
+  const guidKO = Utils.makeGUID();
+  const guidOK = Utils.makeGUID();
+  const recordKO = createRecordForThisApp(guidKO, ID_TEST_SHA1, true, false);
+  const recordOK = createRecordForThisApp(guidOK, ID1, true, false);
+  const countTelemetry = new SyncedRecordsTelemetry();
+
+  let failed;
+
+  const { messages } = await AddonTestUtils.promiseConsoleOutput(async () => {
+    failed = await store.applyIncomingBatch(
+      [recordKO, recordOK],
+      countTelemetry
+    );
+  });
+
+  Assert.equal(
+    1,
+    failed.length,
+    "Expect only 1 on the two synced add-ons to fail"
+  );
+
+  resetWeakSignaturePref();
+
+  let addonKO = await AddonManager.getAddonByID(ID_TEST_SHA1);
+  Assert.equal(null, addonKO, `Expect ${ID_TEST_SHA1} to NOT be installed`);
+  let addonOK = await AddonManager.getAddonByID(ID1);
+  Assert.notEqual(null, addonOK, `Expect ${ID1} to be installed`);
+
+  await uninstallAddon(addonOK, reconciler);
+  await promiseStopServer(server);
+
+  AddonTestUtils.checkMessages(messages, {
+    expected: [
+      {
+        message:
+          /Download of .*\/amosigned-sha1only.xpi failed: install rejected due to the package not including a strong cryptographic signature/,
+      },
+    ],
+  });
 });
 
 add_task(async function test_create_missing_search() {
