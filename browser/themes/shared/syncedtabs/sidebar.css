@@ -237,15 +237,10 @@ body {
 
 .deck .instructions {
   text-align: center;
-  color: GrayText;
+  color: var(--text-color-deemphasized);
   padding: 0 11px;
   max-width: 15em;
   margin: 0 auto;
-}
-
-:root[lwt-sidebar] .deck .instructions {
-  color: inherit;
-  opacity: .6;
 }
 
 .deck .button {
