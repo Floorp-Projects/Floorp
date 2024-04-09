@@ -1741,6 +1741,59 @@ const BounceTrackingProtectionStateCleaner = {
   },
 };
 
+const StoragePermissionsCleaner = {
+  async deleteByRange(aFrom) {
+    // We lack the ability to clear by range, but can clear from a certain time to now
+    // We have to divice aFrom by 1000 to convert the time from ms to microseconds
+    Services.perms.removeByTypeSince("storage-access", aFrom / 1000);
+    Services.perms.removeByTypeSince("persistent-storage", aFrom / 1000);
+  },
+
+  async deleteByPrincipal(aPrincipal) {
+    Services.perms.removeFromPrincipal(aPrincipal, "storage-access");
+    Services.perms.removeFromPrincipal(aPrincipal, "persistent-storage");
+  },
+
+  async deleteByHost(aHost) {
+    let permissions = this._getStoragePermissions();
+    for (let perm of permissions) {
+      if (Services.eTLD.hasRootDomain(perm.principal.host, aHost)) {
+        Services.perms.removePermission(perm);
+      }
+    }
+  },
+
+  async deleteByBaseDomain(aBaseDomain) {
+    let permissions = this._getStoragePermissions();
+    for (let perm of permissions) {
+      if (perm.principal.baseDomain == aBaseDomain) {
+        Services.perms.removePermission(perm);
+      }
+    }
+  },
+
+  async deleteByLocalFiles() {
+    let permissions = this._getStoragePermissions();
+    for (let perm of permissions) {
+      if (perm.principal.schemeIs("file")) {
+        Services.perms.removePermission(perm);
+      }
+    }
+  },
+
+  async deleteAll() {
+    Services.perms.removeByType("storage-access");
+    Services.perms.removeByType("persistent-storage");
+  },
+
+  _getStoragePermissions() {
+    return Services.perms.getAllByTypes([
+      "storage-access",
+      "persistent-storage",
+    ]);
+  },
+};
+
 // Here the map of Flags-Cleaners.
 const FLAGS_MAP = [
   {
@@ -1874,6 +1927,11 @@ const FLAGS_MAP = [
   {
     flag: Ci.nsIClearDataService.CLEAR_BOUNCE_TRACKING_PROTECTION_STATE,
     cleaners: [BounceTrackingProtectionStateCleaner],
+  },
+
+  {
+    flag: Ci.nsIClearDataService.CLEAR_STORAGE_PERMISSIONS,
+    cleaners: [StoragePermissionsCleaner],
   },
 ];
 

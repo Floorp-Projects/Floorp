@@ -308,6 +308,11 @@ interface nsIClearDataService : nsISupports
   const uint32_t CLEAR_BOUNCE_TRACKING_PROTECTION_STATE = 1 << 28;
 
   /**
+   * Clear permissions of type "persistent-storage" and "storage-access"
+   */
+  const uint32_t CLEAR_STORAGE_PERMISSIONS = 1 << 29;
+
+  /**
    * Use this value to delete all the data.
    */
   const uint32_t CLEAR_ALL = 0xFFFFFFFF;

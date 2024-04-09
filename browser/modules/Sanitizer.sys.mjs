@@ -931,7 +931,8 @@ export var Sanitizer = {
               Ci.nsIClearDataService.CLEAR_AUTH_TOKENS |
               Ci.nsIClearDataService.CLEAR_AUTH_CACHE |
               Ci.nsIClearDataService.CLEAR_FINGERPRINTING_PROTECTION_STATE |
-              Ci.nsIClearDataService.CLEAR_BOUNCE_TRACKING_PROTECTION_STATE
+              Ci.nsIClearDataService.CLEAR_BOUNCE_TRACKING_PROTECTION_STATE |
+              Ci.nsIClearDataService.CLEAR_STORAGE_PERMISSIONS
           );
         } else {
           // Not on shutdown
@@ -944,7 +945,8 @@ export var Sanitizer = {
               Ci.nsIClearDataService.CLEAR_AUTH_TOKENS |
               Ci.nsIClearDataService.CLEAR_AUTH_CACHE |
               Ci.nsIClearDataService.CLEAR_FINGERPRINTING_PROTECTION_STATE |
-              Ci.nsIClearDataService.CLEAR_BOUNCE_TRACKING_PROTECTION_STATE
+              Ci.nsIClearDataService.CLEAR_BOUNCE_TRACKING_PROTECTION_STATE |
+              Ci.nsIClearDataService.CLEAR_STORAGE_PERMISSIONS
           );
         }
         await clearData(range, Ci.nsIClearDataService.CLEAR_MEDIA_DEVICES);
