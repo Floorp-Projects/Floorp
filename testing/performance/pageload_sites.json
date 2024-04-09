@@ -354,7 +354,8 @@
     {
       "login": true,
       "name": "instagram",
-      "test_url": "https://www.instagram.com/"
+      "test_url": "https://www.instagram.com/",
+      "secondary_url": "https://www.instagram.com/nobelprize_org/"
     },
     {
       "login": true,
