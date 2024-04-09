@@ -1,9 +1,10 @@
 [
   {
     "filename": "mitm8-linux-firefox-imgur.zip",
-    "size": 11323543,
+    "size": 13808645,
     "algorithm": "sha512",
-    "digest": "5817f3ec63d72658e0b34cc2d50069879ceee80aeaff715ab1370253d8f0ac60e7e58f284ec7b3bd50f562beeeda7d0c1a0cbdf9fd5c960cb8ae1230dcbd08e9",
+    "digest": "35f2bd5b9b89f0912bb8a1577c1beabb76713cbb5e8cff060529d407ebb4818bf791c4e62e3a9bb4c2e299ec0e60a1ab207e1bdc8316538e5bfc66ca2b8a4aab",
     "visibility": "public"
   }
 ]
+

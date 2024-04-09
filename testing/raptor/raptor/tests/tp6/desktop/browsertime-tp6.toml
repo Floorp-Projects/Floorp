@@ -19,6 +19,7 @@ benchmark_page = true
 # Keep this list in alphabetical order
 
 ["amazon"]
+playback_pageset_manifest = "mitm8-linux-firefox-amazon.manifest"
 benchmark_page = false
 test_url = "https://www.amazon.com/s?k=laptop&ref=nb_sb_noss_1"
 secondary_url = "https://www.amazon.com/Acer-A515-46-R14K-Quad-Core-Processor-Backlit/dp/B08VKNVDDR/ref=sr_1_3?dchild=1&keywords=laptop&qid=1627047187&sr=8-3"
@@ -97,7 +98,7 @@ secondary_url = "https://imgur.com/gallery/WuOobqV"
 test_url = "https://imgur.com/gallery/uTI7fKy"
 
 ["instagram"]
-playback_pageset_manifest = "mitm6-linux-firefox-instagram.manifest"
+playback_pageset_manifest = "mitm8-darwin-firefox-instagram.manifest"
 secondary_url = "https://www.instagram.com/nobelprize_org/"
 test_url = "https://www.instagram.com/"
 
