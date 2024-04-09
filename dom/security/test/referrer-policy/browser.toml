@@ -1,9 +1,10 @@
 [DEFAULT]
 support-files = ["referrer_page.sjs"]
 
-["browser_session_history.js"]
-support-files = ["file_session_history.sjs"]
-
 ["browser_referrer_disallow_cross_site_relaxing.js"]
+skip-if = ["asan"] # too slow
 
 ["browser_referrer_telemetry.js"]
+
+["browser_session_history.js"]
+support-files = ["file_session_history.sjs"]
