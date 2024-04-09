@@ -761,7 +761,6 @@
   "resource://gre/modules/TelemetryStorage.jsm": "toolkit/components/telemetry/app/TelemetryStorage.jsm",
   "resource://gre/modules/TelemetryTimestamps.jsm": "toolkit/components/telemetry/app/TelemetryTimestamps.jsm",
   "resource://gre/modules/TelemetryUtils.jsm": "toolkit/components/telemetry/app/TelemetryUtils.jsm",
-  "resource://gre/modules/TerminatorTelemetry.jsm": "toolkit/components/terminator/TerminatorTelemetry.jsm",
   "resource://gre/modules/Timer.jsm": "toolkit/modules/Timer.jsm",
   "resource://gre/modules/TooltipTextProvider.jsm": "toolkit/components/tooltiptext/TooltipTextProvider.jsm",
   "resource://gre/modules/TrackingDBService.jsm": "toolkit/components/antitracking/TrackingDBService.jsm",

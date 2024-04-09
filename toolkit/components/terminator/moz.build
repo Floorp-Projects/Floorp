@@ -21,14 +21,6 @@ EXTRA_COMPONENTS += [
     "terminator.manifest",
 ]
 
-EXTRA_JS_MODULES += [
-    "TerminatorTelemetry.sys.mjs",
-]
-
-XPCOM_MANIFESTS += [
-    "components.conf",
-]
-
 XPIDL_SOURCES += [
     "nsITerminatorTest.idl",
 ]
