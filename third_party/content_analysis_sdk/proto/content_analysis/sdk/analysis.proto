@@ -179,7 +179,7 @@ message ContentAnalysisRequest {
   optional Reason reason = 19;
 
   // Reserved to make sure there is no overlap with DeepScanningClientRequest.
-  reserved 1 to 4, 6 to 8;
+  reserved 1 to 4, 6 to 8, 20;
 }
 
 // Verdict response sent from agent to Google Chrome.
