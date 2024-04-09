@@ -15,7 +15,7 @@ use cssparser::{Parser, Token};
 use style_traits::{ParseError, StyleParseErrorKind};
 
 /// A single color component.
-#[derive(Clone, MallocSizeOf, PartialEq, ToShmem)]
+#[derive(Clone, Debug, MallocSizeOf, PartialEq, ToShmem)]
 pub enum ColorComponent<ValueType> {
     /// The "none" keyword.
     None,
