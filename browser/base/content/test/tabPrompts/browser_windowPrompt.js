@@ -7,9 +7,6 @@
  * Check that the in-window modal dialogs work correctly.
  */
 add_task(async function test_check_window_modal_prompt_service() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["prompts.windowPromptSubDialog", true]],
-  });
   let dialogPromise = BrowserTestUtils.promiseAlertDialogOpen();
   // Avoid blocking the test on the (sync) alert by sticking it in a timeout:
   setTimeout(
@@ -69,9 +66,6 @@ add_task(async function test_check_window_modal_prompt_service() {
  * Check that the dialog's own closing methods being invoked don't break things.
  */
 add_task(async function test_check_window_modal_prompt_service() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["prompts.windowPromptSubDialog", true]],
-  });
   let dialogPromise = BrowserTestUtils.promiseAlertDialogOpen();
   // Avoid blocking the test on the (sync) alert by sticking it in a timeout:
   setTimeout(
@@ -105,9 +99,6 @@ add_task(async function test_check_window_modal_prompt_service() {
 });
 
 add_task(async function test_check_multiple_prompts() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["prompts.windowPromptSubDialog", true]],
-  });
   let container = document.getElementById("window-modal-dialog");
   let dialogPromise = BrowserTestUtils.promiseAlertDialogOpen();
 
@@ -173,9 +164,6 @@ add_task(async function test_check_minimize_response() {
   if (AppConstants.platform == "linux") {
     return;
   }
-  await SpecialPowers.pushPrefEnv({
-    set: [["prompts.windowPromptSubDialog", true]],
-  });
 
   let promiseSizeModeChange = BrowserTestUtils.waitForEvent(
     window,
@@ -235,10 +223,6 @@ add_task(async function test_check_minimize_response() {
  * underlying SubDialog has fully opened.
  */
 add_task(async function test_closed_callback() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["prompts.windowPromptSubDialog", true]],
-  });
-
   let promptClosedPromise = Services.prompt.asyncAlert(
     window.browsingContext,
     Services.prompt.MODAL_TYPE_INTERNAL_WINDOW,

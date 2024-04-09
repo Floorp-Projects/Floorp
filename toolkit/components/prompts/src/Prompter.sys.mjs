@@ -1257,7 +1257,7 @@ class ModalPrompter {
   }
 
   async openInternalWindowPrompt(parentWindow, args) {
-    if (!parentWindow?.gDialogBox || !ModalPrompter.windowPromptSubDialog) {
+    if (!parentWindow?.gDialogBox) {
       this.openWindowPrompt(parentWindow, args);
       return;
     }
@@ -1747,13 +1747,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "defaultModalType",
   "prompts.defaultModalType",
   MODAL_TYPE_WINDOW
-);
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  ModalPrompter,
-  "windowPromptSubDialog",
-  "prompts.windowPromptSubDialog",
-  false
 );
 
 export function AuthPromptAdapterFactory() {}
