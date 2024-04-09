@@ -171,8 +171,8 @@ add_task(async function urlbar_context() {
   let contextMenu = document.getElementById("toolbar-context-menu");
   let shownPromise = popupShown(contextMenu);
   let urlBarContainer = document.getElementById("urlbar-container");
-  // Need to make sure not to click within an edit field.
-  EventUtils.synthesizeMouse(urlBarContainer, 100, 2, {
+  // This clicks in the urlbar container margin, to avoid hitting the urlbar field.
+  EventUtils.synthesizeMouse(urlBarContainer, -2, 4, {
     type: "contextmenu",
     button: 2,
   });
