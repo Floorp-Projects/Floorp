@@ -7134,8 +7134,8 @@ var WebAuthnPromptHelper = {
 
     if (data.prompt.type == "presence") {
       this.presence_required(mgr, data);
-    } else if (data.prompt.type == "register-direct") {
-      this.registerDirect(mgr, data);
+    } else if (data.prompt.type == "attestation-consent") {
+      this.attestation_consent(mgr, data);
     } else if (data.prompt.type == "pin-required") {
       this.pin_required(mgr, false, data);
     } else if (data.prompt.type == "pin-invalid") {
@@ -7298,9 +7298,23 @@ var WebAuthnPromptHelper = {
     );
   },
 
-  registerDirect(mgr, { origin, tid }) {
-    let mainAction = this.buildProceedAction(mgr, tid);
-    let secondaryActions = [this.buildCancelAction(mgr, tid)];
+  attestation_consent(mgr, { origin, tid }) {
+    let mainAction = {
+      label: gNavigatorBundle.getString("webauthn.allow"),
+      accessKey: gNavigatorBundle.getString("webauthn.allow.accesskey"),
+      callback(_state) {
+        mgr.setHasAttestationConsent(tid, true);
+      },
+    };
+    let secondaryActions = [
+      {
+        label: gNavigatorBundle.getString("webauthn.block"),
+        accessKey: gNavigatorBundle.getString("webauthn.block.accesskey"),
+        callback(_state) {
+          mgr.setHasAttestationConsent(tid, false);
+        },
+      },
+    ];
 
     let learnMoreURL =
       Services.urlFormatter.formatURLPref("app.support.baseURL") +
@@ -7308,9 +7322,6 @@ var WebAuthnPromptHelper = {
 
     let options = {
       learnMoreURL,
-      checkbox: {
-        label: gNavigatorBundle.getString("webauthn.anonymize"),
-      },
       hintText: "webauthn.registerDirectPromptHint",
     };
     this.show(
@@ -7431,16 +7442,6 @@ var WebAuthnPromptHelper = {
     if (this._current) {
       this._current.remove();
     }
-  },
-
-  buildProceedAction(mgr, tid) {
-    return {
-      label: gNavigatorBundle.getString("webauthn.proceed"),
-      accessKey: gNavigatorBundle.getString("webauthn.proceed.accesskey"),
-      callback(state) {
-        mgr.resumeMakeCredential(tid, state.checkboxChecked);
-      },
-    };
   },
 
   buildCancelAction(mgr, tid) {

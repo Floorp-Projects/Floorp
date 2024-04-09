@@ -134,8 +134,6 @@ class WebAuthnRegisterResult final : public nsIWebAuthnRegisterResult {
   }
 #endif
 
-  nsresult Anonymize();
-
  private:
   ~WebAuthnRegisterResult() = default;
 
