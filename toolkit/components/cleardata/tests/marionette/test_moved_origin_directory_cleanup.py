@@ -16,6 +16,7 @@ class MovedOriginDirectoryCleanupTestCase(MarionetteTestCase):
                 "privacy.sanitize.sanitizeOnShutdown": True,
                 "privacy.clearOnShutdown.offlineApps": True,
                 "dom.quotaManager.backgroundTask.enabled": False,
+                "browser.sanitizer.loglevel": "All",
             }
         )
         self.moved_origin_directory = (
