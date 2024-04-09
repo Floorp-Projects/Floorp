@@ -157,7 +157,7 @@ class ProviderCalculator extends UrlbarProvider {
     return viewUpdate;
   }
 
-  onEngagement(state, queryContext, details) {
+  onLegacyEngagement(state, queryContext, details) {
     let { result } = details;
     if (result?.providerName == this.name) {
       lazy.ClipboardHelper.copyString(result.payload.value);

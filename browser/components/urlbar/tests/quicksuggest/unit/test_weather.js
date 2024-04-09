@@ -723,7 +723,7 @@ add_tasks_with_rust(async function block() {
   let result = context.results[0];
   let provider = UrlbarProvidersManager.getProvider(result.providerName);
   Assert.ok(provider, "Sanity check: Result provider found");
-  provider.onEngagement(
+  provider.onLegacyEngagement(
     "engagement",
     context,
     {

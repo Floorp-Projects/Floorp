@@ -143,7 +143,7 @@ class ProviderClipboard extends UrlbarProvider {
     addCallback(this, result);
   }
 
-  onEngagement(state, queryContext, details, controller) {
+  onLegacyEngagement(state, queryContext, details, controller) {
     const visibleResults = controller.view?.visibleResults ?? [];
     for (const result of visibleResults) {
       if (

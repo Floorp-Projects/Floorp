@@ -246,7 +246,7 @@ class ProviderContextualSearch extends UrlbarProvider {
     };
   }
 
-  onEngagement(state, queryContext, details, controller) {
+  onLegacyEngagement(state, queryContext, details, controller) {
     let { result } = details;
     if (result?.providerName == this.name) {
       this.#pickResult(result, controller.browserWindow);

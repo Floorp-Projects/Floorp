@@ -63,7 +63,7 @@ class ProviderRecentSearches extends UrlbarProvider {
     return 1;
   }
 
-  onEngagement(state, queryContext, details, controller) {
+  onLegacyEngagement(state, queryContext, details, controller) {
     let { result } = details;
     if (result?.providerName != this.name) {
       return;

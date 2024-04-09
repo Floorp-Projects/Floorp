@@ -352,7 +352,7 @@ class ProviderSearchSuggestions extends UrlbarProvider {
     return undefined;
   }
 
-  onEngagement(state, queryContext, details, controller) {
+  onLegacyEngagement(state, queryContext, details, controller) {
     let { result } = details;
     if (result?.providerName != this.name) {
       return;

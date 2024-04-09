@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Tests the UrlbarProvider.onEngagement() method.
+// Tests the UrlbarProvider.onLegacyEngagement() method.
 
 "use strict";
 
@@ -168,7 +168,7 @@ async function doTest({
 }
 
 /**
- * Test provider that resolves promises when onEngagement is called.
+ * Test provider that resolves promises when onLegacyEngagement is called.
  */
 class TestProvider extends UrlbarTestUtils.TestProvider {
   _resolves = [];
@@ -186,7 +186,7 @@ class TestProvider extends UrlbarTestUtils.TestProvider {
     });
   }
 
-  onEngagement(...args) {
+  onLegacyEngagement(...args) {
     let resolve = this._resolves.shift();
     if (resolve) {
       resolve(args);

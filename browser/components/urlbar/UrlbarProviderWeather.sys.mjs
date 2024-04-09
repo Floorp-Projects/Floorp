@@ -163,7 +163,7 @@ class ProviderWeather extends UrlbarProvider {
     return lazy.QuickSuggest.weather.getViewUpdate(result);
   }
 
-  onEngagement(state, queryContext, details, controller) {
+  onLegacyEngagement(state, queryContext, details, controller) {
     // Ignore engagements on other results that didn't end the session.
     if (details.result?.providerName != this.name && details.isSessionOngoing) {
       return;
@@ -243,7 +243,7 @@ class ProviderWeather extends UrlbarProvider {
    *   A non-empty string means the user picked the weather row or some part of
    *   it, and both impression and click telemetry will be recorded. The
    *   non-empty-string values come from the `details.selType` passed in to
-   *   `onEngagement()`; see `TelemetryEvent.typeFromElement()`.
+   *   `onLegacyEngagement()`; see `TelemetryEvent.typeFromElement()`.
    */
   #recordEngagementTelemetry(result, isPrivate, selType) {
     // Indexes recorded in quick suggest telemetry are 1-based, so add 1 to the
