@@ -658,12 +658,7 @@ export var SiteDataManager = {
   async removeSiteData() {
     await new Promise(function (resolve) {
       Services.clearData.deleteData(
-        Ci.nsIClearDataService.CLEAR_COOKIES |
-          Ci.nsIClearDataService.CLEAR_DOM_STORAGES |
-          Ci.nsIClearDataService.CLEAR_HSTS |
-          Ci.nsIClearDataService.CLEAR_EME |
-          Ci.nsIClearDataService.CLEAR_BOUNCE_TRACKING_PROTECTION_STATE |
-          Ci.nsIClearDataService.CLEAR_STORAGE_PERMISSIONS,
+        Ci.nsIClearDataService.CLEAR_COOKIES_AND_SITE_DATA,
         resolve
       );
     });
