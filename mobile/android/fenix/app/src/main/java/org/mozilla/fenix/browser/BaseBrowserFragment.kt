@@ -189,6 +189,7 @@ import java.lang.ref.WeakReference
 import kotlin.coroutines.cancellation.CancellationException
 import mozilla.components.ui.widgets.behavior.EngineViewClippingBehavior as OldEngineViewClippingBehavior
 import mozilla.components.ui.widgets.behavior.ToolbarPosition as OldToolbarPosition
+import org.mozilla.fenix.GleanMetrics.TabStrip as TabStripMetrics
 
 /**
  * Base fragment extended by [BrowserFragment].
@@ -462,6 +463,7 @@ abstract class BaseBrowserFragment :
                                     focusOnAddressBar = true,
                                 ),
                             )
+                            TabStripMetrics.newTabTapped.record()
                         },
                         onLastTabClose = { isPrivate ->
                             requireComponents.appStore.dispatch(
@@ -471,9 +473,12 @@ abstract class BaseBrowserFragment :
                                 BrowserFragmentDirections.actionGlobalHome(),
                             )
                         },
-                        onSelectedTabClick = {},
+                        onSelectedTabClick = {
+                            TabStripMetrics.selectTab.record()
+                        },
                         onCloseTabClick = { isPrivate ->
                             showUndoSnackbar(requireContext().tabClosedUndoMessage(isPrivate))
+                            TabStripMetrics.closeTab.record()
                         },
                     )
                 }

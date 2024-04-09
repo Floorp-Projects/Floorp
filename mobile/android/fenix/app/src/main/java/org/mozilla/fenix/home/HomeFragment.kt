@@ -144,6 +144,7 @@ import org.mozilla.fenix.utils.Settings.Companion.TOP_SITES_PROVIDER_MAX_THRESHO
 import org.mozilla.fenix.utils.allowUndo
 import org.mozilla.fenix.wallpapers.Wallpaper
 import java.lang.ref.WeakReference
+import org.mozilla.fenix.GleanMetrics.TabStrip as TabStripMetrics
 
 @Suppress("TooManyFunctions", "LargeClass")
 class HomeFragment : Fragment() {
@@ -780,13 +781,16 @@ class HomeFragment : Fragment() {
                         onHome = true,
                         onAddTabClick = {
                             sessionControlInteractor.onNavigateSearch()
+                            TabStripMetrics.newTabTapped.record()
                         },
                         onSelectedTabClick = {
                             (requireActivity() as HomeActivity).openToBrowser(BrowserDirection.FromHome)
+                            TabStripMetrics.selectTab.record()
                         },
                         onLastTabClose = {},
                         onCloseTabClick = { isPrivate ->
                             showUndoSnackbar(requireContext().tabClosedUndoMessage(isPrivate))
+                            TabStripMetrics.closeTab.record()
                         },
                     )
                 }
