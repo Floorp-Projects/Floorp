@@ -204,7 +204,7 @@ struct KeySystemConfigRequest final {
   KeySystemConfigRequest(const nsAString& aKeySystem,
                          KeySystemConfig::DecryptionInfo aDecryption)
       : mKeySystem(aKeySystem), mDecryption(aDecryption) {}
-  const nsAString& mKeySystem;
+  const nsString mKeySystem;
   const KeySystemConfig::DecryptionInfo mDecryption;
 };
 
