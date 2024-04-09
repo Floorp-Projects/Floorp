@@ -522,6 +522,45 @@ async function doCommandTest({
   info("Finished command test: " + JSON.stringify({ commandOrArray }));
 }
 
+/*
+ * Do test the "Manage" result menu item.
+ *
+ * @param {object} options
+ *   Options
+ * @param {number} options.index
+ *   The index of the suggestion that will be checked in the results list.
+ * @param {number} options.input
+ *   The input value on the urlbar.
+ */
+async function doManageTest({ index, input }) {
+  await BrowserTestUtils.withNewTab({ gBrowser }, async browser => {
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: input,
+    });
+
+    const managePage = "about:preferences#search";
+    let onManagePageLoaded = BrowserTestUtils.browserLoaded(
+      browser,
+      false,
+      managePage
+    );
+    // Click the command.
+    await UrlbarTestUtils.openResultMenuAndClickItem(window, "manage", {
+      resultIndex: index,
+    });
+    await onManagePageLoaded;
+
+    Assert.equal(
+      browser.currentURI.spec,
+      managePage,
+      "The manage page is loaded"
+    );
+
+    await UrlbarTestUtils.promisePopupClose(window);
+  });
+}
+
 /**
  * Gets a row in the view, which is assumed to be open, and asserts that it's a
  * particular quick suggest row. If it is, the row is returned. If it's not,

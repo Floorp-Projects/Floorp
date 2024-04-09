@@ -15,8 +15,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 const RESULT_MENU_COMMAND = {
-  HELP: "help",
   INACCURATE_LOCATION: "inaccurate_location",
+  MANAGE: "manage",
   NOT_INTERESTED: "not_interested",
   NOT_RELEVANT: "not_relevant",
   SHOW_LESS_FREQUENTLY: "show_less_frequently",
@@ -168,9 +168,9 @@ export class YelpSuggestions extends BaseFeature {
       },
       { name: "separator" },
       {
-        name: RESULT_MENU_COMMAND.HELP,
+        name: RESULT_MENU_COMMAND.MANAGE,
         l10n: {
-          id: "urlbar-result-menu-learn-more-about-firefox-suggest",
+          id: "urlbar-result-menu-manage-firefox-suggest",
         },
       }
     );
@@ -180,8 +180,8 @@ export class YelpSuggestions extends BaseFeature {
 
   handleCommand(view, result, selType, searchString) {
     switch (selType) {
-      case RESULT_MENU_COMMAND.HELP:
-        // "help" is handled by UrlbarInput, no need to do anything here.
+      case RESULT_MENU_COMMAND.MANAGE:
+        // "manage" is handled by UrlbarInput, no need to do anything here.
         break;
       case RESULT_MENU_COMMAND.INACCURATE_LOCATION:
         // Currently the only way we record this feedback is in the Glean
