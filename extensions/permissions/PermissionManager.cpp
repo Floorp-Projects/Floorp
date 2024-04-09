@@ -1682,22 +1682,15 @@ NS_IMETHODIMP
 PermissionManager::AddFromPrincipalAndPersistInPrivateBrowsing(
     nsIPrincipal* aPrincipal, const nsACString& aType, uint32_t aPermission) {
   ENSURE_NOT_CHILD_PROCESS;
-  NS_ENSURE_ARG_POINTER(aPrincipal);
-  // We don't add the system principal because it actually has no URI and we
-  // always allow action for them.
-  if (aPrincipal->IsSystemPrincipal()) {
-    return NS_OK;
-  }
 
-  // Null principals can't meaningfully have persisted permissions attached to
-  // them, so we don't allow adding permissions for them.
-  if (aPrincipal->GetIsNullPrincipal()) {
-    return NS_OK;
-  }
+  bool isValidPermissionPrincipal = false;
+  nsresult rv = ShouldHandlePrincipalForPermission(aPrincipal,
+                                                   isValidPermissionPrincipal);
 
-  // Permissions may not be added to expanded principals.
-  if (IsExpandedPrincipal(aPrincipal)) {
-    return NS_ERROR_INVALID_ARG;
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!isValidPermissionPrincipal) {
+    // return early if the principal is invalid for permissions
+    return rv;
   }
 
   // A modificationTime of zero will cause AddInternal to use now().
@@ -1717,7 +1710,6 @@ PermissionManager::AddFromPrincipal(nsIPrincipal* aPrincipal,
                                     uint32_t aPermission, uint32_t aExpireType,
                                     int64_t aExpireTime) {
   ENSURE_NOT_CHILD_PROCESS;
-  NS_ENSURE_ARG_POINTER(aPrincipal);
   NS_ENSURE_TRUE(aExpireType == nsIPermissionManager::EXPIRE_NEVER ||
                      aExpireType == nsIPermissionManager::EXPIRE_TIME ||
                      aExpireType == nsIPermissionManager::EXPIRE_SESSION ||
@@ -1729,21 +1721,14 @@ PermissionManager::AddFromPrincipal(nsIPrincipal* aPrincipal,
     return NS_OK;
   }
 
-  // We don't add the system principal because it actually has no URI and we
-  // always allow action for them.
-  if (aPrincipal->IsSystemPrincipal()) {
-    return NS_OK;
-  }
+  bool isValidPermissionPrincipal = false;
+  nsresult rv = ShouldHandlePrincipalForPermission(aPrincipal,
+                                                   isValidPermissionPrincipal);
 
-  // Null principals can't meaningfully have persisted permissions attached to
-  // them, so we don't allow adding permissions for them.
-  if (aPrincipal->GetIsNullPrincipal()) {
-    return NS_OK;
-  }
-
-  // Permissions may not be added to expanded principals.
-  if (IsExpandedPrincipal(aPrincipal)) {
-    return NS_ERROR_INVALID_ARG;
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!isValidPermissionPrincipal) {
+    // return early if the principal is invalid for permissions
+    return rv;
   }
 
   // A modificationTime of zero will cause AddInternal to use now().
@@ -1751,6 +1736,28 @@ PermissionManager::AddFromPrincipal(nsIPrincipal* aPrincipal,
 
   return AddInternal(aPrincipal, aType, aPermission, 0, aExpireType,
                      aExpireTime, modificationTime, eNotify, eWriteToDB);
+}
+
+NS_IMETHODIMP
+PermissionManager::TestAddFromPrincipalByTime(nsIPrincipal* aPrincipal,
+                                              const nsACString& aType,
+                                              uint32_t aPermission,
+                                              int64_t aModificationTime) {
+  ENSURE_NOT_CHILD_PROCESS;
+
+  bool isValidPermissionPrincipal = false;
+  nsresult rv = ShouldHandlePrincipalForPermission(aPrincipal,
+                                                   isValidPermissionPrincipal);
+
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!isValidPermissionPrincipal) {
+    // return early if the principal is invalid for permissions
+    return rv;
+  }
+
+  return AddInternal(aPrincipal, aType, aPermission, 0,
+                     nsIPermissionManager::EXPIRE_NEVER, 0, aModificationTime,
+                     eNotify, eWriteToDB);
 }
 
 nsresult PermissionManager::AddInternal(
@@ -2545,6 +2552,34 @@ NS_IMETHODIMP PermissionManager::GetAllByTypes(
         return aTypes.Contains(mTypeArray[aPermEntry.mType]);
       },
       aResult);
+}
+
+nsresult PermissionManager::ShouldHandlePrincipalForPermission(
+    nsIPrincipal* aPrincipal, bool& aIsPermissionPrincipalValid) {
+  NS_ENSURE_ARG_POINTER(aPrincipal);
+  // We don't add the system principal because it actually has no URI and we
+  // always allow action for them.
+  if (aPrincipal->IsSystemPrincipal()) {
+    aIsPermissionPrincipalValid = false;
+    return NS_OK;
+  }
+
+  // Null principals can't meaningfully have persisted permissions attached to
+  // them, so we don't allow adding permissions for them.
+  if (aPrincipal->GetIsNullPrincipal()) {
+    aIsPermissionPrincipalValid = false;
+    return NS_OK;
+  }
+
+  // Permissions may not be added to expanded principals.
+  if (IsExpandedPrincipal(aPrincipal)) {
+    aIsPermissionPrincipalValid = false;
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  // Permission principal is valid
+  aIsPermissionPrincipalValid = true;
+  return NS_OK;
 }
 
 nsresult PermissionManager::GetAllForPrincipalHelper(

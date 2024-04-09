@@ -10,6 +10,8 @@ support-files = [
 
 ["browser_clearSiteData.js"]
 
+["browser_clearSiteData_v2.js"]
+
 ["browser_siteData.js"]
 
 ["browser_siteData2.js"]
