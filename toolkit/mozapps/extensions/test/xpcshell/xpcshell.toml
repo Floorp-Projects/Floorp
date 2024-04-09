@@ -6,6 +6,7 @@ firefox-appdir = "browser"
 dupe-manifest = true
 support-files = [
   "data/**",
+  "../xpinstall/amosigned.xpi",
   "../xpinstall/amosigned-mv3-cose.xpi",
   "../xpinstall/amosigned-sha1only.xpi",
 ]
