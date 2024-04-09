@@ -7690,7 +7690,6 @@ static nsLiteralCString ContentTypeToTelemetryLabel(nsHttpChannel* aChannel) {
       return "proxy"_ns;
     }
     if (contentType.EqualsLiteral(APPLICATION_BROTLI) ||
-        contentType.EqualsLiteral(APPLICATION_ZSTD) ||
         contentType.Find("zip") != kNotFound ||
         contentType.Find("compress") != kNotFound) {
       return "compressed"_ns;
