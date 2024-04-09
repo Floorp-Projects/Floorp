@@ -12,6 +12,10 @@ export class FormHistoryBackupResource extends BackupResource {
     return "formhistory";
   }
 
+  static get requiresEncryption() {
+    return false;
+  }
+
   async measure(profilePath = PathUtils.profileDir) {
     let formHistoryDBPath = PathUtils.join(profilePath, "formhistory.sqlite");
     let formHistorySize = await BackupResource.getFileSize(formHistoryDBPath);

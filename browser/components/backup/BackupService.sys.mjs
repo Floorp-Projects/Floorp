@@ -125,6 +125,10 @@ export class BackupService {
       // Perform the backup for each resource.
       for (let resourceClass of this.#resources.values()) {
         try {
+          lazy.logConsole.debug(
+            `Backing up resource with key ${resourceClass.key}. ` +
+              `Requires encryption: ${resourceClass.requiresEncryption}`
+          );
           let resourcePath = PathUtils.join(stagingPath, resourceClass.key);
           await IOUtils.makeDirectory(resourcePath);
 

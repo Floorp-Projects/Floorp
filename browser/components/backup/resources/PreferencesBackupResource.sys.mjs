@@ -13,6 +13,10 @@ export class PreferencesBackupResource extends BackupResource {
     return "preferences";
   }
 
+  static get requiresEncryption() {
+    return false;
+  }
+
   async backup(stagingPath, profilePath = PathUtils.profileDir) {
     // These are files that can be simply copied into the staging folder using
     // IOUtils.copy.

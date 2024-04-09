@@ -14,6 +14,10 @@ export class MiscDataBackupResource extends BackupResource {
     return "miscellaneous";
   }
 
+  static get requiresEncryption() {
+    return false;
+  }
+
   async measure(profilePath = PathUtils.profileDir) {
     const files = [
       "times.json",

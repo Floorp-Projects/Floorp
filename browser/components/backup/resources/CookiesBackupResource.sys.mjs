@@ -12,6 +12,10 @@ export class CookiesBackupResource extends BackupResource {
     return "cookies";
   }
 
+  static get requiresEncryption() {
+    return true;
+  }
+
   async measure(profilePath = PathUtils.profileDir) {
     let cookiesDBPath = PathUtils.join(profilePath, "cookies.sqlite");
     let cookiesSize = await BackupResource.getFileSize(cookiesDBPath);

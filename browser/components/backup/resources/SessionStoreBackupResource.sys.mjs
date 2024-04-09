@@ -21,6 +21,13 @@ export class SessionStoreBackupResource extends BackupResource {
     return "sessionstore";
   }
 
+  static get requiresEncryption() {
+    // Session store data does not require encryption, but if encryption is
+    // disabled, then session cookies will be cleared from the backup before
+    // writing it to the disk.
+    return false;
+  }
+
   async measure(profilePath = PathUtils.profileDir) {
     // Get the current state of the session store JSON and
     // measure it's uncompressed size.
