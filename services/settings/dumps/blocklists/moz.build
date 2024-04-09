@@ -7,18 +7,22 @@
 with Files("**"):
     BUG_COMPONENT = ("Toolkit", "Blocklist Implementation")
 
-# The addons blocklist is also in mobile/android/installer/package-manifest.in
+# These collections are referenced in toolkit/ or other core code.
 FINAL_TARGET_FILES.defaults.settings.blocklists += [
-    "addons-bloomfilters.json",
     "gfx.json",
 ]
-if CONFIG["MOZ_WIDGET_TOOLKIT"] != "android":
-    FINAL_TARGET_FILES.defaults.settings.blocklists += ["plugins.json"]
 
-FINAL_TARGET_FILES.defaults.settings.blocklists["addons-bloomfilters"] += [
-    "addons-bloomfilters/addons-mlbf.bin",
-    "addons-bloomfilters/addons-mlbf.bin.meta.json",
-]
+# The addons blocklist data is not packaged on Android/iOS and will be downloaded
+# after install.
+# See https://bugzilla.mozilla.org/show_bug.cgi?id=1639050#c5
 
-if CONFIG["MOZ_BUILD_APP"] == "browser":
-    DIST_SUBDIR = "browser"
+if not CONFIG["MOZ_BUILD_APP"].startswith("mobile/"):
+    FINAL_TARGET_FILES.defaults.settings.blocklists += [
+        "addons-bloomfilters.json",
+        "plugins.json"
+    ]
+
+    FINAL_TARGET_FILES.defaults.settings.blocklists["addons-bloomfilters"] += [
+        "addons-bloomfilters/addons-mlbf.bin",
+        "addons-bloomfilters/addons-mlbf.bin.meta.json",
+    ]

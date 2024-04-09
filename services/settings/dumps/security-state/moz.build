@@ -2,10 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# These collections are referenced in toolkit/ or other core code.
 FINAL_TARGET_FILES.defaults.settings["security-state"] += [
-    "intermediates.json",
     "onecrl.json",
 ]
 
-if CONFIG["MOZ_BUILD_APP"] == "browser":
-    DIST_SUBDIR = "browser"
+# Not packaged on android/ios currently - not crucial data for first load.
+if not CONFIG["MOZ_BUILD_APP"].startswith("mobile/"):
+    FINAL_TARGET_FILES.defaults.settings["security-state"] += [
+        "intermediates.json",
+    ]
