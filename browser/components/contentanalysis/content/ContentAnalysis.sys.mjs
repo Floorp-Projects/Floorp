@@ -300,10 +300,10 @@ export const ContentAnalysis = {
             );
             return;
           }
-          const analysisType = request.analysisType;
+          const operation = request.analysisType;
           // For operations that block browser interaction, show the "slow content analysis"
           // dialog faster
-          let slowTimeoutMs = this._shouldShowBlockingNotification(analysisType)
+          let slowTimeoutMs = this._shouldShowBlockingNotification(operation)
             ? this._SLOW_DLP_NOTIFICATION_BLOCKING_TIMEOUT_MS
             : this._SLOW_DLP_NOTIFICATION_NONBLOCKING_TIMEOUT_MS;
           let browsingContext = request.windowGlobalParent?.browsingContext;
@@ -333,7 +333,7 @@ export const ContentAnalysis = {
             timer: lazy.setTimeout(() => {
               this.dlpBusyViewsByTopBrowsingContext.setEntry(browsingContext, {
                 notification: this._showSlowCAMessage(
-                  analysisType,
+                  operation,
                   request,
                   resourceNameOrOperationType,
                   browsingContext
@@ -450,10 +450,7 @@ export const ContentAnalysis = {
     }
 
     if (this._SHOW_NOTIFICATIONS) {
-      let topWindow =
-        aBrowsingContext.topChromeWindow ??
-        aBrowsingContext.embedderWindowGlobal.browsingContext.topChromeWindow;
-      const notification = new topWindow.Notification(
+      const notification = new aBrowsingContext.topChromeWindow.Notification(
         this.l10n.formatValueSync("contentanalysis-notification-title"),
         {
           body: aMessage,
@@ -472,10 +469,10 @@ export const ContentAnalysis = {
     return null;
   },
 
-  _shouldShowBlockingNotification(aAnalysisType) {
+  _shouldShowBlockingNotification(aOperation) {
     return !(
-      aAnalysisType == Ci.nsIContentAnalysisRequest.eFileDownloaded ||
-      aAnalysisType == Ci.nsIContentAnalysisRequest.ePrint
+      aOperation == Ci.nsIContentAnalysisRequest.eFileDownloaded ||
+      aOperation == Ci.nsIContentAnalysisRequest.ePrint
     );
   },
 
@@ -490,9 +487,6 @@ export const ContentAnalysis = {
           break;
         case Ci.nsIContentAnalysisRequest.eDroppedText:
           l10nId = "contentanalysis-operationtype-dropped-text";
-          break;
-        case Ci.nsIContentAnalysisRequest.eOperationPrint:
-          l10nId = "contentanalysis-operationtype-print";
           break;
       }
       if (!l10nId) {
@@ -602,14 +596,10 @@ export const ContentAnalysis = {
       case Ci.nsIContentAnalysisRequest.eDroppedText:
         l10nId = "contentanalysis-slow-agent-dialog-body-dropped-text";
         break;
-      case Ci.nsIContentAnalysisRequest.eOperationPrint:
-        l10nId = "contentanalysis-slow-agent-dialog-body-print";
-        break;
     }
     if (!l10nId) {
       console.error(
-        "Unknown operationTypeForDisplay: ",
-        aResourceNameOrOperationType
+        "Unknown operationTypeForDisplay: " + aResourceNameOrOperationType
       );
       return "";
     }

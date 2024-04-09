@@ -1,20 +1,3 @@
 [DEFAULT]
-run-if = ["os == 'win'"]
-support-files = [
-  "head.js",
-]
 
 ["browser_content_analysis_policies.js"]
-
-["browser_print_changing_page_content_analysis.js"]
-support-files = [
-  "!/toolkit/components/printing/tests/head.js",
-  "changing_page_for_print.html",
-]
-
-["browser_print_content_analysis.js"]
-support-files = [
-  "!/toolkit/components/printing/tests/head.js",
-  "!/toolkit/components/printing/tests/longerArticle.html",
-  "!/toolkit/components/printing/tests/simplifyArticleSample.html",
-]

@@ -20,12 +20,8 @@ contentanalysis-slow-agent-dialog-body-clipboard = { $agent } is reviewing what 
 # Variables:
 #   $agent - The name of the DLP agent doing the analysis
 contentanalysis-slow-agent-dialog-body-dropped-text = { $agent } is reviewing the text you dropped against your organization’s data policies. This may take a moment.
-# Variables:
-#   $agent - The name of the DLP agent doing the analysis
-contentanalysis-slow-agent-dialog-body-print = { $agent } is reviewing what you printed against your organization’s data policies. This may take a moment.
 contentanalysis-operationtype-clipboard = clipboard
 contentanalysis-operationtype-dropped-text = dropped text
-contentanalysis-operationtype-print = print
 #   $filename - The filename associated with the request, such as "aFile.txt"
 contentanalysis-customdisplaystring-description = upload of “{ $filename }”
 

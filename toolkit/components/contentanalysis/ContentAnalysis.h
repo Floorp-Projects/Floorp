@@ -8,8 +8,6 @@
 
 #include "mozilla/DataMutex.h"
 #include "mozilla/MozPromise.h"
-#include "mozilla/dom/BrowsingContext.h"
-#include "mozilla/dom/MaybeDiscarded.h"
 #include "mozilla/dom/Promise.h"
 #include "nsIContentAnalysis.h"
 #include "nsProxyRelease.h"
@@ -20,16 +18,10 @@
 #include <regex>
 #include <string>
 
-#ifdef XP_WIN
-#  include <windows.h>
-#endif  // XP_WIN
-
 class nsIPrincipal;
-class nsIPrintSettings;
 class ContentAnalysisTest;
 
 namespace mozilla::dom {
-class CanonicalBrowsingContext;
 class DataTransfer;
 class WindowGlobalParent;
 }  // namespace mozilla::dom
@@ -72,15 +64,11 @@ class ContentAnalysisRequest final : public nsIContentAnalysisRequest {
                          bool aStringIsFilePath, nsCString aSha256Digest,
                          nsCOMPtr<nsIURI> aUrl, OperationType aOperationType,
                          dom::WindowGlobalParent* aWindowGlobalParent);
-  ContentAnalysisRequest(const nsTArray<uint8_t> aPrintData,
-                         nsCOMPtr<nsIURI> aUrl, nsString aPrinterName,
-                         dom::WindowGlobalParent* aWindowGlobalParent);
   static nsresult GetFileDigest(const nsAString& aFilePath,
                                 nsCString& aDigestString);
 
  private:
-  ~ContentAnalysisRequest();
-
+  ~ContentAnalysisRequest() = default;
   // Remove unneeded copy constructor/assignment
   ContentAnalysisRequest(const ContentAnalysisRequest&) = delete;
   ContentAnalysisRequest& operator=(ContentAnalysisRequest&) = delete;
@@ -117,16 +105,7 @@ class ContentAnalysisRequest final : public nsIContentAnalysisRequest {
   // OPERATION_CUSTOMDISPLAYSTRING
   nsString mOperationDisplayString;
 
-  // The name of the printer being printed to
-  nsString mPrinterName;
-
   RefPtr<dom::WindowGlobalParent> mWindowGlobalParent;
-#ifdef XP_WIN
-  // The printed data to analyze, in PDF format
-  HANDLE mPrintDataHandle = 0;
-  // The size of the printed data in mPrintDataHandle
-  uint64_t mPrintDataSize = 0;
-#endif
 
   friend class ::ContentAnalysisTest;
 };
@@ -148,39 +127,6 @@ class ContentAnalysis final : public nsIContentAnalysis {
   ContentAnalysis();
   nsCString GetUserActionId();
   void SetLastResult(nsresult aLastResult) { mLastResult = aLastResult; }
-
-  struct PrintAllowedResult final {
-    bool mAllowed;
-    dom::MaybeDiscarded<dom::BrowsingContext>
-        mCachedStaticDocumentBrowsingContext;
-    PrintAllowedResult(bool aAllowed, dom::MaybeDiscarded<dom::BrowsingContext>
-                                          aCachedStaticDocumentBrowsingContext)
-        : mAllowed(aAllowed),
-          mCachedStaticDocumentBrowsingContext(
-              aCachedStaticDocumentBrowsingContext) {}
-    explicit PrintAllowedResult(bool aAllowed)
-        : PrintAllowedResult(aAllowed, dom::MaybeDiscardedBrowsingContext()) {}
-  };
-  struct PrintAllowedError final {
-    nsresult mError;
-    dom::MaybeDiscarded<dom::BrowsingContext>
-        mCachedStaticDocumentBrowsingContext;
-    PrintAllowedError(nsresult aError, dom::MaybeDiscarded<dom::BrowsingContext>
-                                           aCachedStaticDocumentBrowsingContext)
-        : mError(aError),
-          mCachedStaticDocumentBrowsingContext(
-              aCachedStaticDocumentBrowsingContext) {}
-    explicit PrintAllowedError(nsresult aError)
-        : PrintAllowedError(aError, dom::MaybeDiscardedBrowsingContext()) {}
-  };
-  using PrintAllowedPromise =
-      MozPromise<PrintAllowedResult, PrintAllowedError, true>;
-#if defined(XP_WIN)
-  MOZ_CAN_RUN_SCRIPT static RefPtr<PrintAllowedPromise>
-  PrintToPDFToDetermineIfPrintAllowed(
-      dom::CanonicalBrowsingContext* aBrowsingContext,
-      nsIPrintSettings* aPrintSettings);
-#endif  // defined(XP_WIN)
 
  private:
   ~ContentAnalysis();

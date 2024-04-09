@@ -960,33 +960,8 @@ child:
      *
      * @param aBrowsingContext the browsing context to print.
      * @param aPrintData the serialized settings to print with
-     * @param aReturnStaticClone If the document in aBrowsingContext is not a static clone, whether
-     *   to return the static document clone created.
-     *   Note that if you call this with true but do not later call PrintClonedPage(),
-     *   you must call DestroyPrintCache() to avoid leaks.
      */
-    async Print(MaybeDiscardedBrowsingContext aBC, PrintData aPrintData, bool aReturnStaticClone) returns(MaybeDiscardedBrowsingContext staticCloneBrowsingContext);
-
-    /**
-     * Tell the child to print the passed in static clone browsing context with the given settings.
-     *
-     * @param aBrowsingContext the browsing context to print.
-     * @param aPrintData the serialized settings to print with
-     * @param aStaticCloneBrowsingContext The static clone of aBrowsingContext that
-     *   was created by an earlier call to Print(). This is the page that will actually be
-     *   printed.
-     */
-    async PrintClonedPage(MaybeDiscardedBrowsingContext aBC, PrintData aPrintData, MaybeDiscardedBrowsingContext aStaticCloneBrowsingContext);
-
-    /**
-     * Destroy the static document clone for printing, if present. See Print() for details.
-     * For callers' simplicity, it is safe to call this method even if aStaticCloneBrowsingContext
-     * is null or has already been discarded.
-     *
-     * @param aStaticCloneBrowsingContext The static clone that was created by
-     *   an earlier call to Print().
-     */
-    async DestroyPrintClone(MaybeDiscardedBrowsingContext aStaticCloneBrowsingContext);
+    async Print(MaybeDiscardedBrowsingContext aBC, PrintData aPrintData);
 
     /**
      * Update the child with the tab's current top-level native window handle.

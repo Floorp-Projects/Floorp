@@ -36,7 +36,7 @@ interface nsIContentAnalysisAcknowledgement : nsISupports
   readonly attribute nsIContentAnalysisAcknowledgement_FinalAction finalAction;
 };
 
-[scriptable, uuid(89088c61-15f6-4ace-a880-a1b5ea47ca66)]
+[scriptable, builtinclass, uuid(89088c61-15f6-4ace-a880-a1b5ea47ca66)]
 interface nsIContentAnalysisResponse : nsISupports
 {
   // These values must stay synchronized with ContentAnalysisResponse
@@ -59,11 +59,11 @@ interface nsIContentAnalysisResponse : nsISupports
     eErrorOther = 3,
   };
 
-  readonly attribute nsIContentAnalysisResponse_Action action;
-  readonly attribute boolean shouldAllowContent;
+  [infallible] readonly attribute nsIContentAnalysisResponse_Action action;
+  [infallible] readonly attribute boolean shouldAllowContent;
   // If action is eCanceled, this is the error explaining why the request was canceled,
   // or eUserInitiated if the user canceled it.
-  readonly attribute nsIContentAnalysisResponse_CancelError cancelError;
+  [infallible] readonly attribute nsIContentAnalysisResponse_CancelError cancelError;
 
   // Identifier for the corresponding nsIContentAnalysisRequest
   readonly attribute ACString requestToken;
@@ -131,7 +131,6 @@ interface nsIContentAnalysisRequest : nsISupports
     eCustomDisplayString = 0,
     eClipboard = 1,
     eDroppedText = 2,
-    eOperationPrint = 3,
   };
   readonly attribute nsIContentAnalysisRequest_OperationType operationTypeForDisplay;
   readonly attribute AString operationDisplayString;
@@ -141,15 +140,6 @@ interface nsIContentAnalysisRequest : nsISupports
 
   // Name of file to analyze.  Only one of textContent or filePath is defined.
   readonly attribute AString filePath;
-
-  // HANDLE to the printed data in PDF format.
-  readonly attribute unsigned long long printDataHandle;
-
-  // Size of the data stored in printDataHandle.
-  readonly attribute unsigned long long printDataSize;
-
-  // Name of the printer being printed to.
-  readonly attribute AString printerName;
 
   // The URL containing the file download/upload or to which web content is
   // being uploaded.
@@ -195,7 +185,7 @@ interface nsIContentAnalysisDiagnosticInfo : nsISupports
   [infallible] readonly attribute long long requestCount;
 };
 
-[scriptable, uuid(61497587-2bba-4a88-acd3-3fbb2cedf163)]
+[scriptable, builtinclass, uuid(61497587-2bba-4a88-acd3-3fbb2cedf163)]
 interface nsIContentAnalysis : nsISupports
 {
   /**
