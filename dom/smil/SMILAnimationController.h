@@ -144,7 +144,7 @@ class SMILAnimationController final : public SMILTimeContainer,
 
   static void AddAnimationToCompositorTable(
       mozilla::dom::SVGAnimationElement* aElement,
-      SMILCompositorTable* aCompositorTable, bool& aStyleFlushNeeded);
+      SMILCompositorTable* aCompositorTable);
 
   static bool GetTargetIdentifierForAnimation(
       mozilla::dom::SVGAnimationElement* aAnimElem,

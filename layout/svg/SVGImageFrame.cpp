@@ -191,26 +191,6 @@ nsresult SVGImageFrame::AttributeChanged(int32_t aNameSpaceID,
     }
   }
 
-  // Currently our SMIL implementation does not modify the DOM attributes. Once
-  // we implement the SVG 2 SMIL behaviour this can be removed
-  // SVGImageElement::AfterSetAttr's implementation will be sufficient.
-  if (aModType == MutationEvent_Binding::SMIL &&
-      aAttribute == nsGkAtoms::href &&
-      (aNameSpaceID == kNameSpaceID_XLink ||
-       aNameSpaceID == kNameSpaceID_None)) {
-    SVGImageElement* element = static_cast<SVGImageElement*>(GetContent());
-
-    bool hrefIsSet =
-        element->mStringAttributes[SVGImageElement::HREF].IsExplicitlySet() ||
-        element->mStringAttributes[SVGImageElement::XLINK_HREF]
-            .IsExplicitlySet();
-    if (hrefIsSet) {
-      element->LoadSVGImage(true, true);
-    } else {
-      element->CancelImageRequests(true);
-    }
-  }
-
   return NS_OK;
 }
 

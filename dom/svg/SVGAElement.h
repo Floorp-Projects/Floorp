@@ -24,8 +24,7 @@ namespace dom {
 
 using SVGAElementBase = SVGGraphicsElement;
 
-class SVGAElement final : public SVGAElementBase,
-                          public Link {
+class SVGAElement final : public SVGAElementBase, public Link {
  protected:
   using Element::GetText;
 
@@ -93,6 +92,7 @@ class SVGAElement final : public SVGAElementBase,
   virtual ~SVGAElement() = default;
 
   StringAttributesInfo GetStringInfo() override;
+  void DidAnimateString(PRUint8 aAttrEnum) override;
 
   enum { HREF, XLINK_HREF, TARGET };
   SVGAnimatedString mStringAttributes[3];
