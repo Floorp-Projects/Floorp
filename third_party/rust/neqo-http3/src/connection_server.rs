@@ -64,13 +64,17 @@ impl Http3ServerHandler {
         data: &[u8],
         conn: &mut Connection,
     ) -> Res<usize> {
-        self.base_handler.stream_has_pending_data(stream_id);
-        self.needs_processing = true;
-        self.base_handler
+        let n = self
+            .base_handler
             .send_streams
             .get_mut(&stream_id)
             .ok_or(Error::InvalidStreamId)?
-            .send_data(conn, data)
+            .send_data(conn, data)?;
+        if n > 0 {
+            self.base_handler.stream_has_pending_data(stream_id);
+        }
+        self.needs_processing = true;
+        Ok(n)
     }
 
     /// Supply response heeaders for a request.
@@ -98,9 +102,8 @@ impl Http3ServerHandler {
     ///
     /// An error will be returned if stream does not exist.
     pub fn stream_close_send(&mut self, stream_id: StreamId, conn: &mut Connection) -> Res<()> {
-        qinfo!([self], "Close sending side stream={}.", stream_id);
+        qdebug!([self], "Close sending side stream={}.", stream_id);
         self.base_handler.stream_close_send(conn, stream_id)?;
-        self.base_handler.stream_has_pending_data(stream_id);
         self.needs_processing = true;
         Ok(())
     }
@@ -408,7 +411,7 @@ impl Http3ServerHandler {
         stream_id: StreamId,
         buf: &mut [u8],
     ) -> Res<(usize, bool)> {
-        qinfo!([self], "read_data from stream {}.", stream_id);
+        qdebug!([self], "read_data from stream {}.", stream_id);
         let res = self.base_handler.read_data(conn, stream_id, buf);
         if let Err(e) = &res {
             if e.connection_error() {

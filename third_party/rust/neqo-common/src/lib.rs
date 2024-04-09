@@ -16,8 +16,6 @@ pub mod log;
 pub mod qlog;
 pub mod timer;
 pub mod tos;
-#[cfg(feature = "udp")]
-pub mod udp;
 
 use std::fmt::Write;
 

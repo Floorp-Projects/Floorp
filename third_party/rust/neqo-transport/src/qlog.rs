@@ -195,7 +195,7 @@ pub fn packet_sent(
 ) {
     qlog.add_event_with_stream(|stream| {
         let mut d = Decoder::from(body);
-        let header = PacketHeader::with_type(to_qlog_pkt_type(pt), Some(pn), None, None, None);
+        let header = PacketHeader::with_type(pt.into(), Some(pn), None, None, None);
         let raw = RawInfo {
             length: Some(plen as u64),
             payload_length: None,
@@ -205,7 +205,7 @@ pub fn packet_sent(
         let mut frames = SmallVec::new();
         while d.remaining() > 0 {
             if let Ok(f) = Frame::decode(&mut d) {
-                frames.push(frame_to_qlogframe(&f));
+                frames.push(QuicFrame::from(&f));
             } else {
                 qinfo!("qlog: invalid frame");
                 break;
@@ -231,13 +231,8 @@ pub fn packet_sent(
 
 pub fn packet_dropped(qlog: &mut NeqoQlog, public_packet: &PublicPacket) {
     qlog.add_event_data(|| {
-        let header = PacketHeader::with_type(
-            to_qlog_pkt_type(public_packet.packet_type()),
-            None,
-            None,
-            None,
-            None,
-        );
+        let header =
+            PacketHeader::with_type(public_packet.packet_type().into(), None, None, None, None);
         let raw = RawInfo {
             length: Some(public_packet.len() as u64),
             payload_length: None,
@@ -259,8 +254,7 @@ pub fn packet_dropped(qlog: &mut NeqoQlog, public_packet: &PublicPacket) {
 pub fn packets_lost(qlog: &mut NeqoQlog, pkts: &[SentPacket]) {
     qlog.add_event_with_stream(|stream| {
         for pkt in pkts {
-            let header =
-                PacketHeader::with_type(to_qlog_pkt_type(pkt.pt), Some(pkt.pn), None, None, None);
+            let header = PacketHeader::with_type(pkt.pt.into(), Some(pkt.pn), None, None, None);
 
             let ev_data = EventData::PacketLost(PacketLost {
                 header: Some(header),
@@ -283,7 +277,7 @@ pub fn packet_received(
         let mut d = Decoder::from(&payload[..]);
 
         let header = PacketHeader::with_type(
-            to_qlog_pkt_type(public_packet.packet_type()),
+            public_packet.packet_type().into(),
             Some(payload.pn()),
             None,
             None,
@@ -299,7 +293,7 @@ pub fn packet_received(
 
         while d.remaining() > 0 {
             if let Ok(f) = Frame::decode(&mut d) {
-                frames.push(frame_to_qlogframe(&f));
+                frames.push(QuicFrame::from(&f));
             } else {
                 qinfo!("qlog: invalid frame");
                 break;
@@ -393,173 +387,180 @@ pub fn metrics_updated(qlog: &mut NeqoQlog, updated_metrics: &[QlogMetric]) {
 
 #[allow(clippy::too_many_lines)] // Yeah, but it's a nice match.
 #[allow(clippy::cast_possible_truncation, clippy::cast_precision_loss)] // No choice here.
-fn frame_to_qlogframe(frame: &Frame) -> QuicFrame {
-    match frame {
-        Frame::Padding => QuicFrame::Padding,
-        Frame::Ping => QuicFrame::Ping,
-        Frame::Ack {
-            largest_acknowledged,
-            ack_delay,
-            first_ack_range,
-            ack_ranges,
-        } => {
-            let ranges =
-                Frame::decode_ack_frame(*largest_acknowledged, *first_ack_range, ack_ranges).ok();
+impl From<&Frame<'_>> for QuicFrame {
+    fn from(frame: &Frame) -> Self {
+        match frame {
+            // TODO: Add payload length to `QuicFrame::Padding` once
+            // https://github.com/cloudflare/quiche/pull/1745 is available via the qlog crate.
+            Frame::Padding { .. } => QuicFrame::Padding,
+            Frame::Ping => QuicFrame::Ping,
+            Frame::Ack {
+                largest_acknowledged,
+                ack_delay,
+                first_ack_range,
+                ack_ranges,
+            } => {
+                let ranges =
+                    Frame::decode_ack_frame(*largest_acknowledged, *first_ack_range, ack_ranges)
+                        .ok();
 
-            let acked_ranges = ranges.map(|all| {
-                AckedRanges::Double(
-                    all.into_iter()
-                        .map(RangeInclusive::into_inner)
-                        .collect::<Vec<_>>(),
-                )
-            });
+                let acked_ranges = ranges.map(|all| {
+                    AckedRanges::Double(
+                        all.into_iter()
+                            .map(RangeInclusive::into_inner)
+                            .collect::<Vec<_>>(),
+                    )
+                });
 
-            QuicFrame::Ack {
-                ack_delay: Some(*ack_delay as f32 / 1000.0),
-                acked_ranges,
-                ect1: None,
-                ect0: None,
-                ce: None,
+                QuicFrame::Ack {
+                    ack_delay: Some(*ack_delay as f32 / 1000.0),
+                    acked_ranges,
+                    ect1: None,
+                    ect0: None,
+                    ce: None,
+                }
             }
+            Frame::ResetStream {
+                stream_id,
+                application_error_code,
+                final_size,
+            } => QuicFrame::ResetStream {
+                stream_id: stream_id.as_u64(),
+                error_code: *application_error_code,
+                final_size: *final_size,
+            },
+            Frame::StopSending {
+                stream_id,
+                application_error_code,
+            } => QuicFrame::StopSending {
+                stream_id: stream_id.as_u64(),
+                error_code: *application_error_code,
+            },
+            Frame::Crypto { offset, data } => QuicFrame::Crypto {
+                offset: *offset,
+                length: data.len() as u64,
+            },
+            Frame::NewToken { token } => QuicFrame::NewToken {
+                token: qlog::Token {
+                    ty: Some(qlog::TokenType::Retry),
+                    details: None,
+                    raw: Some(RawInfo {
+                        data: Some(hex(token)),
+                        length: Some(token.len() as u64),
+                        payload_length: None,
+                    }),
+                },
+            },
+            Frame::Stream {
+                fin,
+                stream_id,
+                offset,
+                data,
+                ..
+            } => QuicFrame::Stream {
+                stream_id: stream_id.as_u64(),
+                offset: *offset,
+                length: data.len() as u64,
+                fin: Some(*fin),
+                raw: None,
+            },
+            Frame::MaxData { maximum_data } => QuicFrame::MaxData {
+                maximum: *maximum_data,
+            },
+            Frame::MaxStreamData {
+                stream_id,
+                maximum_stream_data,
+            } => QuicFrame::MaxStreamData {
+                stream_id: stream_id.as_u64(),
+                maximum: *maximum_stream_data,
+            },
+            Frame::MaxStreams {
+                stream_type,
+                maximum_streams,
+            } => QuicFrame::MaxStreams {
+                stream_type: match stream_type {
+                    NeqoStreamType::BiDi => StreamType::Bidirectional,
+                    NeqoStreamType::UniDi => StreamType::Unidirectional,
+                },
+                maximum: *maximum_streams,
+            },
+            Frame::DataBlocked { data_limit } => QuicFrame::DataBlocked { limit: *data_limit },
+            Frame::StreamDataBlocked {
+                stream_id,
+                stream_data_limit,
+            } => QuicFrame::StreamDataBlocked {
+                stream_id: stream_id.as_u64(),
+                limit: *stream_data_limit,
+            },
+            Frame::StreamsBlocked {
+                stream_type,
+                stream_limit,
+            } => QuicFrame::StreamsBlocked {
+                stream_type: match stream_type {
+                    NeqoStreamType::BiDi => StreamType::Bidirectional,
+                    NeqoStreamType::UniDi => StreamType::Unidirectional,
+                },
+                limit: *stream_limit,
+            },
+            Frame::NewConnectionId {
+                sequence_number,
+                retire_prior,
+                connection_id,
+                stateless_reset_token,
+            } => QuicFrame::NewConnectionId {
+                sequence_number: *sequence_number as u32,
+                retire_prior_to: *retire_prior as u32,
+                connection_id_length: Some(connection_id.len() as u8),
+                connection_id: hex(connection_id),
+                stateless_reset_token: Some(hex(stateless_reset_token)),
+            },
+            Frame::RetireConnectionId { sequence_number } => QuicFrame::RetireConnectionId {
+                sequence_number: *sequence_number as u32,
+            },
+            Frame::PathChallenge { data } => QuicFrame::PathChallenge {
+                data: Some(hex(data)),
+            },
+            Frame::PathResponse { data } => QuicFrame::PathResponse {
+                data: Some(hex(data)),
+            },
+            Frame::ConnectionClose {
+                error_code,
+                frame_type,
+                reason_phrase,
+            } => QuicFrame::ConnectionClose {
+                error_space: match error_code {
+                    CloseError::Transport(_) => Some(ErrorSpace::TransportError),
+                    CloseError::Application(_) => Some(ErrorSpace::ApplicationError),
+                },
+                error_code: Some(error_code.code()),
+                error_code_value: Some(0),
+                reason: Some(String::from_utf8_lossy(reason_phrase).to_string()),
+                trigger_frame_type: Some(*frame_type),
+            },
+            Frame::HandshakeDone => QuicFrame::HandshakeDone,
+            Frame::AckFrequency { .. } => QuicFrame::Unknown {
+                frame_type_value: None,
+                raw_frame_type: frame.get_type(),
+                raw: None,
+            },
+            Frame::Datagram { data, .. } => QuicFrame::Datagram {
+                length: data.len() as u64,
+                raw: None,
+            },
         }
-        Frame::ResetStream {
-            stream_id,
-            application_error_code,
-            final_size,
-        } => QuicFrame::ResetStream {
-            stream_id: stream_id.as_u64(),
-            error_code: *application_error_code,
-            final_size: *final_size,
-        },
-        Frame::StopSending {
-            stream_id,
-            application_error_code,
-        } => QuicFrame::StopSending {
-            stream_id: stream_id.as_u64(),
-            error_code: *application_error_code,
-        },
-        Frame::Crypto { offset, data } => QuicFrame::Crypto {
-            offset: *offset,
-            length: data.len() as u64,
-        },
-        Frame::NewToken { token } => QuicFrame::NewToken {
-            token: qlog::Token {
-                ty: Some(qlog::TokenType::Retry),
-                details: None,
-                raw: Some(RawInfo {
-                    data: Some(hex(token)),
-                    length: Some(token.len() as u64),
-                    payload_length: None,
-                }),
-            },
-        },
-        Frame::Stream {
-            fin,
-            stream_id,
-            offset,
-            data,
-            ..
-        } => QuicFrame::Stream {
-            stream_id: stream_id.as_u64(),
-            offset: *offset,
-            length: data.len() as u64,
-            fin: Some(*fin),
-            raw: None,
-        },
-        Frame::MaxData { maximum_data } => QuicFrame::MaxData {
-            maximum: *maximum_data,
-        },
-        Frame::MaxStreamData {
-            stream_id,
-            maximum_stream_data,
-        } => QuicFrame::MaxStreamData {
-            stream_id: stream_id.as_u64(),
-            maximum: *maximum_stream_data,
-        },
-        Frame::MaxStreams {
-            stream_type,
-            maximum_streams,
-        } => QuicFrame::MaxStreams {
-            stream_type: match stream_type {
-                NeqoStreamType::BiDi => StreamType::Bidirectional,
-                NeqoStreamType::UniDi => StreamType::Unidirectional,
-            },
-            maximum: *maximum_streams,
-        },
-        Frame::DataBlocked { data_limit } => QuicFrame::DataBlocked { limit: *data_limit },
-        Frame::StreamDataBlocked {
-            stream_id,
-            stream_data_limit,
-        } => QuicFrame::StreamDataBlocked {
-            stream_id: stream_id.as_u64(),
-            limit: *stream_data_limit,
-        },
-        Frame::StreamsBlocked {
-            stream_type,
-            stream_limit,
-        } => QuicFrame::StreamsBlocked {
-            stream_type: match stream_type {
-                NeqoStreamType::BiDi => StreamType::Bidirectional,
-                NeqoStreamType::UniDi => StreamType::Unidirectional,
-            },
-            limit: *stream_limit,
-        },
-        Frame::NewConnectionId {
-            sequence_number,
-            retire_prior,
-            connection_id,
-            stateless_reset_token,
-        } => QuicFrame::NewConnectionId {
-            sequence_number: *sequence_number as u32,
-            retire_prior_to: *retire_prior as u32,
-            connection_id_length: Some(connection_id.len() as u8),
-            connection_id: hex(connection_id),
-            stateless_reset_token: Some(hex(stateless_reset_token)),
-        },
-        Frame::RetireConnectionId { sequence_number } => QuicFrame::RetireConnectionId {
-            sequence_number: *sequence_number as u32,
-        },
-        Frame::PathChallenge { data } => QuicFrame::PathChallenge {
-            data: Some(hex(data)),
-        },
-        Frame::PathResponse { data } => QuicFrame::PathResponse {
-            data: Some(hex(data)),
-        },
-        Frame::ConnectionClose {
-            error_code,
-            frame_type,
-            reason_phrase,
-        } => QuicFrame::ConnectionClose {
-            error_space: match error_code {
-                CloseError::Transport(_) => Some(ErrorSpace::TransportError),
-                CloseError::Application(_) => Some(ErrorSpace::ApplicationError),
-            },
-            error_code: Some(error_code.code()),
-            error_code_value: Some(0),
-            reason: Some(String::from_utf8_lossy(reason_phrase).to_string()),
-            trigger_frame_type: Some(*frame_type),
-        },
-        Frame::HandshakeDone => QuicFrame::HandshakeDone,
-        Frame::AckFrequency { .. } => QuicFrame::Unknown {
-            frame_type_value: None,
-            raw_frame_type: frame.get_type(),
-            raw: None,
-        },
-        Frame::Datagram { data, .. } => QuicFrame::Datagram {
-            length: data.len() as u64,
-            raw: None,
-        },
     }
 }
 
-fn to_qlog_pkt_type(ptype: PacketType) -> qlog::events::quic::PacketType {
-    match ptype {
-        PacketType::Initial => qlog::events::quic::PacketType::Initial,
-        PacketType::Handshake => qlog::events::quic::PacketType::Handshake,
-        PacketType::ZeroRtt => qlog::events::quic::PacketType::ZeroRtt,
-        PacketType::Short => qlog::events::quic::PacketType::OneRtt,
-        PacketType::Retry => qlog::events::quic::PacketType::Retry,
-        PacketType::VersionNegotiation => qlog::events::quic::PacketType::VersionNegotiation,
-        PacketType::OtherVersion => qlog::events::quic::PacketType::Unknown,
+impl From<PacketType> for qlog::events::quic::PacketType {
+    fn from(value: PacketType) -> Self {
+        match value {
+            PacketType::Initial => qlog::events::quic::PacketType::Initial,
+            PacketType::Handshake => qlog::events::quic::PacketType::Handshake,
+            PacketType::ZeroRtt => qlog::events::quic::PacketType::ZeroRtt,
+            PacketType::Short => qlog::events::quic::PacketType::OneRtt,
+            PacketType::Retry => qlog::events::quic::PacketType::Retry,
+            PacketType::VersionNegotiation => qlog::events::quic::PacketType::VersionNegotiation,
+            PacketType::OtherVersion => qlog::events::quic::PacketType::Unknown,
+        }
     }
 }

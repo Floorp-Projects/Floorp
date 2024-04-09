@@ -7,7 +7,7 @@
 use std::{
     cell::RefCell,
     fmt::{Debug, Display},
-    mem,
+    iter, mem,
     net::SocketAddr,
     rc::Rc,
     time::Instant,
@@ -590,7 +590,7 @@ impl Http3Client {
     ///
     /// An error will be return if stream does not exist.
     pub fn stream_close_send(&mut self, stream_id: StreamId) -> Res<()> {
-        qinfo!([self], "Close sending side stream={}.", stream_id);
+        qdebug!([self], "Close sending side stream={}.", stream_id);
         self.base_handler
             .stream_close_send(&mut self.conn, stream_id)
     }
@@ -652,7 +652,7 @@ impl Http3Client {
         stream_id: StreamId,
         buf: &mut [u8],
     ) -> Res<(usize, bool)> {
-        qinfo!([self], "read_data from stream {}.", stream_id);
+        qdebug!([self], "read_data from stream {}.", stream_id);
         let res = self.base_handler.read_data(&mut self.conn, stream_id, buf);
         if let Err(e) = &res {
             if e.connection_error() {
@@ -874,19 +874,16 @@ impl Http3Client {
     ///
     /// [1]: ../neqo_transport/enum.ConnectionEvent.html
     pub fn process_input(&mut self, dgram: &Datagram, now: Instant) {
-        qtrace!([self], "Process input.");
-        self.conn.process_input(dgram, now);
-        self.process_http3(now);
+        self.process_multiple_input(iter::once(dgram), now);
     }
 
     pub fn process_multiple_input<'a, I>(&mut self, dgrams: I, now: Instant)
     where
         I: IntoIterator<Item = &'a Datagram>,
-        I::IntoIter: ExactSizeIterator,
     {
-        let dgrams = dgrams.into_iter();
-        qtrace!([self], "Process multiple datagrams, len={}", dgrams.len());
-        if dgrams.len() == 0 {
+        let mut dgrams = dgrams.into_iter().peekable();
+        qtrace!([self], "Process multiple datagrams");
+        if dgrams.peek().is_none() {
             return;
         }
         self.conn.process_multiple_input(dgrams, now);

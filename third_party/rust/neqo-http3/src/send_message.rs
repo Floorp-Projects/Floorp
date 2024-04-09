@@ -6,7 +6,7 @@
 
 use std::{cell::RefCell, cmp::min, fmt::Debug, rc::Rc};
 
-use neqo_common::{qdebug, qinfo, qtrace, Encoder, Header, MessageType};
+use neqo_common::{qdebug, qtrace, Encoder, Header, MessageType};
 use neqo_qpack::encoder::QPackEncoder;
 use neqo_transport::{Connection, StreamId};
 
@@ -119,7 +119,7 @@ impl SendMessage {
         encoder: Rc<RefCell<QPackEncoder>>,
         conn_events: Box<dyn SendStreamEvents>,
     ) -> Self {
-        qinfo!("Create a request stream_id={}", stream_id);
+        qdebug!("Create a request stream_id={}", stream_id);
         Self {
             state: MessageState::WaitingForHeaders,
             message_type,
@@ -193,7 +193,7 @@ impl SendStream for SendMessage {
             min(buf.len(), available - 9)
         };
 
-        qinfo!(
+        qdebug!(
             [self],
             "send_request_body: available={} to_send={}.",
             available,

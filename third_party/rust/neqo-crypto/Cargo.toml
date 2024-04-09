@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.74.0"
 name = "neqo-crypto"
-version = "0.7.2"
+version = "0.7.4"
 authors = ["The Neqo Authors <necko@mozilla.com>"]
 build = "build.rs"
 homepage = "https://github.com/mozilla/neqo/"
@@ -43,6 +43,10 @@ version = "0.1"
 optional = true
 default-features = false
 
+[build-dependencies.semver]
+version = "1.0"
+default-features = false
+
 [build-dependencies.serde]
 version = "1.0"
 default-features = false
@@ -56,7 +60,7 @@ version = "0.5"
 default-features = false
 
 [features]
-fuzzing = []
+disable-encryption = []
 gecko = ["mozbuild"]
 
 [lints.clippy.pedantic]

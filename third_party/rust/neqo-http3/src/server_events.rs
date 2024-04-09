@@ -13,7 +13,7 @@ use std::{
     rc::Rc,
 };
 
-use neqo_common::{qdebug, qinfo, Encoder, Header};
+use neqo_common::{qdebug, Encoder, Header};
 use neqo_transport::{
     server::ActiveConnectionRef, AppError, Connection, DatagramTracking, StreamId, StreamType,
 };
@@ -189,7 +189,7 @@ impl Http3OrWebTransportStream {
     ///
     /// It may return `InvalidStreamId` if a stream does not exist anymore.
     pub fn send_data(&mut self, data: &[u8]) -> Res<usize> {
-        qinfo!([self], "Set new response.");
+        qdebug!([self], "Set new response.");
         self.stream_handler.send_data(data)
     }
 
@@ -199,7 +199,7 @@ impl Http3OrWebTransportStream {
     ///
     /// It may return `InvalidStreamId` if a stream does not exist anymore.
     pub fn stream_close_send(&mut self) -> Res<()> {
-        qinfo!([self], "Set new response.");
+        qdebug!([self], "Set new response.");
         self.stream_handler.stream_close_send()
     }
 }
@@ -270,7 +270,7 @@ impl WebTransportRequest {
     ///
     /// It may return `InvalidStreamId` if a stream does not exist anymore.
     pub fn response(&mut self, accept: &WebTransportSessionAcceptAction) -> Res<()> {
-        qinfo!([self], "Set a response for a WebTransport session.");
+        qdebug!([self], "Set a response for a WebTransport session.");
         self.stream_handler
             .handler
             .borrow_mut()

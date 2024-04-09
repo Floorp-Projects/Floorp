@@ -10,7 +10,7 @@ use std::{
     cell::RefCell,
     cmp::{max, min},
     fmt::{self, Debug},
-    mem,
+    iter, mem,
     net::{IpAddr, SocketAddr},
     ops::RangeInclusive,
     rc::{Rc, Weak},
@@ -19,7 +19,7 @@ use std::{
 
 use neqo_common::{
     event::Provider as EventProvider, hex, hex_snip_middle, hrtime, qdebug, qerror, qinfo,
-    qlog::NeqoQlog, qtrace, qwarn, Datagram, Decoder, Encoder, Role,
+    qlog::NeqoQlog, qtrace, qwarn, Datagram, Decoder, Encoder, IpTos, Role,
 };
 use neqo_crypto::{
     agent::CertificateInfo, Agent, AntiReplay, AuthenticationStatus, Cipher, Client, Group,
@@ -383,7 +383,6 @@ impl Connection {
             agent,
             protocols.iter().map(P::as_ref).map(String::from).collect(),
             Rc::clone(&tphandler),
-            conn_params.is_fuzzing(),
         )?;
 
         let stats = StatsCell::default();
@@ -461,7 +460,7 @@ impl Connection {
     }
 
     /// # Errors
-    /// When the operation fails.    
+    /// When the operation fails.
     pub fn client_enable_ech(&mut self, ech_config_list: impl AsRef<[u8]>) -> Res<()> {
         self.crypto.client_enable_ech(ech_config_list)
     }
@@ -778,7 +777,7 @@ impl Connection {
             });
             enc.encode(extra);
             let records = s.send_ticket(now, enc.as_ref())?;
-            qinfo!([self], "send session ticket {}", hex(&enc));
+            qdebug!([self], "send session ticket {}", hex(&enc));
             self.crypto.buffer_records(records)?;
         } else {
             unreachable!();
@@ -824,7 +823,7 @@ impl Connection {
     /// the connection to fail.  However, if no packets have been
     /// exchanged, it's not OK.
     pub fn authenticated(&mut self, status: AuthenticationStatus, now: Instant) {
-        qinfo!([self], "Authenticated {:?}", status);
+        qdebug!([self], "Authenticated {:?}", status);
         self.crypto.tls.authenticated(status);
         let res = self.handshake(now, self.version, PacketNumberSpace::Handshake, None);
         self.absorb_error(now, res);
@@ -979,19 +978,16 @@ impl Connection {
 
     /// Process new input datagrams on the connection.
     pub fn process_input(&mut self, d: &Datagram, now: Instant) {
-        self.input(d, now, now);
-        self.process_saved(now);
-        self.streams.cleanup_closed_streams();
+        self.process_multiple_input(iter::once(d), now);
     }
 
     /// Process new input datagrams on the connection.
     pub fn process_multiple_input<'a, I>(&mut self, dgrams: I, now: Instant)
     where
         I: IntoIterator<Item = &'a Datagram>,
-        I::IntoIter: ExactSizeIterator,
     {
-        let dgrams = dgrams.into_iter();
-        if dgrams.len() == 0 {
+        let mut dgrams = dgrams.into_iter().peekable();
+        if dgrams.peek().is_none() {
             return;
         }
 
@@ -1154,7 +1150,7 @@ impl Connection {
 
     fn discard_keys(&mut self, space: PacketNumberSpace, now: Instant) {
         if self.crypto.discard(space) {
-            qinfo!([self], "Drop packet number space {}", space);
+            qdebug!([self], "Drop packet number space {}", space);
             let primary = self.paths.primary();
             self.loss_recovery.discard(&primary, space, now);
             self.acks.drop_space(space);
@@ -1492,6 +1488,7 @@ impl Connection {
                         payload.packet_type(),
                         payload.pn(),
                         &payload[..],
+                        d.tos(),
                     );
 
                     qlog::packet_received(&mut self.qlog, &packet, &payload);
@@ -1552,6 +1549,10 @@ impl Connection {
         packet: &DecryptedPacket,
         now: Instant,
     ) -> Res<bool> {
+        (!packet.is_empty())
+            .then_some(())
+            .ok_or(Error::ProtocolViolation)?;
+
         // TODO(ekr@rtfm.com): Have the server blow away the initial
         // crypto state if this fails? Otherwise, we will get a panic
         // on the assert for doesn't exist.
@@ -1560,24 +1561,8 @@ impl Connection {
         let mut ack_eliciting = false;
         let mut probing = true;
         let mut d = Decoder::from(&packet[..]);
-        let mut consecutive_padding = 0;
         while d.remaining() > 0 {
-            let mut f = Frame::decode(&mut d)?;
-
-            // Skip padding
-            while f == Frame::Padding && d.remaining() > 0 {
-                consecutive_padding += 1;
-                f = Frame::decode(&mut d)?;
-            }
-            if consecutive_padding > 0 {
-                qdebug!(
-                    [self],
-                    "PADDING frame repeated {} times",
-                    consecutive_padding
-                );
-                consecutive_padding = 0;
-            }
-
+            let f = Frame::decode(&mut d)?;
             ack_eliciting |= f.ack_eliciting();
             probing &= f.path_probing();
             let t = f.get_type();
@@ -2271,6 +2256,7 @@ impl Connection {
                 pt,
                 pn,
                 &builder.as_ref()[payload_start..],
+                IpTos::default(), // TODO: set from path
             );
             qlog::packet_sent(
                 &mut self.qlog,
@@ -2323,7 +2309,7 @@ impl Connection {
         }
 
         if encoder.is_empty() {
-            qinfo!("TX blocked, profile={:?} ", profile);
+            qdebug!("TX blocked, profile={:?} ", profile);
             Ok(SendOption::No(profile.paced()))
         } else {
             // Perform additional padding for Initial packets as necessary.
@@ -2367,7 +2353,7 @@ impl Connection {
     }
 
     fn client_start(&mut self, now: Instant) -> Res<()> {
-        qinfo!([self], "client_start");
+        qdebug!([self], "client_start");
         debug_assert_eq!(self.role, Role::Client);
         qlog::client_connection_started(&mut self.qlog, &self.paths.primary());
         qlog::client_version_information_initiated(&mut self.qlog, self.conn_params.get_versions());
@@ -2599,7 +2585,7 @@ impl Connection {
 
     fn confirm_version(&mut self, v: Version) {
         if self.version != v {
-            qinfo!([self], "Compatible upgrade {:?} ==> {:?}", self.version, v);
+            qdebug!([self], "Compatible upgrade {:?} ==> {:?}", self.version, v);
         }
         self.crypto.confirm_version(v);
         self.version = v;
@@ -2694,9 +2680,8 @@ impl Connection {
                 .input_frame(&frame, &mut self.stats.borrow_mut().frame_rx);
         }
         match frame {
-            Frame::Padding => {
-                // Note: This counts contiguous padding as a single frame.
-                self.stats.borrow_mut().frame_rx.padding += 1;
+            Frame::Padding(length) => {
+                self.stats.borrow_mut().frame_rx.padding += usize::from(length);
             }
             Frame::Ping => {
                 // If we get a PING and there are outstanding CRYPTO frames,
@@ -2899,7 +2884,7 @@ impl Connection {
         R: IntoIterator<Item = RangeInclusive<u64>> + Debug,
         R::IntoIter: ExactSizeIterator,
     {
-        qinfo!([self], "Rx ACK space={}, ranges={:?}", space, ack_ranges);
+        qdebug!([self], "Rx ACK space={}, ranges={:?}", space, ack_ranges);
 
         let (acked_packets, lost_packets) = self.loss_recovery.on_ack_received(
             &self.paths.primary(),
@@ -2953,7 +2938,7 @@ impl Connection {
     }
 
     fn set_connected(&mut self, now: Instant) -> Res<()> {
-        qinfo!([self], "TLS connection complete");
+        qdebug!([self], "TLS connection complete");
         if self.crypto.tls.info().map(SecretAgentInfo::alpn).is_none() {
             qwarn!([self], "No ALPN. Closing connection.");
             // 120 = no_application_protocol
@@ -2996,7 +2981,7 @@ impl Connection {
 
     fn set_state(&mut self, state: State) {
         if state > self.state {
-            qinfo!([self], "State change from {:?} -> {:?}", self.state, state);
+            qdebug!([self], "State change from {:?} -> {:?}", self.state, state);
             self.state = state.clone();
             if self.state.closed() {
                 self.streams.clear_streams();
