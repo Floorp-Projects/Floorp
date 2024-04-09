@@ -28,7 +28,6 @@ if not CONFIG["MOZ_BUILD_APP"].startswith("mobile/"):
         "search-config-v2.json",
         "search-config.json",
         "search-default-override-allowlist.json",
-        "translations-identification-models.json",
         "translations-models.json",
         "translations-wasm.json",
         "url-classifier-skip-urls.json",
