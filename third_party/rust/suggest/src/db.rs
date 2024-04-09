@@ -23,7 +23,7 @@ use crate::{
     rs::{
         DownloadedAmoSuggestion, DownloadedAmpSuggestion, DownloadedAmpWikipediaSuggestion,
         DownloadedMdnSuggestion, DownloadedPocketSuggestion, DownloadedWeatherData,
-        SuggestRecordId,
+        DownloadedWikipediaSuggestion, SuggestRecordId,
     },
     schema::{clear_database, SuggestConnectionInitializer, VERSION},
     store::{UnparsableRecord, UnparsableRecords},
@@ -252,6 +252,7 @@ impl<'a> SuggestDao<'a> {
             WHERE
               s.provider = :provider
               AND k.keyword = :keyword
+            AND NOT EXISTS (SELECT 1 FROM dismissed_suggestions WHERE url=s.url)
             "#,
             named_params! {
                 ":keyword": keyword_lowercased,
@@ -348,6 +349,7 @@ impl<'a> SuggestDao<'a> {
             WHERE
               s.provider = :provider
               AND k.keyword = :keyword
+              AND NOT EXISTS (SELECT 1 FROM dismissed_suggestions WHERE url=s.url)
             "#,
             named_params! {
                 ":keyword": keyword_lowercased,
@@ -430,6 +432,7 @@ impl<'a> SuggestDao<'a> {
                   k.keyword_prefix = :keyword_prefix
                   AND (k.keyword_suffix BETWEEN :keyword_suffix AND :keyword_suffix || x'FFFF')
                   AND s.provider = :provider
+                  AND NOT EXISTS (SELECT 1 FROM dismissed_suggestions WHERE url=s.url)
                 GROUP BY
                   s.id
                 ORDER BY
@@ -529,6 +532,7 @@ impl<'a> SuggestDao<'a> {
               k.keyword_prefix = :keyword_prefix
               AND (k.keyword_suffix BETWEEN :keyword_suffix AND :keyword_suffix || x'FFFF')
               AND s.provider = :provider
+              AND NOT EXISTS (SELECT 1 FROM dismissed_suggestions WHERE url=s.url)
             GROUP BY
               s.id,
               k.confidence
@@ -666,35 +670,15 @@ impl<'a> SuggestDao<'a> {
         record_id: &SuggestRecordId,
         suggestions: &[DownloadedAmoSuggestion],
     ) -> Result<()> {
+        let mut suggestion_insert = SuggestionInsertStatement::new(self.conn)?;
         for suggestion in suggestions {
             self.scope.err_if_interrupted()?;
-            let suggestion_id: i64 = self.conn.query_row_and_then_cachable(
-                &format!(
-                    "INSERT INTO suggestions(
-                         record_id,
-                         provider,
-                         title,
-                         url,
-                         score
-                     )
-                     VALUES(
-                         :record_id,
-                         {},
-                         :title,
-                         :url,
-                         :score
-                     )
-                     RETURNING id",
-                    SuggestionProvider::Amo as u8
-                ),
-                named_params! {
-                    ":record_id": record_id.as_str(),
-                    ":title": suggestion.title,
-                    ":url": suggestion.url,
-                    ":score": suggestion.score,
-                },
-                |row| row.get(0),
-                true,
+            let suggestion_id = suggestion_insert.execute(
+                record_id,
+                &suggestion.title,
+                &suggestion.url,
+                suggestion.score,
+                SuggestionProvider::Amo,
             )?;
             self.conn.execute(
                 "INSERT INTO amo_custom_details(
@@ -756,86 +740,30 @@ impl<'a> SuggestDao<'a> {
         record_id: &SuggestRecordId,
         suggestions: &[DownloadedAmpWikipediaSuggestion],
     ) -> Result<()> {
+        // Prepare statements outside of the loop.  This results in a large performance
+        // improvement on a fresh ingest, since there are so many rows.
+        let mut suggestion_insert = SuggestionInsertStatement::new(self.conn)?;
+        let mut amp_insert = AmpInsertStatement::new(self.conn)?;
+        let mut wiki_insert = WikipediaInsertStatement::new(self.conn)?;
+        let mut keyword_insert = KeywordInsertStatement::new(self.conn)?;
         for suggestion in suggestions {
             self.scope.err_if_interrupted()?;
             let common_details = suggestion.common_details();
             let provider = suggestion.provider();
 
-            let suggestion_id: i64 = self.conn.query_row_and_then_cachable(
-                &format!(
-                    "INSERT INTO suggestions(
-                         record_id,
-                         provider,
-                         title,
-                         url,
-                         score
-                     )
-                     VALUES(
-                         :record_id,
-                         {},
-                         :title,
-                         :url,
-                         :score
-                     )
-                     RETURNING id",
-                    provider as u8
-                ),
-                named_params! {
-                    ":record_id": record_id.as_str(),
-                    ":title": common_details.title,
-                    ":url": common_details.url,
-                    ":score": common_details.score.unwrap_or(DEFAULT_SUGGESTION_SCORE)
-                },
-                |row| row.get(0),
-                true,
+            let suggestion_id = suggestion_insert.execute(
+                record_id,
+                &common_details.title,
+                &common_details.url,
+                common_details.score.unwrap_or(DEFAULT_SUGGESTION_SCORE),
+                provider,
             )?;
             match suggestion {
                 DownloadedAmpWikipediaSuggestion::Amp(amp) => {
-                    self.conn.execute(
-                        "INSERT INTO amp_custom_details(
-                             suggestion_id,
-                             advertiser,
-                             block_id,
-                             iab_category,
-                             impression_url,
-                             click_url,
-                             icon_id
-                         )
-                         VALUES(
-                             :suggestion_id,
-                             :advertiser,
-                             :block_id,
-                             :iab_category,
-                             :impression_url,
-                             :click_url,
-                             :icon_id
-                         )",
-                        named_params! {
-                            ":suggestion_id": suggestion_id,
-                            ":advertiser": amp.advertiser,
-                            ":block_id": amp.block_id,
-                            ":iab_category": amp.iab_category,
-                            ":impression_url": amp.impression_url,
-                            ":click_url": amp.click_url,
-                            ":icon_id": amp.icon_id,
-                        },
-                    )?;
+                    amp_insert.execute(suggestion_id, amp)?;
                 }
                 DownloadedAmpWikipediaSuggestion::Wikipedia(wikipedia) => {
-                    self.conn.execute(
-                        "INSERT INTO wikipedia_custom_details(
-                             suggestion_id,
-                             icon_id
-                         )
-                         VALUES(
-                             :suggestion_id,
-                             :icon_id
-                         )",
-                        named_params! {
-                            ":suggestion_id": suggestion_id,
-                            ":icon_id": wikipedia.icon_id,
-                        },
-                    )?;
+                    wiki_insert.execute(suggestion_id, wikipedia)?;
                 }
             }
             let mut full_keyword_inserter = FullKeywordInserter::new(self.conn, suggestion_id);
@@ -849,25 +777,11 @@ impl<'a> SuggestDao<'a> {
                     _ => None,
                 };
 
-                self.conn.execute(
-                    "INSERT INTO keywords(
-                         keyword,
-                         suggestion_id,
-                         full_keyword_id,
-                         rank
-                     )
-                     VALUES(
-                         :keyword,
-                         :suggestion_id,
-                         :full_keyword_id,
-                         :rank
-                     )",
-                    named_params! {
-                        ":keyword": keyword.keyword,
-                        ":rank": keyword.rank,
-                        ":suggestion_id": suggestion_id,
-                        ":full_keyword_id": full_keyword_id,
-                    },
+                keyword_insert.execute(
+                    suggestion_id,
+                    keyword.keyword,
+                    full_keyword_id,
+                    keyword.rank,
                 )?;
             }
         }
@@ -881,66 +795,20 @@ impl<'a> SuggestDao<'a> {
         record_id: &SuggestRecordId,
         suggestions: &[DownloadedAmpSuggestion],
     ) -> Result<()> {
+        let mut suggestion_insert = SuggestionInsertStatement::new(self.conn)?;
+        let mut amp_insert = AmpInsertStatement::new(self.conn)?;
+        let mut keyword_insert = KeywordInsertStatement::new(self.conn)?;
         for suggestion in suggestions {
             self.scope.err_if_interrupted()?;
             let common_details = &suggestion.common_details;
-            let suggestion_id: i64 = self.conn.query_row_and_then_cachable(
-                &format!(
-                    "INSERT INTO suggestions(
-                         record_id,
-                         provider,
-                         title,
-                         url,
-                         score
-                     )
-                     VALUES(
-                         :record_id,
-                         {},
-                         :title,
-                         :url,
-                         :score
-                     )
-                     RETURNING id",
-                    SuggestionProvider::AmpMobile as u8
-                ),
-                named_params! {
-                    ":record_id": record_id.as_str(),
-                    ":title": common_details.title,
-                    ":url": common_details.url,
-                    ":score": common_details.score.unwrap_or(DEFAULT_SUGGESTION_SCORE)
-                },
-                |row| row.get(0),
-                true,
+            let suggestion_id = suggestion_insert.execute(
+                record_id,
+                &common_details.title,
+                &common_details.url,
+                common_details.score.unwrap_or(DEFAULT_SUGGESTION_SCORE),
+                SuggestionProvider::AmpMobile,
             )?;
-            self.conn.execute(
-                "INSERT INTO amp_custom_details(
-                     suggestion_id,
-                     advertiser,
-                     block_id,
-                     iab_category,
-                     impression_url,
-                     click_url,
-                     icon_id
-                 )
-                 VALUES(
-                     :suggestion_id,
-                     :advertiser,
-                     :block_id,
-                     :iab_category,
-                     :impression_url,
-                     :click_url,
-                     :icon_id
-                 )",
-                named_params! {
-                    ":suggestion_id": suggestion_id,
-                    ":advertiser": suggestion.advertiser,
-                    ":block_id": suggestion.block_id,
-                    ":iab_category": suggestion.iab_category,
-                    ":impression_url": suggestion.impression_url,
-                    ":click_url": suggestion.click_url,
-                    ":icon_id": suggestion.icon_id,
-                },
-            )?;
+            amp_insert.execute(suggestion_id, suggestion)?;
 
             let mut full_keyword_inserter = FullKeywordInserter::new(self.conn, suggestion_id);
             for keyword in common_details.keywords() {
@@ -948,25 +816,11 @@ impl<'a> SuggestDao<'a> {
                     .full_keyword
                     .map(|full_keyword| full_keyword_inserter.maybe_insert(full_keyword))
                     .transpose()?;
-                self.conn.execute(
-                    "INSERT INTO keywords(
-                         keyword,
-                         suggestion_id,
-                         full_keyword_id,
-                         rank
-                     )
-                     VALUES(
-                         :keyword,
-                         :suggestion_id,
-                         :full_keyword_id,
-                         :rank
-                     )",
-                    named_params! {
-                        ":keyword": keyword.keyword,
-                        ":rank": keyword.rank,
-                        ":full_keyword_id": full_keyword_id,
-                        ":suggestion_id": suggestion_id,
-                    },
+                keyword_insert.execute(
+                    suggestion_id,
+                    keyword.keyword,
+                    full_keyword_id,
+                    keyword.rank,
                 )?;
             }
         }
@@ -980,37 +834,16 @@ impl<'a> SuggestDao<'a> {
         record_id: &SuggestRecordId,
         suggestions: &[DownloadedPocketSuggestion],
     ) -> Result<()> {
+        let mut suggestion_insert = SuggestionInsertStatement::new(self.conn)?;
         for suggestion in suggestions {
             self.scope.err_if_interrupted()?;
-            let suggestion_id: i64 = self.conn.query_row_and_then_cachable(
-                &format!(
-                    "INSERT INTO suggestions(
-                         record_id,
-                         provider,
-                         title,
-                         url,
-                         score
-                     )
-                     VALUES(
-                         :record_id,
-                         {},
-                         :title,
-                         :url,
-                         :score
-                     )
-                     RETURNING id",
-                    SuggestionProvider::Pocket as u8
-                ),
-                named_params! {
-                    ":record_id": record_id.as_str(),
-                    ":title": suggestion.title,
-                    ":url": suggestion.url,
-                    ":score": suggestion.score,
-                },
-                |row| row.get(0),
-                true,
+            let suggestion_id = suggestion_insert.execute(
+                record_id,
+                &suggestion.title,
+                &suggestion.url,
+                suggestion.score,
+                SuggestionProvider::Pocket,
             )?;
-
             for ((rank, keyword), confidence) in suggestion
                 .high_confidence_keywords
                 .iter()
@@ -1060,35 +893,15 @@ impl<'a> SuggestDao<'a> {
         record_id: &SuggestRecordId,
         suggestions: &[DownloadedMdnSuggestion],
     ) -> Result<()> {
+        let mut suggestion_insert = SuggestionInsertStatement::new(self.conn)?;
         for suggestion in suggestions {
             self.scope.err_if_interrupted()?;
-            let suggestion_id: i64 = self.conn.query_row_and_then_cachable(
-                &format!(
-                    "INSERT INTO suggestions(
-                         record_id,
-                         provider,
-                         title,
-                         url,
-                         score
-                     )
-                     VALUES(
-                         :record_id,
-                         {},
-                         :title,
-                         :url,
-                         :score
-                     )
-                     RETURNING id",
-                    SuggestionProvider::Mdn as u8
-                ),
-                named_params! {
-                    ":record_id": record_id.as_str(),
-                    ":title": suggestion.title,
-                    ":url": suggestion.url,
-                    ":score": suggestion.score,
-                },
-                |row| row.get(0),
-                true,
+            let suggestion_id = suggestion_insert.execute(
+                record_id,
+                &suggestion.title,
+                &suggestion.url,
+                suggestion.score,
+                SuggestionProvider::Mdn,
             )?;
             self.conn.execute_cached(
                 "INSERT INTO mdn_custom_details(
@@ -1137,20 +950,14 @@ impl<'a> SuggestDao<'a> {
         record_id: &SuggestRecordId,
         data: &DownloadedWeatherData,
     ) -> Result<()> {
+        let mut suggestion_insert = SuggestionInsertStatement::new(self.conn)?;
         self.scope.err_if_interrupted()?;
-        let suggestion_id: i64 = self.conn.query_row_and_then_cachable(
-            &format!(
-                "INSERT INTO suggestions(record_id, provider, title, url, score)
-                 VALUES(:record_id, {}, '', '', :score)
-                 RETURNING id",
-                SuggestionProvider::Weather as u8
-            ),
-            named_params! {
-                ":record_id": record_id.as_str(),
-                ":score": data.weather.score.unwrap_or(DEFAULT_SUGGESTION_SCORE),
-            },
-            |row| row.get(0),
-            true,
+        let suggestion_id = suggestion_insert.execute(
+            record_id,
+            "",
+            "",
+            data.weather.score.unwrap_or(DEFAULT_SUGGESTION_SCORE),
+            SuggestionProvider::Weather,
         )?;
         for (index, keyword) in data.weather.keywords.iter().enumerate() {
             self.conn.execute(
@@ -1189,6 +996,22 @@ impl<'a> SuggestDao<'a> {
                 ":mimetype": mimetype,
             },
         )?;
+        Ok(())
+    }
+
+    pub fn insert_dismissal(&self, url: &str) -> Result<()> {
+        self.conn.execute(
+            "INSERT OR IGNORE INTO dismissed_suggestions(url)
+             VALUES(:url)",
+            named_params! {
+                ":url": url,
+            },
+        )?;
+        Ok(())
+    }
+
+    pub fn clear_dismissals(&self) -> Result<()> {
+        self.conn.execute("DELETE FROM dismissed_suggestions", ())?;
         Ok(())
     }
 
@@ -1384,6 +1207,138 @@ impl<'a> FullKeywordInserter<'a> {
                 Ok(full_keyword_id)
             }
         }
+    }
+}
+
+// ======================== Statement types ========================
+//
+// During ingestion we can insert hundreds of thousands of rows.  These types enable speedups by
+// allowing us to prepare a statement outside a loop and use it many times inside the loop.
+//
+// Each type wraps [Connection::prepare] and [Statement] to provide a simplified interface,
+// tailored to a specific query.
+//
+// This pattern is applicable for whenever we execute the same query repeatedly in a loop.
+// The impact scales with the number of loop iterations, which is why we currently don't do this
+// for providers like Mdn, Pocket, and Weather, which have relatively small number of records
+// compared to Amp/Wikipedia.
+
+struct SuggestionInsertStatement<'conn>(rusqlite::Statement<'conn>);
+
+impl<'conn> SuggestionInsertStatement<'conn> {
+    fn new(conn: &'conn Connection) -> Result<Self> {
+        Ok(Self(conn.prepare(
+            "INSERT INTO suggestions(
+                 record_id,
+                 title,
+                 url,
+                 score,
+                 provider
+             )
+             VALUES(?, ?, ?, ?, ?)
+             RETURNING id",
+        )?))
+    }
+
+    /// Execute the insert and return the `suggestion_id` for the new row
+    fn execute(
+        &mut self,
+        record_id: &SuggestRecordId,
+        title: &str,
+        url: &str,
+        score: f64,
+        provider: SuggestionProvider,
+    ) -> Result<i64> {
+        Ok(self.0.query_row(
+            (record_id.as_str(), title, url, score, provider as u8),
+            |row| row.get(0),
+        )?)
+    }
+}
+
+struct AmpInsertStatement<'conn>(rusqlite::Statement<'conn>);
+
+impl<'conn> AmpInsertStatement<'conn> {
+    fn new(conn: &'conn Connection) -> Result<Self> {
+        Ok(Self(conn.prepare(
+            "INSERT INTO amp_custom_details(
+                 suggestion_id,
+                 advertiser,
+                 block_id,
+                 iab_category,
+                 impression_url,
+                 click_url,
+                 icon_id
+             )
+             VALUES(?, ?, ?, ?, ?, ?, ?)
+             ",
+        )?))
+    }
+
+    fn execute(&mut self, suggestion_id: i64, amp: &DownloadedAmpSuggestion) -> Result<()> {
+        self.0.execute((
+            suggestion_id,
+            &amp.advertiser,
+            amp.block_id,
+            &amp.iab_category,
+            &amp.impression_url,
+            &amp.click_url,
+            &amp.icon_id,
+        ))?;
+        Ok(())
+    }
+}
+
+struct WikipediaInsertStatement<'conn>(rusqlite::Statement<'conn>);
+
+impl<'conn> WikipediaInsertStatement<'conn> {
+    fn new(conn: &'conn Connection) -> Result<Self> {
+        Ok(Self(conn.prepare(
+            "INSERT INTO wikipedia_custom_details(
+                 suggestion_id,
+                 icon_id
+             )
+             VALUES(?, ?)
+             ",
+        )?))
+    }
+
+    fn execute(
+        &mut self,
+        suggestion_id: i64,
+        wikipedia: &DownloadedWikipediaSuggestion,
+    ) -> Result<()> {
+        self.0.execute((suggestion_id, &wikipedia.icon_id))?;
+        Ok(())
+    }
+}
+
+struct KeywordInsertStatement<'conn>(rusqlite::Statement<'conn>);
+
+impl<'conn> KeywordInsertStatement<'conn> {
+    fn new(conn: &'conn Connection) -> Result<Self> {
+        Ok(Self(conn.prepare(
+            "INSERT INTO keywords(
+                 suggestion_id,
+                 keyword,
+                 full_keyword_id,
+                 rank
+             )
+             VALUES(?, ?, ?, ?)
+             ",
+        )?))
+    }
+
+    fn execute(
+        &mut self,
+        suggestion_id: i64,
+        keyword: &str,
+        full_keyword_id: Option<i64>,
+        rank: usize,
+    ) -> Result<()> {
+        self.0
+            .execute((suggestion_id, keyword, full_keyword_id, rank))?;
+        Ok(())
     }
 }
 

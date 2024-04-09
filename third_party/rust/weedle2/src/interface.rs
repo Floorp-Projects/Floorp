@@ -1,6 +1,6 @@
 use crate::argument::ArgumentList;
 use crate::attribute::ExtendedAttributeList;
-use crate::common::{Generics, Identifier, Parenthesized};
+use crate::common::{Docstring, Generics, Identifier, Parenthesized};
 use crate::literal::ConstValue;
 use crate::types::{AttributedType, ConstType, ReturnType};
 
@@ -41,6 +41,7 @@ ast_types! {
         ///
         /// (( )) means ( ) chars
         Constructor(struct ConstructorInterfaceMember<'a> {
+            docstring: Option<Docstring>,
             attributes: Option<ExtendedAttributeList<'a>>,
             constructor: term!(constructor),
             args: Parenthesized<ArgumentList<'a>>,
@@ -50,6 +51,7 @@ ast_types! {
         ///
         /// (( )) means ( ) chars
         Operation(struct OperationInterfaceMember<'a> {
+            docstring: Option<Docstring>,
             attributes: Option<ExtendedAttributeList<'a>>,
             modifier: Option<StringifierOrStatic>,
             special: Option<Special>,

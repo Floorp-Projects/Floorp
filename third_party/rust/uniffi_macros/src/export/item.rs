@@ -3,24 +3,34 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use crate::fnsig::FnSignature;
+use proc_macro::TokenStream;
 use proc_macro2::{Ident, Span};
 use quote::ToTokens;
 
-use super::attributes::{ExportAttributeArguments, ExportedImplFnAttributes};
+use super::attributes::{
+    ExportFnArgs, ExportImplArgs, ExportStructArgs, ExportTraitArgs, ExportedImplFnArgs,
+    ExportedImplFnAttributes,
+};
+use crate::util::extract_docstring;
 use uniffi_meta::UniffiTraitDiscriminants;
 
 pub(super) enum ExportItem {
     Function {
         sig: FnSignature,
+        args: ExportFnArgs,
     },
     Impl {
         self_ident: Ident,
         items: Vec<ImplItem>,
+        args: ExportImplArgs,
     },
     Trait {
         self_ident: Ident,
         items: Vec<ImplItem>,
-        callback_interface: bool,
+        with_foreign: bool,
+        callback_interface_only: bool,
+        docstring: String,
+        args: ExportTraitArgs,
     },
     Struct {
         self_ident: Ident,
@@ -29,15 +39,17 @@ pub(super) enum ExportItem {
 }
 
 impl ExportItem {
-    pub fn new(item: syn::Item, args: &ExportAttributeArguments) -> syn::Result<Self> {
+    pub fn new(item: syn::Item, attr_args: TokenStream) -> syn::Result<Self> {
         match item {
             syn::Item::Fn(item) => {
-                let sig = FnSignature::new_function(item.sig)?;
-                Ok(Self::Function { sig })
+                let args: ExportFnArgs = syn::parse(attr_args)?;
+                let docstring = extract_docstring(&item.attrs)?;
+                let sig = FnSignature::new_function(item.sig, args.clone(), docstring)?;
+                Ok(Self::Function { sig, args })
             }
-            syn::Item::Impl(item) => Self::from_impl(item, args.constructor.is_some()),
-            syn::Item::Trait(item) => Self::from_trait(item, args.callback_interface.is_some()),
-            syn::Item::Struct(item) => Self::from_struct(item, args),
+            syn::Item::Impl(item) => Self::from_impl(item, attr_args),
+            syn::Item::Trait(item) => Self::from_trait(item, attr_args),
+            syn::Item::Struct(item) => Self::from_struct(item, attr_args),
             // FIXME: Support const / static?
             _ => Err(syn::Error::new(
                 Span::call_site(),
@@ -47,7 +59,8 @@ impl ExportItem {
         }
     }
 
-    pub fn from_impl(item: syn::ItemImpl, force_constructor: bool) -> syn::Result<Self> {
+    pub fn from_impl(item: syn::ItemImpl, attr_args: TokenStream) -> syn::Result<Self> {
+        let args: ExportImplArgs = syn::parse(attr_args)?;
         if !item.generics.params.is_empty() || item.generics.where_clause.is_some() {
             return Err(syn::Error::new_spanned(
                 &item.generics,
@@ -88,14 +101,22 @@ impl ExportItem {
                     }
                 };
 
+                let docstring = extract_docstring(&impl_fn.attrs)?;
                 let attrs = ExportedImplFnAttributes::new(&impl_fn.attrs)?;
-                let item = if force_constructor || attrs.constructor {
+                let item = if attrs.constructor {
                     ImplItem::Constructor(FnSignature::new_constructor(
                         self_ident.clone(),
                         impl_fn.sig,
+                        attrs.args,
+                        docstring,
                     )?)
                 } else {
-                    ImplItem::Method(FnSignature::new_method(self_ident.clone(), impl_fn.sig)?)
+                    ImplItem::Method(FnSignature::new_method(
+                        self_ident.clone(),
+                        impl_fn.sig,
+                        attrs.args,
+                        docstring,
+                    )?)
                 };
 
                 Ok(item)
@@ -105,10 +126,15 @@ impl ExportItem {
         Ok(Self::Impl {
             items,
             self_ident: self_ident.to_owned(),
+            args,
         })
     }
 
-    fn from_trait(item: syn::ItemTrait, callback_interface: bool) -> syn::Result<Self> {
+    fn from_trait(item: syn::ItemTrait, attr_args: TokenStream) -> syn::Result<Self> {
+        let args: ExportTraitArgs = syn::parse(attr_args)?;
+        let with_foreign = args.callback_interface.is_some() || args.with_foreign.is_some();
+        let callback_interface_only = args.callback_interface.is_some();
+
         if !item.generics.params.is_empty() || item.generics.where_clause.is_some() {
             return Err(syn::Error::new_spanned(
                 &item.generics,
@@ -117,6 +143,7 @@ impl ExportItem {
         }
 
         let self_ident = item.ident.to_owned();
+        let docstring = extract_docstring(&item.attrs)?;
         let items = item
             .items
             .into_iter()
@@ -132,6 +159,7 @@ impl ExportItem {
                     }
                 };
 
+                let docstring = extract_docstring(&tim.attrs)?;
                 let attrs = ExportedImplFnAttributes::new(&tim.attrs)?;
                 let item = if attrs.constructor {
                     return Err(syn::Error::new_spanned(
@@ -142,7 +170,9 @@ impl ExportItem {
                     ImplItem::Method(FnSignature::new_trait_method(
                         self_ident.clone(),
                         tim.sig,
+                        ExportedImplFnArgs::default(),
                         i as u32,
+                        docstring,
                     )?)
                 };
 
@@ -153,28 +183,26 @@ impl ExportItem {
         Ok(Self::Trait {
             items,
             self_ident,
-            callback_interface,
+            with_foreign,
+            callback_interface_only,
+            docstring,
+            args,
         })
     }
 
-    fn from_struct(item: syn::ItemStruct, args: &ExportAttributeArguments) -> syn::Result<Self> {
-        let mut uniffi_traits = Vec::new();
-        if args.trait_debug.is_some() {
-            uniffi_traits.push(UniffiTraitDiscriminants::Debug);
+    fn from_struct(item: syn::ItemStruct, attr_args: TokenStream) -> syn::Result<Self> {
+        let args: ExportStructArgs = syn::parse(attr_args)?;
+        let uniffi_traits: Vec<UniffiTraitDiscriminants> = args.traits.into_iter().collect();
+        if uniffi_traits.is_empty() {
+            Err(syn::Error::new(Span::call_site(),
+                "uniffi::export on a struct must supply a builtin trait name. Did you mean `#[derive(uniffi::Object)]`?"
+            ))
+        } else {
+            Ok(Self::Struct {
+                self_ident: item.ident,
+                uniffi_traits,
+            })
         }
-        if args.trait_display.is_some() {
-            uniffi_traits.push(UniffiTraitDiscriminants::Display);
-        }
-        if args.trait_hash.is_some() {
-            uniffi_traits.push(UniffiTraitDiscriminants::Hash);
-        }
-        if args.trait_eq.is_some() {
-            uniffi_traits.push(UniffiTraitDiscriminants::Eq);
-        }
-        Ok(Self::Struct {
-            self_ident: item.ident,
-            uniffi_traits,
-        })
     }
 }
 

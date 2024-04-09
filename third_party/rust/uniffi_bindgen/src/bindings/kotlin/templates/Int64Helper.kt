@@ -11,7 +11,7 @@ public object FfiConverterLong: FfiConverter<Long, Long> {
         return value
     }
 
-    override fun allocationSize(value: Long) = 8
+    override fun allocationSize(value: Long) = 8UL
 
     override fun write(value: Long, buf: ByteBuffer) {
         buf.putLong(value)

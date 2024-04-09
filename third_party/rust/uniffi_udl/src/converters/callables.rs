@@ -5,6 +5,7 @@
 use super::APIConverter;
 use crate::attributes::ArgumentAttributes;
 use crate::attributes::{ConstructorAttributes, FunctionAttributes, MethodAttributes};
+use crate::converters::convert_docstring;
 use crate::literal::convert_default_value;
 use crate::InterfaceCollector;
 use anyhow::{bail, Result};
@@ -41,6 +42,7 @@ impl APIConverter<FieldMetadata> for weedle::argument::SingleArgument<'_> {
             name: self.identifier.0.to_string(),
             ty: type_,
             default: None,
+            docstring: None,
         })
     }
 }
@@ -89,6 +91,7 @@ impl APIConverter<FnMetadata> for weedle::namespace::OperationNamespaceMember<'_
             Some(id) => id.0.to_string(),
         };
         let attrs = FunctionAttributes::try_from(self.attributes.as_ref())?;
+        let is_async = attrs.is_async();
         let throws = match attrs.get_throws_err() {
             None => None,
             Some(name) => match ci.get_type(name) {
@@ -99,10 +102,11 @@ impl APIConverter<FnMetadata> for weedle::namespace::OperationNamespaceMember<'_
         Ok(FnMetadata {
             module_path: ci.module_path(),
             name,
-            is_async: false,
+            is_async,
             return_type,
             inputs: self.args.body.list.convert(ci)?,
             throws,
+            docstring: self.docstring.as_ref().map(|v| convert_docstring(&v.0)),
             checksum: None,
         })
     }
@@ -122,10 +126,12 @@ impl APIConverter<ConstructorMetadata> for weedle::interface::ConstructorInterfa
             name: String::from(attributes.get_name().unwrap_or("new")),
             // We don't know the name of the containing `Object` at this point, fill it in later.
             self_name: Default::default(),
+            is_async: attributes.is_async(),
             // Also fill in checksum_fn_name later, since it depends on object_name
             inputs: self.args.body.list.convert(ci)?,
             throws,
             checksum: None,
+            docstring: self.docstring.as_ref().map(|v| convert_docstring(&v.0)),
         })
     }
 }
@@ -140,6 +146,7 @@ impl APIConverter<MethodMetadata> for weedle::interface::OperationInterfaceMembe
         }
         let return_type = ci.resolve_return_type_expression(&self.return_type)?;
         let attributes = MethodAttributes::try_from(self.attributes.as_ref())?;
+        let is_async = attributes.is_async();
 
         let throws = match attributes.get_throws_err() {
             Some(name) => match ci.get_type(name) {
@@ -164,12 +171,13 @@ impl APIConverter<MethodMetadata> for weedle::interface::OperationInterfaceMembe
             },
             // We don't know the name of the containing `Object` at this point, fill it in later.
             self_name: Default::default(),
-            is_async: false, // not supported in UDL
+            is_async,
             inputs: self.args.body.list.convert(ci)?,
             return_type,
             throws,
             takes_self_by_arc,
             checksum: None,
+            docstring: self.docstring.as_ref().map(|v| convert_docstring(&v.0)),
         })
     }
 }
@@ -184,6 +192,7 @@ impl APIConverter<TraitMethodMetadata> for weedle::interface::OperationInterface
         }
         let return_type = ci.resolve_return_type_expression(&self.return_type)?;
         let attributes = MethodAttributes::try_from(self.attributes.as_ref())?;
+        let is_async = attributes.is_async();
 
         let throws = match attributes.get_throws_err() {
             Some(name) => match ci.get_type(name) {
@@ -208,12 +217,13 @@ impl APIConverter<TraitMethodMetadata> for weedle::interface::OperationInterface
                     name
                 }
             },
-            is_async: false, // not supported in udl
+            is_async,
             inputs: self.args.body.list.convert(ci)?,
             return_type,
             throws,
             takes_self_by_arc,
             checksum: None,
+            docstring: self.docstring.as_ref().map(|v| convert_docstring(&v.0)),
         })
     }
 }

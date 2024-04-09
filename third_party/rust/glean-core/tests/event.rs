@@ -481,6 +481,7 @@ fn with_event_timestamps() {
         rate_limit: None,
         enable_event_timestamps: true,
         experimentation_id: None, // Enabling event timestamps
+        enable_internal_pings: true,
     };
     let glean = Glean::new(cfg).unwrap();
 

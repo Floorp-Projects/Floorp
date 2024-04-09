@@ -33,9 +33,12 @@
 //! # Ok::<(), anyhow::Error>(())
 //! ```
 
+use std::iter;
+
+use heck::ToUpperCamelCase;
 use uniffi_meta::Checksum;
 
-use super::ffi::{FfiArgument, FfiFunction, FfiType};
+use super::ffi::{FfiArgument, FfiCallbackFunction, FfiField, FfiFunction, FfiStruct, FfiType};
 use super::object::Method;
 use super::{AsType, Type, TypeIterator};
 
@@ -52,18 +55,11 @@ pub struct CallbackInterface {
     //    avoids a weird circular dependency in the calculation.
     #[checksum_ignore]
     pub(super) ffi_init_callback: FfiFunction,
+    #[checksum_ignore]
+    pub(super) docstring: Option<String>,
 }
 
 impl CallbackInterface {
-    pub fn new(name: String, module_path: String) -> CallbackInterface {
-        CallbackInterface {
-            name,
-            module_path,
-            methods: Default::default(),
-            ffi_init_callback: Default::default(),
-        }
-    }
-
     pub fn name(&self) -> &str {
         &self.name
     }
@@ -77,17 +73,44 @@ impl CallbackInterface {
     }
 
     pub(super) fn derive_ffi_funcs(&mut self) {
-        self.ffi_init_callback.name =
-            uniffi_meta::init_callback_fn_symbol_name(&self.module_path, &self.name);
-        self.ffi_init_callback.arguments = vec![FfiArgument {
-            name: "callback_stub".to_string(),
-            type_: FfiType::ForeignCallback,
-        }];
-        self.ffi_init_callback.return_type = None;
+        self.ffi_init_callback =
+            FfiFunction::callback_init(&self.module_path, &self.name, vtable_name(&self.name));
+    }
+
+    /// FfiCallbacks to define for our methods.
+    pub fn ffi_callbacks(&self) -> Vec<FfiCallbackFunction> {
+        ffi_callbacks(&self.name, &self.methods)
+    }
+
+    /// The VTable FFI type
+    pub fn vtable(&self) -> FfiType {
+        FfiType::Struct(vtable_name(&self.name))
+    }
+
+    /// the VTable struct to define.
+    pub fn vtable_definition(&self) -> FfiStruct {
+        vtable_struct(&self.name, &self.methods)
+    }
+
+    /// Vec of (ffi_callback, method) pairs
+    pub fn vtable_methods(&self) -> Vec<(FfiCallbackFunction, &Method)> {
+        self.methods
+            .iter()
+            .enumerate()
+            .map(|(i, method)| (method_ffi_callback(&self.name, method, i), method))
+            .collect()
     }
 
     pub fn iter_types(&self) -> TypeIterator<'_> {
         Box::new(self.methods.iter().flat_map(Method::iter_types))
+    }
+
+    pub fn docstring(&self) -> Option<&str> {
+        self.docstring.as_deref()
+    }
+
+    pub fn has_async_method(&self) -> bool {
+        self.methods.iter().any(Method::is_async)
     }
 }
 
@@ -98,6 +121,139 @@ impl AsType for CallbackInterface {
             module_path: self.module_path.clone(),
         }
     }
+}
+
+impl TryFrom<uniffi_meta::CallbackInterfaceMetadata> for CallbackInterface {
+    type Error = anyhow::Error;
+
+    fn try_from(meta: uniffi_meta::CallbackInterfaceMetadata) -> anyhow::Result<Self> {
+        Ok(Self {
+            name: meta.name,
+            module_path: meta.module_path,
+            methods: Default::default(),
+            ffi_init_callback: Default::default(),
+            docstring: meta.docstring.clone(),
+        })
+    }
+}
+
+/// [FfiCallbackFunction] functions for the methods of a callback/trait interface
+pub fn ffi_callbacks(trait_name: &str, methods: &[Method]) -> Vec<FfiCallbackFunction> {
+    methods
+        .iter()
+        .enumerate()
+        .map(|(i, method)| method_ffi_callback(trait_name, method, i))
+        .collect()
+}
+
+pub fn method_ffi_callback(trait_name: &str, method: &Method, index: usize) -> FfiCallbackFunction {
+    if !method.is_async() {
+        FfiCallbackFunction {
+            name: method_ffi_callback_name(trait_name, index),
+            arguments: iter::once(FfiArgument::new("uniffi_handle", FfiType::UInt64))
+                .chain(method.arguments().into_iter().map(Into::into))
+                .chain(iter::once(match method.return_type() {
+                    Some(t) => FfiArgument::new("uniffi_out_return", FfiType::from(t).reference()),
+                    None => FfiArgument::new("uniffi_out_return", FfiType::VoidPointer),
+                }))
+                .collect(),
+            has_rust_call_status_arg: true,
+            return_type: None,
+        }
+    } else {
+        let completion_callback =
+            ffi_foreign_future_complete(method.return_type().map(FfiType::from));
+        FfiCallbackFunction {
+            name: method_ffi_callback_name(trait_name, index),
+            arguments: iter::once(FfiArgument::new("uniffi_handle", FfiType::UInt64))
+                .chain(method.arguments().into_iter().map(Into::into))
+                .chain([
+                    FfiArgument::new(
+                        "uniffi_future_callback",
+                        FfiType::Callback(completion_callback.name),
+                    ),
+                    FfiArgument::new("uniffi_callback_data", FfiType::UInt64),
+                    FfiArgument::new(
+                        "uniffi_out_return",
+                        FfiType::Struct("ForeignFuture".to_owned()).reference(),
+                    ),
+                ])
+                .collect(),
+            has_rust_call_status_arg: false,
+            return_type: None,
+        }
+    }
+}
+
+/// Result struct to pass to the completion callback for async methods
+pub fn foreign_future_ffi_result_struct(return_ffi_type: Option<FfiType>) -> FfiStruct {
+    let return_type_name =
+        FfiType::return_type_name(return_ffi_type.as_ref()).to_upper_camel_case();
+    FfiStruct {
+        name: format!("ForeignFutureStruct{return_type_name}"),
+        fields: match return_ffi_type {
+            Some(return_ffi_type) => vec![
+                FfiField::new("return_value", return_ffi_type),
+                FfiField::new("call_status", FfiType::RustCallStatus),
+            ],
+            None => vec![
+                // In Rust, `return_value` is `()` -- a ZST.
+                // ZSTs are not valid in `C`, but they also take up 0 space.
+                // Skip the `return_value` field to make the layout correct.
+                FfiField::new("call_status", FfiType::RustCallStatus),
+            ],
+        },
+    }
+}
+
+/// Definition for callback functions to complete an async callback interface method
+pub fn ffi_foreign_future_complete(return_ffi_type: Option<FfiType>) -> FfiCallbackFunction {
+    let return_type_name =
+        FfiType::return_type_name(return_ffi_type.as_ref()).to_upper_camel_case();
+    FfiCallbackFunction {
+        name: format!("ForeignFutureComplete{return_type_name}"),
+        arguments: vec![
+            FfiArgument::new("callback_data", FfiType::UInt64),
+            FfiArgument::new(
+                "result",
+                FfiType::Struct(format!("ForeignFutureStruct{return_type_name}")),
+            ),
+        ],
+        return_type: None,
+        has_rust_call_status_arg: false,
+    }
+}
+
+/// [FfiStruct] for a callback/trait interface VTable
+///
+/// This struct has a FfiCallbackFunction field for each method, plus extra fields for special
+/// methods
+pub fn vtable_struct(trait_name: &str, methods: &[Method]) -> FfiStruct {
+    FfiStruct {
+        name: vtable_name(trait_name),
+        fields: methods
+            .iter()
+            .enumerate()
+            .map(|(i, method)| {
+                FfiField::new(
+                    method.name(),
+                    FfiType::Callback(format!("CallbackInterface{trait_name}Method{i}")),
+                )
+            })
+            .chain([FfiField::new(
+                "uniffi_free",
+                FfiType::Callback("CallbackInterfaceFree".to_owned()),
+            )])
+            .collect(),
+    }
+}
+
+pub fn method_ffi_callback_name(trait_name: &str, index: usize) -> String {
+    format!("CallbackInterface{trait_name}Method{index}")
+}
+
+pub fn vtable_name(trait_name: &str) -> String {
+    format!("VTableCallbackInterface{trait_name}")
 }
 
 #[cfg(test)]
@@ -145,5 +301,22 @@ mod test {
         assert_eq!(callbacks_two.methods().len(), 2);
         assert_eq!(callbacks_two.methods()[0].name(), "two");
         assert_eq!(callbacks_two.methods()[1].name(), "too");
+    }
+
+    #[test]
+    fn test_docstring_callback_interface() {
+        const UDL: &str = r#"
+            namespace test{};
+            /// informative docstring
+            callback interface Testing { };
+        "#;
+        let ci = ComponentInterface::from_webidl(UDL, "crate_name").unwrap();
+        assert_eq!(
+            ci.get_callback_interface_definition("Testing")
+                .unwrap()
+                .docstring()
+                .unwrap(),
+            "informative docstring"
+        );
     }
 }

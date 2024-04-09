@@ -46,6 +46,8 @@ pub struct Configuration {
     /// be noted that this has an underlying StringMetric and so should conform to the limitations that
     /// StringMetric places on length, etc.
     pub experimentation_id: Option<String>,
+    /// Whether to enable internal pings. Default: true
+    pub enable_internal_pings: bool,
 }
 
 /// Configuration builder.
@@ -92,6 +94,8 @@ pub struct Builder {
     /// be noted that this has an underlying StringMetric and so should conform to the limitations that
     /// StringMetric places on length, etc.
     pub experimentation_id: Option<String>,
+    /// Whether to enable internal pings. Default: true
+    pub enable_internal_pings: bool,
 }
 
 impl Builder {
@@ -115,6 +119,7 @@ impl Builder {
             rate_limit: None,
             enable_event_timestamps: true,
             experimentation_id: None,
+            enable_internal_pings: true,
         }
     }
 
@@ -134,6 +139,7 @@ impl Builder {
             rate_limit: self.rate_limit,
             enable_event_timestamps: self.enable_event_timestamps,
             experimentation_id: self.experimentation_id,
+            enable_internal_pings: self.enable_internal_pings,
         }
     }
 
@@ -182,6 +188,12 @@ impl Builder {
     /// Set whether to add a wallclock timestamp to all events (experimental).
     pub fn with_experimentation_id(mut self, value: String) -> Self {
         self.experimentation_id = Some(value);
+        self
+    }
+
+    /// Set whether to enable internal pings.
+    pub fn with_internal_pings(mut self, value: bool) -> Self {
+        self.enable_internal_pings = value;
         self
     }
 }

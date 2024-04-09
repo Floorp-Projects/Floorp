@@ -33,6 +33,12 @@ pub fn method_symbol_name(namespace: &str, object_name: &str, name: &str) -> Str
     format!("uniffi_{namespace}_fn_method_{object_name}_{name}")
 }
 
+/// FFI symbol name for the `clone` function for an object.
+pub fn clone_fn_symbol_name(namespace: &str, object_name: &str) -> String {
+    let object_name = object_name.to_ascii_lowercase();
+    format!("uniffi_{namespace}_fn_clone_{object_name}")
+}
+
 /// FFI symbol name for the `free` function for an object.
 pub fn free_fn_symbol_name(namespace: &str, object_name: &str) -> String {
     let object_name = object_name.to_ascii_lowercase();
@@ -40,9 +46,12 @@ pub fn free_fn_symbol_name(namespace: &str, object_name: &str) -> String {
 }
 
 /// FFI symbol name for the `init_callback` function for a callback interface
-pub fn init_callback_fn_symbol_name(namespace: &str, callback_interface_name: &str) -> String {
+pub fn init_callback_vtable_fn_symbol_name(
+    namespace: &str,
+    callback_interface_name: &str,
+) -> String {
     let callback_interface_name = callback_interface_name.to_ascii_lowercase();
-    format!("uniffi_{namespace}_fn_init_callback_{callback_interface_name}")
+    format!("uniffi_{namespace}_fn_init_callback_vtable_{callback_interface_name}")
 }
 
 /// FFI checksum symbol name for a top-level function

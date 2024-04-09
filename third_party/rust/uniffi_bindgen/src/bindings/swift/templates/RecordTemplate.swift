@@ -1,12 +1,14 @@
 {%- let rec = ci|get_record_definition(name) %}
+{%- call swift::docstring(rec, 0) %}
 public struct {{ type_name }} {
     {%- for field in rec.fields() %}
-    public var {{ field.name()|var_name }}: {{ field|type_name }}
+    {%- call swift::docstring(field, 4) %}
+    public {% if config.generate_immutable_records() %}let{% else %}var{% endif %} {{ field.name()|var_name }}: {{ field|type_name }}
     {%- endfor %}
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
-    public init({% call swift::field_list_decl(rec) %}) {
+    public init({% call swift::field_list_decl(rec, false) %}) {
         {%- for field in rec.fields() %}
         self.{{ field.name()|var_name }} = {{ field.name()|var_name }}
         {%- endfor %}
@@ -14,6 +16,7 @@ public struct {{ type_name }} {
 }
 
 {% if !contains_object_references %}
+{% if config.experimental_sendable_value_types() %}extension {{ type_name }}: Sendable {} {% endif %}
 extension {{ type_name }}: Equatable, Hashable {
     public static func ==(lhs: {{ type_name }}, rhs: {{ type_name }}) -> Bool {
         {%- for field in rec.fields() %}
@@ -34,12 +37,16 @@ extension {{ type_name }}: Equatable, Hashable {
 
 public struct {{ ffi_converter_name }}: FfiConverterRustBuffer {
     public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> {{ type_name }} {
-        return try {{ type_name }}(
+        return {%- if rec.has_fields() %}
+            try {{ type_name }}(
             {%- for field in rec.fields() %}
-            {{ field.name()|arg_name }}: {{ field|read_fn }}(from: &buf)
-            {%- if !loop.last %}, {% endif %}
+                {{ field.name()|arg_name }}: {{ field|read_fn }}(from: &buf)
+                {%- if !loop.last %}, {% endif %}
             {%- endfor %}
         )
+        {%- else %}
+            {{ type_name }}()
+        {%- endif %}
     }
 
     public static func write(_ value: {{ type_name }}, into buf: inout [UInt8]) {

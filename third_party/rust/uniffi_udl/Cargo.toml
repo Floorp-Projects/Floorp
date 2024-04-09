@@ -12,10 +12,11 @@
 [package]
 edition = "2021"
 name = "uniffi_udl"
-version = "0.25.3"
+version = "0.27.1"
 description = "udl parsing for the uniffi project"
 homepage = "https://mozilla.github.io/uniffi-rs"
 documentation = "https://mozilla.github.io/uniffi-rs"
+readme = "README.md"
 keywords = [
     "ffi",
     "bindgen",
@@ -26,11 +27,14 @@ repository = "https://github.com/mozilla/uniffi-rs"
 [dependencies.anyhow]
 version = "1"
 
+[dependencies.textwrap]
+version = "0.16"
+
 [dependencies.uniffi_meta]
-version = "=0.25.3"
+version = "=0.27.1"
 
 [dependencies.uniffi_testing]
-version = "=0.25.3"
+version = "=0.27.1"
 
 [dependencies.weedle2]
-version = "4.0.0"
+version = "5.0.0"

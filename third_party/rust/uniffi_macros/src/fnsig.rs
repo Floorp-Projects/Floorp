@@ -2,8 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use crate::util::{
-    create_metadata_items, ident_to_string, mod_path, try_metadata_value_from_usize,
+use crate::{
+    default::{default_value_metadata_calls, DefaultValue},
+    export::{DefaultMap, ExportFnArgs, ExportedImplFnArgs},
+    util::{create_metadata_items, ident_to_string, mod_path, try_metadata_value_from_usize},
 };
 use proc_macro2::{Span, TokenStream};
 use quote::quote;
@@ -13,7 +15,9 @@ pub(crate) struct FnSignature {
     pub kind: FnKind,
     pub span: Span,
     pub mod_path: String,
+    // The identifier of the Rust function.
     pub ident: Ident,
+    // The foreign name for this function, usually == ident.
     pub name: String,
     pub is_async: bool,
     pub receiver: Option<ReceiverArg>,
@@ -23,30 +27,71 @@ pub(crate) struct FnSignature {
     // Only use this in UDL mode.
     // In general, it's not reliable because it fails for type aliases.
     pub looks_like_result: bool,
+    pub docstring: String,
 }
 
 impl FnSignature {
-    pub(crate) fn new_function(sig: syn::Signature) -> syn::Result<Self> {
-        Self::new(FnKind::Function, sig)
+    pub(crate) fn new_function(
+        sig: syn::Signature,
+        args: ExportFnArgs,
+        docstring: String,
+    ) -> syn::Result<Self> {
+        Self::new(FnKind::Function, sig, args.name, args.defaults, docstring)
     }
 
-    pub(crate) fn new_method(self_ident: Ident, sig: syn::Signature) -> syn::Result<Self> {
-        Self::new(FnKind::Method { self_ident }, sig)
+    pub(crate) fn new_method(
+        self_ident: Ident,
+        sig: syn::Signature,
+        args: ExportedImplFnArgs,
+        docstring: String,
+    ) -> syn::Result<Self> {
+        Self::new(
+            FnKind::Method { self_ident },
+            sig,
+            args.name,
+            args.defaults,
+            docstring,
+        )
     }
 
-    pub(crate) fn new_constructor(self_ident: Ident, sig: syn::Signature) -> syn::Result<Self> {
-        Self::new(FnKind::Constructor { self_ident }, sig)
+    pub(crate) fn new_constructor(
+        self_ident: Ident,
+        sig: syn::Signature,
+        args: ExportedImplFnArgs,
+        docstring: String,
+    ) -> syn::Result<Self> {
+        Self::new(
+            FnKind::Constructor { self_ident },
+            sig,
+            args.name,
+            args.defaults,
+            docstring,
+        )
     }
 
     pub(crate) fn new_trait_method(
         self_ident: Ident,
         sig: syn::Signature,
+        args: ExportedImplFnArgs,
         index: u32,
+        docstring: String,
     ) -> syn::Result<Self> {
-        Self::new(FnKind::TraitMethod { self_ident, index }, sig)
+        Self::new(
+            FnKind::TraitMethod { self_ident, index },
+            sig,
+            args.name,
+            args.defaults,
+            docstring,
+        )
     }
 
-    pub(crate) fn new(kind: FnKind, sig: syn::Signature) -> syn::Result<Self> {
+    pub(crate) fn new(
+        kind: FnKind,
+        sig: syn::Signature,
+        name: Option<String>,
+        mut defaults: DefaultMap,
+        docstring: String,
+    ) -> syn::Result<Self> {
         let span = sig.span();
         let ident = sig.ident;
         let looks_like_result = looks_like_result(&sig.output);
@@ -56,14 +101,11 @@ impl FnSignature {
         };
         let is_async = sig.asyncness.is_some();
 
-        if is_async && matches!(kind, FnKind::Constructor { .. }) {
-            return Err(syn::Error::new(
-                span,
-                "Async constructors are not supported",
-            ));
-        }
-
-        let mut input_iter = sig.inputs.into_iter().map(Arg::try_from).peekable();
+        let mut input_iter = sig
+            .inputs
+            .into_iter()
+            .map(|a| Arg::new(a, &mut defaults))
+            .peekable();
 
         let receiver = input_iter
             .next_if(|a| matches!(a, Ok(a) if a.is_receiver()))
@@ -84,26 +126,40 @@ impl FnSignature {
                 })
             })
             .collect::<syn::Result<Vec<_>>>()?;
-        let mod_path = mod_path()?;
+
+        if let Some(ident) = defaults.idents().first() {
+            return Err(syn::Error::new(
+                ident.span(),
+                format!("Unknown default argument: {}", ident),
+            ));
+        }
 
         Ok(Self {
             kind,
             span,
-            mod_path,
-            name: ident_to_string(&ident),
+            mod_path: mod_path()?,
+            name: name.unwrap_or_else(|| ident_to_string(&ident)),
             ident,
             is_async,
             receiver,
             args,
             return_ty: output,
             looks_like_result,
+            docstring,
         })
     }
 
-    pub fn return_impl(&self) -> TokenStream {
+    pub fn lower_return_impl(&self) -> TokenStream {
         let return_ty = &self.return_ty;
         quote! {
             <#return_ty as ::uniffi::LowerReturn<crate::UniFfiTag>>
+        }
+    }
+
+    pub fn lift_return_impl(&self) -> TokenStream {
+        let return_ty = &self.return_ty;
+        quote! {
+            <#return_ty as ::uniffi::LiftReturn<crate::UniFfiTag>>
         }
     }
 
@@ -151,14 +207,6 @@ impl FnSignature {
         quote! { #(#args),* }
     }
 
-    /// Write expressions for each of our arguments
-    pub fn write_exprs<'a>(
-        &'a self,
-        buf_ident: &'a Ident,
-    ) -> impl Iterator<Item = TokenStream> + 'a {
-        self.args.iter().map(|a| a.write_expr(buf_ident))
-    }
-
     /// Parameters expressions for each of our arguments
     pub fn params(&self) -> impl Iterator<Item = TokenStream> + '_ {
         self.args.iter().map(NamedArg::param)
@@ -182,8 +230,18 @@ impl FnSignature {
     }
 
     /// Scaffolding parameters expressions for each of our arguments
-    pub fn scaffolding_params(&self) -> impl Iterator<Item = TokenStream> + '_ {
-        self.args.iter().map(NamedArg::scaffolding_param)
+    pub fn scaffolding_param_names(&self) -> impl Iterator<Item = TokenStream> + '_ {
+        self.args.iter().map(|a| {
+            let ident = &a.ident;
+            quote! { #ident }
+        })
+    }
+
+    pub fn scaffolding_param_types(&self) -> impl Iterator<Item = TokenStream> + '_ {
+        self.args.iter().map(|a| {
+            let lift_impl = a.lift_impl();
+            quote! { #lift_impl::FfiType }
+        })
     }
 
     /// Generate metadata items for this function
@@ -193,6 +251,7 @@ impl FnSignature {
             return_ty,
             is_async,
             mod_path,
+            docstring,
             ..
         } = &self;
         let args_len = try_metadata_value_from_usize(
@@ -201,7 +260,11 @@ impl FnSignature {
             self.args.len(),
             "UniFFI limits functions to 256 arguments",
         )?;
-        let arg_metadata_calls = self.args.iter().map(NamedArg::arg_metadata);
+        let arg_metadata_calls = self
+            .args
+            .iter()
+            .map(NamedArg::arg_metadata)
+            .collect::<syn::Result<Vec<_>>>()?;
 
         match &self.kind {
             FnKind::Function => Ok(quote! {
@@ -212,6 +275,7 @@ impl FnSignature {
                     .concat_value(#args_len)
                     #(#arg_metadata_calls)*
                     .concat(<#return_ty as ::uniffi::LowerReturn<crate::UniFfiTag>>::TYPE_ID_META)
+                    .concat_long_str(#docstring)
             }),
 
             FnKind::Method { self_ident } => {
@@ -225,6 +289,7 @@ impl FnSignature {
                         .concat_value(#args_len)
                         #(#arg_metadata_calls)*
                         .concat(<#return_ty as ::uniffi::LowerReturn<crate::UniFfiTag>>::TYPE_ID_META)
+                        .concat_long_str(#docstring)
                 })
             }
 
@@ -240,6 +305,7 @@ impl FnSignature {
                         .concat_value(#args_len)
                         #(#arg_metadata_calls)*
                         .concat(<#return_ty as ::uniffi::LowerReturn<crate::UniFfiTag>>::TYPE_ID_META)
+                        .concat_long_str(#docstring)
                 })
             }
 
@@ -250,9 +316,11 @@ impl FnSignature {
                         .concat_str(#mod_path)
                         .concat_str(#object_name)
                         .concat_str(#name)
+                        .concat_bool(#is_async)
                         .concat_value(#args_len)
                         #(#arg_metadata_calls)*
                         .concat(<#return_ty as ::uniffi::LowerReturn<crate::UniFfiTag>>::TYPE_ID_META)
+                        .concat_long_str(#docstring)
                 })
             }
         }
@@ -300,6 +368,69 @@ impl FnSignature {
         }
     }
 
+    /// Generate metadata items for callback interfaces
+    ///
+    /// Unfortunately, most of this is duplicate code from [Self::metadata_items] and
+    /// [Self::metadata_expr].  However, one issue with that code is that it needs to assume if the
+    /// arguments are being lifted vs lowered in order to get TYPE_ID_META.  That code uses
+    /// `<Type as Lift>::TYPE_ID_META` for arguments and `<Type as LowerReturn>::TYPE_ID_META` for
+    /// return types, which works for accidental/historical reasons.
+    ///
+    /// The one exception is callback interfaces (#1947), which are handled by this method.
+    ///
+    /// TODO: fix the metadata system so that this is not needed.
+    pub(crate) fn metadata_items_for_callback_interface(&self) -> syn::Result<TokenStream> {
+        let Self {
+            name,
+            return_ty,
+            is_async,
+            mod_path,
+            docstring,
+            ..
+        } = &self;
+        match &self.kind {
+            FnKind::TraitMethod {
+                self_ident, index, ..
+            } => {
+                let object_name = ident_to_string(self_ident);
+                let args_len = try_metadata_value_from_usize(
+                    // Use param_lifts to calculate this instead of sig.inputs to avoid counting any self
+                    // params
+                    self.args.len(),
+                    "UniFFI limits functions to 256 arguments",
+                )?;
+                let arg_metadata_calls = self
+                    .args
+                    .iter()
+                    .map(NamedArg::arg_metadata)
+                    .collect::<syn::Result<Vec<_>>>()?;
+                let metadata_expr = quote! {
+                    ::uniffi::MetadataBuffer::from_code(::uniffi::metadata::codes::TRAIT_METHOD)
+                        .concat_str(#mod_path)
+                        .concat_str(#object_name)
+                        .concat_u32(#index)
+                        .concat_str(#name)
+                        .concat_bool(#is_async)
+                        .concat_value(#args_len)
+                        #(#arg_metadata_calls)*
+                        .concat(<#return_ty as ::uniffi::LiftReturn<crate::UniFfiTag>>::TYPE_ID_META)
+                        .concat_long_str(#docstring)
+                };
+                Ok(create_metadata_items(
+                    "method",
+                    &format!("{object_name}_{name}"),
+                    metadata_expr,
+                    Some(self.checksum_symbol_name()),
+                ))
+            }
+
+            // This should never happen and indicates an error in the internal code
+            _ => panic!(
+                "metadata_items_for_callback_interface can only be called with `TraitMethod` sigs"
+            ),
+        }
+    }
+
     pub(crate) fn checksum_symbol_name(&self) -> String {
         let name = &self.name;
         match &self.kind {
@@ -331,25 +462,21 @@ pub(crate) enum ArgKind {
 }
 
 impl Arg {
-    pub(crate) fn is_receiver(&self) -> bool {
-        matches!(self.kind, ArgKind::Receiver(_))
-    }
-}
-
-impl TryFrom<FnArg> for Arg {
-    type Error = syn::Error;
-
-    fn try_from(syn_arg: FnArg) -> syn::Result<Self> {
+    fn new(syn_arg: FnArg, defaults: &mut DefaultMap) -> syn::Result<Self> {
         let span = syn_arg.span();
         let kind = match syn_arg {
             FnArg::Typed(p) => match *p.pat {
-                Pat::Ident(i) => Ok(ArgKind::Named(NamedArg::new(i.ident, &p.ty))),
+                Pat::Ident(i) => Ok(ArgKind::Named(NamedArg::new(i.ident, &p.ty, defaults)?)),
                 _ => Err(syn::Error::new_spanned(p, "Argument name missing")),
             },
             FnArg::Receiver(receiver) => Ok(ArgKind::Receiver(ReceiverArg::from(receiver))),
         }?;
 
         Ok(Self { span, kind })
+    }
+
+    pub(crate) fn is_receiver(&self) -> bool {
+        matches!(self.kind, ArgKind::Receiver(_))
     }
 }
 
@@ -379,27 +506,30 @@ pub(crate) struct NamedArg {
     pub(crate) name: String,
     pub(crate) ty: TokenStream,
     pub(crate) ref_type: Option<Type>,
+    pub(crate) default: Option<DefaultValue>,
 }
 
 impl NamedArg {
-    pub(crate) fn new(ident: Ident, ty: &Type) -> Self {
-        match ty {
+    pub(crate) fn new(ident: Ident, ty: &Type, defaults: &mut DefaultMap) -> syn::Result<Self> {
+        Ok(match ty {
             Type::Reference(r) => {
                 let inner = &r.elem;
                 Self {
                     name: ident_to_string(&ident),
-                    ident,
                     ty: quote! { <#inner as ::uniffi::LiftRef<crate::UniFfiTag>>::LiftType },
                     ref_type: Some(*inner.clone()),
+                    default: defaults.remove(&ident),
+                    ident,
                 }
             }
             _ => Self {
                 name: ident_to_string(&ident),
-                ident,
                 ty: quote! { #ty },
                 ref_type: None,
+                default: defaults.remove(&ident),
+                ident,
             },
-        }
+        })
     }
 
     pub(crate) fn lift_impl(&self) -> TokenStream {
@@ -419,27 +549,15 @@ impl NamedArg {
         quote! { #ident: #ty }
     }
 
-    /// Generate the scaffolding parameter for this Arg
-    pub(crate) fn scaffolding_param(&self) -> TokenStream {
-        let ident = &self.ident;
-        let lift_impl = self.lift_impl();
-        quote! { #ident: #lift_impl::FfiType }
-    }
-
-    /// Generate the expression to write the scaffolding parameter for this arg
-    pub(crate) fn write_expr(&self, buf_ident: &Ident) -> TokenStream {
-        let ident = &self.ident;
-        let lower_impl = self.lower_impl();
-        quote! { #lower_impl::write(#ident, &mut #buf_ident) }
-    }
-
-    pub(crate) fn arg_metadata(&self) -> TokenStream {
+    pub(crate) fn arg_metadata(&self) -> syn::Result<TokenStream> {
         let name = &self.name;
         let lift_impl = self.lift_impl();
-        quote! {
+        let default_calls = default_value_metadata_calls(&self.default)?;
+        Ok(quote! {
             .concat_str(#name)
             .concat(#lift_impl::TYPE_ID_META)
-        }
+            #default_calls
+        })
     }
 }
 

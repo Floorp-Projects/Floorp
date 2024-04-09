@@ -31,6 +31,11 @@ struct InnerPing {
     pub include_info_sections: bool,
     /// The "reason" codes that this ping can send
     pub reason_codes: Vec<String>,
+
+    /// Whether this ping is enabled.
+    /// Note: Data for disabled pings is still recorded.
+    /// It will not be cleared out on submit.
+    enabled: bool,
 }
 
 impl fmt::Debug for PingType {
@@ -68,6 +73,26 @@ impl PingType {
         include_info_sections: bool,
         reason_codes: Vec<String>,
     ) -> Self {
+        Self::new_internal(
+            name,
+            include_client_id,
+            send_if_empty,
+            precise_timestamps,
+            include_info_sections,
+            reason_codes,
+            true,
+        )
+    }
+
+    pub(crate) fn new_internal<A: Into<String>>(
+        name: A,
+        include_client_id: bool,
+        send_if_empty: bool,
+        precise_timestamps: bool,
+        include_info_sections: bool,
+        reason_codes: Vec<String>,
+        enabled: bool,
+    ) -> Self {
         let this = Self(Arc::new(InnerPing {
             name: name.into(),
             include_client_id,
@@ -75,6 +100,7 @@ impl PingType {
             precise_timestamps,
             include_info_sections,
             reason_codes,
+            enabled,
         }));
 
         // Register this ping.
@@ -140,6 +166,11 @@ impl PingType {
     /// Whether the ping was succesfully assembled and queued.
     #[doc(hidden)]
     pub fn submit_sync(&self, glean: &Glean, reason: Option<&str>) -> bool {
+        if !self.0.enabled {
+            log::info!("Ping disabled: not submitting '{}' ping.", self.0.name);
+            return false;
+        }
+
         if !glean.is_upload_enabled() {
             log::info!("Glean disabled: not submitting any pings.");
             return false;

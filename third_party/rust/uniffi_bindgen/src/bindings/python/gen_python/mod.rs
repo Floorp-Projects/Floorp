@@ -2,8 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use anyhow::{Context, Result};
+use anyhow::{bail, Context, Result};
 use askama::Template;
+use camino::Utf8Path;
 use heck::{ToShoutySnakeCase, ToSnakeCase, ToUpperCamelCase};
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
@@ -13,19 +14,42 @@ use std::collections::{BTreeSet, HashMap, HashSet};
 use std::fmt::Debug;
 
 use crate::backend::TemplateExpression;
+use crate::bindings::python;
 use crate::interface::*;
-use crate::BindingsConfig;
+use crate::{BindingGenerator, BindingsConfig};
 
 mod callback_interface;
 mod compounds;
 mod custom;
 mod enum_;
-mod executor;
 mod external;
 mod miscellany;
 mod object;
 mod primitives;
 mod record;
+
+pub struct PythonBindingGenerator;
+
+impl BindingGenerator for PythonBindingGenerator {
+    type Config = Config;
+
+    fn write_bindings(
+        &self,
+        ci: &ComponentInterface,
+        config: &Config,
+        out_dir: &Utf8Path,
+        try_format_code: bool,
+    ) -> Result<()> {
+        python::write_bindings(config, ci, out_dir, try_format_code)
+    }
+
+    fn check_library_path(&self, library_path: &Utf8Path, cdylib_name: Option<&str>) -> Result<()> {
+        if cdylib_name.is_none() {
+            bail!("Generate bindings for Python requires a cdylib, but {library_path} was given");
+        }
+        Ok(())
+    }
+}
 
 /// A trait tor the implementation.
 trait CodeType: Debug {
@@ -114,6 +138,8 @@ pub struct Config {
     cdylib_name: Option<String>,
     #[serde(default)]
     custom_types: HashMap<String, CustomTypeConfig>,
+    #[serde(default)]
+    external_packages: HashMap<String, String>,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -131,6 +157,16 @@ impl Config {
             cdylib_name.clone()
         } else {
             "uniffi".into()
+        }
+    }
+
+    /// Get the package name for a given external namespace.
+    pub fn module_for_namespace(&self, ns: &str) -> String {
+        let ns = ns.to_string().to_snake_case();
+        match self.external_packages.get(&ns) {
+            None => format!(".{ns}"),
+            Some(value) if value.is_empty() => ns,
+            Some(value) => format!("{value}.{ns}"),
         }
     }
 }
@@ -326,7 +362,19 @@ impl PythonCodeOracle {
         fixup_keyword(nm.to_string().to_shouty_snake_case())
     }
 
-    fn ffi_type_label(ffi_type: &FfiType) -> String {
+    /// Get the idiomatic Python rendering of an FFI callback function name
+    fn ffi_callback_name(&self, nm: &str) -> String {
+        format!("UNIFFI_{}", nm.to_shouty_snake_case())
+    }
+
+    /// Get the idiomatic Python rendering of an FFI struct name
+    fn ffi_struct_name(&self, nm: &str) -> String {
+        // The ctypes docs use both SHOUTY_SNAKE_CASE AND UpperCamelCase for structs. Let's use
+        // UpperCamelCase and reserve shouting for global variables
+        format!("Uniffi{}", nm.to_upper_camel_case())
+    }
+
+    fn ffi_type_label(&self, ffi_type: &FfiType) -> String {
         match ffi_type {
             FfiType::Int8 => "ctypes.c_int8".to_string(),
             FfiType::UInt8 => "ctypes.c_uint8".to_string(),
@@ -338,19 +386,64 @@ impl PythonCodeOracle {
             FfiType::UInt64 => "ctypes.c_uint64".to_string(),
             FfiType::Float32 => "ctypes.c_float".to_string(),
             FfiType::Float64 => "ctypes.c_double".to_string(),
+            FfiType::Handle => "ctypes.c_uint64".to_string(),
             FfiType::RustArcPtr(_) => "ctypes.c_void_p".to_string(),
             FfiType::RustBuffer(maybe_suffix) => match maybe_suffix {
                 Some(suffix) => format!("_UniffiRustBuffer{suffix}"),
                 None => "_UniffiRustBuffer".to_string(),
             },
+            FfiType::RustCallStatus => "_UniffiRustCallStatus".to_string(),
             FfiType::ForeignBytes => "_UniffiForeignBytes".to_string(),
-            FfiType::ForeignCallback => "_UNIFFI_FOREIGN_CALLBACK_T".to_string(),
+            FfiType::Callback(name) => self.ffi_callback_name(name),
+            FfiType::Struct(name) => self.ffi_struct_name(name),
             // Pointer to an `asyncio.EventLoop` instance
-            FfiType::ForeignExecutorHandle => "ctypes.c_size_t".to_string(),
-            FfiType::ForeignExecutorCallback => "_UNIFFI_FOREIGN_EXECUTOR_CALLBACK_T".to_string(),
-            FfiType::RustFutureHandle => "ctypes.c_void_p".to_string(),
-            FfiType::RustFutureContinuationCallback => "_UNIFFI_FUTURE_CONTINUATION_T".to_string(),
-            FfiType::RustFutureContinuationData => "ctypes.c_size_t".to_string(),
+            FfiType::Reference(inner) => format!("ctypes.POINTER({})", self.ffi_type_label(inner)),
+            FfiType::VoidPointer => "ctypes.c_void_p".to_string(),
+        }
+    }
+
+    /// Default values for FFI types
+    ///
+    /// Used to set a default return value when returning an error
+    fn ffi_default_value(&self, return_type: Option<&FfiType>) -> String {
+        match return_type {
+            Some(t) => match t {
+                FfiType::UInt8
+                | FfiType::Int8
+                | FfiType::UInt16
+                | FfiType::Int16
+                | FfiType::UInt32
+                | FfiType::Int32
+                | FfiType::UInt64
+                | FfiType::Int64 => "0".to_owned(),
+                FfiType::Float32 | FfiType::Float64 => "0.0".to_owned(),
+                FfiType::RustArcPtr(_) => "ctypes.c_void_p()".to_owned(),
+                FfiType::RustBuffer(maybe_suffix) => match maybe_suffix {
+                    Some(suffix) => format!("_UniffiRustBuffer{suffix}.default()"),
+                    None => "_UniffiRustBuffer.default()".to_owned(),
+                },
+                _ => unimplemented!("FFI return type: {t:?}"),
+            },
+            // When we need to use a value for void returns, we use a `u8` placeholder
+            None => "0".to_owned(),
+        }
+    }
+
+    /// Get the name of the protocol and class name for an object.
+    ///
+    /// If we support callback interfaces, the protocol name is the object name, and the class name is derived from that.
+    /// Otherwise, the class name is the object name and the protocol name is derived from that.
+    ///
+    /// This split determines what types `FfiConverter.lower()` inputs.  If we support callback
+    /// interfaces, `lower` must lower anything that implements the protocol.  If not, then lower
+    /// only lowers the concrete class.
+    fn object_names(&self, obj: &Object) -> (String, String) {
+        let class_name = self.class_name(obj.name());
+        if obj.has_callback_interface() {
+            let impl_name = format!("{class_name}Impl");
+            (class_name, impl_name)
+        } else {
+            (format!("{class_name}Protocol"), class_name)
         }
     }
 }
@@ -392,7 +485,6 @@ impl<T: AsType> AsCodeType for T {
             Type::CallbackInterface { name, .. } => {
                 Box::new(callback_interface::CallbackInterfaceCodeType::new(name))
             }
-            Type::ForeignExecutor => Box::new(executor::ForeignExecutorCodeType),
             Type::Optional { inner_type } => {
                 Box::new(compounds::OptionalCodeType::new(*inner_type))
             }
@@ -429,6 +521,10 @@ pub mod filters {
         Ok(format!("{}.lift", ffi_converter_name(as_ct)?))
     }
 
+    pub(super) fn check_lower_fn(as_ct: &impl AsCodeType) -> Result<String, askama::Error> {
+        Ok(format!("{}.check_lower", ffi_converter_name(as_ct)?))
+    }
+
     pub(super) fn lower_fn(as_ct: &impl AsCodeType) -> Result<String, askama::Error> {
         Ok(format!("{}.lower", ffi_converter_name(as_ct)?))
     }
@@ -448,8 +544,18 @@ pub mod filters {
         Ok(as_ct.as_codetype().literal(literal))
     }
 
+    // Get the idiomatic Python rendering of an individual enum variant's discriminant
+    pub fn variant_discr_literal(e: &Enum, index: &usize) -> Result<String, askama::Error> {
+        let literal = e.variant_discr(*index).expect("invalid index");
+        Ok(Type::UInt64.as_codetype().literal(&literal))
+    }
+
     pub fn ffi_type_name(type_: &FfiType) -> Result<String, askama::Error> {
-        Ok(PythonCodeOracle::ffi_type_label(type_))
+        Ok(PythonCodeOracle.ffi_type_label(type_))
+    }
+
+    pub fn ffi_default_value(return_type: Option<FfiType>) -> Result<String, askama::Error> {
+        Ok(PythonCodeOracle.ffi_default_value(return_type.as_ref()))
     }
 
     /// Get the idiomatic Python rendering of a class name (for enums, records, errors, etc).
@@ -470,5 +576,52 @@ pub mod filters {
     /// Get the idiomatic Python rendering of an individual enum variant.
     pub fn enum_variant_py(nm: &str) -> Result<String, askama::Error> {
         Ok(PythonCodeOracle.enum_variant_name(nm))
+    }
+
+    /// Get the idiomatic Python rendering of an FFI callback function name
+    pub fn ffi_callback_name(nm: &str) -> Result<String, askama::Error> {
+        Ok(PythonCodeOracle.ffi_callback_name(nm))
+    }
+
+    /// Get the idiomatic Python rendering of an FFI struct name
+    pub fn ffi_struct_name(nm: &str) -> Result<String, askama::Error> {
+        Ok(PythonCodeOracle.ffi_struct_name(nm))
+    }
+
+    /// Get the idiomatic Python rendering of an individual enum variant.
+    pub fn object_names(obj: &Object) -> Result<(String, String), askama::Error> {
+        Ok(PythonCodeOracle.object_names(obj))
+    }
+
+    /// Get the idiomatic Python rendering of docstring
+    pub fn docstring(docstring: &str, spaces: &i32) -> Result<String, askama::Error> {
+        let docstring = textwrap::dedent(docstring);
+        // Escape triple quotes to avoid syntax error
+        let escaped = docstring.replace(r#"""""#, r#"\"\"\""#);
+
+        let wrapped = format!("\"\"\"\n{escaped}\n\"\"\"");
+
+        let spaces = usize::try_from(*spaces).unwrap_or_default();
+        Ok(textwrap::indent(&wrapped, &" ".repeat(spaces)))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_docstring_escape() {
+        let docstring = r#""""This is a docstring beginning with triple quotes.
+Contains "quotes" in it.
+It also has a triple quote: """
+And a even longer quote: """"""#;
+
+        let expected = r#""""
+\"\"\"This is a docstring beginning with triple quotes.
+Contains "quotes" in it.
+It also has a triple quote: \"\"\"
+And a even longer quote: \"\"\"""
+""""#;
+
+        assert_eq!(super::filters::docstring(docstring, &0).unwrap(), expected);
     }
 }

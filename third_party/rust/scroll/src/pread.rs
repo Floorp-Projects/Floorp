@@ -20,6 +20,11 @@ use crate::error;
 /// over chunks of memory or any other indexable type — but scroll does come with a set of powerful
 /// blanket implementations for data being a continous block of byte-addressable memory.
 ///
+/// Note that in the particular case of the implementation of `Pread` for `[u8]`,
+/// reading it at the length boundary of that slice will cause to read from an empty slice.
+/// i.e. we make use of the fact that `&bytes[bytes.len()..]` will return an empty slice, rather
+/// than returning an error. In the past, scroll returned an offset error.
+///
 /// Pread provides two main groups of functions: pread and gread.
 ///
 /// `pread` is the basic function that simply extracts a given type from a given data store - either
@@ -167,7 +172,7 @@ impl<Ctx: Copy, E: From<error::Error>> Pread<Ctx, E> for [u8] {
         ctx: Ctx,
     ) -> result::Result<N, E> {
         let start = *offset;
-        if start >= self.len() {
+        if start > self.len() {
             return Err(error::Error::BadOffset(start).into());
         }
         N::try_from_ctx(&self[start..], ctx).map(|(n, size)| {

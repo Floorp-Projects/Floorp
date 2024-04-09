@@ -4,5 +4,5 @@ class _UniffiConverterDouble(_UniffiConverterPrimitiveFloat):
         return buf.read_double()
 
     @staticmethod
-    def write_unchecked(value, buf):
+    def write(value, buf):
         buf.write_double(value)

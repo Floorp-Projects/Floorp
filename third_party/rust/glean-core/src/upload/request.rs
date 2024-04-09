@@ -8,7 +8,7 @@ use std::collections::HashMap;
 
 use chrono::prelude::{DateTime, Utc};
 use flate2::{read::GzDecoder, write::GzEncoder, Compression};
-use serde_json::{self, Value as JsonValue};
+use serde_json::Value as JsonValue;
 use std::io::prelude::*;
 
 use crate::error::{ErrorKind, Result};
