@@ -156,7 +156,11 @@ export class WorkerTargetWatcherClass {
     // See https://searchfox.org/mozilla-central/rev/84922363f4014eae684aabc4f1d06380066494c5/dom/workers/nsIWorkerDebugger.idl#55-66
     try {
       dbg.setDebuggerReady(false);
-    } catch (e) {}
+    } catch (e) {
+      if (!e.message.startsWith("Component returned failure code")) {
+        throw e;
+      }
+    }
 
     const { watcherActorID } = watcherDataObject;
     const { connection, loader } =
