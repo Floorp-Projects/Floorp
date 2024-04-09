@@ -1,0 +1,52 @@
+Add hackish support for arm64e to LLD
+
+The current lld output is known as arm64e.old. This hack adds the right flag to
+make it appear as arm64e.
+
+An upstreamable solution would be more involved.
+
+diff --git a/lld/MachO/Driver.cpp b/lld/MachO/Driver.cpp
+index 14c111ce9685..45fa7c59c420 100644
+--- a/lld/MachO/Driver.cpp
++++ b/lld/MachO/Driver.cpp
+@@ -773,8 +773,13 @@ static TargetInfo *createTargetInfo(InputArgList &args) {
+   switch (cpuType) {
+   case CPU_TYPE_X86_64:
+     return createX86_64TargetInfo();
+-  case CPU_TYPE_ARM64:
+-    return createARM64TargetInfo();
++  case CPU_TYPE_ARM64: {
++    auto target = createARM64TargetInfo();
++    if (cpuSubtype == CPU_SUBTYPE_ARM64E) {
++      target->cpuSubtype = CPU_SUBTYPE_ARM64E | CPU_SUBTYPE_PTRAUTH_ABI;
++    }
++    return target;
++  }
+   case CPU_TYPE_ARM64_32:
+     return createARM64_32TargetInfo();
+   default:
+diff --git a/lldb/include/lldb/Host/SafeMachO.h b/lldb/include/lldb/Host/SafeMachO.h
+index 0540383b8c52..a7650f760305 100644
+--- a/lldb/include/lldb/Host/SafeMachO.h
++++ b/lldb/include/lldb/Host/SafeMachO.h
+@@ -115,6 +115,8 @@
+ #undef CPU_SUBTYPE_MC980000_ALL
+ #undef CPU_SUBTYPE_MC98601
+ 
++#undef CPU_SUBTYPE_PTRAUTH_ABI
++
+ #undef VM_PROT_READ
+ #undef VM_PROT_WRITE
+ #undef VM_PROT_EXECUTE
+diff --git a/llvm/include/llvm/BinaryFormat/MachO.h b/llvm/include/llvm/BinaryFormat/MachO.h
+index bef70f869520..7dfe5d031381 100644
+--- a/llvm/include/llvm/BinaryFormat/MachO.h
++++ b/llvm/include/llvm/BinaryFormat/MachO.h
+@@ -1578,6 +1578,7 @@ enum : uint32_t {
+   // Capability bits used in the definition of cpusubtype.
+   CPU_SUBTYPE_MASK = 0xff000000,  // Mask for architecture bits
+   CPU_SUBTYPE_LIB64 = 0x80000000, // 64 bit libraries
++  CPU_SUBTYPE_PTRAUTH_ABI = 0x80000000, // pointer authentication with versioned ABI
+ 
+   // Special CPU subtype constants.
+   CPU_SUBTYPE_MULTIPLE = ~0u
