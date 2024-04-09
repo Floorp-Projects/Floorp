@@ -155,18 +155,7 @@ WebAuthnRegisterArgs::GetTimeoutMS(uint32_t* aTimeoutMS) {
 NS_IMETHODIMP
 WebAuthnRegisterArgs::GetAttestationConveyancePreference(
     nsAString& aAttestationConveyancePreference) {
-  const nsString& attPref = mInfo.attestationConveyancePreference();
-  if (attPref.EqualsLiteral(
-          MOZ_WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_INDIRECT) ||
-      attPref.EqualsLiteral(
-          MOZ_WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_DIRECT) ||
-      attPref.EqualsLiteral(
-          MOZ_WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_ENTERPRISE)) {
-    aAttestationConveyancePreference.Assign(attPref);
-  } else {
-    aAttestationConveyancePreference.AssignLiteral(
-        MOZ_WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_NONE);
-  }
+  aAttestationConveyancePreference = mInfo.attestationConveyancePreference();
   return NS_OK;
 }
 
