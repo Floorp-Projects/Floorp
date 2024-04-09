@@ -9,7 +9,6 @@
     "eslint": "8.57.0",
     "eslint-config-prettier": "8.8.0",
     "eslint-plugin-eslint-plugin": "5.4.0",
-    "eslint-plugin-fetch-options": "0.0.5",
     "eslint-plugin-file-header": "0.0.1",
     "eslint-plugin-html": "8.0.0",
     "eslint-plugin-import": "2.29.1",
