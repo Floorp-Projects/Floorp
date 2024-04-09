@@ -46,12 +46,14 @@ fun NeverTranslateSiteDialogPreference(
         confirmButton = {
             TextButton(
                 text = stringResource(id = R.string.never_translate_site_dialog_confirm_delete_preference),
+                upperCaseText = false,
                 onClick = { onConfirmDelete() },
             )
         },
         dismissButton = {
             TextButton(
                 text = stringResource(id = R.string.never_translate_site_dialog_cancel_preference),
+                upperCaseText = false,
                 onClick = { onCancel() },
             )
         },
