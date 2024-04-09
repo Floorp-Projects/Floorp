@@ -490,6 +490,8 @@ class _QuickSuggestTestUtils {
    *   Whether the result is expected to be sponsored.
    * @param {boolean} [options.isBestMatch]
    *   Whether the result is expected to be a best match.
+   * @param {boolean} [options.isManageable]
+   *   Whether the result is expected to show Manage result menu item.
    * @returns {result}
    *   The quick suggest result.
    */
@@ -500,6 +502,7 @@ class _QuickSuggestTestUtils {
     index = -1,
     isSponsored = true,
     isBestMatch = false,
+    isManageable = true,
   } = {}) {
     this.Assert.ok(
       url || originalUrl,
@@ -574,10 +577,18 @@ class _QuickSuggestTestUtils {
     }
 
     this.Assert.equal(
-      result.payload.helpUrl,
-      lazy.QuickSuggest.HELP_URL,
-      "Result helpURL"
+      result.payload.isManageable,
+      isManageable,
+      "Result isManageable"
     );
+
+    if (!isManageable) {
+      this.Assert.equal(
+        result.payload.helpUrl,
+        lazy.QuickSuggest.HELP_URL,
+        "Result helpURL"
+      );
+    }
 
     this.Assert.ok(
       row._buttons.get("menu"),

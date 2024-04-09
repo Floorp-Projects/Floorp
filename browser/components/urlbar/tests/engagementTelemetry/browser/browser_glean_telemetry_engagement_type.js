@@ -101,17 +101,59 @@ add_task(async function engagement_type_dismiss() {
 });
 
 add_task(async function engagement_type_help() {
-  const cleanupQuickSuggest = await ensureQuickSuggestInit();
+  const url = "https://example.com/";
+  const helpUrl = "https://example.com/help";
+  let provider = new UrlbarTestUtils.TestProvider({
+    priority: Infinity,
+    results: [
+      new UrlbarResult(
+        UrlbarUtils.RESULT_TYPE.URL,
+        UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+        {
+          url,
+          isBlockable: true,
+          blockL10n: { id: "urlbar-result-menu-dismiss-firefox-suggest" },
+          helpUrl,
+          helpL10n: {
+            id: "urlbar-result-menu-learn-more-about-firefox-suggest",
+          },
+        }
+      ),
+    ],
+  });
+  UrlbarProvidersManager.registerProvider(provider);
 
   await doTest(async () => {
-    await openPopup("sponsored");
-    await selectRowByURL("https://example.com/sponsored");
+    await openPopup("test");
+    await selectRowByURL(url);
+
     const onTabOpened = BrowserTestUtils.waitForNewTab(gBrowser);
     UrlbarTestUtils.openResultMenuAndPressAccesskey(window, "L");
     const tab = await onTabOpened;
     BrowserTestUtils.removeTab(tab);
 
     assertEngagementTelemetry([{ engagement_type: "help" }]);
+  });
+
+  UrlbarProvidersManager.unregisterProvider(provider);
+});
+
+add_task(async function engagement_type_manage() {
+  const cleanupQuickSuggest = await ensureQuickSuggestInit();
+
+  await doTest(async () => {
+    await openPopup("sponsored");
+    await selectRowByURL("https://example.com/sponsored");
+
+    const onManagePageLoaded = BrowserTestUtils.browserLoaded(
+      browser,
+      false,
+      "about:preferences#search"
+    );
+    UrlbarTestUtils.openResultMenuAndPressAccesskey(window, "M");
+    await onManagePageLoaded;
+
+    assertEngagementTelemetry([{ engagement_type: "manage" }]);
   });
 
   await cleanupQuickSuggest();

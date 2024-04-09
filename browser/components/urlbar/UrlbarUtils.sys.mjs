@@ -1831,6 +1831,9 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
       isBlockable: {
         type: "boolean",
       },
+      isManageable: {
+        type: "boolean",
+      },
       isPinned: {
         type: "boolean",
       },
