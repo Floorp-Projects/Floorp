@@ -2777,20 +2777,6 @@ with only_when(compile_environment & wasm_sandboxing.hunspell):
     set_config("MOZ_WASI_EMULATED_CLOCK", True, when=wasi_emulated_clock)
 
 
-# new Notification Store implementation
-# ==============================================================
-
-
-@depends(milestone)
-def new_notification_store(milestone):
-    if milestone.is_nightly:
-        return True
-
-
-set_config("MOZ_NEW_NOTIFICATION_STORE", True, when=new_notification_store)
-set_define("MOZ_NEW_NOTIFICATION_STORE", True, when=new_notification_store)
-
-
 # Auxiliary files persistence on application close
 # ==============================================================
 
