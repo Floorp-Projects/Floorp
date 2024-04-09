@@ -924,29 +924,13 @@ export var Sanitizer = {
           await maybeSanitizeSessionPrincipals(
             progress,
             principalsForShutdownClearing,
-            Ci.nsIClearDataService.CLEAR_COOKIES |
-              Ci.nsIClearDataService.CLEAR_COOKIE_BANNER_EXECUTED_RECORD |
-              Ci.nsIClearDataService.CLEAR_DOM_STORAGES |
-              Ci.nsIClearDataService.CLEAR_EME |
-              Ci.nsIClearDataService.CLEAR_AUTH_TOKENS |
-              Ci.nsIClearDataService.CLEAR_AUTH_CACHE |
-              Ci.nsIClearDataService.CLEAR_FINGERPRINTING_PROTECTION_STATE |
-              Ci.nsIClearDataService.CLEAR_BOUNCE_TRACKING_PROTECTION_STATE |
-              Ci.nsIClearDataService.CLEAR_STORAGE_PERMISSIONS
+            Ci.nsIClearDataService.CLEAR_COOKIES_AND_SITE_DATA
           );
         } else {
           // Not on shutdown
           await clearData(
             range,
-            Ci.nsIClearDataService.CLEAR_COOKIES |
-              Ci.nsIClearDataService.CLEAR_COOKIE_BANNER_EXECUTED_RECORD |
-              Ci.nsIClearDataService.CLEAR_DOM_STORAGES |
-              Ci.nsIClearDataService.CLEAR_EME |
-              Ci.nsIClearDataService.CLEAR_AUTH_TOKENS |
-              Ci.nsIClearDataService.CLEAR_AUTH_CACHE |
-              Ci.nsIClearDataService.CLEAR_FINGERPRINTING_PROTECTION_STATE |
-              Ci.nsIClearDataService.CLEAR_BOUNCE_TRACKING_PROTECTION_STATE |
-              Ci.nsIClearDataService.CLEAR_STORAGE_PERMISSIONS
+            Ci.nsIClearDataService.CLEAR_COOKIES_AND_SITE_DATA
           );
         }
         await clearData(range, Ci.nsIClearDataService.CLEAR_MEDIA_DEVICES);

@@ -345,6 +345,19 @@ interface nsIClearDataService : nsISupports
     CLEAR_CREDENTIAL_MANAGER_STATE | CLEAR_COOKIE_BANNER_EXCEPTION |
     CLEAR_COOKIE_BANNER_EXECUTED_RECORD | CLEAR_FINGERPRINTING_PROTECTION_STATE |
     CLEAR_BOUNCE_TRACKING_PROTECTION_STATE;
+
+  /**
+   * Helper flag for clearing cookies and site data.
+   * This flag groups state that we consider site data
+   * from the user perspective. If you implement UI that
+   * offers site data clearing this is almost always what you want.
+   * If you need more granular control please use more specific
+   * flags like CLEAR_COOKIES and CLEAR_DOM_STORAGES.
+   */
+  const uint32_t CLEAR_COOKIES_AND_SITE_DATA =
+    CLEAR_COOKIES | CLEAR_COOKIE_BANNER_EXECUTED_RECORD | CLEAR_DOM_STORAGES | CLEAR_HSTS |
+    CLEAR_EME | CLEAR_AUTH_TOKENS | CLEAR_AUTH_CACHE | CLEAR_FINGERPRINTING_PROTECTION_STATE |
+    CLEAR_BOUNCE_TRACKING_PROTECTION_STATE | CLEAR_STORAGE_PERMISSIONS;
 };
 
 /**
