@@ -401,6 +401,11 @@ async function doDismiss({ menu, assert }) {
   await UrlbarTestUtils.promisePopupClose(window);
 }
 
+// Tests the "Manage" result menu.
+add_task(async function resultMenu_manage() {
+  await doManageTest({ input: "ramen", index: 1 });
+});
+
 // Tests the row/group label.
 add_task(async function rowLabel() {
   let tests = [

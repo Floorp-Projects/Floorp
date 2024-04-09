@@ -116,7 +116,7 @@ add_tasks_with_rust(async function resultMenu_notInterested() {
 });
 
 // Tests the "Not relevant" result menu dismissal command.
-add_tasks_with_rust(async function notRelevant() {
+add_tasks_with_rust(async function resultMenu_notRelevant() {
   await doDismissTest("not_relevant");
 
   Assert.equal(UrlbarPrefs.get("suggest.mdn"), true);
@@ -126,6 +126,11 @@ add_tasks_with_rust(async function notRelevant() {
   Assert.ok(exists);
 
   await QuickSuggest.blockedSuggestions.clear();
+});
+
+// Tests the "Manage" result menu.
+add_tasks_with_rust(async function resultMenu_manage() {
+  await doManageTest({ input: "array", index: 1 });
 });
 
 async function doDismissTest(command) {

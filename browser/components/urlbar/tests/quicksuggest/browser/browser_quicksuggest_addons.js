@@ -245,8 +245,13 @@ add_task(async function resultMenu_notInterested() {
 });
 
 // Tests the "Not relevant" result menu dismissal command.
-add_task(async function notRelevant() {
+add_task(async function resultMenu_notRelevant() {
   await doDismissTest("not_relevant", false);
+});
+
+// Tests the "Manage" result menu.
+add_task(async function resultMenu_manage() {
+  await doManageTest({ input: "only match the Merino suggestion", index: 1 });
 });
 
 // Tests the row/group label.
