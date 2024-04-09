@@ -136,31 +136,25 @@ pub impl FfiType {
     // Type for the Rust scaffolding code
     fn rust_type(&self) -> String {
         match self {
-            FfiType::UInt8 => "uint8_t",
-            FfiType::Int8 => "int8_t",
-            FfiType::UInt16 => "uint16_t",
-            FfiType::Int16 => "int16_t",
-            FfiType::UInt32 => "uint32_t",
-            FfiType::Int32 => "int32_t",
-            FfiType::UInt64 => "uint64_t",
-            FfiType::Int64 => "int64_t",
-            FfiType::Float32 => "float",
-            FfiType::Float64 => "double",
-            FfiType::RustBuffer(_) => "RustBuffer",
-            FfiType::RustArcPtr(_) => "void *",
-            FfiType::ForeignCallback => "ForeignCallback",
+            FfiType::UInt8 => "uint8_t".to_owned(),
+            FfiType::Int8 => "int8_t".to_owned(),
+            FfiType::UInt16 => "uint16_t".to_owned(),
+            FfiType::Int16 => "int16_t".to_owned(),
+            FfiType::UInt32 => "uint32_t".to_owned(),
+            FfiType::Int32 => "int32_t".to_owned(),
+            FfiType::UInt64 => "uint64_t".to_owned(),
+            FfiType::Int64 => "int64_t".to_owned(),
+            FfiType::Float32 => "float".to_owned(),
+            FfiType::Float64 => "double".to_owned(),
+            FfiType::RustBuffer(_) => "RustBuffer".to_owned(),
+            FfiType::RustArcPtr(_) => "void *".to_owned(),
             FfiType::ForeignBytes => unimplemented!("ForeignBytes not supported"),
-            FfiType::ForeignExecutorHandle => unimplemented!("ForeignExecutorHandle not supported"),
-            FfiType::ForeignExecutorCallback => {
-                unimplemented!("ForeignExecutorCallback not supported")
-            }
-            FfiType::RustFutureHandle
-            | FfiType::RustFutureContinuationCallback
-            | FfiType::RustFutureContinuationData => {
-                unimplemented!("Rust async functions not supported")
-            }
+            FfiType::Handle => "uint64_t".to_owned(),
+            FfiType::RustCallStatus => "RustCallStatus".to_owned(),
+            FfiType::Callback(name) | FfiType::Struct(name) => name.to_owned(),
+            FfiType::VoidPointer => "void *".to_owned(),
+            FfiType::Reference(_) => unimplemented!("References not supported"),
         }
-        .to_owned()
     }
 }
 

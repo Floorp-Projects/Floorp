@@ -2330,6 +2330,7 @@ dependencies = [
  "uniffi-example-todolist",
  "uniffi-fixture-callbacks",
  "uniffi-fixture-external-types",
+ "uniffi-fixture-refcounts",
  "url",
  "viaduct",
  "webext_storage_bridge",
@@ -6105,6 +6106,13 @@ dependencies = [
  "thiserror",
  "uniffi",
  "uniffi-example-geometry",
+]
+
+[[package]]
+name = "uniffi-fixture-refcounts"
+version = "0.21.0"
+dependencies = [
+ "uniffi",
 ]
 
 [[package]]
