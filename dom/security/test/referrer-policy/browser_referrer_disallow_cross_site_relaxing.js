@@ -191,6 +191,8 @@ add_setup(async function () {
     set: [
       // Disable mixed content blocking to be able to test downgrade scenario.
       ["security.mixed_content.block_active_content", false],
+      // Disable https-first since we are testing http and https referrers
+      ["dom.security.https_first", false],
     ],
   });
 });

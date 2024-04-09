@@ -166,7 +166,10 @@ function shouldNotifyDownloadUI() {
 
 async function runTest(url, link, checkFunction, description) {
   await SpecialPowers.pushPrefEnv({
-    set: [["dom.block_download_insecure", true]],
+    set: [
+      ["dom.block_download_insecure", true],
+      ["dom.security.https_first", false],
+    ],
   });
   await resetDownloads();
 
