@@ -401,6 +401,12 @@ class PermissionManager final : public nsIPermissionManager,
                                     bool aSiteScopePermissions,
                                     nsTArray<RefPtr<nsIPermission>>& aResult);
 
+  // Returns true if the principal can be used for getting / setting
+  // permissions. If the principal can not be used an error code may be
+  // returned.
+  nsresult ShouldHandlePrincipalForPermission(
+      nsIPrincipal* aPrincipal, bool& aIsPermissionPrincipalValid);
+
   // Returns PermissionHashKey for a given { host, isInBrowserElement } tuple.
   // This is not simply using PermissionKey because we will walk-up domains in
   // case of |host| contains sub-domains. Returns null if nothing found. Also

@@ -117,6 +117,14 @@ interface nsIPermissionManager : nsISupports
                         [optional] in int64_t expireTime);
 
   /**
+   * Test method to add a permission for a given principal with custom modification time.
+   */
+  void testAddFromPrincipalByTime(in nsIPrincipal principal, in ACString type,
+    in uint32_t permission,
+    in int64_t modificationTime
+  );
+
+  /**
    * Add permanent permission information for a given principal in private
    * browsing.
    *
