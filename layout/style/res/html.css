@@ -816,21 +816,15 @@ dialog::backdrop {
   background: rgba(0, 0, 0, 0.1);
 }
 
-/* https://html.spec.whatwg.org/#the-marquee-element-2 */
 marquee {
-  display: inline-block;
-  text-align: initial;
-  overflow: hidden !important;
-
-  /* See https://github.com/whatwg/html/issues/10249 */
   inline-size: -moz-available;
+  display: inline-block;
   vertical-align: text-bottom;
-  white-space: nowrap;
+  text-align: start;
 }
 
 marquee:is([direction="up"], [direction="down"]) {
   block-size: 200px;
-  white-space: unset;
 }
 
 /* Ruby */
