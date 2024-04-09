@@ -18,7 +18,12 @@ namespace mozilla {
             ##__VA_ARGS__)
 
 RemoteMediaDataDecoder::RemoteMediaDataDecoder(RemoteDecoderChild* aChild)
-    : mChild(aChild) {
+    : mChild(aChild),
+      mDescription("RemoteMediaDataDecoder"_ns),
+      mProcessName("unknown"_ns),
+      mCodecName("unknown"_ns),
+      mIsHardwareAccelerated(false),
+      mConversion(ConversionRequired::kNeedNone) {
   LOG("%p is created", this);
 }
 
@@ -48,6 +53,7 @@ RefPtr<MediaDataDecoder::InitPromise> RemoteMediaDataDecoder::Init() {
       ->Then(
           RemoteDecoderManagerChild::GetManagerThread(), __func__,
           [self, this](TrackType aTrack) {
+            MutexAutoLock lock(mMutex);
             // If shutdown has started in the meantime shutdown promise may
             // be resloved before this task. In this case mChild will be null
             // and the init promise has to be canceled.
@@ -127,6 +133,7 @@ RefPtr<ShutdownPromise> RemoteMediaDataDecoder::Shutdown() {
 
 bool RemoteMediaDataDecoder::IsHardwareAccelerated(
     nsACString& aFailureReason) const {
+  MutexAutoLock lock(mMutex);
   aFailureReason = mHardwareAcceleratedReason;
   return mIsHardwareAccelerated;
 }
@@ -145,18 +152,24 @@ void RemoteMediaDataDecoder::SetSeekThreshold(const media::TimeUnit& aTime) {
 
 MediaDataDecoder::ConversionRequired RemoteMediaDataDecoder::NeedsConversion()
     const {
+  MutexAutoLock lock(mMutex);
   return mConversion;
 }
 
 nsCString RemoteMediaDataDecoder::GetDescriptionName() const {
+  MutexAutoLock lock(mMutex);
   return mDescription;
 }
 
 nsCString RemoteMediaDataDecoder::GetProcessName() const {
+  MutexAutoLock lock(mMutex);
   return mProcessName;
 }
 
-nsCString RemoteMediaDataDecoder::GetCodecName() const { return mCodecName; }
+nsCString RemoteMediaDataDecoder::GetCodecName() const {
+  MutexAutoLock lock(mMutex);
+  return mCodecName;
+}
 
 #undef LOG
 

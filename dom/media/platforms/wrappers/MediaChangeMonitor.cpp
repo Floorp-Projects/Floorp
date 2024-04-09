@@ -800,6 +800,7 @@ RefPtr<ShutdownPromise> MediaChangeMonitor::ShutdownDecoder() {
   AssertOnThread();
   mConversionRequired.reset();
   if (mDecoder) {
+    MutexAutoLock lock(mMutex);
     RefPtr<MediaDataDecoder> decoder = std::move(mDecoder);
     return decoder->Shutdown();
   }
@@ -847,6 +848,7 @@ MediaChangeMonitor::CreateDecoder() {
           ->Then(
               GetCurrentSerialEventTarget(), __func__,
               [self = RefPtr{this}, this](RefPtr<MediaDataDecoder>&& aDecoder) {
+                MutexAutoLock lock(mMutex);
                 mDecoder = std::move(aDecoder);
                 DDLINKCHILD("decoder", mDecoder.get());
                 return CreateDecoderPromise::CreateAndResolve(true, __func__);
@@ -1093,6 +1095,11 @@ void MediaChangeMonitor::FlushThenShutdownDecoder(
             mDecodePromise.Reject(aError, __func__);
           })
       ->Track(mFlushRequest);
+}
+
+MediaDataDecoder* MediaChangeMonitor::GetDecoderOnNonOwnerThread() const {
+  MutexAutoLock lock(mMutex);
+  return mDecoder;
 }
 
 #undef LOG
