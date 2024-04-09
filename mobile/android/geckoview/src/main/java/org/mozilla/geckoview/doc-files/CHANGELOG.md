@@ -25,7 +25,8 @@ while a user gesture was active (e.g., a tap).
 - Added [`WebExtension.MetaData.grantedOptionalPermissions`][125.8] and [`WebExtension.MetaData.grantedOptionalOrigins`][125.9] which expose the granted optional and origin optional permissions of an extension ([bug 1879543]({{bugzilla}}1879543)).
 - Added [`WebExtension.MetaData.promptPermissions`][125.10] which exposes a list of permissions which needs to be prompted to users ([bug 1879547]({{bugzilla}}1879547)).
 - ⚠️ Deprecate the [`WebExtension.MetaData.permissions`][125.11] API to be removed in v131. Please use `WebExtension.MetaData.promptPermissions`][125.10] instead.
--
+- Added [`WebExtensionController.addOptionalPermissions`][125.12] and [`WebExtensionController.removeOptionalPermissions`][125.13], which allow to add and remove optional permissions/origins of an extension ([bug 1796176]({{bugzilla}}1796176)).
+
 [125.1]: {{javadoc_uri}}/GeckoSession.NavigationDelegate#onLocationChange(org.mozilla.geckoview.GeckoSession,java.lang.String,java.util.List)
 [125.2]: {{javadoc_uri}}/GeckoSession.NavigationDelegate#onLocationChange(org.mozilla.geckoview.GeckoSession,java.lang.String,java.util.List,boolean)
 [125.3]: {{javadoc_uri}}/WebExtension.MetaData.html#optionalPermissions
@@ -37,6 +38,8 @@ while a user gesture was active (e.g., a tap).
 [125.9]: {{javadoc_uri}}/WebExtension.MetaData.html#grantedOptionalOrigins
 [125.10]: {{javadoc_uri}}/WebExtension.MetaData.html#promptPermissions
 [125.11]: {{javadoc_uri}}/WebExtension.MetaData.html#permissions
+[125.12]: {{javadoc_uri}}/WebExtensionController.html#addOptionalPermissions
+[125.13]: {{javadoc_uri}}/WebExtensionController.html#removeOptionalPermissions
 
 ## v124
 
@@ -1544,4 +1547,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 2fd39a5dca2bf128d7be5ac7e3980fc439c16113
+[api-version]: 2c319e9f18adb4178ce09d71088a173b56d1a694

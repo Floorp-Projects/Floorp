@@ -1222,6 +1222,61 @@ export var GeckoViewWebExtension = {
         break;
       }
 
+      case "GeckoView:WebExtension:AddOptionalPermissions": {
+        const { extensionId, permissions, origins } = aData;
+        try {
+          const addon = await this.extensionById(extensionId);
+          const normalized = lazy.ExtensionPermissions.normalizeOptional(
+            {
+              permissions,
+              origins,
+            },
+            addon.optionalPermissions
+          );
+          const policy = WebExtensionPolicy.getByID(addon.id);
+          await lazy.ExtensionPermissions.add(
+            extensionId,
+            normalized,
+            policy?.extension
+          );
+          const extension = await exportExtension(
+            addon,
+            addon.userPermissions,
+            /* aSourceURI */ null
+          );
+          aCallback.onSuccess({ extension });
+        } catch (ex) {
+          aCallback.onError(`Unexpected error: ${ex}`);
+        }
+        break;
+      }
+
+      case "GeckoView:WebExtension:RemoveOptionalPermissions": {
+        const { extensionId, permissions, origins } = aData;
+        try {
+          const addon = await this.extensionById(extensionId);
+          const normalized = lazy.ExtensionPermissions.normalizeOptional(
+            { permissions, origins },
+            addon.optionalPermissions
+          );
+          const policy = WebExtensionPolicy.getByID(addon.id);
+          await lazy.ExtensionPermissions.remove(
+            addon.id,
+            normalized,
+            policy?.extension
+          );
+          const extension = await exportExtension(
+            addon,
+            addon.userPermissions,
+            /* aSourceURI */ null
+          );
+          aCallback.onSuccess({ extension });
+        } catch (ex) {
+          aCallback.onError(`Unexpected error: ${ex}`);
+        }
+        break;
+      }
+
       case "GeckoView:WebExtension:Install": {
         const { locationUri, installId, installMethod } = aData;
         let uri;

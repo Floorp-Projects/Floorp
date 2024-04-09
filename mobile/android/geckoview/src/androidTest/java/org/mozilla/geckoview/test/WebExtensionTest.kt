@@ -268,6 +268,220 @@ class WebExtensionTest : BaseSessionTest() {
         sessionRule.waitForResult(controller.uninstall(extension))
     }
 
+    @Test
+    fun updateOptionalPermissions() {
+        var extension = sessionRule.waitForResult(
+            controller.ensureBuiltIn(
+                "resource://android/assets/web_extensions/optional-permission-request/",
+                "optional-permission-request@example.com",
+            ),
+        )
+
+        assertEquals("optional-permission-request@example.com", extension.id)
+
+        var grantedOptionalPermissions = extension.metaData.grantedOptionalPermissions
+        var grantedOptionalOrigins = extension.metaData.grantedOptionalOrigins
+
+        // Without adding any optional permissions.
+        assertThat(
+            "grantedOptionalPermissions must be 0.",
+            grantedOptionalPermissions.size,
+            equalTo(0),
+        )
+        assertThat("grantedOptionalOrigins must be 0.", grantedOptionalOrigins.size, equalTo(0))
+
+        // Only adding an origin permission.
+        extension = sessionRule.waitForResult(
+            controller.addOptionalPermissions(
+                extension.id,
+                arrayOf(),
+                arrayOf("*://example.com/*"),
+            ),
+        )
+
+        grantedOptionalPermissions = extension.metaData.grantedOptionalPermissions
+        grantedOptionalOrigins = extension.metaData.grantedOptionalOrigins
+
+        assertThat(
+            "grantedOptionalPermissions must be 0.",
+            grantedOptionalPermissions.size,
+            equalTo(0),
+        )
+        assertThat("grantedOptionalOrigins must be 1.", grantedOptionalOrigins.size, equalTo(1))
+        assertThat(
+            "grantedOptionalOrigins must be *://example.com/*.",
+            grantedOptionalOrigins.first(),
+            equalTo("*://example.com/*"),
+        )
+
+        // Adding "nothing" to verify that nothing gets changed.
+        extension = sessionRule.waitForResult(
+            controller.addOptionalPermissions(
+                extension.id,
+                arrayOf(),
+                arrayOf(),
+            ),
+        )
+
+        assertThat("grantedOptionalOrigins must be 1.", grantedOptionalOrigins.size, equalTo(1))
+        assertThat(
+            "grantedOptionalOrigins must be *://example.com/*.",
+            grantedOptionalOrigins.first(),
+            equalTo("*://example.com/*"),
+        )
+
+        // Adding an optional permission.
+        extension = sessionRule.waitForResult(
+            controller.addOptionalPermissions(
+                extension.id,
+                arrayOf("activeTab"),
+                arrayOf(),
+            ),
+        )
+
+        grantedOptionalPermissions = extension.metaData.grantedOptionalPermissions
+        grantedOptionalOrigins = extension.metaData.grantedOptionalOrigins
+
+        // Both optional and origin permissions must be granted.
+        assertThat(
+            "grantedOptionalPermissions must be 1.",
+            grantedOptionalPermissions.size,
+            equalTo(1),
+        )
+        assertThat(
+            "grantedOptionalPermissions must be activeTab.",
+            grantedOptionalPermissions.first(),
+            equalTo("activeTab"),
+        )
+        assertThat("grantedOptionalOrigins must be 1.", grantedOptionalOrigins.size, equalTo(1))
+        assertThat(
+            "grantedOptionalOrigins must be *://example.com/*.",
+            grantedOptionalOrigins.first(),
+            equalTo("*://example.com/*"),
+        )
+
+        // Removing "nothing" to verify that nothing gets changed.
+        extension = sessionRule.waitForResult(
+            controller.removeOptionalPermissions(
+                extension.id,
+                arrayOf(),
+                arrayOf(),
+            ),
+        )
+
+        assertThat("grantedOptionalOrigins must be 1.", grantedOptionalOrigins.size, equalTo(1))
+        assertThat(
+            "grantedOptionalOrigins must be *://example.com/*.",
+            grantedOptionalOrigins.first(),
+            equalTo("*://example.com/*"),
+        )
+
+        // Remove an activeTab optional permission.
+        extension = sessionRule.waitForResult(
+            controller.removeOptionalPermissions(
+                extension.id,
+                arrayOf("activeTab"),
+                arrayOf(),
+            ),
+        )
+
+        grantedOptionalPermissions = extension.metaData.grantedOptionalPermissions
+        grantedOptionalOrigins = extension.metaData.grantedOptionalOrigins
+
+        assertThat(
+            "grantedOptionalPermissions must be 0.",
+            grantedOptionalPermissions.size,
+            equalTo(0),
+        )
+        assertThat("grantedOptionalOrigins must be 1.", grantedOptionalOrigins.size, equalTo(1))
+        assertThat(
+            "grantedOptionalOrigins must be *://example.com/*.",
+            grantedOptionalOrigins.first(),
+            equalTo("*://example.com/*"),
+        )
+
+        // Remove an `*://example.com/*` origin permission.
+        extension = sessionRule.waitForResult(
+            controller.removeOptionalPermissions(
+                extension.id,
+                arrayOf(),
+                arrayOf("*://example.com/*"),
+            ),
+        )
+
+        grantedOptionalPermissions = extension.metaData.grantedOptionalPermissions
+        grantedOptionalOrigins = extension.metaData.grantedOptionalOrigins
+
+        assertThat(
+            "grantedOptionalPermissions must be 0.",
+            grantedOptionalPermissions.size,
+            equalTo(0),
+        )
+        assertThat("grantedOptionalOrigins must be 0.", grantedOptionalOrigins.size, equalTo(0))
+
+        // Missing origins from the manifest.
+        // Must throw!
+        try {
+            extension = sessionRule.waitForResult(
+                controller.addOptionalPermissions(
+                    extension.id,
+                    arrayOf(),
+                    arrayOf("*://missing-origins.com/*"),
+                ),
+            )
+            fail()
+        } catch (_: Exception) {
+            assertThat(
+                "grantedOptionalPermissions must be 0.",
+                grantedOptionalPermissions.size,
+                equalTo(0),
+            )
+            assertThat("grantedOptionalOrigins must be 0.", grantedOptionalOrigins.size, equalTo(0))
+        }
+
+        // Permission no in the manifest.
+        // Must throw!
+        try {
+            extension = sessionRule.waitForResult(
+                controller.addOptionalPermissions(
+                    extension.id,
+                    arrayOf("clipboardRead"),
+                    arrayOf(),
+                ),
+            )
+            fail()
+        } catch (_: Exception) {
+            assertThat(
+                "grantedOptionalPermissions must be 0.",
+                grantedOptionalPermissions.size,
+                equalTo(0),
+            )
+            assertThat("grantedOptionalOrigins must be 0.", grantedOptionalOrigins.size, equalTo(0))
+        }
+
+        // Missing origins from the manifest.
+        // Must throw!
+        try {
+            extension = sessionRule.waitForResult(
+                controller.addOptionalPermissions(
+                    extension.id,
+                    arrayOf(),
+                    arrayOf("<all_urls>"),
+                ),
+            )
+            fail()
+        } catch (_: Exception) {
+            assertThat(
+                "grantedOptionalPermissions must be 0.",
+                grantedOptionalPermissions.size,
+                equalTo(0),
+            )
+            assertThat("grantedOptionalOrigins must be 0.", grantedOptionalOrigins.size, equalTo(0))
+        }
+
+        sessionRule.waitForResult(controller.uninstall(extension))
+    }
+
     private fun assertBodyBorderEqualTo(expected: String) {
         val color = mainSession.evaluateJS("document.body.style.borderColor")
         assertThat(
