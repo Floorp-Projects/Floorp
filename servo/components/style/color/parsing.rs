@@ -8,12 +8,15 @@
 //! Relative colors, color-mix, system colors, and other such things require better calc() support
 //! and integration.
 
-use super::component::ColorComponentType;
-use crate::{
-    color::component::ColorComponent,
-    values::{
-        generics::calc::CalcUnits, specified::angle::Angle as SpecifiedAngle,
-        specified::calc::Leaf as SpecifiedLeaf,
+use super::{
+    color_function::ColorFunction,
+    component::{ColorComponent, ColorComponentType},
+    AbsoluteColor,
+};
+use crate::values::{
+    generics::calc::CalcUnits,
+    specified::{
+        angle::Angle as SpecifiedAngle, calc::Leaf as SpecifiedLeaf, color::Color as SpecifiedColor,
     },
 };
 use cssparser::{
@@ -42,26 +45,15 @@ impl From<u8> for ColorComponent<u8> {
 /// CSS escaping (if relevant) should be resolved before calling this function.
 /// (For example, the value of an `Ident` token is fine.)
 #[inline]
-pub fn parse_color_keyword<Output>(ident: &str) -> Result<Output, ()>
-where
-    Output: FromParsedColor,
-{
+pub fn parse_color_keyword(ident: &str) -> Result<SpecifiedColor, ()> {
     Ok(match_ignore_ascii_case! { ident,
-        "transparent" => Output::from_rgba(
-            0u8.into(),
-            0u8.into(),
-            0u8.into(),
-            ColorComponent::Value(NumberOrPercentage::Number { value: 0.0 }),
-        ),
-        "currentcolor" => Output::from_current_color(),
+        "transparent" => {
+            SpecifiedColor::from_absolute_color(AbsoluteColor::srgb_legacy(0u8, 0u8, 0u8, 0.0))
+        },
+        "currentcolor" => SpecifiedColor::CurrentColor,
         _ => {
             let (r, g, b) = cssparser::color::parse_named_color(ident)?;
-            Output::from_rgba(
-                r.into(),
-                g.into(),
-                b.into(),
-                ColorComponent::Value(NumberOrPercentage::Number { value: OPAQUE }),
-            )
+            SpecifiedColor::from_absolute_color(AbsoluteColor::srgb_legacy(r, g, b, OPAQUE))
         },
     })
 }
@@ -71,7 +63,7 @@ where
 pub fn parse_color_with<'i, 't, P>(
     color_parser: &P,
     input: &mut Parser<'i, 't>,
-) -> Result<P::Output, ParseError<'i>>
+) -> Result<SpecifiedColor, ParseError<'i>>
 where
     P: ColorParser<'i>,
 {
@@ -80,18 +72,15 @@ where
     match *token {
         Token::Hash(ref value) | Token::IDHash(ref value) => parse_hash_color(value.as_bytes())
             .map(|(r, g, b, a)| {
-                P::Output::from_rgba(
-                    r.into(),
-                    g.into(),
-                    b.into(),
-                    ColorComponent::Value(NumberOrPercentage::Number { value: a }),
-                )
+                SpecifiedColor::from_absolute_color(AbsoluteColor::srgb_legacy(r, g, b, a))
             }),
         Token::Ident(ref value) => parse_color_keyword(value),
         Token::Function(ref name) => {
             let name = name.clone();
             return input.parse_nested_block(|arguments| {
-                parse_color_function(color_parser, name, arguments)
+                Ok(SpecifiedColor::from_absolute_color(
+                    parse_color_function(color_parser, name, arguments)?.resolve_to_absolute(),
+                ))
             });
         },
         _ => Err(()),
@@ -105,7 +94,7 @@ fn parse_color_function<'i, 't, P>(
     color_parser: &P,
     name: CowRcStr<'i>,
     arguments: &mut Parser<'i, 't>,
-) -> Result<P::Output, ParseError<'i>>
+) -> Result<ColorFunction, ParseError<'i>>
 where
     P: ColorParser<'i>,
 {
@@ -113,10 +102,10 @@ where
         "rgb" | "rgba" => parse_rgb(color_parser, arguments),
         "hsl" | "hsla" => parse_hsl(color_parser, arguments),
         "hwb" => parse_hwb(color_parser, arguments),
-        "lab" => parse_lab_like(color_parser, arguments, P::Output::from_lab),
-        "lch" => parse_lch_like(color_parser, arguments, P::Output::from_lch),
-        "oklab" => parse_lab_like(color_parser, arguments, P::Output::from_oklab),
-        "oklch" => parse_lch_like(color_parser, arguments, P::Output::from_oklch),
+        "lab" => parse_lab_like(color_parser, arguments, ColorFunction::Lab),
+        "lch" => parse_lch_like(color_parser, arguments, ColorFunction::Lch),
+        "oklab" => parse_lab_like(color_parser, arguments, ColorFunction::Oklab),
+        "oklch" => parse_lch_like(color_parser, arguments, ColorFunction::Oklch),
         "color" => parse_color_with_color_space(color_parser, arguments),
         _ => return Err(arguments.new_unexpected_token_error(Token::Ident(name))),
     }?;
@@ -174,7 +163,7 @@ impl ColorComponent<NumberOrPercentage> {
 fn parse_origin_color<'i, 't, P>(
     color_parser: &P,
     arguments: &mut Parser<'i, 't>,
-) -> Result<Option<P::Output>, ParseError<'i>>
+) -> Result<Option<SpecifiedColor>, ParseError<'i>>
 where
     P: ColorParser<'i>,
 {
@@ -199,7 +188,7 @@ where
 fn parse_rgb<'i, 't, P>(
     color_parser: &P,
     arguments: &mut Parser<'i, 't>,
-) -> Result<P::Output, ParseError<'i>>
+) -> Result<ColorFunction, ParseError<'i>>
 where
     P: ColorParser<'i>,
 {
@@ -259,7 +248,7 @@ where
         (red, green, blue, alpha)
     };
 
-    Ok(P::Output::from_rgba(red, green, blue, alpha))
+    Ok(ColorFunction::Rgb(red, green, blue, alpha))
 }
 
 /// Parses hsl syntax.
@@ -269,7 +258,7 @@ where
 fn parse_hsl<'i, 't, P>(
     color_parser: &P,
     arguments: &mut Parser<'i, 't>,
-) -> Result<P::Output, ParseError<'i>>
+) -> Result<ColorFunction, ParseError<'i>>
 where
     P: ColorParser<'i>,
 {
@@ -306,7 +295,7 @@ where
         )
     };
 
-    Ok(P::Output::from_hsl(hue, saturation, lightness, alpha))
+    Ok(ColorFunction::Hsl(hue, saturation, lightness, alpha))
 }
 
 /// Parses hwb syntax.
@@ -316,7 +305,7 @@ where
 fn parse_hwb<'i, 't, P>(
     color_parser: &P,
     arguments: &mut Parser<'i, 't>,
-) -> Result<P::Output, ParseError<'i>>
+) -> Result<ColorFunction, ParseError<'i>>
 where
     P: ColorParser<'i>,
 {
@@ -330,7 +319,7 @@ where
         P::parse_number_or_percentage,
     )?;
 
-    Ok(P::Output::from_hwb(hue, whiteness, blackness, alpha))
+    Ok(ColorFunction::Hwb(hue, whiteness, blackness, alpha))
 }
 
 type IntoLabFn<Output> = fn(
@@ -344,8 +333,8 @@ type IntoLabFn<Output> = fn(
 fn parse_lab_like<'i, 't, P>(
     color_parser: &P,
     arguments: &mut Parser<'i, 't>,
-    into_color: IntoLabFn<P::Output>,
-) -> Result<P::Output, ParseError<'i>>
+    into_color: IntoLabFn<ColorFunction>,
+) -> Result<ColorFunction, ParseError<'i>>
 where
     P: ColorParser<'i>,
 {
@@ -373,8 +362,8 @@ type IntoLchFn<Output> = fn(
 fn parse_lch_like<'i, 't, P>(
     color_parser: &P,
     arguments: &mut Parser<'i, 't>,
-    into_color: IntoLchFn<P::Output>,
-) -> Result<P::Output, ParseError<'i>>
+    into_color: IntoLchFn<ColorFunction>,
+) -> Result<ColorFunction, ParseError<'i>>
 where
     P: ColorParser<'i>,
 {
@@ -396,7 +385,7 @@ where
 fn parse_color_with_color_space<'i, 't, P>(
     color_parser: &P,
     arguments: &mut Parser<'i, 't>,
-) -> Result<P::Output, ParseError<'i>>
+) -> Result<ColorFunction, ParseError<'i>>
 where
     P: ColorParser<'i>,
 {
@@ -418,13 +407,7 @@ where
         P::parse_number_or_percentage,
     )?;
 
-    Ok(P::Output::from_color_function(
-        color_space,
-        c1,
-        c2,
-        c3,
-        alpha,
-    ))
+    Ok(ColorFunction::Color(color_space, c1, c2, c3, alpha))
 }
 
 type ComponentParseResult<'i, R1, R2, R3> = Result<
@@ -599,9 +582,6 @@ impl ColorComponentType for f32 {
 ///
 /// For example, this is used by Servo to support calc() in color.
 pub trait ColorParser<'i> {
-    /// The type that the parser will construct on a successful parse.
-    type Output: FromParsedColor;
-
     /// Parse an `<angle>` or `<number>`.
     ///
     /// Returns the result in degrees.
