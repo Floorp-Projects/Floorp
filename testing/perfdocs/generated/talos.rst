@@ -7994,11 +7994,11 @@ For the sample commands found below, note that the capitalization used is import
    * reporting: time from *performance.timing.navigationStart* to *pagerendered* event in ms (lower is better)
    * data: loads a PDF 5 times
    * description:
-    Runs through a set of chunks. Each chunk runs 100 PDFs with 5 iterations each.
-    If --pdfPaintChunk is not used when running the test locally, all PDFs will be tested
-    by default with only 1 cycle each. The PDFs that are run are found in the Mozilla pdf.js
-    repository, and this test pulls those in for testing locally through a toolchain artifact
-    called talos-pdfs.
+      | Runs through a set of chunks. Each chunk runs 100 PDFs with 5 iterations each.
+        If --pdfPaintChunk is not used when running the test locally, all PDFs will be tested
+        by default with only 1 cycle each. The PDFs that are run are found in the Mozilla pdf.js
+        repository, and this test pulls those in for testing locally through a toolchain artifact
+        called talos-pdfs.
    * pdfpaint: True
    * timeout: 1800
    * tpmanifest: ${talos}/tests/pdfpaint/pdfpaint.manifest
