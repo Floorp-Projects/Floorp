@@ -164,3 +164,40 @@ add_tasks_with_rust(
     await cleanUpNimbus();
   }
 );
+
+// Tests the "Manage" result menu for sponsored suggestion.
+add_tasks_with_rust(async function resultMenu_manage_sponsored() {
+  await BrowserTestUtils.withNewTab({ gBrowser }, async browser => {
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: "fra",
+    });
+
+    const managePage = "about:preferences#search";
+    let onManagePageLoaded = BrowserTestUtils.browserLoaded(
+      browser,
+      false,
+      managePage
+    );
+    // Click the command.
+    await UrlbarTestUtils.openResultMenuAndClickItem(window, "manage", {
+      resultIndex: 1,
+    });
+    await onManagePageLoaded;
+    Assert.equal(
+      browser.currentURI.spec,
+      managePage,
+      "The manage page is loaded"
+    );
+
+    await UrlbarTestUtils.promisePopupClose(window);
+  });
+});
+
+// Tests the "Manage" result menu for non-sponsored suggestion.
+add_tasks_with_rust(async function resultMenu_manage_nonSponsored() {
+  await doManageTest({
+    input: "nonspon",
+    index: 1,
+  });
+});

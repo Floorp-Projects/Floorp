@@ -48,6 +48,7 @@ const ZERO_PREFIX_SCALAR_EXPOSURE = "urlbar.zeroprefix.exposure";
 const RESULT_MENU_COMMANDS = {
   DISMISS: "dismiss",
   HELP: "help",
+  MANAGE: "manage",
 };
 
 const getBoundsWithoutFlushing = element =>
@@ -3139,6 +3140,15 @@ export class UrlbarView {
         },
       });
     }
+    if (result.payload.isManageable) {
+      commands.push({
+        name: RESULT_MENU_COMMANDS.MANAGE,
+        l10n: {
+          id: "urlbar-result-menu-manage-firefox-suggest",
+        },
+      });
+    }
+
     let rv = commands.length ? commands : null;
     this.#resultMenuCommands.set(result, rv);
     return rv;

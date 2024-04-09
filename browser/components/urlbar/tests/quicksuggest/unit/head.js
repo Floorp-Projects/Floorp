@@ -182,14 +182,11 @@ function makeWikipediaResult({
       qsSuggestion: keyword,
       sponsoredAdvertiser: "Wikipedia",
       sponsoredIabCategory: "5 - Education",
-      helpUrl: QuickSuggest.HELP_URL,
-      helpL10n: {
-        id: "urlbar-result-menu-learn-more-about-firefox-suggest",
-      },
       isBlockable: true,
       blockL10n: {
         id: "urlbar-result-menu-dismiss-firefox-suggest",
       },
+      isManageable: true,
       telemetryType: "adm_nonsponsored",
     },
   };
@@ -256,14 +253,11 @@ function makeAmpResult({
       sponsoredBlockId: blockId,
       sponsoredAdvertiser: advertiser,
       sponsoredIabCategory: iabCategory,
-      helpUrl: QuickSuggest.HELP_URL,
-      helpL10n: {
-        id: "urlbar-result-menu-learn-more-about-firefox-suggest",
-      },
       isBlockable: true,
       blockL10n: {
         id: "urlbar-result-menu-dismiss-firefox-suggest",
       },
+      isManageable: true,
       telemetryType: "adm_sponsored",
       descriptionL10n: { id: "urlbar-result-action-sponsored" },
     },
