@@ -147,7 +147,9 @@ export class BackupResource {
    * Perform a safe copy of the resource(s) and write them into the backup
    * database. The Promise should resolve with an object that can be serialized
    * to JSON, as it will be written to the manifest file. This same object will
-   * be deserialized and passed to restore() when restoring the backup.
+   * be deserialized and passed to restore() when restoring the backup. This
+   * object can be null if no additional information is needed to restore the
+   * backup.
    *
    * @param {string} stagingPath
    *   The path to the staging folder where copies of the datastores for this
@@ -159,7 +161,7 @@ export class BackupResource {
    *   just shut down, or during test), then this is a string set to that user
    *   profile path.
    *
-   * @returns {Promise<object>}
+   * @returns {Promise<object|null>}
    */
   // eslint-disable-next-line no-unused-vars
   async backup(stagingPath, profilePath = null) {
