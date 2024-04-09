@@ -21,7 +21,6 @@
 #include "mozilla/InputTaskManager.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/NeverDestroyed.h"
-#include "mozilla/Perfetto.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ProfilerMarkers.h"
 #include "mozilla/SpinEventLoopUntil.h"
@@ -271,9 +270,6 @@ nsThreadManager::nsThreadManager()
 nsThreadManager::~nsThreadManager() = default;
 
 nsresult nsThreadManager::Init() {
-  // Initialize perfetto if on Android.
-  InitPerfetto();
-
   // Child processes need to initialize the thread manager before they
   // initialize XPCOM in order to set up the crash reporter. This leads to
   // situations where we get initialized twice.
