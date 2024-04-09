@@ -12,11 +12,9 @@ use crate::color::{mix::ColorInterpolationMethod, AbsoluteColor, ColorSpace};
 use crate::media_queries::Device;
 use crate::parser::{Parse, ParserContext};
 use crate::values::computed::{Color as ComputedColor, Context, ToComputedValue};
-use crate::values::generics::calc::CalcUnits;
 use crate::values::generics::color::{
     ColorMixFlags, GenericCaretColor, GenericColorMix, GenericColorOrAuto,
 };
-use crate::values::specified::calc::{CalcNode, Leaf};
 use crate::values::specified::Percentage;
 use crate::values::{normalize, CustomIdent};
 use cssparser::color::OPAQUE;
@@ -632,46 +630,7 @@ impl<'a, 'b: 'a, 'i: 'a> parsing::ColorParser<'i> for ColorParser<'a, 'b> {
         input: &mut Parser<'i, 't>,
         allow_none: bool,
     ) -> Result<ColorComponent<NumberOrAngle>, ParseError<'i>> {
-        use crate::values::specified::Angle;
-
-        let location = input.current_source_location();
-        let token = input.next()?.clone();
-        Ok(match token {
-            Token::Ident(ref value) if allow_none && value.eq_ignore_ascii_case("none") => {
-                ColorComponent::None
-            },
-            Token::Dimension {
-                value, ref unit, ..
-            } => {
-                let angle = Angle::parse_dimension(value, unit, /* from_calc = */ false);
-
-                let degrees = match angle {
-                    Ok(angle) => angle.degrees(),
-                    Err(()) => return Err(location.new_unexpected_token_error(token.clone())),
-                };
-
-                ColorComponent::Value(NumberOrAngle::Angle { degrees })
-            },
-            Token::Number { value, .. } => ColorComponent::Value(NumberOrAngle::Number { value }),
-            Token::Function(ref name) => {
-                let function = CalcNode::math_function(self.0, name, location)?;
-                let node = CalcNode::parse(self.0, input, function, CalcUnits::ANGLE)?;
-
-                // If we can resolve the calc node, then use the value.
-                match node.resolve() {
-                    Ok(Leaf::Number(value)) => {
-                        ColorComponent::Value(NumberOrAngle::Number { value })
-                    },
-                    Ok(Leaf::Angle(angle)) => ColorComponent::Value(NumberOrAngle::Angle {
-                        degrees: angle.degrees(),
-                    }),
-                    _ => {
-                        return Err(location.new_custom_error(StyleParseErrorKind::UnspecifiedError))
-                    },
-                }
-            },
-            t => return Err(location.new_unexpected_token_error(t)),
-        })
+        ColorComponent::parse(self.0, input, allow_none)
     }
 
     fn parse_percentage<'t>(
@@ -681,27 +640,18 @@ impl<'a, 'b: 'a, 'i: 'a> parsing::ColorParser<'i> for ColorParser<'a, 'b> {
     ) -> Result<ColorComponent<f32>, ParseError<'i>> {
         let location = input.current_source_location();
 
-        Ok(match *input.next()? {
-            Token::Ident(ref value) if allow_none && value.eq_ignore_ascii_case("none") => {
-                ColorComponent::None
+        // We can use the [NumberOrPercentage] type here, because parsing it
+        // doesn't have any more overhead than just parsing a percentage on its
+        // own.
+        Ok(
+            match ColorComponent::<NumberOrPercentage>::parse(self.0, input, allow_none)? {
+                ColorComponent::None => ColorComponent::None,
+                ColorComponent::Value(NumberOrPercentage::Percentage { unit_value }) => {
+                    ColorComponent::Value(unit_value)
+                },
+                _ => return Err(location.new_custom_error(StyleParseErrorKind::UnspecifiedError)),
             },
-            Token::Percentage { unit_value, .. } => ColorComponent::Value(unit_value),
-            Token::Function(ref name) => {
-                let function = CalcNode::math_function(self.0, name, location)?;
-                let node = CalcNode::parse(self.0, input, function, CalcUnits::PERCENTAGE)?;
-
-                // If we can resolve the calc node, then use the value.
-                let Ok(resolved_leaf) = node.resolve() else {
-                    return Err(location.new_custom_error(StyleParseErrorKind::UnspecifiedError));
-                };
-                if let Leaf::Percentage(value) = resolved_leaf {
-                    ColorComponent::Value(value)
-                } else {
-                    return Err(location.new_custom_error(StyleParseErrorKind::UnspecifiedError));
-                }
-            },
-            ref t => return Err(location.new_unexpected_token_error(t.clone())),
-        })
+        )
     }
 
     fn parse_number<'t>(
@@ -709,29 +659,7 @@ impl<'a, 'b: 'a, 'i: 'a> parsing::ColorParser<'i> for ColorParser<'a, 'b> {
         input: &mut Parser<'i, 't>,
         allow_none: bool,
     ) -> Result<ColorComponent<f32>, ParseError<'i>> {
-        let location = input.current_source_location();
-
-        Ok(match *input.next()? {
-            Token::Ident(ref value) if allow_none && value.eq_ignore_ascii_case("none") => {
-                ColorComponent::None
-            },
-            Token::Number { value, .. } => ColorComponent::Value(value),
-            Token::Function(ref name) => {
-                let function = CalcNode::math_function(self.0, name, location)?;
-                let node = CalcNode::parse(self.0, input, function, CalcUnits::empty())?;
-
-                // If we can resolve the calc node, then use the value.
-                let Ok(resolved_leaf) = node.resolve() else {
-                    return Err(location.new_custom_error(StyleParseErrorKind::UnspecifiedError));
-                };
-                if let Leaf::Number(value) = resolved_leaf {
-                    ColorComponent::Value(value)
-                } else {
-                    return Err(location.new_custom_error(StyleParseErrorKind::UnspecifiedError));
-                }
-            },
-            ref t => return Err(location.new_unexpected_token_error(t.clone())),
-        })
+        ColorComponent::parse(self.0, input, allow_none)
     }
 
     fn parse_number_or_percentage<'t>(
@@ -739,36 +667,7 @@ impl<'a, 'b: 'a, 'i: 'a> parsing::ColorParser<'i> for ColorParser<'a, 'b> {
         input: &mut Parser<'i, 't>,
         allow_none: bool,
     ) -> Result<ColorComponent<NumberOrPercentage>, ParseError<'i>> {
-        let location = input.current_source_location();
-
-        Ok(match *input.next()? {
-            Token::Ident(ref value) if allow_none && value.eq_ignore_ascii_case("none") => {
-                ColorComponent::None
-            },
-            Token::Number { value, .. } => {
-                ColorComponent::Value(NumberOrPercentage::Number { value })
-            },
-            Token::Percentage { unit_value, .. } => {
-                ColorComponent::Value(NumberOrPercentage::Percentage { unit_value })
-            },
-            Token::Function(ref name) => {
-                let function = CalcNode::math_function(self.0, name, location)?;
-                let node = CalcNode::parse(self.0, input, function, CalcUnits::PERCENTAGE)?;
-
-                // If we can resolve the calc node, then use the value.
-                let Ok(resolved_leaf) = node.resolve() else {
-                    return Err(location.new_custom_error(StyleParseErrorKind::UnspecifiedError));
-                };
-                if let Leaf::Percentage(unit_value) = resolved_leaf {
-                    ColorComponent::Value(NumberOrPercentage::Percentage { unit_value })
-                } else if let Leaf::Number(value) = resolved_leaf {
-                    ColorComponent::Value(NumberOrPercentage::Number { value })
-                } else {
-                    return Err(location.new_custom_error(StyleParseErrorKind::UnspecifiedError));
-                }
-            },
-            ref t => return Err(location.new_unexpected_token_error(t.clone())),
-        })
+        ColorComponent::parse(self.0, input, allow_none)
     }
 }
 

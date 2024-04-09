@@ -8,16 +8,24 @@
 //! Relative colors, color-mix, system colors, and other such things require better calc() support
 //! and integration.
 
-use crate::color::component::ColorComponent;
-use cssparser::color::{
-    clamp_floor_256_f32, clamp_unit_f32, parse_hash_color, PredefinedColorSpace, OPAQUE,
+use super::component::ColorComponentType;
+use crate::{
+    color::component::ColorComponent,
+    values::{
+        generics::calc::CalcUnits, specified::angle::Angle as SpecifiedAngle,
+        specified::calc::Leaf as SpecifiedLeaf,
+    },
 };
-use cssparser::{match_ignore_ascii_case, CowRcStr, Parser, Token};
+use cssparser::{
+    color::{clamp_floor_256_f32, clamp_unit_f32, parse_hash_color, PredefinedColorSpace, OPAQUE},
+    match_ignore_ascii_case, CowRcStr, Parser, Token,
+};
 use std::str::FromStr;
 use style_traits::{ParseError, StyleParseErrorKind};
 
+/// Returns true if the relative color syntax pref is enabled.
 #[inline]
-fn rcs_enabled() -> bool {
+pub fn rcs_enabled() -> bool {
     static_prefs::pref!("layout.css.relative-color-syntax.enabled")
 }
 
@@ -204,9 +212,9 @@ where
     // If the first component is not "none" and is followed by a comma, then we
     // are parsing the legacy syntax.  Legacy syntax also doesn't support an
     // origin color.
-    let is_legacy_syntax = origin_color.is_none()
-        && !maybe_red.is_none()
-        && arguments.try_parse(|p| p.expect_comma()).is_ok();
+    let is_legacy_syntax = origin_color.is_none() &&
+        !maybe_red.is_none() &&
+        arguments.try_parse(|p| p.expect_comma()).is_ok();
 
     let (red, green, blue, alpha) = if is_legacy_syntax {
         let Ok(is_percentage) = maybe_red.is_percentage() else {
@@ -271,9 +279,9 @@ where
 
     // If the hue is not "none" and is followed by a comma, then we are parsing
     // the legacy syntax. Legacy syntax also doesn't support an origin color.
-    let is_legacy_syntax = origin_color.is_none()
-        && !hue.is_none()
-        && arguments.try_parse(|p| p.expect_comma()).is_ok();
+    let is_legacy_syntax = origin_color.is_none() &&
+        !hue.is_none() &&
+        arguments.try_parse(|p| p.expect_comma()).is_ok();
 
     let (saturation, lightness, alpha) = if is_legacy_syntax {
         let saturation = color_parser
@@ -478,6 +486,30 @@ impl NumberOrPercentage {
     }
 }
 
+impl ColorComponentType for NumberOrPercentage {
+    fn units() -> CalcUnits {
+        CalcUnits::PERCENTAGE
+    }
+
+    fn try_from_token(token: &Token) -> Result<Self, ()> {
+        Ok(match *token {
+            Token::Number { value, .. } => Self::Number { value },
+            Token::Percentage { unit_value, .. } => Self::Percentage { unit_value },
+            _ => {
+                return Err(());
+            },
+        })
+    }
+
+    fn try_from_leaf(leaf: &SpecifiedLeaf) -> Result<Self, ()> {
+        Ok(match *leaf {
+            SpecifiedLeaf::Percentage(unit_value) => Self::Percentage { unit_value },
+            SpecifiedLeaf::Number(value) => Self::Number { value },
+            _ => return Err(()),
+        })
+    }
+}
+
 /// Either an angle or a number.
 pub enum NumberOrAngle {
     /// `<number>`.
@@ -499,6 +531,63 @@ impl NumberOrAngle {
         match *self {
             Self::Number { value } => value,
             Self::Angle { degrees } => degrees,
+        }
+    }
+}
+
+impl ColorComponentType for NumberOrAngle {
+    fn units() -> CalcUnits {
+        CalcUnits::ANGLE
+    }
+
+    fn try_from_token(token: &Token) -> Result<Self, ()> {
+        Ok(match *token {
+            Token::Number { value, .. } => Self::Number { value },
+            Token::Dimension {
+                value, ref unit, ..
+            } => {
+                let degrees =
+                    SpecifiedAngle::parse_dimension(value, unit, /* from_calc = */ false)
+                        .map(|angle| angle.degrees())?;
+
+                NumberOrAngle::Angle { degrees }
+            },
+            _ => {
+                return Err(());
+            },
+        })
+    }
+
+    fn try_from_leaf(leaf: &SpecifiedLeaf) -> Result<Self, ()> {
+        Ok(match *leaf {
+            SpecifiedLeaf::Angle(angle) => Self::Angle {
+                degrees: angle.degrees(),
+            },
+            SpecifiedLeaf::Number(value) => Self::Number { value },
+            _ => return Err(()),
+        })
+    }
+}
+
+/// The raw f32 here is for <number>.
+impl ColorComponentType for f32 {
+    fn units() -> CalcUnits {
+        CalcUnits::empty()
+    }
+
+    fn try_from_token(token: &Token) -> Result<Self, ()> {
+        if let Token::Number { value, .. } = *token {
+            Ok(value)
+        } else {
+            Err(())
+        }
+    }
+
+    fn try_from_leaf(leaf: &SpecifiedLeaf) -> Result<Self, ()> {
+        if let SpecifiedLeaf::Number(value) = *leaf {
+            Ok(value)
+        } else {
+            Err(())
         }
     }
 }
