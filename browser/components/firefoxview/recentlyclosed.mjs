@@ -249,13 +249,22 @@ class RecentlyClosedTabsInView extends ViewPage {
   onDismissTab(e) {
     const closedId = parseInt(e.originalTarget.closedId, 10);
     const sourceClosedId = parseInt(e.originalTarget.sourceClosedId, 10);
-    const sourceWindowId = e.originalTarget.souceWindowId;
-    if (sourceWindowId || !isNaN(sourceClosedId)) {
+    const sourceWindowId = e.originalTarget.sourceWindowId;
+    if (!isNaN(sourceClosedId)) {
+      // the sourceClosedId is an identifier for a now-closed window the tab
+      // was closed in.
       lazy.SessionStore.forgetClosedTabById(closedId, {
         sourceClosedId,
+      });
+    } else if (sourceWindowId) {
+      // the sourceWindowId is an identifier for a currently-open window the tab
+      // was closed in.
+      lazy.SessionStore.forgetClosedTabById(closedId, {
         sourceWindowId,
       });
     } else {
+      // without either identifier, SessionStore will need to walk its window collections
+      // to find the close tab with matching closedId
       lazy.SessionStore.forgetClosedTabById(closedId);
     }
 
