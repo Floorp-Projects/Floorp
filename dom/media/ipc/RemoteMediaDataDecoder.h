@@ -53,14 +53,16 @@ class RemoteMediaDataDecoder final
   // destructor when we can guarantee no other threads are accessing it). Only
   // read from the manager thread.
   RefPtr<RemoteDecoderChild> mChild;
+
+  mutable Mutex mMutex{"RemoteMediaDataDecoder"};
+
   // Only ever written/modified during decoder initialisation.
-  // As such can be accessed from any threads after that.
-  nsCString mDescription = "RemoteMediaDataDecoder"_ns;
-  nsCString mProcessName = "unknown"_ns;
-  nsCString mCodecName = "unknown"_ns;
-  bool mIsHardwareAccelerated = false;
-  nsCString mHardwareAcceleratedReason;
-  ConversionRequired mConversion = ConversionRequired::kNeedNone;
+  nsCString mDescription MOZ_GUARDED_BY(mMutex);
+  nsCString mProcessName MOZ_GUARDED_BY(mMutex);
+  nsCString mCodecName MOZ_GUARDED_BY(mMutex);
+  bool mIsHardwareAccelerated MOZ_GUARDED_BY(mMutex);
+  nsCString mHardwareAcceleratedReason MOZ_GUARDED_BY(mMutex);
+  ConversionRequired mConversion MOZ_GUARDED_BY(mMutex);
 };
 
 }  // namespace mozilla

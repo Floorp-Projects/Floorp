@@ -41,34 +41,34 @@ class MediaChangeMonitor final
   RefPtr<ShutdownPromise> Shutdown() override;
   bool IsHardwareAccelerated(nsACString& aFailureReason) const override;
   nsCString GetDescriptionName() const override {
-    if (mDecoder) {
-      return mDecoder->GetDescriptionName();
+    if (RefPtr<MediaDataDecoder> decoder = GetDecoderOnNonOwnerThread()) {
+      return decoder->GetDescriptionName();
     }
     return "MediaChangeMonitor decoder (pending)"_ns;
   }
   nsCString GetProcessName() const override {
-    if (mDecoder) {
-      return mDecoder->GetProcessName();
+    if (RefPtr<MediaDataDecoder> decoder = GetDecoderOnNonOwnerThread()) {
+      return decoder->GetProcessName();
     }
     return "MediaChangeMonitor"_ns;
   }
   nsCString GetCodecName() const override {
-    if (mDecoder) {
-      return mDecoder->GetCodecName();
+    if (RefPtr<MediaDataDecoder> decoder = GetDecoderOnNonOwnerThread()) {
+      return decoder->GetCodecName();
     }
     return "MediaChangeMonitor"_ns;
   }
   void SetSeekThreshold(const media::TimeUnit& aTime) override;
   bool SupportDecoderRecycling() const override {
-    if (mDecoder) {
-      return mDecoder->SupportDecoderRecycling();
+    if (RefPtr<MediaDataDecoder> decoder = GetDecoderOnNonOwnerThread()) {
+      return decoder->SupportDecoderRecycling();
     }
     return false;
   }
 
   ConversionRequired NeedsConversion() const override {
-    if (mDecoder) {
-      return mDecoder->NeedsConversion();
+    if (RefPtr<MediaDataDecoder> decoder = GetDecoderOnNonOwnerThread()) {
+      return decoder->NeedsConversion();
     }
     // Default so no conversion is performed.
     return ConversionRequired::kNeedNone;
@@ -99,6 +99,9 @@ class MediaChangeMonitor final
     // mThread may not be set if Init hasn't been called first.
     MOZ_ASSERT(!mThread || mThread->IsOnCurrentThread());
   }
+
+  // This is used for getting decoder debug info on other threads. Thread-safe.
+  MediaDataDecoder* GetDecoderOnNonOwnerThread() const;
 
   bool CanRecycleDecoder() const;
 
@@ -140,6 +143,13 @@ class MediaChangeMonitor final
   const CreateDecoderParamsForAsync mParams;
   // Keep any seek threshold set for after decoder creation and initialization.
   Maybe<media::TimeUnit> mPendingSeekThreshold;
+
+  // This lock is used for mDecoder specifically, but it doens't need to be used
+  // for every places accessing mDecoder which is mostly on the owner thread.
+  // However, when requesting decoder debug info, it can happen on other
+  // threads, so we need this mutex to avoid the data race of
+  // creating/destroying decoder and accessing decoder's debug info.
+  mutable Mutex MOZ_ANNOTATED mMutex{"MediaChangeMonitor"};
 };
 
 }  // namespace mozilla
