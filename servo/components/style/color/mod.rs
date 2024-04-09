@@ -4,9 +4,13 @@
 
 //! Color support functions.
 
-pub mod component;
+/// cbindgen:ignore
+mod color_function;
+
 /// cbindgen:ignore
 pub mod convert;
+
+pub mod component;
 pub mod mix;
 pub mod parsing;
 mod to_css;
