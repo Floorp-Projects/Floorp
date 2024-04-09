@@ -114,6 +114,16 @@ set_config("MOZ_GECKO_PROFILER", gecko_profiler_define)
 set_define("MOZ_GECKO_PROFILER", gecko_profiler_define)
 
 
+# Enable perfetto on Android if gecko profiling is enabled and only for
+# nightly builds. Linux support requires at least linux-headers-3.18 for <linux/vm_sockets.h>
+set_config(
+    "MOZ_PERFETTO", gecko_profiler_define, when=target_is_android & milestone.is_nightly
+)
+set_define(
+    "MOZ_PERFETTO", gecko_profiler_define, when=target_is_android & milestone.is_nightly
+)
+
+
 # Whether code to parse ELF binaries should be compiled for the Gecko profiler
 # (for symbol table dumping).
 @depends(gecko_profiler, target)
