@@ -11,6 +11,7 @@
         "llvmorg-18-init-8471-g160e8eb44961.patch",
         "D146664.patch",
         "win64-ret-null-on-commitment-limit_clang_14.patch",
+        "arm64e-hack.patch",
         "compiler-rt-rss-limit-heap-profile.patch"
     ]
 }
