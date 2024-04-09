@@ -1617,7 +1617,7 @@ var gBrowserInit = {
 
   onDOMContentLoaded() {
     // Floorp Injections
-    let loadURL = window.location.toString().split("?")[1];
+    let loadURL = new URL(window.location.href).searchParams.get("url");
     if (!loadURL) {
       // This needs setting up before we create the first remote browser.
       window.docShell.treeOwner
