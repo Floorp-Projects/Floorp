@@ -193,7 +193,7 @@ class ProviderTopSites extends UrlbarProvider {
       return site;
     });
 
-    // Store Sponsored Top Sites so we can use it in `onEngagement`
+    // Store Sponsored Top Sites so we can use it in `onLegacyEngagement`
     if (sponsoredSites.length) {
       this.sponsoredSites = sponsoredSites;
     }
@@ -333,7 +333,7 @@ class ProviderTopSites extends UrlbarProvider {
     }
   }
 
-  onEngagement(state, queryContext) {
+  onLegacyEngagement(state, queryContext) {
     if (!queryContext.isPrivate && this.sponsoredSites) {
       for (let site of this.sponsoredSites) {
         Services.telemetry.keyedScalarAdd(

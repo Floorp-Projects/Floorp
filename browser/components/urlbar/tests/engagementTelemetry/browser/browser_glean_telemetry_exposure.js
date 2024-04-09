@@ -11,7 +11,7 @@ add_setup(async function () {
   await initExposureTest();
 });
 
-add_task(async function exposureSponsoredOnEngagement() {
+add_task(async function exposureSponsoredOnLegacyEngagement() {
   await doExposureTest({
     prefs: [
       ["browser.urlbar.exposureResults", suggestResultType("adm_sponsored")],

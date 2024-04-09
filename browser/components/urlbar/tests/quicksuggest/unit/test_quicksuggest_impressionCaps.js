@@ -3884,7 +3884,7 @@ async function checkSearch({ name, searchString, expectedResults }) {
       removeResult() {},
     },
   });
-  UrlbarProviderQuickSuggest.onEngagement(
+  UrlbarProviderQuickSuggest.onLegacyEngagement(
     "engagement",
     context,
     {

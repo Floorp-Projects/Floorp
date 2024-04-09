@@ -229,7 +229,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
     }
   }
 
-  onEngagement(state, queryContext, details, controller) {
+  onLegacyEngagement(state, queryContext, details, controller) {
     // Ignore engagements on other results that didn't end the session.
     if (details.result?.providerName != this.name && details.isSessionOngoing) {
       return;
@@ -486,8 +486,8 @@ class ProviderQuickSuggest extends UrlbarProvider {
    *   end of the engagement or that was dismissed. Null if no quick suggest
    *   result was present.
    * @param {object} details
-   *   The `details` object that was passed to `onEngagement()`. It must look
-   *   like this: `{ selType, selIndex }`
+   *   The `details` object that was passed to `onLegacyEngagement()`. It must
+   *   look like this: `{ selType, selIndex }`
    */
   #recordEngagement(queryContext, result, details) {
     let resultSelType = "";
@@ -781,8 +781,8 @@ class ProviderQuickSuggest extends UrlbarProvider {
    *   True if the main part of the result's row was clicked; false if a button
    *   like help or dismiss was clicked or if no part of the row was clicked.
    * @param {object} options.details
-   *   The `details` object that was passed to `onEngagement()`. It must look
-   *   like this: `{ selType, selIndex }`
+   *   The `details` object that was passed to `onLegacyEngagement()`. It must
+   *   look like this: `{ selType, selIndex }`
    */
   #recordNavSuggestionTelemetry({
     queryContext,

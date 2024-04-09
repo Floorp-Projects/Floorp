@@ -703,7 +703,7 @@ class ProviderInterventions extends UrlbarProvider {
     }
   }
 
-  onEngagement(state, queryContext, details, controller) {
+  onLegacyEngagement(state, queryContext, details, controller) {
     let { result } = details;
 
     // `selType` is "tip" when the tip's main button is picked. Ignore clicks on

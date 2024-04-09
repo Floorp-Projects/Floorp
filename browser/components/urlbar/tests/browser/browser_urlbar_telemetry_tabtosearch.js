@@ -344,8 +344,8 @@ async function impressions_test(isOnboarding) {
       5
     );
 
-    // See javadoc for UrlbarProviderTabToSearch.onEngagement for discussion
-    // about retained results.
+    // See javadoc for UrlbarProviderTabToSearch.onLegacyEngagement for
+    // discussion about retained results.
     info("Reopen the result set with retained results. Record impression.");
     await UrlbarTestUtils.promisePopupOpen(window, () => {
       EventUtils.synthesizeMouseAtCenter(gURLBar.inputField, {});

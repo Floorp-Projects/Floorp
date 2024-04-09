@@ -334,7 +334,8 @@ class ProvidersManager {
 
   /**
    * Notifies all providers when the user starts and ends an engagement with the
-   * urlbar.  For details on parameters, see UrlbarProvider.onEngagement().
+   * urlbar.  For details on parameters, see
+   * UrlbarProvider.onLegacyEngagement().
    *
    * @param {string} state
    *   The state of the engagement, one of: engagement, abandonment
@@ -348,7 +349,7 @@ class ProvidersManager {
   notifyEngagementChange(state, queryContext, details = {}, controller) {
     for (let provider of this.providers) {
       provider.tryMethod(
-        "onEngagement",
+        "onLegacyEngagement",
         state,
         queryContext,
         details,

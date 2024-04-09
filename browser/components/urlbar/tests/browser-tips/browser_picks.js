@@ -117,8 +117,8 @@ async function doTest({ click, buttonUrl = undefined, helpUrl = undefined }) {
   });
   UrlbarProvidersManager.registerProvider(provider);
 
-  let onEngagementPromise = new Promise(
-    resolve => (provider.onEngagement = resolve)
+  let onLegacyEngagementPromise = new Promise(
+    resolve => (provider.onLegacyEngagement = resolve)
   );
 
   // Do a search to show our tip result.
@@ -142,8 +142,8 @@ async function doTest({ click, buttonUrl = undefined, helpUrl = undefined }) {
     );
   }
 
-  // Now pick the target and wait for provider.onEngagement to be called and
-  // the URL to load if necessary.
+  // Now pick the target and wait for provider.onLegacyEngagement to be called
+  // and the URL to load if necessary.
   let loadPromise;
   if (buttonUrl || helpUrl) {
     loadPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
@@ -160,7 +160,7 @@ async function doTest({ click, buttonUrl = undefined, helpUrl = undefined }) {
       EventUtils.synthesizeKey("KEY_Enter");
     }
   });
-  await onEngagementPromise;
+  await onLegacyEngagementPromise;
   await loadPromise;
 
   // Check telemetry.

@@ -152,8 +152,8 @@ aren't relevant to dynamic result types, and you should choose values
 appropriate to your use case.
 
 If any elements created in the view for your results can be picked with the
-keyboard or mouse, then be sure to implement your provider's ``onEngagement``
-method.
+keyboard or mouse, then be sure to implement your provider's
+``onLegacyEngagement`` method.
 
 For help on implementing providers in general, see the address bar's
 `Architecture Overview`__.
@@ -616,7 +616,7 @@ URL Navigation
 
 If a result's payload includes a string ``url`` property and a boolean
 ``shouldNavigate: true`` property, then picking the result will navigate to the
-URL. The ``onEngagement`` method of the result's provider will still be called
+URL. The ``onLegacyEngagement`` method of the result's provider will still be called
 before navigation.
 
 Text Highlighting

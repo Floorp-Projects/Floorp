@@ -194,7 +194,7 @@ class ProviderTabToSearch extends UrlbarProvider {
    * Called when a result from the provider is selected. "Selected" refers to
    * the user highlighing the result with the arrow keys/Tab, before it is
    * picked. onSelection is also called when a user clicks a result. In the
-   * event of a click, onSelection is called just before onEngagement.
+   * event of a click, onSelection is called just before onLegacyEngagement.
    *
    * @param {UrlbarResult} result
    *   The result that was selected.
@@ -226,7 +226,7 @@ class ProviderTabToSearch extends UrlbarProvider {
     }
   }
 
-  onEngagement(state, queryContext, details) {
+  onLegacyEngagement(state, queryContext, details) {
     let { result, element } = details;
     if (
       result?.providerName == this.name &&

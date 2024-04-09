@@ -188,7 +188,7 @@ class ProviderQuickSuggestContextualOptIn extends UrlbarProvider {
     row.ownerGlobal.A11yUtils.announce({ raw: alertText });
   }
 
-  onEngagement(state, queryContext, details, controller) {
+  onLegacyEngagement(state, queryContext, details, controller) {
     let { result } = details;
     if (result?.providerName != this.name) {
       return;
