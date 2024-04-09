@@ -189,11 +189,13 @@
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Истодан</string>
     <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_add_ons">Ҷузъҳои иловагӣ</string>
+    <string name="browser_menu_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Ҷузъҳои иловагӣ</string>
+    <!-- Browser menu button that opens the extensions manager -->
+    <string name="browser_menu_extensions">Васеъшавиҳо</string>
     <!-- Browser menu button that opens account settings -->
     <string name="browser_menu_account_settings">Маълумот дар бораи ҳисоби корбар</string>
     <!-- Text displayed when there are no add-ons to be shown -->
-    <string name="no_add_ons">Дар ин ҷо ягон ҷузъи иловагӣ нест</string>
+    <string name="no_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Дар ин ҷо ягон ҷузъи иловагӣ нест</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Кумак</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -210,7 +212,7 @@
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">Илова кардан ба экрани асосӣ</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
-    <string name="browser_menu_install_on_homescreen">Насб кардан</string>
+    <string name="browser_menu_install_on_homescreen" moz:removedIn="126" tools:ignore="UnusedResources">Насб кардан</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">Аз нав ҳамоҳанг кардан</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -246,6 +248,9 @@
 
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">Танзимоти саҳифаи асосӣ</string>
+
+    <!-- Browser menu label to sign in to sync on the device using Mozilla accounts -->
+    <string name="browser_menu_sign_in" tools:ignore="UnusedResources">Ворид шудан</string>
 
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
@@ -594,9 +599,9 @@
     <string name="quit_application">Барои татбиқ кардани тағйирот барнома хомӯш мешавад…</string>
 
     <!-- Preference for add_ons -->
-    <string name="preferences_addons">Ҷузъҳои иловагӣ</string>
+    <string name="preferences_addons" moz:removedIn="126" tools:ignore="UnusedResources">Ҷузъҳои иловагӣ</string>
     <!-- Preference for installing a local add-on -->
-    <string name="preferences_install_local_addon">Насб кардани ҷузъи иловагӣ аз файл</string>
+    <string name="preferences_install_local_addon" moz:removedIn="126" tools:ignore="UnusedResources">Насб кардани ҷузъи иловагӣ аз файл</string>
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Огоҳномаҳо</string>
 
@@ -607,7 +612,7 @@
 
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
-    <string name="preferences_customize_amo_collection">Маҷмуаи ҷузъҳои иловагии фармоишӣ</string>
+    <string name="preferences_customize_amo_collection" moz:removedIn="126" tools:ignore="UnusedResources">Маҷмуаи ҷузъҳои иловагии фармоишӣ</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">ХУБ</string>
     <!-- Button caption to abort the add-on collection configuration -->
@@ -617,7 +622,7 @@
     <!-- Hint displayed on input field for custom collection user ID-->
     <string name="customize_addon_collection_user_hint">Соҳиби маҷмуа (ID-и корбар)</string>
     <!-- Toast shown after confirming the custom add-on collection configuration -->
-    <string name="toast_customize_addon_collection_done">Маҷмуаи ҷузъҳои иловагӣ тағйир ёфт. Барои татбиқ кардани тағйирот барнома бояд хомӯш карда шавад…</string>
+    <string name="toast_customize_addon_collection_done" moz:removedIn="126" tools:ignore="UnusedResources">Маҷмуаи ҷузъҳои иловагӣ тағйир ёфт. Барои татбиқ кардани тағйирот барнома бояд хомӯш карда шавад…</string>
 
     <!-- Customize Home -->
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
@@ -673,23 +678,23 @@
 
     <!-- Add-ons general availability nimbus message-->
     <!-- Title of the Nimbus message for add-ons general availability-->
-    <string name="addon_ga_message_title" tools:ignore="UnusedResources">Акнун ҷузъҳои иловагии нав дастрасанд</string>
+    <string name="addon_ga_message_title" moz:removedIn="126" tools:ignore="UnusedResources">Акнун ҷузъҳои иловагии нав дастрасанд</string>
 
     <!-- Body of the Nimbus message for add-ons general availability. 'Firefox' intentionally hardcoded here-->
     <string name="addon_ga_message_body" tools:ignore="UnusedResources">Зиёда аз 100+ васеъшавии навро тафтиш кунед, ки ба шумо барои шахсисозии «Firefox» имкон медиҳанд.</string>
 
     <!-- Button text of the Nimbus message for add-ons general availability. -->
-    <string name="addon_ga_message_button" tools:ignore="UnusedResources">Ҷузъҳои иловагиро озмоед</string>
+    <string name="addon_ga_message_button" moz:removedIn="126" tools:ignore="UnusedResources">Ҷузъҳои иловагиро озмоед</string>
 
-    <!-- Add-on process crash dialog to user -->
+    <!-- Extension process crash dialog to user -->
     <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
-    <string name="addon_process_crash_dialog_title" tools:ignore="UnusedResources">Ҷузъҳои иловагӣ муваққатан ғайрифаъол шудаанд</string>
+    <string name="addon_process_crash_dialog_title" moz:removedIn="126" tools:ignore="UnusedResources">Ҷузъҳои иловагӣ муваққатан ғайрифаъол шудаанд</string>
     <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
-    <string name="addon_process_crash_dialog_message" tools:ignore="UnusedResources">Фаъолияти як ё якчанд ҷузъи иловагӣ қатъ карда шуд, ва ба ҳамин сабаб низоми шумо ноустувор кор мекунад. «%1$s» кӯшиш карда, ҷузъ(ҳо)и иловагиро аз нав оғоз карда натавонист.\n\nҶузъҳои иловагӣ ҳангоми фаъол будани ҷаласаи ҷорӣ аз нав оғоз карда намешаванд.\n\nЭҳтимол аст, ки агар шумо ҷузъҳои иловагиро тоза ё ғайрифаъол созед, ин мушкилӣ метавонад ҳал карда шавад.</string>
+    <string name="addon_process_crash_dialog_message" moz:removedIn="126" tools:ignore="UnusedResources">Фаъолияти як ё якчанд ҷузъи иловагӣ қатъ карда шуд, ва ба ҳамин сабаб низоми шумо ноустувор кор мекунад. «%1$s» кӯшиш карда, ҷузъ(ҳо)и иловагиро аз нав оғоз карда натавонист.\n\nҶузъҳои иловагӣ ҳангоми фаъол будани ҷаласаи ҷорӣ аз нав оғоз карда намешаванд.\n\nЭҳтимол аст, ки агар шумо ҷузъҳои иловагиро тоза ё ғайрифаъол созед, ин мушкилӣ метавонад ҳал карда шавад.</string>
     <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
-    <string name="addon_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">Кӯшиш кунед, ки ҷузъҳои иловагиро аз нав оғоз намоед</string>
+    <string name="addon_process_crash_dialog_retry_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Кӯшиш кунед, ки ҷузъҳои иловагиро аз нав оғоз намоед</string>
     <!-- The user will continue with all add-ons disabled -->
-    <string name="addon_process_crash_dialog_disable_addons_button_text" tools:ignore="UnusedResources">Идома додан бо ҷузъҳои иловагии ғайрифаъолшуда</string>
+    <string name="addon_process_crash_dialog_disable_addons_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Идома додан бо ҷузъҳои иловагии ғайрифаъолшуда</string>
 
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->

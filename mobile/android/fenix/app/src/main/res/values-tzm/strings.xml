@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_5">Uslig %s</string>
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
@@ -10,16 +10,16 @@
     <!-- Label of editable text in create collection dialog for naming a new collection  -->
     <string name="tab_tray_add_new_collection_name">Isem</string>
 
-    <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text">Rnu asanf</string>
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Uhu, tanemmirt</string>
 
     <!-- Text for the positive action button -->
     <string name="open_in_app_cfr_positive_button_text">Ddu ɣer tisɣal</string>
 
+
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
     <string name="camera_permissions_needed_positive_button_text">Ddu ɣer tisɣal</string>
+
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -27,9 +27,6 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Aseksel uslig amaynu</string>
 
-    <!-- Browser Fragment -->
-    <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
-    <string name="browser_tabs_button">Rẓem iseksal</string>
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Sbedd</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -42,12 +39,8 @@
     <string name="browser_menu_library">Tasedlist</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Rzu g tasna</string>
-    <!-- Browser menu button that creates a private tab -->
-    <string name="browser_menu_private_tab">Aseksel uslig</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Bḍu</string>
-    <!-- Share menu title, displayed when a user is sharing their current site -->
-    <string name="menu_share_with">Bḍu d…</string>
     <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_open_in_fenix">Rẓem g %1$s</string>
@@ -59,31 +52,20 @@
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">Ẓreg</string>
 
-    <!-- Content description for search icon -->
-    <string name="a11y_search_icon_content_description">Rzu</string>
     <!-- Text for default locale item -->
     <string name="default_locale_text">Ḍfer tutlay n wallal</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="locale_search_hint">Tutlayt n urezzu</string>
 
-    <!-- Button in the search view that lets a user change their search engine -->
-    <string name="search_engine_button">Anesmassu n urezzu</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Tisɣal n unesmassu n urezzu</string>
-    <!-- Header displayed when selecting a shortcut search engine -->
-    <string name="search_engines_search_with">Tikkelt-a, rzu s:</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
     <string name="search_suggestions_onboarding_allow_button">ssureg</string>
     <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
     <string name="search_suggestions_onboarding_do_not_allow_button">Ad ur ssirig</string>
-    <!-- Search suggestion onboarding hint Learn more link text -->
-    <string name="search_suggestions_onboarding_learn_more_link">Isin uggar</string>
     <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
     <string name="search_engine_suggestions_title">Rzu %s</string>
 
-    <!-- Search Widget -->
-    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
-    <string name="search_widget_content_description">Rẓem Aseksel amaynu n Firefox</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Rzu</string>
     <!-- Text preview for larger sized widgets -->
@@ -98,25 +80,16 @@
     <string name="preferences_category_about">Ɣef</string>
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">Arezzu</string>
-    <!-- Preference linking to help about Fenix -->
-    <string name="preferences_help">Tiwisi</string>
     <!-- Preference linking to about page for Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="preferences_about">Ɣef %1$s</string>
-    <!-- Preference linking to the your rights SUMO page -->
-    <string name="preferences_your_rights">Izerfan-nnek/m</string>
-    <!-- Preference for settings related to saved passwords -->
-    <string name="preferences_passwords">Tigurawin n uzerray</string>
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">Rẓem iseɣwan g useksel uslig</string>
+
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Amiḍan</string>
-    <!-- Preference shown on banner to sign into account -->
-    <string name="preferences_sign_in">Kcem</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Asgum</string>
-    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
-    <string name="preferences_account_default_name">Amiḍan Firefox</string>
     <!-- Preference for language -->
     <string name="preferences_language">Tutlayt</string>
     <!-- Preference for account settings -->
@@ -147,8 +120,6 @@
     <!-- %s is the device name -->
     <string name="fxa_tab_received_from_notification_name">Aseksel seg %s</string>
 
-    <!-- Preference for account login -->
-    <string name="preferences_sync_sign_in">Kcem</string>
     <!-- Preference for removing FxA account -->
     <string name="preferences_sync_remove_account">Kkes amiḍan</string>
 
@@ -162,10 +133,6 @@
     <string name="library_downloads">Agamen</string>
     <!-- Option in Library to open a new tab -->
     <string name="library_new_tab">Aseksel amaynu</string>
-    <!-- Option in Library to find text in page -->
-    <string name="library_find_in_page">Af g tesna</string>
-    <!-- Menu Item Label for Search in Library -->
-    <string name="library_search">Rzu</string>
     <!-- Settings Page Title -->
     <string name="settings_title">Tisɣal</string>
 
@@ -214,10 +181,6 @@
     <string name="add_private_tab">Rnu aseksel uslig</string>
     <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
     <string name="tab_drawer_fab_content">Uslig</string>
-    <!-- Text shown as the title of the open tab tray -->
-    <string name="tab_tray_title">Rẓem iseksal</string>
-    <!-- Text shown in the menu for the collection selector -->
-    <string name="tab_tray_menu_select">Fren</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Bḍu akkʷ iseksal</string>
     <!-- Text shown in the menu to view account settings -->
@@ -226,8 +189,6 @@
     <string name="tab_tray_menu_tab_settings">Tisɣal n useksel</string>
     <!-- Text shown in the menu for closing all tabs -->
     <string name="tab_tray_menu_item_close">Mdel akkʷ iseksal</string>
-    <!-- Shortcut action to open new tab -->
-    <string name="tab_tray_menu_open_new_tab">Aseksel amaynu</string>
     <!-- Text shown in the multiselect menu for closing selected tabs. -->
     <string name="tab_tray_multiselect_menu_item_close">Mḍel</string>
     <!-- Text for button to enter multiselect mode in tabs tray -->
@@ -238,45 +199,20 @@
     <string name="close_tab_title">Mdel aseksel %s</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
     <string name="open_tabs_menu">Rẓem umuɣ n yiseksal</string>
-    <!-- Open tabs menu item to close all tabs -->
-    <string name="tabs_menu_close_all_tabs">Mdel akkʷ iseksal</string>
-    <!-- Open tabs menu item to share all tabs -->
-    <string name="tabs_menu_share_tabs">Bḍu iseksal</string>
-    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string name="tab_menu">Umuɣ n yiseksal</string>
-    <!-- Tab menu item to share the tab -->
-    <string name="tab_share">Bḍu aseksel</string>
-    <!-- Button in the current session menu. Deletes the session when pressed -->
-    <string name="current_session_delete">Kkes</string>
-    <!-- Button in the current session menu. Opens the share menu when pressed -->
-    <string name="current_session_share">Bḍu</string>
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">Rẓem iseksal</string>
     <!-- Text for the menu button to rename a top site -->
 	<string name="rename_top_site">Ssenfel isem</string>
-	<!-- Text for the menu button to remove a top site -->
+    <!-- Text for the menu button to remove a top site -->
 	<string name="remove_top_site">Kkes</string>
 
-    <!-- Text for positive action to delete history in deleting history dialog -->
-    <string name="history_clear_dialog">Sfeḍ</string>
-    <!-- History overflow menu share button -->
-    <string name="history_menu_share_button">Bḍu</string>
-    <!-- History overflow menu open in new tab button -->
-    <string name="history_menu_open_in_new_tab_button">Ṛẓem g useksel amaynu</string>
-    <!-- History overflow menu open in private tab button -->
-    <string name="history_menu_open_in_private_tab_button">Rẓem g useksel uslig</string>
     <!-- Text for the button to delete a single history item -->
     <string name="history_delete_item">Kkes</string>
 
-    <!-- Text for the button to clear selected history items. The first parameter
-        is a digit showing the number of items you have selected -->
-    <string name="history_delete_some">Kkes %1$d iferdas</string>
     <!-- Text for the header that groups the history for today -->
     <string name="history_today">Ass-a</string>
     <!-- Text for the header that groups the history for yesterday -->
     <string name="history_yesterday">Assennaṭ</string>
-    <!-- Text for the header that groups the history for last 24 hours -->
-    <string name="history_24_hours">24 n tesragin timeggura</string>
     <!-- Text for the header that groups the history the past 7 days -->
     <string name="history_7_days">7 n wussan imeggura</string>
     <!-- Text for the header that groups the history the past 30 days -->
@@ -284,13 +220,8 @@
     <!-- Text for the header that groups the history older than the last month -->
     <string name="history_older">Iqburen</string>
 
-    <!-- Downloads -->
-    <!-- Text for the button to clear all downloads -->
-    <string name="download_delete_all">Kkes agamen </string>
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
     <string name="download_delete_multiple_items_snackbar_1">ttwakksen wagamen </string>
-    <!-- History overflow menu open in new tab button -->
-    <string name="download_menu_open">Rẓem</string>
     <!-- Text for the button to remove a single download item -->
     <string name="download_delete_item_1">Kkes</string>
 
@@ -349,19 +280,14 @@
         "Share" button. Opens the share menu when pressed. -->
     <string name="share_button_content_description">Bḍu</string>
 
-    <!-- Sub-header in the dialog to share a link to another app -->
-    <string name="share_link_subheader">Bḍu asɣen</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">Azen ɣer wallal</string>
-    <!-- Add new device screen title -->
+     <!-- Add new device screen title -->
     <string name="sync_add_new_device_title">Azen ɣer wallal</string>
 
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">Mdel iseksal usligen</string>
-    <!-- Notification action to open Fenix and resume the current browsing session. -->
-    <string name="notification_pbm_action_open">Rẓem</string>
-    <!-- Text shown in snackbar action for viewing bookmarks -->
-    <string name="snackbar_message_bookmarks_view">Sken</string>
+
     <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
         First parameter is the name of the app, second parameter is the URL or text scanned-->
     <string name="qr_scanner_confirmation_dialog_message">Ssureg %1$s ad irẓem %2$s</string>
@@ -377,9 +303,6 @@
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d n tansiwin</string>
-    <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
-        number of history pages the user has -->
-    <string name="preferences_delete_browsing_data_browsing_history_subtitle">%d n tasniwin</string>
     <!-- Title for the downloads item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_downloads">Agamen</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
@@ -387,16 +310,6 @@
 
     <!-- Text for the allow button for the data deletion dialog -->
     <string name="delete_browsing_data_prompt_allow">Kkes</string>
-
-    <!-- Onboarding -->
-    <!-- Text for onboarding welcome message
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_header">Ansuf ɣer %s!</string>
-    <!-- text for the private browsing onbording card button, that launches settings -->
-    <string name="onboarding_private_browsing_button">Rẓem tisɣal</string>
-
-    <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
-    <string name="onboarding_close">Mḍel</string>
 
     <!-- Text shown in snackbar when multiple tabs have been sent to device -->
     <string name="sync_sent_tabs_snackbar">Ttwaznen iseksal!</string>
@@ -406,14 +319,8 @@
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">Ittusureg</string>
 
-    <!-- About page Your rights link text -->
-    <string name="about_your_rights">Izerfan-nnek/m</string>
-
     <!-- About page link text to open know your rights link -->
     <string name="about_know_your_rights">Issin izerfan-nnek/m</string>
-
-    <!-- Content description of the tab counter toolbar button when one tab is open -->
-    <string name="tab_counter_content_description_one_tab">1 n useksel</string>
 
     <!-- Add button text for the Add to Homescreen dialog -->
     <string name="add_to_homescreen_add">Rnu</string>
@@ -427,6 +334,7 @@
 
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">Rnu takarḍa n usmad</string>
+
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Rnu takarḍa</string>
     <!-- Title of the "Edit card" screen -->
@@ -448,20 +356,10 @@
 
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">Ẓreg anesmassu n urezzu</string>
-    <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
-    <string name="search_engine_add_button_content_description">Rnu</string>
     <!-- Text for the menu button to edit a search engine -->
     <string name="search_engine_edit">Ẓreg</string>
     <!-- Text for the menu button to delete a search engine -->
     <string name="search_engine_delete">Kkes</string>
-
-    <!-- Text for the button to create a custom search engine on the Add search engine screen -->
-    <string name="search_add_custom_engine_label_other">Wayaḍ</string>
-    <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
-    <string name="search_add_custom_engine_name_hint">Isem</string>
-
-    <!-- Text for the button to learn more about adding a custom search engine -->
-    <string name="search_add_custom_engine_learn_more_label">Isin uggar</string>
 
     <!-- Text shown when a user leaves the search string field empty -->
     <string name="search_add_custom_engine_error_empty_search_string">Ssekcem aḍris n urezzu</string>
@@ -492,5 +390,8 @@
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Kkes</string>
+
+    <!-- Translations feature-->
+
 
     </resources>

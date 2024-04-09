@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
     <!-- Text for confirmation for a positive action in dialog  -->
     <string name="mozac_feature_prompts_ok">Vale</string>
     <!-- Text for confirmation for a negative action in dialog.  -->
@@ -87,4 +87,5 @@
     <string name="mozac_feature_prompts_collapse_logins_content_description">Reduce los inicios de sesión sucherius</string>
     <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
     <string name="mozac_feature_prompts_saved_logins">Inicios de sesión sucherius</string>
-</resources>
+
+    </resources>

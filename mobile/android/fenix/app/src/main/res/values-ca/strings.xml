@@ -2189,8 +2189,6 @@
     <string name="review_quality_check_grade_title">Són fiables aquestes ressenyes?</string>
     <!-- Title for when the rating has been updated by the review checker -->
     <string name="review_quality_check_adjusted_rating_title">Valoració ajustada</string>
-    <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
-    <string name="review_quality_check_adjusted_rating_description" moz:RemovedIn="122" tools:ignore="UnusedResources">S’han eliminat les ressenyes poc fiables</string>
     <!-- Title for list of highlights from a product's review emphasizing a product's important traits. -->
     <string name="review_quality_check_highlights_title">Punts destacats de les ressenyes recents</string>
     <!-- Title for section explaining how we analyze the reliability of a product's reviews. -->
@@ -2246,10 +2244,6 @@
     <string name="review_quality_check_product_availability_warning_body">Si veieu que torna a haver-hi estoc del producte, informeu-nos i en comprovarem les ressenyes.</string>
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
     <string name="review_quality_check_product_availability_warning_action_2">Informa que hi ha estoc del producte</string>
-    <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
-    <string name="review_quality_check_reanalysis_in_progress_warning_title" moz:RemovedIn="122">S\'està comprovant la qualitat de la ressenya</string>
-    <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_title" moz:RemovedIn="122">S\'està comprovant la qualitat de la ressenya</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
     <string name="review_quality_check_analysis_in_progress_warning_body">Això pot trigar uns 60 segons.</string>
     <!-- Title for info card displayed after the user reports a product is back in stock. -->
@@ -2292,18 +2286,8 @@
     <string name="review_quality_check_contextual_onboarding_learn_more">Amb el poder de %1$s de Mozilla, us ajudem a evitar ressenyes esbiaixades i no autèntiques. El nostre model d\'IA sempre millora per a protegir-vos mentre compreu. %2$s</string>
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">Més informació</string>
-    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is the Fakespot product name. Following parameters are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy and review_quality_check_contextual_onboarding_terms_use. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
-    <string name="review_quality_check_contextual_onboarding_caption">En seleccionar «Sí, prova-ho», accepteu %1$s de %2$s i %3$s de Mozilla.</string>
-    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. Parameter is the Fakespot product name. After the colon, what appears are two links, each on their own line. The first link is to a Privacy policy (review_quality_check_contextual_onboarding_privacy_policy_2). The second link is to Terms of use (review_quality_check_contextual_onboarding_terms_use_2). -->
-    <string name="review_quality_check_contextual_onboarding_caption_2" moz:RemovedIn="123" tools:ignore="UnusedResources">En seleccionar «Sí, prova-ho», accepteu les polítiques i condicions següents de %1$s:</string>
-    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy">política de privadesa</string>
-    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Política de privadesa</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
     <string name="review_quality_check_contextual_onboarding_terms_use">condicions d\'ús</string>
-    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
-    <string name="review_quality_check_contextual_onboarding_terms_use_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Condicions d\'ús</string>
     <!-- Text for opt-in button from the review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_primary_button_text">Sí, prova-ho</string>
     <!-- Text for opt-out button from the review quality check contextual onboarding card. -->
@@ -2388,6 +2372,7 @@
     <string name="translation_error_could_not_translate_warning_text">Hi ha hagut un problema en traduir. Torneu-ho a provar.</string>
     <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
     <string name="translation_error_language_not_supported_learn_more">Més informació</string>
+
 
     <!-- Translations options dialog -->
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->

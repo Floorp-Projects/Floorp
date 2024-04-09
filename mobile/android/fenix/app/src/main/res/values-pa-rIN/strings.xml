@@ -191,11 +191,13 @@
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">ਰੋਕੋ</string>
     <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_add_ons">ਐਡ-ਆਨ</string>
+    <string name="browser_menu_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">ਐਡ-ਆਨ</string>
+    <!-- Browser menu button that opens the extensions manager -->
+    <string name="browser_menu_extensions">ਇਕਸਟੈਨਸ਼ਨਾਂ</string>
     <!-- Browser menu button that opens account settings -->
     <string name="browser_menu_account_settings">ਖਾਤਾ ਜਾਣਕਾਰੀ</string>
     <!-- Text displayed when there are no add-ons to be shown -->
-    <string name="no_add_ons">ਕੋਈ ਐਡ-ਆਨ ਨਹੀਂ ਹੈ</string>
+    <string name="no_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">ਕੋਈ ਐਡ-ਆਨ ਨਹੀਂ ਹੈ</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">ਮਦਦ</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -211,7 +213,7 @@
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">ਮੁੱਖ ਸਕਰੀਨ ‘ਤੇ ਜੋੜੋ</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
-    <string name="browser_menu_install_on_homescreen">ਇੰਸਟਾਲ ਕਰੋ</string>
+    <string name="browser_menu_install_on_homescreen" moz:removedIn="126" tools:ignore="UnusedResources">ਇੰਸਟਾਲ ਕਰੋ</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">ਮੁੜ-ਸਿੰਕ ਕਰੋ</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -249,6 +251,15 @@
 
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">ਮੁੱਖ-ਸਫ਼ੇ ਨੂੰ ਕਸਟਮਾਈਜ਼ ਕਰੋ</string>
+
+    <!-- Browser menu label to sign in to sync on the device using Mozilla accounts -->
+    <string name="browser_menu_sign_in" tools:ignore="UnusedResources">ਸਾਈਨ ਇਨ</string>
+    <!-- Browser menu caption label for the "Sign in" browser menu item described in browser_menu_sign_in -->
+    <string name="browser_menu_sign_in_caption" tools:ignore="UnusedResources">ਪਾਸਵਰਡ, ਟੈਬਾਂ ਤੇ ਹੋਰਾਂ ਨੂੰ ਸਿੰਕ ਕਰੋ</string>
+
+    <!-- Extensions management fragment -->
+    <!-- Text displayed when there are no extensions to be shown -->
+    <string name="extensions_management_no_extensions">ਇੱਥੇ ਕੋਈ ਇਕਸਟੈਨਸ਼ਨ ਨਹੀਂ ਹੈ</string>
 
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
@@ -607,10 +618,14 @@
     <string name="quit_application">ਤਬਦੀਲੀਆਂ ਲਾਗੂ ਕਰਨ ਲਈ ਐਪਲੀਕੇਸ਼ਨ ਨੂੰ ਬੰਦ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ…</string>
 
     <!-- Preference for add_ons -->
-    <string name="preferences_addons">ਐਡ-ਆਨ</string>
+    <string name="preferences_addons" moz:removedIn="126" tools:ignore="UnusedResources">ਐਡ-ਆਨ</string>
 
+    <!-- Preference for extensions -->
+    <string name="preferences_extensions">ਇਕਸਟੈਨਸ਼ਨਾਂ</string>
     <!-- Preference for installing a local add-on -->
-    <string name="preferences_install_local_addon">ਫਾਈਲ ਤੋਂ ਐਡ-ਆਨ ਇੰਸਟਾਲ ਕਰੋ</string>
+    <string name="preferences_install_local_addon" moz:removedIn="126" tools:ignore="UnusedResources">ਫਾਈਲ ਤੋਂ ਐਡ-ਆਨ ਇੰਸਟਾਲ ਕਰੋ</string>
+    <!-- Preference for installing a local extension -->
+    <string name="preferences_install_local_extension">ਫ਼ਾਇਲ ਤੋਂ ਇਕਸਟੈਨਸ਼ਨ ਨੂੰ ਇੰਸਟਾਲ ਕਰੋ</string>
     <!-- Preference for notifications -->
     <string name="preferences_notifications">ਨੋਟੀਫਿਕੇਸ਼ਨ</string>
 
@@ -621,7 +636,9 @@
 
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
-    <string name="preferences_customize_amo_collection">ਕਸਟਮ ਐਡ-ਆਨ ਭੰਡਾਰ</string>
+    <string name="preferences_customize_amo_collection" moz:removedIn="126" tools:ignore="UnusedResources">ਕਸਟਮ ਐਡ-ਆਨ ਭੰਡਾਰ</string>
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_extension_collection">ਪਸੰਦੀਦਾ ਇਕਸਟੈਨਸ਼ਨ ਭੰਡਾਰ</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">ਠੀਕ ਹੈ</string>
     <!-- Button caption to abort the add-on collection configuration -->
@@ -632,7 +649,7 @@
     <string name="customize_addon_collection_user_hint">ਭੰਡਾਰ ਮਾਲਕ (ਵਰਤੋਂਕਾਰ ID)</string>
 
     <!-- Toast shown after confirming the custom add-on collection configuration -->
-    <string name="toast_customize_addon_collection_done">ਐਡ-ਆਨ ਭੰਡਾਰ ਸੋਧਿਆ ਗਿਆ। ਤਬਦੀਲੀਆਂ ਲਾਗੂ ਕਰਨ ਲਈ ਐਪਲੀਕੇਸ਼ਨ ਨੂੰ
+    <string name="toast_customize_addon_collection_done" moz:removedIn="126" tools:ignore="UnusedResources">ਐਡ-ਆਨ ਭੰਡਾਰ ਸੋਧਿਆ ਗਿਆ। ਤਬਦੀਲੀਆਂ ਲਾਗੂ ਕਰਨ ਲਈ ਐਪਲੀਕੇਸ਼ਨ ਨੂੰ
 ਬੰਦ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ…</string>
 
     <!-- Customize Home -->
@@ -688,21 +705,21 @@
 
     <!-- Add-ons general availability nimbus message-->
     <!-- Title of the Nimbus message for add-ons general availability-->
-    <string name="addon_ga_message_title" tools:ignore="UnusedResources">ਨਵੀਆਂ ਐਡ-ਆਨ ਹੁਣ ਮੌਜੂਦ ਹਨ</string>
+    <string name="addon_ga_message_title" moz:removedIn="126" tools:ignore="UnusedResources">ਨਵੀਆਂ ਐਡ-ਆਨ ਹੁਣ ਮੌਜੂਦ ਹਨ</string>
     <!-- Body of the Nimbus message for add-ons general availability. 'Firefox' intentionally hardcoded here-->
     <string name="addon_ga_message_body" tools:ignore="UnusedResources">100+ ਤੋਂ ਵੱਧ ਇਕਸਟੈਨਸ਼ਨ ਨੂੰ ਵੇਖੋ, ਜੋ Firefox ਨੂੰ ਤੁਹਾਡਾ ਆਪਣਾ ਬਣਾਉਣ ਲਈ ਸਹਾਇਕ ਹੋਣਗੀਆਂ।</string>
     <!-- Button text of the Nimbus message for add-ons general availability. -->
-    <string name="addon_ga_message_button" tools:ignore="UnusedResources">ਐਡ-ਆਨ ਬਾਰੇ ਜਾਣੋ</string>
+    <string name="addon_ga_message_button" moz:removedIn="126" tools:ignore="UnusedResources">ਐਡ-ਆਨ ਬਾਰੇ ਜਾਣੋ</string>
 
-    <!-- Add-on process crash dialog to user -->
+    <!-- Extension process crash dialog to user -->
     <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
-    <string name="addon_process_crash_dialog_title" tools:ignore="UnusedResources">ਐਡ-ਆਨ ਆਰਜ਼ੀ ਤੌਰ ਉੱਤੇ ਅਸਮਰੱਥ ਹਨ</string>
+    <string name="addon_process_crash_dialog_title" moz:removedIn="126" tools:ignore="UnusedResources">ਐਡ-ਆਨ ਆਰਜ਼ੀ ਤੌਰ ਉੱਤੇ ਅਸਮਰੱਥ ਹਨ</string>
     <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
-    <string name="addon_process_crash_dialog_message" tools:ignore="UnusedResources">ਇੱਕ ਜਾਂ ਵੱਧ ਐਡ-ਆਨ ਕੰਮ ਨਹੀਂ ਕਰ ਰਹੀਆਂ, ਜਿਸ ਨਾਲ ਤੁਹਾਡਾ ਸਿਸਟਮ ਅਸਥਿਰ ਹੋ ਰਿਹਾ ਹੈ। %1$s ਨੇ ਐਡ-ਆਨ ਨੂੰ ਮੁੜ-ਚਾਲੂ ਕਰਨ ਦੀ ਅਸਫ਼ਲ ਕੋਸ਼ਿਸ਼ ਕੀਤੀ ਸੀ।\n\nਤੁਹਾਡੇ ਮੌਜੂਦਾ ਸ਼ੈਸ਼ਨ ਦੇ ਦੌਰਾਨ ਐਡ-ਆਨ ਮੁੜ-ਸ਼ੁਰੂ ਨਹੀਂ ਹੋਵੇਗੀ।\n\nਐਡ-ਆਨ ਨੂੰ ਹਟਾਉਣ ਜਾਂ ਅਸਮਰੱਥ ਕਰਨ ਨਾਲ ਇਹ ਮਸਲਾ ਠੀਕ ਹੋ ਸਕਦਾ ਹੈ।</string>
+    <string name="addon_process_crash_dialog_message" moz:removedIn="126" tools:ignore="UnusedResources">ਇੱਕ ਜਾਂ ਵੱਧ ਐਡ-ਆਨ ਕੰਮ ਨਹੀਂ ਕਰ ਰਹੀਆਂ, ਜਿਸ ਨਾਲ ਤੁਹਾਡਾ ਸਿਸਟਮ ਅਸਥਿਰ ਹੋ ਰਿਹਾ ਹੈ। %1$s ਨੇ ਐਡ-ਆਨ ਨੂੰ ਮੁੜ-ਚਾਲੂ ਕਰਨ ਦੀ ਅਸਫ਼ਲ ਕੋਸ਼ਿਸ਼ ਕੀਤੀ ਸੀ।\n\nਤੁਹਾਡੇ ਮੌਜੂਦਾ ਸ਼ੈਸ਼ਨ ਦੇ ਦੌਰਾਨ ਐਡ-ਆਨ ਮੁੜ-ਸ਼ੁਰੂ ਨਹੀਂ ਹੋਵੇਗੀ।\n\nਐਡ-ਆਨ ਨੂੰ ਹਟਾਉਣ ਜਾਂ ਅਸਮਰੱਥ ਕਰਨ ਨਾਲ ਇਹ ਮਸਲਾ ਠੀਕ ਹੋ ਸਕਦਾ ਹੈ।</string>
     <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
-    <string name="addon_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">ਐਡ-ਆਨ ਮੁੜ-ਚਾਲੂ ਕਰਨ ਦੀ ਕੋਸ਼ਿਸ਼ ਕਰੋ</string>
+    <string name="addon_process_crash_dialog_retry_button_text" moz:removedIn="126" tools:ignore="UnusedResources">ਐਡ-ਆਨ ਮੁੜ-ਚਾਲੂ ਕਰਨ ਦੀ ਕੋਸ਼ਿਸ਼ ਕਰੋ</string>
     <!-- The user will continue with all add-ons disabled -->
-    <string name="addon_process_crash_dialog_disable_addons_button_text" tools:ignore="UnusedResources">ਐਡ-ਆਨ ਨੂੰ ਬੰਦ ਕਰਕੇ ਜਾਰੀ ਰੱਖੋ</string>
+    <string name="addon_process_crash_dialog_disable_addons_button_text" moz:removedIn="126" tools:ignore="UnusedResources">ਐਡ-ਆਨ ਨੂੰ ਬੰਦ ਕਰਕੇ ਜਾਰੀ ਰੱਖੋ</string>
 
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->
@@ -2362,24 +2379,14 @@
     <string name="review_quality_check_contextual_onboarding_learn_more">Mozilla ਵਲੋਂ %1$s ਦੇ ਰਾਹੀਂ ਅਸੀਂ ਤੁਹਾਨੂੰ ਪੱਖਪਾਤੀ ਅਤੇ ਗ਼ੈਰ-ਪ੍ਰਮਾਣਿਤ ਰੀਵਿਊਆਂ ਤੋਂ ਬਚਾਅ ਸਕਦੇ ਹਾਂ। ਸਾਡਾ AI ਮਾਡਲ ਤੁਹਾਨੂੰ ਖਰੀਦਦਾਰੀ ਕਰਨ ਦੌਰਾਨ ਸੁਰੱਖਿਅਤ ਕਰਨ ਲਈ ਹਮੇਸ਼ਾਂ ਸੁਧਾਰ ਕਰ ਰਿਹਾ ਹੈ। %2$s</string>
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">ਹੋਰ ਜਾਣੋ</string>
-    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is the Fakespot product name. Following parameters are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy and review_quality_check_contextual_onboarding_terms_use. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
-    <string name="review_quality_check_contextual_onboarding_caption" moz:RemovedIn="123" tools:ignore="UnusedResources">“ਹਾਂ, ਇਸ ਨੂੰ ਅਜ਼ਮਾਓ” ਚੁਣ ਕੇ ਤੁਸੀਂ Mozilla ਵਲੋਂ %1$s ਦੀ %2$s ਅਤੇ %3$s ਲਈ ਸਹਿਮਤ ਹੁੰਦੇ ਹੋ।</string>
-    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. Parameter is the Fakespot product name. After the colon, what appears are two links, each on their own line. The first link is to a Privacy policy (review_quality_check_contextual_onboarding_privacy_policy_2). The second link is to Terms of use (review_quality_check_contextual_onboarding_terms_use_2). -->
-    <string name="review_quality_check_contextual_onboarding_caption_2" moz:RemovedIn="123" tools:ignore="UnusedResources">“ਹਾਂ, ਇਸ ਨੂੰ ਅਜ਼ਮਾਓ” ਨੂੰ ਚੁਣ ਕੇ ਤੁਸੀਂ %1$s ਤੋਂ ਹੇਠ ਦਿੱਤਿਆਂ ਨਾਲ ਸਹਿਮਤ ਹੁੰਦੇ ਹੋ:</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is Firefox app name, third parameter is the Fakespot product name. Second & fourth are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy_3 and review_quality_check_contextual_onboarding_terms_use. -->
     <string name="review_quality_check_contextual_onboarding_caption_3" moz:RemovedIn="124" tools:ignore="UnusedResources">“ਹਾਂ, ਇਸ ਨੂੰ ਅਜ਼ਮਾਓ” ਚੁਣ ਕੇ ਤੁਸੀਂ %1$s ਦੀ %2$s ਅਤੇ %3$s ਦੀ %4$s ਨਾਲ ਸਹਿਮਤ ਹੁੰਦੇ ਹੋ।</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is Firefox app name, third parameter is the Fakespot product name. Second & fourth are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy_3 and review_quality_check_contextual_onboarding_terms_use. -->
     <string name="review_quality_check_contextual_onboarding_caption_4">“ਹਾਂ, ਇਸ ਨੂੰ ਅਜ਼ਮਾਓ” ਚੁਣ ਕੇ ਤੁਸੀਂ %1$s ਦੀ %2$s ਅਤੇ %3$s ਦੀ %4$s ਨਾਲ ਸਹਿਮਤ ਹੁੰਦੇ ਹੋ।</string>
-    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy" moz:RemovedIn="123" tools:ignore="UnusedResources">ਪਰਦੇਦਾਰੀ ਨੀਤੀ</string>
-    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy_2" moz:RemovedIn="123" tools:ignore="UnusedResources">ਪਰਦੇਦਾਰੀ ਨੀਤੀ</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy notice. -->
     <string name="review_quality_check_contextual_onboarding_privacy_policy_3">ਪਰਦੇਦਾਰੀ ਸੂਚਨਾ</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
     <string name="review_quality_check_contextual_onboarding_terms_use">ਵਰਤਣ ਲਈ ਸ਼ਰਤਾਂ</string>
-    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
-    <string name="review_quality_check_contextual_onboarding_terms_use_2" moz:RemovedIn="123" tools:ignore="UnusedResources">ਵਰਤਣ ਦੀ ਸ਼ਰਤਾਂ</string>
     <!-- Text for opt-in button from the review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_primary_button_text">ਹਾਂ, ਇਸ ਨੂੰ ਅਜ਼ਮਾਓ</string>
     <!-- Text for opt-out button from the review quality check contextual onboarding card. -->

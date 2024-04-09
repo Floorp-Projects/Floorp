@@ -32,4 +32,4 @@
     <string name="mozac_feature_contextmenu_open_link_in_external_app">Arvi link in app esterna</string>
     <!-- Action shown in a text selection context menu. This will prompt a share of the selected text. -->
     <string name="mozac_selection_context_menu_share">Condividdi</string>
-</resources>
+    </resources>

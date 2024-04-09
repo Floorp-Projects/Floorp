@@ -46,8 +46,6 @@
     <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
     <string name="menu_add_to_home_screen">ပင်မစာမျက်နှာသို့ ထည့်ပါ</string>
 
-    <!-- Menu item: Shows information about features and changes that are new to this version -->
-    <string name="menu_whats_new">ဘာအသစ်တွေ ပါဝင်ပါသလဲ။</string>
     <string name="menu_settings">အပြင်အဆင်များ</string>
     <string name="menu_about">အကြောင်း</string>
     <string name="menu_help">အကူအညီ</string>
@@ -111,10 +109,6 @@
          %1$s will be replaced by the app name (e.g. Firefox Focus) -->
     <string name="shortcut_erase_and_open_long_label">%1$s ကို ဖျက်ပြီး ဖွင့်ပါ</string>
 
-
-    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
-         Clicking this action will launch Focus and perform a search in the default search engine. -->
-    <string name="text_selection_search_action">သီးသန့်လုံခြုံစွာ ရှာဖွေပါ</string>
 
     <!-- Header for the Privacy and Security settings menu -->
     <string name="preference_privacy_and_security_header">ကိုယ်ရေးကာကွယ်မှုနှင့် လုံခြုံရေး</string>
@@ -250,10 +244,6 @@
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">အက်ပ်ကို ဖွင့်ရန် လက်ဗွေကို အသုံးပြုပါ</string>
-    <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
-        open when the app was last run to ensure that only the phone's owner can view a previous session.
-        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
-    <string name="preference_security_biometric_summary">အကယ်၍ URL ကို အက်ပ်ထဲတွင် ဖွင့်ပြီးသားဖြစ်ပါက သင့်လက်ဗွေသည် %1$s ကို ဖွင့်မည်။ Stealth စနစ် အသက်ဝင်ပါမည်။</string>
 
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
          and prevents the user from taking screenshots or casting the app to other displays. -->
@@ -307,10 +297,6 @@
     <string name="preference_search_add2">+ အခြားရှာဖွေအင်ဂျင်ကို ထပ်ထည့်ပါ</string>
     <string name="preference_search_remove_title">ရှာဖွေအင်ဂျင်များ ဖယ်ရှားပါ</string>
     <string name="preference_search_remove">ဖယ်ရှားပါ</string>
-
-    <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
-     a user first launches the app. -->
-    <string name="preference_homescreen_tips">စတင်အသုံးပြုရာ ဖန်သားပြင်တွင် အကြံပြုချက်များ ပြပါ</string>
 
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">ရှာဖွေရေး အင်ဂျင် တိုးရန်</string>
@@ -554,17 +540,6 @@
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">USB/Wi-Fi မှတဆင့် Remote debugging</string>
 
-    <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
-     %1$s is replaced with the app name -->
-    <string name="biometric_auth_title">%1$s ကို ဖွင့်ရန်</string>
-
-    <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
-    <string name="biometric_auth_description">ဆက်သွားရန် လက်ဗွေအာရုံခံစနစ်ကို ထိတွေ့ပါ။</string>
-
-    <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
-     When pressed, the user's previous session is cleared, and authentication is not required. -->
-    <string name="biometric_auth_new_session">Session အသစ်</string>
-
     <!-- Description for the fingerprint authentication image. Used for accessibility purposes. -->
     <string name="biometric_auth_image_description">လက်ဗွေပုံငယ်</string>
 
@@ -623,8 +598,6 @@
     <!-- Preference for switching to a new tab immediately after opening -->
     <string name="preference_open_new_tab">လင့်ခ်ကို ချက်ခြင်း တပ်ဗ်အသစ်ထဲတွင် အသုံးပြုရန်</string>
 
-    <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
-    <string moz:removedIn="97" name="preference_category_safe_browsing">လုံခြုံသော ရှာဖွေခြင်း</string>
     <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_safe_browsing_title">အန္တရာယ်ရှိပြီး လှည့်ဖြားတတ်သည့် ဝဘ်ဆိုက်များကို တားဆီးပါ</string>
     <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
@@ -655,5 +628,7 @@
     <string name="crash_report_send_crash_label">Mozillaသို့ ပျက်စီးမှုအစီရင်ခံစာပို့ပါ</string>
 
     <!-- Tracking protection bottom sheet -->
+
+     <!-- Promote SearchWidget Dialog -->
 
     </resources>

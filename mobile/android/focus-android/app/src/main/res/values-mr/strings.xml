@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:moz="http://mozac.org/tools" xmlns:tools="http://schemas.android.com/tools">
     <!-- ####################################################################################### -->
     <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
     <!-- ## into a separate file like strings_references.xml                                  ## -->
@@ -52,8 +52,6 @@
     <!-- Menu item: Remove the current site as a shortcut from the Home screen -->
     <string name="menu_remove_from_shortcuts">शॉर्टकट मधून हटवा</string>
 
-    <!-- Menu item: Shows information about features and changes that are new to this version -->
-    <string name="menu_whats_new">नवीन काय आहे</string>
     <string name="menu_settings">सेटिंग</string>
     <string name="menu_about">याबद्दल</string>
     <string name="menu_help">मदत</string>
@@ -118,10 +116,6 @@
     <string name="shortcut_erase_and_open_long_label">मिटवा आणि %1$s उघडा</string>
 
 
-    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
-         Clicking this action will launch Focus and perform a search in the default search engine. -->
-    <string name="text_selection_search_action">गुप्ततेने शोधा</string>
-
     <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
          Argument 2 is the url for the learn-more link. -->
     <string name="about_content"><![CDATA[<p>%1$s आपल्याला नियंत्रण देतो.</p>
@@ -150,9 +144,6 @@
     <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
     <string name="preference_mozilla_summary">%1$s बद्दल, मदत</string>
 
-    <!-- Preference category for ad blocking and tracking protection settings -->
-    <string name="preference_category_tracking_protection">मागोवा सुरक्षा</string>
-
     <!-- Preference category for settings related to controlling web content -->
     <string name="preference_category_web_content">वेब मजकूर</string>
 
@@ -161,9 +152,6 @@
 
     <!-- Preference category for General Settings -->
     <string name="preference_category_general">सर्वसाधारण</string>
-
-    <!-- Preference summary for General Settings category; the three things users can find in this category -->
-    <string name="preference_general_summary">पूर्वनिर्धारित ब्राउझर, टॅब, भाषा</string>
 
     <!-- Preference category for settings about sending usage data -->
     <string name="preference_category_data_collection_use">माहिती संकलन आणि वापर</string>
@@ -194,14 +182,8 @@
     <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
     <string name="preference_switch_autocomplete_topsites">टॉप साईट करिता</string>
 
-    <!-- Summary for the toggle to enable autocomplete for the topsites list -->
-    <string name="preference_autocomplete_topsite_summary">450 हुन अधिक लोकप्रिय URL पत्ता पट्टीमध्ये स्वयंपूर्ण करणे सक्षम करा.</string>
-
     <!-- Title of "switch" preference that enables/disables autocomplete for the user-defined list -->
     <string name="preference_switch_autocomplete_user_list">आपण जोडलेल्या साईट करिता</string>
-
-    <!-- Summary for the toggle to enable autocomplete for the user-defined list -->
-    <string name="preference_autocomplete_user_list_summary">450 हुन अधिक लोकप्रिय URL पत्ता पट्टीमध्ये स्वयंपूर्ण करणे सक्षम करा.</string>
 
     <!-- Preference category: Manage (user-defined) sites -->
     <string name="preference_category_autocomplete_manage_sites">साईट व्यवस्थापित करा</string>
@@ -291,10 +273,6 @@
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">अँप उघडण्यासाठी बोटाचा ठसा वापरा</string>
-    <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
-        open when the app was last run to ensure that only the phone's owner can view a previous session.
-        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
-    <string name="preference_security_biometric_summary">जर एखादी URL आधीच अँप मध्ये उघडली असेल तर आपल्या बोटाचा ठसा %1$s उघडू शकतो. स्टेल्थ चालू होईल.</string>
 
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
          and prevents the user from taking screenshots or casting the app to other displays. -->
@@ -355,10 +333,6 @@
     <string name="preference_search_add3">अजून एक शोध इंजिन जोडा</string>
     <!-- Explanation text above the list of search engines-->
     <string name="preference_select_preferred_engine">आपले पसंतीचे इंजिन निवडा:</string>
-
-    <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
-     a user first launches the app. -->
-    <string name="preference_homescreen_tips">मुख्य पृष्ठाच्या सूचना दाखवा</string>
 
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">शोध इंजीन जोडा</string>
@@ -523,10 +497,6 @@
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_no">नाही</string>
 
-    <!-- When tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
-         let the user know that the shortcut will always be opened with tracking protection disabled. -->
-    <string name="dialog_addtohomescreen_tracking_protection">मागोवा सुरक्षा निष्क्रिय राहून शॉर्टकट उघडतील</string>
-
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
     The recommended maximum length is 40 characters; the value may be truncated if it is too long.
 
@@ -634,17 +604,6 @@
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">Wi-Fi द्वारे दूरस्थ डीबगिंग</string>
 
-    <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
-     %1$s is replaced with the app name -->
-    <string name="biometric_auth_title">%1$s उघडा</string>
-
-    <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
-    <string name="biometric_auth_description">पुढे चालू ठेवण्यासाठी बोटाच्या ठश्याच्या सेन्सर ला स्पर्श करा.</string>
-
-    <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
-     When pressed, the user's previous session is cleared, and authentication is not required. -->
-    <string name="biometric_auth_new_session">नवीन सत्र</string>
-
     <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
     while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
     <string name="biometric_auth_open_link_new_session">नवीन सत्रात दुवा उघडा</string>
@@ -685,11 +644,6 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_disable_tracking_protection">साइट अनपेक्षितरित्या वागत आहे?\n ट्रॅकिंग संरक्षण बंद करण्याचा प्रयत्न करा</string>
 
-    <!-- Tip displayed on home view explaining how to disable tracking protection
-The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string name="tip_disable_tracking_protection2">साइट अनपेक्षितरित्या वागत आहे?\n
- ट्रॅकिंग संरक्षण बंद करण्याचा प्रयत्न करा</string>
-
     <!-- Tip displayed on home view explaining how to add sites to homescreen
     Argument 1 will be replaced with a line break in the application.-->
     <string name="tip_add_to_homescreen"><![CDATA[आपण सर्वात जास्त वापरता त्या साईट एका टॅप मध्ये मिळवा%1$sमेनू > मुख्य पृष्ठावर जोडा]]></string>
@@ -707,11 +661,6 @@ The new line here must be kept as the second half of the string is clickable for
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_open_in_new_tab">एका नवीन टॅबमध्ये एक दुवा उघडा\n एका पृष्ठावर कोणताही दुवा दीर्घ-दाबून ठेवा</string>
 
-    <!-- Tip displayed on home view explaining how to request the desktop version of a website.
-      %1$s is a placeholder for the app name. -->
-    <string name="tip_request_desktop2">साइटची पूर्ण आवृत्ती पाहू इच्छिता?\n
- %1$s मेनूमधून डेस्कटॉप साइट चालू करा</string>
-
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">आरंभ पटलावर सूचना बंद करा</string>
 
@@ -724,9 +673,8 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Preference for switching to a new tab immediately after opening -->
     <string name="preference_open_new_tab">नवीन टॅबमध्ये दुवा त्वरित स्विच करा</string>
 
-    <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
-    <string name="preference_category_safe_browsing">आपले ब्राउझिंग सुरक्षित असो</string>
-
     <!-- Tracking protection bottom sheet -->
+
+     <!-- Promote SearchWidget Dialog -->
 
     </resources>

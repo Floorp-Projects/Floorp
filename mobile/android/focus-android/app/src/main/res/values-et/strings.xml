@@ -53,8 +53,6 @@
     <!-- Menu item: Remove the current site as a shortcut from the Home screen -->
     <string name="menu_remove_from_shortcuts">Eemalda otseteede hulgast</string>
 
-    <!-- Menu item: Shows information about features and changes that are new to this version -->
-    <string name="menu_whats_new">Mis on uut?</string>
     <string name="menu_settings">Sätted</string>
     <string name="menu_about">Teave</string>
     <string name="menu_help">Abi</string>
@@ -119,10 +117,6 @@
          %1$s will be replaced by the app name (e.g. Firefox Focus) -->
     <string name="shortcut_erase_and_open_long_label">Kustuta ja ava %1$s</string>
 
-
-    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
-         Clicking this action will launch Focus and perform a search in the default search engine. -->
-    <string name="text_selection_search_action">Otsi privaatselt</string>
 
     <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
          Argument 2 is the url for the learn-more link. -->
@@ -299,13 +293,6 @@
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">Rakenduse lahtilukustamiseks kasutatakse sõrmejälge</string>
 
-    <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
-        open when the app was last run to ensure that only the phone's owner can view a previous session.
-        %s will be replaced by the app name (e.g. Firefox Focus)
-        Shortcuts is a feature that allows the user to pin his favorite websites to Focus home screen so he can quickly access them-->
-    <string moz:removedIn="102" name="preference_security_biometric_summary" tools:ignore="UnusedResources">Sinu sõrmejälg saab %1$se lahti lukustada, kui mingi URl on juba äpis avatud.
-    Salajasus lülitatakse sisse.</string>
-
     <string name="preference_security_biometric_summary2">Kui oled juba lisanud otsetee või avanud kaardi, siis saad %se avada sõrmejäljega.</string>
 
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
@@ -367,10 +354,6 @@
     <string name="preference_search_add3">Lisa veel üks otsingumootor</string>
     <!-- Explanation text above the list of search engines-->
     <string name="preference_select_preferred_engine">Vali oma eelistatud otsingumootor:</string>
-
-    <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
-     a user first launches the app. -->
-    <string name="preference_homescreen_tips">Kuvatakse avakuva näpunäiteid</string>
 
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">Otsingumootori lisamine</string>
@@ -472,36 +455,6 @@
     <string name="download_snackbar_open">Ava</string>
 
     <string name="error_hostLookup_title">Serverit ei leitud</string>
-
-    <!-- Onboarding: Title -->
-    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
-    <string name="onboarding_title">Tere tulemast %1$sesse!</string>
-
-    <!-- Onboarding: Description -->
-    <string name="onboarding_description">Järgmise taseme privaatne lehitsemine, puhuks kui vajad seda</string>
-
-    <!-- Onboarding: Incognito Title -->
-    <string name="onboarding_incognito_title">Kus inkognito kohtub nähtamatusega</string>
-
-    <!-- Onboarding: Incognito Description -->
-    <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
-    <string name="onboarding_incognito_description">%s on esmajoones privaatsusele orienteeritud brauser, millesse on sisse ehitatud eriti tugev jälitamise ja küpsiste vastane kaitse.</string>
-
-    <!-- Onboarding: History Title -->
-    <string name="onboarding_history_title">Lehitse nii nagu seda poleks kunagi juhtunud</string>
-
-    <!-- Onboarding: History Description -->
-    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">Üks puudutus kustutab lehitsemise ajaloo ja küpsised ning takistab reklaamidel sinu jälitamist.</string>
-    <string name="onboarding_history_description2">Üks puudutus kustutab lehitsemise ajaloo ja küpsised ning takistab reklaamidel sinu jälitamist.</string>
-
-    <!-- Onboarding: Protection Title -->
-    <string name="onboarding_protection_title">Privaatsus, mis sobib igas olukorras</string>
-
-    <!-- Onboarding: Protection Description -->
-    <string name="onboarding_protection_description">Kui sinu lehitsemine vajab muutust, siis on privaatsuse taset lihtne suurendada või vähendada.</string>
-
-    <!-- Onboarding: Start browsing -->
-    <string name="onboarding_start_browsing">Alusta veebilehitsemist</string>
 
     <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Tugevda oma privaatsust</string>
@@ -732,10 +685,6 @@
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">Kaugsilumine USB/Wi-Fi kaudu</string>
 
-    <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
-     %1$s is replaced with the app name -->
-    <string moz:removedIn="103" name="biometric_auth_title">Lukusta %1$s lahti</string>
-
     <!-- Text Button for show biometric prompt -->
     <string name="show_biometric_button_text">Lukusta lahti</string>
 
@@ -744,13 +693,6 @@
 
     <!-- Subtitle text for biometric prompt pop-up -->
     <string name="biometric_prompt_subtitle">Praeguse seansi jätkamiseks kasuta oma sõrmejälge.</string>
-
-    <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
-    <string moz:removedIn="103" name="biometric_auth_description">Jätkamiseks puuduta sõrmejäljeandurit.</string>
-
-    <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
-     When pressed, the user's previous session is cleared, and authentication is not required. -->
-    <string moz:removedIn="103" name="biometric_auth_new_session">Uus seanss</string>
 
     <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
     while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
@@ -793,11 +735,6 @@
     <string name="tip_disable_tracking_protection">Kas sait käitub ootamatult?\n
     Proovi jälitamisvastane kaitse välja lülitada</string>
 
-    <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
-The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string name="tip_disable_tracking_protection3">Saidil on sisu puudu või käitub imelikult?\n
-    Proovi jälitamisvastane kaitse välja lülitada</string>
-
     <!-- Tip displayed on home view explaining how to add sites to homescreen
     Argument 1 will be replaced with a line break in the application.-->
     <string name="tip_add_to_homescreen"><![CDATA[Saa ühe puudutusega ligipääs saitidele, mida enim %1$ses kasutad. Menüü > Lisa avaekraanile]]></string>
@@ -821,28 +758,8 @@ The new line here must be kept as the second half of the string is clickable for
         Puuduta pikalt mis tahes linki lehel
     </string>
 
-    <!-- Tip displayed on home view explaining how to request the desktop version of a website.
-      %1$s is a placeholder for the app name. -->
-    <string name="tip_request_desktop2">Soovid näha saidi täisversiooni?\n
-        Lülitu %1$se menüüst töölaua versioonile</string>
-
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">Lülita näpunäited avakuval välja</string>
-
-    <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
-     "Allowlist" is a replacement for the word whitelist. -->
-    <string name="tip_explain_allowlist3">Kas soovid usaldusväärse saidi jaoks jälitamisvastase kaitse välja lülitada?\n
-        Lisa see sätetes lubatute nimekirja
-    </string>
-
-    <!-- Tip displayed on the home view about the changes in the new release.
-    %1$s is a placeholder for the app name -->
-    <string name="tip_fresh_look">Jah, meil on uus välimus!\n Loe selle ja teiste %1$se uuenduste kohta.</string>
-
-    <!-- Tip displayed on the home view about shortcuts
-    %1$s is a placeholder for the app name -->
-    <string name="tip_about_shortcuts">Loo otseteed saitidele, mida külastad enim:\n
-    Vali %1$se menüüst Lisa otseteedesse</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">Avati uus kaart</string>
@@ -944,18 +861,10 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Järgitakse seadme teemat</string>
 
-    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
-    <string name="errorpage_httpsonly_title">Soovitud sait ei toeta HTTPSi</string>
-    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
-    <string name="errorpage_httpsonly_message">Vaikimisi üritab %1$s turvalisuse suurendamiseks saitidega ühenduda HTTPSi abil. Selle sätte muutmiseks või lisateabe saamiseks ava Sätted &gt; Privaatsus ja turvalisus &gt; Turvalisus.</string>
-
-    <!-- Sessions List -->
+     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Sulge kaart</string>
 
-    <!-- Contextual Feature Recommendation Popups -->
-    <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
-    <string name="cfr_for_toolbar_shield_icon">Näib, et see sait üritas sind jälitada. Saidi sätete ja jälitajate blokkimise statistika vaatamiseks puuduta kilpi.</string>
     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
     <string name="cfr_close_button_description">Sulge hüpikaken</string>
 
@@ -967,7 +876,6 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Tool Tip "X" button Content description (not visible, for screen readers etc.) :Button that closes the tool tip -->
     <string name="tool_tip_dismiss_button_content_description">Peida</string>
 
-    <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
-    <string name="cfr_for_toolbar_delete_icon">Vabane sellel seansil oma isiklikest andmetest, lehitsemise ajaloost ja muust, puudutades prügikasti nuppu. Proovi!</string>
+    <!-- Promote SearchWidget Dialog -->
 
-</resources>
+    </resources>

@@ -1,152 +1,251 @@
-<?xml version='1.0' encoding='utf-8'?>
-<resources>
-  <string name="action_cancel">Batal</string>
-  <string name="action_ok">OK</string>
-  <string name="action_save">Simpan</string>
-  <string name="urlbar_hint">Cari atau masukkan alamat</string>
-  <string name="teaser">Pelayaran peribadi automatik.\nLayar. Buang. Ulang.</string>
-  <string name="feedback_erase">Sejarah pelayaran anda telah dibuang.</string>
-  <string name="feedback_erase_custom_tab">Sejarah pelayaran tab telah dibuang.</string>
-  <string name="search_hint">Cari %1$s</string>
-  <string name="menu_share">Kongsi…</string>
-  <string name="menu_report_site_issue">Laporkan Isu Laman</string>
-  <string name="menu_open_with_default_browser2">Buka dalam %1$s</string>
-  <string name="menu_open_with_a_browser2">Buka dalam…</string>
-  <string name="menu_add_to_home_screen">Tambah ke Skrin Halaman utama</string>
-  <string name="menu_whats_new">Perkembangan Terbaru</string>
-  <string name="menu_settings">Tetapan</string>
-  <string name="menu_about">Perihal</string>
-  <string name="menu_help">Bantuan</string>
-  <string name="menu_rights">Hak Anda</string>
-  <string name="menu_trackers_blocked_title">Penjejak disekat</string>
-  <string name="menu_trackers_blocked_subtitle">Menyahaktifkan ini boleh membetulkan beberapa masalah laman</string>
-  <string name="menu_content_blocking">Sekatan Kandungan</string>
-  <string name="menu_content_blocking_subtitle">Nyahaktifkan untuk membetulkan beberapa laman</string>
-  <string name="menu_custom_tab_branding">Dikuasakan oleh %1$s</string>
-  <string name="share_dialog_title">Kongsi via</string>
-  <string name="notification_erase_text">Buang sejarah pelayaran</string>
-  <string name="notification_action_open">Buka</string>
-  <string name="notification_action_erase_and_open">Buang dan Buka</string>
-  <string name="shortcut_erase_short_label">Buang</string>
-  <string name="shortcut_erase_long_label">Buang sejarah pelayaran</string>
-  <string name="shortcut_erase_and_open_short_label">Buang &amp; buka</string>
-  <string name="shortcut_erase_and_open_long_label">Buang dan buka %1$s</string>
-  <string name="text_selection_search_action">Cari secara Rahsia</string>
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:moz="http://mozac.org/tools" xmlns:tools="http://schemas.android.com/tools">
+    <!-- ####################################################################################### -->
+    <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
+    <!-- ## into a separate file like strings_references.xml                                  ## -->
+    <!-- ####################################################################################### -->
 
-  <string name="preference_privacy_and_security_header">Privasi &amp; Keselamatan</string>
-  <string name="preference_privacy_and_security_summary">Penjejakan, kuki, pilihan data</string>
-  <string name="preference_search_summary">Tetapkan piawai, autolengkap</string>
-  <string name="preference_mozilla_summary">Perihal %1$s, bantuan</string>
-  <string name="preference_category_tracking_protection">Perlindungan Penjejakan</string>
-  <string name="preference_category_web_content">Kandungan Web</string>
-  <string name="preference_category_switching_apps">Aplikasi Penukaran</string>
-  <string name="preference_category_general">Umum</string>
-  <string name="preference_general_summary">Pelayar, tab, bahasa piawai</string>
-  <string name="preference_category_data_collection_use">Pengumpulan Data &amp; Penggunaan</string>
-  <string name="preference_category_search">Carian</string>
-  <string name="preference_show_search_suggestions">Dapatkan cadangan carian</string>
-  <string name="preference_show_search_suggestions_summary">%1$s akan menghantar apa yang anda taip dalam bar alamat kepada enjin carian</string>
-  <string name="preference_search_engine_default">Piawai</string>
-  <string name="preference_search_engine_label">Enjin carian</string>
-  <string name="preference_state_on">Aktif</string>
-  <string name="preference_state_off">Nyahaktif</string>
-  <string name="preference_subitem_autocomplete">Auto-lengkap URL</string>
-  <string name="preference_switch_autocomplete_topsites">Untuk Laman Teratas</string>
-  <string name="preference_autocomplete_topsite_summary">Dayakan untuk autolengkap lebih daripada 450 URL popular di bar alamat.</string>
-  <string name="preference_switch_autocomplete_user_list">Untuk Laman Yang Anda Tambah</string>
-  <string name="preference_autocomplete_user_list_summary">Dayakan untuk autolengkap lebih daripada 450 URL popular di bar alamat.</string>
-  <string name="preference_category_autocomplete_manage_sites">Urus laman</string>
-  <string name="preference_autocomplete_subitem_manage_sites">Urus laman</string>
-  <string name="preference_autocomplete_action_add">+ Tambah URL penyesuaian</string>
-  <string name="preference_autocomplete_title_add">Tambah URL penyesuaian</string>
-  <string name="custom_autocomplete_quick_add">Tambah URL penyesuaian</string>
-  <string name="add_custom_autocomplete_label">Tambah pautan untuk autolengkap</string>
-  <string name="preference_category_cookies">Kuki dan Data Laman</string>
-  <string name="preference_category_data_choices">Pilihan Data</string>
-  <string name="preference_autocomplete_title_remove">Buang URLs penyesuaian</string>
-  <string name="preference_autocomplete_learn_more">Ketahui selanjutnya</string>
-  <string name="preference_autocomplete_custom_summary">Tambah dan urus penyesuaian URL auto-lengkap.</string>
-  <string name="preference_autocomplete_add_title">URL untuk ditambah</string>
-  <string name="preference_autocomplete_add_hint">Tampal atau masukkan URL</string>
-  <string name="preference_autocomplete_add_example2">Contoh: mozilla.org</string>
-  <string name="preference_autocomplete_add_example">Contoh: example.com</string>
-  <string name="preference_autocomplete_add_confirmation">Penyesuaian URL baru ditambah.</string>
-  <string name="preference_autocomplete_menu_remove">Buang</string>
-  <string name="preference_autocomplete_action_remove_content_description">Buang</string>
-  <string name="preference_autocomplete_add_error">Semak semula URL yang anda masukkan.</string>
-  <string name="preference_language">Bahasa</string>
-  <string name="preference_language_systemdefault">Piawai sistem</string>
-  <string name="preference_category_privacy">Privasi</string>
-  <string name="preference_privacy_block_ads">Sekat penjejak iklan</string>
-  <string name="preference_privacy_block_ads_summary">Sesetengah iklan menjejaki lawatan anda dalam laman, walaupun anda tidak klik iklan</string>
-  <string name="preference_privacy_block_analytics">Sekat penjejak analitik</string>
-  <string name="preference_privacy_block_analytics_summary">Digunakan untuk mengumpul, menganalisis dan menilai aktiviti, seperti klik dan skrol</string>
-  <string name="preference_privacy_block_social">Sekat penjejak sosial</string>
-  <string name="preference_privacy_block_social_summary">Disisipkan di dalam laman untuk menjejaki lawatan anda dan memaparkan fungsi seperti butang kongsi</string>
-  <string name="preference_privacy_block_content">Sekat penjejak kandungan lain</string>
-  <string name="preference_privacy_block_content_summary2">Sesetengah halaman mungkin tidak berfungsi dengan sempurna jika ciri ini diaktifkan</string>
-  <string name="preference_privacy_category_cookies">Sekat kuki</string>
-  <string name="preference_privacy_should_block_cookies_no_option">Tidak</string>
-  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Sekat kuki penjejak pihak ke-3 sahaja</string>
-  <string name="preference_privacy_should_block_cookies_third_party_only_option">Sekat kuki pihak ke-3 sahaja</string>
-  <string name="preference_privacy_should_block_cookies_yes_option">Ya</string>
-  <string name="preference_security_biometric">Guna cap jari untuk membuka aplikasi</string>
-  <string name="preference_security_biometric_summary">Cap jari anda boleh membuka %1$s jika URL telah dibuka dalam aplikasi. Halimunan akan diaktifkan.</string>
-  <string name="preference_privacy_secure_mode">Halimunan</string>
-  <string name="preference_privacy_stealth_summary">Sorok halaman web apabila bertukar aplikasi dan sekat mengambil skrinsyot.</string>
-  <string name="preference_category_security">Keselamatan</string>
-  <string name="preference_category_performance">Prestasi</string>
-  <string name="preference_performance_block_webfonts">Sekat fon Web</string>
-  <string name="preference_performance_block_webfonts_summary">Boleh menyebabkan imej atau ikon hilang</string>
-  <string name="preference_performance_block_javascript">Sekat JavaScript</string>
-  <string name="preference_performance_block_javascript_summary">Halaman dimuatkan lebih cepat, tetapi mungkin ada yang tidak dijangka</string>
-  <string name="preference_default_browser2">Jadikan %1$s pelayar piawai</string>
-  <string name="preference_category_mozilla">Mozilla</string>
-  <string name="preference_mozilla_telemetry2">Hantar data penggunaan</string>
-  <string name="preference_mozilla_telemetry_summary">Ketahui selanjutnya</string>
-  <string name="preference_mozilla_telemetry_summary2">Mozilla mengumpulkan hanya yang diperlukan untuk menyedia dan meningkatkan %1$s.</string>
-  <string name="preference_privacy_notice">Notis Privasi</string>
-  <string name="preference_about">Perihal %1$s</string>
-  <string name="preference_search_installed_search_engines">Enjin carian dipasang</string>
-  <string name="preference_search_restore">Pulih enjin carian piawai</string>
-  <string name="preference_search_add2">+ Tambah enjin carian lain</string>
-  <string name="preference_search_remove_title">Buang enjin carian</string>
-  <string name="preference_search_remove">Buang</string>
-  <string name="preference_homescreen_tips">Papar panduan skrin utama</string>
-  <string name="action_option_add_search_engine">Tambah enjin carian</string>
-  <string name="search_add_manually_name_hint">Nama enjin carian</string>
-  <string name="search_add_manually_string">Cari string yang mahu digunakan</string>
-  <string name="search_add_manually_save">Simpan</string>
-  <string name="search_add_manually_example">Contoh: example.com/search/?q=%s</string>
-  <string name="search_add_confirmation">Enjin carian baru sudah ditambah.</string>
-  <string name="search_add_error_empty_name">Masukkan nama enjin carian</string>
-  <string name="search_add_error_duplicate_name">Enjin carian yang dipasang sudah menggunakan nama itu.</string>
-  <string name="search_add_error_empty_search">Masukkan string carian</string>
-  <string name="search_add_error_format">Pastikan string carian sepadan format contoh</string>
-  <string name="content_description_clear_input">Hapuskan input</string>
-  <string name="content_description_dismiss_input">Abai</string>
-  <string name="content_description_erase">Buang sejarah pelayaran</string>
-  <string name="content_description_tab_counter">Tab terbuka: %1$s</string>
-  <string name="content_description_lock">Sambungan selamat</string>
-  <string name="accessibility_announcement_loading">Memuatkan</string>
-  <string name="accessibility_announcement_loading_finished">Laman web dimuatkan</string>
-  <string name="content_description_menu">Pilihan lain</string>
-  <string name="indicator_content_description_menu">Butang pilihan lain</string>
-  <string name="content_description_forward">Navigasi depan</string>
-  <string name="content_description_reload">Muat semula laman web</string>
-  <string name="content_description_back">Navigasi undur</string>
-  <string name="content_description_stop">Hentikan memuat laman web</string>
-  <string name="content_description_customtab_exit">Kembali ke aplikasi dahulu</string>
-  <string name="content_description_trackers_blocked">Bilangan penjejak disekat</string>
-  <string name="content_description_blocking_switch">Sekat penjejak</string>
-  <string name="your_rights">Hak Anda</string>
-  <string name="external_app_prompt_title">Buka pautan guna aplikasi lain</string>
-  <string name="external_app_prompt">Anda boleh keluar dari %1$s untuk membuka pautan ini dalam %2$s.</string>
-  <string name="external_app_prompt_no_app_title">Cari aplikasi yang boleh buka pautan</string>
-  <string name="external_app_prompt_no_app">Tiada aplikasi pada peranti anda dapat membuka pautan ini. Anda boleh tinggalkan %1$s untuk mencari %2$s aplikasi yang boleh melaksanakannya.</string>
-  <string name="external_multiple_apps_matched_exit">Tamatkan Pelayaran Peribadi?</string>
-  <string name="download_snackbar_finished">%1$s sudah siap</string>
-  <string name="download_snackbar_open">Buka</string>
+    <string name="action_cancel">Batal</string>
+    <string name="action_ok">OK</string>
+
+    <string name="action_save">Simpan</string>
+
+    <string name="urlbar_hint">Cari atau masukkan alamat</string>
+
+    <string name="teaser">Pelayaran peribadi automatik.\nLayar. Buang. Ulang.</string>
+
+    <string name="feedback_erase">Sejarah pelayaran anda telah dibuang.</string>
+
+    <string name="feedback_erase_custom_tab">Sejarah pelayaran tab telah dibuang.</string>
+
+    <string name="search_hint">Cari %1$s</string>
+
+    <string name="menu_share">Kongsi…</string>
+
+    <string name="menu_report_site_issue">Laporkan Isu Laman</string>
+
+    <string name="menu_open_with_default_browser2">Buka dalam %1$s</string>
+
+    <string name="menu_open_with_a_browser2">Buka dalam…</string>
+
+    <string name="menu_add_to_home_screen">Tambah ke Skrin Halaman utama</string>
+
+    <string name="menu_settings">Tetapan</string>
+    <string name="menu_about">Perihal</string>
+    <string name="menu_help">Bantuan</string>
+    <string name="menu_rights">Hak Anda</string>
+
+    <string name="menu_trackers_blocked_title">Penjejak disekat</string>
+
+    <string name="menu_trackers_blocked_subtitle">Menyahaktifkan ini boleh membetulkan beberapa masalah laman</string>
+
+    <string name="menu_content_blocking">Sekatan Kandungan</string>
+    <string name="menu_content_blocking_subtitle">Nyahaktifkan untuk membetulkan beberapa laman</string>
+
+    <string name="menu_custom_tab_branding">Dikuasakan oleh %1$s</string>
+
+    <string name="share_dialog_title">Kongsi via</string>
+
+    <string name="notification_erase_text">Buang sejarah pelayaran</string>
+
+    <string name="notification_action_open">Buka</string>
+
+    <string name="notification_action_erase_and_open">Buang dan Buka</string>
+
+    <string name="shortcut_erase_short_label">Buang</string>
+
+    <string name="shortcut_erase_long_label">Buang sejarah pelayaran</string>
+
+
+    <string name="shortcut_erase_and_open_short_label">Buang &amp; buka</string>
+
+    <string name="shortcut_erase_and_open_long_label">Buang dan buka %1$s</string>
+
+    <string name="preference_privacy_and_security_header">Privasi &amp; Keselamatan</string>
+
+    <string name="preference_privacy_and_security_summary">Penjejakan, kuki, pilihan data</string>
+
+    <string name="preference_search_summary">Tetapkan piawai, autolengkap</string>
+
+    <string name="preference_mozilla_summary">Perihal %1$s, bantuan</string>
+
+    <string name="preference_category_web_content">Kandungan Web</string>
+
+    <string name="preference_category_switching_apps">Aplikasi Penukaran</string>
+
+    <string name="preference_category_general">Umum</string>
+
+    <string name="preference_category_data_collection_use">Pengumpulan Data &amp; Penggunaan</string>
+
+    <string name="preference_category_search">Carian</string>
+
+    <string name="preference_show_search_suggestions">Dapatkan cadangan carian</string>
+    <string name="preference_show_search_suggestions_summary">%1$s akan menghantar apa yang anda taip dalam bar alamat kepada enjin carian</string>
+
+    <string name="preference_search_engine_default">Piawai</string>
+
+    <string name="preference_search_engine_label">Enjin carian</string>
+
+    <string name="preference_state_on">Aktif</string>
+
+    <string name="preference_state_off">Nyahaktif</string>
+
+    <string name="preference_subitem_autocomplete">Auto-lengkap URL</string>
+
+    <string name="preference_switch_autocomplete_topsites">Untuk Laman Teratas</string>
+
+    <string name="preference_switch_autocomplete_user_list">Untuk Laman Yang Anda Tambah</string>
+
+    <string name="preference_category_autocomplete_manage_sites">Urus laman</string>
+
+    <string name="preference_autocomplete_subitem_manage_sites">Urus laman</string>
+
+    <string name="preference_autocomplete_action_add">+ Tambah URL penyesuaian</string>
+
+    <string name="preference_autocomplete_title_add">Tambah URL penyesuaian</string>
+
+    <string name="custom_autocomplete_quick_add">Tambah URL penyesuaian</string>
+
+    <string name="add_custom_autocomplete_label">Tambah pautan untuk autolengkap</string>
+
+    <string name="preference_category_cookies">Kuki dan Data Laman</string>
+
+    <string name="preference_category_data_choices">Pilihan Data</string>
+
+    <string name="preference_autocomplete_title_remove">Buang URLs penyesuaian</string>
+
+    <string name="preference_autocomplete_learn_more">Ketahui selanjutnya</string>
+
+    <string name="preference_autocomplete_custom_summary">Tambah dan urus penyesuaian URL auto-lengkap.</string>
+
+    <string name="preference_autocomplete_add_title">URL untuk ditambah</string>
+
+    <string name="preference_autocomplete_add_hint">Tampal atau masukkan URL</string>
+
+    <string name="preference_autocomplete_add_example2">Contoh: mozilla.org</string>
+
+    <string name="preference_autocomplete_add_example">Contoh: example.com</string>
+
+    <string name="preference_autocomplete_add_confirmation">Penyesuaian URL baru ditambah.</string>
+
+    <string name="preference_autocomplete_menu_remove">Buang</string>
+
+    <string name="preference_autocomplete_action_remove_content_description">Buang</string>
+
+    <string name="preference_autocomplete_add_error">Semak semula URL yang anda masukkan.</string>
+
+    <string name="preference_language">Bahasa</string>
+    <string name="preference_language_systemdefault">Piawai sistem</string>
+
+    <string name="preference_category_privacy">Privasi</string>
+    <string name="preference_privacy_block_ads">Sekat penjejak iklan</string>
+    <string name="preference_privacy_block_ads_summary">Sesetengah iklan menjejaki lawatan anda dalam laman, walaupun anda tidak klik iklan</string>
+    <string name="preference_privacy_block_analytics">Sekat penjejak analitik</string>
+    <string name="preference_privacy_block_analytics_summary">Digunakan untuk mengumpul, menganalisis dan menilai aktiviti, seperti klik dan skrol</string>
+    <string name="preference_privacy_block_social">Sekat penjejak sosial</string>
+    <string name="preference_privacy_block_social_summary">Disisipkan di dalam laman untuk menjejaki lawatan anda dan memaparkan fungsi seperti butang kongsi</string>
+    <string name="preference_privacy_block_content">Sekat penjejak kandungan lain</string>
+    <string name="preference_privacy_block_content_summary2">Sesetengah halaman mungkin tidak berfungsi dengan sempurna jika ciri ini diaktifkan</string>
+    <string name="preference_privacy_category_cookies">Sekat kuki</string>
+
+    <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Sekat kuki penjejak pihak ke-3 sahaja</string>
+    <string name="preference_privacy_should_block_cookies_third_party_only_option">Sekat kuki pihak ke-3 sahaja</string>
+
+    <string name="preference_security_biometric">Guna cap jari untuk membuka aplikasi</string>
+
+    <string name="preference_privacy_secure_mode">Halimunan</string>
+    <string name="preference_privacy_stealth_summary">Sorok halaman web apabila bertukar aplikasi dan sekat mengambil skrinsyot.</string>
+
+    <string name="preference_category_security">Keselamatan</string>
+
+    <string name="preference_category_performance">Prestasi</string>
+    <string name="preference_performance_block_webfonts">Sekat fon Web</string>
+    <string name="preference_performance_block_webfonts_summary">Boleh menyebabkan imej atau ikon hilang</string>
+
+    <string name="preference_performance_block_javascript">Sekat JavaScript</string>
+    <string name="preference_performance_block_javascript_summary">Halaman dimuatkan lebih cepat, tetapi mungkin ada yang tidak dijangka</string>
+
+    <string name="preference_default_browser2">Jadikan %1$s pelayar piawai</string>
+
+    <string name="preference_category_mozilla">Mozilla</string>
+    <string name="preference_mozilla_telemetry2">Hantar data penggunaan</string>
+
+    <string name="preference_mozilla_telemetry_summary">Ketahui selanjutnya</string>
+
+    <string name="preference_mozilla_telemetry_summary2">Mozilla mengumpulkan hanya yang diperlukan untuk menyedia dan meningkatkan %1$s.</string>
+
+    <string name="preference_privacy_notice">Notis Privasi</string>
+
+    <string name="preference_about">Perihal %1$s</string>
+
+    <string name="preference_search_installed_search_engines">Enjin carian dipasang</string>
+
+    <string name="preference_search_restore">Pulih enjin carian piawai</string>
+
+    <string name="preference_search_add2">+ Tambah enjin carian lain</string>
+    <string name="preference_search_remove_title">Buang enjin carian</string>
+    <string name="preference_search_remove">Buang</string>
+
+    <string name="action_option_add_search_engine">Tambah enjin carian</string>
+
+    <string name="search_add_manually_name_hint">Nama enjin carian</string>
+    <string name="search_add_manually_string">Cari string yang mahu digunakan</string>
+    <string name="search_add_manually_save">Simpan</string>
+
+    <string name="search_add_manually_example">Contoh: example.com/search/?q=%s</string>
+
+    <string name="search_add_confirmation">Enjin carian baru sudah ditambah.</string>
+
+    <string name="search_add_error_empty_name">Masukkan nama enjin carian</string>
+    <string name="search_add_error_duplicate_name">Enjin carian yang dipasang sudah menggunakan nama itu.</string>
+
+    <string name="search_add_error_empty_search">Masukkan string carian</string>
+
+    <string name="search_add_error_format">Pastikan string carian sepadan format contoh</string>
+
+    <string name="content_description_clear_input">Hapuskan input</string>
+
+    <string name="content_description_dismiss_input">Abai</string>
+
+    <string name="content_description_erase">Buang sejarah pelayaran</string>
+
+    <string name="content_description_tab_counter">Tab terbuka: %1$s</string>
+
+    <string name="content_description_lock">Sambungan selamat</string>
+
+    <string name="accessibility_announcement_loading">Memuatkan</string>
+
+    <string name="accessibility_announcement_loading_finished">Laman web dimuatkan</string>
+
+    <string name="content_description_menu">Pilihan lain</string>
+
+    <string name="indicator_content_description_menu">Butang pilihan lain</string>
+
+    <string name="content_description_forward">Navigasi depan</string>
+
+    <string name="content_description_reload">Muat semula laman web</string>
+
+    <string name="content_description_back">Navigasi undur</string>
+
+    <string name="content_description_stop">Hentikan memuat laman web</string>
+
+    <string name="content_description_customtab_exit">Kembali ke aplikasi dahulu</string>
+
+    <string name="content_description_trackers_blocked">Bilangan penjejak disekat</string>
+
+    <string name="content_description_blocking_switch">Sekat penjejak</string>
+
+    <string name="your_rights">Hak Anda</string>
+
+    <string name="external_app_prompt_title">Buka pautan guna aplikasi lain</string>
+    <string name="external_app_prompt">Anda boleh keluar dari %1$s untuk membuka pautan ini dalam %2$s.</string>
+    <string name="external_app_prompt_no_app_title">Cari aplikasi yang boleh buka pautan</string>
+    <string name="external_app_prompt_no_app">Tiada aplikasi pada peranti anda dapat membuka pautan ini. Anda boleh tinggalkan %1$s untuk mencari %2$s aplikasi yang boleh melaksanakannya.</string>
+    <string name="external_multiple_apps_matched_exit">Tamatkan Pelayaran Peribadi?</string>
+
+    <string name="download_snackbar_finished">%1$s sudah siap</string>
+
+    <string name="download_snackbar_open">Buka</string>
 
 
 
@@ -177,90 +276,128 @@
 
 
   <string name="firstrun_defaultbrowser_title">Tingkatkan privasi anda</string>
-  <string name="firstrun_defaultbrowser_text2">Membawa pelayaran peribadi ke tahap seterusnya, Sekat iklan dan kandungan lain yang menjejaki anda di serata laman dan melambatkan tempoh memuatkan halaman.</string>
-  <string name="firstrun_search_title">Carian anda, cara anda</string>
-  <string name="firstrun_search_text">Mencari sesuatu yang berlainan? Pilih enjin piawai lain dalam Tetapan.</string>
-  <string name="firstrun_shortcut_title">Letakkan pintasan dalam skrin utama</string>
-  <string name="firstrun_shortcut_text">Kembali ke laman kegemaran anda dalam %1$s dengan pantas. Hanya pilih \"Tambah ke skrin Utama\" dari dalam menu %1$s.</string>
-  <string name="firstrun_privacy_title">Jadikan privasi satu tabiat</string>
-  <string name="firstrun_privacy_text">Tetapkan %1$s sebagai pelayar piawai anda dan dapatkan manfaat daripada pelayaran peribadi apabila anda buka pautan halaman web dari aplikasi lain.</string>
-  <string name="firstrun_close_button">OK, faham!</string>
-  <string name="firstrun_skip_button">Langkau</string>
-  <string name="firstrun_next_button">Seterusnya</string>
-  <string name="content_blocking_disabled">-</string>
-  <string name="dialog_addtohomescreen_action_add">Tambah</string>
-  <string name="dialog_addtohomescreen_action_cancel">Batal</string>
-  <string name="dialog_addtohomescreen_tracking_protection">Perlindungan Penjejakan dinyahdayakan apabila dibuka menggunakan pintasan</string>
-  <string name="notification_browsing_session_channel_name">Sesi pelayaran peribadi</string>
-  <string name="notification_browsing_session_channel_description">Anda boleh buang sesi %1$s dengan menekan notifikasi. Tidak perlu buka aplikasi atau lihat kandungan dalam pelayar.</string>
-  <string name="tabs_tray_action_erase">Buang sejarah pelayaran</string>
-  <string name="download_firefox">Muat turun Firefox</string>
-  <string name="your_rights_content1">%1$s adalah perisian percuma dan sumber terbuka yang dihasilkan oleh Mozilla dan para penyumbang lain.</string>
+    <string name="firstrun_defaultbrowser_text2">Membawa pelayaran peribadi ke tahap seterusnya, Sekat iklan dan kandungan lain yang menjejaki anda di serata laman dan melambatkan tempoh memuatkan halaman.</string>
+
+    <string name="firstrun_search_title">Carian anda, cara anda</string>
+    <string name="firstrun_search_text">Mencari sesuatu yang berlainan? Pilih enjin piawai lain dalam Tetapan.</string>
+
+    <string name="firstrun_shortcut_title">Letakkan pintasan dalam skrin utama</string>
+    <string name="firstrun_shortcut_text">Kembali ke laman kegemaran anda dalam %1$s dengan pantas. Hanya pilih \&quot;Tambah ke skrin Utama\&quot; dari dalam menu %1$s.</string>
+
+    <string name="firstrun_privacy_title">Jadikan privasi satu tabiat</string>
+    <string name="firstrun_privacy_text">Tetapkan %1$s sebagai pelayar piawai anda dan dapatkan manfaat daripada pelayaran peribadi apabila anda buka pautan halaman web dari aplikasi lain.</string>
+
+    <string name="firstrun_close_button">OK, faham!</string>
+    <string name="firstrun_skip_button">Langkau</string>
+    <string name="firstrun_next_button">Seterusnya</string>
+
+    <string name="content_blocking_disabled">-</string>
+
+    <string name="dialog_addtohomescreen_action_add">Tambah</string>
+
+    <string name="dialog_addtohomescreen_action_cancel">Batal</string>
+
+    <string name="notification_browsing_session_channel_name">Sesi pelayaran peribadi</string>
+
+    <string name="notification_browsing_session_channel_description">Anda boleh buang sesi %1$s dengan menekan notifikasi. Tidak perlu buka aplikasi atau lihat kandungan dalam pelayar.</string>
+
+    <string name="tabs_tray_action_erase">Buang sejarah pelayaran</string>
+
+    <string name="download_firefox">Muat turun Firefox</string>
+
+    <string name="your_rights_content1">%1$s adalah perisian percuma dan sumber terbuka yang dihasilkan oleh Mozilla dan para penyumbang lain.</string>
 
 
 
 
   <string name="gv_prompt_username_hint">Nama pengguna</string>
-  <string name="gv_prompt_password_hint">Kata laluan</string>
-  <string name="gv_prompt_clear">Buang</string>
-  <string name="security_popup_secure_connection">Sambungan Selamat</string>
-  <string name="security_popup_insecure_connection">Sambungan Tidak Selamat</string>
-  <string name="security_popup_security_verified">Disahkan oleh: %1$s</string>
-  <string name="site_security_icon_content_description">Keselamatan Laman</string>
-  <string name="preference_autocomplete_duplicate_url_error">URL sudah wujud</string>
-  <string name="find_in_page">Cari dalam Halaman</string>
-  <string name="find_in_page_input">Cari dalam halaman</string>
-  <string name="find_in_page_result">%1$d/%2$d</string>
-  <string name="accessibility_find_in_page_result">%1$d daripada %2$d</string>
-  <string name="accessibility_next_result">Cari hasil seterusnya</string>
-  <string name="accessibility_previous_result">Cari hasil dahulu</string>
-  <string name="accessibility_dismiss_find_in_page">Batal cari dalam halaman</string>
+    <string name="gv_prompt_password_hint">Kata laluan</string>
+    <string name="gv_prompt_clear">Buang</string>
+
+    <string name="security_popup_secure_connection">Sambungan Selamat</string>
+    <string name="security_popup_insecure_connection">Sambungan Tidak Selamat</string>
+    <string name="security_popup_security_verified">Disahkan oleh: %1$s</string>
+
+    <string name="site_security_icon_content_description">Keselamatan Laman</string>
+    <string name="preference_autocomplete_duplicate_url_error">URL sudah wujud</string>
+
+    <string name="find_in_page">Cari dalam Halaman</string>
+
+    <string name="find_in_page_input">Cari dalam halaman</string>
+
+    <string name="find_in_page_result">%1$d/%2$d</string>
+    <string name="accessibility_find_in_page_result">%1$d daripada %2$d</string>
+
+    <string name="accessibility_next_result">Cari hasil seterusnya</string>
+    <string name="accessibility_previous_result">Cari hasil dahulu</string>
+    <string name="accessibility_dismiss_find_in_page">Batal cari dalam halaman</string>
 
 
 
   <string name="preference_performance_request_desktop_site">Pinta laman desktop</string>
-  <string name="custom_tab_copy_url_action">URL disalin</string>
-  <string name="preference_advanced_summary">Alatan pembangun</string>
-  <string name="preference_category_advanced">Lanjutan</string>
-  <string name="preference_remote_debugging">Nyahpepijat jauh via USB/Wi-Fi</string>
-  <string name="biometric_auth_title">Buka %1$s</string>
-  <string name="biometric_auth_description">Sentuh sensor cap jari untuk meneruskan.</string>
-  <string name="biometric_auth_new_session">Sesi Baru</string>
-  <string name="biometric_auth_image_description">Ikon cap jari</string>
-  <string name="biometric_auth_not_recognized_error">Cap jari tidak dikenali. Cuba lagi.</string>
-  <string name="biometric_auth_moved_too_quickly">Jari digerak terlalu pantas. Cuba lagi.</string>
-  <string name="enable_search_suggestion_title">Adakah anda mahu mengaktifkan cadangan carian?</string>
-  <string name="enable_search_suggestion_subtitle">Untuk mendapatkan cadangan carian, %1$s perlu menghantar apa yang anda taip dalam bar alamat kepada enjin carian yang dipilih. %2$s.</string>
-  <string name="enable_search_suggestion_subtitle_learnmore">Ketahui selanjutnya</string>
-  <string name="enable_search_suggestions_no">Tidak</string>
-  <string name="enable_search_suggestions_yes">Ya</string>
-  <string name="no_suggestions_message">Sesetengah enjin carian tidak dapat menunjukkan cadangan.</string>
-  <string name="dismiss_no_suggestions_prompt_button">Abai</string>
-  <string name="tip_disable_tracking_protection">Laman berkelakuan tidak dijangka?\n Cuba nyahaktifkan Perlindungan Penjejakan</string>
-  <string name="tip_add_to_homescreen">Dapatkan akses sekali-sentuh ke laman yang kerap dilawati%1$s Menu &gt; Tambah ke skrin Utama</string>
-  <string name="tip_set_default_browser">Buka pautan dalam %1$s\n Tetapkan %1$s sebagai pelayar piawai</string>
-  <string name="tip_autocomplete_url">Autolengkap URL untuk laman yang kerap dilawati\n Tekan lama-lama URL dalam bar alamat</string>
-  <string name="tip_open_in_new_tab">Buka pautan dalam tab baru\n Tekan lama-lama pautan atau halaman</string>
-  <string name="tip_request_desktop">Mahu paparan laman desktop?%1$s Menu &gt; Pinta laman desktop</string>
-  <string name="tip_disable_tips2">Nyahaktifkan panduan pada skrin mula</string>
-  <string name="tip_explain_allowlist">Laman yang dipercayai?\n Allowlist menyahaktifkan Perlindungan Penjejakan untuk laman yang anda kenali dan percayai.</string>
-  <string name="new_tab_opened_snackbar">Tab baru dibuka</string>
-  <string name="open_new_tab_snackbar">Tukar</string>
-  <string name="preference_open_new_tab">Tukar ke pautan dalam tab baharu dengan segera</string>
-  <string name="preference_category_safe_browsing">Pelayaran Selamat</string>
-  <string name="preference_safe_browsing_title">Sekat laman yang berpotensi berbahaya dan menipu</string>
-  <string name="preference_safe_browsing_summary">Sekat laman yang dilaporkan menipu dan menyerang, laman perisian hasad dan laman perisian yang tidak diingini.</string>
-  <string name="preference_exceptions">Pengecualian</string>
-  <string name="preference_exceptions_description">Anda telah nyahaktifkan Sekatan Kandungan untuk laman web ini.</string>
-  <string name="preference_exceptions_menu_remove">Buang</string>
-  <string name="preference_exceptions_remove_all_button_label">Buang semua laman web</string>
-  <string name="tab_crash_report_title">Tab Ranap</string>
-  <string name="tab_crash_report_headline">Maaf. Kami ada masalah dengan tab ini.</string>
-  <string name="tab_crash_report_description">Sebagai pelayar peribadi, kami tidak pernah menyimpan dan tidak boleh memulihkan tab ini.</string>
-  <string name="tab_crash_report_close_tab_button_label">Tutup Tab</string>
+
+    <string name="custom_tab_copy_url_action">URL disalin</string>
+
+    <string name="preference_advanced_summary">Alatan pembangun</string>
+
+    <string name="preference_category_advanced">Lanjutan</string>
+
+    <string name="preference_remote_debugging">Nyahpepijat jauh via USB/Wi-Fi</string>
+
+    <string name="biometric_auth_image_description">Ikon cap jari</string>
+
+    <string name="biometric_auth_not_recognized_error">Cap jari tidak dikenali. Cuba lagi.</string>
+
+    <string name="biometric_auth_moved_too_quickly">Jari digerak terlalu pantas. Cuba lagi.</string>
+
+    <string name="enable_search_suggestions_no">Tidak</string>
+
+    <string name="enable_search_suggestions_yes">Ya</string>
+
+    <string name="no_suggestions_message">Sesetengah enjin carian tidak dapat menunjukkan cadangan.</string>
+
+    <string name="dismiss_no_suggestions_prompt_button">Abai</string>
+
+    <!-- Tips displayed on the home view -->
+
+    <string name="tip_disable_tracking_protection">Laman berkelakuan tidak dijangka?\n Cuba nyahaktifkan Perlindungan Penjejakan</string>
+
+    <string name="tip_add_to_homescreen">Dapatkan akses sekali-sentuh ke laman yang kerap dilawati%1$s Menu &gt; Tambah ke skrin Utama</string>
+
+    <string name="tip_set_default_browser">Buka pautan dalam %1$s\n Tetapkan %1$s sebagai pelayar piawai</string>
+
+    <string name="tip_autocomplete_url">Autolengkap URL untuk laman yang kerap dilawati\n Tekan lama-lama URL dalam bar alamat</string>
+
+    <string name="tip_open_in_new_tab">Buka pautan dalam tab baru\n Tekan lama-lama pautan atau halaman</string>
+
+    <string name="tip_disable_tips2">Nyahaktifkan panduan pada skrin mula</string>
+
+    <string name="new_tab_opened_snackbar">Tab baru dibuka</string>
+
+    <string name="open_new_tab_snackbar">Tukar</string>
+
+    <string name="preference_open_new_tab">Tukar ke pautan dalam tab baharu dengan segera</string>
+
+    <string name="preference_safe_browsing_title">Sekat laman yang berpotensi berbahaya dan menipu</string>
+    <string name="preference_safe_browsing_summary">Sekat laman yang dilaporkan menipu dan menyerang, laman perisian hasad dan laman perisian yang tidak diingini.</string>
+
+    <string name="preference_exceptions">Pengecualian</string>
+    <string name="preference_exceptions_description">Anda telah nyahaktifkan Sekatan Kandungan untuk laman web ini.</string>
+    <string name="preference_exceptions_menu_remove">Buang</string>
+    <string name="preference_exceptions_remove_all_button_label">Buang semua laman web</string>
+
+    <string name="tab_crash_report_title">Tab Ranap</string>
+    <string name="tab_crash_report_headline">Maaf. Kami ada masalah dengan tab ini.</string>
+    <string name="tab_crash_report_description">Sebagai pelayar peribadi, kami tidak pernah menyimpan dan tidak boleh memulihkan tab ini.</string>
+    <string name="tab_crash_report_close_tab_button_label">Tutup Tab</string>
 
 
 
 
   <string name="crash_report_send_crash_label">Hantar laporan ranap ke Mozilla</string>
-</resources>
+
+    <!-- Tracking protection bottom sheet -->
+
+     <!-- Promote SearchWidget Dialog -->
+
+    </resources>

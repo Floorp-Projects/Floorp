@@ -1,68 +1,118 @@
-<?xml version='1.0' encoding='utf-8'?>
-<resources>
-  <string name="action_cancel">Batal</string>
-  <string name="action_ok">OKÉ</string>
-  <string name="action_save">Simpen</string>
-  <string name="urlbar_hint">Golèk utawa lebokaké alamat</string>
-  <string name="teaser">Dlajahan pribadi otomatis.\nDlajah. Busak. Balèni.</string>
-  <string name="feedback_erase">Riwayat dlajahan sampéyan wis dibusak.</string>
-  <string name="search_hint">Golèk %1$s</string>
-  <string name="menu_share">Dumké…</string>
-  <string name="menu_report_site_issue">Lapur Masalah Situs</string>
-  <string name="menu_open_with_default_browser2">Bukak ing %1$s</string>
-  <string name="menu_open_with_a_browser2">Bukak ing…</string>
-  <string name="menu_add_to_home_screen">Tambah ing Layar Utama</string>
-  <string name="menu_whats_new">Kabar Anyar</string>
-  <string name="menu_settings">Setèlan</string>
-  <string name="menu_about">Ngenani</string>
-  <string name="menu_help">Pitulung</string>
-  <string name="menu_rights">Hak Sampéyan</string>
-  <string name="menu_trackers_blocked_title">Palacak kablokir</string>
-  <string name="menu_trackers_blocked_subtitle">Matèni iki bisa ndandani sawetara masalah situs</string>
-  <string name="menu_content_blocking">Blokir kontèn</string>
-  <string name="menu_content_blocking_subtitle">Patèni kanggo ndandani sawetara situs</string>
-  <string name="menu_custom_tab_branding">Disokong déning %1$s</string>
-  <string name="share_dialog_title">Dumké liwat</string>
-  <string name="notification_erase_text">Busak riwayat dlajahan</string>
-  <string name="notification_action_open">Bukak</string>
-  <string name="notification_action_erase_and_open">Busak lan Bukak</string>
-  <string name="shortcut_erase_short_label">Busak</string>
-  <string name="shortcut_erase_long_label">Busak riwayat dlajahan</string>
-  <string name="shortcut_erase_and_open_short_label">Busak &amp; bukak</string>
-  <string name="preference_mozilla_summary">Ngenani %1$s, pitulung</string>
-  <string name="preference_category_web_content">Kontèn Wèb</string>
-  <string name="preference_category_switching_apps">Ganti aplikasi</string>
-  <string name="preference_category_general">Umum</string>
-  <string name="preference_category_search">Golèk</string>
-  <string name="preference_show_search_suggestions">Njaluk saran panggolekan</string>
-  <string name="preference_search_engine_label">Mesin panggolèk</string>
-  <string name="preference_state_on">Uripké</string>
-  <string name="preference_state_off">Paténi</string>
-  <string name="preference_category_data_choices">Pilihan Data</string>
-  <string name="preference_autocomplete_learn_more">Sinau liyané</string>
-  <string name="preference_autocomplete_add_hint">Témpél utowo leboké URL</string>
-  <string name="preference_autocomplete_menu_remove">Busak</string>
-  <string name="preference_autocomplete_action_remove_content_description">Busak</string>
-  <string name="preference_language">Basa</string>
-  <string name="preference_language_systemdefault">Gawan sistem</string>
-  <string name="preference_category_privacy">Privasi</string>
-  <string name="preference_privacy_category_cookies">Blokir kuki</string>
-  <string name="preference_privacy_should_block_cookies_no_option">Ora</string>
-  <string name="preference_privacy_should_block_cookies_yes_option">Ya</string>
-  <string name="preference_performance_block_javascript">Blokir JavaScript</string>
-  <string name="preference_category_mozilla">Mozilla</string>
-  <string name="preference_about">Ngenani %1$s</string>
-  <string name="preference_search_installed_search_engines">Mesin panggolèk sing wis dipasang</string>
-  <string name="preference_search_restore">Mulihaké mesin panggolèk standar</string>
-  <string name="preference_search_add2">+Tambah mesin panggolèk liyané</string>
-  <string name="preference_search_remove_title">Busak mesin panggolèk</string>
-  <string name="preference_search_remove">Busak</string>
-  <string name="preference_homescreen_tips">Tuduhaké tip layar</string>
-  <string name="action_option_add_search_engine">Tambah mesin panggolèk</string>
-  <string name="search_add_manually_name_hint">Jeneng mesin panggolèk</string>
-  <string name="search_add_manually_save">Simpen</string>
-  <string name="content_description_dismiss_input">Singkirké</string>
-  <string name="accessibility_announcement_loading">Ngamot</string>
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:moz="http://mozac.org/tools" xmlns:tools="http://schemas.android.com/tools">
+    <!-- ####################################################################################### -->
+    <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
+    <!-- ## into a separate file like strings_references.xml                                  ## -->
+    <!-- ####################################################################################### -->
+
+    <string name="action_cancel">Batal</string>
+    <string name="action_ok">OKÉ</string>
+
+    <string name="action_save">Simpen</string>
+
+    <string name="urlbar_hint">Golèk utawa lebokaké alamat</string>
+
+    <string name="teaser">Dlajahan pribadi otomatis.\nDlajah. Busak. Balèni.</string>
+
+    <string name="feedback_erase">Riwayat dlajahan sampéyan wis dibusak.</string>
+
+    <string name="search_hint">Golèk %1$s</string>
+
+    <string name="menu_share">Dumké…</string>
+
+    <string name="menu_report_site_issue">Lapur Masalah Situs</string>
+
+    <string name="menu_open_with_default_browser2">Bukak ing %1$s</string>
+
+    <string name="menu_open_with_a_browser2">Bukak ing…</string>
+
+    <string name="menu_add_to_home_screen">Tambah ing Layar Utama</string>
+
+    <string name="menu_settings">Setèlan</string>
+    <string name="menu_about">Ngenani</string>
+    <string name="menu_help">Pitulung</string>
+    <string name="menu_rights">Hak Sampéyan</string>
+
+    <string name="menu_trackers_blocked_title">Palacak kablokir</string>
+
+    <string name="menu_trackers_blocked_subtitle">Matèni iki bisa ndandani sawetara masalah situs</string>
+
+    <string name="menu_content_blocking">Blokir kontèn</string>
+    <string name="menu_content_blocking_subtitle">Patèni kanggo ndandani sawetara situs</string>
+
+    <string name="menu_custom_tab_branding">Disokong déning %1$s</string>
+
+    <string name="share_dialog_title">Dumké liwat</string>
+
+    <string name="notification_erase_text">Busak riwayat dlajahan</string>
+
+    <string name="notification_action_open">Bukak</string>
+
+    <string name="notification_action_erase_and_open">Busak lan Bukak</string>
+
+    <string name="shortcut_erase_short_label">Busak</string>
+
+    <string name="shortcut_erase_long_label">Busak riwayat dlajahan</string>
+
+
+    <string name="shortcut_erase_and_open_short_label">Busak &amp; bukak</string>
+
+    <string name="preference_mozilla_summary">Ngenani %1$s, pitulung</string>
+
+    <string name="preference_category_web_content">Kontèn Wèb</string>
+
+    <string name="preference_category_switching_apps">Ganti aplikasi</string>
+
+    <string name="preference_category_general">Umum</string>
+
+    <string name="preference_category_search">Golèk</string>
+
+    <string name="preference_show_search_suggestions">Njaluk saran panggolekan</string>
+
+    <string name="preference_search_engine_label">Mesin panggolèk</string>
+
+    <string name="preference_state_on">Uripké</string>
+
+    <string name="preference_state_off">Paténi</string>
+
+    <string name="preference_category_data_choices">Pilihan Data</string>
+
+    <string name="preference_autocomplete_learn_more">Sinau liyané</string>
+
+    <string name="preference_autocomplete_add_hint">Témpél utowo leboké URL</string>
+
+    <string name="preference_autocomplete_menu_remove">Busak</string>
+
+    <string name="preference_autocomplete_action_remove_content_description">Busak</string>
+
+    <string name="preference_language">Basa</string>
+    <string name="preference_language_systemdefault">Gawan sistem</string>
+
+    <string name="preference_category_privacy">Privasi</string>
+    <string name="preference_privacy_category_cookies">Blokir kuki</string>
+
+    <string name="preference_performance_block_javascript">Blokir JavaScript</string>
+
+    <string name="preference_category_mozilla">Mozilla</string>
+
+    <string name="preference_about">Ngenani %1$s</string>
+
+    <string name="preference_search_installed_search_engines">Mesin panggolèk sing wis dipasang</string>
+
+    <string name="preference_search_restore">Mulihaké mesin panggolèk standar</string>
+
+    <string name="preference_search_add2">+Tambah mesin panggolèk liyané</string>
+    <string name="preference_search_remove_title">Busak mesin panggolèk</string>
+    <string name="preference_search_remove">Busak</string>
+
+    <string name="action_option_add_search_engine">Tambah mesin panggolèk</string>
+
+    <string name="search_add_manually_name_hint">Jeneng mesin panggolèk</string>
+    <string name="search_add_manually_save">Simpen</string>
+
+    <string name="content_description_dismiss_input">Singkirké</string>
+
+    <string name="accessibility_announcement_loading">Ngamot</string>
 
 
 
@@ -70,19 +120,33 @@
 
 
   <string name="firstrun_close_button">Oké, mudheng!</string>
-  <string name="content_blocking_disabled">-</string>
-  <string name="dialog_addtohomescreen_action_cancel">Mbatalake</string>
-  <string name="download_firefox">Undhuh Firefox</string>
-  <string name="gv_prompt_username_hint">Jeneng Panganggo</string>
-  <string name="gv_prompt_password_hint">Tembung wadi</string>
-  <string name="gv_prompt_clear">Busak</string>
-  <string name="security_popup_secure_connection">Sambungan aman</string>
-  <string name="security_popup_insecure_connection">Sambungan ora aman</string>
-  <string name="preference_autocomplete_duplicate_url_error">URL wis ana</string>
-  <string name="find_in_page">Golèki ing kaca</string>
-  <string name="find_in_page_input">Golekì ing kaca</string>
-  <string name="find_in_page_result">%1$d / %2$d</string>
-  <string name="accessibility_find_in_page_result">%1$d saka %2$d</string>
 
+    <string name="content_blocking_disabled">-</string>
 
-</resources>
+    <string name="dialog_addtohomescreen_action_cancel">Mbatalake</string>
+
+    <string name="download_firefox">Undhuh Firefox</string>
+
+    <string name="gv_prompt_username_hint">Jeneng Panganggo</string>
+    <string name="gv_prompt_password_hint">Tembung wadi</string>
+    <string name="gv_prompt_clear">Busak</string>
+
+    <string name="security_popup_secure_connection">Sambungan aman</string>
+    <string name="security_popup_insecure_connection">Sambungan ora aman</string>
+
+    <string name="preference_autocomplete_duplicate_url_error">URL wis ana</string>
+
+    <string name="find_in_page">Golèki ing kaca</string>
+
+    <string name="find_in_page_input">Golekì ing kaca</string>
+
+    <string name="find_in_page_result">%1$d / %2$d</string>
+    <string name="accessibility_find_in_page_result">%1$d saka %2$d</string>
+
+    <!-- Tips displayed on the home view -->
+
+    <!-- Tracking protection bottom sheet -->
+
+     <!-- Promote SearchWidget Dialog -->
+
+    </resources>

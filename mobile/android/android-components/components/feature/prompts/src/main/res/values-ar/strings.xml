@@ -131,8 +131,6 @@
     <string name="mozac_feature_prompts_account_picture">صورة الحساب</string>
     <!-- Title of the Identity Credential provider dialog choose. -->
     <string name="mozac_feature_prompts_identity_credentials_choose_provider">اختر مزود ولوج</string>
-    <!-- Title of an account picker dialog for identity credentials. -->
-    <string name="mozac_feature_prompts_identity_credentials_choose_account">اختر حسابا</string>
     <!-- Title of the Identity Credential privacy policy dialog title. The %1$s will be replaced with the name of the provider. -->
     <string name="mozac_feature_prompts_identity_credentials_privacy_policy_title">استخدم %1$s كمزود ولوج</string>
     </resources>

@@ -188,11 +188,13 @@
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Pysäytä</string>
     <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_add_ons">Lisäosat</string>
+    <string name="browser_menu_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Lisäosat</string>
+    <!-- Browser menu button that opens the extensions manager -->
+    <string name="browser_menu_extensions">Laajennukset</string>
     <!-- Browser menu button that opens account settings -->
     <string name="browser_menu_account_settings">Tilin tiedot</string>
     <!-- Text displayed when there are no add-ons to be shown -->
-    <string name="no_add_ons">Ei lisäosia täällä</string>
+    <string name="no_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Ei lisäosia täällä</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Ohje</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -208,7 +210,7 @@
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">Lisää aloitusnäytölle</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
-    <string name="browser_menu_install_on_homescreen">Asenna</string>
+    <string name="browser_menu_install_on_homescreen" moz:removedIn="126" tools:ignore="UnusedResources">Asenna</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">Synkronoi uudelleen</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -247,6 +249,15 @@
 
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">Mukauta kotisivua</string>
+
+    <!-- Browser menu label to sign in to sync on the device using Mozilla accounts -->
+    <string name="browser_menu_sign_in" tools:ignore="UnusedResources">Kirjaudu sisään</string>
+    <!-- Browser menu caption label for the "Sign in" browser menu item described in browser_menu_sign_in -->
+    <string name="browser_menu_sign_in_caption" tools:ignore="UnusedResources">Synkronoi salasanat, välilehdet ja paljon muuta</string>
+
+    <!-- Extensions management fragment -->
+    <!-- Text displayed when there are no extensions to be shown -->
+    <string name="extensions_management_no_extensions">Täällä ei ole laajennuksia</string>
 
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
@@ -603,10 +614,14 @@
     <string name="quit_application">Lopetetaan sovellus, jotta muutokset tulevat voimaan…</string>
 
     <!-- Preference for add_ons -->
-    <string name="preferences_addons">Lisäosat</string>
+    <string name="preferences_addons" moz:removedIn="126" tools:ignore="UnusedResources">Lisäosat</string>
 
+    <!-- Preference for extensions -->
+    <string name="preferences_extensions">Laajennukset</string>
     <!-- Preference for installing a local add-on -->
-    <string name="preferences_install_local_addon">Asenna lisäosa tiedostosta</string>
+    <string name="preferences_install_local_addon" moz:removedIn="126" tools:ignore="UnusedResources">Asenna lisäosa tiedostosta</string>
+    <!-- Preference for installing a local extension -->
+    <string name="preferences_install_local_extension">Asenna laajennus tiedostosta</string>
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Ilmoitukset</string>
 
@@ -617,7 +632,9 @@
 
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
-    <string name="preferences_customize_amo_collection">Mukautettu lisäosakokoelma</string>
+    <string name="preferences_customize_amo_collection" moz:removedIn="126" tools:ignore="UnusedResources">Mukautettu lisäosakokoelma</string>
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_extension_collection">Mukautettu laajennuskokoelma</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">OK</string>
     <!-- Button caption to abort the add-on collection configuration -->
@@ -627,7 +644,10 @@
     <!-- Hint displayed on input field for custom collection user ID-->
     <string name="customize_addon_collection_user_hint">Kokoelman omistaja (käyttäjätunniste)</string>
     <!-- Toast shown after confirming the custom add-on collection configuration -->
-    <string name="toast_customize_addon_collection_done">Lisäosakokoelmaa muokattu. Lopetetaan sovellus, jotta muutokset tulevat voimaan…</string>
+    <string name="toast_customize_addon_collection_done" moz:removedIn="126" tools:ignore="UnusedResources">Lisäosakokoelmaa muokattu. Lopetetaan sovellus, jotta muutokset tulevat voimaan…</string>
+
+    <!-- Toast shown after confirming the custom extension collection configuration -->
+    <string name="toast_customize_extension_collection_done">Laajennuskokoelmaa muokattu. Suljetaan sovellus, jotta muutokset tulevat käyttöön…</string>
 
     <!-- Customize Home -->
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
@@ -683,21 +703,37 @@
 
     <!-- Add-ons general availability nimbus message-->
     <!-- Title of the Nimbus message for add-ons general availability-->
-    <string name="addon_ga_message_title" tools:ignore="UnusedResources">Uusia lisäosia nyt saatavilla</string>
+    <string name="addon_ga_message_title" moz:removedIn="126" tools:ignore="UnusedResources">Uusia lisäosia nyt saatavilla</string>
+    <!-- Title of the Nimbus message for extension general availability-->
+    <string name="addon_ga_message_title_2" tools:ignore="UnusedResources">Uusia laajennuksia nyt saatavilla</string>
     <!-- Body of the Nimbus message for add-ons general availability. 'Firefox' intentionally hardcoded here-->
     <string name="addon_ga_message_body" tools:ignore="UnusedResources">Tutustu yli 100 uuteen laajennukseen, joiden avulla voit tehdä Firefoxista omasi.</string>
     <!-- Button text of the Nimbus message for add-ons general availability. -->
-    <string name="addon_ga_message_button" tools:ignore="UnusedResources">Tutustu lisäosiin</string>
+    <string name="addon_ga_message_button" moz:removedIn="126" tools:ignore="UnusedResources">Tutustu lisäosiin</string>
 
-    <!-- Add-on process crash dialog to user -->
+    <!-- Button text of the Nimbus message for extensions general availability. -->
+    <string name="addon_ga_message_button_2" tools:ignore="UnusedResources">Selaa laajennuksia</string>
+
+    <!-- Extension process crash dialog to user -->
     <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
-    <string name="addon_process_crash_dialog_title" tools:ignore="UnusedResources">Lisäosat on väliaikaisesti poistettu käytöstä</string>
+    <string name="addon_process_crash_dialog_title" moz:removedIn="126" tools:ignore="UnusedResources">Lisäosat on väliaikaisesti poistettu käytöstä</string>
+    <!-- Title of the extension crash dialog shown to the user when enough errors have occurred with extensions and they need to be temporarily disabled -->
+    <string name="extension_process_crash_dialog_title">Laajennukset on väliaikaisesti poistettu käytöstä</string>
     <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
-    <string name="addon_process_crash_dialog_message" tools:ignore="UnusedResources">Yksi tai useampi lisäosa lakkasi toimimasta, mikä teki järjestelmästä epävakaan. %1$s ei onnistunut käynnistämään lisäosia uudelleen.\n\nLisäosia ei käynnistetä uudelleen nykyisen istunnon aikana.\n\nLisäosien poistaminen tai poistaminen käytöstä saattaa korjata tämän ongelman.</string>
+    <string name="addon_process_crash_dialog_message" moz:removedIn="126" tools:ignore="UnusedResources">Yksi tai useampi lisäosa lakkasi toimimasta, mikä teki järjestelmästä epävakaan. %1$s ei onnistunut käynnistämään lisäosia uudelleen.\n\nLisäosia ei käynnistetä uudelleen nykyisen istunnon aikana.\n\nLisäosien poistaminen tai poistaminen käytöstä saattaa korjata tämän ongelman.</string>
+    <!-- This is a message shown to the user when too many errors have occurred with the extensions process and they have been disabled.
+    The user can decide if they would like to continue trying to start extensions or if they'd rather continue without them.
+    The first parameter is the application name. -->
+    <string name="extension_process_crash_dialog_message">Yksi tai useampi laajennus lakkasi toimimasta, mikä teki järjestelmästä epävakaan. %1$s ei onnistunut käynnistämään laajennuksia uudelleen.\n\nLaajennuksia ei käynnistetä uudelleen nykyisen istunnon aikana.\n\nLaajennuksien poistaminen tai poistaminen käytöstä saattaa korjata tämän ongelman.</string>
     <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
-    <string name="addon_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">Yritä käynnistää lisäosat uudelleen</string>
+    <string name="addon_process_crash_dialog_retry_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Yritä käynnistää lisäosat uudelleen</string>
+    <!-- Button text on the extension crash dialog to prompt the user to try restarting the extensions but the dialog will reappear if it is unsuccessful again -->
+    <string name="extension_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">Yritä käynnistää laajennukset uudelleen</string>
     <!-- The user will continue with all add-ons disabled -->
-    <string name="addon_process_crash_dialog_disable_addons_button_text" tools:ignore="UnusedResources">Jatka lisäosien ollessa poistettu käytöstä</string>
+    <string name="addon_process_crash_dialog_disable_addons_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Jatka lisäosien ollessa poistettu käytöstä</string>
+
+    <!-- Button text on the extension crash dialog to prompt the user to continue with all extensions disabled. -->
+    <string name="extension_process_crash_dialog_disable_extensions_button_text">Jatka pitäen laajennukset pois käytöstä</string>
 
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->
@@ -2352,10 +2388,6 @@
     <string name="review_quality_check_contextual_onboarding_title">Kokeile luotettavaa tuotearvosteluopastamme</string>
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">Lue lisää</string>
-    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Tietosuojakäytäntö</string>
-    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
-    <string name="review_quality_check_contextual_onboarding_terms_use_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Käyttöehdot</string>
     <!-- Text for opt-in button from the review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_primary_button_text">Kyllä, kokeile</string>
     <!-- Text for opt-out button from the review quality check contextual onboarding card. -->
@@ -2600,6 +2632,8 @@
     <string name="download_language_file_dialog_title">Ladataanko datansäästötilassa (%1$s)?</string>
     <!-- Additional information for the data saving mode warning dialog used by the translations feature. This text explains the reason a download is required for a translation. -->
     <string name="download_language_file_dialog_message_all_languages">Lataamme osittaiset kielet välimuistiin pitääksemme käännökset yksityisinä.</string>
+    <!-- Additional information for the data saving mode warning dialog used by the translations feature. This text explains the reason a download is required for a translation without mentioning the cache. -->
+    <string name="download_language_file_dialog_message_all_languages_no_cache">Lataamme osittaisia kieliä pitääksemme käännökset yksityisinä.</string>
     <!-- Checkbox label text on the data saving mode warning dialog used by the translations feature. This checkbox allows users to ignore the data usage warnings. -->
     <string name="download_language_file_dialog_checkbox_text">Lataa aina datansäästötilassa</string>
     <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to confirm they wish to continue and download the language file. -->

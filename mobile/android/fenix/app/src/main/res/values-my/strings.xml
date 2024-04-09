@@ -55,6 +55,7 @@
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">ပိတ်ပါ</string>
 
+
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">ကင်မရာ သုံးခွင့် လိုအပ်သည်။ Android ဆက်တင် များသို့ သွားပါ၊ ခွင့်ပြုချက် များကို နှိပ်ပါ၊ ခွင့်ပြုပါ ကိုနှိပ်ပါ။</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
@@ -177,8 +178,6 @@
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">စစ်ဆေးပါ</string>
-    <!-- Button in the search view that lets a user change their search engine -->
-    <string name="search_engine_button">ရှာဖွေရေး အင်ဂျင်</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">အင်ဂျင်အပြင်အဆင် ရှာဖွေပါ</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
@@ -216,8 +215,6 @@
     <string name="preferences_default_search_engine">ပုံမှန်ရှာဖွေရေးယန္တရား</string>
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">ရှာဖွေပါ</string>
-    <!-- Preference for settings related to Search address bar -->
-    <string name="preferences_search_address_bar">လိပ်စာတန်း</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">Google Play တွင်အဆင့်သတ်မှတ်ပါ</string>
     <!-- Preference linking to about page for Fenix
@@ -244,12 +241,8 @@
 
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">အသုံးပြုခွင့်</string>
-    <!-- Preference to override the Firefox Account server -->
-    <string name="preferences_override_fxa_server">စိတ်ကြိုက် Firefox အကောင့် ဆာဗာ</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">သုံးသူစိတ်ကြိုက် ချိန်သားကိုက် ဆာဗာ</string>
-    <!-- Toast shown after updating the FxA/Sync server override preferences -->
-    <string name="toast_override_fxa_sync_server_done">Firefox Account/Sync server ကို ပြုပြင်ပြီး ဖြစ်သည်။ အပြောင်းအလဲများ လျှောက်ထားရန်လျှောက်လွှာ မှ ထွက်ပါ</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">အကောင့်</string>
     <!-- Preference for changing where the toolbar is positioned -->
@@ -260,8 +253,6 @@
     <string name="preferences_gestures">လက်ဟန်အမူအရာများ</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">စိတ်ကြိုက်လုပ်ပါ</string>
-    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
-    <string name="preferences_account_default_name">Firefox အကောင့်</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
     <string name="preferences_account_sync_error">စည်းညှိခြင်းကိုပြန်လည်စတင်ရန်ပြန်လည်ချိတ်ဆက်ပါ</string>
     <!-- Preference for language -->
@@ -273,8 +264,6 @@
 
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">USB မှတဆင့် Remote debugging</string>
-    <!-- Preference title for switch preference to show search engines -->
-    <string name="preferences_show_search_engines">ရှာဖွေရေး အင်ဂျင်များပြရန်</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">ရှာဖွေရေး အကြံပြုချက်များကို ဖေါ်ပြပါ</string>
     <!-- Preference title for switch preference to show voice search button -->
@@ -297,6 +286,7 @@
     <string name="preferences_open_links_in_apps">အက်ပ်များမှလင့်များကိုဖွင့်ပါ</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">ပြင်ပ ဒေါင်းလုတ် မန်နေဂျာ</string>
+
     <!-- Preference for add_ons -->
     <string name="preferences_addons">အတ်အွန်များ</string>
 
@@ -318,12 +308,6 @@
 
     <!-- Toast shown after confirming the custom add-on collection configuration -->
     <string name="toast_customize_addon_collection_done">အပို စုဆောင်းမှုကို ပြုပြင်ပြီး ဖြစ်သည်။ အပြောင်းအလဲများ လျှောက်ထားရန် လျှောက်လွှာ မှ ထွက်ပါ …</string>
-
-    <!-- Add-on Installation from AMO-->
-    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
-    <string name="addon_not_supported_error">အပို ပရိုဂရမ်ကို ပံ့ပိုး မထားပါ</string>
-    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
-    <string name="addon_already_installed">အပို ပရိုဂရမ်ကို ထည့်သွင်း ပြီးပါပြီ</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -571,9 +555,9 @@
     <string name="collection_open_tabs">တပ်ဗ်များကို ဖွင့်ပါ</string>
     <!-- Hint for adding name of a collection -->
     <string name="collection_name_hint">စုဆောင်းမှု အမည်</string>
-	<!-- Text for the menu button to rename a top site -->
+    <!-- Text for the menu button to rename a top site -->
 	<string name="rename_top_site">အမည်ပြောင်းပါ</string>
-	<!-- Text for the menu button to remove a top site -->
+    <!-- Text for the menu button to remove a top site -->
 	<string name="remove_top_site">ဖယ်ရှားပါ</string>
 
     <!-- Text for the menu button to delete a top site from history -->
@@ -733,8 +717,6 @@
     <string name="phone_feature_blocked_by_android">Android မှပိတ်ဆို့ထားခြင်း</string>
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">ခြွင်းချက်များ</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on" moz:removedIn="111" tools:ignore="UnusedResources">ဖွင့်ပါ</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">ပိတ်ပါ</string>
     <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
@@ -909,13 +891,9 @@
     <string name="preferences_delete_browsing_data_tabs_title_2">တက်ဗ်များ ဖွင့်</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d တဗ်များ</string>
-    <!-- Title for the data and history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_data_title">ကြည့်ရှုမှုမှတ်တမ်းနှင့်ဆိုက်အချက်အလက်</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d လိပ်စာများ</string>
-    <!-- Title for the cookies item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cookies">ကွတ်ကီးများ</string>
 
     <!-- Subtitle for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies_subtitle">အများစုဆိုက်များကို သင်ထွက်သွားပါလိမ့်မည်။</string>
@@ -949,37 +927,6 @@
 
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">ထပ်တူပြုခြင်းဖွင့်ထားသည်</string>
-
-    <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button_2">စံ (ပုံသေ)</string>
-    <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_3">လုံခြုံမှု နှင့် စွမ်းဆောင်ရည် အတွက် မျှတမှု ရှိသည်။ စာမျက်နှာများ ပုံမှန်အတိုင်း လည်ပတ်နေသည်။ </string>
-    <!-- text for tracking protection radio button option for strict level of blocking -->
-    <string name="onboarding_tracking_protection_strict_option">တားမြစ်ရန်</string>
-    <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_3">စာမျက်နှာများ ပိုမိုမြန်မြန် လည်ပတ်နိုင်အောင် ခြေရာခံများအား ပိတ်ဆို့ပါ၊ သို့သော် စာမျက်နှာရှိ လုပ်ဆောင်ချက် အချို့ ပျက်သွားနိုင်သည်။</string>
-    <!-- text for the toolbar position card header  -->
-    <string name="onboarding_toolbar_placement_header_1">သင်၏ တူးဘား နေရာချထားမှုကို ရွေးပါ</string>
-
-    <!-- Text for the button to read the privacy notice -->
-    <string name="onboarding_privacy_notice_read_button">ကျွန်ုပ်တို့သီးသန့်ထားရှိမှု သတိပေးချက်များကိုဖတ်ပါ။</string>
-
-    <!-- text for the button to finish onboarding -->
-    <string name="onboarding_finish">ရှာဖွေမှုစမည်</string>
-
-    <!-- Onboarding theme -->
-    <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header">အခင်းအကျင်းရွေးပါ</string>
-    <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description_2">ဘက်ထရီ ကို ချွေတာပြီး အမှောင် အပြင်အဆင် ကို ဖွင့်၍ သင့်မျက်စိကို သက်သာအောင် လုပ်ပါ</string>
-    <!-- Automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_title">အလိုအလျောက်</string>
-    <!-- Summary of automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_summary">သင့်ကိရိယာနှင့် အပြင်အဆင်ကိုညှိနှိုင်းပါ</string>
-    <!-- Theme setting for dark mode -->
-    <string name="onboarding_theme_dark_title">အမှောင်အခင်းအကျင်း</string>
-    <!-- Theme setting for light mode -->
-    <string name="onboarding_theme_light_title">အလင်းအခင်းအကျင်း</string>
 
     <!-- Text shown in snackbar when multiple tabs have been sent to device -->
     <string name="sync_sent_tabs_snackbar">Tabs ပို့လိုက်ပြီ!</string>
@@ -1017,22 +964,14 @@
     <string name="etp_settings">ကာကွယ်မှုဆိုင်ရာ အပြင်အဆင်များ</string>
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">အဆင့်မြှင့် ခြေရာခံကာကွယ်မှု</string>
-    <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title">ခြေရာခံခြင်းပိတ်၍ရှာဖွေပါ။</string>
-    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation">သင့်ရဲ့အချက်အလက်များကိုသင်ကိုယ်တိုင်သိမ်းထားပါ။ %s သည်အွန်လိုင်းတွင်လုပ်ဆောင်သောအသုံးပြုမှုများကို ခြေရာခံမှုများမှသင့်အားကာကွယ်ပေးသည်။</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">ပိုမိုလေ့လာရန်</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">စံ (ပုံသေ)</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_4">လုံခြုံမှု နှင့် စွမ်းဆောင်ရည် မျှတမှုရှိသည်။ စာမျက်နှာများ ပုံမှန်အတိုင်း လည်ပတ်နေသည်။ </string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">စံချိန်မြင့်ခြေရာခံကာကွယ်ခြင်းက ဘာတွေကိုပိတ်ဆို့မလဲ</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">တင်းကျပ်ပါ</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_3">စာမျက်နှာများ ပိုမိုမြန်မြန် တင်နိုင်အောင် ခြေရာခံများအား ပိတ်ဆို့ပါ၊ သို့သော် စာမျက်နှာရှိ လုပ်ဆောင်ချက် အချို့ ပျက်သွားနိုင်သည်။</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">ကန့်သတ်ခြေရာခံကာကွယ်ခြင်းက ဘာတွေကိုပိတ်ဆို့မလဲ</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1312,22 +1251,11 @@
     <string name="search_engine_add_custom_search_engine_title">ရှာဖွေရေး အင်ဂျင်ကို ထပ်ထည့်ပါ</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">ရှာဖွေရေးအင်ဂျင်ကိုပြင်ဆင်ပါ</string>
-    <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
-    <string name="search_engine_add_button_content_description">ထည့်ပါ</string>
-    <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
-    <string name="search_engine_add_custom_search_engine_edit_button_content_description">သိမ်းပါ</string>
     <!-- Text for the menu button to edit a search engine -->
     <string name="search_engine_edit">ပြင်ဆင်ပါ</string>
     <!-- Text for the menu button to delete a search engine -->
     <string name="search_engine_delete">ဖျက်ပါ</string>
 
-    <!-- Text for the button to create a custom search engine on the Add search engine screen -->
-    <string name="search_add_custom_engine_label_other">အခြား</string>
-    <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
-    <string name="search_add_custom_engine_name_hint">နာမည်</string>
-
-    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint">အသုံးပြုရန် စာကြောင်းရှာဖွေပါ။</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_search_string_example" formatted="false">စုံစမ်းမှုကို “%s” ဖြင့်အစားထိုးပါ။ ဥပမာ။ \n https://www.google.com/search?q= %s</string>
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
@@ -1427,7 +1355,7 @@
 
     <!-- Button caption to confirm the renaming of the top site. -->
 	<string name="top_sites_rename_dialog_ok">အိုကေ</string>
-	<!-- Dialog button text for canceling the rename top site prompt. -->
+    <!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">ပယ်​ဖျက်ပါ</string>
 
     <!-- Inactive tabs in the tabs tray -->
@@ -1448,5 +1376,8 @@
 
     <!-- Content description for privacy content close button -->
     <string name="privacy_content_close_button_content_description">ပိတ်ပါ</string>
+
+    <!-- Translations feature-->
+
 
     </resources>

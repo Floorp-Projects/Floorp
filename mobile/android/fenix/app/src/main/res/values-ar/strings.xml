@@ -58,6 +58,7 @@
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">أهمِل</string>
 
+
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">الوصول إلى الكمرة مطلوب. افتح إعدادات أندرويد، وانقر ”الأذونات“ ثم انقر ”سماح“.</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
@@ -171,6 +172,7 @@
 
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">خصّص صفحة البداية</string>
+
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">الشاشة الرئيسية</string>
@@ -188,8 +190,6 @@
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">امسح ضوئيًا</string>
 
-    <!-- Button in the search view that lets a user change their search engine -->
-    <string name="search_engine_button">محرّك البحث</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">إعدادات محرّك البحث</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
@@ -230,8 +230,6 @@
     <string name="preferences_category_about">عن</string>
     <!-- Preference category for settings related to changing the default search engine -->
     <string name="preferences_category_select_default_search_engine">اختر واحدة</string>
-    <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts">أدر اختصارات البحث</string>
     <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
     <string name="preferences_manage_search_shortcuts_summary">حرر المحركات الظاهرة في قائمة البحث</string>
     <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
@@ -242,8 +240,6 @@
     <string name="preferences_search">البحث</string>
     <!-- Preference for settings related to Search engines -->
     <string name="preferences_search_engines">محركات البحث</string>
-    <!-- Preference for settings related to Search address bar -->
-    <string name="preferences_search_address_bar">شريط العناوين</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">قيّمه في متجر غوغل</string>
     <!-- Preference linking to about page for Fenix
@@ -270,12 +266,8 @@
 
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">الإتاحة</string>
-    <!-- Preference to override the Firefox Account server -->
-    <string name="preferences_override_fxa_server">خادوم حسابات Firefox مخصص</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">خادوم مزامنة مخصص</string>
-    <!-- Toast shown after updating the FxA/Sync server override preferences -->
-    <string name="toast_override_fxa_sync_server_done">تعدّل خادوم حسابات Firefox/Sync. يُنهي التطبيق لإجراء التغييرات…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">الحساب</string>
     <!-- Preference for changing where the toolbar is positioned -->
@@ -288,8 +280,6 @@
     <string name="preferences_gestures">الإيماءات</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">خصّص</string>
-    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
-    <string name="preferences_account_default_name">حساب Firefox</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
     <string name="preferences_account_sync_error">أعِد الاتصال لمواصلة المزامنة</string>
     <!-- Preference for language -->
@@ -300,8 +290,6 @@
     <string name="preferences_data_collection">جمع البيانات</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">التنقيح عن بعد عبر USB</string>
-    <!-- Preference title for switch preference to show search engines -->
-    <string name="preferences_show_search_engines">اعرض محركات البحث</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">اعرض اقتراحات البحث</string>
     <!-- Preference title for switch preference to show voice search button -->
@@ -366,12 +354,6 @@
     <string name="wallpaper_updated_snackbar_message">نجح تحديث الخلفية!</string>
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">اعرضها</string>
-
-    <!-- Add-on Installation from AMO-->
-    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
-    <string name="addon_not_supported_error">الإضافة غير مدعومة</string>
-    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
-    <string name="addon_already_installed">الإضافة مثبّتة فعلًا</string>
 
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">زامِن الآن</string>
@@ -639,7 +621,7 @@
     <string name="collection_name_hint">اسم التجميعة</string>
     <!-- Text for the menu button to rename a top site -->
 	<string name="rename_top_site">غيّر الاسم</string>
-	<!-- Text for the menu button to remove a top site -->
+    <!-- Text for the menu button to remove a top site -->
 	<string name="remove_top_site">أزِل</string>
 
     <!-- Text for the menu button to delete a top site from history -->
@@ -979,15 +961,11 @@
     <string name="preferences_delete_browsing_data_tabs_title_2">الألسنة المفتوحة</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">الألسنة: %d</string>
-    <!-- Title for the data and history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_data_title" moz:removedIn="118" tools:ignore="UnusedResources">تأريخ التصفح وبيانات الموقع</string>
     <!-- Title for the history item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_browsing_history_title">التأريخ</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">العناوين: %d</string>
-    <!-- Title for the cookies item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cookies" moz:removedIn="118" tools:ignore="UnusedResources">الكعكات</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies_subtitle">ستخرج من معظم المواقع</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
@@ -1018,40 +996,8 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">يحذف بيانات التصفح…</string>
 
-    <!-- Text for the button to learn more about signing in to your Firefox account. -->
-    <string name="onboarding_manual_sign_in_description" moz:RemovedIn="118" tools:ignore="UnusedResources">اسحب العلامات والتأريخ وكلمات السر إلى Firefox على هذا الجهاز.</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">التزامن يعمل</string>
-    <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button_2" moz:RemovedIn="118" tools:ignore="UnusedResources">القياسي (المبدئي)</string>
-    <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_3" moz:RemovedIn="118" tools:ignore="UnusedResources">يوازن بين الخصوصية والأداء. ستتحمّل الصفحات كالعادة.</string>
-    <!-- text for tracking protection radio button option for strict level of blocking -->
-    <string name="onboarding_tracking_protection_strict_option" moz:RemovedIn="118" tools:ignore="UnusedResources">صارم</string>
-    <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_3" moz:RemovedIn="118" tools:ignore="UnusedResources">يحجب متعقّبات أكثر فتتحمّل الصفحات أسرع، ولكن قد تعطب بعض المزايا في الصفحات.</string>
-    <!-- text for the toolbar position card header  -->
-    <string name="onboarding_toolbar_placement_header_1" moz:RemovedIn="118" tools:ignore="UnusedResources">اختر مكان شريط الأدوات كما تريد</string>
-    <!-- Text for the button to read the privacy notice -->
-    <string name="onboarding_privacy_notice_read_button" moz:RemovedIn="118" tools:ignore="UnusedResources">اقرأ تنويه الخصوصية</string>
-
-    <!-- text for the button to finish onboarding -->
-    <string name="onboarding_finish" moz:RemovedIn="118" tools:ignore="UnusedResources">ابدأ التصفح</string>
-
-    <!-- Onboarding theme -->
-    <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header" moz:RemovedIn="118" tools:ignore="UnusedResources">اختر السمة</string>
-
-    <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description_2" moz:RemovedIn="118" tools:ignore="UnusedResources">وفّر طاقة البطارية واحمِ نظرك مع الوضع الداكن.</string>
-    <!-- Automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_title" moz:RemovedIn="118" tools:ignore="UnusedResources">آلي</string>
-    <!-- Summary of automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_summary" moz:RemovedIn="118" tools:ignore="UnusedResources">يتأقلم حسب إعدادات الجهاز</string>
-    <!-- Theme setting for dark mode -->
-    <string name="onboarding_theme_dark_title" moz:RemovedIn="118" tools:ignore="UnusedResources">سمة داكنة</string>
-    <!-- Theme setting for light mode -->
-    <string name="onboarding_theme_light_title" moz:RemovedIn="118" tools:ignore="UnusedResources">سمة فاتحة</string>
 
     <!-- Text shown in snackbar when multiple tabs have been sent to device -->
     <string name="sync_sent_tabs_snackbar">أُرسلت الألسنة!</string>
@@ -1378,21 +1324,11 @@
     <string name="search_engine_add_custom_search_engine_title">أضِف محرك بحث</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">حرّر محرك بحث</string>
-    <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
-    <string name="search_engine_add_button_content_description">أضِف</string>
-    <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
-    <string name="search_engine_add_custom_search_engine_edit_button_content_description">احفظ</string>
     <!-- Text for the menu button to edit a search engine -->
     <string name="search_engine_edit">حرّر</string>
     <!-- Text for the menu button to delete a search engine -->
     <string name="search_engine_delete">احذف</string>
 
-    <!-- Text for the button to create a custom search engine on the Add search engine screen -->
-    <string name="search_add_custom_engine_label_other">أخرى</string>
-    <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
-    <string name="search_add_custom_engine_name_hint">الاسم</string>
-    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint">نص البحث المستخدم</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_search_string_example" formatted="false">استبدِل الاستعلام بِ‍ ”%s“. مثال:\nhttps://www.google.com/search?q=%s</string>
 
@@ -1510,11 +1446,11 @@
 
     <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
     <string name="top_sites_toggle_top_recent_sites_4">الاختصارات</string>
-	<!-- Title text displayed in the rename top site dialog. -->
+    <!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">الاسم</string>
     <!-- Button caption to confirm the renaming of the top site. -->
 	<string name="top_sites_rename_dialog_ok">حسنا</string>
-	<!-- Dialog button text for canceling the rename top site prompt. -->
+    <!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">ألغِ</string>
 
     <!-- Text for the menu button to open the homepage settings. -->
@@ -1567,5 +1503,8 @@
     <string name="pocket_stories_feature_caption">جزء من عائلة Firefox. ‏%s</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">اطّلع على المزيد</string>
+
+    <!-- Translations feature-->
+
 
     </resources>

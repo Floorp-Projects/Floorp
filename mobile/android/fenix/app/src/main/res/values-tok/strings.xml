@@ -18,9 +18,6 @@
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
     <string name="tab_tray_multiselect_selected_content_description">ijo lawa</string>
 
-    <!-- Home - Recently saved bookmarks -->
-    <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recent_bookmarks_title">lipu awen pi tenpo poka</string>
     <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
     <string name="recently_saved_menu_item_remove">o weka</string>
 
@@ -46,9 +43,6 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">poki sin pi nasin len</string>
 
-    <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
-        %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
-    <string name="recent_tabs_search_term_count_2">lipu %d</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recent_tab_menu_item_remove">o weka</string>
@@ -76,5 +70,8 @@
 
     <!-- This is the hint text that is shown inline on the hostname field of the create new login page. 'https://www.example.com' intentionally hardcoded here -->
     <string name="add_login_hostname_hint_text">https://www.example.com</string>
+
+    <!-- Translations feature-->
+
 
     </resources>

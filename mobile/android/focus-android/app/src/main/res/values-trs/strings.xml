@@ -52,8 +52,6 @@
     <!-- Menu item: Remove the current site as a shortcut from the Home screen -->
     <string name="menu_remove_from_shortcuts">nadure\' riña aksêso dirêckto</string>
 
-    <!-- Menu item: Shows information about features and changes that are new to this version -->
-    <string name="menu_whats_new">Nuin si hua nanj</string>
     <string name="menu_settings">Nagi\'iaj</string>
     <string name="menu_about">Doj rayi\'î</string>
     <string name="menu_help">Sa ruguñu\'unj un</string>

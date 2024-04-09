@@ -1,15 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
     <!-- Content description (not visible, for screen readers etc.): Description for the overflow menu button in the browser toolbar. -->
     <string name="mozac_browser_menu_button">Меню</string>
     <!-- Content description (not visible, for screen readers etc.): Indicates the overflow menu has a highlight -->
     <string name="mozac_browser_menu_highlighted">Таъкид</string>
     <!-- Label for add-ons submenu section -->
-    <string name="mozac_browser_menu_addons">Ҷузъи иловагӣ</string>
+    <string name="mozac_browser_menu_addons" moz:removedIn="126" tools:ignore="UnusedResources">Ҷузъи иловагӣ</string>
+    <!-- Label for extensions submenu section -->
+    <string name="mozac_browser_menu_extensions">Васеъшавиҳо</string>
     <!-- Label for add-ons sub menu item for add-ons manager -->
-    <string name="mozac_browser_menu_addons_manager">Мудири ҷузъи иловагӣ</string>
+    <string name="mozac_browser_menu_addons_manager" moz:removedIn="126" tools:ignore="UnusedResources">Мудири ҷузъи иловагӣ</string>
+    <!-- Label for extensions sub menu item for extensions manager -->
+    <string name="mozac_browser_menu_extensions_manager">Мудири васеъшавиҳо</string>
     <!-- Content description for the action bar "up" button -->
     <string name="action_bar_up_description">Ба боло гузаред</string>
     <!-- Content description for the action bar "up" button of the add-ons sub menu item -->
-    <string name="mozac_browser_menu_addons_description">Ҷузъҳои иловагӣ, гузариш ба боло</string>
+    <string name="mozac_browser_menu_addons_description" moz:removedIn="126" tools:ignore="UnusedResources">Ҷузъҳои иловагӣ, гузариш ба боло</string>
+    <!-- Content description for the action bar "up" button of the extensions sub menu item -->
+    <string name="mozac_browser_menu_extensions_content_description">Васеъшавиҳо, гузариш ба боло</string>
 </resources>

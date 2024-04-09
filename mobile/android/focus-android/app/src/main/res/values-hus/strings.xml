@@ -1,141 +1,230 @@
-<?xml version='1.0' encoding='utf-8'?>
-<resources>
-  <string name="action_cancel">Ka kuba\'</string>
-  <string name="action_ok">Ka bats\'uw</string>
-  <string name="action_save">Ka dheya\'</string>
-  <string name="urlbar_hint">Ka dhucha\' axi a le\' ka aliy</string>
-  <string name="teaser">Eyendhanél abal kit almáts tsinat. \nKit almáts. Ka pakuw. Ka tsab t\'aja\'.</string>
-  <string name="feedback_erase">Pakuwatits an dhuchlab xi in olnál jant\'oj a aliyamal.</string>
-  <string name="feedback_erase_custom_tab">Pakuwatits an dhuchlab xi in olnál jant\'oj a aliyamal.</string>
-  <string name="search_hint">Ka aliy %1$s</string>
-  <string name="menu_share">Ka buk\'uw…</string>
-  <string name="menu_report_site_issue">Ka olna\' max wa\'ats jún i odheltaláb al an xeklek</string>
-  <string name="menu_open_with_default_browser2">Ka japiy ti %1$s</string>
-  <string name="menu_open_with_a_browser2">Ka japiy ti…</string>
-  <string name="menu_add_to_home_screen">Ka punuw al an ok\'ox xeklek</string>
-  <string name="menu_whats_new">Axi it</string>
-  <string name="menu_settings">Ka t\'ojojoy</string>
-  <string name="menu_about">Tin kwenta an</string>
-  <string name="menu_help">Tolmixtaláb</string>
-  <string name="menu_rights">A awiltal</string>
-  <string name="menu_trackers_blocked_title">Ka mapchij in belil an alim</string>
-  <string name="menu_custom_tab_branding">Tolmidh k\'al %1$s</string>
-  <string name="share_dialog_title">Ka buk\'uw ti</string>
-  <string name="notification_erase_text">Ka pakuw an dhuchlab xi in olnál jant\'oj a aliyamal</string>
-  <string name="notification_action_open">Ka japiy</string>
-  <string name="notification_action_erase_and_open">Ka pakuw ani ka japiy</string>
-  <string name="shortcut_erase_short_label">Ka pakuw</string>
-  <string name="shortcut_erase_long_label">Ka pakuw an dhuchlab xi in olnál jant\'oj a aliyamal</string>
-  <string name="shortcut_erase_and_open_long_label">Ka pakuw ani ka japiy %1$s</string>
-  <string name="text_selection_search_action">Kit alim tsinat</string>
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:moz="http://mozac.org/tools" xmlns:tools="http://schemas.android.com/tools">
+    <!-- ####################################################################################### -->
+    <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
+    <!-- ## into a separate file like strings_references.xml                                  ## -->
+    <!-- ####################################################################################### -->
 
-  <string name="preference_privacy_and_security_header">Tsinataláb ani belkadhtaláb</string>
-  <string name="preference_privacy_and_security_summary">Alim, cookies, a k\'al</string>
-  <string name="preference_search_summary">An eyendhanél axi a takuyamal, kwetem kidhbax</string>
-  <string name="preference_mozilla_summary">Tin kwentaj %1$s, tolmixtaláb</string>
-  <string name="preference_category_tracking_protection">K\'anix abal yab ka exláj jant\'oj a aliyamal</string>
-  <string name="preference_category_web_content">Xi in kwa\'al an xeklek</string>
-  <string name="preference_category_switching_apps">Jalk\'unal an eyendhanél</string>
-  <string name="preference_category_general">Tin patál</string>
-  <string name="preference_general_summary">Ok\'ox eyendhanél, xeklek, káwintal</string>
-  <string name="preference_category_data_collection_use">Axi in penál a k\'al ani jant\'ini\' tu eynal</string>
-  <string name="preference_category_search">Ka aliy</string>
-  <string name="preference_show_search_suggestions">Ti ucha\' jant\'oj axi a le\' ka aliy</string>
-  <string name="preference_show_search_suggestions_summary">%1$s ne\'ets kin abna\' patal axi a dhuchál ti al an alimtaláb</string>
-  <string name="preference_search_engine_default">Axi punudh ok\'ox</string>
-  <string name="preference_state_on">Ka lek\'wtsiy</string>
-  <string name="preference_state_off">Ka tepdha\'</string>
-  <string name="preference_subitem_autocomplete">Ka kwetém kidhban an URL</string>
-  <string name="preference_autocomplete_topsite_summary">ka lek\'wtsiy abal kin kwetém kidhbay 450 i URLs abal ebál, axi lej exladh, ti jolataláb ju\'taj it alim.</string>
-  <string name="preference_autocomplete_user_list_summary">ka lek\'wtsiy abal kin kwetém kidhbay 450 i URLs abal ebál, axi lej exladh, ti jolataláb ju\'taj it alim.</string>
-  <string name="preference_autocomplete_action_add">+ Ka punuw an URL axi tsab bijidh</string>
-  <string name="preference_autocomplete_title_add">Ka punuw an URL axi tsab bijidh</string>
-  <string name="custom_autocomplete_quick_add">Ka punuw an URL axi tsab bijidh</string>
-  <string name="preference_category_cookies">Cookies ani xi dhuchadh ti xeklek</string>
-  <string name="preference_category_data_choices">Eyendhanel tin kwentaj an xeklek</string>
-  <string name="preference_autocomplete_title_remove">Ka pakuw an URL axi tsa bijidh</string>
-  <string name="preference_autocomplete_learn_more">Ka exla\' más</string>
-  <string name="preference_autocomplete_custom_summary">Ka punuw ani ka t\'ojojoy an kwetém kidhbax URL.</string>
-  <string name="preference_autocomplete_add_title">URL axi ne\'ets ka punuw</string>
-  <string name="preference_autocomplete_add_hint">Ka ts\'ata\' o ka dhucha\' an URL</string>
-  <string name="preference_autocomplete_add_example2">Ejtil: mozilla.org</string>
-  <string name="preference_autocomplete_add_example">Ejtil: example.com</string>
-  <string name="preference_autocomplete_add_confirmation">It URL axi it bijidh, punudh.</string>
-  <string name="preference_autocomplete_menu_remove">Ka pakuw</string>
-  <string name="preference_autocomplete_action_remove_content_description">Ka pakuw</string>
-  <string name="preference_autocomplete_add_error">Ka dhucha\' juníl an URL axi a dhucha\'its ok\'ox.</string>
-  <string name="preference_language">Káwintaláb</string>
-  <string name="preference_language_systemdefault">Jant\'ini\' ok\'ox punudh an sistema</string>
-  <string name="preference_category_privacy">Tsinataláb</string>
-  <string name="preference_privacy_block_ads">Yab ka jila\' kit olchin axi nujuwáb</string>
-  <string name="preference_privacy_block_ads_summary">Wa\'ats axi in olnál an nujnél, ani in tsu\'tal jant\'oj a met\'al al an xeklek axi a tsa\'biyal, aba\' ij ka ni\'a\' eblim al an olchixtaláb</string>
-  <string name="preference_privacy_block_analytics">Ka kuba\' an alim axi u tsalpax</string>
-  <string name="preference_privacy_block_analytics_summary">Eynal abal kin tamkuy, kin met\'a\' ani kin lejbay an t\'ajbiláb, ejtil ka ni\'a\' ani ka tadhiy</string>
-  <string name="preference_privacy_block_social">Ka kuba\' an alim in k\'al an buk\'ul káwchik</string>
-  <string name="preference_privacy_block_social_summary">Punudh al an xeklek abal ka exláj jawa\' a tsa\'biyamal ani in tejwa\'medhal ejtil an ni\'omtaláb ka buk\'uw</string>
-  <string name="preference_privacy_block_content">Ka kuba\' an alim xi in aliyal jant\'o in kwa\'al an xeklek</string>
-  <string name="preference_privacy_block_content_summary2">Max ka lek\'wtsiy, wa\'ats i xeklek axi yab ne\'ets ka alwa\' tejwa\'mej</string>
-  <string name="preference_privacy_category_cookies">Ka kuba\' an cookies</string>
-  <string name="preference_privacy_should_block_cookies_no_option">Ibaj</string>
-  <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Ka kuba\' an cookies xi in k\'al pil jita\'</string>
-  <string name="preference_privacy_should_block_cookies_third_party_only_option">Ka kuba\' an cookies xi in k\'al pil jita\'</string>
-  <string name="preference_privacy_should_block_cookies_yes_option">Aníts</string>
-  <string name="preference_security_biometric">Ka eyendha\' in t\'iplabil a ch\'uchub abal ka japiy a eyextal</string>
-  <string name="preference_security_biometric_summary">"A ch\'uchub ne\'ets kin japiy %1$s max an URL k\'wajatits japidh ta eyendhanélil.  Ne\'ets ka japin an tsinat alix. \n\n"</string>
-  <string name="preference_privacy_secure_mode">Yab tejwa\'</string>
-  <string name="preference_privacy_stealth_summary">Ka tsina\' an xeklek tam k\'wajat a jalk\'uyal an eyendhanél.</string>
-  <string name="preference_category_security">k\'anidhtaláb</string>
-  <string name="preference_category_performance">Alwa\'taláb</string>
-  <string name="preference_performance_block_webfonts">Ka kuba\' an fuentes xi ti xeklek</string>
-  <string name="preference_performance_block_webfonts_summary">U awil ka k\'ibej anwalekláb ani an k\'ot\'biláb</string>
-  <string name="preference_performance_block_javascript">Ka kuba\' an JavaScript</string>
-  <string name="preference_performance_block_javascript_summary">An xeklek u awil ka dhubath tejwa\'mej, poj u awil yab ka tejwa\'mej alwa\'</string>
-  <string name="preference_default_browser2">Ka t\'aja\' %1$s ta eyendhanelil</string>
-  <string name="preference_category_mozilla">Mozilla</string>
-  <string name="preference_mozilla_telemetry2">Ka ebna\' jay i eyendhanél a eyendhamal</string>
-  <string name="preference_mozilla_telemetry_summary">Ka exla\' más</string>
-  <string name="preference_mozilla_telemetry_summary2">Mozilla in t\'ajál abal kin pena\' expidh xi in yejenchal ani kin alwa\'medha\' %1$s abal patal.</string>
-  <string name="preference_privacy_notice">Tin kwentaj an tsinaxtaláb</string>
-  <string name="preference_about">Tin kwentaj an %1$s</string>
-  <string name="preference_search_installed_search_engines">An alimchik punudhits ta k\'al</string>
-  <string name="preference_search_restore">Ka punuw juníl an alimchik axi talakits ok\'chidh</string>
-  <string name="preference_search_add2">+ Ka punuw pil i alim</string>
-  <string name="preference_search_remove_title">Ka pakuw an alimchik</string>
-  <string name="preference_search_remove">Ka pakuw</string>
-  <string name="preference_homescreen_tips">.</string>
-  <string name="action_option_add_search_engine">Ka punuw an alim</string>
-  <string name="search_add_manually_name_hint">In bij an alim</string>
-  <string name="search_add_manually_string">Ka aliy an kawchik axi eynal</string>
-  <string name="search_add_manually_save">Dheya\'</string>
-  <string name="search_add_manually_example">Ejtil: example.com/search/?q=%s</string>
-  <string name="search_add_confirmation">Punuwat jun i it alim</string>
-  <string name="search_add_error_empty_name">Ka dhucha\' in bij an it alim</string>
-  <string name="search_add_error_duplicate_name">Jun i alim in kwa\'alits jayetsej nix\'e\' xi bijláb</string>
-  <string name="search_add_error_empty_search">Ka punuw axi ne\'ets ka aliy</string>
-  <string name="search_add_error_format">Ka t\'aja\' ti kwentaj max axi a le\' ka dhucha\' ejtil an t\'iplab</string>
-  <string name="content_description_clear_input">Ka pakuw axi a dhuchamal</string>
-  <string name="content_description_dismiss_input">Yab ka t\'aja\' ti kwentaj</string>
-  <string name="content_description_erase">Ka pakuw an dhuchlab xi in olnál jant\'oj a aliyamal</string>
-  <string name="content_description_tab_counter">Xeklekchik xi japidh: %1$s</string>
-  <string name="content_description_lock">Paladh alwa\' ani k\'anidh</string>
-  <string name="accessibility_announcement_loading">K\'wajat ti t\'uchel</string>
-  <string name="accessibility_announcement_loading_finished">Tejwa\'its patal an xeklek</string>
-  <string name="content_description_menu">Eyendhanélchik</string>
-  <string name="content_description_forward">Kit k\'alej abal ok\'ox</string>
-  <string name="content_description_reload">Ka tsab pa\'baj an xeklek</string>
-  <string name="content_description_back">Kit wichiy ju\'taj a tsa\'biyamalits</string>
-  <string name="content_description_stop">Ka jila\' ka pa\'iy an xeklek</string>
-  <string name="content_description_customtab_exit">Kit wichiy al xi jún an eyendhanél</string>
-  <string name="content_description_trackers_blocked">"Jáy i alim kubadh "</string>
-  <string name="content_description_blocking_switch">Ka kuba\' an alimchik</string>
-  <string name="your_rights">A awiltal</string>
-  <string name="external_app_prompt_title">Ka japiy al pil i eyendhanél</string>
-  <string name="external_app_prompt">U awil kit kalej ti %1$s abal ka japiy ti %2$s.</string>
-  <string name="external_app_prompt_no_app_title">Ka aliy jun i eyendhanel axi kin ejtow kin japiy</string>
-  <string name="external_app_prompt_no_app">Ma ni jun i eyendhanél axi in kwa\'al a pat\'alil in jetowal kin japiy. U awil kit kalej ti %1$s abal ka aliy pil i eyendhanél abal %2$s.</string>
-  <string name="external_multiple_apps_matched_exit">¿A le\' kit kalej ti tsinat tsa\'bixtaláb?</string>
-  <string name="download_snackbar_finished">%1$s talbedhamej</string>
-  <string name="download_snackbar_open">Ka japiy</string>
+    <string name="action_cancel">Ka kuba\'</string>
+    <string name="action_ok">Ka bats\'uw</string>
+
+    <string name="action_save">Ka dheya\'</string>
+
+    <string name="urlbar_hint">Ka dhucha\' axi a le\' ka aliy</string>
+
+    <string name="teaser">Eyendhanél abal kit almáts tsinat. \nKit almáts. Ka pakuw. Ka tsab t\'aja\'.</string>
+
+    <string name="feedback_erase">Pakuwatits an dhuchlab xi in olnál jant\'oj a aliyamal.</string>
+
+    <string name="feedback_erase_custom_tab">Pakuwatits an dhuchlab xi in olnál jant\'oj a aliyamal.</string>
+
+    <string name="search_hint">Ka aliy %1$s</string>
+
+    <string name="menu_share">Ka buk\'uw…</string>
+
+    <string name="menu_report_site_issue">Ka olna\' max wa\'ats jún i odheltaláb al an xeklek</string>
+
+    <string name="menu_open_with_default_browser2">Ka japiy ti %1$s</string>
+
+    <string name="menu_open_with_a_browser2">Ka japiy ti…</string>
+
+    <string name="menu_add_to_home_screen">Ka punuw al an ok\'ox xeklek</string>
+
+    <string name="menu_settings">Ka t\'ojojoy</string>
+    <string name="menu_about">Tin kwenta an</string>
+    <string name="menu_help">Tolmixtaláb</string>
+    <string name="menu_rights">A awiltal</string>
+
+    <string name="menu_trackers_blocked_title">Ka mapchij in belil an alim</string>
+
+    <string name="menu_custom_tab_branding">Tolmidh k\'al %1$s</string>
+
+    <string name="share_dialog_title">Ka buk\'uw ti</string>
+
+    <string name="notification_erase_text">Ka pakuw an dhuchlab xi in olnál jant\'oj a aliyamal</string>
+
+    <string name="notification_action_open">Ka japiy</string>
+
+    <string name="notification_action_erase_and_open">Ka pakuw ani ka japiy</string>
+
+    <string name="shortcut_erase_short_label">Ka pakuw</string>
+
+    <string name="shortcut_erase_long_label">Ka pakuw an dhuchlab xi in olnál jant\'oj a aliyamal</string>
+
+
+    <string name="shortcut_erase_and_open_long_label">Ka pakuw ani ka japiy %1$s</string>
+
+    <string name="preference_privacy_and_security_header">Tsinataláb ani belkadhtaláb</string>
+
+    <string name="preference_privacy_and_security_summary">Alim, cookies, a k\'al</string>
+
+    <string name="preference_search_summary">An eyendhanél axi a takuyamal, kwetem kidhbax</string>
+
+    <string name="preference_mozilla_summary">Tin kwentaj %1$s, tolmixtaláb</string>
+
+    <string name="preference_category_web_content">Xi in kwa\'al an xeklek</string>
+
+    <string name="preference_category_switching_apps">Jalk\'unal an eyendhanél</string>
+
+    <string name="preference_category_general">Tin patál</string>
+
+    <string name="preference_category_data_collection_use">Axi in penál a k\'al ani jant\'ini\' tu eynal</string>
+
+    <string name="preference_category_search">Ka aliy</string>
+
+    <string name="preference_show_search_suggestions">Ti ucha\' jant\'oj axi a le\' ka aliy</string>
+    <string name="preference_show_search_suggestions_summary">%1$s ne\'ets kin abna\' patal axi a dhuchál ti al an alimtaláb</string>
+
+    <string name="preference_search_engine_default">Axi punudh ok\'ox</string>
+
+    <string name="preference_state_on">Ka lek\'wtsiy</string>
+
+    <string name="preference_state_off">Ka tepdha\'</string>
+
+    <string name="preference_subitem_autocomplete">Ka kwetém kidhban an URL</string>
+
+    <string name="preference_autocomplete_action_add">+ Ka punuw an URL axi tsab bijidh</string>
+
+    <string name="preference_autocomplete_title_add">Ka punuw an URL axi tsab bijidh</string>
+
+    <string name="custom_autocomplete_quick_add">Ka punuw an URL axi tsab bijidh</string>
+
+    <string name="preference_category_cookies">Cookies ani xi dhuchadh ti xeklek</string>
+
+    <string name="preference_category_data_choices">Eyendhanel tin kwentaj an xeklek</string>
+
+    <string name="preference_autocomplete_title_remove">Ka pakuw an URL axi tsa bijidh</string>
+
+    <string name="preference_autocomplete_learn_more">Ka exla\' más</string>
+
+    <string name="preference_autocomplete_custom_summary">Ka punuw ani ka t\'ojojoy an kwetém kidhbax URL.</string>
+
+    <string name="preference_autocomplete_add_title">URL axi ne\'ets ka punuw</string>
+
+    <string name="preference_autocomplete_add_hint">Ka ts\'ata\' o ka dhucha\' an URL</string>
+
+    <string name="preference_autocomplete_add_example2">Ejtil: mozilla.org</string>
+
+    <string name="preference_autocomplete_add_example">Ejtil: example.com</string>
+
+    <string name="preference_autocomplete_add_confirmation">It URL axi it bijidh, punudh.</string>
+
+    <string name="preference_autocomplete_menu_remove">Ka pakuw</string>
+
+    <string name="preference_autocomplete_action_remove_content_description">Ka pakuw</string>
+
+    <string name="preference_autocomplete_add_error">Ka dhucha\' juníl an URL axi a dhucha\'its ok\'ox.</string>
+
+    <string name="preference_language">Káwintaláb</string>
+    <string name="preference_language_systemdefault">Jant\'ini\' ok\'ox punudh an sistema</string>
+
+    <string name="preference_category_privacy">Tsinataláb</string>
+    <string name="preference_privacy_block_ads">Yab ka jila\' kit olchin axi nujuwáb</string>
+    <string name="preference_privacy_block_ads_summary">Wa\'ats axi in olnál an nujnél, ani in tsu\'tal jant\'oj a met\'al al an xeklek axi a tsa\'biyal, aba\' ij ka ni\'a\' eblim al an olchixtaláb</string>
+    <string name="preference_privacy_block_analytics">Ka kuba\' an alim axi u tsalpax</string>
+    <string name="preference_privacy_block_analytics_summary">Eynal abal kin tamkuy, kin met\'a\' ani kin lejbay an t\'ajbiláb, ejtil ka ni\'a\' ani ka tadhiy</string>
+    <string name="preference_privacy_block_social">Ka kuba\' an alim in k\'al an buk\'ul káwchik</string>
+    <string name="preference_privacy_block_social_summary">Punudh al an xeklek abal ka exláj jawa\' a tsa\'biyamal ani in tejwa\'medhal ejtil an ni\'omtaláb ka buk\'uw</string>
+    <string name="preference_privacy_block_content">Ka kuba\' an alim xi in aliyal jant\'o in kwa\'al an xeklek</string>
+    <string name="preference_privacy_block_content_summary2">Max ka lek\'wtsiy, wa\'ats i xeklek axi yab ne\'ets ka alwa\' tejwa\'mej</string>
+    <string name="preference_privacy_category_cookies">Ka kuba\' an cookies</string>
+
+    <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Ka kuba\' an cookies xi in k\'al pil jita\'</string>
+    <string name="preference_privacy_should_block_cookies_third_party_only_option">Ka kuba\' an cookies xi in k\'al pil jita\'</string>
+
+    <string name="preference_security_biometric">Ka eyendha\' in t\'iplabil a ch\'uchub abal ka japiy a eyextal</string>
+
+    <string name="preference_privacy_secure_mode">Yab tejwa\'</string>
+    <string name="preference_privacy_stealth_summary">Ka tsina\' an xeklek tam k\'wajat a jalk\'uyal an eyendhanél.</string>
+
+    <string name="preference_category_security">k\'anidhtaláb</string>
+
+    <string name="preference_category_performance">Alwa\'taláb</string>
+    <string name="preference_performance_block_webfonts">Ka kuba\' an fuentes xi ti xeklek</string>
+    <string name="preference_performance_block_webfonts_summary">U awil ka k\'ibej anwalekláb ani an k\'ot\'biláb</string>
+
+    <string name="preference_performance_block_javascript">Ka kuba\' an JavaScript</string>
+    <string name="preference_performance_block_javascript_summary">An xeklek u awil ka dhubath tejwa\'mej, poj u awil yab ka tejwa\'mej alwa\'</string>
+
+    <string name="preference_default_browser2">Ka t\'aja\' %1$s ta eyendhanelil</string>
+
+    <string name="preference_category_mozilla">Mozilla</string>
+    <string name="preference_mozilla_telemetry2">Ka ebna\' jay i eyendhanél a eyendhamal</string>
+
+    <string name="preference_mozilla_telemetry_summary">Ka exla\' más</string>
+
+    <string name="preference_mozilla_telemetry_summary2">Mozilla in t\'ajál abal kin pena\' expidh xi in yejenchal ani kin alwa\'medha\' %1$s abal patal.</string>
+
+    <string name="preference_privacy_notice">Tin kwentaj an tsinaxtaláb</string>
+
+    <string name="preference_about">Tin kwentaj an %1$s</string>
+
+    <string name="preference_search_installed_search_engines">An alimchik punudhits ta k\'al</string>
+
+    <string name="preference_search_restore">Ka punuw juníl an alimchik axi talakits ok\'chidh</string>
+
+    <string name="preference_search_add2">+ Ka punuw pil i alim</string>
+    <string name="preference_search_remove_title">Ka pakuw an alimchik</string>
+    <string name="preference_search_remove">Ka pakuw</string>
+
+    <string name="action_option_add_search_engine">Ka punuw an alim</string>
+
+    <string name="search_add_manually_name_hint">In bij an alim</string>
+    <string name="search_add_manually_string">Ka aliy an kawchik axi eynal</string>
+    <string name="search_add_manually_save">Dheya\'</string>
+
+    <string name="search_add_manually_example">Ejtil: example.com/search/?q=%s</string>
+
+    <string name="search_add_confirmation">Punuwat jun i it alim</string>
+
+    <string name="search_add_error_empty_name">Ka dhucha\' in bij an it alim</string>
+    <string name="search_add_error_duplicate_name">Jun i alim in kwa\'alits jayetsej nix\'e\' xi bijláb</string>
+
+    <string name="search_add_error_empty_search">Ka punuw axi ne\'ets ka aliy</string>
+
+    <string name="search_add_error_format">Ka t\'aja\' ti kwentaj max axi a le\' ka dhucha\' ejtil an t\'iplab</string>
+
+    <string name="content_description_clear_input">Ka pakuw axi a dhuchamal</string>
+
+    <string name="content_description_dismiss_input">Yab ka t\'aja\' ti kwentaj</string>
+
+    <string name="content_description_erase">Ka pakuw an dhuchlab xi in olnál jant\'oj a aliyamal</string>
+
+    <string name="content_description_tab_counter">Xeklekchik xi japidh: %1$s</string>
+
+    <string name="content_description_lock">Paladh alwa\' ani k\'anidh</string>
+
+    <string name="accessibility_announcement_loading">K\'wajat ti t\'uchel</string>
+
+    <string name="accessibility_announcement_loading_finished">Tejwa\'its patal an xeklek</string>
+
+    <string name="content_description_menu">Eyendhanélchik</string>
+
+    <string name="content_description_forward">Kit k\'alej abal ok\'ox</string>
+
+    <string name="content_description_reload">Ka tsab pa\'baj an xeklek</string>
+
+    <string name="content_description_back">Kit wichiy ju\'taj a tsa\'biyamalits</string>
+
+    <string name="content_description_stop">Ka jila\' ka pa\'iy an xeklek</string>
+
+    <string name="content_description_customtab_exit">Kit wichiy al xi jún an eyendhanél</string>
+
+    <string name="content_description_trackers_blocked">&quot;Jáy i alim kubadh &quot;</string>
+
+    <string name="content_description_blocking_switch">Ka kuba\' an alimchik</string>
+
+    <string name="your_rights">A awiltal</string>
+
+    <string name="external_app_prompt_title">Ka japiy al pil i eyendhanél</string>
+    <string name="external_app_prompt">U awil kit kalej ti %1$s abal ka japiy ti %2$s.</string>
+    <string name="external_app_prompt_no_app_title">Ka aliy jun i eyendhanel axi kin ejtow kin japiy</string>
+    <string name="external_app_prompt_no_app">Ma ni jun i eyendhanél axi in kwa\'al a pat\'alil in jetowal kin japiy. U awil kit kalej ti %1$s abal ka aliy pil i eyendhanél abal %2$s.</string>
+    <string name="external_multiple_apps_matched_exit">¿A le\' kit kalej ti tsinat tsa\'bixtaláb?</string>
+
+    <string name="download_snackbar_finished">%1$s talbedhamej</string>
+
+    <string name="download_snackbar_open">Ka japiy</string>
 
 
 
@@ -165,72 +254,108 @@
 
 
   <string name="firstrun_defaultbrowser_title">Ka k\'adhbanchij in tsapik an tsinataláb</string>
-  <string name="firstrun_defaultbrowser_text2">Ka ne\'dha\' ebál an tsinat tsa\'bixtaláb. Ka kuba\' an olnom ani pilchik i tejwa\'medhomtaláb axi u awil ti tsinat met\'a\' al an xeklek, ani kin t\'aja\' abal an xeklekchik yab ka dhubat tejwa\'mej.</string>
-  <string name="firstrun_search_title">A alimtal jant\'in tat a le\'</string>
-  <string name="firstrun_search_text">¿A aliyal jant\'oj pil? Ka t\'ojojoy pil i alim.</string>
-  <string name="firstrun_shortcut_title">Ka punuw tin ok\'ox wal a pat\'alil, an bél xi kin taja\' kit ulits dhubat</string>
-  <string name="firstrun_shortcut_text">Kit wichiy dhubat al an xeklek xi a kulbetnál ti %1$s. Ka takuy \"Ka punuw ti ok\'ox xeklek\" o ti %1$s.</string>
-  <string name="firstrun_privacy_title">Kit xe\'tsin k\'al an tsinataláb</string>
-  <string name="firstrun_privacy_text">Ka t\'aja\' abal %1$s ka wenk\'on ta alimtal ani ka ko\'oy an alwa\'taláb abal kit tsa\'bixin tsinat tam ka japiy jun i xeklek al pil i eyendhanél.</string>
-  <string name="firstrun_close_button">¡U ejtiyal!</string>
-  <string name="firstrun_skip_button">Yab ka t\'aja\' ti kwentaj</string>
-  <string name="firstrun_next_button">Xi tal</string>
-  <string name="content_blocking_disabled">-</string>
-  <string name="dialog_addtohomescreen_action_add">Ka punuw</string>
-  <string name="dialog_addtohomescreen_action_cancel">Ka kuba\'</string>
-  <string name="dialog_addtohomescreen_tracking_protection">An dhubat bél ne\'ets ka japin yab k\'anidh</string>
-  <string name="notification_browsing_session_channel_name">Axe\' an tsa\'bixtaláb tsinat</string>
-  <string name="notification_browsing_session_channel_description">An tejwa\'medhomtaláb in jilál ka pakuw an t\'ojláb xi %1$s k\'al jún i takixtaláb. Yab in yejendhal ka japiy an eyendhanél o ka met\'a\' max k\'waja ti t\'ojnal al an tsa\'bixtaláb.</string>
-  <string name="tabs_tray_action_erase">Ka pakuw an dhuchlab xi in olnál jant\'oj a aliyamal</string>
-  <string name="download_firefox">Ka pa\'ba\' Firefox</string>
-  <string name="your_rights_content1">%1$s pel jún i eyendhanél japidh, ts\'ejkadh k\'al Mozilla ani k\'al pilchik i junkudh t\'ojnal.</string>
+    <string name="firstrun_defaultbrowser_text2">Ka ne\'dha\' ebál an tsinat tsa\'bixtaláb. Ka kuba\' an olnom ani pilchik i tejwa\'medhomtaláb axi u awil ti tsinat met\'a\' al an xeklek, ani kin t\'aja\' abal an xeklekchik yab ka dhubat tejwa\'mej.</string>
+
+    <string name="firstrun_search_title">A alimtal jant\'in tat a le\'</string>
+    <string name="firstrun_search_text">¿A aliyal jant\'oj pil? Ka t\'ojojoy pil i alim.</string>
+
+    <string name="firstrun_shortcut_title">Ka punuw tin ok\'ox wal a pat\'alil, an bél xi kin taja\' kit ulits dhubat</string>
+    <string name="firstrun_shortcut_text">Kit wichiy dhubat al an xeklek xi a kulbetnál ti %1$s. Ka takuy \&quot;Ka punuw ti ok\'ox xeklek\&quot; o ti %1$s.</string>
+
+    <string name="firstrun_privacy_title">Kit xe\'tsin k\'al an tsinataláb</string>
+    <string name="firstrun_privacy_text">Ka t\'aja\' abal %1$s ka wenk\'on ta alimtal ani ka ko\'oy an alwa\'taláb abal kit tsa\'bixin tsinat tam ka japiy jun i xeklek al pil i eyendhanél.</string>
+
+    <string name="firstrun_close_button">¡U ejtiyal!</string>
+    <string name="firstrun_skip_button">Yab ka t\'aja\' ti kwentaj</string>
+    <string name="firstrun_next_button">Xi tal</string>
+
+    <string name="content_blocking_disabled">-</string>
+
+    <string name="dialog_addtohomescreen_action_add">Ka punuw</string>
+
+    <string name="dialog_addtohomescreen_action_cancel">Ka kuba\'</string>
+
+    <string name="notification_browsing_session_channel_name">Axe\' an tsa\'bixtaláb tsinat</string>
+
+    <string name="notification_browsing_session_channel_description">An tejwa\'medhomtaláb in jilál ka pakuw an t\'ojláb xi %1$s k\'al jún i takixtaláb. Yab in yejendhal ka japiy an eyendhanél o ka met\'a\' max k\'waja ti t\'ojnal al an tsa\'bixtaláb.</string>
+
+    <string name="tabs_tray_action_erase">Ka pakuw an dhuchlab xi in olnál jant\'oj a aliyamal</string>
+
+    <string name="download_firefox">Ka pa\'ba\' Firefox</string>
+
+    <string name="your_rights_content1">%1$s pel jún i eyendhanél japidh, ts\'ejkadh k\'al Mozilla ani k\'al pilchik i junkudh t\'ojnal.</string>
 
 
 
 
   <string name="gv_prompt_username_hint">In bij an eyendhom</string>
-  <string name="gv_prompt_password_hint">Tsinat japixtal</string>
-  <string name="gv_prompt_clear">Ka k\'wit\'iy</string>
-  <string name="security_popup_secure_connection">Palat beletnadh</string>
-  <string name="security_popup_insecure_connection">Palat po yab beletnadh</string>
-  <string name="security_popup_security_verified">Met\'adh k\'al: %1$s</string>
-  <string name="site_security_icon_content_description">In k\'anix an xeklekchik</string>
-  <string name="preference_autocomplete_duplicate_url_error">An URL wa\'tits</string>
-  <string name="find_in_page">Ka aliy al an xeklek</string>
-  <string name="find_in_page_input">Ka aliy al an xeklek</string>
-  <string name="find_in_page_result">%1$d/%2$d</string>
-  <string name="accessibility_find_in_page_result">%1$d in k\'al %2$d</string>
-  <string name="accessibility_next_result">Ka met\'a\' axi ne\'ets ka tejwa\'mej talbél</string>
-  <string name="accessibility_previous_result">Ka met\'a\' axoi kalej ok\'ox</string>
-  <string name="accessibility_dismiss_find_in_page">Ka mapuy an alim</string>
+    <string name="gv_prompt_password_hint">Tsinat japixtal</string>
+    <string name="gv_prompt_clear">Ka k\'wit\'iy</string>
+
+    <string name="security_popup_secure_connection">Palat beletnadh</string>
+    <string name="security_popup_insecure_connection">Palat po yab beletnadh</string>
+    <string name="security_popup_security_verified">Met\'adh k\'al: %1$s</string>
+
+    <string name="site_security_icon_content_description">In k\'anix an xeklekchik</string>
+    <string name="preference_autocomplete_duplicate_url_error">An URL wa\'tits</string>
+
+    <string name="find_in_page">Ka aliy al an xeklek</string>
+
+    <string name="find_in_page_input">Ka aliy al an xeklek</string>
+
+    <string name="find_in_page_result">%1$d/%2$d</string>
+    <string name="accessibility_find_in_page_result">%1$d in k\'al %2$d</string>
+
+    <string name="accessibility_next_result">Ka met\'a\' axi ne\'ets ka tejwa\'mej talbél</string>
+    <string name="accessibility_previous_result">Ka met\'a\' axoi kalej ok\'ox</string>
+    <string name="accessibility_dismiss_find_in_page">Ka mapuy an alim</string>
 
 
 
   <string name="preference_performance_request_desktop_site">Ka konoy abal ka eyendha\' ta mexajil</string>
-  <string name="custom_tab_copy_url_action">URL k\'ot\'bidh</string>
-  <string name="preference_advanced_summary">Eyendhanél abal an ts\'ejkom</string>
-  <string name="preference_category_advanced">Axi lej ebál in tsap</string>
-  <string name="preference_remote_debugging">An kw\'it\'ixtaláb ma ti USB/Wi-Fi</string>
-  <string name="biometric_auth_title">Ka japiy %1$s</string>
-  <string name="biometric_auth_description">Ka taka\' an ajum k\'ot\'bil ch\'uchub abal kit otsits.</string>
-  <string name="biometric_auth_new_session">It eyendhanél</string>
-  <string name="biometric_auth_image_description">T\'ipodhtaláb in k\'al a ch\'uchub</string>
-  <string name="biometric_auth_not_recognized_error">In t\'iplabil a ch\'uchub yab exláj. Ka exa\' juníl</string>
-  <string name="biometric_auth_moved_too_quickly">A ch\'uchub ejláts tekedh adhik. Ka exa\' juníl.</string>
-  <string name="enable_search_suggestion_title">¿A le\' ka lek\'wtsiy an eyendhanél axi ti uchál jant\'o ka aliy?</string>
-  <string name="enable_search_suggestion_subtitle">Abal kit olchin jant\'oj ka aliy, %1$s a yejenchal ka abna\' axi a dhuchál ti eyendhaxtaláb abal kit almáts %2$s.</string>
-  <string name="enable_search_suggestion_subtitle_learnmore">Ka exla\' más</string>
-  <string name="enable_search_suggestions_no">Ibaj</string>
-  <string name="enable_search_suggestions_yes">Aníts</string>
-  <string name="no_suggestions_message">Wa\'ats i alimtaláb axi yab in olnál jant\'oj u awil ka aliy.</string>
-  <string name="dismiss_no_suggestions_prompt_button">Yab ka t\'aja\' ti kwentaj</string>
-  <string name="tip_disable_tracking_protection">An xeklek yab u alwa\' t\'ojnal \n Ka exa\' ka kuba\' an k\'anix abal yab kit kedhmayat</string>
-  <string name="tip_add_to_homescreen">Ka ela\' k\'al jun i takaxtaláb an xeklek axi a lej eyendhál%1$s Takuxtaláb&gt; Ka punuw ti ok\'ox xeklek</string>
-  <string name="tip_set_default_browser">Ka japiy patal an ne\'dhom %1$s Ka t\'aja\' %1$s ta ok\'ox eyendhom</string>
-  <string name="tip_autocomplete_url">"Ka eyendha\' an kweten putundhach URLs abal an xeklek axi a eyendal\n Ka ni\'a\' jawakits tum URLs ti alimtaláb\n "</string>
-  <string name="tip_open_in_new_tab">Ka japiy jun i ne\'dhach al jun i it xeklek\n Ka jila\' ni\'adh jawakitsk\'ij tum ne\'dhach al jun i xeklek</string>
-  <string name="tip_request_desktop">A le\' ka meta\' an xeklek ta mexajil%1$s Takuxtaláb &gt; Ka konoy an xeklek ta mexajil</string>
-  <string name="tip_disable_tips2">Ka tepdha\' an kawchix axi ti olchal ti ok\'ox xeklek</string>
-  <string name="preference_open_new_tab">Ka japiy al jún i it xeklek</string>
-  <string name="preference_exceptions_menu_remove">Ka pakuw</string>
-</resources>
+
+    <string name="custom_tab_copy_url_action">URL k\'ot\'bidh</string>
+
+    <string name="preference_advanced_summary">Eyendhanél abal an ts\'ejkom</string>
+
+    <string name="preference_category_advanced">Axi lej ebál in tsap</string>
+
+    <string name="preference_remote_debugging">An kw\'it\'ixtaláb ma ti USB/Wi-Fi</string>
+
+    <string name="biometric_auth_image_description">T\'ipodhtaláb in k\'al a ch\'uchub</string>
+
+    <string name="biometric_auth_not_recognized_error">In t\'iplabil a ch\'uchub yab exláj. Ka exa\' juníl</string>
+
+    <string name="biometric_auth_moved_too_quickly">A ch\'uchub ejláts tekedh adhik. Ka exa\' juníl.</string>
+
+    <string name="enable_search_suggestions_no">Ibaj</string>
+
+    <string name="enable_search_suggestions_yes">Aníts</string>
+
+    <string name="no_suggestions_message">Wa\'ats i alimtaláb axi yab in olnál jant\'oj u awil ka aliy.</string>
+
+    <string name="dismiss_no_suggestions_prompt_button">Yab ka t\'aja\' ti kwentaj</string>
+
+    <!-- Tips displayed on the home view -->
+
+    <string name="tip_disable_tracking_protection">An xeklek yab u alwa\' t\'ojnal \n Ka exa\' ka kuba\' an k\'anix abal yab kit kedhmayat</string>
+
+    <string name="tip_add_to_homescreen">Ka ela\' k\'al jun i takaxtaláb an xeklek axi a lej eyendhál%1$s Takuxtaláb&gt; Ka punuw ti ok\'ox xeklek</string>
+
+    <string name="tip_set_default_browser">Ka japiy patal an ne\'dhom %1$s Ka t\'aja\' %1$s ta ok\'ox eyendhom</string>
+
+    <string name="tip_autocomplete_url">&quot;Ka eyendha\' an kweten putundhach URLs abal an xeklek axi a eyendal\n Ka ni\'a\' jawakits tum URLs ti alimtaláb\n &quot;</string>
+
+    <string name="tip_open_in_new_tab">Ka japiy jun i ne\'dhach al jun i it xeklek\n Ka jila\' ni\'adh jawakitsk\'ij tum ne\'dhach al jun i xeklek</string>
+
+    <string name="tip_disable_tips2">Ka tepdha\' an kawchix axi ti olchal ti ok\'ox xeklek</string>
+
+    <string name="preference_open_new_tab">Ka japiy al jún i it xeklek</string>
+
+    <string name="preference_exceptions_menu_remove">Ka pakuw</string>
+
+    <!-- Tracking protection bottom sheet -->
+
+     <!-- Promote SearchWidget Dialog -->
+
+    </resources>

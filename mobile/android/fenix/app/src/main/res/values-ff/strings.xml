@@ -47,13 +47,6 @@
 
     <string name="private_browsing_common_myths">Tinndi goowaaɗi baɗte banngogol suturo</string>
 
-    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message -->
-    <string name="cfr_message" moz:removedIn="109" tools:ignore="UnusedResources">Ɓeydu sodorde ngam udditde tabbe e Jaɓɓorgo maa.</string>
-    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
-    <string name="private_mode_cfr_message">Hurminir tabre aroore fiyannde wootere.</string>
-    <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text" moz:removedIn="109" tools:ignore="UnusedResources">Ɓeydu sodorde</string>
     <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">Alaa, mi yaafiima</string>
 
@@ -156,8 +149,6 @@
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Niiwto</string>
-    <!-- Button in the search view that lets a user change their search engine -->
-    <string name="search_engine_button">Yiylorde</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Teelte yiylorde</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
@@ -205,8 +196,6 @@
     <string name="preferences_default_search_engine">Yiylorde woowaande</string>
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">Yiylo</string>
-    <!-- Preference for settings related to Search address bar -->
-    <string name="preferences_search_address_bar">Palal ñiiɓirɗe</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">Ɓetto to Google Play</string>
     <!-- Preference linking to about page for Fenix
@@ -236,12 +225,8 @@
     <string name="preferences_https_only_off">Ñifol</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Keɓogol</string>
-    <!-- Preference to override the Firefox Account server -->
-    <string name="preferences_override_fxa_server">Heertin sarworde konte Firefox</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">Heertin sarworde Sync</string>
-    <!-- Toast shown after updating the FxA/Sync server override preferences -->
-    <string name="toast_override_fxa_sync_server_done">Konte Firefox/ sarworde Sync waylaama. Uddugol jaaɓnirgal ngal ngam jamminde bayle…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Konte</string>
     <!-- Preference for changing where the toolbar is positioned -->
@@ -254,8 +239,6 @@
     <string name="preferences_gestures">Beese junngo</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Heertin</string>
-    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
-    <string name="preferences_account_default_name">Konte Firefox</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
     <string name="preferences_account_sync_error">Seŋo kadi ngam fuɗɗitaade jahdingol</string>
     <!-- Preference for language -->
@@ -267,8 +250,6 @@
 
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Buggitagol goɗɗungol rewde e USB</string>
-    <!-- Preference title for switch preference to show search engines -->
-    <string name="preferences_show_search_engines">Hollu jiylorɗe</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Hollu wasiyaaji njiilaw</string>
 
@@ -292,6 +273,7 @@
     <string name="preferences_open_links_in_apps">Uddit jokke e nder jaaɓnirɗe</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Toppitorde gaawte yaasiire</string>
+
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Ɓeyditte</string>
 
@@ -457,14 +439,6 @@
     <string name="open_all_warning_confirm">Uddit tabbe</string>
     <!-- Dialog button text for canceling open all tabs -->
     <string name="open_all_warning_cancel">Haaytu</string>
-
-    <!-- Text to show users they have one site in the history group section of the History fragment.
-    %d is a placeholder for the number of sites in the group. -->
-    <string name="history_search_group_site">lowre %d</string>
-
-    <!-- Text to show users they have multiple sites in the history group section of the History fragment.
-    %d is a placeholder for the number of sites in the group. -->
-    <string name="history_search_group_sites">Lowe %d</string>
 
     <!-- Option in library for Recently Closed Tabs -->
     <string name="library_recently_closed_tabs">Tabbe uddaaɗe sakket</string>
@@ -721,8 +695,6 @@
     <string name="phone_feature_blocked_by_android">Ko Android daaƴi ɗum</string>
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Paltooje</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on" moz:removedIn="111" tools:ignore="UnusedResources">Kuɓɓol</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Ñifol</string>
     <!-- Summary of tracking protection preference if tracking protection is set to standard -->
@@ -868,13 +840,9 @@
     <string name="preferences_delete_browsing_data_tabs_title_2">Tabbe udditiiɗe</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d tabbe</string>
-    <!-- Title for the data and history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_data_title">Aslol banngogol e keɓe lowre</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d ñiiɓirɗe</string>
-    <!-- Title for the cookies item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cookies">Kuukiije</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies_subtitle">Maa seŋtoye e ko heewi e lowe</string>
 
@@ -903,29 +871,6 @@
     <string name="preferences_delete_browsing_data_snackbar">Keɓe banngogol momtaama</string>
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Momtugol keɓe banngogol…</string>
-
-    <!-- Text for the button to manually sign into Firefox account. -->
-    <string name="onboarding_firefox_account_sign_in">Seŋo e Firefox</string>
-    <!-- Text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header">Reen hoore maa</string>
-
-    <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button_2">Gaadanteejo (goowaaɗo)</string>
-    <!-- Text for the button to read the privacy notice -->
-    <string name="onboarding_privacy_notice_read_button">Tar tintinol suturo amen</string>
-
-    <!-- text for the button to finish onboarding -->
-    <string name="onboarding_finish">Fuɗɗo wanngaade</string>
-
-    <!-- Onboarding theme -->
-    <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header">Suɓo siŋkoore maa</string>
-    <!-- Summary of automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_summary">Ina fonnda e teelte kaɓirgal maa</string>
-    <!-- Theme setting for dark mode -->
-    <string name="onboarding_theme_dark_title">Siŋkoore niɓɓiɗnde</string>
-    <!-- Theme setting for light mode -->
-    <string name="onboarding_theme_light_title">Siŋkoore jalbunde</string>
 
     <!-- Text shown in snackbar when multiple tabs have been sent to device -->
     <string name="sync_sent_tabs_snackbar">Tabbe neldaama!</string>
@@ -963,10 +908,6 @@
     <string name="etp_settings">Reen teelte</string>
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">Ndeenka Dewindol Ƴellitiika</string>
-    <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title">Wanngo tawo a rewindaaka</string>
-    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation">Mooftan hoore maa keɓe maa. %s ina reen maa e ko heewi e rewindotooɓe ɓurɓe wooweede rewooɓe e maa e ceŋogol.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Ɓeydu humpito</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
@@ -1151,22 +1092,10 @@
     <string name="search_engine_add_custom_search_engine_title">Ɓeydu yiylorde</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">Taƴto yiylorde</string>
-    <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
-    <string name="search_engine_add_button_content_description">Ɓeydu</string>
-    <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
-    <string name="search_engine_add_custom_search_engine_edit_button_content_description">Danndu</string>
     <!-- Text for the menu button to edit a search engine -->
     <string name="search_engine_edit">Taƴto</string>
     <!-- Text for the menu button to delete a search engine -->
     <string name="search_engine_delete">Momtu</string>
-
-    <!-- Text for the button to create a custom search engine on the Add search engine screen -->
-    <string name="search_add_custom_engine_label_other">Goɗɗo</string>
-    <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
-    <string name="search_add_custom_engine_name_hint">Innde</string>
-
-    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint">Binndi njiylaw kuutorteeɗi</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Naatnu innde yiylorde</string>
@@ -1241,5 +1170,8 @@
 
     <!-- Text indicating that the Pocket story that also displays this text is a sponsored story by other 3rd party entity. -->
     <string name="pocket_stories_sponsor_indication">Barjinaaɗi</string>
+
+    <!-- Translations feature-->
+
 
     </resources>

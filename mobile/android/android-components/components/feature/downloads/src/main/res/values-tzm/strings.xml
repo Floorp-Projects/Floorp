@@ -27,4 +27,5 @@
     <string name="mozac_feature_downloads_button_close">Mḍel</string>
     <!-- Message that appears when trying to download with an external app fails. %1$s will be replaced with the name the external app. -->--&gt;
     <string name="mozac_feature_downloads_unable_to_open_third_party_app">Ur izmir ad irẓem %1$s</string>
+
     </resources>

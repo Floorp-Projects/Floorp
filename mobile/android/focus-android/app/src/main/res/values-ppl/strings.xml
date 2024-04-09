@@ -52,8 +52,6 @@
     <!-- Menu item: Remove the current site as a shortcut from the Home screen -->
     <string name="menu_remove_from_shortcuts">Shikishti pal ne Atajos</string>
 
-    <!-- Menu item: Shows information about features and changes that are new to this version -->
-    <string name="menu_whats_new">Tay Yankwik</string>
     <string name="menu_settings">Kan titajshitia</string>
     <string name="menu_about">Taipanpa</string>
     <string name="menu_help">Shinechpalewi</string>
@@ -729,19 +727,11 @@
     <string name="cookie_banner_exception_panel_description_state_on_for_site">%1$s yawi kipupua ne icookies ini sitioj wan yawi kiyankwilia ne iswat. Asu tikpupua muchi ne cookies, mutukey yawi mukishtia u yawi tuyawi muchikiw kan nemi tay tikneki tikua.</string>
 
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
-    <string name="cookie_banner_exception_panel_description_state_off_for_site" moz:RemovedIn="111" tools:ignore="UnusedResources">%1$s weli kiejekua kitawelkwepilia isel ne itajtanilis ne cookie. Su se taishpejpenalis pal tatawelkwepilia tesu kanaj, %1$s weliskia kikwi muchi ne cookies pal kikutamima ne panti.</string>
-
-    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
     <string name="cookie_banner_exception_panel_description_state_off_for_site2">%1$s weli kiejekua isel kitawelkwepilia ne itajtanilis ne cookie.</string>
 
-    <!-- Contextual Feature Recommendation Popups -->
-    <!-- CFR for Cookie Banner (Banner Info Message). The placeholder will be updated with the app name. -->
-    <string name="cfr_for_cookie_banner" moz:RemovedIn="111" tools:ignore="UnusedResources">%1$s kiejekua kitawelkwepilia ne itajtanilis ne cookie pal kikutamima ne ipajpanti ne cookie takakasua.\n\nShiktukti ken mugustuj ne ipanti ne cookie tik tachijchiwalis.</string>
     <!-- CFR for Cookie Banner (Banner Info Message). %1$s will be replaced by the app name, %2$s will be an active link using the string cfr_cookie_banner_link as text. -->
     <string name="cfr_cookie_banner">%1$s kiejekua kitawelkwepilia ne itajtanilis ne cookie pal kikutamima ne ipajpanti ne cookie takakasua.\n\nShiktukti ken mugustuj ne ipanti ne cookie tik %2$s.</string>
 
-    <!-- CFR for Cookie Banner (Banner Info Message). This text should be the same as the settings text from "cfr_for_cookie_banner". The text should be underlined and should redirect the user to the cookie banner settings screen. -->
-    <string name="cfr_for_cookie_banner_underline_settings" moz:RemovedIn="111" tools:ignore="UnusedResources">tachijchiwalis</string>
     <!-- CFR for Cookie Banner (Banner Info Message). This string is used as text for a link in cfr_cookie_banner and takes the user to the app settings. -->
     <string name="cfr_cookie_banner_link">tachijchiwalis</string>
 
@@ -1006,13 +996,7 @@
     <string name="preference_follow_device_theme">Shiktali ne itemaj ne dispositivoj</string>
 
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
-    <string name="errorpage_httpsonly_title" moz:RemovedIn="111" tools:ignore="UnusedResources">Ne sitioj taja tiktajtan tesu kiselia HTTPS</string>
-
-    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
     <string name="errorpage_httpsonly_title2">Ini sitioj tesu kiselia HTTPS</string>
-
-    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
-    <string name="errorpage_httpsonly_message" moz:RemovedIn="111" tools:ignore="UnusedResources">Ken achtitalijtuk, %1$s kiejekua musalua wan kikwi HTTPS pal mutajpia ukchupi. Pal tikpata ne tachijchiwalis u pal timumachtia ukchupi, shu tik Tachijchiwalis&gt; Ichtakayu wan Tajpialis &gt; Nejmachnemilis</string>
 
      <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus").
         Contains a button that will redirect the user to Privacy & Security Screen-->

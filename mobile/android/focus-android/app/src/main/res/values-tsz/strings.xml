@@ -53,8 +53,6 @@
     <!-- Menu item: Remove the current site as a shortcut from the Home screen -->
     <string name="menu_remove_from_shortcuts">Jurhikutakuaecharhu kentita </string>
 
-    <!-- Menu item: Shows information about features and changes that are new to this version -->
-    <string name="menu_whats_new">Jimpanhi ampe</string>
     <string name="menu_settings">Pérakurhikwaecha</string>
     <string name="menu_about">Áamkuri</string>
     <string name="menu_help">Jahroap\'erakwa</string>

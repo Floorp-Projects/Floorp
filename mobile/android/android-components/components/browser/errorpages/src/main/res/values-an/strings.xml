@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
 
     <!-- The button that appears at the bottom of an error page. -->
     <string name="mozac_browser_errorpages_page_refresh">Tornar a intentar-lo</string>
@@ -243,4 +243,5 @@
     <string name="mozac_browser_errorpages_safe_phishing_uri_title">Problema de puesto enganyoso</string>
     <!-- The %1$s will be replaced by the malicious website URL-->
     <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>Lo puesto en %1$s s’ha identificau como un puesto potencialment nocivo y s’ha blocau, seguindo las tuyas preferencias de seguridat</p>]]></string>
-</resources>
+
+    </resources>

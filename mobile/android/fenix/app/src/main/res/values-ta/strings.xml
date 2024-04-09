@@ -47,11 +47,6 @@
     <string name="private_browsing_placeholder_description_2">நீங்கள் கமுக்கக் கீற்றுகளை மூடும்போது அல்லது செயலியை விட்டு வெளியேறும் போது உங்கள் தேடல், உலாவல் வரலாற்றை %1$s துடைக்கிறது. இது வலைத்தளங்கள் அல்லது இணைய சேவை வழங்குநர்களிடமிருந்து உங்களை அடையாளமற்றவராக மாற்றாது, ஆனால் இந்தக் கணினியைப் பயன்படுத்தும் மற்றவர்களிடமிருந்தும் இயங்கலையில் நீங்கள் செய்பவற்றை கமுக்கமாக வைப்பதை எளிதாக்குகிறது.</string>
     <string name="private_browsing_common_myths">கமுக்க உலாவல் பற்றிய பொதுவான தொன்மங்கள்</string>
 
-    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message -->
-    <string name="cfr_message" moz:removedIn="109" tools:ignore="UnusedResources">உங்கள் முகப்புத் திரையிலிருந்து கமுக்கக் கீற்றுகளைத் திறக்கக் குறுக்குவழியைச் சேர்க்கவும்.</string>
-    <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text" moz:removedIn="109" tools:ignore="UnusedResources">குறுக்குவழியைச் சேர்க்கவும்</string>
     <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">பரவாயில்லை நன்றி</string>
 
@@ -59,6 +54,7 @@
     <string name="open_in_app_cfr_positive_button_text">அமைவுகளுக்கு செல்</string>
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">நிராகரி</string>
+
 
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">படகருவிக்கு அணுகல் தேவை. ஆண்ட்ராய்டு அமைவுகளுக்குச் சென்று, அனுமதிகளைத் தட்டி, அனுமதி என்பதைத் தட்டவும்.</string>
@@ -143,8 +139,6 @@
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">வருடு</string>
 
-    <!-- Button in the search view that lets a user change their search engine -->
-    <string name="search_engine_button">தேடுபொறி</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">தேடுபொறி அமைவுகள்</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
@@ -178,8 +172,6 @@
     <string name="preferences_default_search_engine">முன்னிருப்பு தேடுபொறி</string>
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">தேடல்</string>
-    <!-- Preference for settings related to Search address bar -->
-    <string name="preferences_search_address_bar">முகவரி பட்டை</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">கூகுள் கடையில் மதிப்பிடுக</string>
     <!-- Preference linking to about page for Fenix
@@ -206,12 +198,8 @@
 
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">அணுகுத்திறன்</string>
-    <!-- Preference to override the Firefox Account server -->
-    <string name="preferences_override_fxa_server">தனிப்பயன் பயர்பாக்சு கணக்குச் சேவையகம்</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">தனிப்பயன் ஒத்திசைவு சேவையகம்</string>
-    <!-- Toast shown after updating the FxA/Sync server override preferences -->
-    <string name="toast_override_fxa_sync_server_done">பயர்பாக்சு கணக்கு/ஒத்திசைவு சேவையகம் மாற்றப்பட்டது. மாற்றங்களைச் செயல்படுத் செயலியிலிருந் வெளியேறுகிற…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">கணக்கு</string>
 
@@ -223,8 +211,6 @@
     <string name="preferences_gestures">சைகைகள்</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">தனிப்பயனாக்கு</string>
-    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
-    <string name="preferences_account_default_name">பயர்பாக்சு கணக்கு</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
     <string name="preferences_account_sync_error">ஒத்திசைவை மீள்தொடங்க மீண்டும் இணைக்கவும்</string>
     <!-- Preference for language -->
@@ -235,8 +221,6 @@
     <string name="preferences_data_collection">தரவுச் சேகரிப்பு</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">USB மூலமாகத் தொலைநிலை வழுநீக்கல்</string>
-    <!-- Preference title for switch preference to show search engines -->
-    <string name="preferences_show_search_engines">தேடுபொறிகளைக் காட்டு</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">தேடல் பரிந்துரைகளைக் காட்டு</string>
 
@@ -258,6 +242,7 @@
 
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">வெளிப்புற பதிவிறக்க மேலாளர்</string>
+
     <!-- Preference for add_ons -->
     <string name="preferences_addons">துணை நிரல்கள்</string>
 
@@ -582,8 +567,6 @@
     <string name="phone_feature_blocked_by_android">ஆண்ட்ராய்டால் தடுக்கப்பட்டது</string>
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">விதிவிலக்குகள்</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on" moz:removedIn="111" tools:ignore="UnusedResources">இயக்கு</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">அணை</string>
 
@@ -738,14 +721,10 @@
     <string name="preferences_delete_browsing_data_tabs_title_2">கீற்றுகளைத் திற</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d கீற்றைகள்</string>
-    <!-- Title for the data and history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_data_title">உலாவல் வரலாறு மற்றும் தள தரவு</string>
 
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d முகவரிகள்</string>
-    <!-- Title for the cookies item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cookies">நினைவிகள்</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies_subtitle">பெரும்பாலான தளங்களிலிருந்து வெளியேறுவீர்கள்</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
@@ -776,29 +755,6 @@
 
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">ஒத்திசைவு இயக்கத்தில்</string>
-
-    <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button_2">நிலையான (இயல்புநிலை)</string>
-    <!-- text for tracking protection radio button option for strict level of blocking -->
-    <string name="onboarding_tracking_protection_strict_option">கண்டிப்பான</string>
-
-    <!-- Text for the button to read the privacy notice -->
-    <string name="onboarding_privacy_notice_read_button">எங்கள் தனியுரிமை அறிவிக்கையைப் படிக்க</string>
-
-    <!-- text for the button to finish onboarding -->
-    <string name="onboarding_finish">உலாவத் தொடங்குக</string>
-
-    <!-- Onboarding theme -->
-    <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header">உங்கள் கருப்பொருளைத் தேர்க</string>
-    <!-- Automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_title">தானியக்கம்</string>
-    <!-- Summary of automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_summary">உங்கள் சாதன அமைவுகளுக்கு தகவமைக்கும்</string>
-    <!-- Theme setting for dark mode -->
-    <string name="onboarding_theme_dark_title">கருமை</string>
-    <!-- Theme setting for light mode -->
-    <string name="onboarding_theme_light_title">வெளிர்</string>
 
     <!-- Text shown in snackbar when multiple tabs have been sent to device -->
     <string name="sync_sent_tabs_snackbar">கீற்றுகள் அனுப்பப்பட்டன!</string>
@@ -833,10 +789,6 @@
     <string name="etp_settings">பாதுகாப்பு அமைவுகள்</string>
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">மேம்படுத்தப்பட்ட தடமறியல் பாதுகாப்பு</string>
-    <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title">பின்தொடரப்படாமல் உலாவுக</string>
-    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation">உங்கள் தரவை உங்களிடமே வைத்திருங்கள். இயங்கலையில் உங்களைப் பின்தொடரும் மிகப்பொதுவான தடமறிவான்களிடமிருந்து %s உங்களைப் பாதுகாக்கிறது.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">மேலும் அறிய</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
@@ -1037,21 +989,11 @@
     <string name="search_engine_add_custom_search_engine_title">தேடுபொறியைச் சேர்</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">தேடுபொறியைத் திருத்து</string>
-    <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
-    <string name="search_engine_add_button_content_description">சேர்</string>
-    <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
-    <string name="search_engine_add_custom_search_engine_edit_button_content_description">சேமி</string>
     <!-- Text for the menu button to edit a search engine -->
     <string name="search_engine_edit">திருத்து</string>
     <!-- Text for the menu button to delete a search engine -->
     <string name="search_engine_delete">நீக்கு</string>
 
-    <!-- Text for the button to create a custom search engine on the Add search engine screen -->
-    <string name="search_add_custom_engine_label_other">மற்றவை</string>
-    <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
-    <string name="search_add_custom_engine_name_hint">பெயர்</string>
-    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint">பயன்படுத்த வேண்டிய தேடல் தொடர்</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_search_string_example" formatted="false">வினவலை “%s” ஆக மாற்றுக. எ.கா:\nhttps://www.google.com/search?q=%s</string>
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
@@ -1146,5 +1088,8 @@
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">நீக்கு</string>
+
+    <!-- Translations feature-->
+
 
     </resources>

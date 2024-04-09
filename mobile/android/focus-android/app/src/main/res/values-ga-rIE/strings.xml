@@ -1,116 +1,198 @@
-<?xml version='1.0' encoding='utf-8'?>
-<resources>
-  <string name="action_cancel">Cealaigh</string>
-  <string name="action_ok">OK</string>
-  <string name="action_save">Sábháil</string>
-  <string name="urlbar_hint">Cuardach nó seoladh Gréasáin</string>
-  <string name="teaser">Brabhsáil phríobháideach, go huathoibríoch.\nBrabhsáil. Bánaigh. Arís is arís eile.</string>
-  <string name="feedback_erase">Bánaíodh do stair bhrabhsála.</string>
-  <string name="search_hint">Cuardaigh %1$s</string>
-  <string name="menu_share">Comhroinn…</string>
-  <string name="menu_report_site_issue">Tuairiscigh Fadhb leis an Suíomh</string>
-  <string name="menu_open_with_default_browser2">Oscail in %1$s</string>
-  <string name="menu_open_with_a_browser2">Oscail in…</string>
-  <string name="menu_add_to_home_screen">Cuir leis an scáileán Baile</string>
-  <string name="menu_whats_new">Is Geal Gach Nua</string>
-  <string name="menu_settings">Socruithe</string>
-  <string name="menu_about">Maidir leis</string>
-  <string name="menu_help">Cabhair</string>
-  <string name="menu_rights">Cearta an úsáideora</string>
-  <string name="menu_trackers_blocked_title">Lorgairí blocáilte</string>
-  <string name="menu_custom_tab_branding">Á chumhachtú ag %1$s</string>
-  <string name="share_dialog_title">Comhroinn trí</string>
-  <string name="notification_erase_text">Glan an stair bhrabhsála</string>
-  <string name="notification_action_open">Oscail</string>
-  <string name="notification_action_erase_and_open">Scrios agus Oscail</string>
-  <string name="shortcut_erase_short_label">Glan</string>
-  <string name="shortcut_erase_long_label">Glan an stair bhrabhsála</string>
-  <string name="text_selection_search_action">Cuardach Príobháideach</string>
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:moz="http://mozac.org/tools" xmlns:tools="http://schemas.android.com/tools">
+    <!-- ####################################################################################### -->
+    <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
+    <!-- ## into a separate file like strings_references.xml                                  ## -->
+    <!-- ####################################################################################### -->
 
-  <string name="preference_privacy_and_security_header">Príobháideachas agus Slándáil</string>
-  <string name="preference_privacy_and_security_summary">Lorgaireacht, fianáin, roghanna sonraí</string>
-  <string name="preference_search_summary">Réamhshocrú, uathchríochnú</string>
-  <string name="preference_mozilla_summary">Maidir le %1$s, cabhair</string>
-  <string name="preference_category_tracking_protection">Cosaint ar Lorgaireacht</string>
-  <string name="preference_category_web_content">Inneachar Gréasáin</string>
-  <string name="preference_category_switching_apps">Athrú Aipeanna</string>
-  <string name="preference_category_general">Ginearálta</string>
-  <string name="preference_category_data_collection_use">Bailiúchán agus Úsáid Sonraí</string>
-  <string name="preference_category_search">Cuardach</string>
-  <string name="preference_search_engine_default">Réamhshocrú</string>
-  <string name="preference_state_on">Ann</string>
-  <string name="preference_state_off">As</string>
-  <string name="preference_subitem_autocomplete">Uathchríochnú URL</string>
-  <string name="preference_autocomplete_action_add">+ Cuir URL saincheaptha leis</string>
-  <string name="preference_autocomplete_title_add">Cuir URL saincheaptha leis</string>
-  <string name="custom_autocomplete_quick_add">Cuir URL saincheaptha leis</string>
-  <string name="preference_category_cookies">Fianáin agus Sonraí Suímh</string>
-  <string name="preference_category_data_choices">Roghanna Sonraí</string>
-  <string name="preference_autocomplete_title_remove">Bain URLanna saincheaptha</string>
-  <string name="preference_autocomplete_learn_more">Tuilleadh eolais</string>
-  <string name="preference_autocomplete_add_title">URL le cur leis</string>
-  <string name="preference_autocomplete_add_hint">Greamaigh nó clóscríobh URL</string>
-  <string name="preference_autocomplete_add_example2">Sampla: mozilla.org</string>
-  <string name="preference_autocomplete_add_example">Sampla: example.com</string>
-  <string name="preference_autocomplete_menu_remove">Bain</string>
-  <string name="preference_autocomplete_action_remove_content_description">Bain</string>
-  <string name="preference_autocomplete_add_error">Deimhnigh an URL a chuir tú isteach arís.</string>
-  <string name="preference_language">Teanga</string>
-  <string name="preference_language_systemdefault">Réamhshocrú an chórais</string>
-  <string name="preference_category_privacy">Príobháideachas</string>
-  <string name="preference_privacy_block_ads">Cuir cosc ar lorgairí fógraíochta</string>
-  <string name="preference_privacy_block_analytics">Cuir cosc ar lorgairí anailísíochta</string>
-  <string name="preference_privacy_block_social">Cuir cosc ar lorgairí sóisialta</string>
-  <string name="preference_privacy_block_content">Cuir cosc ar lorgairí ábhair eile</string>
-  <string name="preference_privacy_category_cookies">Cuir cosc ar fhianáin</string>
-  <string name="preference_privacy_should_block_cookies_no_option">Níl</string>
-  <string name="preference_privacy_should_block_cookies_yes_option">Tá</string>
-  <string name="preference_privacy_secure_mode">Mód Rúnda</string>
-  <string name="preference_privacy_stealth_summary">Folaigh leathanaigh Ghréasáin agus an aip á hathrú</string>
-  <string name="preference_category_performance">Feidhmíocht</string>
-  <string name="preference_performance_block_webfonts">Cuir cosc ar chlónna Gréasáin</string>
-  <string name="preference_performance_block_webfonts_summary">D\'fhéadfadh go mbeadh deilbhíní nó íomhánna ar iarraidh</string>
-  <string name="preference_performance_block_javascript">Cuir cosc ar JavaScript</string>
-  <string name="preference_category_mozilla">Mozilla</string>
-  <string name="preference_mozilla_telemetry2">Seol sonraí úsáide chugainn</string>
-  <string name="preference_mozilla_telemetry_summary">Tuilleadh eolais</string>
-  <string name="preference_privacy_notice">Fógra Príobháideachais</string>
-  <string name="preference_about">Maidir le %1$s</string>
-  <string name="preference_search_installed_search_engines">Innill chuardaigh suiteáilte</string>
-  <string name="preference_search_restore">Athchóirigh na hinnill chuardaigh réamhshocraithe</string>
-  <string name="preference_search_add2">+ Cuir inneall cuardaigh leis</string>
-  <string name="preference_search_remove_title">Bain innill chuardaigh</string>
-  <string name="preference_search_remove">Bain</string>
-  <string name="action_option_add_search_engine">Inneall cuardaigh nua</string>
-  <string name="search_add_manually_name_hint">Ainm an innill cuardaigh</string>
-  <string name="search_add_manually_string">Teaghrán cuardaigh</string>
-  <string name="search_add_manually_save">Sábháil</string>
-  <string name="search_add_manually_example">Sampla: example.com/search/?q=%s</string>
-  <string name="search_add_confirmation">Cuireadh inneall cuardaigh nua leis.</string>
-  <string name="search_add_error_empty_name">Cuir isteach ainm an innill cuardaigh</string>
-  <string name="search_add_error_empty_search">Cuir teaghrán cuardaigh isteach</string>
-  <string name="content_description_clear_input">Glan an réimse</string>
-  <string name="content_description_dismiss_input">Díbir</string>
-  <string name="content_description_erase">Glan an stair bhrabhsála</string>
-  <string name="content_description_tab_counter">Cluaisíní oscailte: %1$s</string>
-  <string name="content_description_lock">Ceangal slán</string>
-  <string name="accessibility_announcement_loading">Á lódáil</string>
-  <string name="accessibility_announcement_loading_finished">Luchtaíodh an suíomh Gréasáin</string>
-  <string name="content_description_menu">Tuilleadh roghanna</string>
-  <string name="content_description_forward">Téigh ar aghaidh</string>
-  <string name="content_description_reload">Athlódáil an suíomh</string>
-  <string name="content_description_back">Téigh ar gcúl</string>
-  <string name="content_description_stop">Stop ag lódáil an tsuímh</string>
-  <string name="content_description_customtab_exit">Fill ar an aip roimhe seo</string>
-  <string name="content_description_blocking_switch">Cuir cosc ar lorgairí</string>
-  <string name="your_rights">Cearta an úsáideora</string>
-  <string name="external_app_prompt_title">Oscail an nasc in aip eile</string>
-  <string name="external_app_prompt">Is féidir leat %1$s a fhágáil chun an nasc seo a oscailt in %2$s.</string>
-  <string name="external_app_prompt_no_app_title">Aimsigh aip lenar féidir an nasc seo a oscailt</string>
-  <string name="external_app_prompt_no_app">Níl aon aip ar do ghléas atá in ann an nasc seo a oscailt. Is féidir leat %1$s a fhágáil chun aip oiriúnach a lorg in %2$s.</string>
-  <string name="external_multiple_apps_matched_exit">Scoir de Bhrabhsáil Phríobháideach?</string>
-  <string name="download_snackbar_finished">%1$s críochnaithe</string>
-  <string name="download_snackbar_open">Oscail</string>
+    <string name="action_cancel">Cealaigh</string>
+    <string name="action_ok">OK</string>
+
+    <string name="action_save">Sábháil</string>
+
+    <string name="urlbar_hint">Cuardach nó seoladh Gréasáin</string>
+
+    <string name="teaser">Brabhsáil phríobháideach, go huathoibríoch.\nBrabhsáil. Bánaigh. Arís is arís eile.</string>
+
+    <string name="feedback_erase">Bánaíodh do stair bhrabhsála.</string>
+
+    <string name="search_hint">Cuardaigh %1$s</string>
+
+    <string name="menu_share">Comhroinn…</string>
+
+    <string name="menu_report_site_issue">Tuairiscigh Fadhb leis an Suíomh</string>
+
+    <string name="menu_open_with_default_browser2">Oscail in %1$s</string>
+
+    <string name="menu_open_with_a_browser2">Oscail in…</string>
+
+    <string name="menu_add_to_home_screen">Cuir leis an scáileán Baile</string>
+
+    <string name="menu_settings">Socruithe</string>
+    <string name="menu_about">Maidir leis</string>
+    <string name="menu_help">Cabhair</string>
+    <string name="menu_rights">Cearta an úsáideora</string>
+
+    <string name="menu_trackers_blocked_title">Lorgairí blocáilte</string>
+
+    <string name="menu_custom_tab_branding">Á chumhachtú ag %1$s</string>
+
+    <string name="share_dialog_title">Comhroinn trí</string>
+
+    <string name="notification_erase_text">Glan an stair bhrabhsála</string>
+
+    <string name="notification_action_open">Oscail</string>
+
+    <string name="notification_action_erase_and_open">Scrios agus Oscail</string>
+
+    <string name="shortcut_erase_short_label">Glan</string>
+
+    <string name="shortcut_erase_long_label">Glan an stair bhrabhsála</string>
+
+
+    <string name="preference_privacy_and_security_header">Príobháideachas agus Slándáil</string>
+
+    <string name="preference_privacy_and_security_summary">Lorgaireacht, fianáin, roghanna sonraí</string>
+
+    <string name="preference_search_summary">Réamhshocrú, uathchríochnú</string>
+
+    <string name="preference_mozilla_summary">Maidir le %1$s, cabhair</string>
+
+    <string name="preference_category_web_content">Inneachar Gréasáin</string>
+
+    <string name="preference_category_switching_apps">Athrú Aipeanna</string>
+
+    <string name="preference_category_general">Ginearálta</string>
+
+    <string name="preference_category_data_collection_use">Bailiúchán agus Úsáid Sonraí</string>
+
+    <string name="preference_category_search">Cuardach</string>
+
+    <string name="preference_search_engine_default">Réamhshocrú</string>
+
+    <string name="preference_state_on">Ann</string>
+
+    <string name="preference_state_off">As</string>
+
+    <string name="preference_subitem_autocomplete">Uathchríochnú URL</string>
+
+    <string name="preference_autocomplete_action_add">+ Cuir URL saincheaptha leis</string>
+
+    <string name="preference_autocomplete_title_add">Cuir URL saincheaptha leis</string>
+
+    <string name="custom_autocomplete_quick_add">Cuir URL saincheaptha leis</string>
+
+    <string name="preference_category_cookies">Fianáin agus Sonraí Suímh</string>
+
+    <string name="preference_category_data_choices">Roghanna Sonraí</string>
+
+    <string name="preference_autocomplete_title_remove">Bain URLanna saincheaptha</string>
+
+    <string name="preference_autocomplete_learn_more">Tuilleadh eolais</string>
+
+    <string name="preference_autocomplete_add_title">URL le cur leis</string>
+
+    <string name="preference_autocomplete_add_hint">Greamaigh nó clóscríobh URL</string>
+
+    <string name="preference_autocomplete_add_example2">Sampla: mozilla.org</string>
+
+    <string name="preference_autocomplete_add_example">Sampla: example.com</string>
+
+    <string name="preference_autocomplete_menu_remove">Bain</string>
+
+    <string name="preference_autocomplete_action_remove_content_description">Bain</string>
+
+    <string name="preference_autocomplete_add_error">Deimhnigh an URL a chuir tú isteach arís.</string>
+
+    <string name="preference_language">Teanga</string>
+    <string name="preference_language_systemdefault">Réamhshocrú an chórais</string>
+
+    <string name="preference_category_privacy">Príobháideachas</string>
+    <string name="preference_privacy_block_ads">Cuir cosc ar lorgairí fógraíochta</string>
+    <string name="preference_privacy_block_analytics">Cuir cosc ar lorgairí anailísíochta</string>
+    <string name="preference_privacy_block_social">Cuir cosc ar lorgairí sóisialta</string>
+    <string name="preference_privacy_block_content">Cuir cosc ar lorgairí ábhair eile</string>
+    <string name="preference_privacy_category_cookies">Cuir cosc ar fhianáin</string>
+
+    <string name="preference_privacy_secure_mode">Mód Rúnda</string>
+    <string name="preference_privacy_stealth_summary">Folaigh leathanaigh Ghréasáin agus an aip á hathrú</string>
+
+    <string name="preference_category_performance">Feidhmíocht</string>
+    <string name="preference_performance_block_webfonts">Cuir cosc ar chlónna Gréasáin</string>
+    <string name="preference_performance_block_webfonts_summary">D\'fhéadfadh go mbeadh deilbhíní nó íomhánna ar iarraidh</string>
+
+    <string name="preference_performance_block_javascript">Cuir cosc ar JavaScript</string>
+
+    <string name="preference_category_mozilla">Mozilla</string>
+    <string name="preference_mozilla_telemetry2">Seol sonraí úsáide chugainn</string>
+
+    <string name="preference_mozilla_telemetry_summary">Tuilleadh eolais</string>
+
+    <string name="preference_privacy_notice">Fógra Príobháideachais</string>
+
+    <string name="preference_about">Maidir le %1$s</string>
+
+    <string name="preference_search_installed_search_engines">Innill chuardaigh suiteáilte</string>
+
+    <string name="preference_search_restore">Athchóirigh na hinnill chuardaigh réamhshocraithe</string>
+
+    <string name="preference_search_add2">+ Cuir inneall cuardaigh leis</string>
+    <string name="preference_search_remove_title">Bain innill chuardaigh</string>
+    <string name="preference_search_remove">Bain</string>
+
+    <string name="action_option_add_search_engine">Inneall cuardaigh nua</string>
+
+    <string name="search_add_manually_name_hint">Ainm an innill cuardaigh</string>
+    <string name="search_add_manually_string">Teaghrán cuardaigh</string>
+    <string name="search_add_manually_save">Sábháil</string>
+
+    <string name="search_add_manually_example">Sampla: example.com/search/?q=%s</string>
+
+    <string name="search_add_confirmation">Cuireadh inneall cuardaigh nua leis.</string>
+
+    <string name="search_add_error_empty_name">Cuir isteach ainm an innill cuardaigh</string>
+
+    <string name="search_add_error_empty_search">Cuir teaghrán cuardaigh isteach</string>
+
+    <string name="content_description_clear_input">Glan an réimse</string>
+
+    <string name="content_description_dismiss_input">Díbir</string>
+
+    <string name="content_description_erase">Glan an stair bhrabhsála</string>
+
+    <string name="content_description_tab_counter">Cluaisíní oscailte: %1$s</string>
+
+    <string name="content_description_lock">Ceangal slán</string>
+
+    <string name="accessibility_announcement_loading">Á lódáil</string>
+
+    <string name="accessibility_announcement_loading_finished">Luchtaíodh an suíomh Gréasáin</string>
+
+    <string name="content_description_menu">Tuilleadh roghanna</string>
+
+    <string name="content_description_forward">Téigh ar aghaidh</string>
+
+    <string name="content_description_reload">Athlódáil an suíomh</string>
+
+    <string name="content_description_back">Téigh ar gcúl</string>
+
+    <string name="content_description_stop">Stop ag lódáil an tsuímh</string>
+
+    <string name="content_description_customtab_exit">Fill ar an aip roimhe seo</string>
+
+    <string name="content_description_blocking_switch">Cuir cosc ar lorgairí</string>
+
+    <string name="your_rights">Cearta an úsáideora</string>
+
+    <string name="external_app_prompt_title">Oscail an nasc in aip eile</string>
+    <string name="external_app_prompt">Is féidir leat %1$s a fhágáil chun an nasc seo a oscailt in %2$s.</string>
+    <string name="external_app_prompt_no_app_title">Aimsigh aip lenar féidir an nasc seo a oscailt</string>
+    <string name="external_app_prompt_no_app">Níl aon aip ar do ghléas atá in ann an nasc seo a oscailt. Is féidir leat %1$s a fhágáil chun aip oiriúnach a lorg in %2$s.</string>
+    <string name="external_multiple_apps_matched_exit">Scoir de Bhrabhsáil Phríobháideach?</string>
+
+    <string name="download_snackbar_finished">%1$s críochnaithe</string>
+
+    <string name="download_snackbar_open">Oscail</string>
 
 
 
@@ -140,20 +222,36 @@
 
 
   <string name="firstrun_defaultbrowser_title">Príobháideachas praiticiúil proifisiúnta</string>
-  <string name="firstrun_shortcut_title">Cuir aicearraí leis an leathanach baile</string>
-  <string name="firstrun_close_button">OK, tuigim!</string>
-  <string name="firstrun_skip_button">Ná bac leis</string>
-  <string name="firstrun_next_button">Ar Aghaidh</string>
-  <string name="content_blocking_disabled">-</string>
-  <string name="dialog_addtohomescreen_action_add">Cuir Leis</string>
-  <string name="dialog_addtohomescreen_action_cancel">Cealaigh</string>
-  <string name="download_firefox">Íoslódáil Firefox</string>
-  <string name="gv_prompt_username_hint">Ainm úsáideora</string>
-  <string name="gv_prompt_password_hint">Focal Faire</string>
-  <string name="gv_prompt_clear">Glan</string>
-  <string name="security_popup_secure_connection">Ceangal Slán</string>
-  <string name="security_popup_insecure_connection">Ceangal Neamhshlán</string>
-  <string name="security_popup_security_verified">Fíoraithe ag: %1$s</string>
-  <string name="site_security_icon_content_description">Slándáil an tSuímh</string>
-  <string name="preference_autocomplete_duplicate_url_error">Tá an URL ann cheana</string>
-</resources>
+
+    <string name="firstrun_shortcut_title">Cuir aicearraí leis an leathanach baile</string>
+
+    <string name="firstrun_close_button">OK, tuigim!</string>
+    <string name="firstrun_skip_button">Ná bac leis</string>
+    <string name="firstrun_next_button">Ar Aghaidh</string>
+
+    <string name="content_blocking_disabled">-</string>
+
+    <string name="dialog_addtohomescreen_action_add">Cuir Leis</string>
+
+    <string name="dialog_addtohomescreen_action_cancel">Cealaigh</string>
+
+    <string name="download_firefox">Íoslódáil Firefox</string>
+
+    <string name="gv_prompt_username_hint">Ainm úsáideora</string>
+    <string name="gv_prompt_password_hint">Focal Faire</string>
+    <string name="gv_prompt_clear">Glan</string>
+
+    <string name="security_popup_secure_connection">Ceangal Slán</string>
+    <string name="security_popup_insecure_connection">Ceangal Neamhshlán</string>
+    <string name="security_popup_security_verified">Fíoraithe ag: %1$s</string>
+
+    <string name="site_security_icon_content_description">Slándáil an tSuímh</string>
+    <string name="preference_autocomplete_duplicate_url_error">Tá an URL ann cheana</string>
+
+    <!-- Tips displayed on the home view -->
+
+    <!-- Tracking protection bottom sheet -->
+
+     <!-- Promote SearchWidget Dialog -->
+
+    </resources>

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://schemas.android.com/apk/res-auto">
     <!-- Description for privacy add-on permission. -->
     <string name="mozac_feature_addons_permissions_privacy_description">Gahiā nī nadunā dàj gā riña aché nun huìt</string>
     <!-- Description for all_urls add-on permission. -->
@@ -178,8 +178,6 @@
     <string name="mozac_feature_addons_failed_to_install_corrupt_error">Sa nūtà\'t ruhuât nan nī nu nàtaj dadin\' rû\' huaj si huā a\'nan\' man huaj.</string>
     <!-- Text shown when attempting to install an add-on and an error occurred because the extension was not signed. -->
     <string name="mozac_feature_addons_failed_to_install_not_signed_error">Sa nūtàt\' ruhuât nan nī nu gā\'hue nàtaj \'hiaj si hìaj natsij aga\' nan man.</string>
-    <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_blocklisted">%1$s nu gā’hue nāginunj dadin’ gā’hue gà’huì’ yī’ij da’ ga’hiaj sun man asi da’ dūgumîn man sò’</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_enabled">Ngà huā yūgui %1$s</string>
     <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
@@ -222,4 +220,4 @@
     <string name="mozac_feature_addons_installed_dialog_description">Nā\'nïn riña mēnû</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->
     <string name="mozac_feature_addons_installed_dialog_okay_button">Hīaj, ngà ga\'ue</string>
-</resources>
+    </resources>

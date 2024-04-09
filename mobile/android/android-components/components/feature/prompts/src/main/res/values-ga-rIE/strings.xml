@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
     <!-- Text for confirmation for a positive action in dialog  -->
     <string name="mozac_feature_prompts_ok">OK</string>
     <!-- Text for confirmation for a negative action in dialog.  -->
@@ -61,4 +61,5 @@
     <string name="mozac_feature_prompts_nov">Samh</string>
     <!-- December month of the year (short description), used on the month chooser dialog. -->
     <string name="mozac_feature_prompts_dec">Nol</string>
-</resources>
+
+    </resources>

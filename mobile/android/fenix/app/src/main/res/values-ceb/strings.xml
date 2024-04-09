@@ -59,6 +59,7 @@
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">i-Dismiss</string>
 
+
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">Kinahanglan ug camera access. Adto sa Android settings, i-tap and permissions, ug i-tap ang allow.</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
@@ -159,6 +160,7 @@
     <string name="browser_menu_edit">i-Edit</string>
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">i-Customize ang homepage</string>
+
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">Home screen</string>
@@ -228,20 +230,14 @@
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Dugang ug shortcut sa private browsing</string>
 
-    <!-- Preference to override the Firefox Account server -->
-    <string name="preferences_override_fxa_server">Custom nga server sa Firefox Account</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">Custom nga Sync server</string>
-    <!-- Toast shown after updating the FxA/Sync server override preferences -->
-    <string name="toast_override_fxa_sync_server_done">Nausab ang Firefox Account/Sync server. Kamulong gina-quit ang application para maapply ang nausab …</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
     <string name="preferences_account_sync_error">i-Reconnect para mapadayon ang pag-sync</string>
 
 
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Remote debugging pinaagi sa USB</string>
-    <!-- Preference title for switch preference to show search engines -->
-    <string name="preferences_show_search_engines">Ipakita ang mga search engine</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">ipakita ang mga search suggestion</string>
     <!-- Preference title for switch preference to show voice search button -->
@@ -272,12 +268,6 @@
     <!-- Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">Bagong nabisita</string>
-
-    <!-- Add-on Installation from AMO-->
-    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
-    <string name="addon_not_supported_error">Ang add-on dili suportado</string>
-    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
-    <string name="addon_already_installed">Ang add-on na-install na</string>
 
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Sync na karon</string>
@@ -333,6 +323,9 @@
 
     <!-- Preference switch for usage and technical data collection -->
     <string name="preference_usage_data">Usage ug technical data</string>
+
+
+    <!-- Translations feature-->
 
 
     </resources>

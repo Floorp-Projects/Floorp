@@ -34,12 +34,6 @@
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
     <string name="tab_tray_multiselect_selected_content_description">নির্বাচিত</string>
 
-    <!-- Home - Recently saved bookmarks -->
-    <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recent_bookmarks_title">সাম্প্রতিক বুকমার্ক</string>
-    <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
-    <string moz:removedIn="101" name="recently_saved_show_all" tools:ignore="UnusedResources">সব দেখান</string>
-
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s হচ্ছে Mozilla দ্বারা তৈরি।</string>
 
@@ -47,11 +41,6 @@
        ব্যাক্তিগত ব্রাউজিং সম্পর্কে কিছু ভুল ধারণা
     </string>
 
-    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message -->
-    <string name="cfr_message">আপনার হোম স্ক্রীন থেকে ব্যক্তিগত ট্যাবগুলি খুলতে একটি শর্টকাট যোগ করুন।</string>
-    <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text">শর্টকাট যুক্ত করুন</string>
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">না ধন্যবাদ</string>
 
@@ -59,6 +48,7 @@
     <string name="open_in_app_cfr_positive_button_text"> সেটিং এ যাও</string>
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">বাতিল</string>
+
 
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
     <string name="camera_permissions_needed_positive_button_text">সেটিং এ যাও</string>
@@ -129,6 +119,7 @@
     <string name="browser_menu_add">যোগ করুন</string>
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">সম্পাদনা করুন</string>
+
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">হোম স্ক্রিন</string>
@@ -144,8 +135,6 @@
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">স্ক্যান</string>
-    <!-- Button in the search view that lets a user change their search engine -->
-    <string name="search_engine_button">সার্চ ইঞ্জিন</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">সার্চ ইঞ্জিন সেটিংস</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
@@ -158,8 +147,6 @@
     <string name="search_suggestions_onboarding_title">ব্যক্তিগত সেশনে অনুসন্ধানের পরামর্শ দেওয়ার অনুমতি দেবেন?</string>
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">ঠিকানা বারে টাইপ করা সবকিছ %s আপনার ডিফল্ট অনুসন্ধান ইঞ্জিনের মাধ্যমে আপনার সাথে শেয়ার করবে।</string>
-    <!-- Search suggestion onboarding hint Learn more link text -->
-    <string moz:RemovedIn="100" name="search_suggestions_onboarding_learn_more_link" tools:ignore="UnusedResources">আরও জানুন</string>
 
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">অনুসন্ধান করুন</string>
@@ -181,8 +168,6 @@
     <string name="preferences_default_search_engine">ডিফল্ট সার্চ ইঞ্জিন</string>
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">অনুসন্ধান</string>
-    <!-- Preference for settings related to Search address bar -->
-    <string name="preferences_search_address_bar">এড্রেস বার</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">Google Play তে রেট</string>
     <!-- Preference linking to about page for Fenix
@@ -204,14 +189,11 @@
     <string name="preferences_allow_screenshots_in_private_mode">ব্যক্তিগত ব্রাউজিং এ স্ক্রিনশটের অনুমতি দিন</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">ব্যক্তিগত ব্রাউজিং শর্টকাটে যুক্ত করুন</string>
+
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">প্রবেশযোগ্যতা</string>
-    <!-- Preference to override the Firefox Account server -->
-    <string name="preferences_override_fxa_server">কাস্টম Firefox Account সার্ভার</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">কাস্টম Sync সার্ভার</string>
-    <!-- Toast shown after updating the FxA/Sync server override preferences -->
-    <string name="toast_override_fxa_sync_server_done">Firefox Account/Sync সার্ভার সংশোধিত হয়েছে। পরিবর্তনগুলি প্রয়োগ করতে অ্যাপ্লিকেশন বন্ধ করুন…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">অ্যাকাউন্ট</string>
     <!-- Preference for changing where the toolbar is positioned -->
@@ -220,10 +202,6 @@
     <string name="preferences_theme">থিম</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">কাস্টমাইজ</string>
-    <!-- Preference description for banner about signing in -->
-    <string name="preferences_sign_in_description">আপনার Firefox অ্যাকাউন্ট দিয়ে বুকমার্কগুলো, পাসওয়ার্ড এবং আরও অনেক কিছু Sync করুন</string>
-    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
-    <string name="preferences_account_default_name">Firefox অ্যাকাউন্ট</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
     <string name="preferences_account_sync_error">সিঙ্ক শুরু করতে পুনরায় সংযোগ দিন</string>
     <!-- Preference for language -->
@@ -235,8 +213,6 @@
     <string name="preferences_data_collection">তথ্য সংগ্রহ</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">USB এর মাধ্যমে রিমোট ডিবাগিং</string>
-    <!-- Preference title for switch preference to show search engines -->
-    <string name="preferences_show_search_engines">অনুসন্ধান ইঞ্জিনগুলি দেখাও</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">অনুসন্ধানের পরামর্শগুলি দেখান</string>
     <!-- Preference title for switch preference to show search suggestions also in private mode -->
@@ -251,6 +227,7 @@
     <string name="preferences_account_settings">অ্যাকাউন্ট সেটিংস</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">অ্যাপ্সে লিংকগুলি খুলুন</string>
+
     <!-- Preference for add_ons -->
     <string name="preferences_addons">অ্যাড-অনগুলো</string>
 
@@ -326,9 +303,6 @@
     <!-- Preference switch for marketing data collection -->
     <string name="preferences_marketing_data">বিপণন তথ্য</string>
 
-    <!-- Turn On Sync Preferences -->
-    <!-- Header of the Turn on Sync preference view -->
-    <string name="preferences_sync">Sync চালু করুন</string>
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">পুনরায় সংযোগ করতে সাইন ইন করুন</string>
     <!-- Preference for removing FxA account -->
@@ -429,8 +403,6 @@
     <string name="close_tab_title">%s ট্যাব বন্ধ করুন</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
     <string name="open_tabs_menu">ট্যাব মেনু খুলুন</string>
-    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string name="tab_menu">ট্যাব মেনু</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">সংগ্রহ মুছে ফেলুন</string>
     <!-- Text for the menu button to rename a collection -->
@@ -439,9 +411,9 @@
     <string name="collection_open_tabs">ট্যাব খুলুন</string>
     <!-- Hint for adding name of a collection -->
     <string name="collection_name_hint">সংগ্রহের নাম</string>
-	<!-- Text for the menu button to rename a top site -->
+    <!-- Text for the menu button to rename a top site -->
 	<string name="rename_top_site">পুনঃনামকরণ</string>
-	<!-- Text for the menu button to remove a top site -->
+    <!-- Text for the menu button to remove a top site -->
 	<string name="remove_top_site">অপসারণ</string>
 
     <!-- Text for the menu button to delete a top site from history -->
@@ -579,8 +551,6 @@
     <string name="preference_option_phone_feature_allowed">অনুমতি দেওয়া হয়েছে</string>
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">ব্যতিক্রমসমূহ</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on">চালু</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">বন্ধ</string>
     <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
@@ -652,7 +622,7 @@
     <string name="share_link_recent_apps_subheader">সম্প্রতি ব্যবহৃত</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Sync করতে সাইন ইন করুন</string>
-    <!-- An option from the share dialog to send link to all other sync devices -->
+     <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">সকল ডিভাইসে পাঠান</string>
     <!-- An option from the share dialog to reconnect to sync -->
     <string name="sync_reconnect">Sync এর সাথে পুনরায় সংযোগ স্থাপন করুন</string>
@@ -688,8 +658,6 @@
     <string name="snackbar_tab_closed">ট্যাব বন্ধ করা হয়েছে</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">ট্যাব বন্ধ করা হয়েছে</string>
-    <!-- Text shown in snackbar when user adds a site to top sites -->
-    <string moz:RemovedIn="101" name="snackbar_added_to_top_sites" tools:ignore="UnusedResources">শীর্ষ সাইটগুলিতে যুক্ত হয়েছে!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">ব্যক্তিগত ট্যাব বন্ধ হয়েছে</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
@@ -728,13 +696,9 @@
     <string name="preferences_delete_browsing_data_tabs_title_2">ট্যাব খুলুন</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d ট্যাব</string>
-    <!-- Title for the data and history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_data_title">ব্রাউজিংয়ের ইতিহাস এবং সাইটের তথ্য</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d ঠিকানাগুলি</string>
-    <!-- Title for the cookies item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cookies">কুকিস</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies_subtitle">আপনি বেশিরভাগ সাইট থেকে লগ আউট হয়ে যাবেন</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
@@ -752,8 +716,6 @@
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">প্রস্থান</string>
 
-    <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message">এটি আপনার সমস্ত ব্রাউজিং ডেটা মুছে ফেলবে।</string>
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">%s নির্বাচিত ব্রাউজিং ডেটা মুছে ফেলবে।</string>
     <!-- Text for the cancel button for the data deletion dialog -->
@@ -765,33 +727,8 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">ব্রাউজিং ডেটা মুছে ফেলা হচ্ছে …</string>
 
-    <!-- text for firefox preview moving tip button  -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_installed" tools:ignore="UnusedResources">নতুন Nightly তে পরিবর্তন করুন</string>
-
-    <!-- Onboarding -->
-    <!-- Text for onboarding welcome message
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_header">%s এ আপনাকে স্বাগতম!</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Sync চালু আছে</string>
-    <!-- text for the privacy notice onboarding card header -->
-    <string name="onboarding_privacy_notice_header">আপনার গোপনীয়তা</string>
-    <!-- Text for the button to read the privacy notice -->
-    <string name="onboarding_privacy_notice_read_button">আমাদের গোপনীয়তা বিজ্ঞপ্তি পড়ুন</string>
-
-    <!-- text for the button to finish onboarding -->
-    <string name="onboarding_finish">ব্রাউজিং শুরু করুন</string>
-
-    <!-- Onboarding theme -->
-    <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header">আপনার থিম পছন্দ করুন</string>
-    <!-- Automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_title">স্বয়ংক্রিয়</string>
-
-    <!-- Theme setting for dark mode -->
-    <string name="onboarding_theme_dark_title">ডার্ক থিম</string>
-    <!-- Theme setting for light mode -->
-    <string name="onboarding_theme_light_title">লাইট থিম</string>
 
     <!-- Text shown in snackbar when one tab has been sent to device  -->
     <string name="sync_sent_tab_snackbar">ট্যাব পাঠানো হয়েছে!</string>
@@ -819,10 +756,6 @@
     <string name="etp_settings">সুরক্ষা সেটিংস</string>
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">ট্র্যাকিং সুরক্ষা বর্ধিত করা হয়েছে</string>
-    <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title">অনুসৃত না হয়েই ব্রাউজ করুন</string>
-    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation">আপনার ডেটা নিজের কাছে রাখুন। %s আপনাকে অনেক সাধারণ ট্র্যাকার থেকে রক্ষা করে যা আপনি অনলাইনে কি করেন তা অনুসরণ করে।</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">আরো জানুন</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
@@ -953,19 +886,11 @@
     <string name="search_engine_add_custom_search_engine_title">সার্চ ইঞ্জিন যোগ করুন</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">সার্চ ইঞ্জিন সম্পাদনা করুন</string>
-    <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
-    <string name="search_engine_add_button_content_description">যোগ করুন</string>
-    <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
-    <string name="search_engine_add_custom_search_engine_edit_button_content_description">সংরক্ষণ করুন</string>
     <!-- Text for the menu button to edit a search engine -->
     <string name="search_engine_edit">সম্পাদন করুন</string>
     <!-- Text for the menu button to delete a search engine -->
     <string name="search_engine_delete">মুছে ফেলুন</string>
 
-    <!-- Text for the button to create a custom search engine on the Add search engine screen -->
-    <string name="search_add_custom_engine_label_other">অন্যান্য</string>
-    <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
-    <string name="search_add_custom_engine_name_hint">নাম</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string formatted="false" name="search_add_custom_engine_search_string_example">&quot;%s&quot; দিয়ে কোয়েরি প্রতিস্থাপন করুন। উদাহরণ: \nhttps://www.google.com/search?q=%s</string>
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
@@ -980,17 +905,6 @@
     <!-- Text shown when a user successfully deletes a custom search engine -->
     <string name="search_delete_search_engine_success_message">%s মুছে ফেলা হয়েছে</string>
 
-    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
-    <string moz:removedIn="100" name="migration_title" tools:ignore="UnusedResources">একটি সম্পূর্ণ নতুন %s এ আপনাকে স্বাগতম</string>
-    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
-    <string moz:removedIn="100" name="migration_updating_app_button_text" tools:ignore="UnusedResources">%s আপডেট হচ্ছে…</string>
-    <!-- Text on the enabled button. Placeholder replaced with app name-->
-    <string moz:removedIn="100" name="migration_update_app_button" tools:ignore="UnusedResources">%s শুরু করুন</string>
-    <!-- Accessibility description text for a completed migration item -->
-    <string moz:removedIn="100" name="migration_icon_description" tools:ignore="UnusedResources">মাইগ্রেশন সম্পন্ন হয়েছে</string>
-    <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
-    <string moz:removedIn="100" name="migration_text_passwords" tools:ignore="UnusedResources">পাসওয়ার্ডগুলো</string>
-
     <!-- Heading for the instructions to allow a permission -->
     <string name="phone_feature_blocked_intro">এটির অনুমতি দেওয়ার জন্য:</string>
     <!-- First step for the allowing a permission -->
@@ -1002,8 +916,6 @@
     <string name="confirm_clear_permissions_site">আপনি কি নিশ্চিত যে আপনি এই সাইটের জন্য সব অনুমতি সাফ করতে চান?</string>
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">আপনি কি নিশ্চিত যে আপনি এই বুকমার্কটি মুছতে চান?</string>
-    <!-- Browser menu button that adds a top site to the home fragment -->
-    <string moz:RemovedIn="101" name="browser_menu_add_to_top_sites" tools:ignore="UnusedResources">শীর্ষ সাইটে যোগ করুন</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
     <string name="certificate_info_verified_by">যাচাই করা হয়েছে : %1$s দিয়ে</string>
@@ -1016,5 +928,8 @@
     <string name="dialog_delete_positive">মুছে ফেলুন</string>
     <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">পাসওয়ার্ড প্রয়োজন</string>
+
+    <!-- Translations feature-->
+
 
     </resources>

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://schemas.android.com/apk/res-auto">
     <!-- Description for privacy add-on permission. -->
     <string name="mozac_feature_addons_permissions_privacy_description">خواندن و تغییر تنظیمات حریم خصوصی</string>
     <!-- Description for all_urls add-on permission. -->
@@ -170,8 +170,6 @@
     <string name="mozac_feature_addons_successfully_installed">%1$sبا موفقیت نصب شد</string>
     <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_install">شکست در نصب %1$s</string>
-    <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_blocklisted">امکان نصب %1$s به دلیل ریسک بالای مشکلات پایداری و امنیتی وجود ندارد</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_enabled">%1$s با موفقیت فعال شد</string>
     <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
@@ -214,4 +212,4 @@
     <string name="mozac_feature_addons_installed_dialog_description">در منو باز کنید</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->
     <string name="mozac_feature_addons_installed_dialog_okay_button">باشه، فهمیدم</string>
-</resources>
+    </resources>

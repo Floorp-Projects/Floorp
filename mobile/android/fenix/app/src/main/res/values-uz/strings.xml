@@ -61,13 +61,6 @@
     <string name="private_browsing_placeholder_description_2">Ilovadan chiqsangiz yoki ularni yopsangiz, qidiruv va brauzer tarixini  %1$s shaxsiy yorliqlardan tozalaydi. Garchi bu sizni veb-saytlar yoki Internet-provayderingiz uchun nomaʼlum qilmasa ham, Internetda qilgan ishingizni ushbu qurilmadan foydalanadigan har kimdan maxfiy saqlashni osonlashtiradi.</string>
     <string name="private_browsing_common_myths">Maxfiy koʻrish haqidagi umumiy afsonalar</string>
 
-    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message -->
-    <string name="cfr_message" moz:removedIn="109" tools:ignore="UnusedResources">Bosh ekrandan maxfiy varaqlarni ochish uchun tezkor buyruq qoʻshing.</string>
-    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
-    <string name="private_mode_cfr_message">Bir harakatda keyingi maxfiy varaqni oching.</string>
-    <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text" moz:removedIn="109" tools:ignore="UnusedResources">Tezkor buyruq qoʻshish</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
     <string name="private_mode_cfr_pos_button_text">Bosh ekranga qoʻshish</string>
     <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
@@ -81,14 +74,12 @@
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">Rad etish</string>
 
-    <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
-    <string name="cfr_dismiss_button_default_content_description">Rad qilish</string>
-
     <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
     <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
     <string name="tcp_cfr_message">Bizning eng kuchli maxfiylik funksiyamiz saytlararo kuzatuvchilarni izolyatsiya qiladi.</string>
     <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
     <string name="tcp_cfr_learn_more">Umumiy Cookie himoyasi haqida batafsil</string>
+
 
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">Kameradan foydalanish zarur. Android sozlamalariga oʻting, ruxsatnomalarga kiring va ruxsat berish tugmasini bosing.</string>
@@ -218,6 +209,7 @@
     <string name="browser_menu_edit">Tahrirlash</string>
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">Bosh sahifani sozlash</string>
+
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">Bosh ekran</string>
@@ -233,8 +225,6 @@
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Tekshirish</string>
-    <!-- Button in the search view that lets a user change their search engine -->
-    <string name="search_engine_button">Qidiruv tizimi</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Qidiruv tizimi sozlamalari</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
@@ -257,9 +247,6 @@
 
     <!-- Menu option in the search selector menu to open the search settings -->
     <string name="search_settings_menu_item">Izlash sozlamalari</string>
-
-    <!-- Header text for the search selector menu -->
-    <string name="search_header_menu_item" moz:RemovedIn="109" tools:ignore="UnusedResources">Bu safar qidiramiz:</string>
 
     <!-- Header text for the search selector menu -->
     <string name="search_header_menu_item_2">Bu safar quyidagi bilan qidiramiz:</string>
@@ -314,8 +301,6 @@
     <string name="preferences_default_search_engine">Standart qidiruv tizimi</string>
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">Izlash</string>
-    <!-- Preference for settings related to Search address bar -->
-    <string name="preferences_search_address_bar">Manzil paneli</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">&quot;Google Play&quot;da baholash</string>
     <!-- Preference linking to about page for Fenix
@@ -342,13 +327,6 @@
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">Faqat HTTPS rejimi</string>
 
-    <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
-    <string name="preferences_cookie_banner_reduction">Cookie bannerlarini kamaytirish</string>
-    <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
-    <string name="reduce_cookie_banner_option">Cookie bannerlarini kamaytirish</string>
-    <!-- Summary for the preference for rejecting all cookies whenever possible. -->
-    <string name="reduce_cookie_banner_summary" moz:RemovedIn="110" tools:ignore="UnusedResources">Firefox avtomatik ravishda cookie bannerlarida cookie soʻrovlarini rad etishga harakat qiladi. Agar rad etish tanlovi mavjud boʻlmasa, Firefox bannerni oʻchirish uchun barcha cookie fayllarni qabul qilishi mumkin.</string>
-
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">Bu sayt uchun oʻchirilgan</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
@@ -356,8 +334,6 @@
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Xavfsizlikni oshirish uchun HTTPS shifrlash protokoli yordamida saytlarga avtomatik ulanishga harakat qiladi.</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="preferences_https_only_on" moz:removedIn="111" tools:ignore="UnusedResources">Yoniq</string>
     <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">Oʻchiq</string>
     <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
@@ -374,13 +350,9 @@
     <string name="errorpage_httpsonly_message_summary">Biroq, hujumchi ishtirok etishi ham mumkin. Agar saytga kirishda davom etsangiz, hech qanday shaxsiy maʼlumotlarni kiritmasligingiz kerak. Davom etsangiz, sayt uchun &quot;faqat HTTPS rejimi&quot; vaqtinchalik oʻchirib qoʻyiladi.</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Qulaylik</string>
-    <!-- Preference to override the Firefox Account server -->
-    <string name="preferences_override_fxa_server">Boshqa Firefox hisobi serveri</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">Boshqa Sync serveri</string>
 
-    <!-- Toast shown after updating the FxA/Sync server override preferences -->
-    <string name="toast_override_fxa_sync_server_done">Firefox hisobi/Sync serveri oʻzgargan. Oʻzgarishlar amalga oshirshi uchun ilovadan chiqilmoqda…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Hisob</string>
     <!-- Preference for changing where the toolbar is positioned -->
@@ -395,8 +367,6 @@
     <string name="preferences_customize">Moslash</string>
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description_2">Varaq va xatchoʻplarni sinxronlash uchun hisobingizga kiring.</string>
-    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
-    <string name="preferences_account_default_name">Firefox hisobi</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
     <string name="preferences_account_sync_error">Sinxronlashni davom ettirish uchun qayta ulaning</string>
     <!-- Preference for language -->
@@ -407,8 +377,6 @@
     <string name="preferences_data_collection">Maʼlumotlarni toʻplash</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">USB orqali masofadan nosozlikni tuzatish</string>
-    <!-- Preference title for switch preference to show search engines -->
-    <string name="preferences_show_search_engines">Qidiruv tizimlarini koʻrsatish</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Qidiruv tavsiyalarini koʻrsatish</string>
     <!-- Preference title for switch preference to show voice search button -->
@@ -431,6 +399,7 @@
     <string name="preferences_open_links_in_apps">Havolalarni ilovalarda ochish</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Tashqi yuklab olish menejeri</string>
+
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Qoʻshimcha dasturlar</string>
 
@@ -490,24 +459,12 @@
 
     <!-- Text for classic wallpapers title. The first parameter is the Firefox name. -->
     <string name="wallpaper_classic_title">Klassik %s</string>
-    <!-- Text for limited edition wallpapers title. -->
-    <string name="wallpaper_limited_edition_title">Cheklangan versiya</string>
-    <!-- Description text for the limited edition wallpapers with learn more link. The first parameter is the learn more string defined in wallpaper_learn_more-->
-    <string name="wallpaper_limited_edition_description_with_learn_more">Yangi “Mustaqil ovozlar” toʻplami. %s</string>
-    <!-- Description text for the limited edition wallpapers. -->
-    <string name="wallpaper_limited_edition_description">Yangi “Mustaqil ovozlar” toʻplami.</string>
     <!-- Wallpaper onboarding dialog header text. -->
     <string name="wallpapers_onboarding_dialog_title_text">Rangni chayqashga harakat qiling</string>
     <!-- Wallpaper onboarding dialog body text. -->
     <string name="wallpapers_onboarding_dialog_body_text">Didingizga mos fon rasmini tanlang.</string>
     <!-- Wallpaper onboarding dialog learn more button text. The button navigates to the wallpaper settings screen. -->
     <string name="wallpapers_onboarding_dialog_explore_more_button_text">Boshqa fon rasmlarini koʻrish</string>
-
-    <!-- Add-on Installation from AMO-->
-    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
-    <string name="addon_not_supported_error">Qoʻshimcha ishlamaydi</string>
-    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
-    <string name="addon_already_installed">Qoʻshimcha oldin oʻrnatilgan</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -659,14 +616,6 @@
     <!-- Dialog button text for canceling open all tabs -->
     <string name="open_all_warning_cancel">Bekor qilish</string>
 
-    <!-- Text to show users they have one site in the history group section of the History fragment.
-    %d is a placeholder for the number of sites in the group. -->
-    <string name="history_search_group_site">%d ta sayt</string>
-
-    <!-- Text to show users they have multiple sites in the history group section of the History fragment.
-    %d is a placeholder for the number of sites in the group. -->
-    <string name="history_search_group_sites">%d ta sayt</string>
-
     <!-- Option in library for Recently Closed Tabs -->
     <string name="library_recently_closed_tabs">Yaqinda yopilgan varaqlar</string>
     <!-- Option in library to open Recently Closed Tabs page -->
@@ -804,9 +753,9 @@
     <string name="collection_open_tabs">Varaqlarni ochish</string>
     <!-- Hint for adding name of a collection -->
     <string name="collection_name_hint">Toʻplam nomi</string>
-	<!-- Text for the menu button to rename a top site -->
+    <!-- Text for the menu button to rename a top site -->
 	<string name="rename_top_site">Nomini oʻzgartirish</string>
-	<!-- Text for the menu button to remove a top site -->
+    <!-- Text for the menu button to remove a top site -->
 	<string name="remove_top_site">Olib tashlash</string>
     <!-- Text for the menu button to delete a top site from history -->
     <string name="delete_from_history">Tarixdan oʻchirish</string>
@@ -987,8 +936,6 @@
     <string name="phone_feature_blocked_by_android">Android tomonidan bloklangan</string>
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Istisnolar</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on" moz:removedIn="111" tools:ignore="UnusedResources">Yoniq</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Oʻchiq</string>
     <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
@@ -1119,12 +1066,6 @@
 
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">Marketing</string>
-    <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
-    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
-    <string name="notification_default_browser_title">%1$s tez va maxfiy</string>
-    <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
-    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
-    <string name="notification_default_browser_text">%1$sni asosiy brauzer qiling</string>
 
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
@@ -1191,13 +1132,9 @@
     <string name="preferences_delete_browsing_data_tabs_title_2">Varaqlarni ochish</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d ta varaq</string>
-    <!-- Title for the data and history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_data_title">Brauzer tarixi va sayt maʼlumotlari</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d ta manzil</string>
-    <!-- Title for the cookies item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cookies">Cookie fayllar</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies_subtitle">Koʻp saytlardan chiqib ketasiz</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
@@ -1248,61 +1185,8 @@
     <!-- Text for the snackbar confirmation that the history group was deleted -->
     <string name="delete_history_group_snackbar">Guruh oʻchirildi</string>
 
-    <!-- Onboarding -->
-    <!-- Text for onboarding welcome header. -->
-    <string name="onboarding_header_2">Yaxshiroq internetga xush kelibsiz</string>
-    <!-- Text for the onboarding welcome message. -->
-    <string name="onboarding_message">Foyda uchun emas, insonlar uchun tuzilgan brauzer.</string>
-    <!-- Text for the Firefox account onboarding sign in card header. -->
-    <string name="onboarding_account_sign_in_header">Qolgan joyidan davom eting</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account. -->
-    <string name="onboarding_manual_sign_in_description">Ekranlar oʻrtasida uzluksiz oʻtish uchun yorliqlar va parollarni qurilmalar oʻrtasida sinxronlang.</string>
-    <!-- Text for the button to manually sign into Firefox account. -->
-    <string name="onboarding_firefox_account_sign_in">Kirish</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Sinxronizatsiya yoqilgan</string>
-    <!-- Text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header">Standart maxfiylik himoyasi</string>
-    <!-- Text for the tracking protection card description. -->
-    <string name="onboarding_tracking_protection_description">Kuzatuvchilar sizni saytlar boʻylab kuzatish uchun cookie-fayllardan foydalanishiga yoʻl qoʻyilmaydi.</string>
-    <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button_2">Standart</string>
-
-    <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_3">Maxfiylik va samaradorlikning eng yaxshi muvozanatini taʼminlaydi. Sahifalar normal yuklanadi.</string>
-    <!-- text for tracking protection radio button option for strict level of blocking -->
-    <string name="onboarding_tracking_protection_strict_option">Qatʼiy</string>
-    <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_3">Sahifalar tezroq yuklanishi uchun koʻproq kuzatuvchilarni bloklaydi, lekin baʼzi sahifalar toʻgʻri ishlamasligi mumkin.</string>
-    <!-- text for the toolbar position card header  -->
-    <string name="onboarding_toolbar_placement_header_1">Asboblar paneli joylashuvini tanlang</string>
-    <!-- Text for the toolbar position card description -->
-    <string name="onboarding_toolbar_placement_description">Uni pastki qismida qoldiring yoki yuqoriga koʻchiring.</string>
-    <!-- Text for the privacy notice onboarding card header -->
-    <string name="onboarding_privacy_notice_header_1">Maʼlumotlaringizni oʻzingiz boshqaring</string>
-    <!-- Text for the privacy notice onboarding card description. -->
-    <string name="onboarding_privacy_notice_description">Firefox sizga nimalarni onlayn va nimalarni bizga ulashishingiz uchun nazoratni sizga taqdim etadi.</string>
-    <!-- Text for the button to read the privacy notice -->
-    <string name="onboarding_privacy_notice_read_button">Maxfiylik toʻgʻrisidagi bildirishnomamizni oʻqing</string>
-    <!-- Text for the conclusion onboarding message -->
-    <string name="onboarding_conclusion_header">Qiziqarli internetni kashf etish uchun tayyormisiz?</string>
-    <!-- text for the button to finish onboarding -->
-    <string name="onboarding_finish">Koʻrishni boshlash</string>
-
-    <!-- Onboarding theme -->
-    <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header">Mavzungizni tanlang</string>
-
-    <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description_2">Qorongʻi mavzu bilan batareya quvvati va koʻrish qobiliyatingizni asrang.</string>
-    <!-- Automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_title">Avtomatik</string>
-    <!-- Summary of automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_summary">Qurilmangiz sozlamalarga moslashadi</string>
-    <!-- Theme setting for dark mode -->
-    <string name="onboarding_theme_dark_title">Qorongʻi mavzu</string>
-    <!-- Theme setting for light mode -->
-    <string name="onboarding_theme_light_title">Yorqin mavzu</string>
 
     <!-- Text shown in snackbar when multiple tabs have been sent to device -->
     <string name="sync_sent_tabs_snackbar">Varaqlar yuborildi!</string>
@@ -1339,23 +1223,15 @@
     <string name="etp_settings">Himoya sozlamalari</string>
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">Takomillashtirilgan kuzatuvdan himoya</string>
-    <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title">Internetda iz qoldirmay kezing</string>
-    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation">Maʼlumotlaringizni oʻzingiz uchun saqlang. Internetda sizni taqib qiladigan koʻplab kuzatuvchilardan %s himoya qiladi. </string>
 
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Batafsil</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Standart</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_4">Maxfiylik va samaradorlikning eng yaxshi muvozanatini taʼminlaydi. Sahifalar normal yuklanadi.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Standart kuzatuv muhofazasi orqali nimalar  bloklangan?</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Qatʼiy</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_3">Sahifalar tezroq yuklanishi uchun koʻproq kuzatuvchilarni bloklaydi, lekin baʼzi sahifalar toʻgʻri ishlamasligi mumkin.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Qatʼiy kuzatuvdan himoya bilan nima bloklangan</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1703,21 +1579,11 @@
     <string name="search_engine_add_custom_search_engine_title">Qidiruv tizimini qoʻshish</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">Qidiruv tizimini tahrirlash</string>
-    <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
-    <string name="search_engine_add_button_content_description">Qoʻshish</string>
-    <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
-    <string name="search_engine_add_custom_search_engine_edit_button_content_description">Saqlash</string>
     <!-- Text for the menu button to edit a search engine -->
     <string name="search_engine_edit">Tahrirlash</string>
     <!-- Text for the menu button to delete a search engine -->
     <string name="search_engine_delete">Oʻchirish</string>
 
-    <!-- Text for the button to create a custom search engine on the Add search engine screen -->
-    <string name="search_add_custom_engine_label_other">Boshqa</string>
-    <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
-    <string name="search_add_custom_engine_name_hint">Nomi</string>
-    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint">Foydalanish uchun qidiruv qatori</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_search_string_example" formatted="false">Soʻrovni “%s” bilan almashtiring. Masalan:\nhttps://www.google.com/search?q=%s</string>
 
@@ -1853,14 +1719,14 @@
 
     <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
     <string name="top_sites_toggle_top_recent_sites_4">Yorliqlar</string>
-	<!-- Title text displayed in the rename top site dialog. -->
+    <!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Nomi</string>
 
     <!-- Hint for renaming title of a shortcut -->
     <string name="shortcut_name_hint">Yorliq nomi</string>
-	<!-- Button caption to confirm the renaming of the top site. -->
+    <!-- Button caption to confirm the renaming of the top site. -->
 	<string name="top_sites_rename_dialog_ok">OK</string>
-	<!-- Dialog button text for canceling the rename top site prompt. -->
+    <!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Bekor qilish</string>
     <!-- Text for the menu button to open the homepage settings. -->
     <string name="top_sites_menu_settings">Sozlamalar</string>
@@ -1936,4 +1802,8 @@
     <string name="a11y_action_label_wallpaper_collection_learn_more">ushbu kolleksiya haqida koʻproq maʼlumot olish uchun havolani oching</string>
     <!-- Action label for links that point to an article. Talkback will append this to say "Double tap to read the article". -->
     <string name="a11y_action_label_read_article">maqolani oʻqish</string>
-</resources>
+
+    <!-- Translations feature-->
+
+
+    </resources>

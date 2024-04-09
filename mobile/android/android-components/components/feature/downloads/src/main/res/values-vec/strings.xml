@@ -35,4 +35,5 @@
 
     <!-- Content description for close button -->
     <string name="mozac_feature_downloads_button_close">Sara su</string>
-</resources>
+
+    </resources>

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://schemas.android.com/apk/res-auto">
     <!-- Description for privacy add-on permission. -->
     <string name="mozac_feature_addons_permissions_privacy_description">गोपनीयता सेटिंग पढ़ें और संशोधित करें</string>
     <!-- Description for all_urls add-on permission. -->
@@ -190,4 +190,4 @@
     <string name="mozac_feature_addons_installed_dialog_description">इसे मेन्यू में खोलें</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->
     <string name="mozac_feature_addons_installed_dialog_okay_button">ठीक है, समझ गया।</string>
-</resources>
+    </resources>

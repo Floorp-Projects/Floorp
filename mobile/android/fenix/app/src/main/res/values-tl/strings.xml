@@ -69,6 +69,7 @@
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">Alisin</string>
 
+
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">Kailangan ng camera access. Pumunta sa Android settings, i-tap ang permiso, at i-tap ang payagan.</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
@@ -183,6 +184,7 @@
 
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">i-Customize ang homepage</string>
+
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">Home screen</string>
@@ -200,8 +202,6 @@
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">i-Scan</string>
-    <!-- Button in the search view that lets a user change their search engine -->
-    <string name="search_engine_button">Search engine</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Mga search engine setting</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
@@ -265,8 +265,6 @@
     <string name="preferences_default_search_engine">Default na search engine</string>
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">Paghahanap</string>
-    <!-- Preference for settings related to Search address bar -->
-    <string name="preferences_search_address_bar">Address bar</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">I-rate sa Google Play</string>
     <!-- Preference linking to about page for Fenix
@@ -295,10 +293,6 @@
 
     <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_cancel_button">Kanselahin</string>
-    <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Payagan</string>
-    <!-- Change setting text button, for the cookie banner re-engagement dialog -->
-    <string name="reduce_cookie_banner_dialog_change_setting_button">Payagan</string>
 
     <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">Nakasara</string>
@@ -310,12 +304,8 @@
     <string name="errorpage_httpsonly_message_title">Malamang sa malamang, ang website ay sadyang hindi suportado ang HTTPS.</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Accessibility</string>
-    <!-- Preference to override the Firefox Account server -->
-    <string name="preferences_override_fxa_server">Pasadya na Firefox Account server</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">Pasadya na Sync server</string>
-    <!-- Toast shown after updating the FxA/Sync server override preferences -->
-    <string name="toast_override_fxa_sync_server_done">Nabago ang Firefox Account/Sync server. Magsasara na ang application para mailapat ang mga pagbabago…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Account</string>
     <!-- Preference for changing where the toolbar is positioned -->
@@ -330,8 +320,6 @@
     <string name="preferences_customize">Ipasadya</string>
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description_2">Mag sign-in para i-sync ang mga tabs, bookmarks, passwords at iba pa.</string>
-    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
-    <string name="preferences_account_default_name">Firefox Account</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
     <string name="preferences_account_sync_error">Muling kumonekta para maipagpatuloy ang pag-sync</string>
     <!-- Preference for language -->
@@ -345,8 +333,6 @@
 
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Remote debugging sa USB</string>
-    <!-- Preference title for switch preference to show search engines -->
-    <string name="preferences_show_search_engines">Ipakita ang mga search engine</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Ipakita ang mga mungkahi sa paghanap</string>
     <!-- Preference title for switch preference to show voice search button -->
@@ -369,6 +355,7 @@
     <string name="preferences_open_links_in_apps">Buksan ang mga link sa mga app</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Hiwalay na download manager</string>
+
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Mga add-on</string>
 
@@ -419,16 +406,6 @@
     <string name="wallpaper_select_error_snackbar_message">Hindi mapalitan ang wallpaper</string>
     <!-- Text displayed that links to website containing documentation about the "Limited Edition" wallpapers. -->
     <string name="wallpaper_learn_more">Alamin</string>
-    <!-- Description text for the limited edition wallpapers with learn more link. The first parameter is the learn more string defined in wallpaper_learn_more-->
-    <string name="wallpaper_limited_edition_description_with_learn_more">Ang bagong Independent Voices koleksiyon. %s</string>
-    <!-- Description text for the limited edition wallpapers. -->
-    <string name="wallpaper_limited_edition_description">Ang bagong Independent Voices koleksiyon.</string>
-
-    <!-- Add-on Installation from AMO-->
-    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
-    <string name="addon_not_supported_error">Hindi suportado ang add-on</string>
-    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
-    <string name="addon_already_installed">Naka-install na ang add-on</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -707,9 +684,9 @@
     <string name="collection_open_tabs">Buksan ang mga tab</string>
     <!-- Hint for adding name of a collection -->
     <string name="collection_name_hint">Pangalan ng collection</string>
-	<!-- Text for the menu button to rename a top site -->
+    <!-- Text for the menu button to rename a top site -->
 	<string name="rename_top_site">Palitan ng pangalan</string>
-	<!-- Text for the menu button to remove a top site -->
+    <!-- Text for the menu button to remove a top site -->
 	<string name="remove_top_site">Alisin</string>
     <!-- Text for the menu button to delete a top site from history -->
     <string name="delete_from_history">Burahin sa kasaysayan</string>
@@ -1082,13 +1059,9 @@
     <string name="preferences_delete_browsing_data_tabs_title_2">Mga nakabukas na tab</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d tab</string>
-    <!-- Title for the data and history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_data_title">Kasaysayan ng pag-browse at site data</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d address</string>
-    <!-- Title for the cookies item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cookies">Mga cookie</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies_subtitle">Mala-log out ka sa karamihan ng mga site</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
@@ -1136,50 +1109,8 @@
     <!-- Text for the snackbar confirmation that the history group was deleted -->
     <string name="delete_history_group_snackbar">Natanggal ang grupo</string>
 
-    <!-- Text for the onboarding welcome message. -->
-    <string name="onboarding_message">Browser na binuo para sa mga tao, hindi para sa kita.</string>
-    <!-- Text for the Firefox account onboarding sign in card header. -->
-    <string name="onboarding_account_sign_in_header">Kunin kung saan ka umalis</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account. -->
-    <string name="onboarding_manual_sign_in_description">Bring bookmarks, history, and passwords to Firefox on this device.</string>
-    <!-- Text for the button to manually sign into Firefox account. -->
-    <string name="onboarding_firefox_account_sign_in">Mag-sign in</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Nakabukas ang Sync</string>
-    <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button_2">Karaniwan (default)</string>
-    <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_3">Balanced for privacy and performance. Pages load normally.</string>
-    <!-- text for tracking protection radio button option for strict level of blocking -->
-    <string name="onboarding_tracking_protection_strict_option">Mahigpit</string>
-    <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_3">Hinaharang ang mas maraming tracker upang mabilis ang pag-load ng pahina, ngunit maaaring masira ang ilang on-page functionality.</string>
-    <!-- text for the toolbar position card header  -->
-    <string name="onboarding_toolbar_placement_header_1">Pilin ang paglalagyan ng toolbar</string>
-
-    <!-- Text for the privacy notice onboarding card description. -->
-    <string name="onboarding_privacy_notice_description">Binibigyan ka ng Firefox ng mamahala sa mga ibinabahagi mo online at kung ano ang ibinabahagi mo sa amin.</string>
-    <!-- Text for the button to read the privacy notice -->
-    <string name="onboarding_privacy_notice_read_button">Basahin ang aming paunawa sa privacy</string>
-
-    <!-- Text for the conclusion onboarding message -->
-    <string name="onboarding_conclusion_header">Handa ka nang magbukas ng isang kamangha-manghang internet?</string>
-    <!-- text for the button to finish onboarding -->
-    <string name="onboarding_finish">Simulan nang mag-browse</string>
-
-    <!-- Onboarding theme -->
-    <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header">Pumili ng iyong tema</string>
-    <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description_2">Save some battery and your eyesight with dark mode.</string>
-    <!-- Automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_title">Kusa</string>
-    <!-- Summary of automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_summary">Umaangkop sa mga setting ng iyong device</string>
-    <!-- Theme setting for dark mode -->
-    <string name="onboarding_theme_dark_title">Madilim na tema</string>
-    <!-- Theme setting for light mode -->
-    <string name="onboarding_theme_light_title">Maliwanag na tema</string>
 
     <!-- Text shown in snackbar when multiple tabs have been sent to device -->
     <string name="sync_sent_tabs_snackbar">Napadala na ang mga tab!</string>
@@ -1215,22 +1146,14 @@
     <string name="etp_settings">Mga Protection Setting</string>
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">Enhanced Tracking Protection</string>
-    <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title" moz:removedIn="114" tools:ignore="UnusedResources">Mag-browse nang hindi sinusundan</string>
-    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation" moz:removedIn="114" tools:ignore="UnusedResources">Itago mo ang data na para sa iyo lamang. Pinoprotektahan ka ng %s mula sa mga pinakakaraniwang tracker na nagmamanman sa mga gawain mo online.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Alamin</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Karaniwan (default)</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_4" moz:removedIn="114" tools:ignore="UnusedResources">Balanced for privacy and performance. Pages load normally.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Ano ang mga hinaharang sa karaniwang tracking protection</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Mahigpit</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_3" moz:removedIn="114" tools:ignore="UnusedResources">Hinaharang ang mas maraming tracker upang mabilis ang pag-load ng pahina, ngunit maaaring masira ang ilang on-page functionality.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Ano ang mga hinaharang sa mahigpit na tracking protection</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1546,22 +1469,11 @@
     <string name="search_engine_add_custom_search_engine_title">Magdagdag ng search engine</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">i-Edit ang search engine</string>
-    <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
-    <string name="search_engine_add_button_content_description">Magdagdag</string>
-    <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
-    <string name="search_engine_add_custom_search_engine_edit_button_content_description">i-Save</string>
     <!-- Text for the menu button to edit a search engine -->
     <string name="search_engine_edit">i-Edit</string>
     <!-- Text for the menu button to delete a search engine -->
     <string name="search_engine_delete">Burahin</string>
 
-    <!-- Text for the button to create a custom search engine on the Add search engine screen -->
-    <string name="search_add_custom_engine_label_other">Iba pa</string>
-    <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
-    <string name="search_add_custom_engine_name_hint">Pangalan</string>
-
-    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint">Gagamiting teksto ng paghahanap</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_search_string_example" formatted="false">Palitan ang query ng “%s”. Halimbawa:\nhttps://www.google.com/search?q=%s</string>
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
@@ -1657,7 +1569,7 @@
 	<string name="top_sites_rename_dialog_title">Pangalan</string>
     <!-- Button caption to confirm the renaming of the top site. -->
 	<string name="top_sites_rename_dialog_ok">OK</string>
-	<!-- Dialog button text for canceling the rename top site prompt. -->
+    <!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Kanselahin</string>
 
     <!-- Text for the menu button to open the homepage settings. -->
@@ -1688,4 +1600,8 @@
     <string name="a11y_action_label_expand">palawigin</string>
     <!-- Action label for links that point to an article. Talkback will append this to say "Double tap to read the article". -->
     <string name="a11y_action_label_read_article">basahin ang artikulo</string>
+
+    <!-- Translations feature-->
+
+
     </resources>

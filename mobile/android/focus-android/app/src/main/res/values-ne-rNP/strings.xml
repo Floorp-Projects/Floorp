@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:moz="http://mozac.org/tools" xmlns:tools="http://schemas.android.com/tools">
     <!-- ####################################################################################### -->
     <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
     <!-- ## into a separate file like strings_references.xml                                  ## -->
@@ -53,8 +53,6 @@
     <!-- Menu item: Remove the current site as a shortcut from the Home screen -->
     <string name="menu_remove_from_shortcuts">सर्टकटहरुबाट हटाउनुहोस्</string>
 
-    <!-- Menu item: Shows information about features and changes that are new to this version -->
-    <string name="menu_whats_new">नयाँ के छ</string>
     <string name="menu_settings">सेटिङ्गहरू</string>
     <string name="menu_about">बारेमा</string>
     <string name="menu_help">सहयोग</string>
@@ -118,10 +116,6 @@
          %1$s will be replaced by the app name (e.g. Firefox Focus) -->
     <string name="shortcut_erase_and_open_long_label">मेटाउनुहोस् र %1$s खोल्नुहोस्</string>
 
-
-    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
-         Clicking this action will launch Focus and perform a search in the default search engine. -->
-    <string name="text_selection_search_action">निजी रूपमा खोज्नुहोस्</string>
 
     <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
          Argument 2 is the url for the learn-more link. -->
@@ -296,12 +290,6 @@
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">एप अनलक गर्न फिङ्गरप्रिन्टको प्रयोग गर्नुहोस्</string>
 
-    <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
-        open when the app was last run to ensure that only the phone's owner can view a previous session.
-        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
-    <string name="preference_security_biometric_summary">यदि एपमा पहिला नै URL खोलिएको छ भने तपाईंको फिङ्गगरप्रिण्टले %1$s अनलक गर्न सक्छ।
-    स्टेल्थ सक्रिय हुनेछ।</string>
-
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
          and prevents the user from taking screenshots or casting the app to other displays. -->
     <string name="preference_privacy_secure_mode">चुपचाप</string>
@@ -363,10 +351,6 @@
     <string name="preference_search_add3">अर्को खोज इन्जिन थप्नुहोस्</string>
     <!-- Explanation text above the list of search engines-->
     <string name="preference_select_preferred_engine">आफ्नो मनपर्ने इन्जिन छनौट गर्नुहोस्:</string>
-
-    <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
-     a user first launches the app. -->
-    <string name="preference_homescreen_tips">गृह स्क्रिन सुझावहरु देखाउनुहोस्</string>
 
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">खोज इन्जिन थप्नुहोस्</string>
@@ -584,5 +568,7 @@
     <!-- Tips displayed on the home view -->
 
     <!-- Tracking protection bottom sheet -->
+
+     <!-- Promote SearchWidget Dialog -->
 
     </resources>

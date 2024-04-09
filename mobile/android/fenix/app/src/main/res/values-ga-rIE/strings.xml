@@ -17,12 +17,6 @@
        Gnáthmhiotais maidir le brabhsáil phríobháideach
     </string>
 
-    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message -->
-    <string name="cfr_message">Cuir aicearra leis an scáileán Baile a osclaíonn cluaisíní príobáideacha.</string>
-    <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text">Cuir aicearra leis</string>
-
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Ná cuir</string>
 
@@ -97,8 +91,6 @@
     <string name="search_suggestions_onboarding_title">Ceadaigh moltaí cuardaigh i seisiúin phríobháideacha?</string>
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">Comhroinneann %s gach uile rud a chuireann tú isteach sa mbarra suímh leis an inneall cuardaigh réamhshocraithe.</string>
-    <!-- Search suggestion onboarding hint Learn more link text -->
-    <string moz:RemovedIn="100" name="search_suggestions_onboarding_learn_more_link" tools:ignore="UnusedResources">Tuilleadh eolais</string>
 
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Cuardach</string>
@@ -116,8 +108,6 @@
     <string name="preferences_default_search_engine">Inneall cuardaigh réamhshocraithe</string>
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">Cuardach</string>
-    <!-- Preference for settings related to Search address bar -->
-    <string name="preferences_search_address_bar">Barra suímh</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">Rátáil ar Google Play</string>
     <!-- Preference linking to about page for Fenix
@@ -137,6 +127,7 @@
     <string name="preferences_open_links_in_a_private_tab">Oscail nascanna i gcluaisín príobháideach</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Cuir aicearra brabhsála príobháidí leis</string>
+
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Inrochtaineacht</string>
     <!-- Preference category for account information -->
@@ -148,10 +139,6 @@
     <string name="preferences_theme">Téama</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Saincheap</string>
-    <!-- Preference description for banner about signing in -->
-    <string name="preferences_sign_in_description">Sioncronaigh leabharmharcanna, stair, agus tuilleadh le do chuntas Firefox</string>
-    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
-    <string name="preferences_account_default_name">Cuntas Firefox</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
     <string name="preferences_account_sync_error">Athcheangail chun sioncronú a thosú arís</string>
     <!-- Preference for language -->
@@ -235,9 +222,6 @@
     <!-- Preference switch for marketing data collection -->
     <string name="preferences_marketing_data">Sonraí margaíochta</string>
 
-    <!-- Turn On Sync Preferences -->
-    <!-- Header of the Turn on Sync preference view -->
-    <string name="preferences_sync">Cuir Sync ar siúl</string>
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">Logáil isteach le hathcheangal</string>
     <!-- Preference for removing FxA account -->
@@ -293,8 +277,6 @@
     <string name="close_tab_title">Dún cluaisín %s</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
     <string name="open_tabs_menu">Roghchlár na gcluaisíní oscailte</string>
-    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string name="tab_menu">Roghchlár cluaisíní</string>
 
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">Scrios an bailiúchán</string>
@@ -420,8 +402,6 @@
     <string name="phone_feature_blocked_by_android">Coiscthe ag Android</string>
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Eisceachtaí</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on">Ann</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">As</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
@@ -480,7 +460,7 @@
     <string name="share_link_recent_apps_subheader">Úsáidte le déanaí</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Logáil isteach in Sync</string>
-    <!-- An option from the share dialog to send link to all other sync devices -->
+     <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">Seol chuig gach gléas</string>
     <!-- An option from the share dialog to reconnect to sync -->
     <string name="sync_reconnect">Athcheangail le Sync</string>
@@ -516,8 +496,6 @@
     <string name="snackbar_tab_closed">Dúnadh an cluaisín</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">Dúnadh na cluaisíní</string>
-    <!-- Text shown in snackbar when user adds a site to top sites -->
-    <string moz:RemovedIn="101" name="snackbar_added_to_top_sites" tools:ignore="UnusedResources">Cuireadh leis na barrshuímh é!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">Dúnadh an cluaisín príobháideach</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
@@ -555,13 +533,9 @@
     <string name="preferences_delete_browsing_data">Scrios na sonraí brabhsála</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d cluaisín</string>
-    <!-- Title for the data and history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_data_title">Stair bhrabhsála agus sonraí suímh</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d seoladh</string>
-    <!-- Title for the cookies item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cookies">Fianáin</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies_subtitle">Beidh tú logáilte amach as an gcuid is mó de na suímh</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
@@ -579,8 +553,6 @@
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Scoir</string>
 
-    <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message">Scriosfaidh sé seo do chuid sonraí brabhsála go léir.</string>
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">Scriosfaidh %s na sonraí brabhsála roghnaithe.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
@@ -592,32 +564,8 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Sonraí brabhsála á scriosadh…</string>
 
-    <!-- Onboarding -->
-    <!-- Text for onboarding welcome message
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_header">Fáilte go dtí %s!</string>
-
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Tá Sync ar siúl</string>
-    <!-- text for the privacy notice onboarding card header -->
-    <string name="onboarding_privacy_notice_header">Príobháideachas</string>
-    <!-- Text for the button to read the privacy notice -->
-    <string name="onboarding_privacy_notice_read_button">Léigh ár bhfógra príobháideachais</string>
-
-    <!-- text for the button to finish onboarding -->
-    <string name="onboarding_finish">Tosaigh ag brabhsáil</string>
-
-    <!-- Onboarding theme -->
-    <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header">Roghnaigh téama</string>
-    <!-- Automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_title">Uathoibríoch</string>
-    <!-- Summary of automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_summary">Téann sé in oiriúint do shocruithe an ghléis</string>
-    <!-- Theme setting for dark mode -->
-    <string name="onboarding_theme_dark_title">Téama dorcha</string>
-    <!-- Theme setting for light mode -->
-    <string name="onboarding_theme_light_title">Téama sorcha</string>
 
     <!-- Text shown in snackbar when multiple tabs have been sent to device -->
     <string name="sync_sent_tabs_snackbar">Seoladh na cluaisíní!</string>
@@ -650,10 +598,6 @@
     <string name="etp_settings">Socruithe Cosanta</string>
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">Ardchosaint ar Lorgaireacht</string>
-    <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title">Brabhsáil gan lorgaireacht</string>
-    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation">Coinnigh do chuid sonraí agat féin. Cosnaíonn %s thú ar na lorgairí is coitianta a leanann na rudaí a dhéanann tú ar líne.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Tuilleadh eolais</string>
     <!--  Accessibility text for the Standard protection information icon  -->
@@ -796,21 +740,10 @@
     <string name="search_engine_add_custom_search_engine_title">Cuir inneall cuardaigh leis</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">Cuir inneall cuardaigh in eagar</string>
-    <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
-    <string name="search_engine_add_button_content_description">Cuir leis</string>
-    <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
-    <string name="search_engine_add_custom_search_engine_edit_button_content_description">Sábháil</string>
     <!-- Text for the menu button to edit a search engine -->
     <string name="search_engine_edit">Eagar</string>
     <!-- Text for the menu button to delete a search engine -->
     <string name="search_engine_delete">Scrios</string>
-
-    <!-- Text for the button to create a custom search engine on the Add search engine screen -->
-    <string name="search_add_custom_engine_label_other">Eile</string>
-    <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
-    <string name="search_add_custom_engine_name_hint">Ainm</string>
-    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint">Teaghrán cuardaigh</string>
 
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string formatted="false" name="search_add_custom_engine_search_string_example">Cuir “%s” in áit an iarratais. Mar shampla:\nhttps://www.google.com/search?q=%s</string>
@@ -829,19 +762,6 @@
     <string name="search_edit_custom_engine_success_message">Sábháladh %s</string>
     <!-- Text shown when a user successfully deletes a custom search engine -->
     <string name="search_delete_search_engine_success_message">Scriosadh %s</string>
-
-    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
-    <string moz:removedIn="100" name="migration_title" tools:ignore="UnusedResources">Fáilte go dtí %s úrnua</string>
-    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
-    <string moz:removedIn="100" name="migration_description" tools:ignore="UnusedResources">Brabhsálaí athdheartha ón mbonn aníos, le gnéithe a chabhróidh leat níos mó a dhéanamh ar líne.\n\nFan nóiméad le linn dúinn %s a nuashonrú le do</string>
-    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
-    <string moz:removedIn="100" name="migration_updating_app_button_text" tools:ignore="UnusedResources">%s á nuashonrú…</string>
-    <!-- Text on the enabled button. Placeholder replaced with app name-->
-    <string moz:removedIn="100" name="migration_update_app_button" tools:ignore="UnusedResources">Tosaigh %s</string>
-    <!-- Accessibility description text for a completed migration item -->
-    <string moz:removedIn="100" name="migration_icon_description" tools:ignore="UnusedResources">Aistriú curtha i gcrích</string>
-    <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
-    <string moz:removedIn="100" name="migration_text_passwords" tools:ignore="UnusedResources">Focail fhaire</string>
 
     <!-- Heading for the instructions to allow a permission -->
     <string name="phone_feature_blocked_intro">Lena cheadú:</string>
@@ -862,12 +782,13 @@
     <string name="no_site_exceptions">Gan eisceachtaí suímh</string>
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">An bhfuil tú cinnte gur mhaith leat an leabharmharc seo a scriosadh?</string>
-    <!-- Browser menu button that adds a top site to the home fragment -->
-    <string moz:RemovedIn="101" name="browser_menu_add_to_top_sites" tools:ignore="UnusedResources">Cuir leis na barrshuímh é</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
     <string name="certificate_info_verified_by">Fíoraithe ag: %1$s</string>
     <!-- Login overflow menu delete button -->
     <string name="login_menu_delete_button">Scrios</string>
+
+    <!-- Translations feature-->
+
 
     </resources>

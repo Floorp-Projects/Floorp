@@ -43,8 +43,6 @@
     <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
     <string name="menu_add_to_home_screen">Amestar a la pantalla d\'aniciu</string>
 
-    <!-- Menu item: Shows information about features and changes that are new to this version -->
-    <string name="menu_whats_new">Qué hai nuevo</string>
     <string name="menu_settings">Axustes</string>
     <string name="menu_about">Tocante a</string>
     <string name="menu_help">Ayuda</string>
@@ -88,10 +86,6 @@
          of 25 characters. -->
     <string name="shortcut_erase_long_label">Balerar historial de restolar</string>
 
-
-    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
-         Clicking this action will launch Focus and perform a search in the default search engine. -->
-    <string name="text_selection_search_action">Guetar de mou priváu</string>
 
     <!-- Header for the Privacy and Security settings menu -->
     <string name="preference_privacy_and_security_header">Privacidá y seguranza</string>
@@ -261,10 +255,6 @@
     <string name="preference_search_add2">+ Amestar otru motor de gueta</string>
     <string name="preference_search_remove_title">Desaniciar motores de gueta</string>
     <string name="preference_search_remove">Desaniciar</string>
-
-    <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
-     a user first launches the app. -->
-    <string name="preference_homescreen_tips">Amosar conseyos na pantalla d\'aniciu</string>
 
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">Amestar motor de gueta</string>
@@ -479,10 +469,6 @@
         and the position the user is at. The first argument is the position, the second argument is the total -->
     <string name="accessibility_find_in_page_result">%1$d de %2$d</string>
 
-    <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
-     When pressed, the user's previous session is cleared, and authentication is not required. -->
-    <string moz:removedIn="103" name="biometric_auth_new_session">Sesión</string>
-
     <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
     <string name="enable_search_suggestions_no">Non</string>
 
@@ -498,5 +484,7 @@
     <!-- Tips displayed on the home view -->
 
     <!-- Tracking protection bottom sheet -->
+
+     <!-- Promote SearchWidget Dialog -->
 
     </resources>

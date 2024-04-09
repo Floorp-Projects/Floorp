@@ -51,8 +51,6 @@
     <!-- Menu item: Remove the current site as a shortcut from the Home screen -->
     <string name="menu_remove_from_shortcuts">Operativ buyrıqlardan alıp tastaw</string>
 
-    <!-- Menu item: Shows information about features and changes that are new to this version -->
-    <string name="menu_whats_new">Ne jańalıq</string>
     <string name="menu_settings">Sazlawlar</string>
     <string name="menu_about">Baǵdarlama haqqında</string>
     <string name="menu_help">Járdem</string>
@@ -565,8 +563,6 @@
     <!-- Label for cookie banner item from tracking protection, after the user reports with success a website where cookie banner reducer did not work -->
     <string name="cookie_banner_the_site_was_reported">Qollap-quwatlaw haqqındaǵı soraw jiberildi.</string>
 
-    <!-- CFR for Cookie Banner (Banner Info Message). This text should be the same as the settings text from "cfr_for_cookie_banner". The text should be underlined and should redirect the user to the cookie banner settings screen. -->
-    <string name="cfr_for_cookie_banner_underline_settings" moz:RemovedIn="111" tools:ignore="UnusedResources">sazlawlar</string>
     <!-- CFR for Cookie Banner (Banner Info Message). This string is used as text for a link in cfr_cookie_banner and takes the user to the app settings. -->
     <string name="cfr_cookie_banner_link">sazlawlar</string>
 
@@ -764,9 +760,6 @@
     <string name="preference_follow_device_theme">Qurılma temasına ámel etiń</string>
 
      <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
-    <string name="errorpage_httpsonly_title" moz:RemovedIn="111" tools:ignore="UnusedResources">Siz soraǵan sayt HTTPSdı qollap-quwatlamaydı</string>
-
-    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
     <string name="errorpage_httpsonly_title2">Bul sayt HTTPSdı qollap-quwatlamaydı</string>
 
     <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->

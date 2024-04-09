@@ -241,6 +241,7 @@
 
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">مکھ صفحے دیاں ترجیحاں</string>
+
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">مکھ سکرین</string>
@@ -248,6 +249,7 @@
     <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
          history and go back to the home screen. -->
     <string name="browser_toolbar_erase">براؤز کرن دی تاریخ مٹاؤ</string>
+
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">چݨی بولی</string>
@@ -942,5 +944,6 @@
     <string name="experiments_snackbar_button">سیٹنگاں نوں جاؤ</string>
 
     <!-- Translations feature-->
+
 
     </resources>

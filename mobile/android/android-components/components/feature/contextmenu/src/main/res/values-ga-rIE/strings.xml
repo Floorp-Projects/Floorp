@@ -23,4 +23,4 @@
     <!-- Action shown in a "snacbkar" after opening a new/private tab. Clicking this action will switch to the newly opened tab. -->
     <string name="mozac_feature_contextmenu_snackbar_action_switch">Malartaigh</string>
     <string name="mozac_feature_contextmenu_open_link_in_external_app">Oscail an nasc in aip eile</string>
-</resources>
+    </resources>

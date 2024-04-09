@@ -1,126 +1,222 @@
-<?xml version='1.0' encoding='utf-8'?>
-<resources>
-  <string name="action_cancel">འདོར་བ།</string>
-  <string name="action_ok">ཆོག</string>
-  <string name="action_save">ཉར་གསོག</string>
-  <string name="urlbar_hint">འཚོལ་བཤེར་ཡང་ན་དྲ་ཚིཊ་ཁ་བྱང་འདིར་འཇུག་རོཊ།</string>
-  <string name="teaser">རང་འགུལ་སྒེར་དོན་གསང་རྒྱ། དྲྭ་འཚོལ། བསུབ་པ། བསྐྱར་འཚོལ།</string>
-  <string name="feedback_erase">ཁྱེད་ཀྱི་འཚོལ་རབས་འདོར་བསུབས་བྱས་ཟིན།</string>
-  <string name="feedback_erase_custom_tab">རེའུ་མིག་བཟོ་རྟགས་ཀྱི་འཚོལ་རབས་འདོར་བསུབས་བྱས་ཟིན།</string>
-  <string name="search_hint">འཚོལ་བྱའི་ནང་དོན་ %1$s</string>
-  <string name="menu_share">མཉམ་སྤྱོད་་་</string>
-  <string name="menu_report_site_issue">དྲ་ཚིགས་གནད་དོན་སྙན་སེང་ཞུ་བ།</string>
-  <string name="menu_open_with_default_browser2">ཁ་འབྱེད་ཡུལ་ %1$s</string>
-  <string name="menu_open_with_a_browser2">ཁ་འབྱེད་ཡུལ་་་་</string>
-  <string name="menu_add_to_home_screen">ཁ་པའི་མདུན་ངོས་ཞོག་ཅིག</string>
-  <string name="menu_whats_new">གནས་ཚུལ་གསར་པ།</string>
-  <string name="menu_settings">སྒྲིག་འགོད།</string>
-  <string name="menu_about">ངོ་སྤྲོད།</string>
-  <string name="menu_help">རོགས་རམ།</string>
-  <string name="menu_rights">ཁྱེད་ཀྱི་བདག་དབང་།</string>
-  <string name="menu_trackers_blocked_title">རྗེས་འདེད་མཁན་བཀག་འགོག</string>
-  <string name="menu_trackers_blocked_subtitle">འདི་གསོད་ན་དྲ་ཚིགས་འགའ་ཤས་ཀྱི་གནད་དོན་བཅོས་སྒྲིག་བྱ་སྲིད།</string>
-  <string name="menu_content_blocking">ནང་དོན་འགོག་པ།</string>
-  <string name="share_dialog_title">མཉམ་སྤྱོད་བརྒྱུད་ལམ།</string>
-  <string name="notification_erase_text">འཚོལ་རབས་འདོར་སུབས་བྱོས།</string>
-  <string name="notification_action_open">ཁ་འབྱེད།</string>
-  <string name="notification_action_erase_and_open">འདོར་སུབ་དང་འཆར་བ།</string>
-  <string name="shortcut_erase_short_label">སུབ་པ།</string>
-  <string name="shortcut_erase_long_label">ཁྱོད་ཀྱི་འཚོལ་རབས་འདོར་སུབ་བྱས་ཟིན།</string>
-  <string name="shortcut_erase_and_open_short_label">སུབ་པ་དང་ཁ་འབྱེད་པ།</string>
-  <string name="shortcut_erase_and_open_long_label">སུབ་ནས་%1$sཁ་འབྱེད་པ།</string>
-  <string name="text_selection_search_action">ཕྱིར་མི་བསྒྲགས་པའི་ཐོག་འཚོལ་བཤེར།</string>
-  <string name="preference_privacy_and_security_header">གསང་དོན་དང་བདེ་འཇགས།</string>
-  <string name="preference_privacy_and_security_summary">"རྗེས་འདེད།  cookies གཞི་གྲངས་འདེམས་པ།"</string>
-  <string name="preference_search_summary">རྩ་བ་བསྐོ་སྒྲིག གནད་ཚིག་རང་གྲུབ།</string>
-  <string name="preference_mozilla_summary">%1$s ངོ་སྤྲོད། རོགས་རམ།</string>
-  <string name="preference_category_tracking_protection">རྗེས་འདེད་སྲུང་སྐྱོབ།</string>
-  <string name="preference_category_web_content">དྲ་ངོས་བརྗོད་བྱ།</string>
-  <string name="preference_category_switching_apps">མཉེན་ཆས་རྗེ་བཞིན་པ།</string>
-  <string name="preference_category_general">སྤྱི་བཀོལ།</string>
-  <string name="preference_general_summary">སྔོན་སྒྲིག་བཤར་ཆས། རེའུ་མིག་བཟོ་རྟགས། སྐད་ཡིག</string>
-  <string name="preference_category_data_collection_use">གནས་ཚུལ་བསྡུས་རུབ་དང་བེད་སྤྱོད།</string>
-  <string name="preference_category_search">འཚོལ་བཤེར།</string>
-  <string name="preference_show_search_suggestions">འཚོལ་བཤེར་ནང་དོན་འོས་སྦྱོར་ལེན་པ།</string>
-  <string name="preference_show_search_suggestions_summary">%1$s ཡིས་ཁྱེད་འཇུག་པའི་འཚོལ་བྱའི་ནང་དོན་འཚོལ་བཤེར་དྲ་བ་གཏོང་ལེན་བྱེད།</string>
-  <string name="preference_search_engine_default">སྔོན་སྒྲིག</string>
-  <string name="preference_search_engine_label">འཚོལ་བཤེར།</string>
-  <string name="preference_state_on">སྤྱོད།</string>
-  <string name="preference_state_off">སྤྱོད་མཚམས་འཇོག</string>
-  <string name="preference_subitem_autocomplete">URL རང་སྒྲུབ།</string>
-  <string name="preference_switch_autocomplete_topsites">དྲ་ཚིགས་གཙུག་ཕོད་ཆེད་དུ།</string>
-  <string name="preference_switch_autocomplete_user_list">ཁྱོད་ཀྱིས་སྣོན་ཟིན་པའི་དྲ་ཚིགས།</string>
-  <string name="preference_category_autocomplete_manage_sites">དྲ་ཚིགས་དོ་དམ།</string>
-  <string name="preference_autocomplete_subitem_manage_sites">དྲ་ཚིགས་དོ་དམ།</string>
-  <string name="preference_autocomplete_action_add">"+  རང་བཅོས་དྲ་ཚིཊ་ཁ་བྱང་སྣོན།"</string>
-  <string name="preference_autocomplete_title_add">རང་བཅོས་དྲ་ཚིཊ་ཁ་བྱང་སྣོན།</string>
-  <string name="custom_autocomplete_quick_add">རང་བཅོས་དྲ་ཚིཊ་ཁ་བྱང་སྣོན།</string>
-  <string name="add_custom_autocomplete_label">སྦྲེལ་མཐུད་རང་སྒྲུབ་ལ་སྣོན་པ།</string>
-  <string name="preference_category_data_choices">གནས་ཚུལ་འདམ་ག།</string>
-  <string name="preference_autocomplete_title_remove">རང་བཅོས་དྲ་ཚིཊ་ཁ་བྱང་སྤོ་འབུད།</string>
-  <string name="preference_autocomplete_learn_more">དེ་བས་མང་།</string>
-  <string name="preference_autocomplete_custom_summary">རང་བཅོས་དྲ་ཚིཊ་ཁ་བྱང་སྣོན་པ་དང་སྟང་འཛིན་བྱེད་པ།</string>
-  <string name="preference_autocomplete_add_title">སྣོན་བྱའི་དྲ་ཚིཊ་ཁ་བྱང་།</string>
-  <string name="preference_autocomplete_add_hint">དྲ་ཚིཊ་ཁ་བྱང་འདིར་འཇུག་རོཊ།</string>
-  <string name="preference_autocomplete_add_example2">དཔེ་མཚོན། mozilla.org</string>
-  <string name="preference_autocomplete_add_example">དཔེ་མཚོན། example.com</string>
-  <string name="preference_autocomplete_add_confirmation">རང་བཅོས་དྲ་ཚིཊ་ཁ་བྱང་གསར་པ་སྣོན་ཟིན།</string>
-  <string name="preference_autocomplete_menu_remove">སྤོ་འབུད།</string>
-  <string name="preference_autocomplete_action_remove_content_description">སྤོ་འབུད།</string>
-  <string name="preference_autocomplete_add_error">ཁྱོད་ཀྱི་འཇུག་པའི་དྲ་ཚིཊ་ཁ་བྱང་དོ་དམ་བྱོས།</string>
-  <string name="preference_language">སྐད་ཡིག</string>
-  <string name="preference_language_systemdefault">རྒྱུད་ཁོངས་སྔོན་སྒྲིག</string>
-  <string name="preference_category_privacy">གསང་དོན།</string>
-  <string name="preference_privacy_block_ads">རྗེས་འདེད་གཏོང་མཁན་བཀག་ཟིན་པ།</string>
-  <string name="preference_privacy_should_block_cookies_no_option">མིན།</string>
-  <string name="preference_privacy_should_block_cookies_yes_option">འགྲིག</string>
-  <string name="preference_security_biometric">མཛུབ་ཐེལ་བེད་སྤྱོད་བྱས་ཏེ་མཉེན་ཆས་ཁ་འབྱེད།</string>
-  <string name="preference_security_biometric_summary">གལ་ཏེ་URLསྔོན་ནས་མཉེན་ཆས་ཀྱིས་ཁ་ཕྱེ་ཡོད་ཚེ་མཛུབ་ཐེལ་བེད་སྤྱོད་དེ་%1$sཁ་འབྱེད། གསངས་ཐབས་སྤྱོད་འགོ་རྩོམ་ཡོང་།</string>
-  <string name="preference_privacy_secure_mode">གསང་ཐབས།</string>
-  <string name="preference_category_security">ཉེན་སྲུང་།</string>
-  <string name="preference_category_performance">བྱེད་ལས།</string>
-  <string name="preference_performance_block_webfonts">དྲ་བའི་ཡིག་གཟུགས་བཀག་པ།</string>
-  <string name="preference_performance_block_webfonts_summary">འདྲ་གཟུགས་ཡང་ན་པར་རིས་མ་ཚང་བའི་དྲ་ཚིགས་ཐོན་སྲིད་པ།</string>
-  <string name="preference_performance_block_javascript">JavaScript བཀག་པ།</string>
-  <string name="preference_performance_block_javascript_summary">དྲ་ངོས་རྒྱབ་སྣོན་མགྱོགས་ཀྱང་རྒྱུན་ལྡན་མ་ཡིན་པའི་གནས་ཚུལ་ཐོན་སྲིད།</string>
-  <string name="preference_default_browser2">" %1$s སྔོན་སྒྲིག་བཤར་ཆས་སུ་བཀོད་པ།"</string>
-  <string name="preference_category_mozilla">Mozilla</string>
-  <string name="preference_mozilla_telemetry_summary">དེ་བས་མང་།</string>
-  <string name="preference_privacy_notice">གསང་དོན་གསལ་བརྡ།</string>
-  <string name="preference_about">%1$s ངོ་སྤྲོད།</string>
-  <string name="preference_search_installed_search_engines">འཚོལ་བཤེར་སྒྲིག་འཇུག</string>
-  <string name="preference_search_restore">སྔོན་སྒྲིག་འཚོལ་བཤེར་རང་ལོག</string>
-  <string name="preference_search_add2">+ འཚོལ་བཤེར་དྲ་ངོས་གཞན་སྣོན།</string>
-  <string name="preference_search_remove_title">འཚོལ་བཤེར་སྤོ་འབུད།།</string>
-  <string name="preference_search_remove">སྤོ་འབུད།</string>
-  <string name="preference_homescreen_tips">བརྙན་ཡོལ་གཙོ་བའི་ཐབས་མཆོག་འཆར།</string>
-  <string name="action_option_add_search_engine">འཚོལ་བཤེར་དྲ་ངོས་སྣོན།</string>
-  <string name="search_add_manually_name_hint">འཚོལ་བཤེར་དྲ་བའི་མིང་།</string>
-  <string name="search_add_manually_save">ཉར་གསོག</string>
-  <string name="search_add_manually_example">"དཔེར་ན།  example.com/search/?q=%s"</string>
-  <string name="search_add_confirmation">འཚོལ་བཤེར་དྲ་ངོས་གསར་པ་སྣོན་ཟིན།</string>
-  <string name="search_add_error_empty_name">འཚོལ་བཤེར་དྲ་ངོས་མིང་འདིར་འཇུག་རོགས།</string>
-  <string name="search_add_error_duplicate_name">འཚོལ་བཤེར་སྒྲིག་འཇུག་ཟིན་པའི་མིང་རེད་འདུག</string>
-  <string name="search_add_error_empty_search">གནད་ཚིག་འཇུག་རོགས།</string>
-  <string name="content_description_clear_input">ནང་འཇུག་གཙང་བཟོ།</string>
-  <string name="content_description_dismiss_input">ཡང་བསྐྱར་མི་འཆར།</string>
-  <string name="content_description_erase">འཚོལ་རབས་འདོར་སུབ་བྱོས།</string>
-  <string name="content_description_lock">བདེ་འཇགས་འབྲེལ་བཐུད།</string>
-  <string name="accessibility_announcement_loading">རྒྱབ་སྣོན་བྱེད་བཞིན་ཡོད།</string>
-  <string name="accessibility_announcement_loading_finished">དྲ་ཚིགས་འཇུག་ཟིན།</string>
-  <string name="content_description_menu">གདམ་ཚན་དེ་བས་མང་།</string>
-  <string name="indicator_content_description_menu">གདམ་ཚན་མཐེབ་བཅུས་དེ་བས་མང་།</string>
-  <string name="content_description_forward">མདུན་ཕྱོགས་སྒྱུར།</string>
-  <string name="content_description_reload">དྲ་ཚིགས་བསྐྱར་འཇུག</string>
-  <string name="content_description_back">རྒྱབ་ཕྱོགས་སྒྱུར།</string>
-  <string name="content_description_stop">དྲ་ཚིགས་འཇུག་མཚམས་འཇོག</string>
-  <string name="content_description_customtab_exit">མཉེན་ཆས་སྔོན་མ་ཕྱིར་ལོག་བྱོས།</string>
-  <string name="content_description_trackers_blocked">རྗེས་འདེད་མཁན་བཀག་གྲངས།</string>
-  <string name="content_description_blocking_switch">རྗེས་འདེད་མཁན་འགོག</string>
-  <string name="your_rights">ཁྱེད་ཀྱི་བདག་དབང་།</string>
-  <string name="external_multiple_apps_matched_exit">གསང་རྒྱ་ནས་ཕྱིར་ཐོན་དགོས་སམ།</string>
-  <string name="download_snackbar_finished">%1$s ཟིན་པ།</string>
-  <string name="download_snackbar_open">ཁ་འབྱེད།</string>
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:moz="http://mozac.org/tools" xmlns:tools="http://schemas.android.com/tools">
+    <!-- ####################################################################################### -->
+    <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
+    <!-- ## into a separate file like strings_references.xml                                  ## -->
+    <!-- ####################################################################################### -->
+
+    <string name="action_cancel">འདོར་བ།</string>
+    <string name="action_ok">ཆོག</string>
+
+    <string name="action_save">ཉར་གསོག</string>
+
+    <string name="urlbar_hint">འཚོལ་བཤེར་ཡང་ན་དྲ་ཚིཊ་ཁ་བྱང་འདིར་འཇུག་རོཊ།</string>
+
+    <string name="teaser">རང་འགུལ་སྒེར་དོན་གསང་རྒྱ། དྲྭ་འཚོལ། བསུབ་པ། བསྐྱར་འཚོལ།</string>
+
+    <string name="feedback_erase">ཁྱེད་ཀྱི་འཚོལ་རབས་འདོར་བསུབས་བྱས་ཟིན།</string>
+
+    <string name="feedback_erase_custom_tab">རེའུ་མིག་བཟོ་རྟགས་ཀྱི་འཚོལ་རབས་འདོར་བསུབས་བྱས་ཟིན།</string>
+
+    <string name="search_hint">འཚོལ་བྱའི་ནང་དོན་ %1$s</string>
+
+    <string name="menu_share">མཉམ་སྤྱོད་་་</string>
+
+    <string name="menu_report_site_issue">དྲ་ཚིགས་གནད་དོན་སྙན་སེང་ཞུ་བ།</string>
+
+    <string name="menu_open_with_default_browser2">ཁ་འབྱེད་ཡུལ་ %1$s</string>
+
+    <string name="menu_open_with_a_browser2">ཁ་འབྱེད་ཡུལ་་་་</string>
+
+    <string name="menu_add_to_home_screen">ཁ་པའི་མདུན་ངོས་ཞོག་ཅིག</string>
+
+    <string name="menu_settings">སྒྲིག་འགོད།</string>
+    <string name="menu_about">ངོ་སྤྲོད།</string>
+    <string name="menu_help">རོགས་རམ།</string>
+    <string name="menu_rights">ཁྱེད་ཀྱི་བདག་དབང་།</string>
+
+    <string name="menu_trackers_blocked_title">རྗེས་འདེད་མཁན་བཀག་འགོག</string>
+
+    <string name="menu_trackers_blocked_subtitle">འདི་གསོད་ན་དྲ་ཚིགས་འགའ་ཤས་ཀྱི་གནད་དོན་བཅོས་སྒྲིག་བྱ་སྲིད།</string>
+
+    <string name="menu_content_blocking">ནང་དོན་འགོག་པ།</string>
+
+    <string name="share_dialog_title">མཉམ་སྤྱོད་བརྒྱུད་ལམ།</string>
+
+    <string name="notification_erase_text">འཚོལ་རབས་འདོར་སུབས་བྱོས།</string>
+
+    <string name="notification_action_open">ཁ་འབྱེད།</string>
+
+    <string name="notification_action_erase_and_open">འདོར་སུབ་དང་འཆར་བ།</string>
+
+    <string name="shortcut_erase_short_label">སུབ་པ།</string>
+
+    <string name="shortcut_erase_long_label">ཁྱོད་ཀྱི་འཚོལ་རབས་འདོར་སུབ་བྱས་ཟིན།</string>
+
+
+    <string name="shortcut_erase_and_open_short_label">སུབ་པ་དང་ཁ་འབྱེད་པ།</string>
+
+    <string name="shortcut_erase_and_open_long_label">སུབ་ནས་%1$sཁ་འབྱེད་པ།</string>
+
+    <string name="preference_privacy_and_security_header">གསང་དོན་དང་བདེ་འཇགས།</string>
+
+    <string name="preference_privacy_and_security_summary">&quot;རྗེས་འདེད།  cookies གཞི་གྲངས་འདེམས་པ།&quot;</string>
+
+    <string name="preference_search_summary">རྩ་བ་བསྐོ་སྒྲིག གནད་ཚིག་རང་གྲུབ།</string>
+
+    <string name="preference_mozilla_summary">%1$s ངོ་སྤྲོད། རོགས་རམ།</string>
+
+    <string name="preference_category_web_content">དྲ་ངོས་བརྗོད་བྱ།</string>
+
+    <string name="preference_category_switching_apps">མཉེན་ཆས་རྗེ་བཞིན་པ།</string>
+
+    <string name="preference_category_general">སྤྱི་བཀོལ།</string>
+
+    <string name="preference_category_data_collection_use">གནས་ཚུལ་བསྡུས་རུབ་དང་བེད་སྤྱོད།</string>
+
+    <string name="preference_category_search">འཚོལ་བཤེར།</string>
+
+    <string name="preference_show_search_suggestions">འཚོལ་བཤེར་ནང་དོན་འོས་སྦྱོར་ལེན་པ།</string>
+    <string name="preference_show_search_suggestions_summary">%1$s ཡིས་ཁྱེད་འཇུག་པའི་འཚོལ་བྱའི་ནང་དོན་འཚོལ་བཤེར་དྲ་བ་གཏོང་ལེན་བྱེད།</string>
+
+    <string name="preference_search_engine_default">སྔོན་སྒྲིག</string>
+
+    <string name="preference_search_engine_label">འཚོལ་བཤེར།</string>
+
+    <string name="preference_state_on">སྤྱོད།</string>
+
+    <string name="preference_state_off">སྤྱོད་མཚམས་འཇོག</string>
+
+    <string name="preference_subitem_autocomplete">URL རང་སྒྲུབ།</string>
+
+    <string name="preference_switch_autocomplete_topsites">དྲ་ཚིགས་གཙུག་ཕོད་ཆེད་དུ།</string>
+
+    <string name="preference_switch_autocomplete_user_list">ཁྱོད་ཀྱིས་སྣོན་ཟིན་པའི་དྲ་ཚིགས།</string>
+
+    <string name="preference_category_autocomplete_manage_sites">དྲ་ཚིགས་དོ་དམ།</string>
+
+    <string name="preference_autocomplete_subitem_manage_sites">དྲ་ཚིགས་དོ་དམ།</string>
+
+    <string name="preference_autocomplete_action_add">&quot;+  རང་བཅོས་དྲ་ཚིཊ་ཁ་བྱང་སྣོན།&quot;</string>
+
+    <string name="preference_autocomplete_title_add">རང་བཅོས་དྲ་ཚིཊ་ཁ་བྱང་སྣོན།</string>
+
+    <string name="custom_autocomplete_quick_add">རང་བཅོས་དྲ་ཚིཊ་ཁ་བྱང་སྣོན།</string>
+
+    <string name="add_custom_autocomplete_label">སྦྲེལ་མཐུད་རང་སྒྲུབ་ལ་སྣོན་པ།</string>
+
+    <string name="preference_category_data_choices">གནས་ཚུལ་འདམ་ག།</string>
+
+    <string name="preference_autocomplete_title_remove">རང་བཅོས་དྲ་ཚིཊ་ཁ་བྱང་སྤོ་འབུད།</string>
+
+    <string name="preference_autocomplete_learn_more">དེ་བས་མང་།</string>
+
+    <string name="preference_autocomplete_custom_summary">རང་བཅོས་དྲ་ཚིཊ་ཁ་བྱང་སྣོན་པ་དང་སྟང་འཛིན་བྱེད་པ།</string>
+
+    <string name="preference_autocomplete_add_title">སྣོན་བྱའི་དྲ་ཚིཊ་ཁ་བྱང་།</string>
+
+    <string name="preference_autocomplete_add_hint">དྲ་ཚིཊ་ཁ་བྱང་འདིར་འཇུག་རོཊ།</string>
+
+    <string name="preference_autocomplete_add_example2">དཔེ་མཚོན། mozilla.org</string>
+
+    <string name="preference_autocomplete_add_example">དཔེ་མཚོན། example.com</string>
+
+    <string name="preference_autocomplete_add_confirmation">རང་བཅོས་དྲ་ཚིཊ་ཁ་བྱང་གསར་པ་སྣོན་ཟིན།</string>
+
+    <string name="preference_autocomplete_menu_remove">སྤོ་འབུད།</string>
+
+    <string name="preference_autocomplete_action_remove_content_description">སྤོ་འབུད།</string>
+
+    <string name="preference_autocomplete_add_error">ཁྱོད་ཀྱི་འཇུག་པའི་དྲ་ཚིཊ་ཁ་བྱང་དོ་དམ་བྱོས།</string>
+
+    <string name="preference_language">སྐད་ཡིག</string>
+    <string name="preference_language_systemdefault">རྒྱུད་ཁོངས་སྔོན་སྒྲིག</string>
+
+    <string name="preference_category_privacy">གསང་དོན།</string>
+    <string name="preference_privacy_block_ads">རྗེས་འདེད་གཏོང་མཁན་བཀག་ཟིན་པ།</string>
+
+    <string name="preference_security_biometric">མཛུབ་ཐེལ་བེད་སྤྱོད་བྱས་ཏེ་མཉེན་ཆས་ཁ་འབྱེད།</string>
+
+    <string name="preference_privacy_secure_mode">གསང་ཐབས།</string>
+
+    <string name="preference_category_security">ཉེན་སྲུང་།</string>
+
+    <string name="preference_category_performance">བྱེད་ལས།</string>
+    <string name="preference_performance_block_webfonts">དྲ་བའི་ཡིག་གཟུགས་བཀག་པ།</string>
+    <string name="preference_performance_block_webfonts_summary">འདྲ་གཟུགས་ཡང་ན་པར་རིས་མ་ཚང་བའི་དྲ་ཚིགས་ཐོན་སྲིད་པ།</string>
+
+    <string name="preference_performance_block_javascript">JavaScript བཀག་པ།</string>
+    <string name="preference_performance_block_javascript_summary">དྲ་ངོས་རྒྱབ་སྣོན་མགྱོགས་ཀྱང་རྒྱུན་ལྡན་མ་ཡིན་པའི་གནས་ཚུལ་ཐོན་སྲིད།</string>
+
+    <string name="preference_default_browser2">&quot; %1$s སྔོན་སྒྲིག་བཤར་ཆས་སུ་བཀོད་པ།&quot;</string>
+
+    <string name="preference_category_mozilla">Mozilla</string>
+
+    <string name="preference_mozilla_telemetry_summary">དེ་བས་མང་།</string>
+
+    <string name="preference_privacy_notice">གསང་དོན་གསལ་བརྡ།</string>
+
+    <string name="preference_about">%1$s ངོ་སྤྲོད།</string>
+
+    <string name="preference_search_installed_search_engines">འཚོལ་བཤེར་སྒྲིག་འཇུག</string>
+
+    <string name="preference_search_restore">སྔོན་སྒྲིག་འཚོལ་བཤེར་རང་ལོག</string>
+
+    <string name="preference_search_add2">+ འཚོལ་བཤེར་དྲ་ངོས་གཞན་སྣོན།</string>
+    <string name="preference_search_remove_title">འཚོལ་བཤེར་སྤོ་འབུད།།</string>
+    <string name="preference_search_remove">སྤོ་འབུད།</string>
+
+    <string name="action_option_add_search_engine">འཚོལ་བཤེར་དྲ་ངོས་སྣོན།</string>
+
+    <string name="search_add_manually_name_hint">འཚོལ་བཤེར་དྲ་བའི་མིང་།</string>
+    <string name="search_add_manually_save">ཉར་གསོག</string>
+
+    <string name="search_add_manually_example">&quot;དཔེར་ན།  example.com/search/?q=%s&quot;</string>
+
+    <string name="search_add_confirmation">འཚོལ་བཤེར་དྲ་ངོས་གསར་པ་སྣོན་ཟིན།</string>
+
+    <string name="search_add_error_empty_name">འཚོལ་བཤེར་དྲ་ངོས་མིང་འདིར་འཇུག་རོགས།</string>
+    <string name="search_add_error_duplicate_name">འཚོལ་བཤེར་སྒྲིག་འཇུག་ཟིན་པའི་མིང་རེད་འདུག</string>
+
+    <string name="search_add_error_empty_search">གནད་ཚིག་འཇུག་རོགས།</string>
+
+    <string name="content_description_clear_input">ནང་འཇུག་གཙང་བཟོ།</string>
+
+    <string name="content_description_dismiss_input">ཡང་བསྐྱར་མི་འཆར།</string>
+
+    <string name="content_description_erase">འཚོལ་རབས་འདོར་སུབ་བྱོས།</string>
+
+    <string name="content_description_lock">བདེ་འཇགས་འབྲེལ་བཐུད།</string>
+
+    <string name="accessibility_announcement_loading">རྒྱབ་སྣོན་བྱེད་བཞིན་ཡོད།</string>
+
+    <string name="accessibility_announcement_loading_finished">དྲ་ཚིགས་འཇུག་ཟིན།</string>
+
+    <string name="content_description_menu">གདམ་ཚན་དེ་བས་མང་།</string>
+
+    <string name="indicator_content_description_menu">གདམ་ཚན་མཐེབ་བཅུས་དེ་བས་མང་།</string>
+
+    <string name="content_description_forward">མདུན་ཕྱོགས་སྒྱུར།</string>
+
+    <string name="content_description_reload">དྲ་ཚིགས་བསྐྱར་འཇུག</string>
+
+    <string name="content_description_back">རྒྱབ་ཕྱོགས་སྒྱུར།</string>
+
+    <string name="content_description_stop">དྲ་ཚིགས་འཇུག་མཚམས་འཇོག</string>
+
+    <string name="content_description_customtab_exit">མཉེན་ཆས་སྔོན་མ་ཕྱིར་ལོག་བྱོས།</string>
+
+    <string name="content_description_trackers_blocked">རྗེས་འདེད་མཁན་བཀག་གྲངས།</string>
+
+    <string name="content_description_blocking_switch">རྗེས་འདེད་མཁན་འགོག</string>
+
+    <string name="your_rights">ཁྱེད་ཀྱི་བདག་དབང་།</string>
+
+    <string name="external_multiple_apps_matched_exit">གསང་རྒྱ་ནས་ཕྱིར་ཐོན་དགོས་སམ།</string>
+
+    <string name="download_snackbar_finished">%1$s ཟིན་པ།</string>
+
+    <string name="download_snackbar_open">ཁ་འབྱེད།</string>
 
 
 
@@ -142,67 +238,91 @@
 
 
   <string name="firstrun_defaultbrowser_title">སྒེར་དབང་ཆེ་རུ་གཏོང་།</string>
-  <string name="firstrun_defaultbrowser_text2">སྒེར་རྒྱ་རིམ་པ་རྗེས་མ་འཁྱེར་བ། ཁྱབ་བསྒྲགས་དང་རྗེས་འདེད་དེ་བཞིན་དྲ་ངོས་སྣོན་འགོག་གནད་ཆས་བཀག་འགོག་བྱེད།</string>
-  <string name="firstrun_search_title">ཁྱོད་ཀྱི་འཚོལ་བཤེར། ཁྱོད་ཀྱི་ལམ།</string>
-  <string name="firstrun_search_text">འཚོལ་བྱའི་ནང་དོན་གཞན་དག་ཡིན་ནམ། འཚོལ་བཤེར་གཞན་ཞིག་སྒྲིག་འགོད་ནས་ངོས་གཙོར་འཇོག་རོགས།</string>
-  <string name="firstrun_shortcut_title">མྱུར་ལམ་བརྙན་ཡོལ་གཙོ་བོ་ཐོག་འཇོག</string>
-  <string name="firstrun_privacy_title">གསང་དོན་ཁྱོད་ཀྱི་གོམས་གཤིས་བཟོས།</string>
-  <string name="firstrun_privacy_text">%1$s སྔོན་སྒྲིག་བཤར་ཆས་སུ་བཀོད་དེ་གསང་རྒྱ་ཡི་ཁེ་ཕན་ཡོད་ཚད་དྲ་ཚིགས་མཉེན་ཆས་གཞན་ནས་ཁ་འབྱེད་སྐབས་ལེན་པ།</string>
-  <string name="firstrun_close_button">ཆོག་ ཤེས་སོང་།</string>
-  <string name="firstrun_skip_button">མཆོང་པ།</string>
-  <string name="firstrun_next_button">རྗེས་མ།</string>
-  <string name="content_blocking_disabled">-</string>
-  <string name="dialog_addtohomescreen_action_add">སྣོན།</string>
-  <string name="dialog_addtohomescreen_action_cancel">འདོར་བ།</string>
-  <string name="dialog_addtohomescreen_tracking_protection">མྱུར་ལམ་གྱིས་ཁ་འབྱེད་ཚེ་རྗེས་འདེད་སྲུང་སྐྱོབ་མི་སྤྱོད།</string>
-  <string name="notification_browsing_session_channel_name">སྒེར་དོན་གསང་རྒྱ་དུས་མཚམས།</string>
-  <string name="tabs_tray_action_erase">འཚོལ་རབས་འདོར་སུབ་བྱོས།</string>
-  <string name="download_firefox">Firefox ཕབ་ལེན།</string>
-  <string name="gv_prompt_username_hint">སྤྱོད་མཁན་གྱི་མིང་།</string>
-  <string name="gv_prompt_password_hint">གསང་གྲངས།</string>
-  <string name="gv_prompt_clear">གཙང་བཟོ།</string>
-  <string name="security_popup_secure_connection">བདེ་འཇགས་འབྲེལ་བཐུད།</string>
-  <string name="security_popup_insecure_connection">བདེ་འཇགས་འབྲེལ་བཐུད་མེད་པ།</string>
-  <string name="security_popup_security_verified">ར་སྤྲོད་མཁན། %1$s</string>
-  <string name="site_security_icon_content_description">དྲ་བའི་བདེ་འཇགས།</string>
-  <string name="preference_autocomplete_duplicate_url_error">དྲ་ཚིཊ་ཁ་བྱང་སྔོན་ནས་འདུག།</string>
-  <string name="find_in_page">ཤོག་ངོས་ནང་འཚོལ་བཤེར་བྱོས།</string>
-  <string name="find_in_page_input">ཤོག་ངོས་ནང་འཚོལ་བཤེར་བྱོས།</string>
-  <string name="find_in_page_result">%1$d/%2$d</string>
-  <string name="accessibility_find_in_page_result">"%1$d ནང་ནས་ %1$d "</string>
-  <string name="accessibility_next_result">ཤོག་ངོས་ཞོལ་མ།</string>
-  <string name="accessibility_previous_result">ཤོག་ངོས་གོང་མ།</string>
+    <string name="firstrun_defaultbrowser_text2">སྒེར་རྒྱ་རིམ་པ་རྗེས་མ་འཁྱེར་བ། ཁྱབ་བསྒྲགས་དང་རྗེས་འདེད་དེ་བཞིན་དྲ་ངོས་སྣོན་འགོག་གནད་ཆས་བཀག་འགོག་བྱེད།</string>
+
+    <string name="firstrun_search_title">ཁྱོད་ཀྱི་འཚོལ་བཤེར། ཁྱོད་ཀྱི་ལམ།</string>
+    <string name="firstrun_search_text">འཚོལ་བྱའི་ནང་དོན་གཞན་དག་ཡིན་ནམ། འཚོལ་བཤེར་གཞན་ཞིག་སྒྲིག་འགོད་ནས་ངོས་གཙོར་འཇོག་རོགས།</string>
+
+    <string name="firstrun_shortcut_title">མྱུར་ལམ་བརྙན་ཡོལ་གཙོ་བོ་ཐོག་འཇོག</string>
+
+    <string name="firstrun_privacy_title">གསང་དོན་ཁྱོད་ཀྱི་གོམས་གཤིས་བཟོས།</string>
+    <string name="firstrun_privacy_text">%1$s སྔོན་སྒྲིག་བཤར་ཆས་སུ་བཀོད་དེ་གསང་རྒྱ་ཡི་ཁེ་ཕན་ཡོད་ཚད་དྲ་ཚིགས་མཉེན་ཆས་གཞན་ནས་ཁ་འབྱེད་སྐབས་ལེན་པ།</string>
+
+    <string name="firstrun_close_button">ཆོག་ ཤེས་སོང་།</string>
+    <string name="firstrun_skip_button">མཆོང་པ།</string>
+    <string name="firstrun_next_button">རྗེས་མ།</string>
+
+    <string name="content_blocking_disabled">-</string>
+
+    <string name="dialog_addtohomescreen_action_add">སྣོན།</string>
+
+    <string name="dialog_addtohomescreen_action_cancel">འདོར་བ།</string>
+
+    <string name="notification_browsing_session_channel_name">སྒེར་དོན་གསང་རྒྱ་དུས་མཚམས།</string>
+
+    <string name="tabs_tray_action_erase">འཚོལ་རབས་འདོར་སུབ་བྱོས།</string>
+
+    <string name="download_firefox">Firefox ཕབ་ལེན།</string>
+
+    <string name="gv_prompt_username_hint">སྤྱོད་མཁན་གྱི་མིང་།</string>
+    <string name="gv_prompt_password_hint">གསང་གྲངས།</string>
+    <string name="gv_prompt_clear">གཙང་བཟོ།</string>
+
+    <string name="security_popup_secure_connection">བདེ་འཇགས་འབྲེལ་བཐུད།</string>
+    <string name="security_popup_insecure_connection">བདེ་འཇགས་འབྲེལ་བཐུད་མེད་པ།</string>
+    <string name="security_popup_security_verified">ར་སྤྲོད་མཁན། %1$s</string>
+
+    <string name="site_security_icon_content_description">དྲ་བའི་བདེ་འཇགས།</string>
+    <string name="preference_autocomplete_duplicate_url_error">དྲ་ཚིཊ་ཁ་བྱང་སྔོན་ནས་འདུག།</string>
+
+    <string name="find_in_page">ཤོག་ངོས་ནང་འཚོལ་བཤེར་བྱོས།</string>
+
+    <string name="find_in_page_input">ཤོག་ངོས་ནང་འཚོལ་བཤེར་བྱོས།</string>
+
+    <string name="find_in_page_result">%1$d/%2$d</string>
+    <string name="accessibility_find_in_page_result">&quot;%1$d ནང་ནས་ %1$d &quot;</string>
+
+    <string name="accessibility_next_result">ཤོག་ངོས་ཞོལ་མ།</string>
+    <string name="accessibility_previous_result">ཤོག་ངོས་གོང་མ།</string>
 
 
 
   <string name="preference_performance_request_desktop_site">ཅོག་ངོས་དྲ་ཚིགས་རེ་ཞུ་བྱེད།</string>
-  <string name="custom_tab_copy_url_action">དྲ་ཚིཊ་ཁ་བྱང་བཤུས་ཟིན།</string>
-  <string name="preference_advanced_summary">གསར་སྤེལ་ལག་ཆ།</string>
-  <string name="preference_category_advanced">མཐོ་རིམ།</string>
-  <string name="biometric_auth_title">%1$s སྒོ་ཕྱེ།</string>
-  <string name="biometric_auth_description">མཛུབ་ཐེལ་ཚོར་ཤེས་ལ་ཐུག་ནས་མུ་མཐུད།</string>
-  <string name="biometric_auth_new_session">གླིང་མོལ་གསར་པ།</string>
-  <string name="biometric_auth_image_description">མཛུབ་ཐེལ་འདྲ་གཟུགས།</string>
-  <string name="biometric_auth_not_recognized_error">མཛུབ་ཐེལ་ངོས་འཛིན་མ་ཐུབ། བསྐྱར་དུ་ཚོད་ལྟ་བྱོས།</string>
-  <string name="biometric_auth_moved_too_quickly">མཛུག་མོ་འགུལ་སྐྱོད་མགྱོགས་དྲག་འདུག་ བསྐྱར་དུ་ཚོད་ལྟ་བྱོས།</string>
-  <string name="enable_search_suggestion_title">འཚོལ་བཤེར་འབྲེལ་ཡོད་འོས་སྦྱོར་དགོས་སམ།</string>
-  <string name="enable_search_suggestion_subtitle">ཁྱེད་ལ་སྤྲོ་བ་ཡོད་པའི་ནང་དོན་མཁོ་འདོན་ཆེད་དུ། %1$s ཡིས་རང་འཇུག་པའི་འཚོལ་བྱའི་ནང་དོན་རང་འདེམ་པའི་འཚོལ་བཤེར་དྲ་བར་འདོན་སྤྲོད་བྱ་དགོས།. %2$s.</string>
-  <string name="enable_search_suggestion_subtitle_learnmore">དེ་བས་མང་།</string>
-  <string name="enable_search_suggestions_no">མིན།</string>
-  <string name="enable_search_suggestions_yes">རེད།</string>
-  <string name="no_suggestions_message">བཤེར་ཆས་འགའ་ཤས་ཀྱིས་འཚོལ་བཤེར་འབྲེལ་ཡོད་འོས་སྦྱོར་མ་ཐུབ།</string>
-  <string name="dismiss_no_suggestions_prompt_button">འདོར་བ།</string>
-  <string name="tip_disable_tracking_protection">དྲ་ཚིགས་རྒྱུན་གཏན་ལྟར་མི་འདུག་གམ།\n རྗེས་འདེད་སྲུང་སྐྱོབ་གསོད་དེ་བསྐྱར་ཞིག་བྱོས།</string>
-  <string name="tip_autocomplete_url">བེད་སྤྱོད་མང་ཤོས་བྱེད་པའི་དྲ་ཚིཊ་ཁ་བྱང་རད་གྲུབ། དྲ་ཚིཊ་ཁ་བྱང་ཐོག་མཛུབ་མོ་རྒྱུན་རིང་གནོན།</string>
-  <string name="tip_request_desktop">"དྲ་ངོས་གང་ག་གཟིགས་འདོད་དམ། %1$s  དཀར་ཆག་ &gt; ཅོག་ངོས་དྲ་ཚིགས་རེ་ཞུ་བྱེད།"</string>
-  <string name="tip_explain_allowlist">ཡིད་རྟོན་དྲ་ཚིགས་ཡིན་ནམ།\n ཆོག་ཐོ་ཡིས་དྲ་ཚིགས་རྗེས་འདེད་སྲུང་སྐྱོབ་དང་ཡིད་རྟོན་མི་སྤྱོད།</string>
-  <string name="preference_category_safe_browsing">བདེ་འཇགས་བཤར་ལྟ།</string>
-  <string name="preference_exceptions">རྒྱུན་འགལ།</string>
-  <string name="preference_exceptions_menu_remove">སྤོ་འབུད།</string>
-  <string name="preference_exceptions_remove_all_button_label">དྲ་ཚིགས་ཆ་ཚང་སྤོ་འབུད།།</string>
-  <string name="tab_crash_report_headline">དགོངས་དག ང་ཚོ་རེའུ་མིག་བཟོ་རྟགས་འདི་དང་གནད་དོན་འཕྲད་སོང་།</string>
 
+    <string name="custom_tab_copy_url_action">དྲ་ཚིཊ་ཁ་བྱང་བཤུས་ཟིན།</string>
 
+    <string name="preference_advanced_summary">གསར་སྤེལ་ལག་ཆ།</string>
 
+    <string name="preference_category_advanced">མཐོ་རིམ།</string>
 
-</resources>
+    <string name="biometric_auth_image_description">མཛུབ་ཐེལ་འདྲ་གཟུགས།</string>
+
+    <string name="biometric_auth_not_recognized_error">མཛུབ་ཐེལ་ངོས་འཛིན་མ་ཐུབ། བསྐྱར་དུ་ཚོད་ལྟ་བྱོས།</string>
+
+    <string name="biometric_auth_moved_too_quickly">མཛུག་མོ་འགུལ་སྐྱོད་མགྱོགས་དྲག་འདུག་ བསྐྱར་དུ་ཚོད་ལྟ་བྱོས།</string>
+
+    <string name="enable_search_suggestions_no">མིན།</string>
+
+    <string name="enable_search_suggestions_yes">རེད།</string>
+
+    <string name="no_suggestions_message">བཤེར་ཆས་འགའ་ཤས་ཀྱིས་འཚོལ་བཤེར་འབྲེལ་ཡོད་འོས་སྦྱོར་མ་ཐུབ།</string>
+
+    <string name="dismiss_no_suggestions_prompt_button">འདོར་བ།</string>
+
+    <!-- Tips displayed on the home view -->
+
+    <string name="tip_disable_tracking_protection">དྲ་ཚིགས་རྒྱུན་གཏན་ལྟར་མི་འདུག་གམ།\n རྗེས་འདེད་སྲུང་སྐྱོབ་གསོད་དེ་བསྐྱར་ཞིག་བྱོས།</string>
+
+    <string name="tip_autocomplete_url">བེད་སྤྱོད་མང་ཤོས་བྱེད་པའི་དྲ་ཚིཊ་ཁ་བྱང་རད་གྲུབ། དྲ་ཚིཊ་ཁ་བྱང་ཐོག་མཛུབ་མོ་རྒྱུན་རིང་གནོན།</string>
+
+    <string name="preference_exceptions">རྒྱུན་འགལ།</string>
+    <string name="preference_exceptions_menu_remove">སྤོ་འབུད།</string>
+    <string name="preference_exceptions_remove_all_button_label">དྲ་ཚིགས་ཆ་ཚང་སྤོ་འབུད།།</string>
+
+    <string name="tab_crash_report_headline">དགོངས་དག ང་ཚོ་རེའུ་མིག་བཟོ་རྟགས་འདི་དང་གནད་དོན་འཕྲད་སོང་།</string>
+
+    <!-- Tracking protection bottom sheet -->
+
+     <!-- Promote SearchWidget Dialog -->
+
+    </resources>

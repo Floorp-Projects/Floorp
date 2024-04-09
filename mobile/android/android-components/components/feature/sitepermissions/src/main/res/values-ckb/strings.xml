@@ -35,4 +35,4 @@
     <string name="mozac_feature_sitepermissions_persistent_storage_title">ڕێگەدەدەیت کە %1$s زانیاری پاشەکەوتبکات لە بیرگەی هەمیشەیی؟</string>
     <!-- Title of a dialog to use EME. %1$s will be replaced with the URL of the current page -->
     <string name="mozac_feature_sitepermissions_media_key_system_access_title">ڕێگەدەدەیت کە %1$s ناوەڕۆکی پارێزراوی ژمارەیی DRM لێبدات؟</string>
-</resources>
+    </resources>

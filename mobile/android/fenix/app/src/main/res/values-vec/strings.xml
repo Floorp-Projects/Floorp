@@ -111,8 +111,6 @@
     <string name="preferences_default_search_engine">Motore de reserca predefinìo</string>
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">Reserca</string>
-    <!-- Preference for settings related to Search address bar -->
-    <string name="preferences_search_address_bar">Bara de i indirisi</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">Vota su Google Play</string>
     <!-- Preference linking to about page for Fenix
@@ -143,8 +141,6 @@
     <string name="preferences_theme">Tema</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Personalixa</string>
-    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
-    <string name="preferences_account_default_name">Account Firefox</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
     <string name="preferences_account_sync_error">Riconeti par continuare ƚa sincronixasion</string>
     <!-- Preference for language -->
@@ -410,8 +406,6 @@
     <string name="phone_feature_blocked_by_android">Blocà da Android</string>
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Ecesion</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on" moz:removedIn="111" tools:ignore="UnusedResources">Ativa</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Dixativà</string>
     <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
@@ -545,13 +539,9 @@
     <string name="preferences_delete_browsing_data">Scanseƚa i dati de navigasion</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d schede</string>
-    <!-- Title for the data and history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_data_title">Cronoƚogìa de navigasion e dati de i siti web</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d indirisi</string>
-    <!-- Title for the cookies item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cookies">Cookie</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies_subtitle">Te vegnerè disconeso da ƚa major parte de i siti</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
@@ -580,31 +570,8 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Scanseƚasion dati de navigasion en corso…</string>
 
-    <!-- Text for the button to manually sign into Firefox account. -->
-    <string name="onboarding_firefox_account_sign_in">Va rento a Firefox</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Ƚa sincronixasion ƚa xe ativa</string>
-    <!-- Text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header">Protegete</string>
-    <!-- Text for the privacy notice onboarding card description. -->
-    <string name="onboarding_privacy_notice_description">%s el xe progetà par darte el pieno controƚo su ƚe informasion che te condividi online e co noialtri.</string>
-    <!-- Text for the button to read the privacy notice -->
-    <string name="onboarding_privacy_notice_read_button">Lèxi ƚa nòstra informativa so ƚa privacy</string>
-
-    <!-- text for the button to finish onboarding -->
-    <string name="onboarding_finish">Scomisia a navegare</string>
-
-    <!-- Onboarding theme -->
-    <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header">Sèji el tò tema</string>
-    <!-- Automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_title">Otomàtico</string>
-    <!-- Summary of automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_summary">Si adata a ƚe inpostasion de’l dispoxitivo</string>
-    <!-- Theme setting for dark mode -->
-    <string name="onboarding_theme_dark_title">Tema scuro</string>
-    <!-- Theme setting for light mode -->
-    <string name="onboarding_theme_light_title">Tema ciaro</string>
 
     <!-- Text shown in snackbar when multiple tabs have been sent to device -->
     <string name="sync_sent_tabs_snackbar">Schede mandà.</string>
@@ -636,10 +603,6 @@
     <string name="etp_settings">Inpostasion protesion</string>
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">Protesion antitraciamento avansà</string>
-    <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title" moz:removedIn="114" tools:ignore="UnusedResources">Nàviga sensa ƚasarte seguire</string>
-    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation" moz:removedIn="114" tools:ignore="UnusedResources">Tìen i tò dati a’l riparo da òci curioxi. %s te protege da i eƚementi tracianti pì comuni che i cerca de seguire cueƚo che te fè online.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Ulteriori informasion</string>
     <!--  Accessibility text for the Standard protection information icon  -->
@@ -803,21 +766,11 @@
     <string name="search_engine_add_custom_search_engine_title">Xonta motore de reserca</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">Modìfega motore de reserca</string>
-    <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
-    <string name="search_engine_add_button_content_description">Xonta</string>
-    <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
-    <string name="search_engine_add_custom_search_engine_edit_button_content_description">Salva</string>
     <!-- Text for the menu button to edit a search engine -->
     <string name="search_engine_edit">Modìfega</string>
     <!-- Text for the menu button to delete a search engine -->
     <string name="search_engine_delete">Scanseƚa</string>
 
-    <!-- Text for the button to create a custom search engine on the Add search engine screen -->
-    <string name="search_add_custom_engine_label_other">Altro</string>
-    <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
-    <string name="search_add_custom_engine_name_hint">Nòme</string>
-    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint">Stringa de reserca da utilixare</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_search_string_example" formatted="false">Sostituire ƚa ciave de reserca co “%s”. Exempio:\nhttps://www.google.com/search?q=%s</string>
 
@@ -868,5 +821,8 @@
     <string name="login_deletion_confirmation">Scanseƚare ste credensiaƚi?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Rimovi</string>
+
+    <!-- Translations feature-->
+
 
     </resources>
