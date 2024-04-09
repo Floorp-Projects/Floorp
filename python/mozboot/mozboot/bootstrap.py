@@ -633,7 +633,12 @@ def update_mercurial_repo(hg: Path, url, dest: Path, revision):
     print(f"Ensuring {url} is up to date at {dest}")
 
     env = os.environ.copy()
-    env.update({"HGPLAIN": "1"})
+    env.update(
+        {
+            "HGPLAIN": "1",
+            "HGRCPATH": "!",
+        }
+    )
 
     try:
         subprocess.check_call(pull_args, cwd=str(cwd), env=env)
