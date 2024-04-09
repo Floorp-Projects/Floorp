@@ -71,7 +71,7 @@ module.exports = {
           (callerSource === "ChromeUtils.import" ||
             callerSource === "ChromeUtils.importESModule") &&
           helpers.getIsTopLevelAndUnconditionallyExecuted(
-            context.getAncestors()
+            helpers.getAncestors(context, node)
           )
         ) {
           if (node.arguments.length < 1) {

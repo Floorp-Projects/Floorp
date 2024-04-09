@@ -26,7 +26,7 @@ module.exports = {
   create(context) {
     return {
       AwaitExpression(node) {
-        if (!helpers.getIsTopLevelScript(context.getAncestors())) {
+        if (!helpers.getIsTopLevelScript(helpers.getAncestors(context, node))) {
           return;
         }
         context.report({ node, messageId: "rejectTopLevelAwait" });
@@ -34,7 +34,7 @@ module.exports = {
       ForOfStatement(node) {
         if (
           !node.await ||
-          !helpers.getIsTopLevelScript(context.getAncestors())
+          !helpers.getIsTopLevelScript(helpers.getAncestors(context, node))
         ) {
           return;
         }

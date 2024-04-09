@@ -29,7 +29,7 @@ module.exports = {
   create(context) {
     return {
       ThisExpression(node) {
-        if (!helpers.getIsGlobalThis(context.getAncestors())) {
+        if (!helpers.getIsGlobalThis(helpers.getAncestors(context, node))) {
           return;
         }
 
