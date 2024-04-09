@@ -39,12 +39,14 @@ interface nsIWebAuthnService : nsISupports
     // IsUserVerifyingPlatformAuthenticatorAvailable
     readonly attribute boolean isUVPAA;
 
+    [noscript]
     void makeCredential(
         in uint64_t aTransactionId,
         in uint64_t browsingContextId,
         in nsIWebAuthnRegisterArgs args,
         in nsIWebAuthnRegisterPromise promise);
 
+    [noscript]
     void getAssertion(
         in uint64_t aTransactionId,
         in uint64_t browsingContextId,
