@@ -782,6 +782,8 @@ class JSString : public js::gc::CellWithLengthAndFlags {
 
   void traceChildren(JSTracer* trc);
 
+  inline void traceBaseFromStoreBuffer(JSTracer* trc);
+
   // Override base class implementation to tell GC about permanent atoms.
   bool isPermanentAndMayBeShared() const { return isPermanentAtom(); }
 
@@ -931,6 +933,7 @@ class JSLinearString : public JSString {
   friend class JS::AutoStableStringChars;
   friend class js::gc::TenuringTracer;
   friend class js::gc::CellAllocator;
+  friend class JSDependentString;  // To allow access when used as base.
 
   /* Vacuous and therefore unimplemented. */
   JSLinearString* ensureLinear(JSContext* cx) = delete;
@@ -1138,6 +1141,13 @@ class JSDependentString : public JSLinearString {
   void relocateNonInlineChars(T chars, size_t offset) {
     setNonInlineChars(chars + offset);
   }
+
+  inline JSLinearString* rootBaseDuringMinorGC();
+
+  template <typename CharT>
+  inline void sweepTypedAfterMinorGC();
+
+  inline void sweepAfterMinorGC();
 
 #if defined(DEBUG) || defined(JS_JITSPEW) || defined(JS_CACHEIR_SPEW)
   void dumpOwnRepresentationFields(js::JSONPrinter& json) const;
@@ -2261,14 +2271,17 @@ class StringRelocationOverlay : public RelocationOverlay {
   MOZ_ALWAYS_INLINE const CharT* savedNurseryChars() const;
 
   const MOZ_ALWAYS_INLINE JS::Latin1Char* savedNurseryCharsLatin1() const {
+    MOZ_ASSERT(!forwardingAddress()->as<JSString>()->hasBase());
     return nurseryCharsLatin1;
   }
 
   const MOZ_ALWAYS_INLINE char16_t* savedNurseryCharsTwoByte() const {
+    MOZ_ASSERT(!forwardingAddress()->as<JSString>()->hasBase());
     return nurseryCharsTwoByte;
   }
 
   JSLinearString* savedNurseryBaseOrRelocOverlay() const {
+    MOZ_ASSERT(forwardingAddress()->as<JSString>()->hasBase());
     return nurseryBaseOrRelocOverlay;
   }
 
