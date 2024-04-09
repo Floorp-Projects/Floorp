@@ -33,6 +33,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/Result.h"
 #include "mozilla/Span.h"
+#include "mozilla/Try.h"
 #include "mozilla/UniquePtr.h"
 
 namespace mozilla::intl {

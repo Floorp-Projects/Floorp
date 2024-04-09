@@ -12,6 +12,7 @@
 #include "ARIAMap.h"
 #include "CacheConstants.h"
 #include "LocalAccessible-inl.h"
+#include "DocAccessible-inl.h"
 #include "nsTextEquivUtils.h"
 #include "Relation.h"
 #include "mozilla/a11y/Role.h"
