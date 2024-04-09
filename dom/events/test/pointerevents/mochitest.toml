@@ -130,13 +130,6 @@ skip-if = [
 support-files = ["wpt/pointerevent_change-touch-action-onpointerdown_touch-manual.html"]
 disabled = "disabled"
 
-["test_wpt_pointerevent_constructor.html"]
-support-files = ["wpt/pointerevent_constructor.html"]
-skip-if = [
-  "http3",
-  "http2",
-]
-
 ["test_wpt_pointerevent_drag_interaction-manual.html"]
 support-files = ["wpt/html/pointerevent_drag_interaction-manual.html"]
 skip-if = [
