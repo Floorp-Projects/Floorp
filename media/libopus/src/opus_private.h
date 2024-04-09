@@ -214,7 +214,7 @@ int opus_multistream_decode_native(
 
 opus_int32 opus_packet_extensions_parse(const unsigned char *data, opus_int32 len, opus_extension_data *extensions, opus_int32 *nb_extensions);
 
-opus_int32 opus_packet_extensions_generate(unsigned char *data, opus_int32 len, const opus_extension_data  *extensions, int nb_extensions, int pad);
+opus_int32 opus_packet_extensions_generate(unsigned char *data, opus_int32 len, const opus_extension_data  *extensions, opus_int32 nb_extensions, int pad);
 
 opus_int32 opus_packet_extensions_count(const unsigned char *data, opus_int32 len);
 
