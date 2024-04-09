@@ -2,7 +2,7 @@ import sys
 import ctypes
 from rondpoint import *
 
-dico = Dictionnaire(Enumeration.DEUX, True, 0, 123456789)
+dico = Dictionnaire(un=Enumeration.DEUX, deux=True, petit_nombre=0, gros_nombre=123456789)
 copyDico = copie_dictionnaire(dico)
 assert dico == copyDico
 

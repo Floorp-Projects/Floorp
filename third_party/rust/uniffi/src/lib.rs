@@ -17,8 +17,11 @@ pub use uniffi_bindgen::bindings::ruby::run_test as ruby_run_test;
 pub use uniffi_bindgen::bindings::swift::run_test as swift_run_test;
 #[cfg(feature = "bindgen")]
 pub use uniffi_bindgen::{
-    bindings::TargetLanguage, generate_bindings, generate_component_scaffolding,
-    generate_component_scaffolding_for_crate, print_repr,
+    bindings::kotlin::gen_kotlin::KotlinBindingGenerator,
+    bindings::python::gen_python::PythonBindingGenerator,
+    bindings::ruby::gen_ruby::RubyBindingGenerator,
+    bindings::swift::gen_swift::SwiftBindingGenerator, bindings::TargetLanguage, generate_bindings,
+    generate_component_scaffolding, generate_component_scaffolding_for_crate, print_repr,
 };
 #[cfg(feature = "build")]
 pub use uniffi_build::{generate_scaffolding, generate_scaffolding_for_crate};

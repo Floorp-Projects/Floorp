@@ -12,10 +12,14 @@ class _UniffiConverterDuration(_UniffiConverterRustBuffer):
         return datetime.timedelta(seconds=seconds, microseconds=microseconds)
 
     @staticmethod
+    def check_lower(value):
+        seconds = value.seconds + value.days * 24 * 3600
+        if seconds < 0:
+            raise ValueError("Invalid duration, must be non-negative")
+
+    @staticmethod
     def write(value, buf):
         seconds = value.seconds + value.days * 24 * 3600
         nanoseconds = value.microseconds * 1000
-        if seconds < 0:
-            raise ValueError("Invalid duration, must be non-negative")
         buf.write_i64(seconds)
         buf.write_u32(nanoseconds)

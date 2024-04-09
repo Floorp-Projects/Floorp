@@ -18,6 +18,7 @@ pub fn create_metadata_groups(items: &[Metadata]) -> MetadataGroupMap {
             Metadata::Namespace(namespace) => {
                 let group = MetadataGroup {
                     namespace: namespace.clone(),
+                    namespace_docstring: None,
                     items: BTreeSet::new(),
                 };
                 Some((namespace.crate_name.clone(), group))
@@ -29,6 +30,7 @@ pub fn create_metadata_groups(items: &[Metadata]) -> MetadataGroupMap {
                 };
                 let group = MetadataGroup {
                     namespace,
+                    namespace_docstring: None,
                     items: BTreeSet::new(),
                 };
                 Some((udl.module_path.clone(), group))
@@ -63,6 +65,7 @@ pub fn group_metadata(group_map: &mut MetadataGroupMap, items: Vec<Metadata>) ->
 #[derive(Debug)]
 pub struct MetadataGroup {
     pub namespace: NamespaceMetadata,
+    pub namespace_docstring: Option<String>,
     pub items: BTreeSet<Metadata>,
 }
 
@@ -127,12 +130,6 @@ impl<'a> ExternalTypeConverter<'a> {
                 ..meta
             }),
             Metadata::Enum(meta) => Metadata::Enum(self.convert_enum(meta)),
-            Metadata::Error(meta) => Metadata::Error(match meta {
-                ErrorMetadata::Enum { enum_, is_flat } => ErrorMetadata::Enum {
-                    enum_: self.convert_enum(enum_),
-                    is_flat,
-                },
-            }),
             _ => item,
         }
     }

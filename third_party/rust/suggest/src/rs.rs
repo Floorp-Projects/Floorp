@@ -119,7 +119,7 @@ pub(crate) enum SuggestRecord {
 /// Enum for the different record types that can be consumed.
 /// Extracting this from the serialization enum so that we can
 /// extend it to get type metadata.
-#[derive(Clone, PartialEq, PartialOrd, Eq, Ord)]
+#[derive(Copy, Clone, PartialEq, PartialOrd, Eq, Ord)]
 pub enum SuggestRecordType {
     Icon,
     AmpWikipedia,

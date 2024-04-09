@@ -4,6 +4,7 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 
 use crate::bindings::TargetLanguage;
 use crate::library_mode::generate_bindings;
+use crate::BindingGeneratorDefault;
 use anyhow::{bail, Context, Result};
 use camino::Utf8Path;
 use std::env;
@@ -30,11 +31,21 @@ pub fn test_script_command(
     fixture_name: &str,
     script_file: &str,
 ) -> Result<Command> {
-    let script_path = Utf8Path::new(".").join(script_file).canonicalize_utf8()?;
+    let script_path = Utf8Path::new(script_file).canonicalize_utf8()?;
     let test_helper = UniFFITestHelper::new(fixture_name)?;
     let out_dir = test_helper.create_out_dir(tmp_dir, &script_path)?;
     let cdylib_path = test_helper.copy_cdylib_to_out_dir(&out_dir)?;
-    generate_bindings(&cdylib_path, None, &[TargetLanguage::Ruby], &out_dir, false)?;
+    generate_bindings(
+        &cdylib_path,
+        None,
+        &BindingGeneratorDefault {
+            target_languages: vec![TargetLanguage::Ruby],
+            try_format_code: false,
+        },
+        None,
+        &out_dir,
+        false,
+    )?;
 
     let rubypath = env::var_os("RUBYLIB").unwrap_or_else(|| OsString::from(""));
     let rubypath = env::join_paths(

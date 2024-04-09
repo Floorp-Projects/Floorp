@@ -96,7 +96,7 @@ impl TimingDistributionMetric {
         Self {
             meta: Arc::new(meta.into()),
             time_unit,
-            next_id: Arc::new(AtomicUsize::new(0)),
+            next_id: Arc::new(AtomicUsize::new(1)),
             start_times: Arc::new(Mutex::new(Default::default())),
         }
     }

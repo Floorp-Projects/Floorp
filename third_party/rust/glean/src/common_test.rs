@@ -42,7 +42,6 @@ pub(crate) fn new_glean(
         Some(c) => c,
         None => ConfigurationBuilder::new(true, tmpname, GLOBAL_APPLICATION_ID)
             .with_server_endpoint("invalid-test-host")
-            .with_event_timestamps(false)
             .build(),
     };
 

@@ -123,6 +123,12 @@ interface SuggestStore {
     [Throws=SuggestApiError]
     sequence<Suggestion> query(SuggestionQuery query);
 
+    [Throws=SuggestApiError]
+    void dismiss_suggestion(string raw_suggestion_url);
+
+    [Throws=SuggestApiError]
+    void clear_dismissed_suggestions();
+
     void interrupt();
 
     [Throws=SuggestApiError]

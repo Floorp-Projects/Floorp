@@ -6,7 +6,7 @@
 //!
 //! This library is dedicated to parsing a string in a webidl syntax, as described by
 //! weedle and with our own custom take on the attributes etc, pushing the boundaries
-//! of that syntax to describe a uniffi `MetatadataGroup`.
+//! of that syntax to describe a uniffi `MetadataGroup`.
 //!
 //! The output of this module is consumed by uniffi_bindgen to generate stuff.
 

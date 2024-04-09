@@ -33,6 +33,18 @@ impl<'a, T: Parse<'a>, U: Parse<'a>, V: Parse<'a>> Parse<'a> for (T, U, V) {
     parser!(nom::sequence::tuple((T::parse, U::parse, V::parse)));
 }
 
+pub(crate) fn docstring(input: &str) -> IResult<&str, String> {
+    nom::multi::many1(nom::sequence::preceded(
+        nom::character::complete::multispace0,
+        nom::sequence::delimited(
+            nom::bytes::complete::tag("///"),
+            nom::bytes::complete::take_until("\n"),
+            nom::bytes::complete::tag("\n"),
+        ),
+    ))(input)
+    .map(|io| (io.0, io.1.join("\n")))
+}
+
 ast_types! {
     /// Parses `( body )`
     #[derive(Copy, Default)]
@@ -103,6 +115,11 @@ ast_types! {
         assign: term!(=),
         value: DefaultValue<'a>,
     }
+
+    /// Represents consecutive comment lines starting with `///`, joined by `\n`.
+    struct Docstring(
+        String = docstring,
+    )
 }
 
 #[cfg(test)]
@@ -210,5 +227,33 @@ mod test {
         "=";
         Identifier;
         0 == "hello";
+    });
+
+    test!(should_parse_docstring { "///hello world\n" =>
+        "";
+        Docstring;
+        0 == "hello world";
+    });
+
+    test!(should_parse_multiline_docstring { "///hello\n///world\n" =>
+        "";
+        Docstring;
+        0 == "hello\nworld";
+    });
+
+    test!(should_parse_multiline_indented_docstring { "///hello\n  ///world\n" =>
+        "";
+        Docstring;
+        0 == "hello\nworld";
+    });
+
+    test!(should_not_parse_docstring_with_comments { "///hello\n//comment1\n///world\n" =>
+        "//comment1\n///world\n";
+        Docstring;
+        0 == "hello";
+    });
+
+    test!(err should_not_parse_not_docstring { "" =>
+        Docstring
     });
 }

@@ -163,7 +163,7 @@ class RustBufferBuilder
   # The Object type {{ object_name }}.
 
   def write_{{ canonical_type_name }}(obj)
-    pointer = {{ object_name|class_name_rb}}._uniffi_lower obj
+    pointer = {{ object_name|class_name_rb}}.uniffi_lower obj
     pack_into(8, 'Q>', pointer.address)
   end
 

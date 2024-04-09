@@ -4,7 +4,6 @@
 
 use std::cmp::Ordering;
 use std::collections::HashMap;
-use std::convert::TryFrom;
 use std::fs;
 use std::fs::{create_dir_all, File, OpenOptions};
 use std::io::BufRead;
@@ -638,8 +637,8 @@ impl EventDatabase {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::test_get_num_recorded_errors;
     use crate::tests::new_glean;
-    use crate::{test_get_num_recorded_errors, CommonMetricData};
     use chrono::{TimeZone, Timelike};
 
     #[test]

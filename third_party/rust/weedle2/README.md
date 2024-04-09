@@ -28,7 +28,7 @@ Parses valid WebIDL definitions & produces a data structure starting from
 
 ```toml
 [dependencies]
-weedle2 = "4.0.0"
+weedle2 = "5.0.0"
 ```
 
 ### `src/main.rs`
