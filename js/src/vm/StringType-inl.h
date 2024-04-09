@@ -19,6 +19,7 @@
 #include "vm/StaticStrings.h"
 
 #include "gc/GCContext-inl.h"
+#include "gc/Marking-inl.h"
 #include "gc/StoreBuffer-inl.h"
 #include "vm/JSContext-inl.h"
 
@@ -449,6 +450,20 @@ inline JSLinearString::JSLinearString(
 void JSLinearString::disownCharsBecauseError() {
   setLengthAndFlags(0, INIT_LINEAR_FLAGS | LATIN1_CHARS_BIT);
   d.s.u2.nonInlineCharsLatin1 = nullptr;
+}
+
+inline JSLinearString* JSDependentString::rootBaseDuringMinorGC() {
+  JSLinearString* root = this;
+  while (MaybeForwarded(root)->hasBase()) {
+    if (root->isForwarded()) {
+      root = js::gc::StringRelocationOverlay::fromCell(root)
+                 ->savedNurseryBaseOrRelocOverlay();
+    } else {
+      // Possibly nursery or tenured string (not an overlay).
+      root = root->nurseryBaseOrRelocOverlay();
+    }
+  }
+  return root;
 }
 
 template <js::AllowGC allowGC, typename CharT>
