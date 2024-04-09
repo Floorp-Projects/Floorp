@@ -507,15 +507,7 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   mozilla::ipc::IPCResult RecvExitPrintPreview();
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY mozilla::ipc::IPCResult RecvPrint(
-      const MaybeDiscardedBrowsingContext&, const PrintData&, bool,
-      PrintResolver&&);
-
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY mozilla::ipc::IPCResult RecvPrintClonedPage(
-      const MaybeDiscardedBrowsingContext&, const PrintData&,
-      const MaybeDiscardedBrowsingContext&);
-
-  mozilla::ipc::IPCResult RecvDestroyPrintClone(
-      const MaybeDiscardedBrowsingContext&);
+      const MaybeDiscardedBrowsingContext&, const PrintData&);
 
   mozilla::ipc::IPCResult RecvUpdateNativeWindowHandle(
       const uintptr_t& aNewHandle);
@@ -719,11 +711,6 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
                           const uint64_t& aInputBlockId);
 
   void InternalSetDocShellIsActive(bool aIsActive);
-
-  MOZ_CAN_RUN_SCRIPT
-  mozilla::ipc::IPCResult CommonPrint(
-      const MaybeDiscardedBrowsingContext& aBc, const PrintData& aPrintData,
-      RefPtr<BrowsingContext>* aCachedBrowsingContext);
 
   bool CreateRemoteLayerManager(
       mozilla::layers::PCompositorBridgeChild* aCompositorChild);

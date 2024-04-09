@@ -87,11 +87,7 @@ class ContentAnalysisResult : public nsIContentAnalysisResult {
 
   static RefPtr<ContentAnalysisResult> FromContentAnalysisResponse(
       nsIContentAnalysisResponse* aResponse) {
-    bool shouldAllowContent = false;
-    DebugOnly<nsresult> rv =
-        aResponse->GetShouldAllowContent(&shouldAllowContent);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-    if (shouldAllowContent) {
+    if (aResponse->GetShouldAllowContent()) {
       return FromAction(nsIContentAnalysisResponse::Action::eAllow);
     } else {
       return FromAction(nsIContentAnalysisResponse::Action::eBlock);

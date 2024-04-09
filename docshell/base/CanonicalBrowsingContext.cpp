@@ -6,10 +6,8 @@
 
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 
-#include "ContentAnalysis.h"
 #include "ErrorList.h"
 #include "mozilla/CheckedInt.h"
-#include "mozilla/Components.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/AsyncEventDispatcher.h"
@@ -49,7 +47,6 @@
 #include "nsFrameLoader.h"
 #include "nsFrameLoaderOwner.h"
 #include "nsGlobalWindowOuter.h"
-#include "nsIContentAnalysis.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIXULRuntime.h"
 #include "nsNetUtil.h"
@@ -671,9 +668,6 @@ CanonicalBrowsingContext::ReplaceLoadingSessionHistoryEntryForLoad(
 
 using PrintPromise = CanonicalBrowsingContext::PrintPromise;
 #ifdef NS_PRINTING
-// Clients must call StaticCloneForPrintingCreated or
-// NoStaticCloneForPrintingWillBeCreated before the underlying promise can
-// resolve.
 class PrintListenerAdapter final : public nsIWebProgressListener {
  public:
   explicit PrintListenerAdapter(PrintPromise::Private* aPromise)
@@ -684,14 +678,10 @@ class PrintListenerAdapter final : public nsIWebProgressListener {
   // NS_DECL_NSIWEBPROGRESSLISTENER
   NS_IMETHOD OnStateChange(nsIWebProgress* aWebProgress, nsIRequest* aRequest,
                            uint32_t aStateFlags, nsresult aStatus) override {
-    MOZ_ASSERT(NS_IsMainThread());
     if (aStateFlags & nsIWebProgressListener::STATE_STOP &&
         aStateFlags & nsIWebProgressListener::STATE_IS_DOCUMENT && mPromise) {
-      mPrintJobFinished = true;
-      if (mHaveSetBrowsingContext) {
-        mPromise->Resolve(mClonedStaticBrowsingContext, __func__);
-        mPromise = nullptr;
-      }
+      mPromise->Resolve(true, __func__);
+      mPromise = nullptr;
     }
     return NS_OK;
   }
@@ -726,28 +716,10 @@ class PrintListenerAdapter final : public nsIWebProgressListener {
     return NS_OK;
   }
 
-  void StaticCloneForPrintingCreated(
-      MaybeDiscardedBrowsingContext&& aClonedStaticBrowsingContext) {
-    MOZ_ASSERT(NS_IsMainThread());
-    mClonedStaticBrowsingContext = std::move(aClonedStaticBrowsingContext);
-    mHaveSetBrowsingContext = true;
-    if (mPrintJobFinished && mPromise) {
-      mPromise->Resolve(mClonedStaticBrowsingContext, __func__);
-      mPromise = nullptr;
-    }
-  }
-
-  void NoStaticCloneForPrintingWillBeCreated() {
-    StaticCloneForPrintingCreated(nullptr);
-  }
-
  private:
   ~PrintListenerAdapter() = default;
 
   RefPtr<PrintPromise::Private> mPromise;
-  MaybeDiscardedBrowsingContext mClonedStaticBrowsingContext = nullptr;
-  bool mHaveSetBrowsingContext = false;
-  bool mPrintJobFinished = false;
 };
 
 NS_IMPL_ISUPPORTS(PrintListenerAdapter, nsIWebProgressListener)
@@ -763,9 +735,7 @@ already_AddRefed<Promise> CanonicalBrowsingContext::PrintJS(
   Print(aPrintSettings)
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
-          [promise](MaybeDiscardedBrowsingContext) {
-            promise->MaybeResolveWithUndefined();
-          },
+          [promise](bool) { promise->MaybeResolveWithUndefined(); },
           [promise](nsresult aResult) { promise->MaybeReject(aResult); });
   return promise.forget();
 }
@@ -775,72 +745,7 @@ RefPtr<PrintPromise> CanonicalBrowsingContext::Print(
 #ifndef NS_PRINTING
   return PrintPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE, __func__);
 #else
-// Content analysis is not supported on non-Windows platforms.
-#  if defined(XP_WIN)
-  bool needContentAnalysis = false;
-  nsCOMPtr<nsIContentAnalysis> contentAnalysis =
-      mozilla::components::nsIContentAnalysis::Service();
-  Unused << NS_WARN_IF(!contentAnalysis);
-  if (contentAnalysis) {
-    nsresult rv = contentAnalysis->GetIsActive(&needContentAnalysis);
-    Unused << NS_WARN_IF(NS_FAILED(rv));
-  }
-  if (needContentAnalysis) {
-    auto done = MakeRefPtr<PrintPromise::Private>(__func__);
-    contentanalysis::ContentAnalysis::PrintToPDFToDetermineIfPrintAllowed(
-        this, aPrintSettings)
-        ->Then(
-            GetCurrentSerialEventTarget(), __func__,
-            [done, aPrintSettings = RefPtr{aPrintSettings},
-             self = RefPtr{this}](
-                contentanalysis::ContentAnalysis::PrintAllowedResult aResponse)
-                MOZ_CAN_RUN_SCRIPT_BOUNDARY_LAMBDA mutable {
-                  if (aResponse.mAllowed) {
-                    self->PrintWithNoContentAnalysis(
-                            aPrintSettings, false,
-                            aResponse.mCachedStaticDocumentBrowsingContext)
-                        ->ChainTo(done.forget(), __func__);
-                  } else {
-                    // Since we are not doing the second print in this case,
-                    // release the clone that is no longer needed.
-                    self->ReleaseClonedPrint(
-                        aResponse.mCachedStaticDocumentBrowsingContext);
-                    done->Reject(NS_ERROR_CONTENT_BLOCKED, __func__);
-                  }
-                },
-            [done, self = RefPtr{this}](
-                contentanalysis::ContentAnalysis::PrintAllowedError
-                    aErrorResponse) MOZ_CAN_RUN_SCRIPT_BOUNDARY_LAMBDA {
-              // Since we are not doing the second print in this case, release
-              // the clone that is no longer needed.
-              self->ReleaseClonedPrint(
-                  aErrorResponse.mCachedStaticDocumentBrowsingContext);
-              done->Reject(aErrorResponse.mError, __func__);
-            });
-    return done;
-  }
-#  endif
-  return PrintWithNoContentAnalysis(aPrintSettings, false, nullptr);
-#endif
-}
 
-void CanonicalBrowsingContext::ReleaseClonedPrint(
-    const MaybeDiscardedBrowsingContext& aClonedStaticBrowsingContext) {
-#ifdef NS_PRINTING
-  auto* browserParent = GetBrowserParent();
-  if (NS_WARN_IF(!browserParent)) {
-    return;
-  }
-  Unused << browserParent->SendDestroyPrintClone(aClonedStaticBrowsingContext);
-#endif
-}
-
-RefPtr<PrintPromise> CanonicalBrowsingContext::PrintWithNoContentAnalysis(
-    nsIPrintSettings* aPrintSettings, bool aForceStaticDocument,
-    const MaybeDiscardedBrowsingContext& aCachedStaticDocument) {
-#ifndef NS_PRINTING
-  return PrintPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE, __func__);
-#else
   auto promise = MakeRefPtr<PrintPromise::Private>(__func__);
   auto listener = MakeRefPtr<PrintListenerAdapter>(promise);
   if (IsInProcess()) {
@@ -852,14 +757,12 @@ RefPtr<PrintPromise> CanonicalBrowsingContext::PrintWithNoContentAnalysis(
     }
 
     ErrorResult rv;
-    listener->NoStaticCloneForPrintingWillBeCreated();
     outerWindow->Print(aPrintSettings,
                        /* aRemotePrintJob = */ nullptr, listener,
                        /* aDocShellToCloneInto = */ nullptr,
                        nsGlobalWindowOuter::IsPreview::No,
                        nsGlobalWindowOuter::IsForWindowDotPrint::No,
-                       /* aPrintPreviewCallback = */ nullptr,
-                       /* aCachedBrowsingContext = */ nullptr, rv);
+                       /* aPrintPreviewCallback = */ nullptr, rv);
     if (rv.Failed()) {
       promise->Reject(rv.StealNSResult(), __func__);
     }
@@ -902,31 +805,12 @@ RefPtr<PrintPromise> CanonicalBrowsingContext::PrintWithNoContentAnalysis(
   printData.remotePrintJob() =
       browserParent->Manager()->SendPRemotePrintJobConstructor(remotePrintJob);
 
-  remotePrintJob->RegisterListener(listener);
+  if (listener) {
+    remotePrintJob->RegisterListener(listener);
+  }
 
-  if (!aCachedStaticDocument.IsNullOrDiscarded()) {
-    // There is no cloned static browsing context that
-    // SendPrintClonedPage() will return, so indicate this
-    // so listener can resolve its promise.
-    listener->NoStaticCloneForPrintingWillBeCreated();
-    if (NS_WARN_IF(!browserParent->SendPrintClonedPage(
-            this, printData, aCachedStaticDocument))) {
-      promise->Reject(NS_ERROR_FAILURE, __func__);
-    }
-  } else {
-    RefPtr<PBrowserParent::PrintPromise> printPromise =
-        browserParent->SendPrint(this, printData, aForceStaticDocument);
-    printPromise->Then(
-        GetMainThreadSerialEventTarget(), __func__,
-        [listener](MaybeDiscardedBrowsingContext cachedStaticDocument) {
-          // promise will get resolved by the listener
-          listener->StaticCloneForPrintingCreated(
-              std::move(cachedStaticDocument));
-        },
-        [promise](ResponseRejectReason reason) {
-          NS_WARNING("SendPrint() failed");
-          promise->Reject(NS_ERROR_FAILURE, __func__);
-        });
+  if (NS_WARN_IF(!browserParent->SendPrint(this, printData))) {
+    promise->Reject(NS_ERROR_FAILURE, __func__);
   }
   return promise.forget();
 #endif

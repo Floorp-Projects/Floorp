@@ -60,9 +60,6 @@ class PrintHelper {
   }
 
   static getTestPageUrl(pathName) {
-    if (pathName.startsWith("http://")) {
-      return pathName;
-    }
     const testPath = getRootDirectory(gTestPath).replace(
       "chrome://mochitests/content",
       "http://example.com"
@@ -71,9 +68,6 @@ class PrintHelper {
   }
 
   static getTestPageUrlHTTPS(pathName) {
-    if (pathName.startsWith("https://")) {
-      return pathName;
-    }
     const testPath = getRootDirectory(gTestPath).replace(
       "chrome://mochitests/content",
       "https://example.com"

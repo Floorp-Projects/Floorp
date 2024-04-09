@@ -335,7 +335,7 @@ interface nsIPrintSettings : nsISupports
    */
   attribute AString toFileName;
 
-  attribute nsIOutputStream outputStream; /* for kOutputDestinationStream */
+  attribute nsIOutputStream outputStream; /* for kOutputDestinationPrinter */
 
   [infallible] attribute long printPageDelay; /* in milliseconds */
 
