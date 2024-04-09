@@ -2709,3 +2709,17 @@ tabPreview:
         pref: browser.tabs.cardPreview.enabled
       description: >-
         When true, users will see the new card preview when hovering a tab, instead of the standard tooltip
+
+backupService:
+  description: Prefs to control the profile backup service
+  owner: mconley@mozilla.com
+  hasExposure: false
+  variables:
+    enabled:
+      type: boolean
+      setPref:
+        branch: default
+        pref: browser.backup.enabled
+      description: >-
+        When true, the profile backup service will be initialized soon after
+        startup.

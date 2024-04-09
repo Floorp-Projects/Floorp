@@ -3027,11 +3027,8 @@ pref("browser.mailto.dualPrompt", false);
 // default mailto handler.
 pref("browser.mailto.prompt.os", true);
 
-#if defined(NIGHTLY_BUILD)
+// Pref to initialize the BackupService soon after startup.
 pref("browser.backup.enabled", true);
-#else
-pref("browser.backup.enabled", false);
-#endif
 
 // Pref to enable the new profiles
 pref("browser.profiles.enabled", false);
