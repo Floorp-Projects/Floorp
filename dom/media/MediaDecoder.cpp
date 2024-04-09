@@ -929,7 +929,7 @@ void MediaDecoder::FirstFrameLoaded(
           mTelemetryProbesReporter->OntFirstFrameLoaded(
               firstFrameLoadedTime, result->mReader.mTotalReadMetadataTimeMs,
               result->mReader.mTotalWaitingForVideoDataTimeMs,
-              result->mStateMachine.mTotalBufferingTimeMs, flags);
+              result->mStateMachine.mTotalBufferingTimeMs, flags, *mInfo);
         });
     mMDSMCreationTime.reset();
   }

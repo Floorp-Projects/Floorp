@@ -295,11 +295,10 @@ void TelemetryProbesReporter::OnDecodeResumed() {
 void TelemetryProbesReporter::OntFirstFrameLoaded(
     const double aLoadedFirstFrameTime, const double aLoadedMetadataTime,
     const double aTotalWaitingDataTime, const double aTotalBufferingTime,
-    const FirstFrameLoadedFlagSet aFlags) {
-  const MediaInfo& info = mOwner->GetMediaInfo();
-  MOZ_ASSERT(info.HasVideo());
+    const FirstFrameLoadedFlagSet aFlags, const MediaInfo& aInfo) {
+  MOZ_ASSERT(aInfo.HasVideo());
   nsCString resolution;
-  DetermineResolutionForTelemetry(info, resolution);
+  DetermineResolutionForTelemetry(aInfo, resolution);
 
   const bool isMSE = aFlags.contains(FirstFrameLoadedFlag::IsMSE);
   const bool isExternalEngineStateMachine =
@@ -325,7 +324,7 @@ void TelemetryProbesReporter::OntFirstFrameLoaded(
     extraData.playbackType = Some("ERROR TYPE"_ns);
     MOZ_ASSERT(false, "Unexpected playback type!");
   }
-  extraData.videoCodec = Some(info.mVideo.mMimeType);
+  extraData.videoCodec = Some(aInfo.mVideo.mMimeType);
   extraData.resolution = Some(resolution);
   if (const auto keySystem = mOwner->GetKeySystem()) {
     extraData.keySystem = Some(NS_ConvertUTF16toUTF8(*keySystem));
