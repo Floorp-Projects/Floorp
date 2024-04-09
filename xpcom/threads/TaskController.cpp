@@ -16,7 +16,6 @@
 #include "mozilla/InputTaskManager.h"
 #include "mozilla/VsyncTaskManager.h"
 #include "mozilla/IOInterposer.h"
-#include "mozilla/Perfetto.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/ScopeExit.h"
@@ -136,7 +135,6 @@ class MOZ_RAII AutoProfileTask {
 #  define AUTO_PROFILE_FOLLOWING_TASK(task)                                  \
     nsAutoCString name;                                                      \
     (task)->GetName(name);                                                   \
-    PERFETTO_TRACE_EVENT("task", perfetto::DynamicString{name.get()});       \
     AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING_NONSENSITIVE("Task", OTHER, name); \
     mozilla::AutoProfileTask PROFILER_RAII(name, (task)->GetPriority());
 #else
