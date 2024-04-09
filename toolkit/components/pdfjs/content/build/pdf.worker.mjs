@@ -51391,7 +51391,7 @@ class AnnotationBorderStyle {
     }
   }
   setDashArray(dashArray, forceStyle = false) {
-    if (Array.isArray(dashArray) && dashArray.length > 0) {
+    if (Array.isArray(dashArray)) {
       let isValid = true;
       let allZeros = true;
       for (const element of dashArray) {
@@ -51403,7 +51403,7 @@ class AnnotationBorderStyle {
           allZeros = false;
         }
       }
-      if (isValid && !allZeros) {
+      if (dashArray.length === 0 || isValid && !allZeros) {
         this.dashArray = dashArray;
         if (forceStyle) {
           this.setStyle(Name.get("D"));
@@ -56756,7 +56756,7 @@ class WorkerMessageHandler {
       docId,
       apiVersion
     } = docParams;
-    const workerVersion = "4.1.367";
+    const workerVersion = "4.1.378";
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -57318,8 +57318,8 @@ if (typeof window === "undefined" && !isNodeJS && typeof self !== "undefined" &&
 
 ;// CONCATENATED MODULE: ./src/pdf.worker.js
 
-const pdfjsVersion = "4.1.367";
-const pdfjsBuild = "5adad89eb";
+const pdfjsVersion = "4.1.378";
+const pdfjsBuild = "a208d6bca";
 
 var __webpack_exports__WorkerMessageHandler = __webpack_exports__.WorkerMessageHandler;
 export { __webpack_exports__WorkerMessageHandler as WorkerMessageHandler };

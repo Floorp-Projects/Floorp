@@ -6402,7 +6402,7 @@ class PDFThumbnailView {
     }
     this.resume = null;
   }
-  _getPageDrawContext(upscaleFactor = 1) {
+  #getPageDrawContext(upscaleFactor = 1) {
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d", {
       alpha: false
@@ -6417,11 +6417,11 @@ class PDFThumbnailView {
       transform
     };
   }
-  _convertCanvasToImage(canvas) {
+  #convertCanvasToImage(canvas) {
     if (this.renderingState !== RenderingStates.FINISHED) {
-      throw new Error("_convertCanvasToImage: Rendering has not finished.");
+      throw new Error("#convertCanvasToImage: Rendering has not finished.");
     }
-    const reducedCanvas = this._reduceImage(canvas);
+    const reducedCanvas = this.#reduceImage(canvas);
     const image = document.createElement("img");
     image.className = "thumbnailImage";
     image.setAttribute("data-l10n-id", "pdfjs-thumb-page-canvas");
@@ -6441,7 +6441,7 @@ class PDFThumbnailView {
       return;
     }
     this.renderingState = RenderingStates.FINISHED;
-    this._convertCanvasToImage(canvas);
+    this.#convertCanvasToImage(canvas);
     if (error) {
       throw error;
     }
@@ -6463,7 +6463,7 @@ class PDFThumbnailView {
       ctx,
       canvas,
       transform
-    } = this._getPageDrawContext(DRAW_UPSCALE_FACTOR);
+    } = this.#getPageDrawContext(DRAW_UPSCALE_FACTOR);
     const drawViewport = this.viewport.clone({
       scale: DRAW_UPSCALE_FACTOR * this.scale
     });
@@ -6518,13 +6518,13 @@ class PDFThumbnailView {
       return;
     }
     this.renderingState = RenderingStates.FINISHED;
-    this._convertCanvasToImage(canvas);
+    this.#convertCanvasToImage(canvas);
   }
-  _reduceImage(img) {
+  #reduceImage(img) {
     const {
       ctx,
       canvas
-    } = this._getPageDrawContext();
+    } = this.#getPageDrawContext();
     if (img.width <= 2 * canvas.width) {
       ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, canvas.width, canvas.height);
       return canvas;
@@ -6578,16 +6578,16 @@ class PDFThumbnailViewer {
     this.linkService = linkService;
     this.renderingQueue = renderingQueue;
     this.pageColors = pageColors || null;
-    this.scroll = watchScroll(this.container, this._scrollUpdated.bind(this));
-    this._resetView();
+    this.scroll = watchScroll(this.container, this.#scrollUpdated.bind(this));
+    this.#resetView();
   }
-  _scrollUpdated() {
+  #scrollUpdated() {
     this.renderingQueue.renderHighestPriority();
   }
   getThumbnail(index) {
     return this._thumbnails[index];
   }
-  _getVisibleThumbs() {
+  #getVisibleThumbs() {
     return getVisibleElements({
       scrollEl: this.container,
       views: this._thumbnails
@@ -6611,7 +6611,7 @@ class PDFThumbnailViewer {
       first,
       last,
       views
-    } = this._getVisibleThumbs();
+    } = this.#getVisibleThumbs();
     if (views.length > 0) {
       let shouldScroll = false;
       if (pageNumber <= first.id || pageNumber >= last.id) {
@@ -6665,7 +6665,7 @@ class PDFThumbnailViewer {
     }
     TempImageFactory.destroyCanvas();
   }
-  _resetView() {
+  #resetView() {
     this._thumbnails = [];
     this._currentPageNumber = 1;
     this._pageLabels = null;
@@ -6674,8 +6674,8 @@ class PDFThumbnailViewer {
   }
   setDocument(pdfDocument) {
     if (this.pdfDocument) {
-      this._cancelRendering();
-      this._resetView();
+      this.#cancelRendering();
+      this.#resetView();
     }
     this.pdfDocument = pdfDocument;
     if (!pdfDocument) {
@@ -6710,7 +6710,7 @@ class PDFThumbnailViewer {
       console.error("Unable to initialize thumbnail viewer", reason);
     });
   }
-  _cancelRendering() {
+  #cancelRendering() {
     for (const thumbnail of this._thumbnails) {
       thumbnail.cancelRendering();
     }
@@ -6755,7 +6755,7 @@ class PDFThumbnailViewer {
     return this.scroll.down;
   }
   forceRendering() {
-    const visibleThumbs = this._getVisibleThumbs();
+    const visibleThumbs = this.#getVisibleThumbs();
     const scrollAhead = this.#getScrollAhead(visibleThumbs);
     const thumbView = this.renderingQueue.getHighestPriority(visibleThumbs, this._thumbnails, scrollAhead);
     if (thumbView) {
@@ -8493,7 +8493,7 @@ class PDFViewer {
   #scaleTimeoutId = null;
   #textLayerMode = TextLayerMode.ENABLE;
   constructor(options) {
-    const viewerVersion = "4.1.367";
+    const viewerVersion = "4.1.378";
     if (version !== viewerVersion) {
       throw new Error(`The API version "${version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -12632,8 +12632,8 @@ function webViewerReportTelemetry({
 
 
 
-const pdfjsVersion = "4.1.367";
-const pdfjsBuild = "5adad89eb";
+const pdfjsVersion = "4.1.378";
+const pdfjsBuild = "a208d6bca";
 const AppConstants = null;
 window.PDFViewerApplication = PDFViewerApplication;
 window.PDFViewerApplicationConstants = AppConstants;

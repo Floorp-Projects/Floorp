@@ -3412,6 +3412,7 @@ class AnnotationEditor {
   #editToolbar = null;
   #focusedResizerName = "";
   #hasBeenClicked = false;
+  #initialPosition = null;
   #isEditing = false;
   #isInEditMode = false;
   #isResizerEnabledForKeyboard = false;
@@ -3637,12 +3638,14 @@ class AnnotationEditor {
     this.#translate(this.parentDimensions, x, y);
   }
   translateInPage(x, y) {
+    this.#initialPosition ||= [this.x, this.y];
     this.#translate(this.pageDimensions, x, y);
     this.div.scrollIntoView({
       block: "nearest"
     });
   }
   drag(tx, ty) {
+    this.#initialPosition ||= [this.x, this.y];
     const [parentWidth, parentHeight] = this.parentDimensions;
     this.x += tx / parentWidth;
     this.y += ty / parentHeight;
@@ -3668,6 +3671,9 @@ class AnnotationEditor {
     this.div.scrollIntoView({
       block: "nearest"
     });
+  }
+  get _hasBeenMoved() {
+    return !!this.#initialPosition && (this.#initialPosition[0] !== this.x || this.#initialPosition[1] !== this.y);
   }
   getBaseTranslation() {
     const [parentWidth, parentHeight] = this.parentDimensions;
@@ -9190,7 +9196,7 @@ function getDocument(src) {
   }
   const fetchDocParams = {
     docId,
-    apiVersion: "4.1.367",
+    apiVersion: "4.1.378",
     data,
     password,
     disableAutoFetch,
@@ -10834,8 +10840,8 @@ class InternalRenderTask {
     }
   }
 }
-const version = "4.1.367";
-const build = "5adad89eb";
+const version = "4.1.378";
+const build = "a208d6bca";
 
 ;// CONCATENATED MODULE: ./src/shared/scripting_utils.js
 function makeColorComp(n) {
@@ -13693,7 +13699,6 @@ class FreeTextEditor extends AnnotationEditor {
   }
   onceAdded() {
     if (this.width) {
-      this.#cheatInitialRect();
       return;
     }
     this.enableEditMode();
@@ -14070,22 +14075,9 @@ class FreeTextEditor extends AnnotationEditor {
       value,
       fontSize,
       color,
-      rect,
       pageIndex
     } = this.#initialData;
-    return serialized.value !== value || serialized.fontSize !== fontSize || serialized.rect.some((x, i) => Math.abs(x - rect[i]) >= 1) || serialized.color.some((c, i) => c !== color[i]) || serialized.pageIndex !== pageIndex;
-  }
-  #cheatInitialRect(delayed = false) {
-    if (!this.annotationElementId) {
-      return;
-    }
-    this.#setEditorDimensions();
-    if (!delayed && (this.width === 0 || this.height === 0)) {
-      setTimeout(() => this.#cheatInitialRect(true), 0);
-      return;
-    }
-    const padding = FreeTextEditor._internalPadding * this.parentScale;
-    this.#initialData.rect = this.getRect(padding, padding);
+    return this._hasBeenMoved || serialized.value !== value || serialized.fontSize !== fontSize || serialized.color.some((c, i) => c !== color[i]) || serialized.pageIndex !== pageIndex;
   }
 }
 
@@ -17039,6 +17031,9 @@ class AnnotationEditorLayer {
     }
   }
   add(editor) {
+    if (editor.parent === this && editor.isAttachedToDOM) {
+      return;
+    }
     this.changeParent(editor);
     this.#uiManager.addEditor(editor);
     this.attach(editor);
@@ -17514,8 +17509,8 @@ class DrawLayer {
 
 
 
-const pdfjsVersion = "4.1.367";
-const pdfjsBuild = "5adad89eb";
+const pdfjsVersion = "4.1.378";
+const pdfjsBuild = "a208d6bca";
 
 var __webpack_exports__AbortException = __webpack_exports__.AbortException;
 var __webpack_exports__AnnotationEditorLayer = __webpack_exports__.AnnotationEditorLayer;
