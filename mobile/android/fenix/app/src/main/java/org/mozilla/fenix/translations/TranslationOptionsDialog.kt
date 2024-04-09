@@ -149,7 +149,7 @@ private fun TranslationOptionsDialogHeader(
         Spacer(modifier = Modifier.width(32.dp))
 
         Text(
-            text = stringResource(id = R.string.translation_option_bottom_sheet_title),
+            text = stringResource(id = R.string.translation_option_bottom_sheet_title_heading),
             modifier = Modifier
                 .weight(1f)
                 .semantics { heading() },

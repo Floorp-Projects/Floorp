@@ -464,7 +464,7 @@ private fun TranslationsDialogHeader(
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.mozac_ic_settings_24),
-                    contentDescription = stringResource(id = R.string.translation_option_bottom_sheet_title),
+                    contentDescription = stringResource(id = R.string.translation_option_bottom_sheet_title_heading),
                     tint = FirefoxTheme.colors.iconPrimary,
                 )
             }
