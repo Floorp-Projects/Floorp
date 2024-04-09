@@ -538,6 +538,9 @@ class gfxFontEntry {
 
   mozilla::gfx::Rect GetFontExtents(float aFUnitScaleFactor) const {
     // Flip the y-axis here to match the orientation of Gecko's coordinates.
+    // We don't need to take a lock here because the min/max fields are inert
+    // after initialization, and we make sure to initialize them at gfxFont-
+    // creation time.
     return mozilla::gfx::Rect(float(mXMin) * aFUnitScaleFactor,
                               float(-mYMax) * aFUnitScaleFactor,
                               float(mXMax - mXMin) * aFUnitScaleFactor,
