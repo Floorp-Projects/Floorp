@@ -713,6 +713,7 @@ void nsPACMan::ContinueLoadingAfterPACUriKnown() {
 
         channel->SetLoadFlags(nsIRequest::LOAD_BYPASS_CACHE);
         channel->SetNotificationCallbacks(this);
+        channel->SetTRRMode(nsIRequest::TRR_DISABLED_MODE);
         if (NS_SUCCEEDED(channel->AsyncOpen(loader))) return;
       }
     }
