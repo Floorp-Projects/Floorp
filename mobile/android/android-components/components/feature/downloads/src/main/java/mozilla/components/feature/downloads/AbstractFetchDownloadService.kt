@@ -448,6 +448,9 @@ abstract class AbstractFetchDownloadService : Service() {
             notificationManager.cancel(state.foregroundServiceId)
             state.job?.cancel()
         }
+        if (SDK_INT >= Build.VERSION_CODES.N) {
+            notificationManager.cancel(NOTIFICATION_DOWNLOAD_GROUP_ID)
+        }
     }
 
     @Suppress("TooGenericExceptionCaught")
