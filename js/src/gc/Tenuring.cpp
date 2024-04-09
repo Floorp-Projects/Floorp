@@ -937,6 +937,7 @@ JSString* js::gc::TenuringTracer::promoteString(JSString* src) {
   // the atom. Don't do this for dependent strings because they're more
   // complicated. See StringRelocationOverlay and DeduplicationStringHasher
   // comments.
+  MOZ_ASSERT(!src->isAtom());
   if (src->isLinear() && src->inStringToAtomCache() &&
       src->isDeduplicatable() && !src->hasBase()) {
     JSLinearString* linear = &src->asLinear();
@@ -980,6 +981,7 @@ JSString* js::gc::TenuringTracer::promoteString(JSString* src) {
   if (shouldTenure(zone, JS::TraceKind::String, src) &&
       src->length() < MAX_DEDUPLICATABLE_STRING_LENGTH && src->isLinear() &&
       src->isDeduplicatable() && stringDeDupSet.isSome()) {
+    src->clearBitsOnTenure();
     auto p = stringDeDupSet->lookupForAdd(src);
     if (p) {
       // Deduplicate to the looked-up string!
@@ -1004,14 +1006,15 @@ JSString* js::gc::TenuringTracer::promoteString(JSString* src) {
   } else {
     dst = allocString(src, zone, dstKind);
     if (dst->isTenured()) {
-      dst->clearNonDeduplicatable();
+      src->clearBitsOnTenure();
+      dst->clearBitsOnTenure();
     }
   }
 
   zone->stringStats.ref().noteTenured(src->allocSize());
 
   auto* overlay = StringRelocationOverlay::forwardCell(src, dst);
-  MOZ_ASSERT_IF(dst->isTenured(), dst->isDeduplicatable());
+  MOZ_ASSERT_IF(dst->isTenured() && dst->isLinear(), dst->isDeduplicatable());
 
   if (dst->hasBase() || dst->isRope()) {
     // dst or one of its leaves might have a base that will be deduplicated.
@@ -1131,7 +1134,8 @@ void js::gc::TenuringTracer::collectToStringFixedPoint() {
     MOZ_ASSERT_IF(IsInsideNursery(str), !nursery().inCollectedRegion(str));
 
     // To ensure the NON_DEDUP_BIT was reset properly.
-    MOZ_ASSERT_IF(str->isTenured(), str->isDeduplicatable());
+    MOZ_ASSERT(!str->isAtom());
+    MOZ_ASSERT_IF(str->isTenured() && str->isLinear(), str->isDeduplicatable());
 
     // The nursery root base might not be forwarded before
     // traceString(str). traceString(str) will forward the root
