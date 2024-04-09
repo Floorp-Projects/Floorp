@@ -36,6 +36,10 @@ PortLocker::PortLocker(const PortRef** port_refs, size_t num_ports)
   UpdateTLS(nullptr, this);
 #endif
 
+#ifdef MOZ_USE_SINGLETON_PORT_MUTEX
+  detail::PortMutex::sSingleton.Lock();
+#endif
+
   // Sort the ports by address to lock them in a globally consistent order.
   std::sort(
       port_refs_, port_refs_ + num_ports_,
@@ -51,6 +55,10 @@ PortLocker::~PortLocker() {
   for (size_t i = 0; i < num_ports_; ++i) {
     port_refs_[i]->port()->lock_.Unlock();
   }
+
+#ifdef MOZ_USE_SINGLETON_PORT_MUTEX
+  detail::PortMutex::sSingleton.Unlock();
+#endif
 
 #ifdef DEBUG
   UpdateTLS(this, nullptr);

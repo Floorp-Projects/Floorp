@@ -8,6 +8,10 @@ namespace mojo {
 namespace core {
 namespace ports {
 
+#ifdef MOZ_USE_SINGLETON_PORT_MUTEX
+mozilla::StaticMutex detail::PortMutex::sSingleton;
+#endif
+
 // Used by std::{push,pop}_heap functions
 inline bool operator<(const mozilla::UniquePtr<Event>& a,
                       const mozilla::UniquePtr<Event>& b) {
