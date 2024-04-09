@@ -9,13 +9,15 @@
 
 #include "nsISupports.h"
 #include "nsIObserver.h"
+#include "nsITerminatorTest.h"
 
 namespace mozilla {
 
-class nsTerminator final : public nsIObserver {
+class nsTerminator final : public nsIObserver, public nsITerminatorTest {
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
+  NS_DECL_NSITERMINATORTEST
 
   nsTerminator();
   void AdvancePhase(mozilla::ShutdownPhase aPhase);

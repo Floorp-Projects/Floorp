@@ -29,4 +29,10 @@ XPCOM_MANIFESTS += [
     "components.conf",
 ]
 
+XPIDL_SOURCES += [
+    "nsITerminatorTest.idl",
+]
+
+XPIDL_MODULE = "toolkit_terminator"
+
 FINAL_LIBRARY = "xul"
