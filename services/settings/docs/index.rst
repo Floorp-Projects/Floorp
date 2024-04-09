@@ -183,8 +183,11 @@ The JSON dump will serve as the default dataset for ``.get()``, instead of doing
       CID="your-collection"
       curl "https://firefox.settings.services.mozilla.com/v1/buckets/main/collections/${CID}/changeset?_expected=0" | jq '{"data": .changes, "timestamp": .timestamp}' > services/settings/dumps/main/${CID}.json``
 
-#. Add the filename to the ``FINAL_TARGET_FILES`` list in ``services/settings/dumps/main/moz.build``
-#. Add the filename to the ``[browser]`` section of ``mobile/android/installer/package-manifest.in`` IF the file should be bundled with Android.
+#. Add the filename to the relevant ``FINAL_TARGET_FILES`` list in ``services/settings/dumps/main/moz.build``
+
+  * Please consider the application(s) where the collection is used and only include the dump file in the relevant builds.
+  * If it is only for Firefox desktop, i.e. ``browser/``, then add it to a build-specific browser section.
+  * If it is for all applications, i.e. outside of ``browser/`` are other specific area, then add it to the global section.
 
 Now, when ``RemoteSettings("some-key").get()`` is called from an empty profile, the ``some-key.json`` file is going to be loaded before the results are returned.
 

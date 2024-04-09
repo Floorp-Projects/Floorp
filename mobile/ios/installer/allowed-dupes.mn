@@ -16,11 +16,5 @@ res/table-remove-row.gif
 res/multilocale.txt
 update.locale
 
-# Bug 1833829 - Rolling out new search configuration.
-defaults/settings/main/search-config-icons/47da97b5-600f-c450-fd15-a52bb2169c11
-defaults/settings/main/search-config-icons/fed4f021-ff3e-942a-010e-afa43fda2136
-defaults/settings/main/search-config-icons/6a83583a-f0ba-fd39-2fdb-fd2b6990ea3b
-defaults/settings/main/search-config-icons/f312610a-ebfb-a106-ea92-fd643c5d3636
-
 components/httpd.sys.mjs
 chrome/remote/content/server/httpd.sys.mjs

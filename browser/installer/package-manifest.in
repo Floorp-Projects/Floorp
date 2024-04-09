@@ -249,10 +249,7 @@
 @RESPATH@/defaults/autoconfig/prefcalls.js
 @RESPATH@/browser/defaults/permissions
 ; Remote Settings JSON dumps
-@RESPATH@/browser/defaults/settings/last_modified.json
-@RESPATH@/browser/defaults/settings/blocklists
-@RESPATH@/browser/defaults/settings/main
-@RESPATH@/browser/defaults/settings/security-state
+@RESPATH@/browser/defaults/settings
 
 # channel-prefs.js has been removed on macOS.
 #ifndef XP_MACOSX
