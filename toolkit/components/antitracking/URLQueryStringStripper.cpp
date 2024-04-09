@@ -446,6 +446,11 @@ nsresult URLQueryStringStripper::StripForCopyOrShareInternal(
         return false;
       }
 
+      if (!strippedNestedURI) {
+        params.Append(name, value);
+        return true;
+      }
+
       nsAutoCString nestedURIString;
       rv = strippedNestedURI->GetSpec(nestedURIString);
       if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -463,6 +468,11 @@ nsresult URLQueryStringStripper::StripForCopyOrShareInternal(
     params.Append(name, value);
     return true;
   });
+
+  // Returns null for strippedURI if no query params have been stripped.
+  if (!aStripCount) {
+    return NS_OK;
+  }
 
   nsAutoCString newQuery;
   params.Serialize(newQuery, false);
