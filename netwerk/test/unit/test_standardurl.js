@@ -1056,3 +1056,8 @@ add_task(async function test_bug1873976() {
   let url = Services.io.newURI("file:.");
   equal(url.spec, "file:///");
 });
+
+add_task(async function test_bug1890346() {
+  let url = Services.io.newURI("file:..?/..");
+  equal(url.spec, "file:///?/..");
+});
