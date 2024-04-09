@@ -13,6 +13,10 @@ const projectRoot = path.resolve(__dirname, "../../../../");
 module.exports = {
   // The ordering for this stories array affects the order that they are displayed in Storybook
   stories: [
+    // Show the Storybook document first in the list
+    // so that navigating to firefoxux.github.io/firefox-desktop-components/
+    // lands on the Storybook.stories.md file
+    "../**/README.storybook.stories.md",
     // Docs section
     "../**/README.*.stories.md",
     // UI Widgets section
