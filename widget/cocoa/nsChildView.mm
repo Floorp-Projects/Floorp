@@ -1712,17 +1712,14 @@ void nsChildView::UpdateThemeGeometries(
     return;
   }
 
-  // Update unified toolbar height and sheet attachment position.
   ToolbarWindow* win = (ToolbarWindow*)[mView window];
 
   // Update titlebar control offsets.
   LayoutDeviceIntRect windowButtonRect =
       FindFirstRectOfType(aThemeGeometries, eThemeGeometryTypeWindowButtons);
-  if (!windowButtonRect.IsEmpty()) {
-    [win placeWindowButtons:[mView convertRect:DevPixelsToCocoaPoints(
-                                                   windowButtonRect)
-                                        toView:nil]];
-  }
+  [win placeWindowButtons:[mView convertRect:DevPixelsToCocoaPoints(
+                                                 windowButtonRect)
+                                      toView:nil]];
 }
 
 static Maybe<VibrancyType> ThemeGeometryTypeToVibrancyType(
