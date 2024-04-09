@@ -411,9 +411,6 @@ void ForEachStringFlag(const JSString* str, uint32_t flags, KnownF known,
       case JSString::INDEX_VALUE_BIT:
         known("INDEX_VALUE_BIT");
         break;
-      case JSString::NON_DEDUP_BIT:
-        known("NON_DEDUP_BIT");
-        break;
       case JSString::IN_STRING_TO_ATOM_CACHE:
         known("IN_STRING_TO_ATOM_CACHE");
         break;
@@ -421,7 +418,7 @@ void ForEachStringFlag(const JSString* str, uint32_t flags, KnownF known,
         if (str->isRope()) {
           known("FLATTEN_VISIT_RIGHT");
         } else {
-          unknown(i);
+          known("NON_DEDUP_BIT");
         }
         break;
       case JSString::FLATTEN_FINISH_NODE:
