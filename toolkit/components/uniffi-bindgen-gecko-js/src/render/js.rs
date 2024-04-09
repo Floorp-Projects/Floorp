@@ -92,7 +92,8 @@ pub impl Literal {
             Literal::Enum(name, typ) => render_enum_literal(typ, name),
             Literal::EmptyMap => "{}".to_string(),
             Literal::EmptySequence => "[]".to_string(),
-            Literal::Null => "null".to_string(),
+            Literal::Some { inner } => inner.render(),
+            Literal::None => "null".to_string(),
         }
     }
 }
@@ -258,7 +259,6 @@ pub impl Type {
             | Type::CallbackInterface { name, .. } => format!("Type{name}"),
             Type::Timestamp => "Timestamp".into(),
             Type::Duration => "Duration".into(),
-            Type::ForeignExecutor => "ForeignExecutor".into(),
             Type::Optional { inner_type } => format!("Optional{}", inner_type.canonical_name()),
             Type::Sequence { inner_type } => format!("Sequence{}", inner_type.canonical_name()),
             Type::Map {

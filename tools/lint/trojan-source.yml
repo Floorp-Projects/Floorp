@@ -14,6 +14,7 @@ trojan-source:
         - third_party/python/arrow/arrow/locales.py
         - third_party/rust/chardetng/src/data.rs
         - third_party/rust/clap_builder/src/output/textwrap/core.rs
+        - third_party/rust/textwrap/src/core.rs
         - third_party/rust/icu_provider/src/hello_world.rs
         - third_party/rust/uniffi-example-rondpoint/tests/bindings/test_rondpoint.py
         - third_party/rust/error-chain/tests/tests.rs

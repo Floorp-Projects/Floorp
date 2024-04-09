@@ -28,8 +28,8 @@ constexpr int8_t CALLBACK_INTERFACE_UNEXPECTED_ERROR = 2;
 // structs/functions from UniFFI
 extern "C" {
 struct RustBuffer {
-  int32_t capacity;
-  int32_t len;
+  uint64_t capacity;
+  uint64_t len;
   uint8_t* data;
 };
 
@@ -42,7 +42,7 @@ typedef int (*ForeignCallback)(uint64_t handle, uint32_t method,
                                const uint8_t* argsData, int32_t argsLen,
                                RustBuffer* buf_ptr);
 
-RustBuffer uniffi_rustbuffer_alloc(int32_t size, RustCallStatus* call_status);
+RustBuffer uniffi_rustbuffer_alloc(uint64_t size, RustCallStatus* call_status);
 void uniffi_rustbuffer_free(RustBuffer buf, RustCallStatus* call_status);
 }
 
