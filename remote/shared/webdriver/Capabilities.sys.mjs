@@ -1031,7 +1031,10 @@ export function validateCapabilities(capabilities) {
  */
 export function processCapabilities(params) {
   const { capabilities } = params;
-  lazy.assert.object(capabilities);
+  lazy.assert.object(
+    capabilities,
+    lazy.pprint`Expected "capabilities" to be an object, got ${capabilities}`
+  );
 
   let {
     alwaysMatch: requiredCapabilities = {},
