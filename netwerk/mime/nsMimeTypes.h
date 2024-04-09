@@ -31,6 +31,7 @@
 #define APPLICATION_GZIP2 "application/gzip"
 #define APPLICATION_GZIP3 "application/x-gunzip"
 #define APPLICATION_BROTLI "application/brotli"
+#define APPLICATION_ZSTD "application/zstd"
 #define APPLICATION_ZIP "application/zip"
 #define APPLICATION_HTTP_INDEX_FORMAT "application/http-index-format"
 #define APPLICATION_ECMASCRIPT "application/ecmascript"
@@ -245,6 +246,7 @@
 #define ENCODING_UUENCODE3 "uuencode"
 #define ENCODING_UUENCODE4 "uue"
 #define ENCODING_YENCODE "x-yencode"
+#define ENCODING_ZSTD "zstd"
 
 /* Some names of parameters that various MIME headers include.
  */
