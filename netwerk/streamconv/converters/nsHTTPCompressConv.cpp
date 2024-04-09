@@ -29,8 +29,6 @@
 #include "state.h"
 #include "brotli/decode.h"
 
-#include "zstd/zstd.h"
-
 namespace mozilla {
 namespace net {
 
@@ -53,26 +51,6 @@ class BrotliWrapper {
   nsIRequest* mRequest{nullptr};
   nsISupports* mContext{nullptr};
   uint64_t mSourceOffset{0};
-};
-
-class ZstdWrapper {
- public:
-  ZstdWrapper() {
-    mDStream = ZSTD_createDStream();
-    ZSTD_DCtx_setParameter(mDStream, ZSTD_d_windowLogMax, 23 /*8*1024*1024*/);
-  }
-  ~ZstdWrapper() {
-    if (mDStream) {
-      ZSTD_freeDStream(mDStream);
-    }
-  }
-
-  UniquePtr<uint8_t[]> mOutBuffer;
-  nsresult mStatus = NS_OK;
-  nsIRequest* mRequest{nullptr};
-  nsISupports* mContext{nullptr};
-  uint64_t mSourceOffset{0};
-  ZSTD_DStream* mDStream{nullptr};
 };
 
 // nsISupports implementation
@@ -134,12 +112,6 @@ nsHTTPCompressConv::AsyncConvertData(const char* aFromType, const char* aToType,
   } else if (!nsCRT::strncasecmp(aFromType, HTTP_BROTLI_TYPE,
                                  sizeof(HTTP_BROTLI_TYPE) - 1)) {
     mMode = HTTP_COMPRESS_BROTLI;
-  } else if (!nsCRT::strncasecmp(aFromType, HTTP_ZSTD_TYPE,
-                                 sizeof(HTTP_ZSTD_TYPE) - 1)) {
-    mMode = HTTP_COMPRESS_ZSTD;
-  } else if (!nsCRT::strncasecmp(aFromType, HTTP_ZST_TYPE,
-                                 sizeof(HTTP_ZST_TYPE) - 1)) {
-    mMode = HTTP_COMPRESS_ZSTD;
   }
   LOG(("nsHttpCompresssConv %p AsyncConvertData %s %s mode %d\n", this,
        aFromType, aToType, (CompressMode)mMode));
@@ -391,71 +363,6 @@ nsresult nsHTTPCompressConv::BrotliHandler(nsIInputStream* stream,
   return self->mBrotli->mStatus;
 }
 
-/* static */
-nsresult nsHTTPCompressConv::ZstdHandler(nsIInputStream* stream, void* closure,
-                                         const char* dataIn, uint32_t,
-                                         uint32_t aAvail, uint32_t* countRead) {
-  MOZ_ASSERT(stream);
-  nsHTTPCompressConv* self = static_cast<nsHTTPCompressConv*>(closure);
-  *countRead = 0;
-
-  const size_t kOutSize = ZSTD_DStreamOutSize();  // normally 128K
-  uint8_t* outPtr;
-  size_t avail = aAvail;
-
-  // Stop decompressing after an error
-  if (self->mZstd->mStatus != NS_OK) {
-    *countRead = aAvail;
-    return NS_OK;
-  }
-
-  if (!self->mZstd->mOutBuffer) {
-    self->mZstd->mOutBuffer = MakeUniqueFallible<uint8_t[]>(kOutSize);
-    if (!self->mZstd->mOutBuffer) {
-      self->mZstd->mStatus = NS_ERROR_OUT_OF_MEMORY;
-      return self->mZstd->mStatus;
-    }
-  }
-  ZSTD_inBuffer inBuffer = {.src = dataIn, .size = aAvail, .pos = 0};
-  uint32_t last_pos = 0;
-  while (inBuffer.pos < inBuffer.size) {
-    outPtr = self->mZstd->mOutBuffer.get();
-
-    LOG(("nsHttpCompresssConv %p zstdhandler decompress %zu\n", self, avail));
-    // Use ZSTD_(de)compressStream to (de)compress the input buffer into the
-    // output buffer, and fill aReadCount with the number of bytes consumed.
-    ZSTD_outBuffer outBuffer{.dst = outPtr, .size = kOutSize};
-    size_t result;
-    bool output_full;
-    do {
-      outBuffer.pos = 0;
-      result =
-          ZSTD_decompressStream(self->mZstd->mDStream, &outBuffer, &inBuffer);
-
-      // If we errored when writing, flag this and abort writing.
-      if (ZSTD_isError(result)) {
-        self->mZstd->mStatus = NS_ERROR_INVALID_CONTENT_ENCODING;
-        return self->mZstd->mStatus;
-      }
-
-      nsresult rv = self->do_OnDataAvailable(
-          self->mZstd->mRequest, self->mZstd->mSourceOffset,
-          reinterpret_cast<const char*>(outPtr), outBuffer.pos);
-      if (NS_FAILED(rv)) {
-        self->mZstd->mStatus = rv;
-        return rv;
-      }
-      self->mZstd->mSourceOffset += inBuffer.pos - last_pos;
-      last_pos = inBuffer.pos;
-      output_full = outBuffer.pos == outBuffer.size;
-      // in the unlikely case that the output buffer was full, loop to
-      // drain it before processing more input
-    } while (output_full);
-  }
-  *countRead = inBuffer.pos;
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsHTTPCompressConv::OnDataAvailable(nsIRequest* request, nsIInputStream* iStr,
                                     uint64_t aSourceOffset, uint32_t aCount) {
@@ -683,25 +590,6 @@ nsHTTPCompressConv::OnDataAvailable(nsIRequest* request, nsIInputStream* iStr,
       rv = iStr->ReadSegments(BrotliHandler, this, streamLen, &countRead);
       if (NS_SUCCEEDED(rv)) {
         rv = mBrotli->mStatus;
-      }
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
-    } break;
-
-    case HTTP_COMPRESS_ZSTD: {
-      if (!mZstd) {
-        mZstd = MakeUnique<ZstdWrapper>();
-      }
-
-      mZstd->mRequest = request;
-      mZstd->mContext = nullptr;
-      mZstd->mSourceOffset = aSourceOffset;
-
-      uint32_t countRead;
-      rv = iStr->ReadSegments(ZstdHandler, this, streamLen, &countRead);
-      if (NS_SUCCEEDED(rv)) {
-        rv = mZstd->mStatus;
       }
       if (NS_FAILED(rv)) {
         return rv;

@@ -1539,8 +1539,6 @@ HttpBaseChannel::DoApplyContentConversions(nsIStreamListener* aNextListener,
           mode = 2;
         } else if (from.EqualsLiteral("br")) {
           mode = 3;
-        } else if (from.EqualsLiteral("zstd")) {
-          mode = 4;
         }
         Telemetry::Accumulate(Telemetry::HTTP_CONTENT_ENCODING, mode);
       }
@@ -1641,14 +1639,6 @@ HttpBaseChannel::nsContentEncodings::GetNext(nsACString& aNextEncoding) {
     encoding.BeginReading(start);
     if (CaseInsensitiveFindInReadable("br"_ns, start, end)) {
       aNextEncoding.AssignLiteral(APPLICATION_BROTLI);
-      haveType = true;
-    }
-  }
-
-  if (!haveType) {
-    encoding.BeginReading(start);
-    if (CaseInsensitiveFindInReadable("zstd"_ns, start, end)) {
-      aNextEncoding.AssignLiteral(APPLICATION_ZSTD);
       haveType = true;
     }
   }

@@ -34,14 +34,11 @@ class nsIStringInputStream;
 #  define HTTP_BROTLI_TYPE "br"
 #  define HTTP_IDENTITY_TYPE "identity"
 #  define HTTP_UNCOMPRESSED_TYPE "uncompressed"
-#  define HTTP_ZSTD_TYPE "zstd"
-#  define HTTP_ZST_TYPE "zst"
 
 namespace mozilla {
 namespace net {
 
 class BrotliWrapper;
-class ZstdWrapper;
 
 class nsHTTPCompressConv : public nsIStreamConverter,
                            public nsICompressConvStats {
@@ -63,8 +60,7 @@ class nsHTTPCompressConv : public nsIStreamConverter,
     HTTP_COMPRESS_DEFLATE,
     HTTP_COMPRESS_COMPRESS,
     HTTP_COMPRESS_BROTLI,
-    HTTP_COMPRESS_IDENTITY,
-    HTTP_COMPRESS_ZSTD,
+    HTTP_COMPRESS_IDENTITY
   };
 
  private:
@@ -81,17 +77,12 @@ class nsHTTPCompressConv : public nsIStreamConverter,
   uint32_t mInpBufferLen{0};
 
   UniquePtr<BrotliWrapper> mBrotli;
-  UniquePtr<ZstdWrapper> mZstd;
 
   nsCOMPtr<nsIStringInputStream> mStream;
 
   static nsresult BrotliHandler(nsIInputStream* stream, void* closure,
                                 const char* dataIn, uint32_t, uint32_t avail,
                                 uint32_t* countRead);
-
-  static nsresult ZstdHandler(nsIInputStream* stream, void* closure,
-                              const char* dataIn, uint32_t, uint32_t avail,
-                              uint32_t* countRead);
 
   nsresult do_OnDataAvailable(nsIRequest* request, uint64_t aSourceOffset,
                               const char* buffer, uint32_t aCount);

@@ -100,7 +100,7 @@ add_task(
     });
     equal(
       Services.prefs.getCharPref("network.http.accept-encoding.secure"),
-      "gzip, deflate, br, zstd"
+      "gzip, deflate, br"
     );
     let { req, buff } = await new Promise(resolve => {
       let chan = NetUtil.newChannel({
