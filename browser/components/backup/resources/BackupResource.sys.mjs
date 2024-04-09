@@ -35,6 +35,21 @@ export class BackupResource {
   }
 
   /**
+   * This must be overridden to return a boolean indicating whether the
+   * resource requires encryption when being backed up. Encryption should be
+   * required for particularly sensitive data, such as passwords / credentials,
+   * cookies, or payment methods. If you're not sure, talk to someone from the
+   * Privacy team.
+   *
+   * @type {boolean}
+   */
+  static get requiresEncryption() {
+    throw new Error(
+      "BackupResource::requiresEncryption needs to be overridden."
+    );
+  }
+
+  /**
    * Get the size of a file.
    *
    * @param {string} filePath - path to a file.

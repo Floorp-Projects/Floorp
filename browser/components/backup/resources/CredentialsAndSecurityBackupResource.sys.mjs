@@ -12,6 +12,10 @@ export class CredentialsAndSecurityBackupResource extends BackupResource {
     return "credentials_and_security";
   }
 
+  static get requiresEncryption() {
+    return true;
+  }
+
   async measure(profilePath = PathUtils.profileDir) {
     const securityFiles = ["cert9.db", "pkcs11.txt"];
     let securitySize = 0;

@@ -12,6 +12,10 @@ export class PlacesBackupResource extends BackupResource {
     return "places";
   }
 
+  static get requiresEncryption() {
+    return false;
+  }
+
   async measure(profilePath = PathUtils.profileDir) {
     let placesDBPath = PathUtils.join(profilePath, "places.sqlite");
     let faviconsDBPath = PathUtils.join(profilePath, "favicons.sqlite");

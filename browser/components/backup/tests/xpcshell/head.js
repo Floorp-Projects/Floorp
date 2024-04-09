@@ -35,7 +35,9 @@ class FakeBackupResource1 extends BackupResource {
   static get key() {
     return "fake1";
   }
-  measure() {}
+  static get requiresEncryption() {
+    return false;
+  }
 }
 
 /**
@@ -45,7 +47,9 @@ class FakeBackupResource2 extends BackupResource {
   static get key() {
     return "fake2";
   }
-  measure() {}
+  static get requiresEncryption() {
+    return true;
+  }
 }
 
 /**
@@ -55,7 +59,9 @@ class FakeBackupResource3 extends BackupResource {
   static get key() {
     return "fake3";
   }
-  measure() {}
+  static get requiresEncryption() {
+    return false;
+  }
 }
 
 /**

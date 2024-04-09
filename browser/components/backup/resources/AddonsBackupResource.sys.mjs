@@ -12,6 +12,10 @@ export class AddonsBackupResource extends BackupResource {
     return "addons";
   }
 
+  static get requiresEncryption() {
+    return false;
+  }
+
   async measure(profilePath = PathUtils.profileDir) {
     // Report the total size of the extension json files.
     const jsonFiles = [
