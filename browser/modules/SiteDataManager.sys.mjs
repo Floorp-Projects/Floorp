@@ -504,23 +504,6 @@ export var SiteDataManager = {
     site.cookies = [];
   },
 
-  // Returns a list of permissions from the permission manager that
-  // we consider part of "site data and cookies".
-  _getDeletablePermissions() {
-    let perms = [];
-
-    for (let permission of Services.perms.all) {
-      if (
-        permission.type == "persistent-storage" ||
-        permission.type == "storage-access"
-      ) {
-        perms.push(permission);
-      }
-    }
-
-    return perms;
-  },
-
   /**
    * Removes all site data for the specified list of domains and hosts.
    * This includes site data of subdomains belonging to the domains or hosts and
@@ -542,7 +525,7 @@ export var SiteDataManager = {
     if (!Array.isArray(domainsOrHosts)) {
       domainsOrHosts = [domainsOrHosts];
     }
-    let perms = this._getDeletablePermissions();
+
     let promises = [];
     for (let domainOrHost of domainsOrHosts) {
       const kFlags =
@@ -552,7 +535,8 @@ export var SiteDataManager = {
         Ci.nsIClearDataService.CLEAR_ALL_CACHES |
         Ci.nsIClearDataService.CLEAR_COOKIE_BANNER_EXECUTED_RECORD |
         Ci.nsIClearDataService.CLEAR_FINGERPRINTING_PROTECTION_STATE |
-        Ci.nsIClearDataService.CLEAR_BOUNCE_TRACKING_PROTECTION_STATE;
+        Ci.nsIClearDataService.CLEAR_BOUNCE_TRACKING_PROTECTION_STATE |
+        Ci.nsIClearDataService.CLEAR_STORAGE_PERMISSIONS;
       promises.push(
         new Promise(function (resolve) {
           const { clearData } = Services;
@@ -580,19 +564,6 @@ export var SiteDataManager = {
           }
         })
       );
-
-      for (let perm of perms) {
-        // Specialcase local file permissions.
-        if (!domainOrHost) {
-          if (perm.principal.schemeIs("file")) {
-            Services.perms.removePermission(perm);
-          }
-        } else if (
-          Services.eTLD.hasRootDomain(perm.principal.host, domainOrHost)
-        ) {
-          Services.perms.removePermission(perm);
-        }
-      }
     }
 
     await Promise.all(promises);
@@ -691,14 +662,11 @@ export var SiteDataManager = {
           Ci.nsIClearDataService.CLEAR_DOM_STORAGES |
           Ci.nsIClearDataService.CLEAR_HSTS |
           Ci.nsIClearDataService.CLEAR_EME |
-          Ci.nsIClearDataService.CLEAR_BOUNCE_TRACKING_PROTECTION_STATE,
+          Ci.nsIClearDataService.CLEAR_BOUNCE_TRACKING_PROTECTION_STATE |
+          Ci.nsIClearDataService.CLEAR_STORAGE_PERMISSIONS,
         resolve
       );
     });
-
-    for (let permission of this._getDeletablePermissions()) {
-      Services.perms.removePermission(permission);
-    }
 
     return this.updateSites();
   },
