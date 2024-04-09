@@ -3696,14 +3696,11 @@ static bool ShouldShiftByMenubarHeightInFullscreen(nsCocoaWindow* aWindow) {
       if (ShouldShiftByMenubarHeightInFullscreen(geckoWindow)) {
         shiftByPixels += mMenuBarHeight * aShownAmount;
       }
-      // Use mozilla::DesktopToLayoutDeviceScale rather than the
-      // DesktopToLayoutDeviceScale in nsCocoaWindow. The latter accounts for
-      // screen DPI. We don't want that because the revealAmount property
-      // already accounts for it, so we'd be compounding DPI scales > 1.
-      mozilla::DesktopCoord coord = LayoutDeviceCoord(shiftByPixels) /
-                                    mozilla::DesktopToLayoutDeviceScale();
-
-      listener->MacFullscreenMenubarOverlapChanged(coord);
+      // Use desktop pixels rather than the DesktopToLayoutDeviceScale in
+      // nsCocoaWindow. The latter accounts for screen DPI. We don't want that
+      // because the revealAmount property already accounts for it, so we'd be
+      // compounding DPI scales > 1.
+      listener->MacFullscreenMenubarOverlapChanged(DesktopCoord(shiftByPixels));
     }
   }
 }
