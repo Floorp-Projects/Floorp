@@ -85,7 +85,7 @@ interface nsIWebAuthnService : nsISupports
     void resumeConditionalGet(in uint64_t aTransactionId);
 
     void pinCallback(in uint64_t aTransactionId, in ACString aPin);
-    void resumeMakeCredential(in uint64_t aTransactionId, in boolean aForceNoneAttestation);
+    void setHasAttestationConsent(in uint64_t aTransactionId, in boolean aHasConsent);
     void selectionCallback(in uint64_t aTransactionId, in uint64_t aIndex);
 
     // Adds a virtual (software) authenticator for use in tests (particularly

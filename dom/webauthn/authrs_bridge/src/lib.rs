@@ -10,7 +10,7 @@ extern crate xpcom;
 
 use authenticator::{
     authenticatorservice::{RegisterArgs, SignArgs},
-    ctap2::attestation::AttestationObject,
+    ctap2::attestation::{AAGuid, AttestationObject, AttestationStatement},
     ctap2::commands::{get_info::AuthenticatorVersion, PinUvAuthResult},
     ctap2::server::{
         AuthenticationExtensionsClientInputs, AuthenticatorAttachment,
@@ -34,6 +34,7 @@ use nserror::{
 use nsstring::{nsACString, nsAString, nsCString, nsString};
 use serde::Serialize;
 use serde_json::json;
+use std::cell::RefCell;
 use std::fmt::Write;
 use std::sync::mpsc::{channel, Receiver, RecvError, Sender};
 use std::sync::{Arc, Mutex, MutexGuard};
@@ -86,7 +87,6 @@ enum BrowserPromptType<'a> {
     },
     PinIsTooLong,
     PinIsTooShort,
-    RegisterDirect,
     UvInvalid {
         retries: Option<u8>,
     },
@@ -166,7 +166,8 @@ fn cancel_prompts(tid: u64) -> Result<(), nsresult> {
 
 #[xpcom(implement(nsIWebAuthnRegisterResult), atomic)]
 pub struct WebAuthnRegisterResult {
-    result: RegisterResult,
+    // result is only borrowed mutably in `Anonymize`.
+    result: RefCell<RegisterResult>,
 }
 
 impl WebAuthnRegisterResult {
@@ -178,13 +179,13 @@ impl WebAuthnRegisterResult {
     xpcom_method!(get_attestation_object => GetAttestationObject() -> ThinVec<u8>);
     fn get_attestation_object(&self) -> Result<ThinVec<u8>, nsresult> {
         let mut out = ThinVec::new();
-        serde_cbor::to_writer(&mut out, &self.result.att_obj).or(Err(NS_ERROR_FAILURE))?;
+        serde_cbor::to_writer(&mut out, &self.result.borrow().att_obj).or(Err(NS_ERROR_FAILURE))?;
         Ok(out)
     }
 
     xpcom_method!(get_credential_id => GetCredentialId() -> ThinVec<u8>);
     fn get_credential_id(&self) -> Result<ThinVec<u8>, nsresult> {
-        let Some(credential_data) = &self.result.att_obj.auth_data.credential_data else {
+        let Some(credential_data) = &self.result.borrow().att_obj.auth_data.credential_data else {
             return Err(NS_ERROR_FAILURE);
         };
         Ok(credential_data.credential_id.as_slice().into())
@@ -197,7 +198,7 @@ impl WebAuthnRegisterResult {
         // In tests, the result is not very important, but we can at least return "internal" if
         // we're simulating platform attachment.
         if static_prefs::pref!("security.webauth.webauthn_enable_softtoken")
-            && self.result.attachment == AuthenticatorAttachment::Platform
+            && self.result.borrow().attachment == AuthenticatorAttachment::Platform
         {
             Ok(thin_vec![nsString::from("internal")])
         } else {
@@ -207,7 +208,7 @@ impl WebAuthnRegisterResult {
 
     xpcom_method!(get_hmac_create_secret => GetHmacCreateSecret() -> bool);
     fn get_hmac_create_secret(&self) -> Result<bool, nsresult> {
-        let Some(hmac_create_secret) = self.result.extensions.hmac_create_secret else {
+        let Some(hmac_create_secret) = self.result.borrow().extensions.hmac_create_secret else {
             return Err(NS_ERROR_NOT_AVAILABLE);
         };
         Ok(hmac_create_secret)
@@ -215,7 +216,7 @@ impl WebAuthnRegisterResult {
 
     xpcom_method!(get_cred_props_rk => GetCredPropsRk() -> bool);
     fn get_cred_props_rk(&self) -> Result<bool, nsresult> {
-        let Some(cred_props) = &self.result.extensions.cred_props else {
+        let Some(cred_props) = &self.result.borrow().extensions.cred_props else {
             return Err(NS_ERROR_NOT_AVAILABLE);
         };
         Ok(cred_props.rk)
@@ -228,11 +229,28 @@ impl WebAuthnRegisterResult {
 
     xpcom_method!(get_authenticator_attachment => GetAuthenticatorAttachment() -> nsAString);
     fn get_authenticator_attachment(&self) -> Result<nsString, nsresult> {
-        match self.result.attachment {
+        match self.result.borrow().attachment {
             AuthenticatorAttachment::CrossPlatform => Ok(nsString::from("cross-platform")),
             AuthenticatorAttachment::Platform => Ok(nsString::from("platform")),
             AuthenticatorAttachment::Unknown => Err(NS_ERROR_NOT_AVAILABLE),
         }
+    }
+
+    xpcom_method!(has_identifying_attestation => HasIdentifyingAttestation() -> bool);
+    fn has_identifying_attestation(&self) -> Result<bool, nsresult> {
+        if self.result.borrow().att_obj.att_stmt != AttestationStatement::None {
+            return Ok(true);
+        }
+        if let Some(data) = &self.result.borrow().att_obj.auth_data.credential_data {
+            return Ok(data.aaguid != AAGuid::default());
+        }
+        Ok(false)
+    }
+
+    xpcom_method!(anonymize => Anonymize());
+    fn anonymize(&self) -> Result<nsresult, nsresult> {
+        self.result.borrow_mut().att_obj.anonymize();
+        Ok(NS_OK)
     }
 }
 
@@ -274,6 +292,17 @@ impl WebAuthnAttObj {
         };
         // safe to cast to i32 by inspection of defined values
         Ok(credential_data.credential_public_key.alg as i32)
+    }
+
+    xpcom_method!(is_identifying => IsIdentifying() -> bool);
+    fn is_identifying(&self) -> Result<bool, nsresult> {
+        if self.att_obj.att_stmt != AttestationStatement::None {
+            return Ok(true);
+        }
+        if let Some(data) = &self.att_obj.auth_data.credential_data {
+            return Ok(data.aaguid != AAGuid::default());
+        }
+        Ok(false)
     }
 }
 
@@ -490,10 +519,11 @@ impl RegisterPromise {
     fn resolve_or_reject(&self, result: Result<RegisterResult, nsresult>) -> Result<(), nsresult> {
         match result {
             Ok(result) => {
-                let wrapped_result =
-                    WebAuthnRegisterResult::allocate(InitWebAuthnRegisterResult { result })
-                        .query_interface::<nsIWebAuthnRegisterResult>()
-                        .ok_or(NS_ERROR_FAILURE)?;
+                let wrapped_result = WebAuthnRegisterResult::allocate(InitWebAuthnRegisterResult {
+                    result: RefCell::new(result),
+                })
+                .query_interface::<nsIWebAuthnRegisterResult>()
+                .ok_or(NS_ERROR_FAILURE)?;
                 unsafe { self.0.Resolve(wrapped_result.coerce()) };
             }
             Err(result) => {
@@ -543,7 +573,6 @@ impl TransactionPromise {
 }
 
 enum TransactionArgs {
-    Register(/* timeout */ u64, RegisterArgs),
     Sign(/* timeout */ u64, SignArgs),
 }
 
@@ -713,13 +742,6 @@ impl AuthrsService {
             }
         }
 
-        let mut attestation_conveyance_preference = nsString::new();
-        unsafe { args.GetAttestationConveyancePreference(&mut *attestation_conveyance_preference) }
-            .to_result()?;
-        let none_attestation = !(attestation_conveyance_preference.eq("indirect")
-            || attestation_conveyance_preference.eq("direct")
-            || attestation_conveyance_preference.eq("enterprise"));
-
         let mut cred_props = false;
         unsafe { args.GetCredProps(&mut cred_props) }.to_result()?;
 
@@ -760,51 +782,19 @@ impl AuthrsService {
             use_ctap1_fallback: !static_prefs::pref!("security.webauthn.ctap2"),
         };
 
-        *self.transaction.lock().unwrap() = Some(TransactionState {
+        let mut guard = self.transaction.lock().unwrap();
+        *guard = Some(TransactionState {
             tid,
             browsing_context_id,
-            pending_args: Some(TransactionArgs::Register(timeout_ms as u64, info)),
+            pending_args: None,
             promise: TransactionPromise::Register(promise),
             pin_receiver: None,
             selection_receiver: None,
             interactive_receiver: None,
             puat_cache: None,
         });
-
-        if none_attestation
-            || static_prefs::pref!("security.webauth.webauthn_testing_allow_direct_attestation")
-        {
-            self.resume_make_credential(tid, none_attestation)
-        } else {
-            send_prompt(
-                BrowserPromptType::RegisterDirect,
-                tid,
-                Some(&origin),
-                Some(browsing_context_id),
-            )
-        }
-    }
-
-    xpcom_method!(resume_make_credential => ResumeMakeCredential(aTid: u64, aForceNoneAttestation: bool));
-    fn resume_make_credential(
-        &self,
-        tid: u64,
-        force_none_attestation: bool,
-    ) -> Result<(), nsresult> {
-        let mut guard = self.transaction.lock().unwrap();
-        let Some(state) = guard.as_mut() else {
-            return Err(NS_ERROR_FAILURE);
-        };
-        if state.tid != tid {
-            return Err(NS_ERROR_FAILURE);
-        };
-        let browsing_context_id = state.browsing_context_id;
-        let Some(TransactionArgs::Register(timeout_ms, info)) = state.pending_args.take() else {
-            return Err(NS_ERROR_FAILURE);
-        };
-        // We have to drop the guard here, as there _may_ still be another operation
-        // ongoing and `register()` below will try to cancel it. This will call the state
-        // callback of that operation, which in turn may try to access `transaction`, deadlocking.
+        // drop the guard here to ensure we don't deadlock if the call to `register()` below
+        // hairpins the state callback.
         drop(guard);
 
         let (status_tx, status_rx) = channel::<StatusUpdate>();
@@ -825,7 +815,7 @@ impl AuthrsService {
         let callback_transaction = self.transaction.clone();
         let callback_origin = info.origin.clone();
         let state_callback = StateCallback::<Result<RegisterResult, AuthenticatorError>>::new(
-            Box::new(move |mut result| {
+            Box::new(move |result| {
                 let mut guard = callback_transaction.lock().unwrap();
                 let Some(state) = guard.as_mut() else {
                     return;
@@ -836,13 +826,6 @@ impl AuthrsService {
                 let TransactionPromise::Register(ref promise) = state.promise else {
                     return;
                 };
-                if let Ok(inner) = result.as_mut() {
-                    // Tokens always provide attestation, but the user may have asked we not
-                    // include the attestation statement in the response.
-                    if force_none_attestation {
-                        inner.att_obj.anonymize();
-                    }
-                }
                 if let Err(AuthenticatorError::CredentialExcluded) = result {
                     let _ = send_prompt(
                         BrowserPromptType::AlreadyRegistered,
@@ -874,19 +857,24 @@ impl AuthrsService {
                 Some(browsing_context_id),
             )?;
             self.usb_token_manager.lock().unwrap().register(
-                timeout_ms,
+                timeout_ms.into(),
                 info,
                 status_tx,
                 state_callback,
             );
         } else if static_prefs::pref!("security.webauth.webauthn_enable_softtoken") {
             self.test_token_manager
-                .register(timeout_ms, info, status_tx, state_callback);
+                .register(timeout_ms.into(), info, status_tx, state_callback);
         } else {
             return Err(NS_ERROR_FAILURE);
         }
 
         Ok(())
+    }
+
+    xpcom_method!(set_has_attestation_consent => SetHasAttestationConsent(aTid: u64, aHasConsent: bool));
+    fn set_has_attestation_consent(&self, _tid: u64, _has_consent: bool) -> Result<(), nsresult> {
+        Err(NS_ERROR_NOT_IMPLEMENTED)
     }
 
     xpcom_method!(get_assertion => GetAssertion(aTid: u64, aBrowsingContextId: u64, aArgs: *const nsIWebAuthnSignArgs, aPromise: *const nsIWebAuthnSignPromise));

@@ -102,7 +102,27 @@ WebAuthnRegisterResult::GetAuthenticatorAttachment(
   return NS_ERROR_NOT_AVAILABLE;
 }
 
-nsresult WebAuthnRegisterResult::Anonymize() {
+NS_IMETHODIMP
+WebAuthnRegisterResult::HasIdentifyingAttestation(
+    bool* aHasIdentifyingAttestation) {
+  // Assume the attestation statement is identifying in case the constructor or
+  // the getter below fail.
+  bool isIdentifying = true;
+
+  nsCOMPtr<nsIWebAuthnAttObj> attObj;
+  nsresult rv = authrs_webauthn_att_obj_constructor(mAttestationObject,
+                                                    /* anonymize */ false,
+                                                    getter_AddRefs(attObj));
+  if (NS_SUCCEEDED(rv)) {
+    Unused << attObj->IsIdentifying(&isIdentifying);
+  }
+
+  *aHasIdentifyingAttestation = isIdentifying;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+WebAuthnRegisterResult::Anonymize() {
   // The anonymize flag in the nsIWebAuthnAttObj constructor causes the
   // attestation statement to be removed during deserialization. It also
   // causes the AAGUID to be zeroed out. If we can't deserialize the

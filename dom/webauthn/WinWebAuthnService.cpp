@@ -411,14 +411,12 @@ WinWebAuthnService::MakeCredential(uint64_t aTransactionId,
         // AttestationConveyance
         nsString attestation;
         Unused << aArgs->GetAttestationConveyancePreference(attestation);
-        bool anonymize = false;
         // This mapping needs to be reviewed if values are added to the
         // AttestationConveyancePreference enum.
         static_assert(MOZ_WEBAUTHN_ENUM_STRINGS_VERSION == 3);
         if (attestation.EqualsLiteral(
                 MOZ_WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_NONE)) {
           winAttestation = WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_NONE;
-          anonymize = true;
         } else if (
             attestation.EqualsLiteral(
                 MOZ_WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_INDIRECT)) {
@@ -579,13 +577,6 @@ WinWebAuthnService::MakeCredential(uint64_t aTransactionId,
           }
           gWinWebauthnFreeCredentialAttestation(pWebAuthNCredentialAttestation);
 
-          if (anonymize) {
-            nsresult rv = result->Anonymize();
-            if (NS_FAILED(rv)) {
-              aPromise->Reject(NS_ERROR_DOM_NOT_ALLOWED_ERR);
-              return;
-            }
-          }
           aPromise->Resolve(result);
         } else {
           PCWSTR errorName = gWinWebauthnGetErrorName(hr);
@@ -977,8 +968,8 @@ WinWebAuthnService::PinCallback(uint64_t aTransactionId,
 }
 
 NS_IMETHODIMP
-WinWebAuthnService::ResumeMakeCredential(uint64_t aTransactionId,
-                                         bool aForceNoneAttestation) {
+WinWebAuthnService::SetHasAttestationConsent(uint64_t aTransactionId,
+                                             bool aHasConsent) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
