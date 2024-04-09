@@ -25,6 +25,8 @@ namespace mozilla {
 
 bool webgl::PixelPackingState::AssertCurrentUnpack(gl::GLContext& gl,
                                                    const bool isWebgl2) const {
+  if (!kIsDebug) return true;
+
   auto actual = PixelPackingState{};
   gl.GetInt(LOCAL_GL_UNPACK_ALIGNMENT, &actual.alignmentInTypeElems);
   if (isWebgl2) {
