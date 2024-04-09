@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2024-04-08T10:57:11.999960'
+updated_at: '2024-04-09T20:01:48.094116+00:00'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -4231,12 +4231,13 @@ modules:
             - Georg Fritzsche
           group: fx-data-dev
           url: :ref:`Telemetry`
+          peers_emeritus:
+            - *perrymcmanis
         owners:
           - *chutten
         peers:
           - *Dexter
           - *janerik
-          - *perrymcmanis
           - *travis
         machine_name: telemetry
 
@@ -4321,5 +4322,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: f44a92767545e44e9d7057d1a95b14d48268e776
-  export: 4909805439d7d674cf2642bcb374af27aebf6eb6
+  config: 21ccb66794bdc087a3d8d24d81b66c10d105f07c
+  export: 3d6646af4f3bf5d6091f1b3c46ceaeb78f282b3d
