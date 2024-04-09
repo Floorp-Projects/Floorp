@@ -1265,7 +1265,17 @@ nsMargin nsHTMLScrollFrame::ComputeStableScrollbarGutter(
 
 // Legacy, this sucks!
 static bool IsMarqueeScrollbox(const nsIFrame& aScrollFrame) {
-  return HTMLMarqueeElement::FromNodeOrNull(aScrollFrame.GetContent());
+  if (!aScrollFrame.GetContent()) {
+    return false;
+  }
+  if (MOZ_LIKELY(!aScrollFrame.GetContent()->HasBeenInUAWidget())) {
+    return false;
+  }
+  MOZ_ASSERT(aScrollFrame.GetParent() &&
+             aScrollFrame.GetParent()->GetContent());
+  return aScrollFrame.GetParent() &&
+         HTMLMarqueeElement::FromNodeOrNull(
+             aScrollFrame.GetParent()->GetContent());
 }
 
 /* virtual */
