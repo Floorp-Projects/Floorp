@@ -4721,6 +4721,13 @@
 #endif
   mirror: always
 
+# Setting log level for notification modules.
+# The value follows the enum ConsoleLogLevel in ConsoleInstance.webidl.
+- name: dom.webnotifications.loglevel
+  type: String
+  value: Error
+  mirror: never
+
 # Is support for Window.event enabled?
 - name: dom.window.event.enabled
   type: bool

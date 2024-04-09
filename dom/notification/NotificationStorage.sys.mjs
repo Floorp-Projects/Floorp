@@ -2,10 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const DEBUG = false;
-function debug(s) {
-  dump("-*- NotificationStorage.js: " + s + "\n");
-}
+const lazy = {};
+
+ChromeUtils.defineLazyGetter(lazy, "console", () => {
+  return console.createInstance({
+    prefix: "NotificationStorage",
+    maxLogLevelPref: "dom.webnotifications.loglevel",
+  });
+});
 
 const kMessageNotificationGetAllOk = "Notification:GetAll:Return:OK";
 const kMessageNotificationGetAllKo = "Notification:GetAll:Return:KO";
@@ -43,9 +47,7 @@ export class NotificationStorage {
   }
 
   observe(aSubject, aTopic) {
-    if (DEBUG) {
-      debug("Topic: " + aTopic);
-    }
+    lazy.console.debug(`Topic: ${aTopic}`);
     if (aTopic === "xpcom-shutdown") {
       Services.obs.removeObserver(this, "xpcom-shutdown");
       this.unregisterListeners();
@@ -66,9 +68,7 @@ export class NotificationStorage {
     behavior,
     serviceWorkerRegistrationScope
   ) {
-    if (DEBUG) {
-      debug("PUT: " + origin + " " + id + ": " + title);
-    }
+    lazy.console.debug(`PUT: ${origin} ${id}: ${title}`);
     var notification = {
       id,
       title,
@@ -92,16 +92,12 @@ export class NotificationStorage {
   }
 
   get(origin, tag, callback) {
-    if (DEBUG) {
-      debug("GET: " + origin + " " + tag);
-    }
+    lazy.console.debug(`GET: ${origin} ${tag}`);
     this.#fetchFromDB(origin, tag, callback);
   }
 
   delete(origin, id) {
-    if (DEBUG) {
-      debug("DELETE: " + id);
-    }
+    lazy.console.debug(`DELETE: ${id}`);
     Services.cpmm.sendAsyncMessage("Notification:Delete", {
       origin,
       id,
@@ -122,25 +118,18 @@ export class NotificationStorage {
         try {
           request.callback.done();
         } catch (e) {
-          debug("Error calling callback done: " + e);
+          lazy.console.debug(`Error calling callback done: ${e}`);
         }
         break;
       case kMessageNotificationSaveKo:
       case kMessageNotificationDeleteKo:
-        if (DEBUG) {
-          debug(
-            "Error received when treating: '" +
-              message.name +
-              "': " +
-              message.data.errorMsg
-          );
-        }
+        lazy.console.debug(
+          `Error received when treating: '${message.name}': ${message.data.errorMsg}`
+        );
         break;
 
       default:
-        if (DEBUG) {
-          debug("Unrecognized message: " + message.name);
-        }
+        lazy.console.debug(`Unrecognized message: ${message.name}`);
         break;
     }
   }
@@ -189,17 +178,13 @@ export class NotificationStorage {
           )
         );
       } catch (e) {
-        if (DEBUG) {
-          debug("Error calling callback handle: " + e);
-        }
+        lazy.console.debug(`Error calling callback handle: ${e}`);
       }
     });
     try {
       Services.tm.dispatchToMainThread(callback.done);
     } catch (e) {
-      if (DEBUG) {
-        debug("Error calling callback done: " + e);
-      }
+      lazy.console.debug(`Error calling callback done: ${e}`);
     }
   }
 
