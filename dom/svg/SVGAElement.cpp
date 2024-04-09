@@ -257,4 +257,14 @@ SVGElement::StringAttributesInfo SVGAElement::GetStringInfo() {
                               ArrayLength(sStringInfo));
 }
 
+void SVGAElement::DidAnimateString(PRUint8 aAttrEnum) {
+  auto info = GetStringInfo();
+  if ((info.mInfos[aAttrEnum].mNamespaceID == kNameSpaceID_None ||
+       info.mInfos[aAttrEnum].mNamespaceID == kNameSpaceID_XLink) &&
+      info.mInfos[aAttrEnum].mName == nsGkAtoms::href) {
+    Link::ResetLinkState(true, Link::ElementHasHref());
+  }
+  SVGAElementBase::DidAnimateString(aAttrEnum);
+}
+
 }  // namespace mozilla::dom

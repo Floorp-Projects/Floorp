@@ -102,6 +102,7 @@ class SVGFEImageElement final : public SVGFEImageElementBase,
 
   SVGAnimatedPreserveAspectRatio* GetAnimatedPreserveAspectRatio() override;
   StringAttributesInfo GetStringInfo() override;
+  void DidAnimateString(PRUint8 aAttrEnum) override;
 
   // Override for nsImageLoadingContent.
   nsIContent* AsContent() override { return this; }

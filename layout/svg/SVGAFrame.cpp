@@ -82,20 +82,6 @@ nsresult SVGAFrame::AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
     NotifySVGChanged(TRANSFORM_CHANGED);
   }
 
-  // Currently our SMIL implementation does not modify the DOM attributes. Once
-  // we implement the SVG 2 SMIL behaviour this can be removed
-  // SVGAElement::SetAttr/UnsetAttr's ResetLinkState() call will be sufficient.
-  if (aModType == dom::MutationEvent_Binding::SMIL &&
-      aAttribute == nsGkAtoms::href &&
-      (aNameSpaceID == kNameSpaceID_None ||
-       aNameSpaceID == kNameSpaceID_XLink)) {
-    auto* content = static_cast<dom::SVGAElement*>(GetContent());
-
-    // SMIL may change whether an <a> element is a link, in which case we will
-    // need to update the link state.
-    content->ResetLinkState(true, content->ElementHasHref());
-  }
-
   return NS_OK;
 }
 

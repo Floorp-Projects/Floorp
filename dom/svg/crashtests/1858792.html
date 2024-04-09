@@ -1,0 +1,15 @@
+<script>
+window.onload = () => {
+  a.setAttribute("aria-setsize", "512")
+}
+function func() {
+  a.innerHTML = "A"
+}
+</script>
+<svg>
+<foreignObject id="a">
+<iframe></iframe>
+</foreignObject>
+<animate repeatDur="0s" onend="func()"></animate>
+<animate attributeName="x" by="6%">
+<use href="#a">

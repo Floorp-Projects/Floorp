@@ -289,7 +289,7 @@ class SVGElement : public SVGElementBase  // nsIContent
   void DidAnimatePointList();
   void DidAnimatePathSegList();
   void DidAnimateTransformList(int32_t aModType);
-  void DidAnimateString(uint8_t aAttrEnum) {
+  virtual void DidAnimateString(uint8_t aAttrEnum) {
     auto info = GetStringInfo();
     DidAnimateAttribute(info.mInfos[aAttrEnum].mNamespaceID,
                         info.mInfos[aAttrEnum].mName);
