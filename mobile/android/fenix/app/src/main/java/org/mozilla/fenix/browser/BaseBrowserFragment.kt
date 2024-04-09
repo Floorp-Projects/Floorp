@@ -480,114 +480,15 @@ abstract class BaseBrowserFragment :
             },
         )
 
-        val browserToolbar = browserToolbarView.view
-
         if (IncompleteRedesignToolbarFeature(context.settings()).isEnabled) {
-            browserToolbar.showPageActionSeparator()
-            val isToolbarAtBottom = context.components.settings.toolbarPosition == ToolbarPosition.BOTTOM
-
-            // The toolbar view has already been added directly to the container.
-            // We should remove it and add the view to the navigation bar container.
-            // Should refactor this so there is no added view to remove to begin with:
-            // https://bugzilla.mozilla.org/show_bug.cgi?id=1870976
-            if (isToolbarAtBottom) {
-                binding.browserLayout.removeView(browserToolbar)
-            }
-
-            // We need a second menu button, but we could reuse the existing builder.
-            val menuButton = MenuButton(requireContext()).apply {
-                menuBuilder = browserToolbarView.menuToolbar.menuBuilder
-                // We have to set colorFilter manually as the button isn't being managed by a [BrowserToolbarView].
-                setColorFilter(
-                    ContextCompat.getColor(
-                        context,
-                        ThemeManager.resolveAttribute(R.attr.textPrimary, context),
-                    ),
-                )
-                recordClickEvent = { NavigationBar.browserMenuTapped.record(NoExtras()) }
-            }
-
-            _bottomToolbarContainerView = BottomToolbarContainerView(
-                context = context,
-                parent = binding.browserLayout,
-                hideOnScroll = isToolbarDynamic(context),
-                composableContent = {
-                    FirefoxTheme {
-                        Column {
-                            if (isToolbarAtBottom) {
-                                AndroidView(factory = { _ -> browserToolbar })
-                            } else {
-                                Divider()
-                            }
-
-                            BrowserNavBar(
-                                isPrivateMode = activity.browsingModeManager.mode.isPrivate,
-                                browserStore = context.components.core.store,
-                                menuButton = menuButton,
-                                onBackButtonClick = {
-                                    NavigationBar.browserBackTapped.record(NoExtras())
-                                    browserToolbarInteractor.onBrowserToolbarMenuItemTapped(
-                                        ToolbarMenu.Item.Back(viewHistory = false),
-                                    )
-                                },
-                                onBackButtonLongPress = {
-                                    NavigationBar.browserBackLongTapped.record(NoExtras())
-                                    browserToolbarInteractor.onBrowserToolbarMenuItemTapped(
-                                        ToolbarMenu.Item.Back(viewHistory = true),
-                                    )
-                                },
-                                onForwardButtonClick = {
-                                    NavigationBar.browserForwardTapped.record(NoExtras())
-                                    browserToolbarInteractor.onBrowserToolbarMenuItemTapped(
-                                        ToolbarMenu.Item.Forward(viewHistory = false),
-                                    )
-                                },
-                                onForwardButtonLongPress = {
-                                    NavigationBar.browserForwardLongTapped.record(NoExtras())
-                                    browserToolbarInteractor.onBrowserToolbarMenuItemTapped(
-                                        ToolbarMenu.Item.Forward(viewHistory = true),
-                                    )
-                                },
-                                onHomeButtonClick = {
-                                    NavigationBar.browserHomeTapped.record(NoExtras())
-                                    browserAnimator.captureEngineViewAndDrawStatically {
-                                        findNavController().navigate(
-                                            BrowserFragmentDirections.actionGlobalHome(),
-                                        )
-                                    }
-                                },
-                                onTabsButtonClick = {
-                                    NavigationBar.browserTabTrayTapped.record(NoExtras())
-                                    thumbnailsFeature.get()?.requestScreenshot()
-                                    findNavController().nav(
-                                        R.id.browserFragment,
-                                        BrowserFragmentDirections.actionGlobalTabsTrayFragment(
-                                            page = when (activity.browsingModeManager.mode) {
-                                                BrowsingMode.Normal -> Page.NormalTabs
-                                                BrowsingMode.Private -> Page.PrivateTabs
-                                            },
-                                        ),
-                                    )
-                                },
-                            )
-                        }
-                    }
-                },
-            )
-
-            navbarIntegration.set(
-                feature = NavbarIntegration(
-                    toolbar = bottomToolbarContainerView.toolbarContainerView,
-                    store = requireComponents.core.store,
-                    appStore = requireComponents.appStore,
-                    bottomToolbarContainerView = bottomToolbarContainerView,
-                    sessionId = customTabSessionId,
-                ),
-                owner = this,
+            initializeNavBar(
+                browserToolbar = browserToolbarView.view,
                 view = view,
+                context = context,
+                activity = activity,
             )
         } else {
-            browserToolbar.hidePageActionSeparator()
+            browserToolbarView.view.hidePageActionSeparator()
         }
 
         toolbarIntegration.set(
@@ -1342,6 +1243,118 @@ abstract class BaseBrowserFragment :
             swipeRefreshParams.topMargin = topToolbarHeight
             swipeRefreshParams.bottomMargin = bottomToolbarHeight
         }
+    }
+
+    @Suppress("LongMethod")
+    private fun initializeNavBar(
+        browserToolbar: BrowserToolbar,
+        view: View,
+        context: Context,
+        activity: HomeActivity,
+    ) {
+        browserToolbar.showPageActionSeparator()
+        val isToolbarAtBottom = context.components.settings.toolbarPosition == ToolbarPosition.BOTTOM
+
+        // The toolbar view has already been added directly to the container.
+        // We should remove it and add the view to the navigation bar container.
+        // Should refactor this so there is no added view to remove to begin with:
+        // https://bugzilla.mozilla.org/show_bug.cgi?id=1870976
+        if (isToolbarAtBottom) {
+            binding.browserLayout.removeView(browserToolbar)
+        }
+
+        // We need a second menu button, but we could reuse the existing builder.
+        val menuButton = MenuButton(requireContext()).apply {
+            menuBuilder = browserToolbarView.menuToolbar.menuBuilder
+            // We have to set colorFilter manually as the button isn't being managed by a [BrowserToolbarView].
+            setColorFilter(
+                ContextCompat.getColor(
+                    context,
+                    ThemeManager.resolveAttribute(R.attr.textPrimary, context),
+                ),
+            )
+            recordClickEvent = { NavigationBar.browserMenuTapped.record(NoExtras()) }
+        }
+
+        _bottomToolbarContainerView = BottomToolbarContainerView(
+            context = context,
+            parent = binding.browserLayout,
+            hideOnScroll = isToolbarDynamic(context),
+            composableContent = {
+                FirefoxTheme {
+                    Column {
+                        if (isToolbarAtBottom) {
+                            AndroidView(factory = { _ -> browserToolbar })
+                        } else {
+                            Divider()
+                        }
+
+                        BrowserNavBar(
+                            isPrivateMode = activity.browsingModeManager.mode.isPrivate,
+                            browserStore = context.components.core.store,
+                            menuButton = menuButton,
+                            onBackButtonClick = {
+                                NavigationBar.browserBackTapped.record(NoExtras())
+                                browserToolbarInteractor.onBrowserToolbarMenuItemTapped(
+                                    ToolbarMenu.Item.Back(viewHistory = false),
+                                )
+                            },
+                            onBackButtonLongPress = {
+                                NavigationBar.browserBackLongTapped.record(NoExtras())
+                                browserToolbarInteractor.onBrowserToolbarMenuItemTapped(
+                                    ToolbarMenu.Item.Back(viewHistory = true),
+                                )
+                            },
+                            onForwardButtonClick = {
+                                NavigationBar.browserForwardTapped.record(NoExtras())
+                                browserToolbarInteractor.onBrowserToolbarMenuItemTapped(
+                                    ToolbarMenu.Item.Forward(viewHistory = false),
+                                )
+                            },
+                            onForwardButtonLongPress = {
+                                NavigationBar.browserForwardLongTapped.record(NoExtras())
+                                browserToolbarInteractor.onBrowserToolbarMenuItemTapped(
+                                    ToolbarMenu.Item.Forward(viewHistory = true),
+                                )
+                            },
+                            onHomeButtonClick = {
+                                NavigationBar.browserHomeTapped.record(NoExtras())
+                                browserAnimator.captureEngineViewAndDrawStatically {
+                                    findNavController().navigate(
+                                        BrowserFragmentDirections.actionGlobalHome(),
+                                    )
+                                }
+                            },
+                            onTabsButtonClick = {
+                                NavigationBar.browserTabTrayTapped.record(NoExtras())
+                                thumbnailsFeature.get()?.requestScreenshot()
+                                findNavController().nav(
+                                    R.id.browserFragment,
+                                    BrowserFragmentDirections.actionGlobalTabsTrayFragment(
+                                        page = when (activity.browsingModeManager.mode) {
+                                            BrowsingMode.Normal -> Page.NormalTabs
+                                            BrowsingMode.Private -> Page.PrivateTabs
+                                        },
+                                    ),
+                                )
+                            },
+                        )
+                    }
+                }
+            },
+        )
+
+        navbarIntegration.set(
+            feature = NavbarIntegration(
+                toolbar = bottomToolbarContainerView.toolbarContainerView,
+                store = requireComponents.core.store,
+                appStore = requireComponents.appStore,
+                bottomToolbarContainerView = bottomToolbarContainerView,
+                sessionId = customTabSessionId,
+            ),
+            owner = this,
+            view = view,
+        )
     }
 
     private fun isToolbarDynamic(context: Context) =

@@ -451,86 +451,7 @@ class HomeFragment : Fragment() {
         )
 
         if (IncompleteRedesignToolbarFeature(requireContext().settings()).isEnabled) {
-            val isToolbarAtBottom = requireContext().components.settings.toolbarPosition == ToolbarPosition.BOTTOM
-
-            // The toolbar view has already been added directly to the container.
-            // We should remove it and add the view to the navigation bar container.
-            // Should refactor this so there is no added view to remove to begin with:
-            // https://bugzilla.mozilla.org/show_bug.cgi?id=1870976
-            if (isToolbarAtBottom) {
-                binding.root.removeView(binding.toolbarLayout)
-            }
-
-            val menuButton = MenuButton(requireContext())
-            menuButton.recordClickEvent = { NavigationBar.homeMenuTapped.record(NoExtras()) }
-            HomeMenuView(
-                view = binding.root,
-                context = requireContext(),
-                lifecycleOwner = viewLifecycleOwner,
-                homeActivity = activity,
-                navController = findNavController(),
-                menuButton = WeakReference(menuButton),
-            ).also { it.build() }
-
-            _bottomToolbarContainerView = BottomToolbarContainerView(
-                context = requireContext(),
-                parent = binding.homeLayout,
-                hideOnScroll = false,
-                composableContent = {
-                    FirefoxTheme {
-                        Column {
-                            if (isToolbarAtBottom) {
-                                AndroidView(factory = { _ -> binding.toolbarLayout })
-                            } else {
-                                Divider()
-                            }
-
-                            HomeNavBar(
-                                isPrivateMode = activity.browsingModeManager.mode.isPrivate,
-                                browserStore = requireContext().components.core.store,
-                                menuButton = menuButton,
-                                onSearchButtonClick = {
-                                    NavigationBar.homeSearchTapped.record(NoExtras())
-                                    val directions =
-                                        NavGraphDirections.actionGlobalSearchDialog(
-                                            sessionId = null,
-                                        )
-
-                                    findNavController().nav(
-                                        findNavController().currentDestination?.id,
-                                        directions,
-                                        BrowserAnimator.getToolbarNavOptions(activity),
-                                    )
-                                },
-                                onTabsButtonClick = {
-                                    NavigationBar.homeTabTrayTapped.record(NoExtras())
-                                    findNavController().nav(
-                                        findNavController().currentDestination?.id,
-                                        NavGraphDirections.actionGlobalTabsTrayFragment(
-                                            page = when (browsingModeManager.mode) {
-                                                BrowsingMode.Normal -> Page.NormalTabs
-                                                BrowsingMode.Private -> Page.PrivateTabs
-                                            },
-                                        ),
-                                    )
-                                },
-                            )
-                        }
-                    }
-                },
-            )
-
-            navbarIntegration.set(
-                feature = NavbarIntegration(
-                    toolbar = bottomToolbarContainerView.toolbarContainerView,
-                    store = requireComponents.core.store,
-                    appStore = requireComponents.appStore,
-                    bottomToolbarContainerView = bottomToolbarContainerView,
-                    sessionId = null,
-                ),
-                owner = this,
-                view = binding.root,
-            )
+            initializeNavBar(activity = activity)
         }
 
         sessionControlView = SessionControlView(
@@ -566,6 +487,89 @@ class HomeFragment : Fragment() {
             wallpaperName = currentWallpaperName,
             orientationChange = true,
             orientation = newConfig.orientation,
+        )
+    }
+
+    private fun initializeNavBar(activity: HomeActivity) {
+        val isToolbarAtBottom = requireContext().components.settings.toolbarPosition == ToolbarPosition.BOTTOM
+
+        // The toolbar view has already been added directly to the container.
+        // We should remove it and add the view to the navigation bar container.
+        // Should refactor this so there is no added view to remove to begin with:
+        // https://bugzilla.mozilla.org/show_bug.cgi?id=1870976
+        if (isToolbarAtBottom) {
+            binding.root.removeView(binding.toolbarLayout)
+        }
+
+        val menuButton = MenuButton(requireContext())
+        menuButton.recordClickEvent = { NavigationBar.homeMenuTapped.record(NoExtras()) }
+        HomeMenuView(
+            view = binding.root,
+            context = requireContext(),
+            lifecycleOwner = viewLifecycleOwner,
+            homeActivity = activity,
+            navController = findNavController(),
+            menuButton = WeakReference(menuButton),
+        ).also { it.build() }
+
+        _bottomToolbarContainerView = BottomToolbarContainerView(
+            context = requireContext(),
+            parent = binding.homeLayout,
+            hideOnScroll = false,
+            composableContent = {
+                FirefoxTheme {
+                    Column {
+                        if (isToolbarAtBottom) {
+                            AndroidView(factory = { _ -> binding.toolbarLayout })
+                        } else {
+                            Divider()
+                        }
+
+                        HomeNavBar(
+                            isPrivateMode = activity.browsingModeManager.mode.isPrivate,
+                            browserStore = requireContext().components.core.store,
+                            menuButton = menuButton,
+                            onSearchButtonClick = {
+                                NavigationBar.homeSearchTapped.record(NoExtras())
+                                val directions =
+                                    NavGraphDirections.actionGlobalSearchDialog(
+                                        sessionId = null,
+                                    )
+
+                                findNavController().nav(
+                                    findNavController().currentDestination?.id,
+                                    directions,
+                                    BrowserAnimator.getToolbarNavOptions(activity),
+                                )
+                            },
+                            onTabsButtonClick = {
+                                NavigationBar.homeTabTrayTapped.record(NoExtras())
+                                findNavController().nav(
+                                    findNavController().currentDestination?.id,
+                                    NavGraphDirections.actionGlobalTabsTrayFragment(
+                                        page = when (browsingModeManager.mode) {
+                                            BrowsingMode.Normal -> Page.NormalTabs
+                                            BrowsingMode.Private -> Page.PrivateTabs
+                                        },
+                                    ),
+                                )
+                            },
+                        )
+                    }
+                }
+            },
+        )
+
+        navbarIntegration.set(
+            feature = NavbarIntegration(
+                toolbar = bottomToolbarContainerView.toolbarContainerView,
+                store = requireComponents.core.store,
+                appStore = requireComponents.appStore,
+                bottomToolbarContainerView = bottomToolbarContainerView,
+                sessionId = null,
+            ),
+            owner = this,
+            view = binding.root,
         )
     }
 
