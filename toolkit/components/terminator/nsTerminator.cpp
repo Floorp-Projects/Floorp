@@ -369,7 +369,7 @@ void RunWriter(void* arg) {
 
 }  // namespace
 
-NS_IMPL_ISUPPORTS(nsTerminator, nsIObserver)
+NS_IMPL_ISUPPORTS(nsTerminator, nsIObserver, nsITerminatorTest)
 
 nsTerminator::nsTerminator() : mInitialized(false), mCurrentStep(-1) {}
 
@@ -609,4 +609,20 @@ void nsTerminator::UpdateCrashReport(const char* aTopic) {
   CrashReporter::RecordAnnotationCString(
       CrashReporter::Annotation::ShutdownProgress, aTopic);
 }
+
+NS_IMETHODIMP
+nsTerminator::GetTicksForShutdownPhases(JSContext* aCx,
+                                        JS::MutableHandle<JS::Value> aRetval) {
+  JS::Rooted<JSObject*> obj(aCx, JS_NewPlainObject(aCx));
+  aRetval.setObject(*obj);
+
+  for (auto& shutdownStep : sShutdownSteps) {
+    if (shutdownStep.mTicks >= 0) {
+      JS_DefineProperty(aCx, obj, GetReadableNameForPhase(shutdownStep.mPhase),
+                        shutdownStep.mTicks, JSPROP_ENUMERATE);
+    }
+  }
+
+  return NS_OK;
+}  // namespace mozilla
 }  // namespace mozilla

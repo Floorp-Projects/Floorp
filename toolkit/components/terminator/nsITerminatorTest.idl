@@ -1,0 +1,17 @@
+/* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(a76599ef-78a4-441f-b258-4908dedef42d)]
+interface nsITerminatorTest : nsISupports
+{
+
+  /**
+    * This method is used to test the shutdown phases of nsTerminator. It is
+    * not meant to be used outside of tests.
+   */
+  [implicit_jscontext] jsval getTicksForShutdownPhases();
+};
