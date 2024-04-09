@@ -36,15 +36,4 @@ interface nsIStreamTransportService : nsISupports
      */
     nsITransport createInputTransport(in nsIInputStream aStream,
                                       in boolean aCloseWhenDone);
-
-    [noscript]
-    void InputAvailable(in nsIInputStream aStream,
-                        in nsIInputAvailableCallback aCallback);
-};
-
-[uuid(ff2da731-44d0-4dd9-8236-c99387fec721)]
-interface nsIInputAvailableCallback : nsISupports
-{
-  void onInputAvailableComplete(in unsigned long long available,
-                                in nsresult available_return_code);
 };
