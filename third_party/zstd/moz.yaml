@@ -1,0 +1,44 @@
+schema: 1
+
+bugzilla:
+  product: Toolkit
+  component: "General"
+
+origin:
+  name: zstd
+  description: generic-purpose lossless compression algorithm
+
+  url: https://github.com/facebook/zstd
+
+  release: 72c16b187d27016b7634f5c6b7290e7c66ba44b3 (2024-04-01T16:53:08Z).
+  revision: 72c16b187d27016b7634f5c6b7290e7c66ba44b3
+
+  license: "BSD-3-Clause"
+  license-file: "LICENSE"
+
+vendoring:
+  url: https://github.com/facebook/zstd
+  source-hosting: github
+  tracking: commit
+
+  exclude:
+    - ".*"
+    - ".circleci"
+    - "*"
+    - build
+    - examples
+    - tests
+    - zlibWrapper
+    - programs
+    - contrib
+    - doc
+    - lib/legacy
+    - lib/dll
+    - lib/deprecated
+    - lib/dictBuilder
+    - lib/compress
+
+  include:
+    - lib/
+    - LICENSE
+    - COPYING
