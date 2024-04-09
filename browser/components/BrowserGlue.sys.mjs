@@ -3757,7 +3757,7 @@ BrowserGlue.prototype = {
   _migrateUI() {
     // Use an increasing number to keep track of the current migration state.
     // Completely unrelated to the current Firefox release number.
-    const UI_VERSION = 143;
+    const UI_VERSION = 144;
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
     if (!Services.prefs.prefHasUserValue("browser.migration.version")) {
@@ -4388,6 +4388,23 @@ BrowserGlue.prototype = {
           "network.protocol-handler.external.firefox-private"
         );
         Services.prefs.clearUserPref("browser.shell.customProtocolsRegistered");
+      }
+    }
+
+    if (currentUIVersion < 144) {
+      // TerminatorTelemetry was removed in bug 1879136. Before it was removed,
+      // the ShutdownDuration.json file would be written to disk at shutdown
+      // so that the next launch of the browser could read it in and send
+      // shutdown performance measurements.
+      //
+      // Unfortunately, this mechanism and its measurements were fairly
+      // unreliable, so they were removed.
+      for (const filename of [
+        "ShutdownDuration.json",
+        "ShutdownDuration.json.tmp",
+      ]) {
+        const filePath = PathUtils.join(PathUtils.profileDir, filename);
+        IOUtils.remove(filePath, { ignoreAbsent: true }).catch(console.error);
       }
     }
 
