@@ -120,15 +120,41 @@ add_task(
   }
 );
 
-add_task(async function test_weak_install_over_weak_existing() {
+/**
+ * Test helper used to simulate an update from a given pre-installed add-on xpi to a new xpi file for the same
+ * add-on and assert the expected result and logged messages.
+ *
+ * @param {object}               params
+ * @param {string}               params.currentAddonXPI
+ *        The path to the add-on xpi to be pre-installed and then updated to `newAddonXPI`.
+ * @param {string}               params.newAddonXPI
+ *        The path to the add-on xpi to be installed as an update over `currentAddonXPI`.
+ * @param {string}               params.newAddonVersion
+ *        The add-on version expected for `newAddonXPI`.
+ * @param {boolean}              params.expectedInstallOK
+ *        Set to true for an update scenario that is expected to be successful.
+ * @param {Array<string|RegExp>} params.expectedMessages
+ *        Array of strings or RegExp for console messages expected to be logged.
+ * @param {Array<string|RegExp>} params.forbiddenMessages
+ *        Array of strings or RegExp for console messages expected to NOT be logged.
+ */
+async function testWeakSignatureXPIUpdate({
+  currentAddonXPI,
+  newAddonXPI,
+  newAddonVersion,
+  expectedInstallOK,
+  expectedMessages,
+  forbiddenMessages,
+}) {
   // Temporarily allow weak signature to install the xpi as a new install.
   let resetWeakSignaturePref =
     AddonTestUtils.setWeakSignatureInstallAllowed(true);
 
   const { addon: addonFirstInstall } = await promiseInstallFile(
-    do_get_file("amosigned-sha1only.xpi")
+    currentAddonXPI
   );
   const addonId = addonFirstInstall.id;
+  const initialAddonVersion = addonFirstInstall.version;
 
   resetWeakSignaturePref();
 
@@ -139,25 +165,48 @@ add_task(async function test_weak_install_over_weak_existing() {
   info("Install over the existing installed addon");
   let addonInstalledOver;
   const { messages } = await AddonTestUtils.promiseConsoleOutput(async () => {
-    const fileURL = Services.io.newFileURI(
-      do_get_file("amosigned-sha1only.xpi")
-    ).spec;
+    const fileURL = Services.io.newFileURI(newAddonXPI).spec;
     let install = await AddonManager.getInstallForURL(fileURL, {
       existingAddon: addonFirstInstall,
-      version: "2.1",
+      version: newAddonVersion,
     });
 
-    addonInstalledOver = await install.install();
+    addonInstalledOver = await install.install().catch(err => {
+      if (expectedInstallOK) {
+        ok(false, `Unexpected error hit on installing update XPI: ${err}`);
+      } else {
+        ok(true, `Install failed as expected: ${err}`);
+      }
+    });
   });
 
   resetWeakSignaturePref();
 
-  Assert.equal(
-    addonInstalledOver.id,
-    addonFirstInstall.id,
-    "Expect addon id to be the same"
-  );
-  await addonInstalledOver.uninstall();
+  if (expectedInstallOK) {
+    Assert.equal(
+      addonInstalledOver.id,
+      addonFirstInstall.id,
+      "Expect addon id to be the same"
+    );
+    Assert.equal(
+      addonInstalledOver.version,
+      newAddonVersion,
+      "Got expected addon version after update xpi install completed"
+    );
+    await addonInstalledOver.uninstall();
+  } else {
+    Assert.equal(
+      addonInstalledOver?.version,
+      undefined,
+      "Expect update addon xpi not installed successfully"
+    );
+    Assert.equal(
+      (await AddonManager.getAddonByID(addonId)).version,
+      initialAddonVersion,
+      "Expect the addon version to match the initial XPI version"
+    );
+    await addonFirstInstall.uninstall();
+  }
 
   Assert.equal(
     await AddonManager.getAddonByID(addonId),
@@ -165,9 +214,62 @@ add_task(async function test_weak_install_over_weak_existing() {
     "Expect the test addon to be fully uninstalled"
   );
 
-  // Checking the message expected to be logged in the Browser Console.
+  // Checking the message logged in the Browser Console.
   AddonTestUtils.checkMessages(messages, {
-    expected: [
+    expected: expectedMessages,
+    forbidden: forbiddenMessages,
+  });
+}
+
+add_task(async function test_weak_install_over_weak_existing() {
+  const addonId = "amosigned-xpi@tests.mozilla.org";
+  await testWeakSignatureXPIUpdate({
+    currentAddonXPI: do_get_file("amosigned-sha1only.xpi"),
+    newAddonXPI: do_get_file("amosigned-sha1only.xpi"),
+    newAddonVersion: "2.1",
+    expectedInstallOK: true,
+    expectedMessages: [
+      {
+        message: new RegExp(
+          `Allow weak signature install over existing "${addonId}" XPI`
+        ),
+      },
+    ],
+  });
+});
+
+add_task(async function test_update_weak_to_strong_signature() {
+  const addonId = "amosigned-xpi@tests.mozilla.org";
+  await testWeakSignatureXPIUpdate({
+    currentAddonXPI: do_get_file("amosigned-sha1only.xpi"),
+    newAddonXPI: do_get_file("amosigned.xpi"),
+    newAddonVersion: "2.2",
+    expectedInstallOK: true,
+    forbiddenMessages: [
+      {
+        message: new RegExp(
+          `Allow weak signature install over existing "${addonId}" XPI`
+        ),
+      },
+    ],
+  });
+});
+
+add_task(async function test_update_strong_to_weak_signature() {
+  const addonId = "amosigned-xpi@tests.mozilla.org";
+  await testWeakSignatureXPIUpdate({
+    currentAddonXPI: do_get_file("amosigned.xpi"),
+    newAddonXPI: do_get_file("amosigned-sha1only.xpi"),
+    newAddonVersion: "2.1",
+    expectedInstallOK: false,
+    expectedMessages: [
+      {
+        message: new RegExp(
+          "Invalid XPI: install rejected due to the package not including a strong cryptographic signature"
+        ),
+      },
+    ],
+    forbiddenMessages: [
       {
         message: new RegExp(
           `Allow weak signature install over existing "${addonId}" XPI`
