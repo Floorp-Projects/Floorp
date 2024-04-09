@@ -172,6 +172,8 @@ export class GeckoViewStartup {
               "GeckoView:WebExtension:PortDisconnect",
               "GeckoView:WebExtension:PortMessageFromApp",
               "GeckoView:WebExtension:SetPBAllowed",
+              "GeckoView:WebExtension:AddOptionalPermissions",
+              "GeckoView:WebExtension:RemoveOptionalPermissions",
               "GeckoView:WebExtension:Uninstall",
               "GeckoView:WebExtension:Update",
               "GeckoView:WebExtension:EnableProcessSpawning",

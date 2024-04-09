@@ -709,6 +709,56 @@ public class WebExtensionController {
   }
 
   /**
+   * Add the provided permissions to the {@link WebExtension} with the given id.
+   *
+   * @param extensionId the id of {@link WebExtension} instance to modify.
+   * @param permissions the permissions to add, pass an empty array to not update.
+   * @param origins the origins to add, pass an empty array to not update.
+   * @return the updated {@link WebExtension} instance.
+   */
+  @NonNull
+  @AnyThread
+  public GeckoResult<WebExtension> addOptionalPermissions(
+      final @NonNull String extensionId,
+      @NonNull final String[] permissions,
+      @NonNull final String[] origins) {
+    final GeckoBundle bundle = new GeckoBundle(3);
+    bundle.putString("extensionId", extensionId);
+    bundle.putStringArray("permissions", permissions);
+    bundle.putStringArray("origins", origins);
+
+    return EventDispatcher.getInstance()
+        .queryBundle("GeckoView:WebExtension:AddOptionalPermissions", bundle)
+        .map(ext -> WebExtension.fromBundle(mDelegateControllerProvider, ext))
+        .map(this::registerWebExtension);
+  }
+
+  /**
+   * Remove the provided permissions from the {@link WebExtension} with the given id.
+   *
+   * @param extensionId the id of {@link WebExtension} instance to modify.
+   * @param permissions the permissions to remove, pass an empty array to not update.
+   * @param origins the origins to remove, pass an empty array to not update.
+   * @return the updated {@link WebExtension} instance.
+   */
+  @NonNull
+  @AnyThread
+  public GeckoResult<WebExtension> removeOptionalPermissions(
+      final @NonNull String extensionId,
+      @NonNull final String[] permissions,
+      @NonNull final String[] origins) {
+    final GeckoBundle bundle = new GeckoBundle(3);
+    bundle.putString("extensionId", extensionId);
+    bundle.putStringArray("permissions", permissions);
+    bundle.putStringArray("origins", origins);
+
+    return EventDispatcher.getInstance()
+        .queryBundle("GeckoView:WebExtension:RemoveOptionalPermissions", bundle)
+        .map(ext -> WebExtension.fromBundle(mDelegateControllerProvider, ext))
+        .map(this::registerWebExtension);
+  }
+
+  /**
    * Install a built-in extension.
    *
    * <p>Built-in extensions have access to native messaging, don't need to be signed and are
