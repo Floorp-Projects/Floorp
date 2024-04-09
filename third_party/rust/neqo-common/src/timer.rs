@@ -5,6 +5,7 @@
 // except according to those terms.
 
 use std::{
+    collections::VecDeque,
     mem,
     time::{Duration, Instant},
 };
@@ -27,7 +28,7 @@ impl<T> TimerItem<T> {
 /// points). Time is relative, the wheel has an origin time and it is unable to represent times that
 /// are more than `granularity * capacity` past that time.
 pub struct Timer<T> {
-    items: Vec<Vec<TimerItem<T>>>,
+    items: Vec<VecDeque<TimerItem<T>>>,
     now: Instant,
     granularity: Duration,
     cursor: usize,
@@ -55,9 +56,14 @@ impl<T> Timer<T> {
     /// Return a reference to the time of the next entry.
     #[must_use]
     pub fn next_time(&self) -> Option<Instant> {
-        for i in 0..self.items.len() {
-            let idx = self.bucket(i);
-            if let Some(t) = self.items[idx].first() {
+        let idx = self.bucket(0);
+        for i in idx..self.items.len() {
+            if let Some(t) = self.items[i].front() {
+                return Some(t.time);
+            }
+        }
+        for i in 0..idx {
+            if let Some(t) = self.items[i].front() {
                 return Some(t.time);
             }
         }
@@ -145,6 +151,9 @@ impl<T> Timer<T> {
 
     /// Given knowledge of the time an item was added, remove it.
     /// This requires use of a predicate that identifies matching items.
+    ///
+    /// # Panics
+    /// Impossible, I think.
     pub fn remove<F>(&mut self, time: Instant, mut selector: F) -> Option<T>
     where
         F: FnMut(&T) -> bool,
@@ -167,7 +176,7 @@ impl<T> Timer<T> {
                 break;
             }
             if selector(&self.items[bucket][i].item) {
-                return Some(self.items[bucket].remove(i).item);
+                return Some(self.items[bucket].remove(i).unwrap().item);
             }
         }
         // ... then forwards.
@@ -176,7 +185,7 @@ impl<T> Timer<T> {
                 break;
             }
             if selector(&self.items[bucket][i].item) {
-                return Some(self.items[bucket].remove(i).item);
+                return Some(self.items[bucket].remove(i).unwrap().item);
             }
         }
         None
@@ -185,10 +194,25 @@ impl<T> Timer<T> {
     /// Take the next item, unless there are no items with
     /// a timeout in the past relative to `until`.
     pub fn take_next(&mut self, until: Instant) -> Option<T> {
-        for i in 0..self.items.len() {
-            let idx = self.bucket(i);
-            if !self.items[idx].is_empty() && self.items[idx][0].time <= until {
-                return Some(self.items[idx].remove(0).item);
+        fn maybe_take<T>(v: &mut VecDeque<TimerItem<T>>, until: Instant) -> Option<T> {
+            if !v.is_empty() && v[0].time <= until {
+                Some(v.pop_front().unwrap().item)
+            } else {
+                None
+            }
+        }
+
+        let idx = self.bucket(0);
+        for i in idx..self.items.len() {
+            let res = maybe_take(&mut self.items[i], until);
+            if res.is_some() {
+                return res;
+            }
+        }
+        for i in 0..idx {
+            let res = maybe_take(&mut self.items[i], until);
+            if res.is_some() {
+                return res;
             }
         }
         None
@@ -201,7 +225,7 @@ impl<T> Timer<T> {
         if until >= self.now + self.span() {
             // Drain everything, so a clean sweep.
             let mut empty_items = Vec::with_capacity(self.items.len());
-            empty_items.resize_with(self.items.len(), Vec::default);
+            empty_items.resize_with(self.items.len(), VecDeque::default);
             let mut items = mem::replace(&mut self.items, empty_items);
             self.now = until;
             self.cursor = 0;

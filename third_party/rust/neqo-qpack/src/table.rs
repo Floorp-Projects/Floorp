@@ -94,7 +94,7 @@ impl HeaderTable {
             capacity: 0,
             used: 0,
             base: 0,
-            acked_inserts_cnt: if encoder { 0 } else { u64::max_value() },
+            acked_inserts_cnt: if encoder { 0 } else { u64::MAX },
         }
     }
 

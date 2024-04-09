@@ -4,9 +4,9 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![cfg(feature = "fuzzing")]
+#![cfg(feature = "disable-encryption")]
 
-use neqo_crypto::FIXED_TAG_FUZZING;
+use neqo_crypto::aead_null::AEAD_NULL_TAG;
 use test_fixture::now;
 
 use super::{connect_force_idle, default_client, default_server};
@@ -24,7 +24,7 @@ fn no_encryption() {
 
     client.stream_send(stream_id, DATA_CLIENT).unwrap();
     let client_pkt = client.process_output(now()).dgram().unwrap();
-    assert!(client_pkt[..client_pkt.len() - FIXED_TAG_FUZZING.len()].ends_with(DATA_CLIENT));
+    assert!(client_pkt[..client_pkt.len() - AEAD_NULL_TAG.len()].ends_with(DATA_CLIENT));
 
     server.process_input(&client_pkt, now());
     let mut buf = vec![0; 100];
@@ -33,7 +33,7 @@ fn no_encryption() {
     assert_eq!(&buf[..len], DATA_CLIENT);
     server.stream_send(stream_id, DATA_SERVER).unwrap();
     let server_pkt = server.process_output(now()).dgram().unwrap();
-    assert!(server_pkt[..server_pkt.len() - FIXED_TAG_FUZZING.len()].ends_with(DATA_SERVER));
+    assert!(server_pkt[..server_pkt.len() - AEAD_NULL_TAG.len()].ends_with(DATA_SERVER));
 
     client.process_input(&server_pkt, now());
     let (len, _) = client.stream_recv(stream_id, &mut buf).unwrap();

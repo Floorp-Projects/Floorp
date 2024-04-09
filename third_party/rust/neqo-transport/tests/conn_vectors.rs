@@ -6,7 +6,7 @@
 
 // Tests with the test vectors from the spec.
 
-#![cfg(not(feature = "fuzzing"))]
+#![cfg(not(feature = "disable-encryption"))]
 
 use std::{cell::RefCell, rc::Rc};
 

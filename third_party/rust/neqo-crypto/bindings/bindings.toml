@@ -265,8 +265,3 @@ enums = [
 [nspr_time]
 types = ["PRTime"]
 functions = ["PR_Now"]
-
-[mozpkix]
-cplusplus = true
-types = ["mozilla::pkix::ErrorCode"]
-enums = ["mozilla::pkix::ErrorCode"]

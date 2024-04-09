@@ -12,7 +12,12 @@ use std::{
 };
 
 use bindgen::Builder;
+use semver::{Version, VersionReq};
 use serde_derive::Deserialize;
+
+#[path = "src/min_version.rs"]
+mod min_version;
+use min_version::MINIMUM_NSS_VERSION;
 
 const BINDINGS_DIR: &str = "bindings";
 const BINDINGS_CONFIG: &str = "bindings.toml";
@@ -88,46 +93,6 @@ fn setup_clang() {
     } else {
         println!("warning: LIBCLANG_PATH isn't set; maybe run ./mach bootstrap with gecko");
     }
-}
-
-fn nss_dir() -> PathBuf {
-    let dir = if let Ok(dir) = env::var("NSS_DIR") {
-        let path = PathBuf::from(dir.trim());
-        assert!(
-            !path.is_relative(),
-            "The NSS_DIR environment variable is expected to be an absolute path."
-        );
-        path
-    } else {
-        let out_dir = env::var("OUT_DIR").unwrap();
-        let dir = Path::new(&out_dir).join("nss");
-        if !dir.exists() {
-            Command::new("hg")
-                .args([
-                    "clone",
-                    "https://hg.mozilla.org/projects/nss",
-                    dir.to_str().unwrap(),
-                ])
-                .status()
-                .expect("can't clone nss");
-        }
-        let nspr_dir = Path::new(&out_dir).join("nspr");
-        if !nspr_dir.exists() {
-            Command::new("hg")
-                .args([
-                    "clone",
-                    "https://hg.mozilla.org/projects/nspr",
-                    nspr_dir.to_str().unwrap(),
-                ])
-                .status()
-                .expect("can't clone nspr");
-        }
-        dir
-    };
-    assert!(dir.is_dir(), "NSS_DIR {dir:?} doesn't exist");
-    // Note that this returns a relative path because UNC
-    // paths on windows cause certain tools to explode.
-    dir
 }
 
 fn get_bash() -> PathBuf {
@@ -295,11 +260,63 @@ fn build_bindings(base: &str, bindings: &Bindings, flags: &[String], gecko: bool
         .expect("couldn't write bindings");
 }
 
-fn setup_standalone() -> Vec<String> {
+fn pkg_config() -> Vec<String> {
+    let modversion = Command::new("pkg-config")
+        .args(["--modversion", "nss"])
+        .output()
+        .expect("pkg-config reports NSS as absent")
+        .stdout;
+    let modversion = String::from_utf8(modversion).expect("non-UTF8 from pkg-config");
+    let modversion = modversion.trim();
+    // The NSS version number does not follow semver numbering, because it omits the patch version
+    // when that's 0. Deal with that.
+    let modversion_for_cmp = if modversion.chars().filter(|c| *c == '.').count() == 1 {
+        modversion.to_owned() + ".0"
+    } else {
+        modversion.to_owned()
+    };
+    let modversion_for_cmp =
+        Version::parse(&modversion_for_cmp).expect("NSS version not in semver format");
+    let version_req = VersionReq::parse(&format!(">={}", MINIMUM_NSS_VERSION.trim())).unwrap();
+    assert!(
+        version_req.matches(&modversion_for_cmp),
+        "neqo has NSS version requirement {version_req}, found {modversion}"
+    );
+
+    let cfg = Command::new("pkg-config")
+        .args(["--cflags", "--libs", "nss"])
+        .output()
+        .expect("NSS flags not returned by pkg-config")
+        .stdout;
+    let cfg_str = String::from_utf8(cfg).expect("non-UTF8 from pkg-config");
+
+    let mut flags: Vec<String> = Vec::new();
+    for f in cfg_str.split(' ') {
+        if let Some(include) = f.strip_prefix("-I") {
+            flags.push(String::from(f));
+            println!("cargo:include={include}");
+        } else if let Some(path) = f.strip_prefix("-L") {
+            println!("cargo:rustc-link-search=native={path}");
+        } else if let Some(lib) = f.strip_prefix("-l") {
+            println!("cargo:rustc-link-lib=dylib={lib}");
+        } else {
+            println!("Warning: Unknown flag from pkg-config: {f}");
+        }
+    }
+
+    flags
+}
+
+fn setup_standalone(nss: &str) -> Vec<String> {
     setup_clang();
 
     println!("cargo:rerun-if-env-changed=NSS_DIR");
-    let nss = nss_dir();
+    let nss = PathBuf::from(nss);
+    assert!(
+        !nss.is_relative(),
+        "The NSS_DIR environment variable is expected to be an absolute path."
+    );
+
     build_nss(nss.clone());
 
     // $NSS_DIR/../dist/
@@ -406,8 +423,10 @@ fn setup_for_gecko() -> Vec<String> {
 fn main() {
     let flags = if cfg!(feature = "gecko") {
         setup_for_gecko()
+    } else if let Ok(nss_dir) = env::var("NSS_DIR") {
+        setup_standalone(nss_dir.trim())
     } else {
-        setup_standalone()
+        pkg_config()
     };
 
     let config_file = PathBuf::from(BINDINGS_DIR).join(BINDINGS_CONFIG);

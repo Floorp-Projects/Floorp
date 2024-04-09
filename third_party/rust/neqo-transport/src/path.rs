@@ -216,7 +216,7 @@ impl Paths {
     /// to a migration from a peer, in which case the old path needs to be probed.
     #[must_use]
     fn select_primary(&mut self, path: &PathRef) -> Option<PathRef> {
-        qinfo!([path.borrow()], "set as primary path");
+        qdebug!([path.borrow()], "set as primary path");
         let old_path = self.primary.replace(Rc::clone(path)).map(|old| {
             old.borrow_mut().set_primary(false);
             old

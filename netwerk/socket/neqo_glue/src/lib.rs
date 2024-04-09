@@ -121,7 +121,7 @@ impl NeqoHttp3Conn {
         max_accumlated_time_ms: u32,
     ) -> Result<RefPtr<NeqoHttp3Conn>, nsresult> {
         // Nss init.
-        init();
+        init().map_err(|_| NS_ERROR_UNEXPECTED)?;
 
         let origin_conv = str::from_utf8(origin).map_err(|_| NS_ERROR_INVALID_ARG)?;
 
