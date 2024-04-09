@@ -859,8 +859,10 @@ HttpObserverManager = {
       urgentSend: (cos.classFlags & URGENT_CLASSES) > 0,
 
       browserElement: channel.browserElement || undefined,
-      bmsUseragent: channel.browserElement?.ownerDocument.documentURI.split("?")[3] == "true" || undefined,
+      bmsUseragent: channel.browserElement?.ownerGlobal?.window?.gBmsWindow?.userAgent
     };
+
+    console.log(channel.browserElement?.ownerGlobal?.window?.gBmsWindow?.userAgent)
 
     if (originAttributes) {
       data.cookieStoreId =

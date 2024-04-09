@@ -1617,8 +1617,8 @@ var gBrowserInit = {
 
   onDOMContentLoaded() {
     // Floorp Injections
-    let loadURL = new URL(window.location.href).searchParams.get("url");
-    if (!loadURL) {
+    let webPanelId = new URL(window.location.href).searchParams.get("floorpWebPanelId");
+    if (!webPanelId) {
       // This needs setting up before we create the first remote browser.
       window.docShell.treeOwner
         .QueryInterface(Ci.nsIInterfaceRequestor)
