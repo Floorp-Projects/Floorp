@@ -35,7 +35,7 @@ module.exports = {
           node.init?.type != "CallExpression" ||
           node.init?.callee?.type != "MemberExpression" ||
           !context.getFilename().endsWith(".sys.mjs") ||
-          !helpers.isTopLevel(context.getAncestors())
+          !helpers.isTopLevel(helpers.getAncestors(context, node))
         ) {
           return;
         }

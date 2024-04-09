@@ -11,6 +11,7 @@
 const fs = require("fs");
 
 const { maybeGetMemberPropertyName } = require("../helpers");
+const helpers = require("../helpers");
 
 const privilegedGlobals = Object.keys(
   require("../environments/privileged.js").globals
@@ -133,7 +134,7 @@ module.exports = {
         const { operator, right } = node;
         if (
           operator === "instanceof" &&
-          pointsToDOMInterface(context.getScope(), right)
+          pointsToDOMInterface(helpers.getScope(context, node), right)
         ) {
           context.report({
             node,
