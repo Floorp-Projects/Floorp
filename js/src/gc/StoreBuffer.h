@@ -536,7 +536,13 @@ class StoreBuffer {
 
  public:
 #ifdef DEBUG
-  bool markingNondeduplicatable;
+  // If a dependent string in the whole cell buffer has an edge to a base
+  // string, then that base must be visited first through that whole cell buffer
+  // entry so that it doesn't get deduplicated and disappear before the
+  // dependent string is processed. Assert that we visit all string entries
+  // first, before there is any possibility that they will be visited through a
+  // more generic mechanism.
+  bool markingStringWholeCells;
 #endif
 
   explicit StoreBuffer(JSRuntime* rt);

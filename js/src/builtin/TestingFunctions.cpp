@@ -3705,6 +3705,85 @@ static bool NewString(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static bool NewDependentString(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  RootedString src(cx, ToString(cx, args.get(0)));
+  if (!src) {
+    return false;
+  }
+
+  uint64_t indexStart = 0;
+  mozilla::Maybe<uint64_t> indexEnd;
+  gc::Heap heap = gc::Heap::Default;
+  mozilla::Maybe<gc::Heap> requiredHeap;
+
+  if (!ToIndex(cx, args.get(1), &indexStart)) {
+    return false;
+  }
+
+  Rooted<Value> options(cx);
+  if (args.get(2).isObject()) {
+    options = args[2];
+  } else {
+    uint64_t idx;
+    if (args.hasDefined(2)) {
+      if (!ToIndex(cx, args.get(2), &idx)) {
+        return false;
+      }
+      indexEnd.emplace(idx);
+    }
+    options = args.get(3);
+  }
+
+  if (options.isObject()) {
+    Rooted<Value> v(cx);
+    Rooted<JSObject*> optObj(cx, &options.toObject());
+    if (!JS_GetProperty(cx, optObj, "tenured", &v)) {
+      return false;
+    }
+    if (v.isBoolean()) {
+      requiredHeap.emplace(v.toBoolean() ? gc::Heap::Tenured
+                                         : gc::Heap::Default);
+      heap = *requiredHeap;
+    }
+  }
+
+  if (indexEnd.isNothing()) {
+    // Read the length now that no more JS code can run.
+    indexEnd.emplace(src->length());
+  }
+  if (indexStart > src->length() || *indexEnd > src->length() ||
+      indexStart >= *indexEnd) {
+    JS_ReportErrorASCII(cx, "invalid dependent string bounds");
+    return false;
+  }
+  if (!src->ensureLinear(cx)) {
+    return false;
+  }
+  Rooted<JSString*> result(
+      cx, js::NewDependentString(cx, src, indexStart, *indexEnd - indexStart,
+                                 heap));
+  if (!result) {
+    return false;
+  }
+  if (!result->isDependent()) {
+    JS_ReportErrorASCII(cx, "resulting string is not dependent (too short?)");
+    return false;
+  }
+
+  if (requiredHeap.isSome()) {
+    MOZ_ASSERT_IF(*requiredHeap == gc::Heap::Tenured, result->isTenured());
+    if ((*requiredHeap == gc::Heap::Default) && result->isTenured()) {
+      JS_ReportErrorASCII(cx, "nursery string created in tenured heap");
+      return false;
+    }
+  }
+
+  args.rval().setString(result);
+  return true;
+}
+
 // Warning! This will let you create ropes that I'm not sure would be possible
 // otherwise, specifically:
 //
@@ -9422,6 +9501,15 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "  \n"
 "   - maybeExternal: create an external string, unless the data fits within an\n"
 "     inline string. Inline strings may be nursery-allocated."),
+
+    JS_FN_HELP("newDependentString", NewDependentString, 2, 0,
+"newDependentString(str, indexStart[, indexEnd] [, options])",
+"  Essentially the same as str.substring() but insist on\n"
+"  creating a dependent string and failing if not. Also has options to\n"
+"  control the heap the string object is allocated into:\n"
+"  \n"
+"   - tenured: if true, allocate in the tenured heap or throw. If false,\n"
+"     allocate in the nursery or throw."),
 
     JS_FN_HELP("ensureLinearString", EnsureLinearString, 1, 0,
 "ensureLinearString(str)",
