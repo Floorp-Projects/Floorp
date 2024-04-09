@@ -33,6 +33,7 @@ import org.mozilla.fenix.GleanMetrics.Addons
 import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.GleanMetrics.Preferences
 import org.mozilla.fenix.GleanMetrics.SearchDefaultEngine
+import org.mozilla.fenix.GleanMetrics.TabStrip
 import org.mozilla.fenix.GleanMetrics.TopSites
 import org.mozilla.fenix.components.metrics.MozillaProductDetector
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
@@ -147,6 +148,7 @@ class FenixApplicationTest {
         every { application.getDeviceTotalRAM() } returns 7L
         every { settings.inactiveTabsAreEnabled } returns true
         every { application.isDeviceRamAboveThreshold } returns true
+        every { settings.isTabletAndTabStripEnabled } returns true
 
         assertTrue(settings.contileContextId.isEmpty())
         assertNull(TopSites.contextId.testGetValue())
@@ -196,6 +198,7 @@ class FenixApplicationTest {
         assertEquals(true, Metrics.defaultWallpaper.testGetValue())
         assertEquals(true, Metrics.ramMoreThanThreshold.testGetValue())
         assertEquals(7L, Metrics.deviceTotalRam.testGetValue())
+        assertEquals(true, TabStrip.enabled.testGetValue())
 
         val contextId = TopSites.contextId.testGetValue()!!.toString()
 
