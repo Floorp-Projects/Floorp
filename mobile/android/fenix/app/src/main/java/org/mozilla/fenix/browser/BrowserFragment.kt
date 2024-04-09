@@ -107,32 +107,12 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
             )
         }
 
-        val isPrivate = (activity as HomeActivity).browsingModeManager.mode.isPrivate
-
         if (!IncompleteRedesignToolbarFeature(context.settings()).isEnabled) {
-            val leadingAction = if (isPrivate && context.settings().feltPrivateBrowsingEnabled) {
-                BrowserToolbar.Button(
-                    imageDrawable = AppCompatResources.getDrawable(
-                        context,
-                        R.drawable.mozac_ic_data_clearance_24,
-                    )!!,
-                    contentDescription = context.getString(R.string.browser_toolbar_erase),
-                    iconTintColorResource = ThemeManager.resolveAttribute(R.attr.textPrimary, context),
-                    listener = browserToolbarInteractor::onEraseButtonClicked,
-                )
-            } else {
-                BrowserToolbar.Button(
-                    imageDrawable = AppCompatResources.getDrawable(
-                        context,
-                        R.drawable.mozac_ic_home_24,
-                    )!!,
-                    contentDescription = context.getString(R.string.browser_toolbar_home),
-                    iconTintColorResource = ThemeManager.resolveAttribute(R.attr.textPrimary, context),
-                    listener = browserToolbarInteractor::onHomeButtonClicked,
-                )
-            }
-
-            browserToolbarView.view.addNavigationAction(leadingAction)
+            val isPrivate = (activity as HomeActivity).browsingModeManager.mode.isPrivate
+            initLeadingAction(
+                context = context,
+                isPrivate = isPrivate,
+            )
         }
 
         updateToolbarActions(isTablet = resources.getBoolean(R.bool.tablet))
@@ -429,6 +409,36 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
             owner = this,
             view = view,
         )
+    }
+
+    // Adds a home button to BrowserToolbar or, if FeltPrivateBrowsing is enabled, a clear data button instead.
+    private fun initLeadingAction(
+        context: Context,
+        isPrivate: Boolean,
+    ) {
+        val leadingAction = if (isPrivate && context.settings().feltPrivateBrowsingEnabled) {
+            BrowserToolbar.Button(
+                imageDrawable = AppCompatResources.getDrawable(
+                    context,
+                    R.drawable.mozac_ic_data_clearance_24,
+                )!!,
+                contentDescription = context.getString(R.string.browser_toolbar_erase),
+                iconTintColorResource = ThemeManager.resolveAttribute(R.attr.textPrimary, context),
+                listener = browserToolbarInteractor::onEraseButtonClicked,
+            )
+        } else {
+            BrowserToolbar.Button(
+                imageDrawable = AppCompatResources.getDrawable(
+                    context,
+                    R.drawable.mozac_ic_home_24,
+                )!!,
+                contentDescription = context.getString(R.string.browser_toolbar_home),
+                iconTintColorResource = ThemeManager.resolveAttribute(R.attr.textPrimary, context),
+                listener = browserToolbarInteractor::onHomeButtonClicked,
+            )
+        }
+
+        browserToolbarView.view.addNavigationAction(leadingAction)
     }
 
     override fun onUpdateToolbarForConfigurationChange(toolbar: BrowserToolbarView) {
