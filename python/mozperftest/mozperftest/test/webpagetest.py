@@ -255,7 +255,7 @@ class WebPageTest(Layer):
         )
 
     def request_with_timeout(self, url):
-        request_header = {"Host": "www.webpagetest.org"}
+        request_header = {"Host": "www.webpagetest.org", "X-WPT-API-KEY": self.WPT_key}
         requested_results = requests.get(url, headers=request_header)
         results_of_request = json.loads(requested_results.text)
         start = time.monotonic()
@@ -320,7 +320,7 @@ class WebPageTest(Layer):
         for key_value_pair in list(options.items())[6:]:
             test_parameters += "&{}={}".format(*key_value_pair)
         return (
-            f"https://webpagetest.org/runtest.php?url={website_to_be_tested}&k={self.WPT_key}&"
+            f"https://webpagetest.org/runtest.php?url={website_to_be_tested}&"
             f"location={options['location']}:{options['browser']}.{options['connection']}&"
             f"f=json{test_parameters}"
         )
