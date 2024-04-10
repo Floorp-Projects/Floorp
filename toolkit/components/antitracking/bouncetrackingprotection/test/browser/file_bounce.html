@@ -1,150 +1,59 @@
 <!DOCTYPE html>
 <html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>Bounce!</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+  </head>
+  <body>
+    <p>Nothing to see here...</p>
+    <script>
+      // Wrap the entire block so we can run async code.
+      (async () => {
+        let url = new URL(location.href);
 
-<head>
-  <meta charset="utf-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <title>Bounce!</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-</head>
+        let redirectDelay = url.searchParams.get("redirectDelay");
+        if(redirectDelay != null) {
+          redirectDelay = Number.parseInt(redirectDelay);
+        } else {
+          redirectDelay = 50;
+        }
 
-<body>
-  <p id="test-config"></p>
-  <script>
-    const SET_STATE_HANDLERS = {
-      "cookie-client": setCookie,
-      "localStorage": setLocalStorage,
-      "indexedDB": setIndexedDB,
-    };
-
-    function setCookie(id) {
-      let cookie = document.cookie;
-      if (cookie) {
-        console.info("Received cookie", cookie);
-      } else {
-        let newCookie = `id=${id}`;
-        console.info("Setting new cookie", newCookie);
-        document.cookie = newCookie;
-      }
-    }
-
-    function setLocalStorage(id) {
-      let entry = localStorage.getItem("id");
-      if (entry) {
-        console.info("Found localStorage entry. id", entry);
-      } else {
-        console.info("Setting new localStorage entry. id", id);
-        localStorage.setItem(id, id);
-      }
-    }
-
-    function setIndexedDB() {
-      return new Promise((resolve, reject) => {
-        let request = window.indexedDB.open("bounce", 1);
-        request.onsuccess = () => {
-          console.info("Opened indexedDB");
-          resolve()
-        };
-        request.onerror = (event) => {
-          console.error("Error opening indexedDB", event);
-          reject();
-        };
-        request.onupgradeneeded = (event) => {
-          console.info("Initializing indexedDB");
-          let db = event.target.result;
-          db.createObjectStore("bounce");
-        };
-      });
-    }
-
-    function setIndexedDBInWorker(nested = false) {
-      let worker = new Worker("file_web_worker.js");
-      let msg = nested ? "setIndexedDBNested" : "setIndexedDB";
-      worker.postMessage(msg);
-      return new Promise((resolve, reject) => {
-        worker.onmessage = () => {
-          console.info("IndexedDB set in worker");
-          resolve();
-        };
-        worker.onerror = (event) => {
-          console.error("Error setting indexedDB in worker", event);
-          reject();
-        };
-      });
-    }
-
-    /**
-     * Set a state in a child frame.
-     */
-    function setStateInFrame() {
-      // Embed self
-      let iframe = document.createElement("iframe");
-
-      let src = new URL(location.href);
-      // Remove search params we don't need for the iframe.
-      src.searchParams.delete("target");
-      src.searchParams.delete("redirectDelay");
-      src.searchParams.delete("setStateSameSiteFrame");
-      iframe.src = src.href;
-
-      let frameReadyPromise = new Promise((resolve) => {
-        iframe.addEventListener("load", () => {
-          iframe.contentWindow.readyPromise.then(resolve);
-        });
-      });
-      document.body.appendChild(iframe);
-
-      return frameReadyPromise;
-    }
-
-    // Wrap the entire block so we can run async code. Store the result in a
-    // promise so that parent windows can wait for us to be ready.
-    window.readyPromise = (async () => {
-      let url = new URL(location.href);
-      // Display the test config in the body.
-      document.getElementById("test-config").innerText = JSON.stringify(Object.fromEntries(url.searchParams), null, 2);
-
-      if (url.searchParams.get("setStateSameSiteFrame") === "true") {
-        // Set state in a child frame.
-        await setStateInFrame(url);
-      } else if(url.searchParams.get("setStateInWebWorker") === "true") {
-        // Set state in a worker.
-        await setIndexedDBInWorker();
-      } else if(url.searchParams.get("setStateInNestedWebWorker") === "true") {
-        // Set state in a nested worker.
-        await setIndexedDBInWorker(true);
-      } else {
-        // Set a state in this window.
         let setState = url.searchParams.get("setState");
         if (setState) {
           let id = Math.random().toString();
 
-          let handler = SET_STATE_HANDLERS[setState];
-          if (!handler) {
-            throw new Error("Unknown state handler: " + setState);
+          if (setState == "cookie-client") {
+            let cookie = document.cookie;
+
+            if (cookie) {
+              console.info("Received cookie", cookie);
+            } else {
+              let newCookie = `id=${id}`;
+              console.info("Setting new cookie", newCookie);
+              document.cookie = newCookie;
+            }
+          } else if (setState == "localStorage") {
+            let entry = localStorage.getItem("id");
+
+            if (entry) {
+              console.info("Found localStorage entry. id", entry);
+            } else {
+              console.info("Setting new localStorage entry. id", id);
+              localStorage.setItem(id, id);
+            }
           }
-          await handler(id);
         }
-      }
 
-      // Redirect to the target URL after a delay.
-      // If no target is specified, do nothing.
-      let redirectDelay = url.searchParams.get("redirectDelay");
-      if (redirectDelay != null) {
-        redirectDelay = Number.parseInt(redirectDelay);
-      } else {
-        redirectDelay = 50;
-      }
-
-      let target = url.searchParams.get("target");
-      if (target) {
-        console.info("Redirecting to", target);
-        setTimeout(() => {
-          location.href = target;
-        }, redirectDelay);
-      }
-    })();
-  </script>
-</body>
-
+        let target = url.searchParams.get("target");
+        if (target) {
+          console.info("redirecting to", target);
+          setTimeout(() => {
+            location.href = target;
+          }, redirectDelay);
+        }
+      })();
+    </script>
+  </body>
 </html>

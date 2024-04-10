@@ -45,7 +45,7 @@ class BounceTrackingState : public nsIWebProgressListener,
   // return nullptr if the given web progress / browsing context is not suitable
   // (see ShouldCreateBounceTrackingStateForWebProgress).
   static already_AddRefed<BounceTrackingState> GetOrCreate(
-      dom::BrowsingContextWebProgress* aWebProgress, nsresult& aRv);
+      dom::BrowsingContextWebProgress* aWebProgress);
 
   // Reset state for all BounceTrackingState instances this includes resetting
   // BounceTrackingRecords and cancelling any running timers.
@@ -80,9 +80,6 @@ class BounceTrackingState : public nsIWebProgressListener,
   static bool ShouldCreateBounceTrackingStateForBC(
       dom::CanonicalBrowsingContext* aBrowsingContext);
 
-  // Whether the given principal should be tracked for bounce tracking.
-  static bool ShouldTrackPrincipal(nsIPrincipal* aPrincipal);
-
   // Check if there is a BounceTrackingState which current browsing context is
   // associated with aSiteHost.
   // This is an approximation for checking if a given site is currently loaded
@@ -102,15 +99,9 @@ class BounceTrackingState : public nsIWebProgressListener,
   // Create a string that describes this object. Used for logging.
   nsCString Describe();
 
-  // Record sites which have accessed storage in the current extended
-  // navigation.
-  nsresult OnStorageAccess(nsIPrincipal* aPrincipal);
-
  private:
   explicit BounceTrackingState();
   virtual ~BounceTrackingState();
-
-  bool mIsInitialized{false};
 
   uint64_t mBrowserId{};
 
@@ -148,6 +139,12 @@ class BounceTrackingState : public nsIWebProgressListener,
   // When the document is loaded at the end of a navigation, update the
   // final host.
   nsresult OnDocumentLoaded(nsIPrincipal* aDocumentPrincipal);
+
+  // TODO: Bug 1839918: Detection of stateful bounces.
+
+  // Record sites which have accessed storage in the current extended
+  // navigation.
+  nsresult OnStorageAccess();
 
   // Record sites which have activated service workers in the current
   // extended navigation.
