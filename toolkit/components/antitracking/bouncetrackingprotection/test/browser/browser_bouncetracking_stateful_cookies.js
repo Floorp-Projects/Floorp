@@ -66,39 +66,3 @@ add_task(async function test_bounce_stateful_cookies_server_sameSiteFrame() {
     setStateSameSiteFrame: true,
   });
 });
-
-// Storage tests.
-
-add_task(async function test_bounce_stateful_localStorage() {
-  info("Client bounce with localStorage.");
-  await runTestBounce({
-    bounceType: "client",
-    setState: "localStorage",
-  });
-});
-
-add_task(async function test_bounce_stateful_localStorage_sameSiteFrame() {
-  info("Client bounce with localStorage set in same site frame.");
-  await runTestBounce({
-    bounceType: "client",
-    setState: "localStorage",
-    setStateSameSiteFrame: true,
-  });
-});
-
-add_task(async function test_bounce_stateful_indexedDB() {
-  info("Client bounce with indexedDB.");
-  await runTestBounce({
-    bounceType: "client",
-    setState: "indexedDB",
-  });
-});
-
-add_task(async function test_bounce_stateful_indexedDB_sameSiteFrame() {
-  info("Client bounce with indexedDB populated in same site frame.");
-  await runTestBounce({
-    bounceType: "client",
-    setState: "indexedDB",
-    setStateSameSiteFrame: true,
-  });
-});
