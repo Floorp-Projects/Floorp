@@ -720,7 +720,7 @@ nsDragService::GetNumDropItems(uint32_t* aNumItems) {
         *aNumItems = 0;
         return NS_OK;
       }
-      GetTargetDragData(gdkFlavor, dragFlavors);
+      GetTargetDragData(gdkFlavor, dragFlavors, false /* resetTargetData */);
     }
 
     // application/vnd.portal.filetransfer
@@ -730,7 +730,7 @@ nsDragService::GetNumDropItems(uint32_t* aNumItems) {
         *aNumItems = 0;
         return NS_OK;
       }
-      GetTargetDragData(gdkFlavor, dragFlavors);
+      GetTargetDragData(gdkFlavor, dragFlavors, false /* resetTargetData */);
     }
 
     if (mTargetDragUris) {
@@ -883,7 +883,7 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex) {
       LOGDRAGSERVICE("  file not found, proceed with %s flavor\n", gPortalFile);
       gdkFlavor = gdk_atom_intern(gPortalFile, FALSE);
       if (gdkFlavor) {
-        GetTargetDragData(gdkFlavor, dragFlavors);
+        GetTargetDragData(gdkFlavor, dragFlavors, false /* resetTargetData */);
         GetReachableFileFromUriList(mTargetDragUris.get(), aItemIndex, file);
       }
     }
@@ -894,7 +894,7 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex) {
                      gPortalFileTransfer);
       gdkFlavor = gdk_atom_intern(gPortalFileTransfer, FALSE);
       if (gdkFlavor) {
-        GetTargetDragData(gdkFlavor, dragFlavors);
+        GetTargetDragData(gdkFlavor, dragFlavors, false /* resetTargetData */);
         GetReachableFileFromUriList(mTargetDragUris.get(), aItemIndex, file);
       }
     }
@@ -907,7 +907,7 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex) {
 
       gdkFlavor = gdk_atom_intern(gTextUriListType, FALSE);
       if (gdkFlavor) {
-        GetTargetDragData(gdkFlavor, dragFlavors);
+        GetTargetDragData(gdkFlavor, dragFlavors, false /* resetTargetData */);
         GetReachableFileFromUriList(mTargetDragUris.get(), aItemIndex, file);
       }
     }
@@ -1336,13 +1336,16 @@ bool nsDragService::IsTargetContextList(void) {
 // DispatchMotionEvents().
 // Can lead to another round of drag_motion events.
 void nsDragService::GetTargetDragData(GdkAtom aFlavor,
-                                      nsTArray<nsCString>& aDropFlavors) {
+                                      nsTArray<nsCString>& aDropFlavors,
+                                      bool aResetTargetData) {
   LOGDRAGSERVICE("nsDragService::GetTargetDragData(%p) '%s'\n",
                  mTargetDragContext.get(),
                  GUniquePtr<gchar>(gdk_atom_name(aFlavor)).get());
 
   // reset our target data areas
-  TargetResetData();
+  if (aResetTargetData) {
+    TargetResetData();
+  }
 
   GUniquePtr<gchar> name(gdk_atom_name(aFlavor));
   nsDependentCString flavor(name.get());
