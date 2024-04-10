@@ -30,12 +30,15 @@ add_task(async function connect_from_background_frame() {
   }
   async function background() {
     const FRAME_URL = "https://example.com/tests/toolkit/components/extensions/test/mochitest/file_sample.html";
+    const FRAME_ORIGIN = new URL(FRAME_URL).origin;
+
     browser.runtime.onConnect.addListener(port => {
       // The next two assertions are the reason for this being a mochitest
       // instead of a xpcshell test.
       browser.test.assertEq(port.sender.tab, undefined, "Sender is not a tab");
       browser.test.assertEq(port.sender.frameId, undefined, "frameId unset");
       browser.test.assertEq(port.sender.url, FRAME_URL, "Expected sender URL");
+      browser.test.assertEq(port.sender.origin, FRAME_ORIGIN, "Expected sender origin");
       port.onMessage.addListener(msg => {
         browser.test.assertEq("pong", msg, "Reply from content script");
         port.disconnect();
@@ -88,6 +91,8 @@ add_task(async function connect_from_content_script_in_frame() {
   async function background() {
     const TAB_URL = "https://example.org/tests/toolkit/components/extensions/test/mochitest/file_contains_iframe.html";
     const FRAME_URL = "https://example.org/tests/toolkit/components/extensions/test/mochitest/file_contains_img.html";
+    const FRAME_ORIGIN = new URL(FRAME_URL).origin;
+
     let createdTab;
     browser.runtime.onConnect.addListener(port => {
       // The next two assertions are the reason for this being a mochitest
@@ -95,6 +100,7 @@ add_task(async function connect_from_content_script_in_frame() {
       browser.test.assertEq(port.sender.tab.url, TAB_URL, "Sender is the tab");
       browser.test.assertTrue(port.sender.frameId > 0, "frameId is set");
       browser.test.assertEq(port.sender.url, FRAME_URL, "Expected sender URL");
+      browser.test.assertEq(port.sender.origin, FRAME_ORIGIN, "Expected sender origin");
 
       browser.test.assertEq(createdTab.id, port.sender.tab.id, "Tab to close");
       browser.tabs.remove(port.sender.tab.id).then(() => {

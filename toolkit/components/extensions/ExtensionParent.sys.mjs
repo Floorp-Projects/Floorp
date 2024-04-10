@@ -303,7 +303,8 @@ const ProxyMessenger = {
     };
 
     if (JSWindowActorParent.isInstance(source.actor)) {
-      let browser = source.actor.browsingContext.top.embedderElement;
+      let { currentWindowContext, top } = source.actor.browsingContext;
+      let browser = top.embedderElement;
       let data =
         browser && apiManager.global.tabTracker.getBrowserData(browser);
       if (data?.tabId > 0) {
@@ -311,6 +312,13 @@ const ProxyMessenger = {
         // frameId is documented to only be set if sender.tab is set.
         sender.frameId = source.frameId;
       }
+
+      let principal = currentWindowContext.documentPrincipal;
+      // We intend the serialization of null principals *and* file scheme to be
+      // "null".
+      sender.origin = new URL(principal.originNoSuffix).origin;
+    } else if (source.verified) {
+      sender.origin = `moz-extension://${extension.uuid}`;
     }
 
     return sender;

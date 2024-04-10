@@ -8,11 +8,17 @@ function extensionScript() {
   let FRAME_URL = browser.runtime.getManifest().content_scripts[0].matches[0];
   // Cannot use :8888 in the manifest because of bug 1468162.
   FRAME_URL = FRAME_URL.replace("mochi.test", "mochi.test:8888");
+  let FRAME_ORIGIN = new URL(FRAME_URL).origin;
 
   browser.runtime.onConnect.addListener(port => {
     browser.test.assertEq(port.sender.tab, undefined, "Sender is not a tab");
     browser.test.assertEq(port.sender.frameId, undefined, "frameId unset");
     browser.test.assertEq(port.sender.url, FRAME_URL, "Expected sender URL");
+    browser.test.assertEq(
+      port.sender.origin,
+      FRAME_ORIGIN,
+      "Expected sender origin"
+    );
 
     port.onMessage.addListener(msg => {
       browser.test.assertEq("pong", msg, "Reply from content script");
