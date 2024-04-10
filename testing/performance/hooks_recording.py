@@ -20,6 +20,11 @@ next_site = None
 
 RECORDING_LIST = Path(Path(__file__).parent, "pageload_sites.json")
 
+# Uncomment this to record tp7 desktop sites in CI or locally.
+# This is still a WIP (Bug 1831310) and meant to be used by the
+# perftest team.
+# RECORDING_LIST = Path(Path(__file__).parent, "tp7_desktop_sites.json")
+
 SCM_1_LOGIN_SITES = ("facebook", "netflix")
 
 

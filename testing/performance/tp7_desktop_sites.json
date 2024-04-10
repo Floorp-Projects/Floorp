@@ -1,0 +1,51 @@
+{
+  "desktop": [
+    {
+      "login": false,
+      "name": "weather",
+      "test_url": "https://weather.com/en-CA/weather/today/l/43.67%2C-79.42",
+      "secondary_url": "https://weather.com/en-CA/weather/monthly/l/43.67%2C-79.42",
+      "dismiss_cookie_prompt": [
+        [
+          "click.byXpathAndWait",
+          "/html/body/div[1]/main/div[2]/main/div[10]/section/section/button/svg"
+        ]
+      ]
+    },
+    {
+      "login": false,
+      "name": "samsung",
+      "test_url": "https://www.samsung.com/us",
+      "secondary_url": "https://www.samsung.com/us/mobile",
+      "dismiss_cookie_prompt": [
+        ["click.byXpathAndWait", "/html/body/div[1]/header/div[2]/div/button"]
+      ]
+    },
+    {
+      "login": false,
+      "_comment": "Bug 1890563, setup logins for openai and tiktok",
+      "name": "openai",
+      "test_url": "https://openai.com/",
+      "secondary_url": "https://openai.com/blog"
+    },
+    {
+      "login": false,
+      "name": "docomo",
+      "test_url": "https://www.docomo.ne.jp/",
+      "secondary_url": "https://www.docomo.ne.jp/iphone/?icid=CRP_menu_to_CRP_IPH"
+    },
+    {
+      "login": false,
+      "name": "tiktok",
+      "_comment": "Bug 1890563, setup logins for openai and tiktok",
+      "test_url": "https://www.tiktok.com/en",
+      "secondary_url": "https://www.tiktok.com/explore",
+      "dismiss_cookie_prompt": [
+        [
+          "click.byXpathAndWait",
+          "/html/body/div[5]/div[3]/div/div/div/div[1]/div/div/div[3]/div/div[2]/div/div/div"
+        ]
+      ]
+    }
+  ]
+}
