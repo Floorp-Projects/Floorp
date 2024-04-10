@@ -676,15 +676,20 @@ uint32_t GetCubebMTGLatencyInFrames(cubeb_stream_params* params) {
 }
 
 static const char* gInitCallbackPrefs[] = {
-    PREF_VOLUME_SCALE,           PREF_CUBEB_OUTPUT_DEVICE,
-    PREF_CUBEB_LATENCY_PLAYBACK, PREF_CUBEB_LATENCY_MTG,
-    PREF_CUBEB_BACKEND,          PREF_CUBEB_FORCE_NULL_CONTEXT,
-    PREF_CUBEB_SANDBOX,          PREF_AUDIOIPC_STACK_SIZE,
-    PREF_AUDIOIPC_SHM_AREA_SIZE, nullptr,
+    PREF_VOLUME_SCALE,
+    PREF_CUBEB_OUTPUT_DEVICE,
+    PREF_CUBEB_LATENCY_PLAYBACK,
+    PREF_CUBEB_LATENCY_MTG,
+    PREF_CUBEB_BACKEND,
+    PREF_CUBEB_FORCE_SAMPLE_RATE,
+    PREF_CUBEB_FORCE_NULL_CONTEXT,
+    PREF_CUBEB_SANDBOX,
+    PREF_AUDIOIPC_STACK_SIZE,
+    PREF_AUDIOIPC_SHM_AREA_SIZE,
+    nullptr,
 };
 
 static const char* gCallbackPrefs[] = {
-    PREF_CUBEB_FORCE_SAMPLE_RATE,
     // We don't want to call the callback on startup, because the pref is the
     // empty string by default ("", which means "logging disabled"). Because the
     // logging can be enabled via environment variables (MOZ_LOG="module:5"),
