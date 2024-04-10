@@ -1366,3 +1366,8 @@ if CONFIG["OS_TARGET"] == "FreeBSD":
 
 if CONFIG["MOZ_APP_SYSTEM_HEADERS"]:
     include("../" + CONFIG["MOZ_BUILD_APP"] + "/app-system-headers.mozbuild")
+
+if CONFIG["MOZ_PERFETTO"]:
+    system_headers += [
+        "sys/timerfd.h",
+    ]
