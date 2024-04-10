@@ -996,8 +996,6 @@ class WorkerPrivate final
 
   void PropagateStorageAccessPermissionGranted();
 
-  void NotifyStorageKeyUsed();
-
   void EnableDebugger();
 
   void DisableDebugger();
@@ -1620,10 +1618,6 @@ class WorkerPrivate final
 
   // The flag indicates if the worke is idle for events in the main event loop.
   bool mWorkerLoopIsIdle MOZ_GUARDED_BY(mMutex){false};
-
-  // This flag is used to ensure we only call NotifyStorageKeyUsed once per
-  // global.
-  bool hasNotifiedStorageKeyUsed{false};
 };
 
 class AutoSyncLoopHolder {

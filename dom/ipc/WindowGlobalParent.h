@@ -329,8 +329,6 @@ class WindowGlobalParent final : public WindowContext,
       const nsCString& aBaseDomain, const OriginAttributes& aOriginAttributes,
       nsIURI* aHost, bool aFromHttp, const nsTArray<CookieStruct>& aCookies);
 
-  mozilla::ipc::IPCResult RecvOnInitialStorageAccess();
-
  private:
   WindowGlobalParent(CanonicalBrowsingContext* aBrowsingContext,
                      uint64_t aInnerWindowId, uint64_t aOuterWindowId,

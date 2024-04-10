@@ -3,17 +3,6 @@
 
 "use strict";
 
-const { SiteDataTestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/SiteDataTestUtils.sys.mjs"
-);
-
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "bounceTrackingProtection",
-  "@mozilla.org/bounce-tracking-protection;1",
-  "nsIBounceTrackingProtection"
-);
-
 const SITE_A = "example.com";
 const ORIGIN_A = `https://${SITE_A}`;
 
@@ -36,6 +25,13 @@ const OBSERVER_MSG_RECORD_BOUNCES_FINISHED = "test-record-bounces-finished";
 
 const ROOT_DIR = getRootDirectory(gTestPath);
 
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "bounceTrackingProtection",
+  "@mozilla.org/bounce-tracking-protection;1",
+  "nsIBounceTrackingProtection"
+);
+
 /**
  * Get the base url for the current test directory using the given origin.
  * @param {string} origin - Origin to use in URL.
@@ -52,14 +48,8 @@ function getBaseUrl(origin) {
  * the bounce.
  * @param {string} [options.bounceOrigin] - The origin of the bounce URL.
  * @param {string} [options.targetURL] - URL to redirect to after the bounce.
- * @param {('cookie-server'|'cookie-client'|'localStorage')} [options.setState]
- * Type of state to set during the redirect. Defaults to non stateful redirect.
- * @param {boolean} [options.setStateSameSiteFrame=false] - Whether to set the
- * state in a sub frame that is same site to the top window.
- * @param {boolean} [options.setStateInWebWorker=false] - Whether to set the
- * state in a web worker. This only supports setState == "indexedDB".
- * @param {boolean} [options.setStateInWebWorker=false] - Whether to set the
- * state in a nested web worker. Otherwise the same as setStateInWebWorker.
+ * @param {("cookie"|null)} [options.setState] - What type of state should be set during
+ * the bounce. No state by default.
  * @param {number} [options.statusCode] - HTTP status code to use for server
  * side redirect. Only applies to bounceType == "server".
  * @param {number} [options.redirectDelayMS] - How long to wait before
@@ -72,9 +62,6 @@ function getBounceURL({
   bounceOrigin = ORIGIN_TRACKER,
   targetURL = new URL(getBaseUrl(ORIGIN_B) + "file_start.html"),
   setState = null,
-  setStateSameSiteFrame = false,
-  setStateInWebWorker = false,
-  setStateInNestedWebWorker = false,
   statusCode = 302,
   redirectDelayMS = 50,
 }) {
@@ -92,25 +79,6 @@ function getBounceURL({
   if (setState) {
     searchParams.set("setState", setState);
   }
-  if (setStateSameSiteFrame) {
-    searchParams.set("setStateSameSiteFrame", setStateSameSiteFrame);
-  }
-  if (setStateInWebWorker) {
-    if (setState != "indexedDB") {
-      throw new Error(
-        "setStateInWebWorker only supports setState == 'indexedDB'"
-      );
-    }
-    searchParams.set("setStateInWebWorker", setStateInWebWorker);
-  }
-  if (setStateInNestedWebWorker) {
-    if (setState != "indexedDB") {
-      throw new Error(
-        "setStateInNestedWebWorker only supports setState == 'indexedDB'"
-      );
-    }
-    searchParams.set("setStateInNestedWebWorker", setStateInNestedWebWorker);
-  }
 
   if (bounceType == "server") {
     searchParams.set("statusCode", statusCode);
@@ -126,56 +94,23 @@ function getBounceURL({
  * click on it.
  * @param {MozBrowser} browser - Browser to insert the link in.
  * @param {URL} targetURL - Destination for navigation.
- * @param {Object} options - Additional options.
- * @param {string} [options.spawnWindow] - If set to "newTab" or "popup" the
- * link will be opened in a new tab or popup window respectively. If unset the
- * link is opened in the given browser.
  * @returns {Promise} Resolves once the click is done. Does not wait for
  * navigation or load.
  */
-async function navigateLinkClick(
-  browser,
-  targetURL,
-  { spawnWindow = null } = {}
-) {
-  if (spawnWindow && !["newTab", "popup"].includes(spawnWindow)) {
-    throw new Error(`Invalid option '${spawnWindow}' for spawnWindow`);
-  }
+async function navigateLinkClick(browser, targetURL) {
+  await SpecialPowers.spawn(browser, [targetURL.href], targetURL => {
+    let link = content.document.createElement("a");
 
-  await SpecialPowers.spawn(
-    browser,
-    [targetURL.href, spawnWindow],
-    async (targetURL, spawnWindow) => {
-      let link = content.document.createElement("a");
+    link.href = targetURL;
+    link.textContent = targetURL;
+    // The link needs display: block, otherwise synthesizeMouseAtCenter doesn't
+    // hit it.
+    link.style.display = "block";
 
-      // For opening a popup we attach an event listener to trigger via click.
-      if (spawnWindow) {
-        link.href = "#";
-        link.addEventListener("click", event => {
-          event.preventDefault();
-          if (spawnWindow == "newTab") {
-            // Open a new tab.
-            content.window.open(targetURL, "bounce");
-          } else {
-            // Open a popup window.
-            content.window.open(targetURL, "bounce", "height=200,width=200");
-          }
-        });
-      } else {
-        // For regular navigation add href and click.
-        link.href = targetURL;
-      }
+    content.document.body.appendChild(link);
+  });
 
-      link.textContent = targetURL;
-      // The link needs display: block, otherwise synthesizeMouseAtCenter doesn't
-      // hit it.
-      link.style.display = "block";
-
-      content.document.body.appendChild(link);
-
-      await EventUtils.synthesizeMouse(link, 1, 1, {}, content);
-    }
-  );
+  await BrowserTestUtils.synthesizeMouseAtCenter("a[href]", {}, browser);
 }
 
 /**
@@ -206,38 +141,25 @@ async function waitForRecordBounces(browser) {
  * or server side redirect.
  * @param {('cookie-server'|'cookie-client'|'localStorage')} [options.setState]
  * Type of state to set during the redirect. Defaults to non stateful redirect.
- * @param {boolean} [options.setStateSameSiteFrame=false] - Whether to set the
- * state in a sub frame that is same site to the top window.
- * @param {boolean} [options.setStateInWebWorker=false] - Whether to set the
- * state in a web worker. This only supports setState == "indexedDB".
- * @param {boolean} [options.setStateInWebWorker=false] - Whether to set the
- * state in a nested web worker. Otherwise the same as setStateInWebWorker.
- * @param {boolean} [options.expectCandidate=true] - Expect the redirecting site
- * to be identified as a bounce tracker (candidate).
- * @param {boolean} [options.expectPurge=true] - Expect the redirecting site to
- * have its storage purged.
+ * @param {boolean} [options.expectCandidate=true] - Expect the redirecting site to be
+ * identified as a bounce tracker (candidate).
+ * @param {boolean} [options.expectPurge=true] - Expect the redirecting site to have
+ * its storage purged.
  * @param {OriginAttributes} [options.originAttributes={}] - Origin attributes
  * to use for the test. This determines whether the test is run in normal
- * browsing, a private window or a container tab. By default the test is run in
- * normal browsing.
- * @param {function} [options.postBounceCallback] - Optional function to run
- * after the bounce has completed.
- * @param {boolean} [options.skipSiteDataCleanup=false] - Skip the cleanup of
- * site data after the test. When this is enabled the caller is responsible for
- * cleaning up site data.
+ * browsing, a private window or a container tab. By default the test is run
+ * in normal browsing.
+ * @param {function} [options.postBounceCallback] - Optional function to run after the
+ * bounce has completed.
  */
 async function runTestBounce(options = {}) {
   let {
     bounceType,
     setState = null,
-    setStateSameSiteFrame = false,
-    setStateInWebWorker = false,
-    setStateInNestedWebWorker = false,
     expectCandidate = true,
     expectPurge = true,
     originAttributes = {},
     postBounceCallback = () => {},
-    skipSiteDataCleanup = false,
   } = options;
   info(`runTestBounce ${JSON.stringify(options)}`);
 
@@ -286,14 +208,7 @@ async function runTestBounce(options = {}) {
   // Navigate through the bounce chain.
   await navigateLinkClick(
     browser,
-    getBounceURL({
-      bounceType,
-      targetURL,
-      setState,
-      setStateSameSiteFrame,
-      setStateInWebWorker,
-      setStateInNestedWebWorker,
-    })
+    getBounceURL({ bounceType, targetURL, setState })
   );
 
   // Wait for the final site to be loaded which complete the BounceTrackingRecord.
@@ -357,7 +272,4 @@ async function runTestBounce(options = {}) {
     );
   }
   bounceTrackingProtection.clearAll();
-  if (!skipSiteDataCleanup) {
-    await SiteDataTestUtils.clear();
-  }
 }
