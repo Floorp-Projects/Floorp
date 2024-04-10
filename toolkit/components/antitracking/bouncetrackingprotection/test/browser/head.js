@@ -52,6 +52,8 @@ function getBaseUrl(origin) {
  * Type of state to set during the redirect. Defaults to non stateful redirect.
  * @param {boolean} [options.setStateSameSiteFrame=false] - Whether to set the
  * state in a sub frame that is same site to the top window.
+ * @param {boolean} [options.setStateInWebWorker=false] - Whether to set the
+ * state in a web worker. This only supports setState == "indexedDB".
  * @param {number} [options.statusCode] - HTTP status code to use for server
  * side redirect. Only applies to bounceType == "server".
  * @param {number} [options.redirectDelayMS] - How long to wait before
@@ -65,6 +67,7 @@ function getBounceURL({
   targetURL = new URL(getBaseUrl(ORIGIN_B) + "file_start.html"),
   setState = null,
   setStateSameSiteFrame = false,
+  setStateInWebWorker = false,
   statusCode = 302,
   redirectDelayMS = 50,
 }) {
@@ -84,6 +87,14 @@ function getBounceURL({
   }
   if (setStateSameSiteFrame) {
     searchParams.set("setStateSameSiteFrame", setStateSameSiteFrame);
+  }
+  if (setStateInWebWorker) {
+    if (setState != "indexedDB") {
+      throw new Error(
+        "setStateInWebWorker only supports setState == 'indexedDB'"
+      );
+    }
+    searchParams.set("setStateInWebWorker", setStateInWebWorker);
   }
 
   if (bounceType == "server") {
@@ -149,6 +160,8 @@ async function waitForRecordBounces(browser) {
  * Type of state to set during the redirect. Defaults to non stateful redirect.
  * @param {boolean} [options.setStateSameSiteFrame=false] - Whether to set the
  * state in a sub frame that is same site to the top window.
+ * @param {boolean} [options.setStateInWebWorker=false] - Whether to set the
+ * state in a web worker. This only supports setState == "indexedDB".
  * @param {boolean} [options.expectCandidate=true] - Expect the redirecting site
  * to be identified as a bounce tracker (candidate).
  * @param {boolean} [options.expectPurge=true] - Expect the redirecting site to
@@ -165,6 +178,7 @@ async function runTestBounce(options = {}) {
     bounceType,
     setState = null,
     setStateSameSiteFrame = false,
+    setStateInWebWorker = false,
     expectCandidate = true,
     expectPurge = true,
     originAttributes = {},
@@ -217,7 +231,13 @@ async function runTestBounce(options = {}) {
   // Navigate through the bounce chain.
   await navigateLinkClick(
     browser,
-    getBounceURL({ bounceType, targetURL, setState, setStateSameSiteFrame })
+    getBounceURL({
+      bounceType,
+      targetURL,
+      setState,
+      setStateSameSiteFrame,
+      setStateInWebWorker,
+    })
   );
 
   // Wait for the final site to be loaded which complete the BounceTrackingRecord.
