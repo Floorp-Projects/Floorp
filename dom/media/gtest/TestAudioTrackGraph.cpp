@@ -59,39 +59,27 @@ struct StopInputProcessing : public ControlMessage {
   void Run() override { mInputProcessing->Stop(mTrack->Graph()); }
 };
 
-struct SetPassThrough : public ControlMessage {
-  const RefPtr<AudioInputProcessing> mInputProcessing;
-  const bool mPassThrough;
+void QueueApplySettings(AudioProcessingTrack* aTrack,
+                        AudioInputProcessing* aInputProcessing,
+                        const MediaEnginePrefs& aSettings) {
+  aTrack->QueueControlMessageWithNoShutdown(
+      [inputProcessing = RefPtr{aInputProcessing}, aSettings,
+       // If the track is not connected to a device then the particular
+       // AudioDeviceID (nullptr) passed to ReevaluateInputDevice() is not
+       // important.
+       deviceId = aTrack->DeviceId().valueOr(nullptr),
+       graph = aTrack->Graph()] {
+        inputProcessing->ApplySettings(graph, deviceId, aSettings);
+      });
+}
 
-  SetPassThrough(MediaTrack* aTrack, AudioInputProcessing* aInputProcessing,
-                 bool aPassThrough)
-      : ControlMessage(aTrack),
-        mInputProcessing(aInputProcessing),
-        mPassThrough(aPassThrough) {}
-  void Run() override {
-    EXPECT_EQ(mInputProcessing->PassThrough(mTrack->Graph()), !mPassThrough);
-    mInputProcessing->SetPassThrough(mTrack->Graph(), mPassThrough);
-  }
-};
-
-struct SetRequestedInputChannelCount : public ControlMessage {
-  const CubebUtils::AudioDeviceID mDeviceId;
-  const RefPtr<AudioInputProcessing> mInputProcessing;
-  const uint32_t mChannelCount;
-
-  SetRequestedInputChannelCount(MediaTrack* aTrack,
-                                CubebUtils::AudioDeviceID aDeviceId,
-                                AudioInputProcessing* aInputProcessing,
-                                uint32_t aChannelCount)
-      : ControlMessage(aTrack),
-        mDeviceId(aDeviceId),
-        mInputProcessing(aInputProcessing),
-        mChannelCount(aChannelCount) {}
-  void Run() override {
-    mInputProcessing->SetRequestedInputChannelCount(mTrack->Graph(), mDeviceId,
-                                                    mChannelCount);
-  }
-};
+void QueueExpectIsPassThrough(AudioProcessingTrack* aTrack,
+                              AudioInputProcessing* aInputProcessing) {
+  aTrack->QueueControlMessageWithNoShutdown(
+      [inputProcessing = RefPtr{aInputProcessing}, graph = aTrack->Graph()] {
+        EXPECT_EQ(inputProcessing->IsPassThrough(graph), true);
+      });
+}
 #endif  // MOZ_WEBRTC
 
 class GoFaster : public ControlMessage {
@@ -1175,8 +1163,7 @@ TEST(TestAudioTrackGraph, ErrorCallback)
   auto started = Invoke([&] {
     processingTrack = AudioProcessingTrack::Create(graph);
     listener = new AudioInputProcessing(2);
-    processingTrack->GraphImpl()->AppendMessage(
-        MakeUnique<SetPassThrough>(processingTrack, listener, true));
+    QueueExpectIsPassThrough(processingTrack, listener);
     processingTrack->SetInputProcessing(listener);
     processingTrack->GraphImpl()->AppendMessage(
         MakeUnique<StartInputProcessing>(processingTrack, listener));
@@ -1246,8 +1233,7 @@ TEST(TestAudioTrackGraph, AudioProcessingTrack)
     port = outputTrack->AllocateInputPort(processingTrack);
     /* Primary graph: Open Audio Input through SourceMediaTrack */
     listener = new AudioInputProcessing(2);
-    processingTrack->GraphImpl()->AppendMessage(
-        MakeUnique<SetPassThrough>(processingTrack, listener, true));
+    QueueExpectIsPassThrough(processingTrack, listener);
     processingTrack->SetInputProcessing(listener);
     processingTrack->GraphImpl()->AppendMessage(
         MakeUnique<StartInputProcessing>(processingTrack, listener));
@@ -1335,12 +1321,22 @@ TEST(TestAudioTrackGraph, ReConnectDeviceInput)
     outputTrack->QueueSetAutoend(false);
     outputTrack->AddAudioOutput(reinterpret_cast<void*>(1), nullptr);
     port = outputTrack->AllocateInputPort(processingTrack);
-    listener = new AudioInputProcessing(2);
+
+    const int32_t channelCount = 2;
+    listener = new AudioInputProcessing(channelCount);
     processingTrack->SetInputProcessing(listener);
     processingTrack->GraphImpl()->AppendMessage(
         MakeUnique<StartInputProcessing>(processingTrack, listener));
     processingTrack->ConnectDeviceInput(deviceId, listener,
                                         PRINCIPAL_HANDLE_NONE);
+    MediaEnginePrefs settings;
+    settings.mChannels = channelCount;
+    settings.mAgcOn = true;  // Turn off pass-through.
+    // AGC1 Mode 0 interferes with AudioVerifier's frequency estimation
+    // through zero-crossing counts.
+    settings.mAgc2Forced = true;
+    QueueApplySettings(processingTrack, listener, settings);
+
     return graph->NotifyWhenDeviceStarted(nullptr);
   });
 
@@ -1493,8 +1489,7 @@ TEST(TestAudioTrackGraph, AudioProcessingTrackDisabling)
     port = outputTrack->AllocateInputPort(processingTrack);
     /* Primary graph: Open Audio Input through SourceMediaTrack */
     listener = new AudioInputProcessing(2);
-    processingTrack->GraphImpl()->AppendMessage(
-        MakeUnique<SetPassThrough>(processingTrack, listener, true));
+    QueueExpectIsPassThrough(processingTrack, listener);
     processingTrack->SetInputProcessing(listener);
     processingTrack->ConnectDeviceInput(deviceId, listener,
                                         PRINCIPAL_HANDLE_NONE);
@@ -1602,8 +1597,7 @@ TEST(TestAudioTrackGraph, SetRequestedInputChannelCount)
   RefPtr<AudioProcessingTrack> track1 = AudioProcessingTrack::Create(graph);
   RefPtr<AudioInputProcessing> listener1 = new AudioInputProcessing(2);
   track1->SetInputProcessing(listener1);
-  track1->GraphImpl()->AppendMessage(
-      MakeUnique<SetPassThrough>(track1, listener1, true));
+  QueueExpectIsPassThrough(track1, listener1);
   track1->GraphImpl()->AppendMessage(
       MakeUnique<StartInputProcessing>(track1, listener1));
   track1->ConnectDeviceInput(device1, listener1, PRINCIPAL_HANDLE_NONE);
@@ -1624,8 +1618,7 @@ TEST(TestAudioTrackGraph, SetRequestedInputChannelCount)
   RefPtr<AudioProcessingTrack> track2 = AudioProcessingTrack::Create(graph);
   RefPtr<AudioInputProcessing> listener2 = new AudioInputProcessing(1);
   track2->SetInputProcessing(listener2);
-  track2->GraphImpl()->AppendMessage(
-      MakeUnique<SetPassThrough>(track2, listener2, true));
+  QueueExpectIsPassThrough(track2, listener2);
   track2->GraphImpl()->AppendMessage(
       MakeUnique<StartInputProcessing>(track2, listener2));
   track2->ConnectDeviceInput(device2, listener2, PRINCIPAL_HANDLE_NONE);
@@ -1642,7 +1635,7 @@ TEST(TestAudioTrackGraph, SetRequestedInputChannelCount)
   auto setNewChannelCount = [&](const RefPtr<AudioProcessingTrack> aTrack,
                                 const RefPtr<AudioInputProcessing>& aListener,
                                 RefPtr<SmartMockCubebStream>& aStream,
-                                uint32_t aChannelCount) {
+                                int32_t aChannelCount) {
     bool destroyed = false;
     MediaEventListener destroyListener = cubeb->StreamDestroyEvent().Connect(
         AbstractThread::GetCurrent(),
@@ -1657,11 +1650,9 @@ TEST(TestAudioTrackGraph, SetRequestedInputChannelCount)
           newStream = aCreated;
         });
 
-    DispatchFunction([&] {
-      aTrack->GraphImpl()->AppendMessage(
-          MakeUnique<SetRequestedInputChannelCount>(aTrack, *aTrack->DeviceId(),
-                                                    aListener, aChannelCount));
-    });
+    MediaEnginePrefs settings;
+    settings.mChannels = aChannelCount;
+    QueueApplySettings(aTrack, aListener, settings);
 
     SpinEventLoopUntil<ProcessFailureBehavior::IgnoreAndContinue>(
         "TEST(TestAudioTrackGraph, SetRequestedInputChannelCount)"_ns,
@@ -1733,14 +1724,12 @@ TEST(TestAudioTrackGraph, RestartAudioIfProcessingMaxChannelCountChanged)
   auto setNewChannelCount = [&](const RefPtr<AudioProcessingTrack>& aTrack,
                                 const RefPtr<AudioInputProcessing>& aListener,
                                 RefPtr<SmartMockCubebStream>& aStream,
-                                uint32_t aChannelCount) {
+                                int32_t aChannelCount) {
     ASSERT_TRUE(!!aTrack);
     ASSERT_TRUE(!!aListener);
     ASSERT_TRUE(!!aStream);
     ASSERT_TRUE(aStream->mHasInput);
-    ASSERT_NE(aChannelCount, 0U);
-
-    const CubebUtils::AudioDeviceID device = *aTrack->DeviceId();
+    ASSERT_NE(aChannelCount, 0);
 
     bool destroyed = false;
     MediaEventListener destroyListener = cubeb->StreamDestroyEvent().Connect(
@@ -1756,11 +1745,9 @@ TEST(TestAudioTrackGraph, RestartAudioIfProcessingMaxChannelCountChanged)
           newStream = aCreated;
         });
 
-    DispatchFunction([&] {
-      aTrack->GraphImpl()->AppendMessage(
-          MakeUnique<SetRequestedInputChannelCount>(aTrack, device, aListener,
-                                                    aChannelCount));
-    });
+    MediaEnginePrefs settings;
+    settings.mChannels = aChannelCount;
+    QueueApplySettings(aTrack, aListener, settings);
 
     SpinEventLoopUntil<ProcessFailureBehavior::IgnoreAndContinue>(
         "TEST(TestAudioTrackGraph, RestartAudioIfProcessingMaxChannelCountChanged) #1"_ns,
@@ -1801,8 +1788,7 @@ TEST(TestAudioTrackGraph, RestartAudioIfProcessingMaxChannelCountChanged)
     aTrack = AudioProcessingTrack::Create(graph);
     aListener = new AudioInputProcessing(aChannelCount);
     aTrack->SetInputProcessing(aListener);
-    aTrack->GraphImpl()->AppendMessage(
-        MakeUnique<SetPassThrough>(aTrack, aListener, true));
+    QueueExpectIsPassThrough(aTrack, aListener);
     aTrack->GraphImpl()->AppendMessage(
         MakeUnique<StartInputProcessing>(aTrack, aListener));
 
@@ -1836,8 +1822,7 @@ TEST(TestAudioTrackGraph, RestartAudioIfProcessingMaxChannelCountChanged)
     track1 = AudioProcessingTrack::Create(graph);
     listener1 = new AudioInputProcessing(1);
     track1->SetInputProcessing(listener1);
-    track1->GraphImpl()->AppendMessage(
-        MakeUnique<SetPassThrough>(track1, listener1, true));
+    QueueExpectIsPassThrough(track1, listener1);
     track1->GraphImpl()->AppendMessage(
         MakeUnique<StartInputProcessing>(track1, listener1));
     track1->ConnectDeviceInput(nativeDevice, listener1, PRINCIPAL_HANDLE_NONE);
@@ -1880,8 +1865,7 @@ TEST(TestAudioTrackGraph, RestartAudioIfProcessingMaxChannelCountChanged)
     RefPtr<AudioProcessingTrack> track3 = AudioProcessingTrack::Create(graph);
     RefPtr<AudioInputProcessing> listener3 = new AudioInputProcessing(1);
     track3->SetInputProcessing(listener3);
-    track3->GraphImpl()->AppendMessage(
-        MakeUnique<SetPassThrough>(track3, listener3, true));
+    QueueExpectIsPassThrough(track3, listener3);
     track3->GraphImpl()->AppendMessage(
         MakeUnique<StartInputProcessing>(track3, listener3));
     track3->ConnectDeviceInput(nonNativeDevice, listener3,
@@ -1999,12 +1983,13 @@ TEST(TestAudioTrackGraph, SetInputChannelCountBeforeAudioCallbackDriver)
     DispatchFunction([&] {
       track = AudioProcessingTrack::Create(graph);
       listener = new AudioInputProcessing(2);
-      track->GraphImpl()->AppendMessage(
-          MakeUnique<SetPassThrough>(track, listener, true));
+      QueueExpectIsPassThrough(track, listener);
       track->SetInputProcessing(listener);
-      track->GraphImpl()->AppendMessage(
-          MakeUnique<SetRequestedInputChannelCount>(track, deviceId, listener,
-                                                    1));
+
+      MediaEnginePrefs settings;
+      settings.mChannels = 1;
+      QueueApplySettings(track, listener, settings);
+
       track->GraphImpl()->AppendMessage(
           MakeUnique<GuardMessage>(track, std::move(h)));
     });
@@ -2065,8 +2050,7 @@ TEST(TestAudioTrackGraph, StartAudioDeviceBeforeStartingAudioProcessing)
   DispatchFunction([&] {
     track = AudioProcessingTrack::Create(graph);
     listener = new AudioInputProcessing(2);
-    track->GraphImpl()->AppendMessage(
-        MakeUnique<SetPassThrough>(track, listener, true));
+    QueueExpectIsPassThrough(track, listener);
     track->SetInputProcessing(listener);
     // Start audio device without starting audio processing.
     track->ConnectDeviceInput(deviceId, listener, PRINCIPAL_HANDLE_NONE);
@@ -2131,8 +2115,7 @@ TEST(TestAudioTrackGraph, StopAudioProcessingBeforeStoppingAudioDevice)
   DispatchFunction([&] {
     track = AudioProcessingTrack::Create(graph);
     listener = new AudioInputProcessing(2);
-    track->GraphImpl()->AppendMessage(
-        MakeUnique<SetPassThrough>(track, listener, true));
+    QueueExpectIsPassThrough(track, listener);
     track->SetInputProcessing(listener);
     track->GraphImpl()->AppendMessage(
         MakeUnique<StartInputProcessing>(track, listener));
@@ -2267,8 +2250,7 @@ TEST(TestAudioTrackGraph, SwitchNativeAudioProcessingTrack)
   RefPtr<AudioProcessingTrack> track1 = AudioProcessingTrack::Create(graph);
   RefPtr<AudioInputProcessing> listener1 = new AudioInputProcessing(1);
   track1->SetInputProcessing(listener1);
-  track1->GraphImpl()->AppendMessage(
-      MakeUnique<SetPassThrough>(track1, listener1, true));
+  QueueExpectIsPassThrough(track1, listener1);
   track1->GraphImpl()->AppendMessage(
       MakeUnique<StartInputProcessing>(track1, listener1));
   track1->ConnectDeviceInput(device1, listener1, PRINCIPAL_HANDLE_NONE);
@@ -2291,8 +2273,7 @@ TEST(TestAudioTrackGraph, SwitchNativeAudioProcessingTrack)
   RefPtr<AudioProcessingTrack> track2 = AudioProcessingTrack::Create(graph);
   RefPtr<AudioInputProcessing> listener2 = new AudioInputProcessing(2);
   track2->SetInputProcessing(listener2);
-  track2->GraphImpl()->AppendMessage(
-      MakeUnique<SetPassThrough>(track2, listener2, true));
+  QueueExpectIsPassThrough(track2, listener2);
   track2->GraphImpl()->AppendMessage(
       MakeUnique<StartInputProcessing>(track2, listener2));
   track2->ConnectDeviceInput(device2, listener2, PRINCIPAL_HANDLE_NONE);
@@ -2311,8 +2292,7 @@ TEST(TestAudioTrackGraph, SwitchNativeAudioProcessingTrack)
   RefPtr<AudioProcessingTrack> track3 = AudioProcessingTrack::Create(graph);
   RefPtr<AudioInputProcessing> listener3 = new AudioInputProcessing(1);
   track3->SetInputProcessing(listener3);
-  track3->GraphImpl()->AppendMessage(
-      MakeUnique<SetPassThrough>(track3, listener3, true));
+  QueueExpectIsPassThrough(track3, listener3);
   track3->GraphImpl()->AppendMessage(
       MakeUnique<StartInputProcessing>(track3, listener3));
   track3->ConnectDeviceInput(device3, listener3, PRINCIPAL_HANDLE_NONE);
@@ -2417,8 +2397,7 @@ void TestCrossGraphPort(uint32_t aInputRate, uint32_t aOutputRate,
     /* Primary graph: Create input track and open it */
     processingTrack = AudioProcessingTrack::Create(primary);
     listener = new AudioInputProcessing(2);
-    processingTrack->GraphImpl()->AppendMessage(
-        MakeUnique<SetPassThrough>(processingTrack, listener, true));
+    QueueExpectIsPassThrough(processingTrack, listener);
     processingTrack->SetInputProcessing(listener);
     processingTrack->GraphImpl()->AppendMessage(
         MakeUnique<StartInputProcessing>(processingTrack, listener));
@@ -2639,8 +2618,7 @@ TEST(TestAudioTrackGraph, SecondaryOutputDevice)
     /* Create an input track and connect it to a device */
     processingTrack = AudioProcessingTrack::Create(graph);
     listener = new AudioInputProcessing(2);
-    processingTrack->GraphImpl()->AppendMessage(
-        MakeUnique<SetPassThrough>(processingTrack, listener, true));
+    QueueExpectIsPassThrough(processingTrack, listener);
     processingTrack->SetInputProcessing(listener);
     processingTrack->GraphImpl()->AppendMessage(
         MakeUnique<StartInputProcessing>(processingTrack, listener));
