@@ -1138,7 +1138,7 @@ void js::gc::TenuringTracer::collectToStringFixedPoint() {
     bool rootBaseNotYetForwarded = false;
     JSLinearString* rootBase = nullptr;
 
-    if (str->isDependent()) {
+    if (str->isDependent() && !str->isAtomRef()) {
       if (str->hasTwoByteChars()) {
         relocateDependentStringChars<char16_t>(
             &str->asDependent(), p->savedNurseryBaseOrRelocOverlay(), &offset,
