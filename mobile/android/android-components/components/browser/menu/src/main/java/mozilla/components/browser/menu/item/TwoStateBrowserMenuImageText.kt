@@ -25,6 +25,7 @@ import mozilla.components.concept.menu.candidate.TextStyle
  * @param primaryLabel The visible label of the checkbox in primary state.
  * @param secondaryLabel The visible label of this menu item in secondary state.
  * @param textColorResource Optional ID of color resource to tint the text.
+ * @param enabled Sets the enabled status for the view. By default, it is true.
  * @param primaryStateIconResource ID of a drawable resource to be shown as icon in primary state.
  * @param secondaryStateIconResource ID of a drawable resource to be shown as icon in secondary state.
  * @param iconTintColorResource Optional ID of color resource to tint the checkbox drawable.
@@ -40,6 +41,7 @@ class TwoStateBrowserMenuImageText(
     private val primaryLabel: String,
     private val secondaryLabel: String,
     @ColorRes internal val textColorResource: Int = NO_ID,
+    enabled: Boolean = true,
     @DrawableRes val primaryStateIconResource: Int,
     @DrawableRes val secondaryStateIconResource: Int,
     @ColorRes iconTintColorResource: Int = NO_ID,
@@ -54,6 +56,7 @@ class TwoStateBrowserMenuImageText(
     primaryStateIconResource,
     iconTintColorResource,
     textColorResource,
+    enabled,
     isCollapsingMenuLimit,
     isSticky,
     primaryStateAction,
