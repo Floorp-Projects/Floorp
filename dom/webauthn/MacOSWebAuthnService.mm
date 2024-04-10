@@ -626,12 +626,29 @@ MacOSWebAuthnService::MakeCredential(uint64_t aTransactionId,
               ASAuthorizationPublicKeyCredentialUserVerificationPreferenceDiscouraged);
         }
 
-        // The API doesn't support attestation for platform passkeys and shows
-        // no consent UI for non-none attestation for cross-platform devices,
-        // so this must always be none.
-        ASAuthorizationPublicKeyCredentialAttestationKind
-            attestationPreference =
-                ASAuthorizationPublicKeyCredentialAttestationKindNone;
+        // The API doesn't support attestation for platform passkeys, so this is
+        // only used for security keys.
+        ASAuthorizationPublicKeyCredentialAttestationKind attestationPreference;
+        nsAutoString mozAttestationPreference;
+        Unused << aArgs->GetAttestationConveyancePreference(
+            mozAttestationPreference);
+        if (mozAttestationPreference.EqualsLiteral(
+                MOZ_WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_INDIRECT)) {
+          attestationPreference =
+              ASAuthorizationPublicKeyCredentialAttestationKindIndirect;
+        } else if (mozAttestationPreference.EqualsLiteral(
+                       MOZ_WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_DIRECT)) {
+          attestationPreference =
+              ASAuthorizationPublicKeyCredentialAttestationKindDirect;
+        } else if (
+            mozAttestationPreference.EqualsLiteral(
+                MOZ_WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_ENTERPRISE)) {
+          attestationPreference =
+              ASAuthorizationPublicKeyCredentialAttestationKindEnterprise;
+        } else {
+          attestationPreference =
+              ASAuthorizationPublicKeyCredentialAttestationKindNone;
+        }
 
         // Initialize the platform provider with the rpId.
         ASAuthorizationPlatformPublicKeyCredentialProvider* platformProvider =
@@ -645,8 +662,10 @@ MacOSWebAuthnService::MakeCredential(uint64_t aTransactionId,
                                                             name:userNameNS
                                                           userID:userIdNS];
         [platformProvider release];
+
+        // The API doesn't support attestation for platform passkeys
         platformRegistrationRequest.attestationPreference =
-            attestationPreference;
+            ASAuthorizationPublicKeyCredentialAttestationKindNone;
         if (userVerificationPreference.isSome()) {
           platformRegistrationRequest.userVerificationPreference =
               *userVerificationPreference;
