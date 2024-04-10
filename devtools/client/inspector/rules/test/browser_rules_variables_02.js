@@ -119,9 +119,14 @@ async function testBorderShorthandAndInheritance(inspector, view) {
   // var(x) is the next sibling of the parent of M
   const setVarXParent = setVarMParent.parentNode.nextElementSibling;
 
-  // var(r) is the next sibling of var(x), and var(g) is the next sibling of var(r), etc.
-  const setVarRParent = setVarXParent.nextElementSibling;
+  // var(x) next sibling is the element that wraps the color
+  const colorParent =
+    setVarXParent.nextElementSibling.querySelector(".ruleview-color");
+  // var(r) is the first childElement of the ruleview-color element
+  const setVarRParent = colorParent.firstElementChild;
+  // var(g) is the next sibling of var(r),
   const setVarGParent = setVarRParent.nextElementSibling;
+  // and var(b) is the next sibling of var(g),
   const setVarBParent = setVarGParent.nextElementSibling;
 
   const setVarM = getVarFromParent(setVarMParent);

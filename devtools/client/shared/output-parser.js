@@ -217,8 +217,13 @@ class OutputParser {
         options.getVariableValue
       ) {
         sawVariable = true;
-        const { node } = this.#parseVariable(token, text, tokenStream, options);
-        functionData.push(node);
+        const { node, value, fallbackValue } = this.#parseVariable(
+          token,
+          text,
+          tokenStream,
+          options
+        );
+        functionData.push({ node, value, fallbackValue });
       } else if (token.tokenType === "function") {
         ++depth;
       }
@@ -278,6 +283,7 @@ class OutputParser {
     const secondOpts = {};
 
     let varValue;
+    let varFallbackValue;
 
     // Get the variable value if it is in use.
     if (tokens && tokens.length === 1) {
@@ -324,11 +330,16 @@ class OutputParser {
 
       const span = this.#createNode("span", secondOpts);
       span.appendChild(rest);
+      varFallbackValue = span.textContent;
       variableNode.appendChild(span);
     }
     variableNode.appendChild(this.#doc.createTextNode(")"));
 
-    return { node: variableNode, value: varValue };
+    return {
+      node: variableNode,
+      value: varValue,
+      fallbackValue: varFallbackValue,
+    };
   }
 
   /**
@@ -435,17 +446,43 @@ class OutputParser {
             );
 
             if (sawVariable) {
-              // If function contains variable, we need to add both strings
-              // and nodes.
-              this.#appendTextNode(functionName);
-              for (const data of functionData) {
-                if (typeof data === "string") {
-                  this.#appendTextNode(data);
-                } else if (data) {
-                  this.#parsed.push(data);
+              const computedFunctionText =
+                functionName +
+                functionData
+                  .map(data => {
+                    if (typeof data === "string") {
+                      return data;
+                    }
+                    return data.value ?? data.fallbackValue;
+                  })
+                  .join("") +
+                ")";
+              if (
+                colorOK() &&
+                InspectorUtils.isValidCSSColor(computedFunctionText)
+              ) {
+                this.#appendColor(computedFunctionText, {
+                  ...options,
+                  colorFunction: colorFunctions.at(-1)?.functionName,
+                  valueParts: [
+                    functionName,
+                    ...functionData.map(data => data.node || data),
+                    ")",
+                  ],
+                });
+              } else {
+                // If function contains variable, we need to add both strings
+                // and nodes.
+                this.#appendTextNode(functionName);
+                for (const data of functionData) {
+                  if (typeof data === "string") {
+                    this.#appendTextNode(data);
+                  } else if (data) {
+                    this.#parsed.push(data.node);
+                  }
                 }
+                this.#appendTextNode(")");
               }
-              this.#appendTextNode(")");
             } else {
               // If no variable in function, join the text together and add
               // to DOM accordingly.
@@ -1598,13 +1635,14 @@ class OutputParser {
         container.appendChild(options.variableContainer);
       } else {
         // Otherwise we create a new element with the `color` as textContent.
-        const value = this.#createNode(
-          "span",
-          {
-            class: options.colorClass,
-          },
-          color
-        );
+        const value = this.#createNode("span", {
+          class: options.colorClass,
+        });
+        if (options.valueParts) {
+          value.append(...options.valueParts);
+        } else {
+          value.append(this.#doc.createTextNode(color));
+        }
 
         container.appendChild(value);
       }

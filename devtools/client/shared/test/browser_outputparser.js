@@ -670,6 +670,36 @@ function testParseVariable(doc, parser) {
           `</span>)` +
         `</span>`,
     },
+    {
+      text: "rgba(var(--r), 0, 0, var(--a))",
+      variables: { "--r": "255", "--a": "0.5" },
+      expected:
+        // prettier-ignore
+        '<span data-color="rgba(255, 0, 0, 0.5)">' +
+          "<span>rgba("+
+            "<span>" +
+              'var(<span data-variable="--r = 255">--r</span>)' +
+            "</span>, 0, 0, " +
+            "<span>" +
+              'var(<span data-variable="--a = 0.5">--a</span>)' +
+            "</span>" +
+          ")</span>" +
+        "</span>",
+    },
+    {
+      text: "rgb(var(--not-seen, 255), 0, 0)",
+      variables: {},
+      expected:
+        // prettier-ignore
+        '<span data-color="rgb( 255, 0, 0)">' +
+          "<span>rgb("+
+            "<span>var(" +
+              `<span class="unmatched-class" data-variable="--not-seen is not set">--not-seen</span>,` +
+              `<span> 255</span>` +
+            ")</span>, 0, 0" +
+          ")</span>" +
+        "</span>",
+    },
   ];
 
   for (const test of TESTS) {
