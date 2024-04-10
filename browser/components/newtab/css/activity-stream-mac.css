@@ -280,11 +280,6 @@ body {
   background-color: var(--newtab-background-color);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Ubuntu, "Helvetica Neue", sans-serif;
   font-size: 16px;
-  background-image: var(--newtab-wallpaper, "");
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
 }
 
 .no-scroll {
@@ -414,15 +409,9 @@ input[type=text], input[type=search] {
 }
 
 main {
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+  margin: auto;
   width: 274px;
   padding: 0;
-}
-main .vertical-center-wrapper {
-  margin: auto 0;
 }
 main section {
   margin-bottom: 20px;
@@ -502,29 +491,6 @@ main section {
 }
 .prefs-button button:active {
   background-color: var(--newtab-element-active-color);
-}
-
-.wallpaper-attribution {
-  padding: 0 25px;
-  font-size: 14px;
-}
-.wallpaper-attribution.theme-light {
-  display: inline-block;
-}
-[lwt-newtab-brighttext] .wallpaper-attribution.theme-light {
-  display: none;
-}
-.wallpaper-attribution.theme-dark {
-  display: none;
-}
-[lwt-newtab-brighttext] .wallpaper-attribution.theme-dark {
-  display: inline-block;
-}
-.wallpaper-attribution a {
-  color: var(--newtab-element-color);
-}
-.wallpaper-attribution a:hover {
-  text-decoration: none;
 }
 
 .as-error-fallback {
@@ -1732,9 +1698,6 @@ main section {
   grid-row-gap: 32px;
   padding: 0 16px;
 }
-.home-section .wallpapers-section h2 {
-  font-size: inherit;
-}
 .home-section .section moz-toggle {
   margin-bottom: 10px;
 }
@@ -1869,108 +1832,6 @@ main section {
   border: 1px solid var(--newtab-primary-action-background);
   outline: 0;
   box-shadow: 0 0 0 2px var(--newtab-primary-action-background-dimmed);
-}
-
-.wallpaper-list {
-  display: grid;
-  gap: 16px;
-  grid-template-columns: 1fr 1fr 1fr;
-  grid-auto-rows: 86px;
-  margin: 16px 0;
-  padding: 0;
-  border: none;
-}
-.wallpaper-list .wallpaper-input.theme-light,
-.wallpaper-list .sr-only.theme-light {
-  display: inline-block;
-}
-[lwt-newtab-brighttext] .wallpaper-list .wallpaper-input.theme-light,
-[lwt-newtab-brighttext] .wallpaper-list .sr-only.theme-light {
-  display: none;
-}
-.wallpaper-list .wallpaper-input.theme-dark,
-.wallpaper-list .sr-only.theme-dark {
-  display: none;
-}
-[lwt-newtab-brighttext] .wallpaper-list .wallpaper-input.theme-dark,
-[lwt-newtab-brighttext] .wallpaper-list .sr-only.theme-dark {
-  display: inline-block;
-}
-.wallpaper-list .wallpaper-input {
-  appearance: none;
-  margin: 0;
-  padding: 0;
-  height: 86px;
-  width: 100%;
-  box-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.2);
-  border-radius: 8px;
-  background-clip: content-box;
-  background-repeat: no-repeat;
-  background-size: cover;
-  cursor: pointer;
-  outline: 2px solid transparent;
-}
-.wallpaper-list .wallpaper-input.dark-aurora {
-  background-image: url("chrome://activity-stream/content/data/content/assets/wallpapers/dark-aurora.avif");
-}
-.wallpaper-list .wallpaper-input.dark-city {
-  background-image: url("chrome://activity-stream/content/data/content/assets/wallpapers/dark-city.avif");
-}
-.wallpaper-list .wallpaper-input.dark-color {
-  background-image: url("chrome://activity-stream/content/data/content/assets/wallpapers/dark-color.avif");
-}
-.wallpaper-list .wallpaper-input.dark-mountain {
-  background-image: url("chrome://activity-stream/content/data/content/assets/wallpapers/dark-mountain.avif");
-}
-.wallpaper-list .wallpaper-input.dark-panda {
-  background-image: url("chrome://activity-stream/content/data/content/assets/wallpapers/dark-panda.avif");
-}
-.wallpaper-list .wallpaper-input.dark-sky {
-  background-image: url("chrome://activity-stream/content/data/content/assets/wallpapers/dark-sky.avif");
-}
-.wallpaper-list .wallpaper-input.light-beach {
-  background-image: url("chrome://activity-stream/content/data/content/assets/wallpapers/light-beach.avif");
-}
-.wallpaper-list .wallpaper-input.light-color {
-  background-image: url("chrome://activity-stream/content/data/content/assets/wallpapers/light-color.avif");
-}
-.wallpaper-list .wallpaper-input.light-landscape {
-  background-image: url("chrome://activity-stream/content/data/content/assets/wallpapers/light-landscape.avif");
-}
-.wallpaper-list .wallpaper-input.light-mountain {
-  background-image: url("chrome://activity-stream/content/data/content/assets/wallpapers/light-mountain.avif");
-}
-.wallpaper-list .wallpaper-input.light-redpanda {
-  background-image: url("chrome://activity-stream/content/data/content/assets/wallpapers/light-redpanda.avif");
-}
-.wallpaper-list .wallpaper-input.light-sky {
-  background-image: url("chrome://activity-stream/content/data/content/assets/wallpapers/light-sky.avif");
-}
-.wallpaper-list .wallpaper-input:checked {
-  outline-color: var(--newtab-primary-action-background);
-}
-.wallpaper-list .wallpaper-input:hover {
-  filter: brightness(55%);
-  outline-color: transparent;
-}
-.wallpaper-list .sr-only {
-  opacity: 0;
-  overflow: hidden;
-  position: absolute;
-}
-
-.wallpapers-reset {
-  background: none;
-  border: none;
-  text-decoration: underline;
-  margin-inline: auto;
-  display: block;
-  font-size: var(--font-size-small);
-  color: var(--newtab-text-primary-color);
-  cursor: pointer;
-}
-.wallpapers-reset:hover {
-  text-decoration: none;
 }
 
 /* stylelint-disable max-nesting-depth */

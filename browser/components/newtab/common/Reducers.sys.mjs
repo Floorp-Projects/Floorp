@@ -101,9 +101,6 @@ export const INITIAL_STATE = {
     // Hide the search box after handing off to AwesomeBar and user starts typing.
     hide: false,
   },
-  Wallpapers: {
-    wallpaperList: [],
-  },
 };
 
 function App(prevState = INITIAL_STATE.App, action) {
@@ -844,15 +841,6 @@ function Search(prevState = INITIAL_STATE.Search, action) {
   }
 }
 
-function Wallpapers(prevState = INITIAL_STATE.Wallpapers, action) {
-  switch (action.type) {
-    case at.WALLPAPERS_SET:
-      return { wallpaperList: action.data };
-    default:
-      return prevState;
-  }
-}
-
 export const reducers = {
   TopSites,
   App,
@@ -864,5 +852,4 @@ export const reducers = {
   Personalization,
   DiscoveryStream,
   Search,
-  Wallpapers,
 };

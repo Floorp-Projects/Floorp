@@ -24,16 +24,9 @@
 }
 
 main {
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+  margin: auto;
   width: $wrapper-default-width;
   padding: 0;
-
-  .vertical-center-wrapper {
-    margin: auto 0;
-  }
 
   section {
     margin-bottom: $section-spacing;
@@ -128,35 +121,6 @@ main {
 
     &:active {
       background-color: var(--newtab-element-active-color);
-    }
-  }
-}
-
-.wallpaper-attribution {
-  padding: 0 $section-horizontal-padding;
-  font-size: 14px;
-
-  &.theme-light {
-    display: inline-block;
-
-    @include dark-theme-only {
-      display: none;
-    }
-  }
-
-  &.theme-dark {
-    display: none;
-
-    @include dark-theme-only {
-      display: inline-block;
-    }
-  }
-
-  a {
-    color: var(--newtab-element-color);
-
-    &:hover {
-      text-decoration: none;
     }
   }
 }
