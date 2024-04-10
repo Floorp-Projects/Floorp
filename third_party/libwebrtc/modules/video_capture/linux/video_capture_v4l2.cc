@@ -129,6 +129,7 @@ int32_t VideoCaptureModuleV4L2::StartCapture(
     }
   }
 
+  {
   // We don't want members above to be guarded by capture_checker_ as
   // it's meant to be for members that are accessed on the API thread
   // only when we are not capturing. The code above can be called many
@@ -298,6 +299,7 @@ int32_t VideoCaptureModuleV4L2::StartCapture(
   _requestedCapability = capability;
   _captureStarted = true;
   _streaming = true;
+  }
 
   // start capture thread;
   if (_captureThread.empty()) {
