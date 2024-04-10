@@ -43,6 +43,8 @@ support-files = [
   "loadEncoding_worker.js",
   "location_worker.js",
   "longThread_worker.js",
+  "mime_type_is_csv.js",
+  "mime_type_is_csv.js^headers^",
   "multi_sharedWorker_frame.html",
   "multi_sharedWorker_sharedWorker.js",
   "navigator_languages_worker.js",
