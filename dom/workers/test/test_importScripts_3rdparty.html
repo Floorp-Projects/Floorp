@@ -86,9 +86,25 @@ const scriptPermutations = [
     }
   },
   {
+    name: 'Non-JS MIME Type',
+    script: 'mime_type_is_csv.js',
+    sameOrigin: {
+      exceptionName: 'NetworkError',
+      thrownFile: 'importing-worker-script',
+      isDOMException: true,
+      code: DOMException.NETWORK_ERR,
+      message: "A network error occurred."
+    },
+    crossOrigin: {
+      exceptionName: 'NetworkError',
+      thrownFile: 'importing-worker-script',
+      isDOMException: true,
+      code: DOMException.NETWORK_ERR,
+      message: "A network error occurred."
+    }
+  },
+  {
     // What happens if the script is a 404?
-    // This test case primarily exists to document what we expect to happen in
-    // this case.
     name: 'Nonexistent script',
     script: 'script_does_not_exist.js',
     sameOrigin: {
@@ -96,14 +112,14 @@ const scriptPermutations = [
       thrownFile: 'importing-worker-script',
       isDOMException: true,
       code: DOMException.NETWORK_ERR,
-      message: x => `WorkerGlobalScope.importScripts: Failed to load worker script at ${x.importUrl} (nsresult = 0x80530013)`,
+      message: "A network error occurred."
     },
     crossOrigin: {
       exceptionName: 'NetworkError',
       thrownFile: 'importing-worker-script',
       isDOMException: true,
       code: DOMException.NETWORK_ERR,
-      message: x => `WorkerGlobalScope.importScripts: Failed to load worker script at ${x.importUrl} (nsresult = 0x80530013)`,
+      message: "A network error occurred."
     }
   },
   {
