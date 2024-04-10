@@ -6,6 +6,9 @@ permalink: /changelog/
 
 # 126.0 (In Development)
 
+* **browser-menu**
+  * Added enabled state to `BrowserMenuImageText`, see [Bug 1884769](https://bugzilla.mozilla.org/show_bug.cgi?id=1884769).
+
 * **feature-downloads**
   * Content intent of completed `DownloadNotification` now uses a `PendingIntent` which launches an `Activity` directly, see [Bug 1885167](https://bugzilla.mozilla.org/show_bug.cgi?id=1885167).
 
