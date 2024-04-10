@@ -1121,8 +1121,8 @@ MacOSWebAuthnService::PinCallback(uint64_t aTransactionId,
 }
 
 NS_IMETHODIMP
-MacOSWebAuthnService::ResumeMakeCredential(uint64_t aTransactionId,
-                                           bool aForceNoneAttestation) {
+MacOSWebAuthnService::SetHasAttestationConsent(uint64_t aTransactionId,
+                                               bool aHasConsent) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

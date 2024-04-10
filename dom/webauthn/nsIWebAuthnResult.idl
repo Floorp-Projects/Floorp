@@ -28,6 +28,9 @@ interface nsIWebAuthnRegisterResult : nsISupports {
     [must_use] attribute boolean credPropsRk;
 
     [must_use] readonly attribute AString authenticatorAttachment;
+
+    boolean hasIdentifyingAttestation();
+    void anonymize();
 };
 
 // The nsIWebAuthnSignResult interface is used to construct IPDL-defined
