@@ -131,6 +131,7 @@ interface nsIContentAnalysisRequest : nsISupports
     eCustomDisplayString = 0,
     eClipboard = 1,
     eDroppedText = 2,
+    eOperationPrint = 3,
   };
   readonly attribute nsIContentAnalysisRequest_OperationType operationTypeForDisplay;
   readonly attribute AString operationDisplayString;
@@ -140,6 +141,15 @@ interface nsIContentAnalysisRequest : nsISupports
 
   // Name of file to analyze.  Only one of textContent or filePath is defined.
   readonly attribute AString filePath;
+
+  // HANDLE to the printed data in PDF format.
+  readonly attribute unsigned long long printDataHandle;
+
+  // Size of the data stored in printDataHandle.
+  readonly attribute unsigned long long printDataSize;
+
+  // Name of the printer being printed to.
+  readonly attribute AString printerName;
 
   // The URL containing the file download/upload or to which web content is
   // being uploaded.

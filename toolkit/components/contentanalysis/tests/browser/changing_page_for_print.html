@@ -1,0 +1,12 @@
+<!doctype html>
+<p>Some random text</p>
+<button onclick="print()">Print the page</button>
+<pre id="log"></pre>
+<script>
+let i = 0;
+for (let t of ["beforeprint", "afterprint"]) {
+  addEventListener(t, () => {
+    document.getElementById("log").appendChild(document.createTextNode(`[${i++}] ${t}\n`));
+  });
+}
+</script>

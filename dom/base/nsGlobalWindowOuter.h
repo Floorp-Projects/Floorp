@@ -580,7 +580,8 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   Print(nsIPrintSettings*,
         mozilla::layout::RemotePrintJobChild* aRemotePrintJob,
         nsIWebProgressListener*, nsIDocShell*, IsPreview, IsForWindowDotPrint,
-        PrintPreviewResolver&&, mozilla::ErrorResult&);
+        PrintPreviewResolver&&, RefPtr<mozilla::dom::BrowsingContext>*,
+        mozilla::ErrorResult&);
   mozilla::dom::Selection* GetSelectionOuter();
   already_AddRefed<mozilla::dom::Selection> GetSelection() override;
   nsScreen* GetScreen();

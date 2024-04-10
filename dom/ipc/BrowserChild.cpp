@@ -2342,7 +2342,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvPrintPreview(
                       /* aListener = */ nullptr, docShellToCloneInto,
                       nsGlobalWindowOuter::IsPreview::Yes,
                       nsGlobalWindowOuter::IsForWindowDotPrint::No,
-                      std::move(aCallback), IgnoreErrors());
+                      std::move(aCallback), nullptr, IgnoreErrors());
 #endif
   return IPC_OK();
 }
@@ -2359,8 +2359,9 @@ mozilla::ipc::IPCResult BrowserChild::RecvExitPrintPreview() {
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult BrowserChild::RecvPrint(
-    const MaybeDiscardedBrowsingContext& aBc, const PrintData& aPrintData) {
+mozilla::ipc::IPCResult BrowserChild::CommonPrint(
+    const MaybeDiscardedBrowsingContext& aBc, const PrintData& aPrintData,
+    RefPtr<BrowsingContext>* aCachedBrowsingContext) {
 #ifdef NS_PRINTING
   if (NS_WARN_IF(aBc.IsNullOrDiscarded())) {
     return IPC_OK();
@@ -2389,15 +2390,58 @@ mozilla::ipc::IPCResult BrowserChild::RecvPrint(
     IgnoredErrorResult rv;
     RefPtr printJob = static_cast<RemotePrintJobChild*>(
         aPrintData.remotePrintJob().AsChild());
-    outerWindow->Print(printSettings, printJob,
-                       /* aListener = */ nullptr,
-                       /* aWindowToCloneInto = */ nullptr,
-                       nsGlobalWindowOuter::IsPreview::No,
-                       nsGlobalWindowOuter::IsForWindowDotPrint::No,
-                       /* aPrintPreviewCallback = */ nullptr, rv);
+    outerWindow->Print(
+        printSettings, printJob,
+        /* aListener = */ nullptr,
+        /* aWindowToCloneInto = */ nullptr, nsGlobalWindowOuter::IsPreview::No,
+        nsGlobalWindowOuter::IsForWindowDotPrint::No,
+        /* aPrintPreviewCallback = */ nullptr, aCachedBrowsingContext, rv);
     if (NS_WARN_IF(rv.Failed())) {
       return IPC_OK();
     }
+  }
+#endif
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult BrowserChild::RecvPrint(
+    const MaybeDiscardedBrowsingContext& aBc, const PrintData& aPrintData,
+    bool aReturnStaticClone, PrintResolver&& aResolve) {
+#ifdef NS_PRINTING
+  RefPtr<BrowsingContext> browsingContext;
+  auto result = CommonPrint(aBc, aPrintData,
+                            aReturnStaticClone ? &browsingContext : nullptr);
+  aResolve(browsingContext);
+  return result;
+#else
+  aResolve(nullptr);
+  return IPC_OK();
+#endif
+}
+
+mozilla::ipc::IPCResult BrowserChild::RecvPrintClonedPage(
+    const MaybeDiscardedBrowsingContext& aBc, const PrintData& aPrintData,
+    const MaybeDiscardedBrowsingContext& aClonedBc) {
+#ifdef NS_PRINTING
+  if (aClonedBc.IsNullOrDiscarded()) {
+    return IPC_OK();
+  }
+  RefPtr<BrowsingContext> clonedBc = aClonedBc.get();
+  return CommonPrint(aBc, aPrintData, &clonedBc);
+#else
+  return IPC_OK();
+#endif
+}
+
+mozilla::ipc::IPCResult BrowserChild::RecvDestroyPrintClone(
+    const MaybeDiscardedBrowsingContext& aCachedPage) {
+#ifdef NS_PRINTING
+  if (aCachedPage) {
+    RefPtr<nsPIDOMWindowOuter> window = aCachedPage->GetDOMWindow();
+    if (NS_WARN_IF(!window)) {
+      return IPC_OK();
+    }
+    window->Close();
   }
 #endif
   return IPC_OK();
