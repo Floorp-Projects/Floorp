@@ -2,12 +2,16 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+const FILE_URL = Services.io.newFileURI(
+  new FileUtils.File(getTestFilePath("file_dummy.html"))
+).spec;
+
 add_task(async function test_sender_url() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       content_scripts: [
         {
-          matches: ["http://mochi.test/*"],
+          matches: ["http://mochi.test/*", "file:///*"],
           run_at: "document_start",
           js: ["script.js"],
         },
@@ -18,6 +22,7 @@ add_task(async function test_sender_url() {
       browser.runtime.onMessage.addListener((msg, sender) => {
         browser.test.log("Message received.");
         browser.test.sendMessage("sender.url", sender.url);
+        browser.test.sendMessage("sender.origin", sender.origin);
       });
     },
 
@@ -53,6 +58,9 @@ add_task(async function test_sender_url() {
     let url = await extension.awaitMessage("sender.url");
     is(url, image, `Correct sender.url: ${url}`);
 
+    let origin = await extension.awaitMessage("sender.origin");
+    is(origin, "http://mochi.test:8888", `Correct sender.origin: ${origin}`);
+
     let wentBack = awaitNewTab();
     await browser.goBack();
     await wentBack;
@@ -60,6 +68,17 @@ add_task(async function test_sender_url() {
     await browser.goForward();
     url = await extension.awaitMessage("sender.url");
     is(url, image, `Correct sender.url: ${url}`);
+
+    origin = await extension.awaitMessage("sender.origin");
+    is(origin, "http://mochi.test:8888", `Correct sender.origin: ${origin}`);
+  });
+
+  await BrowserTestUtils.withNewTab(FILE_URL, async () => {
+    let url = await extension.awaitMessage("sender.url");
+    ok(url.endsWith("/file_dummy.html"), `Correct sender.url: ${url}`);
+
+    let origin = await extension.awaitMessage("sender.origin");
+    is(origin, "null", `Correct sender.origin: ${origin}`);
   });
 
   await extension.unload();

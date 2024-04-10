@@ -21,6 +21,7 @@ function backgroundScript(token) {
   browser.runtime.onConnect.addListener(port => {
     browser.test.assertTrue(port.sender.url.endsWith("file_sample.html"), "sender url correct");
     browser.test.assertTrue(port.sender.tab.url.endsWith("file_sample.html"), "sender url correct");
+    browser.test.assertEq(new URL(port.sender.url).origin, port.sender.origin, "sender origin correct");
 
     let tabId = port.sender.tab.id;
     browser.tabs.connect(tabId, {name: token});

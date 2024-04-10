@@ -11,6 +11,10 @@
 <script>
 "use strict";
 
+const {
+  WebExtensionPolicy
+} = SpecialPowers.Cu.getGlobalForObject(SpecialPowers.Services);
+
 add_task(async function test_tabs_sendMessage_to_extension_page_frame() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
@@ -27,6 +31,10 @@ add_task(async function test_tabs_sendMessage_to_extension_page_frame() {
       browser.runtime.onMessage.addListener(async (msg, sender) => {
         browser.test.assertEq(msg, "page-script-ready");
         browser.test.assertEq(sender.url, browser.runtime.getURL("page.html"));
+        browser.test.assertEq(
+          sender.origin,
+          new URL(browser.runtime.getURL("/")).origin
+        );
 
         let tabId = sender.tab.id;
         let response = await browser.tabs.sendMessage(tabId, "tab-sendMessage");
@@ -145,6 +153,178 @@ add_task(async function test_tabs_sendMessage_using_frameId() {
   win.close();
 
   await extension.unload();
+});
+
+add_task(async function test_tabs_sendMessage_aboutBlank() {
+  const PATH = "tests/toolkit/components/extensions/test/mochitest/file_with_about_blank.html";
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      content_scripts: [
+        {
+          match_about_blank: true,
+          matches: ["*://mochi.test/*/file_with_about_blank.html"],
+          all_frames: true,
+          js: ["cs.js"],
+        },
+      ],
+    },
+
+    background() {
+      browser.runtime.onMessage.addListener((msg, { url, origin }) => {
+        browser.test.assertEq("cs", msg, "expected message from cs.js");
+
+        const kind = url.startsWith("about:") ? url : "top";
+        switch (kind) {
+          case "top":
+            browser.test.assertTrue(
+              url.endsWith("/file_with_about_blank.html"),
+              "expected correct url"
+            );
+            browser.test.assertEq(
+              "http://mochi.test:8888",
+              origin,
+              "expected correct origin"
+            );
+            break;
+
+          case "about:blank":
+            browser.test.assertEq("about:blank", url, "expected correct url");
+            browser.test.assertEq(
+              "http://mochi.test:8888",
+              origin,
+              "expected correct origin"
+            );
+            break;
+
+          case "about:srcdoc":
+            browser.test.assertEq("about:srcdoc", url, "expected correct url");
+            browser.test.assertEq(
+              "http://mochi.test:8888",
+              origin,
+              "expected correct origin"
+            );
+            break;
+
+          default:
+            browser.test.fail(`Unexpected kind: ${kind}`);
+        }
+
+        browser.test.sendMessage(`done:${kind}`);
+      });
+
+      browser.test.sendMessage("ready");
+    },
+
+    files: {
+      "cs.js"() {
+        browser.runtime.sendMessage("cs");
+      },
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("ready");
+
+  let win = window.open("http://mochi.test:8888/" + PATH);
+  await extension.awaitMessage("done:top");
+  await extension.awaitMessage("done:about:blank");
+  await extension.awaitMessage("done:about:srcdoc");
+  win.close();
+
+  await extension.unload();
+});
+
+add_task(async function test_tabs_sendMessage_opaqueOrigin() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      content_scripts: [
+        {
+          match_about_blank: true,
+          // The combination of `matches` and `exclude_matches` below allows us
+          // to only inject in the top-level about:blank.
+          matches: ["*://*/*"],
+          exclude_matches: ["<all_urls>"],
+          js: ["cs.js"],
+        },
+      ],
+    },
+
+    async background() {
+      let tab;
+
+      browser.runtime.onMessage.addListener(async (msg, { url, origin }) => {
+        browser.test.assertEq("cs", msg, "expected message from cs.js");
+        browser.test.assertEq("about:blank", url, "expected correct url");
+        browser.test.assertEq("null", origin, "expected correct origin");
+
+        await browser.tabs.remove(tab.id);
+        browser.test.sendMessage("done");
+      });
+
+       tab = await browser.tabs.create({ url: "about:blank" });
+    },
+
+    files: {
+      "cs.js"() {
+        browser.runtime.sendMessage("cs");
+      },
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("done");
+  await extension.unload();
+});
+
+add_task(async function test_tabs_sendMessage_blob() {
+  // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1724099
+  if (!WebExtensionPolicy.useRemoteWebExtensions) {
+    await SpecialPowers.pushPrefEnv({
+      set: [["security.allow_unsafe_parent_loads", true]],
+    });
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    async background() {
+      browser.runtime.onMessage.addListener(async (msg, { url, origin }) => {
+        browser.test.assertEq("script", msg, "expected message from script.js");
+        browser.test.assertTrue(
+          url.startsWith("blob:moz-extension://"),
+          "expected correct url"
+        );
+        browser.test.assertEq(
+          new URL(browser.runtime.getURL("/")).origin,
+          origin,
+          "expected correct origin"
+        );
+
+        browser.test.sendMessage("done");
+      });
+
+      const blob = new Blob(
+        [`<script src="${browser.runtime.getURL("script.js")}"><\/script>`],
+        { type: "text/html" }
+      );
+      const iframe = document.createElement("iframe");
+      iframe.src = URL.createObjectURL(blob);
+      document.body.appendChild(iframe);
+    },
+
+    files: {
+      "script.js"() {
+        browser.runtime.sendMessage("script");
+      },
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("done");
+  await extension.unload();
+
+  if (!WebExtensionPolicy.useRemoteWebExtensions) {
+    await SpecialPowers.popPrefEnv();
+  }
 });
 
 </script>
