@@ -735,7 +735,11 @@ nsFilePicker::CheckContentAnalysisService() {
     auto contentAnalysisCallback =
         mozilla::MakeRefPtr<mozilla::contentanalysis::ContentAnalysisCallback>(
             [promise](nsIContentAnalysisResponse* aResponse) {
-              promise->Resolve(aResponse->GetShouldAllowContent(), __func__);
+              bool shouldAllow = false;
+              mozilla::DebugOnly<nsresult> rv =
+                  aResponse->GetShouldAllowContent(&shouldAllow);
+              MOZ_ASSERT(NS_SUCCEEDED(rv));
+              promise->Resolve(shouldAllow, __func__);
             },
             [promise](nsresult aError) { promise->Reject(aError, __func__); });
 
