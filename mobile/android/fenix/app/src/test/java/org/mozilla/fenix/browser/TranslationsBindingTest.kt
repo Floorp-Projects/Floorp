@@ -7,7 +7,6 @@ package org.mozilla.fenix.browser
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.state.action.TranslationsAction
 import mozilla.components.browser.state.state.BrowserState
-import mozilla.components.browser.state.state.ReaderState
 import mozilla.components.browser.state.state.TranslationsBrowserState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
@@ -36,7 +35,12 @@ class TranslationsBindingTest {
 
     private val tabId = "1"
     private val tab = createTab(url = tabId, id = tabId)
-    private val translationsIconStateUpdated: (TranslationsIconState) -> Unit = spy()
+    private val onIconChanged: (
+        isVisible: Boolean,
+        isTranslated: Boolean,
+        fromSelectedLanguage: Language?,
+        toSelectedLanguage: Language?,
+    ) -> Unit = spy()
 
     private val onShowTranslationsDialog: () -> Unit = spy()
 
@@ -56,7 +60,7 @@ class TranslationsBindingTest {
 
             val binding = TranslationsBinding(
                 browserStore = browserStore,
-                translationsIconStateUpdated = translationsIconStateUpdated,
+                onStateUpdated = onIconChanged,
                 onShowTranslationsDialog = {},
             )
             binding.start()
@@ -102,13 +106,11 @@ class TranslationsBindingTest {
                 ),
             ).joinBlocking()
 
-            verify(translationsIconStateUpdated).invoke(
-                TranslationsIconState(
-                    isVisible = true,
-                    isTranslated = true,
-                    fromSelectedLanguage = englishLanguage,
-                    toSelectedLanguage = spanishLanguage,
-                ),
+            verify(onIconChanged).invoke(
+                true,
+                true,
+                englishLanguage,
+                spanishLanguage,
             )
         }
 
@@ -125,7 +127,7 @@ class TranslationsBindingTest {
 
             val binding = TranslationsBinding(
                 browserStore = browserStore,
-                translationsIconStateUpdated = translationsIconStateUpdated,
+                onStateUpdated = onIconChanged,
                 onShowTranslationsDialog = {},
             )
             binding.start()
@@ -136,11 +138,11 @@ class TranslationsBindingTest {
                 ),
             ).joinBlocking()
 
-            verify(translationsIconStateUpdated).invoke(
-                TranslationsIconState(
-                    isVisible = true,
-                    isTranslated = false,
-                ),
+            verify(onIconChanged).invoke(
+                true,
+                false,
+                null,
+                null,
             )
         }
 
@@ -156,16 +158,16 @@ class TranslationsBindingTest {
 
             val binding = TranslationsBinding(
                 browserStore = browserStore,
-                translationsIconStateUpdated = translationsIconStateUpdated,
+                onStateUpdated = onIconChanged,
                 onShowTranslationsDialog = {},
             )
             binding.start()
 
-            verify(translationsIconStateUpdated).invoke(
-                TranslationsIconState(
-                    isVisible = false,
-                    isTranslated = false,
-                ),
+            verify(onIconChanged).invoke(
+                false,
+                false,
+                null,
+                null,
             )
         }
 
@@ -182,7 +184,7 @@ class TranslationsBindingTest {
 
             val binding = TranslationsBinding(
                 browserStore = browserStore,
-                translationsIconStateUpdated = translationsIconStateUpdated,
+                onStateUpdated = onIconChanged,
                 onShowTranslationsDialog = onShowTranslationsDialog,
             )
             binding.start()
@@ -195,36 +197,6 @@ class TranslationsBindingTest {
             ).joinBlocking()
 
             verify(onShowTranslationsDialog).invoke()
-        }
-
-    @Test
-    fun `GIVEN translationState WHEN readerState is active THEN invoke onIconChanged callback`() =
-        runTestOnMain {
-            val tabReaderStateActive = createTab(
-                "https://www.firefox.com",
-                id = "test-tab",
-                readerState = ReaderState(active = true),
-            )
-            browserStore = BrowserStore(
-                BrowserState(
-                    tabs = listOf(tabReaderStateActive),
-                    selectedTabId = tabReaderStateActive.id,
-                ),
-            )
-
-            val binding = TranslationsBinding(
-                browserStore = browserStore,
-                translationsIconStateUpdated = translationsIconStateUpdated,
-                onShowTranslationsDialog = onShowTranslationsDialog,
-            )
-            binding.start()
-
-            verify(translationsIconStateUpdated).invoke(
-                TranslationsIconState(
-                    isVisible = false,
-                    isTranslated = false,
-                ),
-            )
         }
 
     @Test
