@@ -510,11 +510,6 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
         break;
       }
 
-      case JSOp::String:
-        if (!loc.atomizeString(cx_, script_)) {
-          return abort(AbortReason::Alloc);
-        }
-        break;
       case JSOp::GetName:
       case JSOp::GetGName:
       case JSOp::GetProp:
@@ -618,6 +613,7 @@ AbortReasonOr<WarpScriptSnapshot*> WarpScriptOracle::createScriptSnapshot() {
       case JSOp::Int32:
       case JSOp::Double:
       case JSOp::BigInt:
+      case JSOp::String:
       case JSOp::Symbol:
       case JSOp::Pop:
       case JSOp::PopN:
@@ -1213,10 +1209,6 @@ bool WarpScriptOracle::replaceNurseryAndAllocSitePointers(
   // If the stub data contains weak pointers then trigger a read barrier. This
   // is necessary as these will now be strong references in the snapshot.
   //
-  // If the stub data contains strings then atomize them. This ensures we don't
-  // try to access potentially unstable characters from a background thread and
-  // also facilitates certain optimizations.
-  //
   // Also asserts non-object fields don't contain nursery pointers.
 
   uint32_t field = 0;
@@ -1278,17 +1270,11 @@ bool WarpScriptOracle::replaceNurseryAndAllocSitePointers(
         break;
       }
       case StubField::Type::String: {
-        uintptr_t oldWord = stubInfo->getStubRawWord(stub, offset);
-        JSString* str = reinterpret_cast<JSString*>(oldWord);
+#ifdef DEBUG
+        JSString* str =
+            stubInfo->getStubField<StubField::Type::String>(stub, offset);
         MOZ_ASSERT(!IsInsideNursery(str));
-        JSAtom* atom = AtomizeString(cx_, str);
-        if (!atom) {
-          return false;
-        }
-        if (atom != str) {
-          uintptr_t newWord = reinterpret_cast<uintptr_t>(atom);
-          stubInfo->replaceStubRawWord(stubDataCopy, offset, oldWord, newWord);
-        }
+#endif
         break;
       }
       case StubField::Type::Id: {
@@ -1301,19 +1287,10 @@ bool WarpScriptOracle::replaceNurseryAndAllocSitePointers(
         break;
       }
       case StubField::Type::Value: {
-        Value v =
-            stubInfo->getStubField<StubField::Type::Value>(stub, offset).get();
+#ifdef DEBUG
+        Value v = stubInfo->getStubField<StubField::Type::Value>(stub, offset);
         MOZ_ASSERT_IF(v.isGCThing(), !IsInsideNursery(v.toGCThing()));
-        if (v.isString()) {
-          Value newVal;
-          JSAtom* atom = AtomizeString(cx_, v.toString());
-          if (!atom) {
-            return false;
-          }
-          newVal.setString(atom);
-          stubInfo->replaceStubRawValueBits(stubDataCopy, offset, v.asRawBits(),
-                                            newVal.asRawBits());
-        }
+#endif
         break;
       }
       case StubField::Type::AllocSite: {
