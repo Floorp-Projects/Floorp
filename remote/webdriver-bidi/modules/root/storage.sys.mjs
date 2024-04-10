@@ -16,6 +16,15 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "chrome://remote/content/shared/UserContextManager.sys.mjs",
 });
 
+const PREF_COOKIE_BEHAVIOR = "network.cookie.cookieBehavior";
+const PREF_COOKIE_OPTIN_PARTITIONING =
+  "network.cookie.cookieBehavior.optInPartitioning";
+
+// This is a static preference, so it cannot be modified during runtime and we can cache its value.
+ChromeUtils.defineLazyGetter(lazy, "cookieBehaviorOptInPartitioning", () =>
+  Services.prefs.getBoolPref(PREF_COOKIE_OPTIN_PARTITIONING)
+);
+
 const CookieFieldsMapping = {
   domain: "host",
   expiry: "expiry",
@@ -603,10 +612,22 @@ class StorageModule extends Module {
     if (partitionSpec.type === PartitionType.Context) {
       const { context: contextId } = partitionSpec;
       const browsingContext = this.#getBrowsingContext(contextId);
+      const principal = Services.scriptSecurityManager.createContentPrincipal(
+        browsingContext.currentURI,
+        {}
+      );
 
       // Define browsing context’s associated storage partition as combination of user context id
-      // and the origin of the document in this browsing context.
+      // and the origin of the document in this browsing context. We also add here `isThirdPartyURI`
+      // which is required to filter out third-party cookies in case they are not allowed.
       return {
+        // In case we have the browsing context of an iframe here, we perform a check
+        // if the URI of the top context is considered third-party to the URI of the iframe principal.
+        // It's considered a third-party if base domains or hosts (in case one or both base domains
+        // can not be determined) do not match.
+        isThirdPartyURI: browsingContext.parent
+          ? principal.isThirdPartyURI(browsingContext.top.currentURI)
+          : false,
         sourceOrigin: browsingContext.currentURI.prePath,
         userContext: browsingContext.originAttributes.userContextId,
       };
@@ -639,6 +660,9 @@ class StorageModule extends Module {
         partitionKey.userContext
       );
     }
+
+    // This key is not used for partitioning and was required to only filter out third-party cookies.
+    delete partitionKey.isThirdPartyURI;
 
     return partitionKey;
   }
@@ -742,43 +766,60 @@ class StorageModule extends Module {
     // Prepare the data in the format required for the platform API.
     const originAttributes = this.#getOriginAttributes(storagePartitionKey);
 
-    // In case we want to get the cookies for a certain `sourceOrigin`,
-    // we have to separately retrieve cookies for a hostname built from `sourceOrigin`,
-    // and with `partitionKey` equal an empty string to retrieve the cookies that which were set
-    // by this hostname but without `partitionKey`, e.g. with `document.cookie`.
-    if (storagePartitionKey.sourceOrigin) {
-      const url = new URL(storagePartitionKey.sourceOrigin);
-      const hostname = url.hostname;
-
-      const principal = Services.scriptSecurityManager.createContentPrincipal(
-        Services.io.newURI(url),
-        {}
-      );
-      const isSecureProtocol = principal.isOriginPotentiallyTrustworthy;
-
-      // We want to keep `userContext` id here, if it's present,
-      // but set the `partitionKey` to an empty string.
-      const cookiesMatchingHostname =
-        Services.cookies.getCookiesWithOriginAttributes(
-          JSON.stringify({ ...originAttributes, partitionKey: "" }),
-          hostname
-        );
-
-      for (const cookie of cookiesMatchingHostname) {
-        // Ignore secure cookies for non-secure protocols.
-        if (cookie.isSecure && !isSecureProtocol) {
-          continue;
-        }
-        store.push(cookie);
-      }
-    }
-
-    // Add the cookies which exactly match a built partition attributes.
-    store = store.concat(
+    // Retrieve the cookies which exactly match a built partition attributes.
+    const cookiesWithOriginAttributes =
       Services.cookies.getCookiesWithOriginAttributes(
         JSON.stringify(originAttributes)
-      )
-    );
+      );
+
+    const isFirstPartyOrCrossSiteAllowed =
+      !storagePartitionKey.isThirdPartyURI ||
+      this.#shouldIncludeCrossSiteCookie();
+
+    // Check if we accessing the first party storage or cross-site cookies are allowed.
+    if (isFirstPartyOrCrossSiteAllowed) {
+      // In case we want to get the cookies for a certain `sourceOrigin`,
+      // we have to separately retrieve cookies for a hostname built from `sourceOrigin`,
+      // and with `partitionKey` equal an empty string to retrieve the cookies that which were set
+      // by this hostname but without `partitionKey`, e.g. with `document.cookie`.
+      if (storagePartitionKey.sourceOrigin) {
+        const url = new URL(storagePartitionKey.sourceOrigin);
+        const hostname = url.hostname;
+
+        const principal = Services.scriptSecurityManager.createContentPrincipal(
+          Services.io.newURI(url),
+          {}
+        );
+        const isSecureProtocol = principal.isOriginPotentiallyTrustworthy;
+
+        // We want to keep `userContext` id here, if it's present,
+        // but set the `partitionKey` to an empty string.
+        const cookiesMatchingHostname =
+          Services.cookies.getCookiesWithOriginAttributes(
+            JSON.stringify({ ...originAttributes, partitionKey: "" }),
+            hostname
+          );
+        for (const cookie of cookiesMatchingHostname) {
+          // Ignore secure cookies for non-secure protocols.
+          if (cookie.isSecure && !isSecureProtocol) {
+            continue;
+          }
+          store.push(cookie);
+        }
+      }
+
+      store = store.concat(cookiesWithOriginAttributes);
+    }
+    // If we're trying to access the store in the third party context and
+    // the preferences imply that we shouldn't include cross site cookies,
+    // but we should include partitioned cookies, add only partitioned cookies.
+    else if (this.#shouldIncludePartitionedCookies()) {
+      for (const cookie of cookiesWithOriginAttributes) {
+        if (cookie.isPartitioned) {
+          store.push(cookie);
+        }
+      }
+    }
 
     return store;
   }
@@ -855,6 +896,30 @@ class StorageModule extends Module {
     }
 
     return cookie;
+  }
+
+  #shouldIncludeCrossSiteCookie() {
+    const cookieBehavior = Services.prefs.getIntPref(PREF_COOKIE_BEHAVIOR);
+
+    if (
+      cookieBehavior === Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN ||
+      cookieBehavior ===
+        Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN
+    ) {
+      return false;
+    }
+
+    return true;
+  }
+
+  #shouldIncludePartitionedCookies() {
+    const cookieBehavior = Services.prefs.getIntPref(PREF_COOKIE_BEHAVIOR);
+
+    return (
+      cookieBehavior ===
+        Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN &&
+      lazy.cookieBehaviorOptInPartitioning
+    );
   }
 }
 
