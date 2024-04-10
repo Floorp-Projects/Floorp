@@ -3,10 +3,6 @@
 
 "use strict";
 
-const { SiteDataTestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/SiteDataTestUtils.sys.mjs"
-);
-
 const TEST_ORIGIN = "https://itisatracker.org";
 const TEST_BASE_DOMAIN = "itisatracker.org";
 
@@ -28,6 +24,7 @@ async function runPurgeTest(expectPurge) {
   await runTestBounce({
     bounceType: "client",
     setState: "localStorage",
+    skipSiteDataCleanup: true,
     postBounceCallback: () => {
       info(
         "Test that after the bounce but before purging cookies and localStorage are present."
