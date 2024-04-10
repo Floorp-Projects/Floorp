@@ -804,6 +804,9 @@ def target_tasks_general_perf_testing(full_task_graph, parameters, graph_config)
         if "tp6-bench" in try_name:
             return False
 
+        if "tp7" in try_name:
+            return False
+
         # Bug 1867669 - Temporarily disable all live site tests
         if "live" in try_name and "sheriffed" not in try_name:
             return False
