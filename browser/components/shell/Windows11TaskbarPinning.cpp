@@ -14,6 +14,13 @@
 #include "mozilla/Result.h"
 #include "mozilla/ResultVariant.h"
 
+#include "mozilla/Logging.h"
+
+static mozilla::LazyLogModule sLog("Windows11TaskbarPinning");
+
+#define TASKBAR_PINNING_LOG(level, msg, ...) \
+  MOZ_LOG(sLog, level, (msg, ##__VA_ARGS__))
+
 #ifndef __MINGW32__  // WinRT headers not yet supported by MinGW
 
 #  include <wrl.h>
@@ -23,6 +30,8 @@
 #  include <windows.services.store.h>
 #  include <windows.foundation.h>
 #  include <windows.ui.shell.h>
+
+using namespace mozilla;
 
 /**
  * The Win32 SetEvent and WaitForSingleObject functions take HANDLE parameters
@@ -54,30 +63,40 @@ using namespace ABI::Windows::UI::Shell;
 using namespace ABI::Windows::Foundation;
 using namespace ABI::Windows::ApplicationModel;
 
-static mozilla::Result<ComPtr<ITaskbarManager>, HRESULT> InitializeTaskbar() {
+static Result<ComPtr<ITaskbarManager>, HRESULT> InitializeTaskbar() {
   ComPtr<IInspectable> taskbarStaticsInspectable;
+
+  TASKBAR_PINNING_LOG(LogLevel::Debug, "Initializing taskbar");
 
   HRESULT hr = RoGetActivationFactory(
       HStringReference(RuntimeClass_Windows_UI_Shell_TaskbarManager).Get(),
       IID_ITaskbarManagerStatics, &taskbarStaticsInspectable);
   if (FAILED(hr)) {
-    return mozilla::Err(hr);
+    TASKBAR_PINNING_LOG(LogLevel::Debug,
+                        "Taskbar: Failed to activate. HRESULT = 0x%lx", hr);
+    return Err(hr);
   }
 
   ComPtr<ITaskbarManagerStatics> taskbarStatics;
 
   hr = taskbarStaticsInspectable.As(&taskbarStatics);
   if (FAILED(hr)) {
-    return mozilla::Err(hr);
+    TASKBAR_PINNING_LOG(LogLevel::Debug, "Failed statistics. HRESULT = 0x%lx",
+                        hr);
+    return Err(hr);
   }
 
   ComPtr<ITaskbarManager> taskbarManager;
 
   hr = taskbarStatics->GetDefault(&taskbarManager);
   if (FAILED(hr)) {
-    return mozilla::Err(hr);
+    TASKBAR_PINNING_LOG(LogLevel::Debug,
+                        "Error getting TaskbarManager. HRESULT = 0x%lx", hr);
+    return Err(hr);
   }
 
+  TASKBAR_PINNING_LOG(LogLevel::Debug,
+                      "TaskbarManager retrieved successfully!");
   return taskbarManager;
 }
 
@@ -95,10 +114,16 @@ Win11PinToTaskBarResult PinCurrentAppToTaskbarWin11(
     auto result =
         limitedAccessFeatures->Unlock(Win11LimitedAccessFeatureType::Taskbar);
     if (result.isErr()) {
-      return {result.unwrapErr(), Win11PinToTaskBarResultStatus::NotSupported};
+      auto hr = result.unwrapErr();
+      TASKBAR_PINNING_LOG(LogLevel::Debug,
+                          "Taskbar unlock: Error. HRESULT = 0x%lx", hr);
+      return {hr, Win11PinToTaskBarResultStatus::NotSupported};
     }
 
     if (result.unwrap() == false) {
+      TASKBAR_PINNING_LOG(
+          LogLevel::Debug,
+          "Taskbar unlock: failed. Not supported on this version of Windows.");
       return {S_OK, Win11PinToTaskBarResultStatus::NotSupported};
     }
   }
@@ -130,17 +155,38 @@ Win11PinToTaskBarResult PinCurrentAppToTaskbarWin11(
         boolean supported;
         hr = taskbar->get_IsSupported(&supported);
         if (FAILED(hr) || !supported) {
+          if (FAILED(hr)) {
+            TASKBAR_PINNING_LOG(
+                LogLevel::Debug,
+                "Taskbar: error checking if supported. HRESULT = 0x%lx", hr);
+          } else {
+            TASKBAR_PINNING_LOG(LogLevel::Debug, "Taskbar: not supported.");
+          }
           return CompletedOperations(
               Win11PinToTaskBarResultStatus::NotSupported);
         }
 
         if (aCheckOnly) {
+          TASKBAR_PINNING_LOG(LogLevel::Debug, "Taskbar: check succeeded.");
           return CompletedOperations(Win11PinToTaskBarResultStatus::Success);
         }
 
         boolean isAllowed = false;
         hr = taskbar->get_IsPinningAllowed(&isAllowed);
         if (FAILED(hr) || !isAllowed) {
+          if (FAILED(hr)) {
+            TASKBAR_PINNING_LOG(
+                LogLevel::Debug,
+                "Taskbar: error checking if pinning is allowed. HRESULT = "
+                "0x%lx",
+                hr);
+          } else {
+            TASKBAR_PINNING_LOG(
+                LogLevel::Debug,
+                "Taskbar: is pinning allowed error or isn't allowed right now. "
+                "It's not clear when it will be allowed. Possibly after a "
+                "reboot.");
+          }
           return CompletedOperations(
               Win11PinToTaskBarResultStatus::NotCurrentlyAllowed);
         }
@@ -148,6 +194,11 @@ Win11PinToTaskBarResult PinCurrentAppToTaskbarWin11(
         ComPtr<IAsyncOperation<bool>> isPinnedOperation = nullptr;
         hr = taskbar->IsCurrentAppPinnedAsync(&isPinnedOperation);
         if (FAILED(hr)) {
+          TASKBAR_PINNING_LOG(
+              LogLevel::Debug,
+              "Taskbar: is current app pinned operation failed. HRESULT = "
+              "0x%lx",
+              hr);
           return CompletedOperations(Win11PinToTaskBarResultStatus::Failed);
         }
 
@@ -157,84 +208,117 @@ Win11PinToTaskBarResult PinCurrentAppToTaskbarWin11(
         // resultStatus and event are not defined on the main thread and will
         // be alive until the async functions complete, so they can be used as
         // references.
-        auto isPinnedCallback = Callback<IAsyncOperationCompletedHandler<bool>>(
-            [taskbar, &event, &resultStatus, &hr](
-                IAsyncOperation<bool>* asyncInfo,
-                AsyncStatus status) mutable -> HRESULT {
-              auto CompletedOperations =
-                  [&event, &resultStatus](
-                      Win11PinToTaskBarResultStatus status) -> HRESULT {
-                resultStatus = status;
-                event.Set();
-                return S_OK;
-              };
+        auto isPinnedCallback = Callback<IAsyncOperationCompletedHandler<
+            bool>>([taskbar, &event, &resultStatus, &hr](
+                       IAsyncOperation<bool>* asyncInfo,
+                       AsyncStatus status) mutable -> HRESULT {
+          auto CompletedOperations =
+              [&event,
+               &resultStatus](Win11PinToTaskBarResultStatus status) -> HRESULT {
+            resultStatus = status;
+            event.Set();
+            return S_OK;
+          };
 
-              bool asyncOpSucceeded = status == AsyncStatus::Completed;
-              if (!asyncOpSucceeded) {
-                return CompletedOperations(
-                    Win11PinToTaskBarResultStatus::Failed);
-              }
+          bool asyncOpSucceeded = status == AsyncStatus::Completed;
+          if (!asyncOpSucceeded) {
+            TASKBAR_PINNING_LOG(
+                LogLevel::Debug,
+                "Taskbar: is pinned operation failed to complete.");
+            return CompletedOperations(Win11PinToTaskBarResultStatus::Failed);
+          }
 
-              unsigned char isCurrentAppPinned = false;
-              hr = asyncInfo->GetResults(&isCurrentAppPinned);
+          unsigned char isCurrentAppPinned = false;
+          hr = asyncInfo->GetResults(&isCurrentAppPinned);
+          if (FAILED(hr)) {
+            TASKBAR_PINNING_LOG(
+                LogLevel::Debug,
+                "Taskbar: is current app pinned check failed. HRESULT = 0x%lx",
+                hr);
+            return CompletedOperations(Win11PinToTaskBarResultStatus::Failed);
+          }
+
+          if (isCurrentAppPinned) {
+            TASKBAR_PINNING_LOG(LogLevel::Debug,
+                                "Taskbar: current app is already pinned.");
+            return CompletedOperations(
+                Win11PinToTaskBarResultStatus::AlreadyPinned);
+          }
+
+          ComPtr<IAsyncOperation<bool>> requestPinOperation = nullptr;
+          hr = taskbar->RequestPinCurrentAppAsync(&requestPinOperation);
+          if (FAILED(hr)) {
+            TASKBAR_PINNING_LOG(
+                LogLevel::Debug,
+                "Taskbar: request pin current app operation creation failed. "
+                "HRESULT = 0x%lx",
+                hr);
+            return CompletedOperations(Win11PinToTaskBarResultStatus::Failed);
+          }
+
+          auto pinAppCallback = Callback<IAsyncOperationCompletedHandler<
+              bool>>([CompletedOperations, &hr](
+                         IAsyncOperation<bool>* asyncInfo,
+                         AsyncStatus status) -> HRESULT {
+            bool asyncOpSucceeded = status == AsyncStatus::Completed;
+            if (!asyncOpSucceeded) {
+              TASKBAR_PINNING_LOG(
+                  LogLevel::Debug,
+                  "Taskbar: request pin current app operation did not "
+                  "complete.");
+              return CompletedOperations(Win11PinToTaskBarResultStatus::Failed);
+            }
+
+            unsigned char successfullyPinned = 0;
+            hr = asyncInfo->GetResults(&successfullyPinned);
+            if (FAILED(hr) || !successfullyPinned) {
               if (FAILED(hr)) {
-                return CompletedOperations(
-                    Win11PinToTaskBarResultStatus::Failed);
+                TASKBAR_PINNING_LOG(
+                    LogLevel::Debug,
+                    "Taskbar: request pin current app operation failed to pin "
+                    "due to error. HRESULT = 0x%lx",
+                    hr);
+              } else {
+                TASKBAR_PINNING_LOG(
+                    LogLevel::Debug,
+                    "Taskbar: request pin current app operation failed to pin");
               }
+              return CompletedOperations(Win11PinToTaskBarResultStatus::Failed);
+            }
 
-              if (isCurrentAppPinned) {
-                return CompletedOperations(
-                    Win11PinToTaskBarResultStatus::AlreadyPinned);
-              }
+            TASKBAR_PINNING_LOG(
+                LogLevel::Debug,
+                "Taskbar: request pin current app operation succeeded");
+            return CompletedOperations(Win11PinToTaskBarResultStatus::Success);
+          });
 
-              ComPtr<IAsyncOperation<bool>> requestPinOperation = nullptr;
-              hr = taskbar->RequestPinCurrentAppAsync(&requestPinOperation);
-              if (FAILED(hr)) {
-                return CompletedOperations(
-                    Win11PinToTaskBarResultStatus::Failed);
-              }
+          HRESULT pinOperationHR =
+              requestPinOperation->put_Completed(pinAppCallback.Get());
+          if (FAILED(pinOperationHR)) {
+            TASKBAR_PINNING_LOG(
+                LogLevel::Debug,
+                "Taskbar: request pin operation failed when setting completion "
+                "callback. HRESULT = 0x%lx",
+                hr);
+            hr = pinOperationHR;
+            return CompletedOperations(Win11PinToTaskBarResultStatus::Failed);
+          }
 
-              auto pinAppCallback =
-                  Callback<IAsyncOperationCompletedHandler<bool>>(
-                      [CompletedOperations, &hr](
-                          IAsyncOperation<bool>* asyncInfo,
-                          AsyncStatus status) -> HRESULT {
-                        bool asyncOpSucceeded =
-                            status == AsyncStatus::Completed;
-                        if (!asyncOpSucceeded) {
-                          return CompletedOperations(
-                              Win11PinToTaskBarResultStatus::Failed);
-                        }
-
-                        unsigned char successfullyPinned = 0;
-                        hr = asyncInfo->GetResults(&successfullyPinned);
-                        if (FAILED(hr) || !successfullyPinned) {
-                          return CompletedOperations(
-                              Win11PinToTaskBarResultStatus::Failed);
-                        }
-
-                        return CompletedOperations(
-                            Win11PinToTaskBarResultStatus::Success);
-                      });
-
-              HRESULT pinOperationHR =
-                  requestPinOperation->put_Completed(pinAppCallback.Get());
-              if (FAILED(pinOperationHR)) {
-                hr = pinOperationHR;
-                return CompletedOperations(
-                    Win11PinToTaskBarResultStatus::Failed);
-              }
-
-              // DO NOT SET event HERE. It will be set in the pin operation
-              // callback As in, operations are not completed, so don't call
-              // CompletedOperations
-              return S_OK;
-            });
+          // DO NOT SET event HERE. It will be set in the pin operation
+          // callback As in, operations are not completed, so don't call
+          // CompletedOperations
+          return S_OK;
+        });
 
         HRESULT isPinnedOperationHR =
             isPinnedOperation->put_Completed(isPinnedCallback.Get());
         if (FAILED(isPinnedOperationHR)) {
           hr = isPinnedOperationHR;
+          TASKBAR_PINNING_LOG(
+              LogLevel::Debug,
+              "Taskbar: is pinned operation failed when setting completion "
+              "callback. HRESULT = 0x%lx",
+              hr);
           return CompletedOperations(Win11PinToTaskBarResultStatus::Failed);
         }
 
