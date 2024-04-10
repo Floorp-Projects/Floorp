@@ -2,32 +2,21 @@
 * License, v. 2.0. If a copy of the MPL was not distributed with this
 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-.tab-preview-container {
-  --tab-preview-background-color: light-dark(#fff, #42414d);
-  --tab-preview-text-color: light-dark(#15141a, #fbfbfe);
-  --tab-preview-border-color: light-dark(#cfcfd8, #8f8f9d);
-
-  @media (prefers-contrast) {
-    --tab-preview-background-color: Canvas;
-    --tab-preview-text-color: CanvasText;
-  }
+#tab-preview-panel {
+  --panel-width: 280px;
+  --panel-padding: 0;
+  --panel-background: var(--tab-selected-bgcolor);
+  --panel-color: var(--tab-selected-textcolor);
 }
 
-.tab-preview-container {
-  background-color: var(--tab-preview-background-color);
-  color: var(--tab-preview-text-color);
-  border-radius: 9px;
-  display: inline-block;
-  width: 280px;
-  overflow: hidden;
-  line-height: 1.5;
-  border: 1px solid var(--tab-preview-border-color);
+.tab-preview-text-container {
+  padding: var(--space-small);
 }
 
 .tab-preview-title {
   max-height: 3em;
   overflow: hidden;
-  font-weight: 600;
+  font-weight: var(--font-weight-bold);
 }
 
 .tab-preview-uri {
@@ -38,16 +27,18 @@
   text-overflow: ellipsis;
 }
 
-.tab-preview-text-container {
-  padding: 8px;
-}
-
 .tab-preview-thumbnail-container {
-  border-top: 1px solid var(--tab-preview-border-color);
-}
-
-@media (max-width: 640px) {
-  .tab-preview-thumbnail-container {
+  border-top: 1px solid var(--panel-border-color);
+  &:empty {
     display: none;
+  }
+  @media (width < 640px) {
+    display: none;
+  }
+
+  > img,
+  > canvas {
+    display: block;
+    width: 100%;
   }
 }

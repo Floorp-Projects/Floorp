@@ -62,9 +62,7 @@
       this._hiddenSoundPlayingTabs = new Set();
       this._allTabs = null;
       this._visibleTabs = null;
-      this._previewContainer = document.getElementById(
-        "tabbrowser-tab-preview"
-      );
+      this._previewPanel = null;
 
       var tab = this.allTabs[0];
       tab.label = this.emptyTabTitle;
@@ -129,13 +127,12 @@
 
       this.configureTooltip = () => {
         // fall back to original tooltip behavior if pref is not set
-        this.tooltip = this._showCardPreviews ? null : "tabbrowser-tab-tooltip";
-
-        // activate new tooltip behavior if pref is set
-        this._previewContainer.toggleAttribute(
-          "hidden",
-          !this._showCardPreviews
-        );
+        if (this._showCardPreviews) {
+          this.tooltip = null;
+        } else {
+          this.tooltip = "tabbrowser-tab-tooltip";
+          this._previewPanel = null;
+        }
       };
       XPCOMUtils.defineLazyPreferenceGetter(
         this,
@@ -193,18 +190,23 @@
     }
 
     on_TabHoverStart(event) {
-      if (this._showCardPreviews) {
-        this._previewContainer.tab = event.target;
-        this._previewContainer.activate();
+      if (!this._showCardPreviews) {
+        return;
       }
+      if (!this._previewPanel) {
+        // load the tab preview component
+        const TabPreviewPanel = ChromeUtils.importESModule(
+          "chrome://browser/content/tabpreview/tab-preview-panel.mjs"
+        ).default;
+        this._previewPanel = new TabPreviewPanel(
+          document.getElementById("tab-preview-panel")
+        );
+      }
+      this._previewPanel.activate(event.target);
     }
 
     on_TabHoverEnd(event) {
-      if (this._showCardPreviews) {
-        if (this._previewContainer.tab === event.target) {
-          this._previewContainer.tab = null;
-        }
-      }
+      this._previewPanel?.deactivate(event.target);
     }
 
     on_transitionend(event) {
@@ -450,9 +452,7 @@
         return;
       }
 
-      if (this._showCardPreviews) {
-        this._previewContainer.deactivate();
-      }
+      this._previewPanel?.deactivate();
       this.startTabDrag(event, tab);
     }
 
@@ -1093,6 +1093,10 @@
       children.pop();
       this._allTabs = children;
       return children;
+    }
+
+    get previewPanel() {
+      return this._previewPanel;
     }
 
     _getVisibleTabs() {
@@ -1855,9 +1859,7 @@
           }
           break;
         case "mouseleave":
-          if (this._showCardPreviews) {
-            this._previewContainer.deactivate();
-          }
+          this._previewPanel?.deactivate();
           break;
         default:
           let methodName = `on_${aEvent.type}`;

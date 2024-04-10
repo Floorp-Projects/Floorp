@@ -415,7 +415,19 @@
     <hbox id="ctrlTab-showAll-container" pack="center"/>
   </panel>
 
-  <html:tab-preview id="tabbrowser-tab-preview" hidden="true" />
+  <!-- TODO: create lazily? -->
+  <panel id="tab-preview-panel"
+         type="arrow"
+         orient="vertical"
+         norolluponanchor="true"
+         rolluponmousewheel="true"
+         consumeoutsideclicks="false">
+    <html:div class="tab-preview-text-container">
+      <html:div class="tab-preview-title"></html:div>
+      <html:div class="tab-preview-uri"></html:div>
+    </html:div>
+    <html:div class="tab-preview-thumbnail-container"></html:div>
+  </panel>
 
   <html:template id="pageActionPanelTemplate">
     <panel id="pageActionPanel"

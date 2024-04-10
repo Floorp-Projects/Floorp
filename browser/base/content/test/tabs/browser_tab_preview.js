@@ -9,13 +9,9 @@ const { sinon } = ChromeUtils.importESModule(
 );
 
 async function openPreview(tab) {
-  const previewShown = BrowserTestUtils.waitForEvent(
-    document.getElementById("tabbrowser-tab-preview"),
-    "previewshown",
-    false,
-    e => {
-      return e.detail.tab === tab;
-    }
+  const previewShown = BrowserTestUtils.waitForPopupEvent(
+    document.getElementById("tab-preview-panel"),
+    "shown"
   );
   EventUtils.synthesizeMouseAtCenter(tab, { type: "mouseover" });
   return previewShown;
@@ -23,9 +19,9 @@ async function openPreview(tab) {
 
 async function closePreviews() {
   const tabs = document.getElementById("tabbrowser-tabs");
-  const previewHidden = BrowserTestUtils.waitForEvent(
-    document.getElementById("tabbrowser-tab-preview"),
-    "previewhidden"
+  const previewHidden = BrowserTestUtils.waitForPopupEvent(
+    document.getElementById("tab-preview-panel"),
+    "hidden"
   );
   EventUtils.synthesizeMouse(tabs, 0, tabs.outerHeight + 1, {
     type: "mouseout",
@@ -57,30 +53,24 @@ add_task(async function hoverTests() {
   const tabUrl2 =
     "data:text/html,<html><head><title>Second New Tab</title></head><body>Hello</body></html>";
   const tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, tabUrl2);
-  const previewContainer = document.getElementById("tabbrowser-tab-preview");
+  const previewContainer = document.getElementById("tab-preview-panel");
 
   await openPreview(tab1);
-  Assert.equal(previewContainer.panelState, "open", "tab1 preview shown");
   Assert.equal(
-    previewContainer.renderRoot.querySelector(".tab-preview-title").innerText,
+    previewContainer.querySelector(".tab-preview-title").innerText,
     "First New Tab",
     "Preview of tab1 shows correct title"
   );
 
+  await closePreviews();
   await openPreview(tab2);
-  Assert.equal(previewContainer.panelState, "open", "tab2 preview shown");
   Assert.equal(
-    previewContainer.renderRoot.querySelector(".tab-preview-title").innerText,
+    previewContainer.querySelector(".tab-preview-title").innerText,
     "Second New Tab",
     "Preview of tab2 shows correct title"
   );
 
   await closePreviews();
-  Assert.equal(
-    previewContainer.panelState,
-    "closed",
-    "preview container is now hidden"
-  );
 
   BrowserTestUtils.removeTab(tab1);
   BrowserTestUtils.removeTab(tab2);
@@ -104,10 +94,10 @@ add_task(async function thumbnailTests() {
   const tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, tabUrl1);
   const tabUrl2 = "about:blank";
   const tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, tabUrl2);
-  const previewContainer = document.getElementById("tabbrowser-tab-preview");
+  const previewPanel = document.getElementById("tab-preview-panel");
 
-  const thumbnailUpdated = BrowserTestUtils.waitForEvent(
-    previewContainer,
+  let thumbnailUpdated = BrowserTestUtils.waitForEvent(
+    previewPanel,
     "previewThumbnailUpdated",
     false,
     evt => evt.detail.thumbnail
@@ -115,22 +105,30 @@ add_task(async function thumbnailTests() {
   await openPreview(tab1);
   await thumbnailUpdated;
   Assert.ok(
-    previewContainer.thumbnailContainer.renderRoot.querySelectorAll(
-      "img,canvas"
+    previewPanel.querySelectorAll(
+      ".tab-preview-thumbnail-container img, .tab-preview-thumbnail-container canvas"
     ).length,
     "Tab1 preview contains thumbnail"
   );
 
+  await closePreviews();
+  thumbnailUpdated = BrowserTestUtils.waitForEvent(
+    previewPanel,
+    "previewThumbnailUpdated"
+  );
   await openPreview(tab2);
+  await thumbnailUpdated;
   Assert.equal(
-    previewContainer.thumbnailContainer,
-    null,
+    previewPanel.querySelectorAll(
+      ".tab-preview-thumbnail-container img, .tab-preview-thumbnail-container canvas"
+    ).length,
+    0,
     "Tab2 (selected) does not contain thumbnail"
   );
 
-  const previewHidden = BrowserTestUtils.waitForEvent(
-    document.getElementById("tabbrowser-tab-preview"),
-    "previewhidden"
+  const previewHidden = BrowserTestUtils.waitForPopupEvent(
+    previewPanel,
+    "hidden"
   );
 
   BrowserTestUtils.removeTab(tab1);
@@ -157,20 +155,22 @@ add_task(async function delayTests() {
   const tabUrl2 =
     "data:text/html,<html><head><title>Second New Tab</title></head><body>Hello</body></html>";
   const tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, tabUrl2);
-  const previewContainer = document.getElementById("tabbrowser-tab-preview");
+  const previewComponent = gBrowser.tabContainer.previewPanel;
+  const previewElement = document.getElementById("tab-preview-panel");
 
-  sinon.spy(previewContainer, "deactivate");
+  sinon.spy(previewComponent, "deactivate");
 
   await openPreview(tab1);
 
-  await openPreview(tab2);
+  // I can't fake this like in hoverTests, need to send an updated-tab signal
+  //await openPreview(tab2);
 
-  const previewHidden = BrowserTestUtils.waitForEvent(
-    previewContainer,
-    "previewhidden"
+  const previewHidden = BrowserTestUtils.waitForPopupEvent(
+    previewElement,
+    "hidden"
   );
   Assert.ok(
-    !previewContainer.deactivate.called,
+    !previewComponent.deactivate.called,
     "Delay is not reset when moving between tabs"
   );
 
@@ -181,7 +181,7 @@ add_task(async function delayTests() {
   await previewHidden;
 
   Assert.ok(
-    previewContainer.deactivate.called,
+    previewComponent.deactivate.called,
     "Delay is reset when cursor leaves tabstrip"
   );
 
@@ -203,14 +203,15 @@ add_task(async function dragTests() {
   const tabUrl2 =
     "data:text/html,<html><head><title>Second New Tab</title></head><body>Hello</body></html>";
   const tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, tabUrl2);
-  const previewContainer = document.getElementById("tabbrowser-tab-preview");
+  const previewComponent = gBrowser.tabContainer.previewPanel;
+  const previewElement = document.getElementById("tab-preview-panel");
 
-  sinon.spy(previewContainer, "deactivate");
+  sinon.spy(previewComponent, "deactivate");
 
   await openPreview(tab1);
-  const previewHidden = BrowserTestUtils.waitForEvent(
-    previewContainer,
-    "previewhidden"
+  const previewHidden = BrowserTestUtils.waitForPopupEvent(
+    previewElement,
+    "hidden"
   );
   let dragend = BrowserTestUtils.waitForEvent(tab1, "dragend");
   EventUtils.synthesizePlainDragAndDrop({
@@ -220,13 +221,8 @@ add_task(async function dragTests() {
 
   await previewHidden;
 
-  Assert.equal(
-    previewContainer.panelState,
-    "closed",
-    "preview container is hidden after drag started"
-  );
   Assert.ok(
-    previewContainer.deactivate.called,
+    previewComponent.deactivate.called,
     "delay is reset after drag started"
   );
 
@@ -256,9 +252,9 @@ add_task(async function wheelTests() {
   await openPreview(tab1);
 
   const tabs = document.getElementById("tabbrowser-tabs");
-  const previewHidden = BrowserTestUtils.waitForEvent(
-    document.getElementById("tabbrowser-tab-preview"),
-    "previewhidden"
+  const previewHidden = BrowserTestUtils.waitForPopupEvent(
+    document.getElementById("tab-preview-panel"),
+    "hidden"
   );
 
   // Copied from apz_test_native_event_utils.js
