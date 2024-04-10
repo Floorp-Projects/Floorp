@@ -7,6 +7,7 @@
 
 #include "nsIWebAuthnService.h"
 #include "AuthrsBridge_ffi.h"
+#include "mozilla/dom/WebAuthnPromiseHolder.h"
 
 #ifdef MOZ_WIDGET_ANDROID
 #  include "AndroidWebAuthnService.h"
@@ -55,6 +56,21 @@ class WebAuthnService final : public nsIWebAuthnService {
  private:
   ~WebAuthnService() = default;
 
+  struct TransactionState {
+    nsCOMPtr<nsIWebAuthnService> service;
+    uint64_t transactionId;
+    Maybe<nsCOMPtr<nsIWebAuthnRegisterPromise>> parentRegisterPromise;
+    Maybe<nsCOMPtr<nsIWebAuthnRegisterResult>> registerResult;
+    MozPromiseRequestHolder<WebAuthnRegisterPromise> childRegisterRequest;
+  };
+  using TransactionStateMutex = DataMutex<Maybe<TransactionState>>;
+  TransactionStateMutex mTransactionState;
+
+  void ShowAttestationConsentPrompt(const nsString& aOrigin,
+                                    uint64_t aTransactionId,
+                                    uint64_t aBrowsingContextId);
+  void ResetLocked(const TransactionStateMutex::AutoLock& aGuard);
+
   nsIWebAuthnService* DefaultService() {
     if (StaticPrefs::security_webauth_webauthn_enable_softtoken()) {
       return mAuthrsService;
@@ -71,12 +87,6 @@ class WebAuthnService final : public nsIWebAuthnService {
     }
     return DefaultService();
   }
-
-  struct TransactionState {
-    nsCOMPtr<nsIWebAuthnService> service;
-  };
-  using TransactionStateMutex = DataMutex<Maybe<TransactionState>>;
-  TransactionStateMutex mTransactionState;
 
   nsCOMPtr<nsIWebAuthnService> mAuthrsService;
   nsCOMPtr<nsIWebAuthnService> mPlatformService;

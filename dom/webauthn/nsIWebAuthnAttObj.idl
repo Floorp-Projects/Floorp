@@ -17,4 +17,6 @@ interface nsIWebAuthnAttObj : nsISupports {
     readonly attribute Array<octet> publicKey;
 
     readonly attribute COSEAlgorithmIdentifier publicKeyAlgorithm;
+
+    boolean isIdentifying();
 };
