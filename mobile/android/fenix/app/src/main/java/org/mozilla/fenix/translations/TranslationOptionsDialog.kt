@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.translations
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
@@ -11,8 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.Text
@@ -50,9 +49,8 @@ fun TranslationOptionsDialog(
     aboutTranslationClicked: () -> Unit,
 ) {
     TranslationOptionsDialogHeader(onBackClicked)
-
-    LazyColumn {
-        items(translationOptionsList) { item: TranslationSwitchItem ->
+    translationOptionsList.forEach() { item: TranslationSwitchItem ->
+        Column {
             val translationSwitchItem = TranslationSwitchItem(
                 type = item.type,
                 textLabel = item.textLabel,
@@ -66,31 +64,31 @@ fun TranslationOptionsDialog(
                 translationSwitchItem = translationSwitchItem,
             )
         }
+    }
 
-        if (showGlobalSettings) {
-            item {
-                TextListItem(
-                    label = stringResource(id = R.string.translation_option_bottom_sheet_translation_settings),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 56.dp),
-                    onClick = { onTranslationSettingsClicked() },
-                )
-            }
-        }
-
-        item {
+    if (showGlobalSettings) {
+        Column {
             TextListItem(
-                label = stringResource(
-                    id = R.string.translation_option_bottom_sheet_about_translations,
-                    formatArgs = arrayOf(stringResource(R.string.firefox)),
-                ),
+                label = stringResource(id = R.string.translation_option_bottom_sheet_translation_settings),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(start = 56.dp),
-                onClick = { aboutTranslationClicked() },
+                onClick = { onTranslationSettingsClicked() },
             )
         }
+    }
+
+    Column {
+        TextListItem(
+            label = stringResource(
+                id = R.string.translation_option_bottom_sheet_about_translations,
+                formatArgs = arrayOf(stringResource(R.string.firefox)),
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 56.dp),
+            onClick = { aboutTranslationClicked() },
+        )
     }
 }
 
@@ -214,12 +212,14 @@ fun getTranslationOptionsList(): List<TranslationSwitchItem> {
 @LightDarkPreview
 private fun TranslationSettingsPreview() {
     FirefoxTheme {
-        TranslationOptionsDialog(
-            translationOptionsList = getTranslationOptionsList(),
-            showGlobalSettings = true,
-            onBackClicked = {},
-            onTranslationSettingsClicked = {},
-            aboutTranslationClicked = {},
-        )
+        Column {
+            TranslationOptionsDialog(
+                translationOptionsList = getTranslationOptionsList(),
+                showGlobalSettings = true,
+                onBackClicked = {},
+                onTranslationSettingsClicked = {},
+                aboutTranslationClicked = {},
+            )
+        }
     }
 }

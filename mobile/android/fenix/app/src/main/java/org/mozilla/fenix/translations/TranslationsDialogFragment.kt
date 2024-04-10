@@ -142,7 +142,9 @@ class TranslationsDialogFragment : BottomSheetDialogFragment() {
                     mutableStateOf(false)
                 }
 
-                TranslationDialogBottomSheet {
+                TranslationDialogBottomSheet(
+                    onRequestDismiss = { behavior?.state = BottomSheetBehavior.STATE_HIDDEN },
+                ) {
                     TranslationsAnimation(
                         translationsVisibility = translationsVisibility,
                         density = density,
