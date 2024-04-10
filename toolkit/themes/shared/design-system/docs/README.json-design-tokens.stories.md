@@ -155,7 +155,6 @@ We need to be able to change our token values to support both the `prefers-contr
         "value": {
           "prefersContrast": "{text.color.@base}",
           "forcedColors": "ButtonText",
-          ...
         }
       }
     },
@@ -171,24 +170,18 @@ results in the following CSS:
   @media (prefers-contrast) {
     :root,
     :host(.anonymous-content-host) {
-      ...
       /** Border **/
       --border-color-interactive: var(--text-color);
-      ...
     }
   }
 }
-
-...
 
 @layer tokens-forced-colors {
   @media (forced-colors) {
     :root,
     :host(.anonymous-content-host) {
-      ...
       /** Border **/
       --border-color-interactive: ButtonText;
-      ...
     }
   }
 }
@@ -209,7 +202,6 @@ We employ `light` and `dark` keys in our `value` objects to indicate when a give
       "value": {
         "light": "{color.white}",
         "dark": "{color.gray.80}",
-        ...
       }
     },
   }
@@ -227,7 +219,6 @@ If a token has the same value for both the light and dark themes it will either 
       "disabled": {
         "value": {
           "default": "{button.background.color.@base}",
-          ...
         }
       }
     }
@@ -248,7 +239,6 @@ We use `platform` and `brand` keys in our JSON to indicate when a token has a su
   "color": {
     "@base": {
       "value": {
-        ...
         "brand": {
           "light": "{color.gray.100}",
           "dark": "{color.gray.05}"
@@ -268,10 +258,8 @@ communicates that `--text-color` should have the value `currentColor` in `tokens
 @layer tokens-foundation {
   :root,
   :host(.anonymous-content-host) {
-    ...
     /** Text **/
     --text-color: currentColor;
-    ...
   }
 }
 ```
@@ -281,10 +269,8 @@ communicates that `--text-color` should have the value `currentColor` in `tokens
 @layer tokens-foundation {
   :root,
   :host(.anonymous-content-host) {
-    ...
     /** Text **/
     --text-color: light-dark(var(--color-gray-100), var(--color-gray-05));
-    ...
   }
 }
 ```
