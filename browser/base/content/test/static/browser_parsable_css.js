@@ -117,6 +117,8 @@ let propNameAllowlist = [
     isFromDevTools: false,
   },
   { propName: "--browser-stack-z-index-rdm-toolbar", isFromDevTools: false },
+  // about:profiling is in devtools even though it uses non-devtools styles.
+  { propName: "--in-content-border-hover", isFromDevTools: false },
 
   // These variables are specified from devtools but read from non-devtools
   // styles, which confuses the test.
