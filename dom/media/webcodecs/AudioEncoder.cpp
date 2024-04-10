@@ -474,9 +474,9 @@ AudioDecoderConfigInternal AudioEncoder::EncoderConfigToDecoderConfig(
     sampleRate = aRawData->mConfig->mSampleRate;
     channelCount = aRawData->mConfig->mNumberOfChannels;
   }
-  return AudioDecoderConfigInternal(
-      aOutputConfig.mCodec, sampleRate, channelCount,
-      aRawData->mExtraData ? Some(aRawData->mExtraData) : Nothing());
+  return AudioDecoderConfigInternal(aOutputConfig.mCodec, sampleRate,
+                                    channelCount,
+                                    do_AddRef(aRawData->mExtraData));
 }
 
 #undef LOG

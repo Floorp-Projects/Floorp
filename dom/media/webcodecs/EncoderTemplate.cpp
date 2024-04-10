@@ -313,12 +313,12 @@ template <typename T, typename U>
 void EncoderTemplate<EncoderType>::CopyExtradataToDescriptionIfNeeded(
     nsIGlobalObject* aGlobal, const T& aConfigInternal, U& aConfig) {
   if (aConfigInternal.mDescription &&
-      !aConfigInternal.mDescription.value()->IsEmpty()) {
+      !aConfigInternal.mDescription->IsEmpty()) {
     auto& abov = aConfig.mDescription.Construct();
     AutoEntryScript aes(aGlobal, "EncoderConfigToaConfigConfig");
-    size_t lengthBytes = aConfigInternal.mDescription.value()->Length();
+    size_t lengthBytes = aConfigInternal.mDescription->Length();
     UniquePtr<uint8_t[], JS::FreePolicy> extradata(new uint8_t[lengthBytes]);
-    PodCopy(extradata.get(), aConfigInternal.mDescription.value()->Elements(),
+    PodCopy(extradata.get(), aConfigInternal.mDescription->Elements(),
             lengthBytes);
     JS::Rooted<JSObject*> description(
         aes.cx(), JS::NewArrayBufferWithContents(aes.cx(), lengthBytes,
