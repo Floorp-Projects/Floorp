@@ -5,7 +5,9 @@
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_security.h"
 #include "nsIObserverService.h"
+#include "nsTextFormatter.h"
 #include "nsThreadUtils.h"
+#include "WebAuthnEnumStrings.h"
 #include "WebAuthnService.h"
 #include "WebAuthnTransportIdentifiers.h"
 
@@ -18,32 +20,139 @@ already_AddRefed<nsIWebAuthnService> NewWebAuthnService() {
 
 NS_IMPL_ISUPPORTS(WebAuthnService, nsIWebAuthnService)
 
+void WebAuthnService::ShowAttestationConsentPrompt(
+    const nsString& aOrigin, uint64_t aTransactionId,
+    uint64_t aBrowsingContextId) {
+  RefPtr<WebAuthnService> self = this;
+#ifdef MOZ_WIDGET_ANDROID
+  // We don't have a way to prompt the user for consent on Android, so just
+  // assume consent not granted.
+  nsCOMPtr<nsIRunnable> runnable(
+      NS_NewRunnableFunction(__func__, [self, aTransactionId]() {
+        self->SetHasAttestationConsent(
+            aTransactionId,
+            StaticPrefs::
+                security_webauth_webauthn_testing_allow_direct_attestation());
+      }));
+#else
+  nsCOMPtr<nsIRunnable> runnable(NS_NewRunnableFunction(
+      __func__, [self, aOrigin, aTransactionId, aBrowsingContextId]() {
+        if (StaticPrefs::
+                security_webauth_webauthn_testing_allow_direct_attestation()) {
+          self->SetHasAttestationConsent(aTransactionId, true);
+          return;
+        }
+        nsCOMPtr<nsIObserverService> os = services::GetObserverService();
+        if (!os) {
+          return;
+        }
+        const nsLiteralString jsonFmt =
+            u"{\"prompt\": {\"type\":\"attestation-consent\"},"_ns
+            u"\"origin\": \"%S\","_ns
+            u"\"tid\": %llu, \"browsingContextId\": %llu}"_ns;
+        nsString json;
+        nsTextFormatter::ssprintf(json, jsonFmt.get(), aOrigin.get(),
+                                  aTransactionId, aBrowsingContextId);
+        MOZ_ALWAYS_SUCCEEDS(
+            os->NotifyObservers(nullptr, "webauthn-prompt", json.get()));
+      }));
+#endif
+  NS_DispatchToMainThread(runnable.forget());
+}
+
 NS_IMETHODIMP
 WebAuthnService::MakeCredential(uint64_t aTransactionId,
-                                uint64_t browsingContextId,
+                                uint64_t aBrowsingContextId,
                                 nsIWebAuthnRegisterArgs* aArgs,
                                 nsIWebAuthnRegisterPromise* aPromise) {
+  MOZ_ASSERT(aArgs);
+  MOZ_ASSERT(aPromise);
+
   auto guard = mTransactionState.Lock();
-  if (guard->isSome()) {
-    guard->ref().service->Reset();
-    *guard = Nothing();
+  ResetLocked(guard);
+  *guard = Some(TransactionState{.service = DefaultService(),
+                                 .transactionId = aTransactionId,
+                                 .parentRegisterPromise = Some(aPromise)});
+
+  // We may need to show an attestation consent prompt before we return a
+  // credential to WebAuthnTransactionParent, so we insert a new promise that
+  // chains to `aPromise` here.
+
+  nsString attestation;
+  Unused << aArgs->GetAttestationConveyancePreference(attestation);
+  bool attestationRequested = !attestation.EqualsLiteral(
+      MOZ_WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_NONE);
+
+  nsString origin;
+  Unused << aArgs->GetOrigin(origin);
+
+  RefPtr<WebAuthnRegisterPromiseHolder> promiseHolder =
+      new WebAuthnRegisterPromiseHolder(GetCurrentSerialEventTarget());
+
+  RefPtr<WebAuthnService> self = this;
+  RefPtr<WebAuthnRegisterPromise> promise = promiseHolder->Ensure();
+  promise
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [self, origin, aTransactionId, aBrowsingContextId,
+           attestationRequested](
+              const WebAuthnRegisterPromise::ResolveOrRejectValue& aValue) {
+            auto guard = self->mTransactionState.Lock();
+            if (guard->isNothing()) {
+              return;
+            }
+            MOZ_ASSERT(guard->ref().parentRegisterPromise.isSome());
+            MOZ_ASSERT(guard->ref().registerResult.isNothing());
+            MOZ_ASSERT(guard->ref().childRegisterRequest.Exists());
+
+            guard->ref().childRegisterRequest.Complete();
+
+            if (aValue.IsReject()) {
+              guard->ref().parentRegisterPromise.ref()->Reject(
+                  aValue.RejectValue());
+              guard->reset();
+              return;
+            }
+
+            nsIWebAuthnRegisterResult* result = aValue.ResolveValue();
+            // If the RP requested attestation, we need to show a consent prompt
+            // before returning any identifying information. The platform may
+            // have already done this for us, so we need to inspect the
+            // attestation object at this point.
+            bool resultIsIdentifying = true;
+            Unused << result->HasIdentifyingAttestation(&resultIsIdentifying);
+            if (attestationRequested && resultIsIdentifying) {
+              guard->ref().registerResult = Some(result);
+              self->ShowAttestationConsentPrompt(origin, aTransactionId,
+                                                 aBrowsingContextId);
+              return;
+            }
+            result->Anonymize();
+            guard->ref().parentRegisterPromise.ref()->Resolve(result);
+            guard->reset();
+          })
+      ->Track(guard->ref().childRegisterRequest);
+
+  nsresult rv = guard->ref().service->MakeCredential(
+      aTransactionId, aBrowsingContextId, aArgs, promiseHolder);
+  if (NS_FAILED(rv)) {
+    promiseHolder->Reject(NS_ERROR_DOM_NOT_ALLOWED_ERR);
   }
-  *guard = Some(TransactionState{DefaultService()});
-  return guard->ref().service->MakeCredential(aTransactionId, browsingContextId,
-                                              aArgs, aPromise);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 WebAuthnService::GetAssertion(uint64_t aTransactionId,
-                              uint64_t browsingContextId,
+                              uint64_t aBrowsingContextId,
                               nsIWebAuthnSignArgs* aArgs,
                               nsIWebAuthnSignPromise* aPromise) {
+  MOZ_ASSERT(aArgs);
+  MOZ_ASSERT(aPromise);
+
   auto guard = mTransactionState.Lock();
-  if (guard->isSome()) {
-    guard->ref().service->Reset();
-    *guard = Nothing();
-  }
-  *guard = Some(TransactionState{DefaultService()});
+  ResetLocked(guard);
+  *guard = Some(TransactionState{.service = DefaultService(),
+                                 .transactionId = aTransactionId});
   nsresult rv;
 
 #if defined(XP_MACOSX)
@@ -71,7 +180,7 @@ WebAuthnService::GetAssertion(uint64_t aTransactionId,
   }
 #endif
 
-  rv = guard->ref().service->GetAssertion(aTransactionId, browsingContextId,
+  rv = guard->ref().service->GetAssertion(aTransactionId, aBrowsingContextId,
                                           aArgs, aPromise);
   if (NS_FAILED(rv)) {
     return rv;
@@ -125,13 +234,22 @@ WebAuthnService::ResumeConditionalGet(uint64_t aTransactionId) {
   return SelectedService()->ResumeConditionalGet(aTransactionId);
 }
 
+void WebAuthnService::ResetLocked(
+    const TransactionStateMutex::AutoLock& aGuard) {
+  if (aGuard->isSome()) {
+    aGuard->ref().childRegisterRequest.DisconnectIfExists();
+    if (aGuard->ref().parentRegisterPromise.isSome()) {
+      aGuard->ref().parentRegisterPromise.ref()->Reject(NS_ERROR_DOM_ABORT_ERR);
+    }
+    aGuard->ref().service->Reset();
+  }
+  aGuard->reset();
+}
+
 NS_IMETHODIMP
 WebAuthnService::Reset() {
   auto guard = mTransactionState.Lock();
-  if (guard->isSome()) {
-    guard->ref().service->Reset();
-  }
-  *guard = Nothing();
+  ResetLocked(guard);
   return NS_OK;
 }
 
@@ -146,10 +264,27 @@ WebAuthnService::PinCallback(uint64_t aTransactionId, const nsACString& aPin) {
 }
 
 NS_IMETHODIMP
-WebAuthnService::ResumeMakeCredential(uint64_t aTransactionId,
-                                      bool aForceNoneAttestation) {
-  return SelectedService()->ResumeMakeCredential(aTransactionId,
-                                                 aForceNoneAttestation);
+WebAuthnService::SetHasAttestationConsent(uint64_t aTransactionId,
+                                          bool aHasConsent) {
+  auto guard = this->mTransactionState.Lock();
+  if (guard->isNothing() || guard->ref().transactionId != aTransactionId) {
+    // This could happen if the transaction was reset just when the prompt was
+    // receiving user input.
+    return NS_OK;
+  }
+
+  MOZ_ASSERT(guard->ref().parentRegisterPromise.isSome());
+  MOZ_ASSERT(guard->ref().registerResult.isSome());
+  MOZ_ASSERT(!guard->ref().childRegisterRequest.Exists());
+
+  if (!aHasConsent) {
+    guard->ref().registerResult.ref()->Anonymize();
+  }
+  guard->ref().parentRegisterPromise.ref()->Resolve(
+      guard->ref().registerResult.ref());
+
+  guard->reset();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
