@@ -91,8 +91,7 @@ class MediaEngineWebRTCMicrophoneSource : public MediaEngineSource {
   // Current state of the resource for this source.
   MediaEngineSourceState mState;
 
-  // The current preferences that will be forwarded to mAudioProcessingConfig
-  // below.
+  // The current preferences that will be forwarded to mInputProcessing below.
   MediaEnginePrefs mCurrentPrefs;
 
   // The AudioProcessingTrack used to inteface with the MediaTrackGraph. Set in
@@ -101,10 +100,6 @@ class MediaEngineWebRTCMicrophoneSource : public MediaEngineSource {
 
   // See note at the top of this class.
   RefPtr<AudioInputProcessing> mInputProcessing;
-
-  // Copy of the config currently applied to AudioProcessing through
-  // mInputProcessing.
-  webrtc::AudioProcessing::Config mAudioProcessingConfig;
 };
 
 // This class is created on the MediaManager thread, and then exclusively used
@@ -148,10 +143,11 @@ class AudioInputProcessing : public AudioDataListener {
   bool PassThrough(MediaTrackGraph* aGraph) const;
 
   // This allow changing the APM options, enabling or disabling processing
-  // steps. The config gets applied the next time we're about to process input
+  // steps. The settings get applied the next time we're about to process input
   // data.
-  void ApplyConfig(MediaTrackGraph* aGraph,
-                   const webrtc::AudioProcessing::Config& aConfig);
+  void ApplySettings(MediaTrackGraph* aGraph,
+                     CubebUtils::AudioDeviceID aDeviceID,
+                     const MediaEnginePrefs& aSettings);
 
   void End();
 
@@ -166,6 +162,8 @@ class AudioInputProcessing : public AudioDataListener {
 
  private:
   ~AudioInputProcessing() = default;
+  webrtc::AudioProcessing::Config ConfigForPrefs(
+      const MediaEnginePrefs& aPrefs);
   void EnsureAudioProcessing(MediaTrackGraph* aGraph, uint32_t aChannels);
   void ResetAudioProcessing(MediaTrackGraph* aGraph);
   PrincipalHandle GetCheckedPrincipal(const AudioSegment& aSegment);

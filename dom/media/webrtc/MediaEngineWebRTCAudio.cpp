@@ -146,22 +146,17 @@ nsresult MediaEngineWebRTCMicrophoneSource::Reconfigure(
   return NS_OK;
 }
 
-void MediaEngineWebRTCMicrophoneSource::ApplySettings(
+AudioProcessing::Config AudioInputProcessing::ConfigForPrefs(
     const MediaEnginePrefs& aPrefs) {
-  AssertIsOnOwningThread();
+  AudioProcessing::Config config;
 
-  TRACE("ApplySettings");
-  MOZ_ASSERT(
-      mTrack,
-      "ApplySetting is to be called only after SetTrack has been called");
+  config.pipeline.multi_channel_render = true;
+  config.pipeline.multi_channel_capture = true;
 
-  mAudioProcessingConfig.pipeline.multi_channel_render = true;
-  mAudioProcessingConfig.pipeline.multi_channel_capture = true;
+  config.echo_canceller.enabled = aPrefs.mAecOn;
+  config.echo_canceller.mobile_mode = aPrefs.mUseAecMobile;
 
-  mAudioProcessingConfig.echo_canceller.enabled = aPrefs.mAecOn;
-  mAudioProcessingConfig.echo_canceller.mobile_mode = aPrefs.mUseAecMobile;
-
-  if ((mAudioProcessingConfig.gain_controller1.enabled =
+  if ((config.gain_controller1.enabled =
            aPrefs.mAgcOn && !aPrefs.mAgc2Forced)) {
     auto mode = static_cast<AudioProcessing::Config::GainController1::Mode>(
         aPrefs.mAgc);
@@ -169,7 +164,7 @@ void MediaEngineWebRTCMicrophoneSource::ApplySettings(
         mode != AudioProcessing::Config::GainController1::kAdaptiveDigital &&
         mode != AudioProcessing::Config::GainController1::kFixedDigital) {
       LOG_ERROR("AudioInputProcessing %p Attempt to set invalid AGC mode %d",
-                mInputProcessing.get(), static_cast<int>(mode));
+                this, static_cast<int>(mode));
       mode = AudioProcessing::Config::GainController1::kAdaptiveDigital;
     }
 #if defined(WEBRTC_IOS) || defined(ATA) || defined(WEBRTC_ANDROID)
@@ -177,20 +172,20 @@ void MediaEngineWebRTCMicrophoneSource::ApplySettings(
       LOG_ERROR(
           "AudioInputProcessing %p Invalid AGC mode kAdaptiveAnalog on "
           "mobile",
-          mInputProcessing.get());
+          this);
       MOZ_ASSERT_UNREACHABLE(
           "Bad pref set in all.js or in about:config"
           " for the auto gain, on mobile.");
       mode = AudioProcessing::Config::GainController1::kFixedDigital;
     }
 #endif
-    mAudioProcessingConfig.gain_controller1.mode = mode;
+    config.gain_controller1.mode = mode;
   }
-  mAudioProcessingConfig.gain_controller2.enabled =
-      mAudioProcessingConfig.gain_controller2.adaptive_digital.enabled =
+  config.gain_controller2.enabled =
+      config.gain_controller2.adaptive_digital.enabled =
           aPrefs.mAgcOn && aPrefs.mAgc2Forced;
 
-  if ((mAudioProcessingConfig.noise_suppression.enabled = aPrefs.mNoiseOn)) {
+  if ((config.noise_suppression.enabled = aPrefs.mNoiseOn)) {
     auto level = static_cast<AudioProcessing::Config::NoiseSuppression::Level>(
         aPrefs.mNoise);
     if (level != AudioProcessing::Config::NoiseSuppression::kLow &&
@@ -200,49 +195,44 @@ void MediaEngineWebRTCMicrophoneSource::ApplySettings(
       LOG_ERROR(
           "AudioInputProcessing %p Attempt to set invalid noise suppression "
           "level %d",
-          mInputProcessing.get(), static_cast<int>(level));
+          this, static_cast<int>(level));
 
       level = AudioProcessing::Config::NoiseSuppression::kModerate;
     }
-    mAudioProcessingConfig.noise_suppression.level = level;
+    config.noise_suppression.level = level;
   }
 
-  mAudioProcessingConfig.transient_suppression.enabled = aPrefs.mTransientOn;
+  config.transient_suppression.enabled = aPrefs.mTransientOn;
 
-  mAudioProcessingConfig.high_pass_filter.enabled = aPrefs.mHPFOn;
+  config.high_pass_filter.enabled = aPrefs.mHPFOn;
+
+  return config;
+}
+
+void MediaEngineWebRTCMicrophoneSource::ApplySettings(
+    const MediaEnginePrefs& aPrefs) {
+  AssertIsOnOwningThread();
+
+  TRACE("ApplySettings");
+  MOZ_ASSERT(
+      mTrack,
+      "ApplySetting is to be called only after SetTrack has been called");
 
   RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
   CubebUtils::AudioDeviceID deviceID = mDeviceInfo->DeviceID();
   NS_DispatchToMainThread(NS_NewRunnableFunction(
-      __func__, [this, that, deviceID, track = mTrack, prefs = aPrefs,
-                 audioProcessingConfig = mAudioProcessingConfig] {
+      __func__, [this, that, deviceID, track = mTrack, prefs = aPrefs] {
         mSettings->mEchoCancellation.Value() = prefs.mAecOn;
         mSettings->mAutoGainControl.Value() = prefs.mAgcOn;
         mSettings->mNoiseSuppression.Value() = prefs.mNoiseOn;
         mSettings->mChannelCount.Value() = prefs.mChannels;
 
-        // The high-pass filter is not taken into account when activating the
-        // pass through, since it's not controllable from content.
-        bool passThrough = !(prefs.mAecOn || prefs.mAgcOn || prefs.mNoiseOn);
-
         if (track->IsDestroyed()) {
           return;
         }
         track->QueueControlMessageWithNoShutdown(
-            [track, deviceID, inputProcessing = mInputProcessing,
-             audioProcessingConfig, passThrough,
-             requestedInputChannelCount = prefs.mChannels] {
-              inputProcessing->ApplyConfig(track->Graph(),
-                                           audioProcessingConfig);
-              {
-                TRACE("SetRequestedInputChannelCount");
-                inputProcessing->SetRequestedInputChannelCount(
-                    track->Graph(), deviceID, requestedInputChannelCount);
-              }
-              {
-                TRACE("SetPassThrough");
-                inputProcessing->SetPassThrough(track->Graph(), passThrough);
-              }
+            [track, deviceID, prefs, inputProcessing = mInputProcessing] {
+              inputProcessing->ApplySettings(track->Graph(), deviceID, prefs);
             });
       }));
 }
@@ -978,10 +968,18 @@ void AudioInputProcessing::DeviceChanged(MediaTrackGraph* aGraph) {
       aGraph, aGraph->CurrentDriver(), this);
 }
 
-void AudioInputProcessing::ApplyConfig(MediaTrackGraph* aGraph,
-                                       const AudioProcessing::Config& aConfig) {
+void AudioInputProcessing::ApplySettings(MediaTrackGraph* aGraph,
+                                         CubebUtils::AudioDeviceID aDeviceID,
+                                         const MediaEnginePrefs& aSettings) {
+  TRACE("AudioInputProcessing::ApplySettings");
   aGraph->AssertOnGraphThread();
-  mAudioProcessing->ApplyConfig(aConfig);
+  mAudioProcessing->ApplyConfig(ConfigForPrefs(aSettings));
+  SetRequestedInputChannelCount(aGraph, aDeviceID, aSettings.mChannels);
+  // The high-pass filter is not taken into account when activating the
+  // pass through, since it's not controllable from content.
+  bool passThrough =
+      !(aSettings.mAecOn || aSettings.mAgcOn || aSettings.mNoiseOn);
+  SetPassThrough(aGraph, passThrough);
 }
 
 void AudioInputProcessing::End() {
