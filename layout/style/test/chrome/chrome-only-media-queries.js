@@ -31,4 +31,5 @@ const CHROME_ONLY_QUERIES = [
   "(-moz-gtk-theme-family: adwaita)",
   "(-moz-gtk-theme-family: breeze)",
   "(-moz-gtk-theme-family: yaru)",
+  "(forced-colors: requested)",
 ];
