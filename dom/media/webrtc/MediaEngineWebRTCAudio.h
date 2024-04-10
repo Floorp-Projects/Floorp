@@ -164,7 +164,7 @@ class AudioInputProcessing : public AudioDataListener {
   ~AudioInputProcessing() = default;
   webrtc::AudioProcessing::Config ConfigForPrefs(
       const MediaEnginePrefs& aPrefs);
-  void EnsureAudioProcessing(MediaTrackGraph* aGraph, uint32_t aChannels);
+  void EnsurePacketizer(MediaTrackGraph* aGraph, uint32_t aChannels);
   void ResetAudioProcessing(MediaTrackGraph* aGraph);
   PrincipalHandle GetCheckedPrincipal(const AudioSegment& aSegment);
   // This implements the processing algoritm to apply to the input (e.g. a
