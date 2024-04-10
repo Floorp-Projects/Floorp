@@ -221,6 +221,93 @@ class AddonManager(
     }
 
     /**
+     * Add the provided [permissions] and [origins] to [Addon].
+     *
+     * @param addon the [Addon] to add the provided [permissions] and [origins].
+     * @param permissions the permissions to added, pass an empty array for opt-out.
+     * @param origins the origins to added, pass an empty array for opt-out.
+     * @param onSuccess (optional) callback invoked with the added permissions and origins.
+     * @param onError (optional) callback invoked if there was an error adding.
+     */
+    fun addOptionalPermission(
+        addon: Addon,
+        permissions: List<String> = emptyList(),
+        origins: List<String> = emptyList(),
+        onSuccess: ((Addon) -> Unit) = { },
+        onError: ((Throwable) -> Unit) = { },
+    ) {
+        if (permissions.isEmpty() && origins.isEmpty()) {
+            onError(IllegalStateException("Either permissions or origins must not be empty"))
+            return
+        }
+        val extension = addon.installedState?.let { installedExtensions[it.id] }
+        if (extension == null) {
+            onError(IllegalStateException("Addon is not installed"))
+            return
+        }
+
+        val pendingAction = addPendingAddonAction()
+        runtime.addOptionalPermissions(
+            extension.id,
+            permissions = permissions,
+            origins = origins,
+            onSuccess = { ext ->
+                val enabledAddon = addon.copy(installedState = toInstalledState(ext))
+                completePendingAddonAction(pendingAction)
+                onSuccess(enabledAddon)
+            },
+            onError = {
+                completePendingAddonAction(pendingAction)
+                onError(it)
+            },
+        )
+    }
+
+    /**
+     * Remove the provided [permissions] and [origins] from [Addon].
+     *
+     * @param addon the [Addon] to remove the provided [permissions] and [origins].
+     * @param permissions the permissions to be removed, pass an empty array for opt-out.
+     * @param origins the origins to be removed, pass an empty array for opt-out.
+     * @param onSuccess (optional) callback invoked with the removed permissions and origins.
+     * @param onError (optional) callback invoked if there was an error removed.
+     */
+    fun removeOptionalPermission(
+        addon: Addon,
+        permissions: List<String> = emptyList(),
+        origins: List<String> = emptyList(),
+        onSuccess: ((Addon) -> Unit) = { },
+        onError: ((Throwable) -> Unit) = { },
+    ) {
+        if (permissions.isEmpty() && origins.isEmpty()) {
+            onError(IllegalStateException("Either permissions or origins must not be empty"))
+            return
+        }
+
+        val extension = addon.installedState?.let { installedExtensions[it.id] }
+        if (extension == null) {
+            onError(IllegalStateException("Addon is not installed"))
+            return
+        }
+
+        val pendingAction = addPendingAddonAction()
+        runtime.removeOptionalPermissions(
+            extension.id,
+            permissions = permissions,
+            origins = origins,
+            onSuccess = { ext ->
+                val enabledAddon = addon.copy(installedState = toInstalledState(ext))
+                completePendingAddonAction(pendingAction)
+                onSuccess(enabledAddon)
+            },
+            onError = {
+                completePendingAddonAction(pendingAction)
+                onError(it)
+            },
+        )
+    }
+
+    /**
      * Disables the provided [Addon].
      *
      * @param addon the [Addon] to disable.

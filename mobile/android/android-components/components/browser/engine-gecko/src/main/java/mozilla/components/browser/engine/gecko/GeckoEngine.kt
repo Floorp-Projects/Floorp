@@ -489,6 +489,70 @@ class GeckoEngine(
     }
 
     /**
+     * See [Engine.addOptionalPermissions].
+     */
+    override fun addOptionalPermissions(
+        extensionId: String,
+        permissions: List<String>,
+        origins: List<String>,
+        onSuccess: (WebExtension) -> Unit,
+        onError: (Throwable) -> Unit,
+    ) {
+        if (permissions.isEmpty() && origins.isEmpty()) {
+            onError(IllegalStateException("Either permissions or origins must not be empty"))
+            return
+        }
+
+        runtime.webExtensionController.addOptionalPermissions(
+            extensionId,
+            permissions.toTypedArray(),
+            origins.toTypedArray(),
+        ).then(
+            {
+                val enabledExtension = GeckoWebExtension(it!!, runtime)
+                onSuccess(enabledExtension)
+                GeckoResult<Void>()
+            },
+            { throwable ->
+                onError(throwable)
+                GeckoResult<Void>()
+            },
+        )
+    }
+
+    /**
+     * See [Engine.removeOptionalPermissions].
+     */
+    override fun removeOptionalPermissions(
+        extensionId: String,
+        permissions: List<String>,
+        origins: List<String>,
+        onSuccess: (WebExtension) -> Unit,
+        onError: (Throwable) -> Unit,
+    ) {
+        if (permissions.isEmpty() && origins.isEmpty()) {
+            onError(IllegalStateException("Either permissions or origins must not be empty"))
+            return
+        }
+
+        runtime.webExtensionController.removeOptionalPermissions(
+            extensionId,
+            permissions.toTypedArray(),
+            origins.toTypedArray(),
+        ).then(
+            {
+                val enabledExtension = GeckoWebExtension(it!!, runtime)
+                onSuccess(enabledExtension)
+                GeckoResult<Void>()
+            },
+            { throwable ->
+                onError(throwable)
+                GeckoResult<Void>()
+            },
+        )
+    }
+
+    /**
      * See [Engine.disableWebExtension].
      */
     override fun disableWebExtension(

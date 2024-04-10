@@ -59,6 +59,7 @@ import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyFloat
 import org.mockito.ArgumentMatchers.anyInt
+import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
@@ -930,6 +931,126 @@ class GeckoEngineTest {
         assertEquals(extId, extIdCaptor.value)
         assertTrue(onSuccessCalled)
         assertFalse(onErrorCalled)
+    }
+
+    @Test
+    fun `add optional permissions to a web extension successfully`() {
+        val runtime = mock<GeckoRuntime>()
+        val extId = "test-webext"
+        val extUrl = "resource://android/assets/extensions/test"
+        val permissions = listOf("permission1")
+        val origin = listOf("origin")
+
+        val extensionController: WebExtensionController = mock()
+        whenever(runtime.webExtensionController).thenReturn(extensionController)
+
+        val engine = GeckoEngine(context, runtime = runtime)
+        var onSuccessCalled = false
+        var onErrorCalled = false
+        val result = GeckoResult<GeckoWebExtension>()
+
+        whenever(
+            extensionController.addOptionalPermissions(
+                extId,
+                permissions.toTypedArray(),
+                origin.toTypedArray(),
+            ),
+        ).thenReturn(
+            result,
+        )
+        engine.addOptionalPermissions(
+            extId,
+            permissions,
+            origin,
+            onSuccess = { onSuccessCalled = true },
+            onError = { _ -> onErrorCalled = true },
+        )
+        result.complete(mockNativeWebExtension(extId, extUrl))
+
+        shadowOf(getMainLooper()).idle()
+
+        verify(extensionController).addOptionalPermissions(anyString(), any(), any())
+        assertTrue(onSuccessCalled)
+        assertFalse(onErrorCalled)
+    }
+
+    @Test
+    fun `addOptionalPermissions with empty permissions and origins with `() {
+        val runtime = mock<GeckoRuntime>()
+        val extId = "test-webext"
+        val engine = GeckoEngine(context, runtime = runtime)
+        var onErrorCalled = false
+
+        engine.addOptionalPermissions(
+            extId,
+            emptyList(),
+            emptyList(),
+            onError = { _ -> onErrorCalled = true },
+        )
+
+        shadowOf(getMainLooper()).idle()
+
+        assertTrue(onErrorCalled)
+    }
+
+    @Test
+    fun `remove optional permissions to a web extension successfully`() {
+        val runtime = mock<GeckoRuntime>()
+        val extId = "test-webext"
+        val extUrl = "resource://android/assets/extensions/test"
+        val permissions = listOf("permission1")
+        val origin = listOf("origin")
+
+        val extensionController: WebExtensionController = mock()
+        whenever(runtime.webExtensionController).thenReturn(extensionController)
+
+        val engine = GeckoEngine(context, runtime = runtime)
+        var onSuccessCalled = false
+        var onErrorCalled = false
+        val result = GeckoResult<GeckoWebExtension>()
+
+        whenever(
+            extensionController.removeOptionalPermissions(
+                extId,
+                permissions.toTypedArray(),
+                origin.toTypedArray(),
+            ),
+        ).thenReturn(
+            result,
+        )
+        engine.removeOptionalPermissions(
+            extId,
+            permissions,
+            origin,
+            onSuccess = { onSuccessCalled = true },
+            onError = { _ -> onErrorCalled = true },
+        )
+        result.complete(mockNativeWebExtension(extId, extUrl))
+
+        shadowOf(getMainLooper()).idle()
+
+        verify(extensionController).removeOptionalPermissions(anyString(), any(), any())
+        assertTrue(onSuccessCalled)
+        assertFalse(onErrorCalled)
+    }
+
+    @Test
+    fun `removeOptionalPermissions with empty permissions and origins with `() {
+        val runtime = mock<GeckoRuntime>()
+        val extId = "test-webext"
+        val engine = GeckoEngine(context, runtime = runtime)
+        var onErrorCalled = false
+
+        engine.removeOptionalPermissions(
+            extId,
+            emptyList(),
+            emptyList(),
+            onError = { _ -> onErrorCalled = true },
+        )
+
+        shadowOf(getMainLooper()).idle()
+
+        assertTrue(onErrorCalled)
     }
 
     @Test
