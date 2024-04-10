@@ -139,6 +139,10 @@ class nsCSPParser {
   void logWarningErrorToConsole(uint32_t aSeverityFlag, const char* aProperty,
                                 const nsTArray<nsString>& aParams);
 
+  void MaybeWarnAboutIgnoredSources(const nsTArray<nsCSPBaseSrc*>& aSrcs);
+  void MaybeWarnAboutUnsafeInline(const nsCSPDirective& aDirective);
+  void MaybeWarnAboutUnsafeEval(const nsCSPDirective& aDirective);
+
   /**
    * When parsing the policy, the parser internally uses the following helper
    * variables/members which are used/reset during parsing. The following
