@@ -376,7 +376,7 @@ MARKUPMAP(
 MARKUPMAP(time, New_HyperText, roles::TIME, Attr(xmlroles, time),
           AttrFromDOM(datetime, datetime))
 
-MARKUPMAP(tbody, nullptr, roles::GROUPING)
+MARKUPMAP(tbody, nullptr, roles::ROWGROUP)
 
 MARKUPMAP(
     td,
@@ -392,7 +392,7 @@ MARKUPMAP(
     },
     0)
 
-MARKUPMAP(tfoot, nullptr, roles::GROUPING)
+MARKUPMAP(tfoot, nullptr, roles::ROWGROUP)
 
 MARKUPMAP(
     th,
@@ -404,7 +404,7 @@ MARKUPMAP(
     },
     0)
 
-MARKUPMAP(thead, nullptr, roles::GROUPING)
+MARKUPMAP(thead, nullptr, roles::ROWGROUP)
 
 MARKUPMAP(
     tr,
