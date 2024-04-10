@@ -29,13 +29,13 @@
     <!-- Description for unlimited_storage permission. -->
     <string name="mozac_feature_addons_permissions_unlimited_storage_description">Պահել անսահմանափակ քանակությամբ սպասառուի տվյալներ</string>
     <!-- Description for navigation permission. -->
-    <string name="mozac_feature_addons_permissions_web_navigation_description">Մուտք գործել զննարկչի գործունեությունը նավիգացիայի ընթացքում</string>
+    <string name="mozac_feature_addons_permissions_web_navigation_description">Մուտք գործել դիտարկիչի գործունեությունը նավիգացիայի ընթացքում</string>
     <!-- Description for bookmarks permission. -->
     <string name="mozac_feature_addons_permissions_bookmarks_description">Կարդացեք և փոփոխեք էջանիշերը</string>
     <!-- Description for browser_setting permission. -->
-    <string name="mozac_feature_addons_permissions_browser_setting_description">Կարդացեք և փոփոխեք զննարկչի կարգավորումները</string>
+    <string name="mozac_feature_addons_permissions_browser_setting_description">Կարդացեք և փոփոխեք դիտարկիչի կարգավորումները</string>
     <!-- Description for browser_data permission. -->
-    <string name="mozac_feature_addons_permissions_browser_data_description">Մաքրել վերջին դիտարկումները, cookie-ները և նման տվյալներ</string>
+    <string name="mozac_feature_addons_permissions_browser_data_description">Մաքրել վերջին դիտարկումները, թխուկները և նման տվյալներ</string>
     <!-- Description for clipboard_read permission. -->
     <string name="mozac_feature_addons_permissions_clipboard_read_description">Ստանալ տվյալը սեղմատախտակից</string>
     <!-- Description for clipboard_write permission. -->
@@ -83,7 +83,7 @@
     <!-- The developer website (Homepage) of the add-on. -->
     <string name="mozac_feature_addons_home_page">Տնային էջ</string>
     <!-- A link where users can find more information about add-ons permissions. -->
-    <string name="mozac_feature_addons_learn_more">Իմացեք ավելին թույլտվությունների մասին</string>
+    <string name="mozac_feature_addons_learn_more">Իմանալ ավելին թույլտվությունների մասին</string>
     <!-- The rating of the add-on. -->
     <string name="mozac_feature_addons_rating">Վարկանիշ</string>
     <!-- A link that points to the detail page of the add-on. -->
@@ -97,19 +97,19 @@
     <!-- Indicates the add-on is disabled. -->
     <string name="mozac_feature_addons_settings_off" moz:removedIn="125" tools:ignore="UnusedResources">Անջ.</string>
     <!-- Indicates the add-on is allowed in private browsing mode. -->
-    <string name="mozac_feature_addons_settings_allow_in_private_browsing">Թույլատրել Գաղտնի դիտարկմամբ</string>
+    <string name="mozac_feature_addons_settings_allow_in_private_browsing">Թույլատրել Մասնավոր դիտարկմամբ</string>
     <!-- Indicates the add-on is allowed in private browsing mode. -->
-    <string name="mozac_feature_addons_settings_run_in_private_browsing">Աշխատեցնել Գաղտնի դիտարկմամբ</string>
+    <string name="mozac_feature_addons_settings_run_in_private_browsing">Աշխատեցնել Մասնավոր դիտարկմամբ</string>
     <!-- This is displayed when the add-on is not allowed to run in private browsing. -->
-    <string name="mozac_feature_addons_not_allowed_in_private_browsing">Թույլատրված չէ գաղտնի պատուհանում</string>
+    <string name="mozac_feature_addons_not_allowed_in_private_browsing">Թույլատրված չէ մասնավոր պատուհանում</string>
     <!-- Indicates the add-on is enabled. -->
-    <string name="mozac_feature_addons_enabled">Միացված է</string>
+    <string name="mozac_feature_addons_enabled">Միացված</string>
     <!-- Indicates the add-on is disabled. -->
-    <string name="mozac_feature_addons_disabled" moz:removedIn="125" tools:ignore="UnusedResources">Անջատված է</string>
+    <string name="mozac_feature_addons_disabled" moz:removedIn="125" tools:ignore="UnusedResources">Անջատված</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the installed section. -->
     <string name="mozac_feature_addons_installed_section">Տեղադրված</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the recommended section. -->
-    <string name="mozac_feature_addons_recommended_section">Երաշխավորվում է</string>
+    <string name="mozac_feature_addons_recommended_section">Խորհուրդ տրված</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the not yet supported section. -->
     <string name="mozac_feature_addons_unsupported_section">Դեռ չի աջակցվում</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the not yet available section. -->
@@ -141,7 +141,7 @@
     <!-- This is a button to cancel the add-on installation . -->
     <string name="mozac_feature_addons_permissions_dialog_cancel">Չեղարկել</string>
     <!-- Accessibility content description to install add-on button. -->
-    <string name="mozac_feature_addons_install_addon_content_description" tools:ignore="UnusedResources" moz:removedIn="124">Տեղադրել հավելումներ</string>
+    <string name="mozac_feature_addons_install_addon_content_description" tools:ignore="UnusedResources" moz:removedIn="124">Տեղադրել հավելումը</string>
     <!-- Accessibility content description to install add-on button. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_install_addon_content_description_2">Տեղադրել %1$s-ը</string>
     <!-- This is the label of a button to cancel an ongoing add-on installation. -->
@@ -161,11 +161,11 @@
     <!-- The title of the "crash" notification in the extensions manager -->
     <string name="mozac_feature_extensions_manager_notification_title_text">Ընդլայնումները ժամանակավորապես անջատված են</string>
     <!-- The content of the "crash" notification in the add-ons manager -->
-    <string name="mozac_feature_addons_manager_notification_content_text" moz:removedIn="126" tools:ignore="UnusedResources">Մեկ կամ մի քանի հավելումներ դադարել են աշխատել՝ դարձնելով ձեր համակարգը անկայուն:</string>
+    <string name="mozac_feature_addons_manager_notification_content_text" moz:removedIn="126" tools:ignore="UnusedResources">Մեկ կամ ավելի հավելումներ դադարեցին աշխատել՝ դարձնելով Ձեր համակարգն անկայուն:</string>
     <!-- The content of the "crash" notification in the extensions manager -->
     <string name="mozac_feature_extensions_manager_notification_content_text">Մեկ կամ ավելի ընդլայնումներ դադարեցին աշխատել՝ դարձնելով Ձեր համակարգն անկայուն:</string>
     <!-- Button to re-enable the add-ons in the "crash" notification -->
-    <string name="mozac_feature_addons_manager_notification_restart_button" moz:removedIn="126" tools:ignore="UnusedResources">Վերագործարկել հավելումները</string>
+    <string name="mozac_feature_addons_manager_notification_restart_button" moz:removedIn="126" tools:ignore="UnusedResources">Վերամեկնարկել հավելումները</string>
     <!-- Button to re-enable the extensions in the "crash" notification -->
     <string name="mozac_feature_extensions_manager_notification_restart_button">Վերամեկնարկել ընդլայնումները</string>
     <!-- Button in the add-ons manager that opens AMO in a tab -->
@@ -203,7 +203,7 @@
     <!-- This is the caption for not yet supported screen caption -->
     <string name="mozac_feature_addons_not_yet_supported_caption2">Ներկայումս մենք կառուցում ենք աջակցություն՝ առաջարկվող ընդլայնումների նախնական ընտրության համար:</string>
     <!-- This is the caption for the add-on installation progress overlay -->
-    <string name="mozac_add_on_install_progress_caption" moz:removedIn="126" tools:ignore="UnusedResources">Ներբեռնում և տեղադրում է հավելումը…</string>
+    <string name="mozac_add_on_install_progress_caption" moz:removedIn="126" tools:ignore="UnusedResources">Ներբեռնում և ստուգում է հավելումը…</string>
     <!-- This is the caption for the extension installation progress overlay -->
     <string name="mozac_extension_install_progress_caption">Ընդլայնման ներբեռնում և ստուգում…</string>
     <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->
@@ -217,11 +217,11 @@
     <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_install">Չհաջողվեց տեղադրել %1$s-ը</string>
     <!-- Text shown after failing to install an add-on for which we don't have its name. -->
-    <string name="mozac_feature_addons_failed_to_install_generic" moz:removedIn="126" tools:ignore="UnusedResources">Չհաջողվեց տեղադրել այս հավելումը</string>
+    <string name="mozac_feature_addons_failed_to_install_generic" moz:removedIn="126" tools:ignore="UnusedResources">Չհաջողվեց տեղադրել այս հավելումը:</string>
     <!-- Text shown after failing to install an extension for which we don't have its name. -->
     <string name="mozac_feature_addons_extension_failed_to_install">Չհաջողվեց տեղադրել այս ընդլայնումը:</string>
     <!-- Text shown when attempting to install an add-on and a network error happened. -->
-    <string name="mozac_feature_addons_failed_to_install_network_error" moz:removedIn="126" tools:ignore="UnusedResources">Հավելումը չի կարող ներբեռնվել, քանի որ տեղի է ունեցել կապի խափանում:</string>
+    <string name="mozac_feature_addons_failed_to_install_network_error" moz:removedIn="126" tools:ignore="UnusedResources">Հավելումը հնարավոր չէ ներբեռնել կապի խափանման պատճառով:</string>
     <!-- Text shown when attempting to install an extension and a network error happened. -->
     <string name="mozac_feature_addons_extension_failed_to_install_network_error">Ընդլայնումը հնարավոր չէ ներբեռնել կապի խափանման պատճառով:</string>
     <!-- Text shown when attempting to install an add-on and the downloaded file is corrupted. -->
@@ -271,7 +271,7 @@
     <!-- Displayed in the "Status" field for the updater when there was an error during the add-on update. -->
     <string name="mozac_feature_addons_updater_status_error">Սխալ</string>
     <!-- Text shown in a dialog that displays information about the last attempt to update an add-on. This is the title of the dialog. -->
-    <string name="mozac_feature_addons_updater_dialog_title">Թարմացման տեղեկություն</string>
+    <string name="mozac_feature_addons_updater_dialog_title">Թարմացիչի տեղեկություն</string>
     <!-- Label in the dialog displaying information for the last attempt to update add-ons. It's followed by the date of the last attempt. -->
     <string name="mozac_feature_addons_updater_dialog_last_attempt">Վերջին փորձը.</string>
     <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated -->
@@ -279,11 +279,11 @@
     <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. %2$s is the app name. -->
     <string name="mozac_feature_addons_installed_dialog_title">%1$s-ը ավելացվել է %2$s-ում</string>
     <!-- Text shown in the dialog when add-on installation is completed. -->
-    <string name="mozac_feature_addons_installed_dialog_description" moz:removedIn="124" tools:ignore="UnusedResources">Բացեք այն ցանկում</string>
+    <string name="mozac_feature_addons_installed_dialog_description" moz:removedIn="124" tools:ignore="UnusedResources">Բացել այն ցանկում</string>
     <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. %2$s is the app name. -->
     <string name="mozac_feature_addons_installed_dialog_description_2">Մատչում %1$s-ին %2$s-ի ցանկից։</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->
-    <string name="mozac_feature_addons_installed_dialog_okay_button" moz:removedIn="124" tools:ignore="UnusedResources">Հասկանալի է:</string>
+    <string name="mozac_feature_addons_installed_dialog_okay_button" moz:removedIn="124" tools:ignore="UnusedResources">Հասկանալի է</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->
     <string name="mozac_feature_addons_installed_dialog_okay_button_2">Լավ</string>
     <!-- "Learn more" link displayed below an add-on status message. -->

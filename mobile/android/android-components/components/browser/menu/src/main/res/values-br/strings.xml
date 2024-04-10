@@ -5,9 +5,11 @@
     <!-- Content description (not visible, for screen readers etc.): Indicates the overflow menu has a highlight -->
     <string name="mozac_browser_menu_highlighted">Usskedet</string>
     <!-- Label for add-ons submenu section -->
-    <string name="mozac_browser_menu_addons">Askouezhioù</string>
+    <string name="mozac_browser_menu_addons" moz:removedIn="126" tools:ignore="UnusedResources">Askouezhioù</string>
+    <!-- Label for extensions submenu section -->
+    <string name="mozac_browser_menu_extensions">Askouezhioù</string>
     <!-- Label for add-ons sub menu item for add-ons manager -->
-    <string name="mozac_browser_menu_addons_manager">Ardoer an askouezhioù</string>
+    <string name="mozac_browser_menu_addons_manager" moz:removedIn="126" tools:ignore="UnusedResources">Ardoer an askouezhioù</string>
     <!-- Content description for the action bar "up" button -->
     <string name="action_bar_up_description">Adpignat</string>
     </resources>

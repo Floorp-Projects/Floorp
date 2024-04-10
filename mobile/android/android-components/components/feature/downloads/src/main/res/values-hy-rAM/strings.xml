@@ -48,9 +48,9 @@
     <!-- Alert dialog confirmation before cancelling downloads, this is the title   -->
     <string name="mozac_feature_downloads_cancel_active_downloads_warning_content_title">Չեղարկե՞լ  անձնական ներբեռնումները:</string>
     <!-- Alert dialog confirmation before cancelling private downloads, this is the body. %1$s will be replaced with the name of the file. -->
-    <string name="mozac_feature_downloads_cancel_active_private_downloads_warning_content_body">Եթե հիմա փակեք բոլոր Գաղտնի ներդիրենրը, %1$s ներբեռնում կչեղարկվի: Փակե՞լ:</string>
+    <string name="mozac_feature_downloads_cancel_active_private_downloads_warning_content_body">Եթե հիմա փակեք բոլոր Մասնավոր ներդիրները, %1$s ներբեռնում կչեղարկվի: Փակե՞լ:</string>
     <!-- Alert dialog confirmation before cancelling downloads, this is the positive action. -->
     <string name="mozac_feature_downloads_cancel_active_downloads_accept">Չեղարկել ներբեռնումները</string>
     <!-- Alert dialog confirmation before cancelling downloads, this is the negative action. Leaves user in Private browsing -->
-    <string name="mozac_feature_downloads_cancel_active_private_downloads_deny">Շարունակել Գաղտնի դիտարկումը</string>
+    <string name="mozac_feature_downloads_cancel_active_private_downloads_deny">Շարունակել Մասնավոր դիտարկումը</string>
 </resources>

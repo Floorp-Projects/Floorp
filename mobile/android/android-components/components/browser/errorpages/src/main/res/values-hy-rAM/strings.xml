@@ -62,14 +62,14 @@
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">Կապը խզվեց</string>
     <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
-    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[<p> Զննարկիչը հաջողությամբ կապակցվեց, բայց տեղեկատվությունը փոխանցելիս կապն ընդհատվեց: Խնդրում ենք կրկին փորձել: </p>
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[<p> Դիտարկիչը հաջողությամբ կապակցվեց, բայց տեղեկատվությունը փոխանցելիս կապն ընդհատվեց: Խնդրում ենք կրկին փորձել: </p>
       <ul>
         <li> Կայքը կարող է ժամանակավորապես անհասանելի կամ շատ զբաղված լինել: Կրկին փորձեք մի քանի րոպեից: </li>
         <li> Եթե չեք կարողանում բեռնել որևէ էջ, ստուգեք ձեր սարքի տվյալները կամ Wi-Fi կապը: </li>
       </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website takes too long to load. -->
-    <string name="mozac_browser_errorpages_net_timeout_title">Կապի հաստատման ժամանակը սպառվեց</string>
+    <string name="mozac_browser_errorpages_net_timeout_title">Կապը ժամանակասպառվեց</string>
 
     <!-- The error message shown when a website took long to load. -->
     <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>Հարցվող կայքը չպատասխանեց կապի հարցմանը և ծրագիրը դադարեցրեց պատասխան սպասելուն</p>
@@ -81,7 +81,7 @@
       </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
-    <string name="mozac_browser_errorpages_connection_failure_title">Հնարավոր չէ կապակցվել</string>
+    <string name="mozac_browser_errorpages_connection_failure_title">Հնարավոր չէ միանալ</string>
 
     <!-- The error message shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[<ul>
@@ -212,13 +212,13 @@
       </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
-    <string name="mozac_browser_errorpages_file_access_denied_title">Մատչումը ֆայլին մերժված է</string>
+    <string name="mozac_browser_errorpages_file_access_denied_title">Հասանելիությունը ֆայլին մերժվեց</string>
     <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[<ul>
         <li>Հնարավոր է՝ այն հեռացվել է, տեղափոխվել կամ ֆայլի թույլտվությունները կանխել են մատչումը:</li>
       </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
-    <string name="mozac_browser_errorpages_proxy_connection_refused_title">Միջանկյալ սպասարկիչը մերժեց կապը</string>
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">Փոխանորդ սպասարկիչը մերժեց կապը</string>
 
     <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[<p>Դիտարկիչը կազմաձևված է օգտագործելու վստահված պրոքսի սպասարկիչ, բայց պրոքսին մերժել է կապակցումը:</p>
       <ul>
@@ -228,7 +228,7 @@
       </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
-    <string name="mozac_browser_errorpages_unknown_proxy_host_title">Պրոքսի սպասարկիչը չի գտնվել</string>
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">Փոխանորդ սպասարկիչը չգտնվեց</string>
 
     <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[<p>Դիտարկիչը կազմաձևված է օգտագործելու վստահված պրոքսի սպասարկիչ, բայց պրոքսին մերժել է կապակցումը:</p>
       <ul>

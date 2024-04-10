@@ -37,5 +37,5 @@
     <string name="mozac_lib_crash_no_crashes">Վթարային ոչ մի հաղորդագրություն չի ուղարկվել:</string>
 
     <!-- Text link that will show an app chooser to share a crash report with a third-party app (e.g. gmail) -->
-    <string name="mozac_lib_crash_share">Համօգտագործել</string>
+    <string name="mozac_lib_crash_share">Տարածել</string>
 </resources>

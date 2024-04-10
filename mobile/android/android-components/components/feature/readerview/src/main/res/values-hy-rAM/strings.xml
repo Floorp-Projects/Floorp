@@ -24,7 +24,7 @@
     <!-- Accessible description for the color option -->
     <string name="mozac_feature_readerview_sepia_color_scheme_desc">Դարչնագույն գույնի ուրվակազմ</string>
     <!-- Color option for the background -->
-    <string name="mozac_feature_readerview_light">Բաց</string>
+    <string name="mozac_feature_readerview_light">Լուսավոր</string>
     <!-- Accessible description for the color option -->
     <string name="mozac_feature_readerview_light_color_scheme_desc">Բաց գույնի ուրվակազմ</string>
 </resources>
