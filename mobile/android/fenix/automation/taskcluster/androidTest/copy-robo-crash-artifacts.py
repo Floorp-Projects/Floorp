@@ -210,8 +210,12 @@ def parse_crash_log(log_path):
             # java.lang.IllegalStateException: pending state not allowed
             #     at org.mozilla.fenix.onboarding.OnboardingFragment.onCreate(OnboardingFragment.kt:83)
             #     at androidx.fragment.app.Fragment.performCreate(Fragment.java:3094) ...
+            # Example:
+            # java.lang.IllegalArgumentException: No handler given, and current thread has no looper!
+            #     at android.hardware.camera2.impl.CameraDeviceImpl.checkHandler(CameraDeviceImpl.java:2380)
+            #     at android.hardware.camera2.impl.CameraDeviceImpl.checkHandler(CameraDeviceImpl.java:2395)
             match = re.search(
-                r"\n([\w\.]+[:\s\w\.\'\"]+)\s*(at\s.*\n)", contents, re.MULTILINE
+                r"\n([\w\.]+[:\s\w\.,!?#^\'\"]+)\s*(at\s.*\n)", contents, re.MULTILINE
             )
             if match and len(match.groups()) == 2:
                 top_frame = match.group(1).rstrip() + " " + match.group(2)
