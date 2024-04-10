@@ -4647,9 +4647,16 @@ bool nsWindow::DoTitlebarAction(LookAndFeel::TitlebarEvent aEvent,
       LOG("  action menu");
       TryToShowNativeWindowMenu(aButtonEvent);
       break;
-    // Lower is part of gtk_surface1 protocol which we can't support
-    // as Gtk keeps it private. So emulate it by minimize.
     case LookAndFeel::TitlebarAction::WindowLower:
+      LOG("  action lower");
+      // Lower is part of gtk_surface1 protocol which we can't support
+      // as Gtk keeps it private. So emulate it by minimize.
+      if (GdkIsWaylandDisplay()) {
+        SetSizeMode(nsSizeMode_Minimized);
+      } else {
+        gdk_window_lower(GetToplevelGdkWindow());
+      }
+      break;
     case LookAndFeel::TitlebarAction::WindowMinimize:
       LOG("  action minimize");
       SetSizeMode(nsSizeMode_Minimized);
