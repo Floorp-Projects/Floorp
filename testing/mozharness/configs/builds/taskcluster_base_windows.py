@@ -42,5 +42,11 @@ config = {
             "min_scm_level": 2,
             "default": "try-build-has-no-secrets",
         },
+        {
+            "filename": "windows-laf-tokens.data",
+            "secret_name": "project/releng/gecko/build/windows-laf-tokens.data",
+            "min_scm_level": 1,
+            "default": "no-product-name no-token-key",
+        },
     ],
 }
