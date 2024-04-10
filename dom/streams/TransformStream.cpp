@@ -20,14 +20,6 @@
 #include "mozilla/dom/TransformerBinding.h"
 #include "nsWrapperCache.h"
 
-// XXX: GCC somehow does not allow attributes before lambda return types, while
-// clang requires so. See also bug 1627007.
-#ifdef __clang__
-#  define MOZ_CAN_RUN_SCRIPT_BOUNDARY_LAMBDA MOZ_CAN_RUN_SCRIPT_BOUNDARY
-#else
-#  define MOZ_CAN_RUN_SCRIPT_BOUNDARY_LAMBDA
-#endif
-
 namespace mozilla::dom {
 
 using namespace streams_abstract;
