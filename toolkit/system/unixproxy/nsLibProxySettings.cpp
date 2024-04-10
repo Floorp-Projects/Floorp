@@ -99,6 +99,12 @@ nsresult nsUnixSystemProxySettings::GetProxyForURI(const nsACString& aSpec,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsUnixSystemProxySettings::GetSystemWPADSetting(bool* aSystemWPADSetting) {
+  *aSystemWPADSetting = false;
+  return NS_OK;
+}
+
 NS_IMPL_COMPONENT_FACTORY(nsUnixSystemProxySettings) {
   return do_AddRef(new nsUnixSystemProxySettings()).downcast<nsISupports>();
 }
