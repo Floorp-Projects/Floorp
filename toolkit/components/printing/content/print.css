@@ -125,7 +125,7 @@ input:is([type="number"], [type="text"]) {
   padding-inline-start: var(--space-small);
 }
 
-input[type="number"].photon-number {
+input[type="number"] {
   box-sizing: content-box;
   min-height: unset;
   padding: 0;
@@ -133,42 +133,6 @@ input[type="number"].photon-number {
   margin: 0;
   height: 1.5em;
   width: 4em;
-
-  &::-moz-number-spin-box {
-    height: 100%;
-    max-height: 100%;
-    border-inline-start: 1px solid var(--in-content-box-border-color);
-    width: 1em;
-    border-start-end-radius: var(--border-radius-small);
-    border-end-end-radius: var(--border-radius-small);
-  }
-
-  &:hover::-moz-number-spin-box {
-    border-color: var(--in-content-border-hover);
-  }
-
-  &::-moz-number-spin-up,
-  &::-moz-number-spin-down {
-    appearance: none;
-    border: 0;
-    border-radius: 0;
-    background-color: var(--in-content-button-background);
-    background-image: url("chrome://global/skin/icons/arrow-down.svg");
-    background-repeat: no-repeat;
-    background-size: 8px;
-    background-position: center;
-    -moz-context-properties: fill;
-    fill: currentColor;
-
-    &:hover {
-      background-color: var(--in-content-button-background-hover);
-      color: var(--in-content-button-text-color-hover);
-    }
-  }
-
-  &::-moz-number-spin-up {
-    background-image: url("chrome://global/skin/icons/arrow-up.svg");
-  }
 }
 
 input:is([type="checkbox"], [type="radio"]):disabled + label,
