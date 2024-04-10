@@ -557,8 +557,7 @@ class TestDeviceInputConsumerTrack : public DeviceInputConsumerTrack {
     } else {
       MOZ_ASSERT(mInputs.Length() == 1);
       AudioSegment data;
-      DeviceInputConsumerTrack::GetInputSourceData(data, mInputs[0], aFrom,
-                                                   aTo);
+      DeviceInputConsumerTrack::GetInputSourceData(data, aFrom, aTo);
       GetData<AudioSegment>()->AppendFrom(&data);
     }
   };
