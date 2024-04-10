@@ -23,7 +23,6 @@
         --urlbar-box-bgcolor: #fafafa;
       }
       @media (prefers-color-scheme: dark) {
-        --tabs-navbar-separator-style: none;
         --tab-selected-bgcolor: color-mix(in srgb, -moz-dialog 75%, white);
       }
     }
