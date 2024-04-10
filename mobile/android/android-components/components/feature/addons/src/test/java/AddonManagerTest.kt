@@ -29,7 +29,6 @@ import mozilla.components.concept.engine.webextension.EnableSource
 import mozilla.components.concept.engine.webextension.InstallationMethod
 import mozilla.components.concept.engine.webextension.Metadata
 import mozilla.components.concept.engine.webextension.WebExtension
-import mozilla.components.feature.addons.AddonManager.Companion.ADDON_ICON_SIZE
 import mozilla.components.feature.addons.ui.translateName
 import mozilla.components.feature.addons.update.AddonUpdater.Status
 import mozilla.components.support.test.any
@@ -653,6 +652,108 @@ class AddonManagerTest {
         assertEquals("test", throwable!!.localizedMessage)
         assertEquals(msg, addon.id)
         assertTrue(manager.pendingAddonActions.isEmpty())
+    }
+
+    @Test
+    fun `add optional permissions successfully`() {
+        val permission = listOf("permission1")
+        val origin = listOf("origin")
+        val addon = Addon(
+            id = "ext1",
+            installedState = Addon.InstalledState("ext1", "1.0", "", true),
+        )
+
+        val extension: WebExtension = mock()
+        whenever(extension.id).thenReturn("ext1")
+        WebExtensionSupport.installedExtensions[addon.id] = extension
+
+        val engine: Engine = mock()
+        val onSuccessCaptor = argumentCaptor<((WebExtension) -> Unit)>()
+
+        var updateAddon: Addon? = null
+        val manager = AddonManager(mock(), engine, mock(), mock())
+        manager.addOptionalPermission(
+            addon,
+            permission,
+            origin,
+            onSuccess = {
+                updateAddon = it
+            },
+        )
+
+        verify(engine).addOptionalPermissions(eq(extension.id), any(), any(), onSuccessCaptor.capture(), any())
+        onSuccessCaptor.value.invoke(extension)
+        assertNotNull(updateAddon)
+        assertEquals(addon.id, updateAddon!!.id)
+        assertTrue(manager.pendingAddonActions.isEmpty())
+    }
+
+    @Test
+    fun `add optional with empty permissions and origins`() {
+        var onErrorWasExecuted = false
+        val manager = AddonManager(mock(), mock(), mock(), mock())
+
+        manager.addOptionalPermission(
+            mock(),
+            emptyList(),
+            emptyList(),
+            onError = {
+                onErrorWasExecuted = true
+            },
+        )
+
+        assertTrue(onErrorWasExecuted)
+    }
+
+    @Test
+    fun `remove optional permissions successfully`() {
+        val permission = listOf("permission1")
+        val origins = listOf("origin")
+        val addon = Addon(
+            id = "ext1",
+            installedState = Addon.InstalledState("ext1", "1.0", "", true),
+        )
+
+        val extension: WebExtension = mock()
+        whenever(extension.id).thenReturn("ext1")
+        WebExtensionSupport.installedExtensions[addon.id] = extension
+
+        val engine: Engine = mock()
+        val onSuccessCaptor = argumentCaptor<((WebExtension) -> Unit)>()
+
+        var updateAddon: Addon? = null
+        val manager = AddonManager(mock(), engine, mock(), mock())
+        manager.removeOptionalPermission(
+            addon,
+            permission,
+            origins,
+            onSuccess = {
+                updateAddon = it
+            },
+        )
+
+        verify(engine).removeOptionalPermissions(eq(extension.id), any(), any(), onSuccessCaptor.capture(), any())
+        onSuccessCaptor.value.invoke(extension)
+        assertNotNull(updateAddon)
+        assertEquals(addon.id, updateAddon!!.id)
+        assertTrue(manager.pendingAddonActions.isEmpty())
+    }
+
+    @Test
+    fun `remove optional with empty permissions and origins`() {
+        var onErrorWasExecuted = false
+        val manager = AddonManager(mock(), mock(), mock(), mock())
+
+        manager.removeOptionalPermission(
+            mock(),
+            emptyList(),
+            emptyList(),
+            onError = {
+                onErrorWasExecuted = true
+            },
+        )
+
+        assertTrue(onErrorWasExecuted)
     }
 
     @Test
