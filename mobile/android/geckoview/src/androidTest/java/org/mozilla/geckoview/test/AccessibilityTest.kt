@@ -1071,7 +1071,8 @@ class AccessibilityTest : BaseSessionTest() {
             override fun onFocused(event: AccessibilityEvent) {
                 nodeId = getSourceId(event)
                 val node = createNodeInfo(nodeId)
-                assertThat("Focused outsideSelectable", node.text.toString(), equalTo("outside selectable"))
+                val nodeChild = createNodeInfo(node.getChildId(0))
+                assertThat("Focused outsideSelectable", nodeChild.text.toString(), equalTo("outside selectable "))
             }
         })
     }
