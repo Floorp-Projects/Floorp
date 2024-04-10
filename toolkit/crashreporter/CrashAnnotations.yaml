@@ -753,6 +753,12 @@ QuotaManagerShutdownTimeout:
   type: string
   ping: true
 
+QuotaManagerStorageIsNetworkResource:
+  description: >
+    On Windows, this indicates if QM's base dir lives on a network resource.
+    It is the direct result of the Win32 API function PathIsNetworkPath.
+  type: boolean
+
 RDDProcessStatus:
   description: >
     Status of the RDD process, can be set to "Running" or "Destroyed"

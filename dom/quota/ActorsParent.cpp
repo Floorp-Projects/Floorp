@@ -1555,6 +1555,14 @@ QuotaManager::Observer::Observe(nsISupports* aSubject, const char* aTopic,
       return rv;
     }
 
+#ifdef XP_WIN
+    // Annotate if our profile lives on a network resource.
+    bool isNetworkPath = PathIsNetworkPathW(gBasePath->get());
+    CrashReporter::RecordAnnotationBool(
+        CrashReporter::Annotation::QuotaManagerStorageIsNetworkResource,
+        isNetworkPath);
+#endif
+
     gStorageName = new nsString();
 
     rv = Preferences::GetString("dom.quotaManager.storageName", *gStorageName);
