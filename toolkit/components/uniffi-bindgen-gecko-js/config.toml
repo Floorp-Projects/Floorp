@@ -72,16 +72,27 @@ crate_name = "uniffi_todolist"
 udl_file = "third_party/rust/uniffi-example-todolist/src/todolist.udl"
 fixture = true
 
-[fixture_callbacks]
-crate_name = "uniffi_fixture_callbacks"
-udl_file = "toolkit/components/uniffi-fixture-callbacks/src/callbacks.udl"
+[fixture_refcounts]
+crate_name = "uniffi_fixture_refcounts"
+udl_file = "toolkit/components/uniffi-fixture-refcounts/src/refcounts.udl"
 fixture = true
 
-[fixture_callbacks.receiver_thread]
-default = "worker"
-main = [
-  "log_even_numbers_main_thread",
-]
+[fixture_refcounts.receiver_thread]
+default = "main"
+
+# Temporarily disabled until we can re-enable callback support
+#
+# I think this can be done when we implement https://bugzilla.mozilla.org/show_bug.cgi?id=1888668
+# [fixture_callbacks]
+# crate_name = "uniffi_fixture_callbacks"
+# udl_file = "toolkit/components/uniffi-fixture-callbacks/src/callbacks.udl"
+# fixture = true
+#
+# [fixture_callbacks.receiver_thread]
+# default = "worker"
+# main = [
+#   "log_even_numbers_main_thread",
+# ]
 
 [custom_types]
 crate_name = "uniffi_custom_types"

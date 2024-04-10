@@ -136,6 +136,7 @@ mod uniffi_fixtures {
     uniffi_fixture_callbacks::uniffi_reexport_scaffolding!();
     uniffi_custom_types::uniffi_reexport_scaffolding!();
     uniffi_fixture_external_types::uniffi_reexport_scaffolding!();
+    uniffi_fixture_refcounts::uniffi_reexport_scaffolding!();
     uniffi_geometry::uniffi_reexport_scaffolding!();
     uniffi_rondpoint::uniffi_reexport_scaffolding!();
     uniffi_sprites::uniffi_reexport_scaffolding!();
@@ -174,7 +175,7 @@ pub unsafe extern "C" fn debug_log(target: *const c_char, message: *const c_char
 // Define extern "C" versions of these UniFFI functions, so that they can be called from C++
 #[no_mangle]
 pub extern "C" fn uniffi_rustbuffer_alloc(
-    size: i32,
+    size: u64,
     call_status: &mut uniffi::RustCallStatus,
 ) -> uniffi::RustBuffer {
     uniffi::uniffi_rustbuffer_alloc(size, call_status)

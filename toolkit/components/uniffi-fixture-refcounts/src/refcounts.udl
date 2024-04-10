@@ -1,0 +1,8 @@
+namespace refcounts {
+    SingletonObject get_singleton();
+    i32 get_js_refcount();
+};
+
+interface SingletonObject {
+   void method();
+};

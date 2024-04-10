@@ -12,6 +12,7 @@ components = [
     "ExternalTypes",
     "FixtureCallbacks",
     "Geometry",
+    "Refcounts",
     "Rondpoint",
     "Sprites",
     "Todolist",

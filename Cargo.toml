@@ -53,7 +53,8 @@ resolver = "2"
 
 [workspace.dependencies]
 # Shared across multiple UniFFI consumers.
-uniffi = "0.25.3"
+uniffi = "0.27.1"
+uniffi_bindgen = "0.27.1"
 # Shared across multiple application-services consumers.
 rusqlite = "0.30.0"
 
@@ -164,9 +165,11 @@ derive_more = { path = "build/rust/derive_more" }
 # Patch autocfg to hide rustc output. Workaround for https://github.com/cuviper/autocfg/issues/30
 autocfg = { path = "third_party/rust/autocfg" }
 
-# Patch goblin 0.6.0 to 0.7.0 because uniffi crates still use the older version
-# and we want to avoid duplications
+# Patch goblin 0.7.0 to 0.8
 goblin = { path = "build/rust/goblin" }
+
+# Patch scroll 0.11 to 0.12
+scroll = { path = "build/rust/scroll" }
 
 # Patch memoffset from 0.8.0 to 0.9.0 since it's compatible and it avoids duplication
 memoffset = { path = "build/rust/memoffset" }
@@ -209,14 +212,14 @@ warp = { git = "https://github.com/seanmonstar/warp", rev = "9d081461ae1167eb321
 malloc_size_of_derive = { path = "xpcom/rust/malloc_size_of_derive" }
 
 # application-services overrides to make updating them all simpler.
-interrupt-support = { git = "https://github.com/mozilla/application-services", rev = "9054db4bb5031881550ceab3448665ef6499a706" }
-relevancy = { git = "https://github.com/mozilla/application-services", rev = "9054db4bb5031881550ceab3448665ef6499a706" }
-sql-support = { git = "https://github.com/mozilla/application-services", rev = "9054db4bb5031881550ceab3448665ef6499a706" }
-suggest = { git = "https://github.com/mozilla/application-services", rev = "9054db4bb5031881550ceab3448665ef6499a706" }
-sync15 = { git = "https://github.com/mozilla/application-services", rev = "9054db4bb5031881550ceab3448665ef6499a706" }
-tabs = { git = "https://github.com/mozilla/application-services", rev = "9054db4bb5031881550ceab3448665ef6499a706" }
-viaduct = { git = "https://github.com/mozilla/application-services", rev = "9054db4bb5031881550ceab3448665ef6499a706" }
-webext-storage = { git = "https://github.com/mozilla/application-services", rev = "9054db4bb5031881550ceab3448665ef6499a706" }
+interrupt-support = { git = "https://github.com/mozilla/application-services", rev = "e6ccfed09ebe663f464a33968f42e656c152e584" }
+relevancy = { git = "https://github.com/mozilla/application-services", rev = "e6ccfed09ebe663f464a33968f42e656c152e584" }
+sql-support = { git = "https://github.com/mozilla/application-services", rev = "e6ccfed09ebe663f464a33968f42e656c152e584" }
+suggest = { git = "https://github.com/mozilla/application-services", rev = "e6ccfed09ebe663f464a33968f42e656c152e584" }
+sync15 = { git = "https://github.com/mozilla/application-services", rev = "e6ccfed09ebe663f464a33968f42e656c152e584" }
+tabs = { git = "https://github.com/mozilla/application-services", rev = "e6ccfed09ebe663f464a33968f42e656c152e584" }
+viaduct = { git = "https://github.com/mozilla/application-services", rev = "e6ccfed09ebe663f464a33968f42e656c152e584" }
+webext-storage = { git = "https://github.com/mozilla/application-services", rev = "e6ccfed09ebe663f464a33968f42e656c152e584" }
 
 # Patch mio 0.8.8 to use windows-sys 0.52 (backport https://github.com/tokio-rs/mio/commit/eea9e3e0c469480e5c59c01e6c3c7e5fd88f0848)
 mio_0_8 = { package = "mio", git = "https://github.com/glandium/mio", rev = "9a2ef335c366044ffe73b1c4acabe50a1daefe05" }
@@ -227,8 +230,8 @@ mio_0_8 = { package = "mio", git = "https://github.com/glandium/mio", rev = "9a2
 path = "third_party/rust/mio-0.6.23"
 
 [patch."https://github.com/mozilla/uniffi-rs.git"]
-uniffi = "=0.25.3"
-uniffi_bindgen = "=0.25.3"
-uniffi_build = "=0.25.3"
-uniffi_macros = "=0.25.3"
-weedle2 = "=4.0.0"
+uniffi = "0.27.1"
+uniffi_bindgen = "0.27.1"
+uniffi_build = "0.27.1"
+uniffi_macros = "0.27.1"
+weedle2 = "=5.0.0"

@@ -2,18 +2,33 @@
 
 ["test_arithmetic.js"]
 
+# I think this can be re-enabled when we implement https://bugzilla.mozilla.org/show_bug.cgi?id=1888668
+lineno = "3"
+
 ["test_callbacks.js"]
+disabled = "Temporarily disabled until we can re-enable callback support"
+lineno = "8"
 
 ["test_custom_types.js"]
+lineno = "12"
 
 ["test_external_types.js"]
+lineno = "15"
 
 ["test_geometry.js"]
+lineno = "18"
+
+["test_refcounts.js"]
+lineno = "21"
 
 ["test_rondpoint.js"]
+lineno = "24"
 
 ["test_sprites.js"]
+lineno = "27"
 
 ["test_todolist.js"]
+lineno = "30"
 
 ["test_type_checking.js"]
+lineno = "33"
