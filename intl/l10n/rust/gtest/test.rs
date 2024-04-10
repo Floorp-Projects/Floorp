@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use l10nregistry_ffi::load::{load_async, load_sync};
-use moz_task;
 use std::borrow::Borrow;
 
 // We want to test a file that ships in every platform configuration, so we take
