@@ -365,26 +365,19 @@ var FullScreen = {
       passive: true,
     });
 
-    if (enterFS) {
-      gNavToolbox.setAttribute("inFullscreen", true);
-      document.documentElement.setAttribute("inFullscreen", true);
-      let alwaysUsesNativeFullscreen =
+    document.documentElement.toggleAttribute("inFullscreen", enterFS);
+    document.documentElement.toggleAttribute(
+      "macOSNativeFullscreen",
+      enterFS &&
         AppConstants.platform == "macosx" &&
-        Services.prefs.getBoolPref("full-screen-api.macos-native-full-screen");
-      if (
-        (alwaysUsesNativeFullscreen || !document.fullscreenElement) &&
-        AppConstants.platform == "macosx"
-      ) {
-        document.documentElement.setAttribute("macOSNativeFullscreen", true);
-      }
-    } else {
-      gNavToolbox.removeAttribute("inFullscreen");
-      document.documentElement.removeAttribute("inFullscreen");
-      document.documentElement.removeAttribute("macOSNativeFullscreen");
-    }
+        (Services.prefs.getBoolPref(
+          "full-screen-api.macos-native-full-screen"
+        ) ||
+          !document.fullscreenElement)
+    );
 
     if (!document.fullscreenElement) {
-      this._updateToolbars(enterFS);
+      ToolbarIconColor.inferFromText("fullscreen", enterFS);
     }
 
     if (enterFS) {
@@ -947,22 +940,6 @@ var FullScreen = {
     Services.obs.notifyObservers(null, "fullscreen-nav-toolbox", "hidden");
 
     MousePosTracker.removeListener(this);
-  },
-
-  _updateToolbars(aEnterFS) {
-    for (let el of document.querySelectorAll(
-      "toolbar[fullscreentoolbar=true]"
-    )) {
-      // Set the inFullscreen attribute to allow specific styling
-      // in fullscreen mode
-      if (aEnterFS) {
-        el.setAttribute("inFullscreen", true);
-      } else {
-        el.removeAttribute("inFullscreen");
-      }
-    }
-
-    ToolbarIconColor.inferFromText("fullscreen", aEnterFS);
   },
 };
 

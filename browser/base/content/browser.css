@@ -480,7 +480,7 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
 }
 
 @media (-moz-platform: macos) {
-  :root[inFullscreen="true"] {
+  :root[inFullscreen] {
     padding-top: 0; /* override drawintitlebar="true" */
   }
 }
