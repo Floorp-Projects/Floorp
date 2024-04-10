@@ -537,14 +537,16 @@ fn test_set_buffer_frame_size_in_parallel_in_scope(scope: Scope) {
         units.push(test_get_default_audiounit(scope.clone()).unwrap());
         let unit_value = units.last().unwrap().get_inner() as usize;
         join_handles.push(thread::spawn(move || {
-            let status = audio_unit_set_property(
-                unit_value as AudioUnit,
-                kAudioDevicePropertyBufferFrameSize,
-                unit_scope,
-                unit_element,
-                &latency_frames,
-                mem::size_of::<u32>(),
-            );
+            let status = run_serially(|| {
+                audio_unit_set_property(
+                    unit_value as AudioUnit,
+                    kAudioDevicePropertyBufferFrameSize,
+                    unit_scope,
+                    unit_element,
+                    &latency_frames,
+                    mem::size_of::<u32>(),
+                )
+            });
             (latency_frames, status)
         }));
     }

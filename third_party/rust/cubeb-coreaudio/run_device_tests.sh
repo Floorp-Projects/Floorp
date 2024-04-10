@@ -15,8 +15,6 @@ cargo test test_plug_and_unplug_device -- --ignored --nocapture
 cargo test test_register_device_changed_callback_to_check_default_device_changed_input -- --ignored --nocapture
 cargo test test_register_device_changed_callback_to_check_default_device_changed_output -- --ignored --nocapture
 cargo test test_register_device_changed_callback_to_check_default_device_changed_duplex -- --ignored --nocapture
-cargo test test_register_device_changed_callback_to_check_input_alive_changed_input -- --ignored --nocapture
-cargo test test_register_device_changed_callback_to_check_input_alive_changed_duplex -- --ignored --nocapture
 
 cargo test test_destroy_input_stream_after_unplugging_a_nondefault_input_device -- --ignored --nocapture
 cargo test test_suspend_input_stream_by_unplugging_a_nondefault_input_device -- --ignored --nocapture

@@ -1,3 +1,4 @@
+use crate::dispatch::*;
 use coreaudio_sys::*;
 
 // See https://opensource.apple.com/source/WebCore/WebCore-7604.5.6/platform/spi/cf/CoreAudioSPI.h.auto.html
@@ -18,5 +19,6 @@ pub fn audio_device_duck(
     in_start_time: *const AudioTimeStamp,
     in_ramp_duration: f32,
 ) -> OSStatus {
+    debug_assert_running_serially();
     unsafe { AudioDeviceDuck(in_device, in_ducked_level, in_start_time, in_ramp_duration) }
 }

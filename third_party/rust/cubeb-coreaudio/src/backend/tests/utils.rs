@@ -25,6 +25,29 @@ pub extern "C" fn noop_data_callback(
     nframes
 }
 
+pub extern "C" fn draining_data_callback(
+    stream: *mut ffi::cubeb_stream,
+    _user_ptr: *mut c_void,
+    _input_buffer: *const c_void,
+    output_buffer: *mut c_void,
+    nframes: i64,
+) -> i64 {
+    assert!(!stream.is_null());
+
+    // Feed silence data to output buffer
+    if !output_buffer.is_null() {
+        let stm = unsafe { &mut *(stream as *mut AudioUnitStream) };
+        let channels = stm.core_stream_data.output_stream_params.channels();
+        let samples = nframes as usize * channels as usize;
+        let sample_size = cubeb_sample_size(stm.core_stream_data.output_stream_params.format());
+        unsafe {
+            ptr::write_bytes(output_buffer, 0, samples * sample_size);
+        }
+    }
+
+    nframes - 1
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub enum Scope {
     Input,
@@ -47,31 +70,35 @@ pub enum PropertyScope {
 }
 
 pub fn test_get_default_device(scope: Scope) -> Option<AudioObjectID> {
-    let address = AudioObjectPropertyAddress {
-        mSelector: match scope {
-            Scope::Input => kAudioHardwarePropertyDefaultInputDevice,
-            Scope::Output => kAudioHardwarePropertyDefaultOutputDevice,
-        },
-        mScope: kAudioObjectPropertyScopeGlobal,
-        mElement: kAudioObjectPropertyElementMaster,
-    };
+    debug_assert_not_running_serially();
+    run_serially_forward_panics(|| {
+        let address = AudioObjectPropertyAddress {
+            mSelector: match scope {
+                Scope::Input => kAudioHardwarePropertyDefaultInputDevice,
+                Scope::Output => kAudioHardwarePropertyDefaultOutputDevice,
+            },
+            mScope: kAudioObjectPropertyScopeGlobal,
+            mElement: kAudioObjectPropertyElementMaster,
+        };
 
-    let mut devid: AudioObjectID = kAudioObjectUnknown;
-    let mut size = mem::size_of::<AudioObjectID>();
-    let status = unsafe {
-        AudioObjectGetPropertyData(
-            kAudioObjectSystemObject,
-            &address,
-            0,
-            ptr::null(),
-            &mut size as *mut usize as *mut UInt32,
-            &mut devid as *mut AudioObjectID as *mut c_void,
-        )
-    };
-    if status != NO_ERR || devid == kAudioObjectUnknown {
-        return None;
-    }
-    Some(devid)
+        let mut devid: AudioObjectID = kAudioObjectUnknown;
+        let mut size = mem::size_of::<AudioObjectID>();
+        let status = unsafe {
+            AudioObjectGetPropertyData(
+                kAudioObjectSystemObject,
+                &address,
+                0,
+                ptr::null(),
+                &mut size as *mut usize as *mut UInt32,
+                &mut devid as *mut AudioObjectID as *mut c_void,
+            )
+        };
+
+        if status != NO_ERR || devid == kAudioObjectUnknown {
+            return None;
+        }
+        Some(devid)
+    })
 }
 
 // TODO: Create a GetProperty trait and add a default implementation for it, then implement it
@@ -99,16 +126,17 @@ impl TestAudioUnit {
 
 impl Drop for TestAudioUnit {
     fn drop(&mut self) {
-        unsafe {
+        run_serially_forward_panics(|| unsafe {
             AudioUnitUninitialize(self.0);
             AudioComponentInstanceDispose(self.0);
-        }
+        });
     }
 }
 
 // TODO: 1. Return Result with custom errors.
 //       2. Allow to create a in-out unit.
 pub fn test_get_default_audiounit(scope: Scope) -> Option<TestAudioUnit> {
+    debug_assert_not_running_serially();
     let device = test_get_default_device(scope.clone());
     let unit = test_create_audiounit(ComponentSubType::HALOutput);
     if device.is_none() || unit.is_none() {
@@ -133,7 +161,7 @@ pub fn test_get_default_audiounit(scope: Scope) -> Option<TestAudioUnit> {
         }
     }
 
-    let status = unsafe {
+    let status = run_serially(|| unsafe {
         AudioUnitSetProperty(
             unit.get_inner(),
             kAudioOutputUnitProperty_CurrentDevice,
@@ -142,7 +170,7 @@ pub fn test_get_default_audiounit(scope: Scope) -> Option<TestAudioUnit> {
             &device as *const AudioObjectID as *const c_void,
             mem::size_of::<AudioObjectID>() as u32,
         )
-    };
+    });
     if status == NO_ERR {
         Some(unit)
     } else {
@@ -159,6 +187,7 @@ pub enum ComponentSubType {
 // Surprisingly the AudioUnit can be created even when there is no any device on the platform,
 // no matter its subtype is HALOutput or DefaultOutput.
 pub fn test_create_audiounit(unit_type: ComponentSubType) -> Option<TestAudioUnit> {
+    debug_assert_not_running_serially();
     let desc = AudioComponentDescription {
         componentType: kAudioUnitType_Output,
         componentSubType: match unit_type {
@@ -169,12 +198,12 @@ pub fn test_create_audiounit(unit_type: ComponentSubType) -> Option<TestAudioUni
         componentFlags: 0,
         componentFlagsMask: 0,
     };
-    let comp = unsafe { AudioComponentFindNext(ptr::null_mut(), &desc) };
+    let comp = run_serially(|| unsafe { AudioComponentFindNext(ptr::null_mut(), &desc) });
     if comp.is_null() {
         return None;
     }
     let mut unit: AudioUnit = ptr::null_mut();
-    let status = unsafe { AudioComponentInstanceNew(comp, &mut unit) };
+    let status = run_serially(|| unsafe { AudioComponentInstanceNew(comp, &mut unit) });
     // TODO: Is unit possible to be null when no error returns ?
     if status != NO_ERR || unit.is_null() {
         None
@@ -188,13 +217,14 @@ fn test_enable_audiounit_in_scope(
     scope: Scope,
     enable: bool,
 ) -> std::result::Result<(), OSStatus> {
+    debug_assert_not_running_serially();
     assert!(!unit.is_null());
     let (scope, element) = match scope {
         Scope::Input => (kAudioUnitScope_Input, AU_IN_BUS),
         Scope::Output => (kAudioUnitScope_Output, AU_OUT_BUS),
     };
     let on_off: u32 = if enable { 1 } else { 0 };
-    let status = unsafe {
+    let status = run_serially(|| unsafe {
         AudioUnitSetProperty(
             unit,
             kAudioOutputUnitProperty_EnableIO,
@@ -203,7 +233,7 @@ fn test_enable_audiounit_in_scope(
             &on_off as *const u32 as *const c_void,
             mem::size_of::<u32>() as u32,
         )
-    };
+    });
     if status == NO_ERR {
         Ok(())
     } else {
@@ -216,72 +246,80 @@ pub enum DeviceFilter {
     IncludeAll,
 }
 pub fn test_get_all_devices(filter: DeviceFilter) -> Vec<AudioObjectID> {
-    let mut devices = Vec::new();
-    let address = AudioObjectPropertyAddress {
-        mSelector: kAudioHardwarePropertyDevices,
-        mScope: kAudioObjectPropertyScopeGlobal,
-        mElement: kAudioObjectPropertyElementMaster,
-    };
-    let mut size: usize = 0;
-    let status = unsafe {
-        AudioObjectGetPropertyDataSize(
-            kAudioObjectSystemObject,
-            &address,
-            0,
-            ptr::null(),
-            &mut size as *mut usize as *mut u32,
-        )
-    };
-    // size will be 0 if there is no device at all.
-    if status != NO_ERR || size == 0 {
-        return devices;
-    }
-    assert_eq!(size % mem::size_of::<AudioObjectID>(), 0);
-    let elements = size / mem::size_of::<AudioObjectID>();
-    devices.resize(elements, kAudioObjectUnknown);
-    let status = unsafe {
-        AudioObjectGetPropertyData(
-            kAudioObjectSystemObject,
-            &address,
-            0,
-            ptr::null(),
-            &mut size as *mut usize as *mut u32,
-            devices.as_mut_ptr() as *mut c_void,
-        )
-    };
-    if status != NO_ERR {
-        devices.clear();
-        return devices;
-    }
-    for device in devices.iter() {
-        assert_ne!(*device, kAudioObjectUnknown);
-    }
-
-    match filter {
-        DeviceFilter::ExcludeCubebAggregateAndVPIO => {
-            devices.retain(|&device| {
-                if let Ok(uid) = get_device_global_uid(device) {
-                    let uid = uid.into_string();
-                    !uid.contains(PRIVATE_AGGREGATE_DEVICE_NAME)
-                        && !uid.contains(VOICEPROCESSING_AGGREGATE_DEVICE_NAME)
-                } else {
-                    true
-                }
-            });
+    debug_assert_not_running_serially();
+    // To avoid races, the devices getter and the device name filtering have
+    // to run in the same serial task. If not, a device may exist when the
+    // getter runs but not when getting its uid.
+    run_serially_forward_panics(|| {
+        let mut devices = Vec::new();
+        let address = AudioObjectPropertyAddress {
+            mSelector: kAudioHardwarePropertyDevices,
+            mScope: kAudioObjectPropertyScopeGlobal,
+            mElement: kAudioObjectPropertyElementMaster,
+        };
+        let mut size: usize = 0;
+        let status = unsafe {
+            AudioObjectGetPropertyDataSize(
+                kAudioObjectSystemObject,
+                &address,
+                0,
+                ptr::null(),
+                &mut size as *mut usize as *mut u32,
+            )
+        };
+        // size will be 0 if there is no device at all.
+        if status != NO_ERR || size == 0 {
+            return devices;
         }
-        _ => {}
-    }
+        assert_eq!(size % mem::size_of::<AudioObjectID>(), 0);
+        let elements = size / mem::size_of::<AudioObjectID>();
+        devices.resize(elements, kAudioObjectUnknown);
+        let status = unsafe {
+            AudioObjectGetPropertyData(
+                kAudioObjectSystemObject,
+                &address,
+                0,
+                ptr::null(),
+                &mut size as *mut usize as *mut u32,
+                devices.as_mut_ptr() as *mut c_void,
+            )
+        };
+        if status != NO_ERR {
+            devices.clear();
+            return devices;
+        }
+        for device in devices.iter() {
+            assert_ne!(*device, kAudioObjectUnknown);
+        }
 
-    devices
+        match filter {
+            DeviceFilter::ExcludeCubebAggregateAndVPIO => {
+                devices.retain(|&device| {
+                    if let Ok(uid) = get_device_global_uid(device) {
+                        let uid = uid.into_string();
+                        !uid.contains(PRIVATE_AGGREGATE_DEVICE_NAME)
+                            && !uid.contains(VOICEPROCESSING_AGGREGATE_DEVICE_NAME)
+                    } else {
+                        true
+                    }
+                });
+            }
+            _ => {}
+        }
+
+        devices
+    })
 }
 
 pub fn test_get_devices_in_scope(scope: Scope) -> Vec<AudioObjectID> {
+    debug_assert_not_running_serially();
     let mut devices = test_get_all_devices(DeviceFilter::ExcludeCubebAggregateAndVPIO);
     devices.retain(|device| test_device_in_scope(*device, scope.clone()));
     devices
 }
 
 pub fn get_devices_info_in_scope(scope: Scope) -> Vec<TestDeviceInfo> {
+    debug_assert_not_running_serially();
     fn print_info(info: &TestDeviceInfo) {
         println!("{:>4}: {}\n\tuid: {}", info.id, info.label, info.uid);
     }
@@ -337,8 +375,9 @@ pub fn test_device_channels_in_scope(
     id: AudioObjectID,
     scope: Scope,
 ) -> std::result::Result<u32, OSStatus> {
+    debug_assert_not_running_serially();
     let address = AudioObjectPropertyAddress {
-        mSelector: kAudioDevicePropertyStreamConfiguration,
+        mSelector: kAudioDevicePropertyStreams,
         mScope: match scope {
             Scope::Input => kAudioDevicePropertyScopeInput,
             Scope::Output => kAudioDevicePropertyScopeOutput,
@@ -346,7 +385,7 @@ pub fn test_device_channels_in_scope(
         mElement: kAudioObjectPropertyElementMaster,
     };
     let mut size: usize = 0;
-    let status = unsafe {
+    let status = run_serially(|| unsafe {
         AudioObjectGetPropertyDataSize(
             id,
             &address,
@@ -354,49 +393,90 @@ pub fn test_device_channels_in_scope(
             ptr::null(),
             &mut size as *mut usize as *mut u32,
         )
-    };
+    });
     if status != NO_ERR {
         return Err(status);
     }
     if size == 0 {
         return Ok(0);
     }
-    let byte_len = size / mem::size_of::<u8>();
-    let mut bytes = vec![0u8; byte_len];
-    let status = unsafe {
+    let mut stream_list = vec![0, (size / mem::size_of::<AudioObjectID>()) as u32];
+    let status = run_serially(|| unsafe {
         AudioObjectGetPropertyData(
             id,
             &address,
             0,
             ptr::null(),
             &mut size as *mut usize as *mut u32,
-            bytes.as_mut_ptr() as *mut c_void,
+            stream_list.as_mut_ptr() as *mut c_void,
         )
-    };
+    });
     if status != NO_ERR {
         return Err(status);
     }
-    let buf_list = unsafe { &*(bytes.as_mut_ptr() as *mut AudioBufferList) };
-    let buf_len = buf_list.mNumberBuffers as usize;
-    if buf_len == 0 {
-        return Ok(0);
-    }
-    let buf_ptr = buf_list.mBuffers.as_ptr() as *const AudioBuffer;
-    let buffers = unsafe { slice::from_raw_parts(buf_ptr, buf_len) };
-    let mut channels: u32 = 0;
-    for buffer in buffers {
-        channels += buffer.mNumberChannels;
-    }
+    let channels = stream_list
+        .iter()
+        .filter(|s: &&AudioObjectID| {
+            if scope != Scope::Input {
+                return true;
+            }
+            let address = AudioObjectPropertyAddress {
+                mSelector: kAudioStreamPropertyTerminalType,
+                mScope: kAudioObjectPropertyScopeGlobal,
+                mElement: kAudioObjectPropertyElementMaster,
+            };
+            let mut ttype: u32 = 0;
+            let status = unsafe {
+                AudioObjectGetPropertyData(
+                    **s,
+                    &address,
+                    0,
+                    ptr::null(),
+                    &mut mem::size_of::<u32>() as *mut usize as *mut u32,
+                    &mut ttype as *mut u32 as *mut c_void,
+                )
+            };
+            if status != NO_ERR {
+                return false;
+            }
+            ttype == kAudioStreamTerminalTypeMicrophone
+                || (INPUT_MICROPHONE..OUTPUT_UNDEFINED).contains(&ttype)
+        })
+        .map(|s: &AudioObjectID| {
+            let address = AudioObjectPropertyAddress {
+                mSelector: kAudioStreamPropertyVirtualFormat,
+                mScope: kAudioObjectPropertyScopeGlobal,
+                mElement: kAudioObjectPropertyElementMaster,
+            };
+            let mut format = AudioStreamBasicDescription::default();
+            let status = unsafe {
+                AudioObjectGetPropertyData(
+                    *s,
+                    &address,
+                    0,
+                    ptr::null(),
+                    &mut mem::size_of::<AudioStreamBasicDescription>() as *mut usize as *mut u32,
+                    &mut format as *mut AudioStreamBasicDescription as *mut c_void,
+                )
+            };
+            if status != NO_ERR {
+                return 0;
+            }
+            format.mChannelsPerFrame
+        })
+        .sum();
     Ok(channels)
 }
 
 pub fn test_device_in_scope(id: AudioObjectID, scope: Scope) -> bool {
+    debug_assert_not_running_serially();
     let channels = test_device_channels_in_scope(id, scope);
     channels.is_ok() && channels.unwrap() > 0
 }
 
 pub fn test_get_all_onwed_devices(id: AudioDeviceID) -> Vec<AudioObjectID> {
     assert_ne!(id, kAudioObjectUnknown);
+    debug_assert_running_serially();
 
     let address = AudioObjectPropertyAddress {
         mSelector: kAudioObjectPropertyOwnedObjects,
@@ -409,45 +489,46 @@ pub fn test_get_all_onwed_devices(id: AudioDeviceID) -> Vec<AudioObjectID> {
     let qualifier_data = &class_id;
     let mut size: usize = 0;
 
-    unsafe {
-        assert_eq!(
+    assert_eq!(
+        unsafe {
             AudioObjectGetPropertyDataSize(
                 id,
                 &address,
                 qualifier_data_size as u32,
                 qualifier_data as *const u32 as *const c_void,
-                &mut size as *mut usize as *mut u32
-            ),
-            NO_ERR
-        );
-    }
+                &mut size as *mut usize as *mut u32,
+            )
+        },
+        NO_ERR
+    );
     assert_ne!(size, 0);
 
     let elements = size / mem::size_of::<AudioObjectID>();
     let mut devices: Vec<AudioObjectID> = allocate_array(elements);
 
-    unsafe {
-        assert_eq!(
+    assert_eq!(
+        unsafe {
             AudioObjectGetPropertyData(
                 id,
                 &address,
                 qualifier_data_size as u32,
                 qualifier_data as *const u32 as *const c_void,
                 &mut size as *mut usize as *mut u32,
-                devices.as_mut_ptr() as *mut c_void
-            ),
-            NO_ERR
-        );
-    }
+                devices.as_mut_ptr() as *mut c_void,
+            )
+        },
+        NO_ERR
+    );
 
     devices
 }
 
 pub fn test_get_master_device(id: AudioObjectID) -> String {
     assert_ne!(id, kAudioObjectUnknown);
+    debug_assert_running_serially();
 
     let address = AudioObjectPropertyAddress {
-        mSelector: kAudioAggregateDevicePropertyMasterSubDevice,
+        mSelector: kAudioAggregateDevicePropertyMainSubDevice,
         mScope: kAudioObjectPropertyScopeGlobal,
         mElement: kAudioObjectPropertyElementMaster,
     };
@@ -465,6 +546,7 @@ pub fn test_get_master_device(id: AudioObjectID) -> String {
 }
 
 pub fn test_get_drift_compensations(id: AudioObjectID) -> std::result::Result<u32, OSStatus> {
+    debug_assert_running_serially();
     let address = AudioObjectPropertyAddress {
         mSelector: kAudioSubDevicePropertyDriftCompensation,
         mScope: kAudioObjectPropertyScopeGlobal,
@@ -491,6 +573,7 @@ pub fn test_get_drift_compensations(id: AudioObjectID) -> std::result::Result<u3
 
 pub fn test_audiounit_scope_is_enabled(unit: AudioUnit, scope: Scope) -> bool {
     assert!(!unit.is_null());
+    debug_assert_not_running_serially();
     let mut has_io: UInt32 = 0;
     let (scope, element) = match scope {
         Scope::Input => (kAudioUnitScope_Input, AU_IN_BUS),
@@ -498,14 +581,14 @@ pub fn test_audiounit_scope_is_enabled(unit: AudioUnit, scope: Scope) -> bool {
     };
     let mut size = mem::size_of::<UInt32>();
     assert_eq!(
-        audio_unit_get_property(
+        run_serially(|| audio_unit_get_property(
             unit,
             kAudioOutputUnitProperty_HasIO,
             scope,
             element,
             &mut has_io,
             &mut size
-        ),
+        )),
         NO_ERR
     );
     has_io != 0
@@ -516,6 +599,7 @@ pub fn test_audiounit_get_buffer_frame_size(
     scope: Scope,
     prop_scope: PropertyScope,
 ) -> std::result::Result<u32, OSStatus> {
+    debug_assert_not_running_serially();
     let element = match scope {
         Scope::Input => AU_IN_BUS,
         Scope::Output => AU_OUT_BUS,
@@ -526,7 +610,7 @@ pub fn test_audiounit_get_buffer_frame_size(
     };
     let mut buffer_frames: u32 = 0;
     let mut size = mem::size_of::<u32>();
-    let status = unsafe {
+    let status = run_serially(|| unsafe {
         AudioUnitGetProperty(
             unit,
             kAudioDevicePropertyBufferFrameSize,
@@ -535,7 +619,7 @@ pub fn test_audiounit_get_buffer_frame_size(
             &mut buffer_frames as *mut u32 as *mut c_void,
             &mut size as *mut usize as *mut u32,
         )
-    };
+    });
     if status == NO_ERR {
         Ok(buffer_frames)
     } else {
@@ -554,6 +638,7 @@ pub fn test_set_default_device(
     device: AudioObjectID,
     scope: Scope,
 ) -> std::result::Result<AudioObjectID, OSStatus> {
+    debug_assert_not_running_serially();
     assert!(test_device_in_scope(device, scope.clone()));
     let default = test_get_default_device(scope.clone()).unwrap();
     if default == device {
@@ -570,7 +655,7 @@ pub fn test_set_default_device(
         mElement: kAudioObjectPropertyElementMaster,
     };
     let size = mem::size_of::<AudioObjectID>();
-    let status = unsafe {
+    let status = run_serially(|| unsafe {
         AudioObjectSetPropertyData(
             kAudioObjectSystemObject,
             &address,
@@ -579,7 +664,7 @@ pub fn test_set_default_device(
             size as u32,
             &device as *const AudioObjectID as *const c_void,
         )
-    };
+    });
     let new_default = test_get_default_device(scope.clone()).unwrap();
     if new_default == default {
         Err(-1)
@@ -644,6 +729,7 @@ pub fn test_create_device_change_listener<F>(scope: Scope, listener: F) -> TestP
 where
     F: Fn(&[AudioObjectPropertyAddress]) -> OSStatus,
 {
+    debug_assert_running_serially();
     let address = AudioObjectPropertyAddress {
         mSelector: match scope {
             Scope::Input => kAudioHardwarePropertyDefaultInputDevice,
@@ -652,6 +738,7 @@ where
         mScope: kAudioObjectPropertyScopeGlobal,
         mElement: kAudioObjectPropertyElementMaster,
     };
+
     TestPropertyListener::new(kAudioObjectSystemObject, address, listener)
 }
 
@@ -677,6 +764,7 @@ where
     }
 
     pub fn start(&self) -> std::result::Result<(), OSStatus> {
+        debug_assert_running_serially();
         let status = unsafe {
             AudioObjectAddPropertyListener(
                 self.device,
@@ -693,6 +781,7 @@ where
     }
 
     pub fn stop(&self) -> std::result::Result<(), OSStatus> {
+        debug_assert_running_serially();
         let status = unsafe {
             AudioObjectRemovePropertyListener(
                 self.device,
@@ -726,7 +815,7 @@ where
     F: Fn(&[AudioObjectPropertyAddress]) -> OSStatus,
 {
     fn drop(&mut self) {
-        self.stop();
+        run_serially(|| self.stop());
     }
 }
 
@@ -767,6 +856,7 @@ impl TestDevicePlugger {
     }
 
     fn destroy_aggregate_device(&mut self) -> std::result::Result<(), OSStatus> {
+        debug_assert_not_running_serially();
         assert_ne!(self.plugin_id, kAudioObjectUnknown);
         assert_ne!(self.device_id, kAudioObjectUnknown);
 
@@ -777,7 +867,7 @@ impl TestDevicePlugger {
         };
 
         let mut size: usize = 0;
-        let status = unsafe {
+        let status = run_serially(|| unsafe {
             AudioObjectGetPropertyDataSize(
                 self.plugin_id,
                 &address,
@@ -785,13 +875,13 @@ impl TestDevicePlugger {
                 ptr::null(),
                 &mut size as *mut usize as *mut u32,
             )
-        };
+        });
         if status != NO_ERR {
             return Err(status);
         }
         assert_ne!(size, 0);
 
-        let status = unsafe {
+        let status = run_serially(|| unsafe {
             // This call can simulate removing a device.
             AudioObjectGetPropertyData(
                 self.plugin_id,
@@ -801,7 +891,7 @@ impl TestDevicePlugger {
                 &mut size as *mut usize as *mut u32,
                 &mut self.device_id as *mut AudioDeviceID as *mut c_void,
             )
-        };
+        });
         if status == NO_ERR {
             self.device_id = kAudioObjectUnknown;
             Ok(())
@@ -811,6 +901,7 @@ impl TestDevicePlugger {
     }
 
     fn create_aggregate_device(&self) -> std::result::Result<AudioObjectID, OSStatus> {
+        debug_assert_not_running_serially();
         use std::time::{SystemTime, UNIX_EPOCH};
 
         const TEST_AGGREGATE_DEVICE_NAME: &str = "TestAggregateDevice";
@@ -830,7 +921,7 @@ impl TestDevicePlugger {
         };
 
         let mut size: usize = 0;
-        let status = unsafe {
+        let status = run_serially(|| unsafe {
             AudioObjectGetPropertyDataSize(
                 self.plugin_id,
                 &address,
@@ -838,7 +929,7 @@ impl TestDevicePlugger {
                 ptr::null(),
                 &mut size as *mut usize as *mut u32,
             )
-        };
+        });
         if status != NO_ERR {
             return Err(status);
         }
@@ -915,14 +1006,18 @@ impl TestDevicePlugger {
             CFRelease(sub_devices as *const c_void);
 
             // This call can simulate adding a device.
-            let status = AudioObjectGetPropertyData(
-                self.plugin_id,
-                &address,
-                mem::size_of_val(&device_dict) as u32,
-                &device_dict as *const CFMutableDictionaryRef as *const c_void,
-                &mut size as *mut usize as *mut u32,
-                &mut device_id as *mut AudioDeviceID as *mut c_void,
-            );
+            let status = {
+                run_serially(|| {
+                    AudioObjectGetPropertyData(
+                        self.plugin_id,
+                        &address,
+                        mem::size_of_val(&device_dict) as u32,
+                        &device_dict as *const CFMutableDictionaryRef as *const c_void,
+                        &mut size as *mut usize as *mut u32,
+                        &mut device_id as *mut AudioDeviceID as *mut c_void,
+                    )
+                })
+            };
             CFRelease(device_dict as *const c_void);
             status
         };
@@ -935,6 +1030,7 @@ impl TestDevicePlugger {
     }
 
     fn get_system_plugin_id() -> std::result::Result<AudioObjectID, OSStatus> {
+        debug_assert_not_running_serially();
         let address = AudioObjectPropertyAddress {
             mSelector: kAudioHardwarePropertyPlugInForBundleID,
             mScope: kAudioObjectPropertyScopeGlobal,
@@ -942,7 +1038,7 @@ impl TestDevicePlugger {
         };
 
         let mut size: usize = 0;
-        let status = unsafe {
+        let status = run_serially(|| unsafe {
             AudioObjectGetPropertyDataSize(
                 kAudioObjectSystemObject,
                 &address,
@@ -950,7 +1046,7 @@ impl TestDevicePlugger {
                 ptr::null(),
                 &mut size as *mut usize as *mut u32,
             )
-        };
+        });
         if status != NO_ERR {
             return Err(status);
         }
@@ -967,14 +1063,16 @@ impl TestDevicePlugger {
         assert_eq!(size, mem::size_of_val(&translation_value));
 
         let status = unsafe {
-            let status = AudioObjectGetPropertyData(
-                kAudioObjectSystemObject,
-                &address,
-                0,
-                ptr::null(),
-                &mut size as *mut usize as *mut u32,
-                &mut translation_value as *mut AudioValueTranslation as *mut c_void,
-            );
+            let status = run_serially(|| {
+                AudioObjectGetPropertyData(
+                    kAudioObjectSystemObject,
+                    &address,
+                    0,
+                    ptr::null(),
+                    &mut size as *mut usize as *mut u32,
+                    &mut translation_value as *mut AudioValueTranslation as *mut c_void,
+                )
+            });
             CFRelease(in_bundle_ref as *const c_void);
             status
         };
@@ -991,10 +1089,11 @@ impl TestDevicePlugger {
     //       them into the array, if the device is an aggregate device. See the code in
     //       AggregateDevice::get_sub_devices and audiounit_set_aggregate_sub_device_list.
     fn get_sub_devices(scope: Scope) -> Option<CFArrayRef> {
+        debug_assert_not_running_serially();
         let device = test_get_default_device(scope);
         device?;
         let device = device.unwrap();
-        let uid = get_device_global_uid(device);
+        let uid = run_serially(|| get_device_global_uid(device));
         if uid.is_err() {
             return None;
         }
@@ -1033,6 +1132,7 @@ pub fn test_ops_context_operation<F>(name: &'static str, operation: F)
 where
     F: FnOnce(*mut ffi::cubeb),
 {
+    debug_assert_not_running_serially();
     let name_c_string = CString::new(name).expect("Failed to create context name");
     let mut context = ptr::null_mut::<ffi::cubeb>();
     assert_eq!(
@@ -1047,6 +1147,59 @@ where
 // The in-out stream initializeed with different device will create an aggregate_device and
 // result in firing device-collection-changed callbacks. Run in-out streams with tests
 // capturing device-collection-changed callbacks may cause troubles.
+pub fn test_ops_stream_operation_on_context<F>(
+    name: &'static str,
+    context_ptr: *mut ffi::cubeb,
+    input_device: ffi::cubeb_devid,
+    input_stream_params: *mut ffi::cubeb_stream_params,
+    output_device: ffi::cubeb_devid,
+    output_stream_params: *mut ffi::cubeb_stream_params,
+    latency_frames: u32,
+    data_callback: ffi::cubeb_data_callback,
+    state_callback: ffi::cubeb_state_callback,
+    user_ptr: *mut c_void,
+    operation: F,
+) where
+    F: FnOnce(*mut ffi::cubeb_stream),
+{
+    // Do nothing if there is no input/output device to perform input/output tests.
+    if !input_stream_params.is_null() && test_get_default_device(Scope::Input).is_none() {
+        println!("No input device to perform input tests for \"{}\".", name);
+        return;
+    }
+
+    if !output_stream_params.is_null() && test_get_default_device(Scope::Output).is_none() {
+        println!("No output device to perform output tests for \"{}\".", name);
+        return;
+    }
+
+    let mut stream: *mut ffi::cubeb_stream = ptr::null_mut();
+    let stream_name = CString::new(name).expect("Failed to create stream name");
+    assert_eq!(
+        unsafe {
+            OPS.stream_init.unwrap()(
+                context_ptr,
+                &mut stream,
+                stream_name.as_ptr(),
+                input_device,
+                input_stream_params,
+                output_device,
+                output_stream_params,
+                latency_frames,
+                data_callback,
+                state_callback,
+                user_ptr,
+            )
+        },
+        ffi::CUBEB_OK
+    );
+    assert!(!stream.is_null());
+    operation(stream);
+    unsafe {
+        OPS.stream_destroy.unwrap()(stream);
+    }
+}
+
 pub fn test_ops_stream_operation<F>(
     name: &'static str,
     input_device: ffi::cubeb_devid,
@@ -1062,42 +1215,19 @@ pub fn test_ops_stream_operation<F>(
     F: FnOnce(*mut ffi::cubeb_stream),
 {
     test_ops_context_operation("context: stream operation", |context_ptr| {
-        // Do nothing if there is no input/output device to perform input/output tests.
-        if !input_stream_params.is_null() && test_get_default_device(Scope::Input).is_none() {
-            println!("No input device to perform input tests for \"{}\".", name);
-            return;
-        }
-
-        if !output_stream_params.is_null() && test_get_default_device(Scope::Output).is_none() {
-            println!("No output device to perform output tests for \"{}\".", name);
-            return;
-        }
-
-        let mut stream: *mut ffi::cubeb_stream = ptr::null_mut();
-        let stream_name = CString::new(name).expect("Failed to create stream name");
-        assert_eq!(
-            unsafe {
-                OPS.stream_init.unwrap()(
-                    context_ptr,
-                    &mut stream,
-                    stream_name.as_ptr(),
-                    input_device,
-                    input_stream_params,
-                    output_device,
-                    output_stream_params,
-                    latency_frames,
-                    data_callback,
-                    state_callback,
-                    user_ptr,
-                )
-            },
-            ffi::CUBEB_OK
+        test_ops_stream_operation_on_context(
+            name,
+            context_ptr,
+            input_device,
+            input_stream_params,
+            output_device,
+            output_stream_params,
+            latency_frames,
+            data_callback,
+            state_callback,
+            user_ptr,
+            operation,
         );
-        assert!(!stream.is_null());
-        operation(stream);
-        unsafe {
-            OPS.stream_destroy.unwrap()(stream);
-        }
     });
 }
 
@@ -1136,7 +1266,7 @@ fn test_get_raw_stream<F>(
         user_ptr,
         data_callback,
         state_callback,
-        global_latency_frames.unwrap(),
+        global_latency_frames,
     );
     stream.core_stream_data = CoreStreamData::new(&stream, None, None);
 
@@ -1154,6 +1284,7 @@ pub fn test_get_stream_with_default_data_callback_by_type<F>(
 ) where
     F: FnOnce(&mut AudioUnitStream),
 {
+    debug_assert_not_running_serially();
     let mut input_params = get_dummy_stream_params(Scope::Input);
     let mut output_params = get_dummy_stream_params(Scope::Output);
 

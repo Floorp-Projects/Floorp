@@ -1,6 +1,6 @@
 use super::utils::{test_get_default_device, test_ops_stream_operation, Scope};
 use super::*;
-use std::sync::atomic::{AtomicI64, Ordering};
+use std::sync::atomic::AtomicI64;
 
 #[test]
 fn test_dial_tone() {
@@ -202,7 +202,7 @@ fn test_dial_tone() {
         for data in buffer.iter_mut() {
             let t1 = (2.0 * PI * 350.0 * (closure.phase) as f32 / SAMPLE_FREQUENCY as f32).sin();
             let t2 = (2.0 * PI * 440.0 * (closure.phase) as f32 / SAMPLE_FREQUENCY as f32).sin();
-            *data = f32_to_i16_sample(0.5 * (t1 + t2));
+            *data = f32_to_i16_sample(0.45 * (t1 + t2));
             closure.phase += 1;
         }
 

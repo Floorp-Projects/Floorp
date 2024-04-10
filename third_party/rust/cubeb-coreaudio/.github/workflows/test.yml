@@ -4,36 +4,52 @@ on: [push, pull_request]
 
 jobs:
   build:
-    runs-on: macOS-latest
+    runs-on: ${{ matrix.os }}
     continue-on-error: ${{ matrix.experimental }}
     strategy:
       fail-fast: false
       matrix:
+        os: [macos-12, macos-13, macos-14]
         rust: [stable]
         experimental: [false]
         include:
-          - rust: nightly
+          - os: macos-14
+            rust: nightly
             experimental: true
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         submodules: recursive
 
     - name: Install Rust
       run: rustup toolchain install ${{ matrix.rust }} --profile minimal --component rustfmt clippy
-        
-    - name: Setup
+
+    - name: Setup Rust
       run: |
         rustup default ${{ matrix.rust }}
         toolchain=$(rustup default)
         echo "Use Rust toolchain: $toolchain"
         rustc --version
         cargo --version
-        
+
+    - name: Setup Audio
+      if: ${{ matrix.os == 'macos-13' || matrix.os == 'macos-14' }}
+      run: |
+        brew install switchaudio-osx
+        brew install blackhole-2ch
+        SwitchAudioSource -s "BlackHole 2ch" -t input
+        SwitchAudioSource -s "BlackHole 2ch" -t output
+
+    - name: Grant microphone access
+      if: ${{ matrix.os == 'macos-13' || matrix.os == 'macos-14' }}
+      env:
+        tcc_extra_columns: ${{ matrix.os == 'macos-14' && ',NULL,NULL,''UNUSED'',1687786159' || '' }}
+      run: sqlite3 $HOME/Library/Application\ Support/com.apple.TCC/TCC.db "INSERT OR IGNORE INTO access VALUES ('kTCCServiceMicrophone','/usr/local/opt/runner/provisioner/provisioner',1,2,4,1,NULL,NULL,0,'UNUSED',NULL,0,1687786159${{ env.tcc_extra_columns }});"
+
     - name: Build
       run: cargo build --verbose
-      
+
     - name: Regular Test
       run: sh run_tests.sh
     
