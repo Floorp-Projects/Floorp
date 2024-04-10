@@ -396,10 +396,10 @@ class D3D11DXVA2Manager : public DXVA2Manager {
   HRESULT CreateOutputSample(RefPtr<IMFSample>& aSample,
                              ID3D11Texture2D* aTexture);
 
+  // This is used for check whether hw decoding is possible before using MFT for
+  // decoding.
   bool CanCreateDecoder(const D3D11_VIDEO_DECODER_DESC& aDesc) const;
 
-  already_AddRefed<ID3D11VideoDecoder> CreateDecoder(
-      const D3D11_VIDEO_DECODER_DESC& aDesc) const;
   void RefreshIMFSampleWrappers();
   void ReleaseAllIMFSamples();
 
@@ -1190,25 +1190,26 @@ D3D11DXVA2Manager::ConfigureForSize(IMFMediaType* aInputType,
 
 bool D3D11DXVA2Manager::CanCreateDecoder(
     const D3D11_VIDEO_DECODER_DESC& aDesc) const {
-  RefPtr<ID3D11VideoDecoder> decoder = CreateDecoder(aDesc);
-  return decoder.get() != nullptr;
-}
-
-already_AddRefed<ID3D11VideoDecoder> D3D11DXVA2Manager::CreateDecoder(
-    const D3D11_VIDEO_DECODER_DESC& aDesc) const {
   RefPtr<ID3D11Device> device = GetDeviceForDecoderCheck();
   if (!device) {
-    return nullptr;
+    LOG("Can't create decoder due to lacking of ID3D11Device!");
+    return false;
   }
 
   RefPtr<ID3D11VideoDevice> videoDevice;
   HRESULT hr = device->QueryInterface(
       static_cast<ID3D11VideoDevice**>(getter_AddRefs(videoDevice)));
-  NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
+  if (FAILED(hr)) {
+    LOG("Failed to query ID3D11VideoDevice!");
+    return false;
+  }
 
   UINT configCount = 0;
   hr = videoDevice->GetVideoDecoderConfigCount(&aDesc, &configCount);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
+  if (FAILED(hr)) {
+    LOG("Failed to get decoder config count!");
+    return false;
+  }
 
   for (UINT i = 0; i < configCount; i++) {
     D3D11_VIDEO_DECODER_CONFIG config;
@@ -1217,10 +1218,10 @@ already_AddRefed<ID3D11VideoDecoder> D3D11DXVA2Manager::CreateDecoder(
       RefPtr<ID3D11VideoDecoder> decoder;
       hr = videoDevice->CreateVideoDecoder(&aDesc, &config,
                                            decoder.StartAssignment());
-      return decoder.forget();
+      return decoder != nullptr;
     }
   }
-  return nullptr;
+  return false;
 }
 
 /* static */
