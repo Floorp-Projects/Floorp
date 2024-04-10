@@ -713,17 +713,21 @@
   <div id="grouping" role="group">label</div>
   <button id="requested_name_from_grouping"aria-labelledby="grouping"></button>
   <!-- Name from sub tree of tbody marked as display:block;, which is also a grouping -->
-  <div id="listitem_containing_block_tbody" role="listitem">
-    <table>
-      <tbody style="display: block;">
-        <tr><td>label</td></tr>
-      </tbody>
-    </table>
+  <div role="list">
+    <div id="listitem_containing_block_tbody" role="listitem">
+      <table>
+        <tbody style="display: block;">
+          <tr><td>label</td></tr>
+        </tbody>
+      </table>
+    </div>
   </div>
   <!-- Name from subtree of treeitem containing grouping -->
-  <div id="treeitem_containing_grouping" role="treeitem" aria-level="1" aria-expanded="true">root
-    <div role="group">
-      <div role="treeitem" aria-level="2">sub</div>
+  <div role="tree">
+    <div id="treeitem_containing_grouping" role="treeitem" aria-level="1" aria-expanded="true">root
+      <div role="group">
+        <div role="treeitem" aria-level="2">sub</div>
+      </div>
     </div>
   </div>
 
@@ -735,11 +739,13 @@
   </div>
 
   <!-- Text nodes and inline elements. -->
-  <div id="container_text_inline" role="option">a<strong>b</strong>c</div>
-  <!-- Text nodes and block elements. -->
-  <div id="container_text_block" role="option">a<p>b</p>c</div>
-  <!-- Text nodes and empty block elements. -->
-  <div id="container_text_emptyblock" role="option">a<p></p><p></p>b</div>
+  <div role="listbox">
+    <div id="container_text_inline" role="option">a<strong>b</strong>c</div>
+    <!-- Text nodes and block elements. -->
+    <div id="container_text_block" role="option">a<p>b</p>c</div>
+    <!-- Text nodes and empty block elements. -->
+    <div id="container_text_emptyblock" role="option">a<p></p><p></p>b</div>
+  </div>
 
   <!-- aria-labelledby referring to a slot -->
   <div id="shadowHost">
