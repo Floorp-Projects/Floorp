@@ -16,6 +16,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+
+## [0.1.6] - 2023-09-14
+### Added
+* Add `into_raw` and `from_raw` methods on both `Sender` and `Receiver`. Allows passing `oneshot`
+  channels over FFI without an extra layer of heap allocation.
+
+
 ## [0.1.5] - 2022-09-01
 ### Fixed
 - Handle the UNPARKING state correctly in all recv methods. `try_recv` will now not panic

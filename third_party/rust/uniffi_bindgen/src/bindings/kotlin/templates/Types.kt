@@ -1,5 +1,38 @@
 {%- import "macros.kt" as kt %}
 
+// Interface implemented by anything that can contain an object reference.
+//
+// Such types expose a `destroy()` method that must be called to cleanly
+// dispose of the contained objects. Failure to call this method may result
+// in memory leaks.
+//
+// The easiest way to ensure this method is called is to use the `.use`
+// helper method to execute a block and destroy the object at the end.
+interface Disposable {
+    fun destroy()
+    companion object {
+        fun destroy(vararg args: Any?) {
+            args.filterIsInstance<Disposable>()
+                .forEach(Disposable::destroy)
+        }
+    }
+}
+
+inline fun <T : Disposable?, R> T.use(block: (T) -> R) =
+    try {
+        block(this)
+    } finally {
+        try {
+            // N.B. our implementation is on the nullable type `Disposable?`.
+            this?.destroy()
+        } catch (e: Throwable) {
+            // swallow
+        }
+    }
+
+/** Used to instantiate an interface without an actual pointer, for fakes in tests, mostly. */
+object NoPointer
+
 {%- for type_ in ci.iter_types() %}
 {%- let type_name = type_|type_name(ci) %}
 {%- let ffi_converter_name = type_|ffi_converter_name %}
@@ -82,9 +115,6 @@
 {%- when Type::CallbackInterface { module_path, name } %}
 {% include "CallbackInterfaceTemplate.kt" %}
 
-{%- when Type::ForeignExecutor %}
-{% include "ForeignExecutorTemplate.kt" %}
-
 {%- when Type::Timestamp %}
 {% include "TimestampHelper.kt" %}
 
@@ -104,6 +134,10 @@
 {%- if ci.has_async_fns() %}
 {# Import types needed for async support #}
 {{ self.add_import("kotlin.coroutines.resume") }}
+{{ self.add_import("kotlinx.coroutines.launch") }}
 {{ self.add_import("kotlinx.coroutines.suspendCancellableCoroutine") }}
 {{ self.add_import("kotlinx.coroutines.CancellableContinuation") }}
+{{ self.add_import("kotlinx.coroutines.DelicateCoroutinesApi") }}
+{{ self.add_import("kotlinx.coroutines.Job") }}
+{{ self.add_import("kotlinx.coroutines.GlobalScope") }}
 {%- endif %}

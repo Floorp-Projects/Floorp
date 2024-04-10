@@ -7,6 +7,7 @@ pub(crate) fn sp(input: &str) -> IResult<&str, &str> {
             (),
             nom::sequence::tuple((
                 nom::bytes::complete::tag("//"),
+                nom::combinator::not(nom::bytes::complete::tag("/")),
                 nom::bytes::complete::take_until("\n"),
                 nom::bytes::complete::tag("\n"),
             )),

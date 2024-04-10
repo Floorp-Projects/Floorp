@@ -64,9 +64,6 @@
 {%- when Type::CallbackInterface { name, module_path } %}
 {%- include "CallbackInterfaceTemplate.swift" %}
 
-{%- when Type::ForeignExecutor %}
-{%- include "ForeignExecutorTemplate.swift" %}
-
 {%- when Type::Custom { name, module_path, builtin } %}
 {%- include "CustomType.swift" %}
 

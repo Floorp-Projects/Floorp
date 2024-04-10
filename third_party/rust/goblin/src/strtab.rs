@@ -34,6 +34,11 @@ impl<'a> Strtab<'a> {
         Self::from_slice_unparsed(bytes, 0, bytes.len(), delim)
     }
 
+    /// Returns the length of this `Strtab` in bytes
+    pub fn len(&self) -> usize {
+        self.bytes.len()
+    }
+
     /// Creates a `Strtab` directly without bounds check and without parsing it.
     ///
     /// This is potentially unsafe and should only be used if `feature = "alloc"` is disabled.

@@ -3,6 +3,7 @@
 
 use alloc::string::String;
 use core::fmt;
+use core::num::TryFromIntError;
 use core::result;
 #[cfg(feature = "std")]
 use std::{error, io};
@@ -39,6 +40,12 @@ impl error::Error for Error {
 impl From<io::Error> for Error {
     fn from(err: io::Error) -> Error {
         Error::IO(err)
+    }
+}
+
+impl From<TryFromIntError> for Error {
+    fn from(err: TryFromIntError) -> Error {
+        Error::Malformed(format!("Integer do not fit: {err}"))
     }
 }
 

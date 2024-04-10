@@ -5,8 +5,8 @@ public object FfiConverterByteArray: FfiConverterRustBuffer<ByteArray> {
         buf.get(byteArr)
         return byteArr
     }
-    override fun allocationSize(value: ByteArray): Int {
-        return 4 + value.size
+    override fun allocationSize(value: ByteArray): ULong {
+        return 4UL + value.size.toULong()
     }
     override fun write(value: ByteArray, buf: ByteBuffer) {
         buf.putInt(value.size)

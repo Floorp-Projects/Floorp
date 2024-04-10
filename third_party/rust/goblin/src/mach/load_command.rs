@@ -1343,9 +1343,12 @@ pub const PLATFORM_IOSSIMULATOR: u32 = 7;
 pub const PLATFORM_TVOSSIMULATOR: u32 = 8;
 pub const PLATFORM_WATCHOSSIMULATOR: u32 = 9;
 pub const PLATFORM_DRIVERKIT: u32 = 10;
+pub const PLATFORM_VISIONOS: u32 = 11;
+pub const PLATFORM_VISIONOSSIMULATOR: u32 = 12;
 pub const TOOL_CLANG: u32 = 1;
 pub const TOOL_SWIFT: u32 = 2;
 pub const TOOL_LD: u32 = 3;
+pub const TOOL_LLD: u32 = 4;
 
 pub fn cmd_to_str(cmd: u32) -> &'static str {
     match cmd {

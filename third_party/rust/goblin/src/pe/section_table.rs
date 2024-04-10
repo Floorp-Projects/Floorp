@@ -1,6 +1,8 @@
 use crate::error::{self, Error};
 use crate::pe::relocation;
+use alloc::borrow::Cow;
 use alloc::string::{String, ToString};
+use alloc::vec::Vec;
 use scroll::{ctx, Pread, Pwrite};
 
 #[repr(C)]
@@ -77,6 +79,32 @@ impl SectionTable {
             table.real_name = Some(bytes.pread::<&str>(string_table_offset + idx)?.to_string());
         }
         Ok(table)
+    }
+
+    pub fn data<'a, 'b: 'a>(&'a self, pe_bytes: &'b [u8]) -> error::Result<Option<Cow<[u8]>>> {
+        let section_start: usize = self.pointer_to_raw_data.try_into().map_err(|_| {
+            Error::Malformed(format!("Virtual address cannot fit in platform `usize`"))
+        })?;
+
+        // assert!(self.virtual_size <= self.size_of_raw_data);
+        // if vsize > size_of_raw_data, the section is zero padded.
+        let section_end: usize = section_start
+            + usize::try_from(self.size_of_raw_data).map_err(|_| {
+                Error::Malformed(format!("Virtual size cannot fit in platform `usize`"))
+            })?;
+
+        let original_bytes = pe_bytes.get(section_start..section_end).map(Cow::Borrowed);
+
+        if original_bytes.is_some() && self.virtual_size > self.size_of_raw_data {
+            let mut bytes: Vec<u8> = Vec::new();
+            bytes.resize(self.size_of_raw_data.try_into()?, 0);
+            bytes.copy_from_slice(&original_bytes.unwrap());
+            bytes.resize(self.virtual_size.try_into()?, 0);
+
+            Ok(Some(Cow::Owned(bytes)))
+        } else {
+            Ok(original_bytes)
+        }
     }
 
     pub fn name_offset(&self) -> error::Result<Option<usize>> {
@@ -163,6 +191,15 @@ impl SectionTable {
         let number = self.number_of_relocations as usize;
         relocation::Relocations::parse(bytes, offset, number)
     }
+
+    /// Tests if `another_section` on-disk ranges will collide.
+    pub fn overlaps_with(&self, another_section: &SectionTable) -> bool {
+        let self_end = self.pointer_to_raw_data + self.size_of_raw_data;
+        let another_end = another_section.pointer_to_raw_data + another_section.size_of_raw_data;
+
+        !((self_end <= another_section.pointer_to_raw_data)
+            || (another_end <= self.pointer_to_raw_data))
+    }
 }
 
 impl ctx::SizeWith<scroll::Endian> for SectionTable {
@@ -171,7 +208,7 @@ impl ctx::SizeWith<scroll::Endian> for SectionTable {
     }
 }
 
-impl ctx::TryIntoCtx<scroll::Endian> for SectionTable {
+impl ctx::TryIntoCtx<scroll::Endian> for &SectionTable {
     type Error = error::Error;
     fn try_into_ctx(self, bytes: &mut [u8], ctx: scroll::Endian) -> Result<usize, Self::Error> {
         let offset = &mut 0;
@@ -189,7 +226,7 @@ impl ctx::TryIntoCtx<scroll::Endian> for SectionTable {
     }
 }
 
-impl ctx::IntoCtx<scroll::Endian> for SectionTable {
+impl ctx::IntoCtx<scroll::Endian> for &SectionTable {
     fn into_ctx(self, bytes: &mut [u8], ctx: scroll::Endian) {
         bytes.pwrite_with(self, 0, ctx).unwrap();
     }

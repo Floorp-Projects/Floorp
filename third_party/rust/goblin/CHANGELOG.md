@@ -3,9 +3,32 @@ All notable changes to this project will be documented in this file.
 
 Before 1.0, this project does not adhere to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-Goblin is now 0.7, which means we will try our best to ease breaking changes. Tracking issue is here: https://github.com/m4b/goblin/issues/97
+Goblin is now 0.8, which means we will try our best to ease breaking changes. Tracking issue is here: https://github.com/m4b/goblin/issues/97
 
-## [0.7.0] - unreleased
+## [0.8.0]  - 2023-12-31 - Happy New Years!
+### Breaking
+msrv: bumped to 1.63.0 since scroll bumped as well
+pe: new field added to parse options: https://github.com/m4b/goblin/pull/377
+pe: attribute certs now non-exhaustive: https://github.com/m4b/goblin/pull/378
+goblin: hint and object enum is now non-exhaustive
+pe: write support introduced some breaking changes, e.g., data directories array adds a tuple of usize and data directory,
+    DosHeader has all the fields filled out, Header struct has a dos_stub field added,
+	symbols and strings fields is made optional in Coff struct, see: https://github.com/m4b/goblin/pull/361
+### Fixed
+elf: fix documentation, thanks @crzysdrs: https://github.com/m4b/goblin/pull/374
+pe: attribute certificates non-exhaustive, thanks @RaitoBezarius: https://github.com/m4b/goblin/pull/378
+pe: fix authenticode parsing, thanks @baloo: https://github.com/m4b/goblin/pull/383
+### Added
+strtab: len method added to return number of bytes of the strtab
+pe: absolutely epic pe write support PR, thanks @RaitoBezarius and @Baloo: https://github.com/m4b/goblin/pull/361
+pe: add coff object file support, thanks @vadimcn, https://github.com/m4b/goblin/pull/379
+pe: allow toggling parsing of attribute certs, thanks @suttonbradley: https://github.com/m4b/goblin/pull/377
+mach: add new mach-o constants, thanks @keith: https://github.com/m4b/goblin/pull/372
+
+## [0.7.1] - 2023-6-11
+### MSRV bump from log
+
+## [0.7.0] - 2023-6-11
 ### Breaking
 mach: Implement `LC_NOTE`, (breakage=load commands are marked non-exhaustive), thanks @messense: https://github.com/m4b/goblin/pull/342
 ### Fixed

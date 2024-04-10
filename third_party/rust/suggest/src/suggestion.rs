@@ -109,6 +109,37 @@ impl Ord for Suggestion {
     }
 }
 
+impl Suggestion {
+    /// Get the URL for this suggestion, if present
+    pub fn url(&self) -> Option<&str> {
+        match self {
+            Self::Amp { url, .. }
+            | Self::Pocket { url, .. }
+            | Self::Wikipedia { url, .. }
+            | Self::Amo { url, .. }
+            | Self::Yelp { url, .. }
+            | Self::Mdn { url, .. } => Some(url),
+            _ => None,
+        }
+    }
+
+    /// Get the raw URL for this suggestion, if present
+    ///
+    /// This is the same as `url` except for Amp.  In that case, `url` is the URL after being
+    /// "cooked" using template interpolation, while `raw_url` is the URL template.
+    pub fn raw_url(&self) -> Option<&str> {
+        match self {
+            Self::Amp { raw_url: url, .. }
+            | Self::Pocket { url, .. }
+            | Self::Wikipedia { url, .. }
+            | Self::Amo { url, .. }
+            | Self::Yelp { url, .. }
+            | Self::Mdn { url, .. } => Some(url),
+            _ => None,
+        }
+    }
+}
+
 impl Eq for Suggestion {}
 /// Replaces all template parameters in a "raw" sponsored suggestion URL,
 /// producing a "cooked" URL with real values.

@@ -28,7 +28,7 @@ serde = "1"
 serde_derive = "1"
 serde_json = "1"
 thiserror = "1.0"
-uniffi = "0.25.2"
+uniffi = "0.27.1"
 
 [dependencies.error-support]
 path = "../support/error"
@@ -78,7 +78,7 @@ path = "../support/sql"
 path = "../support/rc_crypto/nss/nss_build_common"
 
 [build-dependencies.uniffi]
-version = "0.25.2"
+version = "0.27.1"
 features = ["build"]
 
 [features]

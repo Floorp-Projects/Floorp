@@ -7,7 +7,7 @@
 // `uniffi_core`.
 // This is the easy way out of that issue and is a temporary hacky solution.
 
-/// Metadata constants, make sure to keep this in sync with copy in `uniffi_meta::reader`
+/// Metadata constants, make sure to keep this in sync with copy in `uniffi_core::metadata`
 pub mod codes {
     // Top-level metadata item codes
     pub const FUNC: u8 = 0;
@@ -15,13 +15,14 @@ pub mod codes {
     pub const RECORD: u8 = 2;
     pub const ENUM: u8 = 3;
     pub const INTERFACE: u8 = 4;
-    pub const ERROR: u8 = 5;
     pub const NAMESPACE: u8 = 6;
     pub const CONSTRUCTOR: u8 = 7;
     pub const UDL_FILE: u8 = 8;
     pub const CALLBACK_INTERFACE: u8 = 9;
     pub const TRAIT_METHOD: u8 = 10;
     pub const UNIFFI_TRAIT: u8 = 11;
+    pub const TRAIT_INTERFACE: u8 = 12;
+    pub const CALLBACK_TRAIT_INTERFACE: u8 = 13;
     //pub const UNKNOWN: u8 = 255;
 
     // Type codes
@@ -49,8 +50,8 @@ pub mod codes {
     pub const TYPE_CALLBACK_INTERFACE: u8 = 21;
     pub const TYPE_CUSTOM: u8 = 22;
     pub const TYPE_RESULT: u8 = 23;
-    //pub const TYPE_FUTURE: u8 = 24;
-    pub const TYPE_FOREIGN_EXECUTOR: u8 = 25;
+    pub const TYPE_TRAIT_INTERFACE: u8 = 24;
+    pub const TYPE_CALLBACK_TRAIT_INTERFACE: u8 = 25;
     pub const TYPE_UNIT: u8 = 255;
 
     // Literal codes
@@ -58,7 +59,9 @@ pub mod codes {
     pub const LIT_INT: u8 = 1;
     pub const LIT_FLOAT: u8 = 2;
     pub const LIT_BOOL: u8 = 3;
-    pub const LIT_NULL: u8 = 4;
+    pub const LIT_NONE: u8 = 4;
+    pub const LIT_SOME: u8 = 5;
+    pub const LIT_EMPTY_SEQ: u8 = 6;
 }
 
 // Create a checksum for a MetadataBuffer

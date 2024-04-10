@@ -412,6 +412,7 @@ pub struct AuxSectionDefinition {
 }
 
 /// A COFF symbol table.
+// TODO: #[derive(Pwrite)] produce unparseable tokens
 pub struct SymbolTable<'a> {
     symbols: &'a [u8],
 }
@@ -480,6 +481,14 @@ impl<'a> SymbolTable<'a> {
             index: 0,
             symbols: self.symbols,
         }
+    }
+}
+
+impl<'a> ctx::TryIntoCtx<scroll::Endian> for SymbolTable<'a> {
+    type Error = error::Error;
+
+    fn try_into_ctx(self, bytes: &mut [u8], _ctx: scroll::Endian) -> Result<usize, Self::Error> {
+        bytes.pwrite(self.symbols, 0).map_err(|err| err.into())
     }
 }
 

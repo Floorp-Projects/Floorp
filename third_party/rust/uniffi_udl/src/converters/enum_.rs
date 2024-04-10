@@ -3,19 +3,22 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use super::APIConverter;
-use crate::InterfaceCollector;
+use crate::{attributes::EnumAttributes, converters::convert_docstring, InterfaceCollector};
 use anyhow::{bail, Result};
 
-use uniffi_meta::{EnumMetadata, ErrorMetadata, VariantMetadata};
+use uniffi_meta::{EnumMetadata, VariantMetadata};
 
-// Note that we have four `APIConverter` impls here - one for the `enum` case,
-// one for the `[Error] enum` case, and and one for the `[Enum] interface` case,
-// and one for the `[Error] interface` case.
+// Note that we have 2 `APIConverter` impls here - one for the `enum` case
+// (including an enum with `[Error]`), and one for the `[Error] interface` cas
+// (which is still an enum, but with different "flatness" characteristics.)
 impl APIConverter<EnumMetadata> for weedle::EnumDefinition<'_> {
     fn convert(&self, ci: &mut InterfaceCollector) -> Result<EnumMetadata> {
+        let attributes = EnumAttributes::try_from(self.attributes.as_ref())?;
         Ok(EnumMetadata {
             module_path: ci.module_path(),
             name: self.identifier.0.to_string(),
+            forced_flatness: None,
+            discr_type: None,
             variants: self
                 .values
                 .body
@@ -23,35 +26,15 @@ impl APIConverter<EnumMetadata> for weedle::EnumDefinition<'_> {
                 .iter()
                 .map::<Result<_>, _>(|v| {
                     Ok(VariantMetadata {
-                        name: v.0.to_string(),
+                        name: v.value.0.to_string(),
+                        discr: None,
                         fields: vec![],
+                        docstring: v.docstring.as_ref().map(|v| convert_docstring(&v.0)),
                     })
                 })
                 .collect::<Result<Vec<_>>>()?,
-        })
-    }
-}
-
-impl APIConverter<ErrorMetadata> for weedle::EnumDefinition<'_> {
-    fn convert(&self, ci: &mut InterfaceCollector) -> Result<ErrorMetadata> {
-        Ok(ErrorMetadata::Enum {
-            enum_: EnumMetadata {
-                module_path: ci.module_path(),
-                name: self.identifier.0.to_string(),
-                variants: self
-                    .values
-                    .body
-                    .list
-                    .iter()
-                    .map::<Result<_>, _>(|v| {
-                        Ok(VariantMetadata {
-                            name: v.0.to_string(),
-                            fields: vec![],
-                        })
-                    })
-                    .collect::<Result<Vec<_>>>()?,
-            },
-            is_flat: true,
+            non_exhaustive: attributes.contains_non_exhaustive_attr(),
+            docstring: self.docstring.as_ref().map(|v| convert_docstring(&v.0)),
         })
     }
 }
@@ -61,11 +44,11 @@ impl APIConverter<EnumMetadata> for weedle::InterfaceDefinition<'_> {
         if self.inheritance.is_some() {
             bail!("interface inheritance is not supported for enum interfaces");
         }
-        // We don't need to check `self.attributes` here; if calling code has dispatched
-        // to this impl then we already know there was an `[Enum]` attribute.
+        let attributes = EnumAttributes::try_from(self.attributes.as_ref())?;
         Ok(EnumMetadata {
             module_path: ci.module_path(),
             name: self.identifier.0.to_string(),
+            forced_flatness: Some(false),
             variants: self
                 .members
                 .body
@@ -78,37 +61,11 @@ impl APIConverter<EnumMetadata> for weedle::InterfaceDefinition<'_> {
                     ),
                 })
                 .collect::<Result<Vec<_>>>()?,
+            discr_type: None,
+            non_exhaustive: attributes.contains_non_exhaustive_attr(),
+            docstring: self.docstring.as_ref().map(|v| convert_docstring(&v.0)),
             // Enums declared using the `[Enum] interface` syntax might have variants with fields.
             //flat: false,
-        })
-    }
-}
-
-impl APIConverter<ErrorMetadata> for weedle::InterfaceDefinition<'_> {
-    fn convert(&self, ci: &mut InterfaceCollector) -> Result<ErrorMetadata> {
-        if self.inheritance.is_some() {
-            bail!("interface inheritance is not supported for enum interfaces");
-        }
-        // We don't need to check `self.attributes` here; callers have already checked them
-        // to work out which version to dispatch to.
-        Ok(ErrorMetadata::Enum {
-            enum_: EnumMetadata {
-                module_path: ci.module_path(),
-                name: self.identifier.0.to_string(),
-                variants: self
-                    .members
-                    .body
-                    .iter()
-                    .map::<Result<VariantMetadata>, _>(|member| match member {
-                        weedle::interface::InterfaceMember::Operation(t) => Ok(t.convert(ci)?),
-                        _ => bail!(
-                            "interface member type {:?} not supported in enum interface",
-                            member
-                        ),
-                    })
-                    .collect::<Result<Vec<_>>>()?,
-            },
-            is_flat: false,
         })
     }
 }

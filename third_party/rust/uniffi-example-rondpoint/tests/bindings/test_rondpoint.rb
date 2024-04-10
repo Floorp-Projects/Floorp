@@ -6,7 +6,12 @@ require 'rondpoint'
 include Test::Unit::Assertions
 include Rondpoint
 
-dico = Dictionnaire.new Enumeration::DEUX, true, 0, 123_456_789
+dico = Dictionnaire.new(
+  un: Enumeration::DEUX,
+  deux: true,
+  petit_nombre: 0,
+  gros_nombre: 123_456_789
+)
 
 assert_equal dico, Rondpoint.copie_dictionnaire(dico)
 

@@ -1,4 +1,13 @@
- [![Build Status](https://travis-ci.org/m4b/scroll.svg?branch=master)](https://travis-ci.org/m4b/scroll)
+[![Actions][actions-badge]][actions-url]
+[![crates.io version][crates-scroll-badge]][crates-scroll]
+
+<!-- Badges' links -->
+
+[actions-badge]: https://github.com/m4b/scroll/workflows/CI/badge.svg?branch=master
+[actions-url]: https://github.com/m4b/scroll/actions
+[crates-scroll-badge]: https://img.shields.io/crates/v/scroll.svg
+[crates-scroll]: https://crates.io/crates/scroll
+
 ## Scroll - cast some magic
 
 ```text
@@ -23,7 +32,7 @@ Add to your `Cargo.toml`
 
 ```toml, no_test
 [dependencies]
-scroll = "0.10"
+scroll = "0.11"
 ```
 
 ### Overview

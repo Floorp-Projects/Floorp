@@ -19,6 +19,13 @@ use crate::error;
 /// with 'read' switched for 'write' and 'From' switched with 'Into' so if you haven't yet you
 /// should read the documentation of `Pread` first.
 ///
+/// As with `Pread`, note that in the particular case of the implementation of `Pwrite` for `[u8]`,
+/// writing it at the length boundary of that slice will cause to write in an empty slice.
+/// i.e. we make use of the fact that `&bytes[bytes.len()..]` will return an empty slice, rather
+/// than returning an error. In the past, scroll returned an offset error.
+/// In this case, this is relevant if you are writing an empty slice inside an empty slice and
+/// expected this to work.
+///
 /// Unless you need to implement your own data store — that is either can't convert to `&[u8]` or
 /// have a data that does not expose a `&mut [u8]` — you will probably want to implement
 /// [TryIntoCtx](ctx/trait.TryIntoCtx.html) on your Rust types to be written.
@@ -87,7 +94,7 @@ impl<Ctx: Copy, E: From<error::Error>> Pwrite<Ctx, E> for [u8] {
         offset: usize,
         ctx: Ctx,
     ) -> result::Result<usize, E> {
-        if offset >= self.len() {
+        if offset > self.len() {
             return Err(error::Error::BadOffset(offset).into());
         }
         let dst = &mut self[offset..];
