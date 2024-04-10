@@ -825,6 +825,10 @@
   cursor: text;
 }
 
+.ruleview-variable {
+  color: var(--theme-highlight-blue);
+}
+
 .ruleview-selector-separator,
 .ruleview-selector.unmatched,
 .ruleview-unmatched-variable,
