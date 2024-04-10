@@ -2678,7 +2678,19 @@ BrowserGlue.prototype = {
             AppConstants.platform == "win") &&
           Services.prefs.getBoolPref("browser.firefoxbridge.enabled", false),
         task: async () => {
-          await lazy.FirefoxBridgeExtensionUtils.ensureRegistered();
+          let profileService = Cc[
+            "@mozilla.org/toolkit/profile-service;1"
+          ].getService(Ci.nsIToolkitProfileService);
+          if (
+            profileService.defaultProfile &&
+            profileService.currentProfile == profileService.defaultProfile
+          ) {
+            await lazy.FirefoxBridgeExtensionUtils.ensureRegistered();
+          } else {
+            lazy.log.debug(
+              "FirefoxBridgeExtensionUtils failed to register due to non-default current profile."
+            );
+          }
         },
       },
 
