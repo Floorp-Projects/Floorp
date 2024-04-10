@@ -427,18 +427,13 @@ bool BaselineCacheIRCompiler::emitGuardSpecificAtom(StringOperandId strId,
 
   Address atomAddr(stubAddress(expectedOffset));
 
-  Label done, notCachedAtom;
+  Label done;
   masm.branchPtr(Assembler::Equal, atomAddr, str, &done);
 
   // The pointers are not equal, so if the input string is also an atom it
   // must be a different string.
   masm.branchTest32(Assembler::NonZero, Address(str, JSString::offsetOfFlags()),
                     Imm32(JSString::ATOM_BIT), failure->label());
-
-  masm.tryFastAtomize(str, scratch, scratch, &notCachedAtom);
-  masm.branchPtr(Assembler::Equal, atomAddr, scratch, &done);
-  masm.jump(failure->label());
-  masm.bind(&notCachedAtom);
 
   // Check the length.
   masm.loadPtr(atomAddr, scratch);
@@ -1469,13 +1464,9 @@ bool BaselineCacheIRCompiler::emitHasClassResult(ObjOperandId objId,
 
 void BaselineCacheIRCompiler::emitAtomizeString(Register str, Register temp,
                                                 Label* failure) {
-  Label isAtom, notCachedAtom;
+  Label isAtom;
   masm.branchTest32(Assembler::NonZero, Address(str, JSString::offsetOfFlags()),
                     Imm32(JSString::ATOM_BIT), &isAtom);
-  masm.tryFastAtomize(str, temp, str, &notCachedAtom);
-  masm.jump(&isAtom);
-  masm.bind(&notCachedAtom);
-
   {
     LiveRegisterSet save(GeneralRegisterSet::Volatile(),
                          liveVolatileFloatRegs());

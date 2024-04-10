@@ -103,7 +103,6 @@ class BytecodeLocation {
 
   inline JSAtom* getAtom(const JSScript* script) const;
   inline JSString* getString(const JSScript* script) const;
-  inline bool atomizeString(JSContext* cx, JSScript* script);
   inline PropertyName* getPropertyName(const JSScript* script) const;
   inline JS::BigInt* getBigInt(const JSScript* script) const;
   inline JSObject* getObject(const JSScript* script) const;

@@ -666,10 +666,6 @@ JSAtom* js::AtomizeString(JSContext* cx, JSString* str) {
     return &str->asAtom();
   }
 
-  if (str->isAtomRef()) {
-    return str->atom();
-  }
-
   if (JSAtom* atom = cx->caches().stringToAtomCache.lookup(str)) {
     return atom;
   }
@@ -695,7 +691,6 @@ JSAtom* js::AtomizeString(JSContext* cx, JSString* str) {
         // not done in lookup() itself, because #including JSContext.h there
         // causes some non-trivial #include ordering issues.
         cx->markAtom(atom);
-        str->tryReplaceWithAtomRef(atom);
         return atom;
       }
     }
@@ -728,9 +723,7 @@ JSAtom* js::AtomizeString(JSContext* cx, JSString* str) {
     return nullptr;
   }
 
-  if (!str->tryReplaceWithAtomRef(atom)) {
-    cx->caches().stringToAtomCache.maybePut(str, atom, key);
-  }
+  cx->caches().stringToAtomCache.maybePut(str, atom, key);
 
   return atom;
 }
