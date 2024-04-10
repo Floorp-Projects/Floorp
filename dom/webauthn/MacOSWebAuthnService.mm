@@ -611,6 +611,9 @@ MacOSWebAuthnService::MakeCredential(uint64_t aTransactionId,
             userVerificationPreference = Nothing();
         nsAutoString userVerification;
         Unused << aArgs->GetUserVerification(userVerification);
+        // This mapping needs to be reviewed if values are added to the
+        // UserVerificationRequirement enum.
+        static_assert(MOZ_WEBAUTHN_ENUM_STRINGS_VERSION == 3);
         if (userVerification.EqualsLiteral(
                 MOZ_WEBAUTHN_USER_VERIFICATION_REQUIREMENT_REQUIRED)) {
           userVerificationPreference.emplace(
@@ -648,6 +651,28 @@ MacOSWebAuthnService::MakeCredential(uint64_t aTransactionId,
         } else {
           attestationPreference =
               ASAuthorizationPublicKeyCredentialAttestationKindNone;
+        }
+
+        ASAuthorizationPublicKeyCredentialResidentKeyPreference
+            residentKeyPreference;
+        nsAutoString mozResidentKey;
+        Unused << aArgs->GetResidentKey(mozResidentKey);
+        // This mapping needs to be reviewed if values are added to the
+        // ResidentKeyRequirement enum.
+        static_assert(MOZ_WEBAUTHN_ENUM_STRINGS_VERSION == 3);
+        if (mozResidentKey.EqualsLiteral(
+                MOZ_WEBAUTHN_RESIDENT_KEY_REQUIREMENT_REQUIRED)) {
+          residentKeyPreference =
+              ASAuthorizationPublicKeyCredentialResidentKeyPreferenceRequired;
+        } else if (mozResidentKey.EqualsLiteral(
+                       MOZ_WEBAUTHN_RESIDENT_KEY_REQUIREMENT_PREFERRED)) {
+          residentKeyPreference =
+              ASAuthorizationPublicKeyCredentialResidentKeyPreferencePreferred;
+        } else {
+          MOZ_ASSERT(mozResidentKey.EqualsLiteral(
+              MOZ_WEBAUTHN_RESIDENT_KEY_REQUIREMENT_DISCOURAGED));
+          residentKeyPreference =
+              ASAuthorizationPublicKeyCredentialResidentKeyPreferenceDiscouraged;
         }
 
         // Initialize the platform provider with the rpId.
@@ -690,6 +715,8 @@ MacOSWebAuthnService::MakeCredential(uint64_t aTransactionId,
             attestationPreference;
         crossPlatformRegistrationRequest.credentialParameters =
             credentialParameters;
+        crossPlatformRegistrationRequest.residentKeyPreference =
+            residentKeyPreference;
         if (userVerificationPreference.isSome()) {
           crossPlatformRegistrationRequest.userVerificationPreference =
               *userVerificationPreference;
@@ -939,6 +966,9 @@ void MacOSWebAuthnService::DoGetAssertion(
             userVerificationPreference = Nothing();
         nsAutoString userVerification;
         Unused << aArgs->GetUserVerification(userVerification);
+        // This mapping needs to be reviewed if values are added to the
+        // UserVerificationRequirement enum.
+        static_assert(MOZ_WEBAUTHN_ENUM_STRINGS_VERSION == 3);
         if (userVerification.EqualsLiteral(
                 MOZ_WEBAUTHN_USER_VERIFICATION_REQUIREMENT_REQUIRED)) {
           userVerificationPreference.emplace(
