@@ -43,34 +43,26 @@ add_task(async function test_setup_usbtoken() {
 });
 add_task(test_register);
 add_task(test_register_escape);
-add_task(test_register_direct_cancel);
-add_task(test_register_direct_presence);
 add_task(test_sign);
 add_task(test_sign_escape);
 add_task(test_tab_switching);
 add_task(test_window_switching);
-add_task(async function test_setup_fullscreen() {
+add_task(async function test_setup_softtoken() {
+  gAuthenticatorId = add_virtual_authenticator();
   return SpecialPowers.pushPrefEnv({
     set: [
       ["browser.fullscreen.autohide", true],
       ["full-screen-api.enabled", true],
       ["full-screen-api.allow-trusted-requests-only", false],
-    ],
-  });
-});
-add_task(test_fullscreen_show_nav_toolbar);
-add_task(test_no_fullscreen_dom);
-add_task(async function test_setup_softtoken() {
-  gAuthenticatorId = add_virtual_authenticator();
-  return SpecialPowers.pushPrefEnv({
-    set: [
       ["security.webauth.webauthn_enable_softtoken", true],
       ["security.webauth.webauthn_enable_usbtoken", false],
     ],
   });
 });
-add_task(test_register_direct_proceed);
-add_task(test_register_direct_proceed_anon);
+add_task(test_fullscreen_show_nav_toolbar);
+add_task(test_no_fullscreen_dom);
+add_task(test_register_direct_with_consent);
+add_task(test_register_direct_without_consent);
 add_task(test_select_sign_result);
 
 function promiseNavToolboxStatus(aExpectedStatus) {
@@ -215,53 +207,6 @@ async function test_sign_escape() {
   await BrowserTestUtils.removeTab(tab);
 }
 
-async function test_register_direct_cancel() {
-  // Open a new tab.
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
-
-  // Request a new credential with direct attestation and wait for the prompt.
-  let active = true;
-  let promise = promiseWebAuthnMakeCredential(tab, "direct")
-    .then(arrivingHereIsBad)
-    .catch(expectNotAllowedError)
-    .then(() => (active = false));
-  await promiseNotification("webauthn-prompt-register-direct");
-
-  // Cancel the request.
-  ok(active, "request should still be active");
-  PopupNotifications.panel.firstElementChild.secondaryButton.click();
-  await promise;
-
-  // Close tab.
-  await BrowserTestUtils.removeTab(tab);
-}
-
-async function test_register_direct_presence() {
-  // Open a new tab.
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
-
-  // Request a new credential with direct attestation and wait for the prompt.
-  let active = true;
-  let promise = promiseWebAuthnMakeCredential(tab, "direct")
-    .then(arrivingHereIsBad)
-    .catch(expectNotAllowedError)
-    .then(() => (active = false));
-  await promiseNotification("webauthn-prompt-register-direct");
-
-  // Click "proceed" and wait for presence prompt
-  let presence = promiseNotification("webauthn-prompt-presence");
-  PopupNotifications.panel.firstElementChild.button.click();
-  await presence;
-
-  // Cancel the request.
-  ok(active, "request should still be active");
-  PopupNotifications.panel.firstElementChild.button.click();
-  await promise;
-
-  // Close tab.
-  await BrowserTestUtils.removeTab(tab);
-}
-
 // Add two tabs, open WebAuthn in the first, switch, assert the prompt is
 // not visible, switch back, assert the prompt is there and cancel it.
 async function test_tab_switching() {
@@ -359,7 +304,7 @@ async function test_window_switching() {
   await BrowserTestUtils.removeTab(tab);
 }
 
-async function test_register_direct_proceed() {
+async function test_register_direct_with_consent() {
   // Open a new tab.
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
 
@@ -367,7 +312,7 @@ async function test_register_direct_proceed() {
   let request = promiseWebAuthnMakeCredential(tab, "direct");
   await promiseNotification("webauthn-prompt-register-direct");
 
-  // Proceed.
+  // Click "Allow".
   PopupNotifications.panel.firstElementChild.button.click();
 
   // Ensure we got "direct" attestation.
@@ -377,7 +322,7 @@ async function test_register_direct_proceed() {
   await BrowserTestUtils.removeTab(tab);
 }
 
-async function test_register_direct_proceed_anon() {
+async function test_register_direct_without_consent() {
   // Open a new tab.
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
 
@@ -385,9 +330,8 @@ async function test_register_direct_proceed_anon() {
   let request = promiseWebAuthnMakeCredential(tab, "direct");
   await promiseNotification("webauthn-prompt-register-direct");
 
-  // Check "anonymize anyway" and proceed.
-  PopupNotifications.panel.firstElementChild.checkbox.checked = true;
-  PopupNotifications.panel.firstElementChild.button.click();
+  // Click "Block".
+  PopupNotifications.panel.firstElementChild.secondaryButton.click();
 
   // Ensure we got "none" attestation.
   await request.then(verifyAnonymizedCertificate);
@@ -438,23 +382,22 @@ async function test_fullscreen_show_nav_toolbar() {
 
   await navToolboxHiddenPromise;
 
-  // Request a new credential and wait for the direct attestation consent
-  // prompt.
+  // Request a new credential with direct attestation. The consent prompt will
+  // keep the request active until we can verify that the nav toolbar is shown.
   let promptPromise = promiseNotification("webauthn-prompt-register-direct");
   let navToolboxShownPromise = promiseNavToolboxStatus("shown");
 
   let active = true;
-  let requestPromise = promiseWebAuthnMakeCredential(tab, "direct")
-    .then(arrivingHereIsBad)
-    .catch(expectNotAllowedError)
-    .then(() => (active = false));
+  let requestPromise = promiseWebAuthnMakeCredential(tab, "direct").then(
+    () => (active = false)
+  );
 
   await Promise.all([promptPromise, navToolboxShownPromise]);
 
   ok(active, "request is active");
   ok(window.fullScreen, "window is fullscreen");
 
-  // Cancel the request.
+  // Proceed through the consent prompt.
   PopupNotifications.panel.firstElementChild.secondaryButton.click();
   await requestPromise;
 
@@ -475,23 +418,22 @@ async function test_no_fullscreen_dom() {
   await fullScreenPaintPromise;
   ok(!!document.fullscreenElement, "a DOM element is fullscreen");
 
-  // Request a new credential and wait for the direct attestation consent
-  // prompt.
+  // Request a new credential with direct attestation. The consent prompt will
+  // keep the request active until we can verify that we've left fullscreen.
   let promptPromise = promiseNotification("webauthn-prompt-register-direct");
   fullScreenPaintPromise = promiseFullScreenPaint();
 
   let active = true;
-  let requestPromise = promiseWebAuthnMakeCredential(tab, "direct")
-    .then(arrivingHereIsBad)
-    .catch(expectNotAllowedError)
-    .then(() => (active = false));
+  let requestPromise = promiseWebAuthnMakeCredential(tab, "direct").then(
+    () => (active = false)
+  );
 
   await Promise.all([promptPromise, fullScreenPaintPromise]);
 
   ok(active, "request is active");
   ok(!document.fullscreenElement, "no DOM element is fullscreen");
 
-  // Cancel the request.
+  // Proceed through the consent prompt.
   await waitForPopupNotificationSecurityDelay();
   PopupNotifications.panel.firstElementChild.secondaryButton.click();
   await requestPromise;
