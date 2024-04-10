@@ -107,6 +107,8 @@ class BounceTrackingState : public nsIWebProgressListener,
   explicit BounceTrackingState();
   virtual ~BounceTrackingState();
 
+  bool mIsInitialized{false};
+
   uint64_t mBrowserId{};
 
   // OriginAttributes associated with the browser this state is attached to.

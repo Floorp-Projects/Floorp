@@ -88,7 +88,8 @@ already_AddRefed<BounceTrackingState> BounceTrackingState::GetOrCreate(
     return nullptr;
   }
   uint64_t browserId = browsingContext->BrowserId();
-  bool createdNew;
+  bool createdNew = false;
+
   RefPtr<BounceTrackingState> bounceTrackingState =
       do_AddRef(sBounceTrackingStates->LookupOrInsertWith(browserId, [&] {
         createdNew = true;
@@ -97,7 +98,11 @@ already_AddRefed<BounceTrackingState> BounceTrackingState::GetOrCreate(
 
   if (createdNew) {
     aRv = bounceTrackingState->Init(aWebProgress);
-    NS_ENSURE_SUCCESS(aRv, nullptr);
+    if (NS_FAILED(aRv)) {
+      NS_WARNING("Failed to initialize BounceTrackingState.");
+      sBounceTrackingStates->Remove(browserId);
+      return nullptr;
+    }
   }
 
   return bounceTrackingState.forget();
@@ -120,6 +125,10 @@ void BounceTrackingState::ResetAllForOriginAttributesPattern(
 
 nsresult BounceTrackingState::Init(
     dom::BrowsingContextWebProgress* aWebProgress) {
+  MOZ_ASSERT(!mIsInitialized,
+             "BounceTrackingState must not be initialized twice.");
+  mIsInitialized = true;
+
   NS_ENSURE_ARG_POINTER(aWebProgress);
   NS_ENSURE_TRUE(
       StaticPrefs::privacy_bounceTrackingProtection_enabled_AtStartup(),
@@ -160,9 +169,10 @@ nsCString BounceTrackingState::Describe() {
   OriginAttributesRef().CreateSuffix(oaSuffix);
 
   return nsPrintfCString(
-      "{ mBounceTrackingRecord: %s, mOriginAttributes: %s }",
+      "{ mBounceTrackingRecord: %s, mOriginAttributes: %s, mBrowserId: %" PRIu64
+      " }",
       mBounceTrackingRecord ? mBounceTrackingRecord->Describe().get() : "null",
-      oaSuffix.get());
+      oaSuffix.get(), mBrowserId);
 }
 
 // static
