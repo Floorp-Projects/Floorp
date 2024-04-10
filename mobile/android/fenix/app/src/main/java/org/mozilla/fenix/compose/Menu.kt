@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.compose
 
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
@@ -20,16 +21,21 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import org.mozilla.fenix.R
@@ -47,6 +53,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * @param modifier Modifier to be applied to the menu.
  * @param offset Offset to be added to the position of the menu.
  */
+@Suppress("LongMethod")
 @Composable
 private fun Menu(
     menuItems: List<MenuItem>,
@@ -59,19 +66,28 @@ private fun Menu(
     DisposableEffect(LocalConfiguration.current.orientation) {
         onDispose { onDismissRequest() }
     }
+    val localDensity = LocalDensity.current
+
+    var columnHeightDp by remember {
+        mutableStateOf(0.dp)
+    }
+
+    var selectedItemIndex by remember {
+        mutableIntStateOf(0)
+    }
 
     MaterialTheme(shapes = MaterialTheme.shapes.copy(medium = cornerShape)) {
         DropdownMenu(
             expanded = showMenu && menuItems.isNotEmpty(),
             onDismissRequest = onDismissRequest,
             offset = offset,
+            scrollState = ScrollState(with(localDensity) { columnHeightDp.toPx() * selectedItemIndex }.toInt()),
             modifier = Modifier
                 .background(color = FirefoxTheme.colors.layer2)
                 .then(modifier),
         ) {
             val hasCheckedItems = menuItems.any { it.isChecked }
-
-            for (item in menuItems) {
+            menuItems.forEachIndexed { index, item ->
                 val checkmarkModifier = if (hasCheckedItems) {
                     Modifier.selectable(
                         selected = item.isChecked,
@@ -89,7 +105,11 @@ private fun Menu(
                     modifier = Modifier
                         .testTag(item.testTag)
                         .align(alignment = Alignment.CenterHorizontally)
-                        .then(checkmarkModifier),
+                        .then(checkmarkModifier)
+                        .onGloballyPositioned { coordinates ->
+                            columnHeightDp = with(localDensity) { coordinates.size.height.toDp() }
+                        }
+                        .semantics { if (item.isChecked) traversalIndex = -1f },
                     onClick = {
                         onDismissRequest()
                         item.onClick()
@@ -97,6 +117,7 @@ private fun Menu(
                 ) {
                     if (hasCheckedItems) {
                         if (item.isChecked) {
+                            selectedItemIndex = index
                             Icon(
                                 painter = painterResource(id = R.drawable.mozac_ic_checkmark_24),
                                 modifier = Modifier
