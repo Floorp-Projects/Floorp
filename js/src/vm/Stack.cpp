@@ -509,9 +509,8 @@ void JS::ProfilingFrameIterator::operator++() {
 
 void JS::ProfilingFrameIterator::settleFrames() {
   // Handle transition frames (see comment in JitFrameIter::operator++).
-  if (isJSJit() && !jsJitIter().done() &&
-      jsJitIter().frameType() == jit::FrameType::WasmToJSJit) {
-    wasm::Frame* fp = (wasm::Frame*)jsJitIter().fp();
+  if (isJSJit() && jsJitIter().done() && jsJitIter().wasmCallerFP()) {
+    wasm::Frame* fp = (wasm::Frame*)jsJitIter().wasmCallerFP();
     iteratorDestroy();
     new (storage()) wasm::ProfilingFrameIterator(fp);
     kind_ = Kind::Wasm;

@@ -270,6 +270,7 @@ class JitcodeGlobalTable;
 
 class JSJitProfilingFrameIterator {
   uint8_t* fp_;
+  uint8_t* wasmCallerFP_ = nullptr;
   // See JS::ProfilingFrameIterator::endStackAddress_ comment.
   void* endStackAddress_ = nullptr;
   FrameType type_;
@@ -296,6 +297,11 @@ class JSJitProfilingFrameIterator {
   void* fp() const {
     MOZ_ASSERT(!done());
     return fp_;
+  }
+  void* wasmCallerFP() const {
+    MOZ_ASSERT(done());
+    MOZ_ASSERT(bool(wasmCallerFP_) == (type_ == FrameType::WasmToJSJit));
+    return wasmCallerFP_;
   }
   inline JitFrameLayout* framePtr() const;
   void* stackAddress() const { return fp(); }
