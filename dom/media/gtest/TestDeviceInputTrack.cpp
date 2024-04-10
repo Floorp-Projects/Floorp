@@ -150,16 +150,16 @@ TEST_F(TestDeviceInputTrack, DeviceInputConsumerTrack) {
   RefPtr<TestDeviceInputConsumerTrack> track1 =
       TestDeviceInputConsumerTrack::Create(mGraph);
   track1->ConnectDeviceInput(device1, listener1.get(), testPrincipal);
-  EXPECT_TRUE(track1->ConnectToNativeDevice());
-  EXPECT_FALSE(track1->ConnectToNonNativeDevice());
+  EXPECT_TRUE(track1->ConnectedToNativeDevice());
+  EXPECT_FALSE(track1->ConnectedToNonNativeDevice());
 
   const CubebUtils::AudioDeviceID device2 = (void*)2;
   RefPtr<TestAudioDataListener> listener2 = new TestAudioDataListener(2, false);
   RefPtr<TestDeviceInputConsumerTrack> track2 =
       TestDeviceInputConsumerTrack::Create(mGraph);
   track2->ConnectDeviceInput(device2, listener2.get(), testPrincipal);
-  EXPECT_FALSE(track2->ConnectToNativeDevice());
-  EXPECT_TRUE(track2->ConnectToNonNativeDevice());
+  EXPECT_FALSE(track2->ConnectedToNativeDevice());
+  EXPECT_TRUE(track2->ConnectedToNonNativeDevice());
 
   track2->Destroy();
   mGraph->RemoveTrackGraphThread(track2);

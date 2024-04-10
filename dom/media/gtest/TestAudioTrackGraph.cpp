@@ -619,8 +619,8 @@ TEST(TestAudioTrackGraph, DeviceChangedCallback)
       TestDeviceInputConsumerTrack::Create(graphImpl);
   track1->ConnectDeviceInput(device1, listener1.get(), PRINCIPAL_HANDLE_NONE);
 
-  EXPECT_TRUE(track1->ConnectToNativeDevice());
-  EXPECT_FALSE(track1->ConnectToNonNativeDevice());
+  EXPECT_TRUE(track1->ConnectedToNativeDevice());
+  EXPECT_FALSE(track1->ConnectedToNonNativeDevice());
   auto started =
       Invoke([&] { return graphImpl->NotifyWhenDeviceStarted(nullptr); });
   RefPtr<SmartMockCubebStream> stream1 = WaitFor(cubeb->StreamInitEvent());
@@ -636,8 +636,8 @@ TEST(TestAudioTrackGraph, DeviceChangedCallback)
       TestDeviceInputConsumerTrack::Create(graphImpl);
   track2->ConnectDeviceInput(device2, listener2.get(), PRINCIPAL_HANDLE_NONE);
 
-  EXPECT_FALSE(track2->ConnectToNativeDevice());
-  EXPECT_TRUE(track2->ConnectToNonNativeDevice());
+  EXPECT_FALSE(track2->ConnectedToNativeDevice());
+  EXPECT_TRUE(track2->ConnectedToNonNativeDevice());
   RefPtr<SmartMockCubebStream> stream2 = WaitFor(cubeb->StreamInitEvent());
   EXPECT_TRUE(stream2->mHasInput);
   EXPECT_FALSE(stream2->mHasOutput);
@@ -851,8 +851,8 @@ TEST(TestAudioTrackGraph, RestartAudioIfMaxChannelCountChanged)
     track1->ConnectDeviceInput(nativeDevice, listener1.get(),
                                PRINCIPAL_HANDLE_NONE);
 
-    EXPECT_TRUE(track1->ConnectToNativeDevice());
-    EXPECT_FALSE(track1->ConnectToNonNativeDevice());
+    EXPECT_TRUE(track1->ConnectedToNativeDevice());
+    EXPECT_FALSE(track1->ConnectedToNonNativeDevice());
     auto started =
         Invoke([&] { return graphImpl->NotifyWhenDeviceStarted(nullptr); });
     nativeStream = WaitFor(cubeb->StreamInitEvent());
@@ -890,8 +890,8 @@ TEST(TestAudioTrackGraph, RestartAudioIfMaxChannelCountChanged)
         TestDeviceInputConsumerTrack::Create(graphImpl);
     track3->ConnectDeviceInput(nonNativeDevice, listener3.get(),
                                PRINCIPAL_HANDLE_NONE);
-    EXPECT_FALSE(track3->ConnectToNativeDevice());
-    EXPECT_TRUE(track3->ConnectToNonNativeDevice());
+    EXPECT_FALSE(track3->ConnectedToNativeDevice());
+    EXPECT_TRUE(track3->ConnectedToNonNativeDevice());
 
     RefPtr<SmartMockCubebStream> nonNativeStream =
         WaitFor(cubeb->StreamInitEvent());

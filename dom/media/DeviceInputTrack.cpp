@@ -127,12 +127,12 @@ NotNull<AudioDataListener*> DeviceInputConsumerTrack::GetAudioDataListener()
   return WrapNotNull(mListener.get());
 }
 
-bool DeviceInputConsumerTrack::ConnectToNativeDevice() const {
+bool DeviceInputConsumerTrack::ConnectedToNativeDevice() const {
   MOZ_ASSERT(NS_IsMainThread());
   return mDeviceInputTrack && mDeviceInputTrack->AsNativeInputTrack();
 }
 
-bool DeviceInputConsumerTrack::ConnectToNonNativeDevice() const {
+bool DeviceInputConsumerTrack::ConnectedToNonNativeDevice() const {
   MOZ_ASSERT(NS_IsMainThread());
   return mDeviceInputTrack && mDeviceInputTrack->AsNonNativeInputTrack();
 }
