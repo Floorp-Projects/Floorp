@@ -35,7 +35,7 @@ class TablePartRule : public PivotRule {
         accRole == roles::TEXT || accRole == roles::TEXT_CONTAINER ||
         accRole == roles::SECTION ||
         // Row groups.
-        accRole == roles::GROUPING) {
+        accRole == roles::ROWGROUP) {
       // Walk inside these, but don't match them.
       return nsIAccessibleTraversalRule::FILTER_IGNORE;
     }
