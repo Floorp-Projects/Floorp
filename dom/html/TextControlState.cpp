@@ -2877,8 +2877,7 @@ bool TextControlState::SetValueWithoutTextEditor(
 
   // We can't just early-return here, because OnValueChanged below still need to
   // be called.
-  if (!mValue.Equals(aHandlingSetValue.GetSettingValue()) ||
-      !StaticPrefs::dom_input_skip_cursor_move_for_same_value_set()) {
+  if (!mValue.Equals(aHandlingSetValue.GetSettingValue())) {
     bool handleSettingValue = true;
     // If `SetValue()` call is nested, `GetSettingValue()` result will be
     // modified.  So, we need to store input event data value before

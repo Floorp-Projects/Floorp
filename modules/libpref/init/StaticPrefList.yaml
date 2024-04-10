@@ -2845,13 +2845,6 @@
   value: 8
   mirror: always
 
-# Enable not moving the cursor to end when a text input or textarea has .value
-# set to the value it already has.  By default, enabled.
-- name: dom.input.skip_cursor_move_for_same_value_set
-  type: bool
-  value: true
-  mirror: always
-
 # How often to check for CPOW timeouts (ms). CPOWs are only timed
 # out by the hang monitor.
 - name: dom.ipc.cpow.timeout
