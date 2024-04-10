@@ -126,10 +126,6 @@ skip-if = [
   "http2",
 ]
 
-["test_wpt_pointerevent_change-touch-action-onpointerdown_touch-manual.html"]
-support-files = ["wpt/pointerevent_change-touch-action-onpointerdown_touch-manual.html"]
-disabled = "disabled"
-
 ["test_wpt_pointerevent_drag_interaction-manual.html"]
 support-files = ["wpt/html/pointerevent_drag_interaction-manual.html"]
 skip-if = [
