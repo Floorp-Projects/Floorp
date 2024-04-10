@@ -261,20 +261,24 @@ export class SearchEngineSelector {
         continue;
       }
 
-      let variants =
-        config.variants?.filter(variant =>
-          this.#matchesUserEnvironment(variant, userEnv)
-        ) ?? [];
+      let variant = config.variants?.findLast(variant =>
+        this.#matchesUserEnvironment(variant, userEnv)
+      );
 
-      if (!variants.length) {
+      if (!variant) {
         continue;
       }
 
+      let subVariant = variant.subVariants?.findLast(subVariant =>
+        this.#matchesUserEnvironment(subVariant, userEnv)
+      );
+
       let engine = structuredClone(config.base);
       engine.identifier = config.identifier;
+      engine = this.#deepCopyObject(engine, variant);
 
-      for (let variant of variants) {
-        engine = this.#deepCopyObject(engine, variant);
+      if (subVariant) {
+        engine = this.#deepCopyObject(engine, subVariant);
       }
 
       for (let override of this._configurationOverrides) {
@@ -356,6 +360,10 @@ export class SearchEngineSelector {
   #deepCopyObject(target, source) {
     for (let key in source) {
       if (["environment"].includes(key)) {
+        continue;
+      }
+
+      if (["subVariants"].includes(key)) {
         continue;
       }
 

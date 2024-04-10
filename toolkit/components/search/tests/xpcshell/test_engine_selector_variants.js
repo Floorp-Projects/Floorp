@@ -122,7 +122,7 @@ add_task(async function test_no_variants_match() {
   );
 });
 
-add_task(async function test_match_and_apply_all_variants() {
+add_task(async function test_match_and_apply_last_variants() {
   await assertActualEnginesEqualsExpected(
     CONFIG,
     {
@@ -133,11 +133,10 @@ add_task(async function test_match_and_apply_all_variants() {
       {
         identifier: "engine-1",
         urls: { search: { params: [{ name: "partner-code", value: "foo" }] } },
-        telemetrySuffix: "telemetry",
         searchTermParamName: "search-param",
       },
     ],
-    "Should match all variants and apply each variant property cumulatively."
+    "Should match and apply last variant."
   );
 });
 
