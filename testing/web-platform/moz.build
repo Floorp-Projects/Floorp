@@ -534,10 +534,6 @@ with Files("tests/layout-instability/**"):
 with Files("tests/longtask-timing/**"):
     BUG_COMPONENT = ("Core", "DOM: Performance")
 
-with Files("tests/long-animation-frame  /**"):
-    BUG_COMPONENT = ("Core", "DOM: Performance")
-
-# depends on generic-sensor, check bug 1359076
 with Files("tests/magnetometer/**"):
     BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
 
@@ -561,9 +557,6 @@ with Files("tests/mediacapture-fromelement/**"):
 
 with Files("tests/mediacapture-image/**"):
     BUG_COMPONENT = ("Core", "Audio/Video: Recording")
-
-with Files("tests/mediacapture-insertable-stream/**"):
-    BUG_COMPONENT = ("Core", "Audio/Video: MediaStreamGraph")
 
 with Files("tests/mediacapture-record/**"):
     BUG_COMPONENT = ("Core", "Audio/Video: Recording")
