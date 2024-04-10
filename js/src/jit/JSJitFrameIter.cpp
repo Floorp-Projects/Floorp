@@ -777,20 +777,26 @@ void JSJitProfilingFrameIterator::moveToNextFrame(CommonFrameLayout* frame) {
     }
 
     case FrameType::WasmToJSJit:
-      // No previous js jit frame, this is a transition frame, used to
-      // pass a wasm iterator the correct value of FP.
+      // No previous JS JIT frame. Set fp_ to nullptr to indicate the
+      // JSJitProfilingFrameIterator is done(). Also set wasmCallerFP_ so that
+      // the caller can pass it to a Wasm frame iterator.
       resumePCinCurrentFrame_ = nullptr;
-      fp_ = GetPreviousRawFrame<uint8_t*>(frame);
+      fp_ = nullptr;
       type_ = FrameType::WasmToJSJit;
-      MOZ_ASSERT(!done());
+      MOZ_ASSERT(!wasmCallerFP_);
+      wasmCallerFP_ = GetPreviousRawFrame<uint8_t*>(frame);
+      MOZ_ASSERT(wasmCallerFP_);
+      MOZ_ASSERT(done());
       return;
 
     case FrameType::CppToJSJit:
-      // No previous frame, set to nullptr to indicate that
+      // No previous JS JIT frame. Set fp_ to nullptr to indicate the
       // JSJitProfilingFrameIterator is done().
       resumePCinCurrentFrame_ = nullptr;
       fp_ = nullptr;
       type_ = FrameType::CppToJSJit;
+      MOZ_ASSERT(!wasmCallerFP_);
+      MOZ_ASSERT(done());
       return;
 
     case FrameType::BaselineInterpreterEntry:
