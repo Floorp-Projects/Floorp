@@ -9592,6 +9592,20 @@
   value: 32768   # Measured in KiB
   mirror: always
 
+# Multiplier to change the sample rate at which input-only streams run, so as
+# to similate clock drift.
+- name: media.cubeb.input_drift_factor
+  type: AtomicFloat
+  mirror: always
+  value: 1.f
+
+# Multiplier to change the sample rate at which output-only streams run, so as
+# to similate clock drift.
+- name: media.cubeb.output_drift_factor
+  type: AtomicFloat
+  mirror: always
+  value: 1.f
+
 # Whether cubeb is sandboxed (AudioIPC)
 - name: media.cubeb.sandbox
   type: bool
