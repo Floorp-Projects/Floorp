@@ -327,7 +327,7 @@
           },
           "variants": {
             "title": "Variants",
-            "description": "This section describes variations of this search engine that may occur depending on the user's environment. If multiple sections match a user's environment, then all matching sections are applied cumulatively in the order in the array.",
+            "description": "This section describes variations of this search engine that may occur depending on the user's environment. The last variant that matches the user's environment will be applied to the engine, subvariants may also be applied.",
             "type": "array",
             "items": {
               "type": "object",
@@ -351,6 +351,37 @@
                 },
                 "urls": {
                   "$ref": "#/definitions/urls"
+                },
+                "subVariants": {
+                  "title": "Subvariants",
+                  "description": "This section describes subvariations of this search engine that may occur depending on the user's environment. The last subvariant that matches the user's environment will be applied to the engine.",
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "environment": {
+                        "$ref": "#/definitions/environment"
+                      },
+                      "partnerCode": {
+                        "$ref": "#/definitions/partnerCode"
+                      },
+                      "optional": {
+                        "title": "Optional",
+                        "description": "This search engine is presented as an option that the user may enable. It is not included in the initial list of search engines. If not specified, defaults to false.",
+                        "type": "boolean"
+                      },
+                      "telemetrySuffix": {
+                        "title": "Telemetry Suffix",
+                        "description": "Suffix that is appended to the search engine identifier following a dash, i.e. `<identifier>-<suffix>`. There should always be a suffix supplied if the partner code is different for a reason other than being on a different platform.",
+                        "type": "string",
+                        "pattern": "^[a-zA-Z0-9-]*$"
+                      },
+                      "urls": {
+                        "$ref": "#/definitions/urls"
+                      }
+                    },
+                    "required": ["environment"]
+                  }
                 }
               },
               "required": ["environment"],

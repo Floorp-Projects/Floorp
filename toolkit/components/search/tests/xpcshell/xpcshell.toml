@@ -131,6 +131,8 @@ tags = "remotesettings searchmain"
 
 ["test_engine_selector_environment.js"]
 
+["test_engine_selector_subvariants.js"]
+
 ["test_engine_selector_variants.js"]
 
 ["test_engine_set_alias.js"]
