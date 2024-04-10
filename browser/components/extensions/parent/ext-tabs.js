@@ -1026,7 +1026,13 @@ this.tabs = class extends ExtensionAPIPersistent {
               ? windowTracker.getTopWindow(context)
               : windowTracker.getWindow(windowId, context);
 
-          let tab = tabManager.wrapTab(window.gBrowser.selectedTab);
+          let tab = tabManager.getWrapper(window.gBrowser.selectedTab);
+          if (
+            !extension.hasPermission("<all_urls>") &&
+            !tab.hasActiveTabPermission
+          ) {
+            throw new ExtensionError("Missing activeTab permission");
+          }
           await tabListener.awaitTabReady(tab.nativeTab);
 
           let zoom = window.ZoomManager.getZoomForBrowser(
