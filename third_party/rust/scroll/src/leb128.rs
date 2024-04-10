@@ -1,9 +1,8 @@
-use crate::ctx::TryFromCtx;
-use crate::error;
-use crate::Pread;
 use core::convert::{AsRef, From};
-use core::result;
-use core::u8;
+use core::{result, u8};
+
+use crate::ctx::TryFromCtx;
+use crate::{error, Pread};
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 /// An unsigned leb128 integer
@@ -184,21 +183,24 @@ mod tests {
         let buf = [2u8 | CONTINUATION_BIT, 1];
         let bytes = &buf[..];
         let num = bytes.pread::<Uleb128>(0).unwrap();
-        println!("num: {:?}", &num);
+        #[cfg(feature = "std")]
+        println!("num: {num:?}");
         assert_eq!(130u64, num.into());
         assert_eq!(num.size(), 2);
 
         let buf = [0x00, 0x01];
         let bytes = &buf[..];
         let num = bytes.pread::<Uleb128>(0).unwrap();
-        println!("num: {:?}", &num);
+        #[cfg(feature = "std")]
+        println!("num: {num:?}");
         assert_eq!(0u64, num.into());
         assert_eq!(num.size(), 1);
 
         let buf = [0x21];
         let bytes = &buf[..];
         let num = bytes.pread::<Uleb128>(0).unwrap();
-        println!("num: {:?}", &num);
+        #[cfg(feature = "std")]
+        println!("num: {num:?}");
         assert_eq!(0x21u64, num.into());
         assert_eq!(num.size(), 1);
     }

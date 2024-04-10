@@ -4,5 +4,5 @@ class _UniffiConverterFloat(_UniffiConverterPrimitiveFloat):
         return buf.read_float()
 
     @staticmethod
-    def write_unchecked(value, buf):
+    def write(value, buf):
         buf.write_float(value)

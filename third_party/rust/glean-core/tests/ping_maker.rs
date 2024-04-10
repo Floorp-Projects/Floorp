@@ -91,6 +91,7 @@ fn test_metrics_must_report_experimentation_id() {
         rate_limit: None,
         enable_event_timestamps: true,
         experimentation_id: Some("test-experimentation-id".to_string()),
+        enable_internal_pings: true,
     })
     .unwrap();
     let ping_maker = PingMaker::new();
@@ -143,6 +144,7 @@ fn experimentation_id_is_removed_if_send_if_empty_is_false() {
         rate_limit: None,
         enable_event_timestamps: true,
         experimentation_id: Some("test-experimentation-id".to_string()),
+        enable_internal_pings: true,
     })
     .unwrap();
     let ping_maker = PingMaker::new();

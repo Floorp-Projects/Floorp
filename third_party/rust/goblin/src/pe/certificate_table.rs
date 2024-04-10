@@ -3,12 +3,15 @@
 /// https://learn.microsoft.com/en-us/windows/win32/debug/pe-format#the-attribute-certificate-table-image-only
 /// https://learn.microsoft.com/en-us/windows/win32/api/wintrust/ns-wintrust-win_certificate
 use crate::error;
-use scroll::Pread;
+use scroll::{ctx, Pread, Pwrite};
 
 use alloc::string::ToString;
 use alloc::vec::Vec;
 
+use super::utils::pad;
+
 #[repr(u16)]
+#[non_exhaustive]
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub enum AttributeCertificateRevision {
     /// WIN_CERT_REVISION_1_0
@@ -38,7 +41,7 @@ impl TryFrom<u16> for AttributeCertificateRevision {
 }
 
 #[repr(u16)]
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub enum AttributeCertificateType {
     /// WIN_CERT_TYPE_X509
     X509 = 0x0001,
@@ -127,7 +130,28 @@ impl<'a> AttributeCertificate<'a> {
     }
 }
 
+impl<'a> ctx::TryIntoCtx<scroll::Endian> for &AttributeCertificate<'a> {
+    type Error = error::Error;
+
+    /// Writes an aligned attribute certificate in the buffer.
+    fn try_into_ctx(self, bytes: &mut [u8], ctx: scroll::Endian) -> Result<usize, Self::Error> {
+        let offset = &mut 0;
+        bytes.gwrite_with(self.length, offset, ctx)?;
+        bytes.gwrite_with(self.revision as u16, offset, ctx)?;
+        bytes.gwrite_with(self.certificate_type as u16, offset, ctx)?;
+        // Extend by zero the buffer until it is aligned on a quadword (16 bytes).
+        let maybe_certificate_padding = pad(self.certificate.len(), Some(16usize));
+        bytes.gwrite(self.certificate, offset)?;
+        if let Some(cert_padding) = maybe_certificate_padding {
+            bytes.gwrite(&cert_padding[..], offset)?;
+        }
+
+        Ok(*offset)
+    }
+}
+
 pub type CertificateDirectoryTable<'a> = Vec<AttributeCertificate<'a>>;
+
 pub(crate) fn enumerate_certificates(
     bytes: &[u8],
     table_virtual_address: u32,

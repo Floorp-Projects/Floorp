@@ -84,8 +84,10 @@ pub(super) fn convert_default_value(
         (weedle::literal::DefaultValue::String(s), Type::Enum { .. }) => {
             Literal::Enum(s.0.to_string(), type_.clone())
         }
-        (weedle::literal::DefaultValue::Null(_), Type::Optional { .. }) => Literal::Null,
-        (_, Type::Optional { inner_type, .. }) => convert_default_value(default_value, inner_type)?,
+        (weedle::literal::DefaultValue::Null(_), Type::Optional { .. }) => Literal::None,
+        (_, Type::Optional { inner_type, .. }) => Literal::Some {
+            inner: Box::new(convert_default_value(default_value, inner_type)?),
+        },
 
         // We'll ensure the type safety in the convert_* number methods.
         (weedle::literal::DefaultValue::Integer(i), _) => convert_integer(i, type_)?,
@@ -144,7 +146,7 @@ mod test {
                     inner_type: Box::new(Type::String)
                 }
             )?,
-            Literal::Null
+            Literal::None
         ));
         Ok(())
     }

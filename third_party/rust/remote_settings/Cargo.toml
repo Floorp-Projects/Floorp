@@ -28,7 +28,7 @@ license = "MPL-2.0"
 parking_lot = "0.12"
 serde_json = "1"
 thiserror = "1.0"
-uniffi = "0.25.2"
+uniffi = "0.27.1"
 url = "2.1"
 
 [dependencies.serde]
@@ -46,5 +46,5 @@ mockito = "0.31"
 path = "../support/viaduct-reqwest"
 
 [build-dependencies.uniffi]
-version = "0.25.2"
+version = "0.27.1"
 features = ["build"]

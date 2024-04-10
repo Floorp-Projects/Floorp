@@ -30,7 +30,7 @@ fn extract_from_bytes(file_data: &[u8]) -> anyhow::Result<Vec<Metadata>> {
         Object::PE(pe) => extract_from_pe(pe, file_data),
         Object::Mach(mach) => extract_from_mach(mach, file_data),
         Object::Archive(archive) => extract_from_archive(archive, file_data),
-        Object::Unknown(_) => bail!("Unknown library format"),
+        _ => bail!("Unknown library format"),
     }
 }
 

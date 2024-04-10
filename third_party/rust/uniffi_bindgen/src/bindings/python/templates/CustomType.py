@@ -18,6 +18,10 @@ class _UniffiConverterType{{ name }}:
         return {{ builtin|ffi_converter_name }}.lift(value)
 
     @staticmethod
+    def check_lower(value):
+        return {{ builtin|ffi_converter_name }}.check_lower(value)
+
+    @staticmethod
     def lower(value):
         return {{ builtin|ffi_converter_name }}.lower(value)
 
@@ -50,6 +54,11 @@ class _UniffiConverterType{{ name }}:
     def lift(value):
         builtin_value = {{ builtin|lift_fn }}(value)
         return {{ config.into_custom.render("builtin_value") }}
+
+    @staticmethod
+    def check_lower(value):
+        builtin_value = {{ config.from_custom.render("value") }}
+        return {{ builtin|check_lower_fn }}(builtin_value)
 
     @staticmethod
     def lower(value):

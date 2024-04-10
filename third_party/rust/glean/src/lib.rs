@@ -122,6 +122,7 @@ fn initialize_internal(cfg: Configuration, client_info: ClientInfoMetrics) -> Op
         rate_limit: cfg.rate_limit,
         enable_event_timestamps: cfg.enable_event_timestamps,
         experimentation_id: cfg.experimentation_id,
+        enable_internal_pings: cfg.enable_internal_pings,
     };
 
     glean_core::glean_initialize(core_cfg, client_info.into(), callbacks);

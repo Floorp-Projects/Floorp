@@ -4,7 +4,7 @@
 
 use super::APIConverter;
 use crate::attributes::InterfaceAttributes;
-use crate::InterfaceCollector;
+use crate::{converters::convert_docstring, InterfaceCollector};
 use anyhow::{bail, Result};
 use std::collections::HashSet;
 use uniffi_meta::{
@@ -23,7 +23,7 @@ impl APIConverter<ObjectMetadata> for weedle::InterfaceDefinition<'_> {
         };
 
         let object_name = self.identifier.0;
-        let object_impl = attributes.object_impl();
+        let object_impl = attributes.object_impl()?;
         // Convert each member into a constructor or method, guarding against duplicate names.
         // They get added to the ci and aren't carried in ObjectMetadata.
         let mut member_names = HashSet::new();
@@ -70,6 +70,7 @@ impl APIConverter<ObjectMetadata> for weedle::InterfaceDefinition<'_> {
                 throws: None,
                 takes_self_by_arc: false,
                 checksum: None,
+                docstring: None,
             })
         };
         // Trait methods are in the Metadata.
@@ -130,6 +131,7 @@ impl APIConverter<ObjectMetadata> for weedle::InterfaceDefinition<'_> {
             module_path: ci.module_path(),
             name: object_name.to_string(),
             imp: object_impl,
+            docstring: self.docstring.as_ref().map(|v| convert_docstring(&v.0)),
         })
     }
 }

@@ -1,24 +1,15 @@
-// For each Object definition, we assume the caller has provided an appropriately-shaped `struct T`
-// with an `impl` for each method on the object. We create an `Arc<T>` for "safely" handing out
-// references to these structs to foreign language code, and we provide a `pub extern "C"` function
-// corresponding to each method.
-//
-// (Note that "safely" is in "scare quotes" - that's because we use functions on an `Arc` that
-// that are inherently unsafe, but the code we generate is safe in practice.)
-//
-// If the caller's implementation of the struct does not match with the methods or types specified
-// in the UDL, then the rust compiler will complain with a (hopefully at least somewhat helpful!)
-// error message when processing this generated code.
+{#
+// Forward work to `uniffi_macros` This keeps macro-based and UDL-based generated code consistent.
+#}
 
-{%- match obj.imp() -%}
-{%- when ObjectImpl::Trait %}
-#[::uniffi::export_for_udl]
+{%- if obj.is_trait_interface() %}
+#[::uniffi::export_for_udl{% if obj.has_callback_interface() %}(with_foreign){% endif %}]
 pub trait r#{{ obj.name() }} {
     {%- for meth in obj.methods() %}
-    fn {{ meth.name() }}(
+    {% if meth.is_async() %}async {% endif %}fn r#{{ meth.name() }}(
         {% if meth.takes_self_by_arc()%}self: Arc<Self>{% else %}&self{% endif %},
         {%- for arg in meth.arguments() %}
-        {{ arg.name() }}: {% if arg.by_ref() %}&{% endif %}{{ arg.as_type().borrow()|type_rs }},
+        r#{{ arg.name() }}: {% if arg.by_ref() %}&{% endif %}{{ arg.as_type().borrow()|type_rs }},
         {%- endfor %}
     )
     {%- match (meth.return_type(), meth.throws_type()) %}
@@ -29,7 +20,7 @@ pub trait r#{{ obj.name() }} {
     {%- endmatch %}
     {% endfor %}
 }
-{% when ObjectImpl::Struct %}
+{%- else %}
 {%- for tm in obj.uniffi_traits() %}
 {%      match tm %}
 {%          when UniffiTrait::Debug { fmt }%}
@@ -46,9 +37,10 @@ pub trait r#{{ obj.name() }} {
 struct {{ obj.rust_name() }} { }
 
 {%- for cons in obj.constructors() %}
-#[::uniffi::export_for_udl(constructor)]
+#[::uniffi::export_for_udl]
 impl {{ obj.rust_name() }} {
-    pub fn r#{{ cons.name() }}(
+    #[uniffi::constructor]
+    pub {% if cons.is_async() %}async {% endif %}fn r#{{ cons.name() }}(
         {%- for arg in cons.arguments() %}
         r#{{ arg.name() }}: {% if arg.by_ref() %}&{% endif %}{{ arg.as_type().borrow()|type_rs }},
         {%- endfor %}
@@ -68,7 +60,7 @@ impl {{ obj.rust_name() }} {
 {%- for meth in obj.methods() %}
 #[::uniffi::export_for_udl]
 impl {{ obj.rust_name() }} {
-    pub fn r#{{ meth.name() }}(
+    pub {% if meth.is_async() %}async {% endif %}fn r#{{ meth.name() }}(
         {% if meth.takes_self_by_arc()%}self: Arc<Self>{% else %}&self{% endif %},
         {%- for arg in meth.arguments() %}
         r#{{ arg.name() }}: {% if arg.by_ref() %}&{% endif %}{{ arg.as_type().borrow()|type_rs }},
@@ -86,4 +78,4 @@ impl {{ obj.rust_name() }} {
 }
 {%- endfor %}
 
-{% endmatch %}
+{% endif %}

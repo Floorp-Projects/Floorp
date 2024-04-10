@@ -11,26 +11,37 @@
 
 [package]
 edition = "2021"
+rust-version = "1.63"
 name = "scroll"
-version = "0.11.0"
-authors = ["m4b <m4b.github.io@gmail.com>", "Ted Mielczarek <ted@mielczarek.org>"]
+version = "0.12.0"
+authors = [
+    "m4b <m4b.github.io@gmail.com>",
+    "Ted Mielczarek <ted@mielczarek.org>",
+]
+include = [
+    "src/**/*",
+    "Cargo.toml",
+    "LICENSE",
+    "README.md",
+]
 description = "A suite of powerful, extensible, generic, endian-aware Read/Write traits for byte buffers"
 documentation = "https://docs.rs/scroll"
 readme = "README.md"
-keywords = ["bytes", "endian", "immutable", "pread", "pwrite"]
+keywords = [
+    "bytes",
+    "endian",
+    "immutable",
+    "pread",
+    "pwrite",
+]
 license = "MIT"
 repository = "https://github.com/m4b/scroll"
-resolver = "2"
-[dependencies.scroll_derive]
-version = "0.11"
-optional = true
-[dev-dependencies.byteorder]
-version = "1"
 
-[dev-dependencies.rayon]
-version = "1"
+[dependencies.scroll_derive]
+version = "0.12"
+optional = true
 
 [features]
 default = ["std"]
-derive = ["scroll_derive"]
+derive = ["dep:scroll_derive"]
 std = []

@@ -90,6 +90,7 @@ dictionary InternalConfiguration {
     PingRateLimit? rate_limit;
     boolean enable_event_timestamps;
     string? experimentation_id;
+    boolean enable_internal_pings;
 };
 
 // How to specify the rate pings may be uploaded before they are throttled.

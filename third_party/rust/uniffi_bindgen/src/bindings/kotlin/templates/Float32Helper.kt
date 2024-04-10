@@ -11,7 +11,7 @@ public object FfiConverterFloat: FfiConverter<Float, Float> {
         return value
     }
 
-    override fun allocationSize(value: Float) = 4
+    override fun allocationSize(value: Float) = 4UL
 
     override fun write(value: Float, buf: ByteBuffer) {
         buf.putFloat(value)

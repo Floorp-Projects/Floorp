@@ -5,7 +5,7 @@
 //! # Collects metadata from UDL.
 
 use crate::attributes;
-use crate::converters::APIConverter;
+use crate::converters::{convert_docstring, APIConverter};
 use crate::finder;
 use crate::resolver::TypeResolver;
 use anyhow::{bail, Result};
@@ -138,6 +138,7 @@ impl From<InterfaceCollector> for uniffi_meta::MetadataGroup {
                 crate_name: value.types.module_path(),
                 name: value.types.namespace,
             },
+            namespace_docstring: value.types.namespace_docstring.clone(),
             items: value.items,
         }
     }
@@ -171,15 +172,13 @@ impl APIBuilder for weedle::Definition<'_> {
         match self {
             weedle::Definition::Namespace(d) => d.process(ci)?,
             weedle::Definition::Enum(d) => {
+                let mut e: uniffi_meta::EnumMetadata = d.convert(ci)?;
                 // We check if the enum represents an error...
                 let attrs = attributes::EnumAttributes::try_from(d.attributes.as_ref())?;
                 if attrs.contains_error_attr() {
-                    let e: uniffi_meta::ErrorMetadata = d.convert(ci)?;
-                    ci.add_definition(e.into())?;
-                } else {
-                    let e: uniffi_meta::EnumMetadata = d.convert(ci)?;
-                    ci.add_definition(e.into())?;
+                    e.forced_flatness = Some(true);
                 }
+                ci.add_definition(e.into())?;
             }
             weedle::Definition::Dictionary(d) => {
                 let rec = d.convert(ci)?;
@@ -187,11 +186,8 @@ impl APIBuilder for weedle::Definition<'_> {
             }
             weedle::Definition::Interface(d) => {
                 let attrs = attributes::InterfaceAttributes::try_from(d.attributes.as_ref())?;
-                if attrs.contains_enum_attr() {
+                if attrs.contains_enum_attr() || attrs.contains_error_attr() {
                     let e: uniffi_meta::EnumMetadata = d.convert(ci)?;
-                    ci.add_definition(e.into())?;
-                } else if attrs.contains_error_attr() {
-                    let e: uniffi_meta::ErrorMetadata = d.convert(ci)?;
                     ci.add_definition(e.into())?;
                 } else {
                     let obj: uniffi_meta::ObjectMetadata = d.convert(ci)?;
@@ -218,6 +214,7 @@ impl APIBuilder for weedle::NamespaceDefinition<'_> {
         if self.identifier.0 != ci.types.namespace {
             bail!("duplicate namespace definition");
         }
+        ci.types.namespace_docstring = self.docstring.as_ref().map(|v| convert_docstring(&v.0));
         for func in self.members.body.convert(ci)? {
             ci.add_definition(func.into())?;
         }
@@ -229,6 +226,7 @@ impl APIBuilder for weedle::NamespaceDefinition<'_> {
 pub(crate) struct TypeCollector {
     /// The unique prefix that we'll use for namespacing when exposing this component's API.
     pub namespace: String,
+    pub namespace_docstring: Option<String>,
 
     pub crate_name: String,
 

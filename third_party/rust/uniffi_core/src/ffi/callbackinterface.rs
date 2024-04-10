@@ -91,120 +91,19 @@
 //!
 //! Uniffi generates a protocol or interface in client code in the foreign language must implement.
 //!
-//! For each callback interface, a `CallbackInternals` (on the Foreign Language side) and `ForeignCallbackInternals`
-//! (on Rust side) manages the process through a `ForeignCallback`. There is one `ForeignCallback` per callback interface.
+//! For each callback interface, UniFFI defines a VTable.
+//! This is a `repr(C)` struct where each field is a `repr(C)` callback function pointer.
+//! There is one field for each method, plus an extra field for the `uniffi_free` method.
+//! The foreign code registers one VTable per callback interface with Rust.
 //!
-//! Passing a callback interface implementation from foreign language (e.g. `AndroidKeychain`) into Rust causes the
-//! `KeychainCallbackInternals` to store the instance in a handlemap.
+//! VTable methods have a similar signature to Rust scaffolding functions.
+//! The one difference is that values are returned via an out pointer to work around a Python bug (https://bugs.python.org/issue5710).
 //!
-//! The object handle is passed over to Rust, and used to instantiate a struct `KeychainProxy` which implements
-//! the trait. This proxy implementation is generate by Uniffi. The `KeychainProxy` object is then passed to
-//! client code as `Box<dyn Keychain>`.
-//!
-//! Methods on `KeychainProxy` objects (e.g. `self.keychain.get("username".into())`) encode the arguments into a `RustBuffer`.
-//! Using the `ForeignCallback`, it calls the `CallbackInternals` object on the foreign language side using the
-//! object handle, and the method selector.
-//!
-//! The `CallbackInternals` object unpacks the arguments from the passed buffer, gets the object out from the handlemap,
-//! and calls the actual implementation of the method.
-//!
-//! If there's a return value, it is packed up in to another `RustBuffer` and used as the return value for
-//! `ForeignCallback`. The caller of `ForeignCallback`, the `KeychainProxy` unpacks the returned buffer into the correct
-//! type and then returns to client code.
-//!
+//! The foreign object that implements the interface is represented by an opaque handle.
+//! UniFFI generates a struct that implements the trait by calling VTable methods, passing the handle as the first parameter.
+//! When the struct is dropped, the `uniffi_free` method is called.
 
-use crate::{ForeignCallback, ForeignCallbackCell, Lift, LiftReturn, RustBuffer};
 use std::fmt;
-
-/// The method index used by the Drop trait to communicate to the foreign language side that Rust has finished with it,
-/// and it can be deleted from the handle map.
-pub const IDX_CALLBACK_FREE: u32 = 0;
-
-/// Result of a foreign callback invocation
-#[repr(i32)]
-#[derive(Debug, PartialEq, Eq)]
-pub enum CallbackResult {
-    /// Successful call.
-    /// The return value is serialized to `buf_ptr`.
-    Success = 0,
-    /// Expected error.
-    /// This is returned when a foreign method throws an exception that corresponds to the Rust Err half of a Result.
-    /// The error value is serialized to `buf_ptr`.
-    Error = 1,
-    /// Unexpected error.
-    /// An error message string is serialized to `buf_ptr`.
-    UnexpectedError = 2,
-}
-
-impl TryFrom<i32> for CallbackResult {
-    // On errors we return the unconverted value
-    type Error = i32;
-
-    fn try_from(value: i32) -> Result<Self, i32> {
-        match value {
-            0 => Ok(Self::Success),
-            1 => Ok(Self::Error),
-            2 => Ok(Self::UnexpectedError),
-            n => Err(n),
-        }
-    }
-}
-
-/// Struct to hold a foreign callback.
-pub struct ForeignCallbackInternals {
-    callback_cell: ForeignCallbackCell,
-}
-
-impl ForeignCallbackInternals {
-    pub const fn new() -> Self {
-        ForeignCallbackInternals {
-            callback_cell: ForeignCallbackCell::new(),
-        }
-    }
-
-    pub fn set_callback(&self, callback: ForeignCallback) {
-        self.callback_cell.set(callback);
-    }
-
-    /// Invoke a callback interface method on the foreign side and return the result
-    pub fn invoke_callback<R, UniFfiTag>(&self, handle: u64, method: u32, args: RustBuffer) -> R
-    where
-        R: LiftReturn<UniFfiTag>,
-    {
-        let mut ret_rbuf = RustBuffer::new();
-        let callback = self.callback_cell.get();
-        let raw_result = unsafe {
-            callback(
-                handle,
-                method,
-                args.data_pointer(),
-                args.len() as i32,
-                &mut ret_rbuf,
-            )
-        };
-        let result = CallbackResult::try_from(raw_result)
-            .unwrap_or_else(|code| panic!("Callback failed with unexpected return code: {code}"));
-        match result {
-            CallbackResult::Success => R::lift_callback_return(ret_rbuf),
-            CallbackResult::Error => R::lift_callback_error(ret_rbuf),
-            CallbackResult::UnexpectedError => {
-                let reason = if !ret_rbuf.is_empty() {
-                    match <String as Lift<UniFfiTag>>::try_lift(ret_rbuf) {
-                        Ok(s) => s,
-                        Err(e) => {
-                            log::error!("{{ trait_name }} Error reading ret_buf: {e}");
-                            String::from("[Error reading reason]")
-                        }
-                    }
-                } else {
-                    RustBuffer::destroy(ret_rbuf);
-                    String::from("[Unknown Reason]")
-                };
-                R::handle_callback_unexpected_error(UnexpectedUniFFICallbackError { reason })
-            }
-        }
-    }
-}
 
 /// Used when internal/unexpected error happened when calling a foreign callback, for example when
 /// a unknown exception is raised
@@ -216,8 +115,10 @@ pub struct UnexpectedUniFFICallbackError {
 }
 
 impl UnexpectedUniFFICallbackError {
-    pub fn from_reason(reason: String) -> Self {
-        Self { reason }
+    pub fn new(reason: impl fmt::Display) -> Self {
+        Self {
+            reason: reason.to_string(),
+        }
     }
 }
 

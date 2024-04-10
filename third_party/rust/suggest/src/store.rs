@@ -189,6 +189,22 @@ impl SuggestStore {
         self.inner.query(query)
     }
 
+    /// Dismiss a suggestion
+    ///
+    /// Dismissed suggestions will not be returned again
+    ///
+    /// In the case of AMP suggestions this should be the raw URL.
+    #[handle_error(Error)]
+    pub fn dismiss_suggestion(&self, suggestion_url: String) -> SuggestApiResult<()> {
+        self.inner.dismiss_suggestion(suggestion_url)
+    }
+
+    /// Clear dismissed suggestions
+    #[handle_error(Error)]
+    pub fn clear_dismissed_suggestions(&self) -> SuggestApiResult<()> {
+        self.inner.clear_dismissed_suggestions()
+    }
+
     /// Interrupts any ongoing queries.
     ///
     /// This should be called when the user types new input into the address
@@ -253,7 +269,7 @@ pub(crate) struct SuggestStoreInner<S> {
 }
 
 impl<S> SuggestStoreInner<S> {
-    fn new(data_path: impl Into<PathBuf>, settings_client: S) -> Self {
+    pub fn new(data_path: impl Into<PathBuf>, settings_client: S) -> Self {
         Self {
             data_path: data_path.into(),
             dbs: OnceCell::new(),
@@ -273,6 +289,17 @@ impl<S> SuggestStoreInner<S> {
             return Ok(Vec::new());
         }
         self.dbs()?.reader.read(|dao| dao.fetch_suggestions(&query))
+    }
+
+    fn dismiss_suggestion(&self, suggestion_url: String) -> Result<()> {
+        self.dbs()?
+            .writer
+            .write(|dao| dao.insert_dismissal(&suggestion_url))
+    }
+
+    fn clear_dismissed_suggestions(&self) -> Result<()> {
+        self.dbs()?.writer.write(|dao| dao.clear_dismissals())?;
+        Ok(())
     }
 
     fn interrupt(&self) {
@@ -304,7 +331,7 @@ impl<S> SuggestStoreInner<S>
 where
     S: SuggestRemoteSettingsClient,
 {
-    fn ingest(&self, constraints: SuggestIngestionConstraints) -> Result<()> {
+    pub fn ingest(&self, constraints: SuggestIngestionConstraints) -> Result<()> {
         let writer = &self.dbs()?.writer;
 
         if let Some(unparsable_records) =
@@ -319,7 +346,7 @@ where
             for unparsable_ids in all_unparsable_ids.chunks(UNPARSABLE_IDS_PER_REQUEST) {
                 let mut options = GetItemsOptions::new();
                 for unparsable_id in unparsable_ids {
-                    options.eq("id", *unparsable_id);
+                    options.filter_eq("id", *unparsable_id);
                 }
                 let records_chunk = self
                     .settings_client
@@ -361,7 +388,7 @@ where
         // so that we can eventually resume downloading where we left off.
         options.sort("last_modified", SortOrder::Ascending);
 
-        options.eq("type", ingest_record_type.to_string());
+        options.filter_eq("type", ingest_record_type.to_string());
 
         // Get the last ingest value. This is the max of the last_ingest_keys
         // that are in the database.
@@ -370,7 +397,7 @@ where
         {
             // Only download changes since our last ingest. If our last ingest
             // was interrupted, we'll pick up where we left off.
-            options.gt("last_modified", last_ingest.to_string());
+            options.filter_gt("last_modified", last_ingest.to_string());
         }
 
         if let Some(max_suggestions) = constraints.max_suggestions {
@@ -572,6 +599,55 @@ where
             }
             Err(_) => writer.write(|dao| dao.handle_unparsable_record(record)),
         }
+    }
+}
+
+#[cfg(feature = "benchmark_api")]
+impl<S> SuggestStoreInner<S>
+where
+    S: SuggestRemoteSettingsClient,
+{
+    pub fn into_settings_client(self) -> S {
+        self.settings_client
+    }
+
+    pub fn ensure_db_initialized(&self) {
+        self.dbs().unwrap();
+    }
+
+    pub fn benchmark_ingest_records_by_type(&self, ingest_record_type: SuggestRecordType) {
+        self.ingest_records_by_type(
+            ingest_record_type,
+            &self.dbs().unwrap().writer,
+            &SuggestIngestionConstraints::default(),
+        )
+        .unwrap()
+    }
+
+    pub fn table_row_counts(&self) -> Vec<(String, u32)> {
+        use sql_support::ConnExt;
+
+        // Note: since this is just used for debugging, use unwrap to simplify the error handling.
+        let reader = &self.dbs().unwrap().reader;
+        let conn = reader.conn.lock();
+        let table_names: Vec<String> = conn
+            .query_rows_and_then(
+                "SELECT name FROM sqlite_master where type = 'table'",
+                (),
+                |row| row.get(0),
+            )
+            .unwrap();
+        let mut table_names_with_counts: Vec<(String, u32)> = table_names
+            .into_iter()
+            .map(|name| {
+                let count: u32 = conn
+                    .query_one(&format!("SELECT COUNT(*) FROM {name}"))
+                    .unwrap();
+                (name, count)
+            })
+            .collect();
+        table_names_with_counts.sort_by(|a, b| (b.1.cmp(&a.1)));
+        table_names_with_counts
     }
 }
 
@@ -4945,10 +5021,10 @@ mod tests {
                     UnparsableRecords(
                         {
                             "clippy-2": UnparsableRecord {
-                                schema_version: 17,
+                                schema_version: 18,
                             },
                             "fancy-new-suggestions-1": UnparsableRecord {
-                                schema_version: 17,
+                                schema_version: 18,
                             },
                         },
                     ),
@@ -5017,10 +5093,10 @@ mod tests {
                     UnparsableRecords(
                         {
                             "clippy-2": UnparsableRecord {
-                                schema_version: 17,
+                                schema_version: 18,
                             },
                             "fancy-new-suggestions-1": UnparsableRecord {
-                                schema_version: 17,
+                                schema_version: 18,
                             },
                         },
                     ),
@@ -5216,10 +5292,10 @@ mod tests {
                     UnparsableRecords(
                         {
                             "clippy-2": UnparsableRecord {
-                                schema_version: 17,
+                                schema_version: 18,
                             },
                             "fancy-new-suggestions-1": UnparsableRecord {
-                                schema_version: 17,
+                                schema_version: 18,
                             },
                         },
                     ),
@@ -5305,7 +5381,7 @@ mod tests {
                     UnparsableRecords(
                         {
                             "invalid-attachment": UnparsableRecord {
-                                schema_version: 17,
+                                schema_version: 18,
                             },
                         },
                     ),
@@ -5953,6 +6029,206 @@ mod tests {
                 .fetch_provider_config(SuggestionProvider::Amp)
                 .with_context(|| "fetch_provider_config failed for Amp")?,
         );
+
+        Ok(())
+    }
+
+    #[test]
+    fn remove_dismissed_suggestions() -> anyhow::Result<()> {
+        before_each();
+
+        let snapshot = Snapshot::with_records(json!([{
+            "id": "data-1",
+            "type": "data",
+            "last_modified": 15,
+            "attachment": {
+                "filename": "data-1.json",
+                "mimetype": "application/json",
+                "location": "data-1.json",
+                "hash": "",
+                "size": 0,
+            },
+
+        }, {
+            "id": "data-2",
+            "type": "amo-suggestions",
+            "last_modified": 15,
+            "attachment": {
+                "filename": "data-2.json",
+                "mimetype": "application/json",
+                "location": "data-2.json",
+                "hash": "",
+                "size": 0,
+            },
+        }, {
+            "id": "data-3",
+            "type": "pocket-suggestions",
+            "last_modified": 15,
+            "attachment": {
+                "filename": "data-3.json",
+                "mimetype": "application/json",
+                "location": "data-3.json",
+                "hash": "",
+                "size": 0,
+            },
+        }, {
+            "id": "data-5",
+            "type": "mdn-suggestions",
+            "last_modified": 15,
+            "attachment": {
+                "filename": "data-5.json",
+                "mimetype": "application/json",
+                "location": "data-5.json",
+                "hash": "",
+                "size": 0,
+            },
+        }, {
+            "id": "data-6",
+            "type": "amp-mobile-suggestions",
+            "last_modified": 15,
+            "attachment": {
+                "filename": "data-6.json",
+                "mimetype": "application/json",
+                "location": "data-6.json",
+                "hash": "",
+                "size": 0,
+            },
+        }, {
+            "id": "icon-2",
+            "type": "icon",
+            "last_modified": 20,
+            "attachment": {
+                "filename": "icon-2.png",
+                "mimetype": "image/png",
+                "location": "icon-2.png",
+                "hash": "",
+                "size": 0,
+            },
+        }, {
+            "id": "icon-3",
+            "type": "icon",
+            "last_modified": 25,
+            "attachment": {
+                "filename": "icon-3.png",
+                "mimetype": "image/png",
+                "location": "icon-3.png",
+                "hash": "",
+                "size": 0,
+            },
+        }]))?
+        .with_data(
+            "data-1.json",
+            json!([{
+                "id": 0,
+                "advertiser": "Good Place Eats",
+                "iab_category": "8 - Food & Drink",
+                "keywords": ["cats"],
+                "title": "Lasagna Come Out Tomorrow",
+                "url": "https://www.lasagna.restaurant",
+                "icon": "2",
+                "impression_url": "https://example.com/impression_url",
+                "click_url": "https://example.com/click_url",
+                "score": 0.31
+            }, {
+                "id": 0,
+                "advertiser": "Wikipedia",
+                "iab_category": "5 - Education",
+                "keywords": ["cats"],
+                "title": "California",
+                "url": "https://wikipedia.org/California",
+                "icon": "3"
+            }]),
+        )?
+            .with_data(
+                "data-2.json",
+                json!([
+                    {
+                        "description": "amo suggestion",
+                        "url": "https://addons.mozilla.org/en-US/firefox/addon/example",
+                        "guid": "{b9db16a4-6edc-47ec-a1f4-b86292ed211d}",
+                        "keywords": ["cats"],
+                        "title": "Firefox Relay",
+                        "icon": "https://addons.mozilla.org/user-media/addon_icons/2633/2633704-64.png?modified=2c11a80b",
+                        "rating": "4.9",
+                        "number_of_ratings": 888,
+                        "score": 0.32
+                    },
+                ]),
+        )?
+            .with_data(
+            "data-3.json",
+            json!([
+                {
+                    "description": "pocket suggestion",
+                    "url": "https://getpocket.com/collections/its-not-just-burnout-how-grind-culture-failed-women",
+                    "lowConfidenceKeywords": [],
+                    "highConfidenceKeywords": ["cats"],
+                    "title": "‘It’s Not Just Burnout:’ How Grind Culture Fails Women",
+                    "score": 0.33
+                },
+            ]),
+        )?
+        .with_data(
+            "data-5.json",
+            json!([
+                {
+                    "description": "Javascript Array",
+                    "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array",
+                    "keywords": ["cats"],
+                    "title": "Array",
+                    "score": 0.24
+                },
+            ]),
+        )?
+        .with_data(
+            "data-6.json",
+            json!([
+               {
+                   "id": 0,
+                   "advertiser": "Good Place Eats",
+                   "iab_category": "8 - Food & Drink",
+                   "keywords": ["cats"],
+                   "title": "Mobile - Lasagna Come Out Tomorrow",
+                   "url": "https://www.lasagna.restaurant",
+                   "icon": "3",
+                   "impression_url": "https://example.com/impression_url",
+                   "click_url": "https://example.com/click_url",
+                   "score": 0.26
+               }
+            ]),
+        )?
+        .with_icon("icon-2.png", "i-am-an-icon".as_bytes().into())
+        .with_icon("icon-3.png", "also-an-icon".as_bytes().into());
+
+        let store = unique_test_store(SnapshotSettingsClient::with_snapshot(snapshot));
+        store.ingest(SuggestIngestionConstraints::default())?;
+
+        // A query for cats should return all suggestions
+        let query = SuggestionQuery {
+            keyword: "cats".into(),
+            providers: vec![
+                SuggestionProvider::Amp,
+                SuggestionProvider::Wikipedia,
+                SuggestionProvider::Amo,
+                SuggestionProvider::Pocket,
+                SuggestionProvider::Mdn,
+                SuggestionProvider::AmpMobile,
+            ],
+            limit: None,
+        };
+        let results = store.query(query.clone())?;
+        assert_eq!(results.len(), 6);
+
+        for result in results {
+            store.dismiss_suggestion(result.raw_url().unwrap().to_string())?;
+        }
+
+        // After dismissing the suggestions, the next query shouldn't return them
+        assert_eq!(store.query(query.clone())?.len(), 0);
+
+        // Clearing the dismissals should cause them to be returned again
+        store.clear_dismissed_suggestions()?;
+        assert_eq!(store.query(query.clone())?.len(), 6);
 
         Ok(())
     }

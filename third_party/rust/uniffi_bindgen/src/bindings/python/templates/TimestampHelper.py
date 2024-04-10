@@ -18,6 +18,10 @@ class _UniffiConverterTimestamp(_UniffiConverterRustBuffer):
             return datetime.datetime.fromtimestamp(0, tz=datetime.timezone.utc) - datetime.timedelta(seconds=-seconds, microseconds=microseconds)
 
     @staticmethod
+    def check_lower(value):
+        pass
+
+    @staticmethod
     def write(value, buf):
         if value >= datetime.datetime.fromtimestamp(0, datetime.timezone.utc):
             sign = 1
