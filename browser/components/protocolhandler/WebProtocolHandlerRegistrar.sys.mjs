@@ -543,7 +543,7 @@ WebProtocolHandlerRegistrar.prototype = {
         notificationId,
         {
           label: {
-            "l10n-id": "protocolhandler-mailto-handler-set-message",
+            "l10n-id": "protocolhandler-mailto-handler-set",
             "l10n-args": { url: aURI.host },
           },
           priority: osDefaultNotificationBox.PRIORITY_INFO_LOW,
