@@ -1511,32 +1511,40 @@ TEST(TestAudioTrackGraph, AudioProcessingTrackDisabling)
   stream->SetOutputRecordingEnabled(true);
 
   // Wait for a second worth of audio data.
-  uint32_t totalFrames = 0;
-  WaitUntil(stream->FramesProcessedEvent(), [&](uint32_t aFrames) {
-    totalFrames += aFrames;
-    return totalFrames > static_cast<uint32_t>(graph->GraphRate());
-  });
+  uint64_t targetPosition = graph->GraphRate();
+  auto AdvanceToTargetPosition = [&] {
+    DispatchFunction([&] {
+      processingTrack->GraphImpl()->AppendMessage(MakeUnique<GoFaster>(cubeb));
+    });
+    WaitUntil(stream->FramesProcessedEvent(), [&](uint32_t aFrames) {
+      // Position() gives a more up-to-date indication than summing aFrames if
+      // multiple events are queued.
+      if (stream->Position() < targetPosition) {
+        return false;
+      }
+      cubeb->DontGoFaster();
+      return true;
+    });
+  };
+  AdvanceToTargetPosition();
 
   const uint32_t ITERATION_COUNT = 5;
   uint32_t iterations = ITERATION_COUNT;
-  DisabledTrackMode currentMode = DisabledTrackMode::SILENCE_BLACK;
+  DisabledTrackMode nextMode = DisabledTrackMode::SILENCE_BLACK;
   while (iterations--) {
     // toggle the track enabled mode, wait a second, do this ITERATION_COUNT
     // times
     DispatchFunction([&] {
-      processingTrack->SetDisabledTrackMode(currentMode);
-      if (currentMode == DisabledTrackMode::SILENCE_BLACK) {
-        currentMode = DisabledTrackMode::ENABLED;
+      processingTrack->SetDisabledTrackMode(nextMode);
+      if (nextMode == DisabledTrackMode::SILENCE_BLACK) {
+        nextMode = DisabledTrackMode::ENABLED;
       } else {
-        currentMode = DisabledTrackMode::SILENCE_BLACK;
+        nextMode = DisabledTrackMode::SILENCE_BLACK;
       }
     });
 
-    totalFrames = 0;
-    WaitUntil(stream->FramesProcessedEvent(), [&](uint32_t aFrames) {
-      totalFrames += aFrames;
-      return totalFrames > static_cast<uint32_t>(graph->GraphRate());
-    });
+    targetPosition += graph->GraphRate();
+    AdvanceToTargetPosition();
   }
 
   // Clean up.
