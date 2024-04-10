@@ -8,8 +8,8 @@
         android:shortcutId="password_manager"
         android:enabled="true"
         android:icon="@drawable/ic_static_password_shortcut"
-        android:shortcutShortLabel="@string/home_screen_shortcut_open_password_screen"
-        android:shortcutLongLabel="@string/home_screen_shortcut_open_password_screen">
+        android:shortcutShortLabel="@string/home_screen_shortcut_passwords"
+        android:shortcutLongLabel="@string/home_screen_shortcut_passwords">
         <intent
             android:action="org.mozilla.fenix.OPEN_PASSWORD_MANAGER"
             android:targetPackage="org.mozilla.fenix"
