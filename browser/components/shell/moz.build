@@ -50,6 +50,8 @@ elif CONFIG["OS_ARCH"] == "WINNT":
     ]
     SOURCES += [
         "nsWindowsShellService.cpp",
+        "Windows11LimitedAccessFeatures.cpp",
+        "Windows11TaskbarPinning.cpp",
         "WindowsDefaultBrowser.cpp",
         "WindowsUserChoice.cpp",
     ]
@@ -81,6 +83,25 @@ for var in (
     "MOZ_DEFAULT_BROWSER_AGENT",
 ):
     DEFINES[var] = '"%s"' % CONFIG[var]
+
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
+    apiKey = "MOZ_WINDOWS_TASKBAR_PINNING_API_KEY"
+    DEFINES[apiKey] = 'L"%s"' % (
+        CONFIG[apiKey] or "MOZ_WINDOWS_TASKBAR_PINNING_API_KEY_UNDEFINED"
+    )
+
+    # Inject these other values here as well, to keep all of the data together
+    # but also to construct the attribution key on the fly
+    # at compile time instead of at runtime.
+    windows_feature = "com.microsoft.windows.taskbar.pin"
+    publisher_id = "pcsmm0jrprpb2"
+
+    DEFINES["MOZ_WINDOWS_TASKBAR_PINNING_API_FEATURE"] = 'L"%s"' % windows_feature
+    DEFINES["MOZ_WINDOWS_TASKBAR_PINNING_API_ATTRIBUTION"] = (
+        'L"%s has registered their use of %s with Microsoft and agrees to the terms of use."'
+        % (publisher_id, windows_feature)
+    )
+
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
     CXXFLAGS += CONFIG["MOZ_GTK3_CFLAGS"]
