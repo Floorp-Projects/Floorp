@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsPrintfCString.h"
+#include "js/GCAPI.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/dom/UniFFIPointer.h"
 #include "mozilla/dom/UniFFIBinding.h"
@@ -81,8 +82,14 @@ void UniFFIPointer::Write(const ArrayBuffer& aArrayBuff, uint32_t aPosition,
         // in Rust and Read(), a u64 is read as BigEndian and then converted to
         // a pointer we do the reverse here
         const auto& data_ptr = aData.Subspan(aPosition, 8);
+        // The hazard checker assumes all calls to a function pointer may result
+        // in a GC call and `ClonePtr` calls mType->clone. However, we know that
+        // mtype->clone won't make a GC call since it's essentially just a call
+        // to Rust's `Arc::clone()`. Use AutoSuppressGCAnalysis to tell the
+        // hazard checker to ignore the call.
+        JS::AutoSuppressGCAnalysis suppress;
         mozilla::BigEndian::writeUint64(data_ptr.Elements(),
-                                        (uint64_t)GetPtr());
+                                        (uint64_t)ClonePtr());
         return true;
       })) {
     aError.ThrowRangeError("position is out of range");
@@ -100,10 +107,14 @@ JSObject* UniFFIPointer::WrapObject(JSContext* aCx,
   return dom::UniFFIPointer_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void* UniFFIPointer::GetPtr() const {
+void* UniFFIPointer::ClonePtr() const {
   MOZ_LOG(sUniFFIPointerLogger, LogLevel::Info,
-          ("[UniFFI] Getting raw pointer"));
-  return this->mPtr;
+          ("[UniFFI] Cloning raw pointer"));
+  RustCallStatus status{};
+  auto cloned = this->mType->clone(this->mPtr, &status);
+  MOZ_DIAGNOSTIC_ASSERT(status.code == RUST_CALL_SUCCESS,
+                        "UniFFI clone call returned a non-success result");
+  return cloned;
 }
 
 bool UniFFIPointer::IsSamePtrType(const UniFFIPointerType* aType) const {

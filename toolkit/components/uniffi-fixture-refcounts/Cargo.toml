@@ -1,0 +1,12 @@
+[package]
+name = "uniffi-fixture-refcounts"
+edition = "2021"
+version = "0.21.0"
+license = "MPL-2.0"
+publish = false
+
+[dependencies]
+uniffi = { workspace = true }
+
+[build-dependencies]
+uniffi = { workspace = true, features = ["build"] }
