@@ -36,7 +36,7 @@ interface nsIContentAnalysisAcknowledgement : nsISupports
   readonly attribute nsIContentAnalysisAcknowledgement_FinalAction finalAction;
 };
 
-[scriptable, builtinclass, uuid(89088c61-15f6-4ace-a880-a1b5ea47ca66)]
+[scriptable, uuid(89088c61-15f6-4ace-a880-a1b5ea47ca66)]
 interface nsIContentAnalysisResponse : nsISupports
 {
   // These values must stay synchronized with ContentAnalysisResponse
@@ -59,11 +59,11 @@ interface nsIContentAnalysisResponse : nsISupports
     eErrorOther = 3,
   };
 
-  [infallible] readonly attribute nsIContentAnalysisResponse_Action action;
-  [infallible] readonly attribute boolean shouldAllowContent;
+  readonly attribute nsIContentAnalysisResponse_Action action;
+  readonly attribute boolean shouldAllowContent;
   // If action is eCanceled, this is the error explaining why the request was canceled,
   // or eUserInitiated if the user canceled it.
-  [infallible] readonly attribute nsIContentAnalysisResponse_CancelError cancelError;
+  readonly attribute nsIContentAnalysisResponse_CancelError cancelError;
 
   // Identifier for the corresponding nsIContentAnalysisRequest
   readonly attribute ACString requestToken;
@@ -185,7 +185,7 @@ interface nsIContentAnalysisDiagnosticInfo : nsISupports
   [infallible] readonly attribute long long requestCount;
 };
 
-[scriptable, builtinclass, uuid(61497587-2bba-4a88-acd3-3fbb2cedf163)]
+[scriptable, uuid(61497587-2bba-4a88-acd3-3fbb2cedf163)]
 interface nsIContentAnalysis : nsISupports
 {
   /**
