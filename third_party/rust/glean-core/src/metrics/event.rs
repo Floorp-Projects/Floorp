@@ -175,21 +175,9 @@ impl EventMetric {
             .into()
             .unwrap_or_else(|| &self.meta().inner.send_in_pings[0]);
 
-        let events = glean
+        glean
             .event_storage()
-            .test_get_value(&self.meta, queried_ping_name);
-
-        events.map(|mut evts| {
-            for ev in &mut evts {
-                let Some(extra) = &mut ev.extra else { continue };
-                extra.remove("glean_timestamp");
-                if extra.is_empty() {
-                    ev.extra = None;
-                }
-            }
-
-            evts
-        })
+            .test_get_value(&self.meta, queried_ping_name)
     }
 
     /// **Test-only API (exported for FFI purposes).**

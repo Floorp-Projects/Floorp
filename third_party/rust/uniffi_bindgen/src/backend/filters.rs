@@ -13,12 +13,12 @@ use std::fmt;
 // Need to define an error that implements std::error::Error, which neither String nor
 // anyhow::Error do.
 #[derive(Debug)]
-pub struct UniFFIError {
+struct UniFFIError {
     message: String,
 }
 
 impl UniFFIError {
-    pub fn new(message: String) -> Self {
+    fn new(message: String) -> Self {
         Self { message }
     }
 }

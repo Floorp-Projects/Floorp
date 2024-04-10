@@ -39,12 +39,6 @@ impl FfiDefault for () {
     fn ffi_default() {}
 }
 
-impl FfiDefault for crate::Handle {
-    fn ffi_default() -> Self {
-        Self::default()
-    }
-}
-
 impl FfiDefault for *const std::ffi::c_void {
     fn ffi_default() -> Self {
         std::ptr::null()
@@ -57,10 +51,9 @@ impl FfiDefault for crate::RustBuffer {
     }
 }
 
-impl FfiDefault for crate::ForeignFuture {
+impl FfiDefault for crate::ForeignExecutorHandle {
     fn ffi_default() -> Self {
-        extern "C" fn free(_handle: u64) {}
-        crate::ForeignFuture { handle: 0, free }
+        Self(std::ptr::null())
     }
 }
 

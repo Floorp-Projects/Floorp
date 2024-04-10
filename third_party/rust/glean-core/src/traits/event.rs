@@ -3,6 +3,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use std::collections::HashMap;
+use std::convert::TryFrom;
 use std::hash::Hash;
 
 use crate::event_database::RecordedEvent;

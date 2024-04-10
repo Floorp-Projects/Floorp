@@ -60,16 +60,14 @@
     [{%- for arg in func.arguments() -%}{{ arg.type_().borrow()|type_ffi }}, {% endfor -%} RustCallStatus.by_ref]
 {%- endmacro -%}
 
-{%- macro setup_args(func) %}
+{%- macro coerce_args(func) %}
     {%- for arg in func.arguments() %}
-    {{ arg.name() }} = {{ arg.name()|coerce_rb(ci.namespace()|class_name_rb, arg.as_type().borrow()) }}
-    {{ arg.name()|check_lower_rb(arg.as_type().borrow()) }}
+    {{ arg.name() }} = {{ arg.name()|coerce_rb(ci.namespace()|class_name_rb, arg.as_type().borrow()) -}}
     {% endfor -%}
 {%- endmacro -%}
 
-{%- macro setup_args_extra_indent(meth) %}
-        {%- for arg in meth.arguments() %}
+{%- macro coerce_args_extra_indent(func) %}
+        {%- for arg in func.arguments() %}
         {{ arg.name() }} = {{ arg.name()|coerce_rb(ci.namespace()|class_name_rb, arg.as_type().borrow()) }}
-        {{ arg.name()|check_lower_rb(arg.as_type().borrow()) }}
         {%- endfor %}
 {%- endmacro -%}

@@ -8,15 +8,15 @@ public object {{ ffi_converter_name }}: FfiConverterRustBuffer<List<{{ inner_typ
         }
     }
 
-    override fun allocationSize(value: List<{{ inner_type_name }}>): ULong {
-        val sizeForLength = 4UL
+    override fun allocationSize(value: List<{{ inner_type_name }}>): Int {
+        val sizeForLength = 4
         val sizeForItems = value.map { {{ inner_type|allocation_size_fn }}(it) }.sum()
         return sizeForLength + sizeForItems
     }
 
     override fun write(value: List<{{ inner_type_name }}>, buf: ByteBuffer) {
         buf.putInt(value.size)
-        value.iterator().forEach {
+        value.forEach {
             {{ inner_type|write_fn }}(it, buf)
         }
     }

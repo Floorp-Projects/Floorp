@@ -317,6 +317,8 @@ impl PingDirectoryManager {
 
 #[cfg(test)]
 mod test {
+    use std::fs::File;
+
     use super::*;
     use crate::metrics::PingType;
     use crate::tests::new_glean;

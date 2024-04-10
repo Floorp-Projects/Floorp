@@ -57,11 +57,12 @@
 //! # Ok::<(), anyhow::Error>(())
 //! ```
 
+use std::iter;
+
 use anyhow::Result;
 use uniffi_meta::Checksum;
 
-use super::callbacks;
-use super::ffi::{FfiArgument, FfiCallbackFunction, FfiFunction, FfiStruct, FfiType};
+use super::ffi::{FfiArgument, FfiFunction, FfiType};
 use super::function::{Argument, Callable};
 use super::{AsType, ObjectImpl, Type, TypeIterator};
 
@@ -91,24 +92,14 @@ pub struct Object {
     // a regular method (albeit with a generated name)
     // XXX - this should really be a HashSet, but not enough transient types support hash to make it worthwhile now.
     pub(super) uniffi_traits: Vec<UniffiTrait>,
-    // We don't include the FfiFuncs in the hash calculation, because:
+    // We don't include the FfiFunc in the hash calculation, because:
     //  - it is entirely determined by the other fields,
     //    so excluding it is safe.
     //  - its `name` property includes a checksum derived from  the very
     //    hash value we're trying to calculate here, so excluding it
     //    avoids a weird circular dependency in the calculation.
-
-    // FFI function to clone a pointer for this object
-    #[checksum_ignore]
-    pub(super) ffi_func_clone: FfiFunction,
-    // FFI function to free a pointer for this object
     #[checksum_ignore]
     pub(super) ffi_func_free: FfiFunction,
-    // Ffi function to initialize the foreign callback for trait interfaces
-    #[checksum_ignore]
-    pub(super) ffi_init_callback: Option<FfiFunction>,
-    #[checksum_ignore]
-    pub(super) docstring: Option<String>,
 }
 
 impl Object {
@@ -125,18 +116,6 @@ impl Object {
 
     pub fn imp(&self) -> &ObjectImpl {
         &self.imp
-    }
-
-    pub fn is_trait_interface(&self) -> bool {
-        self.imp.is_trait_interface()
-    }
-
-    pub fn has_callback_interface(&self) -> bool {
-        self.imp.has_callback_interface()
-    }
-
-    pub fn has_async_method(&self) -> bool {
-        self.methods.iter().any(Method::is_async)
     }
 
     pub fn constructors(&self) -> Vec<&Constructor> {
@@ -172,28 +151,12 @@ impl Object {
         self.uniffi_traits.iter().collect()
     }
 
-    pub fn ffi_object_clone(&self) -> &FfiFunction {
-        &self.ffi_func_clone
-    }
-
     pub fn ffi_object_free(&self) -> &FfiFunction {
         &self.ffi_func_free
     }
 
-    pub fn ffi_init_callback(&self) -> &FfiFunction {
-        self.ffi_init_callback
-            .as_ref()
-            .unwrap_or_else(|| panic!("No ffi_init_callback set for {}", &self.name))
-    }
-
-    pub fn docstring(&self) -> Option<&str> {
-        self.docstring.as_deref()
-    }
-
     pub fn iter_ffi_function_definitions(&self) -> impl Iterator<Item = &FfiFunction> {
-        [&self.ffi_func_clone, &self.ffi_func_free]
-            .into_iter()
-            .chain(&self.ffi_init_callback)
+        iter::once(&self.ffi_func_free)
             .chain(self.constructors.iter().map(|f| &f.ffi_func))
             .chain(self.methods.iter().map(|f| &f.ffi_func))
             .chain(
@@ -210,26 +173,13 @@ impl Object {
     }
 
     pub fn derive_ffi_funcs(&mut self) -> Result<()> {
-        assert!(!self.ffi_func_clone.name().is_empty());
         assert!(!self.ffi_func_free.name().is_empty());
-        self.ffi_func_clone.arguments = vec![FfiArgument {
-            name: "ptr".to_string(),
-            type_: FfiType::RustArcPtr(self.name.to_string()),
-        }];
-        self.ffi_func_clone.return_type = Some(FfiType::RustArcPtr(self.name.to_string()));
         self.ffi_func_free.arguments = vec![FfiArgument {
             name: "ptr".to_string(),
             type_: FfiType::RustArcPtr(self.name.to_string()),
         }];
         self.ffi_func_free.return_type = None;
         self.ffi_func_free.is_object_free_function = true;
-        if self.has_callback_interface() {
-            self.ffi_init_callback = Some(FfiFunction::callback_init(
-                &self.module_path,
-                &self.name,
-                callbacks::vtable_name(&self.name),
-            ));
-        }
 
         for cons in self.constructors.iter_mut() {
             cons.derive_ffi_func();
@@ -242,41 +192,6 @@ impl Object {
         }
 
         Ok(())
-    }
-
-    /// For trait interfaces, FfiCallbacks to define for our methods, otherwise an empty vec.
-    pub fn ffi_callbacks(&self) -> Vec<FfiCallbackFunction> {
-        if self.is_trait_interface() {
-            callbacks::ffi_callbacks(&self.name, &self.methods)
-        } else {
-            vec![]
-        }
-    }
-
-    /// For trait interfaces, the VTable FFI type
-    pub fn vtable(&self) -> Option<FfiType> {
-        self.is_trait_interface()
-            .then(|| FfiType::Struct(callbacks::vtable_name(&self.name)))
-    }
-
-    /// For trait interfaces, the VTable struct to define.  Otherwise None.
-    pub fn vtable_definition(&self) -> Option<FfiStruct> {
-        self.is_trait_interface()
-            .then(|| callbacks::vtable_struct(&self.name, &self.methods))
-    }
-
-    /// Vec of (ffi_callback_name, method) pairs
-    pub fn vtable_methods(&self) -> Vec<(FfiCallbackFunction, &Method)> {
-        self.methods
-            .iter()
-            .enumerate()
-            .map(|(i, method)| {
-                (
-                    callbacks::method_ffi_callback(&self.name, method, i),
-                    method,
-                )
-            })
-            .collect()
     }
 
     pub fn iter_types(&self) -> TypeIterator<'_> {
@@ -303,7 +218,6 @@ impl AsType for Object {
 
 impl From<uniffi_meta::ObjectMetadata> for Object {
     fn from(meta: uniffi_meta::ObjectMetadata) -> Self {
-        let ffi_clone_name = meta.clone_ffi_symbol_name();
         let ffi_free_name = meta.free_ffi_symbol_name();
         Object {
             module_path: meta.module_path,
@@ -312,16 +226,10 @@ impl From<uniffi_meta::ObjectMetadata> for Object {
             constructors: Default::default(),
             methods: Default::default(),
             uniffi_traits: Default::default(),
-            ffi_func_clone: FfiFunction {
-                name: ffi_clone_name,
-                ..Default::default()
-            },
             ffi_func_free: FfiFunction {
                 name: ffi_free_name,
                 ..Default::default()
             },
-            ffi_init_callback: None,
-            docstring: meta.docstring.clone(),
         }
     }
 }
@@ -355,7 +263,6 @@ pub struct Constructor {
     pub(super) name: String,
     pub(super) object_name: String,
     pub(super) object_module_path: String,
-    pub(super) is_async: bool,
     pub(super) arguments: Vec<Argument>,
     // We don't include the FFIFunc in the hash calculation, because:
     //  - it is entirely determined by the other fields,
@@ -365,8 +272,6 @@ pub struct Constructor {
     //    avoids a weird circular dependency in the calculation.
     #[checksum_ignore]
     pub(super) ffi_func: FfiFunction,
-    #[checksum_ignore]
-    pub(super) docstring: Option<String>,
     pub(super) throws: Option<Type>,
     pub(super) checksum_fn_name: String,
     // Force a checksum value, or we'll fallback to the trait.
@@ -411,20 +316,14 @@ impl Constructor {
         self.throws.as_ref()
     }
 
-    pub fn docstring(&self) -> Option<&str> {
-        self.docstring.as_deref()
-    }
-
     pub fn is_primary_constructor(&self) -> bool {
         self.name == "new"
     }
 
     fn derive_ffi_func(&mut self) {
         assert!(!self.ffi_func.name().is_empty());
-        self.ffi_func.init(
-            Some(FfiType::RustArcPtr(self.object_name.clone())),
-            self.arguments.iter().map(Into::into),
-        );
+        self.ffi_func.arguments = self.arguments.iter().map(Into::into).collect();
+        self.ffi_func.return_type = Some(FfiType::RustArcPtr(self.object_name.clone()));
     }
 
     pub fn iter_types(&self) -> TypeIterator<'_> {
@@ -440,17 +339,14 @@ impl From<uniffi_meta::ConstructorMetadata> for Constructor {
 
         let ffi_func = FfiFunction {
             name: ffi_name,
-            is_async: meta.is_async,
             ..FfiFunction::default()
         };
         Self {
             name: meta.name,
             object_name: meta.self_name,
-            is_async: meta.is_async,
             object_module_path: meta.module_path,
             arguments,
             ffi_func,
-            docstring: meta.docstring.clone(),
             throws: meta.throws.map(Into::into),
             checksum_fn_name,
             checksum: meta.checksum,
@@ -479,8 +375,6 @@ pub struct Method {
     //    avoids a weird circular dependency in the calculation.
     #[checksum_ignore]
     pub(super) ffi_func: FfiFunction,
-    #[checksum_ignore]
-    pub(super) docstring: Option<String>,
     pub(super) throws: Option<Type>,
     pub(super) takes_self_by_arc: bool,
     pub(super) checksum_fn_name: String,
@@ -551,10 +445,6 @@ impl Method {
         self.throws.as_ref()
     }
 
-    pub fn docstring(&self) -> Option<&str> {
-        self.docstring.as_deref()
-    }
-
     pub fn takes_self_by_arc(&self) -> bool {
         self.takes_self_by_arc
     }
@@ -575,11 +465,6 @@ impl Method {
                 .flat_map(Argument::iter_types)
                 .chain(self.return_type.iter().flat_map(Type::iter_types)),
         )
-    }
-
-    /// For async callback interface methods, the FFI struct to pass to the completion function.
-    pub fn foreign_future_ffi_result_struct(&self) -> FfiStruct {
-        callbacks::foreign_future_ffi_result_struct(self.return_type.as_ref().map(FfiType::from))
     }
 }
 
@@ -606,7 +491,6 @@ impl From<uniffi_meta::MethodMetadata> for Method {
             arguments,
             return_type,
             ffi_func,
-            docstring: meta.docstring.clone(),
             throws: meta.throws.map(Into::into),
             takes_self_by_arc: meta.takes_self_by_arc,
             checksum_fn_name,
@@ -619,22 +503,19 @@ impl From<uniffi_meta::TraitMethodMetadata> for Method {
     fn from(meta: uniffi_meta::TraitMethodMetadata) -> Self {
         let ffi_name = meta.ffi_symbol_name();
         let checksum_fn_name = meta.checksum_symbol_name();
-        let is_async = meta.is_async;
         let return_type = meta.return_type.map(Into::into);
         let arguments = meta.inputs.into_iter().map(Into::into).collect();
         let ffi_func = FfiFunction {
             name: ffi_name,
-            is_async,
             ..FfiFunction::default()
         };
         Self {
             name: meta.name,
             object_name: meta.trait_name,
             object_module_path: meta.module_path,
-            is_async,
+            is_async: false,
             arguments,
             return_type,
-            docstring: meta.docstring.clone(),
             throws: meta.throws.map(Into::into),
             takes_self_by_arc: meta.takes_self_by_arc,
             checksum_fn_name,
@@ -702,7 +583,7 @@ impl Callable for Constructor {
     }
 
     fn is_async(&self) -> bool {
-        self.is_async
+        false
     }
 }
 
@@ -721,10 +602,6 @@ impl Callable for Method {
 
     fn is_async(&self) -> bool {
         self.is_async
-    }
-
-    fn takes_self(&self) -> bool {
-        true
     }
 }
 
@@ -891,64 +768,6 @@ mod test {
         assert_eq!(
             err.to_string(),
             "Trait interfaces can not have constructors: \"new\""
-        );
-    }
-
-    #[test]
-    fn test_docstring_object() {
-        const UDL: &str = r#"
-            namespace test{};
-            /// informative docstring
-            interface Testing { };
-        "#;
-        let ci = ComponentInterface::from_webidl(UDL, "crate_name").unwrap();
-        assert_eq!(
-            ci.get_object_definition("Testing")
-                .unwrap()
-                .docstring()
-                .unwrap(),
-            "informative docstring"
-        );
-    }
-
-    #[test]
-    fn test_docstring_constructor() {
-        const UDL: &str = r#"
-            namespace test{};
-            interface Testing {
-                /// informative docstring
-                constructor();
-            };
-        "#;
-        let ci = ComponentInterface::from_webidl(UDL, "crate_name").unwrap();
-        assert_eq!(
-            ci.get_object_definition("Testing")
-                .unwrap()
-                .primary_constructor()
-                .unwrap()
-                .docstring()
-                .unwrap(),
-            "informative docstring"
-        );
-    }
-
-    #[test]
-    fn test_docstring_method() {
-        const UDL: &str = r#"
-            namespace test{};
-            interface Testing {
-                /// informative docstring
-                void testing();
-            };
-        "#;
-        let ci = ComponentInterface::from_webidl(UDL, "crate_name").unwrap();
-        assert_eq!(
-            ci.get_object_definition("Testing")
-                .unwrap()
-                .get_method("testing")
-                .docstring()
-                .unwrap(),
-            "informative docstring"
         );
     }
 }

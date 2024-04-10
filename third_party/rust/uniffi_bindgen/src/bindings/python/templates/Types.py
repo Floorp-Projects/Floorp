@@ -85,7 +85,7 @@
 {%- when Type::Map { key_type, value_type } %}
 {%- include "MapTemplate.py" %}
 
-{%- when Type::CallbackInterface { name, module_path } %}
+{%- when Type::CallbackInterface { name: id, module_path } %}
 {%- include "CallbackInterfaceTemplate.py" %}
 
 {%- when Type::Custom { name, module_path, builtin } %}
@@ -93,6 +93,9 @@
 
 {%- when Type::External { name, module_path, namespace, kind, tagged } %}
 {%- include "ExternalTemplate.py" %}
+
+{%- when Type::ForeignExecutor %}
+{%- include "ForeignExecutorTemplate.py" %}
 
 {%- else %}
 {%- endmatch %}

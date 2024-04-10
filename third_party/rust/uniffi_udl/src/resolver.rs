@@ -209,6 +209,7 @@ pub(crate) fn resolve_builtin_type(name: &str) -> Option<Type> {
         "f64" => Some(Type::Float64),
         "timestamp" => Some(Type::Timestamp),
         "duration" => Some(Type::Duration),
+        "ForeignExecutor" => Some(Type::ForeignExecutor),
         _ => None,
     }
 }

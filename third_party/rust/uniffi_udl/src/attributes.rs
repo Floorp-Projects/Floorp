@@ -37,29 +37,10 @@ pub(super) enum Attribute {
         kind: ExternalKind,
         export: bool,
     },
-    Rust {
-        kind: RustKind,
-    },
     // Custom type on the scaffolding side
     Custom,
     // The interface described is implemented as a trait.
     Trait,
-    // Modifies `Trait` to enable foreign implementations (callback interfaces)
-    WithForeign,
-    Async,
-    NonExhaustive,
-}
-
-// A type defined in Rust via procmacros but which should be available
-// in UDL.
-#[derive(Debug, Copy, Clone, Checksum)]
-pub(super) enum RustKind {
-    Object,
-    CallbackTrait,
-    Trait,
-    Record,
-    Enum,
-    CallbackInterface,
 }
 
 impl Attribute {
@@ -86,9 +67,6 @@ impl TryFrom<&weedle::attribute::ExtendedAttribute<'_>> for Attribute {
                 "Error" => Ok(Attribute::Error),
                 "Custom" => Ok(Attribute::Custom),
                 "Trait" => Ok(Attribute::Trait),
-                "WithForeign" => Ok(Attribute::WithForeign),
-                "Async" => Ok(Attribute::Async),
-                "NonExhaustive" => Ok(Attribute::NonExhaustive),
                 _ => anyhow::bail!("ExtendedAttributeNoArgs not supported: {:?}", (attr.0).0),
             },
             // Matches assignment-style attributes like ["Throws=Error"]
@@ -116,19 +94,6 @@ impl TryFrom<&weedle::attribute::ExtendedAttribute<'_>> for Attribute {
                         crate_name: name_from_id_or_string(&identity.rhs),
                         kind: ExternalKind::Interface,
                         export: true,
-                    }),
-                    "ExternalTrait" => Ok(Attribute::External {
-                        crate_name: name_from_id_or_string(&identity.rhs),
-                        kind: ExternalKind::Trait,
-                        export: false,
-                    }),
-                    "ExternalTraitExport" => Ok(Attribute::External {
-                        crate_name: name_from_id_or_string(&identity.rhs),
-                        kind: ExternalKind::Trait,
-                        export: true,
-                    }),
-                    "Rust" => Ok(Attribute::Rust {
-                        kind: rust_kind_from_id_or_string(&identity.rhs)?,
                     }),
                     _ => anyhow::bail!(
                         "Attribute identity Identifier not supported: {:?}",
@@ -165,26 +130,6 @@ fn name_from_id_or_string(nm: &weedle::attribute::IdentifierOrString<'_>) -> Str
     }
 }
 
-fn rust_kind_from_id_or_string(nm: &weedle::attribute::IdentifierOrString<'_>) -> Result<RustKind> {
-    Ok(match nm {
-        weedle::attribute::IdentifierOrString::String(str_lit) => match str_lit.0 {
-            // support names which match either procmacro or udl
-            "interface" => RustKind::Object,
-            "object" => RustKind::Object,
-            "record" => RustKind::Record,
-            "dictionary" => RustKind::Record,
-            "enum" => RustKind::Enum,
-            "trait" => RustKind::Trait,
-            "callback" => RustKind::CallbackInterface,
-            "trait_with_foreign" => RustKind::CallbackTrait,
-            _ => anyhow::bail!("Unknown `[Rust=]` kind {:?}", str_lit.0),
-        },
-        weedle::attribute::IdentifierOrString::Identifier(_) => {
-            anyhow::bail!("Expected string attribute value, got identifier")
-        }
-    })
-}
-
 /// Parse a weedle `ExtendedAttributeList` into a list of `Attribute`s,
 /// erroring out on duplicates.
 fn parse_attributes<F>(
@@ -216,18 +161,13 @@ where
 }
 
 /// Attributes that can be attached to an `enum` definition in the UDL.
+/// There's only one case here: using `[Error]` to mark an enum as an error class.
 #[derive(Debug, Clone, Checksum, Default)]
 pub(super) struct EnumAttributes(Vec<Attribute>);
 
 impl EnumAttributes {
     pub fn contains_error_attr(&self) -> bool {
         self.0.iter().any(|attr| attr.is_error())
-    }
-
-    pub fn contains_non_exhaustive_attr(&self) -> bool {
-        self.0
-            .iter()
-            .any(|attr| matches!(attr, Attribute::NonExhaustive))
     }
 }
 
@@ -238,10 +178,6 @@ impl TryFrom<&weedle::attribute::ExtendedAttributeList<'_>> for EnumAttributes {
     ) -> Result<Self, Self::Error> {
         let attrs = parse_attributes(weedle_attributes, |attr| match attr {
             Attribute::Error => Ok(()),
-            Attribute::NonExhaustive => Ok(()),
-            // Allow `[Enum]`, since we may be parsing an attribute list from an interface with the
-            // `[Enum]` attribute.
-            Attribute::Enum => Ok(()),
             _ => bail!(format!("{attr:?} not supported for enums")),
         })?;
         Ok(Self(attrs))
@@ -260,9 +196,8 @@ impl<T: TryInto<EnumAttributes, Error = anyhow::Error>> TryFrom<Option<T>> for E
 
 /// Represents UDL attributes that might appear on a function.
 ///
-/// This supports:
-///   * `[Throws=ErrorName]` attribute for functions that can produce an error.
-///   * `[Async] for async functions
+/// This supports the `[Throws=ErrorName]` attribute for functions that
+/// can produce an error.
 #[derive(Debug, Clone, Checksum, Default)]
 pub(super) struct FunctionAttributes(Vec<Attribute>);
 
@@ -274,10 +209,6 @@ impl FunctionAttributes {
             Attribute::Throws(inner) => Some(inner.as_ref()),
             _ => None,
         })
-    }
-
-    pub(super) fn is_async(&self) -> bool {
-        self.0.iter().any(|attr| matches!(attr, Attribute::Async))
     }
 }
 
@@ -293,7 +224,7 @@ impl TryFrom<&weedle::attribute::ExtendedAttributeList<'_>> for FunctionAttribut
         weedle_attributes: &weedle::attribute::ExtendedAttributeList<'_>,
     ) -> Result<Self, Self::Error> {
         let attrs = parse_attributes(weedle_attributes, |attr| match attr {
-            Attribute::Throws(_) | Attribute::Async => Ok(()),
+            Attribute::Throws(_) => Ok(()),
             _ => bail!(format!("{attr:?} not supported for functions")),
         })?;
         Ok(Self(attrs))
@@ -363,25 +294,12 @@ impl InterfaceAttributes {
         self.0.iter().any(|attr| attr.is_error())
     }
 
-    pub fn contains_trait(&self) -> bool {
-        self.0.iter().any(|attr| matches!(attr, Attribute::Trait))
-    }
-
-    pub fn contains_with_foreign(&self) -> bool {
-        self.0
-            .iter()
-            .any(|attr| matches!(attr, Attribute::WithForeign))
-    }
-
-    pub fn object_impl(&self) -> Result<ObjectImpl> {
-        Ok(
-            match (self.contains_trait(), self.contains_with_foreign()) {
-                (true, true) => ObjectImpl::CallbackTrait,
-                (true, false) => ObjectImpl::Trait,
-                (false, false) => ObjectImpl::Struct,
-                (false, true) => bail!("WithForeign can't be specified without Trait"),
-            },
-        )
+    pub fn object_impl(&self) -> ObjectImpl {
+        if self.0.iter().any(|attr| matches!(attr, Attribute::Trait)) {
+            ObjectImpl::Trait
+        } else {
+            ObjectImpl::Struct
+        }
     }
     pub fn get_traits(&self) -> Vec<String> {
         self.0
@@ -403,7 +321,6 @@ impl TryFrom<&weedle::attribute::ExtendedAttributeList<'_>> for InterfaceAttribu
             Attribute::Enum => Ok(()),
             Attribute::Error => Ok(()),
             Attribute::Trait => Ok(()),
-            Attribute::WithForeign => Ok(()),
             Attribute::Traits(_) => Ok(()),
             _ => bail!(format!("{attr:?} not supported for interface definition")),
         })?;
@@ -456,10 +373,6 @@ impl ConstructorAttributes {
             _ => None,
         })
     }
-
-    pub(super) fn is_async(&self) -> bool {
-        self.0.iter().any(|attr| matches!(attr, Attribute::Async))
-    }
 }
 
 impl TryFrom<&weedle::attribute::ExtendedAttributeList<'_>> for ConstructorAttributes {
@@ -470,7 +383,6 @@ impl TryFrom<&weedle::attribute::ExtendedAttributeList<'_>> for ConstructorAttri
         let attrs = parse_attributes(weedle_attributes, |attr| match attr {
             Attribute::Throws(_) => Ok(()),
             Attribute::Name(_) => Ok(()),
-            Attribute::Async => Ok(()),
             _ => bail!(format!("{attr:?} not supported for constructors")),
         })?;
         Ok(Self(attrs))
@@ -494,10 +406,6 @@ impl MethodAttributes {
         })
     }
 
-    pub(super) fn is_async(&self) -> bool {
-        self.0.iter().any(|attr| matches!(attr, Attribute::Async))
-    }
-
     pub(super) fn get_self_by_arc(&self) -> bool {
         self.0
             .iter()
@@ -517,7 +425,8 @@ impl TryFrom<&weedle::attribute::ExtendedAttributeList<'_>> for MethodAttributes
         weedle_attributes: &weedle::attribute::ExtendedAttributeList<'_>,
     ) -> Result<Self, Self::Error> {
         let attrs = parse_attributes(weedle_attributes, |attr| match attr {
-            Attribute::SelfType(_) | Attribute::Throws(_) | Attribute::Async => Ok(()),
+            Attribute::SelfType(_) => Ok(()),
+            Attribute::Throws(_) => Ok(()),
             _ => bail!(format!("{attr:?} not supported for methods")),
         })?;
         Ok(Self(attrs))
@@ -589,18 +498,10 @@ impl TypedefAttributes {
         })
     }
 
-    pub(super) fn rust_kind(&self) -> Option<RustKind> {
-        self.0.iter().find_map(|attr| match attr {
-            Attribute::Rust { kind, .. } => Some(*kind),
-            _ => None,
-        })
-    }
-
     pub(super) fn external_tagged(&self) -> Option<bool> {
         // If it was "exported" via a proc-macro the FfiConverter was not tagged.
         self.0.iter().find_map(|attr| match attr {
             Attribute::External { export, .. } => Some(!*export),
-            Attribute::Rust { .. } => Some(false),
             _ => None,
         })
     }
@@ -612,7 +513,7 @@ impl TryFrom<&weedle::attribute::ExtendedAttributeList<'_>> for TypedefAttribute
         weedle_attributes: &weedle::attribute::ExtendedAttributeList<'_>,
     ) -> Result<Self, Self::Error> {
         let attrs = parse_attributes(weedle_attributes, |attr| match attr {
-            Attribute::External { .. } | Attribute::Custom | Attribute::Rust { .. } => Ok(()),
+            Attribute::External { .. } | Attribute::Custom => Ok(()),
             _ => bail!(format!("{attr:?} not supported for typedefs")),
         })?;
         Ok(Self(attrs))
@@ -740,22 +641,14 @@ mod test {
     }
 
     #[test]
-    fn test_function_attributes() {
+    fn test_throws_attribute() {
         let (_, node) = weedle::attribute::ExtendedAttributeList::parse("[Throws=Error]").unwrap();
         let attrs = FunctionAttributes::try_from(&node).unwrap();
         assert!(matches!(attrs.get_throws_err(), Some("Error")));
-        assert!(!attrs.is_async());
 
         let (_, node) = weedle::attribute::ExtendedAttributeList::parse("[]").unwrap();
         let attrs = FunctionAttributes::try_from(&node).unwrap();
         assert!(attrs.get_throws_err().is_none());
-        assert!(!attrs.is_async());
-
-        let (_, node) =
-            weedle::attribute::ExtendedAttributeList::parse("[Throws=Error, Async]").unwrap();
-        let attrs = FunctionAttributes::try_from(&node).unwrap();
-        assert!(matches!(attrs.get_throws_err(), Some("Error")));
-        assert!(attrs.is_async());
     }
 
     #[test]
@@ -780,34 +673,22 @@ mod test {
         let attrs = MethodAttributes::try_from(&node).unwrap();
         assert!(!attrs.get_self_by_arc());
         assert!(matches!(attrs.get_throws_err(), Some("Error")));
-        assert!(!attrs.is_async());
 
         let (_, node) = weedle::attribute::ExtendedAttributeList::parse("[]").unwrap();
         let attrs = MethodAttributes::try_from(&node).unwrap();
         assert!(!attrs.get_self_by_arc());
         assert!(attrs.get_throws_err().is_none());
-        assert!(!attrs.is_async());
 
         let (_, node) =
             weedle::attribute::ExtendedAttributeList::parse("[Self=ByArc, Throws=Error]").unwrap();
         let attrs = MethodAttributes::try_from(&node).unwrap();
         assert!(attrs.get_self_by_arc());
         assert!(attrs.get_throws_err().is_some());
-        assert!(!attrs.is_async());
-
-        let (_, node) =
-            weedle::attribute::ExtendedAttributeList::parse("[Self=ByArc, Throws=Error, Async]")
-                .unwrap();
-        let attrs = MethodAttributes::try_from(&node).unwrap();
-        assert!(attrs.get_self_by_arc());
-        assert!(attrs.get_throws_err().is_some());
-        assert!(attrs.is_async());
 
         let (_, node) = weedle::attribute::ExtendedAttributeList::parse("[Self=ByArc]").unwrap();
         let attrs = MethodAttributes::try_from(&node).unwrap();
         assert!(attrs.get_self_by_arc());
         assert!(attrs.get_throws_err().is_none());
-        assert!(!attrs.is_async());
     }
 
     #[test]
@@ -829,11 +710,6 @@ mod test {
         let attrs = ConstructorAttributes::try_from(&node).unwrap();
         assert!(matches!(attrs.get_throws_err(), Some("Error")));
         assert!(matches!(attrs.get_name(), Some("MyFactory")));
-        assert!(!attrs.is_async());
-
-        let (_, node) = weedle::attribute::ExtendedAttributeList::parse("[Async]").unwrap();
-        let attrs = ConstructorAttributes::try_from(&node).unwrap();
-        assert!(attrs.is_async());
     }
 
     #[test]
@@ -878,24 +754,15 @@ mod test {
     fn test_trait_attribute() {
         let (_, node) = weedle::attribute::ExtendedAttributeList::parse("[Trait]").unwrap();
         let attrs = InterfaceAttributes::try_from(&node).unwrap();
-        assert_eq!(attrs.object_impl().unwrap(), ObjectImpl::Trait);
-
-        let (_, node) =
-            weedle::attribute::ExtendedAttributeList::parse("[Trait, WithForeign]").unwrap();
-        let attrs = InterfaceAttributes::try_from(&node).unwrap();
-        assert_eq!(attrs.object_impl().unwrap(), ObjectImpl::CallbackTrait);
+        assert_eq!(attrs.object_impl(), ObjectImpl::Trait);
 
         let (_, node) = weedle::attribute::ExtendedAttributeList::parse("[]").unwrap();
         let attrs = InterfaceAttributes::try_from(&node).unwrap();
-        assert_eq!(attrs.object_impl().unwrap(), ObjectImpl::Struct);
-
-        let (_, node) = weedle::attribute::ExtendedAttributeList::parse("[WithForeign]").unwrap();
-        let attrs = InterfaceAttributes::try_from(&node).unwrap();
-        assert!(attrs.object_impl().is_err())
+        assert_eq!(attrs.object_impl(), ObjectImpl::Struct);
     }
 
     #[test]
-    fn test_enum_attribute_on_interface() {
+    fn test_enum_attribute() {
         let (_, node) = weedle::attribute::ExtendedAttributeList::parse("[Enum]").unwrap();
         let attrs = InterfaceAttributes::try_from(&node).unwrap();
         assert!(matches!(attrs.contains_enum_attr(), true));
@@ -914,38 +781,6 @@ mod test {
             err.to_string(),
             "conflicting attributes on interface definition"
         );
-    }
-
-    // Test parsing attributes for enum definitions
-    #[test]
-    fn test_enum_attributes() {
-        let (_, node) =
-            weedle::attribute::ExtendedAttributeList::parse("[Error, NonExhaustive]").unwrap();
-        let attrs = EnumAttributes::try_from(&node).unwrap();
-        assert!(attrs.contains_error_attr());
-        assert!(attrs.contains_non_exhaustive_attr());
-
-        let (_, node) = weedle::attribute::ExtendedAttributeList::parse("[Trait]").unwrap();
-        let err = EnumAttributes::try_from(&node).unwrap_err();
-        assert_eq!(err.to_string(), "Trait not supported for enums");
-    }
-
-    // Test parsing attributes for interface definitions with the `[Enum]` attribute
-    #[test]
-    fn test_enum_attributes_from_interface() {
-        let (_, node) = weedle::attribute::ExtendedAttributeList::parse("[Enum]").unwrap();
-        assert!(EnumAttributes::try_from(&node).is_ok());
-
-        let (_, node) =
-            weedle::attribute::ExtendedAttributeList::parse("[Enum, Error, NonExhaustive]")
-                .unwrap();
-        let attrs = EnumAttributes::try_from(&node).unwrap();
-        assert!(attrs.contains_error_attr());
-        assert!(attrs.contains_non_exhaustive_attr());
-
-        let (_, node) = weedle::attribute::ExtendedAttributeList::parse("[Enum, Trait]").unwrap();
-        let err = EnumAttributes::try_from(&node).unwrap_err();
-        assert_eq!(err.to_string(), "Trait not supported for enums");
     }
 
     #[test]
