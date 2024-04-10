@@ -47,6 +47,22 @@ already_AddRefed<RTCRtpScriptTransform> RTCRtpScriptTransform::Constructor(
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
+
+  // The spec currently fails to describe what to do when the worker is closing
+  // or closed; the following placeholder text can be found in the spec at:
+  // https://w3c.github.io/webrtc-encoded-transform/#dom-rtcrtpscripttransform-rtcrtpscripttransform
+  //
+  // > FIXME: Describe error handling (worker closing flag true at
+  // > RTCRtpScriptTransform creation time. And worker being terminated while
+  // > transform is processing data).
+  //
+  // Because our worker runnables do not like to be pointed at a nonexistant
+  // worker, we throw in this case.
+  if (!aWorker.IsEligibleForMessaging()) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
   auto newTransform = MakeRefPtr<RTCRtpScriptTransform>(ownerWindow);
   RefPtr<RTCTransformEventRunnable> runnable =
       new RTCTransformEventRunnable(aWorker, &newTransform->GetProxy());

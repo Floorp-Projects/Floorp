@@ -42,6 +42,31 @@ class Worker : public DOMEventTargetHelper, public SupportsWeakPtr {
     return Some(EventCallbackDebuggerNotificationType::Worker);
   }
 
+  // True if the worker is not yet closing from the perspective of this, the
+  // owning thread, and therefore it's okay to post a message to the worker.
+  // This is not a guarantee that the worker will process the message.
+  //
+  // This method will return false if `globalThis.close()` is invoked on the
+  // worker before that method returns control to the caller and without waiting
+  // for any task to be queued on this thread and run; this biases us to avoid
+  // doing wasteful work but does mean if you are exposing something to content
+  // that is specified to only transition as the result of a task, then you
+  // should not use this method.
+  //
+  // The method name comes from
+  // https://html.spec.whatwg.org/multipage/web-messaging.html#eligible-for-messaging
+  // and is intended to convey whether it's okay to begin to take the steps to
+  // create an `EventWithOptionsRunnable` to pass to `PostEventWithOptions`.
+  // Note that early returning based on calling this method without performing
+  // the structured serialization steps that would otherwise run is potentially
+  // observable to content if content is in control of any of the payload in
+  // such a way that an object with getters or a proxy could be provided.
+  //
+  // There is an identically named method on nsIGlobalObject and the semantics
+  // are intentionally similar but please make sure you document your
+  // assumptions when calling either method.
+  bool IsEligibleForMessaging();
+
   void PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
                    const Sequence<JSObject*>& aTransferable, ErrorResult& aRv);
 
@@ -49,6 +74,8 @@ class Worker : public DOMEventTargetHelper, public SupportsWeakPtr {
                    const StructuredSerializeOptions& aOptions,
                    ErrorResult& aRv);
 
+  // Callers must call `IsEligibleForMessaging` before constructing an
+  // `EventWithOptionsRunnable` subclass.
   void PostEventWithOptions(JSContext* aCx, JS::Handle<JS::Value> aOptions,
                             const Sequence<JSObject*>& aTransferable,
                             EventWithOptionsRunnable* aRunnable,

@@ -83,6 +83,12 @@ JSObject* Worker::WrapObject(JSContext* aCx,
   return wrapper;
 }
 
+bool Worker::IsEligibleForMessaging() {
+  NS_ASSERT_OWNINGTHREAD(Worker);
+
+  return mWorkerPrivate && mWorkerPrivate->ParentStatusProtected() <= Running;
+}
+
 void Worker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
                          const Sequence<JSObject*>& aTransferable,
                          ErrorResult& aRv) {
