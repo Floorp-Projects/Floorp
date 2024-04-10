@@ -82,7 +82,7 @@ void UniFFIPointer::Write(const ArrayBuffer& aArrayBuff, uint32_t aPosition,
         // a pointer we do the reverse here
         const auto& data_ptr = aData.Subspan(aPosition, 8);
         mozilla::BigEndian::writeUint64(data_ptr.Elements(),
-                                        (uint64_t)ClonePtr());
+                                        (uint64_t)GetPtr());
         return true;
       })) {
     aError.ThrowRangeError("position is out of range");
@@ -100,14 +100,10 @@ JSObject* UniFFIPointer::WrapObject(JSContext* aCx,
   return dom::UniFFIPointer_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void* UniFFIPointer::ClonePtr() const {
+void* UniFFIPointer::GetPtr() const {
   MOZ_LOG(sUniFFIPointerLogger, LogLevel::Info,
-          ("[UniFFI] Cloning raw pointer"));
-  RustCallStatus status{};
-  auto cloned = this->mType->clone(this->mPtr, &status);
-  MOZ_DIAGNOSTIC_ASSERT(status.code == RUST_CALL_SUCCESS,
-                        "UniFFI clone call returned a non-success result");
-  return cloned;
+          ("[UniFFI] Getting raw pointer"));
+  return this->mPtr;
 }
 
 bool UniFFIPointer::IsSamePtrType(const UniFFIPointerType* aType) const {

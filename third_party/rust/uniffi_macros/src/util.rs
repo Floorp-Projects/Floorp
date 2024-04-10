@@ -8,7 +8,7 @@ use std::path::{Path as StdPath, PathBuf};
 use syn::{
     ext::IdentExt,
     parse::{Parse, ParseStream},
-    Attribute, Expr, Lit, Token,
+    Attribute, Token,
 };
 
 pub fn manifest_path() -> Result<PathBuf, String> {
@@ -79,13 +79,8 @@ pub fn try_read_field(f: &syn::Field) -> TokenStream {
     let ident = &f.ident;
     let ty = &f.ty;
 
-    match ident {
-        Some(ident) => quote! {
-            #ident: <#ty as ::uniffi::Lift<crate::UniFfiTag>>::try_read(buf)?,
-        },
-        None => quote! {
-            <#ty as ::uniffi::Lift<crate::UniFfiTag>>::try_read(buf)?,
-        },
+    quote! {
+        #ident: <#ty as ::uniffi::Lift<crate::UniFfiTag>>::try_read(buf)?,
     }
 }
 
@@ -156,7 +151,13 @@ pub fn parse_comma_separated<T: UniffiAttributeArgs>(input: ParseStream<'_>) -> 
 }
 
 #[derive(Default)]
-struct ArgumentNotAllowedHere;
+pub struct ArgumentNotAllowedHere;
+
+impl Parse for ArgumentNotAllowedHere {
+    fn parse(input: ParseStream<'_>) -> syn::Result<Self> {
+        parse_comma_separated(input)
+    }
+}
 
 impl UniffiAttributeArgs for ArgumentNotAllowedHere {
     fn parse_one(input: ParseStream<'_>) -> syn::Result<Self> {
@@ -223,11 +224,7 @@ pub(crate) fn derive_all_ffi_traits(ty: &Ident, udl_mode: bool) -> TokenStream {
     }
 }
 
-pub(crate) fn derive_ffi_traits(
-    ty: impl ToTokens,
-    udl_mode: bool,
-    trait_names: &[&str],
-) -> TokenStream {
+pub(crate) fn derive_ffi_traits(ty: &Ident, udl_mode: bool, trait_names: &[&str]) -> TokenStream {
     let trait_idents = trait_names
         .iter()
         .map(|name| Ident::new(name, Span::call_site()));
@@ -250,14 +247,11 @@ pub(crate) fn derive_ffi_traits(
 pub mod kw {
     syn::custom_keyword!(async_runtime);
     syn::custom_keyword!(callback_interface);
-    syn::custom_keyword!(with_foreign);
+    syn::custom_keyword!(constructor);
     syn::custom_keyword!(default);
     syn::custom_keyword!(flat_error);
     syn::custom_keyword!(None);
-    syn::custom_keyword!(Some);
     syn::custom_keyword!(with_try_read);
-    syn::custom_keyword!(name);
-    syn::custom_keyword!(non_exhaustive);
     syn::custom_keyword!(Debug);
     syn::custom_keyword!(Display);
     syn::custom_keyword!(Eq);
@@ -281,21 +275,4 @@ impl Parse for ExternalTypeItem {
             type_ident: input.parse()?,
         })
     }
-}
-
-pub(crate) fn extract_docstring(attrs: &[Attribute]) -> syn::Result<String> {
-    return attrs
-        .iter()
-        .filter(|attr| attr.path().is_ident("doc"))
-        .map(|attr| {
-            let name_value = attr.meta.require_name_value()?;
-            if let Expr::Lit(expr) = &name_value.value {
-                if let Lit::Str(lit_str) = &expr.lit {
-                    return Ok(lit_str.value().trim().to_owned());
-                }
-            }
-            Err(syn::Error::new_spanned(attr, "Cannot parse doc attribute"))
-        })
-        .collect::<syn::Result<Vec<_>>>()
-        .map(|lines| lines.join("\n"));
 }

@@ -5,6 +5,7 @@
 //! A simple histogram implementation for exponential histograms.
 
 use std::collections::HashMap;
+use std::convert::TryFrom;
 
 use serde::{Deserialize, Serialize};
 

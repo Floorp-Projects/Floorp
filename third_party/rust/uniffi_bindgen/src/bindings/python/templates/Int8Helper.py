@@ -8,5 +8,5 @@ class _UniffiConverterInt8(_UniffiConverterPrimitiveInt):
         return buf.read_i8()
 
     @staticmethod
-    def write(value, buf):
+    def write_unchecked(value, buf):
         buf.write_i8(value)

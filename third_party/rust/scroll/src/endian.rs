@@ -43,6 +43,9 @@ impl Endian {
     }
     #[inline]
     pub fn is_little(&self) -> bool {
-        *self == LE
+        match *self {
+            LE => true,
+            _ => false,
+        }
     }
 }

@@ -5,81 +5,55 @@
 use super::{AsCodeType, CodeType};
 use crate::backend::{Literal, Type};
 use crate::ComponentInterface;
+use paste::paste;
 
-#[derive(Debug)]
-pub struct OptionalCodeType {
-    inner: Type,
-}
+fn render_literal(literal: &Literal, inner: &Type, ci: &ComponentInterface) -> String {
+    match literal {
+        Literal::Null => "null".into(),
+        Literal::EmptySequence => "listOf()".into(),
+        Literal::EmptyMap => "mapOf()".into(),
 
-impl OptionalCodeType {
-    pub fn new(inner: Type) -> Self {
-        Self { inner }
-    }
-    fn inner(&self) -> &Type {
-        &self.inner
+        // For optionals
+        _ => super::KotlinCodeOracle.find(inner).literal(literal, ci),
     }
 }
 
-impl CodeType for OptionalCodeType {
-    fn type_label(&self, ci: &ComponentInterface) -> String {
-        format!(
-            "{}?",
-            super::KotlinCodeOracle.find(self.inner()).type_label(ci)
-        )
-    }
+macro_rules! impl_code_type_for_compound {
+     ($T:ty, $type_label_pattern:literal, $canonical_name_pattern: literal) => {
+        paste! {
+            #[derive(Debug)]
+            pub struct $T {
+                inner: Type,
+            }
 
-    fn canonical_name(&self) -> String {
-        format!(
-            "Optional{}",
-            super::KotlinCodeOracle.find(self.inner()).canonical_name()
-        )
-    }
+            impl $T {
+                pub fn new(inner: Type) -> Self {
+                    Self { inner }
+                }
+                fn inner(&self) -> &Type {
+                    &self.inner
+                }
+            }
 
-    fn literal(&self, literal: &Literal, ci: &ComponentInterface) -> String {
-        match literal {
-            Literal::None => "null".into(),
-            Literal::Some { inner } => super::KotlinCodeOracle.find(&self.inner).literal(inner, ci),
-            _ => panic!("Invalid literal for Optional type: {literal:?}"),
+            impl CodeType for $T  {
+                fn type_label(&self, ci: &ComponentInterface) -> String {
+                    format!($type_label_pattern, super::KotlinCodeOracle.find(self.inner()).type_label(ci))
+                }
+
+                fn canonical_name(&self) -> String {
+                    format!($canonical_name_pattern, super::KotlinCodeOracle.find(self.inner()).canonical_name())
+                }
+
+                fn literal(&self, literal: &Literal, ci: &ComponentInterface) -> String {
+                    render_literal(literal, self.inner(), ci)
+                }
+            }
         }
     }
-}
+ }
 
-#[derive(Debug)]
-pub struct SequenceCodeType {
-    inner: Type,
-}
-
-impl SequenceCodeType {
-    pub fn new(inner: Type) -> Self {
-        Self { inner }
-    }
-    fn inner(&self) -> &Type {
-        &self.inner
-    }
-}
-
-impl CodeType for SequenceCodeType {
-    fn type_label(&self, ci: &ComponentInterface) -> String {
-        format!(
-            "List<{}>",
-            super::KotlinCodeOracle.find(self.inner()).type_label(ci)
-        )
-    }
-
-    fn canonical_name(&self) -> String {
-        format!(
-            "Sequence{}",
-            super::KotlinCodeOracle.find(self.inner()).canonical_name()
-        )
-    }
-
-    fn literal(&self, literal: &Literal, _ci: &ComponentInterface) -> String {
-        match literal {
-            Literal::EmptySequence => "listOf()".into(),
-            _ => panic!("Invalid literal for List type: {literal:?}"),
-        }
-    }
-}
+impl_code_type_for_compound!(OptionalCodeType, "{}?", "Optional{}");
+impl_code_type_for_compound!(SequenceCodeType, "List<{}>", "Sequence{}");
 
 #[derive(Debug)]
 pub struct MapCodeType {
@@ -118,10 +92,7 @@ impl CodeType for MapCodeType {
         )
     }
 
-    fn literal(&self, literal: &Literal, _ci: &ComponentInterface) -> String {
-        match literal {
-            Literal::EmptyMap => "mapOf()".into(),
-            _ => panic!("Invalid literal for Map type: {literal:?}"),
-        }
+    fn literal(&self, literal: &Literal, ci: &ComponentInterface) -> String {
+        render_literal(literal, &self.value, ci)
     }
 }

@@ -4,8 +4,7 @@ use core::mem;
 use core::ptr::NonNull;
 
 /// An error returned when trying to send on a closed channel. Returned from
-/// [`Sender::send`](crate::Sender::send) if the corresponding [`Receiver`](crate::Receiver)
-/// has already been dropped.
+/// [`Sender::send`] if the corresponding [`Receiver`] has already been dropped.
 ///
 /// The message that could not be sent can be retreived again with [`SendError::into_inner`].
 pub struct SendError<T> {
@@ -80,10 +79,10 @@ impl<T> fmt::Debug for SendError<T> {
 #[cfg(feature = "std")]
 impl<T> std::error::Error for SendError<T> {}
 
-/// An error returned from the blocking [`Receiver::recv`](crate::Receiver::recv) method.
+/// An error returned from the indefinitely blocking recv functions on a [`Receiver`].
 ///
-/// The receive operation can only fail if the corresponding [`Sender`](crate::Sender) was dropped
-/// before sending any message, or if a message has already been sent and received on the channel.
+/// The recv operation can only fail if the corresponding [`Sender`] was dropped before sending
+/// any message. Or if a message has already been sent and received on the channel.
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub struct RecvError;
 
@@ -96,8 +95,7 @@ impl fmt::Display for RecvError {
 #[cfg(feature = "std")]
 impl std::error::Error for RecvError {}
 
-/// An error returned when failing to receive a message in the non-blocking
-/// [`Receiver::try_recv`](crate::Receiver::try_recv).
+/// An error returned when trying a non blocking receive on a [`Receiver`].
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum TryRecvError {
     /// The channel is still open, but there was no message present in it.
@@ -121,8 +119,7 @@ impl fmt::Display for TryRecvError {
 #[cfg(feature = "std")]
 impl std::error::Error for TryRecvError {}
 
-/// An error returned when failing to receive a message in
-/// [`Receiver::recv_timeout`](crate::Receiver::recv_timeout).
+/// An error returned when trying a time limited blocking receive on a [`Receiver`].
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum RecvTimeoutError {
     /// No message arrived on the channel before the timeout was reached. The channel is still open.

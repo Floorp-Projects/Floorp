@@ -184,7 +184,6 @@ fn build_configuration(
         rate_limit,
         enable_event_timestamps,
         experimentation_id: None,
-        enable_internal_pings: true,
     };
 
     Ok((configuration, client_info))

@@ -2,8 +2,10 @@
 License, v. 2.0. If a copy of the MPL was not distributed with this
 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use crate::bindings::TargetLanguage;
-use crate::{bindings::RunScriptOptions, library_mode::generate_bindings, BindingGeneratorDefault};
+use crate::{
+    bindings::{RunScriptOptions, TargetLanguage},
+    library_mode::generate_bindings,
+};
 use anyhow::{bail, Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
 use std::env;
@@ -31,18 +33,14 @@ pub fn run_script(
     args: Vec<String>,
     options: &RunScriptOptions,
 ) -> Result<()> {
-    let script_path = Utf8Path::new(script_file);
+    let script_path = Utf8Path::new(".").join(script_file);
     let test_helper = UniFFITestHelper::new(crate_name)?;
-    let out_dir = test_helper.create_out_dir(tmp_dir, script_path)?;
+    let out_dir = test_helper.create_out_dir(tmp_dir, &script_path)?;
     let cdylib_path = test_helper.copy_cdylib_to_out_dir(&out_dir)?;
     generate_bindings(
         &cdylib_path,
         None,
-        &BindingGeneratorDefault {
-            target_languages: vec![TargetLanguage::Kotlin],
-            try_format_code: false,
-        },
-        None,
+        &[TargetLanguage::Kotlin],
         &out_dir,
         false,
     )?;

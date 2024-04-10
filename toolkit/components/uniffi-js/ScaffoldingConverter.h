@@ -173,7 +173,7 @@ class ScaffoldingObjectConverter {
     if (!value.IsSamePtrType(PointerType)) {
       return Err("Bad pointer type"_ns);
     }
-    return value.ClonePtr();
+    return value.GetPtr();
   }
 
   static void* IntoRust(void* aValue) { return aValue; }

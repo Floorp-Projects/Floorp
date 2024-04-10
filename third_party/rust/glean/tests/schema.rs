@@ -6,7 +6,8 @@ use std::collections::HashMap;
 use std::io::Read;
 
 use flate2::read::GzDecoder;
-use jsonschema_valid::schemas::Draft;
+use glean_core::TextMetric;
+use jsonschema_valid::{self, schemas::Draft};
 use serde_json::Value;
 
 use glean::net::{PingUploadRequest, UploadResult};
