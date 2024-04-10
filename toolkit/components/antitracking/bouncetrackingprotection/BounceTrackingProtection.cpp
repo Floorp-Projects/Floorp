@@ -134,6 +134,11 @@ nsresult BounceTrackingProtection::RecordStatefulBounces(
 
   // For each host in navigable’s bounce tracking record's bounce set:
   for (const nsACString& host : record->GetBounceHosts()) {
+    // Skip "null" entries, they are only used for logging purposes.
+    if (host.EqualsLiteral("null")) {
+      continue;
+    }
+
     // If host equals navigable’s bounce tracking record's initial host,
     // continue.
     if (host == record->GetInitialHost()) {
