@@ -8,6 +8,7 @@ use crate::gecko_bindings::bindings;
 use crate::gecko_bindings::structs;
 use crate::gecko_bindings::structs::ScreenColorGamut;
 use crate::media_queries::{Device, MediaType};
+use crate::parser::ParserContext;
 use crate::queries::feature::{AllowsRanges, Evaluator, FeatureFlags, QueryFeatureDescription};
 use crate::queries::values::Orientation;
 use crate::values::computed::{CSSPixelLength, Context, Ratio, Resolution};
@@ -286,16 +287,26 @@ fn eval_prefers_contrast(context: &Context, query_value: Option<PrefersContrast>
 pub enum ForcedColors {
     /// Page colors are not being forced.
     None,
+    /// Page colors would be forced in content.
+    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    Requested,
     /// Page colors are being forced.
     Active,
 }
 
+impl ForcedColors {
+    /// Returns whether forced-colors is active for this page.
+    pub fn is_active(self) -> bool {
+        matches!(self, Self::Active)
+    }
+}
+
 /// https://drafts.csswg.org/mediaqueries-5/#forced-colors
 fn eval_forced_colors(context: &Context, query_value: Option<ForcedColors>) -> bool {
-    let forced = !context.device().use_document_colors();
+    let forced = context.device().forced_colors();
     match query_value {
-        Some(query_value) => forced == (query_value == ForcedColors::Active),
-        None => forced,
+        Some(query_value) => query_value == forced,
+        None => forced != ForcedColors::None,
     }
 }
 

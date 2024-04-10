@@ -297,7 +297,7 @@ where
     context.style().add_flags(cascade_input_flags);
 
     let using_cached_reset_properties;
-    let ignore_colors = !context.builder.device.use_document_colors();
+    let ignore_colors = context.builder.device.forced_colors().is_active();
     let mut cascade = Cascade::new(first_line_reparenting, ignore_colors);
     let mut declarations = Default::default();
     let mut shorthand_cache = ShorthandsWithPropertyReferencesCache::default();
