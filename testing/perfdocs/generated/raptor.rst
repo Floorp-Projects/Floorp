@@ -18560,6 +18560,229 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
 
 
+.. dropdown:: docomo
+   :class-container: anchor-id-docomo-d
+
+   **Owner**: PerfTest Team
+
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
+   * **alert threshold**: 2.0
+   * **apps**: firefox, chrome
+   * **benchmark page**: false
+   * **browser cycles**: 25
+   * **expected**: pass
+   * **gecko profile interval**: 1
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp7/desktop/browsertime-tp7.toml#22>`__
+   * **lower is better**: true
+   * **page cycles**: 25
+   * **page timeout**: 60000
+   * **playback**: mitmproxy
+   * **playback pageset manifest**: mitm8-linux-firefox-docomo.manifest
+   * **playback version**: 8.1.1
+   * **secondary url**: `<https://www.docomo.ne.jp/iphone/?icid=CRP_menu_to_CRP_IPH>`__
+   * **test url**: `<https://www.docomo.ne.jp/>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: false
+   * **Test Task**:
+
+   .. list-table:: **test-linux1804-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-firefox-docomo**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-firefox-docomo**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-chrome-docomo**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp7-firefox-docomo**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-firefox-docomo**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-firefox-docomo**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-chrome-docomo**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp7-firefox-docomo**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-firefox-docomo**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-chrome-docomo**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp7-firefox-docomo**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-firefox-docomo**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-firefox-docomo**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-chrome-docomo**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp7-firefox-docomo**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+
 .. dropdown:: ebay
    :class-container: anchor-id-ebay-d
 
@@ -24344,6 +24567,229 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
 
 
+.. dropdown:: openai
+   :class-container: anchor-id-openai-d
+
+   **Owner**: PerfTest Team
+
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
+   * **alert threshold**: 2.0
+   * **apps**: firefox, chrome
+   * **benchmark page**: false
+   * **browser cycles**: 25
+   * **expected**: pass
+   * **gecko profile interval**: 1
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp7/desktop/browsertime-tp7.toml#26>`__
+   * **lower is better**: true
+   * **page cycles**: 25
+   * **page timeout**: 60000
+   * **playback**: mitmproxy
+   * **playback pageset manifest**: mitm8-linux-firefox-openai.manifest
+   * **playback version**: 8.1.1
+   * **secondary url**: `<https://openai.com/blog>`__
+   * **test url**: `<https://openai.com/>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: false
+   * **Test Task**:
+
+   .. list-table:: **test-linux1804-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-firefox-openai**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-firefox-openai**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-chrome-openai**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp7-firefox-openai**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-firefox-openai**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-firefox-openai**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-chrome-openai**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp7-firefox-openai**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-firefox-openai**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-chrome-openai**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp7-firefox-openai**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-firefox-openai**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-firefox-openai**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-chrome-openai**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp7-firefox-openai**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+
 .. dropdown:: outlook
    :class-container: anchor-id-outlook-d
 
@@ -25740,6 +26186,452 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
 
 
+.. dropdown:: samsung
+   :class-container: anchor-id-samsung-d
+
+   **Owner**: PerfTest Team
+
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
+   * **alert threshold**: 2.0
+   * **apps**: firefox, chrome
+   * **benchmark page**: false
+   * **browser cycles**: 25
+   * **expected**: pass
+   * **gecko profile interval**: 1
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp7/desktop/browsertime-tp7.toml#31>`__
+   * **lower is better**: true
+   * **page cycles**: 25
+   * **page timeout**: 60000
+   * **playback**: mitmproxy
+   * **playback pageset manifest**: mitm8-linux-firefox-samsung.manifest
+   * **playback version**: 8.1.1
+   * **secondary url**: `<https://www.samsung.com/us/mobile>`__
+   * **test url**: `<https://www.samsung.com/us>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: false
+   * **Test Task**:
+
+   .. list-table:: **test-linux1804-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-firefox-samsung**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-firefox-samsung**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-chrome-samsung**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp7-firefox-samsung**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-firefox-samsung**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-firefox-samsung**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-chrome-samsung**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp7-firefox-samsung**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-firefox-samsung**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-chrome-samsung**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp7-firefox-samsung**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-firefox-samsung**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-firefox-samsung**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-chrome-samsung**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp7-firefox-samsung**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+
+.. dropdown:: tiktok
+   :class-container: anchor-id-tiktok-d
+
+   **Owner**: PerfTest Team
+
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
+   * **alert threshold**: 2.0
+   * **apps**: firefox, chrome
+   * **benchmark page**: false
+   * **browser cycles**: 25
+   * **expected**: pass
+   * **gecko profile interval**: 1
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp7/desktop/browsertime-tp7.toml#27>`__
+   * **lower is better**: true
+   * **page cycles**: 25
+   * **page timeout**: 60000
+   * **playback**: mitmproxy
+   * **playback pageset manifest**: mitm8-linux-firefox-tiktok.manifest
+   * **playback version**: 8.1.1
+   * **secondary url**: `<https://www.tiktok.com/explore>`__
+   * **test url**: `<https://www.tiktok.com/en>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: false
+   * **Test Task**:
+
+   .. list-table:: **test-linux1804-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-firefox-tiktok**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-firefox-tiktok**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-chrome-tiktok**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp7-firefox-tiktok**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-firefox-tiktok**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-firefox-tiktok**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-chrome-tiktok**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp7-firefox-tiktok**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-firefox-tiktok**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-chrome-tiktok**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp7-firefox-tiktok**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-firefox-tiktok**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-firefox-tiktok**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-chrome-tiktok**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp7-firefox-tiktok**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+
 .. dropdown:: tumblr
    :class-container: anchor-id-tumblr-d
 
@@ -26776,6 +27668,229 @@ Tests for page-load performance. The links direct to the actual websites that ar
         - ❌
         - ❌
       * - **browsertime-tp6-live-firefox-twitter**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+
+.. dropdown:: weather
+   :class-container: anchor-id-weather-d
+
+   **Owner**: PerfTest Team
+
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
+   * **alert threshold**: 2.0
+   * **apps**: firefox, chrome
+   * **benchmark page**: false
+   * **browser cycles**: 25
+   * **expected**: pass
+   * **gecko profile interval**: 1
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp7/desktop/browsertime-tp7.toml#40>`__
+   * **lower is better**: true
+   * **page cycles**: 25
+   * **page timeout**: 60000
+   * **playback**: mitmproxy
+   * **playback pageset manifest**: mitm8-linux-firefox-weather.manifest
+   * **playback version**: 8.1.1
+   * **secondary url**: `<https://weather.com/en-CA/weather/monthly/l/43.67%2C-79.42>`__
+   * **test url**: `<https://weather.com/en-CA/weather/today/l/43.67%2C-79.42>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: false
+   * **Test Task**:
+
+   .. list-table:: **test-linux1804-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-firefox-weather**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-firefox-weather**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-chrome-weather**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp7-firefox-weather**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-firefox-weather**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-firefox-weather**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-chrome-weather**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp7-firefox-weather**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-firefox-weather**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-chrome-weather**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp7-firefox-weather**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-firefox-weather**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-firefox-weather**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp7-chrome-weather**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp7-firefox-weather**
         - ❌
         - ❌
         - ❌

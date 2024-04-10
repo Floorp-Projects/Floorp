@@ -291,6 +291,51 @@ browsertime-tp6-bytecode:
             default: 3
     treeherder-symbol: Btime-cache(tp6)
 
+browsertime-tp7:
+    <<: &tp7-defaults
+        description: Raptor (browsertime) tp7 page-load tests
+        limit-platforms:
+            by-app:
+                chrome:
+                    - .*shippable.*
+                safari:
+                    - .*macos.*shippable.*
+                custom-car:
+                    - .*64.*shippable.*
+                default: []
+        max-run-time:
+            by-subtest:
+                imgur: 4800
+                default: 4000
+        mozharness:
+            extra-options:
+                by-test-platform:
+                    windows10-64.*shippable.*-qr.*:
+                        - --chimera
+                        - --browsertime-no-ffwindowrecorder
+                        - --conditioned-profile=settled
+                        - --extra-profiler-run
+                    default:
+                        - --chimera
+                        - --conditioned-profile=settled
+                        - --extra-profiler-run
+        run-on-projects: []
+        treeherder-symbol: Btime(tp7)
+    raptor:
+        apps: [firefox, chrome]
+        test: tp7
+        run-visual-metrics: true
+        subtests:
+            - tiktok
+            - openai
+            - samsung
+            - weather
+            - docomo
+    tier:
+        by-app:
+            firefox: 3
+            default: 3
+
 browsertime-benchmark:
     description: Raptor (browsertime) Benchmark tests
     raptor:

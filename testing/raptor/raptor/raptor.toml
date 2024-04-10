@@ -100,6 +100,9 @@
 ["include:tests/tp6/mobile/browsertime-tp6m.toml"]
 # raptor-browsertime android page-load tests
 
+["include:tests/tp7/desktop/browsertime-tp7.toml"]
+# raptor-browsertime desktop page-load tests
+
 ["include:tests/unittests/browsertime-tp6-unittest.toml"]
 # raptor-browsertime unit tests
 # this is required for the manifest unit tests

@@ -84,6 +84,7 @@ talos-ref-hw:
 
 browsertime:
     - browsertime-tp6
+    - browsertime-tp7
     - browsertime-tp6-essential
     - browsertime-tp6-bytecode
     - browsertime-tp6-live
