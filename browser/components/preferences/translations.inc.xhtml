@@ -19,45 +19,63 @@
 
   <p id="translations-settings-description" data-l10n-id="translations-settings-description"/>
 
-  <div class="translations-settings-manage-list"
-       id="translations-settings-manage-always-translate-list">
+  <moz-card class="translations-settings-manage-section" data-l10n-attrs="heading"
+       id="translations-settings-always-translate-section">
     <div class="translations-settings-manage-language">
       <h2 id="translations-settings-always-translate" data-l10n-id="translations-settings-always-translate"/>
       <xul:menulist id="translations-settings-always-translate-list"
-                    data-l10n-id="translations-settings-add-language-button">
-        <xul:menupopup/>
+                    data-l10n-id="translations-settings-add-language-button"
+                    aria-labelledby="translations-settings-always-translate">
+        <!-- The list of <menuitem> will be dynamically inserted. -->
+        <xul:menupopup id="translations-settings-always-translate-popup"/>
       </xul:menulist>
     </div>
-  </div>
+  </moz-card>
 
-  <div id="translations-settings-manage-never-translate-list"
-       class="translations-settings-manage-list">
+  <moz-card id="translations-settings-never-translate-section"
+       class="translations-settings-manage-section">
     <div class="translations-settings-manage-language">
       <h2 id="translations-settings-never-translate" data-l10n-id="translations-settings-never-translate"/>
       <xul:menulist id="translations-settings-never-translate-list"
-                    data-l10n-id="translations-settings-add-language-button">
-        <xul:menupopup/>
+                    data-l10n-id="translations-settings-add-language-button"
+                    aria-labelledby="translations-settings-never-translate">
+        <!-- The list of <menuitem> will be dynamically inserted. -->
+        <xul:menupopup id="translations-settings-never-translate-popup"/>
       </xul:menulist>
     </div>
-  </div>
+  </moz-card>
 
-  <div id="translations-settings-never-sites-list" class="translations-settings-manage-list" >
-    <div class="translations-settings-manage-list-info" >
+  <moz-card id="translations-settings-never-sites-section"
+            class="translations-settings-manage-section">
+    <div class="translations-settings-manage-section-info" >
       <h2 id="translations-settings-never-sites-header"
           data-l10n-id="translations-settings-never-sites-header"/>
       <p id="translations-settings-never-sites"
          data-l10n-id="translations-settings-never-sites-description"/>
     </div>
-  </div>
+  </moz-card>
 
-  <div id="translations-settings-manage-install-list" class="translations-settings-manage-list">
-    <div class="translations-settings-manage-list-info">
-      <h2 id="translations-settings-download-languages"
-          data-l10n-id="translations-settings-download-languages"/>
+  <moz-card id="translations-settings-download-section"
+       class="translations-settings-manage-section">
+    <div class="translations-settings-manage-section-info">
+      <h2 data-l10n-id="translations-settings-download-languages"/>
       <a is="moz-support-link" class="learnMore"
           id="download-languages-learn-more"
           data-l10n-id="translations-settings-download-languages-link"
           support-page="website-translation"/>
     </div>
-  </div>
+    <div class="translations-settings-languages-card">
+      <h3 class="translations-settings-language-header" data-l10n-id="translations-settings-language-header"></h3>
+      <div class="translations-settings-language-list">
+        <div class="translations-settings-language">
+          <moz-button class="translations-settings-download-icon" type="ghost icon"
+                      aria-label="translations-settings-download-all-languages"></moz-button>
+          <!--  The option to "All languages" is added here.
+                In translations.js the option to download individual languages is
+                added dynamically based on the supported language list -->
+          <label id="translations-settings-download-all-languages" data-l10n-id="translations-settings-download-all-languages"></label>
+        </div>
+      </div>
+    </div>
+  </moz-card>
 </div>

@@ -2147,10 +2147,10 @@ class TranslationsSettingsTestUtils {
       translateNeverHeader: document.getElementById(
         "translations-settings-never-translate"
       ),
-      translateAlwaysAddButton: document.getElementById(
+      translateAlwaysMenuList: document.getElementById(
         "translations-settings-always-translate-list"
       ),
-      translateNeverAddButton: document.getElementById(
+      translateNeverMenuList: document.getElementById(
         "translations-settings-never-translate-list"
       ),
       translateNeverSiteHeader: document.getElementById(
@@ -2159,11 +2159,14 @@ class TranslationsSettingsTestUtils {
       translateNeverSiteDesc: document.getElementById(
         "translations-settings-never-sites"
       ),
-      translateDownloadLanguagesHeader: document.getElementById(
-        "translations-settings-download-languages"
-      ),
+      translateDownloadLanguagesHeader: document
+        .getElementById("translations-settings-download-section")
+        .querySelector("h2"),
       translateDownloadLanguagesLearnMore: document.getElementById(
         "download-languages-learn-more"
+      ),
+      translateDownloadLanguagesList: document.getElementById(
+        "translations-settings-download-section"
       ),
     };
 
