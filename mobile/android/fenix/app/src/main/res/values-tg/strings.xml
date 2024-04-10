@@ -252,6 +252,13 @@
     <!-- Browser menu label to sign in to sync on the device using Mozilla accounts -->
     <string name="browser_menu_sign_in" tools:ignore="UnusedResources">Ворид шудан</string>
 
+    <!-- Browser menu caption label for the "Sign in" browser menu item described in browser_menu_sign_in -->
+    <string name="browser_menu_sign_in_caption" tools:ignore="UnusedResources">Ниҳонвожаҳо, варақаҳо ва бисёр чизҳои дигарро ҳамоҳанг созед</string>
+
+    <!-- Extensions management fragment -->
+    <!-- Text displayed when there are no extensions to be shown -->
+    <string name="extensions_management_no_extensions">Дар ин ҷой ягон васеъшавӣ нест</string>
+
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">Экрани асосӣ</string>
@@ -600,8 +607,12 @@
 
     <!-- Preference for add_ons -->
     <string name="preferences_addons" moz:removedIn="126" tools:ignore="UnusedResources">Ҷузъҳои иловагӣ</string>
+    <!-- Preference for extensions -->
+    <string name="preferences_extensions">Васеъшавиҳо</string>
     <!-- Preference for installing a local add-on -->
     <string name="preferences_install_local_addon" moz:removedIn="126" tools:ignore="UnusedResources">Насб кардани ҷузъи иловагӣ аз файл</string>
+    <!-- Preference for installing a local extension -->
+    <string name="preferences_install_local_extension">Насб кардани васеъшавӣ аз файл</string>
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Огоҳномаҳо</string>
 
@@ -613,6 +624,8 @@
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
     <string name="preferences_customize_amo_collection" moz:removedIn="126" tools:ignore="UnusedResources">Маҷмуаи ҷузъҳои иловагии фармоишӣ</string>
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_extension_collection">Маҷмуаи васеъшавиҳои фармоишӣ</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">ХУБ</string>
     <!-- Button caption to abort the add-on collection configuration -->
@@ -623,6 +636,9 @@
     <string name="customize_addon_collection_user_hint">Соҳиби маҷмуа (ID-и корбар)</string>
     <!-- Toast shown after confirming the custom add-on collection configuration -->
     <string name="toast_customize_addon_collection_done" moz:removedIn="126" tools:ignore="UnusedResources">Маҷмуаи ҷузъҳои иловагӣ тағйир ёфт. Барои татбиқ кардани тағйирот барнома бояд хомӯш карда шавад…</string>
+
+    <!-- Toast shown after confirming the custom extension collection configuration -->
+    <string name="toast_customize_extension_collection_done">Маҷмуаи васеъшавиҳо тағйир ёфт. Барои татбиқ кардани тағйирот барнома бояд хомӯш карда шавад…</string>
 
     <!-- Customize Home -->
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
@@ -680,6 +696,8 @@
     <!-- Title of the Nimbus message for add-ons general availability-->
     <string name="addon_ga_message_title" moz:removedIn="126" tools:ignore="UnusedResources">Акнун ҷузъҳои иловагии нав дастрасанд</string>
 
+    <!-- Title of the Nimbus message for extension general availability-->
+    <string name="addon_ga_message_title_2" tools:ignore="UnusedResources">Акнун васеъшавиҳои нав дастрасанд</string>
     <!-- Body of the Nimbus message for add-ons general availability. 'Firefox' intentionally hardcoded here-->
     <string name="addon_ga_message_body" tools:ignore="UnusedResources">Зиёда аз 100+ васеъшавии навро тафтиш кунед, ки ба шумо барои шахсисозии «Firefox» имкон медиҳанд.</string>
 

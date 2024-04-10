@@ -180,11 +180,11 @@
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Paouez</string>
     <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_add_ons">Askouezhioù</string>
+    <string name="browser_menu_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Askouezhioù</string>
     <!-- Browser menu button that opens account settings -->
     <string name="browser_menu_account_settings">Titouroù ar gont</string>
     <!-- Text displayed when there are no add-ons to be shown -->
-    <string name="no_add_ons">Nʼeus tamm askouezh ebet amañ</string>
+    <string name="no_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Nʼeus tamm askouezh ebet amañ</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Skoazell</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -200,7 +200,7 @@
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">Ouzhpennañ dʼar skramm degemer</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
-    <string name="browser_menu_install_on_homescreen">Staliañ</string>
+    <string name="browser_menu_install_on_homescreen" moz:removedIn="126" tools:ignore="UnusedResources">Staliañ</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">Adgoubredañ</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -235,6 +235,9 @@
 
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">Personelaat an degemer</string>
+
+    <!-- Browser menu label to sign in to sync on the device using Mozilla accounts -->
+    <string name="browser_menu_sign_in" tools:ignore="UnusedResources">Kennaskañ</string>
 
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
@@ -516,10 +519,10 @@
     <string name="quit_application">O serriñ emañ an arload evit kemer e kont ar cheñchamantoù…</string>
 
     <!-- Preference for add_ons -->
-    <string name="preferences_addons">Askouezhioù</string>
+    <string name="preferences_addons" moz:removedIn="126" tools:ignore="UnusedResources">Askouezhioù</string>
 
     <!-- Preference for installing a local add-on -->
-    <string name="preferences_install_local_addon">Staliañ un askouezh diouzh ar restr</string>
+    <string name="preferences_install_local_addon" moz:removedIn="126" tools:ignore="UnusedResources">Staliañ un askouezh diouzh ar restr</string>
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Rebuzadurioù</string>
 
@@ -530,7 +533,7 @@
 
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
-    <string name="preferences_customize_amo_collection">Dastumad askouezhioù nevez</string>
+    <string name="preferences_customize_amo_collection" moz:removedIn="126" tools:ignore="UnusedResources">Dastumad askouezhioù nevez</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">Mat eo</string>
     <!-- Button caption to abort the add-on collection configuration -->
@@ -541,7 +544,7 @@
     <!-- Hint displayed on input field for custom collection user ID-->
     <string name="customize_addon_collection_user_hint">Perc’henn an dastumad (Naoudi an arveriad)</string>
     <!-- Toast shown after confirming the custom add-on collection configuration -->
-    <string name="toast_customize_addon_collection_done">Kemmet eo bet an dastumad askouezhioù. Kuitaet e vo an arload evit arloañ ar c’hemmoù…</string>
+    <string name="toast_customize_addon_collection_done" moz:removedIn="126" tools:ignore="UnusedResources">Kemmet eo bet an dastumad askouezhioù. Kuitaet e vo an arload evit arloañ ar c’hemmoù…</string>
 
     <!-- Customize Home -->
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
@@ -598,18 +601,18 @@
 
     <!-- Add-ons general availability nimbus message-->
     <!-- Title of the Nimbus message for add-ons general availability-->
-    <string name="addon_ga_message_title" tools:ignore="UnusedResources">Askouezhioù nevez zo da gaout</string>
+    <string name="addon_ga_message_title" moz:removedIn="126" tools:ignore="UnusedResources">Askouezhioù nevez zo da gaout</string>
 
     <!-- Button text of the Nimbus message for add-ons general availability. -->
-    <string name="addon_ga_message_button" tools:ignore="UnusedResources">Ergerzhout an askouezhioù</string>
+    <string name="addon_ga_message_button" moz:removedIn="126" tools:ignore="UnusedResources">Ergerzhout an askouezhioù</string>
 
-    <!-- Add-on process crash dialog to user -->
+    <!-- Extension process crash dialog to user -->
     <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
-    <string name="addon_process_crash_dialog_title" tools:ignore="UnusedResources">Diweredekaet eo an askouezhioù evit ar mare</string>
+    <string name="addon_process_crash_dialog_title" moz:removedIn="126" tools:ignore="UnusedResources">Diweredekaet eo an askouezhioù evit ar mare</string>
     <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
-    <string name="addon_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">Klask adloc’hañ an askouezhioù</string>
+    <string name="addon_process_crash_dialog_retry_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Klask adloc’hañ an askouezhioù</string>
     <!-- The user will continue with all add-ons disabled -->
-    <string name="addon_process_crash_dialog_disable_addons_button_text" tools:ignore="UnusedResources">Kenderc’hel gant an askouezhioù bet diweredekaet</string>
+    <string name="addon_process_crash_dialog_disable_addons_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Kenderc’hel gant an askouezhioù bet diweredekaet</string>
 
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->
@@ -1804,6 +1807,8 @@
     <string name="addresses_middle_name" moz:removedIn="125" tools:ignore="UnusedResources">Anv kreiz</string>
     <!-- The header for the last name of an address -->
     <string name="addresses_last_name" moz:removedIn="125" tools:ignore="UnusedResources">Anv familh</string>
+    <!-- The header for the name of an address. Name represents a person's full name, typically made up of a first, middle and last name, e.g. John Joe Doe. -->
+    <string name="addresses_name">Anv</string>
     <!-- The header for the street address of an address -->
     <string name="addresses_street_address">Chomlec’h</string>
     <!-- The header for the city of an address -->
@@ -2255,6 +2260,10 @@
     <string name="translation_error_language_not_supported_warning_text">Hon digarezit, n’eo ket skoret ar yezh &quot;%1$s&quot; c’hoazh.</string>
     <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
     <string name="translation_error_language_not_supported_learn_more">Gouzout hiroc’h</string>
+
+
+    <!-- Snackbar title shown if the user closes the Translation Request dialogue and a translation is in progress. -->
+    <string name="translation_in_progress_snackbar">O treiñ…</string>
 
 
     <!-- Toggle switch label that allows a user to set if they would like to never be offered a translation of the given language. The first parameter is the language name, for example, "Spanish". -->
