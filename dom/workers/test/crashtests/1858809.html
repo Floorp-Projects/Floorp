@@ -1,0 +1,14 @@
+<!DOCTYPE>
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const a = new Worker("", {})
+  const b = new Blob([""], {})
+  a.terminate()
+  new RTCRtpScriptTransform(a, b, [{}])
+})
+</script>
+</head>
+</html>
