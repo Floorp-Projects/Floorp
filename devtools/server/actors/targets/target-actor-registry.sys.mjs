@@ -26,7 +26,7 @@ export var TargetActorRegistry = {
   },
 
   unregisterXpcShellTargetActor(targetActor) {
-    xpcShellTargetActors.remove(targetActor);
+    xpcShellTargetActors.delete(targetActor);
   },
 
   get xpcShellTargetActors() {
