@@ -18,6 +18,7 @@
 @import url("chrome://browser/skin/places/editBookmarkPanel.css");
 @import url("chrome://browser/skin/sidebar.css");
 @import url("chrome://browser/skin/tabs.css");
+@import url("chrome://browser/content/tabpreview/tabpreview.css");
 @import url("chrome://browser/skin/fullscreen/warning.css");
 @import url("chrome://browser/skin/ctrlTab.css");
 @import url("chrome://browser/skin/customizableui/customizeMode.css");
