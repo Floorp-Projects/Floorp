@@ -112,16 +112,12 @@ TEST(TestAudioInputProcessing, Buffering)
     EXPECT_EQ(aip->NumBufferedFrames(graph), 0);
   }
 
-  // aip has been started and set to processing mode so it will insert 80 frames
-  // into aip's internal buffer as pre-buffering.
+  // aip has been set to processing mode and is started.
   aip->Start(graph);
   {
     // Need (nextTime - processedTime) = 256 - 256 = 0 frames this round.
-    // The Process() aip will take 0 frames from input, packetize and process
-    // these frames into 0 80-frame packet(0 frames left in packetizer), insert
-    // packets into aip's internal buffer, then move 0 frames the internal
-    // buffer to output, leaving 80 + 0 - 0 = 80 frames in aip's internal
-    // buffer.
+    // Process() will return early on 0 frames of input.
+    // Pre-buffering is not triggered.
     processedTime = nextTime;
     nextTime = MediaTrackGraphImpl::RoundUpToEndOfAudioBlock(3 * frames);
 
@@ -131,12 +127,14 @@ TEST(TestAudioInputProcessing, Buffering)
     aip->Process(graph, processedTime, nextTime, &input, &output);
     EXPECT_EQ(input.GetDuration(), nextTime - processedTime);
     EXPECT_EQ(output.GetDuration(), nextTime);
-    EXPECT_EQ(aip->NumBufferedFrames(graph), 80);
+    EXPECT_EQ(aip->NumBufferedFrames(graph), 0);
   }
 
   {
     // Need (nextTime - processedTime) = 384 - 256 = 128 frames this round.
-    // The Process() aip will take 128 frames from input, packetize and process
+    // On receipt of the these first frames, aip will insert 80 frames
+    // into its internal buffer as pre-buffering.
+    // Process() will take 128 frames from input, packetize and process
     // these frames into floor(128/80) = 1 80-frame packet (48 frames left in
     // packetizer), insert packets into aip's internal buffer, then move 128
     // frames the internal buffer to output, leaving 80 + 80 - 128 = 32 frames
@@ -274,23 +272,22 @@ TEST(TestAudioInputProcessing, ProcessDataWithDifferentPrincipals)
   EXPECT_EQ(aip->PassThrough(graph), false);
   aip->Start(graph);
   {
-    EXPECT_EQ(aip->NumBufferedFrames(graph), 480);
     AudioSegment output;
     {
-      // Trim the prebuffering silence.
-
       AudioSegment data;
       aip->Process(graph, 0, 4800, &input, &data);
       EXPECT_EQ(input.GetDuration(), 4800);
       EXPECT_EQ(data.GetDuration(), 4800);
 
+      // Extract another 480 frames to account for delay from pre-buffering.
+      EXPECT_EQ(aip->NumBufferedFrames(graph), 480);
       AudioSegment dummy;
       dummy.AppendNullData(480);
       aip->Process(graph, 0, 480, &dummy, &data);
       EXPECT_EQ(dummy.GetDuration(), 480);
       EXPECT_EQ(data.GetDuration(), 480 + 4800);
 
-      // Ignore the pre-buffering data
+      // Ignore the pre-buffering silence.
       output.AppendSlice(data, 480, 480 + 4800);
     }
 

@@ -431,12 +431,13 @@ void AudioInputProcessing::SetPassThrough(MediaTrackGraph* aGraph,
   }
 
   if (aPassThrough) {
-    // Turn on pass-through
+    // Switching to pass-through.  Clear state so that it doesn't affect any
+    // future processing, if re-enabled.
     ResetAudioProcessing(aGraph);
   } else {
-    // Turn off pass-through
+    // No longer pass-through.  Processing will not use old state.
+    // Packetizer setup is deferred until needed.
     MOZ_ASSERT(!mPacketizerInput);
-    EnsureAudioProcessing(aGraph, mRequestedInputChannelCount);
   }
 }
 
@@ -465,7 +466,6 @@ void AudioInputProcessing::Start(MediaTrackGraph* aGraph) {
   }
 
   MOZ_ASSERT(!mPacketizerInput);
-  EnsureAudioProcessing(aGraph, mRequestedInputChannelCount);
 }
 
 void AudioInputProcessing::Stop(MediaTrackGraph* aGraph) {
@@ -627,13 +627,11 @@ void AudioInputProcessing::Process(MediaTrackGraph* aGraph, GraphTime aFrom,
     return;
   }
 
-  // SetPassThrough(false) must be called before reaching here.
-  MOZ_ASSERT(mPacketizerInput);
   // If mRequestedInputChannelCount is updated, create a new packetizer. No
   // need to change the pre-buffering since the rate is always the same. The
   // frames left in the packetizer would be replaced by null data and then
   // transferred to mSegment.
-  EnsureAudioProcessing(aGraph, mRequestedInputChannelCount);
+  EnsurePacketizer(aGraph, mRequestedInputChannelCount);
 
   // Preconditions of the audio-processing logic.
   MOZ_ASSERT(static_cast<uint32_t>(mSegment.GetDuration()) +
@@ -993,8 +991,8 @@ TrackTime AudioInputProcessing::NumBufferedFrames(
   return mSegment.GetDuration();
 }
 
-void AudioInputProcessing::EnsureAudioProcessing(MediaTrackGraph* aGraph,
-                                                 uint32_t aChannels) {
+void AudioInputProcessing::EnsurePacketizer(MediaTrackGraph* aGraph,
+                                            uint32_t aChannels) {
   aGraph->AssertOnGraphThread();
   MOZ_ASSERT(aChannels > 0);
   MOZ_ASSERT(mEnabled);
