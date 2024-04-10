@@ -1122,8 +1122,7 @@ void AudioProcessingTrack::ProcessInput(GraphTime aFrom, GraphTime aTo,
     } else {
       MOZ_ASSERT(mInputs.Length() == 1);
       AudioSegment data;
-      DeviceInputConsumerTrack::GetInputSourceData(data, mInputs[0], aFrom,
-                                                   aTo);
+      DeviceInputConsumerTrack::GetInputSourceData(data, aFrom, aTo);
       mInputProcessing->Process(Graph(), aFrom, aTo, &data,
                                 GetData<AudioSegment>());
     }
