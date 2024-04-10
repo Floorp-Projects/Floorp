@@ -12,7 +12,6 @@ import androidx.core.content.ContextCompat.getColor
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import mozilla.components.browser.menu.BrowserMenuHighlight
@@ -156,8 +155,6 @@ open class DefaultToolbarMenu(
         )
 
         registerForIsBookmarkedUpdates()
-
-        registerForScreenReaderUpdates()
 
         BrowserMenuItemToolbar(listOf(back, forward, share, refresh), isSticky = true)
     }
@@ -483,25 +480,6 @@ open class DefaultToolbarMenu(
             isCurrentUrlBookmarked = bookmarksStorage
                 .getBookmarksWithUrl(newUrl)
                 .any { it.url == newUrl }
-        }
-    }
-
-    private fun registerForScreenReaderUpdates() {
-        store.flowScoped(lifecycleOwner) { flow ->
-            flow.mapNotNull { state -> state.selectedTab }
-                .distinctUntilChangedBy { it.readerState }
-                .collect {
-                    translationsItem.enabled = !it.readerState.active
-                    translationsItem.iconTintColorResource =
-                        if (it.readerState.active) {
-                            ThemeManager.resolveAttribute(
-                                R.attr.textDisabled,
-                                context,
-                            )
-                        } else {
-                            primaryTextColor()
-                        }
-                }
         }
     }
 }
