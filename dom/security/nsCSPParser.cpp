@@ -936,14 +936,6 @@ nsCSPDirective* nsCSPParser::directiveName() {
 
 // directive = *WSP [ directive-name [ WSP directive-value ] ]
 void nsCSPParser::directive() {
-  // Set the directiveName to mCurToken
-  // Remember, the directive name is stored at index 0
-  mCurToken = mCurDir[0];
-
-  CSPPARSERLOG(("nsCSPParser::directive, mCurToken: %s, mCurValue: %s",
-                NS_ConvertUTF16toUTF8(mCurToken).get(),
-                NS_ConvertUTF16toUTF8(mCurValue).get()));
-
   // Make sure that the directive-srcs-array contains at least
   // one directive.
   if (mCurDir.Length() == 0) {
@@ -952,6 +944,14 @@ void nsCSPParser::directive() {
                              "failedToParseUnrecognizedSource", params);
     return;
   }
+
+  // Set the directiveName to mCurToken
+  // Remember, the directive name is stored at index 0
+  mCurToken = mCurDir[0];
+
+  CSPPARSERLOG(("nsCSPParser::directive, mCurToken: %s, mCurValue: %s",
+                NS_ConvertUTF16toUTF8(mCurToken).get(),
+                NS_ConvertUTF16toUTF8(mCurValue).get()));
 
   if (CSP_IsEmptyDirective(mCurValue, mCurToken)) {
     return;
