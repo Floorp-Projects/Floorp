@@ -19,5 +19,6 @@ translations-settings-never-sites-description = To add to this list, visit a sit
 ## Section to download language models to enable offline translation.
 
 translations-settings-download-languages = Download languages
+translations-settings-download-all-languages = All languages
 translations-settings-download-languages-link = Learn more about downloading languages
-translations-settings-download-language = Language
+translations-settings-language-header = Language

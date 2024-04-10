@@ -3,39 +3,61 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #translations-settings-header {
-  margin-top: 32px;
-  margin-bottom: 16px;
+  margin-top: var(--space-xlarge);
+  margin-bottom: calc( 2 * var(--space-small));
 }
 
-.translations-settings-manage-list {
-  overflow: auto;
-  background-color: var(--in-content-box-background);
-  border: 1px solid var(--in-content-box-border-color);
-  border-radius: var(--border-radius-small);
-  margin-top: 32px;
+.translations-settings-manage-section {
+  margin-top: var(--space-xlarge);
 }
 
 .translations-settings-manage-language {
-  padding: 8px;
+  margin: 0 calc( 2 * var(--space-small));
   display: flex;
   flex-direction: row;
   justify-content: space-between;
-  > h2 {
-    margin: 8px;
+}
+
+.translations-settings-manage-section-info {
+  display: flex;
+  flex-direction: column;
+  h2, p, a {
+    display: block;
+    margin: var(--space-small) calc( 2 * var(--space-small));
+  }
+  a {
+    display: block;
   }
 }
 
-.translations-settings-manage-list-info {
+.translations-settings-languages-card {
   display: flex;
   flex-direction: column;
-  > h2 {
-    margin: 16px;
-    margin-bottom: 8px;
+  max-height: calc( 7 * var(--space-xlarge));
+  overflow: auto;
+  padding-inline: calc( 2 * var(--space-small));
+}
+
+.translations-settings-language-header {
+  margin: calc( 2 * var(--space-small)) 0;
+  font-size: var(--font-size-root);
+  font-weight: var(--font-weight-bold);
+}
+
+.translations-settings-language {
+  display: flex;
+  align-items: center;
+  padding: var(--space-small) 0;
+  border-top: 1px solid var(--in-content-border-color);
+  label {
+    margin: 0px calc( 2 * var(--space-small));
   }
-  > p {
-    margin: 8px 16px;
-  }
-  > a {
-    margin: 0 16px;
-  }
+}
+
+.translations-settings-download-icon[type~="icon"]::part(button) {
+  background-image: url(chrome://browser/skin/downloads/downloads.svg);
+}
+
+.translations-settings-delete-icon[type~="icon"]::part(button) {
+  background-image: url(chrome://global/skin/icons/delete.svg);
 }
