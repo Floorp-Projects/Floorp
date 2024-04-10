@@ -68,11 +68,11 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 AudioDecoderConfigInternal::AudioDecoderConfigInternal(
     const nsAString& aCodec, uint32_t aSampleRate, uint32_t aNumberOfChannels,
-    Maybe<RefPtr<MediaByteBuffer>>&& aDescription)
+    already_AddRefed<MediaByteBuffer> aDescription)
     : mCodec(aCodec),
       mSampleRate(aSampleRate),
       mNumberOfChannels(aNumberOfChannels),
-      mDescription(std::move(aDescription)) {}
+      mDescription(aDescription) {}
 
 /*static*/
 UniquePtr<AudioDecoderConfigInternal> AudioDecoderConfigInternal::Create(
@@ -83,7 +83,7 @@ UniquePtr<AudioDecoderConfigInternal> AudioDecoderConfigInternal::Create(
     return nullptr;
   }
 
-  Maybe<RefPtr<MediaByteBuffer>> description;
+  RefPtr<MediaByteBuffer> description;
   if (aConfig.mDescription.WasPassed()) {
     auto rv = GetExtraDataFromArrayBuffer(aConfig.mDescription.Value());
     if (rv.isErr()) {  // Invalid description data.
@@ -95,12 +95,12 @@ UniquePtr<AudioDecoderConfigInternal> AudioDecoderConfigInternal::Create(
           error.get());
       return nullptr;
     }
-    description.emplace(rv.unwrap());
+    description = rv.unwrap();
   }
 
   return UniquePtr<AudioDecoderConfigInternal>(new AudioDecoderConfigInternal(
       aConfig.mCodec, aConfig.mSampleRate, aConfig.mNumberOfChannels,
-      std::move(description)));
+      description.forget()));
 }
 
 nsCString AudioDecoderConfigInternal::ToString() const {
@@ -111,7 +111,7 @@ nsCString AudioDecoderConfigInternal::ToString() const {
                   NS_ConvertUTF16toUTF8(mCodec).get(), mSampleRate,
                   mNumberOfChannels);
   if (mDescription) {
-    rv.AppendPrintf("(%zu bytes of extradata)", (*mDescription)->Length());
+    rv.AppendPrintf("(%zu bytes of extradata)", mDescription->Length());
   } else {
     rv.AppendLiteral("(no extradata)");
   }
@@ -247,13 +247,12 @@ Result<UniquePtr<TrackInfo>, nsresult> AudioDecoderTraits::CreateTrackInfo(
     return Err(NS_ERROR_INVALID_ARG);
   }
 
-  if (aConfig.mDescription.isSome()) {
-    RefPtr<MediaByteBuffer> buf;
-    buf = aConfig.mDescription.value();
-    if (buf) {
-      LOG("The given config has %zu bytes of description data", buf->Length());
-      ai->mCodecSpecificConfig =
-          AudioCodecSpecificVariant{AudioCodecSpecificBinaryBlob{buf}};
+  if (aConfig.mDescription) {
+    if (!aConfig.mDescription->IsEmpty()) {
+      LOG("The given config has %zu bytes of description data",
+          aConfig.mDescription->Length());
+      ai->mCodecSpecificConfig = AudioCodecSpecificVariant{
+          AudioCodecSpecificBinaryBlob{aConfig.mDescription}};
     }
   }
 
@@ -263,7 +262,7 @@ Result<UniquePtr<TrackInfo>, nsresult> AudioDecoderTraits::CreateTrackInfo(
   LOG("Created AudioInfo %s (%" PRIu32 "ch %" PRIu32
       "Hz - with extra-data: %s)",
       NS_ConvertUTF16toUTF8(aConfig.mCodec).get(), ai->mChannels, ai->mChannels,
-      aConfig.mDescription.isSome() ? "yes" : "no");
+      aConfig.mDescription && !aConfig.mDescription->IsEmpty() ? "yes" : "no");
 
   return track;
 }

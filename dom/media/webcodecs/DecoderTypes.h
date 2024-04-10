@@ -50,7 +50,7 @@ class VideoDecoderConfigInternal {
                              Maybe<uint32_t>&& aCodedHeight,
                              Maybe<uint32_t>&& aCodedWidth,
                              Maybe<VideoColorSpaceInternal>&& aColorSpace,
-                             Maybe<RefPtr<MediaByteBuffer>>&& aDescription,
+                             already_AddRefed<MediaByteBuffer> aDescription,
                              Maybe<uint32_t>&& aDisplayAspectHeight,
                              Maybe<uint32_t>&& aDisplayAspectWidth,
                              const HardwareAcceleration& aHardwareAcceleration,
@@ -60,12 +60,12 @@ class VideoDecoderConfigInternal {
   nsCString ToString() const;
 
   bool Equals(const VideoDecoderConfigInternal& aOther) const {
-    if (mDescription.isSome() != aOther.mDescription.isSome()) {
+    if (mDescription != aOther.mDescription) {
       return false;
     }
-    if (mDescription.isSome() && aOther.mDescription.isSome()) {
-      auto lhs = mDescription.value();
-      auto rhs = aOther.mDescription.value();
+    if (mDescription && aOther.mDescription) {
+      auto lhs = mDescription;
+      auto rhs = aOther.mDescription;
       if (lhs->Length() != rhs->Length()) {
         return false;
       }
@@ -86,7 +86,7 @@ class VideoDecoderConfigInternal {
   Maybe<uint32_t> mCodedHeight;
   Maybe<uint32_t> mCodedWidth;
   Maybe<VideoColorSpaceInternal> mColorSpace;
-  Maybe<RefPtr<MediaByteBuffer>> mDescription;
+  RefPtr<MediaByteBuffer> mDescription;
   Maybe<uint32_t> mDisplayAspectHeight;
   Maybe<uint32_t> mDisplayAspectWidth;
   HardwareAcceleration mHardwareAcceleration;
@@ -118,18 +118,18 @@ class AudioDecoderConfigInternal {
  public:
   AudioDecoderConfigInternal(const nsAString& aCodec, uint32_t aSampleRate,
                              uint32_t aNumberOfChannels,
-                             Maybe<RefPtr<MediaByteBuffer>>&& aDescription);
+                             already_AddRefed<MediaByteBuffer> aDescription);
   static UniquePtr<AudioDecoderConfigInternal> Create(
       const AudioDecoderConfig& aConfig);
   ~AudioDecoderConfigInternal() = default;
 
   bool Equals(const AudioDecoderConfigInternal& aOther) const {
-    if (mDescription.isSome() != aOther.mDescription.isSome()) {
+    if (mDescription != aOther.mDescription) {
       return false;
     }
-    if (mDescription.isSome() && aOther.mDescription.isSome()) {
-      auto lhs = mDescription.value();
-      auto rhs = aOther.mDescription.value();
+    if (mDescription && aOther.mDescription) {
+      auto lhs = mDescription;
+      auto rhs = aOther.mDescription;
       if (lhs->Length() != rhs->Length()) {
         return false;
       }
@@ -146,7 +146,7 @@ class AudioDecoderConfigInternal {
   nsString mCodec;
   uint32_t mSampleRate;
   uint32_t mNumberOfChannels;
-  Maybe<RefPtr<MediaByteBuffer>> mDescription;
+  RefPtr<MediaByteBuffer> mDescription;
   // Compilation fix, should be abstracted by DecoderAgent since those are not
   // supported
   HardwareAcceleration mHardwareAcceleration =

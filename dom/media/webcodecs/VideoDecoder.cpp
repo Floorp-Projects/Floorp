@@ -96,7 +96,7 @@ VideoColorSpaceInit VideoColorSpaceInternal::ToColorSpaceInit() const {
 VideoDecoderConfigInternal::VideoDecoderConfigInternal(
     const nsAString& aCodec, Maybe<uint32_t>&& aCodedHeight,
     Maybe<uint32_t>&& aCodedWidth, Maybe<VideoColorSpaceInternal>&& aColorSpace,
-    Maybe<RefPtr<MediaByteBuffer>>&& aDescription,
+    already_AddRefed<MediaByteBuffer> aDescription,
     Maybe<uint32_t>&& aDisplayAspectHeight,
     Maybe<uint32_t>&& aDisplayAspectWidth,
     const HardwareAcceleration& aHardwareAcceleration,
@@ -105,7 +105,7 @@ VideoDecoderConfigInternal::VideoDecoderConfigInternal(
       mCodedHeight(std::move(aCodedHeight)),
       mCodedWidth(std::move(aCodedWidth)),
       mColorSpace(std::move(aColorSpace)),
-      mDescription(std::move(aDescription)),
+      mDescription(aDescription),
       mDisplayAspectHeight(std::move(aDisplayAspectHeight)),
       mDisplayAspectWidth(std::move(aDisplayAspectWidth)),
       mHardwareAcceleration(aHardwareAcceleration),
@@ -120,7 +120,7 @@ UniquePtr<VideoDecoderConfigInternal> VideoDecoderConfigInternal::Create(
     return nullptr;
   }
 
-  Maybe<RefPtr<MediaByteBuffer>> description;
+  RefPtr<MediaByteBuffer> description;
   if (aConfig.mDescription.WasPassed()) {
     auto rv = GetExtraDataFromArrayBuffer(aConfig.mDescription.Value());
     if (rv.isErr()) {  // Invalid description data.
@@ -130,7 +130,7 @@ UniquePtr<VideoDecoderConfigInternal> VideoDecoderConfigInternal::Create(
           static_cast<uint32_t>(rv.unwrapErr()));
       return nullptr;
     }
-    description.emplace(rv.unwrap());
+    description = rv.unwrap();
   }
 
   Maybe<VideoColorSpaceInternal> colorSpace;
@@ -141,7 +141,7 @@ UniquePtr<VideoDecoderConfigInternal> VideoDecoderConfigInternal::Create(
   return UniquePtr<VideoDecoderConfigInternal>(new VideoDecoderConfigInternal(
       aConfig.mCodec, OptionalToMaybe(aConfig.mCodedHeight),
       OptionalToMaybe(aConfig.mCodedWidth), std::move(colorSpace),
-      std::move(description), OptionalToMaybe(aConfig.mDisplayAspectHeight),
+      description.forget(), OptionalToMaybe(aConfig.mDisplayAspectHeight),
       OptionalToMaybe(aConfig.mDisplayAspectWidth),
       aConfig.mHardwareAcceleration,
       OptionalToMaybe(aConfig.mOptimizeForLatency)));
@@ -161,8 +161,8 @@ nsCString VideoDecoderConfigInternal::ToString() const {
   if (mColorSpace.isSome()) {
     rv.AppendPrintf("colorspace %s", "todo");
   }
-  if (mDescription.isSome() && mDescription.value()) {
-    rv.AppendPrintf("extradata: %zu bytes", mDescription.value()->Length());
+  if (mDescription) {
+    rv.AppendPrintf("extradata: %zu bytes", mDescription->Length());
   }
   rv.AppendPrintf("hw accel: %s", GetEnumString(mHardwareAcceleration).get());
   if (mOptimizeForLatency.isSome()) {
@@ -667,15 +667,14 @@ Result<UniquePtr<TrackInfo>, nsresult> VideoDecoderTraits::CreateTrackInfo(
     }
   }
 
-  if (aConfig.mDescription.isSome()) {
-    RefPtr<MediaByteBuffer> buf;
-    buf = aConfig.mDescription.value();
-    if (buf) {
-      LOG("The given config has %zu bytes of description data", buf->Length());
+  if (aConfig.mDescription) {
+    if (!aConfig.mDescription->IsEmpty()) {
+      LOG("The given config has %zu bytes of description data",
+          aConfig.mDescription->Length());
       if (vi->mExtraData) {
         LOGW("The default extra data is overwritten");
       }
-      vi->mExtraData = buf;
+      vi->mExtraData = aConfig.mDescription;
     }
 
     // TODO: Make this utility and replace the similar one in MP4Demuxer.cpp.
