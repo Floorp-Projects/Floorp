@@ -69,6 +69,7 @@ impl AggregateDevice {
         input_id: AudioObjectID,
         output_id: AudioObjectID,
     ) -> std::result::Result<Self, Error> {
+        debug_assert_running_serially();
         let plugin_id = Self::get_system_plugin_id()?;
         let device_id = Self::create_blank_device_sync(plugin_id)?;
 
@@ -399,12 +400,12 @@ impl AggregateDevice {
             let sub_devices = CFArrayCreateMutable(ptr::null(), 0, &kCFTypeArrayCallBacks);
             // The order of the items in the array is significant and is used to determine the order of the streams
             // of the AudioAggregateDevice.
-            for device in output_sub_devices {
+            for device in input_sub_devices {
                 let uid = get_device_global_uid(device)?;
                 CFArrayAppendValue(sub_devices, uid.get_raw() as *const c_void);
             }
 
-            for device in input_sub_devices {
+            for device in output_sub_devices {
                 let uid = get_device_global_uid(device)?;
                 CFArrayAppendValue(sub_devices, uid.get_raw() as *const c_void);
             }
@@ -466,6 +467,28 @@ impl AggregateDevice {
         }
     }
 
+    pub fn get_master_device_uid(device_id: AudioDeviceID) -> std::result::Result<String, Error> {
+        let address = AudioObjectPropertyAddress {
+            mSelector: kAudioAggregateDevicePropertyMainSubDevice,
+            mScope: kAudioObjectPropertyScopeGlobal,
+            mElement: kAudioObjectPropertyElementMaster,
+        };
+
+        let mut master: CFStringRef = ptr::null_mut();
+        let mut size = mem::size_of::<CFStringRef>();
+        let status = audio_object_get_property_data(device_id, &address, &mut size, &mut master);
+        if status != NO_ERR {
+            return Err(Error::from(status));
+        }
+
+        if master.is_null() {
+            return Ok(String::default());
+        }
+
+        let master = StringRef::new(master as _);
+        Ok(master.into_string())
+    }
+
     pub fn set_master_device(
         device_id: AudioDeviceID,
         primary_id: AudioDeviceID,
@@ -480,12 +503,12 @@ impl AggregateDevice {
         );
 
         let address = AudioObjectPropertyAddress {
-            mSelector: kAudioAggregateDevicePropertyMasterSubDevice,
+            mSelector: kAudioAggregateDevicePropertyMainSubDevice,
             mScope: kAudioObjectPropertyScopeGlobal,
             mElement: kAudioObjectPropertyElementMaster,
         };
 
-        // Master become the 1st sub device of the primary device
+        // The master device will be the 1st sub device of the primary device.
         let output_sub_devices = Self::get_sub_devices(primary_id)?;
         assert!(!output_sub_devices.is_empty());
         let master_sub_device_uid = get_device_global_uid(output_sub_devices[0]).unwrap();
@@ -548,16 +571,23 @@ impl AggregateDevice {
             return Err(Error::from(status));
         }
 
+        let master_sub_device_uid = Self::get_master_device_uid(device_id)?;
+
         let address = AudioObjectPropertyAddress {
             mSelector: kAudioSubDevicePropertyDriftCompensation,
             mScope: kAudioObjectPropertyScopeGlobal,
             mElement: kAudioObjectPropertyElementMaster,
         };
 
-        // Start from the second device since the first is the master clock
-        for device in &sub_devices[1..] {
+        for &device in &sub_devices {
+            let uid = get_device_global_uid(device)
+                .map(|sr| sr.into_string())
+                .unwrap_or_default();
+            if uid == master_sub_device_uid {
+                continue;
+            }
             let status = audio_object_set_property_data(
-                *device,
+                device,
                 &address,
                 mem::size_of::<u32>(),
                 &DRIFT_COMPENSATION,
@@ -671,6 +701,7 @@ impl Default for AggregateDevice {
 
 impl Drop for AggregateDevice {
     fn drop(&mut self) {
+        debug_assert_running_serially();
         if self.plugin_id != kAudioObjectUnknown && self.device_id != kAudioObjectUnknown {
             if let Err(r) = Self::destroy_device(self.plugin_id, self.device_id) {
                 cubeb_log!(

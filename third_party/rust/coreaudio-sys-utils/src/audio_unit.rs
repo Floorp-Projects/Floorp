@@ -1,3 +1,4 @@
+use crate::dispatch::debug_assert_running_serially;
 use coreaudio_sys::*;
 use std::convert::TryFrom;
 use std::os::raw::c_void;
@@ -13,6 +14,7 @@ pub fn audio_unit_get_property_info(
 ) -> OSStatus {
     assert!(!unit.is_null());
     assert!(UInt32::try_from(*size).is_ok()); // Check if `size` can be converted to a UInt32.
+    debug_assert_running_serially();
     unsafe {
         AudioUnitGetPropertyInfo(
             unit,
@@ -35,6 +37,7 @@ pub fn audio_unit_get_property<T>(
 ) -> OSStatus {
     assert!(!unit.is_null());
     assert!(UInt32::try_from(*size).is_ok()); // Check if `size` can be converted to a UInt32.
+    debug_assert_running_serially();
     unsafe {
         AudioUnitGetProperty(
             unit,
@@ -56,6 +59,7 @@ pub fn audio_unit_set_property<T>(
     size: usize,
 ) -> OSStatus {
     assert!(!unit.is_null());
+    debug_assert_running_serially();
     unsafe {
         AudioUnitSetProperty(
             unit,
@@ -76,6 +80,7 @@ pub fn audio_unit_get_parameter(
     value: &mut AudioUnitParameterValue,
 ) -> OSStatus {
     assert!(!unit.is_null());
+    debug_assert_running_serially();
     unsafe {
         AudioUnitGetParameter(
             unit,
@@ -96,30 +101,36 @@ pub fn audio_unit_set_parameter(
     buffer_offset_in_frames: UInt32,
 ) -> OSStatus {
     assert!(!unit.is_null());
+    debug_assert_running_serially();
     unsafe { AudioUnitSetParameter(unit, id, scope, element, value, buffer_offset_in_frames) }
 }
 
 pub fn audio_unit_initialize(unit: AudioUnit) -> OSStatus {
     assert!(!unit.is_null());
+    debug_assert_running_serially();
     unsafe { AudioUnitInitialize(unit) }
 }
 
 pub fn audio_unit_uninitialize(unit: AudioUnit) -> OSStatus {
     assert!(!unit.is_null());
+    debug_assert_running_serially();
     unsafe { AudioUnitUninitialize(unit) }
 }
 
 pub fn dispose_audio_unit(unit: AudioUnit) -> OSStatus {
+    debug_assert_running_serially();
     unsafe { AudioComponentInstanceDispose(unit) }
 }
 
 pub fn audio_output_unit_start(unit: AudioUnit) -> OSStatus {
     assert!(!unit.is_null());
+    debug_assert_running_serially();
     unsafe { AudioOutputUnitStart(unit) }
 }
 
 pub fn audio_output_unit_stop(unit: AudioUnit) -> OSStatus {
     assert!(!unit.is_null());
+    debug_assert_running_serially();
     unsafe { AudioOutputUnitStop(unit) }
 }
 
@@ -155,6 +166,7 @@ pub fn audio_unit_add_property_listener<T>(
     data: *mut T,
 ) -> OSStatus {
     assert!(!unit.is_null());
+    debug_assert_running_serially();
     unsafe { AudioUnitAddPropertyListener(unit, id, Some(listener), data as *mut c_void) }
 }
 
@@ -165,6 +177,7 @@ pub fn audio_unit_remove_property_listener_with_user_data<T>(
     data: *mut T,
 ) -> OSStatus {
     assert!(!unit.is_null());
+    debug_assert_running_serially();
     unsafe {
         AudioUnitRemovePropertyListenerWithUserData(unit, id, Some(listener), data as *mut c_void)
     }

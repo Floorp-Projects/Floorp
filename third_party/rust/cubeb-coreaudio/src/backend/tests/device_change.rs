@@ -21,7 +21,7 @@ use super::utils::{
     test_set_default_device, Scope, StreamType, TestDevicePlugger, TestDeviceSwitcher,
 };
 use super::*;
-use std::sync::{LockResult, MutexGuard, WaitTimeoutResult};
+use std::sync::{LockResult, WaitTimeoutResult};
 
 // Switch default devices used by the active streams, to test stream reinitialization
 // ================================================================================================
@@ -49,19 +49,21 @@ fn test_switch_device_in_scope(scope: Scope) {
 
     let notifier = Arc::new(Notifier::new(0));
     let also_notifier = notifier.clone();
-    let listener = test_create_device_change_listener(scope.clone(), move |_addresses| {
-        let mut cnt = notifier.lock().unwrap();
-        *cnt += 1;
-        notifier.notify(cnt);
-        NO_ERR
+    let listener = run_serially(|| {
+        test_create_device_change_listener(scope.clone(), move |_addresses| {
+            let mut cnt = notifier.lock().unwrap();
+            *cnt += 1;
+            notifier.notify(cnt);
+            NO_ERR
+        })
     });
-    listener.start();
+    run_serially(|| listener.start());
 
     let changed_watcher = Watcher::new(&also_notifier);
     test_get_started_stream_in_scope(scope.clone(), move |_stream| loop {
-        let mut guard = changed_watcher.lock().unwrap();
-        let start_cnt = guard.clone();
+        let start_cnt = changed_watcher.lock().unwrap().clone();
         device_switcher.next();
+        let mut guard = changed_watcher.lock().unwrap();
         guard = changed_watcher
             .wait_while(guard, |cnt| *cnt == start_cnt)
             .unwrap();
@@ -709,11 +711,7 @@ fn test_unplug_a_device_on_an_active_stream(
         state_callback,
         device_changed_callback,
         |stream| {
-            stream.start();
-
-            let changed_watcher = Watcher::new(&notifier);
-            let mut data_guard = notifier.lock().unwrap();
-            assert_eq!(data_guard.states.last().unwrap(), &ffi::CUBEB_STATE_STARTED);
+            assert_eq!(stream.start(), Ok(()));
 
             println!(
                 "Stream runs on the device {} for {:?}",
@@ -722,13 +720,20 @@ fn test_unplug_a_device_on_an_active_stream(
             );
 
             let dev = plugger.get_device_id();
-            let start_changed_count = data_guard.changed_count.clone();
+            let start_changed_count = {
+                let guard = notifier.lock().unwrap();
+                assert_eq!(guard.states.last().unwrap(), &ffi::CUBEB_STATE_STARTED);
+                guard.changed_count.clone()
+            };
 
             assert!(plugger.unplug().is_ok());
+
+            let changed_watcher = Watcher::new(&notifier);
 
             if set_device_to_default {
                 // The stream will be reinitialized if it follows the default input or output device.
                 println!("Waiting for default device to change and reinit");
+                let mut data_guard = notifier.lock().unwrap();
                 data_guard = changed_watcher
                     .wait_while(data_guard, |data| {
                         data.changed_count == start_changed_count
@@ -740,6 +745,7 @@ fn test_unplug_a_device_on_an_active_stream(
                 // stream can be dropped immediately before device-changed callback
                 // so we only check the states if we wait for it explicitly.
                 println!("Waiting for non-default device to enter error state");
+                let mut data_guard = notifier.lock().unwrap();
                 let (new_guard, timeout_res) = changed_watcher
                     .wait_timeout_while(data_guard, Duration::from_millis(wait_up_to_ms), |data| {
                         data.states.last().unwrap_or(&ffi::CUBEB_STATE_STARTED)
