@@ -185,6 +185,46 @@ class Accessible {
    */
   bool IsBefore(const Accessible* aAcc) const;
 
+  /**
+   * A utility enum for controlling FindAncestorIf.
+   *   Continue: this is not the desired ancestor node, keep searching
+   *   Found:    this is the desired ancestor node
+   *   NotFound: this is not the desired ancestor node, stop searching
+   */
+  enum class AncestorSearchOption { Continue, Found, NotFound };
+  /**
+   * Return a non-generic ancestor for which the given predicate returns
+   * AncestorSearchOption::Found, if any exist. If none exist, return nullptr.
+   * The predicate may choose to return options from AncestorSearchOption to
+   * control the flow of the ancestor search.
+   */
+  template <typename Callable>
+  Accessible* FindAncestorIf(Callable&& aPredicate) const {
+    static_assert(
+        std::is_same_v<std::invoke_result_t<Callable, const Accessible&>,
+                       AncestorSearchOption>,
+        "Given callable must return AncestorSearchOption.");
+    static_assert(std::is_invocable_v<Callable, const Accessible&>,
+                  "Given callable must accept const Accessible&.");
+    Accessible* search = GetNonGenericParent();
+    while (search) {
+      const AncestorSearchOption option = aPredicate(*search);
+      switch (option) {
+        case AncestorSearchOption::Continue:
+          search = search->GetNonGenericParent();
+          continue;
+        case AncestorSearchOption::Found:
+          return search;
+        case AncestorSearchOption::NotFound:
+          return nullptr;
+        default:
+          MOZ_ASSERT(false, "Unhandled AncestorSearchOption");
+          break;
+      }
+    }
+    return nullptr;
+  }
+
   bool IsAncestorOf(const Accessible* aAcc) const {
     for (const Accessible* parent = aAcc->Parent(); parent;
          parent = parent->Parent()) {
