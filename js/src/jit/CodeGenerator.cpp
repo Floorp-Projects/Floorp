@@ -2328,13 +2328,18 @@ void CreateDependentString::generate(MacroAssembler& masm,
     masm.addToCharPtr(temp1_, temp2_, encoding_);
     masm.storeNonInlineStringChars(temp1_, string_);
     masm.storeDependentStringBase(base, string_);
-    masm.movePtr(base, temp1_);
+
+    // Ensure that the depended-on string is flagged as such, so we don't
+    // convert it into a forwarded atom
+    masm.load32(Address(base, JSString::offsetOfFlags()), temp2_);
+    masm.or32(Imm32(JSString::DEPENDED_ON_BIT), temp2_);
+    masm.store32(temp2_, Address(base, JSString::offsetOfFlags()));
 
     // Follow any base pointer if the input is itself a dependent string.
     // Watch for undepended strings, which have a base pointer but don't
     // actually share their characters with it.
     Label noBase;
-    masm.load32(Address(base, JSString::offsetOfFlags()), temp2_);
+    masm.movePtr(base, temp1_);
     masm.and32(Imm32(JSString::TYPE_FLAGS_MASK), temp2_);
     masm.branchTest32(Assembler::Zero, temp2_, Imm32(JSString::DEPENDENT_BIT),
                       &noBase);
@@ -11319,6 +11324,7 @@ void CodeGenerator::visitCompareSInline(LCompareSInline* lir) {
     masm.bind(&notPointerEqual);
 
     Label setNotEqualResult;
+
     if (str->isAtom()) {
       // Atoms cannot be equal to each other if they point to different strings.
       Imm32 atomBit(JSString::ATOM_BIT);
@@ -11336,8 +11342,27 @@ void CodeGenerator::visitCompareSInline(LCompareSInline* lir) {
     }
 
     // Strings of different length can never be equal.
-    masm.branch32(Assembler::Equal, Address(input, JSString::offsetOfLength()),
-                  Imm32(str->length()), &compareChars);
+    masm.branch32(Assembler::NotEqual,
+                  Address(input, JSString::offsetOfLength()),
+                  Imm32(str->length()), &setNotEqualResult);
+
+    if (str->isAtom()) {
+      Label forwardedPtrEqual;
+      masm.tryFastAtomize(input, output, output, &compareChars);
+
+      // We now have two atoms. Just check pointer equality.
+      masm.branchPtr(Assembler::Equal, output, ImmGCPtr(str),
+                     &forwardedPtrEqual);
+
+      masm.move32(Imm32(op == JSOp::Ne || op == JSOp::StrictNe), output);
+      masm.jump(ool->rejoin());
+
+      masm.bind(&forwardedPtrEqual);
+      masm.move32(Imm32(op == JSOp::Eq || op == JSOp::StrictEq), output);
+      masm.jump(ool->rejoin());
+    } else {
+      masm.jump(&compareChars);
+    }
 
     masm.bind(&setNotEqualResult);
     masm.move32(Imm32(op == JSOp::Ne || op == JSOp::StrictNe), output);
@@ -12506,6 +12531,9 @@ void CodeGenerator::visitSubstr(LSubstr* lir) {
     masm.storeDependentStringBase(string, output);
 
     auto initializeDependentString = [&](CharEncoding encoding) {
+      masm.or32(Imm32(JSString::DEPENDED_ON_BIT),
+                Address(string, JSString::offsetOfFlags()));
+
       uint32_t flags = JSString::INIT_DEPENDENT_FLAGS;
       if (encoding == CharEncoding::Latin1) {
         flags |= JSString::LATIN1_CHARS_BIT;
@@ -16317,9 +16345,26 @@ void CodeGenerator::emitMaybeAtomizeSlot(LInstruction* ins, Register stringReg,
   OutOfLineAtomizeSlot* ool =
       new (alloc()) OutOfLineAtomizeSlot(ins, stringReg, slotAddr, dest);
   addOutOfLineCode(ool, ins->mirRaw()->toInstruction());
+  masm.branchTest32(Assembler::NonZero,
+                    Address(stringReg, JSString::offsetOfFlags()),
+                    Imm32(JSString::ATOM_BIT), ool->rejoin());
+
   masm.branchTest32(Assembler::Zero,
                     Address(stringReg, JSString::offsetOfFlags()),
-                    Imm32(JSString::ATOM_BIT), ool->entry());
+                    Imm32(JSString::ATOM_REF_BIT), ool->entry());
+  masm.loadPtr(Address(stringReg, JSAtomRefString::offsetOfAtom()), stringReg);
+
+  if (dest.hasValue()) {
+    masm.moveValue(
+        TypedOrValueRegister(MIRType::String, AnyRegister(stringReg)),
+        dest.valueReg());
+  } else {
+    MOZ_ASSERT(dest.typedReg().gpr() == stringReg);
+  }
+
+  emitPreBarrier(slotAddr);
+  masm.storeTypedOrValue(dest, slotAddr);
+
   masm.bind(ool->rejoin());
 }
 
@@ -20474,7 +20519,7 @@ void CodeGenerator::visitToHashableString(LToHashableString* ins) {
                     Address(input, JSString::offsetOfFlags()),
                     Imm32(JSString::ATOM_BIT), &isAtom);
 
-  masm.lookupStringInAtomCacheLastLookups(input, output, output, ool->entry());
+  masm.tryFastAtomize(input, output, output, ool->entry());
   masm.jump(ool->rejoin());
   masm.bind(&isAtom);
   masm.movePtr(input, output);

@@ -376,6 +376,7 @@ inline JSDependentString::JSDependentString(JSLinearString* base, size_t start,
     setLengthAndFlags(length, INIT_DEPENDENT_FLAGS);
     d.s.u2.nonInlineCharsTwoByte = base->twoByteChars(nogc) + start;
   }
+  base->setDependedOn();
   d.s.u3.base = base;
   if (isTenured() && !base->isTenured()) {
     base->storeBuffer()->putWholeCell(this);

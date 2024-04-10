@@ -1055,6 +1055,15 @@ void CacheIRStubInfo::replaceStubRawWord(uint8_t* stubData, uint32_t offset,
   *addr = newWord;
 }
 
+void CacheIRStubInfo::replaceStubRawValueBits(uint8_t* stubData,
+                                              uint32_t offset, uint64_t oldBits,
+                                              uint64_t newBits) const {
+  MOZ_ASSERT(uint64_t(stubData + offset) % sizeof(uint64_t) == 0);
+  uint64_t* addr = reinterpret_cast<uint64_t*>(stubData + offset);
+  MOZ_ASSERT(*addr == oldBits);
+  *addr = newBits;
+}
+
 template <class Stub, StubField::Type type>
 typename MapStubFieldToType<type>::WrappedType& CacheIRStubInfo::getStubField(
     Stub* stub, uint32_t offset) const {
@@ -2838,7 +2847,7 @@ bool CacheIRCompiler::emitStringToAtom(StringOperandId stringId) {
   masm.branchTest32(Assembler::NonZero, Address(str, JSString::offsetOfFlags()),
                     Imm32(JSString::ATOM_BIT), &done);
 
-  masm.lookupStringInAtomCacheLastLookups(str, scratch, str, &vmCall);
+  masm.tryFastAtomize(str, scratch, str, &vmCall);
   masm.jump(&done);
 
   masm.bind(&vmCall);
