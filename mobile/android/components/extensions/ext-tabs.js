@@ -541,7 +541,13 @@ this.tabs = class extends ExtensionAPIPersistent {
               ? windowTracker.topWindow
               : windowTracker.getWindow(windowId, context);
 
-          const tab = tabManager.wrapTab(window.tab);
+          const tab = tabManager.getWrapper(window.tab);
+          if (
+            !extension.hasPermission("<all_urls>") &&
+            !tab.hasActiveTabPermission
+          ) {
+            throw new ExtensionError("Missing activeTab permission");
+          }
           await tabListener.awaitTabReady(tab.nativeTab);
           const zoom = window.browsingContext.fullZoom;
 

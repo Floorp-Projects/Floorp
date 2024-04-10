@@ -319,6 +319,141 @@ add_task(async function testCaptureVisibleTabPermissions() {
   await extension.awaitFinish("captureVisibleTabPermissions");
   await extension.unload();
 });
+
+add_task(async function testCaptureVisibleTabWithActiveTab() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      browser_action: {
+        default_area: "navbar",
+      },
+      permissions: ["webNavigation", "tabs", "activeTab"],
+    },
+
+    async background() {
+      // Wait for the page (in the test window) to load.
+      await new Promise(resolve => {
+        browser.webNavigation.onCompleted.addListener(
+        () => resolve(),
+        {url: [{schemes: ["data"]}]});
+      });
+
+      browser.browserAction.onClicked.addListener(async tab => {
+        await browser.tabs.captureVisibleTab(tab.windowId);
+        browser.test.notifyPass("captureVisibleTabPermissions");
+      });
+
+      browser.test.sendMessage("ready");
+    },
+  });
+
+  let html = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+    </head>
+    <body><h1>hello</h1></body>
+    </html>
+  `;
+
+  await extension.startup();
+
+  let testWindow = window.open(`data:text/html,${encodeURIComponent(html)}#scroll`);
+  await extension.awaitMessage("ready");
+  await AppTestDelegate.clickBrowserAction(testWindow, extension);
+  await extension.awaitFinish("captureVisibleTabPermissions");
+  await AppTestDelegate.closeBrowserAction(testWindow, extension);
+  testWindow.close();
+
+  await extension.unload();
+});
+
+add_task(async function testCaptureVisibleTabWithActiveTabAndNotUserInteraction() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["webNavigation", "tabs", "activeTab"],
+    },
+
+    async background() {
+      // Wait for the page (in the test window) to load.
+      await new Promise(resolve => {
+        browser.webNavigation.onCompleted.addListener(
+        () => resolve(),
+        {url: [{schemes: ["data"]}]});
+      });
+
+      let [tab] = await browser.tabs.query({ currentWindow: true, active: true });
+      await browser.test.assertRejects(
+        browser.tabs.captureVisibleTab(tab.windowId),
+        /Missing activeTab permission/,
+        "Expected rejection because activeTab permission isn't set"
+      );
+
+      browser.test.notifyPass("captureVisibleTabPermissions");
+    },
+  });
+
+  let html = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+    </head>
+    <body><h1>hello</h1></body>
+    </html>
+  `;
+
+  await extension.startup();
+
+  let testWindow = window.open(`data:text/html,${encodeURIComponent(html)}#scroll`);
+  await extension.awaitFinish("captureVisibleTabPermissions");
+  testWindow.close();
+
+  await extension.unload();
+});
+
+add_task(async function testCaptureVisibleTabWithActiveTabAndAllURLs() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["webNavigation", "tabs", "activeTab", "<all_urls>"],
+    },
+
+    async background() {
+      // Wait for the page (in the test window) to load.
+      await new Promise(resolve => {
+        browser.webNavigation.onCompleted.addListener(
+        () => resolve(),
+        {url: [{schemes: ["data"]}]});
+      });
+
+      let [tab] = await browser.tabs.query({ currentWindow: true, active: true });
+      await browser.tabs.captureVisibleTab(tab.windowId);
+
+      browser.test.notifyPass("captureVisibleTabPermissions");
+    },
+  });
+
+  let html = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+    </head>
+    <body><h1>hello</h1></body>
+    </html>
+  `;
+
+  await extension.startup();
+
+  let testWindow = window.open(`data:text/html,${encodeURIComponent(html)}#scroll`);
+  await extension.awaitFinish("captureVisibleTabPermissions");
+  testWindow.close();
+
+  await extension.unload();
+});
 </script>
 </body>
 </html>
