@@ -29,7 +29,7 @@ function testScript([mime, shouldLoad]) {
     let script = document.createElement("script");
     script.onload = () => {
       document.body.removeChild(script);
-      ok(shouldLoad, `script with mime '${mime}' should load`);
+      ok(shouldLoad, `script with mime '${mime}' should ${shouldLoad ? "" : "NOT "}load`);
       resolve();
     };
     script.onerror = () => {
@@ -47,7 +47,7 @@ function testWorker([mime, shouldLoad]) {
   return new Promise((resolve) => {
     let worker = new Worker("file_block_script_wrong_mime_server.sjs?type=worker&mime="+mime);
     worker.onmessage = (event) => {
-      ok(shouldLoad, `worker with mime '${mime}' should load`)
+      ok(shouldLoad, `worker with mime '${mime}' should ${shouldLoad ? "" : "NOT "}load`);
       is(event.data, "worker-loaded", "worker should send correct message");
       resolve();
     };
@@ -65,7 +65,7 @@ function testWorkerImportScripts([mime, shouldLoad]) {
   return new Promise((resolve) => {
     let worker = new Worker("file_block_script_wrong_mime_server.sjs?type=worker-import&mime="+mime);
     worker.onmessage = (event) => {
-      ok(shouldLoad, `worker/importScripts with mime '${mime}' should load`)
+      ok(shouldLoad, `worker/importScripts with mime '${mime}' should ${shouldLoad ? "" : "NOT "}load`);
       is(event.data, "worker-loaded", "worker should send correct message");
       resolve();
     };
@@ -73,20 +73,103 @@ function testWorkerImportScripts([mime, shouldLoad]) {
       ok(!shouldLoad, `worker/importScripts with wrong mime '${mime}' should be blocked`);
       error.preventDefault();
       resolve();
+      // The worker doesn't self-terminate via close, so let's do it.
+      worker.terminate();
     }
     worker.postMessage("dummy");
   });
 }
 
-SimpleTest.waitForExplicitFinish();
-Promise.all(MIMETypes.map(testScript)).then(() => {
-  return Promise.all(MIMETypes.map(testWorker));
-}).then(() => {
-  return Promise.all(MIMETypes.map(testWorkerImportScripts));
-}).then(() => {
-  return SpecialPowers.popPrefEnv();
-}).then(SimpleTest.finish);
+async function runMimeTypePermutations() {
+  info("### Running document script MIME checks.");
+  for (const mimeType of MIMETypes) {
+    await testScript(mimeType);
+  }
 
+  info("### Running worker top-level script MIME checks.");
+  for (const mimeType of MIMETypes) {
+    await testWorker(mimeType);
+  }
+
+  info("### Running worker importScripts MIME checks.");
+  for (const mimeType of MIMETypes) {
+    await testWorkerImportScripts(mimeType);
+  }
+}
+
+let gRegistration;
+
+/**
+ * Register and wait for the helper ServiceWorker to be active in the given
+ * mode.
+ */
+async function useServiceWorker({ fetchMode }) {
+  info(`### Registering ServiceWorker with mode '${fetchMode}'`);
+  const activePromise = new Promise((resolve, reject) => {
+    navigator.serviceWorker.addEventListener(
+      "message",
+      event => {
+        if (event.data.fetchMode === fetchMode) {
+          resolve();
+        } else {
+          reject(`wrong fetchMode: ${fetchMode}`);
+        }
+        is(fetchMode, event.data.fetchMode, "right fetch mode");
+      },
+      { once: true });
+  });
+
+  const reg = gRegistration = await navigator.serviceWorker.register(
+    `file_block_script_wrong_mime_sw.js?fetchMode=${fetchMode}`);
+  info("register resolved. " +
+       `installing: ${!!reg.installing} ` +
+       `waiting: ${!!reg.waiting} ` +
+       `active: ${!!reg.active}`);
+
+  await activePromise;
+}
+
+/**
+ * Unregister the ServiceWorker, with the caveat that the ServiceWorker will
+ * still be controlling us until this window goes away.
+ */
+async function cleanupServiceWorkerWithCaveat() {
+  await gRegistration.unregister();
+}
+
+/**
+ * Top-level test that runs the MIME type checks in different ServiceWorker/
+ * network configurations.
+ *
+ * We use the ServiceWorker mechanism that allows ServiceWorkers to claim
+ * existing scope-matching clients in order to make this window controlled and
+ * then run the tests.  When changing the SW behavior the SW also needs to
+ * skipWaiting in order to advance to active.
+ */
+async function runNetworkPermutations() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["dom.serviceWorkers.enabled", true],
+      ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+      ["dom.serviceWorkers.testing.enabled", true],
+    ],
+  });
+
+  info("## Run tests without a ServiceWorker involved.");
+  await runMimeTypePermutations();
+
+  info("## Run tests with a pass-through fetch(event.request) handler.");
+  await useServiceWorker({ fetchMode: "direct" });
+  await runMimeTypePermutations();
+
+  info("## Run tests with a naive URL propagating fetch(event.request.url) handler.");
+  await useServiceWorker({ fetchMode: "indirect" });
+  await runMimeTypePermutations();
+
+  await cleanupServiceWorkerWithCaveat();
+}
+
+add_task(runNetworkPermutations);
 </script>
 </body>
 </html>
