@@ -9,12 +9,14 @@ UNIFIED_SOURCES += [
 ]
 
 EXPORTS.mozilla += [
+    "Perfetto.h",
     "PerfStats.h",
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")
 
 if CONFIG["MOZ_PERFETTO"]:
+    UNIFIED_SOURCES += ["Perfetto.cpp"]
     DIRS += ["/third_party/perfetto/"]
 
 FINAL_LIBRARY = "xul"
