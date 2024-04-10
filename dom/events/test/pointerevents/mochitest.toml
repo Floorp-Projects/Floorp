@@ -147,10 +147,6 @@ skip-if = [
 support-files = ["wpt/pointerevent_multiple_primary_pointers_boundary_events-manual.html"]
 disabled = "should be investigated"
 
-["test_wpt_pointerevent_pointerId_scope-manual.html"]
-support-files = ["wpt/resources/pointerevent_pointerId_scope-iframe.html"]
-disabled = "should be investigated"
-
 ["test_wpt_pointerevent_pointercancel_touch-manual.html"]
 support-files = ["wpt/pointerevent_pointercancel_touch-manual.html"]
 skip-if = [
