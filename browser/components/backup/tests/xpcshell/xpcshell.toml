@@ -11,6 +11,8 @@ support-files = ["data/test_xulstore.json"]
 
 ["test_MiscDataBackupResource.js"]
 
+["test_PlacesBackupResource.js"]
+
 ["test_PreferencesBackupResource.js"]
 
 ["test_createBackup.js"]

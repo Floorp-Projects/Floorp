@@ -3,6 +3,28 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 import { BackupResource } from "resource:///modules/backup/BackupResource.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
+const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  BookmarkJSONUtils: "resource://gre/modules/BookmarkJSONUtils.sys.mjs",
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+  Sqlite: "resource://gre/modules/Sqlite.sys.mjs",
+});
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "isBrowsingHistoryEnabled",
+  "places.history.enabled",
+  true
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "isSanitizeOnShutdownEnabled",
+  "privacy.sanitize.sanitizeOnShutdown",
+  false
+);
 
 /**
  * Class representing Places database related files within a user profile.
@@ -14,6 +36,47 @@ export class PlacesBackupResource extends BackupResource {
 
   static get requiresEncryption() {
     return false;
+  }
+
+  async backup(stagingPath, profilePath = PathUtils.profileDir) {
+    const sqliteDatabases = ["places.sqlite", "favicons.sqlite"];
+    let canBackupHistory =
+      !lazy.PrivateBrowsingUtils.permanentPrivateBrowsing &&
+      !lazy.isSanitizeOnShutdownEnabled &&
+      lazy.isBrowsingHistoryEnabled;
+
+    /**
+     * Do not backup places.sqlite and favicons.sqlite if users have history disabled, want history cleared on shutdown or are using permanent private browsing mode.
+     * Instead, export all existing bookmarks to a compressed JSON file that we can read when restoring the backup.
+     */
+    if (!canBackupHistory) {
+      let bookmarksBackupFile = PathUtils.join(
+        stagingPath,
+        "bookmarks.jsonlz4"
+      );
+      await lazy.BookmarkJSONUtils.exportToFile(bookmarksBackupFile, {
+        compress: true,
+      });
+      return { bookmarksOnly: true };
+    }
+
+    for (let fileName of sqliteDatabases) {
+      let sourcePath = PathUtils.join(profilePath, fileName);
+      let destPath = PathUtils.join(stagingPath, fileName);
+      let connection;
+
+      try {
+        connection = await lazy.Sqlite.openConnection({
+          path: sourcePath,
+          readOnly: true,
+        });
+
+        await connection.backup(destPath);
+      } finally {
+        await connection.close();
+      }
+    }
+    return null;
   }
 
   async measure(profilePath = PathUtils.profileDir) {
