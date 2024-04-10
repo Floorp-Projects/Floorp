@@ -8,6 +8,12 @@
 
 :root {
   --arrowpanel-field-background: light-dark(rgba(249, 249, 250, .3), rgba(12, 12, 13, .3));
+
+  /* On macOS, top level windows are always opaque. This gives us the right
+   * default background color, without confusing Gecko about whether the window
+   * is transparent or not. */
+  appearance: auto;
+  -moz-default-appearance: -moz-mac-unified-toolbar-window;
 }
 
 /* stylelint-disable-next-line media-query-no-invalid */
@@ -28,24 +34,21 @@
     }
   }
 
-  :root[tabsintitlebar]:not([lwtheme]) {
-    -moz-default-appearance: -moz-mac-unified-toolbar-window;
-    appearance: auto;
+  /* Don't make the toolbox vibrant when in full-screen. macOS fullscreen has a
+   * native titlebar outside of the window (revealed on hover) anyways. */
+  :root[tabsintitlebar]:not([lwtheme], [macOSNativeFullscreen]) #navigator-toolbox {
+    background-color: transparent;
 
-    #navigator-toolbox {
-      background-color: transparent;
-
-      /* This is conceptually a background, but putting this on a
-       * pseudo-element avoids it from suppressing the chrome-content separator
-       * border, etc */
-      &::after {
-        -moz-default-appearance: -moz-window-titlebar;
-        appearance: auto;
-        content: "";
-        position: absolute;
-        inset: 0;
-        z-index: -1;
-      }
+    /* This is conceptually a background, but putting this on a
+     * pseudo-element avoids it from suppressing the chrome-content separator
+     * border, etc */
+    &::after {
+      -moz-default-appearance: -moz-window-titlebar;
+      appearance: auto;
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
     }
   }
 }
