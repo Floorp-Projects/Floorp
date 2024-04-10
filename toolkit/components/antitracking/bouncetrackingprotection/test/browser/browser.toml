@@ -16,6 +16,8 @@ support-files = [
 
 ["browser_bouncetracking_purge.js"]
 
+["browser_bouncetracking_schemes.js"]
+
 ["browser_bouncetracking_simple.js"]
 
 ["browser_bouncetracking_stateful_cookies.js"]
