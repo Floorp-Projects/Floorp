@@ -108,10 +108,11 @@ class MediaEngineWebRTCMicrophoneSource : public MediaEngineSource {
 class AudioInputProcessing : public AudioDataListener {
  public:
   explicit AudioInputProcessing(uint32_t aMaxChannelCount);
-  void Process(MediaTrackGraph* aGraph, GraphTime aFrom, GraphTime aTo,
+  void Process(AudioProcessingTrack* aTrack, GraphTime aFrom, GraphTime aTo,
                AudioSegment* aInput, AudioSegment* aOutput);
 
-  void ProcessOutputData(MediaTrackGraph* aGraph, const AudioChunk& aChunk);
+  void ProcessOutputData(AudioProcessingTrack* aTrack,
+                         const AudioChunk& aChunk);
   bool IsVoiceInput(MediaTrackGraph* aGraph) const override {
     // If we're passing data directly without AEC or any other process, this
     // means that all voice-processing has been disabled intentionaly. In this
@@ -130,7 +131,7 @@ class AudioInputProcessing : public AudioDataListener {
 
   void Disconnect(MediaTrackGraph* aGraph) override;
 
-  void PacketizeAndProcess(MediaTrackGraph* aGraph,
+  void PacketizeAndProcess(AudioProcessingTrack* aTrack,
                            const AudioSegment& aSegment);
 
   uint32_t GetRequestedInputChannelCount();
@@ -163,8 +164,8 @@ class AudioInputProcessing : public AudioDataListener {
   void PassThroughChanged(MediaTrackGraph* aGraph);
   void RequestedInputChannelCountChanged(MediaTrackGraph* aGraph,
                                          CubebUtils::AudioDeviceID aDeviceId);
-  void EnsurePacketizer(MediaTrackGraph* aGraph);
-  void EnsureAudioProcessing(MediaTrackGraph* aGraph);
+  void EnsurePacketizer(AudioProcessingTrack* aTrack);
+  void EnsureAudioProcessing(AudioProcessingTrack* aTrack);
   void ResetAudioProcessing(MediaTrackGraph* aGraph);
   PrincipalHandle GetCheckedPrincipal(const AudioSegment& aSegment);
   // This implements the processing algoritm to apply to the input (e.g. a
