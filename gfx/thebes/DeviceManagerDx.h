@@ -58,13 +58,18 @@ class DeviceManagerDx final {
 
   static DeviceManagerDx* Get() { return sInstance; }
 
+  enum class DeviceFlag {
+    isHardwareWebRenderInUse,
+    disableDeviceReuse,
+  };
+  using DeviceFlagSet = EnumSet<DeviceFlag, uint8_t>;
   RefPtr<ID3D11Device> GetCompositorDevice();
   RefPtr<ID3D11Device> GetContentDevice();
   RefPtr<ID3D11Device> GetCanvasDevice();
   RefPtr<ID3D11Device> GetImageDevice();
   RefPtr<IDCompositionDevice2> GetDirectCompositionDevice();
   RefPtr<ID3D11Device> GetVRDevice();
-  RefPtr<ID3D11Device> CreateDecoderDevice(bool aHardwareWebRender);
+  RefPtr<ID3D11Device> CreateDecoderDevice(DeviceFlagSet aFlags);
   RefPtr<ID3D11Device> CreateMediaEngineDevice();
   IDirectDraw7* GetDirectDraw();
 

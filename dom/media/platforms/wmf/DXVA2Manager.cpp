@@ -21,6 +21,8 @@
 #include "gfxCrashReporterUtils.h"
 #include "gfxWindowsPlatform.h"
 #include "mfapi.h"
+#include "mozilla/AppShutdown.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/Telemetry.h"
@@ -121,6 +123,38 @@ using layers::Image;
 using layers::ImageContainer;
 using namespace layers;
 using namespace gfx;
+
+StaticRefPtr<ID3D11Device> sDevice;
+StaticMutex sDeviceMutex;
+
+// We found an issue where the ID3D11VideoDecoder won't release its underlying
+// resources properly if the decoder iscreated from a compositor device by
+// ourselves. This problem has been observed with both VP9 and, reportedly, AV1
+// decoders, it does not seem to affect the H264 decoder, but the underlying
+// decoder created by MFT seems not having this issue.
+// Therefore, when checking whether we can use hardware decoding, we should use
+// a non-compositor device to create a decoder in order to prevent resource
+// leaking that can significantly degrade the performance. For the actual
+// decoding, we will still use the compositor device if it's avaiable in order
+// to avoid video copying.
+static ID3D11Device* GetDeviceForDecoderCheck() {
+  StaticMutexAutoLock lock(sDeviceMutex);
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdown)) {
+    return nullptr;
+  }
+  if (!sDevice) {
+    sDevice = gfx::DeviceManagerDx::Get()->CreateDecoderDevice(
+        {DeviceManagerDx::DeviceFlag::disableDeviceReuse});
+    auto clearOnShutdown = [] { ClearOnShutdown(&sDevice); };
+    if (!NS_IsMainThread()) {
+      Unused << NS_DispatchToMainThread(
+          NS_NewRunnableFunction(__func__, clearOnShutdown));
+    } else {
+      clearOnShutdown();
+    }
+  }
+  return sDevice.get();
+}
 
 void GetDXVA2ExtendedFormatFromMFMediaType(IMFMediaType* pType,
                                            DXVA2_ExtendedFormat* pFormat) {
@@ -618,10 +652,11 @@ D3D11DXVA2Manager::InitInternal(layers::KnowsCompositor* aKnowsCompositor,
   mDevice = aDevice;
 
   if (!mDevice) {
-    bool useHardwareWebRender =
-        aKnowsCompositor && aKnowsCompositor->UsingHardwareWebRender();
-    mDevice =
-        gfx::DeviceManagerDx::Get()->CreateDecoderDevice(useHardwareWebRender);
+    DeviceManagerDx::DeviceFlagSet flags;
+    if (aKnowsCompositor && aKnowsCompositor->UsingHardwareWebRender()) {
+      flags += DeviceManagerDx::DeviceFlag::isHardwareWebRenderInUse;
+    }
+    mDevice = gfx::DeviceManagerDx::Get()->CreateDecoderDevice(flags);
     if (!mDevice) {
       aFailureReason.AssignLiteral("Failed to create D3D11 device for decoder");
       return E_FAIL;
@@ -1161,8 +1196,13 @@ bool D3D11DXVA2Manager::CanCreateDecoder(
 
 already_AddRefed<ID3D11VideoDecoder> D3D11DXVA2Manager::CreateDecoder(
     const D3D11_VIDEO_DECODER_DESC& aDesc) const {
+  RefPtr<ID3D11Device> device = GetDeviceForDecoderCheck();
+  if (!device) {
+    return nullptr;
+  }
+
   RefPtr<ID3D11VideoDevice> videoDevice;
-  HRESULT hr = mDevice->QueryInterface(
+  HRESULT hr = device->QueryInterface(
       static_cast<ID3D11VideoDevice**>(getter_AddRefs(videoDevice)));
   NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 
