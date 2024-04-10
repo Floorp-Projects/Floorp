@@ -862,8 +862,6 @@ HttpObserverManager = {
       bmsUseragent: channel.browserElement?.ownerGlobal?.window?.gBmsWindow?.userAgent
     };
 
-    console.log(channel.browserElement?.ownerGlobal?.window?.gBmsWindow?.userAgent)
-
     if (originAttributes) {
       data.cookieStoreId =
         lazy.getCookieStoreIdForOriginAttributes(originAttributes);
