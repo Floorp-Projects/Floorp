@@ -315,6 +315,9 @@ class MOZ_STACK_CLASS MOZ_NON_PARAM CallArgs
     for (unsigned i = 0; i < argc; ++i) {
       AssertValueIsNotGray(argv[i]);
     }
+    if (constructing) {
+      AssertValueIsNotGray(args.newTarget());
+    }
 #endif
     return args;
   }
