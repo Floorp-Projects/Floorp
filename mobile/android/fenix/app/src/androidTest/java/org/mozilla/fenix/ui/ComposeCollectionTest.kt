@@ -62,7 +62,7 @@ class ComposeCollectionTest : TestSetup() {
         }.goToHomescreen {
         }.clickSaveTabsToCollectionButton(composeTestRule) {
             longClickTab(firstWebPage.title)
-            selectTab(secondWebPage.title)
+            selectTab(secondWebPage.title, numberOfSelectedTabs = 2)
             verifyTabsMultiSelectionCounter(2)
         }.clickSaveCollection {
             typeCollectionNameAndSave(collectionName)
@@ -451,7 +451,7 @@ class ComposeCollectionTest : TestSetup() {
             verifyExistingOpenTabs(firstWebPage.title, secondWebPage.title)
             longClickTab(firstWebPage.title)
             verifyTabsMultiSelectionCounter(1)
-            selectTab(secondWebPage.title)
+            selectTab(secondWebPage.title, numberOfSelectedTabs = 2)
             verifyTabsMultiSelectionCounter(2)
         }.clickSaveCollection {
             typeCollectionNameAndSave(collectionName)
