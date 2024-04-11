@@ -233,6 +233,7 @@ for (const type of [
   "UPDATE_PINNED_SEARCH_SHORTCUTS",
   "UPDATE_SEARCH_SHORTCUTS",
   "UPDATE_SECTION_PREFS",
+  "WALLPAPERS_SET",
   "WEBEXT_CLICK",
   "WEBEXT_DISMISS",
 ]) {
@@ -5530,6 +5531,9 @@ const INITIAL_STATE = {
     // Hide the search box after handing off to AwesomeBar and user starts typing.
     hide: false,
   },
+  Wallpapers: {
+    wallpaperList: [],
+  },
 };
 
 function App(prevState = INITIAL_STATE.App, action) {
@@ -6270,6 +6274,15 @@ function Search(prevState = INITIAL_STATE.Search, action) {
   }
 }
 
+function Wallpapers(prevState = INITIAL_STATE.Wallpapers, action) {
+  switch (action.type) {
+    case actionTypes.WALLPAPERS_SET:
+      return { wallpaperList: action.data };
+    default:
+      return prevState;
+  }
+}
+
 const reducers = {
   TopSites,
   App,
@@ -6281,6 +6294,7 @@ const reducers = {
   Personalization: Reducers_sys_Personalization,
   DiscoveryStream,
   Search,
+  Wallpapers,
 };
 
 ;// CONCATENATED MODULE: ./content-src/components/TopSites/TopSiteFormInput.jsx
@@ -8833,21 +8847,88 @@ const DiscoveryStreamBase = (0,external_ReactRedux_namespaceObject.connect)(stat
   document: globalThis.document,
   App: state.App
 }))(_DiscoveryStreamBase);
-;// CONCATENATED MODULE: ./content-src/components/CustomizeMenu/BackgroundsSection/BackgroundsSection.jsx
+;// CONCATENATED MODULE: ./content-src/components/WallpapersSection/WallpapersSection.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
-class BackgroundsSection extends (external_React_default()).PureComponent {
+
+class _WallpapersSection extends (external_React_default()).PureComponent {
+  constructor(props) {
+    super(props);
+    this.handleChange = this.handleChange.bind(this);
+    this.handleReset = this.handleReset.bind(this);
+    this.prefersHighContrastQuery = null;
+    this.prefersDarkQuery = null;
+  }
+  componentDidMount() {
+    this.prefersHighContrastQuery = globalThis.matchMedia("(forced-colors: active)");
+    this.prefersDarkQuery = globalThis.matchMedia("(prefers-color-scheme: dark)");
+    [this.prefersHighContrastQuery, this.prefersDarkQuery].forEach(colorTheme => {
+      colorTheme.addEventListener("change", this.handleReset);
+    });
+  }
+  componentWillUnmount() {
+    [this.prefersHighContrastQuery, this.prefersDarkQuery].forEach(colorTheme => {
+      colorTheme.removeEventListener("change", this.handleReset);
+    });
+  }
+  handleChange(event) {
+    const {
+      id
+    } = event.target;
+    this.props.setPref("newtabWallpapers.wallpaper", id);
+  }
+  handleReset() {
+    this.props.setPref("newtabWallpapers.wallpaper", "i");
+  }
   render() {
-    return /*#__PURE__*/external_React_default().createElement("div", null);
+    const {
+      wallpaperList
+    } = this.props.Wallpapers;
+    const {
+      activeWallpaper
+    } = this.props;
+    return /*#__PURE__*/external_React_default().createElement("div", null, /*#__PURE__*/external_React_default().createElement("fieldset", {
+      className: "wallpaper-list"
+    }, wallpaperList.map(({
+      title,
+      theme,
+      fluent_id
+    }) => {
+      return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement("input", {
+        onChange: this.handleChange,
+        type: "radio",
+        name: "wallpaper",
+        id: title,
+        value: title,
+        checked: title === activeWallpaper,
+        "aria-checked": title === activeWallpaper,
+        className: `wallpaper-input theme-${theme} ${title}`
+      }), /*#__PURE__*/external_React_default().createElement("label", {
+        htmlFor: title,
+        className: "sr-only",
+        "data-l10n-id": fluent_id
+      }, fluent_id));
+    })), /*#__PURE__*/external_React_default().createElement("button", {
+      className: "wallpapers-reset",
+      onClick: this.handleReset,
+      "data-l10n-id": "newtab-wallpaper-reset"
+    }));
   }
 }
+const WallpapersSection = (0,external_ReactRedux_namespaceObject.connect)(state => {
+  return {
+    Wallpapers: state.Wallpapers,
+    Prefs: state.Prefs
+  };
+})(_WallpapersSection);
 ;// CONCATENATED MODULE: ./content-src/components/CustomizeMenu/ContentSection/ContentSection.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 
 
 
@@ -8930,7 +9011,10 @@ class ContentSection extends (external_React_default()).PureComponent {
       mayHaveSponsoredStories,
       mayHaveRecentSaves,
       openPreferences,
-      spocMessageVariant
+      spocMessageVariant,
+      wallpapersEnabled,
+      activeWallpaper,
+      setPref
     } = this.props;
     const {
       topSitesEnabled,
@@ -8943,7 +9027,14 @@ class ContentSection extends (external_React_default()).PureComponent {
     } = enabledSections;
     return /*#__PURE__*/external_React_default().createElement("div", {
       className: "home-section"
-    }, /*#__PURE__*/external_React_default().createElement("div", {
+    }, wallpapersEnabled && /*#__PURE__*/external_React_default().createElement("div", {
+      className: "wallpapers-section"
+    }, /*#__PURE__*/external_React_default().createElement("h2", {
+      "data-l10n-id": "newtab-wallpaper-title"
+    }), /*#__PURE__*/external_React_default().createElement(WallpapersSection, {
+      setPref: setPref,
+      activeWallpaper: activeWallpaper
+    })), /*#__PURE__*/external_React_default().createElement("div", {
       id: "shortcuts-section",
       className: "section"
     }, /*#__PURE__*/external_React_default().createElement("moz-toggle", {
@@ -9091,7 +9182,6 @@ class ContentSection extends (external_React_default()).PureComponent {
 
 
 
-
 class _CustomizeMenu extends (external_React_default()).PureComponent {
   constructor(props) {
     super(props);
@@ -9135,10 +9225,12 @@ class _CustomizeMenu extends (external_React_default()).PureComponent {
       className: "close-button",
       "data-l10n-id": "newtab-custom-close-button",
       ref: c => this.closeButton = c
-    }), /*#__PURE__*/external_React_default().createElement(BackgroundsSection, null), /*#__PURE__*/external_React_default().createElement(ContentSection, {
+    }), /*#__PURE__*/external_React_default().createElement(ContentSection, {
       openPreferences: this.props.openPreferences,
       setPref: this.props.setPref,
       enabledSections: this.props.enabledSections,
+      wallpapersEnabled: this.props.wallpapersEnabled,
+      activeWallpaper: this.props.activeWallpaper,
       pocketRegion: this.props.pocketRegion,
       mayHaveSponsoredTopSites: this.props.mayHaveSponsoredTopSites,
       mayHaveSponsoredStories: this.props.mayHaveSponsoredStories,
@@ -9453,6 +9545,7 @@ class BaseContent extends (external_React_default()).PureComponent {
     this.handleOnKeyDown = this.handleOnKeyDown.bind(this);
     this.onWindowScroll = debounce(this.onWindowScroll.bind(this), 5);
     this.setPref = this.setPref.bind(this);
+    this.updateWallpaper = this.updateWallpaper.bind(this);
     this.state = {
       fixedSearch: false,
       firstVisibleTimestamp: null
@@ -9535,6 +9628,52 @@ class BaseContent extends (external_React_default()).PureComponent {
   setPref(pref, value) {
     this.props.dispatch(actionCreators.SetPref(pref, value));
   }
+  renderWallpaperAttribution() {
+    const activeWallpaper = this.props.Prefs.values["newtabWallpapers.wallpaper"];
+    const {
+      wallpaperList
+    } = this.props.Wallpapers;
+    const selected = wallpaperList.find(wp => wp.title === activeWallpaper);
+    // make sure a wallpaper is selected and that the attribution also exists
+    if (!selected?.attribution) {
+      return null;
+    }
+    const {
+      name,
+      webpage
+    } = selected.attribution;
+    if (activeWallpaper && wallpaperList && name.url) {
+      return /*#__PURE__*/external_React_default().createElement("p", {
+        className: `wallpaper-attribution`,
+        key: name,
+        "data-l10n-id": "newtab-wallpaper-attribution",
+        "data-l10n-args": JSON.stringify({
+          author_string: name.string,
+          author_url: name.url,
+          webpage_string: webpage.string,
+          webpage_url: webpage.url
+        })
+      }, /*#__PURE__*/external_React_default().createElement("a", {
+        "data-l10n-name": "name-link",
+        href: name.url
+      }, name.string), /*#__PURE__*/external_React_default().createElement("a", {
+        "data-l10n-name": "webpage-link",
+        href: webpage.url
+      }, webpage.string));
+    }
+    return null;
+  }
+  async updateWallpaper() {
+    const prefs = this.props.Prefs.values;
+    const activeWallpaper = prefs["newtabWallpapers.wallpaper"];
+    const {
+      wallpaperList
+    } = this.props.Wallpapers;
+    if (wallpaperList) {
+      const wallpaper = wallpaperList.find(wp => wp.title === activeWallpaper) || "";
+      __webpack_require__.g.document?.body.style.setProperty("--newtab-wallpaper", `url(${wallpaper?.wallpaperUrl || ""})`);
+    }
+  }
   render() {
     const {
       props
@@ -9547,6 +9686,8 @@ class BaseContent extends (external_React_default()).PureComponent {
       customizeMenuVisible
     } = App;
     const prefs = props.Prefs.values;
+    const activeWallpaper = prefs["newtabWallpapers.wallpaper"];
+    const wallpapersEnabled = prefs["newtabWallpapers.enabled"];
     const {
       pocketConfig
     } = prefs;
@@ -9574,12 +9715,17 @@ class BaseContent extends (external_React_default()).PureComponent {
       mayHaveSponsoredTopSites
     } = prefs;
     const outerClassName = ["outer-wrapper", isDiscoveryStream && pocketEnabled && "ds-outer-wrapper-search-alignment", isDiscoveryStream && "ds-outer-wrapper-breakpoint-override", prefs.showSearch && this.state.fixedSearch && !noSectionsEnabled && "fixed-search", prefs.showSearch && noSectionsEnabled && "only-search", prefs["logowordmark.alwaysVisible"] && "visible-logo"].filter(v => v).join(" ");
+    if (wallpapersEnabled) {
+      this.updateWallpaper();
+    }
     return /*#__PURE__*/external_React_default().createElement("div", null, /*#__PURE__*/external_React_default().createElement(CustomizeMenu, {
       onClose: this.closeCustomizationMenu,
       onOpen: this.openCustomizationMenu,
       openPreferences: this.openPreferences,
       setPref: this.setPref,
       enabledSections: enabledSections,
+      wallpapersEnabled: wallpapersEnabled,
+      activeWallpaper: activeWallpaper,
       pocketRegion: pocketRegion,
       mayHaveSponsoredTopSites: mayHaveSponsoredTopSites,
       mayHaveSponsoredStories: mayHaveSponsoredStories,
@@ -9601,7 +9747,7 @@ class BaseContent extends (external_React_default()).PureComponent {
       locale: props.App.locale,
       mayHaveSponsoredStories: mayHaveSponsoredStories,
       firstVisibleTimestamp: this.state.firstVisibleTimestamp
-    })) : /*#__PURE__*/external_React_default().createElement(Sections_Sections, null)), /*#__PURE__*/external_React_default().createElement(ConfirmDialog, null))));
+    })) : /*#__PURE__*/external_React_default().createElement(Sections_Sections, null)), /*#__PURE__*/external_React_default().createElement(ConfirmDialog, null), wallpapersEnabled && this.renderWallpaperAttribution())));
   }
 }
 BaseContent.defaultProps = {
@@ -9612,7 +9758,8 @@ const Base = (0,external_ReactRedux_namespaceObject.connect)(state => ({
   Prefs: state.Prefs,
   Sections: state.Sections,
   DiscoveryStream: state.DiscoveryStream,
-  Search: state.Search
+  Search: state.Search,
+  Wallpapers: state.Wallpapers
 }))(_Base);
 ;// CONCATENATED MODULE: ./content-src/lib/detect-user-session-start.mjs
 /* This Source Code Form is subject to the terms of the Mozilla Public

@@ -1692,6 +1692,9 @@ pref("browser.partnerlink.campaign.topsites", "amzn_2020_a1");
 // Activates preloading of the new tab url.
 pref("browser.newtab.preload", true);
 
+// Preference to enable wallpaper selection in the Customize Menu of new tab page
+pref("browser.newtabpage.activity-stream.newtabWallpapers.enabled", false);
+
 // Current new tab page background image.
 pref("browser.newtabpage.activity-stream.newtabWallpapers.wallpaper", "");
 

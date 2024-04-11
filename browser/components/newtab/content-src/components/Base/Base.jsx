@@ -110,6 +110,7 @@ export class BaseContent extends React.PureComponent {
     this.handleOnKeyDown = this.handleOnKeyDown.bind(this);
     this.onWindowScroll = debounce(this.onWindowScroll.bind(this), 5);
     this.setPref = this.setPref.bind(this);
+    this.updateWallpaper = this.updateWallpaper.bind(this);
     this.state = { fixedSearch: false, firstVisibleTimestamp: null };
   }
 
@@ -192,11 +193,64 @@ export class BaseContent extends React.PureComponent {
     this.props.dispatch(ac.SetPref(pref, value));
   }
 
+  renderWallpaperAttribution() {
+    const activeWallpaper =
+      this.props.Prefs.values["newtabWallpapers.wallpaper"];
+    const { wallpaperList } = this.props.Wallpapers;
+    const selected = wallpaperList.find(wp => wp.title === activeWallpaper);
+    // make sure a wallpaper is selected and that the attribution also exists
+    if (!selected?.attribution) {
+      return null;
+    }
+
+    const { name, webpage } = selected.attribution;
+    if (activeWallpaper && wallpaperList && name.url) {
+      return (
+        <p
+          className={`wallpaper-attribution`}
+          key={name}
+          data-l10n-id="newtab-wallpaper-attribution"
+          data-l10n-args={JSON.stringify({
+            author_string: name.string,
+            author_url: name.url,
+            webpage_string: webpage.string,
+            webpage_url: webpage.url,
+          })}
+        >
+          <a data-l10n-name="name-link" href={name.url}>
+            {name.string}
+          </a>
+          <a data-l10n-name="webpage-link" href={webpage.url}>
+            {webpage.string}
+          </a>
+        </p>
+      );
+    }
+    return null;
+  }
+
+  async updateWallpaper() {
+    const prefs = this.props.Prefs.values;
+    const activeWallpaper = prefs["newtabWallpapers.wallpaper"];
+    const { wallpaperList } = this.props.Wallpapers;
+    if (wallpaperList) {
+      const wallpaper =
+        wallpaperList.find(wp => wp.title === activeWallpaper) || "";
+      global.document?.body.style.setProperty(
+        "--newtab-wallpaper",
+        `url(${wallpaper?.wallpaperUrl || ""})`
+      );
+    }
+  }
+
   render() {
     const { props } = this;
     const { App } = props;
     const { initialized, customizeMenuVisible } = App;
     const prefs = props.Prefs.values;
+    const activeWallpaper = prefs["newtabWallpapers.wallpaper"];
+    const wallpapersEnabled = prefs["newtabWallpapers.enabled"];
+
     const { pocketConfig } = prefs;
 
     const isDiscoveryStream =
@@ -247,6 +301,9 @@ export class BaseContent extends React.PureComponent {
     ]
       .filter(v => v)
       .join(" ");
+    if (wallpapersEnabled) {
+      this.updateWallpaper();
+    }
 
     return (
       <div>
@@ -256,6 +313,8 @@ export class BaseContent extends React.PureComponent {
           openPreferences={this.openPreferences}
           setPref={this.setPref}
           enabledSections={enabledSections}
+          wallpapersEnabled={wallpapersEnabled}
+          activeWallpaper={activeWallpaper}
           pocketRegion={pocketRegion}
           mayHaveSponsoredTopSites={mayHaveSponsoredTopSites}
           mayHaveSponsoredStories={mayHaveSponsoredStories}
@@ -292,6 +351,7 @@ export class BaseContent extends React.PureComponent {
               )}
             </div>
             <ConfirmDialog />
+            {wallpapersEnabled && this.renderWallpaperAttribution()}
           </main>
         </div>
       </div>
@@ -309,4 +369,5 @@ export const Base = connect(state => ({
   Sections: state.Sections,
   DiscoveryStream: state.DiscoveryStream,
   Search: state.Search,
+  Wallpapers: state.Wallpapers,
 }))(_Base);
