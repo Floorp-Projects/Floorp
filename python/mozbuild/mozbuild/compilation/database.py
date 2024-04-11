@@ -132,7 +132,7 @@ class CompileDBBackend(CommonBackend):
             db.append(
                 {
                     "directory": directory,
-                    "command": " ".join(shell_quote(a) for a in c),
+                    "command": shell_quote(*c),
                     "file": mozpath.join(directory, filename),
                 }
             )

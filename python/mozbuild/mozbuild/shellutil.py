@@ -182,10 +182,10 @@ def _quote(s):
     not enclosed in quotes.
     """
     if type(s) == int:
-        return "%d" % s
+        return f"{s}"
 
     # Empty strings need to be quoted to have any significance
-    if s and not SHELL_QUOTE_RE.search(s) and not s.startswith("~"):
+    if s and not SHELL_QUOTE_RE.search(s) and s[0] != "~":
         return s
 
     # Single quoted strings can contain any characters unescaped except the
