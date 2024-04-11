@@ -1244,24 +1244,12 @@ nsDefaultCommandLineHandler.prototype = {
         async function handleNotification() {
           let { tagWasHandled } = await alertService.handleWindowsTag(tag);
 
-          // If the tag was not handled via callback, then the notification was
-          // from a prior instance of the application and we need to handle
-          // fallback behavior.
-          if (!tagWasHandled) {
-            console.info(
-              `Completing Windows notification (tag=${JSON.stringify(
-                tag
-              )}, notificationData=${notificationData})`
+          try {
+            notificationData = JSON.parse(notificationData);
+          } catch (e) {
+            console.error(
+              `Failed to parse (notificationData=${notificationData}) for Windows notification (tag=${tag})`
             );
-            try {
-              notificationData = JSON.parse(notificationData);
-            } catch (e) {
-              console.error(
-                `Completing Windows notification (tag=${JSON.stringify(
-                  tag
-                )}, failed to parse (notificationData=${notificationData})`
-              );
-            }
           }
 
           // This is awkward: the relaunch data set by the caller is _wrapped_
@@ -1275,11 +1263,7 @@ nsDefaultCommandLineHandler.prototype = {
               );
             } catch (e) {
               console.error(
-                `Completing Windows notification (tag=${JSON.stringify(
-                  tag
-                )}, failed to parse (opaqueRelaunchData=${
-                  notificationData.opaqueRelaunchData
-                })`
+                `Failed to parse (opaqueRelaunchData=${notificationData.opaqueRelaunchData}) for Windows notification (tag=${tag})`
               );
             }
           }
@@ -1298,9 +1282,16 @@ nsDefaultCommandLineHandler.prototype = {
           // window to perform the action in.
           let winForAction;
 
-          if (notificationData?.launchUrl && !opaqueRelaunchData) {
-            // Unprivileged Web Notifications contain a launch URL and are handled
-            // slightly differently than privileged notifications with actions.
+          if (
+            !tagWasHandled &&
+            notificationData?.launchUrl &&
+            !opaqueRelaunchData
+          ) {
+            // Unprivileged Web Notifications contain a launch URL and are
+            // handled slightly differently than privileged notifications with
+            // actions. If the tag was not handled, then the notification was
+            // from a prior instance of the application and we need to handle
+            // fallback behavior.
             let { uri, principal } = resolveURIInternal(
               cmdLine,
               notificationData.launchUrl
@@ -1347,6 +1338,14 @@ nsDefaultCommandLineHandler.prototype = {
             });
           }
 
+          // Note: at time of writing `opaqueRelaunchData` was only used by the
+          // Messaging System; if present it could be inferred that the message
+          // originated from the Messaging System. The Messaging System did not
+          // act on Windows 8 style notification callbacks, so there was no risk
+          // of duplicating behavior. If a non-Messaging System consumer is
+          // modified to populate `opaqueRelaunchData` or the Messaging System
+          // modified to use the callback directly, we will need to revisit
+          // this assumption.
           if (opaqueRelaunchData && winForAction) {
             // Without dispatch, `OPEN_URL` with `where: "tab"` does not work on relaunch.
             Services.tm.dispatchToMainThread(() => {
