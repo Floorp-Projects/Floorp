@@ -11361,7 +11361,7 @@ int32_t nsContentUtils::CompareTreePosition(const nsINode* aNode1,
   MOZ_ASSERT(aNode1, "aNode1 must not be null");
   MOZ_ASSERT(aNode2, "aNode2 must not be null");
 
-  if (MOZ_UNLIKELY(NS_WARN_IF(aNode1 == aNode2))) {
+  if (NS_WARN_IF(aNode1 == aNode2)) {
     return 0;
   }
 
