@@ -15,7 +15,7 @@
     <string name="mozac_feature_sitepermissions_option_microphone_one">Խոսափող 1</string>
     <!-- Option in a dialog for requesting a camera permission, this option will give access to
          back facing camera-->
-    <string name="mozac_feature_sitepermissions_back_facing_camera2">Հետևի տեսախցիկ</string>
+    <string name="mozac_feature_sitepermissions_back_facing_camera2">Ետին տեսախցիկ</string>
     <!-- Option in a dialog for requesting a camera permission, this option will give access to
      front facing camera-->
     <string name="mozac_feature_sitepermissions_selfie_camera2">Դիմային տեսախցիկ</string>
