@@ -114,8 +114,14 @@ export class TranslationsPanelShared {
     );
 
     for (const popup of fromPopups) {
-      while (popup.firstChild) {
-        popup.firstChild.remove();
+      // For the moment, the FullPageTranslationsPanel includes its own
+      // menu item for "Choose another language" as the first item in the list
+      // with an empty-string for its value. The SelectTranslationsPanel has
+      // only languages in its list with BCP-47 tags for values. As such,
+      // this loop works for both panels, to remove all of the languages
+      // from the list, but ensuring that any empty-string items are retained.
+      while (popup.lastChild?.value) {
+        popup.lastChild.remove();
       }
       for (const { langTag, displayName } of fromLanguages) {
         const fromMenuItem = document.createXULElement("menuitem");
@@ -126,8 +132,8 @@ export class TranslationsPanelShared {
     }
 
     for (const popup of toPopups) {
-      while (popup.firstChild) {
-        popup.firstChild.remove();
+      while (popup.lastChild?.value) {
+        popup.lastChild.remove();
       }
       for (const { langTag, displayName } of toLanguages) {
         const toMenuItem = document.createXULElement("menuitem");
