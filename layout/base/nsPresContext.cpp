@@ -336,6 +336,7 @@ static const char* gExactCallbackPrefs[] = {
     "intl.accept_languages",
     "layout.css.devPixelsPerPx",
     "layout.css.dpi",
+    "layout.css.letter-spacing.model",
     "layout.css.text-transform.uppercase-eszett.enabled",
     "privacy.trackingprotection.enabled",
     "ui.use_standins_for_native_colors",
@@ -608,7 +609,8 @@ void nsPresContext::PreferenceChanged(const char* aPrefName) {
   }
 
   if (prefName.EqualsLiteral(
-          "layout.css.text-transform.uppercase-eszett.enabled")) {
+          "layout.css.text-transform.uppercase-eszett.enabled") ||
+      prefName.EqualsLiteral("layout.css.letter-spacing.model")) {
     changeHint |= NS_STYLE_HINT_REFLOW;
   }
 

@@ -8675,6 +8675,15 @@
   value: false
   mirror: always
 
+# Which model to use for CSS letter-spacing:
+#   0 - Gecko legacy model, spacing added to trailing side of letter
+#   1 - WebKit/Blink-compatible, spacing always added to right-hand side
+#   2 - Symmetrical spacing, half added to each side
+- name: layout.css.letter-spacing.model
+  type: int32_t
+  value: 0
+  mirror: always
+
 # Is support for motion-path url enabled?
 - name: layout.css.motion-path-url.enabled
   type: RelaxedAtomicBool
