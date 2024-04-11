@@ -226,6 +226,28 @@ bool BounceTrackingState::ShouldCreateBounceTrackingStateForWebProgress(
 }
 
 // static
+bool BounceTrackingState::ShouldTrackPrincipal(nsIPrincipal* aPrincipal) {
+  MOZ_ASSERT(aPrincipal);
+
+  // Only track content principals.
+  if (!aPrincipal->GetIsContentPrincipal()) {
+    return false;
+  }
+
+  // Skip non http schemes.
+  if (!aPrincipal->SchemeIs("http") && !aPrincipal->SchemeIs("https")) {
+    return false;
+  }
+
+  // Skip partitioned principals.
+  if (!aPrincipal->OriginAttributesRef().mPartitionKey.IsEmpty()) {
+    return false;
+  }
+
+  return true;
+}
+
+// static
 nsresult BounceTrackingState::HasBounceTrackingStateForSite(
     const nsACString& aSiteHost, bool& aResult) {
   aResult = false;
@@ -308,8 +330,8 @@ nsresult BounceTrackingState::OnDocumentStartRequest(nsIChannel* aChannel) {
     rv = redirectHistoryEntry->GetPrincipal(getter_AddRefs(principal));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // Filter out non-content principals.
-    if (!principal->GetIsContentPrincipal()) {
+    if (!BounceTrackingState::ShouldTrackPrincipal(principal)) {
+      siteList.AppendElement("");
       continue;
     }
 
@@ -333,7 +355,10 @@ nsresult BounceTrackingState::OnDocumentStartRequest(nsIChannel* aChannel) {
   rv = tldService->GetSchemelessSite(channelURI, siteHost);
 
   if (NS_FAILED(rv)) {
-    NS_WARNING("Failed to retrieve site for final channel URI.");
+    MOZ_LOG(gBounceTrackingProtectionLog, LogLevel::Debug,
+            ("%s: Failed to get site host from channelURI: %s", __FUNCTION__,
+             channelURI->GetSpecOrDefault().get()));
+    siteHost = "";
   }
 
   siteList.AppendElement(siteHost);
@@ -451,16 +476,16 @@ nsresult BounceTrackingState::OnStartNavigation(
 
   // If origin is an opaque origin, set initialHost to empty host. Strictly
   // speaking we only need to check IsNullPrincipal, but we're generally only
-  // interested in content principals. Other principal types are not considered
-  // to be trackers.
-  if (!aTriggeringPrincipal->GetIsContentPrincipal()) {
+  // interested in content principals with http/s scheme. Other principal types
+  // or schemes are not considered to be trackers.
+  if (!BounceTrackingState::ShouldTrackPrincipal(aTriggeringPrincipal)) {
     siteHost = "";
-  }
-
-  // obtain site
-  nsresult rv = aTriggeringPrincipal->GetBaseDomain(siteHost);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    siteHost = "";
+  } else {
+    // obtain site
+    nsresult rv = aTriggeringPrincipal->GetBaseDomain(siteHost);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      siteHost = "";
+    }
   }
 
   // If navigable’s bounce tracking record is null: Set navigable’s bounce
@@ -488,7 +513,7 @@ nsresult BounceTrackingState::OnStartNavigation(
           ("%s: site: %s, hasUserActivation? %d", __FUNCTION__, siteHost.get(),
            hasUserActivation));
   if (hasUserActivation) {
-    rv = mBounceTrackingProtection->RecordStatefulBounces(this);
+    nsresult rv = mBounceTrackingProtection->RecordStatefulBounces(this);
     NS_ENSURE_SUCCESS(rv, rv);
 
     MOZ_ASSERT(!mBounceTrackingRecord);
@@ -508,8 +533,6 @@ nsresult BounceTrackingState::OnStartNavigation(
 
 nsresult BounceTrackingState::OnResponseReceived(
     const nsTArray<nsCString>& aSiteList) {
-  NS_ENSURE_TRUE(mBounceTrackingRecord, NS_ERROR_FAILURE);
-
   // Logging
   if (MOZ_LOG_TEST(gBounceTrackingProtectionLog, LogLevel::Debug)) {
     nsAutoCString siteListStr;
@@ -584,6 +607,18 @@ nsresult BounceTrackingState::OnDocumentLoaded(
   // Assert: navigable’s bounce tracking record is not null.
   NS_ENSURE_TRUE(mBounceTrackingRecord, NS_ERROR_FAILURE);
 
+  nsAutoCString siteHost;
+  if (!BounceTrackingState::ShouldTrackPrincipal(aDocumentPrincipal)) {
+    siteHost = "";
+  } else {
+    nsresult rv = aDocumentPrincipal->GetBaseDomain(siteHost);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // Set the navigable’s bounce tracking record's final host to the host of
+  // finalSite.
+  mBounceTrackingRecord->SetFinalHost(siteHost);
+
   // Logging
   if (MOZ_LOG_TEST(gBounceTrackingProtectionLog, LogLevel::Debug)) {
     nsAutoCString origin;
@@ -597,18 +632,6 @@ nsresult BounceTrackingState::OnDocumentLoaded(
              mBounceTrackingRecord ? mBounceTrackingRecord->Describe().get()
                                    : "null"));
   }
-
-  nsAutoCString siteHost;
-  if (!aDocumentPrincipal->GetIsContentPrincipal()) {
-    siteHost = "";
-  } else {
-    nsresult rv = aDocumentPrincipal->GetBaseDomain(siteHost);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  // Set the navigable’s bounce tracking record's final host to the host of
-  // finalSite.
-  mBounceTrackingRecord->SetFinalHost(siteHost);
 
   return NS_OK;
 }
@@ -630,7 +653,8 @@ nsresult BounceTrackingState::OnCookieWrite(const nsACString& aSiteHost) {
 
 nsresult BounceTrackingState::OnStorageAccess(nsIPrincipal* aPrincipal) {
   NS_ENSURE_ARG_POINTER(aPrincipal);
-  NS_ENSURE_TRUE(aPrincipal->GetIsContentPrincipal(), NS_ERROR_FAILURE);
+  // The caller should already filter out principals for us.
+  MOZ_ASSERT(BounceTrackingState::ShouldTrackPrincipal(aPrincipal));
 
   if (MOZ_LOG_TEST(gBounceTrackingProtectionLog, LogLevel::Debug)) {
     nsAutoCString origin;
