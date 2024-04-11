@@ -284,6 +284,13 @@ export class AppProvidedSearchEngine extends SearchEngine {
   #configurationId = null;
 
   /**
+   * Whether or not this is a general purpose search engine.
+   *
+   * @type {boolean}
+   */
+  #isGeneralPurposeSearchEngine = false;
+
+  /**
    * @param {object} options
    *   The options for this search engine.
    * @param {object} options.config
@@ -389,11 +396,15 @@ export class AppProvidedSearchEngine extends SearchEngine {
     return true;
   }
 
+  /**
+   * Whether or not this engine is a "general" search engine, e.g. is it for
+   * generally searching the web, or does it have a specific purpose like
+   * shopping.
+   *
+   * @returns {boolean}
+   */
   get isGeneralPurposeEngine() {
-    return !!(
-      this._extensionID &&
-      lazy.SearchUtils.GENERAL_SEARCH_ENGINE_IDS.has(this._extensionID)
-    );
+    return this.#isGeneralPurposeSearchEngine;
   }
 
   /**
@@ -471,6 +482,8 @@ export class AppProvidedSearchEngine extends SearchEngine {
   #init(engineConfig) {
     this._orderHint = engineConfig.orderHint;
     this._telemetryId = engineConfig.identifier;
+    this.#isGeneralPurposeSearchEngine =
+      engineConfig.classification == "general";
 
     if (engineConfig.charset) {
       this._queryCharset = engineConfig.charset;

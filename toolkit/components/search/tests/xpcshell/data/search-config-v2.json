@@ -112,6 +112,7 @@
       "recordType": "engine",
       "identifier": "engine-resourceicon",
       "base": {
+        "classification": "general",
         "name": "engine-resourceicon",
         "urls": {
           "search": {
@@ -151,6 +152,7 @@
       "recordType": "engine",
       "identifier": "engine-reordered",
       "base": {
+        "classification": "general",
         "name": "Test search engine (Reordered)",
         "urls": {
           "search": {

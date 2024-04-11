@@ -15,6 +15,7 @@ let CONFIG = [
     base: {
       aliases: ["testEngine1", "testEngine2"],
       charset: "EUC-JP",
+      classification: "general",
       name: "testEngine name",
       partnerCode: "pc",
       urls: {
@@ -55,6 +56,7 @@ let CONFIG = [
     identifier: "testOtherValuesEngine",
     recordType: "engine",
     base: {
+      classification: "unknown",
       name: "testOtherValuesEngine name",
       urls: {
         search: {
@@ -96,6 +98,10 @@ add_task(async function test_engine_with_all_params_set() {
     engine.aliases,
     ["@testEngine1", "@testEngine2"],
     "Should have the correct aliases"
+  );
+  Assert.ok(
+    engine.isGeneralPurposeEngine,
+    "Should be a general purpose engine"
   );
   Assert.equal(
     engine.wrappedJSObject.queryCharset,
@@ -149,6 +155,10 @@ add_task(async function test_engine_with_some_params_set() {
     "Should have the correct engine name"
   );
   Assert.deepEqual(engine.aliases, [], "Should have no aliases");
+  Assert.ok(
+    !engine.isGeneralPurposeEngine,
+    "Should not be a general purpose engine"
+  );
   Assert.equal(
     engine.wrappedJSObject.queryCharset,
     "UTF-8",

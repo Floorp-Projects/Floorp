@@ -9,7 +9,7 @@
             "searchTermParamName": "q"
           }
         },
-        "classification": "unknown"
+        "classification": "general"
       },
       "variants": [{ "environment": { "allRegionsAndLocales": true } }],
       "identifier": "engine1",
@@ -24,7 +24,7 @@
             "searchTermParamName": "q"
           }
         },
-        "classification": "unknown"
+        "classification": "general"
       },
       "variants": [{ "environment": { "allRegionsAndLocales": true } }],
       "identifier": "engine2",
@@ -39,7 +39,7 @@
             "searchTermParamName": "q"
           }
         },
-        "classification": "unknown"
+        "classification": "general"
       },
       "variants": [
         {
@@ -58,7 +58,7 @@
             "searchTermParamName": "q"
           }
         },
-        "classification": "unknown"
+        "classification": "general"
       },
       "variants": [
         {
