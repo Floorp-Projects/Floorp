@@ -17,6 +17,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "chrome://remote/content/webdriver-bidi/modules/root/browsingContext.sys.mjs",
   OriginType:
     "chrome://remote/content/webdriver-bidi/modules/root/browsingContext.sys.mjs",
+  OwnershipModel: "chrome://remote/content/webdriver-bidi/RemoteValue.sys.mjs",
   PollPromise: "chrome://remote/content/shared/Sync.sys.mjs",
 });
 
@@ -425,16 +426,9 @@ class BrowsingContextModule extends WindowGlobalBiDiModule {
   }
 
   _locateNodes(params = {}) {
-    const {
-      locator,
-      maxNodeCount,
-      resultOwnership,
-      sandbox,
-      serializationOptions,
-      startNodes,
-    } = params;
+    const { locator, maxNodeCount, serializationOptions, startNodes } = params;
 
-    const realm = this.messageHandler.getRealm({ sandboxName: sandbox });
+    const realm = this.messageHandler.getRealm();
 
     const contextNodes = [];
     if (startNodes === null) {
@@ -482,7 +476,7 @@ class BrowsingContextModule extends WindowGlobalBiDiModule {
         this.serialize(
           returnedNode,
           serializationOptions,
-          resultOwnership,
+          lazy.OwnershipModel.None,
           realm,
           { seenNodeIds }
         )

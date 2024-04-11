@@ -22,7 +22,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "chrome://remote/content/shared/NavigationManager.sys.mjs",
   NavigationListener:
     "chrome://remote/content/shared/listeners/NavigationListener.sys.mjs",
-  OwnershipModel: "chrome://remote/content/webdriver-bidi/RemoteValue.sys.mjs",
   PollPromise: "chrome://remote/content/shared/Sync.sys.mjs",
   pprint: "chrome://remote/content/shared/Format.sys.mjs",
   print: "chrome://remote/content/shared/PDF.sys.mjs",
@@ -857,12 +856,6 @@ class BrowsingContextModule extends Module {
    * @param {number=} options.maxNodeCount
    *     The maximum amount of nodes which is going to be returned.
    *     Defaults to return all the found nodes.
-   * @param {OwnershipModel=} options.ownership
-   *     The ownership model to use for the serialization
-   *     of the DOM nodes. Defaults to `OwnershipModel.None`.
-   * @property {string=} sandbox
-   *     The name of the sandbox. If the value is null or empty
-   *     string, the default realm will be used.
    * @property {SerializationOptions=} serializationOptions
    *     An object which holds the information of how the DOM nodes
    *     should be serialized.
@@ -884,8 +877,6 @@ class BrowsingContextModule extends Module {
       context: contextId,
       locator,
       maxNodeCount = null,
-      ownership = lazy.OwnershipModel.None,
-      sandbox = null,
       serializationOptions,
       startNodes = null,
     } = options;
@@ -923,19 +914,6 @@ class BrowsingContextModule extends Module {
       }, maxNodeCountErrorMsg)(maxNodeCount);
     }
 
-    const ownershipTypes = Object.values(lazy.OwnershipModel);
-    lazy.assert.that(
-      ownership => ownershipTypes.includes(ownership),
-      `Expected "ownership" to be one of ${ownershipTypes}, got ${ownership}`
-    )(ownership);
-
-    if (sandbox != null) {
-      lazy.assert.string(
-        sandbox,
-        `Expected "sandbox" to be a string, got ${sandbox}`
-      );
-    }
-
     const serializationOptionsWithDefaults =
       lazy.setDefaultAndAssertSerializationOptions(serializationOptions);
 
@@ -961,8 +939,6 @@ class BrowsingContextModule extends Module {
       params: {
         locator,
         maxNodeCount,
-        resultOwnership: ownership,
-        sandbox,
         serializationOptions: serializationOptionsWithDefaults,
         startNodes,
       },
