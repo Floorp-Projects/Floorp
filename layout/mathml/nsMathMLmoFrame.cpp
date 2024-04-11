@@ -596,9 +596,15 @@ nsMathMLmoFrame::Stretch(DrawTarget* aDrawTarget,
 
   // get the leading to be left at the top and the bottom of the stretched char
   // this seems more reliable than using fm->GetLeading() on suspicious fonts
-  nscoord em;
-  GetEmHeight(fm, em);
-  nscoord leading = NSToCoordRound(0.2f * em);
+  const nscoord leading = [&fm] {
+    if (StaticPrefs::
+            mathml_top_bottom_spacing_for_stretchy_operators_disabled()) {
+      return 0;
+    }
+    nscoord em;
+    GetEmHeight(fm, em);
+    return NSToCoordRound(0.2f * (float)em);
+  }();
 
   // Operators that are stretchy, or those that are to be centered
   // to cater for fonts that are not math-aware, are handled by the MathMLChar
