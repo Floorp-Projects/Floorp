@@ -1409,9 +1409,6 @@ gleanInternalSdk:
       type: int
       description: >-
         Maximum number of pings that can be sent in a 60 second interval
-    enableEventTimestamps:
-      type: "boolean"
-      description: "Enables precise event timestamps for Glean events"
 
 majorRelease2022:
   description: Major Release 2022
