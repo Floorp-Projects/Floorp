@@ -840,6 +840,13 @@ pocketNewtab:
         browser.newtabpage.activity-stream.discoverystream.sendToPocket.enabled
       description: >-
         Decides what to do when a logged out user click "Save to Pocket" from a Pocket card.
+    wallpapers:
+      type: boolean
+      setPref:
+        branch: user
+        pref: browser.newtabpage.activity-stream.newtabWallpapers.enabled
+      description: >-
+        Turns on and off wallpaper support.
     recsPersonalized:
       type: boolean
       fallbackPref: >-

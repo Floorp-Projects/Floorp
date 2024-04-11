@@ -272,3 +272,25 @@ newtab-custom-recent-toggle =
   .description = A selection of recent sites and content
 newtab-custom-close-button = Close
 newtab-custom-settings = Manage more settings
+
+## New Tab Wallpapers
+
+newtab-wallpaper-title = Wallpapers
+newtab-wallpaper-reset = Reset to default
+newtab-wallpaper-light-red-panda = Red panda
+newtab-wallpaper-light-mountain = White mountain
+newtab-wallpaper-light-sky = Sky with purple and pink clouds
+newtab-wallpaper-light-color = Blue, pink and yellow shapes
+newtab-wallpaper-light-landscape = Blue mist mountain landscape
+newtab-wallpaper-light-beach = Beach with palm tree
+newtab-wallpaper-dark-aurora = Aurora Borealis
+newtab-wallpaper-dark-color = Red and blue shapes
+newtab-wallpaper-dark-panda = Red panda hidden in forest
+newtab-wallpaper-dark-sky = City landscape with a night sky
+newtab-wallpaper-dark-mountain = Landscape mountain
+newtab-wallpaper-dark-city = Purple city landscape
+
+# Variables
+#   $author_string (String) - The name of the creator of the photo.
+#   $webpage_string (String) - The name of the webpage where the photo is located.
+newtab-wallpaper-attribution = Photo by <a data-l10n-name="name-link">{ $author_string }</a> on <a data-l10n-name="webpage-link">{ $webpage_string }</a>
