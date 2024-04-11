@@ -115,7 +115,7 @@ class SearchConfigTest {
   async setup(version = "42.0") {
     if (SearchUtils.newSearchConfigEnabled) {
       updateAppInfo({
-        name: "XPCShell",
+        name: "firefox",
         ID: "xpcshell@tests.mozilla.org",
         version,
         platformVersion: version,
