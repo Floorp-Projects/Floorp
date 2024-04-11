@@ -95,7 +95,7 @@ already_AddRefed<FOG> FOG::GetSingleton() {
             glean::fog::inits_during_shutdown.Add(1);
             // It's enough to call init before shutting down.
             // We don't need to (and can't) wait for it to complete.
-            glean::impl::fog_init(&VoidCString(), &VoidCString());
+            glean::impl::fog_init(&VoidCString(), &VoidCString(), false);
           }
           gFOG->Shutdown();
           gFOG = nullptr;
@@ -128,7 +128,8 @@ extern "C" bool FOG_IPCIsInAutomation(void) { return xpc::IsInAutomation(); }
 
 NS_IMETHODIMP
 FOG::InitializeFOG(const nsACString& aDataPathOverride,
-                   const nsACString& aAppIdOverride) {
+                   const nsACString& aAppIdOverride,
+                   const bool aDisableInternalPings) {
   MOZ_ASSERT(XRE_IsParentProcess());
   gInitializeCalled = true;
   RunOnShutdown(
@@ -140,7 +141,8 @@ FOG::InitializeFOG(const nsACString& aDataPathOverride,
       },
       ShutdownPhase::AppShutdownConfirmed);
 
-  return glean::impl::fog_init(&aDataPathOverride, &aAppIdOverride);
+  return glean::impl::fog_init(&aDataPathOverride, &aAppIdOverride,
+                               aDisableInternalPings);
 }
 
 NS_IMETHODIMP
