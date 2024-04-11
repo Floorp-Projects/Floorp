@@ -1115,14 +1115,12 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
   const float mGlobalVolume;
 
 #ifdef DEBUG
- protected:
   /**
    * Used to assert when AppendMessage() runs control messages synchronously.
    */
   bool mCanRunMessagesSynchronously;
 #endif
 
- private:
   /**
    * The graph's main-thread observable graph time.
    * Updated by the stable state runnable after each iteration.
