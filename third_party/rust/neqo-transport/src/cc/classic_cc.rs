@@ -179,8 +179,9 @@ impl<T: WindowAdjustment> CongestionControl for ClassicCongestionControl<T> {
             if pkt.pn < self.first_app_limited {
                 is_app_limited = false;
             }
-            assert!(self.bytes_in_flight >= pkt.size);
-            self.bytes_in_flight -= pkt.size;
+            // BIF is set to 0 on a path change, but in case that was because of a simple rebinding
+            // event, we may still get ACKs for packets sent before the rebinding.
+            self.bytes_in_flight = self.bytes_in_flight.saturating_sub(pkt.size);
 
             if !self.after_recovery_start(pkt) {
                 // Do not increase congestion window for packets sent before
@@ -271,8 +272,9 @@ impl<T: WindowAdjustment> CongestionControl for ClassicCongestionControl<T> {
                 pkt.pn,
                 pkt.size
             );
-            assert!(self.bytes_in_flight >= pkt.size);
-            self.bytes_in_flight -= pkt.size;
+            // BIF is set to 0 on a path change, but in case that was because of a simple rebinding
+            // event, we may still declare packets lost that were sent before the rebinding.
+            self.bytes_in_flight = self.bytes_in_flight.saturating_sub(pkt.size);
         }
         qlog::metrics_updated(
             &mut self.qlog,
@@ -516,7 +518,6 @@ impl<T: WindowAdjustment> ClassicCongestionControl<T> {
         true
     }
 
-    #[allow(clippy::unused_self)]
     fn app_limited(&self) -> bool {
         if self.bytes_in_flight >= self.congestion_window {
             false

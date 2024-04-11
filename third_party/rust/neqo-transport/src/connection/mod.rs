@@ -1826,7 +1826,7 @@ impl Connection {
             | State::Connected
             | State::Confirmed => {
                 if let Some(path) = self.paths.select_path() {
-                    let res = self.output_path(&path, now);
+                    let res = self.output_path(&path, now, &None);
                     self.capture_error(Some(path), now, 0, res)
                 } else {
                     Ok(SendOption::default())
@@ -1835,7 +1835,16 @@ impl Connection {
             State::Closing { .. } | State::Draining { .. } | State::Closed(_) => {
                 if let Some(details) = self.state_signaling.close_frame() {
                     let path = Rc::clone(details.path());
-                    let res = self.output_close(&details);
+                    // In some error cases, we will not be able to make a new, permanent path.
+                    // For example, if we run out of connection IDs and the error results from
+                    // a packet on a new path, we avoid sending (and the privacy risk) rather
+                    // than reuse a connection ID.
+                    let res = if path.borrow().is_temporary() {
+                        assert!(!cfg!(test), "attempting to close with a temporary path");
+                        Err(Error::InternalError)
+                    } else {
+                        self.output_path(&path, now, &Some(details))
+                    };
                     self.capture_error(Some(path), now, 0, res)
                 } else {
                     Ok(SendOption::default())
@@ -1910,62 +1919,6 @@ impl Connection {
         } else {
             false
         }
-    }
-
-    fn output_close(&mut self, close: &ClosingFrame) -> Res<SendOption> {
-        let mut encoder = Encoder::with_capacity(256);
-        let grease_quic_bit = self.can_grease_quic_bit();
-        let version = self.version();
-        for space in PacketNumberSpace::iter() {
-            let Some((cspace, tx)) = self.crypto.states.select_tx_mut(self.version, *space) else {
-                continue;
-            };
-
-            let path = close.path().borrow();
-            // In some error cases, we will not be able to make a new, permanent path.
-            // For example, if we run out of connection IDs and the error results from
-            // a packet on a new path, we avoid sending (and the privacy risk) rather
-            // than reuse a connection ID.
-            if path.is_temporary() {
-                assert!(!cfg!(test), "attempting to close with a temporary path");
-                return Err(Error::InternalError);
-            }
-            let (_, mut builder) = Self::build_packet_header(
-                &path,
-                cspace,
-                encoder,
-                tx,
-                &AddressValidationInfo::None,
-                version,
-                grease_quic_bit,
-            );
-            _ = Self::add_packet_number(
-                &mut builder,
-                tx,
-                self.loss_recovery.largest_acknowledged_pn(*space),
-            );
-            // The builder will set the limit to 0 if there isn't enough space for the header.
-            if builder.is_full() {
-                encoder = builder.abort();
-                break;
-            }
-            builder.set_limit(min(path.amplification_limit(), path.mtu()) - tx.expansion());
-            debug_assert!(builder.limit() <= 2048);
-
-            // ConnectionError::Application is only allowed at 1RTT.
-            let sanitized = if *space == PacketNumberSpace::ApplicationData {
-                None
-            } else {
-                close.sanitize()
-            };
-            sanitized
-                .as_ref()
-                .unwrap_or(close)
-                .write_frame(&mut builder);
-            encoder = builder.build(tx)?;
-        }
-
-        Ok(SendOption::Yes(close.path().borrow().datagram(encoder)))
     }
 
     /// Write the frames that are exchanged in the application data space.
@@ -2188,7 +2141,12 @@ impl Connection {
     /// Build a datagram, possibly from multiple packets (for different PN
     /// spaces) and each containing 1+ frames.
     #[allow(clippy::too_many_lines)] // Yeah, that's just the way it is.
-    fn output_path(&mut self, path: &PathRef, now: Instant) -> Res<SendOption> {
+    fn output_path(
+        &mut self,
+        path: &PathRef,
+        now: Instant,
+        closing_frame: &Option<ClosingFrame>,
+    ) -> Res<SendOption> {
         let mut initial_sent = None;
         let mut needs_padding = false;
         let grease_quic_bit = self.can_grease_quic_bit();
@@ -2241,8 +2199,23 @@ impl Connection {
 
             // Add frames to the packet.
             let payload_start = builder.len();
-            let (tokens, ack_eliciting, padded) =
-                self.write_frames(path, *space, &profile, &mut builder, now);
+            let (mut tokens, mut ack_eliciting, mut padded) = (Vec::new(), false, false);
+            if let Some(ref close) = closing_frame {
+                // ConnectionError::Application is only allowed at 1RTT.
+                let sanitized = if *space == PacketNumberSpace::ApplicationData {
+                    None
+                } else {
+                    close.sanitize()
+                };
+                sanitized
+                    .as_ref()
+                    .unwrap_or(close)
+                    .write_frame(&mut builder);
+                self.stats.borrow_mut().frame_tx.connection_close += 1;
+            } else {
+                (tokens, ack_eliciting, padded) =
+                    self.write_frames(path, *space, &profile, &mut builder, now);
+            }
             if builder.packet_empty() {
                 // Nothing to include in this packet.
                 encoder = builder.abort();
@@ -2323,6 +2296,8 @@ impl Connection {
                         mtu
                     );
                     initial.size += mtu - packets.len();
+                    // These zeros aren't padding frames, they are an invalid all-zero coalesced
+                    // packet, which is why we don't increase `frame_tx.padding` count here.
                     packets.resize(mtu, 0);
                 }
                 self.loss_recovery.on_packet_sent(path, initial);
