@@ -8881,7 +8881,7 @@ class _WallpapersSection extends (external_React_default()).PureComponent {
     this.props.setPref("newtabWallpapers.wallpaper", id);
   }
   handleReset() {
-    this.props.setPref("newtabWallpapers.wallpaper", "i");
+    this.props.setPref("newtabWallpapers.wallpaper", "");
   }
   render() {
     const {
