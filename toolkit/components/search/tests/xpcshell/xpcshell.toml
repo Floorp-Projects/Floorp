@@ -78,6 +78,12 @@ support-files = [
 
 ["test_appDefaultEngine.js"]
 
+["test_appProvided_engine.js"]
+prefs = ["browser.search.newSearchConfig.enabled=true"]
+support-files = [
+  "../../schema/search-config-v2-schema.json",
+]
+
 ["test_appProvided_icons.js"]
 prefs = ["browser.search.newSearchConfig.enabled=true"]
 

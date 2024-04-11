@@ -472,6 +472,10 @@ export class AppProvidedSearchEngine extends SearchEngine {
     this._orderHint = engineConfig.orderHint;
     this._telemetryId = engineConfig.identifier;
 
+    if (engineConfig.charset) {
+      this._queryCharset = engineConfig.charset;
+    }
+
     if (engineConfig.telemetrySuffix) {
       this._telemetryId += `-${engineConfig.telemetrySuffix}`;
     }
