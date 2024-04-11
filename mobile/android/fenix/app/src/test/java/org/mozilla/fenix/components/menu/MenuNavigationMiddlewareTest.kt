@@ -9,7 +9,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import mozilla.components.support.test.rule.MainCoroutineRule
-import org.junit.Before
+import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.R
@@ -18,6 +18,7 @@ import org.mozilla.fenix.components.menu.store.MenuAction
 import org.mozilla.fenix.components.menu.store.MenuState
 import org.mozilla.fenix.components.menu.store.MenuStore
 import org.mozilla.fenix.ext.nav
+import org.mozilla.fenix.settings.SupportUtils.SumoTopic
 
 class MenuNavigationMiddlewareTest {
 
@@ -27,25 +28,9 @@ class MenuNavigationMiddlewareTest {
 
     private val navController: NavController = mockk(relaxed = true)
 
-    private lateinit var store: MenuStore
-    private lateinit var middleware: MenuNavigationMiddleware
-
-    @Before
-    fun setup() {
-        middleware = MenuNavigationMiddleware(
-            navController = navController,
-            scope = scope,
-        )
-        store = MenuStore(
-            initialState = MenuState(),
-            middleware = listOf(
-                middleware,
-            ),
-        )
-    }
-
     @Test
     fun `WHEN navigate to settings action is dispatched THEN navigate to settings`() = runTest {
+        val store = createStore()
         store.dispatch(MenuAction.Navigate.Settings).join()
 
         verify {
@@ -55,4 +40,31 @@ class MenuNavigationMiddlewareTest {
             )
         }
     }
+
+    @Test
+    fun `WHEN navigate to help action is dispatched THEN navigate to SUMO Help topic`() = runTest {
+        var topic: SumoTopic? = null
+        val store = createStore(
+            openSumoTopic = {
+                topic = it
+            },
+        )
+
+        store.dispatch(MenuAction.Navigate.Help).join()
+
+        assertEquals(SumoTopic.HELP, topic)
+    }
+
+    private fun createStore(
+        openSumoTopic: (topic: SumoTopic) -> Unit = {},
+    ) = MenuStore(
+        initialState = MenuState(),
+        middleware = listOf(
+            MenuNavigationMiddleware(
+                navController = navController,
+                openSumoTopic = openSumoTopic,
+                scope = scope,
+            ),
+        ),
+    )
 }
