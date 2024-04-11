@@ -143,7 +143,7 @@ mochitest-plain:
             default: default
     instance-size:
         by-test-platform:
-            linux.*64-tsan-qr/opt: xlarge  # runs out of memory using 8GB
+            linux.*64-tsan-qr/opt: xlarge-noscratch  # runs out of memory using 8GB
             default: default
     max-run-time: 3600
     allow-software-gl-layers: false
@@ -458,7 +458,7 @@ mochitest-chrome:
         chunked: true
     instance-size:
         by-test-platform:
-            linux.*64-tsan-qr/opt: xlarge  # runs out of memory otherwise using 8GB
+            linux.*64-tsan-qr/opt: xlarge-noscratch  # runs out of memory otherwise using 8GB
             default: default
 
 mochitest-devtools-chrome:
@@ -516,7 +516,7 @@ mochitest-devtools-chrome:
         chunked: true
     instance-size:
         by-test-platform:
-            linux.*64-[at]san(-qr)?/opt: xlarge  # runs out of memory otherwise using 8GB
+            linux.*64-[at]san(-qr)?/opt: xlarge-noscratch  # runs out of memory otherwise using 8GB
             default: default
     # Bug 1296086: high number of intermittents observed with software GL and large instances
     allow-software-gl-layers: false
@@ -641,7 +641,7 @@ mochitest-plain-gpu:
                     - --mochitest-suite=mochitest-plain-gpu
     instance-size:
         by-test-platform:
-            linux.*64-tsan-qr/opt: xlarge  # runs out of memory otherwise using 8GB
+            linux.*64-tsan-qr/opt: xlarge-noscratch  # runs out of memory otherwise using 8GB
             default: default
 
 mochitest-chrome-gpu:
@@ -680,7 +680,7 @@ mochitest-chrome-gpu:
                     - --mochitest-suite=mochitest-chrome-gpu
     instance-size:
         by-test-platform:
-            linux.*64-tsan-qr/opt: xlarge  # runs out of memory using 8GB of memory
+            linux.*64-tsan-qr/opt: xlarge-noscratch  # runs out of memory using 8GB of memory
             default: default
 
 mochitest-media:

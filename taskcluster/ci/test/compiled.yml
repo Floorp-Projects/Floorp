@@ -49,7 +49,7 @@ gtest:
     description: "GTests run"
     suite: gtest
     treeherder-symbol: GTest
-    instance-size: xlarge
+    instance-size: xlarge-noscratch
     run-on-projects:
         by-variant:
             1proc:

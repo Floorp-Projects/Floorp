@@ -119,7 +119,9 @@ test_description_schema = Schema(
         Required("run-without-variant"): optionally_keyed_by("test-platform", bool),
         # The EC2 instance size to run these tests on.
         Required("instance-size"): optionally_keyed_by(
-            "test-platform", Any("default", "large", "xlarge")
+            "test-platform",
+            "variant",
+            Any("default", "large", "large-noscratch", "xlarge", "xlarge-noscratch"),
         ),
         # type of virtualization or hardware required by test.
         Required("virtualization"): optionally_keyed_by(
