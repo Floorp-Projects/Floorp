@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.74.0"
 name = "neqo-crypto"
-version = "0.7.4"
+version = "0.7.5"
 authors = ["The Neqo Authors <necko@mozilla.com>"]
 build = "build.rs"
 homepage = "https://github.com/mozilla/neqo/"
