@@ -198,6 +198,7 @@ export const SpecialMessageActions = {
       "browser.firefox-view.feature-tour",
       "browser.pdfjs.feature-tour",
       "browser.newtab.feature-tour",
+      "browser.newtabpage.activity-stream.newtabWallpapers.wallpaper",
       "cookiebanners.service.mode",
       "cookiebanners.service.mode.privateBrowsing",
       "cookiebanners.service.detectOnly",

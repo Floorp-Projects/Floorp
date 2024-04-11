@@ -2062,6 +2062,77 @@ html {
   border-radius: 8px;
   outline: 2px solid var(--in-content-primary-button-background);
 }
+.onboardingContainer .tiles-theme-section.wallpaper {
+  justify-content: center;
+  gap: 10px;
+}
+.onboardingContainer .tiles-theme-section.wallpaper:hover {
+  outline: unset;
+}
+.onboardingContainer .tiles-theme-section.wallpaper .theme {
+  flex: unset;
+  width: unset;
+  transition: var(--transition);
+}
+.onboardingContainer .tiles-theme-section.wallpaper .theme .icon {
+  width: 116px;
+  height: 86px;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px 0 rgba(58, 57, 68, 0.2);
+}
+.onboardingContainer .tiles-theme-section.wallpaper .theme .icon:hover {
+  filter: brightness(45%);
+}
+.onboardingContainer .tiles-theme-section.wallpaper .theme .icon.dark-aurora {
+  background-image: url("chrome://activity-stream/content/data/content/assets/wallpapers/dark-aurora.avif");
+}
+.onboardingContainer .tiles-theme-section.wallpaper .theme .icon.dark-city {
+  background-image: url("chrome://activity-stream/content/data/content/assets/wallpapers/dark-city.avif");
+}
+.onboardingContainer .tiles-theme-section.wallpaper .theme .icon.dark-color {
+  background-image: url("chrome://activity-stream/content/data/content/assets/wallpapers/dark-color.avif");
+}
+.onboardingContainer .tiles-theme-section.wallpaper .theme .icon.dark-mountain {
+  background-image: url("chrome://activity-stream/content/data/content/assets/wallpapers/dark-mountain.avif");
+}
+.onboardingContainer .tiles-theme-section.wallpaper .theme .icon.dark-panda {
+  background-image: url("chrome://activity-stream/content/data/content/assets/wallpapers/dark-panda.avif");
+}
+.onboardingContainer .tiles-theme-section.wallpaper .theme .icon.dark-sky {
+  background-image: url("chrome://activity-stream/content/data/content/assets/wallpapers/dark-sky.avif");
+}
+.onboardingContainer .tiles-theme-section.wallpaper .theme .icon.light-beach {
+  background-image: url("chrome://activity-stream/content/data/content/assets/wallpapers/light-beach.avif");
+}
+.onboardingContainer .tiles-theme-section.wallpaper .theme .icon.light-color {
+  background-image: url("chrome://activity-stream/content/data/content/assets/wallpapers/light-color.avif");
+}
+.onboardingContainer .tiles-theme-section.wallpaper .theme .icon.light-landscape {
+  background-image: url("chrome://activity-stream/content/data/content/assets/wallpapers/light-landscape.avif");
+}
+.onboardingContainer .tiles-theme-section.wallpaper .theme .icon.light-mountain {
+  background-image: url("chrome://activity-stream/content/data/content/assets/wallpapers/light-mountain.avif");
+}
+.onboardingContainer .tiles-theme-section.wallpaper .theme .icon.light-redpanda {
+  background-image: url("chrome://activity-stream/content/data/content/assets/wallpapers/light-redpanda.avif");
+}
+.onboardingContainer .tiles-theme-section.wallpaper .theme .icon.light-sky {
+  background-image: url("chrome://activity-stream/content/data/content/assets/wallpapers/light-sky.avif");
+}
+.onboardingContainer .tiles-theme-section.wallpaper .dark {
+  display: none;
+}
+.onboardingContainer .tiles-theme-section.wallpaper .text {
+  display: none;
+}
+@media (prefers-color-scheme: dark) {
+  .onboardingContainer .tiles-theme-section.wallpaper .light {
+    display: none;
+  }
+  .onboardingContainer .tiles-theme-section.wallpaper .dark {
+    display: block;
+  }
+}
 .onboardingContainer .tiles-theme-section .theme {
   align-items: center;
   display: flex;
