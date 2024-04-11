@@ -54,10 +54,18 @@ be as simple as running the following commands:
 COMMIT_LIST_FILE=$TMP_DIR/rebase-commit-list.txt
 export HGPLAIN=1
 
+if [ "x$MOZ_TOP_FF" = "x" ]; then
+  MOZ_TOP_FF=""
+fi
+if [ "x$MOZ_BOTTOM_FF" = "x" ]; then
+  MOZ_BOTTOM_FF=""
+fi
+
 # After this point:
 # * eE: All commands should succeed.
+# * u: All variables should be defined before use.
 # * o pipefail: All stages of all pipes should succeed.
-set -eEo pipefail
+set -eEuo pipefail
 
 if [ -f $STATE_DIR/rebase_resume_state ]; then
   source $STATE_DIR/rebase_resume_state
@@ -118,12 +126,6 @@ That command looks like:
     exit 1
   fi
   ERROR_HELP=""
-
-  # After this point:
-  # * eE: All commands should succeed.
-  # * u: All variables should be defined before use.
-  # * o pipefail: All stages of all pipes should succeed.
-  set -eEuo pipefail
 
   MOZ_NEW_CENTRAL=`hg log -r central -T"{node|short}"`
 
