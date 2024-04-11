@@ -44,7 +44,7 @@ let patterns: string[];
 * [formAutofill](#formautofill)
 * [contentBlocking](#contentblocking)
 * [defaultBrowserCheck](#defaultbrowsercheck)
-* [deeplinkedToWindowsSettingsUI](#deeplinkedToWindowsSettingsUI)
+* [deeplinkedToWindowsSettingsUI](#deeplinkedtowindowssettingsui)
 * [captivePortalLogin](#captiveportallogin)
 * [preferenceObserver](#preferenceobserver)
 * [featureCalloutCheck](#featurecalloutcheck)
