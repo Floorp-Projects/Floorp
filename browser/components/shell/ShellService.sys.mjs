@@ -9,6 +9,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
+  ASRouter: "resource:///modules/asrouter/ASRouter.sys.mjs",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -16,6 +17,13 @@ XPCOMUtils.defineLazyServiceGetter(
   "XreDirProvider",
   "@mozilla.org/xre/directory-provider;1",
   "nsIXREDirProvider"
+);
+
+XPCOMUtils.defineLazyServiceGetter(
+  lazy,
+  "BackgroundTasks",
+  "@mozilla.org/backgroundtasks;1",
+  "nsIBackgroundTasks"
 );
 
 ChromeUtils.defineLazyGetter(lazy, "log", () => {
@@ -337,6 +345,16 @@ let ShellServiceInternal = {
     }
 
     this.shellService.setDefaultBrowser(forAllUsers);
+
+    // Disable showing toast notification from Firefox Background Tasks.
+    if (!lazy.BackgroundTasks?.isBackgroundTaskMode) {
+      await lazy.ASRouter.waitForInitialized;
+      const win = Services.wm.getMostRecentBrowserWindow() ?? null;
+      lazy.ASRouter.sendTriggerMessage({
+        browser: win,
+        id: "deeplinkedToWindowsSettingsUI",
+      });
+    }
   },
 
   async setAsDefault() {

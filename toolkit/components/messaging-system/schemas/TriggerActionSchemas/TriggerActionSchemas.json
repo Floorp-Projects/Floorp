@@ -169,6 +169,18 @@
           "properties": {
             "id": {
               "type": "string",
+              "enum": ["deeplinkedToWindowsSettingsUI"]
+            }
+          },
+          "additionalProperties": false,
+          "required": ["id"],
+          "description": "Occurs when user indicates they want to set Firefox to the default browser and they need to interact with Windows Settings to do so."
+        },
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
               "enum": ["captivePortalLogin"]
             }
           },
