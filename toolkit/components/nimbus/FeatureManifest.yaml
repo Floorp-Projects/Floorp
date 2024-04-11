@@ -2717,6 +2717,16 @@ tabPreview:
       description: >-
         When true, users will see the new card preview when hovering a tab, instead of the standard tooltip
 
+pqcrypto:
+  description: Prefs that control the use of post-quantum cryptography.
+  owner: jschanck@mozilla.com
+  hasExposure: false
+  variables:
+    tlsEnableXyber:
+      description: Whether to enable Xyber768 for TLS
+      type: boolean
+      pref: security.tls.enable_xyber
+
 backupService:
   description: Prefs to control the profile backup service
   owner: mconley@mozilla.com
