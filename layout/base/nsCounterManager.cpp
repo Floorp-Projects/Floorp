@@ -203,7 +203,11 @@ void nsCounterList::SetScope(nsCounterNode* aNode) {
   // the element itself, then we use that scope.
   // Otherwise, fall through to consider scopes created by siblings (and
   // their descendants) in reverse document order.
-  if (aNode->mType != nsCounterNode::USE &&
+  // Do this only for the list-item counter, while the CSSWG discusses what the
+  // right thing to do here is, see bug 1548753 and
+  // https://github.com/w3c/csswg-drafts/issues/5477.
+  if (mCounterName == nsGkAtoms::list_item &&
+      aNode->mType != nsCounterNode::USE &&
       StaticPrefs::layout_css_counter_ancestor_scope_enabled()) {
     for (auto* p = aNode->mPseudoFrame; p; p = p->GetParent()) {
       // This relies on the fact that a RESET node is always the first
