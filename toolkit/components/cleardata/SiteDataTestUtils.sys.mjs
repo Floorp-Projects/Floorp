@@ -114,7 +114,11 @@ export var SiteDataTestUtils = {
   },
 
   /**
-   * Adds a new localStorage entry for the specified origin, with the specified contents.
+   * Adds a new localStorage entry for the specified origin, with the specified
+   * contents.
+   *
+   * This method requires the pref dom.storage.client_validation=false in order
+   * to access LS without a window.
    *
    * @param {String} origin - the origin of the site to add test data for
    * @param {String} [key] - the localStorage key
@@ -138,6 +142,9 @@ export var SiteDataTestUtils = {
    * @param {String} origin - the origin of the site to check
    * @param {{key: String, value: String}[]} [testEntries] - An array of entries
    * to test for.
+   *
+   * This method requires the pref dom.storage.client_validation=false in order
+   * to access LS without a window.
    *
    * @returns {Boolean} whether the origin has localStorage data
    */
