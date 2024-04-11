@@ -345,7 +345,7 @@
                 },
                 "telemetrySuffix": {
                   "title": "Telemetry Suffix",
-                  "description": "Suffix that is appended to the search engine identifier following a dash, i.e. `<identifier>-<suffix>`. There should always be a suffix supplied if the partner code is different.",
+                  "description": "Suffix that is appended to the search engine identifier following a dash, i.e. `<identifier>-<suffix>`. There should always be a suffix supplied if the partner code is different for a reason other than being on a different platform.",
                   "type": "string",
                   "pattern": "^[a-zA-Z0-9-]*$"
                 },
@@ -384,10 +384,7 @@
                   }
                 }
               },
-              "required": ["environment"],
-              "dependencies": {
-                "partnerCode": ["telemetrySuffix"]
-              }
+              "required": ["environment"]
             }
           }
         },

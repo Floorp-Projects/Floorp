@@ -172,6 +172,32 @@ add_task(
 
 add_task(
   { skip_if: () => !SearchUtils.newSearchConfigEnabled },
+  async function test_search_config_valid_partner_codes() {
+    delete SearchUtils.newSearchConfigEnabled;
+    SearchUtils.newSearchConfigEnabled = true;
+
+    let selector = new SearchEngineSelector(() => {});
+
+    for (let entry of await selector.getEngineConfiguration()) {
+      if (entry.recordType == "engine") {
+        for (let variant of entry.variants) {
+          if (
+            "partnerCode" in variant &&
+            "distributions" in variant.environment
+          ) {
+            Assert.ok(
+              variant.telemetrySuffix,
+              `${entry.identifier} should have a telemetrySuffix when a distribution is specified with a partnerCode.`
+            );
+          }
+        }
+      }
+    }
+  }
+);
+
+add_task(
+  { skip_if: () => !SearchUtils.newSearchConfigEnabled },
   async function test_search_config_override_validates_to_schema() {
     let selector = new SearchEngineSelector(() => {});
 
