@@ -806,15 +806,31 @@ impl ViewRenderer {
             }
         } else if let Ok(text) = cocoa::NSText::try_from(view) {
             let normally_editable = unsafe { text.isEditable() } == runtime::YES;
-            match &style.enabled {
-                Property::Static(e) => {
-                    unsafe { text.setEditable_((*e && normally_editable).into()) };
+            let normally_selectable = unsafe { text.isSelectable() } == runtime::YES;
+            let set_enabled = move |enabled: bool| unsafe {
+                if !enabled {
+                    let mut range = text.selectedRange();
+                    range.length = 0;
+                    text.setSelectedRange_(range);
                 }
+                text.setEditable_((enabled && normally_editable).into());
+                text.setSelectable_((enabled && normally_selectable).into());
+                text.setBackgroundColor_(if enabled {
+                    cocoa::NSColor::textBackgroundColor()
+                } else {
+                    cocoa::NSColor::windowBackgroundColor()
+                });
+                text.setTextColor_(if enabled {
+                    cocoa::NSColor::textColor()
+                } else {
+                    cocoa::NSColor::disabledControlTextColor()
+                });
+            };
+            match &style.enabled {
+                Property::Static(e) => set_enabled(*e),
                 Property::Binding(b) => {
-                    b.on_change(move |&enabled| unsafe {
-                        text.setEditable_((enabled && normally_editable).into());
-                    });
-                    unsafe { text.setEditable_((*b.borrow() && normally_editable).into()) };
+                    b.on_change(move |&enabled| set_enabled(enabled));
+                    set_enabled(*b.borrow());
                 }
                 Property::ReadOnly(_) => {
                     unimplemented!("ElementStyle::enabled doesn't support ReadOnly")
@@ -1016,7 +1032,7 @@ fn render_element(
                             cocoa::NSAttributedStringKey,
                             cocoa::id,
                         >>::dictionaryWithObject_forKey_(
-                            cocoa::NSColor::systemGrayColor().0 as u64,
+                            cocoa::NSColor::placeholderTextColor().0 as u64,
                             cocoa::NSForegroundColorAttributeName.0 as u64,
                         ),
                     );
