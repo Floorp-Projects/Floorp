@@ -65,7 +65,13 @@ if system in ["Microsoft", "Windows"]:
     version = "%d.%d.%d" % (major, minor, build_number)
     if major == 10 and minor == 0 and build_number >= 22000:
         major = 11
-    os_version = "%d.%d" % (major, minor)
+
+    # 2009 == 22H2 software update.  These are the build numbers
+    # we use 2009 as the "build" which maps to what taskcluster tasks see
+    if build_number == 22621 or build_number == 19045:
+        build_number = 2009
+
+    os_version = "%d.%d" % (major, build_number)
 elif system.startswith(("MINGW", "MSYS_NT")):
     # windows/mingw python build (msys)
     info["os"] = "win"
@@ -107,7 +113,7 @@ elif system == "Darwin":
     (release, versioninfo, machine) = platform.mac_ver()
     version = "OS X %s" % release
     versionNums = release.split(".")[:2]
-    os_version = "%s.%s" % (versionNums[0], versionNums[1])
+    os_version = "%s.%s" % (versionNums[0], versionNums[1].ljust(2, "0"))
     info["os"] = "mac"
 elif sys.platform in ("solaris", "sunos5"):
     info["os"] = "unix"
@@ -277,8 +283,8 @@ def find_and_update_from_json(*dirs, **kwargs):
     except (BuildEnvironmentNotFoundException, MozconfigFindException):
         pass
 
-    for d in dirs:
-        d = _os.path.abspath(d)
+    for dir in dirs:
+        d = _os.path.abspath(dir)
         json_path = _os.path.join(d, "mozinfo.json")
         if _os.path.isfile(json_path):
             update(json_path)

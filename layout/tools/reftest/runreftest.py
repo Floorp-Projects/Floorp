@@ -462,6 +462,9 @@ class RefTest(object):
         # config specific flags
         prefs["sandbox.apple_silicon"] = mozinfo.info.get("apple_silicon", False)
 
+        prefs["sandbox.mozinfo"] = json.dumps(mozinfo.info)
+        prefs["sandbox.os_version"] = mozinfo.info.get("os_version", "")
+
         # Set tests to run or manifests to parse.
         if tests:
             testlist = os.path.join(profile.profile, "reftests.json")

@@ -677,6 +677,9 @@ function BuildConditionSandbox(aURL) {
     sandbox.d2d &&
     sandbox.gpuProcess;
 
+  sandbox.mozinfo = Services.prefs.getStringPref("sandbox.mozinfo", null);
+  sandbox.os_version = sandbox.mozinfo.os_version;
+
   sandbox.layersGPUAccelerated = g.windowUtils.layerManagerType != "Basic";
   sandbox.d3d11 = g.windowUtils.layerManagerType == "Direct3D 11";
   sandbox.d3d9 = g.windowUtils.layerManagerType == "Direct3D 9";

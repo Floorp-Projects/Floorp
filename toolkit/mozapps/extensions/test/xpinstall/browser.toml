@@ -96,7 +96,7 @@ https_first_disabled = true # Bug 1737265
 ["browser_doorhanger_installs.js"]
 https_first_disabled = true # Bug 1737265
 skip-if = [
-  "os == 'win' && os_version == '10.0' && bits == 64", #Bug 1615449
+  "os == 'win' && os_version == '10.2009' && bits == 64", #Bug 1615449
 ]
 
 ["browser_empty.js"]
