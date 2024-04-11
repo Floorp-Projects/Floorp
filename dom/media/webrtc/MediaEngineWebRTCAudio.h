@@ -108,16 +108,15 @@ class MediaEngineWebRTCMicrophoneSource : public MediaEngineSource {
 class AudioInputProcessing : public AudioDataListener {
  public:
   explicit AudioInputProcessing(uint32_t aMaxChannelCount);
-  void Process(AudioProcessingTrack* aTrack, GraphTime aFrom, GraphTime aTo,
+  void Process(MediaTrackGraph* aGraph, GraphTime aFrom, GraphTime aTo,
                AudioSegment* aInput, AudioSegment* aOutput);
 
-  void ProcessOutputData(AudioProcessingTrack* aTrack,
-                         const AudioChunk& aChunk);
+  void ProcessOutputData(MediaTrackGraph* aGraph, const AudioChunk& aChunk);
   bool IsVoiceInput(MediaTrackGraph* aGraph) const override {
     // If we're passing data directly without AEC or any other process, this
     // means that all voice-processing has been disabled intentionaly. In this
     // case, consider that the device is not used for voice input.
-    return !IsPassThrough(aGraph);
+    return !PassThrough(aGraph);
   }
 
   void Start(MediaTrackGraph* aGraph);
@@ -131,13 +130,17 @@ class AudioInputProcessing : public AudioDataListener {
 
   void Disconnect(MediaTrackGraph* aGraph) override;
 
-  void PacketizeAndProcess(AudioProcessingTrack* aTrack,
+  void PacketizeAndProcess(MediaTrackGraph* aGraph,
                            const AudioSegment& aSegment);
 
+  void SetPassThrough(MediaTrackGraph* aGraph, bool aPassThrough);
   uint32_t GetRequestedInputChannelCount();
-  // This is true when all processing is disabled, in which case we can skip
+  void SetRequestedInputChannelCount(MediaTrackGraph* aGraph,
+                                     CubebUtils::AudioDeviceID aDeviceId,
+                                     uint32_t aRequestedInputChannelCount);
+  // This is true when all processing is disabled, we can skip
   // packetization, resampling and other processing passes.
-  bool IsPassThrough(MediaTrackGraph* aGraph) const;
+  bool PassThrough(MediaTrackGraph* aGraph) const;
 
   // This allow changing the APM options, enabling or disabling processing
   // steps. The settings get applied the next time we're about to process input
@@ -161,11 +164,7 @@ class AudioInputProcessing : public AudioDataListener {
   ~AudioInputProcessing() = default;
   webrtc::AudioProcessing::Config ConfigForPrefs(
       const MediaEnginePrefs& aPrefs);
-  void PassThroughChanged(MediaTrackGraph* aGraph);
-  void RequestedInputChannelCountChanged(MediaTrackGraph* aGraph,
-                                         CubebUtils::AudioDeviceID aDeviceId);
-  void EnsurePacketizer(AudioProcessingTrack* aTrack);
-  void EnsureAudioProcessing(AudioProcessingTrack* aTrack);
+  void EnsurePacketizer(MediaTrackGraph* aGraph, uint32_t aChannels);
   void ResetAudioProcessing(MediaTrackGraph* aGraph);
   PrincipalHandle GetCheckedPrincipal(const AudioSegment& aSegment);
   // This implements the processing algoritm to apply to the input (e.g. a
@@ -173,13 +172,17 @@ class AudioInputProcessing : public AudioDataListener {
   // class only accepts audio chunks of 10ms. It has two inputs and one output:
   // it is fed the speaker data and the microphone data. It outputs processed
   // input data.
-  UniquePtr<webrtc::AudioProcessing> mAudioProcessing;
+  const UniquePtr<webrtc::AudioProcessing> mAudioProcessing;
   // Packetizer to be able to feed 10ms packets to the input side of
   // mAudioProcessing. Not used if the processing is bypassed.
   Maybe<AudioPacketizer<AudioDataValue, float>> mPacketizerInput;
-  // The current settings from about:config preferences and content-provided
-  // constraints.
-  MediaEnginePrefs mSettings;
+  // The number of channels asked for by content, after clamping to the range of
+  // legal channel count for this particular device.
+  uint32_t mRequestedInputChannelCount;
+  // mSkipProcessing is true if none of the processing passes are enabled,
+  // because of prefs or constraints. This allows simply copying the audio into
+  // the MTG, skipping resampling and the whole webrtc.org code.
+  bool mSkipProcessing;
   // Buffer for up to one 10ms packet of planar mixed audio output for the
   // reverse-stream (speaker data) of mAudioProcessing AEC.
   // Length is packet size * channel count, regardless of how many frames are
