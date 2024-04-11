@@ -8,6 +8,7 @@ import androidx.navigation.NavController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
 import org.mozilla.fenix.R
@@ -46,6 +47,26 @@ class MenuNavigationMiddleware(
                 is MenuAction.Navigate.Settings -> navController.nav(
                     R.id.menuDialogFragment,
                     MenuDialogFragmentDirections.actionGlobalSettingsFragment(),
+                )
+
+                is MenuAction.Navigate.Bookmarks -> navController.nav(
+                    R.id.menuDialogFragment,
+                    MenuDialogFragmentDirections.actionGlobalBookmarkFragment(BookmarkRoot.Mobile.id),
+                )
+
+                is MenuAction.Navigate.History -> navController.nav(
+                    R.id.menuDialogFragment,
+                    MenuDialogFragmentDirections.actionGlobalHistoryFragment(),
+                )
+
+                is MenuAction.Navigate.Downloads -> navController.nav(
+                    R.id.menuDialogFragment,
+                    MenuDialogFragmentDirections.actionGlobalDownloadsFragment(),
+                )
+
+                is MenuAction.Navigate.Passwords -> navController.nav(
+                    R.id.menuDialogFragment,
+                    MenuDialogFragmentDirections.actionGlobalSavedLoginsAuthFragment(),
                 )
 
                 else -> Unit

@@ -32,5 +32,25 @@ sealed class MenuAction : Action {
          * [Navigate] action dispatched when navigating to the settings.
          */
         data object Settings : Navigate()
+
+        /**
+         * [Navigate] action dispatched when navigating to bookmarks.
+         */
+        data object Bookmarks : Navigate()
+
+        /**
+         * [Navigate] action dispatched when navigating to history.
+         */
+        data object History : Navigate()
+
+        /**
+         * [Navigate] action dispatched when navigating to downloads.
+         */
+        data object Downloads : Navigate()
+
+        /**
+         * [Navigate] action dispatched when navigating to passwords.
+         */
+        data object Passwords : Navigate()
     }
 }

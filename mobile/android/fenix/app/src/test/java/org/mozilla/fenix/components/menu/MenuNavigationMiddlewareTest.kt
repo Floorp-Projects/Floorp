@@ -8,6 +8,7 @@ import androidx.navigation.NavController
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.test.runTest
+import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -53,6 +54,58 @@ class MenuNavigationMiddlewareTest {
         store.dispatch(MenuAction.Navigate.Help).join()
 
         assertEquals(SumoTopic.HELP, topic)
+    }
+
+    @Test
+    fun `WHEN navigate to bookmarks action is dispatched THEN navigate to bookmarks`() = runTest {
+        val store = createStore()
+        store.dispatch(MenuAction.Navigate.Settings).join()
+
+        verify {
+            navController.nav(
+                R.id.menuDialogFragment,
+                MenuDialogFragmentDirections.actionGlobalBookmarkFragment(BookmarkRoot.Mobile.id),
+            )
+        }
+    }
+
+    @Test
+    fun `WHEN navigate to history action is dispatched THEN navigate to history`() = runTest {
+        val store = createStore()
+        store.dispatch(MenuAction.Navigate.Settings).join()
+
+        verify {
+            navController.nav(
+                R.id.menuDialogFragment,
+                MenuDialogFragmentDirections.actionGlobalHistoryFragment(),
+            )
+        }
+    }
+
+    @Test
+    fun `WHEN navigate to downloads action is dispatched THEN navigate to downloads`() = runTest {
+        val store = createStore()
+        store.dispatch(MenuAction.Navigate.Settings).join()
+
+        verify {
+            navController.nav(
+                R.id.menuDialogFragment,
+                MenuDialogFragmentDirections.actionGlobalDownloadsFragment(),
+            )
+        }
+    }
+
+    @Test
+    fun `WHEN navigate to passwords action is dispatched THEN navigate to passwords`() = runTest {
+        val store = createStore()
+        store.dispatch(MenuAction.Navigate.Settings).join()
+
+        verify {
+            navController.nav(
+                R.id.menuDialogFragment,
+                MenuDialogFragmentDirections.actionGlobalSavedLoginsAuthFragment(),
+            )
+        }
     }
 
     private fun createStore(

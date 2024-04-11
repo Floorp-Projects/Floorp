@@ -35,7 +35,12 @@ import org.mozilla.fenix.theme.Theme
  * @param onSignInButtonClick Invoked when the user clicks on the "Sign in" button.
  * @param onHelpButtonClick Invoked when the user clicks on the help button.
  * @param onSettingsButtonClick Invoked when the user clicks on the settings button.
+ * @param onBookmarksMenuClick Invoked when the user clicks on the bookmarks menu item.
+ * @param onHistoryMenuClick Invoked when the user clicks on the history menu item.
+ * @param onDownloadsMenuClick Invoked when the user clicks on the downloads menu item.
+ * @param onPasswordsMenuClick Invoked when the user clicks on the passwords menu item.
  */
+@Suppress("LongParameterList")
 @Composable
 fun MenuDialog(
     account: Account?,
@@ -43,6 +48,10 @@ fun MenuDialog(
     onSignInButtonClick: () -> Unit,
     onHelpButtonClick: () -> Unit,
     onSettingsButtonClick: () -> Unit,
+    onBookmarksMenuClick: () -> Unit,
+    onHistoryMenuClick: () -> Unit,
+    onDownloadsMenuClick: () -> Unit,
+    onPasswordsMenuClick: () -> Unit,
 ) {
     Column {
         MenuHeader(
@@ -55,7 +64,12 @@ fun MenuDialog(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        MainMenu()
+        MainMenu(
+            onBookmarksMenuClick = onBookmarksMenuClick,
+            onHistoryMenuClick = onHistoryMenuClick,
+            onDownloadsMenuClick = onDownloadsMenuClick,
+            onPasswordsMenuClick = onPasswordsMenuClick,
+        )
     }
 }
 
@@ -63,7 +77,12 @@ fun MenuDialog(
  * Wrapper column containing the main menu items.
  */
 @Composable
-private fun MainMenu() {
+private fun MainMenu(
+    onBookmarksMenuClick: () -> Unit,
+    onHistoryMenuClick: () -> Unit,
+    onDownloadsMenuClick: () -> Unit,
+    onPasswordsMenuClick: () -> Unit,
+) {
     Column(
         modifier = Modifier
             .padding(
@@ -87,6 +106,53 @@ private fun MainMenu() {
                 beforeIconPainter = painterResource(id = R.drawable.mozac_ic_private_mode_circle_fill_24),
             )
         }
+
+        LibraryMenuGroup(
+            onBookmarksMenuClick = onBookmarksMenuClick,
+            onHistoryMenuClick = onHistoryMenuClick,
+            onDownloadsMenuClick = onDownloadsMenuClick,
+            onPasswordsMenuClick = onPasswordsMenuClick,
+        )
+    }
+}
+
+@Composable
+private fun LibraryMenuGroup(
+    onBookmarksMenuClick: () -> Unit,
+    onHistoryMenuClick: () -> Unit,
+    onDownloadsMenuClick: () -> Unit,
+    onPasswordsMenuClick: () -> Unit,
+) {
+    MenuGroup {
+        IconListItem(
+            label = stringResource(id = R.string.library_bookmarks),
+            onClick = onBookmarksMenuClick,
+            beforeIconPainter = painterResource(id = R.drawable.mozac_ic_bookmark_tray_fill_24),
+        )
+
+        Divider(color = FirefoxTheme.colors.borderSecondary)
+
+        IconListItem(
+            label = stringResource(id = R.string.library_history),
+            onClick = onHistoryMenuClick,
+            beforeIconPainter = painterResource(id = R.drawable.mozac_ic_history_24),
+        )
+
+        Divider(color = FirefoxTheme.colors.borderSecondary)
+
+        IconListItem(
+            label = stringResource(id = R.string.library_downloads),
+            onClick = onDownloadsMenuClick,
+            beforeIconPainter = painterResource(id = R.drawable.mozac_ic_download_24),
+        )
+
+        Divider(color = FirefoxTheme.colors.borderSecondary)
+
+        IconListItem(
+            label = stringResource(id = R.string.browser_menu_passwords),
+            onClick = onPasswordsMenuClick,
+            beforeIconPainter = painterResource(id = R.drawable.mozac_ic_login_24),
+        )
     }
 }
 
@@ -104,6 +170,10 @@ private fun MenuDialogPreview() {
                 onSignInButtonClick = {},
                 onHelpButtonClick = {},
                 onSettingsButtonClick = {},
+                onBookmarksMenuClick = {},
+                onHistoryMenuClick = {},
+                onDownloadsMenuClick = {},
+                onPasswordsMenuClick = {},
             )
         }
     }
@@ -123,6 +193,10 @@ private fun MenuDialogPrivatePreview() {
                 onSignInButtonClick = {},
                 onHelpButtonClick = {},
                 onSettingsButtonClick = {},
+                onBookmarksMenuClick = {},
+                onHistoryMenuClick = {},
+                onDownloadsMenuClick = {},
+                onPasswordsMenuClick = {},
             )
         }
     }
