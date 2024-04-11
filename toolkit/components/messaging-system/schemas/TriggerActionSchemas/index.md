@@ -44,6 +44,7 @@ let patterns: string[];
 * [formAutofill](#formautofill)
 * [contentBlocking](#contentblocking)
 * [defaultBrowserCheck](#defaultbrowsercheck)
+* [deeplinkedToWindowsSettingsUI](#deeplinkedToWindowsSettingsUI)
 * [captivePortalLogin](#captiveportallogin)
 * [preferenceObserver](#preferenceobserver)
 * [featureCalloutCheck](#featurecalloutcheck)
@@ -160,6 +161,12 @@ let willShowDefaultPrompt = boolean | undefined;
   targeting: "source == 'startup' && !willShowDefaultPrompt"
 }
 ```
+
+### `deeplinkedToWindowsSettingsUI`
+
+Triggers when the user has indicated they want to set Firefox as the default web
+browser and interaction with Windows Settings is necessary to finish setting
+Firefox as default.
 
 ### `captivePortalLogin`
 
