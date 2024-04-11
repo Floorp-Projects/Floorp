@@ -38,6 +38,7 @@ use viaduct_uploader::ViaductUploader;
 pub extern "C" fn fog_init(
     data_path_override: &nsACString,
     app_id_override: &nsACString,
+    disable_internal_pings: bool,
 ) -> nsresult {
     let upload_enabled = static_prefs::pref!("datareporting.healthreport.uploadEnabled");
     let recording_enabled = static_prefs::pref!("telemetry.fog.test.localhost_port") < 0;
@@ -48,6 +49,9 @@ pub extern "C" fn fog_init(
         app_id_override,
         upload_enabled || recording_enabled,
         uploader,
+        // Flipping it around, because no value = defaults to false,
+        // so we take in `disable` but pass on `enable`.
+        !disable_internal_pings,
     )
     .into()
 }
@@ -64,6 +68,7 @@ pub extern "C" fn fog_init(
 pub extern "C" fn fog_init(
     data_path_override: &nsACString,
     app_id_override: &nsACString,
+    disable_internal_pings: bool,
 ) -> nsresult {
     // On Android always enable Glean upload.
     let upload_enabled = true;
@@ -75,6 +80,7 @@ pub extern "C" fn fog_init(
         app_id_override,
         upload_enabled,
         uploader,
+        !disable_internal_pings,
     )
     .into()
 }
@@ -84,6 +90,7 @@ fn fog_init_internal(
     app_id_override: &nsACString,
     upload_enabled: bool,
     uploader: Option<Box<dyn glean::net::PingUploader>>,
+    enable_internal_pings: bool,
 ) -> Result<(), nsresult> {
     metrics::fog::initialization.start();
 
@@ -95,6 +102,7 @@ fn fog_init_internal(
 
     conf.upload_enabled = upload_enabled;
     conf.uploader = uploader;
+    conf.enable_internal_pings = enable_internal_pings;
 
     // If we're operating in automation without any specific source tags to set,
     // set the tag "automation" so any pings that escape don't clutter the tables.
