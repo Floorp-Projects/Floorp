@@ -491,6 +491,7 @@ class HomeFragment : Fragment() {
         )
     }
 
+    @Suppress("LongMethod")
     private fun initializeNavBar(activity: HomeActivity) {
         val isToolbarAtBottom = requireContext().components.settings.toolbarPosition == ToolbarPosition.BOTTOM
 
@@ -553,6 +554,12 @@ class HomeFragment : Fragment() {
                                             BrowsingMode.Private -> Page.PrivateTabs
                                         },
                                     ),
+                                )
+                            },
+                            onMenuButtonClick = {
+                                findNavController().nav(
+                                    findNavController().currentDestination?.id,
+                                    HomeFragmentDirections.actionGlobalMenuDialogFragment(),
                                 )
                             },
                         )

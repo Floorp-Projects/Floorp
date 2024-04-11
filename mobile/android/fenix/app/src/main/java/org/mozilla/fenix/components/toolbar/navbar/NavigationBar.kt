@@ -36,6 +36,7 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.lib.state.ext.observeAsState
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
+import org.mozilla.fenix.components.components
 import org.mozilla.fenix.compose.LongPressIconButton
 import org.mozilla.fenix.compose.TabCounter
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
@@ -57,6 +58,8 @@ import org.mozilla.fenix.theme.ThemeManager
  * @param onForwardButtonLongPress Invoked when the user long-presses the forward button in the navigation bar.
  * @param onHomeButtonClick Invoked when the user clicks on the home button in the navigation bar.
  * @param onTabsButtonClick Invoked when the user clicks on the tabs button in the navigation bar.
+ * @param onMenuButtonClick Invoked when the user clicks on the menu button in the navigation bar.
+ * @param isMenuRedesignEnabled Whether or not the menu redesign is enabled.
  */
 @Suppress("LongParameterList")
 @Composable
@@ -70,6 +73,8 @@ fun BrowserNavBar(
     onForwardButtonLongPress: () -> Unit,
     onHomeButtonClick: () -> Unit,
     onTabsButtonClick: () -> Unit,
+    onMenuButtonClick: () -> Unit,
+    isMenuRedesignEnabled: Boolean = components.settings.enableMenuRedesign,
 ) {
     val tabCount = browserStore.observeAsState(initialValue = 0) { browserState ->
         if (isPrivateMode) {
@@ -105,7 +110,11 @@ fun BrowserNavBar(
             tabCount = tabCount,
         )
 
-        MenuButton(menuButton = menuButton)
+        MenuButton(
+            menuButton = menuButton,
+            isMenuRedesignEnabled = isMenuRedesignEnabled,
+            onMenuButtonClick = onMenuButtonClick,
+        )
     }
 }
 
@@ -119,6 +128,8 @@ fun BrowserNavBar(
  * @param onSearchButtonClick Invoked when the user clicks the search button in the nav bar. The button
  * is visible only on home screen and activates [SearchDialogFragment].
  * @param onTabsButtonClick Invoked when the user clicks the tabs button in the nav bar.
+ * @param onMenuButtonClick Invoked when the user clicks on the menu button in the navigation bar.
+ * @param isMenuRedesignEnabled Whether or not the menu redesign is enabled.
  */
 @Composable
 fun HomeNavBar(
@@ -127,6 +138,8 @@ fun HomeNavBar(
     menuButton: MenuButton,
     onSearchButtonClick: () -> Unit,
     onTabsButtonClick: () -> Unit,
+    onMenuButtonClick: () -> Unit,
+    isMenuRedesignEnabled: Boolean = components.settings.enableMenuRedesign,
 ) {
     val tabCount = browserStore.observeAsState(initialValue = 0) { browserState ->
         if (isPrivateMode) {
@@ -168,7 +181,11 @@ fun HomeNavBar(
             tabCount = tabCount,
         )
 
-        MenuButton(menuButton = menuButton)
+        MenuButton(
+            menuButton = menuButton,
+            isMenuRedesignEnabled = isMenuRedesignEnabled,
+            onMenuButtonClick = onMenuButtonClick,
+        )
     }
 }
 
@@ -184,6 +201,8 @@ fun HomeNavBar(
  * @param onForwardButtonClick Invoked when the user clicks the forward button in the nav bar.
  * @param onForwardButtonLongPress Invoked when the user long-presses the forward button in the nav bar.
  * @param onOpenInBrowserButtonClick Invoked when the user clicks the open in fenix button in the nav bar.
+ * @param onMenuButtonClick Invoked when the user clicks on the menu button in the navigation bar.
+ * @param isMenuRedesignEnabled Whether or not the menu redesign is enabled.
  */
 @Composable
 @Suppress("LongParameterList")
@@ -196,6 +215,8 @@ fun CustomTabNavBar(
     onForwardButtonClick: () -> Unit,
     onForwardButtonLongPress: () -> Unit,
     onOpenInBrowserButtonClick: () -> Unit,
+    onMenuButtonClick: () -> Unit,
+    isMenuRedesignEnabled: Boolean = components.settings.enableMenuRedesign,
 ) {
     // A follow up: https://bugzilla.mozilla.org/show_bug.cgi?id=1888573
     val canGoBack by browserStore.observeAsState(initialValue = false) {
@@ -220,7 +241,11 @@ fun CustomTabNavBar(
 
         OpenInBrowserButton(onOpenInBrowserButtonClick = onOpenInBrowserButtonClick)
 
-        MenuButton(menuButton = menuButton)
+        MenuButton(
+            menuButton = menuButton,
+            isMenuRedesignEnabled = isMenuRedesignEnabled,
+            onMenuButtonClick = onMenuButtonClick,
+        )
     }
 }
 
@@ -310,14 +335,25 @@ private fun SearchWebButton(
 @Composable
 private fun MenuButton(
     menuButton: MenuButton,
+    isMenuRedesignEnabled: Boolean,
+    onMenuButtonClick: () -> Unit,
 ) {
-    // Should refactor it to be a simple IconButton with a click listener
-    // once the redesigned menu is implemented.
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=1884049
-    AndroidView(
-        modifier = Modifier.size(48.dp),
-        factory = { _ -> menuButton },
-    )
+    if (isMenuRedesignEnabled) {
+        IconButton(
+            onClick = onMenuButtonClick,
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.mozac_ic_ellipsis_vertical_24),
+                contentDescription = stringResource(id = R.string.mozac_browser_menu_button),
+                tint = FirefoxTheme.colors.iconPrimary,
+            )
+        }
+    } else {
+        AndroidView(
+            modifier = Modifier.size(48.dp),
+            factory = { _ -> menuButton },
+        )
+    }
 }
 
 @Composable
@@ -371,6 +407,8 @@ private fun HomeNavBarPreviewRoot(isPrivateMode: Boolean) {
         menuButton = menuButton,
         onSearchButtonClick = {},
         onTabsButtonClick = {},
+        onMenuButtonClick = {},
+        isMenuRedesignEnabled = false,
     )
 }
 
@@ -402,6 +440,8 @@ private fun OpenTabNavBarNavBarPreviewRoot(isPrivateMode: Boolean) {
         onForwardButtonLongPress = {},
         onHomeButtonClick = {},
         onTabsButtonClick = {},
+        onMenuButtonClick = {},
+        isMenuRedesignEnabled = false,
     )
 }
 
@@ -426,12 +466,14 @@ private fun CustomTabNavBarPreviewRoot(isPrivateMode: Boolean) {
     CustomTabNavBar(
         customTabSessionId = "",
         browserStore = BrowserStore(),
+        menuButton = menuButton,
         onBackButtonClick = {},
         onBackButtonLongPress = {},
         onForwardButtonClick = {},
         onForwardButtonLongPress = {},
-        menuButton = menuButton,
         onOpenInBrowserButtonClick = {},
+        onMenuButtonClick = {},
+        isMenuRedesignEnabled = false,
     )
 }
 

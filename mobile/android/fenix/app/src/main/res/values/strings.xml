@@ -241,6 +241,8 @@
     <string name="browser_menu_sign_in" tools:ignore="UnusedResources">Sign in</string>
     <!-- Browser menu caption label for the "Sign in" browser menu item described in browser_menu_sign_in -->
     <string name="browser_menu_sign_in_caption" tools:ignore="UnusedResources">Sync passwords, tabs, and more</string>
+    <!-- Browser menu label that creates a private tab -->
+    <string name="browser_menu_new_private_tab">New private tab</string>
 
     <!-- Extensions management fragment -->
     <!-- Text displayed when there are no extensions to be shown -->

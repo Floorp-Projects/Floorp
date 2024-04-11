@@ -1343,6 +1343,12 @@ abstract class BaseBrowserFragment :
                                     ),
                                 )
                             },
+                            onMenuButtonClick = {
+                                findNavController().nav(
+                                    R.id.browserFragment,
+                                    BrowserFragmentDirections.actionGlobalMenuDialogFragment(),
+                                )
+                            },
                         )
                     }
                 }
