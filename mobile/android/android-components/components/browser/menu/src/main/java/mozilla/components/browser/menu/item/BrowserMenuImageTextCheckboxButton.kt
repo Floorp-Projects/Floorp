@@ -21,6 +21,7 @@ import mozilla.components.support.ktx.android.util.dpToPx
  * @param iconTintColorResource Optional ID of color resource to tint the icon.
  * @param label The visible label of this menu item.
  * @param textColorResource Optional ID of color resource to tint the text.
+ * @param enabled Sets the enabled status for the view. By default, it is true.
  * @param labelListener Callback to be invoked when this menu item is clicked.
  * @param primaryStateIconResource ID of a drawable resource for checkbox drawable in primary state.
  * @param secondaryStateIconResource ID of a drawable resource for checkbox drawable in secondary state.
@@ -39,6 +40,7 @@ class BrowserMenuImageTextCheckboxButton(
     private val label: String,
     @ColorRes iconTintColorResource: Int = NO_ID,
     @ColorRes internal val textColorResource: Int = NO_ID,
+    enabled: Boolean = true,
     @get:VisibleForTesting internal val labelListener: () -> Unit,
     @DrawableRes val primaryStateIconResource: Int,
     @DrawableRes val secondaryStateIconResource: Int,
@@ -54,6 +56,7 @@ class BrowserMenuImageTextCheckboxButton(
     imageResource,
     iconTintColorResource,
     textColorResource,
+    enabled,
     isCollapsingMenuLimit,
     isSticky,
     labelListener,

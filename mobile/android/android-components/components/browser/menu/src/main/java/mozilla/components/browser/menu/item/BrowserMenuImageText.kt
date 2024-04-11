@@ -43,6 +43,7 @@ internal fun TextView.setColorResource(@ColorRes textColorResource: Int) {
  * @param imageResource ID of a drawable resource to be shown as icon.
  * @param iconTintColorResource Optional ID of color resource to tint the icon.
  * @param textColorResource Optional ID of color resource to tint the text.
+ * @param enabled Sets the enabled status for the view. By default, it is true.
  * @param isCollapsingMenuLimit Whether this menu item can serve as the limit of a collapsing menu.
  * @param isSticky whether this item menu should not be scrolled offscreen (downwards or upwards
  * depending on the menu position).
@@ -53,9 +54,10 @@ open class BrowserMenuImageText(
     @DrawableRes
     internal val imageResource: Int,
     @ColorRes
-    internal val iconTintColorResource: Int = NO_ID,
+    open var iconTintColorResource: Int = NO_ID,
     @ColorRes
     private val textColorResource: Int = NO_ID,
+    open var enabled: Boolean = true,
     override val isCollapsingMenuLimit: Boolean = false,
     override val isSticky: Boolean = false,
     private val listener: () -> Unit = {},
@@ -74,12 +76,15 @@ open class BrowserMenuImageText(
             listener.invoke()
             menu.dismiss()
         }
+        view.isEnabled = enabled
+        view.contentDescription = label
     }
 
     private fun bindText(view: View) {
         val textView = view.findViewById<TextView>(R.id.text)
         textView.text = label
         textView.setColorResource(textColorResource)
+        textView.isEnabled = enabled
     }
 
     private fun bindImage(view: View) {
