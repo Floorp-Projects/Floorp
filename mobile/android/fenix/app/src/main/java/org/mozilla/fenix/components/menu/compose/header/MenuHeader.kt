@@ -2,89 +2,75 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.components.menu.compose
+package org.mozilla.fenix.components.menu.compose.header
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import mozilla.components.service.fxa.store.Account
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.accounts.AccountState
 import org.mozilla.fenix.components.accounts.AccountState.NO_ACCOUNT
-import org.mozilla.fenix.components.menu.compose.header.MenuHeader
 import org.mozilla.fenix.compose.Divider
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
-import org.mozilla.fenix.compose.list.IconListItem
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
 
-/**
- * The menu bottom sheet dialog.
- *
- * @param account [Account] information available for a synced account.
- * @param accountState The [AccountState] of a synced account.
- * @param onSignInButtonClick Invoked when the user clicks on the "Sign in" button.
- * @param onHelpButtonClick Invoked when the user clicks on the help button.
- * @param onSettingsButtonClick Invoked when the user clicks on the settings button.
- */
 @Composable
-fun MenuDialog(
+internal fun MenuHeader(
     account: Account?,
     accountState: AccountState,
     onSignInButtonClick: () -> Unit,
     onHelpButtonClick: () -> Unit,
     onSettingsButtonClick: () -> Unit,
 ) {
-    Column {
-        MenuHeader(
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 12.dp, end = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        MozillaAccountMenuButton(
             account = account,
             accountState = accountState,
             onSignInButtonClick = onSignInButtonClick,
-            onHelpButtonClick = onHelpButtonClick,
-            onSettingsButtonClick = onSettingsButtonClick,
+            modifier = Modifier.weight(1f),
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.width(8.dp))
 
-        MainMenu()
-    }
-}
+        Divider(modifier = Modifier.size(width = 2.dp, height = 32.dp))
 
-/**
- * Wrapper column containing the main menu items.
- */
-@Composable
-private fun MainMenu() {
-    Column(
-        modifier = Modifier
-            .padding(
-                start = 16.dp,
-                top = 12.dp,
-                end = 16.dp,
-                bottom = 32.dp,
-            ),
-        verticalArrangement = Arrangement.spacedBy(32.dp),
-    ) {
-        MenuGroup {
-            IconListItem(
-                label = stringResource(id = R.string.library_new_tab),
-                beforeIconPainter = painterResource(id = R.drawable.mozac_ic_plus_24),
+        IconButton(
+            onClick = onHelpButtonClick,
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.mozac_ic_help_circle_24),
+                contentDescription = null,
+                tint = FirefoxTheme.colors.iconSecondary,
             )
+        }
 
-            Divider(color = FirefoxTheme.colors.borderSecondary)
-
-            IconListItem(
-                label = stringResource(id = R.string.browser_menu_new_private_tab),
-                beforeIconPainter = painterResource(id = R.drawable.mozac_ic_private_mode_circle_fill_24),
+        IconButton(
+            onClick = onSettingsButtonClick,
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.mozac_ic_settings_24),
+                contentDescription = null,
+                tint = FirefoxTheme.colors.iconSecondary,
             )
         }
     }
@@ -92,13 +78,13 @@ private fun MainMenu() {
 
 @LightDarkPreview
 @Composable
-private fun MenuDialogPreview() {
+private fun MenuHeaderPreview() {
     FirefoxTheme {
         Column(
             modifier = Modifier
                 .background(color = FirefoxTheme.colors.layer3),
         ) {
-            MenuDialog(
+            MenuHeader(
                 account = null,
                 accountState = NO_ACCOUNT,
                 onSignInButtonClick = {},
@@ -111,13 +97,13 @@ private fun MenuDialogPreview() {
 
 @Preview
 @Composable
-private fun MenuDialogPrivatePreview() {
+private fun MenuHeaderPrivatePreview() {
     FirefoxTheme(theme = Theme.Private) {
         Column(
             modifier = Modifier
                 .background(color = FirefoxTheme.colors.layer3),
         ) {
-            MenuDialog(
+            MenuHeader(
                 account = null,
                 accountState = NO_ACCOUNT,
                 onSignInButtonClick = {},

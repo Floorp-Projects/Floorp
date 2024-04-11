@@ -14,6 +14,7 @@ import androidx.compose.ui.platform.ViewCompositionStrategy
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.accounts.AccountState
 import org.mozilla.fenix.components.menu.compose.MenuDialog
 import org.mozilla.fenix.components.menu.compose.MenuDialogBottomSheet
 import org.mozilla.fenix.theme.FirefoxTheme
@@ -44,7 +45,13 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
         setContent {
             FirefoxTheme {
                 MenuDialogBottomSheet(onRequestDismiss = {}) {
-                    MenuDialog()
+                    MenuDialog(
+                        account = null,
+                        accountState = AccountState.NO_ACCOUNT,
+                        onSignInButtonClick = {},
+                        onHelpButtonClick = {},
+                        onSettingsButtonClick = {},
+                    )
                 }
             }
         }
