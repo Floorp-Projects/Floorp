@@ -1372,6 +1372,102 @@ html {
       outline: 2px solid var(--in-content-primary-button-background);
     }
 
+    // newtab wallpaper specific styles
+    &.wallpaper {
+      justify-content: center;
+      gap: 10px;
+
+      &:hover {
+        outline: unset;
+      }
+
+      .theme {
+        flex: unset;
+        width: unset;
+        transition: var(--transition);
+
+        .icon {
+          width: 116px;
+          height: 86px;
+          border-radius: 8px;
+          box-shadow: 0 1px 2px 0 #3A394433;
+
+          &:hover {
+            filter: brightness(45%);
+          }
+
+          // dark theme wallpapers
+          &.dark-aurora {
+            background-image: url('chrome://activity-stream/content/data/content/assets/wallpapers/dark-aurora.avif');
+          }
+
+          &.dark-city {
+            background-image: url('chrome://activity-stream/content/data/content/assets/wallpapers/dark-city.avif');
+          }
+
+          &.dark-color {
+            background-image: url('chrome://activity-stream/content/data/content/assets/wallpapers/dark-color.avif');
+          }
+
+          &.dark-mountain {
+            background-image: url('chrome://activity-stream/content/data/content/assets/wallpapers/dark-mountain.avif');
+          }
+
+          &.dark-panda {
+            background-image: url('chrome://activity-stream/content/data/content/assets/wallpapers/dark-panda.avif');
+          }
+
+          &.dark-sky {
+            background-image: url('chrome://activity-stream/content/data/content/assets/wallpapers/dark-sky.avif');
+          }
+
+          // light theme wallpapers
+          &.light-beach {
+            background-image: url('chrome://activity-stream/content/data/content/assets/wallpapers/light-beach.avif');
+          }
+
+          &.light-color {
+            background-image: url('chrome://activity-stream/content/data/content/assets/wallpapers/light-color.avif');
+          }
+
+          &.light-landscape {
+            background-image: url('chrome://activity-stream/content/data/content/assets/wallpapers/light-landscape.avif');
+          }
+
+          &.light-mountain {
+            background-image: url('chrome://activity-stream/content/data/content/assets/wallpapers/light-mountain.avif');
+          }
+
+          &.light-redpanda {
+            background-image: url('chrome://activity-stream/content/data/content/assets/wallpapers/light-redpanda.avif');
+          }
+
+          &.light-sky {
+            background-image: url('chrome://activity-stream/content/data/content/assets/wallpapers/light-sky.avif');
+          }
+        }
+      }
+
+      .dark {
+        display: none;
+      }
+
+      .text {
+        display: none;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        .light {
+          display: none;
+        }
+
+        .dark {
+          display: block;
+        }
+      }
+
+    }
+
     .theme {
       align-items: center;
       display: flex;
