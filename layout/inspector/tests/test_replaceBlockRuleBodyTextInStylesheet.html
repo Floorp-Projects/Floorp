@@ -19,13 +19,13 @@
   #test-nested-child {
     background: gold;
   }
-}
+}#test-after-closing-bracket{--modified:false}
   </style>
   <script>SimpleTest.waitForExplicitFinish();</script>
   <script defer>
     const InspectorUtils = SpecialPowers.InspectorUtils;
-    const stylesheet = document.styleSheets[1];
-    const authoredStyleSheetText = document.querySelector("style").textContent;
+    let stylesheet = document.styleSheets[1];
+    let authoredStyleSheetText = document.querySelector("style").textContent;
 
     const existingRulesAuthoredText = [
 `#test-simple {
@@ -46,6 +46,7 @@
 `#test-nested-child {
     background: gold;
   }`,
+`#test-after-closing-bracket{--modified:false}`,
 ];
 
     const replaceBlockRuleBodyTextInStylesheet = (rule, newBodyText) => {
@@ -132,6 +133,65 @@
         `#test-nested-child {${newBodyText}}`,
       ),
       "Got the expected result for #test-nested-child"
+    );
+
+    // Covering fix for Bug 1890775
+    info("Check that it can handle rules  whose declaration is directly after the } of the previous rule, without spaces");
+    isnot(
+      InspectorUtils.getRelativeRuleLine(stylesheet.cssRules[5]),
+      1,
+      "The rule should not be on the first line of the stylesheet to check the issue it covers"
+    );
+    newBodyText = `--modified:true`;
+    is(
+      replaceBlockRuleBodyTextInStylesheet(stylesheet.cssRules[5], newBodyText),
+      authoredStyleSheetText.replace(
+        existingRulesAuthoredText[6],
+        `#test-after-closing-bracket{${newBodyText}}`,
+      ),
+      "Got the expected result for #test-after-closing-bracket"
+    );
+
+    info("Checking fix for files with crlf EOL sequence");
+    let styleEl = document.createElement("style");
+    let ruleText = `#test-after-closing-bracket-crlf{--modified-crlf:false}`
+    authoredStyleSheetText = `\r\nhtml{}${ruleText}`;
+    styleEl.append(document.createTextNode(authoredStyleSheetText));
+    document.head.append(styleEl);
+    stylesheet = document.styleSheets[2];
+    isnot(
+      InspectorUtils.getRelativeRuleLine(stylesheet.cssRules[1]),
+      1,
+      "The rule should not be on the first line of the stylesheet to check the issue it covers"
+    );
+    newBodyText = `--modified-crlf:true`;
+    is(
+      replaceBlockRuleBodyTextInStylesheet(stylesheet.cssRules[1], newBodyText),
+      authoredStyleSheetText.replace(
+        ruleText,
+        `#test-after-closing-bracket-crlf{${newBodyText}}`,
+      ),
+      "Got the expected result for #test-after-closing-bracket-crlf"
+    );
+
+    info("Checking fix for files with cr EOL sequence");
+    ruleText = `#test-after-closing-bracket-cr{--modified-cr:false}`
+    authoredStyleSheetText = `\rhtml{}${ruleText}`;
+    styleEl.innerText = "";
+    styleEl.append(document.createTextNode(authoredStyleSheetText));
+    isnot(
+      InspectorUtils.getRelativeRuleLine(stylesheet.cssRules[1]),
+      1,
+      "The rule should not be on the first line of the stylesheet to check the issue it covers"
+    );
+    newBodyText = `--modified-cr:true`;
+    is(
+      replaceBlockRuleBodyTextInStylesheet(stylesheet.cssRules[1], newBodyText),
+      authoredStyleSheetText.replace(
+        ruleText,
+        `#test-after-closing-bracket-cr{${newBodyText}}`,
+      ),
+      "Got the expected result for #test-after-closing-bracket-cr"
     );
 
     SimpleTest.finish();

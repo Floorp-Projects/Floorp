@@ -834,6 +834,12 @@ class StyleRuleActor extends Actor {
         newText
       );
 
+      if (typeof cssText !== "string") {
+        throw new Error(
+          "Error in InspectorUtils.replaceBlockRuleBodyTextInStylesheet"
+        );
+      }
+
       // setStyleSheetText will parse the stylesheet which can be costly, so only do it
       // if the text has actually changed.
       if (sheetText !== newText) {
