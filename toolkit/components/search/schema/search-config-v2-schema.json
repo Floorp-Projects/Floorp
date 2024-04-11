@@ -108,7 +108,6 @@
             "type": "string",
             "pattern": "^[a-z-]{0,100}$",
             "enum": [
-              "",
               "firefox",
               "firefox-android",
               "firefox-ios",
@@ -129,6 +128,17 @@
           "description": "The maximum application version this section applies to (less-than comparison).",
           "type": "string",
           "pattern": "^[0-9a-z.]{0,20}$"
+        },
+        "deviceType": {
+          "title": "Device Type",
+          "description": "The device type(s) this section applies to. On desktop when this property is specified and non-empty, the associated section will be ignored.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z-]{0,100}$",
+            "enum": ["smartphone", "tablet"]
+          },
+          "uniqueItems": true
         }
       }
     },

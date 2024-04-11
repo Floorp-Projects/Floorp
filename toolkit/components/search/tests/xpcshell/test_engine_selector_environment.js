@@ -388,6 +388,55 @@ const CONFIG_VERSIONS = [
   },
 ];
 
+const CONFIG_DEVICE_TYPE_LAYOUT = [
+  {
+    recordType: "engine",
+    identifier: "engine-no-device-type",
+    base: {},
+    variants: [
+      {
+        environment: {
+          allRegionsAndLocales: true,
+        },
+      },
+    ],
+  },
+  {
+    recordType: "engine",
+    identifier: "engine-single-device-type",
+    base: {},
+    variants: [
+      {
+        environment: {
+          allRegionsAndLocales: true,
+          deviceType: ["tablet"],
+        },
+      },
+    ],
+  },
+  {
+    recordType: "engine",
+    identifier: "engine-multiple-device-type",
+    base: {},
+    variants: [
+      {
+        environment: {
+          allRegionsAndLocales: true,
+          deviceType: ["tablet", "smartphone"],
+        },
+      },
+    ],
+  },
+  {
+    recordType: "defaultEngines",
+    specificDefaults: [],
+  },
+  {
+    recordType: "engineOrders",
+    orders: [],
+  },
+];
+
 const engineSelector = new SearchEngineSelector();
 let settings;
 let settingOverrides;
@@ -791,5 +840,17 @@ add_task(async function test_engine_selector_does_not_match_optional_engines() {
     },
     ["engine-optional-false", "engine-optional-undefined"],
     "Should match engines where optional flag is false or undefined"
+  );
+});
+
+add_task(async function test_engine_selector_match_device_type() {
+  await assertActualEnginesEqualsExpected(
+    CONFIG_DEVICE_TYPE_LAYOUT,
+    {
+      locale: "en-CA",
+      region: "CA",
+    },
+    ["engine-no-device-type"],
+    "Should only match engines with no device type."
   );
 });
