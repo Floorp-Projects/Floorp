@@ -471,15 +471,10 @@ mochitest-devtools-chrome:
     variants:
         - a11y-checks
         - socketprocess_networking
-        - devtools-no-eft+no-fission
         - http3
     run-on-projects:
         by-variant:
             a11y-checks:
-                by-test-platform:
-                    linux.*64(-shippable)?-qr/opt: ['trunk']
-                    default: []
-            devtools-no-eft+no-fission:
                 by-test-platform:
                     linux.*64(-shippable)?-qr/opt: ['trunk']
                     default: []
