@@ -14134,7 +14134,7 @@
 # Whether only bounces that access storage should be considered trackers.
 - name: privacy.bounceTrackingProtection.requireStatefulBounces
   type: bool
-  value: false
+  value: true
   mirror: always
 
 # To be used in test environments to enable observer messages.
