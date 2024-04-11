@@ -42,7 +42,7 @@ export class _WallpapersSection extends React.PureComponent {
   }
 
   handleReset() {
-    this.props.setPref("newtabWallpapers.wallpaper", "i");
+    this.props.setPref("newtabWallpapers.wallpaper", "");
   }
 
   render() {

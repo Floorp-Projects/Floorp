@@ -84,6 +84,9 @@ add_task(async function test_onAction_INIT() {
             wallpaperUrl: "http://localhost:8888/base_url/attachment",
           },
         ],
+        meta: {
+          isStartup: true,
+        },
       })
     )
   );
@@ -105,6 +108,7 @@ add_task(async function test_onAction_PREF_CHANGED() {
   });
 
   Assert.ok(feed.wallpaperSetup.calledOnce);
+  Assert.ok(feed.wallpaperSetup.calledWith(false));
 
   Services.prefs.clearUserPref(PREF_WALLPAPERS_ENABLED);
   sandbox.restore();

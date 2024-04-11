@@ -40,7 +40,7 @@ export class WallpaperFeed {
     return lazy.RemoteSettings(...args);
   }
 
-  async wallpaperSetup() {
+  async wallpaperSetup(isStartup = false) {
     const wallpapersEnabled = Services.prefs.getBoolPref(
       PREF_WALLPAPERS_ENABLED
     );
@@ -52,7 +52,7 @@ export class WallpaperFeed {
 
       await this.getBaseAttachment();
       this.wallpaperClient.on("sync", () => this.updateWallpapers());
-      this.updateWallpapers();
+      this.updateWallpapers(isStartup);
     }
   }
 
@@ -69,7 +69,7 @@ export class WallpaperFeed {
     }
   }
 
-  async updateWallpapers() {
+  async updateWallpapers(isStartup = false) {
     const records = await this.wallpaperClient.get();
     if (!records?.length) {
       return;
@@ -89,6 +89,9 @@ export class WallpaperFeed {
       ac.BroadcastToContent({
         type: at.WALLPAPERS_SET,
         data: wallpapers,
+        meta: {
+          isStartup,
+        },
       })
     );
   }
@@ -96,7 +99,7 @@ export class WallpaperFeed {
   async onAction(action) {
     switch (action.type) {
       case at.INIT:
-        await this.wallpaperSetup();
+        await this.wallpaperSetup(true /* isStartup */);
         break;
       case at.UNINIT:
         break;
@@ -104,7 +107,7 @@ export class WallpaperFeed {
         break;
       case at.PREF_CHANGED:
         if (action.data.name === "newtabWallpapers.enabled") {
-          await this.wallpaperSetup();
+          await this.wallpaperSetup(false /* isStartup */);
         }
         break;
       case at.WALLPAPERS_SET:
