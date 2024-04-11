@@ -15,6 +15,7 @@
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/MouseEventBinding.h"
 
 namespace mozilla {
@@ -80,7 +81,8 @@ void PointerEventHandler::UpdateActivePointerState(WidgetMouseEvent* aEvent,
       // In this case we have to know information about available mouse pointers
       sActivePointersIds->InsertOrUpdate(
           aEvent->pointerId,
-          MakeUnique<PointerInfo>(false, aEvent->mInputSource, true, nullptr));
+          MakeUnique<PointerInfo>(false, aEvent->mInputSource, true, false,
+                                  nullptr));
 
       MaybeCacheSpoofedPointerID(aEvent->mInputSource, aEvent->pointerId);
       break;
@@ -94,6 +96,7 @@ void PointerEventHandler::UpdateActivePointerState(WidgetMouseEvent* aEvent,
             pointerEvent->pointerId,
             MakeUnique<PointerInfo>(
                 true, pointerEvent->mInputSource, pointerEvent->mIsPrimary,
+                pointerEvent->mFromTouchEvent,
                 aTargetContent ? aTargetContent->OwnerDoc() : nullptr));
         MaybeCacheSpoofedPointerID(pointerEvent->mInputSource,
                                    pointerEvent->pointerId);
@@ -112,7 +115,8 @@ void PointerEventHandler::UpdateActivePointerState(WidgetMouseEvent* aEvent,
           sActivePointersIds->InsertOrUpdate(
               pointerEvent->pointerId,
               MakeUnique<PointerInfo>(false, pointerEvent->mInputSource,
-                                      pointerEvent->mIsPrimary, nullptr));
+                                      pointerEvent->mIsPrimary,
+                                      pointerEvent->mFromTouchEvent, nullptr));
         } else {
           sActivePointersIds->Remove(pointerEvent->pointerId);
         }
@@ -314,7 +318,7 @@ void PointerEventHandler::ProcessPointerCaptureForTouch(
       continue;
     }
     WidgetPointerEvent event(aEvent->IsTrusted(), eVoidEvent, aEvent->mWidget);
-    InitPointerEventFromTouch(event, *aEvent, *touch, i == 0);
+    InitPointerEventFromTouch(event, *aEvent, *touch);
     CheckPointerCaptureState(&event);
   }
 }
@@ -548,7 +552,7 @@ void PointerEventHandler::InitPointerEventFromMouse(
 /* static */
 void PointerEventHandler::InitPointerEventFromTouch(
     WidgetPointerEvent& aPointerEvent, const WidgetTouchEvent& aTouchEvent,
-    const mozilla::dom::Touch& aTouch, bool aIsPrimary) {
+    const mozilla::dom::Touch& aTouch) {
   // Use mButton/mButtons only when mButton got a value (from pen input)
   int16_t button = aTouchEvent.mMessage == eTouchMove ? MouseButton::eNotPressed
                    : aTouchEvent.mButton != MouseButton::eNotPressed
@@ -560,7 +564,10 @@ void PointerEventHandler::InitPointerEventFromTouch(
                         ? aTouchEvent.mButtons
                         : MouseButtonsFlag::ePrimaryFlag;
 
-  aPointerEvent.mIsPrimary = aIsPrimary;
+  // Only the first touch would be the primary pointer.
+  aPointerEvent.mIsPrimary = aTouchEvent.mMessage == eTouchStart
+                                 ? !HasActiveTouchPointer()
+                                 : GetPointerPrimaryState(aTouch.Identifier());
   aPointerEvent.pointerId = aTouch.Identifier();
   aPointerEvent.mRefPoint = aTouch.mRefPoint;
   aPointerEvent.mModifiers = aTouchEvent.mModifiers;
@@ -681,7 +688,7 @@ void PointerEventHandler::DispatchPointerFromMouseOrTouch(
       WidgetPointerEvent event(touchEvent->IsTrusted(), pointerMessage,
                                touchEvent->mWidget);
 
-      InitPointerEventFromTouch(event, *touchEvent, *touch, i == 0);
+      InitPointerEventFromTouch(event, *touchEvent, *touch);
       event.convertToPointer = touch->convertToPointer = false;
       event.mCoalescedWidgetEvents = touch->mCoalescedWidgetEvents;
       if (aMouseOrTouchEvent->mMessage == eTouchStart) {
@@ -741,6 +748,15 @@ void PointerEventHandler::NotifyDestroyPresContext(
       iter.Remove();
     }
   }
+  // Clean up active pointer info
+  for (auto iter = sActivePointersIds->Iter(); !iter.Done(); iter.Next()) {
+    PointerInfo* data = iter.UserData();
+    MOZ_ASSERT(data, "how could we have a null PointerInfo here?");
+    if (data->mActiveDocument &&
+        data->mActiveDocument->GetPresContext() == aPresContext) {
+      iter.Remove();
+    }
+  }
 }
 
 bool PointerEventHandler::IsDragAndDropEnabled(WidgetMouseEvent& aEvent) {
@@ -768,6 +784,16 @@ bool PointerEventHandler::GetPointerPrimaryState(uint32_t aPointerId) {
   PointerInfo* pointerInfo = nullptr;
   if (sActivePointersIds->Get(aPointerId, &pointerInfo) && pointerInfo) {
     return pointerInfo->mPrimaryState;
+  }
+  return false;
+}
+
+/* static */
+bool PointerEventHandler::HasActiveTouchPointer() {
+  for (auto iter = sActivePointersIds->ConstIter(); !iter.Done(); iter.Next()) {
+    if (iter.Data()->mFromTouchEvent) {
+      return true;
+    }
   }
   return false;
 }
