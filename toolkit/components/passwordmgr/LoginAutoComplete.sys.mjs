@@ -7,7 +7,10 @@
  */
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-import { GenericAutocompleteItem } from "resource://gre/modules/FillHelpers.sys.mjs";
+import {
+  GenericAutocompleteItem,
+  sendFillRequestToParent,
+} from "resource://gre/modules/FillHelpers.sys.mjs";
 
 const lazy = {};
 
@@ -717,7 +720,6 @@ export class LoginAutoComplete {
 
 let gAutoCompleteListener = {
   added: false,
-  fillRequestId: 0,
 
   init() {
     if (!this.added) {
@@ -729,45 +731,11 @@ let gAutoCompleteListener = {
   async observe(subject, topic, data) {
     switch (topic) {
       case "autocomplete-will-enter-text": {
-        await this.sendFillRequestToLoginManagerParent(subject, data);
+        if (subject && subject == lazy.formFillController.controller.input) {
+          await sendFillRequestToParent("LoginManager", subject, data);
+        }
         break;
       }
     }
-  },
-
-  async sendFillRequestToLoginManagerParent(input, comment) {
-    if (!comment) {
-      return;
-    }
-
-    if (input != lazy.formFillController.controller.input) {
-      return;
-    }
-
-    const { fillMessageName, fillMessageData } = JSON.parse(comment ?? "{}");
-    if (!fillMessageName) {
-      return;
-    }
-
-    this.fillRequestId++;
-    const fillRequestId = this.fillRequestId;
-    const child = lazy.LoginManagerChild.forWindow(
-      input.focusedInput.ownerGlobal
-    );
-    const value = await child.sendQuery(fillMessageName, fillMessageData ?? {});
-
-    // skip fill if another fill operation started during await
-    if (fillRequestId != this.fillRequestId) {
-      return;
-    }
-
-    if (typeof value !== "string") {
-      return;
-    }
-
-    // If LoginManagerParent returned a string to fill, we must do it here because
-    // nsAutoCompleteController.cpp already finished it's work before we finished await.
-    input.textValue = value;
-    input.selectTextRange(value.length, value.length);
   },
 };
