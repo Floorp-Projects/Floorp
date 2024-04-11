@@ -35,7 +35,7 @@ class Texture final : public ObjectBase, public ChildOf<Device> {
 
   Texture(Device* const aParent, RawId aId,
           const dom::GPUTextureDescriptor& aDesc);
-  Device* GetParentDevice() { return mParent; }
+  Device* GetDevice() { return mParent; }
   const RawId mId;
   const dom::GPUTextureFormat mFormat;
   const Maybe<uint8_t> mBytesPerBlock;
