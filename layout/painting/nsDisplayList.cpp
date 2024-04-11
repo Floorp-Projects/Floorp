@@ -2573,7 +2573,8 @@ struct ContentComparator {
       // Something weird going on
       return true;
     }
-    return nsContentUtils::CompareTreePosition<TreeKind::Flat>(
+    return content1 != content2 &&
+           nsContentUtils::CompareTreePosition<TreeKind::Flat>(
                content1, content2, mCommonAncestor) < 0;
   }
 };
