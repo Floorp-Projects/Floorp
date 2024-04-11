@@ -25,8 +25,7 @@ void CoalescedTouchData::CreateCoalescedTouchEvent(
     WidgetPointerEvent* event =
         touch->mCoalescedWidgetEvents->mEvents.AppendElement(WidgetPointerEvent(
             aEvent.IsTrusted(), ePointerMove, aEvent.mWidget));
-    PointerEventHandler::InitPointerEventFromTouch(*event, aEvent, *touch,
-                                                   i == 0);
+    PointerEventHandler::InitPointerEventFromTouch(*event, aEvent, *touch);
     event->mFlags.mBubbles = false;
     event->mFlags.mCancelable = false;
   }
@@ -63,8 +62,7 @@ void CoalescedTouchData::Coalesce(const WidgetTouchEvent& aEvent,
             sameTouch->mCoalescedWidgetEvents->mEvents.AppendElement(
                 WidgetPointerEvent(aEvent.IsTrusted(), ePointerMove,
                                    aEvent.mWidget));
-        PointerEventHandler::InitPointerEventFromTouch(*event, aEvent, *touch,
-                                                       i == 0);
+        PointerEventHandler::InitPointerEventFromTouch(*event, aEvent, *touch);
         event->mFlags.mBubbles = false;
         event->mFlags.mCancelable = false;
       }
