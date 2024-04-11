@@ -102,7 +102,7 @@
         },
         "applications": {
           "title": "Application Identifiers",
-          "description": "The application(s) this section applies to (default/not specified is everywhere).",
+          "description": "The application(s) this section applies to (default/not specified is everywhere). `firefox` relates to Firefox Desktop.",
           "type": "array",
           "items": {
             "type": "string",
