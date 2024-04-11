@@ -56,11 +56,6 @@ class FontFaceImpl final {
     void GetUserFontSets(nsTArray<RefPtr<gfxUserFontSet>>& aResult) override;
     already_AddRefed<gfxUserFontSet> GetUserFontSet() const override;
 
-    void CheckUserFontSet() {
-      AutoWriteLock lock(mLock);
-      CheckUserFontSetLocked();
-    }
-
 #ifdef DEBUG
     bool HasUserFontSet(gfxUserFontSet* aFontSet) const {
       AutoReadLock lock(mLock);
@@ -71,6 +66,8 @@ class FontFaceImpl final {
     void AddFontFace(FontFaceImpl* aOwner);
     void RemoveFontFace(FontFaceImpl* aOwner);
     void FindFontFaceOwners(nsTHashSet<FontFace*>& aOwners);
+
+    RWLock& Lock() const MOZ_RETURN_CAPABILITY(mLock) { return mLock; }
 
    protected:
     void CheckUserFontSetLocked() MOZ_REQUIRES(mLock);

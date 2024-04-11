@@ -675,25 +675,40 @@ bool FontFaceImpl::IsInFontFaceSet(FontFaceSetImpl* aFontFaceSet) const {
 void FontFaceImpl::AddFontFaceSet(FontFaceSetImpl* aFontFaceSet) {
   MOZ_ASSERT(!IsInFontFaceSet(aFontFaceSet));
 
-  if (mFontFaceSet == aFontFaceSet) {
-    mInFontFaceSet = true;
+  auto doAddFontFaceSet = [&]() {
+    if (mFontFaceSet == aFontFaceSet) {
+      mInFontFaceSet = true;
+    } else {
+      mOtherFontFaceSets.AppendElement(aFontFaceSet);
+    }
+  };
+
+  if (mUserFontEntry) {
+    AutoWriteLock lock(mUserFontEntry->Lock());
+    doAddFontFaceSet();
   } else {
-    mOtherFontFaceSets.AppendElement(aFontFaceSet);
+    doAddFontFaceSet();
   }
 }
 
 void FontFaceImpl::RemoveFontFaceSet(FontFaceSetImpl* aFontFaceSet) {
   MOZ_ASSERT(IsInFontFaceSet(aFontFaceSet));
 
-  if (mFontFaceSet == aFontFaceSet) {
-    mInFontFaceSet = false;
-  } else {
-    mOtherFontFaceSets.RemoveElement(aFontFaceSet);
-  }
+  auto doRemoveFontFaceSet = [&]() {
+    if (mFontFaceSet == aFontFaceSet) {
+      mInFontFaceSet = false;
+    } else {
+      mOtherFontFaceSets.RemoveElement(aFontFaceSet);
+    }
+  };
 
-  // The caller should be holding a strong reference to the FontFaceSetImpl.
   if (mUserFontEntry) {
-    mUserFontEntry->CheckUserFontSet();
+    AutoWriteLock lock(mUserFontEntry->Lock());
+    doRemoveFontFaceSet();
+    // The caller should be holding a strong reference to the FontFaceSetImpl.
+    mUserFontEntry->CheckUserFontSetLocked();
+  } else {
+    doRemoveFontFaceSet();
   }
 }
 
