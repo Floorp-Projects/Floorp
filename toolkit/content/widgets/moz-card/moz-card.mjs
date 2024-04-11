@@ -3,7 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { html, ifDefined } from "chrome://global/content/vendor/lit.all.mjs";
+import {
+  html,
+  ifDefined,
+  when,
+} from "chrome://global/content/vendor/lit.all.mjs";
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 
 /**
@@ -18,6 +22,7 @@ import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
  *
  *
  * @property {string} heading - The heading text that will be used for the card.
+ * @property {string} icon - (optional) A flag to indicate the header should include an icon
  * @property {string} type - (optional) The type of card. No type specified
  *   will be the default card. The other available type is "accordion"
  * @slot content - The content to show inside of the card.
@@ -31,6 +36,7 @@ export default class MozCard extends MozLitElement {
 
   static properties = {
     heading: { type: String },
+    icon: { type: Boolean },
     type: { type: String, reflect: true },
     expanded: { type: Boolean },
   };
@@ -47,9 +53,15 @@ export default class MozCard extends MozLitElement {
     }
     return html`
       <div id="heading-wrapper">
-        ${this.type == "accordion"
-          ? html` <div class="chevron-icon"></div>`
-          : ""}
+        ${when(
+          this.type == "accordion",
+          () => html`<div class="chevron-icon"></div>`
+        )}
+        ${when(
+          this.icon,
+          () =>
+            html`<div part="icon" id="heading-icon" role="presentation"></div>`
+        )}
         <span id="heading">${this.heading}</span>
       </div>
     `;

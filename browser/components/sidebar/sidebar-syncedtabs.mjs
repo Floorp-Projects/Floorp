@@ -88,10 +88,17 @@ class SyncedTabsInSidebar extends SidebarPage {
    * The template shown for a device that has tabs.
    *
    * @param {string} deviceName
+   * @param {string} deviceType
+   * @param {Array} tabItems
    * @returns {TemplateResult}
    */
-  deviceTemplate(deviceName, tabItems) {
-    return html`<moz-card type="accordion" .heading=${deviceName}>
+  deviceTemplate(deviceName, deviceType, tabItems) {
+    return html`<moz-card
+      type="accordion"
+      .heading=${deviceName}
+      icon
+      class=${deviceType}
+    >
       <fxview-tab-list
         compactRows
         .tabItems=${ifDefined(tabItems)}
@@ -106,11 +113,14 @@ class SyncedTabsInSidebar extends SidebarPage {
    * The template shown for a device that has no tabs.
    *
    * @param {string} deviceName
+   * @param {string} deviceType
    * @returns {TemplateResult}
    */
-  noDeviceTabsTemplate(deviceName) {
+  noDeviceTabsTemplate(deviceName, deviceType) {
     return html`<moz-card
       .heading=${deviceName}
+      icon
+      class=${deviceType}
       data-l10n-id="firefoxview-syncedtabs-device-notabs"
     >
     </moz-card>`;
@@ -121,11 +131,14 @@ class SyncedTabsInSidebar extends SidebarPage {
    * current search query.
    *
    * @param {string} deviceName
+   * @param {string} deviceType
    * @returns {TemplateResult}
    */
-  noSearchResultsTemplate(deviceName) {
+  noSearchResultsTemplate(deviceName, deviceType) {
     return html`<moz-card
       .heading=${deviceName}
+      icon
+      class=${deviceType}
       data-l10n-id="firefoxview-search-results-empty"
       data-l10n-args=${JSON.stringify({
         query: escapeHtmlEntities(this.controller.searchQuery),
@@ -141,13 +154,13 @@ class SyncedTabsInSidebar extends SidebarPage {
    */
   deviceListTemplate() {
     return Object.values(this.controller.getRenderInfo()).map(
-      ({ name: deviceName, tabItems, tabs }) => {
+      ({ name: deviceName, deviceType, tabItems, tabs }) => {
         if (tabItems.length) {
-          return this.deviceTemplate(deviceName, tabItems);
+          return this.deviceTemplate(deviceName, deviceType, tabItems);
         } else if (tabs.length) {
-          return this.noSearchResultsTemplate(deviceName);
+          return this.noSearchResultsTemplate(deviceName, deviceType);
         }
-        return this.noDeviceTabsTemplate(deviceName);
+        return this.noDeviceTabsTemplate(deviceName, deviceType);
       }
     );
   }

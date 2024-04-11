@@ -11,4 +11,17 @@
 
 moz-card {
   margin-block-start: var(--space-medium);
+
+  &.phone::part(icon),
+  &.mobile::part(icon) {
+    background-image: url('chrome://browser/skin/device-phone.svg');
+  }
+
+  &.desktop::part(icon) {
+    background-image: url('chrome://browser/skin/device-desktop.svg');
+  }
+
+  &.tablet::part(icon) {
+    background-image: url('chrome://browser/skin/device-tablet.svg');
+  }
 }

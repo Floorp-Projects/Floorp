@@ -13,6 +13,11 @@
 
 <body>
   <p id="display"></p>
+  <style>
+    moz-card.withHeadingIcon::part(icon) {
+      background-image: url("chrome://browser/skin/preferences/category-general.svg");
+    }
+  </style>
   <div id="content">
     <moz-card id="default-card" data-l10n-id="test-id-1" data-l10n-attrs="heading">
       <div>TEST</div>
@@ -22,6 +27,12 @@
     <moz-card id="accordion-card" data-l10n-id="test-id-2" data-l10n-attrs="heading" heading="accordion heading"
       type="accordion">
       <div>accordion test content</div>
+    </moz-card>
+    <hr />
+
+    <moz-card id="heading-icon-card" data-l10n-id="test-id-3" data-l10n-attrs="heading" heading="heading with icon"
+      type="accordion" icon class="withHeadingIcon">
+      <div>heading icon test content</div>
     </moz-card>
     <hr />
 
@@ -62,6 +73,10 @@
       ok(card.detailsEl, "The details element should exist");
       ok(card.detailsEl.querySelector("summary"), "There should be a summary element within the details element");
       ok(card.detailsEl.querySelector("summary").querySelector(".chevron-icon"), "There should be a chevron icon div within the summary element");
+    }
+
+    function assertHeadingIconCardProperties(card) {
+      ok(card.shadowRoot.querySelector("#heading-wrapper").querySelector("#heading-icon"), "The heading icon element should exist");
     }
 
     async function generateCard(values) {
@@ -145,6 +160,54 @@
       assertAccordionCardProperties(accordionCard,
         {
           "data-l10n-id": "generated-id-2",
+          "data-l10n-attrs": "heading",
+          headingText: testHeading,
+          contentText: generatedSlotText,
+        }
+      );
+    });
+
+    add_task(async function testHeadingIconCard() {
+      assertBasicProperties(document.getElementById("heading-icon-card"),
+        {
+          "data-l10n-id": "test-id-3",
+          "data-l10n-attrs": "heading",
+          contentText: "heading icon test content",
+          headingText: "heading with icon",
+        }
+      );
+      assertHeadingIconCardProperties(document.getElementById("heading-icon-card"),
+        {
+          "data-l10n-id": "test-id-3",
+          "data-l10n-attrs": "heading",
+          contentText: "heading icon test content",
+          headingText: "heading with icon",
+        }
+      );
+
+      let headingIconCard = await generateCard(
+        {
+          class: "heading-icon-class",
+          type: "accordion",
+          icon: "",
+          id: "generated-heading-icon-card",
+          "data-l10n-id": "generated-id-3",
+          "data-l10n-attrs": "heading",
+          heading: testHeading
+        }
+      );
+
+      assertBasicProperties(headingIconCard,
+        {
+          "data-l10n-id": "generated-id-3",
+          "data-l10n-attrs": "heading",
+          headingText: testHeading,
+          contentText: generatedSlotText,
+        }
+      );
+      assertHeadingIconCardProperties(headingIconCard,
+        {
+          "data-l10n-id": "generated-id-3",
           "data-l10n-attrs": "heading",
           headingText: testHeading,
           contentText: generatedSlotText,
