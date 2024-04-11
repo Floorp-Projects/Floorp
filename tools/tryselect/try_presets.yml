@@ -17,6 +17,25 @@ android-components:
         - "'build-components"
         - "'test-components"
 
+android-geckoview:
+    selector: fuzzy
+    # Show chunk numbers so we can query with -1$ / -2$ etc.
+    show_chunk_numbers: true
+    # disable_target_task_filter: true
+    # Run taskgraph full so all tasks are available
+    full: true
+    description: >-
+        Run android-geckoview builds and tests.
+    query:
+        # Lint
+        - "^source-test-mozlint android-lints$ | eslint$ | rejected-words$ | file-perm$ | file-whitespace$"
+        # Tests
+        - "^test-android-em-7.0-x86_64-qr/debug-isolated-process-geckoview- 'test-verify | cppunittest-1proc$ | gtest-1proc$ | junit$ | junit-fis$ | junit-nofis$ | junit-nofis-ship$ | xpcshell-1$ | xpcshell-2$"
+        - "^test-android-em-7.0-x86_64-qr/debug-isolated-process-geckoview-mochitest- media-1$ | media-2$ | plain-1$ | plain-2$ | plain-3$ | plain-4$ | plain-5$ | plain-gpu$"
+        - "^test-android-em-7.0-x86_64-qr/opt-geckoview- xpcshell-1$ | xpcshell-2$ | cppunittest-1proc$ | gtest-1proc$ | junit-fis$ | junit-nofis-ship$ | junit-nofis$ | junit$ | mochitest-media$"
+        - "^test-android-em-7.0-x86_64-qr/opt-geckoview-mochitest- media$ | plain-1$ | plain-2$ | plain-3$ | plain-4$ | plain-5$ | plain-gpu$"
+        - "^test-android-em-7.0-x86_64-qr/opt-geckoview-test-verify"
+
 builds:
     selector: fuzzy
     description: >-
