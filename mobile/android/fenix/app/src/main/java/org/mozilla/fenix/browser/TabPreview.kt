@@ -101,6 +101,9 @@ class TabPreview @JvmOverloads constructor(
                                 onTabsButtonClick = {
                                     // no-op
                                 },
+                                onMenuButtonClick = {
+                                    // no-op
+                                },
                             )
                         }
                     }

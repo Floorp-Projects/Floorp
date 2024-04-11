@@ -127,6 +127,13 @@ class ExternalAppBrowserFragment : BaseBrowserFragment() {
                                     ToolbarMenu.Item.OpenInFenix,
                                 )
                             },
+                            onMenuButtonClick = {
+                                nav(
+                                    R.id.externalAppBrowserFragment,
+                                    ExternalAppBrowserFragmentDirections
+                                        .actionGlobalMenuDialogFragment(),
+                                )
+                            },
                         )
                     }
                 }
