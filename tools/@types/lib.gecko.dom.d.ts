@@ -1,6 +1,10 @@
-/////////////////////////////
-/// Window APIs
-/////////////////////////////
+/**
+ * NOTE: This file is a work in progress.
+ * Content was generated using a heavily patched TypeScript-DOM-lib-generator.
+ *
+ * Until this whole process is automated, when changing a WebIDL interface,
+ * manually updating this file is *not* required (but doesn't hurt either).
+ */
 
 /// <reference no-default-lib="true" />
 /// <reference types="gecko" />
