@@ -5,6 +5,6 @@
     <string name="mozac_feature_qr_scanner">QR սկաներ</string>
 
     <!-- Text shown if no camera is available on the device and the QR scanner cannot be displayed. -->
-    <string name="mozac_feature_qr_scanner_no_camera">Սարքում չկա տեսախցիկ</string>
+    <string name="mozac_feature_qr_scanner_no_camera">Սարքում տեսախցիկը հասնելի չէ</string>
 
 </resources>
