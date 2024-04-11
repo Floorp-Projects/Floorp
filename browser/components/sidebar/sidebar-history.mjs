@@ -2,8 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 import { html, when } from "chrome://global/content/vendor/lit.all.mjs";
+
+import { SidebarPage } from "./sidebar-page.mjs";
 
 // eslint-disable-next-line import/no-unassigned-import
 import "chrome://browser/content/firefoxview/fxview-search-textbox.mjs";
@@ -16,7 +17,7 @@ import { navigateToLink } from "chrome://browser/content/firefoxview/helpers.mjs
 
 const NEVER_REMEMBER_HISTORY_PREF = "browser.privatebrowsing.autostart";
 
-export class SidebarHistory extends MozLitElement {
+export class SidebarHistory extends SidebarPage {
   constructor() {
     super();
     this._started = false;
@@ -171,10 +172,7 @@ export class SidebarHistory extends MozLitElement {
 
   render() {
     return html`
-      <link
-        rel="stylesheet"
-        href="chrome://browser/content/sidebar/sidebar.css"
-      />
+      ${this.stylesheet()}
       <div class="container">
         <div class="history-sort-option">
           <div class="history-sort-option">

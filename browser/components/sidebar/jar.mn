@@ -8,4 +8,7 @@ browser.jar:
     content/browser/sidebar/sidebar-launcher.mjs
     content/browser/sidebar/sidebar-history.html
     content/browser/sidebar/sidebar-history.mjs
+    content/browser/sidebar/sidebar-page.mjs
+    content/browser/sidebar/sidebar-syncedtabs.html
+    content/browser/sidebar/sidebar-syncedtabs.mjs
     content/browser/sidebar/sidebar.css

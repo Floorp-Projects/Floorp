@@ -1,0 +1,45 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src resource: chrome:; object-src 'none'; img-src data: chrome:;"
+    />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="localization" href="branding/brand.ftl" />
+    <link rel="localization" href="browser/firefoxView.ftl" />
+    <link rel="localization" href="toolkit/branding/accounts.ftl" />
+    <link rel="localization" href="toolkit/branding/brandings.ftl" />
+    <link rel="stylesheet" href="chrome://global/skin/global.css" />
+    <script
+      type="module"
+      src="chrome://global/content/elements/moz-card.mjs"
+    ></script>
+    <script
+      type="module"
+      src="chrome://browser/content/firefoxview/fxview-empty-state.mjs"
+    ></script>
+    <script
+      type="module"
+      src="chrome://browser/content/firefoxview/fxview-search-textbox.mjs"
+    ></script>
+    <script
+      type="module"
+      src="chrome://browser/content/firefoxview/fxview-tab-list.mjs"
+    ></script>
+    <script
+      type="module"
+      src="chrome://browser/content/sidebar/sidebar-syncedtabs.mjs"
+    ></script>
+    <script src="chrome://browser/content/contentTheme.js"></script>
+  </head>
+
+  <body>
+    <sidebar-syncedtabs />
+  </body>
+</html>
