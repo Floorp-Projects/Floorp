@@ -11829,8 +11829,6 @@ class MWasmRefIsSubtypeOfAbstract : public MUnaryInstruction,
     return hn;
   }
 
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
-
   MDefinition* foldsTo(TempAllocator& alloc) override;
 };
 
@@ -11872,8 +11870,6 @@ class MWasmRefIsSubtypeOfConcrete : public MBinaryInstruction,
     hn = addU64ToHash(hn, destType().packed().bits());
     return hn;
   }
-
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
 
   MDefinition* foldsTo(TempAllocator& alloc) override;
 };
