@@ -48,8 +48,10 @@ function getBaseUrl(origin) {
  * the bounce.
  * @param {string} [options.bounceOrigin] - The origin of the bounce URL.
  * @param {string} [options.targetURL] - URL to redirect to after the bounce.
- * @param {("cookie"|null)} [options.setState] - What type of state should be set during
- * the bounce. No state by default.
+ * @param {('cookie-server'|'cookie-client'|'localStorage')} [options.setState]
+ * Type of state to set during the redirect. Defaults to non stateful redirect.
+ * @param {boolean} [options.setStateSameSiteFrame=false] - Whether to set the
+ * state in a sub frame that is same site to the top window.
  * @param {number} [options.statusCode] - HTTP status code to use for server
  * side redirect. Only applies to bounceType == "server".
  * @param {number} [options.redirectDelayMS] - How long to wait before
@@ -62,6 +64,7 @@ function getBounceURL({
   bounceOrigin = ORIGIN_TRACKER,
   targetURL = new URL(getBaseUrl(ORIGIN_B) + "file_start.html"),
   setState = null,
+  setStateSameSiteFrame = false,
   statusCode = 302,
   redirectDelayMS = 50,
 }) {
@@ -78,6 +81,9 @@ function getBounceURL({
   searchParams.set("target", targetURL.href);
   if (setState) {
     searchParams.set("setState", setState);
+  }
+  if (setStateSameSiteFrame) {
+    searchParams.set("setStateSameSiteFrame", setStateSameSiteFrame);
   }
 
   if (bounceType == "server") {
@@ -141,21 +147,24 @@ async function waitForRecordBounces(browser) {
  * or server side redirect.
  * @param {('cookie-server'|'cookie-client'|'localStorage')} [options.setState]
  * Type of state to set during the redirect. Defaults to non stateful redirect.
- * @param {boolean} [options.expectCandidate=true] - Expect the redirecting site to be
- * identified as a bounce tracker (candidate).
- * @param {boolean} [options.expectPurge=true] - Expect the redirecting site to have
- * its storage purged.
+ * @param {boolean} [options.setStateSameSiteFrame=false] - Whether to set the
+ * state in a sub frame that is same site to the top window.
+ * @param {boolean} [options.expectCandidate=true] - Expect the redirecting site
+ * to be identified as a bounce tracker (candidate).
+ * @param {boolean} [options.expectPurge=true] - Expect the redirecting site to
+ * have its storage purged.
  * @param {OriginAttributes} [options.originAttributes={}] - Origin attributes
  * to use for the test. This determines whether the test is run in normal
- * browsing, a private window or a container tab. By default the test is run
- * in normal browsing.
- * @param {function} [options.postBounceCallback] - Optional function to run after the
- * bounce has completed.
+ * browsing, a private window or a container tab. By default the test is run in
+ * normal browsing.
+ * @param {function} [options.postBounceCallback] - Optional function to run
+ * after the bounce has completed.
  */
 async function runTestBounce(options = {}) {
   let {
     bounceType,
     setState = null,
+    setStateSameSiteFrame = false,
     expectCandidate = true,
     expectPurge = true,
     originAttributes = {},
@@ -208,7 +217,7 @@ async function runTestBounce(options = {}) {
   // Navigate through the bounce chain.
   await navigateLinkClick(
     browser,
-    getBounceURL({ bounceType, targetURL, setState })
+    getBounceURL({ bounceType, targetURL, setState, setStateSameSiteFrame })
   );
 
   // Wait for the final site to be loaded which complete the BounceTrackingRecord.
