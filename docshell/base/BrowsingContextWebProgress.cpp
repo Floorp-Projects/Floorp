@@ -170,7 +170,10 @@ void BrowsingContextWebProgress::ContextReplaced(
 already_AddRefed<BounceTrackingState>
 BrowsingContextWebProgress::GetBounceTrackingState() {
   if (!mBounceTrackingState) {
-    mBounceTrackingState = BounceTrackingState::GetOrCreate(this);
+    nsresult rv = NS_OK;
+    mBounceTrackingState = BounceTrackingState::GetOrCreate(this, rv);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "Failed to get BounceTrackingState.");
   }
   return do_AddRef(mBounceTrackingState);
 }

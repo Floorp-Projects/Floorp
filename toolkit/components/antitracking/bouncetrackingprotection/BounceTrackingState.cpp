@@ -29,6 +29,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "nsTHashMap.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/WindowContext.h"
 
 namespace mozilla {
 
@@ -54,8 +55,13 @@ BounceTrackingState::~BounceTrackingState() {
 
 // static
 already_AddRefed<BounceTrackingState> BounceTrackingState::GetOrCreate(
-    dom::BrowsingContextWebProgress* aWebProgress) {
-  MOZ_ASSERT(aWebProgress);
+    dom::BrowsingContextWebProgress* aWebProgress, nsresult& aRv) {
+  aRv = NS_OK;
+
+  if (!aWebProgress) {
+    aRv = NS_ERROR_INVALID_ARG;
+    return nullptr;
+  }
 
   if (!ShouldCreateBounceTrackingStateForWebProgress(aWebProgress)) {
     return nullptr;
@@ -73,8 +79,8 @@ already_AddRefed<BounceTrackingState> BounceTrackingState::GetOrCreate(
     sStorageObserver = new BounceTrackingStorageObserver();
     ClearOnShutdown(&sStorageObserver);
 
-    DebugOnly<nsresult> rv = sStorageObserver->Init();
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to init storage observer");
+    aRv = sStorageObserver->Init();
+    NS_ENSURE_SUCCESS(aRv, nullptr);
   }
 
   dom::BrowsingContext* browsingContext = aWebProgress->GetBrowsingContext();
@@ -90,10 +96,8 @@ already_AddRefed<BounceTrackingState> BounceTrackingState::GetOrCreate(
       }));
 
   if (createdNew) {
-    nsresult rv = bounceTrackingState->Init(aWebProgress);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return nullptr;
-    }
+    aRv = bounceTrackingState->Init(aWebProgress);
+    NS_ENSURE_SUCCESS(aRv, nullptr);
   }
 
   return bounceTrackingState.forget();
@@ -611,6 +615,37 @@ nsresult BounceTrackingState::OnCookieWrite(const nsACString& aSiteHost) {
   }
 
   mBounceTrackingRecord->AddStorageAccessHost(aSiteHost);
+  return NS_OK;
+}
+
+nsresult BounceTrackingState::OnStorageAccess(nsIPrincipal* aPrincipal) {
+  NS_ENSURE_ARG_POINTER(aPrincipal);
+  NS_ENSURE_TRUE(aPrincipal->GetIsContentPrincipal(), NS_ERROR_FAILURE);
+
+  if (MOZ_LOG_TEST(gBounceTrackingProtectionLog, LogLevel::Debug)) {
+    nsAutoCString origin;
+    nsresult rv = aPrincipal->GetOrigin(origin);
+    if (NS_FAILED(rv)) {
+      origin = "err";
+    }
+    MOZ_LOG(gBounceTrackingProtectionLog, LogLevel::Debug,
+            ("%s: origin: %s, mBounceTrackingRecord: %s", __FUNCTION__,
+             origin.get(),
+             mBounceTrackingRecord ? mBounceTrackingRecord->Describe().get()
+                                   : "null"));
+  }
+
+  if (!mBounceTrackingRecord) {
+    return NS_OK;
+  }
+
+  nsAutoCString siteHost;
+  nsresult rv = aPrincipal->GetBaseDomain(siteHost);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(!siteHost.IsEmpty(), NS_ERROR_FAILURE);
+
+  mBounceTrackingRecord->AddStorageAccessHost(siteHost);
+
   return NS_OK;
 }
 
