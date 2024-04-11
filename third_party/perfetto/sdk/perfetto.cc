@@ -572,7 +572,7 @@ struct std::hash<::perfetto::base::StringView> {
 
 #if !PERFETTO_BUILDFLAG(PERFETTO_COMPILER_GCC)
 // MinGW has these. clang-cl and MSVC, which use just the Windows SDK, don't.
-using uid_t = unsigned int;
+using uid_t = int;
 using pid_t = int;
 #endif  // !GCC
 
@@ -583,6 +583,11 @@ using ssize_t = long;
 #endif  // _WIN64
 
 #endif  // OS_WIN
+
+#if PERFETTO_BUILDFLAG(PERFETTO_OS_ANDROID) && !defined(AID_SHELL)
+// From libcutils' android_filesystem_config.h .
+#define AID_SHELL 2000
+#endif
 
 namespace perfetto {
 namespace base {
@@ -2195,7 +2200,11 @@ base::Status SetFilePermissions(const std::string& path,
                                 const std::string& group_name,
                                 const std::string& mode_bits);
 
-std::optional<size_t> GetFileSize(const std::string& path);
+// Returns the size of the file located at |path|, or nullopt in case of error.
+std::optional<uint64_t> GetFileSize(const std::string& path);
+
+// Returns the size of the open file |fd|, or nullopt in case of error.
+std::optional<uint64_t> GetFileSize(PlatformHandle fd);
 
 }  // namespace base
 }  // namespace perfetto
@@ -2611,33 +2620,37 @@ base::Status SetFilePermissions(const std::string& file_path,
 #endif
 }
 
-std::optional<size_t> GetFileSize(const std::string& file_path) {
+std::optional<uint64_t> GetFileSize(const std::string& file_path) {
 #if PERFETTO_BUILDFLAG(PERFETTO_OS_WIN)
   // This does not use base::OpenFile to avoid getting an exclusive lock.
-  HANDLE file =
+  base::ScopedPlatformHandle fd(
       CreateFileA(file_path.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr,
-                  OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
-  if (file == INVALID_HANDLE_VALUE) {
-    return std::nullopt;
-  }
-  LARGE_INTEGER file_size;
-  file_size.QuadPart = 0;
-  std::optional<size_t> res;
-  if (GetFileSizeEx(file, &file_size)) {
-    res = static_cast<size_t>(file_size.QuadPart);
-  }
-  CloseHandle(file);
-  return res;
+                  OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
 #else
   base::ScopedFile fd(base::OpenFile(file_path, O_RDONLY | O_CLOEXEC));
+#endif
   if (!fd) {
     return std::nullopt;
   }
-  struct stat buf;
-  if (fstat(*fd, &buf) == -1) {
+  return GetFileSize(*fd);
+}
+
+std::optional<uint64_t> GetFileSize(PlatformHandle fd) {
+#if PERFETTO_BUILDFLAG(PERFETTO_OS_WIN)
+  LARGE_INTEGER file_size;
+  file_size.QuadPart = 0;
+  if (!GetFileSizeEx(fd, &file_size)) {
     return std::nullopt;
   }
-  return static_cast<size_t>(buf.st_size);
+  static_assert(sizeof(decltype(file_size.QuadPart)) <= sizeof(uint64_t));
+  return static_cast<uint64_t>(file_size.QuadPart);
+#else
+  struct stat buf {};
+  if (fstat(fd, &buf) == -1) {
+    return std::nullopt;
+  }
+  static_assert(sizeof(decltype(buf.st_size)) <= sizeof(uint64_t));
+  return static_cast<uint64_t>(buf.st_size);
 #endif
 }
 
@@ -5067,41 +5080,6 @@ ScopedPlatformHandle OpenFileForMmap(const char* fname) {
 #endif
 }
 
-std::optional<size_t> GetPlatformHandleFileSize(PlatformHandle file) {
-#if PERFETTO_BUILDFLAG(PERFETTO_OS_LINUX) ||   \
-    PERFETTO_BUILDFLAG(PERFETTO_OS_ANDROID) || \
-    PERFETTO_BUILDFLAG(PERFETTO_OS_APPLE)
-  off_t file_size_offset = lseek(file, 0, SEEK_END);
-  if (file_size_offset <= 0) {
-    return std::nullopt;
-  }
-
-  lseek(file, 0, SEEK_SET);
-
-  size_t file_size = static_cast<size_t>(file_size_offset);
-  if (static_cast<off_t>(file_size) != file_size_offset) {
-    return std::nullopt;
-  }
-  return file_size;
-#elif PERFETTO_BUILDFLAG(PERFETTO_OS_WIN)
-  LARGE_INTEGER fs;
-  fs.QuadPart = 0;
-  if (!GetFileSizeEx(file, &fs)) {
-    return std::nullopt;
-  }
-
-  size_t file_size = static_cast<size_t>(fs.QuadPart);
-  if (static_cast<decltype(fs.QuadPart)>(file_size) != fs.QuadPart) {
-    return std::nullopt;
-  }
-  return file_size;
-#else
-  // mmap is not supported. This does not matter.
-  base::ignore_result(file);
-  return std::nullopt;
-#endif
-}
-
 }  // namespace
 
 ScopedMmap::ScopedMmap(ScopedMmap&& other) noexcept {
@@ -5109,6 +5087,9 @@ ScopedMmap::ScopedMmap(ScopedMmap&& other) noexcept {
 }
 
 ScopedMmap& ScopedMmap::operator=(ScopedMmap&& other) noexcept {
+  if (this == &other) {
+    return *this;
+  }
   reset();
   std::swap(ptr_, other.ptr_);
   std::swap(length_, other.length_);
@@ -5199,11 +5180,15 @@ ScopedMmap ReadMmapWholeFile(const char* fname) {
   if (!file) {
     return ScopedMmap();
   }
-  std::optional<size_t> file_size = GetPlatformHandleFileSize(file.get());
+  std::optional<uint64_t> file_size = GetFileSize(file.get());
   if (!file_size.has_value()) {
     return ScopedMmap();
   }
-  return ScopedMmap::FromHandle(std::move(file), *file_size);
+  size_t size = static_cast<size_t>(*file_size);
+  if (static_cast<uint64_t>(size) != *file_size) {
+    return ScopedMmap();
+  }
+  return ScopedMmap::FromHandle(std::move(file), size);
 }
 
 }  // namespace perfetto::base
@@ -10397,6 +10382,11 @@ void TypedProtoDecoderBase::ParseAllFields() {
       //    supposed to return the last value of X, not the first one.
       // This is so that the RepeatedFieldIterator will iterate in the right
       // order, see comments on RepeatedFieldIterator.
+      if (num_fields_ > size_) {
+        ExpandHeapStorage();
+        fld = &fields_[field_id];
+      }
+
       PERFETTO_DCHECK(size_ < capacity_);
       fields_[size_++] = *fld;
       *fld = std::move(res.field);
@@ -15125,6 +15115,210 @@ void AndroidGameInterventionListConfig::Serialize(::protozero::Message* msg) con
 #if defined(__GNUC__) || defined(__clang__)
 #pragma GCC diagnostic pop
 #endif
+// gen_amalgamated begin source: gen/protos/perfetto/config/android/android_input_event_config.gen.cc
+// gen_amalgamated expanded: #include "perfetto/protozero/gen_field_helpers.h"
+// gen_amalgamated expanded: #include "perfetto/protozero/message.h"
+// gen_amalgamated expanded: #include "perfetto/protozero/packed_repeated_fields.h"
+// gen_amalgamated expanded: #include "perfetto/protozero/proto_decoder.h"
+// gen_amalgamated expanded: #include "perfetto/protozero/scattered_heap_buffer.h"
+// DO NOT EDIT. Autogenerated by Perfetto cppgen_plugin
+#if defined(__GNUC__) || defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfloat-equal"
+#endif
+// gen_amalgamated expanded: #include "protos/perfetto/config/android/android_input_event_config.gen.h"
+
+namespace perfetto {
+namespace protos {
+namespace gen {
+
+AndroidInputEventConfig::AndroidInputEventConfig() = default;
+AndroidInputEventConfig::~AndroidInputEventConfig() = default;
+AndroidInputEventConfig::AndroidInputEventConfig(const AndroidInputEventConfig&) = default;
+AndroidInputEventConfig& AndroidInputEventConfig::operator=(const AndroidInputEventConfig&) = default;
+AndroidInputEventConfig::AndroidInputEventConfig(AndroidInputEventConfig&&) noexcept = default;
+AndroidInputEventConfig& AndroidInputEventConfig::operator=(AndroidInputEventConfig&&) = default;
+
+bool AndroidInputEventConfig::operator==(const AndroidInputEventConfig& other) const {
+  return ::protozero::internal::gen_helpers::EqualsField(unknown_fields_, other.unknown_fields_)
+   && ::protozero::internal::gen_helpers::EqualsField(mode_, other.mode_)
+   && ::protozero::internal::gen_helpers::EqualsField(rules_, other.rules_)
+   && ::protozero::internal::gen_helpers::EqualsField(trace_dispatcher_input_events_, other.trace_dispatcher_input_events_)
+   && ::protozero::internal::gen_helpers::EqualsField(trace_dispatcher_window_dispatch_, other.trace_dispatcher_window_dispatch_);
+}
+
+int AndroidInputEventConfig::rules_size() const { return static_cast<int>(rules_.size()); }
+void AndroidInputEventConfig::clear_rules() { rules_.clear(); }
+AndroidInputEventConfig_TraceRule* AndroidInputEventConfig::add_rules() { rules_.emplace_back(); return &rules_.back(); }
+bool AndroidInputEventConfig::ParseFromArray(const void* raw, size_t size) {
+  rules_.clear();
+  unknown_fields_.clear();
+  bool packed_error = false;
+
+  ::protozero::ProtoDecoder dec(raw, size);
+  for (auto field = dec.ReadField(); field.valid(); field = dec.ReadField()) {
+    if (field.id() < _has_field_.size()) {
+      _has_field_.set(field.id());
+    }
+    switch (field.id()) {
+      case 1 /* mode */:
+        field.get(&mode_);
+        break;
+      case 2 /* rules */:
+        rules_.emplace_back();
+        rules_.back().ParseFromArray(field.data(), field.size());
+        break;
+      case 3 /* trace_dispatcher_input_events */:
+        field.get(&trace_dispatcher_input_events_);
+        break;
+      case 4 /* trace_dispatcher_window_dispatch */:
+        field.get(&trace_dispatcher_window_dispatch_);
+        break;
+      default:
+        field.SerializeAndAppendTo(&unknown_fields_);
+        break;
+    }
+  }
+  return !packed_error && !dec.bytes_left();
+}
+
+std::string AndroidInputEventConfig::SerializeAsString() const {
+  ::protozero::internal::gen_helpers::MessageSerializer msg;
+  Serialize(msg.get());
+  return msg.SerializeAsString();
+}
+
+std::vector<uint8_t> AndroidInputEventConfig::SerializeAsArray() const {
+  ::protozero::internal::gen_helpers::MessageSerializer msg;
+  Serialize(msg.get());
+  return msg.SerializeAsArray();
+}
+
+void AndroidInputEventConfig::Serialize(::protozero::Message* msg) const {
+  // Field 1: mode
+  if (_has_field_[1]) {
+    ::protozero::internal::gen_helpers::SerializeVarInt(1, mode_, msg);
+  }
+
+  // Field 2: rules
+  for (auto& it : rules_) {
+    it.Serialize(msg->BeginNestedMessage<::protozero::Message>(2));
+  }
+
+  // Field 3: trace_dispatcher_input_events
+  if (_has_field_[3]) {
+    ::protozero::internal::gen_helpers::SerializeTinyVarInt(3, trace_dispatcher_input_events_, msg);
+  }
+
+  // Field 4: trace_dispatcher_window_dispatch
+  if (_has_field_[4]) {
+    ::protozero::internal::gen_helpers::SerializeTinyVarInt(4, trace_dispatcher_window_dispatch_, msg);
+  }
+
+  protozero::internal::gen_helpers::SerializeUnknownFields(unknown_fields_, msg);
+}
+
+
+AndroidInputEventConfig_TraceRule::AndroidInputEventConfig_TraceRule() = default;
+AndroidInputEventConfig_TraceRule::~AndroidInputEventConfig_TraceRule() = default;
+AndroidInputEventConfig_TraceRule::AndroidInputEventConfig_TraceRule(const AndroidInputEventConfig_TraceRule&) = default;
+AndroidInputEventConfig_TraceRule& AndroidInputEventConfig_TraceRule::operator=(const AndroidInputEventConfig_TraceRule&) = default;
+AndroidInputEventConfig_TraceRule::AndroidInputEventConfig_TraceRule(AndroidInputEventConfig_TraceRule&&) noexcept = default;
+AndroidInputEventConfig_TraceRule& AndroidInputEventConfig_TraceRule::operator=(AndroidInputEventConfig_TraceRule&&) = default;
+
+bool AndroidInputEventConfig_TraceRule::operator==(const AndroidInputEventConfig_TraceRule& other) const {
+  return ::protozero::internal::gen_helpers::EqualsField(unknown_fields_, other.unknown_fields_)
+   && ::protozero::internal::gen_helpers::EqualsField(trace_level_, other.trace_level_)
+   && ::protozero::internal::gen_helpers::EqualsField(match_all_packages_, other.match_all_packages_)
+   && ::protozero::internal::gen_helpers::EqualsField(match_any_packages_, other.match_any_packages_)
+   && ::protozero::internal::gen_helpers::EqualsField(match_secure_, other.match_secure_)
+   && ::protozero::internal::gen_helpers::EqualsField(match_ime_connection_active_, other.match_ime_connection_active_);
+}
+
+bool AndroidInputEventConfig_TraceRule::ParseFromArray(const void* raw, size_t size) {
+  match_all_packages_.clear();
+  match_any_packages_.clear();
+  unknown_fields_.clear();
+  bool packed_error = false;
+
+  ::protozero::ProtoDecoder dec(raw, size);
+  for (auto field = dec.ReadField(); field.valid(); field = dec.ReadField()) {
+    if (field.id() < _has_field_.size()) {
+      _has_field_.set(field.id());
+    }
+    switch (field.id()) {
+      case 1 /* trace_level */:
+        field.get(&trace_level_);
+        break;
+      case 2 /* match_all_packages */:
+        match_all_packages_.emplace_back();
+        ::protozero::internal::gen_helpers::DeserializeString(field, &match_all_packages_.back());
+        break;
+      case 3 /* match_any_packages */:
+        match_any_packages_.emplace_back();
+        ::protozero::internal::gen_helpers::DeserializeString(field, &match_any_packages_.back());
+        break;
+      case 4 /* match_secure */:
+        field.get(&match_secure_);
+        break;
+      case 5 /* match_ime_connection_active */:
+        field.get(&match_ime_connection_active_);
+        break;
+      default:
+        field.SerializeAndAppendTo(&unknown_fields_);
+        break;
+    }
+  }
+  return !packed_error && !dec.bytes_left();
+}
+
+std::string AndroidInputEventConfig_TraceRule::SerializeAsString() const {
+  ::protozero::internal::gen_helpers::MessageSerializer msg;
+  Serialize(msg.get());
+  return msg.SerializeAsString();
+}
+
+std::vector<uint8_t> AndroidInputEventConfig_TraceRule::SerializeAsArray() const {
+  ::protozero::internal::gen_helpers::MessageSerializer msg;
+  Serialize(msg.get());
+  return msg.SerializeAsArray();
+}
+
+void AndroidInputEventConfig_TraceRule::Serialize(::protozero::Message* msg) const {
+  // Field 1: trace_level
+  if (_has_field_[1]) {
+    ::protozero::internal::gen_helpers::SerializeVarInt(1, trace_level_, msg);
+  }
+
+  // Field 2: match_all_packages
+  for (auto& it : match_all_packages_) {
+    ::protozero::internal::gen_helpers::SerializeString(2, it, msg);
+  }
+
+  // Field 3: match_any_packages
+  for (auto& it : match_any_packages_) {
+    ::protozero::internal::gen_helpers::SerializeString(3, it, msg);
+  }
+
+  // Field 4: match_secure
+  if (_has_field_[4]) {
+    ::protozero::internal::gen_helpers::SerializeTinyVarInt(4, match_secure_, msg);
+  }
+
+  // Field 5: match_ime_connection_active
+  if (_has_field_[5]) {
+    ::protozero::internal::gen_helpers::SerializeTinyVarInt(5, match_ime_connection_active_, msg);
+  }
+
+  protozero::internal::gen_helpers::SerializeUnknownFields(unknown_fields_, msg);
+}
+
+}  // namespace perfetto
+}  // namespace protos
+}  // namespace gen
+#if defined(__GNUC__) || defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
 // gen_amalgamated begin source: gen/protos/perfetto/config/android/android_log_config.gen.cc
 // gen_amalgamated expanded: #include "perfetto/protozero/gen_field_helpers.h"
 // gen_amalgamated expanded: #include "perfetto/protozero/message.h"
@@ -19048,12 +19242,319 @@ void ChromeConfig::Serialize(::protozero::Message* msg) const {
 // gen_amalgamated expanded: #include "protos/perfetto/config/android/android_polled_state_config.gen.h"
 // gen_amalgamated expanded: #include "protos/perfetto/config/android/android_log_config.gen.h"
 // gen_amalgamated expanded: #include "protos/perfetto/common/android_log_constants.gen.h"
+// gen_amalgamated expanded: #include "protos/perfetto/config/android/android_input_event_config.gen.h"
 // gen_amalgamated expanded: #include "protos/perfetto/config/android/android_game_intervention_list_config.gen.h"
 // gen_amalgamated expanded: #include "protos/perfetto/common/builtin_clock.gen.h"
 
 namespace perfetto {
 namespace protos {
 namespace gen {
+
+TracingTriggerRulesConfig::TracingTriggerRulesConfig() = default;
+TracingTriggerRulesConfig::~TracingTriggerRulesConfig() = default;
+TracingTriggerRulesConfig::TracingTriggerRulesConfig(const TracingTriggerRulesConfig&) = default;
+TracingTriggerRulesConfig& TracingTriggerRulesConfig::operator=(const TracingTriggerRulesConfig&) = default;
+TracingTriggerRulesConfig::TracingTriggerRulesConfig(TracingTriggerRulesConfig&&) noexcept = default;
+TracingTriggerRulesConfig& TracingTriggerRulesConfig::operator=(TracingTriggerRulesConfig&&) = default;
+
+bool TracingTriggerRulesConfig::operator==(const TracingTriggerRulesConfig& other) const {
+  return ::protozero::internal::gen_helpers::EqualsField(unknown_fields_, other.unknown_fields_)
+   && ::protozero::internal::gen_helpers::EqualsField(rules_, other.rules_);
+}
+
+int TracingTriggerRulesConfig::rules_size() const { return static_cast<int>(rules_.size()); }
+void TracingTriggerRulesConfig::clear_rules() { rules_.clear(); }
+TriggerRule* TracingTriggerRulesConfig::add_rules() { rules_.emplace_back(); return &rules_.back(); }
+bool TracingTriggerRulesConfig::ParseFromArray(const void* raw, size_t size) {
+  rules_.clear();
+  unknown_fields_.clear();
+  bool packed_error = false;
+
+  ::protozero::ProtoDecoder dec(raw, size);
+  for (auto field = dec.ReadField(); field.valid(); field = dec.ReadField()) {
+    if (field.id() < _has_field_.size()) {
+      _has_field_.set(field.id());
+    }
+    switch (field.id()) {
+      case 1 /* rules */:
+        rules_.emplace_back();
+        rules_.back().ParseFromArray(field.data(), field.size());
+        break;
+      default:
+        field.SerializeAndAppendTo(&unknown_fields_);
+        break;
+    }
+  }
+  return !packed_error && !dec.bytes_left();
+}
+
+std::string TracingTriggerRulesConfig::SerializeAsString() const {
+  ::protozero::internal::gen_helpers::MessageSerializer msg;
+  Serialize(msg.get());
+  return msg.SerializeAsString();
+}
+
+std::vector<uint8_t> TracingTriggerRulesConfig::SerializeAsArray() const {
+  ::protozero::internal::gen_helpers::MessageSerializer msg;
+  Serialize(msg.get());
+  return msg.SerializeAsArray();
+}
+
+void TracingTriggerRulesConfig::Serialize(::protozero::Message* msg) const {
+  // Field 1: rules
+  for (auto& it : rules_) {
+    it.Serialize(msg->BeginNestedMessage<::protozero::Message>(1));
+  }
+
+  protozero::internal::gen_helpers::SerializeUnknownFields(unknown_fields_, msg);
+}
+
+
+TriggerRule::TriggerRule() = default;
+TriggerRule::~TriggerRule() = default;
+TriggerRule::TriggerRule(const TriggerRule&) = default;
+TriggerRule& TriggerRule::operator=(const TriggerRule&) = default;
+TriggerRule::TriggerRule(TriggerRule&&) noexcept = default;
+TriggerRule& TriggerRule::operator=(TriggerRule&&) = default;
+
+bool TriggerRule::operator==(const TriggerRule& other) const {
+  return ::protozero::internal::gen_helpers::EqualsField(unknown_fields_, other.unknown_fields_)
+   && ::protozero::internal::gen_helpers::EqualsField(name_, other.name_)
+   && ::protozero::internal::gen_helpers::EqualsField(trigger_chance_, other.trigger_chance_)
+   && ::protozero::internal::gen_helpers::EqualsField(delay_ms_, other.delay_ms_)
+   && ::protozero::internal::gen_helpers::EqualsField(activation_delay_ms_, other.activation_delay_ms_)
+   && ::protozero::internal::gen_helpers::EqualsField(manual_trigger_name_, other.manual_trigger_name_)
+   && ::protozero::internal::gen_helpers::EqualsField(histogram_, other.histogram_)
+   && ::protozero::internal::gen_helpers::EqualsField(repeating_interval_, other.repeating_interval_);
+}
+
+bool TriggerRule::ParseFromArray(const void* raw, size_t size) {
+  unknown_fields_.clear();
+  bool packed_error = false;
+
+  ::protozero::ProtoDecoder dec(raw, size);
+  for (auto field = dec.ReadField(); field.valid(); field = dec.ReadField()) {
+    if (field.id() < _has_field_.size()) {
+      _has_field_.set(field.id());
+    }
+    switch (field.id()) {
+      case 1 /* name */:
+        ::protozero::internal::gen_helpers::DeserializeString(field, &name_);
+        break;
+      case 2 /* trigger_chance */:
+        field.get(&trigger_chance_);
+        break;
+      case 3 /* delay_ms */:
+        field.get(&delay_ms_);
+        break;
+      case 8 /* activation_delay_ms */:
+        field.get(&activation_delay_ms_);
+        break;
+      case 4 /* manual_trigger_name */:
+        ::protozero::internal::gen_helpers::DeserializeString(field, &manual_trigger_name_);
+        break;
+      case 5 /* histogram */:
+        (*histogram_).ParseFromArray(field.data(), field.size());
+        break;
+      case 6 /* repeating_interval */:
+        (*repeating_interval_).ParseFromArray(field.data(), field.size());
+        break;
+      default:
+        field.SerializeAndAppendTo(&unknown_fields_);
+        break;
+    }
+  }
+  return !packed_error && !dec.bytes_left();
+}
+
+std::string TriggerRule::SerializeAsString() const {
+  ::protozero::internal::gen_helpers::MessageSerializer msg;
+  Serialize(msg.get());
+  return msg.SerializeAsString();
+}
+
+std::vector<uint8_t> TriggerRule::SerializeAsArray() const {
+  ::protozero::internal::gen_helpers::MessageSerializer msg;
+  Serialize(msg.get());
+  return msg.SerializeAsArray();
+}
+
+void TriggerRule::Serialize(::protozero::Message* msg) const {
+  // Field 1: name
+  if (_has_field_[1]) {
+    ::protozero::internal::gen_helpers::SerializeString(1, name_, msg);
+  }
+
+  // Field 2: trigger_chance
+  if (_has_field_[2]) {
+    ::protozero::internal::gen_helpers::SerializeFixed(2, trigger_chance_, msg);
+  }
+
+  // Field 3: delay_ms
+  if (_has_field_[3]) {
+    ::protozero::internal::gen_helpers::SerializeVarInt(3, delay_ms_, msg);
+  }
+
+  // Field 8: activation_delay_ms
+  if (_has_field_[8]) {
+    ::protozero::internal::gen_helpers::SerializeVarInt(8, activation_delay_ms_, msg);
+  }
+
+  // Field 4: manual_trigger_name
+  if (_has_field_[4]) {
+    ::protozero::internal::gen_helpers::SerializeString(4, manual_trigger_name_, msg);
+  }
+
+  // Field 5: histogram
+  if (_has_field_[5]) {
+    (*histogram_).Serialize(msg->BeginNestedMessage<::protozero::Message>(5));
+  }
+
+  // Field 6: repeating_interval
+  if (_has_field_[6]) {
+    (*repeating_interval_).Serialize(msg->BeginNestedMessage<::protozero::Message>(6));
+  }
+
+  protozero::internal::gen_helpers::SerializeUnknownFields(unknown_fields_, msg);
+}
+
+
+TriggerRule_RepeatingInterval::TriggerRule_RepeatingInterval() = default;
+TriggerRule_RepeatingInterval::~TriggerRule_RepeatingInterval() = default;
+TriggerRule_RepeatingInterval::TriggerRule_RepeatingInterval(const TriggerRule_RepeatingInterval&) = default;
+TriggerRule_RepeatingInterval& TriggerRule_RepeatingInterval::operator=(const TriggerRule_RepeatingInterval&) = default;
+TriggerRule_RepeatingInterval::TriggerRule_RepeatingInterval(TriggerRule_RepeatingInterval&&) noexcept = default;
+TriggerRule_RepeatingInterval& TriggerRule_RepeatingInterval::operator=(TriggerRule_RepeatingInterval&&) = default;
+
+bool TriggerRule_RepeatingInterval::operator==(const TriggerRule_RepeatingInterval& other) const {
+  return ::protozero::internal::gen_helpers::EqualsField(unknown_fields_, other.unknown_fields_)
+   && ::protozero::internal::gen_helpers::EqualsField(period_ms_, other.period_ms_)
+   && ::protozero::internal::gen_helpers::EqualsField(randomized_, other.randomized_);
+}
+
+bool TriggerRule_RepeatingInterval::ParseFromArray(const void* raw, size_t size) {
+  unknown_fields_.clear();
+  bool packed_error = false;
+
+  ::protozero::ProtoDecoder dec(raw, size);
+  for (auto field = dec.ReadField(); field.valid(); field = dec.ReadField()) {
+    if (field.id() < _has_field_.size()) {
+      _has_field_.set(field.id());
+    }
+    switch (field.id()) {
+      case 1 /* period_ms */:
+        field.get(&period_ms_);
+        break;
+      case 2 /* randomized */:
+        field.get(&randomized_);
+        break;
+      default:
+        field.SerializeAndAppendTo(&unknown_fields_);
+        break;
+    }
+  }
+  return !packed_error && !dec.bytes_left();
+}
+
+std::string TriggerRule_RepeatingInterval::SerializeAsString() const {
+  ::protozero::internal::gen_helpers::MessageSerializer msg;
+  Serialize(msg.get());
+  return msg.SerializeAsString();
+}
+
+std::vector<uint8_t> TriggerRule_RepeatingInterval::SerializeAsArray() const {
+  ::protozero::internal::gen_helpers::MessageSerializer msg;
+  Serialize(msg.get());
+  return msg.SerializeAsArray();
+}
+
+void TriggerRule_RepeatingInterval::Serialize(::protozero::Message* msg) const {
+  // Field 1: period_ms
+  if (_has_field_[1]) {
+    ::protozero::internal::gen_helpers::SerializeVarInt(1, period_ms_, msg);
+  }
+
+  // Field 2: randomized
+  if (_has_field_[2]) {
+    ::protozero::internal::gen_helpers::SerializeTinyVarInt(2, randomized_, msg);
+  }
+
+  protozero::internal::gen_helpers::SerializeUnknownFields(unknown_fields_, msg);
+}
+
+
+TriggerRule_HistogramTrigger::TriggerRule_HistogramTrigger() = default;
+TriggerRule_HistogramTrigger::~TriggerRule_HistogramTrigger() = default;
+TriggerRule_HistogramTrigger::TriggerRule_HistogramTrigger(const TriggerRule_HistogramTrigger&) = default;
+TriggerRule_HistogramTrigger& TriggerRule_HistogramTrigger::operator=(const TriggerRule_HistogramTrigger&) = default;
+TriggerRule_HistogramTrigger::TriggerRule_HistogramTrigger(TriggerRule_HistogramTrigger&&) noexcept = default;
+TriggerRule_HistogramTrigger& TriggerRule_HistogramTrigger::operator=(TriggerRule_HistogramTrigger&&) = default;
+
+bool TriggerRule_HistogramTrigger::operator==(const TriggerRule_HistogramTrigger& other) const {
+  return ::protozero::internal::gen_helpers::EqualsField(unknown_fields_, other.unknown_fields_)
+   && ::protozero::internal::gen_helpers::EqualsField(histogram_name_, other.histogram_name_)
+   && ::protozero::internal::gen_helpers::EqualsField(min_value_, other.min_value_)
+   && ::protozero::internal::gen_helpers::EqualsField(max_value_, other.max_value_);
+}
+
+bool TriggerRule_HistogramTrigger::ParseFromArray(const void* raw, size_t size) {
+  unknown_fields_.clear();
+  bool packed_error = false;
+
+  ::protozero::ProtoDecoder dec(raw, size);
+  for (auto field = dec.ReadField(); field.valid(); field = dec.ReadField()) {
+    if (field.id() < _has_field_.size()) {
+      _has_field_.set(field.id());
+    }
+    switch (field.id()) {
+      case 1 /* histogram_name */:
+        ::protozero::internal::gen_helpers::DeserializeString(field, &histogram_name_);
+        break;
+      case 2 /* min_value */:
+        field.get(&min_value_);
+        break;
+      case 3 /* max_value */:
+        field.get(&max_value_);
+        break;
+      default:
+        field.SerializeAndAppendTo(&unknown_fields_);
+        break;
+    }
+  }
+  return !packed_error && !dec.bytes_left();
+}
+
+std::string TriggerRule_HistogramTrigger::SerializeAsString() const {
+  ::protozero::internal::gen_helpers::MessageSerializer msg;
+  Serialize(msg.get());
+  return msg.SerializeAsString();
+}
+
+std::vector<uint8_t> TriggerRule_HistogramTrigger::SerializeAsArray() const {
+  ::protozero::internal::gen_helpers::MessageSerializer msg;
+  Serialize(msg.get());
+  return msg.SerializeAsArray();
+}
+
+void TriggerRule_HistogramTrigger::Serialize(::protozero::Message* msg) const {
+  // Field 1: histogram_name
+  if (_has_field_[1]) {
+    ::protozero::internal::gen_helpers::SerializeString(1, histogram_name_, msg);
+  }
+
+  // Field 2: min_value
+  if (_has_field_[2]) {
+    ::protozero::internal::gen_helpers::SerializeVarInt(2, min_value_, msg);
+  }
+
+  // Field 3: max_value
+  if (_has_field_[3]) {
+    ::protozero::internal::gen_helpers::SerializeVarInt(3, max_value_, msg);
+  }
+
+  protozero::internal::gen_helpers::SerializeUnknownFields(unknown_fields_, msg);
+}
+
 
 ChromeFieldTracingConfig::ChromeFieldTracingConfig() = default;
 ChromeFieldTracingConfig::~ChromeFieldTracingConfig() = default;
@@ -19345,252 +19846,6 @@ void NestedScenarioConfig::Serialize(::protozero::Message* msg) const {
   protozero::internal::gen_helpers::SerializeUnknownFields(unknown_fields_, msg);
 }
 
-
-TriggerRule::TriggerRule() = default;
-TriggerRule::~TriggerRule() = default;
-TriggerRule::TriggerRule(const TriggerRule&) = default;
-TriggerRule& TriggerRule::operator=(const TriggerRule&) = default;
-TriggerRule::TriggerRule(TriggerRule&&) noexcept = default;
-TriggerRule& TriggerRule::operator=(TriggerRule&&) = default;
-
-bool TriggerRule::operator==(const TriggerRule& other) const {
-  return ::protozero::internal::gen_helpers::EqualsField(unknown_fields_, other.unknown_fields_)
-   && ::protozero::internal::gen_helpers::EqualsField(name_, other.name_)
-   && ::protozero::internal::gen_helpers::EqualsField(trigger_chance_, other.trigger_chance_)
-   && ::protozero::internal::gen_helpers::EqualsField(delay_ms_, other.delay_ms_)
-   && ::protozero::internal::gen_helpers::EqualsField(activation_delay_ms_, other.activation_delay_ms_)
-   && ::protozero::internal::gen_helpers::EqualsField(manual_trigger_name_, other.manual_trigger_name_)
-   && ::protozero::internal::gen_helpers::EqualsField(histogram_, other.histogram_)
-   && ::protozero::internal::gen_helpers::EqualsField(repeating_interval_, other.repeating_interval_);
-}
-
-bool TriggerRule::ParseFromArray(const void* raw, size_t size) {
-  unknown_fields_.clear();
-  bool packed_error = false;
-
-  ::protozero::ProtoDecoder dec(raw, size);
-  for (auto field = dec.ReadField(); field.valid(); field = dec.ReadField()) {
-    if (field.id() < _has_field_.size()) {
-      _has_field_.set(field.id());
-    }
-    switch (field.id()) {
-      case 1 /* name */:
-        ::protozero::internal::gen_helpers::DeserializeString(field, &name_);
-        break;
-      case 2 /* trigger_chance */:
-        field.get(&trigger_chance_);
-        break;
-      case 3 /* delay_ms */:
-        field.get(&delay_ms_);
-        break;
-      case 8 /* activation_delay_ms */:
-        field.get(&activation_delay_ms_);
-        break;
-      case 4 /* manual_trigger_name */:
-        ::protozero::internal::gen_helpers::DeserializeString(field, &manual_trigger_name_);
-        break;
-      case 5 /* histogram */:
-        (*histogram_).ParseFromArray(field.data(), field.size());
-        break;
-      case 6 /* repeating_interval */:
-        (*repeating_interval_).ParseFromArray(field.data(), field.size());
-        break;
-      default:
-        field.SerializeAndAppendTo(&unknown_fields_);
-        break;
-    }
-  }
-  return !packed_error && !dec.bytes_left();
-}
-
-std::string TriggerRule::SerializeAsString() const {
-  ::protozero::internal::gen_helpers::MessageSerializer msg;
-  Serialize(msg.get());
-  return msg.SerializeAsString();
-}
-
-std::vector<uint8_t> TriggerRule::SerializeAsArray() const {
-  ::protozero::internal::gen_helpers::MessageSerializer msg;
-  Serialize(msg.get());
-  return msg.SerializeAsArray();
-}
-
-void TriggerRule::Serialize(::protozero::Message* msg) const {
-  // Field 1: name
-  if (_has_field_[1]) {
-    ::protozero::internal::gen_helpers::SerializeString(1, name_, msg);
-  }
-
-  // Field 2: trigger_chance
-  if (_has_field_[2]) {
-    ::protozero::internal::gen_helpers::SerializeFixed(2, trigger_chance_, msg);
-  }
-
-  // Field 3: delay_ms
-  if (_has_field_[3]) {
-    ::protozero::internal::gen_helpers::SerializeVarInt(3, delay_ms_, msg);
-  }
-
-  // Field 8: activation_delay_ms
-  if (_has_field_[8]) {
-    ::protozero::internal::gen_helpers::SerializeVarInt(8, activation_delay_ms_, msg);
-  }
-
-  // Field 4: manual_trigger_name
-  if (_has_field_[4]) {
-    ::protozero::internal::gen_helpers::SerializeString(4, manual_trigger_name_, msg);
-  }
-
-  // Field 5: histogram
-  if (_has_field_[5]) {
-    (*histogram_).Serialize(msg->BeginNestedMessage<::protozero::Message>(5));
-  }
-
-  // Field 6: repeating_interval
-  if (_has_field_[6]) {
-    (*repeating_interval_).Serialize(msg->BeginNestedMessage<::protozero::Message>(6));
-  }
-
-  protozero::internal::gen_helpers::SerializeUnknownFields(unknown_fields_, msg);
-}
-
-
-TriggerRule_RepeatingInterval::TriggerRule_RepeatingInterval() = default;
-TriggerRule_RepeatingInterval::~TriggerRule_RepeatingInterval() = default;
-TriggerRule_RepeatingInterval::TriggerRule_RepeatingInterval(const TriggerRule_RepeatingInterval&) = default;
-TriggerRule_RepeatingInterval& TriggerRule_RepeatingInterval::operator=(const TriggerRule_RepeatingInterval&) = default;
-TriggerRule_RepeatingInterval::TriggerRule_RepeatingInterval(TriggerRule_RepeatingInterval&&) noexcept = default;
-TriggerRule_RepeatingInterval& TriggerRule_RepeatingInterval::operator=(TriggerRule_RepeatingInterval&&) = default;
-
-bool TriggerRule_RepeatingInterval::operator==(const TriggerRule_RepeatingInterval& other) const {
-  return ::protozero::internal::gen_helpers::EqualsField(unknown_fields_, other.unknown_fields_)
-   && ::protozero::internal::gen_helpers::EqualsField(period_ms_, other.period_ms_)
-   && ::protozero::internal::gen_helpers::EqualsField(randomized_, other.randomized_);
-}
-
-bool TriggerRule_RepeatingInterval::ParseFromArray(const void* raw, size_t size) {
-  unknown_fields_.clear();
-  bool packed_error = false;
-
-  ::protozero::ProtoDecoder dec(raw, size);
-  for (auto field = dec.ReadField(); field.valid(); field = dec.ReadField()) {
-    if (field.id() < _has_field_.size()) {
-      _has_field_.set(field.id());
-    }
-    switch (field.id()) {
-      case 1 /* period_ms */:
-        field.get(&period_ms_);
-        break;
-      case 2 /* randomized */:
-        field.get(&randomized_);
-        break;
-      default:
-        field.SerializeAndAppendTo(&unknown_fields_);
-        break;
-    }
-  }
-  return !packed_error && !dec.bytes_left();
-}
-
-std::string TriggerRule_RepeatingInterval::SerializeAsString() const {
-  ::protozero::internal::gen_helpers::MessageSerializer msg;
-  Serialize(msg.get());
-  return msg.SerializeAsString();
-}
-
-std::vector<uint8_t> TriggerRule_RepeatingInterval::SerializeAsArray() const {
-  ::protozero::internal::gen_helpers::MessageSerializer msg;
-  Serialize(msg.get());
-  return msg.SerializeAsArray();
-}
-
-void TriggerRule_RepeatingInterval::Serialize(::protozero::Message* msg) const {
-  // Field 1: period_ms
-  if (_has_field_[1]) {
-    ::protozero::internal::gen_helpers::SerializeVarInt(1, period_ms_, msg);
-  }
-
-  // Field 2: randomized
-  if (_has_field_[2]) {
-    ::protozero::internal::gen_helpers::SerializeTinyVarInt(2, randomized_, msg);
-  }
-
-  protozero::internal::gen_helpers::SerializeUnknownFields(unknown_fields_, msg);
-}
-
-
-TriggerRule_HistogramTrigger::TriggerRule_HistogramTrigger() = default;
-TriggerRule_HistogramTrigger::~TriggerRule_HistogramTrigger() = default;
-TriggerRule_HistogramTrigger::TriggerRule_HistogramTrigger(const TriggerRule_HistogramTrigger&) = default;
-TriggerRule_HistogramTrigger& TriggerRule_HistogramTrigger::operator=(const TriggerRule_HistogramTrigger&) = default;
-TriggerRule_HistogramTrigger::TriggerRule_HistogramTrigger(TriggerRule_HistogramTrigger&&) noexcept = default;
-TriggerRule_HistogramTrigger& TriggerRule_HistogramTrigger::operator=(TriggerRule_HistogramTrigger&&) = default;
-
-bool TriggerRule_HistogramTrigger::operator==(const TriggerRule_HistogramTrigger& other) const {
-  return ::protozero::internal::gen_helpers::EqualsField(unknown_fields_, other.unknown_fields_)
-   && ::protozero::internal::gen_helpers::EqualsField(histogram_name_, other.histogram_name_)
-   && ::protozero::internal::gen_helpers::EqualsField(min_value_, other.min_value_)
-   && ::protozero::internal::gen_helpers::EqualsField(max_value_, other.max_value_);
-}
-
-bool TriggerRule_HistogramTrigger::ParseFromArray(const void* raw, size_t size) {
-  unknown_fields_.clear();
-  bool packed_error = false;
-
-  ::protozero::ProtoDecoder dec(raw, size);
-  for (auto field = dec.ReadField(); field.valid(); field = dec.ReadField()) {
-    if (field.id() < _has_field_.size()) {
-      _has_field_.set(field.id());
-    }
-    switch (field.id()) {
-      case 1 /* histogram_name */:
-        ::protozero::internal::gen_helpers::DeserializeString(field, &histogram_name_);
-        break;
-      case 2 /* min_value */:
-        field.get(&min_value_);
-        break;
-      case 3 /* max_value */:
-        field.get(&max_value_);
-        break;
-      default:
-        field.SerializeAndAppendTo(&unknown_fields_);
-        break;
-    }
-  }
-  return !packed_error && !dec.bytes_left();
-}
-
-std::string TriggerRule_HistogramTrigger::SerializeAsString() const {
-  ::protozero::internal::gen_helpers::MessageSerializer msg;
-  Serialize(msg.get());
-  return msg.SerializeAsString();
-}
-
-std::vector<uint8_t> TriggerRule_HistogramTrigger::SerializeAsArray() const {
-  ::protozero::internal::gen_helpers::MessageSerializer msg;
-  Serialize(msg.get());
-  return msg.SerializeAsArray();
-}
-
-void TriggerRule_HistogramTrigger::Serialize(::protozero::Message* msg) const {
-  // Field 1: histogram_name
-  if (_has_field_[1]) {
-    ::protozero::internal::gen_helpers::SerializeString(1, histogram_name_, msg);
-  }
-
-  // Field 2: min_value
-  if (_has_field_[2]) {
-    ::protozero::internal::gen_helpers::SerializeVarInt(2, min_value_, msg);
-  }
-
-  // Field 3: max_value
-  if (_has_field_[3]) {
-    ::protozero::internal::gen_helpers::SerializeVarInt(3, max_value_, msg);
-  }
-
-  protozero::internal::gen_helpers::SerializeUnknownFields(unknown_fields_, msg);
-}
-
 }  // namespace perfetto
 }  // namespace protos
 }  // namespace gen
@@ -19749,6 +20004,7 @@ bool DataSourceConfig::operator==(const DataSourceConfig& other) const {
    && ::protozero::internal::gen_helpers::EqualsField(android_sdk_sysprop_guard_config_, other.android_sdk_sysprop_guard_config_)
    && ::protozero::internal::gen_helpers::EqualsField(etw_config_, other.etw_config_)
    && ::protozero::internal::gen_helpers::EqualsField(protolog_config_, other.protolog_config_)
+   && ::protozero::internal::gen_helpers::EqualsField(android_input_event_config_, other.android_input_event_config_)
    && ::protozero::internal::gen_helpers::EqualsField(legacy_config_, other.legacy_config_)
    && ::protozero::internal::gen_helpers::EqualsField(for_testing_, other.for_testing_);
 }
@@ -19867,6 +20123,9 @@ bool DataSourceConfig::ParseFromArray(const void* raw, size_t size) {
         break;
       case 126 /* protolog_config */:
         ::protozero::internal::gen_helpers::DeserializeString(field, &protolog_config_);
+        break;
+      case 128 /* android_input_event_config */:
+        ::protozero::internal::gen_helpers::DeserializeString(field, &android_input_event_config_);
         break;
       case 1000 /* legacy_config */:
         ::protozero::internal::gen_helpers::DeserializeString(field, &legacy_config_);
@@ -20068,6 +20327,11 @@ void DataSourceConfig::Serialize(::protozero::Message* msg) const {
   // Field 126: protolog_config
   if (_has_field_[126]) {
     msg->AppendString(126, protolog_config_);
+  }
+
+  // Field 128: android_input_event_config
+  if (_has_field_[128]) {
+    msg->AppendString(128, android_input_event_config_);
   }
 
   // Field 1000: legacy_config
@@ -20302,6 +20566,7 @@ void InterceptorConfig::Serialize(::protozero::Message* msg) const {
 // gen_amalgamated expanded: #include "protos/perfetto/config/android/android_polled_state_config.gen.h"
 // gen_amalgamated expanded: #include "protos/perfetto/config/android/android_log_config.gen.h"
 // gen_amalgamated expanded: #include "protos/perfetto/common/android_log_constants.gen.h"
+// gen_amalgamated expanded: #include "protos/perfetto/config/android/android_input_event_config.gen.h"
 // gen_amalgamated expanded: #include "protos/perfetto/config/android/android_game_intervention_list_config.gen.h"
 // gen_amalgamated expanded: #include "protos/perfetto/common/builtin_clock.gen.h"
 
@@ -20890,6 +21155,7 @@ void TestConfig_DummyFields::Serialize(::protozero::Message* msg) const {
 // gen_amalgamated expanded: #include "protos/perfetto/config/android/android_polled_state_config.gen.h"
 // gen_amalgamated expanded: #include "protos/perfetto/config/android/android_log_config.gen.h"
 // gen_amalgamated expanded: #include "protos/perfetto/common/android_log_constants.gen.h"
+// gen_amalgamated expanded: #include "protos/perfetto/config/android/android_input_event_config.gen.h"
 // gen_amalgamated expanded: #include "protos/perfetto/config/android/android_game_intervention_list_config.gen.h"
 // gen_amalgamated expanded: #include "protos/perfetto/common/builtin_clock.gen.h"
 
@@ -22574,6 +22840,8 @@ void TraceConfig_BufferConfig::Serialize(::protozero::Message* msg) const {
 // gen_amalgamated begin source: gen/protos/perfetto/trace/track_event/debug_annotation.pbzero.cc
 // Intentionally empty (crbug.com/998165)
 // gen_amalgamated begin source: gen/protos/perfetto/trace/track_event/log_message.pbzero.cc
+// Intentionally empty (crbug.com/998165)
+// gen_amalgamated begin source: gen/protos/perfetto/trace/track_event/pixel_modem.pbzero.cc
 // Intentionally empty (crbug.com/998165)
 // gen_amalgamated begin source: gen/protos/perfetto/trace/track_event/process_descriptor.pbzero.cc
 // Intentionally empty (crbug.com/998165)
@@ -26436,6 +26704,83 @@ void LogMessage::Serialize(::protozero::Message* msg) const {
 #if defined(__GNUC__) || defined(__clang__)
 #pragma GCC diagnostic pop
 #endif
+// gen_amalgamated begin source: gen/protos/perfetto/trace/track_event/pixel_modem.gen.cc
+// gen_amalgamated expanded: #include "perfetto/protozero/gen_field_helpers.h"
+// gen_amalgamated expanded: #include "perfetto/protozero/message.h"
+// gen_amalgamated expanded: #include "perfetto/protozero/packed_repeated_fields.h"
+// gen_amalgamated expanded: #include "perfetto/protozero/proto_decoder.h"
+// gen_amalgamated expanded: #include "perfetto/protozero/scattered_heap_buffer.h"
+// DO NOT EDIT. Autogenerated by Perfetto cppgen_plugin
+#if defined(__GNUC__) || defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfloat-equal"
+#endif
+// gen_amalgamated expanded: #include "protos/perfetto/trace/track_event/pixel_modem.gen.h"
+
+namespace perfetto {
+namespace protos {
+namespace gen {
+
+PixelModemEventInsight::PixelModemEventInsight() = default;
+PixelModemEventInsight::~PixelModemEventInsight() = default;
+PixelModemEventInsight::PixelModemEventInsight(const PixelModemEventInsight&) = default;
+PixelModemEventInsight& PixelModemEventInsight::operator=(const PixelModemEventInsight&) = default;
+PixelModemEventInsight::PixelModemEventInsight(PixelModemEventInsight&&) noexcept = default;
+PixelModemEventInsight& PixelModemEventInsight::operator=(PixelModemEventInsight&&) = default;
+
+bool PixelModemEventInsight::operator==(const PixelModemEventInsight& other) const {
+  return ::protozero::internal::gen_helpers::EqualsField(unknown_fields_, other.unknown_fields_)
+   && ::protozero::internal::gen_helpers::EqualsField(detokenized_message_, other.detokenized_message_);
+}
+
+bool PixelModemEventInsight::ParseFromArray(const void* raw, size_t size) {
+  unknown_fields_.clear();
+  bool packed_error = false;
+
+  ::protozero::ProtoDecoder dec(raw, size);
+  for (auto field = dec.ReadField(); field.valid(); field = dec.ReadField()) {
+    if (field.id() < _has_field_.size()) {
+      _has_field_.set(field.id());
+    }
+    switch (field.id()) {
+      case 1 /* detokenized_message */:
+        ::protozero::internal::gen_helpers::DeserializeString(field, &detokenized_message_);
+        break;
+      default:
+        field.SerializeAndAppendTo(&unknown_fields_);
+        break;
+    }
+  }
+  return !packed_error && !dec.bytes_left();
+}
+
+std::string PixelModemEventInsight::SerializeAsString() const {
+  ::protozero::internal::gen_helpers::MessageSerializer msg;
+  Serialize(msg.get());
+  return msg.SerializeAsString();
+}
+
+std::vector<uint8_t> PixelModemEventInsight::SerializeAsArray() const {
+  ::protozero::internal::gen_helpers::MessageSerializer msg;
+  Serialize(msg.get());
+  return msg.SerializeAsArray();
+}
+
+void PixelModemEventInsight::Serialize(::protozero::Message* msg) const {
+  // Field 1: detokenized_message
+  if (_has_field_[1]) {
+    ::protozero::internal::gen_helpers::SerializeString(1, detokenized_message_, msg);
+  }
+
+  protozero::internal::gen_helpers::SerializeUnknownFields(unknown_fields_, msg);
+}
+
+}  // namespace perfetto
+}  // namespace protos
+}  // namespace gen
+#if defined(__GNUC__) || defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
 // gen_amalgamated begin source: gen/protos/perfetto/trace/track_event/process_descriptor.gen.cc
 // gen_amalgamated expanded: #include "perfetto/protozero/gen_field_helpers.h"
 // gen_amalgamated expanded: #include "perfetto/protozero/message.h"
@@ -27296,6 +27641,7 @@ void TrackDescriptor::Serialize(::protozero::Message* msg) const {
 // gen_amalgamated expanded: #include "protos/perfetto/trace/track_event/track_event.gen.h"
 // gen_amalgamated expanded: #include "protos/perfetto/trace/track_event/source_location.gen.h"
 // gen_amalgamated expanded: #include "protos/perfetto/trace/track_event/screenshot.gen.h"
+// gen_amalgamated expanded: #include "protos/perfetto/trace/track_event/pixel_modem.gen.h"
 // gen_amalgamated expanded: #include "protos/perfetto/trace/track_event/chrome_window_handle_event_info.gen.h"
 // gen_amalgamated expanded: #include "protos/perfetto/trace/track_event/chrome_user_event.gen.h"
 // gen_amalgamated expanded: #include "protos/perfetto/trace/track_event/chrome_renderer_scheduler_state.gen.h"
@@ -27564,6 +27910,7 @@ bool TrackEvent::operator==(const TrackEvent& other) const {
    && ::protozero::internal::gen_helpers::EqualsField(chrome_content_settings_event_info_, other.chrome_content_settings_event_info_)
    && ::protozero::internal::gen_helpers::EqualsField(chrome_active_processes_, other.chrome_active_processes_)
    && ::protozero::internal::gen_helpers::EqualsField(screenshot_, other.screenshot_)
+   && ::protozero::internal::gen_helpers::EqualsField(pixel_modem_event_insight_, other.pixel_modem_event_insight_)
    && ::protozero::internal::gen_helpers::EqualsField(source_location_, other.source_location_)
    && ::protozero::internal::gen_helpers::EqualsField(source_location_iid_, other.source_location_iid_)
    && ::protozero::internal::gen_helpers::EqualsField(chrome_message_pump_, other.chrome_message_pump_)
@@ -27707,6 +28054,9 @@ bool TrackEvent::ParseFromArray(const void* raw, size_t size) {
         break;
       case 50 /* screenshot */:
         (*screenshot_).ParseFromArray(field.data(), field.size());
+        break;
+      case 51 /* pixel_modem_event_insight */:
+        (*pixel_modem_event_insight_).ParseFromArray(field.data(), field.size());
         break;
       case 33 /* source_location */:
         (*source_location_).ParseFromArray(field.data(), field.size());
@@ -27920,6 +28270,11 @@ void TrackEvent::Serialize(::protozero::Message* msg) const {
   // Field 50: screenshot
   if (_has_field_[50]) {
     (*screenshot_).Serialize(msg->BeginNestedMessage<::protozero::Message>(50));
+  }
+
+  // Field 51: pixel_modem_event_insight
+  if (_has_field_[51]) {
+    (*pixel_modem_event_insight_).Serialize(msg->BeginNestedMessage<::protozero::Message>(51));
   }
 
   // Field 33: source_location
@@ -28178,6 +28533,8 @@ void TrackEvent_LegacyEvent::Serialize(::protozero::Message* msg) const {
 #endif
 // gen_amalgamated begin source: gen/protos/perfetto/config/android/android_game_intervention_list_config.pbzero.cc
 // Intentionally empty (crbug.com/998165)
+// gen_amalgamated begin source: gen/protos/perfetto/config/android/android_input_event_config.pbzero.cc
+// Intentionally empty (crbug.com/998165)
 // gen_amalgamated begin source: gen/protos/perfetto/config/android/android_log_config.pbzero.cc
 // Intentionally empty (crbug.com/998165)
 // gen_amalgamated begin source: gen/protos/perfetto/config/android/android_polled_state_config.pbzero.cc
@@ -28353,6 +28710,8 @@ void TrackEvent_LegacyEvent::Serialize(::protozero::Message* msg) const {
 // gen_amalgamated begin source: gen/protos/perfetto/trace/ftrace/raw_syscalls.pbzero.cc
 // Intentionally empty (crbug.com/998165)
 // gen_amalgamated begin source: gen/protos/perfetto/trace/ftrace/regulator.pbzero.cc
+// Intentionally empty (crbug.com/998165)
+// gen_amalgamated begin source: gen/protos/perfetto/trace/ftrace/rpm.pbzero.cc
 // Intentionally empty (crbug.com/998165)
 // gen_amalgamated begin source: gen/protos/perfetto/trace/ftrace/samsung.pbzero.cc
 // Intentionally empty (crbug.com/998165)
@@ -40162,9 +40521,6 @@ enum class PerfettoStatsdAtom {
   // Guardrails inside perfetto_cmd before tracing is finished.
   kOnTimeout = 16,
   kCmdUserBuildTracingNotAllowed = 43,
-  kCmdFailedToInitGuardrailState = 44,
-  kCmdInvalidGuardrailState = 45,
-  kCmdHitUploadLimit = 46,
 
   // Checkpoints inside traced.
   kTracedEnableTracing = 37,
@@ -40237,6 +40593,10 @@ enum class PerfettoStatsdAtom {
   // Contained status of Dropbox uploads. Removed as Perfetto no
   // longer supports uploading traces using Dropbox.
   // reserved 5, 6, 7;
+
+  // Contained status of guardrail state initalization and upload limit in
+  // perfetto_cmd. Removed as perfetto no longer manages stateful guardrails
+  // reserved 44, 45, 46;
 };
 
 // This must match the values of the PerfettoTrigger::TriggerType enum in:
@@ -40443,8 +40803,8 @@ const char* GetVersionCode();
 #ifndef GEN_PERFETTO_VERSION_GEN_H_
 #define GEN_PERFETTO_VERSION_GEN_H_
 
-#define PERFETTO_VERSION_STRING() "v43.1-cb4543283"
-#define PERFETTO_VERSION_SCM_REVISION() "cb45432836de18cf471653f2d1a13499760e69c6"
+#define PERFETTO_VERSION_STRING() "v44.0-94bdc3da5"
+#define PERFETTO_VERSION_SCM_REVISION() "94bdc3da58ad5343e7db3c40fba76309103e342a"
 
 #endif  // GEN_PERFETTO_VERSION_GEN_H_
 /*
@@ -44948,7 +45308,6 @@ class CircularQueue {
 #include <functional>
 #include <map>
 #include <memory>
-#include <mutex>
 #include <optional>
 #include <random>
 #include <set>
@@ -45259,8 +45618,8 @@ class TracingServiceImpl : public TracingService {
   void ApplyChunkPatches(ProducerID,
                          const std::vector<CommitDataRequest::ChunkToPatch>&);
   void NotifyFlushDoneForProducer(ProducerID, FlushRequestID);
-  void NotifyDataSourceStarted(ProducerID, const DataSourceInstanceID);
-  void NotifyDataSourceStopped(ProducerID, const DataSourceInstanceID);
+  void NotifyDataSourceStarted(ProducerID, DataSourceInstanceID);
+  void NotifyDataSourceStopped(ProducerID, DataSourceInstanceID);
   void ActivateTriggers(ProducerID, const std::vector<std::string>& triggers);
 
   // Called by ConsumerEndpointImpl.
@@ -45501,6 +45860,10 @@ class TracingServiceImpl : public TracingService {
           });
     }
 
+    // Checks whether |clone_uid| is allowed to clone the current tracing
+    // session.
+    bool IsCloneAllowed(uid_t clone_uid) const;
+
     const TracingSessionID id;
 
     // The consumer that started the session.
@@ -45731,14 +46094,14 @@ class TracingServiceImpl : public TracingService {
   void FlushDataSourceInstances(
       TracingSession*,
       uint32_t timeout_ms,
-      std::map<ProducerID, std::vector<DataSourceInstanceID>>,
+      const std::map<ProducerID, std::vector<DataSourceInstanceID>>&,
       ConsumerEndpoint::FlushCallback,
       FlushFlags);
   std::map<ProducerID, std::vector<DataSourceInstanceID>>
   GetFlushableDataSourceInstancesForBuffers(TracingSession*,
-                                            std::set<BufferID>);
+                                            const std::set<BufferID>&);
   bool DoCloneBuffers(TracingSession*,
-                      std::set<BufferID>,
+                      const std::set<BufferID>&,
                       std::vector<std::unique_ptr<TraceBuffer>>*);
   base::Status FinishCloneSession(ConsumerEndpointImpl*,
                                   TracingSessionID,
@@ -45748,7 +46111,7 @@ class TracingServiceImpl : public TracingService {
                                   base::Uuid*);
   void OnFlushDoneForClone(TracingSessionID src_tsid,
                            PendingCloneID clone_id,
-                           std::set<BufferID> buf_ids,
+                           const std::set<BufferID>& buf_ids,
                            bool final_flush_outcome);
 
   // Returns true if `*tracing_session` is waiting for a trigger that hasn't
@@ -45892,12 +46255,11 @@ class TracingServiceImpl : public TracingService {
 
 // gen_amalgamated expanded: #include "src/tracing/service/tracing_service_impl.h"
 
-#include <errno.h>
 #include <limits.h>
-#include <stdint.h>
 #include <string.h>
 
 #include <cinttypes>
+#include <cstdint>
 #include <limits>
 #include <optional>
 #include <regex>
@@ -45935,7 +46297,8 @@ class TracingServiceImpl : public TracingService {
 // gen_amalgamated expanded: #include "perfetto/ext/base/file_utils.h"
 // gen_amalgamated expanded: #include "perfetto/ext/base/metatrace.h"
 // gen_amalgamated expanded: #include "perfetto/ext/base/string_utils.h"
-// gen_amalgamated expanded: #include "perfetto/ext/base/temp_file.h"
+// gen_amalgamated expanded: #include "perfetto/ext/base/string_view.h"
+// gen_amalgamated expanded: #include "perfetto/ext/base/sys_types.h"
 // gen_amalgamated expanded: #include "perfetto/ext/base/utils.h"
 // gen_amalgamated expanded: #include "perfetto/ext/base/uuid.h"
 // gen_amalgamated expanded: #include "perfetto/ext/base/version.h"
@@ -46032,8 +46395,8 @@ ssize_t writev(int fd, const struct iovec* iov, int iovcnt) {
 // Format (by bit range):
 // [   31 ][         30 ][             29:20 ][            19:10 ][        9:0]
 // [unused][has flush id][num chunks to patch][num chunks to move][producer id]
-static int32_t EncodeCommitDataRequest(ProducerID producer_id,
-                                       const CommitDataRequest& req_untrusted) {
+int32_t EncodeCommitDataRequest(ProducerID producer_id,
+                                const CommitDataRequest& req_untrusted) {
   uint32_t cmov = static_cast<uint32_t>(req_untrusted.chunks_to_move_size());
   uint32_t cpatch = static_cast<uint32_t>(req_untrusted.chunks_to_patch_size());
   uint32_t has_flush_id = req_untrusted.flush_request_id() != 0;
@@ -46891,7 +47254,7 @@ base::Status TracingServiceImpl::EnableTracing(ConsumerEndpointImpl* consumer,
     auto range = data_sources_.equal_range(cfg_data_source.config().name());
     for (auto it = range.first; it != range.second; it++) {
       TraceConfig::ProducerConfig producer_config;
-      for (auto& config : cfg.producers()) {
+      for (const auto& config : cfg.producers()) {
         if (GetProducer(it->second.producer_id)->name_ ==
             config.producer_name()) {
           producer_config = config;
@@ -47060,7 +47423,7 @@ void TracingServiceImpl::ChangeTraceConfig(ConsumerEndpointImpl* consumer,
       // If it wasn't previously setup, set it up now.
       // (The per-producer config is optional).
       TraceConfig::ProducerConfig producer_config;
-      for (auto& config : tracing_session->config.producers()) {
+      for (const auto& config : tracing_session->config.producers()) {
         if (producer->name_ == config.producer_name()) {
           producer_config = config;
           break;
@@ -47672,13 +48035,13 @@ void TracingServiceImpl::Flush(TracingSessionID tsid,
     data_source_instances[producer_id].push_back(ds_inst.instance_id);
   }
   FlushDataSourceInstances(tracing_session, timeout_ms, data_source_instances,
-                           callback, flush_flags);
+                           std::move(callback), flush_flags);
 }
 
 void TracingServiceImpl::FlushDataSourceInstances(
     TracingSession* tracing_session,
     uint32_t timeout_ms,
-    std::map<ProducerID, std::vector<DataSourceInstanceID>>
+    const std::map<ProducerID, std::vector<DataSourceInstanceID>>&
         data_source_instances,
     ConsumerEndpoint::FlushCallback callback,
     FlushFlags flush_flags) {
@@ -48582,7 +48945,7 @@ void TracingServiceImpl::RegisterDataSource(ProducerID producer_id,
     }
 
     TraceConfig::ProducerConfig producer_config;
-    for (auto& config : tracing_session.config.producers()) {
+    for (const auto& config : tracing_session.config.producers()) {
       if (producer->name_ == config.producer_name()) {
         producer_config = config;
         break;
@@ -49395,6 +49758,8 @@ void TracingServiceImpl::EmitSystemInfo(std::vector<TracePacket>* packets) {
     utsname_info->set_machine(uname_info.machine);
     utsname_info->set_release(uname_info.release);
   }
+  info->set_page_size(static_cast<uint32_t>(sysconf(_SC_PAGESIZE)));
+  info->set_num_cpus(static_cast<uint32_t>(sysconf(_SC_NPROCESSORS_CONF)));
 #endif  // !PERFETTO_BUILDFLAG(PERFETTO_OS_WIN)
 #if PERFETTO_BUILDFLAG(PERFETTO_OS_ANDROID)
   std::string fingerprint_value = base::GetAndroidProp("ro.build.fingerprint");
@@ -49411,8 +49776,6 @@ void TracingServiceImpl::EmitSystemInfo(std::vector<TracePacket>* packets) {
   } else {
     PERFETTO_ELOG("Unable to read ro.build.version.sdk");
   }
-  info->set_hz(sysconf(_SC_CLK_TCK));
-  info->set_page_size(static_cast<uint32_t>(sysconf(_SC_PAGESIZE)));
 #endif  // PERFETTO_BUILDFLAG(PERFETTO_OS_ANDROID)
   packet->set_trusted_uid(static_cast<int32_t>(uid_));
   packet->set_trusted_packet_sequence_id(kServicePacketSequenceID);
@@ -49449,7 +49812,7 @@ void TracingServiceImpl::EmitLifecycleEvents(
               return a.first < b.first;
             });
 
-  for (const auto& pair : timestamped_packets)
+  for (auto& pair : timestamped_packets)
     SerializeAndAppendPacket(packets, std::move(pair.second));
 }
 
@@ -49484,14 +49847,14 @@ void TracingServiceImpl::MaybeEmitRemoteClockSync(
       auto* sync_exchange_msg = remote_clock_sync->add_synced_clocks();
 
       auto* client_snapshots = sync_exchange_msg->set_client_clocks();
-      for (auto& client_clock : sync_exchange.client_clocks) {
+      for (const auto& client_clock : sync_exchange.client_clocks) {
         auto* clock = client_snapshots->add_clocks();
         clock->set_clock_id(client_clock.clock_id);
         clock->set_timestamp(client_clock.timestamp);
       }
 
       auto* host_snapshots = sync_exchange_msg->set_host_clocks();
-      for (auto& host_clock : sync_exchange.host_clocks) {
+      for (const auto& host_clock : sync_exchange.host_clocks) {
         auto* clock = host_snapshots->add_clocks();
         clock->set_clock_id(host_clock.clock_id);
         clock->set_timestamp(host_clock.timestamp);
@@ -49681,7 +50044,7 @@ void TracingServiceImpl::FlushAndCloneSession(ConsumerEndpointImpl* consumer,
 std::map<ProducerID, std::vector<DataSourceInstanceID>>
 TracingServiceImpl::GetFlushableDataSourceInstancesForBuffers(
     TracingSession* session,
-    std::set<BufferID> bufs) {
+    const std::set<BufferID>& bufs) {
   std::map<ProducerID, std::vector<DataSourceInstanceID>> data_source_instances;
 
   for (const auto& [producer_id, ds_inst] : session->data_source_instances) {
@@ -49701,7 +50064,7 @@ TracingServiceImpl::GetFlushableDataSourceInstancesForBuffers(
 
 void TracingServiceImpl::OnFlushDoneForClone(TracingSessionID tsid,
                                              PendingCloneID clone_id,
-                                             std::set<BufferID> buf_ids,
+                                             const std::set<BufferID>& buf_ids,
                                              bool final_flush_outcome) {
   TracingSession* src = GetTracingSession(tsid);
   // The session might be gone by the time we try to clone it.
@@ -49757,7 +50120,7 @@ void TracingServiceImpl::OnFlushDoneForClone(TracingSessionID tsid,
 
 bool TracingServiceImpl::DoCloneBuffers(
     TracingSession* src,
-    std::set<BufferID> buf_ids,
+    const std::set<BufferID>& buf_ids,
     std::vector<std::unique_ptr<TraceBuffer>>* buf_snaps) {
   PERFETTO_DCHECK(src->num_buffers() == src->config.buffers().size());
   buf_snaps->resize(src->buffers_index.size());
@@ -49816,8 +50179,7 @@ base::Status TracingServiceImpl::FinishCloneSession(
   // Skip the UID check for sessions marked with a bugreport_score > 0.
   // Those sessions, by design, can be stolen by any other consumer for the
   // sake of creating snapshots for bugreports.
-  if (src->config.bugreport_score() <= 0 &&
-      src->consumer_uid != consumer->uid_ && consumer->uid_ != 0) {
+  if (!src->IsCloneAllowed(consumer->uid_)) {
     return PERFETTO_SVC_ERR("Not allowed to clone a session from another UID");
   }
 
@@ -49903,6 +50265,20 @@ base::Status TracingServiceImpl::FinishCloneSession(
                                             ? TraceStats::FINAL_FLUSH_SUCCEEDED
                                             : TraceStats::FINAL_FLUSH_FAILED;
   return base::OkStatus();
+}
+
+bool TracingServiceImpl::TracingSession::IsCloneAllowed(uid_t clone_uid) const {
+  if (clone_uid == 0)
+    return true;  // Root is always allowed to clone everything.
+  if (clone_uid == this->consumer_uid)
+    return true;  // Allow cloning if the uids match.
+#if PERFETTO_BUILDFLAG(PERFETTO_OS_ANDROID)
+  // On Android allow shell to clone sessions marked as exported for bugreport.
+  // Dumpstate (invoked by adb bugreport) invokes commands as shell.
+  if (clone_uid == AID_SHELL && this->config.bugreport_score() > 0)
+    return true;
+#endif
+  return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -50149,7 +50525,7 @@ void TracingServiceImpl::ConsumerEndpointImpl::QueryServiceState(
   int num_started = 0;
   for (const auto& kv : sessions)
     num_started += kv.second.state == TracingSession::State::STARTED ? 1 : 0;
-  svc_state.set_num_sessions_started(static_cast<int>(num_started));
+  svc_state.set_num_sessions_started(num_started);
 
   for (const auto& kv : service_->producers_) {
     if (args.sessions_only)
@@ -50175,8 +50551,7 @@ void TracingServiceImpl::ConsumerEndpointImpl::QueryServiceState(
   svc_state.set_supports_tracing_sessions(true);
   for (const auto& kv : service_->tracing_sessions_) {
     const TracingSession& s = kv.second;
-    // List only tracing sessions for the calling UID (or everything for root).
-    if (uid_ != 0 && uid_ != s.consumer_uid)
+    if (!s.IsCloneAllowed(uid_))
       continue;
     auto* session = svc_state.add_tracing_sessions();
     session->set_id(s.id);
@@ -50670,7 +51045,8 @@ TracingBackend* InProcessTracingBackend::GetInstance() {
   return instance;
 }
 
-InProcessTracingBackend::InProcessTracingBackend() {}
+InProcessTracingBackend::InProcessTracingBackend() = default;
+InProcessTracingBackend::~InProcessTracingBackend() = default;
 
 std::unique_ptr<ProducerEndpoint> InProcessTracingBackend::ConnectProducer(
     const ConnectProducerArgs& args) {
@@ -50749,6 +51125,7 @@ TracingService* InProcessTracingBackend::GetOrCreateService(
 // gen_amalgamated expanded: #include "protos/perfetto/config/android/android_polled_state_config.gen.h"
 // gen_amalgamated expanded: #include "protos/perfetto/config/android/android_log_config.gen.h"
 // gen_amalgamated expanded: #include "protos/perfetto/common/android_log_constants.gen.h"
+// gen_amalgamated expanded: #include "protos/perfetto/config/android/android_input_event_config.gen.h"
 // gen_amalgamated expanded: #include "protos/perfetto/config/android/android_game_intervention_list_config.gen.h"
 // gen_amalgamated expanded: #include "protos/perfetto/common/builtin_clock.gen.h"
 // gen_amalgamated expanded: #include "protos/perfetto/common/trace_stats.gen.h"
@@ -52516,6 +52893,7 @@ void EnableTracingRequest::Serialize(::protozero::Message* msg) const {
 // gen_amalgamated expanded: #include "protos/perfetto/config/android/android_polled_state_config.gen.h"
 // gen_amalgamated expanded: #include "protos/perfetto/config/android/android_log_config.gen.h"
 // gen_amalgamated expanded: #include "protos/perfetto/common/android_log_constants.gen.h"
+// gen_amalgamated expanded: #include "protos/perfetto/config/android/android_input_event_config.gen.h"
 // gen_amalgamated expanded: #include "protos/perfetto/config/android/android_game_intervention_list_config.gen.h"
 // gen_amalgamated expanded: #include "protos/perfetto/common/commit_data_request.gen.h"
 
