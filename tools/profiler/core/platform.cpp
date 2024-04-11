@@ -669,7 +669,9 @@ class CorePS {
 
   PS_GET_AND_SET(const nsACString&, ProcessName)
   PS_GET_AND_SET(const nsACString&, ETLDplus1)
+#if !defined(XP_WIN)
   PS_GET_AND_SET(const Maybe<nsCOMPtr<nsIFile>>&, DownloadDirectory)
+#endif
 
   static void SetBandwidthCounter(ProfilerBandwidthCounter* aBandwidthCounter) {
     MOZ_ASSERT(sInstance);
@@ -720,7 +722,9 @@ class CorePS {
   JsFrameBuffer mJsFrames;
 
   // Cached download directory for when we need to dump profiles to disk.
+#if !defined(XP_WIN)
   Maybe<nsCOMPtr<nsIFile>> mDownloadDirectory;
+#endif
 };
 
 CorePS* CorePS::sInstance = nullptr;
@@ -5307,6 +5311,11 @@ static void profiler_stop_signal_handler(int signal, siginfo_t* info,
 // directory, or if the directory has moved since we cached the path.
 // This is non-ideal, but captured by Bug 1885000
 Maybe<nsAutoCString> profiler_find_dump_path() {
+// Note, this is currently a posix-only implementation, as we currently have
+// issues with fetching the download directory on Windows. See Bug 1890154.
+#if defined(XP_WIN)
+  return Nothing();
+#else
   Maybe<nsCOMPtr<nsIFile>> directory = Nothing();
   nsAutoCString path;
 
@@ -5341,12 +5350,8 @@ Maybe<nsAutoCString> profiler_find_dump_path() {
       return Nothing();
     }
 
-// Write the result *back* to the original path
-#if defined(XP_WIN)
-    rv = directory.value()->GetNativeTarget(path);
-#else
+    // Write the result *back* to the original path
     rv = directory.value()->GetNativePath(path);
-#endif
     if (NS_FAILED(rv)) {
       LOG("Failed to get native path for temp path");
       return Nothing();
@@ -5356,6 +5361,7 @@ Maybe<nsAutoCString> profiler_find_dump_path() {
   }
 
   return Nothing();
+#endif
 }
 
 void profiler_dump_and_stop() {
@@ -6459,6 +6465,10 @@ bool profiler_is_paused() {
 
 // See `ProfilerControl.h` for more details.
 void profiler_lookup_download_directory() {
+// This implementation is causing issues on Windows (see Bug 1890154) but as it
+// only exists to support the posix signal handling (on non-windows platforms)
+// we can remove it for now.
+#if !defined(XP_WIN)
   LOG("profiler_lookup_download_directory");
 
   MOZ_ASSERT(
@@ -6481,6 +6491,7 @@ void profiler_lookup_download_directory() {
   } else {
     CorePS::SetDownloadDirectory(lock, Some(tDownloadDir));
   }
+#endif
 }
 
 RefPtr<GenericPromise> profiler_pause() {
