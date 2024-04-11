@@ -27,12 +27,12 @@ CanvasContext* TextureView::GetTargetContext() const {
 }  // namespace webgpu
 
 void TextureView::Cleanup() {
-  if (!mValid) {
+  if (!mValid || !mParent || !mParent->GetDevice()) {
     return;
   }
   mValid = false;
 
-  auto bridge = mParent->GetParentDevice()->GetBridge();
+  auto bridge = mParent->GetDevice()->GetBridge();
   if (!bridge) {
     return;
   }
