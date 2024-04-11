@@ -51,8 +51,6 @@ support-files = [
 
 ["browser_translations_full_page_panel_engine_unsupported.js"]
 
-["browser_translations_full_page_panel_engine_unsupported_lang.js"]
-
 ["browser_translations_full_page_panel_firstrun.js"]
 
 ["browser_translations_full_page_panel_firstrun_revisit.js"]
@@ -76,6 +74,8 @@ skip-if = ["os == 'linux' && !debug"] # Bug 1863227
 ["browser_translations_full_page_panel_settings_unsupported_lang.js"]
 
 ["browser_translations_full_page_panel_switch_languages.js"]
+
+["browser_translations_full_page_panel_unsupported_lang.js"]
 
 ["browser_translations_full_page_reader_mode.js"]
 
