@@ -60,6 +60,9 @@ fi
 if [ "x$MOZ_BOTTOM_FF" = "x" ]; then
   MOZ_BOTTOM_FF=""
 fi
+if [ "x$STOP_FOR_REORDER" = "x" ]; then
+  STOP_FOR_REORDER=""
+fi
 
 # After this point:
 # * eE: All commands should succeed.
