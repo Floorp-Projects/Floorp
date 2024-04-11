@@ -383,6 +383,64 @@ describe("MultiStageAboutWelcome module", () => {
         );
       });
     });
+
+    describe("Wallpaper screen", () => {
+      let WALLPAPER_SCREEN_PROPS;
+      beforeEach(() => {
+        WALLPAPER_SCREEN_PROPS = {
+          content: {
+            title: "test title",
+            subtitle: "test subtitle",
+            tiles: {
+              type: "theme",
+              category: {
+                type: "wallpaper",
+                action: {
+                  type: "SET_PREF",
+                  data: {
+                    pref: { name: "test.pref" },
+                  },
+                },
+              },
+              action: {
+                theme: "<event>",
+              },
+              data: [
+                {
+                  theme: "mountain",
+                  type: "light",
+                },
+              ],
+            },
+            primary_button: {
+              action: {},
+              label: "test button",
+            },
+          },
+          navigate: sandbox.stub(),
+          setActiveTheme: sandbox.stub(),
+        };
+        sandbox.stub(AboutWelcomeUtils, "handleUserAction").resolves();
+      });
+      it("should handle wallpaper click", () => {
+        const wrapper = mount(<WelcomeScreen {...WALLPAPER_SCREEN_PROPS} />);
+        const wallpaperOptions = wrapper.find(
+          ".tiles-theme-section .theme input[name='theme']"
+        );
+        wallpaperOptions.simulate("click");
+        assert.calledOnce(AboutWelcomeUtils.handleUserAction);
+        assert.calledWith(AboutWelcomeUtils.handleUserAction, {
+          data: {
+            pref: {
+              name: "test.pref",
+              value: "mountain",
+            },
+          },
+          type: "SET_PREF",
+        });
+      });
+    });
+
     describe("#handleAction", () => {
       let SCREEN_PROPS;
       let TEST_ACTION;
