@@ -34,15 +34,6 @@ add_task(async function test_bounce_stateful_cookies_client() {
   });
 });
 
-add_task(async function test_bounce_stateful_cookies_client_sameSiteFrame() {
-  info("Test client bounce with cookie set in same site frame.");
-  await runTestBounce({
-    bounceType: "client",
-    setState: "cookie-client",
-    setStateSameSiteFrame: true,
-  });
-});
-
 add_task(async function test_bounce_stateful_cookies_server() {
   info("Test server bounce with cookie.");
   await runTestBounce({
@@ -58,11 +49,15 @@ add_task(async function test_bounce_stateful_cookies_server() {
   });
 });
 
-add_task(async function test_bounce_stateful_cookies_server_sameSiteFrame() {
-  info("Test client bounce with cookie set in same site frame.");
+// Storage tests.
+
+// TODO: Bug 1848406: Implement stateful bounce detection for localStorage.
+add_task(async function test_bounce_stateful_localStorage() {
+  info("TODO: client bounce with localStorage.");
   await runTestBounce({
-    bounceType: "server",
-    setState: "cookie-server",
-    setStateSameSiteFrame: true,
+    bounceType: "client",
+    setState: "localStorage",
+    expectCandidate: false,
+    expectPurge: false,
   });
 });
