@@ -23,6 +23,9 @@ add_task(async function test_unsupported_lang() {
   });
 
   await FullPageTranslationsTestUtils.clickChangeSourceLanguageButton();
+  FullPageTranslationsTestUtils.assertPanelViewDefault();
+  FullPageTranslationsTestUtils.assertSelectedFromLanguage({ langTag: "" });
+  FullPageTranslationsTestUtils.assertSelectedToLanguage({ langTag: "en" });
 
   await cleanup();
 });
