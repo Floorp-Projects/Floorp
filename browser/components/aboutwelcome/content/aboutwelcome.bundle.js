@@ -560,13 +560,7 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
     if (action.theme) {
       let themeToUse = action.theme === "<event>" ? event.currentTarget.value : this.props.initialTheme || action.theme;
       this.props.setActiveTheme(themeToUse);
-      if (props.content.tiles?.category?.type === "wallpaper") {
-        let actionWallPaper = props.content.tiles?.category?.action;
-        actionWallPaper.data.pref.value = themeToUse;
-        await _lib_aboutwelcome_utils_mjs__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.handleUserAction(actionWallPaper);
-      } else {
-        window.AWSelectTheme(themeToUse);
-      }
+      window.AWSelectTheme(themeToUse);
     }
 
     // If the action has persistActiveTheme: true, we set the initial theme to the currently active theme
@@ -1457,7 +1451,7 @@ const Themes = props => {
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
     className: "tiles-theme-container"
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("fieldset", {
-    className: `tiles-theme-section ${props.content.tiles?.category?.type}`
+    className: "tiles-theme-section"
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
     text: props.content.subtitle
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("legend", {
@@ -1466,13 +1460,12 @@ const Themes = props => {
     theme,
     label,
     tooltip,
-    description,
-    type
+    description
   }) => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
     key: theme + label,
     text: typeof tooltip === "object" ? tooltip : {}
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("label", {
-    className: `theme ${type}`,
+    className: "theme",
     title: theme + label
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
     text: typeof description === "object" ? description : {}
