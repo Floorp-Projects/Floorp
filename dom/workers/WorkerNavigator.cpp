@@ -227,6 +227,8 @@ StorageManager* WorkerNavigator::Storage() {
     MOZ_ASSERT(global);
 
     mStorageManager = new StorageManager(global);
+
+    workerPrivate->NotifyStorageKeyUsed();
   }
 
   return mStorageManager;
