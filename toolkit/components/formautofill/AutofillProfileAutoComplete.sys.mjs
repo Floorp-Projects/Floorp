@@ -6,7 +6,10 @@
  * Form Autofill content process module.
  */
 
-import { GenericAutocompleteItem } from "resource://gre/modules/FillHelpers.sys.mjs";
+import {
+  GenericAutocompleteItem,
+  sendFillRequestToParent,
+} from "resource://gre/modules/FillHelpers.sys.mjs";
 
 /* eslint-disable no-use-before-define */
 
@@ -350,50 +353,6 @@ export const ProfileAutocomplete = {
     }
   },
 
-  fillRequestId: 0,
-
-  async sendFillRequestToFormAutofillParent(input, comment) {
-    if (!comment) {
-      return false;
-    }
-
-    if (!input || input != autocompleteController?.input.focusedInput) {
-      return false;
-    }
-
-    const { fillMessageName, fillMessageData } = JSON.parse(comment ?? "{}");
-    if (!fillMessageName) {
-      return false;
-    }
-
-    const actor = getActorFromWindow(input.ownerGlobal, "FormAutofill");
-    if (fillMessageName == "FormAutofill:ClearForm") {
-      // The child can do this directly.
-      actor.clearForm();
-      return true;
-    }
-
-    this.fillRequestId++;
-    const fillRequestId = this.fillRequestId;
-    const value = await actor.sendQuery(fillMessageName, fillMessageData ?? {});
-
-    // skip fill if another fill operation started during await
-    if (fillRequestId != this.fillRequestId) {
-      return false;
-    }
-
-    if (typeof value !== "string") {
-      return false;
-    }
-
-    // If AutoFillParent returned a string to fill, we must do it here because
-    // nsAutoCompleteController.cpp already finished it's work before we finished await.
-    input.setUserInput(value);
-    input.select(value.length, value.length);
-
-    return true;
-  },
-
   _getSelectedIndex(contentWindow) {
     let actor = getActorFromWindow(contentWindow, "AutoComplete");
     if (!actor) {
@@ -419,16 +378,30 @@ export const ProfileAutocomplete = {
       ? this.lastProfileAutoCompleteResult.getCommentAt(selectedIndex)
       : null;
 
+    let profile = JSON.parse(comment);
     if (
       selectedIndex == -1 ||
       !this.lastProfileAutoCompleteResult ||
       this.lastProfileAutoCompleteResult.getStyleAt(selectedIndex) != "autofill"
     ) {
-      await this.sendFillRequestToFormAutofillParent(focusedInput, comment);
+      if (
+        focusedInput &&
+        focusedInput == autocompleteController?.input.focusedInput
+      ) {
+        if (profile?.fillMessageName == "FormAutofill:ClearForm") {
+          // The child can do this directly.
+          getActorFromWindow(focusedInput.ownerGlobal)?.clearForm();
+        } else {
+          // Pass focusedInput as both input arguments.
+          await sendFillRequestToParent(
+            "FormAutofill",
+            autocompleteController.input,
+            comment
+          );
+        }
+      }
       return;
     }
-
-    let profile = JSON.parse(comment);
 
     await lazy.FormAutofillContent.activeHandler.autofillFormFields(profile);
   },

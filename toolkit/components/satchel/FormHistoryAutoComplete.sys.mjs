@@ -3,7 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { GenericAutocompleteItem } from "resource://gre/modules/FillHelpers.sys.mjs";
+import {
+  GenericAutocompleteItem,
+  sendFillRequestToParent,
+} from "resource://gre/modules/FillHelpers.sys.mjs";
 
 const lazy = {};
 
@@ -420,8 +423,6 @@ export class FormHistoryAutoComplete {
   // one is already pending, the existing one is cancelled.
   #pendingClient = null;
 
-  fillRequestId = 0;
-
   observer = {
     _self: null,
 
@@ -649,44 +650,11 @@ export class FormHistoryAutoComplete {
   async observe(subject, topic, data) {
     switch (topic) {
       case "autocomplete-will-enter-text": {
-        await this.sendFillRequestToFormHistoryParent(subject, data);
+        if (subject && subject == formFillController.controller?.input) {
+          await sendFillRequestToParent("FormHistory", subject, data);
+        }
         break;
       }
     }
-  }
-
-  async sendFillRequestToFormHistoryParent(input, comment) {
-    if (!comment) {
-      return;
-    }
-
-    if (!input || input != formFillController.controller?.input) {
-      return;
-    }
-
-    const { fillMessageName, fillMessageData } = JSON.parse(comment ?? "{}");
-    if (!fillMessageName) {
-      return;
-    }
-
-    this.fillRequestId++;
-    const fillRequestId = this.fillRequestId;
-    const actor =
-      input.focusedInput.ownerGlobal.windowGlobalChild.getActor("FormHistory");
-    const value = await actor.sendQuery(fillMessageName, fillMessageData ?? {});
-
-    // skip fill if another fill operation started during await
-    if (fillRequestId != this.fillRequestId) {
-      return;
-    }
-
-    if (typeof value !== "string") {
-      return;
-    }
-
-    // If FormHistoryParent returned a string to fill, we must do it here because
-    // nsAutoCompleteController.cpp already finished it's work before we finished await.
-    input.textValue = value;
-    input.selectTextRange(value.length, value.length);
   }
 }
