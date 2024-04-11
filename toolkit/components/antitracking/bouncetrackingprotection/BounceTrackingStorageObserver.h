@@ -9,10 +9,6 @@
 
 namespace mozilla {
 
-namespace dom {
-class WindowContext;
-}
-
 extern LazyLogModule gBounceTrackingProtectionLog;
 
 class BounceTrackingStorageObserver final : public nsIObserver {
@@ -21,10 +17,7 @@ class BounceTrackingStorageObserver final : public nsIObserver {
 
  public:
   BounceTrackingStorageObserver() = default;
-  [[nodiscard]] nsresult Init();
-
-  [[nodiscard]] static nsresult OnInitialStorageAccess(
-      dom::WindowContext* aWindowContext);
+  nsresult Init();
 
  private:
   ~BounceTrackingStorageObserver() = default;

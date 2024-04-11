@@ -219,10 +219,6 @@ parent:
                                       bool fromHttp,
                                       CookieStruct[] cookies);
 
-  // Notify parent of storage access in the content process. This only happens
-  // once per window lifetime to avoid redundant IPC.
-  async OnInitialStorageAccess();
-
 child:
   async NotifyPermissionChange(nsCString type, uint32_t permission);
 };

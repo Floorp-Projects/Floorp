@@ -10,7 +10,6 @@
 
 #include "mozilla/AntiTrackingUtils.h"
 #include "mozilla/AsyncEventDispatcher.h"
-#include "mozilla/BounceTrackingStorageObserver.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/ContentBlockingAllowList.h"
 #include "mozilla/dom/InProcessParent.h"
@@ -1704,13 +1703,6 @@ IPCResult WindowGlobalParent::RecvSetCookies(
 
   return cs->SetCookies(aBaseDomain, aOriginAttributes, aHost, aFromHttp,
                         aCookies, GetBrowsingContext());
-}
-
-IPCResult WindowGlobalParent::RecvOnInitialStorageAccess() {
-  DebugOnly<nsresult> rv =
-      BounceTrackingStorageObserver::OnInitialStorageAccess(this);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to notify storage access");
-  return IPC_OK();
 }
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(WindowGlobalParent, WindowContext,

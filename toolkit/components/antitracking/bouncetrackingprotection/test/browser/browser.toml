@@ -9,25 +9,12 @@ support-files = [
   "file_start.html",
   "file_bounce.sjs",
   "file_bounce.html",
-  "file_web_worker.js",
 ]
-
-["browser_bouncetracking_dry_run.js"]
 
 ["browser_bouncetracking_oa_isolation.js"]
 
-["browser_bouncetracking_popup.js"]
-
 ["browser_bouncetracking_purge.js"]
-
-["browser_bouncetracking_schemes.js"]
 
 ["browser_bouncetracking_simple.js"]
 
-["browser_bouncetracking_stateful_cookies.js"]
-
-["browser_bouncetracking_stateful_storage.js"]
-
-["browser_bouncetracking_stateful_web_worker.js"]
-
-["browser_bouncetracking_telemetry_purge_events.js"]
+["browser_bouncetracking_stateful.js"]
