@@ -794,6 +794,7 @@
       "jcoppeard@mozilla.com"
     ],
     "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
     "kind": "exponential",
     "high": 100,
     "n_buckets": 20,
@@ -808,6 +809,7 @@
       "jcoppeard@mozilla.com"
     ],
     "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
     "kind": "exponential",
     "high": 100,
     "n_buckets": 20,
@@ -837,6 +839,7 @@
       "smaug@mozilla.com"
     ],
     "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
     "kind": "exponential",
     "high": 10000,
     "n_buckets": 50,
@@ -851,7 +854,6 @@
       "jcoppeard@mozilla.com"
     ],
     "expires_in_version": "never",
-    "releaseChannelCollection": "opt-out",
     "kind": "exponential",
     "high": 200,
     "n_buckets": 50,
@@ -893,7 +895,6 @@
       "sdetar@mozilla.com"
     ],
     "expires_in_version": "never",
-    "releaseChannelCollection": "opt-out",
     "kind": "exponential",
     "high": 10000,
     "n_buckets": 50,
@@ -932,6 +933,7 @@
     "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
     "kind": "exponential",
     "high": 10000,
     "n_buckets": 50,
@@ -943,6 +945,7 @@
     "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
     "kind": "exponential",
     "high": 10000,
     "n_buckets": 50,
@@ -954,6 +957,7 @@
     "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
     "kind": "exponential",
     "high": 10000,
     "n_buckets": 50,
@@ -968,7 +972,6 @@
       "jcoppeard@mozilla.com"
     ],
     "expires_in_version": "never",
-    "releaseChannelCollection": "opt-out",
     "kind": "exponential",
     "high": 150000,
     "n_buckets": 50,
@@ -983,7 +986,6 @@
       "jcoppeard@mozilla.com"
     ],
     "expires_in_version": "never",
-    "releaseChannelCollection": "opt-out",
     "kind": "exponential",
     "high": 10000,
     "n_buckets": 50,
@@ -998,7 +1000,6 @@
       "jcoppeard@mozilla.com"
     ],
     "expires_in_version": "never",
-    "releaseChannelCollection": "opt-out",
     "kind": "exponential",
     "high": 10000,
     "n_buckets": 50,
@@ -1010,6 +1011,7 @@
     "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
     "kind": "exponential",
     "high": 10000,
     "n_buckets": 50,
@@ -1044,6 +1046,7 @@
     "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
     "kind": "linear",
     "high": 100,
     "n_buckets": 20,
@@ -1113,6 +1116,7 @@
     "products": ["firefox"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
     "kind": "exponential",
     "high": 1000000,
     "n_buckets": 100,
@@ -1142,7 +1146,6 @@
       "jcoppeard@mozilla.com"
     ],
     "expires_in_version": "never",
-    "releaseChannelCollection": "opt-out",
     "kind": "exponential",
     "high": 100,
     "n_buckets": 20,
@@ -1199,7 +1202,6 @@
     "kind": "linear",
     "high": 100,
     "n_buckets": 50,
-    "releaseChannelCollection": "opt-out",
     "bug_numbers": [1563755],
     "description": "The percentage of tenured GC things that survived a collection."
   },
@@ -1229,7 +1231,6 @@
     "kind": "exponential",
     "high": 120,
     "n_buckets": 50,
-    "releaseChannelCollection": "opt-out",
     "bug_numbers": [1556467],
     "description": "Time spent in between garbage collections for the main runtime (seconds)"
   },
@@ -1272,7 +1273,6 @@
     ],
     "expires_in_version": "never",
     "kind": "exponential",
-    "releaseChannelCollection": "opt-out",
     "low": 1,
     "high": 50000,
     "n_buckets": 100,
@@ -1625,6 +1625,7 @@
     "products": ["firefox", "fennec", "thunderbird"],
     "alert_emails": ["memshrink-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
     "kind": "exponential",
     "low": 1024,
     "high": 16777216,
