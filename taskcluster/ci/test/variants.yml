@@ -318,27 +318,6 @@ webgl-ipc:
                 - "--setpref=webgl.out-of-process=true"
                 - "--setpref=security.sandbox.content.headless=true"
 
-devtools-no-eft:
-    description: "{description} with DevTools EFT disabled"
-    component: "DevTools::Framework"
-    expiration: "2024-03-01"
-    suffix: "dt-no-eft"
-    when:
-        $eval: '
-                "linux" in task["test-platform"]
-                && "opt" in task["test-platform"]
-                && "mochitest-devtools-chrome" == task["try-name"]
-                && !(
-                        "asan" in task["test-platform"]
-                        || "tsan" in task["test-platform"]
-                        || "ccov" in task["test-platform"]
-                    )
-                '
-    merge:
-        mozharness:
-            extra-options:
-                - "--setpref=devtools.every-frame-target.enabled=false"
-
 wmf-media-engine:
     description: "{description} with Windows Media Foundation media engine enabled"
     component: "Core::Audio/Video: Playback"

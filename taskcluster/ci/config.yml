@@ -104,8 +104,6 @@ treeherder:
         'M-f-swr': 'Mochitest failures software webrender'
         'M-f-cf': 'Mochitest failures w/confirm failure'
         'M-f-swr-cf': 'Mochitest failures software webrender w/confirm failure'
-        'M-dt-no-eft-nofis': 'DevTools Mochitests with EFT disabled without fission enabled'
-        'M-dt-no-eft-nofis-cf': 'DevTools Mochitests confirm failure with EFT disabled without fission enabled'
         'M-msix': 'Mochitests from MSIX builds'
         'M-msix-cf': 'Mochitests confirm failure from MSIX builds'
         'MSI': 'Repack installers into MSIs'
