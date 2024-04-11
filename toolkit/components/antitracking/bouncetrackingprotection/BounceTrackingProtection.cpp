@@ -222,9 +222,11 @@ nsresult BounceTrackingProtection::RecordStatefulBounces(
 nsresult BounceTrackingProtection::RecordUserActivation(
     nsIPrincipal* aPrincipal) {
   MOZ_ASSERT(XRE_IsParentProcess());
-
   NS_ENSURE_ARG_POINTER(aPrincipal);
-  NS_ENSURE_TRUE(aPrincipal->GetIsContentPrincipal(), NS_ERROR_FAILURE);
+
+  if (!BounceTrackingState::ShouldTrackPrincipal(aPrincipal)) {
+    return NS_OK;
+  }
 
   nsAutoCString siteHost;
   nsresult rv = aPrincipal->GetBaseDomain(siteHost);

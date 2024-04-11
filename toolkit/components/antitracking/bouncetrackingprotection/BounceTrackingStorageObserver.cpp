@@ -70,13 +70,25 @@ BounceTrackingStorageObserver::Observe(nsISupports* aSubject,
     return NS_OK;
   }
 
-  // Check if the cookie is partitioned. Partitioned cookies can not be used for
-  // bounce tracking.
+  // Filter http(s) cookies
   nsCOMPtr<nsICookie> cookie;
   rv = notification->GetCookie(getter_AddRefs(cookie));
   NS_ENSURE_SUCCESS(rv, rv);
   MOZ_ASSERT(cookie);
 
+  nsICookie::schemeType schemeMap;
+  rv = cookie->GetSchemeMap(&schemeMap);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!(schemeMap & (nsICookie::schemeType::SCHEME_HTTP |
+                     nsICookie::schemeType::SCHEME_HTTPS))) {
+    MOZ_LOG(gBounceTrackingProtectionLog, LogLevel::Verbose,
+            ("Skipping non-HTTP(S) cookie."));
+    return NS_OK;
+  }
+
+  // Check if the cookie is partitioned. Partitioned cookies can not be used for
+  // bounce tracking.
   if (!cookie->OriginAttributesNative().mPartitionKey.IsEmpty()) {
     MOZ_LOG(gBounceTrackingProtectionLog, LogLevel::Verbose,
             ("Skipping partitioned cookie."));
@@ -111,14 +123,13 @@ nsresult BounceTrackingStorageObserver::OnInitialStorageAccess(
   NS_ENSURE_ARG_POINTER(aWindowContext);
 
   if (!XRE_IsParentProcess()) {
-    // Skip partitioned storage access. Checking this in the content process
-    // potentially saves us an IPC message to the parent.
+    // Check if the principal needs to be tracked for bounce tracking. Checking
+    // this in the content process may save us IPC to the parent.
     nsIPrincipal* storagePrincipal =
         aWindowContext->GetInnerWindow()->GetEffectiveStoragePrincipal();
-    if (storagePrincipal &&
-        !storagePrincipal->OriginAttributesRef().mPartitionKey.IsEmpty()) {
+    if (!BounceTrackingState::ShouldTrackPrincipal(storagePrincipal)) {
       MOZ_LOG(gBounceTrackingProtectionLog, LogLevel::Verbose,
-              ("Skipping partitioned storage access (content process)."));
+              ("%s: Skipping principal (content process).", __FUNCTION__));
       return NS_OK;
     }
 
@@ -136,9 +147,9 @@ nsresult BounceTrackingStorageObserver::OnInitialStorageAccess(
       aWindowContext->Canonical()->DocumentStoragePrincipal();
   NS_ENSURE_TRUE(storagePrincipal, NS_ERROR_FAILURE);
 
-  if (!storagePrincipal->GetIsContentPrincipal()) {
+  if (!BounceTrackingState::ShouldTrackPrincipal(storagePrincipal)) {
     MOZ_LOG(gBounceTrackingProtectionLog, LogLevel::Verbose,
-            ("Skipping non-content principal."));
+            ("%s: Skipping principal.", __FUNCTION__));
     return NS_OK;
   }
 

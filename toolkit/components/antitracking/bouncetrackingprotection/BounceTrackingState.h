@@ -80,6 +80,9 @@ class BounceTrackingState : public nsIWebProgressListener,
   static bool ShouldCreateBounceTrackingStateForBC(
       dom::CanonicalBrowsingContext* aBrowsingContext);
 
+  // Whether the given principal should be tracked for bounce tracking.
+  static bool ShouldTrackPrincipal(nsIPrincipal* aPrincipal);
+
   // Check if there is a BounceTrackingState which current browsing context is
   // associated with aSiteHost.
   // This is an approximation for checking if a given site is currently loaded
