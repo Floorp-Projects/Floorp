@@ -16,13 +16,19 @@ import org.mozilla.fenix.components.menu.store.MenuAction
 import org.mozilla.fenix.components.menu.store.MenuState
 import org.mozilla.fenix.components.menu.store.MenuStore
 import org.mozilla.fenix.ext.nav
+import org.mozilla.fenix.settings.SupportUtils.SumoTopic
 
 /**
  * [Middleware] implementation for handling navigating events based on [MenuAction]s that are
  * dispatched to the [MenuStore].
+ *
+ * @param navController [NavController] used for navigation.
+ * @param openSumoTopic Callback to open the provided [SumoTopic] in a new browser tab.
+ * @param scope [CoroutineScope] used to launch coroutines.
  */
 class MenuNavigationMiddleware(
     private val navController: NavController,
+    private val openSumoTopic: (topic: SumoTopic) -> Unit,
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.Main),
 ) : Middleware<MenuState, MenuAction> {
 
@@ -35,6 +41,8 @@ class MenuNavigationMiddleware(
 
         scope.launch {
             when (action) {
+                is MenuAction.Navigate.Help -> openSumoTopic(SumoTopic.HELP)
+
                 is MenuAction.Navigate.Settings -> navController.nav(
                     R.id.menuDialogFragment,
                     MenuDialogFragmentDirections.actionGlobalSettingsFragment(),

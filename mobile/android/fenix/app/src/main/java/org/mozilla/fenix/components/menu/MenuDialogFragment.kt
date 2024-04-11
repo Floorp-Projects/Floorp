@@ -14,6 +14,8 @@ import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import org.mozilla.fenix.BrowserDirection
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.accounts.AccountState
 import org.mozilla.fenix.components.lazyStore
@@ -23,6 +25,9 @@ import org.mozilla.fenix.components.menu.middleware.MenuNavigationMiddleware
 import org.mozilla.fenix.components.menu.store.MenuAction
 import org.mozilla.fenix.components.menu.store.MenuState
 import org.mozilla.fenix.components.menu.store.MenuStore
+import org.mozilla.fenix.ext.runIfFragmentIsAttached
+import org.mozilla.fenix.settings.SupportUtils
+import org.mozilla.fenix.settings.SupportUtils.SumoTopic
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
@@ -36,6 +41,7 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
             middleware = listOf(
                 MenuNavigationMiddleware(
                     navController = findNavController(),
+                    openSumoTopic = ::openSumoTopic,
                     scope = viewModelScope,
                 ),
             ),
@@ -67,7 +73,9 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                         account = null,
                         accountState = AccountState.NO_ACCOUNT,
                         onSignInButtonClick = {},
-                        onHelpButtonClick = {},
+                        onHelpButtonClick = {
+                            store.dispatch(MenuAction.Navigate.Help)
+                        },
                         onSettingsButtonClick = {
                             store.dispatch(MenuAction.Navigate.Settings)
                         },
@@ -75,5 +83,16 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                 }
             }
         }
+    }
+
+    private fun openSumoTopic(topic: SumoTopic) = runIfFragmentIsAttached {
+        (activity as HomeActivity).openToBrowserAndLoad(
+            searchTermOrURL = SupportUtils.getSumoURLForTopic(
+                context = requireContext(),
+                topic = topic,
+            ),
+            newTab = true,
+            from = BrowserDirection.FromMenuDialogFragment,
+        )
     }
 }
