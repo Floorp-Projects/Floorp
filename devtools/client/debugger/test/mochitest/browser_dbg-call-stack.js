@@ -19,6 +19,8 @@ add_task(async function () {
 
   const button = toggleButton(dbg);
   ok(!button, "toggle button shouldn't be there");
+
+  await resume(dbg);
 });
 
 add_task(async function () {
