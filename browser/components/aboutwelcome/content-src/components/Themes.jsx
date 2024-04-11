@@ -9,20 +9,18 @@ export const Themes = props => {
   return (
     <div className="tiles-theme-container">
       <div>
-        <fieldset
-          className={`tiles-theme-section ${props.content.tiles?.category?.type}`}
-        >
+        <fieldset className="tiles-theme-section">
           <Localized text={props.content.subtitle}>
             <legend className="sr-only" />
           </Localized>
           {props.content.tiles.data.map(
-            ({ theme, label, tooltip, description, type }) => (
+            ({ theme, label, tooltip, description }) => (
               <Localized
                 key={theme + label}
                 text={typeof tooltip === "object" ? tooltip : {}}
               >
                 {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-                <label className={`theme ${type}`} title={theme + label}>
+                <label className="theme" title={theme + label}>
                   <Localized
                     text={typeof description === "object" ? description : {}}
                   >
