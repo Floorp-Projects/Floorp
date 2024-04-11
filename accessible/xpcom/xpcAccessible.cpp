@@ -636,7 +636,8 @@ xpcAccessible::ScrollToPoint(uint32_t aCoordinateType, int32_t aX, int32_t aY) {
 
 NS_IMETHODIMP
 xpcAccessible::Announce(const nsAString& aAnnouncement, uint16_t aPriority) {
-  if (RemoteAccessible* proxy = IntlGeneric()->AsRemote()) {
+  RemoteAccessible* proxy = IntlGeneric()->AsRemote();
+  if (proxy) {
 #if defined(XP_WIN)
     return NS_ERROR_NOT_IMPLEMENTED;
 #else
