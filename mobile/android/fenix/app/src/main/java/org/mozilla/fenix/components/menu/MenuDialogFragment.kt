@@ -79,6 +79,18 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                         onSettingsButtonClick = {
                             store.dispatch(MenuAction.Navigate.Settings)
                         },
+                        onBookmarksMenuClick = {
+                            store.dispatch(MenuAction.Navigate.Bookmarks)
+                        },
+                        onHistoryMenuClick = {
+                            store.dispatch(MenuAction.Navigate.History)
+                        },
+                        onDownloadsMenuClick = {
+                            store.dispatch(MenuAction.Navigate.Downloads)
+                        },
+                        onPasswordsMenuClick = {
+                            store.dispatch(MenuAction.Navigate.Passwords)
+                        },
                     )
                 }
             }
