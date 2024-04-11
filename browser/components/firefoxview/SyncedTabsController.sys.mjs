@@ -21,32 +21,51 @@ const TOPIC_SETUPSTATE_CHANGED = "firefox-view.setupstate.changed";
  * @implements {ReactiveController}
  */
 export class SyncedTabsController {
+  /**
+   * @type {boolean}
+   */
+  contextMenu;
   currentSetupStateIndex = -1;
   currentSyncedTabs = [];
   devices = [];
-
   /**
    * The current error state as determined by `SyncedTabsErrorHandler`.
    *
    * @type {number}
    */
   errorState = null;
-
   /**
    * Component associated with this controller.
    *
    * @type {ReactiveControllerHost}
    */
   host;
-
+  /**
+   * @type {Function}
+   */
+  pairDeviceCallback;
   searchQuery = "";
+  /**
+   * @type {Function}
+   */
+  signupCallback;
 
   /**
    * Construct a new SyncedTabsController.
    *
    * @param {ReactiveControllerHost} host
+   * @param {object} options
+   * @param {boolean} [options.contextMenu]
+   *   Whether synced tab items have a secondary context menu.
+   * @param {Function} [options.pairDeviceCallback]
+   *   The function to call when the pair device window is opened.
+   * @param {Function} [options.signupCallback]
+   *   The function to call when the signup window is opened.
    */
-  constructor(host) {
+  constructor(host, { contextMenu, pairDeviceCallback, signupCallback } = {}) {
+    this.contextMenu = contextMenu;
+    this.pairDeviceCallback = pairDeviceCallback;
+    this.signupCallback = signupCallback;
     this.observe = this.observe.bind(this);
     this.host = host;
     this.host.addController(this);
@@ -83,10 +102,12 @@ export class SyncedTabsController {
         case `${ErrorType.SIGNED_OUT}`:
         case "sign-in": {
           TabsSetupFlowManager.openFxASignup(event.target.ownerGlobal);
+          this.signupCallback?.();
           break;
         }
         case "add-device": {
           TabsSetupFlowManager.openFxAPairDevice(event.target.ownerGlobal);
+          this.pairDeviceCallback?.();
           break;
         }
         case "sync-tabs-disabled": {
@@ -275,8 +296,12 @@ export class SyncedTabsController {
       url: tab.url,
       primaryL10nId: "firefoxview-tabs-list-tab-button",
       primaryL10nArgs: JSON.stringify({ targetURI: tab.url }),
-      secondaryL10nId: "fxviewtabrow-options-menu-button",
-      secondaryL10nArgs: JSON.stringify({ tabTitle: tab.title }),
+      secondaryL10nId: this.contextMenu
+        ? "fxviewtabrow-options-menu-button"
+        : undefined,
+      secondaryL10nArgs: this.contextMenu
+        ? JSON.stringify({ tabTitle: tab.title })
+        : undefined,
     }));
   }
 

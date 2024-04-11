@@ -27,7 +27,26 @@ import {
 const UI_OPEN_STATE = "browser.tabs.firefox-view.ui-state.tab-pickup.open";
 
 class SyncedTabsInView extends ViewPage {
-  controller = new lazy.SyncedTabsController(this);
+  controller = new lazy.SyncedTabsController(this, {
+    contextMenu: true,
+    pairDeviceCallback: () =>
+      Services.telemetry.recordEvent(
+        "firefoxview_next",
+        "fxa_mobile",
+        "sync",
+        null,
+        {
+          has_devices: TabsSetupFlowManager.secondaryDeviceConnected.toString(),
+        }
+      ),
+    signupCallback: () =>
+      Services.telemetry.recordEvent(
+        "firefoxview_next",
+        "fxa_continue",
+        "sync",
+        null
+      ),
+  });
 
   constructor() {
     super();
@@ -150,7 +169,7 @@ class SyncedTabsInView extends ViewPage {
           ?hidden=${!buttonLabel}
           data-l10n-id="${ifDefined(buttonLabel)}"
           data-action="${action}"
-          @click=${this.controller.handleEvent}
+          @click=${e => this.controller.handleEvent(e)}
           aria-details="empty-container"
         ></button>
       </fxview-empty-state>
@@ -405,7 +424,7 @@ class SyncedTabsInView extends ViewPage {
                 <button
                   class="small-button"
                   data-action="add-device"
-                  @click=${this.controller.handleEvent}
+                  @click=${e => this.controller.handleEvent(e)}
                 >
                   <img
                     class="icon"

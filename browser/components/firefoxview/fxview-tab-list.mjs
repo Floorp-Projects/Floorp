@@ -273,7 +273,7 @@ export class FxviewTabListBase extends MozLitElement {
     return html`
       <fxview-tab-row
         ?active=${i == this.activeIndex}
-        .compact=${this.compactRows}
+        ?compact=${this.compactRows}
         .currentActiveElementId=${this.currentActiveElementId}
         .favicon=${tabItem.icon}
         .primaryL10nId=${tabItem.primaryL10nId}
@@ -359,6 +359,7 @@ customElements.define("fxview-tab-list", FxviewTabListBase);
  * A tab item that displays favicon, title, url, and time of last access
  *
  * @property {boolean} active - Should current item have focus on keydown
+ * @property {boolean} compact - Whether to hide the URL and date/time for this tab.
  * @property {string} currentActiveElementId - ID of currently focused element within each tab item
  * @property {string} dateTimeFormat - Expected format for date and/or time
  * @property {string} hasPopup - The aria-haspopup attribute for the secondary action, if required
@@ -384,6 +385,7 @@ customElements.define("fxview-tab-list", FxviewTabListBase);
 export class FxviewTabRowBase extends MozLitElement {
   static properties = {
     active: { type: Boolean },
+    compact: { type: Boolean },
     currentActiveElementId: { type: String },
     dateTimeFormat: { type: String },
     favicon: { type: String },

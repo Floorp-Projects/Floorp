@@ -11,10 +11,6 @@ var SidebarUI = {
       return this._sidebars;
     }
 
-    const historySidebarURL = Services.prefs.getBoolPref("sidebar.revamp")
-      ? "chrome://browser/content/sidebar/sidebar-history.html"
-      : "chrome://browser/content/places/historySidebar.xhtml";
-
     function makeSidebar({ elementId, ...rest }) {
       return {
         get sourceL10nEl() {
@@ -40,7 +36,9 @@ var SidebarUI = {
         "viewHistorySidebar",
         makeSidebar({
           elementId: "sidebar-switcher-history",
-          url: historySidebarURL,
+          url: this.sidebarRevampEnabled
+            ? "chrome://browser/content/sidebar/sidebar-history.html"
+            : "chrome://browser/content/places/historySidebar.xhtml",
           menuId: "menu_historySidebar",
           triggerButtonId: "appMenuViewHistorySidebar",
         }),
@@ -49,7 +47,9 @@ var SidebarUI = {
         "viewTabsSidebar",
         makeSidebar({
           elementId: "sidebar-switcher-tabs",
-          url: "chrome://browser/content/syncedtabs/sidebar.xhtml",
+          url: this.sidebarRevampEnabled
+            ? "chrome://browser/content/sidebar/sidebar-syncedtabs.html"
+            : "chrome://browser/content/syncedtabs/sidebar.xhtml",
           menuId: "menu_tabsSidebar",
         }),
       ],

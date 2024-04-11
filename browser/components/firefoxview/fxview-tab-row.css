@@ -33,6 +33,10 @@
   user-select: none;
   cursor: pointer;
   text-decoration: none;
+
+  :host([compact]) & {
+    grid-template-columns: min-content auto;
+  }
 }
 
 .fxview-tab-row-main,
