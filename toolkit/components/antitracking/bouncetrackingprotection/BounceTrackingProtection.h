@@ -82,13 +82,20 @@ class BounceTrackingProtection final : public nsIBounceTrackingProtection {
     NS_DECL_NSICLEARDATACALLBACK
 
     explicit ClearDataCallback(ClearDataMozPromise::Private* aPromise,
-                               const nsACString& aHost)
-        : mHost(aHost), mPromise(aPromise){};
+                               const nsACString& aHost,
+                               const PRTime aBounceTime)
+        : mHost(aHost), mBounceTime(aBounceTime), mPromise(aPromise) {
+      MOZ_ASSERT(!aHost.IsEmpty(), "Host must not be empty");
+      MOZ_ASSERT(aBounceTime > 0, "Bounce time must be a valid timestamp.");
+    };
 
    private:
     virtual ~ClearDataCallback() { mPromise->Reject(0, __func__); }
 
+    void RecordClearDataTelemetry(bool success);
+
     nsCString mHost;
+    PRTime mBounceTime;
     RefPtr<ClearDataMozPromise::Private> mPromise;
   };
 };
