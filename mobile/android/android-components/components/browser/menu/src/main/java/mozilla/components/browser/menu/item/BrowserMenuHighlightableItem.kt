@@ -31,6 +31,7 @@ private val defaultHighlight = BrowserMenuHighlightableItem.Highlight(0, 0, 0, 0
  * @param startImageResource ID of a drawable resource to be shown as a leftmost icon.
  * @param iconTintColorResource Optional ID of color resource to tint the icon.
  * @param textColorResource Optional ID of color resource to tint the text.
+ * @param enabled Sets the enabled status for the view. By default, it is true.
  * @param isCollapsingMenuLimit Whether this menu item can serve as the limit of a collapsing menu.
  * @param isSticky whether this item menu should not be scrolled offscreen (downwards or upwards
  * depending on the menu position).
@@ -43,6 +44,7 @@ class BrowserMenuHighlightableItem(
     @DrawableRes private val startImageResource: Int,
     @ColorRes iconTintColorResource: Int = NO_ID,
     @ColorRes private val textColorResource: Int = NO_ID,
+    enabled: Boolean = true,
     override val isCollapsingMenuLimit: Boolean = false,
     override val isSticky: Boolean = false,
     override val highlight: BrowserMenuHighlight,
@@ -53,6 +55,7 @@ class BrowserMenuHighlightableItem(
     startImageResource,
     iconTintColorResource,
     textColorResource,
+    enabled,
     isCollapsingMenuLimit,
     isSticky,
     listener,
@@ -69,6 +72,7 @@ class BrowserMenuHighlightableItem(
         iconTintColorResource: Int = NO_ID,
         @ColorRes
         textColorResource: Int = NO_ID,
+        enabled: Boolean = true,
         isCollapsingMenuLimit: Boolean = false,
         isSticky: Boolean = false,
         highlight: Highlight? = null,
@@ -78,6 +82,7 @@ class BrowserMenuHighlightableItem(
         imageResource,
         iconTintColorResource,
         textColorResource,
+        enabled,
         isCollapsingMenuLimit,
         isSticky,
         highlight ?: defaultHighlight,

@@ -278,20 +278,20 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         translationsBinding.set(
             feature = TranslationsBinding(
                 browserStore = context.components.core.store,
-                onStateUpdated = { isVisible, isTranslated, fromSelectedLanguage, toSelectedLanguage ->
-                    translationsAvailable = isVisible
+                onTranslationsActionUpdated = {
+                    translationsAvailable = it.isVisible
 
                     translationsAction.updateView(
-                        tintColorResource = if (isTranslated) {
+                        tintColorResource = if (it.isTranslated) {
                             R.color.fx_mobile_icon_color_accent_violet
                         } else {
                             ThemeManager.resolveAttribute(R.attr.textPrimary, context)
                         },
-                        contentDescription = if (isTranslated) {
+                        contentDescription = if (it.isTranslated) {
                             context.getString(
                                 R.string.browser_toolbar_translated_successfully,
-                                fromSelectedLanguage?.localizedDisplayName,
-                                toSelectedLanguage?.localizedDisplayName,
+                                it.fromSelectedLanguage?.localizedDisplayName,
+                                it.toSelectedLanguage?.localizedDisplayName,
                             )
                         } else {
                             context.getString(R.string.browser_toolbar_translate)
