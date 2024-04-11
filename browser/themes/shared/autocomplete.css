@@ -178,11 +178,16 @@
     opacity: 1;
   }
 
-  &[originaltype="autofill"] > .two-line-wrapper > .ac-site-icon {
-    width: auto;
-    min-height: 16px;
-    max-width: none; /* reset max-width so that credit card icons don't appear stretched */
-    max-height: 16px;
+  &[originaltype="autofill"] > .two-line-wrapper {
+    display: grid;
+    grid-template-columns: 32px 1fr;
+
+    > .ac-site-icon {
+      width: auto;
+      height: 16px;
+      max-width: 32px;
+      max-height: 16px;
+    }
   }
 
   /* Insecure field warning */
