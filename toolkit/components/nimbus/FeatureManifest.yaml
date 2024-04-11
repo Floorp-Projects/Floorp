@@ -2727,3 +2727,16 @@ backupService:
       description: >-
         When true, the profile backup service will be initialized soon after
         startup.
+
+pqcrypto:
+  description: Prefs that control the use of post-quantum cryptography.
+  owner: jschanck@mozilla.com
+  hasExposure: false
+  variables:
+    tlsEnableXyber:
+      type: boolean
+      setPref:
+        branch: default
+        pref: security.tls.enable_kyber
+      description: >-
+        Whether to enable Xyber768 for TLS.
