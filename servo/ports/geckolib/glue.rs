@@ -9238,13 +9238,23 @@ fn get_byte_index_from_line_and_column(
     if line != 1 {
         let mut current_line = 1;
         let mut last_byte = None;
-        line_byte_index = css_text.bytes().position(|byte| {
-            if (byte == b'\n' && last_byte != Some(b'\r')) || byte == b'\r' {
-                current_line += 1;
-            }
-
+        let mut bytes_iter = css_text.bytes();
+        line_byte_index = bytes_iter.position(|byte| {
+            // We want to get the position _after_ the EOF sequence
+            let on_expected_line = current_line == line;
+            let is_previous_byte_carriage_return = last_byte == Some(b'\r');
             last_byte = Some(byte);
-            return current_line == line;
+
+            if byte == b'\r' {
+                current_line += 1;
+            } else if byte == b'\n' {
+                if !is_previous_byte_carriage_return {
+                    current_line += 1;
+                } else {
+                    return false;
+                }
+            }
+            on_expected_line
         });
     }
 
