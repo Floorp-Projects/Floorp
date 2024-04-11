@@ -27721,24 +27721,6 @@
       "last_modified": 1601517444025
     },
     {
-      "schema": 1601376747224,
-      "derHash": "uQ7q6THl4rfTNfFJ2mwiEJhgANIU/9tipy9zMtY3Ma8=",
-      "subject": "CN=Verizon Global Root CA,OU=OmniRoot,O=Verizon Business,C=US",
-      "subjectDN": "MFwxCzAJBgNVBAYTAlVTMRkwFwYDVQQKExBWZXJpem9uIEJ1c2luZXNzMREwDwYDVQQLEwhPbW5pUm9vdDEfMB0GA1UEAxMWVmVyaXpvbiBHbG9iYWwgUm9vdCBDQQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "b2ff06177ee90557f82e4d2b65f87cbe3e37ef185fd9f5b2f7d8c654bf7eefbc",
-        "size": 1760,
-        "filename": "v-gpCYcuRDTxFcUaVhaAGVlNDgPco2PZ87SDnQurzeU=.pem",
-        "location": "security-state-staging/intermediates/96d8b2a4-5c83-408a-aba1-f8c0818c74a1.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "v+gpCYcuRDTxFcUaVhaAGVlNDgPco2PZ87SDnQurzeU=",
-      "crlite_enrolled": false,
-      "id": "90eff404-0514-42a4-b6bc-375d060840d8",
-      "last_modified": 1601517443892
-    },
-    {
       "schema": 1601376768762,
       "derHash": "bay7iUUTex2tQhGwQ2774G8SrONpBJc7Ra4ldAgj02k=",
       "subject": "CN=DigiCert Global Root CA,OU=www.digicert.com,O=DigiCert Inc,C=US",
@@ -30619,5 +30601,5 @@
       "last_modified": 1559865884636
     }
   ],
-  "timestamp": 1712311023721
+  "timestamp": 1712674623155
 }
