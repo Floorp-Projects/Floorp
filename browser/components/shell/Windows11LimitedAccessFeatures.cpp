@@ -9,6 +9,12 @@
  */
 #include "Windows11LimitedAccessFeatures.h"
 
+#include "mozilla/Logging.h"
+
+static mozilla::LazyLogModule sLog("Windows11LimitedAccessFeatures");
+
+#define LAF_LOG(level, msg, ...) MOZ_LOG(sLog, level, (msg, ##__VA_ARGS__))
+
 // MINGW32 is not supported for these features
 // Fall back function defined in the #else
 #ifndef __MINGW32__
@@ -30,11 +36,7 @@ using namespace ABI::Windows;
 using namespace ABI::Windows::Foundation;
 using namespace ABI::Windows::ApplicationModel;
 
-struct LimitedAccessFeatureInfo {
-  const WCHAR* feature;
-  const WCHAR* token;
-  const WCHAR* attestation;
-};
+using namespace mozilla;
 
 /**
  * To unlock features, we need a feature identifier, a token, and an
@@ -95,26 +97,36 @@ struct LimitedAccessFeatureInfo {
  *  Windows 11 will then work.
  *
  */
+
+struct LimitedAccessFeatureInfo {
+  const char* debugName;
+  const WCHAR* feature;
+  const WCHAR* token;
+  const WCHAR* attestation;
+};
+
 static LimitedAccessFeatureInfo limitedAccessFeatureInfo[] = {{
-    // Win11LimitedAccessFeatureType::Taskbar
+    "Win11LimitedAccessFeatureType::Taskbar",
     MOZ_WINDOWS_TASKBAR_PINNING_API_FEATURE,
     MOZ_WINDOWS_TASKBAR_PINNING_API_KEY,
     MOZ_WINDOWS_TASKBAR_PINNING_API_ATTRIBUTION,
 }};
+
+static_assert(mozilla::ArrayLength(limitedAccessFeatureInfo) ==
+              kWin11LimitedAccessFeatureTypeCount);
 
 /**
  Implementation of the Win11LimitedAccessFeaturesInterface.
  */
 class Win11LimitedAccessFeatures : public Win11LimitedAccessFeaturesInterface {
  public:
-  using AtomicState = mozilla::Atomic<int, mozilla::SequentiallyConsistent>;
+  using AtomicState = Atomic<int, SequentiallyConsistent>;
 
-  mozilla::Result<bool, HRESULT> Unlock(
-      Win11LimitedAccessFeatureType feature) override;
+  Result<bool, HRESULT> Unlock(Win11LimitedAccessFeatureType feature) override;
 
  private:
   AtomicState& GetState(Win11LimitedAccessFeatureType feature);
-  mozilla::Result<bool, HRESULT> UnlockImplementation(
+  Result<bool, HRESULT> UnlockImplementation(
       Win11LimitedAccessFeatureType feature);
 
   /**
@@ -145,12 +157,20 @@ CreateWin11LimitedAccessFeaturesInterface() {
   return result;
 }
 
-mozilla::Result<bool, HRESULT> Win11LimitedAccessFeatures::Unlock(
+Result<bool, HRESULT> Win11LimitedAccessFeatures::Unlock(
     Win11LimitedAccessFeatureType feature) {
   AtomicState& atomicState = GetState(feature);
 
+  const auto& lafInfo = limitedAccessFeatureInfo[static_cast<int>(feature)];
+
+  LAF_LOG(
+      LogLevel::Debug, "Limited Access Feature Info for %s. Feature %S, %S, %S",
+      lafInfo.debugName, lafInfo.feature, lafInfo.token, lafInfo.attestation);
+
   int state = atomicState;
   if (state != Uninitialized) {
+    LAF_LOG(LogLevel::Debug, "%s already initialized! State = %s",
+            lafInfo.debugName, (state == Unlocked) ? "true" : "false");
     return (state == Unlocked);
   }
 
@@ -177,6 +197,8 @@ Win11LimitedAccessFeatures::AtomicState& Win11LimitedAccessFeatures::GetState(
       return mTaskbarState;
 
     default:
+      LAF_LOG(LogLevel::Debug, "Missing feature type for %d",
+              static_cast<int>(feature));
       MOZ_ASSERT(false,
                  "Unhandled feature type! Add a new atomic state variable, add "
                  "that entry to the switch statement above, and add the proper "
@@ -185,10 +207,12 @@ Win11LimitedAccessFeatures::AtomicState& Win11LimitedAccessFeatures::GetState(
   }
 }
 
-mozilla::Result<bool, HRESULT> Win11LimitedAccessFeatures::UnlockImplementation(
+Result<bool, HRESULT> Win11LimitedAccessFeatures::UnlockImplementation(
     Win11LimitedAccessFeatureType feature) {
   ComPtr<ILimitedAccessFeaturesStatics> limitedAccessFeatures;
   ComPtr<ILimitedAccessFeatureRequestResult> limitedAccessFeaturesResult;
+
+  const auto& lafInfo = limitedAccessFeatureInfo[static_cast<int>(feature)];
 
   HRESULT hr = RoGetActivationFactory(
       HStringReference(
@@ -197,10 +221,10 @@ mozilla::Result<bool, HRESULT> Win11LimitedAccessFeatures::UnlockImplementation(
       IID_ILimitedAccessFeaturesStatics, &limitedAccessFeatures);
 
   if (!SUCCEEDED(hr)) {
-    return mozilla::Err(hr);
+    LAF_LOG(LogLevel::Debug, "%s activation error. HRESULT = 0x%lx",
+            lafInfo.debugName, hr);
+    return Err(hr);
   }
-
-  const auto& lafInfo = limitedAccessFeatureInfo[static_cast<int>(feature)];
 
   hr = limitedAccessFeatures->TryUnlockFeature(
       HStringReference(lafInfo.feature).Get(),
@@ -208,18 +232,24 @@ mozilla::Result<bool, HRESULT> Win11LimitedAccessFeatures::UnlockImplementation(
       HStringReference(lafInfo.attestation).Get(),
       &limitedAccessFeaturesResult);
   if (!SUCCEEDED(hr)) {
-    return mozilla::Err(hr);
+    LAF_LOG(LogLevel::Debug, "%s unlock error. HRESULT = 0x%lx",
+            lafInfo.debugName, hr);
+    return Err(hr);
   }
 
   LimitedAccessFeatureStatus status;
   hr = limitedAccessFeaturesResult->get_Status(&status);
   if (!SUCCEEDED(hr)) {
-    return mozilla::Err(hr);
+    LAF_LOG(LogLevel::Debug, "%s get status error. HRESULT = 0x%lx",
+            lafInfo.debugName, hr);
+    return Err(hr);
   }
 
   int state = Unlocked;
   if ((status != LimitedAccessFeatureStatus_Available) &&
       (status != LimitedAccessFeatureStatus_AvailableWithoutToken)) {
+    LAF_LOG(LogLevel::Debug, "%s not available. HRESULT = 0x%lx",
+            lafInfo.debugName, hr);
     state = Locked;
   }
 
