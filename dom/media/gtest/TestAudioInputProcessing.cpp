@@ -62,19 +62,26 @@ TEST(TestAudioInputProcessing, Buffering)
   GraphTime processedTime;
   GraphTime nextTime;
   AudioSegment output;
+  MediaEnginePrefs settings;
+  settings.mChannels = channels;
+  // pref "media.getusermedia.agc2_forced" defaults to true.
+  // mAgc would need to be set to something other than kAdaptiveAnalog
+  // for mobile, as asserted in AudioInputProcessing::ConfigForPrefs,
+  // if gain_controller1 were used.
+  settings.mAgc2Forced = true;
 
   // Toggle pass-through mode without starting
   {
-    EXPECT_EQ(aip->PassThrough(graph), false);
+    EXPECT_EQ(aip->IsPassThrough(graph), true);
     EXPECT_EQ(aip->NumBufferedFrames(graph), 0);
 
-    aip->SetPassThrough(graph, true);
+    settings.mAgcOn = true;
+    aip->ApplySettings(graph, nullptr, settings);
+    EXPECT_EQ(aip->IsPassThrough(graph), false);
     EXPECT_EQ(aip->NumBufferedFrames(graph), 0);
 
-    aip->SetPassThrough(graph, false);
-    EXPECT_EQ(aip->NumBufferedFrames(graph), 0);
-
-    aip->SetPassThrough(graph, true);
+    settings.mAgcOn = false;
+    aip->ApplySettings(graph, nullptr, settings);
     EXPECT_EQ(aip->NumBufferedFrames(graph), 0);
   }
 
@@ -95,7 +102,8 @@ TEST(TestAudioInputProcessing, Buffering)
   }
 
   // Set aip to processing/non-pass-through mode
-  aip->SetPassThrough(graph, false);
+  settings.mAgcOn = true;
+  aip->ApplySettings(graph, nullptr, settings);
   {
     // Need (nextTime - processedTime) = 256 - 128 = 128 frames this round.
     // aip has not started yet, so output will be filled with silence data
@@ -184,7 +192,9 @@ TEST(TestAudioInputProcessing, Buffering)
     EXPECT_EQ(aip->NumBufferedFrames(graph), 64);
   }
 
-  aip->SetPassThrough(graph, true);
+  // Set aip to pass-through mode
+  settings.mAgcOn = false;
+  aip->ApplySettings(graph, nullptr, settings);
   {
     // Need (nextTime - processedTime) = 512 - 512 = 0 frames this round.
     // No buffering in pass-through mode
@@ -269,7 +279,12 @@ TEST(TestAudioInputProcessing, ProcessDataWithDifferentPrincipals)
   };
 
   // Check the principals in audio-processing mode.
-  EXPECT_EQ(aip->PassThrough(graph), false);
+  MediaEnginePrefs settings;
+  settings.mChannels = channels;
+  settings.mAgcOn = true;
+  settings.mAgc2Forced = true;
+  aip->ApplySettings(graph, nullptr, settings);
+  EXPECT_EQ(aip->IsPassThrough(graph), false);
   aip->Start(graph);
   {
     AudioSegment output;
@@ -295,7 +310,9 @@ TEST(TestAudioInputProcessing, ProcessDataWithDifferentPrincipals)
   }
 
   // Check the principals in pass-through mode.
-  aip->SetPassThrough(graph, true);
+  settings.mAgcOn = false;
+  aip->ApplySettings(graph, nullptr, settings);
+  EXPECT_EQ(aip->IsPassThrough(graph), true);
   {
     AudioSegment output;
     aip->Process(graph, 0, 4800, &input, &output);
@@ -324,7 +341,12 @@ TEST(TestAudioInputProcessing, Downmixing)
   GraphTime processedTime;
   GraphTime nextTime;
 
-  aip->SetPassThrough(graph, false);
+  MediaEnginePrefs settings;
+  settings.mChannels = channels;
+  settings.mAgcOn = true;
+  settings.mAgc2Forced = true;
+  aip->ApplySettings(graph, nullptr, settings);
+  EXPECT_EQ(aip->IsPassThrough(graph), false);
   aip->Start(graph);
 
   processedTime = 0;
@@ -364,8 +386,11 @@ TEST(TestAudioInputProcessing, Downmixing)
     }
   }
 
-  // Now, repeat the test, checking we get the unmodified 4 channels.
-  aip->SetPassThrough(graph, true);
+  // Now, repeat the test in pass-through mode, checking we get the unmodified
+  // 4 channels.
+  settings.mAgcOn = false;
+  aip->ApplySettings(graph, nullptr, settings);
+  EXPECT_EQ(aip->IsPassThrough(graph), true);
 
   AudioSegment input, output;
   processedTime = nextTime;
