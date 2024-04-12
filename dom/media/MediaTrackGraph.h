@@ -1200,6 +1200,10 @@ class MediaTrackGraph {
   }
 
   double AudioOutputLatency();
+  /* Return whether the clock for the audio output device used for the AEC
+   * reverse stream might drift from the clock for this MediaTrackGraph.
+   * Graph thread only. */
+  bool OutputForAECMightDrift();
 
   void RegisterCaptureTrackForWindow(uint64_t aWindowId,
                                      ProcessedMediaTrack* aCaptureTrack);
