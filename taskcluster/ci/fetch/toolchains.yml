@@ -150,15 +150,14 @@ nasm-2.15.05:
         size: 995732
 
 wix-3.14.0:
-    description: wix 3.14.0.2812 binary release
+    description: wix 3.14.0 binary release
     # WIX doesn't use a wrapping toplevel DIR, so we should really repackage it when
     # Bug 1479533 and related code is ready.
     fetch:
         type: static-url
-        # This is a dev version of the toolset, upstream will purge over time...
-        url: http://wixtoolset.org/downloads/v3.14.0.2812/wix314-binaries.zip
-        sha256: 923892298f37514622c58cbbd9c2cadf2822d9bb53df8ee83aaeb05280777611
-        size: 34664320
+        url: https://github.com/wixtoolset/wix3/releases/download/wix314rtm/wix314-binaries.zip
+        sha256: 13f067f38969faf163d93a804b48ea0576790a202c8f10291f2000f0e356e934
+        size: 41282726
 
 zlib-1.2.13:
     description: zlib 1.2.13 source code
