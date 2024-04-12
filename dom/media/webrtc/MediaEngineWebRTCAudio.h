@@ -157,6 +157,9 @@ class AudioInputProcessing : public AudioDataListener {
 
   bool IsEnded() const { return mEnded; }
 
+  // For testing:
+  bool HadAECAndDrift() const { return mHadAECAndDrift; }
+
  private:
   ~AudioInputProcessing() = default;
   webrtc::AudioProcessing::Config ConfigForPrefs(
