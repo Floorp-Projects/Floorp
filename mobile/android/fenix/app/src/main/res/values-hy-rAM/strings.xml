@@ -14,7 +14,7 @@
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
     <string name="content_description_disable_private_browsing_button">Անջատել գաղտնի դիտարկումը</string>
     <!-- Placeholder text shown in the search bar before a user enters text for the default engine -->
-    <string name="search_hint">Որոնեք կամ մուտքագրեք հասցեն</string>
+    <string name="search_hint">Որոնեք կամ մուտքագրեք հասցե</string>
     <!-- Placeholder text shown in the search bar before a user enters text for a general engine -->
     <string name="search_hint_general_engine">Որոնեք համացանցում</string>
     <!-- Placeholder text shown in search bar when using history search -->
@@ -202,7 +202,7 @@
     <!-- Browser menu button that opens a user's library -->
     <string name="browser_menu_library">Գրադարան</string>
     <!-- Browser menu toggle that requests a desktop site -->
-    <string name="browser_menu_desktop_site">Աշխատասեղանի տարբերակ</string>
+    <string name="browser_menu_desktop_site">Ամբողջական կայք</string>
     <!-- Browser menu button that reopens a private tab as a regular tab -->
     <string name="browser_menu_open_in_regular_tab">Բացել կանոնավոր ներդիրում</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
@@ -513,7 +513,7 @@
     <!-- Summary of https only preference if https only is set to on in all tabs -->
     <string name="preferences_https_only_on_all">Բոլոր ներդիրներում</string>
     <!-- Summary of https only preference if https only is set to on in private tabs only -->
-    <string name="preferences_https_only_on_private">Միացնել գաղտնի ներդիրներում</string>
+    <string name="preferences_https_only_on_private">Միացված գաղտնի ներդիրներում</string>
     <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
     <string name="preferences_http_only_learn_more">Իմանալ ավելին</string>
     <!-- Option for the https only setting -->
@@ -842,7 +842,7 @@
     <!-- Preference for using the dynamic toolbar -->
     <string name="preference_gestures_dynamic_toolbar">Ոլորել՝ գործիքագոտիի թաքցնման համար</string>
     <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
-    <string name="preference_gestures_swipe_toolbar_switch_tabs">Սեղմեք գործիքագոտին կողքից՝ ներդիրներին անցնելու համար</string>
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Սահարկեք գործիքագոտին կողքից՝ ներդիրների փոխարկման համար</string>
     <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
     <string name="preference_gestures_swipe_toolbar_show_tabs">Սահարկել գործիքագոտին վերև՝ ներդիրների բացման համար</string>
 
@@ -989,7 +989,7 @@
     <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
     <string name="tab_drawer_fab_sync">Համաժամեցում</string>
     <!-- Text shown in the menu for sharing all tabs -->
-    <string name="tab_tray_menu_item_share">Համօգտագործել բոլոր ներդիրները</string>
+    <string name="tab_tray_menu_item_share">Համօգտ. ներդիրները</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Վերջերս փակված ներդիրներ</string>
     <!-- Text shown in the tabs tray inactive tabs section -->
@@ -1019,7 +1019,7 @@
     <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
     <string name="open_tabs_menu">Բացել ներդիրների ցանկը</string>
     <!-- Open tabs menu item to save tabs to collection -->
-    <string name="tabs_menu_save_to_collection1">Պահպանել ներդիրները հավաքածուում</string>
+    <string name="tabs_menu_save_to_collection1">Պահել ներդիրները հավաքածուում</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">Ջնջել հավաքածուն</string>
     <!-- Text for the menu button to rename a collection -->
@@ -1903,7 +1903,7 @@
     <!-- The title for the "Save" menu item for saving a credit card -->
     <string name="credit_cards_menu_save">Պահպանել</string>
     <!-- The text for the "Save" button for saving a credit card -->
-    <string name="credit_cards_save_button">Պահպանել </string>
+    <string name="credit_cards_save_button">Պահել</string>
     <!-- The text for the "Cancel" button for cancelling adding, updating or deleting a credit card -->
     <string name="credit_cards_cancel_button">Չեղարկել</string>
 
@@ -2065,7 +2065,7 @@
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">Համոզվա՞ծ եք, որ ցանկանում եք ջնջել այս էջանիշը:</string>
     <!-- Browser menu button that adds a shortcut to the home fragment -->
-    <string name="browser_menu_add_to_shortcuts">Ավելացնել դյուրանցումներին</string>
+    <string name="browser_menu_add_to_shortcuts">Հավելել դյուրանցումներին</string>
     <!-- Browser menu button that removes a shortcut from the home fragment -->
     <string name="browser_menu_remove_from_shortcuts">Հեռացնել դյուրանցումներից</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
