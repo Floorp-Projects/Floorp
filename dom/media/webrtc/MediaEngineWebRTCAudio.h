@@ -174,6 +174,9 @@ class AudioInputProcessing : public AudioDataListener {
   // it is fed the speaker data and the microphone data. It outputs processed
   // input data.
   UniquePtr<webrtc::AudioProcessing> mAudioProcessing;
+  // Whether mAudioProcessing was created for AEC with clock drift.
+  // Meaningful only when mAudioProcessing is non-null;
+  bool mHadAECAndDrift = false;
   // Packetizer to be able to feed 10ms packets to the input side of
   // mAudioProcessing. Not used if the processing is bypassed.
   Maybe<AudioPacketizer<AudioDataValue, float>> mPacketizerInput;

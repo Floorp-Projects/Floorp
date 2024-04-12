@@ -20,6 +20,7 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/Logging.h"
 
+#include "api/audio/echo_canceller3_factory.h"
 #include "common_audio/include/audio_util.h"
 #include "modules/audio_processing/include/audio_processing.h"
 
@@ -1039,12 +1040,32 @@ void AudioInputProcessing::EnsurePacketizer(AudioProcessingTrack* aTrack) {
 void AudioInputProcessing::EnsureAudioProcessing(AudioProcessingTrack* aTrack) {
   aTrack->AssertOnGraphThread();
 
-  if (!mAudioProcessing) {
+  MediaTrackGraph* graph = aTrack->Graph();
+  // If the AEC might need to deal with drift then inform it of this and it
+  // will be less conservative about echo suppression.  This can lead to some
+  // suppression of non-echo signal, so do this only when drift is expected.
+  // https://bugs.chromium.org/p/webrtc/issues/detail?id=11985#c2
+  bool haveAECAndDrift =
+      mSettings.mAecOn &&
+      (graph->OutputForAECMightDrift() ||
+       aTrack->GetDeviceInputTrackGraphThread()->AsNonNativeInputTrack());
+  if (!mAudioProcessing || haveAECAndDrift != mHadAECAndDrift) {
     TRACE("AudioProcessing creation");
-    mAudioProcessing.reset(AudioProcessingBuilder()
-                               .SetConfig(ConfigForPrefs(mSettings))
-                               .Create()
-                               .release());
+    LOG("Track %p AudioInputProcessing %p creating AudioProcessing. "
+        "aec+drift: %s",
+        aTrack, this, haveAECAndDrift ? "Y" : "N");
+    mHadAECAndDrift = haveAECAndDrift;
+    AudioProcessingBuilder builder;
+    builder.SetConfig(ConfigForPrefs(mSettings));
+    if (haveAECAndDrift) {
+      // Setting an EchoControlFactory always enables AEC, overriding
+      // Config::echo_canceller.enabled, so do this only when AEC is enabled.
+      EchoCanceller3Config aec3Config;
+      aec3Config.echo_removal_control.has_clock_drift = true;
+      builder.SetEchoControlFactory(
+          std::make_unique<EchoCanceller3Factory>(aec3Config));
+    }
+    mAudioProcessing.reset(builder.Create().release());
   }
 }
 

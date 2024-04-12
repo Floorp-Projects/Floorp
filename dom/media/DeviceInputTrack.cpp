@@ -137,11 +137,25 @@ bool DeviceInputConsumerTrack::ConnectedToNonNativeDevice() const {
   return mDeviceInputTrack && mDeviceInputTrack->AsNonNativeInputTrack();
 }
 
+DeviceInputTrack* DeviceInputConsumerTrack::GetDeviceInputTrackGraphThread()
+    const {
+  AssertOnGraphThread();
+
+  if (mInputs.IsEmpty()) {
+    return nullptr;
+  }
+  MOZ_ASSERT(mInputs.Length() == 1);
+  MediaTrack* track = mInputs[0]->GetSource();
+  MOZ_ASSERT(track->AsDeviceInputTrack());
+  return static_cast<DeviceInputTrack*>(track);
+}
+
 void DeviceInputConsumerTrack::GetInputSourceData(AudioSegment& aOutput,
                                                   GraphTime aFrom,
                                                   GraphTime aTo) const {
   AssertOnGraphThread();
   MOZ_ASSERT(aOutput.IsEmpty());
+  MOZ_ASSERT(mInputs.Length() == 1);
 
   MediaInputPort* port = mInputs[0];
   MediaTrack* source = port->GetSource();

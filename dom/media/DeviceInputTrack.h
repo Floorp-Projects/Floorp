@@ -84,10 +84,12 @@ class DeviceInputConsumerTrack : public ProcessedMediaTrack {
     return this;
   }
 
- protected:
   // Graph thread API:
+  DeviceInputTrack* GetDeviceInputTrackGraphThread() const;
+
+ protected:
   // Get the data in [aFrom, aTo) from the device input to aOutput. aOutput
-  // needs to be empty. A device input must be connected.
+  // needs to be empty. A device input must be connected. Graph thread.
   void GetInputSourceData(AudioSegment& aOutput, GraphTime aFrom,
                           GraphTime aTo) const;
 
