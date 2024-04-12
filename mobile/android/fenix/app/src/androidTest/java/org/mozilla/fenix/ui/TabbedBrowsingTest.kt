@@ -13,6 +13,7 @@ import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.MatcherHelper
 import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.TestHelper.clickSnackbarButton
 import org.mozilla.fenix.helpers.TestHelper.closeApp
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.restartApp
@@ -93,7 +94,7 @@ class TabbedBrowsingTest : TestSetup() {
             verifyExistingOpenTabs("Test_Page_1")
             closeTab()
             verifySnackBarText("Tab closed")
-            snackBarButtonClick("UNDO")
+            clickSnackbarButton("UNDO")
         }
         browserScreen {
             verifyTabCounter("1")
@@ -141,7 +142,7 @@ class TabbedBrowsingTest : TestSetup() {
             verifyCloseTabsButton("Test_Page_1")
             closeTab()
             verifySnackBarText("Private tab closed")
-            snackBarButtonClick("UNDO")
+            clickSnackbarButton("UNDO")
         }
         browserScreen {
             verifyTabCounter("1")
