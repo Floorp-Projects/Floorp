@@ -15,8 +15,6 @@ interface MutationEvent : Event
   const unsigned short MODIFICATION = 1;
   const unsigned short ADDITION     = 2;
   const unsigned short REMOVAL      = 3;
-  [ChromeOnly]
-  const unsigned short SMIL         = 4;
 
   readonly attribute Node?          relatedNode;
   readonly attribute DOMString      prevValue;

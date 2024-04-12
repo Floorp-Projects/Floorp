@@ -41,8 +41,6 @@ class SVGUseFrame final : public SVGGFrame {
   void DimensionAttributeChanged(bool aHadValidDimensions,
                                  bool aAttributeIsUsed);
 
-  nsresult AttributeChanged(int32_t aNamespaceID, nsAtom* aAttribute,
-                            int32_t aModType) override;
   void DidSetComputedStyle(ComputedStyle* aOldComputedStyle) override;
 
 #ifdef DEBUG_FRAME_DUMP

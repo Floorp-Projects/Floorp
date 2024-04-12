@@ -371,11 +371,11 @@ void SVGFEImageElement::Notify(imgIRequest* aRequest, int32_t aType,
   }
 }
 
-void SVGFEImageElement::DidAnimateString(PRUint8 aAttrEnum) {
-  auto info = GetStringInfo();
-  if ((info.mInfos[aAttrEnum].mNamespaceID == kNameSpaceID_None ||
-       info.mInfos[aAttrEnum].mNamespaceID == kNameSpaceID_XLink) &&
-      info.mInfos[aAttrEnum].mName == nsGkAtoms::href) {
+void SVGFEImageElement::DidAnimateAttribute(int32_t aNameSpaceID,
+                                            nsAtom* aAttribute) {
+  if ((aNameSpaceID == kNameSpaceID_None ||
+       aNameSpaceID == kNameSpaceID_XLink) &&
+      aAttribute == nsGkAtoms::href) {
     bool hrefIsSet =
         mStringAttributes[SVGFEImageElement::HREF].IsExplicitlySet() ||
         mStringAttributes[SVGFEImageElement::XLINK_HREF].IsExplicitlySet();
@@ -385,7 +385,7 @@ void SVGFEImageElement::DidAnimateString(PRUint8 aAttrEnum) {
       CancelImageRequests(true);
     }
   }
-  SVGFEImageElementBase::DidAnimateString(aAttrEnum);
+  SVGFEImageElementBase::DidAnimateAttribute(aNameSpaceID, aAttribute);
 }
 
 }  // namespace mozilla::dom

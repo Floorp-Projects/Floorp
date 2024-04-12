@@ -257,14 +257,14 @@ SVGElement::StringAttributesInfo SVGAElement::GetStringInfo() {
                               ArrayLength(sStringInfo));
 }
 
-void SVGAElement::DidAnimateString(PRUint8 aAttrEnum) {
-  auto info = GetStringInfo();
-  if ((info.mInfos[aAttrEnum].mNamespaceID == kNameSpaceID_None ||
-       info.mInfos[aAttrEnum].mNamespaceID == kNameSpaceID_XLink) &&
-      info.mInfos[aAttrEnum].mName == nsGkAtoms::href) {
+void SVGAElement::DidAnimateAttribute(int32_t aNameSpaceID,
+                                      nsAtom* aAttribute) {
+  if ((aNameSpaceID == kNameSpaceID_None ||
+       aNameSpaceID == kNameSpaceID_XLink) &&
+      aAttribute == nsGkAtoms::href) {
     Link::ResetLinkState(true, Link::ElementHasHref());
   }
-  SVGAElementBase::DidAnimateString(aAttrEnum);
+  SVGAElementBase::DidAnimateAttribute(aNameSpaceID, aAttribute);
 }
 
 }  // namespace mozilla::dom

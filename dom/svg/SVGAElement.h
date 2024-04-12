@@ -92,7 +92,7 @@ class SVGAElement final : public SVGAElementBase, public Link {
   virtual ~SVGAElement() = default;
 
   StringAttributesInfo GetStringInfo() override;
-  void DidAnimateString(PRUint8 aAttrEnum) override;
+  void DidAnimateAttribute(int32_t aNameSpaceID, nsAtom* aAttribute) override;
 
   enum { HREF, XLINK_HREF, TARGET };
   SVGAnimatedString mStringAttributes[3];
