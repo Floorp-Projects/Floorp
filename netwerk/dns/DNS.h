@@ -216,6 +216,11 @@ class AddrInfo {
       mInfo->mAddresses = std::move(addresses);
     }
 
+    template <class Comparator>
+    void SortAddresses(const Comparator& aComp) {
+      mInfo->mAddresses.Sort(aComp);
+    }
+
     void SetCanonicalHostname(const nsACString& aCname) {
       mInfo->mCanonicalName = aCname;
     }

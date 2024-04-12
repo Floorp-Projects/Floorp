@@ -121,3 +121,36 @@ add_task(
     }
   }
 );
+
+add_task(
+  {
+    skip_if: () =>
+      Services.appinfo.processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT,
+  },
+  async function test_sort_family() {
+    Services.prefs.setBoolPref("network.dns.preferIPv6", true);
+    overrideService.clearOverrides();
+    overrideService.addIPOverride("example.com", "1.2.3.4");
+    overrideService.addIPOverride("example.com", "3.4.5.6");
+    overrideService.addIPOverride("example.com", "::1");
+    overrideService.addIPOverride("example.com", "::2");
+
+    let listener = new Listener();
+    Services.dns.asyncResolve(
+      "example.com",
+      Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
+      Ci.nsIDNSService.RESOLVE_CANONICAL_NAME,
+      null, // resolverInfo
+      listener,
+      mainThread,
+      defaultOriginAttributes
+    );
+
+    let [, inRecord] = await listener;
+    inRecord.QueryInterface(Ci.nsIDNSAddrRecord);
+    Assert.equal(inRecord.getNextAddrAsString(), "::1");
+    Assert.equal(inRecord.getNextAddrAsString(), "::2");
+    Assert.equal(inRecord.getNextAddrAsString(), "1.2.3.4");
+    Assert.equal(inRecord.getNextAddrAsString(), "3.4.5.6");
+  }
+);

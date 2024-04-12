@@ -13156,6 +13156,12 @@
   value: false
   mirror: always
 
+# Whether to prefer IPv6 name lookups.
+- name: network.dns.preferIPv6
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Whether to add additional record IPs to the cache
 - name: network.trr.add_additional_records
   type: RelaxedAtomicBool
