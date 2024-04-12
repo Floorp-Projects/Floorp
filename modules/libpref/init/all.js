@@ -1316,9 +1316,6 @@ pref("network.http.enforce-framing.http1", false); // should be named "strict"
 pref("network.http.enforce-framing.soft", true);
 pref("network.http.enforce-framing.strict_chunked_encoding", true);
 
-// Max size, in bytes, for received HTTP response header.
-pref("network.http.max_response_header_size", 393216);
-
 // The ratio of the transaction count for the focused window and the count of
 // all available active connections.
 pref("network.http.focused_window_transaction_ratio", "0.9");
@@ -3638,6 +3635,12 @@ pref("browser.search.removeEngineInfobar.enabled", true);
 
 // User-settable override to media.gmp-manager.url for testing purposes.
 //pref("media.gmp-manager.url.override", "");
+
+// When |media.gmp-manager.allowLocalSources| is true, we will allow falling
+// back to using the plugin configurations distributed with Firefox to update
+// or install plugins. This fallback is only used when we fail to get an
+// acceptable configuration via |media.gmp-manager.url|.
+pref("media.gmp-manager.allowLocalSources", true);
 
 // Update service URL for GMP install/updates:
 pref("media.gmp-manager.url", "https://aus5.mozilla.org/update/3/GMP/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/update.xml");

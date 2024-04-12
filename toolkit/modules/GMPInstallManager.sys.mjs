@@ -43,6 +43,16 @@ const LOCAL_GMP_SOURCES = [
   },
 ];
 
+function getLocalSources() {
+  if (GMPPrefs.getBool(GMPPrefs.KEY_ALLOW_LOCAL_SOURCES, true)) {
+    return LOCAL_GMP_SOURCES;
+  }
+
+  let log = getScopedLogger("GMPInstallManager.downloadLocalConfig");
+  log.info("ignoring local sources");
+  return [];
+}
+
 function downloadJSON(uri) {
   let log = getScopedLogger("GMPInstallManager.checkForAddons");
   log.info("fetching config from: " + uri);
@@ -70,7 +80,7 @@ function downloadJSON(uri) {
 function downloadLocalConfig() {
   let log = getScopedLogger("GMPInstallManager.downloadLocalConfig");
   return Promise.all(
-    LOCAL_GMP_SOURCES.map(conf => {
+    getLocalSources().map(conf => {
       return downloadJSON(conf.src).then(addons => {
         let platforms = addons.vendors[conf.id].platforms;
         let target = Services.appinfo.OS + "_" + lazy.UpdateUtils.ABI;
@@ -143,6 +153,36 @@ GMPInstallManager.prototype = {
 
     log.info("Using url (with replacement): " + url);
     return url;
+  },
+
+  /**
+   * Determines the root to use for verifying content signatures.
+   * @param url
+   *        The Balrog URL, i.e. the return value of _getURL().
+   */
+  _getContentSignatureRootForURL(url) {
+    // The prod and stage URLs of Balrog are documented at:
+    // https://mozilla-balrog.readthedocs.io/en/latest/infrastructure.html
+    // Note: we are matching by prefix without the full domain nor slash, to
+    // enable us to move to a different host name in the future if desired.
+    if (url.startsWith("https://aus")) {
+      return Ci.nsIContentSignatureVerifier.ContentSignatureProdRoot;
+    }
+    if (url.startsWith("https://stage.")) {
+      return Ci.nsIContentSignatureVerifier.ContentSignatureStageRoot;
+    }
+    if (Services.env.exists("XPCSHELL_TEST_PROFILE_DIR")) {
+      return Ci.nsIX509CertDB.AppXPCShellRoot;
+    }
+    // When content signature verification for GMP was added (bug 1714621), a
+    // pref existed to configure an arbitrary root, which enabled local testing.
+    // This pref was removed later in bug 1769669, and replaced with hard-coded
+    // roots (prod and tests only). Support for testing against the stage server
+    // was restored in bug 1771992.
+    // Note: other verifiers ultimately fall back to ContentSignatureLocalRoot,
+    // to support local development. Here we use ContentSignatureProdRoot to
+    // minimize risk (and the unclear demand for "local" development).
+    return Ci.nsIContentSignatureVerifier.ContentSignatureProdRoot;
   },
 
   /**
@@ -318,15 +358,17 @@ GMPInstallManager.prototype = {
     }
 
     let url = await this._getURL();
+    let trustedContentSignatureRoot = this._getContentSignatureRootForURL(url);
 
     log.info(
-      `Fetching product addon list url=${url}, allowNonBuiltIn=${allowNonBuiltIn}, certs=${certs}, checkContentSignature=${checkContentSignature}`
+      `Fetching product addon list url=${url}, allowNonBuiltIn=${allowNonBuiltIn}, certs=${certs}, checkContentSignature=${checkContentSignature}, trustedContentSignatureRoot=${trustedContentSignatureRoot}`
     );
     let addonPromise = ProductAddonChecker.getProductAddonList(
       url,
       allowNonBuiltIn,
       certs,
-      checkContentSignature
+      checkContentSignature,
+      trustedContentSignatureRoot
     )
       .then(res => {
         if (checkContentSignature) {

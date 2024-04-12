@@ -238,6 +238,15 @@
         "description": "The matching regular expression."
       }
     },
+    "nonAdsLinkQueryParamNames": {
+      "type": "array",
+      "title": "Non-ads link query param names",
+      "description": "Query param names present in non-ads link that recover the link that will be redirected to.",
+      "items": {
+        "type": "string",
+        "string": "The query param name to examine."
+      }
+    },
     "nonAdsLinkRegexps": {
       "type": "array",
       "title": "Non-ads link matching regular expressions",
@@ -333,7 +342,7 @@
               "description": "The query to inspect all elements on the SERP."
             },
             "method": {
-              "enum": ["data-attribute"],
+              "enum": ["dataAttribute"],
               "description": "The extraction method used for the query."
             },
             "options": {
@@ -366,19 +375,37 @@
                 "queryParamKey": {
                   "type": "string",
                   "description": "The query parameter key to inspect in the href."
+                },
+                "queryParamValueIsHref": {
+                  "type": "boolean",
+                  "description": "Whether the query param value is expected to contain an href."
                 }
               },
               "required": ["queryParamKey"]
             }
           },
           "required": ["selectors", "method"]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "selectors": {
+              "type": "string",
+              "description": "The query to use to inspect all elements on the SERP."
+            },
+            "method": {
+              "enum": ["textContent"],
+              "description": "The extraction method to use for the query."
+            }
+          },
+          "required": ["selectors", "method"]
         }
       ]
+    },
+    "skipCount": {
+      "title": "Skip Count",
+      "description": "Whether to skip reporting of the count of these elements to ad_impressions. Defaults to false.",
+      "type": "boolean"
     }
-  },
-  "skipCount": {
-    "title": "Skip Count",
-    "description": "Whether to skip reporting of the count of these elements to ad_impressions. Defaults to false.",
-    "type": "boolean"
   }
 }

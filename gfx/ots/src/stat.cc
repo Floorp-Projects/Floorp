@@ -48,10 +48,6 @@ bool OpenTypeSTAT::Parse(const uint8_t* data, size_t length) {
     this->minorVersion = 2;
   }
 
-  if (this->designAxisSize < sizeof(AxisRecord)) {
-    return Drop("Invalid designAxisSize");
-  }
-
   size_t headerEnd = table.offset();
 
   if (this->designAxisCount == 0) {
@@ -60,9 +56,13 @@ bool OpenTypeSTAT::Parse(const uint8_t* data, size_t length) {
       this->designAxesOffset = 0;
     }
   } else {
+    if (this->designAxisSize < sizeof(AxisRecord)) {
+      return Drop("Invalid designAxisSize");
+    }
     if (this->designAxesOffset < headerEnd ||
-        size_t(this->designAxesOffset) +
-          size_t(this->designAxisCount) * size_t(this->designAxisSize) > length) {
+        size_t(this->designAxesOffset) > length ||
+        size_t(this->designAxisCount) * size_t(this->designAxisSize) >
+          length - size_t(this->designAxesOffset)) {
       return Drop("Invalid designAxesOffset");
     }
   }
@@ -95,8 +95,9 @@ bool OpenTypeSTAT::Parse(const uint8_t* data, size_t length) {
     }
   } else {
     if (this->offsetToAxisValueOffsets < headerEnd ||
-        size_t(this->offsetToAxisValueOffsets) +
-          size_t(this->axisValueCount) * sizeof(uint16_t) > length) {
+        size_t(this->offsetToAxisValueOffsets) > length ||
+        size_t(this->axisValueCount) * sizeof(uint16_t) >
+          length - size_t(this->offsetToAxisValueOffsets)) {
       return Drop("Invalid offsetToAxisValueOffsets");
     }
   }
@@ -107,7 +108,9 @@ bool OpenTypeSTAT::Parse(const uint8_t* data, size_t length) {
     if (!table.ReadU16(&axisValueOffset)) {
       return Drop("Failed to read axis value offset");
     }
-    if (this->offsetToAxisValueOffsets + axisValueOffset > length) {
+    // We already checked that offsetToAxisValueOffsets doesn't exceed length,
+    // so this subtraction will not underflow.
+    if (axisValueOffset > length - this->offsetToAxisValueOffsets) {
       return Drop("Invalid axis value offset");
     }
     table.set_offset(this->offsetToAxisValueOffsets + axisValueOffset);

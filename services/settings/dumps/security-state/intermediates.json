@@ -1,6 +1,222 @@
 {
   "data": [
     {
+      "schema": 1712310550077,
+      "derHash": "w+vOp+axOsPrOnnwWBnmfWiTxlZC9Q2bXhZHyyZQa44=",
+      "subject": "CN=Security Communication ECC RootCA1,O=SECOM Trust Systems CO.\\,LTD.,C=JP",
+      "subjectDN": "MGExCzAJBgNVBAYTAkpQMSUwIwYDVQQKExxTRUNPTSBUcnVzdCBTeXN0ZW1zIENPLixMVEQuMSswKQYDVQQDEyJTZWN1cml0eSBDb21tdW5pY2F0aW9uIEVDQyBSb290Q0Ex",
+      "whitelist": false,
+      "attachment": {
+        "hash": "49bb804fc27ee287203f35432fa03118cbda037f2cc4b15a762a27278f2a430a",
+        "size": 1455,
+        "filename": "Mym_oTtgB6tfw3E_CssolCbi-8mcxcEQqRSxOVcWALY=.pem",
+        "location": "security-state-staging/intermediates/85f47822-4d0f-454d-9d84-f0ce5fc4d157.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "Mym/oTtgB6tfw3E/CssolCbi+8mcxcEQqRSxOVcWALY=",
+      "crlite_enrolled": false,
+      "id": "cdfe2baf-ce8e-4ff0-a638-e40128c6f4ee",
+      "last_modified": 1712311023721
+    },
+    {
+      "schema": 1712310549735,
+      "derHash": "nCgDadBy+J2cm2JkC78vKNLzDs7pdZhUAx1cXFPo0bY=",
+      "subject": "CN=JPRS OV ECC CA 2024 G1,O=Japan Registry Services Co.\\, Ltd.,C=JP",
+      "subjectDN": "MFoxCzAJBgNVBAYTAkpQMSowKAYDVQQKEyFKYXBhbiBSZWdpc3RyeSBTZXJ2aWNlcyBDby4sIEx0ZC4xHzAdBgNVBAMTFkpQUlMgT1YgRUNDIENBIDIwMjQgRzE=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "8f21756b90356734138db1717baa7cd355f39bc01d0bbefcd782b6a73bb40267",
+        "size": 1284,
+        "filename": "v_cVY7f6bXpCh2OYwK6wmEE9ZIaufUJmoSlpxWvjBDI=.pem",
+        "location": "security-state-staging/intermediates/5d677b3c-4524-4ee7-a2b9-388e7d90dc2c.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "v/cVY7f6bXpCh2OYwK6wmEE9ZIaufUJmoSlpxWvjBDI=",
+      "crlite_enrolled": false,
+      "id": "f9ed868e-cbce-49b9-85ff-1b7d8f9771e7",
+      "last_modified": 1712311023718
+    },
+    {
+      "schema": 1712310549107,
+      "derHash": "G5AdVQpaUfZzcnnGAhRF8FG9KTAVYSpbqj+FiIKe5po=",
+      "subject": "CN=JPRS DV ECC CA 2024 G1,O=Japan Registry Services Co.\\, Ltd.,C=JP",
+      "subjectDN": "MFoxCzAJBgNVBAYTAkpQMSowKAYDVQQKEyFKYXBhbiBSZWdpc3RyeSBTZXJ2aWNlcyBDby4sIEx0ZC4xHzAdBgNVBAMTFkpQUlMgRFYgRUNDIENBIDIwMjQgRzE=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "3749489691bfad9b5833e7e64c622b11fa2a70217f4d99f59629a2e6e864a189",
+        "size": 1284,
+        "filename": "d7IsXA0lsOv-SgxZRrDbM-A_cNQoAtC0iZ2kRR58b5c=.pem",
+        "location": "security-state-staging/intermediates/57cb9705-521a-4177-82fa-7c562bc5aef7.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "d7IsXA0lsOv+SgxZRrDbM+A/cNQoAtC0iZ2kRR58b5c=",
+      "crlite_enrolled": false,
+      "id": "cc33f7ee-ac11-426c-9210-dd79e9bde3ae",
+      "last_modified": 1712311023716
+    },
+    {
+      "schema": 1711724029637,
+      "derHash": "TkLi2IxOTbWRnHkATRycDpwtb7tFPaHWQtPTD3jAVy4=",
+      "subject": "CN=Certigna Server Authentication ACME FR CA G2,O=Certigna,C=FR",
+      "subjectDN": "MHYxCzAJBgNVBAYTAkZSMREwDwYDVQQKDAhDZXJ0aWduYTEdMBsGA1UEYQwUTlRSRlItNDgxNDYzMDgxMDAwMzYxNTAzBgNVBAMMLENlcnRpZ25hIFNlcnZlciBBdXRoZW50aWNhdGlvbiBBQ01FIEZSIENBIEcy",
+      "whitelist": false,
+      "attachment": {
+        "hash": "47f464e31a2f05a550e83d8045d8570fcf9f57caeb7722436101c8940e879ca3",
+        "size": 2467,
+        "filename": "ULy4kAY07boZvLRDouxffHNVcsGHGQFCnEuCkq-cMCQ=.pem",
+        "location": "security-state-staging/intermediates/c4de029c-0d39-43ba-881d-1f1bdac8eff3.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "ULy4kAY07boZvLRDouxffHNVcsGHGQFCnEuCkq+cMCQ=",
+      "crlite_enrolled": false,
+      "id": "7d46e740-ae39-4f00-87ee-9a6e358e481d",
+      "last_modified": 1711724223131
+    },
+    {
+      "schema": 1711724029289,
+      "derHash": "yh/1TgMRhvkAa7FI+M5qU/BXQqS2zo/+ed/SrkceuqU=",
+      "subject": "CN=Certigna Server Authentication ACME FR CA G1,O=Certigna,C=FR",
+      "subjectDN": "MHYxCzAJBgNVBAYTAkZSMREwDwYDVQQKDAhDZXJ0aWduYTEdMBsGA1UEYQwUTlRSRlItNDgxNDYzMDgxMDAwMzYxNTAzBgNVBAMMLENlcnRpZ25hIFNlcnZlciBBdXRoZW50aWNhdGlvbiBBQ01FIEZSIENBIEcx",
+      "whitelist": false,
+      "attachment": {
+        "hash": "661792dc63ededccb7dc2dfcd2918e5d8236c2dedcce5f8da637be0e28481a61",
+        "size": 2052,
+        "filename": "OQzKIkNRq8kQgHkelHOGFIGYVop2_zdqAGChunarhRQ=.pem",
+        "location": "security-state-staging/intermediates/728c8635-f40a-4594-87cd-5740ebcc5aab.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "OQzKIkNRq8kQgHkelHOGFIGYVop2/zdqAGChunarhRQ=",
+      "crlite_enrolled": false,
+      "id": "f14d65ec-1130-46a3-b84f-246c756cb63b",
+      "last_modified": 1711724223128
+    },
+    {
+      "schema": 1711724028964,
+      "derHash": "scjkcMofSIXd3uD+gLgF8sqCN3DsYHHBzOt39woPtsI=",
+      "subject": "CN=Certigna Server Authentication ACME CA G1,O=Certigna,C=FR",
+      "subjectDN": "MHMxCzAJBgNVBAYTAkZSMREwDwYDVQQKDAhDZXJ0aWduYTEdMBsGA1UEYQwUTlRSRlItNDgxNDYzMDgxMDAwMzYxMjAwBgNVBAMMKUNlcnRpZ25hIFNlcnZlciBBdXRoZW50aWNhdGlvbiBBQ01FIENBIEcx",
+      "whitelist": false,
+      "attachment": {
+        "hash": "6808866c9da6c164a23ade7632d0cce4a43b5740def835d4020636b892aa342f",
+        "size": 2048,
+        "filename": "rvK65wj_zEVuddzfsGOjD135Wh2MILoAbXu7kKxNwoM=.pem",
+        "location": "security-state-staging/intermediates/e4364543-7c84-43b9-a09d-e59d2930b628.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "rvK65wj/zEVuddzfsGOjD135Wh2MILoAbXu7kKxNwoM=",
+      "crlite_enrolled": false,
+      "id": "8046050c-57cc-44c2-8341-e1801f5dde99",
+      "last_modified": 1711724223126
+    },
+    {
+      "schema": 1711724028612,
+      "derHash": "YP0d8Xerjt6HRy6OcoMH9W7EGmDMrXlMT9ttHLfUDVY=",
+      "subject": "CN=Certigna Server Authentication ACME CA G2,O=Certigna,C=FR",
+      "subjectDN": "MHMxCzAJBgNVBAYTAkZSMREwDwYDVQQKDAhDZXJ0aWduYTEdMBsGA1UEYQwUTlRSRlItNDgxNDYzMDgxMDAwMzYxMjAwBgNVBAMMKUNlcnRpZ25hIFNlcnZlciBBdXRoZW50aWNhdGlvbiBBQ01FIENBIEcy",
+      "whitelist": false,
+      "attachment": {
+        "hash": "eac6be7c8bce492dda5b1ff24dea8088d2aacfea367f4d96fd3900d742aebb65",
+        "size": 2463,
+        "filename": "RKrRuFywubwqUKSLQ4_OujB1TYcPLRKs1GDCg351ako=.pem",
+        "location": "security-state-staging/intermediates/05a73290-0d3d-49c1-840a-22d2de8c1fb6.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "RKrRuFywubwqUKSLQ4/OujB1TYcPLRKs1GDCg351ako=",
+      "crlite_enrolled": false,
+      "id": "2269c12e-3b8e-4700-a4d5-42525a948a50",
+      "last_modified": 1711724223123
+    },
+    {
+      "schema": 1711464837732,
+      "derHash": "8H04OCfiZDJsXQ2+JXqoIQhAnyUkb4HuNsivIitaHkM=",
+      "subject": "CN=Telia RSA OV CA v4,O=Telia Company AB,C=SE",
+      "subjectDN": "MEUxCzAJBgNVBAYTAlNFMRkwFwYDVQQKDBBUZWxpYSBDb21wYW55IEFCMRswGQYDVQQDDBJUZWxpYSBSU0EgT1YgQ0EgdjQ=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "8a8a355227c0c3345470ef0bfb850234b21b1dd60470e4dcf566cfdff0e502f8",
+        "size": 2300,
+        "filename": "uNTFkYMpAkhXFadzPws2J6iLVX44ue38H6LKC6alh3A=.pem",
+        "location": "security-state-staging/intermediates/74ec359d-1abe-4c34-9800-83d22cf1824f.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "uNTFkYMpAkhXFadzPws2J6iLVX44ue38H6LKC6alh3A=",
+      "crlite_enrolled": false,
+      "id": "2b785473-c7ec-4117-be0b-1f5cbe2c9bca",
+      "last_modified": 1711465023926
+    },
+    {
+      "schema": 1711464836863,
+      "derHash": "pn8+Z8sd8urPOkBOr/F5N05eP0ug2C6RQF2urfsPM30=",
+      "subject": "CN=Telia RSA DV CA v4,O=Telia Company AB,C=SE",
+      "subjectDN": "MEUxCzAJBgNVBAYTAlNFMRkwFwYDVQQKDBBUZWxpYSBDb21wYW55IEFCMRswGQYDVQQDDBJUZWxpYSBSU0EgRFYgQ0EgdjQ=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "dd2acaf8dd832742c4ce4c63de0d80621f24a60707462a487a496d4fd1271456",
+        "size": 2300,
+        "filename": "pbnDROwxL9imiYDtQcKHL4D07MvFyHJGsfaj_hTH-uw=.pem",
+        "location": "security-state-staging/intermediates/7acb6902-fa54-421e-9b3f-bbb075b0e656.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "pbnDROwxL9imiYDtQcKHL4D07MvFyHJGsfaj/hTH+uw=",
+      "crlite_enrolled": false,
+      "id": "7e90cfb9-3e37-47af-898a-e5d61b99b444",
+      "last_modified": 1711465023924
+    },
+    {
+      "schema": 1711464837319,
+      "derHash": "JtdCdBukKDlPkE5EEO1tqS9NDFVSHx7eKyl5f4ZslVw=",
+      "subject": "CN=Telia EC DV CA v4,O=Telia Company AB,C=SE",
+      "subjectDN": "MEQxCzAJBgNVBAYTAlNFMRkwFwYDVQQKDBBUZWxpYSBDb21wYW55IEFCMRowGAYDVQQDDBFUZWxpYSBFQyBEViBDQSB2NA==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "c085e851d30509db40952fc9f84105396c73546c29ad715cda6452e1c7e04e1d",
+        "size": 1150,
+        "filename": "NeN7Ibyh_EFluoZE27OfNSDLpVsqzCOtSIe0YDz2GSA=.pem",
+        "location": "security-state-staging/intermediates/81c10429-00de-407d-a5c2-78f8d1a46d0d.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "NeN7Ibyh/EFluoZE27OfNSDLpVsqzCOtSIe0YDz2GSA=",
+      "crlite_enrolled": false,
+      "id": "ccbb9d09-e78a-42eb-84e3-ec36872e58a4",
+      "last_modified": 1711465023921
+    },
+    {
+      "schema": 1711079327797,
+      "derHash": "GnD+GCdR5jfA5dPVU+db26HWVf/lQR2bOQtzyDePpyw=",
+      "subject": "CN=Leocert TLS Issuing RSA CA 1,O=Leocert LLC,C=US",
+      "subjectDN": "MEoxCzAJBgNVBAYTAlVTMRQwEgYDVQQKDAtMZW9jZXJ0IExMQzElMCMGA1UEAwwcTGVvY2VydCBUTFMgSXNzdWluZyBSU0EgQ0EgMQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "909b2e8999e89c9ba6a76900402d0f011877b2cac32792910aa1f10c33ab823b",
+        "size": 2064,
+        "filename": "TLG3k1viplwCa4FIN66yKHXwUwpjuk-zYaXHlJKI1mY=.pem",
+        "location": "security-state-staging/intermediates/eafb2b1c-e818-4c8e-914b-86ac8c5d7235.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "TLG3k1viplwCa4FIN66yKHXwUwpjuk+zYaXHlJKI1mY=",
+      "crlite_enrolled": false,
+      "id": "b1c85617-4d30-44d3-ab20-4d5ea7d6ac51",
+      "last_modified": 1711079823132
+    },
+    {
+      "schema": 1711079328231,
+      "derHash": "eQidoGeOCFCA5Y1UxGKzE+94QWqHJPrOfRqJN0OOAMc=",
+      "subject": "CN=Leocert TLS Issuing ECC CA 1,O=Leocert LLC,C=US",
+      "subjectDN": "MEoxCzAJBgNVBAYTAlVTMRQwEgYDVQQKDAtMZW9jZXJ0IExMQzElMCMGA1UEAwwcTGVvY2VydCBUTFMgSXNzdWluZyBFQ0MgQ0EgMQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "3c2391cb93c7441025a1e056e161c4d31acb51039c0f8720ee0598ebe26e35d6",
+        "size": 1089,
+        "filename": "VCKMSEPlE_Wm1yh1cVkPT9qFW95J646OM9DdihnTErc=.pem",
+        "location": "security-state-staging/intermediates/7d525c97-e82d-4f3a-be44-21c246617a24.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "VCKMSEPlE/Wm1yh1cVkPT9qFW95J646OM9DdihnTErc=",
+      "crlite_enrolled": false,
+      "id": "2945ac79-f854-4685-a0ec-f140cdf5e8c7",
+      "last_modified": 1711079823129
+    },
+    {
       "schema": 1710946446035,
       "derHash": "8DZVz+hbOj8q8v03yrnqKDs6KKm2FX/pvrdcF8BhGzo=",
       "subject": "CN=Keysec GR3 DV TLS CA 2024,O=KEYSEC LTDA,C=BR",
@@ -413,78 +629,6 @@
       "crlite_enrolled": false,
       "id": "69343a2a-10ab-428d-9412-9a7986910578",
       "last_modified": 1710557823219
-    },
-    {
-      "schema": 1710539501295,
-      "derHash": "kPqg3vqxPQmsAJdRwMO2BqR81X3oAi5od0gZm0RHSyM=",
-      "subject": "CN=Certigna Server Authentication ACME CA,O=Certigna,C=FR",
-      "subjectDN": "MHAxCzAJBgNVBAYTAkZSMREwDwYDVQQKDAhDZXJ0aWduYTEdMBsGA1UEYQwUTlRSRlItNDgxNDYzMDgxMDAwMzYxLzAtBgNVBAMMJkNlcnRpZ25hIFNlcnZlciBBdXRoZW50aWNhdGlvbiBBQ01FIENB",
-      "whitelist": false,
-      "attachment": {
-        "hash": "49c8ef6d8a7b25da0bf8610a646bed6d9d0eac47d63eec405c40c5e71ce8208f",
-        "size": 2458,
-        "filename": "g96_QpC6c95hPe0mJuHADgpPz6RuVaqjHoRSjOyuL7E=.pem",
-        "location": "security-state-staging/intermediates/7b7f68ae-bfd3-4840-b207-9ab77f4232f8.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "g96/QpC6c95hPe0mJuHADgpPz6RuVaqjHoRSjOyuL7E=",
-      "crlite_enrolled": false,
-      "id": "38d23199-bfbc-46eb-bc42-70a370fbac24",
-      "last_modified": 1710539831556
-    },
-    {
-      "schema": 1710539500206,
-      "derHash": "WMKULEG5CPAJ6QD+YtETC76npaiDbyCJkImnqVHGQyc=",
-      "subject": "CN=Certigna Server Authentication ACME FR CA 2024,O=Certigna,C=FR",
-      "subjectDN": "MHgxCzAJBgNVBAYTAkZSMREwDwYDVQQKDAhDZXJ0aWduYTEdMBsGA1UEYQwUTlRSRlItNDgxNDYzMDgxMDAwMzYxNzA1BgNVBAMMLkNlcnRpZ25hIFNlcnZlciBBdXRoZW50aWNhdGlvbiBBQ01FIEZSIENBIDIwMjQ=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "b2210ca67012f7e0ba1fde2dc3546563fa2c16b17753d83a23cf28772fdc78d4",
-        "size": 2052,
-        "filename": "DoTA9i3cZ3sCoyIkBYv0KN9rxjve3-F1LOL0hMTEjp8=.pem",
-        "location": "security-state-staging/intermediates/bcda003c-3561-469c-97ec-e1268e4edb50.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "DoTA9i3cZ3sCoyIkBYv0KN9rxjve3+F1LOL0hMTEjp8=",
-      "crlite_enrolled": false,
-      "id": "506528ab-12d0-4986-8355-f72a795f5311",
-      "last_modified": 1710539831553
-    },
-    {
-      "schema": 1710539500937,
-      "derHash": "4FD1W1Vj5DXdNgI6OjtKy+q0TDlk8YBIecwxEeKH2Bs=",
-      "subject": "CN=Certigna Server Authentication ACME FR CA,O=Certigna,C=FR",
-      "subjectDN": "MHMxCzAJBgNVBAYTAkZSMREwDwYDVQQKDAhDZXJ0aWduYTEdMBsGA1UEYQwUTlRSRlItNDgxNDYzMDgxMDAwMzYxMjAwBgNVBAMMKUNlcnRpZ25hIFNlcnZlciBBdXRoZW50aWNhdGlvbiBBQ01FIEZSIENB",
-      "whitelist": false,
-      "attachment": {
-        "hash": "bbe52c415c1b8f00ea91967db06b87b829f88f35160ca7e8ff01d6b9acaa0e63",
-        "size": 2463,
-        "filename": "zkN9UXAo8i_VmU2mjpCUOtef-5jkt-KPl32fIqB0tNE=.pem",
-        "location": "security-state-staging/intermediates/4c8342ae-ea33-4964-bac7-4ef7d2d40537.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "zkN9UXAo8i/VmU2mjpCUOtef+5jkt+KPl32fIqB0tNE=",
-      "crlite_enrolled": false,
-      "id": "14b7e624-637a-4380-95e3-3b432fc6aac2",
-      "last_modified": 1710539831550
-    },
-    {
-      "schema": 1710539500588,
-      "derHash": "qaY+A/DUmOxyQwJqeo8r5wXQTyhF1J9j2InJ3QtKOUQ=",
-      "subject": "CN=Certigna Server Authentication ACME CA 2024,O=Certigna,C=FR",
-      "subjectDN": "MHUxCzAJBgNVBAYTAkZSMREwDwYDVQQKDAhDZXJ0aWduYTEdMBsGA1UEYQwUTlRSRlItNDgxNDYzMDgxMDAwMzYxNDAyBgNVBAMMK0NlcnRpZ25hIFNlcnZlciBBdXRoZW50aWNhdGlvbiBBQ01FIENBIDIwMjQ=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "161dc34976ab4cfc42bd69ec0b38ae28178722e6243ee46a916e76743d135d0e",
-        "size": 2048,
-        "filename": "5t6bUEJAtYeRqDL4wc0-BLSX3Cy-W80bNcuO4zpx08Q=.pem",
-        "location": "security-state-staging/intermediates/fce8c500-791e-481c-8225-5faf94b2f6e3.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "5t6bUEJAtYeRqDL4wc0+BLSX3Cy+W80bNcuO4zpx08Q=",
-      "crlite_enrolled": false,
-      "id": "08355b95-d61d-4aa6-8185-4c6a16379fae",
-      "last_modified": 1710539831545
     },
     {
       "schema": 1709780043992,
@@ -12817,24 +12961,6 @@
       "last_modified": 1666727870028
     },
     {
-      "schema": 1666727330223,
-      "derHash": "0zqEf2QDd74K4aQpFToH6HyIJ/pIQLUVi83LheEKRTo=",
-      "subject": "CN=VR IDENT EV SSL CA 2020,O=Fiducia & GAD IT AG,C=DE",
-      "subjectDN": "ME0xCzAJBgNVBAYTAkRFMRwwGgYDVQQKDBNGaWR1Y2lhICYgR0FEIElUIEFHMSAwHgYDVQQDDBdWUiBJREVOVCBFViBTU0wgQ0EgMjAyMA==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "a95e7ccf2ef4b020f65fbd061c44e49d966821be27623376e3f16a8a3ebd371f",
-        "size": 2361,
-        "filename": "te09bIALahNazDua57TEibeM7CatIkOAT8t-qu_Kdro=.pem",
-        "location": "security-state-staging/intermediates/e8b0b0a2-f7f0-4893-b9ef-32f493e8a146.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "te09bIALahNazDua57TEibeM7CatIkOAT8t+qu/Kdro=",
-      "crlite_enrolled": false,
-      "id": "92b7ea6b-c8ed-47fc-bd89-4834ef4a3ad5",
-      "last_modified": 1666727870010
-    },
-    {
       "schema": 1666727401140,
       "derHash": "y2Zmsyv/Lv7cxBh98Umm00pdELcWW5z/KmfA4xGu7tc=",
       "subject": "CN=QuoVadis Europe EV SSL CA G1,O=QuoVadis Trustlink B.V.,C=NL",
@@ -12887,24 +13013,6 @@
       "crlite_enrolled": false,
       "id": "3157d9c2-162a-4e53-9f7b-3bde40d1cd54",
       "last_modified": 1666727869969
-    },
-    {
-      "schema": 1666727372418,
-      "derHash": "NH0Y3Mwu/FGpIOen+7B7+9o1YTaB+C3KXExyuwyDwDU=",
-      "subject": "CN=VR IDENT SSL CA 2020,O=Fiducia & GAD IT AG,C=DE",
-      "subjectDN": "MEoxCzAJBgNVBAYTAkRFMRwwGgYDVQQKDBNGaWR1Y2lhICYgR0FEIElUIEFHMR0wGwYDVQQDDBRWUiBJREVOVCBTU0wgQ0EgMjAyMA==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "4158e246be129509cb8d8eb14b647517fea0196e81a9d593f4b8f64a11a6414f",
-        "size": 2357,
-        "filename": "fQUctsUYoew1aFnAFT0prf-kJmkVNqkPo2jJ5Jm9RaA=.pem",
-        "location": "security-state-staging/intermediates/ada7bb67-cb15-43b5-9c74-259e711941b5.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "fQUctsUYoew1aFnAFT0prf+kJmkVNqkPo2jJ5Jm9RaA=",
-      "crlite_enrolled": false,
-      "id": "2b1f7c04-dd89-4f96-ad7d-e4e167a9099d",
-      "last_modified": 1666727869953
     },
     {
       "schema": 1666727415303,
@@ -13625,24 +13733,6 @@
       "crlite_enrolled": false,
       "id": "b8970565-16ff-4a34-80ed-e7cbee7d048c",
       "last_modified": 1666727869297
-    },
-    {
-      "schema": 1666727410331,
-      "derHash": "6uWboswzKBpc3exQz7/Z3QylVl8872mMk2ahDOwIf5c=",
-      "subject": "CN=Domain The Net Technologies Ltd CA for SSL R2,O=Domain The Net Technologies Ltd,C=IL",
-      "subjectDN": "MG8xCzAJBgNVBAYTAklMMSgwJgYDVQQKDB9Eb21haW4gVGhlIE5ldCBUZWNobm9sb2dpZXMgTHRkMTYwNAYDVQQDDC1Eb21haW4gVGhlIE5ldCBUZWNobm9sb2dpZXMgTHRkIENBIGZvciBTU0wgUjI=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "74b27e430703697e4e0eb4a4518f35a8e27789b980b29dd2593702248ea4491d",
-        "size": 2483,
-        "filename": "1FBqLyRsP8ibxXXsW64LYWGTeYMGSsUTMFEetUQakD8=.pem",
-        "location": "security-state-staging/intermediates/beb201df-0f86-438c-911c-f798428aa9c4.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "1FBqLyRsP8ibxXXsW64LYWGTeYMGSsUTMFEetUQakD8=",
-      "crlite_enrolled": false,
-      "id": "ac504f95-1d16-427c-8e82-82da28c34bc6",
-      "last_modified": 1666727869284
     },
     {
       "schema": 1666727422380,
@@ -23707,24 +23797,6 @@
       "last_modified": 1661561823060
     },
     {
-      "schema": 1659747423666,
-      "derHash": "PzHbdYKNqpbk3luCoGeP4gI71bJGw/klDL9nGOEJWPU=",
-      "subject": "CN=Domain The Net Technologies Ltd CA for EV SSL R2,O=Domain The Net Technologies Ltd,C=IL",
-      "subjectDN": "MHIxCzAJBgNVBAYTAklMMSgwJgYDVQQKDB9Eb21haW4gVGhlIE5ldCBUZWNobm9sb2dpZXMgTHRkMTkwNwYDVQQDDDBEb21haW4gVGhlIE5ldCBUZWNobm9sb2dpZXMgTHRkIENBIGZvciBFViBTU0wgUjI=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "8a4d28681845cdc8a071852db1380fdac3ad47d045153ee6fc939a47193b2bff",
-        "size": 2487,
-        "filename": "Lk19AkNIC7AwHNF5HsU_phCEnUBI-eiA0mbFhxxeQsQ=.pem",
-        "location": "security-state-staging/intermediates/88af22d0-cfec-40f3-bb5e-5e0f70ca65bf.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "Lk19AkNIC7AwHNF5HsU/phCEnUBI+eiA0mbFhxxeQsQ=",
-      "crlite_enrolled": false,
-      "id": "ebf62e8f-f268-416f-b7de-23e67b4313c9",
-      "last_modified": 1660093023424
-    },
-    {
       "schema": 1659617319739,
       "derHash": "r9ep9iQLEcBtD2ck1E9FTg1eMX1cz/a4GNVyRO7VoZk=",
       "subject": "CN=Positiwise OV SSL CA,O=Positiwise Software LLC,C=US",
@@ -27433,24 +27505,6 @@
       "last_modified": 1618102648566
     },
     {
-      "schema": 1616744987712,
-      "derHash": "Grxa1bw5EaW0qR5Cu6MhLiqj3IAUfv4dSVcuS+BTJjM=",
-      "subject": "CN=GlobalSign Atlas R3 AlphaSSL CA H1 2021,O=Globalsign nv-sa,C=BE",
-      "subjectDN": "MFoxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxzaWduIG52LXNhMTAwLgYDVQQDEydHbG9iYWxTaWduIEF0bGFzIFIzIEFscGhhU1NMIENBIEgxIDIwMjE=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "0ac4293f335c1f7922726fccc78a0a749002116e0d6d354411046b3681c14fe0",
-        "size": 1715,
-        "filename": "HAdiOrIGPG14XkymnmeQ184Cm1Z8E9-jnOoBut3PORw=.pem",
-        "location": "security-state-staging/intermediates/a79140b4-b597-4021-b12a-e83c7b03a7e0.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "HAdiOrIGPG14XkymnmeQ184Cm1Z8E9+jnOoBut3PORw=",
-      "crlite_enrolled": false,
-      "id": "afbdb701-e59b-4398-967c-b0db2394d003",
-      "last_modified": 1616745549953
-    },
-    {
       "schema": 1615384231447,
       "derHash": "sQhhc3s+ybEfphVNI5cP+y2r/Ciuamv1bD8yBCZiOa0=",
       "subject": "CN=SECOM Passport for Member PUB CA4,OU=SECOM Passport for Member 2.0 PUB,O=SECOM Trust Systems CO.\\,LTD.,C=JP",
@@ -30565,5 +30619,5 @@
       "last_modified": 1559865884636
     }
   ],
-  "timestamp": 1710946623378
+  "timestamp": 1712311023721
 }

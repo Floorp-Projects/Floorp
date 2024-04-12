@@ -6710,7 +6710,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2024-03-06T15:14:58Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2024-03-28T15:13:37Z
 // This list is auto-generated, don't edit it manually.
 // aaa : American Automobile Association, Inc.
 // https://www.iana.org/domains/root/db/aaa.html
@@ -6987,10 +6987,6 @@ auto
 // autos : XYZ.COM LLC
 // https://www.iana.org/domains/root/db/autos.html
 autos
-
-// avianca : Avianca Inc.
-// https://www.iana.org/domains/root/db/avianca.html
-avianca
 
 // aws : AWS Registry LLC
 // https://www.iana.org/domains/root/db/aws.html
@@ -13480,6 +13476,10 @@ whitesnow.jp
 zombie.jp
 heteml.net
 
+// GoDaddy Registry : https://registry.godaddy
+// Submitted by Rohan Durrant <tldns@registry.godaddy>
+graphic.design
+
 // GOV.UK Platform as a Service : https://www.cloud.service.gov.uk/
 // Submitted by Tom Whitwell <gov-uk-paas-support@digital.cabinet-office.gov.uk>
 cloudapps.digital
@@ -13737,7 +13737,7 @@ biz.at
 info.at
 
 // info.cx : http://info.cx
-// Submitted by Jacob Slater <whois@igloo.to>
+// Submitted by June Slater <whois@igloo.to>
 info.cx
 
 // Interlegis : http://www.interlegis.leg.br
@@ -13785,6 +13785,10 @@ iopsys.se
 // IPiFony Systems, Inc. : https://www.ipifony.com/
 // Submitted by Matthew Hardeman <mhardeman@ipifony.com>
 ipifony.net
+
+// ir.md : https://nic.ir.md
+// Submitted by Ali Soizi <info@nic.ir.md>
+ir.md
 
 // IServ GmbH : https://iserv.de
 // Submitted by Mario Hoberg <info@iserv.de>
@@ -14141,7 +14145,7 @@ co.pl
 // Managed by Corporate Domains
 // Microsoft Azure : https://home.azure
 *.azurecontainer.io
-*.cloudapp.azure.com
+cloudapp.azure.com
 azure-api.net
 azureedge.net
 azurefd.net
@@ -14254,6 +14258,10 @@ nh-serv.co.uk
 // NFSN, Inc. : https://www.NearlyFreeSpeech.NET/
 // Submitted by Jeff Wheelhouse <support@nearlyfreespeech.net>
 nfshost.com
+
+// NFT.Storage : https://nft.storage/
+// Submitted by Vasco Santos <vasco.santos@protocol.ai> or <support@nft.storage>
+ipfs.nftstorage.link
 
 // Noop : https://noop.app
 // Submitted by Nathaniel Schweinberg <noop@rearc.io>

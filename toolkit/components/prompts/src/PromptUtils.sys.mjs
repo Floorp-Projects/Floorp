@@ -76,6 +76,12 @@ export var EnableDelayHelper = function ({
   this.focusTarget.addEventListener("keydown", this, true);
   this.focusTarget.document.addEventListener("unload", this);
 
+  // If we're not part of the active window, don't even start the timer yet.
+  let topWin = focusTarget.browsingContext.top.window;
+  if (topWin != Services.focus.activeWindow) {
+    return;
+  }
+
   this.startOnFocusDelay();
 };
 

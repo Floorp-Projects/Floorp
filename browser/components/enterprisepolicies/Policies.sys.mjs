@@ -303,6 +303,18 @@ export var Policies = {
     },
   },
 
+  AutofillAddressEnabled: {
+    onBeforeAddons(manager, param) {
+      setAndLockPref("extensions.formautofill.addresses.enabled", param);
+    },
+  },
+
+  AutofillCreditCardEnabled: {
+    onBeforeAddons(manager, param) {
+      setAndLockPref("extensions.formautofill.creditCards.enabled", param);
+    },
+  },
+
   AutoLaunchProtocolsFromOrigins: {
     onBeforeAddons(manager, param) {
       for (let info of param) {
@@ -599,8 +611,6 @@ export var Policies = {
         "browser.download.dir",
         replacePathVariables(param)
       );
-      // If a custom download directory is being used, just lock folder list to 2.
-      setAndLockPref("browser.download.folderList", 2);
     },
   },
 
