@@ -21,6 +21,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiObject
+import androidx.test.uiautomator.UiObjectNotFoundException
 import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
@@ -32,6 +33,7 @@ import org.junit.Assert
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.Constants.RETRY_COUNT
 import org.mozilla.fenix.helpers.Constants.TAG
 import org.mozilla.fenix.helpers.MatcherHelper.assertUIObjectExists
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
@@ -40,7 +42,6 @@ import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeVeryShort
 import org.mozilla.fenix.helpers.ext.waitNotNull
-import org.mozilla.fenix.ui.robots.clickPageObject
 
 object TestHelper {
 
@@ -113,8 +114,26 @@ object TestHelper {
         )
     }
 
-    fun clickSnackbarButton(expectedText: String) =
-        clickPageObject(itemWithResIdAndText("$packageName:id/snackbar_btn", expectedText))
+    fun clickSnackbarButton(expectedText: String) {
+        for (i in 1..RETRY_COUNT) {
+            Log.i(TAG, "clickSnackbarButton: Started try #$i")
+            try {
+                Log.i(TAG, "clickSnackbarButton: Waiting for $waitingTimeShort ms for the $expectedText snackbar button to exist")
+                itemWithResIdAndText("$packageName:id/snackbar_btn", expectedText).waitForExists(waitingTimeShort)
+                Log.i(TAG, "clickSnackbarButton: Waited for $waitingTimeShort ms for the $expectedText snackbar button to exist")
+                Log.i(TAG, "clickSnackbarButton: Trying to click the $expectedText and wait for $waitingTime ms for a new window")
+                itemWithResIdAndText("$packageName:id/snackbar_btn", expectedText).clickAndWaitForNewWindow(waitingTimeShort)
+                Log.i(TAG, "clickSnackbarButton: Clicked the $expectedText and waited for $waitingTime ms for a new window")
+
+                break
+            } catch (e: UiObjectNotFoundException) {
+                Log.i(TAG, "clickSnackbarButton: UiObjectNotFoundException caught, executing fallback methods")
+                if (i == RETRY_COUNT) {
+                    throw e
+                }
+            }
+        }
+    }
 
     fun waitUntilSnackbarGone() {
         Log.i(TAG, "waitUntilSnackbarGone: Waiting for $waitingTime ms until the snckabar is gone")

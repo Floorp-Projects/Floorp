@@ -313,12 +313,6 @@ class BookmarksRobot {
         Log.i(TAG, "navigateUp: Clicked navigate up toolbar button")
     }
 
-    fun clickUndoDeleteButton() {
-        Log.i(TAG, "clickUndoDeleteButton: Trying to click undo snack bar button")
-        snackBarUndoButton().click()
-        Log.i(TAG, "clickUndoDeleteButton: Clicked undo snack bar button")
-    }
-
     fun changeBookmarkTitle(newTitle: String) {
         Log.i(TAG, "changeBookmarkTitle: Trying to clear bookmark name text box")
         bookmarkNameEditBox().perform(clearText())

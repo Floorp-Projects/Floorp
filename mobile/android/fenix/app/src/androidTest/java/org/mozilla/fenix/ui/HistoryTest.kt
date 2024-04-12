@@ -17,6 +17,7 @@ import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.MockBrowserDataHelper
 import org.mozilla.fenix.helpers.RecyclerViewIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.TestHelper.clickSnackbarButton
 import org.mozilla.fenix.helpers.TestHelper.exitMenu
 import org.mozilla.fenix.helpers.TestHelper.longTapSelectItem
 import org.mozilla.fenix.helpers.TestHelper.mDevice
@@ -94,7 +95,7 @@ class HistoryTest : TestSetup() {
                 clickDeleteHistoryButton(firstWebPage.url.toString())
             }
             verifyUndoDeleteSnackBarButton()
-            clickUndoDeleteButton()
+            clickSnackbarButton("UNDO")
             verifyHistoryItemExists(true, firstWebPage.url.toString())
             clickDeleteHistoryButton(firstWebPage.url.toString())
             verifySnackBarText(expectedText = "Deleted")

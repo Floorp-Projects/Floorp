@@ -347,21 +347,6 @@ class TabDrawerRobot {
         }
     }
 
-    fun snackBarButtonClick(expectedText: String) {
-        mDevice.findObject(
-            UiSelector()
-                .resourceId("$packageName:id/snackbar_btn")
-                .text(expectedText),
-        ).also {
-            Log.i(TAG, "snackBarButtonClick: Waiting for $waitingTime ms for the snack bar button: $expectedText to exist")
-            it.waitForExists(waitingTime)
-            Log.i(TAG, "snackBarButtonClick: Waited for $waitingTime ms for the snack bar button: $expectedText to exist")
-            Log.i(TAG, "snackBarButtonClick: Trying to click the $expectedText snack bar button")
-            it.click()
-            Log.i(TAG, "snackBarButtonClick: Clicked the $expectedText snack bar button")
-        }
-    }
-
     fun verifyTabMediaControlButtonState(action: String) = assertUIObjectExists(tabMediaControlButton(action))
 
     fun clickTabMediaControlButton(action: String) {

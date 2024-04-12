@@ -69,7 +69,7 @@ class CollectionTest : TestSetup() {
 
         tabDrawer {
             verifySnackBarText("Collection saved!")
-            snackBarButtonClick("VIEW")
+            clickSnackbarButton("VIEW")
         }
 
         homeScreen {
@@ -101,7 +101,7 @@ class CollectionTest : TestSetup() {
         }.enterURLAndEnterToBrowser(webPage.url) {
         }.openTabDrawer {
             createCollection(webPage.title, collectionName = collectionName)
-            snackBarButtonClick("VIEW")
+            clickSnackbarButton("VIEW")
         }
 
         homeScreen {
@@ -215,7 +215,7 @@ class CollectionTest : TestSetup() {
         }.enterURLAndEnterToBrowser(webPage.url) {
         }.openTabDrawer {
             createCollection(webPage.title, collectionName = collectionName)
-            snackBarButtonClick("VIEW")
+            clickSnackbarButton("VIEW")
         }
 
         homeScreen {

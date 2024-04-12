@@ -23,6 +23,7 @@ import org.mozilla.fenix.helpers.MockBrowserDataHelper.createHistoryItem
 import org.mozilla.fenix.helpers.SearchDispatcher
 import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
 import org.mozilla.fenix.helpers.TestHelper.appContext
+import org.mozilla.fenix.helpers.TestHelper.clickSnackbarButton
 import org.mozilla.fenix.helpers.TestHelper.exitMenu
 import org.mozilla.fenix.helpers.TestHelper.restartApp
 import org.mozilla.fenix.helpers.TestHelper.verifySnackBarText
@@ -365,7 +366,7 @@ class SettingsSearchTest : TestSetup() {
             openEngineOverflowMenu(customSearchEngineTitle)
             clickDeleteSearchEngine()
             verifySnackBarText("Deleted $customSearchEngineTitle")
-            clickUndoSnackBarButton()
+            clickSnackbarButton("UNDO")
             verifyEngineListContains(customSearchEngineTitle, shouldExist = true)
             changeDefaultSearchEngine(customSearchEngineTitle)
             openEngineOverflowMenu(customSearchEngineTitle)

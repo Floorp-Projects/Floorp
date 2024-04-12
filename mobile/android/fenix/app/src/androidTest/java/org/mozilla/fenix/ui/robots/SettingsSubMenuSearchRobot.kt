@@ -446,15 +446,6 @@ class SettingsSubMenuSearchRobot {
         Log.i(TAG, "clickDeleteSearchEngine: Clicked the \"Delete\" button")
     }
 
-    fun clickUndoSnackBarButton() {
-        Log.i(TAG, "clickUndoSnackBarButton: Trying to click the \"Undo\" snack bar button")
-        mDevice.findObject(
-            UiSelector()
-                .resourceId("$packageName:id/snackbar_btn"),
-        ).click()
-        Log.i(TAG, "clickUndoSnackBarButton: Clicked the \"Undo\" snack bar button")
-    }
-
     fun saveEditSearchEngine() {
         Log.i(TAG, "saveEditSearchEngine: Trying to click the \"Save\" button")
         onView(withId(R.id.save_button)).click()

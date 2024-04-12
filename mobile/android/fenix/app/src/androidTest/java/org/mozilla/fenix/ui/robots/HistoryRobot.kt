@@ -150,12 +150,6 @@ class HistoryRobot {
         Log.i(TAG, "verifyUndoDeleteSnackBarButton: Verified \"Undo\" snackbar button")
     }
 
-    fun clickUndoDeleteButton() {
-        Log.i(TAG, "verifyUndoDeleteSnackBarButton: Trying to click \"Undo\" snackbar button")
-        snackBarUndoButton().click()
-        Log.i(TAG, "verifyUndoDeleteSnackBarButton: Clicked \"Undo\" snackbar button")
-    }
-
     fun verifySearchGroupDisplayed(shouldBeDisplayed: Boolean, searchTerm: String, groupSize: Int) =
         // checks if the search group exists in the Recently visited section
         assertUIObjectExists(
