@@ -1041,9 +1041,6 @@ id_and_secret_keyfile("Leanplum SDK")
 
 simple_keyfile("Pocket API")
 
-with only_when(target_is_windows):
-    id_and_secret_keyfile("Windows Taskbar Pinning API")
-
 
 # WebRender Debugger integration
 # ==============================================================
