@@ -3,13 +3,13 @@
     <!-- Title of a dialog for a notification permission request. -->
     <string name="mozac_feature_sitepermissions_notification_title">Թույլատրե՞լ %1$s-ին ծանուցումներ ուղարկել:</string>
     <!-- Title of a dialog for a camera permission request. -->
-    <string name="mozac_feature_sitepermissions_camera_title">Թույլատրե՞լ %1$s-ին օգտագործել ձեր տեսախցիկը:</string>
+    <string name="mozac_feature_sitepermissions_camera_title">Թույլատրե՞լ %1$s-ին օգտագործել Ձեր տեսախցիկը:</string>
     <!-- Title of a dialog for a microphone permission request. -->
     <string name="mozac_feature_sitepermissions_microfone_title">Թույլատրե՞լ %1$s-ին օգտագործել ձեր խոսափողը:</string>
     <!-- Title of a dialog for a location permission request. -->
     <string name="mozac_feature_sitepermissions_location_title">Թույլատրե՞լ %1$s-ին օգտագործել ձեր տեղադրությունը:</string>
     <!-- Title of a dialog for a camera and microphone permission request. -->
-    <string name="mozac_feature_sitepermissions_camera_and_microphone">Թույլատրե՞լ %1$s-ին օգտագործել ձեր տեսախցիկը և խոսափողը:</string>
+    <string name="mozac_feature_sitepermissions_camera_and_microphone">Թույլատրե՞լ %1$s-ին օգտագործել Ձեր տեսախցիկը և խոսափողը:</string>
     <!-- Option in a dialog for requesting a microphone permission, this option will give access to
          the first microphone-->
     <string name="mozac_feature_sitepermissions_option_microphone_one">Խոսափող 1</string>

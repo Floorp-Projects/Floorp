@@ -25,7 +25,7 @@
     <!-- Text for confirmation "snackbar" shown after opening a link in a new tab.  -->
     <string name="mozac_feature_contextmenu_snackbar_new_tab_opened">Նոր ներդիր է բացվել</string>
     <!-- Text for confirmation "snackbar" shown after opening a link in a new private tab.  -->
-    <string name="mozac_feature_contextmenu_snackbar_new_private_tab_opened">Նոր Մասնավոր ներդիր է բացվել</string>
+    <string name="mozac_feature_contextmenu_snackbar_new_private_tab_opened">Նոր գաղտնի ներդիրը բացվեց</string>
     <!-- Text for confirmation "snackbar" shown after copying a link or image URL to the clipboard. -->
     <string name="mozac_feature_contextmenu_snackbar_link_copied">Հղումը պատճենվել է սեղմատախտակին</string>
     <!-- Action shown in a "snacbkar" after opening a new/private tab. Clicking this action will switch to the newly opened tab. -->

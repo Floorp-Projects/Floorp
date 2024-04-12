@@ -230,6 +230,10 @@
     <!-- Browser menu label to sign in to sync on the device using Mozilla accounts -->
     <string name="browser_menu_sign_in" tools:ignore="UnusedResources">سائن ان</string>
 
+    <!-- Extensions management fragment -->
+    <!-- Text displayed when there are no extensions to be shown -->
+    <string name="extensions_management_no_extensions">اتھاں کوئی ایکسٹنشن کائنی</string>
+
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">ہوم سکرین</string>
@@ -501,6 +505,10 @@
 
     <!-- Preference for extensions -->
     <string name="preferences_extensions">ایکسٹینشنز</string>
+    <!-- Preference for installing a local add-on -->
+    <string name="preferences_install_local_addon" moz:removedIn="126" tools:ignore="UnusedResources">فائل کنوں ایڈ آن انسٹال کرو…</string>
+    <!-- Preference for installing a local extension -->
+    <string name="preferences_install_local_extension">فائل کنوں ایکسٹنشن انسٹال کرو</string>
     <!-- Preference for notifications -->
     <string name="preferences_notifications">اطلاع نامے</string>
 
