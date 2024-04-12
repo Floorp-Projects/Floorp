@@ -584,10 +584,11 @@ void AudioInputProcessing::Stop(MediaTrackGraph* aGraph) {
 //
 // The D(N) frames of data are just forwarded from input to output without any
 // processing
-void AudioInputProcessing::Process(MediaTrackGraph* aGraph, GraphTime aFrom,
-                                   GraphTime aTo, AudioSegment* aInput,
+void AudioInputProcessing::Process(AudioProcessingTrack* aTrack,
+                                   GraphTime aFrom, GraphTime aTo,
+                                   AudioSegment* aInput,
                                    AudioSegment* aOutput) {
-  aGraph->AssertOnGraphThread();
+  aTrack->AssertOnGraphThread();
   MOZ_ASSERT(aFrom <= aTo);
   MOZ_ASSERT(!mEnded);
 
@@ -596,10 +597,11 @@ void AudioInputProcessing::Process(MediaTrackGraph* aGraph, GraphTime aFrom,
     return;
   }
 
+  MediaTrackGraph* graph = aTrack->Graph();
   if (!mEnabled) {
     LOG_FRAME("(Graph %p, Driver %p) AudioInputProcessing %p Filling %" PRId64
               " frames of silence to output (disabled)",
-              aGraph, aGraph->CurrentDriver(), this, need);
+              graph, graph->CurrentDriver(), this, need);
     aOutput->AppendNullData(need);
     return;
   }
@@ -607,11 +609,11 @@ void AudioInputProcessing::Process(MediaTrackGraph* aGraph, GraphTime aFrom,
   MOZ_ASSERT(aInput->GetDuration() == need,
              "Wrong data length from input port source");
 
-  if (IsPassThrough(aGraph)) {
+  if (IsPassThrough(graph)) {
     LOG_FRAME(
         "(Graph %p, Driver %p) AudioInputProcessing %p Forwarding %" PRId64
         " frames of input data to output directly (PassThrough)",
-        aGraph, aGraph->CurrentDriver(), this, aInput->GetDuration());
+        graph, graph->CurrentDriver(), this, aInput->GetDuration());
     aOutput->AppendSegment(aInput);
     return;
   }
@@ -620,7 +622,7 @@ void AudioInputProcessing::Process(MediaTrackGraph* aGraph, GraphTime aFrom,
   // packetizer. No need to change the pre-buffering since the rate is always
   // the same. The frames left in the packetizer would be replaced by null
   // data and then transferred to mSegment.
-  EnsurePacketizer(aGraph);
+  EnsurePacketizer(aTrack);
 
   // Preconditions of the audio-processing logic.
   MOZ_ASSERT(static_cast<uint32_t>(mSegment.GetDuration()) +
@@ -632,10 +634,10 @@ void AudioInputProcessing::Process(MediaTrackGraph* aGraph, GraphTime aFrom,
   MOZ_ASSERT(mSegment.GetDuration() >= 1);
   MOZ_ASSERT(mSegment.GetDuration() <= mPacketizerInput->mPacketSize);
 
-  PacketizeAndProcess(aGraph, *aInput);
+  PacketizeAndProcess(aTrack, *aInput);
   LOG_FRAME("(Graph %p, Driver %p) AudioInputProcessing %p Buffer has %" PRId64
             " frames of data now, after packetizing and processing",
-            aGraph, aGraph->CurrentDriver(), this, mSegment.GetDuration());
+            graph, graph->CurrentDriver(), this, mSegment.GetDuration());
 
   // By setting pre-buffering to the number of frames of one packet, and
   // because the maximum number of frames stuck in the packetizer before
@@ -646,8 +648,7 @@ void AudioInputProcessing::Process(MediaTrackGraph* aGraph, GraphTime aFrom,
   mSegment.RemoveLeading(need);
   LOG_FRAME("(Graph %p, Driver %p) AudioInputProcessing %p moving %" PRId64
             " frames of data to output, leaving %" PRId64 " frames in buffer",
-            aGraph, aGraph->CurrentDriver(), this, need,
-            mSegment.GetDuration());
+            graph, graph->CurrentDriver(), this, need, mSegment.GetDuration());
 
   // Postconditions of the audio-processing logic.
   MOZ_ASSERT(static_cast<uint32_t>(mSegment.GetDuration()) +
@@ -657,16 +658,16 @@ void AudioInputProcessing::Process(MediaTrackGraph* aGraph, GraphTime aFrom,
   MOZ_ASSERT(mSegment.GetDuration() <= mPacketizerInput->mPacketSize);
 }
 
-void AudioInputProcessing::ProcessOutputData(MediaTrackGraph* aGraph,
+void AudioInputProcessing::ProcessOutputData(AudioProcessingTrack* aTrack,
                                              const AudioChunk& aChunk) {
   MOZ_ASSERT(aChunk.ChannelCount() > 0);
-  aGraph->AssertOnGraphThread();
+  aTrack->AssertOnGraphThread();
 
-  if (!mEnabled || IsPassThrough(aGraph)) {
+  if (!mEnabled || IsPassThrough(aTrack->Graph())) {
     return;
   }
 
-  TrackRate sampleRate = aGraph->GraphRate();
+  TrackRate sampleRate = aTrack->mSampleRate;
   uint32_t framesPerPacket = GetPacketSize(sampleRate);  // in frames
   // Downmix from aChannels to MAX_CHANNELS if needed.
   uint32_t channelCount =
@@ -704,7 +705,7 @@ void AudioInputProcessing::ProcessOutputData(MediaTrackGraph* aGraph,
 
     if (mOutputBufferFrameCount == framesPerPacket) {
       // Have a complete packet.  Analyze it.
-      EnsureAudioProcessing(aGraph);
+      EnsureAudioProcessing(aTrack);
       for (uint32_t channel = 0; channel < channelCount; channel++) {
         channelPtrs[channel] = &mOutputBuffer[channel * framesPerPacket];
       }
@@ -721,14 +722,15 @@ void AudioInputProcessing::ProcessOutputData(MediaTrackGraph* aGraph,
 }
 
 // Only called if we're not in passthrough mode
-void AudioInputProcessing::PacketizeAndProcess(MediaTrackGraph* aGraph,
+void AudioInputProcessing::PacketizeAndProcess(AudioProcessingTrack* aTrack,
                                                const AudioSegment& aSegment) {
-  MOZ_ASSERT(!IsPassThrough(aGraph),
+  MediaTrackGraph* graph = aTrack->Graph();
+  MOZ_ASSERT(!IsPassThrough(graph),
              "This should be bypassed when in PassThrough mode.");
   MOZ_ASSERT(mEnabled);
   MOZ_ASSERT(mPacketizerInput);
   MOZ_ASSERT(mPacketizerInput->mPacketSize ==
-             GetPacketSize(aGraph->GraphRate()));
+             GetPacketSize(aTrack->mSampleRate));
 
   // Calculate number of the pending frames in mChunksInPacketizer.
   auto pendingFrames = [&]() {
@@ -770,7 +772,7 @@ void AudioInputProcessing::PacketizeAndProcess(MediaTrackGraph* aGraph,
   LOG_FRAME(
       "(Graph %p, Driver %p) AudioInputProcessing %p Packetizing %zu frames. "
       "Packetizer has %u frames (enough for %u packets) now",
-      aGraph, aGraph->CurrentDriver(), this, frameCount,
+      graph, graph->CurrentDriver(), this, frameCount,
       mPacketizerInput->FramesAvailable(),
       mPacketizerInput->PacketsAvailable());
 
@@ -828,10 +830,10 @@ void AudioInputProcessing::PacketizeAndProcess(MediaTrackGraph* aGraph,
                    deinterleavedPacketizedInputDataChannelPointers.Elements());
     }
 
-    StreamConfig inputConfig(aGraph->GraphRate(), channelCountInput);
+    StreamConfig inputConfig(aTrack->mSampleRate, channelCountInput);
     StreamConfig outputConfig = inputConfig;
 
-    EnsureAudioProcessing(aGraph);
+    EnsureAudioProcessing(aTrack);
     // Bug 1404965: Get the right delay here, it saves some work down the line.
     mAudioProcessing->set_stream_delay_ms(0);
 
@@ -937,7 +939,7 @@ void AudioInputProcessing::PacketizeAndProcess(MediaTrackGraph* aGraph,
         "(Graph %p, Driver %p) AudioInputProcessing %p Appending %u frames of "
         "packetized audio, leaving %u frames in packetizer (%" PRId64
         " frames in mChunksInPacketizer)",
-        aGraph, aGraph->CurrentDriver(), this, mPacketizerInput->mPacketSize,
+        graph, graph->CurrentDriver(), this, mPacketizerInput->mPacketSize,
         mPacketizerInput->FramesAvailable(), pendingFrames());
 
     // Postcondition of the Principal-labelling logic.
@@ -993,10 +995,11 @@ TrackTime AudioInputProcessing::NumBufferedFrames(
   return mSegment.GetDuration();
 }
 
-void AudioInputProcessing::EnsurePacketizer(MediaTrackGraph* aGraph) {
-  aGraph->AssertOnGraphThread();
+void AudioInputProcessing::EnsurePacketizer(AudioProcessingTrack* aTrack) {
+  aTrack->AssertOnGraphThread();
   MOZ_ASSERT(mEnabled);
-  MOZ_ASSERT(!IsPassThrough(aGraph));
+  MediaTrackGraph* graph = aTrack->Graph();
+  MOZ_ASSERT(!IsPassThrough(graph));
 
   uint32_t channelCount = GetRequestedInputChannelCount();
   MOZ_ASSERT(channelCount > 0);
@@ -1008,7 +1011,7 @@ void AudioInputProcessing::EnsurePacketizer(MediaTrackGraph* aGraph) {
   // need to change pre-buffering since the packet size is the same as the old
   // one, since the rate is a constant.
   MOZ_ASSERT_IF(mPacketizerInput, mPacketizerInput->mPacketSize ==
-                                      GetPacketSize(aGraph->GraphRate()));
+                                      GetPacketSize(aTrack->mSampleRate));
   bool needPreBuffering = !mPacketizerInput;
   if (mPacketizerInput) {
     const TrackTime numBufferedFrames =
@@ -1018,23 +1021,23 @@ void AudioInputProcessing::EnsurePacketizer(MediaTrackGraph* aGraph) {
     mChunksInPacketizer.clear();
   }
 
-  mPacketizerInput.emplace(GetPacketSize(aGraph->GraphRate()), channelCount);
+  mPacketizerInput.emplace(GetPacketSize(aTrack->mSampleRate), channelCount);
 
   if (needPreBuffering) {
     LOG_FRAME(
         "(Graph %p, Driver %p) AudioInputProcessing %p: Adding %u frames of "
         "silence as pre-buffering",
-        aGraph, aGraph->CurrentDriver(), this, mPacketizerInput->mPacketSize);
+        graph, graph->CurrentDriver(), this, mPacketizerInput->mPacketSize);
 
     AudioSegment buffering;
     buffering.AppendNullData(
         static_cast<TrackTime>(mPacketizerInput->mPacketSize));
-    PacketizeAndProcess(aGraph, buffering);
+    PacketizeAndProcess(aTrack, buffering);
   }
 }
 
-void AudioInputProcessing::EnsureAudioProcessing(MediaTrackGraph* aGraph) {
-  aGraph->AssertOnGraphThread();
+void AudioInputProcessing::EnsureAudioProcessing(AudioProcessingTrack* aTrack) {
+  aTrack->AssertOnGraphThread();
 
   if (!mAudioProcessing) {
     TRACE("AudioProcessing creation");
@@ -1137,7 +1140,7 @@ void AudioProcessingTrack::ProcessInput(GraphTime aFrom, GraphTime aTo,
       MOZ_ASSERT(mInputs.Length() == 1);
       AudioSegment data;
       DeviceInputConsumerTrack::GetInputSourceData(data, aFrom, aTo);
-      mInputProcessing->Process(Graph(), aFrom, aTo, &data,
+      mInputProcessing->Process(this, aFrom, aTo, &data,
                                 GetData<AudioSegment>());
     }
     MOZ_ASSERT(TrackTimeToGraphTime(GetEnd()) == aTo);
@@ -1153,7 +1156,7 @@ void AudioProcessingTrack::NotifyOutputData(MediaTrackGraph* aGraph,
   MOZ_ASSERT(mGraph == aGraph, "Cannot feed audio output to another graph");
   AssertOnGraphThread();
   if (mInputProcessing) {
-    mInputProcessing->ProcessOutputData(aGraph, aChunk);
+    mInputProcessing->ProcessOutputData(this, aChunk);
   }
 }
 
