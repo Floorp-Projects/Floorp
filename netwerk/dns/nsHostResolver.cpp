@@ -1490,6 +1490,18 @@ nsHostResolver::LookupStatus nsHostResolver::CompleteLookup(
                               aReason, aTRRRequest, lock);
 }
 
+namespace {
+class NetAddrIPv6FirstComparator {
+ public:
+  static bool Equals(const NetAddr& aLhs, const NetAddr& aRhs) {
+    return aLhs.raw.family == aRhs.raw.family;
+  }
+  static bool LessThan(const NetAddr& aLhs, const NetAddr& aRhs) {
+    return aLhs.raw.family > aRhs.raw.family;
+  }
+};
+}  // namespace
+
 nsHostResolver::LookupStatus nsHostResolver::CompleteLookupLocked(
     nsHostRecord* rec, nsresult status, AddrInfo* aNewRRSet, bool pb,
     const nsACString& aOriginsuffix, TRRSkippedReason aReason,
@@ -1601,6 +1613,16 @@ nsHostResolver::LookupStatus nsHostResolver::CompleteLookupLocked(
       old_addr_info = std::move(newRRSet);
     }
     addrRec->negative = !addrRec->addr_info;
+
+    if (addrRec->addr_info && StaticPrefs::network_dns_preferIPv6() &&
+        addrRec->addr_info->Addresses().Length() > 1 &&
+        addrRec->addr_info->Addresses()[0].IsIPAddrV4()) {
+      // Sort IPv6 addresses first.
+      auto builder = addrRec->addr_info->Build();
+      builder.SortAddresses(NetAddrIPv6FirstComparator());
+      addrRec->addr_info = builder.Finish();
+    }
+
     PrepareRecordExpirationAddrRecord(addrRec);
   }
 
