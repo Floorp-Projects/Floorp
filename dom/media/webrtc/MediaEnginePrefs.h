@@ -35,6 +35,7 @@ class MediaEnginePrefs {
         mNoiseOn(false),
         mTransientOn(false),
         mAgc2Forced(false),
+        mExpectDrift(-1),  // auto
         mAgc(0),
         mNoise(0),
         mChannels(0) {}
@@ -50,6 +51,7 @@ class MediaEnginePrefs {
   bool mNoiseOn;
   bool mTransientOn;
   bool mAgc2Forced;
+  int32_t mExpectDrift;
   int32_t mAgc;
   int32_t mNoise;
   int32_t mChannels;

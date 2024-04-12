@@ -2227,6 +2227,7 @@ MediaManager::MediaManager(already_AddRefed<TaskQueue> aMediaThread)
   mPrefs.mNoiseOn = false;
   mPrefs.mTransientOn = false;
   mPrefs.mAgc2Forced = false;
+  mPrefs.mExpectDrift = -1;  // auto
 #ifdef MOZ_WEBRTC
   mPrefs.mAgc =
       webrtc::AudioProcessing::Config::GainController1::Mode::kAdaptiveDigital;
@@ -3482,17 +3483,26 @@ void MediaManager::GetPrefs(nsIPrefBranch* aBranch, const char* aData) {
               &mPrefs.mTransientOn);
   GetPrefBool(aBranch, "media.getusermedia.agc2_forced", aData,
               &mPrefs.mAgc2Forced);
+  // Use 0 or 1 to force to false or true
+  // EchoCanceller3Config::echo_removal_control.has_clock_drift.
+  // -1 is the default, which means automatically set has_clock_drift as
+  // deemed appropriate.
+  GetPref(aBranch, "media.getusermedia.audio.processing.aec.expect_drift",
+          aData, &mPrefs.mExpectDrift);
   GetPref(aBranch, "media.getusermedia.agc", aData, &mPrefs.mAgc);
   GetPref(aBranch, "media.getusermedia.noise", aData, &mPrefs.mNoise);
   GetPref(aBranch, "media.getusermedia.channels", aData, &mPrefs.mChannels);
 #endif
   LOG("%s: default prefs: %dx%d @%dfps, %dHz test tones, aec: %s, "
-      "agc: %s, hpf: %s, noise: %s, agc level: %d, agc version: %s, noise "
-      "level: %d, transient: %s, channels %d",
+      "agc: %s, hpf: %s, noise: %s, drift: %s, agc level: %d, agc version: %s, "
+      "noise level: %d, transient: %s, channels %d",
       __FUNCTION__, mPrefs.mWidth, mPrefs.mHeight, mPrefs.mFPS, mPrefs.mFreq,
       mPrefs.mAecOn ? "on" : "off", mPrefs.mAgcOn ? "on" : "off",
-      mPrefs.mHPFOn ? "on" : "off", mPrefs.mNoiseOn ? "on" : "off", mPrefs.mAgc,
-      mPrefs.mAgc2Forced ? "2" : "1", mPrefs.mNoise,
+      mPrefs.mHPFOn ? "on" : "off", mPrefs.mNoiseOn ? "on" : "off",
+      mPrefs.mExpectDrift < 0 ? "auto"
+      : mPrefs.mExpectDrift   ? "on"
+                              : "off",
+      mPrefs.mAgc, mPrefs.mAgc2Forced ? "2" : "1", mPrefs.mNoise,
       mPrefs.mTransientOn ? "on" : "off", mPrefs.mChannels);
 }
 
