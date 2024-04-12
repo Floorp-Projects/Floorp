@@ -1203,7 +1203,7 @@ class MOZ_STACK_CLASS WrColorStopInterpolator
 
   void CreateStops() {
     mResult.SetLengthAndRetainStorage(0);
-    // we always emit at least two stops (start and end) for each input stop,
+    // We always emit at least two stops (start and end) for each input stop,
     // which avoids ambiguity with incomplete oklch/lch/hsv/hsb color stops for
     // the last stop pair, where the last color stop can't be interpreted on its
     // own because it actually depends on the previous stop.
@@ -1257,9 +1257,17 @@ void nsCSSGradientRenderer::BuildWebRenderParameters(
   // * https://bugzilla.mozilla.org/show_bug.cgi?id=1248178
   StyleColorInterpolationMethod styleColorInterpolationMethod =
       mGradient->ColorInterpolationMethod();
-  if (mStops.Length() >= 2 &&
-      (styleColorInterpolationMethod.space != StyleColorSpace::Srgb ||
-       gfxPlatform::GetCMSMode() == CMSMode::All)) {
+  // For colorspaces supported by WebRender (Srgb, Hsl, Hwb) we technically do
+  // not need to add extra stops, but the only one of those colorspaces that
+  // appears frequently is Srgb, and Srgb still needs extra stops if CMS is
+  // enabled.  Hsl/Hwb need extra stops if StyleHueInterpolationMethod is not
+  // Shorter, or if CMS is enabled.
+  //
+  // It's probably best to keep this logic as simple as possible, see
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=1885716 for an example of
+  // what can happen if we try to be clever here.
+  if (styleColorInterpolationMethod.space != StyleColorSpace::Srgb ||
+      gfxPlatform::GetCMSMode() == CMSMode::All) {
     WrColorStopInterpolator interpolator(mStops, styleColorInterpolationMethod,
                                          aOpacity, aStops);
     interpolator.CreateStops();

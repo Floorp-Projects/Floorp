@@ -49,18 +49,27 @@ class MOZ_STACK_CLASS ColorStopInterpolator {
         mStops(aStops) {}
 
   void CreateStops() {
-    for (uint32_t i = 0; i < mStops.Length() - 1; i++) {
+    // This loop intentionally iterates the last stop.
+    for (uint32_t i = 0; i < mStops.Length(); i++) {
+      auto nextindex = i + 1 < mStops.Length() ? i + 1 : i;
       const auto& start = mStops[i];
-      const auto& end = mStops[i + 1];
+      const auto& end = mStops[nextindex];
+      float startPosition = start.mPosition;
+      float endPosition = end.mPosition;
+      // For the sake of StyleHueInterpolationMethod == Longer we have to
+      // pretend there is a stop beyond the last stop
+      if (i == mStops.Length() - 1) {
+        endPosition = 1.0f;
+      }
       uint32_t extraStops =
-          (uint32_t)(floor(end.mPosition * kFullRangeExtraStops) -
-                     floor(start.mPosition * kFullRangeExtraStops));
+          (uint32_t)(floor(endPosition * kFullRangeExtraStops) -
+                     floor(startPosition * kFullRangeExtraStops));
       extraStops = clamped(extraStops, 1U, kFullRangeExtraStops);
       float step = 1.0f / (float)extraStops;
       for (uint32_t extraStop = 0; extraStop <= extraStops; extraStop++) {
         auto progress = (float)extraStop * step;
         auto position =
-            start.mPosition + progress * (end.mPosition - start.mPosition);
+            startPosition + progress * (endPosition - startPosition);
         StyleAbsoluteColor color =
             Servo_InterpolateColor(mStyleColorInterpolationMethod, &end.mColor,
                                    &start.mColor, progress);
@@ -74,10 +83,10 @@ class MOZ_STACK_CLASS ColorStopInterpolator {
   StyleColorInterpolationMethod mStyleColorInterpolationMethod;
   const nsTArray<ColorStop>& mStops;
 
-  // this could be made tunable, but at 1.0/128 the error is largely
+  // This could be made tunable, but at 1.0/128 the error is largely
   // irrelevant, as WebRender re-encodes it to 128 pairs of stops.
   //
-  // note that we don't attempt to place the positions of these stops
+  // Note that we don't attempt to place the positions of these stops
   // precisely at intervals, we just add this many extra stops across the
   // range where it is convenient.
   inline static const uint32_t kFullRangeExtraStops = 128;

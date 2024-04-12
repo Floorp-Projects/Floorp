@@ -402,7 +402,8 @@ fn adjust_hue(left: &mut f32, right: &mut f32, hue_interpolation: HueInterpolati
         // https://drafts.csswg.org/css-color/#longer
         HueInterpolationMethod::Longer => {
             let delta = *right - *left;
-            if 0. < delta && delta < 180. {
+            // In the specific case of delta == 0 we need to use Decreasing
+            if 0. <= delta && delta < 180. {
                 *left += 360.;
             } else if -180. < delta && delta <= 0. {
                 *right += 360.;
