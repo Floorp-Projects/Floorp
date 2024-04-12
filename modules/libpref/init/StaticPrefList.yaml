@@ -9557,6 +9557,13 @@
   mirror: always
   rust: true
 
+# Whether to disable extra top/bottom spacing for stretchy operators.
+- name: mathml.top_bottom_spacing_for_stretchy_operators.disabled
+  type: bool
+  value: true
+  mirror: always
+  rust: true
+
 #---------------------------------------------------------------------------
 # Prefs starting with "media."
 #---------------------------------------------------------------------------
