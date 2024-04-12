@@ -2704,6 +2704,116 @@ TEST(TestAudioTrackGraph, SecondaryOutputDevice)
   });
   WaitFor(primaryStream->OutputVerificationEvent());
 }
+
+// Test when AudioInputProcessing expects clock drift
+TEST(TestAudioInputProcessing, ClockDriftExpectation)
+{
+  MockCubeb* cubeb = new MockCubeb();
+  CubebUtils::ForceSetCubebContext(cubeb->AsCubebContext());
+
+  const TrackRate rate = 44100;
+
+  MediaTrackGraph* graph = MediaTrackGraphImpl::GetInstance(
+      MediaTrackGraph::SYSTEM_THREAD_DRIVER,
+      /*Window ID*/ 1, rate, nullptr, GetMainThreadSerialEventTarget());
+
+  auto createInputProcessing =
+      [&](CubebUtils::AudioDeviceID aDeviceID,
+          RefPtr<AudioProcessingTrack>* aProcessingTrack,
+          RefPtr<AudioInputProcessing>* aInputProcessing) {
+        /* Create an input track and connect it to a device */
+        const int32_t channelCount = 2;
+        RefPtr processingTrack = AudioProcessingTrack::Create(graph);
+        RefPtr inputProcessing = new AudioInputProcessing(channelCount);
+        processingTrack->SetInputProcessing(inputProcessing);
+        MediaEnginePrefs settings;
+        settings.mChannels = channelCount;
+        settings.mAecOn = true;
+        QueueApplySettings(processingTrack, inputProcessing, settings);
+        processingTrack->GraphImpl()->AppendMessage(
+            MakeUnique<StartInputProcessing>(processingTrack, inputProcessing));
+        processingTrack->ConnectDeviceInput(aDeviceID, inputProcessing,
+                                            PRINCIPAL_HANDLE_NONE);
+        aProcessingTrack->swap(processingTrack);
+        aInputProcessing->swap(inputProcessing);
+      };
+
+  // Native input, which uses a duplex stream
+  RefPtr<AudioProcessingTrack> processingTrack1;
+  RefPtr<AudioInputProcessing> inputProcessing1;
+  DispatchFunction([&] {
+    createInputProcessing(nullptr, &processingTrack1, &inputProcessing1);
+  });
+  // Non-native input
+  const auto* nonNativeInputDeviceID = CubebUtils::AudioDeviceID(1);
+  RefPtr<AudioProcessingTrack> processingTrack2;
+  RefPtr<AudioInputProcessing> inputProcessing2;
+  DispatchFunction([&] {
+    createInputProcessing(nonNativeInputDeviceID, &processingTrack2,
+                          &inputProcessing2);
+    processingTrack2->AddAudioOutput(nullptr, nullptr, rate);
+  });
+
+  RefPtr<SmartMockCubebStream> primaryStream;
+  RefPtr<SmartMockCubebStream> nonNativeInputStream;
+  WaitUntil(cubeb->StreamInitEvent(),
+            [&](RefPtr<SmartMockCubebStream>&& stream) {
+              if (stream->OutputChannels() > 0) {
+                primaryStream = std::move(stream);
+                return false;
+              }
+              nonNativeInputStream = std::move(stream);
+              return true;
+            });
+  EXPECT_EQ(nonNativeInputStream->GetInputDeviceID(), nonNativeInputDeviceID);
+
+  // Wait until non-native input signal reaches the output, when input
+  // processing has run and so has been configured.
+  WaitFor(primaryStream->FramesVerifiedEvent());
+
+  const void* secondaryOutputDeviceID = CubebUtils::AudioDeviceID(2);
+  DispatchFunction([&] {
+    // Check input processing config with output to primary device.
+    processingTrack1->QueueControlMessageWithNoShutdown([&] {
+      EXPECT_FALSE(inputProcessing1->HadAECAndDrift());
+      EXPECT_TRUE(inputProcessing2->HadAECAndDrift());
+    });
+
+    // Switch output to a secondary device.
+    processingTrack2->RemoveAudioOutput(nullptr);
+    processingTrack2->AddAudioOutput(nullptr, secondaryOutputDeviceID, rate);
+  });
+
+  RefPtr<SmartMockCubebStream> secondaryOutputStream =
+      WaitFor(cubeb->StreamInitEvent());
+  EXPECT_EQ(secondaryOutputStream->GetOutputDeviceID(),
+            secondaryOutputDeviceID);
+
+  WaitFor(secondaryOutputStream->FramesVerifiedEvent());
+  DispatchFunction([&] {
+    // Check input processing config with output to secondary device.
+    processingTrack1->QueueControlMessageWithNoShutdown([&] {
+      EXPECT_TRUE(inputProcessing1->HadAECAndDrift());
+      EXPECT_TRUE(inputProcessing2->HadAECAndDrift());
+    });
+  });
+
+  auto destroyInputProcessing = [&](AudioProcessingTrack* aProcessingTrack,
+                                    AudioInputProcessing* aInputProcessing) {
+    aProcessingTrack->GraphImpl()->AppendMessage(
+        MakeUnique<StopInputProcessing>(aProcessingTrack, aInputProcessing));
+    aProcessingTrack->DisconnectDeviceInput();
+    aProcessingTrack->Destroy();
+  };
+
+  DispatchFunction([&] {
+    // Clean up
+    destroyInputProcessing(processingTrack1, inputProcessing1);
+    destroyInputProcessing(processingTrack2, inputProcessing2);
+  });
+  // Wait for stream stop to ensure that expectations have been checked.
+  WaitFor(nonNativeInputStream->OutputVerificationEvent());
+}
 #endif  // MOZ_WEBRTC
 
 #undef Invoke
