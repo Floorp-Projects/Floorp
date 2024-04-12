@@ -127,6 +127,11 @@ void SVGUseElement::ProcessAttributeChange(int32_t aNamespaceID,
   }
 }
 
+void SVGUseElement::DidAnimateAttribute(int32_t aNameSpaceID,
+                                        nsAtom* aAttribute) {
+  ProcessAttributeChange(aNameSpaceID, aAttribute);
+}
+
 void SVGUseElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aAttribute,
                                  const nsAttrValue* aValue,
                                  const nsAttrValue* aOldValue,

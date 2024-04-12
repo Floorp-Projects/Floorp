@@ -42,19 +42,6 @@ void SVGUseFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   SVGGFrame::Init(aContent, aParent, aPrevInFlow);
 }
 
-nsresult SVGUseFrame::AttributeChanged(int32_t aNamespaceID, nsAtom* aAttribute,
-                                       int32_t aModType) {
-  // Currently our SMIL implementation does not modify the DOM attributes. Once
-  // we implement the SVG 2 SMIL behaviour this can be removed
-  // SVGUseElement::AfterSetAttr's implementation will be sufficient.
-  if (aModType == MutationEvent_Binding::SMIL) {
-    auto* content = SVGUseElement::FromNode(GetContent());
-    content->ProcessAttributeChange(aNamespaceID, aAttribute);
-  }
-
-  return SVGGFrame::AttributeChanged(aNamespaceID, aAttribute, aModType);
-}
-
 void SVGUseFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
   SVGGFrame::DidSetComputedStyle(aOldComputedStyle);
 

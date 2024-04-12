@@ -102,13 +102,14 @@ class SVGImageElement final : public SVGImageElementBase,
   gfx::Rect GeometryBounds(const gfx::Matrix& aToBoundsSpace);
 
  protected:
+  void DidAnimateAttribute(int32_t aNameSpaceID, nsAtom* aAttribute) override;
+
   nsresult LoadSVGImage(bool aForce, bool aNotify);
   bool ShouldLoadImage() const;
 
   LengthAttributesInfo GetLengthInfo() override;
   SVGAnimatedPreserveAspectRatio* GetAnimatedPreserveAspectRatio() override;
   StringAttributesInfo GetStringInfo() override;
-  void DidAnimateString(PRUint8 aAttrEnum) override;
 
   // Override for nsImageLoadingContent.
   nsIContent* AsContent() override { return this; }

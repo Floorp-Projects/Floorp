@@ -94,6 +94,7 @@ class SVGFEImageElement final : public SVGFEImageElementBase,
   }
 
  private:
+  void DidAnimateAttribute(int32_t aNameSpaceID, nsAtom* aAttribute) override;
   nsresult LoadSVGImage(bool aForce, bool aNotify);
   bool ShouldLoadImage() const;
 
@@ -102,7 +103,6 @@ class SVGFEImageElement final : public SVGFEImageElementBase,
 
   SVGAnimatedPreserveAspectRatio* GetAnimatedPreserveAspectRatio() override;
   StringAttributesInfo GetStringInfo() override;
-  void DidAnimateString(PRUint8 aAttrEnum) override;
 
   // Override for nsImageLoadingContent.
   nsIContent* AsContent() override { return this; }

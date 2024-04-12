@@ -143,6 +143,7 @@ class SVGUseElement final : public SVGUseElementBase,
     SVGUseElement* mOwningUseElement;
   };
 
+  void DidAnimateAttribute(int32_t aNameSpaceID, nsAtom* aAttribute) override;
   SVGUseFrame* GetFrame() const;
 
   LengthAttributesInfo GetLengthInfo() override;

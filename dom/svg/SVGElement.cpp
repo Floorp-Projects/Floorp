@@ -2080,7 +2080,7 @@ void SVGElement::DidChangeStringList(bool aIsConditionalProcessingAttribute,
 void SVGElement::DidAnimateAttribute(int32_t aNameSpaceID, nsAtom* aAttribute) {
   if (auto* frame = GetPrimaryFrame()) {
     frame->AttributeChanged(aNameSpaceID, aAttribute,
-                            MutationEvent_Binding::SMIL);
+                            MutationEvent_Binding::MODIFICATION);
     SVGObserverUtils::InvalidateRenderingObservers(frame);
     return;
   }
