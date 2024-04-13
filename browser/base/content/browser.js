@@ -2619,10 +2619,16 @@ var gBrowserInit = {
     // Final window teardown, do this last.
     gBrowser.destroy();
     window.XULBrowserWindow = null;
-    window.docShell.treeOwner
-      .QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIAppWindow).XULBrowserWindow = null;
-    window.browserDOMWindow = null;
+
+    // Floorp Injections
+    let webPanelId = new URL(window.location.href).searchParams.get("floorpWebPanelId");
+    if (!webPanelId) {
+      window.docShell.treeOwner
+        .QueryInterface(Ci.nsIInterfaceRequestor)
+        .getInterface(Ci.nsIAppWindow).XULBrowserWindow = null;
+      window.browserDOMWindow = null;
+    }
+
   },
 };
 
