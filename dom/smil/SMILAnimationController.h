@@ -107,8 +107,8 @@ class SMILAnimationController final : public SMILTimeContainer,
     return mMightHavePendingStyleUpdates;
   }
 
-  bool PreTraverse();
-  bool PreTraverseInSubtree(mozilla::dom::Element* aRoot);
+  void PreTraverse();
+  void PreTraverseInSubtree(mozilla::dom::Element* aRoot);
 
  protected:
   ~SMILAnimationController();

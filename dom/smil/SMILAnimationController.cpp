@@ -598,23 +598,20 @@ bool SMILAnimationController::GetTargetIdentifierForAnimation(
   return true;
 }
 
-bool SMILAnimationController::PreTraverse() {
-  return PreTraverseInSubtree(nullptr);
-}
+void SMILAnimationController::PreTraverse() { PreTraverseInSubtree(nullptr); }
 
-bool SMILAnimationController::PreTraverseInSubtree(Element* aRoot) {
+void SMILAnimationController::PreTraverseInSubtree(Element* aRoot) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!mMightHavePendingStyleUpdates) {
-    return false;
+    return;
   }
 
   nsPresContext* context = mDocument->GetPresContext();
   if (!context) {
-    return false;
+    return;
   }
 
-  bool foundElementsNeedingRestyle = false;
   for (SVGAnimationElement* animElement : mAnimationElementTable.Keys()) {
     SMILTargetIdentifier key;
     if (!GetTargetIdentifierForAnimation(animElement, key)) {
@@ -631,8 +628,6 @@ bool SMILAnimationController::PreTraverseInSubtree(Element* aRoot) {
 
     context->RestyleManager()->PostRestyleEventForAnimations(
         key.mElement, PseudoStyleType::NotPseudo, RestyleHint::RESTYLE_SMIL);
-
-    foundElementsNeedingRestyle = true;
   }
 
   // Only clear the mMightHavePendingStyleUpdates flag if we definitely posted
@@ -640,8 +635,6 @@ bool SMILAnimationController::PreTraverseInSubtree(Element* aRoot) {
   if (!aRoot) {
     mMightHavePendingStyleUpdates = false;
   }
-
-  return foundElementsNeedingRestyle;
 }
 
 //----------------------------------------------------------------------
