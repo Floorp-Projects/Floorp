@@ -181,6 +181,8 @@
     <string name="browser_menu_stop">Paouez</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Askouezhioù</string>
+    <!-- Browser menu button that opens the extensions manager -->
+    <string name="browser_menu_extensions">Askouezhioù</string>
     <!-- Browser menu button that opens account settings -->
     <string name="browser_menu_account_settings">Titouroù ar gont</string>
     <!-- Text displayed when there are no add-ons to be shown -->
@@ -238,6 +240,10 @@
 
     <!-- Browser menu label to sign in to sync on the device using Mozilla accounts -->
     <string name="browser_menu_sign_in" tools:ignore="UnusedResources">Kennaskañ</string>
+
+    <!-- Extensions management fragment -->
+    <!-- Text displayed when there are no extensions to be shown -->
+    <string name="extensions_management_no_extensions">Askouezh ebet da gaout amañ</string>
 
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
