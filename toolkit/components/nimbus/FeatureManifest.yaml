@@ -1571,6 +1571,12 @@ dohPrefs:
       setPref:
         branch: default
         pref: "network.trr_ui.show_fallback_warning_option"
+    nativeHTTPSRecords:
+      description: Whether we can perform native DNS HTTPS lookups
+      type: boolean
+      setPref:
+        branch: default
+        pref: "network.dns.native_https_query"
 
 dooh:
   description: "DNS over Oblivious HTTP"
