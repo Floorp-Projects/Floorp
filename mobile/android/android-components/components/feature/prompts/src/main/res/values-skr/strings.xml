@@ -103,8 +103,12 @@
     <string name="mozac_feature_prompts_manage_logins_2">پاس ورڈز دا بندوبست کرو</string>
     <!-- Content description for expanding the saved logins options in the select login prompt -->
     <string name="mozac_feature_prompts_expand_logins_content_description" moz:removedIn="125" tools:ignore="UnusedResources">تجویز تھئے لاگ اناں کوں ودھاؤ</string>
+    <!-- Content description for expanding the saved passwords options in the select password prompt -->
+    <string name="mozac_feature_prompts_expand_logins_content_description_2">محفوظ تھئے پاس ورڈ کھنڈاؤ</string>
     <!-- Content description for collapsing the saved logins options in the select login prompt -->
     <string name="mozac_feature_prompts_collapse_logins_content_description" moz:removedIn="125" tools:ignore="UnusedResources">تجویز تھئے لاگ اناں کوں کٹھا کرو</string>
+    <!-- Content description for collapsing the saved passwords options in the select password prompt -->
+    <string name="mozac_feature_prompts_collapse_logins_content_description_2">محفوظ تھئے پاس ورڈ ولھیٹو</string>
     <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
     <string name="mozac_feature_prompts_saved_logins" moz:removedIn="125" tools:ignore="UnusedResources">تجویز تھئے لاگ ان</string>
 
@@ -131,8 +135,12 @@
     <string name="mozac_feature_prompts_select_credit_card_2">محفوظ تھیا کارڈ ورتو</string>
     <!-- Content description for expanding the select credit card options in the select credit card prompt. -->
     <string name="mozac_feature_prompts_expand_credit_cards_content_description" moz:removedIn="125" tools:ignore="UnusedResources">تجویز تھئے کریڈٹ کارڈاں کوں ودھاؤ</string>
+    <!-- Content description for expanding the saved card options in the select card prompt. -->
+    <string name="mozac_feature_prompts_expand_credit_cards_content_description_2">محفوظ تھئے کارڈ کھنڈاؤ</string>
     <!-- Content description for collapsing the select credit card options in the select credit prompt. -->
     <string name="mozac_feature_prompts_collapse_credit_cards_content_description" moz:removedIn="125" tools:ignore="UnusedResources">تجویز تھئے کریڈٹ کارڈاں کوں کٹھا کرو</string>
+    <!-- Content description for collapsing the saved card options in the select prompt. -->
+    <string name="mozac_feature_prompts_collapse_credit_cards_content_description_2">محفوظ تھئے کارڈ ولھیٹو</string>
     <!-- Option in the expanded select credit card prompt that links to credit cards settings. -->
     <string name="mozac_feature_prompts_manage_credit_cards" moz:removedIn="125" tools:ignore="UnusedResources">کریڈیٹ کارڈ منیج کرو</string>
     <!-- Option in the expanded select card prompt that links to cards settings. -->
@@ -149,8 +157,12 @@
     <string name="mozac_feature_prompts_select_address_2">پتہ چُݨو</string>
     <!-- Content description for expanding the select addresses options in the select address prompt. -->
     <string name="mozac_feature_prompts_expand_address_content_description" moz:removedIn="125" tools:ignore="UnusedResources">تجویز تھئے پتیاں کوں ودھاؤ</string>
+    <!-- Content description for expanding the saved addresses options in the select address prompt. -->
+    <string name="mozac_feature_prompts_expand_address_content_description_2">محفوظ تھئے پتے کھنڈاؤ</string>
     <!-- Content description for collapsing the select address options in the select address prompt. -->
     <string name="mozac_feature_prompts_collapse_address_content_description" moz:removedIn="125" tools:ignore="UnusedResources">تجویز تھئے پتیاں کوں کٹھا کرو</string>
+    <!-- Content description for collapsing the saved address options in the select address prompt. -->
+    <string name="mozac_feature_prompts_collapse_address_content_description_2">محفوظ تھئے پتے ولھیٹو</string>
     <!-- Text for the manage addresses button. -->
     <string name="mozac_feature_prompts_manage_address">پتے منیج کرو</string>
 
@@ -159,6 +171,8 @@
     <string name="mozac_feature_prompts_account_picture">کھاتہ تصویر</string>
     <!-- Title of the Identity Credential provider dialog chooser. -->
     <string name="mozac_feature_prompts_identity_credentials_choose_provider">لاگ ان مہیا کار چݨو</string>
+    <!-- Title of an account picker dialog for identity credentials. The %1$s will be replaced with the name of the provider -->
+    <string name="mozac_feature_prompts_identity_credentials_choose_account_for_provider">%1$s کھاتے نال سائن ان تھیوو</string>
     <!-- Title of the Identity Credential privacy policy dialog title. The %1$s will be replaced with the name of the provider. -->
     <string name="mozac_feature_prompts_identity_credentials_privacy_policy_title">%1$s کوں لاگ ان مہیاکار دے طور تے ورتو</string>
     <!-- Text for the positive button of the Identity Credential dialogs. -->

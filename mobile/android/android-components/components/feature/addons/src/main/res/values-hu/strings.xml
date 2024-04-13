@@ -87,13 +87,15 @@
     <!-- The rating of the add-on. -->
     <string name="mozac_feature_addons_rating">Értékelés</string>
     <!-- A link that points to the detail page of the add-on. -->
-    <string name="mozac_feature_addons_more_info_link">További tudnivalók a kiegészítőről</string>
+    <string name="mozac_feature_addons_more_info_link" moz:removedIn="126" tools:ignore="UnusedResources">További tudnivalók a kiegészítőről</string>
+    <!-- A link that points to the detail page of the extension. -->
+    <string name="mozac_feature_addons_more_info_link_2">További tudnivalók a kiegészítőről</string>
     <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">Beállítások</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_settings_on">Be</string>
     <!-- Indicates the add-on is disabled. -->
-    <string name="mozac_feature_addons_settings_off">Ki</string>
+    <string name="mozac_feature_addons_settings_off" moz:removedIn="125" tools:ignore="UnusedResources">Ki</string>
     <!-- Indicates the add-on is allowed in private browsing mode. -->
     <string name="mozac_feature_addons_settings_allow_in_private_browsing">Engedélyezés privát böngészésben</string>
     <!-- Indicates the add-on is allowed in private browsing mode. -->
@@ -103,7 +105,7 @@
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_enabled">Engedélyezve</string>
     <!-- Indicates the add-on is disabled. -->
-    <string name="mozac_feature_addons_disabled">Letiltva</string>
+    <string name="mozac_feature_addons_disabled" moz:removedIn="125" tools:ignore="UnusedResources">Letiltva</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the installed section. -->
     <string name="mozac_feature_addons_installed_section">Telepítve</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the recommended section. -->
@@ -155,13 +157,21 @@
     <!-- Label for add-ons sub menu item for add-ons manager-->
     <string name="mozac_feature_addons_addons_manager">Kiegészítőkezelő</string>
     <!-- The title of the "crash" notification in the add-ons manager -->
-    <string name="mozac_feature_addons_manager_notification_title_text">A kiegészítők ideiglenesen le vannak tiltva</string>
+    <string name="mozac_feature_addons_manager_notification_title_text" moz:removedIn="126" tools:ignore="UnusedResources">A kiegészítők ideiglenesen le vannak tiltva</string>
+    <!-- The title of the "crash" notification in the extensions manager -->
+    <string name="mozac_feature_extensions_manager_notification_title_text">A kiegészítők ideiglenesen le vannak tiltva</string>
     <!-- The content of the "crash" notification in the add-ons manager -->
-    <string name="mozac_feature_addons_manager_notification_content_text">Egy vagy több kiegészítő leállt, ami instabillá teszi a rendszert.</string>
+    <string name="mozac_feature_addons_manager_notification_content_text" moz:removedIn="126" tools:ignore="UnusedResources">Egy vagy több kiegészítő leállt, ami instabillá teszi a rendszert.</string>
+    <!-- The content of the "crash" notification in the extensions manager -->
+    <string name="mozac_feature_extensions_manager_notification_content_text">Egy vagy több kiegészítő leállt, ami instabillá teszi a rendszert.</string>
     <!-- Button to re-enable the add-ons in the "crash" notification -->
-    <string name="mozac_feature_addons_manager_notification_restart_button">Kiegészítők újraindítása</string>
+    <string name="mozac_feature_addons_manager_notification_restart_button" moz:removedIn="126" tools:ignore="UnusedResources">Kiegészítők újraindítása</string>
+    <!-- Button to re-enable the extensions in the "crash" notification -->
+    <string name="mozac_feature_extensions_manager_notification_restart_button">Kiegészítők újraindítása</string>
     <!-- Button in the add-ons manager that opens AMO in a tab -->
-    <string name="mozac_feature_addons_find_more_addons_button_text">Több kiegészítő keresése</string>
+    <string name="mozac_feature_addons_find_more_addons_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Több kiegészítő keresése</string>
+    <!-- Button in the extensions manager that opens AMO in a tab -->
+    <string name="mozac_feature_addons_find_more_extensions_button_text">További kiegészítők keresése</string>
     <!-- The label of the allow button, this will be shown to the user when an add-on needs new permissions, with the button the user will indicate that they want to accept the new permissions and update the add-on-->
     <string name="mozac_feature_addons_updater_notification_allow_button">Engedélyezés</string>
     <!-- The label of the deny button on a notification, this will be shown to the user when an add-on needs new permissions. Indicates the user denies the new permissions and prevents the add-on from be updated-->
@@ -173,13 +183,15 @@
     <!-- The content of the notification displayed when an add-on needs a new permission-->
     <string name="mozac_feature_addons_updater_notification_content_singular">Új engedély szükséges</string>
     <!-- Name of the "notification channel" used for displaying a notification for updating an add-on. See https://developer.android.com/training/notify-user/channels -->
-    <string name="mozac_feature_addons_updater_notification_channel">Kiegészítő-frissítések</string>
+    <string name="mozac_feature_addons_updater_notification_channel" moz:removedIn="126" tools:ignore="UnusedResources">Kiegészítő-frissítések</string>
+    <!-- Name of the "notification channel" used for displaying a notification for updating an extension. See https://developer.android.com/training/notify-user/channels -->
+    <string name="mozac_feature_addons_updater_notification_channel_2">Kiegészítőfrissítések</string>
     <!-- Name of the "notification channel" used for displaying a notification for new supported add-ons. See https://developer.android.com/training/notify-user/channels -->
-    <string name="mozac_feature_addons_supported_checker_notification_channel">Támogatott kiegészítők ellenőrzője</string>
+    <string name="mozac_feature_addons_supported_checker_notification_channel" tools:ignore="UnusedResources">Támogatott kiegészítők ellenőrzője</string>
     <!-- The tile of the notification, this will be shown to the user when one newly supported add-on is available.-->
-    <string name="mozac_feature_addons_supported_checker_notification_title">Új kiegészítő érhető el</string>
+    <string name="mozac_feature_addons_supported_checker_notification_title" tools:ignore="UnusedResources">Új kiegészítő érhető el</string>
     <!-- The tile of the notification, this will be shown to the user when more than one newly supported add-ons are available.-->
-    <string name="mozac_feature_addons_supported_checker_notification_title_plural">Új kiegészítők érhetők el</string>
+    <string name="mozac_feature_addons_supported_checker_notification_title_plural" tools:ignore="UnusedResources">Új kiegészítők érhetők el</string>
     <!-- The content of the notification, this will be shown to the user when one newly supported add-on is available. %1$s is the add-on name and %2$s is the app name (in most cases Firefox). -->
     <string name="mozac_feature_addons_supported_checker_notification_content_one">%1$s hozzáadása ehhez: %2$s</string>
     <!-- The content of the notification, this will be shown to the user when two newly supported add-ons are available. %1$s is the first add-on name. %2$s is the second add-on name. %3$s is the app name (in most cases Firefox). -->
@@ -187,13 +199,17 @@
     <!-- The content of the notification, this will be shown to the user when more than two newly supported add-ons are available. %1$s is the app name (in most cases Firefox). -->
     <string name="mozac_feature_addons_supported_checker_notification_content_more_than_two">Hozzáadás ehhez: %1$s</string>
     <!-- This is the caption for not yet supported screen caption -->
-    <string name="mozac_feature_addons_not_yet_supported_caption">A Firefox kiegészítő technológiája modernizálódik. Ezek a kiegészítők olyan keretrendszereket használnak, amelyek nem kompatibilisek a Firefox 75 és újabb verziókkal.</string>
+    <string name="mozac_feature_addons_not_yet_supported_caption" moz:removedIn="126" tools:ignore="UnusedResources">A Firefox kiegészítő technológiája modernizálódik. Ezek a kiegészítők olyan keretrendszereket használnak, amelyek nem kompatibilisek a Firefox 75 és újabb verziókkal.</string>
     <!-- This is the caption for not yet supported screen caption -->
     <string name="mozac_feature_addons_not_yet_supported_caption2">Jelenleg is dolgozunk azon, hogy elérhetővé tegyük az első ajánlott kiegészítőket.</string>
     <!-- This is the caption for the add-on installation progress overlay -->
-    <string name="mozac_add_on_install_progress_caption">Kiegészítő letöltése és ellenőrzése…</string>
+    <string name="mozac_add_on_install_progress_caption" moz:removedIn="126" tools:ignore="UnusedResources">Kiegészítő letöltése és ellenőrzése…</string>
+    <!-- This is the caption for the extension installation progress overlay -->
+    <string name="mozac_extension_install_progress_caption">Kiegészítő letöltése és ellenőrzése…</string>
     <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->
-    <string name="mozac_feature_addons_failed_to_query_add_ons">Nem sikerült lekérdezni a kiegészítőket!</string>
+    <string name="mozac_feature_addons_failed_to_query_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Nem sikerült lekérdezni a kiegészítőket!</string>
+    <!-- Error shown when something unexpected happened while trying to get the extension list from the server -->
+    <string name="mozac_feature_addons_failed_to_query_extensions">Nem sikerült lekérdezni a kiegészítőket!</string>
     <!-- Error shown when unable to find a translation for an add-on field. %1$s is the locale of the user and %2$s is the default language of the add-on -->
     <string name="mozac_feature_addons_failed_to_translate">A fordítás nem található sem a(z) %1$s nyelv, sem az alapértelmezett %2$s nyelv esetén</string>
     <!-- Text shown after successfully installed an add-on. %1$s is the add-on name. -->
@@ -201,13 +217,21 @@
     <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_install">A(z) %1$s telepítése sikertelen</string>
     <!-- Text shown after failing to install an add-on for which we don't have its name. -->
-    <string name="mozac_feature_addons_failed_to_install_generic">Ennek a kiegészítőnek a telepítése sikertelen.</string>
+    <string name="mozac_feature_addons_failed_to_install_generic" moz:removedIn="126" tools:ignore="UnusedResources">Ennek a kiegészítőnek a telepítése sikertelen.</string>
+    <!-- Text shown after failing to install an extension for which we don't have its name. -->
+    <string name="mozac_feature_addons_extension_failed_to_install">Nem sikerült telepíteni a kiegészítőt.</string>
     <!-- Text shown when attempting to install an add-on and a network error happened. -->
-    <string name="mozac_feature_addons_failed_to_install_network_error">A kiegészítőt csatlakozási hiba miatt nem lehetett letölteni.</string>
+    <string name="mozac_feature_addons_failed_to_install_network_error" moz:removedIn="126" tools:ignore="UnusedResources">A kiegészítőt csatlakozási hiba miatt nem lehetett letölteni.</string>
+    <!-- Text shown when attempting to install an extension and a network error happened. -->
+    <string name="mozac_feature_addons_extension_failed_to_install_network_error">A kiegészítőt csatlakozási hiba miatt nem lehetett letölteni.</string>
     <!-- Text shown when attempting to install an add-on and the downloaded file is corrupted. -->
-    <string name="mozac_feature_addons_failed_to_install_corrupt_error">A kiegészítőt nem lehetett telepíteni, mert úgy tűnik, hogy sérült.</string>
+    <string name="mozac_feature_addons_failed_to_install_corrupt_error" moz:removedIn="126" tools:ignore="UnusedResources">A kiegészítőt nem lehetett telepíteni, mert úgy tűnik, hogy sérült.</string>
+    <!-- Text shown when attempting to install an extension and the downloaded file is corrupted. -->
+    <string name="mozac_feature_addons_extension_failed_to_install_corrupt_error">A kiegészítőt nem lehetett telepíteni, mert úgy tűnik, hogy sérült.</string>
     <!-- Text shown when attempting to install an add-on and an error occurred because the extension was not signed. -->
-    <string name="mozac_feature_addons_failed_to_install_not_signed_error">A kiegészítőt nem lehetett telepíteni, mert nincs ellenőrizve.</string>
+    <string name="mozac_feature_addons_failed_to_install_not_signed_error" moz:removedIn="126" tools:ignore="UnusedResources">A kiegészítőt nem lehetett telepíteni, mert nincs ellenőrizve.</string>
+    <!-- Text shown when attempting to install an add-on and an error occurred because the extension was not signed. -->
+    <string name="mozac_feature_addons_extension_failed_to_install_not_signed_error">A kiegészítőt nem lehetett telepíteni, mert nincs ellenőrizve.</string>
     <!-- Text shown when attempting to install an add-on and an error occurred because the extension was incompatible. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
     <string name="mozac_feature_addons_failed_to_install_incompatible_error">A(z) %1$s kiegészítőt nem lehetett telepíteni, mert nem kompatibilis a következővel: %2$s %3$s.</string>
     <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
@@ -231,9 +255,13 @@
     <!-- Label shown to indicate that the add-on was migrated from a previous version of the app. %1$s is the app name most of the case it will be Firefox. -->
     <string name="mozac_feature_addons_migrated_from_a_previous_version_label" tools:ignore="UnusedResources">Ez a kiegészítő a %1$s egy régebbi verziójából lett migrálva</string>
     <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter. -->
-    <string name="mozac_feature_addons_unsupported_caption">1 kiegészítő</string>
+    <string name="mozac_feature_addons_unsupported_caption" moz:removedIn="126" tools:ignore="UnusedResources">1 kiegészítő</string>
+    <!-- Text shown in not yet supported add-ons section. -->
+    <string name="mozac_feature_addons_unsupported_caption_2">1 kiegészítő</string>
     <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter - plural. %1$s is the number of unsupported add-ons -->
-    <string name="mozac_feature_addons_unsupported_caption_plural">%1$s kiegészítő</string>
+    <string name="mozac_feature_addons_unsupported_caption_plural" moz:removedIn="126" tools:ignore="UnusedResources">%1$s kiegészítő</string>
+    <!-- Text shown in not yet supported add-ons section - plural. %1$s is the number of unsupported extensions. -->
+    <string name="mozac_feature_addons_unsupported_caption_plural_2">%1$s kiegészítő</string>
     <!-- Text link to a sumo page for learning more about unsupported add-ons. -->
     <string name="mozac_feature_addons_unsupported_learn_more">További tudnivalók</string>
     <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated. -->

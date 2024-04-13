@@ -86,6 +86,10 @@
     <string name="mozac_feature_addons_learn_more">اجازتاں بارے ٻیا سکھو</string>
     <!-- The rating of the add-on. -->
     <string name="mozac_feature_addons_rating">ریٹنگ</string>
+    <!-- A link that points to the detail page of the add-on. -->
+    <string name="mozac_feature_addons_more_info_link" moz:removedIn="126" tools:ignore="UnusedResources">ایں ایڈ آن بارے ٻیا</string>
+    <!-- A link that points to the detail page of the extension. -->
+    <string name="mozac_feature_addons_more_info_link_2">ایں ایکسٹنشن بارے ٻیا</string>
     <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">ترتیباں</string>
     <!-- Indicates the add-on is enabled. -->
@@ -96,6 +100,8 @@
     <string name="mozac_feature_addons_settings_allow_in_private_browsing">نجی براؤزنگ وچ  اجازت ݙیوو</string>
     <!-- Indicates the add-on is allowed in private browsing mode. -->
     <string name="mozac_feature_addons_settings_run_in_private_browsing">نجی براؤزنگ وچ  چلاؤ</string>
+    <!-- This is displayed when the add-on is not allowed to run in private browsing. -->
+    <string name="mozac_feature_addons_not_allowed_in_private_browsing">نجی ونڈوز وچ اجازت کائنی</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_enabled">فعال تھیا</string>
     <!-- Indicates the add-on is disabled. -->
@@ -120,6 +126,8 @@
     <string name="mozac_feature_addons_report">رپورٹ کرو</string>
     <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_permissions_dialog_title">%1$s شامل کروں؟</string>
+    <!-- This is the title of a dialog that asks the users to grant optional permissions. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_optional_permissions_dialog_title">%1$s اضافی اجازتاں دی درخواست کریندا ہے</string>
     <!-- This is the subtitle of a dialog that asks the users if they want to install or not an add-on, the subtitle lists the permissions that this add-on requires, the permissions will dynamically be listed after the ":". -->
     <string name="mozac_feature_addons_permissions_dialog_subtitle">ایں وچ تہاݙی اجازت ضروری ہے:</string>
     <!-- This is the subtitle of a dialog that asks the users to grant optional permissions, the subtitle lists the permissions that this add-on requests, the permissions will dynamically be listed after the ":". -->
@@ -146,6 +154,10 @@
     <string name="mozac_feature_addons_addons">ایڈ ــ آن</string>
     <!-- Label for add-ons sub menu item for add-ons manager-->
     <string name="mozac_feature_addons_addons_manager">ایڈ ــ آن منیجر</string>
+    <!-- The title of the "crash" notification in the add-ons manager -->
+    <string name="mozac_feature_addons_manager_notification_title_text" moz:removedIn="126" tools:ignore="UnusedResources">ایڈ آن عارضی طور تے غیرفعال ہن۔</string>
+    <!-- The title of the "crash" notification in the extensions manager -->
+    <string name="mozac_feature_extensions_manager_notification_title_text">ایکسٹنشناں عارضی طور تے غیرفعال ہن۔</string>
     <!-- Button to re-enable the add-ons in the "crash" notification -->
     <string name="mozac_feature_addons_manager_notification_restart_button" moz:removedIn="126" tools:ignore="UnusedResources">ایڈ آن ولدا شروع کرو</string>
     <!-- Button to re-enable the extensions in the "crash" notification -->
