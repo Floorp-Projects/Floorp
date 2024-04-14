@@ -3230,10 +3230,6 @@ nsITheme::ThemeGeometryType nsNativeThemeCocoa::ThemeGeometryTypeForWidget(
       return eThemeGeometryTypeTitlebar;
     case StyleAppearance::MozWindowButtonBox:
       return eThemeGeometryTypeWindowButtons;
-    case StyleAppearance::Tooltip:
-      return eThemeGeometryTypeTooltip;
-    case StyleAppearance::Menupopup:
-      return eThemeGeometryTypeMenu;
     default:
       return eThemeGeometryTypeUnknown;
   }

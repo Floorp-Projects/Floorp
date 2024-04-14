@@ -1725,10 +1725,6 @@ void nsChildView::UpdateThemeGeometries(
 static Maybe<VibrancyType> ThemeGeometryTypeToVibrancyType(
     nsITheme::ThemeGeometryType aThemeGeometryType) {
   switch (aThemeGeometryType) {
-    case eThemeGeometryTypeTooltip:
-      return Some(VibrancyType::TOOLTIP);
-    case eThemeGeometryTypeMenu:
-      return Some(VibrancyType::MENU);
     case eThemeGeometryTypeTitlebar:
       return Some(VibrancyType::TITLEBAR);
     default:
@@ -1749,43 +1745,13 @@ static LayoutDeviceIntRegion GatherVibrantRegion(
   return region;
 }
 
-template <typename Region>
-static void MakeRegionsNonOverlappingImpl(Region& aOutUnion) {}
-
-template <typename Region, typename... Regions>
-static void MakeRegionsNonOverlappingImpl(Region& aOutUnion, Region& aFirst,
-                                          Regions&... aRest) {
-  MakeRegionsNonOverlappingImpl(aOutUnion, aRest...);
-  aFirst.SubOut(aOutUnion);
-  aOutUnion.OrWith(aFirst);
-}
-
-// Subtracts parts from regions in such a way that they don't have any overlap.
-// Each region in the argument list will have the union of all the regions
-// *following* it subtracted from itself. In other words, the arguments are
-// sorted low priority to high priority.
-template <typename Region, typename... Regions>
-static void MakeRegionsNonOverlapping(Region& aFirst, Regions&... aRest) {
-  Region unionOfAll;
-  MakeRegionsNonOverlappingImpl(unionOfAll, aFirst, aRest...);
-}
-
 void nsChildView::UpdateVibrancy(
     const nsTArray<ThemeGeometry>& aThemeGeometries) {
-  LayoutDeviceIntRegion menuRegion =
-      GatherVibrantRegion(aThemeGeometries, VibrancyType::MENU);
-  LayoutDeviceIntRegion tooltipRegion =
-      GatherVibrantRegion(aThemeGeometries, VibrancyType::TOOLTIP);
   LayoutDeviceIntRegion titlebarRegion =
       GatherVibrantRegion(aThemeGeometries, VibrancyType::TITLEBAR);
 
-  MakeRegionsNonOverlapping(menuRegion, tooltipRegion, titlebarRegion);
-
   auto& vm = EnsureVibrancyManager();
-  bool changed = false;
-  changed |= vm.UpdateVibrantRegion(VibrancyType::MENU, menuRegion);
-  changed |= vm.UpdateVibrantRegion(VibrancyType::TOOLTIP, tooltipRegion);
-  changed |= vm.UpdateVibrantRegion(VibrancyType::TITLEBAR, titlebarRegion);
+  bool changed = vm.UpdateVibrantRegion(VibrancyType::TITLEBAR, titlebarRegion);
 
   if (changed) {
     SuspendAsyncCATransactions();
