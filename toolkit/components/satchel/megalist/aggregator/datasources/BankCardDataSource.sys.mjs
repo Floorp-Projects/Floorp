@@ -68,187 +68,173 @@ export class BankCardDataSource extends DataSourceBase {
   constructor(...args) {
     super(...args);
     // Wait for Fluent to provide strings before loading data
-    this.formatMessages(
-      "payments-section-label",
-      "card-number-label",
-      "card-expiration-label",
-      "card-holder-label",
-      "command-copy",
-      "command-reveal",
-      "command-conceal",
-      "payments-disabled",
-      "command-delete",
-      "command-edit",
-      "payments-command-create"
-    ).then(
-      ([
-        headerLabel,
-        numberLabel,
-        expirationLabel,
-        holderLabel,
-        copyCommandLabel,
-        revealCommandLabel,
-        concealCommandLabel,
-        cardsDisabled,
-        deleteCommandLabel,
-        editCommandLabel,
-        cardsCreateCommandLabel,
-      ]) => {
-        const copyCommand = { id: "Copy", label: copyCommandLabel };
-        const editCommand = {
-          id: "Edit",
-          label: editCommandLabel,
-          verify: true,
-        };
-        const deleteCommand = {
-          id: "Delete",
-          label: deleteCommandLabel,
-          verify: true,
-        };
-        this.#cardsDisabledMessage = cardsDisabled;
-        this.#header = this.createHeaderLine(headerLabel);
-        this.#header.commands.push({
-          id: "Create",
-          label: cardsCreateCommandLabel,
-        });
-        this.#cardNumberPrototype = this.prototypeDataLine({
-          label: { value: numberLabel },
-          concealed: { value: true, writable: true },
-          start: { value: true },
-          value: {
-            async get() {
-              if (this.editingValue !== undefined) {
-                return this.editingValue;
-              }
+    this.localizeStrings({
+      headerLabel: "payments-section-label",
+      numberLabel: "card-number-label",
+      expirationLabel: "card-expiration-label",
+      holderLabel: "card-holder-label",
+      copyCommandLabel: "command-copy",
+      revealCommandLabel: "command-reveal",
+      concealCommandLabel: "command-conceal",
+      cardsDisabled: "payments-disabled",
+      deleteCommandLabel: "command-delete",
+      editCommandLabel: "command-edit",
+      cardsCreateCommandLabel: "payments-command-create",
+    }).then(strings => {
+      const copyCommand = { id: "Copy", label: strings.copyCommandLabel };
+      const editCommand = {
+        id: "Edit",
+        label: strings.editCommandLabel,
+        verify: true,
+      };
+      const deleteCommand = {
+        id: "Delete",
+        label: strings.deleteCommandLabel,
+        verify: true,
+      };
+      this.#cardsDisabledMessage = strings.cardsDisabled;
+      this.#header = this.createHeaderLine(strings.headerLabel);
+      this.#header.commands.push({
+        id: "Create",
+        label: strings.cardsCreateCommandLabel,
+      });
+      this.#cardNumberPrototype = this.prototypeDataLine({
+        label: { value: strings.numberLabel },
+        concealed: { value: true, writable: true },
+        start: { value: true },
+        value: {
+          async get() {
+            if (this.editingValue !== undefined) {
+              return this.editingValue;
+            }
 
-              if (this.concealed) {
-                return (
-                  "••••••••" +
-                  this.record["cc-number"].replaceAll("*", "").substr(-4)
-                );
-              }
-
-              await decryptCard(this.record);
-              return this.record["cc-number-decrypted"];
-            },
-          },
-          valueIcon: {
-            get() {
-              const typeToImage = {
-                amex: "third-party/cc-logo-amex.png",
-                cartebancaire: "third-party/cc-logo-cartebancaire.png",
-                diners: "third-party/cc-logo-diners.svg",
-                discover: "third-party/cc-logo-discover.png",
-                jcb: "third-party/cc-logo-jcb.svg",
-                mastercard: "third-party/cc-logo-mastercard.svg",
-                mir: "third-party/cc-logo-mir.svg",
-                unionpay: "third-party/cc-logo-unionpay.svg",
-                visa: "third-party/cc-logo-visa.svg",
-              };
+            if (this.concealed) {
               return (
-                "chrome://formautofill/content/" +
-                (typeToImage[this.record["cc-type"]] ??
-                  "icon-credit-card-generic.svg")
+                "••••••••" +
+                this.record["cc-number"].replaceAll("*", "").substr(-4)
               );
-            },
-          },
-          commands: {
-            get() {
-              const commands = [
-                { id: "Conceal", label: concealCommandLabel },
-                { ...copyCommand, verify: true },
-                editCommand,
-                "-",
-                deleteCommand,
-              ];
-              if (this.concealed) {
-                commands[0] = {
-                  id: "Reveal",
-                  label: revealCommandLabel,
-                  verify: true,
-                };
-              }
-              return commands;
-            },
-          },
-          executeReveal: {
-            value() {
-              this.concealed = false;
-              this.refreshOnScreen();
-            },
-          },
-          executeConceal: {
-            value() {
-              this.concealed = true;
-              this.refreshOnScreen();
-            },
-          },
-          executeCopy: {
-            async value() {
-              await decryptCard(this.record);
-              this.copyToClipboard(this.record["cc-number-decrypted"]);
-            },
-          },
-          executeEdit: {
-            async value() {
-              await decryptCard(this.record);
-              this.editingValue = this.record["cc-number-decrypted"] ?? "";
-              this.refreshOnScreen();
-            },
-          },
-          executeSave: {
-            async value(value) {
-              if (updateCard(this.record, "cc-number", value)) {
-                this.executeCancel();
-              }
-            },
-          },
-        });
-        this.#expirationPrototype = this.prototypeDataLine({
-          label: { value: expirationLabel },
-          value: {
-            get() {
-              return `${this.record["cc-exp-month"]}/${this.record["cc-exp-year"]}`;
-            },
-          },
-          commands: {
-            value: [copyCommand, editCommand, "-", deleteCommand],
-          },
-        });
-        this.#holderNamePrototype = this.prototypeDataLine({
-          label: { value: holderLabel },
-          end: { value: true },
-          value: {
-            get() {
-              return this.editingValue ?? this.record["cc-name"];
-            },
-          },
-          commands: {
-            value: [copyCommand, editCommand, "-", deleteCommand],
-          },
-          executeEdit: {
-            value() {
-              this.editingValue = this.record["cc-name"] ?? "";
-              this.refreshOnScreen();
-            },
-          },
-          executeSave: {
-            async value(value) {
-              if (updateCard(this.record, "cc-name", value)) {
-                this.executeCancel();
-              }
-            },
-          },
-        });
+            }
 
-        Services.obs.addObserver(this, "formautofill-storage-changed");
-        Services.prefs.addObserver(
-          "extensions.formautofill.creditCards.enabled",
-          this
-        );
-        this.#reloadDataSource();
-      }
-    );
+            await decryptCard(this.record);
+            return this.record["cc-number-decrypted"];
+          },
+        },
+        valueIcon: {
+          get() {
+            const typeToImage = {
+              amex: "third-party/cc-logo-amex.png",
+              cartebancaire: "third-party/cc-logo-cartebancaire.png",
+              diners: "third-party/cc-logo-diners.svg",
+              discover: "third-party/cc-logo-discover.png",
+              jcb: "third-party/cc-logo-jcb.svg",
+              mastercard: "third-party/cc-logo-mastercard.svg",
+              mir: "third-party/cc-logo-mir.svg",
+              unionpay: "third-party/cc-logo-unionpay.svg",
+              visa: "third-party/cc-logo-visa.svg",
+            };
+            return (
+              "chrome://formautofill/content/" +
+              (typeToImage[this.record["cc-type"]] ??
+                "icon-credit-card-generic.svg")
+            );
+          },
+        },
+        commands: {
+          get() {
+            const commands = [
+              { id: "Conceal", label: strings.concealCommandLabel },
+              { ...copyCommand, verify: true },
+              editCommand,
+              "-",
+              deleteCommand,
+            ];
+            if (this.concealed) {
+              commands[0] = {
+                id: "Reveal",
+                label: strings.revealCommandLabel,
+                verify: true,
+              };
+            }
+            return commands;
+          },
+        },
+        executeReveal: {
+          value() {
+            this.concealed = false;
+            this.refreshOnScreen();
+          },
+        },
+        executeConceal: {
+          value() {
+            this.concealed = true;
+            this.refreshOnScreen();
+          },
+        },
+        executeCopy: {
+          async value() {
+            await decryptCard(this.record);
+            this.copyToClipboard(this.record["cc-number-decrypted"]);
+          },
+        },
+        executeEdit: {
+          async value() {
+            await decryptCard(this.record);
+            this.editingValue = this.record["cc-number-decrypted"] ?? "";
+            this.refreshOnScreen();
+          },
+        },
+        executeSave: {
+          async value(value) {
+            if (updateCard(this.record, "cc-number", value)) {
+              this.executeCancel();
+            }
+          },
+        },
+      });
+      this.#expirationPrototype = this.prototypeDataLine({
+        label: { value: strings.expirationLabel },
+        value: {
+          get() {
+            return `${this.record["cc-exp-month"]}/${this.record["cc-exp-year"]}`;
+          },
+        },
+        commands: {
+          value: [copyCommand, editCommand, "-", deleteCommand],
+        },
+      });
+      this.#holderNamePrototype = this.prototypeDataLine({
+        label: { value: strings.holderLabel },
+        end: { value: true },
+        value: {
+          get() {
+            return this.editingValue ?? this.record["cc-name"];
+          },
+        },
+        commands: {
+          value: [copyCommand, editCommand, "-", deleteCommand],
+        },
+        executeEdit: {
+          value() {
+            this.editingValue = this.record["cc-name"] ?? "";
+            this.refreshOnScreen();
+          },
+        },
+        executeSave: {
+          async value(value) {
+            if (updateCard(this.record, "cc-name", value)) {
+              this.executeCancel();
+            }
+          },
+        },
+      });
+
+      Services.obs.addObserver(this, "formautofill-storage-changed");
+      Services.prefs.addObserver(
+        "extensions.formautofill.creditCards.enabled",
+        this
+      );
+      this.#reloadDataSource();
+    });
   }
 
   /**
