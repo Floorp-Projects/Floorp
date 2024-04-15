@@ -1,5 +1,8 @@
 {
     "patches": [
+        "revert-llvmorg-19-init-7807-gf04452de1986.patch",
+        "revert-llvmorg-19-init-7619-gf139387fb6e7.patch",
+        "revert-llvmorg-19-init-7501-g27b2d7d4bb79.patch",
         "revert-llvmorg-19-init-7044-g30fd099d5062.patch",
         "revert-llvmorg-19-init-6902-gbdb60e6f0c8e.patch",
         "revert-llvmorg-19-init-6898-g60deb8b39afe.patch",
