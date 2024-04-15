@@ -4,7 +4,7 @@
 intended to change the selected view, provide a heading, and have links to external resources.
 
 ```html story
-<moz-page-nav heading="This is a nav" style={{ '--page-nav-margin-top': 0, '--page-nav-margin-bottom': 0, height: '200px' }}>
+<moz-page-nav heading="This is a nav" style={{ '--page-nav-margin-top': 0, '--page-nav-margin-bottom': 0, height: '275px' }}>
   <moz-page-nav-button
     view="view-one"
     iconSrc="chrome://browser/skin/preferences/category-general.svg"
@@ -23,13 +23,27 @@ intended to change the selected view, provide a heading, and have links to exter
   >
     <p style={{ margin: 0 }}>Test 3</p>
   </moz-page-nav-button>
+  <moz-page-nav-button
+    support-page="test"
+    iconSrc="chrome://browser/skin/preferences/category-general.svg"
+    slot="secondary-nav"
+  >
+    <p style={{ margin: 0 }}>Support Link</p>
+  </moz-page-nav-button>
+  <moz-page-nav-button
+    href="https://www.example.com"
+    iconSrc="chrome://browser/skin/preferences/category-general.svg"
+    slot="secondary-nav"
+  >
+   <p style={{ margin: 0 }}>External Link</p>
+  </moz-page-nav-button>
 </moz-page-nav>
 ```
 
 ## When to use
 
 * Use moz-page-nav for single-page navigation to switch between different views.
-* moz-page-nav will also support footer buttons for external support links in the future (See [bug 1877826](https://bugzilla.mozilla.org/show_bug.cgi?id=1877826))
+* moz-page-nav also supports footer buttons for external and support links
 * This component will be used in about: pages such as about:firefoxview, about:preferences, about:addons, about:debugging, etc.
 
 ## When not to use
@@ -53,18 +67,34 @@ And used as follows:
 
 ```html
 <moz-page-nav>
-    <moz-page-nav-button
+  <moz-page-nav-button
     view="A name for the first view"
     iconSrc="A url for the icon for the first navigation button">
-    </moz-page-nav-button>
-    <moz-page-nav-button
+  </moz-page-nav-button>
+  <moz-page-nav-button
     view="A name for the second view"
     iconSrc="A url for the icon for the second navigation button">
-    </moz-page-nav-button>
-    <moz-page-nav-button
+  </moz-page-nav-button>
+  <moz-page-nav-button
     view="A name for the third view"
     iconSrc="A url for the icon for the third navigation button">
-    </moz-page-nav-button>
+  </moz-page-nav-button>
+
+  <!-- Footer Links -->
+
+  <!-- Support Link -->
+  <moz-page-nav-button
+    support-page="A name for a support link"
+    iconSrc="A url for the icon for the third navigation button"
+    slot="secondary-nav">
+  </moz-page-nav-button>
+
+  <!-- External Link -->
+  <moz-page-nav-button
+    href="A url for an external link"
+    iconSrc="A url for the icon for the third navigation button"
+    slot="secondary-nav">
+  </moz-page-nav-button>
 </moz-page-nav>
 ```
 

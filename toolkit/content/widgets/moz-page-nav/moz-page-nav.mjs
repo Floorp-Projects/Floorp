@@ -4,6 +4,8 @@
 
 import { html } from "chrome://global/content/vendor/lit.all.mjs";
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
+// eslint-disable-next-line import/no-unassigned-import
+import "chrome://global/content/elements/moz-support-link.mjs";
 
 /**
  * A grouping of navigation buttons that is displayed at the page level,
@@ -29,6 +31,14 @@ export default class MozPageNav extends MozLitElement {
 
   get pageNavButtons() {
     return this.primaryNavGroupSlot
+      .assignedNodes()
+      .filter(
+        node => node?.localName === "moz-page-nav-button" && !node.hidden
+      );
+  }
+
+  get secondaryNavButtons() {
+    return this.secondaryNavGroupSlot
       .assignedNodes()
       .filter(
         node => node?.localName === "moz-page-nav-button" && !node.hidden
@@ -69,6 +79,12 @@ export default class MozPageNav extends MozLitElement {
     }
   }
 
+  onSecondaryNavChange() {
+    this.secondaryNavGroupSlot.assignedElements()?.forEach(el => {
+      el.classList.add("secondary-nav-item");
+    });
+  }
+
   render() {
     return html`
       <link
@@ -89,7 +105,10 @@ export default class MozPageNav extends MozLitElement {
           ></slot>
         </div>
         <div id="secondary-nav-group" role="group">
-          <slot name="secondary-nav" @keydown=${this.handleFocus}></slot>
+          <slot
+            name="secondary-nav"
+            @slotchange=${this.onSecondaryNavChange}
+          ></slot>
         </div>
       </nav>
     `;
@@ -114,16 +133,18 @@ customElements.define("moz-page-nav", MozPageNav);
  * A navigation button intended to change the selected view within a page.
  *
  * @tagname moz-page-nav-button
+ * @property {string} href - (optional) The url for an external link if not a support page URL
  * @property {string} iconSrc - The chrome:// url for the icon used for the button.
- * @property {string} l10nId - The fluent ID for the button's text
  * @property {boolean} selected - Whether or not the button is currently selected.
+ * @property {string} supportPage - (optional) The short name for the support page a secondary link should launch to
  * @slot [default] - Used to append the l10n string to the button.
  */
 export class MozPageNavButton extends MozLitElement {
   static properties = {
     iconSrc: { type: String },
-    l10nId: { type: String },
+    href: { type: String },
     selected: { type: Boolean },
+    supportPage: { type: String, attribute: "support-page" },
   };
 
   connectedCallback() {
@@ -133,6 +154,7 @@ export class MozPageNavButton extends MozLitElement {
 
   static queries = {
     buttonEl: "button",
+    linkEl: "a",
   };
 
   get view() {
@@ -148,12 +170,15 @@ export class MozPageNavButton extends MozLitElement {
     );
   }
 
-  render() {
+  itemTemplate() {
+    if (this.href || this.supportPage) {
+      return this.linkTemplate();
+    }
+    return this.buttonTemplate();
+  }
+
+  buttonTemplate() {
     return html`
-      <link
-        rel="stylesheet"
-        href="chrome://global/content/elements/moz-page-nav-button.css"
-      />
       <button
         aria-selected=${this.selected}
         tabindex=${this.selected ? 0 : -1}
@@ -161,9 +186,50 @@ export class MozPageNavButton extends MozLitElement {
         ?selected=${this.selected}
         @click=${this.activate}
       >
-        <img class="page-nav-icon" src=${this.iconSrc} />
-        <slot></slot>
+        ${this.innerContentTemplate()}
       </button>
+    `;
+  }
+
+  linkTemplate() {
+    if (this.supportPage) {
+      return html`
+        <a
+          is="moz-support-link"
+          class="moz-page-nav-link"
+          support-page=${this.supportPage}
+        >
+          ${this.innerContentTemplate()}
+        </a>
+      `;
+    }
+    return html`
+      <a href=${this.href} class="moz-page-nav-link" target="_blank">
+        ${this.innerContentTemplate()}
+      </a>
+    `;
+  }
+
+  innerContentTemplate() {
+    return html`
+      ${this.iconSrc
+        ? html`<img
+            class="page-nav-icon"
+            src=${this.iconSrc}
+            role="presentation"
+          />`
+        : ""}
+      <slot></slot>
+    `;
+  }
+
+  render() {
+    return html`
+      <link
+        rel="stylesheet"
+        href="chrome://global/content/elements/moz-page-nav-button.css"
+      />
+      ${this.itemTemplate()}
     `;
   }
 }
