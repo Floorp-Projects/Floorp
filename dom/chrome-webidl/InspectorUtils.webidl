@@ -235,6 +235,15 @@ dictionary InspectorCSSToken {
   // Text associated with the token.
   required UTF8String text;
 
+  // Value of the token. Might differ from `text`:
+  // - for `Function` tokens, text contains the opening paren, `value` does not (e.g. `var(` vs `var`)
+  // - for `AtKeyword` tokens, text contains the leading `@`, `value` does not (e.g. `@media` vs `media`)
+  // - for `Hash` and `IDHash` tokens, text contains the leading `#`, `value` does not (e.g. `#myid` vs `myid`)
+  // - for `UnquotedUrl` tokens, text contains the `url(` parts, `value` only holds the url (e.g. `url(test.jpg)` vs `test.jpg`)
+  // - for `QuotedString` tokens, text contains the wrapping quotes, `value` does not (e.g. `"hello"` vs `hello`)
+  // - for `Comment` tokens, text contains leading `/*` and trailing `*/`, `value` does not (e.g. `/* yo */` vs ` yo `)
+  required UTF8String? value;
+
   // Unit for Dimension tokens
   required UTF8String? unit;
 

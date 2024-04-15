@@ -9,7 +9,11 @@ const jsLexer = require("resource://devtools/shared/css/lexer.js");
 
 add_task(function test_lexer() {
   const LEX_TESTS = [
-    ["simple", ["ident:simple"], ["Ident:simple"]],
+    [
+      "simple",
+      ["ident:simple"],
+      [{ tokenType: "Ident", text: "simple", value: "simple" }],
+    ],
     [
       "simple: { hi; }",
       [
@@ -24,20 +28,32 @@ add_task(function test_lexer() {
         "symbol:}",
       ],
       [
-        "Ident:simple",
-        "Colon::",
-        "WhiteSpace: ",
-        "CurlyBracketBlock:{",
-        "WhiteSpace: ",
-        "Ident:hi",
-        "Semicolon:;",
-        "WhiteSpace: ",
-        "CloseCurlyBracket:}",
+        { tokenType: "Ident", text: "simple", value: "simple" },
+        { tokenType: "Colon", text: ":" },
+        { tokenType: "WhiteSpace", text: " " },
+        { tokenType: "CurlyBracketBlock", text: "{" },
+        { tokenType: "WhiteSpace", text: " " },
+        { tokenType: "Ident", text: "hi", value: "hi" },
+        { tokenType: "Semicolon", text: ";" },
+        { tokenType: "WhiteSpace", text: " " },
+        { tokenType: "CloseCurlyBracket", text: "}" },
       ],
     ],
-    ["/* whatever */", ["comment"], ["Comment:/* whatever */"]],
-    ["'string'", ["string:string"], ["QuotedString:'string'"]],
-    ['"string"', ["string:string"], [`QuotedString:"string"`]],
+    [
+      "/* whatever */",
+      ["comment"],
+      [{ tokenType: "Comment", text: "/* whatever */", value: " whatever " }],
+    ],
+    [
+      "'string'",
+      ["string:string"],
+      [{ tokenType: "QuotedString", text: "'string'", value: "string" }],
+    ],
+    [
+      '"string"',
+      ["string:string"],
+      [{ tokenType: "QuotedString", text: `"string"`, value: "string" }],
+    ],
     [
       "rgb(1,2,3)",
       [
@@ -50,67 +66,116 @@ add_task(function test_lexer() {
         "symbol:)",
       ],
       [
-        "Function:rgb(",
-        "Number:1",
-        "Comma:,",
-        "Number:2",
-        "Comma:,",
-        "Number:3",
-        "CloseParenthesis:)",
+        { tokenType: "Function", text: "rgb(", value: "rgb" },
+        { tokenType: "Number", text: "1", number: 1 },
+        { tokenType: "Comma", text: "," },
+        { tokenType: "Number", text: "2", number: 2 },
+        { tokenType: "Comma", text: "," },
+        { tokenType: "Number", text: "3", number: 3 },
+        { tokenType: "CloseParenthesis", text: ")" },
       ],
     ],
-    ["@media", ["at:media"], ["AtKeyword:@media"]],
-    ["#hibob", ["id:hibob"], ["IDHash:#hibob"]],
-    ["#123", ["hash:123"], ["Hash:#123"]],
-    ["23px", ["dimension:px"], ["Dimension:23px"]],
-    ["23%", ["percentage"], ["Percentage:23%"]],
+    [
+      "@media",
+      ["at:media"],
+      [{ tokenType: "AtKeyword", text: "@media", value: "media" }],
+    ],
+    [
+      "#hibob",
+      ["id:hibob"],
+      [{ tokenType: "IDHash", text: "#hibob", value: "hibob" }],
+    ],
+    ["#123", ["hash:123"], [{ tokenType: "Hash", text: "#123", value: "123" }]],
+    [
+      "23px",
+      ["dimension:px"],
+      [{ tokenType: "Dimension", text: "23px", number: 23, unit: "px" }],
+    ],
+    [
+      "23%",
+      ["percentage"],
+      [{ tokenType: "Percentage", text: "23%", number: 0.23 }],
+    ],
     [
       "url(http://example.com)",
       ["url:http://example.com"],
-      ["UnquotedUrl:url(http://example.com)"],
+      [
+        {
+          tokenType: "UnquotedUrl",
+          text: "url(http://example.com)",
+          value: "http://example.com",
+        },
+      ],
     ],
     [
       "url('http://example.com')",
       ["url:http://example.com"],
       [
-        "Function:url(",
-        "QuotedString:'http://example.com'",
-        "CloseParenthesis:)",
+        { tokenType: "Function", text: "url(", value: "url" },
+        {
+          tokenType: "QuotedString",
+          text: "'http://example.com'",
+          value: "http://example.com",
+        },
+        { tokenType: "CloseParenthesis", text: ")" },
       ],
     ],
     [
       "url(  'http://example.com'  )",
       ["url:http://example.com"],
       [
-        "Function:url(",
-        "WhiteSpace:  ",
-        "QuotedString:'http://example.com'",
-        "WhiteSpace:  ",
-        "CloseParenthesis:)",
+        { tokenType: "Function", text: "url(", value: "url" },
+        { tokenType: "WhiteSpace", text: "  " },
+        {
+          tokenType: "QuotedString",
+          text: "'http://example.com'",
+          value: "http://example.com",
+        },
+        { tokenType: "WhiteSpace", text: "  " },
+        { tokenType: "CloseParenthesis", text: ")" },
       ],
     ],
     // In CSS Level 3, this is an ordinary URL, not a BAD_URL.
     [
       "url(http://example.com",
       ["url:http://example.com"],
-      ["UnquotedUrl:url(http://example.com"],
+      [
+        {
+          tokenType: "UnquotedUrl",
+          text: "url(http://example.com",
+          value: "http://example.com",
+        },
+      ],
     ],
     [
       "url(http://example.com @",
       ["bad_url:http://example.com"],
-      ["BadUrl:url(http://example.com @"],
+      [
+        {
+          tokenType: "BadUrl",
+          text: "url(http://example.com @",
+          value: "http://example.com @",
+        },
+      ],
     ],
-    ["quo\\ting", ["ident:quoting"], ["Ident:quo\\ting"]],
+    [
+      "quo\\ting",
+      ["ident:quoting"],
+      [{ tokenType: "Ident", text: "quo\\ting", value: "quoting" }],
+    ],
     [
       "'bad string\n",
       ["bad_string:bad string", "whitespace"],
-      ["BadString:'bad string", "WhiteSpace:\n"],
+      [
+        { tokenType: "BadString", text: "'bad string", value: "bad string" },
+        { tokenType: "WhiteSpace", text: "\n" },
+      ],
     ],
-    ["~=", ["includes"], ["IncludeMatch:~="]],
-    ["|=", ["dashmatch"], ["DashMatch:|="]],
-    ["^=", ["beginsmatch"], ["PrefixMatch:^="]],
-    ["$=", ["endsmatch"], ["SuffixMatch:$="]],
-    ["*=", ["containsmatch"], ["SubstringMatch:*="]],
+    ["~=", ["includes"], [{ tokenType: "IncludeMatch", text: "~=" }]],
+    ["|=", ["dashmatch"], [{ tokenType: "DashMatch", text: "|=" }]],
+    ["^=", ["beginsmatch"], [{ tokenType: "PrefixMatch", text: "^=" }]],
+    ["$=", ["endsmatch"], [{ tokenType: "SuffixMatch", text: "$=" }]],
+    ["*=", ["containsmatch"], [{ tokenType: "SubstringMatch", text: "*=" }]],
 
     [
       "<!-- html comment -->",
@@ -124,19 +189,23 @@ add_task(function test_lexer() {
         "htmlcomment",
       ],
       [
-        "CDO:<!--",
-        "WhiteSpace: ",
-        "Ident:html",
-        "WhiteSpace: ",
-        "Ident:comment",
-        "WhiteSpace: ",
-        "CDC:-->",
+        { tokenType: "CDO", text: "<!--" },
+        { tokenType: "WhiteSpace", text: " " },
+        { tokenType: "Ident", text: "html", value: "html" },
+        { tokenType: "WhiteSpace", text: " " },
+        { tokenType: "Ident", text: "comment", value: "comment" },
+        { tokenType: "WhiteSpace", text: " " },
+        { tokenType: "CDC", text: "-->" },
       ],
     ],
 
     // earlier versions of CSS had "bad comment" tokens, but in level 3,
     // unterminated comments are just comments.
-    ["/* bad comment", ["comment"], ["Comment:/* bad comment"]],
+    [
+      "/* bad comment",
+      ["comment"],
+      [{ tokenType: "Comment", text: "/* bad comment", value: " bad comment" }],
+    ],
   ];
 
   const test = (cssText, useInspectorCSSParser, tokenTypes) => {
@@ -150,7 +219,28 @@ add_task(function test_lexer() {
       if (token.text) {
         combined += ":" + token.text;
       }
-      equal(combined, tokenTypes[i]);
+      if (useInspectorCSSParser) {
+        const expectedToken = tokenTypes[i];
+        Assert.deepEqual(
+          {
+            tokenType: token.tokenType,
+            text: token.text,
+            value: token.value,
+            number: token.number,
+            unit: token.unit,
+          },
+          {
+            tokenType: expectedToken.tokenType,
+            text: expectedToken.text,
+            value: expectedToken.value ?? null,
+            number: expectedToken.number ?? null,
+            unit: expectedToken.unit ?? null,
+          },
+          `Got expected token #${i} for "${cssText}"`
+        );
+      } else {
+        equal(combined, tokenTypes[i]);
+      }
       Assert.greater(token.endOffset, token.startOffset);
       equal(token.startOffset, lastTokenEnd);
       lastTokenEnd = token.endOffset;
