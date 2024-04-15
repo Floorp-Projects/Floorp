@@ -1648,3 +1648,8 @@ def target_tasks_nightly_android(full_task_graph, parameters, graph_config):
 @_target_task("android-l10n-import")
 def target_tasks_android_l10n_import(full_task_graph, parameters, graph_config):
     return [l for l, t in full_task_graph.tasks.items() if l == "android-l10n-import"]
+
+
+@_target_task("android-l10n-sync")
+def target_tasks_android_l10n_sync(full_task_graph, parameters, graph_config):
+    return [l for l, t in full_task_graph.tasks.items() if l == "android-l10n-sync"]
