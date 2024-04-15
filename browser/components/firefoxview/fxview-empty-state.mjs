@@ -53,7 +53,6 @@ class FxviewEmptyState extends MozLitElement {
       return html``;
     }
     return html` <a
-      aria-details="card-container"
       data-l10n-name=${descriptionLink.name}
       href=${descriptionLink.url}
       target=${descriptionLink?.sameTarget ? "_self" : "_blank"}
@@ -68,7 +67,7 @@ class FxviewEmptyState extends MozLitElement {
        />
        <card-container hideHeader="true" exportparts="image" ?isInnerCard="${
          this.isInnerCard
-       }" id="card-container" isEmptyState="true">
+       }" id="card-container" isEmptyState="true" role="group" aria-labelledby="header" aria-describedby="description">
          <div slot="main" class=${classMap({
            selectedTab: this.isSelectedTab,
            imageHidden: !this.mainImageUrl,
@@ -98,19 +97,21 @@ class FxviewEmptyState extends MozLitElement {
                    data-l10n-args="${JSON.stringify(this.headerArgs)}">
                  </span>
              </h2>
-             ${repeat(
-               this.descriptionLabels,
-               descLabel => descLabel,
-               (descLabel, index) => html`<p
-                 class=${classMap({
-                   description: true,
-                   secondary: index !== 0,
-                 })}
-                 data-l10n-id="${descLabel}"
-               >
-                 ${this.linkTemplate(this.descriptionLink)}
-               </p>`
-             )}
+             <span id="description">
+               ${repeat(
+                 this.descriptionLabels,
+                 descLabel => descLabel,
+                 (descLabel, index) => html`<p
+                   class=${classMap({
+                     description: true,
+                     secondary: index !== 0,
+                   })}
+                   data-l10n-id="${descLabel}"
+                 >
+                   ${this.linkTemplate(this.descriptionLink)}
+                 </p>`
+               )}
+             </span>
              <slot name="primary-action"></slot>
            </div>
          </div>

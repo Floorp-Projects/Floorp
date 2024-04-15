@@ -170,7 +170,6 @@ class SyncedTabsInView extends ViewPage {
           data-l10n-id="${ifDefined(buttonLabel)}"
           data-action="${action}"
           @click=${e => this.controller.handleEvent(e)}
-          aria-details="empty-container"
         ></button>
       </fxview-empty-state>
     `;
