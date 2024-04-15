@@ -79,42 +79,52 @@ class NodePicker {
    * @returns HTMLElement
    */
   _findNodeAtMouseEventPosition(event) {
-    const winUtils = this._targetActor.window.windowUtils;
+    const win = this._targetActor.window;
+    const winUtils = win.windowUtils;
     const rectSize = 1;
-    const elements = winUtils.nodesFromRect(
-      // aX
-      event.clientX,
-      // aY
-      event.clientY,
-      // aTopSize
-      rectSize,
-      // aRightSize
-      rectSize,
-      // aBottomSize
-      rectSize,
-      // aLeftSize
-      rectSize,
-      // aIgnoreRootScrollFrame
-      true,
-      // aFlushLayout
-      false,
-      // aOnlyVisible
-      true,
-      // aTransparencyThreshold
-      1
-    );
+    const elements = Array.from(
+      winUtils.nodesFromRect(
+        // aX
+        event.clientX,
+        // aY
+        event.clientY,
+        // aTopSize
+        rectSize,
+        // aRightSize
+        rectSize,
+        // aBottomSize
+        rectSize,
+        // aLeftSize
+        rectSize,
+        // aIgnoreRootScrollFrame
+        true,
+        // aFlushLayout
+        false,
+        // aOnlyVisible
+        true,
+        // aTransparencyThreshold
+        1
+      )
+    ).filter(element => {
+      // Strip out text nodes, we want to highlight Elements only
+      return !win.Text.isInstance(element);
+    });
 
-    // ⚠️ When a highlighter was added to the page (which is the case at this point),
-    // the first element is the html node, and might be the last one as well (See Bug 1744941).
-    // Until we figure this out, let's pick the second returned item when hit this.
-    if (
-      elements.length > 1 &&
-      ChromeUtils.getClassName(elements[0]) == "HTMLHtmlElement"
-    ) {
-      return elements[1];
+    if (!elements.length) {
+      return null;
     }
 
-    return elements[0];
+    if (elements.length === 1) {
+      return elements[0];
+    }
+
+    // Let's return the first element that we find that is not a parent of another matching
+    // element, so we get the "deepest" element possible.
+    // At this points, we have at least 2 elements and are guaranteed to find an element
+    // which is not the parent of any other ones.
+    return elements.find(
+      element => !elements.some(e => element !== e && element.contains(e))
+    );
   }
 
   /**
