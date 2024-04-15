@@ -466,3 +466,9 @@ toolbarbutton.bookmark-item {
 #firefox-view-button {
   list-style-image: url("chrome://browser/skin/firefox-view.svg");
 }
+
+#content-analysis-indicator {
+  -moz-context-properties: fill, stroke;
+  stroke: var(--toolbarbutton-icon-fill);
+  list-style-image: url("chrome://global/skin/icons/content-analysis.svg");
+}

@@ -515,6 +515,14 @@ menupopup::part(drop-indicator) {
 
 /* End private browsing indicator */
 
+/* Content analysis indicator */
+
+:root:not([contentanalysisactive]) #content-analysis-indicator {
+  display: none;
+}
+
+/* End content analysis indicator */
+
 /* Override theme colors since the picker uses extra colors that
    themes cannot set */
 #DateTimePickerPanel {
