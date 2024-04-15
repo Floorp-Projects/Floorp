@@ -1869,7 +1869,7 @@ var gBrowserInit = {
     BrowserOffline.init();
     CanvasPermissionPromptHelper.init();
     WebAuthnPromptHelper.init();
-    ContentAnalysis.initialize();
+    ContentAnalysis.initialize(document);
 
     // Initialize the full zoom setting.
     // We do this before the session restore service gets initialized so we can

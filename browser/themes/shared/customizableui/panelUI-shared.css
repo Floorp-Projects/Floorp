@@ -2180,3 +2180,9 @@ panelview {
   padding: var(--space-xxlarge) 0 var(--space-medium);
   gap: var(--space-small);
 }
+
+/* ----- Content Analysis indicator panel ----- */
+
+#content-analysis-panel-container {
+  padding: 8px;
+}
