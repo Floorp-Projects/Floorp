@@ -484,17 +484,13 @@ void MacroAssembler::branchIfNotFunctionIsNonBuiltinCtor(Register fun,
   branch32(Assembler::NotEqual, scratch, Imm32(expected), label);
 }
 
-void MacroAssembler::branchIfFunctionHasNoJitEntry(Register fun,
-                                                   bool isConstructing,
-                                                   Label* label) {
-  uint16_t flags = FunctionFlags::HasJitEntryFlags(isConstructing);
+void MacroAssembler::branchIfFunctionHasNoJitEntry(Register fun, Label* label) {
+  uint16_t flags = FunctionFlags::HasJitEntryFlags();
   branchTestFunctionFlags(fun, flags, Assembler::Zero, label);
 }
 
-void MacroAssembler::branchIfFunctionHasJitEntry(Register fun,
-                                                 bool isConstructing,
-                                                 Label* label) {
-  uint16_t flags = FunctionFlags::HasJitEntryFlags(isConstructing);
+void MacroAssembler::branchIfFunctionHasJitEntry(Register fun, Label* label) {
+  uint16_t flags = FunctionFlags::HasJitEntryFlags();
   branchTestFunctionFlags(fun, flags, Assembler::NonZero, label);
 }
 

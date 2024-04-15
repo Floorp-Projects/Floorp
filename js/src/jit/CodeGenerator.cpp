@@ -5995,7 +5995,7 @@ void JitRuntime::generateIonGenericCallStub(MacroAssembler& masm,
   masm.switchToObjectRealm(calleeReg, scratch);
 
   // Load jitCodeRaw for callee if it exists.
-  masm.branchIfFunctionHasNoJitEntry(calleeReg, isConstructing, &noJitEntry);
+  masm.branchIfFunctionHasNoJitEntry(calleeReg, &noJitEntry);
 
   // ****************************
   // * Functions with jit entry *
@@ -6769,7 +6769,7 @@ void CodeGenerator::emitApplyGeneric(T* apply) {
   }
 
   // Guard that calleereg is an interpreted function with a JSScript.
-  masm.branchIfFunctionHasNoJitEntry(calleereg, constructing, &invoke);
+  masm.branchIfFunctionHasNoJitEntry(calleereg, &invoke);
 
   // Guard that callee allows the [[Call]] or [[Construct]] operation required.
   if (constructing) {

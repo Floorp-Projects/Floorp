@@ -4670,8 +4670,7 @@ bool CacheIRCompiler::emitGuardNoAllocationMetadataBuilder(
   return true;
 }
 
-bool CacheIRCompiler::emitGuardFunctionHasJitEntry(ObjOperandId funId,
-                                                   bool constructing) {
+bool CacheIRCompiler::emitGuardFunctionHasJitEntry(ObjOperandId funId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   Register fun = allocator.useRegister(masm, funId);
 
@@ -4680,7 +4679,7 @@ bool CacheIRCompiler::emitGuardFunctionHasJitEntry(ObjOperandId funId,
     return false;
   }
 
-  masm.branchIfFunctionHasNoJitEntry(fun, constructing, failure->label());
+  masm.branchIfFunctionHasNoJitEntry(fun, failure->label());
   return true;
 }
 
@@ -4694,8 +4693,7 @@ bool CacheIRCompiler::emitGuardFunctionHasNoJitEntry(ObjOperandId funId) {
     return false;
   }
 
-  masm.branchIfFunctionHasJitEntry(obj, /*isConstructing =*/false,
-                                   failure->label());
+  masm.branchIfFunctionHasJitEntry(obj, failure->label());
   return true;
 }
 
