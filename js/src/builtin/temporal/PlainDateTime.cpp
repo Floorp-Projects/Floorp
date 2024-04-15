@@ -178,11 +178,6 @@ static bool ISODateTimeWithinLimits(T year, T month, T day) {
   // components set to zero. That means the maximum value is exclusive, whereas
   // the minimum value is inclusive.
 
-  // FIXME: spec bug - GetUTCEpochNanoseconds when called with large |year| may
-  // cause MakeDay to return NaN, which makes MakeDate return NaN, which is
-  // unexpected in GetUTCEpochNanoseconds, step 4.
-  // https://github.com/tc39/proposal-temporal/issues/2315
-
   // Definitely in range.
   if (minYear < year && year < maxYear) {
     return true;

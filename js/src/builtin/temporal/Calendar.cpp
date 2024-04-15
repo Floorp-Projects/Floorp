@@ -137,18 +137,22 @@ static bool IterableToListOfStrings(JSContext* cx, Handle<Value> items,
 
   // Step 1. (Not applicable in our implementation.)
 
-  // Steps 2-3.
+  // Step 2.
   Rooted<Value> nextValue(cx);
   Rooted<PropertyKey> value(cx);
   while (true) {
+    // Step 2.a.
     bool done;
     if (!iterator.next(&nextValue, &done)) {
       return false;
     }
+
+    // Step 2.b.
     if (done) {
-      break;
+      return true;
     }
 
+    // Step 2.d. (Reordered)
     if (nextValue.isString()) {
       if (!PrimitiveValueToId<CanGC>(cx, nextValue, &value)) {
         return false;
@@ -159,15 +163,14 @@ static bool IterableToListOfStrings(JSContext* cx, Handle<Value> items,
       continue;
     }
 
+    // Step 2.c.1.
     ReportValueError(cx, JSMSG_UNEXPECTED_TYPE, JSDVG_IGNORE_STACK, nextValue,
                      nullptr, "not a string");
 
+    // Step 2.c.2.
     iterator.closeThrow();
     return false;
   }
-
-  // Step 4.
-  return true;
 }
 
 /**
@@ -4449,23 +4452,35 @@ static bool Calendar_fields(JSContext* cx, const CallArgs& args) {
   JS::RootedVector<Value> fieldNames(cx);
   mozilla::EnumSet<CalendarField> seen;
 
-  // Steps 6-7.
+  // Step 6.
   Rooted<Value> nextValue(cx);
   Rooted<JSLinearString*> linear(cx);
   while (true) {
-    // Steps 7.a and 7.b.i.
+    // Step 6.a.
     bool done;
     if (!iterator.next(&nextValue, &done)) {
       return false;
     }
+
+    // Step 6.b.
     if (done) {
-      break;
+      auto* array =
+          NewDenseCopiedArray(cx, fieldNames.length(), fieldNames.begin());
+      if (!array) {
+        return false;
+      }
+
+      args.rval().setObject(*array);
+      return true;
     }
 
-    // Step 7.b.ii.
+    // Step 6.c.
     if (!nextValue.isString()) {
+      // Step 6.c.1.
       ReportValueError(cx, JSMSG_UNEXPECTED_TYPE, JSDVG_IGNORE_STACK, nextValue,
                        nullptr, "not a string");
+
+      // Step 6.c.2.
       iterator.closeThrow();
       return false;
     }
@@ -4475,40 +4490,33 @@ static bool Calendar_fields(JSContext* cx, const CallArgs& args) {
       return false;
     }
 
-    // Step 7.b.iv. (Reordered)
+    // Step 6.e. (Reordered)
     CalendarField field;
     if (!ToCalendarField(cx, linear, &field)) {
       iterator.closeThrow();
       return false;
     }
 
-    // Step 7.b.iii.
+    // Step 6.d.
     if (seen.contains(field)) {
+      // Step 6.d.1.
       if (auto chars = QuoteString(cx, linear, '"')) {
         JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                                  JSMSG_TEMPORAL_CALENDAR_DUPLICATE_FIELD,
                                  chars.get());
       }
+
+      // Step 6.d.2.
       iterator.closeThrow();
       return false;
     }
 
-    // Step 7.b.v.
+    // Step 6.f.
     if (!fieldNames.append(nextValue)) {
       return false;
     }
     seen += field;
   }
-
-  // Step 8.
-  auto* array =
-      NewDenseCopiedArray(cx, fieldNames.length(), fieldNames.begin());
-  if (!array) {
-    return false;
-  }
-
-  args.rval().setObject(*array);
-  return true;
 }
 
 /**

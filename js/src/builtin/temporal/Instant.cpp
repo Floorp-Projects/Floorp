@@ -472,13 +472,13 @@ Wrapped<InstantObject*> js::temporal::ToTemporalInstant(JSContext* cx,
     }
   }
 
-  // Steps 1.b-d and 3-6
+  // Steps 1.b-d and 3-7
   Instant epochNanoseconds;
   if (!ToTemporalInstant(cx, item, &epochNanoseconds)) {
     return nullptr;
   }
 
-  // Step 7.
+  // Step 8.
   return CreateTemporalInstant(cx, epochNanoseconds);
 }
 
@@ -528,25 +528,25 @@ bool js::temporal::ToTemporalInstant(JSContext* cx, Handle<Value> item,
   }
   MOZ_ASSERT(std::abs(offset) < ToNanoseconds(TemporalUnit::Day));
 
-  // Step 6. (Reordered)
+  // Steps 5-6. (Reordered)
   if (!ISODateTimeWithinLimits(dateTime)) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_TEMPORAL_INSTANT_INVALID);
     return false;
   }
 
-  // Step 5.
+  // Step 4.
   auto epochNanoseconds =
       GetUTCEpochNanoseconds(dateTime, InstantSpan::fromNanoseconds(offset));
 
-  // Step 6.
+  // Step 7.
   if (!IsValidEpochInstant(epochNanoseconds)) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_TEMPORAL_INSTANT_INVALID);
     return false;
   }
 
-  // Step 7.
+  // Step 8.
   *result = epochNanoseconds;
   return true;
 }

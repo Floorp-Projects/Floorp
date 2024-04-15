@@ -1647,23 +1647,24 @@ static bool GetPossibleInstantsForSlow(
 
   // Step 4. (Not applicable in our implementation.)
 
-  // Steps 5-6.
+  // Step 5.
   Rooted<Value> nextValue(cx);
   while (true) {
-    // Steps 6.a and 6.b.i.
+    // Step 5.a.
     bool done;
     if (!iterator.next(&nextValue, &done)) {
       return false;
     }
+
+    // Step 5.b.
     if (done) {
-      break;
+      return true;
     }
 
-    // Steps 6.b.ii.
+    // Step 5.d. (Reordered)
     if (nextValue.isObject()) {
       JSObject* obj = &nextValue.toObject();
       if (obj->canUnwrapAs<InstantObject>()) {
-        // Step 6.b.iii.
         if (!list.append(obj)) {
           return false;
         }
@@ -1671,17 +1672,14 @@ static bool GetPossibleInstantsForSlow(
       }
     }
 
-    // Step 6.b.ii.1.
+    // Step 5.c.1.
     ReportValueError(cx, JSMSG_UNEXPECTED_TYPE, JSDVG_IGNORE_STACK, nextValue,
                      nullptr, "not an instant");
 
-    // Step 6.b.ii.2.
+    // Step 5.c.2.
     iterator.closeThrow();
     return false;
   }
-
-  // Step 7.
-  return true;
 }
 
 /**
@@ -1714,7 +1712,7 @@ static bool GetPossibleInstantsFor(
     }
   }
 
-  // Steps 1 and 3-7.
+  // Steps 1 and 3-5.
   return GetPossibleInstantsForSlow(cx, timeZone, dateTimeObj, list);
 }
 
@@ -1753,7 +1751,7 @@ bool js::temporal::GetPossibleInstantsFor(
     return false;
   }
 
-  // Steps 1 and 3-7.
+  // Steps 1 and 3-5.
   return GetPossibleInstantsForSlow(cx, timeZone, dateTimeObj, list);
 }
 

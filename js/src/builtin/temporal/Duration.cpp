@@ -1681,7 +1681,7 @@ static bool UnbalanceDateDurationRelativeHasEffect(const DateDuration& duration,
                                                    TemporalUnit largestUnit) {
   MOZ_ASSERT(largestUnit != TemporalUnit::Auto);
 
-  // Steps 2, 3.a-b, 4.a-b, 6-7.
+  // Steps 2-4.
   return (largestUnit > TemporalUnit::Year && duration.years != 0) ||
          (largestUnit > TemporalUnit::Month && duration.months != 0) ||
          (largestUnit > TemporalUnit::Week && duration.weeks != 0);
@@ -1701,68 +1701,58 @@ static bool UnbalanceDateDurationRelative(
 
   // Step 1. (Not applicable in our implementation.)
 
-  // Steps 2, 3.a, 4.a, and 6.
+  // Steps 2-4.
   if (!UnbalanceDateDurationRelativeHasEffect(duration, largestUnit)) {
-    // Steps 2.a, 3.a, 4.a, and 6.
     *result = duration;
     return true;
   }
 
-  // Step 3.
+  // Step 5.
+  MOZ_ASSERT(largestUnit != TemporalUnit::Year);
+
+  // Step 6. (Not applicable in our implementation.)
+
+  // Step 7.
+  MOZ_ASSERT(
+      CalendarMethodsRecordHasLookedUp(calendar, CalendarMethod::DateAdd));
+
+  // Step 8.
   if (largestUnit == TemporalUnit::Month) {
-    // Step 3.a. (Handled above)
-    MOZ_ASSERT(years != 0);
-
-    // Step 3.b. (Not applicable in our implementation.)
-
-    // Step 3.c.
-    MOZ_ASSERT(
-        CalendarMethodsRecordHasLookedUp(calendar, CalendarMethod::DateAdd));
-
-    // Step 3.d.
+    // Step 8.a.
     MOZ_ASSERT(
         CalendarMethodsRecordHasLookedUp(calendar, CalendarMethod::DateUntil));
 
-    // Step 3.e.
+    // Step 8.b.
     auto yearsDuration = DateDuration{years};
 
-    // Step 3.f.
+    // Step 8.c.
     Rooted<Wrapped<PlainDateObject*>> later(
         cx, CalendarDateAdd(cx, calendar, plainRelativeTo, yearsDuration));
     if (!later) {
       return false;
     }
 
-    // Steps 3.g-i.
+    // Steps 8.d-f.
     Duration untilResult;
     if (!CalendarDateUntil(cx, calendar, plainRelativeTo, later,
                            TemporalUnit::Month, &untilResult)) {
       return false;
     }
 
-    // Step 3.j.
+    // Step 8.g.
     int64_t yearsInMonths = int64_t(untilResult.months);
 
-    // Step 3.k.
+    // Step 8.h.
     return CreateDateDurationRecord(cx, 0, months + yearsInMonths, weeks, days,
                                     result);
   }
 
-  // Step 4.
+  // Step 9.
   if (largestUnit == TemporalUnit::Week) {
-    // Step 4.a. (Handled above)
-    MOZ_ASSERT(years != 0 || months != 0);
-
-    // Step 4.b. (Not applicable in our implementation.)
-
-    // Step 4.c.
-    MOZ_ASSERT(
-        CalendarMethodsRecordHasLookedUp(calendar, CalendarMethod::DateAdd));
-
-    // Step 4.d.
+    // Step 9.a.
     auto yearsMonthsDuration = DateDuration{years, months};
 
-    // Step 4.e.
+    // Step 9.b.
     auto later =
         CalendarDateAdd(cx, calendar, plainRelativeTo, yearsMonthsDuration);
     if (!later) {
@@ -1776,31 +1766,20 @@ static bool UnbalanceDateDurationRelative(
     }
     auto relativeToDate = ToPlainDate(unwrappedRelativeTo);
 
-    // Step 4.f.
+    // Step 9.c.
     int32_t yearsMonthsInDays = DaysUntil(relativeToDate, laterDate);
 
-    // Step 4.g.
+    // Step 9.d.
     return CreateDateDurationRecord(cx, 0, 0, weeks, days + yearsMonthsInDays,
                                     result);
   }
 
-  // Step 5. (Not applicable in our implementation.)
+  // Step 10. (Not applicable in our implementation.)
 
-  // Step 6. (Handled above)
-  MOZ_ASSERT(years != 0 || months != 0 || weeks != 0);
-
-  // FIXME: why don't we unconditionally throw an error for missing calendars?
-
-  // Step 7. (Not applicable in our implementation.)
-
-  // Step 8.
-  MOZ_ASSERT(
-      CalendarMethodsRecordHasLookedUp(calendar, CalendarMethod::DateAdd));
-
-  // Step 9.
+  // Step 11.
   auto yearsMonthsWeeksDuration = DateDuration{years, months, weeks};
 
-  // Step 10.
+  // Step 12.
   auto later =
       CalendarDateAdd(cx, calendar, plainRelativeTo, yearsMonthsWeeksDuration);
   if (!later) {
@@ -1814,10 +1793,10 @@ static bool UnbalanceDateDurationRelative(
   }
   auto relativeToDate = ToPlainDate(unwrappedRelativeTo);
 
-  // Step 11.
+  // Step 13.
   int32_t yearsMonthsWeeksInDay = DaysUntil(relativeToDate, laterDate);
 
-  // Step 12.
+  // Step 14.
   return CreateDateDurationRecord(cx, 0, 0, 0, days + yearsMonthsWeeksInDay,
                                   result);
 }
@@ -1834,16 +1813,16 @@ static bool UnbalanceDateDurationRelative(JSContext* cx,
 
   // Step 1. (Not applicable.)
 
-  // Steps 2, 3.a, 4.a, and 6.
+  // Step 2-4.
   if (!UnbalanceDateDurationRelativeHasEffect(duration, largestUnit)) {
-    // Steps 2.a, 3.a, 4.a, and 6.
     *result = duration;
     return true;
   }
 
-  // Step 5. (Not applicable.)
+  // Step 5.
+  MOZ_ASSERT(largestUnit != TemporalUnit::Year);
 
-  // Steps 3.b, 4.b, and 7.
+  // Steps 6.
   JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                             JSMSG_TEMPORAL_DURATION_UNCOMPARABLE, "calendar");
   return false;
@@ -1942,9 +1921,6 @@ static bool BalanceDateDurationRelative(
       return false;
     }
 
-    // FIXME: spec bug - CreateDateDurationRecord is infallible
-    // https://github.com/tc39/proposal-temporal/issues/2750
-
     // Step 10.e.
     *result = CreateDateDurationRecord(
         int64_t(untilResult.years), int64_t(untilResult.months),
@@ -1976,9 +1952,6 @@ static bool BalanceDateDurationRelative(
       return false;
     }
 
-    // FIXME: spec bug - CreateDateDurationRecord is infallible
-    // https://github.com/tc39/proposal-temporal/issues/2750
-
     // Step 11.f.
     *result = CreateDateDurationRecord(0, int64_t(untilResult.months),
                                        int64_t(untilResult.weeks),
@@ -2003,9 +1976,6 @@ static bool BalanceDateDurationRelative(
   if (!untilAddedDate(weeksDaysDuration, &untilResult)) {
     return false;
   }
-
-  // FIXME: spec bug - CreateDateDurationRecord is infallible
-  // https://github.com/tc39/proposal-temporal/issues/2750
 
   // Step 18.
   *result = CreateDateDurationRecord(0, 0, int64_t(untilResult.weeks),
@@ -2102,9 +2072,6 @@ static bool AddDuration(JSContext* cx, const Duration& one, const Duration& two,
 
   // Steps 1-2. (Not applicable)
 
-  // FIXME: spec issue - calendarRec is not undefined when plainRelativeTo is
-  // not undefined.
-
   // Step 3.
   auto largestUnit1 = DefaultTemporalLargestUnit(one);
 
@@ -2124,66 +2091,54 @@ static bool AddDuration(JSContext* cx, const Duration& one, const Duration& two,
   // Step 7.c.
   auto dateDuration2 = two.toDateDuration();
 
-  // FIXME: spec issue - calendarUnitsPresent is unused.
-
   // Step 7.d.
-  [[maybe_unused]] bool calendarUnitsPresent = true;
-
-  // Step 7.e.
-  if (dateDuration1.years == 0 && dateDuration1.months == 0 &&
-      dateDuration1.weeks == 0 && dateDuration2.years == 0 &&
-      dateDuration2.months == 0 && dateDuration2.weeks == 0) {
-    calendarUnitsPresent = false;
-  }
-
-  // Step 7.f.
   Rooted<Wrapped<PlainDateObject*>> intermediate(
       cx, AddDate(cx, calendar, plainRelativeTo, dateDuration1));
   if (!intermediate) {
     return false;
   }
 
-  // Step 7.g.
+  // Step 7.e.
   Rooted<Wrapped<PlainDateObject*>> end(
       cx, AddDate(cx, calendar, intermediate, dateDuration2));
   if (!end) {
     return false;
   }
 
-  // Step 7.h.
+  // Step 7.f.
   auto dateLargestUnit = std::min(TemporalUnit::Day, largestUnit);
 
-  // Steps 7.i-k.
+  // Steps 7.g-i.
   DateDuration dateDifference;
   if (!DifferenceDate(cx, calendar, plainRelativeTo, end, dateLargestUnit,
                       &dateDifference)) {
     return false;
   }
 
-  // Step 7.l.
+  // Step 7.j.
   auto normalized1 = NormalizeTimeDuration(one);
 
-  // Step 7.m.
+  // Step 7.k.
   auto normalized2 = NormalizeTimeDuration(two);
 
-  // Step 7.n.
+  // Step 7.l.
   NormalizedTimeDuration normalized1WithDays;
   if (!Add24HourDaysToNormalizedTimeDuration(
           cx, normalized1, dateDifference.days, &normalized1WithDays)) {
     return false;
   }
 
-  // Step 7.o.
+  // Step 7.m.
   NormalizedTimeDuration normalized;
   if (!AddNormalizedTimeDuration(cx, normalized1WithDays, normalized2,
                                  &normalized)) {
     return false;
   }
 
-  // Step 7.p.
+  // Step 7.n.
   auto balanced = temporal::BalanceTimeDuration(normalized, largestUnit);
 
-  // Steps 7.q.
+  // Steps 7.o.
   *result = {
       double(dateDifference.years), double(dateDifference.months),
       double(dateDifference.weeks), double(balanced.days),
@@ -2705,9 +2660,6 @@ static bool ToRelativeTemporalObject(
 
   // Step 2.
   if (value.isUndefined()) {
-    // FIXME: spec issue - switch return record fields for consistency.
-    // FIXME: spec bug - [[TimeZoneRec]] field not created
-
     plainRelativeTo.set(nullptr);
     zonedRelativeTo.set(ZonedDateTime{});
     timeZoneRecord.set(TimeZoneRecord{});
@@ -2913,20 +2865,20 @@ static bool ToRelativeTemporalObject(
     bool isUTC;
     bool hasOffset;
     int64_t timeZoneOffset;
-    Rooted<ParsedTimeZone> timeZoneName(cx);
+    Rooted<ParsedTimeZone> timeZoneAnnotation(cx);
     Rooted<JSString*> calendarString(cx);
     if (!ParseTemporalRelativeToString(cx, string, &dateTime, &isUTC,
                                        &hasOffset, &timeZoneOffset,
-                                       &timeZoneName, &calendarString)) {
+                                       &timeZoneAnnotation, &calendarString)) {
       return false;
     }
 
     // Step 6.c. (Not applicable in our implementation.)
 
     // Steps 6.e-f.
-    if (timeZoneName) {
+    if (timeZoneAnnotation) {
       // Step 6.f.i.
-      if (!ToTemporalTimeZone(cx, timeZoneName, &timeZone)) {
+      if (!ToTemporalTimeZone(cx, timeZoneAnnotation, &timeZone)) {
         return false;
       }
 
