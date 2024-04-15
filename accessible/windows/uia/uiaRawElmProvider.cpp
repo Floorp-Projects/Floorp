@@ -459,6 +459,11 @@ uiaRawElmProvider::GetPropertyValue(PROPERTYID aPropertyId,
           (acc->State() & states::FOCUSABLE) ? VARIANT_TRUE : VARIANT_FALSE;
       return S_OK;
 
+    case UIA_LevelPropertyId:
+      aPropertyValue->vt = VT_I4;
+      aPropertyValue->lVal = acc->GroupPosition().level;
+      return S_OK;
+
     case UIA_NamePropertyId: {
       nsAutoString name;
       acc->Name(name);
@@ -469,6 +474,16 @@ uiaRawElmProvider::GetPropertyValue(PROPERTYID aPropertyId,
       }
       break;
     }
+
+    case UIA_PositionInSetPropertyId:
+      aPropertyValue->vt = VT_I4;
+      aPropertyValue->lVal = acc->GroupPosition().posInSet;
+      return S_OK;
+
+    case UIA_SizeOfSetPropertyId:
+      aPropertyValue->vt = VT_I4;
+      aPropertyValue->lVal = acc->GroupPosition().setSize;
+      return S_OK;
   }
 
   return S_OK;
