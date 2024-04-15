@@ -12938,6 +12938,10 @@ ondigitalocean.app
 // Submitted by Robin H. Johnson <psl-maintainers@digitalocean.com>
 *.digitaloceanspaces.com
 
+// DigitalPlat : https://www.digitalplat.org/
+// Submitted by Edward Hsing <contact@digitalplat.org>
+us.kg
+
 // dnstrace.pro : https://dnstrace.pro/
 // Submitted by Chris Partridge <chris@partridge.tech>
 bci.dnstrace.pro
@@ -13967,6 +13971,11 @@ myjino.ru
 // Submitted by Daniel Fariña <ingenieria@jotelulu.com>
 jotelulu.cloud
 
+// JouwWeb B.V. : https://www.jouwweb.nl
+// Submitted by Camilo Sperberg <tech@webador.com>
+jouwweb.site
+webadorsite.com
+
 // Joyent : https://www.joyent.com/
 // Submitted by Brian Bennett <brian.bennett@joyent.com>
 *.triton.zone
@@ -14616,10 +14625,6 @@ pagexl.com
 // pcarrier.ca Software Inc: https://pcarrier.ca/
 // Submitted by Pierre Carrier <pc@rrier.ca>
 *.xmit.co
-bar0.net
-bar1.net
-bar2.net
-rdv.to
 srv.us
 gh.srv.us
 gl.srv.us
@@ -15498,47 +15503,6 @@ v-info.info
 // Voorloper.com: https://voorloper.com
 // Submitted by Nathan van Bakel <info@voorloper.com>
 voorloper.cloud
-
-// Voxel.sh DNS : https://voxel.sh/dns/
-// Submitted by Mia Rehlinger <dns@voxel.sh>
-neko.am
-nyaa.am
-be.ax
-cat.ax
-es.ax
-eu.ax
-gg.ax
-mc.ax
-us.ax
-xy.ax
-nl.ci
-xx.gl
-app.gp
-blog.gt
-de.gt
-to.gt
-be.gy
-cc.hn
-io.kg
-jp.kg
-tv.kg
-uk.kg
-us.kg
-de.ls
-at.md
-de.md
-jp.md
-to.md
-indie.porn
-vxl.sh
-ch.tc
-me.tc
-we.tc
-nyan.to
-at.vg
-blog.vu
-dev.vu
-me.vu
 
 // V.UA Domain Administrator : https://domain.v.ua/
 // Submitted by Serhii Rostilo <sergey@rostilo.kiev.ua>
