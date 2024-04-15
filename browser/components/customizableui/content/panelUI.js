@@ -840,10 +840,7 @@ const PanelUI = {
 
   get mainView() {
     if (!this._mainView) {
-      this._mainView = PanelMultiView.getViewNode(
-        document,
-        "appMenu-protonMainView"
-      );
+      this._mainView = PanelMultiView.getViewNode(document, "appMenu-mainView");
     }
     return this._mainView;
   },
@@ -852,7 +849,7 @@ const PanelUI = {
     if (!this._addonNotificationContainer) {
       this._addonNotificationContainer = PanelMultiView.getViewNode(
         document,
-        "appMenu-proton-addon-banners"
+        "appMenu-addon-banners"
       );
     }
 

@@ -103,7 +103,7 @@ function checkSubheaders(view) {
 }
 
 async function checkUpdateBanner(view) {
-  let banner = view.querySelector("#appMenu-proton-update-banner");
+  let banner = view.querySelector("#appMenu-update-banner");
 
   const notifications = [
     "update-downloading",
