@@ -1162,7 +1162,7 @@ bool js::temporal::DifferenceDate(JSContext* cx,
                                   Handle<Wrapped<PlainDateObject*>> one,
                                   Handle<Wrapped<PlainDateObject*>> two,
                                   Handle<PlainObject*> options,
-                                  Duration* result) {
+                                  DateDuration* result) {
   auto* unwrappedOne = one.unwrap(cx);
   if (!unwrappedOne) {
     return false;
@@ -1207,13 +1207,18 @@ bool js::temporal::DifferenceDate(JSContext* cx,
       int32_t days = DaysUntil(oneDate, twoDate);
 
       // Step 6.b.
-      *result = {0, 0, 0, double(days)};
+      *result = {0, 0, 0, days};
       return true;
     }
   }
 
   // Step 7.
-  return CalendarDateUntil(cx, calendar, one, two, options, result);
+  Duration duration;
+  if (!CalendarDateUntil(cx, calendar, one, two, options, &duration)) {
+    return false;
+  }
+  *result = duration.toDateDuration();
+  return true;
 }
 
 /**
@@ -1223,7 +1228,8 @@ bool js::temporal::DifferenceDate(JSContext* cx,
                                   Handle<CalendarRecord> calendar,
                                   Handle<Wrapped<PlainDateObject*>> one,
                                   Handle<Wrapped<PlainDateObject*>> two,
-                                  TemporalUnit largestUnit, Duration* result) {
+                                  TemporalUnit largestUnit,
+                                  DateDuration* result) {
   auto* unwrappedOne = one.unwrap(cx);
   if (!unwrappedOne) {
     return false;
@@ -1250,12 +1256,17 @@ bool js::temporal::DifferenceDate(JSContext* cx,
     int32_t days = DaysUntil(oneDate, twoDate);
 
     // Step 6.b.
-    *result = {0, 0, 0, double(days)};
+    *result = {0, 0, 0, days};
     return true;
   }
 
   // Step 7.
-  return CalendarDateUntil(cx, calendar, one, two, largestUnit, result);
+  Duration duration;
+  if (!CalendarDateUntil(cx, calendar, one, two, largestUnit, &duration)) {
+    return false;
+  }
+  *result = duration.toDateDuration();
+  return true;
 }
 
 /**
@@ -1596,20 +1607,16 @@ static bool DifferenceTemporalPlainDate(JSContext* cx,
     }
 
     // Step 9.
-    Duration duration;
     if (!DifferenceDate(cx, calendar, temporalDate, other, resolvedOptions,
-                        &duration)) {
+                        &difference)) {
       return false;
     }
-    difference = duration.toDateDuration();
   } else {
     // Steps 8-9.
-    Duration duration;
     if (!DifferenceDate(cx, calendar, temporalDate, other, settings.largestUnit,
-                        &duration)) {
+                        &difference)) {
       return false;
     }
-    difference = duration.toDateDuration();
   }
 
   // Step 10.

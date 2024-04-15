@@ -843,7 +843,7 @@ static bool DifferenceISODateTime(JSContext* cx, const PlainDateTime& one,
   // Step 11.
   auto dateLargestUnit = std::min(TemporalUnit::Day, largestUnit);
 
-  Duration dateDifference;
+  DateDuration dateDifference;
   if (maybeOptions) {
     // FIXME: spec issue - this copy is no longer needed, all callers have
     // already copied the user input object.
@@ -878,8 +878,8 @@ static bool DifferenceISODateTime(JSContext* cx, const PlainDateTime& one,
   }
 
   // Step 15.
-  return CreateNormalizedDurationRecord(cx, dateDifference.toDateDuration(),
-                                        timeDuration, result);
+  return CreateNormalizedDurationRecord(cx, dateDifference, timeDuration,
+                                        result);
 }
 
 /**
