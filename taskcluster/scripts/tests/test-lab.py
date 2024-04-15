@@ -21,6 +21,7 @@ import sys
 from enum import Enum
 from pathlib import Path
 from typing import List, Optional, Union
+from urllib.parse import urlparse
 
 
 # Worker paths and binaries
@@ -116,9 +117,17 @@ def execute_tests(
         Worker.RESULTS_DIR.value,
         "--project",
         os.environ.get("GOOGLE_PROJECT"),
-        "--client-details",
-        f'matrixLabel={os.environ.get("PULL_REQUEST_NUMBER", "None")}',
     ]
+
+    # Add a client details parameter using the repository name
+    matrixLabel = os.environ.get("GECKO_HEAD_REPOSITORY")
+    if matrixLabel is not None:
+        flank_command.extend(
+            [
+                "--client-details",
+                f"matrixLabel={urlparse(matrixLabel).path.rpartition('/')[-1]}",
+            ]
+        )
 
     # Add androidTest APK if provided (optional) as robo test or instrumentation test
     if apk_test:
