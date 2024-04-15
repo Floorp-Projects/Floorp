@@ -491,19 +491,12 @@ class HistoryInView extends ViewPage {
           class="import-history-banner"
           hideHeader="true"
           ?hidden=${!this.shouldShowImportBanner()}
-          role="group"
-          aria-labelledby="header"
-          aria-describedby="description"
         >
           <div slot="main">
             <div class="banner-text">
-              <span
-                data-l10n-id="firefoxview-import-history-header"
-                id="header"
-              ></span>
+              <span data-l10n-id="firefoxview-import-history-header"></span>
               <span
                 data-l10n-id="firefoxview-import-history-description"
-                id="description"
               ></span>
             </div>
             <div class="buttons">
