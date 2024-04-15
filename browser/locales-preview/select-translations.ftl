@@ -38,6 +38,12 @@ select-translations-panel-from-label = From
 # Text displayed above the to-language dropdown menu.
 select-translations-panel-to-label = To
 
+# Text displayed above the try-another-source-language dropdown menu.
+select-translations-panel-try-another-language-label = Try another source language
+
+# Text displayed on the cancel button.
+select-translations-panel-cancel-button = Cancel
+
 # Text displayed on the copy button.
 select-translations-panel-copy-button = Copy
 
@@ -47,8 +53,22 @@ select-translations-panel-done-button = Done
 # Text displayed on translate-full-page button.
 select-translations-panel-translate-full-page-button = Translate full page
 
+# Text displayed on translate button.
+select-translations-panel-translate-button = Translate
+
 # Text displayed as a placeholder when the panel is idle.
 select-translations-panel-idle-placeholder-text = Translated text will appear here.
 
 # Text displayed as a placeholder when the panel is actively translating.
 select-translations-panel-translating-placeholder-text = Translating…
+
+# If your language requires declining the language name, a possible solution
+# is to adapt the structure of the phrase, or use a support noun, e.g.
+# `Sorry, we don't support the language yet: { $language }
+#
+# Variables:
+#   $language (string) - The language of the document.
+select-translations-panel-unsupported-language-message-known =
+    .message = Sorry, we don’t support { $language } yet.
+select-translations-panel-unsupported-language-message-unknown =
+    .message = Sorry, we don’t support this language yet.

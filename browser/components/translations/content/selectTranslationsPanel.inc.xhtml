@@ -27,65 +27,89 @@
                      data-l10n-id="translations-panel-settings-button"
                      closemenu="none" />
     </hbox>
-    <vbox class="select-translations-panel-content">
-      <hbox id="select-translations-panel-lang-selection">
-        <vbox flex="1">
-          <label id="select-translations-panel-from-label"
-                 class="select-translations-panel-label"
-                 data-l10n-id="select-translations-panel-from-label">
-          </label>
-          <menulist id="select-translations-panel-from"
-                    flex="1"
-                    value=""
-                    size="large"
-                    data-l10n-id="translations-panel-choose-language"
-                    aria-labelledby="select-translations-panel-from-label"
-                    noinitialselection="true"
-                    oncommand="SelectTranslationsPanel.onChangeFromLanguage(event)">
-            <menupopup id="select-translations-panel-from-menupopup"
-                       onpopupshown="SelectTranslationsPanel.handlePanelPopupShownEvent(event)"
-                       class="translations-panel-language-menupopup-from">
-              <!-- The list of <menuitem> will be dynamically inserted. -->
-            </menupopup>
-          </menulist>
-        </vbox>
-        <vbox flex="1">
-          <label id="select-translations-panel-to-label"
-                 class="select-translations-panel-label"
-                 data-l10n-id="select-translations-panel-to-label">
-          </label>
-          <menulist id="select-translations-panel-to"
-                    flex="1"
-                    value=""
-                    size="large"
-                    data-l10n-id="translations-panel-choose-language"
-                    aria-labelledby="select-translations-panel-to-label"
-                    noinitialselection="true"
-                    oncommand="SelectTranslationsPanel.onChangeToLanguage(event)">
-            <menupopup id="select-translations-panel-to-menupopup"
-                       onpopupshown="SelectTranslationsPanel.handlePanelPopupShownEvent(event)"
-                       class="translations-panel-language-menupopup-to">
-              <!-- The list of <menuitem> will be dynamically inserted. -->
-            </menupopup>
-          </menulist>
-        </vbox>
+    <html:div id="select-translations-panel-unsupported-language-content" hidden="true">
+      <vbox flex="1" class="select-translations-panel-content">
+        <html:moz-message-bar id="select-translations-panel-unsupported-language-message-bar"
+                        data-l10n-attrs="message">
+        </html:moz-message-bar>
+        <label id="select-translations-panel-try-another-language-label"
+               class="select-translations-panel-label"
+               data-l10n-id="select-translations-panel-try-another-language-label">
+        </label>
+        <menulist id="select-translations-panel-try-another-language"
+                  flex="1"
+                  value=""
+                  size="large"
+                  data-l10n-id="translations-panel-choose-language"
+                  aria-labelledby="select-translations-panel-try-another-language-label"
+                  noinitialselection="true">
+          <menupopup id="select-translations-panel-try-another-language-menupopup"
+                     class="translations-panel-language-menupopup-from">
+            <!-- The list of <menuitem> will be dynamically inserted. -->
+          </menupopup>
+        </menulist>
+      </vbox>
+    </html:div>
+    <html:div id="select-translations-panel-main-content">
+      <vbox class="select-translations-panel-content">
+        <hbox id="select-translations-panel-lang-selection">
+          <vbox flex="1">
+            <label id="select-translations-panel-from-label"
+                   class="select-translations-panel-label"
+                   data-l10n-id="select-translations-panel-from-label">
+            </label>
+            <menulist id="select-translations-panel-from"
+                      flex="1"
+                      value=""
+                      size="large"
+                      data-l10n-id="translations-panel-choose-language"
+                      aria-labelledby="select-translations-panel-from-label"
+                      noinitialselection="true"
+                      oncommand="SelectTranslationsPanel.onChangeFromLanguage(event)">
+              <menupopup id="select-translations-panel-from-menupopup"
+                         onpopupshown="SelectTranslationsPanel.handlePanelPopupShownEvent(event)"
+                         class="translations-panel-language-menupopup-from">
+                <!-- The list of <menuitem> will be dynamically inserted. -->
+              </menupopup>
+            </menulist>
+          </vbox>
+          <vbox flex="1">
+            <label id="select-translations-panel-to-label"
+                   class="select-translations-panel-label"
+                   data-l10n-id="select-translations-panel-to-label">
+            </label>
+            <menulist id="select-translations-panel-to"
+                      flex="1"
+                      value=""
+                      size="large"
+                      data-l10n-id="translations-panel-choose-language"
+                      aria-labelledby="select-translations-panel-to-label"
+                      noinitialselection="true"
+                      oncommand="SelectTranslationsPanel.onChangeToLanguage(event)">
+              <menupopup id="select-translations-panel-to-menupopup"
+                         onpopupshown="SelectTranslationsPanel.handlePanelPopupShownEvent(event)"
+                         class="translations-panel-language-menupopup-to">
+                <!-- The list of <menuitem> will be dynamically inserted. -->
+              </menupopup>
+            </menulist>
+          </vbox>
+        </hbox>
+      </vbox>
+      <vbox class="select-translations-panel-content">
+        <html:textarea id="select-translations-panel-text-area"
+                       class="select-translations-panel-text-area"
+                       readonly="true"
+                       tabindex="0">
+        </html:textarea>
+      </vbox>
+
+      <hbox class="select-translations-panel-content">
+        <button id="select-translations-panel-copy-button"
+                class="footer-button select-translations-panel-button select-translations-panel-copy-button"
+                data-l10n-id="select-translations-panel-copy-button">
+        </button>
       </hbox>
-    </vbox>
-    <vbox class="select-translations-panel-content">
-      <html:textarea id="select-translations-panel-text-area"
-                     class="select-translations-panel-text-area"
-                     readonly="true"
-                     tabindex="0">
-      </html:textarea>
-    </vbox>
-
-    <hbox class="select-translations-panel-content">
-      <button id="select-translations-panel-copy-button"
-              class="footer-button select-translations-panel-button select-translations-panel-copy-button"
-              data-l10n-id="select-translations-panel-copy-button">
-      </button>
-    </hbox>
-
+    </html:div>
     <html:moz-button-group class="panel-footer translations-panel-footer">
       <button id="select-translations-panel-translate-full-page-button"
               class="footer-button select-translations-panel-button"
@@ -96,6 +120,13 @@
               data-l10n-id="select-translations-panel-done-button"
               default="true"
               oncommand = "SelectTranslationsPanel.close()">
+      </button>
+      <button id="select-translations-panel-translate-button"
+              class="footer-button select-translations-panel-button"
+              data-l10n-id="select-translations-panel-translate-button"
+              hidden="true"
+              default="true"
+              disabled="true">
       </button>
     </html:moz-button-group>
   </panel>
