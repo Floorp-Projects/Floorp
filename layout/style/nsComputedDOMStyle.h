@@ -133,7 +133,7 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
       Operation aOperation, mozilla::DeclarationBlock** aCreated) final;
   virtual nsresult SetCSSDeclaration(mozilla::DeclarationBlock*,
                                      mozilla::MutationClosureData*) override;
-  virtual mozilla::dom::Document* DocToUpdate() override;
+  virtual mozilla::dom::Document* DocToUpdate() final;
 
   nsDOMCSSDeclaration::ParsingEnvironment GetParsingEnvironment(
       nsIPrincipal* aSubjectPrincipal) const final;

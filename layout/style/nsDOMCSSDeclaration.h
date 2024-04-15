@@ -138,7 +138,7 @@ class nsDOMCSSDeclaration : public nsICSSDeclaration {
   // Document that we must call BeginUpdate/EndUpdate on around the
   // calls to SetCSSDeclaration and the style rule mutation that leads
   // to it.
-  virtual mozilla::dom::Document* DocToUpdate() = 0;
+  virtual mozilla::dom::Document* DocToUpdate() { return nullptr; }
 
   // mUrlExtraData returns URL data for parsing url values in
   // CSS. Returns nullptr on failure. If mUrlExtraData is nullptr,

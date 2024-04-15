@@ -101,8 +101,6 @@ nsresult CSSStyleRuleDeclaration::SetCSSDeclaration(
   return NS_OK;
 }
 
-Document* CSSStyleRuleDeclaration::DocToUpdate() { return nullptr; }
-
 nsDOMCSSDeclaration::ParsingEnvironment
 CSSStyleRuleDeclaration::GetParsingEnvironment(
     nsIPrincipal* aSubjectPrincipal) const {
