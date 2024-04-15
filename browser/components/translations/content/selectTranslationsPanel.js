@@ -220,7 +220,6 @@ var SelectTranslationsPanel = new (class {
    * @param {string} textToTranslate - The text for which the language detection and target language retrieval are performed.
    * @returns {Promise<{fromLang?: string, toLang?: string}>} - An object containing the language pair for the translation.
    *   The `fromLang` property is omitted if it is a language that is not currently supported by Firefox Translations.
-   *   The `toLang` property is omitted if it is the same as `fromLang`.
    */
   async getLangPairPromise(textToTranslate) {
     const [fromLang, toLang] = await Promise.all([
@@ -228,11 +227,7 @@ var SelectTranslationsPanel = new (class {
       TranslationsParent.getTopPreferredSupportedToLang(),
     ]);
 
-    return {
-      fromLang,
-      // If the fromLang and toLang are the same, discard the toLang.
-      toLang: fromLang === toLang ? undefined : toLang,
-    };
+    return { fromLang, toLang };
   }
 
   /**
@@ -423,18 +418,16 @@ var SelectTranslationsPanel = new (class {
    * Handles events when the panels select from-language is changed.
    */
   onChangeFromLanguage() {
-    const { fromMenuList, toMenuList } = this.elements;
+    const { fromMenuList } = this.elements;
     this.#maybeTranslateOnEvents(["blur", "keypress"], fromMenuList);
-    this.#maybeStealLanguageFrom(toMenuList);
   }
 
   /**
    * Handles events when the panels select to-language is changed.
    */
   onChangeToLanguage() {
-    const { toMenuList, fromMenuList } = this.elements;
+    const { toMenuList } = this.elements;
     this.#maybeTranslateOnEvents(["blur", "keypress"], toMenuList);
-    this.#maybeStealLanguageFrom(fromMenuList);
   }
 
   /**
@@ -447,21 +440,6 @@ var SelectTranslationsPanel = new (class {
     menuList.value = "";
     document.l10n.setAttributes(menuList, "translations-panel-choose-language");
     await document.l10n.translateElements([menuList]);
-  }
-
-  /**
-   * Deselects the language from the target menu list if both menu lists
-   * have the same language selected, simulating the effect of one menu
-   * list stealing the selected language value from the other.
-   *
-   * @param {Element} menuList - The target menu list element to update.
-   */
-  async #maybeStealLanguageFrom(menuList) {
-    const { fromLanguage, toLanguage } = this.#getSelectedLanguagePair();
-    if (fromLanguage === toLanguage) {
-      await this.#deselectLanguage(menuList);
-      this.#maybeFocusMenuList(menuList);
-    }
   }
 
   /**
@@ -704,14 +682,8 @@ var SelectTranslationsPanel = new (class {
 
     let nextPhase = "translatable";
 
-    if (
-      // No from-language is selected, so we cannot translate.
-      !fromLanguage ||
-      // No to-language is selected, so we cannot translate.
-      !toLanguage ||
-      // The same language has been selected, so we cannot translate.
-      fromLanguage === toLanguage
-    ) {
+    if (!fromLanguage || !toLanguage) {
+      // No valid language pair is selected, so we cannot translate.
       nextPhase = "idle";
     } else if (
       // The languages have not changed, so there is nothing to do.
@@ -882,6 +854,7 @@ var SelectTranslationsPanel = new (class {
     }
 
     this.#translator = await Translator.create(fromLanguage, toLanguage, {
+      allowSameLanguage: true,
       requestTranslationsPort: this.#requestTranslationsPort,
     });
     return this.#translator;

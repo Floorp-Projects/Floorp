@@ -1506,7 +1506,7 @@ class SelectTranslationsTestUtils {
     });
     SelectTranslationsTestUtils.#assertPanelHasTranslatedText();
     SelectTranslationsTestUtils.#assertPanelTextAreaHeight();
-    SelectTranslationsTestUtils.#assertPanelTextAreaOverflow();
+    await SelectTranslationsTestUtils.#assertPanelTextAreaOverflow();
   }
 
   static #assertPanelTextAreaDirection(langTag = null) {
@@ -1608,29 +1608,6 @@ class SelectTranslationsTestUtils {
   }
 
   /**
-   * Asserts that the SelectTranslationsPanel UI matches the expected
-   * state when no to-language is selected in the panel.
-   */
-  static async assertPanelViewNoToLangSelected() {
-    const { textArea } = SelectTranslationsPanel.elements;
-    await SelectTranslationsTestUtils.waitForPanelState("idle");
-    ok(
-      !textArea.classList.contains("translating"),
-      "The textarea should not have the translating class."
-    );
-    SelectTranslationsTestUtils.#assertPanelElementVisibility({
-      ...SelectTranslationsTestUtils.#alwaysPresentElements,
-    });
-    SelectTranslationsTestUtils.assertSelectedToLanguage(null);
-    SelectTranslationsTestUtils.#assertConditionalUIEnabled({
-      textArea: false,
-      copyButton: false,
-      translateFullPageButton: false,
-    });
-    await SelectTranslationsTestUtils.#assertPanelHasIdlePlaceholder();
-  }
-
-  /**
    * Asserts that the SelectTranslationsPanel UI contains the
    * idle placeholder text.
    */
@@ -1678,6 +1655,22 @@ class SelectTranslationsTestUtils {
       SelectTranslationsPanel.elements;
     const fromLanguage = fromMenuList.value;
     const toLanguage = toMenuList.value;
+    SelectTranslationsTestUtils.#assertPanelTextAreaDirection(toLanguage);
+    SelectTranslationsTestUtils.#assertConditionalUIEnabled({
+      textArea: true,
+      copyButton: true,
+      translateFullPageButton: true,
+    });
+
+    if (fromLanguage === toLanguage) {
+      is(
+        SelectTranslationsPanel.getSourceText(),
+        SelectTranslationsPanel.getTranslatedText(),
+        "The source text should passthrough as the translated text."
+      );
+      return;
+    }
+
     const translatedSuffix = ` [${fromLanguage} to ${toLanguage}]`;
     ok(
       textArea.value.endsWith(translatedSuffix),
@@ -1689,12 +1682,6 @@ class SelectTranslationsTestUtils {
         translatedSuffix.length,
       "Expected translated text length to correspond to the source text length."
     );
-    SelectTranslationsTestUtils.#assertPanelTextAreaDirection(toLanguage);
-    SelectTranslationsTestUtils.#assertConditionalUIEnabled({
-      textArea: true,
-      copyButton: true,
-      translateFullPageButton: true,
-    });
   }
 
   /**
@@ -1972,9 +1959,10 @@ class SelectTranslationsTestUtils {
       await menuListUpdated;
     }
 
+    menuList.focus();
+    EventUtils.synthesizeKey("KEY_Enter");
+
     if (downloadHandler) {
-      menuList.focus();
-      EventUtils.synthesizeKey("KEY_Enter");
       await SelectTranslationsTestUtils.handleDownloads(options);
     }
 

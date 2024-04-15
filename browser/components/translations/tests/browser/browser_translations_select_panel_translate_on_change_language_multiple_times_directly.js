@@ -79,8 +79,8 @@ add_task(
     await SelectTranslationsTestUtils.openPanel(runInPage, {
       openAtEnglishHyperlink: true,
       expectedFromLanguage: "en",
-      expectedToLanguage: null,
-      onOpenPanel: SelectTranslationsTestUtils.assertPanelViewNoToLangSelected,
+      expectedToLanguage: "en",
+      onOpenPanel: SelectTranslationsTestUtils.assertPanelViewTranslated,
     });
 
     await SelectTranslationsTestUtils.changeSelectedToLanguage(
