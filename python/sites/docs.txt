@@ -1,5 +1,6 @@
 pth:tools/lint/eslint/
-pypi:Sphinx==7.1.2
+pypi:Sphinx==7.1.2 ; python_version <= '3.8'
+pypi:Sphinx==7.2.6 ; python_version > '3.8'
 pypi:boto3==1.33.5
 pypi:fluent.pygments==1.0
 pypi:livereload==2.6.3

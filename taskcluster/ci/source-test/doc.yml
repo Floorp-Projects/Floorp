@@ -4,6 +4,7 @@
 ---
 generate:
     description: Generate the Sphinx documentation
+    use-python: "3.11"
     platform: doc/opt
     treeherder:
         symbol: doc(generate)
@@ -37,6 +38,7 @@ generate:
 
 upload:
     description: Generate and upload the Sphinx documentation
+    use-python: "3.11"
     platform: doc/opt
     attributes:
         code-review: true
