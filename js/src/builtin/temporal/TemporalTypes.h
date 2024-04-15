@@ -183,21 +183,8 @@ struct SecondsAndNanoseconds {
 
   /**
    * Return the nanoseconds value.
-   *
-   * The returned nanoseconds amount can be invalid on overflow. The caller is
-   * responsible for handling the overflow case.
    */
-  constexpr mozilla::CheckedInt64 toNanoseconds() const {
-    mozilla::CheckedInt64 nanos = seconds;
-    nanos *= ToNanoseconds(TemporalUnit::Second);
-    nanos += nanoseconds;
-    return nanos;
-  }
-
-  /**
-   * Return the nanoseconds value.
-   */
-  constexpr Int128 toTotalNanoseconds() const {
+  constexpr Int128 toNanoseconds() const {
     return Int128{seconds} * Int128{ToNanoseconds(TemporalUnit::Second)} +
            Int128{nanoseconds};
   }

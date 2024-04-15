@@ -517,7 +517,7 @@ NormalizedTimeDuration js::temporal::DifferenceTime(const PlainTime& time1,
                                       microseconds, nanoseconds);
 
   // Step 8.
-  MOZ_ASSERT(result.abs().toTotalNanoseconds() <
+  MOZ_ASSERT(result.abs().toNanoseconds() <
              Int128{ToNanoseconds(TemporalUnit::Day)});
 
   // Step 9.
@@ -890,7 +890,7 @@ RoundedTime js::temporal::RoundTime(const PlainTime& time, Increment increment,
   // value near zero. Substitute |divisor| with an equivalent expression.
   // Choose |86'400'000'000'000| which will give a similar result because
   // |quantity| is guaranteed to be lower than |86'400'000'000'000|.
-  int64_t divisor = int64_t(std::min(dayLengthNs.toTotalNanoseconds(),
+  int64_t divisor = int64_t(std::min(dayLengthNs.toNanoseconds(),
                                      Int128{ToNanoseconds(TemporalUnit::Day)}));
   MOZ_ASSERT(divisor > 0);
   MOZ_ASSERT(increment == Increment{1}, "Rounding increment for 'day' is 1");
