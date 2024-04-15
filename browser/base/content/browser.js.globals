@@ -54,7 +54,6 @@
   "BrowserSearch",
   "CreateContainerTabMenu",
   "FillHistoryMenu",
-  "BrowserDownloadsUI",
   "toOpenWindowByType",
   "OpenBrowserWindow",
   "updateEditUIVisibility",
