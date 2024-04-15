@@ -191,14 +191,19 @@ static void CancelOffThreadWasmTier2GeneratorLocked(
     return;
   }
 
+  HelperThreadState().cancelOffThreadWasmTier2Generator(lock);
+}
+
+void GlobalHelperThreadState::cancelOffThreadWasmTier2Generator(
+    AutoLockHelperThreadState& lock) {
   // Remove pending tasks from the tier2 generator worklist and cancel and
   // delete them.
   {
     wasm::Tier2GeneratorTaskPtrVector& worklist =
-        HelperThreadState().wasmTier2GeneratorWorklist(lock);
+        wasmTier2GeneratorWorklist(lock);
     for (size_t i = 0; i < worklist.length(); i++) {
       wasm::Tier2GeneratorTask* task = worklist[i];
-      HelperThreadState().remove(worklist, &i);
+      remove(worklist, &i);
       js_delete(task);
     }
   }
@@ -210,7 +215,7 @@ static void CancelOffThreadWasmTier2GeneratorLocked(
 
   // If there is a running Tier2 generator task, shut it down in a predictable
   // way.  The task will be deleted by the normal deletion logic.
-  for (auto* helper : HelperThreadState().helperTasks(lock)) {
+  for (auto* helper : helperTasks(lock)) {
     if (helper->is<wasm::Tier2GeneratorTask>()) {
       // Set a flag that causes compilation to shortcut itself.
       helper->as<wasm::Tier2GeneratorTask>()->cancel();
@@ -219,11 +224,9 @@ static void CancelOffThreadWasmTier2GeneratorLocked(
       // where the shutdown code is trying to shut down helper threads and the
       // ongoing tier2 compilation is trying to finish, which requires it to
       // have access to helper threads.
-      uint32_t oldFinishedCount =
-          HelperThreadState().wasmTier2GeneratorsFinished(lock);
-      while (HelperThreadState().wasmTier2GeneratorsFinished(lock) ==
-             oldFinishedCount) {
-        HelperThreadState().wait(lock);
+      uint32_t oldFinishedCount = wasmTier2GeneratorsFinished(lock);
+      while (wasmTier2GeneratorsFinished(lock) == oldFinishedCount) {
+        wait(lock);
       }
 
       // At most one of these tasks.
@@ -401,6 +404,11 @@ void js::CancelOffThreadIonCompile(const CompilationSelector& selector) {
     return;
   }
 
+  HelperThreadState().cancelOffThreadIonCompile(selector);
+}
+
+void GlobalHelperThreadState::cancelOffThreadIonCompile(
+    const CompilationSelector& selector) {
   jit::JitRuntime* jitRuntime = GetSelectorRuntime(selector)->jitRuntime();
   MOZ_ASSERT(jitRuntime);
 
@@ -408,13 +416,12 @@ void js::CancelOffThreadIonCompile(const CompilationSelector& selector) {
 
   {
     AutoLockHelperThreadState lock;
-    if (!HelperThreadState().isInitialized(lock)) {
+    if (!isInitialized(lock)) {
       return;
     }
 
     /* Cancel any pending entries for which processing hasn't started. */
-    GlobalHelperThreadState::IonCompileTaskVector& worklist =
-        HelperThreadState().ionWorklist(lock);
+    GlobalHelperThreadState::IonCompileTaskVector& worklist = ionWorklist(lock);
     for (size_t i = 0; i < worklist.length(); i++) {
       jit::IonCompileTask* task = worklist[i];
       if (IonCompileTaskMatches(selector, task)) {
@@ -424,7 +431,7 @@ void js::CancelOffThreadIonCompile(const CompilationSelector& selector) {
         worklist[i]->alloc().lifoAlloc()->setReadWrite();
 
         FinishOffThreadIonCompile(task, lock);
-        HelperThreadState().remove(worklist, &i);
+        remove(worklist, &i);
       }
     }
 
@@ -432,7 +439,7 @@ void js::CancelOffThreadIonCompile(const CompilationSelector& selector) {
     bool cancelled;
     do {
       cancelled = false;
-      for (auto* helper : HelperThreadState().helperTasks(lock)) {
+      for (auto* helper : helperTasks(lock)) {
         if (!helper->is<jit::IonCompileTask>()) {
           continue;
         }
@@ -445,28 +452,27 @@ void js::CancelOffThreadIonCompile(const CompilationSelector& selector) {
         }
       }
       if (cancelled) {
-        HelperThreadState().wait(lock);
+        wait(lock);
       }
     } while (cancelled);
 
     /* Cancel code generation for any completed entries. */
     GlobalHelperThreadState::IonCompileTaskVector& finished =
-        HelperThreadState().ionFinishedList(lock);
+        ionFinishedList(lock);
     for (size_t i = 0; i < finished.length(); i++) {
       jit::IonCompileTask* task = finished[i];
       if (IonCompileTaskMatches(selector, task)) {
         JSRuntime* rt = task->script()->runtimeFromAnyThread();
-        rt->jitRuntime()->numFinishedOffThreadTasksRef(lock)--;
+        jitRuntime->numFinishedOffThreadTasksRef(lock)--;
         jit::FinishOffThreadTask(rt, freeTask, task);
-        HelperThreadState().remove(finished, &i);
+        remove(finished, &i);
       }
     }
   }
 
   /* Cancel lazy linking for pending tasks (attached to the ionScript). */
   JSRuntime* runtime = GetSelectorRuntime(selector);
-  jit::IonCompileTask* task =
-      runtime->jitRuntime()->ionLazyLinkList(runtime).getFirst();
+  jit::IonCompileTask* task = jitRuntime->ionLazyLinkList(runtime).getFirst();
   while (task) {
     jit::IonCompileTask* next = task->getNext();
     if (IonCompileTaskMatches(selector, task)) {
@@ -488,29 +494,27 @@ bool js::HasOffThreadIonCompile(Zone* zone) {
     return false;
   }
 
-  GlobalHelperThreadState::IonCompileTaskVector& worklist =
-      HelperThreadState().ionWorklist(lock);
-  for (size_t i = 0; i < worklist.length(); i++) {
-    jit::IonCompileTask* task = worklist[i];
+  return HelperThreadState().hasOffThreadIonCompile(zone, lock);
+}
+
+bool GlobalHelperThreadState::hasOffThreadIonCompile(
+    Zone* zone, AutoLockHelperThreadState& lock) {
+  for (jit::IonCompileTask* task : ionWorklist(lock)) {
     if (task->script()->zoneFromAnyThread() == zone) {
       return true;
     }
   }
 
-  for (auto* helper : HelperThreadState().helperTasks(lock)) {
-    if (!helper->is<jit::IonCompileTask>()) {
-      continue;
-    }
-    JSScript* script = helper->as<jit::IonCompileTask>()->script();
-    if (script->zoneFromAnyThread() == zone) {
-      return true;
+  for (auto* helper : helperTasks(lock)) {
+    if (helper->is<jit::IonCompileTask>()) {
+      JSScript* script = helper->as<jit::IonCompileTask>()->script();
+      if (script->zoneFromAnyThread() == zone) {
+        return true;
+      }
     }
   }
 
-  GlobalHelperThreadState::IonCompileTaskVector& finished =
-      HelperThreadState().ionFinishedList(lock);
-  for (size_t i = 0; i < finished.length(); i++) {
-    jit::IonCompileTask* task = finished[i];
+  for (jit::IonCompileTask* task : ionFinishedList(lock)) {
     if (task->script()->zoneFromAnyThread() == zone) {
       return true;
     }
@@ -518,13 +522,10 @@ bool js::HasOffThreadIonCompile(Zone* zone) {
 
   JSRuntime* rt = zone->runtimeFromMainThread();
   if (rt->hasJitRuntime()) {
-    jit::IonCompileTask* task =
-        rt->jitRuntime()->ionLazyLinkList(rt).getFirst();
-    while (task) {
+    for (jit::IonCompileTask* task : rt->jitRuntime()->ionLazyLinkList(rt)) {
       if (task->script()->zone() == zone) {
         return true;
       }
-      task = task->getNext();
     }
   }
 
@@ -642,9 +643,9 @@ void FreeDelazifyTask::runHelperThreadTask(AutoLockHelperThreadState& locked) {
   js_delete(this);
 }
 
-static void CancelPendingDelazifyTask(JSRuntime* rt,
-                                      AutoLockHelperThreadState& lock) {
-  auto& delazifyList = HelperThreadState().delazifyWorklist(lock);
+void GlobalHelperThreadState::cancelPendingDelazifyTask(
+    JSRuntime* rt, AutoLockHelperThreadState& lock) {
+  auto& delazifyList = delazifyWorklist(lock);
 
   auto end = delazifyList.end();
   for (auto iter = delazifyList.begin(); iter != end;) {
@@ -657,21 +658,17 @@ static void CancelPendingDelazifyTask(JSRuntime* rt,
   }
 }
 
-static void WaitUntilCancelledDelazifyTasks(JSRuntime* rt,
-                                            AutoLockHelperThreadState& lock) {
-  if (!HelperThreadState().isInitialized(lock)) {
-    return;
-  }
-
+void GlobalHelperThreadState::waitUntilCancelledDelazifyTasks(
+    JSRuntime* rt, AutoLockHelperThreadState& lock) {
   while (true) {
-    CancelPendingDelazifyTask(rt, lock);
+    cancelPendingDelazifyTask(rt, lock);
 
     // If running tasks are delazifying any functions, then we have to wait
     // until they complete to remove them from the pending list. DelazifyTask
     // are inserting themself back to be processed once more after delazifying a
     // function.
     bool inProgress = false;
-    for (auto* helper : HelperThreadState().helperTasks(lock)) {
+    for (auto* helper : helperTasks(lock)) {
       if (helper->is<DelazifyTask>() &&
           helper->as<DelazifyTask>()->runtimeMatchesOrNoRuntime(rt)) {
         inProgress = true;
@@ -682,30 +679,17 @@ static void WaitUntilCancelledDelazifyTasks(JSRuntime* rt,
       break;
     }
 
-    HelperThreadState().wait(lock);
+    wait(lock);
   }
 
-#ifdef DEBUG
-  for (DelazifyTask* task : HelperThreadState().delazifyWorklist(lock)) {
-    MOZ_ASSERT(!task->runtimeMatchesOrNoRuntime(rt));
-  }
-  for (auto* helper : HelperThreadState().helperTasks(lock)) {
-    MOZ_ASSERT_IF(helper->is<DelazifyTask>(),
-                  !helper->as<DelazifyTask>()->runtimeMatchesOrNoRuntime(rt));
-  }
-#endif
+  MOZ_ASSERT(!hasAnyDelazifyTask(rt, lock));
 }
 
-static void WaitUntilEmptyFreeDelazifyTaskVector(
+void GlobalHelperThreadState::waitUntilEmptyFreeDelazifyTaskVector(
     AutoLockHelperThreadState& lock) {
-  if (!HelperThreadState().isInitialized(lock)) {
-    return;
-  }
-
   while (true) {
     bool inProgress = false;
-    auto& freeList = HelperThreadState().freeDelazifyTaskVector(lock);
-    if (!freeList.empty()) {
+    if (!freeDelazifyTaskVector(lock).empty()) {
       inProgress = true;
     }
 
@@ -713,7 +697,7 @@ static void WaitUntilEmptyFreeDelazifyTaskVector(
     // until they complete to remove them from the pending list. DelazifyTask
     // are inserting themself back to be processed once more after delazifying a
     // function.
-    for (auto* helper : HelperThreadState().helperTasks(lock)) {
+    for (auto* helper : helperTasks(lock)) {
       if (helper->is<FreeDelazifyTask>()) {
         inProgress = true;
         break;
@@ -723,31 +707,35 @@ static void WaitUntilEmptyFreeDelazifyTaskVector(
       break;
     }
 
-    HelperThreadState().wait(lock);
+    wait(lock);
   }
 }
 
 void js::CancelOffThreadDelazify(JSRuntime* runtime) {
   AutoLockHelperThreadState lock;
 
+  if (!HelperThreadState().isInitialized(lock)) {
+    return;
+  }
+
   // Cancel all Delazify tasks from the given runtime, and wait if tasks are
   // from the given runtime are being executed.
-  WaitUntilCancelledDelazifyTasks(runtime, lock);
+  HelperThreadState().waitUntilCancelledDelazifyTasks(runtime, lock);
 
   // Empty the free list of delazify task, in case one of the delazify task
   // ended and therefore did not returned to the pending list of delazify tasks.
-  WaitUntilEmptyFreeDelazifyTaskVector(lock);
+  HelperThreadState().waitUntilEmptyFreeDelazifyTaskVector(lock);
 }
 
-static bool HasAnyDelazifyTask(JSRuntime* rt, AutoLockHelperThreadState& lock) {
-  auto& delazifyList = HelperThreadState().delazifyWorklist(lock);
-  for (auto task : delazifyList) {
+bool GlobalHelperThreadState::hasAnyDelazifyTask(
+    JSRuntime* rt, AutoLockHelperThreadState& lock) {
+  for (auto task : delazifyWorklist(lock)) {
     if (task->runtimeMatchesOrNoRuntime(rt)) {
       return true;
     }
   }
 
-  for (auto* helper : HelperThreadState().helperTasks(lock)) {
+  for (auto* helper : helperTasks(lock)) {
     if (helper->is<DelazifyTask>() &&
         helper->as<DelazifyTask>()->runtimeMatchesOrNoRuntime(rt)) {
       return true;
@@ -764,7 +752,7 @@ void js::WaitForAllDelazifyTasks(JSRuntime* rt) {
   }
 
   while (true) {
-    if (!HasAnyDelazifyTask(rt, lock)) {
+    if (!HelperThreadState().hasAnyDelazifyTask(rt, lock)) {
       break;
     }
 
@@ -1485,18 +1473,20 @@ void js::CancelOffThreadCompressions(JSRuntime* runtime) {
   }
 
   AutoLockHelperThreadState lock;
+  HelperThreadState().cancelOffThreadCompressions(runtime, lock);
+}
 
+void GlobalHelperThreadState::cancelOffThreadCompressions(
+    JSRuntime* runtime, AutoLockHelperThreadState& lock) {
   // Cancel all pending compression tasks.
-  ClearCompressionTaskList(HelperThreadState().compressionPendingList(lock),
-                           runtime);
-  ClearCompressionTaskList(HelperThreadState().compressionWorklist(lock),
-                           runtime);
+  ClearCompressionTaskList(compressionPendingList(lock), runtime);
+  ClearCompressionTaskList(compressionWorklist(lock), runtime);
 
   // Cancel all in-process compression tasks and wait for them to join so we
   // clean up the finished tasks.
   while (true) {
     bool inProgress = false;
-    for (auto* helper : HelperThreadState().helperTasks(lock)) {
+    for (auto* helper : helperTasks(lock)) {
       if (!helper->is<SourceCompressionTask>()) {
         continue;
       }
@@ -1510,12 +1500,11 @@ void js::CancelOffThreadCompressions(JSRuntime* runtime) {
       break;
     }
 
-    HelperThreadState().wait(lock);
+    wait(lock);
   }
 
   // Clean up finished tasks.
-  ClearCompressionTaskList(HelperThreadState().compressionFinishedList(lock),
-                           runtime);
+  ClearCompressionTaskList(compressionFinishedList(lock), runtime);
 }
 
 void js::AttachFinishedCompressions(JSRuntime* runtime,
@@ -1545,17 +1534,21 @@ void js::RunPendingSourceCompressions(JSRuntime* runtime) {
   }
 
   AutoLockHelperThreadState lock;
+  HelperThreadState().runPendingSourceCompressions(runtime, lock);
+}
 
-  HelperThreadState().startHandlingCompressionTasks(
+void GlobalHelperThreadState::runPendingSourceCompressions(
+    JSRuntime* runtime, AutoLockHelperThreadState& lock) {
+  startHandlingCompressionTasks(
       GlobalHelperThreadState::ScheduleCompressionTask::API, nullptr, lock);
 
   // Wait until all tasks have started compression.
-  while (!HelperThreadState().compressionWorklist(lock).empty()) {
-    HelperThreadState().wait(lock);
+  while (!compressionWorklist(lock).empty()) {
+    wait(lock);
   }
 
   // Wait for all in-process compression tasks to complete.
-  HelperThreadState().waitForAllTasksLocked(lock);
+  waitForAllTasksLocked(lock);
 
   AttachFinishedCompressions(runtime, lock);
 }
@@ -1641,7 +1634,7 @@ void GlobalHelperThreadState::trace(JSTracer* trc) {
       task->trace(trc);
     }
 
-    for (auto* helper : HelperThreadState().helperTasks(lock)) {
+    for (auto* helper : helperTasks(lock)) {
       if (helper->is<jit::IonCompileTask>()) {
         jit::IonCompileTask* ionCompileTask = helper->as<jit::IonCompileTask>();
         ionCompileTask->alloc().lifoAlloc()->setReadWrite();
