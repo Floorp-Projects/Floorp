@@ -13,7 +13,8 @@ add_task(
     const { cleanup, runInPage, resolveDownloads } = await loadTestPage({
       page: SELECT_TEST_PAGE_URL,
       languagePairs: [
-        // Do not include Spanish.
+        { fromLang: "es", toLang: "en" },
+        { fromLang: "en", toLang: "es" },
         { fromLang: "fa", toLang: "en" },
         { fromLang: "en", toLang: "fa" },
         { fromLang: "fi", toLang: "en" },
@@ -31,10 +32,10 @@ add_task(
     await SelectTranslationsTestUtils.openPanel(runInPage, {
       selectSpanishSentence: true,
       openAtSpanishSentence: true,
-      expectedFromLanguage: null,
+      expectedFromLanguage: "es",
       expectedToLanguage: "en",
-      onOpenPanel:
-        SelectTranslationsTestUtils.assertPanelViewNoFromLangSelected,
+      downloadHandler: resolveDownloads,
+      onOpenPanel: SelectTranslationsTestUtils.assertPanelViewTranslated,
     });
 
     await SelectTranslationsTestUtils.changeSelectedFromLanguage(

@@ -1439,21 +1439,6 @@ class SelectTranslationsTestUtils {
   }
 
   /**
-   * Elements that should always be visible in the SelectTranslationsPanel.
-   */
-  static #alwaysPresentElements = {
-    betaIcon: true,
-    copyButton: true,
-    doneButton: true,
-    fromLabel: true,
-    fromMenuList: true,
-    header: true,
-    toLabel: true,
-    toMenuList: true,
-    textArea: true,
-  };
-
-  /**
    * Asserts that for each provided expectation, the visible state of the corresponding
    * element in FullPageTranslationsPanel.elements both exists and matches the visibility expectation.
    *
@@ -1464,7 +1449,18 @@ class SelectTranslationsTestUtils {
     SharedTranslationsTestUtils._assertPanelElementVisibility(
       SelectTranslationsPanel.elements,
       {
-        ...SelectTranslationsTestUtils.#alwaysPresentElements,
+        betaIcon: false,
+        copyButton: false,
+        doneButton: false,
+        fromLabel: false,
+        fromMenuList: false,
+        fromMenuPopup: false,
+        header: false,
+        textArea: false,
+        toLabel: false,
+        toMenuList: false,
+        toMenuPopup: false,
+        translateFullPageButton: false,
         // Overwrite any of the above defaults with the passed in expectations.
         ...expectations,
       }
@@ -1503,11 +1499,21 @@ class SelectTranslationsTestUtils {
       "The textarea should not have the translating class."
     );
     SelectTranslationsTestUtils.#assertPanelElementVisibility({
-      ...SelectTranslationsTestUtils.#alwaysPresentElements,
+      betaIcon: true,
+      copyButton: true,
+      doneButton: true,
+      fromLabel: true,
+      fromMenuList: true,
+      header: true,
+      textArea: true,
+      toLabel: true,
+      toMenuList: true,
+      translateFullPageButton: true,
     });
     SelectTranslationsTestUtils.#assertConditionalUIEnabled({
       textArea: true,
       copyButton: true,
+      doneButton: true,
       translateFullPageButton: true,
     });
     SelectTranslationsTestUtils.#assertPanelHasTranslatedText();
@@ -1585,49 +1591,18 @@ class SelectTranslationsTestUtils {
       "The textarea should have the translating class."
     );
     SelectTranslationsTestUtils.#assertPanelElementVisibility({
-      ...SelectTranslationsTestUtils.#alwaysPresentElements,
+      betaIcon: true,
+      copyButton: true,
+      doneButton: true,
+      fromLabel: true,
+      fromMenuList: true,
+      header: true,
+      textArea: true,
+      toLabel: true,
+      toMenuList: true,
+      translateFullPageButton: true,
     });
     SelectTranslationsTestUtils.#assertPanelHasTranslatingPlaceholder();
-  }
-
-  /**
-   * Asserts that the SelectTranslationsPanel UI matches the expected
-   * state when no from-language is selected in the panel.
-   */
-  static async assertPanelViewNoFromLangSelected() {
-    const { textArea } = SelectTranslationsPanel.elements;
-    await SelectTranslationsTestUtils.waitForPanelState("idle");
-    ok(
-      !textArea.classList.contains("translating"),
-      "The textarea should not have the translating class."
-    );
-    SelectTranslationsTestUtils.#assertPanelElementVisibility({
-      ...SelectTranslationsTestUtils.#alwaysPresentElements,
-    });
-    await SelectTranslationsTestUtils.#assertPanelHasIdlePlaceholder();
-    SelectTranslationsTestUtils.#assertConditionalUIEnabled({
-      textArea: false,
-      copyButton: false,
-      translateFullPageButton: false,
-    });
-    SelectTranslationsTestUtils.assertSelectedFromLanguage(null);
-  }
-
-  /**
-   * Asserts that the SelectTranslationsPanel UI contains the
-   * idle placeholder text.
-   */
-  static async #assertPanelHasIdlePlaceholder() {
-    const { textArea } = SelectTranslationsPanel.elements;
-    const expected = await document.l10n.formatValue(
-      "select-translations-panel-idle-placeholder-text"
-    );
-    is(
-      textArea.value,
-      expected,
-      "Translated text area should be the idle placeholder."
-    );
-    SelectTranslationsTestUtils.#assertPanelTextAreaDirection();
   }
 
   /**
@@ -1648,6 +1623,7 @@ class SelectTranslationsTestUtils {
     SelectTranslationsTestUtils.#assertConditionalUIEnabled({
       textArea: true,
       copyButton: false,
+      doneButton: true,
       translateFullPageButton: true,
     });
   }
@@ -1665,6 +1641,7 @@ class SelectTranslationsTestUtils {
     SelectTranslationsTestUtils.#assertConditionalUIEnabled({
       textArea: true,
       copyButton: true,
+      doneButton: true,
       translateFullPageButton: true,
     });
 
@@ -1693,34 +1670,27 @@ class SelectTranslationsTestUtils {
   /**
    * Asserts the enabled state of action buttons in the SelectTranslationsPanel.
    *
-   * @param {boolean} expectEnabled - Whether the buttons should be enabled (true) or not (false).
+   * @param {Record<string, boolean>} enabledStates
+   *  - An object that maps whether each element should be enabled (true) or disabled (false).
    */
-  static #assertConditionalUIEnabled({
-    copyButton: copyButtonEnabled,
-    translateFullPageButton: translateFullPageButtonEnabled,
-    textArea: textAreaEnabled,
-  }) {
-    const { copyButton, translateFullPageButton, textArea } =
-      SelectTranslationsPanel.elements;
-    is(
-      copyButton.disabled,
-      !copyButtonEnabled,
-      `The copy button should be ${copyButtonEnabled ? "enabled" : "disabled"}.`
-    );
-    is(
-      translateFullPageButton.disabled,
-      !translateFullPageButtonEnabled,
-      `The translate-full-page button should be ${
-        translateFullPageButtonEnabled ? "enabled" : "disabled"
-      }.`
-    );
-    is(
-      textArea.disabled,
-      !textAreaEnabled,
-      `The translated-text area should be ${
-        textAreaEnabled ? "enabled" : "disabled"
-      }.`
-    );
+  static #assertConditionalUIEnabled(enabledStates) {
+    const elements = SelectTranslationsPanel.elements;
+
+    for (const [elementName, isEnabled] of Object.entries(enabledStates)) {
+      const element = elements[elementName];
+      if (!element) {
+        throw new Error(
+          `SelectTranslationsPanel element '${elementName}' not found.`
+        );
+      }
+      is(
+        element.disabled,
+        !isEnabled,
+        `The element '${elementName} should be ${
+          isEnabled ? "enabled" : "disabled"
+        }.`
+      );
+    }
   }
 
   /**
