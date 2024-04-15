@@ -14,6 +14,7 @@ from six import StringIO
 
 from mozbuild.configure import ConfigureError, ConfigureSandbox
 from mozbuild.configure.options import (
+    ConflictingOptionError,
     InvalidOptionError,
     NegativeOptionValue,
     PositiveOptionValue,
@@ -1132,6 +1133,49 @@ class TestConfigure(unittest.TestCase):
                 self.get_config(["--without-foo", "--with-qux"])
 
             self.assertEqual(str(e.exception), message)
+
+    def test_imply_option_conflict(self):
+        moz_configure = """
+            option('--with-foo', help='foo')
+            option('--with-env-foo', help='foo')
+            imply_option('--with-qux', True)
+            imply_option('QUX', "FOO", when='--with-env-foo')
+            imply_option('--with-qux', "FOO", when='--with-foo')
+            option('--with-qux', env="QUX", nargs='*', help='qux')
+            set_config('QUX', depends('--with-qux')(lambda x: x))
+        """
+        with self.assertRaises(ConflictingOptionError) as e:
+            with self.moz_configure(moz_configure):
+                self.get_config(["--with-foo"])
+
+        self.assertEqual(
+            str(e.exception),
+            "Cannot add '--with-qux=FOO' to the implied set because it conflicts"
+            " with '--with-qux' that was added earlier",
+        )
+
+        with self.assertRaises(InvalidOptionError) as e:
+            with self.moz_configure(moz_configure):
+                self.get_config(["--with-env-foo"])
+
+        config_path = mozpath.abspath(mozpath.join(test_data_path, "moz.configure"))
+
+        # TODO: the error message is weird.
+        self.assertEqual(
+            str(e.exception),
+            "'QUX=FOO' implied by 'imply_option at %s:5' conflicts "
+            "with '--with-qux' from the implied" % config_path,
+        )
+
+        with self.assertRaises(InvalidOptionError) as e:
+            with self.moz_configure(moz_configure):
+                self.get_config(["--with-foo", "--with-env-foo"])
+
+        self.assertEqual(
+            str(e.exception),
+            "Cannot add '--with-qux=FOO' to the implied set because it conflicts"
+            " with '--with-qux' that was added earlier",
+        )
 
     def test_option_failures(self):
         with self.assertRaises(ConfigureError) as e:
