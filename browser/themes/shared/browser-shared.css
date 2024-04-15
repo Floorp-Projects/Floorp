@@ -656,7 +656,7 @@ menupopup::part(drop-indicator) {
       float: inline-end;
       background-color: transparent;
       flex-direction: row-reverse;
-      /* Override proton-doorhanger default styles that increase the size of the button */
+      /* Override doorhanger default styles that increase the size of the button */
       margin: 0;
     }
 

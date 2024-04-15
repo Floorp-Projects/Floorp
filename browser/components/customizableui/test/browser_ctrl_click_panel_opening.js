@@ -13,8 +13,8 @@ add_task(async function test_appMenu_mainView() {
     return;
   }
 
-  let mainViewID = "appMenu-protonMainView";
-  const mainView = document.getElementById(mainViewID);
+  let mainViewID = "appMenu-mainView";
+  const mainView = PanelMultiView.getViewNode(document, mainViewID);
 
   let shownPromise = BrowserTestUtils.waitForEvent(mainView, "ViewShown");
   // Should still open the panel when Ctrl key is pressed.
