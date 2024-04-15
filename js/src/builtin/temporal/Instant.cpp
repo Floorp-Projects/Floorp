@@ -552,18 +552,6 @@ bool js::temporal::ToTemporalInstant(JSContext* cx, Handle<Value> item,
 }
 
 /**
- * AddNormalizedTimeDurationToEpochNanoseconds ( d, epochNs )
- */
-Instant js::temporal::AddNormalizedTimeDurationToEpochNanoseconds(
-    const NormalizedTimeDuration& d, const Instant& epochNs) {
-  MOZ_ASSERT(IsValidNormalizedTimeDuration(d));
-  MOZ_ASSERT(IsValidEpochInstant(epochNs));
-
-  // Step 1.
-  return epochNs + d.to<InstantSpan>();
-}
-
-/**
  * AddInstant ( epochNanoseconds, hours, minutes, seconds, milliseconds,
  * microseconds, nanoseconds )
  */
@@ -573,8 +561,8 @@ bool js::temporal::AddInstant(JSContext* cx, const Instant& instant,
   MOZ_ASSERT(IsValidEpochInstant(instant));
   MOZ_ASSERT(IsValidNormalizedTimeDuration(duration));
 
-  // Step 1.
-  auto r = AddNormalizedTimeDurationToEpochNanoseconds(duration, instant);
+  // Step 1. (Inlined AddNormalizedTimeDurationToEpochNanoseconds)
+  auto r = instant + duration.to<InstantSpan>();
 
   // Step 2.
   if (!IsValidEpochInstant(r)) {

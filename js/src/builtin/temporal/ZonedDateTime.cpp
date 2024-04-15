@@ -10,6 +10,7 @@
 #include "mozilla/Maybe.h"
 
 #include <cstdlib>
+#include <limits>
 #include <utility>
 
 #include "jspubtd.h"
@@ -903,16 +904,12 @@ static bool NormalizedTimeDurationToDays(
   const auto& startNs = zonedRelativeTo.instant();
 
   // Step 5.
-  auto endNs = AddNormalizedTimeDurationToEpochNanoseconds(duration, startNs);
-
-  // Step 6.
-  if (!IsValidEpochInstant(endNs)) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_TEMPORAL_INSTANT_INVALID);
+  Instant endNs;
+  if (!AddInstant(cx, startNs, duration, &endNs)) {
     return false;
   }
 
-  // Steps 4 and 8.
+  // Steps 4 and 7.
   PlainDateTime startDateTime;
   if (!precalculatedPlainDateTime) {
     if (!GetPlainDateTimeFor(cx, timeZone, startNs, &startDateTime)) {
@@ -922,31 +919,29 @@ static bool NormalizedTimeDurationToDays(
     startDateTime = *precalculatedPlainDateTime;
   }
 
-  // Steps 7 and 9.
+  // Steps 6 and 8.
   PlainDateTime endDateTime;
   if (!GetPlainDateTimeFor(cx, timeZone, endNs, &endDateTime)) {
     return false;
   }
 
-  // Steps 10-11. (Not applicable in our implementation.)
+  // Steps 9-10. (Not applicable in our implementation.)
+
+  // Step 11.
+  int32_t days = DaysUntil(startDateTime.date, endDateTime.date);
+  MOZ_ASSERT(std::abs(days) <= 200'000'000);
 
   // Step 12.
-  //
-  // Overflows in step 21 can be safely ignored, because they take too long to
-  // happen for int64.
-  int64_t days = DaysUntil(startDateTime.date, endDateTime.date);
-
-  // Step 13.
   int32_t timeSign = CompareTemporalTime(startDateTime.time, endDateTime.time);
 
-  // Steps 14-15.
+  // Steps 13-14.
   if (days > 0 && timeSign > 0) {
     days -= 1;
   } else if (days < 0 && timeSign < 0) {
     days += 1;
   }
 
-  // Step 16.
+  // Step 15.
   PlainDateTimeAndInstant relativeResult;
   if (!::AddDaysToZonedDateTime(cx, startNs, startDateTime, timeZone,
                                 zonedRelativeTo.calendar(), days,
@@ -956,48 +951,85 @@ static bool NormalizedTimeDurationToDays(
   MOZ_ASSERT(IsValidISODateTime(relativeResult.dateTime));
   MOZ_ASSERT(IsValidEpochInstant(relativeResult.instant));
 
-  // Step 17.
-  if (sign > 0) {
-    // Step 17.a.
-    while (days > 0 && relativeResult.instant > endNs) {
-      // This loop can iterate indefinitely when given a specially crafted
-      // time zone object, so we need to check for interrupts.
-      if (!CheckForInterrupt(cx)) {
-        return false;
-      }
+  // Step 16.
+  if (sign > 0 && days > 0 && relativeResult.instant > endNs) {
+    // Step 16.a.
+    days -= 1;
 
-      // Step 17.a.i.
-      days -= 1;
-
-      // Step 17.a.ii.
-      if (!::AddDaysToZonedDateTime(
-              cx, startNs, startDateTime, timeZone, zonedRelativeTo.calendar(),
-              days, TemporalOverflow::Constrain, &relativeResult)) {
-        return false;
-      }
-      MOZ_ASSERT(IsValidISODateTime(relativeResult.dateTime));
-      MOZ_ASSERT(IsValidEpochInstant(relativeResult.instant));
+    // Step 16.b.
+    if (!::AddDaysToZonedDateTime(
+            cx, startNs, startDateTime, timeZone, zonedRelativeTo.calendar(),
+            days, TemporalOverflow::Constrain, &relativeResult)) {
+      return false;
     }
+    MOZ_ASSERT(IsValidISODateTime(relativeResult.dateTime));
+    MOZ_ASSERT(IsValidEpochInstant(relativeResult.instant));
 
+    // Step 16.c.
+    if (days > 0 && relativeResult.instant > endNs) {
+      JS_ReportErrorNumberASCII(
+          cx, GetErrorMessage, nullptr,
+          JSMSG_TEMPORAL_ZONED_DATE_TIME_INCONSISTENT_INSTANT);
+      return false;
+    }
     MOZ_ASSERT_IF(days > 0, relativeResult.instant <= endNs);
   }
 
   MOZ_ASSERT_IF(days == 0, relativeResult.instant == startNs);
 
-  // Step 18. (Inlined NormalizedTimeDurationFromEpochNanosecondsDifference)
+  // Step 17. (Inlined NormalizedTimeDurationFromEpochNanosecondsDifference)
   auto ns = endNs - relativeResult.instant;
   MOZ_ASSERT(IsValidInstantSpan(ns));
 
-  // Steps 19-21.
-  auto dayLengthNs = InstantSpan{};
-  while (true) {
-    // This loop can iterate indefinitely when given a specially crafted time
-    // zone object, so we need to check for interrupts.
-    if (!CheckForInterrupt(cx)) {
-      return false;
-    }
+  // Step 18.
+  PlainDateTimeAndInstant oneDayFarther;
+  if (!::AddDaysToZonedDateTime(cx, relativeResult.instant,
+                                relativeResult.dateTime, timeZone,
+                                zonedRelativeTo.calendar(), sign,
+                                TemporalOverflow::Constrain, &oneDayFarther)) {
+    return false;
+  }
+  MOZ_ASSERT(IsValidISODateTime(oneDayFarther.dateTime));
+  MOZ_ASSERT(IsValidEpochInstant(oneDayFarther.instant));
 
+  // FIXME: spec issue - bad markup for |oneDayFarther|.
+
+  // Step 19. (Inlined NormalizedTimeDurationFromEpochNanosecondsDifference)
+  auto dayLengthNs = oneDayFarther.instant - relativeResult.instant;
+  MOZ_ASSERT(IsValidInstantSpan(dayLengthNs));
+
+  // clang-format off
+  //
+  // ns = endNs - relativeResult.instant
+  // dayLengthNs = oneDayFarther.instant - relativeResult.instant
+  // oneDayLess = ns - dayLengthNs
+  //            = (endNs - relativeResult.instant) - (oneDayFarther.instant - relativeResult.instant)
+  //            = endNs - relativeResult.instant - oneDayFarther.instant + relativeResult.instant
+  //            = endNs - oneDayFarther.instant
+  //
+  // |endNs| and |oneDayFarther.instant| are both valid epoch instant values,
+  // so the difference |oneDayLess| is a valid epoch instant difference value.
+  //
+  // clang-format on
+
+  // Step 20. (Inlined SubtractNormalizedTimeDuration)
+  auto oneDayLess = ns - dayLengthNs;
+  MOZ_ASSERT(IsValidInstantSpan(oneDayLess));
+  MOZ_ASSERT(oneDayLess == (endNs - oneDayFarther.instant));
+
+  // Step 21.
+  if (oneDayLess == InstantSpan{} ||
+      ((oneDayLess < InstantSpan{}) == (sign < 0))) {
     // Step 21.a.
+    ns = oneDayLess;
+
+    // Step 21.b.
+    relativeResult = oneDayFarther;
+
+    // Step 21.c.
+    days += sign;
+
+    // Step 21.d.
     PlainDateTimeAndInstant oneDayFarther;
     if (!::AddDaysToZonedDateTime(
             cx, relativeResult.instant, relativeResult.dateTime, timeZone,
@@ -1008,63 +1040,42 @@ static bool NormalizedTimeDurationToDays(
     MOZ_ASSERT(IsValidISODateTime(oneDayFarther.dateTime));
     MOZ_ASSERT(IsValidEpochInstant(oneDayFarther.instant));
 
-    // Step 21.b. (Inlined NormalizedTimeDurationFromEpochNanosecondsDifference)
+    // FIXME: spec issue - bad markup for |oneDayFarther|.
+
+    // Step 21.e. (Inlined NormalizedTimeDurationFromEpochNanosecondsDifference)
     dayLengthNs = oneDayFarther.instant - relativeResult.instant;
     MOZ_ASSERT(IsValidInstantSpan(dayLengthNs));
 
     // clang-format off
     //
-    // First iteration:
-    //
-    // ns = endNs - relativeResult.instant
-    // dayLengthNs = oneDayFarther.instant - relativeResult.instant
-    // diff = ns - dayLengthNs
-    //      = (endNs - relativeResult.instant) - (oneDayFarther.instant - relativeResult.instant)
-    //      = endNs - relativeResult.instant - oneDayFarther.instant + relativeResult.instant
-    //      = endNs - oneDayFarther.instant
-    //
-    // Second iteration:
-    //
-    // ns = diff'
+    // ns = oneDayLess'
     //    = endNs - oneDayFarther.instant'
     // relativeResult.instant = oneDayFarther.instant'
     // dayLengthNs = oneDayFarther.instant - relativeResult.instant
     //             = oneDayFarther.instant - oneDayFarther.instant'
-    // diff = ns - dayLengthNs
-    //      = (endNs - oneDayFarther.instant') - (oneDayFarther.instant - oneDayFarther.instant')
-    //      = endNs - oneDayFarther.instant' - oneDayFarther.instant + oneDayFarther.instant'
-    //      = endNs - oneDayFarther.instant
+    // oneDayLess = ns - dayLengthNs
+    //            = (endNs - oneDayFarther.instant') - (oneDayFarther.instant - oneDayFarther.instant')
+    //            = endNs - oneDayFarther.instant' - oneDayFarther.instant + oneDayFarther.instant'
+    //            = endNs - oneDayFarther.instant
     //
-    // Where |diff'| and |oneDayFarther.instant'| denote the variables from the
-    // previous iteration.
-    //
-    // This repeats for all following iterations.
+    // Where |oneDayLess'| and |oneDayFarther.instant'| denote the variables
+    // from before this if-statement block.
     //
     // |endNs| and |oneDayFarther.instant| are both valid epoch instant values,
-    // so the difference is a valid epoch instant difference value, too.
+    // so the difference |oneDayLess| is a valid epoch instant difference value.
     //
     // clang-format on
 
-    // FIXME: spec issue - SubtractNormalizedTimeDuration should be infallible
+    // FIXME: spec issue - SubtractNormalizedTimeDuration is infallible
 
-    // Step 21.c. (Inlined SubtractNormalizedTimeDuration)
+    // Step 21.f.
     auto oneDayLess = ns - dayLengthNs;
-    MOZ_ASSERT(IsValidInstantSpan(oneDayLess));
-    MOZ_ASSERT(oneDayLess == (endNs - oneDayFarther.instant));
-
     if (oneDayLess == InstantSpan{} ||
         ((oneDayLess < InstantSpan{}) == (sign < 0))) {
-      // Step 21.c.i.
-      ns = oneDayLess;
-
-      // Step 21.c.ii.
-      relativeResult = oneDayFarther;
-
-      // Step 21.c.iii.
-      days += sign;
-    } else {
-      // Step 21.d.
-      break;
+      JS_ReportErrorNumberASCII(
+          cx, GetErrorMessage, nullptr,
+          JSMSG_TEMPORAL_ZONED_DATE_TIME_INCONSISTENT_INSTANT);
+      return false;
     }
   }
 
@@ -1126,23 +1137,12 @@ static bool NormalizedTimeDurationToDays(
   MOZ_ASSERT(timeNanos == Int128{int64_t(timeNanos)},
              "abs(ns) < dayLengthNs < 2**53 implies that |ns| fits in int64");
 
-  // FIXME: spec issue - restrict days to 2**53 / (24*60*60)?
-
-  // Valid duration days are smaller than ⌈(2**53) / (24 * 60 * 60)⌉.
-  static constexpr int64_t durationDays = (int64_t(1) << 53) / (24 * 60 * 60);
-
-  // NOTE: This case won't happen in practice, because the initial value of
-  // |days| is at most ±200'000'000 and the loop can only increment resp.
-  // decrement |days| by one.
-  if (std::abs(days) > durationDays) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_TEMPORAL_ZONED_DATE_TIME_INCORRECT_SIGN,
-                              "days");
-    return false;
-  }
-
   // Step 29.
-  *result = {days, int64_t{timeNanos}, int64_t(dayLengthNanos)};
+  static_assert(std::numeric_limits<decltype(days)>::max() <=
+                ((int64_t(1) << 53) / (24 * 60 * 60)));
+
+  // Step 30.
+  *result = {int64_t(days), int64_t(timeNanos), int64_t(dayLengthNanos)};
   return true;
 }
 
