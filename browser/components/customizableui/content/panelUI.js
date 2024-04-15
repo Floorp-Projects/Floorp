@@ -132,7 +132,6 @@ const PanelUI = {
       "ViewShowing",
       this._onHelpViewShow
     );
-    this.mainView.addEventListener("command", this);
     this._eventListenersAdded = true;
   },
 
@@ -144,7 +143,6 @@ const PanelUI = {
       document,
       "PanelUI-helpView"
     ).removeEventListener("ViewShowing", this._onHelpViewShow);
-    this.mainView.removeEventListener("command", this);
     this._eventListenersAdded = false;
   },
 
@@ -300,54 +298,6 @@ const PanelUI = {
       case "fullscreen":
       case "activate":
         this.updateNotifications();
-        break;
-      case "command":
-        this.onCommand(aEvent);
-        break;
-    }
-  },
-
-  // Note that we listen for bubbling command events. In the case where the
-  // button that the user clicks has a command attribute, those events are
-  // redirected to the relevant command element, and we never see them in
-  // here. Bear this in mind if you want to write code that applies to
-  // all commands, for which this wouldn't work well.
-  onCommand(aEvent) {
-    let { target } = aEvent;
-    switch (target.id) {
-      case "appMenu-update-banner":
-        this._onBannerItemSelected(aEvent);
-        break;
-      case "appMenu-fxa-label2":
-        gSync.toggleAccountPanel(target, aEvent);
-        break;
-      case "appMenu-profiles-button":
-        gProfiles.updateView(target);
-        break;
-      case "appMenu-bookmarks-button":
-        BookmarkingUI.showSubView(target);
-        break;
-      case "appMenu-history-button":
-        this.showSubView("PanelUI-history", target);
-        break;
-      case "appMenu-passwords-button":
-        LoginHelper.openPasswordManager(window, { entryPoint: "mainmenu" });
-        break;
-      case "appMenu-fullscreen-button2":
-        // Note that we're custom-handling the hiding of the panel to make
-        // sure it disappears before entering fullscreen. Otherwise it can
-        // end up moving around on the screen during the fullscreen transition.
-        target.closest("panel").hidePopup();
-        setTimeout(() => BrowserCommands.fullScreen(), 0);
-        break;
-      case "appMenu-settings-button":
-        openPreferences();
-        break;
-      case "appMenu-more-button2":
-        this.showMoreToolsPanel(target);
-        break;
-      case "appMenu-help-button2":
-        this.showSubView("PanelUI-helpView", target);
         break;
     }
   },
@@ -890,7 +840,10 @@ const PanelUI = {
 
   get mainView() {
     if (!this._mainView) {
-      this._mainView = PanelMultiView.getViewNode(document, "appMenu-mainView");
+      this._mainView = PanelMultiView.getViewNode(
+        document,
+        "appMenu-protonMainView"
+      );
     }
     return this._mainView;
   },
@@ -899,7 +852,7 @@ const PanelUI = {
     if (!this._addonNotificationContainer) {
       this._addonNotificationContainer = PanelMultiView.getViewNode(
         document,
-        "appMenu-addon-banners"
+        "appMenu-proton-addon-banners"
       );
     }
 

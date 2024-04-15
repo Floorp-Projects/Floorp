@@ -99,21 +99,6 @@ export const CustomizableWidgets = [
         case "unload":
           this.onWindowUnload(event);
           break;
-        case "command": {
-          let { target } = event;
-          let { PanelUI, PlacesCommandHook } = target.ownerGlobal;
-          if (target.id == "appMenuRecentlyClosedTabs") {
-            PanelUI.showSubView(this.recentlyClosedTabsPanel, target);
-          } else if (target.id == "appMenuRecentlyClosedWindows") {
-            PanelUI.showSubView(this.recentlyClosedWindowsPanel, target);
-          } else if (target.id == "appMenuSearchHistory") {
-            PlacesCommandHook.searchHistory();
-          } else if (target.id == "PanelUI-historyMore") {
-            PlacesCommandHook.showPlacesOrganizer("History");
-            lazy.CustomizableUI.hidePanelForNode(target);
-          }
-          break;
-        }
         default:
           throw new Error(`Unsupported event for '${this.id}'`);
       }
@@ -168,7 +153,6 @@ export const CustomizableWidgets = [
       // When the popup is hidden (thus the panelmultiview node as well), make
       // sure to stop listening to PlacesDatabase updates.
       panelview.panelMultiView.addEventListener("PanelMultiViewHidden", this);
-      panelview.addEventListener("command", this);
       window.addEventListener("unload", this);
     },
     onViewHiding() {
@@ -188,10 +172,6 @@ export const CustomizableWidgets = [
           document,
           this.recentlyClosedWindowsPanel
         ).removeEventListener("ViewShowing", this);
-        lazy.PanelMultiView.getViewNode(
-          document,
-          this.viewId
-        ).removeEventListener("command", this);
       }
       panelMultiView.removeEventListener("PanelMultiViewHidden", this);
     },
