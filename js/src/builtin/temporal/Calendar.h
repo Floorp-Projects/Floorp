@@ -360,10 +360,16 @@ bool CalendarDateAdd(JSContext* cx, JS::Handle<CalendarRecord> calendar,
  * CalendarDateUntil ( calendarRec, one, two, options )
  */
 bool CalendarDateUntil(JSContext* cx, JS::Handle<CalendarRecord> calendar,
-                       JS::Handle<Wrapped<PlainDateObject*>> one,
-                       JS::Handle<Wrapped<PlainDateObject*>> two,
+                       const PlainDate& one, const PlainDate& two,
+                       TemporalUnit largestUnit, DateDuration* result);
+
+/**
+ * CalendarDateUntil ( calendarRec, one, two, options )
+ */
+bool CalendarDateUntil(JSContext* cx, JS::Handle<CalendarRecord> calendar,
+                       const PlainDate& one, const PlainDate& two,
                        TemporalUnit largestUnit,
-                       JS::Handle<PlainObject*> options, Duration* result);
+                       JS::Handle<PlainObject*> options, DateDuration* result);
 
 /**
  * CalendarDateUntil ( calendarRec, one, two, options )
@@ -372,6 +378,15 @@ bool CalendarDateUntil(JSContext* cx, JS::Handle<CalendarRecord> calendar,
                        JS::Handle<Wrapped<PlainDateObject*>> one,
                        JS::Handle<Wrapped<PlainDateObject*>> two,
                        TemporalUnit largestUnit, Duration* result);
+
+/**
+ * CalendarDateUntil ( calendarRec, one, two, options )
+ */
+bool CalendarDateUntil(JSContext* cx, JS::Handle<CalendarRecord> calendar,
+                       JS::Handle<Wrapped<PlainDateObject*>> one,
+                       JS::Handle<Wrapped<PlainDateObject*>> two,
+                       TemporalUnit largestUnit,
+                       JS::Handle<PlainObject*> options, Duration* result);
 
 /**
  * CalendarYear ( calendar, dateLike )

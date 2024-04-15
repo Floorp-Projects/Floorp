@@ -3539,11 +3539,26 @@ static bool CalendarDateUntilSlow(JSContext* cx,
                                   Handle<CalendarRecord> calendar,
                                   Handle<Wrapped<PlainDateObject*>> one,
                                   Handle<Wrapped<PlainDateObject*>> two,
-                                  Handle<JSObject*> options, Duration* result) {
+                                  TemporalUnit largestUnit,
+                                  Handle<JSObject*> maybeOptions,
+                                  Duration* result) {
   MOZ_ASSERT(
       CalendarMethodsRecordHasLookedUp(calendar, CalendarMethod::DateUntil));
   MOZ_ASSERT(calendar.receiver().isObject());
   MOZ_ASSERT(calendar.dateUntil());
+
+  Rooted<JSObject*> options(cx, maybeOptions);
+  if (!options) {
+    options = NewPlainObjectWithProto(cx, nullptr);
+    if (!options) {
+      return false;
+    }
+  }
+
+  Rooted<Value> value(cx, StringValue(TemporalUnitToString(cx, largestUnit)));
+  if (!DefineDataProperty(cx, options, cx->names().largestUnit, value)) {
+    return false;
+  }
 
   // Step 1. (Inlined call to CalendarMethodsRecordCall.)
   Rooted<JS::Value> dateUntil(cx, ObjectValue(*calendar.dateUntil()));
@@ -3572,6 +3587,116 @@ static bool CalendarDateUntilSlow(JSContext* cx,
   // Step 4.
   *result = ToDuration(&rval.toObject().unwrapAs<DurationObject>());
   return true;
+}
+
+static bool CalendarDateUntilSlow(JSContext* cx,
+                                  Handle<CalendarRecord> calendar,
+                                  const PlainDate& one, const PlainDate& two,
+                                  TemporalUnit largestUnit,
+                                  Handle<JSObject*> maybeOptions,
+                                  DateDuration* result) {
+  Rooted<PlainDateObject*> date1(
+      cx, CreateTemporalDate(cx, one, calendar.receiver()));
+  if (!date1) {
+    return false;
+  }
+
+  Rooted<PlainDateObject*> date2(
+      cx, CreateTemporalDate(cx, two, calendar.receiver()));
+  if (!date2) {
+    return false;
+  }
+
+  Duration duration;
+  if (!CalendarDateUntilSlow(cx, calendar, date1, date2, largestUnit,
+                             maybeOptions, &duration)) {
+    return false;
+  }
+
+  *result = duration.toDateDuration();
+  return true;
+}
+
+/**
+ * CalendarDateUntil ( calendarRec, one, two, options )
+ */
+bool js::temporal::CalendarDateUntil(JSContext* cx,
+                                     Handle<CalendarRecord> calendar,
+                                     const PlainDate& one, const PlainDate& two,
+                                     TemporalUnit largestUnit,
+                                     DateDuration* result) {
+  MOZ_ASSERT(
+      CalendarMethodsRecordHasLookedUp(calendar, CalendarMethod::DateUntil));
+  MOZ_ASSERT(largestUnit <= TemporalUnit::Day);
+
+  // Step 2. (Reordered)
+  if (!calendar.dateUntil()) {
+    *result = BuiltinCalendarDateUntil(one, two, largestUnit).toDateDuration();
+    return true;
+  }
+
+  // Steps 1 and 3-4.
+  return CalendarDateUntilSlow(cx, calendar, one, two, largestUnit, nullptr,
+                               result);
+}
+
+/**
+ * CalendarDateUntil ( calendarRec, one, two, options )
+ */
+bool js::temporal::CalendarDateUntil(JSContext* cx,
+                                     Handle<CalendarRecord> calendar,
+                                     const PlainDate& one, const PlainDate& two,
+                                     TemporalUnit largestUnit,
+                                     Handle<PlainObject*> options,
+                                     DateDuration* result) {
+  MOZ_ASSERT(
+      CalendarMethodsRecordHasLookedUp(calendar, CalendarMethod::DateUntil));
+
+  // As an optimization, our implementation only adds |largestUnit| to the
+  // options object when taking the slow-path.
+#ifdef DEBUG
+  // The object must be extensible, otherwise we'd need to throw an error when
+  // attempting to add the "largestUnit" property to a non-extensible object.
+  MOZ_ASSERT(options->isExtensible());
+
+  // Similarily, if there's an existing "largestUnit" property, this property
+  // must be configurable.
+  auto largestUnitProp = options->lookupPure(cx->names().largestUnit);
+  MOZ_ASSERT_IF(largestUnitProp, largestUnitProp->configurable());
+#endif
+
+  // Step 2. (Reordered)
+  if (!calendar.dateUntil()) {
+    *result = BuiltinCalendarDateUntil(one, two, largestUnit).toDateDuration();
+    return true;
+  }
+
+  // Steps 1 and 3-4.
+  return CalendarDateUntilSlow(cx, calendar, one, two, largestUnit, options,
+                               result);
+}
+
+/**
+ * CalendarDateUntil ( calendarRec, one, two, options )
+ */
+bool js::temporal::CalendarDateUntil(JSContext* cx,
+                                     Handle<CalendarRecord> calendar,
+                                     Handle<Wrapped<PlainDateObject*>> one,
+                                     Handle<Wrapped<PlainDateObject*>> two,
+                                     TemporalUnit largestUnit,
+                                     Duration* result) {
+  MOZ_ASSERT(
+      CalendarMethodsRecordHasLookedUp(calendar, CalendarMethod::DateUntil));
+  MOZ_ASSERT(largestUnit <= TemporalUnit::Day);
+
+  // Step 2. (Reordered)
+  if (!calendar.dateUntil()) {
+    return BuiltinCalendarDateUntil(cx, one, two, largestUnit, result);
+  }
+
+  // Steps 1 and 3-4.
+  return CalendarDateUntilSlow(cx, calendar, one, two, largestUnit, nullptr,
+                               result);
 }
 
 /**
@@ -3605,45 +3730,9 @@ bool js::temporal::CalendarDateUntil(JSContext* cx,
     return BuiltinCalendarDateUntil(cx, one, two, largestUnit, result);
   }
 
-  Rooted<Value> value(cx, StringValue(TemporalUnitToString(cx, largestUnit)));
-  if (!DefineDataProperty(cx, options, cx->names().largestUnit, value)) {
-    return false;
-  }
-
   // Steps 1 and 3-4.
-  return CalendarDateUntilSlow(cx, calendar, one, two, options, result);
-}
-
-/**
- * CalendarDateUntil ( calendarRec, one, two, options )
- */
-bool js::temporal::CalendarDateUntil(JSContext* cx,
-                                     Handle<CalendarRecord> calendar,
-                                     Handle<Wrapped<PlainDateObject*>> one,
-                                     Handle<Wrapped<PlainDateObject*>> two,
-                                     TemporalUnit largestUnit,
-                                     Duration* result) {
-  MOZ_ASSERT(
-      CalendarMethodsRecordHasLookedUp(calendar, CalendarMethod::DateUntil));
-  MOZ_ASSERT(largestUnit <= TemporalUnit::Day);
-
-  // Step 2. (Reordered)
-  if (!calendar.dateUntil()) {
-    return BuiltinCalendarDateUntil(cx, one, two, largestUnit, result);
-  }
-
-  Rooted<PlainObject*> untilOptions(cx, NewPlainObjectWithProto(cx, nullptr));
-  if (!untilOptions) {
-    return false;
-  }
-
-  Rooted<Value> value(cx, StringValue(TemporalUnitToString(cx, largestUnit)));
-  if (!DefineDataProperty(cx, untilOptions, cx->names().largestUnit, value)) {
-    return false;
-  }
-
-  // Steps 1 and 3-4.
-  return CalendarDateUntilSlow(cx, calendar, one, two, untilOptions, result);
+  return CalendarDateUntilSlow(cx, calendar, one, two, largestUnit, options,
+                               result);
 }
 
 /**

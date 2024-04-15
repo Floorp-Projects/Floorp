@@ -1246,6 +1246,68 @@ bool js::temporal::DifferenceDate(JSContext* cx,
 }
 
 /**
+ * DifferenceDate ( calendarRec, one, two, options )
+ */
+bool js::temporal::DifferenceDate(JSContext* cx,
+                                  Handle<CalendarRecord> calendar,
+                                  const PlainDate& one, const PlainDate& two,
+                                  TemporalUnit largestUnit,
+                                  Handle<PlainObject*> options,
+                                  DateDuration* result) {
+  // Steps 1-4. (Not applicable in our implementation.)
+
+  // Step 5.
+  if (one == two) {
+    *result = {};
+    return true;
+  }
+
+  // Step 6.
+  if (largestUnit == TemporalUnit::Day) {
+    // Step 6.a.
+    int32_t days = DaysUntil(one, two);
+
+    // Step 6.b.
+    *result = {0, 0, 0, days};
+    return true;
+  }
+
+  // Step 7.
+  return CalendarDateUntil(cx, calendar, one, two, largestUnit, options,
+                           result);
+}
+
+/**
+ * DifferenceDate ( calendarRec, one, two, options )
+ */
+bool js::temporal::DifferenceDate(JSContext* cx,
+                                  Handle<CalendarRecord> calendar,
+                                  const PlainDate& one, const PlainDate& two,
+                                  TemporalUnit largestUnit,
+                                  DateDuration* result) {
+  // Steps 1-4. (Not applicable in our implementation.)
+
+  // Step 5.
+  if (one == two) {
+    *result = {};
+    return true;
+  }
+
+  // Step 6.
+  if (largestUnit == TemporalUnit::Day) {
+    // Step 6.a.
+    int32_t days = DaysUntil(one, two);
+
+    // Step 6.b.
+    *result = {0, 0, 0, days};
+    return true;
+  }
+
+  // Step 7.
+  return CalendarDateUntil(cx, calendar, one, two, largestUnit, result);
+}
+
+/**
  * CompareISODate ( y1, m1, d1, y2, m2, d2 )
  */
 int32_t js::temporal::CompareISODate(const PlainDate& one,
