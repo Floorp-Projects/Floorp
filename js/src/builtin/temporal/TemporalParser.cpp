@@ -2177,13 +2177,8 @@ bool js::temporal::ParseTemporalDurationString(JSContext* cx,
       (microseconds * factor) + (+0.0), (nanoseconds * factor) + (+0.0),
   };
 
-  // Step 30
-  if (!ThrowIfInvalidDuration(cx, *result)) {
-    return false;
-  }
-
-  // Step 31.
-  return true;
+  // Steps 30-31.
+  return ThrowIfInvalidDuration(cx, *result);
 }
 
 template <typename CharT>
