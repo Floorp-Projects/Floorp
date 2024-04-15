@@ -385,12 +385,6 @@ class GCMarker {
   // structures.
   void abortLinearWeakMarking();
 
-  // 'delegate' is no longer the delegate of 'key'.
-  void severWeakDelegate(JSObject* key, JSObject* delegate);
-
-  // 'delegate' is now the delegate of 'key'. Update weakmap marking state.
-  void restoreWeakDelegate(JSObject* key, JSObject* delegate);
-
 #ifdef DEBUG
   // We can't check atom marking if the helper thread lock is already held by
   // the current thread. This allows us to disable the check.

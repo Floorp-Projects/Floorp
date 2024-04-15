@@ -576,9 +576,6 @@ void js::RemapDeadWrapper(JSContext* cx, HandleObject wobj,
   // invariant that the wrapper in the map points directly to the key.
   MOZ_ASSERT(Wrapper::wrappedObject(wobj) == newTarget);
 
-  // Update the incremental weakmap marking state.
-  wobj->zone()->afterAddDelegate(wobj);
-
   // Update the entry in the compartment's wrapper map to point to the old
   // wrapper, which has now been updated (via reuse or swap).
   if (!wcompartment->putWrapper(cx, newTarget, wobj)) {
