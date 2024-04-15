@@ -117,7 +117,7 @@ static PlainMonthDayObject* CreateTemporalMonthDay(
  */
 PlainMonthDayObject* js::temporal::CreateTemporalMonthDay(
     JSContext* cx, const PlainDate& date, Handle<CalendarValue> calendar) {
-  auto& [isoYear, isoMonth, isoDay] = date;
+  const auto& [isoYear, isoMonth, isoDay] = date;
 
   // Step 1.
   if (!ThrowIfInvalidISODate(cx, date)) {

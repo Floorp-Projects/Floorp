@@ -119,7 +119,8 @@ static bool IsValidTime(T hour, T minute, T second, T millisecond,
  * IsValidTime ( hour, minute, second, millisecond, microsecond, nanosecond )
  */
 bool js::temporal::IsValidTime(const PlainTime& time) {
-  auto& [hour, minute, second, millisecond, microsecond, nanosecond] = time;
+  const auto& [hour, minute, second, millisecond, microsecond, nanosecond] =
+      time;
   return ::IsValidTime(hour, minute, second, millisecond, microsecond,
                        nanosecond);
 }
@@ -215,7 +216,8 @@ static bool ThrowIfInvalidTime(JSContext* cx, T hour, T minute, T second,
  * IsValidTime ( hour, minute, second, millisecond, microsecond, nanosecond )
  */
 bool js::temporal::ThrowIfInvalidTime(JSContext* cx, const PlainTime& time) {
-  auto& [hour, minute, second, millisecond, microsecond, nanosecond] = time;
+  const auto& [hour, minute, second, millisecond, microsecond, nanosecond] =
+      time;
   return ::ThrowIfInvalidTime(cx, hour, minute, second, millisecond,
                               microsecond, nanosecond);
 }
@@ -261,7 +263,8 @@ static PlainTime ConstrainTime(double hour, double minute, double second,
  */
 bool js::temporal::RegulateTime(JSContext* cx, const TemporalTimeLike& time,
                                 TemporalOverflow overflow, PlainTime* result) {
-  auto& [hour, minute, second, millisecond, microsecond, nanosecond] = time;
+  const auto& [hour, minute, second, millisecond, microsecond, nanosecond] =
+      time;
 
   // Step 1.
   MOZ_ASSERT(IsInteger(hour));
@@ -362,7 +365,8 @@ static PlainTimeObject* CreateTemporalTime(JSContext* cx, const CallArgs& args,
  */
 PlainTimeObject* js::temporal::CreateTemporalTime(JSContext* cx,
                                                   const PlainTime& time) {
-  auto& [hour, minute, second, millisecond, microsecond, nanosecond] = time;
+  const auto& [hour, minute, second, millisecond, microsecond, nanosecond] =
+      time;
 
   // Step 1.
   if (!ThrowIfInvalidTime(cx, time)) {
@@ -1136,7 +1140,7 @@ static bool PlainTime_from(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   // Steps 4-5.
-  auto result = ToTemporalTime(cx, args.get(0), overflow);
+  auto* result = ToTemporalTime(cx, args.get(0), overflow);
   if (!result) {
     return false;
   }

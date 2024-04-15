@@ -83,8 +83,8 @@ static bool IsIntegerOrInfinity(double d) {
 }
 
 static bool IsIntegerOrInfinityDuration(const Duration& duration) {
-  auto& [years, months, weeks, days, hours, minutes, seconds, milliseconds,
-         microseconds, nanoseconds] = duration;
+  const auto& [years, months, weeks, days, hours, minutes, seconds,
+               milliseconds, microseconds, nanoseconds] = duration;
 
   // Integers exceeding the Number range are represented as infinity.
 
@@ -96,8 +96,8 @@ static bool IsIntegerOrInfinityDuration(const Duration& duration) {
 }
 
 static bool IsIntegerDuration(const Duration& duration) {
-  auto& [years, months, weeks, days, hours, minutes, seconds, milliseconds,
-         microseconds, nanoseconds] = duration;
+  const auto& [years, months, weeks, days, hours, minutes, seconds,
+               milliseconds, microseconds, nanoseconds] = duration;
 
   return IsInteger(years) && IsInteger(months) && IsInteger(weeks) &&
          IsInteger(days) && IsInteger(hours) && IsInteger(minutes) &&
@@ -125,8 +125,8 @@ static constexpr bool IsSafeInteger(const Int128& x) {
 int32_t js::temporal::DurationSign(const Duration& duration) {
   MOZ_ASSERT(IsIntegerOrInfinityDuration(duration));
 
-  auto& [years, months, weeks, days, hours, minutes, seconds, milliseconds,
-         microseconds, nanoseconds] = duration;
+  const auto& [years, months, weeks, days, hours, minutes, seconds,
+               milliseconds, microseconds, nanoseconds] = duration;
 
   // Step 1.
   for (auto v : {years, months, weeks, days, hours, minutes, seconds,
@@ -151,7 +151,7 @@ int32_t js::temporal::DurationSign(const Duration& duration) {
  * milliseconds, microseconds, nanoseconds )
  */
 static int32_t DurationSign(const DateDuration& duration) {
-  auto& [years, months, weeks, days] = duration;
+  const auto& [years, months, weeks, days] = duration;
 
   // Step 1.
   for (auto v : {years, months, weeks, days}) {
@@ -557,8 +557,8 @@ js::temporal::NormalizedTimeDurationFromEpochNanosecondsDifference(
 bool js::temporal::IsValidDuration(const Duration& duration) {
   MOZ_ASSERT(IsIntegerOrInfinityDuration(duration));
 
-  auto& [years, months, weeks, days, hours, minutes, seconds, milliseconds,
-         microseconds, nanoseconds] = duration;
+  const auto& [years, months, weeks, days, hours, minutes, seconds,
+               milliseconds, microseconds, nanoseconds] = duration;
 
   // Step 1.
   int32_t sign = DurationSign(duration);
@@ -646,8 +646,8 @@ bool js::temporal::ThrowIfInvalidDuration(JSContext* cx,
                                           const Duration& duration) {
   MOZ_ASSERT(IsIntegerOrInfinityDuration(duration));
 
-  auto& [years, months, weeks, days, hours, minutes, seconds, milliseconds,
-         microseconds, nanoseconds] = duration;
+  const auto& [years, months, weeks, days, hours, minutes, seconds,
+               milliseconds, microseconds, nanoseconds] = duration;
 
   // Step 1.
   int32_t sign = DurationSign(duration);
@@ -742,7 +742,7 @@ bool js::temporal::ThrowIfInvalidDuration(JSContext* cx,
  */
 bool js::temporal::ThrowIfInvalidDuration(JSContext* cx,
                                           const DateDuration& duration) {
-  auto& [years, months, weeks, days] = duration;
+  const auto& [years, months, weeks, days] = duration;
 
   // Step 1.
   int32_t sign = ::DurationSign(duration);
@@ -872,8 +872,8 @@ static TemporalUnit DefaultTemporalLargestUnit(const Duration& duration) {
 static DurationObject* CreateTemporalDuration(JSContext* cx,
                                               const CallArgs& args,
                                               const Duration& duration) {
-  auto& [years, months, weeks, days, hours, minutes, seconds, milliseconds,
-         microseconds, nanoseconds] = duration;
+  const auto& [years, months, weeks, days, hours, minutes, seconds,
+               milliseconds, microseconds, nanoseconds] = duration;
 
   // Step 1.
   if (!ThrowIfInvalidDuration(cx, duration)) {
@@ -920,8 +920,8 @@ static DurationObject* CreateTemporalDuration(JSContext* cx,
  */
 DurationObject* js::temporal::CreateTemporalDuration(JSContext* cx,
                                                      const Duration& duration) {
-  auto& [years, months, weeks, days, hours, minutes, seconds, milliseconds,
-         microseconds, nanoseconds] = duration;
+  const auto& [years, months, weeks, days, hours, minutes, seconds,
+               milliseconds, microseconds, nanoseconds] = duration;
 
   MOZ_ASSERT(IsInteger(years));
   MOZ_ASSERT(IsInteger(months));
@@ -1940,7 +1940,7 @@ static bool BalanceDateDurationRelative(
     }
 
     // Step 10.b.
-    auto& yearsMonthsWeeksDaysDuration = duration;
+    const auto& yearsMonthsWeeksDaysDuration = duration;
 
     // Steps 10.c-d.
     Duration untilResult;
@@ -1974,7 +1974,7 @@ static bool BalanceDateDurationRelative(
     }
 
     // Step 11.c.
-    auto& monthsWeeksDaysDuration = duration;
+    const auto& monthsWeeksDaysDuration = duration;
 
     // Steps 11.d-e.
     Duration untilResult;
@@ -2002,7 +2002,7 @@ static bool BalanceDateDurationRelative(
   MOZ_ASSERT(months == 0);
 
   // Step 15.
-  auto& weeksDaysDuration = duration;
+  const auto& weeksDaysDuration = duration;
 
   // Steps 16-17.
   Duration untilResult;
