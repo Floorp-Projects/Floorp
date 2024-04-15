@@ -229,7 +229,7 @@ bool js::temporal::ISODateTimeWithinLimits(double year, double month,
  * millisecond, microsecond, nanosecond )
  */
 bool js::temporal::ISODateTimeWithinLimits(const PlainDateTime& dateTime) {
-  auto& [date, time] = dateTime;
+  const auto& [date, time] = dateTime;
   return ::ISODateTimeWithinLimits(date.year, date.month, date.day, time.hour,
                                    time.minute, time.second, time.millisecond,
                                    time.microsecond, time.nanosecond);
@@ -342,9 +342,10 @@ static PlainDateTimeObject* CreateTemporalDateTime(
 PlainDateTimeObject* js::temporal::CreateTemporalDateTime(
     JSContext* cx, const PlainDateTime& dateTime,
     Handle<CalendarValue> calendar) {
-  auto& [date, time] = dateTime;
-  auto& [isoYear, isoMonth, isoDay] = date;
-  auto& [hour, minute, second, millisecond, microsecond, nanosecond] = time;
+  const auto& [date, time] = dateTime;
+  const auto& [isoYear, isoMonth, isoDay] = date;
+  const auto& [hour, minute, second, millisecond, microsecond, nanosecond] =
+      time;
 
   // Steps 1-2.
   if (!ThrowIfInvalidISODateTime(cx, dateTime)) {

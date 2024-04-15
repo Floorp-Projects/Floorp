@@ -1358,10 +1358,18 @@ static bool TemporalClassFinish(JSContext* cx, Handle<JSObject*> temporal,
   };
 
   // Add the constructor properties.
-  for (const auto& protoKey :
-       {JSProto_Calendar, JSProto_Duration, JSProto_Instant, JSProto_PlainDate,
-        JSProto_PlainDateTime, JSProto_PlainMonthDay, JSProto_PlainTime,
-        JSProto_PlainYearMonth, JSProto_TimeZone, JSProto_ZonedDateTime}) {
+  for (const auto& protoKey : {
+           JSProto_Calendar,
+           JSProto_Duration,
+           JSProto_Instant,
+           JSProto_PlainDate,
+           JSProto_PlainDateTime,
+           JSProto_PlainMonthDay,
+           JSProto_PlainTime,
+           JSProto_PlainYearMonth,
+           JSProto_TimeZone,
+           JSProto_ZonedDateTime,
+       }) {
     if (!defineProperty(protoKey, ClassName(protoKey, cx))) {
       return false;
     }

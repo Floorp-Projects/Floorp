@@ -214,7 +214,7 @@ static Value TemporalFieldDefaultValue(TemporalField field) {
 
 static bool TemporalFieldConvertValue(JSContext* cx, TemporalField field,
                                       MutableHandle<Value> value) {
-  auto* name = ToCString(field);
+  const auto* name = ToCString(field);
   switch (field) {
     case TemporalField::Year:
     case TemporalField::Hour:
@@ -365,7 +365,7 @@ bool js::temporal::PrepareTemporalFields(
   Rooted<Value> value(cx);
   for (auto fieldName : fieldNames) {
     auto* property = ToPropertyName(cx, fieldName);
-    auto* cstr = ToCString(fieldName);
+    const auto* cstr = ToCString(fieldName);
 
     // Step 6.a. (Not applicable in our implementation.)
 
@@ -837,8 +837,8 @@ bool js::temporal::AppendSorted(
     return false;
   }
 
-  auto* left = std::prev(fieldNames.end(), additionalNames.size());
-  auto* right = additionalNames.end();
+  const auto* left = std::prev(fieldNames.end(), additionalNames.size());
+  const auto* right = additionalNames.end();
   auto* out = fieldNames.end();
 
   // Write backwards into the newly allocated space.

@@ -112,7 +112,7 @@ static bool IsValidISODate(T year, T month, T day) {
  * IsValidISODate ( year, month, day )
  */
 bool js::temporal::IsValidISODate(const PlainDate& date) {
-  auto& [year, month, day] = date;
+  const auto& [year, month, day] = date;
   return ::IsValidISODate(year, month, day);
 }
 
@@ -183,7 +183,7 @@ static bool ThrowIfInvalidISODate(JSContext* cx, T year, T month, T day) {
  * IsValidISODate ( year, month, day )
  */
 bool js::temporal::ThrowIfInvalidISODate(JSContext* cx, const PlainDate& date) {
-  auto& [year, month, day] = date;
+  const auto& [year, month, day] = date;
   return ::ThrowIfInvalidISODate(cx, year, month, day);
 }
 
@@ -201,7 +201,7 @@ bool js::temporal::ThrowIfInvalidISODate(JSContext* cx, double year,
  * With |overflow = "constrain"|.
  */
 static PlainDate ConstrainISODate(const PlainDate& date) {
-  auto& [year, month, day] = date;
+  const auto& [year, month, day] = date;
 
   // Step 1.a.
   int32_t m = std::clamp(month, 1, 12);
@@ -336,7 +336,7 @@ static PlainDateObject* CreateTemporalDate(JSContext* cx, const CallArgs& args,
  */
 PlainDateObject* js::temporal::CreateTemporalDate(
     JSContext* cx, const PlainDate& date, Handle<CalendarValue> calendar) {
-  auto& [isoYear, isoMonth, isoDay] = date;
+  const auto& [isoYear, isoMonth, isoDay] = date;
 
   // Step 1.
   if (!ThrowIfInvalidISODate(cx, date)) {
@@ -962,7 +962,7 @@ static bool AddDate(JSContext* cx, const PlainDate& date,
   // Steps 1-4. (Not applicable)
 
   // Step 5. (Not applicable)
-  auto& timeDuration = duration.time;
+  const auto& timeDuration = duration.time;
 
   // Step 6.
   int64_t balancedDays =
