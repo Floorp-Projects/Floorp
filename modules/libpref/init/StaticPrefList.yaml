@@ -9402,7 +9402,7 @@
 # Is matching video-dynamic-range: high allowed?
 - name: layout.css.video-dynamic-range.allows-high
   type: RelaxedAtomicBool
-#if defined(XP_MACOSX) || defined(NIGHTLY_BUILD)
+#if defined(XP_MACOSX)
   value: true
 #else
   value: false
