@@ -40,18 +40,33 @@ class HgServerError(Exception):
         super().__init__(msg)
 
 
+# Maps our CI/release pipeline's architecture names (e.g., "x86_64")
+# into architectures ("amd64") compatible with Debian's dpkg-buildpackage tool.
+# This is the target architecture we are building the .deb package for.
 _DEB_ARCH = {
     "all": "all",
     "x86": "i386",
     "x86_64": "amd64",
+    "aarch64": "arm64",
 }
-# At the moment the Firefox build baseline is jessie.
-# The debian-repackage image defined in taskcluster/docker/debian-repackage/Dockerfile
-# bootstraps the /srv/jessie-i386 and /srv/jessie-amd64 chroot environments we use to
-# create the `.deb` repackages. By running the repackage using chroot we generate shared
-# library dependencies that match the Firefox build baseline
-# defined in taskcluster/scripts/misc/build-sysroot.sh
-_DEB_DIST = "jessie"
+
+# Defines the sysroot (build host's) architecture for each target architecture in the pipeline.
+# It defines the architecture dpkg-buildpackage runs on.
+_DEB_SYSROOT_ARCH = {
+    "all": "amd64",
+    "x86": "i386",
+    "x86_64": "amd64",
+    "aarch64": "amd64",
+}
+
+# Assigns the Debian distribution version for the sysroot based on the target architecture.
+# It defines the Debian distribution dpkg-buildpackage runs on.
+_DEB_SYSROOT_DIST = {
+    "all": "jessie",
+    "x86": "jessie",
+    "x86_64": "jessie",
+    "aarch64": "buster",
+}
 
 
 def repackage_deb(
@@ -729,8 +744,15 @@ def _is_chroot_available(arch):
 
 
 def _get_chroot_path(arch):
-    deb_arch = "amd64" if arch == "all" else _DEB_ARCH[arch]
-    return f"/srv/{_DEB_DIST}-{deb_arch}"
+    # At the moment the Firefox build baseline for i386 and amd64 is jessie and the baseline for arm64 is buster.
+    # These baselines are defined in taskcluster/scripts/misc/build-sysroot.sh
+    # The debian-repackage image defined in taskcluster/docker/debian-repackage/Dockerfile
+    # bootstraps /srv/jessie-i386, /srv/jessie-amd64, and /srv/buster-amd64 roots.
+    # We use these roots to run the repackage step and generate shared
+    # library dependencies that match the Firefox build baseline.
+    deb_sysroot_dist = _DEB_SYSROOT_DIST[arch]
+    deb_sysroot_arch = _DEB_SYSROOT_ARCH[arch]
+    return f"/srv/{deb_sysroot_dist}-{deb_sysroot_arch}"
 
 
 _MANIFEST_FILE_NAME = "manifest.json"

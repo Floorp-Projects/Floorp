@@ -3,22 +3,16 @@ MAINTAINER Mozilla Releng <release@mozilla.com>
 
 VOLUME /builds/worker/workspace
 
-# At the moment the Firefox build baseline is jessie.
-# Things in the build/CI system that run in the task's container
-# (mach, run-task, etc.) do not support jessie.
-# There's also no jessie `base` images or packages generated in the CI.
-# To generate Firefox Debian packages compatible with the baseline
-# we bootstrap basic i386 and amd64 jessie systems on bullseye.
-# We use these to generate shared library dependencies in jessie using chroot.
-# python/mozbuild/mozbuild/repackaging/deb.py checks for jessie systems
-# bootstrapped under /srv/jessie-i386 and /srv/jessie-amd64
-# If they aren't there, deb.py runs the repackage in the working directory without using chroot.
-# To keep the build and repackage enviroments consistent the Debian baseline used
-# here (jessie) should be synchronized with the baseline used in
-# taskcluster/scripts/misc/build-sysroot.sh
+# At the moment the Firefox build sysroot for i386 and amd64 use jessie and arm64 uses buster.
+# To generate Firefox Debian packages we bootstrap jessie and buster sysroots.
+# We use these sysroots to generate shared library dependencies for
+# i386 (jessie), amd64 (jessie), and arm64 (buster) packages.
+# To keep the build and repackage enviroments consistent the Debian distributions used by the sysroots
+# created here should match the distributions used by the sysroots created in taskcluster/scripts/misc/build-sysroot.sh
 ARG TASKCLUSTER_ROOT_URL
 ARG DOCKER_IMAGE_PACKAGES
 RUN /usr/local/sbin/setup_packages.sh $TASKCLUSTER_ROOT_URL $DOCKER_IMAGE_PACKAGES && \
+    dpkg --add-architecture arm64 && \
     apt-get update && \
     apt-get install debootstrap && set -xe && \
     for arch in i386 amd64; do \
@@ -30,6 +24,20 @@ RUN /usr/local/sbin/setup_packages.sh $TASKCLUSTER_ROOT_URL $DOCKER_IMAGE_PACKAG
         --verbose \
         jessie \
         /srv/jessie-$arch \
-        https://archive.debian.org/debian; \
+        https://archive.debian.org/debian || (echo "Debootstrap failed, outputting log:" && cat /srv/jessie-$arch/debootstrap/debootstrap.log && exit 1); \
     done && \
+    # bootstrap a buster/amd64 root to generate an arm64 .deb package.
+    debootstrap \
+    --arch=amd64 \
+    --variant=buildd \
+    --include=debhelper,binutils-multiarch,binutils-aarch64-linux-gnu \
+    --keyring=/usr/share/keyrings/debian-archive-buster-stable.gpg \
+    --verbose \
+    buster \
+    /srv/buster-amd64 \
+    http://deb.debian.org/debian || (echo "Debootstrap failed, outputting log:" && cat /srv/buster-amd64/debootstrap/debootstrap.log && exit 1) && \
+    chroot /srv/buster-amd64 /bin/bash -c "\
+        dpkg --add-architecture arm64 && \
+        apt-get update && \
+        apt-get install -y libasound2:arm64 libgtk-3-0:arm64 libx11-xcb1:arm64 libxtst6:arm64" && \
     /usr/local/sbin/clean_packages.sh $DOCKER_IMAGE_PACKAGES

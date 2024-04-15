@@ -21,6 +21,7 @@ only-for-build-platforms:
     - linux-devedition/opt
     - linux64-shippable/opt
     - linux64-devedition/opt
+    - linux64-aarch64-shippable/opt
 
 only-for-attributes:
     - nightly
