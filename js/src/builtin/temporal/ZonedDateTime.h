@@ -8,6 +8,7 @@
 #define builtin_temporal_ZonedDateTime_h
 
 #include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
 
 #include <stdint.h>
 
@@ -69,7 +70,7 @@ inline Instant ToInstant(const ZonedDateTimeObject* zonedDateTime) {
   return {zonedDateTime->seconds(), zonedDateTime->nanoseconds()};
 }
 
-class ZonedDateTime {
+class MOZ_STACK_CLASS ZonedDateTime final {
   Instant instant_;
   TimeZoneValue timeZone_;
   CalendarValue calendar_;

@@ -8,6 +8,7 @@
 #define builtin_temporal_TemporalParser_h
 
 #include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
 
 #include <cstdlib>
 #include <stdint.h>
@@ -26,7 +27,7 @@ struct PlainDate;
 struct PlainDateTime;
 struct PlainTime;
 
-struct ParsedTimeZone {
+struct MOZ_STACK_CLASS ParsedTimeZone final {
   JSLinearString* name = nullptr;
   int32_t offset = INT32_MIN;
 

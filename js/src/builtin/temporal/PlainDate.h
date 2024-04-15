@@ -8,6 +8,7 @@
 #define builtin_temporal_PlainDate_h
 
 #include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
 
 #include <initializer_list>
 #include <stdint.h>
@@ -60,7 +61,7 @@ class PlainDateObject : public NativeObject {
   static const ClassSpec classSpec_;
 };
 
-class PlainDateWithCalendar {
+class MOZ_STACK_CLASS PlainDateWithCalendar final {
   PlainDate date_;
   CalendarValue calendar_;
 

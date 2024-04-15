@@ -7,6 +7,7 @@
 #ifndef builtin_temporal_TemporalFields_h
 #define builtin_temporal_TemporalFields_h
 
+#include "mozilla/Attributes.h"
 #include "mozilla/FloatingPoint.h"
 
 #include <initializer_list>
@@ -46,7 +47,7 @@ enum class TemporalField {
 // NaN whereas pointer fields use nullptr.
 //
 // [1] <https://tc39.es/proposal-temporal/#table-temporal-field-requirements>
-struct TemporalFields final {
+struct MOZ_STACK_CLASS TemporalFields final {
   double year = mozilla::UnspecifiedNaN<double>();
   double month = mozilla::UnspecifiedNaN<double>();
   JSString* monthCode = nullptr;
