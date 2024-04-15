@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /*
- * Tests for the Glean SERP abandonment event
+ * Tests for the Glean SERP abandonment event.
  */
 
 "use strict";
@@ -65,6 +65,7 @@ add_task(async function test_tab_close() {
         is_shopping_page: "false",
         is_private: "false",
         shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       abandonment: {
         reason: SearchSERPTelemetryUtils.ABANDONMENTS.TAB_CLOSE,
@@ -99,6 +100,7 @@ add_task(async function test_window_close() {
         is_shopping_page: "false",
         is_private: "false",
         shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       abandonment: {
         reason: SearchSERPTelemetryUtils.ABANDONMENTS.WINDOW_CLOSE,
@@ -134,6 +136,7 @@ add_task(async function test_navigation_via_urlbar() {
         is_shopping_page: "false",
         is_private: "false",
         shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       abandonment: {
         reason: SearchSERPTelemetryUtils.ABANDONMENTS.NAVIGATION,
@@ -181,6 +184,7 @@ add_task(async function test_navigation_via_back_button() {
         is_shopping_page: "false",
         is_private: "false",
         shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       abandonment: {
         reason: SearchSERPTelemetryUtils.ABANDONMENTS.NAVIGATION,

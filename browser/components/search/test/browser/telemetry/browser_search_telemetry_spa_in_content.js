@@ -52,6 +52,7 @@ add_task(async function test_content_process_type_search_click_suggestion() {
         is_shopping_page: "false",
         is_private: "false",
         shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       engagements: [
         {
@@ -81,6 +82,7 @@ add_task(async function test_content_process_type_search_click_suggestion() {
         is_shopping_page: "false",
         is_private: "false",
         shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       adImpressions: [
         {
@@ -125,6 +127,7 @@ add_task(
           is_shopping_page: "false",
           is_private: "false",
           shopping_tab_displayed: "false",
+          is_signed_in: "false",
         },
         engagements: [
           {
@@ -154,6 +157,7 @@ add_task(
           is_shopping_page: "false",
           is_private: "false",
           shopping_tab_displayed: "false",
+          is_signed_in: "false",
         },
         adImpressions: [
           {
@@ -197,6 +201,7 @@ add_task(async function test_content_process_engagement() {
         is_shopping_page: "false",
         is_private: "false",
         shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       engagements: [
         {
@@ -246,6 +251,7 @@ add_task(async function test_content_process_engagement_that_changes_page() {
         is_shopping_page: "false",
         is_private: "false",
         shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       engagements: [
         {
@@ -271,6 +277,7 @@ add_task(async function test_content_process_engagement_that_changes_page() {
         is_shopping_page: "false",
         is_private: "false",
         shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       adImpressions: [
         {
@@ -319,6 +326,7 @@ add_task(
           is_shopping_page: "false",
           is_private: "false",
           shopping_tab_displayed: "false",
+          is_signed_in: "false",
         },
         engagements: [
           {
@@ -344,6 +352,7 @@ add_task(
           is_shopping_page: "false",
           is_private: "false",
           shopping_tab_displayed: "false",
+          is_signed_in: "false",
         },
         engagements: [
           {
@@ -369,6 +378,7 @@ add_task(
           is_shopping_page: "false",
           is_private: "false",
           shopping_tab_displayed: "false",
+          is_signed_in: "false",
         },
         adImpressions: [
           {
@@ -417,6 +427,7 @@ add_task(async function test_unload_listeners_single_tab() {
         is_shopping_page: "false",
         is_private: "false",
         shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       engagements: [
         {
@@ -476,6 +487,7 @@ add_task(async function test_unload_listeners_multi_tab() {
         is_shopping_page: "false",
         is_private: "false",
         shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       engagements: [
         {
@@ -501,6 +513,7 @@ add_task(async function test_unload_listeners_multi_tab() {
         is_shopping_page: "false",
         is_private: "false",
         shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       engagements: [
         {

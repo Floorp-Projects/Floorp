@@ -547,6 +547,7 @@ class TelemetryHandler {
         source: inContentSource ?? source,
         isShoppingPage: info.isShoppingPage,
         isPrivate: lazy.PrivateBrowsingUtils.isBrowserPrivate(browser),
+        isSignedIn: info.isSignedIn,
       };
     }
 
@@ -1056,6 +1057,7 @@ class TelemetryHandler {
     }
     let isShoppingPage = false;
     let hasComponents = false;
+    let isSignedIn = false;
     if (lazy.serpEventsEnabled) {
       if (searchProviderInfo.shoppingTab?.regexp) {
         isShoppingPage = searchProviderInfo.shoppingTab.regexp.test(url);
@@ -1063,12 +1065,21 @@ class TelemetryHandler {
       if (searchProviderInfo.components?.length) {
         hasComponents = true;
       }
+      if (searchProviderInfo.accountCookies) {
+        isSignedIn = searchProviderInfo.accountCookies.some(cookieObj => {
+          return Services.cookies
+            .getCookiesFromHost(cookieObj.host, {})
+            .some(c => c.name == cookieObj.name);
+        });
+      }
     }
+
     return {
       provider: searchProviderInfo.telemetryId,
       type,
       code,
       isShoppingPage,
+      isSignedIn,
       hasComponents,
       searchQuery,
       isSPA,
@@ -1755,6 +1766,7 @@ class ContentHandler {
         shopping_tab_displayed: info.shoppingTabDisplayed,
         is_shopping_page: impressionInfo.isShoppingPage,
         is_private: impressionInfo.isPrivate,
+        is_signed_in: impressionInfo.isSignedIn,
       });
       lazy.logConsole.debug(`Reported Impression:`, {
         impressionId,

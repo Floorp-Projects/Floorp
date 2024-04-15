@@ -175,6 +175,9 @@ support-files = [
 ["browser_search_telemetry_shopping.js"]
 support-files = ["searchTelemetryAd_shopping.html"]
 
+["browser_search_telemetry_signed_in_to_account.js"]
+support-files = ["searchTelemetry.html"]
+
 ["browser_search_telemetry_sources.js"]
 support-files = ["searchTelemetry.html", "searchTelemetryAd.html"]
 

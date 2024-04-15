@@ -142,6 +142,7 @@ add_task(async function test_click_cached_page() {
         is_shopping_page: "false",
         is_private: "false",
         shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       engagements: [
         {
@@ -173,6 +174,7 @@ add_task(async function test_click_cached_page() {
         is_shopping_page: "false",
         is_private: "false",
         shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       engagements: [
         {

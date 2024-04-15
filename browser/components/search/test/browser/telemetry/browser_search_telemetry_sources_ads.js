@@ -77,6 +77,7 @@ add_task(async function test_simple_search_page_visit() {
         is_shopping_page: "false",
         is_private: "false",
         shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       abandonment: {
         reason: SearchSERPTelemetryUtils.ABANDONMENTS.TAB_CLOSE,
@@ -120,6 +121,7 @@ add_task(async function test_simple_search_page_visit_telemetry() {
         is_shopping_page: "false",
         is_private: "false",
         shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       abandonment: {
         reason: SearchSERPTelemetryUtils.ABANDONMENTS.TAB_CLOSE,
@@ -156,6 +158,7 @@ add_task(async function test_follow_on_visit() {
         is_shopping_page: "false",
         is_private: "false",
         shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       abandonment: {
         reason: SearchSERPTelemetryUtils.ABANDONMENTS.TAB_CLOSE,
@@ -170,6 +173,7 @@ add_task(async function test_follow_on_visit() {
         is_shopping_page: "false",
         is_private: "false",
         shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       abandonment: {
         reason: SearchSERPTelemetryUtils.ABANDONMENTS.TAB_CLOSE,
@@ -205,6 +209,7 @@ add_task(async function test_track_ad() {
         is_shopping_page: "false",
         is_private: "false",
         shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       adImpressions: [
         {
@@ -247,6 +252,7 @@ add_task(async function test_track_ad_organic() {
         is_shopping_page: "false",
         is_private: "false",
         shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       adImpressions: [
         {
@@ -294,6 +300,7 @@ add_task(async function test_track_ad_new_window() {
         is_shopping_page: "false",
         is_private: "false",
         shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       adImpressions: [
         {
@@ -349,6 +356,7 @@ add_task(async function test_track_ad_pages_without_ads() {
         is_shopping_page: "false",
         is_private: "false",
         shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
     },
     {
@@ -360,6 +368,7 @@ add_task(async function test_track_ad_pages_without_ads() {
         is_shopping_page: "false",
         is_private: "false",
         shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       adImpressions: [
         {

@@ -193,6 +193,11 @@ serp:
         description:
           Indicates if the page was loaded while in Private Browsing Mode.
         type: boolean
+      is_signed_in:
+        description:
+          Indicates if the page was loaded while the user is signed in to a
+          provider's account.
+        type: boolean
 
   engagement:
     type: event
