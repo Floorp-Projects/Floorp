@@ -75,3 +75,116 @@ add_task(async function test_bytesToFuzzyKilobytes() {
 
   Assert.equal(smallSize, 1, "Sizes under 10 kilobytes return 1 kilobyte");
 });
+
+/**
+ * Tests that BackupResource.copySqliteDatabases will call `backup` on a new
+ * read-only connection on each database file.
+ */
+add_task(async function test_copySqliteDatabases() {
+  let sandbox = sinon.createSandbox();
+  let sourcePath = await IOUtils.createUniqueDirectory(
+    PathUtils.tempDir,
+    "BackupResource-source-test"
+  );
+  let destPath = await IOUtils.createUniqueDirectory(
+    PathUtils.tempDir,
+    "BackupResource-dest-test"
+  );
+  let pretendDatabases = ["places.sqlite", "favicons.sqlite"];
+
+  let fakeConnection = {
+    backup: sandbox.stub().resolves(true),
+    close: sandbox.stub().resolves(true),
+  };
+  sandbox.stub(Sqlite, "openConnection").returns(fakeConnection);
+
+  await BackupResource.copySqliteDatabases(
+    sourcePath,
+    destPath,
+    pretendDatabases
+  );
+
+  Assert.ok(
+    Sqlite.openConnection.calledTwice,
+    "Sqlite.openConnection called twice"
+  );
+  Assert.ok(
+    Sqlite.openConnection.firstCall.calledWith({
+      path: PathUtils.join(sourcePath, "places.sqlite"),
+      readOnly: true,
+    }),
+    "openConnection called with places.sqlite as read-only"
+  );
+  Assert.ok(
+    Sqlite.openConnection.secondCall.calledWith({
+      path: PathUtils.join(sourcePath, "favicons.sqlite"),
+      readOnly: true,
+    }),
+    "openConnection called with favicons.sqlite as read-only"
+  );
+
+  Assert.ok(
+    fakeConnection.backup.calledTwice,
+    "backup on an Sqlite connection called twice"
+  );
+  Assert.ok(
+    fakeConnection.backup.firstCall.calledWith(
+      PathUtils.join(destPath, "places.sqlite")
+    ),
+    "backup called with places.sqlite to the destination path"
+  );
+  Assert.ok(
+    fakeConnection.backup.secondCall.calledWith(
+      PathUtils.join(destPath, "favicons.sqlite")
+    ),
+    "backup called with favicons.sqlite to the destination path"
+  );
+
+  Assert.ok(
+    fakeConnection.close.calledTwice,
+    "close on an Sqlite connection called twice"
+  );
+
+  await maybeRemovePath(sourcePath);
+  await maybeRemovePath(destPath);
+  sandbox.restore();
+});
+
+/**
+ * Tests that BackupResource.copyFiles will copy files from one directory to
+ * another.
+ */
+add_task(async function test_copyFiles() {
+  let sourcePath = await IOUtils.createUniqueDirectory(
+    PathUtils.tempDir,
+    "BackupResource-source-test"
+  );
+  let destPath = await IOUtils.createUniqueDirectory(
+    PathUtils.tempDir,
+    "BackupResource-dest-test"
+  );
+
+  const testFiles = [
+    { path: "file1.txt" },
+    { path: ["some", "nested", "file", "file2.txt"] },
+    { path: "file3.txt" },
+  ];
+
+  await createTestFiles(sourcePath, testFiles);
+
+  await BackupResource.copyFiles(sourcePath, destPath, [
+    "file1.txt",
+    "some",
+    "file3.txt",
+    "does-not-exist.txt",
+  ]);
+
+  await assertFilesExist(destPath, testFiles);
+  Assert.ok(
+    !(await IOUtils.exists(PathUtils.join(destPath, "does-not-exist.txt"))),
+    "does-not-exist.txt wasn't somehow written to."
+  );
+
+  await maybeRemovePath(sourcePath);
+  await maybeRemovePath(destPath);
+});

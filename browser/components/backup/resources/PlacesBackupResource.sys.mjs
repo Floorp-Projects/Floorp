@@ -10,7 +10,6 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   BookmarkJSONUtils: "resource://gre/modules/BookmarkJSONUtils.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
-  Sqlite: "resource://gre/modules/Sqlite.sys.mjs",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -60,22 +59,12 @@ export class PlacesBackupResource extends BackupResource {
       return { bookmarksOnly: true };
     }
 
-    for (let fileName of sqliteDatabases) {
-      let sourcePath = PathUtils.join(profilePath, fileName);
-      let destPath = PathUtils.join(stagingPath, fileName);
-      let connection;
+    await BackupResource.copySqliteDatabases(
+      profilePath,
+      stagingPath,
+      sqliteDatabases
+    );
 
-      try {
-        connection = await lazy.Sqlite.openConnection({
-          path: sourcePath,
-          readOnly: true,
-        });
-
-        await connection.backup(destPath);
-      } finally {
-        await connection.close();
-      }
-    }
     return null;
   }
 

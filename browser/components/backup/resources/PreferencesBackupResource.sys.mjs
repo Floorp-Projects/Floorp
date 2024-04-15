@@ -3,7 +3,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 import { BackupResource } from "resource:///modules/backup/BackupResource.sys.mjs";
-import { Sqlite } from "resource://gre/modules/Sqlite.sys.mjs";
 
 /**
  * Class representing files that modify preferences and permissions within a user profile.
@@ -28,32 +27,14 @@ export class PreferencesBackupResource extends BackupResource {
       "user.js",
       "chrome",
     ];
-
-    for (let fileName of simpleCopyFiles) {
-      let sourcePath = PathUtils.join(profilePath, fileName);
-      let destPath = PathUtils.join(stagingPath, fileName);
-      if (await IOUtils.exists(sourcePath)) {
-        await IOUtils.copy(sourcePath, destPath, { recursive: true });
-      }
-    }
+    await BackupResource.copyFiles(profilePath, stagingPath, simpleCopyFiles);
 
     const sqliteDatabases = ["permissions.sqlite", "content-prefs.sqlite"];
-
-    for (let fileName of sqliteDatabases) {
-      let sourcePath = PathUtils.join(profilePath, fileName);
-      let destPath = PathUtils.join(stagingPath, fileName);
-      let connection;
-
-      try {
-        connection = await Sqlite.openConnection({
-          path: sourcePath,
-        });
-
-        await connection.backup(destPath);
-      } finally {
-        await connection.close();
-      }
-    }
+    await BackupResource.copySqliteDatabases(
+      profilePath,
+      stagingPath,
+      sqliteDatabases
+    );
 
     // prefs.js is a special case - we have a helper function to flush the
     // current prefs state to disk off of the main thread.
