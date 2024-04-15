@@ -4,11 +4,13 @@
 
 :host {
   border-radius: var(--border-radius-small);
+  font-size: var(--font-size-large);
   &:focus-visible {
     outline-offset: var(--page-nav-focus-outline-inset);
   }
 }
 
+a[href],
 button {
   background-color: var(--page-nav-button-background-color);
   border: 1px solid var(--page-nav-border-color);
@@ -28,11 +30,17 @@ button {
   padding: var(--page-nav-button-padding);
 }
 
+a[href] {
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
 button:hover {
   cursor: pointer;
 }
 
 @media not (prefers-contrast) {
+  a[href],
   button {
     position: relative;
   }
@@ -55,6 +63,7 @@ button:hover {
     background-color: var(--icon-color);
   }
 
+  a[href]:hover,
   button:hover,
   button[selected]:hover {
     background-color: var(--page-nav-button-background-color-hover);
@@ -72,6 +81,7 @@ button:hover {
   }
 }
 
+a[href]:focus-visible,
 button:focus-visible,
 button[selected]:focus-visible {
   outline: var(--focus-outline);
@@ -86,13 +96,24 @@ button[selected]:focus-visible {
   fill: currentColor;
 }
 
+:host(.secondary-nav-item) {
+  font-size: var(--font-size-small);
+
+  & .page-nav-icon {
+    height: var(--icon-size-default);
+    width: var(--icon-size-default);
+  }
+}
+
 @media (prefers-contrast) {
+  a[href],
   button {
     transition: none;
     border-color: ButtonText;
     background-color: var(--button-background-color);
   }
 
+  a[href]:hover,
   button:hover {
     color: SelectedItem;
   }
@@ -105,13 +126,13 @@ button[selected]:focus-visible {
 }
 
 slot {
-  font-size: var(--font-size-large);
   margin: 0;
   padding-inline-start: 0;
   user-select: none;
 }
 
 @media (max-width: 52rem) {
+  a[href],
   button {
     grid-template-columns: min-content;
     justify-content: center;

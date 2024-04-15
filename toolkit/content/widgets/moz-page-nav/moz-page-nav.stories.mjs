@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { html } from "../vendor/lit.all.mjs";
+import { html, when } from "../vendor/lit.all.mjs";
 // eslint-disable-next-line import/no-unassigned-import
 import "./moz-page-nav.mjs";
 
@@ -21,15 +21,17 @@ moz-page-nav-button-two = View 2
   .title = View 2
 moz-page-nav-button-three = View 3
   .title = View 3
-moz-page-link-one = Support Page
-  .title = Support Page
+moz-page-nav-button-four = Support Link
+  .title = Support Link
+moz-page-nav-button-five = External Link
+  .title = External Link
 moz-page-nav-heading =
   .heading = Heading
      `,
   },
 };
 
-const Template = () => html`
+const Template = ({ hasFooterLinks }) => html`
   <style>
     #page {
       height: 100%;
@@ -68,10 +70,30 @@ const Template = () => html`
         iconSrc="chrome://browser/skin/preferences/category-general.svg"
       >
       </moz-page-nav-button>
+      ${when(
+        hasFooterLinks,
+        () => html` <moz-page-nav-button
+            support-page="test"
+            data-l10n-id="moz-page-nav-button-four"
+            iconSrc="chrome://browser/skin/preferences/category-general.svg"
+            slot="secondary-nav"
+          >
+          </moz-page-nav-button>
+          <moz-page-nav-button
+            href="https://www.example.com"
+            data-l10n-id="moz-page-nav-button-five"
+            iconSrc="chrome://browser/skin/preferences/category-general.svg"
+            slot="secondary-nav"
+          >
+          </moz-page-nav-button>`
+      )}
     </moz-page-nav>
     <main></main>
   </div>
 `;
 
 export const Default = Template.bind({});
-Default.args = {};
+Default.args = { hasFooterLinks: false };
+
+export const WithFooterLinks = Template.bind({});
+WithFooterLinks.args = { hasFooterLinks: true };

@@ -37,6 +37,12 @@ body {
         <moz-page-nav-button view="view-five" iconSrc="chrome://mozapps/skin/extensions/category-discover.svg">
           <span class="view-name">View 5</span>
         </moz-page-nav-button>
+        <moz-page-nav-button iconSrc="chrome://mozapps/skin/extensions/category-discover.svg" support-page="test" slot="secondary-nav">
+          <span class="view-name">Support Link</span>
+        </moz-page-nav-button>
+        <moz-page-nav-button iconSrc="chrome://mozapps/skin/extensions/category-discover.svg" href="https://www.example.com" slot="secondary-nav">
+          <span class="view-name">External Link</span>
+        </moz-page-nav-button>
       </moz-page-nav>
     </div>
   </div>
@@ -121,9 +127,45 @@ function isActiveElement(expectedActiveEl) {
   });
 
   /**
+  * Tests that footer support links have the expected attributes
+  */
+  add_task(async function test_support_link() {
+    const supportLinkRootPath = "https://support.mozilla.org/";
+    let supportLink = mozPageNav.secondaryNavButtons[0];
+    ok(supportLink.linkEl, "The secondary nav button contains the link element.");
+    ok(
+      supportLink.linkEl.hasAttribute("is") && supportLink.linkEl.getAttribute("is") === "moz-support-link",
+      "The support link has the is=moz-support-link attribute."
+    );
+    ok(
+      supportLink.linkEl.hasAttribute("href") && supportLink.linkEl.getAttribute("href") === `${supportLinkRootPath}test`,
+      "The support link has the expected href atrribute."
+    );
+  });
+
+  /**
+  * Tests that footer external links have the expected attributes
+  */
+  add_task(async function test_external_link() {
+    const externalLinkPath = "https://www.example.com";
+    let externalLink = mozPageNav.secondaryNavButtons[1];
+    ok(externalLink.linkEl, "The secondary nav button contains the link element.");
+    ok(!externalLink.linkEl.hasAttribute("is"), "The external link doesn't have the is=moz-support-link attribute.");
+    ok(
+      externalLink.linkEl.hasAttribute("href") && externalLink.linkEl.getAttribute("href") === externalLinkPath,
+      "The external link has the expected href atrribute."
+    );
+  });
+
+  /**
   * Tests that categories are keyboard-navigable
   */
   add_task(async function test_keyboard_navigation() {
+    const tab = async shiftKey => {
+      info(`Tab${shiftKey ? " + Shift" : ""}`);
+      synthesizeKey("KEY_Tab", { shiftKey });
+      await mozPageNav.updateComplete;
+    };
     const arrowDown = async () => {
       info("Arrow down");
       synthesizeKey("KEY_ArrowDown", {});
@@ -155,6 +197,8 @@ function isActiveElement(expectedActiveEl) {
     let thirdPageNavButton = mozPageNav.pageNavButtons[2];
     let fourthPageNavButton = mozPageNav.pageNavButtons[3];
     let fifthPageNavButton = mozPageNav.pageNavButtons[4];
+    let supportLink = mozPageNav.secondaryNavButtons[0];
+    let externalLink = mozPageNav.secondaryNavButtons[1];
 
     is(
       firstPageNavButton.view,
@@ -195,6 +239,23 @@ function isActiveElement(expectedActiveEl) {
       fifthPageNavButton.view,
       mozPageNav.currentView,
       "The fifth page nav button is still selected"
+    )
+    await tab();
+    ok(
+      isActiveElement(supportLink),
+      "The support link is selected"
+    )
+    await tab();
+    ok(
+      isActiveElement(externalLink),
+      "The external link is selected"
+    )
+    await tab(true);
+    await tab(true);
+    is(
+      fifthPageNavButton.view,
+      mozPageNav.currentView,
+      "The fifth page nav button is selected"
     )
     await arrowUp();
     is(
