@@ -1613,7 +1613,7 @@ class EventDispatcher {
   formatAll() {
     const event = globalThis.event = new Event({});
     for (const source of Object.values(this._objects)) {
-      event.value = source.obj.value;
+      event.value = source.obj._getValue();
       this.runActions(source, source, event, "Format");
     }
   }
@@ -1622,8 +1622,7 @@ class EventDispatcher {
     if (event.rc) {
       source.obj.value = event.value;
       this.runCalculate(source, event);
-      const savedValue = source.obj._getValue();
-      event.value = source.obj.value;
+      const savedValue = event.value = source.obj._getValue();
       let formattedValue = null;
       if (this.runActions(source, source, event, "Format")) {
         formattedValue = event.value?.toString?.();
@@ -3957,8 +3956,8 @@ function initSandbox(params) {
 
 ;// CONCATENATED MODULE: ./src/pdf.scripting.js
 
-const pdfjsVersion = "4.1.378";
-const pdfjsBuild = "a208d6bca";
+const pdfjsVersion = "4.1.407";
+const pdfjsBuild = "2e9451133";
 globalThis.pdfjsScripting = {
   initSandbox: initSandbox
 };
