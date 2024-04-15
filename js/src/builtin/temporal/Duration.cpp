@@ -554,12 +554,27 @@ bool js::temporal::IsValidDuration(const Duration& duration) {
     }
   }
 
-  // Steps 3-4.
-  if (!NormalizeSeconds(duration)) {
+  // Step 3.
+  if (std::abs(years) >= double(int64_t(1) << 32)) {
+    return false;
+  }
+
+  // Step 4.
+  if (std::abs(months) >= double(int64_t(1) << 32)) {
     return false;
   }
 
   // Step 5.
+  if (std::abs(weeks) >= double(int64_t(1) << 32)) {
+    return false;
+  }
+
+  // Steps 6-8.
+  if (!NormalizeSeconds(duration)) {
+    return false;
+  }
+
+  // Step 9.
   return true;
 }
 
@@ -614,6 +629,14 @@ bool js::temporal::ThrowIfInvalidDuration(JSContext* cx,
     return true;
   };
 
+  auto throwIfTooLarge = [&](double v, const char* name) {
+    if (std::abs(v) >= double(int64_t(1) << 32)) {
+      report(v, name, JSMSG_TEMPORAL_DURATION_INVALID_NON_FINITE);
+      return false;
+    }
+    return true;
+  };
+
   // Step 2.
   if (!throwIfInvalid(years, "years")) {
     return false;
@@ -646,7 +669,22 @@ bool js::temporal::ThrowIfInvalidDuration(JSContext* cx,
     return false;
   }
 
-  // Steps 3-4.
+  // Step 3.
+  if (!throwIfTooLarge(years, "years")) {
+    return false;
+  }
+
+  // Step 4.
+  if (!throwIfTooLarge(months, "months")) {
+    return false;
+  }
+
+  // Step 5.
+  if (!throwIfTooLarge(weeks, "weeks")) {
+    return false;
+  }
+
+  // Steps 6-8.
   if (!NormalizeSeconds(duration)) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_TEMPORAL_DURATION_INVALID_NORMALIZED_TIME);
@@ -655,7 +693,7 @@ bool js::temporal::ThrowIfInvalidDuration(JSContext* cx,
 
   MOZ_ASSERT(IsValidDuration(duration));
 
-  // Step 5.
+  // Step 9.
   return true;
 }
 
@@ -696,6 +734,14 @@ static bool ThrowIfInvalidDuration(JSContext* cx,
     return true;
   };
 
+  auto throwIfTooLarge = [&](double v, const char* name) {
+    if (std::abs(v) >= double(int64_t(1) << 32)) {
+      report(v, name, JSMSG_TEMPORAL_DURATION_INVALID_NON_FINITE);
+      return false;
+    }
+    return true;
+  };
+
   // Step 2.
   if (!throwIfInvalid(years, "years")) {
     return false;
@@ -710,7 +756,22 @@ static bool ThrowIfInvalidDuration(JSContext* cx,
     return false;
   }
 
-  // Steps 3-4.
+  // Step 3.
+  if (!throwIfTooLarge(years, "years")) {
+    return false;
+  }
+
+  // Step 4.
+  if (!throwIfTooLarge(months, "months")) {
+    return false;
+  }
+
+  // Step 5.
+  if (!throwIfTooLarge(weeks, "weeks")) {
+    return false;
+  }
+
+  // Steps 6-8.
   if (std::abs(days) > ((int64_t(1) << 53) / 86400)) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_TEMPORAL_DURATION_INVALID_NORMALIZED_TIME);
@@ -719,7 +780,7 @@ static bool ThrowIfInvalidDuration(JSContext* cx,
 
   MOZ_ASSERT(IsValidDuration(duration.toDuration()));
 
-  // Step 5.
+  // Step 9.
   return true;
 }
 
