@@ -7,7 +7,7 @@
         "args": [
           "--xctest",
           "--xcode-build-version",
-          "15a507",
+          "15c500b",
           "--out-dir",
           "${ISOLATED_OUTDIR}"
         ],
@@ -29,12 +29,12 @@
           ],
           "dimensions": {
             "device_status": "available",
-            "os": "iOS-16.6",
+            "os": "iOS-16.7.1",
             "pool": "chrome.tests"
           },
           "named_caches": [
             {
-              "name": "xcode_ios_15a507",
+              "name": "xcode_ios_15c500b",
               "path": "Xcode.app"
             }
           ],
@@ -47,7 +47,7 @@
         "args": [
           "--xctest",
           "--xcode-build-version",
-          "15a507",
+          "15c500b",
           "--out-dir",
           "${ISOLATED_OUTDIR}"
         ],
@@ -69,12 +69,12 @@
           ],
           "dimensions": {
             "device_status": "available",
-            "os": "iOS-16.6",
+            "os": "iOS-16.7.1",
             "pool": "chrome.tests"
           },
           "named_caches": [
             {
-              "name": "xcode_ios_15a507",
+              "name": "xcode_ios_15c500b",
               "path": "Xcode.app"
             }
           ],
@@ -88,7 +88,7 @@
           "--readline-timeout=1200",
           "--xctest",
           "--xcode-build-version",
-          "15a507",
+          "15c500b",
           "--out-dir",
           "${ISOLATED_OUTDIR}"
         ],
@@ -110,14 +110,14 @@
           ],
           "dimensions": {
             "device_status": "available",
-            "os": "iOS-16.6",
+            "os": "iOS-16.7.1",
             "pool": "chrome.tests"
           },
           "hard_timeout": 7200,
           "io_timeout": 7200,
           "named_caches": [
             {
-              "name": "xcode_ios_15a507",
+              "name": "xcode_ios_15c500b",
               "path": "Xcode.app"
             }
           ],
@@ -131,7 +131,7 @@
         "args": [
           "--xctest",
           "--xcode-build-version",
-          "15a507",
+          "15c500b",
           "--out-dir",
           "${ISOLATED_OUTDIR}"
         ],
@@ -153,12 +153,12 @@
           ],
           "dimensions": {
             "device_status": "available",
-            "os": "iOS-16.6",
+            "os": "iOS-16.7.1",
             "pool": "chrome.tests"
           },
           "named_caches": [
             {
-              "name": "xcode_ios_15a507",
+              "name": "xcode_ios_15c500b",
               "path": "Xcode.app"
             }
           ],
@@ -172,7 +172,7 @@
         "args": [
           "--xctest",
           "--xcode-build-version",
-          "15a507",
+          "15c500b",
           "--out-dir",
           "${ISOLATED_OUTDIR}"
         ],
@@ -194,12 +194,12 @@
           ],
           "dimensions": {
             "device_status": "available",
-            "os": "iOS-16.6",
+            "os": "iOS-16.7.1",
             "pool": "chrome.tests"
           },
           "named_caches": [
             {
-              "name": "xcode_ios_15a507",
+              "name": "xcode_ios_15c500b",
               "path": "Xcode.app"
             }
           ],
@@ -212,7 +212,7 @@
         "args": [
           "--xctest",
           "--xcode-build-version",
-          "15a507",
+          "15c500b",
           "--out-dir",
           "${ISOLATED_OUTDIR}"
         ],
@@ -234,12 +234,12 @@
           ],
           "dimensions": {
             "device_status": "available",
-            "os": "iOS-16.6",
+            "os": "iOS-16.7.1",
             "pool": "chrome.tests"
           },
           "named_caches": [
             {
-              "name": "xcode_ios_15a507",
+              "name": "xcode_ios_15c500b",
               "path": "Xcode.app"
             }
           ],
@@ -252,7 +252,7 @@
         "args": [
           "--xctest",
           "--xcode-build-version",
-          "15a507",
+          "15c500b",
           "--out-dir",
           "${ISOLATED_OUTDIR}"
         ],
@@ -274,12 +274,12 @@
           ],
           "dimensions": {
             "device_status": "available",
-            "os": "iOS-16.6",
+            "os": "iOS-16.7.1",
             "pool": "chrome.tests"
           },
           "named_caches": [
             {
-              "name": "xcode_ios_15a507",
+              "name": "xcode_ios_15c500b",
               "path": "Xcode.app"
             }
           ],
@@ -292,7 +292,7 @@
         "args": [
           "--xctest",
           "--xcode-build-version",
-          "15a507",
+          "15c500b",
           "--out-dir",
           "${ISOLATED_OUTDIR}"
         ],
@@ -314,12 +314,12 @@
           ],
           "dimensions": {
             "device_status": "available",
-            "os": "iOS-16.6",
+            "os": "iOS-16.7.1",
             "pool": "chrome.tests"
           },
           "named_caches": [
             {
-              "name": "xcode_ios_15a507",
+              "name": "xcode_ios_15c500b",
               "path": "Xcode.app"
             }
           ],
@@ -332,7 +332,7 @@
         "args": [
           "--xctest",
           "--xcode-build-version",
-          "15a507",
+          "15c500b",
           "--out-dir",
           "${ISOLATED_OUTDIR}"
         ],
@@ -354,12 +354,12 @@
           ],
           "dimensions": {
             "device_status": "available",
-            "os": "iOS-16.6",
+            "os": "iOS-16.7.1",
             "pool": "chrome.tests"
           },
           "named_caches": [
             {
-              "name": "xcode_ios_15a507",
+              "name": "xcode_ios_15c500b",
               "path": "Xcode.app"
             }
           ],
@@ -372,7 +372,7 @@
         "args": [
           "--xctest",
           "--xcode-build-version",
-          "15a507",
+          "15c500b",
           "--out-dir",
           "${ISOLATED_OUTDIR}"
         ],
@@ -394,12 +394,12 @@
           ],
           "dimensions": {
             "device_status": "available",
-            "os": "iOS-16.6",
+            "os": "iOS-16.7.1",
             "pool": "chrome.tests"
           },
           "named_caches": [
             {
-              "name": "xcode_ios_15a507",
+              "name": "xcode_ios_15c500b",
               "path": "Xcode.app"
             }
           ],
@@ -472,7 +472,7 @@
         "args": [
           "--xctest",
           "--xcode-build-version",
-          "15a507",
+          "15c500b",
           "--out-dir",
           "${ISOLATED_OUTDIR}"
         ],
@@ -494,12 +494,12 @@
           ],
           "dimensions": {
             "device_status": "available",
-            "os": "iOS-16.6",
+            "os": "iOS-16.7.1",
             "pool": "chrome.tests"
           },
           "named_caches": [
             {
-              "name": "xcode_ios_15a507",
+              "name": "xcode_ios_15c500b",
               "path": "Xcode.app"
             }
           ],
@@ -512,7 +512,7 @@
         "args": [
           "--xctest",
           "--xcode-build-version",
-          "15a507",
+          "15c500b",
           "--out-dir",
           "${ISOLATED_OUTDIR}"
         ],
@@ -534,12 +534,12 @@
           ],
           "dimensions": {
             "device_status": "available",
-            "os": "iOS-16.6",
+            "os": "iOS-16.7.1",
             "pool": "chrome.tests"
           },
           "named_caches": [
             {
-              "name": "xcode_ios_15a507",
+              "name": "xcode_ios_15c500b",
               "path": "Xcode.app"
             }
           ],
@@ -553,7 +553,7 @@
           "--readline-timeout=1200",
           "--xctest",
           "--xcode-build-version",
-          "15a507",
+          "15c500b",
           "--out-dir",
           "${ISOLATED_OUTDIR}"
         ],
@@ -575,14 +575,14 @@
           ],
           "dimensions": {
             "device_status": "available",
-            "os": "iOS-16.6",
+            "os": "iOS-16.7.1",
             "pool": "chrome.tests"
           },
           "hard_timeout": 7200,
           "io_timeout": 7200,
           "named_caches": [
             {
-              "name": "xcode_ios_15a507",
+              "name": "xcode_ios_15c500b",
               "path": "Xcode.app"
             }
           ],
@@ -596,7 +596,7 @@
         "args": [
           "--xctest",
           "--xcode-build-version",
-          "15a507",
+          "15c500b",
           "--out-dir",
           "${ISOLATED_OUTDIR}"
         ],
@@ -618,12 +618,12 @@
           ],
           "dimensions": {
             "device_status": "available",
-            "os": "iOS-16.6",
+            "os": "iOS-16.7.1",
             "pool": "chrome.tests"
           },
           "named_caches": [
             {
-              "name": "xcode_ios_15a507",
+              "name": "xcode_ios_15c500b",
               "path": "Xcode.app"
             }
           ],
@@ -637,7 +637,7 @@
         "args": [
           "--xctest",
           "--xcode-build-version",
-          "15a507",
+          "15c500b",
           "--out-dir",
           "${ISOLATED_OUTDIR}"
         ],
@@ -659,12 +659,12 @@
           ],
           "dimensions": {
             "device_status": "available",
-            "os": "iOS-16.6",
+            "os": "iOS-16.7.1",
             "pool": "chrome.tests"
           },
           "named_caches": [
             {
-              "name": "xcode_ios_15a507",
+              "name": "xcode_ios_15c500b",
               "path": "Xcode.app"
             }
           ],
@@ -677,7 +677,7 @@
         "args": [
           "--xctest",
           "--xcode-build-version",
-          "15a507",
+          "15c500b",
           "--out-dir",
           "${ISOLATED_OUTDIR}"
         ],
@@ -699,12 +699,12 @@
           ],
           "dimensions": {
             "device_status": "available",
-            "os": "iOS-16.6",
+            "os": "iOS-16.7.1",
             "pool": "chrome.tests"
           },
           "named_caches": [
             {
-              "name": "xcode_ios_15a507",
+              "name": "xcode_ios_15c500b",
               "path": "Xcode.app"
             }
           ],
@@ -717,7 +717,7 @@
         "args": [
           "--xctest",
           "--xcode-build-version",
-          "15a507",
+          "15c500b",
           "--out-dir",
           "${ISOLATED_OUTDIR}"
         ],
@@ -739,12 +739,12 @@
           ],
           "dimensions": {
             "device_status": "available",
-            "os": "iOS-16.6",
+            "os": "iOS-16.7.1",
             "pool": "chrome.tests"
           },
           "named_caches": [
             {
-              "name": "xcode_ios_15a507",
+              "name": "xcode_ios_15c500b",
               "path": "Xcode.app"
             }
           ],
@@ -757,7 +757,7 @@
         "args": [
           "--xctest",
           "--xcode-build-version",
-          "15a507",
+          "15c500b",
           "--out-dir",
           "${ISOLATED_OUTDIR}"
         ],
@@ -779,12 +779,12 @@
           ],
           "dimensions": {
             "device_status": "available",
-            "os": "iOS-16.6",
+            "os": "iOS-16.7.1",
             "pool": "chrome.tests"
           },
           "named_caches": [
             {
-              "name": "xcode_ios_15a507",
+              "name": "xcode_ios_15c500b",
               "path": "Xcode.app"
             }
           ],
@@ -797,7 +797,7 @@
         "args": [
           "--xctest",
           "--xcode-build-version",
-          "15a507",
+          "15c500b",
           "--out-dir",
           "${ISOLATED_OUTDIR}"
         ],
@@ -819,12 +819,12 @@
           ],
           "dimensions": {
             "device_status": "available",
-            "os": "iOS-16.6",
+            "os": "iOS-16.7.1",
             "pool": "chrome.tests"
           },
           "named_caches": [
             {
-              "name": "xcode_ios_15a507",
+              "name": "xcode_ios_15c500b",
               "path": "Xcode.app"
             }
           ],
@@ -837,7 +837,7 @@
         "args": [
           "--xctest",
           "--xcode-build-version",
-          "15a507",
+          "15c500b",
           "--out-dir",
           "${ISOLATED_OUTDIR}"
         ],
@@ -859,12 +859,12 @@
           ],
           "dimensions": {
             "device_status": "available",
-            "os": "iOS-16.6",
+            "os": "iOS-16.7.1",
             "pool": "chrome.tests"
           },
           "named_caches": [
             {
-              "name": "xcode_ios_15a507",
+              "name": "xcode_ios_15c500b",
               "path": "Xcode.app"
             }
           ],

@@ -250,10 +250,6 @@ class WebRtcVideoSendChannel : public MediaChannelUtil,
     ADAPTREASON_BANDWIDTH = 2,
   };
 
-  // TODO(webrtc:14852): Update downstream projects to use
-  // cricket::kDefaultVideoMaxQpVpx/H26x and remove.
-  static constexpr int kDefaultQpMax = 56;
-
   // Implements webrtc::EncoderSwitchRequestCallback.
   void RequestEncoderFallback() override;
   void RequestEncoderSwitch(const webrtc::SdpVideoFormat& format,
@@ -402,8 +398,7 @@ class WebRtcVideoSendChannel : public MediaChannelUtil,
         const VideoCodec& codec) const;
     void ReconfigureEncoder(webrtc::SetParametersCallback callback);
 
-    // Calls Start or Stop according to whether or not `sending_` is true,
-    // and whether or not the encoding in `rtp_parameters_` is active.
+    // Calls Start or Stop according to whether or not `sending_` is true.
     void UpdateSendState();
 
     webrtc::DegradationPreference GetDegradationPreference() const

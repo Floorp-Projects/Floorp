@@ -10,33 +10,34 @@
 
 #include "p2p/base/port.h"
 
-#include <math.h>
-
-#include <algorithm>
 #include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <utility>
 #include <vector>
 
-#include "absl/algorithm/container.h"
 #include "absl/memory/memory.h"
 #include "absl/strings/match.h"
 #include "absl/strings/string_view.h"
-#include "p2p/base/connection.h"
-#include "p2p/base/port_allocator.h"
+#include "api/array_view.h"
+#include "api/rtc_error.h"
+#include "api/units/time_delta.h"
+#include "p2p/base/p2p_constants.h"
+#include "p2p/base/stun_request.h"
+#include "rtc_base/byte_buffer.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/crc32.h"
 #include "rtc_base/helpers.h"
+#include "rtc_base/ip_address.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/mdns_responder_interface.h"
-#include "rtc_base/message_digest.h"
+#include "rtc_base/net_helper.h"
 #include "rtc_base/network.h"
-#include "rtc_base/numerics/safe_minmax.h"
 #include "rtc_base/socket_address.h"
 #include "rtc_base/string_encode.h"
 #include "rtc_base/string_utils.h"
 #include "rtc_base/strings/string_builder.h"
-#include "rtc_base/third_party/base64/base64.h"
+#include "rtc_base/time_utils.h"
 #include "rtc_base/trace_event.h"
 
 namespace cricket {
@@ -258,14 +259,18 @@ void Port::AddAddress(const rtc::SocketAddress& address,
                       absl::string_view url,
                       bool is_final) {
   RTC_DCHECK_RUN_ON(thread_);
-  if (protocol == TCP_PROTOCOL_NAME && type == LOCAL_PORT_TYPE) {
-    RTC_DCHECK(!tcptype.empty());
-  }
 
   std::string foundation =
       ComputeFoundation(type, protocol, relay_protocol, base_address);
   Candidate c(component_, protocol, address, 0U, username_fragment(), password_,
               type, generation_, foundation, network_->id(), network_cost_);
+
+#if RTC_DCHECK_IS_ON
+  if (protocol == TCP_PROTOCOL_NAME && c.is_local()) {
+    RTC_DCHECK(!tcptype.empty());
+  }
+#endif
+
   c.set_relay_protocol(relay_protocol);
   c.set_priority(
       c.GetPriority(type_preference, network_->preference(), relay_preference,
@@ -278,26 +283,24 @@ void Port::AddAddress(const rtc::SocketAddress& address,
   c.set_url(url);
   c.set_related_address(related_address);
 
-  bool pending = MaybeObfuscateAddress(&c, type, is_final);
+  bool pending = MaybeObfuscateAddress(c, is_final);
 
   if (!pending) {
     FinishAddingAddress(c, is_final);
   }
 }
 
-bool Port::MaybeObfuscateAddress(Candidate* c,
-                                 absl::string_view type,
-                                 bool is_final) {
+bool Port::MaybeObfuscateAddress(const Candidate& c, bool is_final) {
   // TODO(bugs.webrtc.org/9723): Use a config to control the feature of IP
   // handling with mDNS.
   if (network_->GetMdnsResponder() == nullptr) {
     return false;
   }
-  if (type != LOCAL_PORT_TYPE) {
+  if (!c.is_local()) {
     return false;
   }
 
-  auto copy = *c;
+  auto copy = c;
   auto weak_ptr = weak_factory_.GetWeakPtr();
   auto callback = [weak_ptr, copy, is_final](const rtc::IPAddress& addr,
                                              absl::string_view name) mutable {

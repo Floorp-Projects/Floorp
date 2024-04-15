@@ -55,18 +55,18 @@ index a511eda7bd..75a4a1cac0 100644
  DegradedCall::~DegradedCall() {
    RTC_DCHECK_RUN_ON(call_->worker_thread());
 diff --git a/modules/audio_coding/acm2/acm_receiver.cc b/modules/audio_coding/acm2/acm_receiver.cc
-index a77e472ec1..a5bf88e547 100644
+index 24a49024c8..4deabdf7ff 100644
 --- a/modules/audio_coding/acm2/acm_receiver.cc
 +++ b/modules/audio_coding/acm2/acm_receiver.cc
 @@ -50,7 +50,7 @@ std::unique_ptr<NetEq> CreateNetEq(
  
  AcmReceiver::Config::Config(
      rtc::scoped_refptr<AudioDecoderFactory> decoder_factory)
--    : clock(*Clock::GetRealTimeClock()), decoder_factory(decoder_factory) {
-+    : clock(*Clock::GetRealTimeClockRaw()), decoder_factory(decoder_factory) {
-   // Post-decode VAD is disabled by default in NetEq, however, Audio
-   // Conference Mixer relies on VAD decisions and fails without them.
-   neteq_config.enable_post_decode_vad = true;
+-    : clock(*Clock::GetRealTimeClock()), decoder_factory(decoder_factory) {}
++    : clock(*Clock::GetRealTimeClockRaw()), decoder_factory(decoder_factory) {}
+ 
+ AcmReceiver::Config::Config(const Config&) = default;
+ AcmReceiver::Config::~Config() = default;
 diff --git a/modules/rtp_rtcp/include/flexfec_receiver.h b/modules/rtp_rtcp/include/flexfec_receiver.h
 index a869c8ad41..b6a33882d1 100644
 --- a/modules/rtp_rtcp/include/flexfec_receiver.h

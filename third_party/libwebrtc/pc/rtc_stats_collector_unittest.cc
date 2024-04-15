@@ -23,6 +23,7 @@
 #include <vector>
 
 #include "absl/strings/str_replace.h"
+#include "absl/types/optional.h"
 #include "api/candidate.h"
 #include "api/dtls_transport_interface.h"
 #include "api/media_stream_interface.h"
@@ -211,7 +212,7 @@ std::unique_ptr<cricket::Candidate> CreateFakeCandidate(
     int port,
     const std::string& protocol,
     const rtc::AdapterType adapter_type,
-    const std::string& candidate_type,
+    const absl::string_view candidate_type,
     uint32_t priority,
     const rtc::AdapterType underlying_type_for_vpn =
         rtc::ADAPTER_TYPE_UNKNOWN) {
@@ -3723,7 +3724,7 @@ class RTCTestStats : public RTCStats {
   RTCTestStats(const std::string& id, Timestamp timestamp)
       : RTCStats(id, timestamp) {}
 
-  RTCStatsMember<int32_t> dummy_stat;
+  absl::optional<int32_t> dummy_stat;
 };
 
 WEBRTC_RTCSTATS_IMPL(RTCTestStats,

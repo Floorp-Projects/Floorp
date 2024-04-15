@@ -267,7 +267,8 @@ LibvpxVp9Encoder::LibvpxVp9Encoder(const cricket::VideoCodec& codec,
                             "Disabled")),
       performance_flags_(ParsePerformanceFlagsFromTrials(trials)),
       num_steady_state_frames_(0),
-      config_changed_(true) {
+      config_changed_(true),
+      svc_frame_drop_config_(ParseSvcFrameDropConfig(trials)) {
   codec_ = {};
   memset(&svc_params_, 0, sizeof(vpx_svc_extra_cfg_t));
 }
@@ -838,6 +839,8 @@ int LibvpxVp9Encoder::InitAndSetControlSettings(const VideoCodec* inst) {
       // 1:2 scaling in each dimension.
       svc_params_.scaling_factor_num[i] = scaling_factor_num;
       svc_params_.scaling_factor_den[i] = 256;
+      if (inst->mode != VideoCodecMode::kScreensharing)
+        scaling_factor_num /= 2;
     }
   }
 
@@ -924,11 +927,24 @@ int LibvpxVp9Encoder::InitAndSetControlSettings(const VideoCodec* inst) {
         svc_drop_frame_.framedrop_thresh[i] = config_->rc_dropframe_thresh;
       }
     } else {
-      // Configure encoder to drop entire superframe whenever it needs to drop
-      // a layer. This mode is preferred over per-layer dropping which causes
-      // quality flickering and is not compatible with RTP non-flexible mode.
-      svc_drop_frame_.framedrop_mode = FULL_SUPERFRAME_DROP;
-      svc_drop_frame_.max_consec_drop = std::numeric_limits<int>::max();
+      if (svc_frame_drop_config_.enabled &&
+          svc_frame_drop_config_.layer_drop_mode == LAYER_DROP &&
+          is_flexible_mode_ && svc_controller_ &&
+          (inter_layer_pred_ == InterLayerPredMode::kOff ||
+           inter_layer_pred_ == InterLayerPredMode::kOnKeyPic)) {
+        // SVC controller is required since it properly accounts for dropped
+        // refs (unlike SetReferences(), which assumes full superframe drop).
+        svc_drop_frame_.framedrop_mode = LAYER_DROP;
+      } else {
+        // Configure encoder to drop entire superframe whenever it needs to drop
+        // a layer. This mode is preferred over per-layer dropping which causes
+        // quality flickering and is not compatible with RTP non-flexible mode.
+        svc_drop_frame_.framedrop_mode = FULL_SUPERFRAME_DROP;
+      }
+      svc_drop_frame_.max_consec_drop =
+          svc_frame_drop_config_.enabled
+              ? svc_frame_drop_config_.max_consec_drop
+              : std::numeric_limits<int>::max();
       for (size_t i = 0; i < num_spatial_layers_; ++i) {
         svc_drop_frame_.framedrop_thresh[i] = config_->rc_dropframe_thresh;
       }
@@ -1957,6 +1973,26 @@ LibvpxVp9Encoder::ParseQualityScalerConfig(const FieldTrialsView& trials) {
   config.low_qp = low_qp.Get();
   config.high_qp = high_qp.Get();
 
+  return config;
+}
+
+LibvpxVp9Encoder::SvcFrameDropConfig LibvpxVp9Encoder::ParseSvcFrameDropConfig(
+    const FieldTrialsView& trials) {
+  FieldTrialFlag enabled = FieldTrialFlag("Enabled");
+  FieldTrialParameter<int> layer_drop_mode("layer_drop_mode",
+                                           FULL_SUPERFRAME_DROP);
+  FieldTrialParameter<int> max_consec_drop("max_consec_drop",
+                                           std::numeric_limits<int>::max());
+  ParseFieldTrial({&enabled, &layer_drop_mode, &max_consec_drop},
+                  trials.Lookup("WebRTC-LibvpxVp9Encoder-SvcFrameDropConfig"));
+  SvcFrameDropConfig config;
+  config.enabled = enabled.Get();
+  config.layer_drop_mode = layer_drop_mode.Get();
+  config.max_consec_drop = max_consec_drop.Get();
+  RTC_LOG(LS_INFO) << "Libvpx VP9 encoder SVC frame drop config: "
+                   << (config.enabled ? "enabled" : "disabled")
+                   << " layer_drop_mode " << config.layer_drop_mode
+                   << " max_consec_drop " << config.max_consec_drop;
   return config;
 }
 

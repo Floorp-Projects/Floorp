@@ -42,8 +42,8 @@
 #include "rtc_base/buffer.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/time_utils.h"
-#include "system_wrappers/include/field_trial.h"
 #include "system_wrappers/include/ntp_time.h"
+#include "test/gmock.h"
 #include "test/gtest.h"
 
 namespace webrtc {
@@ -51,6 +51,9 @@ namespace webrtc {
 namespace test {
 
 namespace {
+
+using ::testing::ElementsAreArray;
+using ::testing::IsEmpty;
 
 struct ExtensionPair {
   RTPExtensionType type;
@@ -217,10 +220,27 @@ EventGenerator::NewProbeResultSuccess() {
   return std::make_unique<RtcEventProbeResultSuccess>(id, bitrate_bps);
 }
 
+constexpr uint32_t CandidateTypeCount() {
+  // This switch statement only exists to catch changes to the IceCandidateType
+  // enumeration. If you get an error here, please update the switch statement
+  // and the return value.
+  IceCandidateType type = IceCandidateType::kHost;
+  switch (type) {
+    case IceCandidateType::kHost:
+    case IceCandidateType::kSrflx:
+    case IceCandidateType::kPrflx:
+    case IceCandidateType::kRelay:
+      break;
+  }
+  return 4u;
+}
+
 std::unique_ptr<RtcEventIceCandidatePairConfig>
 EventGenerator::NewIceCandidatePairConfig() {
-  IceCandidateType local_candidate_type = static_cast<IceCandidateType>(
-      prng_.Rand(static_cast<uint32_t>(IceCandidateType::kNumValues) - 1));
+  static_assert(static_cast<int>(IceCandidateType::kHost) == 0,
+                "Expect kLocal to be the first enum value, equal to 0");
+  IceCandidateType local_candidate_type =
+      static_cast<IceCandidateType>(prng_.Rand(CandidateTypeCount() - 1));
   IceCandidateNetworkType local_network_type =
       static_cast<IceCandidateNetworkType>(prng_.Rand(
           static_cast<uint32_t>(IceCandidateNetworkType::kNumValues) - 1));
@@ -228,8 +248,8 @@ EventGenerator::NewIceCandidatePairConfig() {
       static_cast<IceCandidatePairAddressFamily>(prng_.Rand(
           static_cast<uint32_t>(IceCandidatePairAddressFamily::kNumValues) -
           1));
-  IceCandidateType remote_candidate_type = static_cast<IceCandidateType>(
-      prng_.Rand(static_cast<uint32_t>(IceCandidateType::kNumValues) - 1));
+  IceCandidateType remote_candidate_type =
+      static_cast<IceCandidateType>(prng_.Rand(CandidateTypeCount() - 1));
   IceCandidatePairAddressFamily remote_address_family =
       static_cast<IceCandidatePairAddressFamily>(prng_.Rand(
           static_cast<uint32_t>(IceCandidatePairAddressFamily::kNumValues) -
@@ -238,12 +258,10 @@ EventGenerator::NewIceCandidatePairConfig() {
       static_cast<IceCandidatePairProtocol>(prng_.Rand(
           static_cast<uint32_t>(IceCandidatePairProtocol::kNumValues) - 1));
 
-  IceCandidatePairDescription desc;
-  desc.local_candidate_type = local_candidate_type;
+  IceCandidatePairDescription desc(local_candidate_type, remote_candidate_type);
   desc.local_relay_protocol = protocol_type;
   desc.local_network_type = local_network_type;
   desc.local_address_family = local_address_family;
-  desc.remote_candidate_type = remote_candidate_type;
   desc.remote_address_family = remote_address_family;
   desc.candidate_pair_protocol = protocol_type;
 
@@ -1032,23 +1050,15 @@ void VerifyLoggedRtpHeader(const Event& original_header,
 }
 
 template <typename Event>
-void VerifyLoggedDependencyDescriptor(const Event& packet,
-                                      const std::vector<uint8_t>& logged_dd) {
-  if (webrtc::field_trial::IsDisabled(
-          "WebRTC-RtcEventLogEncodeDependencyDescriptor")) {
-    EXPECT_TRUE(logged_dd.empty());
-  } else {
+void EventVerifier::VerifyLoggedDependencyDescriptor(
+    const Event& packet,
+    const std::vector<uint8_t>& logged_dd) const {
+  if (expect_dependency_descriptor_rtp_header_extension_is_set_) {
     rtc::ArrayView<const uint8_t> original =
         packet.template GetRawExtension<RtpDependencyDescriptorExtension>();
-    EXPECT_EQ(logged_dd.size(), original.size());
-    bool dd_is_same = true;
-    for (size_t i = 0; i < logged_dd.size(); ++i) {
-      dd_is_same = logged_dd[i] == original[i];
-      if (!dd_is_same) {
-        break;
-      }
-    }
-    EXPECT_TRUE(dd_is_same);
+    EXPECT_THAT(logged_dd, ElementsAreArray(original));
+  } else {
+    EXPECT_THAT(logged_dd, IsEmpty());
   }
 }
 

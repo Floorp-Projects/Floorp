@@ -10,6 +10,7 @@
 
 #include "api/candidate.h"
 
+#include "absl/base/attributes.h"
 #include "rtc_base/helpers.h"
 #include "rtc_base/ip_address.h"
 #include "rtc_base/logging.h"
@@ -17,15 +18,16 @@
 
 namespace cricket {
 
-const char LOCAL_PORT_TYPE[] = "local";
-const char STUN_PORT_TYPE[] = "stun";
-const char PRFLX_PORT_TYPE[] = "prflx";
-const char RELAY_PORT_TYPE[] = "relay";
+ABSL_CONST_INIT const absl::string_view LOCAL_PORT_TYPE = "local";
+ABSL_CONST_INIT const absl::string_view STUN_PORT_TYPE = "stun";
+ABSL_CONST_INIT const absl::string_view PRFLX_PORT_TYPE = "prflx";
+ABSL_CONST_INIT const absl::string_view RELAY_PORT_TYPE = "relay";
 
 Candidate::Candidate()
     : id_(rtc::CreateRandomString(8)),
       component_(0),
       priority_(0),
+      type_(LOCAL_PORT_TYPE),
       network_type_(rtc::ADAPTER_TYPE_UNKNOWN),
       underlying_type_for_vpn_(rtc::ADAPTER_TYPE_UNKNOWN),
       generation_(0),
@@ -62,6 +64,10 @@ Candidate::Candidate(const Candidate&) = default;
 
 Candidate::~Candidate() = default;
 
+void Candidate::generate_id() {
+  id_ = rtc::CreateRandomString(8);
+}
+
 bool Candidate::is_local() const {
   return type_ == LOCAL_PORT_TYPE;
 }
@@ -73,6 +79,17 @@ bool Candidate::is_prflx() const {
 }
 bool Candidate::is_relay() const {
   return type_ == RELAY_PORT_TYPE;
+}
+
+absl::string_view Candidate::type_name() const {
+  // The LOCAL_PORT_TYPE and STUN_PORT_TYPE constants are not the standard type
+  // names, so check for those specifically. For other types, `type_` will have
+  // the correct name.
+  if (is_local())
+    return "host";
+  if (is_stun())
+    return "srflx";
+  return type_;
 }
 
 bool Candidate::IsEquivalent(const Candidate& c) const {
@@ -99,9 +116,10 @@ std::string Candidate::ToStringInternal(bool sensitive) const {
   std::string related_address = sensitive ? related_address_.ToSensitiveString()
                                           : related_address_.ToString();
   ost << "Cand[" << transport_name_ << ":" << foundation_ << ":" << component_
-      << ":" << protocol_ << ":" << priority_ << ":" << address << ":" << type_
-      << ":" << related_address << ":" << username_ << ":" << password_ << ":"
-      << network_id_ << ":" << network_cost_ << ":" << generation_ << "]";
+      << ":" << protocol_ << ":" << priority_ << ":" << address << ":"
+      << type_name() << ":" << related_address << ":" << username_ << ":"
+      << password_ << ":" << network_id_ << ":" << network_cost_ << ":"
+      << generation_ << "]";
   return ost.Release();
 }
 

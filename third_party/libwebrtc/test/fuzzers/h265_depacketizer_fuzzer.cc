@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2013 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2024 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -7,19 +7,13 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-
-// Unit tests for PostDecodeVad class.
-
-#include "modules/audio_coding/neteq/post_decode_vad.h"
-
-#include "test/gtest.h"
+#include "modules/rtp_rtcp/source/video_rtp_depacketizer_h265.h"
 
 namespace webrtc {
-
-TEST(PostDecodeVad, CreateAndDestroy) {
-  PostDecodeVad vad;
+void FuzzOneInput(const uint8_t* data, size_t size) {
+  if (size > 200000)
+    return;
+  VideoRtpDepacketizerH265 depacketizer;
+  depacketizer.Parse(rtc::CopyOnWriteBuffer(data, size));
 }
-
-// TODO(hlundin): Write more tests.
-
 }  // namespace webrtc

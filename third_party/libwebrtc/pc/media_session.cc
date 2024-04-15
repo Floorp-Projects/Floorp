@@ -22,7 +22,6 @@
 #include "absl/strings/match.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
-#include "api/crypto_params.h"
 #include "media/base/codec.h"
 #include "media/base/media_constants.h"
 #include "media/base/media_engine.h"
@@ -46,19 +45,6 @@ using rtc::UniqueRandomIdGenerator;
 using webrtc::RTCError;
 using webrtc::RTCErrorType;
 using webrtc::RtpTransceiverDirection;
-
-const char kInline[] = "inline:";
-
-void GetSupportedSdesCryptoSuiteNames(
-    void (*func)(const webrtc::CryptoOptions&, std::vector<int>*),
-    const webrtc::CryptoOptions& crypto_options,
-    std::vector<std::string>* names) {
-  std::vector<int> crypto_suites;
-  func(crypto_options, &crypto_suites);
-  for (const auto crypto : crypto_suites) {
-    names->push_back(rtc::SrtpCryptoSuiteToName(crypto));
-  }
-}
 
 webrtc::RtpExtension RtpExtensionFromCapability(
     const webrtc::RtpHeaderExtensionCapability& capability) {
@@ -165,140 +151,6 @@ bool IsMediaContentOfType(const ContentInfo* content, MediaType media_type) {
     return false;
   }
   return content->media_description()->type() == media_type;
-}
-
-bool CreateCryptoParams(int tag,
-                        const std::string& cipher,
-                        CryptoParams* crypto_out) {
-  int key_len;
-  int salt_len;
-  if (!rtc::GetSrtpKeyAndSaltLengths(rtc::SrtpCryptoSuiteFromName(cipher),
-                                     &key_len, &salt_len)) {
-    return false;
-  }
-
-  int master_key_len = key_len + salt_len;
-  std::string master_key;
-  if (!rtc::CreateRandomData(master_key_len, &master_key)) {
-    return false;
-  }
-
-  RTC_CHECK_EQ(master_key_len, master_key.size());
-  std::string key = rtc::Base64::Encode(master_key);
-
-  crypto_out->tag = tag;
-  crypto_out->crypto_suite = cipher;
-  crypto_out->key_params = kInline;
-  crypto_out->key_params += key;
-  return true;
-}
-
-bool AddCryptoParams(const std::string& crypto_suite,
-                     CryptoParamsVec* cryptos_out) {
-  int size = static_cast<int>(cryptos_out->size());
-
-  cryptos_out->resize(size + 1);
-  return CreateCryptoParams(size, crypto_suite, &cryptos_out->at(size));
-}
-
-void AddMediaCryptos(const CryptoParamsVec& cryptos,
-                     MediaContentDescription* media) {
-  for (const CryptoParams& crypto : cryptos) {
-    media->AddCrypto(crypto);
-  }
-}
-
-bool CreateMediaCryptos(const std::vector<std::string>& crypto_suites,
-                        MediaContentDescription* media) {
-  CryptoParamsVec cryptos;
-  for (const std::string& crypto_suite : crypto_suites) {
-    if (!AddCryptoParams(crypto_suite, &cryptos)) {
-      return false;
-    }
-  }
-  AddMediaCryptos(cryptos, media);
-  return true;
-}
-
-const CryptoParamsVec* GetCryptos(const ContentInfo* content) {
-  if (!content || !content->media_description()) {
-    return nullptr;
-  }
-  return &content->media_description()->cryptos();
-}
-
-bool FindMatchingCrypto(const CryptoParamsVec& cryptos,
-                        const CryptoParams& crypto,
-                        CryptoParams* crypto_out) {
-  auto it = absl::c_find_if(
-      cryptos, [&crypto](const CryptoParams& c) { return crypto.Matches(c); });
-  if (it == cryptos.end()) {
-    return false;
-  }
-  *crypto_out = *it;
-  return true;
-}
-
-// For audio, HMAC 32 (if enabled) is prefered over HMAC 80 because of the
-// low overhead.
-void GetSupportedAudioSdesCryptoSuites(
-    const webrtc::CryptoOptions& crypto_options,
-    std::vector<int>* crypto_suites) {
-  if (crypto_options.srtp.enable_aes128_sha1_32_crypto_cipher) {
-    crypto_suites->push_back(rtc::kSrtpAes128CmSha1_32);
-  }
-  crypto_suites->push_back(rtc::kSrtpAes128CmSha1_80);
-  if (crypto_options.srtp.enable_gcm_crypto_suites) {
-    crypto_suites->push_back(rtc::kSrtpAeadAes256Gcm);
-    crypto_suites->push_back(rtc::kSrtpAeadAes128Gcm);
-  }
-}
-
-void GetSupportedAudioSdesCryptoSuiteNames(
-    const webrtc::CryptoOptions& crypto_options,
-    std::vector<std::string>* crypto_suite_names) {
-  GetSupportedSdesCryptoSuiteNames(GetSupportedAudioSdesCryptoSuites,
-                                   crypto_options, crypto_suite_names);
-}
-
-void GetSupportedVideoSdesCryptoSuites(
-    const webrtc::CryptoOptions& crypto_options,
-    std::vector<int>* crypto_suites) {
-  crypto_suites->push_back(rtc::kSrtpAes128CmSha1_80);
-  if (crypto_options.srtp.enable_gcm_crypto_suites) {
-    crypto_suites->push_back(rtc::kSrtpAeadAes256Gcm);
-    crypto_suites->push_back(rtc::kSrtpAeadAes128Gcm);
-  }
-}
-
-void GetSupportedVideoSdesCryptoSuiteNames(
-    const webrtc::CryptoOptions& crypto_options,
-    std::vector<std::string>* crypto_suite_names) {
-  GetSupportedSdesCryptoSuiteNames(GetSupportedVideoSdesCryptoSuites,
-                                   crypto_options, crypto_suite_names);
-}
-
-// Support any GCM cipher (if enabled through options). For video support only
-// 80-bit SHA1 HMAC. For audio 32-bit HMAC is tolerated (if enabled) unless
-// bundle is enabled because it is low overhead.
-// Pick the crypto in the list that is supported.
-bool SelectCrypto(const MediaContentDescription* offer,
-                  bool bundle,
-                  const webrtc::CryptoOptions& crypto_options,
-                  CryptoParams* crypto_out) {
-  bool audio = offer->type() == MEDIA_TYPE_AUDIO;
-  const CryptoParamsVec& cryptos = offer->cryptos();
-
-  for (const CryptoParams& crypto : cryptos) {
-    if ((crypto_options.srtp.enable_gcm_crypto_suites &&
-         rtc::IsGcmCryptoSuiteName(crypto.crypto_suite)) ||
-        rtc::kCsAesCm128HmacSha1_80 == crypto.crypto_suite ||
-        (rtc::kCsAesCm128HmacSha1_32 == crypto.crypto_suite && audio &&
-         !bundle && crypto_options.srtp.enable_aes128_sha1_32_crypto_cipher)) {
-      return CreateCryptoParams(crypto.tag, crypto.crypto_suite, crypto_out);
-    }
-  }
-  return false;
 }
 
 // Finds all StreamParams of all media types and attach them to stream_params.
@@ -496,118 +348,6 @@ bool UpdateTransportInfoForBundle(const ContentGroup& bundle_group,
   return true;
 }
 
-// Gets the CryptoParamsVec of the given `content_name` from `sdesc`, and
-// sets it to `cryptos`.
-bool GetCryptosByName(const SessionDescription* sdesc,
-                      const std::string& content_name,
-                      CryptoParamsVec* cryptos) {
-  if (!sdesc || !cryptos) {
-    return false;
-  }
-  const ContentInfo* content = sdesc->GetContentByName(content_name);
-  if (!content || !content->media_description()) {
-    return false;
-  }
-  *cryptos = content->media_description()->cryptos();
-  return true;
-}
-
-// Prunes the `target_cryptos` by removing the crypto params (crypto_suite)
-// which are not available in `filter`.
-void PruneCryptos(const CryptoParamsVec& filter,
-                  CryptoParamsVec* target_cryptos) {
-  if (!target_cryptos) {
-    return;
-  }
-
-  target_cryptos->erase(
-      std::remove_if(target_cryptos->begin(), target_cryptos->end(),
-                     // Returns true if the `crypto`'s crypto_suite is not
-                     // found in `filter`.
-                     [&filter](const CryptoParams& crypto) {
-                       for (const CryptoParams& entry : filter) {
-                         if (entry.crypto_suite == crypto.crypto_suite)
-                           return false;
-                       }
-                       return true;
-                     }),
-      target_cryptos->end());
-}
-
-bool IsRtpContent(SessionDescription* sdesc, const std::string& content_name) {
-  bool is_rtp = false;
-  ContentInfo* content = sdesc->GetContentByName(content_name);
-  if (content && content->media_description()) {
-    is_rtp = IsRtpProtocol(content->media_description()->protocol());
-  }
-  return is_rtp;
-}
-
-// Updates the crypto parameters of the `sdesc` according to the given
-// `bundle_group`. The crypto parameters of all the contents within the
-// `bundle_group` should be updated to use the common subset of the
-// available cryptos.
-bool UpdateCryptoParamsForBundle(const ContentGroup& bundle_group,
-                                 SessionDescription* sdesc) {
-  // The bundle should not be empty.
-  if (!sdesc || !bundle_group.FirstContentName()) {
-    return false;
-  }
-
-  bool common_cryptos_needed = false;
-  // Get the common cryptos.
-  const ContentNames& content_names = bundle_group.content_names();
-  CryptoParamsVec common_cryptos;
-  bool first = true;
-  for (const std::string& content_name : content_names) {
-    if (!IsRtpContent(sdesc, content_name)) {
-      continue;
-    }
-    // The common cryptos are needed if any of the content does not have DTLS
-    // enabled.
-    if (!sdesc->GetTransportInfoByName(content_name)->description.secure()) {
-      common_cryptos_needed = true;
-    }
-    if (first) {
-      first = false;
-      // Initial the common_cryptos with the first content in the bundle group.
-      if (!GetCryptosByName(sdesc, content_name, &common_cryptos)) {
-        return false;
-      }
-      if (common_cryptos.empty()) {
-        // If there's no crypto params, we should just return.
-        return true;
-      }
-    } else {
-      CryptoParamsVec cryptos;
-      if (!GetCryptosByName(sdesc, content_name, &cryptos)) {
-        return false;
-      }
-      PruneCryptos(cryptos, &common_cryptos);
-    }
-  }
-
-  if (common_cryptos.empty() && common_cryptos_needed) {
-    return false;
-  }
-
-  // Update to use the common cryptos.
-  for (const std::string& content_name : content_names) {
-    if (!IsRtpContent(sdesc, content_name)) {
-      continue;
-    }
-    ContentInfo* content = sdesc->GetContentByName(content_name);
-    if (IsMediaContent(content)) {
-      MediaContentDescription* media_desc = content->media_description();
-      if (!media_desc) {
-        return false;
-      }
-      media_desc->set_cryptos(common_cryptos);
-    }
-  }
-  return true;
-}
-
 std::vector<const ContentInfo*> GetActiveContents(
     const SessionDescription& description,
     const MediaSessionOptions& session_options) {
@@ -634,9 +374,6 @@ std::vector<const ContentInfo*> GetActiveContents(
 RTCError CreateContentOffer(
     const MediaDescriptionOptions& media_description_options,
     const MediaSessionOptions& session_options,
-    const SecurePolicy& secure_policy,
-    const CryptoParamsVec* current_cryptos,
-    const std::vector<std::string>& crypto_suites,
     const RtpHeaderExtensions& rtp_extensions,
     UniqueRandomIdGenerator* ssrc_generator,
     StreamParamsVec* current_streams,
@@ -665,22 +402,6 @@ RTCError CreateContentOffer(
 
   AddSimulcastToMediaDescription(media_description_options, offer);
 
-  if (secure_policy != SEC_DISABLED) {
-    if (current_cryptos) {
-      AddMediaCryptos(*current_cryptos, offer);
-    }
-    if (offer->cryptos().empty()) {
-      if (!CreateMediaCryptos(crypto_suites, offer)) {
-        LOG_AND_RETURN_ERROR(RTCErrorType::INTERNAL_ERROR,
-                             "Failed to create crypto parameters");
-      }
-    }
-  }
-
-  if (secure_policy == SEC_REQUIRED && offer->cryptos().empty()) {
-    LOG_AND_RETURN_ERROR(RTCErrorType::INTERNAL_ERROR,
-                         "Failed to create crypto parameters");
-  }
   return RTCError::OK();
 }
 
@@ -688,9 +409,6 @@ RTCError CreateMediaContentOffer(
     const MediaDescriptionOptions& media_description_options,
     const MediaSessionOptions& session_options,
     const std::vector<Codec>& codecs,
-    const SecurePolicy& secure_policy,
-    const CryptoParamsVec* current_cryptos,
-    const std::vector<std::string>& crypto_suites,
     const RtpHeaderExtensions& rtp_extensions,
     UniqueRandomIdGenerator* ssrc_generator,
     StreamParamsVec* current_streams,
@@ -705,7 +423,6 @@ RTCError CreateMediaContentOffer(
   }
 
   return CreateContentOffer(media_description_options, session_options,
-                            secure_policy, current_cryptos, crypto_suites,
                             rtp_extensions, ssrc_generator, current_streams,
                             offer);
 }
@@ -1254,17 +971,6 @@ void NegotiateRtpHeaderExtensions(const RtpHeaderExtensions& local_extensions,
                                   const RtpHeaderExtensions& offered_extensions,
                                   webrtc::RtpExtension::Filter filter,
                                   RtpHeaderExtensions* negotiated_extensions) {
-  // TransportSequenceNumberV2 is not offered by default. The special logic for
-  // the TransportSequenceNumber extensions works as follows:
-  // Offer       Answer
-  // V1          V1 if in local_extensions.
-  // V1 and V2   V2 regardless of local_extensions.
-  // V2          V2 regardless of local_extensions.
-  const webrtc::RtpExtension* transport_sequence_number_v2_offer =
-      FindHeaderExtensionByUriDiscardUnsupported(
-          offered_extensions,
-          webrtc::RtpExtension::kTransportSequenceNumberV2Uri, filter);
-
   bool frame_descriptor_in_local = false;
   bool dependency_descriptor_in_local = false;
   bool abs_capture_time_in_local = false;
@@ -1276,27 +982,14 @@ void NegotiateRtpHeaderExtensions(const RtpHeaderExtensions& local_extensions,
       dependency_descriptor_in_local = true;
     else if (ours.uri == webrtc::RtpExtension::kAbsoluteCaptureTimeUri)
       abs_capture_time_in_local = true;
+
     const webrtc::RtpExtension* theirs =
         FindHeaderExtensionByUriDiscardUnsupported(offered_extensions, ours.uri,
                                                    filter);
     if (theirs) {
-      if (transport_sequence_number_v2_offer &&
-          ours.uri == webrtc::RtpExtension::kTransportSequenceNumberUri) {
-        // Don't respond to
-        // http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01
-        // if we get an offer including
-        // http://www.webrtc.org/experiments/rtp-hdrext/transport-wide-cc-02
-        continue;
-      } else {
-        // We respond with their RTP header extension id.
-        negotiated_extensions->push_back(*theirs);
-      }
+      // We respond with their RTP header extension id.
+      negotiated_extensions->push_back(*theirs);
     }
-  }
-
-  if (transport_sequence_number_v2_offer) {
-    // Respond that we support kTransportSequenceNumberV2Uri.
-    negotiated_extensions->push_back(*transport_sequence_number_v2_offer);
   }
 
   // Frame descriptors support. If the extension is not present locally, but is
@@ -1367,8 +1060,6 @@ bool CreateMediaContentAnswer(
     const MediaContentDescription* offer,
     const MediaDescriptionOptions& media_description_options,
     const MediaSessionOptions& session_options,
-    const SecurePolicy& sdes_policy,
-    const CryptoParamsVec* current_cryptos,
     const RtpHeaderExtensions& local_rtp_extensions,
     UniqueRandomIdGenerator* ssrc_generator,
     bool enable_encrypted_rtp_header_extensions,
@@ -1409,21 +1100,6 @@ bool CreateMediaContentAnswer(
 
   answer->set_remote_estimate(offer->remote_estimate());
 
-  if (sdes_policy != SEC_DISABLED) {
-    CryptoParams crypto;
-    if (SelectCrypto(offer, bundle_enabled, session_options.crypto_options,
-                     &crypto)) {
-      if (current_cryptos) {
-        FindMatchingCrypto(*current_cryptos, crypto, &crypto);
-      }
-      answer->AddCrypto(crypto);
-    }
-  }
-
-  if (answer->cryptos().empty() && sdes_policy == SEC_REQUIRED) {
-    return false;
-  }
-
   AddSimulcastToMediaDescription(media_description_options, answer);
 
   answer->set_direction(NegotiateRtpTransceiverDirection(
@@ -1462,9 +1138,7 @@ bool IsMediaProtocolSupported(MediaType type,
 }
 
 void SetMediaProtocol(bool secure_transport, MediaContentDescription* desc) {
-  if (!desc->cryptos().empty())
-    desc->set_protocol(kMediaProtocolSavpf);
-  else if (secure_transport)
+  if (secure_transport)
     desc->set_protocol(kMediaProtocolDtlsSavpf);
   else
     desc->set_protocol(kMediaProtocolAvpf);
@@ -1484,23 +1158,6 @@ const TransportDescription* GetTransportDescription(
     }
   }
   return desc;
-}
-
-// Gets the current DTLS state from the transport description.
-bool IsDtlsActive(const ContentInfo* content,
-                  const SessionDescription* current_description) {
-  if (!content) {
-    return false;
-  }
-
-  size_t msection_index = content - &current_description->contents()[0];
-
-  if (current_description->transport_infos().size() <= msection_index) {
-    return false;
-  }
-
-  return current_description->transport_infos()[msection_index]
-      .description.secure();
 }
 
 webrtc::RTCErrorOr<AudioCodecs> GetNegotiatedCodecsForOffer(
@@ -1867,11 +1524,6 @@ MediaSessionDescriptionFactory::CreateOfferOrError(
             RTCErrorType::INTERNAL_ERROR,
             "CreateOffer failed to UpdateTransportInfoForBundle");
       }
-      if (!UpdateCryptoParamsForBundle(offer_bundle, offer.get())) {
-        LOG_AND_RETURN_ERROR(
-            RTCErrorType::INTERNAL_ERROR,
-            "CreateOffer failed to UpdateCryptoParamsForBundle.");
-      }
     }
   }
 
@@ -2044,12 +1696,6 @@ MediaSessionDescriptionFactory::CreateAnswerOrError(
           LOG_AND_RETURN_ERROR(
               RTCErrorType::INTERNAL_ERROR,
               "CreateAnswer failed to UpdateTransportInfoForBundle.");
-        }
-
-        if (!UpdateCryptoParamsForBundle(answer_bundle, answer.get())) {
-          LOG_AND_RETURN_ERROR(
-              RTCErrorType::INTERNAL_ERROR,
-              "CreateAnswer failed to UpdateCryptoParamsForBundle.");
         }
       }
     }
@@ -2402,19 +2048,6 @@ RTCError MediaSessionDescriptionFactory::AddRtpContentForOffer(
     return error_or_filtered_codecs.MoveError();
   }
 
-  cricket::SecurePolicy sdes_policy =
-      IsDtlsActive(current_content, current_description) ? cricket::SEC_DISABLED
-                                                         : secure();
-
-  std::vector<std::string> crypto_suites;
-  if (media_description_options.type == MEDIA_TYPE_AUDIO) {
-    GetSupportedAudioSdesCryptoSuiteNames(session_options.crypto_options,
-                                          &crypto_suites);
-  } else {
-    GetSupportedVideoSdesCryptoSuiteNames(session_options.crypto_options,
-                                          &crypto_suites);
-  }
-
   std::unique_ptr<MediaContentDescription> content_description;
   if (media_description_options.type == MEDIA_TYPE_AUDIO) {
     content_description = std::make_unique<AudioContentDescription>();
@@ -2424,15 +2057,15 @@ RTCError MediaSessionDescriptionFactory::AddRtpContentForOffer(
 
   auto error = CreateMediaContentOffer(
       media_description_options, session_options,
-      error_or_filtered_codecs.MoveValue(), sdes_policy,
-      GetCryptos(current_content), crypto_suites, header_extensions,
-      ssrc_generator(), current_streams, content_description.get(),
+      error_or_filtered_codecs.MoveValue(), header_extensions, ssrc_generator(),
+      current_streams, content_description.get(),
       transport_desc_factory_->trials());
   if (!error.ok()) {
     return error;
   }
 
-  bool secure_transport = transport_desc_factory_->secure() != SEC_DISABLED;
+  // Insecure transport should only occur in testing.
+  bool secure_transport = !(transport_desc_factory_->insecure());
   SetMediaProtocol(secure_transport, content_description.get());
 
   content_description->set_direction(media_description_options.direction);
@@ -2456,15 +2089,9 @@ RTCError MediaSessionDescriptionFactory::AddDataContentForOffer(
     IceCredentialsIterator* ice_credentials) const {
   auto data = std::make_unique<SctpDataContentDescription>();
 
-  bool secure_transport = (transport_desc_factory_->secure() != SEC_DISABLED);
+  bool secure_transport = true;
 
-  cricket::SecurePolicy sdes_policy =
-      IsDtlsActive(current_content, current_description) ? cricket::SEC_DISABLED
-                                                         : secure();
   std::vector<std::string> crypto_suites;
-  // SDES doesn't make sense for SCTP, so we disable it, and we only
-  // get SDES crypto suites for RTP-based data channels.
-  sdes_policy = cricket::SEC_DISABLED;
   // Unlike SetMediaProtocol below, we need to set the protocol
   // before we call CreateMediaContentOffer.  Otherwise,
   // CreateMediaContentOffer won't know this is SCTP and will
@@ -2474,10 +2101,9 @@ RTCError MediaSessionDescriptionFactory::AddDataContentForOffer(
   data->set_use_sctpmap(session_options.use_obsolete_sctp_sdp);
   data->set_max_message_size(kSctpSendBufferSize);
 
-  auto error = CreateContentOffer(
-      media_description_options, session_options, sdes_policy,
-      GetCryptos(current_content), crypto_suites, RtpHeaderExtensions(),
-      ssrc_generator(), current_streams, data.get());
+  auto error = CreateContentOffer(media_description_options, session_options,
+                                  RtpHeaderExtensions(), ssrc_generator(),
+                                  current_streams, data.get());
   if (!error.ok()) {
     return error;
   }
@@ -2546,10 +2172,14 @@ RTCError MediaSessionDescriptionFactory::AddRtpContentForAnswer(
   } else {
     offer_content_description = offer_content->media_description()->as_video();
   }
+  // If this section is part of a bundle, bundle_transport is non-null.
+  // Then require_transport_attributes is false - we can handle sections
+  // without the DTLS parameters. For rejected m-lines it does not matter.
+  // Otherwise, transport attributes MUST be present.
   std::unique_ptr<TransportDescription> transport = CreateTransportAnswer(
       media_description_options.mid, offer_description,
       media_description_options.transport_options, current_description,
-      bundle_transport != nullptr, ice_credentials);
+      !offer_content->rejected && bundle_transport == nullptr, ice_credentials);
   if (!transport) {
     LOG_AND_RETURN_ERROR(
         RTCErrorType::INTERNAL_ERROR,
@@ -2590,9 +2220,6 @@ RTCError MediaSessionDescriptionFactory::AddRtpContentForAnswer(
   } else {
     answer_content = std::make_unique<VideoContentDescription>();
   }
-  // Do not require or create SDES cryptos if DTLS is used.
-  cricket::SecurePolicy sdes_policy =
-      transport->secure() ? cricket::SEC_DISABLED : secure();
   if (!SetCodecsInAnswer(
           offer_content_description, filtered_codecs, media_description_options,
           session_options, ssrc_generator(), current_streams,
@@ -2602,7 +2229,6 @@ RTCError MediaSessionDescriptionFactory::AddRtpContentForAnswer(
   }
   if (!CreateMediaContentAnswer(
           offer_content_description, media_description_options, session_options,
-          sdes_policy, GetCryptos(current_content),
           filtered_rtp_header_extensions(header_extensions), ssrc_generator(),
           enable_encrypted_rtp_header_extensions_, current_streams,
           bundle_enabled, answer_content.get())) {
@@ -2646,16 +2272,13 @@ RTCError MediaSessionDescriptionFactory::AddDataContentForAnswer(
   std::unique_ptr<TransportDescription> data_transport = CreateTransportAnswer(
       media_description_options.mid, offer_description,
       media_description_options.transport_options, current_description,
-      bundle_transport != nullptr, ice_credentials);
+      !offer_content->rejected && bundle_transport == nullptr, ice_credentials);
   if (!data_transport) {
     LOG_AND_RETURN_ERROR(
         RTCErrorType::INTERNAL_ERROR,
         "Failed to create transport answer, data transport is missing");
   }
 
-  // Do not require or create SDES cryptos if DTLS is used.
-  cricket::SecurePolicy sdes_policy =
-      data_transport->secure() ? cricket::SEC_DISABLED : secure();
   bool bundle_enabled = offer_description->HasGroup(GROUP_TYPE_BUNDLE) &&
                         session_options.bundle_enabled;
   RTC_CHECK(IsMediaContentOfType(offer_content, MEDIA_TYPE_DATA));
@@ -2680,9 +2303,9 @@ RTCError MediaSessionDescriptionFactory::AddDataContentForAnswer(
     }
     if (!CreateMediaContentAnswer(
             offer_data_description, media_description_options, session_options,
-            sdes_policy, GetCryptos(current_content), RtpHeaderExtensions(),
-            ssrc_generator(), enable_encrypted_rtp_header_extensions_,
-            current_streams, bundle_enabled, data_answer.get())) {
+            RtpHeaderExtensions(), ssrc_generator(),
+            enable_encrypted_rtp_header_extensions_, current_streams,
+            bundle_enabled, data_answer.get())) {
       LOG_AND_RETURN_ERROR(RTCErrorType::INTERNAL_ERROR,
                            "Failed to create answer");
     }
@@ -2721,10 +2344,11 @@ RTCError MediaSessionDescriptionFactory::AddUnsupportedContentForAnswer(
     SessionDescription* answer,
     IceCredentialsIterator* ice_credentials) const {
   std::unique_ptr<TransportDescription> unsupported_transport =
-      CreateTransportAnswer(media_description_options.mid, offer_description,
-                            media_description_options.transport_options,
-                            current_description, bundle_transport != nullptr,
-                            ice_credentials);
+      CreateTransportAnswer(
+          media_description_options.mid, offer_description,
+          media_description_options.transport_options, current_description,
+          !offer_content->rejected && bundle_transport == nullptr,
+          ice_credentials);
   if (!unsupported_transport) {
     LOG_AND_RETURN_ERROR(
         RTCErrorType::INTERNAL_ERROR,

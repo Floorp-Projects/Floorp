@@ -38,10 +38,10 @@
       '--test-arg=--undefok=test_launcher_summary_output'
     ],
   },
-  'ios-device-16.6': {
+  'ios-device-16.7': {
     'swarming': {
       'dimensions': {
-        'os': 'iOS-16.6',
+        'os': 'iOS-16.7.1',
         'pool': 'chrome.tests',
         'device_status': 'available'
       }

@@ -51,11 +51,6 @@ using NetworkLayerStats =
 
 constexpr TimeDelta kStatsWaitTimeout = TimeDelta::Seconds(1);
 
-// Field trial which controls whether to report standard-compliant bytes
-// sent/received per stream.  If enabled, padding and headers are not included
-// in bytes sent or received.
-constexpr char kUseStandardBytesStats[] = "WebRTC-UseStandardBytesStats";
-
 EmulatedNetworkStats PopulateStats(std::vector<EmulatedEndpoint*> endpoints,
                                    NetworkEmulationManager* network_emulation) {
   rtc::Event stats_loaded;
@@ -324,11 +319,6 @@ void StatsBasedNetworkQualityMetricsReporter::OnStatsReports(
 
 void StatsBasedNetworkQualityMetricsReporter::StopAndReportResults() {
   Timestamp end_time = clock_->CurrentTime();
-
-  if (!webrtc::field_trial::IsEnabled(kUseStandardBytesStats)) {
-    RTC_LOG(LS_ERROR)
-        << "Non-standard GetStats; \"payload\" counts include RTP headers";
-  }
 
   std::map<std::string, NetworkLayerStats> stats = collector_.GetStats();
   for (const auto& entry : stats) {

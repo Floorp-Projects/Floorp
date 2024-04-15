@@ -8,6 +8,9 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#import "base/RTCVideoDecoderFactory.h"
+#import "base/RTCVideoEncoderFactory.h"
+
 #import "api/peerconnection/RTCAudioSource.h"
 #import "api/peerconnection/RTCConfiguration.h"
 #import "api/peerconnection/RTCDataChannel.h"
@@ -16,6 +19,8 @@
 #import "api/peerconnection/RTCMediaStreamTrack.h"
 #import "api/peerconnection/RTCPeerConnection.h"
 #import "api/peerconnection/RTCPeerConnectionFactory.h"
+#import "api/peerconnection/RTCRtpCapabilities.h"
+#import "api/peerconnection/RTCRtpCodecCapability.h"
 #import "api/peerconnection/RTCRtpReceiver.h"
 #import "api/peerconnection/RTCRtpSender.h"
 #import "api/peerconnection/RTCRtpTransceiver.h"
@@ -24,6 +29,40 @@
 #import "rtc_base/system/unused.h"
 
 #import <XCTest/XCTest.h>
+
+@interface MockVideoEncoderDecoderFactory
+    : NSObject <RTC_OBJC_TYPE (RTCVideoEncoderFactory), RTC_OBJC_TYPE (RTCVideoDecoderFactory)>
+- (instancetype)initWithSupportedCodecs:
+    (nonnull NSArray<RTC_OBJC_TYPE(RTCVideoCodecInfo) *> *)supportedCodecs;
+@end
+
+@implementation MockVideoEncoderDecoderFactory {
+  NSArray<RTC_OBJC_TYPE(RTCVideoCodecInfo) *> *_supportedCodecs;
+}
+
+- (instancetype)initWithSupportedCodecs:
+    (nonnull NSArray<RTC_OBJC_TYPE(RTCVideoCodecInfo) *> *)supportedCodecs {
+  if (self = [super init]) {
+    _supportedCodecs = supportedCodecs;
+  }
+  return self;
+}
+
+- (nullable id<RTC_OBJC_TYPE(RTCVideoEncoder)>)createEncoder:
+    (nonnull RTC_OBJC_TYPE(RTCVideoCodecInfo) *)info {
+  return nil;
+}
+
+- (nullable id<RTC_OBJC_TYPE(RTCVideoDecoder)>)createDecoder:
+    (nonnull RTC_OBJC_TYPE(RTCVideoCodecInfo) *)info {
+  return nil;
+}
+
+- (nonnull NSArray<RTC_OBJC_TYPE(RTCVideoCodecInfo) *> *)supportedCodecs {
+  return _supportedCodecs;
+}
+
+@end
 
 @interface RTCPeerConnectionFactoryTests : XCTestCase
 @end
@@ -325,6 +364,148 @@
   }
 }
 
+- (void)testSenderCapabilities {
+  @autoreleasepool {
+    RTC_OBJC_TYPE(RTCPeerConnectionFactory) * factory;
+    MockVideoEncoderDecoderFactory *encoder;
+    MockVideoEncoderDecoderFactory *decoder;
+
+    NSArray<RTC_OBJC_TYPE(RTCVideoCodecInfo) *> *supportedCodecs = @[
+      [[RTC_OBJC_TYPE(RTCVideoCodecInfo) alloc] initWithName:@"VP8"],
+      [[RTC_OBJC_TYPE(RTCVideoCodecInfo) alloc] initWithName:@"H264"]
+    ];
+
+    encoder = [[MockVideoEncoderDecoderFactory alloc] initWithSupportedCodecs:supportedCodecs];
+    decoder = [[MockVideoEncoderDecoderFactory alloc] initWithSupportedCodecs:supportedCodecs];
+    factory = [[RTC_OBJC_TYPE(RTCPeerConnectionFactory) alloc] initWithEncoderFactory:encoder
+                                                                       decoderFactory:decoder];
+
+    RTC_OBJC_TYPE(RTCRtpCapabilities) *capabilities =
+        [factory rtpSenderCapabilitiesForKind:kRTCMediaStreamTrackKindVideo];
+    NSMutableArray<NSString *> *codecNames = [NSMutableArray new];
+    for (RTC_OBJC_TYPE(RTCRtpCodecCapability) * codec in capabilities.codecs) {
+      [codecNames addObject:codec.name];
+    }
+
+    XCTAssertTrue([codecNames containsObject:@"VP8"]);
+    XCTAssertTrue([codecNames containsObject:@"H264"]);
+    factory = nil;
+  }
+}
+
+- (void)testReceiverCapabilities {
+  @autoreleasepool {
+    RTC_OBJC_TYPE(RTCPeerConnectionFactory) * factory;
+    MockVideoEncoderDecoderFactory *encoder;
+    MockVideoEncoderDecoderFactory *decoder;
+
+    NSArray<RTC_OBJC_TYPE(RTCVideoCodecInfo) *> *supportedCodecs = @[
+      [[RTC_OBJC_TYPE(RTCVideoCodecInfo) alloc] initWithName:@"VP8"],
+      [[RTC_OBJC_TYPE(RTCVideoCodecInfo) alloc] initWithName:@"H264"]
+    ];
+
+    encoder = [[MockVideoEncoderDecoderFactory alloc] initWithSupportedCodecs:supportedCodecs];
+    decoder = [[MockVideoEncoderDecoderFactory alloc] initWithSupportedCodecs:supportedCodecs];
+    factory = [[RTC_OBJC_TYPE(RTCPeerConnectionFactory) alloc] initWithEncoderFactory:encoder
+                                                                       decoderFactory:decoder];
+
+    RTC_OBJC_TYPE(RTCRtpCapabilities) *capabilities =
+        [factory rtpReceiverCapabilitiesForKind:kRTCMediaStreamTrackKindVideo];
+    NSMutableArray<NSString *> *codecNames = [NSMutableArray new];
+    for (RTC_OBJC_TYPE(RTCRtpCodecCapability) * codec in capabilities.codecs) {
+      [codecNames addObject:codec.name];
+    }
+
+    XCTAssertTrue([codecNames containsObject:@"VP8"]);
+    XCTAssertTrue([codecNames containsObject:@"H264"]);
+    factory = nil;
+  }
+}
+
+- (void)testSetCodecPreferences {
+  @autoreleasepool {
+    RTC_OBJC_TYPE(RTCConfiguration) *config = [[RTC_OBJC_TYPE(RTCConfiguration) alloc] init];
+    RTC_OBJC_TYPE(RTCMediaConstraints) *constraints =
+        [[RTC_OBJC_TYPE(RTCMediaConstraints) alloc] initWithMandatoryConstraints:nil
+                                                             optionalConstraints:nil];
+    RTC_OBJC_TYPE(RTCRtpTransceiverInit) *init =
+        [[RTC_OBJC_TYPE(RTCRtpTransceiverInit) alloc] init];
+
+    NSArray<RTC_OBJC_TYPE(RTCVideoCodecInfo) *> *supportedCodecs = @[
+      [[RTC_OBJC_TYPE(RTCVideoCodecInfo) alloc] initWithName:@"VP8"],
+      [[RTC_OBJC_TYPE(RTCVideoCodecInfo) alloc] initWithName:@"H264"]
+    ];
+
+    MockVideoEncoderDecoderFactory *encoder =
+        [[MockVideoEncoderDecoderFactory alloc] initWithSupportedCodecs:supportedCodecs];
+    MockVideoEncoderDecoderFactory *decoder =
+        [[MockVideoEncoderDecoderFactory alloc] initWithSupportedCodecs:supportedCodecs];
+
+    RTC_OBJC_TYPE(RTCPeerConnectionFactory) * factory;
+    RTC_OBJC_TYPE(RTCPeerConnection) * peerConnection;
+    RTC_OBJC_TYPE(RTCRtpTransceiver) * tranceiver;
+    factory = [[RTC_OBJC_TYPE(RTCPeerConnectionFactory) alloc] initWithEncoderFactory:encoder
+                                                                       decoderFactory:decoder];
+
+    peerConnection = [factory peerConnectionWithConfiguration:config
+                                                  constraints:constraints
+                                                     delegate:nil];
+    tranceiver = [peerConnection addTransceiverOfType:RTCRtpMediaTypeVideo init:init];
+    XCTAssertNotNil(tranceiver);
+
+    RTC_OBJC_TYPE(RTCRtpCapabilities) *capabilities =
+        [factory rtpReceiverCapabilitiesForKind:kRTCMediaStreamTrackKindVideo];
+
+    RTC_OBJC_TYPE(RTCRtpCodecCapability) * targetCodec;
+    for (RTC_OBJC_TYPE(RTCRtpCodecCapability) * codec in capabilities.codecs) {
+      if ([codec.name isEqual:@"VP8"]) {
+        targetCodec = codec;
+        break;
+      }
+    }
+    XCTAssertNotNil(targetCodec);
+
+    [tranceiver setCodecPreferences:@[ targetCodec ]];
+
+    @autoreleasepool {
+      dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
+
+      __block BOOL completed = NO;
+      [peerConnection
+          offerForConstraints:constraints
+            completionHandler:^(RTC_OBJC_TYPE(RTCSessionDescription) *_Nullable sdp,
+                                NSError *_Nullable error) {
+              XCTAssertNil(error);
+              XCTAssertNotNil(sdp);
+
+              NSArray<NSString *> *rtpMaps = [self rtpMapsFromSDP:sdp.sdp];
+              XCTAssertEqual(1, rtpMaps.count);
+
+              XCTAssertNotNil(targetCodec.preferredPayloadType);
+              XCTAssertNotNil(targetCodec.clockRate);
+
+              NSString *expected =
+                  [NSString stringWithFormat:@"a=rtpmap:%i VP8/%i",
+                                             targetCodec.preferredPayloadType.intValue,
+                                             targetCodec.clockRate.intValue];
+
+              XCTAssertTrue([expected isEqualToString:rtpMaps[0]]);
+
+              completed = YES;
+              dispatch_semaphore_signal(semaphore);
+            }];
+
+      [peerConnection close];
+      peerConnection = nil;
+      factory = nil;
+      tranceiver = nil;
+
+      dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, 15.0 * NSEC_PER_SEC));
+      XCTAssertTrue(completed);
+    }
+  }
+}
+
 - (bool)negotiatePeerConnection:(RTC_OBJC_TYPE(RTCPeerConnection) *)pc1
              withPeerConnection:(RTC_OBJC_TYPE(RTCPeerConnection) *)pc2
              negotiationTimeout:(NSTimeInterval)timeout {
@@ -375,6 +556,18 @@
   return 0 ==
       dispatch_semaphore_wait(negotiatedSem,
                               dispatch_time(DISPATCH_TIME_NOW, (int64_t)(timeout * NSEC_PER_SEC)));
+}
+
+- (NSArray<NSString *> *)rtpMapsFromSDP:(NSString *)sdp {
+  NSMutableArray<NSString *> *rtpMaps = [NSMutableArray new];
+  NSArray *sdpLines =
+      [sdp componentsSeparatedByCharactersInSet:[NSCharacterSet newlineCharacterSet]];
+  for (NSString *line in sdpLines) {
+    if ([line hasPrefix:@"a=rtpmap"]) {
+      [rtpMaps addObject:line];
+    }
+  }
+  return rtpMaps;
 }
 
 @end

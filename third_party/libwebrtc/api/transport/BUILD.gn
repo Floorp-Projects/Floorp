@@ -18,6 +18,12 @@ rtc_library("bitrate_settings") {
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
+rtc_library("bandwidth_estimation_settings") {
+  visibility = [ "*" ]
+  sources = [ "bandwidth_estimation_settings.h" ]
+  deps = [ "../../rtc_base/system:rtc_export" ]
+}
+
 rtc_source_set("enums") {
   visibility = [ "*" ]
   sources = [ "enums.h" ]

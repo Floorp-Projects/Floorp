@@ -260,8 +260,11 @@ rtc_library("rtp_rtcp") {
 
   if (rtc_use_h265) {
     sources += [
+      "source/rtp_packet_h265_common.h",
       "source/rtp_packetizer_h265.cc",
       "source/rtp_packetizer_h265.h",
+      "source/video_rtp_depacketizer_h265.cc",
+      "source/video_rtp_depacketizer_h265.h",
     ]
   }
 
@@ -632,7 +635,10 @@ if (rtc_include_tests) {
       "source/video_rtp_depacketizer_vp9_unittest.cc",
     ]
     if (rtc_use_h265) {
-      sources += [ "source/rtp_packetizer_h265_unittest.cc" ]
+      sources += [
+        "source/rtp_packetizer_h265_unittest.cc",
+        "source/video_rtp_depacketizer_h265_unittest.cc",
+      ]
     }
 
     deps = [
@@ -652,6 +658,7 @@ if (rtc_include_tests) {
       "../../api:frame_transformer_factory",
       "../../api:make_ref_counted",
       "../../api:mock_frame_encryptor",
+      "../../api:mock_frame_transformer",
       "../../api:mock_transformable_video_frame",
       "../../api:rtp_headers",
       "../../api:rtp_packet_info",
@@ -698,7 +705,6 @@ if (rtc_include_tests) {
       "../../rtc_base:timeutils",
       "../../system_wrappers",
       "../../test:explicit_key_value_config",
-      "../../test:mock_frame_transformer",
       "../../test:mock_transport",
       "../../test:rtp_test_utils",
       "../../test:run_loop",
@@ -720,13 +726,13 @@ if (rtc_include_tests) {
     sources = [ "source/frame_transformer_factory_unittest.cc" ]
     deps = [
       "../../api:frame_transformer_factory",
+      "../../api:mock_frame_transformer",
       "../../api:mock_transformable_audio_frame",
       "../../api:mock_transformable_video_frame",
       "../../api:transport_api",
       "../../call:video_stream_api",
       "../../modules/rtp_rtcp",
       "../../rtc_base:rtc_event",
-      "../../test:mock_frame_transformer",
       "../../test:test_support",
       "../../video",
     ]

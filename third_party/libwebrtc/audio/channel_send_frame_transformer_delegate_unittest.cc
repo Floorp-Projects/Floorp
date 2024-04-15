@@ -15,11 +15,11 @@
 #include <vector>
 
 #include "absl/memory/memory.h"
+#include "api/test/mock_frame_transformer.h"
+#include "api/test/mock_transformable_audio_frame.h"
 #include "rtc_base/task_queue_for_test.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
-#include "test/mock_frame_transformer.h"
-#include "test/mock_transformable_frame.h"
 
 namespace webrtc {
 namespace {
@@ -59,7 +59,7 @@ class MockChannelSend {
 };
 
 std::unique_ptr<TransformableAudioFrameInterface> CreateMockReceiverFrame(
-    std::vector<const uint32_t> csrcs) {
+    const std::vector<uint32_t>& csrcs) {
   std::unique_ptr<MockTransformableAudioFrame> mock_frame =
       std::make_unique<NiceMock<MockTransformableAudioFrame>>();
   rtc::ArrayView<const uint8_t> payload(mock_data);
@@ -68,6 +68,7 @@ std::unique_ptr<TransformableAudioFrameInterface> CreateMockReceiverFrame(
   ON_CALL(*mock_frame, GetDirection)
       .WillByDefault(Return(TransformableFrameInterface::Direction::kReceiver));
   ON_CALL(*mock_frame, GetContributingSources).WillByDefault(Return(csrcs));
+  ON_CALL(*mock_frame, SequenceNumber).WillByDefault(Return(987654321));
   return mock_frame;
 }
 
@@ -167,7 +168,7 @@ TEST(ChannelSendFrameTransformerDelegateTest,
   delegate->Init();
   ASSERT_TRUE(callback);
 
-  std::vector<const uint32_t> csrcs = {123, 234, 345, 456};
+  const std::vector<uint32_t> csrcs = {123, 234, 345, 456};
   EXPECT_CALL(mock_channel, SendFrame).Times(0);
   EXPECT_CALL(mock_channel, SendFrame(_, 0, 0, ElementsAreArray(mock_data), _,
                                       ElementsAreArray(csrcs)));
@@ -252,6 +253,7 @@ TEST(ChannelSendFrameTransformerDelegateTest, CloningReceiverFrameWithCsrcs) {
   ASSERT_NE(frame->GetContributingSources().size(), 0u);
   EXPECT_THAT(cloned_frame->GetContributingSources(),
               ElementsAreArray(frame->GetContributingSources()));
+  EXPECT_EQ(cloned_frame->SequenceNumber(), frame->SequenceNumber());
 }
 
 }  // namespace

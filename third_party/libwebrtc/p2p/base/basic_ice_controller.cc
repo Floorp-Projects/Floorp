@@ -16,8 +16,8 @@ namespace {
 const int kMinImprovement = 10;
 
 bool IsRelayRelay(const cricket::Connection* conn) {
-  return conn->local_candidate().type() == cricket::RELAY_PORT_TYPE &&
-         conn->remote_candidate().type() == cricket::RELAY_PORT_TYPE;
+  return conn->local_candidate().is_relay() &&
+         conn->remote_candidate().is_relay();
 }
 
 bool IsUdp(const cricket::Connection* conn) {

@@ -14,12 +14,10 @@
 
 #include "api/neteq/neteq_controller.h"
 #include "api/neteq/tick_timer.h"
-#include "modules/audio_coding/neteq/buffer_level_filter.h"
 #include "modules/audio_coding/neteq/delay_manager.h"
 #include "modules/audio_coding/neteq/mock/mock_buffer_level_filter.h"
 #include "modules/audio_coding/neteq/mock/mock_delay_manager.h"
 #include "modules/audio_coding/neteq/mock/mock_packet_arrival_history.h"
-#include "test/field_trial.h"
 #include "test/gtest.h"
 
 namespace webrtc {
@@ -64,7 +62,8 @@ class DecisionLogicTest : public ::testing::Test {
     mock_delay_manager_ = delay_manager.get();
     auto buffer_level_filter = std::make_unique<MockBufferLevelFilter>();
     mock_buffer_level_filter_ = buffer_level_filter.get();
-    auto packet_arrival_history = std::make_unique<MockPacketArrivalHistory>();
+    auto packet_arrival_history =
+        std::make_unique<MockPacketArrivalHistory>(&tick_timer_);
     mock_packet_arrival_history_ = packet_arrival_history.get();
     decision_logic_ = std::make_unique<DecisionLogic>(
         config, std::move(delay_manager), std::move(buffer_level_filter),
@@ -82,7 +81,7 @@ class DecisionLogicTest : public ::testing::Test {
 TEST_F(DecisionLogicTest, NormalOperation) {
   EXPECT_CALL(*mock_delay_manager_, TargetDelayMs())
       .WillRepeatedly(Return(100));
-  EXPECT_CALL(*mock_packet_arrival_history_, GetDelayMs(_, _))
+  EXPECT_CALL(*mock_packet_arrival_history_, GetDelayMs(_))
       .WillRepeatedly(Return(100));
   EXPECT_CALL(*mock_packet_arrival_history_, GetMaxDelayMs())
       .WillRepeatedly(Return(0));
@@ -98,7 +97,7 @@ TEST_F(DecisionLogicTest, NormalOperation) {
 TEST_F(DecisionLogicTest, Accelerate) {
   EXPECT_CALL(*mock_delay_manager_, TargetDelayMs())
       .WillRepeatedly(Return(100));
-  EXPECT_CALL(*mock_packet_arrival_history_, GetDelayMs(_, _))
+  EXPECT_CALL(*mock_packet_arrival_history_, GetDelayMs(_))
       .WillRepeatedly(Return(150));
   EXPECT_CALL(*mock_packet_arrival_history_, GetMaxDelayMs())
       .WillRepeatedly(Return(0));
@@ -114,7 +113,7 @@ TEST_F(DecisionLogicTest, Accelerate) {
 TEST_F(DecisionLogicTest, FastAccelerate) {
   EXPECT_CALL(*mock_delay_manager_, TargetDelayMs())
       .WillRepeatedly(Return(100));
-  EXPECT_CALL(*mock_packet_arrival_history_, GetDelayMs(_, _))
+  EXPECT_CALL(*mock_packet_arrival_history_, GetDelayMs(_))
       .WillRepeatedly(Return(500));
   EXPECT_CALL(*mock_packet_arrival_history_, GetMaxDelayMs())
       .WillRepeatedly(Return(0));
@@ -130,7 +129,7 @@ TEST_F(DecisionLogicTest, FastAccelerate) {
 TEST_F(DecisionLogicTest, PreemptiveExpand) {
   EXPECT_CALL(*mock_delay_manager_, TargetDelayMs())
       .WillRepeatedly(Return(100));
-  EXPECT_CALL(*mock_packet_arrival_history_, GetDelayMs(_, _))
+  EXPECT_CALL(*mock_packet_arrival_history_, GetDelayMs(_))
       .WillRepeatedly(Return(50));
   EXPECT_CALL(*mock_packet_arrival_history_, GetMaxDelayMs())
       .WillRepeatedly(Return(0));

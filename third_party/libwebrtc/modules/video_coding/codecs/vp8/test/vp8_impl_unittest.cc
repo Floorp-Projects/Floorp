@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <memory>
 
+#include "api/environment/environment_factory.h"
 #include "api/test/create_frame_generator.h"
 #include "api/test/frame_generator_interface.h"
 #include "api/test/mock_video_decoder.h"
@@ -70,7 +71,7 @@ class TestVp8Impl : public VideoCodecUnitTest {
   }
 
   std::unique_ptr<VideoDecoder> CreateDecoder() override {
-    return VP8Decoder::Create();
+    return CreateVp8Decoder(CreateEnvironment());
   }
 
   void ModifyCodecSettings(VideoCodec* codec_settings) override {

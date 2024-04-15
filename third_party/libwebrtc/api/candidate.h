@@ -24,14 +24,18 @@
 #include "rtc_base/socket_address.h"
 #include "rtc_base/system/rtc_export.h"
 
+namespace webrtc {
+enum class IceCandidateType : int { kHost, kSrflx, kPrflx, kRelay };
+}  // namespace webrtc
+
 namespace cricket {
 
 // TODO(tommi): These are temporarily here, moved from `port.h` and will
 // eventually be removed once we use enums instead of strings for these values.
-RTC_EXPORT extern const char LOCAL_PORT_TYPE[];
-RTC_EXPORT extern const char STUN_PORT_TYPE[];
-RTC_EXPORT extern const char PRFLX_PORT_TYPE[];
-RTC_EXPORT extern const char RELAY_PORT_TYPE[];
+RTC_EXPORT extern const absl::string_view LOCAL_PORT_TYPE;
+RTC_EXPORT extern const absl::string_view STUN_PORT_TYPE;
+RTC_EXPORT extern const absl::string_view PRFLX_PORT_TYPE;
+RTC_EXPORT extern const absl::string_view RELAY_PORT_TYPE;
 
 // TURN servers are limited to 32 in accordance with
 // https://w3c.github.io/webrtc-pc/#dom-rtcconfiguration-iceservers
@@ -59,8 +63,12 @@ class RTC_EXPORT Candidate {
   Candidate(const Candidate&);
   ~Candidate();
 
+  // 8 character long randomized ID string for logging purposes.
   const std::string& id() const { return id_; }
-  void set_id(absl::string_view id) { Assign(id_, id); }
+  // Generates a new, 8 character long, id.
+  void generate_id();
+  // TODO(tommi): Callers should use generate_id(). Remove.
+  [[deprecated]] void set_id(absl::string_view id) { Assign(id_, id); }
 
   int component() const { return component_; }
   void set_component(int component) { component_ = component; }
@@ -88,6 +96,10 @@ class RTC_EXPORT Candidate {
   void set_password(absl::string_view password) { Assign(password_, password); }
 
   const std::string& type() const { return type_; }
+
+  // Returns the name of the candidate type as specified in
+  // https://datatracker.ietf.org/doc/html/rfc5245#section-15.1
+  absl::string_view type_name() const;
 
   // Setting the type requires a constant string (e.g.
   // cricket::LOCAL_PORT_TYPE). The type should really be an enum rather than a

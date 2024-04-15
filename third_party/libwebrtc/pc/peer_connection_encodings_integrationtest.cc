@@ -9,6 +9,7 @@
  */
 
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "absl/strings/match.h"
@@ -41,6 +42,7 @@
 #include "pc/test/simulcast_layer_util.h"
 #include "rtc_base/gunit.h"
 #include "rtc_base/physical_socket_server.h"
+#include "rtc_base/thread.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
 
@@ -267,6 +269,34 @@ class PeerConnectionEncodingsIntegrationTest : public ::testing::Test {
       }
     }
     return num_sending_layers == num_active_layers;
+  }
+
+  int EncodedFrames(rtc::scoped_refptr<PeerConnectionTestWrapper> pc_wrapper,
+                    std::string_view rid) {
+    rtc::scoped_refptr<const RTCStatsReport> report = GetStats(pc_wrapper);
+    std::vector<const RTCOutboundRtpStreamStats*> outbound_rtps =
+        report->GetStatsOfType<RTCOutboundRtpStreamStats>();
+    for (const auto* outbound_rtp : outbound_rtps) {
+      if (outbound_rtp->rid.value_or("") == rid) {
+        return outbound_rtp->frames_encoded.value_or(0);
+      }
+    }
+    return 0;
+  }
+
+  bool EncodingIsActive(
+      rtc::scoped_refptr<PeerConnectionTestWrapper> pc_wrapper,
+      std::string_view rid) {
+    rtc::scoped_refptr<const RTCStatsReport> report = GetStats(pc_wrapper);
+    std::vector<const RTCOutboundRtpStreamStats*> outbound_rtps =
+        report->GetStatsOfType<RTCOutboundRtpStreamStats>();
+    for (const auto* outbound_rtp : outbound_rtps) {
+      if (outbound_rtp->rid.value_or("") == rid) {
+        return *outbound_rtp->active;
+      }
+    }
+    RTC_CHECK(false) << "Rid not found: " << rid;
+    return false;
   }
 
   bool HasOutboundRtpWithRidAndScalabilityMode(
@@ -1962,6 +1992,65 @@ TEST_P(PeerConnectionEncodingsIntegrationParameterizedTest, Simulcast) {
   EXPECT_THAT(*outbound_rtps[0]->scalability_mode, StrEq("L1T3"));
   EXPECT_THAT(*outbound_rtps[1]->scalability_mode, StrEq("L1T3"));
   EXPECT_THAT(*outbound_rtps[2]->scalability_mode, StrEq("L1T3"));
+}
+
+TEST_P(PeerConnectionEncodingsIntegrationParameterizedTest,
+       SimulcastEncodingStopWhenRtpEncodingChangeToInactive) {
+  rtc::scoped_refptr<PeerConnectionTestWrapper> local_pc_wrapper = CreatePc();
+  if (SkipTestDueToAv1Missing(local_pc_wrapper)) {
+    return;
+  }
+  rtc::scoped_refptr<PeerConnectionTestWrapper> remote_pc_wrapper = CreatePc();
+  ExchangeIceCandidates(local_pc_wrapper, remote_pc_wrapper);
+
+  std::vector<cricket::SimulcastLayer> layers =
+      CreateLayers({"q", "h", "f"}, /*active=*/true);
+  rtc::scoped_refptr<RtpTransceiverInterface> transceiver =
+      AddTransceiverWithSimulcastLayers(local_pc_wrapper, remote_pc_wrapper,
+                                        layers);
+  std::vector<RtpCodecCapability> codecs =
+      GetCapabilitiesAndRestrictToCodec(local_pc_wrapper, codec_name_);
+  transceiver->SetCodecPreferences(codecs);
+
+  rtc::scoped_refptr<RtpSenderInterface> sender = transceiver->sender();
+  RtpParameters parameters = sender->GetParameters();
+  ASSERT_THAT(parameters.encodings, SizeIs(3));
+  ASSERT_EQ(parameters.encodings[0].rid, "q");
+  parameters.encodings[0].scalability_mode = "L1T3";
+  parameters.encodings[0].scale_resolution_down_by = 4;
+  ASSERT_EQ(parameters.encodings[1].rid, "h");
+  parameters.encodings[1].scalability_mode = "L1T3";
+  parameters.encodings[1].scale_resolution_down_by = 2;
+  ASSERT_EQ(parameters.encodings[2].rid, "f");
+  parameters.encodings[2].scalability_mode = "L1T3";
+  parameters.encodings[2].scale_resolution_down_by = 1;
+  sender->SetParameters(parameters);
+
+  NegotiateWithSimulcastTweaks(local_pc_wrapper, remote_pc_wrapper);
+  local_pc_wrapper->WaitForConnection();
+  remote_pc_wrapper->WaitForConnection();
+
+  ASSERT_TRUE_WAIT(EncodedFrames(local_pc_wrapper, "f") > 1,
+                   kLongTimeoutForRampingUp.ms());
+
+  // Switch higest layer to Inactive.
+  parameters = sender->GetParameters();
+  ASSERT_THAT(parameters.encodings, SizeIs(3));
+  parameters.encodings[2].active = false;
+  sender->SetParameters(parameters);
+  ASSERT_TRUE_WAIT(!EncodingIsActive(local_pc_wrapper, "f"),
+                   kDefaultTimeout.ms());
+
+  int encoded_frames_f = EncodedFrames(local_pc_wrapper, "f");
+  int encoded_frames_h = EncodedFrames(local_pc_wrapper, "h");
+  int encoded_frames_q = EncodedFrames(local_pc_wrapper, "q");
+
+  // Wait until the encoder has encoded another 10 frames on lower layers.
+  ASSERT_TRUE_WAIT(EncodedFrames(local_pc_wrapper, "q") > encoded_frames_q + 10,
+                   kDefaultTimeout.ms());
+  ASSERT_TRUE_WAIT(EncodedFrames(local_pc_wrapper, "h") > encoded_frames_h + 10,
+                   kDefaultTimeout.ms());
+  EXPECT_LE(EncodedFrames(local_pc_wrapper, "f") - encoded_frames_f, 2);
 }
 
 INSTANTIATE_TEST_SUITE_P(StandardPath,

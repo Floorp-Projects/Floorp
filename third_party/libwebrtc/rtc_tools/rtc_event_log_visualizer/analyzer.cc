@@ -238,7 +238,9 @@ TimeSeries CreateRtcpTypeTimeSeries(const std::vector<T>& rtcp_list,
 
 const char kUnknownEnumValue[] = "unknown";
 
+// TODO(tommi): This should be "host".
 const char kIceCandidateTypeLocal[] = "local";
+// TODO(tommi): This should be "srflx".
 const char kIceCandidateTypeStun[] = "stun";
 const char kIceCandidateTypePrflx[] = "prflx";
 const char kIceCandidateTypeRelay[] = "relay";
@@ -257,17 +259,18 @@ const char kNetworkTypeWifi[] = "wifi";
 const char kNetworkTypeVpn[] = "vpn";
 const char kNetworkTypeCellular[] = "cellular";
 
-std::string GetIceCandidateTypeAsString(webrtc::IceCandidateType type) {
+absl::string_view GetIceCandidateTypeAsString(IceCandidateType type) {
   switch (type) {
-    case webrtc::IceCandidateType::kLocal:
+    case IceCandidateType::kHost:
       return kIceCandidateTypeLocal;
-    case webrtc::IceCandidateType::kStun:
+    case IceCandidateType::kSrflx:
       return kIceCandidateTypeStun;
-    case webrtc::IceCandidateType::kPrflx:
+    case IceCandidateType::kPrflx:
       return kIceCandidateTypePrflx;
-    case webrtc::IceCandidateType::kRelay:
+    case IceCandidateType::kRelay:
       return kIceCandidateTypeRelay;
     default:
+      RTC_DCHECK_NOTREACHED();
       return kUnknownEnumValue;
   }
 }
@@ -323,18 +326,15 @@ std::string GetCandidatePairLogDescriptionAsString(
   // and a remote relay candidate using TCP as the relay protocol on a cell
   // network, when the candidate pair communicates over UDP using IPv4.
   rtc::StringBuilder ss;
-  std::string local_candidate_type =
-      GetIceCandidateTypeAsString(config.local_candidate_type);
-  std::string remote_candidate_type =
-      GetIceCandidateTypeAsString(config.remote_candidate_type);
-  if (config.local_candidate_type == webrtc::IceCandidateType::kRelay) {
-    local_candidate_type +=
-        "(" + GetProtocolAsString(config.local_relay_protocol) + ")";
+  ss << GetIceCandidateTypeAsString(config.local_candidate_type);
+
+  if (config.local_candidate_type == IceCandidateType::kRelay) {
+    ss << "(" << GetProtocolAsString(config.local_relay_protocol) << ")";
   }
-  ss << local_candidate_type << ":"
-     << GetNetworkTypeAsString(config.local_network_type) << ":"
+
+  ss << ":" << GetNetworkTypeAsString(config.local_network_type) << ":"
      << GetAddressFamilyAsString(config.local_address_family) << "->"
-     << remote_candidate_type << ":"
+     << GetIceCandidateTypeAsString(config.remote_candidate_type) << ":"
      << GetAddressFamilyAsString(config.remote_address_family) << "@"
      << GetProtocolAsString(config.candidate_pair_protocol);
   return ss.Release();

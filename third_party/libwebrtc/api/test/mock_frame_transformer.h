@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef TEST_MOCK_FRAME_TRANSFORMER_H_
-#define TEST_MOCK_FRAME_TRANSFORMER_H_
+#ifndef API_TEST_MOCK_FRAME_TRANSFORMER_H_
+#define API_TEST_MOCK_FRAME_TRANSFORMER_H_
 
 #include <memory>
 #include <vector>
@@ -42,4 +42,4 @@ class MockFrameTransformer : public FrameTransformerInterface {
 
 }  // namespace webrtc
 
-#endif  // TEST_MOCK_FRAME_TRANSFORMER_H_
+#endif  // API_TEST_MOCK_FRAME_TRANSFORMER_H_

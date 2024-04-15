@@ -58,7 +58,6 @@ UNIFIED_SOURCES += [
     "/third_party/libwebrtc/modules/audio_coding/neteq/packet.cc",
     "/third_party/libwebrtc/modules/audio_coding/neteq/packet_arrival_history.cc",
     "/third_party/libwebrtc/modules/audio_coding/neteq/packet_buffer.cc",
-    "/third_party/libwebrtc/modules/audio_coding/neteq/post_decode_vad.cc",
     "/third_party/libwebrtc/modules/audio_coding/neteq/preemptive_expand.cc",
     "/third_party/libwebrtc/modules/audio_coding/neteq/random_vector.cc",
     "/third_party/libwebrtc/modules/audio_coding/neteq/red_payload_splitter.cc",

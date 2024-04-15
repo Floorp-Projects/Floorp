@@ -294,15 +294,16 @@ void PressEnterToContinue(TaskQueueBase* /*task_queue*/) {
 }  // namespace
 
 std::unique_ptr<VideoDecoder> VideoQualityTest::CreateVideoDecoder(
+    const Environment& env,
     const SdpVideoFormat& format) {
   std::unique_ptr<VideoDecoder> decoder;
   if (format.name == "multiplex") {
     decoder = std::make_unique<MultiplexDecoderAdapter>(
-        decoder_factory_.get(), SdpVideoFormat(cricket::kVp9CodecName));
+        env, decoder_factory_.get(), SdpVideoFormat(cricket::kVp9CodecName));
   } else if (format.name == "FakeCodec") {
     decoder = webrtc::FakeVideoDecoderFactory::CreateVideoDecoder();
   } else {
-    decoder = decoder_factory_->CreateVideoDecoder(format);
+    decoder = decoder_factory_->Create(env, format);
   }
   if (!params_.logging.encoded_frame_base_path.empty()) {
     rtc::StringBuilder str;
@@ -375,9 +376,10 @@ VideoQualityTest::VideoQualityTest(
     std::unique_ptr<InjectionComponents> injection_components)
     : clock_(Clock::GetRealTimeClock()),
       task_queue_factory_(CreateDefaultTaskQueueFactory()),
-      video_decoder_factory_([this](const SdpVideoFormat& format) {
-        return this->CreateVideoDecoder(format);
-      }),
+      video_decoder_factory_(
+          [this](const Environment& env, const SdpVideoFormat& format) {
+            return this->CreateVideoDecoder(env, format);
+          }),
       video_encoder_factory_([this](const SdpVideoFormat& format) {
         return this->CreateVideoEncoder(format, nullptr);
       }),

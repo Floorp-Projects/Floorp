@@ -38,7 +38,8 @@ DcSctpOptions MakeOptions(DurationMs heartbeat_interval) {
   DcSctpOptions options;
   options.heartbeat_interval_include_rtt = false;
   options.heartbeat_interval = heartbeat_interval;
-  options.enable_zero_checksum = false;
+  options.zero_checksum_alternate_error_detection_method =
+      ZeroChecksumAlternateErrorDetectionMethod::None();
   return options;
 }
 

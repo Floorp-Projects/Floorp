@@ -199,6 +199,7 @@ class VideoCodecTester {
 
   // Decodes video, collects and returns decode metrics.
   static std::unique_ptr<VideoCodecStats> RunDecodeTest(
+      const Environment& env,
       CodedVideoSource* video_source,
       VideoDecoderFactory* decoder_factory,
       const DecoderSettings& decoder_settings,
@@ -213,6 +214,7 @@ class VideoCodecTester {
 
   // Encodes and decodes video, collects and returns encode and decode metrics.
   static std::unique_ptr<VideoCodecStats> RunEncodeDecodeTest(
+      const Environment& env,
       const VideoSourceSettings& source_settings,
       VideoEncoderFactory* encoder_factory,
       VideoDecoderFactory* decoder_factory,

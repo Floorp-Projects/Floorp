@@ -96,7 +96,6 @@ class VideoSendStreamImpl : public webrtc::VideoSendStream,
 
   // webrtc::VideoSendStream implementation.
   void Start() override;
-  void StartPerRtpStream(std::vector<bool> active_layers) override;
   void Stop() override;
   bool started() override;
 
@@ -182,6 +181,9 @@ class VideoSendStreamImpl : public webrtc::VideoSendStream,
   void ConfigureSsrcs();
   void SignalEncoderTimedOut();
   void SignalEncoderActive();
+  // A video send stream is running if VideoSendStream::Start has been invoked
+  // and there is an active encoding.
+  bool IsRunning() const;
   MediaStreamAllocationConfig GetAllocationConfig() const
       RTC_RUN_ON(thread_checker_);
 
@@ -212,6 +214,7 @@ class VideoSendStreamImpl : public webrtc::VideoSendStream,
 
   BitrateAllocatorInterface* const bitrate_allocator_;
 
+  bool has_active_encodings_ RTC_GUARDED_BY(thread_checker_);
   bool disable_padding_ RTC_GUARDED_BY(thread_checker_);
   int max_padding_bitrate_ RTC_GUARDED_BY(thread_checker_);
   int encoder_min_bitrate_bps_ RTC_GUARDED_BY(thread_checker_);

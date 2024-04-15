@@ -11,8 +11,10 @@
 #include "rtc_base/nat_server.h"
 
 #include <cstddef>
+#include <cstdint>
 #include <memory>
 
+#include "api/array_view.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/nat_socket_factory.h"
@@ -97,8 +99,9 @@ class NATProxyServerSocket : public AsyncProxyServerSocket {
     }
 
     SocketAddress dest_addr;
-    size_t address_length = UnpackAddressFromNAT(data, *len, &dest_addr);
-
+    size_t address_length = UnpackAddressFromNAT(
+        MakeArrayView(reinterpret_cast<const uint8_t*>(data), *len),
+        &dest_addr);
     *len -= address_length;
     if (*len > 0) {
       memmove(data, data + address_length, *len);
@@ -171,15 +174,12 @@ NATServer::~NATServer() {
 void NATServer::OnInternalUDPPacket(AsyncPacketSocket* socket,
                                     const rtc::ReceivedPacket& packet) {
   RTC_DCHECK(internal_socket_thread_.IsCurrent());
-  const char* buf = reinterpret_cast<const char*>(packet.payload().data());
-  size_t size = packet.payload().size();
-  const SocketAddress& addr = packet.source_address();
   // Read the intended destination from the wire.
   SocketAddress dest_addr;
-  size_t length = UnpackAddressFromNAT(buf, size, &dest_addr);
+  size_t length = UnpackAddressFromNAT(packet.payload(), &dest_addr);
 
   // Find the translation for these addresses (allocating one if necessary).
-  SocketAddressPair route(addr, dest_addr);
+  SocketAddressPair route(packet.source_address(), dest_addr);
   InternalMap::iterator iter = int_map_->find(route);
   if (iter == int_map_->end()) {
     Translate(route);
@@ -192,6 +192,8 @@ void NATServer::OnInternalUDPPacket(AsyncPacketSocket* socket,
 
   // Send the packet to its intended destination.
   rtc::PacketOptions options;
+  const char* buf = reinterpret_cast<const char*>(packet.payload().data());
+  size_t size = packet.payload().size();
   iter->second->socket->SendTo(buf + length, size - length, dest_addr, options);
 }
 

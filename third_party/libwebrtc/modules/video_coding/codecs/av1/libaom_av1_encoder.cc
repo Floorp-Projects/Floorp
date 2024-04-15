@@ -133,6 +133,7 @@ class LibaomAv1Encoder final : public VideoEncoder {
   // TODO(webrtc:15225): Kill switch for disabling frame dropping. Remove it
   // after frame dropping is fully rolled out.
   bool disable_frame_dropping_;
+  int max_consec_frame_drop_;
 };
 
 int32_t VerifyCodecSettings(const VideoCodec& codec_settings) {
@@ -163,6 +164,14 @@ int32_t VerifyCodecSettings(const VideoCodec& codec_settings) {
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
+int GetMaxConsecutiveFrameDrop(const FieldTrialsView& field_trials) {
+  webrtc::FieldTrialParameter<int> maxdrop("maxdrop", 0);
+  webrtc::ParseFieldTrial(
+      {&maxdrop},
+      field_trials.Lookup("WebRTC-LibaomAv1Encoder-MaxConsecFrameDrop"));
+  return maxdrop;
+}
+
 LibaomAv1Encoder::LibaomAv1Encoder(
     const absl::optional<LibaomAv1EncoderAuxConfig>& aux_config,
     const FieldTrialsView& trials)
@@ -174,7 +183,8 @@ LibaomAv1Encoder::LibaomAv1Encoder(
       timestamp_(0),
       disable_frame_dropping_(absl::StartsWith(
           trials.Lookup("WebRTC-LibaomAv1Encoder-DisableFrameDropping"),
-          "Enabled")) {}
+          "Enabled")),
+      max_consec_frame_drop_(GetMaxConsecutiveFrameDrop(trials)) {}
 
 LibaomAv1Encoder::~LibaomAv1Encoder() {
   Release();
@@ -295,6 +305,12 @@ int LibaomAv1Encoder::InitEncode(const VideoCodec* codec_settings,
     SET_ENCODER_PARAM_OR_RETURN_ERROR(AV1E_SET_ENABLE_PALETTE, 1);
   } else {
     SET_ENCODER_PARAM_OR_RETURN_ERROR(AV1E_SET_ENABLE_PALETTE, 0);
+  }
+
+  if (codec_settings->mode == VideoCodecMode::kRealtimeVideo &&
+      encoder_settings_.GetFrameDropEnabled() && max_consec_frame_drop_ > 0) {
+    SET_ENCODER_PARAM_OR_RETURN_ERROR(AV1E_SET_MAX_CONSEC_FRAME_DROP_CBR,
+                                      max_consec_frame_drop_);
   }
 
   if (cfg_.g_threads == 8) {

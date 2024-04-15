@@ -50,6 +50,8 @@ class PacketRouter : public PacingController::PacketSender {
   void AddSendRtpModule(RtpRtcpInterface* rtp_module, bool remb_candidate);
   void RemoveSendRtpModule(RtpRtcpInterface* rtp_module);
 
+  bool SupportsRtxPayloadPadding() const;
+
   void AddReceiveRtpModule(RtcpFeedbackSenderInterface* rtcp_sender,
                            bool remb_candidate);
   void RemoveReceiveRtpModule(RtcpFeedbackSenderInterface* rtcp_sender);

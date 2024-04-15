@@ -147,7 +147,13 @@ RTC_EXPORT extern const char kH265FmtpProfileCompatibilityIndicator[];
 RTC_EXPORT extern const char kH265FmtpInteropConstraints[];
 RTC_EXPORT extern const char kH265FmtpTxMode[];
 
+// draft-ietf-payload-vp9
 extern const char kVP9ProfileId[];
+
+// https://aomediacodec.github.io/av1-rtp-spec/
+extern const char kAv1FmtpProfile[];
+extern const char kAv1FmtpLevelIdx[];
+extern const char kAv1FmtpTier[];
 
 extern const int kDefaultVideoMaxFramerate;
 extern const int kDefaultVideoMaxQpVpx;

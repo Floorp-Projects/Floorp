@@ -11,18 +11,26 @@
 #ifndef P2P_BASE_PORT_ALLOCATOR_H_
 #define P2P_BASE_PORT_ALLOCATOR_H_
 
+#include <stdint.h>
+
 #include <deque>
 #include <memory>
 #include <string>
 #include <vector>
 
 #include "absl/strings/string_view.h"
+#include "absl/types/optional.h"
+#include "api/candidate.h"
 #include "api/sequence_checker.h"
 #include "api/transport/enums.h"
 #include "p2p/base/port.h"
 #include "p2p/base/port_interface.h"
+#include "p2p/base/transport_description.h"
+#include "rtc_base/checks.h"
 #include "rtc_base/helpers.h"
+#include "rtc_base/network.h"
 #include "rtc_base/proxy_info.h"
+#include "rtc_base/socket_address.h"
 #include "rtc_base/ssl_certificate.h"
 #include "rtc_base/system/rtc_export.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
@@ -204,10 +212,6 @@ class RTC_EXPORT PortAllocatorSession : public sigslot::has_slots<> {
   const std::string& ice_pwd() const { return ice_pwd_; }
   bool pooled() const { return pooled_; }
 
-  // TODO(bugs.webrtc.org/14605): move this to the constructor
-  void set_ice_tiebreaker(uint64_t tiebreaker) { tiebreaker_ = tiebreaker; }
-  uint64_t ice_tiebreaker() const { return tiebreaker_; }
-
   // Setting this filter should affect not only candidates gathered in the
   // future, but candidates already gathered and ports already "ready",
   // which would be returned by ReadyCandidates() and ReadyPorts().
@@ -324,9 +328,6 @@ class RTC_EXPORT PortAllocatorSession : public sigslot::has_slots<> {
 
   bool pooled_ = false;
 
-  // TODO(bugs.webrtc.org/14605): move this to the constructor
-  uint64_t tiebreaker_;
-
   // SetIceParameters is an implementation detail which only PortAllocator
   // should be able to call.
   friend class PortAllocator;
@@ -378,9 +379,6 @@ class RTC_EXPORT PortAllocator : public sigslot::has_slots<> {
                         webrtc::TurnCustomizer* turn_customizer = nullptr,
                         const absl::optional<int>&
                             stun_candidate_keepalive_interval = absl::nullopt);
-
-  void SetIceTiebreaker(uint64_t tiebreaker);
-  uint64_t IceTiebreaker() const { return tiebreaker_; }
 
   const ServerAddresses& stun_servers() const {
     CheckRunOnValidThreadIfInitialized();
@@ -452,6 +450,8 @@ class RTC_EXPORT PortAllocator : public sigslot::has_slots<> {
   // 2. Sanitization is configured via the port allocator flags.
   // 3. mDNS concealment of private IPs is enabled.
   Candidate SanitizeCandidate(const Candidate& c) const;
+
+  uint64_t ice_tiebreaker() const { return tiebreaker_; }
 
   uint32_t flags() const {
     CheckRunOnValidThreadIfInitialized();

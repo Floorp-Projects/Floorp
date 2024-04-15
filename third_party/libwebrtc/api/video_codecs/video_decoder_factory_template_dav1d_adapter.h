@@ -23,7 +23,7 @@ struct Dav1dDecoderTemplateAdapter {
   static std::vector<SdpVideoFormat> SupportedFormats() {
     return {SdpVideoFormat("AV1"),
             SdpVideoFormat(
-                "AV1", {{kAV1FmtpProfile,
+                "AV1", {{"profile",
                          AV1ProfileToString(AV1Profile::kProfile1).data()}})};
   }
 
