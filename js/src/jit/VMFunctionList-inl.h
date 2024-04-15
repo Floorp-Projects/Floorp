@@ -211,7 +211,6 @@ namespace jit {
   _(InterpretResume, js::jit::InterpretResume)                                 \
   _(InterruptCheck, js::jit::InterruptCheck)                                   \
   _(InvokeFunction, js::jit::InvokeFunction)                                   \
-  _(InvokeNativeFunction, js::jit::InvokeNativeFunction)                       \
   _(IonBinaryArithICUpdate, js::jit::IonBinaryArithIC::update)                 \
   _(IonBindNameICUpdate, js::jit::IonBindNameIC::update)                       \
   _(IonCheckPrivateFieldICUpdate, js::jit::IonCheckPrivateFieldIC::update)     \

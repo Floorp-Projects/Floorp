@@ -654,7 +654,6 @@ void LIRGenerator::visitApplyArgs(MApplyArgs* apply) {
   static_assert(CallTempReg2 != JSReturnReg_Type);
   static_assert(CallTempReg2 != JSReturnReg_Data);
 
-  auto function = useFixedAtStart(apply->getFunction(), CallTempReg3);
   auto argc = useFixedAtStart(apply->getArgc(), CallTempReg0);
   auto thisValue =
       useBoxFixedAtStart(apply->getThis(), CallTempReg4, CallTempReg5);
@@ -665,9 +664,13 @@ void LIRGenerator::visitApplyArgs(MApplyArgs* apply) {
 
   LInstruction* lir;
   if (target && target->isNativeWithoutJitEntry()) {
+    auto temp = tempFixed(CallTempReg3);
+
     lir = new (alloc())
-        LApplyArgsNative(function, argc, thisValue, tempObj, tempCopy);
+        LApplyArgsNative(argc, thisValue, tempObj, tempCopy, temp);
   } else {
+    auto function = useFixedAtStart(apply->getFunction(), CallTempReg3);
+
     lir = new (alloc())
         LApplyArgsGeneric(function, argc, thisValue, tempObj, tempCopy);
   }
@@ -686,7 +689,6 @@ void LIRGenerator::visitApplyArgsObj(MApplyArgsObj* apply) {
   static_assert(CallTempReg2 != JSReturnReg_Type);
   static_assert(CallTempReg2 != JSReturnReg_Data);
 
-  auto function = useFixedAtStart(apply->getFunction(), CallTempReg3);
   auto argsObj = useFixedAtStart(apply->getArgsObj(), CallTempReg0);
   auto thisValue =
       useBoxFixedAtStart(apply->getThis(), CallTempReg4, CallTempReg5);
@@ -697,9 +699,13 @@ void LIRGenerator::visitApplyArgsObj(MApplyArgsObj* apply) {
 
   LInstruction* lir;
   if (target && target->isNativeWithoutJitEntry()) {
+    auto temp = tempFixed(CallTempReg3);
+
     lir = new (alloc())
-        LApplyArgsObjNative(function, argsObj, thisValue, tempObj, tempCopy);
+        LApplyArgsObjNative(argsObj, thisValue, tempObj, tempCopy, temp);
   } else {
+    auto function = useFixedAtStart(apply->getFunction(), CallTempReg3);
+
     lir = new (alloc())
         LApplyArgsObj(function, argsObj, thisValue, tempObj, tempCopy);
   }
@@ -718,7 +724,6 @@ void LIRGenerator::visitApplyArray(MApplyArray* apply) {
   static_assert(CallTempReg2 != JSReturnReg_Type);
   static_assert(CallTempReg2 != JSReturnReg_Data);
 
-  auto function = useFixedAtStart(apply->getFunction(), CallTempReg3);
   auto elements = useFixedAtStart(apply->getElements(), CallTempReg0);
   auto thisValue =
       useBoxFixedAtStart(apply->getThis(), CallTempReg4, CallTempReg5);
@@ -729,9 +734,13 @@ void LIRGenerator::visitApplyArray(MApplyArray* apply) {
 
   LInstruction* lir;
   if (target && target->isNativeWithoutJitEntry()) {
+    auto temp = tempFixed(CallTempReg3);
+
     lir = new (alloc())
-        LApplyArrayNative(function, elements, thisValue, tempObj, tempCopy);
+        LApplyArrayNative(elements, thisValue, tempObj, tempCopy, temp);
   } else {
+    auto function = useFixedAtStart(apply->getFunction(), CallTempReg3);
+
     lir = new (alloc())
         LApplyArrayGeneric(function, elements, thisValue, tempObj, tempCopy);
   }
@@ -754,7 +763,6 @@ void LIRGenerator::visitConstructArgs(MConstructArgs* mir) {
   static_assert(CallTempReg2 != JSReturnReg_Type);
   static_assert(CallTempReg2 != JSReturnReg_Data);
 
-  auto function = useFixedAtStart(mir->getFunction(), CallTempReg3);
   auto argc = useFixedAtStart(mir->getArgc(), CallTempReg0);
   auto newTarget = useFixedAtStart(mir->getNewTarget(), CallTempReg1);
   auto temp = tempFixed(CallTempReg2);
@@ -763,11 +771,13 @@ void LIRGenerator::visitConstructArgs(MConstructArgs* mir) {
 
   LInstruction* lir;
   if (target && target->isNativeWithoutJitEntry()) {
-    auto temp2 = tempFixed(CallTempReg4);
+    auto temp2 = tempFixed(CallTempReg3);
+    auto temp3 = tempFixed(CallTempReg4);
 
-    lir = new (alloc())
-        LConstructArgsNative(function, argc, newTarget, temp, temp2);
+    lir =
+        new (alloc()) LConstructArgsNative(argc, newTarget, temp, temp2, temp3);
   } else {
+    auto function = useFixedAtStart(mir->getFunction(), CallTempReg3);
     auto thisValue =
         useBoxFixedAtStart(mir->getThis(), CallTempReg4, CallTempReg5);
 
@@ -792,7 +802,6 @@ void LIRGenerator::visitConstructArray(MConstructArray* mir) {
   static_assert(CallTempReg2 != JSReturnReg_Type);
   static_assert(CallTempReg2 != JSReturnReg_Data);
 
-  auto function = useFixedAtStart(mir->getFunction(), CallTempReg3);
   auto elements = useFixedAtStart(mir->getElements(), CallTempReg0);
   auto newTarget = useFixedAtStart(mir->getNewTarget(), CallTempReg1);
   auto temp = tempFixed(CallTempReg2);
@@ -801,11 +810,13 @@ void LIRGenerator::visitConstructArray(MConstructArray* mir) {
 
   LInstruction* lir;
   if (target && target->isNativeWithoutJitEntry()) {
-    auto temp2 = tempFixed(CallTempReg4);
+    auto temp2 = tempFixed(CallTempReg3);
+    auto temp3 = tempFixed(CallTempReg4);
 
     lir = new (alloc())
-        LConstructArrayNative(function, elements, newTarget, temp, temp2);
+        LConstructArrayNative(elements, newTarget, temp, temp2, temp3);
   } else {
+    auto function = useFixedAtStart(mir->getFunction(), CallTempReg3);
     auto thisValue =
         useBoxFixedAtStart(mir->getThis(), CallTempReg4, CallTempReg5);
 
