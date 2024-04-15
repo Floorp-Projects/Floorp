@@ -335,6 +335,8 @@ export class LoginAutoCompleteResult {
 
     // The footer comes last if it's enabled
     if (isFooterEnabled()) {
+      // TODO: This would be removed once autofill is triggered from the parent.
+      gAutoCompleteListener.init();
       if (autocompleteItems) {
         this.#rows.push(
           ...autocompleteItems.map(
