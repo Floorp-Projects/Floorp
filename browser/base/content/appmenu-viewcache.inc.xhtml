@@ -3,11 +3,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 <html:template id="appMenu-viewCache">
-  <panelview id="appMenu-mainView" class="PanelUI-subView"
+  <!-- This is a placeholder app menu which should be replaced with the "real"
+       Proton app menu before the Proton pref starts getting enabled. -->
+  <panelview id="appMenu-protonMainView" class="PanelUI-subView"
              lockpanelvertical="true">
     <vbox class="panel-subview-body">
-      <vbox id="appMenu-addon-banners"/>
-      <toolbarbutton id="appMenu-update-banner" class="panel-banner-item subviewbutton"
+      <vbox id="appMenu-proton-addon-banners"/>
+      <toolbarbutton id="appMenu-proton-update-banner" class="panel-banner-item subviewbutton"
+                     oncommand="PanelUI._onBannerItemSelected(event)"
                      wrap="true"
                      hidden="true"/>
       <toolbaritem id="appMenu-fxa-status2"
@@ -16,7 +19,7 @@
         <html:div id="appMenu-fxa-text" data-l10n-id="appmenu-fxa-sync-and-save-data2"/>
         <toolbarbutton id="appMenu-fxa-label2"
                       class="subviewbutton"
-                      >
+                      oncommand="gSync.toggleAccountPanel(this, event)">
           <vbox flex="1">
             <label id="appMenu-header-title"
                    crop="end"/>
@@ -30,6 +33,7 @@
                      data-l10n-id="appmenuitem-profiles"
                      data-l10n-args='{ "profilename": "" }'
                      closemenu="none"
+                     oncommand="gProfiles.updateView(this)"
                      hidden="true"/>
       <toolbarseparator id="appMenu-fxa-separator" class="proton-zap"/>
       <toolbarbutton id="appMenu-new-tab-button2"
@@ -52,12 +56,12 @@
                      class="subviewbutton subviewbutton-nav"
                      data-l10n-id="library-bookmarks-menu"
                      closemenu="none"
-                     />
+                     oncommand="BookmarkingUI.showSubView(this);"/>
       <toolbarbutton id="appMenu-history-button"
                      class="subviewbutton subviewbutton-nav"
                      data-l10n-id="appmenuitem-history"
                      closemenu="none"
-                     />
+                     oncommand="PanelUI.showSubView('PanelUI-history', this)"/>
       <toolbarbutton id="appMenu-downloads-button"
                      class="subviewbutton"
                      data-l10n-id="appmenuitem-downloads"
@@ -66,6 +70,7 @@
       <toolbarbutton id="appMenu-passwords-button"
                      class="subviewbutton"
                      data-l10n-id="appmenuitem-passwords"
+                     oncommand="LoginHelper.openPasswordManager(window, { entryPoint: 'mainmenu' })"
                      />
       <toolbarbutton id="appMenu-extensions-themes-button"
                      class="subviewbutton"
@@ -114,6 +119,13 @@
                        class="subviewbutton subviewbutton-iconic"
                        data-l10n-id="appmenuitem-fullscreen"
                        type="checkbox"
+# Note that we're custom-handling this click to make sure the panel disappears
+# before entering fullscreen, as it does some odd moving about on the screen
+# in the middle of the fullscreen transition otherwise.
+                       oncommand="
+                         this.closest('panel').hidePopup();
+                         setTimeout(() => BrowserCommands.fullScreen(), 0);
+                       "
                        tooltip="dynamic-shortcut-tooltip">
            <observes element="View:FullScreen" attribute="checked"/>
         </toolbarbutton>
@@ -125,12 +137,12 @@
 #ifdef XP_MACOSX
                      key="key_preferencesCmdMac"
 #endif
-                     />
+                     oncommand="openPreferences()"/>
       <toolbarbutton id="appMenu-more-button2"
                      class="subviewbutton subviewbutton-nav"
                      data-l10n-id="appmenuitem-more-tools"
                      closemenu="none"
-                     />
+                     oncommand="PanelUI.showMoreToolsPanel(this);"/>
       <toolbarbutton id="appMenu-report-broken-site-button"
                      class="subviewbutton subviewbutton-nav"
                      data-l10n-id="appmenuitem-report-broken-site"
@@ -141,7 +153,7 @@
                      class="subviewbutton subviewbutton-nav"
                      data-l10n-id="appmenuitem-help"
                      closemenu="none"
-                     />
+                     oncommand="PanelUI.showSubView('PanelUI-helpView', this)"/>
 #ifndef XP_MACOSX
       <toolbarseparator/>
       <toolbarbutton id="appMenu-quit-button2"
@@ -159,16 +171,16 @@
                      data-l10n-id="appmenu-recently-closed-tabs"
                      class="subviewbutton subviewbutton-nav"
                      closemenu="none"
-                     />
+                     oncommand="PanelUI.showSubView('appMenu-library-recentlyClosedTabs', this)"/>
       <toolbarbutton id="appMenuRecentlyClosedWindows"
                      data-l10n-id="appmenu-recently-closed-windows"
                      class="subviewbutton subviewbutton-nav"
                      closemenu="none"
-                     />
+                     oncommand="PanelUI.showSubView('appMenu-library-recentlyClosedWindows', this)"/>
       <toolbarbutton id="appMenuSearchHistory"
                      data-l10n-id="appmenu-search-history"
                      class="subviewbutton"
-                     />
+                     oncommand="PlacesCommandHook.searchHistory()"/>
       <toolbarbutton id="appMenu-restoreSession"
                      data-l10n-id="appmenu-restore-session"
                      class="subviewbutton"
@@ -194,7 +206,7 @@
     <toolbarbutton id="PanelUI-historyMore"
                    class="subviewbutton panel-subview-footer-button"
                    data-l10n-id="appmenu-manage-history"
-                   />
+                   oncommand="PlacesCommandHook.showPlacesOrganizer('History'); CustomizableUI.hidePanelForNode(this);"/>
   </panelview>
 
   <panelview id="PanelUI-profiles" flex="1">
