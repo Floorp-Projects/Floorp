@@ -141,16 +141,16 @@ static bool GetNumberOption(JSContext* cx, Handle<JSObject*> options,
 bool js::temporal::ToTemporalRoundingIncrement(JSContext* cx,
                                                Handle<JSObject*> options,
                                                Increment* increment) {
-  // Step 1.
+  // Steps 1-3.
   double number = 1;
   if (!GetNumberOption(cx, options, cx->names().roundingIncrement, &number)) {
     return false;
   }
 
-  // Step 3. (Reordered)
+  // Step 5. (Reordered)
   number = std::trunc(number);
 
-  // Steps 2 and 4.
+  // Steps 4 and 6.
   if (!std::isfinite(number) || number < 1 || number > 1'000'000'000) {
     ToCStringBuf cbuf;
     const char* numStr = NumberToCString(&cbuf, number);
@@ -161,6 +161,7 @@ bool js::temporal::ToTemporalRoundingIncrement(JSContext* cx,
     return false;
   }
 
+  // Step 7.
   *increment = Increment{uint32_t(number)};
   return true;
 }
@@ -398,7 +399,7 @@ bool js::temporal::GetTemporalUnit(JSContext* cx, Handle<JSString*> value,
 bool js::temporal::ToTemporalRoundingMode(JSContext* cx,
                                           Handle<JSObject*> options,
                                           TemporalRoundingMode* mode) {
-  // Step 1.
+  // Steps 1-2.
   Rooted<JSString*> string(cx);
   if (!GetStringOption(cx, options, cx->names().roundingMode, &string)) {
     return false;
@@ -1191,17 +1192,14 @@ static JSObject* MaybeUnwrapIf(JSObject* object) {
   return nullptr;
 }
 
-// FIXME: spec issue - "Reject" is exclusively used for Promise rejection. The
-// existing `RejectPromise` abstract operation unconditionally rejects, whereas
-// this operation conditionally rejects.
-// https://github.com/tc39/proposal-temporal/issues/2534
-
 /**
- * RejectTemporalLikeObject ( object )
+ * IsPartialTemporalObject ( object )
  */
-bool js::temporal::RejectTemporalLikeObject(JSContext* cx,
-                                            Handle<JSObject*> object) {
-  // Step 1.
+bool js::temporal::ThrowIfTemporalLikeObject(JSContext* cx,
+                                             Handle<JSObject*> object) {
+  // Step 1. (Handled in caller)
+
+  // Step 2.
   if (auto* unwrapped =
           MaybeUnwrapIf<PlainDateObject, PlainDateTimeObject,
                         PlainMonthDayObject, PlainTimeObject,
@@ -1214,31 +1212,31 @@ bool js::temporal::RejectTemporalLikeObject(JSContext* cx,
 
   Rooted<Value> property(cx);
 
-  // Step 2.
+  // Step 3.
   if (!GetProperty(cx, object, object, cx->names().calendar, &property)) {
     return false;
   }
 
-  // Step 3.
+  // Step 4.
   if (!property.isUndefined()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_TEMPORAL_UNEXPECTED_PROPERTY, "calendar");
     return false;
   }
 
-  // Step 4.
+  // Step 5.
   if (!GetProperty(cx, object, object, cx->names().timeZone, &property)) {
     return false;
   }
 
-  // Step 5.
+  // Step 6.
   if (!property.isUndefined()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_TEMPORAL_UNEXPECTED_PROPERTY, "timeZone");
     return false;
   }
 
-  // Step 6.
+  // Step 7.
   return true;
 }
 

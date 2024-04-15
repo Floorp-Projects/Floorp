@@ -843,16 +843,11 @@ static bool DifferenceISODateTime(JSContext* cx, const PlainDateTime& one,
 
   DateDuration dateDifference;
   if (maybeOptions) {
-    // FIXME: spec issue - this copy is no longer needed, all callers have
-    // already copied the user input object.
-    // https://github.com/tc39/proposal-temporal/issues/2525
-
     // Step 12.
-    Rooted<PlainObject*> untilOptions(cx,
-                                      SnapshotOwnProperties(cx, maybeOptions));
-    if (!untilOptions) {
-      return false;
-    }
+    //
+    // The spec performs an unnecessary copy operation. As an optimization, we
+    // omit this copy.
+    auto untilOptions = maybeOptions;
 
     // Step 13.
     Rooted<Value> largestUnitValue(
@@ -1803,13 +1798,11 @@ static bool PlainDateTime_with(JSContext* cx, const CallArgs& args) {
   if (!temporalDateTimeLike) {
     return false;
   }
-
-  // Step 4.
-  if (!RejectTemporalLikeObject(cx, temporalDateTimeLike)) {
+  if (!ThrowIfTemporalLikeObject(cx, temporalDateTimeLike)) {
     return false;
   }
 
-  // Step 5.
+  // Step 4.
   Rooted<PlainObject*> resolvedOptions(cx);
   if (args.hasDefined(1)) {
     Rooted<JSObject*> options(cx,
@@ -1825,7 +1818,7 @@ static bool PlainDateTime_with(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  // Step 6.
+  // Step 5.
   Rooted<CalendarValue> calendarValue(cx, dateTime->calendar());
   Rooted<CalendarRecord> calendar(cx);
   if (!CreateCalendarMethodsRecord(cx, calendarValue,
@@ -1838,7 +1831,7 @@ static bool PlainDateTime_with(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  // Step 7.
+  // Step 6.
   JS::RootedVector<PropertyKey> fieldNames(cx);
   if (!CalendarFields(cx, calendar,
                       {CalendarField::Day, CalendarField::Month,
@@ -1847,14 +1840,14 @@ static bool PlainDateTime_with(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  // Step 8.
+  // Step 7.
   Rooted<PlainObject*> fields(cx,
                               PrepareTemporalFields(cx, dateTime, fieldNames));
   if (!fields) {
     return false;
   }
 
-  // Steps 9-14.
+  // Steps 8-13.
   struct TimeField {
     using FieldName = ImmutableTenuredPtr<PropertyName*> JSAtomState::*;
 
@@ -1879,7 +1872,7 @@ static bool PlainDateTime_with(JSContext* cx, const CallArgs& args) {
     }
   }
 
-  // Step 15.
+  // Step 14.
   if (!AppendSorted(cx, fieldNames.get(),
                     {
                         TemporalField::Hour,
@@ -1892,37 +1885,37 @@ static bool PlainDateTime_with(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  // Step 16.
+  // Step 15.
   Rooted<PlainObject*> partialDateTime(
       cx, PreparePartialTemporalFields(cx, temporalDateTimeLike, fieldNames));
   if (!partialDateTime) {
     return false;
   }
 
-  // Step 17.
+  // Step 16.
   Rooted<JSObject*> mergedFields(
       cx, CalendarMergeFields(cx, calendar, fields, partialDateTime));
   if (!mergedFields) {
     return false;
   }
 
-  // Step 18.
+  // Step 17.
   fields = PrepareTemporalFields(cx, mergedFields, fieldNames);
   if (!fields) {
     return false;
   }
 
-  // Step 19.
+  // Step 18.
   PlainDateTime result;
   if (!InterpretTemporalDateTimeFields(cx, calendar, fields, resolvedOptions,
                                        &result)) {
     return false;
   }
 
-  // Steps 20-21.
+  // Steps 19-20.
   MOZ_ASSERT(IsValidISODateTime(result));
 
-  // Step 22.
+  // Step 21.
   auto* obj = CreateTemporalDateTime(cx, result, calendar.receiver());
   if (!obj) {
     return false;

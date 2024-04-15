@@ -2470,13 +2470,11 @@ static bool PlainDate_with(JSContext* cx, const CallArgs& args) {
   if (!temporalDateLike) {
     return false;
   }
-
-  // Step 4.
-  if (!RejectTemporalLikeObject(cx, temporalDateLike)) {
+  if (!ThrowIfTemporalLikeObject(cx, temporalDateLike)) {
     return false;
   }
 
-  // Step 5.
+  // Step 4.
   Rooted<PlainObject*> resolvedOptions(cx);
   if (args.hasDefined(1)) {
     Rooted<JSObject*> options(cx,
@@ -2492,7 +2490,7 @@ static bool PlainDate_with(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  // Step 6.
+  // Step 5.
   Rooted<CalendarValue> calendarValue(cx, temporalDate->calendar());
   Rooted<CalendarRecord> calendar(cx);
   if (!CreateCalendarMethodsRecord(cx, calendarValue,
@@ -2505,7 +2503,7 @@ static bool PlainDate_with(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  // Step 7.
+  // Step 6.
   JS::RootedVector<PropertyKey> fieldNames(cx);
   if (!CalendarFields(cx, calendar,
                       {CalendarField::Day, CalendarField::Month,
@@ -2514,34 +2512,34 @@ static bool PlainDate_with(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  // Step 8.
+  // Step 7.
   Rooted<PlainObject*> fields(
       cx, PrepareTemporalFields(cx, temporalDate, fieldNames));
   if (!fields) {
     return false;
   }
 
-  // Step 9.
+  // Step 8.
   Rooted<PlainObject*> partialDate(
       cx, PreparePartialTemporalFields(cx, temporalDateLike, fieldNames));
   if (!partialDate) {
     return false;
   }
 
-  // Step 10.
+  // Step 9.
   Rooted<JSObject*> mergedFields(
       cx, CalendarMergeFields(cx, calendar, fields, partialDate));
   if (!mergedFields) {
     return false;
   }
 
-  // Step 11.
+  // Step 10.
   fields = PrepareTemporalFields(cx, mergedFields, fieldNames);
   if (!fields) {
     return false;
   }
 
-  // Step 12.
+  // Step 11.
   auto result =
       temporal::CalendarDateFromFields(cx, calendar, fields, resolvedOptions);
   if (!result) {

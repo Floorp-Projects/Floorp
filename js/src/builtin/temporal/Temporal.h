@@ -299,9 +299,12 @@ bool ToShowOffsetOption(JSContext* cx, JS::Handle<JSObject*> options,
                         ShowOffsetOption* result);
 
 /**
- * RejectTemporalLikeObject ( object )
+ * IsPartialTemporalObject ( object )
+ *
+ * Our implementation performs error reporting in this function instead of in
+ * the caller to provide better error messages.
  */
-bool RejectTemporalLikeObject(JSContext* cx, JS::Handle<JSObject*> object);
+bool ThrowIfTemporalLikeObject(JSContext* cx, JS::Handle<JSObject*> object);
 
 /**
  * ToPositiveIntegerWithTruncation ( argument )

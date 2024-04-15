@@ -1078,15 +1078,12 @@ bool js::temporal::CalendarFields(
   MOZ_ASSERT(
       CalendarMethodsRecordHasLookedUp(calendar, CalendarMethod::Fields));
 
-  // FIXME: spec issue - the input is already sorted, let's assert this, too.
+  // Step 1.
   MOZ_ASSERT(IsSorted(fieldNames));
-
-  // FIXME: spec issue - the input shouldn't have duplicate elements. Let's
-  // assert this, too.
   MOZ_ASSERT(std::adjacent_find(fieldNames.begin(), fieldNames.end()) ==
              fieldNames.end());
 
-  // Step 1.
+  // Step 2.
   auto fields = calendar.fields();
   if (!fields) {
     bool arrayIterationSane;
@@ -1101,16 +1098,14 @@ bool js::temporal::CalendarFields(
     }
 
     if (arrayIterationSane) {
-      // Steps 1.a-b. (Not applicable in our implementation.)
-
-      // Step 1.c.
+      // Steps 2.a-b.
       return BuiltinCalendarFields(cx, fieldNames, result.get());
 
-      // Steps 1.d-f. (Not applicable in our implementation.)
+      // Steps 2.c-e. (Not applicable in our implementation.)
     }
   }
 
-  // Step 2. (Inlined call to CalendarMethodsRecordCall.)
+  // Step 3. (Inlined call to CalendarMethodsRecordCall.)
 
   auto* array = NewDenseFullyAllocatedArray(cx, fieldNames.size());
   if (!array) {
@@ -1130,7 +1125,7 @@ bool js::temporal::CalendarFields(
     return false;
   }
 
-  // Steps 3-4.
+  // Steps 4-5.
   if (!IterableToListOfStrings(cx, fieldsArray, result)) {
     return false;
   }
@@ -4596,18 +4591,14 @@ static bool Calendar_mergeFields(JSContext* cx, const CallArgs& args) {
   for (size_t i = 0; i < fieldsKeys.length(); i++) {
     Handle<PropertyKey> key = fieldsKeys[i];
 
-    // Step 12.a.
-    // FIXME: spec issue - unnecessary initialisation
-    // https://github.com/tc39/proposal-temporal/issues/2549
-
-    // Steps 12.b-c.
+    // Steps 12.a-b.
     if (overriddenKeys.has(key)) {
       if (!GetProperty(cx, additionalFieldsCopy, additionalFieldsCopy, key,
                        &propValue)) {
         return false;
       }
 
-      // Step 12.d. (Reordered)
+      // Step 12.c. (Reordered)
       if (propValue.isUndefined()) {
         // The property can be undefined if the key is "month" or "monthCode".
         MOZ_ASSERT(key.isAtom(cx->names().month) ||
@@ -4624,7 +4615,7 @@ static bool Calendar_mergeFields(JSContext* cx, const CallArgs& args) {
       MOZ_ASSERT(!propValue.isUndefined());
     }
 
-    // Step 12.d.
+    // Step 12.c.
     if (!DefineDataProperty(cx, merged, key, propValue)) {
       return false;
     }
