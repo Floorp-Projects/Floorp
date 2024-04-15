@@ -533,6 +533,7 @@ var gSync = {
     let fxaPanelView = PanelMultiView.getViewNode(document, "PanelUI-fxa");
     fxaPanelView.addEventListener("ViewShowing", this);
     fxaPanelView.addEventListener("ViewHiding", this);
+    fxaPanelView.addEventListener("command", this);
 
     // If the experiment is enabled, we'll need to update the panels
     // to show some different text to the user
@@ -558,6 +559,10 @@ var gSync = {
 
   handleEvent(event) {
     switch (event.type) {
+      case "command": {
+        this.onCommand(event.target);
+        break;
+      }
       case "ViewShowing": {
         this.onFxAPanelViewShowing(event.target);
         break;
@@ -604,6 +609,44 @@ var gSync = {
   onFxAPanelViewHiding(panelview) {
     panelview.syncedTabsPanelList.destroy();
     panelview.syncedTabsPanelList = null;
+  },
+
+  onCommand(button) {
+    switch (button.id) {
+      case "fxa-manage-account-button":
+        this.clickFxAMenuHeaderButton(button);
+        break;
+      case "PanelUI-fxa-menu-syncnow-button":
+        this.doSyncFromFxaMenu(button);
+        break;
+      case "PanelUI-fxa-menu-setup-sync-button":
+        this.openPrefsFromFxaMenu("sync_settings", button);
+        break;
+      case "PanelUI-fxa-menu-connect-device-button":
+        this.openConnectAnotherDeviceFromFxaMenu(button);
+        break;
+      case "PanelUI-fxa-menu-sendtab-button":
+        this.showSendToDeviceViewFromFxaMenu(button);
+        break;
+      case "PanelUI-fxa-menu-sync-prefs-button":
+        this.openPrefsFromFxaMenu("sync_settings", button);
+        break;
+      case "PanelUI-fxa-menu-account-signout-button":
+        this.disconnect();
+        break;
+      case "PanelUI-fxa-menu-sync-button":
+        this.openPrefsFromFxaButton("sync_cta", button);
+        break;
+      case "PanelUI-fxa-menu-monitor-button":
+        this.openMonitorLink(button);
+        break;
+      case "PanelUI-fxa-menu-relay-button":
+        this.openRelayLink(button);
+        break;
+      case "PanelUI-fxa-menu-vpn-button":
+        this.openVPNLink(button);
+        break;
+    }
   },
 
   observe(subject, topic, data) {
@@ -718,16 +761,6 @@ var gSync = {
 
     this.showSendToDeviceView(anchor);
     this.emitFxaToolbarTelemetry("send_tab", anchor);
-  },
-
-  showRemoteTabsFromFxaMenu(panel) {
-    PanelUI.showSubView("PanelUI-remotetabs", panel);
-    this.emitFxaToolbarTelemetry("sync_tabs", panel);
-  },
-
-  showSidebarFromFxaMenu(panel) {
-    SidebarUI.toggle("viewTabsSidebar");
-    this.emitFxaToolbarTelemetry("sync_tabs_sidebar", panel);
   },
 
   _populateSendTabToDevicesView(panelViewNode, reloadDevices = true) {
@@ -1020,8 +1053,8 @@ var gSync = {
     ).hidden = !canSendAllURIs;
   },
 
-  emitFxaToolbarTelemetry(type, panel) {
-    if (UIState.isReady() && panel) {
+  emitFxaToolbarTelemetry(type, sourceElement) {
+    if (UIState.isReady() && sourceElement) {
       const state = UIState.get();
       const hasAvatar = state.avatarURL && !state.avatarIsDefault;
       let extraOptions = {
@@ -1029,10 +1062,10 @@ var gSync = {
         fxa_avatar: hasAvatar ? "true" : "false",
       };
 
-      // When the fxa avatar panel is within the Firefox app menu,
+      // When the source element is within the Firefox app menu,
       // we emit different telemetry.
       let eventName = "fxa_avatar_menu";
-      if (this.isPanelInsideAppMenu(panel)) {
+      if (this.isInsideAppMenu(sourceElement)) {
         eventName = "fxa_app_menu";
       }
 
@@ -1046,9 +1079,9 @@ var gSync = {
     }
   },
 
-  isPanelInsideAppMenu(panel = undefined) {
+  isInsideAppMenu(sourceElement = undefined) {
     const appMenuPanel = document.getElementById("appMenu-popup");
-    if (panel && appMenuPanel.contains(panel)) {
+    if (sourceElement && appMenuPanel.contains(sourceElement)) {
       return true;
     }
     return false;
@@ -1225,10 +1258,10 @@ var gSync = {
     openTrustedLinkIn(url, "tab");
   },
 
-  async openConnectAnotherDeviceFromFxaMenu(panel = undefined) {
-    this.emitFxaToolbarTelemetry("cad", panel);
+  async openConnectAnotherDeviceFromFxaMenu(sourceElement = undefined) {
+    this.emitFxaToolbarTelemetry("cad", sourceElement);
     let entryPoint = "fxa_discoverability_native";
-    if (this.isPanelInsideAppMenu(panel)) {
+    if (this.isInsideAppMenu(sourceElement)) {
       entryPoint = "fxa_app_menu";
     }
     this.openConnectAnotherDevice(entryPoint);
@@ -1241,7 +1274,7 @@ var gSync = {
     switchToTabHavingURI(url, true, { replaceQueryString: true });
   },
 
-  async clickFxAMenuHeaderButton(panel = undefined) {
+  async clickFxAMenuHeaderButton(sourceElement = undefined) {
     // Depending on the current logged in state of a user,
     // clicking the FxA header will either open
     // a sign-in page, account management page, or sync
@@ -1249,16 +1282,16 @@ var gSync = {
     const { status } = UIState.get();
     switch (status) {
       case UIState.STATUS_NOT_CONFIGURED:
-        this.openFxAEmailFirstPageFromFxaMenu(panel);
+        this.openFxAEmailFirstPageFromFxaMenu(sourceElement);
         break;
       case UIState.STATUS_LOGIN_FAILED:
-        this.openPrefsFromFxaMenu("sync_settings", panel);
+        this.openPrefsFromFxaMenu("sync_settings", sourceElement);
         break;
       case UIState.STATUS_NOT_VERIFIED:
         this.openFxAEmailFirstPage("fxa_app_menu_reverify");
         break;
       case UIState.STATUS_SIGNED_IN:
-        this.openFxAManagePageFromFxaMenu(panel);
+        this.openFxAManagePageFromFxaMenu(sourceElement);
     }
   },
 
@@ -1273,10 +1306,13 @@ var gSync = {
     switchToTabHavingURI(url, true, { replaceQueryString: true });
   },
 
-  async openFxAEmailFirstPageFromFxaMenu(panel = undefined, extraParams = {}) {
-    this.emitFxaToolbarTelemetry("login", panel);
+  async openFxAEmailFirstPageFromFxaMenu(
+    sourceElement = undefined,
+    extraParams = {}
+  ) {
+    this.emitFxaToolbarTelemetry("login", sourceElement);
     let entryPoint = "fxa_discoverability_native";
-    if (panel) {
+    if (sourceElement) {
       entryPoint = "fxa_toolbar_button";
     }
     this.openFxAEmailFirstPage(entryPoint, extraParams);
@@ -1287,10 +1323,10 @@ var gSync = {
     switchToTabHavingURI(url, true, { replaceQueryString: true });
   },
 
-  async openFxAManagePageFromFxaMenu(panel = undefined) {
-    this.emitFxaToolbarTelemetry("account_settings", panel);
+  async openFxAManagePageFromFxaMenu(sourceElement = undefined) {
+    this.emitFxaToolbarTelemetry("account_settings", sourceElement);
     let entryPoint = "fxa_discoverability_native";
-    if (this.isPanelInsideAppMenu(panel)) {
+    if (this.isInsideAppMenu(sourceElement)) {
       entryPoint = "fxa_app_menu";
     }
     this.openFxAManagePage(entryPoint);
@@ -1893,9 +1929,9 @@ var gSync = {
     }
   },
 
-  doSyncFromFxaMenu(panel) {
+  doSyncFromFxaMenu(sourceElement) {
     this.doSync();
-    this.emitFxaToolbarTelemetry("sync_now", panel);
+    this.emitFxaToolbarTelemetry("sync_now", sourceElement);
   },
 
   openPrefs(entryPoint = "syncbutton", origin = undefined) {
@@ -1905,18 +1941,18 @@ var gSync = {
     });
   },
 
-  openPrefsFromFxaMenu(type, panel) {
-    this.emitFxaToolbarTelemetry(type, panel);
+  openPrefsFromFxaMenu(type, sourceElement) {
+    this.emitFxaToolbarTelemetry(type, sourceElement);
     let entryPoint = "fxa_discoverability_native";
-    if (this.isPanelInsideAppMenu(panel)) {
+    if (this.isInsideAppMenu(sourceElement)) {
       entryPoint = "fxa_app_menu";
     }
     this.openPrefs(entryPoint);
   },
 
-  openPrefsFromFxaButton(type, panel) {
+  openPrefsFromFxaButton(type, sourceElement) {
     let entryPoint = "fxa_toolbar_button_sync";
-    this.emitFxaToolbarTelemetry(type, panel);
+    this.emitFxaToolbarTelemetry(type, sourceElement);
     this.openPrefs(entryPoint);
   },
 
@@ -2112,8 +2148,8 @@ var gSync = {
       !monitorEnabled && !relayEnabled && !vpnEnabled;
     mainPanelEl.hidden = false;
   },
-  async openMonitorLink(panel) {
-    this.emitFxaToolbarTelemetry("monitor_cta", panel);
+  async openMonitorLink(sourceElement) {
+    this.emitFxaToolbarTelemetry("monitor_cta", sourceElement);
     await this.openCtaLink(
       FX_MONITOR_OAUTH_CLIENT_ID,
       new URL("https://monitor.firefox.com"),
@@ -2121,8 +2157,8 @@ var gSync = {
     );
   },
 
-  async openRelayLink(panel) {
-    this.emitFxaToolbarTelemetry("relay_cta", panel);
+  async openRelayLink(sourceElement) {
+    this.emitFxaToolbarTelemetry("relay_cta", sourceElement);
     await this.openCtaLink(
       FX_RELAY_OAUTH_CLIENT_ID,
       new URL("https://relay.firefox.com"),
@@ -2130,8 +2166,8 @@ var gSync = {
     );
   },
 
-  async openVPNLink(panel) {
-    this.emitFxaToolbarTelemetry("vpn_cta", panel);
+  async openVPNLink(sourceElement) {
+    this.emitFxaToolbarTelemetry("vpn_cta", sourceElement);
     await this.openCtaLink(
       VPN_OAUTH_CLIENT_ID,
       new URL("https://www.mozilla.org/en-US/products/vpn/"),
