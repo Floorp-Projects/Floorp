@@ -8,6 +8,7 @@
 #define builtin_temporal_PlainDateTime_h
 
 #include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
 
 #include <stdint.h>
 
@@ -190,7 +191,7 @@ bool DifferenceISODateTime(JSContext* cx, const PlainDateTime& one,
                            JS::Handle<PlainObject*> options,
                            NormalizedDuration* result);
 
-class PlainDateTimeWithCalendar {
+class MOZ_STACK_CLASS PlainDateTimeWithCalendar final {
   PlainDateTime dateTime_;
   CalendarValue calendar_;
 
