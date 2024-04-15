@@ -381,6 +381,11 @@ const Preferences = (window.Preferences = (function () {
       if (this.locked) {
         aElement.disabled = true;
       }
+      if (aElement.labels?.length) {
+        for (let label of aElement.labels) {
+          label.toggleAttribute("disabled", this.locked);
+        }
+      }
 
       if (!this.isElementEditable(aElement)) {
         return;

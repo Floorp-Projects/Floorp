@@ -583,6 +583,12 @@ a[is="moz-support-link"]:not(.sidebar-footer-link) {
   pointer-events: none;
 }
 
+html|label[disabled] {
+  /* This matches XUL checkbox.css - but for HTML labels for HTML inputs we
+   * need to do this ourselves. */
+  opacity: 0.4;
+}
+
 #showUpdateHistory {
   margin-inline-start: 0;
 }
