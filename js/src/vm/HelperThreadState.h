@@ -79,6 +79,8 @@ typedef Vector<Tier2GeneratorTask*, 0, SystemAllocPolicy>
 
 }  // namespace wasm
 
+using HelperThreadTaskVector = Vector<HelperThreadTask*, 0, SystemAllocPolicy>;
+
 // Per-process state for off thread work items.
 class GlobalHelperThreadState {
   friend class AutoLockHelperThreadState;
@@ -172,8 +174,6 @@ class GlobalHelperThreadState {
   // GCRuntime before being dispatched to the helper thread system.
   GCParallelTaskList gcParallelWorklist_;
 
-  using HelperThreadTaskVector =
-      Vector<HelperThreadTask*, 0, SystemAllocPolicy>;
   // Vector of running HelperThreadTask.
   // This is used to get the HelperThreadTask that are currently running.
   HelperThreadTaskVector helperTasks_;
@@ -183,9 +183,11 @@ class GlobalHelperThreadState {
   // pool is used.
   JS::HelperThreadTaskCallback dispatchTaskCallback = nullptr;
 
+#ifdef DEBUG
   // The number of tasks dispatched to the thread pool that have not started
   // running yet.
   size_t tasksPending_ = 0;
+#endif
 
   bool isInitialized_ = false;
 
@@ -419,7 +421,7 @@ class GlobalHelperThreadState {
   bool submitTask(PromiseHelperTask* task);
   bool submitTask(GCParallelTask* task,
                   const AutoLockHelperThreadState& locked);
-  void runOneTask(AutoLockHelperThreadState& lock);
+  void runOneTask(HelperThreadTask* task, AutoLockHelperThreadState& lock);
   void runTaskLocked(HelperThreadTask* task, AutoLockHelperThreadState& lock);
 
   using Selector = HelperThreadTask* (

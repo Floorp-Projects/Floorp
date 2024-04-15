@@ -439,6 +439,7 @@ void js::CancelOffThreadIonCompile(const CompilationSelector& selector) {
 
         jit::IonCompileTask* ionCompileTask = helper->as<jit::IonCompileTask>();
         if (IonCompileTaskMatches(selector, ionCompileTask)) {
+          ionCompileTask->alloc().lifoAlloc()->setReadWrite();
           ionCompileTask->mirGen().cancel();
           cancelled = true;
         }
@@ -889,19 +890,31 @@ void GlobalHelperThreadState::assertIsLockedByCurrentThread() const {
 }
 #endif  // DEBUG
 
-void GlobalHelperThreadState::dispatch(
-    DispatchReason reason, const AutoLockHelperThreadState& locked) {
-  if (canStartTasks(locked) && tasksPending_ < threadCount) {
-    // This doesn't guarantee that we don't dispatch more tasks to the external
-    // pool than necessary if tasks are taking a long time to start, but it does
-    // limit the number.
-    tasksPending_++;
-
-    // The hazard analysis can't tell that the callback doesn't GC.
-    JS::AutoSuppressGCAnalysis nogc;
-
-    dispatchTaskCallback(reason);
+void GlobalHelperThreadState::dispatch(DispatchReason reason,
+                                       const AutoLockHelperThreadState& lock) {
+  if (helperTasks_.length() >= threadCount) {
+    return;
   }
+
+  HelperThreadTask* task = findHighestPriorityTask(lock);
+  if (!task) {
+    return;
+  }
+
+#ifdef DEBUG
+  MOZ_ASSERT(tasksPending_ < threadCount);
+  tasksPending_++;
+#endif
+
+  // Add task to list of running tasks immediately.
+  helperTasks(lock).infallibleEmplaceBack(task);
+  runningTaskCount[task->threadType()]++;
+  totalCountRunningTasks++;
+
+  // The hazard analysis can't tell that the callback doesn't GC.
+  JS::AutoSuppressGCAnalysis nogc;
+
+  dispatchTaskCallback(task, reason);
 }
 
 void GlobalHelperThreadState::wait(
@@ -938,10 +951,11 @@ void GlobalHelperThreadState::waitForAllTasksLocked(
     AutoLockHelperThreadState& lock) {
   CancelOffThreadWasmTier2GeneratorLocked(lock);
 
-  while (canStartTasks(lock) || tasksPending_ || hasActiveThreads(lock)) {
+  while (canStartTasks(lock) || hasActiveThreads(lock)) {
     wait(lock);
   }
 
+  MOZ_ASSERT(tasksPending_ == 0);
   MOZ_ASSERT(gcParallelWorklist().isEmpty(lock));
   MOZ_ASSERT(ionWorklist(lock).empty());
   MOZ_ASSERT(wasmWorklist(lock, wasm::CompileMode::Tier1).empty());
@@ -1629,13 +1643,13 @@ void GlobalHelperThreadState::trace(JSTracer* trc) {
 
     for (auto* helper : HelperThreadState().helperTasks(lock)) {
       if (helper->is<jit::IonCompileTask>()) {
-        helper->as<jit::IonCompileTask>()->trace(trc);
+        jit::IonCompileTask* ionCompileTask = helper->as<jit::IonCompileTask>();
+        ionCompileTask->alloc().lifoAlloc()->setReadWrite();
+        ionCompileTask->trace(trc);
       }
     }
   }
 
-  // The lazy link list is only accessed on the main thread, so trace it after
-  // releasing the lock.
   JSRuntime* rt = trc->runtime();
   if (auto* jitRuntime = rt->jitRuntime()) {
     jit::IonCompileTask* task = jitRuntime->ionLazyLinkList(rt).getFirst();
@@ -1672,7 +1686,8 @@ bool GlobalHelperThreadState::canStartTasks(
          canStartWasmTier2GeneratorTask(lock);
 }
 
-void JS::RunHelperThreadTask() {
+void JS::RunHelperThreadTask(HelperThreadTask* task) {
+  MOZ_ASSERT(task);
   MOZ_ASSERT(CanUseExtraThreads());
 
   AutoLockHelperThreadState lock;
@@ -1681,24 +1696,21 @@ void JS::RunHelperThreadTask() {
     return;
   }
 
-  HelperThreadState().runOneTask(lock);
+  HelperThreadState().runOneTask(task, lock);
 }
 
-void GlobalHelperThreadState::runOneTask(AutoLockHelperThreadState& lock) {
+void GlobalHelperThreadState::runOneTask(HelperThreadTask* task,
+                                         AutoLockHelperThreadState& lock) {
+#ifdef DEBUG
   MOZ_ASSERT(tasksPending_ > 0);
   tasksPending_--;
+#endif
 
-  // The selectors may depend on the HelperThreadState not changing between task
-  // selection and task execution, in particular, on new tasks not being added
-  // (because of the lifo structure of the work lists). Unlocking the
-  // HelperThreadState between task selection and execution is not well-defined.
-  HelperThreadTask* task = findHighestPriorityTask(lock);
-  if (task) {
-    runTaskLocked(task, lock);
-    dispatch(DispatchReason::FinishedTask, lock);
-  }
+  runTaskLocked(task, lock);
 
   notifyAll(lock);
+
+  dispatch(DispatchReason::FinishedTask, lock);
 }
 
 HelperThreadTask* GlobalHelperThreadState::findHighestPriorityTask(
@@ -1714,24 +1726,37 @@ HelperThreadTask* GlobalHelperThreadState::findHighestPriorityTask(
   return nullptr;
 }
 
+#ifdef DEBUG
+static bool VectorHasTask(const HelperThreadTaskVector& tasks,
+                          HelperThreadTask* task) {
+  for (HelperThreadTask* t : tasks) {
+    if (t == task) {
+      return true;
+    }
+  }
+
+  return false;
+}
+#endif
+
 void GlobalHelperThreadState::runTaskLocked(HelperThreadTask* task,
                                             AutoLockHelperThreadState& locked) {
-  JS::AutoSuppressGCAnalysis nogc;
-
-  HelperThreadState().helperTasks(locked).infallibleEmplaceBack(task);
-
   ThreadType threadType = task->threadType();
+
+  MOZ_ASSERT(VectorHasTask(helperTasks(locked), task));
+  MOZ_ASSERT(totalCountRunningTasks != 0);
+  MOZ_ASSERT(runningTaskCount[threadType] != 0);
+
   js::oom::SetThreadType(threadType);
-  runningTaskCount[threadType]++;
-  totalCountRunningTasks++;
 
-  task->runHelperThreadTask(locked);
-
-  // Delete task from helperTasks.
-  HelperThreadState().helperTasks(locked).eraseIfEqual(task);
-
-  totalCountRunningTasks--;
-  runningTaskCount[threadType]--;
+  {
+    JS::AutoSuppressGCAnalysis nogc;
+    task->runHelperThreadTask(locked);
+  }
 
   js::oom::SetThreadType(js::THREAD_TYPE_NONE);
+
+  helperTasks(locked).eraseIfEqual(task);
+  totalCountRunningTasks--;
+  runningTaskCount[threadType]--;
 }
