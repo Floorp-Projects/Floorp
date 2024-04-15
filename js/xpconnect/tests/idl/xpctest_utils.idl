@@ -18,25 +18,29 @@ interface nsIXPCTestUtils : nsISupports {
   nsIXPCTestFunctionInterface doubleWrapFunction(in nsIXPCTestFunctionInterface f);
 };
 
-/*
- * Test that non-[scriptable] interfaces and [noscript] members are not
- * generated for TypeScript bindings.
+/**
+ * TypeScript bindings specific tests.
  */
 
+// Typedefs with a TSNoncompat underlying type are not defined.
+typedef voidPtr Noncompat;
+
+// Not [scriptable] interfaces are not generated.
 [uuid(ddf64cfb-668a-4571-a900-0fe2babb6249)]
 interface nsIXPCTestNotScriptable : nsISupports {
   // Empty.
 };
 
 [scriptable, uuid(1bbfe703-c67d-4995-b061-564c8a1c39d7)]
-interface nsIXPCTestNoScriptMembers : nsISupports {
-  [noscript]
-  attribute long noscriptProp;
-
+interface nsIXPCTestTypeScript : nsISupports {
   attribute long exposedProp;
-
-  [noscript]
-  void noscriptMethod(in long arg);
-
   void exposedMethod(in long arg);
+
+  // Members referencing TSNoncompat typedefs are not exposed.
+  attribute Noncompat noncompatProp;
+  void noncompatMethod(in Noncompat arg);
+
+  // [noscript] attributes and methods are not exposed.
+  [noscript] attribute long noscriptProp;
+  [noscript] void noscriptMethod(in long arg);
 };
