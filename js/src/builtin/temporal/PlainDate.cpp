@@ -974,10 +974,11 @@ static bool AddDate(JSContext* cx, Handle<Wrapped<PlainDateObject*>> date,
 /**
  * AddDate ( calendarRec, plainDate, duration [ , options ] )
  */
-Wrapped<PlainDateObject*> js::temporal::AddDate(
-    JSContext* cx, Handle<CalendarRecord> calendar,
-    Handle<Wrapped<PlainDateObject*>> date, const Duration& duration,
-    Handle<JSObject*> options) {
+static Wrapped<PlainDateObject*> AddDate(JSContext* cx,
+                                         Handle<CalendarRecord> calendar,
+                                         Handle<Wrapped<PlainDateObject*>> date,
+                                         const Duration& duration,
+                                         Handle<JSObject*> options) {
   // Step 1.
   MOZ_ASSERT(
       CalendarMethodsRecordHasLookedUp(calendar, CalendarMethod::DateAdd));
@@ -1039,6 +1040,16 @@ Wrapped<PlainDateObject*> js::temporal::AddDate(
 
   // Step 8.
   return CreateTemporalDate(cx, resultDate, calendar.receiver());
+}
+
+/**
+ * AddDate ( calendarRec, plainDate, duration [ , options ] )
+ */
+Wrapped<PlainDateObject*> js::temporal::AddDate(
+    JSContext* cx, Handle<CalendarRecord> calendar,
+    Handle<Wrapped<PlainDateObject*>> date, const DateDuration& duration,
+    Handle<JSObject*> options) {
+  return ::AddDate(cx, calendar, date, duration.toDuration(), options);
 }
 
 /**
@@ -2470,8 +2481,7 @@ static bool PlainDate_subtract(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 7.
-  auto result =
-      temporal::AddDate(cx, calendar, temporalDate, negatedDuration, options);
+  auto result = ::AddDate(cx, calendar, temporalDate, negatedDuration, options);
   if (!result) {
     return false;
   }

@@ -585,11 +585,11 @@ static bool AddDurationToOrSubtractDurationFromPlainYearMonth(
   auto balancedTime = BalanceTimeDuration(timeDuration, TemporalUnit::Day);
 
   // Steps 6 and 16. (Reordered)
-  Duration durationToAdd = {
-      duration.years,
-      duration.months,
-      duration.weeks,
-      duration.days + double(balancedTime.days),
+  auto durationToAdd = DateDuration{
+      int64_t(duration.years),
+      int64_t(duration.months),
+      int64_t(duration.weeks),
+      int64_t(duration.days) + balancedTime.days,
   };
 
   // Step 7.

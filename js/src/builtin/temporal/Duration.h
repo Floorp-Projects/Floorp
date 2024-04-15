@@ -89,6 +89,12 @@ enum class TemporalUnit;
 int32_t DurationSign(const Duration& duration);
 
 /**
+ * DurationSign ( years, months, weeks, days, hours, minutes, seconds,
+ * milliseconds, microseconds, nanoseconds )
+ */
+int32_t DurationSign(const DateDuration& duration);
+
+/**
  * IsValidDuration ( years, months, weeks, days, hours, minutes, seconds,
  * milliseconds, microseconds, nanoseconds )
  */
