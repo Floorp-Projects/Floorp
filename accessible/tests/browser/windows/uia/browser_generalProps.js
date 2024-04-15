@@ -103,3 +103,59 @@ addUiaTask(
     ok(await runPython(`p.CurrentIsEnabled`), "p has IsEnabled true");
   }
 );
+
+async function testGroupPos(id, level, pos, size) {
+  await assignPyVarToUiaWithId(id);
+  is(await runPython(`${id}.CurrentLevel`), level, `${id} Level correct`);
+  is(
+    await runPython(`${id}.CurrentPositionInSet`),
+    pos,
+    `${id} PositionInSet correct`
+  );
+  is(
+    await runPython(`${id}.CurrentSizeOfSet`),
+    size,
+    `${id} SizeOfSet correct`
+  );
+}
+
+/**
+ * Test the Level, PositionInSet and SizeOfSet properties.
+ */
+addUiaTask(
+  `
+<ul>
+  <li id="li1">li1<ul id="ul1">
+    <li id="li2a">li2a</li>
+    <li id="li2b" hidden>li2b</li>
+    <li id="li2c">li2c</li>
+  </ul></li>
+</ul>
+<h2 id="h2">h2</h2>
+<button id="button">button</button>
+  `,
+  async function testGroupPosProps(browser) {
+    await definePyVar("doc", `getDocUia()`);
+    await testGroupPos("li1", 1, 1, 1);
+    await testGroupPos("li2a", 2, 1, 2);
+    await testGroupPos("li2c", 2, 2, 2);
+    info("Showing li2b");
+    // There aren't events in any API for a change to group position properties
+    // because this would be too spammy and isn't particularly useful given
+    // how frequently these can change.
+    let shown = waitForEvent(EVENT_SHOW, "li2b");
+    await invokeContentTask(browser, [], () => {
+      content.document.getElementById("li2b").hidden = false;
+    });
+    await shown;
+    await testGroupPos("li2a", 2, 1, 3);
+    await testGroupPos("li2b", 2, 2, 3);
+    await testGroupPos("li2c", 2, 3, 3);
+
+    // The IA2 -> UIA proxy doesn't map heading level to the Level property.
+    if (gIsUiaEnabled) {
+      await testGroupPos("h2", 2, 0, 0);
+    }
+    await testGroupPos("button", 0, 0, 0);
+  }
+);
