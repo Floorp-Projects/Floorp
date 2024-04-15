@@ -731,7 +731,8 @@ already_AddRefed<Promise> Clipboard::Write(
   RefPtr<ClipboardWriteCallback> callback =
       MakeRefPtr<ClipboardWriteCallback>(p, aData[0]);
   nsresult rv = clipboard->AsyncSetData(nsIClipboard::kGlobalClipboard,
-                                        callback, getter_AddRefs(request));
+                                        owner->GetWindowContext(), callback,
+                                        getter_AddRefs(request));
   if (NS_FAILED(rv)) {
     p->MaybeReject(rv);
     return p.forget();

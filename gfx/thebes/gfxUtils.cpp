@@ -1265,7 +1265,7 @@ nsresult gfxUtils::EncodeSourceSurface(SourceSurface* aSurface,
     nsCOMPtr<nsIClipboardHelper> clipboard(
         do_GetService("@mozilla.org/widget/clipboardhelper;1", &rv));
     if (clipboard) {
-      clipboard->CopyString(NS_ConvertASCIItoUTF16(dataURI));
+      clipboard->CopyString(NS_ConvertASCIItoUTF16(dataURI), nullptr);
     }
   }
   return NS_OK;

@@ -23,6 +23,7 @@ class PresShell;
 namespace dom {
 class Document;
 class Selection;
+class WindowContext;
 }  // namespace dom
 }  // namespace mozilla
 
@@ -46,7 +47,8 @@ class nsCopySupport {
                               mozilla::dom::Document* aDoc, nsAString& outdata);
 
   static nsresult ImageCopy(nsIImageLoadingContent* aImageElement,
-                            nsILoadContext* aLoadContext, int32_t aCopyFlags);
+                            nsILoadContext* aLoadContext, int32_t aCopyFlags,
+                            mozilla::dom::WindowContext* aSettingWindowContext);
 
   // Get the selection as a transferable.
   // @param aSelection Can be nullptr.

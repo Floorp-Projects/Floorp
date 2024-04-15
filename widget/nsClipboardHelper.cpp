@@ -36,9 +36,10 @@ nsClipboardHelper::~nsClipboardHelper() {
  *****************************************************************************/
 
 NS_IMETHODIMP
-nsClipboardHelper::CopyStringToClipboard(const nsAString& aString,
-                                         int32_t aClipboardID,
-                                         SensitiveData aSensitive) {
+nsClipboardHelper::CopyStringToClipboard(
+    const nsAString& aString, int32_t aClipboardID,
+    mozilla::dom::WindowContext* aSettingWindowContext,
+    SensitiveData aSensitive) {
   nsresult rv;
 
   // get the clipboard
@@ -92,20 +93,22 @@ nsClipboardHelper::CopyStringToClipboard(const nsAString& aString,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // put the transferable on the clipboard
-  rv = clipboard->SetData(trans, nullptr, aClipboardID);
+  rv = clipboard->SetData(trans, nullptr, aClipboardID, aSettingWindowContext);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsClipboardHelper::CopyString(const nsAString& aString,
-                              SensitiveData aSensitive) {
+nsClipboardHelper::CopyString(
+    const nsAString& aString,
+    mozilla::dom::WindowContext* aSettingWindowContext,
+    SensitiveData aSensitive) {
   nsresult rv;
 
   // copy to the global clipboard. it's bad if this fails in any way.
   rv = CopyStringToClipboard(aString, nsIClipboard::kGlobalClipboard,
-                             aSensitive);
+                             aSettingWindowContext, aSensitive);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // unix also needs us to copy to the selection clipboard. this will
@@ -117,7 +120,8 @@ nsClipboardHelper::CopyString(const nsAString& aString,
   // if this fails in any way other than "not being unix", we'll get
   // the assertion we need in CopyStringToClipboard, and we needn't
   // assert again here.
-  CopyStringToClipboard(aString, nsIClipboard::kSelectionClipboard, aSensitive);
+  CopyStringToClipboard(aString, nsIClipboard::kSelectionClipboard,
+                        aSettingWindowContext, aSensitive);
 
   return NS_OK;
 }

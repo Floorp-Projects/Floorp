@@ -115,20 +115,28 @@ interface nsIClipboard : nsISupports
     * @param  aTransferable The transferable
     * @param  anOwner The owner of the transferable
     * @param  aWhichClipboard Specifies the clipboard to which this operation applies.
-    * @result NS_Ok if no errors
+    * @param  aSettingWindowContext [optional]
+    *         The window context that is setting the clipboard, if any. This is used
+    *         to possibly bypass Content Analysis if a set clipboard and get clipboard
+    *         operation are done on the same page.
+    * @result NS_OK if no errors
     */
 
-    void setData ( in nsITransferable aTransferable, in nsIClipboardOwner anOwner,
-                    in long aWhichClipboard ) ;
+    void setData (in nsITransferable aTransferable, in nsIClipboardOwner anOwner,
+                  in long aWhichClipboard, [optional] in WindowContext aSettingWindowContext);
 
     /**
-     * Requests setting data to the native clipboard. The acutal set occur
+     * Requests setting data to the native clipboard. The actual set occurs
      * when the data is provided by calling nsIAsyncSetClipboardData::setData().
      * The result will be notified by nsIClipboardCallback. A new set request
      * will cancel any prior pending requests, if any exist.
      *
      * @param  aWhichClipboard
      *         Specifies the clipboard to which this operation applies.
+     * @param  aSettingWindowContext [optional]
+     *         The window context that is setting the clipboard, if any. This is used
+     *         to possibly bypass Content Analysis if a set clipboard and get clipboard
+     *         operation are done on the same page.
      * @param  aCallback [optional]
      *         The callback object that will be notified upon completion.
      * @return nsIAsyncSetClipboardData
@@ -136,6 +144,7 @@ interface nsIClipboard : nsISupports
      *         data is provided by calling nsIAsyncSetClipboardData::setData().
      */
     nsIAsyncSetClipboardData asyncSetData(in long aWhichClipboard,
+                                          [optional] in WindowContext aSettingWindowContext,
                                           [optional] in nsIAsyncClipboardRequestCallback aCallback);
 
    /**

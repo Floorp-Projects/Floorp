@@ -553,6 +553,7 @@ export var Policies = {
         ["IsPerUser", "is_per_user"],
         ["ShowBlockedResult", "show_blocked_result"],
         ["DefaultAllow", "default_allow"],
+        ["BypassForSameTabOperations", "bypass_for_same_tab_operations"],
       ];
       for (let pref of boolPrefs) {
         if (pref[0] in param) {

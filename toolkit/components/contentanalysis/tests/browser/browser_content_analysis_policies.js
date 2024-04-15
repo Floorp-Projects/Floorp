@@ -26,6 +26,7 @@ const kClientSignaturePref = "client_signature";
 const kPerUserPref = "is_per_user";
 const kShowBlockedPref = "show_blocked_result";
 const kDefaultAllowPref = "default_allow";
+const kBypassForSameTabOperationsPref = "bypass_for_same_tab_operations";
 
 const ca = Cc["@mozilla.org/contentanalysis;1"].getService(
   Ci.nsIContentAnalysis
@@ -88,6 +89,7 @@ add_task(async function test_ca_enterprise_config() {
         IsPerUser: true,
         ShowBlockedResult: false,
         DefaultAllow: true,
+        BypassForSameTabOperations: true,
       },
     },
   });
@@ -138,6 +140,13 @@ add_task(async function test_ca_enterprise_config() {
     Services.prefs.getBoolPref("browser.contentanalysis." + kDefaultAllowPref),
     true,
     "default allow match"
+  );
+  is(
+    Services.prefs.getBoolPref(
+      "browser.contentanalysis." + kBypassForSameTabOperationsPref
+    ),
+    true,
+    "bypass for same tab operations match"
   );
   PoliciesPrefTracker.stop();
 });

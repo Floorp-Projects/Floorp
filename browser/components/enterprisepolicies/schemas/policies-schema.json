@@ -267,6 +267,9 @@
         },
         "DefaultAllow": {
           "type": "boolean"
+        },
+        "BypassForSameTabOperations": {
+          "type": "boolean"
         }
       }
     },

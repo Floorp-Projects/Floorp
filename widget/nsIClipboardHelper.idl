@@ -29,17 +29,29 @@ interface nsIClipboardHelper : nsISupports
    * @param aString, the string to copy to the clipboard
    * @param aClipboardID, the ID of the clipboard to copy to
    *        (eg. kSelectionClipboard -- see nsIClipboard.idl)
+   * @param aSettingWindowContext
+   *         The window context that is setting the clipboard, if any. This is used
+   *         to possibly bypass Content Analysis if a set clipboard and get clipboard
+   *         operation are done on the same page.
    * @param aSensitive, optional flag to indicate that data is sensitive, like a password.
    *        That will exclude data from Cloud Clipboard/Clipboard History on Windows.
    */
   void copyStringToClipboard(in AString aString, in long aClipboardID,
+                             [optional] in WindowContext aSettingWindowContext,
                              [optional, default(NotSensitive)] in nsIClipboardHelper_SensitiveData aSensitive);
 
   /**
    * copy string to (default) clipboard
    *
    * @param aString, the string to copy to the clipboard
+   * @param aSettingWindowContext
+   *         The window context that is setting the clipboard, if any. This is used
+   *         to possibly bypass Content Analysis if a set clipboard and get clipboard
+   *         operation are done on the same page.
+   * @param aSensitive, optional flag to indicate that data is sensitive, like a password.
+   *        That will exclude data from Cloud Clipboard/Clipboard History on Windows.
    */
   void copyString(in AString aString,
+                  [optional] in WindowContext aSettingWindowContext,
                   [optional, default(NotSensitive)] in nsIClipboardHelper_SensitiveData aSensitive);
 };

@@ -816,6 +816,7 @@ NS_IMETHODIMP ContentAnalysisResult::GetShouldAllowContent(
                         ALLOW_DUE_TO_CONTENT_ANALYSIS_NOT_ACTIVE ||
           result == NoContentAnalysisResult::
                         ALLOW_DUE_TO_CONTEXT_EXEMPT_FROM_CONTENT_ANALYSIS ||
+          result == NoContentAnalysisResult::ALLOW_DUE_TO_SAME_TAB_SOURCE ||
           result == NoContentAnalysisResult::ALLOW_DUE_TO_COULD_NOT_GET_DATA;
     }
   } else {

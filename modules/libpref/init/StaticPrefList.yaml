@@ -1211,6 +1211,13 @@
   value: true
   mirror: always
 
+# Should Firefox bypass content analysis for pastes and drags whose source
+# is the same tab?
+- name: browser.contentanalysis.bypass_for_same_tab_operations
+  type: bool
+  value: false
+  mirror: always
+
 # Content blocking for Enhanced Tracking Protection
 - name: browser.contentblocking.database.enabled
   type: bool

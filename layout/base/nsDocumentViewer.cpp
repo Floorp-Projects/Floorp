@@ -2426,7 +2426,7 @@ NS_IMETHODIMP nsDocumentViewer::CopyLinkLocation() {
   NS_ENSURE_SUCCESS(rv, rv);
 
   // copy the href onto the clipboard
-  return clipboard->CopyString(locationText);
+  return clipboard->CopyString(locationText, mDocument->GetWindowContext());
 }
 
 NS_IMETHODIMP nsDocumentViewer::CopyImage(int32_t aCopyFlags) {
@@ -2436,7 +2436,8 @@ NS_IMETHODIMP nsDocumentViewer::CopyImage(int32_t aCopyFlags) {
   NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsILoadContext> loadContext(mContainer);
-  return nsCopySupport::ImageCopy(node, loadContext, aCopyFlags);
+  return nsCopySupport::ImageCopy(node, loadContext, aCopyFlags,
+                                  mDocument->GetWindowContext());
 }
 
 NS_IMETHODIMP nsDocumentViewer::GetCopyable(bool* aCopyable) {
