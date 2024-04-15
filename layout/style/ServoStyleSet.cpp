@@ -994,6 +994,7 @@ void ServoStyleSet::RuleChangedInternal(StyleSheet& aSheet, css::Rule& aRule,
     CASE_FOR(Import, Import)
     CASE_FOR(Media, Media)
     CASE_FOR(Keyframes, Keyframes)
+    CASE_FOR(Margin, Margin)
     CASE_FOR(FontFeatureValues, FontFeatureValues)
     CASE_FOR(FontPaletteValues, FontPaletteValues)
     CASE_FOR(FontFace, FontFace)
@@ -1014,9 +1015,6 @@ void ServoStyleSet::RuleChangedInternal(StyleSheet& aSheet, css::Rule& aRule,
       // FIXME: We should probably just forward to the parent @keyframes rule? I
       // think that'd do the right thing, but meanwhile...
       return MarkOriginsDirty(ToOriginFlags(aSheet.GetOrigin()));
-    case StyleCssRuleType::Margin:
-      // Margin rules not implemented yet, see bug 1864737
-      break;
   }
 
 #undef CASE_FOR
