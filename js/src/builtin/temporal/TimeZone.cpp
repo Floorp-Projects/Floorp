@@ -1429,9 +1429,6 @@ static PlainDateTimeObject* GetPlainDateTimeFor(
   // Steps 5-7.
   auto dateTime =
       GetPlainDateTimeFor(ToInstant(unwrappedInstant), offsetNanoseconds);
-
-  // FIXME: spec issue - CreateTemporalDateTime is infallible
-  // https://github.com/tc39/proposal-temporal/issues/2523
   MOZ_ASSERT(ISODateTimeWithinLimits(dateTime));
 
   return CreateTemporalDateTime(cx, dateTime, calendar);
@@ -1455,9 +1452,6 @@ PlainDateTime js::temporal::GetPlainDateTimeFor(const Instant& instant,
 
   // Step 6.
   auto balanced = BalanceISODateTime(dateTime, offsetNanoseconds);
-
-  // FIXME: spec issue - CreateTemporalDateTime is infallible
-  // https://github.com/tc39/proposal-temporal/issues/2523
   MOZ_ASSERT(ISODateTimeWithinLimits(balanced));
 
   // Step 7.
@@ -1524,9 +1518,6 @@ PlainDateTimeObject* js::temporal::GetPlainDateTimeFor(
   if (!GetPlainDateTimeFor(cx, timeZone, instant, &dateTime)) {
     return nullptr;
   }
-
-  // FIXME: spec issue - CreateTemporalDateTime is infallible
-  // https://github.com/tc39/proposal-temporal/issues/2523
   MOZ_ASSERT(ISODateTimeWithinLimits(dateTime));
 
   // Step 7.
@@ -1544,9 +1535,6 @@ PlainDateTimeObject* js::temporal::GetPlainDateTimeFor(
 
   // Steps 1-6.
   auto dateTime = GetPlainDateTimeFor(instant, offsetNanoseconds);
-
-  // FIXME: spec issue - CreateTemporalDateTime is infallible
-  // https://github.com/tc39/proposal-temporal/issues/2523
   MOZ_ASSERT(ISODateTimeWithinLimits(dateTime));
 
   // Step 7.

@@ -1338,28 +1338,26 @@ static bool PlainTime_with(JSContext* cx, const CallArgs& args) {
   if (!temporalTimeLike) {
     return false;
   }
-
-  // Step 4.
-  if (!RejectTemporalLikeObject(cx, temporalTimeLike)) {
+  if (!ThrowIfTemporalLikeObject(cx, temporalTimeLike)) {
     return false;
   }
 
   auto overflow = TemporalOverflow::Constrain;
   if (args.hasDefined(1)) {
-    // Step 5.
+    // Step 4.
     Rooted<JSObject*> options(cx,
                               RequireObjectArg(cx, "options", "with", args[1]));
     if (!options) {
       return false;
     }
 
-    // Step 6.
+    // Step 5.
     if (!ToTemporalOverflow(cx, options, &overflow)) {
       return false;
     }
   }
 
-  // Steps 7-19.
+  // Steps 6-18.
   TemporalTimeLike partialTime = {
       double(time.hour),        double(time.minute),
       double(time.second),      double(time.millisecond),
@@ -1369,13 +1367,13 @@ static bool PlainTime_with(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  // Step 20.
+  // Step 19.
   PlainTime result;
   if (!RegulateTime(cx, partialTime, overflow, &result)) {
     return false;
   }
 
-  // Step 21.
+  // Step 20.
   auto* obj = CreateTemporalTime(cx, result);
   if (!obj) {
     return false;

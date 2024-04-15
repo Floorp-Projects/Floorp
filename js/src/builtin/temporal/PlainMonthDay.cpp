@@ -531,13 +531,11 @@ static bool PlainMonthDay_with(JSContext* cx, const CallArgs& args) {
   if (!temporalMonthDayLike) {
     return false;
   }
-
-  // Step 4.
-  if (!RejectTemporalLikeObject(cx, temporalMonthDayLike)) {
+  if (!ThrowIfTemporalLikeObject(cx, temporalMonthDayLike)) {
     return false;
   }
 
-  // Step 5.
+  // Step 4.
   Rooted<PlainObject*> resolvedOptions(cx);
   if (args.hasDefined(1)) {
     Rooted<JSObject*> options(cx,
@@ -553,7 +551,7 @@ static bool PlainMonthDay_with(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  // Step 6.
+  // Step 5.
   Rooted<CalendarRecord> calendar(cx);
   if (!CreateCalendarMethodsRecord(cx, calendarValue,
                                    {
@@ -565,7 +563,7 @@ static bool PlainMonthDay_with(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  // Step 7.
+  // Step 6.
   JS::RootedVector<PropertyKey> fieldNames(cx);
   if (!CalendarFields(cx, calendar,
                       {CalendarField::Day, CalendarField::Month,
@@ -574,34 +572,34 @@ static bool PlainMonthDay_with(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  // Step 8.
+  // Step 7.
   Rooted<PlainObject*> fields(cx,
                               PrepareTemporalFields(cx, monthDay, fieldNames));
   if (!fields) {
     return false;
   }
 
-  // Step 9.
+  // Step 8.
   Rooted<PlainObject*> partialMonthDay(
       cx, PreparePartialTemporalFields(cx, temporalMonthDayLike, fieldNames));
   if (!partialMonthDay) {
     return false;
   }
 
-  // Step 10.
+  // Step 9.
   Rooted<JSObject*> mergedFields(
       cx, CalendarMergeFields(cx, calendar, fields, partialMonthDay));
   if (!mergedFields) {
     return false;
   }
 
-  // Step 11.
+  // Step 10.
   fields = PrepareTemporalFields(cx, mergedFields, fieldNames);
   if (!fields) {
     return false;
   }
 
-  // Step 12.
+  // Step 11.
   auto obj = js::temporal::CalendarMonthDayFromFields(cx, calendar, fields,
                                                       resolvedOptions);
   if (!obj) {

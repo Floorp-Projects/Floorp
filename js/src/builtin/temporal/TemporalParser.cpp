@@ -2265,9 +2265,6 @@ TemporalParser<CharT>::annotations() {
     }
     auto [key, value, critical] = anno.unwrap();
 
-    // FIXME: spec issue - ignore case for "[u-ca=" to match BCP47?
-    // https://github.com/tc39/proposal-temporal/issues/2524
-
     static constexpr std::string_view ca = "u-ca";
 
     auto keySpan = reader_.substring(key);
