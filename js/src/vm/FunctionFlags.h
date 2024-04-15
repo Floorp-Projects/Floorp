@@ -436,12 +436,8 @@ class FunctionFlags {
   FunctionFlags& setIsGhost() { return setFlags(GHOST_FUNCTION); }
   bool isGhost() const { return hasFlags(GHOST_FUNCTION); }
 
-  static uint16_t HasJitEntryFlags(bool isConstructing) {
-    uint16_t flags = BASESCRIPT | SELFHOSTLAZY;
-    if (!isConstructing) {
-      flags |= NATIVE_JIT_ENTRY;
-    }
-    return flags;
+  static constexpr uint16_t HasJitEntryFlags() {
+    return BASESCRIPT | SELFHOSTLAZY | NATIVE_JIT_ENTRY;
   }
 
   static FunctionFlags clearMutableflags(FunctionFlags flags) {

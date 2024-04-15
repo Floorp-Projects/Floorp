@@ -1262,9 +1262,8 @@ ICInterpretOps(BaselineFrame* frame, VMFrameManager& frameMgr, State& state,
 
   CACHEOP_CASE(GuardFunctionHasJitEntry) {
     ObjOperandId funId = icregs.cacheIRReader.objOperandId();
-    bool constructing = icregs.cacheIRReader.readBool();
     JSObject* fun = reinterpret_cast<JSObject*>(icregs.icVals[funId.id()]);
-    uint16_t flags = FunctionFlags::HasJitEntryFlags(constructing);
+    uint16_t flags = FunctionFlags::HasJitEntryFlags();
     if (!fun->as<JSFunction>().flags().hasFlags(flags)) {
       return ICInterpretOpResult::NextIC;
     }
@@ -1274,7 +1273,7 @@ ICInterpretOps(BaselineFrame* frame, VMFrameManager& frameMgr, State& state,
   CACHEOP_CASE(GuardFunctionHasNoJitEntry) {
     ObjOperandId funId = icregs.cacheIRReader.objOperandId();
     JSObject* fun = reinterpret_cast<JSObject*>(icregs.icVals[funId.id()]);
-    uint16_t flags = FunctionFlags::HasJitEntryFlags(/*constructing =*/false);
+    uint16_t flags = FunctionFlags::HasJitEntryFlags();
     if (fun->as<JSFunction>().flags().hasFlags(flags)) {
       return ICInterpretOpResult::NextIC;
     }
