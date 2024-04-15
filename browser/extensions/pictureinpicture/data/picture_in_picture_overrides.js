@@ -57,7 +57,7 @@ let AVAILABLE_PIP_OVERRIDES;
 
     aol: {
       "https://*.aol.com/*": {
-        videoWrapperScriptPath: "video-wrappers/yahoo.js",
+        videoWrapperScriptPath: "video-wrappers/videojsWrapper.js",
       },
     },
 
@@ -274,9 +274,9 @@ let AVAILABLE_PIP_OVERRIDES;
       },
     },
 
-    yahoofinance: {
-      "https://*.finance.yahoo.com/*": {
-        videoWrapperScriptPath: "video-wrappers/yahoo.js",
+    yahoo: {
+      "https://*.s.yimg.com/*": {
+        videoWrapperScriptPath: "video-wrappers/videojsWrapper.js",
       },
     },
 
