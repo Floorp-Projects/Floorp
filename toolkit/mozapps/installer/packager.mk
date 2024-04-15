@@ -119,6 +119,7 @@ prepare-package: stage-package
 make-package-internal: prepare-package make-sourcestamp-file
 	@echo 'Compressing...'
 	$(call MAKE_PACKAGE,$(DIST))
+	echo $(PACKAGE) > $(ABS_DIST)/package_name.txt
 
 make-package: FORCE
 	$(MAKE) make-package-internal
