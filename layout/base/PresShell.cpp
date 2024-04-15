@@ -12102,13 +12102,6 @@ void PresShell::EventHandler::EventTargetData::UpdateWheelEventTarget(
     return;
   }
 
-  // If the browsing context is no longer the same as the context of the
-  // current wheel transaction, do not override the event target.
-  if (!groupFrame->PresContext() || !groupFrame->PresShell() ||
-      groupFrame->PresContext() != GetPresContext()) {
-    return;
-  }
-
   // If dom.event.wheel-event-groups.enabled is set and whe have a stored
   // event target from the wheel transaction, override the event target.
   SetFrameAndComputePresShellAndContent(groupFrame, aGUIEvent);
