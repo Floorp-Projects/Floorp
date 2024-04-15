@@ -276,3 +276,4 @@ export type SelectTranslationsPanelState =
   | { phase: "translatable"; fromLanguage: string; toLanguage: string, sourceText: string, }
   | { phase: "translating"; fromLanguage: string; toLanguage: string, sourceText: string, }
   | { phase: "translated"; fromLanguage: string; toLanguage: string, sourceText: string, translatedText: string, }
+  | { phase: "unsupported"; detectedLanguage: string; toLanguage: string, sourceText: string }

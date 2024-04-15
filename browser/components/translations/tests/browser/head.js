@@ -1456,11 +1456,16 @@ class SelectTranslationsTestUtils {
         fromMenuList: false,
         fromMenuPopup: false,
         header: false,
+        mainContent: false,
         textArea: false,
         toLabel: false,
         toMenuList: false,
         toMenuPopup: false,
+        translateButton: false,
         translateFullPageButton: false,
+        tryAnotherSourceMenuList: false,
+        unsupportedLanguageContent: false,
+        unsupportedLanguageMessageBar: false,
         // Overwrite any of the above defaults with the passed in expectations.
         ...expectations,
       }
@@ -1505,6 +1510,7 @@ class SelectTranslationsTestUtils {
       fromLabel: true,
       fromMenuList: true,
       header: true,
+      mainContent: true,
       textArea: true,
       toLabel: true,
       toMenuList: true,
@@ -1533,6 +1539,27 @@ class SelectTranslationsTestUtils {
       expectedTextDirection,
       `The text direction should be ${expectedTextDirection}`
     );
+  }
+
+  /**
+   * Asserts that the SelectTranslationsPanel UI matches the expected
+   * state when the panel has completed its translation.
+   */
+  static async assertPanelViewUnsupportedLanguage() {
+    await SelectTranslationsTestUtils.waitForPanelState("unsupported");
+    SelectTranslationsTestUtils.#assertPanelElementVisibility({
+      betaIcon: true,
+      doneButton: true,
+      header: true,
+      translateButton: true,
+      tryAnotherSourceMenuList: true,
+      unsupportedLanguageContent: true,
+      unsupportedLanguageMessageBar: true,
+    });
+    SelectTranslationsTestUtils.#assertConditionalUIEnabled({
+      doneButton: true,
+      translateButton: false,
+    });
   }
 
   /**
@@ -1597,6 +1624,7 @@ class SelectTranslationsTestUtils {
       fromLabel: true,
       fromMenuList: true,
       header: true,
+      mainContent: true,
       textArea: true,
       toLabel: true,
       toMenuList: true,
