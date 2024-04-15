@@ -41,7 +41,7 @@ add_UITour_task(async function test_highlight_help_and_show_help_subview() {
 
   let helpButtonID = "appMenu-help-button2";
   let helpBtn = document.getElementById(helpButtonID);
-  helpBtn.dispatchEvent(new Event("command"));
+  helpBtn.dispatchEvent(new Event("command", { bubbles: true }));
   await highlightHiddenPromise;
   await ViewShownPromise;
   let helpView = document.getElementById("PanelUI-helpView");
