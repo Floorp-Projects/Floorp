@@ -32,6 +32,7 @@ LOCAL_INCLUDES += [
 
 UNIFIED_SOURCES += [
     "/third_party/libwebrtc/modules/video_coding/include/video_codec_interface.cc",
+    "/third_party/libwebrtc/modules/video_coding/include/video_error_codes_utils.cc",
     "/third_party/libwebrtc/modules/video_coding/video_coding_defines.cc"
 ]
 
