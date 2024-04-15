@@ -16,6 +16,26 @@ export class CredentialsAndSecurityBackupResource extends BackupResource {
     return true;
   }
 
+  async backup(stagingPath, profilePath = PathUtils.profileDir) {
+    const simpleCopyFiles = [
+      "pkcs11.txt",
+      "logins.json",
+      "logins-backup.json",
+      "autofill-profiles.json",
+      "signedInUser.json",
+    ];
+    await BackupResource.copyFiles(profilePath, stagingPath, simpleCopyFiles);
+
+    const sqliteDatabases = ["cert9.db", "key4.db", "credentialstate.sqlite"];
+    await BackupResource.copySqliteDatabases(
+      profilePath,
+      stagingPath,
+      sqliteDatabases
+    );
+
+    return null;
+  }
+
   async measure(profilePath = PathUtils.profileDir) {
     const securityFiles = ["cert9.db", "pkcs11.txt"];
     let securitySize = 0;
