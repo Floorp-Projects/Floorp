@@ -3167,67 +3167,84 @@ NormalizedTimeDuration js::temporal::RoundDuration(
   return rounded;
 }
 
-static int64_t TruncateDays(const NormalizedTimeAndDays& timeAndDays,
-                            int64_t days, int32_t daysToAdd) {
-#ifdef DEBUG
-  // Valid duration days are smaller than ⌈(2**53) / (24 * 60 * 60)⌉.
-  static constexpr int64_t durationDays = (int64_t(1) << 53) / (24 * 60 * 60);
+struct FractionalDays final {
+  int64_t days = 0;
+  int64_t time = 0;
+  int64_t dayLength = 0;
 
-  // Numbers of days between nsMinInstant and nsMaxInstant.
-  static constexpr int32_t epochDays = 200'000'000;
-#endif
+  FractionalDays() = default;
 
-  MOZ_ASSERT(std::abs(days) <= durationDays);
-  MOZ_ASSERT(std::abs(timeAndDays.days) <= durationDays);
-  MOZ_ASSERT(std::abs(daysToAdd) <= epochDays);
+  explicit FractionalDays(int64_t durationDays,
+                          const NormalizedTimeAndDays& timeAndDays)
+      : days(durationDays + timeAndDays.days),
+        time(timeAndDays.time),
+        dayLength(timeAndDays.dayLength) {
+    MOZ_ASSERT(durationDays <= (int64_t(1) << 53) / (24 * 60 * 60));
+    MOZ_ASSERT(timeAndDays.days <= (int64_t(1) << 53) / (24 * 60 * 60));
 
-  static_assert(durationDays + durationDays + epochDays <= INT64_MAX,
-                "addition can't overflow");
+    // NormalizedTimeDurationToDays guarantees that |dayLength| is strictly
+    // positive and less than 2**53.
+    MOZ_ASSERT(dayLength > 0);
+    MOZ_ASSERT(dayLength < int64_t(1) << 53);
 
-  int64_t totalDays = days + timeAndDays.days + daysToAdd;
-
-  int64_t truncatedDays = totalDays;
-  if (timeAndDays.time > 0) {
-    // Round toward positive infinity when the integer days are negative and
-    // the fractional part is positive.
-    if (truncatedDays < 0) {
-      truncatedDays += 1;
-    }
-  } else if (timeAndDays.time < 0) {
-    // Round toward negative infinity when the integer days are positive and
-    // the fractional part is negative.
-    if (truncatedDays > 0) {
-      truncatedDays -= 1;
-    }
+    // NormalizedTimeDurationToDays guarantees that |abs(timeAndDays.time)| is
+    // less than |timeAndDays.dayLength|.
+    MOZ_ASSERT(std::abs(time) < dayLength);
   }
 
-  return truncatedDays;
-}
+  FractionalDays operator+=(int32_t epochDays) {
+    MOZ_ASSERT(std::abs(epochDays) <= 200'000'000);
+    days += epochDays;
+    return *this;
+  }
 
-static bool DaysIsNegative(int64_t days,
-                           const NormalizedTimeAndDays& timeAndDays,
-                           int32_t daysToAdd) {
-  // Valid duration days are smaller than ⌈(2**53) / (24 * 60 * 60)⌉.
-  static constexpr int64_t durationDays = (int64_t(1) << 53) / (24 * 60 * 60);
+  FractionalDays operator-=(int32_t epochDays) {
+    MOZ_ASSERT(std::abs(epochDays) <= 200'000'000);
+    days -= epochDays;
+    return *this;
+  }
 
-  // Numbers of days between nsMinInstant and nsMaxInstant.
-  static constexpr int32_t epochDays = 200'000'000;
+  int64_t truncate() const {
+    int64_t truncatedDays = days;
+    if (time > 0) {
+      // Round toward positive infinity when the integer days are negative and
+      // the fractional part is positive.
+      if (truncatedDays < 0) {
+        truncatedDays += 1;
+      }
+    } else if (time < 0) {
+      // Round toward negative infinity when the integer days are positive and
+      // the fractional part is negative.
+      if (truncatedDays > 0) {
+        truncatedDays -= 1;
+      }
+    }
+    return truncatedDays;
+  }
 
-  MOZ_ASSERT(std::abs(days) <= durationDays);
-  MOZ_ASSERT(std::abs(timeAndDays.days) <= durationDays);
-  MOZ_ASSERT(std::abs(daysToAdd) <= epochDays * 2);
+  int32_t sign() const {
+    if (days != 0) {
+      return days < 0 ? -1 : 1;
+    }
+    return time < 0 ? -1 : time > 0 ? 1 : 0;
+  }
+};
 
-  static_assert(durationDays + durationDays + epochDays * 2 <= INT64_MAX,
-                "addition can't overflow");
+struct Fraction final {
+  int64_t numerator = 0;
+  int32_t denominator = 0;
 
-  int64_t totalDays = days + timeAndDays.days + daysToAdd;
-  return totalDays < 0 || (totalDays == 0 && timeAndDays.time < 0);
-}
+  constexpr Fraction() = default;
+
+  constexpr Fraction(int64_t numerator, int32_t denominator)
+      : numerator(numerator), denominator(denominator) {
+    MOZ_ASSERT(denominator > 0);
+  }
+};
 
 static RoundedNumber RoundNumberToIncrement(
-    int64_t durationAmount, int64_t amountPassed, int64_t durationDays,
-    int32_t daysToAdd, const NormalizedTimeAndDays& timeAndDays,
-    int32_t oneUnitDays, Increment increment, TemporalRoundingMode roundingMode,
+    const Fraction& fraction, const FractionalDays& fractionalDays,
+    Increment increment, TemporalRoundingMode roundingMode,
     ComputeRemainder computeRemainder) {
 #ifdef DEBUG
   // Valid duration days are smaller than ⌈(2**53) / (24 * 60 * 60)⌉.
@@ -3236,18 +3253,19 @@ static RoundedNumber RoundNumberToIncrement(
 
   // Numbers of days between nsMinInstant and nsMaxInstant.
   static constexpr int32_t epochDays = 200'000'000;
+
+  // Maximum number of days in |fractionalDays|.
+  static constexpr int64_t maxFractionalDays =
+      2 * maxDurationDays + 2 * epochDays;
 #endif
 
-  MOZ_ASSERT(std::abs(durationAmount) < (int64_t(1) << 32));
-  MOZ_ASSERT(std::abs(amountPassed) < (int64_t(1) << 32));
-  MOZ_ASSERT(std::abs(durationDays) <= maxDurationDays);
-  MOZ_ASSERT(std::abs(daysToAdd) <= epochDays * 2);
-  MOZ_ASSERT(timeAndDays.dayLength > 0);
-  MOZ_ASSERT(timeAndDays.dayLength < (int64_t(1) << 53));
-  MOZ_ASSERT(std::abs(timeAndDays.time) < timeAndDays.dayLength);
-  MOZ_ASSERT(std::abs(timeAndDays.days) <= maxDurationDays);
-  MOZ_ASSERT(oneUnitDays != 0);
-  MOZ_ASSERT(std::abs(oneUnitDays) <= epochDays);
+  MOZ_ASSERT(std::abs(fraction.numerator) < (int64_t(1) << 32) * 2);
+  MOZ_ASSERT(fraction.denominator > 0);
+  MOZ_ASSERT(fraction.denominator <= epochDays);
+  MOZ_ASSERT(std::abs(fractionalDays.days) <= maxFractionalDays);
+  MOZ_ASSERT(fractionalDays.dayLength > 0);
+  MOZ_ASSERT(fractionalDays.dayLength < (int64_t(1) << 53));
+  MOZ_ASSERT(std::abs(fractionalDays.time) < fractionalDays.dayLength);
   MOZ_ASSERT(increment <= Increment::max());
 
   // clang-format off
@@ -3263,7 +3281,7 @@ static RoundedNumber RoundNumberToIncrement(
   //
   // where days' = days + nanoseconds / dayLength.
   //
-  // The fractional part |nanoseconds / dayLength| is from step 4.
+  // The fractional part |nanoseconds / dayLength| is from step 7.
   //
   // The denominator for |fractionalWeeks| is |dayLength * abs(oneWeekDays)|.
   //
@@ -3272,31 +3290,80 @@ static RoundedNumber RoundNumberToIncrement(
   // = weeks + days / abs(oneWeekDays) + nanoseconds / (dayLength * abs(oneWeekDays))
   // = (weeks * dayLength * abs(oneWeekDays) + days * dayLength + nanoseconds) / (dayLength * abs(oneWeekDays))
   //
+  // Because |abs(nanoseconds / dayLength) < 0|, this operation can be rewritten
+  // to omit the multiplication by |dayLength| when the rounding conditions are
+  // appropriately modified to account for the |nanoseconds / dayLength| part.
+  // This allows to implement rounding using only int64 values.
+  //
+  // This optimization is currently only implemented when |nanoseconds| is zero.
+  //
+  // Example how to expand this optimization for non-zero |nanoseconds|:
+  //
+  // |Round(fraction / increment) * increment| with:
+  //   fraction = numerator / denominator
+  //   numerator = weeks * dayLength * abs(oneWeekDays) + days * dayLength + nanoseconds
+  //   denominator = dayLength * abs(oneWeekDays)
+  //
+  // When ignoring the |nanoseconds / dayLength| part, this can be simplified to:
+  //
+  // |Round(fraction / increment) * increment| with:
+  //   fraction = numerator / denominator
+  //   numerator = weeks * abs(oneWeekDays) + days
+  //   denominator = abs(oneWeekDays)
+  //
+  // Where:
+  //   fraction / increment
+  // = (numerator / denominator) / increment
+  // = numerator / (denominator * increment)
+  //
+  // And |numerator| and |denominator * increment| both fit into int64.
+  //
+  // The "ceiling" operation has to be modified from:
+  //
+  // CeilDiv(dividend, divisor)
+  //   quot, rem = dividend / divisor
+  //   return quot + (rem > 0)
+  //
+  // To:
+  //
+  // CeilDiv(dividend, divisor, fractional)
+  //   quot, rem = dividend / divisor
+  //   return quot + ((rem > 0) || (fractional > 0))
+  //
+  // To properly account for the fractional |nanoseconds| part. Alternatively
+  // |dividend| can be modified before calling `CeilDiv`.
+  //
   // clang-format on
 
-  do {
-    auto dayLength = mozilla::CheckedInt64(timeAndDays.dayLength);
+  if (fractionalDays.time == 0) {
+    auto [numerator, denominator] = fraction;
+    int64_t totalDays = fractionalDays.days + denominator * numerator;
 
-    auto denominator = dayLength * std::abs(oneUnitDays);
+    if (computeRemainder == ComputeRemainder::Yes) {
+      return TruncateNumber(totalDays, denominator);
+    }
+
+    auto rounded =
+        RoundNumberToIncrement(totalDays, denominator, increment, roundingMode);
+    constexpr double total = 0;
+    return {rounded, total};
+  }
+
+  do {
+    auto dayLength = mozilla::CheckedInt64(fractionalDays.dayLength);
+
+    auto denominator = dayLength * fraction.denominator;
     if (!denominator.isValid()) {
       break;
     }
 
-    auto totalDays = mozilla::CheckedInt64(durationDays);
-    totalDays += timeAndDays.days;
-    totalDays += daysToAdd;
-    MOZ_ASSERT(totalDays.isValid());
-
-    auto totalAmount = mozilla::CheckedInt64(durationAmount) + amountPassed;
-    MOZ_ASSERT(totalAmount.isValid());
-
-    auto amountNanos = denominator * totalAmount;
+    auto amountNanos = denominator * fraction.numerator;
     if (!amountNanos.isValid()) {
       break;
     }
 
-    auto totalNanoseconds = dayLength * totalDays;
-    totalNanoseconds += timeAndDays.time;
+    auto totalNanoseconds = dayLength * fractionalDays.days;
+    totalNanoseconds += fractionalDays.time;
     totalNanoseconds += amountNanos;
     if (!totalNanoseconds.isValid()) {
       break;
@@ -3316,31 +3383,25 @@ static RoundedNumber RoundNumberToIncrement(
   // values fit into int128.
 
   // `dayLength` < 2**53
-  auto dayLength = Int128{timeAndDays.dayLength};
+  auto dayLength = Int128{fractionalDays.dayLength};
   MOZ_ASSERT(dayLength < Int128{1} << 53);
 
-  // `abs(oneUnitDays)` < 200'000'000, log2(200'000'000) = ~27.57.
-  auto denominator = dayLength * Int128{std::abs(oneUnitDays)};
+  // `fraction.denominator` < 200'000'000, log2(200'000'000) = ~27.57.
+  auto denominator = dayLength * Int128{fraction.denominator};
   MOZ_ASSERT(denominator < Int128{1} << (53 + 28));
 
   // log2(24*60*60) = ~16.4 and log2(2 * 200'000'000) = ~28.57.
   //
-  // `abs(maxDurationDays)` ≤ 2**(53 - 16).
-  // `abs(timeAndDays.days)` ≤ 2**(53 - 16).
-  // `abs(daysToAdd)` ≤ 2**29.
-  //
-  //   2**(53 - 16) + 2**(53 - 16) + 2**29
-  // = 2**37 + 2**37 + 2**29
-  // = 2**38 + 2**29
+  //   `abs(maxFractionalDays)`
+  // = `abs(2 * maxDurationDays + 2 * epochDays)`
+  // = `abs(2 * 2**(53 - 16) + 2 * 200'000'000)`
+  // ≤ 2 * 2**37 + 2**29
   // ≤ 2**39
-  auto totalDays = Int128{durationDays};
-  totalDays += Int128{timeAndDays.days};
-  totalDays += Int128{daysToAdd};
+  auto totalDays = Int128{fractionalDays.days};
   MOZ_ASSERT(totalDays.abs() <= Uint128{1} << 39);
 
-  // `abs(durationAmount)` ≤ 2**32
-  // `abs(amountPassed)` ≤ 2**32
-  auto totalAmount = Int128{durationAmount} + Int128{amountPassed};
+  // `abs(fraction.numerator)` ≤ (2**33)
+  auto totalAmount = Int128{fraction.numerator};
   MOZ_ASSERT(totalAmount.abs() <= Uint128{1} << 33);
 
   // `denominator` < 2**(53 + 28)
@@ -3355,19 +3416,19 @@ static RoundedNumber RoundNumberToIncrement(
 
   // `dayLength` < 2**53
   // `totalDays` ≤ 2**39
-  // `timeAndDays.time` < `dayLength` < 2**53
+  // `fractionalDays.time` < `dayLength` < 2**53
   // `amountNanos` ≤ 2**114
   //
   //  `dayLength * totalDays`
   // ≤ 2**(53 + 39) = 2**92
   //
-  //   `dayLength * totalDays + timeAndDays.time`
+  //   `dayLength * totalDays + fractionalDays.time`
   // ≤ 2**93
   //
-  //  `dayLength * totalDays + timeAndDays.time + amountNanos`
+  //  `dayLength * totalDays + fractionalDays.time + amountNanos`
   // ≤ 2**115
   auto totalNanoseconds = dayLength * totalDays;
-  totalNanoseconds += Int128{timeAndDays.time};
+  totalNanoseconds += Int128{fractionalDays.time};
   totalNanoseconds += amountNanos;
   MOZ_ASSERT(totalNanoseconds.abs() <= Uint128{1} << 115);
 
@@ -3381,22 +3442,8 @@ static RoundedNumber RoundNumberToIncrement(
   return {rounded, total};
 }
 
-static RoundedNumber RoundNumberToIncrement(
-    double durationDays, const NormalizedTimeAndDays& timeAndDays,
-    Increment increment, TemporalRoundingMode roundingMode,
-    ComputeRemainder computeRemainder) {
-  constexpr int64_t daysAmount = 0;
-  constexpr int64_t daysPassed = 0;
-  constexpr int32_t oneDayDays = 1;
-  constexpr int32_t daysToAdd = 0;
-
-  return RoundNumberToIncrement(daysAmount, daysPassed, durationDays, daysToAdd,
-                                timeAndDays, oneDayDays, increment,
-                                roundingMode, computeRemainder);
-}
-
 static bool RoundDurationYear(JSContext* cx, const NormalizedDuration& duration,
-                              const NormalizedTimeAndDays& timeAndDays,
+                              FractionalDays fractionalDays,
                               Increment increment,
                               TemporalRoundingMode roundingMode,
                               Handle<Wrapped<PlainDateObject*>> dateRelativeTo,
@@ -3438,16 +3485,14 @@ static bool RoundDurationYear(JSContext* cx, const NormalizedDuration& duration,
   // Step 10.f. (Moved up)
 
   // Step 10.g.
-  // Our implementation keeps |days| and |monthsWeeksInDays| separate.
+  fractionalDays += monthsWeeksInDays;
 
   // FIXME: spec issue - truncation doesn't match the spec polyfill.
   // https://github.com/tc39/proposal-temporal/issues/2540
 
   // Step 10.h.
-  int64_t truncatedDays = TruncateDays(timeAndDays, days, monthsWeeksInDays);
-
   PlainDate isoResult;
-  if (!AddISODate(cx, yearsLaterDate, {0, 0, 0, truncatedDays},
+  if (!AddISODate(cx, yearsLaterDate, {0, 0, 0, fractionalDays.truncate()},
                   TemporalOverflow::Constrain, &isoResult)) {
     return false;
   }
@@ -3470,7 +3515,7 @@ static bool RoundDurationYear(JSContext* cx, const NormalizedDuration& duration,
   int64_t yearsPassed = int64_t(timePassed.years);
 
   // Step 10.n.
-  // Our implementation keeps |years| and |yearsPassed| separate.
+  years += yearsPassed;
 
   // Step 10.o.
   Duration yearsPassedDuration = {double(yearsPassed)};
@@ -3484,13 +3529,10 @@ static bool RoundDurationYear(JSContext* cx, const NormalizedDuration& duration,
   MOZ_ASSERT(std::abs(daysPassed) <= epochDays);
 
   // Step 10.s.
-  //
-  // Our implementation keeps |days| and |daysPassed| separate.
-  int32_t daysToAdd = monthsWeeksInDays - daysPassed;
-  MOZ_ASSERT(std::abs(daysToAdd) <= epochDays * 2);
+  fractionalDays -= daysPassed;
 
   // Steps 10.t.
-  double sign = DaysIsNegative(days, timeAndDays, daysToAdd) ? -1 : 1;
+  double sign = fractionalDays.sign() < 0 ? -1 : 1;
 
   // Step 10.u.
   Duration oneYear = {sign};
@@ -3510,10 +3552,13 @@ static bool RoundDurationYear(JSContext* cx, const NormalizedDuration& duration,
     return false;
   }
 
-  // Steps 10.y-aa.
-  auto [numYears, total] = RoundNumberToIncrement(
-      years, yearsPassed, days, daysToAdd, timeAndDays, oneYearDays, increment,
-      roundingMode, computeRemainder);
+  // Steps 10.y.
+  auto fractionalYears = Fraction{years, std::abs(oneYearDays)};
+
+  // Steps 10.z-aa.
+  auto [numYears, total] =
+      RoundNumberToIncrement(fractionalYears, fractionalDays, increment,
+                             roundingMode, computeRemainder);
 
   // Step 10.ab.
   int64_t numMonths = 0;
@@ -3539,7 +3584,7 @@ static bool RoundDurationYear(JSContext* cx, const NormalizedDuration& duration,
 
 static bool RoundDurationMonth(JSContext* cx,
                                const NormalizedDuration& duration,
-                               const NormalizedTimeAndDays& timeAndDays,
+                               FractionalDays fractionalDays,
                                Increment increment,
                                TemporalRoundingMode roundingMode,
                                Handle<Wrapped<PlainDateObject*>> dateRelativeTo,
@@ -3581,16 +3626,15 @@ static bool RoundDurationMonth(JSContext* cx,
   // Step 11.f. (Moved up)
 
   // Step 11.g.
-  // Our implementation keeps |days| and |weeksInDays| separate.
+  fractionalDays += weeksInDays;
 
   // FIXME: spec issue - truncation doesn't match the spec polyfill.
   // https://github.com/tc39/proposal-temporal/issues/2540
 
   // Step 11.h.
-  int64_t truncatedDays = TruncateDays(timeAndDays, days, weeksInDays);
-
   PlainDate isoResult;
-  if (!AddISODate(cx, yearsMonthsLaterDate, {0, 0, 0, truncatedDays},
+  if (!AddISODate(cx, yearsMonthsLaterDate,
+                  {0, 0, 0, fractionalDays.truncate()},
                   TemporalOverflow::Constrain, &isoResult)) {
     return false;
   }
@@ -3613,7 +3657,7 @@ static bool RoundDurationMonth(JSContext* cx,
   int64_t monthsPassed = int64_t(timePassed.months);
 
   // Step 11.n.
-  // Our implementation keeps |months| and |monthsPassed| separate.
+  months += monthsPassed;
 
   // Step 11.o.
   Duration monthsPassedDuration = {0, double(monthsPassed)};
@@ -3627,13 +3671,10 @@ static bool RoundDurationMonth(JSContext* cx,
   MOZ_ASSERT(std::abs(daysPassed) <= epochDays);
 
   // Step 11.s.
-  //
-  // Our implementation keeps |days| and |daysPassed| separate.
-  int32_t daysToAdd = weeksInDays - daysPassed;
-  MOZ_ASSERT(std::abs(daysToAdd) <= epochDays * 2);
+  fractionalDays -= daysPassed;
 
   // Steps 11.t.
-  double sign = DaysIsNegative(days, timeAndDays, daysToAdd) ? -1 : 1;
+  double sign = fractionalDays.sign() < 0 ? -1 : 1;
 
   // Step 11.u.
   Duration oneMonth = {0, sign};
@@ -3653,10 +3694,13 @@ static bool RoundDurationMonth(JSContext* cx,
     return false;
   }
 
-  // Steps 11.y-aa.
-  auto [numMonths, total] = RoundNumberToIncrement(
-      months, monthsPassed, days, daysToAdd, timeAndDays, oneMonthDays,
-      increment, roundingMode, computeRemainder);
+  // Step 11.y.
+  auto fractionalMonths = Fraction{months, std::abs(oneMonthDays)};
+
+  // Steps 11.z-aa.
+  auto [numMonths, total] =
+      RoundNumberToIncrement(fractionalMonths, fractionalDays, increment,
+                             roundingMode, computeRemainder);
 
   // Step 11.ab.
   int64_t numWeeks = 0;
@@ -3680,7 +3724,7 @@ static bool RoundDurationMonth(JSContext* cx,
 }
 
 static bool RoundDurationWeek(JSContext* cx, const NormalizedDuration& duration,
-                              const NormalizedTimeAndDays& timeAndDays,
+                              FractionalDays fractionalDays,
                               Increment increment,
                               TemporalRoundingMode roundingMode,
                               Handle<Wrapped<PlainDateObject*>> dateRelativeTo,
@@ -3699,10 +3743,8 @@ static bool RoundDurationWeek(JSContext* cx, const NormalizedDuration& duration,
   auto relativeToDate = ToPlainDate(unwrappedRelativeTo);
 
   // Step 12.a
-  int64_t truncatedDays = TruncateDays(timeAndDays, days, 0);
-
   PlainDate isoResult;
-  if (!AddISODate(cx, relativeToDate, {0, 0, 0, truncatedDays},
+  if (!AddISODate(cx, relativeToDate, {0, 0, 0, fractionalDays.truncate()},
                   TemporalOverflow::Constrain, &isoResult)) {
     return false;
   }
@@ -3725,7 +3767,7 @@ static bool RoundDurationWeek(JSContext* cx, const NormalizedDuration& duration,
   int64_t weeksPassed = int64_t(timePassed.weeks);
 
   // Step 12.g.
-  // Our implementation keeps |weeks| and |weeksPassed| separate.
+  weeks += weeksPassed;
 
   // Step 12.h.
   Duration weeksPassedDuration = {0, 0, double(weeksPassed)};
@@ -3740,13 +3782,10 @@ static bool RoundDurationWeek(JSContext* cx, const NormalizedDuration& duration,
   MOZ_ASSERT(std::abs(daysPassed) <= epochDays);
 
   // Step 12.l.
-  //
-  // Our implementation keeps |days| and |daysPassed| separate.
-  int32_t daysToAdd = -daysPassed;
-  MOZ_ASSERT(std::abs(daysToAdd) <= epochDays);
+  fractionalDays -= daysPassed;
 
   // Steps 12.m.
-  double sign = DaysIsNegative(days, timeAndDays, daysToAdd) ? -1 : 1;
+  double sign = fractionalDays.sign() < 0 ? -1 : 1;
 
   // Step 12.n.
   Duration oneWeek = {0, 0, sign};
@@ -3766,10 +3805,13 @@ static bool RoundDurationWeek(JSContext* cx, const NormalizedDuration& duration,
     return false;
   }
 
-  // Steps 12.r-t.
-  auto [numWeeks, total] = RoundNumberToIncrement(
-      weeks, weeksPassed, days, daysToAdd, timeAndDays, oneWeekDays, increment,
-      roundingMode, computeRemainder);
+  // Step 12.r.
+  auto fractionalWeeks = Fraction{weeks, std::abs(oneWeekDays)};
+
+  // Steps 12.s-t.
+  auto [numWeeks, total] =
+      RoundNumberToIncrement(fractionalWeeks, fractionalDays, increment,
+                             roundingMode, computeRemainder);
 
   // Step 12.u.
   constexpr auto time = NormalizedTimeDuration{};
@@ -3790,16 +3832,19 @@ static bool RoundDurationWeek(JSContext* cx, const NormalizedDuration& duration,
 }
 
 static bool RoundDurationDay(JSContext* cx, const NormalizedDuration& duration,
-                             const NormalizedTimeAndDays& timeAndDays,
+                             const FractionalDays& fractionalDays,
                              Increment increment,
                              TemporalRoundingMode roundingMode,
                              ComputeRemainder computeRemainder,
                              RoundedDuration* result) {
   auto [years, months, weeks, days] = duration.date;
 
+  // Pass zero fraction.
+  constexpr auto zero = Fraction{0, 1};
+
   // Steps 13.a-b.
   auto [numDays, total] = RoundNumberToIncrement(
-      days, timeAndDays, increment, roundingMode, computeRemainder);
+      zero, fractionalDays, increment, roundingMode, computeRemainder);
 
   MOZ_ASSERT(Int128{INT64_MIN} <= numDays && numDays <= Int128{INT64_MAX},
              "rounded days fits in int64");
@@ -3864,9 +3909,10 @@ static bool RoundDuration(JSContext* cx, const NormalizedDuration& duration,
   if (unit == TemporalUnit::Day) {
     // Step 7.
     auto timeAndDays = NormalizedTimeDurationToDays(duration.time);
+    auto fractionalDays = FractionalDays{duration.date.days, timeAndDays};
 
-    return RoundDurationDay(cx, duration, timeAndDays, increment, roundingMode,
-                            computeRemainder, result);
+    return RoundDurationDay(cx, duration, fractionalDays, increment,
+                            roundingMode, computeRemainder, result);
   }
 
   MOZ_ASSERT(TemporalUnit::Hour <= unit && unit <= TemporalUnit::Nanosecond);
@@ -3965,7 +4011,7 @@ static bool RoundDuration(
   MOZ_ASSERT(TemporalUnit::Year <= unit && unit <= TemporalUnit::Day);
 
   // Steps 7.a-c.
-  NormalizedTimeAndDays timeAndDays;
+  FractionalDays fractionalDays;
   if (zonedRelativeTo) {
     // Step 7.a.i.
     Rooted<ZonedDateTime> intermediate(cx);
@@ -3976,20 +4022,19 @@ static bool RoundDuration(
     }
 
     // Steps 7.a.ii.
+    NormalizedTimeAndDays timeAndDays;
     if (!NormalizedTimeDurationToDays(cx, duration.time, intermediate, timeZone,
                                       &timeAndDays)) {
       return false;
     }
 
-    // Step 7.a.iii. (Not applicable in our implementation.)
+    // Step 7.a.iii.
+    fractionalDays = FractionalDays{duration.date.days, timeAndDays};
   } else {
-    // Step 7.b. (Partial)
-    timeAndDays = ::NormalizedTimeDurationToDays(duration.time);
+    // Step 7.b.
+    auto timeAndDays = NormalizedTimeDurationToDays(duration.time);
+    fractionalDays = FractionalDays{duration.date.days, timeAndDays};
   }
-
-  // NormalizedTimeDurationToDays guarantees that |abs(timeAndDays.time)| is
-  // less than |timeAndDays.dayLength|.
-  MOZ_ASSERT(std::abs(timeAndDays.time) < timeAndDays.dayLength);
 
   // Step 7.c. (Moved below)
 
@@ -4002,25 +4047,25 @@ static bool RoundDuration(
   switch (unit) {
     // Steps 10 and 20.
     case TemporalUnit::Year:
-      return RoundDurationYear(cx, duration, timeAndDays, increment,
+      return RoundDurationYear(cx, duration, fractionalDays, increment,
                                roundingMode, plainRelativeTo, calendar,
                                computeRemainder, result);
 
     // Steps 11 and 20.
     case TemporalUnit::Month:
-      return RoundDurationMonth(cx, duration, timeAndDays, increment,
+      return RoundDurationMonth(cx, duration, fractionalDays, increment,
                                 roundingMode, plainRelativeTo, calendar,
                                 computeRemainder, result);
 
     // Steps 12 and 20.
     case TemporalUnit::Week:
-      return RoundDurationWeek(cx, duration, timeAndDays, increment,
+      return RoundDurationWeek(cx, duration, fractionalDays, increment,
                                roundingMode, plainRelativeTo, calendar,
                                computeRemainder, result);
 
     // Steps 13 and 20.
     case TemporalUnit::Day:
-      return RoundDurationDay(cx, duration, timeAndDays, increment,
+      return RoundDurationDay(cx, duration, fractionalDays, increment,
                               roundingMode, computeRemainder, result);
 
     // Steps 14-19. (Handled elsewhere)
