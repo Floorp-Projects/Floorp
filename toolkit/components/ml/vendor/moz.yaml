@@ -1,0 +1,15 @@
+schema: 1
+
+bugzilla:
+  product: Core
+  component: Machine Learning
+
+origin:
+  name: transformers.js
+  description: Transformers.js Machine Learning Library for the web
+  url: https://huggingface.co/docs/transformers.js/index
+  release: 2.16.1
+  revision: 314b7f0dc4291e8a38a516073b710d7c6a29aefb
+  license: Apache-2.0
+  license-file: LICENSE
+  notes: see README.md for more details.
