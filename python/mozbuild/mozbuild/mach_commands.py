@@ -1157,7 +1157,26 @@ def package(command_context, verbose=False):
     )
     if ret == 0:
         command_context.notify("Packaging complete")
+        _print_package_name(command_context)
     return ret
+
+
+def _print_package_name(command_context):
+    dist_path = mozpath.join(command_context.topobjdir, "dist")
+    package_name_path = mozpath.join(dist_path, "package_name.txt")
+    if not os.path.exists(package_name_path):
+        return
+
+    with open(package_name_path, "r") as f:
+        package_name = f.read().strip()
+    package_path = mozpath.join(dist_path, package_name)
+
+    if not os.path.exists(package_path):
+        return
+
+    command_context.log(
+        logging.INFO, "package", {}, "Created package: {}".format(package_path)
+    )
 
 
 def _get_android_install_parser():
