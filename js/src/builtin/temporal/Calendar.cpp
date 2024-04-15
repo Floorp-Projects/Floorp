@@ -1057,6 +1057,88 @@ static bool BuiltinCalendarFields(
   return true;
 }
 
+/**
+ * Temporal.Calendar.prototype.fields ( fields )
+ */
+static bool BuiltinCalendarFields(JSContext* cx, Handle<Value> fields,
+                                  MutableHandle<Value> result) {
+  // Step 4.
+  JS::ForOfIterator iterator(cx);
+  if (!iterator.init(fields)) {
+    return false;
+  }
+
+  // Step 5.
+  JS::RootedVector<Value> fieldNames(cx);
+  mozilla::EnumSet<CalendarField> seen;
+
+  // Step 6.
+  Rooted<Value> nextValue(cx);
+  Rooted<JSLinearString*> linear(cx);
+  while (true) {
+    // Step 6.a.
+    bool done;
+    if (!iterator.next(&nextValue, &done)) {
+      return false;
+    }
+
+    // Step 6.b.
+    if (done) {
+      auto* array =
+          NewDenseCopiedArray(cx, fieldNames.length(), fieldNames.begin());
+      if (!array) {
+        return false;
+      }
+
+      result.setObject(*array);
+      return true;
+    }
+
+    // Step 6.c.
+    if (!nextValue.isString()) {
+      // Step 6.c.1.
+      ReportValueError(cx, JSMSG_UNEXPECTED_TYPE, JSDVG_IGNORE_STACK, nextValue,
+                       nullptr, "not a string");
+
+      // Step 6.c.2.
+      iterator.closeThrow();
+      return false;
+    }
+
+    linear = nextValue.toString()->ensureLinear(cx);
+    if (!linear) {
+      return false;
+    }
+
+    // Step 6.e. (Reordered)
+    CalendarField field;
+    if (!ToCalendarField(cx, linear, &field)) {
+      iterator.closeThrow();
+      return false;
+    }
+
+    // Step 6.d.
+    if (seen.contains(field)) {
+      // Step 6.d.1.
+      if (auto chars = QuoteString(cx, linear, '"')) {
+        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                                 JSMSG_TEMPORAL_CALENDAR_DUPLICATE_FIELD,
+                                 chars.get());
+      }
+
+      // Step 6.d.2.
+      iterator.closeThrow();
+      return false;
+    }
+
+    // Step 6.f.
+    if (!fieldNames.append(nextValue)) {
+      return false;
+    }
+    seen += field;
+  }
+}
+
 #ifdef DEBUG
 static bool IsSorted(std::initializer_list<CalendarField> fieldNames) {
   return std::is_sorted(fieldNames.begin(), fieldNames.end(),
@@ -1118,15 +1200,22 @@ bool js::temporal::CalendarFields(
     array->initDenseElement(i, StringValue(name));
   }
 
-  Rooted<Value> fieldsFn(cx, ObjectValue(*fields));
-  auto thisv = calendar.receiver().toValue();
   Rooted<Value> fieldsArray(cx, ObjectValue(*array));
-  if (!Call(cx, fieldsFn, thisv, fieldsArray, &fieldsArray)) {
-    return false;
+  Rooted<Value> calendarFieldNames(cx);
+  if (fields) {
+    Rooted<Value> fieldsFn(cx, ObjectValue(*fields));
+    auto thisv = calendar.receiver().toValue();
+    if (!Call(cx, fieldsFn, thisv, fieldsArray, &calendarFieldNames)) {
+      return false;
+    }
+  } else {
+    if (!BuiltinCalendarFields(cx, fieldsArray, &calendarFieldNames)) {
+      return false;
+    }
   }
 
   // Steps 4-5.
-  if (!IterableToListOfStrings(cx, fieldsArray, result)) {
+  if (!IterableToListOfStrings(cx, calendarFieldNames, result)) {
     return false;
   }
 
@@ -4546,81 +4635,8 @@ static bool Calendar_fields(JSContext* cx, const CallArgs& args) {
   // Step 3.
   MOZ_ASSERT(IsISO8601Calendar(&args.thisv().toObject().as<CalendarObject>()));
 
-  // Step 4.
-  JS::ForOfIterator iterator(cx);
-  if (!iterator.init(args.get(0))) {
-    return false;
-  }
-
-  // Step 5.
-  JS::RootedVector<Value> fieldNames(cx);
-  mozilla::EnumSet<CalendarField> seen;
-
-  // Step 6.
-  Rooted<Value> nextValue(cx);
-  Rooted<JSLinearString*> linear(cx);
-  while (true) {
-    // Step 6.a.
-    bool done;
-    if (!iterator.next(&nextValue, &done)) {
-      return false;
-    }
-
-    // Step 6.b.
-    if (done) {
-      auto* array =
-          NewDenseCopiedArray(cx, fieldNames.length(), fieldNames.begin());
-      if (!array) {
-        return false;
-      }
-
-      args.rval().setObject(*array);
-      return true;
-    }
-
-    // Step 6.c.
-    if (!nextValue.isString()) {
-      // Step 6.c.1.
-      ReportValueError(cx, JSMSG_UNEXPECTED_TYPE, JSDVG_IGNORE_STACK, nextValue,
-                       nullptr, "not a string");
-
-      // Step 6.c.2.
-      iterator.closeThrow();
-      return false;
-    }
-
-    linear = nextValue.toString()->ensureLinear(cx);
-    if (!linear) {
-      return false;
-    }
-
-    // Step 6.e. (Reordered)
-    CalendarField field;
-    if (!ToCalendarField(cx, linear, &field)) {
-      iterator.closeThrow();
-      return false;
-    }
-
-    // Step 6.d.
-    if (seen.contains(field)) {
-      // Step 6.d.1.
-      if (auto chars = QuoteString(cx, linear, '"')) {
-        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                                 JSMSG_TEMPORAL_CALENDAR_DUPLICATE_FIELD,
-                                 chars.get());
-      }
-
-      // Step 6.d.2.
-      iterator.closeThrow();
-      return false;
-    }
-
-    // Step 6.f.
-    if (!fieldNames.append(nextValue)) {
-      return false;
-    }
-    seen += field;
-  }
+  // Steps 4-6.
+  return BuiltinCalendarFields(cx, args.get(0), args.rval());
 }
 
 /**
