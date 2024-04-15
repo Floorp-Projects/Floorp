@@ -396,3 +396,12 @@ jobs:
       run-on-projects: [autoland]
       when:
           - {hour: 0, minute: 0}
+
+    - name: android-l10n-sync
+      job:
+          type: decision-task
+          treeherder-symbol: android-l10n-sync
+          target-tasks-method: android-l10n-sync
+      run-on-projects: [mozilla-beta]
+      when:
+          - {hour: 2, minute: 0}
