@@ -772,7 +772,12 @@ bool SVGGeometryFrame::CreateWebRenderCommands(
     // At the moment this code path doesn't support strokes so it fine to
     // combine the rectangle's opacity (which has to be applied on the result)
     // of (filling + stroking) with the fill opacity.
-    float elemOpacity = StyleEffects()->mOpacity;
+
+    float elemOpacity = 1.0f;
+    if (SVGUtils::CanOptimizeOpacity(this)) {
+      elemOpacity = StyleEffects()->mOpacity;
+    }
+
     float fillOpacity = SVGUtils::GetOpacity(style->mFillOpacity, contextPaint);
     float opacity = elemOpacity * fillOpacity;
 

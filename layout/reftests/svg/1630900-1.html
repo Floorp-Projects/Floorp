@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+
+      .loader {
+        height: 480px;
+      }
+
+      rect {
+        fill: #000;
+        opacity: 0.5;
+      }
+      .anim {
+        animation: fade 10.5s infinite;
+      }
+
+      @keyframes fade {
+        0% {
+          opacity: 0.5;
+        }
+        50% {
+          opacity: 0.51;
+        }
+        100% {
+          opacity: 0.5;
+        }
+      }
+
+    </style>
+  </head>
+  <body>
+    <svg 
+      class="loader" 
+      x="0px" 
+      y="0px" 
+      viewBox="0 0 100 100"
+    >
+      <rect class="anim" x="0" y="0" width="100" height="100"/>
+    </svg>
+  </body>
+</html>
