@@ -829,15 +829,19 @@ export class LoginManagerParent extends JSWindowActorParent {
         }))
       );
     }
-    autocompleteItems.push(
-      ...(await lazy.WebAuthnFeature.autocompleteItemsAsync(
-        this._overrideBrowsingContextId ??
-          this.getRootBrowser().browsingContext.id,
-        formOrigin,
-        scenarioName,
-        isWebAuthn
-      ))
-    );
+    // This check is only used to init webauthn in tests, which causes
+    // intermittent like Bug 1890419.
+    if (LoginManagerParent._webAuthnAutoComplete) {
+      autocompleteItems.push(
+        ...(await lazy.WebAuthnFeature.autocompleteItemsAsync(
+          this._overrideBrowsingContextId ??
+            this.getRootBrowser().browsingContext.id,
+          formOrigin,
+          scenarioName,
+          isWebAuthn
+        ))
+      );
+    }
 
     return {
       generatedPassword,
@@ -1555,3 +1559,10 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "signon.masterPasswordReprompt.timeout_ms",
   900000
 ); // 15 Minutes
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  LoginManagerParent,
+  "_webAuthnAutoComplete",
+  "signon.webauthn.autocomplete",
+  true
+);

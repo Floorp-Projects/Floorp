@@ -1137,15 +1137,6 @@ export class SpecialPowersChild extends JSWindowActorChild {
       Ci.nsIFormFillController
     );
   }
-  attachFormFillControllerTo(window) {
-    this.getFormFillController().attachPopupElementToDocument(
-      window.document,
-      this._getAutoCompletePopup(window)
-    );
-  }
-  detachFormFillControllerFrom(window) {
-    this.getFormFillController().detachFromDocument(window.document);
-  }
   isBackButtonEnabled(window) {
     return !this._getTopChromeWindow(window)
       .document.getElementById("Browser:Back")

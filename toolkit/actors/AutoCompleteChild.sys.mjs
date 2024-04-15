@@ -295,7 +295,10 @@ export class AutoCompleteChild extends JSWindowActorChild {
         data,
       });
       this.#ongoingSearches.add(promise);
-      result = await promise;
+      result = await promise.catch(e => {
+        this.#ongoingSearches.delete(promise);
+      });
+      result ||= [];
 
       // If the search is stopped, don't report back.
       if (!this.#ongoingSearches.delete(promise)) {

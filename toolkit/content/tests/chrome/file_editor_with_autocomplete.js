@@ -84,6 +84,10 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
           Ci.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH
         );
       });
+      if (test.popup) {
+        await waitForCondition(() => this._controller.input.popupOpen);
+      }
+
       this._target.removeEventListener("beforeinput", onBeforeInput);
       this._target.removeEventListener("input", onInput);
       this._checkResult(test, beforeInputEvents, inputEvents);

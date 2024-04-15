@@ -365,9 +365,16 @@ export const ProfileAutocomplete = {
       .lastProfileAutoCompleteResult;
   },
 
+  set lastProfileAutoCompleteFocusedInput(input) {
+    if (lazy.FormAutofillContent.activeAutofillChild) {
+      lazy.FormAutofillContent.activeAutofillChild.lastProfileAutoCompleteFocusedInput =
+        input;
+    }
+  },
+
   get lastProfileAutoCompleteFocusedInput() {
     return lazy.FormAutofillContent.activeAutofillChild
-      .lastProfileAutoCompleteFocusedInput;
+      ?.lastProfileAutoCompleteFocusedInput;
   },
 
   async _fillFromAutocompleteRow(focusedInput) {
