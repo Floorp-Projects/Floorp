@@ -297,6 +297,20 @@ class SharedTranslationsTestUtils {
   }
 
   /**
+   * Asserts that the given element has the expected L10nId.
+   *
+   * @param {Element} element - The element to assert against.
+   * @param {string} l10nId - The expected localization id.
+   */
+  static _assertL10nId(element, l10nId) {
+    is(
+      element.getAttribute("data-l10n-id"),
+      l10nId,
+      `The element ${element.id} should have L10n Id ${l10nId}.`
+    );
+  }
+
+  /**
    * Asserts that the mainViewId of the panel matches the given string.
    *
    * @param {FullPageTranslationsPanel | SelectTranslationsPanel} panel
@@ -685,11 +699,7 @@ class FullPageTranslationsTestUtils {
    */
   static #assertPanelHeaderL10nId(l10nId) {
     const { header } = FullPageTranslationsPanel.elements;
-    is(
-      header.getAttribute("data-l10n-id"),
-      l10nId,
-      "The translations panel header should match the expected data-l10n-id"
-    );
+    SharedTranslationsTestUtils._assertL10nId(header, l10nId);
   }
 
   /**
@@ -699,11 +709,7 @@ class FullPageTranslationsTestUtils {
    */
   static #assertPanelErrorL10nId(l10nId) {
     const { errorMessage } = FullPageTranslationsPanel.elements;
-    is(
-      errorMessage.getAttribute("data-l10n-id"),
-      l10nId,
-      "The translations panel error message should match the expected data-l10n-id"
-    );
+    SharedTranslationsTestUtils._assertL10nId(errorMessage, l10nId);
   }
 
   /**
