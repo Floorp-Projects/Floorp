@@ -263,7 +263,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "11758b57e781c4f296012d2db06980b6f9390e7d"
+        "revision": "bfd1e38a3428750de8d7607e0d437703e94c4291"
     },
     "ca-valencia": {
         "pin": false,
@@ -1979,7 +1979,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "1b4285a7fe5faca979289441e78de3ca4b891757"
+        "revision": "af221489b354b9c374abed3f179b7f8373159d90"
     },
     "ur": {
         "pin": false,
