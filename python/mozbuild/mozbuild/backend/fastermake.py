@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from collections import defaultdict
 from operator import itemgetter
 
 import mozpack.path as mozpath
@@ -22,19 +23,18 @@ from mozbuild.frontend.data import (
     XPIDLModule,
 )
 from mozbuild.makeutil import Makefile
-from mozbuild.util import OrderedDefaultDict
 
 
 class FasterMakeBackend(MakeBackend, PartialBackend):
     def _init(self):
         super(FasterMakeBackend, self)._init()
 
-        self._manifest_entries = OrderedDefaultDict(set)
+        self._manifest_entries = defaultdict(set)
 
-        self._install_manifests = OrderedDefaultDict(InstallManifest)
+        self._install_manifests = defaultdict(InstallManifest)
 
-        self._dependencies = OrderedDefaultDict(list)
-        self._l10n_dependencies = OrderedDefaultDict(list)
+        self._dependencies = defaultdict(list)
+        self._l10n_dependencies = defaultdict(list)
 
         self._has_xpidl = False
 

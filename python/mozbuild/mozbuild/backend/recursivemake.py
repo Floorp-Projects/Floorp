@@ -69,7 +69,7 @@ from ..frontend.data import (
     XPIDLModule,
 )
 from ..makeutil import Makefile
-from ..util import FileAvoidWrite, OrderedDefaultDict, ensureParentDir, pairwise
+from ..util import FileAvoidWrite, ensureParentDir, pairwise
 from .common import CommonBackend
 from .make import MakeBackend
 
@@ -364,7 +364,7 @@ class RecursiveMakeBackend(MakeBackend):
         self._install_manifests["dist_private"]
 
         self._traversal = RecursiveMakeTraversal()
-        self._compile_graph = OrderedDefaultDict(set)
+        self._compile_graph = defaultdict(set)
         self._rust_targets = set()
         self._gkrust_target = None
         self._pre_compile = set()
@@ -810,7 +810,7 @@ class RecursiveMakeBackend(MakeBackend):
                     rule.add_dependencies(sorted(deps))
 
         non_default_roots = defaultdict(list)
-        non_default_graphs = defaultdict(lambda: OrderedDefaultDict(set))
+        non_default_graphs = defaultdict(lambda: defaultdict(set))
 
         for root in compile_roots:
             # If this is a non-default target, separate the root from the

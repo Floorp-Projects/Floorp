@@ -1376,7 +1376,7 @@ CustomizeMode.prototype = {
   },
 
   openAddonsManagerThemes() {
-    this.window.BrowserOpenAddonsMgr("addons://list/theme");
+    this.window.BrowserAddonUI.openAddonsMgr("addons://list/theme");
   },
 
   getMoreThemes(aEvent) {

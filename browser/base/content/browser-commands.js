@@ -573,4 +573,19 @@ var BrowserCommands = {
   fullScreen() {
     window.fullScreen = !window.fullScreen || BrowserHandler.kiosk;
   },
+
+  downloadsUI() {
+    if (PrivateBrowsingUtils.isWindowPrivate(window)) {
+      openTrustedLinkIn("about:downloads", "tab");
+    } else {
+      PlacesCommandHook.showPlacesOrganizer("Downloads");
+    }
+  },
+
+  forceEncodingDetection() {
+    gBrowser.selectedBrowser.forceEncodingDetection();
+    BrowserCommands.reloadWithFlags(
+      Ci.nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE
+    );
+  },
 };

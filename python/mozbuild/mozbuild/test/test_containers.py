@@ -3,14 +3,13 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import unittest
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 
 from mozunit import main
 
 from mozbuild.util import (
     KeyedDefaultDict,
     List,
-    OrderedDefaultDict,
     ReadOnlyDefaultDict,
     ReadOnlyDict,
     ReadOnlyKeyedDefaultDict,
@@ -146,7 +145,7 @@ class TestOrderedDefaultDict(unittest.TestCase):
     def test_simple(self):
         original = OrderedDict(foo=1, bar=2)
 
-        test = OrderedDefaultDict(bool, original)
+        test = defaultdict(bool, original)
 
         self.assertEqual(original, test)
 
@@ -155,7 +154,7 @@ class TestOrderedDefaultDict(unittest.TestCase):
         self.assertEqual(list(test), ["foo", "bar"])
 
     def test_defaults(self):
-        test = OrderedDefaultDict(bool, {"foo": 1})
+        test = defaultdict(bool, {"foo": 1})
 
         self.assertEqual(test["foo"], 1)
 

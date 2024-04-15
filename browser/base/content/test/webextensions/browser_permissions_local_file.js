@@ -14,7 +14,9 @@ async function installFile(filename) {
   MockFilePicker.setFiles([file]);
   MockFilePicker.afterOpenCallback = MockFilePicker.cleanup;
 
-  let { document } = await BrowserOpenAddonsMgr("addons://list/extension");
+  let { document } = await BrowserAddonUI.openAddonsMgr(
+    "addons://list/extension"
+  );
 
   // Do the install...
   await waitAboutAddonsViewLoaded(document);

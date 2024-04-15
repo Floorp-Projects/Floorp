@@ -616,6 +616,27 @@ export class SearchSettings {
   }
 
   /**
+   * Finds the settings for the engine, based on the version of the settings
+   * passed in. Older versions of settings used the engine name as the key,
+   * whereas newer versions now use the engine id.
+   *
+   * @param {object} settings
+   *   The saved settings object.
+   * @param {string} engineId
+   *   The id of the engine.
+   * @param {string} engineName
+   *   The name of the engine.
+   * @returns {object|undefined}
+   *   The engine settings if found, undefined otherwise.
+   */
+  static findSettingsForEngine(settings, engineId, engineName) {
+    if (settings.version <= 6) {
+      return settings.engines?.find(e => e._name == engineName);
+    }
+    return settings.engines?.find(e => e.id == engineId);
+  }
+
+  /**
    * Returns the engine associated with the name without SearchService
    * initialization checks.
    *

@@ -12,6 +12,7 @@ import sys
 import time
 from argparse import ArgumentParser
 from itertools import chain
+from multiprocessing import Pool, get_start_method
 
 from mach.logging import LoggingManager
 
@@ -37,6 +38,45 @@ See the documentation at
 https://firefox-source-docs.mozilla.org/mobile/android/geckoview/contributor/geckoview-quick-start.html#build-using-android-studio
 =============
 """.strip()
+
+
+## Parallel backend setup
+# Distributing each backend on different process is costly because we need to
+# copy the definitions across each process. These definitions are read-only, so
+# only copy them once when each process starts.
+
+
+class BackendPool:
+    per_process_definitions = None
+
+    def __init__(self, definitions, *, processes=None):
+        definitions = list(definitions)
+        BackendPool._init_worker(definitions)
+        self.pool = Pool(
+            initializer=BackendPool._init_worker,
+            initargs=(definitions,),
+            processes=processes,
+        )
+
+    def run(self, backends):
+        # We're trying to spawn a minimal number of new processes there, and
+        # limit the number of times we serialize the task state. As a
+        # consequence:
+        # 1. we initialize each process with a copy of `definitions'
+        # 2. instead of spawning as many processes as backend, we use current
+        #    process to handle one of the backend and asynchronously run the
+        #    others.
+        async_tasks = self.pool.map_async(BackendPool._run_worker, backends[1:])
+        BackendPool._run_worker(backends[0])
+        async_tasks.wait()
+
+    @staticmethod
+    def _init_worker(state):
+        BackendPool.per_process_definitions = state
+
+    @staticmethod
+    def _run_worker(backend):
+        return backend.consume(BackendPool.per_process_definitions)
 
 
 def config_status(
@@ -148,11 +188,20 @@ def config_status(
     log_manager.enable_unstructured()
 
     print("Reticulating splines...", file=sys.stderr)
-    if len(selected_backends) > 1:
-        definitions = list(definitions)
 
-    for the_backend in selected_backends:
-        the_backend.consume(definitions)
+    # `definitions` objects are unfortunately not picklable, which is a
+    # requirement for "spawn" method. It's fine under "fork" method. This
+    # basically excludes Windows from our optimization, we can live with it.
+    if len(selected_backends) > 1 and get_start_method() == "fork":
+        # See https://github.com/python/cpython/commit/39889864c09741909da4ec489459d0197ea8f1fc
+        # For why we cap the process count. There's also an overhead to setup
+        # new processes, and not that many backends anyway.
+        processes = min(len(selected_backends) - 1, 4)
+        pool = BackendPool(definitions, processes=processes)
+        pool.run(selected_backends)
+    else:
+        for backend in selected_backends:
+            backend.consume(definitions)
 
     execution_time = 0.0
     for obj in chain((reader, emitter), selected_backends):

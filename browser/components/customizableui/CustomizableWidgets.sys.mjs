@@ -419,7 +419,7 @@ export const CustomizableWidgets = [
     id: "characterencoding-button",
     l10nId: "repair-text-encoding-button",
     onCommand(aEvent) {
-      aEvent.view.BrowserForceEncodingDetection();
+      aEvent.view.BrowserCommands.forceEncodingDetection();
     },
   },
   {

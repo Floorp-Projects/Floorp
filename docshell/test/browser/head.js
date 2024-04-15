@@ -16,7 +16,7 @@ function runCharsetTest(url, check1, check2) {
     );
 
     SpecialPowers.spawn(gBrowser.selectedBrowser, [], check1).then(() => {
-      BrowserForceEncodingDetection();
+      BrowserCommands.forceEncodingDetection();
     });
   }
 

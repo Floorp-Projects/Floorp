@@ -54,7 +54,7 @@ let openUrl = url => {
 let openAddonsUrl = url => {
   return () => {
     let window = lazy.BrowserWindowTracker.getTopWindow();
-    window.BrowserOpenAddonsMgr(url, { selectTabByViewId: true });
+    window.BrowserAddonUI.openAddonsMgr(url, { selectTabByViewId: true });
   };
 };
 

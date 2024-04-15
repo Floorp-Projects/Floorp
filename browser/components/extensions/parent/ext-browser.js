@@ -82,7 +82,7 @@ global.openOptionsPage = extension => {
     extension.id
   )}/preferences`;
 
-  return window.BrowserOpenAddonsMgr(viewId);
+  return window.BrowserAddonUI.openAddonsMgr(viewId);
 };
 
 global.makeWidgetId = id => {

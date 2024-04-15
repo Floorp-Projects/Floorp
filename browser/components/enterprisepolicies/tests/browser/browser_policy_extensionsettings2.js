@@ -45,7 +45,7 @@ add_task(async function test_addon_install() {
 
 add_task(async function test_addon_locked_update_disabled() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
-  const win = await BrowserOpenAddonsMgr(
+  const win = await BrowserAddonUI.openAddonsMgr(
     "addons://detail/" + encodeURIComponent(ADDON_ID)
   );
 
