@@ -150,14 +150,14 @@ class WeakMapBase : public mozilla::LinkedListElement<WeakMapBase> {
   virtual void clearAndCompact() = 0;
 
   // We have a key that, if it or its delegate is marked, may lead to a WeakMap
-  // value getting marked. Insert it or its delegate (if any) into the
-  // appropriate zone's gcEphemeronEdges or gcNurseryEphemeronEdges.
-  [[nodiscard]] bool addImplicitEdges(gc::MarkColor mapColor, gc::Cell* key,
-                                      gc::Cell* delegate,
-                                      gc::TenuredCell* value);
-  [[nodiscard]] bool addEphemeronTableEntries(gc::MarkColor mapColor,
-                                              gc::Cell* key, gc::Cell* value,
-                                              gc::Cell* maybeValue);
+  // value getting marked. Insert the necessary edges into the appropriate
+  // zone's gcEphemeronEdges or gcNurseryEphemeronEdges tables.
+  [[nodiscard]] bool addEphemeronEdgesForEntry(gc::MarkColor mapColor,
+                                               gc::Cell* key,
+                                               gc::Cell* delegate,
+                                               gc::TenuredCell* value);
+  [[nodiscard]] bool addEphemeronEdge(gc::MarkColor color, gc::Cell* src,
+                                      gc::Cell* dst);
 
   virtual bool markEntries(GCMarker* marker) = 0;
 

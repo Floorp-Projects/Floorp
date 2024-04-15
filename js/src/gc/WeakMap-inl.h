@@ -184,23 +184,24 @@ bool WeakMap<K, V>::markEntry(GCMarker* marker, gc::CellColor mapColor, K& key,
   }
 
   if (populateWeakKeysTable) {
+    MOZ_ASSERT(trc->weakMapAction() == JS::WeakMapTraceAction::Expand);
+
     // Note that delegateColor >= keyColor because marking a key marks its
     // delegate, so we only need to check whether keyColor < mapColor to tell
     // this.
-
     if (keyColor < mapColor) {
-      MOZ_ASSERT(trc->weakMapAction() == JS::WeakMapTraceAction::Expand);
-      // The final color of the key is not yet known. Record this weakmap and
-      // the lookup key in the list of weak keys. If the key has a delegate,
-      // then the lookup key is the delegate (because marking the key will end
-      // up marking the delegate and thereby mark the entry.)
+      // The final color of the key is not yet known. Add an edge to the
+      // relevant ephemerons table to ensure that the value will be marked if
+      // the key is marked. If the key has a delegate, also add an edge to
+      // ensure the key is marked if the delegate is marked.
+
       gc::TenuredCell* tenuredValue = nullptr;
       if (cellValue && cellValue->isTenured()) {
         tenuredValue = &cellValue->asTenured();
       }
 
-      if (!this->addImplicitEdges(AsMarkColor(mapColor), keyCell, delegate,
-                                  tenuredValue)) {
+      if (!this->addEphemeronEdgesForEntry(AsMarkColor(mapColor), keyCell,
+                                           delegate, tenuredValue)) {
         marker->abortLinearWeakMarking();
       }
     }
