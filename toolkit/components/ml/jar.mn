@@ -2,9 +2,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# For the vendored lib, see https://bugzilla.mozilla.org/show_bug.cgi?id=1890946
 toolkit.jar:
     content/global/ml/EngineProcess.sys.mjs    (content/EngineProcess.sys.mjs)
     content/global/ml/MLEngine.worker.mjs      (content/MLEngine.worker.mjs)
     content/global/ml/MLEngine.html            (content/MLEngine.html)
     content/global/ml/ModelHub.sys.mjs         (content/ModelHub.sys.mjs)
     content/global/ml/SummarizerModel.sys.mjs  (content/SummarizerModel.sys.mjs)
+  #ifdef NIGHTLY_BUILD
+    content/global/ml/ort.js                   (vendor/ort.js)
+    content/global/ml/ort-dev.js               (vendor/ort-dev.js)
+    content/global/ml/transformers.js          (vendor/transformers.js)
+    content/global/ml/transformers-dev.js      (vendor/transformers-dev.js)
+  #endif
