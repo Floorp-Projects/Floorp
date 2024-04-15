@@ -8,6 +8,7 @@
 #define ViewRegion_h
 
 #include "Units.h"
+#include "nsRegion.h"
 #include "nsTArray.h"
 
 class nsChildView;

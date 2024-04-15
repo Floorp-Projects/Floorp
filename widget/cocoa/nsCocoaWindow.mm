@@ -3071,10 +3071,6 @@ static NSMutableSet* gSwizzledFrameViewClasses = nil;
 - (void)_setNeedsDisplayInRect:(NSRect)aRect;
 @end
 
-@interface NSView (NSVisualEffectViewSetMaskImage)
-- (void)setMaskImage:(NSImage*)image;
-@end
-
 @interface BaseWindow (Private)
 - (void)removeTrackingArea;
 - (void)cursorUpdated:(NSEvent*)aEvent;
@@ -3174,35 +3170,38 @@ static NSImage* GetMenuMaskImage() {
   return maskImage;
 }
 
-- (void)swapOutChildViewWrapper:(NSView*)aNewWrapper {
-  aNewWrapper.frame = self.contentView.frame;
+// Add an effect view wrapper if needed so that the OS draws the appropriate
+// vibrancy effect and window border.
+- (void)setEffectViewWrapperForStyle:(WindowShadow)aStyle {
+  NSView* wrapper = [&]() -> NSView* {
+    if (aStyle == WindowShadow::Menu || aStyle == WindowShadow::Tooltip) {
+      const bool isMenu = aStyle == WindowShadow::Menu;
+      auto* effectView =
+          [[NSVisualEffectView alloc] initWithFrame:self.contentView.frame];
+      effectView.material =
+          isMenu ? NSVisualEffectMaterialMenu : NSVisualEffectMaterialToolTip;
+      // Tooltip and menu windows are never "key", so we need to tell the
+      // vibrancy effect to look active regardless of window state.
+      effectView.state = NSVisualEffectStateActive;
+      effectView.blendingMode = NSVisualEffectBlendingModeBehindWindow;
+      if (isMenu) {
+        // Turn on rounded corner masking.
+        effectView.maskImage = GetMenuMaskImage();
+      }
+      return effectView;
+    }
+    return [[NSView alloc] initWithFrame:self.contentView.frame];
+  }();
+
+  wrapper.wantsLayer = YES;
+  // Swap out our content view by the new view. Setting .contentView releases
+  // the old view.
   NSView* childView = [self.mainChildView retain];
   [childView removeFromSuperview];
-  [aNewWrapper addSubview:childView];
+  [wrapper addSubview:childView];
   [childView release];
-  [super setContentView:aNewWrapper];
-}
-
-- (void)setEffectViewWrapperForStyle:(WindowShadow)aStyle {
-  if (aStyle == WindowShadow::Menu || aStyle == WindowShadow::Tooltip) {
-    // Add an effect view wrapper so that the OS draws the appropriate
-    // vibrancy effect and window border.
-    BOOL isMenu = aStyle == WindowShadow::Menu;
-    NSView* effectView = VibrancyManager::CreateEffectView(
-        isMenu ? VibrancyType::MENU : VibrancyType::TOOLTIP, YES);
-    if (isMenu) {
-      // Turn on rounded corner masking.
-      [effectView setMaskImage:GetMenuMaskImage()];
-    }
-    [self swapOutChildViewWrapper:effectView];
-    [effectView release];
-  } else {
-    // Remove the existing wrapper.
-    NSView* wrapper = [[NSView alloc] initWithFrame:NSZeroRect];
-    [wrapper setWantsLayer:YES];
-    [self swapOutChildViewWrapper:wrapper];
-    [wrapper release];
-  }
+  super.contentView = wrapper;
+  [wrapper release];
 }
 
 - (NSTouchBar*)makeTouchBar {
