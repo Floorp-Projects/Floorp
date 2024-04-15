@@ -188,14 +188,6 @@ config = {
             "options": ["--suite=reftest", "--topsrcdir=tests/reftest/tests"],
             "tests": ["tests/reftest/tests/layout/reftests/reftest.list"],
         },
-        "reftest-no-accel": {
-            "options": [
-                "--suite=reftest",
-                "--setpref=layers.acceleration.disabled=true",
-                "--topsrcdir=tests/reftest/tests",
-            ],
-            "tests": ["tests/reftest/tests/layout/reftests/reftest.list"],
-        },
     },
     "all_xpcshell_suites": {
         "xpcshell": {

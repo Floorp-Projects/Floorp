@@ -116,11 +116,6 @@ class MozharnessRunner(MozbuildObject):
                 "script": "desktop_unittest.py",
                 "config": desktop_unittest_config + ["--reftest-suite", "reftest"],
             },
-            "reftest-no-accel": {
-                "script": "desktop_unittest.py",
-                "config": desktop_unittest_config
-                + ["--reftest-suite", "reftest-no-accel"],
-            },
             "cppunittest": {
                 "script": "desktop_unittest.py",
                 "config": desktop_unittest_config

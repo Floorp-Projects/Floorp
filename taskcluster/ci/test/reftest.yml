@@ -176,6 +176,7 @@ reftest:
             windows11.*/opt: 3
             default: 8
     variants:
+        - draw-snapshot
         - geckoview-no-fission-ship
         - no-fission
         - webrender-dcomp-disabled
@@ -186,6 +187,10 @@ reftest:
         - webrender-sw
     run-on-projects:
         by-variant:
+            draw-snapshot:
+                by-test-platform:
+                    linux1804.*/debug: built-projects
+                    default: []
             webrender-sw+no-fission:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug: built-projects
@@ -231,6 +236,8 @@ reftest:
                 macosx.*64/opt: false
                 windows.*/opt: false
                 default: true
+        extra-options:
+            - --setpref=layers.acceleration.force-enabled=true
     tier:
         by-variant:
             no-fission:
@@ -266,16 +273,3 @@ reftest-qr:
         chunked: true
     tier: 2
     virtualization: virtual
-
-reftest-snapshot:
-    description: "Reftest snapshot"
-    treeherder-symbol: R(Rs)
-    virtualization: virtual
-    run-on-projects:
-        by-test-platform:
-            linux1804-64-qr/debug: ['trunk']
-            default: []
-    tier: default
-    chunks: 8
-    mozharness:
-        chunked: true

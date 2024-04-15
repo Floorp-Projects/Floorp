@@ -173,7 +173,6 @@ linux1804-tests:
     - mochitest-webgl2-core
     - mochitest-webgl2-ext
     - reftest
-    - reftest-snapshot
     - telemetry-tests-client
     - test-verify
     - test-verify-gpu
@@ -212,7 +211,6 @@ linux2204-wayland-tests:
     - mochitest-webgl2-core
     - mochitest-webgl2-ext
     - reftest
-    - reftest-snapshot
     - telemetry-tests-client
     - test-verify
     - test-verify-gpu
