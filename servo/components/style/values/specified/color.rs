@@ -658,7 +658,7 @@ impl Color {
             },
         };
 
-        let color_parser = ColorParser::new(&context);
+        let color_parser = ColorParser { context: &context };
         match input.try_parse(|i| parsing::parse_color_with(&color_parser, i)) {
             Ok(mut color) => {
                 if let Color::Absolute(ref mut absolute) = color {
