@@ -479,7 +479,7 @@ static BalancedTime BalanceTime(int32_t hour, int32_t minute, int32_t second,
 BalancedTime js::temporal::BalanceTime(const PlainTime& time,
                                        int64_t nanoseconds) {
   MOZ_ASSERT(IsValidTime(time));
-  MOZ_ASSERT(std::abs(nanoseconds) <= 2 * ToNanoseconds(TemporalUnit::Day));
+  MOZ_ASSERT(std::abs(nanoseconds) <= ToNanoseconds(TemporalUnit::Day));
 
   return ::BalanceTime<int64_t>(time.hour, time.minute, time.second,
                                 time.millisecond, time.microsecond,
