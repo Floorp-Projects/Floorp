@@ -519,7 +519,7 @@ js::temporal::NormalizedTimeDurationFromEpochNanosecondsDifference(
   MOZ_ASSERT(IsValidInstantSpan(result));
 
   // Step 3.
-  return {result.seconds, result.nanoseconds};
+  return result.to<NormalizedTimeDuration>();
 }
 
 /**
@@ -1196,12 +1196,10 @@ static NormalizedTimeAndDays NormalizedTimeDurationToDays(
   int64_t days = seconds / ToSeconds(TemporalUnit::Day);
   seconds = seconds % ToSeconds(TemporalUnit::Day);
 
-  auto time = NormalizedTimeDuration::fromSeconds(seconds) +
-              NormalizedTimeDuration::fromNanoseconds(nanoseconds);
+  int64_t time = seconds * ToNanoseconds(TemporalUnit::Second) + nanoseconds;
 
-  constexpr auto dayLength =
-      NormalizedTimeDuration::fromNanoseconds(ToNanoseconds(TemporalUnit::Day));
-  MOZ_ASSERT(time.abs() < dayLength);
+  constexpr int64_t dayLength = ToNanoseconds(TemporalUnit::Day);
+  MOZ_ASSERT(std::abs(time) < dayLength);
 
   return {days, time, dayLength};
 }
@@ -1552,7 +1550,7 @@ static bool BalanceTimeDurationRelative(
     days = timeAndDays.days;
 
     // Step 8.d.
-    normalized = timeAndDays.time;
+    normalized = NormalizedTimeDuration::fromNanoseconds(timeAndDays.time);
     MOZ_ASSERT_IF(days > 0, normalized >= NormalizedTimeDuration{});
     MOZ_ASSERT_IF(days < 0, normalized <= NormalizedTimeDuration{});
 
@@ -2334,8 +2332,7 @@ static bool AdjustRoundedDurationDays(
   // Step 8.
   auto dayLengthNs =
       NormalizedTimeDurationFromEpochNanosecondsDifference(dayEnd, dayStart);
-  MOZ_ASSERT(
-      IsValidInstantSpan({dayLengthNs.seconds, dayLengthNs.nanoseconds}));
+  MOZ_ASSERT(IsValidInstantSpan(dayLengthNs.to<InstantSpan>()));
 
   // Step 9.
   NormalizedTimeDuration oneDayLess;
@@ -3186,13 +3183,13 @@ static bool TruncateDays(JSContext* cx,
     }
 
     int64_t truncatedDays = totalDays.value();
-    if (timeAndDays.time > NormalizedTimeDuration{}) {
+    if (timeAndDays.time > 0) {
       // Round toward positive infinity when the integer days are negative and
       // the fractional part is positive.
       if (truncatedDays < 0) {
         truncatedDays += 1;
       }
-    } else if (timeAndDays.time < NormalizedTimeDuration{}) {
+    } else if (timeAndDays.time < 0) {
       // Round toward negative infinity when the integer days are positive and
       // the fractional part is negative.
       if (truncatedDays > 0) {
@@ -3229,7 +3226,7 @@ static bool TruncateDays(JSContext* cx,
     return false;
   }
 
-  if (timeAndDays.time > NormalizedTimeDuration{}) {
+  if (timeAndDays.time > 0) {
     // Round toward positive infinity when the integer days are negative and
     // the fractional part is positive.
     if (truncatedDays->isNegative()) {
@@ -3238,7 +3235,7 @@ static bool TruncateDays(JSContext* cx,
         return false;
       }
     }
-  } else if (timeAndDays.time < NormalizedTimeDuration{}) {
+  } else if (timeAndDays.time < 0) {
     // Round toward negative infinity when the integer days are positive and
     // the fractional part is negative.
     if (!truncatedDays->isNegative() && !truncatedDays->isZero()) {
@@ -3280,8 +3277,7 @@ static bool DaysIsNegative(double days,
 
   if (std::abs(daysApproximation) <= epochDays * 2) {
     int32_t intDays = int32_t(daysApproximation) + daysToAdd;
-    return intDays < 0 ||
-           (intDays == 0 && timeAndDays.time < NormalizedTimeDuration{});
+    return intDays < 0 || (intDays == 0 && timeAndDays.time < 0);
   }
 
   // |daysApproximation| is too large, adding |daysToAdd| doesn't change the
@@ -3302,8 +3298,8 @@ static bool RoundNumberToIncrementSlow(JSContext* cx, double durationAmount,
                                        TemporalRoundingMode roundingMode,
                                        ComputeRemainder computeRemainder,
                                        RoundedNumber* result) {
-  MOZ_ASSERT(timeAndDays.dayLength > NormalizedTimeDuration{});
-  MOZ_ASSERT(timeAndDays.time.abs() < timeAndDays.dayLength);
+  MOZ_ASSERT(timeAndDays.dayLength > 0);
+  MOZ_ASSERT(std::abs(timeAndDays.time) < timeAndDays.dayLength);
   MOZ_ASSERT(oneUnitDays != 0);
 
   Rooted<BigInt*> biAmount(cx, BigInt::createFromDouble(cx, durationAmount));
@@ -3347,12 +3343,14 @@ static bool RoundNumberToIncrementSlow(JSContext* cx, double durationAmount,
     return false;
   }
 
-  Rooted<BigInt*> nanoseconds(cx, ToNanoseconds(cx, timeAndDays.time));
+  Rooted<BigInt*> nanoseconds(cx,
+                              BigInt::createFromInt64(cx, timeAndDays.time));
   if (!nanoseconds) {
     return false;
   }
 
-  Rooted<BigInt*> dayLength(cx, ToNanoseconds(cx, timeAndDays.dayLength));
+  Rooted<BigInt*> dayLength(cx,
+                            BigInt::createFromInt64(cx, timeAndDays.dayLength));
   if (!dayLength) {
     return false;
   }
@@ -3414,8 +3412,8 @@ static bool RoundNumberToIncrement(JSContext* cx, double durationAmount,
                                    TemporalRoundingMode roundingMode,
                                    ComputeRemainder computeRemainder,
                                    RoundedNumber* result) {
-  MOZ_ASSERT(timeAndDays.dayLength > NormalizedTimeDuration{});
-  MOZ_ASSERT(timeAndDays.time.abs() < timeAndDays.dayLength);
+  MOZ_ASSERT(timeAndDays.dayLength > 0);
+  MOZ_ASSERT(std::abs(timeAndDays.time) < timeAndDays.dayLength);
   MOZ_ASSERT(oneUnitDays != 0);
   MOZ_ASSERT(std::abs(oneUnitDays) <= 200'000'000);
 
@@ -3446,15 +3444,7 @@ static bool RoundNumberToIncrement(JSContext* cx, double durationAmount,
   // clang-format on
 
   do {
-    auto nanoseconds = timeAndDays.time.toNanoseconds();
-    if (!nanoseconds.isValid()) {
-      break;
-    }
-
-    auto dayLength = timeAndDays.dayLength.toNanoseconds();
-    if (!dayLength.isValid()) {
-      break;
-    }
+    auto dayLength = mozilla::CheckedInt64(timeAndDays.dayLength);
 
     auto denominator = dayLength * std::abs(oneUnitDays);
     if (!denominator.isValid()) {
@@ -3478,7 +3468,7 @@ static bool RoundNumberToIncrement(JSContext* cx, double durationAmount,
       break;
     }
 
-    totalNanoseconds += nanoseconds;
+    totalNanoseconds += timeAndDays.time;
     if (!totalNanoseconds.isValid()) {
       break;
     }
@@ -4149,7 +4139,7 @@ static bool RoundDuration(
 
   // NormalizedTimeDurationToDays guarantees that |abs(timeAndDays.time)| is
   // less than |timeAndDays.dayLength|.
-  MOZ_ASSERT(timeAndDays.time.abs() < timeAndDays.dayLength);
+  MOZ_ASSERT(std::abs(timeAndDays.time) < timeAndDays.dayLength);
 
   // Step 7.c. (Moved below)
 
@@ -5612,7 +5602,7 @@ static bool Duration_total(JSContext* cx, const CallArgs& args) {
       }
 
       // Step 18.j.iii.
-      balanceResult = timeAndDays.time;
+      balanceResult = NormalizedTimeDuration::fromNanoseconds(timeAndDays.time);
 
       // Step 18.j.iv.
       days = timeAndDays.days;

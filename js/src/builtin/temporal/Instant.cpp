@@ -565,7 +565,7 @@ Instant js::temporal::AddNormalizedTimeDurationToEpochNanoseconds(
   MOZ_ASSERT(IsValidEpochInstant(epochNs));
 
   // Step 1.
-  return epochNs + InstantSpan{d.seconds, d.nanoseconds};
+  return epochNs + d.to<InstantSpan>();
 }
 
 /**
@@ -607,7 +607,7 @@ NormalizedTimeDuration js::temporal::DifferenceInstant(
 
   // Step 1.
   auto diff = NormalizedTimeDurationFromEpochNanosecondsDifference(ns2, ns1);
-  MOZ_ASSERT(IsValidInstantSpan({diff.seconds, diff.nanoseconds}));
+  MOZ_ASSERT(IsValidInstantSpan(diff.to<InstantSpan>()));
 
   // Step 2.
   if (smallestUnit == TemporalUnit::Nanosecond &&
