@@ -169,7 +169,7 @@ static void FormatFractionalSeconds(TemporalStringBuilder& result,
     result.append('.');
 
     // Steps 1.b-c.
-    uint32_t k = 100'000'000;
+    int32_t k = 100'000'000;
     do {
       result.append(char('0' + (subSecondNanoseconds / k)));
       subSecondNanoseconds %= k;
@@ -186,7 +186,7 @@ static void FormatFractionalSeconds(TemporalStringBuilder& result,
     result.append('.');
 
     // Steps 2.b-c.
-    uint32_t k = 100'000'000;
+    int32_t k = 100'000'000;
     for (uint8_t i = 0; i < p; i++) {
       result.append(char('0' + (subSecondNanoseconds / k)));
       subSecondNanoseconds %= k;
@@ -274,7 +274,7 @@ static int32_t RoundNanosecondsToMinutes(int64_t offsetNanoseconds) {
   if (std::abs(remainder * 2) >= increment) {
     quotient += (offsetNanoseconds > 0 ? 1 : -1);
   }
-  return quotient;
+  return int32_t(quotient);
 }
 
 /**

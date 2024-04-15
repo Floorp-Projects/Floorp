@@ -1131,23 +1131,23 @@ JSString* js::temporal::FormatUTCOffsetNanoseconds(JSContext* cx,
 
   // Steps 7-8. (Inlined FormatTimeString).
   result[n++] = sign;
-  result[n++] = '0' + (hour / 10);
-  result[n++] = '0' + (hour % 10);
+  result[n++] = char('0' + (hour / 10));
+  result[n++] = char('0' + (hour % 10));
   result[n++] = ':';
-  result[n++] = '0' + (minute / 10);
-  result[n++] = '0' + (minute % 10);
+  result[n++] = char('0' + (minute / 10));
+  result[n++] = char('0' + (minute % 10));
 
   if (second != 0 || subSecondNanoseconds != 0) {
     result[n++] = ':';
-    result[n++] = '0' + (second / 10);
-    result[n++] = '0' + (second % 10);
+    result[n++] = char('0' + (second / 10));
+    result[n++] = char('0' + (second % 10));
 
     if (uint32_t fractional = subSecondNanoseconds) {
       result[n++] = '.';
 
       uint32_t k = 100'000'000;
       do {
-        result[n++] = '0' + (fractional / k);
+        result[n++] = char('0' + (fractional / k));
         fractional %= k;
         k /= 10;
       } while (fractional);
@@ -1338,28 +1338,28 @@ static PlainDateTime GetISOPartsFromEpoch(const Instant& instant) {
   int32_t remainderNs = instant.nanoseconds % 1'000'000;
 
   // Step 3.
-  int64_t epochMilliseconds = instant.floorToMilliseconds();
+  double epochMilliseconds = double(instant.floorToMilliseconds());
 
   // Step 4.
-  int32_t year = JS::YearFromTime(epochMilliseconds);
+  int32_t year = int32_t(JS::YearFromTime(epochMilliseconds));
 
   // Step 5.
-  int32_t month = JS::MonthFromTime(epochMilliseconds) + 1;
+  int32_t month = int32_t(JS::MonthFromTime(epochMilliseconds)) + 1;
 
   // Step 6.
-  int32_t day = JS::DayFromTime(epochMilliseconds);
+  int32_t day = int32_t(JS::DayFromTime(epochMilliseconds));
 
   // Step 7.
-  int32_t hour = HourFromTime(epochMilliseconds);
+  int32_t hour = int32_t(HourFromTime(epochMilliseconds));
 
   // Step 8.
-  int32_t minute = MinFromTime(epochMilliseconds);
+  int32_t minute = int32_t(MinFromTime(epochMilliseconds));
 
   // Step 9.
-  int32_t second = SecFromTime(epochMilliseconds);
+  int32_t second = int32_t(SecFromTime(epochMilliseconds));
 
   // Step 10.
-  int32_t millisecond = msFromTime(epochMilliseconds);
+  int32_t millisecond = int32_t(msFromTime(epochMilliseconds));
 
   // Step 11.
   int32_t microsecond = remainderNs / 1000;

@@ -111,7 +111,7 @@ static PlainYearMonthObject* CreateTemporalYearMonth(
   // testing |referenceISODay|?
 
   // Step 2.
-  if (!ISOYearMonthWithinLimits(isoYear, isoMonth)) {
+  if (!ISOYearMonthWithinLimits(isoYear, int32_t(isoMonth))) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_TEMPORAL_PLAIN_YEAR_MONTH_INVALID);
     return nullptr;
@@ -130,16 +130,19 @@ static PlainYearMonthObject* CreateTemporalYearMonth(
   }
 
   // Step 5.
-  obj->setFixedSlot(PlainYearMonthObject::ISO_YEAR_SLOT, Int32Value(isoYear));
+  obj->setFixedSlot(PlainYearMonthObject::ISO_YEAR_SLOT,
+                    Int32Value(int32_t(isoYear)));
 
   // Step 6.
-  obj->setFixedSlot(PlainYearMonthObject::ISO_MONTH_SLOT, Int32Value(isoMonth));
+  obj->setFixedSlot(PlainYearMonthObject::ISO_MONTH_SLOT,
+                    Int32Value(int32_t(isoMonth)));
 
   // Step 7.
   obj->setFixedSlot(PlainYearMonthObject::CALENDAR_SLOT, calendar.toValue());
 
   // Step 8.
-  obj->setFixedSlot(PlainYearMonthObject::ISO_DAY_SLOT, Int32Value(isoDay));
+  obj->setFixedSlot(PlainYearMonthObject::ISO_DAY_SLOT,
+                    Int32Value(int32_t(isoDay)));
 
   // Step 9.
   return obj;

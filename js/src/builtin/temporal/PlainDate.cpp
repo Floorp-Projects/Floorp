@@ -7,6 +7,7 @@
 #include "builtin/temporal/PlainDate.h"
 
 #include "mozilla/Assertions.h"
+#include "mozilla/Casting.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Maybe.h"
 
@@ -316,13 +317,16 @@ static PlainDateObject* CreateTemporalDate(JSContext* cx, const CallArgs& args,
   }
 
   // Step 5.
-  object->setFixedSlot(PlainDateObject::ISO_YEAR_SLOT, Int32Value(isoYear));
+  object->setFixedSlot(PlainDateObject::ISO_YEAR_SLOT,
+                       Int32Value(int32_t(isoYear)));
 
   // Step 6.
-  object->setFixedSlot(PlainDateObject::ISO_MONTH_SLOT, Int32Value(isoMonth));
+  object->setFixedSlot(PlainDateObject::ISO_MONTH_SLOT,
+                       Int32Value(int32_t(isoMonth)));
 
   // Step 7.
-  object->setFixedSlot(PlainDateObject::ISO_DAY_SLOT, Int32Value(isoDay));
+  object->setFixedSlot(PlainDateObject::ISO_DAY_SLOT,
+                       Int32Value(int32_t(isoDay)));
 
   // Step 8.
   object->setFixedSlot(PlainDateObject::CALENDAR_SLOT, calendar.toValue());
@@ -602,30 +606,28 @@ bool js::temporal::ToTemporalDate(JSContext* cx, Handle<Value> item,
 /**
  * Mathematical Operations, "modulo" notation.
  */
-static int32_t NonNegativeModulo(double x, int32_t y) {
-  MOZ_ASSERT(IsInteger(x));
+static int32_t NonNegativeModulo(int64_t x, int32_t y) {
   MOZ_ASSERT(y > 0);
 
-  double r = std::fmod(x, y);
-
-  int32_t result;
-  MOZ_ALWAYS_TRUE(mozilla::NumberEqualsInt32(r, &result));
-
+  int32_t result = mozilla::AssertedCast<int32_t>(x % y);
   return (result < 0) ? (result + y) : result;
 }
 
 struct BalancedYearMonth final {
-  double year = 0;
+  int64_t year = 0;
   int32_t month = 0;
 };
 
 /**
  * BalanceISOYearMonth ( year, month )
  */
-static BalancedYearMonth BalanceISOYearMonth(double year, double month) {
-  // Step 1.
-  MOZ_ASSERT(IsInteger(year));
-  MOZ_ASSERT(IsInteger(month));
+static BalancedYearMonth BalanceISOYearMonth(int64_t year, int64_t month) {
+  MOZ_ASSERT(std::abs(year) < (int64_t(1) << 33),
+             "year is the addition of plain-date year with duration years");
+  MOZ_ASSERT(std::abs(month) < (int64_t(1) << 33),
+             "month is the addition of plain-date month with duration months");
+
+  // Step 1. (Not applicable in our implementation.)
 
   // Note: If either abs(year) or abs(month) is greater than 2^53 (the double
   // integral precision limit), the additions resp. subtractions below are
@@ -633,18 +635,17 @@ static BalancedYearMonth BalanceISOYearMonth(double year, double month) {
   // function (AddISODate) will throw an error for large values anyway.
 
   // Step 2.
-  year = year + std::floor((month - 1) / 12);
-  MOZ_ASSERT(IsInteger(year) || std::isinf(year));
+  int64_t balancedYear = year + temporal::FloorDiv(month - 1, 12);
 
   // Step 3.
-  int32_t mon = NonNegativeModulo(month - 1, 12) + 1;
-  MOZ_ASSERT(1 <= mon && mon <= 12);
+  int32_t balancedMonth = NonNegativeModulo(month - 1, 12) + 1;
+  MOZ_ASSERT(1 <= balancedMonth && balancedMonth <= 12);
 
   // Step 4.
-  return {year, mon};
+  return {balancedYear, balancedMonth};
 }
 
-static bool CanBalanceISOYear(double year) {
+static bool CanBalanceISOYear(int64_t year) {
   // TODO: Export these values somewhere.
   constexpr int32_t minYear = -271821;
   constexpr int32_t maxYear = 275760;
@@ -654,7 +655,7 @@ static bool CanBalanceISOYear(double year) {
   return minYear <= year && year <= maxYear;
 }
 
-static bool CanBalanceISODay(double day) {
+static bool CanBalanceISODay(int64_t day) {
   // The maximum number of seconds from the epoch is 8.64 * 10^12.
   constexpr int64_t maxInstantSeconds = 8'640'000'000'000;
 
@@ -684,7 +685,7 @@ PlainDate js::temporal::BalanceISODateNew(int32_t year, int32_t month,
   MOZ_ASSERT(1 <= month && month <= 12);
 
   // Steps 1-3.
-  int64_t ms = MakeDate(year, month, day);
+  double ms = double(MakeDate(year, month, day));
 
   // FIXME: spec issue - |ms| can be non-finite
   // https://github.com/tc39/proposal-temporal/issues/2315
@@ -827,7 +828,6 @@ bool js::temporal::AddISODate(JSContext* cx, const PlainDate& date,
   // Step 3.
   auto yearMonth = BalanceISOYearMonth(date.year + duration.years,
                                        date.month + duration.months);
-  MOZ_ASSERT(IsInteger(yearMonth.year) || std::isinf(yearMonth.year));
   MOZ_ASSERT(1 <= yearMonth.month && yearMonth.month <= 12);
 
   // FIXME: spec issue?
@@ -875,7 +875,7 @@ bool js::temporal::AddISODate(JSContext* cx, const PlainDate& date,
   // about imprecise number arithmetic here.
 
   // Steps 5-6.
-  double d = regulated.day + (duration.days + duration.weeks * 7);
+  int64_t d = regulated.day + (duration.days + duration.weeks * 7);
 
   // Just as with |yearMonth.year|, also directly throw an error if the |days|
   // value is too large.

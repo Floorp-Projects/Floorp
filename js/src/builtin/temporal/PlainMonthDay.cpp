@@ -96,16 +96,19 @@ static PlainMonthDayObject* CreateTemporalMonthDay(
   }
 
   // Step 5.
-  obj->setFixedSlot(PlainMonthDayObject::ISO_MONTH_SLOT, Int32Value(isoMonth));
+  obj->setFixedSlot(PlainMonthDayObject::ISO_MONTH_SLOT,
+                    Int32Value(int32_t(isoMonth)));
 
   // Step 6.
-  obj->setFixedSlot(PlainMonthDayObject::ISO_DAY_SLOT, Int32Value(isoDay));
+  obj->setFixedSlot(PlainMonthDayObject::ISO_DAY_SLOT,
+                    Int32Value(int32_t(isoDay)));
 
   // Step 7.
   obj->setFixedSlot(PlainMonthDayObject::CALENDAR_SLOT, calendar.toValue());
 
   // Step 8.
-  obj->setFixedSlot(PlainMonthDayObject::ISO_YEAR_SLOT, Int32Value(isoYear));
+  obj->setFixedSlot(PlainMonthDayObject::ISO_YEAR_SLOT,
+                    Int32Value(int32_t(isoYear)));
 
   // Step 9.
   return obj;

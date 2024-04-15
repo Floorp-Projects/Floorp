@@ -208,7 +208,7 @@ static NormalizedTimeDuration NormalizeMicroseconds(const Int96& microseconds) {
   auto [seconds, micros] = microseconds / ToMicroseconds(TemporalUnit::Second);
 
   // Scale microseconds to nanoseconds.
-  int32_t nanos = micros * ToNanoseconds(TemporalUnit::Microsecond);
+  int32_t nanos = micros * int32_t(ToNanoseconds(TemporalUnit::Microsecond));
 
   return {seconds, nanos};
 }
@@ -752,7 +752,7 @@ bool js::temporal::ThrowIfInvalidDuration(JSContext* cx,
 
     // Steps 2.b-c.
     if ((v < 0 && sign > 0) || (v > 0 && sign < 0)) {
-      return ThrowInvalidDurationPart(cx, v, name,
+      return ThrowInvalidDurationPart(cx, double(v), name,
                                       JSMSG_TEMPORAL_DURATION_INVALID_SIGN);
     }
 
@@ -762,7 +762,7 @@ bool js::temporal::ThrowIfInvalidDuration(JSContext* cx,
   auto throwIfTooLarge = [&](int64_t v, const char* name) {
     if (std::abs(v) >= (int64_t(1) << 32)) {
       return ThrowInvalidDurationPart(
-          cx, v, name, JSMSG_TEMPORAL_DURATION_INVALID_NON_FINITE);
+          cx, double(v), name, JSMSG_TEMPORAL_DURATION_INVALID_NON_FINITE);
     }
     return true;
   };
@@ -2508,7 +2508,7 @@ static Duration AbsoluteDuration(const Duration& duration) {
     }
 
     // Steps 1.b-c.
-    uint32_t k = 100'000'000;
+    int32_t k = 100'000'000;
     do {
       if (!result.append(char('0' + (subSecondNanoseconds / k)))) {
         return false;
@@ -2529,7 +2529,7 @@ static Duration AbsoluteDuration(const Duration& duration) {
     }
 
     // Steps 2.b-c.
-    uint32_t k = 100'000'000;
+    int32_t k = 100'000'000;
     for (uint8_t i = 0; i < precision.value(); i++) {
       if (!result.append(char('0' + (subSecondNanoseconds / k)))) {
         return false;

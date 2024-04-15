@@ -133,7 +133,7 @@ class Int96 final {
       remainder = n % divisor;
     }
 
-    int64_t result = (TwoDigit(quotient[1]) << 32) | quotient[0];
+    int64_t result = int64_t((TwoDigit(quotient[1]) << 32) | quotient[0]);
     if (negative) {
       result *= -1;
       if (remainder != 0) {
