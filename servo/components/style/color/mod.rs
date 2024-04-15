@@ -449,62 +449,6 @@ impl AbsoluteColor {
         }
     }
 
-    /// Return the value of a component by its channel keyword.
-    pub fn get_component_by_channel_keyword(&self, name: &str) -> Result<Option<f32>, ()> {
-        if name.eq_ignore_ascii_case("alpha") {
-            return Ok(self.alpha());
-        }
-
-        Ok(match self.color_space {
-            ColorSpace::Srgb => match_ignore_ascii_case! { name,
-                "r" => self.c0(),
-                "g" => self.c1(),
-                "b" => self.c2(),
-                _ => return Err(()),
-            },
-            ColorSpace::Hsl => match_ignore_ascii_case! { name,
-                "h" => self.c0(),
-                "s" => self.c1(),
-                "l" => self.c2(),
-                _ => return Err(()),
-            },
-            ColorSpace::Hwb => match_ignore_ascii_case! { name,
-                "h" => self.c0(),
-                "w" => self.c1(),
-                "b" => self.c2(),
-                _ => return Err(()),
-            },
-            ColorSpace::Lab | ColorSpace::Oklab => match_ignore_ascii_case! { name,
-                "l" => self.c0(),
-                "a" => self.c1(),
-                "b" => self.c2(),
-                _ => return Err(()),
-            },
-            ColorSpace::Lch | ColorSpace::Oklch => match_ignore_ascii_case! { name,
-                "l" => self.c0(),
-                "c" => self.c1(),
-                "h" => self.c2(),
-                _ => return Err(()),
-            },
-            ColorSpace::SrgbLinear |
-            ColorSpace::DisplayP3 |
-            ColorSpace::A98Rgb |
-            ColorSpace::ProphotoRgb |
-            ColorSpace::Rec2020 => match_ignore_ascii_case! { name,
-                "r" => self.c0(),
-                "g" => self.c1(),
-                "b" => self.c2(),
-                _ => return Err(()),
-            },
-            ColorSpace::XyzD50 | ColorSpace::XyzD65 => match_ignore_ascii_case! { name,
-                "x" => self.c0(),
-                "y" => self.c1(),
-                "z" => self.c2(),
-                _ => return Err(()),
-            },
-        })
-    }
-
     /// Convert this color to the specified color space.
     pub fn to_color_space(&self, color_space: ColorSpace) -> Self {
         use ColorSpace::*;
