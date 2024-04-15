@@ -150,9 +150,9 @@ bool RegulateISODate(JSContext* cx, const PlainDate& date,
                      TemporalOverflow overflow, PlainDate* result);
 
 struct RegulatedISODate final {
-  double year;
-  int32_t month;
-  int32_t day;
+  double year = 0;
+  int32_t month = 0;
+  int32_t day = 0;
 };
 
 /**
