@@ -2464,20 +2464,12 @@ static bool ZonedDateTime_hoursInDay(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 14.
-  auto diffNs = tomorrowInstant - todayInstant;
-  MOZ_ASSERT(IsValidInstantSpan(diffNs));
+  auto diff = tomorrowInstant - todayInstant;
+  MOZ_ASSERT(IsValidInstantSpan(diff));
 
   // Step 15.
-  constexpr int32_t secPerHour = 60 * 60;
-  constexpr int64_t nsPerSec = ToNanoseconds(TemporalUnit::Second);
-  constexpr double nsPerHour = ToNanoseconds(TemporalUnit::Hour);
-
-  int64_t hours = diffNs.seconds / secPerHour;
-  int64_t seconds = diffNs.seconds % secPerHour;
-  int64_t nanoseconds = seconds * nsPerSec + diffNs.nanoseconds;
-
-  double result = double(hours) + double(nanoseconds) / nsPerHour;
-  args.rval().setNumber(result);
+  constexpr auto nsPerHour = Int128{ToNanoseconds(TemporalUnit::Hour)};
+  args.rval().setNumber(FractionToDouble(diff.toNanoseconds(), nsPerHour));
   return true;
 }
 
