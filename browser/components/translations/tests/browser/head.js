@@ -1466,11 +1466,32 @@ class SelectTranslationsTestUtils {
   }
 
   /**
+   * Waits for the panel's translation state to reach the given phase,
+   * if it is not currently in that phase already.
+   *
+   * @param {string} phase - The phase of the panel's translation state to wait for.
+   */
+  static async waitForPanelState(phase) {
+    const currentPhase = SelectTranslationsPanel.phase();
+    if (currentPhase !== phase) {
+      info(
+        `Waiting for SelectTranslationsPanel to change state from "${currentPhase}" to "${phase}"`
+      );
+      await BrowserTestUtils.waitForEvent(
+        document,
+        "SelectTranslationsPanelStateChanged",
+        event => event.detail.phase === phase
+      );
+    }
+  }
+
+  /**
    * Asserts that the SelectTranslationsPanel UI matches the expected
    * state when the panel has completed its translation.
    */
-  static assertPanelViewTranslated() {
+  static async assertPanelViewTranslated() {
     const { textArea } = SelectTranslationsPanel.elements;
+    await SelectTranslationsTestUtils.waitForPanelState("translated");
     ok(
       !textArea.classList.contains("translating"),
       "The textarea should not have the translating class."
@@ -1506,19 +1527,18 @@ class SelectTranslationsTestUtils {
    * Asserts that the SelectTranslationsPanel translated text area is
    * both scrollable and scrolled to the top.
    */
-  static #assertPanelTextAreaOverflow() {
+  static async #assertPanelTextAreaOverflow() {
     const { textArea } = SelectTranslationsPanel.elements;
-    is(
-      textArea.style.overflow,
-      "auto",
-      "The translated-text area should be scrollable."
-    );
-    if (textArea.scrollHeight > textArea.clientHeight) {
-      is(
-        textArea.scrollTop,
-        0,
-        "The translated-text area should be scrolled to the top."
+    if (textArea.style.overflow !== "auto") {
+      await BrowserTestUtils.waitForMutationCondition(
+        textArea,
+        { attributes: true, attributeFilter: ["style"] },
+        () => textArea.style.overflow === "auto"
       );
+    }
+    if (textArea.scrollHeight > textArea.clientHeight) {
+      info("Ensuring that the textarea is scrolled to the top.");
+      await waitForCondition(() => textArea.scrollTop === 0);
     }
   }
 
@@ -1551,8 +1571,9 @@ class SelectTranslationsTestUtils {
    * Asserts that the SelectTranslationsPanel UI matches the expected
    * state when the panel is actively translating text.
    */
-  static assertPanelViewActivelyTranslating() {
+  static async assertPanelViewActivelyTranslating() {
     const { textArea } = SelectTranslationsPanel.elements;
+    await SelectTranslationsTestUtils.waitForPanelState("translating");
     ok(
       textArea.classList.contains("translating"),
       "The textarea should have the translating class."
@@ -1569,6 +1590,7 @@ class SelectTranslationsTestUtils {
    */
   static async assertPanelViewNoFromLangSelected() {
     const { textArea } = SelectTranslationsPanel.elements;
+    await SelectTranslationsTestUtils.waitForPanelState("idle");
     ok(
       !textArea.classList.contains("translating"),
       "The textarea should not have the translating class."
@@ -1591,6 +1613,7 @@ class SelectTranslationsTestUtils {
    */
   static async assertPanelViewNoToLangSelected() {
     const { textArea } = SelectTranslationsPanel.elements;
+    await SelectTranslationsTestUtils.waitForPanelState("idle");
     ok(
       !textArea.classList.contains("translating"),
       "The textarea should not have the translating class."
@@ -1863,27 +1886,9 @@ class SelectTranslationsTestUtils {
    * @returns {Promise<void>}
    */
   static async handleDownloads({ downloadHandler, pivotTranslation }) {
-    const { textArea } = SelectTranslationsPanel.elements;
-
     if (downloadHandler) {
-      if (textArea.style.overflow !== "hidden") {
-        await BrowserTestUtils.waitForMutationCondition(
-          textArea,
-          { attributes: true, attributeFilter: ["style"] },
-          () => textArea.style.overflow === "hidden"
-        );
-      }
-
       await SelectTranslationsTestUtils.assertPanelViewActivelyTranslating();
       await downloadHandler(pivotTranslation ? 2 : 1);
-    }
-
-    if (textArea.style.overflow === "hidden") {
-      await BrowserTestUtils.waitForMutationCondition(
-        textArea,
-        { attributes: true, attributeFilter: ["style"] },
-        () => textArea.style.overflow === "auto"
-      );
     }
   }
 
@@ -1897,6 +1902,7 @@ class SelectTranslationsTestUtils {
    * @returns {Promise<void>}
    */
   static async changeSelectedFromLanguage(langTags, options) {
+    logAction(langTags);
     const { fromMenuList, fromMenuPopup } = SelectTranslationsPanel.elements;
     const { openDropdownMenu } = options;
 
@@ -1923,6 +1929,7 @@ class SelectTranslationsTestUtils {
    * @returns {Promise<void>}
    */
   static async changeSelectedToLanguage(langTags, options) {
+    logAction(langTags);
     const { toMenuList, toMenuPopup } = SelectTranslationsPanel.elements;
     const { openDropdownMenu } = options;
 
