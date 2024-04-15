@@ -1547,6 +1547,8 @@ class SelectTranslationsTestUtils {
    */
   static async assertPanelViewUnsupportedLanguage() {
     await SelectTranslationsTestUtils.waitForPanelState("unsupported");
+    const { translateButton, unsupportedLanguageMessageBar } =
+      SelectTranslationsPanel.elements;
     SelectTranslationsTestUtils.#assertPanelElementVisibility({
       betaIcon: true,
       doneButton: true,
@@ -1560,6 +1562,14 @@ class SelectTranslationsTestUtils {
       doneButton: true,
       translateButton: false,
     });
+    ok(
+      translateButton.disabled,
+      "The translate button should be disabled when first shown."
+    );
+    SharedTranslationsTestUtils._assertL10nId(
+      unsupportedLanguageMessageBar,
+      "select-translations-panel-unsupported-language-message-known"
+    );
   }
 
   /**
@@ -1777,6 +1787,40 @@ class SelectTranslationsTestUtils {
   }
 
   /**
+   * Simulates clicking the Translate button in the SelectTranslationsPanel,
+   * then waits for any pending translation effects, based on the provided options.
+   *
+   * @param {object} config
+   * @param {Function} [config.downloadHandler]
+   *  - The function handle expected downloads, resolveDownloads() or rejectDownloads()
+   *    Leave as null to test more granularly, such as testing opening the loading view,
+   *    or allowing for the automatic downloading of files.
+   * @param {boolean} [config.pivotTranslation]
+   *  - True if the expected translation is a pivot translation, otherwise false.
+   *    Affects the number of expected downloads.
+   * @param {Function} [config.onTranslated]
+   *  - An optional callback function to execute after the translation completes.
+   */
+  static async clickTranslateButton({
+    downloadHandler,
+    pivotTranslation,
+    onTranslated,
+  }) {
+    logAction();
+    const { translateButton } = SelectTranslationsPanel.elements;
+    assertVisibility({ visible: { doneButton: translateButton } });
+    ok(!translateButton.disabled, "The translate button should be enabled.");
+    click(translateButton);
+    await SelectTranslationsTestUtils.waitForPanelState("translatable");
+    if (downloadHandler) {
+      await this.handleDownloads({ downloadHandler, pivotTranslation });
+    }
+    if (onTranslated) {
+      await onTranslated();
+    }
+  }
+
+  /**
    * Opens the context menu at a specified element on the page, based on the provided options.
    *
    * @param {Function} runInPage - A content-exposed function to run within the context of the page.
@@ -1905,6 +1949,28 @@ class SelectTranslationsTestUtils {
       langTags,
       { menuList: fromMenuList, menuPopup: fromMenuPopup },
       options
+    );
+  }
+
+  /**
+   * Change the selected language in the try-another-source-language dropdown.
+   *
+   * @param {string} langTag - A BCP-47 language tag.
+   */
+  static async changeSelectedTryAnotherSourceLanguage(langTag) {
+    logAction(langTag);
+    const { tryAnotherSourceMenuList, translateButton } =
+      SelectTranslationsPanel.elements;
+    await SelectTranslationsTestUtils.#changeSelectedLanguageDirectly(
+      [langTag],
+      { menuList: tryAnotherSourceMenuList },
+      {
+        onChangeLanguage: () =>
+          ok(
+            !translateButton.disabled,
+            "The translate button should be enabled after selecting a language."
+          ),
+      }
     );
   }
 
