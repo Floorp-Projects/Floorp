@@ -1108,14 +1108,18 @@ CycleCollectedJSRuntime* XPCJSContext::CreateRuntime(JSContext* aCx) {
 }
 
 class HelperThreadTaskHandler : public Task {
+  JS::HelperThreadTask* mTask;
+
  public:
-  TaskResult Run() override {
-    JS::RunHelperThreadTask();
-    return TaskResult::Complete;
-  }
-  explicit HelperThreadTaskHandler()
-      : Task(Kind::OffMainThreadOnly, EventQueuePriority::Normal) {
+  explicit HelperThreadTaskHandler(JS::HelperThreadTask* aTask)
+      : Task(Kind::OffMainThreadOnly, EventQueuePriority::Normal),
+        mTask(aTask) {
     // Bug 1703185: Currently all tasks are run at the same priority.
+  }
+
+  TaskResult Run() override {
+    JS::RunHelperThreadTask(mTask);
+    return TaskResult::Complete;
   }
 
 #ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
@@ -1129,8 +1133,9 @@ class HelperThreadTaskHandler : public Task {
   ~HelperThreadTaskHandler() = default;
 };
 
-static void DispatchOffThreadTask(JS::DispatchReason) {
-  TaskController::Get()->AddTask(MakeAndAddRef<HelperThreadTaskHandler>());
+static void DispatchOffThreadTask(JS::HelperThreadTask* aTask,
+                                  JS::DispatchReason) {
+  TaskController::Get()->AddTask(MakeAndAddRef<HelperThreadTaskHandler>(aTask));
 }
 
 static bool CreateSelfHostedSharedMemory(JSContext* aCx,

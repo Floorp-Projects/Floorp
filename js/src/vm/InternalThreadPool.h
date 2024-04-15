@@ -20,15 +20,19 @@
 
 namespace JS {
 enum class DispatchReason;
+class HelperThreadTask;
 };
 
 namespace js {
 
 class AutoLockHelperThreadState;
 class HelperThread;
+using JS::HelperThreadTask;
 
 using HelperThreadVector =
     Vector<UniquePtr<HelperThread>, 0, SystemAllocPolicy>;
+
+using HelperTaskVector = Vector<HelperThreadTask*, 0, SystemAllocPolicy>;
 
 class InternalThreadPool {
  public:
@@ -45,14 +49,16 @@ class InternalThreadPool {
                              const AutoLockHelperThreadState& lock) const;
 
  private:
-  static void DispatchTask(JS::DispatchReason reason);
+  static void DispatchTask(HelperThreadTask* task, JS::DispatchReason reason);
 
-  void dispatchTask(JS::DispatchReason reason);
+  void dispatchTask(HelperThreadTask* task, JS::DispatchReason reason);
   void shutDown(AutoLockHelperThreadState& lock);
 
   HelperThreadVector& threads(const AutoLockHelperThreadState& lock);
   const HelperThreadVector& threads(
       const AutoLockHelperThreadState& lock) const;
+
+  HelperTaskVector& tasks(const AutoLockHelperThreadState& lock);
 
   void notifyAll(const AutoLockHelperThreadState& lock);
   void wait(AutoLockHelperThreadState& lock);
@@ -62,9 +68,9 @@ class InternalThreadPool {
 
   HelperThreadLockData<HelperThreadVector> threads_;
 
-  js::ConditionVariable wakeup;
+  HelperThreadLockData<HelperTaskVector> tasks_;
 
-  HelperThreadLockData<size_t> queuedTasks;
+  js::ConditionVariable wakeup;
 
   HelperThreadLockData<bool> terminating;
 };
