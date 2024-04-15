@@ -18,6 +18,8 @@ platform_names:
             linux-shippable: 'linux-i686'
             linux-devedition: 'linux-i686'
             linux64-shippable: 'linux-x86_64'
+            linux64-aarch64-shippable: 'linux-aarch64'
+            linux64-aarch64-devedition: 'linux-aarch64'
             linux64-devedition: 'linux-x86_64'
             linux64-asan-reporter-shippable: 'linux-x86_64-asan-reporter'
             macosx64-shippable: 'mac'
