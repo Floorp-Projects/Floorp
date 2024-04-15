@@ -11791,19 +11791,13 @@
 # Hard code the User-Agent string's CPU architecture. This pref can be removed
 # after we're confident there are no webcompat problems.
 #
-# For now, don't enable this pref for x86 Linux builds until Firefox
-# download page bugs https://github.com/mozilla/bedrock/issues/12966 and
-# https://github.com/mozilla/bedrock/issues/14012 are fixed.
-#
 # Enable for:
 # * Android (any architecture)
-# * Linux (any architecture except x86)
+# * Linux (any architecture)
 # * Other Unix-like platforms except macOS (any architecture)
 - name: network.http.useragent.freezeCpu
   type: bool
-# (When reading the next line, know that preprocessor.py doesn't
-# understand parentheses, but && is higher precedence than ||.)
-#if defined(ANDROID) || defined(XP_LINUX) && !defined(__i386__) || defined(XP_UNIX) && !defined(XP_LINUX) && !defined(XP_MACOSX)
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
   value: true
 #else
   value: false
