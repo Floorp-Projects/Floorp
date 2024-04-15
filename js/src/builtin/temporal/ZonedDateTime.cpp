@@ -1201,7 +1201,7 @@ static bool DifferenceZonedDateTime(
   }
 
   // Step 6.
-  NormalizedDuration dateDifference;
+  DateDuration dateDifference;
   if (maybeOptions) {
     if (!DifferenceISODateTime(cx, startDateTime, endDateTime, calendar,
                                largestUnit, maybeOptions, &dateDifference)) {
@@ -1218,9 +1218,9 @@ static bool DifferenceZonedDateTime(
   Instant intermediateNs;
   if (!AddZonedDateTime(cx, ns1, timeZone, calendar,
                         DateDuration{
-                            dateDifference.date.years,
-                            dateDifference.date.months,
-                            dateDifference.date.weeks,
+                            dateDifference.years,
+                            dateDifference.months,
+                            dateDifference.weeks,
                         },
                         startDateTime, &intermediateNs)) {
     return false;
@@ -1245,9 +1245,9 @@ static bool DifferenceZonedDateTime(
 
   // Step 11.
   auto dateDuration = DateDuration{
-      dateDifference.date.years,
-      dateDifference.date.months,
-      dateDifference.date.weeks,
+      dateDifference.years,
+      dateDifference.months,
+      dateDifference.weeks,
       timeAndDays.days,
   };
   if (!ThrowIfInvalidDuration(cx, dateDuration)) {

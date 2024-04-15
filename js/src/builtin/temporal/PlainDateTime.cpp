@@ -884,9 +884,14 @@ bool js::temporal::DifferenceISODateTime(JSContext* cx,
                                          const PlainDateTime& two,
                                          Handle<CalendarRecord> calendar,
                                          TemporalUnit largestUnit,
-                                         NormalizedDuration* result) {
-  return ::DifferenceISODateTime(cx, one, two, calendar, largestUnit, nullptr,
-                                 result);
+                                         DateDuration* result) {
+  NormalizedDuration normalized;
+  if (!::DifferenceISODateTime(cx, one, two, calendar, largestUnit, nullptr,
+                               &normalized)) {
+    return false;
+  }
+  *result = normalized.date;
+  return true;
 }
 
 /**
@@ -896,9 +901,14 @@ bool js::temporal::DifferenceISODateTime(JSContext* cx,
 bool js::temporal::DifferenceISODateTime(
     JSContext* cx, const PlainDateTime& one, const PlainDateTime& two,
     Handle<CalendarRecord> calendar, TemporalUnit largestUnit,
-    Handle<PlainObject*> options, NormalizedDuration* result) {
-  return ::DifferenceISODateTime(cx, one, two, calendar, largestUnit, options,
-                                 result);
+    Handle<PlainObject*> options, DateDuration* result) {
+  NormalizedDuration normalized;
+  if (!::DifferenceISODateTime(cx, one, two, calendar, largestUnit, options,
+                               &normalized)) {
+    return false;
+  }
+  *result = normalized.date;
+  return true;
 }
 
 /**
