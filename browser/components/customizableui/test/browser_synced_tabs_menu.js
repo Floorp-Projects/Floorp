@@ -216,6 +216,17 @@ add_task(async function () {
   ok(button, "found the button");
 
   await document.getElementById("nav-bar").overflowable.show();
+  // Actually show the fxa view:
+  let shown = BrowserTestUtils.waitForEvent(
+    document.getElementById("PanelUI-remotetabs"),
+    "ViewShown"
+  );
+  PanelUI.showSubView(
+    "PanelUI-remotetabs",
+    document.getElementById("sync-button")
+  );
+  await shown;
+
   let expectedUrl =
     "https://example.com/connect_another_device?context=" +
     "fx_desktop_v3&entrypoint=synced-tabs&service=sync&uid=uid&email=foo%40bar.com";
