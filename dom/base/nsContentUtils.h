@@ -501,6 +501,9 @@ class nsContentUtils {
     return GetCommonAncestorHelper(aNode1, aNode2);
   }
 
+  static nsINode* GetClosestCommonShadowIncludingInclusiveAncestor(
+      nsINode* aNode1, nsINode* aNode2);
+
   /**
    * Returns the common flattened tree ancestor, if any, for two given content
    * nodes.
@@ -2778,9 +2781,13 @@ class nsContentUtils {
    *                    check.  aNode and aOffset can be computed with
    *                    UIEvent::GetRangeParentContentAndOffset() if you want to
    *                    check the click point.
+   * @param aAllowCrossShadowBoundary If true, this method allows the selection
+   *                                  to have boundaries that cross shadow
+   *                                  boundaries.
    */
   static bool IsPointInSelection(const mozilla::dom::Selection& aSelection,
-                                 const nsINode& aNode, const uint32_t aOffset);
+                                 const nsINode& aNode, const uint32_t aOffset,
+                                 const bool aAllowCrossShadowBoundary = false);
 
   /**
    * Takes a selection, and a text control element (<input> or <textarea>), and
@@ -3597,6 +3604,8 @@ class nsContentUtils {
           aCallback);
 
   static nsINode* GetCommonAncestorHelper(nsINode* aNode1, nsINode* aNode2);
+  static nsINode* GetCommonShadowIncludingAncestorHelper(nsINode* aNode1,
+                                                         nsINode* aNode2);
   static nsIContent* GetCommonFlattenedTreeAncestorHelper(
       nsIContent* aContent1, nsIContent* aContent2);
 

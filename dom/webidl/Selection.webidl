@@ -21,6 +21,8 @@ interface Selection {
   [NeedsCallerType]
   readonly attribute unsigned long focusOffset;
   readonly attribute boolean       isCollapsed;
+  [ChromeOnly]
+  readonly attribute boolean       areNormalAndCrossShadowBoundaryRangesCollapsed;
   /**
    * Returns the number of ranges in the selection.
    */

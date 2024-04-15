@@ -21,7 +21,7 @@ add_task(async function test_getSelectionDetails_input() {
         content.getSelection().removeAllRanges();
         let info = SelectionUtils.getSelectionDetails(content);
         Assert.equal(text, info.text);
-        Assert.ok(!info.collapsed);
+        Assert.strictEqual(info.docSelectionIsCollapsed, false);
         Assert.equal(linkURL, info.linkURL);
       }
 
@@ -45,6 +45,34 @@ add_task(async function test_getSelectionDetails_input() {
         text: "3.5",
         linkURL: null,
       });
+    });
+  });
+});
+
+add_task(async function test_getSelectionDetails_shadow_selection() {
+  const url = kFixtureBaseURL + "file_getSelectionDetails_inputs.html";
+  await BrowserTestUtils.withNewTab({ gBrowser, url }, async browser => {
+    await SpecialPowers.spawn(browser, [], async () => {
+      function checkSelection() {
+        const { SelectionUtils } = ChromeUtils.importESModule(
+          "resource://gre/modules/SelectionUtils.sys.mjs"
+        );
+
+        const text = content.document.getElementById("outer");
+        const host = content.document.getElementById("host");
+        content
+          .getSelection()
+          .setBaseAndExtent(
+            text,
+            0,
+            host.shadowRoot.getElementById("inner").firstChild,
+            3
+          );
+        let info = SelectionUtils.getSelectionDetails(content);
+        // TODO(sefeng): verify info.text after bug 1881095 is fixed
+        Assert.strictEqual(info.docSelectionIsCollapsed, false);
+      }
+      checkSelection();
     });
   });
 });

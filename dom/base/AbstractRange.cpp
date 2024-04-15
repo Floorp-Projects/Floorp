@@ -49,6 +49,8 @@ template nsresult AbstractRange::SetStartAndEndInternal(
     const RawRangeBoundary& aEndBoundary, StaticRange* aRange);
 template bool AbstractRange::MaybeCacheToReuse(nsRange& aInstance);
 template bool AbstractRange::MaybeCacheToReuse(StaticRange& aInstance);
+template bool AbstractRange::MaybeCacheToReuse(
+    CrossShadowBoundaryRange& aInstance);
 
 bool AbstractRange::sHasShutDown = false;
 
@@ -206,6 +208,12 @@ void AbstractRange::Shutdown() {
   if (nsTArray<RefPtr<StaticRange>>* cachedRanges =
           StaticRange::sCachedRanges) {
     StaticRange::sCachedRanges = nullptr;
+    cachedRanges->Clear();
+    delete cachedRanges;
+  }
+  if (nsTArray<RefPtr<CrossShadowBoundaryRange>>* cachedRanges =
+          CrossShadowBoundaryRange::sCachedRanges) {
+    CrossShadowBoundaryRange::sCachedRanges = nullptr;
     cachedRanges->Clear();
     delete cachedRanges;
   }

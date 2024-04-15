@@ -5,5 +5,12 @@
     <input id="url-with-scheme" value="https://test.example.com">
     <input id="not-url" value="foo. bar">
     <input id="not-url-number" value="3.5">
+
+    <span id="outer">OuterText</span>
+    <div id="host">
+      <template shadowrootmode="open">
+        <span id="inner">innerText</span>
+      </template>
+    </div>
   </body>
 </html>

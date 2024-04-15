@@ -19,7 +19,7 @@ class ErrorResult;
 
 namespace dom {
 
-class StaticRange final : public AbstractRange {
+class StaticRange : public AbstractRange {
  public:
   StaticRange() = delete;
   explicit StaticRange(const StaticRange& aOther) = delete;
@@ -70,16 +70,6 @@ class StaticRange final : public AbstractRange {
    * @see https://dom.spec.whatwg.org/#staticrange-valid
    */
   bool IsValid() const;
-
-  void NotifyNodeBecomesShadowHost(nsINode* aNode) {
-    if (aNode == mStart.Container()) {
-      mStart.NotifyParentBecomesShadowHost();
-    }
-
-    if (aNode == mEnd.Container()) {
-      mEnd.NotifyParentBecomesShadowHost();
-    }
-  }
 
  private:
   // Whether the start and end points are in the same tree.
