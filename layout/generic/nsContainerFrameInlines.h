@@ -21,8 +21,8 @@ void nsContainerFrame::DoInlineIntrinsicISize(ISizeData* aData,
   if (GetPrevInFlow()) return;  // Already added.
 
   WritingMode wm = GetWritingMode();
-  Side startSide = wm.PhysicalSideForInlineAxis(eLogicalEdgeStart);
-  Side endSide = wm.PhysicalSideForInlineAxis(eLogicalEdgeEnd);
+  Side startSide = wm.PhysicalSideForInlineAxis(LogicalEdge::Start);
+  Side endSide = wm.PhysicalSideForInlineAxis(LogicalEdge::End);
 
   const nsStylePadding* stylePadding = StylePadding();
   const nsStyleBorder* styleBorder = StyleBorder();

@@ -1123,9 +1123,9 @@ void ReflowInput::CalculateBorderPaddingMargin(
     nscoord* aOutsideBoxSizing) const {
   WritingMode wm = GetWritingMode();
   mozilla::Side startSide =
-      wm.PhysicalSide(MakeLogicalSide(aAxis, eLogicalEdgeStart));
+      wm.PhysicalSide(MakeLogicalSide(aAxis, LogicalEdge::Start));
   mozilla::Side endSide =
-      wm.PhysicalSide(MakeLogicalSide(aAxis, eLogicalEdgeEnd));
+      wm.PhysicalSide(MakeLogicalSide(aAxis, LogicalEdge::End));
 
   nsMargin styleBorder = mStyleBorder->GetComputedBorder();
   nscoord borderStartEnd =
@@ -1228,9 +1228,9 @@ static bool AxisPolarityFlipped(LogicalAxis aThisAxis, WritingMode aThisWm,
       aThisWm.PhysicalAxis(aThisAxis) == aOtherWm.PhysicalAxis(otherAxis),
       "Physical axes must match!");
   Side thisStartSide =
-      aThisWm.PhysicalSide(MakeLogicalSide(aThisAxis, eLogicalEdgeStart));
+      aThisWm.PhysicalSide(MakeLogicalSide(aThisAxis, LogicalEdge::Start));
   Side otherStartSide =
-      aOtherWm.PhysicalSide(MakeLogicalSide(otherAxis, eLogicalEdgeStart));
+      aOtherWm.PhysicalSide(MakeLogicalSide(otherAxis, LogicalEdge::Start));
   return thisStartSide != otherStartSide;
 }
 
@@ -2549,9 +2549,9 @@ void SizeComputationInput::InitOffsets(WritingMode aCBWM, nscoord aPercentBasis,
       NS_ASSERTION(val != nscoord(0), "zero in this property is useless");
       LogicalSide side;
       if (val > 0) {
-        side = MakeLogicalSide(aAxis, eLogicalEdgeStart);
+        side = MakeLogicalSide(aAxis, LogicalEdge::Start);
       } else {
-        side = MakeLogicalSide(aAxis, eLogicalEdgeEnd);
+        side = MakeLogicalSide(aAxis, LogicalEdge::End);
         val = -val;
       }
       mComputedPadding.Side(side, wm) += val;

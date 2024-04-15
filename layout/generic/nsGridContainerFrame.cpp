@@ -4317,7 +4317,7 @@ int32_t nsGridContainerFrame::Grid::ResolveLine(
       bool useStart = IsNameWithStartSuffix(aLine.LineName(), &index);
       if (useStart || IsNameWithEndSuffix(aLine.LineName(), &index)) {
         auto side = MakeLogicalSide(
-            GetAxis(aSide), useStart ? eLogicalEdgeStart : eLogicalEdgeEnd);
+            GetAxis(aSide), useStart ? LogicalEdge::Start : LogicalEdge::End);
         RefPtr<nsAtom> name = NS_Atomize(nsDependentSubstring(
             nsDependentAtomString(aLine.LineName()), 0, index));
         aNameMap.FindNamedAreas(name, side, implicitLines);
@@ -4377,7 +4377,7 @@ nsGridContainerFrame::Grid::ResolveLineRangeHelper(
 
     uint32_t from = aEnd.line_num < 0 ? aExplicitGridEnd + 1 : 0;
     auto end = ResolveLine(aEnd, aEnd.line_num, from, aNameMap,
-                           MakeLogicalSide(aAxis, eLogicalEdgeEnd),
+                           MakeLogicalSide(aAxis, LogicalEdge::End),
                            aExplicitGridEnd, aStyle);
     int32_t span = aStart.line_num == 0 ? 1 : aStart.line_num;
     if (end <= 1) {
@@ -4387,7 +4387,7 @@ nsGridContainerFrame::Grid::ResolveLineRangeHelper(
       return LinePair(start, end);
     }
     auto start = ResolveLine(aStart, -span, end, aNameMap,
-                             MakeLogicalSide(aAxis, eLogicalEdgeStart),
+                             MakeLogicalSide(aAxis, LogicalEdge::Start),
                              aExplicitGridEnd, aStyle);
     return LinePair(start, end);
   }
@@ -4411,7 +4411,7 @@ nsGridContainerFrame::Grid::ResolveLineRangeHelper(
   } else {
     uint32_t from = aStart.line_num < 0 ? aExplicitGridEnd + 1 : 0;
     start = ResolveLine(aStart, aStart.line_num, from, aNameMap,
-                        MakeLogicalSide(aAxis, eLogicalEdgeStart),
+                        MakeLogicalSide(aAxis, LogicalEdge::Start),
                         aExplicitGridEnd, aStyle);
     if (aEnd.IsAuto()) {
       // A "definite line / auto" should resolve the auto to 'span 1'.
@@ -4441,7 +4441,7 @@ nsGridContainerFrame::Grid::ResolveLineRangeHelper(
     from = aEnd.line_num < 0 ? aExplicitGridEnd + 1 : 0;
   }
   auto end = ResolveLine(aEnd, nth, from, aNameMap,
-                         MakeLogicalSide(aAxis, eLogicalEdgeEnd),
+                         MakeLogicalSide(aAxis, LogicalEdge::End),
                          aExplicitGridEnd, aStyle);
   if (start == int32_t(kAutoLine)) {
     // auto / definite line
@@ -4527,7 +4527,7 @@ nsGridContainerFrame::Grid::ResolveAbsPosLineRange(
     }
     uint32_t from = aEnd.line_num < 0 ? aExplicitGridEnd + 1 : 0;
     int32_t end = ResolveLine(aEnd, aEnd.line_num, from, aNameMap,
-                              MakeLogicalSide(aAxis, eLogicalEdgeEnd),
+                              MakeLogicalSide(aAxis, LogicalEdge::End),
                               aExplicitGridEnd, aStyle);
     if (aEnd.is_span) {
       ++end;
@@ -4540,7 +4540,7 @@ nsGridContainerFrame::Grid::ResolveAbsPosLineRange(
   if (aEnd.IsAuto()) {
     uint32_t from = aStart.line_num < 0 ? aExplicitGridEnd + 1 : 0;
     int32_t start = ResolveLine(aStart, aStart.line_num, from, aNameMap,
-                                MakeLogicalSide(aAxis, eLogicalEdgeStart),
+                                MakeLogicalSide(aAxis, LogicalEdge::Start),
                                 aExplicitGridEnd, aStyle);
     if (aStart.is_span) {
       start = std::max(aGridEnd - start, aGridStart);
@@ -6017,7 +6017,7 @@ void nsGridContainerFrame::Tracks::InitializeItemBaselines(
   // against the physical block start side of the child to determine its
   // baseline sharing group.
   auto containerBlockStartSide =
-      containerWM.PhysicalSide(MakeLogicalSide(mAxis, eLogicalEdgeStart));
+      containerWM.PhysicalSide(MakeLogicalSide(mAxis, LogicalEdge::Start));
 
   for (GridItemInfo& gridItem : aGridItems) {
     if (gridItem.IsSubgrid(mAxis)) {
@@ -6124,7 +6124,7 @@ void nsGridContainerFrame::Tracks::InitializeItemBaselines(
         {
           auto childAxis = isOrthogonal ? GetOrthogonalAxis(mAxis) : mAxis;
           auto childBlockStartSide = childWM.PhysicalSide(
-              MakeLogicalSide(childAxis, eLogicalEdgeStart));
+              MakeLogicalSide(childAxis, LogicalEdge::Start));
           bool isFirstBaseline = (state & ItemState::eFirstBaseline) != 0;
           const bool containerAndChildHasEqualBaselineSide =
               containerBlockStartSide == childBlockStartSide;
