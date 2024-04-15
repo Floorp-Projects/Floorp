@@ -106,6 +106,18 @@ static bool IsIntegerDuration(const Duration& duration) {
 }
 #endif
 
+static constexpr bool IsSafeInteger(int64_t x) {
+  constexpr int64_t MaxSafeInteger = int64_t(1) << 53;
+  constexpr int64_t MinSafeInteger = -MaxSafeInteger;
+  return MinSafeInteger < x && x < MaxSafeInteger;
+}
+
+static constexpr bool IsSafeInteger(const Int128& x) {
+  constexpr Int128 MaxSafeInteger = Int128{int64_t(1) << 53};
+  constexpr Int128 MinSafeInteger = -MaxSafeInteger;
+  return MinSafeInteger < x && x < MaxSafeInteger;
+}
+
 /**
  * DurationSign ( years, months, weeks, days, hours, minutes, seconds,
  * milliseconds, microseconds, nanoseconds )
@@ -1272,39 +1284,32 @@ static NormalizedTimeAndDays NormalizedTimeDurationToDays(
 static TimeDuration CreateTimeDurationRecord(int64_t days, int64_t hours,
                                              int64_t minutes, int64_t seconds,
                                              int64_t milliseconds,
-                                             int64_t microseconds,
-                                             int64_t nanoseconds) {
-  // Step 1.
-  MOZ_ASSERT(IsValidDuration(
-      {0, 0, 0, double(days), double(hours), double(minutes), double(seconds),
-       double(milliseconds), double(microseconds), double(nanoseconds)}));
-
-  // Step 2.
-  return {
-      double(days),        double(hours),        double(minutes),
-      double(seconds),     double(milliseconds), double(microseconds),
-      double(nanoseconds),
-  };
-}
-
-/**
- * CreateTimeDurationRecord ( days, hours, minutes, seconds, milliseconds,
- * microseconds, nanoseconds )
- */
-static TimeDuration CreateTimeDurationRecord(double days, double hours,
-                                             double minutes, double seconds,
-                                             double milliseconds,
                                              double microseconds,
                                              double nanoseconds) {
   // Step 1.
-  MOZ_ASSERT(IsValidDuration({0, 0, 0, days, hours, minutes, seconds,
-                              milliseconds, microseconds, nanoseconds}));
+  MOZ_ASSERT(IsValidDuration(
+      {0, 0, 0, double(days), double(hours), double(minutes), double(seconds),
+       double(milliseconds), microseconds, nanoseconds}));
+
+  // |days|, |hours|, |minutes|, and |seconds| are safe integers, so we don't
+  // need to convert to `double` and back for the `ℝ(𝔽(x))` conversion.
+  MOZ_ASSERT(IsSafeInteger(days));
+  MOZ_ASSERT(IsSafeInteger(hours));
+  MOZ_ASSERT(IsSafeInteger(minutes));
+  MOZ_ASSERT(IsSafeInteger(seconds));
+
+  // |milliseconds| is explicitly casted to double by consumers, so we can also
+  // omit the `ℝ(𝔽(x))` conversion.
 
   // Step 2.
   // NB: Adds +0.0 to correctly handle negative zero.
   return {
-      days + (+0.0),        hours + (+0.0),        minutes + (+0.0),
-      seconds + (+0.0),     milliseconds + (+0.0), microseconds + (+0.0),
+      days,
+      hours,
+      minutes,
+      seconds,
+      milliseconds,
+      microseconds + (+0.0),
       nanoseconds + (+0.0),
   };
 }
@@ -1526,7 +1531,7 @@ TimeDuration js::temporal::BalanceTimeDuration(
 
   // Step 11.
   return CreateTimeDurationRecord(days, hours, minutes, seconds, milliseconds,
-                                  microseconds, nanoseconds);
+                                  double(microseconds), double(nanoseconds));
 }
 
 /**
@@ -1624,7 +1629,7 @@ static bool BalanceTimeDurationRelative(
 
   // Step 11.
   *result = {
-      double(days),
+      days,
       balanceResult.hours,
       balanceResult.minutes,
       balanceResult.seconds,
@@ -2173,10 +2178,11 @@ static bool AddDuration(JSContext* cx, const Duration& one, const Duration& two,
 
   // Steps 7.q.
   *result = {
-      dateDifference.years, dateDifference.months, dateDifference.weeks,
-      balanced.days,        balanced.hours,        balanced.minutes,
-      balanced.seconds,     balanced.milliseconds, balanced.microseconds,
-      balanced.nanoseconds,
+      dateDifference.years,     dateDifference.months,
+      dateDifference.weeks,     double(balanced.days),
+      double(balanced.hours),   double(balanced.minutes),
+      double(balanced.seconds), double(balanced.milliseconds),
+      balanced.microseconds,    balanced.nanoseconds,
   };
   MOZ_ASSERT(IsValidDuration(*result));
   return true;
@@ -2315,10 +2321,11 @@ static bool AddDuration(
 
   // Step 20.
   *result = {
-      difference.date.years, difference.date.months, difference.date.weeks,
-      difference.date.days,  balanced.hours,         balanced.minutes,
-      balanced.seconds,      balanced.milliseconds,  balanced.microseconds,
-      balanced.nanoseconds,
+      difference.date.years,    difference.date.months,
+      difference.date.weeks,    difference.date.days,
+      double(balanced.hours),   double(balanced.minutes),
+      double(balanced.seconds), double(balanced.milliseconds),
+      balanced.microseconds,    balanced.nanoseconds,
   };
   MOZ_ASSERT(IsValidDuration(*result));
   return true;
@@ -3051,18 +3058,6 @@ static bool CreateCalendarMethodsRecordFromRelativeTo(
 
   // Step 3.
   return true;
-}
-
-static constexpr bool IsSafeInteger(int64_t x) {
-  constexpr int64_t MaxSafeInteger = int64_t(1) << 53;
-  constexpr int64_t MinSafeInteger = -MaxSafeInteger;
-  return MinSafeInteger < x && x < MaxSafeInteger;
-}
-
-static constexpr bool IsSafeInteger(const Int128& x) {
-  constexpr Int128 MaxSafeInteger = Int128{int64_t(1) << 53};
-  constexpr Int128 MinSafeInteger = -MaxSafeInteger;
-  return MinSafeInteger < x && x < MaxSafeInteger;
 }
 
 /**
@@ -5431,7 +5426,7 @@ static bool Duration_round(JSContext* cx, const CallArgs& args) {
       roundResult.date.years,
       roundResult.date.months,
       roundResult.date.weeks,
-      balanceResult.days,
+      double(balanceResult.days),
   };
   DateDuration dateResult;
   if (!::BalanceDateDurationRelative(cx, balanceInput, largestUnit,
@@ -5442,11 +5437,16 @@ static bool Duration_round(JSContext* cx, const CallArgs& args) {
 
   // Step 42.
   auto result = Duration{
-      dateResult.years,           dateResult.months,
-      dateResult.weeks,           dateResult.days,
-      balanceResult.hours,        balanceResult.minutes,
-      balanceResult.seconds,      balanceResult.milliseconds,
-      balanceResult.microseconds, balanceResult.nanoseconds,
+      dateResult.years,
+      dateResult.months,
+      dateResult.weeks,
+      dateResult.days,
+      double(balanceResult.hours),
+      double(balanceResult.minutes),
+      double(balanceResult.seconds),
+      double(balanceResult.milliseconds),
+      balanceResult.microseconds,
+      balanceResult.nanoseconds,
   };
   MOZ_ASSERT(IsValidDuration(result));
   auto* obj = CreateTemporalDuration(cx, result);
@@ -5797,11 +5797,11 @@ static bool Duration_toString(JSContext* cx, const CallArgs& args) {
 
     // Step 10.f.
     result = {
-        duration.years,        duration.months,
-        duration.weeks,        duration.days + balanced.days,
-        balanced.hours,        balanced.minutes,
-        balanced.seconds,      balanced.milliseconds,
-        balanced.microseconds, balanced.nanoseconds,
+        duration.years,           duration.months,
+        duration.weeks,           duration.days + double(balanced.days),
+        double(balanced.hours),   double(balanced.minutes),
+        double(balanced.seconds), double(balanced.milliseconds),
+        balanced.microseconds,    balanced.nanoseconds,
     };
     MOZ_ASSERT(IsValidDuration(duration));
   } else {

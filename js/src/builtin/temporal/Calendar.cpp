@@ -3086,7 +3086,7 @@ static bool BuiltinCalendarAdd(JSContext* cx, const PlainDate& date,
       duration.years,
       duration.months,
       duration.weeks,
-      duration.days + balanceResult.days,
+      duration.days + double(balanceResult.days),
   };
   return AddISODate(cx, date, addDuration, overflow, result);
 }

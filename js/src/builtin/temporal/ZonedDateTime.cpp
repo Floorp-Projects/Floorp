@@ -1571,11 +1571,11 @@ static bool DifferenceTemporalZonedDateTime(JSContext* cx,
 
   // Step 19.
   auto duration = Duration{
-      difference.date.years,     difference.date.months,
-      difference.date.weeks,     difference.date.days,
-      timeDuration.hours,        timeDuration.minutes,
-      timeDuration.seconds,      timeDuration.milliseconds,
-      timeDuration.microseconds, timeDuration.nanoseconds,
+      difference.date.years,        difference.date.months,
+      difference.date.weeks,        difference.date.days,
+      double(timeDuration.hours),   double(timeDuration.minutes),
+      double(timeDuration.seconds), double(timeDuration.milliseconds),
+      timeDuration.microseconds,    timeDuration.nanoseconds,
   };
   if (operation == TemporalDifference::Since) {
     duration = duration.negate();
