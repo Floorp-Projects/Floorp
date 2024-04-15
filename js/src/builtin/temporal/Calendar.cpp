@@ -3494,18 +3494,15 @@ bool js::temporal::CalendarDateAdd(JSContext* cx,
 /**
  * Temporal.Calendar.prototype.dateUntil ( one, two [ , options ] )
  */
-static Duration BuiltinCalendarDateUntil(const PlainDate& one,
-                                         const PlainDate& two,
-                                         TemporalUnit largestUnit) {
+static DateDuration BuiltinCalendarDateUntil(const PlainDate& one,
+                                             const PlainDate& two,
+                                             TemporalUnit largestUnit) {
   // Steps 1-3. (Not applicable)
 
   // Steps 4-8. (Not applicable)
 
-  // Step 9.
-  auto difference = DifferenceISODate(one, two, largestUnit);
-
-  // Step 10.
-  return difference.toDuration();
+  // Steps 9-10.
+  return DifferenceISODate(one, two, largestUnit);
 }
 
 /**
@@ -3515,7 +3512,7 @@ static bool BuiltinCalendarDateUntil(JSContext* cx,
                                      Handle<Wrapped<PlainDateObject*>> one,
                                      Handle<Wrapped<PlainDateObject*>> two,
                                      TemporalUnit largestUnit,
-                                     Duration* result) {
+                                     DateDuration* result) {
   MOZ_ASSERT(largestUnit <= TemporalUnit::Day);
 
   auto* unwrappedOne = one.unwrap(cx);
@@ -3541,7 +3538,7 @@ static bool CalendarDateUntilSlow(JSContext* cx,
                                   Handle<Wrapped<PlainDateObject*>> two,
                                   TemporalUnit largestUnit,
                                   Handle<JSObject*> maybeOptions,
-                                  Duration* result) {
+                                  DateDuration* result) {
   MOZ_ASSERT(
       CalendarMethodsRecordHasLookedUp(calendar, CalendarMethod::DateUntil));
   MOZ_ASSERT(calendar.receiver().isObject());
@@ -3585,7 +3582,8 @@ static bool CalendarDateUntilSlow(JSContext* cx,
   }
 
   // Step 4.
-  *result = ToDuration(&rval.toObject().unwrapAs<DurationObject>());
+  auto duration = ToDuration(&rval.toObject().unwrapAs<DurationObject>());
+  *result = duration.toDateDuration();
   return true;
 }
 
@@ -3607,14 +3605,8 @@ static bool CalendarDateUntilSlow(JSContext* cx,
     return false;
   }
 
-  Duration duration;
-  if (!CalendarDateUntilSlow(cx, calendar, date1, date2, largestUnit,
-                             maybeOptions, &duration)) {
-    return false;
-  }
-
-  *result = duration.toDateDuration();
-  return true;
+  return CalendarDateUntilSlow(cx, calendar, date1, date2, largestUnit,
+                               maybeOptions, result);
 }
 
 /**
@@ -3631,7 +3623,7 @@ bool js::temporal::CalendarDateUntil(JSContext* cx,
 
   // Step 2. (Reordered)
   if (!calendar.dateUntil()) {
-    *result = BuiltinCalendarDateUntil(one, two, largestUnit).toDateDuration();
+    *result = BuiltinCalendarDateUntil(one, two, largestUnit);
     return true;
   }
 
@@ -3667,7 +3659,7 @@ bool js::temporal::CalendarDateUntil(JSContext* cx,
 
   // Step 2. (Reordered)
   if (!calendar.dateUntil()) {
-    *result = BuiltinCalendarDateUntil(one, two, largestUnit).toDateDuration();
+    *result = BuiltinCalendarDateUntil(one, two, largestUnit);
     return true;
   }
 
@@ -3684,7 +3676,7 @@ bool js::temporal::CalendarDateUntil(JSContext* cx,
                                      Handle<Wrapped<PlainDateObject*>> one,
                                      Handle<Wrapped<PlainDateObject*>> two,
                                      TemporalUnit largestUnit,
-                                     Duration* result) {
+                                     DateDuration* result) {
   MOZ_ASSERT(
       CalendarMethodsRecordHasLookedUp(calendar, CalendarMethod::DateUntil));
   MOZ_ASSERT(largestUnit <= TemporalUnit::Day);
@@ -3708,7 +3700,7 @@ bool js::temporal::CalendarDateUntil(JSContext* cx,
                                      Handle<Wrapped<PlainDateObject*>> two,
                                      TemporalUnit largestUnit,
                                      Handle<PlainObject*> options,
-                                     Duration* result) {
+                                     DateDuration* result) {
   MOZ_ASSERT(
       CalendarMethodsRecordHasLookedUp(calendar, CalendarMethod::DateUntil));
 
@@ -4169,10 +4161,11 @@ static bool Calendar_dateUntil(JSContext* cx, const CallArgs& args) {
     }
   }
 
-  // Steps 9-10.
+  // Step 9.
   auto duration = BuiltinCalendarDateUntil(one, two, largestUnit);
 
-  auto* obj = CreateTemporalDuration(cx, duration);
+  // Step 10.
+  auto* obj = CreateTemporalDuration(cx, duration.toDuration());
   if (!obj) {
     return false;
   }
