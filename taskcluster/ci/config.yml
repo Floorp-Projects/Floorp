@@ -113,6 +113,8 @@ treeherder:
         'Pup': "Puppeteer tests"
         'R': 'Reftests'
         'R-cf': 'Reftests confirm failure'
+        'R-s': 'Reftest snapshot'
+        'R-s-cf': 'Reftest snapshot with confirm failure'
         'R-nofis': 'Reftests without fission enabled'
         'R-nofis-cf': 'Reftests confirm failure without fission enabled'
         'R-nofis-ship': 'Reftests without fission and with SHIP (session history in parent) enabled (Android specific)'

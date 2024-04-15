@@ -414,3 +414,22 @@ http2:
         mozharness:
             extra-options:
                 - "--use-http2-server"
+
+draw-snapshot:
+    description: "{description} with draw snapshot"
+    component: "Core::Graphics"
+    suffix: "s"
+    mozinfo: "snapshot"
+    expiration: "never"
+    when:
+        $eval: '(
+                    "linux" in task["test-platform"]
+                    && "debug" in task["test-platform"]
+                )
+                    && "reftest" == task["try-name"]
+                '
+    replace:
+        virtualization: virtual
+        mozharness:
+            extra-options:
+                - "--setpref=reftest.use-draw-snapshot=true"

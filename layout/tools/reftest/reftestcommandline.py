@@ -478,11 +478,6 @@ class DesktopArgumentsParser(ReftestArgumentsParser):
             help="run tests in parallel if possible",
         )
 
-    def _prefs_gpu(self):
-        if mozinfo.os != "win":
-            return ["layers.acceleration.force-enabled=true"]
-        return []
-
     def validate(self, options, reftest):
         super(DesktopArgumentsParser, self).validate(options, reftest)
 
