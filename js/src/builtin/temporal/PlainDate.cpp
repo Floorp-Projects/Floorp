@@ -677,8 +677,7 @@ PlainDate js::temporal::BalanceISODateNew(int32_t year, int32_t month,
   // Steps 1-3.
   double ms = double(MakeDate(year, month, day));
 
-  // FIXME: spec issue - |ms| can be non-finite
-  // https://github.com/tc39/proposal-temporal/issues/2315
+  // TODO: Add ISODateToEpochDays & friends which handle larger inputs.
 
   // TODO: This approach isn't efficient, because MonthFromTime and DayFromTime
   // both recompute YearFromTime.
@@ -716,9 +715,8 @@ PlainDate js::temporal::BalanceISODate(int32_t year, int32_t month,
   MOZ_ASSERT(1 <= month && month <= 12);
   MOZ_ASSERT(CanBalanceISODay(day));
 
-  // TODO: BalanceISODate now works using MakeDate
+  // TODO: BalanceISODate now works using ISODateToEpochDays & friends.
   // TODO: Can't use JS::MakeDate, because it expects valid month/day values.
-  // https://github.com/tc39/proposal-temporal/issues/2315
 
   // Step 1. (Not applicable in our implementation.)
 

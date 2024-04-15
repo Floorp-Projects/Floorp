@@ -120,7 +120,8 @@ bool js::temporal::InterpretISODateTimeOffset(
 
   // Step 5.
   if (offsetBehaviour == OffsetBehaviour::Wall ||
-      offsetOption == TemporalOffset::Ignore) {
+      (offsetBehaviour == OffsetBehaviour::Option &&
+       offsetOption == TemporalOffset::Ignore)) {
     // Steps 5.a-b.
     return GetInstantFor(cx, timeZone, temporalDateTime, disambiguation,
                          result);
@@ -128,7 +129,8 @@ bool js::temporal::InterpretISODateTimeOffset(
 
   // Step 6.
   if (offsetBehaviour == OffsetBehaviour::Exact ||
-      offsetOption == TemporalOffset::Use) {
+      (offsetBehaviour == OffsetBehaviour::Option &&
+       offsetOption == TemporalOffset::Use)) {
     // Step 6.a.
     auto epochNanoseconds = GetUTCEpochNanoseconds(
         dateTime, InstantSpan::fromNanoseconds(offsetNanoseconds));
@@ -152,27 +154,21 @@ bool js::temporal::InterpretISODateTimeOffset(
   MOZ_ASSERT(offsetOption == TemporalOffset::Prefer ||
              offsetOption == TemporalOffset::Reject);
 
-  // FIXME: spec issue - duplicate assertion
-
   // Step 9.
-  MOZ_ASSERT(TimeZoneMethodsRecordHasLookedUp(
-      timeZone, TimeZoneMethod::GetPossibleInstantsFor));
-
-  // Step 10.
   Rooted<InstantVector> possibleInstants(cx, InstantVector(cx));
   if (!GetPossibleInstantsFor(cx, timeZone, temporalDateTime,
                               &possibleInstants)) {
     return false;
   }
 
-  // Step 11.
+  // Step 10.
   if (!possibleInstants.empty()) {
-    // Step 11.a.
+    // Step 10.a.
     Rooted<Wrapped<InstantObject*>> candidate(cx);
     for (size_t i = 0; i < possibleInstants.length(); i++) {
       candidate = possibleInstants[i];
 
-      // Step 11.a.i.
+      // Step 10.a.i.
       int64_t candidateNanoseconds;
       if (!GetOffsetNanosecondsFor(cx, timeZone, candidate,
                                    &candidateNanoseconds)) {
@@ -181,7 +177,7 @@ bool js::temporal::InterpretISODateTimeOffset(
       MOZ_ASSERT(std::abs(candidateNanoseconds) <
                  ToNanoseconds(TemporalUnit::Day));
 
-      // Step 11.a.ii.
+      // Step 10.a.ii.
       if (candidateNanoseconds == offsetNanoseconds) {
         auto* unwrapped = candidate.unwrap(cx);
         if (!unwrapped) {
@@ -192,20 +188,20 @@ bool js::temporal::InterpretISODateTimeOffset(
         return true;
       }
 
-      // Step 11.a.iii.
+      // Step 10.a.iii.
       if (matchBehaviour == MatchBehaviour::MatchMinutes) {
-        // Step 11.a.iii.1.
+        // Step 10.a.iii.1.
         int64_t roundedCandidateNanoseconds =
             RoundNanosecondsToMinutesIncrement(candidateNanoseconds);
 
-        // Step 11.a.iii.2.
+        // Step 10.a.iii.2.
         if (roundedCandidateNanoseconds == offsetNanoseconds) {
           auto* unwrapped = candidate.unwrap(cx);
           if (!unwrapped) {
             return false;
           }
 
-          // Step 11.a.iii.2.a.
+          // Step 10.a.iii.2.a.
           *result = ToInstant(unwrapped);
           return true;
         }
@@ -213,14 +209,14 @@ bool js::temporal::InterpretISODateTimeOffset(
     }
   }
 
-  // Step 12.
+  // Step 11.
   if (offsetOption == TemporalOffset::Reject) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_TEMPORAL_ZONED_DATE_TIME_NO_TIME_FOUND);
     return false;
   }
 
-  // Step 13.
+  // Step 12.
   Rooted<Wrapped<InstantObject*>> instant(cx);
   if (!DisambiguatePossibleInstants(cx, possibleInstants, timeZone,
                                     ToPlainDateTime(temporalDateTime),
@@ -233,7 +229,7 @@ bool js::temporal::InterpretISODateTimeOffset(
     return false;
   }
 
-  // Step 14.
+  // Step 13.
   *result = ToInstant(unwrappedInstant);
   return true;
 }
@@ -431,19 +427,19 @@ static bool ToTemporalZonedDateTime(JSContext* cx, Handle<Value> item,
     bool isUTC;
     bool hasOffset;
     int64_t timeZoneOffset;
-    Rooted<ParsedTimeZone> timeZoneString(cx);
+    Rooted<ParsedTimeZone> timeZoneAnnotation(cx);
     Rooted<JSString*> calendarString(cx);
-    if (!ParseTemporalZonedDateTimeString(cx, string, &dateTime, &isUTC,
-                                          &hasOffset, &timeZoneOffset,
-                                          &timeZoneString, &calendarString)) {
+    if (!ParseTemporalZonedDateTimeString(
+            cx, string, &dateTime, &isUTC, &hasOffset, &timeZoneOffset,
+            &timeZoneAnnotation, &calendarString)) {
       return false;
     }
 
     // Step 6.d.
-    MOZ_ASSERT(timeZoneString);
+    MOZ_ASSERT(timeZoneAnnotation);
 
     // Step 6.e.
-    if (!ToTemporalTimeZone(cx, timeZoneString, &timeZone)) {
+    if (!ToTemporalTimeZone(cx, timeZoneAnnotation, &timeZone)) {
       return false;
     }
 

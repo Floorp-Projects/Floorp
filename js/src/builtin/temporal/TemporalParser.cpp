@@ -1034,11 +1034,10 @@ mozilla::Result<PlainTime, ParserError> TemporalParser<CharT>::timeSpec() {
   PlainTime result = {};
 
   // TimeHour :
-  //   Hour[+Padded]
+  //   Hour
   //
-  // Hour[Padded] :
-  //   [~Padded] DecimalDigit
-  //   [~Padded] 0 DecimalDigit
+  // Hour :
+  //   0 DecimalDigit
   //   1 DecimalDigit
   //   20
   //   21
@@ -1131,9 +1130,9 @@ TemporalParser<CharT>::timeZoneUTCOffsetName() {
   //   UTCOffsetMinutePrecision
   //
   // UTCOffsetMinutePrecision :
-  //   Sign Hour[+Padded]
-  //   Sign Hour[+Padded] TimeSeparator[+Extended] MinuteSecond
-  //   Sign Hour[+Padded] TimeSeparator[~Extended] MinuteSecond
+  //   Sign Hour
+  //   Sign Hour TimeSeparator[+Extended] MinuteSecond
+  //   Sign Hour TimeSeparator[~Extended] MinuteSecond
 
   TimeZoneUTCOffset result = {};
 
@@ -1142,9 +1141,8 @@ TemporalParser<CharT>::timeZoneUTCOffsetName() {
   }
   result.sign = sign();
 
-  // Hour[Padded] :
-  //   [~Padded] DecimalDigit
-  //   [+Padded] 0 DecimalDigit
+  // Hour :
+  //   0 DecimalDigit
   //   1 DecimalDigit
   //   20
   //   21
@@ -1198,12 +1196,12 @@ TemporalParser<CharT>::utcOffsetSubMinutePrecision() {
   //   UTCOffsetWithSubMinuteComponents[~Extended]
   //
   // UTCOffsetMinutePrecision :
-  //   Sign Hour[+Padded]
-  //   Sign Hour[+Padded] TimeSeparator[+Extended] MinuteSecond
-  //   Sign Hour[+Padded] TimeSeparator[~Extended] MinuteSecond
+  //   Sign Hour
+  //   Sign Hour TimeSeparator[+Extended] MinuteSecond
+  //   Sign Hour TimeSeparator[~Extended] MinuteSecond
   //
   // UTCOffsetWithSubMinuteComponents[Extended] :
-  //   Sign Hour[+Padded] TimeSeparator[?Extended] MinuteSecond TimeSeparator[?Extended] MinuteSecond Fraction?
+  //   Sign Hour TimeSeparator[?Extended] MinuteSecond TimeSeparator[?Extended] MinuteSecond Fraction?
   //
   // clang-format on
 
@@ -1214,9 +1212,8 @@ TemporalParser<CharT>::utcOffsetSubMinutePrecision() {
   }
   result.sign = sign();
 
-  // Hour[Padded] :
-  //   [~Padded] DecimalDigit
-  //   [+Padded] 0 DecimalDigit
+  // Hour :
+  //   0 DecimalDigit
   //   1 DecimalDigit
   //   20
   //   21
@@ -3268,7 +3265,7 @@ static auto ParseTemporalZonedDateTimeString(Handle<JSLinearString*> str) {
 bool js::temporal::ParseTemporalZonedDateTimeString(
     JSContext* cx, Handle<JSString*> str, PlainDateTime* dateTime, bool* isUTC,
     bool* hasOffset, int64_t* timeZoneOffset,
-    MutableHandle<ParsedTimeZone> timeZoneName,
+    MutableHandle<ParsedTimeZone> timeZoneAnnotation,
     MutableHandle<JSString*> calendar) {
   Rooted<JSLinearString*> linear(cx, str->ensureLinear(cx));
   if (!linear) {
@@ -3312,7 +3309,7 @@ bool js::temporal::ParseTemporalZonedDateTimeString(
     // { [[Z]]: false, [[OffsetString]]: undefined, [[Name]]: "Europe/Berlin" }
 
     const auto& annotation = parsed.timeZone.annotation;
-    if (!ParseTimeZoneAnnotation(cx, annotation, linear, timeZoneName)) {
+    if (!ParseTimeZoneAnnotation(cx, annotation, linear, timeZoneAnnotation)) {
       return false;
     }
 
@@ -3369,7 +3366,7 @@ static auto ParseTemporalRelativeToString(Handle<JSLinearString*> str) {
 bool js::temporal::ParseTemporalRelativeToString(
     JSContext* cx, Handle<JSString*> str, PlainDateTime* dateTime, bool* isUTC,
     bool* hasOffset, int64_t* timeZoneOffset,
-    MutableHandle<ParsedTimeZone> timeZoneName,
+    MutableHandle<ParsedTimeZone> timeZoneAnnotation,
     MutableHandle<JSString*> calendar) {
   Rooted<JSLinearString*> linear(cx, str->ensureLinear(cx));
   if (!linear) {
@@ -3419,7 +3416,7 @@ bool js::temporal::ParseTemporalRelativeToString(
     // { [[Z]]: false, [[OffsetString]]: undefined, [[Name]]: "Europe/Berlin" }
 
     const auto& annotation = parsed.timeZone.annotation;
-    if (!ParseTimeZoneAnnotation(cx, annotation, linear, timeZoneName)) {
+    if (!ParseTimeZoneAnnotation(cx, annotation, linear, timeZoneAnnotation)) {
       return false;
     }
 
@@ -3443,7 +3440,7 @@ bool js::temporal::ParseTemporalRelativeToString(
     *isUTC = false;
     *hasOffset = false;
     *timeZoneOffset = 0;
-    timeZoneName.set(ParsedTimeZone{});
+    timeZoneAnnotation.set(ParsedTimeZone{});
   }
 
   // Step 4. (ParseISODateTime, steps 23-24.)

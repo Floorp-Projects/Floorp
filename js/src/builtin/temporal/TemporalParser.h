@@ -130,7 +130,7 @@ bool ParseTemporalDateTimeString(JSContext* cx, JS::Handle<JSString*> str,
 bool ParseTemporalZonedDateTimeString(
     JSContext* cx, JS::Handle<JSString*> str, PlainDateTime* dateTime,
     bool* isUTC, bool* hasOffset, int64_t* timeZoneOffset,
-    JS::MutableHandle<ParsedTimeZone> timeZoneName,
+    JS::MutableHandle<ParsedTimeZone> timeZoneAnnotation,
     JS::MutableHandle<JSString*> calendar);
 
 /**
@@ -139,7 +139,7 @@ bool ParseTemporalZonedDateTimeString(
 bool ParseTemporalRelativeToString(
     JSContext* cx, JS::Handle<JSString*> str, PlainDateTime* dateTime,
     bool* isUTC, bool* hasOffset, int64_t* timeZoneOffset,
-    JS::MutableHandle<ParsedTimeZone> timeZoneName,
+    JS::MutableHandle<ParsedTimeZone> timeZoneAnnotation,
     JS::MutableHandle<JSString*> calendar);
 
 } /* namespace js::temporal */

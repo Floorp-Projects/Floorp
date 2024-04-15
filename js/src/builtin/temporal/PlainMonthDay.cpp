@@ -310,8 +310,6 @@ static Wrapped<PlainMonthDayObject*> ToTemporalMonthDay(
     return nullptr;
   }
 
-  // FIXME: spec bug - missing call to CreateCalendarMethodsRecord
-
   // Step 13.
   Rooted<CalendarRecord> calendar(cx);
   if (!CreateCalendarMethodsRecord(cx, calendarValue,
