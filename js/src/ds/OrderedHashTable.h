@@ -263,6 +263,12 @@ class OrderedHashTable {
     }
 
     *foundp = true;
+    return remove(e);
+  }
+
+  bool remove(Data* e) {
+    MOZ_ASSERT(uint32_t(e - data) < dataCapacity);
+
     liveCount--;
     Ops::makeEmpty(&e->element);
 
@@ -277,6 +283,7 @@ class OrderedHashTable {
         return false;
       }
     }
+
     return true;
   }
 
@@ -966,6 +973,12 @@ class OrderedHashMap {
   Entry* get(const Lookup& key) { return impl.get(key); }
   bool remove(const Lookup& key, bool* foundp) {
     return impl.remove(key, foundp);
+  }
+  // Remove an entry returned by get().
+  bool remove(Entry* entry) {
+    static_assert(offsetof(typename Impl::Data, element) == 0);
+    auto* data = reinterpret_cast<typename Impl::Data*>(entry);
+    return impl.remove(data);
   }
   [[nodiscard]] bool clear() { return impl.clear(); }
 
