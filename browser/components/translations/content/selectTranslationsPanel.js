@@ -876,11 +876,9 @@ var SelectTranslationsPanel = new (class {
       this.#translator = null;
     }
 
-    this.#translator = await Translator.create(
-      fromLanguage,
-      toLanguage,
-      this.#requestTranslationsPort
-    );
+    this.#translator = await Translator.create(fromLanguage, toLanguage, {
+      requestTranslationsPort: this.#requestTranslationsPort,
+    });
     return this.#translator;
   }
 

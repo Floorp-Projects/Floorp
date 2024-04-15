@@ -250,7 +250,10 @@ class TranslationsState {
       const translatorPromise = Translator.create(
         this.fromLanguage,
         this.toLanguage,
-        translationPortPromise
+        {
+          allowSameLanguage: false,
+          requestTranslationsPort: translationPortPromise,
+        }
       );
       const duration = performance.now() - start;
 
