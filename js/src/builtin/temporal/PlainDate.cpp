@@ -1188,13 +1188,8 @@ bool js::temporal::DifferenceDate(JSContext* cx,
   }
 
   // Step 7.
-  Duration duration;
-  if (!CalendarDateUntil(cx, calendar, one, two, largestUnit, options,
-                         &duration)) {
-    return false;
-  }
-  *result = duration.toDateDuration();
-  return true;
+  return CalendarDateUntil(cx, calendar, one, two, largestUnit, options,
+                           result);
 }
 
 /**
@@ -1237,12 +1232,7 @@ bool js::temporal::DifferenceDate(JSContext* cx,
   }
 
   // Step 7.
-  Duration duration;
-  if (!CalendarDateUntil(cx, calendar, one, two, largestUnit, &duration)) {
-    return false;
-  }
-  *result = duration.toDateDuration();
-  return true;
+  return CalendarDateUntil(cx, calendar, one, two, largestUnit, result);
 }
 
 /**
