@@ -508,7 +508,7 @@ async function interactiveUpdateTest(autoUpdate, checkFn) {
   ok(addon, "Addon was installed");
   is(addon.version, "1.0", "Version 1 of the addon is installed");
 
-  let win = await BrowserOpenAddonsMgr("addons://list/extension");
+  let win = await BrowserAddonUI.openAddonsMgr("addons://list/extension");
 
   await waitAboutAddonsViewLoaded(win.document);
 

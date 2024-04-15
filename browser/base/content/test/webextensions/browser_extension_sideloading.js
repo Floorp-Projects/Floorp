@@ -224,7 +224,7 @@ add_task(async function test_sideloading() {
   // Close the hamburger menu and go directly to the addons manager
   await gCUITestUtils.hideMainMenu();
 
-  win = await BrowserOpenAddonsMgr(VIEW);
+  win = await BrowserAddonUI.openAddonsMgr(VIEW);
   await waitAboutAddonsViewLoaded(win.document);
 
   // about:addons addon entry element.
@@ -293,7 +293,7 @@ add_task(async function test_sideloading() {
   // Close the hamburger menu and go to the detail page for this addon
   await gCUITestUtils.hideMainMenu();
 
-  win = await BrowserOpenAddonsMgr(
+  win = await BrowserAddonUI.openAddonsMgr(
     `addons://detail/${encodeURIComponent(ID3)}`
   );
 
