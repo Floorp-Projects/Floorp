@@ -52,7 +52,7 @@ rev = "0c5bebca514eb06d9387f87666c1c658f3f673b4"
 package = "wgpu-hal"
 git = "https://github.com/gfx-rs/wgpu"
 rev = "0c5bebca514eb06d9387f87666c1c658f3f673b4"
-features = ["windows_rs"]
+features = ["windows_rs", "oom_panic", "device_lost_panic", "internal_error_panic"]
 
 [target.'cfg(windows)'.dependencies.d3d12]
 git = "https://github.com/gfx-rs/wgpu"
