@@ -723,7 +723,6 @@ struct hb_ot_apply_context_t :
   bool auto_zwj = true;
   bool per_syllable = false;
   bool random = false;
-  uint32_t random_state = 1;
   unsigned new_syllables = (unsigned) -1;
 
   signed last_base = -1; // GPOS uses
@@ -788,8 +787,8 @@ struct hb_ot_apply_context_t :
   uint32_t random_number ()
   {
     /* http://www.cplusplus.com/reference/random/minstd_rand/ */
-    random_state = random_state * 48271 % 2147483647;
-    return random_state;
+    buffer->random_state = buffer->random_state * 48271 % 2147483647;
+    return buffer->random_state;
   }
 
   bool match_properties_mark (hb_codepoint_t  glyph,

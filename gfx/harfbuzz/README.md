@@ -72,9 +72,9 @@ For a comparison of old vs new HarfBuzz memory consumption see [this][10].
 
 ## Name
 
-HarfBuzz (حرف‌باز) is my Persian translation of “[OpenType][1]”,
-transliterated using the Latin script. It sports a second meaning, but that
-ain’t translatable.
+HarfBuzz (حرف‌باز) is the literal Persian translation of “[OpenType][1]”,
+transliterated using the Latin script. It also means "talkative" or
+"glib" (also a nod to the GNOME project where HarfBuzz originates from).
 
 > Background: Originally there was this font format called TrueType. People and
 > companies started calling their type engines all things ending in Type:
