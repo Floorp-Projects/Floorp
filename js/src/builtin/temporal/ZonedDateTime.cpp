@@ -1118,7 +1118,7 @@ static bool NormalizedTimeDurationToDays(
 
   // Step 28.
   constexpr auto maxDayLength = Int128{1} << 53;
-  auto dayLengthNanos = dayLengthNs.toTotalNanoseconds();
+  auto dayLengthNanos = dayLengthNs.toNanoseconds();
   if (dayLengthNanos >= maxDayLength) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_TEMPORAL_ZONED_DATE_TIME_INCORRECT_SIGN,
@@ -1126,7 +1126,7 @@ static bool NormalizedTimeDurationToDays(
     return false;
   }
 
-  auto timeNanos = ns.toTotalNanoseconds();
+  auto timeNanos = ns.toNanoseconds();
   MOZ_ASSERT(timeNanos == Int128{int64_t(timeNanos)},
              "abs(ns) < dayLengthNs < 2**53 implies that |ns| fits in int64");
 

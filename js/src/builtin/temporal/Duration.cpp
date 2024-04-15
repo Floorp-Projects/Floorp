@@ -3129,7 +3129,7 @@ static NormalizedTimeDuration RoundNormalizedTimeDurationToIncrement(
   MOZ_ASSERT(divisor > 0);
   MOZ_ASSERT(divisor <= ToNanoseconds(TemporalUnit::Day));
 
-  auto totalNanoseconds = duration.toTotalNanoseconds();
+  auto totalNanoseconds = duration.toNanoseconds();
   auto rounded =
       RoundNumberToIncrement(totalNanoseconds, Int128{divisor}, roundingMode);
   return NormalizedTimeDuration::fromNanoseconds(rounded);
@@ -3145,7 +3145,7 @@ static double TotalNormalizedTimeDuration(
 
   // Compute real number value of the rational number |numerator / denominator|.
 
-  auto numerator = duration.toTotalNanoseconds();
+  auto numerator = duration.toNanoseconds();
   auto denominator = ToNanoseconds(unit);
   MOZ_ASSERT(::IsSafeInteger(denominator));
 
