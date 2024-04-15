@@ -2159,8 +2159,6 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
 
   switch (aAppearance) {
     case StyleAppearance::Menupopup:
-      return Nothing();
-
     case StyleAppearance::Tooltip:
       return Nothing();
 
