@@ -975,6 +975,15 @@ nsresult nsDNSService::PreprocessHostname(bool aLocalDomain,
   return NS_OK;
 }
 
+bool nsDNSService::IsLocalDomain(const nsACString& aHostname) const {
+  bool localDomain = mLocalDomains.Contains(aHostname);
+  if (StringEndsWith(aHostname, "."_ns)) {
+    localDomain = localDomain || mLocalDomains.Contains(Substring(
+                                     aHostname, 0, aHostname.Length() - 1));
+  }
+  return localDomain;
+}
+
 nsresult nsDNSService::AsyncResolveInternal(
     const nsACString& aHostname, uint16_t type, nsIDNSService::DNSFlags flags,
     nsIDNSAdditionalInfo* aInfo, nsIDNSListener* aListener,
@@ -996,7 +1005,8 @@ nsresult nsDNSService::AsyncResolveInternal(
 
     res = mResolver;
     idn = mIDN;
-    localDomain = mLocalDomains.Contains(aHostname);
+
+    localDomain = IsLocalDomain(aHostname);
   }
 
   if (mNotifyResolution) {
@@ -1076,7 +1086,7 @@ nsresult nsDNSService::CancelAsyncResolveInternal(
 
     res = mResolver;
     idn = mIDN;
-    localDomain = mLocalDomains.Contains(aHostname);
+    localDomain = IsLocalDomain(aHostname);
   }
   if (!res) {
     return NS_ERROR_OFFLINE;
@@ -1212,7 +1222,7 @@ nsresult nsDNSService::ResolveInternal(
     MutexAutoLock lock(mLock);
     res = mResolver;
     idn = mIDN;
-    localDomain = mLocalDomains.Contains(aHostname);
+    localDomain = IsLocalDomain(aHostname);
   }
 
   if (mNotifyResolution) {
