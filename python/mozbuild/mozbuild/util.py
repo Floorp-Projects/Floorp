@@ -21,7 +21,6 @@ import re
 import stat
 import sys
 import time
-from collections import OrderedDict
 from io import BytesIO, StringIO
 from pathlib import Path
 
@@ -997,18 +996,6 @@ def lock_file(lockfile, max_wait=600):
     f.close()
 
     return LockFile(lockfile)
-
-
-class OrderedDefaultDict(OrderedDict):
-    """A combination of OrderedDict and defaultdict."""
-
-    def __init__(self, default_factory, *args, **kwargs):
-        OrderedDict.__init__(self, *args, **kwargs)
-        self._default_factory = default_factory
-
-    def __missing__(self, key):
-        value = self[key] = self._default_factory()
-        return value
 
 
 class KeyedDefaultDict(dict):

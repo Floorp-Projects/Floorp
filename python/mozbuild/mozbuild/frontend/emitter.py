@@ -17,7 +17,7 @@ from mach.mixin.logging import LoggingMixin
 from mozpack.chrome.manifest import Manifest
 
 from mozbuild.base import ExecutionSummary
-from mozbuild.util import OrderedDefaultDict, memoize
+from mozbuild.util import memoize
 
 from ..testing import REFTEST_FLAVORS, TEST_MANIFESTS, SupportFilesConverter
 from .context import Context, ObjDirPath, Path, SourcePath, SubContext
@@ -92,7 +92,7 @@ class TreeMetadataEmitter(LoggingMixin):
 
         self.info = dict(mozinfo.info)
 
-        self._libs = OrderedDefaultDict(list)
+        self._libs = defaultdict(list)
         self._binaries = OrderedDict()
         self._compile_dirs = set()
         self._host_compile_dirs = set()
