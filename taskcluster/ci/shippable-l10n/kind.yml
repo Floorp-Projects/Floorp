@@ -20,6 +20,7 @@ kind-dependencies:
 only-for-build-platforms:
     - linux64-shippable/opt
     - linux-shippable/opt
+    - linux64-aarch64-shippable/opt
     - macosx64-shippable/opt
     - win32-shippable/opt
     - win64-shippable/opt
@@ -76,6 +77,7 @@ jobs:
                 by-build-platform:
                     linux-shippable: linux-opt
                     linux64-shippable: linux64-opt
+                    linux64-aarch64-shippable: linux64-aarch64-opt
                     macosx64-shippable: macosx64-opt
                     win32-shippable: win32-opt
                     win64-shippable: win64-opt
@@ -93,6 +95,7 @@ jobs:
             platform:
                 by-build-platform:
                     linux64-shippable: linux64-shippable/opt
+                    linux64-aarch64-shippable: linux64-aarch64-shippable/opt
                     linux-shippable: linux32-shippable/opt
                     macosx64-shippable: osx-shippable/opt
                     win32-shippable: windows2012-32-shippable/opt
@@ -128,6 +131,12 @@ jobs:
                         - single_locale/tc_linux_common.py
                         - taskcluster_nightly.py
                     linux64-shippable:
+                        - single_locale/firefox.py
+                        - single_locale/linux64.py
+                        - single_locale/tc_common.py
+                        - single_locale/tc_linux_common.py
+                        - taskcluster_nightly.py
+                    linux64-aarch64-shippable:
                         - single_locale/firefox.py
                         - single_locale/linux64.py
                         - single_locale/tc_common.py
