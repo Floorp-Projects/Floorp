@@ -1,0 +1,15 @@
+[package]
+name = "uniffi-fixture-external-types"
+edition = "2021"
+version = "0.21.0"
+authors = ["Firefox Sync Team <sync-team@mozilla.com>"]
+license = "MPL-2.0"
+publish = false
+
+[dependencies]
+uniffi-example-geometry = { path = "../geometry/" }
+uniffi = { workspace = true }
+thiserror = "1.0"
+
+[build-dependencies]
+uniffi = { workspace = true, features = ["build"] }

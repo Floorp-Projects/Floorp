@@ -49,32 +49,32 @@ main = [
 
 [geometry]
 crate_name = "uniffi_geometry"
-udl_file = "third_party/rust/uniffi-example-geometry/src/geometry.udl"
+udl_file = "toolkit/components/uniffi-fixtures/geometry/src/geometry.udl"
 fixture = true
 
 [arithmetic]
 crate_name = "arithmetical"
-udl_file = "third_party/rust/uniffi-example-arithmetic/src/arithmetic.udl"
+udl_file = "toolkit/components/uniffi-fixtures/arithmetic/src/arithmetic.udl"
 fixture = true
 
 [rondpoint]
 crate_name = "uniffi_rondpoint"
-udl_file = "third_party/rust/uniffi-example-rondpoint/src/rondpoint.udl"
+udl_file = "toolkit/components/uniffi-fixtures/rondpoint/src/rondpoint.udl"
 fixture = true
 
 [sprites]
 crate_name = "uniffi_sprites"
-udl_file = "third_party/rust/uniffi-example-sprites/src/sprites.udl"
+udl_file = "toolkit/components/uniffi-fixtures/sprites/src/sprites.udl"
 fixture = true
 
 [todolist]
 crate_name = "uniffi_todolist"
-udl_file = "third_party/rust/uniffi-example-todolist/src/todolist.udl"
+udl_file = "toolkit/components/uniffi-fixtures/todolist/src/todolist.udl"
 fixture = true
 
 [fixture_refcounts]
 crate_name = "uniffi_fixture_refcounts"
-udl_file = "toolkit/components/uniffi-fixture-refcounts/src/refcounts.udl"
+udl_file = "toolkit/components/uniffi-fixtures/refcounts/src/refcounts.udl"
 fixture = true
 
 [fixture_refcounts.receiver_thread]
@@ -96,10 +96,10 @@ default = "main"
 
 [custom_types]
 crate_name = "uniffi_custom_types"
-udl_file = "toolkit/components/uniffi-example-custom-types/src/custom-types.udl"
+udl_file = "toolkit/components/uniffi-fixtures/custom-types/src/custom-types.udl"
 fixture = true
 
 [external_types]
 crate_name = "uniffi_fixture_external_types"
-udl_file = "toolkit/components/uniffi-fixture-external-types/src/external-types.udl"
+udl_file = "toolkit/components/uniffi-fixtures/external-types/src/external-types.udl"
 fixture = true
