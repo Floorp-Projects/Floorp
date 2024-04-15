@@ -317,6 +317,7 @@ module.exports = {
     ImageData: false,
     ImageDocument: false,
     InputEvent: false,
+    InspectorCSSParser: false,
     InspectorFontFace: false,
     InspectorUtils: false,
     InstallTriggerImpl: false,

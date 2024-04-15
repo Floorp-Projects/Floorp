@@ -211,10 +211,10 @@ interface nsIXPCComponents_Utils : nsISupports
      *          object that you want to make available as a global to code running in
      *          the sandbox. Possible values: Blob, ChromeUtils, CSS, CSSRule,
      *          Directory, DOMParser, Element, Event, File, FileReader, FormData,
-     *          InspectorUtils, MessageChannel, Node, NodeFilter, PromiseDebugging,
-     *          TextDecoder, TextEncoder, URL, URLSearchParams, XMLHttpRequest,
-     *          XMLSerializer, atob, btoa, caches, crypto, fetch, indexedDB,
-     *          rtcIdentityProvider
+     *          InspectorCSSParser, InspectorUtils, MessageChannel, Node, NodeFilter,
+                PromiseDebugging, TextDecoder, TextEncoder, URL, URLSearchParams,
+                XMLHttpRequest, XMLSerializer, atob, btoa, caches, crypto, fetch,
+                indexedDB, rtcIdentityProvider
      *        - wantXrays: {Boolean} Whether the sandbox wants Xray vision with
      *          respect to same-origin objects outside the sandbox.
      *            Note that wantXrays is essentially deprecated. The preferred method

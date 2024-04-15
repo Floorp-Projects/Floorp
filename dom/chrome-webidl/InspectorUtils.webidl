@@ -227,3 +227,44 @@ interface InspectorFontFace {
   readonly attribute DOMString format; // as per http://www.w3.org/TR/css3-webfonts/#referencing
   readonly attribute DOMString metadata; // XML metadata from WOFF file (if any)
 };
+
+dictionary InspectorCSSToken {
+  // The token type.
+  required UTF8String tokenType;
+
+  // Text associated with the token.
+  required UTF8String text;
+
+  // Unit for Dimension tokens
+  required UTF8String? unit;
+
+  // Float value for Dimension, Number and Percentage tokens
+  double? number = null;
+};
+
+/**
+ * InspectorCSSParser is an interface to the CSS lexer. It tokenizes an
+ * input stream and returns CSS tokens.
+ */
+[Func="nsContentUtils::IsCallerChromeOrFuzzingEnabled",
+ Exposed=Window]
+interface InspectorCSSParser {
+  constructor(UTF8String text);
+
+  /**
+   * The line number of the most recently returned token.  Line
+   * numbers are 0-based.
+   */
+  readonly attribute unsigned long lineNumber;
+
+  /**
+   * The column number of the most recently returned token.  Column
+   * numbers are 1-based.
+   */
+  readonly attribute unsigned long columnNumber;
+
+  /**
+   * Return the next token, or null at EOF.
+   */
+  InspectorCSSToken? nextToken();
+};

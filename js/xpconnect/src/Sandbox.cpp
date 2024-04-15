@@ -928,6 +928,8 @@ bool xpc::GlobalProperties::Parse(JSContext* cx, JS::HandleObject obj) {
       Headers = true;
     } else if (JS_LinearStringEqualsLiteral(nameStr, "IOUtils")) {
       IOUtils = true;
+    } else if (JS_LinearStringEqualsLiteral(nameStr, "InspectorCSSParser")) {
+      InspectorCSSParser = true;
     } else if (JS_LinearStringEqualsLiteral(nameStr, "InspectorUtils")) {
       InspectorUtils = true;
     } else if (JS_LinearStringEqualsLiteral(nameStr, "MessageChannel")) {
@@ -1072,6 +1074,11 @@ bool xpc::GlobalProperties::Define(JSContext* cx, JS::HandleObject obj) {
   }
 
   if (IOUtils && !dom::IOUtils_Binding::GetConstructorObject(cx)) {
+    return false;
+  }
+
+  if (InspectorCSSParser &&
+      !dom::InspectorCSSParser_Binding::GetConstructorObject(cx)) {
     return false;
   }
 

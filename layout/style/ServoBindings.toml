@@ -403,6 +403,7 @@ cbindgen-types = [
     { gecko = "StyleOffsetRotate", servo = "crate::values::computed::motion::OffsetRotate" },
     { gecko = "StylePathCommand", servo = "crate::values::specified::svg_path::PathCommand" },
     { gecko = "StyleRayFunction", servo = "crate::values::computed::motion::RayFunction" },
+    { gecko = "StyleParserState", servo = "cssparser::ParserState" },
     { gecko = "StyleUnicodeRange", servo = "cssparser::UnicodeRange" },
     { gecko = "StyleOverflowWrap", servo = "crate::values::computed::OverflowWrap" },
     { gecko = "StyleWordBreak", servo = "crate::values::computed::WordBreak" },

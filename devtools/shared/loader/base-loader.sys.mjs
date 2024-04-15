@@ -123,6 +123,7 @@ function Sandbox(options) {
       "FileReader",
       "FormData",
       "Headers",
+      "InspectorCSSParser",
       "InspectorUtils",
       "MIDIInputMap",
       "MIDIOutputMap",
