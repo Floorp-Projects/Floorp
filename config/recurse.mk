@@ -208,9 +208,18 @@ $(addprefix build/unix/stdc++compat/,target host) build/clang-plugin/host: confi
 # prior to Make running. So we also set it as a dependency of pre-export, which
 # ensures it exists before recursing the rust targets and the export targets
 # that run cbindgen, tricking Make into keeping them early.
-$(rust_targets): $(DEPTH)/.cargo/config.toml
+# When $topobjdir/.cargo/config exists from an old build, we also remove it because
+# cargo will prefer to use it rather than config.toml.
+CARGO_CONFIG_DEPS = $(DEPTH)/.cargo/config.toml
+ifneq (,$(wildcard $(DEPTH)/.cargo/config))
+CARGO_CONFIG_DEPS += $(MDDEPDIR)/cargo-config-cleanup.stub
+endif
+$(rust_targets): $(CARGO_CONFIG_DEPS)
 ifndef TEST_MOZBUILD
-recurse_pre-export: $(DEPTH)/.cargo/config.toml
+recurse_pre-export: $(CARGO_CONFIG_DEPS)
 endif
 
+$(MDDEPDIR)/cargo-config-cleanup.stub:
+	rm $(DEPTH)/.cargo/config
+	touch $@
 endif
