@@ -463,6 +463,8 @@ MOZ_DEFINE_ENUM_CLASS_WITH_BASE(ScrollDirection, uint8_t, (
   eHorizontal
 ));
 
+std::ostream& operator<<(std::ostream& os, ScrollDirection aDirection);
+
 using ScrollDirections = EnumSet<ScrollDirection, uint8_t>;
 
 constexpr ScrollDirections EitherScrollDirection(ScrollDirection::eVertical,ScrollDirection::eHorizontal);
