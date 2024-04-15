@@ -27,7 +27,6 @@ function runTests() {
                  .QueryInterface(Ci.nsIAutoCompleteInput);
   var originalFormFillTimeout = formFillController.timeout;
 
-  SpecialPowers.attachFormFillControllerTo(window);
   var target = document.getElementById("input");
 
   // Register a word to the form history.
@@ -53,7 +52,6 @@ function runTests() {
         function() { return target.value; },
         function() {
           formFillController.timeout = originalFormFillTimeout;
-          SpecialPowers.detachFormFillControllerFrom(window);
           SimpleTest.finish();
         });
     });

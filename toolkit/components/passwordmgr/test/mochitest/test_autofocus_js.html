@@ -22,6 +22,8 @@ const iframe = document.getElementsByTagName("iframe")[0];
 let iframeDoc, hostname;
 
 add_setup(async () => {
+  SpecialPowers.pushPrefEnv({"set": [["signon.webauthn.autocomplete", false]]});
+
   const origin = window.location.origin;
   await setStoredLoginsAsync(
     [origin, origin, null, "name", "pass"],

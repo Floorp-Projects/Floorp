@@ -35,10 +35,6 @@ interface nsIFormFillController : nsISupports
    */
   readonly attribute boolean passwordPopupAutomaticallyOpened;
 
-  // Only used by tests.
-  void attachPopupElementToDocument(in Document document, in Element popup);
-  void detachFromDocument(in Document document);
-
   /*
    * Mark the specified <input> element as being managed by autocomplete entry provider.
    * Autocomplete requests will be handed off to the AutoCompleteChild.

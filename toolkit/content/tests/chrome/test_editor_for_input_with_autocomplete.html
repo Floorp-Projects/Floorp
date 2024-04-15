@@ -51,7 +51,6 @@ async function runTests() {
                  .QueryInterface(Ci.nsIAutoCompleteInput);
   var originalFormFillTimeout = formFillController.timeout;
 
-  SpecialPowers.attachFormFillControllerTo(window);
   var target = document.getElementById("input");
 
   // Register a word to the form history.
@@ -71,7 +70,6 @@ async function runTests() {
   await tests2.run();
 
   formFillController.timeout = originalFormFillTimeout;
-  SpecialPowers.detachFormFillControllerFrom(window);
   SimpleTest.finish();
 }
 

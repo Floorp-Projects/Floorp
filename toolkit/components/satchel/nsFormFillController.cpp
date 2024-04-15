@@ -47,7 +47,7 @@ using mozilla::LogLevel;
 static mozilla::LazyLogModule sLogger("satchel");
 
 NS_IMPL_CYCLE_COLLECTION(nsFormFillController, mController, mFocusedPopup,
-                         mPopups, mLastListener)
+                         mLastListener)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsFormFillController)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIFormFillController)
@@ -207,34 +207,6 @@ void nsFormFillController::MaybeRemoveMutationObserver(nsINode* aNode) {
 
 ////////////////////////////////////////////////////////////////////////
 //// nsIFormFillController
-
-NS_IMETHODIMP
-nsFormFillController::AttachPopupElementToDocument(Document* aDocument,
-                                                   dom::Element* aPopupEl) {
-  if (!xpc::IsInAutomation()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  MOZ_LOG(sLogger, LogLevel::Debug,
-          ("AttachPopupElementToDocument for document %p with popup %p",
-           aDocument, aPopupEl));
-  NS_ENSURE_TRUE(aDocument && aPopupEl, NS_ERROR_ILLEGAL_VALUE);
-
-  nsCOMPtr<nsIAutoCompletePopup> popup = aPopupEl->AsAutoCompletePopup();
-  NS_ENSURE_STATE(popup);
-
-  mPopups.InsertOrUpdate(aDocument, popup);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFormFillController::DetachFromDocument(Document* aDocument) {
-  if (!xpc::IsInAutomation()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-  mPopups.Remove(aDocument);
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 nsFormFillController::MarkAsAutoCompletableField(HTMLInputElement* aInput) {
@@ -1099,12 +1071,10 @@ void nsFormFillController::StartControllingInput(HTMLInputElement* aInput) {
     return;
   }
 
-  nsCOMPtr<nsIAutoCompletePopup> popup = mPopups.Get(aInput->OwnerDoc());
+  nsCOMPtr<nsIAutoCompletePopup> popup =
+      do_QueryActor("AutoComplete", aInput->OwnerDoc());
   if (!popup) {
-    popup = do_QueryActor("AutoComplete", aInput->OwnerDoc());
-    if (!popup) {
-      return;
-    }
+    return;
   }
 
   mFocusedPopup = popup;

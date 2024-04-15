@@ -2,8 +2,8 @@
 <input type=text>
 <script>
   let input = SpecialPowers.wrap(document.querySelector("input"));
-  SpecialPowers.Cc["@mozilla.org/satchel/form-fill-controller;1"].getService(SpecialPowers.Ci.nsIFormFillController).markAsAutofillField(input);
-  input.getBoundingClientRect(); // previewValue setter depends on the reframe posted by markAsAutofillField() having being processed...
+  SpecialPowers.Cc["@mozilla.org/satchel/form-fill-controller;1"].getService(SpecialPowers.Ci.nsIFormFillController).markAsAutoCompletableField(input);
+  input.getBoundingClientRect(); // previewValue setter depends on the reframe posted by markAsAutoCompletableField() having being processed...
   input.previewValue = "Autofill";
   SpecialPowers.wrap(window).windowUtils.addManuallyManagedState(input, "-moz-autofill-preview");
 </script>
