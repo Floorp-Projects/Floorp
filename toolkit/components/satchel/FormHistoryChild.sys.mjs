@@ -21,12 +21,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "gEnabled",
   "browser.formfill.enable"
 );
-XPCOMUtils.defineLazyServiceGetter(
-  lazy,
-  "gFormFillService",
-  "@mozilla.org/satchel/form-fill-controller;1",
-  "nsIFormFillController"
-);
 
 function log(message) {
   if (!lazy.gDebug) {
@@ -85,7 +79,7 @@ export class FormHistoryChild extends JSWindowActorChild {
 
       // Bug 1780571, Bug 394612: If Login Manager marked this input, don't save it.
       // The login manager will deal with remembering it.
-      if (lazy.gFormFillService.isLoginManagerField(input)) {
+      if (this.manager.getActor("LoginManager")?.isLoginManagerField(input)) {
         continue;
       }
 

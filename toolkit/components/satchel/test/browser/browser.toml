@@ -8,12 +8,12 @@ support-files = [
 lineno = "7"
 
 ["browser_close_tab.js"]
-lineno = "9"
+lineno = "10"
 
 ["browser_popup_mouseover.js"]
 skip-if = ["verify"]
-lineno = "11"
+lineno = "13"
 
 ["browser_privbrowsing_perwindowpb.js"]
 skip-if = ["verify"]
-lineno = "14"
+lineno = "17"
