@@ -56,7 +56,6 @@
 #include "js/RootingAPI.h"
 #include "js/Value.h"
 #include "util/StringBuffer.h"
-#include "vm/BigIntType.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSAtomState.h"
@@ -2435,47 +2434,17 @@ bool js::temporal::AdjustRoundedDurationDays(
       timeZone, mozilla::SomeRef(precalculatedPlainDateTime), result);
 }
 
-static bool BigIntToStringBuilder(JSContext* cx, Handle<BigInt*> num,
+static bool NumberToStringBuilder(JSContext* cx, double num,
                                   JSStringBuilder& sb) {
-  MOZ_ASSERT(!num->isNegative());
-
-  JSLinearString* str = BigInt::toString<CanGC>(cx, num, 10);
-  if (!str) {
-    return false;
-  }
-  return sb.append(str);
-}
-
-static bool NumberToStringBuilder(JSContext* cx, int64_t num,
-                                  JSStringBuilder& sb) {
+  MOZ_ASSERT(IsInteger(num));
   MOZ_ASSERT(num >= 0);
-  MOZ_ASSERT(num < int64_t(DOUBLE_INTEGRAL_PRECISION_LIMIT));
+  MOZ_ASSERT(num < DOUBLE_INTEGRAL_PRECISION_LIMIT);
 
   ToCStringBuf cbuf;
   size_t length;
   const char* numStr = NumberToCString(&cbuf, num, &length);
 
   return sb.append(numStr, length);
-}
-
-static bool NumberToStringBuilder(JSContext* cx, double num,
-                                  JSStringBuilder& sb) {
-  MOZ_ASSERT(IsInteger(num));
-  MOZ_ASSERT(num >= 0);
-
-  if (num < DOUBLE_INTEGRAL_PRECISION_LIMIT) {
-    ToCStringBuf cbuf;
-    size_t length;
-    const char* numStr = NumberToCString(&cbuf, num, &length);
-
-    return sb.append(numStr, length);
-  }
-
-  Rooted<BigInt*> bi(cx, BigInt::createFromDouble(cx, num));
-  if (!bi) {
-    return false;
-  }
-  return BigIntToStringBuilder(cx, bi, sb);
 }
 
 static Duration AbsoluteDuration(const Duration& duration) {
@@ -2554,19 +2523,26 @@ static JSString* TemporalDurationToString(JSContext* cx,
   MOZ_ASSERT(IsValidDuration(duration));
   MOZ_ASSERT(precision != Precision::Minute());
 
+  // Fast path for zero durations.
+  if (duration == Duration{} &&
+      (precision == Precision::Auto() || precision.value() == 0)) {
+    return NewStringCopyZ<CanGC>(cx, "PT0S");
+  }
+
   // Convert to absolute values up front. This is okay to do, because when the
   // duration is valid, all components have the same sign.
   const auto& [years, months, weeks, days, hours, minutes, seconds,
                milliseconds, microseconds, nanoseconds] =
       AbsoluteDuration(duration);
 
-  // Fast path for zero durations.
-  if (years == 0 && months == 0 && weeks == 0 && days == 0 && hours == 0 &&
-      minutes == 0 && seconds == 0 && milliseconds == 0 && microseconds == 0 &&
-      nanoseconds == 0 &&
-      (precision == Precision::Auto() || precision.value() == 0)) {
-    return NewStringCopyZ<CanGC>(cx, "PT0S");
-  }
+  // Years to seconds parts are all safe integers for valid durations.
+  MOZ_ASSERT(years < DOUBLE_INTEGRAL_PRECISION_LIMIT);
+  MOZ_ASSERT(months < DOUBLE_INTEGRAL_PRECISION_LIMIT);
+  MOZ_ASSERT(weeks < DOUBLE_INTEGRAL_PRECISION_LIMIT);
+  MOZ_ASSERT(days < DOUBLE_INTEGRAL_PRECISION_LIMIT);
+  MOZ_ASSERT(hours < DOUBLE_INTEGRAL_PRECISION_LIMIT);
+  MOZ_ASSERT(minutes < DOUBLE_INTEGRAL_PRECISION_LIMIT);
+  MOZ_ASSERT(seconds < DOUBLE_INTEGRAL_PRECISION_LIMIT);
 
   auto secondsDuration = NormalizeTimeDuration(0.0, 0.0, seconds, milliseconds,
                                                microseconds, nanoseconds);
@@ -2667,7 +2643,7 @@ static JSString* TemporalDurationToString(JSContext* cx,
     // Step 12.
     if (hasSecondsPart) {
       // Step 12.a.
-      if (!NumberToStringBuilder(cx, secondsDuration.seconds, result)) {
+      if (!NumberToStringBuilder(cx, double(secondsDuration.seconds), result)) {
         return nullptr;
       }
 
