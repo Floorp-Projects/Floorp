@@ -14,7 +14,12 @@
     "noEmit": true,
     // Allow esnext syntax. Otherwise the default is ES5 only.
     "target": "esnext",
-    "lib": ["esnext", "dom"]
+    "lib": ["esnext", "dom"],
+    // Make sure that only this project is taken into account when checking types.
+    // In the future we'll want to use the same types as in the rest of Gecko, but
+    // that's not ready yet.
+    // See Bug 1891209
+    "typeRoots": ["./@types", "./node_modules/@types"]
   },
   "files": ["./@types/gecko.d.ts"],
   // Add a @ts-check comment to a JS file to start type checking it.
