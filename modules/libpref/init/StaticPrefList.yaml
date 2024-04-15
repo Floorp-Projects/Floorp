@@ -8688,7 +8688,11 @@
 #   2 - Symmetrical spacing, half added to each side
 - name: layout.css.letter-spacing.model
   type: int32_t
+#ifdef NIGHTLY_BUILD
+  value: 2
+#else
   value: 0
+#endif
   mirror: always
 
 # Is support for motion-path url enabled?
