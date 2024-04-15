@@ -568,7 +568,7 @@ class Marionette(object):
         baseurl=None,
         socket_timeout=None,
         startup_timeout=None,
-        **instance_args
+        **instance_args,
     ):
         """Construct a holder for the Marionette connection.
 
@@ -1273,6 +1273,8 @@ class Marionette(object):
                 exc_cls, _, tb = sys.exc_info()
 
                 if self.instance.runner.returncode is None:
+                    self.is_shutting_down = False
+
                     # The process is still running, which means the shutdown
                     # request was not correct or the application ignored it.
                     # Allow Marionette to accept connections again.
@@ -1291,33 +1293,28 @@ class Marionette(object):
                         tb,
                     )
 
-            finally:
-                self.is_shutting_down = False
+            self.is_shutting_down = False
 
+            # Create a new session to retrieve the new process id of the application
             self.delete_session(send_request=False)
 
         else:
             self.delete_session()
             self.instance.restart(clean=clean)
+
             self.raise_for_port(timeout=self.DEFAULT_STARTUP_TIMEOUT)
 
             restart_details.update({"in_app": False, "forced": True})
+
+        self.start_session(self.requested_capabilities, process_forked=in_app)
+        # Restore the context as used before the restart
+        self.set_context(context)
 
         if restart_details.get("cause") not in (None, "restart"):
             raise errors.MarionetteException(
                 "Unexpected shutdown reason '{}' for "
                 "restarting the process".format(restart_details["cause"])
             )
-
-        self.start_session(self.requested_capabilities)
-        # Restore the context as used before the restart
-        self.set_context(context)
-
-        if in_app and self.process_id:
-            # In some cases Firefox restarts itself by spawning into a new process group.
-            # As long as mozprocess cannot track that behavior (bug 1284864) we assist by
-            # informing about the new process id.
-            self.instance.runner.process_handler.check_for_detached(self.process_id)
 
         return restart_details
 
@@ -1330,7 +1327,7 @@ class Marionette(object):
         return "{0}{1}".format(self.baseurl, relative_url)
 
     @do_process_check
-    def start_session(self, capabilities=None, timeout=None):
+    def start_session(self, capabilities=None, process_forked=False, timeout=None):
         """Create a new WebDriver session.
         This method must be called before performing any other action.
 
@@ -1340,7 +1337,10 @@ class Marionette(object):
             (including alwaysMatch, firstMatch, desiredCapabilities,
             or requriedCapabilities), and only recognises extension
             capabilities that are specific to Marionette.
+        :param process_forked: If True, the existing process forked itself due
+        to an internal restart.
         :param timeout: Optional timeout in seconds for the server to be ready.
+
         :returns: A dictionary of the capabilities offered.
         """
         if capabilities is None:
@@ -1352,17 +1352,20 @@ class Marionette(object):
 
         self.crashed = 0
 
-        if self.instance:
-            returncode = self.instance.runner.returncode
-            # We're managing a binary which has terminated. Start it again
-            # and implicitely wait for the Marionette server to be ready.
-            if returncode is not None:
-                self.start_binary(timeout)
+        if not process_forked:
+            # Only handle the binary if there was no process before which also
+            # might have forked itself due to a restart
+            if self.instance:
+                returncode = self.instance.runner.returncode
+                # We're managing a binary which has terminated. Start it again
+                # and implicitely wait for the Marionette server to be ready.
+                if returncode is not None:
+                    self.start_binary(timeout)
 
-        else:
-            # In the case when Marionette doesn't manage the binary wait until
-            # its server component has been started.
-            self.raise_for_port(timeout=timeout)
+            else:
+                # In the case when Marionette doesn't manage the binary wait until
+                # its server component has been started.
+                self.raise_for_port(timeout=timeout)
 
         self.client = transport.TcpTransport(self.host, self.port, self.socket_timeout)
         self.protocol, _ = self.client.connect()
@@ -1380,10 +1383,11 @@ class Marionette(object):
         self.session_id = resp["sessionId"]
         self.session = resp["capabilities"]
         self.cleanup_ran = False
-        # fallback to processId can be removed in Firefox 55
-        self.process_id = self.session.get(
-            "moz:processID", self.session.get("processId")
-        )
+
+        self.process_id = self.session.get("moz:processID")
+        if process_forked:
+            self.instance.update_process(self.process_id, self.shutdown_timeout)
+
         self.profile = self.session.get("moz:profile")
 
         timeout = self.session.get("moz:shutdownTimeout")
