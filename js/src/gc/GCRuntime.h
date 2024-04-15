@@ -1027,6 +1027,7 @@ class GCRuntime {
   MainThreadData<double> helperThreadRatio;
   MainThreadData<size_t> maxHelperThreads;
   MainThreadOrGCTaskData<size_t> helperThreadCount;
+  MainThreadData<size_t> maxMarkingThreads;
   MainThreadData<size_t> markingThreadCount;
 
   // Per-runtime helper thread task queue. Can be accessed from helper threads
