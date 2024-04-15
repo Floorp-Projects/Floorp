@@ -1801,8 +1801,8 @@ static bool ZonedDateTime_compare(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   // Step 3.
-  auto oneNs = one.instant();
-  auto twoNs = two.instant();
+  const auto& oneNs = one.instant();
+  const auto& twoNs = two.instant();
   args.rval().setInt32(oneNs > twoNs ? 1 : oneNs < twoNs ? -1 : 0);
   return true;
 }
@@ -2396,7 +2396,7 @@ static bool ZonedDateTime_hoursInDay(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 4.
-  auto instant = zonedDateTime.instant();
+  const auto& instant = zonedDateTime.instant();
 
   // Step 5.
   PlainDateTime temporalDateTime;
@@ -2624,7 +2624,7 @@ static bool ZonedDateTime_offsetNanoseconds(JSContext* cx,
   auto timeZone = zonedDateTime.timeZone();
 
   // Step 4.
-  auto instant = zonedDateTime.instant();
+  const auto& instant = zonedDateTime.instant();
 
   // Step 5.
   int64_t offsetNanoseconds;
@@ -2659,7 +2659,7 @@ static bool ZonedDateTime_offset(JSContext* cx, const CallArgs& args) {
   auto timeZone = zonedDateTime.timeZone();
 
   // Step 4.
-  auto instant = zonedDateTime.instant();
+  const auto& instant = zonedDateTime.instant();
 
   // Step 5.
   JSString* str = GetOffsetStringFor(cx, timeZone, instant);
@@ -2741,7 +2741,7 @@ static bool ZonedDateTime_with(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 8.
-  auto instant = zonedDateTime.instant();
+  const auto& instant = zonedDateTime.instant();
 
   // Step 9.
   int64_t offsetNanoseconds;
@@ -3594,7 +3594,7 @@ static bool ZonedDateTime_startOfDay(JSContext* cx, const CallArgs& args) {
   auto calendar = zonedDateTime.calendar();
 
   // Step 5.
-  auto instant = zonedDateTime.instant();
+  const auto& instant = zonedDateTime.instant();
 
   // Steps 5-6.
   PlainDateTime temporalDateTime;
@@ -3901,7 +3901,7 @@ static bool ZonedDateTime_getISOFields(JSContext* cx, const CallArgs& args) {
   Rooted<IdValueVector> fields(cx, IdValueVector(cx));
 
   // Step 4.
-  auto instant = zonedDateTime.instant();
+  const auto& instant = zonedDateTime.instant();
 
   // Step 5.
   auto calendar = zonedDateTime.calendar();
