@@ -275,6 +275,12 @@ TimeDuration BalanceTimeDuration(const NormalizedTimeDuration& duration,
                                  TemporalUnit largestUnit);
 
 /**
+ * BalanceTimeDuration ( norm, largestUnit )
+ */
+bool BalanceTimeDuration(JSContext* cx, const NormalizedTimeDuration& duration,
+                         TemporalUnit largestUnit, TimeDuration* result);
+
+/**
  * BalanceDateDurationRelative ( years, months, weeks, days, largestUnit,
  * smallestUnit, plainRelativeTo, calendarRec )
  */
