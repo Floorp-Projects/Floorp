@@ -327,9 +327,9 @@ function saveToClipboard(base64URI) {
 let _outputDirectory = null;
 
 /**
- * Returns the default directory for screenshots.
- * If a specific directory for screenshots is not defined,
- * it falls back to the system downloads directory.
+ * Returns the default directory for DevTools screenshots.
+ * For consistency with the Firefox Screenshots feature, this will default to
+ * the preferred downloads directory.
  *
  * @return {Promise<String>} Resolves the path as a string
  */
@@ -338,13 +338,7 @@ async function getOutputDirectory() {
     return _outputDirectory;
   }
 
-  try {
-    // This will throw if there is not a screenshot directory set for the platform
-    _outputDirectory = Services.dirsvc.get("Scrnshts", Ci.nsIFile).path;
-  } catch (e) {
-    _outputDirectory = await lazy.Downloads.getPreferredDownloadsDirectory();
-  }
-
+  _outputDirectory = await lazy.Downloads.getPreferredDownloadsDirectory();
   return _outputDirectory;
 }
 
