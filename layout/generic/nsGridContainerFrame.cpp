@@ -5761,7 +5761,7 @@ static nscoord MinSize(const GridItemInfo& aGridItem,
   PhysicalAxis axis(aCBWM.PhysicalAxis(aAxis));
   const nsStylePosition* stylePos = child->StylePosition();
   StyleSize sizeStyle =
-      axis == eAxisHorizontal ? stylePos->mWidth : stylePos->mHeight;
+      axis == PhysicalAxis::Horizontal ? stylePos->mWidth : stylePos->mHeight;
 
   auto ourInlineAxis =
       child->GetWritingMode().PhysicalAxis(LogicalAxis::Inline);
@@ -5800,8 +5800,9 @@ static nscoord MinSize(const GridItemInfo& aGridItem,
                nsLayoutUtils::MinSizeContributionForAxis(
                    axis, aRC, child, IntrinsicISizeType::MinISize,
                    *aCache->mPercentageBasis);
-  const StyleSize& style =
-      axis == eAxisHorizontal ? stylePos->mMinWidth : stylePos->mMinHeight;
+  const StyleSize& style = axis == PhysicalAxis::Horizontal
+                               ? stylePos->mMinWidth
+                               : stylePos->mMinHeight;
   // max-content and min-content should behave as initial value in block axis.
   // FIXME: Bug 567039: moz-fit-content and -moz-available are not supported
   // for block size dimension on sizing properties (e.g. height), so we

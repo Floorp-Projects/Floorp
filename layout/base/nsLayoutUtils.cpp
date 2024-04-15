@@ -4610,7 +4610,7 @@ static nscoord AddIntrinsicSizeOffset(
     LayoutDeviceIntSize devSize = pc->Theme()->GetMinimumWidgetSize(
         pc, aFrame, disp->EffectiveAppearance());
     nscoord themeSize = pc->DevPixelsToAppUnits(
-        aAxis == eAxisVertical ? devSize.height : devSize.width);
+        aAxis == PhysicalAxis::Vertical ? devSize.height : devSize.width);
     // GetMinimumWidgetSize() returns a border-box width.
     themeSize += aOffsets.margin;
     if (themeSize > result) {
@@ -4641,7 +4641,7 @@ nscoord nsLayoutUtils::IntrinsicForAxis(
                  aPercentageBasis.isSome(),
              "grid layout should always pass a percentage basis");
 
-  const bool horizontalAxis = MOZ_LIKELY(aAxis == eAxisHorizontal);
+  const bool horizontalAxis = MOZ_LIKELY(aAxis == PhysicalAxis::Horizontal);
 #ifdef DEBUG_INTRINSIC_WIDTH
   nsIFrame::IndentBy(stderr, gNoiseIndent);
   aFrame->ListTag(stderr);
@@ -5048,10 +5048,11 @@ nscoord nsLayoutUtils::MinSizeContributionForAxis(
 
   // Note: this method is only meant for grid/flex items.
   const nsStylePosition* const stylePos = aFrame->StylePosition();
-  StyleSize size =
-      aAxis == eAxisHorizontal ? stylePos->mMinWidth : stylePos->mMinHeight;
-  StyleMaxSize maxSize =
-      aAxis == eAxisHorizontal ? stylePos->mMaxWidth : stylePos->mMaxHeight;
+  StyleSize size = aAxis == PhysicalAxis::Horizontal ? stylePos->mMinWidth
+                                                     : stylePos->mMinHeight;
+  StyleMaxSize maxSize = aAxis == PhysicalAxis::Horizontal
+                             ? stylePos->mMaxWidth
+                             : stylePos->mMaxHeight;
   auto childWM = aFrame->GetWritingMode();
   PhysicalAxis ourInlineAxis = childWM.PhysicalAxis(LogicalAxis::Inline);
   // According to the spec, max-content and min-content should behave as the
@@ -5077,7 +5078,8 @@ nscoord nsLayoutUtils::MinSizeContributionForAxis(
       minSize = 0;
       fixedMinSize = &minSize;
     } else {
-      size = aAxis == eAxisHorizontal ? stylePos->mWidth : stylePos->mHeight;
+      size = aAxis == PhysicalAxis::Horizontal ? stylePos->mWidth
+                                               : stylePos->mHeight;
       // This is same as above: keywords should behaves as property's initial
       // values in block axis.
       if (aAxis != ourInlineAxis && size.BehavesLikeInitialValueOnBlockAxis()) {

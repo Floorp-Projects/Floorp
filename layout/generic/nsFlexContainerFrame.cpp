@@ -312,7 +312,7 @@ class MOZ_STACK_CLASS nsFlexContainerFrame::FlexboxAxisTracker {
         return StyleAlignFlags::START;
       }
 
-      MOZ_ASSERT(wm.PhysicalAxis(MainAxis()) == eAxisHorizontal,
+      MOZ_ASSERT(wm.PhysicalAxis(MainAxis()) == PhysicalAxis::Horizontal,
                  "Vertical column-oriented flex container's main axis should "
                  "be parallel to physical left <-> right axis!");
       // Map 'left' or 'right' to 'start' or 'end', depending on its block flow
@@ -2354,7 +2354,7 @@ nscoord FlexItem::BaselineOffsetFromOuterCrossEdge(
     // column-oriented flex container. We need to synthesize the item's baseline
     // from its border-box edge.
     const bool isMainAxisHorizontal =
-        mCBWM.PhysicalAxis(MainAxis()) == mozilla::eAxisHorizontal;
+        mCBWM.PhysicalAxis(MainAxis()) == PhysicalAxis::Horizontal;
 
     // When the main axis is horizontal, the synthesized baseline is the bottom
     // edge of the item's border-box. Otherwise, when the main axis is vertical,
