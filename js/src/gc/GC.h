@@ -82,7 +82,8 @@ class TenuredChunk;
   _("helperThreadRatio", JSGC_HELPER_THREAD_RATIO, true)                    \
   _("maxHelperThreads", JSGC_MAX_HELPER_THREADS, true)                      \
   _("helperThreadCount", JSGC_HELPER_THREAD_COUNT, false)                   \
-  _("markingThreadCount", JSGC_MARKING_THREAD_COUNT, true)                  \
+  _("maxMarkingThreads", JSGC_MAX_MARKING_THREADS, true)                    \
+  _("markingThreadCount", JSGC_MARKING_THREAD_COUNT, false)                 \
   _("systemPageSizeKB", JSGC_SYSTEM_PAGE_SIZE_KB, false)                    \
   _("semispaceNurseryEnabled", JSGC_SEMISPACE_NURSERY_ENABLED, true)
 

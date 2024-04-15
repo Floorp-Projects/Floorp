@@ -411,6 +411,8 @@ GCRuntime::GCRuntime(JSRuntime* rt)
       helperThreadRatio(TuningDefaults::HelperThreadRatio),
       maxHelperThreads(TuningDefaults::MaxHelperThreads),
       helperThreadCount(1),
+      maxMarkingThreads(TuningDefaults::MaxMarkingThreads),
+      markingThreadCount(1),
       createBudgetCallback(nullptr),
       minEmptyChunkCount_(TuningDefaults::MinEmptyChunkCount),
       maxEmptyChunkCount_(TuningDefaults::MaxEmptyChunkCount),
@@ -1049,7 +1051,7 @@ bool GCRuntime::setParameter(JSContext* cx, JSGCParamKey key, uint32_t value) {
 
 static bool IsGCThreadParameter(JSGCParamKey key) {
   return key == JSGC_HELPER_THREAD_RATIO || key == JSGC_MAX_HELPER_THREADS ||
-         key == JSGC_MARKING_THREAD_COUNT;
+         key == JSGC_MAX_MARKING_THREADS;
 }
 
 bool GCRuntime::setParameter(JSGCParamKey key, uint32_t value,
@@ -1120,8 +1122,8 @@ bool GCRuntime::setThreadParameter(JSGCParamKey key, uint32_t value,
       }
       maxHelperThreads = value;
       break;
-    case JSGC_MARKING_THREAD_COUNT:
-      markingThreadCount = std::min(size_t(value), MaxParallelWorkers);
+    case JSGC_MAX_MARKING_THREADS:
+      maxMarkingThreads = std::min(size_t(value), MaxParallelWorkers);
       break;
     default:
       MOZ_CRASH("Unexpected parameter key");
@@ -1201,8 +1203,8 @@ void GCRuntime::resetThreadParameter(JSGCParamKey key, AutoLockGC& lock) {
     case JSGC_MAX_HELPER_THREADS:
       maxHelperThreads = TuningDefaults::MaxHelperThreads;
       break;
-    case JSGC_MARKING_THREAD_COUNT:
-      markingThreadCount = 0;
+    case JSGC_MAX_MARKING_THREADS:
+      maxMarkingThreads = TuningDefaults::MaxMarkingThreads;
       break;
     default:
       MOZ_CRASH("Unexpected parameter key");
@@ -1265,6 +1267,8 @@ uint32_t GCRuntime::getParameter(JSGCParamKey key, const AutoLockGC& lock) {
       return maxHelperThreads;
     case JSGC_HELPER_THREAD_COUNT:
       return helperThreadCount;
+    case JSGC_MAX_MARKING_THREADS:
+      return maxMarkingThreads;
     case JSGC_MARKING_THREAD_COUNT:
       return markingThreadCount;
     case JSGC_SYSTEM_PAGE_SIZE_KB:
@@ -1316,8 +1320,12 @@ void GCRuntime::updateHelperThreadCount() {
       std::clamp(size_t(double(cpuCount) * helperThreadRatio.ref()), size_t(1),
                  maxHelperThreads.ref());
 
+  // Calculate the target thread count for parallel marking, which uses separate
+  // parameters to let us adjust this independently.
+  markingThreadCount = std::min(cpuCount / 2, maxMarkingThreads.ref());
+
   // Calculate the overall target thread count taking into account the separate
-  // parameter for parallel marking threads. Add spare threads to avoid blocking
+  // target for parallel marking threads. Add spare threads to avoid blocking
   // parallel marking when there is other GC work happening.
   size_t targetCount =
       std::max(helperThreadCount.ref(),
@@ -1334,9 +1342,13 @@ void GCRuntime::updateHelperThreadCount() {
   MOZ_ASSERT(availableThreadCount != 0);
   targetCount = std::min(targetCount, availableThreadCount);
   helperThreadCount = std::min(helperThreadCount.ref(), availableThreadCount);
-  markingThreadCount =
-      std::min(markingThreadCount.ref(),
-               availableThreadCount - SpareThreadsDuringParallelMarking);
+  if (availableThreadCount < SpareThreadsDuringParallelMarking) {
+    markingThreadCount = 1;
+  } else {
+    markingThreadCount =
+        std::min(markingThreadCount.ref(),
+                 availableThreadCount - SpareThreadsDuringParallelMarking);
+  }
 
   // Update the maximum number of threads that will be used for GC work.
   maxParallelThreads = targetCount;

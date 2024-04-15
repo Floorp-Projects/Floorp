@@ -440,15 +440,9 @@ typedef enum JSGCParamKey {
   JSGC_URGENT_THRESHOLD_MB = 48,
 
   /**
-   * Set the number of threads to use for parallel marking, or zero to use the
-   * default.
-   *
-   * The actual number used is capped to the number of available helper threads.
-   *
-   * This is provided for testing purposes.
+   * Get the number of threads used for parallel marking.
    *
    * Pref: None.
-   * Default: 0 (no effect).
    */
   JSGC_MARKING_THREAD_COUNT = 49,
 
@@ -467,6 +461,18 @@ typedef enum JSGCParamKey {
    * Default: SemispaceNurseryEnabled
    */
   JSGC_SEMISPACE_NURSERY_ENABLED = 51,
+
+  /**
+   * Set the maximum number of threads to use for parallel marking, if enabled.
+   *
+   * The actual number used is calculated based on the number of available
+   * helper threads and can be found by getting the JSGC_MARKING_THREAD_COUNT
+   * parameter.
+   *
+   * Pref: None.
+   * Default: 2.
+   */
+  JSGC_MAX_MARKING_THREADS = 52,
 
 } JSGCParamKey;
 

@@ -12262,9 +12262,6 @@ bool InitOptionParser(OptionParser& op) {
                         "Disable GC parallel marking") ||
       !op.addBoolOption('\0', "enable-parallel-marking",
                         "Enable GC parallel marking") ||
-      !op.addIntOption(
-          '\0', "marking-threads", "COUNT",
-          "Set the number of threads used for parallel marking to COUNT.", 0) ||
       !op.addStringOption('\0', "nursery-strings", "on/off",
                           "Allocate strings in the nursery") ||
       !op.addStringOption('\0', "nursery-bigints", "on/off",
@@ -13301,11 +13298,6 @@ bool SetContextGCOptions(JSContext* cx, const OptionParser& op) {
     parallelMarking = false;
   }
   JS_SetGCParameter(cx, JSGC_PARALLEL_MARKING_ENABLED, parallelMarking);
-
-  int32_t markingThreads = op.getIntOption("marking-threads");
-  if (markingThreads > 0) {
-    JS_SetGCParameter(cx, JSGC_MARKING_THREAD_COUNT, markingThreads);
-  }
 
   JS_SetGCParameter(cx, JSGC_SLICE_TIME_BUDGET_MS, 5);
 

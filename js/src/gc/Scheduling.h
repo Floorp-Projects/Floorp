@@ -545,6 +545,9 @@ static const double HelperThreadRatio = 0.5;
 /* JSGC_MAX_HELPER_THREADS */
 static const size_t MaxHelperThreads = 8;
 
+/* JSGC_MAX_MARKING_THREADS */
+static const size_t MaxMarkingThreads = 2;
+
 }  // namespace TuningDefaults
 
 /*
