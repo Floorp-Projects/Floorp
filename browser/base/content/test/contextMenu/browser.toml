@@ -101,3 +101,5 @@ support-files = [
   "test_view_image_inline_svg.html",
 ]
 skip-if = ["os == 'linux' && socketprocess_networking"]
+
+["browser_contextmenu_cross_boundary_selection.js"]

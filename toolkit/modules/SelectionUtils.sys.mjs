@@ -75,7 +75,7 @@ export var SelectionUtils = {
       }
     }
 
-    let collapsed = selection.isCollapsed;
+    let collapsed = selection.areNormalAndCrossShadowBoundaryRangesCollapsed;
 
     if (selectionStr) {
       // Have some text, let's figure out if it looks like a URL that isn't

@@ -1353,7 +1353,7 @@ already_AddRefed<ShadowRoot> Element::AttachShadowWithoutNameChecks(
     for (const AbstractRange* range : *ranges) {
       if (range->MayCrossShadowBoundary()) {
         MOZ_ASSERT(range->IsDynamicRange());
-        StaticRange* crossBoundaryRange =
+        CrossShadowBoundaryRange* crossBoundaryRange =
             range->AsDynamicRange()->GetCrossShadowBoundaryRange();
         MOZ_ASSERT(crossBoundaryRange);
         // We may have previously selected this node before it

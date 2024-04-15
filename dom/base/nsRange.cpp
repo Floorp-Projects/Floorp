@@ -792,8 +792,17 @@ void nsRange::ParentChainChanged(nsIContent* aContent) {
   DoSetRange(mStart, mEnd, newRoot);
 }
 
+bool nsRange::IsShadowIncludingInclusiveDescendantOfCrossBoundaryRangeAncestor(
+    const nsINode& aContainer) const {
+  MOZ_ASSERT(mCrossShadowBoundaryRange &&
+             mCrossShadowBoundaryRange->GetCommonAncestor());
+  return aContainer.IsShadowIncludingInclusiveDescendantOf(
+      mCrossShadowBoundaryRange->GetCommonAncestor());
+}
+
 bool nsRange::IsPointComparableToRange(const nsINode& aContainer,
                                        uint32_t aOffset,
+                                       bool aAllowCrossShadowBoundary,
                                        ErrorResult& aRv) const {
   // our range is in a good state?
   if (!mIsPositioned) {
@@ -801,7 +810,13 @@ bool nsRange::IsPointComparableToRange(const nsINode& aContainer,
     return false;
   }
 
-  if (!aContainer.IsInclusiveDescendantOf(mRoot)) {
+  const bool isContainerInRange =
+      aContainer.IsInclusiveDescendantOf(mRoot) ||
+      (aAllowCrossShadowBoundary && mCrossShadowBoundaryRange &&
+       IsShadowIncludingInclusiveDescendantOfCrossBoundaryRangeAncestor(
+           aContainer));
+
+  if (!isContainerInRange) {
     // TODO(emilio): Switch to ThrowWrongDocumentError, but IsPointInRange
     // relies on the error code right now in order to suppress the exception.
     aRv.Throw(NS_ERROR_DOM_WRONG_DOCUMENT_ERR);
@@ -832,8 +847,10 @@ bool nsRange::IsPointComparableToRange(const nsINode& aContainer,
 }
 
 bool nsRange::IsPointInRange(const nsINode& aContainer, uint32_t aOffset,
-                             ErrorResult& aRv) const {
-  uint16_t compareResult = ComparePoint(aContainer, aOffset, aRv);
+                             ErrorResult& aRv,
+                             bool aAllowCrossShadowBoundary) const {
+  int16_t compareResult =
+      ComparePoint(aContainer, aOffset, aRv, aAllowCrossShadowBoundary);
   // If the node isn't in the range's document, it clearly isn't in the range.
   if (aRv.ErrorCodeIs(NS_ERROR_DOM_WRONG_DOCUMENT_ERR)) {
     aRv.SuppressException();
@@ -844,8 +861,10 @@ bool nsRange::IsPointInRange(const nsINode& aContainer, uint32_t aOffset,
 }
 
 int16_t nsRange::ComparePoint(const nsINode& aContainer, uint32_t aOffset,
-                              ErrorResult& aRv) const {
-  if (!IsPointComparableToRange(aContainer, aOffset, aRv)) {
+                              ErrorResult& aRv,
+                              bool aAllowCrossShadowBoundary) const {
+  if (!IsPointComparableToRange(aContainer, aOffset, aAllowCrossShadowBoundary,
+                                aRv)) {
     return 0;
   }
 
@@ -853,11 +872,15 @@ int16_t nsRange::ComparePoint(const nsINode& aContainer, uint32_t aOffset,
 
   MOZ_ASSERT(point.IsSetAndValid());
 
-  if (Maybe<int32_t> order = nsContentUtils::ComparePoints(point, mStart);
+  if (Maybe<int32_t> order = nsContentUtils::ComparePoints(
+          point, aAllowCrossShadowBoundary ? MayCrossShadowBoundaryStartRef()
+                                           : StartRef());
       order && *order <= 0) {
     return int16_t(*order);
   }
-  if (Maybe<int32_t> order = nsContentUtils::ComparePoints(mEnd, point);
+  if (Maybe<int32_t> order = nsContentUtils::ComparePoints(
+          aAllowCrossShadowBoundary ? MayCrossShadowBoundaryEndRef() : EndRef(),
+          point);
       order && *order == -1) {
     return 1;
   }
@@ -881,7 +904,9 @@ bool nsRange::IntersectsNode(nsINode& aNode, ErrorResult& aRv) {
     return false;
   }
 
-  if (!IsPointComparableToRange(*parent, *nodeIndex, IgnoreErrors())) {
+  if (!IsPointComparableToRange(*parent, *nodeIndex,
+                                false /* aAllowCrossShadowBoundary */,
+                                IgnoreErrors())) {
     return false;
   }
 
@@ -3504,7 +3529,7 @@ void nsRange::CreateOrUpdateCrossShadowBoundaryRangeIfNeeded(
 
   if (!mCrossShadowBoundaryRange) {
     mCrossShadowBoundaryRange =
-        StaticRange::Create(aStartBoundary, aEndBoundary, IgnoreErrors());
+        CrossShadowBoundaryRange::Create(aStartBoundary, aEndBoundary);
     return;
   }
 

@@ -4928,12 +4928,14 @@ bool nsIFrame::MovingCaretToEventPointAllowedIfSecondaryButtonEvent(
               : aContentAtEventPoint.GetClosestNativeAnonymousSubtreeRoot());
   if (Selection* selection =
           aFrameSelection.GetSelection(SelectionType::eNormal)) {
-    const bool selectionIsCollapsed = selection->IsCollapsed();
-    // If right click in a selection range, we should not collapse selection.
-    if (!selectionIsCollapsed &&
-        nsContentUtils::IsPointInSelection(
-            *selection, aContentAtEventPoint,
-            static_cast<uint32_t>(aOffsetAtEventPoint))) {
+    const bool selectionIsCollapsed =
+        selection->AreNormalAndCrossShadowBoundaryRangesCollapsed();
+    // If right click in a selection range, we should not collapse
+    // selection.
+    if (!selectionIsCollapsed && nsContentUtils::IsPointInSelection(
+                                     *selection, aContentAtEventPoint,
+                                     static_cast<uint32_t>(aOffsetAtEventPoint),
+                                     true /* aAllowCrossShadowBoundary */)) {
       return false;
     }
     const bool wantToPreventMoveCaret =
