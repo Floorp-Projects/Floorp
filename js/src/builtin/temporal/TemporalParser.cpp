@@ -2168,7 +2168,7 @@ bool js::temporal::ParseTemporalDurationString(JSContext* cx,
   int32_t factor = parsed.sign ? parsed.sign : 1;
   MOZ_ASSERT(factor == -1 || factor == 1);
 
-  // Step 20.
+  // Steps 20-29.
   *result = {
       (years * factor) + (+0.0),        (months * factor) + (+0.0),
       (weeks * factor) + (+0.0),        (days * factor) + (+0.0),
@@ -2176,9 +2176,13 @@ bool js::temporal::ParseTemporalDurationString(JSContext* cx,
       (seconds * factor) + (+0.0),      (milliseconds * factor) + (+0.0),
       (microseconds * factor) + (+0.0), (nanoseconds * factor) + (+0.0),
   };
+
+  // Step 30
   if (!ThrowIfInvalidDuration(cx, *result)) {
     return false;
   }
+
+  // Step 31.
   return true;
 }
 
