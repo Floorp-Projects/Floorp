@@ -8,6 +8,10 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   CreditCard: "resource://gre/modules/CreditCard.sys.mjs",
+  FormHistoryAutoCompleteResult:
+    "resource://gre/modules/FormHistoryAutoComplete.sys.mjs",
+  FormScenarios: "resource://gre/modules/FormScenarios.sys.mjs",
+  GenericAutocompleteItem: "resource://gre/modules/FillHelpers.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
 
@@ -41,6 +45,10 @@ export class FormHistoryChild extends JSWindowActorChild {
       default:
         throw new Error("Unexpected event");
     }
+  }
+
+  static getInputName(input) {
+    return input.name || input.id;
   }
 
   #onFormSubmission(event) {
@@ -107,7 +115,7 @@ export class FormHistoryChild extends JSWindowActorChild {
         continue;
       }
 
-      const name = input.name || input.id;
+      const name = FormHistoryChild.getInputName(input);
       if (!name) {
         continue;
       }
@@ -136,5 +144,141 @@ export class FormHistoryChild extends JSWindowActorChild {
       log("sending entries to parent process for form " + form.id);
       this.sendAsyncMessage("FormHistory:FormSubmitEntries", entries);
     }
+  }
+
+  get actorName() {
+    return "FormHistory";
+  }
+
+  /**
+   * Get the search options when searching for autocomplete entries in the parent
+   *
+   * @param {HTMLInputElement} input - The input element to search for autocompelte entries
+   * @returns {object} the search options for the input
+   */
+  getAutoCompleteSearchOption(input) {
+    const inputName = FormHistoryChild.getInputName(input);
+    const scenarioName = lazy.FormScenarios.detect({ input }).signUpForm
+      ? "SignUpFormScenario"
+      : "";
+
+    return { inputName, scenarioName };
+  }
+
+  /**
+   * Ask the provider whether it might have autocomplete entry to show
+   * for the given input.
+   *
+   * @param {HTMLInputElement} input - The input element to search for autocompelte entries
+   * @returns {boolean} true if we shold search for autocomplete entries
+   */
+  shouldSearchForAutoComplete(input) {
+    if (!lazy.gEnabled) {
+      return false;
+    }
+
+    const inputName = FormHistoryChild.getInputName(input);
+    // Don't allow form inputs (aField != null) to get results from
+    // search bar history.
+    if (inputName == "searchbar-history") {
+      log(`autoCompleteSearch for input name "${inputName}" is denied`);
+      return false;
+    }
+
+    if (input.autocomplete == "off" || input.form?.autocomplete == "off") {
+      log("autoCompleteSearch not allowed due to autcomplete=off");
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Convert the search result to autocomplete results
+   *
+   * @param {string} searchString - The string to search for
+   * @param {HTMLInputElement} input - The input element to search for autocompelte entries
+   * @param {Array<object>} records - autocomplete records
+   * @returns {AutocompleteResult}
+   */
+  searchResultToAutoCompleteResult(searchString, input, records) {
+    const inputName = FormHistoryChild.getInputName(input);
+    const acResult = new lazy.FormHistoryAutoCompleteResult(
+      input,
+      [],
+      inputName,
+      searchString
+    );
+
+    acResult.fixedEntries = this.getDataListSuggestions(input);
+    if (!records) {
+      return acResult;
+    }
+
+    const entries = records.formHistoryEntries;
+    const externalEntries = records.externalEntries;
+
+    if (input?.maxLength > -1) {
+      acResult.entries = entries.filter(
+        el => el.text.length <= input.maxLength
+      );
+    } else {
+      acResult.entries = entries;
+    }
+
+    acResult.externalEntries.push(
+      ...externalEntries.map(
+        entry =>
+          new lazy.GenericAutocompleteItem(
+            entry.image,
+            entry.title,
+            entry.subtitle,
+            entry.fillMessageName,
+            entry.fillMessageData
+          )
+      )
+    );
+
+    acResult.removeDuplicateHistoryEntries();
+    return acResult;
+  }
+
+  #isTextControl(input) {
+    return [
+      "text",
+      "email",
+      "search",
+      "tel",
+      "url",
+      "number",
+      "month",
+      "week",
+      "password",
+    ].includes(input.type);
+  }
+
+  getDataListSuggestions(input) {
+    const items = [];
+
+    if (!this.#isTextControl(input) || !input.list) {
+      return items;
+    }
+
+    const upperFieldValue = input.value.toUpperCase();
+
+    for (const option of input.list.options) {
+      const label = option.label || option.text || option.value || "";
+
+      if (!label.toUpperCase().includes(upperFieldValue)) {
+        continue;
+      }
+
+      items.push({
+        label,
+        value: option.value,
+      });
+    }
+
+    return items;
   }
 }

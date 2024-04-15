@@ -122,7 +122,6 @@ class nsFormFillController final : public nsIFormFillController,
   nsCOMPtr<nsIAutoCompleteObserver> mLastListener;
 
   // This is cleared by StopSearch().
-  nsCOMPtr<nsIFormHistoryAutoComplete> mLastFormHistoryAutoComplete;
   nsString mLastSearchString;
 
   nsTHashMap<nsPtrHashKey<const nsINode>, bool> mPwmgrInputs;
