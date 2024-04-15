@@ -5,6 +5,7 @@
 #include "nsISupports.idl"
 
 interface nsIAutoCompleteInput;
+interface nsIFormFillCompleteObserver;
 
 webidl Element;
 
@@ -69,4 +70,21 @@ interface nsIAutoCompletePopup : nsISupports
    * @return The currently selected result item index
    */
   void selectBy(in boolean reverse, in boolean page);
+
+  /*
+   * Search for a given string and notify a listener (either synchronously
+   * or asynchronously) of the result
+   *
+   * @param searchString - The string to search for
+   * @param searchParam - An extra parameter
+   * @param previousResult - A previous result to use for faster searching
+   * @param listener - A listener to notify when the search is complete
+   */
+  void startSearch(in AString searchString, in Element element, in nsIFormFillCompleteObserver listener);
+
+  /*
+   * Stop the search that is in progress
+   */
+  void stopSearch();
+
 };

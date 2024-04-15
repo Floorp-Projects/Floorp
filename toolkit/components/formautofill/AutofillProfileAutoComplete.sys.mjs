@@ -296,8 +296,6 @@ AutofillProfileAutoCompleteSearch.prototype = {
 export const ProfileAutocomplete = {
   QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
 
-  lastProfileAutoCompleteResult: null,
-  lastProfileAutoCompleteFocusedInput: null,
   _registered: false,
   _factory: null,
 
@@ -329,7 +327,6 @@ export const ProfileAutocomplete = {
     this._factory.unregister();
     this._factory = null;
     this._registered = false;
-    this._lastAutoCompleteResult = null;
 
     Services.obs.removeObserver(this, "autocomplete-will-enter-text");
   },
@@ -360,6 +357,17 @@ export const ProfileAutocomplete = {
     }
 
     return actor.selectedIndex;
+  },
+
+  // TODO: This will be removed after we implement triggering autofill from the parent
+  get lastProfileAutoCompleteResult() {
+    return lazy.FormAutofillContent.activeAutofillChild
+      .lastProfileAutoCompleteResult;
+  },
+
+  get lastProfileAutoCompleteFocusedInput() {
+    return lazy.FormAutofillContent.activeAutofillChild
+      .lastProfileAutoCompleteFocusedInput;
   },
 
   async _fillFromAutocompleteRow(focusedInput) {
