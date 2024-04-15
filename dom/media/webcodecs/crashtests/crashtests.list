@@ -3,4 +3,4 @@ skip-if(Android) pref(dom.media.webcodecs.enabled,true) load 1848460.html
 skip-if(Android) pref(dom.media.webcodecs.enabled,true) load 1849271.html
 skip-if(Android) pref(dom.media.webcodecs.enabled,true) load 1864475.html
 skip-if(Android) pref(dom.media.webcodecs.enabled,true) load 1881079.html
-
+skip-if(Android) pref(dom.media.webcodecs.enabled,true) load 1889831.html
