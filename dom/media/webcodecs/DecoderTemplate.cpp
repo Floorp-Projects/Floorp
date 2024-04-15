@@ -565,7 +565,6 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessDecodeMessage(
     mProcessingMessage.reset();
     QueueATask("Error during decode",
                [self = RefPtr{this}]() MOZ_CAN_RUN_SCRIPT_BOUNDARY {
-                 MOZ_ASSERT(self->mState != CodecState::Closed);
                  self->CloseInternal(NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR);
                });
     return MessageProcessedResult::Processed;
