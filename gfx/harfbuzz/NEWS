@@ -1,3 +1,16 @@
+Overview of changes leading to 8.4.0
+Saturday, March 29, 2024
+====================================
+- Add /bigobj to MSVC compiler flags in meson build, to fix building hb-subset.cc
+- Specify minimum versions of various dependencies in meson and autotools build.
+- When subsetting, place variation store at the end of “GDEF” table  to fix
+  shaping issues with some versions of Adobe InDesign.
+- Various build fixes.
+
+- New API:
++hb_buffer_set_random_state()
++hb_buffer_get_random_state()
+
 Overview of changes leading to 8.3.1
 Saturday, March 16, 2024
 ====================================
