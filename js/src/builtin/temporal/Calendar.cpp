@@ -2482,8 +2482,8 @@ Wrapped<PlainDateObject*> js::temporal::CalendarDateFromFields(
 }
 
 struct RegulatedISOYearMonth final {
-  double year;
-  int32_t month;
+  double year = 0;
+  int32_t month = 0;
 };
 
 /**
