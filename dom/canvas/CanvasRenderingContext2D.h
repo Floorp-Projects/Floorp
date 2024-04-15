@@ -364,14 +364,18 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
   }
 
   void ClosePath() {
-    EnsureWritablePath();
+    if (!EnsureWritablePath()) {
+      return;
+    }
 
     mPathBuilder->Close();
     mPathPruned = false;
   }
 
   void MoveTo(double aX, double aY) {
-    EnsureWritablePath();
+    if (!EnsureWritablePath()) {
+      return;
+    }
 
     mozilla::gfx::Point pos(ToFloat(aX), ToFloat(aY));
     if (!pos.IsFinite()) {
@@ -383,13 +387,17 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
   }
 
   void LineTo(double aX, double aY) {
-    EnsureWritablePath();
+    if (!EnsureWritablePath()) {
+      return;
+    }
 
     LineTo(mozilla::gfx::Point(ToFloat(aX), ToFloat(aY)));
   }
 
   void QuadraticCurveTo(double aCpx, double aCpy, double aX, double aY) {
-    EnsureWritablePath();
+    if (!EnsureWritablePath()) {
+      return;
+    }
 
     mozilla::gfx::Point cp1(ToFloat(aCpx), ToFloat(aCpy));
     mozilla::gfx::Point cp2(ToFloat(aX), ToFloat(aY));
@@ -408,7 +416,9 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
 
   void BezierCurveTo(double aCp1x, double aCp1y, double aCp2x, double aCp2y,
                      double aX, double aY) {
-    EnsureWritablePath();
+    if (!EnsureWritablePath()) {
+      return;
+    }
 
     BezierTo(mozilla::gfx::Point(ToFloat(aCp1x), ToFloat(aCp1y)),
              mozilla::gfx::Point(ToFloat(aCp2x), ToFloat(aCp2y)),
@@ -680,7 +690,7 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
 
   /* This function ensures there is a writable pathbuilder available
    */
-  void EnsureWritablePath();
+  bool EnsureWritablePath();
 
   // Ensures a path in UserSpace is available.
   void EnsureUserSpacePath(

@@ -3463,7 +3463,9 @@ void CanvasRenderingContext2D::ArcTo(double aX1, double aY1, double aX2,
     return aError.ThrowIndexSizeError("Negative radius");
   }
 
-  EnsureWritablePath();
+  if (!EnsureWritablePath()) {
+    return;
+  }
 
   // Current point in user space!
   Point p0 = mPathBuilder->CurrentPoint();
@@ -3535,7 +3537,9 @@ void CanvasRenderingContext2D::Arc(double aX, double aY, double aR,
     return;
   }
 
-  EnsureWritablePath();
+  if (!EnsureWritablePath()) {
+    return;
+  }
 
   EnsureActivePath();
 
@@ -3545,7 +3549,9 @@ void CanvasRenderingContext2D::Arc(double aX, double aY, double aR,
 
 void CanvasRenderingContext2D::Rect(double aX, double aY, double aW,
                                     double aH) {
-  EnsureWritablePath();
+  if (!EnsureWritablePath()) {
+    return;
+  }
 
   if (!std::isfinite(aX) || !std::isfinite(aY) || !std::isfinite(aW) ||
       !std::isfinite(aH)) {
@@ -3741,7 +3747,9 @@ void CanvasRenderingContext2D::RoundRect(
     const UnrestrictedDoubleOrDOMPointInitOrUnrestrictedDoubleOrDOMPointInitSequence&
         aRadii,
     ErrorResult& aError) {
-  EnsureWritablePath();
+  if (!EnsureWritablePath()) {
+    return;
+  }
 
   PathBuilder* builder = mPathBuilder;
   Maybe<Matrix> transform = Nothing();
@@ -3759,7 +3767,9 @@ void CanvasRenderingContext2D::Ellipse(double aX, double aY, double aRadiusX,
     return aError.ThrowIndexSizeError("Negative radius");
   }
 
-  EnsureWritablePath();
+  if (!EnsureWritablePath()) {
+    return;
+  }
 
   ArcToBezier(this, Point(aX, aY), Size(aRadiusX, aRadiusY), aStartAngle,
               aEndAngle, aAnticlockwise, aRotation);
@@ -3780,10 +3790,14 @@ void CanvasRenderingContext2D::FlushPathTransform() {
   mPathTransformDirty = false;
 }
 
-void CanvasRenderingContext2D::EnsureWritablePath() {
+bool CanvasRenderingContext2D::EnsureWritablePath() {
   EnsureTarget();
+
   // NOTE: IsTargetValid() may be false here (mTarget == sErrorTarget) but we
   // go ahead and create a path anyway since callers depend on that.
+  if (NS_WARN_IF(!mTarget)) {
+    return false;
+  }
 
   FillRule fillRule = CurrentState().fillRule;
 
@@ -3792,7 +3806,7 @@ void CanvasRenderingContext2D::EnsureWritablePath() {
   }
 
   if (mPathBuilder) {
-    return;
+    return true;
   }
 
   if (!mPath) {
@@ -3800,6 +3814,7 @@ void CanvasRenderingContext2D::EnsureWritablePath() {
   } else {
     mPathBuilder = mPath->CopyToBuilder(fillRule);
   }
+  return true;
 }
 
 void CanvasRenderingContext2D::EnsureUserSpacePath(
