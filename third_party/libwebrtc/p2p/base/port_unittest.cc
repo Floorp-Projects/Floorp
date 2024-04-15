@@ -825,9 +825,9 @@ class PortTest : public ::testing::Test, public sigslot::has_slots<> {
       absl::string_view username,
       absl::string_view password,
       const webrtc::FieldTrialsView* field_trials = nullptr) {
-    auto port = std::make_unique<TestPort>(&main_, "test", &socket_factory_,
-                                           MakeNetwork(addr), 0, 0, username,
-                                           password, field_trials);
+    auto port = std::make_unique<TestPort>(
+        &main_, cricket::LOCAL_PORT_TYPE, &socket_factory_, MakeNetwork(addr),
+        0, 0, username, password, field_trials);
     port->SignalRoleConflict.connect(this, &PortTest::OnRoleConflict);
     return port;
   }
@@ -845,8 +845,9 @@ class PortTest : public ::testing::Test, public sigslot::has_slots<> {
   std::unique_ptr<TestPort> CreateTestPort(const rtc::Network* network,
                                            absl::string_view username,
                                            absl::string_view password) {
-    auto port = std::make_unique<TestPort>(&main_, "test", &socket_factory_,
-                                           network, 0, 0, username, password);
+    auto port = std::make_unique<TestPort>(&main_, cricket::LOCAL_PORT_TYPE,
+                                           &socket_factory_, network, 0, 0,
+                                           username, password);
     port->SignalRoleConflict.connect(this, &PortTest::OnRoleConflict);
     return port;
   }

@@ -130,6 +130,7 @@ rtc_library("quality_analyzing_video_decoder") {
     ":encoded_image_data_injector_api",
     ":simulcast_dummy_buffer_helper",
     "../../../../../api:video_quality_analyzer_api",
+    "../../../../../api/environment",
     "../../../../../api/video:encoded_image",
     "../../../../../api/video:video_frame",
     "../../../../../api/video_codecs:video_codecs_api",

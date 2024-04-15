@@ -50,6 +50,11 @@ class MockRtpTransportControllerSend
               DestroyRtpVideoSender,
               (RtpVideoSenderInterface*),
               (override));
+  MOCK_METHOD(void, RegisterSendingRtpStream, (RtpRtcpInterface&), (override));
+  MOCK_METHOD(void,
+              DeRegisterSendingRtpStream,
+              (RtpRtcpInterface&),
+              (override));
   MOCK_METHOD(PacketRouter*, packet_router, (), (override));
   MOCK_METHOD(NetworkStateEstimateObserver*,
               network_state_estimate_observer,
@@ -63,6 +68,10 @@ class MockRtpTransportControllerSend
   MOCK_METHOD(void,
               SetAllocatedSendBitrateLimits,
               (BitrateAllocationLimits),
+              (override));
+  MOCK_METHOD(void,
+              ReconfigureBandwidthEstimation,
+              (const BandwidthEstimationSettings&),
               (override));
   MOCK_METHOD(void, SetPacingFactor, (float), (override));
   MOCK_METHOD(void, SetQueueTimeLimit, (int), (override));

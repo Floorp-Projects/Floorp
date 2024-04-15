@@ -43,7 +43,7 @@ index 415ad0640a..1e8cff5441 100644
  }  // namespace
  
 diff --git a/audio/channel_receive.cc b/audio/channel_receive.cc
-index 8367b00113..aff21fa72a 100644
+index 17cf859ed8..b743b550ba 100644
 --- a/audio/channel_receive.cc
 +++ b/audio/channel_receive.cc
 @@ -105,7 +105,8 @@ class ChannelReceive : public ChannelReceiveInterface,
@@ -66,7 +66,7 @@ index 8367b00113..aff21fa72a 100644
      : worker_thread_(TaskQueueBase::Current()),
        event_log_(rtc_event_log),
        rtp_receive_statistics_(ReceiveStatistics::Create(clock)),
-@@ -587,6 +589,7 @@ ChannelReceive::ChannelReceive(
+@@ -580,6 +582,7 @@ ChannelReceive::ChannelReceive(
    configuration.local_media_ssrc = local_ssrc;
    configuration.rtcp_packet_type_counter_observer = this;
    configuration.non_sender_rtt_measurement = enable_non_sender_rtt;
@@ -74,7 +74,7 @@ index 8367b00113..aff21fa72a 100644
  
    if (frame_transformer)
      InitFrameTransformerDelegate(std::move(frame_transformer));
-@@ -1129,13 +1132,15 @@ std::unique_ptr<ChannelReceiveInterface> CreateChannelReceive(
+@@ -1122,13 +1125,15 @@ std::unique_ptr<ChannelReceiveInterface> CreateChannelReceive(
      absl::optional<AudioCodecPairId> codec_pair_id,
      rtc::scoped_refptr<FrameDecryptorInterface> frame_decryptor,
      const webrtc::CryptoOptions& crypto_options,
@@ -269,7 +269,7 @@ index 0bdd389795..2c56dccd2a 100644
      TransportFeedbackObserver* transport_feedback_callback = nullptr;
      VideoBitrateAllocationObserver* bitrate_allocation_observer = nullptr;
 diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
-index 1f4cc5b6be..9694f1d0c1 100644
+index 3ed4e5bb18..a3cfd903f4 100644
 --- a/video/rtp_video_stream_receiver2.cc
 +++ b/video/rtp_video_stream_receiver2.cc
 @@ -83,7 +83,8 @@ std::unique_ptr<ModuleRtpRtcpImpl2> CreateRtpRtcpModule(

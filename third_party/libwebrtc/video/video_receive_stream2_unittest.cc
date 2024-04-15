@@ -205,10 +205,9 @@ class VideoReceiveStream2Test : public ::testing::TestWithParam<bool> {
                      time_controller_.GetMainThread()),
         h264_decoder_factory_(&mock_decoder_) {
     // By default, mock decoder factory is backed by VideoDecoderProxyFactory.
-    ON_CALL(mock_h264_decoder_factory_, CreateVideoDecoder)
-        .WillByDefault(
-            Invoke(&h264_decoder_factory_,
-                   &test::VideoDecoderProxyFactory::CreateVideoDecoder));
+    ON_CALL(mock_h264_decoder_factory_, Create)
+        .WillByDefault(Invoke(&h264_decoder_factory_,
+                              &test::VideoDecoderProxyFactory::Create));
 
     // By default, mock decode will wrap the fake decoder.
     ON_CALL(mock_decoder_, Configure)
@@ -459,7 +458,7 @@ TEST_P(VideoReceiveStream2Test, LazyDecoderCreation) {
   rtppacket.SetTimestamp(0);
 
   // No decoders are created by default.
-  EXPECT_CALL(mock_h264_decoder_factory_, CreateVideoDecoder(_)).Times(0);
+  EXPECT_CALL(mock_h264_decoder_factory_, Create).Times(0);
   video_receive_stream_->Start();
   time_controller_.AdvanceTime(TimeDelta::Zero());
 
@@ -467,9 +466,8 @@ TEST_P(VideoReceiveStream2Test, LazyDecoderCreation) {
       testing::Mock::VerifyAndClearExpectations(&mock_h264_decoder_factory_));
   // Verify that the decoder is created when we receive payload data and tries
   // to decode a frame.
-  EXPECT_CALL(
-      mock_h264_decoder_factory_,
-      CreateVideoDecoder(Field(&SdpVideoFormat::name, testing::Eq("H264"))));
+  EXPECT_CALL(mock_h264_decoder_factory_,
+              Create(_, Field(&SdpVideoFormat::name, Eq("H264"))));
   EXPECT_CALL(mock_decoder_, Configure);
   EXPECT_CALL(mock_decoder_, RegisterDecodeCompleteCallback);
   EXPECT_CALL(mock_decoder_, Decode(_, _));

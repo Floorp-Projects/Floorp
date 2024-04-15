@@ -160,6 +160,9 @@ class PacingController {
   // 'burst_interval'.
   void SetSendBurstInterval(TimeDelta burst_interval);
 
+  // A probe may be sent without first waing for a media packet.
+  void SetAllowProbeWithoutMediaPacket(bool allow);
+
   // Returns the time when the oldest packet was queued.
   Timestamp OldestPacketEnqueueTime() const;
 

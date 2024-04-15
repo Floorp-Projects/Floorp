@@ -76,12 +76,13 @@ TEST_F(NetEqDecodingTest, MAYBE_TestOpusBitExactness) {
       webrtc::test::ResourcePath("audio_coding/neteq_opus", "rtp");
 
   const std::string output_checksum =
-      "2efdbea92c3fb2383c59f89d881efec9f94001d0|"
-      "a6831b946b59913852ae3e53f99fa8f209bb23cd";
+      "434bdc4ec08546510ee903d001c8be1a01c44e24|"
+      "4336be0091e2faad7a194c16ee0a05e727325727|"
+      "cefd2de4adfa8f6a9b66a3639ad63c2f6779d0cd";
 
   const std::string network_stats_checksum =
-      "dfaf4399fd60293405290476ccf1c05c807c71a0|"
-      "076662525572dba753b11578330bd491923f7f5e";
+      "5f2c8e3dff9cff55dd7a9f4167939de001566d95|"
+      "80ab17c17da030d4f2dfbf314ac44aacdadd7f0c";
 
   DecodeAndCompare(input_rtp_file, output_checksum, network_stats_checksum,
                    absl::GetFlag(FLAGS_gen_ref));

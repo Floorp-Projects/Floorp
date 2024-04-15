@@ -159,6 +159,37 @@ void RtpTransportControllerSend::DestroyRtpVideoSender(
   video_rtp_senders_.erase(it);
 }
 
+void RtpTransportControllerSend::RegisterSendingRtpStream(
+    RtpRtcpInterface& rtp_module) {
+  RTC_DCHECK_RUN_ON(&sequence_checker_);
+  // Allow pacer to send packets using this module.
+  packet_router_.AddSendRtpModule(&rtp_module,
+                                  /*remb_candidate=*/true);
+  pacer_.SetAllowProbeWithoutMediaPacket(
+      bwe_settings_.allow_probe_without_media &&
+      packet_router_.SupportsRtxPayloadPadding());
+}
+
+void RtpTransportControllerSend::DeRegisterSendingRtpStream(
+    RtpRtcpInterface& rtp_module) {
+  RTC_DCHECK_RUN_ON(&sequence_checker_);
+  // Disabling media, remove from packet router map to reduce size and
+  // prevent any stray packets in the pacer from asynchronously arriving
+  // to a disabled module.
+  packet_router_.RemoveSendRtpModule(&rtp_module);
+  // Clear the pacer queue of any packets pertaining to this module.
+  pacer_.RemovePacketsForSsrc(rtp_module.SSRC());
+  if (rtp_module.RtxSsrc().has_value()) {
+    pacer_.RemovePacketsForSsrc(*rtp_module.RtxSsrc());
+  }
+  if (rtp_module.FlexfecSsrc().has_value()) {
+    pacer_.RemovePacketsForSsrc(*rtp_module.FlexfecSsrc());
+  }
+  pacer_.SetAllowProbeWithoutMediaPacket(
+      bwe_settings_.allow_probe_without_media &&
+      packet_router_.SupportsRtxPayloadPadding());
+}
+
 void RtpTransportControllerSend::UpdateControlState() {
   absl::optional<TargetTransferRate> update = control_handler_->GetUpdate();
   if (!update)
@@ -222,6 +253,29 @@ void RtpTransportControllerSend::SetQueueTimeLimit(int limit_ms) {
 StreamFeedbackProvider*
 RtpTransportControllerSend::GetStreamFeedbackProvider() {
   return &feedback_demuxer_;
+}
+
+void RtpTransportControllerSend::ReconfigureBandwidthEstimation(
+    const BandwidthEstimationSettings& settings) {
+  RTC_DCHECK_RUN_ON(&sequence_checker_);
+  bwe_settings_ = settings;
+
+  if (controller_) {
+    // Recreate the controller and handler.
+    control_handler_ = nullptr;
+    controller_ = nullptr;
+    // The BWE controller is created when/if the network is available.
+    MaybeCreateControllers();
+    if (controller_) {
+      BitrateConstraints constraints = bitrate_configurator_.GetConfig();
+      UpdateBitrateConstraints(constraints);
+      UpdateStreamsConfig();
+      UpdateNetworkAvailability();
+    }
+  }
+  pacer_.SetAllowProbeWithoutMediaPacket(
+      bwe_settings_.allow_probe_without_media &&
+      packet_router_.SupportsRtxPayloadPadding());
 }
 
 void RtpTransportControllerSend::RegisterTargetTransferRateObserver(
@@ -325,9 +379,6 @@ void RtpTransportControllerSend::OnNetworkAvailability(bool network_available) {
   RTC_DCHECK_RUN_ON(&sequence_checker_);
   RTC_LOG(LS_VERBOSE) << "SignalNetworkState "
                       << (network_available ? "Up" : "Down");
-  NetworkAvailability msg;
-  msg.at_time = Timestamp::Millis(env_.clock().TimeInMilliseconds());
-  msg.network_available = network_available;
   network_available_ = network_available;
   if (network_available) {
     pacer_.Resume();
@@ -340,11 +391,7 @@ void RtpTransportControllerSend::OnNetworkAvailability(bool network_available) {
   if (!controller_) {
     MaybeCreateControllers();
   }
-  if (controller_) {
-    control_handler_->SetNetworkAvailability(network_available);
-    PostUpdates(controller_->OnNetworkAvailability(msg));
-    UpdateControlState();
-  }
+  UpdateNetworkAvailability();
   for (auto& rtp_sender : video_rtp_senders_) {
     rtp_sender->OnNetworkAvailability(network_available);
   }
@@ -585,6 +632,18 @@ void RtpTransportControllerSend::MaybeCreateControllers() {
   }
   UpdateControllerWithTimeInterval();
   StartProcessPeriodicTasks();
+}
+
+void RtpTransportControllerSend::UpdateNetworkAvailability() {
+  if (!controller_) {
+    return;
+  }
+  NetworkAvailability msg;
+  msg.at_time = Timestamp::Millis(env_.clock().TimeInMilliseconds());
+  msg.network_available = network_available_;
+  control_handler_->SetNetworkAvailability(network_available_);
+  PostUpdates(controller_->OnNetworkAvailability(msg));
+  UpdateControlState();
 }
 
 void RtpTransportControllerSend::UpdateInitialConstraints(

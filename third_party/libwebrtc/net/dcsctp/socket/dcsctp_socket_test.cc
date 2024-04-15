@@ -2887,8 +2887,16 @@ TEST_P(DcSctpSocketParametrizedTest, ZeroChecksumMetricsAreSet) {
   std::vector<std::pair<bool, bool>> combinations = {
       {false, false}, {false, true}, {true, false}, {true, true}};
   for (const auto& [a_enable, z_enable] : combinations) {
-    DcSctpOptions a_options = {.enable_zero_checksum = a_enable};
-    DcSctpOptions z_options = {.enable_zero_checksum = z_enable};
+    DcSctpOptions a_options = {
+        .zero_checksum_alternate_error_detection_method =
+            a_enable
+                ? ZeroChecksumAlternateErrorDetectionMethod::LowerLayerDtls()
+                : ZeroChecksumAlternateErrorDetectionMethod::None()};
+    DcSctpOptions z_options = {
+        .zero_checksum_alternate_error_detection_method =
+            z_enable
+                ? ZeroChecksumAlternateErrorDetectionMethod::LowerLayerDtls()
+                : ZeroChecksumAlternateErrorDetectionMethod::None()};
 
     SocketUnderTest a("A", a_options);
     auto z = std::make_unique<SocketUnderTest>("Z", z_options);
@@ -2902,7 +2910,9 @@ TEST_P(DcSctpSocketParametrizedTest, ZeroChecksumMetricsAreSet) {
 }
 
 TEST(DcSctpSocketTest, AlwaysSendsInitWithNonZeroChecksum) {
-  DcSctpOptions options = {.enable_zero_checksum = true};
+  DcSctpOptions options = {
+      .zero_checksum_alternate_error_detection_method =
+          ZeroChecksumAlternateErrorDetectionMethod::LowerLayerDtls()};
   SocketUnderTest a("A", options);
 
   a.socket.Connect();
@@ -2916,7 +2926,9 @@ TEST(DcSctpSocketTest, AlwaysSendsInitWithNonZeroChecksum) {
 }
 
 TEST(DcSctpSocketTest, MaySendInitAckWithZeroChecksum) {
-  DcSctpOptions options = {.enable_zero_checksum = true};
+  DcSctpOptions options = {
+      .zero_checksum_alternate_error_detection_method =
+          ZeroChecksumAlternateErrorDetectionMethod::LowerLayerDtls()};
   SocketUnderTest a("A", options);
   SocketUnderTest z("Z", options);
 
@@ -2933,7 +2945,9 @@ TEST(DcSctpSocketTest, MaySendInitAckWithZeroChecksum) {
 }
 
 TEST(DcSctpSocketTest, AlwaysSendsCookieEchoWithNonZeroChecksum) {
-  DcSctpOptions options = {.enable_zero_checksum = true};
+  DcSctpOptions options = {
+      .zero_checksum_alternate_error_detection_method =
+          ZeroChecksumAlternateErrorDetectionMethod::LowerLayerDtls()};
   SocketUnderTest a("A", options);
   SocketUnderTest z("Z", options);
 
@@ -2951,7 +2965,9 @@ TEST(DcSctpSocketTest, AlwaysSendsCookieEchoWithNonZeroChecksum) {
 }
 
 TEST(DcSctpSocketTest, SendsCookieAckWithZeroChecksum) {
-  DcSctpOptions options = {.enable_zero_checksum = true};
+  DcSctpOptions options = {
+      .zero_checksum_alternate_error_detection_method =
+          ZeroChecksumAlternateErrorDetectionMethod::LowerLayerDtls()};
   SocketUnderTest a("A", options);
   SocketUnderTest z("Z", options);
 
@@ -2970,7 +2986,9 @@ TEST(DcSctpSocketTest, SendsCookieAckWithZeroChecksum) {
 }
 
 TEST_P(DcSctpSocketParametrizedTest, SendsDataWithZeroChecksum) {
-  DcSctpOptions options = {.enable_zero_checksum = true};
+  DcSctpOptions options = {
+      .zero_checksum_alternate_error_detection_method =
+          ZeroChecksumAlternateErrorDetectionMethod::LowerLayerDtls()};
   SocketUnderTest a("A", options);
   auto z = std::make_unique<SocketUnderTest>("Z", options);
 
@@ -2993,7 +3011,9 @@ TEST_P(DcSctpSocketParametrizedTest, SendsDataWithZeroChecksum) {
 }
 
 TEST_P(DcSctpSocketParametrizedTest, AllPacketsAfterConnectHaveZeroChecksum) {
-  DcSctpOptions options = {.enable_zero_checksum = true};
+  DcSctpOptions options = {
+      .zero_checksum_alternate_error_detection_method =
+          ZeroChecksumAlternateErrorDetectionMethod::LowerLayerDtls()};
   SocketUnderTest a("A", options);
   auto z = std::make_unique<SocketUnderTest>("Z", options);
 

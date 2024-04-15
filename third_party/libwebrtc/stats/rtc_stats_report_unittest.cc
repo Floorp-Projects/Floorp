@@ -10,6 +10,7 @@
 
 #include "api/stats/rtc_stats_report.h"
 
+#include "absl/types/optional.h"
 #include "api/stats/attribute.h"
 #include "api/stats/rtc_stats.h"
 #include "rtc_base/checks.h"
@@ -24,7 +25,7 @@ class RTCTestStats1 : public RTCStats {
   RTCTestStats1(const std::string& id, Timestamp timestamp)
       : RTCStats(id, timestamp) {}
 
-  RTCStatsMember<int32_t> integer;
+  absl::optional<int32_t> integer;
 };
 
 WEBRTC_RTCSTATS_IMPL(RTCTestStats1,
@@ -39,7 +40,7 @@ class RTCTestStats2 : public RTCStats {
   RTCTestStats2(const std::string& id, Timestamp timestamp)
       : RTCStats(id, timestamp) {}
 
-  RTCStatsMember<double> number;
+  absl::optional<double> number;
 };
 
 WEBRTC_RTCSTATS_IMPL(RTCTestStats2,
@@ -54,7 +55,7 @@ class RTCTestStats3 : public RTCStats {
   RTCTestStats3(const std::string& id, Timestamp timestamp)
       : RTCStats(id, timestamp) {}
 
-  RTCStatsMember<std::string> string;
+  absl::optional<std::string> string;
 };
 
 WEBRTC_RTCSTATS_IMPL(RTCTestStats3,

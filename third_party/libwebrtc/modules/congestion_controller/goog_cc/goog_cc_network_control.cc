@@ -720,7 +720,8 @@ PacerConfig GoogCcNetworkController::GetPacingRates(Timestamp at_time) const {
   // Pacing rate is based on target rate before congestion window pushback,
   // because we don't want to build queues in the pacer when pushback occurs.
   DataRate pacing_rate = DataRate::Zero();
-  if (pace_at_max_of_bwe_and_lower_link_capacity_ && estimate_) {
+  if (pace_at_max_of_bwe_and_lower_link_capacity_ && estimate_ &&
+      !bandwidth_estimation_->PaceAtLossBasedEstimate()) {
     pacing_rate =
         std::max({min_total_allocated_bitrate_, estimate_->link_capacity_lower,
                   last_loss_based_target_rate_}) *

@@ -121,7 +121,7 @@ TEST(InternalDecoderFactoryTest, Av1Profile1_Dav1dDecoderTrialEnabled) {
   InternalDecoderFactory factory;
   std::unique_ptr<VideoDecoder> decoder = factory.CreateVideoDecoder(
       SdpVideoFormat(cricket::kAv1CodecName,
-                     {{kAV1FmtpProfile,
+                     {{cricket::kAv1FmtpProfile,
                        AV1ProfileToString(AV1Profile::kProfile1).data()}}));
   EXPECT_EQ(static_cast<bool>(decoder), kDav1dIsIncluded);
 }

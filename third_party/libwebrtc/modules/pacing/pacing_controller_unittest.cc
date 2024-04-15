@@ -1366,10 +1366,9 @@ TEST_F(PacingControllerTest, CanProbeWithPaddingBeforeFirstMediaPacket) {
   const int kInitialBitrateBps = 300000;
 
   PacingControllerProbing packet_sender;
-  const test::ExplicitKeyValueConfig trials(
-      "WebRTC-Bwe-ProbingBehavior/min_packet_size:0/");
   auto pacer =
-      std::make_unique<PacingController>(&clock_, &packet_sender, trials);
+      std::make_unique<PacingController>(&clock_, &packet_sender, trials_);
+  pacer->SetAllowProbeWithoutMediaPacket(true);
   std::vector<ProbeClusterConfig> probe_clusters = {
       {.at_time = clock_.CurrentTime(),
        .target_data_rate = kFirstClusterRate,
@@ -1393,16 +1392,46 @@ TEST_F(PacingControllerTest, CanProbeWithPaddingBeforeFirstMediaPacket) {
   EXPECT_GT(packet_sender.padding_packets_sent(), 5);
 }
 
+TEST_F(PacingControllerTest, ProbeSentAfterSetAllowProbeWithoutMediaPacket) {
+  const int kInitialBitrateBps = 300000;
+
+  PacingControllerProbing packet_sender;
+  auto pacer =
+      std::make_unique<PacingController>(&clock_, &packet_sender, trials_);
+  std::vector<ProbeClusterConfig> probe_clusters = {
+      {.at_time = clock_.CurrentTime(),
+       .target_data_rate = kFirstClusterRate,
+       .target_duration = TimeDelta::Millis(15),
+       .target_probe_count = 5,
+       .id = 0}};
+  pacer->CreateProbeClusters(probe_clusters);
+
+  pacer->SetPacingRates(
+      DataRate::BitsPerSec(kInitialBitrateBps * kPaceMultiplier),
+      DataRate::Zero());
+
+  pacer->SetAllowProbeWithoutMediaPacket(true);
+
+  Timestamp start = clock_.CurrentTime();
+  Timestamp next_process = pacer->NextSendTime();
+  while (clock_.CurrentTime() < start + TimeDelta::Millis(100) &&
+         next_process.IsFinite()) {
+    AdvanceTimeUntil(next_process);
+    pacer->ProcessPackets();
+    next_process = pacer->NextSendTime();
+  }
+  EXPECT_GT(packet_sender.padding_packets_sent(), 5);
+}
+
 TEST_F(PacingControllerTest, CanNotProbeWithPaddingIfGeneratePaddingFails) {
   // const size_t kPacketSize = 1200;
   const int kInitialBitrateBps = 300000;
 
   PacingControllerProbing packet_sender;
   packet_sender.SetCanGeneratePadding(false);
-  const test::ExplicitKeyValueConfig trials(
-      "WebRTC-Bwe-ProbingBehavior/min_packet_size:0/");
   auto pacer =
-      std::make_unique<PacingController>(&clock_, &packet_sender, trials);
+      std::make_unique<PacingController>(&clock_, &packet_sender, trials_);
+  pacer->SetAllowProbeWithoutMediaPacket(true);
   std::vector<ProbeClusterConfig> probe_clusters = {
       {.at_time = clock_.CurrentTime(),
        .target_data_rate = kFirstClusterRate,

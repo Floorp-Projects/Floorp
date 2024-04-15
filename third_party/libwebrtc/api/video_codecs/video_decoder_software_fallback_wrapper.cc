@@ -16,6 +16,7 @@
 #include <string>
 #include <utility>
 
+#include "api/field_trials_view.h"
 #include "api/video/encoded_image.h"
 #include "api/video_codecs/video_decoder.h"
 #include "modules/video_coding/include/video_error_codes.h"
@@ -35,7 +36,8 @@ class VideoDecoderSoftwareFallbackWrapper final : public VideoDecoder {
  public:
   VideoDecoderSoftwareFallbackWrapper(
       std::unique_ptr<VideoDecoder> sw_fallback_decoder,
-      std::unique_ptr<VideoDecoder> hw_decoder);
+      std::unique_ptr<VideoDecoder> hw_decoder,
+      bool force_sw_decoder_fallback);
   ~VideoDecoderSoftwareFallbackWrapper() override;
 
   bool Configure(const Settings& settings) override;
@@ -67,6 +69,7 @@ class VideoDecoderSoftwareFallbackWrapper final : public VideoDecoder {
   } decoder_type_;
   std::unique_ptr<VideoDecoder> hw_decoder_;
 
+  const bool force_sw_decoder_fallback_;
   Settings decoder_settings_;
   const std::unique_ptr<VideoDecoder> fallback_decoder_;
   const std::string fallback_implementation_name_;
@@ -77,9 +80,11 @@ class VideoDecoderSoftwareFallbackWrapper final : public VideoDecoder {
 
 VideoDecoderSoftwareFallbackWrapper::VideoDecoderSoftwareFallbackWrapper(
     std::unique_ptr<VideoDecoder> sw_fallback_decoder,
-    std::unique_ptr<VideoDecoder> hw_decoder)
+    std::unique_ptr<VideoDecoder> hw_decoder,
+    bool force_sw_decoder_fallback)
     : decoder_type_(DecoderType::kNone),
       hw_decoder_(std::move(hw_decoder)),
+      force_sw_decoder_fallback_(force_sw_decoder_fallback),
       fallback_decoder_(std::move(sw_fallback_decoder)),
       fallback_implementation_name_(
           fallback_decoder_->GetDecoderInfo().implementation_name +
@@ -94,7 +99,7 @@ VideoDecoderSoftwareFallbackWrapper::~VideoDecoderSoftwareFallbackWrapper() =
 bool VideoDecoderSoftwareFallbackWrapper::Configure(const Settings& settings) {
   decoder_settings_ = settings;
 
-  if (webrtc::field_trial::IsEnabled("WebRTC-Video-ForcedSwDecoderFallback")) {
+  if (force_sw_decoder_fallback_) {
     RTC_LOG(LS_INFO) << "Forced software decoder fallback enabled.";
     RTC_DCHECK(decoder_type_ == DecoderType::kNone);
     return InitFallbackDecoder();
@@ -276,10 +281,20 @@ VideoDecoder& VideoDecoderSoftwareFallbackWrapper::active_decoder() const {
 }  // namespace
 
 std::unique_ptr<VideoDecoder> CreateVideoDecoderSoftwareFallbackWrapper(
+    const Environment& env,
     std::unique_ptr<VideoDecoder> sw_fallback_decoder,
     std::unique_ptr<VideoDecoder> hw_decoder) {
   return std::make_unique<VideoDecoderSoftwareFallbackWrapper>(
-      std::move(sw_fallback_decoder), std::move(hw_decoder));
+      std::move(sw_fallback_decoder), std::move(hw_decoder),
+      env.field_trials().IsEnabled("WebRTC-Video-ForcedSwDecoderFallback"));
+}
+
+std::unique_ptr<VideoDecoder> CreateVideoDecoderSoftwareFallbackWrapper(
+    std::unique_ptr<VideoDecoder> sw_fallback_decoder,
+    std::unique_ptr<VideoDecoder> hw_decoder) {
+  return std::make_unique<VideoDecoderSoftwareFallbackWrapper>(
+      std::move(sw_fallback_decoder), std::move(hw_decoder),
+      webrtc::field_trial::IsEnabled("WebRTC-Video-ForcedSwDecoderFallback"));
 }
 
 }  // namespace webrtc

@@ -750,8 +750,20 @@ void WebrtcVideoConduit::OnControlConfigChange() {
         // TODO this is for webrtc-priority, but needs plumbing bits
         mEncoderConfig.bitrate_priority = 1.0;
 
+        // Populate simulcast_layers with their config (not dimensions or
+        // dimensions-derived properties, as they're only known as a frame to
+        // be sent is known).
+        mEncoderConfig.simulcast_layers.clear();
+        for (size_t idx = 0; idx < streamCount; ++idx) {
+          webrtc::VideoStream video_stream;
+          auto& encoding = codecConfig->mEncodings[idx];
+          video_stream.active = encoding.active;
+          mEncoderConfig.simulcast_layers.push_back(video_stream);
+        }
+
         // Expected max number of encodings
-        mEncoderConfig.number_of_streams = streamCount;
+        mEncoderConfig.number_of_streams =
+            mEncoderConfig.simulcast_layers.size();
 
         // libwebrtc disables this by default.
         mSendStreamConfig.suspend_below_min_bitrate = false;

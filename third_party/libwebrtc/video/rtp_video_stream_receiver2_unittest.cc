@@ -14,6 +14,7 @@
 #include <utility>
 
 #include "api/task_queue/task_queue_base.h"
+#include "api/test/mock_frame_transformer.h"
 #include "api/video/video_codec_type.h"
 #include "api/video/video_frame_type.h"
 #include "call/test/mock_rtp_packet_sink_interface.h"
@@ -35,7 +36,6 @@
 #include "system_wrappers/include/clock.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
-#include "test/mock_frame_transformer.h"
 #include "test/mock_transport.h"
 #include "test/rtcp_packet_parser.h"
 #include "test/scoped_key_value_config.h"

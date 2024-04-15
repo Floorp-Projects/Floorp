@@ -231,12 +231,10 @@ bool Convert(std::string inputfile,
                 {IceCandidatePairConfigType::kNumValues, "NUM_VALUES"}};
 
         static const std::map<IceCandidateType, std::string>
-            candidate_type_name{{IceCandidateType::kUnknown, "UNKNOWN"},
-                                {IceCandidateType::kLocal, "LOCAL"},
-                                {IceCandidateType::kStun, "STUN"},
+            candidate_type_name{{IceCandidateType::kHost, "LOCAL"},
+                                {IceCandidateType::kSrflx, "STUN"},
                                 {IceCandidateType::kPrflx, "PRFLX"},
-                                {IceCandidateType::kRelay, "RELAY"},
-                                {IceCandidateType::kNumValues, "NUM_VALUES"}};
+                                {IceCandidateType::kRelay, "RELAY"}};
 
         static const std::map<IceCandidatePairProtocol, std::string>
             protocol_name{{IceCandidatePairProtocol::kUnknown, "UNKNOWN"},

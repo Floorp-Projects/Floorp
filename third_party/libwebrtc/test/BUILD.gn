@@ -735,6 +735,8 @@ if (rtc_include_tests) {
         "../api:mock_video_encoder",
         "../api:scoped_refptr",
         "../api:simulcast_test_fixture_api",
+        "../api/environment",
+        "../api/environment:environment_factory",
         "../api/task_queue",
         "../api/task_queue:task_queue_test",
         "../api/test/video:function_video_factory",
@@ -867,6 +869,7 @@ rtc_library("fileutils") {
     ":fileutils_override_api",
     ":fileutils_override_impl",
     "../rtc_base:checks",
+    "../rtc_base:ssl",
     "../rtc_base:stringutils",
   ]
   absl_deps = [
@@ -956,6 +959,7 @@ rtc_library("fileutils_unittests") {
     ":fileutils",
     ":test_support",
     "../rtc_base:checks",
+    "../rtc_base:ssl",
   ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/strings:strings",
@@ -1105,28 +1109,6 @@ rtc_source_set("test_renderer") {
     public_deps +=  # no-presubmit-check TODO(webrtc:8603)
         [ ":test_renderer_objc" ]
   }
-}
-
-rtc_library("mock_frame_transformer") {
-  visibility = [ "*" ]
-  testonly = true
-  sources = [ "mock_frame_transformer.h" ]
-  deps = [
-    "../api:frame_transformer_interface",
-    "../test:test_support",
-  ]
-}
-
-rtc_library("mock_transformable_frame") {
-  visibility = [ "*" ]
-
-  testonly = true
-  sources = [ "mock_transformable_frame.h" ]
-
-  deps = [
-    "../api:frame_transformer_interface",
-    "../test:test_support",
-  ]
 }
 
 if (is_mac) {

@@ -131,21 +131,15 @@ ConvertIceCandidatePairConfigType(IceCandidatePairConfigType type) {
 rtclog::IceCandidatePairConfig::IceCandidateType ConvertIceCandidateType(
     IceCandidateType type) {
   switch (type) {
-    case IceCandidateType::kUnknown:
-      return rtclog::IceCandidatePairConfig::UNKNOWN_CANDIDATE_TYPE;
-    case IceCandidateType::kLocal:
+    case IceCandidateType::kHost:
       return rtclog::IceCandidatePairConfig::LOCAL;
-    case IceCandidateType::kStun:
+    case IceCandidateType::kSrflx:
       return rtclog::IceCandidatePairConfig::STUN;
     case IceCandidateType::kPrflx:
       return rtclog::IceCandidatePairConfig::PRFLX;
     case IceCandidateType::kRelay:
       return rtclog::IceCandidatePairConfig::RELAY;
-    case IceCandidateType::kNumValues:
-      RTC_DCHECK_NOTREACHED();
   }
-  RTC_DCHECK_NOTREACHED();
-  return rtclog::IceCandidatePairConfig::UNKNOWN_CANDIDATE_TYPE;
 }
 
 rtclog::IceCandidatePairConfig::Protocol ConvertIceCandidatePairProtocol(
@@ -202,6 +196,7 @@ rtclog::IceCandidatePairConfig::NetworkType ConvertIceCandidateNetworkType(
       return rtclog::IceCandidatePairConfig::CELLULAR;
     case IceCandidateNetworkType::kNumValues:
       RTC_DCHECK_NOTREACHED();
+      break;
   }
   RTC_DCHECK_NOTREACHED();
   return rtclog::IceCandidatePairConfig::UNKNOWN_NETWORK_TYPE;

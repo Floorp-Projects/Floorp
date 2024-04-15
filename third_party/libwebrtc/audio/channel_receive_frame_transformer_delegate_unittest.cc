@@ -13,11 +13,11 @@
 #include <memory>
 #include <utility>
 
+#include "api/test/mock_frame_transformer.h"
+#include "api/test/mock_transformable_audio_frame.h"
 #include "audio/channel_send_frame_transformer_delegate.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
-#include "test/mock_frame_transformer.h"
-#include "test/mock_transformable_frame.h"
 
 namespace webrtc {
 namespace {

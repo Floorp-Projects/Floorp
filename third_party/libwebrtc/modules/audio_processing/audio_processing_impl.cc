@@ -2382,7 +2382,7 @@ void AudioProcessingImpl::InitializeGainController2() {
       !UseApmVadSubModule(config_, gain_controller2_experiment_params_);
   submodules_.gain_controller2 = std::make_unique<GainController2>(
       config_.gain_controller2, input_volume_controller_config,
-      proc_fullband_sample_rate_hz(), num_proc_channels(), use_internal_vad);
+      proc_fullband_sample_rate_hz(), num_output_channels(), use_internal_vad);
   submodules_.gain_controller2->SetCaptureOutputUsed(
       capture_.capture_output_used);
 }

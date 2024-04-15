@@ -124,10 +124,10 @@ rtc_library("packet_buffer") {
   ]
 }
 
-rtc_library("h264_packet_buffer") {
+rtc_library("h26x_packet_buffer") {
   sources = [
-    "h264_packet_buffer.cc",
-    "h264_packet_buffer.h",
+    "h26x_packet_buffer.cc",
+    "h26x_packet_buffer.h",
   ]
   deps = [
     ":codec_globals_headers",
@@ -287,6 +287,8 @@ rtc_library("video_codec_interface") {
     "include/video_codec_interface.h",
     "include/video_coding_defines.h",
     "include/video_error_codes.h",
+    "include/video_error_codes_utils.cc",
+    "include/video_error_codes_utils.h",
     "video_coding_defines.cc",
   ]
   deps = [
@@ -527,6 +529,7 @@ rtc_library("webrtc_multiplex") {
     ":video_coding_utility",
     "../../api:fec_controller_api",
     "../../api:scoped_refptr",
+    "../../api/environment",
     "../../api/video:encoded_image",
     "../../api/video:video_frame",
     "../../api/video:video_rtp_headers",
@@ -583,7 +586,10 @@ rtc_library("webrtc_vp8") {
     ":webrtc_vp8_scalability",
     ":webrtc_vp8_temporal_layers",
     "../../api:fec_controller_api",
+    "../../api:field_trials_view",
     "../../api:scoped_refptr",
+    "../../api/environment",
+    "../../api/transport:field_trial_based_config",
     "../../api/units:time_delta",
     "../../api/units:timestamp",
     "../../api/video:encoded_image",
@@ -820,6 +826,8 @@ if (rtc_include_tests) {
       "../../api:mock_video_decoder",
       "../../api:mock_video_encoder",
       "../../api:simulcast_test_fixture_api",
+      "../../api/environment",
+      "../../api/environment:environment_factory",
       "../../api/video:encoded_image",
       "../../api/video:video_frame",
       "../../api/video:video_rtp_headers",
@@ -932,6 +940,8 @@ if (rtc_include_tests) {
       ":webrtc_vp9_helpers",
       "../../api:array_view",
       "../../api:videocodec_test_fixture_api",
+      "../../api/environment",
+      "../../api/environment:environment_factory",
       "../../api/test/metrics:global_metrics_logger_and_exporter",
       "../../api/test/metrics:metric",
       "../../api/test/video:function_video_factory",
@@ -999,6 +1009,8 @@ if (rtc_include_tests) {
 
     deps = [
       ":video_codec_interface",
+      "../../api/environment",
+      "../../api/environment:environment_factory",
       "../../api/test/metrics:global_metrics_logger_and_exporter",
       "../../api/units:data_rate",
       "../../api/units:frequency",
@@ -1008,6 +1020,8 @@ if (rtc_include_tests) {
       "../../modules/video_coding/svc:scalability_mode_util",
       "../../rtc_base:logging",
       "../../rtc_base:stringutils",
+      "../../test:explicit_key_value_config",
+      "../../test:field_trial",
       "../../test:fileutils",
       "../../test:test_flags",
       "../../test:test_main",
@@ -1077,6 +1091,8 @@ if (rtc_include_tests) {
       "../../api:scoped_refptr",
       "../../api:videocodec_test_fixture_api",
       "../../api:videocodec_test_stats_api",
+      "../../api/environment",
+      "../../api/environment:environment_factory",
       "../../api/test/metrics:global_metrics_logger_and_exporter",
       "../../api/test/video:function_video_factory",
       "../../api/video:encoded_image",
@@ -1152,9 +1168,9 @@ if (rtc_include_tests) {
       "frame_dependencies_calculator_unittest.cc",
       "frame_helpers_unittest.cc",
       "generic_decoder_unittest.cc",
-      "h264_packet_buffer_unittest.cc",
       "h264_sprop_parameter_sets_unittest.cc",
       "h264_sps_pps_tracker_unittest.cc",
+      "h26x_packet_buffer_unittest.cc",
       "histogram_unittest.cc",
       "loss_notification_controller_unittest.cc",
       "nack_requester_unittest.cc",
@@ -1189,7 +1205,7 @@ if (rtc_include_tests) {
       ":encoded_frame",
       ":frame_dependencies_calculator",
       ":frame_helpers",
-      ":h264_packet_buffer",
+      ":h26x_packet_buffer",
       ":nack_requester",
       ":packet_buffer",
       ":simulcast_test_fixture_impl",

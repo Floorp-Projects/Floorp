@@ -126,8 +126,6 @@ class MockVideoSendStream : public webrtc::VideoSendStream {
 
   Stats GetStats() override { return mStats; }
 
-  void StartPerRtpStream(const std::vector<bool> active_layers) override {}
-
   void AddAdaptationResource(
       rtc::scoped_refptr<webrtc::Resource> resource) override {}
 

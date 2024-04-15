@@ -10,6 +10,7 @@
 
 #include "modules/video_coding/codecs/multiplex/include/multiplex_decoder_adapter.h"
 
+#include "api/environment/environment.h"
 #include "api/video/encoded_image.h"
 #include "api/video/i420_buffer.h"
 #include "api/video/video_frame_buffer.h"
@@ -93,10 +94,12 @@ struct MultiplexDecoderAdapter::AugmentingData {
 };
 
 MultiplexDecoderAdapter::MultiplexDecoderAdapter(
+    const Environment& env,
     VideoDecoderFactory* factory,
     const SdpVideoFormat& associated_format,
     bool supports_augmenting_data)
-    : factory_(factory),
+    : env_(env),
+      factory_(factory),
       associated_format_(associated_format),
       supports_augmenting_data_(supports_augmenting_data) {}
 
@@ -111,7 +114,7 @@ bool MultiplexDecoderAdapter::Configure(const Settings& settings) {
       PayloadStringToCodecType(associated_format_.name));
   for (size_t i = 0; i < kAlphaCodecStreams; ++i) {
     std::unique_ptr<VideoDecoder> decoder =
-        factory_->CreateVideoDecoder(associated_format_);
+        factory_->Create(env_, associated_format_);
     if (!decoder->Configure(associated_settings)) {
       return false;
     }

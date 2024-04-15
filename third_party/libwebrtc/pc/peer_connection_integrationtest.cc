@@ -275,26 +275,6 @@ TEST_P(PeerConnectionIntegrationTest, EndToEndCallWithDtls) {
   ASSERT_TRUE(ExpectNewFrames(media_expectations));
 }
 
-#if defined(WEBRTC_FUCHSIA)
-// Uses SDES instead of DTLS for key agreement.
-TEST_P(PeerConnectionIntegrationTest, EndToEndCallWithSdes) {
-  PeerConnectionInterface::RTCConfiguration sdes_config;
-  sdes_config.enable_dtls_srtp.emplace(false);
-  ASSERT_TRUE(CreatePeerConnectionWrappersWithConfig(sdes_config, sdes_config));
-  ConnectFakeSignaling();
-
-  // Do normal offer/answer and wait for some frames to be received in each
-  // direction.
-  caller()->AddAudioVideoTracks();
-  callee()->AddAudioVideoTracks();
-  caller()->CreateAndSetAndSignalOffer();
-  ASSERT_TRUE_WAIT(SignalingStateStable(), kDefaultTimeout);
-  MediaExpectations media_expectations;
-  media_expectations.ExpectBidirectionalAudioAndVideo();
-  ASSERT_TRUE(ExpectNewFrames(media_expectations));
-}
-#endif
-
 // Basic end-to-end test specifying the `enable_encrypted_rtp_header_extensions`
 // option to offer encrypted versions of all header extensions alongside the
 // unencrypted versions.
@@ -3087,25 +3067,23 @@ TEST_P(PeerConnectionIntegrationTest, RegatherAfterChangingIceTransportType) {
   // `WebRTC.PeerConnection.CandidatePairType_UDP` in this test since this
   // metric is only populated when we reach kIceConnectionComplete in the
   // current implementation.
-  EXPECT_EQ(cricket::RELAY_PORT_TYPE,
-            caller()->last_candidate_gathered().type());
-  EXPECT_EQ(cricket::RELAY_PORT_TYPE,
-            callee()->last_candidate_gathered().type());
+  EXPECT_TRUE(caller()->last_candidate_gathered().is_relay());
+  EXPECT_TRUE(callee()->last_candidate_gathered().is_relay());
 
   // Loosen the caller's candidate filter.
   caller_config = caller()->pc()->GetConfiguration();
   caller_config.type = PeerConnectionInterface::kAll;
   caller()->pc()->SetConfiguration(caller_config);
   // We should have gathered a new host candidate.
-  EXPECT_EQ_WAIT(cricket::LOCAL_PORT_TYPE,
-                 caller()->last_candidate_gathered().type(), kDefaultTimeout);
+  EXPECT_TRUE_WAIT(caller()->last_candidate_gathered().is_local(),
+                   kDefaultTimeout);
 
   // Loosen the callee's candidate filter.
   callee_config = callee()->pc()->GetConfiguration();
   callee_config.type = PeerConnectionInterface::kAll;
   callee()->pc()->SetConfiguration(callee_config);
-  EXPECT_EQ_WAIT(cricket::LOCAL_PORT_TYPE,
-                 callee()->last_candidate_gathered().type(), kDefaultTimeout);
+  EXPECT_TRUE_WAIT(callee()->last_candidate_gathered().is_local(),
+                   kDefaultTimeout);
 
   // Create an offer and verify that it does not contain an ICE restart (i.e new
   // ice credentials).

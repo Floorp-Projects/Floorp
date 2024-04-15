@@ -114,7 +114,6 @@ static const char kVideoTracks[][32] = {"videotrack0", "videotrack1"};
 
 static const char kRecvonly[] = "recvonly";
 static const char kSendrecv[] = "sendrecv";
-constexpr uint64_t kTiebreakerDefault = 44444;
 
 // Reference SDP with a MediaStream with label "stream1" and audio track with
 // id "audio_1" and a video track with id "video_1;
@@ -420,29 +419,6 @@ static const char kSdpStringMs1Video1[] =
     "a=ssrc:4 cname:stream1\r\n"
     "a=ssrc:4 msid:stream1 videotrack1\r\n";
 
-static const char kDtlsSdesFallbackSdp[] =
-    "v=0\r\n"
-    "o=xxxxxx 7 2 IN IP4 0.0.0.0\r\n"
-    "s=-\r\n"
-    "c=IN IP4 0.0.0.0\r\n"
-    "t=0 0\r\n"
-    "a=group:BUNDLE audio\r\n"
-    "a=msid-semantic: WMS\r\n"
-    "m=audio 1 RTP/SAVPF 0\r\n"
-    "a=sendrecv\r\n"
-    "a=rtcp-mux\r\n"
-    "a=mid:audio\r\n"
-    "a=ssrc:1 cname:stream1\r\n"
-    "a=ice-ufrag:e5785931\r\n"
-    "a=ice-pwd:36fb7878390db89481c1d46daa4278d8\r\n"
-    "a=rtpmap:0 pcmu/8000\r\n"
-    "a=fingerprint:sha-1 "
-    "4A:AD:B9:B1:3F:82:18:3B:54:02:12:DF:3E:5D:49:6B:19:E5:7C:AB\r\n"
-    "a=setup:actpass\r\n"
-    "a=crypto:0 AES_CM_128_HMAC_SHA1_80 "
-    "inline:NzB4d1BINUAvLEw6UzF3WSJ+PSdFcGdUJShpX1Zj|2^20|1:32 "
-    "dummy_session_params\r\n";
-
 class RtcEventLogOutputNull final : public RtcEventLogOutput {
  public:
   bool IsActive() const override { return true; }
@@ -734,7 +710,6 @@ class PeerConnectionInterfaceBaseTest : public ::testing::Test {
             std::make_unique<rtc::BasicPacketSocketFactory>(vss_.get()),
             &field_trials_));
     port_allocator_ = port_allocator.get();
-    port_allocator_->SetIceTiebreaker(kTiebreakerDefault);
 
     // Create certificate generator unless DTLS constraint is explicitly set to
     // false.
@@ -1662,7 +1637,7 @@ TEST_P(PeerConnectionInterfaceTest, AddTrackWithoutStream) {
 // Test that we can call GetStats() after AddTrack but before connecting
 // the PeerConnection to a peer.
 TEST_P(PeerConnectionInterfaceTest, AddTrackBeforeConnecting) {
-  CreatePeerConnectionWithoutDtls();
+  CreatePeerConnection();
   rtc::scoped_refptr<AudioTrackInterface> audio_track(
       CreateAudioTrack("audio_track"));
   rtc::scoped_refptr<VideoTrackInterface> video_track(
@@ -1673,7 +1648,7 @@ TEST_P(PeerConnectionInterfaceTest, AddTrackBeforeConnecting) {
 }
 
 TEST_P(PeerConnectionInterfaceTest, AttachmentIdIsSetOnAddTrack) {
-  CreatePeerConnectionWithoutDtls();
+  CreatePeerConnection();
   rtc::scoped_refptr<AudioTrackInterface> audio_track(
       CreateAudioTrack("audio_track"));
   rtc::scoped_refptr<VideoTrackInterface> video_track(
@@ -1695,7 +1670,7 @@ TEST_P(PeerConnectionInterfaceTest, AttachmentIdIsSetOnAddTrack) {
 
 // Don't run under Unified Plan since the stream API is not available.
 TEST_F(PeerConnectionInterfaceTestPlanB, AttachmentIdIsSetOnAddStream) {
-  CreatePeerConnectionWithoutDtls();
+  CreatePeerConnection();
   AddVideoStream(kStreamId1);
   auto senders = pc_->GetSenders();
   ASSERT_EQ(1u, senders.size());
@@ -2128,24 +2103,6 @@ TEST_P(PeerConnectionInterfaceTest, ReceiveFireFoxOffer) {
   ASSERT_TRUE(content != nullptr);
   EXPECT_FALSE(content->rejected);
 #endif
-}
-
-// Test that fallback from DTLS to SDES is not supported.
-// The fallback was previously supported but was removed to simplify the code
-// and because it's non-standard.
-TEST_P(PeerConnectionInterfaceTest, DtlsSdesFallbackNotSupported) {
-  RTCConfiguration rtc_config;
-  CreatePeerConnection(rtc_config);
-  // Wait for fake certificate to be generated. Previously, this is what caused
-  // the "a=crypto" lines to be rejected.
-  AddAudioTrack("audio_label");
-  AddVideoTrack("video_label");
-  ASSERT_NE(nullptr, fake_certificate_generator_);
-  EXPECT_EQ_WAIT(1, fake_certificate_generator_->generated_certificates(),
-                 kTimeout);
-  std::unique_ptr<SessionDescriptionInterface> desc(
-      CreateSessionDescription(SdpType::kOffer, kDtlsSdesFallbackSdp, nullptr));
-  EXPECT_FALSE(DoSetSessionDescription(std::move(desc), /*local=*/false));
 }
 
 // Test that we can create an audio only offer and receive an answer with a

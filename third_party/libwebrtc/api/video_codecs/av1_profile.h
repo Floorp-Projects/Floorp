@@ -20,9 +20,6 @@
 
 namespace webrtc {
 
-// Profile information for AV1 video.
-extern RTC_EXPORT const char kAV1FmtpProfile[];
-
 // Profiles can be found at:
 // https://aomedia.org/av1/specification/annex-a/#profiles
 // The enum values match the number specified in the SDP.

@@ -46,6 +46,7 @@ RTC_OBJC_EXPORT
 @end
 
 @class RTC_OBJC_TYPE(RTCRtpTransceiver);
+@class RTC_OBJC_TYPE(RTCRtpCodecCapability);
 
 /** The RTCRtpTransceiver maps to the RTCRtpTransceiver defined by the
  *  WebRTC specification. A transceiver represents a combination of an RTCRtpSender
@@ -117,6 +118,12 @@ RTC_OBJC_EXPORT
  *  https://w3c.github.io/webrtc-pc/#dom-rtcrtptransceiver-stop
  */
 - (void)stopInternal;
+
+/** The setCodecPreferences method overrides the default codec preferences used
+ * by WebRTC for this transceiver.
+ * https://w3c.github.io/webrtc-pc/#dom-rtcrtptransceiver-setcodecpreferences
+ */
+- (void)setCodecPreferences:(NSArray<RTC_OBJC_TYPE(RTCRtpCodecCapability) *> *)codecs;
 
 /** An update of directionality does not take effect immediately. Instead,
  *  future calls to createOffer and createAnswer mark the corresponding media

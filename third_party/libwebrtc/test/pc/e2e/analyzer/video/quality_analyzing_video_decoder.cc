@@ -259,10 +259,10 @@ QualityAnalyzingVideoDecoderFactory::GetSupportedFormats() const {
   return delegate_->GetSupportedFormats();
 }
 
-std::unique_ptr<VideoDecoder>
-QualityAnalyzingVideoDecoderFactory::CreateVideoDecoder(
+std::unique_ptr<VideoDecoder> QualityAnalyzingVideoDecoderFactory::Create(
+    const Environment& env,
     const SdpVideoFormat& format) {
-  std::unique_ptr<VideoDecoder> decoder = delegate_->CreateVideoDecoder(format);
+  std::unique_ptr<VideoDecoder> decoder = delegate_->Create(env, format);
   return std::make_unique<QualityAnalyzingVideoDecoder>(
       peer_name_, std::move(decoder), extractor_, analyzer_);
 }

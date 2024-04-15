@@ -937,6 +937,8 @@ void VideoStreamEncoder::ConfigureEncoder(VideoEncoderConfig config,
 void VideoStreamEncoder::ReconfigureEncoder() {
   // Running on the encoder queue.
   RTC_DCHECK(pending_encoder_reconfiguration_);
+  RTC_LOG(LS_INFO) << "[VSE] " << __func__
+                   << " [encoder_config=" << encoder_config_.ToString() << "]";
 
   bool encoder_reset_required = false;
   if (pending_encoder_creation_) {
@@ -1154,37 +1156,38 @@ void VideoStreamEncoder::ReconfigureEncoder() {
 
   char log_stream_buf[4 * 1024];
   rtc::SimpleStringBuilder log_stream(log_stream_buf);
-  log_stream << "ReconfigureEncoder:\n";
-  log_stream << "Simulcast streams:\n";
+  log_stream << "ReconfigureEncoder: simulcast streams: ";
   for (size_t i = 0; i < codec.numberOfSimulcastStreams; ++i) {
-    log_stream << i << ": " << codec.simulcastStream[i].width << "x"
-               << codec.simulcastStream[i].height
-               << " min_kbps: " << codec.simulcastStream[i].minBitrate
-               << " target_kbps: " << codec.simulcastStream[i].targetBitrate
-               << " max_kbps: " << codec.simulcastStream[i].maxBitrate
-               << " max_fps: " << codec.simulcastStream[i].maxFramerate
-               << " max_qp: " << codec.simulcastStream[i].qpMax
-               << " num_tl: " << codec.simulcastStream[i].numberOfTemporalLayers
-               << " active: "
-               << (codec.simulcastStream[i].active ? "true" : "false") << "\n";
+    log_stream << "{" << i << ": " << codec.simulcastStream[i].width << "x"
+               << codec.simulcastStream[i].height << " "
+               << ScalabilityModeToString(
+                      codec.simulcastStream[i].GetScalabilityMode())
+               << ", min_kbps: " << codec.simulcastStream[i].minBitrate
+               << ", target_kbps: " << codec.simulcastStream[i].targetBitrate
+               << ", max_kbps: " << codec.simulcastStream[i].maxBitrate
+               << ", max_fps: " << codec.simulcastStream[i].maxFramerate
+               << ", max_qp: " << codec.simulcastStream[i].qpMax << ", num_tl: "
+               << codec.simulcastStream[i].numberOfTemporalLayers
+               << ", active: "
+               << (codec.simulcastStream[i].active ? "true" : "false") << "}";
   }
   if (encoder_config_.codec_type == kVideoCodecVP9 ||
       encoder_config_.codec_type == kVideoCodecAV1) {
-    log_stream << "Spatial layers:\n";
+    log_stream << ", spatial layers: ";
     for (int i = 0; i < GetNumSpatialLayers(codec); ++i) {
-      log_stream << i << ": " << codec.spatialLayers[i].width << "x"
+      log_stream << "{" << i << ": " << codec.spatialLayers[i].width << "x"
                  << codec.spatialLayers[i].height
-                 << " min_kbps: " << codec.spatialLayers[i].minBitrate
-                 << " target_kbps: " << codec.spatialLayers[i].targetBitrate
-                 << " max_kbps: " << codec.spatialLayers[i].maxBitrate
-                 << " max_fps: " << codec.spatialLayers[i].maxFramerate
-                 << " max_qp: " << codec.spatialLayers[i].qpMax
-                 << " num_tl: " << codec.spatialLayers[i].numberOfTemporalLayers
-                 << " active: "
-                 << (codec.spatialLayers[i].active ? "true" : "false") << "\n";
+                 << ", min_kbps: " << codec.spatialLayers[i].minBitrate
+                 << ", target_kbps: " << codec.spatialLayers[i].targetBitrate
+                 << ", max_kbps: " << codec.spatialLayers[i].maxBitrate
+                 << ", max_fps: " << codec.spatialLayers[i].maxFramerate
+                 << ", max_qp: " << codec.spatialLayers[i].qpMax << ", num_tl: "
+                 << codec.spatialLayers[i].numberOfTemporalLayers
+                 << ", active: "
+                 << (codec.spatialLayers[i].active ? "true" : "false") << "}";
     }
   }
-  RTC_LOG(LS_INFO) << log_stream.str();
+  RTC_LOG(LS_INFO) << "[VSE] " << log_stream.str();
 
   codec.startBitrate = std::max(encoder_target_bitrate_bps_.value_or(0) / 1000,
                                 codec.minBitrate);
@@ -1319,7 +1322,7 @@ void VideoStreamEncoder::ReconfigureEncoder() {
                         << " max frame rate " << codec.maxFramerate
                         << " max payload size " << max_data_payload_length_;
   } else {
-    RTC_LOG(LS_ERROR) << "Failed to configure encoder.";
+    RTC_LOG(LS_ERROR) << "[VSE] Failed to configure encoder.";
     rate_allocator_ = nullptr;
   }
 
@@ -1917,7 +1920,7 @@ void VideoStreamEncoder::EncodeVideoFrame(const VideoFrame& video_frame,
     stream_resource_manager_.ConfigureQualityScaler(info);
     stream_resource_manager_.ConfigureBandwidthQualityScaler(info);
 
-    RTC_LOG(LS_INFO) << "Encoder info changed to " << info.ToString();
+    RTC_LOG(LS_INFO) << "[VSE] Encoder info changed to " << info.ToString();
   }
 
   if (bitrate_adjuster_) {
@@ -2102,6 +2105,8 @@ EncodedImage VideoStreamEncoder::AugmentEncodedImage(
             .Parse(codec_type, stream_idx, image_copy.data(), image_copy.size())
             .value_or(-1);
   }
+  TRACE_EVENT2("webrtc", "VideoStreamEncoder::AugmentEncodedImage",
+               "stream_idx", stream_idx, "qp", image_copy.qp_);
   RTC_LOG(LS_VERBOSE) << __func__ << " ntp time " << encoded_image.NtpTimeMs()
                       << " stream_idx " << stream_idx << " qp "
                       << image_copy.qp_;

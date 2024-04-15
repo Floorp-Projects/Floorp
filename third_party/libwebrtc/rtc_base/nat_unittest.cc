@@ -233,12 +233,12 @@ bool TestConnectivity(const SocketAddress& src, const IPAddress& dst) {
   const char* buf = "hello other socket";
   size_t len = strlen(buf);
   int sent = client->SendTo(buf, len, server->GetLocalAddress());
-  SocketAddress addr;
-  const size_t kRecvBufSize = 64;
-  char recvbuf[kRecvBufSize];
+
   Thread::Current()->SleepMs(100);
-  int received = server->RecvFrom(recvbuf, kRecvBufSize, &addr, nullptr);
-  return received == sent && ::memcmp(buf, recvbuf, len) == 0;
+  rtc::Buffer payload;
+  Socket::ReceiveBuffer receive_buffer(payload);
+  int received = server->RecvFrom(receive_buffer);
+  return received == sent && ::memcmp(buf, payload.data(), len) == 0;
 }
 
 void TestPhysicalInternal(const SocketAddress& int_addr) {

@@ -151,6 +151,27 @@ class LifecycleId : public webrtc::StrongAlias<class LifecycleIdTag, uint64_t> {
 
   static constexpr LifecycleId NotSet() { return LifecycleId(0); }
 };
+
+// To enable zero checksum feature, both peers must agree on which alternate
+// error detection method that is used. See
+// https://www.ietf.org/archive/id/draft-ietf-tsvwg-sctp-zero-checksum-06.html.
+class ZeroChecksumAlternateErrorDetectionMethod
+    : public webrtc::StrongAlias<
+          class ZeroChecksumAlternateErrorDetectionMethodTag,
+          uint32_t> {
+ public:
+  constexpr explicit ZeroChecksumAlternateErrorDetectionMethod(
+      const UnderlyingType& v)
+      : webrtc::StrongAlias<class ZeroChecksumAlternateErrorDetectionMethodTag,
+                            uint32_t>(v) {}
+
+  static constexpr ZeroChecksumAlternateErrorDetectionMethod None() {
+    return ZeroChecksumAlternateErrorDetectionMethod(0);
+  }
+  static constexpr ZeroChecksumAlternateErrorDetectionMethod LowerLayerDtls() {
+    return ZeroChecksumAlternateErrorDetectionMethod(1);
+  }
+};
 }  // namespace dcsctp
 
 #endif  // NET_DCSCTP_PUBLIC_TYPES_H_

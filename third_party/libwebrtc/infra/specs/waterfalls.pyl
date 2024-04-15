@@ -70,7 +70,7 @@
         'os_type':
         'linux',
         'mixins': [
-          'linux-focal', 'x86-64', 'fuchsia-gtest-output',
+          'linux-jammy', 'x86-64', 'fuchsia-gtest-output',
           'resultdb-gtest-json-format'
         ],
         'test_suites': {
@@ -79,7 +79,7 @@
       },
       'Linux (more configs)': {
         'os_type': 'linux',
-        'mixins': ['linux-focal', 'x86-64', 'resultdb-json-format'],
+        'mixins': ['linux-jammy', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
           'isolated_scripts': 'more_configs_tests',
         },
@@ -127,7 +127,7 @@
       },
       'Linux32 Debug': {
         'os_type': 'linux',
-        'mixins': ['linux-focal', 'x86-64', 'resultdb-json-format'],
+        'mixins': ['linux-jammy', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
           'isolated_scripts': 'desktop_tests',
         },
@@ -135,7 +135,7 @@
       'Linux32 Debug (ARM)': {},
       'Linux32 Release': {
         'os_type': 'linux',
-        'mixins': ['linux-focal', 'x86-64', 'resultdb-json-format'],
+        'mixins': ['linux-jammy', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
           'isolated_scripts': 'desktop_tests',
         },
@@ -144,7 +144,7 @@
       'Linux64 Builder': {},
       'Linux64 Debug': {
         'os_type': 'linux',
-        'mixins': ['linux-focal', 'x86-64', 'resultdb-json-format'],
+        'mixins': ['linux-jammy', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
           'isolated_scripts': 'linux_tests',
         },
@@ -152,7 +152,7 @@
       'Linux64 Debug (ARM)': {},
       'Linux64 Release': {
         'os_type': 'linux',
-        'mixins': ['linux-focal', 'x86-64', 'resultdb-json-format'],
+        'mixins': ['linux-jammy', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
           'isolated_scripts': 'linux_tests',
         },
@@ -322,7 +322,7 @@
     'machines': {
       'iOS64 Debug': {
         'mixins': [
-          'ios-device-16.6', 'webrtc-xctest', 'chrome-tester-service-account',
+          'ios-device-16.7', 'webrtc-xctest', 'chrome-tester-service-account',
           'xcode_15_main', 'mac_toolchain', 'has_native_resultdb_integration',
           'out_dir_arg'
         ],
@@ -345,7 +345,7 @@
       },
       'iOS64 Release': {
         'mixins': [
-          'ios-device-16.6', 'webrtc-xctest', 'chrome-tester-service-account',
+          'ios-device-16.7', 'webrtc-xctest', 'chrome-tester-service-account',
           'xcode_15_main', 'mac_toolchain', 'has_native_resultdb_integration',
           'out_dir_arg'
         ],
@@ -420,7 +420,7 @@
         'os_type':
         'linux',
         'mixins': [
-          'linux-focal', 'x86-64', 'fuchsia-gtest-output',
+          'linux-jammy', 'x86-64', 'fuchsia-gtest-output',
           'resultdb-gtest-json-format'
         ],
         'test_suites': {
@@ -455,7 +455,7 @@
         'os_type':
         'linux',
         'mixins': [
-          'linux-focal', 'x86-64', 'resultdb-json-format',
+          'linux-jammy', 'x86-64', 'resultdb-json-format',
           'isolate_profile_data'
         ],
         'test_suites': {
@@ -464,7 +464,7 @@
       },
       'linux_dbg': {
         'os_type': 'linux',
-        'mixins': ['linux-focal', 'x86-64', 'resultdb-json-format'],
+        'mixins': ['linux-jammy', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
           'isolated_scripts': 'linux_tests',
         },
@@ -472,14 +472,14 @@
       'linux_libfuzzer_rel': {},
       'linux_memcheck': {
         'os_type': 'linux',
-        'mixins': ['linux-focal', 'x86-64', 'resultdb-json-format'],
+        'mixins': ['linux-jammy', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
           'isolated_scripts': 'linux_tests',
         },
       },
       'linux_more_configs': {
         'os_type': 'linux',
-        'mixins': ['linux-focal', 'x86-64', 'resultdb-json-format'],
+        'mixins': ['linux-jammy', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
           'isolated_scripts': 'more_configs_tests',
         },
@@ -496,7 +496,7 @@
       },
       'linux_rel': {
         'os_type': 'linux',
-        'mixins': ['linux-focal', 'x86-64', 'resultdb-json-format'],
+        'mixins': ['linux-jammy', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
           'isolated_scripts': 'linux_desktop_tests_tryserver',
         },
@@ -527,14 +527,14 @@
       },
       'linux_x86_dbg': {
         'os_type': 'linux',
-        'mixins': ['linux-focal', 'x86-64', 'resultdb-json-format'],
+        'mixins': ['linux-jammy', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
           'isolated_scripts': 'desktop_tests',
         },
       },
       'linux_x86_rel': {
         'os_type': 'linux',
-        'mixins': ['linux-focal', 'x86-64', 'resultdb-json-format'],
+        'mixins': ['linux-jammy', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
           'isolated_scripts': 'desktop_tests',
         },

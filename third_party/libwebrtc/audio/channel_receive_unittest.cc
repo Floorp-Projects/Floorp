@@ -14,6 +14,7 @@
 #include "api/audio_codecs/builtin_audio_decoder_factory.h"
 #include "api/crypto/frame_decryptor_interface.h"
 #include "api/task_queue/default_task_queue_factory.h"
+#include "api/test/mock_frame_transformer.h"
 #include "logging/rtc_event_log/mock/mock_rtc_event_log.h"
 #include "modules/audio_device/include/audio_device.h"
 #include "modules/audio_device/include/mock_audio_device.h"
@@ -29,7 +30,6 @@
 #include "test/gmock.h"
 #include "test/gtest.h"
 #include "test/mock_audio_decoder_factory.h"
-#include "test/mock_frame_transformer.h"
 #include "test/mock_transport.h"
 #include "test/time_controller/simulated_time_controller.h"
 

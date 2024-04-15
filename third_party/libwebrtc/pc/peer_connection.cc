@@ -104,13 +104,7 @@ uint32_t ConvertIceTransportTypeToCandidateFilter(
 IceCandidatePairType GetIceCandidatePairCounter(
     const cricket::Candidate& local,
     const cricket::Candidate& remote) {
-  const auto& l = local.type();
-  const auto& r = remote.type();
-  const auto& host = cricket::LOCAL_PORT_TYPE;
-  const auto& srflx = cricket::STUN_PORT_TYPE;
-  const auto& relay = cricket::RELAY_PORT_TYPE;
-  const auto& prflx = cricket::PRFLX_PORT_TYPE;
-  if (l == host && r == host) {
+  if (local.is_local() && remote.is_local()) {
     bool local_hostname =
         !local.address().hostname().empty() && local.address().IsUnresolvedIP();
     bool remote_hostname = !remote.address().hostname().empty() &&
@@ -143,34 +137,41 @@ IceCandidatePairType GetIceCandidatePairCounter(
       }
     }
   }
-  if (l == host && r == srflx)
-    return kIceCandidatePairHostSrflx;
-  if (l == host && r == relay)
-    return kIceCandidatePairHostRelay;
-  if (l == host && r == prflx)
-    return kIceCandidatePairHostPrflx;
-  if (l == srflx && r == host)
-    return kIceCandidatePairSrflxHost;
-  if (l == srflx && r == srflx)
-    return kIceCandidatePairSrflxSrflx;
-  if (l == srflx && r == relay)
-    return kIceCandidatePairSrflxRelay;
-  if (l == srflx && r == prflx)
-    return kIceCandidatePairSrflxPrflx;
-  if (l == relay && r == host)
-    return kIceCandidatePairRelayHost;
-  if (l == relay && r == srflx)
-    return kIceCandidatePairRelaySrflx;
-  if (l == relay && r == relay)
-    return kIceCandidatePairRelayRelay;
-  if (l == relay && r == prflx)
-    return kIceCandidatePairRelayPrflx;
-  if (l == prflx && r == host)
-    return kIceCandidatePairPrflxHost;
-  if (l == prflx && r == srflx)
-    return kIceCandidatePairPrflxSrflx;
-  if (l == prflx && r == relay)
-    return kIceCandidatePairPrflxRelay;
+
+  if (local.is_local()) {
+    if (remote.is_stun())
+      return kIceCandidatePairHostSrflx;
+    if (remote.is_relay())
+      return kIceCandidatePairHostRelay;
+    if (remote.is_prflx())
+      return kIceCandidatePairHostPrflx;
+  } else if (local.is_stun()) {
+    if (remote.is_local())
+      return kIceCandidatePairSrflxHost;
+    if (remote.is_stun())
+      return kIceCandidatePairSrflxSrflx;
+    if (remote.is_relay())
+      return kIceCandidatePairSrflxRelay;
+    if (remote.is_prflx())
+      return kIceCandidatePairSrflxPrflx;
+  } else if (local.is_relay()) {
+    if (remote.is_local())
+      return kIceCandidatePairRelayHost;
+    if (remote.is_stun())
+      return kIceCandidatePairRelaySrflx;
+    if (remote.is_relay())
+      return kIceCandidatePairRelayRelay;
+    if (remote.is_prflx())
+      return kIceCandidatePairRelayPrflx;
+  } else if (local.is_prflx()) {
+    if (remote.is_local())
+      return kIceCandidatePairPrflxHost;
+    if (remote.is_stun())
+      return kIceCandidatePairPrflxSrflx;
+    if (remote.is_relay())
+      return kIceCandidatePairPrflxRelay;
+  }
+
   return kIceCandidatePairMax;
 }
 
@@ -347,15 +348,7 @@ bool DtlsEnabled(const PeerConnectionInterface::RTCConfiguration& configuration,
     return false;
 
   // Enable DTLS by default if we have an identity store or a certificate.
-  bool default_enabled =
-      (dependencies.cert_generator || !configuration.certificates.empty());
-
-#if defined(WEBRTC_FUCHSIA)
-  // The `configuration` can override the default value.
-  return configuration.enable_dtls_srtp.value_or(default_enabled);
-#else
-  return default_enabled;
-#endif
+  return (dependencies.cert_generator || !configuration.certificates.empty());
 }
 
 // Calls `ParseIceServersOrError` to extract ice server information from the
@@ -415,9 +408,6 @@ bool PeerConnectionInterface::RTCConfiguration::operator==(
     int max_ipv6_networks;
     bool disable_link_local_networks;
     absl::optional<int> screencast_min_bitrate;
-#if defined(WEBRTC_FUCHSIA)
-    absl::optional<bool> enable_dtls_srtp;
-#endif
     TcpCandidatePolicy tcp_candidate_policy;
     CandidateNetworkPolicy candidate_network_policy;
     int audio_jitter_buffer_max_packets;
@@ -482,9 +472,6 @@ bool PeerConnectionInterface::RTCConfiguration::operator==(
          max_ipv6_networks == o.max_ipv6_networks &&
          disable_link_local_networks == o.disable_link_local_networks &&
          screencast_min_bitrate == o.screencast_min_bitrate &&
-#if defined(WEBRTC_FUCHSIA)
-         enable_dtls_srtp == o.enable_dtls_srtp &&
-#endif
          ice_candidate_pool_size == o.ice_candidate_pool_size &&
          prune_turn_ports == o.prune_turn_ports &&
          turn_port_prune_policy == o.turn_port_prune_policy &&
@@ -1694,6 +1681,15 @@ RTCError PeerConnection::SetBitrate(const BitrateSettings& bitrate) {
   return RTCError::OK();
 }
 
+void PeerConnection::ReconfigureBandwidthEstimation(
+    const BandwidthEstimationSettings& settings) {
+  worker_thread()->PostTask(SafeTask(worker_thread_safety_, [this, settings]() {
+    RTC_DCHECK_RUN_ON(worker_thread());
+    call_->GetTransportControllerSend()->ReconfigureBandwidthEstimation(
+        settings);
+  }));
+}
+
 void PeerConnection::SetAudioPlayout(bool playout) {
   if (!worker_thread()->IsCurrent()) {
     worker_thread()->BlockingCall(
@@ -2706,9 +2702,7 @@ void PeerConnection::ReportRemoteIceCandidateAdded(
 
 bool PeerConnection::SrtpRequired() const {
   RTC_DCHECK_RUN_ON(signaling_thread());
-  return (dtls_enabled_ ||
-          sdp_handler_->webrtc_session_desc_factory()->SdesPolicy() ==
-              cricket::SEC_REQUIRED);
+  return dtls_enabled_;
 }
 
 void PeerConnection::OnTransportControllerGatheringState(
