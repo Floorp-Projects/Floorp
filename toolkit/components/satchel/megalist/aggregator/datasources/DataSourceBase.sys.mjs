@@ -64,6 +64,25 @@ export class DataSourceBase {
   }
 
   formatMessages = createFormatMessages("preview/megalist.ftl");
+  static ftl = new Localization(["preview/megalist.ftl"]);
+
+  async localizeStrings(strings) {
+    const keys = Object.keys(strings);
+    const localisationIds = Object.values(strings).map(id => ({ id }));
+    const messages = await DataSourceBase.ftl.formatMessages(localisationIds);
+
+    for (let i = 0; i < messages.length; i++) {
+      let { attributes, value } = messages[i];
+      if (attributes) {
+        value = attributes.reduce(
+          (result, { name, value }) => ({ ...result, [name]: value }),
+          {}
+        );
+      }
+      strings[keys[i]] = value;
+    }
+    return strings;
+  }
 
   /**
    * Prototype for the each line.

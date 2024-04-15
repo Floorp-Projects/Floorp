@@ -56,103 +56,88 @@ export class AddressesDataSource extends DataSourceBase {
 
   constructor(...args) {
     super(...args);
-    this.formatMessages(
-      "addresses-section-label",
-      "address-name-label",
-      "address-phone-label",
-      "address-email-label",
-      "command-copy",
-      "addresses-disabled",
-      "command-delete",
-      "command-edit",
-      "addresses-command-create"
-    ).then(
-      ([
-        headerLabel,
-        nameLabel,
-        phoneLabel,
-        emailLabel,
-        copyLabel,
-        addressesDisabled,
-        deleteLabel,
-        editLabel,
-        createLabel,
-      ]) => {
-        const copyCommand = { id: "Copy", label: copyLabel };
-        const editCommand = { id: "Edit", label: editLabel };
-        const deleteCommand = { id: "Delete", label: deleteLabel };
-        this.#addressesDisabledMessage = addressesDisabled;
-        this.#header = this.createHeaderLine(headerLabel);
-        this.#header.commands.push({ id: "Create", label: createLabel });
+    this.localizeStrings({
+      headerLabel: "addresses-section-label",
+      nameLabel: "address-name-label",
+      phoneLabel: "address-phone-label",
+      emailLabel: "address-email-label",
+      copyLabel: "command-copy",
+      addressesDisabled: "addresses-disabled",
+      deleteLabel: "command-delete",
+      editLabel: "command-edit",
+      createLabel: "addresses-command-create",
+    }).then(strings => {
+      const copyCommand = { id: "Copy", label: strings.copyLabel };
+      const editCommand = { id: "Edit", label: strings.editLabel };
+      const deleteCommand = { id: "Delete", label: strings.deleteLabel };
+      this.#addressesDisabledMessage = strings.addressesDisabled;
+      this.#header = this.createHeaderLine(strings.headerLabel);
+      this.#header.commands.push({ id: "Create", label: strings.createLabel });
 
-        let self = this;
+      let self = this;
 
-        function prototypeLine(label, key, options = {}) {
-          return self.prototypeDataLine({
-            label: { value: label },
-            value: {
-              get() {
-                return this.editingValue ?? this.record[key];
-              },
+      function prototypeLine(label, key, options = {}) {
+        return self.prototypeDataLine({
+          label: { value: label },
+          value: {
+            get() {
+              return this.editingValue ?? this.record[key];
             },
-            commands: {
-              value: [copyCommand, editCommand, "-", deleteCommand],
+          },
+          commands: {
+            value: [copyCommand, editCommand, "-", deleteCommand],
+          },
+          executeEdit: {
+            value() {
+              this.editingValue = this.record[key] ?? "";
+              this.refreshOnScreen();
             },
-            executeEdit: {
-              value() {
-                this.editingValue = this.record[key] ?? "";
-                this.refreshOnScreen();
-              },
+          },
+          executeSave: {
+            async value(value) {
+              if (await updateAddress(this.record, key, value)) {
+                this.executeCancel();
+              }
             },
-            executeSave: {
-              async value(value) {
-                if (await updateAddress(this.record, key, value)) {
-                  this.executeCancel();
-                }
-              },
-            },
-            ...options,
-          });
-        }
-
-        this.#namePrototype = prototypeLine(nameLabel, "name", {
-          start: { value: true },
+          },
+          ...options,
         });
-        this.#organizationPrototype = prototypeLine(
-          "Organization",
-          "organization"
-        );
-        this.#streetAddressPrototype = prototypeLine(
-          "Street Address",
-          "street-address"
-        );
-        this.#addressLevelThreePrototype = prototypeLine(
-          "Neighbourhood",
-          "address-level3"
-        );
-        this.#addressLevelTwoPrototype = prototypeLine(
-          "City",
-          "address-level2"
-        );
-        this.#addressLevelOnePrototype = prototypeLine(
-          "Province",
-          "address-level1"
-        );
-        this.#postalCodePrototype = prototypeLine("Postal Code", "postal-code");
-        this.#countryPrototype = prototypeLine("Country", "country");
-        this.#phonePrototype = prototypeLine(phoneLabel, "tel");
-        this.#emailPrototype = prototypeLine(emailLabel, "email", {
-          end: { value: true },
-        });
-
-        Services.obs.addObserver(this, "formautofill-storage-changed");
-        Services.prefs.addObserver(
-          "extensions.formautofill.addresses.enabled",
-          this
-        );
-        this.#reloadDataSource();
       }
-    );
+
+      this.#namePrototype = prototypeLine(strings.nameLabel, "name", {
+        start: { value: true },
+      });
+      this.#organizationPrototype = prototypeLine(
+        "Organization",
+        "organization"
+      );
+      this.#streetAddressPrototype = prototypeLine(
+        "Street Address",
+        "street-address"
+      );
+      this.#addressLevelThreePrototype = prototypeLine(
+        "Neighbourhood",
+        "address-level3"
+      );
+      this.#addressLevelTwoPrototype = prototypeLine("City", "address-level2");
+      this.#addressLevelOnePrototype = prototypeLine(
+        "Province",
+        "address-level1"
+      );
+      this.#postalCodePrototype = prototypeLine("Postal Code", "postal-code");
+      this.#countryPrototype = prototypeLine("Country", "country");
+      this.#phonePrototype = prototypeLine(strings.phoneLabel, "tel");
+      this.#emailPrototype = prototypeLine(strings.emailLabel, "email", {
+        end: { value: true },
+      });
+
+      Services.obs.addObserver(this, "formautofill-storage-changed");
+      Services.prefs.addObserver(
+        "extensions.formautofill.addresses.enabled",
+        this
+      );
+      this.#reloadDataSource();
+    });
   }
 
   async #reloadDataSource() {
