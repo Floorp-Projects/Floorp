@@ -6,8 +6,10 @@
 
 #include "builtin/temporal/Temporal.h"
 
+#include "mozilla/Casting.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Likely.h"
+#include "mozilla/MathAlgorithms.h"
 #include "mozilla/Maybe.h"
 
 #include <algorithm>
@@ -15,8 +17,10 @@
 #include <cstdlib>
 #include <initializer_list>
 #include <iterator>
+#include <limits>
 #include <stdint.h>
 #include <string_view>
+#include <type_traits>
 #include <utility>
 
 #include "jsfriendapi.h"
@@ -440,8 +444,14 @@ bool js::temporal::ToTemporalRoundingMode(JSContext* cx,
 }
 
 #ifdef DEBUG
+template <typename T>
+static bool IsValidMul(const T& x, const T& y) {
+  return (mozilla::CheckedInt<T>(x) * y).isValid();
+}
+
 // Copied from mozilla::CheckedInt.
-static bool IsValidMul(const Int128& x, const Int128& y) {
+template <>
+bool IsValidMul<Int128>(const Int128& x, const Int128& y) {
   static constexpr auto min = Int128{1} << 127;
   static constexpr auto max = ~min;
 
@@ -534,6 +544,238 @@ Int128 js::temporal::RoundNumberToIncrement(const Int128& x,
   // Step 9.
   MOZ_ASSERT(IsValidMul(rounded, increment), "unsupported overflow");
   return rounded * increment;
+}
+
+template <typename IntT>
+static inline constexpr bool IsSafeInteger(const IntT& x) {
+  constexpr IntT MaxSafeInteger = IntT{int64_t(1) << 53};
+  constexpr IntT MinSafeInteger = -MaxSafeInteger;
+  return MinSafeInteger < x && x < MaxSafeInteger;
+}
+
+/**
+ * Return the real number value of the fraction |numerator / denominator|.
+ *
+ * As an optimization we multiply the remainder by 16 when computing the number
+ * of digits after the decimal point, i.e. we compute four instead of one bit of
+ * the fractional digits. The denominator is therefore required to not exceed
+ * 2**(N - log2(16)), where N is the number of non-sign bits in the mantissa.
+ */
+template <typename T>
+static double FractionToDoubleSlow(const T& numerator, const T& denominator) {
+  MOZ_ASSERT(denominator > T{0}, "expected positive denominator");
+  MOZ_ASSERT(denominator <= (T{1} << (std::numeric_limits<T>::digits - 4)),
+             "denominator too large");
+
+  auto absValue = [](const T& value) {
+    if constexpr (std::is_same_v<T, Int128>) {
+      return value.abs();
+    } else {
+      // NB: Not std::abs, because std::abs(INT64_MIN) is undefined behavior.
+      return mozilla::Abs(value);
+    }
+  };
+
+  using UnsignedT = decltype(absValue(T{0}));
+  static_assert(!std::numeric_limits<UnsignedT>::is_signed);
+
+  auto divrem = [](const UnsignedT& x, const UnsignedT& y) {
+    if constexpr (std::is_same_v<T, Int128>) {
+      return x.divrem(y);
+    } else {
+      return std::pair{x / y, x % y};
+    }
+  };
+
+  auto [quot, rem] =
+      divrem(absValue(numerator), static_cast<UnsignedT>(denominator));
+
+  // Simple case when no remainder is present.
+  if (rem == UnsignedT{0}) {
+    double sign = numerator < T{0} ? -1 : 1;
+    return sign * double(quot);
+  }
+
+  using Double = mozilla::FloatingPoint<double>;
+
+  // Significand including the implicit one of IEEE-754 floating point numbers.
+  static constexpr uint32_t SignificandWidthWithImplicitOne =
+      Double::kSignificandWidth + 1;
+
+  // Number of leading zeros for a correctly adjusted significand.
+  static constexpr uint32_t SignificandLeadingZeros =
+      64 - SignificandWidthWithImplicitOne;
+
+  // Exponent bias for an integral significand. (`Double::kExponentBias` is the
+  // bias for the binary fraction `1.xyz * 2**exp`. For an integral significand
+  // the significand width has to be added to the bias.)
+  static constexpr int32_t ExponentBias =
+      Double::kExponentBias + Double::kSignificandWidth;
+
+  // Significand, possibly unnormalized.
+  uint64_t significand = 0;
+
+  // Significand ignored msd bits.
+  uint32_t ignoredBits = 0;
+
+  // Read quotient, from most to least significant digit. Stop when the
+  // significand got too large for double precision.
+  int32_t shift = std::numeric_limits<UnsignedT>::digits;
+  for (; shift != 0 && ignoredBits == 0; shift -= 4) {
+    uint64_t digit = uint64_t(quot >> (shift - 4)) & 0xf;
+
+    significand = significand * 16 + digit;
+    ignoredBits = significand >> SignificandWidthWithImplicitOne;
+  }
+
+  // Read remainder, from most to least significant digit. Stop when the
+  // remainder is zero or the significand got too large.
+  int32_t fractionDigit = 0;
+  for (; rem != UnsignedT{0} && ignoredBits == 0; fractionDigit++) {
+    auto [digit, next] =
+        divrem(rem * UnsignedT{16}, static_cast<UnsignedT>(denominator));
+    rem = next;
+
+    significand = significand * 16 + uint64_t(digit);
+    ignoredBits = significand >> SignificandWidthWithImplicitOne;
+  }
+
+  // Unbiased exponent. (`shift` remaining bits in the quotient, minus the
+  // fractional digits.)
+  int32_t exponent = shift - (fractionDigit * 4);
+
+  // Significand got too large and some bits are now ignored. Adjust the
+  // significand and exponent.
+  if (ignoredBits != 0) {
+    //        significand
+    //  ___________|__________
+    // /                      \
+    // [xxx················yyy|
+    //  \_/                \_/
+    //   |                  |
+    // ignoredBits       extraBits
+    //
+    // `ignoredBits` have to be shifted back into the 53 bits of the significand
+    // and `extraBits` has to be checked if the result has to be rounded up.
+
+    // Number of ignored/extra bits in the significand.
+    uint32_t extraBitsCount = 32 - mozilla::CountLeadingZeroes32(ignoredBits);
+    MOZ_ASSERT(extraBitsCount > 0);
+
+    // Extra bits in the significand.
+    uint32_t extraBits = uint32_t(significand) & ((1 << extraBitsCount) - 1);
+
+    // Move the ignored bits into the proper significand position and adjust the
+    // exponent to reflect the now moved out extra bits.
+    significand >>= extraBitsCount;
+    exponent += extraBitsCount;
+
+    MOZ_ASSERT((significand >> SignificandWidthWithImplicitOne) == 0,
+               "no excess bits in the significand");
+
+    // When the most significant digit in the extra bits is set, we may need to
+    // round the result.
+    uint32_t msdExtraBit = extraBits >> (extraBitsCount - 1);
+    if (msdExtraBit != 0) {
+      // Extra bits, excluding the most significant digit.
+      uint32_t extraBitExcludingMsdMask = (1 << (extraBitsCount - 1)) - 1;
+
+      // Unprocessed bits in the quotient.
+      auto bitsBelowExtraBits = quot & ((UnsignedT{1} << shift) - UnsignedT{1});
+
+      // Round up if the extra bit's msd is set and either the significand is
+      // odd or any other bits below the extra bit's msd are non-zero.
+      //
+      // Bits below the extra bit's msd are:
+      // 1. The remaining bits of the extra bits.
+      // 2. Any bits below the extra bits.
+      // 3. Any rest of the remainder.
+      bool shouldRoundUp = (significand & 1) != 0 ||
+                           (extraBits & extraBitExcludingMsdMask) != 0 ||
+                           bitsBelowExtraBits != UnsignedT{0} ||
+                           rem != UnsignedT{0};
+      if (shouldRoundUp) {
+        // Add one to the significand bits.
+        significand += 1;
+
+        // If they overflow, the exponent must also be increased.
+        if ((significand >> SignificandWidthWithImplicitOne) != 0) {
+          exponent++;
+          significand >>= 1;
+        }
+      }
+    }
+  }
+
+  MOZ_ASSERT(significand > 0, "significand is non-zero");
+  MOZ_ASSERT((significand >> SignificandWidthWithImplicitOne) == 0,
+             "no excess bits in the significand");
+
+  // Move the significand into the correct position and adjust the exponent
+  // accordingly.
+  uint32_t significandZeros = mozilla::CountLeadingZeroes64(significand);
+  if (significandZeros < SignificandLeadingZeros) {
+    uint32_t shift = SignificandLeadingZeros - significandZeros;
+    significand >>= shift;
+    exponent += shift;
+  } else if (significandZeros > SignificandLeadingZeros) {
+    uint32_t shift = significandZeros - SignificandLeadingZeros;
+    significand <<= shift;
+    exponent -= shift;
+  }
+
+  // Combine the individual bits of the double value and return it.
+  uint64_t signBit = uint64_t(numerator < T{0} ? 1 : 0)
+                     << (Double::kExponentWidth + Double::kSignificandWidth);
+  uint64_t exponentBits = static_cast<uint64_t>(exponent + ExponentBias)
+                          << Double::kExponentShift;
+  uint64_t significandBits = significand & Double::kSignificandBits;
+  return mozilla::BitwiseCast<double>(signBit | exponentBits | significandBits);
+}
+
+double js::temporal::FractionToDouble(int64_t numerator, int64_t denominator) {
+  MOZ_ASSERT(denominator > 0);
+
+  // Zero divided by any divisor is still zero.
+  if (numerator == 0) {
+    return 0;
+  }
+
+  // When both values can be represented as doubles, use double division to
+  // compute the exact result. The result is exact, because double division is
+  // guaranteed to return the exact result.
+  if (MOZ_LIKELY(::IsSafeInteger(numerator) && ::IsSafeInteger(denominator))) {
+    return double(numerator) / double(denominator);
+  }
+
+  // Otherwise call into |FractionToDoubleSlow| to compute the exact result.
+  if (denominator <=
+      (int64_t(1) << (std::numeric_limits<int64_t>::digits - 4))) {
+    // Slightly faster, but still slow approach when |denominator| is small
+    // enough to allow computing on int64 values.
+    return FractionToDoubleSlow(numerator, denominator);
+  }
+  return FractionToDoubleSlow(Int128{numerator}, Int128{denominator});
+}
+
+double js::temporal::FractionToDouble(const Int128& numerator,
+                                      const Int128& denominator) {
+  MOZ_ASSERT(denominator > Int128{0});
+
+  // Zero divided by any divisor is still zero.
+  if (numerator == Int128{0}) {
+    return 0;
+  }
+
+  // When both values can be represented as doubles, use double division to
+  // compute the exact result. The result is exact, because double division is
+  // guaranteed to return the exact result.
+  if (MOZ_LIKELY(::IsSafeInteger(numerator) && ::IsSafeInteger(denominator))) {
+    return double(numerator) / double(denominator);
+  }
+
+  // Otherwise call into |FractionToDoubleSlow| to compute the exact result.
+  return FractionToDoubleSlow(numerator, denominator);
 }
 
 /**

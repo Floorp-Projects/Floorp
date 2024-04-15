@@ -50,6 +50,7 @@ UNIFIED_SOURCES += [
     "testForceLexicalInitialization.cpp",
     "testForOfIterator.cpp",
     "testForwardSetProperty.cpp",
+    "testFractionToDouble.cpp",
     "testFreshGlobalEvalRedefinition.cpp",
     "testFrontendCompileStencil.cpp",
     "testFrontendErrors.cpp",
