@@ -949,8 +949,9 @@ class ContentParent final : public PContentParent,
       PBrowserParent* aBrowser,
       const MaybeDiscarded<BrowsingContext>& aContext);
 
-  mozilla::ipc::IPCResult RecvSetClipboard(const IPCTransferable& aTransferable,
-                                           const int32_t& aWhichClipboard);
+  mozilla::ipc::IPCResult RecvSetClipboard(
+      const IPCTransferable& aTransferable, const int32_t& aWhichClipboard,
+      const MaybeDiscarded<WindowContext>& aRequestingWindowContext);
 
   mozilla::ipc::IPCResult RecvGetClipboard(
       nsTArray<nsCString>&& aTypes, const int32_t& aWhichClipboard,
@@ -975,7 +976,9 @@ class ContentParent final : public PContentParent,
       ClipboardReadRequestOrError* aRequestOrError);
 
   already_AddRefed<PClipboardWriteRequestParent>
-  AllocPClipboardWriteRequestParent(const int32_t& aClipboardType);
+  AllocPClipboardWriteRequestParent(
+      const int32_t& aClipboardType,
+      const MaybeDiscarded<WindowContext>& aSettingWindowContext);
 
   mozilla::ipc::IPCResult RecvGetIconForExtension(const nsACString& aFileExt,
                                                   const uint32_t& aIconSize,

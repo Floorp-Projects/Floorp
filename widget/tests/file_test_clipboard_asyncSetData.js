@@ -21,7 +21,7 @@ clipboardTypes.forEach(function (type) {
             let priorResult;
             let priorRequest;
             let priorPromise = new Promise(resolve => {
-              priorRequest = clipboard.asyncSetData(type, {
+              priorRequest = clipboard.asyncSetData(type, null, {
                 QueryInterface: SpecialPowers.ChromeUtils.generateQI([
                   "nsIAsyncSetClipboardDataCallback",
                 ]),
@@ -119,7 +119,7 @@ clipboardTypes.forEach(function (type) {
 
       // Create a pending asyncSetData request
       let result;
-      let request = clipboard.asyncSetData(type, rv => {
+      let request = clipboard.asyncSetData(type, null, rv => {
         result = rv;
       });
 

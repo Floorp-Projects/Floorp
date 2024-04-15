@@ -32,7 +32,8 @@ nsClipboardProxy::nsClipboardProxy() : mClipboardCaps(false, false, false) {}
 
 NS_IMETHODIMP
 nsClipboardProxy::SetData(nsITransferable* aTransferable,
-                          nsIClipboardOwner* anOwner, int32_t aWhichClipboard) {
+                          nsIClipboardOwner* anOwner, int32_t aWhichClipboard,
+                          mozilla::dom::WindowContext* aWindowContext) {
 #if defined(ACCESSIBILITY) && defined(XP_WIN)
   a11y::Compatibility::SuppressA11yForClipboardCopy();
 #endif
@@ -41,17 +42,19 @@ nsClipboardProxy::SetData(nsITransferable* aTransferable,
   IPCTransferable ipcTransferable;
   nsContentUtils::TransferableToIPCTransferable(aTransferable, &ipcTransferable,
                                                 false, nullptr);
-  child->SendSetClipboard(std::move(ipcTransferable), aWhichClipboard);
+  child->SendSetClipboard(std::move(ipcTransferable), aWhichClipboard,
+                          aWindowContext);
   return NS_OK;
 }
 
 NS_IMETHODIMP nsClipboardProxy::AsyncSetData(
-    int32_t aWhichClipboard, nsIAsyncClipboardRequestCallback* aCallback,
+    int32_t aWhichClipboard, mozilla::dom::WindowContext* aSettingWindowContext,
+    nsIAsyncClipboardRequestCallback* aCallback,
     nsIAsyncSetClipboardData** _retval) {
   RefPtr<ClipboardWriteRequestChild> request =
       MakeRefPtr<ClipboardWriteRequestChild>(aCallback);
   ContentChild::GetSingleton()->SendPClipboardWriteRequestConstructor(
-      request, aWhichClipboard);
+      request, aWhichClipboard, aSettingWindowContext);
   request.forget(_retval);
   return NS_OK;
 }

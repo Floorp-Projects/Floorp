@@ -2175,7 +2175,10 @@ class nsContextMenu {
     var clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(
       Ci.nsIClipboardHelper
     );
-    clipboard.copyString(addresses);
+    clipboard.copyString(
+      addresses,
+      this.actor.manager.browsingContext.currentWindowGlobal
+    );
   }
 
   // Extract phone and put it on clipboard
@@ -2195,7 +2198,10 @@ class nsContextMenu {
     var clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(
       Ci.nsIClipboardHelper
     );
-    clipboard.copyString(phone);
+    clipboard.copyString(
+      phone,
+      this.actor.manager.browsingContext.currentWindowGlobal
+    );
   }
 
   copyLink() {
@@ -2204,7 +2210,10 @@ class nsContextMenu {
     var clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(
       Ci.nsIClipboardHelper
     );
-    clipboard.copyString(linkURL);
+    clipboard.copyString(
+      linkURL,
+      this.actor.manager.browsingContext.currentWindowGlobal
+    );
   }
 
   /**
@@ -2220,7 +2229,10 @@ class nsContextMenu {
       let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(
         Ci.nsIClipboardHelper
       );
-      clipboard.copyString(strippedLinkURL);
+      clipboard.copyString(
+        strippedLinkURL,
+        this.actor.manager.browsingContext.currentWindowGlobal
+      );
     }
   }
 
@@ -2458,7 +2470,10 @@ class nsContextMenu {
     var clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(
       Ci.nsIClipboardHelper
     );
-    clipboard.copyString(this.originalMediaURL);
+    clipboard.copyString(
+      this.originalMediaURL,
+      this.actor.manager.browsingContext.currentWindowGlobal
+    );
   }
 
   getImageText() {

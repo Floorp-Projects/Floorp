@@ -44,9 +44,12 @@ class nsBaseClipboard : public nsIClipboard {
   NS_DECL_ISUPPORTS
 
   // nsIClipboard
-  NS_IMETHOD SetData(nsITransferable* aTransferable, nsIClipboardOwner* aOwner,
-                     int32_t aWhichClipboard) override final;
+  NS_IMETHOD SetData(
+      nsITransferable* aTransferable, nsIClipboardOwner* aOwner,
+      int32_t aWhichClipboard,
+      mozilla::dom::WindowContext* aWindowContext) override final;
   NS_IMETHOD AsyncSetData(int32_t aWhichClipboard,
+                          mozilla::dom::WindowContext* aSettingWindowContext,
                           nsIAsyncClipboardRequestCallback* aCallback,
                           nsIAsyncSetClipboardData** _retval) override final;
   NS_IMETHOD GetData(
@@ -108,6 +111,7 @@ class nsBaseClipboard : public nsIClipboard {
     NS_DECL_NSIASYNCSETCLIPBOARDDATA
 
     AsyncSetClipboardData(int32_t aClipboardType, nsBaseClipboard* aClipboard,
+                          mozilla::dom::WindowContext* aRequestingWindowContext,
                           nsIAsyncClipboardRequestCallback* aCallback);
 
    private:
@@ -125,6 +129,7 @@ class nsBaseClipboard : public nsIClipboard {
     // NotifyCallback()) once nsBaseClipboard stops tracking us. This is
     // also used to indicate whether this request is valid.
     nsBaseClipboard* mClipboard;
+    RefPtr<mozilla::dom::WindowContext> mWindowContext;
     // mCallback will be nullified once the callback is notified to ensure the
     // callback is only notified once.
     nsCOMPtr<nsIAsyncClipboardRequestCallback> mCallback;
@@ -174,22 +179,26 @@ class nsBaseClipboard : public nsIClipboard {
      */
     void Clear();
     void Update(nsITransferable* aTransferable,
-                nsIClipboardOwner* aClipboardOwner, int32_t aSequenceNumber) {
+                nsIClipboardOwner* aClipboardOwner, int32_t aSequenceNumber,
+                mozilla::Maybe<uint64_t> aInnerWindowId) {
       // Clear first to notify the old clipboard owner.
       Clear();
       mTransferable = aTransferable;
       mClipboardOwner = aClipboardOwner;
       mSequenceNumber = aSequenceNumber;
+      mInnerWindowId = aInnerWindowId;
     }
     nsITransferable* GetTransferable() const { return mTransferable; }
     nsIClipboardOwner* GetClipboardOwner() const { return mClipboardOwner; }
     int32_t GetSequenceNumber() const { return mSequenceNumber; }
+    mozilla::Maybe<uint64_t> GetInnerWindowId() const { return mInnerWindowId; }
     nsresult GetData(nsITransferable* aTransferable) const;
 
    private:
     nsCOMPtr<nsITransferable> mTransferable;
     nsCOMPtr<nsIClipboardOwner> mClipboardOwner;
     int32_t mSequenceNumber = -1;
+    mozilla::Maybe<uint64_t> mInnerWindowId;
   };
 
   class SafeContentAnalysisResultCallback final
@@ -245,10 +254,10 @@ class nsBaseClipboard : public nsIClipboard {
                                      int32_t aClipboardType);
   bool CheckClipboardContentAnalysisSync(
       mozilla::dom::WindowGlobalParent* aWindow,
-      const nsCOMPtr<nsITransferable>& trans);
+      const nsCOMPtr<nsITransferable>& trans, int32_t aClipboardType);
   void CheckClipboardContentAnalysis(
       mozilla::dom::WindowGlobalParent* aWindow, nsITransferable* aTransferable,
-      SafeContentAnalysisResultCallback* aResolver);
+      int32_t aClipboardType, SafeContentAnalysisResultCallback* aResolver);
   //  - true means a content analysis request was fired
   //  - false means there is no text data in the transferable
   //  - NoContentAnalysisResult means there was an error

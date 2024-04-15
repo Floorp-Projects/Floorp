@@ -1219,7 +1219,7 @@ parent:
 
     // Places the items within dataTransfer on the clipboard.
     async SetClipboard(IPCTransferable aTransferable,
-                       int32_t aWhichClipboard);
+                       int32_t aWhichClipboard, MaybeDiscardedWindowContext aRequestingWindowContext);
 
     // Given a list of supported types, returns the clipboard data for the
     // first type that matches.
@@ -1252,8 +1252,12 @@ parent:
      * and that the data will be sent over another IPC message once it is ready.
      * @param  aClipboardType
      *         The clipboard type defined in nsIClipboard.
+     * @param  aSettingWindowContext
+     *         The window context that is setting the clipboard, if any. This is used
+     *         to possibly bypass Content Analysis if a set clipboard and get clipboard
+     *         operation are done on the same page.
      */
-    async PClipboardWriteRequest(int32_t aClipboardType);
+    async PClipboardWriteRequest(int32_t aClipboardType, MaybeDiscardedWindowContext aSettingWindowContext);
 
     sync GetIconForExtension(nsCString aFileExt, uint32_t aIconSize)
         returns (uint8_t[] bits);
