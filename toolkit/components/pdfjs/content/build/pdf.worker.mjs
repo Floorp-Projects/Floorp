@@ -29087,6 +29087,7 @@ function bidi(str, startLevel = -1, vertical = false) {
 ;// CONCATENATED MODULE: ./src/core/font_substitutions.js
 
 
+
 const NORMAL = {
   style: "normal",
   weight: "normal"
@@ -29277,9 +29278,12 @@ function generateFont({
   }
   return result;
 }
-function getFontSubstitution(systemFontCache, idFactory, localFontPath, baseFontName, standardFontName) {
+function getFontSubstitution(systemFontCache, idFactory, localFontPath, baseFontName, standardFontName, type) {
   if (baseFontName.startsWith("InvalidPDFjsFont_")) {
     return null;
+  }
+  if ((type === "TrueType" || type === "Type1") && /^[A-Z]{6}\+/.test(baseFontName)) {
+    baseFontName = baseFontName.slice(7);
   }
   baseFontName = normalizeFontName(baseFontName);
   const key = baseFontName;
@@ -29305,6 +29309,7 @@ function getFontSubstitution(systemFontCache, idFactory, localFontPath, baseFont
   const loadedName = `${idFactory.getDocId()}_s${idFactory.createFontId()}`;
   if (!substitution) {
     if (!validateFontName(baseFontName)) {
+      warn(`Cannot substitute the font because of its name: ${baseFontName}`);
       systemFontCache.set(key, null);
       return null;
     }
@@ -33942,7 +33947,7 @@ class PartialEvaluator {
           properties.isInternalFont = !!file;
         }
         if (!properties.isInternalFont && this.options.useSystemFonts) {
-          properties.systemFontInfo = getFontSubstitution(this.systemFontCache, this.idFactory, this.options.standardFontDataUrl, baseFontName, standardFontName);
+          properties.systemFontInfo = getFontSubstitution(this.systemFontCache, this.idFactory, this.options.standardFontDataUrl, baseFontName, standardFontName, type);
         }
         const newProperties = await this.extractDataStructures(dict, properties);
         if (widths) {
@@ -34019,7 +34024,7 @@ class PartialEvaluator {
         isInternalFont = !!fontFile;
       }
       if (!isInternalFont && this.options.useSystemFonts) {
-        systemFontInfo = getFontSubstitution(this.systemFontCache, this.idFactory, this.options.standardFontDataUrl, fontName.name, standardFontName);
+        systemFontInfo = getFontSubstitution(this.systemFontCache, this.idFactory, this.options.standardFontDataUrl, fontName.name, standardFontName, type);
       }
     }
     const properties = {
@@ -51180,9 +51185,21 @@ class Annotation {
     });
   }
   async getOperatorList(evaluator, task, intent, renderForms, annotationStorage) {
-    const data = this.data;
+    const {
+      hasOwnCanvas,
+      id,
+      rect
+    } = this.data;
     let appearance = this.appearance;
-    const isUsingOwnCanvas = !!(this.data.hasOwnCanvas && intent & RenderingIntentFlag.DISPLAY);
+    const isUsingOwnCanvas = !!(hasOwnCanvas && intent & RenderingIntentFlag.DISPLAY);
+    if (isUsingOwnCanvas && (rect[0] === rect[2] || rect[1] === rect[3])) {
+      this.data.hasOwnCanvas = false;
+      return {
+        opList: new OperatorList(),
+        separateForm: false,
+        separateCanvas: false
+      };
+    }
     if (!appearance) {
       if (!isUsingOwnCanvas) {
         return {
@@ -51198,7 +51215,7 @@ class Annotation {
     const resources = await this.loadResources(["ExtGState", "ColorSpace", "Pattern", "Shading", "XObject", "Font"], appearance);
     const bbox = appearanceDict.getArray("BBox") || [0, 0, 1, 1];
     const matrix = appearanceDict.getArray("Matrix") || [1, 0, 0, 1, 0, 0];
-    const transform = getTransformMatrix(data.rect, bbox, matrix);
+    const transform = getTransformMatrix(rect, bbox, matrix);
     const opList = new OperatorList();
     let optionalContent;
     if (this.oc) {
@@ -51207,7 +51224,7 @@ class Annotation {
     if (optionalContent !== undefined) {
       opList.addOp(OPS.beginMarkedContentProps, ["OC", optionalContent]);
     }
-    opList.addOp(OPS.beginAnnotation, [data.id, data.rect, transform, matrix, isUsingOwnCanvas]);
+    opList.addOp(OPS.beginAnnotation, [id, rect, transform, matrix, isUsingOwnCanvas]);
     await evaluator.getOperatorList({
       stream: appearance,
       task,
@@ -56756,7 +56773,7 @@ class WorkerMessageHandler {
       docId,
       apiVersion
     } = docParams;
-    const workerVersion = "4.1.378";
+    const workerVersion = "4.1.407";
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -57318,8 +57335,8 @@ if (typeof window === "undefined" && !isNodeJS && typeof self !== "undefined" &&
 
 ;// CONCATENATED MODULE: ./src/pdf.worker.js
 
-const pdfjsVersion = "4.1.378";
-const pdfjsBuild = "a208d6bca";
+const pdfjsVersion = "4.1.407";
+const pdfjsBuild = "2e9451133";
 
 var __webpack_exports__WorkerMessageHandler = __webpack_exports__.WorkerMessageHandler;
 export { __webpack_exports__WorkerMessageHandler as WorkerMessageHandler };
