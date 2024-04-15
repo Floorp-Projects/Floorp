@@ -3045,17 +3045,21 @@ static bool CreateCalendarMethodsRecordFromRelativeTo(
   return true;
 }
 
+struct RoundedNumber final {
+  Int128 rounded;
+  double total;
+};
+
 /**
  * RoundNumberToIncrement ( x, increment, roundingMode )
  */
-static void TruncateNumber(int64_t numerator, int64_t denominator,
-                           double* quotient, double* total) {
+static RoundedNumber TruncateNumber(int64_t numerator, int64_t denominator) {
   // Computes the quotient and real number value of the rational number
   // |numerator / denominator|.
 
   // Int64 division truncates.
-  int64_t q = numerator / denominator;
-  int64_t r = numerator % denominator;
+  int64_t quot = numerator / denominator;
+  int64_t rem = numerator % denominator;
 
   // The total value is stored as a mathematical number in the draft proposal,
   // so we can't convert it to a double without loss of precision. We use two
@@ -3074,49 +3078,29 @@ static void TruncateNumber(int64_t numerator, int64_t denominator,
   //
   // The best possible approximation is |4000.0000000000004547...𝔽|, which can
   // be computed through |q + r / denominator|.
+  double total;
   if (::IsSafeInteger(numerator) && ::IsSafeInteger(denominator)) {
-    *quotient = double(q);
-    *total = double(numerator) / double(denominator);
+    total = double(numerator) / double(denominator);
   } else {
-    *quotient = double(q);
-    *total = double(q) + double(r) / double(denominator);
+    total = double(quot) + double(rem) / double(denominator);
   }
+  return {Int128{quot}, total};
 }
 
 /**
  * RoundNumberToIncrement ( x, increment, roundingMode )
  */
-static bool TruncateNumber(JSContext* cx, Handle<BigInt*> numerator,
-                           Handle<BigInt*> denominator, double* quotient,
-                           double* total) {
-  MOZ_ASSERT(!denominator->isNegative());
-  MOZ_ASSERT(!denominator->isZero());
+static RoundedNumber TruncateNumber(const Int128& numerator,
+                                    const Int128& denominator) {
+  MOZ_ASSERT(denominator > Int128{});
+  MOZ_ASSERT(numerator > Int128{INT64_MAX} || denominator > Int128{INT64_MAX},
+             "small values use the int64 overload");
 
-  // Dividing zero is always zero.
-  if (numerator->isZero()) {
-    *quotient = 0;
-    *total = 0;
-    return true;
-  }
+  // Int128 division truncates.
+  auto [quot, rem] = numerator.divrem(denominator);
 
-  int64_t num, denom;
-  if (BigInt::isInt64(numerator, &num) &&
-      BigInt::isInt64(denominator, &denom)) {
-    TruncateNumber(num, denom, quotient, total);
-    return true;
-  }
-
-  // BigInt division truncates.
-  Rooted<BigInt*> quot(cx);
-  Rooted<BigInt*> rem(cx);
-  if (!BigInt::divmod(cx, numerator, denominator, &quot, &rem)) {
-    return false;
-  }
-
-  double q = BigInt::numberValue(quot);
-  *quotient = q;
-  *total = q + BigInt::numberValue(rem) / BigInt::numberValue(denominator);
-  return true;
+  double total = double(quot) + double(rem) / double(denominator);
+  return {quot, total};
 }
 
 struct RoundedDuration final {
@@ -3264,139 +3248,31 @@ static bool DaysIsNegative(int64_t days,
   return totalDays < 0 || (totalDays == 0 && timeAndDays.time < 0);
 }
 
-struct RoundedNumber {
-  double rounded;
-  double total;
-};
+static RoundedNumber RoundNumberToIncrement(
+    int64_t durationAmount, int64_t amountPassed, int64_t durationDays,
+    int32_t daysToAdd, const NormalizedTimeAndDays& timeAndDays,
+    int32_t oneUnitDays, Increment increment, TemporalRoundingMode roundingMode,
+    ComputeRemainder computeRemainder) {
+#ifdef DEBUG
+  // Valid duration days are smaller than ⌈(2**53) / (24 * 60 * 60)⌉.
+  static constexpr int64_t maxDurationDays =
+      (int64_t(1) << 53) / (24 * 60 * 60);
 
-static bool RoundNumberToIncrementSlow(JSContext* cx, double durationAmount,
-                                       double amountPassed, double durationDays,
-                                       int32_t daysToAdd,
-                                       const NormalizedTimeAndDays& timeAndDays,
-                                       int32_t oneUnitDays, Increment increment,
-                                       TemporalRoundingMode roundingMode,
-                                       ComputeRemainder computeRemainder,
-                                       RoundedNumber* result) {
+  // Numbers of days between nsMinInstant and nsMaxInstant.
+  static constexpr int32_t epochDays = 200'000'000;
+#endif
+
+  MOZ_ASSERT(std::abs(durationAmount) < (int64_t(1) << 32));
+  MOZ_ASSERT(std::abs(amountPassed) < (int64_t(1) << 32));
+  MOZ_ASSERT(std::abs(durationDays) <= maxDurationDays);
+  MOZ_ASSERT(std::abs(daysToAdd) <= epochDays * 2);
   MOZ_ASSERT(timeAndDays.dayLength > 0);
+  MOZ_ASSERT(timeAndDays.dayLength < (int64_t(1) << 53));
   MOZ_ASSERT(std::abs(timeAndDays.time) < timeAndDays.dayLength);
+  MOZ_ASSERT(std::abs(timeAndDays.days) <= maxDurationDays);
   MOZ_ASSERT(oneUnitDays != 0);
-
-  Rooted<BigInt*> biAmount(cx, BigInt::createFromDouble(cx, durationAmount));
-  if (!biAmount) {
-    return false;
-  }
-
-  Rooted<BigInt*> biAmountPassed(cx,
-                                 BigInt::createFromDouble(cx, amountPassed));
-  if (!biAmountPassed) {
-    return false;
-  }
-
-  biAmount = BigInt::add(cx, biAmount, biAmountPassed);
-  if (!biAmount) {
-    return false;
-  }
-
-  Rooted<BigInt*> days(cx, BigInt::createFromDouble(cx, durationDays));
-  if (!days) {
-    return false;
-  }
-
-  Rooted<BigInt*> nanoDays(cx, BigInt::createFromInt64(cx, timeAndDays.days));
-  if (!nanoDays) {
-    return false;
-  }
-
-  Rooted<BigInt*> biDaysToAdd(cx, BigInt::createFromInt64(cx, daysToAdd));
-  if (!biDaysToAdd) {
-    return false;
-  }
-
-  days = BigInt::add(cx, days, nanoDays);
-  if (!days) {
-    return false;
-  }
-
-  days = BigInt::add(cx, days, biDaysToAdd);
-  if (!days) {
-    return false;
-  }
-
-  Rooted<BigInt*> nanoseconds(cx,
-                              BigInt::createFromInt64(cx, timeAndDays.time));
-  if (!nanoseconds) {
-    return false;
-  }
-
-  Rooted<BigInt*> dayLength(cx,
-                            BigInt::createFromInt64(cx, timeAndDays.dayLength));
-  if (!dayLength) {
-    return false;
-  }
-
-  Rooted<BigInt*> denominator(
-      cx, BigInt::createFromInt64(cx, std::abs(oneUnitDays)));
-  if (!denominator) {
-    return false;
-  }
-
-  denominator = BigInt::mul(cx, denominator, dayLength);
-  if (!denominator) {
-    return false;
-  }
-
-  Rooted<BigInt*> totalNanoseconds(cx, BigInt::mul(cx, days, dayLength));
-  if (!totalNanoseconds) {
-    return false;
-  }
-
-  totalNanoseconds = BigInt::add(cx, totalNanoseconds, nanoseconds);
-  if (!totalNanoseconds) {
-    return false;
-  }
-
-  Rooted<BigInt*> amountNanos(cx, BigInt::mul(cx, biAmount, denominator));
-  if (!amountNanos) {
-    return false;
-  }
-
-  totalNanoseconds = BigInt::add(cx, totalNanoseconds, amountNanos);
-  if (!totalNanoseconds) {
-    return false;
-  }
-
-  double rounded;
-  double total = 0;
-  if (computeRemainder == ComputeRemainder::No) {
-    if (!temporal::RoundNumberToIncrement(cx, totalNanoseconds, denominator,
-                                          increment, roundingMode, &rounded)) {
-      return false;
-    }
-  } else {
-    if (!::TruncateNumber(cx, totalNanoseconds, denominator, &rounded,
-                          &total)) {
-      return false;
-    }
-  }
-
-  *result = {rounded, total};
-  return true;
-}
-
-static bool RoundNumberToIncrement(JSContext* cx, double durationAmount,
-                                   double amountPassed, double durationDays,
-                                   int32_t daysToAdd,
-                                   const NormalizedTimeAndDays& timeAndDays,
-                                   int32_t oneUnitDays, Increment increment,
-                                   TemporalRoundingMode roundingMode,
-                                   ComputeRemainder computeRemainder,
-                                   RoundedNumber* result) {
-  MOZ_ASSERT(timeAndDays.dayLength > 0);
-  MOZ_ASSERT(std::abs(timeAndDays.time) < timeAndDays.dayLength);
-  MOZ_ASSERT(oneUnitDays != 0);
-  MOZ_ASSERT(std::abs(oneUnitDays) <= 200'000'000);
-
-  // TODO(anba): Rename variables.
+  MOZ_ASSERT(std::abs(oneUnitDays) <= epochDays);
+  MOZ_ASSERT(increment <= Increment::max());
 
   // clang-format off
   //
@@ -3430,89 +3306,117 @@ static bool RoundNumberToIncrement(JSContext* cx, double durationAmount,
       break;
     }
 
-    int64_t intDays;
-    if (!mozilla::NumberEqualsInt64(durationDays, &intDays)) {
-      break;
-    }
-
-    auto totalDays = mozilla::CheckedInt64(intDays);
+    auto totalDays = mozilla::CheckedInt64(durationDays);
     totalDays += timeAndDays.days;
     totalDays += daysToAdd;
-    if (!totalDays.isValid()) {
-      break;
-    }
+    MOZ_ASSERT(totalDays.isValid());
 
-    auto totalNanoseconds = dayLength * totalDays;
-    if (!totalNanoseconds.isValid()) {
-      break;
-    }
-
-    totalNanoseconds += timeAndDays.time;
-    if (!totalNanoseconds.isValid()) {
-      break;
-    }
-
-    int64_t intAmount;
-    if (!mozilla::NumberEqualsInt64(durationAmount, &intAmount)) {
-      break;
-    }
-
-    int64_t intAmountPassed;
-    if (!mozilla::NumberEqualsInt64(amountPassed, &intAmountPassed)) {
-      break;
-    }
-
-    auto totalAmount = mozilla::CheckedInt64(intAmount) + intAmountPassed;
-    if (!totalAmount.isValid()) {
-      break;
-    }
+    auto totalAmount = mozilla::CheckedInt64(durationAmount) + amountPassed;
+    MOZ_ASSERT(totalAmount.isValid());
 
     auto amountNanos = denominator * totalAmount;
     if (!amountNanos.isValid()) {
       break;
     }
 
+    auto totalNanoseconds = dayLength * totalDays;
+    totalNanoseconds += timeAndDays.time;
     totalNanoseconds += amountNanos;
     if (!totalNanoseconds.isValid()) {
       break;
     }
 
-    double rounded;
-    double total = 0;
-    if (computeRemainder == ComputeRemainder::No) {
-      if (!temporal::RoundNumberToIncrement(cx, totalNanoseconds.value(),
-                                            denominator.value(), increment,
-                                            roundingMode, &rounded)) {
-        return false;
-      }
-    } else {
-      TruncateNumber(totalNanoseconds.value(), denominator.value(), &rounded,
-                     &total);
+    if (computeRemainder == ComputeRemainder::Yes) {
+      return TruncateNumber(totalNanoseconds.value(), denominator.value());
     }
 
-    *result = {rounded, total};
-    return true;
+    auto rounded = RoundNumberToIncrement(
+        totalNanoseconds.value(), denominator.value(), increment, roundingMode);
+    constexpr double total = 0;
+    return {rounded, total};
   } while (false);
 
-  return RoundNumberToIncrementSlow(
-      cx, durationAmount, amountPassed, durationDays, daysToAdd, timeAndDays,
-      oneUnitDays, increment, roundingMode, computeRemainder, result);
+  // Use int128 when values are too large for int64. Additionally assert all
+  // values fit into int128.
+
+  // `dayLength` < 2**53
+  auto dayLength = Int128{timeAndDays.dayLength};
+  MOZ_ASSERT(dayLength < Int128{1} << 53);
+
+  // `abs(oneUnitDays)` < 200'000'000, log2(200'000'000) = ~27.57.
+  auto denominator = dayLength * Int128{std::abs(oneUnitDays)};
+  MOZ_ASSERT(denominator < Int128{1} << (53 + 28));
+
+  // log2(24*60*60) = ~16.4 and log2(2 * 200'000'000) = ~28.57.
+  //
+  // `abs(maxDurationDays)` ≤ 2**(53 - 16).
+  // `abs(timeAndDays.days)` ≤ 2**(53 - 16).
+  // `abs(daysToAdd)` ≤ 2**29.
+  //
+  //   2**(53 - 16) + 2**(53 - 16) + 2**29
+  // = 2**37 + 2**37 + 2**29
+  // = 2**38 + 2**29
+  // ≤ 2**39
+  auto totalDays = Int128{durationDays};
+  totalDays += Int128{timeAndDays.days};
+  totalDays += Int128{daysToAdd};
+  MOZ_ASSERT(totalDays.abs() <= Uint128{1} << 39);
+
+  // `abs(durationAmount)` ≤ 2**32
+  // `abs(amountPassed)` ≤ 2**32
+  auto totalAmount = Int128{durationAmount} + Int128{amountPassed};
+  MOZ_ASSERT(totalAmount.abs() <= Uint128{1} << 33);
+
+  // `denominator` < 2**(53 + 28)
+  // `abs(totalAmount)` <= 2**33
+  //
+  //   `denominator * totalAmount`
+  // ≤ 2**(53 + 28) * 2**33
+  // = 2**(53 + 28 + 33)
+  // = 2**114
+  auto amountNanos = denominator * totalAmount;
+  MOZ_ASSERT(amountNanos.abs() <= Uint128{1} << 114);
+
+  // `dayLength` < 2**53
+  // `totalDays` ≤ 2**39
+  // `timeAndDays.time` < `dayLength` < 2**53
+  // `amountNanos` ≤ 2**114
+  //
+  //  `dayLength * totalDays`
+  // ≤ 2**(53 + 39) = 2**92
+  //
+  //   `dayLength * totalDays + timeAndDays.time`
+  // ≤ 2**93
+  //
+  //  `dayLength * totalDays + timeAndDays.time + amountNanos`
+  // ≤ 2**115
+  auto totalNanoseconds = dayLength * totalDays;
+  totalNanoseconds += Int128{timeAndDays.time};
+  totalNanoseconds += amountNanos;
+  MOZ_ASSERT(totalNanoseconds.abs() <= Uint128{1} << 115);
+
+  if (computeRemainder == ComputeRemainder::Yes) {
+    return TruncateNumber(totalNanoseconds, denominator);
+  }
+
+  auto rounded = RoundNumberToIncrement(totalNanoseconds, denominator,
+                                        increment, roundingMode);
+  constexpr double total = 0;
+  return {rounded, total};
 }
 
-static bool RoundNumberToIncrement(JSContext* cx, double durationDays,
-                                   const NormalizedTimeAndDays& timeAndDays,
-                                   Increment increment,
-                                   TemporalRoundingMode roundingMode,
-                                   ComputeRemainder computeRemainder,
-                                   RoundedNumber* result) {
-  constexpr double daysAmount = 0;
-  constexpr double daysPassed = 0;
+static RoundedNumber RoundNumberToIncrement(
+    double durationDays, const NormalizedTimeAndDays& timeAndDays,
+    Increment increment, TemporalRoundingMode roundingMode,
+    ComputeRemainder computeRemainder) {
+  constexpr int64_t daysAmount = 0;
+  constexpr int64_t daysPassed = 0;
   constexpr int32_t oneDayDays = 1;
   constexpr int32_t daysToAdd = 0;
 
-  return RoundNumberToIncrement(cx, daysAmount, daysPassed, durationDays,
-                                daysToAdd, timeAndDays, oneDayDays, increment,
-                                roundingMode, computeRemainder, result);
+  return RoundNumberToIncrement(daysAmount, daysPassed, durationDays, daysToAdd,
+                                timeAndDays, oneDayDays, increment,
+                                roundingMode, computeRemainder);
 }
 
 static bool RoundDurationYear(JSContext* cx, const NormalizedDuration& duration,
@@ -3587,13 +3491,13 @@ static bool RoundDurationYear(JSContext* cx, const NormalizedDuration& duration,
   }
 
   // Step 10.m.
-  double yearsPassed = timePassed.years;
+  int64_t yearsPassed = int64_t(timePassed.years);
 
   // Step 10.n.
   // Our implementation keeps |years| and |yearsPassed| separate.
 
   // Step 10.o.
-  Duration yearsPassedDuration = {yearsPassed};
+  Duration yearsPassedDuration = {double(yearsPassed)};
 
   // Steps 10.p-r.
   int32_t daysPassed;
@@ -3631,13 +3535,9 @@ static bool RoundDurationYear(JSContext* cx, const NormalizedDuration& duration,
   }
 
   // Steps 10.y-aa.
-  RoundedNumber rounded;
-  if (!RoundNumberToIncrement(cx, years, yearsPassed, days, daysToAdd,
-                              timeAndDays, oneYearDays, increment, roundingMode,
-                              computeRemainder, &rounded)) {
-    return false;
-  }
-  auto [numYears, total] = rounded;
+  auto [numYears, total] = RoundNumberToIncrement(
+      years, yearsPassed, days, daysToAdd, timeAndDays, oneYearDays, increment,
+      roundingMode, computeRemainder);
 
   // Step 10.ab.
   int64_t numMonths = 0;
@@ -3647,8 +3547,8 @@ static bool RoundDurationYear(JSContext* cx, const NormalizedDuration& duration,
   constexpr auto time = NormalizedTimeDuration{};
 
   // Step 20.
-  if (std::abs(numYears) >= double(int64_t(1) << 32)) {
-    return ThrowInvalidDurationPart(cx, numYears, "years",
+  if (numYears.abs() >= (Uint128{1} << 32)) {
+    return ThrowInvalidDurationPart(cx, double(numYears), "years",
                                     JSMSG_TEMPORAL_DURATION_INVALID_NON_FINITE);
   }
 
@@ -3734,13 +3634,13 @@ static bool RoundDurationMonth(JSContext* cx,
   }
 
   // Step 11.m.
-  double monthsPassed = timePassed.months;
+  int64_t monthsPassed = int64_t(timePassed.months);
 
   // Step 11.n.
   // Our implementation keeps |months| and |monthsPassed| separate.
 
   // Step 11.o.
-  Duration monthsPassedDuration = {0, monthsPassed};
+  Duration monthsPassedDuration = {0, double(monthsPassed)};
 
   // Steps 11.p-r.
   int32_t daysPassed;
@@ -3778,13 +3678,9 @@ static bool RoundDurationMonth(JSContext* cx,
   }
 
   // Steps 11.y-aa.
-  RoundedNumber rounded;
-  if (!RoundNumberToIncrement(cx, months, monthsPassed, days, daysToAdd,
-                              timeAndDays, oneMonthDays, increment,
-                              roundingMode, computeRemainder, &rounded)) {
-    return false;
-  }
-  auto [numMonths, total] = rounded;
+  auto [numMonths, total] = RoundNumberToIncrement(
+      months, monthsPassed, days, daysToAdd, timeAndDays, oneMonthDays,
+      increment, roundingMode, computeRemainder);
 
   // Step 11.ab.
   int64_t numWeeks = 0;
@@ -3793,8 +3689,8 @@ static bool RoundDurationMonth(JSContext* cx,
   constexpr auto time = NormalizedTimeDuration{};
 
   // Step 21.
-  if (std::abs(numMonths) >= double(int64_t(1) << 32)) {
-    return ThrowInvalidDurationPart(cx, numMonths, "months",
+  if (numMonths.abs() >= (Uint128{1} << 32)) {
+    return ThrowInvalidDurationPart(cx, double(numMonths), "months",
                                     JSMSG_TEMPORAL_DURATION_INVALID_NON_FINITE);
   }
 
@@ -3850,13 +3746,13 @@ static bool RoundDurationWeek(JSContext* cx, const NormalizedDuration& duration,
   }
 
   // Step 12.f.
-  double weeksPassed = timePassed.weeks;
+  int64_t weeksPassed = int64_t(timePassed.weeks);
 
   // Step 12.g.
   // Our implementation keeps |weeks| and |weeksPassed| separate.
 
   // Step 12.h.
-  Duration weeksPassedDuration = {0, 0, weeksPassed};
+  Duration weeksPassedDuration = {0, 0, double(weeksPassed)};
 
   // Steps 12.i-k.
   Rooted<Wrapped<PlainDateObject*>> newRelativeTo(cx);
@@ -3895,20 +3791,16 @@ static bool RoundDurationWeek(JSContext* cx, const NormalizedDuration& duration,
   }
 
   // Steps 12.r-t.
-  RoundedNumber rounded;
-  if (!RoundNumberToIncrement(cx, weeks, weeksPassed, days, daysToAdd,
-                              timeAndDays, oneWeekDays, increment, roundingMode,
-                              computeRemainder, &rounded)) {
-    return false;
-  }
-  auto [numWeeks, total] = rounded;
+  auto [numWeeks, total] = RoundNumberToIncrement(
+      weeks, weeksPassed, days, daysToAdd, timeAndDays, oneWeekDays, increment,
+      roundingMode, computeRemainder);
 
   // Step 12.u.
   constexpr auto time = NormalizedTimeDuration{};
 
   // Step 20.
-  if (std::abs(numWeeks) >= double(int64_t(1) << 32)) {
-    return ThrowInvalidDurationPart(cx, numWeeks, "weeks",
+  if (numWeeks.abs() >= (Uint128{1} << 32)) {
+    return ThrowInvalidDurationPart(cx, double(numWeeks), "weeks",
                                     JSMSG_TEMPORAL_DURATION_INVALID_NON_FINITE);
   }
 
@@ -3930,12 +3822,11 @@ static bool RoundDurationDay(JSContext* cx, const NormalizedDuration& duration,
   auto [years, months, weeks, days] = duration.date;
 
   // Steps 13.a-b.
-  RoundedNumber rounded;
-  if (!RoundNumberToIncrement(cx, days, timeAndDays, increment, roundingMode,
-                              computeRemainder, &rounded)) {
-    return false;
-  }
-  auto [numDays, total] = rounded;
+  auto [numDays, total] = RoundNumberToIncrement(
+      days, timeAndDays, increment, roundingMode, computeRemainder);
+
+  MOZ_ASSERT(Int128{INT64_MIN} <= numDays && numDays <= Int128{INT64_MAX},
+             "rounded days fits in int64");
 
   // Step 13.c.
   constexpr auto time = NormalizedTimeDuration{};
