@@ -3,13 +3,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 <html:template id="appMenu-viewCache">
-  <!-- This is a placeholder app menu which should be replaced with the "real"
-       Proton app menu before the Proton pref starts getting enabled. -->
-  <panelview id="appMenu-protonMainView" class="PanelUI-subView"
+  <panelview id="appMenu-mainView" class="PanelUI-subView"
              lockpanelvertical="true">
     <vbox class="panel-subview-body">
-      <vbox id="appMenu-proton-addon-banners"/>
-      <toolbarbutton id="appMenu-proton-update-banner" class="panel-banner-item subviewbutton"
+      <vbox id="appMenu-addon-banners"/>
+      <toolbarbutton id="appMenu-update-banner" class="panel-banner-item subviewbutton"
                      oncommand="PanelUI._onBannerItemSelected(event)"
                      wrap="true"
                      hidden="true"/>
