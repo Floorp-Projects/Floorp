@@ -622,22 +622,27 @@ NormalizedTimeDuration js::temporal::DifferenceInstant(
 /**
  * RoundNumberToIncrementAsIfPositive ( x, increment, roundingMode )
  */
-static bool RoundNumberToIncrementAsIfPositive(
-    JSContext* cx, const Instant& x, int64_t increment,
-    TemporalRoundingMode roundingMode, Instant* result) {
+static Instant RoundNumberToIncrementAsIfPositive(
+    const Instant& x, int64_t increment, TemporalRoundingMode roundingMode) {
+  MOZ_ASSERT(IsValidEpochInstant(x));
+  MOZ_ASSERT(increment > 0);
+  MOZ_ASSERT(increment <= ToNanoseconds(TemporalUnit::Day));
+
   // This operation is equivalent to adjusting the rounding mode through
   // |ToPositiveRoundingMode| and then calling |RoundNumberToIncrement|.
-  return RoundNumberToIncrement(cx, x, increment,
-                                ToPositiveRoundingMode(roundingMode), result);
+  auto rounded =
+      RoundNumberToIncrement(x.toTotalNanoseconds(), Int128{increment},
+                             ToPositiveRoundingMode(roundingMode));
+  return Instant::fromNanoseconds(rounded);
 }
 
 /**
  * RoundTemporalInstant ( ns, increment, unit, roundingMode )
  */
-bool js::temporal::RoundTemporalInstant(JSContext* cx, const Instant& ns,
-                                        Increment increment, TemporalUnit unit,
-                                        TemporalRoundingMode roundingMode,
-                                        Instant* result) {
+Instant js::temporal::RoundTemporalInstant(const Instant& ns,
+                                           Increment increment,
+                                           TemporalUnit unit,
+                                           TemporalRoundingMode roundingMode) {
   MOZ_ASSERT(IsValidEpochInstant(ns));
   MOZ_ASSERT(increment >= Increment::min());
   MOZ_ASSERT(uint64_t(increment.value()) <= ToNanoseconds(TemporalUnit::Day));
@@ -651,7 +656,7 @@ bool js::temporal::RoundTemporalInstant(JSContext* cx, const Instant& ns,
 
   // Step 7.
   return RoundNumberToIncrementAsIfPositive(
-      cx, ns, increment.value() * toNanoseconds, roundingMode, result);
+      ns, increment.value() * toNanoseconds, roundingMode);
 }
 
 /**
@@ -1226,11 +1231,8 @@ static bool Instant_round(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 17.
-  Instant roundedNs;
-  if (!RoundTemporalInstant(cx, instant, roundingIncrement, smallestUnit,
-                            roundingMode, &roundedNs)) {
-    return false;
-  }
+  auto roundedNs = RoundTemporalInstant(instant, roundingIncrement,
+                                        smallestUnit, roundingMode);
 
   // Step 18.
   auto* result = CreateTemporalInstant(cx, roundedNs);
@@ -1338,11 +1340,8 @@ static bool Instant_toString(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 12.
-  Instant ns;
-  if (!RoundTemporalInstant(cx, instant, precision.increment, precision.unit,
-                            roundingMode, &ns)) {
-    return false;
-  }
+  auto ns = RoundTemporalInstant(instant, precision.increment, precision.unit,
+                                 roundingMode);
 
   // Step 13.
   Rooted<InstantObject*> roundedInstant(cx, CreateTemporalInstant(cx, ns));

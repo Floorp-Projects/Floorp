@@ -13,6 +13,7 @@
 
 #include "jstypes.h"
 
+#include "builtin/temporal/Int128.h"
 #include "builtin/temporal/TemporalRoundingMode.h"
 #include "builtin/temporal/TemporalUnit.h"
 #include "js/RootingAPI.h"
@@ -34,10 +35,6 @@ class TemporalObject : public NativeObject {
  private:
   static const ClassSpec classSpec_;
 };
-
-struct Instant;
-struct PlainTime;
-class Int128;
 
 /**
  * Rounding increment, which is an integer in the range [1, 1'000'000'000].
@@ -172,43 +169,22 @@ bool ToTemporalRoundingMode(JSContext* cx, JS::Handle<JSObject*> options,
 /**
  * RoundNumberToIncrement ( x, increment, roundingMode )
  */
-Int128 RoundNumberToIncrement(const Int128& x, const Int128& increment,
+Int128 RoundNumberToIncrement(int64_t numerator, int64_t denominator,
+                              Increment increment,
                               TemporalRoundingMode roundingMode);
 
 /**
  * RoundNumberToIncrement ( x, increment, roundingMode )
  */
-bool RoundNumberToIncrement(JSContext* cx, const Instant& x, int64_t increment,
-                            TemporalRoundingMode roundingMode, Instant* result);
+Int128 RoundNumberToIncrement(const Int128& numerator,
+                              const Int128& denominator, Increment increment,
+                              TemporalRoundingMode roundingMode);
 
 /**
  * RoundNumberToIncrement ( x, increment, roundingMode )
  */
-bool RoundNumberToIncrement(JSContext* cx, int64_t numerator, TemporalUnit unit,
-                            Increment increment,
-                            TemporalRoundingMode roundingMode, double* result);
-
-/**
- * RoundNumberToIncrement ( x, increment, roundingMode )
- */
-bool RoundNumberToIncrement(JSContext* cx, JS::Handle<JS::BigInt*> numerator,
-                            TemporalUnit unit, Increment increment,
-                            TemporalRoundingMode roundingMode, double* result);
-
-/**
- * RoundNumberToIncrement ( x, increment, roundingMode )
- */
-bool RoundNumberToIncrement(JSContext* cx, int64_t numerator,
-                            int64_t denominator, Increment increment,
-                            TemporalRoundingMode roundingMode, double* result);
-
-/**
- * RoundNumberToIncrement ( x, increment, roundingMode )
- */
-bool RoundNumberToIncrement(JSContext* cx, JS::Handle<JS::BigInt*> numerator,
-                            JS::Handle<JS::BigInt*> denominator,
-                            Increment increment,
-                            TemporalRoundingMode roundingMode, double* result);
+Int128 RoundNumberToIncrement(const Int128& x, const Int128& increment,
+                              TemporalRoundingMode roundingMode);
 
 enum class CalendarOption { Auto, Always, Never, Critical };
 

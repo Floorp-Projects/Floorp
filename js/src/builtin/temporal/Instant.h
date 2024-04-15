@@ -127,9 +127,9 @@ Instant GetUTCEpochNanoseconds(const PlainDateTime& dateTime,
 /**
  * RoundTemporalInstant ( ns, increment, unit, roundingMode )
  */
-bool RoundTemporalInstant(JSContext* cx, const Instant& ns, Increment increment,
-                          TemporalUnit unit, TemporalRoundingMode roundingMode,
-                          Instant* result);
+Instant RoundTemporalInstant(const Instant& ns, Increment increment,
+                             TemporalUnit unit,
+                             TemporalRoundingMode roundingMode);
 
 /**
  * AddNormalizedTimeDurationToEpochNanoseconds ( d, epochNs )
