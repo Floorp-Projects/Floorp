@@ -1500,6 +1500,22 @@ TimeDuration js::temporal::BalanceTimeDuration(
       MOZ_ASSERT(std::abs(milliseconds) <= 999);
       milliseconds += millis;
 
+      // The number of normalized seconds must not exceed `2**53 - 1`.
+      constexpr auto limit =
+          (int64_t(1) << 53) * ToMilliseconds(TemporalUnit::Second);
+      constexpr auto max = int64_t(0x7cff'ffff'ffff'fdff);
+
+      static_assert(
+          int64_t(double(max)) < limit && int64_t(double(max + 1)) >= limit,
+          "max is the maximum allowed milliseconds value");
+
+      auto totalMillis =
+          (seconds * ToMilliseconds(TemporalUnit::Second)) + milliseconds;
+      if (totalMillis > max) {
+        // FIXME: spec bug - handle too large duration values
+        // https://github.com/tc39/proposal-temporal/issues/2785
+      }
+
       break;
     }
 
@@ -1516,6 +1532,21 @@ TimeDuration js::temporal::BalanceTimeDuration(
           std::fma(double(seconds), ToMicroseconds(TemporalUnit::Second),
                    double(microseconds));
 
+      // The number of normalized seconds must not exceed `2**53 - 1`.
+      constexpr auto limit = Int128{int64_t(1) << 53} *
+                             Int128{ToMicroseconds(TemporalUnit::Second)};
+      constexpr auto max =
+          (Int128{0x1e8} << 64) + Int128{0x47ff'ffff'fff7'ffff};
+      static_assert(max < limit);
+
+      auto totalMicros =
+          (Int128{seconds} * Int128{ToMicroseconds(TemporalUnit::Second)}) +
+          Int128{microseconds};
+      if (totalMicros > max) {
+        // FIXME: spec bug - handle too large duration values
+        // https://github.com/tc39/proposal-temporal/issues/2785
+      }
+
       // Step 11.
       return CreateTimeDurationRecord(0, 0, 0, 0, 0, micros,
                                       double(nanoseconds));
@@ -1527,6 +1558,21 @@ TimeDuration js::temporal::BalanceTimeDuration(
       double nanos =
           std::fma(double(seconds), ToNanoseconds(TemporalUnit::Second),
                    double(nanoseconds));
+
+      // The number of normalized seconds must not exceed `2**53 - 1`.
+      constexpr auto limit = Int128{int64_t(1) << 53} *
+                             Int128{ToNanoseconds(TemporalUnit::Second)};
+      constexpr auto max =
+          (Int128{0x77359} << 64) + Int128{0x3fff'ffff'dfff'ffff};
+      static_assert(max < limit);
+
+      auto totalNanos =
+          (Int128{seconds} * Int128{ToNanoseconds(TemporalUnit::Second)}) +
+          Int128{nanoseconds};
+      if (totalNanos > max) {
+        // FIXME: spec bug - handle too large duration values
+        // https://github.com/tc39/proposal-temporal/issues/2785
+      }
 
       // Step 11.
       return CreateTimeDurationRecord(0, 0, 0, 0, 0, 0, nanos);
@@ -2175,25 +2221,6 @@ static bool AddDuration(
   // Steps 6-7. (Not applicable)
 
   // Steps 8-9. (Not applicable in our implementation.)
-
-  // FIXME: spec issue - GetPlainDateTimeFor called unnecessarily
-  //
-  // clang-format off
-  //
-  // 10. If largestUnit is one of "year", "month", "week", or "day", then
-  //   a. If precalculatedPlainDateTime is undefined, then
-  //     i. Let startDateTime be ? GetPlainDateTimeFor(timeZone, zonedRelativeTo.[[Nanoseconds]], calendar).
-  //   b. Else,
-  //     i. Let startDateTime be precalculatedPlainDateTime.
-  //   c. Let intermediateNs be ? AddZonedDateTime(zonedRelativeTo.[[Nanoseconds]], timeZone, calendar, y1, mon1, w1, d1, h1, min1, s1, ms1, mus1, ns1, startDateTime).
-  //   d. Let endNs be ? AddZonedDateTime(intermediateNs, timeZone, calendar, y2, mon2, w2, d2, h2, min2, s2, ms2, mus2, ns2).
-  //   e. Return ? DifferenceZonedDateTime(zonedRelativeTo.[[Nanoseconds]], endNs, timeZone, calendar, largestUnit, OrdinaryObjectCreate(null), startDateTime).
-  // 11. Let intermediateNs be ? AddInstant(zonedRelativeTo.[[Nanoseconds]], h1, min1, s1, ms1, mus1, ns1).
-  // 12. Let endNs be ? AddInstant(intermediateNs, h2, min2, s2, ms2, mus2, ns2).
-  // 13. Let result be DifferenceInstant(zonedRelativeTo.[[Nanoseconds]], endNs, 1, "nanosecond", largestUnit, "halfExpand").
-  // 14. Return ! CreateDurationRecord(0, 0, 0, 0, result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]).
-  //
-  // clang-format on
 
   // Step 10.
   bool startDateTimeNeeded = largestUnit <= TemporalUnit::Day;
@@ -3951,6 +3978,7 @@ static bool RoundDuration(
 
   // Step 9.
   // FIXME: spec issue - `total` doesn't need be initialised.
+  // https://github.com/tc39/proposal-temporal/issues/2784
 
   // Steps 10-20.
   switch (unit) {
@@ -5191,7 +5219,7 @@ static bool Duration_round(JSContext* cx, const CallArgs& args) {
       double(balanceResult.seconds), double(balanceResult.milliseconds),
       balanceResult.microseconds,    balanceResult.nanoseconds,
   };
-  MOZ_ASSERT(IsValidDuration(result));
+
   auto* obj = CreateTemporalDuration(cx, result);
   if (!obj) {
     return false;
