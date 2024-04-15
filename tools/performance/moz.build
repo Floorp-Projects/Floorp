@@ -14,4 +14,7 @@ EXPORTS.mozilla += [
 
 include("/ipc/chromium/chromium-config.mozbuild")
 
+if CONFIG["MOZ_PERFETTO"]:
+    DIRS += ["/third_party/perfetto/"]
+
 FINAL_LIBRARY = "xul"
