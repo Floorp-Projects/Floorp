@@ -570,9 +570,9 @@ var SelectTranslationsPanel = new (class {
   /**
    * Retrieves the current phase of the translation state.
    *
-   * @returns {SelectTranslationsPanelState}
+   * @returns {string}
    */
-  #phase() {
+  phase() {
     return this.#translationState.phase;
   }
 
@@ -580,14 +580,14 @@ var SelectTranslationsPanel = new (class {
    * @returns {boolean} True if the panel is open, otherwise false.
    */
   #isOpen() {
-    return this.#phase() !== "closed";
+    return this.phase() !== "closed";
   }
 
   /**
    * @returns {boolean} True if the panel is closed, otherwise false.
    */
   #isClosed() {
-    return this.#phase() === "closed";
+    return this.phase() === "closed";
   }
 
   /**
@@ -617,7 +617,7 @@ var SelectTranslationsPanel = new (class {
       }
     }
 
-    const previousPhase = this.#phase();
+    const previousPhase = this.phase();
     if (data && retainEntries) {
       // Change the phase and apply new entries from data, but retain non-overwritten entries from previous state.
       this.#translationState = { ...this.#translationState, phase, ...data };
@@ -632,7 +632,7 @@ var SelectTranslationsPanel = new (class {
       this.#translationState = { phase };
     }
 
-    if (previousPhase === this.#phase()) {
+    if (previousPhase === this.phase()) {
       // Do not continue on to update the UI because the phase didn't change.
       return;
     }
@@ -645,6 +645,11 @@ var SelectTranslationsPanel = new (class {
     );
 
     this.#updatePanelUIFromState();
+    document.dispatchEvent(
+      new CustomEvent("SelectTranslationsPanelStateChanged", {
+        detail: { phase },
+      })
+    );
   }
 
   /**
@@ -660,7 +665,7 @@ var SelectTranslationsPanel = new (class {
    * @throws {Error} If the current state is not "translatable".
    */
   #changeStateToTranslating() {
-    const phase = this.#phase();
+    const phase = this.phase();
     if (phase !== "translatable") {
       throw new Error(`Invalid state change (${phase} => translating)`);
     }
@@ -673,7 +678,7 @@ var SelectTranslationsPanel = new (class {
    * @throws {Error} If the current state is not "translating".
    */
   #changeStateToTranslated(translatedText) {
-    const phase = this.#phase();
+    const phase = this.phase();
     if (phase !== "translating") {
       throw new Error(`Invalid state change (${phase} => translated)`);
     }
@@ -788,7 +793,7 @@ var SelectTranslationsPanel = new (class {
     const { copyButton, translateFullPageButton, textArea } = this.elements;
 
     const invalidLangPairSelected = !fromLanguage || !toLanguage;
-    const isTranslating = this.#phase() === "translating";
+    const isTranslating = this.phase() === "translating";
 
     textArea.disabled = invalidLangPairSelected;
     translateFullPageButton.disabled = invalidLangPairSelected;
@@ -799,7 +804,7 @@ var SelectTranslationsPanel = new (class {
    * Updates the panel UI based on the current phase of the translation state.
    */
   #updatePanelUIFromState() {
-    switch (this.#phase()) {
+    switch (this.phase()) {
       case "idle": {
         this.#displayIdlePlaceholder();
         break;
