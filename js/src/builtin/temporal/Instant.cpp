@@ -695,7 +695,10 @@ static bool DifferenceTemporalInstant(JSContext* cx,
                         settings.smallestUnit, settings.roundingMode);
 
   // Step 6.
-  auto balanced = BalanceTimeDuration(difference, settings.largestUnit);
+  TimeDuration balanced;
+  if (!BalanceTimeDuration(cx, difference, settings.largestUnit, &balanced)) {
+    return false;
+  }
 
   // Step 7.
   auto duration = balanced.toDuration();

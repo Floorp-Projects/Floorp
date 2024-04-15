@@ -992,7 +992,10 @@ static bool DifferenceTemporalPlainTime(JSContext* cx,
   }
 
   // Step 7.
-  auto balancedDuration = BalanceTimeDuration(diff, settings.largestUnit);
+  TimeDuration balancedDuration;
+  if (!BalanceTimeDuration(cx, diff, settings.largestUnit, &balancedDuration)) {
+    return false;
+  }
 
   // Step 8.
   auto duration = balancedDuration.toDuration();

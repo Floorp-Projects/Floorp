@@ -1420,7 +1420,11 @@ static bool DifferenceTemporalZonedDateTime(JSContext* cx,
         settings.smallestUnit, settings.roundingMode);
 
     // Step 6.b.
-    auto balancedTime = BalanceTimeDuration(difference, settings.largestUnit);
+    TimeDuration balancedTime;
+    if (!BalanceTimeDuration(cx, difference, settings.largestUnit,
+                             &balancedTime)) {
+      return false;
+    }
 
     // Step 6.c.
     auto duration = balancedTime.toDuration();
