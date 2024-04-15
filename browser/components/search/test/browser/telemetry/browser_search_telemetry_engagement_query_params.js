@@ -5,7 +5,6 @@
  * These tests load SERPs and check that query params that are changed either
  * by the browser or in the page after click are still properly recognized
  * as ads.
- *
  */
 
 "use strict";
@@ -88,6 +87,7 @@ add_task(async function test_click_links() {
         is_shopping_page: "false",
         is_private: "false",
         shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       engagements: [
         {
@@ -136,6 +136,7 @@ add_task(async function test_click_links() {
         is_shopping_page: "false",
         is_private: "false",
         shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       engagements: [
         {
@@ -167,6 +168,7 @@ add_task(async function test_click_links() {
         is_shopping_page: "false",
         is_private: "false",
         shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       engagements: [
         {
@@ -231,6 +233,7 @@ add_task(async function test_click_link_with_more_parameters() {
         is_shopping_page: "false",
         is_private: "false",
         shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       engagements: [
         {
@@ -294,6 +297,7 @@ add_task(async function test_click_link_with_fewer_parameters() {
         is_shopping_page: "false",
         is_private: "false",
         shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       engagements: [
         {
@@ -357,6 +361,7 @@ add_task(async function test_click_link_with_reordered_parameters() {
         is_shopping_page: "false",
         is_private: "false",
         shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       engagements: [
         {

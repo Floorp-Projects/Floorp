@@ -49,6 +49,7 @@ const IMPRESSION = {
   is_shopping_page: "false",
   is_private: "false",
   shopping_tab_displayed: "false",
+  is_signed_in: "false",
 };
 
 const SERP_URL = getSERPUrl("searchTelemetryAd_searchbox_with_content.html");

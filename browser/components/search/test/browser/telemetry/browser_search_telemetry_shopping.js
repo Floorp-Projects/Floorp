@@ -83,6 +83,7 @@ async function loadSerpAndClickShoppingTab(page) {
         is_shopping_page: "false",
         is_private: "false",
         shopping_tab_displayed: "true",
+        is_signed_in: "false",
       },
       adImpressions: [
         {
@@ -109,6 +110,7 @@ async function loadSerpAndClickShoppingTab(page) {
         is_shopping_page: "false",
         is_private: "false",
         shopping_tab_displayed: "true",
+        is_signed_in: "false",
       },
       engagements: [
         {

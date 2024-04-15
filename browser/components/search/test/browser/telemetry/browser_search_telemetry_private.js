@@ -82,6 +82,7 @@ add_task(async function load_2_pbm_serps_and_1_non_pbm_serp() {
         is_shopping_page: "false",
         is_private: "true",
         shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       abandonment: {
         reason: SearchSERPTelemetryUtils.ABANDONMENTS.NAVIGATION,
@@ -96,6 +97,7 @@ add_task(async function load_2_pbm_serps_and_1_non_pbm_serp() {
         is_shopping_page: "false",
         is_private: "true",
         shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       abandonment: {
         reason: SearchSERPTelemetryUtils.ABANDONMENTS.TAB_CLOSE,
@@ -118,6 +120,7 @@ add_task(async function load_2_pbm_serps_and_1_non_pbm_serp() {
         is_shopping_page: "false",
         is_private: "false",
         shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       adImpressions: [
         {

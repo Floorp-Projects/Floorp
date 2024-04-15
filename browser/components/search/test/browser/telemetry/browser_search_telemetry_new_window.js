@@ -83,6 +83,7 @@ add_task(async function load_serp_in_new_window_with_pref_and_click_ad() {
         is_shopping_page: "false",
         is_private: "false",
         shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       engagements: [
         {
@@ -148,6 +149,7 @@ add_task(async function load_serp_in_new_window_with_pref_and_click_organic() {
         is_shopping_page: "false",
         is_private: "false",
         shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       engagements: [
         {
@@ -214,6 +216,7 @@ add_task(async function load_serp_in_new_window_with_context_menu() {
         is_shopping_page: "false",
         is_private: "false",
         shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       engagements: [
         {
@@ -303,6 +306,7 @@ add_task(
           is_shopping_page: "false",
           is_private: "false",
           shopping_tab_displayed: "false",
+          is_signed_in: "false",
         },
         adImpressions: [
           {
@@ -322,6 +326,7 @@ add_task(
           is_shopping_page: "false",
           is_private: "false",
           shopping_tab_displayed: "false",
+          is_signed_in: "false",
         },
         engagements: [
           {

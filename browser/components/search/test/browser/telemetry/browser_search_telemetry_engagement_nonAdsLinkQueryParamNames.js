@@ -76,6 +76,7 @@ add_task(async function test_click_absolute_url_in_query_param() {
         is_shopping_page: "false",
         is_private: "false",
         shopping_tab_displayed: "true",
+        is_signed_in: "false",
       },
       engagements: [
         {
@@ -101,6 +102,7 @@ add_task(async function test_click_absolute_url_in_query_param() {
         is_shopping_page: "true",
         is_private: "false",
         shopping_tab_displayed: "true",
+        is_signed_in: "false",
       },
       adImpressions: [
         {
@@ -151,6 +153,7 @@ add_task(async function test_click_relative_href_in_query_param() {
         is_shopping_page: "false",
         is_private: "false",
         shopping_tab_displayed: "true",
+        is_signed_in: "false",
       },
       engagements: [
         {
@@ -176,6 +179,7 @@ add_task(async function test_click_relative_href_in_query_param() {
         is_shopping_page: "true",
         is_private: "false",
         shopping_tab_displayed: "true",
+        is_signed_in: "false",
       },
       adImpressions: [
         {
@@ -226,6 +230,7 @@ add_task(async function test_click_irrelevant_href_in_query_param() {
         is_shopping_page: "false",
         is_private: "false",
         shopping_tab_displayed: "true",
+        is_signed_in: "false",
       },
       engagements: [
         {

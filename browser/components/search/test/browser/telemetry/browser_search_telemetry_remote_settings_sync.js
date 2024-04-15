@@ -139,6 +139,7 @@ add_task(async function update_telemetry_tab_already_open() {
         is_shopping_page: "false",
         is_private: "false",
         shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       adImpressions: [
         {
@@ -192,6 +193,7 @@ add_task(async function update_telemetry_tab_closed() {
         is_shopping_page: "false",
         is_private: "false",
         shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       adImpressions: [
         {
@@ -246,6 +248,7 @@ add_task(async function update_telemetry_multiple_tabs() {
           is_shopping_page: "false",
           is_private: "false",
           shopping_tab_displayed: "false",
+          is_signed_in: "false",
         },
         adImpressions: [
           {
@@ -307,6 +310,7 @@ add_task(async function update_telemetry_multiple_processes_and_tabs() {
           is_shopping_page: "false",
           is_private: "false",
           shopping_tab_displayed: "false",
+          is_signed_in: "false",
         },
         adImpressions: [
           {

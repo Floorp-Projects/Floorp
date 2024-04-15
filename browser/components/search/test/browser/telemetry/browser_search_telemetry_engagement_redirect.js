@@ -79,6 +79,7 @@ add_task(async function test_click_non_ads_link_redirected() {
         is_shopping_page: "false",
         is_private: "false",
         shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       engagements: [
         {
@@ -139,6 +140,7 @@ add_task(async function test_click_non_ads_link_redirected_new_tab() {
         is_shopping_page: "false",
         is_private: "false",
         shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       engagements: [
         {
@@ -195,6 +197,7 @@ add_task(async function test_click_non_ads_link_redirect_non_top_level() {
         is_shopping_page: "false",
         is_private: "false",
         shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       engagements: [
         {
@@ -248,6 +251,7 @@ add_task(async function test_multiple_redirects_non_ad_link() {
         is_shopping_page: "false",
         is_private: "false",
         shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       engagements: [
         {
@@ -301,6 +305,7 @@ add_task(async function test_click_ad_link_redirected() {
         is_shopping_page: "false",
         is_private: "false",
         shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       engagements: [
         {
@@ -349,6 +354,7 @@ add_task(async function test_click_ad_link_redirected_new_tab() {
         is_shopping_page: "false",
         is_private: "false",
         shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       engagements: [
         {

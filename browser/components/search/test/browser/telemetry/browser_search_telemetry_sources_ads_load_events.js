@@ -84,6 +84,7 @@ add_task(async function test_track_ad_on_DOMContentLoaded() {
         is_shopping_page: "false",
         is_private: "false",
         shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       adImpressions: [
         {
@@ -126,6 +127,7 @@ add_task(async function test_track_ad_on_load_event() {
         is_shopping_page: "false",
         is_private: "false",
         shopping_tab_displayed: "false",
+        is_signed_in: "false",
       },
       adImpressions: [
         {
