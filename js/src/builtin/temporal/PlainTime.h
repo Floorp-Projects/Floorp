@@ -112,19 +112,24 @@ PlainTimeObject* CreateTemporalTime(JSContext* cx, const PlainTime& time);
 bool ToTemporalTime(JSContext* cx, JS::Handle<JS::Value> item,
                     PlainTime* result);
 
+struct AddedTime {
+  int32_t days = 0;
+  PlainTime time;
+};
+
 /**
- * AddTime ( hour, minute, second, millisecond, microsecond, nanosecond, hours,
- * minutes, seconds, milliseconds, microseconds, nanoseconds )
+ * AddTime ( hour, minute, second, millisecond, microsecond, nanosecond, norm )
  */
-bool AddTime(JSContext* cx, const PlainTime& time, const Duration& duration,
-             PlainTime* result, double* daysResult);
+AddedTime AddTime(const PlainTime& time,
+                  const NormalizedTimeDuration& duration);
 
 /**
  * DifferenceTime ( h1, min1, s1, ms1, mus1, ns1, h2, min2, s2, ms2, mus2, ns2 )
  */
-TimeDuration DifferenceTime(const PlainTime& time1, const PlainTime& time2);
+NormalizedTimeDuration DifferenceTime(const PlainTime& time1,
+                                      const PlainTime& time2);
 
-struct TimeRecord final {
+struct TemporalTimeLike final {
   double hour = 0;
   double minute = 0;
   double second = 0;
@@ -137,13 +142,13 @@ struct TimeRecord final {
  * ToTemporalTimeRecord ( temporalTimeLike [ , completeness ] )
  */
 bool ToTemporalTimeRecord(JSContext* cx, JS::Handle<JSObject*> temporalTimeLike,
-                          TimeRecord* result);
+                          TemporalTimeLike* result);
 
 /**
  * RegulateTime ( hour, minute, second, millisecond, microsecond, nanosecond,
  * overflow )
  */
-bool RegulateTime(JSContext* cx, const TimeRecord& time,
+bool RegulateTime(JSContext* cx, const TemporalTimeLike& time,
                   TemporalOverflow overflow, PlainTime* result);
 
 /**

@@ -11,7 +11,9 @@
 #include "mozilla/CheckedInt.h"
 
 #include <stdint.h>
+#include <type_traits>
 
+#include "builtin/temporal/Int128.h"
 #include "builtin/temporal/TemporalUnit.h"
 
 namespace js::temporal {
@@ -193,6 +195,23 @@ struct SecondsAndNanoseconds {
   }
 
   /**
+   * Return the nanoseconds value.
+   */
+  constexpr Int128 toTotalNanoseconds() const {
+    return Int128{seconds} * Int128{ToNanoseconds(TemporalUnit::Second)} +
+           Int128{nanoseconds};
+  }
+
+  /**
+   * Cast to a different representation.
+   */
+  template <class Other>
+  constexpr Other to() const {
+    static_assert(std::is_base_of_v<SecondsAndNanoseconds<Other>, Other>);
+    return Other{seconds, nanoseconds};
+  }
+
+  /**
    * Create from a minutes value.
    */
   static constexpr Derived fromMinutes(int64_t minutes) {
@@ -236,6 +255,20 @@ struct SecondsAndNanoseconds {
   static constexpr Derived fromNanoseconds(int64_t nanoseconds) {
     int64_t seconds = nanoseconds / 1'000'000'000;
     int32_t nanos = nanoseconds % 1'000'000'000;
+    if (nanos < 0) {
+      seconds -= 1;
+      nanos += 1'000'000'000;
+    }
+    return {seconds, nanos};
+  }
+
+  /**
+   * Create from a nanoseconds value.
+   */
+  static constexpr Derived fromNanoseconds(const Int128& nanoseconds) {
+    auto div = nanoseconds.divrem(Int128{1'000'000'000});
+    int64_t seconds = int64_t(div.first);
+    int32_t nanos = int32_t(div.second);
     if (nanos < 0) {
       seconds -= 1;
       nanos += 1'000'000'000;
@@ -437,6 +470,9 @@ struct PlainDateTime final {
   }
 };
 
+struct DateDuration;
+struct TimeDuration;
+
 /**
  * Duration represents the difference between dates or times. Each duration
  * component is an integer and all components must have the same sign.
@@ -453,7 +489,7 @@ struct Duration final {
   double microseconds = 0;
   double nanoseconds = 0;
 
-  bool operator==(const Duration& other) const {
+  constexpr bool operator==(const Duration& other) const {
     return years == other.years && months == other.months &&
            weeks == other.weeks && days == other.days && hours == other.hours &&
            minutes == other.minutes && seconds == other.seconds &&
@@ -462,35 +498,14 @@ struct Duration final {
            nanoseconds == other.nanoseconds;
   }
 
-  bool operator!=(const Duration& other) const { return !(*this == other); }
-
-  /**
-   * Return the date components of this duration.
-   */
-  Duration date() const { return {years, months, weeks, days}; }
-
-  /**
-   * Return the time components of this duration.
-   */
-  Duration time() const {
-    return {
-        0,
-        0,
-        0,
-        0,
-        hours,
-        minutes,
-        seconds,
-        milliseconds,
-        microseconds,
-        nanoseconds,
-    };
+  constexpr bool operator!=(const Duration& other) const {
+    return !(*this == other);
   }
 
   /**
    * Return a new duration with every component negated.
    */
-  Duration negate() const {
+  constexpr Duration negate() const {
     // Add zero to convert -0 to +0.
     return {
         -years + (+0.0),       -months + (+0.0),       -weeks + (+0.0),
@@ -499,6 +514,11 @@ struct Duration final {
         -nanoseconds + (+0.0),
     };
   }
+
+  /**
+   * Return the date components of this duration.
+   */
+  inline DateDuration toDateDuration() const;
 };
 
 /**
@@ -511,8 +531,21 @@ struct DateDuration final {
   double weeks = 0;
   double days = 0;
 
-  Duration toDuration() { return {years, months, weeks, days}; }
+  constexpr bool operator==(const DateDuration& other) const {
+    return years == other.years && months == other.months &&
+           weeks == other.weeks && days == other.days;
+  }
+
+  constexpr bool operator!=(const DateDuration& other) const {
+    return !(*this == other);
+  }
+
+  constexpr Duration toDuration() const { return {years, months, weeks, days}; }
 };
+
+inline DateDuration Duration::toDateDuration() const {
+  return {years, months, weeks, days};
+}
 
 /**
  * Time duration represents the difference between times. Each duration
@@ -527,7 +560,7 @@ struct TimeDuration final {
   double microseconds = 0;
   double nanoseconds = 0;
 
-  Duration toDuration() {
+  constexpr Duration toDuration() const {
     return {0,
             0,
             0,
@@ -538,6 +571,69 @@ struct TimeDuration final {
             milliseconds,
             microseconds,
             nanoseconds};
+  }
+};
+
+/**
+ * Normalized time duration with a seconds value in the range
+ * [-9'007'199'254'740'991, +9'007'199'254'740'991] and a nanoseconds value in
+ * the range [0, 999'999'999].
+ */
+struct NormalizedTimeDuration final
+    : SecondsAndNanoseconds<NormalizedTimeDuration> {
+  constexpr NormalizedTimeDuration& operator+=(
+      const NormalizedTimeDuration& other) {
+    *this = add(*this, other);
+    return *this;
+  }
+
+  constexpr NormalizedTimeDuration& operator-=(
+      const NormalizedTimeDuration& other) {
+    *this = subtract(*this, other);
+    return *this;
+  }
+
+  constexpr NormalizedTimeDuration operator+(
+      const NormalizedTimeDuration& other) const {
+    return add(*this, other);
+  }
+
+  constexpr NormalizedTimeDuration operator-(
+      const NormalizedTimeDuration& other) const {
+    return subtract(*this, other);
+  }
+
+  constexpr NormalizedTimeDuration operator-() const { return negate(*this); }
+
+  /**
+   * Returns the maximum normalized time duration value.
+   */
+  static constexpr NormalizedTimeDuration max() {
+    constexpr int64_t seconds = 0x1f'ffff'ffff'ffff;
+    constexpr int64_t nanos = 999'999'999;
+    return {seconds, nanos};
+  }
+
+  /**
+   * Returns the minimum normalized time duration value.
+   */
+  static constexpr NormalizedTimeDuration min() { return -max(); }
+};
+
+/**
+ * Duration represents the difference between dates or times. Each duration
+ * component is an integer and all components must have the same sign.
+ */
+struct NormalizedDuration final {
+  DateDuration date;
+  NormalizedTimeDuration time;
+
+  constexpr bool operator==(const NormalizedDuration& other) const {
+    return date == other.date && time == other.time;
+  }
+
+  constexpr bool operator!=(const NormalizedDuration& other) const {
+    return !(*this == other);
   }
 };
 

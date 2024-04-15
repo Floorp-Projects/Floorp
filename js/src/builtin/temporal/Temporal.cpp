@@ -726,7 +726,7 @@ bool js::temporal::RoundNumberToIncrement(JSContext* cx, const Instant& x,
                                           int64_t increment,
                                           TemporalRoundingMode roundingMode,
                                           Instant* result) {
-  MOZ_ASSERT(temporal::IsValidEpochInstant(x));
+  MOZ_ASSERT(IsValidEpochInstant(x));
   MOZ_ASSERT(increment > 0);
   MOZ_ASSERT(increment <= ToNanoseconds(TemporalUnit::Day));
 
