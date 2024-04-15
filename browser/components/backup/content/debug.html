@@ -36,6 +36,13 @@
       <section id="controls">
         <h2>Controls</h2>
         <button id="create-backup">Create backup</button>
+        <p>
+          Clicking "Create backup" will create a backup, and then attempt to
+          show an OS notification with the total time it took to create it. This
+          notification may not appear if your OS has not granted the browser to
+          display notifications.
+        </p>
+        <p id="last-backup-status"></p>
         <button id="open-backup-folder">Open backups folder</button>
       </section>
     </main>

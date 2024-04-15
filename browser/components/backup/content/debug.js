@@ -26,13 +26,31 @@ let DebugUI = {
     }
   },
 
+  secondsToHms(seconds) {
+    let h = Math.floor(seconds / 3600);
+    let m = Math.floor((seconds % 3600) / 60);
+    let s = Math.floor((seconds % 3600) % 60);
+    return `${h}h ${m}m ${s}s`;
+  },
+
   async onButtonClick(button) {
     switch (button.id) {
       case "create-backup": {
         let service = BackupService.get();
+        let lastBackupStatus = document.querySelector("#last-backup-status");
+        lastBackupStatus.textContent = "Creating backup...";
+
+        let then = Cu.now();
         button.disabled = true;
         await service.createBackup();
+        let totalTimeSeconds = (Cu.now() - then) / 1000;
         button.disabled = false;
+        new Notification(`Backup created`, {
+          body: `Total time ${this.secondsToHms(totalTimeSeconds)}`,
+        });
+        lastBackupStatus.textContent = `Backup created - total time: ${this.secondsToHms(
+          totalTimeSeconds
+        )}`;
         break;
       }
       case "open-backup-folder": {
