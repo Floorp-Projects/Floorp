@@ -131,12 +131,10 @@ function pickElement(inspector, selector, x, y) {
  *        X-offset from the top-left corner of the element matching the provided selector
  * @param {Number} y
  *        Y-offset from the top-left corner of the element matching the provided selector
- * @param {Object} eventOptions
- *        Options that will be passed to synthesizeMouse
  * @return {Promise} promise that resolves when both the "picker-node-hovered" and
  *                   "highlighter-shown" events are emitted.
  */
-async function hoverElement(inspector, selector, x, y, eventOptions = {}) {
+async function hoverElement(inspector, selector, x, y) {
   const { waitForHighlighterTypeShown } = getHighlighterTestHelpers(inspector);
   info(`Waiting for element "${selector}" to be hovered`);
   const onHovered = inspector.toolbox.nodePicker.once("picker-node-hovered");
@@ -161,7 +159,7 @@ async function hoverElement(inspector, selector, x, y, eventOptions = {}) {
   if (isNaN(x) || isNaN(y)) {
     BrowserTestUtils.synthesizeMouseAtCenter(
       selector,
-      { ...eventOptions, type: "mousemove" },
+      { type: "mousemove" },
       browsingContext
     );
   } else {
@@ -169,7 +167,7 @@ async function hoverElement(inspector, selector, x, y, eventOptions = {}) {
       selector,
       x,
       y,
-      { ...eventOptions, type: "mousemove" },
+      { type: "mousemove" },
       browsingContext
     );
   }
