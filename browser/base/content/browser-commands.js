@@ -573,4 +573,12 @@ var BrowserCommands = {
   fullScreen() {
     window.fullScreen = !window.fullScreen || BrowserHandler.kiosk;
   },
+
+  downloadsUI() {
+    if (PrivateBrowsingUtils.isWindowPrivate(window)) {
+      openTrustedLinkIn("about:downloads", "tab");
+    } else {
+      PlacesCommandHook.showPlacesOrganizer("Downloads");
+    }
+  },
 };

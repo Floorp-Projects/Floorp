@@ -3942,14 +3942,6 @@ function FillHistoryMenu(aParent) {
   return true;
 }
 
-function BrowserDownloadsUI() {
-  if (PrivateBrowsingUtils.isWindowPrivate(window)) {
-    openTrustedLinkIn("about:downloads", "tab");
-  } else {
-    PlacesCommandHook.showPlacesOrganizer("Downloads");
-  }
-}
-
 function toOpenWindowByType(inType, uri, features) {
   var topWindow = Services.wm.getMostRecentWindow(inType);
 

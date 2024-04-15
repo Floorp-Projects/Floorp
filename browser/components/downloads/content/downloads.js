@@ -327,7 +327,7 @@ var DownloadsPanel = {
     // to the browser window when the panel closes automatically.
     this.hidePanel();
 
-    BrowserDownloadsUI();
+    BrowserCommands.downloadsUI();
   },
 
   // Internal functions
