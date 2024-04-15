@@ -254,8 +254,8 @@ static Wrapped<PlainYearMonthObject*> ToTemporalYearMonth(
 
     // Step 3.f.
     if (maybeResolvedOptions) {
-      return CalendarYearMonthFromFields(cx, calendar, fields,
-                                         maybeResolvedOptions);
+      return temporal::CalendarYearMonthFromFields(cx, calendar, fields,
+                                                   maybeResolvedOptions);
     }
     return CalendarYearMonthFromFields(cx, calendar, fields);
   }
@@ -736,8 +736,8 @@ static bool AddDurationToOrSubtractDurationFromPlainYearMonth(
   }
 
   // Step 20.
-  auto obj =
-      CalendarYearMonthFromFields(cx, calendar, addedDateFields, optionsCopy);
+  auto obj = temporal::CalendarYearMonthFromFields(
+      cx, calendar, addedDateFields, optionsCopy);
   if (!obj) {
     return false;
   }
@@ -1146,7 +1146,8 @@ static bool PlainYearMonth_with(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 11.
-  auto obj = CalendarYearMonthFromFields(cx, calendar, fields, resolvedOptions);
+  auto obj = temporal::CalendarYearMonthFromFields(cx, calendar, fields,
+                                                   resolvedOptions);
   if (!obj) {
     return false;
   }
