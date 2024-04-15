@@ -72,42 +72,27 @@ bool WeakMapBase::markMap(MarkColor markColor) {
   }
 }
 
-bool WeakMapBase::addImplicitEdges(MarkColor mapColor, Cell* key,
-                                   Cell* delegate, TenuredCell* value) {
-  if (delegate) {
-    return addEphemeronTableEntries(mapColor, delegate, key, value);
+bool WeakMapBase::addEphemeronEdgesForEntry(MarkColor mapColor, Cell* key,
+                                            Cell* delegate,
+                                            TenuredCell* value) {
+  if (delegate && !addEphemeronEdge(mapColor, delegate, key)) {
+    return false;
   }
 
-  if (value) {
-    return addEphemeronTableEntries(mapColor, key, value, nullptr);
+  if (value && !addEphemeronEdge(mapColor, key, value)) {
+    return false;
   }
 
   return true;
 }
 
-bool WeakMapBase::addEphemeronTableEntries(MarkColor mapColor, gc::Cell* key,
-                                           gc::Cell* value1,
-                                           gc::Cell* maybeValue2) {
-  // Add implicit edges from |key| to |value1| and |maybeValue2| if supplied.
-  //
-  // Note the key and values do not necessarily correspond to the weak map
-  // entry's key and value at this point.
+bool WeakMapBase::addEphemeronEdge(MarkColor color, gc::Cell* src,
+                                   gc::Cell* dst) {
+  // Add an implicit edge from |src| to |dst|.
 
-  auto& edgeTable = key->zone()->gcEphemeronEdges(key);
-  auto* ptr = edgeTable.getOrAdd(key);
-  if (!ptr) {
-    return false;
-  }
-
-  if (!ptr->value.emplaceBack(mapColor, value1)) {
-    return false;
-  }
-
-  if (maybeValue2 && !ptr->value.emplaceBack(mapColor, maybeValue2)) {
-    return false;
-  }
-
-  return true;
+  auto& edgeTable = src->zone()->gcEphemeronEdges(src);
+  auto* ptr = edgeTable.getOrAdd(src);
+  return ptr && ptr->value.emplaceBack(color, dst);
 }
 
 #if defined(JS_GC_ZEAL) || defined(DEBUG)
