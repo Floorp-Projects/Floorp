@@ -190,6 +190,7 @@ class CalendarRecord {
   void trace(JSTracer* trc);
 };
 
+struct DateDuration;
 struct Duration;
 struct PlainDate;
 struct PlainDateTime;
@@ -305,7 +306,7 @@ JSObject* CalendarMergeFields(JSContext* cx,
  */
 Wrapped<PlainDateObject*> CalendarDateAdd(
     JSContext* cx, JS::Handle<CalendarRecord> calendar,
-    JS::Handle<Wrapped<PlainDateObject*>> date, const Duration& duration);
+    JS::Handle<Wrapped<PlainDateObject*>> date, const DateDuration& duration);
 
 /**
  * CalendarDateAdd ( calendarRec, date, duration [ , options ] )
@@ -336,14 +337,14 @@ Wrapped<PlainDateObject*> CalendarDateAdd(
  * CalendarDateAdd ( calendarRec, date, duration [ , options ] )
  */
 bool CalendarDateAdd(JSContext* cx, JS::Handle<CalendarRecord> calendar,
-                     const PlainDate& date, const Duration& duration,
+                     const PlainDate& date, const DateDuration& duration,
                      PlainDate* result);
 
 /**
  * CalendarDateAdd ( calendarRec, date, duration [ , options ] )
  */
 bool CalendarDateAdd(JSContext* cx, JS::Handle<CalendarRecord> calendar,
-                     const PlainDate& date, const Duration& duration,
+                     const PlainDate& date, const DateDuration& duration,
                      JS::Handle<JSObject*> options, PlainDate* result);
 
 /**
@@ -351,7 +352,7 @@ bool CalendarDateAdd(JSContext* cx, JS::Handle<CalendarRecord> calendar,
  */
 bool CalendarDateAdd(JSContext* cx, JS::Handle<CalendarRecord> calendar,
                      JS::Handle<Wrapped<PlainDateObject*>> date,
-                     const Duration& duration, PlainDate* result);
+                     const DateDuration& duration, PlainDate* result);
 
 /**
  * CalendarDateUntil ( calendarRec, one, two, options )

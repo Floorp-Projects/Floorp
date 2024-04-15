@@ -776,7 +776,7 @@ static bool AddZonedDateTime(JSContext* cx, const Instant& epochNanoseconds,
   const auto& datePart = date;
 
   // Step 13.
-  auto dateDuration = duration.date.toDuration();
+  const auto& dateDuration = duration.date;
 
   // Step 14.
   PlainDate addedDate;

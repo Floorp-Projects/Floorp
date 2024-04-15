@@ -754,19 +754,19 @@ static bool AddDateTime(JSContext* cx, const PlainDateTime& dateTime,
   const auto& datePart = dateTime.date;
 
   // Step 4.
-  auto durationWithDays = Duration{
-      double(duration.date.years),
-      double(duration.date.months),
-      double(duration.date.weeks),
-      double(duration.date.days + timeResult.days),
+  auto dateDuration = DateDuration{
+      duration.date.years,
+      duration.date.months,
+      duration.date.weeks,
+      duration.date.days + timeResult.days,
   };
-  if (!ThrowIfInvalidDuration(cx, durationWithDays)) {
+  if (!ThrowIfInvalidDuration(cx, dateDuration)) {
     return false;
   }
 
   // Step 5.
   PlainDate addedDate;
-  if (!AddDate(cx, calendar, datePart, durationWithDays, options, &addedDate)) {
+  if (!AddDate(cx, calendar, datePart, dateDuration, options, &addedDate)) {
     return false;
   }
 
@@ -1086,7 +1086,7 @@ static bool DifferenceTemporalPlainDateTime(JSContext* cx,
         balancedTime.days,
     };
   }
-  MOZ_ASSERT(IsValidDuration(balancedDate.toDuration()));
+  MOZ_ASSERT(IsValidDuration(balancedDate));
 
   // Step 14.
   Duration duration = {
