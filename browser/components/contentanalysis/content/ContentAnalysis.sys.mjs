@@ -25,6 +25,7 @@ XPCOMUtils.defineLazyServiceGetter(
 
 ChromeUtils.defineESModuleGetters(lazy, {
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
+  PanelMultiView: "resource:///modules/PanelMultiView.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
@@ -211,7 +212,7 @@ export const ContentAnalysis = {
    * Registers for various messages/events that will indicate the
    * need for communicating something to the user.
    */
-  initialize() {
+  initialize(doc) {
     if (!this.isInitialized) {
       this.isInitialized = true;
       this.initializeDownloadCA();
@@ -222,6 +223,17 @@ export const ContentAnalysis = {
           true
         );
       });
+    }
+
+    // Do this even if initialized so the icon shows up on new windows, not just the
+    // first one.
+    if (lazy.gContentAnalysis.isActive) {
+      doc.l10n.setAttributes(
+        doc.getElementById("content-analysis-indicator"),
+        "content-analysis-indicator-tooltip",
+        { agentName: lazy.agentName }
+      );
+      doc.documentElement.setAttribute("contentanalysisactive", "true");
     }
   },
 
@@ -388,6 +400,19 @@ export const ContentAnalysis = {
         break;
       }
     }
+  },
+
+  async showPanel(element, panelUI) {
+    element.ownerGlobal.ensureCustomElements("moz-support-link");
+    await element.ownerDocument.l10n.setAttributes(
+      lazy.PanelMultiView.getViewNode(
+        element.ownerDocument,
+        "content-analysis-panel-description"
+      ),
+      "content-analysis-panel-text",
+      { agentName: lazy.agentName }
+    );
+    panelUI.showSubView("content-analysis-panel", element);
   },
 
   _showAnotherPendingDialog(aBrowsingContext) {
