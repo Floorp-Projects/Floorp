@@ -3353,8 +3353,10 @@ static bool RoundDurationYear(JSContext* cx, const NormalizedDuration& duration,
                               Handle<CalendarRecord> calendar,
                               ComputeRemainder computeRemainder,
                               RoundedDuration* result) {
+#ifdef DEBUG
   // Numbers of days between nsMinInstant and nsMaxInstant.
   static constexpr int32_t epochDays = 200'000'000;
+#endif
 
   auto [years, months, weeks, days] = duration.date;
 
@@ -3494,8 +3496,10 @@ static bool RoundDurationMonth(JSContext* cx,
                                Handle<CalendarRecord> calendar,
                                ComputeRemainder computeRemainder,
                                RoundedDuration* result) {
+#ifdef DEBUG
   // Numbers of days between nsMinInstant and nsMaxInstant.
   static constexpr int32_t epochDays = 200'000'000;
+#endif
 
   auto [years, months, weeks, days] = duration.date;
 
@@ -3634,8 +3638,10 @@ static bool RoundDurationWeek(JSContext* cx, const NormalizedDuration& duration,
                               Handle<CalendarRecord> calendar,
                               ComputeRemainder computeRemainder,
                               RoundedDuration* result) {
+#ifdef DEBUG
   // Numbers of days between nsMinInstant and nsMaxInstant.
   static constexpr int32_t epochDays = 200'000'000;
+#endif
 
   auto [years, months, weeks, days] = duration.date;
 
