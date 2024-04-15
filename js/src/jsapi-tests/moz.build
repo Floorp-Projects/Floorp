@@ -74,6 +74,7 @@ UNIFIED_SOURCES += [
     "testHashTable.cpp",
     "testIndexToString.cpp",
     "testInformalValueTypeName.cpp",
+    "testInt128.cpp",
     "testIntern.cpp",
     "testIntlAvailableLocales.cpp",
     "testIntString.cpp",
