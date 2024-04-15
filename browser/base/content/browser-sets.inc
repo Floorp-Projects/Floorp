@@ -92,7 +92,7 @@
     <command id="Browser:OpenAboutContainers" oncommand="openPreferences('paneContainers');"/>
     <command id="Tools:Search" oncommand="BrowserSearch.webSearch();"/>
     <command id="Tools:Downloads" oncommand="BrowserCommands.downloadsUI();"/>
-    <command id="Tools:Addons" oncommand="BrowserOpenAddonsMgr();"/>
+    <command id="Tools:Addons" oncommand="BrowserAddonUI.openAddonsMgr();"/>
     <command id="Tools:Sanitize" oncommand="Sanitizer.showUI(window);"/>
     <command id="Tools:PrivateBrowsing"
       oncommand="OpenBrowserWindow({private: true});"/>

@@ -264,7 +264,7 @@ function init_all() {
         return;
       }
       let mainWindow = window.browsingContext.topChromeWindow;
-      mainWindow.BrowserOpenAddonsMgr();
+      mainWindow.BrowserAddonUI.openAddonsMgr();
     });
 
     document.dispatchEvent(

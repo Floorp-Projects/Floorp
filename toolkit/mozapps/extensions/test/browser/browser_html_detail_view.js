@@ -1260,7 +1260,7 @@ add_task(async function testGoBackButtonIsDisabledWhenHistoryIsEmpty() {
   // When we have a fresh new tab, `about:addons` is opened in it.
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, null);
   // Simulate a click on "Manage extension" from a context menu.
-  let win = await BrowserOpenAddonsMgr(viewID);
+  let win = await BrowserAddonUI.openAddonsMgr(viewID);
   await assertBackButtonIsDisabled(win);
 
   BrowserTestUtils.removeTab(tab);
@@ -1288,7 +1288,7 @@ add_task(async function testGoBackButtonIsDisabledWhenHistoryIsEmptyInNewTab() {
     true
   );
   // Simulate a click on "Manage extension" from a context menu.
-  let win = await BrowserOpenAddonsMgr(viewID);
+  let win = await BrowserAddonUI.openAddonsMgr(viewID);
   let addonsTab = await addonsTabLoaded;
   await assertBackButtonIsDisabled(win);
 
@@ -1309,7 +1309,7 @@ add_task(async function testGoBackButtonIsDisabledAfterBrowserBackButton() {
   // When we have a fresh new tab, `about:addons` is opened in it.
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, null);
   // Simulate a click on "Manage extension" from a context menu.
-  let win = await BrowserOpenAddonsMgr(viewID);
+  let win = await BrowserAddonUI.openAddonsMgr(viewID);
   await assertBackButtonIsDisabled(win);
 
   // Navigate to the extensions list.

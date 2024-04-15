@@ -92,7 +92,6 @@
   "WindowIsClosing",
   "warnAboutClosingWindow",
   "MailIntegration",
-  "BrowserOpenAddonsMgr",
   "AddKeywordForSearchField",
   "restoreLastClosedTabOrWindowOrSession",
   "undoCloseTab",

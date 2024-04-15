@@ -1110,7 +1110,7 @@ var Control = {
           // We've clicked on the extensions process, open or reuse window.
           let parentWin =
             window.docShell.browsingContext.embedderElement.ownerGlobal;
-          parentWin.BrowserOpenAddonsMgr();
+          parentWin.BrowserAddonUI.openAddonsMgr();
           return;
         }
         // Otherwise, proceed.

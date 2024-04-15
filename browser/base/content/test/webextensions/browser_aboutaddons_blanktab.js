@@ -8,7 +8,7 @@ add_task(async function testBlankTabReusedAboutAddons() {
     is(browser, gBrowser.selectedBrowser, "New tab is selected");
 
     // Opening about:addons shouldn't change the selected tab.
-    BrowserOpenAddonsMgr();
+    BrowserAddonUI.openAddonsMgr();
 
     is(browser, gBrowser.selectedBrowser, "No new tab was opened");
 

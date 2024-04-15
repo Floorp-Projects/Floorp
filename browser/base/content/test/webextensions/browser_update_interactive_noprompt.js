@@ -36,7 +36,7 @@ async function testUpdateNoPrompt(
   is(addon.version, initialVersion, "Version 1 of the addon is installed");
 
   // Go to Extensions in about:addons
-  let win = await BrowserOpenAddonsMgr("addons://list/extension");
+  let win = await BrowserAddonUI.openAddonsMgr("addons://list/extension");
 
   await waitAboutAddonsViewLoaded(win.document);
 
