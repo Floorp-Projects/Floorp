@@ -361,6 +361,7 @@ bool CalendarDateAdd(JSContext* cx, JS::Handle<CalendarRecord> calendar,
 bool CalendarDateUntil(JSContext* cx, JS::Handle<CalendarRecord> calendar,
                        JS::Handle<Wrapped<PlainDateObject*>> one,
                        JS::Handle<Wrapped<PlainDateObject*>> two,
+                       TemporalUnit largestUnit,
                        JS::Handle<PlainObject*> options, Duration* result);
 
 /**

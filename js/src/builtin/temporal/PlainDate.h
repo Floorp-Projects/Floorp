@@ -212,7 +212,8 @@ DateDuration DifferenceISODate(const PlainDate& start, const PlainDate& end,
 bool DifferenceDate(JSContext* cx, JS::Handle<CalendarRecord> calendar,
                     JS::Handle<Wrapped<PlainDateObject*>> one,
                     JS::Handle<Wrapped<PlainDateObject*>> two,
-                    JS::Handle<PlainObject*> options, DateDuration* result);
+                    TemporalUnit largestUnit, JS::Handle<PlainObject*> options,
+                    DateDuration* result);
 
 /**
  * DifferenceDate ( calendarRec, one, two, options )
