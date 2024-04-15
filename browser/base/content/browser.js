@@ -6719,13 +6719,6 @@ function handleDroppedLink(
   }
 }
 
-function BrowserForceEncodingDetection() {
-  gBrowser.selectedBrowser.forceEncodingDetection();
-  BrowserCommands.reloadWithFlags(
-    Ci.nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE
-  );
-}
-
 var ToolbarContextMenu = {
   updateDownloadsAutoHide(popup) {
     let checkbox = document.getElementById(

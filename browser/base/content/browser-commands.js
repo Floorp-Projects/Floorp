@@ -581,4 +581,11 @@ var BrowserCommands = {
       PlacesCommandHook.showPlacesOrganizer("Downloads");
     }
   },
+
+  forceEncodingDetection() {
+    gBrowser.selectedBrowser.forceEncodingDetection();
+    BrowserCommands.reloadWithFlags(
+      Ci.nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE
+    );
+  },
 };
