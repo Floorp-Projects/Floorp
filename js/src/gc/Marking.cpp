@@ -718,26 +718,6 @@ void js::gc::TraceRangeInternal(JSTracer* trc, size_t len, T* vec,
 
 namespace js {
 
-using HasNoImplicitEdgesType = bool;
-
-template <typename T>
-struct ImplicitEdgeHolderType {
-  using Type = HasNoImplicitEdgesType;
-};
-
-// For now, we only handle JSObject* and BaseScript* keys, but the linear time
-// algorithm can be easily extended by adding in more types here, then making
-// GCMarker::traverse<T> call markImplicitEdges.
-template <>
-struct ImplicitEdgeHolderType<JSObject*> {
-  using Type = JSObject*;
-};
-
-template <>
-struct ImplicitEdgeHolderType<BaseScript*> {
-  using Type = BaseScript*;
-};
-
 void GCMarker::markEphemeronEdges(EphemeronEdgeVector& edges,
                                   gc::MarkColor srcColor) {
   // This is called as part of GC weak marking or by barriers outside of GC.
@@ -772,7 +752,18 @@ void GCMarker::markEphemeronEdges(EphemeronEdgeVector& edges,
 }
 
 template <typename T>
-void GCMarker::markImplicitEdgesHelper(T markedThing) {
+struct TypeCanHaveImplicitEdges : std::false_type {};
+template <>
+struct TypeCanHaveImplicitEdges<JSObject> : std::true_type {};
+template <>
+struct TypeCanHaveImplicitEdges<BaseScript> : std::true_type {};
+
+template <typename T>
+void GCMarker::markImplicitEdges(T* markedThing) {
+  if constexpr (!TypeCanHaveImplicitEdges<T>::value) {
+    return;
+  }
+
   if (!isWeakMarking()) {
     return;
   }
@@ -785,22 +776,18 @@ void GCMarker::markImplicitEdgesHelper(T markedThing) {
   if (!p) {
     return;
   }
+
   EphemeronEdgeVector& edges = p->value;
 
   // markedThing might be a key in a debugger weakmap, which can end up marking
   // values that are in a different compartment.
   AutoClearTracingSource acts(tracer());
 
-  CellColor thingColor = gc::detail::GetEffectiveColor(this, markedThing);
-  markEphemeronEdges(edges, AsMarkColor(thingColor));
-}
+  MarkColor thingColor = markColor();
+  MOZ_ASSERT(CellColor(thingColor) ==
+             gc::detail::GetEffectiveColor(this, markedThing));
 
-template <>
-void GCMarker::markImplicitEdgesHelper(HasNoImplicitEdgesType) {}
-
-template <typename T>
-void GCMarker::markImplicitEdges(T* thing) {
-  markImplicitEdgesHelper<typename ImplicitEdgeHolderType<T*>::Type>(thing);
+  markEphemeronEdges(edges, thingColor);
 }
 
 template void GCMarker::markImplicitEdges(JSObject*);

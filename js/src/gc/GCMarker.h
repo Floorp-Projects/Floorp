@@ -423,7 +423,7 @@ class GCMarker {
   void markAndTraverse(T* thing);
 
   template <typename T>
-  void markImplicitEdges(T* oldThing);
+  void markImplicitEdges(T* markedThing);
 
  private:
   /*
@@ -517,9 +517,6 @@ class GCMarker {
 
   inline void pushValueRange(JSObject* obj, SlotsOrElementsKind kind,
                              size_t start, size_t end);
-
-  template <typename T>
-  void markImplicitEdgesHelper(T markedThing);
 
   // Mark through edges whose target color depends on the colors of two source
   // entities (eg a WeakMap and one of its keys), and push the target onto the
