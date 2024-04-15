@@ -10,23 +10,19 @@
  */
 add_task(
   async function test_select_translations_panel_select_same_from_language_directly() {
-    const { cleanup, runInPage } = await loadTestPage({
+    const { cleanup, runInPage, resolveDownloads } = await loadTestPage({
       page: SELECT_TEST_PAGE_URL,
-      languagePairs: [
-        // Do not include Spanish.
-        { fromLang: "fr", toLang: "en" },
-        { fromLang: "en", toLang: "fr" },
-      ],
+      languagePairs: LANGUAGE_PAIRS,
       prefs: [["browser.translations.select.enable", true]],
     });
 
     await SelectTranslationsTestUtils.openPanel(runInPage, {
       selectSpanishSection: true,
       openAtSpanishSection: true,
-      expectedFromLanguage: null,
+      expectedFromLanguage: "es",
       expectedToLanguage: "en",
-      onOpenPanel:
-        SelectTranslationsTestUtils.assertPanelViewNoFromLangSelected,
+      downloadHandler: resolveDownloads,
+      onOpenPanel: SelectTranslationsTestUtils.assertPanelViewTranslated,
     });
 
     await SelectTranslationsTestUtils.changeSelectedFromLanguage(["en"], {
