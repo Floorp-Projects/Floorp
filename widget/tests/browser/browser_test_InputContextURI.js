@@ -86,6 +86,9 @@ add_task(async () => {
   await test_url_bar_url("check after remote content sets the URI");
 });
 add_task(async () => {
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.security.https_first", false]],
+  });
   await test_input_in_http_or_https(false);
 });
 
