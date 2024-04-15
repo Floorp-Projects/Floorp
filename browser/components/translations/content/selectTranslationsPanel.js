@@ -457,6 +457,26 @@ var SelectTranslationsPanel = new (class {
   }
 
   /**
+   * Handles events when the panel's try-another-source language is changed.
+   */
+  onChangeTryAnotherSourceLanguage() {
+    const { tryAnotherSourceMenuList, translateButton } = this.elements;
+    if (tryAnotherSourceMenuList.value) {
+      translateButton.disabled = false;
+    }
+  }
+
+  /**
+   * Handles events when the panel's translate button is clicked.
+   */
+  onClickTranslateButton() {
+    const { fromMenuList, tryAnotherSourceMenuList } = this.elements;
+    fromMenuList.value = tryAnotherSourceMenuList.value;
+    this.#deselectLanguage(tryAnotherSourceMenuList);
+    this.#maybeRequestTranslation();
+  }
+
+  /**
    * Clears the selected language and ensures that the menu list displays
    * the proper placeholder text.
    *

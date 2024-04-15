@@ -42,7 +42,8 @@
                   size="large"
                   data-l10n-id="translations-panel-choose-language"
                   aria-labelledby="select-translations-panel-try-another-language-label"
-                  noinitialselection="true">
+                  noinitialselection="true"
+                  oncommand="SelectTranslationsPanel.onChangeTryAnotherSourceLanguage(event)">
           <menupopup id="select-translations-panel-try-another-language-menupopup"
                      class="translations-panel-language-menupopup-from">
             <!-- The list of <menuitem> will be dynamically inserted. -->
@@ -126,7 +127,8 @@
               data-l10n-id="select-translations-panel-translate-button"
               hidden="true"
               default="true"
-              disabled="true">
+              disabled="true"
+              oncommand = "SelectTranslationsPanel.onClickTranslateButton()">
       </button>
     </html:moz-button-group>
   </panel>
