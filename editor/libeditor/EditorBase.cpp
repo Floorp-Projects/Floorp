@@ -2940,8 +2940,17 @@ void EditorBase::CloneAttributesWithTransaction(Element& aDestElement,
   bool isDestElementInBody = rootElement->Contains(destElement);
 
   // Clear existing attributes
-  RefPtr<nsDOMAttributeMap> destAttributes = destElement->Attributes();
-  while (RefPtr<Attr> attr = destAttributes->Item(0)) {
+  AutoTArray<OwningNonNull<Attr>, 16> destElementAttributes;
+  if (nsDOMAttributeMap* attributes = destElement->Attributes()) {
+    const uint32_t numberOfAttributes = attributes->Length();
+    destElementAttributes.SetCapacity(numberOfAttributes);
+    for (const auto i : IntegerRange(numberOfAttributes)) {
+      if (Attr* attr = attributes->Item(i)) {
+        destElementAttributes.AppendElement(*attr);
+      }
+    }
+  }
+  for (const OwningNonNull<Attr>& attr : destElementAttributes) {
     if (isDestElementInBody) {
       DebugOnly<nsresult> rvIgnored = RemoveAttributeWithTransaction(
           destElement, MOZ_KnownLive(*attr->NodeInfo()->NameAtom()));
@@ -2957,10 +2966,17 @@ void EditorBase::CloneAttributesWithTransaction(Element& aDestElement,
   }
 
   // Set just the attributes that the source element has
-  RefPtr<nsDOMAttributeMap> sourceAttributes = sourceElement->Attributes();
-  uint32_t sourceCount = sourceAttributes->Length();
-  for (uint32_t i = 0; i < sourceCount; i++) {
-    RefPtr<Attr> attr = sourceAttributes->Item(i);
+  AutoTArray<OwningNonNull<Attr>, 16> sourceElementAttributes;
+  if (nsDOMAttributeMap* attributes = sourceElement->Attributes()) {
+    const uint32_t numberOfAttributes = attributes->Length();
+    sourceElementAttributes.SetCapacity(numberOfAttributes);
+    for (const auto i : IntegerRange(numberOfAttributes)) {
+      if (Attr* attr = attributes->Item(i)) {
+        sourceElementAttributes.AppendElement(*attr);
+      }
+    }
+  }
+  for (const OwningNonNull<Attr>& attr : sourceElementAttributes) {
     nsAutoString value;
     attr->GetValue(value);
     if (isDestElementInBody) {
