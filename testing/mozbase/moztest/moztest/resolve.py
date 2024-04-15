@@ -14,7 +14,6 @@ import six
 from manifestparser import TestManifest, combine_fields
 from mozbuild.base import MozbuildObject
 from mozbuild.testing import REFTEST_FLAVORS, TEST_MANIFESTS
-from mozbuild.util import OrderedDefaultDict
 from mozpack.files import FileFinder
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -612,7 +611,7 @@ class TestResolver(MozbuildObject):
         self._wpt_loaded = False
 
     def _reset_state(self):
-        self._tests_by_path = OrderedDefaultDict(list)
+        self._tests_by_path = defaultdict(list)
         self._tests_by_flavor = defaultdict(set)
         self._tests_by_manifest = defaultdict(list)
         self._test_dirs = set()

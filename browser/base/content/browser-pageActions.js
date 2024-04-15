@@ -970,7 +970,7 @@ var BrowserPageActions = {
     this._contextAction = null;
 
     let viewID = "addons://detail/" + encodeURIComponent(action.extensionID);
-    window.BrowserOpenAddonsMgr(viewID);
+    window.BrowserAddonUI.openAddonsMgr(viewID);
   },
 
   /**

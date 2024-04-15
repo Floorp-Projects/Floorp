@@ -119,12 +119,12 @@ export var ExtensionsUI = {
 
   showAddonsManager(tabbrowser, strings, icon) {
     let global = tabbrowser.selectedBrowser.ownerGlobal;
-    return global
-      .BrowserOpenAddonsMgr("addons://list/extension")
-      .then(aomWin => {
+    return global.BrowserAddonUI.openAddonsMgr("addons://list/extension").then(
+      aomWin => {
         let aomBrowser = aomWin.docShell.chromeEventHandler;
         return this.showPermissionsPrompt(aomBrowser, strings, icon);
-      });
+      }
+    );
   },
 
   showSideloaded(tabbrowser, addon) {

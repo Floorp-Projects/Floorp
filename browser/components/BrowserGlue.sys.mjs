@@ -1630,7 +1630,9 @@ BrowserGlue.prototype = {
           "unsignedAddonsDisabled.learnMore.accesskey"
         ),
         callback() {
-          win.BrowserOpenAddonsMgr("addons://list/extension?unsigned=true");
+          win.BrowserAddonUI.openAddonsMgr(
+            "addons://list/extension?unsigned=true"
+          );
         },
       },
     ];

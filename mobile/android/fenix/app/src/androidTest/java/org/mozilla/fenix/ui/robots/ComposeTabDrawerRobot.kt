@@ -289,6 +289,9 @@ class ComposeTabDrawerRobot(private val composeTestRule: HomeActivityComposeTest
         Log.i(TAG, "swipeTabLeft: Trying to perform swipe left action on tab: $title")
         composeTestRule.tabItem(title).performTouchInput { swipeLeft() }
         Log.i(TAG, "swipeTabLeft: Performed swipe left action on tab: $title")
+        Log.i(TAG, "swipeTabLeft: Waiting for compose test rule to be idle")
+        composeTestRule.waitForIdle()
+        Log.i(TAG, "swipeTabLeft: Waited for compose test rule to be idle")
     }
 
     /**
@@ -298,6 +301,9 @@ class ComposeTabDrawerRobot(private val composeTestRule: HomeActivityComposeTest
         Log.i(TAG, "swipeTabRight: Trying to perform swipe right action on tab: $title")
         composeTestRule.tabItem(title).performTouchInput { swipeRight() }
         Log.i(TAG, "swipeTabRight: Performed swipe right action on tab: $title")
+        Log.i(TAG, "swipeTabRight: Waiting for compose test rule to be idle")
+        composeTestRule.waitForIdle()
+        Log.i(TAG, "swipeTabRight: Waited for compose test rule to be idle")
     }
 
     /**

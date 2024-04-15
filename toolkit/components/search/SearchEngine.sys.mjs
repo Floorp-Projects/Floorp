@@ -10,6 +10,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
+  SearchSettings: "resource://gre/modules/SearchSettings.sys.mjs",
   SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
   OpenSearchEngine: "resource://gre/modules/OpenSearchEngine.sys.mjs",
 });
@@ -1228,12 +1229,11 @@ export class SearchEngine {
       return;
     }
 
-    let engineSettings;
-    if (settings.version <= 6) {
-      engineSettings = settings.engines?.find(e => e._name == this.name);
-    } else {
-      engineSettings = settings.engines?.find(e => e.id == this.id);
-    }
+    let engineSettings = lazy.SearchSettings.findSettingsForEngine(
+      settings,
+      this.id,
+      this.name
+    );
     if (engineSettings?._metaData) {
       this._metaData = structuredClone(engineSettings._metaData);
     }

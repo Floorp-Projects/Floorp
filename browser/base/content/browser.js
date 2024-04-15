@@ -3942,14 +3942,6 @@ function FillHistoryMenu(aParent) {
   return true;
 }
 
-function BrowserDownloadsUI() {
-  if (PrivateBrowsingUtils.isWindowPrivate(window)) {
-    openTrustedLinkIn("about:downloads", "tab");
-  } else {
-    PlacesCommandHook.showPlacesOrganizer("Downloads");
-  }
-}
-
 function toOpenWindowByType(inType, uri, features) {
   var topWindow = Services.wm.getMostRecentWindow(inType);
 
@@ -6727,13 +6719,6 @@ function handleDroppedLink(
   }
 }
 
-function BrowserForceEncodingDetection() {
-  gBrowser.selectedBrowser.forceEncodingDetection();
-  BrowserCommands.reloadWithFlags(
-    Ci.nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE
-  );
-}
-
 var ToolbarContextMenu = {
   updateDownloadsAutoHide(popup) {
     let checkbox = document.getElementById(
@@ -7627,84 +7612,6 @@ var MailIntegration = {
     }
   },
 };
-
-/**
- * Open about:addons page by given view id.
- * @param {String} aView
- *                 View id of page that will open.
- *                 e.g. "addons://discover/"
- * @param {Object} options
- *        {
- *          selectTabByViewId: If true, if there is the tab opening page having
- *                             same view id, select the tab. Else if the current
- *                             page is blank, load on it. Otherwise, open a new
- *                             tab, then load on it.
- *                             If false, if there is the tab opening
- *                             about:addoons page, select the tab and load page
- *                             for view id on it. Otherwise, leave the loading
- *                             behavior to switchToTabHavingURI().
- *                             If no options, handles as false.
- *        }
- * @returns {Promise} When the Promise resolves, returns window object loaded the
- *                    view id.
- */
-function BrowserOpenAddonsMgr(aView, { selectTabByViewId = false } = {}) {
-  return new Promise(resolve => {
-    let emWindow;
-    let browserWindow;
-
-    var receivePong = function (aSubject) {
-      let browserWin = aSubject.browsingContext.topChromeWindow;
-      if (!emWindow || browserWin == window /* favor the current window */) {
-        if (
-          selectTabByViewId &&
-          aSubject.gViewController.currentViewId !== aView
-        ) {
-          return;
-        }
-
-        emWindow = aSubject;
-        browserWindow = browserWin;
-      }
-    };
-    Services.obs.addObserver(receivePong, "EM-pong");
-    Services.obs.notifyObservers(null, "EM-ping");
-    Services.obs.removeObserver(receivePong, "EM-pong");
-
-    if (emWindow) {
-      if (aView && !selectTabByViewId) {
-        emWindow.loadView(aView);
-      }
-      let tab = browserWindow.gBrowser.getTabForBrowser(
-        emWindow.docShell.chromeEventHandler
-      );
-      browserWindow.gBrowser.selectedTab = tab;
-      emWindow.focus();
-      resolve(emWindow);
-      return;
-    }
-
-    if (selectTabByViewId) {
-      const target = isBlankPageURL(gBrowser.currentURI.spec)
-        ? "current"
-        : "tab";
-      openTrustedLinkIn("about:addons", target);
-    } else {
-      // This must be a new load, else the ping/pong would have
-      // found the window above.
-      switchToTabHavingURI("about:addons", true);
-    }
-
-    Services.obs.addObserver(function observer(aSubject, aTopic) {
-      Services.obs.removeObserver(observer, aTopic);
-      if (aView) {
-        aSubject.loadView(aView);
-      }
-      aSubject.focus();
-      resolve(aSubject);
-    }, "EM-loaded");
-  });
-}
 
 function AddKeywordForSearchField() {
   if (!gContextMenu) {

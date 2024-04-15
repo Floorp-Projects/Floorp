@@ -4202,7 +4202,7 @@ const AppearanceChooser = {
           e.preventDefault();
           break;
         case "web-appearance-manage-themes-link":
-          window.browsingContext.topChromeWindow.BrowserOpenAddonsMgr(
+          window.browsingContext.topChromeWindow.BrowserAddonUI.openAddonsMgr(
             "addons://list/theme"
           );
           e.preventDefault();
