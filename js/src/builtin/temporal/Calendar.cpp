@@ -3083,10 +3083,10 @@ static bool BuiltinCalendarAdd(JSContext* cx, const PlainDate& date,
 
   // Step 10.
   auto addDuration = DateDuration{
-      duration.years,
-      duration.months,
-      duration.weeks,
-      duration.days + double(balanceResult.days),
+      int64_t(duration.years),
+      int64_t(duration.months),
+      int64_t(duration.weeks),
+      int64_t(duration.days) + balanceResult.days,
   };
   return AddISODate(cx, date, addDuration, overflow, result);
 }

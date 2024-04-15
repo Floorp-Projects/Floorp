@@ -755,10 +755,10 @@ static bool AddDateTime(JSContext* cx, const PlainDateTime& dateTime,
 
   // Step 4.
   auto durationWithDays = Duration{
-      duration.date.years,
-      duration.date.months,
-      duration.date.weeks,
-      duration.date.days + timeResult.days,
+      double(duration.date.years),
+      double(duration.date.months),
+      double(duration.date.weeks),
+      double(duration.date.days + timeResult.days),
   };
   if (!ThrowIfInvalidDuration(cx, durationWithDays)) {
     return false;
@@ -1060,7 +1060,7 @@ static bool DifferenceTemporalPlainDateTime(JSContext* cx,
         roundResult.date.years,
         roundResult.date.months,
         roundResult.date.weeks,
-        double(balancedTime.days),
+        balancedTime.days,
     };
     if (!temporal::BalanceDateDurationRelative(
             cx, toBalance, settings.largestUnit, settings.smallestUnit,
@@ -1083,15 +1083,15 @@ static bool DifferenceTemporalPlainDateTime(JSContext* cx,
         diff.date.years,
         diff.date.months,
         diff.date.weeks,
-        double(balancedTime.days),
+        balancedTime.days,
     };
   }
   MOZ_ASSERT(IsValidDuration(balancedDate.toDuration()));
 
   // Step 14.
   Duration duration = {
-      balancedDate.years,           balancedDate.months,
-      balancedDate.weeks,           balancedDate.days,
+      double(balancedDate.years),   double(balancedDate.months),
+      double(balancedDate.weeks),   double(balancedDate.days),
       double(balancedTime.hours),   double(balancedTime.minutes),
       double(balancedTime.seconds), double(balancedTime.milliseconds),
       balancedTime.microseconds,    balancedTime.nanoseconds,

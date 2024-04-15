@@ -822,13 +822,7 @@ bool js::temporal::AddISODate(JSContext* cx, const PlainDate& date,
   // BalanceISODate.
   MOZ_ASSERT(IsValidDuration(duration.toDuration()));
 
-  // Step 1.
-  MOZ_ASSERT(IsInteger(duration.years));
-  MOZ_ASSERT(IsInteger(duration.months));
-  MOZ_ASSERT(IsInteger(duration.weeks));
-  MOZ_ASSERT(IsInteger(duration.days));
-
-  // Step 2. (Not applicable in our implementation.)
+  // Steps 1-2. (Not applicable in our implementation.)
 
   // Step 3.
   auto yearMonth = BalanceISOYearMonth(date.year + duration.years,
@@ -975,9 +969,9 @@ static bool AddDate(JSContext* cx, const PlainDate& date,
   auto timeDuration = NormalizeTimeDuration(duration);
 
   // Step 6.
-  double balancedDays =
-      double(BalanceTimeDuration(timeDuration, TemporalUnit::Day).days);
-  double days = duration.days + balancedDays;
+  int64_t balancedDays =
+      BalanceTimeDuration(timeDuration, TemporalUnit::Day).days;
+  int64_t days = int64_t(duration.days) + balancedDays;
 
   // Step 7.
   return AddISODate(cx, date, {0, 0, 0, days}, overflow, result);
@@ -1290,7 +1284,7 @@ static DateDuration CreateDateDurationRecord(int32_t years, int32_t months,
                                              int32_t weeks, int32_t days) {
   MOZ_ASSERT(IsValidDuration(
       Duration{double(years), double(months), double(weeks), double(days)}));
-  return {double(years), double(months), double(weeks), double(days)};
+  return {int64_t(years), int64_t(months), int64_t(weeks), int64_t(days)};
 }
 
 /**
