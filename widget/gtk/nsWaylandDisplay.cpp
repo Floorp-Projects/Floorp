@@ -28,7 +28,6 @@ void WaylandDisplayRelease() {
   MOZ_RELEASE_ASSERT(NS_IsMainThread(),
                      "WaylandDisplay can be released in main thread only!");
   if (!gWaylandDisplay) {
-    NS_WARNING("WaylandDisplayRelease(): Wayland display is missing!");
     return;
   }
   delete gWaylandDisplay;
