@@ -83,6 +83,8 @@ class nsDNSService final : public mozilla::net::DNSServiceBase,
   nsresult PreprocessHostname(bool aLocalDomain, const nsACString& aInput,
                               nsIIDNService* aIDN, nsACString& aACE);
 
+  bool IsLocalDomain(const nsACString& aHostname) const;
+
   nsresult AsyncResolveInternal(
       const nsACString& aHostname, uint16_t type, nsIDNSService::DNSFlags flags,
       nsIDNSAdditionalInfo* aInfo, nsIDNSListener* aListener,
