@@ -717,10 +717,19 @@
     <string name="extension_process_crash_dialog_title">A kiegészítők ideiglenesen le vannak tiltva</string>
     <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
     <string name="addon_process_crash_dialog_message" moz:removedIn="126" tools:ignore="UnusedResources">Egy vagy több kiegészítő működése leállt, ami instabillá teszi a rendszert. A %1$s sikertelenül próbálta újraindítani a kiegészítőt.\n\nA kiegészítők nem fognak újraindulni a jelenlegi munkamenet alatt.\n\nA kiegészítők eltávolítása vagy letiltása megoldhatja a problémát.</string>
+    <!-- This is a message shown to the user when too many errors have occurred with the extensions process and they have been disabled.
+    The user can decide if they would like to continue trying to start extensions or if they'd rather continue without them.
+    The first parameter is the application name. -->
+    <string name="extension_process_crash_dialog_message">Egy vagy több kiegészítő működése leállt, ami instabillá teszi a rendszert. A %1$s sikertelenül próbálta újraindítani a kiegészítőt.\n\nA kiegészítők nem fognak újraindulni a jelenlegi munkamenet alatt.\n\nA kiegészítők eltávolítása vagy letiltása megoldhatja a problémát.</string>
     <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
     <string name="addon_process_crash_dialog_retry_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Próbálja meg újraindítani a kiegészítőket</string>
+    <!-- Button text on the extension crash dialog to prompt the user to try restarting the extensions but the dialog will reappear if it is unsuccessful again -->
+    <string name="extension_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">Kiegészítők újraindításának megpróbálása</string>
     <!-- The user will continue with all add-ons disabled -->
     <string name="addon_process_crash_dialog_disable_addons_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Folytatás letiltott kiegészítőkkel</string>
+
+    <!-- Button text on the extension crash dialog to prompt the user to continue with all extensions disabled. -->
+    <string name="extension_process_crash_dialog_disable_extensions_button_text">Folytatás letiltott kiegészítőkkel</string>
 
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->
@@ -2638,6 +2647,8 @@
     <string name="download_language_file_dialog_title">Letöltés adattakarékos módban (%1$s)?</string>
     <!-- Additional information for the data saving mode warning dialog used by the translations feature. This text explains the reason a download is required for a translation. -->
     <string name="download_language_file_dialog_message_all_languages">Részleges nyelvek lesznek a gyorsítótárba töltve, hogy a fordítások privátok maradjanak.</string>
+    <!-- Additional information for the data saving mode warning dialog used by the translations feature. This text explains the reason a download is required for a translation without mentioning the cache. -->
+    <string name="download_language_file_dialog_message_all_languages_no_cache">Részleges nyelvek lesznek letöltve, hogy a fordítások privátok maradjanak.</string>
     <!-- Checkbox label text on the data saving mode warning dialog used by the translations feature. This checkbox allows users to ignore the data usage warnings. -->
     <string name="download_language_file_dialog_checkbox_text">Letöltés mindig adattakarékos módban</string>
 

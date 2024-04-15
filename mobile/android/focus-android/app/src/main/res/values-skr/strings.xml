@@ -88,6 +88,12 @@
 
     <string name="notification_erase_title_android_14">براؤزنگ تاریخ مٹاؤں؟</string>
 
+    <string name="notification_erase_text_android_14" moz:RemovedIn="124" tools:ignore="UnusedResources">آپݨی براؤزنگ تاریخ کوں محفوظ طریقے نال مٹاوݨ کیتے ایں اطلاع نامے تے انگل پھیرو یا صاف کرو۔</string>
+
+    <!-- Text shown in the notification description that pops up to remind the user that a browsing session is active
+    for Android 14+. -->
+    <string name="notification_erase_text_android_14_1">آپݨی براؤزنگ تاریخ کوں محفوظ طریقے نال مٹاوݨ کیتے ایں اطلاع نامے تے انگل پھیرو یا انگل نال پونجھو۔</string>
+
     <string name="notification_erase_text">براؤزنگ تاریخ مٹاؤ</string>
 
     <!-- Notification action to open Focus and resume the current browsing session. -->
