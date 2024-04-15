@@ -631,6 +631,22 @@ skip script test262/built-ins/RegExp/unicode_full_case_folding.js
 skip script test262/intl402/Locale/likely-subtags.js
 skip script test262/intl402/Locale/prototype/minimize/removing-likely-subtags-first-adds-likely-subtags.js
 
+# Failures in AsyncFromSyncIteratorPrototype, see bug 1877862.
+skip script test262/built-ins/AsyncFromSyncIteratorPrototype/throw/throw-undefined-poisoned-return.js
+skip script test262/built-ins/AsyncFromSyncIteratorPrototype/throw/throw-undefined-return-object.js
+skip script test262/built-ins/AsyncFromSyncIteratorPrototype/throw/throw-undefined-return-not-object.js
+skip script test262/built-ins/AsyncFromSyncIteratorPrototype/throw/throw-null.js
+skip script test262/built-ins/AsyncFromSyncIteratorPrototype/throw/throw-undefined.js
+skip script test262/built-ins/AsyncFromSyncIteratorPrototype/throw/throw-result-poisoned-wrapper.js
+skip script test262/built-ins/AsyncFromSyncIteratorPrototype/throw/iterator-result-rejected-promise-close.js
+skip script test262/built-ins/AsyncFromSyncIteratorPrototype/throw/throw-undefined-get-return-undefined.js
+skip script test262/built-ins/AsyncFromSyncIteratorPrototype/next/next-result-poisoned-wrapper.js
+skip script test262/built-ins/AsyncFromSyncIteratorPrototype/next/for-await-iterator-next-rejected-promise-close.js
+skip script test262/built-ins/AsyncFromSyncIteratorPrototype/next/yield-iterator-next-rejected-promise-close.js
+skip script test262/built-ins/AsyncFromSyncIteratorPrototype/next/for-await-next-rejected-promise-close.js
+skip script test262/built-ins/AsyncFromSyncIteratorPrototype/next/iterator-result-poisoned-wrapper.js
+skip script test262/built-ins/AsyncFromSyncIteratorPrototype/next/yield-next-rejected-promise-close.js
+
 
 ###########################################################
 # Tests disabled due to issues in test262 importer script #
@@ -1037,6 +1053,32 @@ shell-option(--enable-iterator-helpers) script non262/Iterator/prototype/take/ta
 
 
 ##############################################
+# Temporal                                   #
+##############################################
+
+# https://github.com/tc39/proposal-temporal/pull/2762
+# https://github.com/tc39/proposal-temporal/pull/2759
+skip script test262/built-ins/Temporal/ZonedDateTime/prototype/since/wrapping-at-end-of-month.js
+skip script test262/built-ins/Temporal/ZonedDateTime/prototype/until/wrapping-at-end-of-month.js
+skip script test262/built-ins/Temporal/PlainDate/prototype/since/wrapping-at-end-of-month.js
+skip script test262/built-ins/Temporal/PlainDate/prototype/until/wrapping-at-end-of-month.js
+skip script test262/built-ins/Temporal/PlainDateTime/prototype/since/wrapping-at-end-of-month.js
+skip script test262/built-ins/Temporal/PlainDateTime/prototype/until/wrapping-at-end-of-month.js
+
+# Expected test results no longer match current spec.
+# Can be re-enabled after updating test262.
+skip script test262/built-ins/Temporal/ZonedDateTime/prototype/since/normalized-time-duration-to-days-loop-arbitrarily.js
+skip script test262/built-ins/Temporal/ZonedDateTime/prototype/until/normalized-time-duration-to-days-loop-arbitrarily.js
+skip script test262/built-ins/Temporal/Duration/prototype/round/normalized-time-duration-to-days-loop-arbitrarily.js
+skip script test262/built-ins/Temporal/Duration/prototype/add/normalized-time-duration-to-days-loop-arbitrarily.js
+skip script test262/built-ins/Temporal/Duration/prototype/subtract/normalized-time-duration-to-days-loop-arbitrarily.js
+skip script test262/built-ins/Temporal/Duration/prototype/total/normalized-time-duration-to-days-loop-arbitrarily.js
+
+# Revisit after <https://github.com/tc39/proposal-temporal/issues/2790> is fixed.
+skip script test262/staging/Temporal/ZonedDateTime/old/round.js
+
+
+##############################################
 # Temporal Intl tests                        #
 ##############################################
 
@@ -1331,58 +1373,3 @@ skip script test262/intl402/Temporal/TimeZone/from/iana-legacy-names.js
 skip script test262/intl402/Temporal/TimeZone/from/etc-timezone.js
 skip script test262/intl402/Temporal/TimeZone/from/argument-valid.js
 skip script test262/intl402/Temporal/TimeZone/from/timezone-case-insensitive.js
-
-# New Temporal failures, see bug 1878340
-skip script test262/built-ins/Temporal/Duration/out-of-range.js
-skip script test262/built-ins/Temporal/Duration/compare/argument-duration-out-of-range.js
-skip script test262/built-ins/Temporal/Duration/compare/relativeto-plaindate-add24hourdaystonormalizedtimeduration-out-of-range.js
-skip script test262/built-ins/Temporal/Duration/prototype/subtract/argument-duration-out-of-range.js
-skip script test262/built-ins/Temporal/Duration/prototype/subtract/result-out-of-range-1.js
-skip script test262/built-ins/Temporal/Duration/prototype/subtract/normalized-time-duration-to-days-loop-arbitrarily.js
-skip script test262/built-ins/Temporal/Duration/prototype/subtract/result-out-of-range-2.js
-skip script test262/built-ins/Temporal/Duration/prototype/subtract/relativeto-zoneddatetime-normalized-time-duration-to-days-range-errors.js
-skip script test262/built-ins/Temporal/Duration/prototype/subtract/argument-duration-precision-exact-numerical-values.js
-skip script test262/built-ins/Temporal/Duration/prototype/toString/throws-when-rounded-duration-is-invalid.js
-skip script test262/built-ins/Temporal/Duration/prototype/round/result-out-of-range.js
-skip script test262/built-ins/Temporal/Duration/prototype/round/normalized-time-duration-to-days-loop-arbitrarily.js
-skip script test262/built-ins/Temporal/Duration/prototype/round/relativeto-zoneddatetime-normalized-time-duration-to-days-range-errors.js
-skip script test262/built-ins/Temporal/Duration/prototype/round/out-of-range-when-converting-from-normalized-duration.js
-skip script test262/built-ins/Temporal/Duration/prototype/add/argument-duration-out-of-range.js
-skip script test262/built-ins/Temporal/Duration/prototype/add/result-out-of-range-1.js
-skip script test262/built-ins/Temporal/Duration/prototype/add/normalized-time-duration-to-days-loop-arbitrarily.js
-skip script test262/built-ins/Temporal/Duration/prototype/add/result-out-of-range-2.js
-skip script test262/built-ins/Temporal/Duration/prototype/add/relativeto-zoneddatetime-normalized-time-duration-to-days-range-errors.js
-skip script test262/built-ins/Temporal/Duration/prototype/add/argument-duration-precision-exact-numerical-values.js
-skip script test262/built-ins/Temporal/Duration/prototype/total/precision-exact-mathematical-values-7.js
-skip script test262/built-ins/Temporal/Duration/prototype/total/precision-exact-mathematical-values-6.js
-skip script test262/built-ins/Temporal/Duration/prototype/total/normalized-time-duration-to-days-loop-arbitrarily.js
-skip script test262/built-ins/Temporal/Duration/prototype/total/relativeto-plaindate-add24hourdaystonormalizedtimeduration-out-of-range.js
-skip script test262/built-ins/Temporal/Duration/prototype/total/relativeto-zoneddatetime-normalized-time-duration-to-days-range-errors.js
-skip script test262/built-ins/Temporal/Duration/from/argument-duration-out-of-range.js
-skip script test262/built-ins/Temporal/PlainTime/prototype/subtract/argument-duration-out-of-range.js
-skip script test262/built-ins/Temporal/PlainTime/prototype/add/argument-duration-out-of-range.js
-skip script test262/built-ins/Temporal/ZonedDateTime/prototype/until/normalized-time-duration-to-days-range-errors.js
-skip script test262/built-ins/Temporal/ZonedDateTime/prototype/until/normalized-time-duration-to-days-loop-arbitrarily.js
-skip script test262/built-ins/Temporal/ZonedDateTime/prototype/since/normalized-time-duration-to-days-range-errors.js
-skip script test262/built-ins/Temporal/ZonedDateTime/prototype/since/normalized-time-duration-to-days-loop-arbitrarily.js
-skip script test262/built-ins/Temporal/ZonedDateTime/prototype/hoursInDay/precision-exact-mathematical-values-2.js
-
-##############################################
-# AsyncFromSyncIteratorPrototype tests       #
-##############################################
-
-# Failures in AsyncFromSyncIteratorPrototype, see bug 1877862.
-skip script test262/built-ins/AsyncFromSyncIteratorPrototype/throw/throw-undefined-poisoned-return.js
-skip script test262/built-ins/AsyncFromSyncIteratorPrototype/throw/throw-undefined-return-object.js
-skip script test262/built-ins/AsyncFromSyncIteratorPrototype/throw/throw-undefined-return-not-object.js
-skip script test262/built-ins/AsyncFromSyncIteratorPrototype/throw/throw-null.js
-skip script test262/built-ins/AsyncFromSyncIteratorPrototype/throw/throw-undefined.js
-skip script test262/built-ins/AsyncFromSyncIteratorPrototype/throw/throw-result-poisoned-wrapper.js
-skip script test262/built-ins/AsyncFromSyncIteratorPrototype/throw/iterator-result-rejected-promise-close.js
-skip script test262/built-ins/AsyncFromSyncIteratorPrototype/throw/throw-undefined-get-return-undefined.js
-skip script test262/built-ins/AsyncFromSyncIteratorPrototype/next/next-result-poisoned-wrapper.js
-skip script test262/built-ins/AsyncFromSyncIteratorPrototype/next/for-await-iterator-next-rejected-promise-close.js
-skip script test262/built-ins/AsyncFromSyncIteratorPrototype/next/yield-iterator-next-rejected-promise-close.js
-skip script test262/built-ins/AsyncFromSyncIteratorPrototype/next/for-await-next-rejected-promise-close.js
-skip script test262/built-ins/AsyncFromSyncIteratorPrototype/next/iterator-result-poisoned-wrapper.js
-skip script test262/built-ins/AsyncFromSyncIteratorPrototype/next/yield-next-rejected-promise-close.js
