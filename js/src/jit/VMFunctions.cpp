@@ -545,39 +545,6 @@ bool InvokeFunction(JSContext* cx, HandleObject obj, bool constructing,
   return Call(cx, fval, thisv, args, rval);
 }
 
-bool InvokeNativeFunction(JSContext* cx, bool constructing,
-                          bool ignoresReturnValue, uint32_t argc, Value* argv,
-                          MutableHandleValue rval) {
-  // Ensure argv array is rooted - we may GC in here.
-  size_t numValues = argc + 2 + constructing;
-  RootedExternalValueArray argvRoot(cx, numValues, argv);
-
-  // Data in the argument vector is arranged for a JIT -> C++ call.
-  CallArgs callArgs = CallArgsFromSp(argc + constructing, argv + numValues,
-                                     constructing, ignoresReturnValue);
-
-  // This function is only called when the callee is a native function.
-  MOZ_ASSERT(callArgs.callee().as<JSFunction>().isNativeWithoutJitEntry());
-
-  if (constructing) {
-    MOZ_ASSERT(callArgs.thisv().isMagic(JS_IS_CONSTRUCTING));
-
-    if (!ConstructFromStack(cx, callArgs)) {
-      return false;
-    }
-
-    MOZ_ASSERT(callArgs.rval().isObject(),
-               "native constructors don't return primitives");
-  } else {
-    if (!CallFromStack(cx, callArgs)) {
-      return false;
-    }
-  }
-
-  rval.set(callArgs.rval());
-  return true;
-}
-
 void* GetContextSensitiveInterpreterStub() {
   return TlsContext.get()->runtime()->jitRuntime()->interpreterStub().value;
 }
