@@ -190,7 +190,7 @@ inline int32_t NormalizedTimeDurationSign(const NormalizedTimeDuration& d) {
  */
 bool Add24HourDaysToNormalizedTimeDuration(JSContext* cx,
                                            const NormalizedTimeDuration& d,
-                                           double days,
+                                           int64_t days,
                                            NormalizedTimeDuration* result);
 
 /**
