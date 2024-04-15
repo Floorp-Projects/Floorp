@@ -1,0 +1,2696 @@
+From 6fa607c553cbcf6ba31b08ec73a0e57e3ba2a19f Mon Sep 17 00:00:00 2001
+From: Mike Hommey <mh@glandium.org>
+Date: Thu, 11 Apr 2024 08:54:05 +0900
+Subject: [PATCH 3/3] Revert "[InstallAPI] Capture & compare load commands that
+ may differ per arch slice (#87674)"
+
+This reverts commit 27b2d7d4bb790ec1e7430bf18b1bc2f6e0800d0d.
+---
+ .../clang/Basic/DiagnosticDriverKinds.td      |   1 -
+ .../clang/Basic/DiagnosticInstallAPIKinds.td  |  21 -
+ clang/include/clang/InstallAPI/Context.h      |  17 -
+ .../include/clang/InstallAPI/DylibVerifier.h  |  29 +-
+ clang/include/clang/InstallAPI/MachO.h        |   2 -
+ clang/lib/InstallAPI/CMakeLists.txt           |   1 -
+ .../InstallAPI/DiagnosticBuilderWrappers.cpp  | 109 ---
+ .../InstallAPI/DiagnosticBuilderWrappers.h    |  49 --
+ clang/lib/InstallAPI/DylibVerifier.cpp        | 196 ------
+ clang/lib/InstallAPI/Frontend.cpp             |  54 --
+ clang/test/InstallAPI/binary-attributes.test  |  76 --
+ .../InstallAPI/driver-invalid-options.test    |   6 -
+ .../InstallAPI/reexported-frameworks.test     | 638 -----------------
+ clang/test/InstallAPI/rpath.test              | 663 ------------------
+ clang/tools/clang-installapi/CMakeLists.txt   |   1 -
+ .../clang-installapi/ClangInstallAPI.cpp      |  27 +-
+ .../tools/clang-installapi/InstallAPIOpts.td  |  40 +-
+ clang/tools/clang-installapi/Options.cpp      | 277 +-------
+ clang/tools/clang-installapi/Options.h        |  43 +-
+ 19 files changed, 16 insertions(+), 2234 deletions(-)
+ delete mode 100644 clang/lib/InstallAPI/DiagnosticBuilderWrappers.cpp
+ delete mode 100644 clang/lib/InstallAPI/DiagnosticBuilderWrappers.h
+ delete mode 100644 clang/test/InstallAPI/binary-attributes.test
+ delete mode 100644 clang/test/InstallAPI/reexported-frameworks.test
+ delete mode 100644 clang/test/InstallAPI/rpath.test
+
+diff --git a/clang/include/clang/Basic/DiagnosticDriverKinds.td b/clang/include/clang/Basic/DiagnosticDriverKinds.td
+index ed3fd9b1c4a5..6186a88e1c80 100644
+--- a/clang/include/clang/Basic/DiagnosticDriverKinds.td
++++ b/clang/include/clang/Basic/DiagnosticDriverKinds.td
+@@ -666,7 +666,6 @@ def warn_drv_darwin_sdk_invalid_settings : Warning<
+   "SDK settings were ignored as 'SDKSettings.json' could not be parsed">,
+   InGroup<DiagGroup<"darwin-sdk-settings">>;
+ 
+-def err_missing_sysroot : Error<"no such sysroot directory: '%0'">;
+ def err_drv_darwin_sdk_missing_arclite : Error<
+   "SDK does not contain 'libarclite' at the path '%0'; try increasing the minimum deployment target">;
+ 
+diff --git a/clang/include/clang/Basic/DiagnosticInstallAPIKinds.td b/clang/include/clang/Basic/DiagnosticInstallAPIKinds.td
+index 0a477da7186b..e3263fe9ccb9 100644
+--- a/clang/include/clang/Basic/DiagnosticInstallAPIKinds.td
++++ b/clang/include/clang/Basic/DiagnosticInstallAPIKinds.td
+@@ -19,11 +19,9 @@ def err_no_such_header_file : Error<"no such %select{public|private|project}1 he
+ def warn_no_such_excluded_header_file : Warning<"no such excluded %select{public|private}0 header file: '%1'">, InGroup<InstallAPIViolation>;
+ def warn_glob_did_not_match: Warning<"glob '%0' did not match any header file">, InGroup<InstallAPIViolation>;
+ def err_no_such_umbrella_header_file : Error<"%select{public|private|project}1 umbrella header file not found in input: '%0'">;
+-def err_cannot_find_reexport : Error<"cannot find re-exported %select{framework|library}0: '%1'">;
+ } // end of command line category.
+ 
+ let CategoryName = "Verification" in {
+-// Diagnostics about symbols.
+ def warn_target: Warning<"violations found for %0">, InGroup<InstallAPIViolation>;
+ def err_library_missing_symbol : Error<"declaration has external linkage, but dynamic library doesn't have symbol '%0'">;
+ def warn_library_missing_symbol : Warning<"declaration has external linkage, but dynamic library doesn't have symbol '%0'">, InGroup<InstallAPIViolation>;
+@@ -45,25 +43,6 @@ def err_dylib_symbol_flags_mismatch : Error<"dynamic library symbol '%0' is "
+   "%select{weak defined|thread local}1, but its declaration is not">;
+ def err_header_symbol_flags_mismatch : Error<"declaration '%0' is "
+   "%select{weak defined|thread local}1, but symbol is not in dynamic library">;
+-
+-// Diagnostics about load commands.
+-def err_architecture_mismatch : Error<"architectures do not match: '%0' (provided) vs '%1' (found)">;
+-def warn_platform_mismatch : Warning<"platform does not match: '%0' (provided) vs '%1' (found)">, InGroup<InstallAPIViolation>;
+-def err_platform_mismatch : Error<"platform does not match: '%0' (provided) vs '%1' (found)">;
+-def err_install_name_mismatch : Error<"install_name does not match: '%0' (provided) vs '%1' (found)">;
+-def err_current_version_mismatch : Error<"current_version does not match: '%0' (provided) vs '%1' (found)">;
+-def err_compatibility_version_mismatch : Error<"compatibility_version does not match: '%0' (provided) vs '%1' (found)">;
+-def err_appextension_safe_mismatch : Error<"ApplicationExtensionSafe flag does not match: '%0' (provided) vs '%1' (found)">;
+-def err_shared_cache_eligiblity_mismatch : Error<"NotForDyldSharedCache flag does not match: '%0' (provided) vs '%1' (found)">;
+-def err_no_twolevel_namespace : Error<"flat namespace libraries are not supported">;
+-def err_parent_umbrella_missing: Error<"parent umbrella missing from %0: '%1'">;
+-def err_parent_umbrella_mismatch : Error<"parent umbrella does not match: '%0' (provided) vs '%1' (found)">;
+-def err_reexported_libraries_missing : Error<"re-exported library missing from %0: '%1'">;
+-def err_reexported_libraries_mismatch : Error<"re-exported libraries do not match: '%0' (provided) vs '%1' (found)">;
+-def err_allowable_clients_missing : Error<"allowable client missing from %0: '%1'">;
+-def err_allowable_clients_mismatch : Error<"allowable clients do not match: '%0' (provided) vs '%1' (found)">;
+-def warn_rpaths_missing : Warning<"runpath search paths missing from %0: '%1'">, InGroup<InstallAPIViolation>;
+-def warn_rpaths_mismatch : Warning<"runpath search paths do not match: '%0' (provided) vs '%1' (found)">, InGroup<InstallAPIViolation>;
+ } // end of Verification category.
+ 
+ } // end of InstallAPI component
+diff --git a/clang/include/clang/InstallAPI/Context.h b/clang/include/clang/InstallAPI/Context.h
+index 8f88331a2803..54e517544b8e 100644
+--- a/clang/include/clang/InstallAPI/Context.h
++++ b/clang/include/clang/InstallAPI/Context.h
+@@ -28,9 +28,6 @@ struct InstallAPIContext {
+   /// Library attributes that are typically passed as linker inputs.
+   BinaryAttrs BA;
+ 
+-  /// Install names of reexported libraries of a library.
+-  LibAttrs Reexports;
+-
+   /// All headers that represent a library.
+   HeaderSeq InputHeaders;
+ 
+@@ -83,20 +80,6 @@ private:
+   llvm::DenseMap<StringRef, HeaderType> KnownIncludes;
+ };
+ 
+-/// Lookup the dylib or TextAPI file location for a system library or framework.
+-/// The search paths provided are searched in order.
+-/// @rpath based libraries are not supported.
+-///
+-/// \param InstallName The install name for the library.
+-/// \param FrameworkSearchPaths Search paths to look up frameworks with.
+-/// \param LibrarySearchPaths Search paths to look up dylibs with.
+-/// \param SearchPaths Fallback search paths if library was not found in earlier
+-/// paths.
+-/// \return The full path of the library.
+-std::string findLibrary(StringRef InstallName, FileManager &FM,
+-                        ArrayRef<std::string> FrameworkSearchPaths,
+-                        ArrayRef<std::string> LibrarySearchPaths,
+-                        ArrayRef<std::string> SearchPaths);
+ } // namespace installapi
+ } // namespace clang
+ 
+diff --git a/clang/include/clang/InstallAPI/DylibVerifier.h b/clang/include/clang/InstallAPI/DylibVerifier.h
+index 07dbd3bf5f2b..22cdc234486c 100644
+--- a/clang/include/clang/InstallAPI/DylibVerifier.h
++++ b/clang/include/clang/InstallAPI/DylibVerifier.h
+@@ -24,9 +24,6 @@ enum class VerificationMode {
+   Pedantic,
+ };
+ 
+-using LibAttrs = llvm::StringMap<ArchitectureSet>;
+-using ReexportedInterfaces = llvm::SmallVector<llvm::MachO::InterfaceFile, 8>;
+-
+ /// Service responsible to tracking state of verification across the
+ /// lifetime of InstallAPI.
+ /// As declarations are collected during AST traversal, they are
+@@ -66,12 +63,11 @@ public:
+ 
+   DylibVerifier() = default;
+ 
+-  DylibVerifier(llvm::MachO::Records &&Dylib, ReexportedInterfaces &&Reexports,
+-                DiagnosticsEngine *Diag, VerificationMode Mode, bool Demangle,
+-                StringRef DSYMPath)
+-      : Dylib(std::move(Dylib)), Reexports(std::move(Reexports)), Mode(Mode),
+-        Demangle(Demangle), DSYMPath(DSYMPath),
+-        Exports(std::make_unique<SymbolSet>()), Ctx(VerifierContext{Diag}) {}
++  DylibVerifier(llvm::MachO::Records &&Dylib, DiagnosticsEngine *Diag,
++                VerificationMode Mode, bool Demangle, StringRef DSYMPath)
++      : Dylib(std::move(Dylib)), Mode(Mode), Demangle(Demangle),
++        DSYMPath(DSYMPath), Exports(std::make_unique<SymbolSet>()),
++        Ctx(VerifierContext{Diag}) {}
+ 
+   Result verify(GlobalRecord *R, const FrontendAttrs *FA);
+   Result verify(ObjCInterfaceRecord *R, const FrontendAttrs *FA);
+@@ -81,14 +77,6 @@ public:
+   // Scan through dylib slices and report any remaining missing exports.
+   Result verifyRemainingSymbols();
+ 
+-  /// Compare and report the attributes represented as
+-  /// load commands in the dylib to the attributes provided via options.
+-  bool verifyBinaryAttrs(const ArrayRef<Target> ProvidedTargets,
+-                         const BinaryAttrs &ProvidedBA,
+-                         const LibAttrs &ProvidedReexports,
+-                         const LibAttrs &ProvidedClients,
+-                         const LibAttrs &ProvidedRPaths, const FileType &FT);
+-
+   /// Initialize target for verification.
+   void setTarget(const Target &T);
+ 
+@@ -117,10 +105,6 @@ private:
+   bool shouldIgnoreObsolete(const Record *R, SymbolContext &SymCtx,
+                             const Record *DR);
+ 
+-  /// Check if declaration is exported from a reexported library. These
+-  /// symbols should be omitted from the text-api file.
+-  bool shouldIgnoreReexport(const Record *R, SymbolContext &SymCtx) const;
+-
+   /// Compare the visibility declarations to the linkage of symbol found in
+   /// dylib.
+   Result compareVisibility(const Record *R, SymbolContext &SymCtx,
+@@ -170,9 +154,6 @@ private:
+   // Symbols in dylib.
+   llvm::MachO::Records Dylib;
+ 
+-  // Reexported interfaces apart of the library.
+-  ReexportedInterfaces Reexports;
+-
+   // Controls what class of violations to report.
+   VerificationMode Mode = VerificationMode::Invalid;
+ 
+diff --git a/clang/include/clang/InstallAPI/MachO.h b/clang/include/clang/InstallAPI/MachO.h
+index 854399f54ba6..827220dbf39f 100644
+--- a/clang/include/clang/InstallAPI/MachO.h
++++ b/clang/include/clang/InstallAPI/MachO.h
+@@ -23,8 +23,6 @@
+ #include "llvm/TextAPI/TextAPIWriter.h"
+ #include "llvm/TextAPI/Utils.h"
+ 
+-using Architecture = llvm::MachO::Architecture;
+-using ArchitectureSet = llvm::MachO::ArchitectureSet;
+ using SymbolFlags = llvm::MachO::SymbolFlags;
+ using RecordLinkage = llvm::MachO::RecordLinkage;
+ using Record = llvm::MachO::Record;
+diff --git a/clang/lib/InstallAPI/CMakeLists.txt b/clang/lib/InstallAPI/CMakeLists.txt
+index b36493942300..e0bc8d969ecb 100644
+--- a/clang/lib/InstallAPI/CMakeLists.txt
++++ b/clang/lib/InstallAPI/CMakeLists.txt
+@@ -7,7 +7,6 @@ set(LLVM_LINK_COMPONENTS
+   )
+ 
+ add_clang_library(clangInstallAPI
+-  DiagnosticBuilderWrappers.cpp
+   DylibVerifier.cpp
+   FileList.cpp
+   Frontend.cpp
+diff --git a/clang/lib/InstallAPI/DiagnosticBuilderWrappers.cpp b/clang/lib/InstallAPI/DiagnosticBuilderWrappers.cpp
+deleted file mode 100644
+index 1fa988f93bdd..000000000000
+--- a/clang/lib/InstallAPI/DiagnosticBuilderWrappers.cpp
++++ /dev/null
+@@ -1,109 +0,0 @@
+-//===- DiagnosticBuilderWrappers.cpp ----------------------------*- C++-*-===//
+-//
+-// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+-// See https://llvm.org/LICENSE.txt for license information.
+-// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+-//
+-//===----------------------------------------------------------------------===//
+-
+-#include "DiagnosticBuilderWrappers.h"
+-#include "llvm/ADT/STLExtras.h"
+-#include "llvm/ADT/SmallString.h"
+-#include "llvm/Support/raw_ostream.h"
+-#include "llvm/TextAPI/Platform.h"
+-
+-using clang::DiagnosticBuilder;
+-
+-namespace llvm {
+-namespace MachO {
+-const DiagnosticBuilder &operator<<(const DiagnosticBuilder &DB,
+-                                    const Architecture &Arch) {
+-  DB.AddString(getArchitectureName(Arch));
+-  return DB;
+-}
+-
+-const DiagnosticBuilder &operator<<(const DiagnosticBuilder &DB,
+-                                    const ArchitectureSet &ArchSet) {
+-  DB.AddString(std::string(ArchSet));
+-  return DB;
+-}
+-
+-const DiagnosticBuilder &operator<<(const DiagnosticBuilder &DB,
+-                                    const PlatformType &Platform) {
+-  DB.AddString(getPlatformName(Platform));
+-  return DB;
+-}
+-
+-const DiagnosticBuilder &operator<<(const DiagnosticBuilder &DB,
+-                                    const PlatformVersionSet &Platforms) {
+-  std::string PlatformAsString;
+-  raw_string_ostream Stream(PlatformAsString);
+-
+-  Stream << "[ ";
+-  llvm::interleaveComma(
+-      Platforms, Stream,
+-      [&Stream](const std::pair<PlatformType, VersionTuple> &PV) {
+-        Stream << getPlatformName(PV.first);
+-        if (!PV.second.empty())
+-          Stream << PV.second.getAsString();
+-      });
+-  Stream << " ]";
+-  DB.AddString(Stream.str());
+-  return DB;
+-}
+-
+-const DiagnosticBuilder &operator<<(const DiagnosticBuilder &DB,
+-                                    const FileType &Type) {
+-  switch (Type) {
+-  case FileType::MachO_Bundle:
+-    DB.AddString("mach-o bundle");
+-    return DB;
+-  case FileType::MachO_DynamicLibrary:
+-    DB.AddString("mach-o dynamic library");
+-    return DB;
+-  case FileType::MachO_DynamicLibrary_Stub:
+-    DB.AddString("mach-o dynamic library stub");
+-    return DB;
+-  case FileType::TBD_V1:
+-    DB.AddString("tbd-v1");
+-    return DB;
+-  case FileType::TBD_V2:
+-    DB.AddString("tbd-v2");
+-    return DB;
+-  case FileType::TBD_V3:
+-    DB.AddString("tbd-v3");
+-    return DB;
+-  case FileType::TBD_V4:
+-    DB.AddString("tbd-v4");
+-    return DB;
+-  case FileType::TBD_V5:
+-    DB.AddString("tbd-v5");
+-    return DB;
+-  case FileType::Invalid:
+-  case FileType::All:
+-    llvm_unreachable("Unexpected file type for diagnostics.");
+-  }
+-}
+-
+-const DiagnosticBuilder &operator<<(const DiagnosticBuilder &DB,
+-                                    const PackedVersion &Version) {
+-  std::string VersionString;
+-  raw_string_ostream OS(VersionString);
+-  OS << Version;
+-  DB.AddString(OS.str());
+-  return DB;
+-}
+-
+-const clang::DiagnosticBuilder &
+-operator<<(const clang::DiagnosticBuilder &DB,
+-           const StringMapEntry<ArchitectureSet> &LibAttr) {
+-  std::string IFAsString;
+-  raw_string_ostream OS(IFAsString);
+-
+-  OS << LibAttr.getKey() << " [ " << LibAttr.getValue() << " ]";
+-  DB.AddString(OS.str());
+-  return DB;
+-}
+-
+-} // namespace MachO
+-} // namespace llvm
+diff --git a/clang/lib/InstallAPI/DiagnosticBuilderWrappers.h b/clang/lib/InstallAPI/DiagnosticBuilderWrappers.h
+deleted file mode 100644
+index 48cfefbf65e6..000000000000
+--- a/clang/lib/InstallAPI/DiagnosticBuilderWrappers.h
++++ /dev/null
+@@ -1,49 +0,0 @@
+-//===- DiagnosticBuilderWrappers.h -----------------------------*- C++ -*-===//
+-//
+-// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+-// See https://llvm.org/LICENSE.txt for license information.
+-// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+-//
+-//===----------------------------------------------------------------------===//
+-//
+-/// Diagnostic wrappers for TextAPI types for error reporting.
+-//
+-//===----------------------------------------------------------------------===//
+-
+-#ifndef LLVM_CLANG_INSTALLAPI_DIAGNOSTICBUILDER_WRAPPER_H
+-#define LLVM_CLANG_INSTALLAPI_DIAGNOSTICBUILDER_WRAPPER_H
+-
+-#include "clang/Basic/Diagnostic.h"
+-#include "llvm/TextAPI/Architecture.h"
+-#include "llvm/TextAPI/ArchitectureSet.h"
+-#include "llvm/TextAPI/InterfaceFile.h"
+-#include "llvm/TextAPI/Platform.h"
+-
+-namespace llvm {
+-namespace MachO {
+-
+-const clang::DiagnosticBuilder &operator<<(const clang::DiagnosticBuilder &DB,
+-                                           const PlatformType &Platform);
+-
+-const clang::DiagnosticBuilder &operator<<(const clang::DiagnosticBuilder &DB,
+-                                           const PlatformVersionSet &Platforms);
+-
+-const clang::DiagnosticBuilder &operator<<(const clang::DiagnosticBuilder &DB,
+-                                           const Architecture &Arch);
+-
+-const clang::DiagnosticBuilder &operator<<(const clang::DiagnosticBuilder &DB,
+-                                           const ArchitectureSet &ArchSet);
+-
+-const clang::DiagnosticBuilder &operator<<(const clang::DiagnosticBuilder &DB,
+-                                           const FileType &Type);
+-
+-const clang::DiagnosticBuilder &operator<<(const clang::DiagnosticBuilder &DB,
+-                                           const PackedVersion &Version);
+-
+-const clang::DiagnosticBuilder &
+-operator<<(const clang::DiagnosticBuilder &DB,
+-           const StringMapEntry<ArchitectureSet> &LibAttr);
+-
+-} // namespace MachO
+-} // namespace llvm
+-#endif // LLVM_CLANG_INSTALLAPI_DIAGNOSTICBUILDER_WRAPPER_H
+diff --git a/clang/lib/InstallAPI/DylibVerifier.cpp b/clang/lib/InstallAPI/DylibVerifier.cpp
+index 2387ee0e78ad..c0eda1d81b9b 100644
+--- a/clang/lib/InstallAPI/DylibVerifier.cpp
++++ b/clang/lib/InstallAPI/DylibVerifier.cpp
+@@ -7,7 +7,6 @@
+ //===----------------------------------------------------------------------===//
+ 
+ #include "clang/InstallAPI/DylibVerifier.h"
+-#include "DiagnosticBuilderWrappers.h"
+ #include "clang/InstallAPI/FrontendRecords.h"
+ #include "clang/InstallAPI/InstallAPIDiagnostic.h"
+ #include "llvm/Demangle/Demangle.h"
+@@ -179,22 +178,6 @@ bool DylibVerifier::shouldIgnoreObsolete(const Record *R, SymbolContext &SymCtx,
+   return SymCtx.FA->Avail.isObsoleted();
+ }
+ 
+-bool DylibVerifier::shouldIgnoreReexport(const Record *R,
+-                                         SymbolContext &SymCtx) const {
+-  if (Reexports.empty())
+-    return false;
+-
+-  for (const InterfaceFile &Lib : Reexports) {
+-    if (!Lib.hasTarget(Ctx.Target))
+-      continue;
+-    if (auto Sym =
+-            Lib.getSymbol(SymCtx.Kind, SymCtx.SymbolName, SymCtx.ObjCIFKind))
+-      if ((*Sym)->hasTarget(Ctx.Target))
+-        return true;
+-  }
+-  return false;
+-}
+-
+ bool DylibVerifier::compareObjCInterfaceSymbols(const Record *R,
+                                                 SymbolContext &SymCtx,
+                                                 const ObjCInterfaceRecord *DR) {
+@@ -400,11 +383,6 @@ DylibVerifier::Result DylibVerifier::verifyImpl(Record *R,
+     return Ctx.FrontendState;
+   }
+ 
+-  if (shouldIgnoreReexport(R, SymCtx)) {
+-    updateState(Result::Ignore);
+-    return Ctx.FrontendState;
+-  }
+-
+   Record *DR =
+       findRecordFromSlice(Ctx.DylibSlice, SymCtx.SymbolName, SymCtx.Kind);
+   if (DR)
+@@ -724,179 +702,5 @@ DylibVerifier::Result DylibVerifier::verifyRemainingSymbols() {
+   return getState();
+ }
+ 
+-bool DylibVerifier::verifyBinaryAttrs(const ArrayRef<Target> ProvidedTargets,
+-                                      const BinaryAttrs &ProvidedBA,
+-                                      const LibAttrs &ProvidedReexports,
+-                                      const LibAttrs &ProvidedClients,
+-                                      const LibAttrs &ProvidedRPaths,
+-                                      const FileType &FT) {
+-  assert(!Dylib.empty() && "Need dylib to verify.");
+-
+-  // Pickup any load commands that can differ per slice to compare.
+-  TargetList DylibTargets;
+-  LibAttrs DylibReexports;
+-  LibAttrs DylibClients;
+-  LibAttrs DylibRPaths;
+-  for (const std::shared_ptr<RecordsSlice> &RS : Dylib) {
+-    DylibTargets.push_back(RS->getTarget());
+-    const BinaryAttrs &BinInfo = RS->getBinaryAttrs();
+-    for (const StringRef LibName : BinInfo.RexportedLibraries)
+-      DylibReexports[LibName].set(DylibTargets.back().Arch);
+-    for (const StringRef LibName : BinInfo.AllowableClients)
+-      DylibClients[LibName].set(DylibTargets.back().Arch);
+-    // Compare attributes that are only representable in >= TBD_V5.
+-    if (FT >= FileType::TBD_V5)
+-      for (const StringRef Name : BinInfo.RPaths)
+-        DylibRPaths[Name].set(DylibTargets.back().Arch);
+-  }
+-
+-  // Check targets first.
+-  ArchitectureSet ProvidedArchs = mapToArchitectureSet(ProvidedTargets);
+-  ArchitectureSet DylibArchs = mapToArchitectureSet(DylibTargets);
+-  if (ProvidedArchs != DylibArchs) {
+-    Ctx.Diag->Report(diag::err_architecture_mismatch)
+-        << ProvidedArchs << DylibArchs;
+-    return false;
+-  }
+-  auto ProvidedPlatforms = mapToPlatformVersionSet(ProvidedTargets);
+-  auto DylibPlatforms = mapToPlatformVersionSet(DylibTargets);
+-  if (ProvidedPlatforms != DylibPlatforms) {
+-    const bool DiffMinOS =
+-        mapToPlatformSet(ProvidedTargets) == mapToPlatformSet(DylibTargets);
+-    if (DiffMinOS)
+-      Ctx.Diag->Report(diag::warn_platform_mismatch)
+-          << ProvidedPlatforms << DylibPlatforms;
+-    else {
+-      Ctx.Diag->Report(diag::err_platform_mismatch)
+-          << ProvidedPlatforms << DylibPlatforms;
+-      return false;
+-    }
+-  }
+-
+-  // Because InstallAPI requires certain attributes to match across architecture
+-  // slices, take the first one to compare those with.
+-  const BinaryAttrs &DylibBA = (*Dylib.begin())->getBinaryAttrs();
+-
+-  if (ProvidedBA.InstallName != DylibBA.InstallName) {
+-    Ctx.Diag->Report(diag::err_install_name_mismatch)
+-        << ProvidedBA.InstallName << DylibBA.InstallName;
+-    return false;
+-  }
+-
+-  if (ProvidedBA.CurrentVersion != DylibBA.CurrentVersion) {
+-    Ctx.Diag->Report(diag::err_current_version_mismatch)
+-        << ProvidedBA.CurrentVersion << DylibBA.CurrentVersion;
+-    return false;
+-  }
+-
+-  if (ProvidedBA.CompatVersion != DylibBA.CompatVersion) {
+-    Ctx.Diag->Report(diag::err_compatibility_version_mismatch)
+-        << ProvidedBA.CompatVersion << DylibBA.CompatVersion;
+-    return false;
+-  }
+-
+-  if (ProvidedBA.AppExtensionSafe != DylibBA.AppExtensionSafe) {
+-    Ctx.Diag->Report(diag::err_appextension_safe_mismatch)
+-        << (ProvidedBA.AppExtensionSafe ? "true" : "false")
+-        << (DylibBA.AppExtensionSafe ? "true" : "false");
+-    return false;
+-  }
+-
+-  if (!DylibBA.TwoLevelNamespace) {
+-    Ctx.Diag->Report(diag::err_no_twolevel_namespace);
+-    return false;
+-  }
+-
+-  if (ProvidedBA.OSLibNotForSharedCache != DylibBA.OSLibNotForSharedCache) {
+-    Ctx.Diag->Report(diag::err_shared_cache_eligiblity_mismatch)
+-        << (ProvidedBA.OSLibNotForSharedCache ? "true" : "false")
+-        << (DylibBA.OSLibNotForSharedCache ? "true" : "false");
+-    return false;
+-  }
+-
+-  if (ProvidedBA.ParentUmbrella.empty() && !DylibBA.ParentUmbrella.empty()) {
+-    Ctx.Diag->Report(diag::err_parent_umbrella_missing)
+-        << "installAPI option" << DylibBA.ParentUmbrella;
+-    return false;
+-  }
+-
+-  if (!ProvidedBA.ParentUmbrella.empty() && DylibBA.ParentUmbrella.empty()) {
+-    Ctx.Diag->Report(diag::err_parent_umbrella_missing)
+-        << "binary file" << ProvidedBA.ParentUmbrella;
+-    return false;
+-  }
+-
+-  if ((!ProvidedBA.ParentUmbrella.empty()) &&
+-      (ProvidedBA.ParentUmbrella != DylibBA.ParentUmbrella)) {
+-    Ctx.Diag->Report(diag::err_parent_umbrella_mismatch)
+-        << ProvidedBA.ParentUmbrella << DylibBA.ParentUmbrella;
+-    return false;
+-  }
+-
+-  auto CompareLibraries = [&](const LibAttrs &Provided, const LibAttrs &Dylib,
+-                              unsigned DiagID_missing, unsigned DiagID_mismatch,
+-                              bool Fatal = true) {
+-    if (Provided == Dylib)
+-      return true;
+-
+-    for (const llvm::StringMapEntry<ArchitectureSet> &PAttr : Provided) {
+-      const auto DAttrIt = Dylib.find(PAttr.getKey());
+-      if (DAttrIt == Dylib.end()) {
+-        Ctx.Diag->Report(DiagID_missing) << "binary file" << PAttr;
+-        if (Fatal)
+-          return false;
+-      }
+-
+-      if (PAttr.getValue() != DAttrIt->getValue()) {
+-        Ctx.Diag->Report(DiagID_mismatch) << PAttr << *DAttrIt;
+-        if (Fatal)
+-          return false;
+-      }
+-    }
+-
+-    for (const llvm::StringMapEntry<ArchitectureSet> &DAttr : Dylib) {
+-      const auto PAttrIt = Provided.find(DAttr.getKey());
+-      if (PAttrIt == Provided.end()) {
+-        Ctx.Diag->Report(DiagID_missing) << "installAPI option" << DAttr;
+-        if (!Fatal)
+-          continue;
+-        return false;
+-      }
+-
+-      if (PAttrIt->getValue() != DAttr.getValue()) {
+-        if (Fatal)
+-          llvm_unreachable("this case was already covered above.");
+-      }
+-    }
+-    return true;
+-  };
+-
+-  if (!CompareLibraries(ProvidedReexports, DylibReexports,
+-                        diag::err_reexported_libraries_missing,
+-                        diag::err_reexported_libraries_mismatch))
+-    return false;
+-
+-  if (!CompareLibraries(ProvidedClients, DylibClients,
+-                        diag::err_allowable_clients_missing,
+-                        diag::err_allowable_clients_mismatch))
+-    return false;
+-
+-  if (FT >= FileType::TBD_V5) {
+-    // Ignore rpath differences if building an asan variant, since the
+-    //   compiler injects additional paths.
+-    // FIXME: Building with sanitizers does not always change the install
+-    //   name, so this is not a foolproof solution.
+-    if (!ProvidedBA.InstallName.ends_with("_asan")) {
+-      if (!CompareLibraries(ProvidedRPaths, DylibRPaths,
+-                            diag::warn_rpaths_missing,
+-                            diag::warn_rpaths_mismatch,
+-                            /*Fatal=*/false))
+-        return true;
+-    }
+-  }
+-
+-  return true;
+-}
+-
+ } // namespace installapi
+ } // namespace clang
+diff --git a/clang/lib/InstallAPI/Frontend.cpp b/clang/lib/InstallAPI/Frontend.cpp
+index bd7589c13e04..e07ccb14e0b8 100644
+--- a/clang/lib/InstallAPI/Frontend.cpp
++++ b/clang/lib/InstallAPI/Frontend.cpp
+@@ -162,58 +162,4 @@ std::unique_ptr<MemoryBuffer> createInputBuffer(InstallAPIContext &Ctx) {
+   return llvm::MemoryBuffer::getMemBufferCopy(Contents, BufferName);
+ }
+ 
+-std::string findLibrary(StringRef InstallName, FileManager &FM,
+-                        ArrayRef<std::string> FrameworkSearchPaths,
+-                        ArrayRef<std::string> LibrarySearchPaths,
+-                        ArrayRef<std::string> SearchPaths) {
+-  auto getLibrary =
+-      [&](const StringRef FullPath) -> std::optional<std::string> {
+-    // Prefer TextAPI files when possible.
+-    SmallString<PATH_MAX> TextAPIFilePath = FullPath;
+-    replace_extension(TextAPIFilePath, ".tbd");
+-
+-    if (FM.getOptionalFileRef(TextAPIFilePath))
+-      return std::string(TextAPIFilePath);
+-
+-    if (FM.getOptionalFileRef(FullPath))
+-      return std::string(FullPath);
+-
+-    return std::nullopt;
+-  };
+-
+-  const StringRef Filename = sys::path::filename(InstallName);
+-  const bool IsFramework = sys::path::parent_path(InstallName)
+-                               .ends_with((Filename + ".framework").str());
+-  if (IsFramework) {
+-    for (const StringRef Path : FrameworkSearchPaths) {
+-      SmallString<PATH_MAX> FullPath(Path);
+-      sys::path::append(FullPath, Filename + StringRef(".framework"), Filename);
+-      if (auto LibOrNull = getLibrary(FullPath))
+-        return *LibOrNull;
+-    }
+-  } else {
+-    // Copy Apple's linker behavior: If this is a .dylib inside a framework, do
+-    // not search -L paths.
+-    bool IsEmbeddedDylib = (sys::path::extension(InstallName) == ".dylib") &&
+-                           InstallName.contains(".framework/");
+-    if (!IsEmbeddedDylib) {
+-      for (const StringRef Path : LibrarySearchPaths) {
+-        SmallString<PATH_MAX> FullPath(Path);
+-        sys::path::append(FullPath, Filename);
+-        if (auto LibOrNull = getLibrary(FullPath))
+-          return *LibOrNull;
+-      }
+-    }
+-  }
+-
+-  for (const StringRef Path : SearchPaths) {
+-    SmallString<PATH_MAX> FullPath(Path);
+-    sys::path::append(FullPath, InstallName);
+-    if (auto LibOrNull = getLibrary(FullPath))
+-      return *LibOrNull;
+-  }
+-
+-  return {};
+-}
+-
+ } // namespace clang::installapi
+diff --git a/clang/test/InstallAPI/binary-attributes.test b/clang/test/InstallAPI/binary-attributes.test
+deleted file mode 100644
+index d97c7a14a98d..000000000000
+--- a/clang/test/InstallAPI/binary-attributes.test
++++ /dev/null
+@@ -1,76 +0,0 @@
+-; RUN: rm -rf %t 
+-; RUN: split-file %s %t
+-; RUN: mkdir -p %t/System/Library/Frameworks 
+-; RUN: cp -r %S/Inputs/Simple/Simple.framework %t/System/Library/Frameworks/
+-; RUN: yaml2obj %S/Inputs/Simple/Simple.yaml -o %t/Simple 
+-
+-; RUN: not clang-installapi -target x86_64h-apple-macos10.12 \
+-; RUN: -install_name Simple -current_version 3 -compatibility_version 2 \
+-; RUN: -o tmp.tbd --verify-against=%t/Simple 2>&1 | FileCheck -check-prefix=ARCHITECTURE %s
+-; ARCHITECTURE: error: architectures do not match: 'x86_64h' (provided) vs 'x86_64' (found)
+-
+-; RUN: not clang-installapi -target x86_64-apple-macos10.12 \
+-; RUN: -install_name Simple -current_version 3 -compatibility_version 2 \
+-; RUN: -o tmp.tbd --verify-against=%t/Simple 2>&1 | FileCheck -check-prefix=INSTALL_NAME %s
+-; INSTALL_NAME: error: install_name does not match: 'Simple' (provided) vs '/System/Library/Frameworks/Simple.framework/Versions/A/Simple' (found)
+-
+-; RUN: not clang-installapi -target x86_64-apple-macos10.12 \
+-; RUN: -install_name /System/Library/Frameworks/Simple.framework/Versions/A/Simple \
+-; RUN: -current_version 3 -compatibility_version 2 \
+-; RUN: -o tmp.tbd --verify-against=%t/Simple 2>&1 | FileCheck -check-prefix=CURRENT_VERSION %s
+-; CURRENT_VERSION: error: current_version does not match: '3' (provided) vs '1.2.3' (found)
+-
+-; RUN: not clang-installapi -target x86_64-apple-macos10.12 \
+-; RUN: -install_name /System/Library/Frameworks/Simple.framework/Versions/A/Simple \
+-; RUN: -current_version 1.2.3  -compatibility_version 2 \
+-; RUN: -o tmp.tbd --verify-against=%t/Simple 2>&1 | FileCheck -check-prefix=COMPATIBILITY_VERSION %s
+-; COMPATIBILITY_VERSION: error: compatibility_version does not match: '2' (provided) vs '1' (found)
+-
+-; RUN: not clang-installapi -target x86_64-apple-macos10.12 \
+-; RUN: -install_name /System/Library/Frameworks/Simple.framework/Versions/A/Simple \
+-; RUN: -current_version 1.2.3  -compatibility_version 1 -fapplication-extension \
+-; RUN: -o tmp.tbd --verify-against=%t/Simple 2>&1 | FileCheck -check-prefix=APPEXTSAFE %s
+-; APPEXTSAFE: error: ApplicationExtensionSafe flag does not match: 'true' (provided) vs 'false' (found)
+-
+-; RUN: not clang-installapi -target x86_64-apple-macos10.12 \
+-; RUN: -install_name /System/Library/Frameworks/Simple.framework/Versions/A/Simple \
+-; RUN: -current_version 1.2.3  -compatibility_version 1 -not_for_dyld_shared_cache \
+-; RUN: -o tmp.tbd --verify-against=%t/Simple 2>&1 | FileCheck -check-prefix=SHARED_CACHE %s
+-; SHARED_CACHE: error: NotForDyldSharedCache flag does not match: 'true' (provided) vs 'false' (found)
+-
+-; RUN: not clang-installapi -target x86_64-apple-macos10.12 \
+-; RUN: -install_name /System/Library/Frameworks/Simple.framework/Versions/A/Simple \
+-; RUN: -current_version 1.2.3  -compatibility_version 1 \
+-; RUN: -allowable_client Foo -allowable_client Bar \
+-; RUN: -o tmp.tbd --verify-against=%t/Simple 2>&1 | FileCheck -check-prefix=ALLOWABLE %s
+-; ALLOWABLE: error: allowable client missing from binary file: 'Foo [ x86_64 ]'
+-
+-; RUN: not clang-installapi -target x86_64-apple-macos10.12 \
+-; RUN: -install_name /System/Library/Frameworks/Simple.framework/Versions/A/Simple \
+-; RUN: -current_version 1.2.3  -compatibility_version 1 -reexport_library %t/Foo.tbd \
+-; RUN: -o tmp.tbd --verify-against=%t/Simple 2>&1 | FileCheck -check-prefix=REEXPORT %s
+-; REEXPORT: error: re-exported library missing from binary file: 'Foo [ x86_64 ]'
+-
+-; RUN: not clang-installapi -target x86_64-apple-macos10.12 \
+-; RUN: -install_name /System/Library/Frameworks/Simple.framework/Versions/A/Simple \
+-; RUN: -current_version 1.2.3  -compatibility_version 1 -umbrella Bogus \
+-; RUN: -o tmp.tbd --verify-against=%t/Simple 2>&1 | FileCheck -check-prefix=UMBRELLA %s
+-; UMBRELLA: error: parent umbrella missing from binary file: 'Bogus'
+-
+-;--- Foo.tbd
+-{
+-  "main_library": {
+-    "install_names": [
+-      {
+-        "name": "Foo"
+-      }
+-    ],
+-    "target_info": [
+-      {
+-        "min_deployment": "13.0",
+-        "target": "arm64-macos"
+-      }
+-    ]
+-  },
+-  "tapi_tbd_version": 5
+-}
+diff --git a/clang/test/InstallAPI/driver-invalid-options.test b/clang/test/InstallAPI/driver-invalid-options.test
+index 2b2c551fca20..0c630eacd183 100644
+--- a/clang/test/InstallAPI/driver-invalid-options.test
++++ b/clang/test/InstallAPI/driver-invalid-options.test
+@@ -13,9 +13,3 @@
+ // RUN: --verify-mode=Invalid -o tmp.tbd 2> %t
+ // RUN: FileCheck --check-prefix INVALID_VERIFY_MODE -input-file %t %s 
+ // INVALID_VERIFY_MODE: error: invalid value 'Invalid' in '--verify-mode=Invalid'
+-
+-/// Check that invalid sysroot is fatal.
+-// RUN: not clang-installapi -install_name Foo -target arm64-apple-ios13 \
+-// RUN: -isysroot /no/such/path -o tmp.tbd 2> %t 
+-// RUN: FileCheck --check-prefix INVALID_ISYSROOT -input-file %t %s 
+-// INVALID_ISYSROOT: error: no such sysroot directory: {{.*}}no/such/path'
+diff --git a/clang/test/InstallAPI/reexported-frameworks.test b/clang/test/InstallAPI/reexported-frameworks.test
+deleted file mode 100644
+index 41c4f539c0b1..000000000000
+--- a/clang/test/InstallAPI/reexported-frameworks.test
++++ /dev/null
+@@ -1,638 +0,0 @@
+-; RUN: rm -rf %t
+-; RUN: split-file %s %t
+-; RUN: sed -e "s|DSTROOT|%/t|g" %t/inputs.json.in > %t/inputs.json
+-
+-; RUN: yaml2obj %t/Umbrella.yaml -o %t/Umbrella
+-; RUN: mkdir -p %t/System/Library/Frameworks/Bar.framework
+-; RUN: yaml2obj %t/Bar.yaml -o %t/System/Library/Frameworks/Bar.framework/Bar
+-
+-; RUN: clang-installapi -target x86_64-apple-macosx13 -install_name \
+-; RUN: /System/Library/Frameworks/Umbrella3.framework/Versions/A/Umbrella3 \
+-; RUN: -current_version 1 -compatibility_version 1 \
+-; RUN: --verify-against=%t/Umbrella \
+-; RUN: -F %t/System/Library/Frameworks -L %t/usr/lib \
+-; RUN: %t/inputs.json --verify-mode=Pedantic \
+-; RUN: -reexport_framework Foo -reexport_framework Bar -reexport-lBaz \
+-; RUN: -o %t/Umbrella.tbd 2>&1 | FileCheck -allow-empty %s
+-; RUN: llvm-readtapi -compare %t/Umbrella.tbd %t/expected.tbd 2>&1 | FileCheck -allow-empty %s
+-
+-// Checks that one of the reexported frameworks found earlier doesn't resolve 
+-// a missing export from a declaration.
+-; RUN: not clang-installapi -target x86_64-apple-macosx13 -install_name \
+-; RUN: /System/Library/Frameworks/Umbrella3.framework/Versions/A/Umbrella3 \
+-; RUN: -current_version 1 -compatibility_version 1 \
+-; RUN: --verify-against=%t/Umbrella \
+-; RUN: %t/inputs.json -F %t/BadFoo \
+-; RUN: -F %t/System/Library/Frameworks -L %t/usr/lib \
+-; RUN: --verify-mode=ErrorsOnly \
+-; RUN: -reexport_framework Foo -reexport_framework Bar -reexport-lBaz \
+-; RUN: -o %t/Umbrella.tbd 2>&1 | FileCheck %s --check-prefix MISSING_SYMBOL
+-
+-; MISSING_SYMBOL: error: declaration has external linkage, but dynamic library doesn't have symbol 'foo'
+-; MISSING_SYMBOL-NEXT: extern int foo();
+-
+-
+-; CHECK-NOT: error
+-; CHECK-NOT: warning
+-
+-;--- System/Library/Frameworks/Umbrella.framework/Headers/Bar.h
+-extern int bar();
+-
+-;--- System/Library/Frameworks/Umbrella.framework/Headers/Baz.h
+-extern int baz();
+-
+-;--- System/Library/Frameworks/Umbrella.framework/Headers/Foo.h
+-extern int foo();
+-
+-;--- System/Library/Frameworks/Umbrella.framework/Headers/Umbrella.h
+-#import <Umbrella/Bar.h>
+-#import <Umbrella/Baz.h>
+-#import <Umbrella/Foo.h>
+-
+-;--- inputs.json.in
+-{
+-  "headers": [ {
+-    "path" : "DSTROOT/System/Library/Frameworks/Umbrella.framework/Headers/Bar.h",
+-    "type" : "public"
+-  }, 
+-  {
+-    "path" : "DSTROOT/System/Library/Frameworks/Umbrella.framework/Headers/Baz.h",
+-    "type" : "public"
+-  },
+-  {
+-    "path" : "DSTROOT/System/Library/Frameworks/Umbrella.framework/Headers/Umbrella.h",
+-    "type" : "public"
+-  },
+-  {
+-    "path" : "DSTROOT/System/Library/Frameworks/Umbrella.framework/Headers/Foo.h",
+-    "type" : "public"
+-  }
+-  ],
+-  "version": "3"
+-}
+-
+-;--- Umbrella.yaml
+---- !mach-o
+-FileHeader:
+-  magic:           0xFEEDFACF
+-  cputype:         0x1000007
+-  cpusubtype:      0x3
+-  filetype:        0x6
+-  ncmds:           18
+-  sizeofcmds:      1184
+-  flags:           0x85
+-  reserved:        0x0
+-LoadCommands:
+-  - cmd:             LC_SEGMENT_64
+-    cmdsize:         152
+-    segname:         __TEXT
+-    vmaddr:          0
+-    vmsize:          12288
+-    fileoff:         0
+-    filesize:        12288
+-    maxprot:         5
+-    initprot:        5
+-    nsects:          1
+-    flags:           0
+-    Sections:
+-      - sectname:        __text
+-        segname:         __TEXT
+-        addr:            0x24C0
+-        size:            0
+-        offset:          0x24C0
+-        align:           0
+-        reloff:          0x0
+-        nreloc:          0
+-        flags:           0x80000000
+-        reserved1:       0x0
+-        reserved2:       0x0
+-        reserved3:       0x0
+-        content:         ''
+-  - cmd:             LC_SEGMENT_64
+-    cmdsize:         152
+-    segname:         __DATA_CONST
+-    vmaddr:          12288
+-    vmsize:          4096
+-    fileoff:         12288
+-    filesize:        4096
+-    maxprot:         3
+-    initprot:        3
+-    nsects:          1
+-    flags:           16
+-    Sections:
+-      - sectname:        __objc_imageinfo
+-        segname:         __DATA_CONST
+-        addr:            0x3000
+-        size:            8
+-        offset:          0x3000
+-        align:           0
+-        reloff:          0x0
+-        nreloc:          0
+-        flags:           0x0
+-        reserved1:       0x0
+-        reserved2:       0x0
+-        reserved3:       0x0
+-        content:         '0000000040000000'
+-  - cmd:             LC_SEGMENT_64
+-    cmdsize:         72
+-    segname:         __LINKEDIT
+-    vmaddr:          16384
+-    vmsize:          48
+-    fileoff:         16384
+-    filesize:        48
+-    maxprot:         1
+-    initprot:        1
+-    nsects:          0
+-    flags:           0
+-  - cmd:             LC_DYLD_INFO_ONLY
+-    cmdsize:         48
+-    rebase_off:      0
+-    rebase_size:     0
+-    bind_off:        0
+-    bind_size:       0
+-    weak_bind_off:   0
+-    weak_bind_size:  0
+-    lazy_bind_off:   0
+-    lazy_bind_size:  0
+-    export_off:      0
+-    export_size:     0
+-  - cmd:             LC_SYMTAB
+-    cmdsize:         24
+-    symoff:          16392
+-    nsyms:           1
+-    stroff:          16408
+-    strsize:         24
+-  - cmd:             LC_DYSYMTAB
+-    cmdsize:         80
+-    ilocalsym:       0
+-    nlocalsym:       0
+-    iextdefsym:      0
+-    nextdefsym:      0
+-    iundefsym:       0
+-    nundefsym:       1
+-    tocoff:          0
+-    ntoc:            0
+-    modtaboff:       0
+-    nmodtab:         0
+-    extrefsymoff:    0
+-    nextrefsyms:     0
+-    indirectsymoff:  0
+-    nindirectsyms:   0
+-    extreloff:       0
+-    nextrel:         0
+-    locreloff:       0
+-    nlocrel:         0
+-  - cmd:             LC_ID_DYLIB
+-    cmdsize:         96
+-    dylib:
+-      name:            24
+-      timestamp:       0
+-      current_version: 65536
+-      compatibility_version: 65536
+-    Content:         '/System/Library/Frameworks/Umbrella3.framework/Versions/A/Umbrella3'
+-    ZeroPadBytes:    5
+-  - cmd:             LC_UUID
+-    cmdsize:         24
+-    uuid:            4C4C44AE-5555-3144-A1D3-33A5C6F7B36A
+-  - cmd:             LC_BUILD_VERSION
+-    cmdsize:         32
+-    platform:        1
+-    minos:           851968
+-    sdk:             983040
+-    ntools:          1
+-    Tools:
+-      - tool:            4
+-        version:         1245184
+-  - cmd:             LC_LOAD_DYLIB
+-    cmdsize:         80
+-    dylib:
+-      name:            24
+-      timestamp:       0
+-      current_version: 65536
+-      compatibility_version: 65536
+-    Content:         '/System/Library/Frameworks/Foo.framework/Versions/A/Foo'
+-    ZeroPadBytes:    1
+-  - cmd:             LC_REEXPORT_DYLIB
+-    cmdsize:         80
+-    dylib:
+-      name:            24
+-      timestamp:       0
+-      current_version: 0
+-      compatibility_version: 0
+-    Content:         '/System/Library/Frameworks/Foo.framework/Versions/A/Foo'
+-    ZeroPadBytes:    1
+-  - cmd:             LC_LOAD_DYLIB
+-    cmdsize:         80
+-    dylib:
+-      name:            24
+-      timestamp:       0
+-      current_version: 65536
+-      compatibility_version: 65536
+-    Content:         '/System/Library/Frameworks/Bar.framework/Versions/A/Bar'
+-    ZeroPadBytes:    1
+-  - cmd:             LC_REEXPORT_DYLIB
+-    cmdsize:         80
+-    dylib:
+-      name:            24
+-      timestamp:       0
+-      current_version: 0
+-      compatibility_version: 0
+-    Content:         '/System/Library/Frameworks/Bar.framework/Versions/A/Bar'
+-    ZeroPadBytes:    1
+-  - cmd:             LC_LOAD_DYLIB
+-    cmdsize:         48
+-    dylib:
+-      name:            24
+-      timestamp:       0
+-      current_version: 65536
+-      compatibility_version: 65536
+-    Content:         '/usr/lib/libBaz.1.dylib'
+-    ZeroPadBytes:    1
+-  - cmd:             LC_REEXPORT_DYLIB
+-    cmdsize:         48
+-    dylib:
+-      name:            24
+-      timestamp:       0
+-      current_version: 0
+-      compatibility_version: 0
+-    Content:         '/usr/lib/libBaz.1.dylib'
+-    ZeroPadBytes:    1
+-  - cmd:             LC_LOAD_DYLIB
+-    cmdsize:         56
+-    dylib:
+-      name:            24
+-      timestamp:       0
+-      current_version: 88539136
+-      compatibility_version: 65536
+-    Content:         '/usr/lib/libSystem.B.dylib'
+-    ZeroPadBytes:    6
+-  - cmd:             LC_FUNCTION_STARTS
+-    cmdsize:         16
+-    dataoff:         16384
+-    datasize:        8
+-  - cmd:             LC_DATA_IN_CODE
+-    cmdsize:         16
+-    dataoff:         16392
+-    datasize:        0
+-LinkEditData:
+-  NameList:
+-    - n_strx:          2
+-      n_type:          0x1
+-      n_sect:          0
+-      n_desc:          1024
+-      n_value:         0
+-  StringTable:
+-    - ' '
+-    - dyld_stub_binder
+-    - ''
+-    - ''
+-    - ''
+-    - ''
+-    - ''
+-...
+-
+-;--- System/Library/Frameworks/Foo.framework/Foo.tbd
+-{
+-  "main_library": {
+-    "exported_symbols": [
+-      {
+-        "text": {
+-          "global": [
+-            "_foo"
+-          ]
+-        }
+-      }
+-    ],
+-    "flags": [
+-      {
+-        "attributes": [
+-          "not_app_extension_safe"
+-        ]
+-      }
+-    ],
+-    "install_names": [
+-      {
+-        "name": "/System/Library/Frameworks/Foo.framework/Versions/A/Foo"
+-      }
+-    ],
+-    "target_info": [
+-      {
+-        "min_deployment": "13",
+-        "target": "x86_64-macos"
+-      }
+-    ]
+-  },
+-  "tapi_tbd_version": 5
+-}
+-
+-;--- Bar.yaml
+---- !mach-o
+-FileHeader:
+-  magic:           0xFEEDFACF
+-  cputype:         0x1000007
+-  cpusubtype:      0x3
+-  filetype:        0x6
+-  ncmds:           12
+-  sizeofcmds:      912
+-  flags:           0x100085
+-  reserved:        0x0
+-LoadCommands:
+-  - cmd:             LC_SEGMENT_64
+-    cmdsize:         312
+-    segname:         __TEXT
+-    vmaddr:          0
+-    vmsize:          8192
+-    fileoff:         0
+-    filesize:        8192
+-    maxprot:         5
+-    initprot:        5
+-    nsects:          3
+-    flags:           0
+-    Sections:
+-      - sectname:        __text
+-        segname:         __TEXT
+-        addr:            0xBB0
+-        size:            8
+-        offset:          0xBB0
+-        align:           4
+-        reloff:          0x0
+-        nreloc:          0
+-        flags:           0x80000400
+-        reserved1:       0x0
+-        reserved2:       0x0
+-        reserved3:       0x0
+-        content:         554889E531C05DC3
+-      - sectname:        __unwind_info
+-        segname:         __TEXT
+-        addr:            0xBB8
+-        size:            4152
+-        offset:          0xBB8
+-        align:           2
+-        reloff:          0x0
+-        nreloc:          0
+-        flags:           0x0
+-        reserved1:       0x0
+-        reserved2:       0x0
+-        reserved3:       0x0
+-        content:         010000001C000000010000002000000000000000200000000200000000000001B00B00003800000038000000B80B00000000000038000000030000000C0001001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+-      - sectname:        __eh_frame
+-        segname:         __TEXT
+-        addr:            0x1BF0
+-        size:            24
+-        offset:          0x1BF0
+-        align:           3
+-        reloff:          0x0
+-        nreloc:          0
+-        flags:           0x6000000B
+-        reserved1:       0x0
+-        reserved2:       0x0
+-        reserved3:       0x0
+-        content:         1400000000000000017A520001781001100C070890010000
+-  - cmd:             LC_SEGMENT_64
+-    cmdsize:         152
+-    segname:         __DATA_CONST
+-    vmaddr:          8192
+-    vmsize:          4096
+-    fileoff:         8192
+-    filesize:        4096
+-    maxprot:         3
+-    initprot:        3
+-    nsects:          1
+-    flags:           16
+-    Sections:
+-      - sectname:        __objc_imageinfo
+-        segname:         __DATA_CONST
+-        addr:            0x2000
+-        size:            8
+-        offset:          0x2000
+-        align:           0
+-        reloff:          0x0
+-        nreloc:          0
+-        flags:           0x0
+-        reserved1:       0x0
+-        reserved2:       0x0
+-        reserved3:       0x0
+-        content:         '0000000040000000'
+-  - cmd:             LC_SEGMENT_64
+-    cmdsize:         72
+-    segname:         __LINKEDIT
+-    vmaddr:          12288
+-    vmsize:          80
+-    fileoff:         12288
+-    filesize:        80
+-    maxprot:         1
+-    initprot:        1
+-    nsects:          0
+-    flags:           0
+-  - cmd:             LC_DYLD_INFO_ONLY
+-    cmdsize:         48
+-    rebase_off:      0
+-    rebase_size:     0
+-    bind_off:        0
+-    bind_size:       0
+-    weak_bind_off:   0
+-    weak_bind_size:  0
+-    lazy_bind_off:   0
+-    lazy_bind_size:  0
+-    export_off:      12288
+-    export_size:     16
+-  - cmd:             LC_SYMTAB
+-    cmdsize:         24
+-    symoff:          12312
+-    nsyms:           2
+-    stroff:          12344
+-    strsize:         24
+-  - cmd:             LC_DYSYMTAB
+-    cmdsize:         80
+-    ilocalsym:       0
+-    nlocalsym:       0
+-    iextdefsym:      0
+-    nextdefsym:      1
+-    iundefsym:       1
+-    nundefsym:       1
+-    tocoff:          0
+-    ntoc:            0
+-    modtaboff:       0
+-    nmodtab:         0
+-    extrefsymoff:    0
+-    nextrefsyms:     0
+-    indirectsymoff:  0
+-    nindirectsyms:   0
+-    extreloff:       0
+-    nextrel:         0
+-    locreloff:       0
+-    nlocrel:         0
+-  - cmd:             LC_ID_DYLIB
+-    cmdsize:         80
+-    dylib:
+-      name:            24
+-      timestamp:       0
+-      current_version: 65536
+-      compatibility_version: 65536
+-    Content:         '/System/Library/Frameworks/Bar.framework/Versions/A/Bar'
+-    ZeroPadBytes:    1
+-  - cmd:             LC_UUID
+-    cmdsize:         24
+-    uuid:            4C4C4415-5555-3144-A11E-3C68D85CC061
+-  - cmd:             LC_BUILD_VERSION
+-    cmdsize:         32
+-    platform:        1
+-    minos:           851968
+-    sdk:             983040
+-    ntools:          1
+-    Tools:
+-      - tool:            4
+-        version:         1245184
+-  - cmd:             LC_LOAD_DYLIB
+-    cmdsize:         56
+-    dylib:
+-      name:            24
+-      timestamp:       0
+-      current_version: 88539136
+-      compatibility_version: 65536
+-    Content:         '/usr/lib/libSystem.B.dylib'
+-    ZeroPadBytes:    6
+-  - cmd:             LC_FUNCTION_STARTS
+-    cmdsize:         16
+-    dataoff:         12304
+-    datasize:        8
+-  - cmd:             LC_DATA_IN_CODE
+-    cmdsize:         16
+-    dataoff:         12312
+-    datasize:        0
+-LinkEditData:
+-  ExportTrie:
+-    TerminalSize:    0
+-    NodeOffset:      0
+-    Name:            ''
+-    Flags:           0x0
+-    Address:         0x0
+-    Other:           0x0
+-    ImportName:      ''
+-    Children:
+-      - TerminalSize:    3
+-        NodeOffset:      8
+-        Name:            _bar
+-        Flags:           0x0
+-        Address:         0xBB0
+-        Other:           0x0
+-        ImportName:      ''
+-  NameList:
+-    - n_strx:          2
+-      n_type:          0xF
+-      n_sect:          1
+-      n_desc:          0
+-      n_value:         2992
+-    - n_strx:          7
+-      n_type:          0x1
+-      n_sect:          0
+-      n_desc:          256
+-      n_value:         0
+-  StringTable:
+-    - ' '
+-    - _bar
+-    - dyld_stub_binder
+-  FunctionStarts:  [ 0xBB0 ]
+-...
+-
+-;--- usr/lib/libBaz.tbd
+-{
+-  "main_library": {
+-    "exported_symbols": [
+-      {
+-        "text": {
+-          "global": [
+-            "_baz"
+-          ]
+-        }
+-      }
+-    ],
+-    "flags": [
+-      {
+-        "attributes": [
+-          "not_app_extension_safe"
+-        ]
+-      }
+-    ],
+-    "install_names": [
+-      {
+-        "name": "/usr/lib/libBaz.1.dylib"
+-      }
+-    ],
+-    "target_info": [
+-      {
+-        "min_deployment": "13",
+-        "target": "x86_64-macos"
+-      }
+-    ]
+-  },
+-  "tapi_tbd_version": 5
+-}
+-
+-;--- BadFoo/Foo.framework/Foo.tbd
+-{
+-  "main_library": {
+-    "exported_symbols": [
+-      {
+-        "text": {
+-          "global": [
+-            "_not_so_foo"
+-          ]
+-        }
+-      }
+-    ],
+-    "flags": [
+-      {
+-        "attributes": [
+-          "not_app_extension_safe"
+-        ]
+-      }
+-    ],
+-    "install_names": [
+-      {
+-        "name": "/System/Library/Frameworks/Foo.framework/Versions/A/Foo"
+-      }
+-    ],
+-    "target_info": [
+-      {
+-        "min_deployment": "13",
+-        "target": "x86_64-macos"
+-      }
+-    ]
+-  },
+-  "tapi_tbd_version": 5
+-}
+-
+-;--- expected.tbd
+-{
+-  "main_library": {
+-    "flags": [
+-      {
+-        "attributes": [
+-          "not_app_extension_safe"
+-        ]
+-      }
+-    ],
+-    "install_names": [
+-      {
+-        "name": "/System/Library/Frameworks/Umbrella3.framework/Versions/A/Umbrella3"
+-      }
+-    ],
+-    "reexported_libraries": [
+-      {
+-        "names": [
+-          "/System/Library/Frameworks/Bar.framework/Versions/A/Bar",
+-          "/System/Library/Frameworks/Foo.framework/Versions/A/Foo",
+-          "/usr/lib/libBaz.1.dylib"
+-        ]
+-      }
+-    ],
+-    "target_info": [
+-      {
+-        "min_deployment": "13",
+-        "target": "x86_64-macos"
+-      }
+-    ]
+-  },
+-  "tapi_tbd_version": 5
+-}
+diff --git a/clang/test/InstallAPI/rpath.test b/clang/test/InstallAPI/rpath.test
+deleted file mode 100644
+index 083a15419aba..000000000000
+--- a/clang/test/InstallAPI/rpath.test
++++ /dev/null
+@@ -1,663 +0,0 @@
+-; RUN: rm -rf %t
+-; RUN: split-file %s %t
+-; RUN: yaml2obj %t/RPath.yaml -o %t/RPath
+-
+-; RUN: clang-installapi --filetype=tbd-v5 \
+-; RUN: -target arm64-apple-macos13.0 -target x86_64-apple-macos13.0 \
+-; RUN: -install_name @rpath/Frameworks/RPath.framework/Versions/A/RPath \
+-; RUN: -current_version 1 -compatibility_version 1 \
+-; RUN: --extra-public-header=%t/public.h \
+-; RUN: -o %t/RPath_warnings.tbd \
+-; RUN: --verify-against=%t/RPath \
+-; RUN: --verify-mode=Pedantic 2>&1 | FileCheck %s --check-prefix=MISSING
+-; RUN: llvm-readtapi --compare %t/RPath_warnings.tbd %t/expected_no_rpaths.tbd
+-
+-; MISSING: warning: runpath search paths missing from installAPI option: '@loader_path/../../../SharedFrameworks/ [ x86_64 arm64 ]'
+-; MISSING: warning: runpath search paths missing from installAPI option: '@loader_path/../../PrivateFrameworks/ [ x86_64 arm64 ]'
+-
+-; RUN: clang-installapi --filetype=tbd-v5 \
+-; RUN: -target arm64-apple-macos13.0 -target x86_64-apple-macos13.0 \
+-; RUN: -install_name @rpath/Frameworks/RPath.framework/Versions/A/RPath \
+-; RUN: -current_version 1 -compatibility_version 1 \
+-; RUN: --extra-public-header=%t/public.h \
+-; RUN: -Xarch_arm64 -rpath @loader_path/../../../SharedFrameworks/ \
+-; RUN: -o %t/RPath_Xarch.tbd \
+-; RUN: --verify-against=%t/RPath \
+-; RUN: --verify-mode=Pedantic 2>&1 | FileCheck %s --check-prefix=XARCH
+-; RUN: llvm-readtapi --compare %t/RPath_Xarch.tbd %t/expected_xarch_rpaths.tbd
+-
+-; XARCH: warning: runpath search paths do not match: '@loader_path/../../../SharedFrameworks/ [ arm64 ]' (provided) vs '@loader_path/../../../SharedFrameworks/ [ x86_64 arm64 ]'
+-; XARCH: warning: runpath search paths missing from installAPI option: '@loader_path/../../PrivateFrameworks/ [ x86_64 arm64 ]'
+-
+-; RUN: clang-installapi --filetype=tbd-v5 \
+-; RUN: -target arm64-apple-macos13.0 -target x86_64-apple-macos13.0 \
+-; RUN: -install_name @rpath/Frameworks/RPath.framework/Versions/A/RPath \
+-; RUN: -current_version 1 -compatibility_version 1 \
+-; RUN: --extra-public-header=%t/public.h \
+-; RUN: -rpath @loader_path/../../../SharedFrameworks/ \
+-; RUN: -rpath @loader_path/../../PrivateFrameworks/ \
+-; RUN: --verify-against=%t/RPath --verify-mode=Pedantic \
+-; RUN: -o %t/RPath.tbd 2>&1 | FileCheck -allow-empty %s 
+-; RUN: llvm-readtapi --compare %t/RPath.tbd %t/expected.tbd
+-
+-CHECK-NOT: error
+-CHECK-NOT: warning
+-
+-;--- public.h
+-extern int publicGlobalVariable; 
+-
+-;--- expected.tbd
+-{
+-  "main_library": {
+-    "exported_symbols": [
+-      {
+-        "data": {
+-          "global": [
+-            "_publicGlobalVariable"
+-          ]
+-        }
+-      }
+-    ],
+-    "flags": [
+-      {
+-        "attributes": [
+-          "not_app_extension_safe"
+-        ]
+-      }
+-    ],
+-    "install_names": [
+-      {
+-        "name": "@rpath/Frameworks/RPath.framework/Versions/A/RPath"
+-      }
+-    ],
+-    "rpaths": [
+-      {
+-        "paths": [
+-          "@loader_path/../../../SharedFrameworks/",
+-          "@loader_path/../../PrivateFrameworks/"
+-        ]
+-      }
+-    ],
+-    "target_info": [
+-      {
+-        "min_deployment": "13.0",
+-        "target": "x86_64-macos"
+-      },
+-      {
+-        "min_deployment": "13.0",
+-        "target": "arm64-macos"
+-      }
+-    ]
+-  },
+-  "tapi_tbd_version": 5
+-}
+-
+-;--- expected_no_rpaths.tbd
+-{
+-  "main_library": {
+-    "exported_symbols": [
+-      {
+-        "data": {
+-          "global": [
+-            "_publicGlobalVariable"
+-          ]
+-        }
+-      }
+-    ],
+-    "flags": [
+-      {
+-        "attributes": [
+-          "not_app_extension_safe"
+-        ]
+-      }
+-    ],
+-    "install_names": [
+-      {
+-        "name": "@rpath/Frameworks/RPath.framework/Versions/A/RPath"
+-      }
+-    ],
+-    "target_info": [
+-      {
+-        "min_deployment": "13.0",
+-        "target": "x86_64-macos"
+-      },
+-      {
+-        "min_deployment": "13.0",
+-        "target": "arm64-macos"
+-      }
+-    ]
+-  },
+-  "tapi_tbd_version": 5
+-}
+-
+-;--- expected_xarch_rpaths.tbd
+-{
+-  "main_library": {
+-    "exported_symbols": [
+-      {
+-        "data": {
+-          "global": [
+-            "_publicGlobalVariable"
+-          ]
+-        }
+-      }
+-    ],
+-    "flags": [
+-      {
+-        "attributes": [
+-          "not_app_extension_safe"
+-        ]
+-      }
+-    ],
+-    "install_names": [
+-      {
+-        "name": "@rpath/Frameworks/RPath.framework/Versions/A/RPath"
+-      }
+-    ],
+-    "rpaths": [
+-      {
+-        "paths": [
+-          "@loader_path/../../../SharedFrameworks/"
+-        ],
+-        "targets": [
+-          "arm64-macos"
+-        ]
+-      }
+-    ],
+-    "target_info": [
+-      {
+-        "min_deployment": "13.0",
+-        "target": "x86_64-macos"
+-      },
+-      {
+-        "min_deployment": "13.0",
+-        "target": "arm64-macos"
+-      }
+-    ]
+-  },
+-  "tapi_tbd_version": 5
+-}
+-
+-;--- RPath.yaml
+---- !fat-mach-o
+-FatHeader:
+-  magic:           0xCAFEBABE
+-  nfat_arch:       2
+-FatArchs:
+-  - cputype:         0x1000007
+-    cpusubtype:      0x3
+-    offset:          0x1000
+-    size:            12408
+-    align:           12
+-  - cputype:         0x100000C
+-    cpusubtype:      0x0
+-    offset:          0x8000
+-    size:            33312
+-    align:           14
+-Slices:
+-  - !mach-o
+-    FileHeader:
+-      magic:           0xFEEDFACF
+-      cputype:         0x1000007
+-      cpusubtype:      0x3
+-      filetype:        0x6
+-      ncmds:           16
+-      sizeofcmds:      1072
+-      flags:           0x100085
+-      reserved:        0x0
+-    LoadCommands:
+-      - cmd:             LC_SEGMENT_64
+-        cmdsize:         152
+-        segname:         __TEXT
+-        vmaddr:          0
+-        vmsize:          8192
+-        fileoff:         0
+-        filesize:        8192
+-        maxprot:         5
+-        initprot:        5
+-        nsects:          1
+-        flags:           0
+-        Sections:
+-          - sectname:        __text
+-            segname:         __TEXT
+-            addr:            0x1050
+-            size:            0
+-            offset:          0x1050
+-            align:           0
+-            reloff:          0x0
+-            nreloc:          0
+-            flags:           0x80000000
+-            reserved1:       0x0
+-            reserved2:       0x0
+-            reserved3:       0x0
+-            content:         ''
+-      - cmd:             LC_SEGMENT_64
+-        cmdsize:         152
+-        segname:         __DATA_CONST
+-        vmaddr:          8192
+-        vmsize:          4096
+-        fileoff:         8192
+-        filesize:        4096
+-        maxprot:         3
+-        initprot:        3
+-        nsects:          1
+-        flags:           16
+-        Sections:
+-          - sectname:        __objc_imageinfo
+-            segname:         __DATA_CONST
+-            addr:            0x2000
+-            size:            8
+-            offset:          0x2000
+-            align:           0
+-            reloff:          0x0
+-            nreloc:          0
+-            flags:           0x0
+-            reserved1:       0x0
+-            reserved2:       0x0
+-            reserved3:       0x0
+-            content:         '0000000040000000'
+-      - cmd:             LC_SEGMENT_64
+-        cmdsize:         152
+-        segname:         __DATA
+-        vmaddr:          12288
+-        vmsize:          4096
+-        fileoff:         12288
+-        filesize:        0
+-        maxprot:         3
+-        initprot:        3
+-        nsects:          1
+-        flags:           0
+-        Sections:
+-          - sectname:        __common
+-            segname:         __DATA
+-            addr:            0x3000
+-            size:            4
+-            offset:          0x0
+-            align:           2
+-            reloff:          0x0
+-            nreloc:          0
+-            flags:           0x1
+-            reserved1:       0x0
+-            reserved2:       0x0
+-            reserved3:       0x0
+-      - cmd:             LC_SEGMENT_64
+-        cmdsize:         72
+-        segname:         __LINKEDIT
+-        vmaddr:          16384
+-        vmsize:          120
+-        fileoff:         12288
+-        filesize:        120
+-        maxprot:         1
+-        initprot:        1
+-        nsects:          0
+-        flags:           0
+-      - cmd:             LC_DYLD_INFO_ONLY
+-        cmdsize:         48
+-        rebase_off:      0
+-        rebase_size:     0
+-        bind_off:        0
+-        bind_size:       0
+-        weak_bind_off:   0
+-        weak_bind_size:  0
+-        lazy_bind_off:   0
+-        lazy_bind_size:  0
+-        export_off:      12288
+-        export_size:     32
+-      - cmd:             LC_SYMTAB
+-        cmdsize:         24
+-        symoff:          12328
+-        nsyms:           2
+-        stroff:          12360
+-        strsize:         48
+-      - cmd:             LC_DYSYMTAB
+-        cmdsize:         80
+-        ilocalsym:       0
+-        nlocalsym:       0
+-        iextdefsym:      0
+-        nextdefsym:      1
+-        iundefsym:       1
+-        nundefsym:       1
+-        tocoff:          0
+-        ntoc:            0
+-        modtaboff:       0
+-        nmodtab:         0
+-        extrefsymoff:    0
+-        nextrefsyms:     0
+-        indirectsymoff:  0
+-        nindirectsyms:   0
+-        extreloff:       0
+-        nextrel:         0
+-        locreloff:       0
+-        nlocrel:         0
+-      - cmd:             LC_RPATH
+-        cmdsize:         56
+-        path:            12
+-        Content:         '@loader_path/../../../SharedFrameworks/'
+-        ZeroPadBytes:    5
+-      - cmd:             LC_RPATH
+-        cmdsize:         56
+-        path:            12
+-        Content:         '@loader_path/../../PrivateFrameworks/'
+-        ZeroPadBytes:    7
+-      - cmd:             LC_ID_DYLIB
+-        cmdsize:         80
+-        dylib:
+-          name:            24
+-          timestamp:       0
+-          current_version: 65536
+-          compatibility_version: 65536
+-        Content:         '@rpath/Frameworks/RPath.framework/Versions/A/RPath'
+-        ZeroPadBytes:    6
+-      - cmd:             LC_UUID
+-        cmdsize:         24
+-        uuid:            4C4C4489-5555-3144-A1D1-28C8EA66FB24
+-      - cmd:             LC_BUILD_VERSION
+-        cmdsize:         32
+-        platform:        1
+-        minos:           851968
+-        sdk:             983040
+-        ntools:          1
+-        Tools:
+-          - tool:            4
+-            version:         1245184
+-      - cmd:             LC_LOAD_DYLIB
+-        cmdsize:         56
+-        dylib:
+-          name:            24
+-          timestamp:       0
+-          current_version: 14942208
+-          compatibility_version: 65536
+-        Content:         '/usr/lib/libobjc.A.dylib'
+-        ZeroPadBytes:    8
+-      - cmd:             LC_LOAD_DYLIB
+-        cmdsize:         56
+-        dylib:
+-          name:            24
+-          timestamp:       0
+-          current_version: 88539136
+-          compatibility_version: 65536
+-        Content:         '/usr/lib/libSystem.B.dylib'
+-        ZeroPadBytes:    6
+-      - cmd:             LC_FUNCTION_STARTS
+-        cmdsize:         16
+-        dataoff:         12320
+-        datasize:        8
+-      - cmd:             LC_DATA_IN_CODE
+-        cmdsize:         16
+-        dataoff:         12328
+-        datasize:        0
+-    LinkEditData:
+-      ExportTrie:
+-        TerminalSize:    0
+-        NodeOffset:      0
+-        Name:            ''
+-        Flags:           0x0
+-        Address:         0x0
+-        Other:           0x0
+-        ImportName:      ''
+-        Children:
+-          - TerminalSize:    3
+-            NodeOffset:      25
+-            Name:            _publicGlobalVariable
+-            Flags:           0x0
+-            Address:         0x3000
+-            Other:           0x0
+-            ImportName:      ''
+-      NameList:
+-        - n_strx:          2
+-          n_type:          0xF
+-          n_sect:          3
+-          n_desc:          0
+-          n_value:         12288
+-        - n_strx:          24
+-          n_type:          0x1
+-          n_sect:          0
+-          n_desc:          512
+-          n_value:         0
+-      StringTable:
+-        - ' '
+-        - _publicGlobalVariable
+-        - dyld_stub_binder
+-        - ''
+-        - ''
+-        - ''
+-        - ''
+-        - ''
+-        - ''
+-        - ''
+-  - !mach-o
+-    FileHeader:
+-      magic:           0xFEEDFACF
+-      cputype:         0x100000C
+-      cpusubtype:      0x0
+-      filetype:        0x6
+-      ncmds:           17
+-      sizeofcmds:      1088
+-      flags:           0x100085
+-      reserved:        0x0
+-    LoadCommands:
+-      - cmd:             LC_SEGMENT_64
+-        cmdsize:         152
+-        segname:         __TEXT
+-        vmaddr:          0
+-        vmsize:          16384
+-        fileoff:         0
+-        filesize:        16384
+-        maxprot:         5
+-        initprot:        5
+-        nsects:          1
+-        flags:           0
+-        Sections:
+-          - sectname:        __text
+-            segname:         __TEXT
+-            addr:            0x1060
+-            size:            0
+-            offset:          0x1060
+-            align:           0
+-            reloff:          0x0
+-            nreloc:          0
+-            flags:           0x80000000
+-            reserved1:       0x0
+-            reserved2:       0x0
+-            reserved3:       0x0
+-            content:         ''
+-      - cmd:             LC_SEGMENT_64
+-        cmdsize:         152
+-        segname:         __DATA_CONST
+-        vmaddr:          16384
+-        vmsize:          16384
+-        fileoff:         16384
+-        filesize:        16384
+-        maxprot:         3
+-        initprot:        3
+-        nsects:          1
+-        flags:           16
+-        Sections:
+-          - sectname:        __objc_imageinfo
+-            segname:         __DATA_CONST
+-            addr:            0x4000
+-            size:            8
+-            offset:          0x4000
+-            align:           0
+-            reloff:          0x0
+-            nreloc:          0
+-            flags:           0x0
+-            reserved1:       0x0
+-            reserved2:       0x0
+-            reserved3:       0x0
+-            content:         '0000000040000000'
+-      - cmd:             LC_SEGMENT_64
+-        cmdsize:         152
+-        segname:         __DATA
+-        vmaddr:          32768
+-        vmsize:          16384
+-        fileoff:         32768
+-        filesize:        0
+-        maxprot:         3
+-        initprot:        3
+-        nsects:          1
+-        flags:           0
+-        Sections:
+-          - sectname:        __common
+-            segname:         __DATA
+-            addr:            0x8000
+-            size:            4
+-            offset:          0x0
+-            align:           2
+-            reloff:          0x0
+-            nreloc:          0
+-            flags:           0x1
+-            reserved1:       0x0
+-            reserved2:       0x0
+-            reserved3:       0x0
+-      - cmd:             LC_SEGMENT_64
+-        cmdsize:         72
+-        segname:         __LINKEDIT
+-        vmaddr:          49152
+-        vmsize:          544
+-        fileoff:         32768
+-        filesize:        544
+-        maxprot:         1
+-        initprot:        1
+-        nsects:          0
+-        flags:           0
+-      - cmd:             LC_DYLD_INFO_ONLY
+-        cmdsize:         48
+-        rebase_off:      0
+-        rebase_size:     0
+-        bind_off:        0
+-        bind_size:       0
+-        weak_bind_off:   0
+-        weak_bind_size:  0
+-        lazy_bind_off:   0
+-        lazy_bind_size:  0
+-        export_off:      32768
+-        export_size:     32
+-      - cmd:             LC_SYMTAB
+-        cmdsize:         24
+-        symoff:          32808
+-        nsyms:           2
+-        stroff:          32840
+-        strsize:         48
+-      - cmd:             LC_DYSYMTAB
+-        cmdsize:         80
+-        ilocalsym:       0
+-        nlocalsym:       0
+-        iextdefsym:      0
+-        nextdefsym:      1
+-        iundefsym:       1
+-        nundefsym:       1
+-        tocoff:          0
+-        ntoc:            0
+-        modtaboff:       0
+-        nmodtab:         0
+-        extrefsymoff:    0
+-        nextrefsyms:     0
+-        indirectsymoff:  0
+-        nindirectsyms:   0
+-        extreloff:       0
+-        nextrel:         0
+-        locreloff:       0
+-        nlocrel:         0
+-      - cmd:             LC_RPATH
+-        cmdsize:         56
+-        path:            12
+-        Content:         '@loader_path/../../../SharedFrameworks/'
+-        ZeroPadBytes:    5
+-      - cmd:             LC_RPATH
+-        cmdsize:         56
+-        path:            12
+-        Content:         '@loader_path/../../PrivateFrameworks/'
+-        ZeroPadBytes:    7
+-      - cmd:             LC_ID_DYLIB
+-        cmdsize:         80
+-        dylib:
+-          name:            24
+-          timestamp:       0
+-          current_version: 65536
+-          compatibility_version: 65536
+-        Content:         '@rpath/Frameworks/RPath.framework/Versions/A/RPath'
+-        ZeroPadBytes:    6
+-      - cmd:             LC_UUID
+-        cmdsize:         24
+-        uuid:            4C4C440D-5555-3144-A18B-DB67A0A12202
+-      - cmd:             LC_BUILD_VERSION
+-        cmdsize:         32
+-        platform:        1
+-        minos:           851968
+-        sdk:             983040
+-        ntools:          1
+-        Tools:
+-          - tool:            4
+-            version:         1245184
+-      - cmd:             LC_LOAD_DYLIB
+-        cmdsize:         56
+-        dylib:
+-          name:            24
+-          timestamp:       0
+-          current_version: 14942208
+-          compatibility_version: 65536
+-        Content:         '/usr/lib/libobjc.A.dylib'
+-        ZeroPadBytes:    8
+-      - cmd:             LC_LOAD_DYLIB
+-        cmdsize:         56
+-        dylib:
+-          name:            24
+-          timestamp:       0
+-          current_version: 88539136
+-          compatibility_version: 65536
+-        Content:         '/usr/lib/libSystem.B.dylib'
+-        ZeroPadBytes:    6
+-      - cmd:             LC_FUNCTION_STARTS
+-        cmdsize:         16
+-        dataoff:         32800
+-        datasize:        8
+-      - cmd:             LC_DATA_IN_CODE
+-        cmdsize:         16
+-        dataoff:         32808
+-        datasize:        0
+-      - cmd:             LC_CODE_SIGNATURE
+-        cmdsize:         16
+-        dataoff:         32896
+-        datasize:        416
+-    LinkEditData:
+-      ExportTrie:
+-        TerminalSize:    0
+-        NodeOffset:      0
+-        Name:            ''
+-        Flags:           0x0
+-        Address:         0x0
+-        Other:           0x0
+-        ImportName:      ''
+-        Children:
+-          - TerminalSize:    4
+-            NodeOffset:      25
+-            Name:            _publicGlobalVariable
+-            Flags:           0x0
+-            Address:         0x8000
+-            Other:           0x0
+-            ImportName:      ''
+-      NameList:
+-        - n_strx:          2
+-          n_type:          0xF
+-          n_sect:          3
+-          n_desc:          0
+-          n_value:         32768
+-        - n_strx:          24
+-          n_type:          0x1
+-          n_sect:          0
+-          n_desc:          512
+-          n_value:         0
+-      StringTable:
+-        - ' '
+-        - _publicGlobalVariable
+-        - dyld_stub_binder
+-        - ''
+-        - ''
+-        - ''
+-        - ''
+-        - ''
+-        - ''
+-        - ''
+-      FunctionStarts:  [ 0x1060 ]
+-...
+diff --git a/clang/tools/clang-installapi/CMakeLists.txt b/clang/tools/clang-installapi/CMakeLists.txt
+index 9c0d9dff7dc7..b90ffc847b15 100644
+--- a/clang/tools/clang-installapi/CMakeLists.txt
++++ b/clang/tools/clang-installapi/CMakeLists.txt
+@@ -1,5 +1,4 @@
+ set(LLVM_LINK_COMPONENTS
+-  BinaryFormat
+   Support
+   TargetParser
+   TextAPI
+diff --git a/clang/tools/clang-installapi/ClangInstallAPI.cpp b/clang/tools/clang-installapi/ClangInstallAPI.cpp
+index 0c1980ba5d62..13061cfa36ee 100644
+--- a/clang/tools/clang-installapi/ClangInstallAPI.cpp
++++ b/clang/tools/clang-installapi/ClangInstallAPI.cpp
+@@ -101,16 +101,6 @@ static bool run(ArrayRef<const char *> Args, const char *ProgName) {
+   if (Diag->hasErrorOccurred())
+     return EXIT_FAILURE;
+ 
+-  if (!Opts.DriverOpts.DylibToVerify.empty()) {
+-    TargetList Targets;
+-    llvm::for_each(Opts.DriverOpts.Targets,
+-                   [&](const auto &T) { Targets.push_back(T.first); });
+-    if (!Ctx.Verifier->verifyBinaryAttrs(Targets, Ctx.BA, Ctx.Reexports,
+-                                         Opts.LinkerOpts.AllowableClients,
+-                                         Opts.LinkerOpts.RPaths, Ctx.FT))
+-      return EXIT_FAILURE;
+-  };
+-
+   // Set up compilation.
+   std::unique_ptr<CompilerInstance> CI(new CompilerInstance());
+   CI->setFileManager(FM.get());
+@@ -118,7 +108,7 @@ static bool run(ArrayRef<const char *> Args, const char *ProgName) {
+   if (!CI->hasDiagnostics())
+     return EXIT_FAILURE;
+ 
+-  // Execute, verify and gather AST results.
++  // Execute and gather AST results.
+   // An invocation is ran for each unique target triple and for each header
+   // access level.
+   for (const auto &[Targ, Trip] : Opts.DriverOpts.Targets) {
+@@ -146,25 +136,10 @@ static bool run(ArrayRef<const char *> Args, const char *ProgName) {
+ 
+   // Assign attributes for serialization.
+   InterfaceFile IF(Ctx.Verifier->getExports());
+-  // Assign attributes that are the same per slice first.
+   for (const auto &TargetInfo : Opts.DriverOpts.Targets) {
+     IF.addTarget(TargetInfo.first);
+     IF.setFromBinaryAttrs(Ctx.BA, TargetInfo.first);
+   }
+-  // Then assign potentially different attributes per slice after.
+-  auto assignLibAttrs =
+-      [&IF](
+-          const auto &Attrs,
+-          std::function<void(InterfaceFile *, StringRef, const Target &)> Add) {
+-        for (const auto &Lib : Attrs)
+-          for (const auto &T : IF.targets(Lib.getValue()))
+-            Add(&IF, Lib.getKey(), T);
+-      };
+-
+-  assignLibAttrs(Opts.LinkerOpts.AllowableClients,
+-                 &InterfaceFile::addAllowableClient);
+-  assignLibAttrs(Opts.LinkerOpts.RPaths, &InterfaceFile::addRPath);
+-  assignLibAttrs(Ctx.Reexports, &InterfaceFile::addReexportedLibrary);
+ 
+   // Write output file and perform CI cleanup.
+   if (auto Err = TextAPIWriter::writeToStream(*Out, IF, Ctx.FT)) {
+diff --git a/clang/tools/clang-installapi/InstallAPIOpts.td b/clang/tools/clang-installapi/InstallAPIOpts.td
+index 8b1998c280dd..010f2507a1d1 100644
+--- a/clang/tools/clang-installapi/InstallAPIOpts.td
++++ b/clang/tools/clang-installapi/InstallAPIOpts.td
+@@ -17,23 +17,11 @@ include "llvm/Option/OptParser.td"
+ /////////
+ // Options
+ 
+-//
+-/// TextAPI options.
+-//
++// TextAPI options.
+ def filetype : Joined<["--"], "filetype=">,
+   HelpText<"Specify the output file type (tbd-v4 or tbd-v5)">;
+-def not_for_dyld_shared_cache : Joined<["-"], "not_for_dyld_shared_cache">,
+-  HelpText<"Mark library as shared cache ineligible">;
+-
+-//
+-/// Debugging or logging options.
+-//
+-def t: Flag<["-"], "t">,
+-  HelpText<"Logs each dylib loaded for InstallAPI. Useful for debugging problems with search paths where the wrong library is loaded.">;
+ 
+-//
+-/// Verification options.
+-//
++// Verification options.
+ def verify_against : Separate<["-"], "verify-against">,
+   HelpText<"Verify the specified dynamic library/framework against the headers">;
+ def verify_against_EQ : Joined<["--"], "verify-against=">, Alias<verify_against>;
+@@ -44,9 +32,7 @@ def demangle : Flag<["--", "-"], "demangle">,
+ def dsym: Joined<["--"], "dsym=">,
+   MetaVarName<"<path>">, HelpText<"Specify dSYM path for enriched diagnostics.">;
+ 
+-//
+-/// Additional input options.
+-//
++// Additional input options.
+ def extra_project_header : Separate<["-"], "extra-project-header">,
+   MetaVarName<"<path>">,
+   HelpText<"Add additional project header location for parsing">;
+@@ -89,23 +75,3 @@ def project_umbrella_header : Separate<["-"], "project-umbrella-header">,
+   MetaVarName<"<path>">, HelpText<"Specify the project umbrella header location">;
+ def project_umbrella_header_EQ : Joined<["--"], "project-umbrella-header=">,
+   Alias<project_umbrella_header>;
+-
+-//
+-/// Overidden clang options for different behavior.
+-//
+-
+-// Clang's Xarch does not support options that require arguments. 
+-// But is supported for InstallAPI generation.
+-def Xarch__ : Joined<["-"], "Xarch_">;
+-def allowable_client : Separate<["-"], "allowable_client">,
+-  HelpText<"Restricts what can link against the dynamic library being created">;
+-def rpath: Separate<["-"], "rpath">,
+-  HelpText<"Add path to the runpath search path list for the dynamic library being created.">;
+-def reexport_l : Joined<["-"], "reexport-l">,
+-  HelpText<"Re-export the specified library">;
+-def reexport_library : Separate<["-"], "reexport_library">, MetaVarName<"<path>">,
+-  HelpText<"Re-export the specified library">;
+-def reexport_framework : Separate<["-"], "reexport_framework">,
+-  HelpText<"Re-export the specified framework">;
+-
+-
+diff --git a/clang/tools/clang-installapi/Options.cpp b/clang/tools/clang-installapi/Options.cpp
+index d1f911812800..04d5e3cbb9d6 100644
+--- a/clang/tools/clang-installapi/Options.cpp
++++ b/clang/tools/clang-installapi/Options.cpp
+@@ -7,17 +7,14 @@
+ //===----------------------------------------------------------------------===//
+ 
+ #include "Options.h"
+-#include "clang/Basic/DiagnosticIDs.h"
+ #include "clang/Driver/Driver.h"
++#include "clang/Frontend/FrontendDiagnostic.h"
+ #include "clang/InstallAPI/FileList.h"
+ #include "clang/InstallAPI/HeaderFile.h"
+ #include "clang/InstallAPI/InstallAPIDiagnostic.h"
+-#include "llvm/BinaryFormat/Magic.h"
+ #include "llvm/Support/Program.h"
+ #include "llvm/TargetParser/Host.h"
+ #include "llvm/TextAPI/DylibReader.h"
+-#include "llvm/TextAPI/TextAPIError.h"
+-#include "llvm/TextAPI/TextAPIReader.h"
+ #include "llvm/TextAPI/TextAPIWriter.h"
+ 
+ using namespace llvm;
+@@ -140,56 +137,6 @@ bool Options::processDriverOptions(InputArgList &Args) {
+   return true;
+ }
+ 
+-bool Options::processInstallAPIXOptions(InputArgList &Args) {
+-  for (arg_iterator It = Args.begin(), End = Args.end(); It != End; ++It) {
+-    if ((*It)->getOption().matches(OPT_Xarch__)) {
+-      if (!processXarchOption(Args, It))
+-        return false;
+-    }
+-  }
+-  // TODO: Add support for the all of the X* options installapi supports.
+-
+-  return true;
+-}
+-
+-bool Options::processXarchOption(InputArgList &Args, arg_iterator Curr) {
+-  Arg *CurrArg = *Curr;
+-  Architecture Arch = getArchitectureFromName(CurrArg->getValue(0));
+-  if (Arch == AK_unknown) {
+-    Diags->Report(diag::err_drv_invalid_arch_name)
+-        << CurrArg->getAsString(Args);
+-    return false;
+-  }
+-
+-  auto NextIt = std::next(Curr);
+-  if (NextIt == Args.end()) {
+-    Diags->Report(diag::err_drv_missing_argument)
+-        << CurrArg->getAsString(Args) << 1;
+-    return false;
+-  }
+-
+-  // InstallAPI has a limited understanding of supported Xarch options.
+-  // Currently this is restricted to linker inputs.
+-  const Arg *NextArg = *NextIt;
+-  switch (NextArg->getOption().getID()) {
+-  case OPT_allowable_client:
+-  case OPT_reexport_l:
+-  case OPT_reexport_framework:
+-  case OPT_reexport_library:
+-  case OPT_rpath:
+-    break;
+-  default:
+-    Diags->Report(diag::err_drv_invalid_argument_to_option)
+-        << NextArg->getAsString(Args) << CurrArg->getAsString(Args);
+-    return false;
+-  }
+-
+-  ArgToArchMap[NextArg] = Arch;
+-  CurrArg->claim();
+-
+-  return true;
+-}
+-
+ bool Options::processLinkerOptions(InputArgList &Args) {
+   // Handle required arguments.
+   if (const Arg *A = Args.getLastArg(drv::OPT_install__name))
+@@ -206,12 +153,6 @@ bool Options::processLinkerOptions(InputArgList &Args) {
+   if (auto *Arg = Args.getLastArg(drv::OPT_compatibility__version))
+     LinkerOpts.CompatVersion.parse64(Arg->getValue());
+ 
+-  if (auto *Arg = Args.getLastArg(drv::OPT_compatibility__version))
+-    LinkerOpts.CompatVersion.parse64(Arg->getValue());
+-
+-  if (auto *Arg = Args.getLastArg(drv::OPT_umbrella))
+-    LinkerOpts.ParentUmbrella = Arg->getValue();
+-
+   LinkerOpts.IsDylib = Args.hasArg(drv::OPT_dynamiclib);
+ 
+   LinkerOpts.AppExtensionSafe = Args.hasFlag(
+@@ -223,24 +164,12 @@ bool Options::processLinkerOptions(InputArgList &Args) {
+ 
+   if (::getenv("LD_APPLICATION_EXTENSION_SAFE") != nullptr)
+     LinkerOpts.AppExtensionSafe = true;
+-
+-  // Capture library paths.
+-  PathSeq LibraryPaths;
+-  for (const Arg *A : Args.filtered(drv::OPT_L)) {
+-    LibraryPaths.emplace_back(A->getValue());
+-    A->claim();
+-  }
+-
+-  if (!LibraryPaths.empty())
+-    LinkerOpts.LibPaths = std::move(LibraryPaths);
+-
+   return true;
+ }
+ 
+-// NOTE: Do not claim any arguments, as they will be passed along for CC1
+-// invocations.
+ bool Options::processFrontendOptions(InputArgList &Args) {
+-  // Capture language mode.
++  // Do not claim any arguments, as they will be passed along for CC1
++  // invocations.
+   if (auto *A = Args.getLastArgNoClaim(drv::OPT_x)) {
+     FEOpts.LangMode = llvm::StringSwitch<clang::Language>(A->getValue())
+                           .Case("c", clang::Language::C)
+@@ -262,54 +191,6 @@ bool Options::processFrontendOptions(InputArgList &Args) {
+       FEOpts.LangMode = clang::Language::ObjCXX;
+   }
+ 
+-  // Capture Sysroot.
+-  if (const Arg *A = Args.getLastArgNoClaim(drv::OPT_isysroot)) {
+-    SmallString<PATH_MAX> Path(A->getValue());
+-    FM->makeAbsolutePath(Path);
+-    if (!FM->getOptionalDirectoryRef(Path)) {
+-      Diags->Report(diag::err_missing_sysroot) << Path;
+-      return false;
+-    }
+-    FEOpts.ISysroot = std::string(Path);
+-  } else if (FEOpts.ISysroot.empty()) {
+-    // Mirror CLANG and obtain the isysroot from the SDKROOT environment
+-    // variable, if it wasn't defined by the  command line.
+-    if (auto *Env = ::getenv("SDKROOT")) {
+-      if (StringRef(Env) != "/" && llvm::sys::path::is_absolute(Env) &&
+-          FM->getOptionalFileRef(Env))
+-        FEOpts.ISysroot = Env;
+-    }
+-  }
+-
+-  // Capture system frameworks.
+-  // TODO: Support passing framework paths per platform.
+-  for (const Arg *A : Args.filtered(drv::OPT_iframework))
+-    FEOpts.SystemFwkPaths.emplace_back(A->getValue());
+-
+-  // Capture framework paths.
+-  PathSeq FrameworkPaths;
+-  for (const Arg *A : Args.filtered(drv::OPT_F))
+-    FrameworkPaths.emplace_back(A->getValue());
+-
+-  if (!FrameworkPaths.empty())
+-    FEOpts.FwkPaths = std::move(FrameworkPaths);
+-
+-  // Add default framework/library paths.
+-  PathSeq DefaultLibraryPaths = {"/usr/lib", "/usr/local/lib"};
+-  PathSeq DefaultFrameworkPaths = {"/Library/Frameworks",
+-                                   "/System/Library/Frameworks"};
+-
+-  for (const StringRef LibPath : DefaultLibraryPaths) {
+-    SmallString<PATH_MAX> Path(FEOpts.ISysroot);
+-    sys::path::append(Path, LibPath);
+-    LinkerOpts.LibPaths.emplace_back(Path.str());
+-  }
+-  for (const StringRef FwkPath : DefaultFrameworkPaths) {
+-    SmallString<PATH_MAX> Path(FEOpts.ISysroot);
+-    sys::path::append(Path, FwkPath);
+-    FEOpts.SystemFwkPaths.emplace_back(Path.str());
+-  }
+-
+   return true;
+ }
+ 
+@@ -343,9 +224,6 @@ Options::processAndFilterOutInstallAPIOptions(ArrayRef<const char *> Args) {
+                                      MissingArgCount, Visibility());
+ 
+   // Capture InstallAPI only driver options.
+-  if (!processInstallAPIXOptions(ParsedArgs))
+-    return {};
+-
+   DriverOpts.Demangle = ParsedArgs.hasArg(OPT_demangle);
+ 
+   if (auto *A = ParsedArgs.getLastArg(OPT_filetype)) {
+@@ -378,42 +256,6 @@ Options::processAndFilterOutInstallAPIOptions(ArrayRef<const char *> Args) {
+   if (const Arg *A = ParsedArgs.getLastArg(OPT_dsym))
+     DriverOpts.DSYMPath = A->getValue();
+ 
+-  DriverOpts.TraceLibraryLocation = ParsedArgs.hasArg(OPT_t);
+-
+-  // Linker options not handled by clang driver.
+-  LinkerOpts.OSLibNotForSharedCache =
+-      ParsedArgs.hasArg(OPT_not_for_dyld_shared_cache);
+-
+-  for (const Arg *A : ParsedArgs.filtered(OPT_allowable_client)) {
+-    LinkerOpts.AllowableClients[A->getValue()] =
+-        ArgToArchMap.count(A) ? ArgToArchMap[A] : ArchitectureSet();
+-    A->claim();
+-  }
+-
+-  for (const Arg *A : ParsedArgs.filtered(OPT_reexport_l)) {
+-    LinkerOpts.ReexportedLibraries[A->getValue()] =
+-        ArgToArchMap.count(A) ? ArgToArchMap[A] : ArchitectureSet();
+-    A->claim();
+-  }
+-
+-  for (const Arg *A : ParsedArgs.filtered(OPT_reexport_library)) {
+-    LinkerOpts.ReexportedLibraryPaths[A->getValue()] =
+-        ArgToArchMap.count(A) ? ArgToArchMap[A] : ArchitectureSet();
+-    A->claim();
+-  }
+-
+-  for (const Arg *A : ParsedArgs.filtered(OPT_reexport_framework)) {
+-    LinkerOpts.ReexportedFrameworks[A->getValue()] =
+-        ArgToArchMap.count(A) ? ArgToArchMap[A] : ArchitectureSet();
+-    A->claim();
+-  }
+-
+-  for (const Arg *A : ParsedArgs.filtered(OPT_rpath)) {
+-    LinkerOpts.RPaths[A->getValue()] =
+-        ArgToArchMap.count(A) ? ArgToArchMap[A] : ArchitectureSet();
+-    A->claim();
+-  }
+-
+   // Handle exclude & extra header directories or files.
+   auto handleAdditionalInputArgs = [&](PathSeq &Headers,
+                                        clang::installapi::ID OptID) {
+@@ -494,22 +336,6 @@ Options::Options(DiagnosticsEngine &Diag, FileManager *FM,
+   if (!processFrontendOptions(ArgList))
+     return;
+ 
+-  // After all InstallAPI necessary arguments have been collected. Go back and
+-  // assign values that were unknown before the clang driver opt table was used.
+-  ArchitectureSet AllArchs;
+-  llvm::for_each(DriverOpts.Targets,
+-                 [&AllArchs](const auto &T) { AllArchs.set(T.first.Arch); });
+-  auto assignDefaultLibAttrs = [&AllArchs](LibAttrs &Attrs) {
+-    for (StringMapEntry<ArchitectureSet> &Entry : Attrs)
+-      if (Entry.getValue().empty())
+-        Entry.setValue(AllArchs);
+-  };
+-  assignDefaultLibAttrs(LinkerOpts.AllowableClients);
+-  assignDefaultLibAttrs(LinkerOpts.ReexportedFrameworks);
+-  assignDefaultLibAttrs(LinkerOpts.ReexportedLibraries);
+-  assignDefaultLibAttrs(LinkerOpts.ReexportedLibraryPaths);
+-  assignDefaultLibAttrs(LinkerOpts.RPaths);
+-
+   /// Force cc1 options that should always be on.
+   FrontendArgs = {"-fsyntax-only", "-Wprivate-extern"};
+ 
+@@ -531,89 +357,6 @@ static StringRef getFrameworkNameFromInstallName(StringRef InstallName) {
+   return Match.back();
+ }
+ 
+-static Expected<std::unique_ptr<InterfaceFile>>
+-getInterfaceFile(const StringRef Filename) {
+-  ErrorOr<std::unique_ptr<MemoryBuffer>> BufferOrErr =
+-      MemoryBuffer::getFile(Filename);
+-  if (auto Err = BufferOrErr.getError())
+-    return errorCodeToError(std::move(Err));
+-
+-  auto Buffer = std::move(*BufferOrErr);
+-  std::unique_ptr<InterfaceFile> IF;
+-  switch (identify_magic(Buffer->getBuffer())) {
+-  case file_magic::macho_dynamically_linked_shared_lib:
+-    LLVM_FALLTHROUGH;
+-  case file_magic::macho_dynamically_linked_shared_lib_stub:
+-    LLVM_FALLTHROUGH;
+-  case file_magic::macho_universal_binary:
+-    return DylibReader::get(Buffer->getMemBufferRef());
+-    break;
+-  case file_magic::tapi_file:
+-    return TextAPIReader::get(Buffer->getMemBufferRef());
+-  default:
+-    return make_error<TextAPIError>(TextAPIErrorCode::InvalidInputFormat,
+-                                    "unsupported library file format");
+-  }
+-  llvm_unreachable("unexpected failure in getInterface");
+-}
+-
+-std::pair<LibAttrs, ReexportedInterfaces> Options::getReexportedLibraries() {
+-  LibAttrs Reexports;
+-  ReexportedInterfaces ReexportIFs;
+-  auto AccumulateReexports = [&](StringRef Path, const ArchitectureSet &Archs) {
+-    auto ReexportIFOrErr = getInterfaceFile(Path);
+-    if (!ReexportIFOrErr)
+-      return false;
+-    std::unique_ptr<InterfaceFile> Reexport = std::move(*ReexportIFOrErr);
+-    StringRef InstallName = Reexport->getInstallName();
+-    assert(!InstallName.empty() && "Parse error for install name");
+-    Reexports.insert({InstallName, Archs});
+-    ReexportIFs.emplace_back(std::move(*Reexport));
+-    return true;
+-  };
+-
+-  // Populate search paths by looking at user paths before system ones.
+-  PathSeq FwkSearchPaths(FEOpts.FwkPaths.begin(), FEOpts.FwkPaths.end());
+-  // FIXME: System framework paths need to reset if installapi is invoked with
+-  // different platforms.
+-  FwkSearchPaths.insert(FwkSearchPaths.end(), FEOpts.SystemFwkPaths.begin(),
+-                        FEOpts.SystemFwkPaths.end());
+-
+-  for (const StringMapEntry<ArchitectureSet> &Lib :
+-       LinkerOpts.ReexportedLibraries) {
+-    std::string Name = "lib" + Lib.getKey().str() + ".dylib";
+-    std::string Path = findLibrary(Name, *FM, {}, LinkerOpts.LibPaths, {});
+-    if (Path.empty()) {
+-      Diags->Report(diag::err_cannot_find_reexport) << true << Lib.getKey();
+-      return {};
+-    }
+-    if (DriverOpts.TraceLibraryLocation)
+-      errs() << Path << "\n";
+-
+-    AccumulateReexports(Path, Lib.getValue());
+-  }
+-
+-  for (const StringMapEntry<ArchitectureSet> &Lib :
+-       LinkerOpts.ReexportedLibraryPaths)
+-    AccumulateReexports(Lib.getKey(), Lib.getValue());
+-
+-  for (const StringMapEntry<ArchitectureSet> &Lib :
+-       LinkerOpts.ReexportedFrameworks) {
+-    std::string Name = (Lib.getKey() + ".framework/" + Lib.getKey()).str();
+-    std::string Path = findLibrary(Name, *FM, FwkSearchPaths, {}, {});
+-    if (Path.empty()) {
+-      Diags->Report(diag::err_cannot_find_reexport) << false << Lib.getKey();
+-      return {};
+-    }
+-    if (DriverOpts.TraceLibraryLocation)
+-      errs() << Path << "\n";
+-
+-    AccumulateReexports(Path, Lib.getValue());
+-  }
+-
+-  return {std::move(Reexports), std::move(ReexportIFs)};
+-}
+-
+ InstallAPIContext Options::createContext() {
+   InstallAPIContext Ctx;
+   Ctx.FM = FM;
+@@ -626,17 +369,10 @@ InstallAPIContext Options::createContext() {
+   Ctx.BA.CurrentVersion = LinkerOpts.CurrentVersion;
+   Ctx.BA.CompatVersion = LinkerOpts.CompatVersion;
+   Ctx.BA.AppExtensionSafe = LinkerOpts.AppExtensionSafe;
+-  Ctx.BA.ParentUmbrella = LinkerOpts.ParentUmbrella;
+-  Ctx.BA.OSLibNotForSharedCache = LinkerOpts.OSLibNotForSharedCache;
+   Ctx.FT = DriverOpts.OutFT;
+   Ctx.OutputLoc = DriverOpts.OutputPath;
+   Ctx.LangMode = FEOpts.LangMode;
+ 
+-  auto [Reexports, ReexportedIFs] = getReexportedLibraries();
+-  if (Diags->hasErrorOccurred())
+-    return Ctx;
+-  Ctx.Reexports = Reexports;
+-
+   // Attempt to find umbrella headers by capturing framework name.
+   StringRef FrameworkName;
+   if (!LinkerOpts.IsDylib)
+@@ -796,14 +532,13 @@ InstallAPIContext Options::createContext() {
+   Expected<Records> Slices =
+       DylibReader::readFile((*Buffer)->getMemBufferRef(), PO);
+   if (auto Err = Slices.takeError()) {
+-    Diags->Report(diag::err_cannot_open_file)
+-        << DriverOpts.DylibToVerify << std::move(Err);
++    Diags->Report(diag::err_cannot_open_file) << DriverOpts.DylibToVerify;
+     return Ctx;
+   }
+ 
+   Ctx.Verifier = std::make_unique<DylibVerifier>(
+-      std::move(*Slices), std::move(ReexportedIFs), Diags,
+-      DriverOpts.VerifyMode, DriverOpts.Demangle, DriverOpts.DSYMPath);
++      std::move(*Slices), Diags, DriverOpts.VerifyMode, DriverOpts.Demangle,
++      DriverOpts.DSYMPath);
+   return Ctx;
+ }
+ 
+diff --git a/clang/tools/clang-installapi/Options.h b/clang/tools/clang-installapi/Options.h
+index 6da1469de2c8..cd74722c92c8 100644
+--- a/clang/tools/clang-installapi/Options.h
++++ b/clang/tools/clang-installapi/Options.h
+@@ -20,6 +20,7 @@
+ #include "llvm/Option/Option.h"
+ #include "llvm/Support/Program.h"
+ #include "llvm/TargetParser/Triple.h"
++#include <set>
+ #include <string>
+ #include <vector>
+ 
+@@ -80,30 +81,9 @@ struct DriverOptions {
+ 
+   /// \brief Print verbose output.
+   bool Verbose = false;
+-
+-  /// \brief Log libraries loaded.
+-  bool TraceLibraryLocation = false;
+ };
+ 
+ struct LinkerOptions {
+-  /// \brief List of allowable clients to use for the dynamic library.
+-  LibAttrs AllowableClients;
+-
+-  /// \brief List of reexported libraries to use for the dynamic library.
+-  LibAttrs ReexportedLibraries;
+-
+-  /// \brief List of reexported libraries to use for the dynamic library.
+-  LibAttrs ReexportedLibraryPaths;
+-
+-  /// \brief List of reexported frameworks to use for the dynamic library.
+-  LibAttrs ReexportedFrameworks;
+-
+-  /// \brief List of rpaths to use for the dynamic library.
+-  LibAttrs RPaths;
+-
+-  /// \brief Additional library search paths.
+-  PathSeq LibPaths;
+-
+   /// \brief The install name to use for the dynamic library.
+   std::string InstallName;
+ 
+@@ -113,34 +93,18 @@ struct LinkerOptions {
+   /// \brief The compatibility version to use for the dynamic library.
+   PackedVersion CompatVersion;
+ 
+-  /// \brief Name of the umbrella library.
+-  std::string ParentUmbrella;
+-
+   /// \brief Is application extension safe.
+   bool AppExtensionSafe = false;
+ 
+   /// \brief Set if we should scan for a dynamic library and not a framework.
+   bool IsDylib = false;
+-
+-  /// \brief Is an OS library that is not shared cache eligible.
+-  bool OSLibNotForSharedCache = false;
+ };
+ 
+ struct FrontendOptions {
+   /// \brief The language mode to parse headers in.
+   Language LangMode = Language::ObjC;
+-
+-  /// \brief The sysroot to search for SDK headers or libraries.
+-  std::string ISysroot;
+-
+-  /// \brief Additional framework search paths.
+-  PathSeq FwkPaths;
+-
+-  /// \brief Additional SYSTEM framework search paths.
+-  PathSeq SystemFwkPaths;
+ };
+ 
+-using arg_iterator = llvm::opt::arg_iterator<llvm::opt::Arg **>;
+ class Options {
+ private:
+   bool processDriverOptions(llvm::opt::InputArgList &Args);
+@@ -148,8 +112,6 @@ private:
+   bool processFrontendOptions(llvm::opt::InputArgList &Args);
+   std::vector<const char *>
+   processAndFilterOutInstallAPIOptions(ArrayRef<const char *> Args);
+-  bool processInstallAPIXOptions(llvm::opt::InputArgList &Args);
+-  bool processXarchOption(llvm::opt::InputArgList &Args, arg_iterator Curr);
+ 
+ public:
+   /// The various options grouped together.
+@@ -174,12 +136,9 @@ private:
+   bool addFilePaths(llvm::opt::InputArgList &Args, PathSeq &Headers,
+                     llvm::opt::OptSpecifier ID);
+ 
+-  std::pair<LibAttrs, ReexportedInterfaces> getReexportedLibraries();
+-
+   DiagnosticsEngine *Diags;
+   FileManager *FM;
+   std::vector<std::string> FrontendArgs;
+-  llvm::DenseMap<const llvm::opt::Arg *, Architecture> ArgToArchMap;
+ };
+ 
+ enum ID {
+-- 
+2.44.0.1.g9765aa7075
+
