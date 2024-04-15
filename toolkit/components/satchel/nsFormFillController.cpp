@@ -64,8 +64,7 @@ static nsIFormHistoryAutoComplete* GetFormHistoryAutoComplete() {
 }
 
 NS_IMPL_CYCLE_COLLECTION(nsFormFillController, mController, mLoginManagerAC,
-                         mFocusedPopup, mPopups, mLastListener,
-                         mLastFormHistoryAutoComplete)
+                         mFocusedPopup, mPopups, mLastListener)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsFormFillController)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIFormFillController)
@@ -666,6 +665,9 @@ nsFormFillController::StartSearch(const nsAString& aSearchString,
                                   nsIAutoCompleteObserver* aListener) {
   MOZ_LOG(sLogger, LogLevel::Debug, ("StartSearch for %p", mFocusedInput));
 
+  // Ensure FormHistoryAutoComplete is created
+  GetFormHistoryAutoComplete();
+
   if (mFocusedInput && mFocusedPopup) {
     if (mAutofillInputs.Get(mFocusedInput)) {
       MOZ_LOG(sLogger, LogLevel::Debug, ("StartSearch: formautofill field"));
@@ -701,22 +703,14 @@ nsFormFillController::StartSearch(const nsAString& aSearchString,
   }
 
   MOZ_LOG(sLogger, LogLevel::Debug, ("StartSearch: non-login field"));
-  mLastListener = aListener;
 
   bool addDataList = IsTextControl(mFocusedInput);
   if (addDataList) {
     MaybeObserveDataListMutations();
   }
 
-  auto* formHistoryAutoComplete = GetFormHistoryAutoComplete();
-  NS_ENSURE_TRUE(formHistoryAutoComplete, NS_ERROR_FAILURE);
-
-  formHistoryAutoComplete->AutoCompleteSearchAsync(
-      aSearchParam, aSearchString, mFocusedInput, aPreviousResult, addDataList,
-      this);
-  mLastFormHistoryAutoComplete = formHistoryAutoComplete;
-
-  return NS_OK;
+  mLastListener = aListener;
+  return mFocusedPopup->StartSearch(aSearchString, mFocusedInput, this);
 }
 
 void nsFormFillController::MaybeObserveDataListMutations() {
@@ -761,13 +755,6 @@ void nsFormFillController::RevalidateDataList() {
 
 NS_IMETHODIMP
 nsFormFillController::StopSearch() {
-  // Make sure to stop and clear this, otherwise the controller will prevent
-  // mLastFormHistoryAutoComplete from being deleted.
-  if (mLastFormHistoryAutoComplete) {
-    mLastFormHistoryAutoComplete->StopAutoCompleteSearch();
-    mLastFormHistoryAutoComplete = nullptr;
-  }
-
   if (mFocusedPopup) {
     mFocusedPopup->StopSearch();
   }
