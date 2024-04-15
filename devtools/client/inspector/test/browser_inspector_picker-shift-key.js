@@ -13,12 +13,18 @@ const TEST_URI = `data:text/html;charset=utf-8,
     <div id="nopointer" style="pointer-events: none">Element with pointer-events: none</div>
     <div id="transluscent" style="pointer-events: none;opacity: 0.1">Element with opacity of 0.1</div>
     <div id="invisible" style="pointer-events: none;opacity: 0">Element with opacity of 0</div>
+    <div>
+      <header>Hello</header>
+      <div style="z-index:-1;position:relative;">
+        <span id="negative-z-index-child">ZZ</span>
+      </div>
+    </div>
   </main>`;
 const IS_OSX = Services.appinfo.OS === "Darwin";
 
 add_task(async function () {
-  const { inspector, toolbox } = await openInspectorForURL(TEST_URI);
-
+  const { inspector, toolbox, highlighterTestFront } =
+    await openInspectorForURL(TEST_URI);
   const body = await getNodeFront("body", inspector);
   is(
     inspector.selection.nodeFront,
@@ -72,6 +78,31 @@ add_task(async function () {
     shiftKey: true,
   });
   await checkElementSelected("main", inspector);
+
+  info("Shift-clicking element with negative z-index parent works");
+  await hoverElement(
+    inspector,
+    "#negative-z-index-child",
+    undefined,
+    undefined,
+    {
+      shiftKey: true,
+    }
+  );
+  is(
+    await highlighterTestFront.getHighlighterNodeTextContent(
+      "box-model-infobar-id"
+    ),
+    "#negative-z-index-child",
+    "The highlighter is shown on #negative-z-index-child"
+  );
+
+  await clickElement({
+    inspector,
+    selector: "#negative-z-index-child",
+    shiftKey: true,
+  });
+  await checkElementSelected("#negative-z-index-child", inspector);
 });
 
 async function clickElement({ selector, inspector, shiftKey }) {
