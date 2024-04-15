@@ -18,6 +18,7 @@
 #include "builtin/temporal/Calendar.h"
 #include "builtin/temporal/Duration.h"
 #include "builtin/temporal/Instant.h"
+#include "builtin/temporal/Int96.h"
 #include "builtin/temporal/PlainDate.h"
 #include "builtin/temporal/PlainDateTime.h"
 #include "builtin/temporal/PlainMonthDay.h"
@@ -898,12 +899,7 @@ static bool NormalizedTimeDurationToDays(
 
   // Step 2.
   if (sign == 0) {
-    *result = {
-        int64_t(0),
-        duration,
-        NormalizedTimeDuration::fromNanoseconds(
-            ToNanoseconds(TemporalUnit::Day)),
-    };
+    *result = {int64_t(0), int64_t(0), ToNanoseconds(TemporalUnit::Day)};
     return true;
   }
 
@@ -1116,16 +1112,26 @@ static bool NormalizedTimeDurationToDays(
     MOZ_ASSERT(ns >= InstantSpan{});
   }
 
-  // Step 26.
+  // Steps 26-27.
   dayLengthNs = dayLengthNs.abs();
   MOZ_ASSERT(ns.abs() < dayLengthNs);
 
-  // Step 27.
-  *result = {
-      days,
-      NormalizedTimeDuration{ns.seconds, ns.nanoseconds},
-      NormalizedTimeDuration{dayLengthNs.seconds, dayLengthNs.nanoseconds},
-  };
+  // Step 28.
+  constexpr auto maxDayLength = Int128{1} << 53;
+  auto dayLengthNanos = dayLengthNs.toTotalNanoseconds();
+  if (dayLengthNanos >= maxDayLength) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TEMPORAL_ZONED_DATE_TIME_INCORRECT_SIGN,
+                              "days");
+    return false;
+  }
+
+  auto timeNanos = ns.toTotalNanoseconds();
+  MOZ_ASSERT(timeNanos == Int128{int64_t(timeNanos)},
+             "abs(ns) < dayLengthNs < 2**53 implies that |ns| fits in int64");
+
+  // Step 29.
+  *result = {days, int64_t{timeNanos}, int64_t(dayLengthNanos)};
   return true;
 }
 
@@ -1243,7 +1249,7 @@ static bool DifferenceZonedDateTime(
           dateDifference.date.weeks,
           double(timeAndDays.days),
       },
-      timeAndDays.time);
+      NormalizedTimeDuration::fromNanoseconds(timeAndDays.time));
   return true;
 }
 
@@ -1535,7 +1541,7 @@ static bool DifferenceTemporalZonedDateTime(JSContext* cx,
             roundResult.date.weeks,
             days,
         },
-        timeAndDays.time,
+        NormalizedTimeDuration::fromNanoseconds(timeAndDays.time),
     };
     NormalizedDuration adjustResult;
     if (!AdjustRoundedDurationDays(cx, toAdjust, settings.roundingIncrement,
