@@ -3506,27 +3506,6 @@ static bool BuiltinCalendarDateUntil(JSContext* cx,
   return true;
 }
 
-/**
- * Temporal.Calendar.prototype.dateUntil ( one, two [ , options ] )
- */
-static bool BuiltinCalendarDateUntil(JSContext* cx,
-                                     Handle<Wrapped<PlainDateObject*>> one,
-                                     Handle<Wrapped<PlainDateObject*>> two,
-                                     Handle<JSObject*> options,
-                                     Duration* result) {
-  // Steps 1-6. (Not applicable)
-
-  // Steps 7-8.
-  auto largestUnit = TemporalUnit::Day;
-  if (!GetTemporalUnit(cx, options, TemporalUnitKey::LargestUnit,
-                       TemporalUnitGroup::Date, &largestUnit)) {
-    return false;
-  }
-
-  // Steps 9-10.
-  return BuiltinCalendarDateUntil(cx, one, two, largestUnit, result);
-}
-
 static bool CalendarDateUntilSlow(JSContext* cx,
                                   Handle<CalendarRecord> calendar,
                                   Handle<Wrapped<PlainDateObject*>> one,
@@ -3573,14 +3552,33 @@ bool js::temporal::CalendarDateUntil(JSContext* cx,
                                      Handle<CalendarRecord> calendar,
                                      Handle<Wrapped<PlainDateObject*>> one,
                                      Handle<Wrapped<PlainDateObject*>> two,
+                                     TemporalUnit largestUnit,
                                      Handle<PlainObject*> options,
                                      Duration* result) {
   MOZ_ASSERT(
       CalendarMethodsRecordHasLookedUp(calendar, CalendarMethod::DateUntil));
 
+  // As an optimization, our implementation only adds |largestUnit| to the
+  // options object when taking the slow-path.
+#ifdef DEBUG
+  // The object must be extensible, otherwise we'd need to throw an error when
+  // attempting to add the "largestUnit" property to a non-extensible object.
+  MOZ_ASSERT(options->isExtensible());
+
+  // Similarily, if there's an existing "largestUnit" property, this property
+  // must be configurable.
+  auto largestUnitProp = options->lookupPure(cx->names().largestUnit);
+  MOZ_ASSERT_IF(largestUnitProp, largestUnitProp->configurable());
+#endif
+
   // Step 2. (Reordered)
   if (!calendar.dateUntil()) {
-    return BuiltinCalendarDateUntil(cx, one, two, options, result);
+    return BuiltinCalendarDateUntil(cx, one, two, largestUnit, result);
+  }
+
+  Rooted<Value> value(cx, StringValue(TemporalUnitToString(cx, largestUnit)));
+  if (!DefineDataProperty(cx, options, cx->names().largestUnit, value)) {
+    return false;
   }
 
   // Steps 1 and 3-4.
