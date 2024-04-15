@@ -1760,7 +1760,7 @@ static void MakeRegionsNonOverlapping(Span<LayoutDeviceIntRegion> aRegions) {
 void nsChildView::UpdateVibrancy(
     const nsTArray<ThemeGeometry>& aThemeGeometries) {
   auto regions = GatherVibrantRegions(aThemeGeometries);
-  MakeRegionsNonOverlapping(Span(regions.begin(), regions.end()));
+  MakeRegionsNonOverlapping(regions);
 
   auto& vm = EnsureVibrancyManager();
   bool changed = false;
