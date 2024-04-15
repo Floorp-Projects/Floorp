@@ -526,10 +526,17 @@ struct Duration final {
  * component is an integer and all components must have the same sign.
  */
 struct DateDuration final {
-  double years = 0;
-  double months = 0;
-  double weeks = 0;
-  double days = 0;
+  // abs(years) < 2**32
+  int64_t years = 0;
+
+  // abs(months) < 2**32
+  int64_t months = 0;
+
+  // abs(weeks) < 2**32
+  int64_t weeks = 0;
+
+  // abs(days) < ⌈(2**53) / (24 * 60 * 60)⌉
+  int64_t days = 0;
 
   constexpr bool operator==(const DateDuration& other) const {
     return years == other.years && months == other.months &&
@@ -540,11 +547,18 @@ struct DateDuration final {
     return !(*this == other);
   }
 
-  constexpr Duration toDuration() const { return {years, months, weeks, days}; }
+  constexpr Duration toDuration() const {
+    return {
+        double(years),
+        double(months),
+        double(weeks),
+        double(days),
+    };
+  }
 };
 
 inline DateDuration Duration::toDateDuration() const {
-  return {years, months, weeks, days};
+  return {int64_t(years), int64_t(months), int64_t(weeks), int64_t(days)};
 }
 
 /**

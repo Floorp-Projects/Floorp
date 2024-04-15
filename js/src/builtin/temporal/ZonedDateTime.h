@@ -125,7 +125,7 @@ ZonedDateTimeObject* CreateTemporalZonedDateTime(
 bool AddDaysToZonedDateTime(JSContext* cx, const Instant& instant,
                             const PlainDateTime& dateTime,
                             JS::Handle<TimeZoneRecord> timeZone,
-                            JS::Handle<CalendarValue> calendar, double days,
+                            JS::Handle<CalendarValue> calendar, int64_t days,
                             TemporalOverflow overflow, Instant* result);
 
 /**
@@ -135,7 +135,7 @@ bool AddDaysToZonedDateTime(JSContext* cx, const Instant& instant,
 bool AddDaysToZonedDateTime(JSContext* cx, const Instant& instant,
                             const PlainDateTime& dateTime,
                             JS::Handle<TimeZoneRecord> timeZone,
-                            JS::Handle<CalendarValue> calendar, double days,
+                            JS::Handle<CalendarValue> calendar, int64_t days,
                             Instant* result);
 
 /**

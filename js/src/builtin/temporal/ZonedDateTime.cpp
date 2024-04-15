@@ -625,7 +625,7 @@ struct PlainDateTimeAndInstant {
 static bool AddDaysToZonedDateTime(JSContext* cx, const Instant& instant,
                                    const PlainDateTime& dateTime,
                                    Handle<TimeZoneRecord> timeZone,
-                                   Handle<CalendarValue> calendar, double days,
+                                   Handle<CalendarValue> calendar, int64_t days,
                                    TemporalOverflow overflow,
                                    PlainDateTimeAndInstant* result) {
   // Step 1. (Not applicable in our implementation.)
@@ -670,7 +670,7 @@ static bool AddDaysToZonedDateTime(JSContext* cx, const Instant& instant,
 bool js::temporal::AddDaysToZonedDateTime(
     JSContext* cx, const Instant& instant, const PlainDateTime& dateTime,
     Handle<TimeZoneRecord> timeZone, Handle<CalendarValue> calendar,
-    double days, TemporalOverflow overflow, Instant* result) {
+    int64_t days, TemporalOverflow overflow, Instant* result) {
   // Steps 1-7.
   PlainDateTimeAndInstant dateTimeAndInstant;
   if (!::AddDaysToZonedDateTime(cx, instant, dateTime, timeZone, calendar, days,
@@ -690,7 +690,7 @@ bool js::temporal::AddDaysToZonedDateTime(JSContext* cx, const Instant& instant,
                                           const PlainDateTime& dateTime,
                                           Handle<TimeZoneRecord> timeZone,
                                           Handle<CalendarValue> calendar,
-                                          double days, Instant* result) {
+                                          int64_t days, Instant* result) {
   // Step 2.
   auto overflow = TemporalOverflow::Constrain;
 
@@ -1130,6 +1130,21 @@ static bool NormalizedTimeDurationToDays(
   MOZ_ASSERT(timeNanos == Int128{int64_t(timeNanos)},
              "abs(ns) < dayLengthNs < 2**53 implies that |ns| fits in int64");
 
+  // FIXME: spec issue - restrict days to 2**53 / (24*60*60)?
+
+  // Valid duration days are smaller than ⌈(2**53) / (24 * 60 * 60)⌉.
+  static constexpr int64_t durationDays = (int64_t(1) << 53) / (24 * 60 * 60);
+
+  // NOTE: This case won't happen in practice, because the initial value of
+  // |days| is at most ±200'000'000 and the loop can only increment resp.
+  // decrement |days| by one.
+  if (std::abs(days) > durationDays) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TEMPORAL_ZONED_DATE_TIME_INCORRECT_SIGN,
+                              "days");
+    return false;
+  }
+
   // Step 29.
   *result = {days, int64_t{timeNanos}, int64_t(dayLengthNanos)};
   return true;
@@ -1242,15 +1257,19 @@ static bool DifferenceZonedDateTime(
   }
 
   // Step 11.
-  *result = CreateNormalizedDurationRecord(
-      {
-          dateDifference.date.years,
-          dateDifference.date.months,
-          dateDifference.date.weeks,
-          double(timeAndDays.days),
-      },
-      NormalizedTimeDuration::fromNanoseconds(timeAndDays.time));
-  return true;
+  auto dateDuration = DateDuration{
+      dateDifference.date.years,
+      dateDifference.date.months,
+      dateDifference.date.weeks,
+      timeAndDays.days,
+  };
+  if (!ThrowIfInvalidDuration(cx, dateDuration)) {
+    return false;
+  }
+
+  return CreateNormalizedDurationRecord(
+      cx, dateDuration,
+      NormalizedTimeDuration::fromNanoseconds(timeAndDays.time), result);
 }
 
 /**
@@ -1531,7 +1550,7 @@ static bool DifferenceTemporalZonedDateTime(JSContext* cx,
     }
 
     // Step 17.d.
-    double days = roundResult.date.days + timeAndDays.days;
+    int64_t days = roundResult.date.days + timeAndDays.days;
 
     // Step 17.e.
     auto toAdjust = NormalizedDuration{
@@ -1571,11 +1590,11 @@ static bool DifferenceTemporalZonedDateTime(JSContext* cx,
 
   // Step 19.
   auto duration = Duration{
-      difference.date.years,        difference.date.months,
-      difference.date.weeks,        difference.date.days,
-      double(timeDuration.hours),   double(timeDuration.minutes),
-      double(timeDuration.seconds), double(timeDuration.milliseconds),
-      timeDuration.microseconds,    timeDuration.nanoseconds,
+      double(difference.date.years), double(difference.date.months),
+      double(difference.date.weeks), double(difference.date.days),
+      double(timeDuration.hours),    double(timeDuration.minutes),
+      double(timeDuration.seconds),  double(timeDuration.milliseconds),
+      timeDuration.microseconds,     timeDuration.nanoseconds,
   };
   if (operation == TemporalDifference::Since) {
     duration = duration.negate();

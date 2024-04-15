@@ -1879,7 +1879,7 @@ bool js::temporal::DisambiguatePossibleInstants(
 
     // Step 18.c.
     PlainDate earlierDate;
-    if (!AddISODate(cx, dateTime.date, {0, 0, 0, double(earlierTime.days)},
+    if (!AddISODate(cx, dateTime.date, {0, 0, 0, earlierTime.days},
                     TemporalOverflow::Constrain, &earlierDate)) {
       return false;
     }
@@ -1920,7 +1920,7 @@ bool js::temporal::DisambiguatePossibleInstants(
 
   // Step 22.
   PlainDate laterDate;
-  if (!AddISODate(cx, dateTime.date, {0, 0, 0, double(laterTime.days)},
+  if (!AddISODate(cx, dateTime.date, {0, 0, 0, laterTime.days},
                   TemporalOverflow::Constrain, &laterDate)) {
     return false;
   }

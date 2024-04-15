@@ -508,7 +508,7 @@ static bool DifferenceTemporalPlainYearMonth(JSContext* cx,
   }
 
   // We only care about years and months here, all other fields are set to zero.
-  auto dateDuration = DateDuration{until.years, until.months};
+  auto dateDuration = DateDuration{int64_t(until.years), int64_t(until.months)};
 
   // Step 19.
   if (settings.smallestUnit != TemporalUnit::Month ||

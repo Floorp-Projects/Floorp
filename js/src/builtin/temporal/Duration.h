@@ -189,15 +189,8 @@ inline NormalizedDuration CreateNormalizedDurationRecord(
   MOZ_ASSERT(IsValidDuration(date.toDuration()));
   MOZ_ASSERT(IsValidNormalizedTimeDuration(time));
 #ifdef DEBUG
-  int32_t dateSign = date.years < 0    ? -1
-                     : date.years > 0  ? 1
-                     : date.months < 0 ? -1
-                     : date.months > 0 ? 1
-                     : date.weeks < 0  ? -1
-                     : date.weeks > 0  ? 1
-                     : date.days < 0   ? -1
-                     : date.days > 0   ? 1
-                                       : 0;
+  int64_t dateValues = date.years | date.months | date.weeks | date.days;
+  int32_t dateSign = dateValues ? dateValues < 0 ? -1 : 1 : 0;
   int32_t timeSign = NormalizedTimeDurationSign(time);
   MOZ_ASSERT((dateSign * timeSign) >= 0);
 #endif
