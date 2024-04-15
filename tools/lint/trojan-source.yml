@@ -16,10 +16,10 @@ trojan-source:
         - third_party/rust/clap_builder/src/output/textwrap/core.rs
         - third_party/rust/textwrap/src/core.rs
         - third_party/rust/icu_provider/src/hello_world.rs
-        - third_party/rust/uniffi-example-rondpoint/tests/bindings/test_rondpoint.py
         - third_party/rust/error-chain/tests/tests.rs
         - third_party/rust/unicode-width/src/tests.rs
         - security/nss/gtests/mozpkix_gtest/pkixnames_tests.cpp
+        - toolkit/components/uniffi-fixtures/rondpoint/tests/bindings/test_rondpoint.py
     extensions:
         - .c
         - .cc

@@ -6046,6 +6046,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a5566fae48a5cb017005bf9cd622af5236b2a203a13fb548afde3506d3c68277"
 dependencies = [
  "anyhow",
+ "uniffi_bindgen",
  "uniffi_build",
  "uniffi_core",
  "uniffi_macros",
@@ -6070,7 +6071,6 @@ dependencies = [
 [[package]]
 name = "uniffi-example-arithmetic"
 version = "0.22.0"
-source = "git+https://github.com/mozilla/uniffi-rs.git?rev=d52c5460ae42ecad1e73a5b394ac96d48f4769de#d52c5460ae42ecad1e73a5b394ac96d48f4769de"
 dependencies = [
  "thiserror",
  "uniffi",
@@ -6090,7 +6090,6 @@ dependencies = [
 [[package]]
 name = "uniffi-example-geometry"
 version = "0.22.0"
-source = "git+https://github.com/mozilla/uniffi-rs.git?rev=d52c5460ae42ecad1e73a5b394ac96d48f4769de#d52c5460ae42ecad1e73a5b394ac96d48f4769de"
 dependencies = [
  "uniffi",
 ]
@@ -6098,7 +6097,6 @@ dependencies = [
 [[package]]
 name = "uniffi-example-rondpoint"
 version = "0.22.0"
-source = "git+https://github.com/mozilla/uniffi-rs.git?rev=d52c5460ae42ecad1e73a5b394ac96d48f4769de#d52c5460ae42ecad1e73a5b394ac96d48f4769de"
 dependencies = [
  "uniffi",
 ]
@@ -6106,7 +6104,6 @@ dependencies = [
 [[package]]
 name = "uniffi-example-sprites"
 version = "0.22.0"
-source = "git+https://github.com/mozilla/uniffi-rs.git?rev=d52c5460ae42ecad1e73a5b394ac96d48f4769de#d52c5460ae42ecad1e73a5b394ac96d48f4769de"
 dependencies = [
  "uniffi",
 ]
@@ -6114,7 +6111,6 @@ dependencies = [
 [[package]]
 name = "uniffi-example-todolist"
 version = "0.22.0"
-source = "git+https://github.com/mozilla/uniffi-rs.git?rev=d52c5460ae42ecad1e73a5b394ac96d48f4769de#d52c5460ae42ecad1e73a5b394ac96d48f4769de"
 dependencies = [
  "once_cell",
  "thiserror",
