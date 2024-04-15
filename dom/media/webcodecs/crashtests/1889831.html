@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<script>
+document.addEventListener("DOMContentLoaded", async () => {
+  const decoder = new VideoDecoder({
+    'output': (e) => {},
+    'error': (e) => {},
+  });
+  decoder.configure({
+    codec: 'vp8',
+    codedWidth: 320,
+    codedHeight: 240,
+    visibleRect: {x: 0, y: 0, width: 320, height: 240},
+    displayWidth: 320,
+    displayHeight: 240,
+  });
+  decoder.decode(new EncodedVideoChunk(
+    {type: 'key', timestamp: 0, data: new ArrayBuffer(0)}));
+  decoder.decode(new EncodedVideoChunk(
+    {type: 'key', timestamp: 1, data: new ArrayBuffer(0)}));
+})
+</script>
