@@ -175,8 +175,7 @@ bool AddISODate(JSContext* cx, const PlainDate& date,
 Wrapped<PlainDateObject*> AddDate(JSContext* cx,
                                   JS::Handle<CalendarRecord> calendar,
                                   JS::Handle<Wrapped<PlainDateObject*>> date,
-                                  const Duration& duration,
-                                  JS::Handle<JSObject*> options);
+                                  const DateDuration& duration);
 
 /**
  * AddDate ( calendarRec, plainDate, duration [ , options ] )
@@ -184,7 +183,8 @@ Wrapped<PlainDateObject*> AddDate(JSContext* cx,
 Wrapped<PlainDateObject*> AddDate(JSContext* cx,
                                   JS::Handle<CalendarRecord> calendar,
                                   JS::Handle<Wrapped<PlainDateObject*>> date,
-                                  const DateDuration& duration);
+                                  const DateDuration& duration,
+                                  JS::Handle<JSObject*> options);
 
 /**
  * AddDate ( calendarRec, plainDate, duration [ , options ] )
