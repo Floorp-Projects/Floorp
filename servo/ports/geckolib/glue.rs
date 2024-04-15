@@ -137,9 +137,10 @@ use style::stylesheets::{
     AllowImportRules, ContainerRule, CounterStyleRule, CssRule, CssRuleType, CssRuleTypes,
     CssRules, CssRulesHelpers, DocumentRule, FontFaceRule, FontFeatureValuesRule,
     FontPaletteValuesRule, ImportRule, KeyframesRule, LayerBlockRule, LayerStatementRule,
-    MediaRule, NamespaceRule, Origin, OriginSet, PagePseudoClassFlags, PageRule, PropertyRule,
-    SanitizationData, SanitizationKind, StartingStyleRule, StyleRule, StylesheetContents,
-    StylesheetLoader as StyleStylesheetLoader, SupportsRule, UrlExtraData, ScopeRule,
+    MarginRule, MediaRule, NamespaceRule, Origin, OriginSet, PagePseudoClassFlags, PageRule,
+    PropertyRule, SanitizationData, SanitizationKind, StartingStyleRule, StyleRule,
+    StylesheetContents, StylesheetLoader as StyleStylesheetLoader, SupportsRule, UrlExtraData,
+    ScopeRule,
 };
 use style::stylist::{add_size_of_ua_cache, AuthorStylesEnabled, RuleInclusion, Stylist};
 use style::thread_state;
@@ -2402,6 +2403,13 @@ impl_group_rule_funcs! { (Media, MediaRule, MediaRule),
     changed: Servo_StyleSet_MediaRuleChanged,
 }
 
+impl_basic_rule_funcs! { (Margin, MarginRule, MarginRule),
+    getter: Servo_CssRules_GetMarginRuleAt,
+    debug: Servo_MarginRule_Debug,
+    to_css: Servo_MarginRule_GetCssText,
+    changed: Servo_StyleSet_MarginRuleChanged,
+}
+
 impl_basic_rule_funcs! { (Namespace, NamespaceRule, NamespaceRule),
     getter: Servo_CssRules_GetNamespaceRuleAt,
     debug: Servo_NamespaceRule_Debug,
@@ -2936,6 +2944,16 @@ pub extern "C" fn Servo_NamespaceRule_GetPrefix(rule: &NamespaceRule) -> *mut ns
 #[no_mangle]
 pub extern "C" fn Servo_NamespaceRule_GetURI(rule: &NamespaceRule) -> *mut nsAtom {
     rule.url.0.as_ptr()
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_MarginRule_GetStyle(rule: &MarginRule) -> Strong<LockedDeclarationBlock> {
+    rule.block.clone().into()
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_MarginRule_GetName(rule: &MarginRule, out: &mut nsACString) {
+    out.assign(rule.name());
 }
 
 #[no_mangle]

@@ -17,6 +17,7 @@
 #include "mozilla/dom/CSSLayerStatementRule.h"
 #include "mozilla/dom/CSSKeyframesRule.h"
 #include "mozilla/dom/CSSContainerRule.h"
+#include "mozilla/dom/CSSMarginRule.h"
 #include "mozilla/dom/CSSMediaRule.h"
 #include "mozilla/dom/CSSMozDocumentRule.h"
 #include "mozilla/dom/CSSNamespaceRule.h"
@@ -88,6 +89,7 @@ css::Rule* ServoCSSRuleList::GetRule(uint32_t aIndex) {
       CASE_RULE_LOCKED(Keyframes, Keyframes)
       CASE_RULE_UNLOCKED(Media, Media)
       CASE_RULE_UNLOCKED(Namespace, Namespace)
+      CASE_RULE_UNLOCKED(Margin, Margin)
       CASE_RULE_LOCKED(Page, Page)
       CASE_RULE_UNLOCKED(Property, Property)
       CASE_RULE_UNLOCKED(Supports, Supports)
@@ -107,9 +109,6 @@ css::Rule* ServoCSSRuleList::GetRule(uint32_t aIndex) {
 #undef CASE_RULE_WITH_PREFIX
       case StyleCssRuleType::Keyframe:
         MOZ_ASSERT_UNREACHABLE("keyframe rule cannot be here");
-        return nullptr;
-      case StyleCssRuleType::Margin:
-        // Margin rules not implemented yet, see bug 1864737
         return nullptr;
     }
     rule = CastToUint(ruleObj.forget().take());
@@ -277,6 +276,7 @@ void ServoCSSRuleList::SetRawContents(RefPtr<StyleLockedCssRules> aNewRules,
       RULE_CASE_LOCKED(Keyframes, Keyframes)
       RULE_CASE_UNLOCKED(Media, Media)
       RULE_CASE_UNLOCKED(Namespace, Namespace)
+      RULE_CASE_UNLOCKED(Margin, Margin)
       RULE_CASE_LOCKED(Page, Page)
       RULE_CASE_UNLOCKED(Property, Property)
       RULE_CASE_UNLOCKED(Supports, Supports)
@@ -293,9 +293,6 @@ void ServoCSSRuleList::SetRawContents(RefPtr<StyleLockedCssRules> aNewRules,
       RULE_CASE_UNLOCKED(StartingStyle, StartingStyle)
       case StyleCssRuleType::Keyframe:
         MOZ_ASSERT_UNREACHABLE("keyframe rule cannot be here");
-        break;
-      case StyleCssRuleType::Margin:
-        // Margin rules not implemented yet, see bug 1864737
         break;
     }
 #undef RULE_CASE_WITH_PREFIX
