@@ -4914,10 +4914,10 @@ static bool Duration_nanoseconds(JSContext* cx, unsigned argc, Value* vp) {
  * get Temporal.Duration.prototype.sign
  */
 static bool Duration_sign(JSContext* cx, const CallArgs& args) {
+  auto duration = ToDuration(&args.thisv().toObject().as<DurationObject>());
+
   // Step 3.
-  auto* duration = &args.thisv().toObject().as<DurationObject>();
-  int32_t sign = DurationSign(ToDuration(duration));
-  args.rval().setInt32(sign);
+  args.rval().setInt32(DurationSign(duration));
   return true;
 }
 
@@ -4934,12 +4934,10 @@ static bool Duration_sign(JSContext* cx, unsigned argc, Value* vp) {
  * get Temporal.Duration.prototype.blank
  */
 static bool Duration_blank(JSContext* cx, const CallArgs& args) {
-  // Step 3.
-  auto* duration = &args.thisv().toObject().as<DurationObject>();
-  int32_t sign = DurationSign(ToDuration(duration));
+  auto duration = ToDuration(&args.thisv().toObject().as<DurationObject>());
 
-  // Steps 4-5.
-  args.rval().setBoolean(sign == 0);
+  // Steps 3-5.
+  args.rval().setBoolean(duration == Duration{});
   return true;
 }
 
@@ -4958,10 +4956,8 @@ static bool Duration_blank(JSContext* cx, unsigned argc, Value* vp) {
  * ToPartialDuration ( temporalDurationLike )
  */
 static bool Duration_with(JSContext* cx, const CallArgs& args) {
-  auto* durationObj = &args.thisv().toObject().as<DurationObject>();
-
   // Absent values default to the corresponding values of |this| object.
-  auto duration = ToDuration(durationObj);
+  auto duration = ToDuration(&args.thisv().toObject().as<DurationObject>());
 
   // Steps 3-23.
   Rooted<JSObject*> temporalDurationLike(
@@ -4996,8 +4992,7 @@ static bool Duration_with(JSContext* cx, unsigned argc, Value* vp) {
  * Temporal.Duration.prototype.negated ( )
  */
 static bool Duration_negated(JSContext* cx, const CallArgs& args) {
-  auto* durationObj = &args.thisv().toObject().as<DurationObject>();
-  auto duration = ToDuration(durationObj);
+  auto duration = ToDuration(&args.thisv().toObject().as<DurationObject>());
 
   // Step 3.
   auto* result = CreateTemporalDuration(cx, duration.negate());
@@ -5022,8 +5017,7 @@ static bool Duration_negated(JSContext* cx, unsigned argc, Value* vp) {
  * Temporal.Duration.prototype.abs ( )
  */
 static bool Duration_abs(JSContext* cx, const CallArgs& args) {
-  auto* durationObj = &args.thisv().toObject().as<DurationObject>();
-  auto duration = ToDuration(durationObj);
+  auto duration = ToDuration(&args.thisv().toObject().as<DurationObject>());
 
   // Step 3.
   auto* result = CreateTemporalDuration(cx, AbsoluteDuration(duration));
@@ -5082,8 +5076,7 @@ static bool Duration_subtract(JSContext* cx, unsigned argc, Value* vp) {
  * Temporal.Duration.prototype.round ( roundTo )
  */
 static bool Duration_round(JSContext* cx, const CallArgs& args) {
-  auto* durationObj = &args.thisv().toObject().as<DurationObject>();
-  auto duration = ToDuration(durationObj);
+  auto duration = ToDuration(&args.thisv().toObject().as<DurationObject>());
 
   // Step 18. (Reordered)
   auto existingLargestUnit = DefaultTemporalLargestUnit(duration);
@@ -5785,14 +5778,13 @@ static bool Duration_toString(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 /**
- *  Temporal.Duration.prototype.toJSON ( )
+ * Temporal.Duration.prototype.toJSON ( )
  */
 static bool Duration_toJSON(JSContext* cx, const CallArgs& args) {
-  auto* duration = &args.thisv().toObject().as<DurationObject>();
+  auto duration = ToDuration(&args.thisv().toObject().as<DurationObject>());
 
   // Steps 3-4.
-  JSString* str =
-      TemporalDurationToString(cx, ToDuration(duration), Precision::Auto());
+  JSString* str = TemporalDurationToString(cx, duration, Precision::Auto());
   if (!str) {
     return false;
   }
@@ -5802,7 +5794,7 @@ static bool Duration_toJSON(JSContext* cx, const CallArgs& args) {
 }
 
 /**
- *  Temporal.Duration.prototype.toJSON ( )
+ * Temporal.Duration.prototype.toJSON ( )
  */
 static bool Duration_toJSON(JSContext* cx, unsigned argc, Value* vp) {
   // Steps 1-2.
@@ -5814,11 +5806,10 @@ static bool Duration_toJSON(JSContext* cx, unsigned argc, Value* vp) {
  * Temporal.Duration.prototype.toLocaleString ( [ locales [ , options ] ] )
  */
 static bool Duration_toLocaleString(JSContext* cx, const CallArgs& args) {
-  auto* duration = &args.thisv().toObject().as<DurationObject>();
+  auto duration = ToDuration(&args.thisv().toObject().as<DurationObject>());
 
   // Steps 3-4.
-  JSString* str =
-      TemporalDurationToString(cx, ToDuration(duration), Precision::Auto());
+  JSString* str = TemporalDurationToString(cx, duration, Precision::Auto());
   if (!str) {
     return false;
   }
