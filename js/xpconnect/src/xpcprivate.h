@@ -2204,6 +2204,7 @@ struct GlobalProperties {
   bool FormData : 1;
   bool Headers : 1;
   bool IOUtils : 1;
+  bool InspectorCSSParser : 1;
   bool InspectorUtils : 1;
   bool MessageChannel : 1;
   bool MIDIInputMap : 1;

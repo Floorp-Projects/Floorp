@@ -35,6 +35,7 @@ module.exports = {
     assert: false,
     Assert: false,
     BrowsingContext: false,
+    InspectorCSSParser: false,
     InspectorUtils: false,
     ok: false,
     is: false,

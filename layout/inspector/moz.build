@@ -19,6 +19,7 @@ EXPORTS.mozilla += [
 ]
 
 EXPORTS.mozilla.dom += [
+    "InspectorCSSParser.h",
     "InspectorFontFace.h",
     "InspectorUtils.h",
 ]
@@ -26,6 +27,7 @@ EXPORTS.mozilla.dom += [
 UNIFIED_SOURCES += [
     "inDeepTreeWalker.cpp",
     "inLayoutUtils.cpp",
+    "InspectorCSSParser.cpp",
     "InspectorFontFace.cpp",
     "InspectorUtils.cpp",
     "ServoStyleRuleMap.cpp",

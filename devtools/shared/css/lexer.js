@@ -1513,10 +1513,41 @@ Scanner.prototype = {
  * Create and return a new CSS lexer.
  *
  * @param {String} input the CSS text to lex
+ * @param {Boolean} useInspectorCSSParser Set to true to use InspectorCSSParser.
  * @return {CSSLexer} the new lexer
  */
-function getCSSLexer(input) {
+function getCSSLexer(input, useInspectorCSSParser = false) {
+  if (useInspectorCSSParser) {
+    return new InspectorCSSParserWrapper(input);
+  }
   return new Scanner(input);
 }
 
 exports.getCSSLexer = getCSSLexer;
+
+/**
+ * Wrapper around InspectorCSSParser.
+ * Once/if https://github.com/servo/rust-cssparser/pull/374 lands, we can remove this class.
+ */
+class InspectorCSSParserWrapper {
+  #offset = 0;
+  constructor(input) {
+    this.parser = new InspectorCSSParser(input);
+  }
+
+  nextToken() {
+    const token = this.parser.nextToken();
+    if (!token) {
+      return token;
+    }
+
+    // At the moment, InspectorCSSParser doesn't expose offsets, so we need to compute
+    // them manually here.
+    // We can do that because we are retrieving every token in the input string, and so the
+    // end offset of the last token is the start offset of the new token.
+    token.startOffset = this.#offset;
+    this.#offset += token.text.length;
+    token.endOffset = this.#offset;
+    return token;
+  }
+}

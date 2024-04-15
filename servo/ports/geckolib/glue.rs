@@ -6,7 +6,7 @@ use super::error_reporter::ErrorReporter;
 use super::stylesheet_loader::{AsyncStylesheetParser, StylesheetLoader};
 use bincode::{deserialize, serialize};
 use cssparser::ToCss as ParserToCss;
-use cssparser::{BasicParseError, ParseError as CssParseError, Parser, ParserInput, SourceLocation, UnicodeRange, Token};
+use cssparser::{BasicParseError, ParseError as CssParseError, Parser, ParserInput, ParserState, SourceLocation, UnicodeRange, Token};
 use dom::{DocumentState, ElementState};
 use malloc_size_of::MallocSizeOfOps;
 use nsstring::{nsCString, nsString};
@@ -9276,4 +9276,162 @@ fn get_byte_index_from_line_and_column(
     }
 
     None
+}
+
+#[repr(C)]
+pub struct CSSToken {
+    pub text: nsCString,
+    pub token_type: nsCString,
+    pub has_unit: bool,
+    pub unit: nsCString,
+    pub has_number: bool,
+    pub number: f32,
+    // line and column at which the token starts
+    pub line: u32,
+    pub column: u32,
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_CSSParser_create(
+    text: &nsACString,
+) -> *mut ParserState {
+    let css_text = unsafe { text.as_str_unchecked() };
+    let mut parser_input = ParserInput::new(&css_text);
+    let input = Parser::new(&mut parser_input);
+    Box::into_raw(Box::new(input.state()))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_CSSParser_destroy(
+    state: *mut ParserState,
+) {
+    drop(Box::from_raw(state));
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_CSSParser_GetCurrentLine(
+    state: &ParserState,
+) -> u32 {
+    return state.source_location().line;
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_CSSParser_GetCurrentColumn(
+    state: &ParserState,
+) -> u32 {
+    return state.source_location().column;
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_CSSParser_NextToken(
+    text: &nsACString,
+    state: &mut ParserState,
+    css_token: &mut CSSToken,
+) -> bool {
+    let css_text = unsafe { text.as_str_unchecked() };
+    let mut parser_input = ParserInput::new(&css_text);
+    let mut input = Parser::new(&mut parser_input);
+    input.reset(state);
+
+    let token_start = input.position();
+    let location_start = state.source_location();
+    let Ok(token) = &input.next_including_whitespace_and_comments() else {
+        return false;
+    };
+
+    let token_type = match *token {
+        Token::Ident(_) => "Ident",
+        Token::AtKeyword(_) => "AtKeyword",
+        Token::Hash(_) => "Hash",
+        Token::IDHash(_) => "IDHash",
+        Token::QuotedString(_) => "QuotedString",
+        Token::UnquotedUrl(_) => "UnquotedUrl",
+        Token::Delim(_) => "Delim",
+        Token::Number{..} => "Number",
+        Token::Percentage{..} => "Percentage",
+        Token::Dimension{..} => "Dimension",
+        Token::WhiteSpace(_) => "WhiteSpace",
+        Token::Comment(_) => "Comment",
+        Token::Colon => "Colon",
+        Token::Semicolon => "Semicolon",
+        Token::Comma => "Comma",
+        Token::IncludeMatch => "IncludeMatch",
+        Token::DashMatch => "DashMatch",
+        Token::PrefixMatch => "PrefixMatch",
+        Token::SuffixMatch => "SuffixMatch",
+        Token::SubstringMatch => "SubstringMatch",
+        Token::CDO => "CDO",
+        Token::CDC => "CDC",
+        Token::Function(_) => "Function",
+        Token::ParenthesisBlock => "ParenthesisBlock",
+        Token::SquareBracketBlock => "SquareBracketBlock",
+        Token::CurlyBracketBlock => "CurlyBracketBlock",
+        Token::BadUrl(_) => "BadUrl",
+        Token::BadString(_) => "BadString",
+        Token::CloseParenthesis => "CloseParenthesis",
+        Token::CloseSquareBracket => "CloseSquareBracket",
+        Token::CloseCurlyBracket => "CloseCurlyBracket",
+    };
+
+    let token_unit = match *token {
+        Token::Dimension{
+            ref unit, ..
+        } => {
+            let mut unit_text = nsCString::new();
+            unit_text.assign(unit.as_bytes());
+            Some(unit_text)
+        },
+        _ => None
+    };
+
+    let token_number = match *token {
+        Token::Dimension {
+            ref value, ..
+        } => Some(value),
+        Token::Number{
+            ref value, ..
+        } => Some(value),
+        Token::Percentage{
+            ref unit_value, ..
+        } => Some(unit_value),
+        _ => None
+    };
+    css_token.has_number = token_number.is_some();
+    if css_token.has_number {
+        css_token.number = *token_number.unwrap();
+    }
+
+    let need_to_parse_nested_block = match *token {
+        Token::Function(_) |
+        Token::ParenthesisBlock |
+        Token::CurlyBracketBlock |
+        Token::SquareBracketBlock => true,
+        _ => false,
+    };
+
+    let mut text = nsCString::new();
+    text.assign(&input.slice_from(token_start));
+
+    css_token.text = text;
+    css_token.token_type = token_type.into();
+    css_token.has_unit = token_unit.is_some();
+    if css_token.has_unit {
+        css_token.unit = token_unit.unwrap();
+    }
+
+    css_token.line = location_start.line;
+    css_token.column = location_start.column;
+
+    if need_to_parse_nested_block {
+        let _ = input.parse_nested_block(
+            |i| -> Result<(), CssParseError<'_, BasicParseError>> {
+                *state = i.state();
+                Ok(())
+            },
+        );
+    } else {
+        *state = input.state();
+    }
+
+    return true;
 }
