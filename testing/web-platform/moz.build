@@ -122,6 +122,9 @@ with Files("tests/accelerometer/**"):
 with Files("tests/ambient-light/**"):
     BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
 
+with Files("tests/animation-worklet/**"):
+    BUG_COMPONENT = ("Core", "DOM: Animation")
+
 with Files("tests/annotation-model/**"):
     BUG_COMPONENT = ("Testing", "web-platform-tests")
 
@@ -152,8 +155,14 @@ with Files("tests/bluetooth/**"):
 with Files("tests/clear-site-data/**"):
     BUG_COMPONENT = ("Core", "DOM: Security")
 
+with Files("tests/client-hints/**"):
+    BUG_COMPONENT = ("Core", "Networking: HTTP")
+
 with Files("tests/clipboard-apis/**"):
     BUG_COMPONENT = ("Core", "DOM: Copy & Paste and Drag & Drop")
+
+with Files("tests/close-watcher/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
 with Files("tests/common/**"):
     BUG_COMPONENT = ("Testing", "web-platform-tests")
@@ -168,11 +177,17 @@ with Files("tests/conformance-checkers/**"):
 with Files("tests/console/**"):
     BUG_COMPONENT = ("DevTools", "Console")
 
+with Files("tests/content-dpr/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
 with Files("tests/content-security-policy/**"):
     BUG_COMPONENT = ("Core", "DOM: Security")
 
 with Files("tests/cookies/**"):
     BUG_COMPONENT = ("Core", "Networking: Cookies")
+
+with Files("tests/cookie-store/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
 with Files("tests/core-aam/**"):
     BUG_COMPONENT = ("Core", "Disability Access APIs")
@@ -405,8 +420,20 @@ with Files("tests/css/selectors/**"):
 with Files("tests/custom-elements/**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
+with Files("tests/device-memory/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("tests/device-posture/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
 with Files("tests/docs/**"):
     BUG_COMPONENT = ("Testing", "web-platform-tests")
+
+with Files("tests/document-picture-in-picture/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("tests/document-policy/**"):
+    BUG_COMPONENT = ("Core", "DOM: Security")
 
 with Files("tests/dom/**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
@@ -422,6 +449,9 @@ with Files("tests/dpub-aam/**"):
 
 with Files("tests/dpub-aria/**"):
     BUG_COMPONENT = ("Core", "Disability Access APIs")
+
+with Files("tests/ecmascript/**"):
+    BUG_COMPONENT = ("Core", "JavaScript Engine")
 
 with Files("tests/editing/**"):
     BUG_COMPONENT = ("Core", "DOM: Editor")
@@ -447,14 +477,23 @@ with Files("tests/eventsource/**"):
 with Files("tests/feature-policy/**"):
     BUG_COMPONENT = ("Core", "DOM: Security")
 
+with Files("tests/fenced-frame/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
 with Files("tests/fetch/**"):
     BUG_COMPONENT = ("Core", "DOM: Networking")
+
+with Files("tests/file-system-access/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
 with Files("tests/fonts/**"):
     BUG_COMPONENT = ("Testing", "web-platform-tests")
 
 with Files("tests/fonts/math/**"):
     BUG_COMPONENT = ("Core", "MathML")
+
+with Files("tests/forced-colors-mode/**"):
+    BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
 
 with Files("tests/fs/**"):
     BUG_COMPONENT = ("Core", "DOM: File")
@@ -465,8 +504,20 @@ with Files("tests/fullscreen/**"):
 with Files("tests/gamepad/**"):
     BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
 
+with Files("tests/generic-sensor/**"):
+    BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
+
+with Files("tests/geolocation-sensor/**"):
+    BUG_COMPONENT = ("Core", "DOM: Geolocation")
+
 with Files("tests/geolocation-API/**"):
     BUG_COMPONENT = ("Core", "DOM: Geolocation")
+
+with Files("tests/graphics-aam/**"):
+    BUG_COMPONENT = ("Core", "Disability Access APIs")
+
+with Files("tests/graphics-aria/**"):
+    BUG_COMPONENT = ("Core", "Disability Access APIs")
 
 with Files("tests/gyroscope/**"):
     BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
@@ -477,6 +528,9 @@ with Files("tests/hr-time/**"):
 with Files("tests/html/**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
+with Files("tests/html-aam/**"):
+    BUG_COMPONENT = ("Core", "Disability Access APIs")
+
 with Files("tests/html/canvas/**"):
     BUG_COMPONENT = ("Core", "Graphics: Canvas2D")
 
@@ -485,6 +539,12 @@ with Files("tests/html-longdesc/**"):
 
 # Not implemented yet, see Bug 741393
 with Files("tests/html-media-capture/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
+with Files("tests/https-upgrades/**"):
+    BUG_COMPONENT = ("Core", "DOM: Security")
+
+with Files("tests/idle-detection/**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
 with Files("tests/imagebitmap-renderingcontext/**"):
@@ -534,6 +594,10 @@ with Files("tests/layout-instability/**"):
 with Files("tests/longtask-timing/**"):
     BUG_COMPONENT = ("Core", "DOM: Performance")
 
+with Files("tests/long-animation-frame/**"):
+    BUG_COMPONENT = ("Core", "DOM: Performance")
+
+# depends on generic-sensor, check bug 1359076
 with Files("tests/magnetometer/**"):
     BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
 
@@ -557,6 +621,9 @@ with Files("tests/mediacapture-fromelement/**"):
 
 with Files("tests/mediacapture-image/**"):
     BUG_COMPONENT = ("Core", "Audio/Video: Recording")
+
+with Files("tests/mediacapture-insertable-streams/**"):
+    BUG_COMPONENT = ("Core", "Audio/Video: MediaStreamGraph")
 
 with Files("tests/mediacapture-record/**"):
     BUG_COMPONENT = ("Core", "Audio/Video: Recording")
