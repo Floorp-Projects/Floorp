@@ -1,0 +1,44 @@
+# Version of this schema
+schema: 1
+
+bugzilla:
+  # Bugzilla product and component for this directory and subdirectories
+  product: "Core"
+  component: "Performance"
+
+origin:
+  name: "perfetto"
+  description: "C++ SDK for userspace performance tracing on Linux and Android."
+
+  url: "https://perfetto.dev"
+  license: Apache-2.0
+
+  release: v44.0 (2024-04-10T09:26:48+00:00).
+  revision: v44.0
+
+updatebot:
+  maintainer-phab: denispal
+  maintainer-bz: dpalmeiro@mozilla.com
+  tasks:
+    - type: vendoring
+      enabled: true
+      frequency: release
+
+vendoring:
+  url: https://github.com/google/perfetto
+  source-hosting: github
+  tracking: tag
+  keep:
+    - moz.build
+    - moz_attributes.patch
+  skip-vendoring-steps:
+    - update-moz-build
+  exclude:
+    - '**'
+  include:
+    - sdk/
+    - LICENSE
+  # Add an implicit attribute to EventFinalizer() and use the
+  # asan declarations from "mozilla/MemoryChecking.h".
+  patches:
+    - moz_attributes.patch
