@@ -5,8 +5,6 @@
 #tab-preview-panel {
   --panel-width: 280px;
   --panel-padding: 0;
-  --panel-background: var(--tab-selected-bgcolor);
-  --panel-color: var(--tab-selected-textcolor);
 }
 
 .tab-preview-text-container {
