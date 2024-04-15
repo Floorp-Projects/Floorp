@@ -48,6 +48,11 @@ void InspectorCSSParser::NextToken(Nullable<InspectorCSSToken>& aResult) {
   InspectorCSSToken& inspectorCssToken = aResult.SetValue();
   inspectorCssToken.mText.Append(cssToken.text);
   inspectorCssToken.mTokenType.Append(cssToken.token_type);
+  if (cssToken.has_value) {
+    inspectorCssToken.mValue.Append(cssToken.value);
+  } else {
+    inspectorCssToken.mValue.SetIsVoid(true);
+  }
   if (cssToken.has_unit) {
     inspectorCssToken.mUnit.Append(cssToken.unit);
   } else {
