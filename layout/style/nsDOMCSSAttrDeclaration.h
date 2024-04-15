@@ -83,7 +83,7 @@ class nsDOMCSSAttributeDeclaration final : public nsDOMCSSDeclaration {
   nsresult SetCSSDeclaration(
       mozilla::DeclarationBlock* aDecl,
       mozilla::MutationClosureData* aClosureData) override;
-  mozilla::dom::Document* DocToUpdate() override;
+  mozilla::dom::Document* DocToUpdate() final;
 
   RefPtr<Element> mElement;
 

@@ -16,7 +16,7 @@ namespace mozilla::dom {
 // CSSKeyframeDeclaration
 //
 
-class CSSKeyframeDeclaration : public nsDOMCSSDeclaration {
+class CSSKeyframeDeclaration final : public nsDOMCSSDeclaration {
  public:
   explicit CSSKeyframeDeclaration(CSSKeyframeRule* aRule) : mRule(aRule) {
     mDecls =
@@ -63,7 +63,6 @@ class CSSKeyframeDeclaration : public nsDOMCSSDeclaration {
       nsIPrincipal* aSubjectPrincipal) const final {
     return GetParsingEnvironmentForRule(mRule, StyleCssRuleType::Keyframe);
   }
-  Document* DocToUpdate() final { return nullptr; }
 
   nsINode* GetAssociatedNode() const final {
     return mRule ? mRule->GetAssociatedDocumentOrShadowRoot() : nullptr;
