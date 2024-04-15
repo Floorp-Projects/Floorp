@@ -772,7 +772,8 @@ void GCMarker::markImplicitEdges(T* markedThing) {
   MOZ_ASSERT(zone->isGCMarking());
   MOZ_ASSERT(!zone->isGCSweeping());
 
-  auto p = zone->gcEphemeronEdges().get(markedThing);
+  auto& ephemeronTable = zone->gcEphemeronEdges();
+  auto* p = ephemeronTable.get(markedThing);
   if (!p) {
     return;
   }
@@ -788,6 +789,10 @@ void GCMarker::markImplicitEdges(T* markedThing) {
              gc::detail::GetEffectiveColor(this, markedThing));
 
   markEphemeronEdges(edges, thingColor);
+
+  if (edges.empty()) {
+    ephemeronTable.remove(p);
+  }
 }
 
 template void GCMarker::markImplicitEdges(JSObject*);
