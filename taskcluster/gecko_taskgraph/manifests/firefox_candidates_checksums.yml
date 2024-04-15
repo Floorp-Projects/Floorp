@@ -51,6 +51,8 @@ platform_names:
             linux64-shippable: 'linux-x86_64'
             linux64-devedition: 'linux-x86_64'
             linux64-asan-reporter-shippable: 'linux-x86_64-asan-reporter'
+            linux64-aarch64-shippable: 'linux-aarch64'
+            linux64-aarch64-devedition: 'linux-aarch64'
             macosx64-shippable: 'mac'
             macosx64-devedition: 'mac'
             win32-shippable: 'win32'
