@@ -475,9 +475,29 @@ export class AddressSaveDoorhanger extends AutofillDoorhanger {
         ];
         break;
       case "address":
-        data = ["address-level2", "address-level1", "postal-code"].map(
-          field => [field, this.oldRecord[field], this.newRecord[field]]
-        );
+        data = [
+          [
+            "address-level2",
+            this.oldRecord["address-level2"],
+            this.newRecord["address-level2"],
+          ],
+          [
+            "address-level1",
+            FormAutofillUtils.getAbbreviatedSubregionName(
+              this.oldRecord["address-level1"],
+              this.oldRecord.country
+            ) || this.oldRecord["address-level1"],
+            FormAutofillUtils.getAbbreviatedSubregionName(
+              this.newRecord["address-level1"],
+              this.newRecord.country
+            ) || this.newRecord["address-level1"],
+          ],
+          [
+            "postal-code",
+            this.oldRecord["postal-code"],
+            this.newRecord["postal-code"],
+          ],
+        ];
         break;
       case "name":
       case "country":
