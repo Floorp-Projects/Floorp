@@ -715,14 +715,7 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
     }
   }
 
-  void afterAddDelegate(JSObject* wrapper) {
-    if (needsIncrementalBarrier()) {
-      afterAddDelegateInternal(wrapper);
-    }
-  }
-
   void beforeClearDelegateInternal(JSObject* wrapper, JSObject* delegate);
-  void afterAddDelegateInternal(JSObject* wrapper);
   js::gc::EphemeronEdgeTable& gcEphemeronEdges() {
     return gcEphemeronEdges_.ref();
   }
