@@ -1060,7 +1060,7 @@ static bool DifferenceTemporalPlainDateTime(JSContext* cx,
         roundResult.date.years,
         roundResult.date.months,
         roundResult.date.weeks,
-        balancedTime.days,
+        double(balancedTime.days),
     };
     if (!temporal::BalanceDateDurationRelative(
             cx, toBalance, settings.largestUnit, settings.smallestUnit,
@@ -1083,18 +1083,18 @@ static bool DifferenceTemporalPlainDateTime(JSContext* cx,
         diff.date.years,
         diff.date.months,
         diff.date.weeks,
-        balancedTime.days,
+        double(balancedTime.days),
     };
   }
   MOZ_ASSERT(IsValidDuration(balancedDate.toDuration()));
 
   // Step 14.
   Duration duration = {
-      balancedDate.years,        balancedDate.months,
-      balancedDate.weeks,        balancedDate.days,
-      balancedTime.hours,        balancedTime.minutes,
-      balancedTime.seconds,      balancedTime.milliseconds,
-      balancedTime.microseconds, balancedTime.nanoseconds,
+      balancedDate.years,           balancedDate.months,
+      balancedDate.weeks,           balancedDate.days,
+      double(balancedTime.hours),   double(balancedTime.minutes),
+      double(balancedTime.seconds), double(balancedTime.milliseconds),
+      balancedTime.microseconds,    balancedTime.nanoseconds,
   };
   if (operation == TemporalDifference::Since) {
     duration = duration.negate();

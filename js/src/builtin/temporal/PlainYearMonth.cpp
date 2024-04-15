@@ -579,7 +579,7 @@ static bool AddDurationToOrSubtractDurationFromPlainYearMonth(
       duration.years,
       duration.months,
       duration.weeks,
-      duration.days + balancedTime.days,
+      duration.days + double(balancedTime.days),
   };
 
   // Step 6.
