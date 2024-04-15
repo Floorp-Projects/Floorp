@@ -56,8 +56,8 @@ add_task(
       selectEnglishSection: true,
       openAtEnglishSection: true,
       expectedFromLanguage: "en",
-      expectedToLanguage: null,
-      onOpenPanel: SelectTranslationsTestUtils.assertPanelViewNoToLangSelected,
+      expectedToLanguage: "en",
+      onOpenPanel: SelectTranslationsTestUtils.assertPanelViewTranslated,
     });
 
     await SelectTranslationsTestUtils.changeSelectedToLanguage(["es"], {

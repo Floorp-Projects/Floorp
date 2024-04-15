@@ -43,8 +43,8 @@ add_task(
 /**
  * This test case verifies the functionality of the translate-selection context menu item
  * when the selected text is detected to be in the user's preferred language. The menu item
- * should not be localized to display a target language when the selected text matches the
- * user's top preferred language.
+ * still be localized to the user's preferred language as a target, since the Select Translations
+ * Panel allows passing through the text for same-language translation.
  */
 add_task(
   async function test_translate_selection_menuitem_when_selected_text_is_preferred_language() {
@@ -65,9 +65,9 @@ add_task(
         selectEnglishSentence: true,
         openAtEnglishSentence: true,
         expectMenuItemVisible: true,
-        expectedTargetLanguage: null,
+        expectedTargetLanguage: "en",
       },
-      "The translate-selection context menu item should not display a target language " +
+      "The translate-selection context menu item should still display a target language " +
         "when the selected text is in the preferred language."
     );
 

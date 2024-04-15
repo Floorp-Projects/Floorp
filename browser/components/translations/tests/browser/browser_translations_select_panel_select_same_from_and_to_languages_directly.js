@@ -31,8 +31,7 @@ add_task(
 
     await SelectTranslationsTestUtils.changeSelectedFromLanguage(["en"], {
       openDropdownMenu: false,
-      onChangeLanguage:
-        SelectTranslationsTestUtils.assertPanelViewNoFromToSelected,
+      onChangeLanguage: SelectTranslationsTestUtils.assertPanelViewTranslated,
     });
 
     await cleanup();
@@ -41,29 +40,29 @@ add_task(
 
 /**
  * This test case verifies the behavior of switching the to-language to the same value
- * that is currently selected in the from-language, effectively stealing the from-language's
- * value, leaving it unselected and focused.
+ * that is currently selected in the from-language, creating a passthrough translation
+ * of the source text directly into the text area.
  */
 add_task(
   async function test_select_translations_panel_select_same_to_language_directly() {
-    const { cleanup, runInPage } = await loadTestPage({
+    const { cleanup, runInPage, resolveDownloads } = await loadTestPage({
       page: SELECT_TEST_PAGE_URL,
       languagePairs: LANGUAGE_PAIRS,
       prefs: [["browser.translations.select.enable", true]],
     });
 
     await SelectTranslationsTestUtils.openPanel(runInPage, {
-      selectEnglishSection: true,
-      openAtEnglishSection: true,
-      expectedFromLanguage: "en",
-      expectedToLanguage: null,
-      onOpenPanel: SelectTranslationsTestUtils.assertPanelViewNoToLangSelected,
+      selectFrenchSentence: true,
+      openAtFrenchSentence: true,
+      expectedFromLanguage: "fr",
+      expectedToLanguage: "en",
+      downloadHandler: resolveDownloads,
+      onOpenPanel: SelectTranslationsTestUtils.assertPanelViewTranslated,
     });
 
-    await SelectTranslationsTestUtils.changeSelectedToLanguage(["en"], {
+    await SelectTranslationsTestUtils.changeSelectedToLanguage(["fr"], {
       openDropdownMenu: false,
-      onChangeLanguage:
-        SelectTranslationsTestUtils.assertPanelViewNoFromLangSelected,
+      onChangeLanguage: SelectTranslationsTestUtils.assertPanelViewTranslated,
     });
 
     await cleanup();
