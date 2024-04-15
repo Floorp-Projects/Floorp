@@ -7,6 +7,7 @@
 #include "builtin/temporal/Duration.h"
 
 #include "mozilla/Assertions.h"
+#include "mozilla/Casting.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/EnumSet.h"
 #include "mozilla/FloatingPoint.h"
@@ -314,18 +315,11 @@ static mozilla::Maybe<NormalizedTimeDuration> NormalizeSeconds(
  * Normalize a days amount into a time duration. Return Nothing if the value is
  * too large.
  */
-static mozilla::Maybe<NormalizedTimeDuration> NormalizeDays(double days) {
-  MOZ_ASSERT(IsInteger(days));
-
+static mozilla::Maybe<NormalizedTimeDuration> NormalizeDays(int64_t days) {
   do {
-    int64_t intDays;
-    if (!mozilla::NumberEqualsInt64(days, &intDays)) {
-      break;
-    }
-
     // Compute the overall amount of milliseconds.
     auto millis =
-        mozilla::CheckedInt64(intDays) * ToMilliseconds(TemporalUnit::Day);
+        mozilla::CheckedInt64(days) * ToMilliseconds(TemporalUnit::Day);
     if (!millis.isValid()) {
       break;
     }
@@ -485,10 +479,9 @@ static bool SubtractNormalizedTimeDuration(JSContext* cx,
  * Add24HourDaysToNormalizedTimeDuration ( d, days )
  */
 bool js::temporal::Add24HourDaysToNormalizedTimeDuration(
-    JSContext* cx, const NormalizedTimeDuration& d, double days,
+    JSContext* cx, const NormalizedTimeDuration& d, int64_t days,
     NormalizedTimeDuration* result) {
   MOZ_ASSERT(IsValidNormalizedTimeDuration(d));
-  MOZ_ASSERT(IsInteger(days));
 
   // Step 1.
   auto normalizedDays = NormalizeDays(days);
@@ -2084,8 +2077,13 @@ static bool AddDuration(JSContext* cx, const Duration& one, const Duration& two,
   }
 
   // Step 6.e.
-  if (!Add24HourDaysToNormalizedTimeDuration(
-          cx, normalized, one.days + two.days, &normalized)) {
+  int64_t days1 = mozilla::AssertedCast<int64_t>(one.days);
+  int64_t days2 = mozilla::AssertedCast<int64_t>(two.days);
+  auto totalDays = mozilla::CheckedInt64(days1) + days2;
+  MOZ_ASSERT(totalDays.isValid(), "adding two duration days can't overflow");
+
+  if (!Add24HourDaysToNormalizedTimeDuration(cx, normalized, totalDays.value(),
+                                             &normalized)) {
     return false;
   }
 
@@ -4564,7 +4562,7 @@ static bool Duration_compare(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   // Steps 13-14.
-  double days1, days2;
+  int64_t days1, days2;
   if (calendarUnitsPresent) {
     // FIXME: spec issue - directly throw an error if plainRelativeTo is undef.
 
@@ -4607,10 +4605,10 @@ static bool Duration_compare(JSContext* cx, unsigned argc, Value* vp) {
     days2 = unbalanceResult2.days;
   } else {
     // Step 14.a.
-    days1 = one.days;
+    days1 = mozilla::AssertedCast<int64_t>(one.days);
 
     // Step 14.b.
-    days2 = two.days;
+    days2 = mozilla::AssertedCast<int64_t>(two.days);
   }
 
   // Step 15.
