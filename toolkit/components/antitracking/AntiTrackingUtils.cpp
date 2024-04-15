@@ -567,9 +567,8 @@ AntiTrackingUtils::GetStoragePermissionStateInParent(nsIChannel* aChannel) {
 
   if (policyType == ExtContentPolicy::TYPE_SUBDOCUMENT) {
     // For loads of framed documents, we only use storage access
-    // if the load is the result of a same-origin, self-initiated
+    // if the load is the result of a same-origin, same-site-initiated
     // navigation of the frame.
-    uint64_t targetWindowIdNoTop = bc->GetCurrentInnerWindowId();
     uint64_t triggeringWindowId;
     rv = loadInfo->GetTriggeringWindowId(&triggeringWindowId);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -581,10 +580,29 @@ AntiTrackingUtils::GetStoragePermissionStateInParent(nsIChannel* aChannel) {
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return nsILoadInfo::NoStoragePermission;
     }
-    RefPtr<net::HttpBaseChannel> httpChannel = do_QueryObject(aChannel);
 
-    if (targetWindowIdNoTop == triggeringWindowId &&
-        triggeringWindowHasStorageAccess &&
+    nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
+    RefPtr<nsIPrincipal> channelResultPrincipal;
+    rv = ssm->GetChannelResultPrincipal(aChannel,
+                                        getter_AddRefs(channelResultPrincipal));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return nsILoadInfo::NoStoragePermission;
+    }
+    RefPtr<net::HttpBaseChannel> httpChannel = do_QueryObject(aChannel);
+    bool crossSiteInitiated = false;
+    if (bc && bc->GetParent()->GetCurrentWindowContext()) {
+      RefPtr<WindowGlobalParent> triggeringWGP =
+          WindowGlobalParent::GetByInnerWindowId(triggeringWindowId);
+      if (triggeringWGP && triggeringWGP->DocumentPrincipal()) {
+        rv = triggeringWGP->DocumentPrincipal()->IsThirdPartyPrincipal(
+            channelResultPrincipal, &crossSiteInitiated);
+        if (NS_FAILED(rv)) {
+          crossSiteInitiated = false;
+        }
+      }
+    }
+
+    if (!crossSiteInitiated && triggeringWindowHasStorageAccess &&
         trackingPrincipal->Equals(framePrincipal) && httpChannel &&
         !httpChannel->HasRedirectTaintedOrigin()) {
       return nsILoadInfo::HasStoragePermission;
