@@ -343,12 +343,6 @@ BigInt* js::temporal::ToEpochNanoseconds(JSContext* cx,
   return ::ToBigInt(cx, instant);
 }
 
-BigInt* js::temporal::ToNanoseconds(JSContext* cx,
-                                    const NormalizedTimeDuration& duration) {
-  MOZ_ASSERT(IsValidNormalizedTimeDuration(duration));
-  return ::ToBigInt(cx, duration);
-}
-
 /**
  * GetUTCEpochNanoseconds ( year, month, day, hour, minute, second, millisecond,
  * microsecond, nanosecond [ , offsetNanoseconds ] )

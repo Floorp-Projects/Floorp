@@ -88,13 +88,6 @@ Instant ToInstant(const JS::BigInt* epochNanoseconds);
 JS::BigInt* ToEpochNanoseconds(JSContext* cx, const Instant& instant);
 
 /**
- * Convert a normalized time duration to a BigInt. The input must be a valid
- * normalized time duration.
- */
-JS::BigInt* ToNanoseconds(JSContext* cx,
-                          const NormalizedTimeDuration& duration);
-
-/**
  * ToTemporalInstant ( item )
  */
 Wrapped<InstantObject*> ToTemporalInstant(JSContext* cx,
