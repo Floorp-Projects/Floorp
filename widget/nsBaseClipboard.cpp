@@ -315,54 +315,11 @@ NS_IMETHODIMP nsBaseClipboard::AsyncSetData(
   return NS_OK;
 }
 
-namespace {
-class SafeContentAnalysisResultCallback final
-    : public nsIContentAnalysisCallback {
- public:
-  explicit SafeContentAnalysisResultCallback(
-      std::function<void(RefPtr<nsIContentAnalysisResult>&&)> aResolver)
-      : mResolver(std::move(aResolver)) {}
-  void Callback(RefPtr<nsIContentAnalysisResult>&& aResult) {
-    MOZ_ASSERT(mResolver, "Called SafeContentAnalysisResultCallback twice!");
-    if (auto resolver = std::move(mResolver)) {
-      resolver(std::move(aResult));
-    }
-  }
-
-  NS_IMETHODIMP ContentResult(nsIContentAnalysisResponse* aResponse) override {
-    using namespace mozilla::contentanalysis;
-    RefPtr<ContentAnalysisResult> result =
-        ContentAnalysisResult::FromContentAnalysisResponse(aResponse);
-    Callback(result);
-    return NS_OK;
-  }
-
-  NS_IMETHODIMP Error(nsresult aError) override {
-    using namespace mozilla::contentanalysis;
-    Callback(ContentAnalysisResult::FromNoResult(
-        NoContentAnalysisResult::DENY_DUE_TO_OTHER_ERROR));
-    return NS_OK;
-  }
-
-  NS_DECL_THREADSAFE_ISUPPORTS
- private:
-  // Private destructor to force this to be allocated in a RefPtr, which is
-  // necessary for safe usage.
-  ~SafeContentAnalysisResultCallback() {
-    MOZ_ASSERT(!mResolver, "SafeContentAnalysisResultCallback never called!");
-  }
-  mozilla::MoveOnlyFunction<void(RefPtr<nsIContentAnalysisResult>&&)> mResolver;
-};
-NS_IMPL_ISUPPORTS(SafeContentAnalysisResultCallback,
+NS_IMPL_ISUPPORTS(nsBaseClipboard::SafeContentAnalysisResultCallback,
                   nsIContentAnalysisCallback);
-}  // namespace
 
-// Returning:
-//  - true means a content analysis request was fired
-//  - false means there is no text data in the transferable
-//  - NoContentAnalysisResult means there was an error
-static mozilla::Result<bool, mozilla::contentanalysis::NoContentAnalysisResult>
-CheckClipboardContentAnalysisAsText(
+nsBaseClipboard::ClipboardContentAnalysisResult
+nsBaseClipboard::CheckClipboardContentAnalysisAsText(
     uint64_t aInnerWindowId, SafeContentAnalysisResultCallback* aResolver,
     nsIURI* aDocumentURI, nsIContentAnalysis* aContentAnalysis,
     nsITransferable* aTextTrans) {
@@ -405,12 +362,8 @@ CheckClipboardContentAnalysisAsText(
   return true;
 }
 
-// Returning:
-//  - true means a content analysis request was fired
-//  - false means there is no file data in the transferable
-//  - NoContentAnalysisResult means there was an error
-static mozilla::Result<bool, mozilla::contentanalysis::NoContentAnalysisResult>
-CheckClipboardContentAnalysisAsFile(
+nsBaseClipboard::ClipboardContentAnalysisResult
+nsBaseClipboard::CheckClipboardContentAnalysisAsFile(
     uint64_t aInnerWindowId, SafeContentAnalysisResultCallback* aResolver,
     nsIURI* aDocumentURI, nsIContentAnalysis* aContentAnalysis,
     nsITransferable* aFileTrans) {
@@ -453,7 +406,7 @@ CheckClipboardContentAnalysisAsFile(
   return true;
 }
 
-static void CheckClipboardContentAnalysis(
+void nsBaseClipboard::CheckClipboardContentAnalysis(
     mozilla::dom::WindowGlobalParent* aWindow, nsITransferable* aTransferable,
     SafeContentAnalysisResultCallback* aResolver) {
   using namespace mozilla::contentanalysis;
@@ -527,7 +480,7 @@ static void CheckClipboardContentAnalysis(
   }
 }
 
-static bool CheckClipboardContentAnalysisSync(
+bool nsBaseClipboard::CheckClipboardContentAnalysisSync(
     mozilla::dom::WindowGlobalParent* aWindow,
     const nsCOMPtr<nsITransferable>& trans) {
   bool requestDone = false;
@@ -634,14 +587,12 @@ NS_IMETHODIMP nsBaseClipboard::SetData(nsITransferable* aTransferable,
 nsresult nsBaseClipboard::GetDataFromClipboardCache(
     nsITransferable* aTransferable, int32_t aClipboardType) {
   MOZ_ASSERT(aTransferable);
-  MOZ_ASSERT(nsIClipboard::IsClipboardTypeSupported(aClipboardType));
   MOZ_ASSERT(mozilla::StaticPrefs::widget_clipboard_use_cached_data_enabled());
 
   const auto* clipboardCache = GetClipboardCacheIfValid(aClipboardType);
   if (!clipboardCache) {
     return NS_ERROR_FAILURE;
   }
-
   return clipboardCache->GetData(aTransferable);
 }
 
@@ -1249,10 +1200,10 @@ NS_IMETHODIMP nsBaseClipboard::AsyncGetClipboardData::GetData(
     MOZ_DIAGNOSTIC_ASSERT(clipboardCache->GetSequenceNumber() ==
                           mSequenceNumber);
     if (NS_SUCCEEDED(clipboardCache->GetData(aTransferable))) {
-      CheckClipboardContentAnalysis(mRequestingWindowContext
-                                        ? mRequestingWindowContext->Canonical()
-                                        : nullptr,
-                                    aTransferable, contentAnalysisCallback);
+      mClipboard->CheckClipboardContentAnalysis(
+          mRequestingWindowContext ? mRequestingWindowContext->Canonical()
+                                   : nullptr,
+          aTransferable, contentAnalysisCallback);
       return NS_OK;
     }
 
@@ -1278,7 +1229,7 @@ NS_IMETHODIMP nsBaseClipboard::AsyncGetClipboardData::GetData(
           callback->OnComplete(NS_ERROR_FAILURE);
           return;
         }
-        CheckClipboardContentAnalysis(
+        self->mClipboard->CheckClipboardContentAnalysis(
             self->mRequestingWindowContext
                 ? self->mRequestingWindowContext->Canonical()
                 : nullptr,
