@@ -1888,7 +1888,8 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetMinHeight() {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
   StyleSize minHeight = StylePosition()->mMinHeight;
 
-  if (minHeight.IsAuto() && !ShouldHonorMinSizeAutoInAxis(eAxisVertical)) {
+  if (minHeight.IsAuto() &&
+      !ShouldHonorMinSizeAutoInAxis(PhysicalAxis::Vertical)) {
     minHeight = StyleSize::LengthPercentage(LengthPercentage::Zero());
   }
 
@@ -1901,7 +1902,8 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetMinWidth() {
 
   StyleSize minWidth = StylePosition()->mMinWidth;
 
-  if (minWidth.IsAuto() && !ShouldHonorMinSizeAutoInAxis(eAxisHorizontal)) {
+  if (minWidth.IsAuto() &&
+      !ShouldHonorMinSizeAutoInAxis(PhysicalAxis::Horizontal)) {
     minWidth = StyleSize::LengthPercentage(LengthPercentage::Zero());
   }
 

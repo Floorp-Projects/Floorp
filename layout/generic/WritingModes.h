@@ -72,7 +72,7 @@ enum class LogicalCorner : uint8_t {
 };
 
 // Physical axis constants.
-enum PhysicalAxis { eAxisVertical = 0x0, eAxisHorizontal = 0x1 };
+enum class PhysicalAxis : uint8_t { Vertical, Horizontal };
 
 // Represents zero or more physical axes.
 enum class PhysicalAxes : uint8_t {
@@ -339,8 +339,9 @@ class WritingMode {
                       uint8_t(StyleWritingModeProperty::VerticalRl) == 1 &&
                       uint8_t(StyleWritingModeProperty::VerticalLr) == 3 &&
                       uint8_t(LogicalAxis::Block) == 0 &&
-                      uint8_t(LogicalAxis::Inline) == 1 && eAxisVertical == 0 &&
-                      eAxisHorizontal == 1,
+                      uint8_t(LogicalAxis::Inline) == 1 &&
+                      uint8_t(PhysicalAxis::Vertical) == 0 &&
+                      uint8_t(PhysicalAxis::Horizontal) == 1,
                   "unexpected writing-mode, logical axis or physical axis "
                   "constant values");
     return mozilla::PhysicalAxis((aWritingModeValue ^ uint8_t(aAxis)) & 0x1);
