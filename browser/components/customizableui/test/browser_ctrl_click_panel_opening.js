@@ -13,7 +13,7 @@ add_task(async function test_appMenu_mainView() {
     return;
   }
 
-  let mainViewID = "appMenu-protonMainView";
+  let mainViewID = "appMenu-mainView";
   const mainView = document.getElementById(mainViewID);
 
   let shownPromise = BrowserTestUtils.waitForEvent(mainView, "ViewShown");
