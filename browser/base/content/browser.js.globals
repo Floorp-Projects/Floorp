@@ -84,7 +84,6 @@
   "handleLinkClick",
   "middleMousePaste",
   "handleDroppedLink",
-  "BrowserForceEncodingDetection",
   "ToolbarContextMenu",
   "BrowserOffline",
   "CanvasPermissionPromptHelper",

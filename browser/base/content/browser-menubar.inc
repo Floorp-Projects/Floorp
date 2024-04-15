@@ -192,7 +192,7 @@
                 </menu>
                 <menuitem id="repair-text-encoding"
                           disabled="true"
-                          oncommand="BrowserForceEncodingDetection();"
+                          oncommand="BrowserCommands.forceEncodingDetection();"
                           data-l10n-id="menu-view-repair-text-encoding"/>
                 <menuseparator/>
 #ifdef XP_MACOSX
