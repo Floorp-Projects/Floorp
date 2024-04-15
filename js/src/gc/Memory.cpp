@@ -437,6 +437,7 @@ void* MapAlignedPages(size_t length, size_t alignment) {
   void* region = nullptr;
   if (int err = posix_memalign(&region, alignment, length)) {
     MOZ_ASSERT(err == ENOMEM);
+    (void)err;
     return nullptr;
   }
   MOZ_ASSERT(region != nullptr);
