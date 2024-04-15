@@ -209,8 +209,8 @@ needs-focus == multiple-chunks-selection.svg multiple-chunks-selection-ref.svg
 fuzzy(0-1,0-200) needs-focus == textpath-selection.svg textpath-selection-ref.svg
 
 # letter-spacing and word-spacing
-== simple-letter-spacing.svg simple-letter-spacing-ref.svg
+pref(layout.css.letter-spacing.model,0) == simple-letter-spacing.svg simple-letter-spacing-ref.svg
 == simple-word-spacing.svg simple-word-spacing-ref.svg
-== multiple-chunks-letter-spacing.svg multiple-chunks-letter-spacing-ref.svg
+pref(layout.css.letter-spacing.model,0) == multiple-chunks-letter-spacing.svg multiple-chunks-letter-spacing-ref.svg
 
 == tspan-shaping.svg tspan-shaping-ref.svg
