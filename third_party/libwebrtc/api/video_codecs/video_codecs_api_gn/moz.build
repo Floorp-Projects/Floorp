@@ -38,6 +38,7 @@ UNIFIED_SOURCES += [
     "/third_party/libwebrtc/api/video_codecs/spatial_layer.cc",
     "/third_party/libwebrtc/api/video_codecs/video_codec.cc",
     "/third_party/libwebrtc/api/video_codecs/video_decoder.cc",
+    "/third_party/libwebrtc/api/video_codecs/video_decoder_factory.cc",
     "/third_party/libwebrtc/api/video_codecs/video_encoder.cc",
     "/third_party/libwebrtc/api/video_codecs/vp8_frame_config.cc",
     "/third_party/libwebrtc/api/video_codecs/vp8_temporal_layers.cc",
