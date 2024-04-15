@@ -7,7 +7,6 @@ package org.mozilla.fenix.ui
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import mozilla.components.concept.engine.mediasession.MediaSession
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
@@ -109,7 +108,6 @@ class ComposeTabbedBrowsingTest : TestSetup() {
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/903604
-    @Ignore("Disabled: https://bugzilla.mozilla.org/show_bug.cgi?id=1889843")
     @Test
     fun swipeToCloseTabsTest() {
         val genericURL = TestAssetHelper.getGenericAsset(mockWebServer, 1)
