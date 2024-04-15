@@ -2,6 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  Sqlite: "resource://gre/modules/Sqlite.sys.mjs",
+});
+
 // Convert from bytes to kilobytes (not kibibytes).
 export const BYTES_IN_KB = 1000;
 
@@ -127,6 +133,65 @@ export class BackupResource {
     }
 
     return size;
+  }
+
+  /**
+   * Copy a set of SQLite databases safely from a source directory to a
+   * destination directory. A new read-only connection is opened for each
+   * database, and then a backup is created.
+   *
+   * @param {string} sourcePath
+   *   Path to the source directory of the SQLite databases.
+   * @param {string} destPath
+   *   Path to the destination directory where the SQLite databases should be
+   *   copied to.
+   * @param {Array<string>} sqliteDatabases
+   *   An array of filenames of the SQLite databases to copy.
+   * @returns {Promise<undefined>}
+   */
+  static async copySqliteDatabases(sourcePath, destPath, sqliteDatabases) {
+    for (let fileName of sqliteDatabases) {
+      let sourceFilePath = PathUtils.join(sourcePath, fileName);
+      let destFilePath = PathUtils.join(destPath, fileName);
+      let connection;
+
+      try {
+        connection = await lazy.Sqlite.openConnection({
+          path: sourceFilePath,
+          readOnly: true,
+        });
+
+        await connection.backup(destFilePath);
+      } finally {
+        await connection.close();
+      }
+    }
+  }
+
+  /**
+   * A helper function to copy a set of files from a source directory to a
+   * destination directory. Callers should ensure that the source files can be
+   * copied safely before invoking this function. Files that do not exist will
+   * be ignored. Callers that wish to copy SQLite databases should use
+   * copySqliteDatabases() instead.
+   *
+   * @param {string} sourcePath
+   *   Path to the source directory of the files to be copied.
+   * @param {string} destPath
+   *   Path to the destination directory where the files should be
+   *   copied to.
+   * @param {string[]} fileNames
+   *   An array of filenames of the files to copy.
+   * @returns {Promise<undefined>}
+   */
+  static async copyFiles(sourcePath, destPath, fileNames) {
+    for (let fileName of fileNames) {
+      let sourceFilePath = PathUtils.join(sourcePath, fileName);
+      let destFilePath = PathUtils.join(destPath, fileName);
+      if (await IOUtils.exists(sourceFilePath)) {
+        await IOUtils.copy(sourceFilePath, destFilePath, { recursive: true });
+      }
+    }
   }
 
   constructor() {}

@@ -4,12 +4,6 @@
 
 import { BackupResource } from "resource:///modules/backup/BackupResource.sys.mjs";
 
-const lazy = {};
-
-ChromeUtils.defineESModuleGetters(lazy, {
-  Sqlite: "resource://gre/modules/Sqlite.sys.mjs",
-});
-
 /**
  * Class representing miscellaneous files for telemetry, site storage,
  * media device origin mapping, chrome privileged IndexedDB databases,
@@ -30,33 +24,14 @@ export class MiscDataBackupResource extends BackupResource {
       "enumerate_devices.txt",
       "SiteSecurityServiceState.bin",
     ];
-
-    for (let fileName of files) {
-      let sourcePath = PathUtils.join(profilePath, fileName);
-      let destPath = PathUtils.join(stagingPath, fileName);
-      if (await IOUtils.exists(sourcePath)) {
-        await IOUtils.copy(sourcePath, destPath, { recursive: true });
-      }
-    }
+    await BackupResource.copyFiles(profilePath, stagingPath, files);
 
     const sqliteDatabases = ["protections.sqlite"];
-
-    for (let fileName of sqliteDatabases) {
-      let sourcePath = PathUtils.join(profilePath, fileName);
-      let destPath = PathUtils.join(stagingPath, fileName);
-      let connection;
-
-      try {
-        connection = await lazy.Sqlite.openConnection({
-          path: sourcePath,
-          readOnly: true,
-        });
-
-        await connection.backup(destPath);
-      } finally {
-        await connection.close();
-      }
-    }
+    await BackupResource.copySqliteDatabases(
+      profilePath,
+      stagingPath,
+      sqliteDatabases
+    );
 
     // Bug 1890585 - we don't currently have the ability to copy the
     // chrome-privileged IndexedDB databases under storage/permanent/chrome, so
