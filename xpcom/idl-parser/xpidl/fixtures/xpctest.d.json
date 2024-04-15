@@ -1313,7 +1313,7 @@
         "callable": false,
         "consts": [],
         "enums": [],
-        "id": "nsIXPCTestNoScriptMembers",
+        "id": "nsIXPCTestTypeScript",
         "members": [
           {
             "name": "exposedProp",
