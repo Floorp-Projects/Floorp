@@ -267,17 +267,8 @@ export class FormAutofillParent extends JSWindowActorParent {
         break;
       }
       case "FormAutofill:GetRecords": {
-        const relayPromise = lazy.FirefoxRelay.autocompleteItemsAsync({
-          formOrigin: this.formOrigin,
-          scenarioName: data.scenarioName,
-          hasInput: !!data.searchString?.length,
-        });
-        const recordsPromise = FormAutofillParent.getRecords(data);
-        const [records, externalEntries] = await Promise.all([
-          recordsPromise,
-          relayPromise,
-        ]);
-        return { records, externalEntries };
+        const records = await FormAutofillParent.getRecords(data);
+        return { records };
       }
       case "FormAutofill:OnFormSubmit": {
         this.notifyMessageObservers("onFormSubmitted", data);
@@ -399,6 +390,43 @@ export class FormAutofillParent extends JSWindowActorParent {
         console.error(ex);
       }
     }
+  }
+
+  /**
+   * Retrieves autocomplete entries for a given search string and data context.
+   *
+   * @param {string} searchString
+   *                 The search string used to filter autocomplete entries.
+   * @param {object} options
+   * @param {string} options.fieldName
+   *                 The name of the field for which autocomplete entries are being fetched.
+   * @param {string} options.scenarioName
+   *                 The scenario name used in the autocomplete operation to fetch external entries.
+   * @returns {Promise<object>} A promise that resolves to an object containing two properties: `records` and `externalEntries`.
+   *         `records` is an array of autofill records from the form's internal data, sorted by `timeLastUsed`.
+   *         `externalEntries` is an array of external autocomplete items fetched based on the scenario.
+   */
+  async searchAutoCompleteEntries(searchString, options) {
+    const { fieldName, scenarioName } = options;
+    const relayPromise = lazy.FirefoxRelay.autocompleteItemsAsync({
+      formOrigin: this.formOrigin,
+      scenarioName,
+      hasInput: !!searchString?.length,
+    });
+
+    const recordsPromise = FormAutofillParent.getRecords({
+      searchString,
+      fieldName,
+    });
+    const [records, externalEntries] = await Promise.all([
+      recordsPromise,
+      relayPromise,
+    ]);
+
+    // Sort addresses by timeLastUsed for showing the lastest used address at top.
+    records.sort((a, b) => b.timeLastUsed - a.timeLastUsed);
+
+    return { records, externalEntries };
   }
 
   /**
