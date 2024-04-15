@@ -544,10 +544,10 @@ class TemporalParser final {
     return mozilla::Some(num);
   }
 
-  // TimeFractionalPart :
+  // TimeFractionalPart :::
   //   Digit{1, 9}
   //
-  // Fraction :
+  // Fraction :::
   //   DecimalSeparator TimeFractionalPart
   mozilla::Maybe<int32_t> fraction() {
     if (!reader_.hasMore(2)) {
@@ -679,11 +679,11 @@ class TemporalParser final {
     return true;
   }
 
-  // Sign :
+  // Sign :::
   //   ASCIISign
   //   U+2212
   //
-  // ASCIISign : one of
+  // ASCIISign ::: one of
   //   + -
   bool hasSign() const { return hasOneOf({'+', '-', 0x2212}); }
 
@@ -698,61 +698,61 @@ class TemporalParser final {
     return plus ? 1 : -1;
   }
 
-  // DecimalSeparator : one of
+  // DecimalSeparator ::: one of
   //   . ,
   bool hasDecimalSeparator() const { return hasOneOf({'.', ','}); }
 
   bool decimalSeparator() { return oneOf({'.', ','}); }
 
-  // DaysDesignator : one of
+  // DaysDesignator ::: one of
   //   D d
   bool daysDesignator() { return oneOf({'D', 'd'}); }
 
-  // HoursDesignator : one of
+  // HoursDesignator ::: one of
   //   H h
   bool hoursDesignator() { return oneOf({'H', 'h'}); }
 
-  // MinutesDesignator : one of
+  // MinutesDesignator ::: one of
   //   M m
   bool minutesDesignator() { return oneOf({'M', 'm'}); }
 
-  // MonthsDesignator : one of
+  // MonthsDesignator ::: one of
   //   M m
   bool monthsDesignator() { return oneOf({'M', 'm'}); }
 
-  // DurationDesignator : one of
+  // DurationDesignator ::: one of
   //   P p
   bool durationDesignator() { return oneOf({'P', 'p'}); }
 
-  // SecondsDesignator : one of
+  // SecondsDesignator ::: one of
   //   S s
   bool secondsDesignator() { return oneOf({'S', 's'}); }
 
-  // DateTimeSeparator :
+  // DateTimeSeparator :::
   //   <SP>
   //   T
   //   t
   bool dateTimeSeparator() { return oneOf({' ', 'T', 't'}); }
 
-  // TimeDesignator : one of
+  // TimeDesignator ::: one of
   //   T t
   bool hasTimeDesignator() const { return hasOneOf({'T', 't'}); }
 
   bool timeDesignator() { return oneOf({'T', 't'}); }
 
-  // WeeksDesignator : one of
+  // WeeksDesignator ::: one of
   //   W w
   bool weeksDesignator() { return oneOf({'W', 'w'}); }
 
-  // YearsDesignator : one of
+  // YearsDesignator ::: one of
   //   Y y
   bool yearsDesignator() { return oneOf({'Y', 'y'}); }
 
-  // UTCDesignator : one of
+  // UTCDesignator ::: one of
   //   Z z
   bool utcDesignator() { return oneOf({'Z', 'z'}); }
 
-  // TZLeadingChar :
+  // TZLeadingChar :::
   //   Alpha
   //   .
   //   _
@@ -762,7 +762,7 @@ class TemporalParser final {
     });
   }
 
-  // TZChar :
+  // TZChar :::
   //   TZLeadingChar
   //   DecimalDigit
   //   -
@@ -774,11 +774,11 @@ class TemporalParser final {
     });
   }
 
-  // AnnotationCriticalFlag :
+  // AnnotationCriticalFlag :::
   //   !
   bool annotationCriticalFlag() { return character('!'); }
 
-  // AKeyLeadingChar :
+  // AKeyLeadingChar :::
   //   LowercaseAlpha
   //   _
   bool aKeyLeadingChar() {
@@ -787,7 +787,7 @@ class TemporalParser final {
     });
   }
 
-  // AKeyChar :
+  // AKeyChar :::
   //   AKeyLeadingChar
   //   DecimalDigit
   //   -
@@ -798,7 +798,7 @@ class TemporalParser final {
     });
   }
 
-  // AnnotationValueComponent :
+  // AnnotationValueComponent :::
   //   Alpha AnnotationValueComponent?
   //   DecimalDigit AnnotationValueComponent?
   bool annotationValueComponent() {
@@ -929,7 +929,7 @@ class TemporalParser final {
 template <typename CharT>
 mozilla::Result<ZonedDateTimeString, ParserError>
 TemporalParser<CharT>::dateTime() {
-  // DateTime :
+  // DateTime :::
   //   Date
   //   Date DateTimeSeparator TimeSpec DateTimeUTCOffset?
   ZonedDateTimeString result = {};
@@ -961,12 +961,12 @@ TemporalParser<CharT>::dateTime() {
 
 template <typename CharT>
 mozilla::Result<PlainDate, ParserError> TemporalParser<CharT>::date() {
-  // Date :
+  // Date :::
   //   DateYear - DateMonth - DateDay
   //   DateYear DateMonth DateDay
   PlainDate result = {};
 
-  // DateYear :
+  // DateYear :::
   //  DecimalDigit{4}
   //  Sign DecimalDigit{6}
   if (auto year = digits(4)) {
@@ -988,7 +988,7 @@ mozilla::Result<PlainDate, ParserError> TemporalParser<CharT>::date() {
   // Optional: -
   character('-');
 
-  // DateMonth :
+  // DateMonth :::
   //   0 NonzeroDigit
   //   10
   //   11
@@ -1005,7 +1005,7 @@ mozilla::Result<PlainDate, ParserError> TemporalParser<CharT>::date() {
   // Optional: -
   character('-');
 
-  // DateDay :
+  // DateDay :::
   //   0 NonzeroDigit
   //   1 DecimalDigit
   //   2 DecimalDigit
@@ -1025,7 +1025,7 @@ mozilla::Result<PlainDate, ParserError> TemporalParser<CharT>::date() {
 
 template <typename CharT>
 mozilla::Result<PlainTime, ParserError> TemporalParser<CharT>::timeSpec() {
-  // TimeSpec :
+  // TimeSpec :::
   //   TimeHour
   //   TimeHour : TimeMinute
   //   TimeHour TimeMinute
@@ -1033,10 +1033,10 @@ mozilla::Result<PlainTime, ParserError> TemporalParser<CharT>::timeSpec() {
   //   TimeHour TimeMinute TimeSecond TimeFraction?
   PlainTime result = {};
 
-  // TimeHour :
+  // TimeHour :::
   //   Hour
   //
-  // Hour :
+  // Hour :::
   //   0 DecimalDigit
   //   1 DecimalDigit
   //   20
@@ -1055,10 +1055,10 @@ mozilla::Result<PlainTime, ParserError> TemporalParser<CharT>::timeSpec() {
   // Optional: :
   bool needsMinutes = character(':');
 
-  // TimeMinute :
+  // TimeMinute :::
   //   MinuteSecond
   //
-  // MinuteSecond :
+  // MinuteSecond :::
   //   0 DecimalDigit
   //   1 DecimalDigit
   //   2 DecimalDigit
@@ -1074,7 +1074,7 @@ mozilla::Result<PlainTime, ParserError> TemporalParser<CharT>::timeSpec() {
     // Optional: :
     bool needsSeconds = needsMinutes && character(':');
 
-    // TimeSecond :
+    // TimeSecond :::
     //   MinuteSecond
     //   60
     if (auto second = digits(2)) {
@@ -1083,7 +1083,7 @@ mozilla::Result<PlainTime, ParserError> TemporalParser<CharT>::timeSpec() {
         return mozilla::Err(JSMSG_TEMPORAL_PARSER_INVALID_LEAPSECOND);
       }
 
-      // TimeFraction :
+      // TimeFraction :::
       //   Fraction
       if (auto f = fraction()) {
         int32_t fractionalPart = f.value();
@@ -1104,7 +1104,7 @@ mozilla::Result<PlainTime, ParserError> TemporalParser<CharT>::timeSpec() {
 template <typename CharT>
 mozilla::Result<TimeZoneString, ParserError>
 TemporalParser<CharT>::dateTimeUTCOffset() {
-  // DateTimeUTCOffset :
+  // DateTimeUTCOffset :::
   //   UTCDesignator
   //   UTCOffsetSubMinutePrecision
 
@@ -1126,10 +1126,10 @@ TemporalParser<CharT>::dateTimeUTCOffset() {
 template <typename CharT>
 mozilla::Result<TimeZoneUTCOffset, ParserError>
 TemporalParser<CharT>::timeZoneUTCOffsetName() {
-  // TimeZoneUTCOffsetName :
+  // TimeZoneUTCOffsetName :::
   //   UTCOffsetMinutePrecision
   //
-  // UTCOffsetMinutePrecision :
+  // UTCOffsetMinutePrecision :::
   //   Sign Hour
   //   Sign Hour TimeSeparator[+Extended] MinuteSecond
   //   Sign Hour TimeSeparator[~Extended] MinuteSecond
@@ -1141,7 +1141,7 @@ TemporalParser<CharT>::timeZoneUTCOffsetName() {
   }
   result.sign = sign();
 
-  // Hour :
+  // Hour :::
   //   0 DecimalDigit
   //   1 DecimalDigit
   //   20
@@ -1157,12 +1157,12 @@ TemporalParser<CharT>::timeZoneUTCOffsetName() {
     return mozilla::Err(JSMSG_TEMPORAL_PARSER_MISSING_HOUR);
   }
 
-  // TimeSeparator[Extended] :
+  // TimeSeparator[Extended] :::
   //   [+Extended] :
   //   [~Extended] [empty]
   bool needsMinutes = character(':');
 
-  // MinuteSecond :
+  // MinuteSecond :::
   //   0 DecimalDigit
   //   1 DecimalDigit
   //   2 DecimalDigit
@@ -1190,17 +1190,17 @@ mozilla::Result<DateTimeUTCOffset, ParserError>
 TemporalParser<CharT>::utcOffsetSubMinutePrecision() {
   // clang-format off
   //
-  // UTCOffsetSubMinutePrecision :
+  // UTCOffsetSubMinutePrecision :::
   //   UTCOffsetMinutePrecision
   //   UTCOffsetWithSubMinuteComponents[+Extended]
   //   UTCOffsetWithSubMinuteComponents[~Extended]
   //
-  // UTCOffsetMinutePrecision :
+  // UTCOffsetMinutePrecision :::
   //   Sign Hour
   //   Sign Hour TimeSeparator[+Extended] MinuteSecond
   //   Sign Hour TimeSeparator[~Extended] MinuteSecond
   //
-  // UTCOffsetWithSubMinuteComponents[Extended] :
+  // UTCOffsetWithSubMinuteComponents[Extended] :::
   //   Sign Hour TimeSeparator[?Extended] MinuteSecond TimeSeparator[?Extended] MinuteSecond Fraction?
   //
   // clang-format on
@@ -1212,7 +1212,7 @@ TemporalParser<CharT>::utcOffsetSubMinutePrecision() {
   }
   result.sign = sign();
 
-  // Hour :
+  // Hour :::
   //   0 DecimalDigit
   //   1 DecimalDigit
   //   20
@@ -1228,12 +1228,12 @@ TemporalParser<CharT>::utcOffsetSubMinutePrecision() {
     return mozilla::Err(JSMSG_TEMPORAL_PARSER_MISSING_HOUR);
   }
 
-  // TimeSeparator[Extended] :
+  // TimeSeparator[Extended] :::
   //   [+Extended] :
   //   [~Extended] [empty]
   bool needsMinutes = character(':');
 
-  // MinuteSecond :
+  // MinuteSecond :::
   //   0 DecimalDigit
   //   1 DecimalDigit
   //   2 DecimalDigit
@@ -1246,12 +1246,12 @@ TemporalParser<CharT>::utcOffsetSubMinutePrecision() {
       return mozilla::Err(JSMSG_TEMPORAL_PARSER_INVALID_MINUTE);
     }
 
-    // TimeSeparator[Extended] :
+    // TimeSeparator[Extended] :::
     //   [+Extended] :
     //   [~Extended] [empty]
     bool needsSeconds = needsMinutes && character(':');
 
-    // MinuteSecond :
+    // MinuteSecond :::
     //   0 DecimalDigit
     //   1 DecimalDigit
     //   2 DecimalDigit
@@ -1282,7 +1282,7 @@ TemporalParser<CharT>::utcOffsetSubMinutePrecision() {
 template <typename CharT>
 mozilla::Result<TimeZoneAnnotation, ParserError>
 TemporalParser<CharT>::timeZoneIdentifier() {
-  // TimeZoneIdentifier :
+  // TimeZoneIdentifier :::
   //   TimeZoneUTCOffsetName
   //   TimeZoneIANAName
 
@@ -1307,7 +1307,7 @@ TemporalParser<CharT>::timeZoneIdentifier() {
 template <typename CharT>
 mozilla::Result<TimeZoneAnnotation, ParserError>
 TemporalParser<CharT>::timeZoneAnnotation() {
-  // TimeZoneAnnotation :
+  // TimeZoneAnnotation :::
   //   [ AnnotationCriticalFlag? TimeZoneIdentifier ]
 
   if (!character('[')) {
@@ -1332,11 +1332,11 @@ TemporalParser<CharT>::timeZoneAnnotation() {
 template <typename CharT>
 mozilla::Result<TimeZoneName, ParserError>
 TemporalParser<CharT>::timeZoneIANAName() {
-  // TimeZoneIANAName :
+  // TimeZoneIANAName :::
   //   TimeZoneIANANameComponent
   //   TimeZoneIANAName / TimeZoneIANANameComponent
   //
-  // TimeZoneIANANameComponent :
+  // TimeZoneIANANameComponent :::
   //   TZLeadingChar
   //   TimeZoneIANANameComponent TZChar
 
@@ -1382,7 +1382,7 @@ TemporalParser<CharT>::parseTemporalInstantString() {
 
   // clang-format off
   //
-  // TemporalInstantString :
+  // TemporalInstantString :::
   //   Date DateTimeSeparator TimeSpec DateTimeUTCOffset TimeZoneAnnotation? Annotations?
   //
   // clang-format on
@@ -1489,7 +1489,7 @@ bool js::temporal::ParseTemporalInstantString(JSContext* cx,
 template <typename CharT>
 mozilla::Result<ZonedDateTimeString, ParserError>
 TemporalParser<CharT>::parseTemporalTimeZoneString() {
-  // TimeZoneIdentifier :
+  // TimeZoneIdentifier :::
   //   TimeZoneUTCOffsetName
   //   TimeZoneIANAName
 
@@ -1816,10 +1816,10 @@ TemporalParser<CharT>::parseTemporalDurationString(JSContext* cx) {
   // Initialize all fields to zero.
   TemporalDurationString result = {};
 
-  // TemporalDurationString :
+  // TemporalDurationString :::
   //   Duration
   //
-  // Duration :
+  // Duration :::
   //   Sign? DurationDesignator DurationDate
   //   Sign? DurationDesignator DurationTime
 
@@ -1831,7 +1831,7 @@ TemporalParser<CharT>::parseTemporalDurationString(JSContext* cx) {
     return mozilla::Err(JSMSG_TEMPORAL_PARSER_MISSING_DURATION_DESIGNATOR);
   }
 
-  // DurationDate :
+  // DurationDate :::
   //   DurationYearsPart DurationTime?
   //   DurationMonthsPart DurationTime?
   //   DurationWeeksPart DurationTime?
@@ -1848,12 +1848,12 @@ TemporalParser<CharT>::parseTemporalDurationString(JSContext* cx) {
       num = *d;
     }
 
-    // DurationYearsPart :
+    // DurationYearsPart :::
     //   DurationYears YearsDesignator DurationMonthsPart
     //   DurationYears YearsDesignator DurationWeeksPart
     //   DurationYears YearsDesignator DurationDaysPart?
     //
-    // DurationYears :
+    // DurationYears :::
     //   DecimalDigits[~Sep]
     if (yearsDesignator()) {
       result.years = num;
@@ -1870,11 +1870,11 @@ TemporalParser<CharT>::parseTemporalDurationString(JSContext* cx) {
       }
     }
 
-    // DurationMonthsPart :
+    // DurationMonthsPart :::
     //   DurationMonths MonthsDesignator DurationWeeksPart
     //   DurationMonths MonthsDesignator DurationDaysPart?
     //
-    // DurationMonths :
+    // DurationMonths :::
     //   DecimalDigits[~Sep]
     if (monthsDesignator()) {
       result.months = num;
@@ -1891,10 +1891,10 @@ TemporalParser<CharT>::parseTemporalDurationString(JSContext* cx) {
       }
     }
 
-    // DurationWeeksPart :
+    // DurationWeeksPart :::
     //   DurationWeeks WeeksDesignator DurationDaysPart?
     //
-    // DurationWeeks :
+    // DurationWeeks :::
     //   DecimalDigits[~Sep]
     if (weeksDesignator()) {
       result.weeks = num;
@@ -1911,10 +1911,10 @@ TemporalParser<CharT>::parseTemporalDurationString(JSContext* cx) {
       }
     }
 
-    // DurationDaysPart :
+    // DurationDaysPart :::
     //   DurationDays DaysDesignator
     //
-    // DurationDays :
+    // DurationDays :::
     //   DecimalDigits[~Sep]
     if (daysDesignator()) {
       result.days = num;
@@ -1929,7 +1929,7 @@ TemporalParser<CharT>::parseTemporalDurationString(JSContext* cx) {
     return mozilla::Err(JSMSG_TEMPORAL_PARSER_GARBAGE_AFTER_INPUT);
   } while (false);
 
-  // DurationTime :
+  // DurationTime :::
   //   DurationTimeDesignator DurationHoursPart
   //   DurationTimeDesignator DurationMinutesPart
   //   DurationTimeDesignator DurationSecondsPart
@@ -1955,18 +1955,18 @@ TemporalParser<CharT>::parseTemporalDurationString(JSContext* cx) {
 
   // clang-format off
   //
-  // DurationHoursPart :
+  // DurationHoursPart :::
   //   DurationWholeHours DurationHoursFraction HoursDesignator
   //   DurationWholeHours HoursDesignator DurationMinutesPart
   //   DurationWholeHours HoursDesignator DurationSecondsPart?
   //
-  // DurationWholeHours :
+  // DurationWholeHours :::
   //   DecimalDigits[~Sep]
   //
-  // DurationHoursFraction :
+  // DurationHoursFraction :::
   //   TimeFraction
   //
-  // TimeFraction :
+  // TimeFraction :::
   //   Fraction
   //
   // clang-format on
@@ -1985,17 +1985,17 @@ TemporalParser<CharT>::parseTemporalDurationString(JSContext* cx) {
 
   // clang-format off
   //
-  // DurationMinutesPart :
+  // DurationMinutesPart :::
   //   DurationWholeMinutes DurationMinutesFraction MinutesDesignator
   //   DurationWholeMinutes MinutesDesignator DurationSecondsPart?
   //
-  // DurationWholeMinutes :
+  // DurationWholeMinutes :::
   //   DecimalDigits[~Sep]
   //
-  // DurationMinutesFraction :
+  // DurationMinutesFraction :::
   //   TimeFraction
   //
-  // TimeFraction :
+  // TimeFraction :::
   //   Fraction
   //
   // clang-format on
@@ -2015,16 +2015,16 @@ TemporalParser<CharT>::parseTemporalDurationString(JSContext* cx) {
     }
   }
 
-  // DurationSecondsPart :
+  // DurationSecondsPart :::
   //   DurationWholeSeconds DurationSecondsFraction? SecondsDesignator
   //
-  // DurationWholeSeconds :
+  // DurationWholeSeconds :::
   //   DecimalDigits[~Sep]
   //
-  // DurationSecondsFraction :
+  // DurationSecondsFraction :::
   //   TimeFraction
   //
-  // TimeFraction :
+  // TimeFraction :::
   //   Fraction
   if (secondsDesignator()) {
     if (hasHoursFraction || hasMinutesFraction) {
@@ -2181,7 +2181,7 @@ bool js::temporal::ParseTemporalDurationString(JSContext* cx,
 template <typename CharT>
 mozilla::Result<AnnotationKey, ParserError>
 TemporalParser<CharT>::annotationKey() {
-  // AnnotationKey :
+  // AnnotationKey :::
   //    AKeyLeadingChar
   //    AnnotationKey AKeyChar
 
@@ -2201,7 +2201,7 @@ TemporalParser<CharT>::annotationKey() {
 template <typename CharT>
 mozilla::Result<AnnotationValue, ParserError>
 TemporalParser<CharT>::annotationValue() {
-  // AnnotationValue :
+  // AnnotationValue :::
   //   AnnotationValueComponent
   //   AnnotationValueComponent - AnnotationValue
 
@@ -2218,7 +2218,7 @@ TemporalParser<CharT>::annotationValue() {
 
 template <typename CharT>
 mozilla::Result<Annotation, ParserError> TemporalParser<CharT>::annotation() {
-  // Annotation :
+  // Annotation :::
   //   [ AnnotationCriticalFlag? AnnotationKey = AnnotationValue ]
 
   if (!character('[')) {
@@ -2251,7 +2251,7 @@ mozilla::Result<Annotation, ParserError> TemporalParser<CharT>::annotation() {
 template <typename CharT>
 mozilla::Result<CalendarName, ParserError>
 TemporalParser<CharT>::annotations() {
-  // Annotations:
+  // Annotations :::
   //   Annotation Annotations?
 
   MOZ_ASSERT(hasAnnotationStart());
@@ -2288,7 +2288,7 @@ mozilla::Result<ZonedDateTimeString, ParserError>
 TemporalParser<CharT>::annotatedTime() {
   // clang-format off
   //
-  // AnnotatedTime :
+  // AnnotatedTime :::
   //   TimeDesignator TimeSpec DateTimeUTCOffset? TimeZoneAnnotation? Annotations?
   //   TimeSpecWithOptionalOffsetNotAmbiguous TimeZoneAnnotation? Annotations?
   //
@@ -2332,7 +2332,7 @@ TemporalParser<CharT>::annotatedTime() {
 
   // clang-format off
   //
-  // TimeSpecWithOptionalOffsetNotAmbiguous :
+  // TimeSpecWithOptionalOffsetNotAmbiguous :::
   //   TimeSpec DateTimeUTCOffset? but not one of ValidMonthDay or DateSpecYearMonth
   //
   // clang-format on
@@ -2400,7 +2400,7 @@ TemporalParser<CharT>::annotatedTime() {
 template <typename CharT>
 mozilla::Result<ZonedDateTimeString, ParserError>
 TemporalParser<CharT>::annotatedDateTime() {
-  // AnnotatedDateTime[Zoned] :
+  // AnnotatedDateTime[Zoned] :::
   //   [~Zoned] DateTime TimeZoneAnnotation? Annotations?
   //   [+Zoned] DateTime TimeZoneAnnotation Annotations?
 
@@ -2434,7 +2434,7 @@ mozilla::Result<ZonedDateTimeString, ParserError>
 TemporalParser<CharT>::annotatedDateTimeTimeRequired() {
   // clang-format off
   //
-  // AnnotatedDateTimeTimeRequired :
+  // AnnotatedDateTimeTimeRequired :::
   //   Date DateTimeSeparator TimeSpec DateTimeUTCOffset? TimeZoneAnnotation? Annotations?
   //
   // clang-format on
@@ -2487,7 +2487,7 @@ TemporalParser<CharT>::annotatedDateTimeTimeRequired() {
 template <typename CharT>
 mozilla::Result<ZonedDateTimeString, ParserError>
 TemporalParser<CharT>::annotatedYearMonth() {
-  // AnnotatedYearMonth :
+  // AnnotatedYearMonth :::
   //   DateSpecYearMonth TimeZoneAnnotation? Annotations?
 
   ZonedDateTimeString result = {};
@@ -2520,7 +2520,7 @@ TemporalParser<CharT>::annotatedYearMonth() {
 template <typename CharT>
 mozilla::Result<ZonedDateTimeString, ParserError>
 TemporalParser<CharT>::annotatedMonthDay() {
-  // AnnotatedMonthDay :
+  // AnnotatedMonthDay :::
   //   DateSpecMonthDay TimeZoneAnnotation? Annotations?
 
   ZonedDateTimeString result = {};
@@ -2553,11 +2553,11 @@ TemporalParser<CharT>::annotatedMonthDay() {
 template <typename CharT>
 mozilla::Result<PlainDate, ParserError>
 TemporalParser<CharT>::dateSpecYearMonth() {
-  // DateSpecYearMonth :
+  // DateSpecYearMonth :::
   //   DateYear -? DateMonth
   PlainDate result = {};
 
-  // DateYear :
+  // DateYear :::
   //  DecimalDigit{4}
   //  Sign DecimalDigit{6}
   if (auto year = digits(4)) {
@@ -2578,7 +2578,7 @@ TemporalParser<CharT>::dateSpecYearMonth() {
 
   character('-');
 
-  // DateMonth :
+  // DateMonth :::
   //   0 NonzeroDigit
   //   10
   //   11
@@ -2601,16 +2601,17 @@ TemporalParser<CharT>::dateSpecYearMonth() {
 template <typename CharT>
 mozilla::Result<PlainDate, ParserError>
 TemporalParser<CharT>::dateSpecMonthDay() {
-  // DateSpecMonthDay :
+  // DateSpecMonthDay :::
   //   -- DateMonth -? DateDay
   //   DateMonth -? DateDay
   PlainDate result = {};
 
+  // Optional: --
   string("--");
 
   result.year = AbsentYear;
 
-  // DateMonth :
+  // DateMonth :::
   //   0 NonzeroDigit
   //   10
   //   11
@@ -2624,9 +2625,10 @@ TemporalParser<CharT>::dateSpecMonthDay() {
     return mozilla::Err(JSMSG_TEMPORAL_PARSER_MISSING_MONTH);
   }
 
+  // Optional: -
   character('-');
 
-  // DateDay :
+  // DateDay :::
   //   0 NonzeroDigit
   //   1 DecimalDigit
   //   2 DecimalDigit
@@ -2646,19 +2648,19 @@ TemporalParser<CharT>::dateSpecMonthDay() {
 
 template <typename CharT>
 mozilla::Result<PlainDate, ParserError> TemporalParser<CharT>::validMonthDay() {
-  // ValidMonthDay :
+  // ValidMonthDay :::
   //   DateMonth -? 0 NonZeroDigit
   //   DateMonth -? 1 DecimalDigit
   //   DateMonth -? 2 DecimalDigit
   //   DateMonth -? 30 but not one of 0230 or 02-30
   //   DateMonthWithThirtyOneDays -? 31
   //
-  // DateMonthWithThirtyOneDays : one of
+  // DateMonthWithThirtyOneDays ::: one of
   //   01 03 05 07 08 10 12
 
   PlainDate result = {};
 
-  // DateMonth :
+  // DateMonth :::
   //   0 NonzeroDigit
   //   10
   //   11
@@ -2672,6 +2674,7 @@ mozilla::Result<PlainDate, ParserError> TemporalParser<CharT>::validMonthDay() {
     return mozilla::Err(JSMSG_TEMPORAL_PARSER_MISSING_MONTH);
   }
 
+  // Optional: -
   character('-');
 
   if (auto day = digits(2)) {
@@ -2827,7 +2830,7 @@ JSLinearString* js::temporal::ParseTemporalCalendarString(
 template <typename CharT>
 mozilla::Result<ZonedDateTimeString, ParserError>
 TemporalParser<CharT>::parseTemporalTimeString() {
-  // TemporalTimeString :
+  // TemporalTimeString :::
   //   AnnotatedTime
   //   AnnotatedDateTimeTimeRequired
 
@@ -2908,7 +2911,7 @@ bool js::temporal::ParseTemporalTimeString(JSContext* cx, Handle<JSString*> str,
 template <typename CharT>
 mozilla::Result<ZonedDateTimeString, ParserError>
 TemporalParser<CharT>::parseTemporalMonthDayString() {
-  // TemporalMonthDayString :
+  // TemporalMonthDayString :::
   //   AnnotatedMonthDay
   //   AnnotatedDateTime[~Zoned]
 
@@ -3007,7 +3010,7 @@ bool js::temporal::ParseTemporalMonthDayString(
 template <typename CharT>
 mozilla::Result<ZonedDateTimeString, ParserError>
 TemporalParser<CharT>::parseTemporalYearMonthString() {
-  // TemporalYearMonthString :
+  // TemporalYearMonthString :::
   //   AnnotatedYearMonth
   //   AnnotatedDateTime[~Zoned]
 
@@ -3105,7 +3108,7 @@ bool js::temporal::ParseTemporalYearMonthString(
 template <typename CharT>
 mozilla::Result<ZonedDateTimeString, ParserError>
 TemporalParser<CharT>::parseTemporalDateTimeString() {
-  // TemporalDateTimeString[Zoned] :
+  // TemporalDateTimeString[Zoned] :::
   //   AnnotatedDateTime[?Zoned]
 
   auto dateTime = annotatedDateTime();
@@ -3202,10 +3205,10 @@ mozilla::Result<ZonedDateTimeString, ParserError>
 TemporalParser<CharT>::parseTemporalZonedDateTimeString() {
   // Parse goal: TemporalDateTimeString[+Zoned]
   //
-  // TemporalDateTimeString[Zoned] :
+  // TemporalDateTimeString[Zoned] :::
   //   AnnotatedDateTime[?Zoned]
   //
-  // AnnotatedDateTime[Zoned] :
+  // AnnotatedDateTime[Zoned] :::
   //   [~Zoned] DateTime TimeZoneAnnotation? Annotations?
   //   [+Zoned] DateTime TimeZoneAnnotation Annotations?
 
