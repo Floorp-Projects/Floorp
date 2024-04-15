@@ -820,7 +820,7 @@ bool js::temporal::AddISODate(JSContext* cx, const PlainDate& date,
   // then we can directly reject any numbers which can't be represented with
   // int32_t. That in turn avoids the precision loss issue noted in
   // BalanceISODate.
-  MOZ_ASSERT(IsValidDuration(duration.toDuration()));
+  MOZ_ASSERT(IsValidDuration(duration));
 
   // Steps 1-2. (Not applicable in our implementation.)
 
@@ -946,65 +946,41 @@ static bool HasYearsMonthsOrWeeks(const Duration& duration) {
   return duration.years != 0 || duration.months != 0 || duration.weeks != 0;
 }
 
+static bool HasYearsMonthsOrWeeks(const DateDuration& duration) {
+  return duration.years != 0 || duration.months != 0 || duration.weeks != 0;
+}
+
 /**
  * AddDate ( calendarRec, plainDate, duration [ , options ] )
  */
 static bool AddDate(JSContext* cx, const PlainDate& date,
-                    const Duration& duration, Handle<JSObject*> maybeOptions,
-                    PlainDate* result) {
-  MOZ_ASSERT(!HasYearsMonthsOrWeeks(duration));
+                    const NormalizedDuration& duration,
+                    TemporalOverflow overflow, PlainDate* result) {
+  MOZ_ASSERT(!HasYearsMonthsOrWeeks(duration.date));
   MOZ_ASSERT(IsValidDuration(duration));
 
-  // Steps 1-3. (Not applicable)
+  // Steps 1-4. (Not applicable)
 
-  // Step 4.
-  auto overflow = TemporalOverflow::Constrain;
-  if (maybeOptions) {
-    if (!ToTemporalOverflow(cx, maybeOptions, &overflow)) {
-      return false;
-    }
-  }
-
-  // Step 5.
-  auto timeDuration = NormalizeTimeDuration(duration);
+  // Step 5. (Not applicable)
+  auto& timeDuration = duration.time;
 
   // Step 6.
   int64_t balancedDays =
       BalanceTimeDuration(timeDuration, TemporalUnit::Day).days;
-  int64_t days = int64_t(duration.days) + balancedDays;
+  int64_t days = duration.date.days + balancedDays;
 
   // Step 7.
   return AddISODate(cx, date, {0, 0, 0, days}, overflow, result);
 }
 
 static bool AddDate(JSContext* cx, Handle<Wrapped<PlainDateObject*>> date,
-                    const Duration& duration, Handle<JSObject*> maybeOptions,
-                    PlainDate* result) {
+                    const NormalizedDuration& duration,
+                    TemporalOverflow overflow, PlainDate* result) {
   auto* unwrappedDate = date.unwrap(cx);
   if (!unwrappedDate) {
     return false;
   }
-  return ::AddDate(cx, ToPlainDate(unwrappedDate), duration, maybeOptions,
-                   result);
-}
-
-/**
- * AddDate ( calendarRec, plainDate, duration [ , options ] )
- */
-static PlainDateObject* AddDate(JSContext* cx, Handle<CalendarRecord> calendar,
-                                Handle<Wrapped<PlainDateObject*>> date,
-                                const Duration& duration,
-                                Handle<JSObject*> maybeOptions) {
-  // Steps 1-3. (Not applicable)
-
-  // Steps 4-7.
-  PlainDate resultDate;
-  if (!::AddDate(cx, date, duration, maybeOptions, &resultDate)) {
-    return nullptr;
-  }
-
-  // Step 8.
-  return CreateTemporalDate(cx, resultDate, calendar.receiver());
+  return ::AddDate(cx, ToPlainDate(unwrappedDate), duration, overflow, result);
 }
 
 /**
@@ -1025,8 +1001,23 @@ Wrapped<PlainDateObject*> js::temporal::AddDate(
     return temporal::CalendarDateAdd(cx, calendar, date, duration, options);
   }
 
-  // Steps 4-8.
-  return ::AddDate(cx, calendar, date, duration, options);
+  // Step 4.
+  auto overflow = TemporalOverflow::Constrain;
+  if (!ToTemporalOverflow(cx, options, &overflow)) {
+    return nullptr;
+  }
+
+  // Step 5.
+  auto normalized = CreateNormalizedDurationRecord(duration);
+
+  // Steps 6-7.
+  PlainDate resultDate;
+  if (!::AddDate(cx, date, normalized, overflow, &resultDate)) {
+    return nullptr;
+  }
+
+  // Step 8.
+  return CreateTemporalDate(cx, resultDate, calendar.receiver());
 }
 
 /**
@@ -1034,7 +1025,7 @@ Wrapped<PlainDateObject*> js::temporal::AddDate(
  */
 Wrapped<PlainDateObject*> js::temporal::AddDate(
     JSContext* cx, Handle<CalendarRecord> calendar,
-    Handle<Wrapped<PlainDateObject*>> date, const Duration& duration) {
+    Handle<Wrapped<PlainDateObject*>> date, const DateDuration& duration) {
   // Step 1.
   MOZ_ASSERT(
       CalendarMethodsRecordHasLookedUp(calendar, CalendarMethod::DateAdd));
@@ -1046,42 +1037,26 @@ Wrapped<PlainDateObject*> js::temporal::AddDate(
     return CalendarDateAdd(cx, calendar, date, duration);
   }
 
-  // Steps 4-8.
-  return ::AddDate(cx, calendar, date, duration, nullptr);
-}
+  // Step 4.
+  auto overflow = TemporalOverflow::Constrain;
 
-/**
- * AddDate ( calendarRec, plainDate, duration [ , options ] )
- */
-Wrapped<PlainDateObject*> js::temporal::AddDate(
-    JSContext* cx, Handle<CalendarRecord> calendar,
-    Handle<Wrapped<PlainDateObject*>> date,
-    Handle<Wrapped<DurationObject*>> durationObj) {
-  auto* unwrappedDuration = durationObj.unwrap(cx);
-  if (!unwrappedDuration) {
+  // Step 5.
+  auto normalized = NormalizedDuration{duration};
+
+  // Steps 6-7.
+  PlainDate resultDate;
+  if (!::AddDate(cx, date, normalized, overflow, &resultDate)) {
     return nullptr;
   }
-  auto duration = ToDuration(unwrappedDuration);
 
-  // Step 1.
-  MOZ_ASSERT(
-      CalendarMethodsRecordHasLookedUp(calendar, CalendarMethod::DateAdd));
-
-  // Step 2. (Not applicable in our implementation.)
-
-  // Step 3.
-  if (HasYearsMonthsOrWeeks(duration)) {
-    return CalendarDateAdd(cx, calendar, date, durationObj);
-  }
-
-  // Steps 4-8.
-  return ::AddDate(cx, calendar, date, duration, nullptr);
+  // Step 8.
+  return CreateTemporalDate(cx, resultDate, calendar.receiver());
 }
 
 /**
  * AddDate ( calendarRec, plainDate, duration [ , options ] )
  */
-Wrapped<PlainDateObject*> js::temporal::AddDate(
+static Wrapped<PlainDateObject*> AddDate(
     JSContext* cx, Handle<CalendarRecord> calendar,
     Handle<Wrapped<PlainDateObject*>> date,
     Handle<Wrapped<DurationObject*>> durationObj, Handle<JSObject*> options) {
@@ -1102,15 +1077,30 @@ Wrapped<PlainDateObject*> js::temporal::AddDate(
     return temporal::CalendarDateAdd(cx, calendar, date, durationObj, options);
   }
 
-  // Steps 4-8.
-  return ::AddDate(cx, calendar, date, duration, options);
+  // Step 4.
+  auto overflow = TemporalOverflow::Constrain;
+  if (!ToTemporalOverflow(cx, options, &overflow)) {
+    return nullptr;
+  }
+
+  // Step 5.
+  auto normalized = CreateNormalizedDurationRecord(duration);
+
+  // Steps 6-7.
+  PlainDate resultDate;
+  if (!::AddDate(cx, date, normalized, overflow, &resultDate)) {
+    return nullptr;
+  }
+
+  // Step 8.
+  return CreateTemporalDate(cx, resultDate, calendar.receiver());
 }
 
 /**
  * AddDate ( calendarRec, plainDate, duration [ , options ] )
  */
 bool js::temporal::AddDate(JSContext* cx, Handle<CalendarRecord> calendar,
-                           const PlainDate& date, const Duration& duration,
+                           const PlainDate& date, const DateDuration& duration,
                            Handle<JSObject*> options, PlainDate* result) {
   // Step 1.
   MOZ_ASSERT(
@@ -1124,8 +1114,17 @@ bool js::temporal::AddDate(JSContext* cx, Handle<CalendarRecord> calendar,
                                      result);
   }
 
-  // Steps 4-8.
-  return ::AddDate(cx, date, duration, options, result);
+  // Step 4.
+  auto overflow = TemporalOverflow::Constrain;
+  if (!ToTemporalOverflow(cx, options, &overflow)) {
+    return false;
+  }
+
+  // Step 5.
+  auto normalized = NormalizedDuration{duration};
+
+  // Steps 5-8.
+  return ::AddDate(cx, date, normalized, overflow, result);
 }
 
 /**
@@ -1133,7 +1132,7 @@ bool js::temporal::AddDate(JSContext* cx, Handle<CalendarRecord> calendar,
  */
 bool js::temporal::AddDate(JSContext* cx, Handle<CalendarRecord> calendar,
                            Handle<Wrapped<PlainDateObject*>> date,
-                           const Duration& duration, PlainDate* result) {
+                           const DateDuration& duration, PlainDate* result) {
   // Step 1.
   MOZ_ASSERT(
       CalendarMethodsRecordHasLookedUp(calendar, CalendarMethod::DateAdd));
@@ -1145,8 +1144,14 @@ bool js::temporal::AddDate(JSContext* cx, Handle<CalendarRecord> calendar,
     return CalendarDateAdd(cx, calendar, date, duration, result);
   }
 
-  // Steps 4-8.
-  return ::AddDate(cx, date, duration, nullptr, result);
+  // Step 4.
+  auto overflow = TemporalOverflow::Constrain;
+
+  // Step 5.
+  auto normalized = NormalizedDuration{duration};
+
+  // Steps 6-8.
+  return ::AddDate(cx, date, normalized, overflow, result);
 }
 
 /**
@@ -1284,7 +1289,7 @@ static DateDuration CreateDateDurationRecord(int32_t years, int32_t months,
                                              int32_t weeks, int32_t days) {
   MOZ_ASSERT(IsValidDuration(
       Duration{double(years), double(months), double(weeks), double(days)}));
-  return {int64_t(years), int64_t(months), int64_t(weeks), int64_t(days)};
+  return {years, months, weeks, days};
 }
 
 /**

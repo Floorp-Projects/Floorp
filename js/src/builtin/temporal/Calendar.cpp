@@ -3060,7 +3060,7 @@ JSObject* js::temporal::CalendarMergeFields(
  * Temporal.Calendar.prototype.dateAdd ( date, duration [ , options ] )
  */
 static bool BuiltinCalendarAdd(JSContext* cx, const PlainDate& date,
-                               const Duration& duration,
+                               const NormalizedDuration& duration,
                                Handle<JSObject*> options, PlainDate* result) {
   MOZ_ASSERT(IsValidISODate(date));
   MOZ_ASSERT(IsValidDuration(duration));
@@ -3076,19 +3076,51 @@ static bool BuiltinCalendarAdd(JSContext* cx, const PlainDate& date,
   }
 
   // Step 8.
-  auto timeDuration = NormalizeTimeDuration(duration);
+  const auto& timeDuration = duration.time;
 
   // Step 9.
   auto balanceResult = BalanceTimeDuration(timeDuration, TemporalUnit::Day);
 
   // Step 10.
   auto addDuration = DateDuration{
-      int64_t(duration.years),
-      int64_t(duration.months),
-      int64_t(duration.weeks),
-      int64_t(duration.days) + balanceResult.days,
+      duration.date.years,
+      duration.date.months,
+      duration.date.weeks,
+      duration.date.days + balanceResult.days,
   };
   return AddISODate(cx, date, addDuration, overflow, result);
+}
+
+/**
+ * Temporal.Calendar.prototype.dateAdd ( date, duration [ , options ] )
+ */
+static bool BuiltinCalendarAdd(JSContext* cx, const PlainDate& date,
+                               const DateDuration& duration,
+                               Handle<JSObject*> options, PlainDate* result) {
+  // Steps 1-6. (Not applicable)
+
+  // Step 8. (Reordered)
+  auto normalized = CreateNormalizedDurationRecord(duration, {});
+
+  // Steps 7-10.
+  return BuiltinCalendarAdd(cx, date, normalized, options, result);
+}
+
+/**
+ * Temporal.Calendar.prototype.dateAdd ( date, duration [ , options ] )
+ */
+static PlainDateObject* BuiltinCalendarAdd(JSContext* cx, const PlainDate& date,
+                                           const DateDuration& duration,
+                                           Handle<JSObject*> options) {
+  // Steps 1-10.
+  PlainDate result;
+  if (!BuiltinCalendarAdd(cx, date, duration, options, &result)) {
+    return nullptr;
+  }
+
+  // Step 11.
+  Rooted<CalendarValue> calendar(cx, CalendarValue(cx->names().iso8601));
+  return CreateTemporalDate(cx, result, calendar);
 }
 
 /**
@@ -3099,9 +3131,12 @@ static PlainDateObject* BuiltinCalendarAdd(JSContext* cx, const PlainDate& date,
                                            Handle<JSObject*> options) {
   // Steps 1-6. (Not applicable)
 
+  // Step 8. (Reordered)
+  auto normalized = CreateNormalizedDurationRecord(duration);
+
   // Steps 7-10.
   PlainDate result;
-  if (!BuiltinCalendarAdd(cx, date, duration, options, &result)) {
+  if (!BuiltinCalendarAdd(cx, date, normalized, options, &result)) {
     return nullptr;
   }
 
@@ -3192,6 +3227,38 @@ static Wrapped<PlainDateObject*> CalendarDateAdd(
  */
 static Wrapped<PlainDateObject*> CalendarDateAdd(
     JSContext* cx, Handle<CalendarRecord> calendar,
+    Handle<Wrapped<PlainDateObject*>> date, const DateDuration& duration,
+    Handle<JSObject*> options) {
+  MOZ_ASSERT(
+      CalendarMethodsRecordHasLookedUp(calendar, CalendarMethod::DateAdd));
+
+  // Step 1. (Not applicable).
+
+  // Step 3. (Reordered)
+  if (!calendar.dateAdd()) {
+    auto* unwrappedDate = date.unwrap(cx);
+    if (!unwrappedDate) {
+      return nullptr;
+    }
+    auto date = ToPlainDate(unwrappedDate);
+
+    return BuiltinCalendarAdd(cx, date, duration, options);
+  }
+
+  // Steps 2 and 4-5.
+  Rooted<DurationObject*> durationObj(
+      cx, CreateTemporalDuration(cx, duration.toDuration()));
+  if (!durationObj) {
+    return nullptr;
+  }
+  return CalendarDateAddSlow(cx, calendar, date, durationObj, options);
+}
+
+/**
+ * CalendarDateAdd ( calendarRec, date, duration [ , options ] )
+ */
+static Wrapped<PlainDateObject*> CalendarDateAdd(
+    JSContext* cx, Handle<CalendarRecord> calendar,
     Handle<Wrapped<PlainDateObject*>> date,
     Handle<Wrapped<DurationObject*>> duration, Handle<JSObject*> options) {
   MOZ_ASSERT(
@@ -3225,8 +3292,8 @@ static Wrapped<PlainDateObject*> CalendarDateAdd(
  */
 static bool CalendarDateAdd(JSContext* cx, Handle<CalendarRecord> calendar,
                             Handle<Wrapped<PlainDateObject*>> date,
-                            const Duration& duration, Handle<JSObject*> options,
-                            PlainDate* result) {
+                            const DateDuration& duration,
+                            Handle<JSObject*> options, PlainDate* result) {
   MOZ_ASSERT(
       CalendarMethodsRecordHasLookedUp(calendar, CalendarMethod::DateAdd));
 
@@ -3245,7 +3312,8 @@ static bool CalendarDateAdd(JSContext* cx, Handle<CalendarRecord> calendar,
 
   // Steps 2 and 4-5.
 
-  Rooted<DurationObject*> durationObj(cx, CreateTemporalDuration(cx, duration));
+  Rooted<DurationObject*> durationObj(
+      cx, CreateTemporalDuration(cx, duration.toDuration()));
   if (!durationObj) {
     return false;
   }
@@ -3263,7 +3331,7 @@ static bool CalendarDateAdd(JSContext* cx, Handle<CalendarRecord> calendar,
  * CalendarDateAdd ( calendarRec, date, duration [ , options ] )
  */
 static bool CalendarDateAdd(JSContext* cx, Handle<CalendarRecord> calendar,
-                            const PlainDate& date, const Duration& duration,
+                            const PlainDate& date, const DateDuration& duration,
                             Handle<JSObject*> options, PlainDate* result) {
   MOZ_ASSERT(
       CalendarMethodsRecordHasLookedUp(calendar, CalendarMethod::DateAdd));
@@ -3283,7 +3351,8 @@ static bool CalendarDateAdd(JSContext* cx, Handle<CalendarRecord> calendar,
     return false;
   }
 
-  Rooted<DurationObject*> durationObj(cx, CreateTemporalDuration(cx, duration));
+  Rooted<DurationObject*> durationObj(
+      cx, CreateTemporalDuration(cx, duration.toDuration()));
   if (!durationObj) {
     return false;
   }
@@ -3315,7 +3384,7 @@ Wrapped<PlainDateObject*> js::temporal::CalendarDateAdd(
  */
 Wrapped<PlainDateObject*> js::temporal::CalendarDateAdd(
     JSContext* cx, Handle<CalendarRecord> calendar,
-    Handle<Wrapped<PlainDateObject*>> date, const Duration& duration) {
+    Handle<Wrapped<PlainDateObject*>> date, const DateDuration& duration) {
   // Step 1.
   Handle<JSObject*> options = nullptr;
 
@@ -3356,7 +3425,7 @@ Wrapped<PlainDateObject*> js::temporal::CalendarDateAdd(
 bool js::temporal::CalendarDateAdd(JSContext* cx,
                                    Handle<CalendarRecord> calendar,
                                    const PlainDate& date,
-                                   const Duration& duration,
+                                   const DateDuration& duration,
                                    PlainDate* result) {
   // Step 1.
   Handle<JSObject*> options = nullptr;
@@ -3368,9 +3437,12 @@ bool js::temporal::CalendarDateAdd(JSContext* cx,
 /**
  * CalendarDateAdd ( calendarRec, date, duration [ , options ] )
  */
-bool js::temporal::CalendarDateAdd(
-    JSContext* cx, Handle<CalendarRecord> calendar, const PlainDate& date,
-    const Duration& duration, Handle<JSObject*> options, PlainDate* result) {
+bool js::temporal::CalendarDateAdd(JSContext* cx,
+                                   Handle<CalendarRecord> calendar,
+                                   const PlainDate& date,
+                                   const DateDuration& duration,
+                                   Handle<JSObject*> options,
+                                   PlainDate* result) {
   // Step 1. (Not applicable)
 
   // Steps 2-5.
@@ -3383,7 +3455,7 @@ bool js::temporal::CalendarDateAdd(
 bool js::temporal::CalendarDateAdd(JSContext* cx,
                                    Handle<CalendarRecord> calendar,
                                    Handle<Wrapped<PlainDateObject*>> date,
-                                   const Duration& duration,
+                                   const DateDuration& duration,
                                    PlainDate* result) {
   // Step 1.
   Handle<JSObject*> options = nullptr;
