@@ -2,14 +2,19 @@
 <html id="html" style="height:100%">
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=780847
+https://bugzilla.mozilla.org/show_bug.cgi?id=1733509
 -->
 <head>
   <title>Test radii for mouse events</title>
-  <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/gfx/layers/apz/test/mochitest/apz_test_utils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <style>
   .target { position:absolute; left:100px; top:100px; width:100px; height:100px; background:blue; }
+  .scaled { background: green; transform: scale(0.5); }
+  iframe { margin:0; padding:0; width:50; height:50; border:1px solid black; background:yellowgreen; }
   </style>
 </head>
 <body id="body" onload="setTimeout(startTest, 0)" style="margin:0; width:100%; height:100%; overflow:hidden">
@@ -72,6 +77,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=780847
   <div id="t13" class="target" style="cursor:pointer" hidden>
    <div id="t13_touchlistener" style="width: 50px; height: 50px; background:red" ontouchend="x=1"></div>
    <div id="t13_notouchlistener" style="width: 50px; height: 50px; background:green"></div>
+  </div>
+
+  <div id="t14" class="target scaled" hidden>
+    <iframe id="t14iframe"></iframe>
   </div>
 </div>
 <pre id="test">
@@ -414,7 +423,50 @@ function testTouchable() {
   testTouch("t13", 10, 50 - (2*mm), "t13_touchlistener", "touch inside t13_touchlistener bottom edge");
   setShowing("t13", false);
 
-  endTest();
+  test4();
+}
+
+// https://bugzilla.mozilla.org/show_bug.cgi?id=1733509
+function test4() {
+  // Skip non-Fission for now because of bug 1890522
+  if (SpecialPowers.Services.appinfo.fissionAutostart) {
+    waitUntilApzStable().then(async () => doTest4()).then(endTest);
+  } else {
+    endTest();
+  }
+}
+
+async function doTest4() {
+  setShowing("t14", true);
+
+  let iframeURL = SimpleTest.getTestFileURL("helper_bug1733509.html");
+  // todo: Also perform this test for an in-process iframe
+  // once bug 1890522 is fixed.
+  const iframe = document.querySelector("#t14iframe");
+  iframeURL = iframeURL.replace(window.location.origin, "https://example.com");
+  await setupIframe(iframe, iframeURL);
+
+  var result = await SpecialPowers.spawn(iframe, [], async () => {
+    await content.wrappedJSObject.waitUntilApzStable();
+    var iframeEventTarget = null;
+    content.window.onmousedown = function (event) { iframeEventTarget = event.target; };
+    content.wrappedJSObject.synthesizeMouse(content.document.documentElement, 2, 2, {});
+    return iframeEventTarget && iframeEventTarget.id === "btn";
+  });
+
+  ok(result, "Failed to target button inside iframe");
+  setShowing("t14", false);
+}
+
+async function setupIframe(aIFrame, aURL) {
+  const iframeLoadPromise = promiseOneEvent(aIFrame, "load", null);
+  aIFrame.src = aURL;
+  await iframeLoadPromise;
+
+  await SpecialPowers.spawn(aIFrame, [], async () => {
+    await content.wrappedJSObject.waitUntilApzStable();
+    await SpecialPowers.contentTransformsReceived(content);
+  });
 }
 </script>
 </pre>

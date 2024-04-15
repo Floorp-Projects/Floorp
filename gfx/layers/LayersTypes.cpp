@@ -91,5 +91,17 @@ GpuProcessQueryId GpuProcessQueryId::GetNext() {
   return GpuProcessQueryId{++sCounter};
 }
 
+std::ostream& operator<<(std::ostream& os, ScrollDirection aDirection) {
+  switch (aDirection) {
+    case ScrollDirection::eHorizontal:
+      os << "horizontal";
+      break;
+    case ScrollDirection::eVertical:
+      os << "vertical";
+      break;
+  }
+  return os;
+}
+
 }  // namespace layers
 }  // namespace mozilla
