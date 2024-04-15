@@ -295,37 +295,39 @@ static PlainDateTimeObject* CreateTemporalDateTime(
 
   // Step 6.
   dateTime->setFixedSlot(PlainDateTimeObject::ISO_YEAR_SLOT,
-                         Int32Value(isoYear));
+                         Int32Value(int32_t(isoYear)));
 
   // Step 7.
   dateTime->setFixedSlot(PlainDateTimeObject::ISO_MONTH_SLOT,
-                         Int32Value(isoMonth));
+                         Int32Value(int32_t(isoMonth)));
 
   // Step 8.
-  dateTime->setFixedSlot(PlainDateTimeObject::ISO_DAY_SLOT, Int32Value(isoDay));
+  dateTime->setFixedSlot(PlainDateTimeObject::ISO_DAY_SLOT,
+                         Int32Value(int32_t(isoDay)));
 
   // Step 9.
-  dateTime->setFixedSlot(PlainDateTimeObject::ISO_HOUR_SLOT, Int32Value(hour));
+  dateTime->setFixedSlot(PlainDateTimeObject::ISO_HOUR_SLOT,
+                         Int32Value(int32_t(hour)));
 
   // Step 10.
   dateTime->setFixedSlot(PlainDateTimeObject::ISO_MINUTE_SLOT,
-                         Int32Value(minute));
+                         Int32Value(int32_t(minute)));
 
   // Step 11.
   dateTime->setFixedSlot(PlainDateTimeObject::ISO_SECOND_SLOT,
-                         Int32Value(second));
+                         Int32Value(int32_t(second)));
 
   // Step 12.
   dateTime->setFixedSlot(PlainDateTimeObject::ISO_MILLISECOND_SLOT,
-                         Int32Value(millisecond));
+                         Int32Value(int32_t(millisecond)));
 
   // Step 13.
   dateTime->setFixedSlot(PlainDateTimeObject::ISO_MICROSECOND_SLOT,
-                         Int32Value(microsecond));
+                         Int32Value(int32_t(microsecond)));
 
   // Step 14.
   dateTime->setFixedSlot(PlainDateTimeObject::ISO_NANOSECOND_SLOT,
-                         Int32Value(nanosecond));
+                         Int32Value(int32_t(nanosecond)));
 
   // Step 15.
   dateTime->setFixedSlot(PlainDateTimeObject::CALENDAR_SLOT,
@@ -929,8 +931,8 @@ static PlainDateTime RoundISODateTime(const PlainDateTime& dateTime,
   MOZ_ASSERT(0 <= roundedTime.days && roundedTime.days <= 1);
 
   // Step 4.
-  auto balanceResult =
-      BalanceISODate(date.year, date.month, date.day + roundedTime.days);
+  auto balanceResult = BalanceISODate(date.year, date.month,
+                                      date.day + int32_t(roundedTime.days));
 
   // Step 5.
   return {balanceResult, roundedTime.time};

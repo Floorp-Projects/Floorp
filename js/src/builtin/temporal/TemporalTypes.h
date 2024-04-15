@@ -228,7 +228,7 @@ struct SecondsAndNanoseconds {
    */
   static constexpr Derived fromMilliseconds(int64_t milliseconds) {
     int64_t seconds = milliseconds / 1'000;
-    int32_t millis = milliseconds % 1'000;
+    int32_t millis = int32_t(milliseconds % 1'000);
     if (millis < 0) {
       seconds -= 1;
       millis += 1'000;
@@ -241,7 +241,7 @@ struct SecondsAndNanoseconds {
    */
   static constexpr Derived fromMicroseconds(int64_t microseconds) {
     int64_t seconds = microseconds / 1'000'000;
-    int32_t micros = microseconds % 1'000'000;
+    int32_t micros = int32_t(microseconds % 1'000'000);
     if (micros < 0) {
       seconds -= 1;
       micros += 1'000'000;
@@ -254,7 +254,7 @@ struct SecondsAndNanoseconds {
    */
   static constexpr Derived fromNanoseconds(int64_t nanoseconds) {
     int64_t seconds = nanoseconds / 1'000'000'000;
-    int32_t nanos = nanoseconds % 1'000'000'000;
+    int32_t nanos = int32_t(nanoseconds % 1'000'000'000);
     if (nanos < 0) {
       seconds -= 1;
       nanos += 1'000'000'000;

@@ -7,6 +7,7 @@
 #include "builtin/temporal/Instant.h"
 
 #include "mozilla/Assertions.h"
+#include "mozilla/Casting.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Maybe.h"
@@ -865,7 +866,8 @@ static bool Instant_fromEpochSeconds(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   // Step 5.
-  auto* result = CreateTemporalInstant(cx, Instant::fromSeconds(epochSeconds));
+  int64_t seconds = mozilla::AssertedCast<int64_t>(epochSeconds);
+  auto* result = CreateTemporalInstant(cx, Instant::fromSeconds(seconds));
   if (!result) {
     return false;
   }
@@ -908,8 +910,9 @@ static bool Instant_fromEpochMilliseconds(JSContext* cx, unsigned argc,
   }
 
   // Step 5.
+  int64_t milliseconds = mozilla::AssertedCast<int64_t>(epochMilliseconds);
   auto* result =
-      CreateTemporalInstant(cx, Instant::fromMilliseconds(epochMilliseconds));
+      CreateTemporalInstant(cx, Instant::fromMilliseconds(milliseconds));
   if (!result) {
     return false;
   }
@@ -1215,7 +1218,7 @@ static bool Instant_round(JSContext* cx, const CallArgs& args) {
     }
 
     // Steps 10-15.
-    uint64_t maximum = UnitsPerDay(smallestUnit);
+    int64_t maximum = UnitsPerDay(smallestUnit);
 
     // Step 16.
     if (!ValidateTemporalRoundingIncrement(cx, roundingIncrement, maximum,

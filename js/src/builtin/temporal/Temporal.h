@@ -204,7 +204,7 @@ class Precision final {
   constexpr Precision(int8_t value, Tag) : value_(value) {}
 
  public:
-  constexpr explicit Precision(uint8_t value) : value_(value) {
+  constexpr explicit Precision(uint8_t value) : value_(int8_t(value)) {
     MOZ_ASSERT(value < 10);
   }
 

@@ -116,9 +116,9 @@ static JSString* SystemTimeZoneIdentifier(JSContext* cx) {
     size_t n = etcGMT.copy(offsetString, etcGMT.length());
     offsetString[n++] = offset < 0 ? '+' : '-';
     if (offsetHours >= 10) {
-      offsetString[n++] = '0' + (offsetHours / 10);
+      offsetString[n++] = char('0' + (offsetHours / 10));
     }
-    offsetString[n++] = '0' + (offsetHours % 10);
+    offsetString[n++] = char('0' + (offsetHours % 10));
 
     MOZ_ASSERT(n == etcGMT.length() + 2 || n == etcGMT.length() + 3);
 

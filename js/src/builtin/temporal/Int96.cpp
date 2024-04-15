@@ -39,12 +39,12 @@ mozilla::Maybe<Int96> Int96::fromInteger(double value) {
 
   // Inlined version of |BigInt::createFromDouble()| for DigitBits=32. See the
   // comments in |BigInt::createFromDouble()| for how this code works.
-  constexpr size_t DigitBits = 32;
+  constexpr int DigitBits = 32;
 
   // The number can't have more than three digits when it's below |maximum|.
   Int96::Digits digits = {};
 
-  int exponent = mozilla::ExponentComponent(value);
+  int exponent = int(mozilla::ExponentComponent(value));
   MOZ_ASSERT(0 <= exponent && exponent <= 95,
              "exponent is lower than exponent of 0x1p+96");
 
@@ -62,7 +62,7 @@ mozilla::Maybe<Int96> Int96::fromInteger(double value) {
   int msdTopBit = exponent % DigitBits;
 
   // First, build the MSD by shifting the mantissa appropriately.
-  int remainingMantissaBits = Double::kSignificandWidth - msdTopBit;
+  int remainingMantissaBits = int(Double::kSignificandWidth - msdTopBit);
   digits[--length] = mantissa >> remainingMantissaBits;
 
   // Fill in digits containing mantissa contributions.
