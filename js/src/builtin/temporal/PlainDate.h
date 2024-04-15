@@ -164,8 +164,9 @@ bool RegulateISODate(JSContext* cx, double year, double month, double day,
 /**
  * AddISODate ( year, month, day, years, months, weeks, days, overflow )
  */
-bool AddISODate(JSContext* cx, const PlainDate& date, const Duration& duration,
-                TemporalOverflow overflow, PlainDate* result);
+bool AddISODate(JSContext* cx, const PlainDate& date,
+                const DateDuration& duration, TemporalOverflow overflow,
+                PlainDate* result);
 
 /**
  * AddDate ( calendarRec, plainDate, duration [ , options ] )

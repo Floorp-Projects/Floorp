@@ -261,7 +261,7 @@ static PlainTime ConstrainTime(double hour, double minute, double second,
  * RegulateTime ( hour, minute, second, millisecond, microsecond, nanosecond,
  * overflow )
  */
-bool js::temporal::RegulateTime(JSContext* cx, const TimeRecord& time,
+bool js::temporal::RegulateTime(JSContext* cx, const TemporalTimeLike& time,
                                 TemporalOverflow overflow, PlainTime* result) {
   auto& [hour, minute, second, millisecond, microsecond, nanosecond] = time;
 
@@ -403,63 +403,6 @@ PlainTimeObject* js::temporal::CreateTemporalTime(JSContext* cx,
 }
 
 /**
- * CreateTimeDurationRecord ( days, hours, minutes, seconds, milliseconds,
- * microseconds, nanoseconds )
- */
-static TimeDuration CreateTimeDurationRecord(double days, int32_t hours,
-                                             int32_t minutes, int32_t seconds,
-                                             int32_t milliseconds,
-                                             int32_t microseconds,
-                                             int32_t nanoseconds) {
-  // Step 1.
-  MOZ_ASSERT(IsValidDuration({0, 0, 0, days, double(hours), double(minutes),
-                              double(seconds), double(microseconds),
-                              double(nanoseconds)}));
-
-  // Step 2.
-  return {
-      days,
-      double(hours),
-      double(minutes),
-      double(seconds),
-      double(milliseconds),
-      double(microseconds),
-      double(nanoseconds),
-  };
-}
-
-/**
- * DurationSign ( years, months, weeks, days, hours, minutes, seconds,
- * milliseconds, microseconds, nanoseconds )
- */
-static int32_t DurationSign(int32_t hours, int32_t minutes, int32_t seconds,
-                            int32_t milliseconds, int32_t microseconds,
-                            int32_t nanoseconds) {
-  // Step 1. (Loop unrolled)
-  if (hours) {
-    return hours > 0 ? 1 : -1;
-  }
-  if (minutes) {
-    return minutes > 0 ? 1 : -1;
-  }
-  if (seconds) {
-    return seconds > 0 ? 1 : -1;
-  }
-  if (milliseconds) {
-    return milliseconds > 0 ? 1 : -1;
-  }
-  if (microseconds) {
-    return microseconds > 0 ? 1 : -1;
-  }
-  if (nanoseconds) {
-    return nanoseconds > 0 ? 1 : -1;
-  }
-
-  // Step 2.
-  return 0;
-}
-
-/**
  * BalanceTime ( hour, minute, second, millisecond, microsecond, nanosecond )
  */
 template <typename IntT>
@@ -541,8 +484,8 @@ BalancedTime js::temporal::BalanceTime(const PlainTime& time,
 /**
  * DifferenceTime ( h1, min1, s1, ms1, mus1, ns1, h2, min2, s2, ms2, mus2, ns2 )
  */
-TimeDuration js::temporal::DifferenceTime(const PlainTime& time1,
-                                          const PlainTime& time2) {
+NormalizedTimeDuration js::temporal::DifferenceTime(const PlainTime& time1,
+                                                    const PlainTime& time2) {
   MOZ_ASSERT(IsValidTime(time1));
   MOZ_ASSERT(IsValidTime(time2));
 
@@ -565,22 +508,15 @@ TimeDuration js::temporal::DifferenceTime(const PlainTime& time1,
   int32_t nanoseconds = time2.nanosecond - time1.nanosecond;
 
   // Step 7.
-  int32_t sign = ::DurationSign(hours, minutes, seconds, milliseconds,
-                                microseconds, nanoseconds);
+  auto result = NormalizeTimeDuration(hours, minutes, seconds, milliseconds,
+                                      microseconds, nanoseconds);
 
   // Step 8.
-  auto balanced = ::BalanceTime(hours * sign, minutes * sign, seconds * sign,
-                                milliseconds * sign, microseconds * sign,
-                                nanoseconds * sign);
+  MOZ_ASSERT(result.abs().toTotalNanoseconds() <
+             Int128{ToNanoseconds(TemporalUnit::Day)});
 
   // Step 9.
-  MOZ_ASSERT(balanced.days == 0);
-
-  // Step 10.
-  return CreateTimeDurationRecord(
-      0, balanced.time.hour * sign, balanced.time.minute * sign,
-      balanced.time.second * sign, balanced.time.millisecond * sign,
-      balanced.time.microsecond * sign, balanced.time.nanosecond * sign);
+  return result;
 }
 
 /**
@@ -628,7 +564,7 @@ static bool ToTemporalTime(JSContext* cx, Handle<Value> item,
     }
 
     // Step 3.d.
-    TimeRecord timeResult;
+    TemporalTimeLike timeResult;
     if (!ToTemporalTimeRecord(cx, itemObj, &timeResult)) {
       return false;
     }
@@ -684,218 +620,6 @@ bool js::temporal::ToTemporalTime(JSContext* cx, Handle<Value> item,
 }
 
 /**
- * TotalDurationNanoseconds ( hours, minutes, seconds, milliseconds,
- * microseconds, nanoseconds )
- */
-static int64_t TotalDurationNanoseconds(const Duration& duration) {
-  // This function is only called from BalanceTime. The difference between two
-  // plain times can't exceed the number of nanoseconds in a day.
-  MOZ_ASSERT(IsValidDuration(duration));
-  MOZ_ASSERT(std::abs(duration.hours) <= 24);
-  MOZ_ASSERT(std::abs(duration.minutes) <= 60);
-  MOZ_ASSERT(std::abs(duration.seconds) <= 60);
-  MOZ_ASSERT(std::abs(duration.milliseconds) <= 1000);
-  MOZ_ASSERT(std::abs(duration.microseconds) <= 1000);
-  MOZ_ASSERT(std::abs(duration.nanoseconds) <= 1000);
-
-  // Step 1.
-  auto minutes = int64_t(duration.minutes) + int64_t(duration.hours) * 60;
-
-  // Step 2.
-  auto seconds = int64_t(duration.seconds) + minutes * 60;
-
-  // Step 3.
-  auto milliseconds = int64_t(duration.milliseconds) + seconds * 1000;
-
-  // Step 4.
-  auto microseconds = int64_t(duration.microseconds) + milliseconds * 1000;
-
-  // Steps 5.
-  return int64_t(duration.nanoseconds) + microseconds * 1000;
-}
-
-/**
- * BalanceTimeDuration ( days, hours, minutes, seconds, milliseconds,
- * microseconds, nanoseconds, largestUnit [ , relativeTo ] )
- */
-static Duration BalanceTimeDuration(const Duration& duration,
-                                    TemporalUnit largestUnit) {
-  MOZ_ASSERT(IsValidDuration(duration));
-  MOZ_ASSERT(largestUnit > TemporalUnit::Day);
-
-  // We only handle time components here.
-  MOZ_ASSERT(duration.years == 0);
-  MOZ_ASSERT(duration.months == 0);
-  MOZ_ASSERT(duration.weeks == 0);
-  MOZ_ASSERT(duration.days == 0);
-
-  // Step 1. (Not applicable)
-
-  // Step 2.
-  int64_t nanoseconds = TotalDurationNanoseconds(duration);
-  MOZ_ASSERT(std::abs(nanoseconds) <= ToNanoseconds(TemporalUnit::Day));
-
-  // Steps 3-4. (Not applicable)
-
-  // Step 5.
-  int64_t hours = 0;
-  int64_t minutes = 0;
-  int64_t seconds = 0;
-  int64_t milliseconds = 0;
-  int64_t microseconds = 0;
-
-  // Step 6.
-  int32_t sign = nanoseconds < 0 ? -1 : +1;
-
-  // Step 7.
-  nanoseconds = std::abs(nanoseconds);
-
-  // Steps 8-13.
-  switch (largestUnit) {
-    case TemporalUnit::Auto:
-    case TemporalUnit::Year:
-    case TemporalUnit::Month:
-    case TemporalUnit::Week:
-    case TemporalUnit::Day:
-      MOZ_CRASH("Unexpected temporal unit");
-
-    case TemporalUnit::Hour: {
-      // Step 8.
-
-      // Step 8.a.
-      microseconds = nanoseconds / 1000;
-
-      // Step 8.b.
-      nanoseconds = nanoseconds % 1000;
-
-      // Step 8.c.
-      milliseconds = microseconds / 1000;
-
-      // Step 8.d.
-      microseconds = microseconds % 1000;
-
-      // Step 8.e.
-      seconds = milliseconds / 1000;
-
-      // Step 8.f.
-      milliseconds = milliseconds % 1000;
-
-      // Step 8.g.
-      minutes = seconds / 60;
-
-      // Step 8.h.
-      seconds = seconds % 60;
-
-      // Step 8.i.
-      hours = minutes / 60;
-
-      // Step 8.j.
-      minutes = minutes % 60;
-
-      break;
-    }
-    case TemporalUnit::Minute: {
-      // Step 9.
-
-      // Step 9.a.
-      microseconds = nanoseconds / 1000;
-
-      // Step 9.b.
-      nanoseconds = nanoseconds % 1000;
-
-      // Step 9.c.
-      milliseconds = microseconds / 1000;
-
-      // Step 9.d.
-      microseconds = microseconds % 1000;
-
-      // Step 9.e.
-      seconds = milliseconds / 1000;
-
-      // Step 9.f.
-      milliseconds = milliseconds % 1000;
-
-      // Step 9.g.
-      minutes = seconds / 60;
-
-      // Step 9.h.
-      seconds = seconds % 60;
-
-      break;
-    }
-    case TemporalUnit::Second: {
-      // Step 10.
-
-      // Step 10.a.
-      microseconds = nanoseconds / 1000;
-
-      // Step 10.b.
-      nanoseconds = nanoseconds % 1000;
-
-      // Step 10.c.
-      milliseconds = microseconds / 1000;
-
-      // Step 10.d.
-      microseconds = microseconds % 1000;
-
-      // Step 10.e.
-      seconds = milliseconds / 1000;
-
-      // Step 10.f.
-      milliseconds = milliseconds % 1000;
-
-      break;
-    }
-    case TemporalUnit::Millisecond: {
-      // Step 11.
-
-      // Step 11.a.
-      microseconds = nanoseconds / 1000;
-
-      // Step 11.b.
-      nanoseconds = nanoseconds % 1000;
-
-      // Step 11.c.
-      milliseconds = microseconds / 1000;
-
-      // Step 11.d.
-      microseconds = microseconds % 1000;
-
-      break;
-    }
-    case TemporalUnit::Microsecond: {
-      // Step 12.
-
-      // Step 12.a.
-      microseconds = nanoseconds / 1000;
-
-      // Step 12.b.
-      nanoseconds = nanoseconds % 1000;
-
-      break;
-    }
-    case TemporalUnit::Nanosecond: {
-      // Step 13.
-      break;
-    }
-  }
-
-  // Step 14.
-  return {
-      0,
-      0,
-      0,
-      0,
-      double(hours * sign),
-      double(minutes * sign),
-      double(seconds * sign),
-      double(milliseconds * sign),
-      double(microseconds * sign),
-      double(nanoseconds * sign),
-  };
-}
-
-/**
  * CompareTemporalTime ( h1, min1, s1, ms1, mus1, ns1, h2, min2, s2, ms2, mus2,
  * ns2 )
  */
@@ -940,7 +664,7 @@ int32_t js::temporal::CompareTemporalTime(const PlainTime& one,
  */
 static bool ToTemporalTimeRecord(JSContext* cx,
                                  Handle<JSObject*> temporalTimeLike,
-                                 TimeRecord* result) {
+                                 TemporalTimeLike* result) {
   // Steps 1 and 3-4. (Not applicable in our implementation.)
 
   // Step 2. (Inlined call to PrepareTemporalFields.)
@@ -1012,7 +736,7 @@ static bool ToTemporalTimeRecord(JSContext* cx,
  */
 bool js::temporal::ToTemporalTimeRecord(JSContext* cx,
                                         Handle<JSObject*> temporalTimeLike,
-                                        TimeRecord* result) {
+                                        TemporalTimeLike* result) {
   // Step 3.a. (Set all fields to zero.)
   *result = {};
 
@@ -1225,427 +949,31 @@ RoundedTime js::temporal::RoundTime(const PlainTime& time, Increment increment,
 }
 
 /**
- * AddTime ( hour, minute, second, millisecond, microsecond, nanosecond, hours,
- * minutes, seconds, milliseconds, microseconds, nanoseconds )
+ * AddTime ( hour, minute, second, millisecond, microsecond, nanosecond, norm )
  */
-static PlainTime AddTime(const PlainTime& time, const Duration& duration) {
+AddedTime js::temporal::AddTime(const PlainTime& time,
+                                const NormalizedTimeDuration& duration) {
   MOZ_ASSERT(IsValidTime(time));
-  MOZ_ASSERT(IsValidDuration(duration));
+  MOZ_ASSERT(IsValidNormalizedTimeDuration(duration));
 
-  // Balance the duration so we don't have to worry about imprecise Number
-  // computations below.
-
-  // Use either int64_t or int32_t below. Assert the total combined amount of
-  // the units can be expressed in either int64_t or int32_t.
-  static_assert(1 * UnitsPerDay(TemporalUnit::Nanosecond) > INT32_MAX,
-                "total combined nanoseconds per day");
-  static_assert(2 * UnitsPerDay(TemporalUnit::Microsecond) > INT32_MAX,
-                "total combined microseconds per day");
-  static_assert(3 * UnitsPerDay(TemporalUnit::Millisecond) <= INT32_MAX,
-                "total combined milliseconds per day");
-  static_assert(4 * UnitsPerDay(TemporalUnit::Second) <= INT32_MAX,
-                "total combined seconds per day");
-  static_assert(5 * UnitsPerDay(TemporalUnit::Minute) <= INT32_MAX,
-                "total combined minutes per day");
-  static_assert(6 * UnitsPerDay(TemporalUnit::Hour) <= INT32_MAX,
-                "total combined hours per day");
-
-  // We ignore the days overflow in this function, therefore it's possible
-  // to restrict each unit to units-per-day.
-  int64_t nanoseconds = int64_t(
-      std::fmod(duration.nanoseconds, UnitsPerDay(TemporalUnit::Nanosecond)));
-  int64_t microseconds = int64_t(
-      std::fmod(duration.microseconds, UnitsPerDay(TemporalUnit::Microsecond)));
-  int32_t milliseconds = int32_t(
-      std::fmod(duration.milliseconds, UnitsPerDay(TemporalUnit::Millisecond)));
-  int32_t seconds =
-      int32_t(std::fmod(duration.seconds, UnitsPerDay(TemporalUnit::Second)));
-  int32_t minutes =
-      int32_t(std::fmod(duration.minutes, UnitsPerDay(TemporalUnit::Minute)));
-  int32_t hours =
-      int32_t(std::fmod(duration.hours, UnitsPerDay(TemporalUnit::Hour)));
-
-  // Each unit is now less than the units-per-day.
-  MOZ_ASSERT(std::abs(nanoseconds) < UnitsPerDay(TemporalUnit::Nanosecond));
-  MOZ_ASSERT(std::abs(microseconds) < UnitsPerDay(TemporalUnit::Microsecond));
-  MOZ_ASSERT(std::abs(milliseconds) < UnitsPerDay(TemporalUnit::Millisecond));
-  MOZ_ASSERT(std::abs(seconds) < UnitsPerDay(TemporalUnit::Second));
-  MOZ_ASSERT(std::abs(minutes) < UnitsPerDay(TemporalUnit::Minute));
-  MOZ_ASSERT(std::abs(hours) < UnitsPerDay(TemporalUnit::Hour));
-
-  microseconds += nanoseconds / 1000;
-  nanoseconds %= 1000;
-  MOZ_ASSERT(microseconds < 2 * UnitsPerDay(TemporalUnit::Microsecond));
-
-  milliseconds += microseconds / 1000;
-  microseconds %= 1000;
-  MOZ_ASSERT(milliseconds < 3 * UnitsPerDay(TemporalUnit::Millisecond));
-
-  seconds += milliseconds / 1000;
-  milliseconds %= 1000;
-  MOZ_ASSERT(seconds < 4 * UnitsPerDay(TemporalUnit::Second));
-
-  minutes += seconds / 60;
-  seconds %= 60;
-  MOZ_ASSERT(minutes < 5 * UnitsPerDay(TemporalUnit::Minute));
-
-  hours += minutes / 60;
-  minutes %= 60;
-  MOZ_ASSERT(hours < 6 * UnitsPerDay(TemporalUnit::Hour));
-
-  hours %= 24;
-
-  MOZ_ASSERT(std::abs(hours) <= 23);
-  MOZ_ASSERT(std::abs(minutes) <= 59);
-  MOZ_ASSERT(std::abs(seconds) <= 59);
-  MOZ_ASSERT(std::abs(milliseconds) <= 999);
-  MOZ_ASSERT(std::abs(microseconds) <= 999);
-  MOZ_ASSERT(std::abs(nanoseconds) <= 999);
+  auto [seconds, nanoseconds] = duration;
+  if (seconds < 0 && nanoseconds > 0) {
+    seconds += 1;
+    nanoseconds -= 1'000'000'000;
+  }
+  MOZ_ASSERT(std::abs(nanoseconds) <= 999'999'999);
 
   // Step 1.
-  int32_t hour = time.hour + hours;
+  int64_t second = time.second + seconds;
 
   // Step 2.
-  int32_t minute = time.minute + minutes;
+  int32_t nanosecond = time.nanosecond + nanoseconds;
 
   // Step 3.
-  int32_t second = time.second + seconds;
-
-  // Step 4.
-  int32_t millisecond = time.millisecond + milliseconds;
-
-  // Step 5.
-  int32_t microsecond = time.microsecond + int32_t(microseconds);
-
-  // Step 6.
-  int32_t nanosecond = time.nanosecond + int32_t(nanoseconds);
-
-  // Step 7.
   auto balanced =
-      ::BalanceTime(hour, minute, second, millisecond, microsecond, nanosecond);
-  return balanced.time;
-}
-
-static BigInt* FloorDiv(JSContext* cx, Handle<BigInt*> dividend,
-                        int32_t divisor) {
-  MOZ_ASSERT(divisor > 0);
-
-  Rooted<BigInt*> div(cx, BigInt::createFromInt64(cx, divisor));
-  if (!div) {
-    return nullptr;
-  }
-
-  Rooted<BigInt*> quotient(cx);
-  Rooted<BigInt*> remainder(cx);
-  if (!BigInt::divmod(cx, dividend, div, &quotient, &remainder)) {
-    return nullptr;
-  }
-  if (remainder->isNegative()) {
-    return BigInt::dec(cx, quotient);
-  }
-  return quotient;
-}
-
-static bool AddTimeDaysSlow(JSContext* cx, const PlainTime& time,
-                            const Duration& duration, double* result) {
-  MOZ_ASSERT(IsValidTime(time));
-  MOZ_ASSERT(IsValidDuration(duration));
-
-  Rooted<BigInt*> days(cx, BigInt::createFromDouble(cx, duration.days));
-  if (!days) {
-    return false;
-  }
-
-  Rooted<BigInt*> hours(cx, BigInt::createFromDouble(cx, duration.hours));
-  if (!hours) {
-    return false;
-  }
-
-  Rooted<BigInt*> minutes(cx, BigInt::createFromDouble(cx, duration.minutes));
-  if (!minutes) {
-    return false;
-  }
-
-  Rooted<BigInt*> seconds(cx, BigInt::createFromDouble(cx, duration.seconds));
-  if (!seconds) {
-    return false;
-  }
-
-  Rooted<BigInt*> milliseconds(
-      cx, BigInt::createFromDouble(cx, duration.milliseconds));
-  if (!milliseconds) {
-    return false;
-  }
-
-  Rooted<BigInt*> microseconds(
-      cx, BigInt::createFromDouble(cx, duration.microseconds));
-  if (!microseconds) {
-    return false;
-  }
-
-  Rooted<BigInt*> nanoseconds(
-      cx, BigInt::createFromDouble(cx, duration.nanoseconds));
-  if (!nanoseconds) {
-    return false;
-  }
-
-  auto addWithInt32 = [cx](Handle<BigInt*> left, int32_t right) -> BigInt* {
-    Rooted<BigInt*> rightBigInt(cx, BigInt::createFromInt64(cx, right));
-    if (!rightBigInt) {
-      return nullptr;
-    }
-    return BigInt::add(cx, left, rightBigInt);
-  };
-
-  // Step 1.
-  Rooted<BigInt*> hour(cx, addWithInt32(hours, time.hour));
-  if (!hour) {
-    return false;
-  }
-
-  // Step 2.
-  Rooted<BigInt*> minute(cx, addWithInt32(minutes, time.minute));
-  if (!minute) {
-    return false;
-  }
-
-  // Step 3.
-  Rooted<BigInt*> second(cx, addWithInt32(seconds, time.second));
-  if (!second) {
-    return false;
-  }
-
-  // Step 4.
-  Rooted<BigInt*> millisecond(cx, addWithInt32(milliseconds, time.millisecond));
-  if (!millisecond) {
-    return false;
-  }
-
-  // Step 5.
-  Rooted<BigInt*> microsecond(cx, addWithInt32(microseconds, time.microsecond));
-  if (!microsecond) {
-    return false;
-  }
-
-  // Step 6.
-  Rooted<BigInt*> nanosecond(cx, addWithInt32(nanoseconds, time.nanosecond));
-  if (!nanosecond) {
-    return false;
-  }
-
-  // Step 7. (Inlined BalanceTime)
-
-  auto addFloorDiv = [cx](Handle<BigInt*> left, Handle<BigInt*> right,
-                          int32_t divisor) -> BigInt* {
-    Rooted<BigInt*> quotient(cx, FloorDiv(cx, right, divisor));
-    if (!quotient) {
-      return nullptr;
-    }
-    return BigInt::add(cx, left, quotient);
-  };
-
-  // BalanceTime, steps 1-2.
-  microsecond = addFloorDiv(microsecond, nanosecond, 1000);
-  if (!microsecond) {
-    return false;
-  }
-
-  // BalanceTime, steps 3-4.
-  millisecond = addFloorDiv(millisecond, microsecond, 1000);
-  if (!millisecond) {
-    return false;
-  }
-
-  // BalanceTime, steps 5-6.
-  second = addFloorDiv(second, millisecond, 1000);
-  if (!second) {
-    return false;
-  }
-
-  // BalanceTime, steps 7-8.
-  minute = addFloorDiv(minute, second, 60);
-  if (!minute) {
-    return false;
-  }
-
-  // BalanceTime, steps 9-10.
-  hour = addFloorDiv(hour, minute, 60);
-  if (!hour) {
-    return false;
-  }
-
-  // BalanceTime, steps 11-13.
-  days = addFloorDiv(days, hour, 24);
-  if (!days) {
-    return false;
-  }
-
-  // The days number is used as the input for a duration. Throw if the BigInt
-  // when converted to a Number can't be represented in a duration.
-  double daysNumber = BigInt::numberValue(days);
-  if (!ThrowIfInvalidDuration(cx, {0, 0, 0, daysNumber})) {
-    return false;
-  }
-  MOZ_ASSERT(IsInteger(daysNumber));
-
-  *result = daysNumber;
-  return true;
-}
-
-static mozilla::Maybe<int64_t> AddTimeDays(const PlainTime& time,
-                                           const Duration& duration) {
-  MOZ_ASSERT(IsValidTime(time));
-  MOZ_ASSERT(IsValidDuration(duration));
-
-  int64_t days;
-  if (!mozilla::NumberEqualsInt64(duration.days, &days)) {
-    return mozilla::Nothing();
-  }
-
-  int64_t hours;
-  if (!mozilla::NumberEqualsInt64(duration.hours, &hours)) {
-    return mozilla::Nothing();
-  }
-
-  int64_t minutes;
-  if (!mozilla::NumberEqualsInt64(duration.minutes, &minutes)) {
-    return mozilla::Nothing();
-  }
-
-  int64_t seconds;
-  if (!mozilla::NumberEqualsInt64(duration.seconds, &seconds)) {
-    return mozilla::Nothing();
-  }
-
-  int64_t milliseconds;
-  if (!mozilla::NumberEqualsInt64(duration.milliseconds, &milliseconds)) {
-    return mozilla::Nothing();
-  }
-
-  int64_t microseconds;
-  if (!mozilla::NumberEqualsInt64(duration.microseconds, &microseconds)) {
-    return mozilla::Nothing();
-  }
-
-  int64_t nanoseconds;
-  if (!mozilla::NumberEqualsInt64(duration.nanoseconds, &nanoseconds)) {
-    return mozilla::Nothing();
-  }
-
-  // Step 1.
-  auto hour = mozilla::CheckedInt64(time.hour) + hours;
-  if (!hour.isValid()) {
-    return mozilla::Nothing();
-  }
-
-  // Step 2.
-  auto minute = mozilla::CheckedInt64(time.minute) + minutes;
-  if (!minute.isValid()) {
-    return mozilla::Nothing();
-  }
-
-  // Step 3.
-  auto second = mozilla::CheckedInt64(time.second) + seconds;
-  if (!second.isValid()) {
-    return mozilla::Nothing();
-  }
-
-  // Step 4.
-  auto millisecond = mozilla::CheckedInt64(time.millisecond) + milliseconds;
-  if (!millisecond.isValid()) {
-    return mozilla::Nothing();
-  }
-
-  // Step 5.
-  auto microsecond = mozilla::CheckedInt64(time.microsecond) + microseconds;
-  if (!microsecond.isValid()) {
-    return mozilla::Nothing();
-  }
-
-  // Step 6.
-  auto nanosecond = mozilla::CheckedInt64(time.nanosecond) + nanoseconds;
-  if (!nanosecond.isValid()) {
-    return mozilla::Nothing();
-  }
-
-  // Step 7. (Inlined BalanceTime)
-
-  // BalanceTime, steps 1-2.
-  microsecond += FloorDiv(nanosecond.value(), 1000);
-  if (!microsecond.isValid()) {
-    return mozilla::Nothing();
-  }
-
-  // BalanceTime, steps 3-4.
-  millisecond += FloorDiv(microsecond.value(), 1000);
-  if (!millisecond.isValid()) {
-    return mozilla::Nothing();
-  }
-
-  // BalanceTime, steps 5-6.
-  second += FloorDiv(millisecond.value(), 1000);
-  if (!second.isValid()) {
-    return mozilla::Nothing();
-  }
-
-  // BalanceTime, steps 7-8.
-  minute += FloorDiv(second.value(), 60);
-  if (!minute.isValid()) {
-    return mozilla::Nothing();
-  }
-
-  // BalanceTime, steps 9-10.
-  hour += FloorDiv(minute.value(), 60);
-  if (!hour.isValid()) {
-    return mozilla::Nothing();
-  }
-
-  // BalanceTime, steps 11-13.
-  auto result = mozilla::CheckedInt64(days) + FloorDiv(hour.value(), 24);
-  if (!result.isValid()) {
-    return mozilla::Nothing();
-  }
-  return mozilla::Some(result.value());
-}
-
-static bool AddTimeDays(JSContext* cx, const PlainTime& time,
-                        const Duration& duration, double* result) {
-  // Fast-path when we can perform the whole computation with int64 values.
-  if (auto days = AddTimeDays(time, duration)) {
-    *result = *days;
-    return true;
-  }
-  return AddTimeDaysSlow(cx, time, duration, result);
-}
-
-/**
- * AddTime ( hour, minute, second, millisecond, microsecond, nanosecond, hours,
- * minutes, seconds, milliseconds, microseconds, nanoseconds )
- */
-bool js::temporal::AddTime(JSContext* cx, const PlainTime& time,
-                           const Duration& duration, PlainTime* result,
-                           double* daysResult) {
-  MOZ_ASSERT(IsValidTime(time));
-  MOZ_ASSERT(IsValidDuration(duration));
-
-  // Steps 1-7.
-  auto balanced = ::AddTime(time, duration);
-
-  // Compute |days| separately to ensure no loss of precision occurs.
-  //
-  // The single caller of this |AddTime| function also needs to compute the
-  // addition of |duration.days| and the balanced days. Perform this addition
-  // here, so we don't need to pass around BigInt values for exact mathematical
-  // results.
-  double days;
-  if (!AddTimeDays(cx, time, duration, &days)) {
-    return false;
-  }
-  MOZ_ASSERT(IsInteger(days));
-
-  *result = balanced;
-  *daysResult = days;
-  return true;
+      ::BalanceTime<int64_t>(time.hour, time.minute, second, time.millisecond,
+                             time.microsecond, nanosecond);
+  return {balanced.days, balanced.time};
 }
 
 /**
@@ -1699,30 +1027,25 @@ static bool DifferenceTemporalPlainTime(JSContext* cx,
 
   // Step 5.
   auto diff = DifferenceTime(temporalTime, other);
-  MOZ_ASSERT(diff.days == 0);
 
   // Step 6.
-  auto roundedDuration = diff.toDuration();
   if (settings.smallestUnit != TemporalUnit::Nanosecond ||
       settings.roundingIncrement != Increment{1}) {
     // Steps 6.a-b.
-    if (!RoundDuration(cx, roundedDuration.time(), settings.roundingIncrement,
-                       settings.smallestUnit, settings.roundingMode,
-                       &roundedDuration)) {
-      return false;
-    }
+    diff = RoundDuration(diff, settings.roundingIncrement,
+                         settings.smallestUnit, settings.roundingMode);
   }
 
   // Step 7.
-  auto balancedDuration =
-      BalanceTimeDuration(roundedDuration, settings.largestUnit);
+  auto balancedDuration = BalanceTimeDuration(diff, settings.largestUnit);
 
   // Step 8.
+  auto duration = balancedDuration.toDuration();
   if (operation == TemporalDifference::Since) {
-    balancedDuration = balancedDuration.negate();
+    duration = duration.negate();
   }
 
-  auto* result = CreateTemporalDuration(cx, balancedDuration);
+  auto* result = CreateTemporalDuration(cx, duration);
   if (!result) {
     return false;
   }
@@ -1754,13 +1077,14 @@ static bool AddDurationToOrSubtractDurationFromPlainTime(
   if (operation == PlainTimeDuration::Subtract) {
     duration = duration.negate();
   }
-  auto result = AddTime(time, duration);
+  auto timeDuration = NormalizeTimeDuration(duration);
 
   // Step 4.
-  MOZ_ASSERT(IsValidTime(result));
+  auto result = AddTime(time, timeDuration);
+  MOZ_ASSERT(IsValidTime(result.time));
 
   // Step 5.
-  auto* obj = CreateTemporalTime(cx, result);
+  auto* obj = CreateTemporalTime(cx, result.time);
   if (!obj) {
     return false;
   }
@@ -2081,7 +1405,7 @@ static bool PlainTime_with(JSContext* cx, const CallArgs& args) {
   }
 
   // Steps 7-19.
-  TimeRecord partialTime = {
+  TemporalTimeLike partialTime = {
       double(time.hour),        double(time.minute),
       double(time.second),      double(time.millisecond),
       double(time.microsecond), double(time.nanosecond),

@@ -3076,14 +3076,18 @@ static bool BuiltinCalendarAdd(JSContext* cx, const PlainDate& date,
   }
 
   // Step 8.
-  TimeDuration balanceResult;
-  if (!BalanceTimeDuration(cx, duration, TemporalUnit::Day, &balanceResult)) {
-    return false;
-  }
+  auto timeDuration = NormalizeTimeDuration(duration);
 
   // Step 9.
-  Duration addDuration = {duration.years, duration.months, duration.weeks,
-                          balanceResult.days};
+  auto balanceResult = BalanceTimeDuration(timeDuration, TemporalUnit::Day);
+
+  // Step 10.
+  auto addDuration = DateDuration{
+      duration.years,
+      duration.months,
+      duration.weeks,
+      duration.days + balanceResult.days,
+  };
   return AddISODate(cx, date, addDuration, overflow, result);
 }
 
@@ -3095,13 +3099,13 @@ static PlainDateObject* BuiltinCalendarAdd(JSContext* cx, const PlainDate& date,
                                            Handle<JSObject*> options) {
   // Steps 1-6. (Not applicable)
 
-  // Steps 7-9.
+  // Steps 7-10.
   PlainDate result;
   if (!BuiltinCalendarAdd(cx, date, duration, options, &result)) {
     return nullptr;
   }
 
-  // Step 10.
+  // Step 11.
   Rooted<CalendarValue> calendar(cx, CalendarValue(cx->names().iso8601));
   return CreateTemporalDate(cx, result, calendar);
 }
@@ -3925,7 +3929,7 @@ static bool Calendar_dateAdd(JSContext* cx, const CallArgs& args) {
     }
   }
 
-  // Steps 7-10.
+  // Steps 7-11.
   auto* obj = BuiltinCalendarAdd(cx, date, duration, options);
   if (!obj) {
     return false;
