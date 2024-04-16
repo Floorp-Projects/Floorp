@@ -616,7 +616,7 @@ fn add_composite_prim(
         &mut frame_state.frame_gpu_data.f32,
         rect,
         rect,
-        pattern.base_color,
+        PremultipliedColorF::WHITE,
         segments,
     );
 
