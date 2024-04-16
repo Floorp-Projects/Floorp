@@ -100,7 +100,19 @@ void js::GCParallelTask::joinWithLockHeld(AutoLockHelperThreadState& lock,
     return;
   }
 
-  joinNonIdleTask(deadline, lock);
+  if (isNotYetRunning(lock) && deadline.isNothing()) {
+    // If the task was dispatched but has not yet started then cancel the task
+    // and run it from the main thread. This stops us from blocking here when
+    // the helper threads are busy with other tasks.
+    MOZ_ASSERT(isInList());
+    MOZ_ASSERT_IF(isDispatched(lock), gc->dispatchedParallelTasks != 0);
+
+    remove();
+    runFromMainThread(lock);
+  } else {
+    // Otherwise wait for the task to complete.
+    joinNonIdleTask(deadline, lock);
+  }
 
   if (isIdle(lock)) {
     recordDuration();
@@ -115,9 +127,9 @@ void GCParallelTask::recordDuration() {
 
 void js::GCParallelTask::joinNonIdleTask(Maybe<TimeStamp> deadline,
                                          AutoLockHelperThreadState& lock) {
-  while (!isFinished(lock)) {
-    MOZ_ASSERT(!isIdle(lock));
+  MOZ_ASSERT(!isIdle(lock));
 
+  while (!isFinished(lock)) {
     TimeDuration timeout = TimeDuration::Forever();
     if (deadline) {
       TimeStamp now = TimeStamp::Now();
@@ -136,9 +148,7 @@ void js::GCParallelTask::joinNonIdleTask(Maybe<TimeStamp> deadline,
 }
 
 void js::GCParallelTask::runFromMainThread(AutoLockHelperThreadState& lock) {
-  MOZ_ASSERT(isIdle(lock));
   MOZ_ASSERT(js::CurrentThreadCanAccessRuntime(gc->rt));
-
   runTask(gc->rt->gcContext(), lock);
   setIdle(lock);
 }

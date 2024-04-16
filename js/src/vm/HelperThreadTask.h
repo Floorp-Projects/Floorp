@@ -54,19 +54,14 @@ struct MapTypeToThreadType<SourceCompressionTask> {
   static const ThreadType threadType = THREAD_TYPE_COMPRESS;
 };
 
-}  // namespace js
-
-namespace JS {
-
-class HelperThreadTask {
- public:
-  virtual void runHelperThreadTask(js::AutoLockHelperThreadState& locked) = 0;
-  virtual js::ThreadType threadType() = 0;
+struct HelperThreadTask {
+  virtual void runHelperThreadTask(AutoLockHelperThreadState& locked) = 0;
+  virtual ThreadType threadType() = 0;
   virtual ~HelperThreadTask() = default;
 
   template <typename T>
   bool is() {
-    return js::MapTypeToThreadType<T>::threadType == threadType();
+    return MapTypeToThreadType<T>::threadType == threadType();
   }
 
   template <typename T>
@@ -76,10 +71,6 @@ class HelperThreadTask {
   }
 };
 
-}  // namespace JS
-
-namespace js {
-using JS::HelperThreadTask;
 }  // namespace js
 
 #endif /* vm_HelperThreadTask_h */
