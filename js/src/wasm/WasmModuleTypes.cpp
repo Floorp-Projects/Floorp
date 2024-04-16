@@ -49,6 +49,8 @@ bool CacheableName::fromUTF8Chars(const char* utf8Chars, CacheableName* name) {
   return true;
 }
 
+BranchHintVector BranchHintCollection::invalidVector;
+
 JSAtom* CacheableName::toAtom(JSContext* cx) const {
   return AtomizeUTF8Chars(cx, begin(), length());
 }

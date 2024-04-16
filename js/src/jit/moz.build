@@ -26,6 +26,7 @@ UNIFIED_SOURCES += [
     "BaselineIC.cpp",
     "BaselineJIT.cpp",
     "BitSet.cpp",
+    "BranchHinting.cpp",
     "BytecodeAnalysis.cpp",
     "CacheIR.cpp",
     "CacheIRCompiler.cpp",

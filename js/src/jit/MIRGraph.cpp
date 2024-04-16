@@ -47,6 +47,10 @@ bool MIRGenerator::licmEnabled() const {
          !outerInfo().hadLICMInvalidation();
 }
 
+bool MIRGenerator::branchHintingEnabled() const {
+  return outerInfo().branchHintingEnabled();
+}
+
 mozilla::GenericErrorResult<AbortReason> MIRGenerator::abort(AbortReason r) {
   if (JitSpewEnabled(JitSpew_IonAbort)) {
     switch (r) {

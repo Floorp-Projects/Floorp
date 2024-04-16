@@ -245,11 +245,28 @@ struct BranchHintCollection {
       branchHintsMap;
 
  public:
+  // Used for lookups into the collection if a function
+  // doesn't contain any hints.
+  static BranchHintVector invalidVector;
+
   // Add all the branch hints for a function
   [[nodiscard]] bool addHintsForFunc(uint32_t functionIndex,
                                      BranchHintVector&& branchHints) {
     return branchHintsMap.put(functionIndex, std::move(branchHints));
   }
+
+  // Return the vector with branch hints for a funcIndex.
+  // If this function doesn't contain any hints, return an empty vector.
+  BranchHintVector& getHintVector(uint32_t funcIndex) const {
+    if (auto hintsVector = branchHintsMap.readonlyThreadsafeLookup(funcIndex)) {
+      return hintsVector->value();
+    }
+
+    // If not found, return the empty invalid Vector
+    return invalidVector;
+  }
+
+  bool isEmpty() const { return branchHintsMap.empty(); }
 };
 
 enum class GlobalKind { Import, Constant, Variable };

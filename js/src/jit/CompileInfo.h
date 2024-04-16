@@ -146,6 +146,7 @@ class CompileInfo {
         hadReorderingBailout_(false),
         hadBoundsCheckBailout_(false),
         hadUnboxFoldingBailout_(false),
+        branchHintingEnabled_(false),
         mayReadFrameArgsDirectly_(false),
         anyFormalIsForwarded_(false),
         inlineScriptTree_(nullptr),
@@ -339,6 +340,12 @@ class CompileInfo {
   bool hadBoundsCheckBailout() const { return hadBoundsCheckBailout_; }
   bool hadUnboxFoldingBailout() const { return hadUnboxFoldingBailout_; }
 
+  bool branchHintingEnabled() const {
+    return compilingWasm() && branchHintingEnabled_;
+  }
+
+  void setBranchHinting(bool value) { branchHintingEnabled_ = value; }
+
   bool mayReadFrameArgsDirectly() const { return mayReadFrameArgsDirectly_; }
   bool anyFormalIsForwarded() const { return anyFormalIsForwarded_; }
 
@@ -369,6 +376,8 @@ class CompileInfo {
   bool hadReorderingBailout_;
   bool hadBoundsCheckBailout_;
   bool hadUnboxFoldingBailout_;
+
+  bool branchHintingEnabled_;
 
   bool mayReadFrameArgsDirectly_;
   bool anyFormalIsForwarded_;
