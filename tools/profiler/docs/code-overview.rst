@@ -2,7 +2,7 @@ Profiler Code Overview
 ######################
 
 This is an overview of the code that implements the Profiler inside Firefox
-with dome details around tricky subjects, or pointers to more detailed
+with some details around tricky subjects, or pointers to more detailed
 documentation and/or source code.
 
 It assumes familiarity with Firefox development, including Mercurial (hg), mach,
