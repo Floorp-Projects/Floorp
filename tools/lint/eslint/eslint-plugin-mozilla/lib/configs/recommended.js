@@ -55,7 +55,6 @@ module.exports = {
       files: ["**/*.sys.mjs", "**/*.jsm"],
       rules: {
         "mozilla/lazy-getter-object-name": "error",
-        "mozilla/reject-chromeutils-import": "error",
         "mozilla/reject-eager-module-in-lazy-getter": "error",
         "mozilla/reject-global-this": "error",
         "mozilla/reject-globalThis-modification": "error",
@@ -180,6 +179,7 @@ module.exports = {
     "mozilla/prefer-boolean-length-check": "error",
     "mozilla/prefer-formatValues": "error",
     "mozilla/reject-addtask-only": "error",
+    "mozilla/reject-chromeutils-import": "error",
     "mozilla/reject-chromeutils-import-params": "error",
     "mozilla/reject-importGlobalProperties": ["error", "allownonwebidl"],
     "mozilla/reject-multiple-getters-calls": "error",
