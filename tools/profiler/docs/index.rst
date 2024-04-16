@@ -23,13 +23,13 @@ while the profiler.firefox.com interface is documented at `profiler.firefox.com/
    buffer
    instrumenting-javascript
    instrumenting-rust
+   instrumenting-android
    markers-guide
    memory
 
 The following areas still need documentation:
 
  * LUL
- * Instrumenting Java
  * Registering Threads
  * Samples and Stack Walking
  * Triggering Gecko Profiles in Automation

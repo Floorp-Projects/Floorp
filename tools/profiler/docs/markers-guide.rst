@@ -9,8 +9,9 @@ and an optional payload of a specific type (containing arbitrary data relevant t
 
 .. note::
     This guide explains C++ markers in depth. To learn more about how to add a
-    marker in JavaScript or Rust, please take a look at their documentation
-    in :doc:`instrumenting-javascript` or :doc:`instrumenting-rust` respectively.
+    marker in JavaScript, Rust or JVM, please take a look at their documentation
+    in :doc:`instrumenting-javascript`, :doc:`instrumenting-rust` or
+    :doc:`instrumenting-android` respectively.
 
 Example
 -------
