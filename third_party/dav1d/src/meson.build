@@ -106,6 +106,7 @@ if is_asm_enabled
                     'arm/64/loopfilter.S',
                     'arm/64/looprestoration.S',
                     'arm/64/mc.S',
+                    'arm/64/mc_dotprod.S',
                 )
             endif
 

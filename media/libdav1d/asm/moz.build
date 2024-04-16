@@ -211,6 +211,7 @@ elif CONFIG['TARGET_CPU'] == 'arm' or CONFIG['TARGET_CPU'] == 'aarch64':
             '../../../third_party/dav1d/src/arm/64/looprestoration_tmpl.S',
             '../../../third_party/dav1d/src/arm/64/mc.S',
             '../../../third_party/dav1d/src/arm/64/mc16.S',
+            '../../../third_party/dav1d/src/arm/64/mc_dotprod.S',
             '../../../third_party/dav1d/src/arm/64/msac.S',
             '../../../third_party/dav1d/src/arm/64/refmvs.S',
         ]

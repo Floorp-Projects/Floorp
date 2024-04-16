@@ -837,7 +837,7 @@ endfunc
 
 // This has got the same signature as the put_8tap functions,
 // and assumes that x8 is set to (clz(w)-24).
-function put_neon
+function put_neon, export=1
         adr             x9,  L(put_tbl)
         ldrh            w8,  [x9, x8, lsl #1]
         sub             x9,  x9,  w8, uxtw
@@ -939,7 +939,7 @@ endfunc
 
 // This has got the same signature as the prep_8tap functions,
 // and assumes that x8 is set to (clz(w)-24), and x7 to w*2.
-function prep_neon
+function prep_neon, export=1
         adr             x9,  L(prep_tbl)
         ldrh            w8,  [x9, x8, lsl #1]
         sub             x9,  x9,  w8, uxtw

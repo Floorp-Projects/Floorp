@@ -436,7 +436,7 @@ static void calc_lf_value(uint8_t (*const lflvl_values)[2],
     const int base = iclip(iclip(base_lvl + lf_delta, 0, 63) + seg_delta, 0, 63);
 
     if (!mr_delta) {
-        memset(lflvl_values, base, 8 * 2);
+        memset(lflvl_values, base, sizeof(*lflvl_values) * 8);
     } else {
         const int sh = base >= 32;
         lflvl_values[0][0] = lflvl_values[0][1] =
@@ -457,7 +457,7 @@ static inline void calc_lf_value_chroma(uint8_t (*const lflvl_values)[2],
                                         const Dav1dLoopfilterModeRefDeltas *const mr_delta)
 {
     if (!base_lvl)
-        memset(lflvl_values, 0, 8 * 2);
+        memset(lflvl_values, 0, sizeof(*lflvl_values) * 8);
     else
         calc_lf_value(lflvl_values, base_lvl, lf_delta, seg_delta, mr_delta);
 }
@@ -469,7 +469,7 @@ void dav1d_calc_lf_values(uint8_t (*const lflvl_values)[4][8][2],
     const int n_seg = hdr->segmentation.enabled ? 8 : 1;
 
     if (!hdr->loopfilter.level_y[0] && !hdr->loopfilter.level_y[1]) {
-        memset(lflvl_values, 0, 8 * 4 * 2 * n_seg);
+        memset(lflvl_values, 0, sizeof(*lflvl_values) * n_seg);
         return;
     }
 
