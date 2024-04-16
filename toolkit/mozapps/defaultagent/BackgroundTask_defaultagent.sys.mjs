@@ -330,7 +330,7 @@ function makeAlert(options) {
   let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
   alert.init(
     options.name,
-    "chrome://branding/content/about-logo@2x.png",
+    "chrome://global/content/defaultagent/fox-doodle-peek.png",
     options.title,
     options.body,
     true /* aTextClickable */,

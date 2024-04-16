@@ -6,6 +6,8 @@
 
 SPHINX_TREES["default-browser-agent"] = "docs"
 
+JAR_MANIFESTS += ["jar.mn"]
+
 DIRS += ["proxy"]
 
 UNIFIED_SOURCES += [
