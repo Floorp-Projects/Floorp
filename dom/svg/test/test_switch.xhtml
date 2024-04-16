@@ -22,17 +22,6 @@ SimpleTest.waitForExplicitFinish();
 
 var test = 1;
 
-function checkBounds(element, x, y, w, h) {
-  var bbox = element.getBBox();
-  var name = element.nodeName;
-
-  is(bbox.x, x, test + " " + name + ".getBBox().x");
-  is(bbox.y, y, test + " " + name + ".getBBox().y");
-  is(bbox.width, w, test + " " + name + ".getBBox().width");
-  is(bbox.height, h, test + " " + name + ".getBBox().height");
-  ++test;
-}
-
 function checkWidth(element, w) {
   var bbox = element.getBBox();
   var name = element.nodeName;
@@ -41,53 +30,63 @@ function checkWidth(element, w) {
   ++test;
 }
 
-function run() {
-  // Set accept_languages to something we know
-  SpecialPowers.pushPrefEnv({"set": [["intl.accept_languages", "en-gb,en,it"]]}, run1);
-}
-
-function run1() {
+async function run() {
   try {
-    var doc = $("svg").contentDocument;
-    var s = doc.getElementById("s");
-    var first = doc.getElementById("first");
-    var second = doc.getElementById("second");
-    var third = doc.getElementById("third");
-
-    first.setAttribute("systemLanguage", "fr");
-
-    /* test for an exact match */
-    second.setAttribute("systemLanguage", "en-gb");
-    checkWidth(s, 50);
-
-    /* test for a close match i.e. the same language prefix */
-    second.setAttribute("systemLanguage", "en-us");
-    checkWidth(s, 50);
-
-    /* test that we pick the best match */
-    second.setAttribute("systemLanguage", "it");
-    checkWidth(s, 50);
-
-    /* test that we use the default if nothing matches */
-    second.setAttribute("systemLanguage", "fr");
-    checkWidth(s, 80);
-
-    /* test we still ignore non-matches */
-    second.removeAttribute("systemLanguage");
-    third.setAttribute("systemLanguage", "fr");
-    checkWidth(s, 50);
-
-    /* check what happens if nothing matches */
-    second.setAttribute("systemLanguage", "fr");
-    checkWidth(s, 0);
-
-    /* test that we pick the best match */
-    first.setAttribute("systemLanguage", "en");
-    second.setAttribute("systemLanguage", "en-gb");
-    checkWidth(s, 50);
+    // Set accept_languages to something we know
+    await SpecialPowers.pushPrefEnv({"set": [["intl.accept_languages", "en-gb,en,it"]]}, run1);
   } finally {
     SimpleTest.finish();
   }
+}
+
+function run1() {
+  let doc = $("svg").contentDocument;
+  let s = doc.getElementById("s");
+  let first = doc.getElementById("first");
+  let second = doc.getElementById("second");
+  let third = doc.getElementById("third");
+
+  first.setAttribute("systemLanguage", "fr");
+
+  /* test for an exact match */
+  second.setAttribute("systemLanguage", "en-gb");
+  checkWidth(s, 50);
+
+  /* test for a close match i.e. the same language prefix */
+  second.setAttribute("systemLanguage", "en");
+  checkWidth(s, 50);
+
+  /* test for a close match regardless of case */
+  second.setAttribute("systemLanguage", "eN");
+  checkWidth(s, 50);
+
+  /* test that different regions don't match */
+  second.setAttribute("systemLanguage", "en-us");
+  checkWidth(s, 80);
+
+  /* test that we pick the best match */
+  second.setAttribute("systemLanguage", "it");
+  checkWidth(s, 50);
+
+  /* test that we use the default if nothing matches */
+  second.setAttribute("systemLanguage", "fr");
+  checkWidth(s, 80);
+
+  /* test we still ignore non-matches */
+  second.removeAttribute("systemLanguage");
+  third.setAttribute("systemLanguage", "fr");
+  checkWidth(s, 50);
+
+  /* check what happens if nothing matches */
+  second.setAttribute("systemLanguage", "fr");
+  third.setAttribute("systemLanguage", "fr");
+  checkWidth(s, 0);
+
+  /* test that we pick the best match */
+  first.setAttribute("systemLanguage", "en");
+  second.setAttribute("systemLanguage", "en-gb");
+  third.removeAttribute("systemLanguage");
+  checkWidth(s, 50);
 }
 
 window.addEventListener("load", run);
