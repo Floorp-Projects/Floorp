@@ -25,7 +25,4 @@ libs::
 	$(call py_action,preprocessor updater.app/Contents/Resources/English.lproj/InfoPlist.strings,-Fsubstitution --output-encoding utf-16 -DAPP_NAME='$(MOZ_APP_DISPLAYNAME)' $(srcdir)/macbuild/Contents/Resources/English.lproj/InfoPlist.strings.in -o $(DIST)/bin/updater.app/Contents/Resources/English.lproj/InfoPlist.strings)
 	$(NSINSTALL) -D $(DIST)/bin/updater.app/Contents/MacOS
 	$(NSINSTALL) $(DIST)/bin/org.mozilla.updater $(DIST)/bin/updater.app/Contents/MacOS
-	$(NSINSTALL) -D $(DIST)/bin/updater.app/Contents/Frameworks
-	$(NSINSTALL) $(DIST)/bin/UpdateSettings $(DIST)/bin/updater.app/Contents/Frameworks/UpdateSettings.framework
-	$(NSINSTALL) $(srcdir)/macos-frameworks/UpdateSettings/Info.plist $(DIST)/bin/updater.app/Contents/Frameworks/UpdateSettings.framework/Resources
 endif

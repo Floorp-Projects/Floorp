@@ -22,17 +22,6 @@ if CONFIG["MOZ_VERIFY_MAR_SIGNATURE"]:
         "verifymar",
     ]
 
-    if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
-        srcs += [
-            "macos-frameworks/UpdateSettingsUtil.mm",
-        ]
-        USE_LIBS += [
-            "UpdateSettings",
-        ]
-        LDFLAGS += [
-            "-Wl,-rpath,@executable_path/../Frameworks/UpdateSettings.framework"
-        ]
-
 if CONFIG["OS_ARCH"] == "WINNT":
     have_progressui = 1
     srcs += [
@@ -125,7 +114,7 @@ if CONFIG["MOZ_TSAN"]:
 DEFINES["SPRINTF_H_USES_VSNPRINTF"] = True
 DEFINES["NS_NO_XPCOM"] = True
 DisableStlWrapping()
-for var in ("MAR_CHANNEL_ID", "MOZ_APP_VERSION", "ACCEPTED_MAR_CHANNEL_IDS"):
+for var in ("MAR_CHANNEL_ID", "MOZ_APP_VERSION"):
     DEFINES[var] = '"%s"' % CONFIG[var]
 
 LOCAL_INCLUDES += [

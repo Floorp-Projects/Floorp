@@ -790,10 +790,9 @@ mac-signing:
                 - deep: false
                   runtime: true
                   force: true
-                  # These files are signed without entitlements
+                  # These files are signed wihtout entitlements
                   globs:
                       - "/Contents/MacOS/crashreporter.app"
-                      - "/Contents/MacOS/updater.app/Contents/Frameworks/UpdateSettings.framework"
                       - "/Contents/MacOS/updater.app"
                       - "/Contents/Library/LaunchServices/org.mozilla.updater"
                       - "/Contents/MacOS/XUL"
@@ -802,7 +801,6 @@ mac-signing:
                       - "/Contents/MacOS/nmhproxy"
                       - "/Contents/MacOS/*.dylib"
                       - "/Contents/Resources/gmp-clearkey/*/*.dylib"
-                      - "/Contents/Frameworks/ChannelPrefs.framework"
 
                 - deep: false
                   runtime: true
@@ -838,13 +836,11 @@ mac-signing:
                   entitlements: security/mac/hardenedruntime/v2/developer/utility.xml
                   globs:
                       - "/Contents/MacOS/crashreporter.app"
-                      - "/Contents/MacOS/updater.app/Contents/Frameworks/UpdateSettings.framework"
                       - "/Contents/MacOS/updater.app"
                       - "/Contents/Library/LaunchServices/org.mozilla.updater"
                       - "/Contents/MacOS/pingsender"
                       - "/Contents/MacOS/minidump-analyzer"
                       - "/Contents/MacOS/nmhproxy"
-                      - "/Contents/Frameworks/ChannelPrefs.framework"
 
                 - deep: false
                   runtime: true

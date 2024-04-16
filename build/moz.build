@@ -107,10 +107,7 @@ if CONFIG["MOZ_APP_BASENAME"]:
     )
 
     FINAL_TARGET_FILES += ["!application.ini"]
-    if (
-        CONFIG["MOZ_WIDGET_TOOLKIT"] not in ("android", "cocoa")
-        and CONFIG["MOZ_UPDATER"]
-    ):
+    if CONFIG["MOZ_WIDGET_TOOLKIT"] != "android" and CONFIG["MOZ_UPDATER"]:
         FINAL_TARGET_PP_FILES += ["update-settings.ini"]
 
     GeneratedFile(

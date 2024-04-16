@@ -38,6 +38,16 @@ class AutoFILE {
   FILE* fp_;
 };
 
+class AutoCharArray {
+ public:
+  explicit AutoCharArray(size_t len) { ptr_ = new char[len]; }
+  ~AutoCharArray() { delete[] ptr_; }
+  operator char*() { return ptr_; }
+
+ private:
+  char* ptr_;
+};
+
 static const char kNL[] = "\r\n";
 static const char kEquals[] = "=";
 static const char kWhitespace[] = " \t";
@@ -143,8 +153,7 @@ int ReadStrings(const NS_tchar* path, const char* keyList,
   }
 
   size_t flen = size_t(len);
-
-  char* fileContents = new char[flen + 1];
+  AutoCharArray fileContents(flen + 1);
   if (!fileContents) {
     return READ_STRINGS_MEM_ERROR;
   }
@@ -161,53 +170,12 @@ int ReadStrings(const NS_tchar* path, const char* keyList,
 
   fileContents[flen] = '\0';
 
-  int result = ReadStringsFromBuffer(fileContents, keyList, numStrings, results,
-                                     section);
-  delete[] fileContents;
-  return result;
-}
-
-// A wrapper function to read strings for the updater.
-// Added for compatibility with the original code.
-int ReadStrings(const NS_tchar* path, StringTable* results) {
-  const unsigned int kNumStrings = 2;
-  const char* kUpdaterKeys = "Title\0Info\0";
-  mozilla::UniquePtr<char[]> updater_strings[kNumStrings];
-
-  int result = ReadStrings(path, kUpdaterKeys, kNumStrings, updater_strings);
-
-  if (result == OK) {
-    results->title.swap(updater_strings[0]);
-    results->info.swap(updater_strings[1]);
-  }
-
-  return result;
-}
-
-/**
- * A very basic parser for updater.ini taken mostly from nsINIParser.cpp
- * that can be used by standalone apps.
- *
- * @param stringBuffer The string buffer to parse
- * @param keyList      List of zero-delimited keys ending with two zero
- * characters
- * @param numStrings   Number of strings to read into results buffer - must be
- *                     equal to the number of keys
- * @param results      Array of strings. Array's length must be equal to
- *                     numStrings. Each string will be populated with the value
- *                     corresponding to the key with the same index in keyList.
- * @param section      Optional name of the section to read; defaults to
- * "Strings"
- */
-int ReadStringsFromBuffer(char* stringBuffer, const char* keyList,
-                          unsigned int numStrings,
-                          mozilla::UniquePtr<char[]>* results,
-                          const char* section) {
+  char* buffer = fileContents;
   bool inStringsSection = false;
 
   unsigned int read = 0;
 
-  while (char* token = NS_strtok(kNL, &stringBuffer)) {
+  while (char* token = NS_strtok(kNL, &buffer)) {
     if (token[0] == '#' || token[0] == ';') {  // it's a comment
       continue;
     }
@@ -263,6 +231,23 @@ int ReadStringsFromBuffer(char* stringBuffer, const char* keyList,
   }
 
   return (read == numStrings) ? OK : PARSE_ERROR;
+}
+
+// A wrapper function to read strings for the updater.
+// Added for compatibility with the original code.
+int ReadStrings(const NS_tchar* path, StringTable* results) {
+  const unsigned int kNumStrings = 2;
+  const char* kUpdaterKeys = "Title\0Info\0";
+  mozilla::UniquePtr<char[]> updater_strings[kNumStrings];
+
+  int result = ReadStrings(path, kUpdaterKeys, kNumStrings, updater_strings);
+
+  if (result == OK) {
+    results->title.swap(updater_strings[0]);
+    results->info.swap(updater_strings[1]);
+  }
+
+  return result;
 }
 
 IniReader::IniReader(const NS_tchar* iniPath,

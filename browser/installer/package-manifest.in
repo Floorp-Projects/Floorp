@@ -38,7 +38,6 @@
 #ifdef MOZ_UPDATER
 @APPNAME@/Contents/Library/LaunchServices
 #endif
-@APPNAME@/Contents/Frameworks
 @APPNAME@/Contents/PkgInfo
 @RESPATH@/firefox.icns
 @RESPATH@/document.icns
@@ -142,10 +141,7 @@
 #endif
 @RESPATH@/application.ini
 #ifdef MOZ_UPDATER
-# update-settings.ini has been removed on macOS.
-#ifndef XP_MACOSX
 @RESPATH@/update-settings.ini
-#endif
 #endif
 @RESPATH@/platform.ini
 #ifndef MOZ_FOLD_LIBS
@@ -254,13 +250,10 @@
 @RESPATH@/browser/defaults/settings/main
 @RESPATH@/browser/defaults/settings/security-state
 
-# channel-prefs.js has been removed on macOS.
-#ifndef XP_MACOSX
 ; Warning: changing the path to channel-prefs.js can cause bugs (Bug 756325)
 ; Technically this is an app pref file, but we are keeping it in the original
 ; gre location for now.
 @RESPATH@/defaults/pref/channel-prefs.js
-#endif
 
 ; Background tasks-specific preferences.
 ; These are in the GRE location since they apply to all tasks at this time.

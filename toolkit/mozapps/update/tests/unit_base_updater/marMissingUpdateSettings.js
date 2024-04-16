@@ -14,17 +14,7 @@ async function run_test() {
     return;
   }
   gTestFiles = gTestFilesCompleteSuccess;
-  if (AppConstants.platform == "macosx") {
-    // On macOS, the update settings Framework already exists. Remove it.
-    const updateSettings = getTestFileByName(FILE_UPDATE_SETTINGS_FRAMEWORK);
-    updateSettings.removeOriginalFile = true;
-  } else {
-    // On non-macOS, the update settings INI will normally be written out with
-    // the contents specified by `originalContents`. Setting this to `null`
-    // prevents anything from being written out.
-    const updateSettings = getTestFileByName(FILE_UPDATE_SETTINGS_INI);
-    updateSettings.originalContents = null;
-  }
+  gTestFiles[gTestFiles.length - 2].originalContents = null;
   gTestDirs = gTestDirsCompleteSuccess;
   setTestFilesAndDirsForFailure();
   await setupUpdaterTest(FILE_COMPLETE_MAR, false);

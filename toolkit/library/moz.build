@@ -100,7 +100,6 @@ def Libxul(name, output_category=None):
         LDFLAGS += ["-Wl,-U,_OBJC_CLASS_$_NSCustomTouchBarItem"]
         LDFLAGS += ["-Wl,-U,_OBJC_CLASS_$_NSPopoverTouchBarItem"]
         LDFLAGS += ["-lresolv"]
-        LDFLAGS += ["-Wl,-rpath,@executable_path/../Frameworks/ChannelPrefs.framework"]
 
     if CONFIG["MOZ_DEBUG_SYMBOLS"] and CONFIG["CC_TYPE"] == "clang-cl":
         LDFLAGS += ["-NATVIS:%s/toolkit/library/gecko.natvis" % TOPSRCDIR]
@@ -232,9 +231,6 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
         "-framework CoreUI",
         "-framework CoreSymbolication",
         "cups",
-    ]
-    USE_LIBS += [
-        "ChannelPrefs",
     ]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "uikit":

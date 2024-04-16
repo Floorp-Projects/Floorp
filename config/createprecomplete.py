@@ -24,11 +24,7 @@ def get_build_entries(root_path):
             if not (
                 rel_path_file.endswith("channel-prefs.js")
                 or rel_path_file.endswith("update-settings.ini")
-                or "/ChannelPrefs.framework/" in rel_path_file
-                or rel_path_file.startswith("ChannelPrefs.framework/")
-                or "/UpdateSettings.framework/" in rel_path_file
-                or rel_path_file.startswith("UpdateSettings.framework/")
-                or "distribution/" in rel_path_file
+                or rel_path_file.find("distribution/") != -1
             ):
                 rel_file_path_set.add(rel_path_file)
 

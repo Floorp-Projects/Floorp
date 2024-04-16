@@ -189,7 +189,6 @@ const startupPhases = {
     {
       // bug 1541601
       path: "PrfDef:channel-prefs.js",
-      condition: !MAC,
       stat: 1,
       read: 1,
       close: 1,

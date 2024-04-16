@@ -45,7 +45,8 @@ async function run_test() {
   // won't be updated if it already exists.  The manipulations below arrange a)
   // for the file to exist and b) for the comparison afterward to succeed.
   gTestFiles = gTestFilesPartialSuccess;
-  let channelPrefs = getTestFileByName(FILE_CHANNEL_PREFS);
+  let channelPrefs = gTestFiles[gTestFiles.length - 1];
+  Assert.equal("channel-prefs.js", channelPrefs.fileName);
   let f = gGREDirOrig.clone();
   f.append("defaults");
   f.append("pref");

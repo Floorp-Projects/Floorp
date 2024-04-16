@@ -72,15 +72,3 @@
     @DIR_RESOURCES@chrome.manifest
   #endif
 #endif
-
-# channel-prefs.js has been removed on macOS.
-#ifdef XP_MACOSX
-@DIR_RESOURCES@defaults/pref/channel-prefs.js
-@DIR_RESOURCES@defaults/pref/
-@DIR_RESOURCES@defaults/
-#endif
-
-# update-settings.ini has been removed on macOS.
-#ifdef XP_MACOSX
-@DIR_RESOURCES@update-settings.ini
-#endif

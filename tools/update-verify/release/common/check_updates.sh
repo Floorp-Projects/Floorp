@@ -12,29 +12,17 @@ check_updates () {
   channel=$8
   mar_channel_IDs=$9
   update_to_dep=${10}
-  local mac_update_settings_dir_override
-  mac_update_settings_dir_override=${11}
 
   # cleanup
   rm -rf source/*
   rm -rf target/*
 
-  # $mac_update_settings_dir_override allows unpack_build to find a host platform appropriate
-  # `update-settings.ini` file, which is needed to successfully run the updater later in this
-  # function.
-  unpack_build $update_platform source "$source_package" $locale '' "$mar_channel_IDs" $mac_update_settings_dir_override
+  unpack_build $update_platform source "$source_package" $locale '' $mar_channel_IDs
   if [ "$?" != "0" ]; then
     echo "FAILED: cannot unpack_build $update_platform source $source_package"
     return 1
   fi
-
-  # Unlike unpacking the `source` build, we don't actually _need_ $mac_update_settings_dir_override
-  # here to succesfully apply the update, but its usage in `source` causes an `update-settings.ini`
-  # file to be present in the directory we diff, which means we either also need it present in the
-  # `target` directory, or to remove it after the update is applied. The latter was chosen
-  # because it keeps the workaround close together (as opposed to just above this, and then much
-  # further down).
-  unpack_build $update_platform target "$target_package" $locale '' '' $mac_update_settings_dir_override
+  unpack_build $update_platform target "$target_package" $locale
   if [ "$?" != "0" ]; then
     echo "FAILED: cannot unpack_build $update_platform target $target_package"
     return 1
@@ -120,21 +108,6 @@ check_updates () {
     ignore_coderesources="--ignore-missing=Contents/CodeResources --ignore-missing=Contents/embedded.provisionprofile"
   else
     ignore_coderesources=
-  fi
-
-  # On Mac, there are two Frameworks that are not included with updates, and
-  # which change with every build. Because of this, we ignore differences in
-  # them in `compare-directories.py`. The best verification we can do for them
-  # is that they still exist.
-  if [[ $update_platform == Darwin_* ]]; then
-    if ! compgen -G "source/${platform_dirname}/Contents/MacOS/updater.app/Contents/Frameworks/UpdateSettings.framework" >/dev/null; then
-      echo "TEST-UNEXPECTED-FAIL: UpdateSettings.framework doesn't exist after update"
-      return 4
-    fi
-    if ! compgen -G "source/${platform_dirname}/Contents/Frameworks/ChannelPrefs.framework" >/dev/null; then
-      echo "TEST-UNEXPECTED-FAIL: ChannelPrefs.framework doesn't exist after update"
-      return 5
-    fi
   fi
 
   ../compare-directories.py source/${platform_dirname} target/${platform_dirname} ${channel} ${ignore_coderesources} > "${diff_file}"

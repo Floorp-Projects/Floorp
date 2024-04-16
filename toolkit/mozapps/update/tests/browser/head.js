@@ -368,15 +368,9 @@ function copyTestUpdater(attempt = 0) {
       testUpdater.copyToFollowingLinks(greBinDir, FILE_UPDATER_BIN);
 
       let greDir = getGREDir();
-
-      // On macOS, update settings is a Framework, not an INI. This was already
-      // built into updater-xpcshell using the `UpdateSettings-xpcshell`
-      // Framework, so we don't need to do any additional work here.
-      if (AppConstants.platform != "macosx") {
-        let updateSettingsIni = greDir.clone();
-        updateSettingsIni.append(FILE_UPDATE_SETTINGS_INI);
-        writeFile(updateSettingsIni, UPDATE_SETTINGS_CONTENTS);
-      }
+      let updateSettingsIni = greDir.clone();
+      updateSettingsIni.append(FILE_UPDATE_SETTINGS_INI);
+      writeFile(updateSettingsIni, UPDATE_SETTINGS_CONTENTS);
 
       let precomplete = greDir.clone();
       precomplete.append(FILE_PRECOMPLETE);
