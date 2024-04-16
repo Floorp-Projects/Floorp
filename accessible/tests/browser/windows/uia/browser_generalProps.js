@@ -159,3 +159,24 @@ addUiaTask(
     await testGroupPos("button", 0, 0, 0);
   }
 );
+
+/**
+ * Test the FrameworkId property.
+ */
+addUiaTask(
+  `<button id="button">button</button>`,
+  async function testFrameworkId() {
+    await definePyVar("doc", `getDocUia()`);
+    is(
+      await runPython(`doc.CurrentFrameworkId`),
+      "Gecko",
+      "doc FrameworkId is correct"
+    );
+    await assignPyVarToUiaWithId("button");
+    is(
+      await runPython(`button.CurrentFrameworkId`),
+      "Gecko",
+      "button FrameworkId is correct"
+    );
+  }
+);
