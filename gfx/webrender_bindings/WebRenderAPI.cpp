@@ -537,6 +537,20 @@ bool WebRenderAPI::CheckIsRemoteTextureReady(
     layers::CompositorThread()->Dispatch(runnable.forget());
   };
 
+  bool isReady = true;
+  while (!aList->mList.empty() && isReady) {
+    auto& front = aList->mList.front();
+    isReady &= layers::RemoteTextureMap::Get()->CheckRemoteTextureReady(
+        front, callback);
+    if (isReady) {
+      aList->mList.pop();
+    }
+  }
+
+  if (isReady) {
+    return true;
+  }
+
   const auto maxWaitDurationMs = 10000;
   const auto now = TimeStamp::Now();
   const auto waitDurationMs =
@@ -548,20 +562,7 @@ bool WebRenderAPI::CheckIsRemoteTextureReady(
     gfxCriticalNote << "RemoteTexture ready timeout";
   }
 
-  bool isReady = true;
-  while (!aList->mList.empty() && isReady) {
-    auto& front = aList->mList.front();
-    isReady &= layers::RemoteTextureMap::Get()->CheckRemoteTextureReady(
-        front, callback);
-    if (isTimeout) {
-      isReady = true;
-    }
-    if (isReady) {
-      aList->mList.pop();
-    }
-  }
-
-  return isReady;
+  return false;
 }
 
 void WebRenderAPI::WaitRemoteTextureReady(
