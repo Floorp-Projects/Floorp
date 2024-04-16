@@ -13,13 +13,15 @@
 
 class nsAttrValue;
 class nsAtom;
+class nsIContent;
 class nsStaticAtom;
 
 namespace mozilla {
 
 namespace dom {
 class DOMSVGStringList;
-}
+class SVGSwitchElement;
+}  // namespace dom
 
 #define MOZILLA_DOMSVGTESTS_IID                      \
   {                                                  \
@@ -42,26 +44,10 @@ class SVGTests : public nsISupports {
   using SVGStringList = mozilla::SVGStringList;
 
   /**
-   * Compare the language name(s) in a systemLanguage attribute to the
-   * user's language preferences, as defined in
-   * http://www.w3.org/TR/SVG11/struct.html#SystemLanguageAttribute
-   * We have a match if a language name in the users language preferences
-   * exactly equals one of the language names or exactly equals a prefix of
-   * one of the language names in the systemLanguage attribute.
-   * @returns 2 * the lowest index in the aAcceptLangs that matches + 1
-   * if only the prefix matches, -2 if there's no systemLanguage attribute,
-   * or -1 if no indices match.
-   * XXX This algorithm is O(M*N).
+   * Find the active switch child using BCP 47 rules.
    */
-  int32_t GetBestLanguagePreferenceRank(const nsAString& aAcceptLangs) const;
-
-  /**
-   * Check whether the conditional processing attributes other than
-   * systemLanguage "return true" if they apply to and are specified
-   * on the given element. Returns true if this element should be
-   * rendered, false if it should not.
-   */
-  bool PassesConditionalProcessingTestsIgnoringSystemLanguage() const;
+  static nsIContent* FindActiveSwitchChild(
+      const dom::SVGSwitchElement* aSwitch);
 
   /**
    * Check whether the conditional processing attributes requiredExtensions
@@ -70,16 +56,6 @@ class SVGTests : public nsISupports {
    * should be rendered, false if it should not.
    */
   bool PassesConditionalProcessingTests() const;
-
-  /**
-   * Check whether the conditional processing attributes requiredExtensions
-   * and systemLanguage both "return true" if they apply to
-   * and are specified on the given element. Returns true if this element
-   * should be rendered, false if it should not.
-   *
-   * @param aAcceptLangs The value of the intl.accept_languages preference
-   */
-  bool PassesConditionalProcessingTests(const nsAString& aAcceptLangs) const;
 
   /**
    * Returns true if the attribute is one of the conditional processing
@@ -117,6 +93,13 @@ class SVGTests : public nsISupports {
   virtual ~SVGTests() = default;
 
  private:
+  /**
+   * Check whether the extensions processing attribute applies to and is
+   * specified on the given element. Returns true if this element should be
+   * rendered, false if it should not.
+   */
+  bool PassesRequiredExtensionsTests() const;
+
   enum { EXTENSIONS, LANGUAGE };
   SVGStringList mStringListAttributes[2];
   static nsStaticAtom* const sStringListNames[2];
