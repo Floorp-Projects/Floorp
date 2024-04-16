@@ -151,6 +151,8 @@ bool FramingChecker::CheckFrameOptions(nsIChannel* aChannel,
     return true;
   }
 
+  static const char kASCIIWhitespace[] = "\t ";
+
   // Step 3-4. reduce the header options to a unique set and count how many
   // unique values (that we track) are encountered. this avoids using a set to
   // stop attackers from inheriting arbitrary values in memory and reduce the
@@ -158,7 +160,7 @@ bool FramingChecker::CheckFrameOptions(nsIChannel* aChannel,
   XFOHeader xfoOptions;
   for (const nsACString& next : xfoHeaderValue.Split(',')) {
     nsAutoCString option(next);
-    option.StripWhitespace();
+    option.Trim(kASCIIWhitespace);
 
     if (option.LowerCaseEqualsLiteral("allowall")) {
       xfoOptions.ALLOWALL = true;
