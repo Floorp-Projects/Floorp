@@ -1387,7 +1387,7 @@ export class ScreenshotsOverlay {
     let [selectionSizeTranslation] =
       lazy.overlayLocalization.formatMessagesSync([
         {
-          id: "screenshots-overlay-selection-region-size-2",
+          id: "screenshots-overlay-selection-region-size-3",
           args: {
             width: Math.floor(width * zoom),
             height: Math.floor(height * zoom),

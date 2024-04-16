@@ -22,7 +22,7 @@ add_task(async function test_selectionSizeTest() {
 
       Assert.equal(
         actualText,
-        `${400 * dpr} x ${400 * dpr}`,
+        `${400 * dpr} × ${400 * dpr}`,
         "The selection size text is the same"
       );
     }
@@ -50,7 +50,7 @@ add_task(async function test_selectionSizeTestAt1Point5Zoom() {
 
       Assert.equal(
         actualText,
-        `${400 * dpr * zoom} x ${400 * dpr * zoom}`,
+        `${400 * dpr * zoom} × ${400 * dpr * zoom}`,
         "The selection size text is the same"
       );
     }
@@ -78,7 +78,7 @@ add_task(async function test_selectionSizeTestAtPoint5Zoom() {
 
       Assert.equal(
         actualText,
-        `${400 * dpr * zoom} x ${400 * dpr * zoom}`,
+        `${400 * dpr * zoom} × ${400 * dpr * zoom}`,
         "The selection size text is the same"
       );
     }
