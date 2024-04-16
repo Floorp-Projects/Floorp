@@ -448,7 +448,8 @@ class MarionetteWindowProtocolPart(WindowProtocolPart):
         return self.marionette.minimize_window()
 
     def set_rect(self, rect):
-        self.marionette.set_window_rect(rect["x"], rect["y"], rect["height"], rect["width"])
+        self.marionette.set_window_rect(
+            rect.get("x"), rect.get("y"), rect.get("height"), rect.get("width"))
 
     def get_rect(self):
         return self.marionette.window_rect
