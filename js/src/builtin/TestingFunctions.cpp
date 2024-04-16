@@ -2125,7 +2125,7 @@ static bool WasmDumpIon(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-enum class Flag { Tier2Complete, Deserialized };
+enum class Flag { Tier2Complete, Deserialized, ParsedBranchHints };
 
 static bool WasmReturnFlag(JSContext* cx, unsigned argc, Value* vp, Flag flag) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -2149,6 +2149,9 @@ static bool WasmReturnFlag(JSContext* cx, unsigned argc, Value* vp, Flag flag) {
       break;
     case Flag::Deserialized:
       b = module->module().loggingDeserialized();
+      break;
+    case Flag::ParsedBranchHints:
+      b = module->module().metadata().parsedBranchHints;
       break;
   }
 
@@ -2220,6 +2223,12 @@ static bool WasmHasTier2CompilationCompleted(JSContext* cx, unsigned argc,
 static bool WasmLoadedFromCache(JSContext* cx, unsigned argc, Value* vp) {
   return WasmReturnFlag(cx, argc, vp, Flag::Deserialized);
 }
+
+#ifdef ENABLE_WASM_BRANCH_HINTING
+static bool WasmParsedBranchHints(JSContext* cx, unsigned argc, Value* vp) {
+  return WasmReturnFlag(cx, argc, vp, Flag::ParsedBranchHints);
+}
+#endif  // ENABLE_WASM_BRANCH_HINTING
 
 static bool WasmBuiltinI8VecMul(JSContext* cx, unsigned argc, Value* vp) {
   if (!wasm::HasSupport(cx)) {
@@ -9955,6 +9964,14 @@ JS_FOR_WASM_FEATURES(WASM_FEATURE)
 "wasmGcArrayLength(arr)",
 "  Gets the length of a WebAssembly GC array."),
 #endif // ENABLE_WASM_GC
+
+#ifdef ENABLE_WASM_BRANCH_HINTING
+    JS_FN_HELP("wasmParsedBranchHints", WasmParsedBranchHints, 1, 0,
+"wasmParsedBranchHints(module)",
+"  Returns a boolean indicating whether a given module has successfully parsed a\n"
+"  custom branch hinting section."),
+
+#endif // ENABLE_WASM_BRANCH_HINTING
 
     JS_FN_HELP("largeArrayBufferSupported", LargeArrayBufferSupported, 0, 0,
 "largeArrayBufferSupported()",

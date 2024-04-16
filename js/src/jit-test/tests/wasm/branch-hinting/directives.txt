@@ -1,0 +1,1 @@
+|jit-test| --setpref=wasm_branch_hinting=true; --wasm-compiler=ion; test-also=--wasm-compiler=baseline;skip-if: !wasmBranchHintingEnabled(); include:wasm.js
