@@ -84,7 +84,8 @@ using namespace mozilla::widget;
 static bool moz_container_wayland_surface_create_locked(
     const MutexAutoLock& aProofOfLock, MozContainer* container);
 static void moz_container_wayland_set_opaque_region_locked(
-    const MutexAutoLock& aProofOfLock, MozContainer* container);
+    const MutexAutoLock& aProofOfLock, MozContainer* container,
+    const LayoutDeviceIntRegion&);
 
 // Lock mozcontainer and get wayland surface of it. You need to pair with
 // moz_container_wayland_surface_unlock() even
@@ -413,7 +414,10 @@ gboolean moz_container_wayland_map_event(GtkWidget* widget,
   nsWindow* window = moz_container_get_nsWindow(MOZ_CONTAINER(widget));
   moz_container_wayland_set_scale_factor_locked(lock, MOZ_CONTAINER(widget),
                                                 window->GdkCeiledScaleFactor());
-  moz_container_wayland_set_opaque_region_locked(lock, MOZ_CONTAINER(widget));
+  if (container->data.wl_container.opaque_region_needs_updates) {
+    moz_container_wayland_set_opaque_region_locked(lock, container,
+                                                   window->GetOpaqueRegion());
+  }
   moz_container_clear_input_region(MOZ_CONTAINER(widget));
   moz_container_wayland_invalidate(MOZ_CONTAINER(widget));
   return FALSE;
@@ -456,7 +460,10 @@ void moz_container_wayland_size_allocate(GtkWidget* widget,
     nsWindow* window = moz_container_get_nsWindow(container);
     moz_container_wayland_set_scale_factor_locked(
         lock, container, window->GdkCeiledScaleFactor());
-    moz_container_wayland_set_opaque_region_locked(lock, container);
+    if (container->data.wl_container.opaque_region_needs_updates) {
+      moz_container_wayland_set_opaque_region_locked(lock, container,
+                                                     window->GetOpaqueRegion());
+    }
     moz_container_wayland_move_locked(lock, container, allocation->x,
                                       allocation->y);
     moz_container_clear_input_region(container);
@@ -465,54 +472,28 @@ void moz_container_wayland_size_allocate(GtkWidget* widget,
   }
 }
 
-static wl_region* moz_container_wayland_create_opaque_region(
-    int aX, int aY, int aWidth, int aHeight, int aCornerRadius) {
-  struct wl_compositor* compositor = WaylandDisplayGet()->GetCompositor();
-  wl_region* region = wl_compositor_create_region(compositor);
-  wl_region_add(region, aX, aY, aWidth, aHeight);
-  if (aCornerRadius) {
-    wl_region_subtract(region, aX, aY, aCornerRadius, aCornerRadius);
-    wl_region_subtract(region, aX + aWidth - aCornerRadius, aY, aCornerRadius,
-                       aCornerRadius);
-    wl_region_subtract(region, aX, aY + aHeight - aCornerRadius, aCornerRadius,
-                       aCornerRadius);
-    wl_region_subtract(region, aX + aWidth - aCornerRadius,
-                       aY + aHeight - aCornerRadius, aCornerRadius,
-                       aCornerRadius);
-  }
-  return region;
-}
-
 static void moz_container_wayland_set_opaque_region_locked(
-    const MutexAutoLock& aProofOfLock, MozContainer* container) {
+    const MutexAutoLock& aProofOfLock, MozContainer* container,
+    const LayoutDeviceIntRegion& aRegion) {
   MozContainerWayland* wl_container = &container->data.wl_container;
-
-  if (!wl_container->opaque_region_needs_updates) {
+  MOZ_ASSERT(wl_container->opaque_region_needs_updates);
+  if (!wl_container->surface) {
     return;
   }
 
+  wl_container->opaque_region_needs_updates = false;
   if (!wl_container->opaque_region_used) {
-    wl_container->opaque_region_needs_updates = false;
     return;
   }
 
-  GtkAllocation allocation;
-  gtk_widget_get_allocation(GTK_WIDGET(container), &allocation);
-
-  wl_region* region = moz_container_wayland_create_opaque_region(
-      0, 0, allocation.width, allocation.height,
-      wl_container->opaque_region_corner_radius);
+  wl_region* region =
+      wl_compositor_create_region(WaylandDisplayGet()->GetCompositor());
+  for (auto iter = aRegion.RectIter(); !iter.Done(); iter.Next()) {
+    const auto& rect = iter.Get();
+    wl_region_add(region, rect.x, rect.y, rect.Width(), rect.Height());
+  }
   wl_surface_set_opaque_region(wl_container->surface, region);
   wl_region_destroy(region);
-  wl_container->opaque_region_needs_updates = false;
-}
-
-static void moz_container_wayland_set_opaque_region(MozContainer* container) {
-  MozContainerWayland* wl_container = &container->data.wl_container;
-  MutexAutoLock lock(wl_container->container_lock);
-  if (wl_container->surface) {
-    moz_container_wayland_set_opaque_region_locked(lock, container);
-  }
 }
 
 static void moz_container_wayland_surface_set_scale_locked(
@@ -757,17 +738,18 @@ gboolean moz_container_wayland_has_egl_window(MozContainer* container) {
   return !!container->data.wl_container.eglwindow;
 }
 
-void moz_container_wayland_update_opaque_region(MozContainer* container,
-                                                int corner_radius) {
+void moz_container_wayland_update_opaque_region(MozContainer* container) {
   MozContainerWayland* wl_container = &container->data.wl_container;
+  MutexAutoLock lock(wl_container->container_lock);
   wl_container->opaque_region_needs_updates = true;
-  wl_container->opaque_region_corner_radius = corner_radius;
 
   // When GL compositor / WebRender is used,
   // moz_container_wayland_get_egl_window() is called only once when window
   // is created or resized so update opaque region now.
   if (moz_container_wayland_has_egl_window(container)) {
-    moz_container_wayland_set_opaque_region(container);
+    nsWindow* window = moz_container_get_nsWindow(container);
+    moz_container_wayland_set_opaque_region_locked(lock, container,
+                                                   window->GetOpaqueRegion());
   }
 }
 
