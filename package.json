@@ -15,6 +15,7 @@
   "devDependencies": {
     "@biomejs/biome": "^1.6.2",
     "@mongodb-js/zstd": "^1.2.0",
+    "@swc/core": "^1.4.14",
     "@types/node": "^20.11.30",
     "@types/tar-fs": "^2.0.4",
     "autoprefixer": "^10.4.19",
@@ -34,8 +35,9 @@
     "solid-js": "^1.8.16",
     "tsx": "^4.7.1",
     "typescript": "^5.4.3",
-    "vite": "^5.2.8",
+    "vite": "5.2.8",
     "vite-plugin-solid": "^2.10.2",
+    "vite-tsconfig-paths": "^4.3.2",
     "zstddec": "^0.1.0"
   }
 }

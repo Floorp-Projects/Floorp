@@ -15,7 +15,7 @@ interface JSServices {
   console: nsIConsoleService;
   cookieBanners: nsICookieBannerService;
   cookies: nsICookieManager & nsICookieService;
-  //cpmm: ContentProcessMessageManager;
+  cpmm: ContentProcessMessageManager;
   dirsvc: nsIDirectoryService & nsIProperties;
   dns: nsIDNSService;
   domStorageManager: nsIDOMStorageManager & nsILocalStorageManager;
@@ -30,11 +30,11 @@ interface JSServices {
   loadContextInfo: nsILoadContextInfoFactory;
   locale: mozILocaleService;
   logins: nsILoginManager;
-  //mm: ChromeMessageBroadcaster;
+  mm: ChromeMessageBroadcaster;
   obs: nsIObserverService;
   perms: nsIPermissionManager;
   policies: nsIEnterprisePolicies;
-  //ppmm: ParentProcessMessageManager;
+  ppmm: ParentProcessMessageManager;
   prefs: nsIPrefBranch & nsIPrefService;
   profiler: nsIProfiler;
   prompt: nsIPromptService;
@@ -60,8 +60,4 @@ interface JSServices {
   xulStore: nsIXULStore;
 }
 
-declare global {
-  const Services: JSServices;
-}
-
-export {};
+export type { JSServices };

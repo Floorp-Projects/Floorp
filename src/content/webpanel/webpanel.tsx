@@ -30,7 +30,7 @@ export function webpanel2base() {
     <xul:browser
       type="content"
       style="flex: 1 1 auto; width: 897px; min-width:74px"
-      src="chrome://noraneko/content/webpanel/webpanel.xhtml"
+      src="chrome://noraneko/content/webpanel/index.html"
     />
   );
 }

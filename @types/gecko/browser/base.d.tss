@@ -1,0 +1,2 @@
+//https://searchfox.org/mozilla-central/rev/d5ed9df049e40f12d058a5b7c2f3451ed778163b/toolkit/content/customElements.js#694
+type BaseControlMixin<T> = T & {};

@@ -9,7 +9,10 @@ user_pref("svg.context-properties.content.enabled", true);
 user_pref("browser.compactmode.show", true);
 
 // about:home Search Bar - 89 Above
-user_pref("browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar", false);
+user_pref(
+  "browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar",
+  false,
+);
 
 // CSS's `:has()` selector #457 - 103 Above
 user_pref("layout.css.has-selector.enabled", true);

@@ -1,7 +1,4 @@
 {
-  "typeAcquisition": {
-    "enable": true
-  },
   "compilerOptions": {
     "useDefineForClassFields": true,
     "lib": ["es2022", "DOM"],
@@ -11,7 +8,11 @@
     "allowJs": true,
     "checkJs": true,
     "jsx": "preserve",
-    "jsxImportSource": "solid-js"
+    "jsxImportSource": "solid-js",
+    "paths": {
+      "@types/*": ["./@types/*"],
+      "@solid-xul/*": ["./src/solid-xul/*"]
+    }
   },
   "exclude": ["dist/**"]
 }

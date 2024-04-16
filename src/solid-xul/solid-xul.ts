@@ -1,5 +1,6 @@
 import type { JSX } from "solid-js";
 import { createRenderer } from "solid-js/universal";
+import type { XULElement } from "@types/gecko/lib.gecko.dom";
 
 export const {
   render,
@@ -42,10 +43,10 @@ export const {
       node[name] = value;
     }
   },
-  insertNode: (parent: ParentNode, node: Node, anchor?: Node): void => {
-    parent.insertBefore(node, anchor);
+  insertNode: (parent: Node, node: JSX.Element, anchor?: Node): void => {
+    parent.insertBefore(node, anchor ?? null);
   },
-  removeNode: (parent: ParentNode, node: Node): void => {
+  removeNode: (parent: Node, node: JSX.Element): void => {
     parent.removeChild(node);
   },
   getParentNode: (node: Node): ParentNode => {

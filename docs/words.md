@@ -1,0 +1,1 @@
+BMS: Browser Manager Sidebar

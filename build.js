@@ -10,37 +10,43 @@ import postcssSorting from "postcss-sorting";
 import chikodar from "chokidar";
 import { build } from "vite";
 import solidPlugin from "vite-plugin-solid";
+import tsconfigPaths from "vite-tsconfig-paths";
+import * as swc from "@swc/core";
 
 import { injectManifest } from "./scripts/injectmanifest.js";
 import { injectXHTML } from "./scripts/injectxhtml.js";
 
 async function compile() {
   await build({
-    //root: path.resolve(__dirname, "./project"),
-
+    root: path.resolve(import.meta.dirname, "src"),
     build: {
       sourcemap: true,
       reportCompressedSize: false,
       minify: false,
       cssMinify: false,
-      emptyOutDir: false,
+      emptyOutDir: true,
+      assetsInlineLimit: 0,
 
       rollupOptions: {
         input: {
           index: "src/content/index.ts",
-          "webpanel-index": "src/content/webpanel/index.ts",
+          "webpanel-index": path.resolve(
+            import.meta.dirname,
+            "src/content/webpanel/index.html",
+          ),
         },
         output: {
           esModule: true,
           entryFileNames: "content/[name].js",
         },
       },
-      outDir: "dist/noraneko",
+      outDir: "../dist/noraneko",
 
       assetsDir: "content/assets",
     },
 
     plugins: [
+      tsconfigPaths(),
       solidPlugin({
         solid: {
           generate: "universal",
@@ -52,7 +58,6 @@ async function compile() {
       }),
     ],
   });
-
   const entries = await fg("./src/skin/**/*");
 
   for (const _entry of entries) {
@@ -90,6 +95,46 @@ async function compile() {
       }
     }
   }
+
+  //swc / compile modules
+  await fg.glob("src/modules/**/*", { onlyFiles: true }).then((paths) => {
+    const listPromise = [];
+    for (const filepath of paths) {
+      const promise = (async () => {
+        const output = await swc.transformFile(filepath, {
+          jsc: {
+            parser: {
+              syntax: "typescript",
+              decorators: true,
+              importAssertions: true,
+              dynamicImport: true,
+            },
+            target: "esnext",
+          },
+          sourceMaps: true,
+        });
+        const outpath = filepath
+          .replace("src/modules/", "dist/noraneko/resource/modules/")
+          .replace(".ts", ".js")
+          .replace(".mts", ".mjs");
+        const outdir = path.dirname(outpath);
+        try {
+          await fs.access("dist/noraneko/resource/modules/");
+        } catch {
+          await fs.mkdir(outdir, { recursive: true });
+        }
+        await fs.writeFile(
+          outpath,
+          output.code +
+            "\n//# sourceMappingURL= " +
+            path.relative(path.dirname(outpath), outpath + ".map"),
+        );
+        await fs.writeFile(outpath + ".map", output.map);
+      })();
+      listPromise.push(promise);
+    }
+    return Promise.all(listPromise);
+  });
 
   // await fs.cp("public", "dist", { recursive: true });
 }
