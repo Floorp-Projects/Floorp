@@ -735,7 +735,7 @@ export const ContentAnalysis = {
             Ci.nsIPromptService.BUTTON_TITLE_IS_STRING +
             Ci.nsIPromptService.BUTTON_POS_1 *
               Ci.nsIPromptService.BUTTON_TITLE_IS_STRING +
-            Ci.nsIPromptService.BUTTON_POS_1_DEFAULT,
+            Ci.nsIPromptService.BUTTON_POS_2_DEFAULT,
           await this.l10n.formatValue(
             "contentanalysis-warndialog-response-allow"
           ),
@@ -750,18 +750,54 @@ export const ContentAnalysis = {
         lazy.gContentAnalysis.respondToWarnDialog(aRequestToken, allow);
         return null;
       }
-      case Ci.nsIContentAnalysisResponse.eBlock:
+      case Ci.nsIContentAnalysisResponse.eBlock: {
         if (!lazy.showBlockedResult) {
           // Don't show anything
           return null;
         }
-        message = await this.l10n.formatValue("contentanalysis-block-message", {
-          content: this._getResourceNameFromNameOrOperationType(
-            aResourceNameOrOperationType
-          ),
-        });
-        timeoutMs = this._RESULT_NOTIFICATION_TIMEOUT_MS;
-        break;
+        let titleId = undefined;
+        let body = undefined;
+        if (aResourceNameOrOperationType.name) {
+          titleId = "contentanalysis-block-dialog-title-upload-file";
+          body = this.l10n.formatValueSync(
+            "contentanalysis-block-dialog-body-upload-file",
+            {
+              filename: aResourceNameOrOperationType.name,
+            }
+          );
+        } else {
+          let bodyId = undefined;
+          switch (aResourceNameOrOperationType.operationType) {
+            case Ci.nsIContentAnalysisRequest.eClipboard:
+              titleId = "contentanalysis-block-dialog-title-clipboard";
+              bodyId = "contentanalysis-block-dialog-body-clipboard";
+              break;
+            case Ci.nsIContentAnalysisRequest.eDroppedText:
+              titleId = "contentanalysis-block-dialog-title-dropped-text";
+              bodyId = "contentanalysis-block-dialog-body-dropped-text";
+              break;
+            case Ci.nsIContentAnalysisRequest.eOperationPrint:
+              titleId = "contentanalysis-block-dialog-title-print";
+              bodyId = "contentanalysis-block-dialog-body-print";
+              break;
+          }
+          if (!titleId || !bodyId) {
+            console.error(
+              "Unknown operationTypeForDisplay: ",
+              aResourceNameOrOperationType
+            );
+            return null;
+          }
+          body = this.l10n.formatValueSync(bodyId);
+        }
+        Services.prompt.alertBC(
+          aBrowsingContext,
+          Ci.nsIPromptService.MODAL_TYPE_TAB,
+          this.l10n.formatValueSync(titleId),
+          body
+        );
+        return null;
+      }
       case Ci.nsIContentAnalysisResponse.eUnspecified:
         message = await this.l10n.formatValue(
           "contentanalysis-unspecified-error-message",
