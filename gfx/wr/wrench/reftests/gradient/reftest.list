@@ -82,6 +82,7 @@ fuzzy(1,7) == tiling-conic-3.yaml tiling-conic-3-ref.yaml
 platform(linux,mac) == linear-aligned-border-radius.yaml linear-aligned-border-radius.png
 # interpolation fuzz from sampling texture-baked gradient ramps
 platform(linux,mac) fuzzy-range(<=1,*1404) == repeat-border-radius.yaml repeat-border-radius.png
+fuzzy(1,6000) == radial-border-radius-large.yaml radial-border-radius-large-ref.png
 
 == conic.yaml conic-ref.yaml
 fuzzy(1,57) == conic-simple.yaml conic-simple.png

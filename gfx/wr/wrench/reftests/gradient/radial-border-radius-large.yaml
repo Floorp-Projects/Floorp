@@ -1,0 +1,21 @@
+# This test contains a radial gradient with rounded corners.
+# The primitive is large enough to exercise the quad nine-patch
+# code path.
+# In addition the primitive contains a large solid color portion
+# causing the gradient optimization to split it into two primitives. 
+---
+root:
+  items:
+    - type: clip
+      id: 5
+      complex:
+        - rect: [10, 10, 750, 500]
+          radius: 32
+    - type: radial-gradient
+      bounds: 10 10 750 500
+      center: 0 0
+      radius: 400 350
+      stops: [0.0, red, 1.0, blue]
+      clip-chain: [5]
+
+
