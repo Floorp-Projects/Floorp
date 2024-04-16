@@ -1573,6 +1573,11 @@ function updateElement(translationsDocument, element) {
       ([, element]) => !element.parentNode
     );
 
+    for (node of liveTree.querySelectorAll("*")) {
+      // Clean-up the translation ids.
+      delete node.dataset.mozTranslationsId;
+    }
+
     if (unhandledElements.length) {
       lazy.console.warn(
         `${createNodePath(
