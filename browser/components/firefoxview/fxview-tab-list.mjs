@@ -810,10 +810,16 @@ export class VirtualList extends MozLitElement {
     this.isSubList = false;
     this.isVisible = false;
     this.intersectionObserver = new IntersectionObserver(
-      ([entry]) => (this.isVisible = entry.isIntersecting),
+      ([entry]) => {
+        this.isVisible = entry.isIntersecting;
+      },
       { root: this.ownerDocument }
     );
-    this.resizeObserver = new ResizeObserver(([entry]) => {
+    this.selfResizeObserver = new ResizeObserver(() => {
+      // Trigger the intersection observer once the tab rows have rendered
+      this.triggerIntersectionObserver();
+    });
+    this.childResizeObserver = new ResizeObserver(([entry]) => {
       if (entry.contentRect?.height > 0) {
         // Update properties on top-level virtual-list
         this.parentElement.itemHeightEstimate = entry.contentRect.height;
@@ -828,7 +834,8 @@ export class VirtualList extends MozLitElement {
   disconnectedCallback() {
     super.disconnectedCallback();
     this.intersectionObserver.disconnect();
-    this.resizeObserver.disconnect();
+    this.childResizeObserver.disconnect();
+    this.selfResizeObserver.disconnect();
   }
 
   triggerIntersectionObserver() {
@@ -860,7 +867,6 @@ export class VirtualList extends MozLitElement {
           this.items.slice(i, i + this.maxRenderCountEstimate)
         );
       }
-      this.triggerIntersectionObserver();
     }
   }
 
@@ -873,13 +879,17 @@ export class VirtualList extends MozLitElement {
 
   firstUpdated() {
     this.intersectionObserver.observe(this);
+    this.selfResizeObserver.observe(this);
     if (this.isSubList && this.children[0]) {
-      this.resizeObserver.observe(this.children[0]);
+      this.childResizeObserver.observe(this.children[0]);
     }
   }
 
   updated(changedProperties) {
     this.updateListHeight(changedProperties);
+    if (changedProperties.has("items") && !this.isSubList) {
+      this.triggerIntersectionObserver();
+    }
   }
 
   updateListHeight(changedProperties) {
