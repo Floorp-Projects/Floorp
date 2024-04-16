@@ -814,7 +814,7 @@ CSSFilterEditorWidget.prototype = {
       return;
     }
 
-    for (let { name, value } of tokenizeFilterValue(cssValue)) {
+    for (let { name, value, quote } of tokenizeFilterValue(cssValue)) {
       // If the specified value is invalid, replace it with the
       // default.
       if (name !== "url") {
@@ -823,7 +823,7 @@ CSSFilterEditorWidget.prototype = {
         }
       }
 
-      this.add(name, value, true);
+      this.add(name, value, quote, true);
     }
 
     this.emit("updated", this.getCssValue());
@@ -838,6 +838,9 @@ CSSFilterEditorWidget.prototype = {
    * @param {String} value
    *        value of the filter (e.g. 30px, 20%)
    *        If this is |null|, then a default value may be supplied.
+   * @param {String} quote
+   *        For a url filter, the quoting style.  This can be a
+   *        single quote, a double quote, or empty.
    * @return {Number}
    *        The index of the new filter in the current list of filters
    * @param {Boolean}
@@ -845,7 +848,7 @@ CSSFilterEditorWidget.prototype = {
    *        you're calling add in a loop and wait to emit a single event after
    *        the loop yourself, set this parameter to true.
    */
-  add(name, value, noEvent) {
+  add(name, value, quote, noEvent) {
     const def = this._definition(name);
     if (!def) {
       return false;
@@ -864,6 +867,11 @@ CSSFilterEditorWidget.prototype = {
         value = "";
       } else {
         value = def.range[0] + unitLabel;
+      }
+
+      if (name === "url") {
+        // Default quote.
+        quote = '"';
       }
     }
 
@@ -886,7 +894,7 @@ CSSFilterEditorWidget.prototype = {
       }
     }
 
-    const index = this.filters.push({ value, unit, name }) - 1;
+    const index = this.filters.push({ value, unit, name, quote }) - 1;
     if (!noEvent) {
       this.emit("updated", this.getCssValue());
     }
@@ -908,12 +916,22 @@ CSSFilterEditorWidget.prototype = {
       return null;
     }
 
-    // Just return the value url functions.
-    if (filter.name === "url") {
-      return filter.value;
+    // Just return the value+unit for non-url functions.
+    if (filter.name !== "url") {
+      return filter.value + filter.unit;
     }
 
-    return filter.value + filter.unit;
+    // url values need to be quoted and escaped.
+    if (filter.quote === "'") {
+      return "'" + filter.value.replace(/\'/g, "\\'") + "'";
+    } else if (filter.quote === '"') {
+      return '"' + filter.value.replace(/\"/g, '\\"') + '"';
+    }
+
+    // Unquoted.  This approach might change the original input -- for
+    // example the original might be over-quoted.  But, this is
+    // correct and probably good enough.
+    return filter.value.replace(/[\\ \t()"']/g, "\\$&");
   },
 
   removeAt(index) {
@@ -1030,37 +1048,30 @@ function tokenizeFilterValue(css) {
   let state = "initial";
   let name;
   let contents;
-  for (const token of cssTokenizer(css, true)) {
+  for (const token of cssTokenizer(css)) {
     switch (state) {
       case "initial":
-        if (token.tokenType === "Function") {
-          name = token.value;
+        if (token.tokenType === "function") {
+          name = token.text;
           contents = "";
           state = "function";
           depth = 1;
-        } else if (
-          token.tokenType === "UnquotedUrl" ||
-          token.tokenType === "BadUrl"
-        ) {
-          const url = token.text
-            .substring(
-              // token text starts with `url(`
-              4,
-              // unquoted url also include the closing parenthesis
-              token.tokenType == "UnquotedUrl"
-                ? token.text.length - 1
-                : undefined
-            )
-            .trim();
+        } else if (token.tokenType === "url" || token.tokenType === "bad_url") {
+          // Extract the quoting style from the url.
+          const originalText = css.substring(
+            token.startOffset,
+            token.endOffset
+          );
+          const [, quote] = /^url\([ \t\r\n\f]*(["']?)/i.exec(originalText);
 
-          filters.push({ name: "url", value: url });
+          filters.push({ name: "url", value: token.text.trim(), quote });
           // Leave state as "initial" because the URL token includes
           // the trailing close paren.
         }
         break;
 
       case "function":
-        if (token.tokenType === "CloseParenthesis") {
+        if (token.tokenType === "symbol" && token.text === ")") {
           --depth;
           if (depth === 0) {
             filters.push({ name, value: contents.trim() });
@@ -1070,8 +1081,8 @@ function tokenizeFilterValue(css) {
         }
         contents += css.substring(token.startOffset, token.endOffset);
         if (
-          token.tokenType === "Function" ||
-          token.tokenType === "Parenthesis"
+          token.tokenType === "function" ||
+          (token.tokenType === "symbol" && token.text === "(")
         ) {
           ++depth;
         }

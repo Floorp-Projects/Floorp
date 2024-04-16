@@ -9,6 +9,7 @@ const {
   pageStyleSpec,
 } = require("resource://devtools/shared/specs/page-style.js");
 
+const { getCSSLexer } = require("resource://devtools/shared/css/lexer.js");
 const {
   LongStringActor,
 } = require("resource://devtools/server/actors/string.js");
@@ -1279,26 +1280,20 @@ class PageStyleActor extends Actor {
       return;
     }
 
-    const lexer = new InspectorCSSParser(selectorText);
+    const lexer = getCSSLexer(selectorText);
     let token;
     while ((token = lexer.nextToken())) {
       if (
-        token.tokenType === "Delim" &&
-        shouldRetrieveClasses &&
-        token.text === "."
+        token.tokenType === "symbol" &&
+        ((shouldRetrieveClasses && token.text === ".") ||
+          (shouldRetrieveIds && token.text === "#"))
       ) {
         token = lexer.nextToken();
         if (
-          token.tokenType === "Ident" &&
+          token.tokenType === "ident" &&
           token.text.toLowerCase().startsWith(search)
         ) {
           result.add(token.text);
-        }
-      }
-      if (token.tokenType === "IDHash" && shouldRetrieveIds) {
-        const idWithoutHash = token.value;
-        if (idWithoutHash.startsWith(search)) {
-          result.add(idWithoutHash);
         }
       }
     }
