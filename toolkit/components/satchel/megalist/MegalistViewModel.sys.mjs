@@ -67,6 +67,13 @@ export class MegalistViewModel {
     }
   }
 
+  #commandsArray(snapshot) {
+    if (Array.isArray(snapshot.commands)) {
+      return snapshot.commands;
+    }
+    return Array.from(snapshot.commands());
+  }
+
   /**
    *
    * Send snapshot of necessary line data across parent-child boundary.
@@ -95,7 +102,7 @@ export class MegalistViewModel {
       snapshot.end = snapshotData.end;
     }
     if ("commands" in snapshotData) {
-      snapshot.commands = snapshotData.commands;
+      snapshot.commands = this.#commandsArray(snapshotData);
     }
     if ("valueIcon" in snapshotData) {
       snapshot.valueIcon = snapshotData.valueIcon;
@@ -182,8 +189,9 @@ export class MegalistViewModel {
       : this.#selectedIndex;
     const snapshot = this.#snapshots[index];
     if (snapshot) {
-      commandId = commandId ?? snapshot.commands[0]?.id;
-      const mustVerify = snapshot.commands.find(c => c.id == commandId)?.verify;
+      const commands = this.#commandsArray(snapshot);
+      commandId = commandId ?? commands[0]?.id;
+      const mustVerify = commands.find(c => c.id == commandId)?.verify;
       if (!mustVerify || (await this.#verifyUser())) {
         // TODO:Enter the prompt message and pref for #verifyUser()
         await snapshot[`execute${commandId}`]?.(value);

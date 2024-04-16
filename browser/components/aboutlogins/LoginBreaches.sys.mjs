@@ -147,6 +147,11 @@ export const LoginBreaches = {
     return vulnerablePasswordsByLoginGUID;
   },
 
+  recordBreachAlertDismissal(loginGuid) {
+    const storageJSON = Services.logins.wrappedJSObject._storage;
+    return storageJSON.recordBreachAlertDismissal(loginGuid);
+  },
+
   isVulnerablePassword(login) {
     if (!lazy.VULNERABLE_PASSWORDS_ENABLED) {
       return false;
