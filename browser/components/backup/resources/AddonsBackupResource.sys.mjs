@@ -16,6 +16,55 @@ export class AddonsBackupResource extends BackupResource {
     return false;
   }
 
+  async backup(stagingPath, profilePath = PathUtils.profileDir) {
+    // Files and directories to backup.
+    let toCopy = [
+      "extensions.json",
+      "extension-settings.json",
+      "extension-preferences.json",
+      "addonStartup.json.lz4",
+      "browser-extension-data",
+      "extension-store-permissions",
+    ];
+    await BackupResource.copyFiles(profilePath, stagingPath, toCopy);
+
+    // Backup only the XPIs in the extensions directory.
+    let xpiFiles = [];
+    let extensionsXPIDirectoryPath = PathUtils.join(profilePath, "extensions");
+    let xpiDirectoryChildren = await IOUtils.getChildren(
+      extensionsXPIDirectoryPath,
+      {
+        ignoreAbsent: true,
+      }
+    );
+    for (const childFilePath of xpiDirectoryChildren) {
+      if (childFilePath.endsWith(".xpi")) {
+        let childFileName = PathUtils.filename(childFilePath);
+        xpiFiles.push(childFileName);
+      }
+    }
+    // Create the extensions directory in the staging directory.
+    let stagingExtensionsXPIDirectoryPath = PathUtils.join(
+      stagingPath,
+      "extensions"
+    );
+    await IOUtils.makeDirectory(stagingExtensionsXPIDirectoryPath);
+    // Copy all found XPIs to the staging directory.
+    await BackupResource.copyFiles(
+      extensionsXPIDirectoryPath,
+      stagingExtensionsXPIDirectoryPath,
+      xpiFiles
+    );
+
+    // Copy storage sync database.
+    let databases = ["storage-sync-v2.sqlite"];
+    await BackupResource.copySqliteDatabases(
+      profilePath,
+      stagingPath,
+      databases
+    );
+  }
+
   async measure(profilePath = PathUtils.profileDir) {
     // Report the total size of the extension json files.
     const jsonFiles = [
@@ -55,16 +104,16 @@ export class AddonsBackupResource extends BackupResource {
     Glean.browserBackup.storageSyncSize.set(storageSyncSize);
 
     // Report the total size of XPI files in the extensions directory.
-    let extensionsXpiDirectoryPath = PathUtils.join(profilePath, "extensions");
-    let extensionsXpiDirectorySize = await BackupResource.getDirectorySize(
-      extensionsXpiDirectoryPath,
+    let extensionsXPIDirectoryPath = PathUtils.join(profilePath, "extensions");
+    let extensionsXPIDirectorySize = await BackupResource.getDirectorySize(
+      extensionsXPIDirectoryPath,
       {
         shouldExclude: (filePath, fileType) =>
           fileType !== "regular" || !filePath.endsWith(".xpi"),
       }
     );
     Glean.browserBackup.extensionsXpiDirectorySize.set(
-      extensionsXpiDirectorySize
+      extensionsXPIDirectorySize
     );
 
     // Report the total size of the browser extension data.

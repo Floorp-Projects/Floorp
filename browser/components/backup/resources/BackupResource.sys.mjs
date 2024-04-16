@@ -163,7 +163,7 @@ export class BackupResource {
 
         await connection.backup(destFilePath);
       } finally {
-        await connection.close();
+        await connection?.close();
       }
     }
   }

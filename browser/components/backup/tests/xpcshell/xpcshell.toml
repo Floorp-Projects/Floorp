@@ -6,6 +6,8 @@ prefs = [
   "browser.backup.log=true",
 ]
 
+["test_AddonsBackupResource.js"]
+
 ["test_BackupResource.js"]
 support-files = ["data/test_xulstore.json"]
 
