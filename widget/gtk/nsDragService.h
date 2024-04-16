@@ -24,6 +24,42 @@ class SourceSurface;
 }
 }  // namespace mozilla
 
+class DragData final {
+ public:
+  NS_INLINE_DECL_REFCOUNTING(DragData)
+
+  DragData(void* aData, uint32_t aDataLen, bool aCopyData) {
+    UpdateData(aData, aDataLen, aCopyData);
+  }
+  DragData(const void* aData, uint32_t aDataLen) {
+    // Always copy const data as we want to update it in-place by
+    // UTF8/UTF16 conversions.
+    UpdateData(const_cast<void*>(aData), aDataLen, /* aCopyData */ true);
+  }
+  explicit DragData(gchar** aDragUris) : mDragUris(aDragUris) {}
+
+  bool HasURIs() const { return !!mDragUris.get(); }
+  gchar** GetURIs() const { return mDragUris.get(); }
+
+  void UpdateData(void* aData, uint32_t aDataLen, bool aCopyData = false);
+  void* GetData() const { return mDragData; }
+  uint32_t GetDataLen() const { return mDragDataLen; }
+  mozilla::Span<char> GetDataSpan() const {
+    return mozilla::Span((char*)mDragData, mDragDataLen);
+  }
+
+ private:
+  void ReleaseData();
+  ~DragData();
+
+  // We don't use any auto pointers here because we pass mDragData directly
+  // to various code which re-allocates it and releases it by malloc/free.
+  uint32_t mDragDataLen = 0;
+  void* mDragData = nullptr;
+
+  mozilla::GUniquePtr<gchar*> mDragUris;
+};
+
 /**
  * Native GTK DragService wrapper
  */
@@ -162,14 +198,14 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
 
   // We cache all data for the current drag context,
   // because waiting for the data in GetDragData can be very slow.
-  nsTHashMap<nsVoidPtrHashKey, nsTArray<uint8_t>> mCachedData;
+  //
   // mCachedData are tied to mCachedDragContext. mCachedDragContext is not
   // ref counted and may be already deleted on Gtk side.
+  //
   // We used it for mCachedData invalidation only and can't be used for
   // any D&D operation.
   uintptr_t mCachedDragContext;
-
-  nsTHashMap<nsVoidPtrHashKey, mozilla::GUniquePtr<gchar*>> mCachedUris;
+  nsRefPtrHashtable<nsVoidPtrHashKey, DragData> mCachedDragData;
 
   guint mPendingTime;
 
@@ -197,12 +233,9 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
   // is it OK to drop on us?
   bool mCanDrop;
 
-  // have we received our drag data?
-  bool mTargetDragDataReceived;
-  // last data received and its length
-  void* mTargetDragData;
-  uint32_t mTargetDragDataLen;
-  mozilla::GUniquePtr<gchar*> mTargetDragUris;
+  // Received drag data
+  RefPtr<DragData> mDragData;
+
   // is the current target drag context contain a list?
   bool IsTargetContextList(void);
   // this will get the native data from the last target given a
