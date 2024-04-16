@@ -56,8 +56,9 @@ class ProfilerStopDialogFragment : DialogFragment() {
         }
     }
 
-    private fun setProfilerState() {
+    override fun dismiss() {
         profilerViewModel.setProfilerState(requireContext().components.core.engine.profiler!!.isProfilerActive())
+        super.dismiss()
     }
 
     @Composable
@@ -110,14 +111,7 @@ class ProfilerStopDialogFragment : DialogFragment() {
                 ) {
                     TextButton(
                         onClick = {
-                            requireContext().components.core.engine.profiler?.stopProfiler(
-                                onSuccess = {
-                                    setProfilerState()
-                                },
-                                onError = {
-                                    setProfilerState()
-                                }
-                            )
+                            requireContext().components.core.engine.profiler?.stopProfiler({}, {})
                             dismiss()
                         },
                     ) {
@@ -168,7 +162,6 @@ class ProfilerStopDialogFragment : DialogFragment() {
             resources.getString(message) + extra,
             Toast.LENGTH_LONG,
         ).show()
-        setProfilerState()
         dismiss()
     }
 
