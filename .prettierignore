@@ -1430,6 +1430,7 @@ testing/xpcshell/node-ws/
 third_party/
 toolkit/components/certviewer/content/vendor/
 toolkit/components/jsoncpp/
+toolkit/components/ml/vendor/
 toolkit/components/normandy/vendor/
 toolkit/components/passwordmgr/PasswordRulesParser.sys.mjs
 toolkit/components/protobuf/
