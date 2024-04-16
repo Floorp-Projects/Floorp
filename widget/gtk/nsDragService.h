@@ -207,7 +207,8 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
   bool IsTargetContextList(void);
   // this will get the native data from the last target given a
   // specific flavor
-  void GetTargetDragData(GdkAtom aFlavor, nsTArray<nsCString>& aDropFlavors,
+  void GetTargetDragData(GdkAtom aFlavor,
+                         const nsTArray<nsCString>& aDropFlavors,
                          bool aResetTargetData = true);
   // this will reset all of the target vars
   void TargetResetData(void);
