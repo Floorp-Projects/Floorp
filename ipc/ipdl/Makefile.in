@@ -19,6 +19,7 @@ ipdl_py_deps := \
 # NB: the IPDL compiler manages .ipdl-->.h/.cpp dependencies itself,
 # which is why we don't have explicit .h/.cpp targets here
 ipdl.track: $(ALL_IPDLSRCS) $(ALL_IPDLSRCS_FILE) $(srcdir)/sync-messages.ini $(srcdir)/message-metadata.ini $(ipdl_py_deps)
+	$(call BUILDSTATUS,START_Ipdl ipdl.py)
 	$(PYTHON3) $(srcdir)/ipdl.py \
 	  --sync-msg-list=$(srcdir)/sync-messages.ini \
 	  --msg-metadata=$(srcdir)/message-metadata.ini \
@@ -27,6 +28,7 @@ ipdl.track: $(ALL_IPDLSRCS) $(ALL_IPDLSRCS_FILE) $(srcdir)/sync-messages.ini $(s
 	  $(IPDLDIRS:%=-I%) \
 	  --file-list $(ALL_IPDLSRCS_FILE)
 	touch $@
+	$(call BUILDSTATUS,END_Ipdl ipdl.py)
 
 export:: ipdl.track
 endif
