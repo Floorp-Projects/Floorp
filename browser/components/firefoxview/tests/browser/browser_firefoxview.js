@@ -31,20 +31,47 @@ add_task(async function test_aria_roles() {
     );
     let recentlyClosedEmptyState = recentlyClosedComponent.emptyState;
     let descriptionEls = recentlyClosedEmptyState.descriptionEls;
+    const recentlyClosedCard = SpecialPowers.wrap(
+      recentlyClosedEmptyState
+    ).openOrClosedShadowRoot.querySelector("card-container");
     is(
-      descriptionEls[1].querySelector("a").getAttribute("aria-details"),
-      "card-container",
-      "The link within the recently closed empty state has the expected 'aria-details' attribute."
+      recentlyClosedCard.getAttribute("aria-labelledby"),
+      "header",
+      "The recently closed empty state container has the expected 'aria-labelledby' attribute."
+    );
+    is(
+      recentlyClosedCard.getAttribute("aria-describedby"),
+      "description",
+      "The recently closed empty state container has the expected 'aria-describedby' attribute."
+    );
+    is(
+      recentlyClosedCard.getAttribute("role"),
+      "group",
+      "The recently closed empty state container has the expected 'role' attribute."
     );
 
     let syncedTabsComponent = document.querySelector(
       "view-syncedtabs[slot=syncedtabs]"
     );
     let syncedTabsEmptyState = syncedTabsComponent.emptyState;
+    const syncedCard =
+      SpecialPowers.wrap(
+        syncedTabsEmptyState
+      ).openOrClosedShadowRoot.querySelector("card-container");
     is(
-      syncedTabsEmptyState.querySelector("button").getAttribute("aria-details"),
-      "empty-container",
-      "The button within the synced tabs empty state has the expected 'aria-details' attribute."
+      syncedCard.getAttribute("aria-labelledby"),
+      "header",
+      "The synced tabs empty state container has the expected 'aria-labelledby' attribute."
+    );
+    is(
+      syncedCard.getAttribute("aria-describedby"),
+      "description",
+      "The synced tabs empty state container has the expected 'aria-describedby' attribute."
+    );
+    is(
+      syncedCard.getAttribute("role"),
+      "group",
+      "The synced tabs empty state container has the expected 'role' attribute."
     );
 
     // Test keyboard navigation from card-container summary
