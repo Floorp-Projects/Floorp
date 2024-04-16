@@ -9220,12 +9220,14 @@ class _CustomizeMenu extends (external_React_default()).PureComponent {
       className: "customize-menu",
       role: "dialog",
       "data-l10n-id": "newtab-personalize-dialog-label"
+    }, /*#__PURE__*/external_React_default().createElement("div", {
+      className: "close-button-wrapper"
     }, /*#__PURE__*/external_React_default().createElement("button", {
       onClick: () => this.props.onClose(),
       className: "close-button",
       "data-l10n-id": "newtab-custom-close-button",
       ref: c => this.closeButton = c
-    }), /*#__PURE__*/external_React_default().createElement(ContentSection, {
+    })), /*#__PURE__*/external_React_default().createElement(ContentSection, {
       openPreferences: this.props.openPreferences,
       setPref: this.props.setPref,
       enabledSections: this.props.enabledSections,

@@ -1674,7 +1674,8 @@ main section {
   inset-block: 0;
   inset-inline-end: 0;
   z-index: 1001;
-  padding: 16px;
+  padding-block: 0 var(--space-large);
+  padding-inline: var(--space-large);
   overflow: auto;
   transform: translateX(435px);
   visibility: hidden;
@@ -1701,9 +1702,16 @@ main section {
 .customize-menu.customize-animate-exit-active {
   box-shadow: 0 2px 14px 0 rgba(0, 0, 0, 0.2);
 }
+.customize-menu .close-button-wrapper {
+  position: sticky;
+  top: var(--space-large);
+  margin-block-end: var(--space-large);
+  background-color: var(--newtab-background-color-secondary);
+  z-index: 1;
+}
 .customize-menu .close-button {
   margin-inline-start: auto;
-  margin-bottom: 28px;
+  margin-inline-end: var(--space-large);
   white-space: nowrap;
   display: block;
   background-color: var(--newtab-element-secondary-color);
@@ -1730,7 +1738,7 @@ main section {
   grid-template-columns: 1fr;
   grid-template-rows: repeat(4, auto);
   grid-row-gap: 32px;
-  padding: 0 16px;
+  padding: var(--space-large);
 }
 .home-section .wallpapers-section h2 {
   font-size: inherit;
