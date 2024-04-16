@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GetAddrInfo.h"
+#include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/net/DNSPacket.h"
 #include "nsIDNSService.h"
 #include "mozilla/Maybe.h"
@@ -55,6 +56,7 @@ nsresult ResolveHTTPSRecordImpl(const nsACString& aHost, uint16_t aFlags,
   rv = packet.FillBuffer(
       [&](unsigned char response[DNSPacket::MAX_SIZE]) -> int {
         int len = 0;
+        TimeStamp startTime = TimeStamp::Now();
 #if defined(HAVE_RES_NINIT)
         len = res_nquery(sThreadRes.get(), host.get(), ns_c_in,
                          nsIDNSService::RESOLVE_TYPE_HTTPSSVC, response,
@@ -65,6 +67,8 @@ nsresult ResolveHTTPSRecordImpl(const nsACString& aHost, uint16_t aFlags,
                       response, DNSPacket::MAX_SIZE);
 #endif
 
+        mozilla::glean::networking::dns_native_https_call_time
+            .AccumulateRawDuration(TimeStamp::Now() - startTime);
         if (len < 0) {
           LOG("DNS query failed");
         }
