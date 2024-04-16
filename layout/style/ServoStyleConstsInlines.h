@@ -45,6 +45,7 @@ template struct StyleStrong<StyleLockedKeyframesRule>;
 template struct StyleStrong<StyleMediaRule>;
 template struct StyleStrong<StyleDocumentRule>;
 template struct StyleStrong<StyleNamespaceRule>;
+template struct StyleStrong<StyleMarginRule>;
 template struct StyleStrong<StyleLockedPageRule>;
 template struct StyleStrong<StylePropertyRule>;
 template struct StyleStrong<StyleSupportsRule>;
