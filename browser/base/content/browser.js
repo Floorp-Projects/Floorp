@@ -35,8 +35,6 @@ ChromeUtils.defineESModuleGetters(this, {
   DownloadsCommon: "resource:///modules/DownloadsCommon.sys.mjs",
   E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
   ExtensionsUI: "resource:///modules/ExtensionsUI.sys.mjs",
-  FirefoxViewNotificationManager:
-    "resource:///modules/firefox-view-notification-manager.sys.mjs",
   HomePage: "resource:///modules/HomePage.sys.mjs",
   isProductURL: "chrome://global/content/shopping/ShoppingProduct.mjs",
   LightweightThemeConsumer:
@@ -9143,11 +9141,9 @@ var FirefoxViewHandler = {
     ChromeUtils.defineESModuleGetters(this, {
       SyncedTabs: "resource://services-sync/SyncedTabs.sys.mjs",
     });
-    Services.obs.addObserver(this, "firefoxview-notification-dot-update");
   },
   uninit() {
     CustomizableUI.removeListener(this);
-    Services.obs.removeObserver(this, "firefoxview-notification-dot-update");
   },
   onWidgetRemoved(aWidgetId) {
     if (aWidgetId == this.BUTTON_ID && this.tab) {
@@ -9221,14 +9217,6 @@ var FirefoxViewHandler = {
         break;
     }
   },
-  observe(sub, topic, data) {
-    switch (topic) {
-      case "firefoxview-notification-dot-update":
-        let shouldShow = data === "true";
-        this._toggleNotificationDot(shouldShow);
-        break;
-    }
-  },
   _closeDeviceConnectedTab() {
     if (!TabsSetupFlowManager.didFxaTabOpen) {
       return;
@@ -9259,11 +9247,6 @@ var FirefoxViewHandler = {
   _onTabForegrounded() {
     if (this.tab?.selected) {
       this.SyncedTabs.syncTabs();
-      Services.obs.notifyObservers(
-        null,
-        "firefoxview-notification-dot-update",
-        "false"
-      );
     }
   },
   _recordViewIfTabSelected() {
@@ -9286,8 +9269,5 @@ var FirefoxViewHandler = {
         Services.prefs.setIntPref(PREF_NAME, viewCount + 1);
       }
     }
-  },
-  _toggleNotificationDot(shouldShow) {
-    this.button?.toggleAttribute("attention", shouldShow);
   },
 };

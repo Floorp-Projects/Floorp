@@ -95,10 +95,6 @@ toolbarpaletteitem:not([notransition])[place="panel"] {
   opacity: 1;
 }
 
-#customization-palette #firefox-view-button[attention] {
-  background-position: center bottom 8%;
-}
-
 toolbarpaletteitem toolbarbutton[disabled] {
   color: inherit !important;
 }
