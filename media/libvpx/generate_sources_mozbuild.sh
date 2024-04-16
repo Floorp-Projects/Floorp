@@ -214,7 +214,7 @@ gen_config_files win/x64 "--target=x86_64-win64-vs15 ${all_platforms} ${x86_plat
 gen_config_files win/ia32 "--target=x86-win32-gcc ${all_platforms} ${x86_platforms}"
 
 gen_config_files linux/arm "--target=armv7-linux-gcc ${all_platforms} ${arm_platforms}"
-gen_config_files linux/arm64 "--target=arm64-linux-gcc ${all_platforms} ${arm64_platforms}"
+gen_config_files linux/arm64 "--target=arm64-linux-gcc ${all_platforms} ${arm64_platforms} ${disable_sve}" # Bug 1889813
 gen_config_files win/aarch64 "--target=arm64-win64-vs15 ${all_platforms} ${arm64_platforms} ${disable_sve}" # Bug 1885585
 
 gen_config_files generic "--target=generic-gnu ${all_platforms}"
@@ -237,7 +237,7 @@ gen_rtcd_header win/x64 x86_64
 gen_rtcd_header win/ia32 x86
 
 gen_rtcd_header linux/arm armv7
-gen_rtcd_header linux/arm64 arm64
+gen_rtcd_header linux/arm64 arm64 $disable_sve # Bug 1889813
 gen_rtcd_header win/aarch64 arm64 $disable_sve # Bug 1885585
 
 gen_rtcd_header generic generic
@@ -278,6 +278,7 @@ make_clean
 make libvpx_srcs.txt target=libs $config > /dev/null
 convert_srcs_to_project_files libvpx_srcs.txt ARM64
 # Bug 1885585: The sve files will be excluded from the win/aarch64 build in moz.build.
+# Bug 1889813: The sve files will be excluded from the linux/arm64 build in moz.build.
 
 echo "Generate generic source list."
 config=$(print_config generic)
