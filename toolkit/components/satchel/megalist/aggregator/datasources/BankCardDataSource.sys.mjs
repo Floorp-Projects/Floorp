@@ -266,7 +266,7 @@ export class BankCardDataSource extends DataSourceBase {
         `${card["cc-exp-month"]}/${card["cc-exp-year"]}`
           .toUpperCase()
           .includes(searchText) ||
-        card["cc-name"].toUpperCase().includes(searchText)
+        card["cc-name"]?.toUpperCase().includes(searchText)
     );
 
     this.formatMessages({

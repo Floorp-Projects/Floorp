@@ -63,10 +63,15 @@ export class LoginDataSource extends DataSourceBase {
         "passwords-import-file-picker-csv-filter-title",
       passwordsImportFilePickerTsvFilterTitle:
         "passwords-import-file-picker-tsv-filter-title",
+      dismissBreachCommandLabel: "passwords-dismiss-breach-alert-command",
     }).then(strings => {
       const copyCommand = { id: "Copy", label: strings.copyCommandLabel };
       const editCommand = { id: "Edit", label: strings.editCommandLabel };
       const deleteCommand = { id: "Delete", label: strings.deleteCommandLabel };
+      const dismissBreachCommand = {
+        id: "DismissBreach",
+        label: strings.dismissBreachCommandLabel,
+      };
       const noOriginSticker = { type: "error", label: "😾 Missing origin" };
       const noPasswordSticker = { type: "error", label: "😾 Missing password" };
       const breachedSticker = { type: "warning", label: "BREACH" };
@@ -115,12 +120,23 @@ export class LoginDataSource extends DataSourceBase {
           },
         },
         commands: {
-          value: [
-            { id: "Open", label: strings.openCommandLabel },
-            copyCommand,
-            "-",
-            deleteCommand,
-          ],
+          *value() {
+            yield { id: "Open", label: strings.openCommandLabel };
+            yield copyCommand;
+            yield "-";
+            yield deleteCommand;
+
+            if (this.breached) {
+              yield dismissBreachCommand;
+            }
+          },
+        },
+        executeDismissBreach: {
+          value() {
+            lazy.LoginBreaches.recordBreachAlertDismissal(this.record.guid);
+            delete this.breached;
+            this.refreshOnScreen();
+          },
         },
         executeCopy: {
           value() {

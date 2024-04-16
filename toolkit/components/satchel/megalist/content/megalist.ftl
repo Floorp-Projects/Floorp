@@ -23,6 +23,7 @@ command-cancel = Cancel
 passwords-section-label = Passwords
 passwords-disabled = Passwords are disabled
 
+passwords-dismiss-breach-alert-command = Dismiss breach alert
 passwords-command-create = Add Password
 passwords-command-import = Import from a File…
 passwords-command-export = Export Passwords…
