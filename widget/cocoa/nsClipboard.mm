@@ -499,13 +499,12 @@ nsClipboard::HasNativeClipboardDataMatchingFlavors(
         // XXX we only check the first pasteboard item as we only get data from
         // first item in TransferableFromPasteboard for now.
         if (NSPasteboardItem* item = [items objectAtIndex:0]) {
-          if (NSString *availableType = [item
-                  availableTypeFromArray:
-                      [NSArray
-                          arrayWithObjects:[UTIHelper
-                                               stringFromPboardType:
-                                                   (NSString*)kUTTypeFileURL],
-                                           nil]]) {
+          if ([item availableTypeFromArray:
+                        [NSArray
+                            arrayWithObjects:[UTIHelper
+                                                 stringFromPboardType:
+                                                     (NSString*)kUTTypeFileURL],
+                                             nil]]) {
             MOZ_CLIPBOARD_LOG("    has %s\n", mimeType.get());
             return true;
           }
