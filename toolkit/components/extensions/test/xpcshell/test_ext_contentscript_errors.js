@@ -18,6 +18,11 @@ add_task(async function test_cached_contentscript_on_document_start() {
         // Use distinct content scripts as some will throw and would prevent executing the next script
         {
           matches: ["http://*/*/file_content_script_errors.html"],
+          js: ["script_does_not_exist.js"],
+          run_at: "document_start",
+        },
+        {
+          matches: ["http://*/*/file_content_script_errors.html"],
           js: ["script1.js"],
           run_at: "document_start",
         },
@@ -41,6 +46,16 @@ add_task(async function test_cached_contentscript_on_document_start() {
           js: ["script5.js"],
           run_at: "document_start",
         },
+        {
+          matches: ["http://*/*/file_content_script_errors.html"],
+          js: ["script6.js"],
+          run_at: "document_start",
+        },
+        {
+          matches: ["http://*/*/file_content_script_errors.html"],
+          js: ["script7.js"],
+          run_at: "document_start",
+        },
       ],
     },
 
@@ -58,6 +73,12 @@ add_task(async function test_cached_contentscript_on_document_start() {
         )
       `,
       "script5.js": `
+        throw null;
+      `,
+      "script6.js": `
+        throw Symbol("MySymbol");
+      `,
+      "script7.js": `
         Promise.reject("rejected promise");
 
         (async () => {
@@ -78,18 +99,21 @@ add_task(async function test_cached_contentscript_on_document_start() {
     },
   });
 
+  await extension.startup();
+
   // Error messages, in roughly the order they appear above.
   let expectedMessages = [
+    `Unable to load script: moz-extension://${extension.uuid}/script_does_not_exist.js`,
     "Error: Object exception",
     "uncaught exception: String exception",
     "ReferenceError: undefinedSymbol is not defined",
     "SyntaxError: expected expression, got ')'",
+    "uncaught exception: null",
+    "uncaught exception: Symbol(MySymbol)",
     "uncaught exception: rejected promise",
     "Error: async function exception",
     "ReferenceError: asyncUndefinedSymbol is not defined",
   ];
-
-  await extension.startup();
 
   // Load a first page in order to be able to register a console listener in the content process.
   // This has to be done in the same domain of the second page to stay in the same process.
@@ -110,7 +134,7 @@ add_task(async function test_cached_contentscript_on_document_start() {
           innerWindowID: error.innerWindowID,
           message: error.errorMessage,
         });
-        if (this.collectedErrors.length == 7) {
+        if (this.collectedErrors.length == 10) {
           Services.console.unregisterListener(this);
           resolve(this.collectedErrors);
         }
@@ -128,7 +152,7 @@ add_task(async function test_cached_contentscript_on_document_start() {
 
   await extension.awaitMessage("content-script-loaded");
 
-  equal(errors.length, 7);
+  equal(errors.length, 10);
   let messages = [];
   for (const { innerWindowID, message } of errors) {
     equal(
