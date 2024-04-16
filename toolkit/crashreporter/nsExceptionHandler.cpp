@@ -96,6 +96,9 @@
 using mozilla::InjectCrashRunnable;
 #endif
 
+#ifdef XP_WIN
+#  include <filesystem>
+#endif
 #include <fstream>
 #include <optional>
 
@@ -2773,7 +2776,17 @@ static nsresult PrefSubmitReports(bool* aSubmitReports, bool writePref) {
   reporterSettings->AppendNative("Crash Reports"_ns);
   reporterSettings->AppendNative("crashreporter_settings.json"_ns);
 
+  // On e.g. Linux, std::filesystem requires sometimes linking libstdc++fs,
+  // and we don't do that yet, so limit the use of std::filesystem::path where
+  // it's really needed, which is Windows, because implicit conversions from
+  // wstring in fstream constructors are not supported as of
+  // https://cplusplus.github.io/LWG/issue3430.
+#  ifdef XP_WIN
+  std::optional<std::filesystem::path> file_path =
+      CreatePathFromFile(reporterSettings);
+#  else
   std::optional<xpstring> file_path = CreatePathFromFile(reporterSettings);
+#  endif
 
   if (!file_path) {
     return NS_ERROR_FAILURE;
