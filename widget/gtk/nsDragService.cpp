@@ -718,8 +718,7 @@ nsDragService::GetNumDropItems(uint32_t* aNumItems) {
     return NS_OK;
   }
 
-  bool isList = IsTargetContextList();
-  if (isList) {
+  if (IsTargetContextList()) {
     if (!mSourceDataItems) {
       *aNumItems = 0;
       return NS_OK;
@@ -727,35 +726,20 @@ nsDragService::GetNumDropItems(uint32_t* aNumItems) {
     mSourceDataItems->GetLength(aNumItems);
   } else {
     // text/uri-list
-    GdkAtom requestedFlavor = sTextUriListTypeAtom;
-    if (!requestedFlavor) {
-      *aNumItems = 0;
-      return NS_OK;
-    }
-
     nsTArray<GdkAtom> availableDragFlavors;
     GetAvailableDragFlavors(availableDragFlavors);
-    GetDragData(requestedFlavor, availableDragFlavors);
+
+    GetDragData(sTextUriListTypeAtom, availableDragFlavors);
 
     // application/vnd.portal.files
     if (!mTargetDragUris) {
-      requestedFlavor = sPortalFileAtom;
-      if (!requestedFlavor) {
-        *aNumItems = 0;
-        return NS_OK;
-      }
-      GetDragData(requestedFlavor, availableDragFlavors,
+      GetDragData(sPortalFileAtom, availableDragFlavors,
                   false /* resetTargetData */);
     }
 
     // application/vnd.portal.filetransfer
     if (!mTargetDragUris) {
-      requestedFlavor = sPortalFileTransferAtom;
-      if (!requestedFlavor) {
-        *aNumItems = 0;
-        return NS_OK;
-      }
-      GetDragData(requestedFlavor, availableDragFlavors,
+      GetDragData(sPortalFileTransferAtom, availableDragFlavors,
                   false /* resetTargetData */);
     }
 
@@ -842,9 +826,7 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex) {
   }
 
   // check to see if this is an internal list
-  bool isList = IsTargetContextList();
-
-  if (isList) {
+  if (IsTargetContextList()) {
     LOGDRAGSERVICE("  Process as a list...");
     // find a matching flavor
     for (uint32_t i = 0; i < flavors.Length(); ++i) {
@@ -903,24 +885,18 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex) {
     // application/vnd.portal.files
     if (!file || !mTargetDragUris) {
       LOGDRAGSERVICE("  file not found, proceed with %s flavor\n", gPortalFile);
-      requestedFlavor = sPortalFileAtom;
-      if (requestedFlavor) {
-        GetDragData(requestedFlavor, availableDragFlavors,
-                    false /* resetTargetData */);
-        GetReachableFileFromUriList(mTargetDragUris.get(), aItemIndex, file);
-      }
+      GetDragData(sPortalFileAtom, availableDragFlavors,
+                  false /* resetTargetData */);
+      GetReachableFileFromUriList(mTargetDragUris.get(), aItemIndex, file);
     }
 
     // application/vnd.portal.filetransfer
     if (!file || !mTargetDragUris) {
       LOGDRAGSERVICE("  file not found, proceed with %s flavor\n",
                      gPortalFileTransfer);
-      requestedFlavor = sPortalFileTransferAtom;
-      if (requestedFlavor) {
-        GetDragData(requestedFlavor, availableDragFlavors,
-                    false /* resetTargetData */);
-        GetReachableFileFromUriList(mTargetDragUris.get(), aItemIndex, file);
-      }
+      GetDragData(sPortalFileTransferAtom, availableDragFlavors,
+                  false /* resetTargetData */);
+      GetReachableFileFromUriList(mTargetDragUris.get(), aItemIndex, file);
     }
 
     // Conversion from application/x-moz-file to text/uri-list
@@ -928,13 +904,9 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex) {
       LOGDRAGSERVICE(
           "  file not found, proceed with conversion %s =>  %s flavor\n",
           kFileMime, gTextUriListType);
-
-      requestedFlavor = sTextUriListTypeAtom;
-      if (requestedFlavor) {
-        GetDragData(requestedFlavor, availableDragFlavors,
-                    false /* resetTargetData */);
-        GetReachableFileFromUriList(mTargetDragUris.get(), aItemIndex, file);
-      }
+      GetDragData(sTextUriListTypeAtom, availableDragFlavors,
+                  false /* resetTargetData */);
+      GetReachableFileFromUriList(mTargetDragUris.get(), aItemIndex, file);
     }
 
     if (file) {
@@ -952,8 +924,7 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex) {
       // If we are looking for text/plain, try again with non utf-8 text.
       if (flavorStr.EqualsLiteral(kTextMime)) {
         LOGDRAGSERVICE("  conversion %s => %s", kTextMime, kTextMime);
-        requestedFlavor = sTextMimeAtom;
-        GetDragData(requestedFlavor, availableDragFlavors);
+        GetDragData(sTextMimeAtom, availableDragFlavors);
         if (mTargetDragData) {
           dataFound = true;
         }  // if plain text flavor present
@@ -964,8 +935,7 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex) {
       // _NETSCAPE_URL
       if (flavorStr.EqualsLiteral(kURLMime)) {
         LOGDRAGSERVICE("  conversion %s => %s", kURLMime, gTextUriListType);
-        requestedFlavor = sTextUriListTypeAtom;
-        GetDragData(requestedFlavor, availableDragFlavors);
+        GetDragData(sTextUriListTypeAtom, availableDragFlavors);
         if (mTargetDragData) {
           const char* data = reinterpret_cast<char*>(mTargetDragData);
           char16_t* convertedText = nullptr;
@@ -984,8 +954,7 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex) {
         }
         if (!dataFound) {
           LOGDRAGSERVICE("  conversion %s => %s", kURLMime, gMozUrlType);
-          requestedFlavor = sMozUrlTypeAtom;
-          GetDragData(requestedFlavor, availableDragFlavors);
+          GetDragData(sMozUrlTypeAtom, availableDragFlavors);
           if (mTargetDragData) {
             const char* castedText = reinterpret_cast<char*>(mTargetDragData);
             char16_t* convertedText = nullptr;
@@ -1077,10 +1046,9 @@ nsDragService::IsDataFlavorSupported(const char* aDataFlavor, bool* _retval) {
   }
 
   // check to see if the target context is a list.
-  bool isList = IsTargetContextList();
   // if it is, just look in the internal data since we are the source
   // for it.
-  if (isList) {
+  if (IsTargetContextList()) {
     LOGDRAGSERVICE("  It's a list");
     uint32_t numDragItems = 0;
     // if we don't have mDataItems we didn't start this drag so it's
@@ -2018,9 +1986,6 @@ void nsDragService::SourceDataGetXDND(nsITransferable* aItem,
   GdkAtom target = gtk_selection_data_get_target(aSelectionData);
   gtk_selection_data_set(aSelectionData, target, 8, (guchar*)"E", 1);
 
-  GdkAtom property = sXdndDirectSaveTypeAtom;
-  GdkAtom type = sTextMimeAtom;
-
   GdkWindow* srcWindow = gdk_drag_context_get_source_window(aContext);
   if (!srcWindow) {
     LOGDRAGSERVICE("  failed to get source GdkWindow!");
@@ -2032,8 +1997,9 @@ void nsDragService::SourceDataGetXDND(nsITransferable* aItem,
   {
     GUniquePtr<guchar> gdata;
     gint length = 0;
-    if (!gdk_property_get(srcWindow, property, type, 0, INT32_MAX, FALSE,
-                          nullptr, nullptr, &length, getter_Transfers(gdata))) {
+    if (!gdk_property_get(srcWindow, sXdndDirectSaveTypeAtom, sTextMimeAtom, 0,
+                          INT32_MAX, FALSE, nullptr, nullptr, &length,
+                          getter_Transfers(gdata))) {
       LOGDRAGSERVICE("  failed to get gXdndDirectSaveType GdkWindow property.");
       return;
     }
@@ -2266,13 +2232,10 @@ void nsDragService::SourceBeginDrag(GdkDragContext* aContext) {
       nsCString fileNameCStr;
       CopyUTF16toUTF8(fileNameStr, fileNameCStr);
 
-      GdkAtom property = sXdndDirectSaveTypeAtom;
-      GdkAtom type = sTextMimeAtom;
-
-      gdk_property_change(gdk_drag_context_get_source_window(aContext),
-                          property, type, 8, GDK_PROP_MODE_REPLACE,
-                          (const guchar*)fileNameCStr.get(),
-                          fileNameCStr.Length());
+      gdk_property_change(
+          gdk_drag_context_get_source_window(aContext), sXdndDirectSaveTypeAtom,
+          sTextMimeAtom, 8, GDK_PROP_MODE_REPLACE,
+          (const guchar*)fileNameCStr.get(), fileNameCStr.Length());
       break;
     }
   }
