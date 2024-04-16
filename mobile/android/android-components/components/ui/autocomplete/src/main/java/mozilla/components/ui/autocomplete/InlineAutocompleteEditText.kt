@@ -182,7 +182,7 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
             return false
         }
 
-        if (keyCode == KeyEvent.KEYCODE_ENTER) {
+        if (keyCode == KeyEvent.KEYCODE_ENTER || keyCode == KeyEvent.KEYCODE_NUMPAD_ENTER) {
             // If the edit text has a composition string, don't submit the text yet.
             // ENTER is needed to commit the composition string.
             val content = text
@@ -201,7 +201,7 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
     }
 
     private val onKey = fun (_: View, keyCode: Int, event: KeyEvent): Boolean {
-        if (keyCode == KeyEvent.KEYCODE_ENTER) {
+        if (keyCode == KeyEvent.KEYCODE_ENTER || keyCode == KeyEvent.KEYCODE_NUMPAD_ENTER) {
             if (event.action != KeyEvent.ACTION_DOWN) {
                 return true
             }

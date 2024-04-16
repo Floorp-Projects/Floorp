@@ -227,6 +227,17 @@ class InlineAutocompleteEditTextTest {
     }
 
     @Test
+    fun `onCommitListenerInvocation with Numpad ENTER`() {
+        val et = InlineAutocompleteEditText(testContext, attributes)
+        var invoked = false
+        et.setOnCommitListener { invoked = true }
+        et.onAttachedToWindow()
+
+        et.dispatchKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_NUMPAD_ENTER))
+        assertTrue(invoked)
+    }
+
+    @Test
     fun onTextChangeListenerInvocation() {
         val et = InlineAutocompleteEditText(testContext, attributes)
         var invokedWithParams: List<Any>? = null
