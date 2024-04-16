@@ -18,8 +18,7 @@
 
 class nsWindow;
 
-namespace mozilla {
-namespace widget {
+namespace mozilla::widget {
 
 class PlatformCompositorWidgetDelegate : public CompositorWidgetDelegate {
  public:
@@ -74,7 +73,7 @@ class WinCompositorWidget : public CompositorWidget {
   void UpdateCompositorWndSizeIfNecessary();
 
   void RequestFxrOutput();
-  bool HasFxrOutputHandler() const { return mFxrHandler != nullptr; }
+  bool HasFxrOutputHandler() const { return !!mFxrHandler; }
   FxROutputHandler* GetFxrOutputHandler() const { return mFxrHandler.get(); }
 
   virtual nsSizeMode GetWindowSizeMode() const = 0;
@@ -97,7 +96,6 @@ class WinCompositorWidget : public CompositorWidget {
   UniquePtr<FxROutputHandler> mFxrHandler;
 };
 
-}  // namespace widget
-}  // namespace mozilla
+}  // namespace mozilla::widget
 
 #endif  // widget_windows_WinCompositorWidget_h

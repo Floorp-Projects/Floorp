@@ -149,16 +149,12 @@ mozilla::ipc::IPCResult CompositorWidgetParent::RecvNotifyVisibilityUpdated(
   return IPC_OK();
 }
 
-nsSizeMode CompositorWidgetParent::CompositorWidgetParent::GetWindowSizeMode()
-    const {
-  nsSizeMode sizeMode = mSizeMode;
-  return sizeMode;
+nsSizeMode CompositorWidgetParent::GetWindowSizeMode() const {
+  return mSizeMode;
 }
 
-bool CompositorWidgetParent::CompositorWidgetParent::GetWindowIsFullyOccluded()
-    const {
-  bool isFullyOccluded = mIsFullyOccluded;
-  return isFullyOccluded;
+bool CompositorWidgetParent::GetWindowIsFullyOccluded() const {
+  return mIsFullyOccluded;
 }
 
 mozilla::ipc::IPCResult CompositorWidgetParent::RecvClearTransparentWindow() {

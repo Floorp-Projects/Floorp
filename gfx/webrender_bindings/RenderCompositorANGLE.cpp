@@ -36,8 +36,7 @@
 #undef PW_RENDERFULLCONTENT
 #define PW_RENDERFULLCONTENT 0x00000002
 
-namespace mozilla {
-namespace wr {
+namespace mozilla::wr {
 
 extern LazyLogModule gRenderThreadLog;
 #define LOG(...) MOZ_LOG(gRenderThreadLog, LogLevel::Debug, (__VA_ARGS__))
@@ -440,11 +439,9 @@ RenderedFrameId RenderCompositorANGLE::EndFrame(
 
   if (!UseCompositor()) {
     auto start = TimeStamp::Now();
-    if (mWidget->AsWindows()->HasFxrOutputHandler()) {
+    if (auto* fxrHandler = mWidget->AsWindows()->GetFxrOutputHandler()) {
       // There is a Firefox Reality handler for this swapchain. Update this
       // window's contents to the VR window.
-      FxROutputHandler* fxrHandler =
-          mWidget->AsWindows()->GetFxrOutputHandler();
       if (fxrHandler->TryInitialize(mSwapChain, mDevice)) {
         fxrHandler->UpdateOutput(mCtx);
       }
@@ -926,12 +923,9 @@ void RenderCompositorANGLE::InitializeUsePartialPresent() {
   // Even when mSwapChain1 is null, we could enable WR partial present, since
   // when mSwapChain1 is null, SwapChain is blit model swap chain with one
   // buffer.
-  if (UseCompositor() || mWidget->AsWindows()->HasFxrOutputHandler() ||
-      gfx::gfxVars::WebRenderMaxPartialPresentRects() <= 0) {
-    mUsePartialPresent = false;
-  } else {
-    mUsePartialPresent = true;
-  }
+  mUsePartialPresent = !UseCompositor() &&
+                       !mWidget->AsWindows()->HasFxrOutputHandler() &&
+                       gfx::gfxVars::WebRenderMaxPartialPresentRects() > 0;
 }
 
 bool RenderCompositorANGLE::UsePartialPresent() { return mUsePartialPresent; }
@@ -1021,5 +1015,4 @@ bool RenderCompositorANGLE::MaybeReadback(
   return true;
 }
 
-}  // namespace wr
-}  // namespace mozilla
+}  // namespace mozilla::wr
