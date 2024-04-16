@@ -1535,6 +1535,14 @@ class InspectorCSSParserWrapper {
     this.parser = new InspectorCSSParser(input);
   }
 
+  get lineNumber() {
+    return this.parser.lineNumber;
+  }
+
+  get columnNumber() {
+    return this.parser.columnNumber;
+  }
+
   nextToken() {
     const token = this.parser.nextToken();
     if (!token) {
