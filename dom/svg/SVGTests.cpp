@@ -102,7 +102,8 @@ nsIContent* SVGTests::FindActiveSwitchChild(
     }
     nsCOMPtr<SVGTests> tests(do_QueryInterface(child));
     if (tests) {
-      if (!tests->PassesRequiredExtensionsTests()) {
+      if (!tests->mPassesConditionalProcessingTests.valueOr(true) ||
+          !tests->PassesRequiredExtensionsTests()) {
         continue;
       }
       const auto& languages = tests->mStringListAttributes[LANGUAGE];
@@ -146,10 +147,12 @@ bool SVGTests::PassesRequiredExtensionsTests() const {
   const auto& extensions = mStringListAttributes[EXTENSIONS];
   if (extensions.IsExplicitlySet()) {
     if (extensions.IsEmpty()) {
+      mPassesConditionalProcessingTests = Some(false);
       return false;
     }
     for (uint32_t i = 0; i < extensions.Length(); i++) {
       if (!HasExtension(extensions[i])) {
+        mPassesConditionalProcessingTests = Some(false);
         return false;
       }
     }
@@ -158,6 +161,9 @@ bool SVGTests::PassesRequiredExtensionsTests() const {
 }
 
 bool SVGTests::PassesConditionalProcessingTests() const {
+  if (mPassesConditionalProcessingTests) {
+    return mPassesConditionalProcessingTests.value();
+  }
   if (!PassesRequiredExtensionsTests()) {
     return false;
   }
@@ -170,6 +176,7 @@ bool SVGTests::PassesConditionalProcessingTests() const {
   const auto& languages = mStringListAttributes[LANGUAGE];
   if (languages.IsExplicitlySet()) {
     if (languages.IsEmpty()) {
+      mPassesConditionalProcessingTests = Some(false);
       return false;
     }
 
@@ -178,9 +185,12 @@ bool SVGTests::PassesConditionalProcessingTests() const {
       availLocales.AppendElement(NS_ConvertUTF16toUTF8(languages[i]));
     }
 
-    return FindBestLanguage(availLocales) >= 0;
+    mPassesConditionalProcessingTests =
+        Some(FindBestLanguage(availLocales) >= 0);
+    return mPassesConditionalProcessingTests.value();
   }
 
+  mPassesConditionalProcessingTests = Some(true);
   return true;
 }
 
@@ -193,6 +203,7 @@ bool SVGTests::ParseConditionalProcessingAttribute(nsAtom* aAttribute,
       if (NS_FAILED(rv)) {
         mStringListAttributes[i].Clear();
       }
+      mPassesConditionalProcessingTests = Nothing();
       MaybeInvalidate();
       return true;
     }
@@ -204,6 +215,7 @@ void SVGTests::UnsetAttr(const nsAtom* aAttribute) {
   for (uint32_t i = 0; i < ArrayLength(sStringListNames); i++) {
     if (aAttribute == sStringListNames[i]) {
       mStringListAttributes[i].Clear();
+      mPassesConditionalProcessingTests = Nothing();
       MaybeInvalidate();
       return;
     }
