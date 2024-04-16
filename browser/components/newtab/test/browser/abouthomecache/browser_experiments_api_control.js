@@ -28,7 +28,9 @@ add_task(async function test_experiments_api_control() {
     });
 
     Assert.ok(
-      !NimbusFeatures.abouthomecache.getVariable("enabled"),
+      !Services.prefs.getBoolPref(
+        "browser.startup.homepage.abouthome_cache.enabled"
+      ),
       "NimbusFeatures should tell us that the about:home startup cache " +
         "is disabled"
     );
@@ -51,7 +53,9 @@ add_task(async function test_experiments_api_control() {
     });
 
     Assert.ok(
-      NimbusFeatures.abouthomecache.getVariable("enabled"),
+      Services.prefs.getBoolPref(
+        "browser.startup.homepage.abouthome_cache.enabled"
+      ),
       "NimbusFeatures should tell us that the about:home startup cache " +
         "is enabled"
     );

@@ -641,14 +641,15 @@ windowsJumpList:
 
 abouthomecache:
   description: "The startup about:home cache."
-  owner: omc@mozilla.com
+  owner: omc@mozilla.com, mconley@mozilla.com
   hasExposure: false
-  isEarlyStartup: true
   variables:
     enabled:
       type: boolean
-      fallbackPref: browser.startup.homepage.abouthome_cache.enabled
       description: Is the feature enabled?
+      setPref:
+        branch: user
+        pref: browser.startup.homepage.abouthome_cache.enabled
 
 newtab:
   description: "The about:newtab page"
