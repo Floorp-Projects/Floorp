@@ -7,6 +7,10 @@ const { MiscDataBackupResource } = ChromeUtils.importESModule(
   "resource:///modules/backup/MiscDataBackupResource.sys.mjs"
 );
 
+const { ActivityStreamStorage } = ChromeUtils.importESModule(
+  "resource://activity-stream/lib/ActivityStreamStorage.sys.mjs"
+);
+
 /**
  * Tests that we can measure miscellaneous files in the profile directory.
  */
@@ -85,6 +89,18 @@ add_task(async function test_backup() {
   };
   sandbox.stub(Sqlite, "openConnection").returns(fakeConnection);
 
+  let snippetsTableStub = {
+    getAllKeys: sandbox.stub().resolves(["key1", "key2"]),
+    get: sandbox.stub().callsFake(key => {
+      return { key: `value for ${key}` };
+    }),
+  };
+
+  sandbox
+    .stub(ActivityStreamStorage.prototype, "getDbTable")
+    .withArgs("snippets")
+    .resolves(snippetsTableStub);
+
   await miscDataBackupResource.backup(stagingPath, sourcePath);
 
   await assertFilesExist(stagingPath, simpleCopyFiles);
@@ -102,9 +118,27 @@ add_task(async function test_backup() {
     "Called backup on the protections.sqlite Sqlite connection"
   );
 
-  // Bug 1890585 - we don't currently have the ability to copy the
-  // chrome-privileged IndexedDB databases under storage/permanent/chrome, so
-  // we'll just skip testing that for now.
+  // Bug 1890585 - we don't currently have the generalized ability to copy the
+  // chrome-privileged IndexedDB databases under storage/permanent/chrome, but
+  // we do support copying individual IndexedDB databases by manually exporting
+  // and re-importing their contents.
+  let snippetsBackupPath = PathUtils.join(
+    stagingPath,
+    "activity-stream-snippets.json"
+  );
+  Assert.ok(
+    await IOUtils.exists(snippetsBackupPath),
+    "The activity-stream-snippets.json file should exist"
+  );
+  let snippetsBackupContents = await IOUtils.readJSON(snippetsBackupPath);
+  Assert.deepEqual(
+    snippetsBackupContents,
+    {
+      key1: { key: "value for key1" },
+      key2: { key: "value for key2" },
+    },
+    "The contents of the activity-stream-snippets.json file should be as expected"
+  );
 
   await maybeRemovePath(stagingPath);
   await maybeRemovePath(sourcePath);
