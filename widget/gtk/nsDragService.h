@@ -161,7 +161,7 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
   RefPtr<GdkDragContext> mPendingDragContext;
 
   // We cache all data for the current drag context,
-  // because waiting for the data in GetTargetDragData can be very slow.
+  // because waiting for the data in GetDragData can be very slow.
   nsTHashMap<nsCStringHashKey, nsTArray<uint8_t>> mCachedData;
   // mCachedData are tied to mCachedDragContext. mCachedDragContext is not
   // ref counted and may be already deleted on Gtk side.
@@ -207,9 +207,9 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
   bool IsTargetContextList(void);
   // this will get the native data from the last target given a
   // specific flavor
-  void GetTargetDragData(GdkAtom aFlavor,
-                         const nsTArray<nsCString>& aDropFlavors,
-                         bool aResetTargetData = true);
+  void GetDragData(GdkAtom aRequestedFlavor,
+                   const nsTArray<nsCString>& aAvailableDragFlavors,
+                   bool aResetDragData = true);
   // this will reset all of the target vars
   void TargetResetData(void);
   // Ensure our data cache belongs to aDragContext and clear the cache if
