@@ -4,6 +4,12 @@
 
 import { BackupResource } from "resource:///modules/backup/BackupResource.sys.mjs";
 
+const lazy = {};
+ChromeUtils.defineESModuleGetters(lazy, {
+  ActivityStreamStorage:
+    "resource://activity-stream/lib/ActivityStreamStorage.sys.mjs",
+});
+
 /**
  * Class representing miscellaneous files for telemetry, site storage,
  * media device origin mapping, chrome privileged IndexedDB databases,
@@ -34,8 +40,28 @@ export class MiscDataBackupResource extends BackupResource {
     );
 
     // Bug 1890585 - we don't currently have the ability to copy the
-    // chrome-privileged IndexedDB databases under storage/permanent/chrome, so
-    // we'll just skip that for now.
+    // chrome-privileged IndexedDB databases under storage/permanent/chrome.
+    // Instead, we'll manually export any IndexedDB data we need to backup
+    // to a separate JSON file.
+
+    // The first IndexedDB database we want to back up is the ActivityStream
+    // one - specifically, the "snippets" table, as this contains information
+    // on ASRouter impressions, blocked messages, message group impressions,
+    // etc.
+    const SNIPPETS_TABLE_NAME = "snippets";
+    let storage = new lazy.ActivityStreamStorage({
+      storeNames: [SNIPPETS_TABLE_NAME],
+    });
+    let snippetsTable = await storage.getDbTable(SNIPPETS_TABLE_NAME);
+    let snippetsObj = {};
+    for (let key of await snippetsTable.getAllKeys()) {
+      snippetsObj[key] = await snippetsTable.get(key);
+    }
+    let snippetsBackupFile = PathUtils.join(
+      stagingPath,
+      "activity-stream-snippets.json"
+    );
+    await IOUtils.writeJSON(snippetsBackupFile, snippetsObj);
 
     return null;
   }
