@@ -368,6 +368,22 @@ networking:
     expires: never
     telemetry_mirror: DNS_FAILED_LOOKUP_TIME
 
+  dns_native_https_call_time:
+    type: timing_distribution
+    time_unit: millisecond
+    description: >
+      Time spent in the call to the native OS DNS resolution.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1885529
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1885529
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - necko@mozilla.com
+      - vgosu@mozilla.com
+    expires: never
+
   dns_native_count:
     type: labeled_counter
     description: >

@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GetAddrInfo.h"
+#include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/net/DNSPacket.h"
 #include "nsIDNSService.h"
 #include "mozilla/Maybe.h"
@@ -39,9 +40,15 @@ nsresult ResolveHTTPSRecordImpl(const nsACString& aHost, uint16_t aFlags,
     return NS_ERROR_UNKNOWN_HOST;
   }
 
+  TimeStamp startTime = TimeStamp::Now();
+
   DNS_STATUS status =
       DnsQuery_A(host.get(), nsIDNSService::RESOLVE_TYPE_HTTPSSVC,
                  DNS_QUERY_STANDARD, nullptr, &result, nullptr);
+
+  mozilla::glean::networking::dns_native_https_call_time.AccumulateRawDuration(
+      TimeStamp::Now() - startTime);
+
   if (status != ERROR_SUCCESS) {
     LOG("DnsQuery_A failed with error: %ld\n", status);
     return NS_ERROR_UNKNOWN_HOST;
