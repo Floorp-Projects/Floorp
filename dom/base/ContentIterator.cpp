@@ -715,7 +715,7 @@ nsIContent* ContentIteratorBase<NodeType>::GetNextSibling(
     // For shadow root, instead of getting to the sibling of the parent
     // directly, we need to get into the light tree of the parent to handle
     // slotted contents.
-    if (ShadowRoot* shadowRoot = ShadowRoot::FromNode(aNode)) {
+    if (aNode->IsShadowRoot()) {
       if (nsIContent* child = parent->GetFirstChild()) {
         return child;
       }
