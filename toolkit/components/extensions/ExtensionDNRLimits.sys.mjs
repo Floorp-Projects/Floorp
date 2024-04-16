@@ -24,7 +24,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
   "MAX_NUMBER_OF_STATIC_RULESETS",
   "extensions.dnr.max_number_of_static_rulesets",
-  50
+  100
 );
 
 XPCOMUtils.defineLazyPreferenceGetter(
