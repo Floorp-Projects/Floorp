@@ -73,42 +73,29 @@ static void init_quant_tables(const Dav1dSequenceHeader *const seq_hdr,
     }
 }
 
-static int read_mv_component_diff(Dav1dTaskContext *const t,
+static int read_mv_component_diff(MsacContext *const msac,
                                   CdfMvComponent *const mv_comp,
-                                  const int have_fp)
+                                  const int mv_prec)
 {
-    Dav1dTileState *const ts = t->ts;
-    const Dav1dFrameContext *const f = t->f;
-    const int have_hp = f->frame_hdr->hp;
-    const int sign = dav1d_msac_decode_bool_adapt(&ts->msac, mv_comp->sign);
-    const int cl = dav1d_msac_decode_symbol_adapt16(&ts->msac,
-                                                    mv_comp->classes, 10);
-    int up, fp, hp;
+    const int sign = dav1d_msac_decode_bool_adapt(msac, mv_comp->sign);
+    const int cl = dav1d_msac_decode_symbol_adapt16(msac, mv_comp->classes, 10);
+    int up, fp = 3, hp = 1;
 
     if (!cl) {
-        up = dav1d_msac_decode_bool_adapt(&ts->msac, mv_comp->class0);
-        if (have_fp) {
-            fp = dav1d_msac_decode_symbol_adapt4(&ts->msac,
-                                                 mv_comp->class0_fp[up], 3);
-            hp = have_hp ? dav1d_msac_decode_bool_adapt(&ts->msac,
-                                                        mv_comp->class0_hp) : 1;
-        } else {
-            fp = 3;
-            hp = 1;
+        up = dav1d_msac_decode_bool_adapt(msac, mv_comp->class0);
+        if (mv_prec >= 0) {  // !force_integer_mv
+            fp = dav1d_msac_decode_symbol_adapt4(msac, mv_comp->class0_fp[up], 3);
+            if (mv_prec > 0) // allow_high_precision_mv
+                hp = dav1d_msac_decode_bool_adapt(msac, mv_comp->class0_hp);
         }
     } else {
         up = 1 << cl;
         for (int n = 0; n < cl; n++)
-            up |= dav1d_msac_decode_bool_adapt(&ts->msac,
-                                               mv_comp->classN[n]) << n;
-        if (have_fp) {
-            fp = dav1d_msac_decode_symbol_adapt4(&ts->msac,
-                                                 mv_comp->classN_fp, 3);
-            hp = have_hp ? dav1d_msac_decode_bool_adapt(&ts->msac,
-                                                        mv_comp->classN_hp) : 1;
-        } else {
-            fp = 3;
-            hp = 1;
+            up |= dav1d_msac_decode_bool_adapt(msac, mv_comp->classN[n]) << n;
+        if (mv_prec >= 0) {  // !force_integer_mv
+            fp = dav1d_msac_decode_symbol_adapt4(msac, mv_comp->classN_fp, 3);
+            if (mv_prec > 0) // allow_high_precision_mv
+                hp = dav1d_msac_decode_bool_adapt(msac, mv_comp->classN_hp);
         }
     }
 
@@ -117,25 +104,16 @@ static int read_mv_component_diff(Dav1dTaskContext *const t,
     return sign ? -diff : diff;
 }
 
-static void read_mv_residual(Dav1dTaskContext *const t, mv *const ref_mv,
-                             CdfMvContext *const mv_cdf, const int have_fp)
+static void read_mv_residual(Dav1dTileState *const ts, mv *const ref_mv,
+                             const int mv_prec)
 {
-    switch (dav1d_msac_decode_symbol_adapt4(&t->ts->msac, t->ts->cdf.mv.joint,
-                                            N_MV_JOINTS - 1))
-    {
-    case MV_JOINT_HV:
-        ref_mv->y += read_mv_component_diff(t, &mv_cdf->comp[0], have_fp);
-        ref_mv->x += read_mv_component_diff(t, &mv_cdf->comp[1], have_fp);
-        break;
-    case MV_JOINT_H:
-        ref_mv->x += read_mv_component_diff(t, &mv_cdf->comp[1], have_fp);
-        break;
-    case MV_JOINT_V:
-        ref_mv->y += read_mv_component_diff(t, &mv_cdf->comp[0], have_fp);
-        break;
-    default:
-        break;
-    }
+    MsacContext *const msac = &ts->msac;
+    const enum MVJoint mv_joint =
+        dav1d_msac_decode_symbol_adapt4(msac, ts->cdf.mv.joint, N_MV_JOINTS - 1);
+    if (mv_joint & MV_JOINT_V)
+        ref_mv->y += read_mv_component_diff(msac, &ts->cdf.mv.comp[0], mv_prec);
+    if (mv_joint & MV_JOINT_H)
+        ref_mv->x += read_mv_component_diff(msac, &ts->cdf.mv.comp[1], mv_prec);
 }
 
 static void read_tx_tree(Dav1dTaskContext *const t,
@@ -1001,8 +979,7 @@ static int decode_b(Dav1dTaskContext *const t,
         const int have_delta_q = f->frame_hdr->delta.q.present &&
             (bs != (f->seq_hdr->sb128 ? BS_128x128 : BS_64x64) || !b->skip);
 
-        int8_t prev_delta_lf[4];
-        memcpy(prev_delta_lf, ts->last_delta_lf, 4);
+        uint32_t prev_delta_lf = ts->last_delta_lf.u32;
 
         if (have_delta_q) {
             int delta_q = dav1d_msac_decode_symbol_adapt4(&ts->msac,
@@ -1038,8 +1015,8 @@ static int decode_b(Dav1dTaskContext *const t,
                             delta_lf = -delta_lf;
                         delta_lf *= 1 << f->frame_hdr->delta.lf.res_log2;
                     }
-                    ts->last_delta_lf[i] =
-                        iclip(ts->last_delta_lf[i] + delta_lf, -63, 63);
+                    ts->last_delta_lf.i8[i] =
+                        iclip(ts->last_delta_lf.i8[i] + delta_lf, -63, 63);
                     if (have_delta_q && DEBUG_BLOCK_INFO)
                         printf("Post-delta_lf[%d:%d]: r=%d\n", i, delta_lf,
                                ts->msac.rng);
@@ -1054,13 +1031,13 @@ static int decode_b(Dav1dTaskContext *const t,
             init_quant_tables(f->seq_hdr, f->frame_hdr, ts->last_qidx, ts->dqmem);
             ts->dq = ts->dqmem;
         }
-        if (!memcmp(ts->last_delta_lf, (int8_t[4]) { 0, 0, 0, 0 }, 4)) {
+        if (!ts->last_delta_lf.u32) {
             // assign frame-wide lf values to this sb
             ts->lflvl = f->lf.lvl;
-        } else if (memcmp(ts->last_delta_lf, prev_delta_lf, 4)) {
+        } else if (ts->last_delta_lf.u32 != prev_delta_lf) {
             // find sb-specific lf lvl parameters
-            dav1d_calc_lf_values(ts->lflvlmem, f->frame_hdr, ts->last_delta_lf);
             ts->lflvl = ts->lflvlmem;
+            dav1d_calc_lf_values(ts->lflvlmem, f->frame_hdr, ts->last_delta_lf.i8);
         }
     }
 
@@ -1324,7 +1301,7 @@ static int decode_b(Dav1dTaskContext *const t,
         }
 
         const union mv ref = b->mv[0];
-        read_mv_residual(t, &b->mv[0], &ts->cdf.dmv, 0);
+        read_mv_residual(ts, &b->mv[0], -1);
 
         // clip intrabc motion vector to decoded parts of current tile
         int border_left = ts->tiling.col_start * 4;
@@ -1586,8 +1563,8 @@ static int decode_b(Dav1dTaskContext *const t,
                 break; \
             case NEWMV: \
                 b->mv[idx] = mvstack[b->drl_idx].mv.mv[idx]; \
-                read_mv_residual(t, &b->mv[idx], &ts->cdf.mv, \
-                                 !f->frame_hdr->force_integer_mv); \
+                const int mv_prec = f->frame_hdr->hp - f->frame_hdr->force_integer_mv; \
+                read_mv_residual(ts, &b->mv[idx], mv_prec); \
                 break; \
             }
             has_subpel_filter = imin(bw4, bh4) == 1 ||
@@ -1775,8 +1752,8 @@ static int decode_b(Dav1dTaskContext *const t,
                 if (DEBUG_BLOCK_INFO)
                     printf("Post-intermode[%d,drl=%d]: r=%d\n",
                            b->inter_mode, b->drl_idx, ts->msac.rng);
-                read_mv_residual(t, &b->mv[0], &ts->cdf.mv,
-                                 !f->frame_hdr->force_integer_mv);
+                const int mv_prec = f->frame_hdr->hp - f->frame_hdr->force_integer_mv;
+                read_mv_residual(ts, &b->mv[0], mv_prec);
                 if (DEBUG_BLOCK_INFO)
                     printf("Post-residualmv[mv=y:%d,x:%d]: r=%d\n",
                            b->mv[0].y, b->mv[0].x, ts->msac.rng);
@@ -2495,7 +2472,7 @@ static void setup_tile(Dav1dTileState *const ts,
 
     dav1d_cdf_thread_copy(&ts->cdf, &f->in_cdf);
     ts->last_qidx = f->frame_hdr->quant.yac;
-    memset(ts->last_delta_lf, 0, sizeof(ts->last_delta_lf));
+    ts->last_delta_lf.u32 = 0;
 
     dav1d_msac_init(&ts->msac, data, sz, f->frame_hdr->disable_cdf_update);
 

@@ -81,6 +81,8 @@ cdata.set10('TRIM_DSP_FUNCTIONS', get_option('trim_dsp') == 'true' or
 # Logging option
 cdata.set10('CONFIG_LOG', get_option('logging'))
 
+cdata.set10('CONFIG_MACOS_KPERF', get_option('macos_kperf'))
+
 #
 # OS/Compiler checks and defines
 #

@@ -288,10 +288,8 @@ function msac_decode_hi_tok_neon, export=1
         mvni            v30.4h, #0x3f             // 0xffc0
         ldrh            w9,  [x1, #6]             // count = cdf[n_symbols]
         ld1r            {v3.4h},  [x16]           // rng
-        movrel          x16, bits
         ld1             {v29.4h}, [x17]           // EC_MIN_PROB * (n_symbols - ret)
         add             x17, x0,  #DIF + 6
-        ld1             {v16.8h}, [x16]
         mov             w13, #-24
         and             v17.8b,  v0.8b,   v30.8b  // cdf & 0xffc0
         ldr             w10, [x0, #ALLOW_UPDATE_CDF]
@@ -305,30 +303,27 @@ function msac_decode_hi_tok_neon, export=1
         add             v4.4h,   v17.4h,  v29.4h  // v = cdf + EC_MIN_PROB * (n_symbols - ret)
         add             v4.4h,   v6.4h,   v4.4h   // v = ((cdf >> EC_PROB_SHIFT) * r) >> 1 + EC_MIN_PROB * (n_symbols - ret)
         str             h3,  [sp, #14]            // store original u = s->rng
-        cmhs            v2.8h,   v1.8h,   v4.8h   // c >= v
+        cmhs            v2.4h,   v1.4h,   v4.4h   // c >= v
         str             q4,  [sp, #16]            // store v values to allow indexed access
-        and             v6.16b,  v2.16b,  v16.16b // One bit per halfword set in the mask
-        addv            h6,  v6.8h                // Aggregate mask bits
-        umov            w3,  v6.h[0]
+        addv            h6,  v2.4h                // -4 + ret
         add             w13, w13, #5
-        rbit            w3,  w3
+        smov            w15, v6.h[0]
         add             x8,  sp,  #16
-        clz             w15, w3                   // ret
+        add             w15, w15, #4              // ret
 
         cbz             w10, 2f
         // update_cdf
-        movi            v5.8b, #0xff
+        sub             v5.4h,   v0.4h,   v2.4h   // cdf[i] + (i >= val ? 1 : 0)
         mov             w4,  #-5
-        urhadd          v4.4h,   v5.4h,   v2.4h   // i >= val ? -1 : 32768
+        orr             v2.4h, #0x80, lsl #8      // i >= val ? -1 : 32768
         sub             w4,  w4,  w9, lsr #4      // -((count >> 4) + 5)
-        sub             v4.4h,   v4.4h,   v0.4h   // (32768 - cdf[i]) or (-1 - cdf[i])
+        sub             v4.4h,   v2.4h,   v0.4h   // (32768 - cdf[i]) or (-1 - cdf[i])
         dup             v6.4h,    w4              // -rate
 
         sub             w9,  w9,  w9, lsr #5      // count - (count == 32)
-        sub             v0.4h,   v0.4h,   v2.4h   // cdf + (i >= val ? 1 : 0)
         sshl            v4.4h,   v4.4h,   v6.4h   // ({32768,-1} - cdf[i]) >> rate
         add             w9,  w9,  #1              // count + (count < 32)
-        add             v0.4h,   v0.4h,   v4.4h   // cdf + (32768 - cdf[i]) >> rate
+        add             v0.4h,   v5.4h,   v4.4h   // cdf[i] + (32768 - cdf[i]) >> rate
         st1             {v0.4h},  [x1]
         and             v17.8b,  v0.8b,   v30.8b  // cdf & 0xffc0
         strh            w9,  [x1, #6]
