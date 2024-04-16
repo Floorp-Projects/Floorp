@@ -95,9 +95,10 @@ Rule* Rule::GetParentRule() const { return mParentRule; }
 
 #ifdef DEBUG
 void Rule::AssertParentRuleType() {
-  // Would be nice to check that this->Type() is KEYFRAME_RULE when
-  // mParentRule->Tye() is KEYFRAMES_RULE, but we can't call
+  // Would be nice to check that this->Type() is StyleCssRuleType::Keyframe
+  // when mParentRule->Tye() is StyleCssRuleType::Keyframes, but we can't call
   // this->Type() here since it's virtual.
+  // Same for StyleCssRuleType::Margin and StyleCssRuleType::Page.
   if (mParentRule) {
     auto type = mParentRule->Type();
     MOZ_ASSERT(type == StyleCssRuleType::Media ||
@@ -108,7 +109,8 @@ void Rule::AssertParentRuleType() {
                type == StyleCssRuleType::LayerBlock ||
                type == StyleCssRuleType::Container ||
                type == StyleCssRuleType::Scope ||
-               type == StyleCssRuleType::StartingStyle);
+               type == StyleCssRuleType::StartingStyle ||
+               type == StyleCssRuleType::Page);
   }
 }
 #endif
