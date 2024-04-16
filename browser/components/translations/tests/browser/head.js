@@ -394,6 +394,7 @@ class SharedTranslationsTestUtils {
    *                              This is often used to trigger the event on the expected element.
    * @param {Function|null} [postEventAssertion=null] - An optional callback function to execute after
    *                                                    the event has occurred.
+   * @param {ChromeWindow} [win]
    * @throws Throws if the element with the specified `elementId` does not exist.
    * @returns {Promise<void>}
    */
@@ -401,9 +402,10 @@ class SharedTranslationsTestUtils {
     elementId,
     eventName,
     callback,
-    postEventAssertion = null
+    postEventAssertion = null,
+    win = window
   ) {
-    const element = document.getElementById(elementId);
+    const element = win.document.getElementById(elementId);
     if (!element) {
       throw new Error(
         `Unable to find the ${elementId} element in the document.`
@@ -573,10 +575,12 @@ class FullPageTranslationsTestUtils {
    *
    * @param {string} fromLanguage - The BCP-47 language tag being translated from.
    * @param {string} toLanguage - The BCP-47 language tag being translated into.
+   * @param {ChromeWindow} win
    */
   static async #assertLangTagIsShownOnTranslationsButton(
     fromLanguage,
-    toLanguage
+    toLanguage,
+    win = window
   ) {
     info(
       `Ensuring that the translations button displays the language tag "${toLanguage}"`
@@ -584,7 +588,8 @@ class FullPageTranslationsTestUtils {
     const { button, locale } =
       await FullPageTranslationsTestUtils.assertTranslationsButton(
         { button: true, circleArrows: false, locale: true, icon: true },
-        "The icon presents the locale."
+        "The icon presents the locale.",
+        win
       );
     is(
       locale.innerText,
@@ -610,12 +615,14 @@ class FullPageTranslationsTestUtils {
    * @param {string} toLanguage - The BCP-47 language tag being translated into.
    * @param {Function} runInPage - Allows running a closure in the content page.
    * @param {string} message - An optional message to log to info.
+   * @param {ChromeWindow} [win]
    */
   static async assertPageIsTranslated(
     fromLanguage,
     toLanguage,
     runInPage,
-    message = null
+    message = null,
+    win = window
   ) {
     if (message) {
       info(message);
@@ -632,7 +639,8 @@ class FullPageTranslationsTestUtils {
     await runInPage(callback, { fromLang: fromLanguage, toLang: toLanguage });
     await FullPageTranslationsTestUtils.#assertLangTagIsShownOnTranslationsButton(
       fromLanguage,
-      toLanguage
+      toLanguage,
+      win
     );
   }
 
@@ -883,16 +891,21 @@ class FullPageTranslationsTestUtils {
    *
    * @param {Record<string, boolean>} visibleAssertions
    * @param {string} message The message for the assertion.
+   * @param {ChromeWindow} [win]
    * @returns {HTMLElement}
    */
-  static async assertTranslationsButton(visibleAssertions, message) {
+  static async assertTranslationsButton(
+    visibleAssertions,
+    message,
+    win = window
+  ) {
     const elements = {
-      button: document.getElementById("translations-button"),
-      icon: document.getElementById("translations-button-icon"),
-      circleArrows: document.getElementById(
+      button: win.document.getElementById("translations-button"),
+      icon: win.document.getElementById("translations-button-icon"),
+      circleArrows: win.document.getElementById(
         "translations-button-circle-arrows"
       ),
-      locale: document.getElementById("translations-button-locale"),
+      locale: win.document.getElementById("translations-button-locale"),
     };
 
     for (const [name, element] of Object.entries(elements)) {
@@ -1086,25 +1099,31 @@ class FullPageTranslationsTestUtils {
    * @param {boolean} config.pivotTranslation
    *  - True if the expected translation is a pivot translation, otherwise false.
    *    Affects the number of expected downloads.
+   * @param {ChromeWindow} [config.win]
+   *  - An optional ChromeWindow, for multi-window tests.
    */
   static async clickTranslateButton({
     downloadHandler = null,
     pivotTranslation = false,
+    win = window,
   } = {}) {
     logAction();
-    const { translateButton } = FullPageTranslationsPanel.elements;
+    const { translateButton } = win.FullPageTranslationsPanel.elements;
     assertVisibility({ visible: { translateButton } });
     await FullPageTranslationsTestUtils.waitForPanelPopupEvent(
       "popuphidden",
       () => {
         click(translateButton);
-      }
+      },
+      null /* postEventAssertion */,
+      win
     );
 
     if (downloadHandler) {
       await FullPageTranslationsTestUtils.assertTranslationsButton(
         { button: true, circleArrows: true, locale: false, icon: true },
-        "The icon presents the loading indicator."
+        "The icon presents the loading indicator.",
+        win
       );
       await downloadHandler(pivotTranslation ? 2 : 1);
     }
@@ -1120,21 +1139,26 @@ class FullPageTranslationsTestUtils {
    *  - Open the panel from the app menu. If false, uses the translations button.
    * @param {boolean} config.openWithKeyboard
    *  - Open the panel by synthesizing the keyboard. If false, synthesizes the mouse.
+   * @param {ChromeWindow} [config.win]
+   *  - An optional window for multi-window tests.
    */
   static async openPanel({
     onOpenPanel = null,
     openFromAppMenu = false,
     openWithKeyboard = false,
+    win = window,
   }) {
     logAction();
-    await closeAllOpenPanelsAndMenus();
+    await closeAllOpenPanelsAndMenus(win);
     if (openFromAppMenu) {
       await FullPageTranslationsTestUtils.#openPanelViaAppMenu({
+        win,
         onOpenPanel,
         openWithKeyboard,
       });
     } else {
       await FullPageTranslationsTestUtils.#openPanelViaTranslationsButton({
+        win,
         onOpenPanel,
         openWithKeyboard,
       });
@@ -1149,21 +1173,26 @@ class FullPageTranslationsTestUtils {
    *  - A function to run as soon as the panel opens.
    * @param {boolean} config.openWithKeyboard
    *  - Open the panel by synthesizing the keyboard. If false, synthesizes the mouse.
+   * @param {ChromeWindow} [config.win]
    */
   static async #openPanelViaAppMenu({
     onOpenPanel = null,
     openWithKeyboard = false,
+    win = window,
   }) {
     logAction();
-    const appMenuButton = getById("PanelUI-menu-button");
+    const appMenuButton = getById("PanelUI-menu-button", win.document);
     if (openWithKeyboard) {
       hitEnterKey(appMenuButton, "Opening the app-menu button with keyboard");
     } else {
       click(appMenuButton, "Opening the app-menu button");
     }
-    await BrowserTestUtils.waitForEvent(window.PanelUI.mainView, "ViewShown");
+    await BrowserTestUtils.waitForEvent(win.PanelUI.mainView, "ViewShown");
 
-    const translateSiteButton = getById("appMenu-translate-button");
+    const translateSiteButton = getById(
+      "appMenu-translate-button",
+      win.document
+    );
 
     is(
       translateSiteButton.disabled,
@@ -1192,16 +1221,19 @@ class FullPageTranslationsTestUtils {
    *  - A function to run as soon as the panel opens.
    * @param {boolean} config.openWithKeyboard
    *  - Open the panel by synthesizing the keyboard. If false, synthesizes the mouse.
+   * @param {ChromeWindow} [config.win]
    */
   static async #openPanelViaTranslationsButton({
     onOpenPanel = null,
     openWithKeyboard = false,
+    win = window,
   }) {
     logAction();
     const { button } =
       await FullPageTranslationsTestUtils.assertTranslationsButton(
         { button: true },
-        "The translations button is visible."
+        "The translations button is visible.",
+        win
       );
     await FullPageTranslationsTestUtils.waitForPanelPopupEvent(
       "popupshown",
@@ -1212,7 +1244,8 @@ class FullPageTranslationsTestUtils {
           click(button, "Opening the popup");
         }
       },
-      onOpenPanel
+      onOpenPanel,
+      win
     );
   }
 
@@ -1273,20 +1306,23 @@ class FullPageTranslationsTestUtils {
    * @param {Function} callback
    * @param {Function} postEventAssertion
    *   An optional assertion to be made immediately after the event occurs.
+   * @param {ChromeWindow} [win]
    * @returns {Promise<void>}
    */
   static async waitForPanelPopupEvent(
     eventName,
     callback,
-    postEventAssertion = null
+    postEventAssertion = null,
+    win = window
   ) {
     // De-lazify the panel elements.
-    FullPageTranslationsPanel.elements;
+    win.FullPageTranslationsPanel.elements;
     await SharedTranslationsTestUtils._waitForPopupEvent(
       "full-page-translations-panel",
       eventName,
       callback,
-      postEventAssertion
+      postEventAssertion,
+      win
     );
   }
 }
