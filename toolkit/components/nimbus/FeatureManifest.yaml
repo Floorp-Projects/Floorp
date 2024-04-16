@@ -2397,20 +2397,6 @@ backgroundUpdate:
         branch: user
         pref: app.update.background.allowUpdatesForUnelevatedInstallations
 
-defaultAgent:
-  description: >-
-    Features that configure the Windows Default Browser Agent.
-  owner: install-update@mozilla.com
-  applications:
-    - firefox-desktop-background-task
-  hasExposure: false
-  variables:
-    cppFallback:
-      description: >-
-        Triggers the Default Agent to fall back to the C++ implementation of DoTask if true.
-      type: boolean
-      fallbackPref: "defaultAgent.cppFallback.enabled"
-
 bookmarks:
   description: Prefs to control aspects of the bookmarks system.
   owner: omc@mozilla.com
