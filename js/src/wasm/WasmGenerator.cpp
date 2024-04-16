@@ -1135,6 +1135,7 @@ SharedMetadata ModuleGenerator::finishMetadata(const Bytes& bytecode) {
   metadata_->nameCustomSectionIndex = moduleEnv_->nameCustomSectionIndex;
   metadata_->moduleName = moduleEnv_->moduleName;
   metadata_->funcNames = std::move(moduleEnv_->funcNames);
+  metadata_->parsedBranchHints = moduleEnv_->parsedBranchHints;
 
   // Copy over additional debug information.
 

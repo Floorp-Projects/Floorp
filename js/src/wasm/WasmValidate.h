@@ -94,6 +94,9 @@ struct ModuleEnvironment {
   Maybe<Name> moduleName;
   NameVector funcNames;
 
+  // Indicates whether the branch hint section was successfully parsed.
+  bool parsedBranchHints;
+
   explicit ModuleEnvironment(FeatureArgs features,
                              ModuleKind kind = ModuleKind::Wasm)
       : kind(kind),
@@ -104,7 +107,8 @@ struct ModuleEnvironment {
         typeDefsOffsetStart(UINT32_MAX),
         memoriesOffsetStart(UINT32_MAX),
         tablesOffsetStart(UINT32_MAX),
-        tagsOffsetStart(UINT32_MAX) {}
+        tagsOffsetStart(UINT32_MAX),
+        parsedBranchHints(false) {}
 
   [[nodiscard]] bool init() {
     types = js_new<TypeContext>(features);
