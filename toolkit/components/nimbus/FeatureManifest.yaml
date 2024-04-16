@@ -1694,26 +1694,20 @@ dapTelemetry:
   description: DAP Telemetry
   owner: simon@mozilla.com
   hasExposure: false
-  isEarlyStartup: true # Data is sent on startup with a trigger in BrowserGlue.sys.mjs
   variables:
     enabled:
       type: boolean
-      fallbackPref: toolkit.telemetry.dap_enabled
       description: Whether to automatically send DAP measurements.
     task1Enabled:
       type: boolean
-      fallbackPref: toolkit.telemetry.dap_task1_enabled
       description: Whether to send fake measurements for task 1.
     task1TaskId:
       type: string
-      fallbackPref: toolkit.telemetry.dap_task1_taskid
       description: The task ID to use for task 1 measurements.
     visitCountingEnabled:
       type: boolean
-      fallbackPref: toolkit.telemetry.dap_visit_counting_enabled
       description: Whether to count visits to the provided list of URLs.
     visitCountingExperimentList:
-      fallbackPref: toolkit.telemetry.dap_visit_counting_experiment_list
       type: json
       description: A list of experiments with URLs for which we want to count visits.
 
