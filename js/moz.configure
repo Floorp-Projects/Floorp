@@ -1076,6 +1076,35 @@ def wasm_multi_memory(value):
 set_config("ENABLE_WASM_MULTI_MEMORY", wasm_multi_memory)
 set_define("ENABLE_WASM_MULTI_MEMORY", wasm_multi_memory)
 
+
+# Support for WebAssembly Branch-hinting.
+# ===========================
+
+
+@depends(milestone.is_nightly)
+def default_wasm_branch_hinting(is_nightly):
+    if is_nightly:
+        return True
+
+
+option(
+    "--enable-wasm-branch-hinting",
+    default=default_wasm_branch_hinting,
+    help="{Enable|Disable} WebAssembly Branch hints",
+)
+
+
+@depends("--enable-wasm-branch-hinting", "--wasm-no-experimental")
+def wasm_branch_hinting(value, no_experimental):
+    if no_experimental or not value:
+        return
+
+    return True
+
+
+set_config("ENABLE_WASM_BRANCH_HINTING", wasm_branch_hinting)
+set_define("ENABLE_WASM_BRANCH_HINTING", wasm_branch_hinting)
+
 # Options for generating the shell as a script
 # ============================================
 option("--with-qemu-exe", nargs=1, help="Use path as an arm emulator on host platforms")

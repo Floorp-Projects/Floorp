@@ -58,6 +58,7 @@ struct ModuleEnvironment {
   MemoryDescVector memories;
   MutableTypeContext types;
   FuncDescVector funcs;
+  BranchHintCollection branchHints;
   uint32_t numFuncImports;
   uint32_t numGlobalImports;
   GlobalDescVector globals;

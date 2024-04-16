@@ -7804,6 +7804,16 @@
     mirror: always
     set_spidermonkey_pref: startup
 
+-   name: javascript.options.wasm_branch_hinting
+    type: bool
+#if defined(ENABLE_WASM_BRANCH_HINTING)
+    value: @IS_NIGHTLY_BUILD@
+#else
+    value: false
+#endif
+    mirror: always
+    set_spidermonkey_pref: startup
+
 #if defined(ENABLE_WASM_SIMD)
 #if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
   # Enables AVX instructions support on X86/X64 platforms.
