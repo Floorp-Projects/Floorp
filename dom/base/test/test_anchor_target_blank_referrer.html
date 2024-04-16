@@ -35,6 +35,9 @@
 
   const testCases = [
     {ACTION: ["generate-anchor-target-blank-policy-test"],
+      PREFS: [
+        ["dom.security.https_first", false], // need to test http and https
+      ],
       TESTS: [
         // Referrer policy is set in meta
         {NAME: 'origin-in-meta-rel-noopener',
