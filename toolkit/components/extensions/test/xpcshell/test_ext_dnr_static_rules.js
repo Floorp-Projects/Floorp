@@ -1269,13 +1269,13 @@ add_task(async function test_static_rulesets_limits() {
       },
       {
         message:
-          /declarative_net_request: Enabled static rulesets are exceeding the MAX_NUMBER_OF_ENABLED_STATIC_RULESETS limit .* "ruleset_10"/,
+          /declarative_net_request: Enabled static rulesets are exceeding the MAX_NUMBER_OF_ENABLED_STATIC_RULESETS limit .* "ruleset_20"/,
       },
       // Error reported on the browser console as part of loading enabled rulesets)
       // on enabled rulesets being ignored because exceeding the limit.
       {
         message:
-          /Ignoring enabled static ruleset exceeding the MAX_NUMBER_OF_ENABLED_STATIC_RULESETS .* "ruleset_10"/,
+          /Ignoring enabled static ruleset exceeding the MAX_NUMBER_OF_ENABLED_STATIC_RULESETS .* "ruleset_20"/,
       },
     ],
   });
@@ -1285,7 +1285,7 @@ add_task(async function test_static_rulesets_limits() {
   );
   extension.sendMessage("updateEnabledRulesets", {
     disableRulesetIds: ["ruleset_0"],
-    enableRulesetIds: ["ruleset_10", "ruleset_11"],
+    enableRulesetIds: ["ruleset_20", "ruleset_21"],
   });
 
   await Assert.rejects(
@@ -1313,19 +1313,19 @@ add_task(async function test_static_rulesets_limits() {
     "updateEnabledRulesets",
     {
       disableRulesetIds: ["ruleset_0"],
-      enableRulesetIds: ["ruleset_10"],
+      enableRulesetIds: ["ruleset_20"],
     },
     {
-      disableRulesetIds: ["ruleset_10"],
-      enableRulesetIds: ["ruleset_11"],
+      disableRulesetIds: ["ruleset_20"],
+      enableRulesetIds: ["ruleset_21"],
     }
   );
   await extension.awaitMessage("updateEnabledRulesets:done");
 
-  // Expect ruleset_0 disabled, ruleset_10 to be enabled but then disabled by the
-  // second update queued after the first one, and ruleset_11 to be enabled.
+  // Expect ruleset_0 disabled, ruleset_20 to be enabled but then disabled by the
+  // second update queued after the first one, and ruleset_21 to be enabled.
   delete expectedEnabledRulesets.ruleset_0;
-  expectedEnabledRulesets.ruleset_11 = getSchemaNormalizedRules(
+  expectedEnabledRulesets.ruleset_21 = getSchemaNormalizedRules(
     extension,
     rules
   );
@@ -1356,10 +1356,10 @@ add_task(async function test_static_rulesets_limits() {
   await assertDNRStoreData(dnrStore, extension, expectedEnabledRulesets);
 
   extension.sendMessage("updateEnabledRulesets", {
-    disableRulesetIds: ["ruleset_11"],
+    disableRulesetIds: ["ruleset_21"],
   });
   await extension.awaitMessage("updateEnabledRulesets:done");
-  delete expectedEnabledRulesets.ruleset_11;
+  delete expectedEnabledRulesets.ruleset_21;
   await assertDNRGetEnabledRulesets(
     extension,
     Array.from(Object.keys(expectedEnabledRulesets))
