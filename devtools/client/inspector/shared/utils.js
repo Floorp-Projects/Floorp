@@ -51,11 +51,11 @@ function advanceValidate(keyCode, value, insertionPoint) {
   // value.  Otherwise it's been inserted in some spot where it has a
   // valid meaning, like a comment or string.
   value = value.slice(0, insertionPoint) + ";" + value.slice(insertionPoint);
-  const lexer = getCSSLexer(value, true);
+  const lexer = getCSSLexer(value);
   while (true) {
     const token = lexer.nextToken();
     if (token.endOffset > insertionPoint) {
-      if (token.tokenType === "Semicolon") {
+      if (token.tokenType === "symbol" && token.text === ";") {
         // The ";" is a terminator.
         return true;
       }
