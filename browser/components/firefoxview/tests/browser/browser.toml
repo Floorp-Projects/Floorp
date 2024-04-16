@@ -41,9 +41,6 @@ skip-if = ["true"] # Bug 1869605 and # Bug 1870296
 
 ["browser_history_firefoxview.js"]
 
-["browser_notification_dot.js"]
-skip-if = ["true"] # Bug 1851453
-
 ["browser_opentabs_cards.js"]
 
 ["browser_opentabs_changes.js"]
