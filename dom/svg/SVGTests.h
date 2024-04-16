@@ -103,6 +103,7 @@ class SVGTests : public nsISupports {
   enum { EXTENSIONS, LANGUAGE };
   SVGStringList mStringListAttributes[2];
   static nsStaticAtom* const sStringListNames[2];
+  mutable Maybe<bool> mPassesConditionalProcessingTests = Some(true);
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(SVGTests, MOZILLA_DOMSVGTESTS_IID)
