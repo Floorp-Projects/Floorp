@@ -12,12 +12,17 @@
 
   document.addEventListener("DOMContentLoaded", async function() {
       /**
-       * Even when we fail to localize all elements, we will
-       * still resolve the `ready` promise to communicate that
+       * Outside of tests, even when we fail to localize all elements,
+       * we will still resolve the `ready` promise to communicate that
        * the initial translation phase is now completed.
+       *
+       * In tests, the promise will be rejected to allow errors to be caught.
        */
       document.l10n.ready.then(() => {
-        is(1, 1, "the ready should resolve");
+        is(1, 2, "the ready should not resolve");
+        SimpleTest.finish();
+      }, (_err) => {
+        is(1, 1, "the ready should reject");
         SimpleTest.finish();
       });
   });

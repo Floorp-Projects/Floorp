@@ -93,8 +93,15 @@ class L10nReadyHandler final : public PromiseNativeHandler {
      * rejection" warning, which is noisy and not-actionable.
      *
      * So instead, we just resolve and report errors.
+     *
+     * However, in automated tests we do reject so that errors with missing
+     * messages and resources can be caught.
      */
-    mPromise->MaybeResolveWithUndefined();
+    if (xpc::IsInAutomation()) {
+      mPromise->MaybeRejectWithClone(aCx, aValue);
+    } else {
+      mPromise->MaybeResolveWithUndefined();
+    }
   }
 
  private:
