@@ -354,22 +354,25 @@ function getTranslationsParent() {
 
 /**
  * Closes all open panels and menu popups related to Translations.
+ *
+ * @param {ChromeWindow} [win]
  */
-async function closeAllOpenPanelsAndMenus() {
-  await closeSettingsMenuIfOpen();
-  await closeFullPageTranslationsPanelIfOpen();
-  await closeSelectTranslationsPanelIfOpen();
-  await closeContextMenuIfOpen();
+async function closeAllOpenPanelsAndMenus(win) {
+  await closeSettingsMenuIfOpen(win);
+  await closeFullPageTranslationsPanelIfOpen(win);
+  await closeSelectTranslationsPanelIfOpen(win);
+  await closeContextMenuIfOpen(win);
 }
 
 /**
  * Closes the popup element with the given Id if it is open.
  *
  * @param {string} popupElementId
+ * @param {ChromeWindow} [win]
  */
-async function closePopupIfOpen(popupElementId) {
+async function closePopupIfOpen(popupElementId, win = window) {
   await waitForCondition(async () => {
-    const popupElement = document.getElementById(popupElementId);
+    const popupElement = win.document.getElementById(popupElementId);
     if (!popupElement) {
       return true;
     }
@@ -389,30 +392,41 @@ async function closePopupIfOpen(popupElementId) {
 
 /**
  * Closes the context menu if it is open.
+ *
+ * @param {ChromeWindow} [win]
  */
-async function closeContextMenuIfOpen() {
-  await closePopupIfOpen("contentAreaContextMenu");
+async function closeContextMenuIfOpen(win) {
+  await closePopupIfOpen("contentAreaContextMenu", win);
 }
 
 /**
  * Closes the translations panel settings menu if it is open.
+ *
+ * @param {ChromeWindow} [win]
  */
-async function closeSettingsMenuIfOpen() {
-  await closePopupIfOpen("full-page-translations-panel-settings-menupopup");
+async function closeSettingsMenuIfOpen(win) {
+  await closePopupIfOpen(
+    "full-page-translations-panel-settings-menupopup",
+    win
+  );
 }
 
 /**
  * Closes the translations panel if it is open.
+ *
+ * @param {ChromeWindow} [win]
  */
-async function closeFullPageTranslationsPanelIfOpen() {
-  await closePopupIfOpen("full-page-translations-panel");
+async function closeFullPageTranslationsPanelIfOpen(win) {
+  await closePopupIfOpen("full-page-translations-panel", win);
 }
 
 /**
  * Closes the translations panel if it is open.
+ *
+ * @param {ChromeWindow} [win]
  */
-async function closeSelectTranslationsPanelIfOpen() {
-  await closePopupIfOpen("select-translations-panel");
+async function closeSelectTranslationsPanelIfOpen(win) {
+  await closePopupIfOpen("select-translations-panel", win);
 }
 
 /**
@@ -505,38 +519,56 @@ async function loadTestPage({
   prefs,
   autoOffer,
   permissionsUrls,
+  win = window,
 }) {
   info(`Loading test page starting at url: ${page}`);
-  // Ensure no engine is being carried over from a previous test.
-  await EngineProcess.destroyTranslationsEngine();
-  Services.fog.testResetFOG();
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      // Enabled by default.
-      ["browser.translations.enable", true],
-      ["browser.translations.logLevel", "All"],
-      ["browser.translations.panelShown", true],
-      ["browser.translations.automaticallyPopup", true],
-      ["browser.translations.alwaysTranslateLanguages", ""],
-      ["browser.translations.neverTranslateLanguages", ""],
-      ...(prefs ?? []),
-    ],
-  });
-  await SpecialPowers.pushPermissions(
-    [
-      ENGLISH_PAGE_URL,
-      FRENCH_PAGE_URL,
-      NO_LANGUAGE_URL,
-      SPANISH_PAGE_URL,
-      SPANISH_PAGE_URL_2,
-      SPANISH_PAGE_URL_DOT_ORG,
-      ...(permissionsUrls || []),
-    ].map(url => ({
-      type: TRANSLATIONS_PERMISSION,
-      allow: true,
-      context: url,
-    }))
-  );
+
+  // If there are multiple windows, only do the first time setup on the main window.
+  const isFirstTimeSetup = win === window;
+
+  let remoteClients = null;
+  let removeMocks = () => {};
+
+  if (isFirstTimeSetup) {
+    // Ensure no engine is being carried over from a previous test.
+    await EngineProcess.destroyTranslationsEngine();
+
+    Services.fog.testResetFOG();
+    await SpecialPowers.pushPrefEnv({
+      set: [
+        // Enabled by default.
+        ["browser.translations.enable", true],
+        ["browser.translations.logLevel", "All"],
+        ["browser.translations.panelShown", true],
+        ["browser.translations.automaticallyPopup", true],
+        ["browser.translations.alwaysTranslateLanguages", ""],
+        ["browser.translations.neverTranslateLanguages", ""],
+        ...(prefs ?? []),
+      ],
+    });
+    await SpecialPowers.pushPermissions(
+      [
+        ENGLISH_PAGE_URL,
+        FRENCH_PAGE_URL,
+        NO_LANGUAGE_URL,
+        SPANISH_PAGE_URL,
+        SPANISH_PAGE_URL_2,
+        SPANISH_PAGE_URL_DOT_ORG,
+        ...(permissionsUrls || []),
+      ].map(url => ({
+        type: TRANSLATIONS_PERMISSION,
+        allow: true,
+        context: url,
+      }))
+    );
+
+    const result = await createAndMockRemoteSettings({
+      languagePairs,
+      autoDownloadFromRemoteSettings,
+    });
+    remoteClients = result.remoteClients;
+    removeMocks = result.removeMocks;
+  }
 
   if (autoOffer) {
     TranslationsParent.testAutomaticPopup = true;
@@ -544,15 +576,10 @@ async function loadTestPage({
 
   // Start the tab at a blank page.
   const tab = await BrowserTestUtils.openNewForegroundTab(
-    gBrowser,
+    win.gBrowser,
     BLANK_PAGE,
     true // waitForLoad
   );
-
-  const { remoteClients, removeMocks } = await createAndMockRemoteSettings({
-    languagePairs,
-    autoDownloadFromRemoteSettings,
-  });
 
   BrowserTestUtils.startLoadingURIString(tab.linkedBrowser, page);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
