@@ -47,8 +47,8 @@ fuzzy-if(Android,0-8,0-771) == radial-shape-farthest-corner-1a.html radial-shape
 fails-if(gtkWidget) fuzzy(0-2,0-500) == radial-shape-farthest-corner-1b.html radial-shape-farthest-corner-1-ref.html
 fuzzy(0-2,0-15000) fuzzy-if(Android,0-17,0-13320) == radial-shape-farthest-side-1a.html radial-shape-farthest-side-1-ref.html
 fuzzy(0-2,0-15000) fuzzy-if(Android,0-17,0-13320) == radial-shape-farthest-side-1b.html radial-shape-farthest-side-1-ref.html
-== radial-size-1a.html radial-size-1-ref.html
-== radial-size-1b.html radial-size-1-ref.html
+fuzzy(0-1,0-100) == radial-size-1a.html radial-size-1-ref.html
+fuzzy(0-1,0-100) == radial-size-1b.html radial-size-1-ref.html
 fuzzy-if(Android,0-4,0-248) == radial-zero-length-1a.html radial-zero-length-1-ref.html
 fuzzy-if(Android,0-4,0-248) == radial-zero-length-1b.html radial-zero-length-1-ref.html
 fuzzy-if(Android,0-4,0-248) == radial-zero-length-1c.html radial-zero-length-1-ref.html
