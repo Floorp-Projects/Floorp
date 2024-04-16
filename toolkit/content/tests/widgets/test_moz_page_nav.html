@@ -242,12 +242,12 @@ function isActiveElement(expectedActiveEl) {
     )
     await tab();
     ok(
-      isActiveElement(supportLink),
+      isActiveElement(supportLink.linkEl),
       "The support link is selected"
     )
     await tab();
     ok(
-      isActiveElement(externalLink),
+      isActiveElement(externalLink.linkEl),
       "The external link is selected"
     )
     await tab(true);
