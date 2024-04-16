@@ -13,9 +13,6 @@ with Files("code-coverage/**"):
 with Files("compare-locales/mach_commands.py"):
     BUG_COMPONENT = ("Localization Infrastructure and Tools", "compare-locales")
 
-with Files("github-sync/**"):
-    BUG_COMPONENT = ("Core", "Graphics")
-
 with Files("lint/**"):
     BUG_COMPONENT = ("Developer Infrastructure", "Lint and Formatting")
 

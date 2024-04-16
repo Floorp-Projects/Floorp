@@ -113,7 +113,6 @@ existing_tasks:
   docker-image-firefox-snap: YmvNSMSfQWW3YG6x_Fcdbg
   docker-image-funsize-update-generator: H14MbupWQoyjX2KXVFC7Cg
   docker-image-gdb-test: SqgEZnNpSoqvNxaY-P2OCA
-  docker-image-github-sync: P_Ymo66MSamplL2DUkKafA
   docker-image-image_builder: MWRymupRSheUkuqIQwF8TA
   docker-image-index-task: VIneOK4VRXGrcEmrEpleSA
   docker-image-lint: PvzC5kHhQiGDcIo5GhW6TQ
