@@ -10,8 +10,12 @@
   justify-content: center;
   max-height: 100vh;
 
-  > search-input {
+  > .search {
     margin: 20px;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid var(--in-content-border-color);
+    box-sizing: border-box;
   }
 }
 
@@ -197,12 +201,4 @@ virtualized-list {
       visibility: visible;
     }
   }
-}
-
-.search {
-  padding: 8px;
-  border-radius: 4px;
-  border: 1px solid var(--in-content-border-color);
-  box-sizing: border-box;
-  width: 100%;
 }

@@ -8,9 +8,6 @@ import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 // eslint-disable-next-line import/no-unassigned-import
 import "chrome://global/content/megalist/VirtualizedList.mjs";
 
-// eslint-disable-next-line import/no-unassigned-import
-import "chrome://global/content/megalist/search-input.mjs";
-
 /**
  * Map with limit on how many entries it can have.
  * When over limit entries are added, oldest one are removed.
@@ -111,6 +108,10 @@ export class MegalistView extends MozLitElement {
   #snapshotById = new MostRecentMap(7680 / MegalistView.LINE_HEIGHT);
 
   #templates = {};
+
+  static queries = {
+    searchInput: ".search",
+  };
 
   connectedCallback() {
     super.connectedCallback();
@@ -360,6 +361,12 @@ export class MegalistView extends MozLitElement {
 
     const popup = this.ownerDocument.createElement("div");
     popup.className = "menuPopup";
+
+    let closeMenu = () => {
+      popup.remove();
+      this.searchInput.focus();
+    };
+
     popup.addEventListener(
       "keydown",
       e => {
@@ -385,7 +392,7 @@ export class MegalistView extends MozLitElement {
 
         switch (e.code) {
           case "Escape":
-            popup.remove();
+            closeMenu();
             break;
           case "Tab":
             if (e.shiftKey) {
@@ -416,9 +423,7 @@ export class MegalistView extends MozLitElement {
           e.composedTarget?.closest(".menuPopup") !=
           e.relatedTarget?.closest(".menuPopup")
         ) {
-          // TODO: this triggers on macOS before "click" event. Due to this,
-          // we are not receiving the command.
-          popup.remove();
+          closeMenu();
         }
       },
       { capture: true }
@@ -456,11 +461,13 @@ export class MegalistView extends MozLitElement {
         href="chrome://global/content/megalist/megalist.css"
       />
       <div class="container">
-        <search-input
+        <input
+          class="search"
+          type="search"
+          data-l10n-id="filter-placeholder"
           .value=${this.searchText}
-          .change=${e => this.#handleInputChange(e)}
-        >
-        </search-input>
+          @input=${e => this.#handleInputChange(e)}
+        />
         <virtualized-list
           .lineCount=${this.listLength}
           .lineHeight=${MegalistView.LINE_HEIGHT}
