@@ -69,6 +69,7 @@ function write_sources {
 # Convert a list of source files into sources.mozbuild.
 # $1 - Input file.
 # $2 - Output prefix.
+# $3 - Path of vpx_config.c under $LIBVPX_CONFIG_DIR
 function convert_srcs_to_project_files {
   # Do the following here:
   # 1. Filter .c, .h, .s, .S and .asm files.
@@ -76,9 +77,17 @@ function convert_srcs_to_project_files {
 
   local source_list=$(grep -E '(\.c|\.h|\.S|\.s|\.asm)$' $1)
 
+  # Adjust the path for vpx_config.c while maintaining list order:
+  # Since the config file resides in $BASE_DIR/$LIBVPX_CONFIG_DIR, while the
+  # files in $source_list are placed under $BASE_DIR/libvpx (see write_sources),
+  # the config file path requires adjustment. To ensure the list remains sorted,
+  # we must first remove it and then insert it at the beginning of the list.
+
   # Remove vpx_config.c.
-  # The platform-specific vpx_config.c will be added into in moz.build later.
   source_list=$(echo "$source_list" | grep -v 'vpx_config\.c')
+  # Insert vpx_config.c at the beginning of the list.
+  local config=$(echo "../$LIBVPX_CONFIG_DIR/$3/vpx_config.c")
+  source_list=$(echo "$config" ; echo "$source_list")
 
   # Remove include-only asm files (no object code emitted)
   source_list=$(echo "$source_list" | grep -v 'x86_abi_support\.asm')
@@ -255,19 +264,19 @@ echo "Generate X86_64 source list on Linux."
 config=$(print_config linux/x64)
 make_clean
 make libvpx_srcs.txt target=libs $config > /dev/null
-convert_srcs_to_project_files libvpx_srcs.txt LINUX_X64
+convert_srcs_to_project_files libvpx_srcs.txt LINUX_X64 linux/x64
 
 echo "Generate X86_64 source list on Mac."
 config=$(print_config mac/x64)
 make_clean
 make libvpx_srcs.txt target=libs $config > /dev/null
-convert_srcs_to_project_files libvpx_srcs.txt MAC_X64
+convert_srcs_to_project_files libvpx_srcs.txt MAC_X64 mac/x64
 
 echo "Generate X86_64 source list on Windows."
 config=$(print_config win/x64)
 make_clean
 make libvpx_srcs.txt target=libs $config > /dev/null
-convert_srcs_to_project_files libvpx_srcs.txt WIN_X64
+convert_srcs_to_project_files libvpx_srcs.txt WIN_X64 win/x64
 
 # Copy vpx_version.h once. The file is the same for all platforms.
 cp vpx_version.h $BASE_DIR/$LIBVPX_CONFIG_DIR
@@ -276,43 +285,43 @@ echo "Generate IA32 source list on Linux."
 config=$(print_config linux/ia32)
 make_clean
 make libvpx_srcs.txt target=libs $config > /dev/null
-convert_srcs_to_project_files libvpx_srcs.txt LINUX_IA32
+convert_srcs_to_project_files libvpx_srcs.txt LINUX_IA32 linux/ia32
 
 echo "Generate IA32 source list on Mac."
 config=$(print_config mac/ia32)
 make_clean
 make libvpx_srcs.txt target=libs $config > /dev/null
-convert_srcs_to_project_files libvpx_srcs.txt MAC_IA32
+convert_srcs_to_project_files libvpx_srcs.txt MAC_IA32 mac/ia32
 
 echo "Generate IA32 source list on Windows."
 config=$(print_config win/ia32)
 make_clean
 make libvpx_srcs.txt target=libs $config > /dev/null
-convert_srcs_to_project_files libvpx_srcs.txt WIN_IA32
+convert_srcs_to_project_files libvpx_srcs.txt WIN_IA32 win/ia32
 
 echo "Generate ARM source list on Linux."
 config=$(print_config linux/arm)
 make_clean
 make libvpx_srcs.txt target=libs $config > /dev/null
-convert_srcs_to_project_files libvpx_srcs.txt LINUX_ARM
+convert_srcs_to_project_files libvpx_srcs.txt LINUX_ARM linux/arm
 
 echo "Generate ARM64 source list on Linux"
 config=$(print_config linux/arm64)
 make_clean
 make libvpx_srcs.txt target=libs $config > /dev/null
-convert_srcs_to_project_files libvpx_srcs.txt LINUX_ARM64
+convert_srcs_to_project_files libvpx_srcs.txt LINUX_ARM64 linux/arm64
 
 echo "Generate AARCH64 source list on Windows."
 config=$(print_config win/aarch64)
 make_clean
 make libvpx_srcs.txt target=libs $config > /dev/null
-convert_srcs_to_project_files libvpx_srcs.txt WIN_AARCH64
+convert_srcs_to_project_files libvpx_srcs.txt WIN_AARCH64 win/aarch64
 
 echo "Generate generic source list."
 config=$(print_config generic)
 make_clean
 make libvpx_srcs.txt target=libs $config > /dev/null
-convert_srcs_to_project_files libvpx_srcs.txt GENERIC
+convert_srcs_to_project_files libvpx_srcs.txt GENERIC generic
 
 echo "}" >> $BASE_DIR/sources.mozbuild
 
