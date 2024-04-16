@@ -21,10 +21,8 @@ const MAX_NUMBER_OF_STATIC_RULESETS = 50;
 
 /**
  * The maximum number of static Rulesets an extension can enable at any one time.
- *
- * NOTE: this limit may be increased in the future, see https://github.com/w3c/webextensions/issues/318
  */
-const MAX_NUMBER_OF_ENABLED_STATIC_RULESETS = 10;
+const MAX_NUMBER_OF_ENABLED_STATIC_RULESETS = 20;
 
 /**
  * The maximum number of dynamic and session rules an extension can add.
