@@ -623,7 +623,7 @@ class Script {
         p.catch(error => {
           Services.console.logMessage(
             new ScriptError(
-              `${error.name}: ${error.message}`,
+              error.toString(),
               error.fileName,
               null,
               error.lineNumber,
