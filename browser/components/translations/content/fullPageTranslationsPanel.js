@@ -1110,7 +1110,7 @@ var FullPageTranslationsPanel = new (class {
 
     const { button } = this.buttonElements;
 
-    const { requestedTranslationPair, locationChangeId } =
+    const { requestedTranslationPair } =
       TranslationsParent.getTranslationsActor(
         gBrowser.selectedBrowser
       ).languageState;
@@ -1139,17 +1139,6 @@ var FullPageTranslationsPanel = new (class {
       event.type === "TranslationsParent:OfferTranslation"
         ? button
         : this.elements.appMenuButton;
-
-    if (!TranslationsParent.isActiveLocation(locationChangeId)) {
-      this.console?.log(`A translation panel open request was stale.`, {
-        locationChangeId,
-        newlocationChangeId: TranslationsParent.getTranslationsActor(
-          gBrowser.selectedBrowser
-        ).languageState.locationChangeId,
-        currentURISpec: gBrowser.currentURI.spec,
-      });
-      return;
-    }
 
     this.console?.log(`Showing a translation panel`, gBrowser.currentURI.spec);
 
