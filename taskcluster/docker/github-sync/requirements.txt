@@ -1,3 +1,0 @@
-requests == 2.21.0
-pygit2 == 1.11.1
-python-hglib == 2.6.1

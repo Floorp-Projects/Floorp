@@ -235,7 +235,6 @@ treeherder:
         'test-info': 'Test manifest skip/fail information'
         'condprof': 'Conditioned Profile Builder'
         'doc': 'Documentation'
-        'GhS': 'GitHub Synchronization'
         'perftest': 'Performance tests'
         'perftest-detect': 'Performance regression detection tooling'
         'perftest-chrome': 'Performance tests using Chrone'
