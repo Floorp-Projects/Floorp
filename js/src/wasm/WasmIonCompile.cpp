@@ -235,11 +235,18 @@ class FunctionCompiler {
   };
 
   using ControlFlowPatchVector = Vector<ControlFlowPatch, 0, SystemAllocPolicy>;
-  using ControlFlowPatchVectorVector =
-      Vector<ControlFlowPatchVector, 0, SystemAllocPolicy>;
+
+  struct PendingBlockTarget {
+    ControlFlowPatchVector patches;
+    BranchHint hint = BranchHint::Invalid;
+  };
+
+  using PendingBlockTargetVector =
+      Vector<PendingBlockTarget, 0, SystemAllocPolicy>;
 
   const ModuleEnvironment& moduleEnv_;
   IonOpIter iter_;
+  uint32_t functionBodyOffset_;
   const FuncCompileInput& func_;
   const ValTypeVector& locals_;
   size_t lastReadCallSite_;
@@ -254,7 +261,7 @@ class FunctionCompiler {
 
   uint32_t loopDepth_;
   uint32_t blockDepth_;
-  ControlFlowPatchVectorVector blockPatches_;
+  PendingBlockTargetVector pendingBlocks_;
   // Control flow patches created by `delegate` instructions that target the
   // outermost label of this function. These will be bound to a pad that will
   // do a rethrow in `emitBodyDelegateThrowPad`.
@@ -276,6 +283,7 @@ class FunctionCompiler {
                    MIRGenerator& mirGen, TryNoteVector& tryNotes)
       : moduleEnv_(moduleEnv),
         iter_(moduleEnv, decoder),
+        functionBodyOffset_(decoder.beginOffset()),
         func_(func),
         locals_(locals),
         lastReadCallSite_(0),
@@ -294,6 +302,9 @@ class FunctionCompiler {
   const ModuleEnvironment& moduleEnv() const { return moduleEnv_; }
 
   IonOpIter& iter() { return iter_; }
+  uint32_t relativeBytecodeOffset() {
+    return readBytecodeOffset() - functionBodyOffset_;
+  }
   TempAllocator& alloc() const { return alloc_; }
   // FIXME(1401675): Replace with BlockType.
   uint32_t funcIndex() const { return func_.index; }
@@ -301,6 +312,7 @@ class FunctionCompiler {
     return *moduleEnv_.funcs[func_.index].type;
   }
 
+  MBasicBlock* getCurBlock() const { return curBlock_; }
   BytecodeOffset bytecodeOffset() const { return iter_.bytecodeOffset(); }
   BytecodeOffset bytecodeIfNotAsmJS() const {
     return moduleEnv_.isAsmJS() ? BytecodeOffset() : iter_.bytecodeOffset();
@@ -384,8 +396,8 @@ class FunctionCompiler {
     MOZ_ASSERT(loopDepth_ == 0);
     MOZ_ASSERT(blockDepth_ == 0);
 #ifdef DEBUG
-    for (ControlFlowPatchVector& patches : blockPatches_) {
-      MOZ_ASSERT(patches.empty());
+    for (PendingBlockTarget& targets : pendingBlocks_) {
+      MOZ_ASSERT(targets.patches.empty());
     }
 #endif
     MOZ_ASSERT(inDeadCode());
@@ -2682,8 +2694,8 @@ class FunctionCompiler {
   }
 
   [[nodiscard]] bool startBlock() {
-    MOZ_ASSERT_IF(blockDepth_ < blockPatches_.length(),
-                  blockPatches_[blockDepth_].empty());
+    MOZ_ASSERT_IF(blockDepth_ < pendingBlocks_.length(),
+                  pendingBlocks_[blockDepth_].patches.empty());
     blockDepth_++;
     return true;
   }
@@ -2769,8 +2781,8 @@ class FunctionCompiler {
     }
 
     // Fix up phis stored in the slots Vector of pending blocks.
-    for (ControlFlowPatchVector& patches : blockPatches_) {
-      for (ControlFlowPatch& p : patches) {
+    for (PendingBlockTarget& pendingBlockTarget : pendingBlocks_) {
+      for (ControlFlowPatch& p : pendingBlockTarget.patches) {
         MBasicBlock* block = p.ins->block();
         if (block->loopDepth() >= loopEntry->loopDepth()) {
           fixupRedundantPhis(block);
@@ -2836,8 +2848,8 @@ class FunctionCompiler {
 
     if (!loopHeader) {
       MOZ_ASSERT(inDeadCode());
-      MOZ_ASSERT(headerLabel >= blockPatches_.length() ||
-                 blockPatches_[headerLabel].empty());
+      MOZ_ASSERT(headerLabel >= pendingBlocks_.length() ||
+                 pendingBlocks_[headerLabel].patches.empty());
       blockDepth_--;
       loopDepth_--;
       return true;
@@ -2896,17 +2908,20 @@ class FunctionCompiler {
     return inDeadCode() || popPushedDefs(loopResults);
   }
 
-  [[nodiscard]] bool addControlFlowPatch(MControlInstruction* ins,
-                                         uint32_t relative, uint32_t index) {
+  [[nodiscard]] bool addControlFlowPatch(
+      MControlInstruction* ins, uint32_t relative, uint32_t index,
+      BranchHint branchHint = BranchHint::Invalid) {
     MOZ_ASSERT(relative < blockDepth_);
     uint32_t absolute = blockDepth_ - 1 - relative;
 
-    if (absolute >= blockPatches_.length() &&
-        !blockPatches_.resize(absolute + 1)) {
+    if (absolute >= pendingBlocks_.length() &&
+        !pendingBlocks_.resize(absolute + 1)) {
       return false;
     }
 
-    return blockPatches_[absolute].append(ControlFlowPatch(ins, index));
+    pendingBlocks_[absolute].hint = branchHint;
+    return pendingBlocks_[absolute].patches.append(
+        ControlFlowPatch(ins, index));
   }
 
   [[nodiscard]] bool br(uint32_t relativeDepth, const DefVector& values) {
@@ -2929,7 +2944,7 @@ class FunctionCompiler {
   }
 
   [[nodiscard]] bool brIf(uint32_t relativeDepth, const DefVector& values,
-                          MDefinition* condition) {
+                          MDefinition* condition, BranchHint branchHint) {
     if (inDeadCode()) {
       return true;
     }
@@ -2940,7 +2955,8 @@ class FunctionCompiler {
     }
 
     MTest* test = MTest::New(alloc(), condition, nullptr, joinBlock);
-    if (!addControlFlowPatch(test, relativeDepth, MTest::TrueBranchIndex)) {
+    if (!addControlFlowPatch(test, relativeDepth, MTest::TrueBranchIndex,
+                             branchHint)) {
       return false;
     }
 
@@ -2950,6 +2966,7 @@ class FunctionCompiler {
 
     curBlock_->end(test);
     curBlock_ = joinBlock;
+
     return true;
   }
 
@@ -4785,17 +4802,23 @@ class FunctionCompiler {
   }
 
   [[nodiscard]] bool bindBranches(uint32_t absolute, DefVector* defs) {
-    if (absolute >= blockPatches_.length() || blockPatches_[absolute].empty()) {
+    if (absolute >= pendingBlocks_.length() ||
+        pendingBlocks_[absolute].patches.empty()) {
       return inDeadCode() || popPushedDefs(defs);
     }
 
-    ControlFlowPatchVector& patches = blockPatches_[absolute];
+    ControlFlowPatchVector& patches = pendingBlocks_[absolute].patches;
     MControlInstruction* ins = patches[0].ins;
     MBasicBlock* pred = ins->block();
 
     MBasicBlock* join = nullptr;
     if (!newBlock(pred, &join)) {
       return false;
+    }
+
+    // Use branch hinting information if any.
+    if (pendingBlocks_[absolute].hint != BranchHint::Invalid) {
+      join->setBranchHinting(pendingBlocks_[absolute].hint);
     }
 
     pred->mark();
@@ -4942,6 +4965,9 @@ static bool EmitLoop(FunctionCompiler& f) {
 }
 
 static bool EmitIf(FunctionCompiler& f) {
+  BranchHint branchHint =
+      f.iter().getBranchHint(f.funcIndex(), f.relativeBytecodeOffset());
+
   ResultType params;
   MDefinition* condition = nullptr;
   if (!f.iter().readIf(&params, &condition)) {
@@ -4951,6 +4977,11 @@ static bool EmitIf(FunctionCompiler& f) {
   MBasicBlock* elseBlock;
   if (!f.branchAndStartThen(condition, &elseBlock)) {
     return false;
+  }
+
+  // Store the branch hint in the basic block.
+  if (branchHint != BranchHint::Invalid) {
+    f.getCurBlock()->setBranchHinting(branchHint);
   }
 
   f.iter().controlItem().block = elseBlock;
@@ -5088,11 +5119,15 @@ static bool EmitBrIf(FunctionCompiler& f) {
   ResultType type;
   DefVector values;
   MDefinition* condition;
+
+  BranchHint branchHint =
+      f.iter().getBranchHint(f.funcIndex(), f.relativeBytecodeOffset());
+
   if (!f.iter().readBrIf(&relativeDepth, &type, &values, &condition)) {
     return false;
   }
 
-  return f.brIf(relativeDepth, values, condition);
+  return f.brIf(relativeDepth, values, condition, branchHint);
 }
 
 static bool EmitBrTable(FunctionCompiler& f) {
@@ -9326,6 +9361,12 @@ bool wasm::IonCompileFunctions(const ModuleEnvironment& moduleEnv,
     const JitCompileOptions options;
     MIRGraph graph(&alloc);
     CompileInfo compileInfo(locals.length());
+    // Only activate branch hinting if the option is enabled and some hints were
+    // parsed.
+    if (moduleEnv.branchHintingEnabled() && !moduleEnv.branchHints.isEmpty()) {
+      compileInfo.setBranchHinting(true);
+    }
+
     MIRGenerator mir(nullptr, options, &alloc, &graph, &compileInfo,
                      IonOptimizations.get(OptimizationLevel::Wasm));
 

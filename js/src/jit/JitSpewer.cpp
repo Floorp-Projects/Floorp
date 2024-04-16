@@ -360,6 +360,7 @@ static void PrintHelpAndExit(int status = 0) {
       "  pools         Literal Pools (ARM only for now)\n"
       "  cacheflush    Instruction Cache flushes (ARM only for now)\n"
       "  range         Range Analysis\n"
+      "  branch-hint   Wasm Branch Hinting\n"
       "  wasmbce       Wasm Bounds Check Elimination\n"
       "  shapeguards   Redundant shape guard elimination\n"
       "  gcbarriers    Redundant GC barrier elimination\n"
@@ -432,6 +433,8 @@ void jit::CheckLogging() {
       EnableChannel(JitSpew_Range);
     } else if (IsFlag(found, "wasmbce")) {
       EnableChannel(JitSpew_WasmBCE);
+    } else if (IsFlag(found, "branch-hint")) {
+      EnableChannel(JitSpew_BranchHint);
     } else if (IsFlag(found, "licm")) {
       EnableChannel(JitSpew_LICM);
     } else if (IsFlag(found, "flac")) {

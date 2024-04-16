@@ -158,6 +158,7 @@ class MIRGenerator final {
  public:
   void disableLICM() { disableLICM_ = true; }
   bool licmEnabled() const;
+  bool branchHintingEnabled() const;
 
  private:
   uint64_t minWasmMemory0Length_;

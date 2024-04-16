@@ -41,6 +41,8 @@ namespace jit {
   _(Range)                                 \
   /* Information during LICM */            \
   _(LICM)                                  \
+  /* Information during Branch Hinting */  \
+  _(BranchHint)                            \
   /* Info about fold linear constants */   \
   _(FLAC)                                  \
   /* Effective address analysis info */    \

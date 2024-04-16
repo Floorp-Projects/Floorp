@@ -20,6 +20,7 @@
 #include "jit/BacktrackingAllocator.h"
 #include "jit/BaselineFrame.h"
 #include "jit/BaselineJIT.h"
+#include "jit/BranchHinting.h"
 #include "jit/CodeGenerator.h"
 #include "jit/CompileInfo.h"
 #include "jit/EdgeCaseAnalysis.h"
@@ -1219,6 +1220,19 @@ bool OptimizeMIR(MIRGenerator* mir) {
     AssertExtendedGraphCoherency(graph);
 
     if (mir->shouldCancel("GVN")) {
+      return false;
+    }
+  }
+
+  if (mir->branchHintingEnabled()) {
+    JitSpewCont(JitSpew_BranchHint, "\n");
+    if (!BranchHinting(mir, graph)) {
+      return false;
+    }
+    gs.spewPass("BranchHinting");
+    AssertBasicGraphCoherency(graph);
+
+    if (mir->shouldCancel("BranchHinting")) {
       return false;
     }
   }
