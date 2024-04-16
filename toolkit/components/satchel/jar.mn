@@ -6,5 +6,4 @@ toolkit.jar:
   content/global/megalist/megalist.css        (megalist/content/megalist.css)
   content/global/megalist/megalist.html       (megalist/content/megalist.html)
   content/global/megalist/MegalistView.mjs    (megalist/content/MegalistView.mjs)
-  content/global/megalist/search-input.mjs    (megalist/content/search-input.mjs)
   content/global/megalist/VirtualizedList.mjs (megalist/content/VirtualizedList.mjs)
