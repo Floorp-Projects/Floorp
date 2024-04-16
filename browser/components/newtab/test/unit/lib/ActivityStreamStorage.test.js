@@ -47,6 +47,7 @@ describe("ActivityStreamStorage", () => {
     beforeEach(() => {
       storeStub = {
         getAll: sandbox.stub().resolves(),
+        getAllKeys: sandbox.stub().resolves(),
         get: sandbox.stub().resolves(),
         put: sandbox.stub().resolves(),
       };
@@ -74,6 +75,14 @@ describe("ActivityStreamStorage", () => {
 
       assert.calledOnce(storeStub.getAll);
       assert.deepEqual(result, ["bar"]);
+    });
+    it("should return the correct value for getAllKeys", async () => {
+      storeStub.getAllKeys.resolves(["key1", "key2", "key3"]);
+
+      const result = await testStorage.getAllKeys();
+
+      assert.calledOnce(storeStub.getAllKeys);
+      assert.deepEqual(result, ["key1", "key2", "key3"]);
     });
     it("should query the correct object store", async () => {
       await testStorage.get();

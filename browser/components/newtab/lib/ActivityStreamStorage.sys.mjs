@@ -38,6 +38,7 @@ export class ActivityStreamStorage {
       return {
         get: this._get.bind(this, storeName),
         getAll: this._getAll.bind(this, storeName),
+        getAllKeys: this._getAllKeys.bind(this, storeName),
         set: this._set.bind(this, storeName),
       };
     }
@@ -58,6 +59,12 @@ export class ActivityStreamStorage {
   _getAll(storeName) {
     return this._requestWrapper(async () =>
       (await this._getStore(storeName)).getAll()
+    );
+  }
+
+  _getAllKeys(storeName) {
+    return this._requestWrapper(async () =>
+      (await this._getStore(storeName)).getAllKeys()
     );
   }
 
