@@ -16422,47 +16422,33 @@ WindowContext* Document::GetWindowContextForPageUseCounters() const {
   return wc;
 }
 
-void Document::UpdateIntersectionObservations(TimeStamp aNowTime) {
-  if (mIntersectionObservers.IsEmpty()) {
-    return;
-  }
-
-  DOMHighResTimeStamp time = 0;
-  if (nsPIDOMWindowInner* win = GetInnerWindow()) {
-    if (Performance* perf = win->GetPerformance()) {
-      time = perf->TimeStampToDOMHighResForRendering(aNowTime);
+void Document::UpdateIntersections(TimeStamp aNowTime) {
+  if (!mIntersectionObservers.IsEmpty()) {
+    DOMHighResTimeStamp time = 0;
+    if (nsPIDOMWindowInner* win = GetInnerWindow()) {
+      if (Performance* perf = win->GetPerformance()) {
+        time = perf->TimeStampToDOMHighResForRendering(aNowTime);
+      }
     }
-  }
-
-  const auto observers = ToTArray<nsTArray<RefPtr<DOMIntersectionObserver>>>(
-      mIntersectionObservers);
-  for (const auto& observer : observers) {
-    if (observer) {
+    for (DOMIntersectionObserver* observer : mIntersectionObservers) {
       observer->Update(*this, time);
     }
+    Dispatch(NewRunnableMethod("Document::NotifyIntersectionObservers", this,
+                               &Document::NotifyIntersectionObservers));
   }
-}
-
-void Document::ScheduleIntersectionObserverNotification() {
-  if (mIntersectionObservers.IsEmpty()) {
-    return;
-  }
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  nsCOMPtr<nsIRunnable> notification =
-      NewRunnableMethod("Document::NotifyIntersectionObservers", this,
-                        &Document::NotifyIntersectionObservers);
-  Dispatch(notification.forget());
+  EnumerateSubDocuments([aNowTime](Document& aDoc) {
+    aDoc.UpdateIntersections(aNowTime);
+    return CallState::Continue;
+  });
 }
 
 void Document::NotifyIntersectionObservers() {
   const auto observers = ToTArray<nsTArray<RefPtr<DOMIntersectionObserver>>>(
       mIntersectionObservers);
   for (const auto& observer : observers) {
-    if (observer) {
-      // MOZ_KnownLive because the 'observers' array guarantees to keep it
-      // alive.
-      MOZ_KnownLive(observer)->Notify();
-    }
+    // MOZ_KnownLive because the 'observers' array guarantees to keep it
+    // alive.
+    MOZ_KnownLive(observer)->Notify();
   }
 }
 
