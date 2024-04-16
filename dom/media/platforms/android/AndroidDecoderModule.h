@@ -54,25 +54,16 @@ class AndroidDecoderModule : public PlatformDecoderModule {
  private:
   explicit AndroidDecoderModule(CDMProxy* aProxy = nullptr);
   virtual ~AndroidDecoderModule() = default;
-
-  static bool AreSupportedMimeTypesReady();
-  static bool IsSupportedCodecsReady();
-
   RefPtr<MediaDrmCDMProxy> mProxy;
   // SW compatible MIME type strings
-  static inline StaticAutoPtr<nsTArray<nsCString>> sSupportedSwMimeTypes
-      MOZ_GUARDED_BY(sMutex);
+  static StaticAutoPtr<nsTArray<nsCString>> sSupportedSwMimeTypes;
   // HW compatible MIME type strings
-  static inline StaticAutoPtr<nsTArray<nsCString>> sSupportedHwMimeTypes
-      MOZ_GUARDED_BY(sMutex);
+  static StaticAutoPtr<nsTArray<nsCString>> sSupportedHwMimeTypes;
   // EnumSet containing SW/HW codec support information parsed from
   // MIME type strings. If a specific codec could not be determined
   // it will not be included in this EnumSet. All supported MIME type strings
   // are still stored in sSupportedSwMimeTypes and sSupportedHwMimeTypes.
-  static inline StaticAutoPtr<media::MediaCodecsSupported> sSupportedCodecs
-      MOZ_GUARDED_BY(sMutex);
-
-  static inline StaticMutex sMutex;
+  static StaticAutoPtr<media::MediaCodecsSupported> sSupportedCodecs;
 };
 
 extern LazyLogModule sAndroidDecoderModuleLog;
