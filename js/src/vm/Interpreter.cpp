@@ -4140,13 +4140,7 @@ bool MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER js::Interpret(JSContext* cx,
         }
 
         if (!DebugAPI::onResumeFrame(cx, REGS.fp())) {
-          if (cx->isPropagatingForcedReturn()) {
-            MOZ_ASSERT_IF(
-                REGS.fp()
-                    ->callee()
-                    .isGenerator(),  // as opposed to an async function
-                gen->isClosed());
-          }
+          MOZ_ASSERT_IF(cx->isPropagatingForcedReturn(), gen->isClosed());
           goto error;
         }
       }
