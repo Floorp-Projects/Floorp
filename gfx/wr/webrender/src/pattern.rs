@@ -62,7 +62,7 @@ impl Pattern {
         Pattern {
             kind: PatternKind::ColorOrTexture,
             shader_input: PatternShaderInput::default(),
-            base_color: PremultipliedColorF::BLACK,
+            base_color: PremultipliedColorF::WHITE,
             is_opaque: false,
         }
     }
