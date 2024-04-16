@@ -344,6 +344,13 @@ class SharedArrayBufferObject : public ArrayBufferObjectMaybeShared {
     return rawBufferObject()->volatileByteLength();
   }
 
+ private:
+  bool isInitialized() const {
+    bool initialized = getFixedSlot(RAWBUF_SLOT).isDouble();
+    MOZ_ASSERT_IF(initialized, getFixedSlot(LENGTH_SLOT).isDouble());
+    return initialized;
+  }
+
  public:
   // Returns either the byte length for fixed-length shared arrays. Or the
   // maximum byte length for growable shared arrays.

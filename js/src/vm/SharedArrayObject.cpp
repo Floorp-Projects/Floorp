@@ -587,6 +587,7 @@ SharedArrayBufferType* SharedArrayBufferObject::NewWith(
 
 bool SharedArrayBufferObject::acceptRawBuffer(SharedArrayRawBuffer* buffer,
                                               size_t length) {
+  MOZ_ASSERT(!isInitialized());
   if (!zone()->addSharedMemory(buffer,
                                SharedArrayMappedSize(buffer->isWasm(), length),
                                MemoryUse::SharedArrayRawBuffer)) {
@@ -595,6 +596,7 @@ bool SharedArrayBufferObject::acceptRawBuffer(SharedArrayRawBuffer* buffer,
 
   setFixedSlot(RAWBUF_SLOT, PrivateValue(buffer));
   setFixedSlot(LENGTH_SLOT, PrivateValue(length));
+  MOZ_ASSERT(isInitialized());
   return true;
 }
 
@@ -605,6 +607,7 @@ void SharedArrayBufferObject::dropRawBuffer() {
                                           MemoryUse::SharedArrayRawBuffer);
   rawBufferObject()->dropReference();
   setFixedSlot(RAWBUF_SLOT, UndefinedValue());
+  MOZ_ASSERT(!isInitialized());
 }
 
 SharedArrayRawBuffer* SharedArrayBufferObject::rawBufferObject() const {
@@ -639,6 +642,11 @@ void SharedArrayBufferObject::addSizeOfExcludingThis(
   // the refcount goes down). But that's unlikely and hard to avoid, so we
   // just live with the risk.
   const SharedArrayBufferObject& buf = obj->as<SharedArrayBufferObject>();
+
+  if (MOZ_UNLIKELY(!buf.isInitialized())) {
+    return;
+  }
+
   size_t nbytes = buf.byteLengthOrMaxByteLength();
   size_t owned = nbytes / buf.rawBufferObject()->refcount();
   if (buf.isWasm()) {
@@ -683,6 +691,7 @@ SharedArrayBufferObject* SharedArrayBufferObject::createFromNewRawBuffer(
 
   if (!obj->acceptRawBuffer(buffer, initialSize)) {
     buffer->dropReference();
+    js::ReportOutOfMemory(cx);
     return nullptr;
   }
 
