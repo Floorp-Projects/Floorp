@@ -24,12 +24,15 @@ export const GeckoViewTabUtil = {
         if (subject.name === sessionId) {
           Services.obs.removeObserver(
             openingObserver,
-            "geckoview-window-created"
+            "browser-delayed-startup-finished"
           );
           resolve(subject);
         }
       };
-      Services.obs.addObserver(openingObserver, "geckoview-window-created");
+      Services.obs.addObserver(
+        openingObserver,
+        "browser-delayed-startup-finished"
+      );
     });
 
     try {
