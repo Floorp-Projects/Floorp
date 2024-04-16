@@ -1235,7 +1235,7 @@ void gfxUserFontSet::UserFontCache::CacheFont(gfxFontEntry* aFontEntry) {
                "caching a font associated with no family yet");
 
   // if caching is disabled, simply return
-  if (Preferences::GetBool("gfx.downloadable_fonts.disable_cache")) {
+  if (StaticPrefs::gfx_downloadable_fonts_disable_cache()) {
     return;
   }
 
@@ -1308,8 +1308,7 @@ void gfxUserFontSet::UserFontCache::ForgetFont(gfxFontEntry* aFontEntry) {
 
 gfxFontEntry* gfxUserFontSet::UserFontCache::GetFont(
     const gfxFontFaceSrc& aSrc, const gfxUserFontEntry& aUserFontEntry) {
-  if (!sUserFonts ||
-      Preferences::GetBool("gfx.downloadable_fonts.disable_cache")) {
+  if (!sUserFonts || StaticPrefs::gfx_downloadable_fonts_disable_cache()) {
     return nullptr;
   }
 
