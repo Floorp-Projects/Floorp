@@ -11,8 +11,9 @@ or record events that normally wouldn't show up in samples.
 
 .. note::
     This guide explains JavaScript markers in depth. To learn more about how to add a
-    marker in C++ or Rust, please take a look at their documentation
-    in :doc:`markers-guide` or :doc:`instrumenting-rust` respectively.
+    marker in C++, Rust or JVM please take a look at their documentation
+    in :doc:`markers-guide`, :doc:`instrumenting-rust` or :doc:`instrumenting-android`
+    respectively.
 
 Markers in Browser Chrome
 *************************
