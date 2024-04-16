@@ -113,6 +113,10 @@ export class DataSourceBase {
       return true;
     },
 
+    isEditing() {
+      return this.editingValue !== undefined;
+    },
+
     copyToClipboard(text) {
       lazy.ClipboardHelper.copyString(text, lazy.ClipboardHelper.Sensitive);
     },

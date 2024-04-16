@@ -163,6 +163,12 @@ virtualized-list {
         border: 1px solid maroon;
         color: whitesmoke;
       }
+
+      > span.error {
+        background-color: orange;
+        border: 1px solid orangered;
+        color: black;
+      }
     }
 
     &.section {

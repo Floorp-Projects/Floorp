@@ -19,13 +19,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "VULNERABLE_PASSWORDS_ENABLED",
-  "signon.management.page.vulnerable-passwords.enabled",
-  false
-);
-
 /**
  * Data source for Logins.
  *
@@ -74,8 +67,10 @@ export class LoginDataSource extends DataSourceBase {
       const copyCommand = { id: "Copy", label: strings.copyCommandLabel };
       const editCommand = { id: "Edit", label: strings.editCommandLabel };
       const deleteCommand = { id: "Delete", label: strings.deleteCommandLabel };
-      this.breachedSticker = { type: "warning", label: "BREACH" };
-      this.vulnerableSticker = { type: "risk", label: "🤮 Vulnerable" };
+      const noOriginSticker = { type: "error", label: "😾 Missing origin" };
+      const noPasswordSticker = { type: "error", label: "😾 Missing password" };
+      const breachedSticker = { type: "warning", label: "BREACH" };
+      const vulnerableSticker = { type: "risk", label: "🤮 Vulnerable" };
       this.#loginsDisabledMessage = strings.passwordsDisabled;
       this.#header = this.createHeaderLine(strings.headerLabel);
       this.#header.commands.push(
@@ -132,6 +127,17 @@ export class LoginDataSource extends DataSourceBase {
             this.copyToClipboard(this.record.origin);
           },
         },
+        stickers: {
+          *value() {
+            if (this.isEditing() && !this.editingValue.length) {
+              yield noOriginSticker;
+            }
+
+            if (this.breached) {
+              yield breachedSticker;
+            }
+          },
+        },
       });
       this.#usernamePrototype = this.prototypeDataLine({
         label: { value: strings.usernameLabel },
@@ -171,6 +177,17 @@ export class LoginDataSource extends DataSourceBase {
               this.editingValue ??
               (this.concealed ? "••••••••" : this.record.password)
             );
+          },
+        },
+        stickers: {
+          *value() {
+            if (this.isEditing() && !this.editingValue.length) {
+              yield noPasswordSticker;
+            }
+
+            if (this.vulnerable) {
+              yield vulnerableSticker;
+            }
           },
         },
         commands: {
@@ -221,6 +238,10 @@ export class LoginDataSource extends DataSourceBase {
         },
         executeSave: {
           value(value) {
+            if (!value) {
+              return;
+            }
+
             try {
               const modifiedLogin = this.record.clone();
               modifiedLogin.password = value;
@@ -401,31 +422,8 @@ export class LoginDataSource extends DataSourceBase {
         this.#passwordPrototype
       );
 
-      let breachIndex =
-        originLine.stickers?.findIndex(s => s === this.breachedSticker) ?? -1;
-      let breach = breachesMap.get(login.guid);
-      if (breach && breachIndex < 0) {
-        originLine.stickers ??= [];
-        originLine.stickers.push(this.breachedSticker);
-      } else if (!breach && breachIndex >= 0) {
-        originLine.stickers.splice(breachIndex, 1);
-      }
-
-      const vulnerable = lazy.VULNERABLE_PASSWORDS_ENABLED
-        ? lazy.LoginBreaches.getPotentiallyVulnerablePasswordsByLoginGUID([
-            login,
-          ]).size
-        : 0;
-
-      let vulnerableIndex =
-        passwordLine.stickers?.findIndex(s => s === this.vulnerableSticker) ??
-        -1;
-      if (vulnerable && vulnerableIndex < 0) {
-        passwordLine.stickers ??= [];
-        passwordLine.stickers.push(this.vulnerableSticker);
-      } else if (!vulnerable && vulnerableIndex >= 0) {
-        passwordLine.stickers.splice(vulnerableIndex, 1);
-      }
+      originLine.breached = breachesMap.has(login.guid);
+      passwordLine.vulnerable = lazy.LoginBreaches.isVulnerablePassword(login);
     });
 
     this.afterReloadingDataSource();

@@ -104,7 +104,7 @@ export class BankCardDataSource extends DataSourceBase {
         start: { value: true },
         value: {
           async get() {
-            if (this.editingValue !== undefined) {
+            if (this.isEditing()) {
               return this.editingValue;
             }
 
