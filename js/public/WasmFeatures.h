@@ -72,6 +72,11 @@
 #else
 #  define WASM_MULTI_MEMORY_ENABLED 0
 #endif
+#ifdef ENABLE_WASM_BRANCH_HINTING
+#  define WASM_BRANCH_HINTING_ENABLED 1
+#else
+#  define WASM_BRANCH_HINTING_ENABLED 0
+#endif
 #ifdef ENABLE_WASM_JS_STRING_BUILTINS
 #  define WASM_JS_STRING_BUILTINS_ENABLED 1
 #else
@@ -169,7 +174,16 @@
     /* flag predicate     */ true,                                      \
     /* flag force enable  */ false,                                     \
     /* flag fuzz enable   */ false,                                     \
-    /* preference name    */ test_serialization)
+    /* preference name    */ test_serialization)                        \
+  FEATURE(                                                              \
+    /* capitalized name   */ BranchHinting,                             \
+    /* lower case name    */ branchHinting,                             \
+    /* compile predicate  */ WASM_BRANCH_HINTING_ENABLED,               \
+    /* compiler predicate */ IonAvailable(cx),                          \
+    /* flag predicate     */ true,                                      \
+    /* flag force enable  */ false,                                     \
+    /* flag fuzz enable   */ false,                                     \
+    /* preference name    */ branch_hinting)
 
 // clang-format on
 

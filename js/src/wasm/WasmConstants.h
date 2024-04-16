@@ -1092,6 +1092,7 @@ struct OpBytes {
 
 static const char NameSectionName[] = "name";
 static const char SourceMappingURLSectionName[] = "sourceMappingURL";
+static const char BranchHintingSectionName[] = "metadata.code.branch_hint";
 
 enum class NameType { Module = 0, Function = 1, Local = 2 };
 
@@ -1151,6 +1152,7 @@ static_assert(uint64_t(MaxArrayPayloadBytes) <
 static const unsigned MaxTryTableCatches = 10000;
 static const unsigned MaxBrTableElems = 1000000;
 static const unsigned MaxCodeSectionBytes = MaxModuleBytes;
+static const unsigned MaxBranchHintValue = 2;
 
 // 512KiB should be enough, considering how Rabaldr uses the stack and
 // what the standard limits are:

@@ -2929,6 +2929,92 @@ bool wasm::StartsCodeSection(const uint8_t* begin, const uint8_t* end,
   return false;
 }
 
+#ifdef ENABLE_WASM_BRANCH_HINTING
+static bool ParseBranchHintingSection(Decoder& d, ModuleEnvironment* env) {
+  uint32_t functionCount;
+  if (!d.readVarU32(&functionCount)) {
+    return d.fail("failed to read function count");
+  }
+
+  for (uint32_t i = 0; i < functionCount; i++) {
+    uint32_t functionIndex;
+    if (!d.readVarU32(&functionIndex)) {
+      return d.fail("failed to read function index");
+    }
+
+    // Disallow branch hints on imported functions.
+    if ((functionIndex >= env->funcs.length()) ||
+        (functionIndex < env->numFuncImports)) {
+      return d.fail("invalid function index in branch hint");
+    }
+
+    uint32_t hintCount;
+    if (!d.readVarU32(&hintCount)) {
+      return d.fail("failed to read hint count");
+    }
+
+    BranchHintVector hintVector;
+    if (!hintVector.reserve(hintCount)) {
+      return false;
+    }
+
+    // Branch hint offsets must appear in increasing byte offset order, at most
+    // once for each offset.
+    uint32_t prevOffsetPlus1 = 0;
+    for (uint32_t hintIndex = 0; hintIndex < hintCount; hintIndex++) {
+      uint32_t branchOffset;
+      if (!d.readVarU32(&branchOffset)) {
+        return d.fail("failed to read branch offset");
+      }
+      if (branchOffset <= prevOffsetPlus1) {
+        return d.fail("Invalid offset in code hint");
+      }
+
+      uint32_t reserved;
+      if (!d.readVarU32(&reserved) || (reserved != 1)) {
+        return d.fail("Invalid reserved value for code hint");
+      }
+
+      uint32_t branchHintValue;
+      if (!d.readVarU32(&branchHintValue) ||
+          (branchHintValue >= MaxBranchHintValue)) {
+        return d.fail("Invalid branch hint value");
+      }
+
+      BranchHint branchHint = static_cast<BranchHint>(branchHintValue);
+      BranchHintEntry entry(branchOffset, branchHint);
+      hintVector.infallibleAppend(entry);
+
+      prevOffsetPlus1 = branchOffset;
+    }
+
+    // Save this collection in the module
+    if (!env->branchHints.addHintsForFunc(functionIndex,
+                                          std::move(hintVector))) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+static bool DecodeBranchHintingSection(Decoder& d, ModuleEnvironment* env) {
+  MaybeSectionRange range;
+  if (!d.startCustomSection(BranchHintingSectionName, env, &range)) {
+    return false;
+  }
+  if (!range) {
+    return true;
+  }
+
+  // Skip this custom section if errors are encountered during parsing.
+  (void)ParseBranchHintingSection(d, env);
+
+  d.finishCustomSection(BranchHintingSectionName, *range);
+  return true;
+}
+#endif
+
 bool wasm::DecodeModuleEnvironment(Decoder& d, ModuleEnvironment* env) {
   if (!DecodePreamble(d)) {
     return false;
@@ -2983,6 +3069,12 @@ bool wasm::DecodeModuleEnvironment(Decoder& d, ModuleEnvironment* env) {
   if (!DecodeDataCountSection(d, env)) {
     return false;
   }
+
+#ifdef ENABLE_WASM_BRANCH_HINTING
+  if (env->branchHintingEnabled() && !DecodeBranchHintingSection(d, env)) {
+    return false;
+  }
+#endif
 
   if (!d.startSection(SectionId::Code, env, &env->codeSection, "code")) {
     return false;
