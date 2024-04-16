@@ -11,6 +11,7 @@
 
 #include "AccAttributes.h"
 #include "AccessibleWrap.h"
+#include "ApplicationAccessible.h"
 #include "ARIAMap.h"
 #include "LocalAccessible-inl.h"
 #include "mozilla/a11y/RemoteAccessible.h"
@@ -418,6 +419,18 @@ uiaRawElmProvider::GetPropertyValue(PROPERTYID aPropertyId,
     case UIA_ControlTypePropertyId:
       aPropertyValue->vt = VT_I4;
       aPropertyValue->lVal = GetControlType();
+      break;
+
+    case UIA_FrameworkIdPropertyId:
+      if (ApplicationAccessible* app = ApplicationAcc()) {
+        nsAutoString name;
+        app->PlatformName(name);
+        if (!name.IsEmpty()) {
+          aPropertyValue->vt = VT_BSTR;
+          aPropertyValue->bstrVal = ::SysAllocString(name.get());
+          return S_OK;
+        }
+      }
       break;
 
     case UIA_FullDescriptionPropertyId: {
