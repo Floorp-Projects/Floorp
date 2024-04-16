@@ -204,7 +204,7 @@ all_platforms="${all_platforms} --disable-avx512"
 x86_platforms="--enable-postproc --enable-vp9-postproc --as=yasm"
 arm_platforms="--enable-runtime-cpu-detect --enable-realtime-only"
 arm64_platforms="--enable-realtime-only"
-disable_sve="--disable-sve" # Bug 1885585
+disable_sve="--disable-sve" # Bug 1885585, Bug 1889813
 
 gen_config_files linux/x64 "--target=x86_64-linux-gcc ${all_platforms} ${x86_platforms}"
 gen_config_files linux/ia32 "--target=x86-linux-gcc ${all_platforms} ${x86_platforms}"
@@ -251,34 +251,62 @@ rm -rf $BASE_DIR/sources.mozbuild
 write_license $BASE_DIR/sources.mozbuild
 echo "files = {" >> $BASE_DIR/sources.mozbuild
 
-echo "Generate X86_64 source list."
+echo "Generate X86_64 source list on Linux."
 config=$(print_config linux/x64)
 make_clean
 make libvpx_srcs.txt target=libs $config > /dev/null
-convert_srcs_to_project_files libvpx_srcs.txt X64
+convert_srcs_to_project_files libvpx_srcs.txt LINUX_X64
+
+echo "Generate X86_64 source list on Mac."
+config=$(print_config mac/x64)
+make_clean
+make libvpx_srcs.txt target=libs $config > /dev/null
+convert_srcs_to_project_files libvpx_srcs.txt MAC_X64
+
+echo "Generate X86_64 source list on Windows."
+config=$(print_config win/x64)
+make_clean
+make libvpx_srcs.txt target=libs $config > /dev/null
+convert_srcs_to_project_files libvpx_srcs.txt WIN_X64
 
 # Copy vpx_version.h once. The file is the same for all platforms.
 cp vpx_version.h $BASE_DIR/$LIBVPX_CONFIG_DIR
 
-echo "Generate IA32 source list."
+echo "Generate IA32 source list on Linux."
 config=$(print_config linux/ia32)
 make_clean
 make libvpx_srcs.txt target=libs $config > /dev/null
-convert_srcs_to_project_files libvpx_srcs.txt IA32
+convert_srcs_to_project_files libvpx_srcs.txt LINUX_IA32
 
-echo "Generate ARM source list."
+echo "Generate IA32 source list on Mac."
+config=$(print_config mac/ia32)
+make_clean
+make libvpx_srcs.txt target=libs $config > /dev/null
+convert_srcs_to_project_files libvpx_srcs.txt MAC_IA32
+
+echo "Generate IA32 source list on Windows."
+config=$(print_config win/ia32)
+make_clean
+make libvpx_srcs.txt target=libs $config > /dev/null
+convert_srcs_to_project_files libvpx_srcs.txt WIN_IA32
+
+echo "Generate ARM source list on Linux."
 config=$(print_config linux/arm)
 make_clean
 make libvpx_srcs.txt target=libs $config > /dev/null
-convert_srcs_to_project_files libvpx_srcs.txt ARM
+convert_srcs_to_project_files libvpx_srcs.txt LINUX_ARM
 
-echo "Generate ARM64 source list."
+echo "Generate ARM64 source list on Linux"
 config=$(print_config linux/arm64)
 make_clean
 make libvpx_srcs.txt target=libs $config > /dev/null
-convert_srcs_to_project_files libvpx_srcs.txt ARM64
-# Bug 1885585: The sve files will be excluded from the win/aarch64 build in moz.build.
-# Bug 1889813: The sve files will be excluded from the linux/arm64 build in moz.build.
+convert_srcs_to_project_files libvpx_srcs.txt LINUX_ARM64
+
+echo "Generate AARCH64 source list on Windows."
+config=$(print_config win/aarch64)
+make_clean
+make libvpx_srcs.txt target=libs $config > /dev/null
+convert_srcs_to_project_files libvpx_srcs.txt WIN_AARCH64
 
 echo "Generate generic source list."
 config=$(print_config generic)
