@@ -36,18 +36,22 @@ const COMMENT_PARSING_HEURISTIC_BYPASS_CHAR =
  * CSS tokens.  Comment tokens are dropped.
  *
  * @param {String} CSS source string
+ * @param {Boolean} useInspectorCSSParser Set to true to use InspectorCSSParser.
  * @yield {CSSToken} The next CSSToken that is lexed
  * @see CSSToken for details about the returned tokens
  */
-function* cssTokenizer(string) {
-  const lexer = getCSSLexer(string);
+function* cssTokenizer(string, useInspectorCSSParser = false) {
+  const lexer = getCSSLexer(string, useInspectorCSSParser);
   while (true) {
     const token = lexer.nextToken();
     if (!token) {
       break;
     }
     // None of the existing consumers want comments.
-    if (token.tokenType !== "comment") {
+    if (
+      token.tokenType !== "comment" ||
+      (useInspectorCSSParser && token.tokenType !== "Comment")
+    ) {
       yield token;
     }
   }
@@ -644,15 +648,21 @@ function parsePseudoClassesAndAttributes(value) {
     throw new Error("empty input string");
   }
 
-  const tokens = cssTokenizer(value);
+  // See InspectorCSSToken dictionnary in InspectorUtils.webidl for more information
+  // about the tokens.
+  const tokensIterator = cssTokenizer(
+    value,
+    // useInspectorCSSParser
+    true
+  );
   const result = [];
   let current = "";
   let functionCount = 0;
   let hasAttribute = false;
   let hasColon = false;
 
-  for (const token of tokens) {
-    if (token.tokenType === "ident") {
+  for (const token of tokensIterator) {
+    if (token.tokenType === "Ident") {
       current += value.substring(token.startOffset, token.endOffset);
 
       if (hasColon && !functionCount) {
@@ -663,7 +673,7 @@ function parsePseudoClassesAndAttributes(value) {
         current = "";
         hasColon = false;
       }
-    } else if (token.tokenType === "symbol" && token.text === ":") {
+    } else if (token.tokenType === "Colon") {
       if (!hasColon) {
         if (current) {
           result.push({ value: current, type: SELECTOR_ELEMENT });
@@ -674,10 +684,10 @@ function parsePseudoClassesAndAttributes(value) {
       }
 
       current += token.text;
-    } else if (token.tokenType === "function") {
+    } else if (token.tokenType === "Function") {
       current += value.substring(token.startOffset, token.endOffset);
       functionCount++;
-    } else if (token.tokenType === "symbol" && token.text === ")") {
+    } else if (token.tokenType === "CloseParenthesis") {
       current += token.text;
 
       if (hasColon && functionCount == 1) {
@@ -691,7 +701,7 @@ function parsePseudoClassesAndAttributes(value) {
       } else {
         functionCount--;
       }
-    } else if (token.tokenType === "symbol" && token.text === "[") {
+    } else if (token.tokenType === "SquareBracketBlock") {
       if (!hasAttribute && !functionCount) {
         if (current) {
           result.push({ value: current, type: SELECTOR_ELEMENT });
@@ -702,7 +712,7 @@ function parsePseudoClassesAndAttributes(value) {
       }
 
       current += token.text;
-    } else if (token.tokenType === "symbol" && token.text === "]") {
+    } else if (token.tokenType === "CloseSquareBracket") {
       current += token.text;
 
       if (hasAttribute && !functionCount) {
