@@ -247,7 +247,7 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
 #ifdef MOZ_LOGGING
   const char* GetDragServiceTaskName(nsDragService::DragTask aTask);
 #endif
-  void GetDragFlavors(nsTArray<nsCString>& aFlavors);
+  void GetAvailableDragFlavors(nsTArray<nsCString>& aAvailableFlavors);
   gboolean DispatchDropEvent();
   static uint32_t GetCurrentModifiers();
 
