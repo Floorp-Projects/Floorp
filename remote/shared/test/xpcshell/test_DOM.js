@@ -75,27 +75,55 @@ function setupTest() {
       <iframe></iframe>
       <video></video>
       <svg xmlns="http://www.w3.org/2000/svg"></svg>
-      <textarea></textarea>
+      <form>
+        <button/>
+        <input/>
+        <fieldset>
+          <legend><input id="first"/></legend>
+          <legend><input id="second"/></legend>
+        </fieldset>
+        <select>
+          <optgroup>
+            <option id="in-group">foo</options>
+          </optgroup>
+          <option id="no-group">bar</option>
+        </select>
+        <textarea></textarea>
+      </form>
     </div>
   `;
 
   const divEl = browser.document.querySelector("div");
   const svgEl = browser.document.querySelector("svg");
-  const textareaEl = browser.document.querySelector("textarea");
   const videoEl = browser.document.querySelector("video");
+  const shadowRoot = videoEl.openOrClosedShadowRoot;
+
+  const buttonEl = browser.document.querySelector("button");
+  const fieldsetEl = browser.document.querySelector("fieldset");
+  const inputEl = browser.document.querySelector("input");
+  const optgroupEl = browser.document.querySelector("optgroup");
+  const optionInGroupEl = browser.document.querySelector("option#in-group");
+  const optionNoGroupEl = browser.document.querySelector("option#no-group");
+  const selectEl = browser.document.querySelector("select");
+  const textareaEl = browser.document.querySelector("textarea");
 
   const iframeEl = browser.document.querySelector("iframe");
   const childEl = iframeEl.contentDocument.createElement("div");
   iframeEl.contentDocument.body.appendChild(childEl);
 
-  const shadowRoot = videoEl.openOrClosedShadowRoot;
-
   return {
     browser,
-    nodeCache: new NodeCache(),
+    buttonEl,
     childEl,
     divEl,
+    inputEl,
+    fieldsetEl,
     iframeEl,
+    nodeCache: new NodeCache(),
+    optgroupEl,
+    optionInGroupEl,
+    optionNoGroupEl,
+    selectEl,
     shadowRoot,
     svgEl,
     textareaEl,
@@ -252,38 +280,70 @@ add_task(function test_isReadOnly() {
   ok(!dom.isReadOnly(null));
 });
 
-add_task(function test_isDisabled() {
-  const { browser, divEl, svgEl } = setupTest();
+add_task(function test_isDisabledSelect() {
+  const { optgroupEl, optionInGroupEl, optionNoGroupEl, selectEl } =
+    setupTest();
 
-  const select = browser.document.createElement("select");
-  const option = browser.document.createElement("option");
-  select.appendChild(option);
-  select.disabled = true;
-  ok(dom.isDisabled(option));
+  optionNoGroupEl.disabled = true;
+  ok(dom.isDisabled(optionNoGroupEl));
+  optionNoGroupEl.disabled = false;
+  ok(!dom.isDisabled(optionNoGroupEl));
 
-  const optgroup = browser.document.createElement("optgroup");
-  option.parentNode = optgroup;
-  ok(dom.isDisabled(option));
+  optgroupEl.disabled = true;
+  ok(dom.isDisabled(optgroupEl));
+  ok(dom.isDisabled(optionInGroupEl));
+  optgroupEl.disabled = false;
+  ok(!dom.isDisabled(optgroupEl));
+  ok(!dom.isDisabled(optionInGroupEl));
 
-  optgroup.parentNode = select;
-  ok(dom.isDisabled(option));
+  selectEl.disabled = true;
+  ok(dom.isDisabled(selectEl));
+  ok(dom.isDisabled(optgroupEl));
+  ok(dom.isDisabled(optionNoGroupEl));
+  selectEl.disabled = false;
+  ok(!dom.isDisabled(selectEl));
+  ok(!dom.isDisabled(optgroupEl));
+  ok(!dom.isDisabled(optionNoGroupEl));
+});
 
-  select.disabled = false;
-  ok(!dom.isDisabled(option));
+add_task(function test_isDisabledFormControl() {
+  const { buttonEl, fieldsetEl, inputEl, selectEl, textareaEl } = setupTest();
 
-  for (const type of ["button", "input", "select", "textarea"]) {
-    const elem = browser.document.createElement(type);
-    ok(!dom.isDisabled(elem));
+  for (const elem of [buttonEl, inputEl, selectEl, textareaEl]) {
     elem.disabled = true;
     ok(dom.isDisabled(elem));
+    elem.disabled = false;
+    ok(!dom.isDisabled(elem));
   }
 
-  ok(!dom.isDisabled(divEl));
+  const inputs = fieldsetEl.querySelectorAll("input");
+  fieldsetEl.disabled = true;
+  ok(dom.isDisabled(fieldsetEl));
+  ok(!dom.isDisabled(inputs[0]));
+  ok(dom.isDisabled(inputs[1]));
+  fieldsetEl.disabled = false;
+  ok(!dom.isDisabled(fieldsetEl));
+  ok(!dom.isDisabled(inputs[0]));
+  ok(!dom.isDisabled(inputs[1]));
+});
 
-  svgEl.disabled = true;
-  ok(!dom.isDisabled(svgEl));
+add_task(function test_isDisabledElement() {
+  const { divEl, svgEl } = setupTest();
+  const mockXulEl = new MockXULElement("browser", { disabled: true });
 
-  ok(!dom.isDisabled(new MockXULElement("browser", { disabled: true })));
+  for (const elem of [divEl, svgEl, mockXulEl]) {
+    ok(!dom.isDisabled(elem));
+    elem.disabled = true;
+    ok(!dom.isDisabled(elem));
+  }
+});
+
+add_task(function test_isDisabledNoDOMElement() {
+  ok(!dom.isDisabled());
+
+  for (const obj of [null, undefined, 42, "", {}, []]) {
+    ok(!dom.isDisabled(obj));
+  }
 });
 
 add_task(function test_isEditingHost() {
