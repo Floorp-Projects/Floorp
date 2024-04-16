@@ -211,7 +211,7 @@ using namespace mozilla::a11y;
 
 - (NSArray*)moxUnignoredChildren {
   if (id rootGroup = [self rootGroup]) {
-    return @[ [self rootGroup] ];
+    return @[ rootGroup ];
   }
 
   // There is no root group, expose the children here directly.
