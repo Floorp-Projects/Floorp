@@ -733,7 +733,7 @@ nsDragService::GetNumDropItems(uint32_t* aNumItems) {
       return NS_OK;
     }
 
-    nsTArray<nsCString> availableDragFlavors;
+    nsTArray<GdkAtom> availableDragFlavors;
     GetAvailableDragFlavors(availableDragFlavors);
     GetDragData(requestedFlavor, availableDragFlavors);
 
@@ -769,15 +769,10 @@ nsDragService::GetNumDropItems(uint32_t* aNumItems) {
 }
 
 void nsDragService::GetAvailableDragFlavors(
-    nsTArray<nsCString>& aAvailableFlavors) {
+    nsTArray<GdkAtom>& aAvailableFlavors) {
   for (GList* tmp = gdk_drag_context_list_targets(mTargetDragContext); tmp;
        tmp = tmp->next) {
-    GdkAtom atom = GDK_POINTER_TO_ATOM(tmp->data);
-    GUniquePtr<gchar> name(gdk_atom_name(atom));
-    if (!name) {
-      continue;
-    }
-    aAvailableFlavors.AppendElement(nsCString(name.get()));
+    aAvailableFlavors.AppendElement(GDK_POINTER_TO_ATOM(tmp->data));
   }
 }
 
@@ -881,7 +876,7 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex) {
     return NS_ERROR_FAILURE;
   }
 
-  nsTArray<nsCString> availableDragFlavors;
+  nsTArray<GdkAtom> availableDragFlavors;
   GetAvailableDragFlavors(availableDragFlavors);
 
   // Now walk down the list of flavors. When we find one that is
@@ -1244,8 +1239,6 @@ void nsDragService::TargetDataReceived(GtkWidget* aWidget,
   mTargetDragDataReceived = true;
 
   GdkAtom target = gtk_selection_data_get_target(aSelectionData);
-  GUniquePtr<gchar> name(gdk_atom_name(target));
-  nsDependentCString flavor(name.get());
   if (gtk_targets_include_uri(&target, 1)) {
     // For the vnd.portal.filetransfer and vnd.portal.files we receive numeric
     // id when it's a local file. The numeric id is then used by
@@ -1259,7 +1252,7 @@ void nsDragService::TargetDataReceived(GtkWidget* aWidget,
     // we try to use the gtk_selection_data_get_uris. We ignore the valid uris
     // for the vnd.portal.file* targets.
     // See: https://gitlab.gnome.org/GNOME/gtk/-/issues/6563
-    if (flavor.Equals(gPortalFile) || flavor.Equals(gPortalFileTransfer)) {
+    if (target == sPortalFileAtom || target == sPortalFileTransferAtom) {
       const guchar* data = gtk_selection_data_get_data(aSelectionData);
       if (!data || data[0] == '\0') {
         LOGDRAGSERVICE("  Empty data!\n");
@@ -1278,7 +1271,7 @@ void nsDragService::TargetDataReceived(GtkWidget* aWidget,
         LOGDRAGSERVICE(
             "  got valid uri for MIME %s - this is bug in GTK - expected "
             "numeric value for portal, got %s\n",
-            flavor.get(), data);
+            gdk_atom_name(target), data);
         return;
       }
 
@@ -1290,7 +1283,7 @@ void nsDragService::TargetDataReceived(GtkWidget* aWidget,
     if (MOZ_LOG_TEST(gWidgetDragLog, mozilla::LogLevel::Debug)) {
       gchar** uri = mTargetDragUris.get();
       while (uri && *uri) {
-        LOGDRAGSERVICE("  got uri %s, MIME %s", *uri, flavor.get());
+        LOGDRAGSERVICE("  got uri %s, MIME %s", *uri, gdk_atom_name(target));
         uri++;
       }
     }
@@ -1299,10 +1292,10 @@ void nsDragService::TargetDataReceived(GtkWidget* aWidget,
 
     if (mTargetDragUris) {
       mCachedUris.InsertOrUpdate(
-          flavor, GUniquePtr<gchar*>(g_strdupv(mTargetDragUris.get())));
+          target, GUniquePtr<gchar*>(g_strdupv(mTargetDragUris.get())));
     } else {
       LOGDRAGSERVICE("Failed to get uri list\n");
-      mCachedUris.InsertOrUpdate(flavor, GUniquePtr<gchar*>(nullptr));
+      mCachedUris.InsertOrUpdate(target, GUniquePtr<gchar*>(nullptr));
     }
     return;
   }
@@ -1322,13 +1315,13 @@ void nsDragService::TargetDataReceived(GtkWidget* aWidget,
     }
     memcpy(copy.Elements(), data, len);
 
-    mCachedData.InsertOrUpdate(flavor, std::move(copy));
+    mCachedData.InsertOrUpdate(target, std::move(copy));
   } else {
     LOGDRAGSERVICE("Failed to get data. selection data len was %d\n",
                    mTargetDragDataLen);
-    mCachedData.InsertOrUpdate(flavor, nsTArray<uint8_t>());
+    mCachedData.InsertOrUpdate(target, nsTArray<uint8_t>());
   }
-  LOGDRAGSERVICE("  got data, MIME %s", flavor.get());
+  LOGDRAGSERVICE("  got data, MIME %s", gdk_atom_name(target));
 }
 
 bool nsDragService::IsTargetContextList(void) {
@@ -1365,9 +1358,9 @@ bool nsDragService::IsTargetContextList(void) {
 // Spins event loop, called from eDragTaskMotion handler by
 // DispatchMotionEvents().
 // Can lead to another round of drag_motion events.
-void nsDragService::GetDragData(
-    GdkAtom aRequestedFlavor, const nsTArray<nsCString>& aAvailableDragFlavors,
-    bool aResetDragData) {
+void nsDragService::GetDragData(GdkAtom aRequestedFlavor,
+                                const nsTArray<GdkAtom>& aAvailableDragFlavors,
+                                bool aResetDragData) {
   LOGDRAGSERVICE("nsDragService::GetDragData(%p) requested '%s'\n",
                  mTargetDragContext.get(),
                  GUniquePtr<gchar>(gdk_atom_name(aRequestedFlavor)).get());
@@ -1377,12 +1370,9 @@ void nsDragService::GetDragData(
     TargetResetData();
   }
 
-  GUniquePtr<gchar> name(gdk_atom_name(aRequestedFlavor));
-  nsDependentCString flavor(name.get());
-
   // Return early when requested MIME is not offered by D&D.
-  if (!aAvailableDragFlavors.Contains(flavor)) {
-    LOGDRAGSERVICE("  %s is missing", flavor.get());
+  if (!aAvailableDragFlavors.Contains(aRequestedFlavor)) {
+    LOGDRAGSERVICE("  %s is missing", gdk_atom_name(aRequestedFlavor));
     return;
   }
 
@@ -1392,18 +1382,19 @@ void nsDragService::GetDragData(
     // Especially with multiple items the same data is requested
     // very often.
     EnsureCachedDataValidForContext(mTargetDragContext);
-    if (auto cached = mCachedUris.Lookup(flavor)) {
-      LOGDRAGSERVICE("  using cached uri list for %s", flavor.get());
+    if (auto cached = mCachedUris.Lookup(aRequestedFlavor)) {
+      LOGDRAGSERVICE("  using cached uri list for %s",
+                     gdk_atom_name(aRequestedFlavor));
 
       mTargetDragUris = GUniquePtr<gchar*>(g_strdupv(cached->get()));
       mTargetDragDataReceived = true;
-      LOGDRAGSERVICE("  %s found in cache", flavor.get());
+      LOGDRAGSERVICE("  %s found in cache", gdk_atom_name(aRequestedFlavor));
       return;
     }
-    if (auto cached = mCachedData.Lookup(flavor)) {
+    if (auto cached = mCachedData.Lookup(aRequestedFlavor)) {
       mTargetDragDataLen = cached->Length();
-      LOGDRAGSERVICE("  using cached data for %s, length is %d", flavor.get(),
-                     mTargetDragDataLen);
+      LOGDRAGSERVICE("  using cached data for %s, length is %d",
+                     gdk_atom_name(aRequestedFlavor), mTargetDragDataLen);
 
       if (mTargetDragDataLen) {
         mTargetDragData = g_malloc(mTargetDragDataLen);
@@ -1411,7 +1402,7 @@ void nsDragService::GetDragData(
       }
 
       mTargetDragDataReceived = true;
-      LOGDRAGSERVICE("  %s found in cache", flavor.get());
+      LOGDRAGSERVICE("  %s found in cache", gdk_atom_name(aRequestedFlavor));
       return;
     }
 
@@ -1436,9 +1427,10 @@ void nsDragService::GetDragData(
 
 #ifdef MOZ_LOGGING
   if (mTargetDragUris || (mTargetDragDataLen && mTargetDragData)) {
-    LOGDRAGSERVICE("  %s got from system", flavor.get());
+    LOGDRAGSERVICE("  %s got from system", gdk_atom_name(aRequestedFlavor));
   } else {
-    LOGDRAGSERVICE("  %s failed to get from system", flavor.get());
+    LOGDRAGSERVICE("  %s failed to get from system",
+                   gdk_atom_name(aRequestedFlavor));
   }
 #endif
 }
@@ -2399,8 +2391,7 @@ static gboolean invisibleSourceDragFailed(GtkWidget* aWidget,
     for (GList* tmp = gdk_drag_context_list_targets(aContext); tmp;
          tmp = tmp->next) {
       GdkAtom atom = GDK_POINTER_TO_ATOM(tmp->data);
-      GUniquePtr<gchar> name(gdk_atom_name(atom));
-      if (name && !strcmp(name.get(), gTabDropType)) {
+      if (atom == nsDragService::sTabDropTypeAtom) {
         aResult = GTK_DRAG_RESULT_NO_TARGET;
         LOGDRAGSERVICESTATIC("invisibleSourceDragFailed(%p): Wayland tab drop",
                              aContext);

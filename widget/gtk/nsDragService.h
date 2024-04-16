@@ -162,14 +162,14 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
 
   // We cache all data for the current drag context,
   // because waiting for the data in GetDragData can be very slow.
-  nsTHashMap<nsCStringHashKey, nsTArray<uint8_t>> mCachedData;
+  nsTHashMap<nsVoidPtrHashKey, nsTArray<uint8_t>> mCachedData;
   // mCachedData are tied to mCachedDragContext. mCachedDragContext is not
   // ref counted and may be already deleted on Gtk side.
   // We used it for mCachedData invalidation only and can't be used for
   // any D&D operation.
   uintptr_t mCachedDragContext;
 
-  nsTHashMap<nsCStringHashKey, mozilla::GUniquePtr<gchar*>> mCachedUris;
+  nsTHashMap<nsVoidPtrHashKey, mozilla::GUniquePtr<gchar*>> mCachedUris;
 
   guint mPendingTime;
 
@@ -208,7 +208,7 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
   // this will get the native data from the last target given a
   // specific flavor
   void GetDragData(GdkAtom aRequestedFlavor,
-                   const nsTArray<nsCString>& aAvailableDragFlavors,
+                   const nsTArray<GdkAtom>& aAvailableDragFlavors,
                    bool aResetDragData = true);
   // this will reset all of the target vars
   void TargetResetData(void);
@@ -248,7 +248,7 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
 #ifdef MOZ_LOGGING
   const char* GetDragServiceTaskName(nsDragService::DragTask aTask);
 #endif
-  void GetAvailableDragFlavors(nsTArray<nsCString>& aAvailableFlavors);
+  void GetAvailableDragFlavors(nsTArray<GdkAtom>& aAvailableFlavors);
   gboolean DispatchDropEvent();
   static uint32_t GetCurrentModifiers();
 
@@ -266,6 +266,7 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
   // How deep we're nested in event loops
   int mEventLoopDepth;
 
+ public:
   static GdkAtom sTextMimeAtom;
   static GdkAtom sMozUrlTypeAtom;
   static GdkAtom sMimeListTypeAtom;
