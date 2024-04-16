@@ -8,7 +8,6 @@ import android.os.Build
 import android.view.autofill.AutofillManager
 import androidx.core.net.toUri
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
@@ -538,7 +537,6 @@ class LoginsTest : TestSetup() {
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/593768
-    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1812995")
     @Test
     fun doNotSaveOptionWillNotUpdateALoginTest() {
         val loginPage = "https://mozilla-mobile.github.io/testapp/v2.0/loginForm.html"
@@ -547,19 +545,18 @@ class LoginsTest : TestSetup() {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(loginPage.toUri()) {
             setPageObjectText(itemWithResId("username"), "mozilla")
+            waitForAppWindowToBeUpdated()
             setPageObjectText(itemWithResId("password"), "firefox")
+            waitForAppWindowToBeUpdated()
             clickPageObject(itemWithResId("submit"))
             verifySaveLoginPromptIsDisplayed()
             clickPageObject(itemWithText("Save"))
-        }.openTabDrawer {
-            closeTab()
-        }
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(loginPage.toUri()) {
+            waitForAppWindowToBeUpdated()
             clickPageObject(itemWithResId("togglePassword"))
             setPageObjectText(itemWithResId("username"), "mozilla")
+            waitForAppWindowToBeUpdated()
             setPageObjectText(itemWithResId("password"), "fenix")
+            waitForAppWindowToBeUpdated()
             clickPageObject(itemWithResId("submit"))
             verifySaveLoginPromptIsDisplayed()
             clickPageObject(itemWithText("Don’t update"))
