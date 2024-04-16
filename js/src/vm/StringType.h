@@ -1737,7 +1737,9 @@ inline JSLinearString* NewStringCopy(
 }
 
 /* Copy a counted string and GC-allocate a descriptor for it. */
-template <js::AllowGC allowGC, typename CharT>
+template <
+    js::AllowGC allowGC, typename CharT,
+    typename std::enable_if_t<!std::is_same_v<CharT, unsigned char>>* = nullptr>
 inline JSLinearString* NewStringCopy(
     JSContext* cx, std::basic_string_view<CharT> s,
     js::gc::Heap heap = js::gc::Heap::Default) {
