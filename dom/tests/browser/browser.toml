@@ -44,6 +44,7 @@ tags = "geolocation"
 skip-if = ["os != 'mac'"]
 
 ["browser_bug1238427.js"]
+https_first_disabled = true
 
 ["browser_bug1316330.js"]
 
