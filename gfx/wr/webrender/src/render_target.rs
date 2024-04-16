@@ -263,7 +263,7 @@ impl RenderTarget for ColorRenderTarget {
             used_rect,
             resolve_ops: Vec::new(),
             clear_color: Some(ColorF::TRANSPARENT),
-            prim_instances: [Vec::new(), Vec::new()],
+            prim_instances: [Vec::new(), Vec::new(), Vec::new()],
             prim_instances_with_scissor: FastHashMap::default(),
             clip_masks: ClipMaskInstanceList::new(),
         }
