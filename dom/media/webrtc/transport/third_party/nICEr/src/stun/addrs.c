@@ -62,82 +62,125 @@ nr_stun_is_duplicate_addr(nr_local_addr addrs[], int count, nr_local_addr *addr)
     return 0;
 }
 
+static int
+nr_stun_filter_find_first_addr_with_ifname(nr_local_addr addrs[], int count, const char *ifname) {
+  for (int i = 0; i < count; ++i) {
+    if (!strncmp(addrs[i].addr.ifname, ifname, sizeof(addrs[i].addr.ifname))) {
+      return i;
+    }
+  }
+  return count;
+}
+
+static int
+nr_stun_filter_addrs_for_ifname(nr_local_addr src[], const int src_begin, const int src_end, nr_local_addr dest[], int *dest_index, int remove_loopback, int remove_link_local) {
+  int r, _status;
+  /* We prefer temp ipv6 for their privacy properties. If we cannot get
+   * that, we prefer ipv6 that are not based on mac address. */
+  int filter_mac_ipv6 = 0;
+  int filter_teredo_ipv6 = 0;
+  int filter_non_temp_ipv6 = 0;
+
+  const char* ifname = src[src_begin].addr.ifname;
+
+  /* Figure out what we want to filter */
+  for (int i = src_begin; i < src_end; ++i) {
+    if (strncmp(ifname, src[i].addr.ifname, sizeof(src[i].addr.ifname))) {
+      /* Ignore addrs from other interfaces */
+      continue;
+    }
+
+    if (src[i].addr.ip_version == NR_IPV6) {
+      if (nr_transport_addr_is_teredo(&src[i].addr)) {
+          src[i].interface.type |= NR_INTERFACE_TYPE_TEREDO;
+          /* Prefer teredo over mac-based address. Probably will never see
+           * both. */
+          filter_mac_ipv6 = 1;
+      } else {
+        filter_teredo_ipv6 = 1;
+      }
+
+      if (!nr_transport_addr_is_mac_based(&src[i].addr)) {
+        filter_mac_ipv6 = 1;
+      }
+
+      if (src[i].flags & NR_ADDR_FLAG_TEMPORARY) {
+        filter_non_temp_ipv6 = 1;
+      }
+    }
+  }
+
+  /* Perform the filtering */
+  for (int i = src_begin; i < src_end; ++i) {
+    if (strncmp(ifname, src[i].addr.ifname, sizeof(src[i].addr.ifname))) {
+      /* Ignore addrs from other interfaces */
+      continue;
+    }
+
+    if (nr_stun_is_duplicate_addr(dest, *dest_index, &src[i])) {
+        /* skip src[i], it's a duplicate */
+    }
+    else if (remove_loopback && nr_transport_addr_is_loopback(&src[i].addr)) {
+        /* skip src[i], it's a loopback */
+    }
+    else if (remove_link_local &&
+             nr_transport_addr_is_link_local(&src[i].addr)) {
+        /* skip src[i], it's a link-local address */
+    }
+    else if (filter_mac_ipv6 &&
+             nr_transport_addr_is_mac_based(&src[i].addr)) {
+        /* skip src[i], it's MAC based */
+    }
+    else if (filter_teredo_ipv6 &&
+             nr_transport_addr_is_teredo(&src[i].addr)) {
+        /* skip src[i], it's a Teredo address */
+    }
+    else if (filter_non_temp_ipv6 &&
+             (src[i].addr.ip_version == NR_IPV6) &&
+             !(src[i].flags & NR_ADDR_FLAG_TEMPORARY)) {
+        /* skip src[i], it's a non-temporary ipv6, and we have a temporary */
+    }
+    else {
+        /* otherwise, copy it to the destination array */
+        if ((r=nr_local_addr_copy(&dest[*dest_index], &src[i])))
+            ABORT(r);
+        ++(*dest_index);
+    }
+  }
+
+  _status = 0;
+abort:
+  return _status;
+}
+
 int
 nr_stun_filter_addrs(nr_local_addr addrs[], int remove_loopback, int remove_link_local, int *count)
 {
     int r, _status;
     nr_local_addr *tmp = 0;
-    int i;
-    int n;
-    /* We prefer temp ipv6 for their privacy properties. If we cannot get
-     * that, we prefer ipv6 that are not based on mac address. */
-    int filter_mac_ipv6 = 0;
-    int filter_teredo_ipv6 = 0;
-    int filter_non_temp_ipv6 = 0;
+    int dest_index = 0;
 
     tmp = RMALLOC(*count * sizeof(*tmp));
     if (!tmp)
         ABORT(R_NO_MEMORY);
 
-    for (i = 0; i < *count; ++i) {
-      if (addrs[i].addr.ip_version == NR_IPV6) {
-        if (nr_transport_addr_is_teredo(&addrs[i].addr)) {
-            addrs[i].interface.type |= NR_INTERFACE_TYPE_TEREDO;
-            /* Prefer teredo over mac-based address. Probably will never see
-             * both. */
-            filter_mac_ipv6 = 1;
-        } else {
-          filter_teredo_ipv6 = 1;
-        }
-
-        if (!nr_transport_addr_is_mac_based(&addrs[i].addr)) {
-          filter_mac_ipv6 = 1;
-        }
-
-        if (addrs[i].flags & NR_ADDR_FLAG_TEMPORARY) {
-          filter_non_temp_ipv6 = 1;
+    for (int i = 0; i < *count; ++i) {
+      if (i == nr_stun_filter_find_first_addr_with_ifname(addrs, *count, addrs[i].addr.ifname)) {
+        /* This is the first address associated with this interface.
+         * Filter for this interface once, now. */
+        if (r = nr_stun_filter_addrs_for_ifname(addrs, i, *count, tmp, &dest_index, remove_loopback, remove_link_local)) {
+          ABORT(r);
         }
       }
     }
 
-    n = 0;
-    for (i = 0; i < *count; ++i) {
-        if (nr_stun_is_duplicate_addr(tmp, n, &addrs[i])) {
-            /* skip addrs[i], it's a duplicate */
-        }
-        else if (remove_loopback && nr_transport_addr_is_loopback(&addrs[i].addr)) {
-            /* skip addrs[i], it's a loopback */
-        }
-        else if (remove_link_local &&
-                 nr_transport_addr_is_link_local(&addrs[i].addr)) {
-            /* skip addrs[i], it's a link-local address */
-        }
-        else if (filter_mac_ipv6 &&
-                 nr_transport_addr_is_mac_based(&addrs[i].addr)) {
-            /* skip addrs[i], it's MAC based */
-        }
-        else if (filter_teredo_ipv6 &&
-                 nr_transport_addr_is_teredo(&addrs[i].addr)) {
-            /* skip addrs[i], it's a Teredo address */
-        }
-        else if (filter_non_temp_ipv6 &&
-                 (addrs[i].addr.ip_version == NR_IPV6) &&
-                 !(addrs[i].flags & NR_ADDR_FLAG_TEMPORARY)) {
-            /* skip addrs[i], it's a non-temporary ipv6, and we have a temporary */
-        }
-        else {
-            /* otherwise, copy it to the temporary array */
-            if ((r=nr_local_addr_copy(&tmp[n], &addrs[i])))
-                ABORT(r);
-            ++n;
-        }
-    }
-
-    *count = n;
-
+    /* Clear the entire array out before copying back */
     memset(addrs, 0, *count * sizeof(*addrs));
+
+    *count = dest_index;
+
     /* copy temporary array into passed in/out array */
-    for (i = 0; i < *count; ++i) {
+    for (int i = 0; i < *count; ++i) {
         if ((r=nr_local_addr_copy(&addrs[i], &tmp[i])))
             ABORT(r);
     }
