@@ -7,6 +7,7 @@
 #include "ChromiumCDMProxy.h"
 #include "ChromiumCDMCallbackProxy.h"
 #include "MediaResult.h"
+#include "mozilla/StaticPrefs_media.h"
 #include "mozilla/dom/MediaKeySession.h"
 #include "GMPUtils.h"
 #include "nsPrintfCString.h"
@@ -381,12 +382,18 @@ void ChromiumCDMProxy::NotifyOutputProtectionStatus(
   }
 
   uint32_t linkMask{};
-  uint32_t protectionMask{};  // Unused/always zeroed.
+  uint32_t protectionMask{};
   if (aCheckStatus == OutputProtectionCheckStatus::CheckSuccessful &&
       aCaptureStatus == OutputProtectionCaptureStatus::CapturePossilbe) {
     // The result indicates the capture is possible, so set the mask
     // to indicate this.
     linkMask |= cdm::OutputLinkTypes::kLinkTypeNetwork;
+  }
+  // `kProtectionNone` can cause playback to stop if HDCP_V1 is required. Report
+  // HDCP protection if there's no potential capturing.
+  if (linkMask == cdm::OutputLinkTypes::kLinkTypeNone &&
+      StaticPrefs::media_widevine_hdcp_protection_mask()) {
+    protectionMask = cdm::OutputProtectionMethods::kProtectionHDCP;
   }
   mGMPThread->Dispatch(NewRunnableMethod<bool, uint32_t, uint32_t>(
       "gmp::ChromiumCDMParent::NotifyOutputProtectionStatus", cdm,

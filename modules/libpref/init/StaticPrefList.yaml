@@ -11151,6 +11151,13 @@
   value: true
   mirror: always
 
+# When this is true, the protection mask that Firefox replies to Widevine API
+# QueryOutputProtectionStatus is `kProtectionHDCP` when no potential capturing.
+- name: media.widevine.hdcp-protection-mask
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "midi."
 #---------------------------------------------------------------------------
