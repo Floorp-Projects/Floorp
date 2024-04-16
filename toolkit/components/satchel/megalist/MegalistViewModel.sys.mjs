@@ -104,7 +104,7 @@ export class MegalistViewModel {
       snapshot.href = snapshotData.href;
     }
     if (snapshotData.stickers) {
-      for (const sticker of snapshotData.stickers) {
+      for (const sticker of snapshotData.stickers()) {
         snapshot.stickers ??= [];
         snapshot.stickers.push(sticker);
       }

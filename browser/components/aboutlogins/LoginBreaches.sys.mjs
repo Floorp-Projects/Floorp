@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
 /**
  * Manages breach alerts for saved logins using data from Firefox Monitor via
  * RemoteSettings.
@@ -15,6 +17,13 @@ ChromeUtils.defineESModuleGetters(lazy, {
   RemoteSettingsClient:
     "resource://services-settings/RemoteSettingsClient.sys.mjs",
 });
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "VULNERABLE_PASSWORDS_ENABLED",
+  "signon.management.page.vulnerable-passwords.enabled",
+  false
+);
 
 export const LoginBreaches = {
   REMOTE_SETTINGS_COLLECTION: "fxmonitor-breaches",
@@ -136,6 +145,15 @@ export const LoginBreaches = {
       }
     }
     return vulnerablePasswordsByLoginGUID;
+  },
+
+  isVulnerablePassword(login) {
+    if (!lazy.VULNERABLE_PASSWORDS_ENABLED) {
+      return false;
+    }
+
+    const storageJSON = Services.logins.wrappedJSObject._storage;
+    return storageJSON.isPotentiallyVulnerablePassword(login);
   },
 
   async clearAllPotentiallyVulnerablePasswords() {
