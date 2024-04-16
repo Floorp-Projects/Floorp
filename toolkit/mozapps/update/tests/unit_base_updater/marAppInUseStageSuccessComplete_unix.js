@@ -10,12 +10,9 @@ async function run_test() {
   }
   const STATE_AFTER_STAGE = STATE_APPLIED;
   gTestFiles = gTestFilesCompleteSuccess;
-  const channelPrefs = getTestFileByName(FILE_CHANNEL_PREFS);
-  if (channelPrefs) {
-    channelPrefs.originalContents = null;
-    channelPrefs.compareContents = "FromComplete\n";
-    channelPrefs.comparePerms = 0o644;
-  }
+  gTestFiles[gTestFiles.length - 1].originalContents = null;
+  gTestFiles[gTestFiles.length - 1].compareContents = "FromComplete\n";
+  gTestFiles[gTestFiles.length - 1].comparePerms = 0o644;
   gTestDirs = gTestDirsCompleteSuccess;
   await setupUpdaterTest(FILE_COMPLETE_MAR, true);
   setupSymLinks();

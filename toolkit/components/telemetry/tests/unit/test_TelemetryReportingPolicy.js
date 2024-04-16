@@ -199,12 +199,6 @@ add_task(async function test_prefs() {
     "Accepting the policy again should let us upload data."
   );
 
-  // macOS has the app.update.channel pref locked. Check if it needs to be
-  // unlocked before proceeding with the test.
-  if (Services.prefs.getDefaultBranch("").prefIsLocked("app.update.channel")) {
-    Services.prefs.getDefaultBranch("").unlockPref("app.update.channel");
-  }
-
   // Set a new, per channel, minimum policy version. Start by setting a test current channel.
   Services.prefs
     .getDefaultBranch("")

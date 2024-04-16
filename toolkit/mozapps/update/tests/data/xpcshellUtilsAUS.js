@@ -181,30 +181,12 @@ var gDebugTestLog = false;
 var gTestsToLog = [];
 var gRealDump;
 var gFOS;
-var gUpdateBin;
 
 var gTestFiles = [];
 var gTestDirs = [];
 
 // Common files for both successful and failed updates.
 var gTestFilesCommon = [
-  {
-    description: "Should never change",
-    fileName: FILE_CHANNEL_PREFS,
-    relPathDir:
-      AppConstants.platform == "macosx"
-        ? "Contents/Frameworks/ChannelPrefs.framework/"
-        : DIR_RESOURCES + "defaults/pref/",
-    originalContents: "ShouldNotBeReplaced\n",
-    compareContents: "ShouldNotBeReplaced\n",
-    originalFile: null,
-    compareFile: null,
-    originalPerms: 0o767,
-    comparePerms: 0o767,
-  },
-];
-
-var gTestFilesCommonNonMac = [
   {
     description: "Should never change",
     fileName: FILE_UPDATE_SETTINGS_INI,
@@ -216,31 +198,18 @@ var gTestFilesCommonNonMac = [
     originalPerms: 0o767,
     comparePerms: 0o767,
   },
-];
-
-if (AppConstants.platform != "macosx") {
-  gTestFilesCommon = gTestFilesCommon.concat(gTestFilesCommonNonMac);
-}
-
-var gTestFilesCommonMac = [
   {
     description: "Should never change",
-    fileName: FILE_UPDATE_SETTINGS_FRAMEWORK,
-    relPathDir:
-      "Contents/MacOS/updater.app/Contents/Frameworks/UpdateSettings.framework/",
-    originalContents: null,
-    compareContents: null,
+    fileName: "channel-prefs.js",
+    relPathDir: DIR_RESOURCES + "defaults/pref/",
+    originalContents: "ShouldNotBeReplaced\n",
+    compareContents: "ShouldNotBeReplaced\n",
     originalFile: null,
     compareFile: null,
-    originalPerms: null,
-    comparePerms: null,
-    existingFile: true,
+    originalPerms: 0o767,
+    comparePerms: 0o767,
   },
 ];
-
-if (AppConstants.platform == "macosx") {
-  gTestFilesCommon = gTestFilesCommon.concat(gTestFilesCommonMac);
-}
 
 // Files for a complete successful update. This can be used for a complete
 // failed update by calling setTestFilesAndDirsForFailure.
@@ -687,20 +656,6 @@ var gTestFilesPartialSuccess = [
 
 // Concatenate the common files to the end of the array.
 gTestFilesPartialSuccess = gTestFilesPartialSuccess.concat(gTestFilesCommon);
-
-/**
- * Searches `gTestFiles` for the file with the given filename. This is currently
- * not very efficient (it searches the whole array every time).
- *
- * @param filename
- *        The name of the file to search for (i.e. the `fileName` attribute).
- * @returns
- *        The object in `gTestFiles` that describes the requested file.
- *        Or `null`, if the file is not in `gTestFiles`.
- */
-function getTestFileByName(filename) {
-  return gTestFiles.find(f => f.fileName == filename) ?? null;
-}
 
 var gTestDirsCommon = [
   {
@@ -2064,13 +2019,8 @@ function runUpdate(
     Services.env.set("MOZ_TEST_SHORTER_WAIT_PID", "1");
   }
 
-  if (!gUpdateBin) {
-    gUpdateBin = copyTestUpdaterToBinDir();
-  }
-  Assert.ok(
-    gUpdateBin.exists(),
-    MSG_SHOULD_EXIST + getMsgPath(gUpdateBin.path)
-  );
+  let updateBin = copyTestUpdaterToBinDir();
+  Assert.ok(updateBin.exists(), MSG_SHOULD_EXIST + getMsgPath(updateBin.path));
 
   let updatesDirPath = aPatchDirPath || getUpdateDirFile(DIR_PATCH).path;
   let installDirPath = aInstallDirPath || getApplyDirFile().path;
@@ -2095,13 +2045,13 @@ function runUpdate(
     args[3] = pid;
   }
 
-  let launchBin = gIsServiceTest && isInvalidArgTest ? callbackApp : gUpdateBin;
+  let launchBin = gIsServiceTest && isInvalidArgTest ? callbackApp : updateBin;
 
   if (!isInvalidArgTest) {
     args = args.concat([callbackApp.parent.path, callbackApp.path]);
     args = args.concat(gCallbackArgs);
   } else if (gIsServiceTest) {
-    args = ["launch-service", gUpdateBin.path].concat(args);
+    args = ["launch-service", updateBin.path].concat(args);
   } else if (aCallbackPath) {
     args = args.concat([callbackApp.parent.path, aCallbackPath]);
   }
@@ -3175,13 +3125,6 @@ async function setupUpdaterTest(
   helperBin.copyToFollowingLinks(afterApplyBinDir, gCallbackBinFile);
   helperBin.copyToFollowingLinks(afterApplyBinDir, gPostUpdateBinFile);
 
-  // On macOS, some test files (like the Update Settings file) may be within the
-  // updater app bundle, so make sure it is in place now in case we want to
-  // manipulate it.
-  if (!gUpdateBin) {
-    gUpdateBin = copyTestUpdaterToBinDir();
-  }
-
   gTestFiles.forEach(function SUT_TF_FE(aTestFile) {
     debugDump("start - setup test file: " + aTestFile.fileName);
     if (aTestFile.originalFile || aTestFile.originalContents) {
@@ -3216,24 +3159,6 @@ async function setupUpdaterTest(
         testFile.permissions = aTestFile.originalPerms;
         // Store the actual permissions on the file for reference later after
         // setting the permissions.
-        if (!aTestFile.comparePerms) {
-          aTestFile.comparePerms = testFile.permissions;
-        }
-      }
-    } else if (aTestFile.existingFile) {
-      const testFile = getApplyDirFile(
-        aTestFile.relPathDir + aTestFile.fileName
-      );
-      if (aTestFile.removeOriginalFile) {
-        testFile.remove(false);
-      } else {
-        const fileContents = readFileBytes(testFile);
-        if (!aTestFile.originalContents && !aTestFile.originalFile) {
-          aTestFile.originalContents = fileContents;
-        }
-        if (!aTestFile.compareContents && !aTestFile.compareFile) {
-          aTestFile.compareContents = fileContents;
-        }
         if (!aTestFile.comparePerms) {
           aTestFile.comparePerms = testFile.permissions;
         }
@@ -3499,13 +3424,21 @@ function checkUpdateLogContents(
   // Remove leading timestamps
   updateLogContents = removeTimeStamps(updateLogContents);
 
-  const channelPrefs = getTestFileByName(FILE_CHANNEL_PREFS);
-  if (channelPrefs && !channelPrefs.originalContents) {
+  // The channel-prefs.js is defined in gTestFilesCommon which will always be
+  // located to the end of gTestFiles when it is present.
+  if (
+    gTestFiles.length > 1 &&
+    gTestFiles[gTestFiles.length - 1].fileName == "channel-prefs.js" &&
+    !gTestFiles[gTestFiles.length - 1].originalContents
+  ) {
     updateLogContents = updateLogContents.replace(/.*defaults\/.*/g, "");
   }
 
-  const updateSettings = getTestFileByName(FILE_UPDATE_SETTINGS_INI);
-  if (updateSettings && !updateSettings.originalContents) {
+  if (
+    gTestFiles.length > 2 &&
+    gTestFiles[gTestFiles.length - 2].fileName == FILE_UPDATE_SETTINGS_INI &&
+    !gTestFiles[gTestFiles.length - 2].originalContents
+  ) {
     updateLogContents = updateLogContents.replace(
       /.*update-settings.ini.*/g,
       ""
@@ -3596,11 +3529,21 @@ function checkUpdateLogContents(
   // Remove leading timestamps
   compareLogContents = removeTimeStamps(compareLogContents);
 
-  if (channelPrefs && !channelPrefs.originalContents) {
+  // The channel-prefs.js is defined in gTestFilesCommon which will always be
+  // located to the end of gTestFiles.
+  if (
+    gTestFiles.length > 1 &&
+    gTestFiles[gTestFiles.length - 1].fileName == "channel-prefs.js" &&
+    !gTestFiles[gTestFiles.length - 1].originalContents
+  ) {
     compareLogContents = compareLogContents.replace(/.*defaults\/.*/g, "");
   }
 
-  if (updateSettings && !updateSettings.originalContents) {
+  if (
+    gTestFiles.length > 2 &&
+    gTestFiles[gTestFiles.length - 2].fileName == FILE_UPDATE_SETTINGS_INI &&
+    !gTestFiles[gTestFiles.length - 2].originalContents
+  ) {
     compareLogContents = compareLogContents.replace(
       /.*update-settings.ini.*/g,
       ""
@@ -4934,35 +4877,5 @@ function resetEnvironment() {
   } else if (gIsServiceTest) {
     debugDump("removing MOZ_NO_SERVICE_FALLBACK environment variable");
     Services.env.set("MOZ_NO_SERVICE_FALLBACK", "");
-  }
-}
-
-/**
- * `gTestFiles` needs to be set such that it contains the Update Settings file
- * before this function is called.
- */
-function setUpdateSettingsUseWrongChannel() {
-  if (AppConstants.platform == "macosx") {
-    let replacementUpdateSettings = Services.dirsvc.get("CurWorkD", Ci.nsIFile);
-    replacementUpdateSettings = replacementUpdateSettings.parent;
-    replacementUpdateSettings.append("UpdateSettings-WrongChannel");
-
-    const updateSettings = getTestFileByName(FILE_UPDATE_SETTINGS_FRAMEWORK);
-    if (!updateSettings) {
-      throw new Error(
-        "gTestFiles does not contain the update settings framework"
-      );
-    }
-    updateSettings.existingFile = false;
-    updateSettings.originalContents = readFileBytes(replacementUpdateSettings);
-  } else {
-    const updateSettings = getTestFileByName(FILE_UPDATE_SETTINGS_INI);
-    if (!updateSettings) {
-      throw new Error("gTestFiles does not contain the update settings INI");
-    }
-    updateSettings.originalContents = UPDATE_SETTINGS_CONTENTS.replace(
-      "xpcshell-test",
-      "wrong-channel"
-    );
   }
 }

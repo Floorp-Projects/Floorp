@@ -50,17 +50,14 @@ endif
 
 endif
 
-ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-
-# channel-prefs.js has been removed on macOS.
-# channel-prefs.js is handled separately from other prefs due to bug 756325.
+# channel-prefs.js is handled separate from other prefs due to bug 756325
 # DO NOT change the content of channel-prefs.js without taking the appropriate
 # steps. See bug 1431342.
 libs:: $(srcdir)/profile/channel-prefs.js
 	$(NSINSTALL) -D $(DIST)/bin/defaults/pref
 	$(call py_action,preprocessor channel-prefs.js,-Fsubstitution $(PREF_PPFLAGS) $(ACDEFINES) $^ -o $(DIST)/bin/defaults/pref/channel-prefs.js)
 
-else
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 
 MAC_APP_NAME = $(MOZ_APP_DISPLAYNAME)
 
@@ -84,7 +81,7 @@ MAC_BUNDLE_VERSION = $(shell $(PYTHON3) $(srcdir)/macversion.py --version=$(MOZ_
 
 .PHONY: repackage
 tools repackage:: $(DIST)/bin/$(MOZ_APP_NAME) $(objdir)/macbuild/Contents/MacOS-files.txt
-	rm -rf '$(dist_dest)'
+	rm -rf $(dist_dest)
 	$(MKDIR) -p '$(dist_dest)/Contents/MacOS'
 	$(MKDIR) -p '$(dist_dest)/$(LPROJ)'
 	rsync -a --exclude '*.in' $(srcdir)/macbuild/Contents '$(dist_dest)' --exclude English.lproj
@@ -102,9 +99,8 @@ tools repackage:: $(DIST)/bin/$(MOZ_APP_NAME) $(objdir)/macbuild/Contents/MacOS-
 	cp -RL $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/document.icns '$(dist_dest)/Contents/Resources/document.icns'
 	$(MKDIR) -p '$(dist_dest)/Contents/Library/LaunchServices'
 ifdef MOZ_UPDATER
-	cp -f '$(dist_dest)/Contents/MacOS/updater.app/Contents/MacOS/org.mozilla.updater' '$(dist_dest)/Contents/Library/LaunchServices'
+	mv -f '$(dist_dest)/Contents/MacOS/updater.app/Contents/MacOS/org.mozilla.updater' '$(dist_dest)/Contents/Library/LaunchServices'
+	ln -s ../../../../Library/LaunchServices/org.mozilla.updater '$(dist_dest)/Contents/MacOS/updater.app/Contents/MacOS/org.mozilla.updater'
 endif
-	$(MKDIR) -p '$(dist_dest)/Contents/Frameworks'
-	mv '$(dist_dest)/Contents/Resources/ChannelPrefs.framework' '$(dist_dest)/Contents/Frameworks'
 	printf APPLMOZB > '$(dist_dest)/Contents/PkgInfo'
 endif

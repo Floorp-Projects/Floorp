@@ -30,10 +30,6 @@ ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 	$(call py_action,preprocessor updater-xpcshell.app/Contents/Resources/English.lproj/InfoPlist.strings,-Fsubstitution --output-encoding utf-16 -DAPP_NAME='$(MOZ_APP_DISPLAYNAME)' $(srcdir)/../macbuild/Contents/Resources/English.lproj/InfoPlist.strings.in -o $(XPCSHELLTESTDIR)/data/updater-xpcshell.app/Contents/Resources/English.lproj/InfoPlist.strings)
 	$(NSINSTALL) -D $(XPCSHELLTESTDIR)/data/updater-xpcshell.app/Contents/MacOS
 	$(NSINSTALL) $(FINAL_TARGET)/updater-xpcshell $(XPCSHELLTESTDIR)/data/updater-xpcshell.app/Contents/MacOS
-	$(NSINSTALL) -D  $(XPCSHELLTESTDIR)/data/updater-xpcshell.app/Contents/Frameworks
-	$(NSINSTALL) -D $(XPCSHELLTESTDIR)/data/updater-xpcshell.app/Contents/Frameworks/UpdateSettings.framework
-	cp $(XPCSHELLTESTDIR)/UpdateSettings-xpcshell  $(XPCSHELLTESTDIR)/data/updater-xpcshell.app/Contents/Frameworks/UpdateSettings.framework/UpdateSettings
-	$(NSINSTALL) $(srcdir)/../macos-frameworks/UpdateSettings/Info.plist  $(XPCSHELLTESTDIR)/data/updater-xpcshell.app/Contents/Frameworks/UpdateSettings.framework/Resources
 	rm -Rf $(XPCSHELLTESTDIR)/data/updater.app
 	mv $(XPCSHELLTESTDIR)/data/updater-xpcshell.app $(XPCSHELLTESTDIR)/data/updater.app
 	mv $(XPCSHELLTESTDIR)/data/updater.app/Contents/MacOS/updater-xpcshell $(XPCSHELLTESTDIR)/data/updater.app/Contents/MacOS/org.mozilla.updater

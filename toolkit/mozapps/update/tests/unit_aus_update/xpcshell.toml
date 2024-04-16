@@ -83,3 +83,7 @@ reason = "Update directory migration is currently Windows only"
 
 ["urlConstruction.js"]
 skip-if = ["socketprocess_networking"] # Bug 1759035
+
+["verifyChannelPrefsFile.js"]
+run-if = ["appname == 'firefox'"]
+reason = "File being verified is Firefox-specific."

@@ -112,10 +112,6 @@
 #  include "mozilla/WidgetUtilsGtk.h"
 #endif  // defined(MOZ_WIDGET_GTK)
 
-#ifdef MOZ_WIDGET_COCOA
-#  include "ChannelPrefsUtil.h"
-#endif
-
 using namespace mozilla;
 
 using ipc::FileDescriptor;
@@ -4847,27 +4843,6 @@ nsresult Preferences::InitInitialObjects(bool aIsStartup) {
   if (NS_FAILED(rv)) {
     NS_WARNING("Error parsing application default preferences.");
   }
-
-#ifdef MOZ_WIDGET_COCOA
-  // On macOS, channel-prefs.js is no longer bundled with the application and
-  // the "app.update.channel" pref is now read from a Framework instead.
-  // Previously, channel-prefs.js was read as one of the files in
-  // NS_APP_PREF_DEFAULTS_50_DIR (see just above). See bug 1799332 for more
-  // info.
-  nsAutoCString appUpdatePrefKey;
-  appUpdatePrefKey.Assign(kChannelPref);
-  nsAutoCString appUpdatePrefValue;
-  PrefValue channelPrefValue;
-  channelPrefValue.mStringVal = MOZ_STRINGIFY(MOZ_UPDATE_CHANNEL);
-  if (ChannelPrefsUtil::GetChannelPrefValue(appUpdatePrefValue)) {
-    channelPrefValue.mStringVal = appUpdatePrefValue.get();
-  }
-  pref_SetPref(appUpdatePrefKey, PrefType::String, PrefValueKind::Default,
-               channelPrefValue,
-               /* isSticky */ false,
-               /* isLocked */ true,
-               /* fromInit */ true);
-#endif
 
   // Load jar:$app/omni.jar!/defaults/preferences/*.js
   // or jar:$gre/omni.jar!/defaults/preferences/*.js.

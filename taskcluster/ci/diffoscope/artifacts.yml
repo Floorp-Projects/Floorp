@@ -18,7 +18,7 @@ job-defaults:
         # artifact and not-artifact builds, so remove its line if present.
         - sed -i '/telemetry\.fog\.artifact\_build/d' b/"$RESOURCE_DIR"/browser/defaults/preferences/firefox.js
         # artifact builds are not fed with accepted-mar-channel-ids
-        - if [ -f a/"$RESOURCE_DIR"/update-settings.ini ]; then sed -i '/ACCEPTED_MAR_CHANNEL_IDS/d' {a,b}/"$RESOURCE_DIR"/update-settings.ini; fi
+        - sed -i '/ACCEPTED_MAR_CHANNEL_IDS/d' {a,b}/"$RESOURCE_DIR"/update-settings.ini
     # Extra diffoscope arguments to account for:
     # - about:buildconfig being expectedly different.
     extra-args: >-

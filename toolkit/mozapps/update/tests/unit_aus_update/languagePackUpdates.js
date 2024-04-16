@@ -177,12 +177,9 @@ add_task(async function testLangpackStaged() {
   copyTestUpdaterToBinDir();
 
   let greDir = getGREDir();
-
-  if (AppConstants.platform != "macosx") {
-    let updateSettingsIni = greDir.clone();
-    updateSettingsIni.append(FILE_UPDATE_SETTINGS_INI);
-    writeFile(updateSettingsIni, UPDATE_SETTINGS_CONTENTS);
-  }
+  let updateSettingsIni = greDir.clone();
+  updateSettingsIni.append(FILE_UPDATE_SETTINGS_INI);
+  writeFile(updateSettingsIni, UPDATE_SETTINGS_CONTENTS);
 
   await downloadUpdate();
 

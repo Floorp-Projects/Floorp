@@ -15,8 +15,10 @@ async function run_test() {
   gTestFiles = gTestFilesPartialSuccess;
   gTestDirs = gTestDirsPartialSuccess;
   await setupUpdaterTest(FILE_PARTIAL_MAR, false);
-  const testFile = getTestFileByName("0exe0.exe");
-  await runHelperFileInUse(testFile.relPathDir + testFile.fileName, false);
+  await runHelperFileInUse(
+    gTestFiles[11].relPathDir + gTestFiles[11].fileName,
+    false
+  );
   await stageUpdate(STATE_AFTER_STAGE, true);
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateSuccess(getStageDirFile, true);

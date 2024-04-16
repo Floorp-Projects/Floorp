@@ -114,7 +114,6 @@ do
   use_old_updater=0
   mar_channel_IDs=""
   updater_package=""
-  mac_update_settings_dir_override=""
   eval $entry
 
   # the arguments for updater changed in Gecko 34/SeaMonkey 2.31
@@ -178,35 +177,18 @@ do
             platform_dirname="*.app"
             updater_bins="Contents/MacOS/updater.app/Contents/MacOS/updater Contents/MacOS/updater.app/Contents/MacOS/org.mozilla.updater"
             updater_platform="mac"
-            mac_update_settings_dir_override=""
             ;;
           *exe)
             updater_package_url=`echo "${updater_package_url}" | sed "s/ja-JP-mac/ja/"`
             platform_dirname="bin"
             updater_bins="updater.exe"
             updater_platform="win32"
-            case $platform in
-                Darwin_*)
-                    mac_update_settings_dir_override="${PWD}/updater/${platform_dirname}"
-                    ;;
-                *)
-                    mac_update_settings_dir_override=""
-                    ;;
-            esac
             ;;
           *bz2)
             updater_package_url=`echo "${updater_package_url}" | sed "s/ja-JP-mac/ja/"`
             platform_dirname=`echo $product | tr '[A-Z]' '[a-z]'`
             updater_bins="updater"
             updater_platform="linux"
-            case $platform in
-                Darwin_*)
-                    mac_update_settings_dir_override="${PWD}/updater/${platform_dirname}"
-                    ;;
-                *)
-                    mac_update_settings_dir_override=""
-                    ;;
-            esac
             ;;
           *)
             echo "Couldn't detect updater platform"
@@ -274,7 +256,7 @@ do
         if [ -e ${diff_file} ]; then
           rm ${diff_file}
         fi
-        check_updates "${platform}" "downloads/${source_file}" "downloads/${target_file}" ${locale} ${use_old_updater} ${updater} ${diff_file} ${channel} "${mar_channel_IDs}" ${update_to_dep} ${mac_update_settings_dir_override}
+        check_updates "${platform}" "downloads/${source_file}" "downloads/${target_file}" ${locale} ${use_old_updater} ${updater} ${diff_file} ${channel} "${mar_channel_IDs}" ${update_to_dep}
         err=$?
         if [ "$err" == "0" ]; then
           continue

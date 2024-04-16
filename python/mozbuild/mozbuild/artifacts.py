@@ -646,38 +646,26 @@ class MacArtifactJob(ArtifactJob):
 
     # These get copied into dist/bin without the path, so "root/a/b/c" -> "dist/bin/c".
     _paths_no_keep_path = (
-        (
-            "Contents/MacOS",
-            [
-                "crashreporter.app/Contents/MacOS/crashreporter",
-                "{product}",
-                "{product}-bin",
-                "*.dylib",
-                "minidump-analyzer",
-                "nmhproxy",
-                "pingsender",
-                "plugin-container.app/Contents/MacOS/plugin-container",
-                "updater.app/Contents/Frameworks/UpdateSettings.framework/UpdateSettings",
-                "updater.app/Contents/MacOS/org.mozilla.updater",
-                # 'xpcshell',
-                "XUL",
-            ],
-        ),
-        (
-            "Contents/Frameworks",
-            [
-                "ChannelPrefs.framework/ChannelPrefs",
-            ],
-        ),
+        "Contents/MacOS",
+        [
+            "crashreporter.app/Contents/MacOS/crashreporter",
+            "{product}",
+            "{product}-bin",
+            "*.dylib",
+            "minidump-analyzer",
+            "nmhproxy",
+            "pingsender",
+            "plugin-container.app/Contents/MacOS/plugin-container",
+            "updater.app/Contents/MacOS/org.mozilla.updater",
+            # 'xpcshell',
+            "XUL",
+        ],
     )
 
     @property
     def paths_no_keep_path(self):
-        formatted = []
-        for root, paths in self._paths_no_keep_path:
-            formatted.append((root, [p.format(product=self.product) for p in paths]))
-
-        return tuple(formatted)
+        root, paths = self._paths_no_keep_path
+        return (root, [p.format(product=self.product) for p in paths])
 
     @contextmanager
     def get_writer(self, **kwargs):
@@ -738,18 +726,18 @@ class MacArtifactJob(ArtifactJob):
             ]
 
             with self.get_writer(file=processed_filename, compress_level=5) as writer:
-                for root, paths in self.paths_no_keep_path:
-                    finder = UnpackFinder(mozpath.join(source, root))
-                    for path in paths:
-                        for p, f in finder.find(path):
-                            self.log(
-                                logging.DEBUG,
-                                "artifact",
-                                {"path": p},
-                                "Adding {path} to processed archive",
-                            )
-                            destpath = mozpath.join("bin", os.path.basename(p))
-                            writer.add(destpath.encode("utf-8"), f.open(), mode=f.mode)
+                root, paths = self.paths_no_keep_path
+                finder = UnpackFinder(mozpath.join(source, root))
+                for path in paths:
+                    for p, f in finder.find(path):
+                        self.log(
+                            logging.DEBUG,
+                            "artifact",
+                            {"path": p},
+                            "Adding {path} to processed archive",
+                        )
+                        destpath = mozpath.join("bin", os.path.basename(p))
+                        writer.add(destpath.encode("utf-8"), f.open(), mode=f.mode)
 
                 for root, paths in paths_keep_path:
                     finder = UnpackFinder(mozpath.join(source, root))
