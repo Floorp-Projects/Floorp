@@ -19,6 +19,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/TouchEvents.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/RWLock.h"
 #include "mozilla/widget/WindowSurface.h"
 #include "mozilla/widget/WindowSurfaceProvider.h"
 #include "nsBaseWidget.h"
@@ -257,7 +258,9 @@ class nsWindow final : public nsBaseWidget {
 
   gint GetInputRegionMarginInGdkCoords();
 
-  void UpdateTopLevelOpaqueRegion();
+  void UpdateOpaqueRegionInternal();
+  void UpdateOpaqueRegion(const LayoutDeviceIntRegion&) override;
+  LayoutDeviceIntRegion GetOpaqueRegion() const;
 
   already_AddRefed<mozilla::gfx::DrawTarget> StartRemoteDrawingInRegion(
       const LayoutDeviceIntRegion& aInvalidRegion,
@@ -369,9 +372,7 @@ class nsWindow final : public nsBaseWidget {
 
   nsresult SetNonClientMargins(const LayoutDeviceIntMargin&) override;
   void SetDrawsInTitlebar(bool aState);
-  void SetTitlebarRect();
   mozilla::LayoutDeviceIntCoord GetTitlebarRadius();
-  LayoutDeviceIntRect GetTitlebarRect();
   void UpdateWindowDraggingRegion(
       const LayoutDeviceIntRegion& aRegion) override;
 
@@ -389,6 +390,7 @@ class nsWindow final : public nsBaseWidget {
   GdkPoint DevicePixelsToGdkPointRoundDown(const LayoutDeviceIntPoint&);
   GdkRectangle DevicePixelsToGdkSizeRoundUp(const LayoutDeviceIntSize&);
   GdkRectangle DevicePixelsToGdkRectRoundOut(const LayoutDeviceIntRect&);
+  GdkRectangle DevicePixelsToGdkRectRoundIn(const LayoutDeviceIntRect&);
 
   // From GDK
   int GdkCoordToDevicePixels(gint);
@@ -630,9 +632,6 @@ class nsWindow final : public nsBaseWidget {
 
   // If true, draw our own window titlebar.
   bool mDrawInTitlebar = false;
-
-  mozilla::Mutex mTitlebarRectMutex;
-  LayoutDeviceIntRect mTitlebarRect MOZ_GUARDED_BY(mTitlebarRectMutex);
 
   // This mutex protect window visibility changes.
   mozilla::Mutex mWindowVisibilityMutex;
@@ -1018,6 +1017,8 @@ class nsWindow final : public nsBaseWidget {
   // Running in kiosk mode and requested to stay on specified monitor.
   // If monitor is removed minimize the window.
   mozilla::Maybe<int> mKioskMonitor;
+  LayoutDeviceIntRegion mOpaqueRegion MOZ_GUARDED_BY(mOpaqueRegionLock);
+  mutable mozilla::RWLock mOpaqueRegionLock{"nsWindow::mOpaqueRegion"};
 };
 
 #endif /* __nsWindow_h__ */

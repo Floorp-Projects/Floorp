@@ -389,8 +389,7 @@ static void GtkWindowSetTransientFor(GtkWindow* aWindow, GtkWindow* aParent) {
   }
 
 nsWindow::nsWindow()
-    : mTitlebarRectMutex("nsWindow::mTitlebarRectMutex"),
-      mWindowVisibilityMutex("nsWindow::mWindowVisibilityMutex"),
+    : mWindowVisibilityMutex("nsWindow::mWindowVisibilityMutex"),
       mIsMapped(false),
       mIsDestroyed(false),
       mIsShown(false),
@@ -512,10 +511,6 @@ void nsWindow::MaybeDispatchResized() {
         !wr::WindowSizeSanityCheck(mBounds.width, mBounds.height)) {
       gfxCriticalNoteOnce << "Invalid mBounds in MaybeDispatchResized "
                           << mBounds << " size state " << mSizeMode;
-    }
-
-    if (IsTopLevelWindowType()) {
-      UpdateTopLevelOpaqueRegion();
     }
 
     // Notify the GtkCompositorWidget of a ClientSizeChange
@@ -5379,8 +5374,6 @@ void nsWindow::OnWindowStateEvent(GtkWidget* aWidget,
     } else {
       ClearTransparencyBitmap();
     }
-  } else {
-    SetTitlebarRect();
   }
 }
 
@@ -6934,43 +6927,56 @@ LayoutDeviceIntCoord nsWindow::GetTitlebarRadius() {
   return GdkCoordToDevicePixels(cssCoord);
 }
 
+LayoutDeviceIntRegion nsWindow::GetOpaqueRegion() const {
+  AutoReadLock r(mOpaqueRegionLock);
+  return mOpaqueRegion;
+}
+
 // See subtract_corners_from_region() at gtk/gtkwindow.c
 // We need to subtract corners from toplevel window opaque region
 // to draw transparent corners of default Gtk titlebar.
 // Both implementations (cairo_region_t and wl_region) needs to be synced.
-static void SubtractTitlebarCorners(cairo_region_t* aRegion, int aX, int aY,
-                                    int aWindowWidth, int aWindowHeight,
-                                    int aTitlebarRadius) {
-  if (!aTitlebarRadius) {
+static void SubtractTitlebarCorners(LayoutDeviceIntRegion& aRegion,
+                                    const LayoutDeviceIntRect& aRect,
+                                    LayoutDeviceIntCoord aRadius) {
+  if (!aRadius) {
     return;
   }
-  cairo_rectangle_int_t rect = {aX, aY, aTitlebarRadius, aTitlebarRadius};
-  cairo_region_subtract_rectangle(aRegion, &rect);
-  rect = {
-      aX + aWindowWidth - aTitlebarRadius,
-      aY,
-      aTitlebarRadius,
-      aTitlebarRadius,
-  };
-  cairo_region_subtract_rectangle(aRegion, &rect);
-  rect = {
-      aX,
-      aY + aWindowHeight - aTitlebarRadius,
-      aTitlebarRadius,
-      aTitlebarRadius,
-  };
-  cairo_region_subtract_rectangle(aRegion, &rect);
-  rect = {
-      aX + aWindowWidth - aTitlebarRadius,
-      aY + aWindowHeight - aTitlebarRadius,
-      aTitlebarRadius,
-      aTitlebarRadius,
-  };
-  cairo_region_subtract_rectangle(aRegion, &rect);
+  const LayoutDeviceIntSize size(aRadius, aRadius);
+  aRegion.SubOut(LayoutDeviceIntRect(aRect.TopLeft(), size));
+  aRegion.SubOut(LayoutDeviceIntRect(
+      aRect.TopRight() - LayoutDeviceIntPoint(aRadius, 0), size));
+  aRegion.SubOut(LayoutDeviceIntRect(
+      aRect.BottomLeft() - LayoutDeviceIntPoint(0, aRadius), size));
+  aRegion.SubOut(LayoutDeviceIntRect(
+      aRect.BottomRight() - LayoutDeviceIntPoint(aRadius, aRadius), size));
 }
 
-void nsWindow::UpdateTopLevelOpaqueRegion() {
+void nsWindow::UpdateOpaqueRegion(const LayoutDeviceIntRegion& aRegion) {
+  LayoutDeviceIntRegion region = aRegion;
+  SubtractTitlebarCorners(region, LayoutDeviceIntRect({}, mBounds.Size()),
+                          GetTitlebarRadius());
+  {
+    AutoReadLock r(mOpaqueRegionLock);
+    if (mOpaqueRegion == region) {
+      return;
+    }
+  }
+  {
+    AutoWriteLock w(mOpaqueRegionLock);
+    mOpaqueRegion = region;
+  }
+  UpdateOpaqueRegionInternal();
+}
+
+void nsWindow::UpdateOpaqueRegionInternal() {
   if (!mCompositedScreen) {
+    return;
+  }
+
+  if (!IsTopLevelWindowType()) {
+    // We need to clear target buffer alpha values of popup windows as
+    // SW-WR paints with alpha blending (see Bug 1674473).
     return;
   }
 
@@ -6980,34 +6986,40 @@ void nsWindow::UpdateTopLevelOpaqueRegion() {
   }
   MOZ_ASSERT(gdk_window_get_window_type(window) == GDK_WINDOW_TOPLEVEL);
 
-  int x = 0;
-  int y = 0;
+  {
+    AutoReadLock lock(mOpaqueRegionLock);
+    cairo_region_t* region = nullptr;
+    if (!mOpaqueRegion.IsEmpty()) {
+      // NOTE(emilio): The opaque region is relative to our mContainer /
+      // mGdkWindow / inner window, but we're setting it on the top level
+      // GdkWindow / mShell.
+      //
+      // So we need to offset the rects by the position of mGdkWindow, in order
+      // for them to be in the right coordinate system.
+      GdkPoint offset{0, 0};
+      gdk_window_get_position(mGdkWindow, &offset.x, &offset.y);
 
-  gdk_window_get_position(mGdkWindow, &x, &y);
+      region = cairo_region_create();
 
-  int width = DevicePixelsToGdkCoordRoundDown(mBounds.width);
-  int height = DevicePixelsToGdkCoordRoundDown(mBounds.height);
-
-  cairo_region_t* region = cairo_region_create();
-  cairo_rectangle_int_t rect = {x, y, width, height};
-  cairo_region_union_rectangle(region, &rect);
-
-  // TODO: We actually could get a proper opaque region from layout, see
-  // nsIWidget::UpdateOpaqueRegion. This could simplify titlebar drawing.
-  int radius = DoDrawTilebarCorners() ? int(GetTitlebarRadius()) : 0;
-  SubtractTitlebarCorners(region, x, y, width, height, radius);
-
-  gdk_window_set_opaque_region(window, region);
-
-  cairo_region_destroy(region);
+      for (auto iter = mOpaqueRegion.RectIter(); !iter.Done(); iter.Next()) {
+        auto gdkRect = DevicePixelsToGdkRectRoundIn(iter.Get());
+        cairo_rectangle_int_t rect = {gdkRect.x + offset.x,
+                                      gdkRect.y + offset.y, gdkRect.width,
+                                      gdkRect.height};
+        cairo_region_union_rectangle(region, &rect);
+      }
+    }
+    gdk_window_set_opaque_region(window, region);
+    if (region) {
+      cairo_region_destroy(region);
+    }
+  }
 
 #ifdef MOZ_WAYLAND
   if (GdkIsWaylandDisplay()) {
-    moz_container_wayland_update_opaque_region(mContainer, radius);
+    moz_container_wayland_update_opaque_region(mContainer);
   }
 #endif
-
-  SetTitlebarRect();
 }
 
 bool nsWindow::IsChromeWindowTitlebar() {
@@ -7179,24 +7191,6 @@ nsresult nsWindow::UpdateTranslucentWindowAlphaInternal(const nsIntRect& aRect,
     ApplyTransparencyBitmap();
   }
   return NS_OK;
-}
-
-#define TITLEBAR_HEIGHT 10
-
-void nsWindow::SetTitlebarRect() {
-  MutexAutoLock lock(mTitlebarRectMutex);
-
-  if (!mGdkWindow || !DoDrawTilebarCorners()) {
-    mTitlebarRect = LayoutDeviceIntRect();
-    return;
-  }
-  mTitlebarRect = LayoutDeviceIntRect(0, 0, mBounds.width,
-                                      GdkCeiledScaleFactor() * TITLEBAR_HEIGHT);
-}
-
-LayoutDeviceIntRect nsWindow::GetTitlebarRect() {
-  MutexAutoLock lock(mTitlebarRectMutex);
-  return mTitlebarRect;
 }
 
 void nsWindow::UpdateTitlebarTransparencyBitmap() {
@@ -8243,7 +8237,9 @@ static void toplevel_window_size_allocate_cb(GtkWidget* widget,
     return;
   }
 
-  window->UpdateTopLevelOpaqueRegion();
+  // NOTE(emilio): We need to do this here to override GTK's own opaque region
+  // setting (which would clobber ours).
+  window->UpdateOpaqueRegionInternal();
 }
 
 static gboolean delete_event_cb(GtkWidget* widget, GdkEventAny* event) {
@@ -9180,8 +9176,6 @@ void nsWindow::SetDrawsInTitlebar(bool aState) {
     } else {
       ClearTransparencyBitmap();
     }
-  } else {
-    SetTitlebarRect();
   }
 }
 
@@ -9247,6 +9241,16 @@ GdkRectangle nsWindow::DevicePixelsToGdkRectRoundOut(
   int right = ceil((aRect.x + aRect.width) / scale);
   int bottom = ceil((aRect.y + aRect.height) / scale);
   return {x, y, right - x, bottom - y};
+}
+
+GdkRectangle nsWindow::DevicePixelsToGdkRectRoundIn(
+    const LayoutDeviceIntRect& aRect) {
+  double scale = FractionalScaleFactor();
+  int x = ceil(aRect.x / scale);
+  int y = ceil(aRect.y / scale);
+  int right = floor((aRect.x + aRect.width) / scale);
+  int bottom = floor((aRect.y + aRect.height) / scale);
+  return {x, y, std::max(right - x, 0), std::max(bottom - y, 0)};
 }
 
 GdkRectangle nsWindow::DevicePixelsToGdkSizeRoundUp(

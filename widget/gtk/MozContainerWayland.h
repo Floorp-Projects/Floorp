@@ -42,7 +42,6 @@ struct MozContainerWayland {
   struct wp_viewport* viewport = nullptr;
   struct wp_fractional_scale_v1* fractional_scale = nullptr;
   gboolean opaque_region_needs_updates = false;
-  int opaque_region_corner_radius = 0;
   gboolean opaque_region_used = false;
   gboolean ready_to_draw = false;
   gboolean commit_to_parent = false;
@@ -97,8 +96,7 @@ void moz_container_wayland_add_or_fire_initial_draw_callback(
 void moz_container_wayland_clear_initial_draw_callback(MozContainer* container);
 
 wl_surface* moz_gtk_widget_get_wl_surface(GtkWidget* aWidget);
-void moz_container_wayland_update_opaque_region(MozContainer* container,
-                                                int corner_radius);
+void moz_container_wayland_update_opaque_region(MozContainer* container);
 gboolean moz_container_wayland_can_draw(MozContainer* container);
 double moz_container_wayland_get_scale(MozContainer* container);
 double moz_container_wayland_get_fractional_scale(MozContainer* container);
