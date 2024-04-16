@@ -83,7 +83,7 @@ function convert_srcs_to_project_files {
   # the config file path requires adjustment. To ensure the list remains sorted,
   # we must first remove it and then insert it at the beginning of the list.
 
-  # Remove vpx_config.c.
+  # Remove vpx_config.c
   source_list=$(echo "$source_list" | grep -v 'vpx_config\.c')
   # Insert vpx_config.c at the beginning of the list.
   local config=$(echo "../$LIBVPX_CONFIG_DIR/$3/vpx_config.c")
