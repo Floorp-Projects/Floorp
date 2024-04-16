@@ -5,10 +5,47 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+const { MockRegistry } = ChromeUtils.importESModule(
+  "resource://testing-common/MockRegistry.sys.mjs"
+);
+
 const nsIWindowsRegKey = Ci.nsIWindowsRegKey;
 let regKeyComponent = Cc["@mozilla.org/windows-registry-key;1"];
 
-function run_test() {
+// We run these tests twice: once against the native Windows registry, and a
+// second time against `MockRegistry`.  This gives some confidence that
+// `MockRegistry` implements the same APIs as the native Windows registry.
+
+// This order is important: the native registry test must run first, because
+// otherwise we would end up running the `MockRegistry` test twice without
+// checking it against the native Windows registry.
+
+add_task(function test_native_registry() {
+  info("Running test for native Windows registry");
+  run_one_test();
+});
+
+add_task(function test_MockRegistry() {
+  let registry = new MockRegistry();
+  registerCleanupFunction(() => {
+    registry.shutdown();
+  });
+
+  // Before, there's nothing -- just the 3 roots (HKLM, HKCU, HKCR).
+  let linesBefore = [];
+  MockRegistry.dump(null, "", linesBefore.push.bind(linesBefore));
+  strictEqual(linesBefore.length, 3);
+
+  info("Running test for MockRegistry");
+  run_one_test({ cleanup: false });
+
+  // After, there's something -- more than just the roots.
+  let linesAfter = [];
+  MockRegistry.dump(null, "", linesAfter.push.bind(linesAfter));
+  strictEqual(linesAfter.length, 8);
+});
+
+function run_one_test({ cleanup = true } = {}) {
   //* create a key structure in a spot that's normally writable (somewhere under HKCU).
   let testKey = regKeyComponent.createInstance(nsIWindowsRegKey);
 
@@ -28,11 +65,16 @@ function run_test() {
   //* check that the get* functions fail with the right exception codes if we ask for the wrong type or if the value name doesn't exist at all
   test_invalidread_functions(testKey);
 
+  //* check that removing/deleting values works
+  test_remove_functions(testKey);
+
   //* check that creating/enumerating/deleting child keys works
   test_childkey_functions(testKey);
 
   //* clean up
-  cleanup_test_run(testKey, keyName);
+  if (cleanup) {
+    cleanup_test_run(testKey, keyName);
+  }
 }
 
 function setup_test_run(testKey, keyName) {
@@ -150,6 +192,15 @@ function test_invalidread_functions(testKey) {
       throw e;
     }
   }
+}
+
+function test_remove_functions(testKey) {
+  strictEqual(testKey.valueCount, 4);
+  testKey.removeValue(TESTDATA_INT64NAME);
+  strictEqual(testKey.valueCount, 3);
+
+  testKey.removeValue(TESTDATA_INT64NAME);
+  strictEqual(testKey.valueCount, 3);
 }
 
 function test_childkey_functions(testKey) {
