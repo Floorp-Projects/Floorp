@@ -3088,11 +3088,9 @@ BrowserGlue.prototype = {
 
       {
         name: "DAPTelemetrySender.startup",
-        condition:
-          lazy.TelemetryUtils.isTelemetryEnabled &&
-          lazy.NimbusFeatures.dapTelemetry.getVariable("enabled"),
-        task: () => {
-          lazy.DAPTelemetrySender.startup();
+        condition: lazy.TelemetryUtils.isTelemetryEnabled,
+        task: async () => {
+          await lazy.DAPTelemetrySender.startup();
         },
       },
 

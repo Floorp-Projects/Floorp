@@ -35,7 +35,12 @@ XPCOMUtils.defineLazyPreferenceGetter(lazy, "HELPER", PREF_HELPER, undefined);
  */
 
 export const DAPTelemetrySender = new (class {
-  startup() {
+  async startup() {
+    await lazy.NimbusFeatures.dapTelemetry.ready();
+    if (!lazy.NimbusFeatures.dapTelemetry.getVariable("enabled")) {
+      return;
+    }
+
     lazy.logConsole.debug("Performing DAP startup");
 
     if (lazy.NimbusFeatures.dapTelemetry.getVariable("visitCountingEnabled")) {

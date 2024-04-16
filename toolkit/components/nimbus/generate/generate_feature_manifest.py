@@ -26,7 +26,6 @@ NIMBUS_FALLBACK_PREFS = (
 ALLOWED_ISEARLYSTARTUP_FEATURE_IDS = {
     "abouthomecache",
     "aboutwelcome",
-    "dapTelemetry",
     "gleanInternalSdk",
     "majorRelease2022",
     "newtab",
