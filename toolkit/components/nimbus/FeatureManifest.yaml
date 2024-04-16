@@ -2092,6 +2092,12 @@ gc:
       setPref:
         branch: user
         pref: "javascript.options.mem.gc_parallel_marking_threshold_mb"
+    gc_max_parallel_marking_threads:
+      description: The maximum number of threads to use for parallel marking, if enabled.
+      type: int
+      setPref:
+        branch: user
+        pref: "javascript.options.mem.gc_max_parallel_marking_threads"
     gc_per_zone:
       description: Whether per-zone GC is enabled. If not, all zones are collected every time.
       type: boolean

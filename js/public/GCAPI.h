@@ -469,7 +469,7 @@ typedef enum JSGCParamKey {
    * helper threads and can be found by getting the JSGC_MARKING_THREAD_COUNT
    * parameter.
    *
-   * Pref: None.
+   * Pref: javascript.options.mem.gc_max_parallel_marking_threads
    * Default: 2.
    */
   JSGC_MAX_MARKING_THREADS = 52,
