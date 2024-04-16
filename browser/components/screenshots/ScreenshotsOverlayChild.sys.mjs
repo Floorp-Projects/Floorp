@@ -153,7 +153,7 @@ export class ScreenshotsOverlay {
                 <div class="mover"></div>
               </div>
               <div id="selection-size-container">
-                <span id="selection-size"></span>
+                <span id="selection-size" dir="ltr"></span>
               </div>
             </div>
           </div>
