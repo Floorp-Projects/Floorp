@@ -109,7 +109,11 @@ export const AboutHomeStartupCacheChild = {
       );
     }
 
-    if (!lazy.NimbusFeatures.abouthomecache.getVariable("enabled")) {
+    if (
+      !Services.prefs.getBoolPref(
+        "browser.startup.homepage.abouthome_cache.enabled"
+      )
+    ) {
       return;
     }
 
