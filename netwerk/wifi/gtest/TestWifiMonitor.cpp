@@ -85,7 +85,7 @@ class TestWifiMonitor : public ::testing::Test {
  public:
   TestWifiMonitor() {
     mObs = mozilla::services::GetObserverService();
-    MOZ_ASSERT(mObs);
+    MOZ_RELEASE_ASSERT(mObs);
 
     nsresult rv;
     nsCOMPtr<nsINetworkLinkService> nls =
@@ -312,7 +312,7 @@ class TestWifiMonitor : public ::testing::Test {
     LOGI(("RunSingleTest: <%s, %s> | requestPolling: %s | shouldPoll: %s",
           aTopic, NS_ConvertUTF16toUTF8(aData).get(),
           aRequestPolling ? "true" : "false", aShouldPoll ? "true" : "false"));
-    MOZ_ASSERT(aShouldPoll || !aRequestPolling);
+    MOZ_RELEASE_ASSERT(aShouldPoll || !aRequestPolling);
 
     CreateObjects();
 
