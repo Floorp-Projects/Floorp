@@ -21,13 +21,10 @@ using mozilla::UniqueFreePtr;
 using mozilla::UniquePtr;
 using mozilla::Vector;
 
-#define CHECK(c)                               \
-  do {                                         \
-    bool cond = !!(c);                         \
-    MOZ_ASSERT(cond, "Failed assertion: " #c); \
-    if (!cond) {                               \
-      return false;                            \
-    }                                          \
+#define CHECK(c)                                  \
+  do {                                            \
+    bool cond = !!(c);                            \
+    MOZ_RELEASE_ASSERT(cond, "Test failed: " #c); \
   } while (false)
 
 typedef UniquePtr<int> NewInt;

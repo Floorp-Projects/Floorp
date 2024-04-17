@@ -17,13 +17,13 @@ using mozilla::SomeRef;
 using mozilla::ToMaybe;
 using mozilla::ToMaybeRef;
 
-#define RUN_TEST(t)                                                     \
-  do {                                                                  \
-    bool cond = (t());                                                  \
-    if (!cond) return 1;                                                \
-    cond = AllDestructorsWereCalled();                                  \
-    MOZ_ASSERT(cond, "Failed to destroy all objects during test: " #t); \
-    if (!cond) return 1;                                                \
+#define RUN_TEST(t)                                                           \
+  do {                                                                        \
+    bool cond = (t());                                                        \
+    MOZ_RELEASE_ASSERT(cond, "Unexpectedly returned false during test: " #t); \
+    cond = AllDestructorsWereCalled();                                        \
+    MOZ_RELEASE_ASSERT(cond,                                                  \
+                       "Failed to destroy all objects during test: " #t);     \
   } while (false)
 
 enum Status {

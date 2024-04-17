@@ -350,28 +350,28 @@ void mozilla::detail::VectorTesting::testReplaceRawBuffer() {
     MOZ_RELEASE_ASSERT(v.reserve(4));
     v.infallibleEmplaceBack(1, 2);
     v.infallibleEmplaceBack(3, 4);
-    MOZ_ASSERT(S::constructCount == 2);
+    MOZ_RELEASE_ASSERT(S::constructCount == 2);
     s = v.extractRawBuffer();
   }
 
-  MOZ_ASSERT(S::constructCount == 2);
-  MOZ_ASSERT(S::moveCount == 0);
-  MOZ_ASSERT(S::destructCount == 0);
+  MOZ_RELEASE_ASSERT(S::constructCount == 2);
+  MOZ_RELEASE_ASSERT(S::moveCount == 0);
+  MOZ_RELEASE_ASSERT(S::destructCount == 0);
 
   {
     Vector<S, 10> v;
     v.replaceRawBuffer(s, 2);
-    MOZ_ASSERT(v.length() == 2);
     MOZ_ASSERT(v.reserved() == 2);
-    MOZ_ASSERT(v.capacity() == 10);
-    MOZ_ASSERT(v[0].j == 1);
-    MOZ_ASSERT(v[1].j == 3);
-    MOZ_ASSERT(S::destructCount == 2);
+    MOZ_RELEASE_ASSERT(v.length() == 2);
+    MOZ_RELEASE_ASSERT(v.capacity() == 10);
+    MOZ_RELEASE_ASSERT(v[0].j == 1);
+    MOZ_RELEASE_ASSERT(v[1].j == 3);
+    MOZ_RELEASE_ASSERT(S::destructCount == 2);
   }
 
-  MOZ_ASSERT(S::constructCount == 2);
-  MOZ_ASSERT(S::moveCount == 2);
-  MOZ_ASSERT(S::destructCount == 4);
+  MOZ_RELEASE_ASSERT(S::constructCount == 2);
+  MOZ_RELEASE_ASSERT(S::moveCount == 2);
+  MOZ_RELEASE_ASSERT(S::destructCount == 4);
 
   S::resetCounts();
 
@@ -379,30 +379,30 @@ void mozilla::detail::VectorTesting::testReplaceRawBuffer() {
     Vector<S, 2> v;
     MOZ_RELEASE_ASSERT(v.reserve(4));
     v.infallibleEmplaceBack(9, 10);
-    MOZ_ASSERT(S::constructCount == 1);
+    MOZ_RELEASE_ASSERT(S::constructCount == 1);
     s = v.extractRawBuffer();
-    MOZ_ASSERT(S::constructCount == 1);
-    MOZ_ASSERT(S::moveCount == 0);
+    MOZ_RELEASE_ASSERT(S::constructCount == 1);
+    MOZ_RELEASE_ASSERT(S::moveCount == 0);
   }
 
-  MOZ_ASSERT(S::destructCount == 0);
+  MOZ_RELEASE_ASSERT(S::destructCount == 0);
 
   {
     Vector<S> v;
     v.replaceRawBuffer(s, 1, 4);
-    MOZ_ASSERT(v.length() == 1);
     MOZ_ASSERT(v.reserved() == 4);
-    MOZ_ASSERT(v.capacity() == 4);
-    MOZ_ASSERT(v[0].j == 9);
+    MOZ_RELEASE_ASSERT(v.length() == 1);
+    MOZ_RELEASE_ASSERT(v.capacity() == 4);
+    MOZ_RELEASE_ASSERT(v[0].j == 9);
     for (size_t i = 0; i < 5; i++) MOZ_RELEASE_ASSERT(v.emplaceBack(i, i));
-    MOZ_ASSERT(v.length() == 6);
     MOZ_ASSERT(v.reserved() == 6);
-    MOZ_ASSERT(S::constructCount == 6);
-    MOZ_ASSERT(S::moveCount == 4);
-    MOZ_ASSERT(S::destructCount == 4);
+    MOZ_RELEASE_ASSERT(v.length() == 6);
+    MOZ_RELEASE_ASSERT(S::constructCount == 6);
+    MOZ_RELEASE_ASSERT(S::moveCount == 4);
+    MOZ_RELEASE_ASSERT(S::destructCount == 4);
   }
 
-  MOZ_ASSERT(S::destructCount == 10);
+  MOZ_RELEASE_ASSERT(S::destructCount == 10);
 }
 
 void mozilla::detail::VectorTesting::testInsert() {
@@ -541,13 +541,13 @@ void mozilla::detail::VectorTesting::testShrinkStorageToFit() {
     Vector<int, 0> v1;
     MOZ_RELEASE_ASSERT(v1.reserve(10));
     v1.infallibleAppend(1);
-    MOZ_ASSERT(v1.length() == 1);
     MOZ_ASSERT(v1.reserved() == 10);
-    MOZ_ASSERT(v1.capacity() >= 10);
+    MOZ_RELEASE_ASSERT(v1.length() == 1);
+    MOZ_RELEASE_ASSERT(v1.capacity() >= 10);
     v1.shrinkStorageToFit();
-    MOZ_ASSERT(v1.length() == 1);
     MOZ_ASSERT(v1.reserved() == 1);
-    MOZ_ASSERT(v1.capacity() == 1);
+    MOZ_RELEASE_ASSERT(v1.length() == 1);
+    MOZ_RELEASE_ASSERT(v1.capacity() == 1);
   }
 
   // Vectors using inline storage do nothing.
@@ -555,13 +555,13 @@ void mozilla::detail::VectorTesting::testShrinkStorageToFit() {
     Vector<int, 2> v2;
     MOZ_RELEASE_ASSERT(v2.reserve(2));
     v2.infallibleAppend(1);
-    MOZ_ASSERT(v2.length() == 1);
     MOZ_ASSERT(v2.reserved() == 2);
-    MOZ_ASSERT(v2.capacity() == 2);
+    MOZ_RELEASE_ASSERT(v2.length() == 1);
+    MOZ_RELEASE_ASSERT(v2.capacity() == 2);
     v2.shrinkStorageToFit();
-    MOZ_ASSERT(v2.length() == 1);
     MOZ_ASSERT(v2.reserved() == 2);
-    MOZ_ASSERT(v2.capacity() == 2);
+    MOZ_RELEASE_ASSERT(v2.length() == 1);
+    MOZ_RELEASE_ASSERT(v2.capacity() == 2);
   }
 
   // shrinkStorageToFit uses inline storage if possible.
@@ -569,13 +569,13 @@ void mozilla::detail::VectorTesting::testShrinkStorageToFit() {
     Vector<int, 2> v;
     MOZ_RELEASE_ASSERT(v.reserve(4));
     v.infallibleAppend(1);
-    MOZ_ASSERT(v.length() == 1);
     MOZ_ASSERT(v.reserved() == 4);
-    MOZ_ASSERT(v.capacity() >= 4);
+    MOZ_RELEASE_ASSERT(v.length() == 1);
+    MOZ_RELEASE_ASSERT(v.capacity() >= 4);
     v.shrinkStorageToFit();
-    MOZ_ASSERT(v.length() == 1);
     MOZ_ASSERT(v.reserved() == 1);
-    MOZ_ASSERT(v.capacity() == 2);
+    MOZ_RELEASE_ASSERT(v.length() == 1);
+    MOZ_RELEASE_ASSERT(v.capacity() == 2);
   }
 
   // Non-pod shrinking to non-inline storage.
