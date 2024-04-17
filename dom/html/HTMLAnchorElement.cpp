@@ -68,10 +68,7 @@ nsresult HTMLAnchorElement::BindToTree(BindContext& aContext,
   Link::BindToTree(aContext);
 
   // Prefetch links
-  if (IsInComposedDoc()) {
-    TryDNSPrefetch(*this);
-  }
-
+  MaybeTryDNSPrefetch();
   return rv;
 }
 
@@ -194,8 +191,8 @@ void HTMLAnchorElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
   if (aNamespaceID == kNameSpaceID_None) {
     if (aName == nsGkAtoms::href) {
       Link::ResetLinkState(aNotify, !!aValue);
-      if (aValue && IsInComposedDoc()) {
-        TryDNSPrefetch(*this);
+      if (aValue) {
+        MaybeTryDNSPrefetch();
       }
     }
   }
@@ -208,6 +205,24 @@ void HTMLAnchorElement::AddSizeOfExcludingThis(nsWindowSizes& aSizes,
                                                size_t* aNodeSize) const {
   nsGenericHTMLElement::AddSizeOfExcludingThis(aSizes, aNodeSize);
   *aNodeSize += Link::SizeOfExcludingThis(aSizes.mState);
+}
+
+void HTMLAnchorElement::MaybeTryDNSPrefetch() {
+  if (IsInComposedDoc()) {
+    nsIURI* docURI = OwnerDoc()->GetDocumentURI();
+    if (!docURI) {
+      return;
+    }
+
+    bool docIsHttps = docURI->SchemeIs("https");
+    if ((docIsHttps &&
+         StaticPrefs::dom_prefetch_dns_for_anchor_https_document()) ||
+        (!docIsHttps &&
+         StaticPrefs::dom_prefetch_dns_for_anchor_http_document())) {
+      TryDNSPrefetch(
+          *this, HTMLDNSPrefetch::PrefetchSource::AnchorSpeculativePrefetch);
+    }
+  }
 }
 
 }  // namespace mozilla::dom

@@ -105,7 +105,7 @@ class DeferredDNSPrefetches final : public nsIWebProgressListener,
   void Flush();
 
   void SubmitQueue();
-  void SubmitQueueEntry(Element&, nsIDNSService::DNSFlags aFlags);
+  void SubmitQueueEntry(Element& aElement, nsIDNSService::DNSFlags aFlags);
 
   uint16_t mHead;
   uint16_t mTail;
@@ -206,8 +206,8 @@ nsIDNSService::DNSFlags HTMLDNSPrefetch::PriorityToDNSServiceFlags(
   return nsIDNSService::RESOLVE_DEFAULT_FLAGS;
 }
 
-nsresult HTMLDNSPrefetch::Prefetch(SupportsDNSPrefetch& aSupports,
-                                   Element& aElement, Priority aPriority) {
+nsresult HTMLDNSPrefetch::DeferPrefetch(SupportsDNSPrefetch& aSupports,
+                                        Element& aElement, Priority aPriority) {
   MOZ_ASSERT(&ToSupportsDNSPrefetch(aElement) == &aSupports);
   if (!(sInitialized && sPrefetches && sDNSListener) || !EnsureDNSService()) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -362,10 +362,84 @@ void HTMLDNSPrefetch::ElementDestroyed(Element& aElement,
   }
 }
 
-void SupportsDNSPrefetch::TryDNSPrefetch(Element& aOwner) {
+void HTMLDNSPrefetch::SendRequest(Element& aElement,
+                                  nsIDNSService::DNSFlags aFlags) {
+  auto& supports = ToSupportsDNSPrefetch(aElement);
+
+  nsIURI* uri = supports.GetURIForDNSPrefetch(aElement);
+  if (!uri) {
+    return;
+  }
+
+  nsAutoCString hostName;
+  uri->GetAsciiHost(hostName);
+  if (hostName.IsEmpty()) {
+    return;
+  }
+
+  bool isLocalResource = false;
+  nsresult rv = NS_URIChainHasFlags(
+      uri, nsIProtocolHandler::URI_IS_LOCAL_RESOURCE, &isLocalResource);
+  if (NS_FAILED(rv) || isLocalResource) {
+    return;
+  }
+
+  OriginAttributes oa;
+  StoragePrincipalHelper::GetOriginAttributesForNetworkState(
+      aElement.OwnerDoc(), oa);
+
+  bool isHttps = uri->SchemeIs("https");
+
+  if (IsNeckoChild()) {
+    // during shutdown gNeckoChild might be null
+    if (gNeckoChild) {
+      gNeckoChild->SendHTMLDNSPrefetch(NS_ConvertUTF8toUTF16(hostName), isHttps,
+                                       oa, aFlags);
+    }
+  } else {
+    nsCOMPtr<nsICancelable> tmpOutstanding;
+
+    rv = sDNSService->AsyncResolveNative(
+        hostName, nsIDNSService::RESOLVE_TYPE_DEFAULT,
+        aFlags | nsIDNSService::RESOLVE_SPECULATE, nullptr, sDNSListener,
+        nullptr, oa, getter_AddRefs(tmpOutstanding));
+    if (NS_FAILED(rv)) {
+      return;
+    }
+
+    // Fetch HTTPS RR if needed.
+    if (StaticPrefs::network_dns_upgrade_with_https_rr() ||
+        StaticPrefs::network_dns_use_https_rr_as_altsvc()) {
+      sDNSService->AsyncResolveNative(
+          hostName, nsIDNSService::RESOLVE_TYPE_HTTPSSVC,
+          aFlags | nsIDNSService::RESOLVE_SPECULATE, nullptr, sDNSListener,
+          nullptr, oa, getter_AddRefs(tmpOutstanding));
+    }
+  }
+
+  // Tell element that deferred prefetch was requested.
+  supports.DNSPrefetchRequestStarted();
+}
+
+void SupportsDNSPrefetch::TryDNSPrefetch(
+    Element& aOwner, HTMLDNSPrefetch::PrefetchSource aSource) {
   MOZ_ASSERT(aOwner.IsInComposedDoc());
   if (HTMLDNSPrefetch::IsAllowed(aOwner.OwnerDoc())) {
-    HTMLDNSPrefetch::Prefetch(*this, aOwner, HTMLDNSPrefetch::Priority::Low);
+    if (!(sInitialized && sDNSListener) || !EnsureDNSService()) {
+      return;
+    }
+
+    if (aSource == HTMLDNSPrefetch::PrefetchSource::AnchorSpeculativePrefetch) {
+      HTMLDNSPrefetch::DeferPrefetch(*this, aOwner,
+                                     HTMLDNSPrefetch::Priority::Low);
+    } else if (aSource == HTMLDNSPrefetch::PrefetchSource::LinkDnsPrefetch) {
+      HTMLDNSPrefetch::SendRequest(
+          aOwner, GetDNSFlagsFromElement(aOwner) |
+                      HTMLDNSPrefetch::PriorityToDNSServiceFlags(
+                          HTMLDNSPrefetch::Priority::High));
+    } else {
+      MOZ_ASSERT_UNREACHABLE("Unknown DNS prefetch type");
+    }
   }
 }
 
@@ -470,59 +544,7 @@ void DeferredDNSPrefetches::SubmitQueueEntry(Element& aElement,
     return;
   }
 
-  nsIURI* uri = supports.GetURIForDNSPrefetch(aElement);
-  if (!uri) {
-    return;
-  }
-
-  nsAutoCString hostName;
-  uri->GetAsciiHost(hostName);
-  if (hostName.IsEmpty()) {
-    return;
-  }
-
-  bool isLocalResource = false;
-  nsresult rv = NS_URIChainHasFlags(
-      uri, nsIProtocolHandler::URI_IS_LOCAL_RESOURCE, &isLocalResource);
-  if (NS_FAILED(rv) || isLocalResource) {
-    return;
-  }
-
-  OriginAttributes oa;
-  StoragePrincipalHelper::GetOriginAttributesForNetworkState(
-      aElement.OwnerDoc(), oa);
-
-  bool isHttps = uri->SchemeIs("https");
-
-  if (IsNeckoChild()) {
-    // during shutdown gNeckoChild might be null
-    if (gNeckoChild) {
-      gNeckoChild->SendHTMLDNSPrefetch(NS_ConvertUTF8toUTF16(hostName), isHttps,
-                                       oa, mEntries[mTail].mFlags);
-    }
-  } else {
-    nsCOMPtr<nsICancelable> tmpOutstanding;
-
-    rv = sDNSService->AsyncResolveNative(
-        hostName, nsIDNSService::RESOLVE_TYPE_DEFAULT,
-        mEntries[mTail].mFlags | nsIDNSService::RESOLVE_SPECULATE, nullptr,
-        sDNSListener, nullptr, oa, getter_AddRefs(tmpOutstanding));
-    if (NS_FAILED(rv)) {
-      return;
-    }
-
-    // Fetch HTTPS RR if needed.
-    if (StaticPrefs::network_dns_upgrade_with_https_rr() ||
-        StaticPrefs::network_dns_use_https_rr_as_altsvc()) {
-      sDNSService->AsyncResolveNative(
-          hostName, nsIDNSService::RESOLVE_TYPE_HTTPSSVC,
-          mEntries[mTail].mFlags | nsIDNSService::RESOLVE_SPECULATE, nullptr,
-          sDNSListener, nullptr, oa, getter_AddRefs(tmpOutstanding));
-    }
-  }
-
-  // Tell element that deferred prefetch was requested.
-  supports.DNSPrefetchRequestStarted();
+  HTMLDNSPrefetch::SendRequest(aElement, aFlags);
 }
 
 void DeferredDNSPrefetches::Activate() {

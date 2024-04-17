@@ -3295,6 +3295,18 @@
   value: false
   mirror: always
 
+# Should we speculatively prefetch dns for anchor elements on http documents
+- name: dom.prefetch_dns_for_anchor_http_document
+  type: bool
+  value: true
+  mirror: always
+
+# Should we speculatively prefetch dns for anchor elements on https documents
+- name: dom.prefetch_dns_for_anchor_https_document
+  type: bool
+  value: false
+  mirror: always
+
 # This currently only affects XHTML. For XUL the cache is always allowed.
 - name: dom.prototype_document_cache.enabled
   type: bool
