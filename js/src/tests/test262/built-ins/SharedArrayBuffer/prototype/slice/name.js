@@ -21,11 +21,10 @@ includes: [propertyHelper.js]
 features: [SharedArrayBuffer]
 ---*/
 
-verifyProperty(SharedArrayBuffer.prototype.slice, "name", {
-  value: "slice",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(SharedArrayBuffer.prototype.slice.name, "slice");
+
+verifyNotEnumerable(SharedArrayBuffer.prototype.slice, "name");
+verifyNotWritable(SharedArrayBuffer.prototype.slice, "name");
+verifyConfigurable(SharedArrayBuffer.prototype.slice, "name");
 
 reportCompare(0, 0);

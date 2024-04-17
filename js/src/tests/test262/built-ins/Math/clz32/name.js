@@ -19,11 +19,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Math.clz32, "name", {
-  value: "clz32",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Math.clz32.name, "clz32");
+
+verifyNotEnumerable(Math.clz32, "name");
+verifyNotWritable(Math.clz32, "name");
+verifyConfigurable(Math.clz32, "name");
 
 reportCompare(0, 0);

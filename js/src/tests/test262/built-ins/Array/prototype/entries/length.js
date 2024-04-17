@@ -12,11 +12,13 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Array.prototype.entries, "length", {
-  value: 0,
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(
+  Array.prototype.entries.length, 0,
+  'The value of `Array.prototype.entries.length` is `0`'
+);
+
+verifyNotEnumerable(Array.prototype.entries, 'length');
+verifyNotWritable(Array.prototype.entries, 'length');
+verifyConfigurable(Array.prototype.entries, 'length');
 
 reportCompare(0, 0);

@@ -23,16 +23,18 @@ try {
   });
   throw new Test262Error("Expected an exception.");
 } catch (e) {
+  verifyEqualTo(arrObj, "property", 12);
+
+  verifyNotWritable(arrObj, "property");
+
+  verifyNotEnumerable(arrObj, "property");
+
+  verifyNotConfigurable(arrObj, "property");
+
   if (!(e instanceof TypeError)) {
     throw new Test262Error("Expected TypeError, got " + e);
   }
-}
 
-verifyProperty(arrObj, "property", {
-  value: 12,
-  writable: false,
-  enumerable: false,
-  configurable: false,
-});
+}
 
 reportCompare(0, 0);

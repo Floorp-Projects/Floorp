@@ -13,11 +13,13 @@ includes: [propertyHelper.js]
 features: [Reflect]
 ---*/
 
-verifyProperty(Reflect.isExtensible, "name", {
-  value: "isExtensible",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(
+  Reflect.isExtensible.name, 'isExtensible',
+  'The value of `Reflect.isExtensible.name` is `"isExtensible"`'
+);
+
+verifyNotEnumerable(Reflect.isExtensible, 'name');
+verifyNotWritable(Reflect.isExtensible, 'name');
+verifyConfigurable(Reflect.isExtensible, 'name');
 
 reportCompare(0, 0);

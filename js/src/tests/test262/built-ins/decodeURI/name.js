@@ -19,11 +19,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(decodeURI, "name", {
-  value: "decodeURI",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(decodeURI.name, "decodeURI");
+
+verifyNotEnumerable(decodeURI, "name");
+verifyNotWritable(decodeURI, "name");
+verifyConfigurable(decodeURI, "name");
 
 reportCompare(0, 0);

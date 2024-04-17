@@ -22,11 +22,10 @@ features: [Symbol.toStringTag]
 
 var desc = Object.getOwnPropertyDescriptor(TypedArray.prototype, Symbol.toStringTag);
 
-verifyProperty(desc.get, "name", {
-  value: "get [Symbol.toStringTag]",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(desc.get.name, "get [Symbol.toStringTag]");
+
+verifyNotEnumerable(desc.get, "name");
+verifyNotWritable(desc.get, "name");
+verifyConfigurable(desc.get, "name");
 
 reportCompare(0, 0);

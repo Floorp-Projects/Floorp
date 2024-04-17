@@ -24,11 +24,12 @@ Object.defineProperty(obj, "prop", {
   value: 1002
 });
 
-verifyProperty(obj, "prop", {
-  value: 1002,
-  writable: true,
-  enumerable: false,
-  configurable: false,
-});
+verifyEqualTo(obj, "prop", 1002);
+
+verifyWritable(obj, "prop");
+
+verifyNotEnumerable(obj, "prop");
+
+verifyNotConfigurable(obj, "prop");
 
 reportCompare(0, 0);

@@ -12,11 +12,13 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(String.prototype.codePointAt, "name", {
-  value: "codePointAt",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(
+  String.prototype.codePointAt.name, 'codePointAt',
+  'The value of `String.prototype.codePointAt.name` is `"codePointAt"`'
+);
+
+verifyNotEnumerable(String.prototype.codePointAt, 'name');
+verifyNotWritable(String.prototype.codePointAt, 'name');
+verifyConfigurable(String.prototype.codePointAt, 'name');
 
 reportCompare(0, 0);

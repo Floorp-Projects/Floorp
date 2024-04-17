@@ -19,11 +19,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Array.prototype.join, "name", {
-  value: "join",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Array.prototype.join.name, "join");
+
+verifyNotEnumerable(Array.prototype.join, "name");
+verifyNotWritable(Array.prototype.join, "name");
+verifyConfigurable(Array.prototype.join, "name");
 
 reportCompare(0, 0);

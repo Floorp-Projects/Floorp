@@ -35,11 +35,14 @@ try {
 } catch (e) {
   assert(e instanceof TypeError);
 
-  assert.sameValue(desc1.configurable, false);
-}
+  var desc2 = Object.getOwnPropertyDescriptor(obj, "prop");
 
-verifyProperty(obj, "prop", {
-  configurable: false,
-});
+  verifyNotConfigurable(obj, "prop");
+
+  assert.sameValue(desc1.configurable, false);
+  assert.sameValue(desc2.configurable, false);
+
+  assert(obj.hasOwnProperty("prop"));
+}
 
 reportCompare(0, 0);

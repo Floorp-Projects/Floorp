@@ -19,11 +19,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Array.prototype.toLocaleString, "name", {
-  value: "toLocaleString",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Array.prototype.toLocaleString.name, "toLocaleString");
+
+verifyNotEnumerable(Array.prototype.toLocaleString, "name");
+verifyNotWritable(Array.prototype.toLocaleString, "name");
+verifyConfigurable(Array.prototype.toLocaleString, "name");
 
 reportCompare(0, 0);

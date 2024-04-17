@@ -19,11 +19,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Date.prototype.getTimezoneOffset, "name", {
-  value: "getTimezoneOffset",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Date.prototype.getTimezoneOffset.name, "getTimezoneOffset");
+
+verifyNotEnumerable(Date.prototype.getTimezoneOffset, "name");
+verifyNotWritable(Date.prototype.getTimezoneOffset, "name");
+verifyConfigurable(Date.prototype.getTimezoneOffset, "name");
 
 reportCompare(0, 0);

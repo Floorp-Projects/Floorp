@@ -22,11 +22,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Number.prototype.toExponential, "length", {
-  value: 1,
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Number.prototype.toExponential.length, 1);
+
+verifyNotEnumerable(Number.prototype.toExponential, "length");
+verifyNotWritable(Number.prototype.toExponential, "length");
+verifyConfigurable(Number.prototype.toExponential, "length");
 
 reportCompare(0, 0);

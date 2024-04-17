@@ -21,11 +21,10 @@ includes: [propertyHelper.js]
 features: [Symbol.matchAll]
 ---*/
 
-verifyProperty(RegExp.prototype[Symbol.matchAll], "name", {
-  value: "[Symbol.matchAll]",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(RegExp.prototype[Symbol.matchAll].name, '[Symbol.matchAll]');
+
+verifyNotEnumerable(RegExp.prototype[Symbol.matchAll], 'name');
+verifyNotWritable(RegExp.prototype[Symbol.matchAll], 'name');
+verifyConfigurable(RegExp.prototype[Symbol.matchAll], 'name');
 
 reportCompare(0, 0);

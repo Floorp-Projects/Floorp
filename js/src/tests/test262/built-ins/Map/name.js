@@ -11,11 +11,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Map, "name", {
-  value: "Map",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Map.name, 'Map', 'The value of Map.name is "Map"');
+
+verifyNotEnumerable(Map, 'name');
+verifyNotWritable(Map, 'name');
+verifyConfigurable(Map, 'name');
 
 reportCompare(0, 0);

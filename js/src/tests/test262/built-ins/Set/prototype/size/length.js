@@ -13,11 +13,10 @@ includes: [propertyHelper.js]
 var descriptor = Object.getOwnPropertyDescriptor(Set.prototype, "size");
 
 
-verifyProperty(descriptor.get, "length", {
-  value: 0,
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(descriptor.get.length, 0, "The value of `Set.prototype.size.length` is `0`");
+
+verifyNotEnumerable(descriptor.get, "length");
+verifyNotWritable(descriptor.get, "length");
+verifyConfigurable(descriptor.get, "length");
 
 reportCompare(0, 0);

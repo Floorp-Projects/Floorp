@@ -20,11 +20,10 @@ includes: [propertyHelper.js, testTypedArray.js]
 features: [TypedArray]
 ---*/
 
-verifyProperty(TypedArray.prototype.subarray, "name", {
-  value: "subarray",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(TypedArray.prototype.subarray.name, "subarray");
+
+verifyNotEnumerable(TypedArray.prototype.subarray, "name");
+verifyNotWritable(TypedArray.prototype.subarray, "name");
+verifyConfigurable(TypedArray.prototype.subarray, "name");
 
 reportCompare(0, 0);

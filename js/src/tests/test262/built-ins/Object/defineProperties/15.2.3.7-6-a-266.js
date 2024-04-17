@@ -22,13 +22,13 @@ Object.defineProperties(arr, {
     configurable: true
   }
 });
+verifyEqualTo(arr, "property", 12);
 
-verifyProperty(arr, "property", {
-  value: 12,
-  writable: true,
-  enumerable: true,
-  configurable: true,
-});
+verifyWritable(arr, "property");
+
+verifyEnumerable(arr, "property");
+
+verifyConfigurable(arr, "property");
 
 if (arr.length !== 0) {
   throw new Test262Error('Expected arr.length === 0, actually ' + arr.length);

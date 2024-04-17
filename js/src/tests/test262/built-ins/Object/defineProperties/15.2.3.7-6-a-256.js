@@ -30,9 +30,8 @@ Object.defineProperties(arr, {
 });
 verifyEqualTo(arr, "0", get_fun());
 
-verifyProperty(arr, "0", {
-  enumerable: false,
-  configurable: true,
-});
+verifyNotEnumerable(arr, "0");
+
+verifyConfigurable(arr, "0");
 
 reportCompare(0, 0);

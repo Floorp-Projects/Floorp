@@ -37,9 +37,8 @@ verifyEqualTo(obj, "0", get_func());
 
 verifyWritable(obj, "0", "verifySetFunction");
 
-verifyProperty(obj, "0", {
-  enumerable: true,
-  configurable: true,
-});
+verifyEnumerable(obj, "0");
+
+verifyConfigurable(obj, "0");
 
 reportCompare(0, 0);

@@ -14,11 +14,13 @@ includes: [propertyHelper.js]
 
 var descriptor = Object.getOwnPropertyDescriptor(RegExp.prototype, 'ignoreCase');
 
-verifyProperty(descriptor.get, "name", {
-  value: "get ignoreCase",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(
+  descriptor.get.name,
+  'get ignoreCase'
+);
+
+verifyNotEnumerable(descriptor.get, 'name');
+verifyNotWritable(descriptor.get, 'name');
+verifyConfigurable(descriptor.get, 'name');
 
 reportCompare(0, 0);

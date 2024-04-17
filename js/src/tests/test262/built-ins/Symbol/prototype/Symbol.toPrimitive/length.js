@@ -20,11 +20,10 @@ features: [Symbol.toPrimitive]
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Symbol.prototype[Symbol.toPrimitive], "length", {
-  value: 1,
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Symbol.prototype[Symbol.toPrimitive].length, 1);
+
+verifyNotEnumerable(Symbol.prototype[Symbol.toPrimitive], 'length');
+verifyNotWritable(Symbol.prototype[Symbol.toPrimitive], 'length');
+verifyConfigurable(Symbol.prototype[Symbol.toPrimitive], 'length');
 
 reportCompare(0, 0);

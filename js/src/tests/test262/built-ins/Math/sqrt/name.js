@@ -19,11 +19,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Math.sqrt, "name", {
-  value: "sqrt",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Math.sqrt.name, "sqrt");
+
+verifyNotEnumerable(Math.sqrt, "name");
+verifyNotWritable(Math.sqrt, "name");
+verifyConfigurable(Math.sqrt, "name");
 
 reportCompare(0, 0);

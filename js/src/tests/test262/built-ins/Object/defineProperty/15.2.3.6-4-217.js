@@ -20,11 +20,11 @@ Object.defineProperty(arrObj, "0", {
   value: NaN
 });
 
-verifyProperty(arrObj, "0", {
-  value: NaN,
-  writable: false,
-  enumerable: false,
-  configurable: false,
-});
+assert(arrObj.hasOwnProperty("0"));
+assert(arrObj[0] !== arrObj[0]);
+
+verifyNotWritable(arrObj, "0");
+verifyNotEnumerable(arrObj, "0");
+verifyNotConfigurable(arrObj, "0");
 
 reportCompare(0, 0);

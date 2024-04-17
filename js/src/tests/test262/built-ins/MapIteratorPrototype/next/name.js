@@ -21,11 +21,10 @@ includes: [propertyHelper.js]
 
 var MapIteratorProto = Object.getPrototypeOf(new Map().values());
 
-verifyProperty(MapIteratorProto.next, "name", {
-  value: "next",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(MapIteratorProto.next.name, "next");
+
+verifyNotEnumerable(MapIteratorProto.next, "name");
+verifyNotWritable(MapIteratorProto.next, "name");
+verifyConfigurable(MapIteratorProto.next, "name");
 
 reportCompare(0, 0);

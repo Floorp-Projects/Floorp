@@ -19,11 +19,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Date.prototype.setUTCMonth, "name", {
-  value: "setUTCMonth",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Date.prototype.setUTCMonth.name, "setUTCMonth");
+
+verifyNotEnumerable(Date.prototype.setUTCMonth, "name");
+verifyNotWritable(Date.prototype.setUTCMonth, "name");
+verifyConfigurable(Date.prototype.setUTCMonth, "name");
 
 reportCompare(0, 0);

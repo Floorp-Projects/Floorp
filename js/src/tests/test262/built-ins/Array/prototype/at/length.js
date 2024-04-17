@@ -18,11 +18,13 @@ assert.sameValue(
   'The value of `typeof Array.prototype.at` is expected to be "function"'
 );
 
-verifyProperty(Array.prototype.at, "length", {
-  value: 1,
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(
+  Array.prototype.at.length, 1,
+  'The value of Array.prototype.at.length is expected to be 1'
+);
+
+verifyNotEnumerable(Array.prototype.at, 'length');
+verifyNotWritable(Array.prototype.at, 'length');
+verifyConfigurable(Array.prototype.at, 'length');
 
 reportCompare(0, 0);

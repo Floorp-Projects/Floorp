@@ -14,11 +14,13 @@ includes: [propertyHelper.js]
 
 var descriptor = Object.getOwnPropertyDescriptor(RegExp.prototype, 'sticky');
 
-verifyProperty(descriptor.get, "name", {
-  value: "get sticky",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(
+  descriptor.get.name,
+  'get sticky'
+);
+
+verifyNotEnumerable(descriptor.get, 'name');
+verifyNotWritable(descriptor.get, 'name');
+verifyConfigurable(descriptor.get, 'name');
 
 reportCompare(0, 0);

@@ -17,11 +17,10 @@ includes: [propertyHelper.js]
 features: [Symbol.split]
 ---*/
 
-verifyProperty(RegExp.prototype[Symbol.split], "length", {
-  value: 2,
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(RegExp.prototype[Symbol.split].length, 2);
+
+verifyNotEnumerable(RegExp.prototype[Symbol.split], 'length');
+verifyNotWritable(RegExp.prototype[Symbol.split], 'length');
+verifyConfigurable(RegExp.prototype[Symbol.split], 'length');
 
 reportCompare(0, 0);

@@ -23,11 +23,10 @@ includes: [propertyHelper.js]
 features: [Array.prototype.includes]
 ---*/
 
-verifyProperty(Array.prototype.includes, "length", {
-  value: 1,
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Array.prototype.includes.length, 1);
+
+verifyNotEnumerable(Array.prototype.includes, "length");
+verifyNotWritable(Array.prototype.includes, "length");
+verifyConfigurable(Array.prototype.includes, "length");
 
 reportCompare(0, 0);

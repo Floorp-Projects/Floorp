@@ -19,11 +19,10 @@ new Promise(function(resolve, reject) {
   rejectFunction = reject;
 });
 
-verifyProperty(rejectFunction, "length", {
-  value: 1,
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(rejectFunction.length, 1);
+
+verifyNotEnumerable(rejectFunction, "length");
+verifyNotWritable(rejectFunction, "length");
+verifyConfigurable(rejectFunction, "length");
 
 reportCompare(0, 0);

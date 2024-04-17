@@ -18,6 +18,8 @@ assert.throws(
   TypeError,
   () => {
     new Set.prototype.difference();
-  });
+  },
+  "`new Set.prototype.difference()` throws TypeError"
+);
 
 reportCompare(0, 0);

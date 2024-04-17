@@ -19,11 +19,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Object.create, "name", {
-  value: "create",
-  writable: false,
-  enumerable: false,
-  configurable: true,
-});
+assert.sameValue(Object.create.name, "create");
+
+verifyNotEnumerable(Object.create, "name");
+verifyNotWritable(Object.create, "name");
+verifyConfigurable(Object.create, "name");
 
 reportCompare(0, 0);

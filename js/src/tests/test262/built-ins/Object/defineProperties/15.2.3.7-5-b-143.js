@@ -35,8 +35,7 @@ Object.defineProperties(obj, {
   property: descObj
 });
 
-verifyProperty(obj, "property", {
-  writable: false,
-});
+assert(obj.hasOwnProperty("property"));
+verifyNotWritable(obj, "property");
 
 reportCompare(0, 0);

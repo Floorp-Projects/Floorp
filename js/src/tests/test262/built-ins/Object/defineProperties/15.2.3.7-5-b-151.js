@@ -22,8 +22,7 @@ Object.defineProperties(obj, {
   property: func
 });
 
-verifyProperty(obj, "property", {
-  writable: false,
-});
+assert(obj.hasOwnProperty("property"));
+verifyNotWritable(obj, "property");
 
 reportCompare(0, 0);

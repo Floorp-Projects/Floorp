@@ -13,11 +13,13 @@ includes: [propertyHelper.js]
 features: [String.prototype.endsWith]
 ---*/
 
-verifyProperty(String.prototype.endsWith, "name", {
-  value: "endsWith",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(
+  String.prototype.endsWith.name, 'endsWith',
+  'The value of `String.prototype.endsWith.name` is `"endsWith"`'
+);
+
+verifyNotEnumerable(String.prototype.endsWith, 'name');
+verifyNotWritable(String.prototype.endsWith, 'name');
+verifyConfigurable(String.prototype.endsWith, 'name');
 
 reportCompare(0, 0);

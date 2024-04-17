@@ -43,20 +43,19 @@ if (Object.isExtensible(obj)) {
   throw new Test262Error('Expected obj NOT to be extensible, actually ' + Object.isExtensible(obj));
 }
 
-verifyProperty(obj, "foo1", {
-  value: 10,
-  writable: true,
-  enumerable: true,
-  configurable: false,
-});
+verifyEqualTo(obj, "foo1", 10);
 
+verifyWritable(obj, "foo1");
+
+verifyEnumerable(obj, "foo1");
+
+verifyNotConfigurable(obj, "foo1");
 verifyEqualTo(obj, "foo2", get_func());
 
 verifyWritable(obj, "foo2", "variableForHelpVerify");
 
-verifyProperty(obj, "foo2", {
-  enumerable: true,
-  configurable: false,
-});
+verifyEnumerable(obj, "foo2");
+
+verifyNotConfigurable(obj, "foo2");
 
 reportCompare(0, 0);

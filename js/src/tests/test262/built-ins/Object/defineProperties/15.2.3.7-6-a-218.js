@@ -27,12 +27,12 @@ var properties = {
 };
 
 Object.defineProperties(arr, properties);
+verifyEqualTo(arr, "0", obj1);
 
-verifyProperty(arr, "0", {
-  value: obj1,
-  writable: false,
-  enumerable: false,
-  configurable: false,
-});
+verifyNotWritable(arr, "0");
+
+verifyNotEnumerable(arr, "0");
+
+verifyNotConfigurable(arr, "0");
 
 reportCompare(0, 0);
