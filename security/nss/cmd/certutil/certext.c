@@ -1219,6 +1219,7 @@ AddCrlDistPoint(void *extHandle)
         intValue = PORT_Atoi(buffer);
         switch (intValue) {
             case generalName:
+                PORT_SetError(0);
                 current->distPointType = intValue;
                 current->distPoint.fullName = CreateGeneralName(arena);
                 rv = PORT_GetError();

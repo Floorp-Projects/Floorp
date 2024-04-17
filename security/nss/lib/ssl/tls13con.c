@@ -3977,12 +3977,13 @@ tls13_HandleCertificateDecode(sslSocket *ss, PRUint8 *b, PRUint32 length)
 
     /* Decoding received certificate. */
     SECItem decodedCertificate = { siBuffer, NULL, 0 };
+    if (!SECITEM_AllocItem(NULL, &decodedCertificate, decodedCertificateLen)) {
+        FATAL_ERROR(ss, SEC_ERROR_NO_MEMORY, internal_error);
+        return SECFailure;
+    }
 
-    SECItem encodedCertAsSecItem;
-    SECITEM_MakeItem(NULL, &encodedCertAsSecItem, b, compressedCertificateMessageLen);
-
+    SECItem encodedCertAsSecItem = { siBuffer, b, compressedCertificateMessageLen };
     rv = certificateDecodingFunc(&encodedCertAsSecItem, &decodedCertificate, decodedCertificateLen);
-    SECITEM_FreeItem(&encodedCertAsSecItem, PR_FALSE);
 
     if (rv != SECSuccess) {
         SSL_TRC(50, ("%d: TLS13[%d]: %s decoding of the certificate has failed",
