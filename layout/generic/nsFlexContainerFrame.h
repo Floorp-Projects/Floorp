@@ -604,6 +604,8 @@ class nsFlexContainerFrame final : public nsContainerFrame,
    * @param aItem           The flex item to be reflowed.
    * @param aFramePos       The position where the flex item's frame should
    *                        be placed. (pre-relative positioning)
+   * @param aIsAdjacentWithBStart True if aFramePos is adjacent with the flex
+   *                              container's content-box block-start edge.
    * @param aAvailableSize  The available size to reflow the child frame (in the
    *                        child frame's writing-mode).
    * @param aContainerSize  The flex container's size (required by some methods
@@ -614,6 +616,7 @@ class nsFlexContainerFrame final : public nsContainerFrame,
                                 const ReflowInput& aReflowInput,
                                 const FlexItem& aItem,
                                 const mozilla::LogicalPoint& aFramePos,
+                                const bool aIsAdjacentWithBStart,
                                 const mozilla::LogicalSize& aAvailableSize,
                                 const nsSize& aContainerSize);
 
