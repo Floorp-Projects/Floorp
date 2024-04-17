@@ -25,7 +25,7 @@ assert.sameValue(isConstructor(Map.prototype.delete), false, 'isConstructor(Map.
 
 assert.throws(TypeError, () => {
   let m = new Map(); new m.delete();
-}, '`let m = new Map(); new m.delete()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

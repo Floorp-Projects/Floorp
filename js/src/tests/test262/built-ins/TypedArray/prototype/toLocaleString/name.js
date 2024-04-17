@@ -20,10 +20,11 @@ includes: [propertyHelper.js, testTypedArray.js]
 features: [TypedArray]
 ---*/
 
-assert.sameValue(TypedArray.prototype.toLocaleString.name, "toLocaleString");
-
-verifyNotEnumerable(TypedArray.prototype.toLocaleString, "name");
-verifyNotWritable(TypedArray.prototype.toLocaleString, "name");
-verifyConfigurable(TypedArray.prototype.toLocaleString, "name");
+verifyProperty(TypedArray.prototype.toLocaleString, "name", {
+  value: "toLocaleString",
+  writable: false,
+  enumerable: false,
+  configurable: true
+});
 
 reportCompare(0, 0);

@@ -28,7 +28,7 @@ assert.sameValue(
 
 assert.throws(TypeError, () => {
   new String.prototype.italics();
-}, '`new String.prototype.italics()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

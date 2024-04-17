@@ -19,10 +19,11 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-assert.sameValue(String.prototype.trim.name, "trim");
-
-verifyNotEnumerable(String.prototype.trim, "name");
-verifyNotWritable(String.prototype.trim, "name");
-verifyConfigurable(String.prototype.trim, "name");
+verifyProperty(String.prototype.trim, "name", {
+  value: "trim",
+  writable: false,
+  enumerable: false,
+  configurable: true
+});
 
 reportCompare(0, 0);

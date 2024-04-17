@@ -25,7 +25,7 @@ assert.sameValue(isConstructor(Array.prototype.findLast), false, 'isConstructor(
 
 assert.throws(TypeError, () => {
   new Array.prototype.findLast(() => {});
-}, '`new Array.prototype.findLast(() => {})` throws TypeError');
+});
 
 
 reportCompare(0, 0);

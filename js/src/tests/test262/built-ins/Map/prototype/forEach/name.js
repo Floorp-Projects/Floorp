@@ -12,13 +12,11 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-assert.sameValue(
-  Map.prototype.forEach.name, 'forEach',
-  'The value of `Map.prototype.forEach.name` is `"forEach"`'
-);
-
-verifyNotEnumerable(Map.prototype.forEach, 'name');
-verifyNotWritable(Map.prototype.forEach, 'name');
-verifyConfigurable(Map.prototype.forEach, 'name');
+verifyProperty(Map.prototype.forEach, "name", {
+  value: "forEach",
+  writable: false,
+  enumerable: false,
+  configurable: true
+});
 
 reportCompare(0, 0);

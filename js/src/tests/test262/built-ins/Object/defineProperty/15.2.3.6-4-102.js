@@ -16,12 +16,12 @@ obj.foo = undefined; // default value of attributes: writable: true, configurabl
 Object.defineProperty(obj, "foo", {
   value: 100
 });
-verifyEqualTo(obj, "foo", 100);
 
-verifyWritable(obj, "foo");
-
-verifyEnumerable(obj, "foo");
-
-verifyConfigurable(obj, "foo");
+verifyProperty(obj, "foo", {
+  value: 100,
+  writable: true,
+  enumerable: true,
+  configurable: true,
+});
 
 reportCompare(0, 0);

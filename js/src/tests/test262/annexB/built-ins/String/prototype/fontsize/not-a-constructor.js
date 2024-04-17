@@ -28,7 +28,7 @@ assert.sameValue(
 
 assert.throws(TypeError, () => {
   new String.prototype.fontsize();
-}, '`new String.prototype.fontsize()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

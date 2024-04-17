@@ -10,10 +10,11 @@ description: >
 includes: [propertyHelper.js]
 ---*/
 
-assert.sameValue(Set.prototype.delete.name, "delete", "The value of `Set.prototype.delete.name` is `'delete'`");
-
-verifyNotEnumerable(Set.prototype.delete, "name");
-verifyNotWritable(Set.prototype.delete, "name");
-verifyConfigurable(Set.prototype.delete, "name");
+verifyProperty(Set.prototype.delete, "name", {
+  value: "delete",
+  writable: false,
+  enumerable: false,
+  configurable: true
+});
 
 reportCompare(0, 0);

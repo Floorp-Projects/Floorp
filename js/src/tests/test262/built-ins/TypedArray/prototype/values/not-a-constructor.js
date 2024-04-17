@@ -29,7 +29,7 @@ assert.sameValue(
 
 assert.throws(TypeError, () => {
   let u8 = new Uint8Array(1); new u8.values();
-}, '`let u8 = new Uint8Array(1); new u8.values()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

@@ -25,7 +25,7 @@ assert.sameValue(isConstructor(Math.trunc), false, 'isConstructor(Math.trunc) mu
 
 assert.throws(TypeError, () => {
   new Math.trunc();
-}, '`new Math.trunc()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

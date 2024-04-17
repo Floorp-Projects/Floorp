@@ -11,13 +11,11 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-assert.sameValue(
-  Array.of.length, 0,
-  'The value of Array.of.length is expected to be 0'
-);
-
-verifyNotEnumerable(Array.of, 'length');
-verifyNotWritable(Array.of, 'length');
-verifyConfigurable(Array.of, 'length');
+verifyProperty(Array.of, "length", {
+  value: 0,
+  writable: false,
+  enumerable: false,
+  configurable: true
+});
 
 reportCompare(0, 0);

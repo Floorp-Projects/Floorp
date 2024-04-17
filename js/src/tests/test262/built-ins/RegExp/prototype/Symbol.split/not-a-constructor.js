@@ -29,7 +29,7 @@ assert.sameValue(
 
 assert.throws(TypeError, () => {
   let re = new RegExp(''); new re[Symbol.split]();
-}, '`let re = new RegExp(\'\'); new re[Symbol.split]()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

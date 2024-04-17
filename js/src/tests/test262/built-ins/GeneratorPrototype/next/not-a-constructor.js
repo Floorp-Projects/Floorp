@@ -29,7 +29,7 @@ assert.sameValue(
 
 assert.throws(TypeError, () => {
   function* g() {} let iterator = g(); new iterator.next();
-}, '`function* g() {} let iterator = g(); new iterator.next()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

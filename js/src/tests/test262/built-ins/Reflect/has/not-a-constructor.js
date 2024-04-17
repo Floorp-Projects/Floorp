@@ -25,7 +25,7 @@ assert.sameValue(isConstructor(Reflect.has), false, 'isConstructor(Reflect.has) 
 
 assert.throws(TypeError, () => {
   new Reflect.has();
-}, '`new Reflect.has()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

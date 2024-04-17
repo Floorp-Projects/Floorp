@@ -25,7 +25,7 @@ assert.sameValue(isConstructor(Reflect.set), false, 'isConstructor(Reflect.set) 
 
 assert.throws(TypeError, () => {
   new Reflect.set({});
-}, '`new Reflect.set({})` throws TypeError');
+});
 
 
 reportCompare(0, 0);

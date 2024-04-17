@@ -29,7 +29,7 @@ assert.sameValue(
 
 assert.throws(TypeError, () => {
   new String.prototype.split();
-}, '`new String.prototype.split()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

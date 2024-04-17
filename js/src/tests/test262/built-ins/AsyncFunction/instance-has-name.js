@@ -10,9 +10,11 @@ includes: [propertyHelper.js]
 
 async function foo() {};
 
-assert.sameValue(foo.name, "foo");
-verifyNotWritable(foo, "name");
-verifyNotEnumerable(foo, "name");
-verifyConfigurable(foo, "name");
+verifyProperty(foo, "name", {
+  value: "foo",
+  writable: false,
+  enumerable: false,
+  configurable: true
+});
 
 reportCompare(0, 0);

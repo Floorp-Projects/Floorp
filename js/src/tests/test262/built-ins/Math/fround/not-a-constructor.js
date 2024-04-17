@@ -25,7 +25,7 @@ assert.sameValue(isConstructor(Math.fround), false, 'isConstructor(Math.fround) 
 
 assert.throws(TypeError, () => {
   new Math.fround();
-}, '`new Math.fround()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

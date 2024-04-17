@@ -24,10 +24,11 @@ includes: [propertyHelper.js]
 features: [SharedArrayBuffer]
 ---*/
 
-assert.sameValue(SharedArrayBuffer.prototype.slice.length, 2);
-
-verifyNotEnumerable(SharedArrayBuffer.prototype.slice, "length");
-verifyNotWritable(SharedArrayBuffer.prototype.slice, "length");
-verifyConfigurable(SharedArrayBuffer.prototype.slice, "length");
+verifyProperty(SharedArrayBuffer.prototype.slice, "length", {
+  value: 2,
+  writable: false,
+  enumerable: false,
+  configurable: true
+});
 
 reportCompare(0, 0);

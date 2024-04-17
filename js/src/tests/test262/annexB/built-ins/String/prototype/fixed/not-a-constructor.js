@@ -28,7 +28,7 @@ assert.sameValue(
 
 assert.throws(TypeError, () => {
   new String.prototype.fixed();
-}, '`new String.prototype.fixed()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

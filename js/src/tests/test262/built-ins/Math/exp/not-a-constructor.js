@@ -25,7 +25,7 @@ assert.sameValue(isConstructor(Math.exp), false, 'isConstructor(Math.exp) must r
 
 assert.throws(TypeError, () => {
   new Math.exp();
-}, '`new Math.exp()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

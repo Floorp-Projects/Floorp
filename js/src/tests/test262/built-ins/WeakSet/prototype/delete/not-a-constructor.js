@@ -29,7 +29,7 @@ assert.sameValue(
 
 assert.throws(TypeError, () => {
   let ws = new WeakSet(); new ws.delete();
-}, '`let ws = new WeakSet(); new ws.delete()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

@@ -19,10 +19,11 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-assert.sameValue(Promise.all.name, 'all');
-
-verifyNotEnumerable(Promise.all, 'name');
-verifyNotWritable(Promise.all, 'name');
-verifyConfigurable(Promise.all, 'name');
+verifyProperty(Promise.all, "name", {
+  value: "all",
+  writable: false,
+  enumerable: false,
+  configurable: true
+});
 
 reportCompare(0, 0);

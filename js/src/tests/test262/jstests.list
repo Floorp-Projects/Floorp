@@ -1,5 +1,8 @@
 # GENERATED, DO NOT EDIT
 
+test262-raw error:Test262Error script annexB/language/comments/single-line-html-close-first-line-1.js
+test262-raw error:Test262Error script annexB/language/comments/single-line-html-close-first-line-2.js
+test262-raw error:Test262Error script annexB/language/comments/single-line-html-close-first-line-3.js
 test262-raw error:SyntaxError script language/comments/hashbang/escaped-bang-041.js
 test262-raw error:SyntaxError script language/comments/hashbang/escaped-bang-u0021.js
 test262-raw error:SyntaxError script language/comments/hashbang/escaped-bang-u21.js

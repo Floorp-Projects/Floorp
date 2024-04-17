@@ -25,7 +25,7 @@ assert.sameValue(isConstructor(Set.prototype.delete), false, 'isConstructor(Set.
 
 assert.throws(TypeError, () => {
   let s = new Set([]); new s.delete();
-}, '`let s = new Set([]); new s.delete()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

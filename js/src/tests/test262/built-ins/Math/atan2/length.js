@@ -22,10 +22,11 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-assert.sameValue(Math.atan2.length, 2);
-
-verifyNotEnumerable(Math.atan2, "length");
-verifyNotWritable(Math.atan2, "length");
-verifyConfigurable(Math.atan2, "length");
+verifyProperty(Math.atan2, "length", {
+  value: 2,
+  writable: false,
+  enumerable: false,
+  configurable: true
+});
 
 reportCompare(0, 0);

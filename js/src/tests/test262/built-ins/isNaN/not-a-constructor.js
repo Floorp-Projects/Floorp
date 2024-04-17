@@ -25,7 +25,7 @@ assert.sameValue(isConstructor(isNaN), false, 'isConstructor(isNaN) must return 
 
 assert.throws(TypeError, () => {
   new isNaN(1);
-}, '`new isNaN(1)` throws TypeError');
+});
 
 
 reportCompare(0, 0);
