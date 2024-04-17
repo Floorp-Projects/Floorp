@@ -5,7 +5,7 @@
 
 const TEST_PATH = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
-  "https://example.com"
+  "http://example.com"
 );
 
 add_task(async function test_readerModeURLDrag() {
