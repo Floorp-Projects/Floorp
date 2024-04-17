@@ -59,7 +59,7 @@ struct BGRAColor {
   }
 
   BGRAColor DeviceColor() const {
-    MOZ_ASSERT(!mPremultiplied);
+    MOZ_RELEASE_ASSERT(!mPremultiplied);
     if (msRGB) {
       gfx::DeviceColor color = gfx::ToDeviceColor(
           gfx::sRGBColor(float(mRed) / 255.0f, float(mGreen) / 255.0f,
@@ -72,8 +72,8 @@ struct BGRAColor {
   }
 
   BGRAColor sRGBColor() const {
-    MOZ_ASSERT(msRGB);
-    MOZ_ASSERT(!mPremultiplied);
+    MOZ_RELEASE_ASSERT(msRGB);
+    MOZ_RELEASE_ASSERT(!mPremultiplied);
     return *this;
   }
 
