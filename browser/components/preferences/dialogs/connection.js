@@ -132,10 +132,11 @@ var gConnectionsDialog = {
     if ("@mozilla.org/system-proxy-settings;1" in Cc) {
       document.getElementById("systemPref").removeAttribute("hidden");
 
-      var systemWpadAllowed = Preferences.get(
-        "network.proxy.system_wpad.allowed"
+      var systemWpadAllowed = Services.prefs.getBoolPref(
+        "network.proxy.system_wpad.allowed",
+        false
       );
-      if (systemWpadAllowed && Services.appinfo.OS == "WINNT") {
+      if (systemWpadAllowed && AppConstants.platform == "win") {
         document.getElementById("systemWpad").removeAttribute("hidden");
       }
     }

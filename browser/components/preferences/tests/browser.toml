@@ -72,6 +72,9 @@ skip-if = [
   "verify && debug && os == 'mac'",
 ]
 
+["browser_connection_system_wpad.js"]
+run-if = ["os == 'win'"]
+
 ["browser_connection_valid_hostname.js"]
 
 ["browser_containers_name_input.js"]
