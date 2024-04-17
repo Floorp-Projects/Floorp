@@ -25,15 +25,10 @@ using namespace mozilla::ipc;
 class ServiceWorkerRegistrarTest : public ServiceWorkerRegistrar {
  public:
   ServiceWorkerRegistrarTest() {
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
     nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
                                          getter_AddRefs(mProfileDir));
-    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-#else
-    NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
-                           getter_AddRefs(mProfileDir));
-#endif
-    MOZ_DIAGNOSTIC_ASSERT(mProfileDir);
+    MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
+    MOZ_RELEASE_ASSERT(mProfileDir);
   }
 
   nsresult TestReadData() { return ReadData(); }
