@@ -774,6 +774,15 @@ export var Policies = {
     },
   },
 
+  DisableEncryptedClientHello: {
+    onBeforeAddons(manager, param) {
+      if (param) {
+        setAndLockPref("network.dns.echconfig.enabled", false);
+        setAndLockPref("network.dns.http3_echconfig.enabled", false);
+      }
+    },
+  },
+
   DisableFeedbackCommands: {
     onBeforeUIStartup(manager, param) {
       if (param) {
