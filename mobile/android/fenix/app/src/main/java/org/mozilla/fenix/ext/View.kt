@@ -2,18 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-@file:Suppress("TooManyFunctions")
-
 package org.mozilla.fenix.ext
 
 import android.graphics.Rect
 import android.os.Build
 import android.view.TouchDelegate
 import android.view.View
-import android.view.accessibility.AccessibilityNodeInfo
 import androidx.annotation.Dimension
 import androidx.annotation.Dimension.Companion.DP
 import androidx.annotation.VisibleForTesting
+import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import mozilla.components.support.ktx.android.util.dpToPx
 import mozilla.components.support.utils.ext.bottom
@@ -55,97 +53,11 @@ fun View.removeTouchDelegate() {
 }
 
 /**
- * Sets the new a11y parent.
- */
-fun View.setNewAccessibilityParent(newParent: View) {
-    this.accessibilityDelegate = object : View.AccessibilityDelegate() {
-        override fun onInitializeAccessibilityNodeInfo(
-            host: View,
-            info: AccessibilityNodeInfo,
-        ) {
-            super.onInitializeAccessibilityNodeInfo(host, info)
-            info.setParent(newParent)
-        }
-    }
-}
-
-/**
- * Updates the a11y collection item info for an item in a list.
- */
-fun View.updateAccessibilityCollectionItemInfo(
-    rowIndex: Int,
-    columnIndex: Int,
-    isSelected: Boolean,
-    rowSpan: Int = 1,
-    columnSpan: Int = 1,
-) {
-    this.accessibilityDelegate = object : View.AccessibilityDelegate() {
-        override fun onInitializeAccessibilityNodeInfo(
-            host: View,
-            info: AccessibilityNodeInfo,
-        ) {
-            super.onInitializeAccessibilityNodeInfo(host, info)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                info.collectionItemInfo =
-                    AccessibilityNodeInfo.CollectionItemInfo(
-                        rowIndex,
-                        rowSpan,
-                        columnIndex,
-                        columnSpan,
-                        false,
-                        isSelected,
-                    )
-            } else {
-                @Suppress("DEPRECATION")
-                AccessibilityNodeInfo.CollectionItemInfo.obtain(
-                    rowIndex,
-                    rowSpan,
-                    columnIndex,
-                    columnSpan,
-                    false,
-                    isSelected,
-                )
-            }
-        }
-    }
-}
-
-/**
- * Updates the a11y collection info for a list.
- */
-fun View.updateAccessibilityCollectionInfo(
-    rowCount: Int,
-    columnCount: Int,
-) {
-    this.accessibilityDelegate = object : View.AccessibilityDelegate() {
-        override fun onInitializeAccessibilityNodeInfo(
-            host: View,
-            info: AccessibilityNodeInfo,
-        ) {
-            super.onInitializeAccessibilityNodeInfo(host, info)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                info.collectionInfo = AccessibilityNodeInfo.CollectionInfo(
-                    rowCount,
-                    columnCount,
-                    false,
-                )
-            } else {
-                @Suppress("DEPRECATION")
-                info.collectionInfo = AccessibilityNodeInfo.CollectionInfo.obtain(
-                    rowCount,
-                    columnCount,
-                    false,
-                )
-            }
-        }
-    }
-}
-
-/**
  * Fills a [Rect] with data about a view's location in the screen.
  *
- * @see View.getLocationOnScreen
- * @see View.getRectWithViewLocation for a version of this that is relative to a window
+ * @see android.view.View.getLocationOnScreen
+ * @see mozilla.components.support.ktx.android.view.getRectWithViewLocation for a version of this
+ * that is relative to a window
  */
 fun View.getRectWithScreenLocation(): Rect {
     val locationOnScreen = IntArray(2).apply { getLocationOnScreen(this) }
@@ -207,10 +119,3 @@ internal fun View.getKeyboardHeight(): Int {
 
     return keyboardHeight
 }
-
-/**
- * The assumed minimum height of the keyboard.
- */
-@VisibleForTesting
-@Dimension(unit = DP)
-internal const val MINIMUM_KEYBOARD_HEIGHT = 100
