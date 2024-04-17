@@ -26,9 +26,11 @@ Object.defineProperties(obj, {
   }
 });
 
-verifyNotEnumerable(obj, "foo");
 assert.sameValue(obj.foo, 10);
 
-verifyNotConfigurable(obj, "foo")
+verifyProperty(obj, "foo", {
+  enumerable: false,
+  configurable: false,
+});
 
 reportCompare(0, 0);

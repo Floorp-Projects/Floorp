@@ -29,7 +29,7 @@ assert.sameValue(
 
 assert.throws(TypeError, () => {
   new Number.prototype.toLocaleString();
-}, '`new Number.prototype.toLocaleString()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

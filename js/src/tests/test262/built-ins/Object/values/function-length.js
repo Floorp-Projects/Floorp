@@ -8,10 +8,11 @@ author: Jordan Harband
 includes: [propertyHelper.js]
 ---*/
 
-assert.sameValue(Object.values.length, 1, 'Expected Object.values.length to be 1');
-
-verifyNotEnumerable(Object.values, 'length');
-verifyNotWritable(Object.values, 'length');
-verifyConfigurable(Object.values, 'length');
+verifyProperty(Object.values, "length", {
+  value: 1,
+  writable: false,
+  enumerable: false,
+  configurable: true,
+});
 
 reportCompare(0, 0);

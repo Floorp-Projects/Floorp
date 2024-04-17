@@ -19,10 +19,11 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-assert.sameValue(Object.getOwnPropertySymbols.name, "getOwnPropertySymbols");
-
-verifyNotEnumerable(Object.getOwnPropertySymbols, "name");
-verifyNotWritable(Object.getOwnPropertySymbols, "name");
-verifyConfigurable(Object.getOwnPropertySymbols, "name");
+verifyProperty(Object.getOwnPropertySymbols, "name", {
+  value: "getOwnPropertySymbols",
+  writable: false,
+  enumerable: false,
+  configurable: true,
+});
 
 reportCompare(0, 0);

@@ -22,10 +22,11 @@ features: [Symbol.iterator]
 
 var ArrayIteratorProto = Object.getPrototypeOf([][Symbol.iterator]());
 
-assert.sameValue(ArrayIteratorProto.next.name, "next");
-
-verifyNotEnumerable(ArrayIteratorProto.next, "name");
-verifyNotWritable(ArrayIteratorProto.next, "name");
-verifyConfigurable(ArrayIteratorProto.next, "name");
+verifyProperty(ArrayIteratorProto.next, "name", {
+  value: "next",
+  writable: false,
+  enumerable: false,
+  configurable: true
+});
 
 reportCompare(0, 0);

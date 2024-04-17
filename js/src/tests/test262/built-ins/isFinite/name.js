@@ -19,10 +19,11 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-assert.sameValue(isFinite.name, "isFinite");
-
-verifyNotEnumerable(isFinite, "name");
-verifyNotWritable(isFinite, "name");
-verifyConfigurable(isFinite, "name");
+verifyProperty(isFinite, "name", {
+  value: "isFinite",
+  writable: false,
+  enumerable: false,
+  configurable: true
+});
 
 reportCompare(0, 0);

@@ -28,7 +28,7 @@ assert.sameValue(
 
 assert.throws(TypeError, () => {
   new String.prototype.blink();
-}, '`new String.prototype.blink()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

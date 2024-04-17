@@ -30,7 +30,7 @@ const invalidCollationOptions = [
 for (const invalidCollationOption of invalidCollationOptions) {
   assert.throws(RangeError, function() {
     new Intl.Locale("en", {collation: invalidCollationOption});
-  }, '`new Intl.Locale("en", {collation: invalidCollationOption})` throws RangeError');
+  });
 }
 
 reportCompare(0, 0);

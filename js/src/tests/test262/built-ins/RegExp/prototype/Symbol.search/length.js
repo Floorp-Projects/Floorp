@@ -20,10 +20,11 @@ features: [Symbol.search]
 includes: [propertyHelper.js]
 ---*/
 
-assert.sameValue(RegExp.prototype[Symbol.search].length, 1);
-
-verifyNotEnumerable(RegExp.prototype[Symbol.search], 'length');
-verifyNotWritable(RegExp.prototype[Symbol.search], 'length');
-verifyConfigurable(RegExp.prototype[Symbol.search], 'length');
+verifyProperty(RegExp.prototype[Symbol.search], "length", {
+  value: 1,
+  writable: false,
+  enumerable: false,
+  configurable: true
+});
 
 reportCompare(0, 0);

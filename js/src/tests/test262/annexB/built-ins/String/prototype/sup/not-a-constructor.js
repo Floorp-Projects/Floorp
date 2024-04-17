@@ -24,7 +24,7 @@ assert.sameValue(isConstructor(String.prototype.sup), false, 'isConstructor(Stri
 
 assert.throws(TypeError, () => {
   new String.prototype.sup();
-}, '`new String.prototype.sup()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

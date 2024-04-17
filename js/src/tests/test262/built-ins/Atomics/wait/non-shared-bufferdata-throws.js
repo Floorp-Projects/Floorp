@@ -28,10 +28,10 @@ const poisoned = {
 
 assert.throws(TypeError, function() {
   Atomics.wait(i32a, 0, 0, 0);
-}, '`Atomics.wait(i32a, 0, 0, 0)` throws TypeError');
+});
 
 assert.throws(TypeError, function() {
   Atomics.wait(i32a, poisoned, poisoned, poisoned);
-}, '`Atomics.wait(i32a, poisoned, poisoned, poisoned)` throws TypeError');
+});
 
 reportCompare(0, 0);

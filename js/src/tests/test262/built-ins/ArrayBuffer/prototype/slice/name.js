@@ -19,10 +19,11 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-assert.sameValue(ArrayBuffer.prototype.slice.name, "slice");
-
-verifyNotEnumerable(ArrayBuffer.prototype.slice, "name");
-verifyNotWritable(ArrayBuffer.prototype.slice, "name");
-verifyConfigurable(ArrayBuffer.prototype.slice, "name");
+verifyProperty(ArrayBuffer.prototype.slice, "name", {
+  value: "slice",
+  writable: false,
+  enumerable: false,
+  configurable: true
+});
 
 reportCompare(0, 0);

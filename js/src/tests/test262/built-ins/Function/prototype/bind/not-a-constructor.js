@@ -29,7 +29,7 @@ assert.sameValue(
 
 assert.throws(TypeError, () => {
   new Function.prototype.bind();
-}, '`new Function.prototype.bind()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

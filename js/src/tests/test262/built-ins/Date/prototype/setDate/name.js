@@ -19,10 +19,11 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-assert.sameValue(Date.prototype.setDate.name, "setDate");
-
-verifyNotEnumerable(Date.prototype.setDate, "name");
-verifyNotWritable(Date.prototype.setDate, "name");
-verifyConfigurable(Date.prototype.setDate, "name");
+verifyProperty(Date.prototype.setDate, "name", {
+  value: "setDate",
+  writable: false,
+  enumerable: false,
+  configurable: true
+});
 
 reportCompare(0, 0);

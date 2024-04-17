@@ -24,12 +24,12 @@ Object.defineProperties(obj, {
     writable: true
   }
 });
-verifyEqualTo(obj, "foo", 100);
 
-verifyWritable(obj, "foo");
-
-verifyEnumerable(obj, "foo");
-
-verifyConfigurable(obj, "foo");
+verifyProperty(obj, "foo", {
+  value: 100,
+  writable: true,
+  enumerable: true,
+  configurable: true,
+});
 
 reportCompare(0, 0);

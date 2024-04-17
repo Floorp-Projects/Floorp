@@ -29,7 +29,7 @@ assert.sameValue(
 
 assert.throws(TypeError, () => {
   new String.prototype.lastIndexOf();
-}, '`new String.prototype.lastIndexOf()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

@@ -24,8 +24,10 @@ Object.defineProperties(arr, {
     set: undefined
   }
 });
-verifyNotEnumerable(arr, "0");
 
-verifyConfigurable(arr, "0");
+verifyProperty(arr, "0", {
+  enumerable: false,
+  configurable: true,
+});
 
 reportCompare(0, 0);

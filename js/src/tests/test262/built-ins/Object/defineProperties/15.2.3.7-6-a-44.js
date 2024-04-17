@@ -23,8 +23,10 @@ Object.defineProperties(obj, {
   }
 });
 
-verifyNotEnumerable(obj, "foo");
-verifyNotWritable(obj, "foo");
-verifyNotConfigurable(obj, "foo");
+verifyProperty(obj, "foo", {
+  writable: false,
+  enumerable: false,
+  configurable: false,
+});
 
 reportCompare(0, 0);

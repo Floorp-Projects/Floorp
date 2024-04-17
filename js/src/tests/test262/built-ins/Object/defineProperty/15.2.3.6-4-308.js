@@ -25,19 +25,17 @@ includes: [propertyHelper.js]
     });
     throw new Test262Error("Expected an exception.");
   } catch (e) {
-    verifyEqualTo(arguments, "0", 0);
-
-    verifyNotWritable(arguments, "0");
-
-    verifyNotEnumerable(arguments, "0");
-
-    verifyNotConfigurable(arguments, "0");
-
     if (!(e instanceof TypeError)) {
       throw new Test262Error("Expected TypeError, got " + e);
     }
-
   }
+
+  verifyProperty(arguments, "0", {
+    value: 0,
+    writable: false,
+    enumerable: false,
+    configurable: false,
+  });
 }());
 
 reportCompare(0, 0);

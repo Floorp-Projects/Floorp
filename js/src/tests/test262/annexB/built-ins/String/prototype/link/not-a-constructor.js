@@ -28,7 +28,7 @@ assert.sameValue(
 
 assert.throws(TypeError, () => {
   new String.prototype.link();
-}, '`new String.prototype.link()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

@@ -29,15 +29,15 @@ const poisoned = {
 
 assert.throws(RangeError, function() {
   Atomics.notify(i32a, -Infinity, poisoned);
-}, '`Atomics.notify(i32a, -Infinity, poisoned)` throws RangeError');
+});
 assert.throws(RangeError, function() {
   Atomics.notify(i32a, -7.999, poisoned);
-}, '`Atomics.notify(i32a, -7.999, poisoned)` throws RangeError');
+});
 assert.throws(RangeError, function() {
   Atomics.notify(i32a, -1, poisoned);
-}, '`Atomics.notify(i32a, -1, poisoned)` throws RangeError');
+});
 assert.throws(RangeError, function() {
   Atomics.notify(i32a, -300, poisoned);
-}, '`Atomics.notify(i32a, -300, poisoned)` throws RangeError');
+});
 
 reportCompare(0, 0);

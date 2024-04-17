@@ -19,10 +19,11 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-assert.sameValue(Promise.prototype.then.name, 'then');
-
-verifyNotEnumerable(Promise.prototype.then, 'name');
-verifyNotWritable(Promise.prototype.then, 'name');
-verifyConfigurable(Promise.prototype.then, 'name');
+verifyProperty(Promise.prototype.then, "name", {
+  value: "then",
+  writable: false,
+  enumerable: false,
+  configurable: true
+});
 
 reportCompare(0, 0);

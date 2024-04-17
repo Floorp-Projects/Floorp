@@ -29,7 +29,7 @@ assert.sameValue(
 
 assert.throws(TypeError, () => {
   new Reflect.deleteProperty({}, '');
-}, '`new Reflect.deleteProperty({}, \'\')` throws TypeError');
+});
 
 
 reportCompare(0, 0);

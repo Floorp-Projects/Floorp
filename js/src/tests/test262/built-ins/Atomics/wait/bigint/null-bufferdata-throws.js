@@ -43,6 +43,6 @@ try {
 
 assert.throws(TypeError, function() {
   Atomics.wait(i64a, poisoned, poisoned, poisoned);
-}, '`Atomics.wait(i64a, poisoned, poisoned, poisoned)` throws TypeError');
+});
 
 reportCompare(0, 0);

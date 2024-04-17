@@ -25,7 +25,7 @@ assert.sameValue(isConstructor(Object.isSealed), false, 'isConstructor(Object.is
 
 assert.throws(TypeError, () => {
   new Object.isSealed({});
-}, '`new Object.isSealed({})` throws TypeError');
+});
 
 
 reportCompare(0, 0);

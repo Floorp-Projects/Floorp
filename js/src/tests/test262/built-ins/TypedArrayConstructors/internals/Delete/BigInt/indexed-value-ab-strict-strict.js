@@ -40,16 +40,16 @@ testWithBigIntTypedArrayConstructors(function(TA) {
 
   assert.throws(TypeError, () => {
     delete sample["0"];
-  }, '`delete sample["0"]` throws TypeError');
+  });
   assert.throws(TypeError, () => {
     delete sample["1"];
-  }, '`delete sample["1"]` throws TypeError');
+  });
   assert.throws(TypeError, () => {
     delete sample[0];
-  }, '`delete sample[0]` throws TypeError');
+  });
   assert.throws(TypeError, () => {
     delete sample[0];
-  }, '`delete sample[0]` throws TypeError');
+  });
 });
 
 reportCompare(0, 0);

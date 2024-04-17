@@ -25,7 +25,7 @@ assert.sameValue(isConstructor(Promise.reject), false, 'isConstructor(Promise.re
 
 assert.throws(TypeError, () => {
   new Promise.reject();
-}, '`new Promise.reject()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

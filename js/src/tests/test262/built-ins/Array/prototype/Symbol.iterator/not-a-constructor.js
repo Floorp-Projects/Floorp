@@ -29,7 +29,7 @@ assert.sameValue(
 
 assert.throws(TypeError, () => {
   new Array.prototype[Symbol.iterator]();
-}, '`new Array.prototype[Symbol.iterator]()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

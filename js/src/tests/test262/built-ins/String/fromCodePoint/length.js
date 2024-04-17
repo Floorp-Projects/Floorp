@@ -8,13 +8,11 @@ includes: [propertyHelper.js]
 features: [String.fromCodePoint]
 ---*/
 
-assert.sameValue(
-  String.fromCodePoint.length, 1,
-  'The value of `String.fromCodePoint.length` is `1`'
-);
-
-verifyNotEnumerable(String.fromCodePoint, 'length');
-verifyNotWritable(String.fromCodePoint, 'length');
-verifyConfigurable(String.fromCodePoint, 'length');
+verifyProperty(String.fromCodePoint, "length", {
+  value: 1,
+  writable: false,
+  enumerable: false,
+  configurable: true
+});
 
 reportCompare(0, 0);

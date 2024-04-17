@@ -12,13 +12,11 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-assert.sameValue(
-  String.prototype.repeat.name, 'repeat',
-  'The value of `String.prototype.repeat.name` is `"repeat"`'
-);
-
-verifyNotEnumerable(String.prototype.repeat, 'name');
-verifyNotWritable(String.prototype.repeat, 'name');
-verifyConfigurable(String.prototype.repeat, 'name');
+verifyProperty(String.prototype.repeat, "name", {
+  value: "repeat",
+  writable: false,
+  enumerable: false,
+  configurable: true
+});
 
 reportCompare(0, 0);

@@ -25,7 +25,7 @@ assert.sameValue(isConstructor(Date.parse), false, 'isConstructor(Date.parse) mu
 
 assert.throws(TypeError, () => {
   new Date.parse();
-}, '`new Date.parse()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

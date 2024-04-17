@@ -18,8 +18,6 @@ assert.throws(
   TypeError,
   () => {
     new Set.prototype.isSupersetOf();
-  },
-  "`new Set.prototype.isSupersetOf()` throws TypeError"
-);
+  });
 
 reportCompare(0, 0);

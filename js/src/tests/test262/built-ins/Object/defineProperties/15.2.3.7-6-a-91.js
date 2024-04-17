@@ -44,14 +44,14 @@ try {
 
   verifyWritable(obj, "foo", "setVerifyHelpProp");
 
-  verifyNotEnumerable(obj, "foo");
-
-  verifyNotConfigurable(obj, "foo");
-
   if (!(e instanceof TypeError)) {
     throw new Test262Error("Expected TypeError, got " + e);
   }
-
 }
+
+verifyProperty(obj, "foo", {
+  enumerable: false,
+  configurable: false,
+});
 
 reportCompare(0, 0);

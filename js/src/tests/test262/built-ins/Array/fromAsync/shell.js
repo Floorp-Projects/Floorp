@@ -2135,6 +2135,9 @@ var TemporalHelpers = {
         "11-18junk",
         "11-18[u-ca=gregory]",
         "11-18[u-ca=hebrew]",
+        "11-18[U-CA=iso8601]",
+        "11-18[u-CA=iso8601]",
+        "11-18[FOO=bar]",
       ];
     },
 
@@ -2222,6 +2225,11 @@ var TemporalHelpers = {
     plainYearMonthStringsInvalid() {
       return [
         "2020-13",
+        "1976-11[u-ca=gregory]",
+        "1976-11[u-ca=hebrew]",
+        "1976-11[U-CA=iso8601]",
+        "1976-11[u-CA=iso8601]",
+        "1976-11[FOO=bar]",
       ];
     },
 

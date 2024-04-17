@@ -19,10 +19,11 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-assert.sameValue(Promise.race.name, 'race');
-
-verifyNotEnumerable(Promise.race, 'name');
-verifyNotWritable(Promise.race, 'name');
-verifyConfigurable(Promise.race, 'name');
+verifyProperty(Promise.race, "name", {
+  value: "race",
+  writable: false,
+  enumerable: false,
+  configurable: true
+});
 
 reportCompare(0, 0);
