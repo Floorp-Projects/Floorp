@@ -20,7 +20,7 @@ class RunNextTest : public mozilla::Runnable {
  public:
   RunNextTest() : mozilla::Runnable("RunNextTest") {}
   NS_IMETHOD Run() override {
-    NS_ASSERTION(NS_IsMainThread(), "Not running on the main thread?");
+    MOZ_RELEASE_ASSERT(NS_IsMainThread(), "Not running on the main thread?");
     if (gTestsIndex < int(mozilla::ArrayLength(gTests))) {
       do_test_pending();
       Test& test = gTests[gTestsIndex++];
@@ -47,7 +47,7 @@ void run_next_test() {
 int gPendingTests = 0;
 
 void do_test_pending() {
-  NS_ASSERTION(NS_IsMainThread(), "Not running on the main thread?");
+  MOZ_RELEASE_ASSERT(NS_IsMainThread(), "Not running on the main thread?");
   if (kDebugRunNextTest) {
     printf_stderr("do_test_pending()\n");
     MozWalkTheStack(stderr);
@@ -56,8 +56,8 @@ void do_test_pending() {
 }
 
 void do_test_finished() {
-  NS_ASSERTION(NS_IsMainThread(), "Not running on the main thread?");
-  NS_ASSERTION(gPendingTests > 0, "Invalid pending test count!");
+  MOZ_RELEASE_ASSERT(NS_IsMainThread(), "Not running on the main thread?");
+  MOZ_RELEASE_ASSERT(gPendingTests > 0, "Invalid pending test count!");
   gPendingTests--;
 }
 
