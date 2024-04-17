@@ -1190,23 +1190,42 @@ already_AddRefed<gfx::SourceSurface> CanvasTranslator::LookupExternalSurface(
 // Check if the surface descriptor describes a GPUVideo texture for which we
 // only have an opaque source/handle from SurfaceDescriptorRemoteDecoder to
 // derive the actual texture from.
-static bool SDIsNullRemoteDecoder(const SurfaceDescriptor& sd) {
-  return sd.type() == SurfaceDescriptor::TSurfaceDescriptorGPUVideo &&
-         sd.get_SurfaceDescriptorGPUVideo()
-                 .get_SurfaceDescriptorRemoteDecoder()
-                 .subdesc()
-                 .type() == RemoteDecoderVideoSubDescriptor::Tnull_t;
+static bool SDIsSupportedRemoteDecoder(const SurfaceDescriptor& sd) {
+  if (sd.type() != SurfaceDescriptor::TSurfaceDescriptorGPUVideo) {
+    return false;
+  }
+
+  const auto& sdv = sd.get_SurfaceDescriptorGPUVideo();
+  const auto& sdvType = sdv.type();
+  if (sdvType != SurfaceDescriptorGPUVideo::TSurfaceDescriptorRemoteDecoder) {
+    return false;
+  }
+
+  const auto& sdrd = sdv.get_SurfaceDescriptorRemoteDecoder();
+  const auto& subdesc = sdrd.subdesc();
+  const auto& subdescType = subdesc.type();
+
+  if (subdescType == RemoteDecoderVideoSubDescriptor::Tnull_t ||
+      subdescType ==
+          RemoteDecoderVideoSubDescriptor::TSurfaceDescriptorMacIOSurface) {
+    return true;
+  }
+
+  return false;
 }
 
 already_AddRefed<gfx::SourceSurface>
 CanvasTranslator::LookupSourceSurfaceFromSurfaceDescriptor(
     const SurfaceDescriptor& aDesc) {
-  if (!SDIsNullRemoteDecoder(aDesc)) {
+  if (!SDIsSupportedRemoteDecoder(aDesc)) {
     return nullptr;
   }
 
   const auto& sdrd = aDesc.get_SurfaceDescriptorGPUVideo()
                          .get_SurfaceDescriptorRemoteDecoder();
+  const auto& subdesc = sdrd.subdesc();
+  const auto& subdescType = subdesc.type();
+
   RefPtr<VideoBridgeParent> parent =
       VideoBridgeParent::GetSingleton(sdrd.source());
   if (!parent) {
@@ -1222,9 +1241,19 @@ CanvasTranslator::LookupSourceSurfaceFromSurfaceDescriptor(
     return nullptr;
   }
 
-  RefPtr<gfx::DataSourceSurface> surf = texture->GetAsSurface();
+  if (subdescType ==
+      RemoteDecoderVideoSubDescriptor::TSurfaceDescriptorMacIOSurface) {
+    MOZ_ASSERT(texture->AsMacIOSurfaceTextureHost());
+    return texture->GetAsSurface();
+  }
 
-  return surf.forget();
+  if (subdescType == RemoteDecoderVideoSubDescriptor::Tnull_t) {
+    RefPtr<gfx::DataSourceSurface> surf = texture->GetAsSurface();
+    return surf.forget();
+  }
+
+  MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+  return nullptr;
 }
 
 void CanvasTranslator::CheckpointReached() { CheckAndSignalWriter(); }
