@@ -57,6 +57,10 @@ function showSpocs({ geo }) {
   return spocsGeo.includes(geo);
 }
 
+function showWeather() {
+  return true;
+}
+
 // Configure default Activity Stream prefs with a plain `value` or a `getValue`
 // that computes a value. A `value_local_dev` is used for development defaults.
 export const PREFS_CONFIG = new Map([
@@ -128,6 +132,21 @@ export const PREFS_CONFIG = new Map([
     "showSponsoredTopSites",
     {
       title: "Show sponsored top sites",
+      value: true,
+    },
+  ],
+  [
+    "system.showWeather",
+    {
+      title: "system.showWeather",
+      // pref is dynamic
+      getValue: showWeather,
+    },
+  ],
+  [
+    "showWeather",
+    {
+      title: "showWeather",
       value: true,
     },
   ],
