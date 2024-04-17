@@ -127,20 +127,20 @@ ArrayBufferInputStream::Read(char* aBuf, uint32_t aCount,
 NS_IMETHODIMP
 ArrayBufferInputStream::ReadSegments(nsWriteSegmentFun writer, void* closure,
                                      uint32_t aCount, uint32_t* result) {
-  MOZ_ASSERT(result, "null ptr");
-  MOZ_ASSERT(mBufferLength >= mPos, "bad stream state");
+  MOZ_RELEASE_ASSERT(result, "null ptr");
+  MOZ_RELEASE_ASSERT(mBufferLength >= mPos, "bad stream state");
 
   if (mClosed) {
     return NS_BASE_STREAM_CLOSED;
   }
 
-  MOZ_ASSERT(mArrayBuffer || (mPos == mBufferLength),
-             "stream inited incorrectly");
+  MOZ_RELEASE_ASSERT(mArrayBuffer || (mPos == mBufferLength),
+                     "stream inited incorrectly");
 
   *result = 0;
   while (mPos < mBufferLength) {
     uint32_t remaining = mBufferLength - mPos;
-    MOZ_ASSERT(mArrayBuffer);
+    MOZ_RELEASE_ASSERT(mArrayBuffer);
 
     uint32_t count = std::min(aCount, remaining);
     if (count == 0) {
@@ -155,8 +155,9 @@ ArrayBufferInputStream::ReadSegments(nsWriteSegmentFun writer, void* closure,
       return NS_OK;
     }
 
-    MOZ_ASSERT(written <= count,
-               "writer should not write more than we asked it to write");
+    MOZ_RELEASE_ASSERT(
+        written <= count,
+        "writer should not write more than we asked it to write");
     mPos += written;
     *result += written;
     aCount -= written;
@@ -174,7 +175,7 @@ ArrayBufferInputStream::IsNonBlocking(bool* aNonBlocking) {
 }
 
 NS_IMETHODIMP ArrayBufferInputStream::Tell(int64_t* const aRetval) {
-  MOZ_ASSERT(aRetval);
+  MOZ_RELEASE_ASSERT(aRetval);
 
   *aRetval = mPos;
 
