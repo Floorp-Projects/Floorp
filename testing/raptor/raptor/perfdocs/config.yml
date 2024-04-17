@@ -12,7 +12,7 @@ metrics:
             - First Contentful Paint
             - First Contentful Composite
         description: >
-            Denotes the first time the browser performs a paint that has content in it.
+            Denotes the first time the browser performs a paint that has content in it (in ms).
     "Youtube Playback Metrics":
         aliases:
             - VP9
@@ -20,10 +20,51 @@ metrics:
         matcher: VP9.*|H264.*
         description: >
             Metrics starting with VP9/H264 give the number of frames dropped, and painted.
-    "In Progress":
-        aliases: []
-        matcher: .*
-        description: Many metrics have not been documented yet, this is a placeholder.
+    "First Visual Change":
+        aliases:
+            - FirstVisualChange
+        description: The first visual change detected in the test (in ms).
+    "Last Visual Change":
+        aliases:
+            - LastVisualChange
+        description: The last visual change detected in the test (in ms).
+    "Load Time":
+        aliases:
+            - loadtime
+        description: The time it took for the page to complete loading (in ms).
+    "Largest Contentful Paint":
+        aliases:
+            - largestContentfulPaint
+            - lcp
+        description: >
+            The time (in ms) at which the largest piece of content on the page was rendered/painted.
+    "Speed Index":
+        aliases:
+            - SpeedIndex
+        description: >
+            A metric used to denote the speed at which a page loaded. Lower values indicate faster
+            pageloads. Units are in (Visually-Complete x Milliseconds). Calculated by using videos
+            of the pageload which provide a measure of visual completeness. Visual completeness is
+            calculated by comparing the histogram of a given frame to the final frame of the pageload.
+            The SpeedIndex is calculated as the area between the curves of a constant line at y=1,
+            and the graph of the visual completeness from 0ms to when visual completeness reaches
+            100% (or hits the y=1 line).
+    "Contentful Speed Index":
+        aliases:
+            - ContentfulSpeedIndex
+        description: >
+            Similar to SpeedIndex, except that it uses the contentfulness of a frame to determine
+            visual completeness instead of the histogram differences. The contentfulness is determined
+            by calculating the number of edges found in the frame. A lower number of edges detected
+            gives a smaller contentfulness value (and a smaller visually complete value).
+    "Perceptual Speed Index":
+        aliases:
+            - PerceptualSpeedIndex
+        description: >
+            Similar to SpeedIndex, except that it uses the structural similarity index measure (ssim)
+            to determine visual completeness. This technique compares the luminance, contrast, and
+            structure of the frames (a given frame vs. a final frame) to determine the completeness.
+
 suites:
     desktop:
         description: "Tests for page-load performance. The links direct to the actual websites that are being tested."
