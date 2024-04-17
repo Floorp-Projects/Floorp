@@ -16,6 +16,8 @@ support-files = [
 
 ["browser_bouncetracking_oa_isolation.js"]
 
+["browser_bouncetracking_popup.js"]
+
 ["browser_bouncetracking_purge.js"]
 
 ["browser_bouncetracking_schemes.js"]
