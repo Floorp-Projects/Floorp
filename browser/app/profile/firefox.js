@@ -1981,7 +1981,13 @@ pref("browser.translations.newSettingsUI.enable", false);
 
 // Enable Firefox Select translations powered by Bergamot translations
 // engine https://browser.mt/.
-pref("browser.translations.select.enable", false);
+#if defined(EARLY_BETA_OR_EARLIER)
+  // Enables Select Translations for Early Beta and Nightly.
+  pref("browser.translations.select.enable", true);
+#else
+  // Disables Select Translations for Late Beta and Release.
+  pref("browser.translations.select.enable", false);
+#endif
 
 // Telemetry settings.
 // Determines if Telemetry pings can be archived locally.
