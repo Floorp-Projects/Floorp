@@ -2726,6 +2726,21 @@ backupService:
       description: >-
         When true, the profile backup service will be initialized soon after
         startup.
+    sqlitePagesPerStep:
+      description: >-
+        The number of database pages to backup per step when backing up an
+        SQLite database.
+      type: int
+      setPref:
+        branch: user
+        pref: browser.backup.sqlite.pages_per_step
+    sqliteStepDelayMs:
+      description: >-
+        The delay between SQLite database backup steps in milliseconds.
+      type: int
+      setPref:
+        branch: user
+        pref: browser.backup.sqlite.step_delay_ms
 
 pqcrypto:
   description: Prefs that control the use of post-quantum cryptography.

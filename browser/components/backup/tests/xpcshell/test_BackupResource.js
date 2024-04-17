@@ -31,7 +31,8 @@ add_task(async function test_getFileSize() {
 });
 
 /**
- * Tests that BackupService.getDirectorySize will get the total size of all the files in a directory and it's children in kilobytes.
+ * Tests that BackupService.getDirectorySize will get the total size of all the
+ * files in a directory and it's children in kilobytes.
  */
 add_task(async function test_getDirectorySize() {
   let file = do_get_file("data/test_xulstore.json");
@@ -82,6 +83,15 @@ add_task(async function test_bytesToFuzzyKilobytes() {
  */
 add_task(async function test_copySqliteDatabases() {
   let sandbox = sinon.createSandbox();
+  const SQLITE_PAGES_PER_STEP_PREF = "browser.backup.sqlite.pages_per_step";
+  const SQLITE_STEP_DELAY_MS_PREF = "browser.backup.sqlite.step_delay_ms";
+  const DEFAULT_SQLITE_PAGES_PER_STEP = Services.prefs.getIntPref(
+    SQLITE_PAGES_PER_STEP_PREF
+  );
+  const DEFAULT_SQLITE_STEP_DELAY_MS = Services.prefs.getIntPref(
+    SQLITE_STEP_DELAY_MS_PREF
+  );
+
   let sourcePath = await IOUtils.createUniqueDirectory(
     PathUtils.tempDir,
     "BackupResource-source-test"
@@ -129,20 +139,66 @@ add_task(async function test_copySqliteDatabases() {
   );
   Assert.ok(
     fakeConnection.backup.firstCall.calledWith(
-      PathUtils.join(destPath, "places.sqlite")
+      PathUtils.join(destPath, "places.sqlite"),
+      DEFAULT_SQLITE_PAGES_PER_STEP,
+      DEFAULT_SQLITE_STEP_DELAY_MS
     ),
-    "backup called with places.sqlite to the destination path"
+    "backup called with places.sqlite to the destination path with the right " +
+      "pages per step and step delay"
   );
   Assert.ok(
     fakeConnection.backup.secondCall.calledWith(
-      PathUtils.join(destPath, "favicons.sqlite")
+      PathUtils.join(destPath, "favicons.sqlite"),
+      DEFAULT_SQLITE_PAGES_PER_STEP,
+      DEFAULT_SQLITE_STEP_DELAY_MS
     ),
-    "backup called with favicons.sqlite to the destination path"
+    "backup called with favicons.sqlite to the destination path with the " +
+      "right pages per step and step delay"
   );
 
   Assert.ok(
     fakeConnection.close.calledTwice,
     "close on an Sqlite connection called twice"
+  );
+
+  // Now check that we can override the default pages per step and step delay.
+  fakeConnection.backup.resetHistory();
+  const NEW_SQLITE_PAGES_PER_STEP = 10;
+  const NEW_SQLITE_STEP_DELAY_MS = 500;
+  Services.prefs.setIntPref(
+    SQLITE_PAGES_PER_STEP_PREF,
+    NEW_SQLITE_PAGES_PER_STEP
+  );
+  Services.prefs.setIntPref(
+    SQLITE_STEP_DELAY_MS_PREF,
+    NEW_SQLITE_STEP_DELAY_MS
+  );
+  await BackupResource.copySqliteDatabases(
+    sourcePath,
+    destPath,
+    pretendDatabases
+  );
+  Assert.ok(
+    fakeConnection.backup.calledTwice,
+    "backup on an Sqlite connection called twice"
+  );
+  Assert.ok(
+    fakeConnection.backup.firstCall.calledWith(
+      PathUtils.join(destPath, "places.sqlite"),
+      NEW_SQLITE_PAGES_PER_STEP,
+      NEW_SQLITE_STEP_DELAY_MS
+    ),
+    "backup called with places.sqlite to the destination path with the right " +
+      "pages per step and step delay"
+  );
+  Assert.ok(
+    fakeConnection.backup.secondCall.calledWith(
+      PathUtils.join(destPath, "favicons.sqlite"),
+      NEW_SQLITE_PAGES_PER_STEP,
+      NEW_SQLITE_STEP_DELAY_MS
+    ),
+    "backup called with favicons.sqlite to the destination path with the " +
+      "right pages per step and step delay"
   );
 
   await maybeRemovePath(sourcePath);

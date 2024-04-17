@@ -3024,6 +3024,10 @@ pref("browser.mailto.prompt.os", true);
 
 // Pref to initialize the BackupService soon after startup.
 pref("browser.backup.enabled", true);
+// The number of SQLite database pages to backup per step.
+pref("browser.backup.sqlite.pages_per_step", 5);
+// The delay between SQLite database backup steps in milliseconds.
+pref("browser.backup.sqlite.step_delay_ms", 250);
 
 // Pref to enable the new profiles
 pref("browser.profiles.enabled", false);
