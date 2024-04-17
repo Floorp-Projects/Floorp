@@ -16,6 +16,12 @@ export class FormHistoryBackupResource extends BackupResource {
     return false;
   }
 
+  async backup(stagingPath, profilePath = PathUtils.profileDir) {
+    await BackupResource.copySqliteDatabases(profilePath, stagingPath, [
+      "formhistory.sqlite",
+    ]);
+  }
+
   async measure(profilePath = PathUtils.profileDir) {
     let formHistoryDBPath = PathUtils.join(profilePath, "formhistory.sqlite");
     let formHistorySize = await BackupResource.getFileSize(formHistoryDBPath);

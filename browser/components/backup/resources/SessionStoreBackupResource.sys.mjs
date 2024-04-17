@@ -28,6 +28,21 @@ export class SessionStoreBackupResource extends BackupResource {
     return false;
   }
 
+  async backup(stagingPath, profilePath = PathUtils.profileDir) {
+    let sessionStoreState = lazy.SessionStore.getCurrentState(true);
+    let sessionStorePath = PathUtils.join(stagingPath, "sessionstore.jsonlz4");
+
+    /* Bug 1891854 - remove cookies from session store state if the backup file is
+     * not encrypted. */
+
+    await IOUtils.writeJSON(sessionStorePath, sessionStoreState, {
+      compress: true,
+    });
+    await BackupResource.copyFiles(profilePath, stagingPath, [
+      "sessionstore-backups",
+    ]);
+  }
+
   async measure(profilePath = PathUtils.profileDir) {
     // Get the current state of the session store JSON and
     // measure it's uncompressed size.

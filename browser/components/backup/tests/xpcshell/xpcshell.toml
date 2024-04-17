@@ -11,13 +11,19 @@ prefs = [
 ["test_BackupResource.js"]
 support-files = ["data/test_xulstore.json"]
 
+["test_CookiesBackupResource.js"]
+
 ["test_CredentialsAndSecurityBackupResource.js"]
+
+["test_FormHistoryBackupResource.js"]
 
 ["test_MiscDataBackupResource.js"]
 
 ["test_PlacesBackupResource.js"]
 
 ["test_PreferencesBackupResource.js"]
+
+["test_SessionStoreBackupResource.js"]
 
 ["test_createBackup.js"]
 
