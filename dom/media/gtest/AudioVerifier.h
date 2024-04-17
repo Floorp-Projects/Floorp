@@ -99,7 +99,7 @@ class AudioVerifier {
   void CountZeroCrossing(Sample aCurrentSample) {
     if (mPrevious > 0 && aCurrentSample <= 0) {
       if (mZeroCrossCount++) {
-        MOZ_ASSERT(mZeroCrossCount > 1);
+        MOZ_RELEASE_ASSERT(mZeroCrossCount > 1);
         mSumPeriodInSamples += mTotalFramesSoFar - mLastZeroCrossPosition;
       }
       mLastZeroCrossPosition = mTotalFramesSoFar;
@@ -120,7 +120,7 @@ class AudioVerifier {
       return;
     }
 
-    MOZ_ASSERT(mCurrentDiscontinuityFrameCount == 0);
+    MOZ_RELEASE_ASSERT(mCurrentDiscontinuityFrameCount == 0);
     if (!discontinuity) {
       return;
     }

@@ -522,7 +522,7 @@ TEST(TestAudioTrackGraph, NonNativeInputTrackErrorCallback)
 class TestDeviceInputConsumerTrack : public DeviceInputConsumerTrack {
  public:
   static TestDeviceInputConsumerTrack* Create(MediaTrackGraph* aGraph) {
-    MOZ_ASSERT(NS_IsMainThread());
+    MOZ_RELEASE_ASSERT(NS_IsMainThread());
     TestDeviceInputConsumerTrack* track =
         new TestDeviceInputConsumerTrack(aGraph->GraphRate());
     aGraph->AddTrack(track);
@@ -530,7 +530,7 @@ class TestDeviceInputConsumerTrack : public DeviceInputConsumerTrack {
   }
 
   void Destroy() {
-    MOZ_ASSERT(NS_IsMainThread());
+    MOZ_RELEASE_ASSERT(NS_IsMainThread());
     DisconnectDeviceInput();
     DeviceInputConsumerTrack::Destroy();
   }
@@ -543,7 +543,7 @@ class TestDeviceInputConsumerTrack : public DeviceInputConsumerTrack {
     if (mInputs.IsEmpty()) {
       GetData<AudioSegment>()->AppendNullData(aTo - aFrom);
     } else {
-      MOZ_ASSERT(mInputs.Length() == 1);
+      MOZ_RELEASE_ASSERT(mInputs.Length() == 1);
       AudioSegment data;
       DeviceInputConsumerTrack::GetInputSourceData(data, aFrom, aTo);
       GetData<AudioSegment>()->AppendFrom(&data);
@@ -555,7 +555,7 @@ class TestDeviceInputConsumerTrack : public DeviceInputConsumerTrack {
       return 0;
     }
     DeviceInputTrack* t = mInputs[0]->GetSource()->AsDeviceInputTrack();
-    MOZ_ASSERT(t);
+    MOZ_RELEASE_ASSERT(t);
     return t->NumberOfChannels();
   }
 
@@ -700,7 +700,7 @@ TEST(TestAudioTrackGraph, RestartAudioIfMaxChannelCountChanged)
     void SetInputChannelCount(MediaTrackGraph* aGraph,
                               CubebUtils::AudioDeviceID aDevice,
                               uint32_t aChannelCount) {
-      MOZ_ASSERT(NS_IsMainThread());
+      MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
       struct Message : public ControlMessage {
         MediaTrackGraph* mGraph;

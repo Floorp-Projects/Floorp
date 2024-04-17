@@ -56,7 +56,7 @@ class MP4DemuxerBinding {
   }
 
   RefPtr<GenericPromise> CheckTrackKeyFrame(MediaTrackDemuxer* aTrackDemuxer) {
-    MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
+    MOZ_RELEASE_ASSERT(mTaskQueue->IsCurrentThreadIn());
 
     RefPtr<MediaTrackDemuxer> track = aTrackDemuxer;
     RefPtr<MP4DemuxerBinding> binding = this;
@@ -97,7 +97,7 @@ class MP4DemuxerBinding {
   }
 
   RefPtr<GenericPromise> CheckTrackSamples(MediaTrackDemuxer* aTrackDemuxer) {
-    MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
+    MOZ_RELEASE_ASSERT(mTaskQueue->IsCurrentThreadIn());
 
     RefPtr<MediaTrackDemuxer> track = aTrackDemuxer;
     RefPtr<MP4DemuxerBinding> binding = this;
