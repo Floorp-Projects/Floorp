@@ -293,6 +293,72 @@ void MediaManager::CallOnSuccess(GetUserMediaSuccessCallback& aCallback,
   aCallback.Call(aStream);
 }
 
+enum class PersistentPermissionState : uint32_t {
+  Unknown = nsIPermissionManager::UNKNOWN_ACTION,
+  Allow = nsIPermissionManager::ALLOW_ACTION,
+  Deny = nsIPermissionManager::DENY_ACTION,
+  Prompt = nsIPermissionManager::PROMPT_ACTION,
+};
+
+static PersistentPermissionState CheckPermission(
+    PersistentPermissionState aPermission) {
+  switch (aPermission) {
+    case PersistentPermissionState::Unknown:
+    case PersistentPermissionState::Allow:
+    case PersistentPermissionState::Deny:
+    case PersistentPermissionState::Prompt:
+      return aPermission;
+  }
+  MOZ_CRASH("Unexpected permission value");
+}
+
+struct WindowPersistentPermissionState {
+  PersistentPermissionState mCameraPermission;
+  PersistentPermissionState mMicrophonePermission;
+};
+
+static Result<WindowPersistentPermissionState, nsresult>
+GetPersistentPermissions(uint64_t aWindowId) {
+  auto* window = nsGlobalWindowInner::GetInnerWindowWithId(aWindowId);
+  if (NS_WARN_IF(!window) || NS_WARN_IF(!window->GetPrincipal())) {
+    return Err(NS_ERROR_INVALID_ARG);
+  }
+
+  Document* doc = window->GetExtantDoc();
+  if (NS_WARN_IF(!doc)) {
+    return Err(NS_ERROR_INVALID_ARG);
+  }
+
+  nsIPrincipal* principal = window->GetPrincipal();
+  if (NS_WARN_IF(!principal)) {
+    return Err(NS_ERROR_INVALID_ARG);
+  }
+
+  nsresult rv;
+  RefPtr<PermissionDelegateHandler> permDelegate =
+      doc->GetPermissionDelegateHandler();
+  if (NS_WARN_IF(!permDelegate)) {
+    return Err(NS_ERROR_INVALID_ARG);
+  }
+
+  uint32_t audio = nsIPermissionManager::UNKNOWN_ACTION;
+  uint32_t video = nsIPermissionManager::UNKNOWN_ACTION;
+  {
+    rv = permDelegate->GetPermission("microphone"_ns, &audio, true);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return Err(rv);
+    }
+    rv = permDelegate->GetPermission("camera"_ns, &video, true);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return Err(rv);
+    }
+  }
+
+  return WindowPersistentPermissionState{
+      CheckPermission(static_cast<PersistentPermissionState>(video)),
+      CheckPermission(static_cast<PersistentPermissionState>(audio))};
+}
+
 /**
  * DeviceListener has threadsafe refcounting for use across the main, media and
  * MTG threads. But it has a non-threadsafe SupportsWeakPtr for WeakPtr usage
@@ -3119,6 +3185,15 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
                 return;
               }
 
+              if (GetPersistentPermissions(windowID)
+                      .map([](auto&& aState) {
+                        return aState.mMicrophonePermission ==
+                               PersistentPermissionState::Deny;
+                      })
+                      .unwrapOr(true)) {
+                return;
+              }
+
               task->PrimeVoiceProcessing();
             }();
 
@@ -4026,43 +4101,13 @@ bool MediaManager::IsActivelyCapturingOrHasAPermission(uint64_t aWindowId) {
 
   // Or are persistent permissions (audio or video) granted?
 
-  auto* window = nsGlobalWindowInner::GetInnerWindowWithId(aWindowId);
-  if (NS_WARN_IF(!window) || NS_WARN_IF(!window->GetPrincipal())) {
-    return false;
-  }
-
-  Document* doc = window->GetExtantDoc();
-  if (NS_WARN_IF(!doc)) {
-    return false;
-  }
-
-  nsIPrincipal* principal = window->GetPrincipal();
-  if (NS_WARN_IF(!principal)) {
-    return false;
-  }
-
-  // Check if this site has persistent permissions.
-  nsresult rv;
-  RefPtr<PermissionDelegateHandler> permDelegate =
-      doc->GetPermissionDelegateHandler();
-  if (NS_WARN_IF(!permDelegate)) {
-    return false;
-  }
-
-  uint32_t audio = nsIPermissionManager::UNKNOWN_ACTION;
-  uint32_t video = nsIPermissionManager::UNKNOWN_ACTION;
-  {
-    rv = permDelegate->GetPermission("microphone"_ns, &audio, true);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return false;
-    }
-    rv = permDelegate->GetPermission("camera"_ns, &video, true);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return false;
-    }
-  }
-  return audio == nsIPermissionManager::ALLOW_ACTION ||
-         video == nsIPermissionManager::ALLOW_ACTION;
+  return GetPersistentPermissions(aWindowId)
+      .map([](auto&& aState) {
+        return aState.mMicrophonePermission ==
+                   PersistentPermissionState::Allow ||
+               aState.mCameraPermission == PersistentPermissionState::Allow;
+      })
+      .unwrapOr(false);
 }
 
 DeviceListener::DeviceListener()
