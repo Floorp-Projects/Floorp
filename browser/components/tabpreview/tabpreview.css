@@ -12,14 +12,13 @@
 }
 
 .tab-preview-title {
-  max-height: 3em;
   overflow: hidden;
+  -webkit-line-clamp: 2;
   font-weight: var(--font-weight-bold);
 }
 
 .tab-preview-uri {
   color: var(--text-color-deemphasized);
-  max-height: 1.5em;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
