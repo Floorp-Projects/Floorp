@@ -12357,7 +12357,7 @@
 
 - name: network.dns.disablePrefetchFromHTTPS
   type: bool
-  value: true
+  value: false
   mirror: always
 
 # Max time to shutdown the resolver threads
