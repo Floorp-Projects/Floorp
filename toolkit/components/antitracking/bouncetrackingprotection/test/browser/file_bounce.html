@@ -57,9 +57,10 @@
       });
     }
 
-    function setIndexedDBInWorker() {
+    function setIndexedDBInWorker(nested = false) {
       let worker = new Worker("file_web_worker.js");
-      worker.postMessage("setIndexedDB");
+      let msg = nested ? "setIndexedDBNested" : "setIndexedDB";
+      worker.postMessage(msg);
       return new Promise((resolve, reject) => {
         worker.onmessage = () => {
           console.info("IndexedDB set in worker");
@@ -109,6 +110,9 @@
       } else if(url.searchParams.get("setStateInWebWorker") === "true") {
         // Set state in a worker.
         await setIndexedDBInWorker();
+      } else if(url.searchParams.get("setStateInNestedWebWorker") === "true") {
+        // Set state in a nested worker.
+        await setIndexedDBInWorker(true);
       } else {
         // Set a state in this window.
         let setState = url.searchParams.get("setState");

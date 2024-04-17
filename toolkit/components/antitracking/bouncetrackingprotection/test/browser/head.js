@@ -54,6 +54,8 @@ function getBaseUrl(origin) {
  * state in a sub frame that is same site to the top window.
  * @param {boolean} [options.setStateInWebWorker=false] - Whether to set the
  * state in a web worker. This only supports setState == "indexedDB".
+ * @param {boolean} [options.setStateInWebWorker=false] - Whether to set the
+ * state in a nested web worker. Otherwise the same as setStateInWebWorker.
  * @param {number} [options.statusCode] - HTTP status code to use for server
  * side redirect. Only applies to bounceType == "server".
  * @param {number} [options.redirectDelayMS] - How long to wait before
@@ -68,6 +70,7 @@ function getBounceURL({
   setState = null,
   setStateSameSiteFrame = false,
   setStateInWebWorker = false,
+  setStateInNestedWebWorker = false,
   statusCode = 302,
   redirectDelayMS = 50,
 }) {
@@ -95,6 +98,14 @@ function getBounceURL({
       );
     }
     searchParams.set("setStateInWebWorker", setStateInWebWorker);
+  }
+  if (setStateInNestedWebWorker) {
+    if (setState != "indexedDB") {
+      throw new Error(
+        "setStateInNestedWebWorker only supports setState == 'indexedDB'"
+      );
+    }
+    searchParams.set("setStateInNestedWebWorker", setStateInNestedWebWorker);
   }
 
   if (bounceType == "server") {
@@ -162,6 +173,8 @@ async function waitForRecordBounces(browser) {
  * state in a sub frame that is same site to the top window.
  * @param {boolean} [options.setStateInWebWorker=false] - Whether to set the
  * state in a web worker. This only supports setState == "indexedDB".
+ * @param {boolean} [options.setStateInWebWorker=false] - Whether to set the
+ * state in a nested web worker. Otherwise the same as setStateInWebWorker.
  * @param {boolean} [options.expectCandidate=true] - Expect the redirecting site
  * to be identified as a bounce tracker (candidate).
  * @param {boolean} [options.expectPurge=true] - Expect the redirecting site to
@@ -179,6 +192,7 @@ async function runTestBounce(options = {}) {
     setState = null,
     setStateSameSiteFrame = false,
     setStateInWebWorker = false,
+    setStateInNestedWebWorker = false,
     expectCandidate = true,
     expectPurge = true,
     originAttributes = {},
@@ -237,6 +251,7 @@ async function runTestBounce(options = {}) {
       setState,
       setStateSameSiteFrame,
       setStateInWebWorker,
+      setStateInNestedWebWorker,
     })
   );
 
