@@ -14215,7 +14215,15 @@
   value: true
   mirror: always
 
-# To be used in test environments to enable observer messages.
+# Enables a mode where if bounce tracking protection is enabled it classifies
+# but does not purge trackers. This mode is helpful for testing the feature
+# without risking data loss. Telemetry is still collected normally.
+- name: privacy.bounceTrackingProtection.enableDryRunMode
+  type: bool
+  value: false
+  mirror: always
+
+# To be used in automated test environments to enable observer messages.
 - name: privacy.bounceTrackingProtection.enableTestMode
   type: bool
   value: false
