@@ -25,7 +25,6 @@ NIMBUS_FALLBACK_PREFS = (
 # See https://bugzilla.mozilla.org/show_bug.cgi?id=1875331 for details.
 ALLOWED_ISEARLYSTARTUP_FEATURE_IDS = {
     "aboutwelcome",
-    "gleanInternalSdk",
     "majorRelease2022",
     "newtab",
     "pocketNewtab",

@@ -2988,6 +2988,9 @@ pref("cookiebanners.ui.desktop.cfrVariant", 0);
   pref("telemetry.fog.artifact_build", true);
 #endif
 
+pref("telemetry.glean.internal.finalInactive", false);
+pref("telemetry.glean.internal.maxPingsPerMinute", 15);
+
 #ifdef NIGHTLY_BUILD
   pref("dom.security.credentialmanagement.identity.enabled", true);
 #endif
