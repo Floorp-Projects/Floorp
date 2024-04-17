@@ -30,6 +30,7 @@ def read_ini(
     strict=True,
     handle_defaults=True,
     document=False,
+    add_line_no=False,
 ):
     """
     read an .ini file and return a list of [(section, values)]
@@ -40,6 +41,7 @@ def read_ini(
     - separators : strings that denote key, value separation in order
     - strict : whether to be strict about parsing
     - handle_defaults : whether to incorporate defaults into each section
+    - add_line_no: whether to include the line number that points to the test in the generated ini file.
     """
 
     # variables
