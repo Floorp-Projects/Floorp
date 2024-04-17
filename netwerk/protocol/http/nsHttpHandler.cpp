@@ -2748,12 +2748,15 @@ bool nsHttpHandler::UseHTTPSRRAsAltSvcEnabled() const {
 }
 
 bool nsHttpHandler::EchConfigEnabled(bool aIsHttp3) const {
+  if (mParentalControlEnabled) {
+    return false;
+  }
+
   if (!aIsHttp3) {
     return StaticPrefs::network_dns_echconfig_enabled();
   }
 
-  return StaticPrefs::network_dns_echconfig_enabled() &&
-         StaticPrefs::network_dns_http3_echconfig_enabled();
+  return StaticPrefs::network_dns_http3_echconfig_enabled();
 }
 
 bool nsHttpHandler::FallbackToOriginIfConfigsAreECHAndAllFailed() const {
