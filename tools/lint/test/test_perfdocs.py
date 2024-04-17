@@ -85,11 +85,32 @@ suites:
 
 SAMPLE_METRICS_CONFIG = """
 name: raptor
+manifest: "None"
+metrics:
+    'test':
+        aliases: [t1, t2]
+        description: a description
+        matcher: f.*|S.*
+static-only: False
+suites:
+    suite:
+        description: "Performance tests from the 'suite' folder."
+        tests:
+            Example: "Performance test Example from another_suite."
+    another_suite:
+        description: "Performance tests from the 'another_suite' folder."
+        tests:
+            Example: "Performance test Example from another_suite."
+"""
+
+
+DYNAMIC_METRICS_CONFIG = """
+name: raptor
 manifest: "None"{}
 static-only: False
 suites:
     suite:
-        description: "Performance tests from the 'suite' folder."{}
+        description: "Performance tests from the 'suite' folder."
         tests:
             Example: "Performance test Example from another_suite."
     another_suite:
@@ -324,7 +345,9 @@ def test_perfdocs_verifier_validate_rst_pass(
 
     from perfdocs.verifier import Verifier
 
-    valid = Verifier(top_dir).validate_rst_content(pathlib.Path(rst_path))
+    valid = Verifier(top_dir).validate_rst_content(
+        pathlib.Path(rst_path), expected_str="{documentation}"
+    )
 
     assert valid
 
@@ -347,7 +370,7 @@ def test_perfdocs_verifier_invalid_rst(logger, structured_logger, perfdocs_sampl
     from perfdocs.verifier import Verifier
 
     verifier = Verifier("top_dir")
-    valid = verifier.validate_rst_content(rst_path)
+    valid = verifier.validate_rst_content(rst_path, expected_str="{documentation}")
 
     expected = (
         "Cannot find a '{documentation}' entry in the given index file",
@@ -532,7 +555,7 @@ def test_perfdocs_verifier_nonexistent_documented_metrics(
     setup_sample_logger(logger, structured_logger, top_dir)
 
     with open(perfdocs_sample["config"], "w", newline="\n") as f:
-        f.write(SAMPLE_METRICS_CONFIG.format(metric_definitions, ""))
+        f.write(DYNAMIC_METRICS_CONFIG.format(metric_definitions, ""))
     with open(perfdocs_sample["manifest"]["path"], "w", newline="\n") as f:
         f.write(manifest)
 
@@ -587,7 +610,7 @@ def test_perfdocs_verifier_undocumented_metrics(
     setup_sample_logger(logger, structured_logger, top_dir)
 
     with open(perfdocs_sample["config"], "w", newline="\n") as f:
-        f.write(SAMPLE_METRICS_CONFIG.format(metric_definitions, ""))
+        f.write(DYNAMIC_METRICS_CONFIG.format(metric_definitions, ""))
     with open(perfdocs_sample["manifest"]["path"], "w", newline="\n") as f:
         f.write(manifest)
 
@@ -619,6 +642,13 @@ metrics:
         aliases:
             - fcp
             - SpeedIndex
+            - SpeedIndex2
+        description: "Example"
+    "FirstPaint2":
+        aliases:
+            - fcp
+            - SpeedIndex
+            - SpeedIndex2
         description: "Example" """,
             3,
         ],
@@ -629,11 +659,19 @@ metrics:
     FirstPaint:
         aliases:
             - fcp
+            - SpeedIndex3
+            - SpeedIndex
         description: Example
     SpeedIndex:
         aliases:
             - speedindex
             - si
+        description: Example
+    SpeedIndex3:
+        aliases:
+            - speedindex
+            - si
+            - fcp
         description: Example
         """,
             5,
@@ -648,10 +686,7 @@ def test_perfdocs_verifier_duplicate_metrics(
     setup_sample_logger(logger, structured_logger, top_dir)
 
     with open(perfdocs_sample["config"], "w", newline="\n") as f:
-        indented_defs = "\n".join(
-            [(" " * 8) + metric_line for metric_line in metric_definitions.split("\n")]
-        )
-        f.write(SAMPLE_METRICS_CONFIG.format(metric_definitions, indented_defs))
+        f.write(DYNAMIC_METRICS_CONFIG.format(metric_definitions))
     with open(perfdocs_sample["manifest"]["path"], "w", newline="\n") as f:
         f.write(manifest)
 
@@ -710,7 +745,7 @@ def test_perfdocs_verifier_valid_metrics(
     setup_sample_logger(logger, structured_logger, top_dir)
 
     with open(perfdocs_sample["config"], "w", newline="\n") as f:
-        f.write(SAMPLE_METRICS_CONFIG.format(metric_definitions, ""))
+        f.write(DYNAMIC_METRICS_CONFIG.format(metric_definitions, ""))
     with open(perfdocs_sample["manifest"]["path"], "w", newline="\n") as f:
         f.write(manifest)
 
@@ -836,7 +871,9 @@ def test_perfdocs_framework_gatherers_urls(logger, structured_logger, perfdocs_s
         for test_name in tests.keys():
             desc = gn._verifier._gatherer.framework_gatherers[
                 "raptor"
-            ].build_test_description(fg, test_name, tests[test_name], suite_name)
+            ].build_test_description(
+                fg, test_name, tests[test_name], suite_name, {"fcp": {}}
+            )
             assert f"**test url**: `<{url[0]['test_url']}>`__" in desc[0]
             assert f"**expected**: {url[0]['expected']}" in desc[0]
             assert test_name in desc[0]
