@@ -421,3 +421,15 @@ def make_job_description(config, jobs):
             job_description["shipping-product"] = job["shipping-product"]
 
         yield job_description
+
+
+# TODO: remove me as part of https://bugzilla.mozilla.org/show_bug.cgi?id=1890359
+@transforms.add
+def add_windows_laf_scope(config, jobs):
+    for job in jobs:
+        job.setdefault("scopes", [])
+        job["scopes"].append(
+            "secrets:get:project/releng/gecko/build/windows-laf-tokens.data"
+        )
+
+        yield job
