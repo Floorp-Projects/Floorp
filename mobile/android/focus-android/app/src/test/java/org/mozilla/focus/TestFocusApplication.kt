@@ -32,6 +32,10 @@ class TestFocusApplication : FocusApplication() {
     }
 
     override fun initializeNimbus() = Unit
+    override fun initializeTelemetry() = Unit
+    override fun finishSetupMegazord() = Unit
+
+    override fun initializeWebExtensionSupport() = Unit
 }
 
 /**
