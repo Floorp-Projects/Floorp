@@ -578,13 +578,13 @@ class TimingFunctionPreviewWidget {
  */
 function parseTimingFunction(value) {
   value = value.trim();
-  const tokenStream = getCSSLexer(value);
+  const tokenStream = getCSSLexer(value, true);
   const getNextToken = () => {
     while (true) {
       const token = tokenStream.nextToken();
       if (
         !token ||
-        (token.tokenType !== "whitespace" && token.tokenType !== "comment")
+        (token.tokenType !== "WhiteSpace" && token.tokenType !== "Comment")
       ) {
         return token;
       }
@@ -592,7 +592,7 @@ function parseTimingFunction(value) {
   };
 
   let token = getNextToken();
-  if (!token || token.tokenType !== "function" || token.text !== "linear") {
+  if (!token || token.tokenType !== "Function" || token.value !== "linear") {
     return undefined;
   }
 
@@ -601,11 +601,11 @@ function parseTimingFunction(value) {
   let largestInput = -Infinity;
 
   while ((token = getNextToken())) {
-    if (token.text === ")") {
+    if (token.tokenType === "CloseParenthesis") {
       break;
     }
 
-    if (token.tokenType === "number") {
+    if (token.tokenType === "Number") {
       // [parsing step 4.1]
       const point = { input: null, output: token.number };
       // [parsing step 4.2]
@@ -614,7 +614,7 @@ function parseTimingFunction(value) {
       // get nextToken to see if there's a linear stop length
       token = getNextToken();
       // [parsing step 4.3]
-      if (token && token.tokenType === "percentage") {
+      if (token && token.tokenType === "Percentage") {
         // [parsing step 4.3.1]
         point.input = Math.max(token.number, largestInput);
         // [parsing step 4.3.2]
@@ -624,7 +624,7 @@ function parseTimingFunction(value) {
         token = getNextToken();
 
         // [parsing step 4.3.3]
-        if (token && token.tokenType === "percentage") {
+        if (token && token.tokenType === "Percentage") {
           // [parsing step 4.3.3.1]
           const extraPoint = { input: null, output: point.output };
           // [parsing step 4.3.3.2]

@@ -657,14 +657,11 @@ function makeExpectedDefaultResult({ suggestion }) {
         ? { id: "urlbar-result-action-sponsored" }
         : undefined,
       shouldShowUrl: true,
-      helpUrl: QuickSuggest.HELP_URL,
-      helpL10n: {
-        id: "urlbar-result-menu-learn-more-about-firefox-suggest",
-      },
       isBlockable: true,
       blockL10n: {
         id: "urlbar-result-menu-dismiss-firefox-suggest",
       },
+      isManageable: true,
     },
   };
 }

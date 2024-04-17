@@ -501,7 +501,11 @@ Changelog
   Firefox 109.0
     Introduced. [Bug 1800993_]
 
+  Firefox 127.0
+    Removed. [Bug 1891602_]
+
 .. _1800993: https://bugzilla.mozilla.org/show_bug.cgi?id=1800993
+.. _1891602: https://bugzilla.mozilla.org/show_bug.cgi?id=1891602
 
 contextual.services.quicksuggest.help_nonsponsored
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -579,7 +583,11 @@ Changelog
   Firefox 110.0
     Introduced. [Bug 1804536_]
 
+  Firefox 127.0
+    Removed. [Bug 1891602_]
+
 .. _1804536: https://bugzilla.mozilla.org/show_bug.cgi?id=1804536
+.. _1891602: https://bugzilla.mozilla.org/show_bug.cgi?id=1891602
 
 contextual.services.quicksuggest.impression
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

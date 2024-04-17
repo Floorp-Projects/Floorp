@@ -19,6 +19,7 @@ const kESModuleList = new Set([
   /browser\/vpn-card.js$/,
   /toolkit\/content\/global\/certviewer\/components\/.*\.js$/,
   /toolkit\/content\/global\/certviewer\/.*\.js$/,
+  /toolkit\/content\/global\/ml\/transformers.*\.js$/,
   /chrome\/pdfjs\/content\/web\/.*\.js$/,
 ]);
 

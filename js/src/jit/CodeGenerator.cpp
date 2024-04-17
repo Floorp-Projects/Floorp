@@ -6879,9 +6879,9 @@ void CodeGenerator::emitAlignStackForApplyNative(T* apply, Register argc) {
                 "aligning on JIT stack subsumes ABI alignment");
 
   // Align the arguments on the JitStackAlignment.
-  if constexpr (JitStackValueAlignment > 1) {
-    static_assert(JitStackValueAlignment == 2,
-                  "Stack padding adds exactly one Value");
+  if (JitStackValueAlignment > 1) {
+    MOZ_ASSERT(JitStackValueAlignment == 2,
+               "Stack padding adds exactly one Value");
     MOZ_ASSERT(frameSize() % JitStackValueAlignment == 0,
                "Stack padding assumes that the frameSize is correct");
 
