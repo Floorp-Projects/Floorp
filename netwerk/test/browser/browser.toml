@@ -72,6 +72,7 @@ support-files = [
   "x_frame_options.html^headers^",
   "test_1629307.html",
   "file_link_header.sjs",
+  "file_link_dns_prefetch.sjs",
 ]
 
 prefs = [
@@ -155,6 +156,8 @@ skip-if = ["os == 'win'"] # Bug 1775761
 ["browser_cookie_filtering_subdomain.js"]
 
 ["browser_cookie_sync_across_tabs.js"]
+
+["browser_dns_prefetch_link_header.js"]
 
 ["browser_fetch_lnk.js"]
 run-if = ["os == 'win'"]

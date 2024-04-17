@@ -12360,6 +12360,12 @@
   value: false
   mirror: always
 
+# For testing purpose only: allow dns prefetch through proxies
+- name: network.dns.prefetch_via_proxy
+  type: bool
+  value: false
+  mirror: always
+
 # Max time to shutdown the resolver threads
 - name: network.dns.resolver_shutdown_timeout_ms
   type: uint32_t
