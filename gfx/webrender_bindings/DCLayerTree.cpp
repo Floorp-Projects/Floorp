@@ -70,8 +70,8 @@ UniquePtr<DCLayerTree> DCLayerTree::Create(gl::GLContext* aGL,
     return nullptr;
   }
 
-  auto layerTree = MakeUnique<DCLayerTree>(aGL, aEGLConfig, aDevice, aCtx,
-                                           aHwnd, dCompDevice);
+  auto layerTree =
+      MakeUnique<DCLayerTree>(aGL, aEGLConfig, aDevice, aCtx, dCompDevice);
   if (!layerTree->Initialize(aHwnd, aError)) {
     return nullptr;
   }
@@ -83,12 +83,11 @@ void DCLayerTree::Shutdown() { DCLayerTree::sGpuOverlayInfo = nullptr; }
 
 DCLayerTree::DCLayerTree(gl::GLContext* aGL, EGLConfig aEGLConfig,
                          ID3D11Device* aDevice, ID3D11DeviceContext* aCtx,
-                         HWND aHwnd, IDCompositionDevice2* aCompositionDevice)
+                         IDCompositionDevice2* aCompositionDevice)
     : mGL(aGL),
       mEGLConfig(aEGLConfig),
       mDevice(aDevice),
       mCtx(aCtx),
-      mHwnd(aHwnd),
       mCompositionDevice(aCompositionDevice),
       mDebugCounter(false),
       mDebugVisualRedrawRegions(false),
@@ -1359,8 +1358,7 @@ bool DCSurfaceVideo::CalculateSwapChainSize(gfx::Matrix& aTransform) {
       GetVpAutoHDRSupported(vendorId, mDCLayerTree->GetVideoContext(),
                             mDCLayerTree->GetVideoProcessor());
   const bool contentIsHDR = false;  // XXX for now, only non-HDR is supported.
-  const bool monitorIsHDR =
-      gfx::DeviceManagerDx::Get()->WindowHDREnabled(mDCLayerTree->GetHwnd());
+  const bool monitorIsHDR = gfx::DeviceManagerDx::Get()->SystemHDREnabled();
   const bool powerIsCharging = RenderThread::Get()->GetPowerIsCharging();
 
   bool useVpAutoHDR = gfx::gfxVars::WebRenderOverlayVpAutoHDR() &&
