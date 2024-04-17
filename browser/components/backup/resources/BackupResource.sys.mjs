@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -161,7 +163,11 @@ export class BackupResource {
           readOnly: true,
         });
 
-        await connection.backup(destFilePath);
+        await connection.backup(
+          destFilePath,
+          BackupResource.SQLITE_PAGES_PER_STEP,
+          BackupResource.SQLITE_STEP_DELAY_MS
+        );
       } finally {
         await connection?.close();
       }
@@ -233,3 +239,17 @@ export class BackupResource {
     throw new Error("BackupResource::backup must be overridden");
   }
 }
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  BackupResource,
+  "SQLITE_PAGES_PER_STEP",
+  "browser.backup.sqlite.pages_per_step",
+  5
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  BackupResource,
+  "SQLITE_STEP_DELAY_MS",
+  "browser.backup.sqlite.step_delay_ms",
+  250
+);
