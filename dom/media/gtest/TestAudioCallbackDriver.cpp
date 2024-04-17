@@ -289,7 +289,8 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY {
   // Wait for the audio driver to have started the stream before running data
   // callbacks. driver->Start() does a dispatch to the cubeb operation thread
   // and starts the stream there.
-  nsCOMPtr<nsIEventTarget> cubebOpThread = CUBEB_TASK_THREAD;
+  nsCOMPtr<nsIEventTarget> cubebOpThread =
+      CubebUtils::GetCubebOperationThread();
   MOZ_ALWAYS_SUCCEEDS(SyncRunnable::DispatchToThread(
       cubebOpThread, NS_NewRunnableFunction(__func__, [] {})));
 
@@ -421,7 +422,8 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY {
   // Wait for the audio driver to have started or the DeviceChanged event will
   // be ignored. driver->Start() does a dispatch to the cubeb operation thread
   // and starts the stream there.
-  nsCOMPtr<nsIEventTarget> cubebOpThread = CUBEB_TASK_THREAD;
+  nsCOMPtr<nsIEventTarget> cubebOpThread =
+      CubebUtils::GetCubebOperationThread();
   MOZ_ALWAYS_SUCCEEDS(SyncRunnable::DispatchToThread(
       cubebOpThread, NS_NewRunnableFunction(__func__, [] {})));
 

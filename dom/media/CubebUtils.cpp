@@ -14,6 +14,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Components.h"
+#include "mozilla/SharedThreadPool.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
@@ -763,6 +764,13 @@ bool SandboxEnabled() {
 #else
   return false;
 #endif
+}
+
+already_AddRefed<SharedThreadPool> GetCubebOperationThread() {
+  RefPtr<SharedThreadPool> pool = SharedThreadPool::Get("CubebOperation"_ns, 1);
+  const uint32_t kIdleThreadTimeoutMs = 2000;
+  pool->SetIdleThreadTimeout(PR_MillisecondsToInterval(kIdleThreadTimeoutMs));
+  return pool.forget();
 }
 
 uint32_t MaxNumberOfChannels() {

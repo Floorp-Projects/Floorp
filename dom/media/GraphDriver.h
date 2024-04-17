@@ -30,12 +30,6 @@ class nsAutoRefTraits<cubeb_stream> : public nsPointerRefTraits<cubeb_stream> {
 };
 
 namespace mozilla {
-
-// A thread pool containing only one thread to execute the cubeb operations. We
-// should always use this thread to init, destroy, start, or stop cubeb streams,
-// to avoid data racing or deadlock issues across platforms.
-#define CUBEB_TASK_THREAD SharedThreadPool::Get("CubebOperation"_ns, 1)
-
 /**
  * Assume we can run an iteration of the MediaTrackGraph loop in this much time
  * or less.
