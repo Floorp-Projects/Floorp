@@ -48,6 +48,7 @@ test_url = "http://www.espn.com/nba/story/_/page/allstarweekend25788027/the-comp
 secondary_url = "https://www.espn.com/nba/draft/news"
 
 ["expedia"]
+playback_pageset_manifest = "mitm8-darwin-firefox-expedia.manifest"
 secondary_url = "https://groups.expedia.com/Group-Rate/?locale=en_US&ol=1"
 test_url = "https://expedia.com/Hotel-Search?destination=New+York%2C+New+York&latLong=40.756680%2C-73.986470&regionId=178293&startDate=&endDate=&rooms=1&_xpid=11905%7C1&adults=2"
 
@@ -108,6 +109,7 @@ secondary_url = "https://www.linkedin.com/in/thommy-harris-hk-385723106/"
 test_url = "https://www.linkedin.com/feed/"
 
 ["microsoft"]
+playback_pageset_manifest = "mitm8-linux-firefox-microsoft.manifest"
 secondary_url = "https://support.microsoft.com/en-us"
 test_url = "https://www.microsoft.com/en-us/"
 
