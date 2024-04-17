@@ -8,6 +8,10 @@
     "allowJs": true,
     "checkJs": true,
     "jsx": "preserve",
+    "strict": true,
+    "skipLibCheck": true,
+    "allowImportingTsExtensions": true,
+    "isolatedModules": true,
     "jsxImportSource": "solid-js",
     "paths": {
       "@types/*": ["./@types/*"],

@@ -9,6 +9,10 @@ const { BrowserManagerSidebar } = ChromeUtils.importESModule(
   "resource://noraneko/modules/BrowserManagerSidebar.sys.mjs",
 );
 
+const { BrowserManagerSidebarPanelWindowUtils } = ChromeUtils.importESModule(
+  "resource://noraneko-private/modules/bms/BrowserManagerSidebarPanelWindowUtils.sys.mjs",
+);
+
 export class CBrowserManagerSidebar {
   private static instance: CBrowserManagerSidebar;
 
@@ -16,7 +20,7 @@ export class CBrowserManagerSidebar {
   contextMenu = new BMSContextMenu(this);
   mouseEvent = new BMSMouseEvent();
 
-  currentPanel: string = null;
+  currentPanel = "";
   clickedWebpanel = null;
   webpanel = null;
   contextWebpanel = null;
@@ -57,6 +61,7 @@ export class CBrowserManagerSidebar {
   }
 
   private constructor() {
+    inject();
     Services.prefs.addObserver(
       "floorp.browser.sidebar2.global.webpanel.width",
       () => this.controlFunctions.setSidebarWidth(this.currentPanel),
@@ -93,9 +98,13 @@ export class CBrowserManagerSidebar {
       "floorp-change-panel-show",
     );
     const addbutton = document.getElementById("add-button");
-    addbutton.ondragover = this.mouseEvent.dragOver;
-    addbutton.ondragleave = this.mouseEvent.dragLeave;
-    addbutton.ondrop = this.mouseEvent.drop;
+    //TODO: remove when addbutton is added
+    if (addbutton) {
+      addbutton.ondragover = this.mouseEvent.dragOver;
+      addbutton.ondragleave = this.mouseEvent.dragLeave;
+      addbutton.ondrop = this.mouseEvent.drop;
+    }
+
     //startup functions
     this.controlFunctions.makeSidebarIcon();
     // sidebar display
@@ -220,19 +229,21 @@ function inject() {
   insert(
     document.getElementById("browser"),
     sidebar(),
-    document.getElementById("sidebar-splitter"),
+    document.getElementById("appcontent"),
   );
   console.log("body");
   insert(
     document.body,
     sidebarContext(),
-    document.getElementById("unified-extensions-item-template"),
+    document.getElementById("window-modal-dialog"),
   );
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  inject();
-  //init
-  //@ts-ignore
-  window.gBrowserManagerSidebar = CBrowserManagerSidebar.getInstance();
-});
+// function onDOMLoad() {}
+
+// document.addEventListener("DOMContentLoaded", () => {
+
+//   //init
+//   //@ts-ignore
+
+// });

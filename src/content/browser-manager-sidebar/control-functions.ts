@@ -1,4 +1,8 @@
 import type { CBrowserManagerSidebar } from ".";
+
+const { ContextualIdentityService } = ChromeUtils.importESModule(
+  "resource://gre/modules/ContextualIdentityService.sys.mjs",
+);
 export class BMSControlFunctions {
   public bmsInstance: CBrowserManagerSidebar;
   constructor(BMSInstance: CBrowserManagerSidebar) {
@@ -14,7 +18,9 @@ export class BMSControlFunctions {
     const selectedURL =
       this.bmsInstance.BROWSER_SIDEBAR_DATA.data[modeValuePref].url ?? "";
     this.changeVisibleCommandButton(selectedURL.startsWith("floorp//"));
-    for (const elem of document.getElementsByClassName("webpanels")) {
+    for (const elem of Array.from(
+      document.getElementsByClassName("webpanels"),
+    )) {
       elem.hidden = true;
       if (
         elem.classList.contains("isFloorp") ||
@@ -26,13 +32,13 @@ export class BMSControlFunctions {
       }
     }
     if (
-      document.getElementById("sidebar-splitter2").getAttribute("hidden") ===
+      document.getElementById("sidebar-splitter2")?.getAttribute("hidden") ===
       "true"
     ) {
       this.changeVisibilityOfWebPanel();
     }
     this.changeCheckPanel(
-      document.getElementById("sidebar-splitter2").getAttribute("hidden") !==
+      document.getElementById("sidebar-splitter2")?.getAttribute("hidden") !==
         "true",
     );
     if (selectedwebpanel != null) {
@@ -53,10 +59,14 @@ export class BMSControlFunctions {
   }
 
   unloadAllWebpanel() {
-    for (const elem of document.getElementsByClassName("webpanels")) {
+    for (const elem of Array.from(
+      document.getElementsByClassName("webpanels"),
+    )) {
       elem.remove();
     }
-    for (const elem of document.getElementsByClassName("sidepanel-icon")) {
+    for (const elem of Array.from(
+      document.getElementsByClassName("sidepanel-icon"),
+    )) {
       elem.removeAttribute("muted");
     }
     this.bmsInstance.currentPanel = null;

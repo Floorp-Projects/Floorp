@@ -28,6 +28,8 @@ async function compile() {
       assetsInlineLimit: 0,
 
       rollupOptions: {
+        //https://github.com/vitejs/vite/discussions/14454
+        preserveEntrySignatures: "allow-extension",
         input: {
           index: "src/content/index.ts",
           "webpanel-index": path.resolve(
@@ -119,7 +121,7 @@ async function compile() {
           .replace(".mts", ".mjs");
         const outdir = path.dirname(outpath);
         try {
-          await fs.access("dist/noraneko/resource/modules/");
+          await fs.access(outdir);
         } catch {
           await fs.mkdir(outdir, { recursive: true });
         }
@@ -129,12 +131,57 @@ async function compile() {
             "\n//# sourceMappingURL= " +
             path.relative(path.dirname(outpath), outpath + ".map"),
         );
-        await fs.writeFile(outpath + ".map", output.map);
+        await fs.writeFile(`${outpath}.map`, output.map);
       })();
       listPromise.push(promise);
     }
     return Promise.all(listPromise);
   });
+
+  //swc / compile modules
+  await fg
+    .glob("src/private/browser/components/**/*", { onlyFiles: true })
+    .then((paths) => {
+      const listPromise = [];
+      for (const filepath of paths) {
+        const promise = (async () => {
+          const output = await swc.transformFile(filepath, {
+            jsc: {
+              parser: {
+                syntax: "typescript",
+                decorators: true,
+                importAssertions: true,
+                dynamicImport: true,
+              },
+              target: "esnext",
+            },
+            sourceMaps: true,
+          });
+          const outpath = filepath
+            .replace(
+              "src/private/browser/components/",
+              "dist/noraneko/private/resource/modules/",
+            )
+            .replace(".ts", ".js")
+            .replace(".mts", ".mjs");
+          const outdir = path.dirname(outpath);
+          try {
+            await fs.access(outdir);
+          } catch {
+            await fs.mkdir(outdir, { recursive: true });
+          }
+          await fs.writeFile(
+            outpath,
+            output.code +
+              "\n//# sourceMappingURL= " +
+              path.relative(path.dirname(outpath), outpath + ".map"),
+          );
+          await fs.writeFile(`${outpath}.map`, output.map);
+        })();
+        listPromise.push(promise);
+      }
+      return Promise.all(listPromise);
+    });
 
   // await fs.cp("public", "dist", { recursive: true });
 }

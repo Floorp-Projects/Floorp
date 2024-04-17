@@ -1,3 +1,5 @@
 content noraneko content/
 skin noraneko classic/1.0 skin/
 resource noraneko resource/ contentaccessible=yes
+
+resource noraneko-private private/resource/ contentaccessible=yes
