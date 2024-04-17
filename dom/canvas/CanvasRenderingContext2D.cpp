@@ -5390,6 +5390,10 @@ MaybeGetSurfaceDescriptorForRemoteCanvas(
     if (subdescType == layers::RemoteDecoderVideoSubDescriptor::Tnull_t) {
       return sd;
     }
+    if (subdescType == layers::RemoteDecoderVideoSubDescriptor::
+                           TSurfaceDescriptorMacIOSurface) {
+      return sd;
+    }
   }
 
   return Nothing();
