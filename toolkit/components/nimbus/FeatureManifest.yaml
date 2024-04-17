@@ -848,6 +848,12 @@ pocketNewtab:
         pref: browser.newtabpage.activity-stream.newtabWallpapers.enabled
       description: >-
         Turns on and off wallpaper support.
+    newtabWeatherEnabled:
+      type: boolean
+      description: >-
+        Turns on and off the weather widget in home and newtab
+      fallbackPref: >-
+        browser.newtabpage.activity-stream.feeds.system.showWeather
     recsPersonalized:
       type: boolean
       fallbackPref: >-
