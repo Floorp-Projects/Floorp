@@ -80,3 +80,10 @@ Benchmarks
 ----------
 
 Benchmarks gather their own custom metrics unlike the pageload tests above. Please ping the owners of those benchmarks to determine what they mean and how they are produced, or reach out to the Performance Test and Tooling team in #perftest on Element.
+
+Metric Definitions
+------------------
+
+The following documents all available metrics that current alert in Raptor Browsertime tests.
+
+{metrics_documentation}
