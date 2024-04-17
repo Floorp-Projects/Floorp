@@ -25,6 +25,9 @@ UNSUPPORTED_FEATURES = set(
         "legacy-regexp",  # Bug 1306461
         "regexp-duplicate-named-groups",  # Bug 1773135
         "set-methods",  # Bug 1805038
+        "Float16Array",  # Bug 1833646
+        "explicit-resource-management",  # Bug 1569081
+        "regexp-modifiers",
     ]
 )
 FEATURE_CHECK_NEEDED = {
