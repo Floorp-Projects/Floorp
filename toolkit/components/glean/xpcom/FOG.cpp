@@ -11,6 +11,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/FOGIPC.h"
+#include "mozilla/browser/NimbusFeatures.h"
 #include "mozilla/glean/bindings/Common.h"
 #include "mozilla/glean/bindings/jog/jog_ffi_generated.h"
 #include "mozilla/glean/fog_ffi_generated.h"
@@ -118,7 +119,8 @@ extern "C" bool FOG_TooLateToSend(void) {
 // This allows us to pass the configurable maximum ping limit (in pings per
 // minute) to Rust. Default value is 15.
 extern "C" uint32_t FOG_MaxPingLimit(void) {
-  return Preferences::GetInt("telemetry.glean.internal.maxPingsPerMinute");
+  return NimbusFeatures::GetInt("gleanInternalSdk"_ns,
+                                "gleanMaxPingsPerMinute"_ns, 15);
 }
 
 // Called when knowing if we're in automation is necessary.
@@ -132,7 +134,8 @@ FOG::InitializeFOG(const nsACString& aDataPathOverride,
   gInitializeCalled = true;
   RunOnShutdown(
       [&] {
-        if (Preferences::GetBool("telemetry.glean.internal.finalInactive")) {
+        if (NimbusFeatures::GetBool("gleanInternalSdk"_ns, "finalInactive"_ns,
+                                    false)) {
           glean::impl::fog_internal_glean_handle_client_inactive();
         }
       },
