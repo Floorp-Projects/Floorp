@@ -240,6 +240,12 @@ export class ScreenshotsOverlay {
 
     this.#setState(STATES.CROSSHAIRS);
 
+    this.selection = this.window.getSelection();
+    this.ranges = [];
+    for (let i = 0; i < this.selection.rangeCount; i++) {
+      this.ranges.push(this.selection.getRangeAt(i));
+    }
+
     this.#initialized = true;
   }
 
@@ -340,6 +346,9 @@ export class ScreenshotsOverlay {
         break;
       case "keyup":
         this.handleKeyUp(event);
+        break;
+      case "selectionchange":
+        this.handleSelectionChange();
         break;
     }
   }
@@ -887,6 +896,19 @@ export class ScreenshotsOverlay {
             break;
         }
         break;
+    }
+  }
+
+  /**
+   * All of the selection ranges were recorded at initialization. The ranges
+   * are removed when focus is set to the buttons so we add the selection
+   * ranges back so a selected region can be captured.
+   */
+  handleSelectionChange() {
+    if (this.ranges.length) {
+      for (let range of this.ranges) {
+        this.selection.addRange(range);
+      }
     }
   }
 
