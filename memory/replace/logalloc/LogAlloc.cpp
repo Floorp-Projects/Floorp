@@ -21,7 +21,7 @@
 #include "Mutex.h"
 
 static malloc_table_t sFuncs;
-static intptr_t sFd = 0;
+static platform_handle_t sFd = 0;
 static bool sStdoutOrStderr = false;
 
 static Mutex sMutex MOZ_UNANNOTATED;
@@ -169,7 +169,7 @@ void replace_init(malloc_table_t* aTable, ReplaceMallocBridge** aBridge) {
                       nullptr, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
     }
     if (handle != INVALID_HANDLE_VALUE) {
-      sFd = reinterpret_cast<intptr_t>(handle);
+      sFd = handle;
     }
 #else
     if (fd == -1) {

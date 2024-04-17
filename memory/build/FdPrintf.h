@@ -7,6 +7,12 @@
 #ifndef __FdPrintf_h__
 #define __FdPrintf_h__
 
+#ifdef _WIN32
+typedef void* platform_handle_t;
+#else
+typedef int platform_handle_t;
+#endif
+
 /* We can't use libc's (f)printf because it would reenter in replace_malloc,
  * So use a custom and simplified version.  Only %p, %zu, %s and %% are
  * supported, %zu, %s, support width specifiers.
@@ -18,7 +24,7 @@
  * APIs is that they don't support O_APPEND in a multi-process-safe way,
  * while CreateFile does.
  */
-void FdPrintf(intptr_t aFd, const char* aFormat, ...)
+void FdPrintf(platform_handle_t aFd, const char* aFormat, ...)
 #ifdef __GNUC__
     __attribute__((format(printf, 2, 3)))
 #endif
