@@ -19435,7 +19435,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
-   * **playback pageset manifest**: mitm7-linux-firefox-expedia.manifest
+   * **playback pageset manifest**: mitm8-darwin-firefox-expedia.manifest
    * **playback version**: 8.1.1
    * **secondary url**: `<https://groups.expedia.com/Group-Rate/?locale=en_US&ol=1>`__
    * **test url**: `<https://expedia.com/Hotel-Search?destination=New+York%2C+New+York&latLong=40.756680%2C-73.986470&regionId=178293&startDate=&endDate=&rooms=1&_xpid=11905%7C1&adults=2>`__
@@ -19716,7 +19716,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp6/desktop/browsertime-tp6.toml#54>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp6/desktop/browsertime-tp6.toml#55>`__
    * **lower is better**: true
    * **page cycles**: 25
    * **page timeout**: 60000
@@ -20082,7 +20082,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp6/desktop/browsertime-tp6.toml#59>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp6/desktop/browsertime-tp6.toml#60>`__
    * **lower is better**: true
    * **page cycles**: 25
    * **page timeout**: 60000
@@ -20480,7 +20480,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp6/desktop/browsertime-tp6.toml#64>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp6/desktop/browsertime-tp6.toml#65>`__
    * **lower is better**: true
    * **page complete wait time**: 8000
    * **page cycles**: 25
@@ -20805,7 +20805,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp6/desktop/browsertime-tp6.toml#69>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp6/desktop/browsertime-tp6.toml#70>`__
    * **lower is better**: true
    * **page cycles**: 25
    * **page timeout**: 60000
@@ -21128,7 +21128,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp6/desktop/browsertime-tp6.toml#74>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp6/desktop/browsertime-tp6.toml#75>`__
    * **lower is better**: true
    * **page cycles**: 25
    * **page timeout**: 60000
@@ -21451,7 +21451,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp6/desktop/browsertime-tp6.toml#78>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp6/desktop/browsertime-tp6.toml#79>`__
    * **lower is better**: true
    * **page cycles**: 25
    * **page timeout**: 60000
@@ -21850,7 +21850,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp6/desktop/browsertime-tp6.toml#84>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp6/desktop/browsertime-tp6.toml#85>`__
    * **lower is better**: true
    * **page cycles**: 25
    * **page timeout**: 60000
@@ -22281,7 +22281,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp6/desktop/browsertime-tp6.toml#88>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp6/desktop/browsertime-tp6.toml#89>`__
    * **lower is better**: true
    * **page cycles**: 25
    * **page timeout**: 60000
@@ -22586,7 +22586,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp6/desktop/browsertime-tp6.toml#100>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp6/desktop/browsertime-tp6.toml#101>`__
    * **lower is better**: true
    * **page cycles**: 25
    * **page timeout**: 60000
@@ -23087,7 +23087,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp6/desktop/browsertime-tp6.toml#105>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp6/desktop/browsertime-tp6.toml#106>`__
    * **lower is better**: true
    * **page cycles**: 25
    * **page timeout**: 60000
@@ -23411,12 +23411,12 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp6/desktop/browsertime-tp6.toml#110>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp6/desktop/browsertime-tp6.toml#111>`__
    * **lower is better**: true
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
-   * **playback pageset manifest**: mitm7-linux-firefox-microsoft.manifest
+   * **playback pageset manifest**: mitm8-linux-firefox-microsoft.manifest
    * **playback version**: 8.1.1
    * **secondary url**: `<https://support.microsoft.com/en-us>`__
    * **test url**: `<https://www.microsoft.com/en-us/>`__
@@ -23735,7 +23735,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp6/desktop/browsertime-tp6.toml#114>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp6/desktop/browsertime-tp6.toml#116>`__
    * **lower is better**: true
    * **page cycles**: 25
    * **page timeout**: 60000
@@ -24054,7 +24054,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp6/desktop/browsertime-tp6.toml#119>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp6/desktop/browsertime-tp6.toml#121>`__
    * **lower is better**: true
    * **page cycles**: 25
    * **page timeout**: 60000
@@ -24340,7 +24340,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp6/desktop/browsertime-tp6.toml#123>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp6/desktop/browsertime-tp6.toml#125>`__
    * **lower is better**: true
    * **page cycles**: 25
    * **page timeout**: 60000
@@ -24802,7 +24802,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp6/desktop/browsertime-tp6.toml#127>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp6/desktop/browsertime-tp6.toml#129>`__
    * **lower is better**: true
    * **page cycles**: 25
    * **page timeout**: 60000
@@ -25120,7 +25120,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp6/desktop/browsertime-tp6.toml#131>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp6/desktop/browsertime-tp6.toml#133>`__
    * **lower is better**: true
    * **page cycles**: 25
    * **page timeout**: 60000
@@ -25443,7 +25443,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp6/desktop/browsertime-tp6.toml#135>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp6/desktop/browsertime-tp6.toml#137>`__
    * **lower is better**: true
    * **page cycles**: 25
    * **page timeout**: 60000
@@ -25767,7 +25767,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp6/desktop/browsertime-tp6.toml#141>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp6/desktop/browsertime-tp6.toml#143>`__
    * **lower is better**: true
    * **page cycles**: 25
    * **page timeout**: 60000
@@ -26644,7 +26644,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp6/desktop/browsertime-tp6.toml#147>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp6/desktop/browsertime-tp6.toml#149>`__
    * **lower is better**: true
    * **page cycles**: 25
    * **page timeout**: 60000
@@ -26968,7 +26968,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp6/desktop/browsertime-tp6.toml#152>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp6/desktop/browsertime-tp6.toml#154>`__
    * **lower is better**: true
    * **measure**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **page cycles**: 25
@@ -27294,7 +27294,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp6/desktop/browsertime-tp6.toml#165>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp6/desktop/browsertime-tp6.toml#167>`__
    * **lower is better**: true
    * **page cycles**: 25
    * **page timeout**: 60000
@@ -27910,7 +27910,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp6/desktop/browsertime-tp6.toml#170>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp6/desktop/browsertime-tp6.toml#172>`__
    * **lower is better**: true
    * **page cycles**: 25
    * **page timeout**: 60000
@@ -28149,7 +28149,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp6/desktop/browsertime-tp6.toml#175>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp6/desktop/browsertime-tp6.toml#177>`__
    * **lower is better**: true
    * **page cycles**: 25
    * **page timeout**: 60000
@@ -28655,7 +28655,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp6/desktop/browsertime-tp6.toml#179>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp6/desktop/browsertime-tp6.toml#181>`__
    * **lower is better**: true
    * **page cycles**: 25
    * **page timeout**: 60000
@@ -29053,7 +29053,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **browser cycles**: 25
    * **expected**: pass
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp6/desktop/browsertime-tp6.toml#184>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/tp6/desktop/browsertime-tp6.toml#186>`__
    * **lower is better**: true
    * **page cycles**: 25
    * **page timeout**: 60000
