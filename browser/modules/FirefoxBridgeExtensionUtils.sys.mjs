@@ -56,6 +56,10 @@ export const FirefoxBridgeExtensionUtils = {
    * In Firefox 122, we enabled the firefox and firefox-private protocols.
    * We switched over to using firefox-bridge and firefox-private-bridge,
    *
+   * In Firefox 126, we deleted the above firefox-bridge and
+   * firefox-private-bridge protocols in favor of using native
+   * messaging so we are only keeping the deletion code.
+   *
    * but we want to clean up the use of the other protocols.
    *
    * deleteBridgeProtocolRegistryEntryHelper handles everything outside of the logic needed for
@@ -66,7 +70,15 @@ export const FirefoxBridgeExtensionUtils = {
    * them with. If the entries are changed in any way, it is assumed that the user
    * mucked with them manually and knows what they are doing.
    */
+
+  PUBLIC_PROTOCOL: "firefox-bridge",
+  PRIVATE_PROTOCOL: "firefox-private-bridge",
+  OLD_PUBLIC_PROTOCOL: "firefox",
+  OLD_PRIVATE_PROTOCOL: "firefox-private",
+
   maybeDeleteBridgeProtocolRegistryEntries(
+    publicProtocol = this.PUBLIC_PROTOCOL,
+    privateProtocol = this.PRIVATE_PROTOCOL,
     deleteBridgeProtocolRegistryEntryHelper = new DeleteBridgeProtocolRegistryEntryHelperImplementation()
   ) {
     try {
@@ -110,118 +122,13 @@ export const FirefoxBridgeExtensionUtils = {
         }
       };
 
-      maybeDeleteRegistryKey("firefox", `\"${path}\" -osint -url \"%1\"`);
+      maybeDeleteRegistryKey(publicProtocol, `\"${path}\" -osint -url \"%1\"`);
       maybeDeleteRegistryKey(
-        "firefox-private",
+        privateProtocol,
         `\"${path}\" -osint -private-window \"%1\"`
       );
     } catch (err) {
       console.error(err);
-    } finally {
-      wrk.close();
-    }
-  },
-
-  /**
-   * Registers the firefox-bridge and firefox-private-bridge protocols
-   * on the Windows platform.
-   */
-  maybeRegisterFirefoxBridgeProtocols() {
-    const FIREFOX_BRIDGE_HANDLER_NAME = "firefox-bridge";
-    const FIREFOX_PRIVATE_BRIDGE_HANDLER_NAME = "firefox-private-bridge";
-    const path = Services.dirsvc.get("XREExeF", Ci.nsIFile).path;
-    let wrk = Cc["@mozilla.org/windows-registry-key;1"].createInstance(
-      Ci.nsIWindowsRegKey
-    );
-    try {
-      wrk.open(wrk.ROOT_KEY_CLASSES_ROOT, "", wrk.ACCESS_READ);
-      let FxSet = wrk.hasChild(FIREFOX_BRIDGE_HANDLER_NAME);
-      let FxPrivateSet = wrk.hasChild(FIREFOX_PRIVATE_BRIDGE_HANDLER_NAME);
-      wrk.close();
-      if (FxSet && FxPrivateSet) {
-        return;
-      }
-      wrk.open(wrk.ROOT_KEY_CURRENT_USER, "Software\\Classes", wrk.ACCESS_ALL);
-      const maybeUpdateRegistry = (isSetAlready, handler, protocolName) => {
-        if (isSetAlready) {
-          return;
-        }
-        let FxKey = wrk.createChild(handler, wrk.ACCESS_ALL);
-        try {
-          // Write URL protocol key
-          FxKey.writeStringValue("", protocolName);
-          FxKey.writeStringValue("URL Protocol", "");
-          FxKey.close();
-          // Write defaultIcon key
-          FxKey.create(
-            FxKey.ROOT_KEY_CURRENT_USER,
-            "Software\\Classes\\" + handler + "\\DefaultIcon",
-            FxKey.ACCESS_ALL
-          );
-          FxKey.open(
-            FxKey.ROOT_KEY_CURRENT_USER,
-            "Software\\Classes\\" + handler + "\\DefaultIcon",
-            FxKey.ACCESS_ALL
-          );
-          FxKey.writeStringValue("", `\"${path}\",1`);
-          FxKey.close();
-          // Write shell\\open\\command key
-          FxKey.create(
-            FxKey.ROOT_KEY_CURRENT_USER,
-            "Software\\Classes\\" + handler + "\\shell",
-            FxKey.ACCESS_ALL
-          );
-          FxKey.create(
-            FxKey.ROOT_KEY_CURRENT_USER,
-            "Software\\Classes\\" + handler + "\\shell\\open",
-            FxKey.ACCESS_ALL
-          );
-          FxKey.create(
-            FxKey.ROOT_KEY_CURRENT_USER,
-            "Software\\Classes\\" + handler + "\\shell\\open\\command",
-            FxKey.ACCESS_ALL
-          );
-          FxKey.open(
-            FxKey.ROOT_KEY_CURRENT_USER,
-            "Software\\Classes\\" + handler + "\\shell\\open\\command",
-            FxKey.ACCESS_ALL
-          );
-          if (handler == FIREFOX_PRIVATE_BRIDGE_HANDLER_NAME) {
-            FxKey.writeStringValue(
-              "",
-              `\"${path}\" -osint -private-window \"%1\"`
-            );
-          } else {
-            FxKey.writeStringValue("", `\"${path}\" -osint -url \"%1\"`);
-          }
-        } catch (ex) {
-          console.error(ex);
-        } finally {
-          FxKey.close();
-        }
-      };
-
-      try {
-        maybeUpdateRegistry(
-          FxSet,
-          FIREFOX_BRIDGE_HANDLER_NAME,
-          "URL:Firefox Bridge Protocol"
-        );
-      } catch (ex) {
-        console.error(ex);
-      }
-
-      try {
-        maybeUpdateRegistry(
-          FxPrivateSet,
-          FIREFOX_PRIVATE_BRIDGE_HANDLER_NAME,
-          "URL:Firefox Private Bridge Protocol"
-        );
-      } catch (ex) {
-        console.error(ex);
-      }
-    } catch (ex) {
-      console.error(ex);
     } finally {
       wrk.close();
     }
