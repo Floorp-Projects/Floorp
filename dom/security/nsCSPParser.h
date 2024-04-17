@@ -72,7 +72,6 @@ class nsCSPParser {
   void referrerDirectiveValue(nsCSPDirective* aDir);
   void reportURIList(nsCSPDirective* aDir);
   void sandboxFlagList(nsCSPDirective* aDir);
-  void handleRequireTrustedTypesForDirective(nsCSPDirective* aDir);
   void sourceList(nsTArray<nsCSPBaseSrc*>& outSrcs);
   nsCSPBaseSrc* sourceExpression();
   nsCSPSchemeSrc* schemeSource();
