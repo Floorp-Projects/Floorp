@@ -416,6 +416,17 @@ uiaRawElmProvider::GetPropertyValue(PROPERTYID aPropertyId,
       break;
     }
 
+    case UIA_ClassNamePropertyId: {
+      nsAutoString className;
+      acc->DOMNodeClass(className);
+      if (!className.IsEmpty()) {
+        aPropertyValue->vt = VT_BSTR;
+        aPropertyValue->bstrVal = ::SysAllocString(className.get());
+        return S_OK;
+      }
+      break;
+    }
+
     case UIA_ControlTypePropertyId:
       aPropertyValue->vt = VT_I4;
       aPropertyValue->lVal = GetControlType();
