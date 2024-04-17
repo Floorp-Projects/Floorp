@@ -1,7 +1,7 @@
 export const description = `
 Execution tests for the 'sign' builtin function
 
-S is AbstractFloat, AbstractInt, i32, f32, f16
+S is abstract-float, Type.abstractInt, i32, f32, f16
 T is S or vecN<S>
 @const fn sign(e: T ) -> T
 Returns the sign of e. Component-wise when T is a vector.
@@ -9,47 +9,13 @@ Returns the sign of e. Component-wise when T is a vector.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import {
-  i32,
-  TypeF32,
-  TypeF16,
-  TypeI32,
-  TypeAbstractFloat,
-} from '../../../../../util/conversion.js';
-import { FP } from '../../../../../util/floating_point.js';
-import {
-  fullF32Range,
-  fullF16Range,
-  fullI32Range,
-  fullF64Range,
-} from '../../../../../util/math.js';
-import { makeCaseCache } from '../../case_cache.js';
+import { Type } from '../../../../../util/conversion.js';
 import { allInputSources, onlyConstInputSource, run } from '../../expression.js';
 
-import { abstractBuiltin, builtin } from './builtin.js';
+import { abstractFloatBuiltin, abstractIntBuiltin, builtin } from './builtin.js';
+import { d } from './sign.cache.js';
 
 export const g = makeTestGroup(GPUTest);
-
-export const d = makeCaseCache('sign', {
-  f32: () => {
-    return FP.f32.generateScalarToIntervalCases(fullF32Range(), 'unfiltered', FP.f32.signInterval);
-  },
-  f16: () => {
-    return FP.f16.generateScalarToIntervalCases(fullF16Range(), 'unfiltered', FP.f16.signInterval);
-  },
-  abstract_float: () => {
-    return FP.abstract.generateScalarToIntervalCases(
-      fullF64Range(),
-      'unfiltered',
-      FP.abstract.signInterval
-    );
-  },
-  i32: () =>
-    fullI32Range().map(i => {
-      const signFunc = (i: number): number => (i < 0 ? -1 : i > 0 ? 1 : 0);
-      return { input: [i32(i)], expected: i32(signFunc(i)) };
-    }),
-});
 
 g.test('abstract_float')
   .specURL('https://www.w3.org/TR/WGSL/#sign-builtin')
@@ -61,16 +27,28 @@ g.test('abstract_float')
   )
   .fn(async t => {
     const cases = await d.get('abstract_float');
-    await run(t, abstractBuiltin('sign'), [TypeAbstractFloat], TypeAbstractFloat, t.params, cases);
+    await run(
+      t,
+      abstractFloatBuiltin('sign'),
+      [Type.abstractFloat],
+      Type.abstractFloat,
+      t.params,
+      cases
+    );
   });
 
 g.test('abstract_int')
   .specURL('https://www.w3.org/TR/WGSL/#sign-builtin')
   .desc(`abstract int tests`)
   .params(u =>
-    u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4] as const)
+    u
+      .combine('inputSource', onlyConstInputSource)
+      .combine('vectorize', [undefined, 2, 3, 4] as const)
   )
-  .unimplemented();
+  .fn(async t => {
+    const cases = await d.get('abstract_int');
+    await run(t, abstractIntBuiltin('sign'), [Type.abstractInt], Type.abstractInt, t.params, cases);
+  });
 
 g.test('i32')
   .specURL('https://www.w3.org/TR/WGSL/#sign-builtin')
@@ -80,7 +58,7 @@ g.test('i32')
   )
   .fn(async t => {
     const cases = await d.get('i32');
-    await run(t, builtin('sign'), [TypeI32], TypeI32, t.params, cases);
+    await run(t, builtin('sign'), [Type.i32], Type.i32, t.params, cases);
   });
 
 g.test('f32')
@@ -91,7 +69,7 @@ g.test('f32')
   )
   .fn(async t => {
     const cases = await d.get('f32');
-    await run(t, builtin('sign'), [TypeF32], TypeF32, t.params, cases);
+    await run(t, builtin('sign'), [Type.f32], Type.f32, t.params, cases);
   });
 
 g.test('f16')
@@ -105,5 +83,5 @@ g.test('f16')
   })
   .fn(async t => {
     const cases = await d.get('f16');
-    await run(t, builtin('sign'), [TypeF16], TypeF16, t.params, cases);
+    await run(t, builtin('sign'), [Type.f16], Type.f16, t.params, cases);
   });

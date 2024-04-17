@@ -297,7 +297,9 @@ TODO: Test NaN, Infinity, -Infinity [1]`
 g.test('ufloat_texel_data_in_shader')
   .desc(
     `
-TODO: Test NaN, Infinity [1]`
+Note: this uses values that are representable by both rg11b10ufloat and rgb9e5ufloat.
+
+TODO: Test NaN, Infinity`
   )
   .params(u =>
     u
@@ -312,21 +314,19 @@ TODO: Test NaN, Infinity [1]`
           // Test extrema
           makeParam(format, () => 0),
 
-          // [2]: Test NaN, Infinity
-
           // Test some values
-          makeParam(format, () => 0.119140625),
-          makeParam(format, () => 1.40625),
-          makeParam(format, () => 24896),
+          makeParam(format, () => 128),
+          makeParam(format, () => 1984),
+          makeParam(format, () => 3968),
 
           // Test scattered mixed values
           makeParam(format, (bitLength, i) => {
-            return [24896, 1.40625, 0.119140625, 0.23095703125][i];
+            return [128, 1984, 3968][i];
           }),
 
           // Test mixed values that are close in magnitude.
           makeParam(format, (bitLength, i) => {
-            return [0.1337890625, 0.17919921875, 0.119140625, 0.125][i];
+            return [0.05859375, 0.03125, 0.03515625][i];
           }),
         ];
       })

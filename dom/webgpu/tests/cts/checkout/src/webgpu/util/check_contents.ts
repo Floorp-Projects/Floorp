@@ -19,7 +19,7 @@ import { generatePrettyTable } from './pretty_diff_tables.js';
 /** Generate an expected value at `index`, to test for equality with the actual value. */
 export type CheckElementsGenerator = (index: number) => number;
 /** Check whether the actual `value` at `index` is as expected. */
-export type CheckElementsPredicate = (index: number, value: number) => boolean;
+export type CheckElementsPredicate = (index: number, value: number | bigint) => boolean;
 /**
  * Provides a pretty-printing implementation for a particular CheckElementsPredicate.
  * This is an array; each element provides info to print an additional row in the error message.
@@ -29,9 +29,9 @@ export type CheckElementsSupplementalTableRows = Array<{
   leftHeader: string;
   /**
    * Get the value for a cell in the table with element index `index`.
-   * May be a string or a number; a number will be formatted according to the TypedArray type used.
+   * May be a string or numeric (number | bigint); numerics will be formatted according to the TypedArray type used.
    */
-  getValueForCell: (index: number) => number | string;
+  getValueForCell: (index: number) => string | number | bigint;
 }>;
 
 /**
@@ -43,7 +43,10 @@ export function checkElementsEqual(
   expected: TypedArrayBufferView
 ): ErrorWithExtra | undefined {
   assert(actual.constructor === expected.constructor, 'TypedArray type mismatch');
-  assert(actual.length === expected.length, 'size mismatch');
+  assert(
+    actual.length === expected.length,
+    `length mismatch: expected ${expected.length} got ${actual.length}`
+  );
 
   let failedElementsFirstMaybe: number | undefined = undefined;
   /** Sparse array with `true` for elements that failed. */
@@ -221,13 +224,17 @@ function failCheckElements({
   const printElementsEnd = Math.min(size, failedElementsLast + 2);
   const printElementsCount = printElementsEnd - printElementsStart;
 
-  const numberToString = printAsFloat
-    ? (n: number) => n.toPrecision(4)
-    : (n: number) => intToPaddedHex(n, { byteLength: ctor.BYTES_PER_ELEMENT });
+  const numericToString = (val: number | bigint): string => {
+    if (typeof val === 'number' && printAsFloat) {
+      return val.toPrecision(4);
+    }
+    return intToPaddedHex(val, { byteLength: ctor.BYTES_PER_ELEMENT });
+  };
+
   const numberPrefix = printAsFloat ? '' : '0x:';
 
   const printActual = actual.subarray(printElementsStart, printElementsEnd);
-  const printExpected: Array<Iterable<string | number>> = [];
+  const printExpected: Array<Iterable<string | number | bigint>> = [];
   if (predicatePrinter) {
     for (const { leftHeader, getValueForCell: cell } of predicatePrinter) {
       printExpected.push(
@@ -246,7 +253,7 @@ function failCheckElements({
 
   const opts = {
     fillToWidth: 120,
-    numberToString,
+    numericToString,
   };
   const msg = `Array had unexpected contents at indices ${failedElementsFirst} through ${failedElementsLast}.
  Starting at index ${printElementsStart}:
@@ -263,10 +270,11 @@ ${generatePrettyTable(opts, [
 // Helper helpers
 
 /** Convert an integral `number` into a hex string, padded to the specified `byteLength`. */
-function intToPaddedHex(number: number, { byteLength }: { byteLength: number }) {
-  assert(Number.isInteger(number), 'number must be integer');
-  let s = Math.abs(number).toString(16);
-  if (byteLength) s = s.padStart(byteLength * 2, '0');
-  if (number < 0) s = '-' + s;
-  return s;
+function intToPaddedHex(val: number | bigint, { byteLength }: { byteLength: number }) {
+  assert(Number.isInteger(val), 'number must be integer');
+  const is_negative = typeof val === 'number' ? val < 0 : val < 0n;
+  let str = (is_negative ? -val : val).toString(16);
+  if (byteLength) str = str.padStart(byteLength * 2, '0');
+  if (is_negative) str = '-' + str;
+  return str;
 }

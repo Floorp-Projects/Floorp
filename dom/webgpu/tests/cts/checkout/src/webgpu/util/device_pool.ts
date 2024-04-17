@@ -9,7 +9,12 @@ import {
 } from '../../common/util/util.js';
 import { getDefaultLimits, kLimits } from '../capability_info.js';
 
+// MUST_NOT_BE_IMPORTED_BY_DATA_CACHE
+// This file should not be transitively imported by .cache.ts files
+
 export interface DeviceProvider {
+  /** Adapter the device was created from. Cannot be reused; just for adapter info. */
+  readonly adapter: GPUAdapter;
   readonly device: GPUDevice;
   expectDeviceLost(reason: GPUDeviceLostReason): void;
 }
@@ -283,6 +288,8 @@ type DeviceHolderState = 'free' | 'acquired';
  * Holds a GPUDevice and tracks its state (free/acquired) and handles device loss.
  */
 class DeviceHolder implements DeviceProvider {
+  /** Adapter the device was created from. Cannot be reused; just for adapter info. */
+  readonly adapter: GPUAdapter;
   /** The device. Will be cleared during cleanup if there were unexpected errors. */
   private _device: GPUDevice | undefined;
   /** Whether the device is in use by a test or not. */
@@ -307,10 +314,11 @@ class DeviceHolder implements DeviceProvider {
     const device = await adapter.requestDevice(descriptor);
     assert(device !== null, 'requestDevice returned null');
 
-    return new DeviceHolder(device);
+    return new DeviceHolder(adapter, device);
   }
 
-  private constructor(device: GPUDevice) {
+  private constructor(adapter: GPUAdapter, device: GPUDevice) {
+    this.adapter = adapter;
     this._device = device;
     void this._device.lost.then(ev => {
       this.lostInfo = ev;

@@ -16,6 +16,8 @@ import {
 } from '../webgpu/util/compare.js';
 import { kValue } from '../webgpu/util/constants.js';
 import {
+  abstractFloat,
+  abstractInt,
   bool,
   deserializeValue,
   f16,
@@ -61,6 +63,18 @@ g.test('value').fn(t => {
     u8(kValue.u8.max - 1),
     u8(kValue.u8.max - 0),
 
+    abstractInt(kValue.i64.negative.min),
+    abstractInt(kValue.i64.negative.min + 1n),
+    abstractInt(kValue.i64.negative.min + 2n),
+    abstractInt(kValue.i64.negative.max - 2n),
+    abstractInt(kValue.i64.negative.max - 1n),
+    abstractInt(kValue.i64.positive.min),
+    abstractInt(kValue.i64.positive.min + 1n),
+    abstractInt(kValue.i64.positive.min + 2n),
+    abstractInt(kValue.i64.positive.max - 2n),
+    abstractInt(kValue.i64.positive.max - 1n),
+    abstractInt(kValue.i64.positive.max),
+
     i32(kValue.i32.negative.min + 0),
     i32(kValue.i32.negative.min + 1),
     i32(kValue.i32.negative.min + 2),
@@ -96,6 +110,21 @@ g.test('value').fn(t => {
     i8(kValue.i8.positive.max - 2),
     i8(kValue.i8.positive.max - 1),
     i8(kValue.i8.positive.max - 0),
+
+    abstractFloat(0),
+    abstractFloat(-0),
+    abstractFloat(1),
+    abstractFloat(-1),
+    abstractFloat(0.5),
+    abstractFloat(-0.5),
+    abstractFloat(kValue.f64.positive.max),
+    abstractFloat(kValue.f64.positive.min),
+    abstractFloat(kValue.f64.positive.subnormal.max),
+    abstractFloat(kValue.f64.positive.subnormal.min),
+    abstractFloat(kValue.f64.negative.subnormal.max),
+    abstractFloat(kValue.f64.negative.subnormal.min),
+    abstractFloat(kValue.f64.positive.infinity),
+    abstractFloat(kValue.f64.negative.infinity),
 
     f32(0),
     f32(-0),
@@ -139,6 +168,13 @@ g.test('value').fn(t => {
         [0.0, 1.0],
         [2.0, 3.0],
       ],
+      abstractFloat
+    ),
+    toMatrix(
+      [
+        [0.0, 1.0],
+        [2.0, 3.0],
+      ],
       f32
     ),
     toMatrix(
@@ -147,6 +183,13 @@ g.test('value').fn(t => {
         [3.0, 4.0, 5.0],
       ],
       f16
+    ),
+    toMatrix(
+      [
+        [0.0, 1.0, 2.0, 3.0],
+        [4.0, 5.0, 6.0, 7.0],
+      ],
+      abstractFloat
     ),
     toMatrix(
       [
@@ -162,6 +205,14 @@ g.test('value').fn(t => {
         [4.0, 5.0],
       ],
       f16
+    ),
+    toMatrix(
+      [
+        [0.0, 1.0, 2.0],
+        [3.0, 4.0, 5.0],
+        [6.0, 7.0, 8.0],
+      ],
+      abstractFloat
     ),
     toMatrix(
       [
@@ -186,6 +237,15 @@ g.test('value').fn(t => {
         [4.0, 5.0],
         [6.0, 7.0],
       ],
+      abstractFloat
+    ),
+    toMatrix(
+      [
+        [0.0, 1.0],
+        [2.0, 3.0],
+        [4.0, 5.0],
+        [6.0, 7.0],
+      ],
       f32
     ),
     toMatrix(
@@ -196,6 +256,15 @@ g.test('value').fn(t => {
         [9.0, 10.0, 11.0],
       ],
       f16
+    ),
+    toMatrix(
+      [
+        [0.0, 1.0, 2.0, 3.0],
+        [4.0, 5.0, 6.0, 7.0],
+        [8.0, 9.0, 10.0, 11.0],
+        [12.0, 13.0, 14.0, 15.0],
+      ],
+      abstractFloat
     ),
     toMatrix(
       [

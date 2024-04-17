@@ -6,14 +6,22 @@
 
 The raw data may be edited manually, to add entries or change timing values.
 
-The **list** of tests must stay up to date, so it can be used by external
-tools. This is verified by presubmit checks.
+The list of tests in this file is **not** guaranteed to stay up to date.
+Use the generated `gen/*_variant_list*.json` if you need a complete list.
 
-The `subcaseMS` values are estimates. They can be set to 0 if for some reason
+The `subcaseMS` values are estimates. They can be set to 0 or omitted if for some reason
 you can't estimate the time (or there's an existing test with a long name and
-slow subcases that would result in query strings that are too long), but this
-will produce a non-fatal warning. Avoid creating new warnings whenever
-possible. Any existing failures should be fixed (eventually).
+slow subcases that would result in query strings that are too long).
+It's OK if the number is estimated too high.
+
+These entries are estimates for the amount of time that subcases take to run,
+and are used as inputs into the WPT tooling to attempt to portion out tests into
+approximately same-sized chunks. High estimates are OK, they just may generate
+more chunks than necessary.
+
+To check for missing or 0 entries, run
+`tools/validate --print-metadata-warnings src/webgpu`
+and look at the resulting warnings.
 
 ### Performance
 
@@ -25,46 +33,25 @@ should still execute in under 5 seconds on lower-end computers.
 
 ## Problem
 
-When adding new tests to the CTS you may occasionally see an error like this
+When renaming or removing tests from the CTS you will see an error like this
 when running `npm test` or `npm run standalone`:
 
 ```
-ERROR: Tests missing from listing_meta.json. Please add the new tests (set subcaseMS to 0 if you cannot estimate it):
-  webgpu:shader,execution,expression,binary,af_matrix_addition:matrix:*
-
-/home/runner/work/cts/cts/src/common/util/util.ts:38
-    throw new Error(msg && (typeof msg === 'string' ? msg : msg()));
-          ^
-Error:
-    at assert (/home/runner/work/cts/cts/src/common/util/util.ts:38:11)
-    at crawl (/home/runner/work/cts/cts/src/common/tools/crawl.ts:155:11)
-Warning: non-zero exit code 1
- Use --force to continue.
-
-Aborted due to warnings.
+ERROR: Non-existent tests found in listing_meta.json. Please update:
+  webgpu:api,operation,adapter,requestAdapter:old_test_that_got_renamed:*
 ```
 
-What this error message is trying to tell us, is that there is no entry for
-`webgpu:shader,execution,expression,binary,af_matrix_addition:matrix:*` in
-`src/webgpu/listing_meta.json`.
+## Solution
 
-These entries are estimates for the amount of time that subcases take to run,
-and are used as inputs into the WPT tooling to attempt to portion out tests into
-approximately same-sized chunks.
+This means there is a stale line in `src/webgpu/listing_meta.json` that needs
+to be deleted, or updated to match the rename that you did.
 
-If a value has been defaulted to 0 by someone, you will see warnings like this:
+## Problem
 
-```
-...
-WARNING: subcaseMS≤0 found in listing_meta.json (allowed, but try to avoid):
-  webgpu:shader,execution,expression,binary,af_matrix_addition:matrix:*
-...
-```
+You run `tools/validate --print-metadata-warnings src/webgpu`
+and want to fix the warnings.
 
-These messages should be resolved by adding appropriate entries to the JSON
-file.
-
-## Solution 1 (manual, best for simple tests)
+## Solution 1 (manual, best for one-off updates of simple tests)
 
 If you're developing new tests and need to update this file, it is sometimes
 easiest to do so manually. Run your tests under your usual development workflow
@@ -82,30 +69,18 @@ these values, though they do require some manual intervention. The rest of this
 doc will be a walkthrough of running these tools.
 
 Timing data can be captured in bulk and "merged" into this file using
-the `merge_listing_times` tool. This is useful when a large number of tests
+the `merge_listing_times` tool. This is
+This is useful when a large number of tests
 change or otherwise a lot of tests need to be updated, but it also automates the
 manual steps above.
 
 The tool can also be used without any inputs to reformat `listing_meta.json`.
 Please read the help message of `merge_listing_times` for more information.
 
-### Placeholder Value
-
-If your development workflow requires a clean build, the first step is to add a
-placeholder value for entry to `src/webgpu/listing_meta.json`, since there is a
-chicken-and-egg problem for updating these values.
-
-```
-  "webgpu:shader,execution,expression,binary,af_matrix_addition:matrix:*": { "subcaseMS": 0 },
-```
-
-(It should have a value of 0, since later tooling updates the value if the newer
-value is higher.)
-
 ### Websocket Logger
 
 The first tool that needs to be run is `websocket-logger`, which receives data
-on a WebSocket channel to capture timing data when CTS is run. This
+on a WebSocket channel at `localhost:59497` to capture timing data when CTS is run. This
 should be run in a separate process/terminal, since it needs to stay running
 throughout the following steps.
 
@@ -125,10 +100,19 @@ Writing to wslog-2023-09-12T18-57-34.txt
 ...
 ```
 
+See also [tools/websocket-logger/README.md](../tools/websocket-logger/README.md).
+
 ### Running CTS
 
 Now we need to run the specific cases in CTS that we need to time.
-This should be possible under any development workflow (as long as its runtime environment, like Node, supports WebSockets), but the most well-tested way is using the standalone web runner.
+
+This should be possible under any development workflow by logging through a
+side-channel (as long as its runtime environment, like Node, supports WebSockets).
+Regardless of development workflow, you need to enable logToWebSocket flag
+(`?log_to_web_socket=1` in browser, `--log-to-web-socket` on command line, or
+just hack it in by switching the default in `options.ts`).
+
+The most well-tested way to do this is using the standalone web runner.
 
 This requires serving the CTS locally. In the project root:
 
@@ -141,7 +125,7 @@ Once this is started you can then direct a WebGPU enabled browser to the
 specific CTS entry and run the tests, for example:
 
 ```
-http://localhost:8080/standalone/?q=webgpu:shader,execution,expression,binary,af_matrix_addition:matrix:*
+http://localhost:8080/standalone/?log_to_web_socket=1&q=webgpu:*
 ```
 
 If the tests have a high variance in runtime, you can run them multiple times.
@@ -156,8 +140,9 @@ This can be done using the following command:
 
 ```
 tools/merge_listing_times webgpu -- tools/websocket-logger/wslog-2023-09-12T18-57-34.txt
+tools/merge_listing_times webgpu -- tools/websocket-logger/wslog-*.txt
 ```
 
-where the text file is the result file from websocket-logger.
+Or, you can point it to one of the log files from a specific invocation of websocket-logger.
 
 Now you just need to commit the pending diff in your repo.

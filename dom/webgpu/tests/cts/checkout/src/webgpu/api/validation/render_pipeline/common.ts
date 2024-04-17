@@ -1,4 +1,4 @@
-import { kTextureFormatInfo } from '../../../format_info.js';
+import { ColorTextureFormat, kTextureFormatInfo } from '../../../format_info.js';
 import {
   getFragmentShaderCodeWithOutput,
   getPlainTypeInfo,
@@ -6,12 +6,14 @@ import {
 } from '../../../util/shader.js';
 import { ValidationTest } from '../validation_test.js';
 
+type ColorTargetState = GPUColorTargetState & { format: ColorTextureFormat };
+
 const values = [0, 1, 0, 1];
 export class CreateRenderPipelineValidationTest extends ValidationTest {
   getDescriptor(
     options: {
       primitive?: GPUPrimitiveState;
-      targets?: GPUColorTargetState[];
+      targets?: ColorTargetState[];
       multisample?: GPUMultisampleState;
       depthStencil?: GPUDepthStencilState;
       fragmentShaderCode?: string;
@@ -19,17 +21,16 @@ export class CreateRenderPipelineValidationTest extends ValidationTest {
       fragmentConstants?: Record<string, GPUPipelineConstantValue>;
     } = {}
   ): GPURenderPipelineDescriptor {
-    const defaultTargets: GPUColorTargetState[] = [{ format: 'rgba8unorm' }];
     const {
       primitive = {},
-      targets = defaultTargets,
+      targets = [{ format: 'rgba8unorm' }] as const,
       multisample = {},
       depthStencil,
       fragmentShaderCode = getFragmentShaderCodeWithOutput([
         {
           values,
           plainType: getPlainTypeInfo(
-            kTextureFormatInfo[targets[0] ? targets[0].format : 'rgba8unorm'].sampleType
+            kTextureFormatInfo[targets[0] ? targets[0].format : 'rgba8unorm'].color.type
           ),
           componentCount: 4,
         },

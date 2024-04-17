@@ -35,7 +35,7 @@ fn atomicAdd(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T) -> T
     u
       .combine('workgroupSize', workgroupSizes)
       .combine('dispatchSize', dispatchSizes)
-      .combine('scalarType', ['u32', 'i32'])
+      .combine('scalarType', ['u32', 'i32'] as const)
   )
   .fn(t => {
     const numInvocations = t.params.workgroupSize * t.params.dispatchSize;
@@ -72,7 +72,7 @@ fn atomicAdd(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T) -> T
     u
       .combine('workgroupSize', workgroupSizes)
       .combine('dispatchSize', dispatchSizes)
-      .combine('scalarType', ['u32', 'i32'])
+      .combine('scalarType', ['u32', 'i32'] as const)
   )
   .fn(t => {
     // Allocate one extra element to ensure it doesn't get modified

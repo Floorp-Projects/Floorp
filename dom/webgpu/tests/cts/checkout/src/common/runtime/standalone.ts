@@ -2,7 +2,7 @@
 /* eslint no-console: "off" */
 
 import { dataCache } from '../framework/data_cache.js';
-import { setBaseResourcePath } from '../framework/resources.js';
+import { getResourcePath, setBaseResourcePath } from '../framework/resources.js';
 import { globalTestConfig } from '../framework/test_config.js';
 import { DefaultTestFileLoader } from '../internal/file_loader.js';
 import { Logger } from '../internal/logging/logger.js';
@@ -21,7 +21,7 @@ import {
   OptionsInfos,
   camelCaseToSnakeCase,
 } from './helper/options.js';
-import { TestWorker } from './helper/test_worker.js';
+import { TestDedicatedWorker, TestSharedWorker, TestServiceWorker } from './helper/test_worker.js';
 
 const rootQuerySpec = 'webgpu:*';
 let promptBeforeReload = false;
@@ -47,16 +47,26 @@ const { queries: qs, options } = parseSearchParamLikeWithOptions(
   kStandaloneOptionsInfos,
   window.location.search || rootQuerySpec
 );
-const { runnow, debug, unrollConstEvalLoops, powerPreference, compatibility } = options;
-globalTestConfig.unrollConstEvalLoops = unrollConstEvalLoops;
+const { runnow, powerPreference, compatibility, forceFallbackAdapter } = options;
+globalTestConfig.enableDebugLogs = options.debug;
+globalTestConfig.unrollConstEvalLoops = options.unrollConstEvalLoops;
 globalTestConfig.compatibility = compatibility;
+globalTestConfig.logToWebSocket = options.logToWebSocket;
 
-Logger.globalDebugMode = debug;
 const logger = new Logger();
 
 setBaseResourcePath('../out/resources');
 
-const worker = options.worker ? new TestWorker(options) : undefined;
+const testWorker =
+  options.worker === null
+    ? null
+    : options.worker === 'dedicated'
+    ? new TestDedicatedWorker(options)
+    : options.worker === 'shared'
+    ? new TestSharedWorker(options)
+    : options.worker === 'service'
+    ? new TestServiceWorker(options)
+    : unreachable();
 
 const autoCloseOnPass = document.getElementById('autoCloseOnPass') as HTMLInputElement;
 const resultsVis = document.getElementById('resultsVis')!;
@@ -70,17 +80,18 @@ stopButtonElem.addEventListener('click', () => {
   stopRequested = true;
 });
 
-if (powerPreference || compatibility) {
+if (powerPreference || compatibility || forceFallbackAdapter) {
   setDefaultRequestAdapterOptions({
     ...(powerPreference && { powerPreference }),
     // MAINTENANCE_TODO: Change this to whatever the option ends up being
     ...(compatibility && { compatibilityMode: true }),
+    ...(forceFallbackAdapter && { forceFallbackAdapter: true }),
   });
 }
 
 dataCache.setStore({
   load: async (path: string) => {
-    const response = await fetch(`data/${path}`);
+    const response = await fetch(getResourcePath(`cache/${path}`));
     if (!response.ok) {
       return Promise.reject(response.statusText);
     }
@@ -168,8 +179,8 @@ function makeCaseHTML(t: TestTreeLeaf): VisualizedSubtree {
 
     const [rec, res] = logger.record(name);
     caseResult = res;
-    if (worker) {
-      await worker.run(rec, name);
+    if (testWorker) {
+      await testWorker.run(rec, name);
     } else {
       await t.run(rec);
     }
@@ -223,6 +234,12 @@ function makeCaseHTML(t: TestTreeLeaf): VisualizedSubtree {
 
         if (caseResult.logs) {
           caselogs.empty();
+          // Show exceptions at the top since they are often unexpected can point out an error in the test itself vs the WebGPU implementation.
+          caseResult.logs
+            .filter(l => l.name === 'EXCEPTION')
+            .forEach(l => {
+              $('<pre>').addClass('testcaselogtext').text(l.toJSON()).appendTo(caselogs);
+            });
           for (const l of caseResult.logs) {
             const caselog = $('<div>').addClass('testcaselog').appendTo(caselogs);
             $('<button>')
@@ -500,13 +517,11 @@ function makeTreeNodeHeaderHTML(
 // Collapse s:f:t:* or s:f:t:c by default.
 let lastQueryLevelToExpand: TestQueryLevel = 2;
 
-type ParamValue = string | undefined | null | boolean | string[];
-
 /**
  * Takes an array of string, ParamValue and returns an array of pairs
  * of [key, value] where value is a string. Converts boolean to '0' or '1'.
  */
-function keyValueToPairs([k, v]: [string, ParamValue]): [string, string][] {
+function keyValueToPairs([k, v]: [string, boolean | string | null]): [string, string][] {
   const key = camelCaseToSnakeCase(k);
   if (typeof v === 'boolean') {
     return [[key, v ? '1' : '0']];
@@ -527,9 +542,9 @@ function keyValueToPairs([k, v]: [string, ParamValue]): [string, string][] {
  * @param params Some object with key value pairs.
  * @returns a search string.
  */
-function prepareParams(params: Record<string, ParamValue>): string {
+function prepareParams(params: Record<string, boolean | string | null>): string {
   const pairsArrays = Object.entries(params)
-    .filter(([, v]) => !!v)
+    .filter(([, v]) => !(v === false || v === null || v === '0'))
     .map(keyValueToPairs);
   const pairs = pairsArrays.flat();
   return new URLSearchParams(pairs).toString();
@@ -537,7 +552,7 @@ function prepareParams(params: Record<string, ParamValue>): string {
 
 // This is just a cast in one place.
 export function optionsToRecord(options: CTSOptions) {
-  return options as unknown as Record<string, boolean | string>;
+  return options as unknown as Record<string, boolean | string | null>;
 }
 
 /**
@@ -597,15 +612,15 @@ void (async () => {
     };
 
     const createSelect = (optionName: string, info: OptionInfo) => {
-      const select = $('<select>').on('change', function () {
-        optionValues[optionName] = (this as HTMLInputElement).value;
+      const select = $('<select>').on('change', function (this: HTMLSelectElement) {
+        optionValues[optionName] = JSON.parse(this.value);
         updateURLsWithCurrentOptions();
       });
       const currentValue = optionValues[optionName];
       for (const { value, description } of info.selectValueDescriptions!) {
         $('<option>')
           .text(description)
-          .val(value)
+          .val(JSON.stringify(value))
           .prop('selected', value === currentValue)
           .appendTo(select);
       }

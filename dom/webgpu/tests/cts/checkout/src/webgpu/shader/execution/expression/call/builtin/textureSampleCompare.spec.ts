@@ -1,8 +1,5 @@
 export const description = `
 Samples a depth texture and compares the sampled depth values against a reference value.
-
-Must only be used in a fragment shader stage.
-Must only be invoked in uniform control flow.
 `;
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
@@ -11,26 +8,6 @@ import { GPUTest } from '../../../../../gpu_test.js';
 import { generateCoordBoundaries, generateOffsets } from './utils.js';
 
 export const g = makeTestGroup(GPUTest);
-
-g.test('stage')
-  .specURL('https://www.w3.org/TR/WGSL/#texturesamplecompare')
-  .desc(
-    `
-Tests that 'textureSampleCompare' can only be called in 'fragment' shaders.
-`
-  )
-  .params(u => u.combine('stage', ['fragment', 'vertex', 'compute'] as const))
-  .unimplemented();
-
-g.test('control_flow')
-  .specURL('https://www.w3.org/TR/WGSL/#texturesamplecompare')
-  .desc(
-    `
-Tests that 'textureSampleCompare' can only be called in uniform control flow.
-`
-  )
-  .params(u => u.combine('stage', ['fragment', 'vertex', 'compute'] as const))
-  .unimplemented();
 
 g.test('2d_coords')
   .specURL('https://www.w3.org/TR/WGSL/#texturesamplecompare')

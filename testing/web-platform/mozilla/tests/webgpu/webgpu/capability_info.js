@@ -323,10 +323,14 @@ export const kVertexFormats = keysOf(kVertexFormatInfo);
 
 
 
+
+
 /**
  * Classes of `PerPipelineLayout` binding limits. Two bindings with the same class
  * count toward the same `PerPipelineLayout` limit(s) in the spec (if any).
  */
+
+
 
 
 
@@ -353,7 +357,9 @@ export const kBindableResources = [
 'compareSamp',
 'sampledTex',
 'sampledTexMS',
-'storageTex',
+'readonlyStorageTex',
+'writeonlyStorageTex',
+'readwriteStorageTex',
 'errorBuf',
 'errorSamp',
 'errorTex'];
@@ -380,7 +386,9 @@ export const kPerStageBindingLimits =
   'storageBuf': { class: 'storageBuf', maxLimit: 'maxStorageBuffersPerShaderStage' },
   'sampler': { class: 'sampler', maxLimit: 'maxSamplersPerShaderStage' },
   'sampledTex': { class: 'sampledTex', maxLimit: 'maxSampledTexturesPerShaderStage' },
-  'storageTex': { class: 'storageTex', maxLimit: 'maxStorageTexturesPerShaderStage' }
+  'readonlyStorageTex': { class: 'readonlyStorageTex', maxLimit: 'maxStorageTexturesPerShaderStage' },
+  'writeonlyStorageTex': { class: 'writeonlyStorageTex', maxLimit: 'maxStorageTexturesPerShaderStage' },
+  'readwriteStorageTex': { class: 'readwriteStorageTex', maxLimit: 'maxStorageTexturesPerShaderStage' }
 };
 
 /**
@@ -402,7 +410,9 @@ export const kPerPipelineBindingLimits =
   'storageBuf': { class: 'storageBuf', maxDynamicLimit: 'maxDynamicStorageBuffersPerPipelineLayout' },
   'sampler': { class: 'sampler', maxDynamicLimit: '' },
   'sampledTex': { class: 'sampledTex', maxDynamicLimit: '' },
-  'storageTex': { class: 'storageTex', maxDynamicLimit: '' }
+  'readonlyStorageTex': { class: 'readonlyStorageTex', maxDynamicLimit: '' },
+  'writeonlyStorageTex': { class: 'writeonlyStorageTex', maxDynamicLimit: '' },
+  'readwriteStorageTex': { class: 'readwriteStorageTex', maxDynamicLimit: '' }
 };
 
 
@@ -423,7 +433,9 @@ const kBindingKind =
   compareSamp: { resource: 'compareSamp', perStageLimitClass: kPerStageBindingLimits.sampler, perPipelineLimitClass: kPerPipelineBindingLimits.sampler },
   sampledTex: { resource: 'sampledTex', perStageLimitClass: kPerStageBindingLimits.sampledTex, perPipelineLimitClass: kPerPipelineBindingLimits.sampledTex },
   sampledTexMS: { resource: 'sampledTexMS', perStageLimitClass: kPerStageBindingLimits.sampledTex, perPipelineLimitClass: kPerPipelineBindingLimits.sampledTex },
-  storageTex: { resource: 'storageTex', perStageLimitClass: kPerStageBindingLimits.storageTex, perPipelineLimitClass: kPerPipelineBindingLimits.storageTex }
+  readonlyStorageTex: { resource: 'readonlyStorageTex', perStageLimitClass: kPerStageBindingLimits.readonlyStorageTex, perPipelineLimitClass: kPerPipelineBindingLimits.readonlyStorageTex },
+  writeonlyStorageTex: { resource: 'writeonlyStorageTex', perStageLimitClass: kPerStageBindingLimits.writeonlyStorageTex, perPipelineLimitClass: kPerPipelineBindingLimits.writeonlyStorageTex },
+  readwriteStorageTex: { resource: 'readwriteStorageTex', perStageLimitClass: kPerStageBindingLimits.readwriteStorageTex, perPipelineLimitClass: kPerPipelineBindingLimits.readwriteStorageTex }
 };
 
 // Binding type info
@@ -483,14 +495,30 @@ assertTypeTrue();
 
 /** Binding type info (including class limits) for the specified GPUStorageTextureBindingLayout. */
 export function storageTextureBindingTypeInfo(d) {
-  return {
-    usage: GPUConst.TextureUsage.STORAGE_BINDING,
-    ...kBindingKind.storageTex,
-    ...kValidStagesStorageWrite
-  };
+  switch (d.access) {
+    case undefined:
+    case 'write-only':
+      return {
+        usage: GPUConst.TextureUsage.STORAGE_BINDING,
+        ...kBindingKind.writeonlyStorageTex,
+        ...kValidStagesStorageWrite
+      };
+    case 'read-only':
+      return {
+        usage: GPUConst.TextureUsage.STORAGE_BINDING,
+        ...kBindingKind.readonlyStorageTex,
+        ...kValidStagesAll
+      };
+    case 'read-write':
+      return {
+        usage: GPUConst.TextureUsage.STORAGE_BINDING,
+        ...kBindingKind.readwriteStorageTex,
+        ...kValidStagesStorageWrite
+      };
+  }
 }
 /** List of all GPUStorageTextureAccess values. */
-export const kStorageTextureAccessValues = ['write-only'];
+export const kStorageTextureAccessValues = ['read-only', 'read-write', 'write-only'];
 assertTypeTrue();
 
 /** GPUBindGroupLayoutEntry, but only the "union" fields, not the common fields. */
@@ -539,8 +567,10 @@ export function samplerBindingEntries(includeUndefined) {
  */
 export function textureBindingEntries(includeUndefined) {
   return [
-  ...(includeUndefined ? [{ texture: { multisampled: undefined } }] : []),
-  { texture: { multisampled: false } },
+  ...(includeUndefined ?
+  [{ texture: { multisampled: undefined, sampleType: 'unfilterable-float' } }] :
+  []),
+  { texture: { multisampled: false, sampleType: 'unfilterable-float' } },
   { texture: { multisampled: true, sampleType: 'unfilterable-float' } }];
 
 }
@@ -549,18 +579,16 @@ export function textureBindingEntries(includeUndefined) {
  *
  * Note: Generates different `access` options, but not `format` or `viewDimension` options.
  */
-export function storageTextureBindingEntries(format) {
-  return [{ storageTexture: { access: 'write-only', format } }];
+export function storageTextureBindingEntries() {
+  return [
+  { storageTexture: { access: 'write-only', format: 'r32float' } },
+  { storageTexture: { access: 'read-only', format: 'r32float' } },
+  { storageTexture: { access: 'read-write', format: 'r32float' } }];
+
 }
 /** Generate a list of possible texture-or-storageTexture-typed BGLEntry values. */
-export function sampledAndStorageBindingEntries(
-includeUndefined,
-storageTextureFormat = 'rgba8unorm')
-{
-  return [
-  ...textureBindingEntries(includeUndefined),
-  ...storageTextureBindingEntries(storageTextureFormat)];
-
+export function sampledAndStorageBindingEntries(includeUndefined) {
+  return [...textureBindingEntries(includeUndefined), ...storageTextureBindingEntries()];
 }
 /**
  * Generate a list of possible BGLEntry values of every type, but not variants with different:
@@ -569,14 +597,11 @@ storageTextureFormat = 'rgba8unorm')
  * - texture.viewDimension
  * - storageTexture.viewDimension
  */
-export function allBindingEntries(
-includeUndefined,
-storageTextureFormat = 'rgba8unorm')
-{
+export function allBindingEntries(includeUndefined) {
   return [
   ...bufferBindingEntries(includeUndefined),
   ...samplerBindingEntries(includeUndefined),
-  ...sampledAndStorageBindingEntries(includeUndefined, storageTextureFormat)];
+  ...sampledAndStorageBindingEntries(includeUndefined)];
 
 }
 
@@ -689,7 +714,7 @@ const [kLimitInfoKeys, kLimitInfoDefaults, kLimitInfoData] =
   'maxVertexAttributes': [, 16, 16],
   'maxVertexBufferArrayStride': [, 2048, 2048],
   'maxInterStageShaderComponents': [, 60, 60],
-  'maxInterStageShaderVariables': [, 16, 16],
+  'maxInterStageShaderVariables': [, 16, 15],
 
   'maxColorAttachments': [, 8, 4],
   'maxColorAttachmentBytesPerSample': [, 32, 32],
@@ -790,3 +815,10 @@ export const kFeatureNameInfo =
 };
 /** List of all GPUFeatureName values. */
 export const kFeatureNames = keysOf(kFeatureNameInfo);
+
+/** List of all known WGSL language features */
+export const kKnownWGSLLanguageFeatures = [
+'readonly_and_readwrite_storage_textures',
+'packed_4x8_integer_dot_product',
+'unrestricted_pointer_parameters',
+'pointer_composite_access'];

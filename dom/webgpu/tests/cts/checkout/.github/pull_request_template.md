@@ -10,6 +10,7 @@ Issue: #<!-- Fill in the issue number here. See docs/intro/life_of.md -->
 - [ ] All missing test coverage is tracked with "TODO" or `.unimplemented()`.
 - [ ] New helpers are `/** documented */` and new helper files are found in `helper_index.txt`.
 - [ ] Test behaves as expected in a WebGPU implementation. (If not passing, explain above.)
+- [ ] Test have be tested with compatibility mode validation enabled and behave as expected. (If not passing, explain above.)
 
 **Requirements for [reviewer sign-off](https://github.com/gpuweb/cts/blob/main/docs/reviews.md):**
 

@@ -45,13 +45,16 @@ async function crawlFilesRecursively(dir: string): Promise<string[]> {
   );
 }
 
-export async function crawl(suiteDir: string, validate: boolean): Promise<TestSuiteListingEntry[]> {
+export async function crawl(
+  suiteDir: string,
+  opts: { validate: boolean; printMetadataWarnings: boolean } | null = null
+): Promise<TestSuiteListingEntry[]> {
   if (!fs.existsSync(suiteDir)) {
     throw new Error(`Could not find suite: ${suiteDir}`);
   }
 
   let validateTimingsEntries;
-  if (validate) {
+  if (opts?.validate) {
     const metadata = loadMetadataForSuite(suiteDir);
     if (metadata) {
       validateTimingsEntries = {
@@ -75,7 +78,7 @@ export async function crawl(suiteDir: string, validate: boolean): Promise<TestSu
 
       const suite = path.basename(suiteDir);
 
-      if (validate) {
+      if (opts?.validate) {
         const filename = `../../${suite}/${filepathWithoutExtension}.spec.js`;
 
         assert(!process.env.STANDALONE_DEV_SERVER);
@@ -109,8 +112,6 @@ export async function crawl(suiteDir: string, validate: boolean): Promise<TestSu
   }
 
   if (validateTimingsEntries) {
-    let failed = false;
-
     const zeroEntries = [];
     const staleEntries = [];
     for (const [metadataKey, metadataValue] of Object.entries(validateTimingsEntries.metadata)) {
@@ -125,36 +126,39 @@ export async function crawl(suiteDir: string, validate: boolean): Promise<TestSu
         staleEntries.push(metadataKey);
       }
     }
-    if (zeroEntries.length) {
-      console.warn('WARNING: subcaseMS≤0 found in listing_meta.json (allowed, but try to avoid):');
+    if (zeroEntries.length && opts?.printMetadataWarnings) {
+      console.warn(
+        'WARNING: subcaseMS ≤ 0 found in listing_meta.json (see docs/adding_timing_metadata.md):'
+      );
       for (const metadataKey of zeroEntries) {
         console.warn(`  ${metadataKey}`);
       }
     }
+
+    if (opts?.printMetadataWarnings) {
+      const missingEntries = [];
+      for (const metadataKey of validateTimingsEntries.testsFoundInFiles) {
+        if (!(metadataKey in validateTimingsEntries.metadata)) {
+          missingEntries.push(metadataKey);
+        }
+      }
+      if (missingEntries.length) {
+        console.error(
+          'WARNING: Tests missing from listing_meta.json (see docs/adding_timing_metadata.md):'
+        );
+        for (const metadataKey of missingEntries) {
+          console.error(`  ${metadataKey}`);
+        }
+      }
+    }
+
     if (staleEntries.length) {
-      console.error('ERROR: Non-existent tests found in listing_meta.json:');
+      console.error('ERROR: Non-existent tests found in listing_meta.json. Please update:');
       for (const metadataKey of staleEntries) {
         console.error(`  ${metadataKey}`);
       }
-      failed = true;
+      unreachable();
     }
-
-    const missingEntries = [];
-    for (const metadataKey of validateTimingsEntries.testsFoundInFiles) {
-      if (!(metadataKey in validateTimingsEntries.metadata)) {
-        missingEntries.push(metadataKey);
-      }
-    }
-    if (missingEntries.length) {
-      console.error(
-        'ERROR: Tests missing from listing_meta.json. Please add the new tests (See docs/adding_timing_metadata.md):'
-      );
-      for (const metadataKey of missingEntries) {
-        console.error(`  ${metadataKey}`);
-        failed = true;
-      }
-    }
-    assert(!failed);
   }
 
   return entries;
@@ -163,5 +167,5 @@ export async function crawl(suiteDir: string, validate: boolean): Promise<TestSu
 export function makeListing(filename: string): Promise<TestSuiteListing> {
   // Don't validate. This path is only used for the dev server and running tests with Node.
   // Validation is done for listing generation and presubmit.
-  return crawl(path.dirname(filename), false);
+  return crawl(path.dirname(filename));
 }

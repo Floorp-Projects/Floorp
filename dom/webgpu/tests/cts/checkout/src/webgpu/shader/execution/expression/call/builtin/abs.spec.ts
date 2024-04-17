@@ -1,14 +1,14 @@
 export const description = `
 Execution tests for the 'abs' builtin function
 
-S is AbstractInt, i32, or u32
+S is abstract-int, i32, or u32
 T is S or vecN<S>
 @const fn abs(e: T ) -> T
 The absolute value of e. Component-wise when T is a vector. If e is a signed
 integral scalar type and evaluates to the largest negative value, then the
 result is e. If e is an unsigned integral type, then the result is e.
 
-S is AbstractFloat, f32, f16
+S is abstract-float, f32, f16
 T is S or vecN<S>
 @const fn abs(e: T ) -> T
 Returns the absolute value of e (e.g. e with a positive sign bit).
@@ -18,47 +18,26 @@ Component-wise when T is a vector.
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import { kBit } from '../../../../../util/constants.js';
-import {
-  i32Bits,
-  TypeF32,
-  TypeF16,
-  TypeI32,
-  TypeU32,
-  u32Bits,
-  TypeAbstractFloat,
-} from '../../../../../util/conversion.js';
-import { FP } from '../../../../../util/floating_point.js';
-import { fullF32Range, fullF16Range, fullF64Range } from '../../../../../util/math.js';
-import { makeCaseCache } from '../../case_cache.js';
+import { Type, i32Bits, u32Bits } from '../../../../../util/conversion.js';
 import { allInputSources, onlyConstInputSource, run } from '../../expression.js';
 
-import { abstractBuiltin, builtin } from './builtin.js';
+import { d } from './abs.cache.js';
+import { abstractFloatBuiltin, abstractIntBuiltin, builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
-
-export const d = makeCaseCache('abs', {
-  f32: () => {
-    return FP.f32.generateScalarToIntervalCases(fullF32Range(), 'unfiltered', FP.f32.absInterval);
-  },
-  f16: () => {
-    return FP.f16.generateScalarToIntervalCases(fullF16Range(), 'unfiltered', FP.f16.absInterval);
-  },
-  abstract: () => {
-    return FP.abstract.generateScalarToIntervalCases(
-      fullF64Range(),
-      'unfiltered',
-      FP.abstract.absInterval
-    );
-  },
-});
 
 g.test('abstract_int')
   .specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions')
   .desc(`abstract int tests`)
   .params(u =>
-    u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4] as const)
+    u
+      .combine('inputSource', onlyConstInputSource)
+      .combine('vectorize', [undefined, 2, 3, 4] as const)
   )
-  .unimplemented();
+  .fn(async t => {
+    const cases = await d.get('abstract_int');
+    await run(t, abstractIntBuiltin('abs'), [Type.abstractInt], Type.abstractInt, t.params, cases);
+  });
 
 g.test('u32')
   .specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions')
@@ -67,7 +46,7 @@ g.test('u32')
     u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
-    await run(t, builtin('abs'), [TypeU32], TypeU32, t.params, [
+    await run(t, builtin('abs'), [Type.u32], Type.u32, t.params, [
       // Min and Max u32
       { input: u32Bits(kBit.u32.min), expected: u32Bits(kBit.u32.min) },
       { input: u32Bits(kBit.u32.max), expected: u32Bits(kBit.u32.max) },
@@ -114,7 +93,7 @@ g.test('i32')
     u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
-    await run(t, builtin('abs'), [TypeI32], TypeI32, t.params, [
+    await run(t, builtin('abs'), [Type.i32], Type.i32, t.params, [
       // Min and max i32
       // If e evaluates to the largest negative value, then the result is e.
       { input: i32Bits(kBit.i32.negative.min), expected: i32Bits(kBit.i32.negative.min) },
@@ -166,8 +145,15 @@ g.test('abstract_float')
       .combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
-    const cases = await d.get('abstract');
-    await run(t, abstractBuiltin('abs'), [TypeAbstractFloat], TypeAbstractFloat, t.params, cases);
+    const cases = await d.get('abstract_float');
+    await run(
+      t,
+      abstractFloatBuiltin('abs'),
+      [Type.abstractFloat],
+      Type.abstractFloat,
+      t.params,
+      cases
+    );
   });
 
 g.test('f32')
@@ -178,7 +164,7 @@ g.test('f32')
   )
   .fn(async t => {
     const cases = await d.get('f32');
-    await run(t, builtin('abs'), [TypeF32], TypeF32, t.params, cases);
+    await run(t, builtin('abs'), [Type.f32], Type.f32, t.params, cases);
   });
 
 g.test('f16')
@@ -192,5 +178,5 @@ g.test('f16')
   })
   .fn(async t => {
     const cases = await d.get('f16');
-    await run(t, builtin('abs'), [TypeF16], TypeF16, t.params, cases);
+    await run(t, builtin('abs'), [Type.f16], Type.f16, t.params, cases);
   });

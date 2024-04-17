@@ -440,7 +440,7 @@ Test that the copy size must be aligned to the texture's format's block size.
     const texture = t.createAlignedTexture(format, size, origin, dimension);
 
     const bytesPerRow = align(
-      Math.max(1, Math.ceil(size.width / info.blockWidth)) * info.bytesPerBlock,
+      Math.max(1, Math.ceil(size.width / info.blockWidth)) * info.color.bytes,
       256
     );
     const rowsPerImage = Math.ceil(size.height / info.blockHeight);

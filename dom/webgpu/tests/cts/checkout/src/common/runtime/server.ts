@@ -5,6 +5,7 @@ import * as http from 'http';
 import { AddressInfo } from 'net';
 
 import { dataCache } from '../framework/data_cache.js';
+import { getResourcePath, setBaseResourcePath } from '../framework/resources.js';
 import { globalTestConfig } from '../framework/test_config.js';
 import { DefaultTestFileLoader } from '../internal/file_loader.js';
 import { prettyPrintLog } from '../internal/logging/log_message.js';
@@ -20,21 +21,23 @@ import sys from './helper/sys.js';
 
 function usage(rc: number): never {
   console.log(`Usage:
-  tools/run_${sys.type} [OPTIONS...]
+  tools/server [OPTIONS...]
 Options:
   --colors                  Enable ANSI colors in output.
   --compat                  Run tests in compatibility mode.
   --coverage                Add coverage data to each result.
-  --data                    Path to the data cache directory.
   --verbose                 Print result/log of every test as it runs.
+  --debug                   Include debug messages in logging.
   --gpu-provider            Path to node module that provides the GPU implementation.
   --gpu-provider-flag       Flag to set on the gpu-provider as <flag>=<value>
   --unroll-const-eval-loops Unrolls loops in constant-evaluation shader execution tests
   --u                       Flag to set on the gpu-provider as <flag>=<value>
 
 Provides an HTTP server used for running tests via an HTTP RPC interface
-To run a test, perform an HTTP GET or POST at the URL:
-  http://localhost:port/run?<test-name>
+First, load some tree or subtree of tests:
+  http://localhost:port/load?unittests:basic:*
+To run a single test case, perform an HTTP GET or POST at the URL:
+  http://localhost:port/run?unittests:basic:test,sync
 To shutdown the server perform an HTTP GET or POST at the URL:
   http://localhost:port/terminate
 `);
@@ -46,6 +49,8 @@ interface RunResult {
   status: Status;
   // Any additional messages printed
   message: string;
+  // The time it took to execute the test
+  durationMS: number;
   // Code coverage data, if the server was started with `--coverage`
   // This data is opaque (implementation defined).
   coverageData?: string;
@@ -71,13 +76,13 @@ if (!sys.existsSync('src/common/runtime/cmdline.ts')) {
   console.log('Must be run from repository root');
   usage(1);
 }
+setBaseResourcePath('out-node/resources');
 
 Colors.enabled = false;
 
 let emitCoverage = false;
 let verbose = false;
 let gpuProviderModule: GPUProviderModule | undefined = undefined;
-let dataPath: string | undefined = undefined;
 
 const gpuProviderFlags: string[] = [];
 for (let i = 0; i < sys.args.length; ++i) {
@@ -89,13 +94,17 @@ for (let i = 0; i < sys.args.length; ++i) {
       globalTestConfig.compatibility = true;
     } else if (a === '--coverage') {
       emitCoverage = true;
-    } else if (a === '--data') {
-      dataPath = sys.args[++i];
+    } else if (a === '--force-fallback-adapter') {
+      globalTestConfig.forceFallbackAdapter = true;
+    } else if (a === '--log-to-websocket') {
+      globalTestConfig.logToWebSocket = true;
     } else if (a === '--gpu-provider') {
       const modulePath = sys.args[++i];
       gpuProviderModule = require(modulePath);
     } else if (a === '--gpu-provider-flag') {
       gpuProviderFlags.push(sys.args[++i]);
+    } else if (a === '--debug') {
+      globalTestConfig.enableDebugLogs = true;
     } else if (a === '--unroll-const-eval-loops') {
       globalTestConfig.unrollConstEvalLoops = true;
     } else if (a === '--help') {
@@ -110,9 +119,12 @@ for (let i = 0; i < sys.args.length; ++i) {
 
 let codeCoverage: CodeCoverageProvider | undefined = undefined;
 
-if (globalTestConfig.compatibility) {
+if (globalTestConfig.compatibility || globalTestConfig.forceFallbackAdapter) {
   // MAINTENANCE_TODO: remove the cast once compatibilityMode is officially added
-  setDefaultRequestAdapterOptions({ compatibilityMode: true } as GPURequestAdapterOptions);
+  setDefaultRequestAdapterOptions({
+    compatibilityMode: globalTestConfig.compatibility,
+    forceFallbackAdapter: globalTestConfig.forceFallbackAdapter,
+  } as GPURequestAdapterOptions);
 }
 
 if (gpuProviderModule) {
@@ -130,28 +142,26 @@ Did you remember to build with code coverage instrumentation enabled?`
   }
 }
 
-if (dataPath !== undefined) {
-  dataCache.setStore({
-    load: (path: string) => {
-      return new Promise<Uint8Array>((resolve, reject) => {
-        fs.readFile(`${dataPath}/${path}`, (err, data) => {
-          if (err !== null) {
-            reject(err.message);
-          } else {
-            resolve(data);
-          }
-        });
+dataCache.setStore({
+  load: (path: string) => {
+    return new Promise<Uint8Array>((resolve, reject) => {
+      fs.readFile(getResourcePath(`cache/${path}`), (err, data) => {
+        if (err !== null) {
+          reject(err.message);
+        } else {
+          resolve(data);
+        }
       });
-    },
-  });
-}
+    });
+  },
+});
+
 if (verbose) {
   dataCache.setDebugLogger(console.log);
 }
 
 // eslint-disable-next-line @typescript-eslint/require-await
 (async () => {
-  Logger.globalDebugMode = verbose;
   const log = new Logger();
   const testcases = new Map<string, TestTreeLeaf>();
 
@@ -198,14 +208,16 @@ if (verbose) {
             if (codeCoverage !== undefined) {
               codeCoverage.begin();
             }
+            const start = performance.now();
             const result = await runTestcase(testcase);
+            const durationMS = performance.now() - start;
             const coverageData = codeCoverage !== undefined ? codeCoverage.end() : undefined;
             let message = '';
             if (result.logs !== undefined) {
               message = result.logs.map(log => prettyPrintLog(log)).join('\n');
             }
             const status = result.status;
-            const res: RunResult = { status, message, coverageData };
+            const res: RunResult = { status, message, durationMS, coverageData };
             response.statusCode = 200;
             response.end(JSON.stringify(res));
           } else {

@@ -3,7 +3,7 @@ Interface matching between vertex and fragment shader validation for createRende
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { assert, range } from '../../../../common/util/util.js';
+import { range } from '../../../../common/util/util.js';
 
 import { CreateRenderPipelineValidationTest } from './common.js';
 
@@ -97,8 +97,18 @@ g.test('location,mismatch')
   });
 
 g.test('location,superset')
-  .desc(`TODO: implement after spec is settled: https://github.com/gpuweb/gpuweb/issues/2038`)
-  .unimplemented();
+  .desc(`Tests that validation should succeed when vertex output is superset of fragment input`)
+  .params(u => u.combine('isAsync', [false, true]))
+  .fn(t => {
+    const { isAsync } = t.params;
+
+    const descriptor = t.getDescriptorWithStates(
+      t.getVertexStateWithOutputs(['@location(0) vout0: f32', '@location(1) vout1: f32']),
+      t.getFragmentStateWithInputs(['@location(1) fin1: f32'])
+    );
+
+    t.doCreateRenderPipelineTest(isAsync, true, descriptor);
+  });
 
 g.test('location,subset')
   .desc(`Tests that validation should fail when vertex output is a subset of fragment input.`)
@@ -159,20 +169,27 @@ g.test('interpolation_type')
       { output: '@interpolate(linear)', input: '@interpolate(perspective)' },
       { output: '@interpolate(flat)', input: '@interpolate(perspective)' },
       { output: '@interpolate(linear)', input: '@interpolate(flat)' },
-      { output: '@interpolate(linear, center)', input: '@interpolate(linear, center)' },
+      {
+        output: '@interpolate(linear, center)',
+        input: '@interpolate(linear, center)',
+        _compat_success: false,
+      },
     ])
   )
   .fn(t => {
-    const { isAsync, output, input, _success } = t.params;
+    const { isAsync, output, input, _success, _compat_success } = t.params;
 
     const descriptor = t.getDescriptorWithStates(
       t.getVertexStateWithOutputs([`@location(0) ${output} vout0: f32`]),
       t.getFragmentStateWithInputs([`@location(0) ${input} fin0: f32`])
     );
 
-    t.doCreateRenderPipelineTest(isAsync, _success ?? output === input, descriptor);
-  });
+    const shouldSucceed =
+      (_success ?? output === input) && (!t.isCompatibility || _compat_success !== false);
 
+    t.doCreateRenderPipelineTest(isAsync, shouldSucceed, descriptor);
+  });
+1;
 g.test('interpolation_sampling')
   .desc(
     `Tests that validation should fail when interpolation sampling of vertex output and fragment input at the same location doesn't match.`
@@ -186,7 +203,12 @@ g.test('interpolation_sampling')
         input: '@interpolate(perspective, center)',
         _success: true,
       },
-      { output: '@interpolate(linear, center)', input: '@interpolate(linear)', _success: true },
+      {
+        output: '@interpolate(linear, center)',
+        input: '@interpolate(linear)',
+        _success: true,
+        _compat_success: false,
+      },
       { output: '@interpolate(flat)', input: '@interpolate(flat)' },
       { output: '@interpolate(perspective)', input: '@interpolate(perspective, sample)' },
       { output: '@interpolate(perspective, center)', input: '@interpolate(perspective, sample)' },
@@ -198,14 +220,17 @@ g.test('interpolation_sampling')
     ])
   )
   .fn(t => {
-    const { isAsync, output, input, _success } = t.params;
+    const { isAsync, output, input, _success, _compat_success } = t.params;
 
     const descriptor = t.getDescriptorWithStates(
       t.getVertexStateWithOutputs([`@location(0) ${output} vout0: f32`]),
       t.getFragmentStateWithInputs([`@location(0) ${input} fin0: f32`])
     );
 
-    t.doCreateRenderPipelineTest(isAsync, _success ?? output === input, descriptor);
+    const shouldSucceed =
+      (_success ?? output === input) && (!t.isCompatibility || _compat_success !== false);
+
+    t.doCreateRenderPipelineTest(isAsync, shouldSucceed, descriptor);
   });
 
 g.test('max_shader_variable_location')
@@ -251,9 +276,6 @@ g.test('max_components_count,output')
 
     const numVec4 = Math.floor(numScalarComponents / 4);
     const numTrailingScalars = numScalarComponents % 4;
-    const numUserDefinedInterStageVariables = numTrailingScalars > 0 ? numVec4 + 1 : numVec4;
-
-    assert(numUserDefinedInterStageVariables <= t.device.limits.maxInterStageShaderVariables);
 
     const outputs = range(numVec4, i => `@location(${i}) vout${i}: vec4<f32>`);
     const inputs = range(numVec4, i => `@location(${i}) fin${i}: vec4<f32>`);
@@ -280,23 +302,23 @@ g.test('max_components_count,input')
   .params(u =>
     u.combine('isAsync', [false, true]).combineWithParams([
       // Number of user-defined input scalar components in test shader = device.limits.maxInterStageShaderComponents + numScalarDelta.
-      { numScalarDelta: 0, useExtraBuiltinInputs: false, _success: true },
-      { numScalarDelta: 1, useExtraBuiltinInputs: false, _success: false },
-      { numScalarDelta: 0, useExtraBuiltinInputs: true, _success: false },
-      { numScalarDelta: -3, useExtraBuiltinInputs: true, _success: true },
-      { numScalarDelta: -2, useExtraBuiltinInputs: true, _success: false },
+      { numScalarDelta: 0, useExtraBuiltinInputs: false },
+      { numScalarDelta: 1, useExtraBuiltinInputs: false },
+      { numScalarDelta: 0, useExtraBuiltinInputs: true },
+      { numScalarDelta: -3, useExtraBuiltinInputs: true },
+      { numScalarDelta: -2, useExtraBuiltinInputs: true },
     ] as const)
   )
   .fn(t => {
-    const { isAsync, numScalarDelta, useExtraBuiltinInputs, _success } = t.params;
+    const { isAsync, numScalarDelta, useExtraBuiltinInputs } = t.params;
 
     const numScalarComponents = t.device.limits.maxInterStageShaderComponents + numScalarDelta;
+    const numExtraComponents = useExtraBuiltinInputs ? (t.isCompatibility ? 2 : 3) : 0;
+    const numUsedComponents = numScalarComponents + numExtraComponents;
+    const success = numUsedComponents <= t.device.limits.maxInterStageShaderComponents;
 
     const numVec4 = Math.floor(numScalarComponents / 4);
     const numTrailingScalars = numScalarComponents % 4;
-    const numUserDefinedInterStageVariables = numTrailingScalars > 0 ? numVec4 + 1 : numVec4;
-
-    assert(numUserDefinedInterStageVariables <= t.device.limits.maxInterStageShaderVariables);
 
     const outputs = range(numVec4, i => `@location(${i}) vout${i}: vec4<f32>`);
     const inputs = range(numVec4, i => `@location(${i}) fin${i}: vec4<f32>`);
@@ -310,9 +332,11 @@ g.test('max_components_count,input')
     if (useExtraBuiltinInputs) {
       inputs.push(
         '@builtin(front_facing) front_facing_in: bool',
-        '@builtin(sample_index) sample_index_in: u32',
         '@builtin(sample_mask) sample_mask_in: u32'
       );
+      if (!t.isCompatibility) {
+        inputs.push('@builtin(sample_index) sample_index_in: u32');
+      }
     }
 
     const descriptor = t.getDescriptorWithStates(
@@ -320,5 +344,5 @@ g.test('max_components_count,input')
       t.getFragmentStateWithInputs(inputs, true)
     );
 
-    t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
+    t.doCreateRenderPipelineTest(isAsync, success, descriptor);
   });

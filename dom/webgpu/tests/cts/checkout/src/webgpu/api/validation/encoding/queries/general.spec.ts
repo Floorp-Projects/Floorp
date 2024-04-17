@@ -68,14 +68,16 @@ Tests that begin occlusion query with query index:
     encoder.validateFinish(t.params.queryIndex < 2);
   });
 
-g.test('timestamp_query,query_type_and_index')
+g.test('writeTimestamp,query_type_and_index')
   .desc(
     `
 Tests that write timestamp to all types of query set on all possible encoders:
 - type {occlusion, timestamp}
 - queryIndex {in, out of} range for GPUQuerySet
 - x= {non-pass} encoder
-  `
+
+TODO: writeTimestamp is removed from the spec so it's skipped if it TypeErrors.
+`
   )
   .params(u =>
     u
@@ -101,16 +103,23 @@ Tests that write timestamp to all types of query set on all possible encoders:
     const querySet = createQuerySetWithType(t, type, count);
 
     const encoder = t.createEncoder('non-pass');
-    encoder.encoder.writeTimestamp(querySet, queryIndex);
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (encoder.encoder as any).writeTimestamp(querySet, queryIndex);
+    } catch (ex) {
+      t.skipIf(ex instanceof TypeError, 'writeTimestamp is actually not available');
+    }
     encoder.validateFinish(type === 'timestamp' && queryIndex < count);
   });
 
-g.test('timestamp_query,invalid_query_set')
+g.test('writeTimestamp,invalid_query_set')
   .desc(
     `
 Tests that write timestamp to a invalid query set that failed during creation:
 - x= {non-pass} encoder
-  `
+
+TODO: writeTimestamp is removed from the spec so it's skipped if it TypeErrors.
+`
   )
   .paramsSubcasesOnly(u => u.combine('querySetState', ['valid', 'invalid'] as const))
   .beforeAllSubcases(t => {
@@ -125,12 +134,22 @@ Tests that write timestamp to a invalid query set that failed during creation:
     });
 
     const encoder = t.createEncoder('non-pass');
-    encoder.encoder.writeTimestamp(querySet, 0);
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (encoder.encoder as any).writeTimestamp(querySet, 0);
+    } catch (ex) {
+      t.skipIf(ex instanceof TypeError, 'writeTimestamp is actually not available');
+    }
     encoder.validateFinish(querySetState !== 'invalid');
   });
 
-g.test('timestamp_query,device_mismatch')
-  .desc('Tests writeTimestamp cannot be called with a query set created from another device')
+g.test('writeTimestamp,device_mismatch')
+  .desc(
+    `Tests writeTimestamp cannot be called with a query set created from another device
+
+  TODO: writeTimestamp is removed from the spec so it's skipped if it TypeErrors.
+  `
+  )
   .paramsSubcasesOnly(u => u.combine('mismatched', [true, false]))
   .beforeAllSubcases(t => {
     t.selectDeviceForQueryTypeOrSkipTestCase('timestamp');
@@ -147,6 +166,11 @@ g.test('timestamp_query,device_mismatch')
     t.trackForCleanup(querySet);
 
     const encoder = t.createEncoder('non-pass');
-    encoder.encoder.writeTimestamp(querySet, 0);
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (encoder.encoder as any).writeTimestamp(querySet, 0);
+    } catch (ex) {
+      t.skipIf(ex instanceof TypeError, 'writeTimestamp is actually not available');
+    }
     encoder.validateFinish(!mismatched);
   });

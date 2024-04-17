@@ -18,7 +18,7 @@ import {
   i32,
   kFloat16Format,
   kFloat32Format,
-  Matrix,
+  MatrixValue,
   numbersApproximatelyEqual,
   pack2x16float,
   pack2x16snorm,
@@ -26,14 +26,14 @@ import {
   pack4x8snorm,
   pack4x8unorm,
   packRGB9E5UFloat,
-  Scalar,
+  ScalarValue,
   toMatrix,
   u32,
   unpackRGB9E5UFloat,
   vec2,
   vec3,
   vec4,
-  Vector,
+  VectorValue,
 } from '../webgpu/util/conversion.js';
 
 import { UnitTest } from './unit_test.js';
@@ -191,7 +191,7 @@ g.test('floatBitsToULPFromZero,32').fn(t => {
 });
 
 g.test('scalarWGSL').fn(t => {
-  const cases: Array<[Scalar, string]> = [
+  const cases: Array<[ScalarValue, string]> = [
     [f32(0.0), '0.0f'],
     // The number -0.0 can be remapped to 0.0 when stored in a Scalar
     // object. It is not possible to guarantee that '-0.0f' will
@@ -227,7 +227,7 @@ expect: ${expect}`
 });
 
 g.test('vectorWGSL').fn(t => {
-  const cases: Array<[Vector, string]> = [
+  const cases: Array<[VectorValue, string]> = [
     [vec2(f32(42.0), f32(24.0)), 'vec2(42.0f, 24.0f)'],
     [vec2(f16Bits(0x5140), f16Bits(0x4e00)), 'vec2(42.0h, 24.0h)'],
     [vec2(u32(42), u32(24)), 'vec2(42u, 24u)'],
@@ -261,7 +261,7 @@ expect: ${expect}`
 });
 
 g.test('matrixWGSL').fn(t => {
-  const cases: Array<[Matrix, string]> = [
+  const cases: Array<[MatrixValue, string]> = [
     [
       toMatrix(
         [
@@ -391,7 +391,7 @@ g.test('constructorMatrix')
       return [...Array(rows).keys()].map(r => scalar_builder(c * cols + r));
     });
 
-    const got = new Matrix(elements);
+    const got = new MatrixValue(elements);
     const got_type = got.type;
     t.expect(
       got_type.cols === cols,

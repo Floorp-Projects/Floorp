@@ -157,20 +157,50 @@ export function viewDimensionsForTextureDimension(textureDimension: GPUTextureDi
   }
 }
 
-/** Returns the default view dimension for a given texture descriptor. */
-export function defaultViewDimensionsForTexture(textureDescriptor: Readonly<GPUTextureDescriptor>) {
-  switch (textureDescriptor.dimension) {
+/** Returns the effective view dimension for a given texture dimension and depthOrArrayLayers */
+export function effectiveViewDimensionForDimension(
+  viewDimension: GPUTextureViewDimension | undefined,
+  dimension: GPUTextureDimension | undefined,
+  depthOrArrayLayers: number
+) {
+  if (viewDimension) {
+    return viewDimension;
+  }
+
+  switch (dimension || '2d') {
     case '1d':
       return '1d';
-    case '2d': {
-      const sizeDict = reifyExtent3D(textureDescriptor.size);
-      return sizeDict.depthOrArrayLayers > 1 ? '2d-array' : '2d';
-    }
+    case '2d':
+    case undefined:
+      return depthOrArrayLayers > 1 ? '2d-array' : '2d';
+      break;
     case '3d':
       return '3d';
     default:
       unreachable();
   }
+}
+
+/** Returns the effective view dimension for a given texture */
+export function effectiveViewDimensionForTexture(
+  texture: GPUTexture,
+  viewDimension: GPUTextureViewDimension | undefined
+) {
+  return effectiveViewDimensionForDimension(
+    viewDimension,
+    texture.dimension,
+    texture.depthOrArrayLayers
+  );
+}
+
+/** Returns the default view dimension for a given texture descriptor. */
+export function defaultViewDimensionsForTexture(textureDescriptor: Readonly<GPUTextureDescriptor>) {
+  const sizeDict = reifyExtent3D(textureDescriptor.size);
+  return effectiveViewDimensionForDimension(
+    undefined,
+    textureDescriptor.dimension,
+    sizeDict.depthOrArrayLayers
+  );
 }
 
 /** Reifies the optional fields of `GPUTextureDescriptor`.

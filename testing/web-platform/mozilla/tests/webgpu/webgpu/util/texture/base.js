@@ -157,20 +157,50 @@ export function viewDimensionsForTextureDimension(textureDimension) {
   }
 }
 
-/** Returns the default view dimension for a given texture descriptor. */
-export function defaultViewDimensionsForTexture(textureDescriptor) {
-  switch (textureDescriptor.dimension) {
+/** Returns the effective view dimension for a given texture dimension and depthOrArrayLayers */
+export function effectiveViewDimensionForDimension(
+viewDimension,
+dimension,
+depthOrArrayLayers)
+{
+  if (viewDimension) {
+    return viewDimension;
+  }
+
+  switch (dimension || '2d') {
     case '1d':
       return '1d';
-    case '2d':{
-        const sizeDict = reifyExtent3D(textureDescriptor.size);
-        return sizeDict.depthOrArrayLayers > 1 ? '2d-array' : '2d';
-      }
+    case '2d':
+    case undefined:
+      return depthOrArrayLayers > 1 ? '2d-array' : '2d';
+      break;
     case '3d':
       return '3d';
     default:
       unreachable();
   }
+}
+
+/** Returns the effective view dimension for a given texture */
+export function effectiveViewDimensionForTexture(
+texture,
+viewDimension)
+{
+  return effectiveViewDimensionForDimension(
+    viewDimension,
+    texture.dimension,
+    texture.depthOrArrayLayers
+  );
+}
+
+/** Returns the default view dimension for a given texture descriptor. */
+export function defaultViewDimensionsForTexture(textureDescriptor) {
+  const sizeDict = reifyExtent3D(textureDescriptor.size);
+  return effectiveViewDimensionForDimension(
+    undefined,
+    textureDescriptor.dimension,
+    sizeDict.depthOrArrayLayers
+  );
 }
 
 /** Reifies the optional fields of `GPUTextureDescriptor`.

@@ -4,8 +4,9 @@ Execution Tests for the bitwise shift binary expression operations
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../gpu_test.js';
-import { i32, scalarType, ScalarType, TypeU32, u32 } from '../../../../util/conversion.js';
-import { allInputSources, CaseList, run } from '../expression.js';
+import { i32, scalarType, ScalarType, Type, u32 } from '../../../../util/conversion.js';
+import { Case } from '../case.js';
+import { allInputSources, run } from '../expression.js';
 
 import { binary, compoundBinary } from './binary.js';
 
@@ -65,9 +66,9 @@ function is_valid_const_shift_right(e1: number, e1Type: string, e2: number) {
 
 // Returns all cases of shifting e1 left by [0,63]. If `is_const` is true, cases that are
 // invalid for const eval are not returned.
-function generate_shift_left_cases(e1: number, e1Type: string, is_const: boolean): CaseList {
+function generate_shift_left_cases(e1: number, e1Type: string, is_const: boolean): Case[] {
   const V = e1Type === 'i32' ? i32 : u32;
-  const cases: CaseList = [];
+  const cases: Case[] = [];
   for (let shift = 0; shift < 64; ++shift) {
     const e2 = shift;
     if (is_const && !is_valid_const_shift_left(e1, e1Type, e2)) {
@@ -81,9 +82,9 @@ function generate_shift_left_cases(e1: number, e1Type: string, is_const: boolean
 
 // Returns all cases of shifting e1 right by [0,63]. If `is_const` is true, cases that are
 // invalid for const eval are not returned.
-function generate_shift_right_cases(e1: number, e1Type: string, is_const: boolean): CaseList {
+function generate_shift_right_cases(e1: number, e1Type: string, is_const: boolean): Case[] {
   const V = e1Type === 'i32' ? i32 : u32;
-  const cases: CaseList = [];
+  const cases: Case[] = [];
   for (let shift = 0; shift < 64; ++shift) {
     const e2 = shift;
     if (is_const && !is_valid_const_shift_right(e1, e1Type, e2)) {
@@ -107,7 +108,7 @@ function makeShiftLeftConcreteCases(inputType: string, inputSource: string, type
   const V = inputType === 'i32' ? i32 : u32;
   const is_const = inputSource === 'const';
 
-  const cases: CaseList = [
+  const cases: Case[] = [
     {
       input: /*  */ [V(0b00000000000000000000000000000001), u32(1)],
       expected: /**/ V(0b00000000000000000000000000000010),
@@ -193,7 +194,7 @@ Shift left (shifted value is concrete)
   .fn(async t => {
     const type = scalarType(t.params.type);
     const cases = makeShiftLeftConcreteCases(t.params.type, t.params.inputSource, type);
-    await run(t, binary('<<'), [type, TypeU32], type, t.params, cases);
+    await run(t, binary('<<'), [type, Type.u32], type, t.params, cases);
   });
 
 g.test('shift_left_concrete_compound')
@@ -214,14 +215,14 @@ Shift left (shifted value is concrete)
   .fn(async t => {
     const type = scalarType(t.params.type);
     const cases = makeShiftLeftConcreteCases(t.params.type, t.params.inputSource, type);
-    await run(t, compoundBinary('<<='), [type, TypeU32], type, t.params, cases);
+    await run(t, compoundBinary('<<='), [type, Type.u32], type, t.params, cases);
   });
 
 function makeShiftRightConcreteCases(inputType: string, inputSource: string, type: ScalarType) {
   const V = inputType === 'i32' ? i32 : u32;
   const is_const = inputSource === 'const';
 
-  const cases: CaseList = [
+  const cases: Case[] = [
     {
       input: /*  */ [V(0b00000000000000000000000000000001), u32(1)],
       expected: /**/ V(0b00000000000000000000000000000000),
@@ -318,7 +319,7 @@ Shift right (shifted value is concrete)
   .fn(async t => {
     const type = scalarType(t.params.type);
     const cases = makeShiftRightConcreteCases(t.params.type, t.params.inputSource, type);
-    await run(t, binary('>>'), [type, TypeU32], type, t.params, cases);
+    await run(t, binary('>>'), [type, Type.u32], type, t.params, cases);
   });
 
 g.test('shift_right_concrete_compound')
@@ -339,5 +340,5 @@ Shift right (shifted value is concrete)
   .fn(async t => {
     const type = scalarType(t.params.type);
     const cases = makeShiftRightConcreteCases(t.params.type, t.params.inputSource, type);
-    await run(t, compoundBinary('>>='), [type, TypeU32], type, t.params, cases);
+    await run(t, compoundBinary('>>='), [type, Type.u32], type, t.params, cases);
   });

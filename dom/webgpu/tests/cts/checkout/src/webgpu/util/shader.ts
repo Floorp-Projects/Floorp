@@ -11,6 +11,27 @@ export const kDefaultFragmentShaderCode = `
   return vec4<f32>(1.0, 1.0, 1.0, 1.0);
 }`;
 
+// MAINTENANCE_TODO(#3344): deduplicate fullscreen quad shader code.
+export const kFullscreenQuadVertexShaderCode = `
+  struct VertexOutput {
+    @builtin(position) Position : vec4<f32>
+  };
+
+  @vertex fn main(@builtin(vertex_index) VertexIndex : u32) -> VertexOutput {
+    var pos = array<vec2<f32>, 6>(
+        vec2<f32>( 1.0,  1.0),
+        vec2<f32>( 1.0, -1.0),
+        vec2<f32>(-1.0, -1.0),
+        vec2<f32>( 1.0,  1.0),
+        vec2<f32>(-1.0, -1.0),
+        vec2<f32>(-1.0,  1.0));
+
+    var output : VertexOutput;
+    output.Position = vec4<f32>(pos[VertexIndex], 0.0, 1.0);
+    return output;
+  }
+`;
+
 const kPlainTypeInfo = {
   i32: {
     suffix: '',
@@ -157,7 +178,9 @@ export function getFragmentShaderCodeWithOutput(
     }`;
 }
 
-export type TShaderStage = 'compute' | 'vertex' | 'fragment' | 'empty';
+export const kValidShaderStages = ['compute', 'vertex', 'fragment'] as const;
+export type TValidShaderStage = (typeof kValidShaderStages)[number];
+export type TShaderStage = TValidShaderStage | 'empty';
 
 /**
  * Return a foo shader of the given stage with the given entry point

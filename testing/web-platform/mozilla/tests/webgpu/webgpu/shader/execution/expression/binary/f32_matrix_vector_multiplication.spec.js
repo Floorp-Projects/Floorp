@@ -4,56 +4,13 @@
 Execution Tests for matrix-vector and vector-matrix f32 multiplication expression
 `;import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../gpu_test.js';
-import { TypeF32, TypeMat, TypeVec } from '../../../../util/conversion.js';
-import { FP } from '../../../../util/floating_point.js';
-import { sparseMatrixF32Range, sparseVectorF32Range } from '../../../../util/math.js';
-import { makeCaseCache } from '../case_cache.js';
+import { Type } from '../../../../util/conversion.js';
 import { allInputSources, run } from '../expression.js';
 
 import { binary, compoundBinary } from './binary.js';
+import { d } from './f32_matrix_vector_multiplication.cache.js';
 
 export const g = makeTestGroup(GPUTest);
-
-// Cases: matCxR_vecC_[non_]const
-const mat_vec_cases = [2, 3, 4].
-flatMap((cols) =>
-[2, 3, 4].flatMap((rows) =>
-[true, false].map((nonConst) => ({
-  [`mat${cols}x${rows}_vec${cols}_${nonConst ? 'non_const' : 'const'}`]: () => {
-    return FP.f32.generateMatrixVectorToVectorCases(
-      sparseMatrixF32Range(cols, rows),
-      sparseVectorF32Range(cols),
-      nonConst ? 'unfiltered' : 'finite',
-      FP.f32.multiplicationMatrixVectorInterval
-    );
-  }
-}))
-)
-).
-reduce((a, b) => ({ ...a, ...b }), {});
-
-// Cases: vecR_matCxR_[non_]const
-const vec_mat_cases = [2, 3, 4].
-flatMap((rows) =>
-[2, 3, 4].flatMap((cols) =>
-[true, false].map((nonConst) => ({
-  [`vec${rows}_mat${cols}x${rows}_${nonConst ? 'non_const' : 'const'}`]: () => {
-    return FP.f32.generateVectorMatrixToVectorCases(
-      sparseVectorF32Range(rows),
-      sparseMatrixF32Range(cols, rows),
-      nonConst ? 'unfiltered' : 'finite',
-      FP.f32.multiplicationVectorMatrixInterval
-    );
-  }
-}))
-)
-).
-reduce((a, b) => ({ ...a, ...b }), {});
-
-export const d = makeCaseCache('binary/f32_matrix_vector_multiplication', {
-  ...mat_vec_cases,
-  ...vec_mat_cases
-});
 
 g.test('matrix_vector').
 specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation').
@@ -80,8 +37,8 @@ fn(async (t) => {
   await run(
     t,
     binary('*'),
-    [TypeMat(cols, rows, TypeF32), TypeVec(cols, TypeF32)],
-    TypeVec(rows, TypeF32),
+    [Type.mat(cols, rows, Type.f32), Type.vec(cols, Type.f32)],
+    Type.vec(rows, Type.f32),
     t.params,
     cases
   );
@@ -112,8 +69,8 @@ fn(async (t) => {
   await run(
     t,
     binary('*'),
-    [TypeVec(rows, TypeF32), TypeMat(cols, rows, TypeF32)],
-    TypeVec(cols, TypeF32),
+    [Type.vec(rows, Type.f32), Type.mat(cols, rows, Type.f32)],
+    Type.vec(cols, Type.f32),
     t.params,
     cases
   );
@@ -139,8 +96,8 @@ fn(async (t) => {
   await run(
     t,
     compoundBinary('*='),
-    [TypeVec(rows, TypeF32), TypeMat(cols, rows, TypeF32)],
-    TypeVec(cols, TypeF32),
+    [Type.vec(rows, Type.f32), Type.mat(cols, rows, Type.f32)],
+    Type.vec(cols, Type.f32),
     t.params,
     cases
   );

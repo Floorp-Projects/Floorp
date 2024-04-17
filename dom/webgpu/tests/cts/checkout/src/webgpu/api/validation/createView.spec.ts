@@ -10,7 +10,7 @@ import {
 } from '../../capability_info.js';
 import {
   kTextureFormatInfo,
-  kTextureFormats,
+  kAllTextureFormats,
   kFeaturesForFormats,
   filterFormatsByFeature,
   viewCompatible,
@@ -39,10 +39,10 @@ g.test('format')
       .combine('viewFormatFeature', kFeaturesForFormats)
       .beginSubcases()
       .expand('textureFormat', ({ textureFormatFeature }) =>
-        filterFormatsByFeature(textureFormatFeature, kTextureFormats)
+        filterFormatsByFeature(textureFormatFeature, kAllTextureFormats)
       )
       .expand('viewFormat', ({ viewFormatFeature }) =>
-        filterFormatsByFeature(viewFormatFeature, [undefined, ...kTextureFormats])
+        filterFormatsByFeature(viewFormatFeature, [undefined, ...kAllTextureFormats])
       )
       .combine('useViewFormatList', [false, true])
   )
@@ -56,7 +56,8 @@ g.test('format')
 
     t.skipIfTextureFormatNotSupported(textureFormat, viewFormat);
 
-    const compatible = viewFormat === undefined || viewCompatible(textureFormat, viewFormat);
+    const compatible =
+      viewFormat === undefined || viewCompatible(t.isCompatibility, textureFormat, viewFormat);
 
     const texture = t.device.createTexture({
       format: textureFormat,
@@ -123,7 +124,7 @@ g.test('aspect')
   )
   .params(u =>
     u //
-      .combine('format', kTextureFormats)
+      .combine('format', kAllTextureFormats)
       .combine('aspect', kTextureAspects)
   )
   .beforeAllSubcases(t => {

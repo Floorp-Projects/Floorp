@@ -13,7 +13,6 @@ import { GPUConst } from '../../constants.js';
 import {
   kAllTextureFormats,
   kFeaturesForFormats,
-  kTextureFormats,
   filterFormatsByFeature,
   viewCompatible,
 } from '../../format_info.js';
@@ -387,7 +386,7 @@ g.test('viewFormats')
       .combine('viewFormatFeature', kFeaturesForFormats)
       .beginSubcases()
       .expand('viewFormat', ({ viewFormatFeature }) =>
-        filterFormatsByFeature(viewFormatFeature, kTextureFormats)
+        filterFormatsByFeature(viewFormatFeature, kAllTextureFormats)
       )
   )
   .beforeAllSubcases(t => {
@@ -402,7 +401,7 @@ g.test('viewFormats')
     const ctx = canvas.getContext('webgpu');
     assert(ctx instanceof GPUCanvasContext, 'Failed to get WebGPU context from canvas');
 
-    const compatible = viewCompatible(format, viewFormat);
+    const compatible = viewCompatible(t.isCompatibility, format, viewFormat);
 
     // Test configure() produces an error if the formats aren't compatible.
     t.expectValidationError(() => {

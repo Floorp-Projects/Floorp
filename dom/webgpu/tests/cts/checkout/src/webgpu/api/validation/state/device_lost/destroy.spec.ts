@@ -704,10 +704,7 @@ Tests import external texture on destroyed device. Tests valid combinations of:
           entries: [
             {
               binding: 0,
-              resource: t.device.importExternalTexture({
-                /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-                source: source as any,
-              }),
+              resource: t.device.importExternalTexture({ source }),
             },
           ],
         });
@@ -899,7 +896,12 @@ Tests encoding and finishing a writeTimestamp command on destroyed device.
     const { type, stage, awaitLost } = t.params;
     const querySet = t.device.createQuerySet({ type, count: 2 });
     await t.executeCommandsAfterDestroy(stage, awaitLost, 'non-pass', maker => {
-      maker.encoder.writeTimestamp(querySet, 0);
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (maker.encoder as any).writeTimestamp(querySet, 0);
+      } catch (ex) {
+        t.skipIf(ex instanceof TypeError, 'writeTimestamp is actually not available');
+      }
       return maker;
     });
   });

@@ -22,8 +22,8 @@ import {
   correctlyRoundedF32,
   FlushMode,
   frexp,
-  fullF16Range,
-  fullF32Range,
+  scalarF16Range,
+  scalarF32Range,
   fullI32Range,
   lerp,
   linearRange,
@@ -36,6 +36,7 @@ import {
   oneULPF64,
   lerpBigInt,
   linearRangeBigInt,
+  biasedRangeBigInt,
 } from '../webgpu/util/math.js';
 import {
   reinterpretU16AsF16,
@@ -1525,6 +1526,41 @@ g.test('linearRangeBigInt')
     );
   });
 
+g.test('biasedRangeBigInt')
+  .paramsSimple<rangeBigIntCase>(
+    // prettier-ignore
+    [
+      { a: 0n, b: 0n, num_steps: 10, result: new Array<bigint>(10).fill(0n) },
+      { a: 10n, b: 10n, num_steps: 10, result: new Array<bigint>(10).fill(10n) },
+      { a: 0n, b: 10n, num_steps: 1, result: [0n] },
+      { a: 10n, b: 0n, num_steps: 1, result: [10n] },
+      { a: 0n, b: 10n, num_steps: 11, result: [0n, 0n, 0n, 0n, 1n, 2n, 3n, 4n, 6n, 8n, 10n] },
+      { a: 10n, b: 0n, num_steps: 11, result: [10n, 10n, 10n, 10n, 9n, 8n, 7n, 6n, 4n, 2n, 0n] },
+      { a: 0n, b: 1000n, num_steps: 11, result: [0n, 9n, 39n, 89n, 159n, 249n, 359n, 489n, 639n, 809n, 1000n] },
+      { a: 1000n, b: 0n, num_steps: 11, result: [1000n, 991n, 961n, 911n, 841n, 751n, 641n, 511n, 361n, 191n, 0n] },
+      { a: 1n, b: 5n, num_steps: 5, result: [1n, 1n, 2n, 3n, 5n] },
+      { a: 5n, b: 1n, num_steps: 5, result: [5n, 5n, 4n, 3n, 1n] },
+      { a: 0n, b: 10n, num_steps: 5, result: [0n, 0n, 2n, 5n, 10n] },
+      { a: 10n, b: 0n, num_steps: 5, result: [10n, 10n, 8n, 5n, 0n] },
+      { a: -10n, b: 10n, num_steps: 11, result: [-10n, -10n, -10n, -10n, -8n, -6n, -4n, -2n, 2n, 6n, 10n] },
+      { a: 10n, b: -10n, num_steps: 11, result: [10n, 10n, 10n, 10n, 8n, 6n, 4n, 2n, -2n, -6n, -10n] },
+      { a: -10n, b: 0n, num_steps: 11, result: [-10n, -10n, -10n, -10n, -9n, -8n, -7n, -6n, -4n, -2n, -0n] },
+      { a: 0n, b: -10n, num_steps: 11, result: [0n, 0n, 0n, 0n, -1n, -2n, -3n, -4n, -6n, -8n, -10n] },
+    ]
+  )
+  .fn(test => {
+    const a = test.params.a;
+    const b = test.params.b;
+    const num_steps = test.params.num_steps;
+    const got = biasedRangeBigInt(a, b, num_steps);
+    const expect = test.params.result;
+
+    test.expect(
+      objectEquals(got, expect),
+      `biasedRangeBigInt(${a}, ${b}, ${num_steps}) returned ${got}. Expected ${expect}`
+    );
+  });
+
 interface fullF32RangeCase {
   neg_norm: number;
   neg_sub: number;
@@ -1557,7 +1593,7 @@ g.test('fullF32Range')
     const neg_sub = test.params.neg_sub;
     const pos_sub = test.params.pos_sub;
     const pos_norm = test.params.pos_norm;
-    const got = fullF32Range({ neg_norm, neg_sub, pos_sub, pos_norm });
+    const got = scalarF32Range({ neg_norm, neg_sub, pos_sub, pos_norm });
     const expect = test.params.expect;
 
     test.expect(
@@ -1598,7 +1634,7 @@ g.test('fullF16Range')
     const neg_sub = test.params.neg_sub;
     const pos_sub = test.params.pos_sub;
     const pos_norm = test.params.pos_norm;
-    const got = fullF16Range({ neg_norm, neg_sub, pos_sub, pos_norm });
+    const got = scalarF16Range({ neg_norm, neg_sub, pos_sub, pos_norm });
     const expect = test.params.expect;
 
     test.expect(

@@ -6,7 +6,7 @@ import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { kTextureUsages, kTextureDimensions } from '../../../../capability_info.js';
 import {
   kTextureFormatInfo,
-  kTextureFormats,
+  kAllTextureFormats,
   kCompressedTextureFormats,
   kDepthStencilFormats,
   kFeaturesForFormats,
@@ -255,6 +255,12 @@ Test that textures in copyTextureToTexture must have the same sample count.
       .combine('srcSampleCount', [1, 4])
       .combine('dstSampleCount', [1, 4])
   )
+  .beforeAllSubcases(t => {
+    t.skipIf(
+      t.isCompatibility && (t.params.srcSampleCount !== 1 || t.params.dstSampleCount !== 1),
+      'multisample textures are not copyable in compatibility mode'
+    );
+  })
   .fn(t => {
     const { srcSampleCount, dstSampleCount } = t.params;
 
@@ -307,6 +313,9 @@ TODO: Check the source and destination constraints separately.
       .expand('copyWidth', p => [32 - Math.max(p.srcCopyOrigin.x, p.dstCopyOrigin.x), 16])
       .expand('copyHeight', p => [16 - Math.max(p.srcCopyOrigin.y, p.dstCopyOrigin.y), 8])
   )
+  .beforeAllSubcases(t => {
+    t.skipIf(t.isCompatibility, 'multisample textures are not copyable in compatibility mode');
+  })
   .fn(t => {
     const { srcCopyOrigin, dstCopyOrigin, copyWidth, copyHeight } = t.params;
 
@@ -351,10 +360,10 @@ Test the formats of textures in copyTextureToTexture must be copy-compatible.
       .combine('dstFormatFeature', kFeaturesForFormats)
       .beginSubcases()
       .expand('srcFormat', ({ srcFormatFeature }) =>
-        filterFormatsByFeature(srcFormatFeature, kTextureFormats)
+        filterFormatsByFeature(srcFormatFeature, kAllTextureFormats)
       )
       .expand('dstFormat', ({ dstFormatFeature }) =>
-        filterFormatsByFeature(dstFormatFeature, kTextureFormats)
+        filterFormatsByFeature(dstFormatFeature, kAllTextureFormats)
       )
   )
   .beforeAllSubcases(t => {

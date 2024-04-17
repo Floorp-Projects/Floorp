@@ -242,6 +242,21 @@ export const kBit = {
 } as const;
 
 export const kValue = {
+  // Limits of i64
+  i64: {
+    positive: {
+      min: BigInt(0n),
+      max: BigInt(9223372036854775807n),
+    },
+    negative: {
+      min: BigInt(-9223372036854775808n),
+      max: BigInt(0n),
+    },
+    isOOB: (val: bigint): boolean => {
+      return val > kValue.i64.positive.max || val < kValue.i64.negative.min;
+    },
+  },
+
   // Limits of i32
   i32: {
     positive: {

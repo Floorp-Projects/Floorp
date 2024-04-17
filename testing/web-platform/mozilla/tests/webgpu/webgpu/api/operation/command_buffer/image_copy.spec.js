@@ -25,8 +25,9 @@
 * copy_with_no_image_or_slice_padding_and_undefined_values: test that when copying a single row we can set any bytesPerRow value and when copying a single\
  slice we can set rowsPerImage to 0. Also test setting offset, rowsPerImage, mipLevel, origin, origin.{x,y,z} to undefined.
 
+Note: more coverage of memory synchronization for different read and write texture methods are in same_subresource.spec.ts.
+
 * TODO:
-  - add another initMethod which renders the texture [3]
   - test copyT2B with buffer size not divisible by 4 (not done because expectContents 4-byte alignment)
   - Convert the float32 values in initialData into the ones compatible to the depth aspect of
     depthFormats when depth16unorm is supported by the browsers in
@@ -86,7 +87,7 @@ import { findFailedPixels } from '../../../util/texture/texture_ok.js';
  * - PartialCopyT2B: do CopyT2B to check that the part of the texture we copied to with InitMethod
  *   matches the data we were copying and that we don't overwrite any data in the target buffer that
  *   we're not supposed to - that's primarily for testing CopyT2B functionality.
- * - FullCopyT2B: do CopyT2B on the whole texture and check wether the part we copied to matches
+ * - FullCopyT2B: do CopyT2B on the whole texture and check whether the part we copied to matches
  *   the data we were copying and that the nothing else was modified - that's primarily for testing
  *   WriteTexture and CopyB2T.
  *
@@ -1132,6 +1133,10 @@ class ImageCopyTest extends TextureTestMixin(GPUTest) {
       copySize
     );
 
+    const use2DArray = this.isCompatibility && inputTexture.depthOrArrayLayers > 1;
+    const [textureType, layerCode] = use2DArray ?
+    ['texture_2d_array', ', baseArrayLayer'] :
+    ['texture_2d', ''];
     const renderPipeline = this.device.createRenderPipeline({
       layout: 'auto',
       vertex: {
@@ -1154,10 +1159,11 @@ class ImageCopyTest extends TextureTestMixin(GPUTest) {
       fragment: {
         module: this.device.createShaderModule({
           code: `
-            @group(0) @binding(0) var inputTexture: texture_2d<f32>;
+            @group(0) @binding(0) var inputTexture: ${textureType}<f32>;
+            @group(0) @binding(1) var<uniform> baseArrayLayer: u32;
             @fragment fn main(@builtin(position) fragcoord : vec4<f32>) ->
               @builtin(frag_depth) f32 {
-              var depthValue : vec4<f32> = textureLoad(inputTexture, vec2<i32>(fragcoord.xy), 0);
+              var depthValue : vec4<f32> = textureLoad(inputTexture, vec2<i32>(fragcoord.xy)${layerCode}, 0);
               return depthValue.x;
             }`
         }),
@@ -1200,19 +1206,26 @@ class ImageCopyTest extends TextureTestMixin(GPUTest) {
       });
       renderPass.setPipeline(renderPipeline);
 
+      const uniformBufferEntry = use2DArray ?
+      [this.createUniformBufferAndBindGroupEntryForBaseArrayLayer(z)] :
+      [];
+
       const bindGroup = this.device.createBindGroup({
         layout: renderPipeline.getBindGroupLayout(0),
         entries: [
         {
           binding: 0,
           resource: inputTexture.createView({
-            dimension: '2d',
-            baseArrayLayer: z,
-            arrayLayerCount: 1,
+            dimension: use2DArray ? '2d-array' : '2d',
+            ...(!use2DArray && {
+              baseArrayLayer: z,
+              arrayLayerCount: 1
+            }),
             baseMipLevel: 0,
             mipLevelCount: 1
           })
-        }]
+        },
+        ...uniformBufferEntry]
 
       });
       renderPass.setBindGroup(0, bindGroup);
@@ -1221,6 +1234,23 @@ class ImageCopyTest extends TextureTestMixin(GPUTest) {
     }
 
     this.queue.submit([encoder.finish()]);
+  }
+
+  createUniformBufferAndBindGroupEntryForBaseArrayLayer(z) {
+    const buffer = this.device.createBuffer({
+      usage: GPUBufferUsage.UNIFORM,
+      size: 4,
+      mappedAtCreation: true
+    });
+    this.trackForCleanup(buffer);
+    new Uint32Array(buffer.getMappedRange()).set([z]);
+    buffer.unmap();
+    return {
+      binding: 1,
+      resource: {
+        buffer
+      }
+    };
   }
 
   DoCopyTextureToBufferWithDepthAspectTest(
@@ -1328,8 +1358,6 @@ class ImageCopyTest extends TextureTestMixin(GPUTest) {
 
 /**
  * This is a helper function used for filtering test parameters
- *
- * [3]: Modify this after introducing tests with rendering.
  */
 function formatCanBeTested({ format }) {
   return kTextureFormatInfo[format].color.copyDst && kTextureFormatInfo[format].color.copySrc;
@@ -1491,6 +1519,12 @@ works for every format with 2d and 2d-array textures.
     offset + bytesInCopyExtentPerRow { ==, > } bytesPerRow
     offset > bytesInACompleteCopyImage
 
+  Covers spceial cases for OpenGL Compat:
+    offset % 4 > 0 while:
+      - padding bytes at end of each row/layer: bytesPerRow % 256 > 0 || rowsPerImage > copyDepth
+      - rows/layers are compact: bytesPerRow % 256 == 0 && rowsPerImage == copyDepth
+      - padding bytes at front and end of the same 4-byte word: format == 'r8snorm' && copyWidth <= 2
+
   TODO: Cover the special code paths for 3D textures in D3D12.
   TODO: Make a variant for depth-stencil formats.
 `
@@ -1505,7 +1539,19 @@ filter(({ dimension, format }) => textureDimensionAndFormatCompatible(dimension,
 beginSubcases().
 combineWithParams(kOffsetsAndSizesParams.offsetsAndPaddings).
 combine('copyDepth', kOffsetsAndSizesParams.copyDepth) // 2d and 2d-array textures
-.unless((p) => p.dimension === '1d' && p.copyDepth !== 1)
+.combine('copyWidth', [3, 1, 2, 127, 128, 255, 256]) // copyWidth === 3 is the default. Others covers special cases for r8snorm and rg8snorm on compatiblity mode.
+.filter(({ format, copyWidth }) => {
+  switch (format) {
+    case 'r8snorm':
+    case 'rg8snorm':
+      return true;
+    default:
+      // Restrict test parameters to save run time.
+      return copyWidth === 3;
+  }
+}).
+combine('rowsPerImageEqualsCopyHeight', [true, false]).
+unless((p) => p.dimension === '1d' && p.copyDepth !== 1)
 ).
 beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
@@ -1520,26 +1566,44 @@ fn((t) => {
     format,
     dimension,
     initMethod,
-    checkMethod
+    checkMethod,
+    copyWidth,
+    rowsPerImageEqualsCopyHeight
   } = t.params;
+
+  // Skip test cases designed for special cases coverage on compatibility mode to save run time.
+  if (!(t.isCompatibility && (format === 'r8snorm' || format === 'rg8snorm'))) {
+    if (rowsPerImageEqualsCopyHeight === false) {
+      t.skip(
+        'rowsPerImageEqualsCopyHeight === false is only for r8snorm and rg8snorm on compatibility mode'
+      );
+    }
+
+    if (copyWidth !== 3) {
+      t.skip('copyWidth !== 3 is only for r8snorm and rg8snorm on compatibility mode');
+    }
+  }
+
   const info = kTextureFormatInfo[format];
 
   const offset = offsetInBlocks * info.color.bytes;
+  const copyHeight = 3;
   const copySize = {
-    width: 3 * info.blockWidth,
-    height: 3 * info.blockHeight,
+    width: copyWidth * info.blockWidth,
+    height: copyHeight * info.blockHeight,
     depthOrArrayLayers: copyDepth
   };
   let textureHeight = 4 * info.blockHeight;
-  let rowsPerImage = 3;
-  const bytesPerRow = 256;
+  let rowsPerImage = rowsPerImageEqualsCopyHeight ? copyHeight : copyHeight + 1;
+  const bytesPerRow = align(copyWidth * info.color.bytes, 256);
 
   if (dimension === '1d') {
     copySize.height = 1;
     textureHeight = info.blockHeight;
     rowsPerImage = 1;
   }
-  const textureSize = [4 * info.blockWidth, textureHeight, copyDepth];
+  // Add textureWidth by 1 to make sure we are doing a partial copy.
+  const textureSize = [(copyWidth + 1) * info.blockWidth, textureHeight, copyDepth];
 
   const minDataSize = dataBytesForCopyOrFail({
     layout: { offset, bytesPerRow, rowsPerImage },
@@ -1549,7 +1613,7 @@ fn((t) => {
   });
   const dataSize = minDataSize + dataPaddingInBytes;
 
-  // We're copying a (3 x 3 x copyDepth) (in texel blocks) part of a (4 x 4 x copyDepth)
+  // We're copying a (copyWidth x 3 x copyDepth) (in texel blocks) part of a ((copyWidth + 1) x 4 x copyDepth)
   // (in texel blocks) texture with no origin.
   t.uploadTextureAndVerifyCopy({
     textureDataLayout: { offset, bytesPerRow, rowsPerImage },

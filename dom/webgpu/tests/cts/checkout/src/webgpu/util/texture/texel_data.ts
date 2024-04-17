@@ -1,5 +1,6 @@
 import { assert, unreachable } from '../../../common/util/util.js';
 import { UncompressedTextureFormat, EncodableTextureFormat } from '../../format_info.js';
+import { kValue } from '../constants.js';
 import {
   assertInIntegerRange,
   float32ToFloatBits,
@@ -424,6 +425,8 @@ function makeNormalizedInfo(
   }
 
   const dataType: ComponentDataType = opt.signed ? 'snorm' : 'unorm';
+  const min = opt.signed ? -1 : 0;
+  const max = 1;
   return {
     componentOrder,
     componentInfo: makePerTexelComponent(componentOrder, {
@@ -438,7 +441,7 @@ function makeNormalizedInfo(
     numberToBits,
     bitsToNumber,
     bitsToULPFromZero,
-    numericRange: { min: opt.signed ? -1 : 0, max: 1 },
+    numericRange: { min, max, finiteMin: min, finiteMax: max },
   };
 }
 
@@ -454,9 +457,9 @@ function makeIntegerInfo(
   opt: { signed: boolean }
 ): TexelRepresentationInfo {
   assert(bitLength <= 32);
-  const numericRange = opt.signed
-    ? { min: -(2 ** (bitLength - 1)), max: 2 ** (bitLength - 1) - 1 }
-    : { min: 0, max: 2 ** bitLength - 1 };
+  const min = opt.signed ? -(2 ** (bitLength - 1)) : 0;
+  const max = opt.signed ? 2 ** (bitLength - 1) - 1 : 2 ** bitLength - 1;
+  const numericRange = { min, max, finiteMin: min, finiteMax: max };
   const maxUnsignedValue = 2 ** bitLength;
   const encode = applyEach(
     (n: number) => (assertInIntegerRange(n, bitLength, opt.signed), n),
@@ -576,8 +579,13 @@ function makeFloatInfo(
     bitsToNumber,
     bitsToULPFromZero,
     numericRange: restrictedDepth
-      ? { min: 0, max: 1 }
-      : { min: Number.NEGATIVE_INFINITY, max: Number.POSITIVE_INFINITY },
+      ? { min: 0, max: 1, finiteMin: 0, finiteMax: 1 }
+      : {
+          min: Number.NEGATIVE_INFINITY,
+          max: Number.POSITIVE_INFINITY,
+          finiteMin: bitLength === 32 ? kValue.f32.negative.min : kValue.f16.negative.min,
+          finiteMax: bitLength === 32 ? kValue.f32.positive.max : kValue.f16.positive.max,
+        },
   };
 }
 
@@ -592,6 +600,7 @@ const identity = (n: number) => n;
 const kFloat11Format = { signed: 0, exponentBits: 5, mantissaBits: 6, bias: 15 } as const;
 const kFloat10Format = { signed: 0, exponentBits: 5, mantissaBits: 5, bias: 15 } as const;
 
+export type PerComponentFiniteMax = Record<TexelComponent, number>;
 export type TexelRepresentationInfo = {
   /** Order of components in the packed representation. */
   readonly componentOrder: TexelComponent[];
@@ -619,7 +628,12 @@ export type TexelRepresentationInfo = {
   /** Convert integer bit representations into ULPs-from-zero, e.g. unorm8 255 -> 255 ULPs */
   readonly bitsToULPFromZero: ComponentMapFn;
   /** The valid range of numeric "color" values, e.g. [0, Infinity] for ufloat. */
-  readonly numericRange: null | { min: number; max: number };
+  readonly numericRange: null | {
+    min: number;
+    max: number;
+    finiteMin: number;
+    finiteMax: number | PerComponentFiniteMax;
+  };
 
   // Add fields as needed
 };
@@ -765,7 +779,7 @@ export const kTexelRepresentationInfo: {
         A: normalizedIntegerAsFloat(components.A!, 2, false),
       }),
       bitsToULPFromZero: components => components,
-      numericRange: { min: 0, max: 1 },
+      numericRange: { min: 0, max: 1, finiteMin: 0, finiteMax: 1 },
     },
     rg11b10ufloat: {
       componentOrder: kRGB,
@@ -809,7 +823,16 @@ export const kTexelRepresentationInfo: {
         G: floatBitsToNormalULPFromZero(components.G!, kFloat11Format),
         B: floatBitsToNormalULPFromZero(components.B!, kFloat10Format),
       }),
-      numericRange: { min: 0, max: Number.POSITIVE_INFINITY },
+      numericRange: {
+        min: 0,
+        max: Number.POSITIVE_INFINITY,
+        finiteMin: 0,
+        finiteMax: {
+          R: floatBitsToNumber(0b111_1011_1111, kFloat11Format),
+          G: floatBitsToNumber(0b111_1011_1111, kFloat11Format),
+          B: floatBitsToNumber(0b11_1101_1111, kFloat10Format),
+        } as PerComponentFiniteMax,
+      },
     },
     rgb9e5ufloat: {
       componentOrder: kRGB,
@@ -854,7 +877,12 @@ export const kTexelRepresentationInfo: {
         G: floatBitsToNormalULPFromZero(components.G!, kUFloat9e5Format),
         B: floatBitsToNormalULPFromZero(components.B!, kUFloat9e5Format),
       }),
-      numericRange: { min: 0, max: Number.POSITIVE_INFINITY },
+      numericRange: {
+        min: 0,
+        max: Number.POSITIVE_INFINITY,
+        finiteMin: 0,
+        finiteMax: ufloatM9E5BitsToNumber(0b11_1111_1111_1111, kUFloat9e5Format),
+      },
     },
     depth32float: makeFloatInfo([TexelComponent.Depth], 32, { restrictedDepth: true }),
     depth16unorm: makeNormalizedInfo([TexelComponent.Depth], 16, { signed: false, sRGB: false }),
@@ -868,7 +896,7 @@ export const kTexelRepresentationInfo: {
       numberToBits: () => unreachable('depth24plus has no representation'),
       bitsToNumber: () => unreachable('depth24plus has no representation'),
       bitsToULPFromZero: () => unreachable('depth24plus has no representation'),
-      numericRange: { min: 0, max: 1 },
+      numericRange: { min: 0, max: 1, finiteMin: 0, finiteMax: 1 },
     },
     stencil8: makeIntegerInfo([TexelComponent.Stencil], 8, { signed: false }),
     'depth32float-stencil8': {

@@ -1,6 +1,6 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/import { keysOf } from '../common/util/data_tables.js';import { assert } from '../common/util/util.js';
+**/import { keysOf } from '../common/util/data_tables.js';import { assert, unreachable } from '../common/util/util.js';
 import { align } from './util/math.js';
 
 
@@ -13,25 +13,26 @@ import { align } from './util/math.js';
  * `formatTableWithDefaults`. This ensures keys are never missing, always explicitly `undefined`.
  *
  * All top-level keys must be defined here, or they won't be exposed at all.
+ * Documentation is also written here; this makes it propagate through to the end types.
  */
 const kFormatUniversalDefaults = {
+  /** Texel block width. */
   blockWidth: undefined,
+  /** Texel block height. */
   blockHeight: undefined,
   color: undefined,
   depth: undefined,
   stencil: undefined,
   colorRender: undefined,
+  /** Whether the format can be used in a multisample texture. */
   multisample: undefined,
+  /** Optional feature required to use this format, or `undefined` if none. */
   feature: undefined,
+  /** The base format for srgb formats. Specified on both srgb and equivalent non-srgb formats. */
   baseFormat: undefined,
 
-  sampleType: undefined,
-  copySrc: undefined,
-  copyDst: undefined,
-  bytesPerBlock: undefined,
-  renderable: false,
-  renderTargetPixelByteCost: undefined,
-  renderTargetComponentAlignment: undefined
+  /** @deprecated Use `.color.bytes`, `.depth.bytes`, or `.stencil.bytes`. */
+  bytesPerBlock: undefined
 
   // IMPORTANT:
   // Add new top-level keys both here and in TextureFormatInfo_TypeCheck.
@@ -67,382 +68,506 @@ function formatTableWithDefaults({
 
 /** "plain color formats", plus rgb9e5ufloat. */
 const kRegularTextureFormatInfo = formatTableWithDefaults({
-  defaults: { blockWidth: 1, blockHeight: 1, copySrc: true, copyDst: true },
+  defaults: { blockWidth: 1, blockHeight: 1 },
   table: {
     // plain, 8 bits per component
 
     r8unorm: {
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 1 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 1
+      },
       colorRender: { blend: true, resolve: true, byteCost: 1, alignment: 1 },
-      renderable: true,
-      get renderTargetComponentAlignment() {return this.colorRender.alignment;},
-      get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: true,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
     r8snorm: {
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 1 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 1
+      },
       multisample: false,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
     r8uint: {
-      color: { type: 'uint', copySrc: true, copyDst: true, storage: false, bytes: 1 },
+      color: {
+        type: 'uint',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 1
+      },
       colorRender: { blend: false, resolve: false, byteCost: 1, alignment: 1 },
-      renderable: true,
-      get renderTargetComponentAlignment() {return this.colorRender.alignment;},
-      get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: true,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
     r8sint: {
-      color: { type: 'sint', copySrc: true, copyDst: true, storage: false, bytes: 1 },
+      color: {
+        type: 'sint',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 1
+      },
       colorRender: { blend: false, resolve: false, byteCost: 1, alignment: 1 },
-      renderable: true,
-      get renderTargetComponentAlignment() {return this.colorRender.alignment;},
-      get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: true,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
 
     rg8unorm: {
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 2 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 2
+      },
       colorRender: { blend: true, resolve: true, byteCost: 2, alignment: 1 },
-      renderable: true,
-      get renderTargetComponentAlignment() {return this.colorRender.alignment;},
-      get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: true,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
     rg8snorm: {
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 2 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 2
+      },
       multisample: false,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
     rg8uint: {
-      color: { type: 'uint', copySrc: true, copyDst: true, storage: false, bytes: 2 },
+      color: {
+        type: 'uint',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 2
+      },
       colorRender: { blend: false, resolve: false, byteCost: 2, alignment: 1 },
-      renderable: true,
-      get renderTargetComponentAlignment() {return this.colorRender.alignment;},
-      get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: true,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
     rg8sint: {
-      color: { type: 'sint', copySrc: true, copyDst: true, storage: false, bytes: 2 },
+      color: {
+        type: 'sint',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 2
+      },
       colorRender: { blend: false, resolve: false, byteCost: 2, alignment: 1 },
-      renderable: true,
-      get renderTargetComponentAlignment() {return this.colorRender.alignment;},
-      get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: true,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
 
     rgba8unorm: {
-      color: { type: 'float', copySrc: true, copyDst: true, storage: true, bytes: 4 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: true,
+        readWriteStorage: false,
+        bytes: 4
+      },
       colorRender: { blend: true, resolve: true, byteCost: 8, alignment: 1 },
-      renderable: true,
-      get renderTargetComponentAlignment() {return this.colorRender.alignment;},
-      get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: true,
       baseFormat: 'rgba8unorm',
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
     'rgba8unorm-srgb': {
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 4 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 4
+      },
       colorRender: { blend: true, resolve: true, byteCost: 8, alignment: 1 },
-      renderable: true,
-      get renderTargetComponentAlignment() {return this.colorRender.alignment;},
-      get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: true,
       baseFormat: 'rgba8unorm',
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
     rgba8snorm: {
-      color: { type: 'float', copySrc: true, copyDst: true, storage: true, bytes: 4 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: true,
+        readWriteStorage: false,
+        bytes: 4
+      },
       multisample: false,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
     rgba8uint: {
-      color: { type: 'uint', copySrc: true, copyDst: true, storage: true, bytes: 4 },
+      color: {
+        type: 'uint',
+        copySrc: true,
+        copyDst: true,
+        storage: true,
+        readWriteStorage: false,
+        bytes: 4
+      },
       colorRender: { blend: false, resolve: false, byteCost: 4, alignment: 1 },
-      renderable: true,
-      get renderTargetComponentAlignment() {return this.colorRender.alignment;},
-      get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: true,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
     rgba8sint: {
-      color: { type: 'sint', copySrc: true, copyDst: true, storage: true, bytes: 4 },
+      color: {
+        type: 'sint',
+        copySrc: true,
+        copyDst: true,
+        storage: true,
+        readWriteStorage: false,
+        bytes: 4
+      },
       colorRender: { blend: false, resolve: false, byteCost: 4, alignment: 1 },
-      renderable: true,
-      get renderTargetComponentAlignment() {return this.colorRender.alignment;},
-      get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: true,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
     bgra8unorm: {
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 4 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 4
+      },
       colorRender: { blend: true, resolve: true, byteCost: 8, alignment: 1 },
-      renderable: true,
-      get renderTargetComponentAlignment() {return this.colorRender.alignment;},
-      get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: true,
       baseFormat: 'bgra8unorm',
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
     'bgra8unorm-srgb': {
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 4 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 4
+      },
       colorRender: { blend: true, resolve: true, byteCost: 8, alignment: 1 },
-      renderable: true,
-      get renderTargetComponentAlignment() {return this.colorRender.alignment;},
-      get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: true,
       baseFormat: 'bgra8unorm',
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
 
     // plain, 16 bits per component
 
     r16uint: {
-      color: { type: 'uint', copySrc: true, copyDst: true, storage: false, bytes: 2 },
+      color: {
+        type: 'uint',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 2
+      },
       colorRender: { blend: false, resolve: false, byteCost: 2, alignment: 2 },
-      renderable: true,
-      get renderTargetComponentAlignment() {return this.colorRender.alignment;},
-      get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: true,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
     r16sint: {
-      color: { type: 'sint', copySrc: true, copyDst: true, storage: false, bytes: 2 },
+      color: {
+        type: 'sint',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 2
+      },
       colorRender: { blend: false, resolve: false, byteCost: 2, alignment: 2 },
-      renderable: true,
-      get renderTargetComponentAlignment() {return this.colorRender.alignment;},
-      get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: true,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
     r16float: {
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 2 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 2
+      },
       colorRender: { blend: true, resolve: true, byteCost: 2, alignment: 2 },
-      renderable: true,
-      get renderTargetComponentAlignment() {return this.colorRender.alignment;},
-      get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: true,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
 
     rg16uint: {
-      color: { type: 'uint', copySrc: true, copyDst: true, storage: false, bytes: 4 },
+      color: {
+        type: 'uint',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 4
+      },
       colorRender: { blend: false, resolve: false, byteCost: 4, alignment: 2 },
-      renderable: true,
-      get renderTargetComponentAlignment() {return this.colorRender.alignment;},
-      get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: true,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
     rg16sint: {
-      color: { type: 'sint', copySrc: true, copyDst: true, storage: false, bytes: 4 },
+      color: {
+        type: 'sint',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 4
+      },
       colorRender: { blend: false, resolve: false, byteCost: 4, alignment: 2 },
-      renderable: true,
-      get renderTargetComponentAlignment() {return this.colorRender.alignment;},
-      get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: true,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
     rg16float: {
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 4 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 4
+      },
       colorRender: { blend: true, resolve: true, byteCost: 4, alignment: 2 },
-      renderable: true,
-      get renderTargetComponentAlignment() {return this.colorRender.alignment;},
-      get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: true,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
 
     rgba16uint: {
-      color: { type: 'uint', copySrc: true, copyDst: true, storage: true, bytes: 8 },
+      color: {
+        type: 'uint',
+        copySrc: true,
+        copyDst: true,
+        storage: true,
+        readWriteStorage: false,
+        bytes: 8
+      },
       colorRender: { blend: false, resolve: false, byteCost: 8, alignment: 2 },
-      renderable: true,
-      get renderTargetComponentAlignment() {return this.colorRender.alignment;},
-      get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: true,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
     rgba16sint: {
-      color: { type: 'sint', copySrc: true, copyDst: true, storage: true, bytes: 8 },
+      color: {
+        type: 'sint',
+        copySrc: true,
+        copyDst: true,
+        storage: true,
+        readWriteStorage: false,
+        bytes: 8
+      },
       colorRender: { blend: false, resolve: false, byteCost: 8, alignment: 2 },
-      renderable: true,
-      get renderTargetComponentAlignment() {return this.colorRender.alignment;},
-      get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: true,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
     rgba16float: {
-      color: { type: 'float', copySrc: true, copyDst: true, storage: true, bytes: 8 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: true,
+        readWriteStorage: false,
+        bytes: 8
+      },
       colorRender: { blend: true, resolve: true, byteCost: 8, alignment: 2 },
-      renderable: true,
-      get renderTargetComponentAlignment() {return this.colorRender.alignment;},
-      get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: true,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
 
     // plain, 32 bits per component
 
     r32uint: {
-      color: { type: 'uint', copySrc: true, copyDst: true, storage: true, bytes: 4 },
+      color: {
+        type: 'uint',
+        copySrc: true,
+        copyDst: true,
+        storage: true,
+        readWriteStorage: true,
+        bytes: 4
+      },
       colorRender: { blend: false, resolve: false, byteCost: 4, alignment: 4 },
-      renderable: true,
-      get renderTargetComponentAlignment() {return this.colorRender.alignment;},
-      get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: false,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
     r32sint: {
-      color: { type: 'sint', copySrc: true, copyDst: true, storage: true, bytes: 4 },
+      color: {
+        type: 'sint',
+        copySrc: true,
+        copyDst: true,
+        storage: true,
+        readWriteStorage: true,
+        bytes: 4
+      },
       colorRender: { blend: false, resolve: false, byteCost: 4, alignment: 4 },
-      renderable: true,
-      get renderTargetComponentAlignment() {return this.colorRender.alignment;},
-      get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: false,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
     r32float: {
-      color: { type: 'unfilterable-float', copySrc: true, copyDst: true, storage: true, bytes: 4 },
+      color: {
+        type: 'unfilterable-float',
+        copySrc: true,
+        copyDst: true,
+        storage: true,
+        readWriteStorage: true,
+        bytes: 4
+      },
       colorRender: { blend: false, resolve: false, byteCost: 4, alignment: 4 },
-      renderable: true,
-      get renderTargetComponentAlignment() {return this.colorRender.alignment;},
-      get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: true,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
 
     rg32uint: {
-      color: { type: 'uint', copySrc: true, copyDst: true, storage: true, bytes: 8 },
+      color: {
+        type: 'uint',
+        copySrc: true,
+        copyDst: true,
+        storage: true,
+        readWriteStorage: false,
+        bytes: 8
+      },
       colorRender: { blend: false, resolve: false, byteCost: 8, alignment: 4 },
-      renderable: true,
-      get renderTargetComponentAlignment() {return this.colorRender.alignment;},
-      get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: false,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
     rg32sint: {
-      color: { type: 'sint', copySrc: true, copyDst: true, storage: true, bytes: 8 },
+      color: {
+        type: 'sint',
+        copySrc: true,
+        copyDst: true,
+        storage: true,
+        readWriteStorage: false,
+        bytes: 8
+      },
       colorRender: { blend: false, resolve: false, byteCost: 8, alignment: 4 },
-      renderable: true,
-      get renderTargetComponentAlignment() {return this.colorRender.alignment;},
-      get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: false,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
     rg32float: {
-      color: { type: 'unfilterable-float', copySrc: true, copyDst: true, storage: true, bytes: 8 },
+      color: {
+        type: 'unfilterable-float',
+        copySrc: true,
+        copyDst: true,
+        storage: true,
+        readWriteStorage: false,
+        bytes: 8
+      },
       colorRender: { blend: false, resolve: false, byteCost: 8, alignment: 4 },
-      renderable: true,
-      get renderTargetComponentAlignment() {return this.colorRender.alignment;},
-      get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: false,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
 
     rgba32uint: {
-      color: { type: 'uint', copySrc: true, copyDst: true, storage: true, bytes: 16 },
+      color: {
+        type: 'uint',
+        copySrc: true,
+        copyDst: true,
+        storage: true,
+        readWriteStorage: false,
+        bytes: 16
+      },
       colorRender: { blend: false, resolve: false, byteCost: 16, alignment: 4 },
-      renderable: true,
-      get renderTargetComponentAlignment() {return this.colorRender.alignment;},
-      get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: false,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
     rgba32sint: {
-      color: { type: 'sint', copySrc: true, copyDst: true, storage: true, bytes: 16 },
+      color: {
+        type: 'sint',
+        copySrc: true,
+        copyDst: true,
+        storage: true,
+        readWriteStorage: false,
+        bytes: 16
+      },
       colorRender: { blend: false, resolve: false, byteCost: 16, alignment: 4 },
-      renderable: true,
-      get renderTargetComponentAlignment() {return this.colorRender.alignment;},
-      get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: false,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
     rgba32float: {
-      color: { type: 'unfilterable-float', copySrc: true, copyDst: true, storage: true, bytes: 16 },
+      color: {
+        type: 'unfilterable-float',
+        copySrc: true,
+        copyDst: true,
+        storage: true,
+        readWriteStorage: false,
+        bytes: 16
+      },
       colorRender: { blend: false, resolve: false, byteCost: 16, alignment: 4 },
-      renderable: true,
-      get renderTargetComponentAlignment() {return this.colorRender.alignment;},
-      get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: false,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
 
     // plain, mixed component width, 32 bits per texel
 
     rgb10a2uint: {
-      color: { type: 'uint', copySrc: true, copyDst: true, storage: false, bytes: 4 },
+      color: {
+        type: 'uint',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 4
+      },
       colorRender: { blend: false, resolve: false, byteCost: 8, alignment: 4 },
-      renderable: true,
-      get renderTargetComponentAlignment() {return this.colorRender.alignment;},
-      get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: true,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
     rgb10a2unorm: {
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 4 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 4
+      },
       colorRender: { blend: true, resolve: true, byteCost: 8, alignment: 4 },
-      renderable: true,
-      get renderTargetComponentAlignment() {return this.colorRender.alignment;},
-      get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: true,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
     rg11b10ufloat: {
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 4 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 4
+      },
       multisample: false,
-      get sampleType() {return this.color.type;},
-      get bytesPerBlock() {return this.color.bytes;},
-      renderTargetPixelByteCost: 8,
-      renderTargetComponentAlignment: 4
+      get bytesPerBlock() {return this.color.bytes;}
     },
 
     // packed
 
     rgb9e5ufloat: {
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 4 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 4
+      },
       multisample: false,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     }
   }
@@ -452,24 +577,39 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
 // because one aspect can be sized and one can be unsized. This should be cleaned up, but is kept
 // this way during a migration phase.
 const kSizedDepthStencilFormatInfo = formatTableWithDefaults({
-  defaults: { blockWidth: 1, blockHeight: 1, multisample: true, copySrc: true, renderable: true },
+  defaults: { blockWidth: 1, blockHeight: 1, multisample: true },
   table: {
     stencil8: {
-      stencil: { type: 'uint', copySrc: true, copyDst: true, storage: false, bytes: 1 },
-      sampleType: 'uint',
-      copyDst: true,
+      stencil: {
+        type: 'uint',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 1
+      },
       bytesPerBlock: 1
     },
     depth16unorm: {
-      depth: { type: 'depth', copySrc: true, copyDst: true, storage: false, bytes: 2 },
-      sampleType: 'depth',
-      copyDst: true,
+      depth: {
+        type: 'depth',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 2
+      },
       bytesPerBlock: 2
     },
     depth32float: {
-      depth: { type: 'depth', copySrc: true, copyDst: false, storage: false, bytes: 4 },
-      sampleType: 'depth',
-      copyDst: false,
+      depth: {
+        type: 'depth',
+        copySrc: true,
+        copyDst: false,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 4
+      },
       bytesPerBlock: 4
     }
   }
@@ -478,28 +618,51 @@ const kUnsizedDepthStencilFormatInfo = formatTableWithDefaults({
   defaults: { blockWidth: 1, blockHeight: 1, multisample: true },
   table: {
     depth24plus: {
-      depth: { type: 'depth', copySrc: false, copyDst: false, storage: false, bytes: undefined },
-      copySrc: false,
-      copyDst: false,
-      sampleType: 'depth',
-      renderable: true
+      depth: {
+        type: 'depth',
+        copySrc: false,
+        copyDst: false,
+        storage: false,
+        readWriteStorage: false,
+        bytes: undefined
+      }
     },
     'depth24plus-stencil8': {
-      depth: { type: 'depth', copySrc: false, copyDst: false, storage: false, bytes: undefined },
-      stencil: { type: 'uint', copySrc: true, copyDst: true, storage: false, bytes: 1 },
-      copySrc: false,
-      copyDst: false,
-      sampleType: 'depth',
-      renderable: true
+      depth: {
+        type: 'depth',
+        copySrc: false,
+        copyDst: false,
+        storage: false,
+        readWriteStorage: false,
+        bytes: undefined
+      },
+      stencil: {
+        type: 'uint',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 1
+      }
     },
     'depth32float-stencil8': {
-      depth: { type: 'depth', copySrc: true, copyDst: false, storage: false, bytes: 4 },
-      stencil: { type: 'uint', copySrc: true, copyDst: true, storage: false, bytes: 1 },
-      feature: 'depth32float-stencil8',
-      copySrc: false,
-      copyDst: false,
-      sampleType: 'depth',
-      renderable: true
+      depth: {
+        type: 'depth',
+        copySrc: true,
+        copyDst: false,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 4
+      },
+      stencil: {
+        type: 'uint',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 1
+      },
+      feature: 'depth32float-stencil8'
     }
   }
 });
@@ -509,79 +672,174 @@ const kBCTextureFormatInfo = formatTableWithDefaults({
     blockWidth: 4,
     blockHeight: 4,
     multisample: false,
-    feature: 'texture-compression-bc',
-    sampleType: 'float',
-    copySrc: true,
-    copyDst: true
+    feature: 'texture-compression-bc'
   },
   table: {
     'bc1-rgba-unorm': {
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 8 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 8
+      },
       baseFormat: 'bc1-rgba-unorm',
       get bytesPerBlock() {return this.color.bytes;}
     },
     'bc1-rgba-unorm-srgb': {
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 8 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 8
+      },
       baseFormat: 'bc1-rgba-unorm',
       get bytesPerBlock() {return this.color.bytes;}
     },
 
     'bc2-rgba-unorm': {
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 16
+      },
       baseFormat: 'bc2-rgba-unorm',
       get bytesPerBlock() {return this.color.bytes;}
     },
     'bc2-rgba-unorm-srgb': {
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 16
+      },
       baseFormat: 'bc2-rgba-unorm',
       get bytesPerBlock() {return this.color.bytes;}
     },
 
     'bc3-rgba-unorm': {
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 16
+      },
       baseFormat: 'bc3-rgba-unorm',
       get bytesPerBlock() {return this.color.bytes;}
     },
     'bc3-rgba-unorm-srgb': {
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 16
+      },
       baseFormat: 'bc3-rgba-unorm',
       get bytesPerBlock() {return this.color.bytes;}
     },
 
     'bc4-r-unorm': {
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 8 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 8
+      },
       get bytesPerBlock() {return this.color.bytes;}
     },
     'bc4-r-snorm': {
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 8 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 8
+      },
       get bytesPerBlock() {return this.color.bytes;}
     },
 
     'bc5-rg-unorm': {
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 16
+      },
       get bytesPerBlock() {return this.color.bytes;}
     },
     'bc5-rg-snorm': {
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 16
+      },
       get bytesPerBlock() {return this.color.bytes;}
     },
 
     'bc6h-rgb-ufloat': {
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 16
+      },
       get bytesPerBlock() {return this.color.bytes;}
     },
     'bc6h-rgb-float': {
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 16
+      },
       get bytesPerBlock() {return this.color.bytes;}
     },
 
     'bc7-rgba-unorm': {
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 16
+      },
       baseFormat: 'bc7-rgba-unorm',
       get bytesPerBlock() {return this.color.bytes;}
     },
     'bc7-rgba-unorm-srgb': {
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 16
+      },
       baseFormat: 'bc7-rgba-unorm',
       get bytesPerBlock() {return this.color.bytes;}
     }
@@ -593,60 +851,127 @@ const kETC2TextureFormatInfo = formatTableWithDefaults({
     blockWidth: 4,
     blockHeight: 4,
     multisample: false,
-    feature: 'texture-compression-etc2',
-    sampleType: 'float',
-    copySrc: true,
-    copyDst: true
+    feature: 'texture-compression-etc2'
   },
   table: {
     'etc2-rgb8unorm': {
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 8 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 8
+      },
       baseFormat: 'etc2-rgb8unorm',
       get bytesPerBlock() {return this.color.bytes;}
     },
     'etc2-rgb8unorm-srgb': {
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 8 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 8
+      },
       baseFormat: 'etc2-rgb8unorm',
       get bytesPerBlock() {return this.color.bytes;}
     },
 
     'etc2-rgb8a1unorm': {
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 8 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 8
+      },
       baseFormat: 'etc2-rgb8a1unorm',
       get bytesPerBlock() {return this.color.bytes;}
     },
     'etc2-rgb8a1unorm-srgb': {
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 8 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 8
+      },
       baseFormat: 'etc2-rgb8a1unorm',
       get bytesPerBlock() {return this.color.bytes;}
     },
 
     'etc2-rgba8unorm': {
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 16
+      },
       baseFormat: 'etc2-rgba8unorm',
       get bytesPerBlock() {return this.color.bytes;}
     },
     'etc2-rgba8unorm-srgb': {
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 16
+      },
       baseFormat: 'etc2-rgba8unorm',
       get bytesPerBlock() {return this.color.bytes;}
     },
 
     'eac-r11unorm': {
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 8 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 8
+      },
       get bytesPerBlock() {return this.color.bytes;}
     },
     'eac-r11snorm': {
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 8 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 8
+      },
       get bytesPerBlock() {return this.color.bytes;}
     },
 
     'eac-rg11unorm': {
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 16
+      },
       get bytesPerBlock() {return this.color.bytes;}
     },
     'eac-rg11snorm': {
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 16
+      },
       get bytesPerBlock() {return this.color.bytes;}
     }
   }
@@ -655,23 +980,34 @@ const kETC2TextureFormatInfo = formatTableWithDefaults({
 const kASTCTextureFormatInfo = formatTableWithDefaults({
   defaults: {
     multisample: false,
-    feature: 'texture-compression-astc',
-    sampleType: 'float',
-    copySrc: true,
-    copyDst: true
+    feature: 'texture-compression-astc'
   },
   table: {
     'astc-4x4-unorm': {
       blockWidth: 4,
       blockHeight: 4,
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 16
+      },
       baseFormat: 'astc-4x4-unorm',
       get bytesPerBlock() {return this.color.bytes;}
     },
     'astc-4x4-unorm-srgb': {
       blockWidth: 4,
       blockHeight: 4,
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 16
+      },
       baseFormat: 'astc-4x4-unorm',
       get bytesPerBlock() {return this.color.bytes;}
     },
@@ -679,14 +1015,28 @@ const kASTCTextureFormatInfo = formatTableWithDefaults({
     'astc-5x4-unorm': {
       blockWidth: 5,
       blockHeight: 4,
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 16
+      },
       baseFormat: 'astc-5x4-unorm',
       get bytesPerBlock() {return this.color.bytes;}
     },
     'astc-5x4-unorm-srgb': {
       blockWidth: 5,
       blockHeight: 4,
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 16
+      },
       baseFormat: 'astc-5x4-unorm',
       get bytesPerBlock() {return this.color.bytes;}
     },
@@ -694,14 +1044,28 @@ const kASTCTextureFormatInfo = formatTableWithDefaults({
     'astc-5x5-unorm': {
       blockWidth: 5,
       blockHeight: 5,
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 16
+      },
       baseFormat: 'astc-5x5-unorm',
       get bytesPerBlock() {return this.color.bytes;}
     },
     'astc-5x5-unorm-srgb': {
       blockWidth: 5,
       blockHeight: 5,
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 16
+      },
       baseFormat: 'astc-5x5-unorm',
       get bytesPerBlock() {return this.color.bytes;}
     },
@@ -709,14 +1073,28 @@ const kASTCTextureFormatInfo = formatTableWithDefaults({
     'astc-6x5-unorm': {
       blockWidth: 6,
       blockHeight: 5,
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 16
+      },
       baseFormat: 'astc-6x5-unorm',
       get bytesPerBlock() {return this.color.bytes;}
     },
     'astc-6x5-unorm-srgb': {
       blockWidth: 6,
       blockHeight: 5,
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 16
+      },
       baseFormat: 'astc-6x5-unorm',
       get bytesPerBlock() {return this.color.bytes;}
     },
@@ -724,14 +1102,28 @@ const kASTCTextureFormatInfo = formatTableWithDefaults({
     'astc-6x6-unorm': {
       blockWidth: 6,
       blockHeight: 6,
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 16
+      },
       baseFormat: 'astc-6x6-unorm',
       get bytesPerBlock() {return this.color.bytes;}
     },
     'astc-6x6-unorm-srgb': {
       blockWidth: 6,
       blockHeight: 6,
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 16
+      },
       baseFormat: 'astc-6x6-unorm',
       get bytesPerBlock() {return this.color.bytes;}
     },
@@ -739,14 +1131,28 @@ const kASTCTextureFormatInfo = formatTableWithDefaults({
     'astc-8x5-unorm': {
       blockWidth: 8,
       blockHeight: 5,
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 16
+      },
       baseFormat: 'astc-8x5-unorm',
       get bytesPerBlock() {return this.color.bytes;}
     },
     'astc-8x5-unorm-srgb': {
       blockWidth: 8,
       blockHeight: 5,
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 16
+      },
       baseFormat: 'astc-8x5-unorm',
       get bytesPerBlock() {return this.color.bytes;}
     },
@@ -754,14 +1160,28 @@ const kASTCTextureFormatInfo = formatTableWithDefaults({
     'astc-8x6-unorm': {
       blockWidth: 8,
       blockHeight: 6,
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 16
+      },
       baseFormat: 'astc-8x6-unorm',
       get bytesPerBlock() {return this.color.bytes;}
     },
     'astc-8x6-unorm-srgb': {
       blockWidth: 8,
       blockHeight: 6,
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 16
+      },
       baseFormat: 'astc-8x6-unorm',
       get bytesPerBlock() {return this.color.bytes;}
     },
@@ -769,14 +1189,28 @@ const kASTCTextureFormatInfo = formatTableWithDefaults({
     'astc-8x8-unorm': {
       blockWidth: 8,
       blockHeight: 8,
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 16
+      },
       baseFormat: 'astc-8x8-unorm',
       get bytesPerBlock() {return this.color.bytes;}
     },
     'astc-8x8-unorm-srgb': {
       blockWidth: 8,
       blockHeight: 8,
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 16
+      },
       baseFormat: 'astc-8x8-unorm',
       get bytesPerBlock() {return this.color.bytes;}
     },
@@ -784,14 +1218,28 @@ const kASTCTextureFormatInfo = formatTableWithDefaults({
     'astc-10x5-unorm': {
       blockWidth: 10,
       blockHeight: 5,
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 16
+      },
       baseFormat: 'astc-10x5-unorm',
       get bytesPerBlock() {return this.color.bytes;}
     },
     'astc-10x5-unorm-srgb': {
       blockWidth: 10,
       blockHeight: 5,
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 16
+      },
       baseFormat: 'astc-10x5-unorm',
       get bytesPerBlock() {return this.color.bytes;}
     },
@@ -799,14 +1247,28 @@ const kASTCTextureFormatInfo = formatTableWithDefaults({
     'astc-10x6-unorm': {
       blockWidth: 10,
       blockHeight: 6,
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 16
+      },
       baseFormat: 'astc-10x6-unorm',
       get bytesPerBlock() {return this.color.bytes;}
     },
     'astc-10x6-unorm-srgb': {
       blockWidth: 10,
       blockHeight: 6,
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 16
+      },
       baseFormat: 'astc-10x6-unorm',
       get bytesPerBlock() {return this.color.bytes;}
     },
@@ -814,14 +1276,28 @@ const kASTCTextureFormatInfo = formatTableWithDefaults({
     'astc-10x8-unorm': {
       blockWidth: 10,
       blockHeight: 8,
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 16
+      },
       baseFormat: 'astc-10x8-unorm',
       get bytesPerBlock() {return this.color.bytes;}
     },
     'astc-10x8-unorm-srgb': {
       blockWidth: 10,
       blockHeight: 8,
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 16
+      },
       baseFormat: 'astc-10x8-unorm',
       get bytesPerBlock() {return this.color.bytes;}
     },
@@ -829,14 +1305,28 @@ const kASTCTextureFormatInfo = formatTableWithDefaults({
     'astc-10x10-unorm': {
       blockWidth: 10,
       blockHeight: 10,
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 16
+      },
       baseFormat: 'astc-10x10-unorm',
       get bytesPerBlock() {return this.color.bytes;}
     },
     'astc-10x10-unorm-srgb': {
       blockWidth: 10,
       blockHeight: 10,
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 16
+      },
       baseFormat: 'astc-10x10-unorm',
       get bytesPerBlock() {return this.color.bytes;}
     },
@@ -844,14 +1334,28 @@ const kASTCTextureFormatInfo = formatTableWithDefaults({
     'astc-12x10-unorm': {
       blockWidth: 12,
       blockHeight: 10,
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 16
+      },
       baseFormat: 'astc-12x10-unorm',
       get bytesPerBlock() {return this.color.bytes;}
     },
     'astc-12x10-unorm-srgb': {
       blockWidth: 12,
       blockHeight: 10,
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 16
+      },
       baseFormat: 'astc-12x10-unorm',
       get bytesPerBlock() {return this.color.bytes;}
     },
@@ -859,14 +1363,28 @@ const kASTCTextureFormatInfo = formatTableWithDefaults({
     'astc-12x12-unorm': {
       blockWidth: 12,
       blockHeight: 12,
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 16
+      },
       baseFormat: 'astc-12x12-unorm',
       get bytesPerBlock() {return this.color.bytes;}
     },
     'astc-12x12-unorm-srgb': {
       blockWidth: 12,
       blockHeight: 12,
-      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      color: {
+        type: 'float',
+        copySrc: true,
+        copyDst: true,
+        storage: false,
+        readWriteStorage: false,
+        bytes: 16
+      },
       baseFormat: 'astc-12x12-unorm',
       get bytesPerBlock() {return this.color.bytes;}
     }
@@ -921,15 +1439,10 @@ export const kAllTextureFormats = keysOf(kAllTextureFormatInfo);
 export const kRenderableColorTextureFormats = kRegularTextureFormats.filter(
   (v) => kColorTextureFormatInfo[v].colorRender
 );
-assert(
-  kRenderableColorTextureFormats.every(
-    (f) =>
-    kAllTextureFormatInfo[f].renderTargetComponentAlignment !== undefined &&
-    kAllTextureFormatInfo[f].renderTargetPixelByteCost !== undefined
-  )
-);
 
 /** Per-GPUTextureFormat-per-aspect info. */
+
+
 
 
 
@@ -962,26 +1475,7 @@ assert(
  * This is not actually the type of values in kTextureFormatInfo; that type is fully const
  * so that it can be narrowed very precisely at usage sites by the compiler.
  * This type exists only as a type check on the inferred type of kTextureFormatInfo.
- * Documentation is also written here, but not actually visible to the IDE.
  */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -1042,10 +1536,6 @@ export const kTextureFormatInfo = {
 const kTextureFormatInfo_TypeCheck =
 
 kTextureFormatInfo;
-
-/** List of all GPUTextureFormat values. */
-// MAINTENANCE_TODO: dedup with kAllTextureFormats
-export const kTextureFormats = keysOf(kAllTextureFormatInfo);
 
 /** Valid GPUTextureFormats for `copyExternalImageToTexture`, by spec. */
 export const kValidTextureFormatsForCopyE2T = [
@@ -1170,6 +1660,35 @@ aspect)
 }
 
 /**
+ * @returns the sample type of the specified aspect of the specified format.
+ */
+export function sampleTypeForFormatAndAspect(
+format,
+aspect)
+{
+  const info = kTextureFormatInfo[format];
+  if (info.color) {
+    assert(aspect === 'all', `color format ${format} used with aspect ${aspect}`);
+    return info.color.type;
+  } else if (info.depth && info.stencil) {
+    if (aspect === 'depth-only') {
+      return info.depth.type;
+    } else if (aspect === 'stencil-only') {
+      return info.stencil.type;
+    } else {
+      unreachable(`depth-stencil format ${format} used with aspect ${aspect}`);
+    }
+  } else if (info.depth) {
+    assert(aspect !== 'stencil-only', `depth-only format ${format} used with aspect ${aspect}`);
+    return info.depth.type;
+  } else if (info.stencil) {
+    assert(aspect !== 'depth-only', `stencil-only format ${format} used with aspect ${aspect}`);
+    return info.stencil.type;
+  }
+  unreachable();
+}
+
+/**
  * Gets all copyable aspects for copies between texture and buffer for specified depth/stencil format and copy type, by spec.
  */
 export function depthStencilFormatCopyableAspects(
@@ -1229,8 +1748,12 @@ format)
  *
  * This function may need to be generalized to use `baseFormat` from `kTextureFormatInfo`.
  */
-export function viewCompatible(a, b) {
-  return a === b || a + '-srgb' === b || b + '-srgb' === a;
+export function viewCompatible(
+compatibilityMode,
+a,
+b)
+{
+  return compatibilityMode ? a === b : a === b || a + '-srgb' === b || b + '-srgb' === a;
 }
 
 export function getFeaturesForFormats(
@@ -1250,7 +1773,29 @@ export function isCompressedTextureFormat(format) {
   return format in kCompressedTextureFormatInfo;
 }
 
-export const kFeaturesForFormats = getFeaturesForFormats(kTextureFormats);
+export const kCompatModeUnsupportedStorageTextureFormats = [
+'rg32float',
+'rg32sint',
+'rg32uint'];
+
+
+export function isTextureFormatUsableAsStorageFormat(
+format,
+isCompatibilityMode)
+{
+  if (isCompatibilityMode) {
+    if (kCompatModeUnsupportedStorageTextureFormats.indexOf(format) >= 0) {
+      return false;
+    }
+  }
+  return !!kTextureFormatInfo[format].color?.storage;
+}
+
+export function isRegularTextureFormat(format) {
+  return format in kRegularTextureFormatInfo;
+}
+
+export const kFeaturesForFormats = getFeaturesForFormats(kAllTextureFormats);
 
 /**
  * Given an array of texture formats return the number of bytes per sample.

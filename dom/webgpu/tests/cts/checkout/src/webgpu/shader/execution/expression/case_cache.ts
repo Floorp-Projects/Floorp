@@ -3,21 +3,22 @@ import { unreachable } from '../../../../common/util/util.js';
 import BinaryStream from '../../../util/binary_stream.js';
 import { deserializeComparator, serializeComparator } from '../../../util/compare.js';
 import {
-  Scalar,
-  Vector,
-  serializeValue,
-  deserializeValue,
-  Matrix,
+  MatrixValue,
   Value,
+  VectorValue,
+  deserializeValue,
+  isScalarValue,
+  serializeValue,
 } from '../../../util/conversion.js';
 import {
-  deserializeFPInterval,
   FPInterval,
+  deserializeFPInterval,
   serializeFPInterval,
 } from '../../../util/floating_point.js';
 import { flatten2DArray, unflatten2DArray } from '../../../util/math.js';
 
-import { Case, CaseList, Expectation, isComparator } from './expression.js';
+import { Case } from './case.js';
+import { Expectation, isComparator } from './expectation.js';
 
 enum SerializedExpectationKind {
   Value,
@@ -30,7 +31,7 @@ enum SerializedExpectationKind {
 
 /** serializeExpectation() serializes an Expectation to a BinaryStream */
 export function serializeExpectation(s: BinaryStream, e: Expectation) {
-  if (e instanceof Scalar || e instanceof Vector || e instanceof Matrix) {
+  if (isScalarValue(e) || e instanceof VectorValue || e instanceof MatrixValue) {
     s.writeU8(SerializedExpectationKind.Value);
     serializeValue(s, e);
     return;
@@ -122,27 +123,27 @@ export function deserializeCase(s: BinaryStream): Case {
   return { input, expected };
 }
 
-/** CaseListBuilder is a function that builds a CaseList */
-export type CaseListBuilder = () => CaseList;
+/** CaseListBuilder is a function that builds a list of cases, Case[] */
+export type CaseListBuilder = () => Case[];
 
 /**
- * CaseCache is a cache of CaseList.
+ * CaseCache is a cache of Case[].
  * CaseCache implements the Cacheable interface, so the cases can be pre-built
  * and stored in the data cache, reducing computation costs at CTS runtime.
  */
-export class CaseCache implements Cacheable<Record<string, CaseList>> {
+export class CaseCache implements Cacheable<Record<string, Case[]>> {
   /**
    * Constructor
    * @param name the name of the cache. This must be globally unique.
    * @param builders a Record of case-list name to case-list builder.
    */
   constructor(name: string, builders: Record<string, CaseListBuilder>) {
-    this.path = `webgpu/shader/execution/case-cache/${name}.bin`;
+    this.path = `webgpu/shader/execution/${name}.bin`;
     this.builders = builders;
   }
 
   /** get() returns the list of cases with the given name */
-  public async get(name: string): Promise<CaseList> {
+  public async get(name: string): Promise<Case[]> {
     const data = await dataCache.fetch(this);
     return data[name];
   }
@@ -151,8 +152,8 @@ export class CaseCache implements Cacheable<Record<string, CaseList>> {
    * build() implements the Cacheable.build interface.
    * @returns the data.
    */
-  build(): Promise<Record<string, CaseList>> {
-    const built: Record<string, CaseList> = {};
+  build(): Promise<Record<string, Case[]>> {
+    const built: Record<string, Case[]> = {};
     for (const name in this.builders) {
       const cases = this.builders[name]();
       built[name] = cases;
@@ -164,7 +165,7 @@ export class CaseCache implements Cacheable<Record<string, CaseList>> {
    * serialize() implements the Cacheable.serialize interface.
    * @returns the serialized data.
    */
-  serialize(data: Record<string, CaseList>): Uint8Array {
+  serialize(data: Record<string, Case[]>): Uint8Array {
     const maxSize = 32 << 20; // 32MB - max size for a file
     const stream = new BinaryStream(new ArrayBuffer(maxSize));
     stream.writeU32(Object.keys(data).length);
@@ -179,9 +180,9 @@ export class CaseCache implements Cacheable<Record<string, CaseList>> {
    * deserialize() implements the Cacheable.deserialize interface.
    * @returns the deserialize data.
    */
-  deserialize(array: Uint8Array): Record<string, CaseList> {
+  deserialize(array: Uint8Array): Record<string, Case[]> {
     const s = new BinaryStream(array.buffer);
-    const casesByName: Record<string, CaseList> = {};
+    const casesByName: Record<string, Case[]> = {};
     const numRecords = s.readU32();
     for (let i = 0; i < numRecords; i++) {
       const name = s.readString();

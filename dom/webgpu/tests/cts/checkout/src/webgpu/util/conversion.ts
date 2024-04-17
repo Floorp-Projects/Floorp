@@ -6,6 +6,7 @@ import { Float16Array } from '../../external/petamoriken/float16/float16.js';
 import BinaryStream from './binary_stream.js';
 import { kBit } from './constants.js';
 import {
+  align,
   cartesianProduct,
   clamp,
   correctlyRoundedF16,
@@ -84,6 +85,8 @@ const workingDataI16 = new Int16Array(workingData);
 const workingDataI32 = new Int32Array(workingData);
 const workingDataI8 = new Int8Array(workingData);
 const workingDataF64 = new Float64Array(workingData);
+const workingDataI64 = new BigInt64Array(workingData);
+const workingDataU64 = new BigUint64Array(workingData);
 const workingDataView = new DataView(workingData);
 
 /**
@@ -107,7 +110,7 @@ export function float32ToFloatBits(
   assert(mantissaBits <= 23);
 
   if (Number.isNaN(n)) {
-    // NaN = all exponent bits true, 1 or more mantissia bits true
+    // NaN = all exponent bits true, 1 or more mantissa bits true
     return (((1 << exponentBits) - 1) << mantissaBits) | ((1 << mantissaBits) - 1);
   }
 
@@ -584,6 +587,7 @@ export type ScalarKind =
   | 'u32'
   | 'u16'
   | 'u8'
+  | 'abstract-int'
   | 'i32'
   | 'i16'
   | 'i8'
@@ -593,11 +597,18 @@ export type ScalarKind =
 export class ScalarType {
   readonly kind: ScalarKind; // The named type
   readonly _size: number; // In bytes
-  readonly read: (buf: Uint8Array, offset: number) => Scalar; // reads a scalar from a buffer
+  readonly _signed: boolean;
+  readonly read: (buf: Uint8Array, offset: number) => ScalarValue; // reads a scalar from a buffer
 
-  constructor(kind: ScalarKind, size: number, read: (buf: Uint8Array, offset: number) => Scalar) {
+  constructor(
+    kind: ScalarKind,
+    size: number,
+    signed: boolean,
+    read: (buf: Uint8Array, offset: number) => ScalarValue
+  ) {
     this.kind = kind;
     this._size = size;
+    this._signed = signed;
     this.read = read;
   }
 
@@ -609,32 +620,64 @@ export class ScalarType {
     return this._size;
   }
 
-  /** Constructs a Scalar of this type with `value` */
-  public create(value: number): Scalar {
-    switch (this.kind) {
-      case 'abstract-float':
-        return abstractFloat(value);
-      case 'f64':
-        return f64(value);
-      case 'f32':
-        return f32(value);
-      case 'f16':
-        return f16(value);
-      case 'u32':
-        return u32(value);
-      case 'u16':
-        return u16(value);
-      case 'u8':
-        return u8(value);
-      case 'i32':
-        return i32(value);
-      case 'i16':
-        return i16(value);
-      case 'i8':
-        return i8(value);
-      case 'bool':
-        return bool(value !== 0);
+  public get alignment(): number {
+    return this._size;
+  }
+
+  public get signed(): boolean {
+    return this._signed;
+  }
+
+  // This allows width to be checked in cases where scalar and vector types are mixed.
+  public get width(): number {
+    return 1;
+  }
+
+  public requiresF16(): boolean {
+    return this.kind === 'f16';
+  }
+
+  /** Constructs a ScalarValue of this type with `value` */
+  public create(value: number | bigint): ScalarValue {
+    switch (typeof value) {
+      case 'number':
+        switch (this.kind) {
+          case 'abstract-float':
+            return abstractFloat(value);
+          case 'abstract-int':
+            return abstractInt(BigInt(value));
+          case 'f64':
+            return f64(value);
+          case 'f32':
+            return f32(value);
+          case 'f16':
+            return f16(value);
+          case 'u32':
+            return u32(value);
+          case 'u16':
+            return u16(value);
+          case 'u8':
+            return u8(value);
+          case 'i32':
+            return i32(value);
+          case 'i16':
+            return i16(value);
+          case 'i8':
+            return i8(value);
+          case 'bool':
+            return bool(value !== 0);
+        }
+        break;
+      case 'bigint':
+        switch (this.kind) {
+          case 'abstract-int':
+            return abstractInt(value);
+          case 'bool':
+            return bool(value !== 0n);
+        }
+        break;
     }
+    unreachable(`Scalar<${this.kind}>.create() does not support ${typeof value}`);
   }
 }
 
@@ -642,6 +685,20 @@ export class ScalarType {
 export class VectorType {
   readonly width: number; // Number of elements in the vector
   readonly elementType: ScalarType; // Element type
+
+  // Maps a string representation of a vector type to vector type.
+  private static instances = new Map<string, VectorType>();
+
+  static create(width: number, elementType: ScalarType): VectorType {
+    const key = `${elementType.toString()} ${width}}`;
+    let ty = this.instances.get(key);
+    if (ty !== undefined) {
+      return ty;
+    }
+    ty = new VectorType(width, elementType);
+    this.instances.set(key, ty);
+    return ty;
+  }
 
   constructor(width: number, elementType: ScalarType) {
     this.width = width;
@@ -652,13 +709,13 @@ export class VectorType {
    * @returns a vector constructed from the values read from the buffer at the
    * given byte offset
    */
-  public read(buf: Uint8Array, offset: number): Vector {
-    const elements: Array<Scalar> = [];
+  public read(buf: Uint8Array, offset: number): VectorValue {
+    const elements: Array<ScalarValue> = [];
     for (let i = 0; i < this.width; i++) {
       elements[i] = this.elementType.read(buf, offset);
       offset += this.elementType.size;
     }
-    return new Vector(elements);
+    return new VectorValue(elements);
   }
 
   public toString(): string {
@@ -669,29 +726,27 @@ export class VectorType {
     return this.elementType.size * this.width;
   }
 
+  public get alignment(): number {
+    return VectorType.alignmentOf(this.width, this.elementType);
+  }
+
+  public static alignmentOf(width: number, elementType: ScalarType) {
+    return elementType.size * (width === 3 ? 4 : width);
+  }
+
   /** Constructs a Vector of this type with the given values */
-  public create(value: number | readonly number[]): Vector {
+  public create(value: (number | bigint) | readonly (number | bigint)[]): VectorValue {
     if (value instanceof Array) {
       assert(value.length === this.width);
     } else {
       value = Array(this.width).fill(value);
     }
-    return new Vector(value.map(v => this.elementType.create(v)));
+    return new VectorValue(value.map(v => this.elementType.create(v)));
   }
-}
 
-// Maps a string representation of a vector type to vector type.
-const vectorTypes = new Map<string, VectorType>();
-
-export function TypeVec(width: number, elementType: ScalarType): VectorType {
-  const key = `${elementType.toString()} ${width}}`;
-  let ty = vectorTypes.get(key);
-  if (ty !== undefined) {
-    return ty;
+  public requiresF16(): boolean {
+    return this.elementType.requiresF16();
   }
-  ty = new VectorType(width, elementType);
-  vectorTypes.set(key, ty);
-  return ty;
 }
 
 /** MatrixType describes the type of WGSL Matrix. */
@@ -699,6 +754,20 @@ export class MatrixType {
   readonly cols: number; // Number of columns in the Matrix
   readonly rows: number; // Number of elements per column in the Matrix
   readonly elementType: ScalarType; // Element type
+
+  // Maps a string representation of a Matrix type to Matrix type.
+  private static instances = new Map<string, MatrixType>();
+
+  static create(cols: number, rows: number, elementType: ScalarType): MatrixType {
+    const key = `${elementType.toString()} ${cols} ${rows}`;
+    let ty = this.instances.get(key);
+    if (ty !== undefined) {
+      return ty;
+    }
+    ty = new MatrixType(cols, rows, elementType);
+    this.instances.set(key, ty);
+    return ty;
+  }
 
   constructor(cols: number, rows: number, elementType: ScalarType) {
     this.cols = cols;
@@ -716,8 +785,8 @@ export class MatrixType {
    * @returns a Matrix constructed from the values read from the buffer at the
    * given byte offset
    */
-  public read(buf: Uint8Array, offset: number): Matrix {
-    const elements: Scalar[][] = [...Array(this.cols)].map(_ => [...Array(this.rows)]);
+  public read(buf: Uint8Array, offset: number): MatrixValue {
+    const elements: ScalarValue[][] = [...Array(this.cols)].map(_ => [...Array(this.rows)]);
     for (let c = 0; c < this.cols; c++) {
       for (let r = 0; r < this.rows; r++) {
         elements[c][r] = this.elementType.read(buf, offset);
@@ -729,100 +798,265 @@ export class MatrixType {
         offset += this.elementType.size;
       }
     }
-    return new Matrix(elements);
+    return new MatrixValue(elements);
   }
 
   public toString(): string {
     return `mat${this.cols}x${this.rows}<${this.elementType}>`;
   }
+
+  public get size(): number {
+    return VectorType.alignmentOf(this.rows, this.elementType) * this.cols;
+  }
+
+  public get alignment(): number {
+    return VectorType.alignmentOf(this.rows, this.elementType);
+  }
+
+  public requiresF16(): boolean {
+    return this.elementType.requiresF16();
+  }
+
+  /** Constructs a Matrix of this type with the given values */
+  public create(value: (number | bigint) | readonly (number | bigint)[]): MatrixValue {
+    if (value instanceof Array) {
+      assert(value.length === this.cols * this.rows);
+    } else {
+      value = Array(this.cols * this.rows).fill(value);
+    }
+    const columns: (number | bigint)[][] = [];
+    for (let i = 0; i < this.cols; i++) {
+      const start = i * this.rows;
+      columns.push(value.slice(start, start + this.rows));
+    }
+    return new MatrixValue(columns.map(c => c.map(v => this.elementType.create(v))));
+  }
 }
 
-// Maps a string representation of a Matrix type to Matrix type.
-const matrixTypes = new Map<string, MatrixType>();
+/** ArrayType describes the type of WGSL Array. */
+export class ArrayType {
+  readonly count: number; // Number of elements in the array. Zero represents a runtime-sized array.
+  readonly elementType: Type; // Element type
 
-export function TypeMat(cols: number, rows: number, elementType: ScalarType): MatrixType {
-  const key = `${elementType.toString()} ${cols} ${rows}`;
-  let ty = matrixTypes.get(key);
-  if (ty !== undefined) {
+  // Maps a string representation of a array type to array type.
+  private static instances = new Map<string, ArrayType>();
+
+  static create(count: number, elementType: Type): ArrayType {
+    const key = `${elementType.toString()} ${count}`;
+    let ty = this.instances.get(key);
+    if (ty !== undefined) {
+      return ty;
+    }
+    ty = new ArrayType(count, elementType);
+    this.instances.set(key, ty);
     return ty;
   }
-  ty = new MatrixType(cols, rows, elementType);
-  matrixTypes.set(key, ty);
-  return ty;
+
+  constructor(count: number, elementType: Type) {
+    this.count = count;
+    this.elementType = elementType;
+  }
+
+  /**
+   * @returns a array constructed from the values read from the buffer at the
+   * given byte offset
+   */
+  public read(buf: Uint8Array, offset: number): ArrayValue {
+    const elements: Array<Value> = [];
+
+    for (let i = 0; i < this.count; i++) {
+      elements[i] = this.elementType.read(buf, offset);
+      offset += this.stride;
+    }
+    return new ArrayValue(elements);
+  }
+
+  public toString(): string {
+    return this.count !== 0
+      ? `array<${this.elementType}, ${this.count}>`
+      : `array<${this.elementType}>`;
+  }
+
+  public get stride(): number {
+    return align(this.elementType.size, this.elementType.alignment);
+  }
+
+  public get size(): number {
+    return this.stride * this.count;
+  }
+
+  public get alignment(): number {
+    return this.elementType.alignment;
+  }
+
+  public requiresF16(): boolean {
+    return this.elementType.requiresF16();
+  }
+
+  /** Constructs an Array of this type with the given values */
+  public create(value: (number | bigint) | readonly (number | bigint)[]): ArrayValue {
+    if (value instanceof Array) {
+      assert(value.length === this.count);
+    } else {
+      value = Array(this.count).fill(value);
+    }
+    return new ArrayValue(value.map(v => this.elementType.create(v)));
+  }
 }
 
-/** Type is a ScalarType, VectorType, or MatrixType. */
-export type Type = ScalarType | VectorType | MatrixType;
+/** ArrayElementType infers the element type of the indexable type A */
+type ArrayElementType<A> = A extends { [index: number]: infer T } ? T : never;
 
 /** Copy bytes from `buf` at `offset` into the working data, then read it out using `workingDataOut` */
-function valueFromBytes(workingDataOut: TypedArrayBufferView, buf: Uint8Array, offset: number) {
+function valueFromBytes<A extends TypedArrayBufferView>(
+  workingDataOut: A,
+  buf: Uint8Array,
+  offset: number
+): ArrayElementType<A> {
   for (let i = 0; i < workingDataOut.BYTES_PER_ELEMENT; ++i) {
     workingDataU8[i] = buf[offset + i];
   }
-  return workingDataOut[0];
+  return workingDataOut[0] as ArrayElementType<A>;
 }
 
-export const TypeI32 = new ScalarType('i32', 4, (buf: Uint8Array, offset: number) =>
+const abstractIntType = new ScalarType('abstract-int', 8, true, (buf: Uint8Array, offset: number) =>
+  abstractInt(valueFromBytes(workingDataI64, buf, offset))
+);
+const i32Type = new ScalarType('i32', 4, true, (buf: Uint8Array, offset: number) =>
   i32(valueFromBytes(workingDataI32, buf, offset))
 );
-export const TypeU32 = new ScalarType('u32', 4, (buf: Uint8Array, offset: number) =>
+const u32Type = new ScalarType('u32', 4, false, (buf: Uint8Array, offset: number) =>
   u32(valueFromBytes(workingDataU32, buf, offset))
 );
-export const TypeAbstractFloat = new ScalarType(
-  'abstract-float',
-  8,
-  (buf: Uint8Array, offset: number) => abstractFloat(valueFromBytes(workingDataF64, buf, offset))
-);
-export const TypeF64 = new ScalarType('f64', 8, (buf: Uint8Array, offset: number) =>
-  f64(valueFromBytes(workingDataF64, buf, offset))
-);
-export const TypeF32 = new ScalarType('f32', 4, (buf: Uint8Array, offset: number) =>
-  f32(valueFromBytes(workingDataF32, buf, offset))
-);
-export const TypeI16 = new ScalarType('i16', 2, (buf: Uint8Array, offset: number) =>
+const i16Type = new ScalarType('i16', 2, true, (buf: Uint8Array, offset: number) =>
   i16(valueFromBytes(workingDataI16, buf, offset))
 );
-export const TypeU16 = new ScalarType('u16', 2, (buf: Uint8Array, offset: number) =>
+const u16Type = new ScalarType('u16', 2, false, (buf: Uint8Array, offset: number) =>
   u16(valueFromBytes(workingDataU16, buf, offset))
 );
-export const TypeF16 = new ScalarType('f16', 2, (buf: Uint8Array, offset: number) =>
-  f16Bits(valueFromBytes(workingDataU16, buf, offset))
-);
-export const TypeI8 = new ScalarType('i8', 1, (buf: Uint8Array, offset: number) =>
+const i8Type = new ScalarType('i8', 1, true, (buf: Uint8Array, offset: number) =>
   i8(valueFromBytes(workingDataI8, buf, offset))
 );
-export const TypeU8 = new ScalarType('u8', 1, (buf: Uint8Array, offset: number) =>
+const u8Type = new ScalarType('u8', 1, false, (buf: Uint8Array, offset: number) =>
   u8(valueFromBytes(workingDataU8, buf, offset))
 );
-export const TypeBool = new ScalarType('bool', 4, (buf: Uint8Array, offset: number) =>
+const abstractFloatType = new ScalarType(
+  'abstract-float',
+  8,
+  true,
+  (buf: Uint8Array, offset: number) => abstractFloat(valueFromBytes(workingDataF64, buf, offset))
+);
+const f64Type = new ScalarType('f64', 8, true, (buf: Uint8Array, offset: number) =>
+  f64(valueFromBytes(workingDataF64, buf, offset))
+);
+const f32Type = new ScalarType('f32', 4, true, (buf: Uint8Array, offset: number) =>
+  f32(valueFromBytes(workingDataF32, buf, offset))
+);
+const f16Type = new ScalarType('f16', 2, true, (buf: Uint8Array, offset: number) =>
+  f16Bits(valueFromBytes(workingDataU16, buf, offset))
+);
+const boolType = new ScalarType('bool', 4, false, (buf: Uint8Array, offset: number) =>
   bool(valueFromBytes(workingDataU32, buf, offset) !== 0)
 );
+
+/** Type is a ScalarType, VectorType, MatrixType or ArrayType. */
+export type Type = ScalarType | VectorType | MatrixType | ArrayType;
+
+/** Type holds pre-declared Types along with helper constructor functions. */
+export const Type = {
+  abstractInt: abstractIntType,
+  'abstract-int': abstractIntType,
+  i32: i32Type,
+  u32: u32Type,
+  i16: i16Type,
+  u16: u16Type,
+  i8: i8Type,
+  u8: u8Type,
+
+  abstractFloat: abstractFloatType,
+  'abstract-float': abstractFloatType,
+  f64: f64Type,
+  f32: f32Type,
+  f16: f16Type,
+
+  bool: boolType,
+
+  vec: (width: number, elementType: ScalarType) => VectorType.create(width, elementType),
+
+  vec2ai: VectorType.create(2, abstractIntType),
+  vec2i: VectorType.create(2, i32Type),
+  vec2u: VectorType.create(2, u32Type),
+  vec2af: VectorType.create(2, abstractFloatType),
+  vec2f: VectorType.create(2, f32Type),
+  vec2h: VectorType.create(2, f16Type),
+  vec2b: VectorType.create(2, boolType),
+  vec3ai: VectorType.create(3, abstractIntType),
+  vec3i: VectorType.create(3, i32Type),
+  vec3u: VectorType.create(3, u32Type),
+  vec3af: VectorType.create(3, abstractFloatType),
+  vec3f: VectorType.create(3, f32Type),
+  vec3h: VectorType.create(3, f16Type),
+  vec3b: VectorType.create(3, boolType),
+  vec4ai: VectorType.create(4, abstractIntType),
+  vec4i: VectorType.create(4, i32Type),
+  vec4u: VectorType.create(4, u32Type),
+  vec4af: VectorType.create(4, abstractFloatType),
+  vec4f: VectorType.create(4, f32Type),
+  vec4h: VectorType.create(4, f16Type),
+  vec4b: VectorType.create(4, boolType),
+
+  mat: (cols: number, rows: number, elementType: ScalarType) =>
+    MatrixType.create(cols, rows, elementType),
+
+  mat2x2f: MatrixType.create(2, 2, f32Type),
+  mat2x2h: MatrixType.create(2, 2, f16Type),
+  mat3x2f: MatrixType.create(3, 2, f32Type),
+  mat3x2h: MatrixType.create(3, 2, f16Type),
+  mat4x2f: MatrixType.create(4, 2, f32Type),
+  mat4x2h: MatrixType.create(4, 2, f16Type),
+  mat2x3f: MatrixType.create(2, 3, f32Type),
+  mat2x3h: MatrixType.create(2, 3, f16Type),
+  mat3x3f: MatrixType.create(3, 3, f32Type),
+  mat3x3h: MatrixType.create(3, 3, f16Type),
+  mat4x3f: MatrixType.create(4, 3, f32Type),
+  mat4x3h: MatrixType.create(4, 3, f16Type),
+  mat2x4f: MatrixType.create(2, 4, f32Type),
+  mat2x4h: MatrixType.create(2, 4, f16Type),
+  mat3x4f: MatrixType.create(3, 4, f32Type),
+  mat3x4h: MatrixType.create(3, 4, f16Type),
+  mat4x4f: MatrixType.create(4, 4, f32Type),
+  mat4x4h: MatrixType.create(4, 4, f16Type),
+
+  array: (count: number, elementType: Type) => ArrayType.create(count, elementType),
+};
 
 /** @returns the ScalarType from the ScalarKind */
 export function scalarType(kind: ScalarKind): ScalarType {
   switch (kind) {
     case 'abstract-float':
-      return TypeAbstractFloat;
+      return Type.abstractFloat;
     case 'f64':
-      return TypeF64;
+      return Type.f64;
     case 'f32':
-      return TypeF32;
+      return Type.f32;
     case 'f16':
-      return TypeF16;
+      return Type.f16;
     case 'u32':
-      return TypeU32;
+      return Type.u32;
     case 'u16':
-      return TypeU16;
+      return Type.u16;
     case 'u8':
-      return TypeU8;
+      return Type.u8;
+    case 'abstract-int':
+      return Type.abstractInt;
     case 'i32':
-      return TypeI32;
+      return Type.i32;
     case 'i16':
-      return TypeI16;
+      return Type.i16;
     case 'i8':
-      return TypeI8;
+      return Type.i8;
     case 'bool':
-      return TypeBool;
+      return Type.bool;
   }
 }
 
@@ -837,21 +1071,52 @@ export function numElementsOf(ty: Type): number {
   if (ty instanceof MatrixType) {
     return ty.cols * ty.rows;
   }
+  if (ty instanceof ArrayType) {
+    return ty.count;
+  }
   throw new Error(`unhandled type ${ty}`);
 }
 
 /** @returns the scalar elements of the given Value */
-export function elementsOf(value: Value): Scalar[] {
-  if (value instanceof Scalar) {
+export function elementsOf(value: Value): Value[] {
+  if (isScalarValue(value)) {
     return [value];
   }
-  if (value instanceof Vector) {
+  if (value instanceof VectorValue) {
     return value.elements;
   }
-  if (value instanceof Matrix) {
+  if (value instanceof MatrixValue) {
     return value.elements.flat();
   }
+  if (value instanceof ArrayValue) {
+    return value.elements;
+  }
   throw new Error(`unhandled value ${value}`);
+}
+
+/** @returns the scalar elements of the given Value */
+export function scalarElementsOf(value: Value): ScalarValue[] {
+  if (isScalarValue(value)) {
+    return [value];
+  }
+  if (value instanceof VectorValue) {
+    return value.elements;
+  }
+  if (value instanceof MatrixValue) {
+    return value.elements.flat();
+  }
+  if (value instanceof ArrayValue) {
+    return value.elements.map(els => scalarElementsOf(els)).flat();
+  }
+  throw new Error(`unhandled value ${value}`);
+}
+
+/** @returns the inner element type of the given type */
+export function elementTypeOf(t: Type) {
+  if (t instanceof ScalarType) {
+    return t;
+  }
+  return t.elementType;
 }
 
 /** @returns the scalar (element) type of the given Type */
@@ -865,27 +1130,93 @@ export function scalarTypeOf(ty: Type): ScalarType {
   if (ty instanceof MatrixType) {
     return ty.elementType;
   }
+  if (ty instanceof ArrayType) {
+    return scalarTypeOf(ty.elementType);
+  }
   throw new Error(`unhandled type ${ty}`);
 }
 
-/** ScalarValue is the JS type that can be held by a Scalar */
-type ScalarValue = boolean | number;
+/**
+ * @returns the implicit concretized type of the given Type.
+ * @param abstractIntToF32 if true, returns f32 for abstractInt else i32
+ * Example: vec3<abstract-float> -> vec3<float>
+ */
+export function concreteTypeOf(ty: Type, allowedScalarTypes?: Type[]): Type {
+  if (allowedScalarTypes && allowedScalarTypes.length > 0) {
+    // https://www.w3.org/TR/WGSL/#conversion-rank
+    switch (ty) {
+      case Type.abstractInt:
+        if (allowedScalarTypes.includes(Type.i32)) {
+          return Type.i32;
+        }
+        if (allowedScalarTypes.includes(Type.u32)) {
+          return Type.u32;
+        }
+      // fallthrough.
+      case Type.abstractFloat:
+        if (allowedScalarTypes.includes(Type.f32)) {
+          return Type.f32;
+        }
+        if (allowedScalarTypes.includes(Type.f16)) {
+          return Type.f32;
+        }
+        throw new Error(`no ${ty}`);
+    }
+  } else {
+    switch (ty) {
+      case Type.abstractInt:
+        return Type.i32;
+      case Type.abstractFloat:
+        return Type.f32;
+    }
+  }
+  if (ty instanceof ScalarType) {
+    return ty;
+  }
+  if (ty instanceof VectorType) {
+    return Type.vec(ty.width, concreteTypeOf(ty.elementType, allowedScalarTypes) as ScalarType);
+  }
+  if (ty instanceof MatrixType) {
+    return Type.mat(
+      ty.cols,
+      ty.rows,
+      concreteTypeOf(ty.elementType, allowedScalarTypes) as ScalarType
+    );
+  }
+  if (ty instanceof ArrayType) {
+    return Type.array(ty.count, concreteTypeOf(ty.elementType, allowedScalarTypes));
+  }
+  throw new Error(`unhandled type ${ty}`);
+}
 
-/** Class that encapsulates a single scalar value of various types. */
-export class Scalar {
-  readonly value: ScalarValue; // The scalar value
-  readonly type: ScalarType; // The type of the scalar
+function hex(sizeInBytes: number, bitsLow: number, bitsHigh?: number) {
+  let hex = '';
+  workingDataU32[0] = bitsLow;
+  if (bitsHigh !== undefined) {
+    workingDataU32[1] = bitsHigh;
+  }
+  for (let i = 0; i < sizeInBytes; ++i) {
+    hex = workingDataU8[i].toString(16).padStart(2, '0') + hex;
+  }
+  return `0x${hex}`;
+}
 
-  // The scalar value, packed in one or two 32-bit unsigned integers.
-  // Whether or not the bits1 is used depends on `this.type.size`.
-  readonly bits1: number;
-  readonly bits0: number;
+function withPoint(x: number) {
+  const str = `${x}`;
+  return str.indexOf('.') > 0 || str.indexOf('e') > 0 ? str : `${str}.0`;
+}
 
-  public constructor(type: ScalarType, value: ScalarValue, bits1: number, bits0: number) {
+/** Class that encapsulates a single abstract-int value. */
+export class AbstractIntValue {
+  readonly value: bigint; // The abstract-integer value
+  readonly bitsLow: number; // The low 32 bits of the abstract-integer value.
+  readonly bitsHigh: number; // The high 32 bits of the abstract-integer value.
+  readonly type = Type.abstractInt; // The type of the value.
+
+  public constructor(value: bigint, bitsLow: number, bitsHigh: number) {
     this.value = value;
-    this.type = type;
-    this.bits1 = bits1;
-    this.bits0 = bits0;
+    this.bitsLow = bitsLow;
+    this.bitsHigh = bitsHigh;
   }
 
   /**
@@ -894,200 +1225,583 @@ export class Scalar {
    * @param offset the offset in buffer, in units of `buffer`
    */
   public copyTo(buffer: TypedArrayBufferView, offset: number) {
-    assert(this.type.kind !== 'f64', `Copying f64 values to/from buffers is not defined`);
-    workingDataU32[1] = this.bits1;
-    workingDataU32[0] = this.bits0;
-    for (let i = 0; i < this.type.size; i++) {
+    workingDataU32[0] = this.bitsLow;
+    workingDataU32[1] = this.bitsHigh;
+    for (let i = 0; i < 8; i++) {
       buffer[offset + i] = workingDataU8[i];
     }
   }
 
-  /**
-   * @returns the WGSL representation of this scalar value
-   */
+  /** @returns the WGSL representation of this scalar value */
   public wgsl(): string {
-    const withPoint = (x: number) => {
-      const str = `${x}`;
-      return str.indexOf('.') > 0 || str.indexOf('e') > 0 ? str : `${str}.0`;
-    };
-    if (isFinite(this.value as number)) {
-      switch (this.type.kind) {
-        case 'abstract-float':
-          return `${withPoint(this.value as number)}`;
-        case 'f64':
-          return `${withPoint(this.value as number)}`;
-        case 'f32':
-          return `${withPoint(this.value as number)}f`;
-        case 'f16':
-          return `${withPoint(this.value as number)}h`;
-        case 'u32':
-          return `${this.value}u`;
-        case 'i32':
-          return `i32(${this.value})`;
-        case 'bool':
-          return `${this.value}`;
-      }
+    // WGSL parses negative numbers as a negated positive.
+    // This means '-9223372036854775808' parses as `-' & '9223372036854775808', so must be written as
+    // '(-9223372036854775807 - 1)' in WGSL, because '9223372036854775808' is not a valid AbstractInt.
+    if (this.value === -9223372036854775808n) {
+      return `(-9223372036854775807 - 1)`;
     }
-    throw new Error(
-      `scalar of value ${this.value} and type ${this.type} has no WGSL representation`
-    );
+    return `${this.value}`;
   }
 
   public toString(): string {
-    if (this.type.kind === 'bool') {
-      return Colors.bold(this.value.toString());
+    return `${Colors.bold(this.value.toString())} (${hex(8, this.bitsLow, this.bitsHigh)})`;
+  }
+}
+
+/** Class that encapsulates a single abstract-float value. */
+export class AbstractFloatValue {
+  readonly value: number; // The f32 value
+  readonly bitsLow: number; // The low 32 bits of the abstract-float value.
+  readonly bitsHigh: number; // The high 32 bits of the abstract-float value.
+  readonly type = Type.abstractFloat; // The type of the value.
+
+  public constructor(value: number, bitsLow: number, bitsHigh: number) {
+    this.value = value;
+    this.bitsLow = bitsLow;
+    this.bitsHigh = bitsHigh;
+  }
+
+  /**
+   * Copies the scalar value to the buffer at the provided byte offset.
+   * @param buffer the destination buffer
+   * @param offset the offset in buffer, in units of `buffer`
+   */
+  public copyTo(buffer: TypedArrayBufferView, offset: number) {
+    workingDataU32[0] = this.bitsLow;
+    workingDataU32[1] = this.bitsHigh;
+    for (let i = 0; i < 8; i++) {
+      buffer[offset + i] = workingDataU8[i];
     }
+  }
+
+  /** @returns the WGSL representation of this scalar value */
+  public wgsl(): string {
+    return `${withPoint(this.value)}`;
+  }
+
+  public toString(): string {
     switch (this.value) {
       case Infinity:
       case -Infinity:
         return Colors.bold(this.value.toString());
       default: {
-        workingDataU32[1] = this.bits1;
-        workingDataU32[0] = this.bits0;
-        let hex = '';
-        for (let i = 0; i < this.type.size; ++i) {
-          hex = workingDataU8[i].toString(16).padStart(2, '0') + hex;
-        }
-        const n = this.value as Number;
-        if (n !== null && isFloatValue(this)) {
-          let str = this.value.toString();
-          str = str.indexOf('.') > 0 || str.indexOf('e') > 0 ? str : `${str}.0`;
-          switch (this.type.kind) {
-            case 'abstract-float':
-              return isSubnormalNumberF64(n.valueOf())
-                ? `${Colors.bold(str)} (0x${hex} subnormal)`
-                : `${Colors.bold(str)} (0x${hex})`;
-            case 'f64':
-              return isSubnormalNumberF64(n.valueOf())
-                ? `${Colors.bold(str)} (0x${hex} subnormal)`
-                : `${Colors.bold(str)} (0x${hex})`;
-            case 'f32':
-              return isSubnormalNumberF32(n.valueOf())
-                ? `${Colors.bold(str)} (0x${hex} subnormal)`
-                : `${Colors.bold(str)} (0x${hex})`;
-            case 'f16':
-              return isSubnormalNumberF16(n.valueOf())
-                ? `${Colors.bold(str)} (0x${hex} subnormal)`
-                : `${Colors.bold(str)} (0x${hex})`;
-            default:
-              unreachable(
-                `Printing of floating point kind ${this.type.kind} is not implemented...`
-              );
-          }
-        }
-        return `${Colors.bold(this.value.toString())} (0x${hex})`;
+        let str = this.value.toString();
+        str = str.indexOf('.') > 0 || str.indexOf('e') > 0 ? str : `${str}.0`;
+        return isSubnormalNumberF64(this.value.valueOf())
+          ? `${Colors.bold(str)} (${hex(8, this.bitsLow, this.bitsHigh)} subnormal)`
+          : `${Colors.bold(str)} (${hex(8, this.bitsLow, this.bitsHigh)})`;
       }
     }
   }
 }
 
-export interface ScalarBuilder {
-  (value: number): Scalar;
+/** Class that encapsulates a single i32 value. */
+export class I32Value {
+  readonly value: number; // The i32 value
+  readonly bits: number; // The i32 value, bitcast to a 32-bit integer.
+  readonly type = Type.i32; // The type of the value.
+
+  public constructor(value: number, bits: number) {
+    this.value = value;
+    this.bits = bits;
+  }
+
+  /**
+   * Copies the scalar value to the buffer at the provided byte offset.
+   * @param buffer the destination buffer
+   * @param offset the offset in buffer, in units of `buffer`
+   */
+  public copyTo(buffer: TypedArrayBufferView, offset: number) {
+    workingDataU32[0] = this.bits;
+    for (let i = 0; i < 4; i++) {
+      buffer[offset + i] = workingDataU8[i];
+    }
+  }
+
+  /** @returns the WGSL representation of this scalar value */
+  public wgsl(): string {
+    return `i32(${this.value})`;
+  }
+
+  public toString(): string {
+    return `${Colors.bold(this.value.toString())} (${hex(4, this.bits)})`;
+  }
 }
 
-/** Create a Scalar of `type` by storing `value` as an element of `workingDataArray` and retrieving it.
- * The working data array *must* be an alias of `workingData`.
- */
-function scalarFromValue(
-  type: ScalarType,
-  workingDataArray: TypedArrayBufferView,
-  value: number
-): Scalar {
-  // Clear all bits of the working data since `value` may be smaller; the upper bits should be 0.
-  workingDataU32[1] = 0;
-  workingDataU32[0] = 0;
-  workingDataArray[0] = value;
-  return new Scalar(type, workingDataArray[0], workingDataU32[1], workingDataU32[0]);
+/** Class that encapsulates a single u32 value. */
+export class U32Value {
+  readonly value: number; // The u32 value
+  readonly type = Type.u32; // The type of the value.
+
+  public constructor(value: number) {
+    this.value = value;
+  }
+
+  /**
+   * Copies the scalar value to the buffer at the provided byte offset.
+   * @param buffer the destination buffer
+   * @param offset the offset in buffer, in units of `buffer`
+   */
+  public copyTo(buffer: TypedArrayBufferView, offset: number) {
+    workingDataU32[0] = this.value;
+    for (let i = 0; i < 4; i++) {
+      buffer[offset + i] = workingDataU8[i];
+    }
+  }
+
+  /** @returns the WGSL representation of this scalar value */
+  public wgsl(): string {
+    return `${this.value}u`;
+  }
+
+  public toString(): string {
+    return `${Colors.bold(this.value.toString())} (${hex(4, this.value)})`;
+  }
 }
 
-/** Create a Scalar of `type` by storing `value` as an element of `workingDataStoreArray` and
- * reinterpreting it as an element of `workingDataLoadArray`.
- * Both working data arrays *must* be aliases of `workingData`.
+/**
+ * Class that encapsulates a single i16 value.
+ * @note type does not exist in WGSL yet
  */
-function scalarFromBits(
-  type: ScalarType,
-  workingDataStoreArray: TypedArrayBufferView,
-  workingDataLoadArray: TypedArrayBufferView,
-  bits: number
-): Scalar {
-  // Clear all bits of the working data since `value` may be smaller; the upper bits should be 0.
-  workingDataU32[1] = 0;
-  workingDataU32[0] = 0;
-  workingDataStoreArray[0] = bits;
-  return new Scalar(type, workingDataLoadArray[0], workingDataU32[1], workingDataU32[0]);
+export class I16Value {
+  readonly value: number; // The i16 value
+  readonly bits: number; // The i16 value, bitcast to a 16-bit integer.
+  readonly type = Type.i16; // The type of the value.
+
+  public constructor(value: number, bits: number) {
+    this.value = value;
+    this.bits = bits;
+  }
+
+  /**
+   * Copies the scalar value to the buffer at the provided byte offset.
+   * @param buffer the destination buffer
+   * @param offset the offset in buffer, in units of `buffer`
+   */
+  public copyTo(buffer: TypedArrayBufferView, offset: number) {
+    workingDataU16[0] = this.bits;
+    for (let i = 0; i < 4; i++) {
+      buffer[offset + i] = workingDataU8[i];
+    }
+  }
+
+  /** @returns the WGSL representation of this scalar value */
+  public wgsl(): string {
+    return `i16(${this.value})`;
+  }
+
+  public toString(): string {
+    return `${Colors.bold(this.value.toString())} (${hex(2, this.bits)})`;
+  }
+}
+
+/**
+ * Class that encapsulates a single u16 value.
+ * @note type does not exist in WGSL yet
+ */
+export class U16Value {
+  readonly value: number; // The u16 value
+  readonly type = Type.u16; // The type of the value.
+
+  public constructor(value: number) {
+    this.value = value;
+  }
+
+  /**
+   * Copies the scalar value to the buffer at the provided byte offset.
+   * @param buffer the destination buffer
+   * @param offset the offset in buffer, in units of `buffer`
+   */
+  public copyTo(buffer: TypedArrayBufferView, offset: number) {
+    workingDataU16[0] = this.value;
+    for (let i = 0; i < 2; i++) {
+      buffer[offset + i] = workingDataU8[i];
+    }
+  }
+
+  /** @returns the WGSL representation of this scalar value */
+  public wgsl(): string {
+    assert(false, 'u16 is not a WGSL type');
+    return `u16(${this.value})`;
+  }
+
+  public toString(): string {
+    return `${Colors.bold(this.value.toString())} (${hex(2, this.value)})`;
+  }
+}
+
+/**
+ * Class that encapsulates a single i8 value.
+ * @note type does not exist in WGSL yet
+ */
+export class I8Value {
+  readonly value: number; // The i8 value
+  readonly bits: number; // The i8 value, bitcast to a 8-bit integer.
+  readonly type = Type.i8; // The type of the value.
+
+  public constructor(value: number, bits: number) {
+    this.value = value;
+    this.bits = bits;
+  }
+
+  /**
+   * Copies the scalar value to the buffer at the provided byte offset.
+   * @param buffer the destination buffer
+   * @param offset the offset in buffer, in units of `buffer`
+   */
+  public copyTo(buffer: TypedArrayBufferView, offset: number) {
+    workingDataU8[0] = this.bits;
+    for (let i = 0; i < 4; i++) {
+      buffer[offset + i] = workingDataU8[i];
+    }
+  }
+
+  /** @returns the WGSL representation of this scalar value */
+  public wgsl(): string {
+    return `i8(${this.value})`;
+  }
+
+  public toString(): string {
+    return `${Colors.bold(this.value.toString())} (${hex(2, this.bits)})`;
+  }
+}
+
+/**
+ * Class that encapsulates a single u8 value.
+ * @note type does not exist in WGSL yet
+ */
+export class U8Value {
+  readonly value: number; // The u8 value
+  readonly type = Type.u8; // The type of the value.
+
+  public constructor(value: number) {
+    this.value = value;
+  }
+
+  /**
+   * Copies the scalar value to the buffer at the provided byte offset.
+   * @param buffer the destination buffer
+   * @param offset the offset in buffer, in units of `buffer`
+   */
+  public copyTo(buffer: TypedArrayBufferView, offset: number) {
+    workingDataU8[0] = this.value;
+    for (let i = 0; i < 2; i++) {
+      buffer[offset + i] = workingDataU8[i];
+    }
+  }
+
+  /** @returns the WGSL representation of this scalar value */
+  public wgsl(): string {
+    assert(false, 'u8 is not a WGSL type');
+    return `u8(${this.value})`;
+  }
+
+  public toString(): string {
+    return `${Colors.bold(this.value.toString())} (${hex(2, this.value)})`;
+  }
+}
+
+/**
+ * Class that encapsulates a single f64 value
+ * @note type does not exist in WGSL yet
+ */
+export class F64Value {
+  readonly value: number; // The f32 value
+  readonly bitsLow: number; // The low 32 bits of the abstract-float value.
+  readonly bitsHigh: number; // The high 32 bits of the abstract-float value.
+  readonly type = Type.f64; // The type of the value.
+
+  public constructor(value: number, bitsLow: number, bitsHigh: number) {
+    this.value = value;
+    this.bitsLow = bitsLow;
+    this.bitsHigh = bitsHigh;
+  }
+
+  /**
+   * Copies the scalar value to the buffer at the provided byte offset.
+   * @param buffer the destination buffer
+   * @param offset the offset in buffer, in units of `buffer`
+   */
+  public copyTo(buffer: TypedArrayBufferView, offset: number) {
+    workingDataU32[0] = this.bitsLow;
+    workingDataU32[1] = this.bitsHigh;
+    for (let i = 0; i < 8; i++) {
+      buffer[offset + i] = workingDataU8[i];
+    }
+  }
+
+  /** @returns the WGSL representation of this scalar value */
+  public wgsl(): string {
+    assert(false, 'f64 is not a WGSL type');
+    return `${withPoint(this.value)}`;
+  }
+
+  public toString(): string {
+    switch (this.value) {
+      case Infinity:
+      case -Infinity:
+        return Colors.bold(this.value.toString());
+      default: {
+        let str = this.value.toString();
+        str = str.indexOf('.') > 0 || str.indexOf('e') > 0 ? str : `${str}.0`;
+        return isSubnormalNumberF64(this.value.valueOf())
+          ? `${Colors.bold(str)} (${hex(8, this.bitsLow, this.bitsHigh)} subnormal)`
+          : `${Colors.bold(str)} (${hex(8, this.bitsLow, this.bitsHigh)})`;
+      }
+    }
+  }
+}
+
+/** Class that encapsulates a single f32 value. */
+export class F32Value {
+  readonly value: number; // The f32 value
+  readonly bits: number; // The f32 value, bitcast to a 32-bit integer.
+  readonly type = Type.f32; // The type of the value.
+
+  public constructor(value: number, bits: number) {
+    this.value = value;
+    this.bits = bits;
+  }
+
+  /**
+   * Copies the scalar value to the buffer at the provided byte offset.
+   * @param buffer the destination buffer
+   * @param offset the offset in buffer, in units of `buffer`
+   */
+  public copyTo(buffer: TypedArrayBufferView, offset: number) {
+    workingDataU32[0] = this.bits;
+    for (let i = 0; i < 4; i++) {
+      buffer[offset + i] = workingDataU8[i];
+    }
+  }
+
+  /** @returns the WGSL representation of this scalar value */
+  public wgsl(): string {
+    return `${withPoint(this.value)}f`;
+  }
+
+  public toString(): string {
+    switch (this.value) {
+      case Infinity:
+      case -Infinity:
+        return Colors.bold(this.value.toString());
+      default: {
+        let str = this.value.toString();
+        str = str.indexOf('.') > 0 || str.indexOf('e') > 0 ? str : `${str}.0`;
+        return isSubnormalNumberF32(this.value.valueOf())
+          ? `${Colors.bold(str)} (${hex(4, this.bits)} subnormal)`
+          : `${Colors.bold(str)} (${hex(4, this.bits)})`;
+      }
+    }
+  }
+}
+
+/** Class that encapsulates a single f16 value. */
+export class F16Value {
+  readonly value: number; // The f16 value
+  readonly bits: number; // The f16 value, bitcast to a 16-bit integer.
+  readonly type = Type.f16; // The type of the value.
+
+  public constructor(value: number, bits: number) {
+    this.value = value;
+    this.bits = bits;
+  }
+
+  /**
+   * Copies the scalar value to the buffer at the provided byte offset.
+   * @param buffer the destination buffer
+   * @param offset the offset in buffer, in units of `buffer`
+   */
+  public copyTo(buffer: TypedArrayBufferView, offset: number) {
+    workingDataU16[0] = this.bits;
+    for (let i = 0; i < 2; i++) {
+      buffer[offset + i] = workingDataU8[i];
+    }
+  }
+
+  /** @returns the WGSL representation of this scalar value */
+  public wgsl(): string {
+    return `${withPoint(this.value)}h`;
+  }
+
+  public toString(): string {
+    switch (this.value) {
+      case Infinity:
+      case -Infinity:
+        return Colors.bold(this.value.toString());
+      default: {
+        let str = this.value.toString();
+        str = str.indexOf('.') > 0 || str.indexOf('e') > 0 ? str : `${str}.0`;
+        return isSubnormalNumberF16(this.value.valueOf())
+          ? `${Colors.bold(str)} (${hex(2, this.bits)} subnormal)`
+          : `${Colors.bold(str)} (${hex(2, this.bits)})`;
+      }
+    }
+  }
+}
+/** Class that encapsulates a single bool value. */
+export class BoolValue {
+  readonly value: boolean; // The bool value
+  readonly type = Type.bool; // The type of the value.
+
+  public constructor(value: boolean) {
+    this.value = value;
+  }
+
+  /**
+   * Copies the scalar value to the buffer at the provided byte offset.
+   * @param buffer the destination buffer
+   * @param offset the offset in buffer, in units of `buffer`
+   */
+  public copyTo(buffer: TypedArrayBufferView, offset: number) {
+    buffer[offset] = this.value ? 1 : 0;
+  }
+
+  /** @returns the WGSL representation of this scalar value */
+  public wgsl(): string {
+    return this.value.toString();
+  }
+
+  public toString(): string {
+    return Colors.bold(this.value.toString());
+  }
+}
+
+/** Scalar represents all the scalar value types */
+export type ScalarValue =
+  | AbstractIntValue
+  | AbstractFloatValue
+  | I32Value
+  | U32Value
+  | I16Value
+  | U16Value
+  | I8Value
+  | U8Value
+  | F64Value
+  | F32Value
+  | F16Value
+  | BoolValue;
+
+export interface ScalarBuilder<T> {
+  (value: T): ScalarValue;
+}
+
+export function isScalarValue(value: object): value is ScalarValue {
+  return (
+    value instanceof AbstractIntValue ||
+    value instanceof AbstractFloatValue ||
+    value instanceof I32Value ||
+    value instanceof U32Value ||
+    value instanceof I16Value ||
+    value instanceof U16Value ||
+    value instanceof I8Value ||
+    value instanceof U8Value ||
+    value instanceof F64Value ||
+    value instanceof F32Value ||
+    value instanceof F16Value ||
+    value instanceof BoolValue
+  );
+}
+
+/** Create an AbstractInt from a numeric value, a JS `bigint`. */
+export function abstractInt(value: bigint) {
+  workingDataI64[0] = value;
+  return new AbstractIntValue(workingDataI64[0], workingDataU32[0], workingDataU32[1]);
+}
+
+/** Create an AbstractInt from a bit representation, a uint64 represented as a JS `bigint`. */
+export function abstractIntBits(value: bigint) {
+  workingDataU64[0] = value;
+  return new AbstractIntValue(workingDataI64[0], workingDataU32[0], workingDataU32[1]);
 }
 
 /** Create an AbstractFloat from a numeric value, a JS `number`. */
-export const abstractFloat = (value: number): Scalar =>
-  scalarFromValue(TypeAbstractFloat, workingDataF64, value);
-
-/** Create an f64 from a numeric value, a JS `number`. */
-export const f64 = (value: number): Scalar => scalarFromValue(TypeF64, workingDataF64, value);
-
-/** Create an f32 from a numeric value, a JS `number`. */
-export const f32 = (value: number): Scalar => scalarFromValue(TypeF32, workingDataF32, value);
-
-/** Create an f16 from a numeric value, a JS `number`. */
-export const f16 = (value: number): Scalar => scalarFromValue(TypeF16, workingDataF16, value);
-
-/** Create an f32 from a bit representation, a uint32 represented as a JS `number`. */
-export const f32Bits = (bits: number): Scalar =>
-  scalarFromBits(TypeF32, workingDataU32, workingDataF32, bits);
-
-/** Create an f16 from a bit representation, a uint16 represented as a JS `number`. */
-export const f16Bits = (bits: number): Scalar =>
-  scalarFromBits(TypeF16, workingDataU16, workingDataF16, bits);
+export function abstractFloat(value: number) {
+  workingDataF64[0] = value;
+  return new AbstractFloatValue(workingDataF64[0], workingDataU32[0], workingDataU32[1]);
+}
 
 /** Create an i32 from a numeric value, a JS `number`. */
-export const i32 = (value: number): Scalar => scalarFromValue(TypeI32, workingDataI32, value);
-
-/** Create an i16 from a numeric value, a JS `number`. */
-export const i16 = (value: number): Scalar => scalarFromValue(TypeI16, workingDataI16, value);
-
-/** Create an i8 from a numeric value, a JS `number`. */
-export const i8 = (value: number): Scalar => scalarFromValue(TypeI8, workingDataI8, value);
+export function i32(value: number) {
+  workingDataI32[0] = value;
+  return new I32Value(workingDataI32[0], workingDataU32[0]);
+}
 
 /** Create an i32 from a bit representation, a uint32 represented as a JS `number`. */
-export const i32Bits = (bits: number): Scalar =>
-  scalarFromBits(TypeI32, workingDataU32, workingDataI32, bits);
-
-/** Create an i16 from a bit representation, a uint16 represented as a JS `number`. */
-export const i16Bits = (bits: number): Scalar =>
-  scalarFromBits(TypeI16, workingDataU16, workingDataI16, bits);
-
-/** Create an i8 from a bit representation, a uint8 represented as a JS `number`. */
-export const i8Bits = (bits: number): Scalar =>
-  scalarFromBits(TypeI8, workingDataU8, workingDataI8, bits);
+export function i32Bits(bits: number) {
+  workingDataU32[0] = bits;
+  return new I32Value(workingDataI32[0], workingDataU32[0]);
+}
 
 /** Create a u32 from a numeric value, a JS `number`. */
-export const u32 = (value: number): Scalar => scalarFromValue(TypeU32, workingDataU32, value);
+export function u32(value: number) {
+  workingDataU32[0] = value;
+  return new U32Value(workingDataU32[0]);
+}
+
+/** Create a u32 from a bit representation, a uint32 represented as a JS `number`. */
+export function u32Bits(bits: number) {
+  workingDataU32[0] = bits;
+  return new U32Value(workingDataU32[0]);
+}
+
+/** Create an i16 from a numeric value, a JS `number`. */
+export function i16(value: number) {
+  workingDataI16[0] = value;
+  return new I16Value(workingDataI16[0], workingDataU16[0]);
+}
 
 /** Create a u16 from a numeric value, a JS `number`. */
-export const u16 = (value: number): Scalar => scalarFromValue(TypeU16, workingDataU16, value);
+export function u16(value: number) {
+  workingDataU16[0] = value;
+  return new U16Value(workingDataU16[0]);
+}
+
+/** Create an i8 from a numeric value, a JS `number`. */
+export function i8(value: number) {
+  workingDataI8[0] = value;
+  return new I8Value(workingDataI8[0], workingDataU8[0]);
+}
 
 /** Create a u8 from a numeric value, a JS `number`. */
-export const u8 = (value: number): Scalar => scalarFromValue(TypeU8, workingDataU8, value);
+export function u8(value: number) {
+  workingDataU8[0] = value;
+  return new U8Value(workingDataU8[0]);
+}
 
-/** Create an u32 from a bit representation, a uint32 represented as a JS `number`. */
-export const u32Bits = (bits: number): Scalar =>
-  scalarFromBits(TypeU32, workingDataU32, workingDataU32, bits);
+/** Create an f64 from a numeric value, a JS `number`. */
+export function f64(value: number) {
+  workingDataF64[0] = value;
+  return new F64Value(workingDataF64[0], workingDataU32[0], workingDataU32[1]);
+}
 
-/** Create an u16 from a bit representation, a uint16 represented as a JS `number`. */
-export const u16Bits = (bits: number): Scalar =>
-  scalarFromBits(TypeU16, workingDataU16, workingDataU16, bits);
+/** Create an f32 from a numeric value, a JS `number`. */
+export function f32(value: number) {
+  workingDataF32[0] = value;
+  return new F32Value(workingDataF32[0], workingDataU32[0]);
+}
 
-/** Create an u8 from a bit representation, a uint8 represented as a JS `number`. */
-export const u8Bits = (bits: number): Scalar =>
-  scalarFromBits(TypeU8, workingDataU8, workingDataU8, bits);
+/** Create an f32 from a bit representation, a uint32 represented as a JS `number`. */
+export function f32Bits(bits: number) {
+  workingDataU32[0] = bits;
+  return new F32Value(workingDataF32[0], workingDataU32[0]);
+}
+
+/** Create an f16 from a numeric value, a JS `number`. */
+export function f16(value: number) {
+  workingDataF16[0] = value;
+  return new F16Value(workingDataF16[0], workingDataU16[0]);
+}
+
+/** Create an f16 from a bit representation, a uint16 represented as a JS `number`. */
+export function f16Bits(bits: number) {
+  workingDataU16[0] = bits;
+  return new F16Value(workingDataF16[0], workingDataU16[0]);
+}
 
 /** Create a boolean value. */
-export function bool(value: boolean): Scalar {
-  // WGSL does not support using 'bool' types directly in storage / uniform
-  // buffers, so instead we pack booleans in a u32, where 'false' is zero and
-  // 'true' is any non-zero value.
-  workingDataU32[0] = value ? 1 : 0;
-  workingDataU32[1] = 0;
-  return new Scalar(TypeBool, value, workingDataU32[1], workingDataU32[0]);
+export function bool(value: boolean): ScalarValue {
+  return new BoolValue(value);
 }
 
 /** A 'true' literal value */
@@ -1099,11 +1813,11 @@ export const False = bool(false);
 /**
  * Class that encapsulates a vector value.
  */
-export class Vector {
-  readonly elements: Array<Scalar>;
+export class VectorValue {
+  readonly elements: Array<ScalarValue>;
   readonly type: VectorType;
 
-  public constructor(elements: Array<Scalar>) {
+  public constructor(elements: Array<ScalarValue>) {
     if (elements.length < 2 || elements.length > 4) {
       throw new Error(`vector element count must be between 2 and 4, got ${elements.length}`);
     }
@@ -1117,7 +1831,7 @@ export class Vector {
       }
     }
     this.elements = elements;
-    this.type = TypeVec(elements.length, elements[0].type);
+    this.type = VectorType.create(elements.length, elements[0].type);
   }
 
   /**
@@ -1165,19 +1879,24 @@ export class Vector {
   }
 }
 
+/** Helper for constructing a new vector with the provided values */
+export function vec(...elements: ScalarValue[]) {
+  return new VectorValue(elements);
+}
+
 /** Helper for constructing a new two-element vector with the provided values */
-export function vec2(x: Scalar, y: Scalar) {
-  return new Vector([x, y]);
+export function vec2(x: ScalarValue, y: ScalarValue) {
+  return new VectorValue([x, y]);
 }
 
 /** Helper for constructing a new three-element vector with the provided values */
-export function vec3(x: Scalar, y: Scalar, z: Scalar) {
-  return new Vector([x, y, z]);
+export function vec3(x: ScalarValue, y: ScalarValue, z: ScalarValue) {
+  return new VectorValue([x, y, z]);
 }
 
 /** Helper for constructing a new four-element vector with the provided values */
-export function vec4(x: Scalar, y: Scalar, z: Scalar, w: Scalar) {
-  return new Vector([x, y, z, w]);
+export function vec4(x: ScalarValue, y: ScalarValue, z: ScalarValue, w: ScalarValue) {
+  return new VectorValue([x, y, z, w]);
 }
 
 /**
@@ -1186,7 +1905,7 @@ export function vec4(x: Scalar, y: Scalar, z: Scalar, w: Scalar) {
  * @param v array of numbers to be converted, must contain 2, 3 or 4 elements
  * @param op function to convert from number to Scalar, e.g. 'f32`
  */
-export function toVector(v: readonly number[], op: (n: number) => Scalar): Vector {
+export function toVector(v: readonly number[], op: (n: number) => ScalarValue): VectorValue {
   switch (v.length) {
     case 2:
       return vec2(op(v[0]), op(v[1]));
@@ -1201,11 +1920,11 @@ export function toVector(v: readonly number[], op: (n: number) => Scalar): Vecto
 /**
  * Class that encapsulates a Matrix value.
  */
-export class Matrix {
-  readonly elements: Scalar[][];
+export class MatrixValue {
+  readonly elements: ScalarValue[][];
   readonly type: MatrixType;
 
-  public constructor(elements: Array<Array<Scalar>>) {
+  public constructor(elements: Array<Array<ScalarValue>>) {
     const num_cols = elements.length;
     if (num_cols < 2 || num_cols > 4) {
       throw new Error(`matrix cols count must be between 2 and 4, got ${num_cols}`);
@@ -1226,7 +1945,7 @@ export class Matrix {
     }
 
     this.elements = elements;
-    this.type = TypeMat(num_cols, num_rows, elem_type);
+    this.type = MatrixType.create(num_cols, num_rows, elem_type);
   }
 
   /**
@@ -1262,41 +1981,90 @@ export class Matrix {
 }
 
 /**
+ * Class that encapsulates an Array value.
+ */
+export class ArrayValue {
+  readonly elements: Value[];
+  readonly type: ArrayType;
+
+  public constructor(elements: Array<Value>) {
+    const elem_type = elements[0].type;
+    if (!elements.every(c => elements.every(r => objectEquals(r.type, elem_type)))) {
+      throw new Error(`cannot mix array element types`);
+    }
+
+    this.elements = elements;
+    this.type = ArrayType.create(elements.length, elem_type);
+  }
+
+  /**
+   * Copies the array value to the Uint8Array buffer at the provided byte offset.
+   * @param buffer the destination buffer
+   * @param offset the byte offset within buffer
+   */
+  public copyTo(buffer: Uint8Array, offset: number) {
+    for (const element of this.elements) {
+      element.copyTo(buffer, offset);
+      offset += this.type.elementType.size;
+    }
+  }
+
+  /**
+   * @returns the WGSL representation of this array value
+   */
+  public wgsl(): string {
+    const els = this.elements.map(r => r.wgsl()).join(', ');
+    return isAbstractType(this.type.elementType) ? `array(${els})` : `${this.type}(${els})`;
+  }
+
+  public toString(): string {
+    return this.wgsl();
+  }
+}
+
+/** Helper for constructing an ArrayValue with the provided values */
+export function array(...elements: Value[]) {
+  return new ArrayValue(elements);
+}
+
+/**
  * Helper for constructing Matrices from arrays of numbers
  *
  * @param m array of array of numbers to be converted, all Array of number must
  *          be of the same length. All Arrays must have 2, 3, or 4 elements.
  * @param op function to convert from number to Scalar, e.g. 'f32`
  */
-export function toMatrix(m: ROArrayArray<number>, op: (n: number) => Scalar): Matrix {
+export function toMatrix(m: ROArrayArray<number>, op: (n: number) => ScalarValue): MatrixValue {
   const cols = m.length;
   const rows = m[0].length;
-  const elements: Scalar[][] = [...Array<Scalar[]>(cols)].map(_ => [...Array<Scalar>(rows)]);
+  const elements: ScalarValue[][] = [...Array<ScalarValue[]>(cols)].map(_ => [
+    ...Array<ScalarValue>(rows),
+  ]);
   for (let i = 0; i < cols; i++) {
     for (let j = 0; j < rows; j++) {
       elements[i][j] = op(m[i][j]);
     }
   }
 
-  return new Matrix(elements);
+  return new MatrixValue(elements);
 }
 
-/** Value is a Scalar or Vector value. */
-export type Value = Scalar | Vector | Matrix;
+/** Value is a Scalar, Vector, Matrix or Array value. */
+export type Value = ScalarValue | VectorValue | MatrixValue | ArrayValue;
 
-export type SerializedValueScalar = {
+export type SerializedScalarValue = {
   kind: 'scalar';
   type: ScalarKind;
   value: boolean | number;
 };
 
-export type SerializedValueVector = {
+export type SerializedVectorValue = {
   kind: 'vector';
   type: ScalarKind;
   value: boolean[] | readonly number[];
 };
 
-export type SerializedValueMatrix = {
+export type SerializedMatrixValue = {
   kind: 'matrix';
   type: ScalarKind;
   value: ROArrayArray<number>;
@@ -1314,6 +2082,7 @@ enum SerializedScalarKind {
   I16,
   I8,
   Bool,
+  AbstractInt,
 }
 
 /** serializeScalarKind() serializes a ScalarKind to a BinaryStream */
@@ -1340,6 +2109,9 @@ function serializeScalarKind(s: BinaryStream, v: ScalarKind) {
     case 'u8':
       s.writeU8(SerializedScalarKind.U8);
       return;
+    case 'abstract-int':
+      s.writeU8(SerializedScalarKind.AbstractInt);
+      return;
     case 'i32':
       s.writeU8(SerializedScalarKind.I32);
       return;
@@ -1353,6 +2125,7 @@ function serializeScalarKind(s: BinaryStream, v: ScalarKind) {
       s.writeU8(SerializedScalarKind.Bool);
       return;
   }
+  unreachable(`Do not know what to write scalar kind = ${v}`);
 }
 
 /** deserializeScalarKind() deserializes a ScalarKind from a BinaryStream */
@@ -1373,6 +2146,8 @@ function deserializeScalarKind(s: BinaryStream): ScalarKind {
       return 'u16';
     case SerializedScalarKind.U8:
       return 'u8';
+    case SerializedScalarKind.AbstractInt:
+      return 'abstract-int';
     case SerializedScalarKind.I32:
       return 'i32';
     case SerializedScalarKind.I16:
@@ -1394,51 +2169,66 @@ enum SerializedValueKind {
 
 /** serializeValue() serializes a Value to a BinaryStream */
 export function serializeValue(s: BinaryStream, v: Value) {
-  const serializeScalar = (scalar: Scalar, kind: ScalarKind) => {
-    switch (kind) {
-      case 'abstract-float':
-        s.writeF64(scalar.value as number);
-        return;
-      case 'f64':
-        s.writeF64(scalar.value as number);
-        return;
-      case 'f32':
-        s.writeF32(scalar.value as number);
-        return;
-      case 'f16':
-        s.writeF16(scalar.value as number);
-        return;
-      case 'u32':
-        s.writeU32(scalar.value as number);
-        return;
-      case 'u16':
-        s.writeU16(scalar.value as number);
-        return;
-      case 'u8':
-        s.writeU8(scalar.value as number);
-        return;
-      case 'i32':
-        s.writeI32(scalar.value as number);
-        return;
-      case 'i16':
-        s.writeI16(scalar.value as number);
-        return;
-      case 'i8':
-        s.writeI8(scalar.value as number);
-        return;
-      case 'bool':
-        s.writeBool(scalar.value as boolean);
-        return;
+  const serializeScalar = (scalar: ScalarValue, kind: ScalarKind) => {
+    switch (typeof scalar.value) {
+      case 'number':
+        switch (kind) {
+          case 'abstract-float':
+            s.writeF64(scalar.value);
+            return;
+          case 'f64':
+            s.writeF64(scalar.value);
+            return;
+          case 'f32':
+            s.writeF32(scalar.value);
+            return;
+          case 'f16':
+            s.writeF16(scalar.value);
+            return;
+          case 'u32':
+            s.writeU32(scalar.value);
+            return;
+          case 'u16':
+            s.writeU16(scalar.value);
+            return;
+          case 'u8':
+            s.writeU8(scalar.value);
+            return;
+          case 'i32':
+            s.writeI32(scalar.value);
+            return;
+          case 'i16':
+            s.writeI16(scalar.value);
+            return;
+          case 'i8':
+            s.writeI8(scalar.value);
+            return;
+        }
+        break;
+      case 'bigint':
+        switch (kind) {
+          case 'abstract-int':
+            s.writeI64(scalar.value);
+            return;
+        }
+        break;
+      case 'boolean':
+        switch (kind) {
+          case 'bool':
+            s.writeBool(scalar.value);
+            return;
+        }
+        break;
     }
   };
 
-  if (v instanceof Scalar) {
+  if (isScalarValue(v)) {
     s.writeU8(SerializedValueKind.Scalar);
     serializeScalarKind(s, v.type.kind);
     serializeScalar(v, v.type.kind);
     return;
   }
-  if (v instanceof Vector) {
+  if (v instanceof VectorValue) {
     s.writeU8(SerializedValueKind.Vector);
     serializeScalarKind(s, v.type.elementType.kind);
     s.writeU8(v.type.width);
@@ -1447,7 +2237,7 @@ export function serializeValue(s: BinaryStream, v: Value) {
     }
     return;
   }
-  if (v instanceof Matrix) {
+  if (v instanceof MatrixValue) {
     s.writeU8(SerializedValueKind.Matrix);
     serializeScalarKind(s, v.type.elementType.kind);
     s.writeU8(v.type.cols);
@@ -1481,6 +2271,8 @@ export function deserializeValue(s: BinaryStream): Value {
         return u16(s.readU16());
       case 'u8':
         return u8(s.readU8());
+      case 'abstract-int':
+        return abstractInt(s.readI64());
       case 'i32':
         return i32(s.readI32());
       case 'i16':
@@ -1498,23 +2290,23 @@ export function deserializeValue(s: BinaryStream): Value {
       return deserializeScalar(scalarKind);
     case SerializedValueKind.Vector: {
       const width = s.readU8();
-      const scalars = new Array<Scalar>(width);
+      const scalars = new Array<ScalarValue>(width);
       for (let i = 0; i < width; i++) {
         scalars[i] = deserializeScalar(scalarKind);
       }
-      return new Vector(scalars);
+      return new VectorValue(scalars);
     }
     case SerializedValueKind.Matrix: {
       const numCols = s.readU8();
       const numRows = s.readU8();
-      const columns = new Array<Scalar[]>(numCols);
+      const columns = new Array<ScalarValue[]>(numCols);
       for (let c = 0; c < numCols; c++) {
-        columns[c] = new Array<Scalar>(numRows);
+        columns[c] = new Array<ScalarValue>(numRows);
         for (let i = 0; i < numRows; i++) {
           columns[c][i] = deserializeScalar(scalarKind);
         }
       }
-      return new Matrix(columns);
+      return new MatrixValue(columns);
     }
     default:
       unreachable(`invalid serialized value kind: ${valueKind}`);
@@ -1533,7 +2325,7 @@ export function isFloatValue(v: Value): boolean {
  */
 export function isAbstractType(ty: Type): boolean {
   if (ty instanceof ScalarType) {
-    return ty.kind === 'abstract-float';
+    return ty.kind === 'abstract-float' || ty.kind === 'abstract-int';
   }
   return false;
 }
@@ -1552,84 +2344,222 @@ export function isFloatType(ty: Type): boolean {
   return false;
 }
 
+/**
+ * @returns if `ty` is a type convertible to floating point type.
+ * @note this does not consider composite types.
+ * Use elementType() if you want to test the element type.
+ */
+export function isConvertibleToFloatType(ty: Type): boolean {
+  if (ty instanceof ScalarType) {
+    return (
+      ty.kind === 'abstract-int' ||
+      ty.kind === 'abstract-float' ||
+      ty.kind === 'f64' ||
+      ty.kind === 'f32' ||
+      ty.kind === 'f16'
+    );
+  }
+  return false;
+}
+
+/**
+ * @returns if `ty` is an unsigned type.
+ */
+export function isUnsignedType(ty: Type): boolean {
+  if (ty instanceof ScalarType) {
+    return ty.kind === 'u8' || ty.kind === 'u16' || ty.kind === 'u32';
+  } else {
+    return isUnsignedType(ty.elementType);
+  }
+}
+
+/** @returns true if an argument of type 'src' can be used for a parameter of type 'dst' */
+export function isConvertible(src: Type, dst: Type) {
+  if (src === dst) {
+    return true;
+  }
+
+  const widthOf = (ty: Type) => {
+    return ty instanceof VectorType ? ty.width : 1;
+  };
+
+  if (widthOf(src) !== widthOf(dst)) {
+    return false;
+  }
+
+  const elSrc = scalarTypeOf(src);
+  const elDst = scalarTypeOf(dst);
+
+  switch (elSrc.kind) {
+    case 'abstract-float':
+      switch (elDst.kind) {
+        case 'abstract-float':
+        case 'f16':
+        case 'f32':
+        case 'f64':
+          return true;
+        default:
+          return false;
+      }
+    case 'abstract-int':
+      switch (elDst.kind) {
+        case 'abstract-int':
+        case 'abstract-float':
+        case 'f16':
+        case 'f32':
+        case 'f64':
+        case 'u16':
+        case 'u32':
+        case 'u8':
+        case 'i16':
+        case 'i32':
+        case 'i8':
+          return true;
+        default:
+          return false;
+      }
+    default:
+      return false;
+  }
+}
+
 /// All floating-point scalar types
-export const kAllFloatScalars = [TypeAbstractFloat, TypeF32, TypeF16] as const;
+const kFloatScalars = [Type.abstractFloat, Type.f32, Type.f16] as const;
 
 /// All floating-point vec2 types
-export const kAllFloatVector2 = [
-  TypeVec(2, TypeAbstractFloat),
-  TypeVec(2, TypeF32),
-  TypeVec(2, TypeF16),
-] as const;
+const kFloatVec2 = [Type.vec2af, Type.vec2f, Type.vec2h] as const;
 
 /// All floating-point vec3 types
-export const kAllFloatVector3 = [
-  TypeVec(3, TypeAbstractFloat),
-  TypeVec(3, TypeF32),
-  TypeVec(3, TypeF16),
-] as const;
+const kFloatVec3 = [Type.vec3af, Type.vec3f, Type.vec3h] as const;
 
 /// All floating-point vec4 types
-export const kAllFloatVector4 = [
-  TypeVec(4, TypeAbstractFloat),
-  TypeVec(4, TypeF32),
-  TypeVec(4, TypeF16),
+const kFloatVec4 = [Type.vec4af, Type.vec4f, Type.vec4h] as const;
+
+export const kConcreteF32ScalarsAndVectors = [
+  Type.f32,
+  Type.vec2f,
+  Type.vec3f,
+  Type.vec4f,
+] as const;
+
+/// All f16 floating-point scalar and vector types
+export const kConcreteF16ScalarsAndVectors = [
+  Type.f16,
+  Type.vec2h,
+  Type.vec3h,
+  Type.vec4h,
 ] as const;
 
 /// All floating-point vector types
-export const kAllFloatVectors = [
-  ...kAllFloatVector2,
-  ...kAllFloatVector3,
-  ...kAllFloatVector4,
-] as const;
+export const kFloatVectors = [...kFloatVec2, ...kFloatVec3, ...kFloatVec4] as const;
 
 /// All floating-point scalar and vector types
-export const kAllFloatScalarsAndVectors = [...kAllFloatScalars, ...kAllFloatVectors] as const;
+export const kFloatScalarsAndVectors = [...kFloatScalars, ...kFloatVectors] as const;
 
-/// All integer scalar and vector types
-export const kAllIntegerScalarsAndVectors = [
-  TypeI32,
-  TypeVec(2, TypeI32),
-  TypeVec(3, TypeI32),
-  TypeVec(4, TypeI32),
-  TypeU32,
-  TypeVec(2, TypeU32),
-  TypeVec(3, TypeU32),
-  TypeVec(4, TypeU32),
+// Abstract and concrete integer types are not grouped into an 'all' type,
+// because for many validation tests there is a valid conversion of
+// AbstractInt -> AbstractFloat, but not one for the concrete integers. Thus, an
+// AbstractInt literal will be a potentially valid input, whereas the concrete
+// integers will not be. For many tests the pattern is to have separate fixtures
+// for the things that might be valid and those that are never valid.
+
+/// All signed integer vector types
+export const kConcreteSignedIntegerVectors = [Type.vec2i, Type.vec3i, Type.vec4i] as const;
+
+/// All unsigned integer vector types
+export const kConcreteUnsignedIntegerVectors = [Type.vec2u, Type.vec3u, Type.vec4u] as const;
+
+/// All concrete integer vector types
+export const kConcreteIntegerVectors = [
+  ...kConcreteSignedIntegerVectors,
+  ...kConcreteUnsignedIntegerVectors,
 ] as const;
 
 /// All signed integer scalar and vector types
-export const kAllSignedIntegerScalarsAndVectors = [
-  TypeI32,
-  TypeVec(2, TypeI32),
-  TypeVec(3, TypeI32),
-  TypeVec(4, TypeI32),
+export const kConcreteSignedIntegerScalarsAndVectors = [
+  Type.i32,
+  ...kConcreteSignedIntegerVectors,
 ] as const;
 
 /// All unsigned integer scalar and vector types
-export const kAllUnsignedIntegerScalarsAndVectors = [
-  TypeU32,
-  TypeVec(2, TypeU32),
-  TypeVec(3, TypeU32),
-  TypeVec(4, TypeU32),
+export const kConcreteUnsignedIntegerScalarsAndVectors = [
+  Type.u32,
+  ...kConcreteUnsignedIntegerVectors,
 ] as const;
 
-/// All floating-point and integer scalar and vector types
-export const kAllFloatAndIntegerScalarsAndVectors = [
-  ...kAllFloatScalarsAndVectors,
-  ...kAllIntegerScalarsAndVectors,
+/// All concrete integer scalar and vector types
+export const kConcreteIntegerScalarsAndVectors = [
+  ...kConcreteSignedIntegerScalarsAndVectors,
+  ...kConcreteUnsignedIntegerScalarsAndVectors,
 ] as const;
 
-/// All floating-point and signed integer scalar and vector types
-export const kAllFloatAndSignedIntegerScalarsAndVectors = [
-  ...kAllFloatScalarsAndVectors,
-  ...kAllSignedIntegerScalarsAndVectors,
+/// All types which are convertable to floating-point scalar types.
+export const kConvertableToFloatScalar = [Type.abstractInt, ...kFloatScalars] as const;
+
+/// All types which are convertable to floating-point vector 2 types.
+export const kConvertableToFloatVec2 = [Type.vec2ai, ...kFloatVec2] as const;
+
+/// All types which are convertable to floating-point vector 3 types.
+export const kConvertableToFloatVec3 = [Type.vec3ai, ...kFloatVec3] as const;
+
+/// All types which are convertable to floating-point vector 4 types.
+export const kConvertableToFloatVec4 = [Type.vec4ai, ...kFloatVec4] as const;
+
+/// All the types which are convertable to floating-point vector types.
+export const kConvertableToFloatVectors = [
+  Type.vec2ai,
+  Type.vec3ai,
+  Type.vec4ai,
+  ...kFloatVectors,
 ] as const;
 
-/** @returns the inner element type of the given type */
-export function elementType(t: ScalarType | VectorType | MatrixType) {
-  if (t instanceof ScalarType) {
-    return t;
-  }
-  return t.elementType;
-}
+/// All types which are convertable to floating-point scalar or vector types.
+export const kConvertableToFloatScalarsAndVectors = [
+  Type.abstractInt,
+  ...kFloatScalars,
+  ...kConvertableToFloatVectors,
+] as const;
+
+/// All the numeric scalar and vector types.
+export const kAllNumericScalarsAndVectors = [
+  ...kConvertableToFloatScalarsAndVectors,
+  ...kConcreteIntegerScalarsAndVectors,
+] as const;
+
+/// All the concrete integer and floating point scalars and vectors.
+export const kConcreteNumericScalarsAndVectors = [
+  ...kConcreteIntegerScalarsAndVectors,
+  ...kConcreteF16ScalarsAndVectors,
+  ...kConcreteF32ScalarsAndVectors,
+] as const;
+
+/// All boolean types.
+export const kAllBoolScalarsAndVectors = [Type.bool, Type.vec2b, Type.vec3b, Type.vec4b] as const;
+
+/// All the scalar and vector types.
+export const kAllScalarsAndVectors = [
+  ...kAllBoolScalarsAndVectors,
+  ...kAllNumericScalarsAndVectors,
+] as const;
+
+/// All the matrix types
+export const kAllMatrices = [
+  Type.mat2x2f,
+  Type.mat2x2h,
+  Type.mat2x3f,
+  Type.mat2x3h,
+  Type.mat2x4f,
+  Type.mat2x4h,
+  Type.mat3x2f,
+  Type.mat3x2h,
+  Type.mat3x3f,
+  Type.mat3x3h,
+  Type.mat3x4f,
+  Type.mat3x4h,
+  Type.mat4x2f,
+  Type.mat4x2h,
+  Type.mat4x3f,
+  Type.mat4x3h,
+  Type.mat4x4f,
+  Type.mat4x4h,
+] as const;

@@ -38,7 +38,7 @@ fn atomicXor(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T) -> T
       .combine('workgroupSize', workgroupSizes)
       .combine('dispatchSize', dispatchSizes)
       .combine('mapId', keysOf(kMapId))
-      .combine('scalarType', ['u32', 'i32'])
+      .combine('scalarType', ['u32', 'i32'] as const)
   )
   .fn(t => {
     const numInvocations = t.params.workgroupSize * t.params.dispatchSize;
@@ -91,7 +91,7 @@ fn atomicXor(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T) -> T
       .combine('workgroupSize', workgroupSizes)
       .combine('dispatchSize', dispatchSizes)
       .combine('mapId', keysOf(kMapId))
-      .combine('scalarType', ['u32', 'i32'])
+      .combine('scalarType', ['u32', 'i32'] as const)
   )
   .fn(t => {
     const numInvocations = t.params.workgroupSize;
