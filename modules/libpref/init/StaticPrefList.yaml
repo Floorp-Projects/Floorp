@@ -10884,6 +10884,14 @@
   value: True
   mirror: always
 
+# Tell the audio backend to create a voice stream for later re-use before asking
+# the user for microphone permissions, if approving those permissions would
+# result in a voice stream when created later on.
+- name: media.getusermedia.microphone.voice_stream_priming.enabled
+  type: RelaxedAtomicBool
+  value: @IS_XP_MACOSX@
+  mirror: always
+
 # This pref turns on legacy (non-spec) exposure of camera and microphone
 # information from enumerateDevices and devicechange ahead of successful
 # getUserMedia calls. Should only be turned on to resolve web compat issues,

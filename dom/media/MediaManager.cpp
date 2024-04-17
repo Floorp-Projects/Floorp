@@ -15,8 +15,10 @@
 #include "MediaTrackGraph.h"
 #include "MediaTrackListener.h"
 #include "VideoStreamTrack.h"
+#include "Tracing.h"
 #include "VideoUtils.h"
 #include "mozilla/Base64.h"
+#include "mozilla/EventTargetCapability.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/PeerIdentity.h"
@@ -1458,8 +1460,62 @@ class GetUserMediaStreamTask final : public GetUserMediaTask {
 
   const MediaStreamConstraints& GetConstraints() { return mConstraints; }
 
+  void PrimeVoiceProcessing() {
+    mPrimingStream = MakeAndAddRef<PrimingCubebVoiceInputStream>();
+    mPrimingStream->Init();
+  }
+
  private:
   void PrepareDOMStream();
+
+  class PrimingCubebVoiceInputStream {
+    class Listener final : public CubebInputStream::Listener {
+      NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Listener, override);
+
+     private:
+      ~Listener() = default;
+
+      long DataCallback(const void*, long) override {
+        MOZ_CRASH("Unexpected data callback");
+      }
+      void StateCallback(cubeb_state) override {}
+      void DeviceChangedCallback() override {}
+    };
+
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_DELETE_ON_EVENT_TARGET(
+        PrimingCubebVoiceInputStream, mCubebThread.GetEventTarget())
+
+   public:
+    void Init() {
+      mCubebThread.GetEventTarget()->Dispatch(
+          NS_NewRunnableFunction(__func__, [this, self = RefPtr(this)] {
+            mCubebThread.AssertOnCurrentThread();
+            LOG("Priming voice processing with stream %p", this);
+            TRACE("PrimingCubebVoiceInputStream::Init");
+            const cubeb_devid default_device = nullptr;
+            const uint32_t mono = 1;
+            const uint32_t rate = CubebUtils::PreferredSampleRate(false);
+            const bool isVoice = true;
+            mCubebStream =
+                CubebInputStream::Create(default_device, mono, rate, isVoice,
+                                         MakeRefPtr<Listener>().get());
+          }));
+    }
+
+   private:
+    ~PrimingCubebVoiceInputStream() {
+      mCubebThread.AssertOnCurrentThread();
+      LOG("Releasing primed voice processing stream %p", this);
+      mCubebStream = nullptr;
+    }
+
+    const EventTargetCapability<nsISerialEventTarget> mCubebThread =
+        EventTargetCapability<nsISerialEventTarget>(
+            TaskQueue::Create(CubebUtils::GetCubebOperationThread(),
+                              "PrimingCubebInputStream::mCubebThread")
+                .get());
+    UniquePtr<CubebInputStream> mCubebStream MOZ_GUARDED_BY(mCubebThread);
+  };
 
   // Constraints derived from those passed to getUserMedia() but adjusted for
   // preferences, defaults, and security
@@ -1473,6 +1529,7 @@ class GetUserMediaStreamTask final : public GetUserMediaTask {
   // MediaDevices are set when selected and Allowed() by the UI.
   RefPtr<LocalMediaDevice> mAudioDevice;
   RefPtr<LocalMediaDevice> mVideoDevice;
+  RefPtr<PrimingCubebVoiceInputStream> mPrimingStream;
   // Tracking id unique for a video frame source. Set when the corresponding
   // device has been allocated.
   Maybe<TrackingId> mVideoTrackingId;
@@ -3043,6 +3100,27 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
                 c, std::move(holder), windowID, std::move(windowListener),
                 std::move(audioListener), std::move(videoListener), prefs,
                 principalInfo, aCallerType, focusSource);
+
+            // It is time to ask for user permission, prime voice processing
+            // now. Use a local lambda to enable a guard pattern.
+            [&] {
+              if (!StaticPrefs::
+                      media_getusermedia_microphone_voice_stream_priming_enabled() ||
+                  !StaticPrefs::
+                      media_getusermedia_microphone_prefer_voice_stream_with_processing_enabled()) {
+                return;
+              }
+
+              if (const auto fc = FlattenedConstraints(
+                      NormalizedConstraints(GetInvariant(c.mAudio)));
+                  !fc.mEchoCancellation.Get(prefs.mAecOn) &&
+                  !fc.mAutoGainControl.Get(prefs.mAgcOn && prefs.mAecOn) &&
+                  !fc.mNoiseSuppression.Get(prefs.mNoiseOn && prefs.mAecOn)) {
+                return;
+              }
+
+              task->PrimeVoiceProcessing();
+            }();
 
             size_t taskCount =
                 self->AddTaskAndGetCount(windowID, callID, std::move(task));
