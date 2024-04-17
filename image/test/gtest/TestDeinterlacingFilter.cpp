@@ -186,8 +186,7 @@ TEST_F(ImageDeinterlacingFilter, WritePixelsNonProgressiveOutput51_52) {
               return AsVariant(BGRAColor::Red().AsPixel());
 
             default:
-              MOZ_ASSERT_UNREACHABLE("Unexpected row");
-              return AsVariant(BGRAColor::Transparent().AsPixel());
+              MOZ_CRASH("Unexpected row");
           }
         });
         EXPECT_EQ(WriteState::FINISHED, result);
@@ -259,8 +258,7 @@ TEST_F(ImageDeinterlacingFilter, WritePixelsOutput20_20) {
               return AsVariant(BGRAColor::Red().AsPixel());
 
             default:
-              MOZ_ASSERT_UNREACHABLE("Unexpected row");
-              return AsVariant(BGRAColor::Transparent().AsPixel());
+              MOZ_CRASH("Unexpected row");
           }
         });
         EXPECT_EQ(WriteState::FINISHED, result);
@@ -319,8 +317,7 @@ TEST_F(ImageDeinterlacingFilter, WritePixelsOutput7_7) {
               return AsVariant(BGRAColor::Green().AsPixel());
 
             default:
-              MOZ_ASSERT_UNREACHABLE("Unexpected row");
-              return AsVariant(BGRAColor::Transparent().AsPixel());
+              MOZ_CRASH("Unexpected row");
           }
         });
         EXPECT_EQ(WriteState::FINISHED, result);
@@ -373,8 +370,7 @@ TEST_F(ImageDeinterlacingFilter, WritePixelsOutput3_3) {
               return AsVariant(BGRAColor::Red().AsPixel());
 
             default:
-              MOZ_ASSERT_UNREACHABLE("Unexpected row");
-              return AsVariant(BGRAColor::Transparent().AsPixel());
+              MOZ_CRASH("Unexpected row");
           }
         });
         EXPECT_EQ(WriteState::FINISHED, result);
