@@ -6,14 +6,15 @@
 
 #include "BounceTrackingState.h"
 #include "mozilla/Services.h"
-#include "mozilla/StaticPrefs_privacy.h"
-#include "mozilla/ClearOnShutdown.h"
-#include "mozilla/dom/CanonicalBrowsingContext.h"
+#include "mozilla/dom/WindowContext.h"
+#include "mozilla/dom/WindowGlobalChild.h"
+#include "mozilla/dom/WindowGlobalParent.h"
 #include "nsCOMPtr.h"
 #include "nsICookieNotification.h"
 #include "nsIObserverService.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "nsICookie.h"
+#include "nsIPrincipal.h"
 
 namespace mozilla {
 
@@ -102,6 +103,68 @@ BounceTrackingStorageObserver::Observe(nsISupports* aSubject,
   NS_ENSURE_SUCCESS(rv, rv);
 
   return bounceTrackingState->OnCookieWrite(baseDomain);
+}
+
+// static
+nsresult BounceTrackingStorageObserver::OnInitialStorageAccess(
+    dom::WindowContext* aWindowContext) {
+  NS_ENSURE_ARG_POINTER(aWindowContext);
+
+  if (!XRE_IsParentProcess()) {
+    // Skip partitioned storage access. Checking this in the content process
+    // potentially saves us an IPC message to the parent.
+    nsIPrincipal* storagePrincipal =
+        aWindowContext->GetInnerWindow()->GetEffectiveStoragePrincipal();
+    if (storagePrincipal &&
+        !storagePrincipal->OriginAttributesRef().mPartitionKey.IsEmpty()) {
+      MOZ_LOG(gBounceTrackingProtectionLog, LogLevel::Verbose,
+              ("Skipping partitioned storage access (content process)."));
+      return NS_OK;
+    }
+
+    dom::WindowGlobalChild* windowGlobalChild =
+        aWindowContext->GetWindowGlobalChild();
+    NS_ENSURE_TRUE(windowGlobalChild, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(windowGlobalChild->SendOnInitialStorageAccess(),
+                   NS_ERROR_FAILURE);
+
+    return NS_OK;
+  }
+
+  MOZ_ASSERT(XRE_IsParentProcess());
+  nsCOMPtr<nsIPrincipal> storagePrincipal =
+      aWindowContext->Canonical()->DocumentStoragePrincipal();
+  NS_ENSURE_TRUE(storagePrincipal, NS_ERROR_FAILURE);
+
+  if (!storagePrincipal->GetIsContentPrincipal()) {
+    MOZ_LOG(gBounceTrackingProtectionLog, LogLevel::Verbose,
+            ("Skipping non-content principal."));
+    return NS_OK;
+  }
+
+  if (!storagePrincipal->OriginAttributesRef().mPartitionKey.IsEmpty()) {
+    MOZ_LOG(gBounceTrackingProtectionLog, LogLevel::Verbose,
+            ("Skipping partitioned storage access."));
+    return NS_OK;
+  }
+
+  dom::BrowsingContext* browsingContext = aWindowContext->GetBrowsingContext();
+  NS_ENSURE_TRUE(browsingContext, NS_ERROR_FAILURE);
+
+  nsresult rv = NS_OK;
+  RefPtr<BounceTrackingState> bounceTrackingState =
+      BounceTrackingState::GetOrCreate(
+          browsingContext->Top()->Canonical()->GetWebProgress(), rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // We may not always get a BounceTrackingState, e.g. if the feature is
+  // disabled or we don't keep track of bounce tracking for the given
+  // BrowsingContext.
+  if (!bounceTrackingState) {
+    return NS_OK;
+  }
+
+  return bounceTrackingState->OnStorageAccess(storagePrincipal);
 }
 
 }  // namespace mozilla
