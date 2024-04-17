@@ -303,7 +303,12 @@ int32_t VideoCaptureModuleV4L2::StartCapture(
 
   // start capture thread;
   if (_captureThread.empty()) {
-    quit_ = false;
+    {
+      // Probably can't be accessed from another thread with
+      // _captureThread empty, but the analyzer doesn't know this
+      MutexLock lock(&capture_lock_);
+      quit_ = false;
+    }
     _captureThread = rtc::PlatformThread::SpawnJoinable(
         [self = scoped_refptr(this)] {
           while (self->CaptureProcess()) {
