@@ -23,7 +23,7 @@ Locally, Raptor can be invoked with the following command:
    browsertime
    debugging
    contributing
-   metrics
+   {metrics_rst_name}
 
 .. contents::
    :depth: 2

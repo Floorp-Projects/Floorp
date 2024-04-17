@@ -51,6 +51,38 @@ class FrameworkGatherer(object):
         self._task_list = {}
         self._task_match_pattern = re.compile(r"([\w\W]*/[pgo|opt]*)-([\w\W]*)")
 
+    def _build_section_with_header(self, title, content, header_type=None):
+        """
+        Adds a section to the documentation with the title as the type mentioned
+        and paragraph as content mentioned.
+        :param title: title of the section
+        :param content: content of section paragraph
+        :param header_type: type of the title heading
+        """
+        heading_map = {"H2": "*", "H3": "=", "H4": "-", "H5": "^"}
+        return [title, heading_map.get(header_type, "^") * len(title), content, ""]
+
+    def _get_metric_heading(self, metric, metrics_info):
+        """
+        Gets the heading of a specific metric.
+
+        :param str metric: The metric to search for.
+        :param dict metrics_info: The information of all the
+            metrics that were documented.
+        :return str: The heading to use for the given metric.
+        """
+        for metric_heading, metric_info in metrics_info.items():
+            if metric == metric_heading or any(
+                metric == alias for alias in metric_info.get("aliases", [])
+            ):
+                return metric_heading
+            if metric_info.get("matcher"):
+                match = re.search(metric_info["matcher"], metric)
+                if match:
+                    return metric_heading
+
+        raise Exception(f"Could not find a metric heading for `{metric}`")
+
     def get_task_match(self, task_name):
         return re.search(self._task_match_pattern, task_name)
 
@@ -85,16 +117,23 @@ class FrameworkGatherer(object):
         """
         raise NotImplementedError
 
-    def _build_section_with_header(self, title, content, header_type=None):
+    def build_metrics_documentation(self, yaml_content):
         """
-        Adds a section to the documentation with the title as the type mentioned
-        and paragraph as content mentioned.
-        :param title: title of the section
-        :param content: content of section paragraph
-        :param header_type: type of the title heading
+        Each framework that provides a page with descriptions about the
+        metrics it produces must implement this method. The metrics defined
+        for the framework can be found in the `yaml_content` variable.
+
+        The framework gatherer is expected to produce the full documentation
+        for all the metrics defined in the yaml_content at once. This is done
+        to allow differentiation between how metrics are displayed between
+        the different frameworks.
+
+        :param dict yaml_content: A dictionary of the YAML config file for
+            the specific framework.
+        :return list: A list of all the lines being added to the metrics
+            documentation.
         """
-        heading_map = {"H2": "*", "H3": "=", "H4": "-", "H5": "^"}
-        return [title, heading_map.get(header_type, "^") * len(title), content, ""]
+        raise NotImplementedError
 
 
 class RaptorGatherer(FrameworkGatherer):
@@ -206,6 +245,21 @@ class RaptorGatherer(FrameworkGatherer):
 
         return subtests
 
+    def _get_metric_heading(self, metric, metrics_info):
+        """
+        Finds, and returns the correct heading for a metric to target in a reference link.
+
+        :param str metric: The metric to search for.
+        :param dict metrics_info: The information of all the
+            metrics that were documented.
+        :return str: A formatted string containing the reference link to the
+            documented metric.
+        """
+        metric_heading = super(RaptorGatherer, self)._get_metric_heading(
+            metric, metrics_info
+        )
+        return f"`{metric} <raptor-metrics.html#{metric_heading.lower().replace(' ', '-')}>`__"
+
     def get_test_list(self):
         """
         Returns a dictionary containing the tests in every suite ini file.
@@ -235,7 +289,9 @@ class RaptorGatherer(FrameworkGatherer):
 
         return self._test_list
 
-    def build_test_description(self, title, test_description="", suite_name=""):
+    def build_test_description(
+        self, title, test_description="", suite_name="", metrics_info=None
+    ):
         matcher = []
         browsers = [
             "firefox",
@@ -292,6 +348,18 @@ class RaptorGatherer(FrameworkGatherer):
                         f"   * **{sub_title}**: "
                         f"{description[key].replace('{subtest}', description['name'])}\n"
                     )
+                elif key == "alert_on":
+                    result += (
+                        f"   * **{sub_title}**: "
+                        + ", ".join(
+                            self._get_metric_heading(metric.strip(), metrics_info)
+                            for metric in description[key]
+                            .replace("\n", " ")
+                            .replace(",", " ")
+                            .split()
+                        )
+                        + "\n"
+                    )
                 else:
                     if "\n" in description[key]:
                         description[key] = description[key].replace("\n", " ")
@@ -327,6 +395,39 @@ class RaptorGatherer(FrameworkGatherer):
         return self._build_section_with_header(
             title.capitalize(), content, header_type="H4"
         )
+
+    def build_metrics_documentation(self, parsed_metrics):
+        metrics_documentation = []
+        for metric, metric_info in sorted(
+            parsed_metrics.items(), key=lambda item: item[0]
+        ):
+            metric_content = metric_info["description"] + "\n\n"
+
+            metric_content += (
+                f"  * **Aliases**: {', '.join(sorted(metric_info['aliases']))}\n"
+            )
+            metric_content += "  * **Tests using it**:\n"
+
+            for suite, tests in sorted(
+                metric_info["location"].items(), key=lambda item: item[0]
+            ):
+                metric_content += f"     * **{suite.capitalize()}**: "
+
+                test_links = []
+                for test in sorted(tests):
+                    test_links.append(
+                        f"`{test} <raptor.html#{test}-{suite.lower()[0]}>`__"
+                    )
+
+                metric_content += ", ".join(test_links) + "\n"
+
+            metrics_documentation.extend(
+                self._build_section_with_header(
+                    metric, metric_content, header_type="H3"
+                )
+            )
+
+        return metrics_documentation
 
 
 class MozperftestGatherer(FrameworkGatherer):
@@ -371,7 +472,9 @@ class MozperftestGatherer(FrameworkGatherer):
 
         return self._test_list
 
-    def build_test_description(self, title, test_description="", suite_name=""):
+    def build_test_description(
+        self, title, test_description="", suite_name="", metrics_info=None
+    ):
         return [str(self.script_infos[title])]
 
     def build_suite_section(self, title, content):
@@ -428,7 +531,9 @@ class TalosGatherer(FrameworkGatherer):
 
         return self._test_list
 
-    def build_test_description(self, title, test_description="", suite_name=""):
+    def build_test_description(
+        self, title, test_description="", suite_name="", metrics_info=None
+    ):
         result = f".. dropdown:: {title}\n"
         result += f"   :class-container: anchor-id-{title}\n\n"
 
@@ -548,7 +653,9 @@ class AwsyGatherer(FrameworkGatherer):
             title.capitalize(), content, header_type="H4"
         )
 
-    def build_test_description(self, title, test_description="", suite_name=""):
+    def build_test_description(
+        self, title, test_description="", suite_name="", metrics_info=None
+    ):
         dropdown_suite_name = suite_name.replace(" ", "-")
         result = f".. dropdown:: {title} ({test_description})\n"
         result += f"   :class-container: anchor-id-{title}-{dropdown_suite_name}\n\n"

@@ -87,6 +87,9 @@ class Gatherer(object):
             if any(d in str(path.resolve()) for d in exclude_dir):
                 continue
             files = [f for f in os.listdir(path)]
+
+            # Metrics are optional so it's only added to the matched if we
+            # find the `metrics.rst` file in the perfdocs folder
             matched = {"path": str(path), "yml": "", "rst": "", "static": []}
 
             for file in files:
@@ -95,6 +98,8 @@ class Gatherer(object):
                     matched["yml"] = file
                 elif file == "index.rst":
                     matched["rst"] = file
+                elif file == "metrics.rst":
+                    matched["metrics"] = file
                 elif file.split(".")[-1] in ALLOWED_STATIC_FILETYPES:
                     matched["static"].append(file)
 
