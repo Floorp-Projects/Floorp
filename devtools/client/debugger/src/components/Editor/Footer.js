@@ -459,8 +459,6 @@ const mapStateToProps = state => {
       : null,
     isSourceActorWithSourceMap: isSourceActorWithSourceMapProp,
 
-    sourceMapURL: selectedLocation?.sourceActor.sourceMapURL,
-
     areSourceMapsEnabled: areSourceMapsEnabledProp,
     shouldSelectOriginalLocation: getShouldSelectOriginalLocation(state),
   };
