@@ -68,13 +68,14 @@ CssAngle.prototype = {
   },
 
   get valid() {
-    const token = getCSSLexer(this.authored).nextToken();
+    const token = getCSSLexer(this.authored, true).nextToken();
     if (!token) {
       return false;
     }
+
     return (
-      token.tokenType === "dimension" &&
-      token.text.toLowerCase() in this.ANGLEUNIT
+      token.tokenType === "Dimension" &&
+      token.unit.toLowerCase() in this.ANGLEUNIT
     );
   },
 
