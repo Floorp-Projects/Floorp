@@ -8,7 +8,6 @@
 #include "mozilla/TextUtils.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_security.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
@@ -19,9 +18,6 @@
 #include "nsReadableUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsUnicharUtils.h"
-
-#include <cstdint>
-#include <utility>
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -817,54 +813,6 @@ void nsCSPParser::sandboxFlagList(nsCSPDirective* aDir) {
   mPolicy->addDirective(aDir);
 }
 
-// https://w3c.github.io/trusted-types/dist/spec/#integration-with-content-security-policy
-static constexpr nsLiteralString kValidRequireTrustedTypesForDirectiveValue =
-    u"'script'"_ns;
-
-static bool IsValidRequireTrustedTypesForDirectiveValue(
-    const nsAString& aToken) {
-  return aToken.Equals(kValidRequireTrustedTypesForDirectiveValue);
-}
-
-void nsCSPParser::handleRequireTrustedTypesForDirective(nsCSPDirective* aDir) {
-  // "srcs" start at index 1. Here "srcs" should represent Trusted Types' sink
-  // groups
-  // (https://w3c.github.io/trusted-types/dist/spec/#require-trusted-types-for-csp-directive).
-
-  if (mCurDir.Length() != 2) {
-    nsString numberOfTokensStr;
-
-    // Casting is required to avoid ambiguous function calls on some platforms.
-    numberOfTokensStr.AppendInt(static_cast<uint64_t>(mCurDir.Length()));
-
-    AutoTArray<nsString, 1> numberOfTokensArr = {std::move(numberOfTokensStr)};
-    logWarningErrorToConsole(nsIScriptError::errorFlag,
-                             "invalidNumberOfTrustedTypesForDirectiveValues",
-                             numberOfTokensArr);
-    return;
-  }
-
-  mCurToken = mCurDir.LastElement();
-
-  CSPPARSERLOG(
-      ("nsCSPParser::handleRequireTrustedTypesForDirective, mCurToken: %s",
-       NS_ConvertUTF16toUTF8(mCurToken).get()));
-
-  if (!IsValidRequireTrustedTypesForDirectiveValue(mCurToken)) {
-    AutoTArray<nsString, 1> token = {mCurToken};
-    logWarningErrorToConsole(nsIScriptError::errorFlag,
-                             "invalidRequireTrustedTypesForDirectiveValue",
-                             token);
-    return;
-  }
-
-  nsTArray<nsCSPBaseSrc*> srcs = {
-      new nsCSPRequireTrustedTypesForDirectiveValue(mCurToken)};
-
-  aDir->addSrcs(srcs);
-  mPolicy->addDirective(aDir);
-}
-
 // directive-value = *( WSP / <VCHAR except ";" and ","> )
 void nsCSPParser::directiveValue(nsTArray<nsCSPBaseSrc*>& outSrcs) {
   CSPPARSERLOG(("nsCSPParser::directiveValue"));
@@ -881,10 +829,7 @@ nsCSPDirective* nsCSPParser::directiveName() {
 
   // Check if it is a valid directive
   CSPDirective directive = CSP_StringToCSPDirective(mCurToken);
-  if (directive == nsIContentSecurityPolicy::NO_DIRECTIVE ||
-      (!StaticPrefs::dom_security_trusted_types_enabled() &&
-       directive ==
-           nsIContentSecurityPolicy::REQUIRE_TRUSTED_TYPES_FOR_DIRECTIVE)) {
+  if (directive == nsIContentSecurityPolicy::NO_DIRECTIVE) {
     AutoTArray<nsString, 1> params = {mCurToken};
     logWarningErrorToConsole(nsIScriptError::warningFlag,
                              "couldNotProcessUnknownDirective", params);
@@ -1060,14 +1005,6 @@ void nsCSPParser::directive() {
   if (CSP_IsDirective(mCurDir[0],
                       nsIContentSecurityPolicy::SANDBOX_DIRECTIVE)) {
     sandboxFlagList(cspDir);
-    return;
-  }
-
-  // Special case handling since these directives don't contain source lists.
-  if (CSP_IsDirective(
-          mCurDir[0],
-          nsIContentSecurityPolicy::REQUIRE_TRUSTED_TYPES_FOR_DIRECTIVE)) {
-    handleRequireTrustedTypesForDirective(cspDir);
     return;
   }
 
