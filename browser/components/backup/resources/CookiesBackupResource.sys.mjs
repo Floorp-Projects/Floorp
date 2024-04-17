@@ -16,6 +16,12 @@ export class CookiesBackupResource extends BackupResource {
     return true;
   }
 
+  async backup(stagingPath, profilePath = PathUtils.profileDir) {
+    await BackupResource.copySqliteDatabases(profilePath, stagingPath, [
+      "cookies.sqlite",
+    ]);
+  }
+
   async measure(profilePath = PathUtils.profileDir) {
     let cookiesDBPath = PathUtils.join(profilePath, "cookies.sqlite");
     let cookiesSize = await BackupResource.getFileSize(cookiesDBPath);

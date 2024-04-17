@@ -1,0 +1,93 @@
+/* Any copyright is dedicated to the Public Domain.
+https://creativecommons.org/publicdomain/zero/1.0/ */
+
+"use strict";
+
+const { CookiesBackupResource } = ChromeUtils.importESModule(
+  "resource:///modules/backup/CookiesBackupResource.sys.mjs"
+);
+
+/**
+ * Tests that we can measure the Cookies db in a profile directory.
+ */
+add_task(async function test_measure() {
+  const EXPECTED_COOKIES_DB_SIZE = 1230;
+
+  Services.fog.testResetFOG();
+
+  // Create resource files in temporary directory
+  let tempDir = PathUtils.tempDir;
+  let tempCookiesDBPath = PathUtils.join(tempDir, "cookies.sqlite");
+  await createKilobyteSizedFile(tempCookiesDBPath, EXPECTED_COOKIES_DB_SIZE);
+
+  let cookiesBackupResource = new CookiesBackupResource();
+  await cookiesBackupResource.measure(tempDir);
+
+  let cookiesMeasurement = Glean.browserBackup.cookiesSize.testGetValue();
+  let scalars = TelemetryTestUtils.getProcessScalars("parent", false, false);
+
+  // Compare glean vs telemetry measurements
+  TelemetryTestUtils.assertScalar(
+    scalars,
+    "browser.backup.cookies_size",
+    cookiesMeasurement,
+    "Glean and telemetry measurements for cookies.sqlite should be equal"
+  );
+
+  // Compare glean measurements vs actual file sizes
+  Assert.equal(
+    cookiesMeasurement,
+    EXPECTED_COOKIES_DB_SIZE,
+    "Should have collected the correct glean measurement for cookies.sqlite"
+  );
+
+  await maybeRemovePath(tempCookiesDBPath);
+});
+
+/**
+ * Test that the backup method correctly copies items from the profile directory
+ * into the staging directory.
+ */
+add_task(async function test_backup() {
+  let sandbox = sinon.createSandbox();
+
+  let cookiesBackupResource = new CookiesBackupResource();
+  let sourcePath = await IOUtils.createUniqueDirectory(
+    PathUtils.tempDir,
+    "CookiesBackupResource-source-test"
+  );
+  let stagingPath = await IOUtils.createUniqueDirectory(
+    PathUtils.tempDir,
+    "CookiesBackupResource-staging-test"
+  );
+
+  // We have no need to test that Sqlite.sys.mjs's backup method is working -
+  // this is something that is tested in Sqlite's own tests. We can just make
+  // sure that it's being called using sinon. Unfortunately, we cannot do the
+  // same thing with IOUtils.copy, as its methods are not stubbable.
+  let fakeConnection = {
+    backup: sandbox.stub().resolves(true),
+    close: sandbox.stub().resolves(true),
+  };
+  sandbox.stub(Sqlite, "openConnection").returns(fakeConnection);
+
+  await cookiesBackupResource.backup(stagingPath, sourcePath);
+
+  // Next, we'll make sure that the Sqlite connection had `backup` called on it
+  // with the right arguments.
+  Assert.ok(
+    fakeConnection.backup.calledOnce,
+    "Called backup the expected number of times for all connections"
+  );
+  Assert.ok(
+    fakeConnection.backup.calledWith(
+      PathUtils.join(stagingPath, "cookies.sqlite")
+    ),
+    "Called backup on the cookies.sqlite Sqlite connection"
+  );
+
+  await maybeRemovePath(stagingPath);
+  await maybeRemovePath(sourcePath);
+
+  sandbox.restore();
+});
