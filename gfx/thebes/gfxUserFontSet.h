@@ -545,8 +545,8 @@ class gfxUserFontSet {
   // font families defined by @font-face rules
   nsRefPtrHashtable<nsCStringHashKey, gfxUserFontFamily> mFontFamilies;
 
-  uint64_t mGeneration;         // bumped on any font load change
-  uint64_t mRebuildGeneration;  // only bumped on rebuilds
+  mozilla::Atomic<uint64_t> mGeneration;  // bumped on any font load change
+  uint64_t mRebuildGeneration;            // only bumped on rebuilds
 
   // true when local names have been looked up, false otherwise
   bool mLocalRulesUsed;
