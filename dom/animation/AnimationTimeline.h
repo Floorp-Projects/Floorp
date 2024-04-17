@@ -23,8 +23,7 @@ class ScrollTimeline;
 
 class AnimationTimeline : public nsISupports, public nsWrapperCache {
  public:
-  explicit AnimationTimeline(nsIGlobalObject* aWindow,
-                             RTPCallerType aRTPCallerType);
+  AnimationTimeline(nsIGlobalObject* aWindow, RTPCallerType);
 
   struct TickState {
     TickState() = default;
