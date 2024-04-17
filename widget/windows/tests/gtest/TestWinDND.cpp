@@ -693,7 +693,7 @@ nsCOMPtr<nsIFile> GetTemporaryDirectory() {
 #define ENSURE(expr) NS_ENSURE_SUCCESS(expr, nullptr);
 
   ENSURE(NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(tmpdir)));
-  MOZ_ASSERT(tmpdir);
+  MOZ_RELEASE_ASSERT(tmpdir);
 
   ENSURE(tmpdir->AppendNative("TestWinDND"_ns));
   ENSURE(tmpdir->CreateUnique(nsIFile::DIRECTORY_TYPE, 0777));

@@ -393,15 +393,15 @@ TEST(JumpListBuilder, CheckForRemovals)
   EXPECT_CALL(*testBackend, BeginList)
       .WillOnce([](UINT* pcMinSlots, REFIID riid, void** ppv) {
         RefPtr<IObjectCollection> collection;
-        DebugOnly<HRESULT> hr = CoCreateInstance(
+        HRESULT hr = CoCreateInstance(
             CLSID_EnumerableObjectCollection, nullptr, CLSCTX_INPROC_SERVER,
             IID_IObjectCollection, getter_AddRefs(collection));
-        MOZ_ASSERT(SUCCEEDED(hr));
+        MOZ_RELEASE_ASSERT(SUCCEEDED(hr));
 
         RefPtr<IShellLinkW> link;
         hr = CoCreateInstance(CLSID_ShellLink, nullptr, CLSCTX_INPROC_SERVER,
                               IID_IShellLinkW, getter_AddRefs(link));
-        MOZ_ASSERT(SUCCEEDED(hr));
+        MOZ_RELEASE_ASSERT(SUCCEEDED(hr));
 
         nsAutoString firstLinkHref(u"https://example.com"_ns);
         link->SetArguments(firstLinkHref.get());
@@ -421,7 +421,7 @@ TEST(JumpListBuilder, CheckForRemovals)
         RefPtr<IObjectArray> pArray;
         hr = collection->QueryInterface(IID_IObjectArray,
                                         getter_AddRefs(pArray));
-        MOZ_ASSERT(SUCCEEDED(hr));
+        MOZ_RELEASE_ASSERT(SUCCEEDED(hr));
 
         *ppv = static_cast<IObjectArray*>(pArray);
         (static_cast<IUnknown*>(*ppv))->AddRef();
