@@ -194,7 +194,6 @@ http://tracking.example.org:80
 http://another-tracking.example.net:80
 http://social-tracking.example.org:80
 http://itisatracker.org:80
-https://itisatracker.org:443
 http://trackertest.org:80
 http://email-tracking.example.org:80
 #
@@ -212,6 +211,8 @@ https://not-tracking.example.com:443
 https://tracking.example.org:443
 https://another-tracking.example.net:443
 https://social-tracking.example.org:443
+https://itisatracker.org:443
+https://trackertest.org:443
 https://email-tracking.example.org:443
 
 #
