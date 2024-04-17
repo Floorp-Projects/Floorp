@@ -17,7 +17,7 @@ void MockAudioSendStream::Reconfigure(const Config& config,
 
 void MockAudioReceiveStream::SetDecoderMap(
     std::map<int, webrtc::SdpAudioFormat> decoder_map) {
-  MOZ_ASSERT(mCallWrapper->GetMockCall()->mAudioReceiveConfig.isSome());
+  MOZ_RELEASE_ASSERT(mCallWrapper->GetMockCall()->mAudioReceiveConfig.isSome());
   mCallWrapper->GetMockCall()->mAudioReceiveConfig->decoder_map =
       std::move(decoder_map);
 }
