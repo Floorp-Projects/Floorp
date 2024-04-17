@@ -27,6 +27,8 @@ skip-if = ["true"] # Bug 1869605 and # Bug 1870296
 
 ["browser_firefoxview.js"]
 
+["browser_firefoxview_dragDrop_pinned_tab.js"]
+
 ["browser_firefoxview_general_telemetry.js"]
 
 ["browser_firefoxview_navigation.js"]
