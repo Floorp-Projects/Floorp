@@ -29,6 +29,8 @@ const nsACString& BounceTrackingRecord::GetFinalHost() const {
 }
 
 void BounceTrackingRecord::AddBounceHost(const nsACString& aHost) {
+  MOZ_ASSERT(!aHost.IsEmpty());
+
   mBounceHosts.Insert(aHost);
   MOZ_LOG(gBounceTrackingProtectionLog, LogLevel::Debug,
           ("%s: %s", __FUNCTION__, Describe().get()));
@@ -54,6 +56,8 @@ nsCString BounceTrackingRecord::DescribeSet(const nsTHashSet<nsCString>& set) {
 }
 
 void BounceTrackingRecord::AddStorageAccessHost(const nsACString& aHost) {
+  MOZ_ASSERT(!aHost.IsEmpty());
+
   mStorageAccessHosts.Insert(aHost);
 }
 
