@@ -89,7 +89,7 @@ static void WriteDigits(CheckedIncrement<char*>& b, size_t i,
   } while (x > 0);
 }
 
-void FdPrintf(intptr_t aFd, const char* aFormat, ...) {
+void FdPrintf(platform_handle_t aFd, const char* aFormat, ...) {
   if (aFd == 0) {
     return;
   }
@@ -192,7 +192,7 @@ out:
 #ifdef _WIN32
   // See comment in FdPrintf.h as to why WriteFile is used.
   DWORD written;
-  WriteFile(reinterpret_cast<HANDLE>(aFd), buf, b - buf, &written, nullptr);
+  WriteFile(aFd, buf, b - buf, &written, nullptr);
 #else
   MOZ_UNUSED(write(aFd, buf, b - buf));
 #endif

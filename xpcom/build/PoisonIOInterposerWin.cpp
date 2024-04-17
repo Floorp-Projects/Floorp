@@ -127,8 +127,7 @@ class WinIOAutoObservation : public mozilla::IOInterposeObserver::Observation {
   WinIOAutoObservation(mozilla::IOInterposeObserver::Operation aOp,
                        HANDLE aFileHandle, const LARGE_INTEGER* aOffset)
       : mozilla::IOInterposeObserver::Observation(
-            aOp, sReference,
-            !mozilla::IsDebugFile(reinterpret_cast<intptr_t>(aFileHandle))),
+            aOp, sReference, !mozilla::IsDebugFile(aFileHandle)),
         mFileHandle(aFileHandle),
         mFileHandleType(GetFileType(aFileHandle)),
         mHasQueriedFilename(false) {

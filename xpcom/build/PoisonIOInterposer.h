@@ -10,6 +10,12 @@
 #include "mozilla/Types.h"
 #include <stdio.h>
 
+#ifdef _WIN32
+typedef void* platform_handle_t;
+#else
+typedef int platform_handle_t;
+#endif
+
 MOZ_BEGIN_EXTERN_C
 
 /** Register file handle to be ignored by poisoning IO interposer. This function
@@ -18,7 +24,7 @@ MOZ_BEGIN_EXTERN_C
  * when one of them links the static CRT). In such cases, giving file
  * descriptors or FILEs
  * doesn't work because _get_osfhandle fails with "invalid parameter". */
-void MozillaRegisterDebugHandle(intptr_t aHandle);
+void MozillaRegisterDebugHandle(platform_handle_t aHandle);
 
 /** Register file descriptor to be ignored by poisoning IO interposer */
 void MozillaRegisterDebugFD(int aFd);
@@ -27,7 +33,7 @@ void MozillaRegisterDebugFD(int aFd);
 void MozillaRegisterDebugFILE(FILE* aFile);
 
 /** Unregister file handle from being ignored by poisoning IO interposer */
-void MozillaUnRegisterDebugHandle(intptr_t aHandle);
+void MozillaUnRegisterDebugHandle(platform_handle_t aHandle);
 
 /** Unregister file descriptor from being ignored by poisoning IO interposer */
 void MozillaUnRegisterDebugFD(int aFd);
@@ -45,7 +51,7 @@ namespace mozilla {
 /**
  * Check if a file is registered as a debug file.
  */
-bool IsDebugFile(intptr_t aFileID);
+bool IsDebugFile(platform_handle_t aFileID);
 
 /**
  * Initialize IO poisoning, this is only safe to do on the main-thread when no
@@ -79,7 +85,7 @@ void ClearPoisonIOInterposer();
 
 #  ifdef __cplusplus
 namespace mozilla {
-inline bool IsDebugFile(intptr_t aFileID) { return true; }
+inline bool IsDebugFile(platform_handle_t aFileID) { return true; }
 inline void InitPoisonIOInterposer() {}
 inline void ClearPoisonIOInterposer() {}
 #    ifdef XP_MACOSX
