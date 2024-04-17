@@ -101,12 +101,15 @@ class MediaSourceDemuxer : public MediaDataDemuxer,
 
 class MediaSourceTrackDemuxer
     : public MediaTrackDemuxer,
-      public DecoderDoctorLifeLogger<MediaSourceTrackDemuxer> {
+      public DecoderDoctorLifeLogger<MediaSourceTrackDemuxer>,
+      public SingleWriterLockOwner {
  public:
   MediaSourceTrackDemuxer(MediaSourceDemuxer* aParent,
                           TrackInfo::TrackType aType,
                           TrackBuffersManager* aManager)
       MOZ_REQUIRES(aParent->mMutex);
+
+  bool OnWritingThread() const override { return OnTaskQueue(); }
 
   UniquePtr<TrackInfo> GetInfo() const override;
 
@@ -146,12 +149,12 @@ class MediaSourceTrackDemuxer
 
   TrackInfo::TrackType mType;
   // Mutex protecting members below accessed from multiple threads.
-  Mutex mMutex MOZ_UNANNOTATED;
-  media::TimeUnit mNextRandomAccessPoint;
+  MutexSingleWriter mMutex;
+  media::TimeUnit mNextRandomAccessPoint MOZ_GUARDED_BY(mMutex);
   // Would be accessed in MFR's demuxer proxy task queue and TaskQueue, and
   // only be set on the TaskQueue. It can be accessed while on TaskQueue without
   // the need for the lock.
-  RefPtr<TrackBuffersManager> mManager;
+  RefPtr<TrackBuffersManager> mManager MOZ_GUARDED_BY(mMutex);
 
   // Only accessed on TaskQueue
   Maybe<RefPtr<MediaRawData>> mNextSample;

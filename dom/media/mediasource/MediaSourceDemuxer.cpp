@@ -271,7 +271,7 @@ MediaSourceTrackDemuxer::MediaSourceTrackDemuxer(MediaSourceDemuxer* aParent,
     : mParent(aParent),
       mTaskQueue(mParent->GetTaskQueue()),
       mType(aType),
-      mMutex("MediaSourceTrackDemuxer"),
+      mMutex("MediaSourceTrackDemuxer", this),
       mManager(aManager),
       mReset(true),
       mPreRoll(TimeUnit::FromMicroseconds(
@@ -316,6 +316,7 @@ void MediaSourceTrackDemuxer::Reset() {
   RefPtr<MediaSourceTrackDemuxer> self = this;
   nsCOMPtr<nsIRunnable> task =
       NS_NewRunnableFunction("MediaSourceTrackDemuxer::Reset", [self]() {
+        self->mMutex.AssertOnWritingThread();
         self->mNextSample.reset();
         self->mReset = true;
         if (!self->mManager) {
@@ -324,7 +325,7 @@ void MediaSourceTrackDemuxer::Reset() {
         MOZ_ASSERT(self->OnTaskQueue());
         self->mManager->Seek(self->mType, TimeUnit::Zero(), TimeUnit::Zero());
         {
-          MutexAutoLock mon(self->mMutex);
+          MutexSingleWriterAutoLockOnThread(lock, self->mMutex);
           self->mNextRandomAccessPoint =
               self->mManager->GetNextRandomAccessPoint(
                   self->mType, MediaSourceDemuxer::EOS_FUZZ);
@@ -336,7 +337,7 @@ void MediaSourceTrackDemuxer::Reset() {
 }
 
 nsresult MediaSourceTrackDemuxer::GetNextRandomAccessPoint(TimeUnit* aTime) {
-  MutexAutoLock mon(mMutex);
+  MutexSingleWriterAutoLock mon(mMutex);
   *aTime = mNextRandomAccessPoint;
   return NS_OK;
 }
@@ -350,7 +351,7 @@ MediaSourceTrackDemuxer::SkipToNextRandomAccessPoint(
 }
 
 media::TimeIntervals MediaSourceTrackDemuxer::GetBuffered() {
-  MutexAutoLock mon(mMutex);
+  MutexSingleWriterAutoLock mon(mMutex);
   if (!mManager) {
     return media::TimeIntervals();
   }
@@ -371,6 +372,7 @@ void MediaSourceTrackDemuxer::BreakCycles() {
 
 RefPtr<MediaSourceTrackDemuxer::SeekPromise> MediaSourceTrackDemuxer::DoSeek(
     const TimeUnit& aTime) {
+  mMutex.AssertOnWritingThread();
   if (!mManager) {
     return SeekPromise::CreateAndReject(
         MediaResult(NS_ERROR_DOM_MEDIA_CANCELED,
@@ -426,7 +428,7 @@ RefPtr<MediaSourceTrackDemuxer::SeekPromise> MediaSourceTrackDemuxer::DoSeek(
   }
   mReset = false;
   {
-    MutexAutoLock mon(mMutex);
+    MutexSingleWriterAutoLockOnThread(lock, mMutex);
     mNextRandomAccessPoint =
         mManager->GetNextRandomAccessPoint(mType, MediaSourceDemuxer::EOS_FUZZ);
   }
@@ -435,6 +437,7 @@ RefPtr<MediaSourceTrackDemuxer::SeekPromise> MediaSourceTrackDemuxer::DoSeek(
 
 RefPtr<MediaSourceTrackDemuxer::SamplesPromise>
 MediaSourceTrackDemuxer::DoGetSamples(int32_t aNumSamples) {
+  mMutex.AssertOnWritingThread();
   if (!mManager) {
     return SamplesPromise::CreateAndReject(
         MediaResult(NS_ERROR_DOM_MEDIA_CANCELED,
@@ -487,7 +490,7 @@ MediaSourceTrackDemuxer::DoGetSamples(int32_t aNumSamples) {
   RefPtr<SamplesHolder> samples = new SamplesHolder;
   samples->AppendSample(sample);
   {
-    MutexAutoLock mon(mMutex);  // spurious warning will be given
+    MutexSingleWriterAutoLockOnThread(lock, mMutex);
     // Diagnostic asserts for bug 1810396
     MOZ_DIAGNOSTIC_ASSERT(sample, "Invalid sample pointer found!");
     MOZ_DIAGNOSTIC_ASSERT(sample->HasValidTime(), "Invalid sample time found!");
@@ -505,6 +508,7 @@ MediaSourceTrackDemuxer::DoGetSamples(int32_t aNumSamples) {
 RefPtr<MediaSourceTrackDemuxer::SkipAccessPointPromise>
 MediaSourceTrackDemuxer::DoSkipToNextRandomAccessPoint(
     const TimeUnit& aTimeThreadshold) {
+  mMutex.AssertOnWritingThread();
   if (!mManager) {
     return SkipAccessPointPromise::CreateAndReject(
         SkipFailureHolder(MediaResult(NS_ERROR_DOM_MEDIA_CANCELED,
@@ -534,13 +538,13 @@ MediaSourceTrackDemuxer::DoSkipToNextRandomAccessPoint(
 }
 
 bool MediaSourceTrackDemuxer::HasManager(TrackBuffersManager* aManager) const {
-  MOZ_ASSERT(OnTaskQueue());
+  mMutex.AssertOnWritingThread();
   return mManager == aManager;
 }
 
 void MediaSourceTrackDemuxer::DetachManager() {
   MOZ_ASSERT(OnTaskQueue());
-  MutexAutoLock mon(mMutex);
+  MutexSingleWriterAutoLock mon(mMutex);
   mManager = nullptr;
 }
 
