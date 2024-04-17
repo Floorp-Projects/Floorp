@@ -191,8 +191,7 @@ void MediaSource::IsTypeSupported(const nsAString& aType,
     return;
   }
   if (mimeType == MEDIAMIMETYPE("audio/webm")) {
-    if (!(StaticPrefs::media_mediasource_webm_enabled() ||
-          StaticPrefs::media_mediasource_webm_audio_enabled())) {
+    if (!StaticPrefs::media_mediasource_webm_enabled()) {
       // Don't leak information about the fact that it's pref-disabled; just act
       // like we can't play it.  Or should this throw "Unknown type"?
       return aRv.ThrowNotSupportedError("Can't play type");
