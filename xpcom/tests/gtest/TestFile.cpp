@@ -36,7 +36,7 @@ static void SetUseDOSDevicePathSyntax(nsIFile* aFile) {
     nsCOMPtr<nsILocalFileWin> winFile = do_QueryInterface(aFile, &rv);
     VerifyResult(rv, "Querying nsILocalFileWin");
 
-    MOZ_ASSERT(winFile);
+    MOZ_RELEASE_ASSERT(winFile);
     winFile->SetUseDOSDevicePathSyntax(true);
   }
 }

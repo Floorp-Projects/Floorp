@@ -308,7 +308,7 @@ class FindExpirationTimeState final {
   // Create timers, with aNumLowPriority low priority timers first in the queue
   void InitTimers(uint32_t aNumLowPriority, uint32_t aType) {
     // aType is just for readability.
-    MOZ_ASSERT(aType == nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY);
+    MOZ_RELEASE_ASSERT(aType == nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY);
     InitTimers(aNumLowPriority, nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY, nullptr);
   }
 

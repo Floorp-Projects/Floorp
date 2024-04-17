@@ -45,7 +45,7 @@ class DelayedResolveOrReject : public Runnable {
         mIterations(aIterations) {}
 
   NS_IMETHOD Run() override {
-    MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
+    MOZ_RELEASE_ASSERT(mTaskQueue->IsCurrentThreadIn());
     if (!mPromise) {
       // Canceled.
       return NS_OK;
