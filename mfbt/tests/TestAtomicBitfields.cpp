@@ -65,12 +65,12 @@ void TestDocumentationExample() {
       (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, \
        21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32))
 
-#define CHECK_BOOL(aIndex)                     \
-  MOZ_ASSERT(val.LoadFlag##aIndex() == false); \
-  val.StoreFlag##aIndex(true);                 \
-  MOZ_ASSERT(val.LoadFlag##aIndex() == true);  \
-  val.StoreFlag##aIndex(false);                \
-  MOZ_ASSERT(val.LoadFlag##aIndex() == false);
+#define CHECK_BOOL(aIndex)                             \
+  MOZ_RELEASE_ASSERT(val.LoadFlag##aIndex() == false); \
+  val.StoreFlag##aIndex(true);                         \
+  MOZ_RELEASE_ASSERT(val.LoadFlag##aIndex() == true);  \
+  val.StoreFlag##aIndex(false);                        \
+  MOZ_RELEASE_ASSERT(val.LoadFlag##aIndex() == false);
 
 #define GENERATE_TEST_JAMMED_WITH_FLAGS(aSize) \
   void TestJammedWithFlags##aSize() {          \
@@ -82,31 +82,31 @@ void TestDocumentationExample() {
 
 // ========================= TestLopsided ===========================
 
-#define GENERATE_TEST_LOPSIDED_FUNC(aSide, aSize)          \
-  void TestLopsided##aSide##aSize() {                      \
-    Lopsided##aSide##aSize val;                            \
-    MOZ_ASSERT(val.LoadHappyLittleBit() == false);         \
-    MOZ_ASSERT(val.LoadLargeAndInCharge() == 0);           \
-    val.StoreHappyLittleBit(true);                         \
-    MOZ_ASSERT(val.LoadHappyLittleBit() == true);          \
-    MOZ_ASSERT(val.LoadLargeAndInCharge() == 0);           \
-    val.StoreLargeAndInCharge(1);                          \
-    MOZ_ASSERT(val.LoadHappyLittleBit() == true);          \
-    MOZ_ASSERT(val.LoadLargeAndInCharge() == 1);           \
-    val.StoreLargeAndInCharge(0);                          \
-    MOZ_ASSERT(val.LoadHappyLittleBit() == true);          \
-    MOZ_ASSERT(val.LoadLargeAndInCharge() == 0);           \
-    uint##aSize##_t size = aSize;                          \
-    uint##aSize##_t int_max = (~(1ull << (size - 1))) - 1; \
-    val.StoreLargeAndInCharge(int_max);                    \
-    MOZ_ASSERT(val.LoadHappyLittleBit() == true);          \
-    MOZ_ASSERT(val.LoadLargeAndInCharge() == int_max);     \
-    val.StoreHappyLittleBit(false);                        \
-    MOZ_ASSERT(val.LoadHappyLittleBit() == false);         \
-    MOZ_ASSERT(val.LoadLargeAndInCharge() == int_max);     \
-    val.StoreLargeAndInCharge(int_max);                    \
-    MOZ_ASSERT(val.LoadHappyLittleBit() == false);         \
-    MOZ_ASSERT(val.LoadLargeAndInCharge() == int_max);     \
+#define GENERATE_TEST_LOPSIDED_FUNC(aSide, aSize)              \
+  void TestLopsided##aSide##aSize() {                          \
+    Lopsided##aSide##aSize val;                                \
+    MOZ_RELEASE_ASSERT(val.LoadHappyLittleBit() == false);     \
+    MOZ_RELEASE_ASSERT(val.LoadLargeAndInCharge() == 0);       \
+    val.StoreHappyLittleBit(true);                             \
+    MOZ_RELEASE_ASSERT(val.LoadHappyLittleBit() == true);      \
+    MOZ_RELEASE_ASSERT(val.LoadLargeAndInCharge() == 0);       \
+    val.StoreLargeAndInCharge(1);                              \
+    MOZ_RELEASE_ASSERT(val.LoadHappyLittleBit() == true);      \
+    MOZ_RELEASE_ASSERT(val.LoadLargeAndInCharge() == 1);       \
+    val.StoreLargeAndInCharge(0);                              \
+    MOZ_RELEASE_ASSERT(val.LoadHappyLittleBit() == true);      \
+    MOZ_RELEASE_ASSERT(val.LoadLargeAndInCharge() == 0);       \
+    uint##aSize##_t size = aSize;                              \
+    uint##aSize##_t int_max = (~(1ull << (size - 1))) - 1;     \
+    val.StoreLargeAndInCharge(int_max);                        \
+    MOZ_RELEASE_ASSERT(val.LoadHappyLittleBit() == true);      \
+    MOZ_RELEASE_ASSERT(val.LoadLargeAndInCharge() == int_max); \
+    val.StoreHappyLittleBit(false);                            \
+    MOZ_RELEASE_ASSERT(val.LoadHappyLittleBit() == false);     \
+    MOZ_RELEASE_ASSERT(val.LoadLargeAndInCharge() == int_max); \
+    val.StoreLargeAndInCharge(int_max);                        \
+    MOZ_RELEASE_ASSERT(val.LoadHappyLittleBit() == false);     \
+    MOZ_RELEASE_ASSERT(val.LoadLargeAndInCharge() == int_max); \
   }
 
 #define GENERATE_TEST_LOPSIDED(aSize)                                        \

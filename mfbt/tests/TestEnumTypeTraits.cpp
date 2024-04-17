@@ -134,7 +134,7 @@ void TestFitForTypes() {
 template <typename T, typename U>
 static constexpr void AssertSameTypeAndValue(T a, U b) {
   static_assert(std::is_same_v<T, U>);
-  MOZ_ASSERT(a == b);
+  MOZ_RELEASE_ASSERT(a == b);
 }
 
 void TestUnderlyingValue() {

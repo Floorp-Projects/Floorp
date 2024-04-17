@@ -20,7 +20,7 @@ class Foo : public RefCounted<Foo> {
   static int sNumDestroyed;
 
   ~Foo() {
-    MOZ_ASSERT(!mDead);
+    MOZ_RELEASE_ASSERT(!mDead);
     mDead = true;
     sNumDestroyed++;
   }
