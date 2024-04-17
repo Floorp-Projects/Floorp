@@ -18,8 +18,7 @@ include position-relative/reftest.list
 # apng-mime
 include apng-mime/reftest.list
 
-# unsupported with draw snapshot
-skip-if(useDrawSnapshot) include async-scrolling/reftest.list
+skip-if(unsupportedWithDrawSnapshot) include async-scrolling/reftest.list
 
 # backgrounds/
 include backgrounds/reftest.list
@@ -432,8 +431,7 @@ include invalidation/reftest.list
 include ../../dom/encoding/test/reftest/reftest.list
 
 # APZ/async positioning tests
-# unsupported with draw snapshot
-skip-if(useDrawSnapshot) include ../../gfx/layers/apz/test/reftest/reftest.list
+skip-if(unsupportedWithDrawSnapshot) include ../../gfx/layers/apz/test/reftest/reftest.list
 
 # Display list building
 include display-list/reftest.list

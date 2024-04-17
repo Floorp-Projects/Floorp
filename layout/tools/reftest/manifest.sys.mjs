@@ -612,7 +612,22 @@ function BuildConditionSandbox(aURL) {
   sandbox.isDebugBuild = g.debug.isDebugBuild;
   sandbox.isCoverageBuild = g.isCoverageBuild;
 
-  sandbox.xulRuntime = {};
+  sandbox.xulRuntime = Cu.cloneInto(
+    {
+      widgetToolkit: Services.appinfo.widgetToolkit,
+      OS: Services.appinfo.OS,
+      XPCOMABI: Services.appinfo.XPCOMABI,
+    },
+    sandbox
+  );
+
+  sandbox.smallScreen = false;
+  if (
+    g.containingWindow.innerWidth < 800 ||
+    g.containingWindow.innerHeight < 1000
+  ) {
+    sandbox.smallScreen = true;
+  }
 
   var gfxInfo =
     NS_GFXINFO_CONTRACTID in Cc &&
@@ -625,24 +640,60 @@ function BuildConditionSandbox(aURL) {
   };
 
   try {
+    sandbox.d2d = readGfxInfo(gfxInfo, "D2DEnabled");
+    sandbox.dwrite = readGfxInfo(gfxInfo, "DWriteEnabled");
+    sandbox.embeddedInFirefoxReality = readGfxInfo(
+      gfxInfo,
+      "EmbeddedInFirefoxReality"
+    );
+  } catch (e) {
+    sandbox.d2d = false;
+    sandbox.dwrite = false;
+    sandbox.embeddedInFirefoxReality = false;
+  }
+
+  var canvasBackend = readGfxInfo(gfxInfo, "AzureCanvasBackend");
+  var contentBackend = readGfxInfo(gfxInfo, "AzureContentBackend");
+
+  sandbox.gpuProcess = gfxInfo.usingGPUProcess;
+  sandbox.azureCairo = canvasBackend == "cairo";
+  sandbox.azureSkia = canvasBackend == "skia";
+  sandbox.skiaContent = contentBackend == "skia";
+  sandbox.azureSkiaGL = false;
+  // true if we are using the same Azure backend for rendering canvas and content
+  sandbox.contentSameGfxBackendAsCanvas =
+    contentBackend == canvasBackend ||
+    (contentBackend == "none" && canvasBackend == "cairo");
+
+  try {
     var windowProtocol = readGfxInfo(gfxInfo, "windowProtocol");
     sandbox.wayland = windowProtocol == "wayland";
   } catch (e) {
     sandbox.wayland = false;
   }
 
+  sandbox.remoteCanvas =
+    Services.prefs.getBoolPref("gfx.canvas.remote") &&
+    sandbox.d2d &&
+    sandbox.gpuProcess;
+
   sandbox.mozinfo = Services.prefs.getStringPref("sandbox.mozinfo", null);
   sandbox.os_version = sandbox.mozinfo.os_version;
 
+  sandbox.layersGPUAccelerated = g.windowUtils.layerManagerType != "Basic";
   sandbox.d3d11 = g.windowUtils.layerManagerType == "Direct3D 11";
+  sandbox.d3d9 = g.windowUtils.layerManagerType == "Direct3D 9";
+  sandbox.layersOpenGL = g.windowUtils.layerManagerType == "OpenGL";
   sandbox.swgl = g.windowUtils.layerManagerType.startsWith(
     "WebRender (Software"
   );
+  sandbox.layersOMTC = !!g.windowUtils.layerManagerRemote;
 
   // Shortcuts for widget toolkits.
   sandbox.Android = Services.appinfo.OS == "Android";
   sandbox.cocoaWidget = Services.appinfo.widgetToolkit == "cocoa";
   sandbox.gtkWidget = Services.appinfo.widgetToolkit == "gtk";
+  sandbox.qtWidget = Services.appinfo.widgetToolkit == "qt";
   sandbox.winWidget = Services.appinfo.widgetToolkit == "windows";
 
   sandbox.is64Bit = Services.appinfo.is64Bit;
@@ -650,10 +701,26 @@ function BuildConditionSandbox(aURL) {
   // Use this to annotate reftests that fail in drawSnapshot, but
   // the reason hasn't been investigated (or fixed) yet.
   sandbox.useDrawSnapshot = g.useDrawSnapshot;
+  // Use this to annotate reftests that use functionality
+  // that isn't available to drawSnapshot (like any sort of
+  // compositor feature such as async scrolling).
+  sandbox.unsupportedWithDrawSnapshot = g.useDrawSnapshot;
+
+  sandbox.retainedDisplayList =
+    Services.prefs.getBoolPref("layout.display-list.retain") &&
+    !sandbox.useDrawSnapshot;
+
+  // Needed to specifically test the new and old behavior. This will eventually be removed.
+  sandbox.retainedDisplayListNew =
+    sandbox.retainedDisplayList &&
+    Services.prefs.getBoolPref("layout.display-list.retain.sc");
 
   // GeckoView is currently uniquely identified by "android + e10s" but
   // we might want to make this condition more precise in the future.
   sandbox.geckoview = sandbox.Android && g.browserIsRemote;
+
+  // Scrollbars that are semi-transparent. See bug 1169666.
+  sandbox.transparentScrollbars = Services.appinfo.widgetToolkit == "gtk";
 
   if (sandbox.Android) {
     sandbox.AndroidVersion = Services.sysinfo.getPropertyAsInt32("version");
@@ -667,15 +734,35 @@ function BuildConditionSandbox(aURL) {
   // Some reftests need extra fuzz on the Android 13 Pixel 5 devices.
   sandbox.Android13 = sandbox.AndroidVersion == "33";
 
+  sandbox.MinGW =
+    sandbox.winWidget && Services.sysinfo.getPropertyAsBool("isMinGW");
+
   sandbox.AddressSanitizer = AppConstants.ASAN;
   sandbox.ThreadSanitizer = AppConstants.TSAN;
   sandbox.webrtc = AppConstants.MOZ_WEBRTC;
+  sandbox.jxl = AppConstants.MOZ_JXL;
+
+  sandbox.compareRetainedDisplayLists = g.compareRetainedDisplayLists;
 
   sandbox.release_or_beta = AppConstants.RELEASE_OR_BETA;
 
   var hh = Cc[NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX + "http"].getService(
     Ci.nsIHttpProtocolHandler
   );
+  var httpProps = [
+    "userAgent",
+    "appName",
+    "appVersion",
+    "vendor",
+    "vendorSub",
+    "product",
+    "productSub",
+    "oscpu",
+    "language",
+    "misc",
+  ];
+  sandbox.http = new sandbox.Object();
+  httpProps.forEach(x => (sandbox.http[x] = hh[x]));
 
   // Set OSX to be the Mac OS X version, as an integer, or undefined
   // for other platforms.  The integer is formed by 100 times the
@@ -692,6 +779,11 @@ function BuildConditionSandbox(aURL) {
     false
   );
 
+  sandbox.gpuProcessForceEnabled = Services.prefs.getBoolPref(
+    "layers.gpu-process.force-enabled",
+    false
+  );
+
   sandbox.prefs = Cu.cloneInto(
     {
       getBoolPref(p) {
@@ -705,11 +797,28 @@ function BuildConditionSandbox(aURL) {
     { cloneFunctions: true }
   );
 
+  // Tests shouldn't care about this except for when they need to
+  // crash the content process
+  sandbox.browserIsRemote = g.browserIsRemote;
+  sandbox.browserIsFission = g.browserIsFission;
+
+  try {
+    sandbox.asyncPan =
+      g.containingWindow.docShell.asyncPanZoomEnabled &&
+      !sandbox.useDrawSnapshot;
+  } catch (e) {
+    sandbox.asyncPan = false;
+  }
+
+  // Graphics features
+  sandbox.usesRepeatResampling = sandbox.d2d;
+
   // Running in a test-verify session?
   sandbox.verify = Services.prefs.getBoolPref("reftest.verify", false);
 
   // Running with a variant enabled?
   sandbox.fission = Services.appinfo.fissionAutostart;
+  sandbox.serviceWorkerE10s = true;
 
   if (!g.dumpedConditionSandbox) {
     g.logger.info(
