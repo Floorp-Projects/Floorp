@@ -902,13 +902,6 @@ bool nsHTTPSOnlyUtils::IsEqualURIExceptSchemeAndRef(nsIURI* aHTTPSSchemeURI,
 
   return uriEquals;
 }
-
-/* static */
-uint32_t nsHTTPSOnlyUtils::GetStatusForSubresourceLoad(
-    uint32_t aHttpsOnlyStatus) {
-  return aHttpsOnlyStatus & ~nsILoadInfo::HTTPS_ONLY_UPGRADED_HTTPS_FIRST;
-}
-
 /////////////////////////////////////////////////////////////////////
 // Implementation of TestHTTPAnswerRunnable
 
