@@ -7,8 +7,13 @@ include $(topsrcdir)/config/rules.mk
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 libs::
-	rm -rf $(DIST)/bin/ChannelPrefs.framework
-
-	$(NSINSTALL) $(DIST)/bin/ChannelPrefs $(DIST)/bin/ChannelPrefs.framework
-	$(NSINSTALL) $(srcdir)/Info.plist $(DIST)/bin/ChannelPrefs.framework/Resources
-endif
+	rm -rf $(FINAL_TARGET)/ChannelPrefs.framework
+	$(NSINSTALL) -D $(FINAL_TARGET)/ChannelPrefs.framework
+ifneq (,$(COMPILE_ENVIRONMENT))
+	$(NSINSTALL) $(FINAL_TARGET)/ChannelPrefs $(FINAL_TARGET)/ChannelPrefs.framework
+endif # COMPILE_ENVIRONMENT
+ifneq (,$(MOZ_ARTIFACT_BUILDS))
+	$(NSINSTALL) $(DIST)/update_framework_artifacts/ChannelPrefs-localbuild.framework/ChannelPrefs $(FINAL_TARGET)/ChannelPrefs.framework
+endif # MOZ_ARTIFACT_BUILDS
+	$(NSINSTALL) $(srcdir)/Info.plist $(FINAL_TARGET)/ChannelPrefs.framework/Resources
+endif # MOZ_WIDGET_TOOLKIT

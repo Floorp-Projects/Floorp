@@ -394,6 +394,10 @@ endif
 
 # Upload `.xpt` artifacts for use in artifact builds.
 UPLOAD_FILES += $(call QUOTED_WILDCARD,$(DIST)/$(PKG_PATH)$(XPT_ARTIFACTS_ARCHIVE_BASENAME).zip)
+# Upload update-related macOS framework artifacts for use in artifact builds.
+ifeq ($(OS_ARCH),Darwin)
+UPLOAD_FILES += $(call QUOTED_WILDCARD,$(DIST)/$(PKG_PATH)$(UPDATE_FRAMEWORK_ARTIFACTS_ARCHIVE_BASENAME).zip)
+endif # Darwin
 
 ifndef MOZ_PKG_SRCDIR
   MOZ_PKG_SRCDIR = $(topsrcdir)

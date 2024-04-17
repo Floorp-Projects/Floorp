@@ -1,0 +1,20 @@
+# vim:set ts=8 sw=8 sts=8 noet:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+include $(topsrcdir)/config/rules.mk
+
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
+libs::
+	rm -rf $(FINAL_TARGET)/UpdateSettings-localbuild.framework
+	$(NSINSTALL) -D $(FINAL_TARGET)/UpdateSettings-localbuild.framework
+ifneq (,$(COMPILE_ENVIRONMENT))
+	cp $(FINAL_TARGET)/UpdateSettings-localbuild UpdateSettings
+	$(NSINSTALL) UpdateSettings $(FINAL_TARGET)/UpdateSettings-localbuild.framework
+endif # COMPILE_ENVIRONMENT
+ifneq (,$(MOZ_ARTIFACT_BUILDS))
+	$(NSINSTALL) $(DIST)/update_framework_artifacts/UpdateSettings-localbuild.framework/UpdateSettings $(FINAL_TARGET)/UpdateSettings-localbuild.framework
+endif # MOZ_ARTIFACT_BUILDS
+	$(NSINSTALL) $(srcdir)/../UpdateSettings/Info.plist $(FINAL_TARGET)/UpdateSettings-localbuild.framework/Resources
+endif # MOZ_WIDGET_TOOLKIT
