@@ -1,4 +1,4 @@
-// |reftest| skip-if(xulRuntime.OS=="Linux"&&!xulRuntime.shell&&!xulRuntime.XPCOMABI.match(/x86_64/)&&isDebugBuild) -- bug 521549
+// |reftest| skip-if(gtkWidget&&!xulRuntime.shell&&!is64Bit&&isDebugBuild) -- bug 521549
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this

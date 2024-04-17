@@ -31,22 +31,25 @@ class XULInfo:
         self.abi = abi
         self.os = os
         self.isdebug = isdebug
-        self.browserIsRemote = False
 
     def as_js(self):
         """Return JS that when executed sets up variables so that JS expression
         predicates on XUL build info evaluate properly."""
 
         return (
-            'var xulRuntime = {{ OS: "{}", XPCOMABI: "{}", shell: true }};'
+            "var winWidget = {};"
+            "var gtkWidget = {};"
+            "var cocoaWidget = {};"
+            "var is64Bit = {};"
+            "var xulRuntime = {{ shell: true }};"
             "var release_or_beta = getBuildConfiguration('release_or_beta');"
-            "var isDebugBuild={}; var Android={}; "
-            "var browserIsRemote={}".format(
-                self.os,
-                self.abi,
+            "var isDebugBuild={}; var Android={}; ".format(
+                str(self.os == "WINNT").lower(),
+                str(self.os == "Darwin").lower(),
+                str(self.os == "Linux").lower(),
+                str("x86-" not in self.abi).lower(),
                 str(self.isdebug).lower(),
                 str(self.os == "Android").lower(),
-                str(self.browserIsRemote).lower(),
             )
         )
 
@@ -258,7 +261,7 @@ def _parse_one(testcase, terms, xul_tester):
             pos += 1
         elif parts[pos] == "silentfail":
             # silentfails use tons of memory, and Darwin doesn't support ulimit.
-            if xul_tester.test("xulRuntime.OS == 'Darwin'", testcase.options):
+            if xul_tester.test("cocoaWidget", testcase.options):
                 testcase.expect = testcase.enable = False
             pos += 1
         elif parts[pos].startswith("error:"):

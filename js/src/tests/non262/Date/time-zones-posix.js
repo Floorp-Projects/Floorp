@@ -1,4 +1,4 @@
-// |reftest| skip-if(xulRuntime.OS=="WINNT"&&!xulRuntime.shell) -- Windows browser in automation doesn't pick up new time zones correctly
+// |reftest| skip-if(winWidget&&!xulRuntime.shell) -- Windows browser in automation doesn't pick up new time zones correctly
 
 // Repeats the test from "time-zones.js", but uses POSIX instead of IANA names
 // for the time zones. This allows to run these tests on Windows, too.
