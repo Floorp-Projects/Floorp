@@ -95,7 +95,7 @@ void SetACookieInternal(nsICookieService* aCookieService, const char* aSpec,
                                       /* shouldResistFingerprinting */ false)
           : CookieJarSettings::GetBlockingAll(
                 /* shouldResistFingerprinting */ false);
-  MOZ_ASSERT(cookieJarSettings);
+  MOZ_RELEASE_ASSERT(cookieJarSettings);
 
   nsCOMPtr<nsILoadInfo> loadInfo = dummyChannel->LoadInfo();
   loadInfo->SetCookieJarSettings(cookieJarSettings);
@@ -140,7 +140,7 @@ void GetACookieNoHttp(nsICookieService* aCookieService, const char* aSpec,
 
   RefPtr<BasePrincipal> principal =
       BasePrincipal::CreateContentPrincipal(uri, OriginAttributes());
-  MOZ_ASSERT(principal);
+  MOZ_RELEASE_ASSERT(principal);
 
   nsCOMPtr<mozilla::dom::Document> document;
   nsresult rv = NS_NewDOMDocument(getter_AddRefs(document),

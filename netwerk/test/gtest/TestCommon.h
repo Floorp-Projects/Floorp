@@ -17,8 +17,8 @@ class WaitForCondition final : public nsIRunnable {
   NS_DECL_THREADSAFE_ISUPPORTS
 
   void Wait(int pending) {
-    MOZ_ASSERT(NS_IsMainThread());
-    MOZ_ASSERT(mPending == 0);
+    MOZ_RELEASE_ASSERT(NS_IsMainThread());
+    MOZ_RELEASE_ASSERT(mPending == 0);
 
     mPending = pending;
     mozilla::SpinEventLoopUntil("TestCommon.h:WaitForCondition::Wait"_ns,
@@ -32,8 +32,8 @@ class WaitForCondition final : public nsIRunnable {
   virtual ~WaitForCondition() = default;
 
   NS_IMETHOD Run() override {
-    MOZ_ASSERT(NS_IsMainThread());
-    MOZ_ASSERT(mPending);
+    MOZ_RELEASE_ASSERT(NS_IsMainThread());
+    MOZ_RELEASE_ASSERT(mPending);
 
     --mPending;
     return NS_OK;

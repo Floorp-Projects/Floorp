@@ -29,7 +29,7 @@ void CreateStream(already_AddRefed<nsIInputStream> aSource,
   ASSERT_EQ(NS_OK, rv);
 
   nsCOMPtr<nsIAsyncInputStream> asyncStream = do_QueryInterface(wrapper);
-  MOZ_ASSERT(asyncStream);
+  MOZ_RELEASE_ASSERT(asyncStream);
 
   asyncStream.forget(aStream);
 }

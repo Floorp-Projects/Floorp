@@ -31,7 +31,7 @@ class Event {
 
   void Set() {
     MonitorAutoLock lock(mMonitor);
-    MOZ_ASSERT(!mSignaled);
+    MOZ_RELEASE_ASSERT(!mSignaled);
     mSignaled = true;
     mMonitor.Notify();
   }
