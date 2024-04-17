@@ -21,7 +21,7 @@
   body {
     background: transparent;
     box-sizing: border-box;
-    color: #222426;
+    color: light-dark(#222426, CanvasText);
     cursor: default;
     display: flex;
     flex-direction: column;
