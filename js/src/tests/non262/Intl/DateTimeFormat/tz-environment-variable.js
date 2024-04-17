@@ -1,4 +1,4 @@
-// |reftest| skip-if(!this.hasOwnProperty("Intl")||(xulRuntime.OS=="WINNT"&&!xulRuntime.shell)) -- Windows browser in automation doesn't pick up new time zones correctly
+// |reftest| skip-if(!this.hasOwnProperty("Intl")||(winWidget&&!xulRuntime.shell)) -- Windows browser in automation doesn't pick up new time zones correctly
 
 // From bug 1330149:
 //

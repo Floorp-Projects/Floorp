@@ -1,4 +1,4 @@
-// |reftest| skip-if(xulRuntime.OS=="WINNT") -- Windows doesn't accept IANA names for the TZ env variable
+// |reftest| skip-if(winWidget) -- Windows doesn't accept IANA names for the TZ env variable
 
 const testCases = [
     {

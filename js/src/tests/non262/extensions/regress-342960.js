@@ -1,4 +1,4 @@
-// |reftest| skip-if(!Object.prototype.toSource||(!xulRuntime.shell&&(Android||xulRuntime.OS=="WINNT"||xulRuntime.OS=="Linux"))) silentfail slow -- bug 528464
+// |reftest| skip-if(!Object.prototype.toSource||(!xulRuntime.shell&&(Android||winWidget||gtkWidget))) silentfail slow -- bug 528464
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this

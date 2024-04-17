@@ -1,4 +1,4 @@
-// |reftest| skip-if(xulRuntime.OS=="WINNT"||xulRuntime.OS=="Darwin") -- Skip on OS X in addition to Windows
+// |reftest| skip-if(winWidget||cocoaWidget) -- Skip on OS X in addition to Windows
 
 // Contains the tests from "time-zones.js" which fail on OS X.
 
