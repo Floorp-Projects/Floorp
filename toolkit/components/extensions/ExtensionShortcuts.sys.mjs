@@ -261,7 +261,24 @@ export class ExtensionShortcuts {
 
     if (storedCommand && storedCommand.value) {
       commands.set(name, { ...manifestCommands.get(name) });
+
       lazy.ExtensionSettingsStore.removeSetting(extension.id, "commands", name);
+      if (
+        name === "_execute_action" &&
+        extension.manifestVersion > 2 &&
+        lazy.ExtensionSettingsStore.hasSetting(
+          extension.id,
+          "commands",
+          "_execute_browser_action"
+        )
+      ) {
+        lazy.ExtensionSettingsStore.removeSetting(
+          extension.id,
+          "commands",
+          "_execute_browser_action"
+        );
+      }
+
       this.registerKeys(commands);
     }
   }
@@ -285,6 +302,19 @@ export class ExtensionShortcuts {
       let savedCommands = await this.loadCommandsFromStorage(extension.id);
       savedCommands.forEach((update, name) => {
         let command = commands.get(name);
+        if (
+          name === "_execute_browser_action" &&
+          extension.manifestVersion > 2
+        ) {
+          // Ignore the old _execute_browser_action if there is data stored for
+          // the new _execute_action command. Otherwise use the stored data for
+          // `_execute_action` (since we renamed `_execute_browser_action` to
+          // `_execute_action` in MV3).
+          command = savedCommands.has("_execute_action")
+            ? null
+            : commands.get("_execute_action");
+        }
+
         if (command) {
           // We will only update commands, not add them.
           Object.assign(command, update);

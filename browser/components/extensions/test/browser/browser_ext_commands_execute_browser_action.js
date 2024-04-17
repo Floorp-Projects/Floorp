@@ -2,10 +2,9 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(async function testTabSwitchActionContext() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.manifestV3.enabled", true]],
-  });
+ChromeUtils.defineESModuleGetters(this, {
+  ExtensionSettingsStore:
+    "resource://gre/modules/ExtensionSettingsStore.sys.mjs",
 });
 
 async function testExecuteBrowserActionWithOptions(options = {}) {
@@ -192,3 +191,232 @@ add_task(
     });
   }
 );
+
+add_task(async function test_fallback_to_execute_browser_action_in_mv3() {
+  // Make sure the mouse isn't hovering over the browserAction widget.
+  EventUtils.synthesizeMouseAtCenter(
+    gURLBar.textbox,
+    { type: "mouseover" },
+    window
+  );
+
+  const EXTENSION_ID = "@test-action";
+  const extMV2 = ExtensionTestUtils.loadExtension({
+    manifest: {
+      manifest_version: 2,
+      browser_action: {},
+      browser_specific_settings: { gecko: { id: EXTENSION_ID } },
+      commands: {
+        _execute_browser_action: {
+          suggested_key: {
+            default: "Alt+1",
+          },
+        },
+      },
+    },
+    async background() {
+      await browser.commands.update({
+        name: "_execute_browser_action",
+        shortcut: "Alt+Shift+2",
+      });
+      browser.test.sendMessage("command-update");
+    },
+    useAddonManager: "temporary",
+  });
+  await extMV2.startup();
+  await extMV2.awaitMessage("command-update");
+
+  let storedCommands = ExtensionSettingsStore.getAllForExtension(
+    EXTENSION_ID,
+    "commands"
+  );
+  Assert.deepEqual(
+    storedCommands,
+    ["_execute_browser_action"],
+    "expected a stored command"
+  );
+
+  const extDataMV3 = {
+    manifest: {
+      manifest_version: 3,
+      action: {},
+      browser_specific_settings: { gecko: { id: EXTENSION_ID } },
+      commands: {
+        _execute_action: {
+          suggested_key: {
+            default: "Alt+3",
+          },
+        },
+      },
+    },
+    background() {
+      browser.action.onClicked.addListener(() => {
+        browser.test.notifyPass("execute-action-on-clicked-fired");
+      });
+
+      browser.test.onMessage.addListener(async (msg, data) => {
+        switch (msg) {
+          case "verify": {
+            const commands = await browser.commands.getAll();
+            browser.test.assertDeepEq(
+              data,
+              commands,
+              "expected correct commands"
+            );
+            browser.test.sendMessage(`${msg}-done`);
+            break;
+          }
+
+          case "update":
+            await browser.commands.update(data);
+            browser.test.sendMessage(`${msg}-done`);
+            break;
+
+          case "reset":
+            await browser.commands.reset("_execute_action");
+            browser.test.sendMessage(`${msg}-done`);
+            break;
+
+          default:
+            browser.test.fail(`unexpected message: ${msg}`);
+        }
+      });
+
+      browser.test.sendMessage("ready");
+    },
+    useAddonManager: "temporary",
+  };
+  const extMV3 = ExtensionTestUtils.loadExtension(extDataMV3);
+  await extMV3.startup();
+  await extMV3.awaitMessage("ready");
+
+  // We should have the shortcut value from the previous extension.
+  extMV3.sendMessage("verify", [
+    {
+      name: "_execute_action",
+      description: null,
+      shortcut: "Alt+Shift+2",
+    },
+  ]);
+  await extMV3.awaitMessage("verify-done");
+
+  // Execute the shortcut from the MV2 extension.
+  await SimpleTest.promiseFocus(window);
+  EventUtils.synthesizeKey("2", {
+    altKey: true,
+    shiftKey: true,
+  });
+  await extMV3.awaitFinish("execute-action-on-clicked-fired");
+
+  // Update the shortcut.
+  extMV3.sendMessage("update", {
+    name: "_execute_action",
+    shortcut: "Alt+Shift+4",
+  });
+  await extMV3.awaitMessage("update-done");
+
+  extMV3.sendMessage("verify", [
+    {
+      name: "_execute_action",
+      description: null,
+      shortcut: "Alt+Shift+4",
+    },
+  ]);
+  await extMV3.awaitMessage("verify-done");
+
+  // At this point, we should have the old and new commands in storage.
+  storedCommands = ExtensionSettingsStore.getAllForExtension(
+    EXTENSION_ID,
+    "commands"
+  );
+  Assert.deepEqual(
+    storedCommands,
+    ["_execute_browser_action", "_execute_action"],
+    "expected two stored commands"
+  );
+
+  // Disarm any pending writes before we modify the JSONFile directly.
+  await ExtensionSettingsStore._reloadFile(
+    true // saveChanges
+  );
+
+  let jsonFileName = "extension-settings.json";
+  let storePath = PathUtils.join(PathUtils.profileDir, jsonFileName);
+
+  let settingsStoreData = await IOUtils.readJSON(storePath);
+  Assert.deepEqual(
+    Array.from(Object.keys(settingsStoreData.commands)),
+    ["_execute_browser_action", "_execute_action"],
+    "expected command hortcuts data to be found in extension-settings.json"
+  );
+
+  // Reverse the order of _execute_action and _execute_browser_action stored
+  // in the settings store.
+  settingsStoreData.commands = {
+    _execute_action: settingsStoreData.commands._execute_action,
+    _execute_browser_action: settingsStoreData.commands._execute_browser_action,
+  };
+
+  Assert.deepEqual(
+    Array.from(Object.keys(settingsStoreData.commands)),
+    ["_execute_action", "_execute_browser_action"],
+    "expected command shortcuts order to be reversed in extension-settings.json data"
+  );
+
+  // Write the extension-settings.json data and reload it.
+  await IOUtils.writeJSON(storePath, settingsStoreData);
+  await ExtensionSettingsStore._reloadFile(
+    false // saveChanges
+  );
+
+  // Restart the extension to verify that the loaded command is the right one.
+  const updatedExtMV3 = ExtensionTestUtils.loadExtension(extDataMV3);
+  await updatedExtMV3.startup();
+  await updatedExtMV3.awaitMessage("ready");
+
+  // We should *still* have two stored commands.
+  storedCommands = ExtensionSettingsStore.getAllForExtension(
+    EXTENSION_ID,
+    "commands"
+  );
+  Assert.deepEqual(
+    storedCommands,
+    ["_execute_action", "_execute_browser_action"],
+    "expected two stored commands"
+  );
+
+  updatedExtMV3.sendMessage("verify", [
+    {
+      name: "_execute_action",
+      description: null,
+      shortcut: "Alt+Shift+4",
+    },
+  ]);
+  await updatedExtMV3.awaitMessage("verify-done");
+
+  updatedExtMV3.sendMessage("reset");
+  await updatedExtMV3.awaitMessage("reset-done");
+
+  // Resetting the shortcut should take the default value from the latest
+  // extension version.
+  updatedExtMV3.sendMessage("verify", [
+    {
+      name: "_execute_action",
+      description: null,
+      shortcut: "Alt+3",
+    },
+  ]);
+  await updatedExtMV3.awaitMessage("verify-done");
+
+  // At this point, we should no longer have any stored commands, since we are
+  // using the default.
+  storedCommands = ExtensionSettingsStore.getAllForExtension(
+    EXTENSION_ID,
+    "commands"
+  );
+  Assert.deepEqual(storedCommands, [], "expected no stored command");
+
+  await extMV2.unload();
+  await extMV3.unload();
+  await updatedExtMV3.unload();
+});
