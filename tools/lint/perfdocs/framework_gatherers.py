@@ -206,7 +206,9 @@ class RaptorGatherer(FrameworkGatherer):
         :return list: the list of the tests
         """
         desc_exclusion = ["here", "manifest_relpath", "path", "relpath"]
-        test_manifest = TestManifest([str(manifest_path)], strict=False, document=True)
+        test_manifest = TestManifest(
+            [str(manifest_path)], strict=False, document=True, add_line_no=True
+        )
         test_list = test_manifest.active_tests(exists=False, disabled=False)
         subtests = {}
         for subtest in test_list:

@@ -5,7 +5,6 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
-import re
 import shutil
 import tempfile
 import unittest
@@ -621,12 +620,6 @@ yellow = submarine
         after = "edit-manifest-after.toml"
         after_path = os.path.join(here, after)
         after_str = open(after_path, "r", encoding="utf-8").read()
-
-        # Define the regex pattern to match lines containing 'lineno'
-        pattern = re.compile(r"^.*lineno.*$\n?", re.MULTILINE)
-        # Remove lines containing 'lineno'
-        manifest_str = re.sub(pattern, "", manifest_str)
-
         assert manifest_str == after_str
 
 

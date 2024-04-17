@@ -82,6 +82,7 @@ def read_toml(
     strict=True,
     handle_defaults=True,
     document=False,
+    add_line_no=False,
 ):
     """
     read a .toml file and return a list of [(section, values)]
@@ -93,6 +94,7 @@ def read_toml(
     - strict : whether to be strict about parsing
     - handle_defaults : whether to incorporate defaults into each section
     - document: read TOML with tomlkit and return source in test["document"]
+    - add_line_no: add the line number where the test name appears in the file to the source. Also, the document variable must be set to True for this flag to work. (This is used only to generate the documentation)
     """
 
     # variables
@@ -163,12 +165,12 @@ def read_toml(
         # merge combined defaults into each section
         sections = [(i, combine_fields(defaults, j)) for i, j in sections]
 
-    if document:
+    if document and add_line_no:
         # Take the line where the test name appears in the file.
         for i, _ in enumerate(sections):
             line = contents.split(sections[i][0])[0].count(os.linesep) + 1
             manifest.setdefault(sections[i][0], {})["lineno"] = str(line)
-    else:
+    elif not document:
         manifest = None
 
     return sections, defaults, manifest
