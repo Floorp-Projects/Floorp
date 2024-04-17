@@ -54,12 +54,6 @@ $ds-card-image-gradient-solid: rgba(0, 0, 0, 100%);
       fill: $white;
     }
 
-    .context-menu-button {
-      position: static;
-      transition: none;
-      border-radius: 3px;
-    }
-
     .context-menu-position-container {
       position: relative;
     }
@@ -83,6 +77,10 @@ $ds-card-image-gradient-solid: rgba(0, 0, 0, 100%);
       padding: 6px;
       white-space: nowrap;
       color: $white;
+
+      &:focus-visible {
+        outline: 2px solid var(--newtab-button-focus-border);
+      }
     }
 
     button,
@@ -92,6 +90,28 @@ $ds-card-image-gradient-solid: rgba(0, 0, 0, 100%);
 
     button {
       cursor: pointer;
+    }
+  }
+
+  // Override note: The colors set here are intentionally static
+  // due to transparency issues over images.
+  .context-menu-button {
+    position: static;
+    transition: none;
+    border-radius: 3px;
+    background-color: var(--newtab-button-static-background);
+
+    &:hover {
+      background-color: var(--newtab-button-static-hover-background);
+
+      &:active {
+        background-color: var(--newtab-button-static-active-background);
+      }
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--newtab-button-focus-border);
+      background-color: var(--newtab-button-static-focus-background);
     }
   }
 

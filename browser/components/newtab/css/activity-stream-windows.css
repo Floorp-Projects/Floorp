@@ -42,6 +42,16 @@ input {
   --newtab-text-secondary-color: color-mix(in srgb, var(--newtab-text-primary-color) 70%, transparent);
   --newtab-element-hover-color: color-mix(in srgb, var(--newtab-background-color) 90%, #000);
   --newtab-element-active-color: color-mix(in srgb, var(--newtab-background-color) 80%, #000);
+  --newtab-button-background: var(--button-background-color);
+  --newtab-button-focus-background: var(--newtab-button-background);
+  --newtab-button-focus-border: var(--focus-outline-color);
+  --newtab-button-hover-background: var(--button-background-color-hover);
+  --newtab-button-active-background: var(--button-background-color-active);
+  --newtab-button-text: var(--button-text-color);
+  --newtab-button-static-background: #F0F0F4;
+  --newtab-button-static-focus-background: var(--newtab-button-static-background);
+  --newtab-button-static-hover-background: #E0E0E6;
+  --newtab-button-static-active-background: #CFCFD8;
   --newtab-element-secondary-color: color-mix(in srgb, currentColor 5%, transparent);
   --newtab-element-secondary-hover-color: color-mix(in srgb, currentColor 12%, transparent);
   --newtab-element-secondary-active-color: color-mix(in srgb, currentColor 25%, transparent);
@@ -79,6 +89,9 @@ input {
   --newtab-primary-element-text-color: #2b2a33;
   --newtab-wordmark-color: #fbfbfe;
   --newtab-status-success: #7C6;
+  --newtab-button-static-background: #2B2A33;
+  --newtab-button-static-hover-background: #52525E;
+  --newtab-button-static-active-background: #5B5B66;
 }
 
 @media (prefers-contrast) {
@@ -92,7 +105,7 @@ input {
   background-size: 16px;
   -moz-context-properties: fill;
   display: inline-block;
-  color: var(--newtab-text-primary-color);
+  color: var(--icon-color);
   fill: currentColor;
   height: 16px;
   vertical-align: middle;
@@ -654,12 +667,17 @@ main section {
 .top-site-outer:is(:hover) .context-menu-button {
   opacity: 1;
 }
+.top-site-outer.active .context-menu-button {
+  opacity: 1;
+  background-color: var(--newtab-button-active-background);
+}
 .top-site-outer .context-menu-button {
   background-image: url("chrome://global/skin/icons/more.svg");
+  background-color: var(--newtab-button-background);
   border: 0;
   border-radius: 4px;
   cursor: pointer;
-  fill: var(--newtab-text-primary-color);
+  fill: var(--newtab-button-text);
   -moz-context-properties: fill;
   height: 20px;
   width: 20px;
@@ -669,11 +687,16 @@ main section {
   top: -20px;
   transition: opacity 200ms;
 }
-.top-site-outer .context-menu-button:is(:active, :focus) {
-  outline: 0;
+.top-site-outer .context-menu-button:hover {
+  background-color: var(--newtab-button-hover-background);
+}
+.top-site-outer .context-menu-button:hover:active {
+  background-color: var(--newtab-button-active-background);
+}
+.top-site-outer .context-menu-button:focus-visible {
+  background-color: var(--newtab-button-focus-background);
+  border-color: var(--newtab-button-focus-border);
   opacity: 1;
-  background-color: var(--newtab-element-hover-color);
-  fill: var(--newtab-primary-action-background);
 }
 .top-site-outer .tile {
   border-radius: 8px;
@@ -1989,14 +2012,17 @@ main section {
 }
 .card-outer .context-menu-button {
   background-clip: padding-box;
-  background-color: var(--newtab-background-color-secondary);
+  background-color: var(--newtab-button-background);
   background-image: url("chrome://global/skin/icons/more.svg");
   background-position: 55%;
-  border: 1px solid var(--newtab-border-color);
+  border: 0;
+  outline: 1px solid var(--newtab-border-color);
+  outline-width: 0;
   border-radius: 100%;
   box-shadow: 0 2px rgba(12, 12, 13, 0.1);
   cursor: pointer;
-  fill: var(--newtab-text-primary-color);
+  color: var(--button-text-color);
+  fill: var(--newtab-button-text);
   height: 27px;
   inset-inline-end: -13.5px;
   opacity: 0;
@@ -2007,9 +2033,20 @@ main section {
   transition-property: transform, opacity;
   width: 27px;
 }
-.card-outer .context-menu-button:is(:active, :focus) {
+.card-outer .context-menu-button:is(:active, :focus-visible, :hover) {
   opacity: 1;
   transform: scale(1);
+}
+.card-outer .context-menu-button:is(:hover) {
+  background-color: var(--newtab-button-hover-background);
+}
+.card-outer .context-menu-button:is(:focus-visible) {
+  outline-color: var(--newtab-button-focus-border);
+  background-color: var(--newtab-button-focus-background);
+  outline-width: 4px;
+}
+.card-outer .context-menu-button:is(:active) {
+  background-color: var(--newtab-button-active-background);
 }
 .card-outer:is(:focus):not(.placeholder) {
   border: 0;
@@ -3304,6 +3341,18 @@ main section {
 .ds-highlights .section .section-list .card-outer a {
   text-decoration: none;
 }
+.ds-highlights .section .section-list .card-outer .context-menu-button {
+  background-color: var(--newtab-button-static-background);
+}
+.ds-highlights .section .section-list .card-outer .context-menu-button:hover {
+  background-color: var(--newtab-button-static-hover-background);
+}
+.ds-highlights .section .section-list .card-outer .context-menu-button:hover:active {
+  background-color: var(--newtab-button-static-active-background);
+}
+.ds-highlights .section .section-list .card-outer .context-menu-button:focus-visible {
+  background-color: var(--newtab-button-static-focus-background);
+}
 .ds-highlights .hide-for-narrow {
   display: block;
 }
@@ -3565,14 +3614,17 @@ main section {
 .ds-card .context-menu-button,
 .ds-signup .context-menu-button {
   background-clip: padding-box;
-  background-color: var(--newtab-background-color-secondary);
+  background-color: var(--newtab-button-background);
   background-image: url("chrome://global/skin/icons/more.svg");
   background-position: 55%;
-  border: 1px solid var(--newtab-border-color);
+  border: 0;
+  outline: 1px solid var(--newtab-border-color);
+  outline-width: 0;
   border-radius: 100%;
   box-shadow: 0 2px rgba(12, 12, 13, 0.1);
   cursor: pointer;
-  fill: var(--newtab-text-primary-color);
+  color: var(--button-text-color);
+  fill: var(--newtab-button-text);
   height: 27px;
   inset-inline-end: -13.5px;
   opacity: 0;
@@ -3583,10 +3635,24 @@ main section {
   transition-property: transform, opacity;
   width: 27px;
 }
-.ds-card .context-menu-button:is(:active, :focus),
-.ds-signup .context-menu-button:is(:active, :focus) {
+.ds-card .context-menu-button:is(:active, :focus-visible, :hover),
+.ds-signup .context-menu-button:is(:active, :focus-visible, :hover) {
   opacity: 1;
   transform: scale(1);
+}
+.ds-card .context-menu-button:is(:hover),
+.ds-signup .context-menu-button:is(:hover) {
+  background-color: var(--newtab-button-hover-background);
+}
+.ds-card .context-menu-button:is(:focus-visible),
+.ds-signup .context-menu-button:is(:focus-visible) {
+  outline-color: var(--newtab-button-focus-border);
+  background-color: var(--newtab-button-focus-background);
+  outline-width: 4px;
+}
+.ds-card .context-menu-button:is(:active),
+.ds-signup .context-menu-button:is(:active) {
+  background-color: var(--newtab-button-active-background);
 }
 .ds-card .context-menu,
 .ds-signup .context-menu {
@@ -3662,11 +3728,6 @@ main section {
   background-size: 15px;
   fill: #FFF;
 }
-.ds-card .card-stp-button-hover-background .context-menu-button {
-  position: static;
-  transition: none;
-  border-radius: 3px;
-}
 .ds-card .card-stp-button-hover-background .context-menu-position-container {
   position: relative;
 }
@@ -3689,12 +3750,31 @@ main section {
   white-space: nowrap;
   color: #FFF;
 }
+.ds-card .card-stp-button-hover-background .card-stp-button:focus-visible {
+  outline: 2px solid var(--newtab-button-focus-border);
+}
 .ds-card .card-stp-button-hover-background button,
 .ds-card .card-stp-button-hover-background .context-menu {
   pointer-events: auto;
 }
 .ds-card .card-stp-button-hover-background button {
   cursor: pointer;
+}
+.ds-card .context-menu-button {
+  position: static;
+  transition: none;
+  border-radius: 3px;
+  background-color: var(--newtab-button-static-background);
+}
+.ds-card .context-menu-button:hover {
+  background-color: var(--newtab-button-static-hover-background);
+}
+.ds-card .context-menu-button:hover:active {
+  background-color: var(--newtab-button-static-active-background);
+}
+.ds-card .context-menu-button:focus-visible {
+  outline: 2px solid var(--newtab-button-focus-border);
+  background-color: var(--newtab-button-static-focus-background);
 }
 .ds-card.last-item .card-stp-button-hover-background .context-menu {
   margin-inline-start: auto;
