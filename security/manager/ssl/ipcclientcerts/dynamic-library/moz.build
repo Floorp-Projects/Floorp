@@ -19,6 +19,8 @@ else:
         "stub.c",
     ]
 
+OS_LIBS += CONFIG["DL_LIBS"]
+
 if CONFIG["OS_TARGET"] == "Android":
     OS_LIBS += ["m"]
 

@@ -33,7 +33,7 @@ using namespace mozilla;
 #  define _GNU_SOURCE
 #endif
 
-#if defined(HAVE_DLOPEN) || defined(XP_DARWIN)
+#if defined(HAVE_DLFCN_H) || defined(XP_DARWIN)
 #  include <dlfcn.h>
 #endif
 
