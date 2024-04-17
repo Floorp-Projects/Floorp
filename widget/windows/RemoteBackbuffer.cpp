@@ -89,6 +89,8 @@ class SharedImage {
   }
 
   bool Initialize(int32_t aWidth, int32_t aHeight) {
+    MOZ_ASSERT(aWidth);
+    MOZ_ASSERT(aHeight);
     MOZ_ASSERT(aWidth > 0);
     MOZ_ASSERT(aHeight > 0);
 
@@ -183,9 +185,9 @@ class SharedImage {
     }
   }
 
-  int32_t GetWidth() { return mWidth; }
+  int32_t GetWidth() const { return mWidth; }
 
-  int32_t GetHeight() { return mHeight; }
+  int32_t GetHeight() const { return mHeight; }
 
   SharedImage(const SharedImage&) = delete;
   SharedImage(SharedImage&&) = delete;
@@ -515,7 +517,7 @@ void Provider::HandleBorrowRequest(BorrowResponseData* aResponseData,
 
   aResponseData->result = ResponseResult::Error;
 
-  RECT clientRect = {};
+  RECT clientRect{};
   if (!::GetClientRect(mWindowHandle, &clientRect)) {
     return;
   }
@@ -523,12 +525,12 @@ void Provider::HandleBorrowRequest(BorrowResponseData* aResponseData,
   MOZ_ASSERT(clientRect.left == 0);
   MOZ_ASSERT(clientRect.top == 0);
 
-  int32_t width = clientRect.right ? clientRect.right : 1;
-  int32_t height = clientRect.bottom ? clientRect.bottom : 1;
+  const int32_t width = std::max(int32_t(clientRect.right), 1);
+  const int32_t height = std::max(int32_t(clientRect.bottom), 1);
 
   bool needNewBackbuffer = !aAllowSameBuffer || !mBackbuffer ||
-                           (mBackbuffer->GetWidth() != width) ||
-                           (mBackbuffer->GetHeight() != height);
+                           mBackbuffer->GetWidth() != width ||
+                           mBackbuffer->GetHeight() != height;
 
   if (!needNewBackbuffer) {
     aResponseData->result = ResponseResult::BorrowSameBuffer;
