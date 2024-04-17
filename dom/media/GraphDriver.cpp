@@ -448,13 +448,9 @@ NS_IMPL_ISUPPORTS0(AudioCallbackDriver::FallbackWrapper)
 
 /* static */
 already_AddRefed<TaskQueue> AudioCallbackDriver::CreateTaskQueue() {
-  RefPtr<SharedThreadPool> pool = CUBEB_TASK_THREAD;
-  const uint32_t kIdleThreadTimeoutMs = 2000;
-  pool->SetIdleThreadTimeout(PR_MillisecondsToInterval(kIdleThreadTimeoutMs));
-
-  RefPtr<TaskQueue> queue =
-      TaskQueue::Create(pool.forget(), "AudioCallbackDriver cubeb task queue");
-  return queue.forget();
+  return TaskQueue::Create(CubebUtils::GetCubebOperationThread(),
+                           "AudioCallbackDriver cubeb task queue")
+      .forget();
 }
 
 AudioCallbackDriver::AudioCallbackDriver(

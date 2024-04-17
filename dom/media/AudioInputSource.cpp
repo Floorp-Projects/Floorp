@@ -55,7 +55,7 @@ AudioInputSource::AudioInputSource(RefPtr<EventListener>&& aListener,
       mSandboxed(CubebUtils::SandboxEnabled()),
       mAudioThreadId(ProfilerThreadId{}),
       mEventListener(std::move(aListener)),
-      mTaskThread(CUBEB_TASK_THREAD),
+      mTaskThread(CubebUtils::GetCubebOperationThread()),
       mDriftCorrector(static_cast<uint32_t>(aSourceRate),
                       static_cast<uint32_t>(aTargetRate), aPrincipalHandle) {
   MOZ_ASSERT(mChannelCount > 0);
