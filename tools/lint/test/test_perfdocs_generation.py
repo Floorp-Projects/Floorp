@@ -51,6 +51,72 @@ def test_perfdocs_generator_generate_perfdocs_pass(
 
 
 @mock.patch("perfdocs.logger.PerfDocLogger")
+def test_perfdocs_generator_generate_perfdocs_metrics_pass(
+    logger, structured_logger, perfdocs_sample
+):
+    from test_perfdocs import temp_file
+
+    top_dir = perfdocs_sample["top_dir"]
+    setup_sample_logger(logger, structured_logger, top_dir)
+
+    templates_dir = pathlib.Path(top_dir, "tools", "lint", "perfdocs", "templates")
+    templates_dir.mkdir(parents=True, exist_ok=True)
+
+    from perfdocs.generator import Generator
+    from perfdocs.verifier import Verifier
+
+    sample_gatherer_result = {
+        "suite": {"Example": {"metrics": ["fcp", "SpeedIndex"]}},
+        "another_suite": {"Example": {}},
+    }
+    sample_test_list_result = {
+        "suite": [{"metrics": ["fcp", "SpeedIndex"], "name": "Example"}],
+        "another_suite": [{"name": "Example"}],
+    }
+
+    with temp_file(
+        "metrics.rst",
+        tempdir=pathlib.Path(top_dir, "perfdocs"),
+        content="{metrics_documentation}",
+    ):
+        with mock.patch(
+            "perfdocs.framework_gatherers.RaptorGatherer.get_test_list"
+        ) as m:
+            m.return_value = sample_gatherer_result
+            with perfdocs_sample["config"].open("w") as f1, perfdocs_sample[
+                "config_metrics"
+            ].open("r") as f2:
+                # Overwrite content of config.yml with metrics config
+                f1.write(f2.read())
+
+            verifier = Verifier(top_dir)
+            verifier.validate_tree()
+
+            verifier._gatherer.framework_gatherers[
+                "raptor"
+            ]._descriptions = sample_test_list_result
+
+        generator = Generator(verifier, generate=True, workspace=top_dir)
+        with temp_file(
+            "index.rst", tempdir=templates_dir, content="{test_documentation}"
+        ):
+            generator.generate_perfdocs()
+
+        with pathlib.Path(generator.perfdocs_path, "raptor-metrics.rst").open() as f:
+            metrics_content = f.read()
+            assert "{metrics_documentation}" not in metrics_content
+            assert "a description" in metrics_content
+            assert "**Tests using it**" in metrics_content
+
+        with pathlib.Path(generator.perfdocs_path, "raptor.rst").open() as f:
+            raptor_index_content = f.read()
+            assert "{metrics_rst_name}" not in raptor_index_content
+            assert "raptor-metrics" in raptor_index_content
+
+    assert logger.warning.call_count == 0
+
+
+@mock.patch("perfdocs.logger.PerfDocLogger")
 def test_perfdocs_generator_needed_regeneration(
     logger, structured_logger, perfdocs_sample
 ):
@@ -227,7 +293,7 @@ def test_perfdocs_generator_build_perfdocs(logger, structured_logger, perfdocs_s
     generator = Generator(verifier, generate=True, workspace=top_dir)
     frameworks_info = generator.build_perfdocs_from_tree()
 
-    expected = ["dynamic", "static"]
+    expected = ["dynamic", "metrics", "static"]
 
     for framework in sorted(frameworks_info.keys()):
         for i, framework_info in enumerate(frameworks_info[framework]):
