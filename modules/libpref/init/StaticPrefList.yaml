@@ -9789,11 +9789,6 @@
   value: @IS_NOT_ANDROID@
   mirror: always
 
-- name: media.mediasource.webm.audio.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 # Whether to enable MediaSource v2 support.
 - name: media.mediasource.experimental.enabled
   type: RelaxedAtomicBool
