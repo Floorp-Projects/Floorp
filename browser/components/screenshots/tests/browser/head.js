@@ -20,6 +20,7 @@ const SHORT_TEST_PAGE = TEST_ROOT + "short-test-page.html";
 const LARGE_TEST_PAGE = TEST_ROOT + "large-test-page.html";
 const IFRAME_TEST_PAGE = TEST_ROOT + "iframe-test-page.html";
 const RESIZE_TEST_PAGE = TEST_ROOT + "test-page-resize.html";
+const SELECTION_TEST_PAGE = TEST_ROOT + "test-selectionAPI-page.html";
 
 const { MAX_CAPTURE_DIMENSION, MAX_CAPTURE_AREA } = ChromeUtils.importESModule(
   "resource:///modules/ScreenshotsUtils.sys.mjs"
@@ -580,7 +581,7 @@ class ScreenshotsHelper {
    * Returns a promise that resolves when the clipboard data has changed
    * Otherwise rejects
    */
-  waitForRawClipboardChange(epectedWidth, expectedHeight) {
+  waitForRawClipboardChange(epectedWidth, expectedHeight, options = {}) {
     const initialClipboardData = Date.now().toString();
     SpecialPowers.clipboardCopyString(initialClipboardData);
 
@@ -588,7 +589,7 @@ class ScreenshotsHelper {
       async () => {
         let data;
         try {
-          data = await this.getImageSizeAndColorFromClipboard();
+          data = await this.getImageSizeAndColorFromClipboard(options);
         } catch (e) {
           console.log("Failed to get image/png clipboard data:", e);
           return false;
@@ -756,7 +757,7 @@ class ScreenshotsHelper {
    * :screenshot command.
    * @return The {width, height, color} dimension and color object.
    */
-  async getImageSizeAndColorFromClipboard() {
+  async getImageSizeAndColorFromClipboard(options = {}) {
     let flavor = "image/png";
     let image = getRawClipboardData(flavor);
     if (!image) {
@@ -796,8 +797,8 @@ class ScreenshotsHelper {
     // which could mess all sorts of things up
     return SpecialPowers.spawn(
       this.browser,
-      [buffer],
-      async function (_buffer) {
+      [buffer, options],
+      async function (_buffer, _options) {
         const img = content.document.createElement("img");
         const loaded = new Promise(r => {
           img.addEventListener("load", r, { once: true });
@@ -830,6 +831,11 @@ class ScreenshotsHelper {
           1
         );
 
+        let allPixels = null;
+        if (_options.allPixels) {
+          allPixels = context.getImageData(0, 0, img.width, img.height);
+        }
+
         img.remove();
         content.URL.revokeObjectURL(url);
 
@@ -842,6 +848,7 @@ class ScreenshotsHelper {
             bottomLeft: bottomLeft.data,
             bottomRight: bottomRight.data,
           },
+          allPixels: allPixels?.data,
         };
       }
     );

@@ -64,6 +64,7 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
       case "pointerup":
       case "keyup":
       case "keydown":
+      case "selectionchange":
         if (!this.overlay?.initialized) {
           return;
         }
@@ -220,6 +221,7 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
     for (let event of ScreenshotsComponentChild.OVERLAY_EVENTS) {
       chromeEventHandler.addEventListener(event, this, true);
     }
+    this.document.addEventListener("selectionchange", this);
   }
 
   /**
@@ -257,6 +259,7 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
     for (let event of ScreenshotsComponentChild.OVERLAY_EVENTS) {
       chromeEventHandler.removeEventListener(event, this, true);
     }
+    this.document.removeEventListener("selectionchange", this);
   }
 
   /**

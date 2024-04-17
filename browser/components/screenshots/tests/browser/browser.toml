@@ -8,6 +8,7 @@ support-files = [
   "short-test-page.html",
   "large-test-page.html",
   "test-page-resize.html",
+  "test-selectionAPI-page.html",
 ]
 
 prefs = [
@@ -67,3 +68,5 @@ skip-if = ["!crashreporter"]
 ["browser_test_resize.js"]
 
 ["browser_test_selection_size_text.js"]
+
+["browser_text_selectionAPI_test.js"]
