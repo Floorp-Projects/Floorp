@@ -19,11 +19,14 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Array.from, "name", {
-  value: "from",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(
+  Array.from.name,
+  'from',
+  'The value of Array.from.name is expected to be "from"'
+);
+
+verifyNotEnumerable(Array.from, 'name');
+verifyNotWritable(Array.from, 'name');
+verifyConfigurable(Array.from, 'name');
 
 reportCompare(0, 0);

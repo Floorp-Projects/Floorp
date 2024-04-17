@@ -19,11 +19,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Object.seal, "name", {
-  value: "seal",
-  writable: false,
-  enumerable: false,
-  configurable: true,
-});
+assert.sameValue(Object.seal.name, "seal");
+
+verifyNotEnumerable(Object.seal, "name");
+verifyNotWritable(Object.seal, "name");
+verifyConfigurable(Object.seal, "name");
 
 reportCompare(0, 0);

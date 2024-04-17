@@ -38,9 +38,8 @@ verifyEqualTo(arr, "property", get_fun());
 
 verifyWritable(arr, "property", "verifySetFun");
 
-verifyProperty(arr, "property", {
-  enumerable: false,
-  configurable: true,
-});
+verifyNotEnumerable(arr, "property");
+
+verifyConfigurable(arr, "property");
 
 reportCompare(0, 0);

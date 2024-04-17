@@ -38,9 +38,8 @@ verifyEqualTo(arrObj, "property", getFunc());
 
 verifyWritable(arrObj, "property", "setVerifyHelpProp");
 
-verifyProperty(arrObj, "property", {
-  enumerable: false,
-  configurable: false,
-});
+verifyNotEnumerable(arrObj, "property");
+
+verifyNotConfigurable(arrObj, "property");
 
 reportCompare(0, 0);

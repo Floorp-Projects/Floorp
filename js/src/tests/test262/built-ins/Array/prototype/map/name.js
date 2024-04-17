@@ -19,11 +19,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Array.prototype.map, "name", {
-  value: "map",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Array.prototype.map.name, "map");
+
+verifyNotEnumerable(Array.prototype.map, "name");
+verifyNotWritable(Array.prototype.map, "name");
+verifyConfigurable(Array.prototype.map, "name");
 
 reportCompare(0, 0);

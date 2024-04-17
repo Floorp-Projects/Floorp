@@ -17,11 +17,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(SyntaxError.prototype, "name", {
-  value: "SyntaxError",
-  writable: true,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(SyntaxError.prototype.name, "SyntaxError");
+
+verifyNotEnumerable(SyntaxError.prototype, "name");
+verifyWritable(SyntaxError.prototype, "name");
+verifyConfigurable(SyntaxError.prototype, "name");
 
 reportCompare(0, 0);

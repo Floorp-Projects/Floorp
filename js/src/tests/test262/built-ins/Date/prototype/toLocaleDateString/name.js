@@ -19,11 +19,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Date.prototype.toLocaleDateString, "name", {
-  value: "toLocaleDateString",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Date.prototype.toLocaleDateString.name, "toLocaleDateString");
+
+verifyNotEnumerable(Date.prototype.toLocaleDateString, "name");
+verifyNotWritable(Date.prototype.toLocaleDateString, "name");
+verifyConfigurable(Date.prototype.toLocaleDateString, "name");
 
 reportCompare(0, 0);

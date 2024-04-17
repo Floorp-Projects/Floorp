@@ -17,10 +17,8 @@ argObj.foo = 10; // default [[Configurable]] attribute value of foo: true
 
 Object.freeze(argObj);
 
-verifyProperty(argObj, "foo", {
-  value: 10,
-  writable: false,
-  configurable: false,
-});
+verifyNotWritable(argObj, "foo");
+verifyNotConfigurable(argObj, "foo");
+assert.sameValue(argObj.foo, 10);
 
 reportCompare(0, 0);

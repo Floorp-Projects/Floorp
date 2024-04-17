@@ -28,11 +28,12 @@ Object.defineProperties(arr, {
   }
 });
 
-verifyProperty(arr, "1", {
-  value: 12,
-  writable: false,
-  enumerable: false,
-  configurable: true,
-});
+verifyEqualTo(arr, "1", 12);
+
+verifyNotWritable(arr, "1");
+
+verifyNotEnumerable(arr, "1");
+
+verifyConfigurable(arr, "1");
 
 reportCompare(0, 0);

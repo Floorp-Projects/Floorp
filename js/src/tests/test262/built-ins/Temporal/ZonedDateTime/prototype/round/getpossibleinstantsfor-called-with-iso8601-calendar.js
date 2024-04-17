@@ -51,8 +51,8 @@ const nonBuiltinISOCalendar = new Temporal.Calendar("iso8601");
 const timeZone = new SkippedDateTime();
 
 const instance = new Temporal.ZonedDateTime(0n, timeZone, nonBuiltinISOCalendar);
-instance.round({ smallestUnit: "day" });
+instance.round({ smallestUnit: "hours" });
 
-assert.sameValue(timeZone.calls, 4, "getPossibleInstantsFor should have been called 4 times");
+assert.sameValue(timeZone.calls, 6, "getPossibleInstantsFor should have been called 6 times");
 
 reportCompare(0, 0);

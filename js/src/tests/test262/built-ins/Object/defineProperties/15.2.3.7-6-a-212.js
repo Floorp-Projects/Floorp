@@ -22,11 +22,12 @@ Object.defineProperties(arr, {
   }
 });
 
-verifyProperty(arr, "0", {
-  value: NaN,
-  writable: false,
-  enumerable: false,
-  configurable: false,
-});
+verifyEqualTo(arr, "0", NaN);
+
+verifyNotWritable(arr, "0");
+
+verifyNotEnumerable(arr, "0");
+
+verifyNotConfigurable(arr, "0");
 
 reportCompare(0, 0);

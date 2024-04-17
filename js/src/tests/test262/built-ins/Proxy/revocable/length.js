@@ -23,11 +23,10 @@ includes: [propertyHelper.js]
 features: [Proxy]
 ---*/
 
-verifyProperty(Proxy.revocable, "length", {
-  value: 2,
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Proxy.revocable.length, 2);
+
+verifyNotEnumerable(Proxy.revocable, "length");
+verifyNotWritable(Proxy.revocable, "length");
+verifyConfigurable(Proxy.revocable, "length");
 
 reportCompare(0, 0);

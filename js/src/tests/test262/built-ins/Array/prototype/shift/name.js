@@ -19,11 +19,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Array.prototype.shift, "name", {
-  value: "shift",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Array.prototype.shift.name, "shift");
+
+verifyNotEnumerable(Array.prototype.shift, "name");
+verifyNotWritable(Array.prototype.shift, "name");
+verifyConfigurable(Array.prototype.shift, "name");
 
 reportCompare(0, 0);

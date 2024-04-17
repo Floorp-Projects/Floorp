@@ -27,12 +27,13 @@ flags: [onlyStrict]
     throw new Test262Error('Expected "a === 0", actually ' + a);
   }
 
-  verifyProperty(arguments, "0", {
-    value: 20,
-    writable: false,
-    enumerable: true,
-    configurable: true,
-  });
+  verifyEqualTo(arguments, "0", 20);
+
+  verifyNotWritable(arguments, "0");
+
+  verifyEnumerable(arguments, "0");
+
+  verifyConfigurable(arguments, "0");
 }(0, 1, 2));
 
 reportCompare(0, 0);

@@ -17,10 +17,10 @@ var argObj = (function() {
 
 Object.freeze(argObj);
 
-verifyProperty(argObj, "0", {
-  value: 1,
-  writable: false,
-  configurable: false,
-});
+var desc = Object.getOwnPropertyDescriptor(argObj, "0");
+
+verifyNotWritable(argObj, "0");
+verifyNotConfigurable(argObj, "0");
+assert.sameValue(argObj[0], 1);
 
 reportCompare(0, 0);

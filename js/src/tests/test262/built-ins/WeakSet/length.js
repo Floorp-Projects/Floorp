@@ -7,11 +7,10 @@ description: >
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(WeakSet, "length", {
-  value: 0,
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(WeakSet.length, 0, 'The value of `WeakSet.length` is `0`');
+
+verifyNotEnumerable(WeakSet, 'length');
+verifyNotWritable(WeakSet, 'length');
+verifyConfigurable(WeakSet, 'length');
 
 reportCompare(0, 0);

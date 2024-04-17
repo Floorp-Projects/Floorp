@@ -19,11 +19,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(String.prototype.toUpperCase, "name", {
-  value: "toUpperCase",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(String.prototype.toUpperCase.name, "toUpperCase");
+
+verifyNotEnumerable(String.prototype.toUpperCase, "name");
+verifyNotWritable(String.prototype.toUpperCase, "name");
+verifyConfigurable(String.prototype.toUpperCase, "name");
 
 reportCompare(0, 0);

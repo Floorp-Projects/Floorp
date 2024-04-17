@@ -18,9 +18,8 @@ Object.defineProperty(obj, "prop", {
   configurable: false
 });
 
-verifyProperty(obj, "prop", {
-  value: 2010,
-  configurable: false,
-});
+assert(obj.hasOwnProperty("prop"));
+verifyNotConfigurable(obj, "prop");
+assert.sameValue(obj.prop, 2010);
 
 reportCompare(0, 0);

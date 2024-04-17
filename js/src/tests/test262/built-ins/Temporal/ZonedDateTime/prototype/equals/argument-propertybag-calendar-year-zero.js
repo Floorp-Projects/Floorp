@@ -17,8 +17,7 @@ const invalidStrings = [
 ];
 const timeZone = new Temporal.TimeZone("UTC");
 const instance = new Temporal.ZonedDateTime(0n, timeZone);
-invalidStrings.forEach((str) => {
-  const arg = { year: 1976, month: 11, day: 18, calendar: str };
+invalidStrings.forEach((arg) => {
   assert.throws(
     RangeError,
     () => instance.equals(arg),

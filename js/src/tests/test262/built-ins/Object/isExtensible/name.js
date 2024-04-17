@@ -19,11 +19,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Object.isExtensible, "name", {
-  value: "isExtensible",
-  writable: false,
-  enumerable: false,
-  configurable: true,
-});
+assert.sameValue(Object.isExtensible.name, "isExtensible");
+
+verifyNotEnumerable(Object.isExtensible, "name");
+verifyNotWritable(Object.isExtensible, "name");
+verifyConfigurable(Object.isExtensible, "name");
 
 reportCompare(0, 0);

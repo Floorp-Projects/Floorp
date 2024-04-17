@@ -19,11 +19,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Object.preventExtensions, "name", {
-  value: "preventExtensions",
-  writable: false,
-  enumerable: false,
-  configurable: true,
-});
+assert.sameValue(Object.preventExtensions.name, "preventExtensions");
+
+verifyNotEnumerable(Object.preventExtensions, "name");
+verifyNotWritable(Object.preventExtensions, "name");
+verifyConfigurable(Object.preventExtensions, "name");
 
 reportCompare(0, 0);

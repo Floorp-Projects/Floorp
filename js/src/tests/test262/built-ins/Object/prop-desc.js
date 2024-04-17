@@ -11,10 +11,8 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(this, "Object", {
-  writable: true,
-  enumerable: false,
-  configurable: true,
-});
+verifyNotEnumerable(this, "Object");
+verifyWritable(this, "Object");
+verifyConfigurable(this, "Object");
 
 reportCompare(0, 0);

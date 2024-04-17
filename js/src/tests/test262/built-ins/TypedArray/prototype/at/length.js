@@ -18,11 +18,13 @@ assert.sameValue(
   'The value of `typeof TypedArray.prototype.at` is "function"'
 );
 
-verifyProperty(TypedArray.prototype.at, "length", {
-  value: 1,
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(
+  TypedArray.prototype.at.length, 1,
+  'The value of TypedArray.prototype.at.length is 1'
+);
+
+verifyNotEnumerable(TypedArray.prototype.at, 'length');
+verifyNotWritable(TypedArray.prototype.at, 'length');
+verifyConfigurable(TypedArray.prototype.at, 'length');
 
 reportCompare(0, 0);

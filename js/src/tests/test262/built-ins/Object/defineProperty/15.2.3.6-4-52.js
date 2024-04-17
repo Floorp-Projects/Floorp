@@ -14,11 +14,12 @@ var obj = {};
 
 Object.defineProperty(obj, "property", {});
 
-verifyProperty(obj, "property", {
-  value: undefined,
-  writable: false,
-  enumerable: false,
-  configurable: false,
-});
+verifyEqualTo(obj, "property", undefined);
+
+verifyNotWritable(obj, "property");
+
+verifyNotEnumerable(obj, "property");
+
+verifyNotConfigurable(obj, "property");
 
 reportCompare(0, 0);

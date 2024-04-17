@@ -8,11 +8,14 @@ author: Jordan Harband
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Object.entries, "name", {
-  value: "entries",
-  writable: false,
-  enumerable: false,
-  configurable: true,
-});
+assert.sameValue(
+  Object.entries.name,
+  'entries',
+  'Expected Object.entries.name to be "entries"'
+);
+
+verifyNotEnumerable(Object.entries, 'name');
+verifyNotWritable(Object.entries, 'name');
+verifyConfigurable(Object.entries, 'name');
 
 reportCompare(0, 0);

@@ -6,7 +6,7 @@
 esid: sec-Intl.DurationFormat.prototype.format
 description: >
   Test format method with negative duration and default style
-locale: [en]
+locale: [en-US]
 includes: [testIntl.js]
 features: [Intl.DurationFormat]
 ---*/

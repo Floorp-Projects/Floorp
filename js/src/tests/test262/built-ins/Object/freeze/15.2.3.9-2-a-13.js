@@ -17,10 +17,9 @@ var obj = {
 
 Object.freeze(obj);
 
-verifyProperty(obj, "0", {
-  value: 0,
-  writable: false,
-  configurable: false,
-});
+verifyNotWritable(obj, "0");
+verifyNotConfigurable(obj, "0");
+
+assert.sameValue(obj[0], 0);
 
 reportCompare(0, 0);

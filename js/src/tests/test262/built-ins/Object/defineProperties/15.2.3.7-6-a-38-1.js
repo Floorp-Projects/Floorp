@@ -29,9 +29,8 @@ Object.defineProperties(obj, {
 
 verifyEqualTo(obj, "foo", getFunc());
 
-verifyProperty(obj, "foo", {
-  enumerable: true,
-  configurable: true,
-});
+verifyEnumerable(obj, "foo");
+
+verifyConfigurable(obj, "foo");
 
 reportCompare(0, 0);

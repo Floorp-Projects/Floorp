@@ -21,11 +21,10 @@ includes: [propertyHelper.js]
 
 var getter = Object.getOwnPropertyDescriptor(RegExp.prototype, 'unicode').get;
 
-verifyProperty(getter, "length", {
-  value: 0,
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(getter.length, 0);
+
+verifyNotEnumerable(getter, 'length');
+verifyNotWritable(getter, 'length');
+verifyConfigurable(getter, 'length');
 
 reportCompare(0, 0);

@@ -16,8 +16,7 @@ const invalidStrings = [
   "-000000-10-31T17:45+00:00[UTC]",
 ];
 const instance = new Temporal.PlainDateTime(2000, 5, 2, 12, 34, 56, 987, 654, 321);
-invalidStrings.forEach((str) => {
-  const arg = { year: 1976, month: 11, day: 18, calendar: str };
+invalidStrings.forEach((arg) => {
   assert.throws(
     RangeError,
     () => instance.withPlainDate(arg),

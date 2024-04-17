@@ -12,11 +12,10 @@ includes: [propertyHelper.js]
 features: [Symbol]
 ---*/
 
-verifyProperty(Symbol, "length", {
-  value: 0,
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Symbol.length, 0, "The value of `Symbol.length` is `0`");
+
+verifyNotEnumerable(Symbol, "length");
+verifyNotWritable(Symbol, "length");
+verifyConfigurable(Symbol, "length");
 
 reportCompare(0, 0);

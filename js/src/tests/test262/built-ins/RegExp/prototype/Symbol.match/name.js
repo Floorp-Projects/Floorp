@@ -17,11 +17,10 @@ includes: [propertyHelper.js]
 features: [Symbol.match]
 ---*/
 
-verifyProperty(RegExp.prototype[Symbol.match], "name", {
-  value: "[Symbol.match]",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(RegExp.prototype[Symbol.match].name, '[Symbol.match]');
+
+verifyNotEnumerable(RegExp.prototype[Symbol.match], 'name');
+verifyNotWritable(RegExp.prototype[Symbol.match], 'name');
+verifyConfigurable(RegExp.prototype[Symbol.match], 'name');
 
 reportCompare(0, 0);

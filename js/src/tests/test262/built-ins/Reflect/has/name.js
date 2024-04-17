@@ -13,11 +13,13 @@ includes: [propertyHelper.js]
 features: [Reflect]
 ---*/
 
-verifyProperty(Reflect.has, "name", {
-  value: "has",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(
+  Reflect.has.name, 'has',
+  'The value of `Reflect.has.name` is `"has"`'
+);
+
+verifyNotEnumerable(Reflect.has, 'name');
+verifyNotWritable(Reflect.has, 'name');
+verifyConfigurable(Reflect.has, 'name');
 
 reportCompare(0, 0);

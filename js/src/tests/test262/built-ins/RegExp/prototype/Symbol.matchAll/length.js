@@ -23,11 +23,10 @@ includes: [propertyHelper.js]
 features: [Symbol.matchAll]
 ---*/
 
-verifyProperty(RegExp.prototype[Symbol.matchAll], "length", {
-  value: 1,
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(RegExp.prototype[Symbol.matchAll].length, 1);
+
+verifyNotEnumerable(RegExp.prototype[Symbol.matchAll], 'length');
+verifyNotWritable(RegExp.prototype[Symbol.matchAll], 'length');
+verifyConfigurable(RegExp.prototype[Symbol.matchAll], 'length');
 
 reportCompare(0, 0);

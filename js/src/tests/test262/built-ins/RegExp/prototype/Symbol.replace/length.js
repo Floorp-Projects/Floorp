@@ -19,11 +19,10 @@ includes: [propertyHelper.js]
 features: [Symbol.replace]
 ---*/
 
-verifyProperty(RegExp.prototype[Symbol.replace], "length", {
-  value: 2,
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(RegExp.prototype[Symbol.replace].length, 2);
+
+verifyNotEnumerable(RegExp.prototype[Symbol.replace], 'length');
+verifyNotWritable(RegExp.prototype[Symbol.replace], 'length');
+verifyConfigurable(RegExp.prototype[Symbol.replace], 'length');
 
 reportCompare(0, 0);

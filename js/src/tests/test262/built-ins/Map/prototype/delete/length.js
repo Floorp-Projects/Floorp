@@ -12,11 +12,13 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Map.prototype.delete, "length", {
-  value: 1,
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(
+  Map.prototype.delete.length, 1,
+  'The value of `Map.prototype.delete.length` is `1`'
+);
+
+verifyNotEnumerable(Map.prototype.delete, 'length');
+verifyNotWritable(Map.prototype.delete, 'length');
+verifyConfigurable(Map.prototype.delete, 'length');
 
 reportCompare(0, 0);

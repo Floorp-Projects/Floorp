@@ -20,12 +20,12 @@ Object.defineProperty(obj, "foo", {
 Object.defineProperty(obj, "foo", {
   writable: true
 });
+verifyEqualTo(obj, "foo", undefined);
 
-verifyProperty(obj, "foo", {
-  value: undefined,
-  writable: true,
-  enumerable: false,
-  configurable: true,
-});
+verifyWritable(obj, "foo");
+
+verifyNotEnumerable(obj, "foo");
+
+verifyConfigurable(obj, "foo");
 
 reportCompare(0, 0);

@@ -19,11 +19,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Math.random, "name", {
-  value: "random",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Math.random.name, "random");
+
+verifyNotEnumerable(Math.random, "name");
+verifyNotWritable(Math.random, "name");
+verifyConfigurable(Math.random, "name");
 
 reportCompare(0, 0);

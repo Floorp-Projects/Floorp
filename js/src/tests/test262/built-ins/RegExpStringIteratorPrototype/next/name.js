@@ -24,11 +24,10 @@ features: [Symbol.matchAll]
 
 var RegExpStringIteratorProto = Object.getPrototypeOf(/./[Symbol.matchAll](''));
 
-verifyProperty(RegExpStringIteratorProto.next, "name", {
-  value: "next",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(RegExpStringIteratorProto.next.name, 'next');
+
+verifyNotEnumerable(RegExpStringIteratorProto.next, 'name');
+verifyNotWritable(RegExpStringIteratorProto.next, 'name');
+verifyConfigurable(RegExpStringIteratorProto.next, 'name');
 
 reportCompare(0, 0);

@@ -10,11 +10,10 @@ description: >
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Object.is, "length", {
-  value: 2,
-  writable: false,
-  enumerable: false,
-  configurable: true,
-});
+assert.sameValue(Object.is.length, 2, "The value of `Object.is.length` is `2`");
+
+verifyNotEnumerable(Object.is, "length");
+verifyNotWritable(Object.is, "length");
+verifyConfigurable(Object.is, "length");
 
 reportCompare(0, 0);

@@ -24,13 +24,12 @@ Object.defineProperty(arrObj, "0", {
 Object.defineProperty(arrObj, "0", {
   value: obj1
 });
+verifyEqualTo(arrObj, "0", obj1);
 
-verifyProperty(arrObj, "0", {
-  value: obj1,
-  writable: false,
-  enumerable: false,
-  configurable: false,
-});
+verifyNotWritable(arrObj, "0");
 
+verifyNotEnumerable(arrObj, "0");
+
+verifyNotConfigurable(arrObj, "0");
 
 reportCompare(0, 0);

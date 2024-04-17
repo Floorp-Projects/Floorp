@@ -20,11 +20,10 @@ includes: [propertyHelper.js]
 features: [Symbol]
 ---*/
 
-verifyProperty(Symbol.prototype.valueOf, "name", {
-  value: "valueOf",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Symbol.prototype.valueOf.name, "valueOf");
+
+verifyNotEnumerable(Symbol.prototype.valueOf, "name");
+verifyNotWritable(Symbol.prototype.valueOf, "name");
+verifyConfigurable(Symbol.prototype.valueOf, "name");
 
 reportCompare(0, 0);

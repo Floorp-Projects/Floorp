@@ -40,10 +40,9 @@ includes: [propertyHelper.js]
 
   verifyWritable(arguments, "genericProperty", "testgetFunction");
 
-  verifyProperty(arguments, "genericProperty", {
-    enumerable: false,
-    configurable: false,
-  });
+  verifyNotEnumerable(arguments, "genericProperty");
+
+  verifyNotConfigurable(arguments, "genericProperty");
 }(1, 2, 3));
 
 reportCompare(0, 0);

@@ -19,11 +19,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Array.prototype.lastIndexOf, "name", {
-  value: "lastIndexOf",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Array.prototype.lastIndexOf.name, "lastIndexOf");
+
+verifyNotEnumerable(Array.prototype.lastIndexOf, "name");
+verifyNotWritable(Array.prototype.lastIndexOf, "name");
+verifyConfigurable(Array.prototype.lastIndexOf, "name");
 
 reportCompare(0, 0);

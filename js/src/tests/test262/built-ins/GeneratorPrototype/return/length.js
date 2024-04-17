@@ -26,11 +26,10 @@ features: [generators]
 function* g() {}
 var GeneratorPrototype = Object.getPrototypeOf(g).prototype;
 
-verifyProperty(GeneratorPrototype.return, "length", {
-  value: 1,
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(GeneratorPrototype.return.length, 1);
+
+verifyNotEnumerable(GeneratorPrototype.return, "length");
+verifyNotWritable(GeneratorPrototype.return, "length");
+verifyConfigurable(GeneratorPrototype.return, "length");
 
 reportCompare(0, 0);

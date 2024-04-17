@@ -19,11 +19,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Object.getPrototypeOf, "name", {
-  value: "getPrototypeOf",
-  writable: false,
-  enumerable: false,
-  configurable: true,
-});
+assert.sameValue(Object.getPrototypeOf.name, "getPrototypeOf");
+
+verifyNotEnumerable(Object.getPrototypeOf, "name");
+verifyNotWritable(Object.getPrototypeOf, "name");
+verifyConfigurable(Object.getPrototypeOf, "name");
 
 reportCompare(0, 0);
