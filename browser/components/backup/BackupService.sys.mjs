@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import * as DefaultBackupResources from "resource:///modules/backup/BackupResources.sys.mjs";
-import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
 
@@ -14,17 +13,6 @@ ChromeUtils.defineLazyGetter(lazy, "logConsole", function () {
       ? "Debug"
       : "Warn",
   });
-});
-
-ChromeUtils.defineLazyGetter(lazy, "fxAccounts", () => {
-  return ChromeUtils.importESModule(
-    "resource://gre/modules/FxAccounts.sys.mjs"
-  ).getFxAccountsSingleton();
-});
-
-ChromeUtils.defineESModuleGetters(lazy, {
-  JsonSchemaValidator:
-    "resource://gre/modules/components-utils/JsonSchemaValidator.sys.mjs",
 });
 
 /**
@@ -54,51 +42,6 @@ export class BackupService {
    * @type {boolean}
    */
   #backupInProgress = false;
-
-  /**
-   * The name of the backup manifest file.
-   *
-   * @type {string}
-   */
-  static get MANIFEST_FILE_NAME() {
-    return "backup-manifest.json";
-  }
-
-  /**
-   * The current schema version of the backup manifest that this BackupService
-   * uses when creating a backup.
-   *
-   * @type {number}
-   */
-  static get MANIFEST_SCHEMA_VERSION() {
-    return 1;
-  }
-
-  /**
-   * A promise that resolves to the schema for the backup manifest that this
-   * BackupService uses when creating a backup. This should be accessed via
-   * the `MANIFEST_SCHEMA` static getter.
-   *
-   * @type {Promise<object>}
-   */
-  static #manifestSchemaPromise = null;
-
-  /**
-   * The current schema version of the backup manifest that this BackupService
-   * uses when creating a backup.
-   *
-   * @type {Promise<object>}
-   */
-  static get MANIFEST_SCHEMA() {
-    if (!BackupService.#manifestSchemaPromise) {
-      let schemaURL = `chrome://browser/content/backup/BackupManifest.${BackupService.MANIFEST_SCHEMA_VERSION}.schema.json`;
-      BackupService.#manifestSchemaPromise = fetch(schemaURL).then(response =>
-        response.json()
-      );
-    }
-
-    return BackupService.#manifestSchemaPromise;
-  }
 
   /**
    * Returns a reference to a BackupService singleton. If this is the first time
@@ -167,7 +110,6 @@ export class BackupService {
 
     try {
       lazy.logConsole.debug(`Creating backup for profile at ${profilePath}`);
-      let manifest = this.#createBackupManifest();
 
       // First, check to see if a `backups` directory already exists in the
       // profile.
@@ -201,7 +143,6 @@ export class BackupService {
             `Backup of resource with key ${resourceClass.key} completed`,
             manifestEntry
           );
-          manifest.resources[resourceClass.key] = manifestEntry;
         } catch (e) {
           lazy.logConsole.error(
             `Failed to backup resource: ${resourceClass.key}`,
@@ -209,35 +150,6 @@ export class BackupService {
           );
         }
       }
-
-      // Ensure that the manifest abides by the current schema, and log
-      // an error if somehow it doesn't. We'll want to collect telemetry for
-      // this case to make sure it's not happening in the wild. We debated
-      // throwing an exception here too, but that's not meaningfully better
-      // than creating a backup that's not schema-compliant. At least in this
-      // case, a user so-inclined could theoretically repair the manifest
-      // to make it valid.
-      let manifestSchema = await BackupService.MANIFEST_SCHEMA;
-      let schemaValidationResult = lazy.JsonSchemaValidator.validate(
-        manifest,
-        manifestSchema
-      );
-      if (!schemaValidationResult.valid) {
-        lazy.logConsole.error(
-          "Backup manifest does not conform to schema:",
-          manifest,
-          manifestSchema,
-          schemaValidationResult
-        );
-        // TODO: Collect telemetry for this case. (bug 1891817)
-      }
-
-      // Write the manifest to the staging folder.
-      let manifestPath = PathUtils.join(
-        stagingPath,
-        BackupService.MANIFEST_FILE_NAME
-      );
-      await IOUtils.writeJSON(manifestPath, manifest);
     } finally {
       this.#backupInProgress = false;
     }
@@ -264,42 +176,6 @@ export class BackupService {
     await IOUtils.makeDirectory(stagingPath);
 
     return stagingPath;
-  }
-
-  /**
-   * Creates and returns a backup manifest object with an empty resources
-   * property.
-   *
-   * @returns {object}
-   */
-  #createBackupManifest() {
-    let profileSvc = Cc["@mozilla.org/toolkit/profile-service;1"].getService(
-      Ci.nsIToolkitProfileService
-    );
-    let profileName;
-    if (!profileSvc.currentProfile) {
-      // We're probably running on a local build or in some special configuration.
-      // Let's pull in a profile name from the profile directory.
-      let profileFolder = PathUtils.split(PathUtils.profileDir).at(-1);
-      profileName = profileFolder.substring(profileFolder.indexOf(".") + 1);
-    } else {
-      profileName = profileSvc.currentProfile.name;
-    }
-
-    return {
-      version: BackupService.MANIFEST_SCHEMA_VERSION,
-      meta: {
-        date: new Date().toISOString(),
-        appName: AppConstants.MOZ_APP_NAME,
-        appVersion: AppConstants.MOZ_APP_VERSION,
-        buildID: AppConstants.MOZ_BUILDID,
-        profileName,
-        machineName: lazy.fxAccounts.device.getLocalName(),
-        osName: Services.sysinfo.getProperty("name"),
-        osVersion: Services.sysinfo.getProperty("version"),
-      },
-      resources: {},
-    };
   }
 
   /**
