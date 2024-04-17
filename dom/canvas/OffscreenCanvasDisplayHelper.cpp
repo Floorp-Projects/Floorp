@@ -61,6 +61,22 @@ void OffscreenCanvasDisplayHelper::DestroyCanvas() {
   mWorkerRef = nullptr;
 }
 
+bool OffscreenCanvasDisplayHelper::CanElementCaptureStream() const {
+  MutexAutoLock lock(mMutex);
+  return !!mWorkerRef;
+}
+
+bool OffscreenCanvasDisplayHelper::UsingElementCaptureStream() const {
+  MutexAutoLock lock(mMutex);
+
+  if (NS_WARN_IF(!NS_IsMainThread())) {
+    MOZ_ASSERT_UNREACHABLE("Should not call off main-thread!");
+    return !!mCanvasElement;
+  }
+
+  return mCanvasElement && mCanvasElement->UsingCaptureStream();
+}
+
 CanvasContextType OffscreenCanvasDisplayHelper::GetContextType() const {
   MutexAutoLock lock(mMutex);
   return mType;

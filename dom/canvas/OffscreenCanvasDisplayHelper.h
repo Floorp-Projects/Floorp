@@ -57,6 +57,9 @@ class OffscreenCanvasDisplayHelper final {
   void DestroyCanvas();
   void DestroyElement();
 
+  bool CanElementCaptureStream() const;
+  bool UsingElementCaptureStream() const;
+
   already_AddRefed<mozilla::gfx::SourceSurface> GetSurfaceSnapshot();
   already_AddRefed<mozilla::layers::Image> GetAsImage();
   UniquePtr<uint8_t[]> GetImageBuffer(int32_t* aOutFormat,

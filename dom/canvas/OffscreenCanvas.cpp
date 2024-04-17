@@ -358,6 +358,21 @@ UniquePtr<OffscreenCanvasCloneData> OffscreenCanvas::ToCloneData(
     return nullptr;
   }
 
+  // Check if we are using HTMLCanvasElement::captureStream. This is not
+  // defined by the spec yet, so it is better to fail now than implement
+  // something not compliant:
+  // https://github.com/w3c/mediacapture-fromelement/issues/65
+  // https://github.com/w3c/mediacapture-extensions/pull/26
+  // https://github.com/web-platform-tests/wpt/issues/21102
+  if (mDisplay && NS_WARN_IF(mDisplay->UsingElementCaptureStream())) {
+    ErrorResult rv;
+    rv.ThrowNotSupportedError(
+        "Cannot transfer OffscreenCanvas bound to element using "
+        "captureStream.");
+    MOZ_ALWAYS_TRUE(rv.MaybeSetPendingException(aCx));
+    return nullptr;
+  }
+
   auto cloneData = MakeUnique<OffscreenCanvasCloneData>(
       mDisplay, mWidth, mHeight, mCompositorBackendType, mTextureType,
       mNeutered, mIsWriteOnly, mExpandedReader);
