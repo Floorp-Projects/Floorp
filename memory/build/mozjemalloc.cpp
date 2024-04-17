@@ -5513,7 +5513,7 @@ static void replace_malloc_init_funcs(malloc_table_t* table) {
 #include "malloc_decls.h"
 // ***************************************************************************
 
-#ifdef HAVE_DLFCN_H
+#ifdef HAVE_DLOPEN
 #  include <dlfcn.h>
 #endif
 
