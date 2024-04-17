@@ -180,3 +180,42 @@ addUiaTask(
     );
   }
 );
+
+/**
+ * Test the ClassName property.
+ */
+addUiaTask(
+  `
+<p id="p">p</p>
+<button id="button" class="c1">button</button>
+  `,
+  async function testClassName(browser, docAcc) {
+    await definePyVar("doc", `getDocUia()`);
+    await assignPyVarToUiaWithId("p");
+    ok(!(await runPython(`p.CurrentClassName`)), "p has no ClassName");
+
+    await assignPyVarToUiaWithId("button");
+    is(
+      await runPython(`button.CurrentClassName`),
+      "c1",
+      "button has correct ClassName"
+    );
+    info("Changing button class");
+    await invokeSetAttribute(browser, "button", "class", "c2 c3");
+    // Gecko doesn't fire an event for class changes, as this isn't useful for
+    // clients.
+    const button = findAccessibleChildByID(docAcc, "button");
+    await untilCacheIs(
+      () => button.attributes.getStringProperty("class"),
+      "c2 c3",
+      "button class updated"
+    );
+    is(
+      await runPython(`button.CurrentClassName`),
+      "c2 c3",
+      "button has correct ClassName"
+    );
+  },
+  // The IA2 -> UIA proxy doesn't support ClassName.
+  { uiaEnabled: true, uiaDisabled: false }
+);
