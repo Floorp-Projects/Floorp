@@ -104,12 +104,6 @@ export const INITIAL_STATE = {
   Wallpapers: {
     wallpaperList: [],
   },
-  Weather: {
-    // do we have the data from WeatherFeed yet?
-    initialized: false,
-    // stub out demo data while building the feature
-    data: {},
-  },
 };
 
 function App(prevState = INITIAL_STATE.App, action) {
