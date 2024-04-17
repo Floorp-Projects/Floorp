@@ -193,8 +193,7 @@ static int ParentMain(int argc, wchar_t* argv[]) {
     return 1;
   }
 
-  MOZ_ASSERT_UNREACHABLE("This process should be terminated by now");
-  return 0;
+  MOZ_CRASH("This process should be terminated by now");
 }
 
 static int MonitorMain(int argc, wchar_t* argv[]) {
