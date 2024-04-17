@@ -260,6 +260,9 @@ const nsIFrame* ViewportUtils::IsZoomedContentRoot(const nsIFrame* aFrame) {
 }
 
 Scale2D ViewportUtils::TryInferEnclosingResolution(PresShell* aShell) {
+  if (!XRE_IsContentProcess()) {
+    return {1.0f, 1.0f};
+  }
   MOZ_ASSERT(aShell && aShell->GetPresContext());
   MOZ_ASSERT(!aShell->GetPresContext()->GetParentPresContext(),
              "TryInferEnclosingResolution can only be called for a root pres "
