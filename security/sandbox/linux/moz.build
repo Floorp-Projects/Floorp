@@ -18,6 +18,8 @@ USE_LIBS += [
     "nspr",
 ]
 
+OS_LIBS += CONFIG["DL_LIBS"]
+
 EXPORTS.mozilla += [
     "Sandbox.h",
     "SandboxInfo.h",

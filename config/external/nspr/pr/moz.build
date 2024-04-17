@@ -13,6 +13,8 @@ else:
 # TODO: fix NSPR warnings and remove this
 AllowCompilerWarnings()
 
+OS_LIBS += CONFIG["DL_LIBS"]
+
 DEFINES["_NSPR_BUILD_"] = True
 if CONFIG["OS_ARCH"] == "Linux":
     OS_LIBS += CONFIG["REALTIME_LIBS"]
