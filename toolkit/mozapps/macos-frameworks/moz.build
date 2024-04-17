@@ -11,7 +11,6 @@ FINAL_LIBRARY = "xul"
 
 DIRS += [
     "ChannelPrefs",
-    "ChannelPrefs-localbuild",
 ]
 
 EXPORTS += [
