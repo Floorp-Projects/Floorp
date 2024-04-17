@@ -63,12 +63,10 @@ CONFIG_SCHEMA = {
                             "type": "object",
                             "properties": {
                                 "test_name": {"type": "string"},
-                                "metrics": {"$ref": "#/definitions/metrics_schema"},
                             },
                         },
                         "description": {"type": "string"},
                         "owner": {"type": "string"},
-                        "metrics": {"$ref": "#/definitions/metrics_schema"},
                     },
                     "required": ["description"],
                 }
@@ -93,6 +91,7 @@ class Verifier(object):
         :param str workspace_dir: Path to the top-level checkout directory.
         """
         self.workspace_dir = workspace_dir
+        self.metrics_info = {}
         self._gatherer = Gatherer(workspace_dir, taskgraph)
         self._compiled_matchers = {}
 
@@ -242,104 +241,32 @@ class Verifier(object):
         the test harness as real metrics. Failures here suggest that a metric
         changed name, is missing an alias, is misnamed, duplicated, or was removed.
         """
-        yaml_suite = yaml_content["suites"][suite]
-        suite_metrics = yaml_suite.get("metrics", {})
-
-        # Check to make sure all the metrics with given descriptions
-        # are actually being measured. Add the metric to the "verified" field in
-        # global_metrics to use it later for "global" metrics that can
-        # have their descriptions removed. Start from the test level.
-        for test_name, test_info in yaml_suite.get("tests", {}).items():
-            if not isinstance(test_info, dict):
-                continue
-            test_metrics_info = test_info.get("metrics", {})
-
-            # Find all tests that match with this name in case they measure
-            # different things
-            measured_metrics = []
-            for t in framework_info["test_list"][suite]:
-                if not self._is_yaml_test_match(t, test_name):
-                    # Check to make sure we are checking against the right
-                    # test. Skip the metric check if we can't find the test.
-                    continue
-                measured_metrics.extend(
-                    framework_info["test_list"][suite][t].get("metrics", [])
-                )
-
-            if len(measured_metrics) == 0:
-                continue
-
-            # Check if all the test metrics documented exist
-            for metric_name, metric_info in test_metrics_info.items():
+        for global_metric_name, global_metric_info in global_metrics["global"].items():
+            for test, test_info in framework_info["test_list"][suite].items():
                 verified_metrics = self._match_metrics(
-                    metric_name, metric_info, measured_metrics
+                    global_metric_name, global_metric_info, test_info.get("metrics", [])
                 )
-                if len(verified_metrics) > 0:
+                if len(verified_metrics) == 0:
+                    continue
+
+                if global_metric_info.get("verified", False):
+                    # We already verified this global metric, but add any
+                    # extra verified metrics here
+                    global_metrics["verified"].extend(verified_metrics)
+                else:
+                    global_metric_info["verified"] = True
                     global_metrics["yaml-verified"].extend(
-                        [metric_name] + metric_info["aliases"]
+                        [global_metric_name] + global_metric_info["aliases"]
                     )
                     global_metrics["verified"].extend(
-                        [metric_name] + metric_info["aliases"] + verified_metrics
-                    )
-                else:
-                    logger.warning(
-                        (
-                            "Cannot find documented metric `{}` "
-                            "being used in the specified test `{}`."
-                        ).format(metric_name, test_name),
-                        framework_info["yml_path"],
+                        [global_metric_name]
+                        + global_metric_info["aliases"]
+                        + verified_metrics
                     )
 
-        # Check the suite level now
-        for suite_metric_name, suite_metric_info in suite_metrics.items():
-            measured_metrics = []
-            for _, test_info in framework_info["test_list"][suite].items():
-                measured_metrics.extend(test_info.get("metrics", []))
-
-            verified_metrics = self._match_metrics(
-                suite_metric_name, suite_metric_info, measured_metrics
-            )
-            if len(verified_metrics) > 0:
-                global_metrics["yaml-verified"].extend(
-                    [suite_metric_name] + suite_metric_info["aliases"]
-                )
-                global_metrics["verified"].extend(
-                    [suite_metric_name]
-                    + suite_metric_info["aliases"]
-                    + verified_metrics
-                )
-            else:
-                logger.warning(
-                    (
-                        "Cannot find documented metric `{}` "
-                        "being used in the specified suite `{}`."
-                    ).format(suite_metric_name, suite),
-                    framework_info["yml_path"],
-                )
-
-        # Finally check the global level (output failures later)
-        all_measured_metrics = []
-        for _, test_info in framework_info["test_list"][suite].items():
-            all_measured_metrics.extend(test_info.get("metrics", []))
-        for global_metric_name, global_metric_info in global_metrics["global"].items():
-            verified_metrics = self._match_metrics(
-                global_metric_name, global_metric_info, all_measured_metrics
-            )
-            if global_metric_info.get("verified", False):
-                # We already verified this global metric, but add any
-                # extra verified metrics here
-                global_metrics["verified"].extend(verified_metrics)
-                continue
-            if len(verified_metrics) > 0:
-                global_metric_info["verified"] = True
-                global_metrics["yaml-verified"].extend(
-                    [global_metric_name] + global_metric_info["aliases"]
-                )
-                global_metrics["verified"].extend(
-                    [global_metric_name]
-                    + global_metric_info["aliases"]
-                    + verified_metrics
-                )
+                global_metric_info.setdefault("location", {}).setdefault(
+                    suite, []
+                ).append(test)
 
     def _validate_metrics_harness_direction(
         self, suite, test_list, yaml_content, global_metrics
@@ -484,6 +411,8 @@ class Verifier(object):
                 suite, test_list, yaml_content, global_metrics
             )
 
+        self.metrics_info[framework_info["name"]] = global_metrics["global"]
+
     def validate_yaml(self, yaml_path):
         """
         Validate that the YAML file has all the fields that are
@@ -532,10 +461,10 @@ class Verifier(object):
 
         return valid
 
-    def validate_rst_content(self, rst_path):
+    def validate_rst_content(self, rst_path, expected_str):
         """
-        Validate that the index file given has a {documentation} entry
-        so that the documentation can be inserted there.
+        Validate that a given RST has the expected string in it
+        so that the generated documentation can be inserted there.
 
         :param str rst_path: Path to the RST file.
         :return bool: True/False => Passed/Failed Validation
@@ -545,14 +474,14 @@ class Verifier(object):
         # Check for a {documentation} entry in some line,
         # if we can't find one, then the validation fails.
         valid = False
-        docs_match = re.compile(".*{documentation}.*")
+        docs_match = re.compile(f".*{expected_str}.*")
         for line in rst_content:
             if docs_match.search(line):
                 valid = True
                 break
         if not valid:
             logger.warning(  # noqa: PLE1205
-                "Cannot find a '{documentation}' entry in the given index file",
+                f"Cannot find a '{expected_str}' entry in the given index file",
                 rst_path,
             )
 
@@ -583,9 +512,18 @@ class Verifier(object):
             _valid_files = {
                 "yml": self.validate_yaml(matched_yml),
                 "rst": True,
+                "metrics": True,
             }
             if not read_yaml(matched_yml)["static-only"]:
-                _valid_files["rst"] = self.validate_rst_content(matched_rst)
+                _valid_files["rst"] = self.validate_rst_content(
+                    matched_rst, "{documentation}"
+                )
+
+                if matched.get("metrics"):
+                    _valid_files["metrics"] = self.validate_rst_content(
+                        pathlib.Path(matched["path"], matched["metrics"]),
+                        "{metrics_documentation}",
+                    )
 
             # Log independently the errors found for the matched files
             for file_format, valid in _valid_files.items():
