@@ -6,6 +6,7 @@
 
 #include "PositionedEventTargeting.h"
 
+#include "Units.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
@@ -13,18 +14,23 @@
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_ui.h"
 #include "mozilla/ToString.h"
+#include "mozilla/ViewportUtils.h"
 #include "mozilla/dom/MouseEventBinding.h"
+#include "mozilla/gfx/Matrix.h"
+#include "mozilla/layers/LayersTypes.h"
 #include "nsContainerFrame.h"
+#include "nsCoord.h"
 #include "nsFrameList.h"  // for DEBUG_FRAME_DUMP
 #include "nsHTMLParts.h"
 #include "nsLayoutUtils.h"
 #include "nsGkAtoms.h"
 #include "nsFontMetrics.h"
+#include "nsIContentInlines.h"
+#include "nsPresContext.h"
 #include "nsPrintfCString.h"
 #include "mozilla/dom/Element.h"
 #include "nsRegion.h"
 #include "nsDeviceContext.h"
-#include "nsIContentInlines.h"
 #include "nsIFrame.h"
 #include <algorithm>
 
@@ -276,15 +282,40 @@ static nsIContent* GetClickableAncestor(
   return nullptr;
 }
 
-static nscoord AppUnitsFromMM(RelativeTo aFrame, uint32_t aMM) {
-  nsPresContext* pc = aFrame.mFrame->PresContext();
-  float result = float(aMM) * (pc->DeviceContext()->AppUnitsPerPhysicalInch() /
-                               MM_PER_INCH_FLOAT);
-  if (aFrame.mViewportType == ViewportType::Layout) {
-    PresShell* presShell = pc->PresShell();
-    result = result / presShell->GetResolution();
+static Scale2D AppUnitsToMMScale(RelativeTo aFrame) {
+  nsPresContext* presContext = aFrame.mFrame->PresContext();
+
+  const int32_t appUnitsPerInch =
+      presContext->DeviceContext()->AppUnitsPerPhysicalInch();
+  const float appUnits =
+      static_cast<float>(appUnitsPerInch) / MM_PER_INCH_FLOAT;
+
+  // Visual coordinates are only used for quantities relative to the
+  // cross-process root content document's root frame. There should
+  // not be an enclosing resolution or transform scale above that.
+  if (aFrame.mViewportType != ViewportType::Layout) {
+    const nscoord scale = NSToCoordRound(appUnits);
+    return Scale2D{static_cast<float>(scale), static_cast<float>(scale)};
   }
-  return NSToCoordRound(result);
+
+  Scale2D localResolution{1.0f, 1.0f};
+  Scale2D enclosingResolution{1.0f, 1.0f};
+
+  if (auto* pc = presContext->GetInProcessRootContentDocumentPresContext()) {
+    PresShell* presShell = pc->PresShell();
+    localResolution = {presShell->GetResolution(), presShell->GetResolution()};
+    enclosingResolution = ViewportUtils::TryInferEnclosingResolution(presShell);
+  }
+
+  const gfx::MatrixScales parentScale =
+      nsLayoutUtils::GetTransformToAncestorScale(aFrame.mFrame);
+  const Scale2D resolution =
+      localResolution * parentScale * enclosingResolution;
+
+  const nscoord scaleX = NSToCoordRound(appUnits / resolution.xScale);
+  const nscoord scaleY = NSToCoordRound(appUnits / resolution.yScale);
+
+  return {static_cast<float>(scaleX), static_cast<float>(scaleY)};
 }
 
 /**
@@ -303,10 +334,11 @@ static nsRect GetTargetRect(RelativeTo aRootFrame,
                             const nsPoint& aPointRelativeToRootFrame,
                             const nsIFrame* aRestrictToDescendants,
                             const EventRadiusPrefs& aPrefs, uint32_t aFlags) {
-  nsMargin m(AppUnitsFromMM(aRootFrame, aPrefs.mRadiusTopmm),
-             AppUnitsFromMM(aRootFrame, aPrefs.mRadiusRightmm),
-             AppUnitsFromMM(aRootFrame, aPrefs.mRadiusBottommm),
-             AppUnitsFromMM(aRootFrame, aPrefs.mRadiusLeftmm));
+  const Scale2D scale = AppUnitsToMMScale(aRootFrame);
+  nsMargin m(aPrefs.mRadiusTopmm * scale.yScale,
+             aPrefs.mRadiusRightmm * scale.xScale,
+             aPrefs.mRadiusBottommm * scale.yScale,
+             aPrefs.mRadiusLeftmm * scale.xScale);
   nsRect r(aPointRelativeToRootFrame, nsSize(0, 0));
   r.Inflate(m);
   if (!(aFlags & INPUT_IGNORE_ROOT_SCROLL_FRAME)) {
