@@ -9058,7 +9058,6 @@ var ConfirmationHint = {
       "popupshown",
       () => {
         this._animationBox.setAttribute("animate", "true");
-        A11yUtils.announce({ id: messageId });
         this._timerID = setTimeout(() => {
           this._panel.hidePopup(true);
         }, DURATION + 120);
