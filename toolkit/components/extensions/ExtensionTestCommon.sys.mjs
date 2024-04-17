@@ -17,10 +17,13 @@ ChromeUtils.defineESModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   Assert: "resource://testing-common/Assert.sys.mjs",
   Extension: "resource://gre/modules/Extension.sys.mjs",
+  ExtensionAddonObserver: "resource://gre/modules/Extension.sys.mjs",
   ExtensionData: "resource://gre/modules/Extension.sys.mjs",
   ExtensionParent: "resource://gre/modules/ExtensionParent.sys.mjs",
   ExtensionPermissions: "resource://gre/modules/ExtensionPermissions.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
+  clearInterval: "resource://gre/modules/Timer.sys.mjs",
+  setInterval: "resource://gre/modules/Timer.sys.mjs",
 });
 
 ChromeUtils.defineLazyGetter(
@@ -35,6 +38,110 @@ import { ExtensionUtils } from "resource://gre/modules/ExtensionUtils.sys.mjs";
 const { flushJarCache } = ExtensionUtils;
 
 const { instanceOf } = ExtensionCommon;
+
+// The tasks received here have already been registered as shutdown blockers
+// (with AsyncShutdown). That means that in reality, if these tasks take
+// long, that they affect Firefox's ability to quit, with a warning after 10
+// seconds and a forced quit without waiting for shutdown after 60 seconds
+// (or whatever is in the toolkit.asyncshutdown.crash_timeout pref).
+//
+// To help with detecting unreasonable slowness in tests, we log when these
+// tasks are taking too long at shutdown.
+const MS_SLOW_TASK_DURATION = 2000;
+
+/**
+ * ExtensionUninstallTracker should be instantiated before extension shutdown,
+ * and can be used to await the completion of the uninstall and post-uninstall
+ * cleanup logic. Log messages are printed to aid debugging if the cleanup is
+ * observed to be slow (i.e. taking longer than MS_SLOW_TASK_DURATION).
+ *
+ *   // Usage:
+ *   let uninstallTracker = new ExtensionUninstallTracker(extension.id);
+ *   await extension.shutdown();
+ *   await uninstallTracker.waitForUninstallCleanupDone();
+ */
+class ExtensionUninstallTracker {
+  #resolveOnCleanupDone;
+  constructor(addonId) {
+    this.id = addonId;
+
+    this.remainingTasks = new Set();
+    // The uninstall/cleanup observer needs to be registered early, to not miss
+    // the notifications.
+    this._uninstallPromise = this.#promiseUninstallComplete();
+    this._cleanupPromise = this.#promiseCleanupAfterUninstall();
+  }
+
+  async waitForUninstallCleanupDone() {
+    // Call #addTask() now instead of in the constructor, so that we only track
+    // the time after extension.shutdown() has completed.
+    this.#addTask("Awaiting uninstall-complete", this._uninstallPromise);
+    this.#addTask("Awaiting cleanupAfterUninstall", this._cleanupPromise);
+    // For debugging purposes, if shutdown is slow, regularly print a message
+    // with the remaining tasks.
+    let timer = lazy.setInterval(
+      () => this.#checkRemainingTasks(),
+      2 * MS_SLOW_TASK_DURATION
+    );
+    await new Promise(resolve => {
+      this.#resolveOnCleanupDone = resolve;
+      this.#checkRemainingTasks();
+    });
+    lazy.clearInterval(timer);
+  }
+
+  #addTask(name, promise) {
+    const task = { name, promise, timeStart: Date.now() };
+    this.remainingTasks.add(task);
+    promise.finally(() => {
+      this.remainingTasks.delete(task);
+      this.#checkRemainingTasks();
+    });
+  }
+
+  #checkRemainingTasks() {
+    for (let task of this.remainingTasks) {
+      const timeSinceStart = Date.now() - task.timeStart;
+      if (timeSinceStart > MS_SLOW_TASK_DURATION) {
+        dump(
+          `WARNING: Detected slow post-uninstall task: ${timeSinceStart}ms for extension ${this.id}: ${task.name}\n`
+        );
+      }
+    }
+    if (this.remainingTasks.size === 0) {
+      this.#resolveOnCleanupDone?.();
+    }
+  }
+
+  #promiseUninstallComplete() {
+    return new Promise(resolve => {
+      const onUninstallComplete = (eventName, { id }) => {
+        if (id === this.id) {
+          lazy.apiManager.off("uninstall-complete", onUninstallComplete);
+          resolve();
+        }
+      };
+      lazy.apiManager.on("uninstall-complete", onUninstallComplete);
+    });
+  }
+
+  #promiseCleanupAfterUninstall() {
+    return new Promise(resolve => {
+      const onCleanupAfterUninstall = (eventName, id, tasks) => {
+        if (id === this.id) {
+          lazy.apiManager.off("cleanupAfterUninstall", onCleanupAfterUninstall);
+          for (const task of tasks) {
+            if (task.promise) {
+              this.#addTask(task.name, task.promise);
+            }
+          }
+          resolve();
+        }
+      };
+      lazy.apiManager.on("cleanupAfterUninstall", onCleanupAfterUninstall);
+    });
+  }
+}
 
 /**
  * A skeleton Extension-like object, used for testing, which installs an
@@ -75,7 +182,6 @@ export class MockExtension {
     this._extension = null;
     this._extensionPromise = promiseEvent("startup");
     this._readyPromise = promiseEvent("ready");
-    this._uninstallPromise = promiseEvent("uninstall-complete");
   }
 
   maybeSetID(uri, id) {
@@ -673,5 +779,25 @@ export var ExtensionTestCommon = class ExtensionTestCommon {
       },
       data.startupReason ?? "ADDON_INSTALL"
     );
+  }
+
+  /**
+   * Unload an extension and await completion of post-uninstall cleanup tasks.
+   *
+   * @param {Extension|MockExtension} extension
+   */
+  static async unloadTestExtension(extension) {
+    const { id } = extension;
+    const uninstallTracker = new ExtensionUninstallTracker(id);
+    await extension.shutdown();
+    if (extension instanceof lazy.Extension) {
+      // AddonManager-managed add-ons run additional (cleanup) tasks after
+      // shutting down an extension. Do the same even without useAddonManager.
+      lazy.Extension.getBootstrapScope().uninstall({ id });
+
+      // Data removal by ExtensionAddonObserver.onUninstalled:
+      lazy.ExtensionAddonObserver.clearOnUninstall(id);
+    }
+    await uninstallTracker.waitForUninstallCleanupDone();
   }
 };
