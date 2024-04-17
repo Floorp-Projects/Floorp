@@ -1101,6 +1101,8 @@ pref("network.protocol-handler.external.disk", false);
 pref("network.protocol-handler.external.disks", false);
 pref("network.protocol-handler.external.afp", false);
 pref("network.protocol-handler.external.moz-icon", false);
+pref("network.protocol-handler.external.firefox-bridge", false);
+pref("network.protocol-handler.external.firefox-private-bridge", false);
 
 // Don't allow  external protocol handlers for common typos
 pref("network.protocol-handler.external.ttp", false);  // http
