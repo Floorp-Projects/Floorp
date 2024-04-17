@@ -918,13 +918,13 @@ function parseTimingFunction(value) {
     return PREDEFINED[value];
   }
 
-  const tokenStream = getCSSLexer(value);
+  const tokenStream = getCSSLexer(value, true);
   const getNextToken = () => {
     while (true) {
       const token = tokenStream.nextToken();
       if (
         !token ||
-        (token.tokenType !== "whitespace" && token.tokenType !== "comment")
+        (token.tokenType !== "WhiteSpace" && token.tokenType !== "Comment")
       ) {
         return token;
       }
@@ -932,24 +932,20 @@ function parseTimingFunction(value) {
   };
 
   let token = getNextToken();
-  if (token.tokenType !== "function" || token.text !== "cubic-bezier") {
+  if (token.tokenType !== "Function" || token.value !== "cubic-bezier") {
     return undefined;
   }
 
   const result = [];
   for (let i = 0; i < 4; ++i) {
     token = getNextToken();
-    if (!token || token.tokenType !== "number") {
+    if (!token || token.tokenType !== "Number") {
       return undefined;
     }
     result.push(token.number);
 
     token = getNextToken();
-    if (
-      !token ||
-      token.tokenType !== "symbol" ||
-      token.text !== (i == 3 ? ")" : ",")
-    ) {
+    if (!token || token.tokenType !== (i == 3 ? "CloseParenthesis" : "Comma")) {
       return undefined;
     }
   }
