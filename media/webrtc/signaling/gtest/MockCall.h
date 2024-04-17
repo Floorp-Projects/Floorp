@@ -79,16 +79,16 @@ class MockAudioReceiveStream : public webrtc::AudioReceiveStreamInterface {
   virtual void SetDepacketizerToDecoderFrameTransformer(
       rtc::scoped_refptr<webrtc::FrameTransformerInterface> frame_transformer)
       override {
-    // Unimplemented after webrtc.org e2561e17e2 removed the Reconfigure
-    // method.
-    MOZ_ASSERT(false);
+    MOZ_CRASH(
+        "Unimplemented after webrtc.org e2561e17e2 removed the Reconfigure "
+        "method.");
   }
   virtual void SetDecoderMap(
       std::map<int, webrtc::SdpAudioFormat> decoder_map) override;
   virtual void SetNackHistory(int history_ms) override {
-    // Unimplemented after webrtc.org e2561e17e2 removed the Reconfigure
-    // method.
-    MOZ_ASSERT(false);
+    MOZ_CRASH(
+        "Unimplemented after webrtc.org e2561e17e2 removed the Reconfigure "
+        "method.");
   }
   virtual void SetNonSenderRttMeasurement(bool enabled) override {}
   void SetFrameDecryptor(rtc::scoped_refptr<webrtc::FrameDecryptorInterface>
