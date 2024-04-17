@@ -49,3 +49,5 @@ run-sequentially = "very high failure rate in parallel"
 ["test_ext_scripting_contentScripts_file.js"]
 
 ["test_ext_scripting_updateContentScripts.js"]
+
+["test_ext_service_worker_messaging.js"]
