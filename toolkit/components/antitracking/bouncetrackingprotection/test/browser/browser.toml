@@ -18,6 +18,8 @@ support-files = [
 
 ["browser_bouncetracking_simple.js"]
 
-["browser_bouncetracking_stateful.js"]
+["browser_bouncetracking_stateful_cookies.js"]
+
+["browser_bouncetracking_stateful_storage.js"]
 
 ["browser_bouncetracking_stateful_web_worker.js"]
