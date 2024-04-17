@@ -494,11 +494,15 @@ void AnimationInfo::AddAnimationForProperty(
   }
 
   if (aAnimation->Pending()) {
-    const TimeStamp readyTime =
-        aFrame->PresContext()->RefreshDriver()->MostRecentRefresh(
-            /* aEnsureTimerStarted= */ false);
-    MOZ_ASSERT(!readyTime.IsNull());
-    aAnimation->SetPendingReadyTime(readyTime);
+    TimeStamp readyTime = aAnimation->GetPendingReadyTime();
+    if (readyTime.IsNull()) {
+      // TODO(emilio): This should generally not happen anymore, can we remove
+      // this SetPendingReadyTime call?
+      readyTime = aFrame->PresContext()->RefreshDriver()->MostRecentRefresh(
+          /* aEnsureTimerStarted= */ false);
+      MOZ_ASSERT(!readyTime.IsNull());
+      aAnimation->SetPendingReadyTime(readyTime);
+    }
     MaybeStartPendingAnimation(*animation, readyTime);
   }
 }
