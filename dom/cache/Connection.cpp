@@ -288,7 +288,8 @@ uint32_t Connection::DecreaseTransactionNestingLevel(
 
 NS_IMETHODIMP
 Connection::BackupToFileAsync(nsIFile* aDestinationFile,
-                              mozIStorageCompletionCallback* aCallback) {
+                              mozIStorageCompletionCallback* aCallback,
+                              uint32_t aPagesPerStep, uint32_t aStepDelayMs) {
   // async methods are not supported
   return NS_ERROR_NOT_IMPLEMENTED;
 }

@@ -395,6 +395,12 @@ interface mozIStorageAsyncConnection : nsISupports {
    *        - status: the status of the operation, use this to check if making
    *                  the copy was successful.
    *        - value: unused.
+   * @param [aPagesPerStep=5]
+   *        The number of pages in the database to copy per step. Defaults to 5
+   *        if omitted or set to 0.
+   * @param [aStepDelayMs=250]
+   *        The number of milliseconds to wait between each step. Defaults to
+   *        250 if omitted or set to 0.
    * @throws NS_ERROR_ABORT
    *         If the application has begun the process of shutting down already.
    * @throws NS_ERROR_NOT_INITIALIZED
@@ -405,5 +411,7 @@ interface mozIStorageAsyncConnection : nsISupports {
    *         If the execution thread cannot be acquired.
    */
   void backupToFileAsync(in nsIFile aDestinationFile,
-                         in mozIStorageCompletionCallback aCallback);
+                         in mozIStorageCompletionCallback aCallback,
+                         [optional] in unsigned long aPagesPerStep,
+                         [optional] in unsigned long aStepDelayMs);
 };

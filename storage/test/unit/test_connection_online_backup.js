@@ -85,9 +85,15 @@ async function getPreparedAsyncDatabase() {
  *
  * @param {mozIStorageAsyncConnection} connection
  *   A connection to a database that should be copied.
+ * @param {number} [pagesPerStep]
+ *   The number of pages to copy per step. If not supplied or is 0, falls back
+ *   to the platform default which is currently 5.
+ * @param {number} [stepDelayMs]
+ *   The number of milliseconds to wait between copying step. If not supplied
+ *   or is 0, falls back to the platform default which is currently 250.
  * @returns {Promise<nsIFile>}
  */
-async function createCopy(connection) {
+async function createCopy(connection, pagesPerStep, stepDelayMs) {
   let destFilePath = PathUtils.join(PathUtils.profileDir, BACKUP_FILE_NAME);
   let destFile = await IOUtils.getFile(destFilePath);
   Assert.ok(
@@ -96,10 +102,15 @@ async function createCopy(connection) {
   );
 
   await new Promise(resolve => {
-    connection.backupToFileAsync(destFile, result => {
-      Assert.ok(Components.isSuccessCode(result));
-      resolve(result);
-    });
+    connection.backupToFileAsync(
+      destFile,
+      result => {
+        Assert.ok(Components.isSuccessCode(result));
+        resolve(result);
+      },
+      pagesPerStep,
+      stepDelayMs
+    );
   });
 
   return destFile;
@@ -121,7 +132,7 @@ async function assertSuccessfulCopy(file, expectedEntries = TEST_ROWS) {
 
   await executeSimpleSQLAsync(conn, "PRAGMA page_size", resultSet => {
     let result = resultSet.getNextRow();
-    Assert.equal(TEST_PAGE_SIZE, result.getResultByIndex(0).getAsUint32());
+    Assert.equal(TEST_PAGE_SIZE, result.getResultByIndex(0));
   });
 
   let stmt = conn.createAsyncStatement("SELECT COUNT(*) FROM test");
@@ -191,6 +202,36 @@ add_task(async function test_backupToFileAsync_during_insert() {
 });
 
 /**
+ * Tests that alternative pages-per-step and step delay values can be set when
+ * calling backupToFileAsync.
+ */
+add_task(async function test_backupToFileAsync_during_insert() {
+  let newConnection = await getPreparedAsyncDatabase();
+
+  // Let's try some higher values...
+  let copyFile = await createCopy(newConnection, 15, 500);
+  Assert.ok(
+    await IOUtils.exists(copyFile.path),
+    "A new file was created by backupToFileAsync"
+  );
+
+  await assertSuccessfulCopy(copyFile);
+  await IOUtils.remove(copyFile.path);
+
+  // And now we'll try some lower values...
+  copyFile = await createCopy(newConnection, 1, 25);
+  Assert.ok(
+    await IOUtils.exists(copyFile.path),
+    "A new file was created by backupToFileAsync"
+  );
+
+  await assertSuccessfulCopy(copyFile);
+  await IOUtils.remove(copyFile.path);
+
+  await asyncClose(newConnection);
+});
+
+/**
  * Tests the behaviour of backupToFileAsync as exposed through Sqlite.sys.mjs.
  */
 add_task(async function test_backupToFileAsync_via_Sqlite_module() {
@@ -206,6 +247,13 @@ add_task(async function test_backupToFileAsync_via_Sqlite_module() {
 
   await assertSuccessfulCopy(copyFile);
   await IOUtils.remove(copyFile.path);
+
+  // Also check that we can plumb through pagesPerStep and stepDelayMs.
+  await moduleConnection.backup(copyFilePath, 15, 500);
+  Assert.ok(await IOUtils.exists(copyFilePath), "A new file was created");
+  await assertSuccessfulCopy(copyFile);
+  await IOUtils.remove(copyFile.path);
+
   await moduleConnection.close();
   await asyncClose(xpcomConnection);
 });

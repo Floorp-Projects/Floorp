@@ -1184,9 +1184,15 @@ ConnectionData.prototype = Object.freeze({
    * @param {string} destFilePath
    *   The path on the local filesystem to write the database copy. Any existing
    *   file at this path will be overwritten.
+   * @param {number} [pagesPerStep=0]
+   *   The number of pages to copy per step. If not supplied or is 0, falls back
+   *   to the platform default which is currently 5.
+   * @param {number} [stepDelayMs=0]
+   *   The number of milliseconds to wait between copying step. If not supplied
+   *   or is 0, falls back to the platform default which is currently 250.
    * @return Promise<undefined, nsresult>
    */
-  async backupToFile(destFilePath) {
+  async backupToFile(destFilePath, pagesPerStep = 0, stepDelayMs = 0) {
     if (!this._dbConn) {
       return Promise.reject(
         new Error("No opened database connection to create a backup from.")
@@ -1194,13 +1200,18 @@ ConnectionData.prototype = Object.freeze({
     }
     let destFile = await IOUtils.getFile(destFilePath);
     return new Promise((resolve, reject) => {
-      this._dbConn.backupToFileAsync(destFile, result => {
-        if (Components.isSuccessCode(result)) {
-          resolve();
-        } else {
-          reject(result);
-        }
-      });
+      this._dbConn.backupToFileAsync(
+        destFile,
+        result => {
+          if (Components.isSuccessCode(result)) {
+            resolve();
+          } else {
+            reject(result);
+          }
+        },
+        pagesPerStep,
+        stepDelayMs
+      );
     });
   },
 });
@@ -2002,10 +2013,20 @@ OpenedConnection.prototype = Object.freeze({
    * @param {string} destFilePath
    *   The path on the local filesystem to write the database copy. Any existing
    *   file at this path will be overwritten.
+   * @param {number} [pagesPerStep=0]
+   *   The number of pages to copy per step. If not supplied or is 0, falls back
+   *   to the platform default which is currently 5.
+   * @param {number} [stepDelayMs=0]
+   *   The number of milliseconds to wait between copying step. If not supplied
+   *   or is 0, falls back to the platform default which is currently 250.
    * @return Promise<undefined, nsresult>
    */
-  backup(destFilePath) {
-    return this._connectionData.backupToFile(destFilePath);
+  backup(destFilePath, pagesPerStep = 0, stepDelayMs = 0) {
+    return this._connectionData.backupToFile(
+      destFilePath,
+      pagesPerStep,
+      stepDelayMs
+    );
   },
 });
 
