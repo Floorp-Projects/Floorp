@@ -146,8 +146,9 @@ h1.translations-panel-header-wrapper {
   text-align: initial;
 }
 
-.select-translations-panel-label {
-  margin-block: var(--arrowpanel-padding) 6px;
+.select-translations-panel-label,
+.select-translations-panel-message-bar {
+  margin-block: 0 6px;
 }
 
 #select-translations-panel-lang-selection {
