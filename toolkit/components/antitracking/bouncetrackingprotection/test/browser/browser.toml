@@ -9,6 +9,7 @@ support-files = [
   "file_start.html",
   "file_bounce.sjs",
   "file_bounce.html",
+  "file_web_worker.js",
 ]
 
 ["browser_bouncetracking_oa_isolation.js"]
@@ -18,3 +19,5 @@ support-files = [
 ["browser_bouncetracking_simple.js"]
 
 ["browser_bouncetracking_stateful.js"]
+
+["browser_bouncetracking_stateful_web_worker.js"]
