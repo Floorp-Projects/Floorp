@@ -104,6 +104,8 @@ skip-if = ["a11y_checks"] # Bug 1858037 to investigate intermittent a11y_checks 
 
 ["browser_html_options_ui.js"]
 
+["browser_html_options_ui_dark_theme.js"]
+
 ["browser_html_options_ui_in_tab.js"]
 
 ["browser_html_pending_updates.js"]
