@@ -12,7 +12,7 @@ skip-if(useDrawSnapshot) fuzzy-if(gtkWidget,0-1,0-87) fuzzy-if(!gtkWidget,0-1,0-
 skip-if(useDrawSnapshot) == bg-fixed-child-no-culling-1.html bg-fixed-child-no-culling-1-ref.html
 skip-if(useDrawSnapshot) == bg-fixed-child-no-culling-2.html bg-fixed-child-no-culling-2-ref.html
 skip-if(useDrawSnapshot) == bg-fixed-child-no-culling-3.html bg-fixed-child-no-culling-3-ref.html
-fuzzy-if(Android,0-2,0-4000) fuzzy-if(cocoaWidget,0-2,0-179524) fuzzy-if(winWidget,0-1,0-74590) fuzzy-if(gtkWidget&&layersGPUAccelerated,0-1,0-3528) skip-if(useDrawSnapshot) fuzzy-if(geckoview,0-1,0-74590) == bg-fixed-transformed-image.html bg-fixed-transformed-image-ref.html
+fuzzy-if(Android,0-2,0-4000) fuzzy-if(cocoaWidget,0-2,0-179524) fuzzy-if(winWidget,0-1,0-74590) fuzzy-if(gtkWidget,0-1,0-3528) skip-if(useDrawSnapshot) fuzzy-if(geckoview,0-1,0-74590) == bg-fixed-transformed-image.html bg-fixed-transformed-image-ref.html
 skip-if(useDrawSnapshot) == contain-paint-scrollable-frame-1.html contain-paint-scrollable-frame-1-ref.html
 skip-if(useDrawSnapshot) == element-1.html element-1-ref.html
 pref(layers.force-active,true) skip-if(useDrawSnapshot) == iframe-1.html iframe-1-ref.html
@@ -73,7 +73,7 @@ fuzzy-if(Android,0-6,0-4) skip == position-sticky-scrolled-clip-2.html position-
 fuzzy-if(Android,0-8,0-27) fuzzy-if(cocoaWidget,9-11,20-44) skip-if(useDrawSnapshot) == curtain-effect-1.html curtain-effect-1-ref.html
 fuzzy-if(Android,0-7,0-9) fuzzy-if(gtkWidget,10-15,12-32) fuzzy-if(cocoaWidget,5-9,20-42) skip-if(useDrawSnapshot) == transformed-1.html transformed-1-ref.html # Bug 1604338
 fuzzy-if(Android,2-7,1-12) fuzzy-if(gtkWidget,3-5,12-28) fuzzy-if(cocoaWidget,5-6,18-38) skip-if(useDrawSnapshot) fuzzy-if(swgl&&cocoaWidget&&isDebugBuild,0-6,0-38) == position-sticky-transformed-in-scrollframe-1.html position-sticky-transformed-in-scrollframe-1-ref.html # Bug 1604338
-fuzzy-if(Android,3-3,1-470) fuzzy-if(Android&&swgl&&isDebugBuild&&/^aarch64-gcc3/.test(xulRuntime.XPCOMABI),3-3,457-457) fuzzy-if(gtkWidget,13-20,12-32) fuzzy-if(cocoaWidget,12-16,20-44) skip-if(useDrawSnapshot) == position-sticky-transformed-in-scrollframe-2.html position-sticky-transformed-in-scrollframe-2-ref.html # Bug 1604338
+fuzzy-if(Android,3-3,1-470) fuzzy-if(gtkWidget,13-20,12-32) fuzzy-if(cocoaWidget,12-16,20-44) skip-if(useDrawSnapshot) == position-sticky-transformed-in-scrollframe-2.html position-sticky-transformed-in-scrollframe-2-ref.html # Bug 1604338
 fuzzy-if(Android,12-13,4-31) fuzzy-if(gtkWidget,16-27,14-32) fuzzy-if(cocoaWidget,13-16,20-44) skip-if(useDrawSnapshot) == position-sticky-in-transformed-scrollframe-1.html position-sticky-in-transformed-scrollframe-ref.html # Bug 1604338
 fuzzy-if(Android,12-13,4-31) fuzzy-if(gtkWidget,16-27,14-32) fuzzy-if(cocoaWidget,13-16,20-44) skip-if(useDrawSnapshot) == position-sticky-in-transformed-scrollframe-2.html position-sticky-in-transformed-scrollframe-ref.html # Bug 1604338
 
