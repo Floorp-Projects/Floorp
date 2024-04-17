@@ -37,6 +37,12 @@ job-defaults:
         env:
             MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE: system
     use-python: default
+
+    # Note: this makes the tokens accessible to more than just the Windows builds,
+    # but we do not have Windows-specific mozharness configs, so it's simpler
+    # to just add this scope to all builds.
+    scopes:
+        - secrets:get:project/releng/gecko/build/windows-laf-tokens.data
     run:
         mozconfig-variant:
             by-release-type:
