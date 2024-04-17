@@ -1329,6 +1329,13 @@ void RemoteAccessible::DOMNodeID(nsString& aID) const {
   }
 }
 
+void RemoteAccessible::DOMNodeClass(nsString& aClass) const {
+  if (mCachedFields) {
+    mCachedFields->GetAttribute(CacheKey::DOMNodeClass, aClass);
+    VERIFY_CACHE(CacheDomain::DOMNodeIDAndClass);
+  }
+}
+
 void RemoteAccessible::ScrollToPoint(uint32_t aScrollType, int32_t aX,
                                      int32_t aY) {
   Unused << mDoc->SendScrollToPoint(mID, aScrollType, aX, aY);
@@ -1551,7 +1558,7 @@ already_AddRefed<AccAttributes> RemoteAccessible::Attributes() {
     }
 
     nsString className;
-    mCachedFields->GetAttribute(CacheKey::DOMNodeClass, className);
+    DOMNodeClass(className);
     if (!className.IsEmpty()) {
       attributes->SetAttribute(nsGkAtoms::_class, std::move(className));
     }
