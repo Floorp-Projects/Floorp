@@ -9491,6 +9491,10 @@ interface Document extends Node, DocumentOrShadowRoot, FontFaceSource, GeometryU
      *
      * [MDN Reference](https://developer.mozilla.org/docs/Web/API/Document/createElement)
      */
+    createElement<K extends keyof HTMLElementTagNameMap>(tagName: K, options?: ElementCreationOptions): HTMLElementTagNameMap[K];
+    /** @deprecated */
+    createElement<K extends keyof HTMLElementDeprecatedTagNameMap>(tagName: K, options?: ElementCreationOptions): HTMLElementDeprecatedTagNameMap[K];
+    createElement(tagName: string, options?: ElementCreationOptions): HTMLElement;
     /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Document/createElementNS) */
     createElementNS(namespace: string | null, qualifiedName: string, options?: ElementCreationOptions | string): Element;
     /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/Document/createEvent) */
