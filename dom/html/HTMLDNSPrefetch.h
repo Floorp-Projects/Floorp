@@ -55,7 +55,13 @@ class HTMLDNSPrefetch {
     Medium,
     High,
   };
-  static nsresult Prefetch(SupportsDNSPrefetch&, Element&, Priority);
+  enum class PrefetchSource {
+    LinkDnsPrefetch,
+    AnchorSpeculativePrefetch,
+  };
+  static nsresult DeferPrefetch(SupportsDNSPrefetch& aSupports,
+                                Element& aElement, Priority aPriority);
+  static void SendRequest(Element& aElement, nsIDNSService::DNSFlags aFlags);
   static nsresult Prefetch(
       const nsAString& host, bool isHttps,
       const OriginAttributes& aPartitionedPrincipalOriginAttributes,
@@ -68,9 +74,9 @@ class HTMLDNSPrefetch {
                                  nsresult aReason);
   static void ElementDestroyed(Element&, SupportsDNSPrefetch&);
 
- private:
   static nsIDNSService::DNSFlags PriorityToDNSServiceFlags(Priority);
 
+ private:
   static nsresult Prefetch(
       const nsAString& host, bool isHttps,
       const OriginAttributes& aPartitionedPrincipalOriginAttributes,
@@ -114,8 +120,8 @@ class SupportsDNSPrefetch {
         mDNSPrefetchDeferred(false),
         mDestroyedCalled(false) {}
 
-  void CancelDNSPrefetch(Element&);
-  void TryDNSPrefetch(Element&);
+  void CancelDNSPrefetch(Element& aOwner);
+  void TryDNSPrefetch(Element& aOwner, HTMLDNSPrefetch::PrefetchSource aSource);
 
   // This MUST be called on the destructor of the Element subclass.
   // Our own destructor ensures that.

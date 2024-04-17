@@ -555,7 +555,7 @@ void HTMLLinkElement::
   }
 
   if (linkTypes & eDNS_PREFETCH) {
-    TryDNSPrefetch(*this);
+    TryDNSPrefetch(*this, HTMLDNSPrefetch::PrefetchSource::LinkDnsPrefetch);
   }
 }
 

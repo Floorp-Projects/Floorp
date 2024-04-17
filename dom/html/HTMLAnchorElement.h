@@ -189,6 +189,8 @@ class HTMLAnchorElement final : public nsGenericHTMLElement,
  protected:
   virtual ~HTMLAnchorElement();
 
+  void MaybeTryDNSPrefetch();
+
   JSObject* WrapNode(JSContext*, JS::Handle<JSObject*> aGivenProto) override;
   RefPtr<nsDOMTokenList> mRelList;
 };
