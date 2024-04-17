@@ -413,14 +413,11 @@ class ProviderQuickSuggest extends UrlbarProvider {
     let payload = {
       url: suggestion.url,
       isSponsored: suggestion.is_sponsored,
-      helpUrl: lazy.QuickSuggest.HELP_URL,
-      helpL10n: {
-        id: "urlbar-result-menu-learn-more-about-firefox-suggest",
-      },
       isBlockable: true,
       blockL10n: {
         id: "urlbar-result-menu-dismiss-firefox-suggest",
       },
+      isManageable: true,
     };
 
     if (suggestion.full_keyword) {
