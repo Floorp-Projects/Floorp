@@ -2292,6 +2292,10 @@ void nsProtocolProxyService::MaybeDisableDNSPrefetch(nsIProxyInfo* aProxy) {
   nsCOMPtr<nsProxyInfo> pi = do_QueryInterface(aProxy);
   if (!pi || !pi->mType || pi->mType == kProxyType_DIRECT) return;
 
+  if (StaticPrefs::network_dns_prefetch_via_proxy()) {
+    return;
+  }
+
   // To avoid getting DNS service recursively, we directly use
   // GetXPCOMSingleton().
   nsCOMPtr<nsIDNSService> dns = nsDNSService::GetXPCOMSingleton();
