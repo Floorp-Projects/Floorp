@@ -32,7 +32,6 @@ dictionary CSP {
   sequence<DOMString> worker-src;
   sequence<DOMString> script-src-elem;
   sequence<DOMString> script-src-attr;
-  sequence<DOMString> require-trusted-types-for;
 };
 
 [GenerateToJSON]
