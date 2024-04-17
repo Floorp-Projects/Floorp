@@ -587,11 +587,17 @@ nsresult BounceTrackingProtection::PurgeBounceTrackersForStateGlobal(
             ("%s: Purge state for host: %s", __FUNCTION__,
              PromiseFlatCString(host).get()));
 
-    // TODO: Bug 1842067: Clear by site + OA.
-    rv = clearDataService->DeleteDataFromBaseDomain(host, false,
-                                                    TRACKER_PURGE_FLAGS, cb);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      clearPromise->Reject(0, __func__);
+    if (StaticPrefs::privacy_bounceTrackingProtection_enableDryRunMode()) {
+      // In dry-run mode, we don't actually clear the data, but we still want to
+      // resolve the promise to indicate that the data would have been cleared.
+      clearPromise->Resolve(host, __func__);
+    } else {
+      // TODO: Bug 1842067: Clear by site + OA.
+      rv = clearDataService->DeleteDataFromBaseDomain(host, false,
+                                                      TRACKER_PURGE_FLAGS, cb);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        clearPromise->Reject(0, __func__);
+      }
     }
 
     aClearPromises.AppendElement(clearPromise);
