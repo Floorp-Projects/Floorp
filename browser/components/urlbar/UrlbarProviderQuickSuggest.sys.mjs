@@ -45,7 +45,6 @@ const TELEMETRY_SCALARS = {
   CLICK_NAV_SUPERCEDED: `${TELEMETRY_PREFIX}.click_nav_superceded`,
   CLICK_NONSPONSORED: `${TELEMETRY_PREFIX}.click_nonsponsored`,
   CLICK_SPONSORED: `${TELEMETRY_PREFIX}.click_sponsored`,
-  HELP_DYNAMIC_WIKIPEDIA: `${TELEMETRY_PREFIX}.help_dynamic_wikipedia`,
   HELP_NONSPONSORED: `${TELEMETRY_PREFIX}.help_nonsponsored`,
   HELP_SPONSORED: `${TELEMETRY_PREFIX}.help_sponsored`,
   IMPRESSION_DYNAMIC_WIKIPEDIA: `${TELEMETRY_PREFIX}.impression_dynamic_wikipedia`,
@@ -413,14 +412,11 @@ class ProviderQuickSuggest extends UrlbarProvider {
     let payload = {
       url: suggestion.url,
       isSponsored: suggestion.is_sponsored,
-      helpUrl: lazy.QuickSuggest.HELP_URL,
-      helpL10n: {
-        id: "urlbar-result-menu-learn-more-about-firefox-suggest",
-      },
       isBlockable: true,
       blockL10n: {
         id: "urlbar-result-menu-dismiss-firefox-suggest",
       },
+      isManageable: true,
     };
 
     if (suggestion.full_keyword) {
@@ -592,9 +588,6 @@ class ProviderQuickSuggest extends UrlbarProvider {
           scalars.push(TELEMETRY_SCALARS.CLICK_DYNAMIC_WIKIPEDIA);
         } else {
           switch (resultSelType) {
-            case "help":
-              scalars.push(TELEMETRY_SCALARS.HELP_DYNAMIC_WIKIPEDIA);
-              break;
             case "dismiss":
               scalars.push(TELEMETRY_SCALARS.BLOCK_DYNAMIC_WIKIPEDIA);
               break;

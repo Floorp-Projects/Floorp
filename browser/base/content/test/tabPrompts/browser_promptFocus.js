@@ -20,8 +20,7 @@ add_task(async function test_tabdialogbox_tab_switch_focus() {
     tabPromises.push(
       BrowserTestUtils.openNewForegroundTab(
         gBrowser,
-        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
-        "http://example.com",
+        "https://example.com",
         true
       )
     );

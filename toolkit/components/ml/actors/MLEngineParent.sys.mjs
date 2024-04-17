@@ -5,6 +5,7 @@
 /**
  * @typedef {object} Lazy
  * @property {typeof console} console
+ * @property {typeof import("../content/Utils.sys.mjs").getRuntimeWasmFilename} getRuntimeWasmFilename
  * @property {typeof import("../content/EngineProcess.sys.mjs").EngineProcess} EngineProcess
  * @property {typeof import("../../../../services/settings/remote-settings.sys.mjs").RemoteSettings} RemoteSettings
  * @property {typeof import("../../translations/actors/TranslationsParent.sys.mjs").TranslationsParent} TranslationsParent
@@ -21,16 +22,13 @@ ChromeUtils.defineLazyGetter(lazy, "console", () => {
 });
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  getRuntimeWasmFilename: "chrome://global/content/ml/Utils.sys.mjs",
   EngineProcess: "chrome://global/content/ml/EngineProcess.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
   TranslationsParent: "resource://gre/actors/TranslationsParent.sys.mjs",
 });
 
-/**
- * @typedef {import("../../translations/translations").WasmRecord} WasmRecord
- */
-
-const DEFAULT_CACHE_TIMEOUT_MS = 15_000;
+const RS_COLLECTION = "ml-onnx-runtime";
 
 /**
  * The ML engine is in its own content process. This actor handles the
@@ -78,16 +76,13 @@ export class MLEngineParent extends JSWindowActorParent {
     MLEngineParent.#wasmRecord = null;
   }
 
-  /**
-   * @param {string} engineName
-   * @param {() => Promise<ArrayBuffer>} getModel
-   * @param {number} cacheTimeoutMS - How long the engine cache remains alive between
-   *   uses, in milliseconds. In automation the engine is manually created and destroyed
-   *   to avoid timing issues.
+  /** Creates a new MLEngine.
+   *
+   * @param {PipelineOptions} pipelineOptions
    * @returns {MLEngine}
    */
-  getEngine(engineName, getModel, cacheTimeoutMS = DEFAULT_CACHE_TIMEOUT_MS) {
-    return new MLEngine(this, engineName, getModel, cacheTimeoutMS);
+  getEngine(pipelineOptions) {
+    return new MLEngine({ mlEngineParent: this, pipelineOptions });
   }
 
   // eslint-disable-next-line consistent-return
@@ -112,19 +107,18 @@ export class MLEngineParent extends JSWindowActorParent {
     }
   }
 
-  /**
+  /** Gets the wasm file from remote settings.
+   *
    * @param {RemoteSettingsClient} client
    */
   static async #getWasmArrayRecord(client) {
-    // Load the wasm binary from remote settings, if it hasn't been already.
-    lazy.console.log(`Getting remote wasm records.`);
+    const wasmFilename = lazy.getRuntimeWasmFilename();
 
     /** @type {WasmRecord[]} */
     const wasmRecords = await lazy.TranslationsParent.getMaxVersionRecords(
       client,
       {
-        // TODO - This record needs to be created with the engine wasm payload.
-        filters: { name: "inference-engine" },
+        filters: { name: wasmFilename },
         majorVersion: MLEngineParent.WASM_MAJOR_VERSION,
       }
     );
@@ -142,10 +136,7 @@ export class MLEngineParent extends JSWindowActorParent {
       );
     }
     const [record] = wasmRecords;
-    lazy.console.log(
-      `Using ${record.name}@${record.release} release version ${record.version} first released on Fx${record.fx_release}`,
-      record
-    );
+    lazy.console.log(`Using runtime ${record.name}@${record.version}`, record);
     return record;
   }
 
@@ -192,12 +183,14 @@ export class MLEngineParent extends JSWindowActorParent {
     }
 
     /** @type {RemoteSettingsClient} */
-    const client = lazy.RemoteSettings("ml-wasm");
+    const client = lazy.RemoteSettings(RS_COLLECTION, {
+      bucketName: "main",
+    });
 
     MLEngineParent.#remoteClient = client;
 
     client.on("sync", async ({ data: { created, updated, deleted } }) => {
-      lazy.console.log(`"sync" event for ml-wasm`, {
+      lazy.console.log(`"sync" event for ${RS_COLLECTION}`, {
         created,
         updated,
         deleted,
@@ -227,17 +220,6 @@ export class MLEngineParent extends JSWindowActorParent {
     return this.sendQuery("MLEngine:ForceShutdown");
   }
 }
-
-/**
- * This contains all of the information needed to perform a translation request.
- *
- * @typedef {object} TranslationRequest
- * @property {Node} node
- * @property {string} sourceText
- * @property {boolean} isHTML
- * @property {Function} resolve
- * @property {Function} reject
- */
 
 /**
  * The interface to communicate to an MLEngine in the parent process. The engine manages
@@ -271,21 +253,13 @@ class MLEngine {
   engineStatus = "uninitialized";
 
   /**
-   * @param {MLEngineParent} mlEngineParent
-   * @param {string} engineName
-   * @param {() => Promise<ArrayBuffer>} getModel
-   * @param {number} timeoutMS
+   * @param {object} config - The configuration object for the instance.
+   * @param {object} config.mlEngineParent - The parent machine learning engine associated with this instance.
+   * @param {object} config.pipelineOptions - The options for configuring the pipeline associated with this instance.
    */
-  constructor(mlEngineParent, engineName, getModel, timeoutMS) {
-    /** @type {MLEngineParent} */
+  constructor({ mlEngineParent, pipelineOptions }) {
     this.mlEngineParent = mlEngineParent;
-    /** @type {string} */
-    this.engineName = engineName;
-    /** @type {() => Promise<ArrayBuffer>} */
-    this.getModel = getModel;
-    /** @type {number} */
-    this.timeoutMS = timeoutMS;
-
+    this.pipelineOptions = pipelineOptions;
     this.#setupPortCommunication();
   }
 
@@ -296,14 +270,12 @@ class MLEngine {
     const { port1: childPort, port2: parentPort } = new MessageChannel();
     const transferables = [childPort];
     this.#port = parentPort;
-
     this.#port.onmessage = this.handlePortMessage;
     this.mlEngineParent.sendAsyncMessage(
       "MLEngine:NewPort",
       {
         port: childPort,
-        engineName: this.engineName,
-        timeoutMS: this.timeoutMS,
+        pipelineOptions: this.pipelineOptions.getOptions(),
       },
       transferables
     );
@@ -393,11 +365,20 @@ class MLEngine {
     const resolvers = Promise.withResolvers();
     const requestId = this.#nextRequestId++;
     this.#requests.set(requestId, resolvers);
-    this.#port.postMessage({
-      type: "EnginePort:Run",
-      requestId,
-      request,
-    });
+
+    let transferables = [];
+    if (request.data instanceof ArrayBuffer) {
+      transferables.push(request.data);
+    }
+
+    this.#port.postMessage(
+      {
+        type: "EnginePort:Run",
+        requestId,
+        request,
+      },
+      transferables
+    );
     return resolvers.promise;
   }
 }

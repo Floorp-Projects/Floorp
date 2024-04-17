@@ -5663,9 +5663,11 @@ std::tuple<nscoord, nsReflowStatus> nsFlexContainerFrame::ReflowChildren(
                         availableBSizeForItem)
                 .ConvertTo(itemWM, flexWM);
 
+        const bool isAdjacentWithBStart =
+            framePos.B(flexWM) == containerContentBoxOrigin.B(flexWM);
         const nsReflowStatus childReflowStatus =
             ReflowFlexItem(aAxisTracker, aReflowInput, item, framePos,
-                           availableSize, aContainerSize);
+                           isAdjacentWithBStart, availableSize, aContainerSize);
 
         const bool shouldPushItem = [&]() {
           if (availableBSizeForItem == NS_UNCONSTRAINEDSIZE) {
@@ -5673,7 +5675,7 @@ std::tuple<nscoord, nsReflowStatus> nsFlexContainerFrame::ReflowChildren(
             // fragmenting and we don't want to push the item.
             return false;
           }
-          if (framePos.B(flexWM) == containerContentBoxOrigin.B(flexWM)) {
+          if (isAdjacentWithBStart) {
             // The flex item is adjacent with block-start of the container's
             // content-box. Don't push it, or we'll trap in an infinite loop.
             return false;
@@ -6068,7 +6070,8 @@ void nsFlexContainerFrame::MoveFlexItemToFinalPosition(
 nsReflowStatus nsFlexContainerFrame::ReflowFlexItem(
     const FlexboxAxisTracker& aAxisTracker, const ReflowInput& aReflowInput,
     const FlexItem& aItem, const LogicalPoint& aFramePos,
-    const LogicalSize& aAvailableSize, const nsSize& aContainerSize) {
+    const bool aIsAdjacentWithBStart, const LogicalSize& aAvailableSize,
+    const nsSize& aContainerSize) {
   FLEX_ITEM_LOG(aItem.Frame(), "Doing final reflow");
 
   // Returns true if we should use 'auto' in block axis's StyleSizeOverrides to
@@ -6205,6 +6208,13 @@ nsReflowStatus nsFlexContainerFrame::ReflowFlexItem(
     // intended to catch any regressions here, if we end up relying on this bit
     // & neglecting to set it.)
     aItem.Frame()->AddStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE);
+  }
+
+  if (!aIsAdjacentWithBStart) {
+    // mIsTopOfPage bit in childReflowInput is carried over from aReflowInput.
+    // However, if this item's position is not adjacent with the flex
+    // container's content-box block-start edge, we should clear it.
+    childReflowInput.mFlags.mIsTopOfPage = false;
   }
 
   // NOTE: Be very careful about doing anything else with childReflowInput

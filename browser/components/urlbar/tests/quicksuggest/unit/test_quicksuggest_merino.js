@@ -549,14 +549,11 @@ add_task(async function bestMatch() {
           url: "url",
           icon: null,
           qsSuggestion: "full_keyword",
-          helpUrl: QuickSuggest.HELP_URL,
-          helpL10n: {
-            id: "urlbar-result-menu-learn-more-about-firefox-suggest",
-          },
           isBlockable: true,
           blockL10n: {
             id: "urlbar-result-menu-dismiss-firefox-suggest",
           },
+          isManageable: true,
           displayUrl: "url",
           source: "merino",
           provider: "some_top_pick_provider",

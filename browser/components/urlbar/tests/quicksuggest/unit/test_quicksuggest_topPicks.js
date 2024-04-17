@@ -175,14 +175,11 @@ function makeExpectedResult({
       shouldShowUrl: true,
       source: "merino",
       provider: telemetryType,
-      helpUrl: QuickSuggest.HELP_URL,
-      helpL10n: {
-        id: "urlbar-result-menu-learn-more-about-firefox-suggest",
-      },
       isBlockable: true,
       blockL10n: {
         id: "urlbar-result-menu-dismiss-firefox-suggest",
       },
+      isManageable: true,
     },
   };
   if (typeof dupedHeuristic == "boolean") {

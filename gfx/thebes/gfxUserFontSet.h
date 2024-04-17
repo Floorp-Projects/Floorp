@@ -313,7 +313,10 @@ class gfxUserFontSet {
 
   // generation - each time a face is loaded, generation is
   // incremented so that the change can be recognized
-  uint64_t GetGeneration() { return mGeneration; }
+  uint64_t GetGeneration() {
+    mozilla::RecursiveMutexAutoLock lock(mMutex);
+    return mGeneration;
+  }
 
   // increment the generation on font load
   void IncrementGeneration(bool aIsRebuild = false) {

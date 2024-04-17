@@ -975,13 +975,7 @@ waitForAllPaints(() => {
     animation.pause();
 
     await animation.ready;
-    let restyleCount;
-    restyleCount = await observeStyling(1);
-    is(restyleCount, 1,
-       'Animations running on the compositor should restyle once after ' +
-       'Animation.pause() was called');
-
-    restyleCount = await observeStyling(5);
+    let restyleCount = await observeStyling(5);
     is(restyleCount, 0,
        'Paused animations running on the compositor should never cause ' +
        'restyles');
@@ -997,13 +991,7 @@ waitForAllPaints(() => {
     animation.pause();
 
     await animation.ready;
-    let restyleCount;
-    restyleCount = await observeStyling(1);
-    is(restyleCount, 1,
-       'Animations running on the main-thread should restyle once after ' +
-       'Animation.pause() was called');
-
-    restyleCount = await observeStyling(5);
+    let restyleCount = await observeStyling(5);
     is(restyleCount, 0,
        'Paused animations running on the main-thread should never cause ' +
        'restyles');

@@ -121,24 +121,6 @@ add_task(async function () {
           },
         },
       },
-      // help
-      {
-        command: "help",
-        scalars: {
-          [WEATHER_SCALARS.IMPRESSION]: position,
-          [WEATHER_SCALARS.HELP]: position,
-        },
-        event: {
-          category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
-          method: "engagement",
-          object: "help",
-          extra: {
-            suggestion_type,
-            match_type,
-            position: position.toString(),
-          },
-        },
-      },
     ],
   });
 });

@@ -20,7 +20,6 @@ const TELEMETRY_PREFIX = "contextual.services.quicksuggest";
 const TELEMETRY_SCALARS = {
   BLOCK: `${TELEMETRY_PREFIX}.block_weather`,
   CLICK: `${TELEMETRY_PREFIX}.click_weather`,
-  HELP: `${TELEMETRY_PREFIX}.help_weather`,
   IMPRESSION: `${TELEMETRY_PREFIX}.impression_weather`,
 };
 
@@ -233,7 +232,6 @@ class ProviderWeather extends UrlbarProvider {
    *
    *   - "": The user didn't pick the row or any part of it
    *   - "weather": The user picked the main part of the row
-   *   - "help": The user picked the help button
    *   - "dismiss": The user dismissed the result
    *
    *   An empty string means the user picked some other row to end the
@@ -264,10 +262,6 @@ class ProviderWeather extends UrlbarProvider {
       case "weather":
         clickScalars.push(TELEMETRY_SCALARS.CLICK);
         eventObject = "click";
-        break;
-      case "help":
-        clickScalars.push(TELEMETRY_SCALARS.HELP);
-        eventObject = "help";
         break;
       case "dismiss":
         clickScalars.push(TELEMETRY_SCALARS.BLOCK);
