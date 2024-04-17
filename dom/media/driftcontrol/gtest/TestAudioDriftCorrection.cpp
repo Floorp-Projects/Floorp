@@ -329,9 +329,9 @@ TEST(TestAudioDriftCorrection, DynamicInputBufferSizeChanges)
       if (((receivedFramesStart - transmittedFramesStart + i) /
            aTransmitterBlockSize) > numBlocksTransmitted) {
         tone.Generate(inSegment, aTransmitterBlockSize);
-        MOZ_ASSERT(!inSegment.IsNull());
+        MOZ_RELEASE_ASSERT(!inSegment.IsNull());
         inToneVerifier.AppendData(inSegment);
-        MOZ_ASSERT(!inSegment.IsNull());
+        MOZ_RELEASE_ASSERT(!inSegment.IsNull());
         ++numBlocksTransmitted;
         totalFramesTransmitted += aTransmitterBlockSize;
       }

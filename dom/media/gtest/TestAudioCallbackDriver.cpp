@@ -81,7 +81,7 @@ class MockGraphInterface : public GraphInterface {
                 RefPtr<Runnable> aSwitchedRunnable = NS_NewRunnableFunction(
                     "DefaultNoopSwitchedRunnable", [] {})) {
     auto guard = mNextDriver.Lock();
-    MOZ_ASSERT(guard->isNothing());
+    MOZ_RELEASE_ASSERT(guard->isNothing());
     *guard =
         Some(std::make_tuple(std::move(aDriver), std::move(aSwitchedRunnable)));
   }
@@ -252,7 +252,7 @@ class MOZ_STACK_CLASS AutoSetter {
       : mVal(aVal), mNew(aNew), mOld(mVal.exchange(aNew)) {}
   ~AutoSetter() {
     DebugOnly<T> oldNew = mVal.exchange(mOld);
-    MOZ_ASSERT(oldNew == mNew);
+    MOZ_RELEASE_ASSERT(oldNew == mNew);
   }
 };
 #endif

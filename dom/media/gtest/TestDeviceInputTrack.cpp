@@ -87,7 +87,7 @@ TEST_F(TestDeviceInputTrack, DeviceInputConsumerTrack) {
   class TestDeviceInputConsumerTrack : public DeviceInputConsumerTrack {
    public:
     static TestDeviceInputConsumerTrack* Create(MediaTrackGraph* aGraph) {
-      MOZ_ASSERT(NS_IsMainThread());
+      MOZ_RELEASE_ASSERT(NS_IsMainThread());
       TestDeviceInputConsumerTrack* track =
           new TestDeviceInputConsumerTrack(aGraph->GraphRate());
       aGraph->AddTrack(track);
@@ -95,7 +95,7 @@ TEST_F(TestDeviceInputTrack, DeviceInputConsumerTrack) {
     }
 
     void Destroy() {
-      MOZ_ASSERT(NS_IsMainThread());
+      MOZ_RELEASE_ASSERT(NS_IsMainThread());
       DisconnectDeviceInput();
       DeviceInputConsumerTrack::Destroy();
     }
@@ -108,7 +108,7 @@ TEST_F(TestDeviceInputTrack, DeviceInputConsumerTrack) {
         return 0;
       }
       DeviceInputTrack* t = mInputs[0]->GetSource()->AsDeviceInputTrack();
-      MOZ_ASSERT(t);
+      MOZ_RELEASE_ASSERT(t);
       return t->NumberOfChannels();
     }
 

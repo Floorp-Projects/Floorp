@@ -49,8 +49,7 @@ RddProcessTest::TestTelemetryProbes(JSContext* aCx,
         promise->MaybeResolve((int32_t)rddProc->RDDProcessPid());
       },
       [promise](nsresult aError) {
-        MOZ_ASSERT_UNREACHABLE("RddProcessTest; failure to get RDD child");
-        promise->MaybeReject(aError);
+        MOZ_CRASH("RddProcessTest; failure to get RDD child");
       });
 
   promise.forget(aOutPromise);

@@ -193,7 +193,7 @@ static already_AddRefed<MediaDataEncoder> CreateH264Encoder(
 }
 
 void WaitForShutdown(const RefPtr<MediaDataEncoder>& aEncoder) {
-  MOZ_ASSERT(aEncoder);
+  MOZ_RELEASE_ASSERT(aEncoder);
 
   Maybe<bool> result;
   // media::Await() supports exclusive promises only, but ShutdownPromise is
