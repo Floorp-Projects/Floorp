@@ -243,6 +243,20 @@ void CSP_LogMessage(const nsAString& aMessage, const nsAString& aSourceName,
   console->LogMessage(error);
 }
 
+CSPDirective CSP_StringToCSPDirective(const nsAString& aDir) {
+  nsString lowerDir = PromiseFlatString(aDir);
+  ToLowerCase(lowerDir);
+
+  uint32_t numDirs = (sizeof(CSPStrDirectives) / sizeof(CSPStrDirectives[0]));
+
+  for (uint32_t i = 1; i < numDirs; i++) {
+    if (lowerDir.EqualsASCII(CSPStrDirectives[i])) {
+      return static_cast<CSPDirective>(i);
+    }
+  }
+  return nsIContentSecurityPolicy::NO_DIRECTIVE;
+}
+
 /**
  * Combines CSP_LogMessage and CSP_GetLocalizedStr into one call.
  */
@@ -997,6 +1011,24 @@ void nsCSPSandboxFlags::toString(nsAString& outStr) const {
   outStr.Append(mFlags);
 }
 
+/* ===== nsCSPRequireTrustedTypesForDirectiveValue ===================== */
+
+nsCSPRequireTrustedTypesForDirectiveValue::
+    nsCSPRequireTrustedTypesForDirectiveValue(const nsAString& aValue)
+    : mValue{aValue} {}
+
+bool nsCSPRequireTrustedTypesForDirectiveValue::visit(
+    nsCSPSrcVisitor* aVisitor) const {
+  MOZ_ASSERT_UNREACHABLE(
+      "This method should only be called for other overloads of this method.");
+  return false;
+}
+
+void nsCSPRequireTrustedTypesForDirectiveValue::toString(
+    nsAString& aOutStr) const {
+  aOutStr.Append(mValue);
+}
+
 /* ===== nsCSPDirective ====================== */
 
 nsCSPDirective::nsCSPDirective(CSPDirective aDirective) {
@@ -1412,6 +1444,14 @@ void nsCSPDirective::toDomCSPStruct(mozilla::dom::CSP& outCSP) const {
     case nsIContentSecurityPolicy::SCRIPT_SRC_ATTR_DIRECTIVE:
       outCSP.mScript_src_attr.Construct();
       outCSP.mScript_src_attr.Value() = std::move(srcs);
+      return;
+
+    case nsIContentSecurityPolicy::REQUIRE_TRUSTED_TYPES_FOR_DIRECTIVE:
+      outCSP.mRequire_trusted_types_for.Construct();
+
+      // Here, the srcs represent the sink group
+      // (https://w3c.github.io/trusted-types/dist/spec/#integration-with-content-security-policy).
+      outCSP.mRequire_trusted_types_for.Value() = std::move(srcs);
       return;
 
     default:
