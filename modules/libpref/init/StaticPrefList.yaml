@@ -9965,6 +9965,13 @@
 #endif
   mirror: always
 
+# The codecs in the vendored ffmpeg copy are usually prefered to the other
+# codecs. This allows changing this policy for testing purposes.
+- name: media.prefer-non-ffvpx
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 - name: media.rdd-process.enabled
   type: RelaxedAtomicBool
 #if defined(XP_WIN)

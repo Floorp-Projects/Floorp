@@ -79,11 +79,6 @@ class PDMFactory final {
   void CreateContentPDMs();
   void CreateDefaultPDMs();
 
-  template <typename DECODER_MODULE, typename... ARGS>
-  bool CreateAndStartupPDM(ARGS&&... aArgs) {
-    return StartupPDM(DECODER_MODULE::Create(std::forward<ARGS>(aArgs)...));
-  }
-
   // Startup the provided PDM and add it to our list if successful.
   bool StartupPDM(already_AddRefed<PlatformDecoderModule> aPDM,
                   bool aInsertAtBeginning = false);
