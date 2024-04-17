@@ -509,14 +509,36 @@ var ExtensionAddonObserver = {
   },
 
   onUninstalled(addon) {
+    this.clearOnUninstall(addon.id);
+  },
+
+  /**
+   * Clears persistent state from the add-on post install.
+   *
+   * @param {string} addonId The ID of the addon that has been uninstalled.
+   */
+  clearOnUninstall(addonId) {
+    const tasks = [];
+    function addShutdownBlocker(name, promise) {
+      lazy.AsyncShutdown.profileChangeTeardown.addBlocker(name, promise);
+      tasks.push({ name, promise });
+    }
+    function notifyUninstallTaskObservers() {
+      Management.emit("cleanupAfterUninstall", addonId, tasks);
+    }
+
     // Cleanup anything that is used by non-extension addon types
     // since only extensions have uuid's.
-    lazy.ExtensionPermissions.removeAll(addon.id);
+    addShutdownBlocker(
+      `Clear ExtensionPermissions for ${addonId}`,
+      lazy.ExtensionPermissions.removeAll(addonId)
+    );
 
-    lazy.QuarantinedDomains.clearUserPref(addon.id);
+    lazy.QuarantinedDomains.clearUserPref(addonId);
 
-    let uuid = UUIDMap.get(addon.id, false);
+    let uuid = UUIDMap.get(addonId, false);
     if (!uuid) {
+      notifyUninstallTaskObservers();
       return;
     }
 
@@ -527,8 +549,8 @@ var ExtensionAddonObserver = {
     );
 
     // Clear all cached resources (e.g. CSS and images);
-    lazy.AsyncShutdown.profileChangeTeardown.addBlocker(
-      `Clear cache for ${addon.id}`,
+    addShutdownBlocker(
+      `Clear cache for ${addonId}`,
       clearCacheForExtensionPrincipal(principal, /* clearAll */ true)
     );
 
@@ -549,38 +571,38 @@ var ExtensionAddonObserver = {
     // down because is being uninstalled) and then cleared from
     // the persisted serviceworker registration on the next
     // startup.
-    lazy.AsyncShutdown.profileChangeTeardown.addBlocker(
-      `Clear ServiceWorkers for ${addon.id}`,
+    addShutdownBlocker(
+      `Clear ServiceWorkers for ${addonId}`,
       lazy.ServiceWorkerCleanUp.removeFromPrincipal(principal)
     );
 
     // Clear the persisted dynamic content scripts created with the scripting
     // API (if any).
-    lazy.AsyncShutdown.profileChangeTeardown.addBlocker(
-      `Clear scripting store for ${addon.id}`,
-      lazy.ExtensionScriptingStore.clearOnUninstall(addon.id)
+    addShutdownBlocker(
+      `Clear scripting store for ${addonId}`,
+      lazy.ExtensionScriptingStore.clearOnUninstall(addonId)
     );
 
     // Clear the DNR API's rules data persisted on disk (if any).
-    lazy.AsyncShutdown.profileChangeTeardown.addBlocker(
-      `Clear declarativeNetRequest store for ${addon.id}`,
+    addShutdownBlocker(
+      `Clear declarativeNetRequest store for ${addonId}`,
       lazy.ExtensionDNRStore.clearOnUninstall(uuid)
     );
 
     if (!Services.prefs.getBoolPref(LEAVE_STORAGE_PREF, false)) {
       // Clear browser.storage.local backends.
-      lazy.AsyncShutdown.profileChangeTeardown.addBlocker(
-        `Clear Extension Storage ${addon.id} (File Backend)`,
-        lazy.ExtensionStorage.clear(addon.id, { shouldNotifyListeners: false })
+      addShutdownBlocker(
+        `Clear Extension Storage ${addonId} (File Backend)`,
+        lazy.ExtensionStorage.clear(addonId, { shouldNotifyListeners: false })
       );
 
       // Clear browser.storage.sync rust-based backend.
       // (storage.sync clearOnUninstall will resolve and log an error on the
       // browser console in case of unexpected failures).
       if (!lazy.storageSyncOldKintoBackend) {
-        lazy.AsyncShutdown.profileChangeTeardown.addBlocker(
-          `Clear Extension StorageSync ${addon.id}`,
-          lazy.extensionStorageSync.clearOnUninstall(addon.id)
+        addShutdownBlocker(
+          `Clear Extension StorageSync ${addonId}`,
+          lazy.extensionStorageSync.clearOnUninstall(addonId)
         );
       }
 
@@ -595,7 +617,7 @@ var ExtensionAddonObserver = {
         });
       Services.qms.clearStoragesForPrincipal(storagePrincipal);
 
-      lazy.ExtensionStorageIDB.clearMigratedExtensionPref(addon.id);
+      lazy.ExtensionStorageIDB.clearMigratedExtensionPref(addonId);
 
       // If LSNG is not enabled, we need to clear localStorage explicitly using
       // the old API.
@@ -632,8 +654,10 @@ var ExtensionAddonObserver = {
 
     if (!Services.prefs.getBoolPref(LEAVE_UUID_PREF, false)) {
       // Clear the entry in the UUID map
-      UUIDMap.remove(addon.id);
+      UUIDMap.remove(addonId);
     }
+
+    notifyUninstallTaskObservers();
   },
 
   onPropertyChanged(addon, properties) {

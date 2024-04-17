@@ -1341,9 +1341,7 @@ export class SpecialPowersParent extends JSWindowActorParent {
           let id = aMessage.data.id;
           let extension = this._extensions.get(id);
           this._extensions.delete(id);
-          return extension.shutdown().then(() => {
-            return extension._uninstallPromise;
-          });
+          return lazy.ExtensionTestCommon.unloadTestExtension(extension);
         }
 
         case "SPExtensionTerminateBackground": {
