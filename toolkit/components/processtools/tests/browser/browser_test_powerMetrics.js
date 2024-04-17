@@ -12,7 +12,7 @@ function GetTestWebBasedURL(fileName) {
   return (
     getRootDirectory(gTestPath).replace(
       "chrome://mochitests/content",
-      "http://example.org"
+      "https://example.org"
     ) + fileName
   );
 }
