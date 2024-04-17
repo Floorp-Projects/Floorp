@@ -429,6 +429,10 @@
       "type": "boolean"
     },
 
+    "DisableEncryptedClientHello": {
+      "type": "boolean"
+    },
+
     "DisableFeedbackCommands": {
       "type": "boolean"
     },

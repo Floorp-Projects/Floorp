@@ -1099,6 +1099,17 @@ const POLICIES_TESTS = [
       "network.proxy.type": 5,
     },
   },
+
+  // POLICY: DisableEncryptedClientHello
+  {
+    policies: {
+      DisableEncryptedClientHello: true,
+    },
+    lockedPrefs: {
+      "network.dns.echconfig.enabled": false,
+      "network.dns.http3_echconfig.enabled": false,
+    },
+  },
 ];
 
 add_task(async function test_policy_simple_prefs() {

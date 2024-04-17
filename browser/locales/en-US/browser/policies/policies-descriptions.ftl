@@ -66,6 +66,8 @@ policy-DisableDefaultBrowserAgent = Prevent the default browser agent from takin
 
 policy-DisableDeveloperTools = Block access to the developer tools.
 
+policy-DisableEncryptedClientHello = Disable use of the TLS feature Encrypted Client Hello (ECH).
+
 policy-DisableFeedbackCommands = Disable commands to send feedback from the Help menu (Submit Feedback and Report Deceptive Site).
 
 policy-DisableFirefoxAccounts = Disable { -fxaccount-brand-name } based services, including Sync.
