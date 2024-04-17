@@ -277,13 +277,6 @@ fn run(args: CliArgs) -> miette::Result<()> {
     })?;
 
     let cts_https_html_path = out_wpt_dir.child("cts.https.html");
-    log::info!("refining the output of {cts_https_html_path} with `npm run gen_wpt_cts_html …`…");
-    EasyCommand::new(&npm_bin, |cmd| {
-        cmd.args(["run", "gen_wpt_cts_html"]).arg(existing_file(
-            &cts_ckt.child("tools/gen_wpt_cfg_unchunked.json"),
-        ))
-    })
-    .spawn()?;
 
     {
         let extra_cts_https_html_path = out_wpt_dir.child("cts-chunked2sec.https.html");
