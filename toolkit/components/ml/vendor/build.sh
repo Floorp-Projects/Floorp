@@ -31,3 +31,6 @@ rm -rf package
 # remove the eval() calls
 sed -i '' '1855,1859d' ort-dev.js
 sed -i '' 's/function inquire(moduleName){try{var mod=eval("quire".replace(\/^\/,"re"))(moduleName);if(mod&&(mod.length||Object.keys(mod).length))return mod}catch(t){}return null}/function inquire(moduleName){return null}/g' ort.js
+
+# remove the last line of ort-dev.js (map)
+sed -i '' '$d' ort-dev.js
