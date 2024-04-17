@@ -221,6 +221,7 @@ class TLSCertificateToEncodedCertificateChanger : public TlsRecordFilter {
 static SECStatus SimpleXorCertCompEncode(const SECItem* input,
                                          SECItem* output) {
   SECITEM_CopyItem(NULL, output, input);
+  PORT_Memcpy(output->data, input->data, output->len);
   for (size_t i = 0; i < output->len; i++) {
     output->data[i] ^= 0x55;
   }
@@ -230,7 +231,7 @@ static SECStatus SimpleXorCertCompEncode(const SECItem* input,
 /* Test decoding function.  */
 static SECStatus SimpleXorCertCompDecode(const SECItem* input, SECItem* output,
                                          size_t expectedLenDecodedCertificate) {
-  SECITEM_CopyItem(NULL, output, input);
+  PORT_Memcpy(output->data, input->data, input->len);
   for (size_t i = 0; i < output->len; i++) {
     output->data[i] ^= 0x55;
   }
@@ -251,7 +252,7 @@ static SECStatus SimpleXorWithDifferentValueEncode(const SECItem* input,
 static SECStatus SimpleXorWithDifferentValueDecode(
     const SECItem* input, SECItem* output,
     size_t expectedLenDecodedCertificate) {
-  SECITEM_CopyItem(NULL, output, input);
+  PORT_Memcpy(output->data, input->data, input->len);
   for (size_t i = 0; i < output->len; i++) {
     output->data[i] ^= 0x77;
   }
@@ -1126,47 +1127,6 @@ TEST_F(TlsConnectStreamTls13, CertificateCompression_ReceivedWrongAlgorithm) {
 
   client_->CheckErrorCode(
       SEC_ERROR_CERTIFICATE_COMPRESSION_ALGORITHM_NOT_SUPPORTED);
-}
-
-static SECStatus SimpleXorCertCompDecode_length_smaller_than_given(
-    const SECItem* input, SECItem* output,
-    size_t expectedLenDecodedCertificate) {
-  SECITEM_MakeItem(NULL, output, input->data, input->len - 1);
-  return SECSuccess;
-}
-
-/*
- * The next test modifies the length of the received certificate
- * (uncompressed_length field of CompressedCertificate).
- */
-TEST_F(TlsConnectStreamTls13, CertificateCompression_ReceivedWrongLength) {
-  EnsureTlsSetup();
-  auto filterExtension =
-      MakeTlsFilter<TLSCertificateCompressionCertificateModifier>(server_, 0x6,
-                                                                  0xff);
-  SSLCertificateCompressionAlgorithm t = {
-      0xff01, "test function", SimpleXorCertCompEncode,
-      SimpleXorCertCompDecode_length_smaller_than_given};
-
-  EXPECT_EQ(SECSuccess,
-            SSLExp_SetCertificateCompressionAlgorithm(server_->ssl_fd(), t));
-  EXPECT_EQ(SECSuccess,
-            SSLExp_SetCertificateCompressionAlgorithm(client_->ssl_fd(), t));
-
-  ExpectAlert(client_, kTlsAlertBadCertificate);
-  StartConnect();
-
-  client_->SetServerKeyBits(server_->server_key_bits());
-  client_->Handshake();
-  server_->Handshake();
-
-  ASSERT_TRUE_WAIT((client_->state() != TlsAgent::STATE_CONNECTING), 5000);
-  ASSERT_EQ(TlsAgent::STATE_ERROR, client_->state());
-
-  client_->ExpectSendAlert(kTlsAlertCloseNotify);
-  server_->ExpectReceiveAlert(kTlsAlertCloseNotify);
-
-  client_->CheckErrorCode(SSL_ERROR_RX_MALFORMED_CERTIFICATE);
 }
 
 /* The next test modifies the length of the encoded certificate

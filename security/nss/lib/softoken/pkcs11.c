@@ -1088,7 +1088,7 @@ sftk_handlePublicKeyObject(SFTKSession *session, SFTKObject *object,
             }
             /* for ECDSA and EDDSA. Change if the structure of any of them is modified. */
             derive = (key_type == CKK_EC_EDWARDS) ? CK_FALSE : CK_TRUE; /* CK_TRUE for ECDH */
-            verify = CK_TRUE;                                           /* for ECDSA */
+            verify = CK_TRUE;                                           /* for ECDSA and EDDSA */
             encrypt = CK_FALSE;
             recover = CK_FALSE;
             wrap = CK_FALSE;
@@ -1285,8 +1285,10 @@ sftk_handlePrivateKeyObject(SFTKSession *session, SFTKObject *object, CK_KEY_TYP
             if (!sftk_hasAttribute(object, CKA_VALUE)) {
                 return CKR_TEMPLATE_INCOMPLETE;
             }
+            /* for ECDSA and EDDSA. Change if the structure of any of them is modified. */
+            derive = (key_type == CKK_EC_EDWARDS) ? CK_FALSE : CK_TRUE; /* CK_TRUE for ECDH */
+            sign = CK_TRUE;                                             /* for ECDSA and EDDSA */
             encrypt = CK_FALSE;
-            sign = CK_TRUE;
             recover = CK_FALSE;
             wrap = CK_FALSE;
             break;
