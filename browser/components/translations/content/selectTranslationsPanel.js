@@ -230,19 +230,6 @@ var SelectTranslationsPanel = new (class {
    *   The `fromLang` property is omitted if it is a language that is not currently supported by Firefox Translations.
    */
   async getLangPairPromise(textToTranslate) {
-    if (
-      TranslationsParent.isInAutomation() &&
-      !TranslationsParent.isTranslationsEngineMocked()
-    ) {
-      // If we are in automation, and the Translations Engine is NOT mocked, then that means
-      // we are in a test case in which we are not explicitly testing Select Translations,
-      // and the code to get the supported languages below will not be available. However,
-      // we still need to ensure that the translate-selection menuitem in the context menu
-      // is compatible with all code in other tests, so we will return "en" for the purpose
-      // of being able to localize and display the context-menu item in other test cases.
-      return { toLang: "en" };
-    }
-
     const [fromLang, toLang] = await Promise.all([
       SelectTranslationsPanel.getTopSupportedDetectedLanguage(textToTranslate),
       TranslationsParent.getTopPreferredSupportedToLang(),
