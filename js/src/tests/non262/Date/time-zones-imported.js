@@ -1,4 +1,4 @@
-// |reftest| skip-if(xulRuntime.OS=="WINNT"||!this.hasOwnProperty("Intl")) -- Windows doesn't accept IANA names for the TZ env variable; Requires ICU time zone support
+// |reftest| skip-if(winWidget||!this.hasOwnProperty("Intl")) -- Windows doesn't accept IANA names for the TZ env variable; Requires ICU time zone support
 
 // Imported tests from es6draft and then adapted to use ICU/CLDR time zone display names.
 

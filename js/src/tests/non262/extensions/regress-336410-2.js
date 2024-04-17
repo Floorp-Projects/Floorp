@@ -1,4 +1,4 @@
-// |reftest| skip-if(!Object.prototype.toSource||(!xulRuntime.shell&&((isDebugBuild&&xulRuntime.OS=="Linux")||Android||xulRuntime.XPCOMABI.match(/x86_64/)||xulRuntime.OS=="WINNT"))) slow -- can fail silently due to out of memory, bug 621348 - timeouts on slow debug Linux
+// |reftest| skip-if(!Object.prototype.toSource||(!xulRuntime.shell&&((isDebugBuild&&gtkWidget)||Android||is64Bit||winWidget))) slow -- can fail silently due to out of memory, bug 621348 - timeouts on slow debug Linux
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
