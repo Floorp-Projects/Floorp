@@ -289,7 +289,7 @@ export class LoginDataSource extends DataSourceBase {
     const { BrowserWindowTracker } = ChromeUtils.importESModule(
       "resource:///modules/BrowserWindowTracker.sys.mjs"
     );
-    const browser = BrowserWindowTracker.getTopWindow().gBrowser;
+    const browsingContext = BrowserWindowTracker.getTopWindow().browsingContext;
     let { result, path } = await this.openFilePickerDialog(
       title,
       buttonLabel,
@@ -303,7 +303,7 @@ export class LoginDataSource extends DataSourceBase {
           extensionPattern: "*.tsv",
         },
       ],
-      browser.ownerGlobal
+      browsingContext
     );
 
     if (result != Ci.nsIFilePicker.returnCancel) {
@@ -319,10 +319,15 @@ export class LoginDataSource extends DataSourceBase {
     }
   }
 
-  async openFilePickerDialog(title, okButtonLabel, appendFilters, ownerGlobal) {
+  async openFilePickerDialog(
+    title,
+    okButtonLabel,
+    appendFilters,
+    browsingContext
+  ) {
     return new Promise(resolve => {
       let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-      fp.init(ownerGlobal, title, Ci.nsIFilePicker.modeOpen);
+      fp.init(browsingContext, title, Ci.nsIFilePicker.modeOpen);
       for (const appendFilter of appendFilters) {
         fp.appendFilter(appendFilter.title, appendFilter.extensionPattern);
       }
