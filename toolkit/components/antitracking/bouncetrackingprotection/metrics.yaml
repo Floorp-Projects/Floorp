@@ -1,0 +1,38 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Adding a new metric? We have docs for that!
+# https://firefox-source-docs.mozilla.org/toolkit/components/glean/user/new_definitions_file.html
+
+---
+$schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
+$tags:
+  - 'Core :: Privacy: Anti-Tracking'
+
+bounce.tracking.protection:
+  action_purge:
+    type: event
+    description: >
+      Dispatched whenever a bounce tracker site is purged. Only collected in
+      early Beta and Nightly.
+    bugs:
+      - https://bugzilla.mozilla.org/1889444
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1889444#c3
+    data_sensitivity:
+      - stored_content
+    notification_emails:
+      - pbz@mozilla.com
+      - bvandersloot@mozilla.com
+    expires: 130
+    extra_keys:
+      site_host:
+        description: The site host of which the data has been purged.
+        type: string
+      bounce_time:
+        description: Timestamp (seconds since epoch) of the last detected bounce.
+        type: quantity
+      success:
+        description: Whether the purge data call was successful. false indicates an error in ClearDataService.
+        type: boolean
