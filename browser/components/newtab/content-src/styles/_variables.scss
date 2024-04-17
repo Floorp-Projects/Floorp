@@ -157,14 +157,17 @@ $customize-menu-border-tint: 1px solid rgba(0, 0, 0, 15%);
 @mixin context-menu-button {
   .context-menu-button {
     background-clip: padding-box;
-    background-color: var(--newtab-background-color-secondary);
+    background-color: var(--newtab-button-background);
     background-image: url('chrome://global/skin/icons/more.svg');
     background-position: 55%;
-    border: $border-primary;
+    border: 0;
+    outline: $border-primary;
+    outline-width: 0;
     border-radius: 100%;
     box-shadow: $context-menu-button-boxshadow;
     cursor: pointer;
-    fill: var(--newtab-text-primary-color);
+    color: var(--button-text-color);
+    fill: var(--newtab-button-text);
     height: $context-menu-button-size;
     inset-inline-end: math.div(-$context-menu-button-size, 2);
     opacity: 0;
@@ -175,10 +178,26 @@ $customize-menu-border-tint: 1px solid rgba(0, 0, 0, 15%);
     transition-property: transform, opacity;
     width: $context-menu-button-size;
 
-    &:is(:active, :focus) {
+    &:is(:active, :focus-visible, :hover) {
       opacity: 1;
       transform: scale(1);
     }
+
+    &:is(:hover) {
+      background-color: var(--newtab-button-hover-background);
+    }
+
+    &:is(:focus-visible) {
+      outline-color: var(--newtab-button-focus-border);
+      background-color: var(--newtab-button-focus-background);
+      outline-width: 4px;
+    }
+
+    &:is(:active) {
+      background-color: var(--newtab-button-active-background);
+    }
+
+
   }
 }
 
