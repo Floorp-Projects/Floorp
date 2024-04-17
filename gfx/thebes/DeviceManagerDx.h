@@ -6,6 +6,7 @@
 #ifndef mozilla_gfx_thebes_DeviceManagerDx_h
 #define mozilla_gfx_thebes_DeviceManagerDx_h
 
+#include <set>
 #include <vector>
 
 #include "gfxPlatform.h"
@@ -96,7 +97,10 @@ class DeviceManagerDx final {
   bool GetOutputFromMonitor(HMONITOR monitor, RefPtr<IDXGIOutput>* aOutOutput);
 
   void PostUpdateMonitorInfo();
+  void UpdateMonitorInfo();
   bool SystemHDREnabled();
+  bool WindowHDREnabled(HWND aWindow);
+  bool MonitorHDREnabled(HMONITOR aMonitor);
 
   // Check if the current adapter supports hardware stretching
   void CheckHardwareStretchingSupport(HwStretchingSupport& aRv);
@@ -182,7 +186,6 @@ class DeviceManagerDx final {
   bool GetAnyDeviceRemovedReason(DeviceResetReason* aOutReason)
       MOZ_REQUIRES(mDeviceLock);
 
-  void UpdateMonitorInfo();
   std::vector<DXGI_OUTPUT_DESC1> GetOutputDescs();
 
  private:
@@ -214,6 +217,7 @@ class DeviceManagerDx final {
   Maybe<DeviceResetReason> mDeviceResetReason MOZ_GUARDED_BY(mDeviceLock);
   RefPtr<Runnable> mUpdateMonitorInfoRunnable MOZ_GUARDED_BY(mDeviceLock);
   Maybe<bool> mSystemHdrEnabled MOZ_GUARDED_BY(mDeviceLock);
+  std::set<HMONITOR> mHdrMonitors MOZ_GUARDED_BY(mDeviceLock);
 
   nsModuleHandle mDirectDrawDLL;
   RefPtr<IDirectDraw7> mDirectDraw;
