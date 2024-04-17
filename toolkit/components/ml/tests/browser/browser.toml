@@ -5,5 +5,10 @@ support-files = [
 ]
 
 ["browser_ml_cache.js"]
+lineno = "7"
 
 ["browser_ml_engine.js"]
+lineno = "10"
+
+["browser_ml_utils.js"]
+lineno = "13"

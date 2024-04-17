@@ -3,9 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const lazy = {};
-ChromeUtils.defineESModuleGetters(lazy, {
-  HiddenFrame: "resource://gre/modules/HiddenFrame.sys.mjs",
-});
+ChromeUtils.defineESModuleGetters(
+  lazy,
+  {
+    HiddenFrame: "resource://gre/modules/HiddenFrame.sys.mjs",
+  },
+  { global: "current" }
+);
 
 /**
  * @typedef {import("../actors/MLEngineParent.sys.mjs").MLEngineParent} MLEngineParent
@@ -14,6 +18,134 @@ ChromeUtils.defineESModuleGetters(lazy, {
 /**
  * @typedef {import("../../translations/actors/TranslationsEngineParent.sys.mjs").TranslationsEngineParent} TranslationsEngineParent
  */
+
+/**
+ * This class encapsulates the options for a pipeline process.
+ */
+export class PipelineOptions {
+  /**
+   * The name of the task the pipeline is configured for.
+   *
+   * @type {?string}
+   */
+  taskName = null;
+
+  /**
+   * The maximum amount of time in milliseconds the pipeline should wait for a response.
+   *
+   * @type {?number}
+   */
+  timeoutMS = null;
+
+  /**
+   * The root URL of the model hub where models are hosted.
+   *
+   * @type {?string}
+   */
+  modelHubRootUrl = null;
+
+  /**
+   * A template URL for building the full URL for the model.
+   *
+   * @type {?string}
+   */
+  modelHubUrlTemplate = null;
+
+  /**
+   * The identifier for the specific model to be used by the pipeline.
+   *
+   * @type {?string}
+   */
+  modelId = null;
+
+  /**
+   * The identifier for the tokenizer associated with the model, used for pre-processing inputs.
+   *
+   * @type {?string}
+   */
+  tokenizerId = null;
+
+  /**
+   * The identifier for any processor required by the model, used for additional input processing.
+   *
+   * @type {?string}
+   */
+  processorId = null;
+
+  /**
+   * The log level used in the worker
+   *
+   * @type {?string}
+   */
+  logLevel = null;
+
+  /**
+   * Create a PipelineOptions instance.
+   *
+   * @param {object} options - The options for the pipeline. Must include mandatory fields.
+   */
+  constructor(options) {
+    this.updateOptions(options);
+  }
+
+  /**
+   * Updates multiple options at once.
+   *
+   * @param {object} options - An object containing the options to update.
+   * @throws {Error} Throws an error if an invalid option is provided.
+   */
+  updateOptions(options) {
+    const allowedKeys = [
+      "taskName",
+      "modelHubRootUrl",
+      "modelHubUrlTemplate",
+      "timeoutMS",
+      "modelId",
+      "tokenizerId",
+      "processorId",
+      "logLevel",
+    ];
+    Object.keys(options).forEach(key => {
+      if (allowedKeys.includes(key)) {
+        this[key] = options[key]; // Use bracket notation to access setter
+      } else {
+        throw new Error(`Invalid option: ${key}`);
+      }
+    });
+  }
+
+  /**
+   * Returns an object containing all current options.
+
+   * @returns {object} An object with the current options.
+   */
+  getOptions() {
+    return {
+      taskName: this.taskName,
+      modelHubRootUrl: this.modelHubRootUrl,
+      modelHubUrlTemplate: this.modelHubUrlTemplate,
+      timeoutMS: this.timeoutMS,
+      modelId: this.modelId,
+      tokenizerId: this.tokenizerId,
+      processorId: this.processorId,
+      logLevel: this.logLevel,
+    };
+  }
+
+  /**
+   * Updates the given configuration object with the options.
+   *
+   * @param {object} config - The configuration object to be updated.
+   */
+  applyToConfig(config) {
+    const options = this.getOptions();
+    Object.keys(options).forEach(key => {
+      if (options[key] !== null) {
+        config[key] = options[key];
+      }
+    });
+  }
+}
 
 /**
  * This class controls the life cycle of the engine process used both in the
