@@ -410,6 +410,36 @@ assert.object = function (obj, msg = "") {
 };
 
 /**
+ * Asserts that <var>obj</var> is an instance of a specified class.
+ * <var>constructor</var> should have a static isInstance method implemented.
+ *
+ * @param {?} obj
+ *     Value to test.
+ * @param {?} constructor
+ *     Class constructor.
+ * @param {string=} msg
+ *     Custom error message.
+ *
+ * @returns {object}
+ *     <var>obj</var> is returned unaltered.
+ *
+ * @throws {InvalidArgumentError}
+ *     If <var>obj</var> is not an instance of a specified class.
+ */
+assert.isInstance = function (obj, constructor, msg = "") {
+  assert.object(obj, msg);
+  assert.object(constructor.prototype, msg);
+
+  msg =
+    msg ||
+    lazy.pprint`Expected ${obj} to be an instance of ${constructor.name}`;
+  return assert.that(
+    o => Object.hasOwn(constructor, "isInstance") && constructor.isInstance(o),
+    msg
+  )(obj);
+};
+
+/**
  * Asserts that <var>prop</var> is in <var>obj</var>.
  *
  * @param {?} prop

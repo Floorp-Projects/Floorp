@@ -150,6 +150,20 @@ add_task(function test_object() {
   Assert.throws(() => assert.object(null, "custom"), /custom/);
 });
 
+add_task(function test_isInstance() {
+  class Foo {
+    static isInstance(obj) {
+      return obj instanceof Foo;
+    }
+  }
+  assert.isInstance(new Foo(), Foo);
+  for (let typ of [{}, 42, "foo", true, null, undefined]) {
+    Assert.throws(() => assert.isInstance(typ, Foo), /InvalidArgumentError/);
+  }
+
+  Assert.throws(() => assert.isInstance(null, null, "custom"), /custom/);
+});
+
 add_task(function test_in() {
   assert.in("foo", { foo: 42 });
   for (let typ of [{}, 42, true, null, undefined]) {
