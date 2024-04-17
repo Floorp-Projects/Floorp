@@ -40,12 +40,6 @@ support-files = [
 ["browser_navigation.js"]
 support-files = ["file_navigation.html"]
 
-["browser_subdocument_downgrade.js"]
-support-files = [
-  "file_empty.html",
-  "file_subdocument_downgrade.sjs",
-]
-
 ["browser_schemeless.js"]
 
 ["browser_slow_download.js"]
