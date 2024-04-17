@@ -438,9 +438,14 @@ class Accessible {
   nsStaticAtom* LandmarkRole() const;
 
   /**
-   * Return the id of the dom node this accessible represents.
+   * Return the id of the DOM node this Accessible represents.
    */
   virtual void DOMNodeID(nsString& aID) const = 0;
+
+  /**
+   * Return the class of the DOM node this Accessible represents.
+   */
+  virtual void DOMNodeClass(nsString& aClass) const = 0;
 
   //////////////////////////////////////////////////////////////////////////////
   // ActionAccessible

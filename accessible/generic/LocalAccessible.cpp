@@ -3794,14 +3794,12 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
     } else if (aUpdateType == CacheUpdateType::Update) {
       fields->SetAttribute(CacheKey::DOMNodeID, DeleteEntry());
     }
-    if (auto* el = dom::Element::FromNodeOrNull(mContent)) {
-      nsAutoString className;
-      el->GetClassName(className);
-      if (!className.IsEmpty()) {
-        fields->SetAttribute(CacheKey::DOMNodeClass, std::move(className));
-      } else if (aUpdateType == CacheUpdateType::Update) {
-        fields->SetAttribute(CacheKey::DOMNodeClass, DeleteEntry());
-      }
+    nsString className;
+    DOMNodeClass(className);
+    if (!className.IsEmpty()) {
+      fields->SetAttribute(CacheKey::DOMNodeClass, std::move(className));
+    } else if (aUpdateType == CacheUpdateType::Update) {
+      fields->SetAttribute(CacheKey::DOMNodeClass, DeleteEntry());
     }
   }
 
@@ -4269,6 +4267,13 @@ void LocalAccessible::DOMNodeID(nsString& aID) const {
     if (nsAtom* id = mContent->GetID()) {
       id->ToString(aID);
     }
+  }
+}
+
+void LocalAccessible::DOMNodeClass(nsString& aClass) const {
+  aClass.Truncate();
+  if (auto* el = dom::Element::FromNodeOrNull(mContent)) {
+    el->GetClassName(aClass);
   }
 }
 
