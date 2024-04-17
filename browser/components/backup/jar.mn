@@ -7,4 +7,3 @@ browser.jar:
   content/browser/backup/debug.html                              (content/debug.html)
   content/browser/backup/debug.js                                (content/debug.js)
 #endif
-  content/browser/backup/BackupManifest.1.schema.json              (content/BackupManifest.1.schema.json)
