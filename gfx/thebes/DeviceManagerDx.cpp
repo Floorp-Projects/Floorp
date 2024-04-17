@@ -234,17 +234,47 @@ void DeviceManagerDx::PostUpdateMonitorInfo() {
   holder->GetCompositorThread()->DelayedDispatch(runnable.forget(), kDelayMS);
 }
 
+static bool ColorSpaceIsHDR(const DXGI_OUTPUT_DESC1& aDesc) {
+  // Set isHDR to true if the output has a BT2020 colorspace with EOTF2084
+  // gamma curve, this indicates the system is sending an HDR format to
+  // this monitor.  The colorspace returned by DXGI is very vague - we only
+  // see DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020 for HDR and
+  // DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709 for SDR modes, even if the
+  // monitor is using something like YCbCr444 according to Settings
+  // (System -> Display Settings -> Advanced Display).  To get more specific
+  // info we would need to query the DISPLAYCONFIG values in WinGDI.
+  //
+  // Note that we don't check bit depth here, since as of Windows 11 22H2,
+  // HDR is supported with 8bpc for lower bandwidth, where DWM converts to
+  // dithered RGB8 rather than RGB10, which doesn't really matter here.
+  //
+  // Since RefreshScreens(), the caller of this function, is triggered
+  // by WM_DISPLAYCHANGE, this will pick up changes to the monitors in
+  // all the important cases (resolution/color changes by the user).
+  //
+  // Further reading:
+  // https://learn.microsoft.com/en-us/windows/win32/direct3darticles/high-dynamic-range
+  // https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-displayconfig_sdr_white_level
+  bool isHDR = (aDesc.ColorSpace == DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020);
+
+  return isHDR;
+}
+
 void DeviceManagerDx::UpdateMonitorInfo() {
   bool systemHdrEnabled = false;
+  std::set<HMONITOR> hdrMonitors;
 
   for (const auto& desc : GetOutputDescs()) {
-    if (desc.ColorSpace == DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020) {
+    if (ColorSpaceIsHDR(desc)) {
       systemHdrEnabled = true;
+      hdrMonitors.emplace(desc.Monitor);
     }
   }
+
   {
     MutexAutoLock lock(mDeviceLock);
     mSystemHdrEnabled = Some(systemHdrEnabled);
+    mHdrMonitors.swap(hdrMonitors);
     mUpdateMonitorInfoRunnable = nullptr;
   }
 }
@@ -327,6 +357,42 @@ bool DeviceManagerDx::SystemHDREnabled() {
 
   MutexAutoLock lock(mDeviceLock);
   return mSystemHdrEnabled.ref();
+}
+
+bool DeviceManagerDx::WindowHDREnabled(HWND aWindow) {
+  MOZ_ASSERT(aWindow);
+
+  HMONITOR monitor = ::MonitorFromWindow(aWindow, MONITOR_DEFAULTTONEAREST);
+  return MonitorHDREnabled(monitor);
+}
+
+bool DeviceManagerDx::MonitorHDREnabled(HMONITOR aMonitor) {
+  if (!aMonitor) {
+    return false;
+  }
+
+  bool needInit = false;
+
+  {
+    MutexAutoLock lock(mDeviceLock);
+    if (mSystemHdrEnabled.isNothing()) {
+      needInit = true;
+    }
+  }
+
+  if (needInit) {
+    UpdateMonitorInfo();
+  }
+
+  MutexAutoLock lock(mDeviceLock);
+  MOZ_ASSERT(mSystemHdrEnabled.isSome());
+
+  auto it = mHdrMonitors.find(aMonitor);
+  if (it == mHdrMonitors.end()) {
+    return false;
+  }
+
+  return true;
 }
 
 void DeviceManagerDx::CheckHardwareStretchingSupport(HwStretchingSupport& aRv) {
