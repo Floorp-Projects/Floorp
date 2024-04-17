@@ -356,6 +356,8 @@ class HTMLCanvasElement final : public nsGenericHTMLElement,
 
   layers::ImageContainer* GetImageContainer() const { return mImageContainer; }
 
+  bool UsingCaptureStream() const { return !!mRequestedFrameRefreshObserver; }
+
  protected:
   bool mResetLayer;
   bool mMaybeModified;  // we fetched the context, so we may have written to the

@@ -857,6 +857,20 @@ already_AddRefed<CanvasCaptureMediaStream> HTMLCanvasElement::CaptureStream(
     return nullptr;
   }
 
+  // Check if we transferred the OffscreenCanvas to a DOM worker. This is not
+  // defined by the spec yet, so it is better to fail now than implement
+  // something not compliant:
+  // https://github.com/w3c/mediacapture-fromelement/issues/65
+  // https://github.com/w3c/mediacapture-extensions/pull/26
+  // https://github.com/web-platform-tests/wpt/issues/21102
+  if (mOffscreenDisplay &&
+      NS_WARN_IF(!mOffscreenDisplay->CanElementCaptureStream())) {
+    aRv.ThrowNotSupportedError(
+        "Capture stream not supported when OffscreenCanvas transferred to "
+        "worker");
+    return nullptr;
+  }
+
   auto stream = MakeRefPtr<CanvasCaptureMediaStream>(window, this);
 
   nsCOMPtr<nsIPrincipal> principal = NodePrincipal();
