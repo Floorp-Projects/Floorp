@@ -12,7 +12,7 @@ Also known as "ctz" in some languages.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { i32, i32Bits, TypeI32, u32, TypeU32, u32Bits } from '../../../../../util/conversion.js';
+import { i32, i32Bits, Type, u32, u32Bits } from '../../../../../util/conversion.js';
 import { allInputSources, Config, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
@@ -27,7 +27,7 @@ g.test('u32')
   )
   .fn(async t => {
     const cfg: Config = t.params;
-    await run(t, builtin('countTrailingZeros'), [TypeU32], TypeU32, cfg, [
+    await run(t, builtin('countTrailingZeros'), [Type.u32], Type.u32, cfg, [
       // Zero
       { input: u32Bits(0b00000000000000000000000000000000), expected: u32(32) },
 
@@ -142,7 +142,7 @@ g.test('i32')
   )
   .fn(async t => {
     const cfg: Config = t.params;
-    await run(t, builtin('countTrailingZeros'), [TypeI32], TypeI32, cfg, [
+    await run(t, builtin('countTrailingZeros'), [Type.i32], Type.i32, cfg, [
       // Zero
       { input: i32Bits(0b00000000000000000000000000000000), expected: i32(32) },
 

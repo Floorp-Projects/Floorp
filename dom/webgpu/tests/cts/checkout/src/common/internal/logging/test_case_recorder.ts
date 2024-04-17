@@ -45,8 +45,6 @@ export class TestCaseRecorder {
   private logs: LogMessageWithStack[] = [];
   private logLinesAtCurrentSeverity = 0;
   private debugging = false;
-  /** Used to dedup log messages which have identical stacks. */
-  private messagesForPreviouslySeenStacks = new Map<string, LogMessageWithStack>();
 
   constructor(result: LiveTestCaseResult, debugging: boolean) {
     this.result = result;
@@ -143,13 +141,15 @@ export class TestCaseRecorder {
       this.skipped(ex);
       return;
     }
-    this.logImpl(LogSeverity.ThrewException, 'EXCEPTION', ex);
+    // logImpl will discard the original error's ex.name. Preserve it here.
+    const name = ex instanceof Error ? `EXCEPTION: ${ex.name}` : 'EXCEPTION';
+    this.logImpl(LogSeverity.ThrewException, name, ex);
   }
 
   private logImpl(level: LogSeverity, name: string, baseException: unknown): void {
     assert(baseException instanceof Error, 'test threw a non-Error object');
     globalTestConfig.testHeartbeatCallback();
-    const logMessage = new LogMessageWithStack(name, baseException);
+    const logMessage = LogMessageWithStack.wrapError(name, baseException);
 
     // Final case status should be the "worst" of all log entries.
     if (this.inSubCase) {

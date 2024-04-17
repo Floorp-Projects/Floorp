@@ -695,7 +695,7 @@ fn(async (t) => {
       const expectPassed = !occluded;
       t.expect(
         !!passed === expectPassed,
-        `queryIndex: ${queryIndex}, scissorCase: ${scissorCase}, was: ${!!passed}, expected: ${expectPassed}, ${name}`
+        `queryIndex: ${queryIndex}, scissorCase: ${scissorCase}, was: ${!!passed}, expected: ${expectPassed}`
       );
     }
   );
@@ -739,7 +739,7 @@ fn(async (t) => {
       const expectPassed = queryIndex % 2 === 0;
       t.expect(
         !!passed === expectPassed,
-        `queryIndex: ${queryIndex}, was: ${!!passed}, expected: ${expectPassed}, ${name}`
+        `queryIndex: ${queryIndex}, was: ${!!passed}, expected: ${expectPassed}`
       );
     }
   );
@@ -783,7 +783,7 @@ fn(async (t) => {
       const expectPassed = queryIndex % 2 === 0;
       t.expect(
         !!passed === expectPassed,
-        `queryIndex: ${queryIndex}, was: ${!!passed}, expected: ${expectPassed}, ${name}`
+        `queryIndex: ${queryIndex}, was: ${!!passed}, expected: ${expectPassed}`
       );
     }
   );
@@ -851,7 +851,7 @@ fn(async (t) => {
       const expectPassed = !!(sampleMask & drawMask);
       t.expect(
         !!passed === expectPassed,
-        `queryIndex: ${queryIndex}, was: ${!!passed}, expected: ${expectPassed}, ${name}`
+        `queryIndex: ${queryIndex}, was: ${!!passed}, expected: ${expectPassed}`
       );
     }
   );

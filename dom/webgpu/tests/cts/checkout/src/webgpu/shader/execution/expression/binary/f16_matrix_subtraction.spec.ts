@@ -4,35 +4,13 @@ Execution Tests for matrix f16 subtraction expression
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../gpu_test.js';
-import { TypeF16, TypeMat } from '../../../../util/conversion.js';
-import { FP } from '../../../../util/floating_point.js';
-import { sparseMatrixF16Range } from '../../../../util/math.js';
-import { makeCaseCache } from '../case_cache.js';
+import { Type } from '../../../../util/conversion.js';
 import { allInputSources, run } from '../expression.js';
 
 import { binary, compoundBinary } from './binary.js';
+import { d } from './f16_matrix_subtraction.cache.js';
 
 export const g = makeTestGroup(GPUTest);
-
-// Cases: matCxR_[non_]const
-const mat_cases = ([2, 3, 4] as const)
-  .flatMap(cols =>
-    ([2, 3, 4] as const).flatMap(rows =>
-      ([true, false] as const).map(nonConst => ({
-        [`mat${cols}x${rows}_${nonConst ? 'non_const' : 'const'}`]: () => {
-          return FP.f16.generateMatrixPairToMatrixCases(
-            sparseMatrixF16Range(cols, rows),
-            sparseMatrixF16Range(cols, rows),
-            nonConst ? 'unfiltered' : 'finite',
-            FP.f16.subtractionMatrixMatrixInterval
-          );
-        },
-      }))
-    )
-  )
-  .reduce((a, b) => ({ ...a, ...b }), {});
-
-export const d = makeCaseCache('binary/f16_matrix_subtraction', mat_cases);
 
 g.test('matrix')
   .specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation')
@@ -60,8 +38,8 @@ Accuracy: Correctly rounded
     await run(
       t,
       binary('-'),
-      [TypeMat(cols, rows, TypeF16), TypeMat(cols, rows, TypeF16)],
-      TypeMat(cols, rows, TypeF16),
+      [Type.mat(cols, rows, Type.f16), Type.mat(cols, rows, Type.f16)],
+      Type.mat(cols, rows, Type.f16),
       t.params,
       cases
     );
@@ -93,8 +71,8 @@ Accuracy: Correctly rounded
     await run(
       t,
       compoundBinary('-='),
-      [TypeMat(cols, rows, TypeF16), TypeMat(cols, rows, TypeF16)],
-      TypeMat(cols, rows, TypeF16),
+      [Type.mat(cols, rows, Type.f16), Type.mat(cols, rows, Type.f16)],
+      Type.mat(cols, rows, Type.f16),
       t.params,
       cases
     );

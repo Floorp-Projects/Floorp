@@ -57,6 +57,9 @@ class F extends ValidationTest {
 
 export const g = makeTestGroup(F);
 
+// MAINTENANCE_TODO: Remove writeTimestamp from here once it's (hopefully) added back to the spec.
+
+
 
 const kEncoderCommandInfo =
 
@@ -146,6 +149,8 @@ desc(
   `
   Test that functions of GPUCommandEncoder generate a validation error if the encoder is already
   finished.
+
+  TODO: writeTimestamp is removed from the spec so it's skipped if it TypeErrors.
   `
 ).
 params((u) =>
@@ -260,8 +265,11 @@ fn((t) => {
         }
         break;
       case 'writeTimestamp':
-        {
+        try {
+
           encoder.writeTimestamp(querySet, 0);
+        } catch (ex) {
+          t.skipIf(ex instanceof TypeError, 'writeTimestamp is actually not available');
         }
         break;
       case 'resolveQuerySet':

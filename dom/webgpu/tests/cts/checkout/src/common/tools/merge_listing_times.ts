@@ -36,21 +36,13 @@ In more detail:
 - For each suite seen, loads its listing_meta.json, takes the max of the old and
   new data, and writes it back out.
 
-How to generate TIMING_LOG_FILES files:
-
-- Launch the 'websocket-logger' tool (see its README.md), which listens for
-  log messages on localhost:59497.
-- Run the tests you want to capture data for, on the same system. Since
-  logging is done through the websocket side-channel, you can run the tests
-  under any runtime (standalone, WPT, etc.) as long as WebSocket support is
-  available (always true in browsers).
-- Run \`tools/merge_listing_times webgpu -- tools/websocket-logger/wslog-*.txt\`
+See 'docs/adding_timing_metadata.md' for how to generate TIMING_LOG_FILES files.
 `);
   process.exit(rc);
 }
 
 const kHeader = `{
-  "_comment": "SEMI AUTO-GENERATED: Please read docs/adding_timing_metadata.md.",
+  "_comment": "SEMI AUTO-GENERATED. This list is NOT exhaustive. Please read docs/adding_timing_metadata.md.",
 `;
 const kFooter = `\
   "_end": ""

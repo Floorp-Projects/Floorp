@@ -165,15 +165,16 @@ Tests that using a destroyed texture referenced by a bindGroup set with setBindG
     u
       .combine('destroyed', [false, true] as const)
       .combine('encoderType', ['compute pass', 'render pass', 'render bundle'] as const)
+      .combine('bindingType', ['texture', 'storageTexture'] as const)
   )
   .fn(t => {
-    const { destroyed, encoderType } = t.params;
+    const { destroyed, encoderType, bindingType } = t.params;
     const { device } = t;
     const texture = t.trackForCleanup(
       t.device.createTexture({
         size: [1, 1, 1],
         format: 'rgba8unorm',
-        usage: GPUTextureUsage.TEXTURE_BINDING,
+        usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.STORAGE_BINDING,
       })
     );
 
@@ -182,7 +183,9 @@ Tests that using a destroyed texture referenced by a bindGroup set with setBindG
         {
           binding: 0,
           visibility: GPUShaderStage.COMPUTE,
-          texture: {},
+          [bindingType]: {
+            format: texture.format,
+          },
         },
       ],
     });

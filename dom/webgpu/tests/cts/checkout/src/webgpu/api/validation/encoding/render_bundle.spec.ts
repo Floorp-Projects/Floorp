@@ -3,7 +3,7 @@ Tests execution of render bundles.
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { kDepthStencilFormats, kTextureFormatInfo } from '../../../format_info.js';
+import { kDepthStencilFormats } from '../../../format_info.js';
 import { ValidationTest } from '../validation_test.js';
 
 export const g = makeTestGroup(ValidationTest);
@@ -170,18 +170,6 @@ g.test('depth_stencil_readonly_mismatch')
       .combine('bundleStencilReadOnly', [false, true])
       .combine('passDepthReadOnly', [false, true])
       .combine('passStencilReadOnly', [false, true])
-      .filter(p => {
-        // For combined depth/stencil formats the depth and stencil read only state must match
-        // in order to create a valid render bundle or render pass.
-        const depthStencilInfo = kTextureFormatInfo[p.depthStencilFormat];
-        if (depthStencilInfo.depth && depthStencilInfo.stencil) {
-          return (
-            p.passDepthReadOnly === p.passStencilReadOnly &&
-            p.bundleDepthReadOnly === p.bundleStencilReadOnly
-          );
-        }
-        return true;
-      })
   )
   .beforeAllSubcases(t => {
     t.selectDeviceForTextureFormatOrSkipTestCase(t.params.depthStencilFormat);

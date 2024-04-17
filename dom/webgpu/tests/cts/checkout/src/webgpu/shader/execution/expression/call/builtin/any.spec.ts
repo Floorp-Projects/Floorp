@@ -10,15 +10,7 @@ Returns true if any component of e is true if e is a vector.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import {
-  False,
-  True,
-  TypeBool,
-  TypeVec,
-  vec2,
-  vec3,
-  vec4,
-} from '../../../../../util/conversion.js';
+import { False, True, Type, vec2, vec3, vec4 } from '../../../../../util/conversion.js';
 import { allInputSources, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
@@ -36,14 +28,14 @@ g.test('bool')
   .fn(async t => {
     const overloads = {
       scalar: {
-        type: TypeBool,
+        type: Type.bool,
         cases: [
           { input: False, expected: False },
           { input: True, expected: True },
         ],
       },
       vec2: {
-        type: TypeVec(2, TypeBool),
+        type: Type.vec(2, Type.bool),
         cases: [
           { input: vec2(False, False), expected: False },
           { input: vec2(True, False), expected: True },
@@ -52,7 +44,7 @@ g.test('bool')
         ],
       },
       vec3: {
-        type: TypeVec(3, TypeBool),
+        type: Type.vec(3, Type.bool),
         cases: [
           { input: vec3(False, False, False), expected: False },
           { input: vec3(True, False, False), expected: True },
@@ -65,7 +57,7 @@ g.test('bool')
         ],
       },
       vec4: {
-        type: TypeVec(4, TypeBool),
+        type: Type.vec(4, Type.bool),
         cases: [
           { input: vec4(False, False, False, False), expected: False },
           { input: vec4(False, True, False, False), expected: True },
@@ -88,5 +80,5 @@ g.test('bool')
     };
     const overload = overloads[t.params.overload];
 
-    await run(t, builtin('any'), [overload.type], TypeBool, t.params, overload.cases);
+    await run(t, builtin('any'), [overload.type], Type.bool, t.params, overload.cases);
   });

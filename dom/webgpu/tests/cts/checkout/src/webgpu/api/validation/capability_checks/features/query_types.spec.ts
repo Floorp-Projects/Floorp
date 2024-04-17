@@ -43,11 +43,13 @@ g.test('createQuerySet')
     });
   });
 
-g.test('writeTimestamp')
+g.test('timestamp')
   .desc(
     `
   Tests that writing a timestamp throws a type error exception if the features don't contain
   'timestamp-query'.
+
+  TODO: writeTimestamp test is disabled since it's removed from the spec for now.
   `
   )
   .params(u => u.combine('featureContainsTimestampQuery', [false, true]))
@@ -66,11 +68,53 @@ g.test('writeTimestamp')
 
     const querySet = t.device.createQuerySet({
       type: featureContainsTimestampQuery ? 'timestamp' : 'occlusion',
-      count: 1,
+      count: 2,
     });
-    const encoder = t.createEncoder('non-pass');
 
-    t.shouldThrow(featureContainsTimestampQuery ? false : 'TypeError', () => {
-      encoder.encoder.writeTimestamp(querySet, 0);
-    });
+    {
+      let expected = featureContainsTimestampQuery ? false : 'TypeError';
+      // writeTimestamp no longer exists and this should always TypeError.
+      expected = 'TypeError';
+
+      const encoder = t.createEncoder('non-pass');
+      t.shouldThrow(expected, () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (encoder.encoder as any).writeTimestamp(querySet, 0);
+      });
+      encoder.finish();
+    }
+
+    {
+      const encoder = t.createEncoder('non-pass');
+      encoder.encoder
+        .beginComputePass({
+          timestampWrites: { querySet, beginningOfPassWriteIndex: 0, endOfPassWriteIndex: 1 },
+        })
+        .end();
+      t.expectValidationError(() => {
+        encoder.finish();
+      }, !featureContainsTimestampQuery);
+    }
+
+    {
+      const encoder = t.createEncoder('non-pass');
+      const view = t
+        .trackForCleanup(
+          t.device.createTexture({
+            size: [16, 16, 1],
+            format: 'rgba8unorm',
+            usage: GPUTextureUsage.RENDER_ATTACHMENT,
+          })
+        )
+        .createView();
+      encoder.encoder
+        .beginRenderPass({
+          colorAttachments: [{ view, loadOp: 'clear', storeOp: 'discard' }],
+          timestampWrites: { querySet, beginningOfPassWriteIndex: 0, endOfPassWriteIndex: 1 },
+        })
+        .end();
+      t.expectValidationError(() => {
+        encoder.finish();
+      }, !featureContainsTimestampQuery);
+    }
   });

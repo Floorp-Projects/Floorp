@@ -33,17 +33,7 @@ Component-wise when T is a vector.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import {
-  i32Bits,
-  TypeI32,
-  u32,
-  TypeU32,
-  u32Bits,
-  vec2,
-  vec3,
-  vec4,
-  TypeVec,
-} from '../../../../../util/conversion.js';
+import { i32Bits, Type, u32, u32Bits, vec2, vec3, vec4 } from '../../../../../util/conversion.js';
 import { allInputSources, Config, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
@@ -57,7 +47,7 @@ g.test('u32')
   .fn(async t => {
     const cfg: Config = t.params;
 
-    const T = t.params.width === 1 ? TypeU32 : TypeVec(t.params.width, TypeU32);
+    const T = t.params.width === 1 ? Type.u32 : Type.vec(t.params.width, Type.u32);
 
     const V = (x: number, y?: number, z?: number, w?: number) => {
       y = y === undefined ? x : y;
@@ -193,7 +183,7 @@ g.test('u32')
       );
     }
 
-    await run(t, builtin('extractBits'), [T, TypeU32, TypeU32], T, cfg, cases);
+    await run(t, builtin('extractBits'), [T, Type.u32, Type.u32], T, cfg, cases);
   });
 
 g.test('i32')
@@ -203,7 +193,7 @@ g.test('i32')
   .fn(async t => {
     const cfg: Config = t.params;
 
-    const T = t.params.width === 1 ? TypeI32 : TypeVec(t.params.width, TypeI32);
+    const T = t.params.width === 1 ? Type.i32 : Type.vec(t.params.width, Type.i32);
 
     const V = (x: number, y?: number, z?: number, w?: number) => {
       y = y === undefined ? x : y;
@@ -333,5 +323,5 @@ g.test('i32')
       );
     }
 
-    await run(t, builtin('extractBits'), [T, TypeU32, TypeU32], T, cfg, cases);
+    await run(t, builtin('extractBits'), [T, Type.u32, Type.u32], T, cfg, cases);
   });

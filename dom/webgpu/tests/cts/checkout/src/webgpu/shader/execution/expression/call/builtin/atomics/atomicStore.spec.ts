@@ -32,7 +32,7 @@ fn atomicStore(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T)
       .combine('workgroupSize', workgroupSizes)
       .combine('dispatchSize', dispatchSizes)
       .combine('mapId', keysOf(kMapId))
-      .combine('scalarType', ['u32', 'i32'])
+      .combine('scalarType', ['u32', 'i32'] as const)
   )
   .fn(t => {
     const numInvocations = t.params.workgroupSize * t.params.dispatchSize;
@@ -72,7 +72,7 @@ fn atomicStore(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T)
       .combine('workgroupSize', workgroupSizes)
       .combine('dispatchSize', dispatchSizes)
       .combine('mapId', keysOf(kMapId))
-      .combine('scalarType', ['u32', 'i32'])
+      .combine('scalarType', ['u32', 'i32'] as const)
   )
   .fn(t => {
     const numInvocations = t.params.workgroupSize;
@@ -117,7 +117,7 @@ one of the values written.
       .combine('workgroupSize', workgroupSizes)
       .combine('dispatchSize', dispatchSizes)
       .combine('mapId', keysOf(kMapId))
-      .combine('scalarType', ['u32', 'i32'])
+      .combine('scalarType', ['u32', 'i32'] as const)
   )
   .fn(async t => {
     const numInvocations = t.params.workgroupSize * t.params.dispatchSize;
@@ -210,7 +210,7 @@ one of the values written.
       .combine('workgroupSize', workgroupSizes)
       .combine('dispatchSize', dispatchSizes)
       .combine('mapId', keysOf(kMapId))
-      .combine('scalarType', ['u32', 'i32'])
+      .combine('scalarType', ['u32', 'i32'] as const)
   )
   .fn(async t => {
     const numInvocations = t.params.workgroupSize;

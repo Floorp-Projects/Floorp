@@ -5,10 +5,18 @@ import {
   deserializeExpectation,
   serializeExpectation,
 } from '../shader/execution/expression/case_cache.js';
-import { Expectation, toComparator } from '../shader/execution/expression/expression.js';
+import { Expectation, toComparator } from '../shader/execution/expression/expectation.js';
 
 import BinaryStream from './binary_stream.js';
-import { isFloatValue, Matrix, Scalar, Value, Vector } from './conversion.js';
+import {
+  ArrayValue,
+  isFloatValue,
+  isScalarValue,
+  MatrixValue,
+  ScalarValue,
+  Value,
+  VectorValue,
+} from './conversion.js';
 import { FPInterval } from './floating_point.js';
 
 /** Comparison describes the result of a Comparator function. */
@@ -98,9 +106,9 @@ function compareValue(got: Value, expected: Value): Comparison {
     }
   }
 
-  if (got instanceof Scalar) {
+  if (isScalarValue(got)) {
     const g = got;
-    const e = expected as Scalar;
+    const e = expected as ScalarValue;
     const isFloat = g.type.kind === 'f64' || g.type.kind === 'f32' || g.type.kind === 'f16';
     const matched =
       (isFloat && (g.value as number) === (e.value as number)) || (!isFloat && g.value === e.value);
@@ -111,8 +119,8 @@ function compareValue(got: Value, expected: Value): Comparison {
     };
   }
 
-  if (got instanceof Vector) {
-    const e = expected as Vector;
+  if (got instanceof VectorValue || got instanceof ArrayValue) {
+    const e = expected as VectorValue | ArrayValue;
     const gLen = got.elements.length;
     const eLen = e.elements.length;
     let matched = gLen === eLen;
@@ -130,8 +138,8 @@ function compareValue(got: Value, expected: Value): Comparison {
     };
   }
 
-  if (got instanceof Matrix) {
-    const e = expected as Matrix;
+  if (got instanceof MatrixValue) {
+    const e = expected as MatrixValue;
     const gCols = got.type.cols;
     const eCols = e.type.cols;
     const gRows = got.type.rows;
@@ -153,7 +161,7 @@ function compareValue(got: Value, expected: Value): Comparison {
     };
   }
 
-  throw new Error(`unhandled type '${typeof got}`);
+  throw new Error(`unhandled type '${typeof got}'`);
 }
 
 /**
@@ -175,7 +183,7 @@ function compareInterval(got: Value, expected: FPInterval): Comparison {
     }
   }
 
-  if (got instanceof Scalar) {
+  if (isScalarValue(got)) {
     const g = got.value as number;
     const matched = expected.contains(g);
     return {
@@ -197,7 +205,7 @@ function compareInterval(got: Value, expected: FPInterval): Comparison {
  */
 function compareVector(got: Value, expected: FPInterval[]): Comparison {
   // Check got type
-  if (!(got instanceof Vector)) {
+  if (!(got instanceof VectorValue)) {
     return {
       matched: false,
       got: `${Colors.red((typeof got).toString())}(${got})`,
@@ -262,7 +270,7 @@ function convertArrayToString<T>(m: T[]): string {
  */
 function compareMatrix(got: Value, expected: FPInterval[][]): Comparison {
   // Check got type
-  if (!(got instanceof Matrix)) {
+  if (!(got instanceof MatrixValue)) {
     return {
       matched: false,
       got: `${Colors.red((typeof got).toString())}(${got})`,

@@ -17,6 +17,7 @@ export { TestCaseRecorder } from '../internal/logging/test_case_recorder.js';
 
 
 
+
 export class SubcaseBatchState {
   constructor(
   recorder,
@@ -124,8 +125,12 @@ export class Fixture {
         if (WEBGL_lose_context) WEBGL_lose_context.loseContext();
       } else if ('destroy' in o) {
         o.destroy();
-      } else {
+      } else if ('close' in o) {
         o.close();
+      } else {
+        // HTMLVideoElement
+        o.src = '';
+        o.srcObject = null;
       }
     }
   }
@@ -159,6 +164,14 @@ export class Fixture {
   /** Log a debug message. */
   debug(msg) {
     this.rec.debug(new Error(msg));
+  }
+
+  /**
+   * Log an info message.
+   * **Use sparingly. Use `debug()` instead if logs are only needed with debug logging enabled.**
+   */
+  info(msg) {
+    this.rec.info(new Error(msg));
   }
 
   /** Throws an exception marking the subcase as skipped. */

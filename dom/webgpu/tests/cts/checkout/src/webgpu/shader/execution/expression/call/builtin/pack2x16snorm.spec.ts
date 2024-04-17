@@ -8,17 +8,10 @@ bits 16 × i through 16 × i + 15 of the result.
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import { kValue } from '../../../../../util/constants.js';
-import {
-  f32,
-  pack2x16snorm,
-  TypeF32,
-  TypeU32,
-  TypeVec,
-  u32,
-  vec2,
-} from '../../../../../util/conversion.js';
+import { f32, pack2x16snorm, u32, vec2, Type } from '../../../../../util/conversion.js';
 import { quantizeToF32, vectorF32Range } from '../../../../../util/math.js';
-import { allInputSources, Case, run } from '../../expression.js';
+import { Case } from '../../case.js';
+import { allInputSources, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -51,5 +44,5 @@ g.test('pack')
       ];
     });
 
-    await run(t, builtin('pack2x16snorm'), [TypeVec(2, TypeF32)], TypeU32, t.params, cases);
+    await run(t, builtin('pack2x16snorm'), [Type.vec2f], Type.u32, t.params, cases);
   });

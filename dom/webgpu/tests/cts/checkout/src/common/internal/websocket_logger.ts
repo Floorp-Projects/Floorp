@@ -1,3 +1,5 @@
+import { globalTestConfig } from '../framework/test_config.js';
+
 /**
  * - 'uninitialized' means we haven't tried to connect yet
  * - Promise means it's pending
@@ -8,12 +10,15 @@ let connection: Promise<WebSocket | 'failed'> | WebSocket | 'failed' | 'uninitia
   'uninitialized';
 
 /**
- * Log a string to a websocket at `localhost:59497`. See `tools/websocket-logger`.
+ * If the logToWebSocket option is enabled (?log_to_web_socket=1 in browser,
+ * --log-to-web-socket on command line, or enable it by default in options.ts),
+ * log a string to a websocket at `localhost:59497`. See `tools/websocket-logger`.
  *
- * This does nothing if a connection couldn't be established on the first call.
+ * This does nothing if a logToWebSocket is not enabled, or if a connection
+ * couldn't be established on the first call.
  */
-export function logToWebsocket(msg: string) {
-  if (connection === 'failed') {
+export function logToWebSocket(msg: string) {
+  if (!globalTestConfig.logToWebSocket || connection === 'failed') {
     return;
   }
 

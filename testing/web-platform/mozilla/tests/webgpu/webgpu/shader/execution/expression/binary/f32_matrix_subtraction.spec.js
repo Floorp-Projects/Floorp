@@ -4,35 +4,13 @@
 Execution Tests for matrix f32 subtraction expression
 `;import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../gpu_test.js';
-import { TypeF32, TypeMat } from '../../../../util/conversion.js';
-import { FP } from '../../../../util/floating_point.js';
-import { sparseMatrixF32Range } from '../../../../util/math.js';
-import { makeCaseCache } from '../case_cache.js';
+import { Type } from '../../../../util/conversion.js';
 import { allInputSources, run } from '../expression.js';
 
 import { binary, compoundBinary } from './binary.js';
+import { d } from './f32_matrix_subtraction.cache.js';
 
 export const g = makeTestGroup(GPUTest);
-
-// Cases: matCxR_[non_]const
-const mat_cases = [2, 3, 4].
-flatMap((cols) =>
-[2, 3, 4].flatMap((rows) =>
-[true, false].map((nonConst) => ({
-  [`mat${cols}x${rows}_${nonConst ? 'non_const' : 'const'}`]: () => {
-    return FP.f32.generateMatrixPairToMatrixCases(
-      sparseMatrixF32Range(cols, rows),
-      sparseMatrixF32Range(cols, rows),
-      nonConst ? 'unfiltered' : 'finite',
-      FP.f32.subtractionMatrixMatrixInterval
-    );
-  }
-}))
-)
-).
-reduce((a, b) => ({ ...a, ...b }), {});
-
-export const d = makeCaseCache('binary/f32_matrix_subtraction', mat_cases);
 
 g.test('matrix').
 specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation').
@@ -57,8 +35,8 @@ fn(async (t) => {
   await run(
     t,
     binary('-'),
-    [TypeMat(cols, rows, TypeF32), TypeMat(cols, rows, TypeF32)],
-    TypeMat(cols, rows, TypeF32),
+    [Type.mat(cols, rows, Type.f32), Type.mat(cols, rows, Type.f32)],
+    Type.mat(cols, rows, Type.f32),
     t.params,
     cases
   );
@@ -87,8 +65,8 @@ fn(async (t) => {
   await run(
     t,
     compoundBinary('-='),
-    [TypeMat(cols, rows, TypeF32), TypeMat(cols, rows, TypeF32)],
-    TypeMat(cols, rows, TypeF32),
+    [Type.mat(cols, rows, Type.f32), Type.mat(cols, rows, Type.f32)],
+    Type.mat(cols, rows, Type.f32),
     t.params,
     cases
   );

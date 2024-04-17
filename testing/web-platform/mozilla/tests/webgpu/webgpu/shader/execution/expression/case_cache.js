@@ -3,21 +3,22 @@
 **/import { dataCache } from '../../../../common/framework/data_cache.js';import { unreachable } from '../../../../common/util/util.js';import BinaryStream from '../../../util/binary_stream.js';
 import { deserializeComparator, serializeComparator } from '../../../util/compare.js';
 import {
-  Scalar,
-  Vector,
-  serializeValue,
-  deserializeValue,
-  Matrix } from
+  MatrixValue,
 
+  VectorValue,
+  deserializeValue,
+  isScalarValue,
+  serializeValue } from
 '../../../util/conversion.js';
 import {
-  deserializeFPInterval,
   FPInterval,
+  deserializeFPInterval,
   serializeFPInterval } from
 '../../../util/floating_point.js';
 import { flatten2DArray, unflatten2DArray } from '../../../util/math.js';
 
-import { isComparator } from './expression.js';var
+
+import { isComparator } from './expectation.js';var
 
 SerializedExpectationKind = /*#__PURE__*/function (SerializedExpectationKind) {SerializedExpectationKind[SerializedExpectationKind["Value"] = 0] = "Value";SerializedExpectationKind[SerializedExpectationKind["Interval"] = 1] = "Interval";SerializedExpectationKind[SerializedExpectationKind["Interval1DArray"] = 2] = "Interval1DArray";SerializedExpectationKind[SerializedExpectationKind["Interval2DArray"] = 3] = "Interval2DArray";SerializedExpectationKind[SerializedExpectationKind["Array"] = 4] = "Array";SerializedExpectationKind[SerializedExpectationKind["Comparator"] = 5] = "Comparator";return SerializedExpectationKind;}(SerializedExpectationKind || {});
 
@@ -30,7 +31,7 @@ SerializedExpectationKind = /*#__PURE__*/function (SerializedExpectationKind) {S
 
 /** serializeExpectation() serializes an Expectation to a BinaryStream */
 export function serializeExpectation(s, e) {
-  if (e instanceof Scalar || e instanceof Vector || e instanceof Matrix) {
+  if (isScalarValue(e) || e instanceof VectorValue || e instanceof MatrixValue) {
     s.writeU8(SerializedExpectationKind.Value);
     serializeValue(s, e);
     return;
@@ -122,11 +123,11 @@ export function deserializeCase(s) {
   return { input, expected };
 }
 
-/** CaseListBuilder is a function that builds a CaseList */
+/** CaseListBuilder is a function that builds a list of cases, Case[] */
 
 
 /**
- * CaseCache is a cache of CaseList.
+ * CaseCache is a cache of Case[].
  * CaseCache implements the Cacheable interface, so the cases can be pre-built
  * and stored in the data cache, reducing computation costs at CTS runtime.
  */
@@ -137,7 +138,7 @@ export class CaseCache {
    * @param builders a Record of case-list name to case-list builder.
    */
   constructor(name, builders) {
-    this.path = `webgpu/shader/execution/case-cache/${name}.bin`;
+    this.path = `webgpu/shader/execution/${name}.bin`;
     this.builders = builders;
   }
 

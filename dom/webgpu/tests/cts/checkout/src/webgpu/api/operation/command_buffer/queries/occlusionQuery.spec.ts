@@ -695,7 +695,7 @@ g.test('occlusion_query,scissor')
         const expectPassed = !occluded;
         t.expect(
           !!passed === expectPassed,
-          `queryIndex: ${queryIndex}, scissorCase: ${scissorCase}, was: ${!!passed}, expected: ${expectPassed}, ${name}`
+          `queryIndex: ${queryIndex}, scissorCase: ${scissorCase}, was: ${!!passed}, expected: ${expectPassed}`
         );
       }
     );
@@ -739,7 +739,7 @@ g.test('occlusion_query,depth')
         const expectPassed = queryIndex % 2 === 0;
         t.expect(
           !!passed === expectPassed,
-          `queryIndex: ${queryIndex}, was: ${!!passed}, expected: ${expectPassed}, ${name}`
+          `queryIndex: ${queryIndex}, was: ${!!passed}, expected: ${expectPassed}`
         );
       }
     );
@@ -783,7 +783,7 @@ g.test('occlusion_query,stencil')
         const expectPassed = queryIndex % 2 === 0;
         t.expect(
           !!passed === expectPassed,
-          `queryIndex: ${queryIndex}, was: ${!!passed}, expected: ${expectPassed}, ${name}`
+          `queryIndex: ${queryIndex}, was: ${!!passed}, expected: ${expectPassed}`
         );
       }
     );
@@ -851,7 +851,7 @@ g.test('occlusion_query,sample_mask')
         const expectPassed = !!(sampleMask & drawMask);
         t.expect(
           !!passed === expectPassed,
-          `queryIndex: ${queryIndex}, was: ${!!passed}, expected: ${expectPassed}, ${name}`
+          `queryIndex: ${queryIndex}, was: ${!!passed}, expected: ${expectPassed}`
         );
       }
     );

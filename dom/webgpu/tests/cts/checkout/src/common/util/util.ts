@@ -1,7 +1,6 @@
 import { Float16Array } from '../../external/petamoriken/float16/float16.js';
 import { SkipTestCase } from '../framework/fixture.js';
 import { globalTestConfig } from '../framework/test_config.js';
-import { Logger } from '../internal/logging/logger.js';
 
 import { keysOf } from './data_tables.js';
 import { timeout } from './timeout.js';
@@ -24,7 +23,7 @@ export class ErrorWithExtra extends Error {
     super(message);
 
     const oldExtras = baseOrMessage instanceof ErrorWithExtra ? baseOrMessage.extra : {};
-    this.extra = Logger.globalDebugMode
+    this.extra = globalTestConfig.enableDebugLogs
       ? { ...oldExtras, ...newExtra() }
       : { omitted: 'pass ?debug=1' };
   }
@@ -304,6 +303,8 @@ const TypedArrayBufferViewInstances = [
   new Float16Array(),
   new Float32Array(),
   new Float64Array(),
+  new BigInt64Array(),
+  new BigUint64Array(),
 ] as const;
 
 export type TypedArrayBufferView = (typeof TypedArrayBufferViewInstances)[number];

@@ -331,6 +331,26 @@ export interface Float16Array {
   subarray(begin?: number, end?: number): Float16Array;
 
   /**
+   * Copies the array and returns the copy with the elements in reverse order.
+   */
+  toReversed(): Float16Array;
+
+  /**
+   * Copies and sorts the array.
+   * @param compareFn Function used to determine the order of the elements. It is expected to return
+   * a negative value if first argument is less than second argument, zero if they're equal and a positive
+   * value otherwise. If omitted, the elements are sorted in ascending.
+   */
+  toSorted(compareFn?: (a: number, b: number) => number): Float16Array;
+
+  /**
+   * Copies the array and replaces the element at the given index with the provided value.
+   * @param index The zero-based location in the array for which to replace an element.
+   * @param value Element to insert into the array in place of the replaced element.
+   */
+  with(index: number, value: number): Float16Array;
+
+  /**
    * Converts a number to a string by using the current locale.
    */
   toLocaleString(): string;
@@ -466,6 +486,13 @@ export declare function setFloat16(
 
 /**
  * Returns the nearest half-precision float representation of a number.
+ * @param x A numeric expression.
+ */
+export declare function f16round(x: number): number;
+
+/**
+ * Returns the nearest half-precision float representation of a number.
+ * @alias f16round
  * @param x A numeric expression.
  */
 export declare function hfround(x: number): number;

@@ -86,10 +86,7 @@ g.test('import_multiple_times_in_same_task_scope')
         sourceType === 'VideoFrame'
           ? await getVideoFrameFromVideoElement(t, videoElement)
           : videoElement;
-      externalTexture = t.device.importExternalTexture({
-        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-        source: source as any,
-      });
+      externalTexture = t.device.importExternalTexture({ source });
 
       bindGroup = t.device.createBindGroup({
         layout: t.getDefaultBindGroupLayout(),
@@ -99,10 +96,7 @@ g.test('import_multiple_times_in_same_task_scope')
       t.submitCommandBuffer(bindGroup, true);
 
       // Import again in the same task scope should return same object.
-      const mayBeTheSameExternalTexture = t.device.importExternalTexture({
-        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-        source: source as any,
-      });
+      const mayBeTheSameExternalTexture = t.device.importExternalTexture({ source });
 
       if (externalTexture === mayBeTheSameExternalTexture) {
         t.submitCommandBuffer(bindGroup, true);
@@ -142,10 +136,7 @@ g.test('import_and_use_in_different_microtask')
 
       // Import GPUExternalTexture
       queueMicrotask(() => {
-        externalTexture = t.device.importExternalTexture({
-          /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-          source: source as any,
-        });
+        externalTexture = t.device.importExternalTexture({ source });
       });
 
       // Submit GPUExternalTexture
@@ -182,10 +173,7 @@ g.test('import_and_use_in_different_task')
         sourceType === 'VideoFrame'
           ? await getVideoFrameFromVideoElement(t, videoElement)
           : videoElement;
-      externalTexture = t.device.importExternalTexture({
-        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-        source: source as any,
-      });
+      externalTexture = t.device.importExternalTexture({ source });
 
       bindGroup = t.device.createBindGroup({
         layout: t.getDefaultBindGroupLayout(),
@@ -218,10 +206,7 @@ g.test('use_import_to_refresh')
     let source: HTMLVideoElement | VideoFrame;
     await startPlayingAndWaitForVideo(videoElement, () => {
       source = videoElement;
-      externalTexture = t.device.importExternalTexture({
-        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-        source: source as any,
-      });
+      externalTexture = t.device.importExternalTexture({ source });
 
       bindGroup = t.device.createBindGroup({
         layout: t.getDefaultBindGroupLayout(),
@@ -232,10 +217,7 @@ g.test('use_import_to_refresh')
     });
 
     await waitForNextTask(() => {
-      const mayBeTheSameExternalTexture = t.device.importExternalTexture({
-        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-        source: source as any,
-      });
+      const mayBeTheSameExternalTexture = t.device.importExternalTexture({ source });
 
       if (externalTexture === mayBeTheSameExternalTexture) {
         // ImportExternalTexture should refresh expired GPUExternalTexture.
@@ -264,10 +246,7 @@ g.test('webcodec_video_frame_close_expire_immediately')
     let externalTexture: GPUExternalTexture;
     await startPlayingAndWaitForVideo(videoElement, async () => {
       const source = await getVideoFrameFromVideoElement(t, videoElement);
-      externalTexture = t.device.importExternalTexture({
-        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-        source: source as any,
-      });
+      externalTexture = t.device.importExternalTexture({ source });
 
       bindGroup = t.device.createBindGroup({
         layout: t.getDefaultBindGroupLayout(),

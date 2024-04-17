@@ -4,72 +4,13 @@ Execution Tests for non-matrix f16 division expression
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../gpu_test.js';
-import { TypeF16, TypeVec } from '../../../../util/conversion.js';
-import { FP, FPVector } from '../../../../util/floating_point.js';
-import { sparseF16Range, sparseVectorF16Range } from '../../../../util/math.js';
-import { makeCaseCache } from '../case_cache.js';
+import { Type } from '../../../../util/conversion.js';
 import { allInputSources, run } from '../expression.js';
 
 import { binary, compoundBinary } from './binary.js';
-
-const divisionVectorScalarInterval = (v: readonly number[], s: number): FPVector => {
-  return FP.f16.toVector(v.map(e => FP.f16.divisionInterval(e, s)));
-};
-
-const divisionScalarVectorInterval = (s: number, v: readonly number[]): FPVector => {
-  return FP.f16.toVector(v.map(e => FP.f16.divisionInterval(s, e)));
-};
+import { d } from './f16_division.cache.js';
 
 export const g = makeTestGroup(GPUTest);
-
-const scalar_cases = ([true, false] as const)
-  .map(nonConst => ({
-    [`scalar_${nonConst ? 'non_const' : 'const'}`]: () => {
-      return FP.f16.generateScalarPairToIntervalCases(
-        sparseF16Range(),
-        sparseF16Range(),
-        nonConst ? 'unfiltered' : 'finite',
-        FP.f16.divisionInterval
-      );
-    },
-  }))
-  .reduce((a, b) => ({ ...a, ...b }), {});
-
-const vector_scalar_cases = ([2, 3, 4] as const)
-  .flatMap(dim =>
-    ([true, false] as const).map(nonConst => ({
-      [`vec${dim}_scalar_${nonConst ? 'non_const' : 'const'}`]: () => {
-        return FP.f16.generateVectorScalarToVectorCases(
-          sparseVectorF16Range(dim),
-          sparseF16Range(),
-          nonConst ? 'unfiltered' : 'finite',
-          divisionVectorScalarInterval
-        );
-      },
-    }))
-  )
-  .reduce((a, b) => ({ ...a, ...b }), {});
-
-const scalar_vector_cases = ([2, 3, 4] as const)
-  .flatMap(dim =>
-    ([true, false] as const).map(nonConst => ({
-      [`scalar_vec${dim}_${nonConst ? 'non_const' : 'const'}`]: () => {
-        return FP.f16.generateScalarVectorToVectorCases(
-          sparseF16Range(),
-          sparseVectorF16Range(dim),
-          nonConst ? 'unfiltered' : 'finite',
-          divisionScalarVectorInterval
-        );
-      },
-    }))
-  )
-  .reduce((a, b) => ({ ...a, ...b }), {});
-
-export const d = makeCaseCache('binary/f16_division', {
-  ...scalar_cases,
-  ...vector_scalar_cases,
-  ...scalar_vector_cases,
-});
 
 g.test('scalar')
   .specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation')
@@ -87,7 +28,7 @@ Accuracy: 2.5 ULP for |y| in the range [2^-126, 2^126]
     const cases = await d.get(
       t.params.inputSource === 'const' ? 'scalar_const' : 'scalar_non_const'
     );
-    await run(t, binary('/'), [TypeF16, TypeF16], TypeF16, t.params, cases);
+    await run(t, binary('/'), [Type.f16, Type.f16], Type.f16, t.params, cases);
   });
 
 g.test('vector')
@@ -106,7 +47,7 @@ Accuracy: 2.5 ULP for |y| in the range [2^-126, 2^126]
     const cases = await d.get(
       t.params.inputSource === 'const' ? 'scalar_const' : 'scalar_non_const' // Using vectorize to generate vector cases based on scalar cases
     );
-    await run(t, binary('/'), [TypeF16, TypeF16], TypeF16, t.params, cases);
+    await run(t, binary('/'), [Type.f16, Type.f16], Type.f16, t.params, cases);
   });
 
 g.test('scalar_compound')
@@ -127,7 +68,7 @@ Accuracy: 2.5 ULP for |y| in the range [2^-126, 2^126]
     const cases = await d.get(
       t.params.inputSource === 'const' ? 'scalar_const' : 'scalar_non_const'
     );
-    await run(t, compoundBinary('/='), [TypeF16, TypeF16], TypeF16, t.params, cases);
+    await run(t, compoundBinary('/='), [Type.f16, Type.f16], Type.f16, t.params, cases);
   });
 
 g.test('vector_scalar')
@@ -150,8 +91,8 @@ Accuracy: Correctly rounded
     await run(
       t,
       binary('/'),
-      [TypeVec(dim, TypeF16), TypeF16],
-      TypeVec(dim, TypeF16),
+      [Type.vec(dim, Type.f16), Type.f16],
+      Type.vec(dim, Type.f16),
       t.params,
       cases
     );
@@ -177,8 +118,8 @@ Accuracy: Correctly rounded
     await run(
       t,
       compoundBinary('/='),
-      [TypeVec(dim, TypeF16), TypeF16],
-      TypeVec(dim, TypeF16),
+      [Type.vec(dim, Type.f16), Type.f16],
+      Type.vec(dim, Type.f16),
       t.params,
       cases
     );
@@ -204,8 +145,8 @@ Accuracy: Correctly rounded
     await run(
       t,
       binary('/'),
-      [TypeF16, TypeVec(dim, TypeF16)],
-      TypeVec(dim, TypeF16),
+      [Type.f16, Type.vec(dim, Type.f16)],
+      Type.vec(dim, Type.f16),
       t.params,
       cases
     );

@@ -11,7 +11,7 @@ TODO:
 import { assert, unreachable } from '../../../../common/util/util.js';
 import { kBlendFactors, kBlendOperations } from '../../../capability_info.js';
 import { GPUConst } from '../../../constants.js';
-import { kEncodableTextureFormats, kTextureFormatInfo } from '../../../format_info.js';
+import { kRegularTextureFormats, kTextureFormatInfo } from '../../../format_info.js';
 import { GPUTest, TextureTestMixin } from '../../../gpu_test.js';
 import { clamp } from '../../../util/math.js';
 import { TexelView } from '../../../util/texture/texel_view.js';
@@ -165,6 +165,7 @@ u //
 .combine('component', ['color', 'alpha']).
 combine('srcFactor', kBlendFactors).
 combine('dstFactor', kBlendFactors).
+beginSubcases().
 combine('operation', kBlendOperations).
 filter((t) => {
   if (t.operation === 'min' || t.operation === 'max') {
@@ -172,7 +173,6 @@ filter((t) => {
   }
   return true;
 }).
-beginSubcases().
 combine('srcColor', [{ r: 0.11, g: 0.61, b: 0.81, a: 0.44 }]).
 combine('dstColor', [
 { r: 0.51, g: 0.22, b: 0.71, a: 0.33 },
@@ -318,9 +318,9 @@ struct Uniform {
   );
 });
 
-const kBlendableFormats = kEncodableTextureFormats.filter((f) => {
+const kBlendableFormats = kRegularTextureFormats.filter((f) => {
   const info = kTextureFormatInfo[f];
-  return info.renderable && info.sampleType === 'float';
+  return info.colorRender && info.color.type === 'float';
 });
 
 g.test('blending,formats').

@@ -311,6 +311,65 @@ fn(async (t) => {
   t.shouldReject('OperationError', adapter.requestDevice({ requiredLimits }));
 });
 
+g.test('limit,out_of_range').
+desc(
+  `
+    Test that specifying limits that are out of range (<0, >MAX_SAFE_INTEGER, >2**31-2 for 32-bit
+    limits, =0 for alignment limits) produce the appropriate error (TypeError or OperationError).
+    `
+).
+params((u) =>
+u.
+combine('limit', kLimits).
+beginSubcases().
+expand('value', function* () {
+  yield -(2 ** 64);
+  yield Number.MIN_SAFE_INTEGER - 3;
+  yield Number.MIN_SAFE_INTEGER - 1;
+  yield Number.MIN_SAFE_INTEGER;
+  yield -(2 ** 32);
+  yield -1;
+  yield 0;
+  yield 2 ** 32 - 2;
+  yield 2 ** 32 - 1;
+  yield 2 ** 32;
+  yield 2 ** 32 + 1;
+  yield 2 ** 32 + 2;
+  yield Number.MAX_SAFE_INTEGER;
+  yield Number.MAX_SAFE_INTEGER + 1;
+  yield Number.MAX_SAFE_INTEGER + 3;
+  yield 2 ** 64;
+  yield Number.MAX_VALUE;
+})
+).
+fn(async (t) => {
+  const { limit, value } = t.params;
+
+  const gpu = getGPU(t.rec);
+  const adapter = await gpu.requestAdapter();
+  assert(adapter !== null);
+  const limitInfo = getDefaultLimitsForAdapter(adapter)[limit];
+
+  const requiredLimits = {
+    [limit]: value
+  };
+
+  const errorName =
+  value < 0 || value > Number.MAX_SAFE_INTEGER ?
+  'TypeError' :
+  limitInfo.class === 'maximum' && value > adapter.limits[limit] ?
+  'OperationError' :
+  limitInfo.class === 'alignment' && (value > 2 ** 31 || !isPowerOfTwo(value)) ?
+  'OperationError' :
+  false;
+
+  if (errorName) {
+    t.shouldReject(errorName, adapter.requestDevice({ requiredLimits }));
+  } else {
+    await adapter.requestDevice({ requiredLimits });
+  }
+});
+
 g.test('limit,worse_than_default').
 desc(
   `

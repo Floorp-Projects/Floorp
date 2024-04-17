@@ -4,72 +4,13 @@ Execution Tests for non-matrix f32 remainder expression
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../gpu_test.js';
-import { TypeF32, TypeVec } from '../../../../util/conversion.js';
-import { FP, FPVector } from '../../../../util/floating_point.js';
-import { sparseF32Range, sparseVectorF32Range } from '../../../../util/math.js';
-import { makeCaseCache } from '../case_cache.js';
+import { Type } from '../../../../util/conversion.js';
 import { allInputSources, run } from '../expression.js';
 
 import { binary, compoundBinary } from './binary.js';
-
-const remainderVectorScalarInterval = (v: readonly number[], s: number): FPVector => {
-  return FP.f32.toVector(v.map(e => FP.f32.remainderInterval(e, s)));
-};
-
-const remainderScalarVectorInterval = (s: number, v: readonly number[]): FPVector => {
-  return FP.f32.toVector(v.map(e => FP.f32.remainderInterval(s, e)));
-};
+import { d } from './f32_remainder.cache.js';
 
 export const g = makeTestGroup(GPUTest);
-
-const scalar_cases = ([true, false] as const)
-  .map(nonConst => ({
-    [`scalar_${nonConst ? 'non_const' : 'const'}`]: () => {
-      return FP.f32.generateScalarPairToIntervalCases(
-        sparseF32Range(),
-        sparseF32Range(),
-        nonConst ? 'unfiltered' : 'finite',
-        FP.f32.remainderInterval
-      );
-    },
-  }))
-  .reduce((a, b) => ({ ...a, ...b }), {});
-
-const vector_scalar_cases = ([2, 3, 4] as const)
-  .flatMap(dim =>
-    ([true, false] as const).map(nonConst => ({
-      [`vec${dim}_scalar_${nonConst ? 'non_const' : 'const'}`]: () => {
-        return FP.f32.generateVectorScalarToVectorCases(
-          sparseVectorF32Range(dim),
-          sparseF32Range(),
-          nonConst ? 'unfiltered' : 'finite',
-          remainderVectorScalarInterval
-        );
-      },
-    }))
-  )
-  .reduce((a, b) => ({ ...a, ...b }), {});
-
-const scalar_vector_cases = ([2, 3, 4] as const)
-  .flatMap(dim =>
-    ([true, false] as const).map(nonConst => ({
-      [`scalar_vec${dim}_${nonConst ? 'non_const' : 'const'}`]: () => {
-        return FP.f32.generateScalarVectorToVectorCases(
-          sparseF32Range(),
-          sparseVectorF32Range(dim),
-          nonConst ? 'unfiltered' : 'finite',
-          remainderScalarVectorInterval
-        );
-      },
-    }))
-  )
-  .reduce((a, b) => ({ ...a, ...b }), {});
-
-export const d = makeCaseCache('binary/f32_remainder', {
-  ...scalar_cases,
-  ...vector_scalar_cases,
-  ...scalar_vector_cases,
-});
 
 g.test('scalar')
   .specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation')
@@ -84,7 +25,7 @@ Accuracy: Derived from x - y * trunc(x/y)
     const cases = await d.get(
       t.params.inputSource === 'const' ? 'scalar_const' : 'scalar_non_const'
     );
-    await run(t, binary('%'), [TypeF32, TypeF32], TypeF32, t.params, cases);
+    await run(t, binary('%'), [Type.f32, Type.f32], Type.f32, t.params, cases);
   });
 
 g.test('vector')
@@ -100,7 +41,7 @@ Accuracy: Derived from x - y * trunc(x/y)
     const cases = await d.get(
       t.params.inputSource === 'const' ? 'scalar_const' : 'scalar_non_const' // Using vectorize to generate vector cases based on scalar cases
     );
-    await run(t, binary('%'), [TypeF32, TypeF32], TypeF32, t.params, cases);
+    await run(t, binary('%'), [Type.f32, Type.f32], Type.f32, t.params, cases);
   });
 
 g.test('scalar_compound')
@@ -118,7 +59,7 @@ Accuracy: Derived from x - y * trunc(x/y)
     const cases = await d.get(
       t.params.inputSource === 'const' ? 'scalar_const' : 'scalar_non_const'
     );
-    await run(t, compoundBinary('%='), [TypeF32, TypeF32], TypeF32, t.params, cases);
+    await run(t, compoundBinary('%='), [Type.f32, Type.f32], Type.f32, t.params, cases);
   });
 
 g.test('vector_scalar')
@@ -138,8 +79,8 @@ Accuracy: Correctly rounded
     await run(
       t,
       binary('%'),
-      [TypeVec(dim, TypeF32), TypeF32],
-      TypeVec(dim, TypeF32),
+      [Type.vec(dim, Type.f32), Type.f32],
+      Type.vec(dim, Type.f32),
       t.params,
       cases
     );
@@ -162,8 +103,8 @@ Accuracy: Correctly rounded
     await run(
       t,
       compoundBinary('%='),
-      [TypeVec(dim, TypeF32), TypeF32],
-      TypeVec(dim, TypeF32),
+      [Type.vec(dim, Type.f32), Type.f32],
+      Type.vec(dim, Type.f32),
       t.params,
       cases
     );
@@ -186,8 +127,8 @@ Accuracy: Correctly rounded
     await run(
       t,
       binary('%'),
-      [TypeF32, TypeVec(dim, TypeF32)],
-      TypeVec(dim, TypeF32),
+      [Type.f32, Type.vec(dim, Type.f32)],
+      Type.vec(dim, Type.f32),
       t.params,
       cases
     );

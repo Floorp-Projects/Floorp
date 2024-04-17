@@ -45,32 +45,47 @@ export function getPipelineTypeForBindingCombination(bindingCombination: Binding
   }
 }
 
-function getBindGroupIndex(bindGroupTest: BindGroupTest, i: number) {
+function getBindGroupIndex(bindGroupTest: BindGroupTest, numBindGroups: number, i: number) {
   switch (bindGroupTest) {
     case 'sameGroup':
       return 0;
     case 'differentGroups':
-      return i % 3;
+      return i % numBindGroups;
+  }
+}
+
+function getBindingIndex(bindGroupTest: BindGroupTest, numBindGroups: number, i: number) {
+  switch (bindGroupTest) {
+    case 'sameGroup':
+      return i;
+    case 'differentGroups':
+      return (i / numBindGroups) | 0;
   }
 }
 
 function getWGSLBindings(
-  order: ReorderOrder,
-  bindGroupTest: BindGroupTest,
-  storageDefinitionWGSLSnippetFn: (i: number, j: number) => string,
+  {
+    order,
+    bindGroupTest,
+    storageDefinitionWGSLSnippetFn,
+    numBindGroups,
+  }: {
+    order: ReorderOrder;
+    bindGroupTest: BindGroupTest;
+    storageDefinitionWGSLSnippetFn: (i: number, j: number) => string;
+    numBindGroups: number;
+  },
   numBindings: number,
   id: number
 ) {
   return reorder(
     order,
-    range(
-      numBindings,
-      i =>
-        `@group(${getBindGroupIndex(
-          bindGroupTest,
-          i
-        )}) @binding(${i}) ${storageDefinitionWGSLSnippetFn(i, id)};`
-    )
+    range(numBindings, i => {
+      const groupNdx = getBindGroupIndex(bindGroupTest, numBindGroups, i);
+      const bindingNdx = getBindingIndex(bindGroupTest, numBindGroups, i);
+      const storageWGSL = storageDefinitionWGSLSnippetFn(i, id);
+      return `@group(${groupNdx}) @binding(${bindingNdx}) ${storageWGSL};`;
+    })
   ).join('\n        ');
 }
 
@@ -80,15 +95,22 @@ export function getPerStageWGSLForBindingCombinationImpl(
   bindGroupTest: BindGroupTest,
   storageDefinitionWGSLSnippetFn: (i: number, j: number) => string,
   bodyFn: (numBindings: number, set: number) => string,
+  numBindGroups: number,
   numBindings: number,
   extraWGSL = ''
 ) {
+  const bindingParams = {
+    order,
+    bindGroupTest,
+    storageDefinitionWGSLSnippetFn,
+    numBindGroups,
+  };
   switch (bindingCombination) {
     case 'vertex':
       return `
         ${extraWGSL}
 
-        ${getWGSLBindings(order, bindGroupTest, storageDefinitionWGSLSnippetFn, numBindings, 0)}
+        ${getWGSLBindings(bindingParams, numBindings, 0)}
 
         @vertex fn mainVS() -> @builtin(position) vec4f {
           ${bodyFn(numBindings, 0)}
@@ -99,7 +121,7 @@ export function getPerStageWGSLForBindingCombinationImpl(
       return `
         ${extraWGSL}
 
-        ${getWGSLBindings(order, bindGroupTest, storageDefinitionWGSLSnippetFn, numBindings, 0)}
+        ${getWGSLBindings(bindingParams, numBindings, 0)}
 
         @vertex fn mainVS() -> @builtin(position) vec4f {
           return vec4f(0);
@@ -113,9 +135,9 @@ export function getPerStageWGSLForBindingCombinationImpl(
       return `
         ${extraWGSL}
 
-        ${getWGSLBindings(order, bindGroupTest, storageDefinitionWGSLSnippetFn, numBindings, 0)}
+        ${getWGSLBindings(bindingParams, numBindings, 0)}
 
-        ${getWGSLBindings(order, bindGroupTest, storageDefinitionWGSLSnippetFn, numBindings - 1, 1)}
+        ${getWGSLBindings(bindingParams, numBindings - 1, 1)}
 
         @vertex fn mainVS() -> @builtin(position) vec4f {
           ${bodyFn(numBindings, 0)}
@@ -131,9 +153,9 @@ export function getPerStageWGSLForBindingCombinationImpl(
       return `
         ${extraWGSL}
 
-        ${getWGSLBindings(order, bindGroupTest, storageDefinitionWGSLSnippetFn, numBindings - 1, 0)}
+        ${getWGSLBindings(bindingParams, numBindings - 1, 0)}
 
-        ${getWGSLBindings(order, bindGroupTest, storageDefinitionWGSLSnippetFn, numBindings, 1)}
+        ${getWGSLBindings(bindingParams, numBindings, 1)}
 
         @vertex fn mainVS() -> @builtin(position) vec4f {
           ${bodyFn(numBindings - 1, 0)}
@@ -148,8 +170,7 @@ export function getPerStageWGSLForBindingCombinationImpl(
     case 'compute':
       return `
         ${extraWGSL}
-        ${getWGSLBindings(order, bindGroupTest, storageDefinitionWGSLSnippetFn, numBindings, 0)}
-        @group(3) @binding(0) var<storage, read_write> d: f32;
+        ${getWGSLBindings(bindingParams, numBindings, 0)}
         @compute @workgroup_size(1) fn main() {
           ${bodyFn(numBindings, 0)}
         }
@@ -164,6 +185,7 @@ export function getPerStageWGSLForBindingCombination(
   bindGroupTest: BindGroupTest,
   storageDefinitionWGSLSnippetFn: (i: number, j: number) => string,
   usageWGSLSnippetFn: (i: number, j: number) => string,
+  maxBindGroups: number,
   numBindings: number,
   extraWGSL = ''
 ) {
@@ -174,6 +196,7 @@ export function getPerStageWGSLForBindingCombination(
     storageDefinitionWGSLSnippetFn,
     (numBindings: number, set: number) =>
       `${range(numBindings, i => usageWGSLSnippetFn(i, set)).join('\n          ')}`,
+    maxBindGroups,
     numBindings,
     extraWGSL
   );
@@ -185,6 +208,7 @@ export function getPerStageWGSLForBindingCombinationStorageTextures(
   bindGroupTest: BindGroupTest,
   storageDefinitionWGSLSnippetFn: (i: number, j: number) => string,
   usageWGSLSnippetFn: (i: number, j: number) => string,
+  numBindGroups: number,
   numBindings: number,
   extraWGSL = ''
 ) {
@@ -195,6 +219,7 @@ export function getPerStageWGSLForBindingCombinationStorageTextures(
     storageDefinitionWGSLSnippetFn,
     (numBindings: number, set: number) =>
       `${range(numBindings, i => usageWGSLSnippetFn(i, set)).join('\n          ')}`,
+    numBindGroups,
     numBindings,
     extraWGSL
   );
@@ -854,7 +879,7 @@ export class LimitTestsImpl extends GPUTestBase {
   /**
    * Creates an GPURenderCommandsMixin setup with some initial state.
    */
-  _getGPURenderCommandsMixin(encoderType: RenderEncoderType) {
+  #getGPURenderCommandsMixin(encoderType: RenderEncoderType) {
     const { device } = this;
 
     switch (encoderType) {
@@ -895,7 +920,7 @@ export class LimitTestsImpl extends GPUTestBase {
         });
 
         const encoder = device.createCommandEncoder();
-        const mixin = encoder.beginRenderPass({
+        const passEncoder = encoder.beginRenderPass({
           colorAttachments: [
             {
               view: texture.createView(),
@@ -906,10 +931,10 @@ export class LimitTestsImpl extends GPUTestBase {
         });
 
         return {
-          mixin,
+          passEncoder,
           bindGroup,
           prep() {
-            mixin.end();
+            passEncoder.end();
           },
           test() {
             encoder.finish();
@@ -946,16 +971,16 @@ export class LimitTestsImpl extends GPUTestBase {
           ],
         });
 
-        const mixin = device.createRenderBundleEncoder({
+        const passEncoder = device.createRenderBundleEncoder({
           colorFormats: ['rgba8unorm'],
         });
 
         return {
-          mixin,
+          passEncoder,
           bindGroup,
           prep() {},
           test() {
-            mixin.finish();
+            passEncoder.finish();
           },
         };
         break;
@@ -964,17 +989,23 @@ export class LimitTestsImpl extends GPUTestBase {
   }
 
   /**
-   * Tests a method on GPURenderCommandsMixin
-   * The function will be called with the mixin.
+   * Test a method on GPURenderCommandsMixin or GPUBindingCommandsMixin
+   * The function will be called with the passEncoder.
    */
-  async testGPURenderCommandsMixin(
+  async testGPURenderAndBindingCommandsMixin(
     encoderType: RenderEncoderType,
-    fn: ({ mixin }: { mixin: GPURenderCommandsMixin }) => void,
+    fn: ({
+      passEncoder,
+      bindGroup,
+    }: {
+      passEncoder: GPURenderCommandsMixin & GPUBindingCommandsMixin;
+      bindGroup: GPUBindGroup;
+    }) => void,
     shouldError: boolean,
     msg = ''
   ) {
-    const { mixin, prep, test } = this._getGPURenderCommandsMixin(encoderType);
-    fn({ mixin });
+    const { passEncoder, prep, test, bindGroup } = this.#getGPURenderCommandsMixin(encoderType);
+    fn({ passEncoder, bindGroup });
     prep();
 
     await this.expectValidationError(test, shouldError, msg);
@@ -983,7 +1014,7 @@ export class LimitTestsImpl extends GPUTestBase {
   /**
    * Creates GPUBindingCommandsMixin setup with some initial state.
    */
-  _getGPUBindingCommandsMixin(encoderType: EncoderType) {
+  #getGPUBindingCommandsMixin(encoderType: EncoderType) {
     const { device } = this;
 
     switch (encoderType) {
@@ -1016,12 +1047,12 @@ export class LimitTestsImpl extends GPUTestBase {
         });
 
         const encoder = device.createCommandEncoder();
-        const mixin = encoder.beginComputePass();
+        const passEncoder = encoder.beginComputePass();
         return {
-          mixin,
+          passEncoder,
           bindGroup,
           prep() {
-            mixin.end();
+            passEncoder.end();
           },
           test() {
             encoder.finish();
@@ -1030,24 +1061,24 @@ export class LimitTestsImpl extends GPUTestBase {
         break;
       }
       case 'render':
-        return this._getGPURenderCommandsMixin('render');
+        return this.#getGPURenderCommandsMixin('render');
       case 'renderBundle':
-        return this._getGPURenderCommandsMixin('renderBundle');
+        return this.#getGPURenderCommandsMixin('renderBundle');
     }
   }
 
   /**
    * Tests a method on GPUBindingCommandsMixin
-   * The function pass will be called with the mixin and a bindGroup
+   * The function pass will be called with the passEncoder and a bindGroup
    */
   async testGPUBindingCommandsMixin(
     encoderType: EncoderType,
-    fn: ({ bindGroup }: { mixin: GPUBindingCommandsMixin; bindGroup: GPUBindGroup }) => void,
+    fn: ({ bindGroup }: { passEncoder: GPUBindingCommandsMixin; bindGroup: GPUBindGroup }) => void,
     shouldError: boolean,
     msg = ''
   ) {
-    const { mixin, bindGroup, prep, test } = this._getGPUBindingCommandsMixin(encoderType);
-    fn({ mixin, bindGroup });
+    const { passEncoder, bindGroup, prep, test } = this.#getGPUBindingCommandsMixin(encoderType);
+    fn({ passEncoder, bindGroup });
     prep();
 
     await this.expectValidationError(test, shouldError, msg);

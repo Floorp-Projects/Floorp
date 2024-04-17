@@ -178,10 +178,11 @@ g.test('vector')
   .desc('Tests validation of vector indexed and swizzles')
   .params(u =>
     u
-      .combine('case', keysOf(kCases)) //
       .combine('vector_decl', ['const', 'let', 'var', 'param'] as const)
       .combine('vector_width', [2, 3, 4] as const)
       .combine('element_type', ['i32', 'u32', 'f32', 'f16', 'bool'] as const)
+      .beginSubcases()
+      .combine('case', keysOf(kCases))
   )
   .beforeAllSubcases(t => {
     if (t.params.element_type === 'f16') {

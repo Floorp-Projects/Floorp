@@ -3,6 +3,7 @@ This tests entry point validation of compute/render pipelines and their shader m
 
 The entryPoint in shader module include standard "main" and others.
 The entryPoint assigned in descriptor include:
+- Undefined with matching entry point for stage
 - Matching case (control case)
 - Empty string
 - Mistyping
@@ -10,7 +11,6 @@ The entryPoint assigned in descriptor include:
 - Unicode entrypoints and their ASCIIfied version
 
 TODO:
-- Test unicode normalization (gpuweb/gpuweb#1160)
 - Fine-tune test cases to reduce number by removing trivially similar cases
 `;
 
@@ -43,23 +43,52 @@ const kEntryPointTestCases = [
 g.test('compute')
   .desc(
     `
-Tests calling createComputePipeline(Async) with valid vertex stage shader and different entryPoints,
+Tests calling createComputePipeline(Async) with valid compute stage shader and different entryPoints,
 and check that the APIs only accept matching entryPoint.
 `
   )
-  .params(u => u.combine('isAsync', [true, false]).combineWithParams(kEntryPointTestCases))
+  .params(u =>
+    u
+      .combine('isAsync', [true, false])
+      .combine('shaderModuleStage', ['compute', 'vertex', 'fragment'] as const)
+      .beginSubcases()
+      .combine('provideEntryPoint', [true, false])
+      .combine('extraEntryPoint', [true, false])
+      .combineWithParams(kEntryPointTestCases)
+  )
   .fn(t => {
-    const { isAsync, shaderModuleEntryPoint, stageEntryPoint } = t.params;
+    const {
+      isAsync,
+      provideEntryPoint,
+      extraEntryPoint,
+      shaderModuleStage,
+      shaderModuleEntryPoint,
+      stageEntryPoint,
+    } = t.params;
+    const entryPoint = provideEntryPoint ? stageEntryPoint : undefined;
+    let code = getShaderWithEntryPoint(shaderModuleStage, shaderModuleEntryPoint);
+    if (extraEntryPoint) {
+      code += ` ${getShaderWithEntryPoint(shaderModuleStage, 'extra')}`;
+    }
     const descriptor: GPUComputePipelineDescriptor = {
       layout: 'auto',
       compute: {
         module: t.device.createShaderModule({
-          code: getShaderWithEntryPoint('compute', shaderModuleEntryPoint),
+          code,
         }),
-        entryPoint: stageEntryPoint,
+        entryPoint,
       },
     };
-    const _success = shaderModuleEntryPoint === stageEntryPoint;
+    let _success = true;
+    if (shaderModuleStage !== 'compute') {
+      _success = false;
+    }
+    if (!provideEntryPoint && extraEntryPoint) {
+      _success = false;
+    }
+    if (shaderModuleEntryPoint !== stageEntryPoint && provideEntryPoint) {
+      _success = false;
+    }
     t.doCreateComputePipelineTest(isAsync, _success, descriptor);
   });
 
@@ -70,19 +99,46 @@ Tests calling createRenderPipeline(Async) with valid vertex stage shader and dif
 and check that the APIs only accept matching entryPoint.
 `
   )
-  .params(u => u.combine('isAsync', [true, false]).combineWithParams(kEntryPointTestCases))
+  .params(u =>
+    u
+      .combine('isAsync', [true, false])
+      .combine('shaderModuleStage', ['compute', 'vertex', 'fragment'] as const)
+      .beginSubcases()
+      .combine('provideEntryPoint', [true, false])
+      .combine('extraEntryPoint', [true, false])
+      .combineWithParams(kEntryPointTestCases)
+  )
   .fn(t => {
-    const { isAsync, shaderModuleEntryPoint, stageEntryPoint } = t.params;
+    const {
+      isAsync,
+      provideEntryPoint,
+      extraEntryPoint,
+      shaderModuleStage,
+      shaderModuleEntryPoint,
+      stageEntryPoint,
+    } = t.params;
+    const entryPoint = provideEntryPoint ? stageEntryPoint : undefined;
+    let code = getShaderWithEntryPoint(shaderModuleStage, shaderModuleEntryPoint);
+    if (extraEntryPoint) {
+      code += ` ${getShaderWithEntryPoint(shaderModuleStage, 'extra')}`;
+    }
     const descriptor: GPURenderPipelineDescriptor = {
       layout: 'auto',
       vertex: {
-        module: t.device.createShaderModule({
-          code: getShaderWithEntryPoint('vertex', shaderModuleEntryPoint),
-        }),
-        entryPoint: stageEntryPoint,
+        module: t.device.createShaderModule({ code }),
+        entryPoint,
       },
     };
-    const _success = shaderModuleEntryPoint === stageEntryPoint;
+    let _success = true;
+    if (shaderModuleStage !== 'vertex') {
+      _success = false;
+    }
+    if (!provideEntryPoint && extraEntryPoint) {
+      _success = false;
+    }
+    if (shaderModuleEntryPoint !== stageEntryPoint && provideEntryPoint) {
+      _success = false;
+    }
     t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
   });
 
@@ -93,25 +149,155 @@ Tests calling createRenderPipeline(Async) with valid fragment stage shader and d
 and check that the APIs only accept matching entryPoint.
 `
   )
-  .params(u => u.combine('isAsync', [true, false]).combineWithParams(kEntryPointTestCases))
+  .params(u =>
+    u
+      .combine('isAsync', [true, false])
+      .combine('shaderModuleStage', ['compute', 'vertex', 'fragment'] as const)
+      .beginSubcases()
+      .combine('provideEntryPoint', [true, false])
+      .combine('extraEntryPoint', [true, false])
+      .combineWithParams(kEntryPointTestCases)
+  )
   .fn(t => {
-    const { isAsync, shaderModuleEntryPoint, stageEntryPoint } = t.params;
+    const {
+      isAsync,
+      provideEntryPoint,
+      extraEntryPoint,
+      shaderModuleStage,
+      shaderModuleEntryPoint,
+      stageEntryPoint,
+    } = t.params;
+    const entryPoint = provideEntryPoint ? stageEntryPoint : undefined;
+    let code = getShaderWithEntryPoint(shaderModuleStage, shaderModuleEntryPoint);
+    if (extraEntryPoint) {
+      code += ` ${getShaderWithEntryPoint(shaderModuleStage, 'extra')}`;
+    }
     const descriptor: GPURenderPipelineDescriptor = {
       layout: 'auto',
       vertex: {
         module: t.device.createShaderModule({
           code: kDefaultVertexShaderCode,
         }),
-        entryPoint: 'main',
       },
       fragment: {
         module: t.device.createShaderModule({
-          code: getShaderWithEntryPoint('fragment', shaderModuleEntryPoint),
+          code,
         }),
-        entryPoint: stageEntryPoint,
+        entryPoint,
         targets: [{ format: 'rgba8unorm' }],
       },
     };
-    const _success = shaderModuleEntryPoint === stageEntryPoint;
+    let _success = true;
+    if (shaderModuleStage !== 'fragment') {
+      _success = false;
+    }
+    if (!provideEntryPoint && extraEntryPoint) {
+      _success = false;
+    }
+    if (shaderModuleEntryPoint !== stageEntryPoint && provideEntryPoint) {
+      _success = false;
+    }
     t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
+  });
+
+g.test('compute_undefined_entry_point_and_extra_stage')
+  .desc(
+    `
+Tests calling createComputePipeline(Async) with compute stage shader and
+an undefined entryPoint is valid if there's an extra shader stage.
+`
+  )
+  .params(u =>
+    u
+      .combine('isAsync', [true, false])
+      .combine('extraShaderModuleStage', ['compute', 'vertex', 'fragment'] as const)
+  )
+  .fn(t => {
+    const { isAsync, extraShaderModuleStage } = t.params;
+    const code = `
+        ${getShaderWithEntryPoint('compute', 'main')}
+        ${getShaderWithEntryPoint(extraShaderModuleStage, 'extra')}
+    `;
+    const descriptor: GPUComputePipelineDescriptor = {
+      layout: 'auto',
+      compute: {
+        module: t.device.createShaderModule({
+          code,
+        }),
+        entryPoint: undefined,
+      },
+    };
+
+    const success = extraShaderModuleStage !== 'compute';
+    t.doCreateComputePipelineTest(isAsync, success, descriptor);
+  });
+
+g.test('vertex_undefined_entry_point_and_extra_stage')
+  .desc(
+    `
+Tests calling createRenderPipeline(Async) with vertex stage shader and
+an undefined entryPoint is valid if there's an extra shader stage.
+`
+  )
+  .params(u =>
+    u
+      .combine('isAsync', [true, false])
+      .combine('extraShaderModuleStage', ['compute', 'vertex', 'fragment'] as const)
+  )
+  .fn(t => {
+    const { isAsync, extraShaderModuleStage } = t.params;
+    const code = `
+        ${getShaderWithEntryPoint('vertex', 'main')}
+        ${getShaderWithEntryPoint(extraShaderModuleStage, 'extra')}
+    `;
+    const descriptor: GPURenderPipelineDescriptor = {
+      layout: 'auto',
+      vertex: {
+        module: t.device.createShaderModule({
+          code,
+        }),
+        entryPoint: undefined,
+      },
+    };
+
+    const success = extraShaderModuleStage !== 'vertex';
+    t.doCreateRenderPipelineTest(isAsync, success, descriptor);
+  });
+
+g.test('fragment_undefined_entry_point_and_extra_stage')
+  .desc(
+    `
+Tests calling createRenderPipeline(Async) with fragment stage shader and
+an undefined entryPoint is valid if there's an extra shader stage.
+`
+  )
+  .params(u =>
+    u
+      .combine('isAsync', [true, false])
+      .combine('extraShaderModuleStage', ['compute', 'vertex', 'fragment'] as const)
+  )
+  .fn(t => {
+    const { isAsync, extraShaderModuleStage } = t.params;
+    const code = `
+        ${getShaderWithEntryPoint('fragment', 'main')}
+        ${getShaderWithEntryPoint(extraShaderModuleStage, 'extra')}
+    `;
+    const descriptor: GPURenderPipelineDescriptor = {
+      layout: 'auto',
+      vertex: {
+        module: t.device.createShaderModule({
+          code: kDefaultVertexShaderCode,
+        }),
+      },
+      fragment: {
+        module: t.device.createShaderModule({
+          code,
+        }),
+        entryPoint: undefined,
+        targets: [{ format: 'rgba8unorm' }],
+      },
+    };
+
+    const success = extraShaderModuleStage !== 'fragment';
+    t.doCreateRenderPipelineTest(isAsync, success, descriptor);
   });

@@ -103,9 +103,9 @@ g.test('type')
   .params(u =>
     u
       .combineWithParams(kBuiltins)
-      .combine('use_struct', [true, false] as const)
-      .combine('target_type', kTestTypes)
       .beginSubcases()
+      .combine('target_type', kTestTypes)
+      .combine('use_struct', [true, false] as const)
   )
   .fn(t => {
     let code = '';

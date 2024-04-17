@@ -1,69 +1,16 @@
 export const description = `
-Execution Tests for non-matrix AbstractFloat division expression
+Execution Tests for non-matrix abstract-float division expression
 `;
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../gpu_test.js';
-import { TypeAbstractFloat, TypeVec } from '../../../../util/conversion.js';
-import { FP, FPVector } from '../../../../util/floating_point.js';
-import { sparseF64Range, sparseVectorF64Range } from '../../../../util/math.js';
-import { makeCaseCache } from '../case_cache.js';
+import { Type } from '../../../../util/conversion.js';
 import { onlyConstInputSource, run } from '../expression.js';
 
-import { abstractBinary } from './binary.js';
-
-const divisionVectorScalarInterval = (v: readonly number[], s: number): FPVector => {
-  return FP.abstract.toVector(v.map(e => FP.abstract.divisionInterval(e, s)));
-};
-
-const divisionScalarVectorInterval = (s: number, v: readonly number[]): FPVector => {
-  return FP.abstract.toVector(v.map(e => FP.abstract.divisionInterval(s, e)));
-};
+import { d } from './af_division.cache.js';
+import { abstractFloatBinary } from './binary.js';
 
 export const g = makeTestGroup(GPUTest);
-
-const scalar_cases = {
-  ['scalar']: () => {
-    return FP.abstract.generateScalarPairToIntervalCases(
-      sparseF64Range(),
-      sparseF64Range(),
-      'finite',
-      FP.abstract.divisionInterval
-    );
-  },
-};
-
-const vector_scalar_cases = ([2, 3, 4] as const)
-  .map(dim => ({
-    [`vec${dim}_scalar`]: () => {
-      return FP.abstract.generateVectorScalarToVectorCases(
-        sparseVectorF64Range(dim),
-        sparseF64Range(),
-        'finite',
-        divisionVectorScalarInterval
-      );
-    },
-  }))
-  .reduce((a, b) => ({ ...a, ...b }), {});
-
-const scalar_vector_cases = ([2, 3, 4] as const)
-  .map(dim => ({
-    [`scalar_vec${dim}`]: () => {
-      return FP.abstract.generateScalarVectorToVectorCases(
-        sparseF64Range(),
-        sparseVectorF64Range(dim),
-        'finite',
-        divisionScalarVectorInterval
-      );
-    },
-  }))
-  .reduce((a, b) => ({ ...a, ...b }), {});
-
-export const d = makeCaseCache('binary/af_division', {
-  ...scalar_cases,
-  ...vector_scalar_cases,
-  ...scalar_vector_cases,
-});
 
 g.test('scalar')
   .specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation')
@@ -78,9 +25,9 @@ Accuracy: 2.5 ULP for |y| in the range [2^-126, 2^126]
     const cases = await d.get('scalar');
     await run(
       t,
-      abstractBinary('/'),
-      [TypeAbstractFloat, TypeAbstractFloat],
-      TypeAbstractFloat,
+      abstractFloatBinary('/'),
+      [Type.abstractFloat, Type.abstractFloat],
+      Type.abstractFloat,
       t.params,
       cases
     );
@@ -101,9 +48,9 @@ Accuracy: 2.5 ULP for |y| in the range [2^-126, 2^126]
     const cases = await d.get('scalar'); // Using vectorize to generate vector cases based on scalar cases
     await run(
       t,
-      abstractBinary('/'),
-      [TypeAbstractFloat, TypeAbstractFloat],
-      TypeAbstractFloat,
+      abstractFloatBinary('/'),
+      [Type.abstractFloat, Type.abstractFloat],
+      Type.abstractFloat,
       t.params,
       cases
     );
@@ -123,9 +70,9 @@ Accuracy: Correctly rounded
     const cases = await d.get(`vec${dim}_scalar`);
     await run(
       t,
-      abstractBinary('/'),
-      [TypeVec(dim, TypeAbstractFloat), TypeAbstractFloat],
-      TypeVec(dim, TypeAbstractFloat),
+      abstractFloatBinary('/'),
+      [Type.vec(dim, Type.abstractFloat), Type.abstractFloat],
+      Type.vec(dim, Type.abstractFloat),
       t.params,
       cases
     );
@@ -145,9 +92,9 @@ Accuracy: Correctly rounded
     const cases = await d.get(`scalar_vec${dim}`);
     await run(
       t,
-      abstractBinary('/'),
-      [TypeAbstractFloat, TypeVec(dim, TypeAbstractFloat)],
-      TypeVec(dim, TypeAbstractFloat),
+      abstractFloatBinary('/'),
+      [Type.abstractFloat, Type.vec(dim, Type.abstractFloat)],
+      Type.vec(dim, Type.abstractFloat),
       t.params,
       cases
     );

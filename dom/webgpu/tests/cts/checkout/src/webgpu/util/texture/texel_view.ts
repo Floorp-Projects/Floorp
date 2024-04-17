@@ -1,6 +1,6 @@
 import { assert, memcpy } from '../../../common/util/util.js';
 import { kTextureFormatInfo, EncodableTextureFormat } from '../../format_info.js';
-import { generatePrettyTable } from '../pretty_diff_tables.js';
+import { generatePrettyTable, numericToStringBuilder } from '../pretty_diff_tables.js';
 import { reifyExtent3D, reifyOrigin3D } from '../unions.js';
 
 import { fullSubrectCoordinates } from './base.js';
@@ -166,10 +166,13 @@ export class TexelView {
     const info = kTextureFormatInfo[this.format];
     const repr = kTexelRepresentationInfo[this.format];
 
-    const integerSampleType = info.sampleType === 'uint' || info.sampleType === 'sint';
-    const numberToString = integerSampleType
-      ? (n: number) => n.toFixed()
-      : (n: number) => n.toPrecision(6);
+    // MAINTENANCE_TODO: Print depth-stencil formats as float+int instead of float+float.
+    const printAsInteger = info.color
+      ? // For color, pick the type based on the format type
+        ['uint', 'sint'].includes(info.color.type)
+      : // Print depth as "float", depth-stencil as "float,float", stencil as "int".
+        !info.depth;
+    const numericToString = numericToStringBuilder(printAsInteger);
 
     const componentOrderStr = repr.componentOrder.join(',') + ':';
     const subrectCoords = [...fullSubrectCoordinates(subrectOrigin, subrectSize)];
@@ -188,13 +191,13 @@ export class TexelView {
       yield* [' act. colors', '==', componentOrderStr];
       for (const coords of subrectCoords) {
         const pixel = t.color(coords);
-        yield `${repr.componentOrder.map(ch => numberToString(pixel[ch]!)).join(',')}`;
+        yield `${repr.componentOrder.map(ch => numericToString(pixel[ch]!)).join(',')}`;
       }
     })(this);
 
     const opts = {
       fillToWidth: 120,
-      numberToString,
+      numericToString,
     };
     return `${generatePrettyTable(opts, [printCoords, printActualBytes, printActualColors])}`;
   }

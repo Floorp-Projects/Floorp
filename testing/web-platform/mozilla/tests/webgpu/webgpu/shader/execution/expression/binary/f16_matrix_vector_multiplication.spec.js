@@ -4,56 +4,13 @@
 Execution Tests for matrix-vector and vector-matrix f16 multiplication expression
 `;import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../gpu_test.js';
-import { TypeF16, TypeMat, TypeVec } from '../../../../util/conversion.js';
-import { FP } from '../../../../util/floating_point.js';
-import { sparseMatrixF16Range, sparseVectorF16Range } from '../../../../util/math.js';
-import { makeCaseCache } from '../case_cache.js';
+import { Type } from '../../../../util/conversion.js';
 import { allInputSources, run } from '../expression.js';
 
 import { binary, compoundBinary } from './binary.js';
+import { d } from './f16_matrix_vector_multiplication.cache.js';
 
 export const g = makeTestGroup(GPUTest);
-
-// Cases: matCxR_vecC_[non_]const
-const mat_vec_cases = [2, 3, 4].
-flatMap((cols) =>
-[2, 3, 4].flatMap((rows) =>
-[true, false].map((nonConst) => ({
-  [`mat${cols}x${rows}_vec${cols}_${nonConst ? 'non_const' : 'const'}`]: () => {
-    return FP.f16.generateMatrixVectorToVectorCases(
-      sparseMatrixF16Range(cols, rows),
-      sparseVectorF16Range(cols),
-      nonConst ? 'unfiltered' : 'finite',
-      FP.f16.multiplicationMatrixVectorInterval
-    );
-  }
-}))
-)
-).
-reduce((a, b) => ({ ...a, ...b }), {});
-
-// Cases: vecR_matCxR_[non_]const
-const vec_mat_cases = [2, 3, 4].
-flatMap((rows) =>
-[2, 3, 4].flatMap((cols) =>
-[true, false].map((nonConst) => ({
-  [`vec${rows}_mat${cols}x${rows}_${nonConst ? 'non_const' : 'const'}`]: () => {
-    return FP.f16.generateVectorMatrixToVectorCases(
-      sparseVectorF16Range(rows),
-      sparseMatrixF16Range(cols, rows),
-      nonConst ? 'unfiltered' : 'finite',
-      FP.f16.multiplicationVectorMatrixInterval
-    );
-  }
-}))
-)
-).
-reduce((a, b) => ({ ...a, ...b }), {});
-
-export const d = makeCaseCache('binary/f16_matrix_vector_multiplication', {
-  ...mat_vec_cases,
-  ...vec_mat_cases
-});
 
 g.test('matrix_vector').
 specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation').
@@ -83,8 +40,8 @@ fn(async (t) => {
   await run(
     t,
     binary('*'),
-    [TypeMat(cols, rows, TypeF16), TypeVec(cols, TypeF16)],
-    TypeVec(rows, TypeF16),
+    [Type.mat(cols, rows, Type.f16), Type.vec(cols, Type.f16)],
+    Type.vec(rows, Type.f16),
     t.params,
     cases
   );
@@ -118,8 +75,8 @@ fn(async (t) => {
   await run(
     t,
     binary('*'),
-    [TypeVec(rows, TypeF16), TypeMat(cols, rows, TypeF16)],
-    TypeVec(cols, TypeF16),
+    [Type.vec(rows, Type.f16), Type.mat(cols, rows, Type.f16)],
+    Type.vec(cols, Type.f16),
     t.params,
     cases
   );
@@ -148,8 +105,8 @@ fn(async (t) => {
   await run(
     t,
     compoundBinary('*='),
-    [TypeVec(rows, TypeF16), TypeMat(cols, rows, TypeF16)],
-    TypeVec(cols, TypeF16),
+    [Type.vec(rows, Type.f16), Type.mat(cols, rows, Type.f16)],
+    Type.vec(cols, Type.f16),
     t.params,
     cases
   );

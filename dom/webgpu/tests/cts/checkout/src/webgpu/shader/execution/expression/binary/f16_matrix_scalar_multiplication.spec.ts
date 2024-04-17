@@ -4,56 +4,13 @@ Execution Tests for matrix-scalar and scalar-matrix f16 multiplication expressio
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../gpu_test.js';
-import { TypeF16, TypeMat } from '../../../../util/conversion.js';
-import { FP } from '../../../../util/floating_point.js';
-import { sparseF16Range, sparseMatrixF16Range } from '../../../../util/math.js';
-import { makeCaseCache } from '../case_cache.js';
+import { Type } from '../../../../util/conversion.js';
 import { allInputSources, run } from '../expression.js';
 
 import { binary, compoundBinary } from './binary.js';
+import { d } from './f16_matrix_scalar_multiplication.cache.js';
 
 export const g = makeTestGroup(GPUTest);
-
-// Cases: matCxR_scalar_[non_]const
-const mat_scalar_cases = ([2, 3, 4] as const)
-  .flatMap(cols =>
-    ([2, 3, 4] as const).flatMap(rows =>
-      ([true, false] as const).map(nonConst => ({
-        [`mat${cols}x${rows}_scalar_${nonConst ? 'non_const' : 'const'}`]: () => {
-          return FP.f16.generateMatrixScalarToMatrixCases(
-            sparseMatrixF16Range(cols, rows),
-            sparseF16Range(),
-            nonConst ? 'unfiltered' : 'finite',
-            FP.f16.multiplicationMatrixScalarInterval
-          );
-        },
-      }))
-    )
-  )
-  .reduce((a, b) => ({ ...a, ...b }), {});
-
-// Cases: scalar_matCxR_[non_]const
-const scalar_mat_cases = ([2, 3, 4] as const)
-  .flatMap(cols =>
-    ([2, 3, 4] as const).flatMap(rows =>
-      ([true, false] as const).map(nonConst => ({
-        [`scalar_mat${cols}x${rows}_${nonConst ? 'non_const' : 'const'}`]: () => {
-          return FP.f16.generateScalarMatrixToMatrixCases(
-            sparseF16Range(),
-            sparseMatrixF16Range(cols, rows),
-            nonConst ? 'unfiltered' : 'finite',
-            FP.f16.multiplicationScalarMatrixInterval
-          );
-        },
-      }))
-    )
-  )
-  .reduce((a, b) => ({ ...a, ...b }), {});
-
-export const d = makeCaseCache('binary/f16_matrix_scalar_multiplication', {
-  ...mat_scalar_cases,
-  ...scalar_mat_cases,
-});
 
 g.test('matrix_scalar')
   .specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation')
@@ -83,8 +40,8 @@ Accuracy: Correctly rounded
     await run(
       t,
       binary('*'),
-      [TypeMat(cols, rows, TypeF16), TypeF16],
-      TypeMat(cols, rows, TypeF16),
+      [Type.mat(cols, rows, Type.f16), Type.f16],
+      Type.mat(cols, rows, Type.f16),
       t.params,
       cases
     );
@@ -118,8 +75,8 @@ Accuracy: Correctly rounded
     await run(
       t,
       compoundBinary('*='),
-      [TypeMat(cols, rows, TypeF16), TypeF16],
-      TypeMat(cols, rows, TypeF16),
+      [Type.mat(cols, rows, Type.f16), Type.f16],
+      Type.mat(cols, rows, Type.f16),
       t.params,
       cases
     );
@@ -153,8 +110,8 @@ Accuracy: Correctly rounded
     await run(
       t,
       binary('*'),
-      [TypeF16, TypeMat(cols, rows, TypeF16)],
-      TypeMat(cols, rows, TypeF16),
+      [Type.f16, Type.mat(cols, rows, Type.f16)],
+      Type.mat(cols, rows, Type.f16),
       t.params,
       cases
     );

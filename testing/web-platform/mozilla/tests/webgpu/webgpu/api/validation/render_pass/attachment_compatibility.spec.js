@@ -551,13 +551,6 @@ combine('cullMode', ['none', 'front', 'back']).
 filter((p) => {
   if (p.format) {
     const depthStencilInfo = kTextureFormatInfo[p.format];
-    // For combined depth/stencil formats the depth and stencil read only state must match
-    // in order to create a valid render bundle or render pass.
-    if (depthStencilInfo.depth && depthStencilInfo.stencil) {
-      if (p.depthReadOnly !== p.stencilReadOnly) {
-        return false;
-      }
-    }
     // If the format has no depth aspect, the depthReadOnly, depthWriteEnabled of the pipeline must not be true
     // in order to create a valid render pipeline.
     if (!depthStencilInfo.depth && p.depthWriteEnabled) {

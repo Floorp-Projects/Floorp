@@ -2,6 +2,7 @@
 .vscode/
 
 # Build files
+/gen/
 /out/
 /out-wpt/
 /out-node/

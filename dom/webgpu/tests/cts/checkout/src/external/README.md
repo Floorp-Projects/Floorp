@@ -28,4 +28,4 @@ should be listed below.
 
 | **Name**             | **Origin**                                       | **License** | **Version** | **Purpose**                                    |
 |----------------------|--------------------------------------------------|-------------|-------------|------------------------------------------------|
-| petamoriken/float16  | [github](https://github.com/petamoriken/float16) | MIT         | 3.6.6       | Fluent support for f16 numbers via TypedArrays |
+| petamoriken/float16  | [github](https://github.com/petamoriken/float16) | MIT         | 3.8.6       | Fluent support for f16 numbers via TypedArrays |

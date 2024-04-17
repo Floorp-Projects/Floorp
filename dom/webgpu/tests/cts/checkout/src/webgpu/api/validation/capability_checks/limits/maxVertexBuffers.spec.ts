@@ -1,41 +1,23 @@
-import { range } from '../../../../../common/util/util.js';
-
 import { kRenderEncoderTypes, kMaximumLimitBaseParams, makeLimitTestGroup } from './limit_utils.js';
 
-const kPipelineTypes = ['withoutLocations', 'withLocations'] as const;
-type PipelineType = (typeof kPipelineTypes)[number];
+function getPipelineDescriptor(device: GPUDevice, testValue: number): GPURenderPipelineDescriptor {
+  const module = device.createShaderModule({
+    code: `
+      @vertex fn vs(@location(0) p: vec4f) -> @builtin(position) vec4f {
+        return p;
+      }`,
+  });
+  const buffers = new Array<GPUVertexBufferLayout>(testValue);
+  buffers[testValue - 1] = {
+    arrayStride: 16,
+    attributes: [{ shaderLocation: 0, offset: 0, format: 'float32' }],
+  };
 
-function getPipelineDescriptor(
-  device: GPUDevice,
-  pipelineType: PipelineType,
-  testValue: number
-): GPURenderPipelineDescriptor {
-  const code =
-    pipelineType === 'withLocations'
-      ? `
-        struct VSInput {
-          ${range(testValue, i => `@location(${i}) p${i}: f32,`).join('\n')}
-        }
-        @vertex fn vs(v: VSInput) -> @builtin(position) vec4f {
-          let x = ${range(testValue, i => `v.p${i}`).join(' + ')};
-          return vec4f(x, 0, 0, 1);
-        }
-        `
-      : `
-        @vertex fn vs() -> @builtin(position) vec4f {
-          return vec4f(0);
-        }
-        `;
-  const module = device.createShaderModule({ code });
   return {
     layout: 'auto',
     vertex: {
       module,
-      entryPoint: 'vs',
-      buffers: range(testValue, i => ({
-        arrayStride: 32,
-        attributes: [{ shaderLocation: i, offset: 0, format: 'float32' }],
-      })),
+      buffers,
     },
   };
 }
@@ -45,18 +27,22 @@ export const { g, description } = makeLimitTestGroup(limit);
 
 g.test('createRenderPipeline,at_over')
   .desc(`Test using at and over ${limit} limit in createRenderPipeline(Async)`)
-  .params(
-    kMaximumLimitBaseParams.combine('async', [false, true]).combine('pipelineType', kPipelineTypes)
-  )
+  .params(kMaximumLimitBaseParams.combine('async', [false, true]))
   .fn(async t => {
-    const { limitTest, testValueName, async, pipelineType } = t.params;
+    const { limitTest, testValueName, async } = t.params;
     await t.testDeviceWithRequestedMaximumLimits(
       limitTest,
       testValueName,
-      async ({ device, testValue, shouldError }) => {
-        const pipelineDescriptor = getPipelineDescriptor(device, pipelineType, testValue);
+      async ({ device, testValue, shouldError, actualLimit }) => {
+        const pipelineDescriptor = getPipelineDescriptor(device, testValue);
+        const lastIndex = testValue - 1;
 
-        await t.testCreateRenderPipeline(pipelineDescriptor, async, shouldError);
+        await t.testCreateRenderPipeline(
+          pipelineDescriptor,
+          async,
+          shouldError,
+          `lastIndex: ${lastIndex}, actualLimit: ${actualLimit}, shouldError: ${shouldError}`
+        );
       }
     );
   });
@@ -77,10 +63,10 @@ g.test('setVertexBuffer,at_over')
           usage: GPUBufferUsage.VERTEX,
         });
 
-        await t.testGPURenderCommandsMixin(
+        await t.testGPURenderAndBindingCommandsMixin(
           encoderType,
-          ({ mixin }) => {
-            mixin.setVertexBuffer(lastIndex, buffer);
+          ({ passEncoder }) => {
+            passEncoder.setVertexBuffer(lastIndex, buffer);
           },
           shouldError,
           `lastIndex: ${lastIndex}, actualLimit: ${actualLimit}, shouldError: ${shouldError}`
