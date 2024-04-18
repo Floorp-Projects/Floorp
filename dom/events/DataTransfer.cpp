@@ -909,7 +909,7 @@ already_AddRefed<nsITransferable> DataTransfer::GetTransferable(
   // from another origin or from the OS.
   if (mMode == Mode::ReadWrite) {
     if (nsCOMPtr<nsIGlobalObject> global = GetGlobal()) {
-      transferable->SetRequestingPrincipal(global->PrincipalOrNull());
+      transferable->SetDataPrincipal(global->PrincipalOrNull());
     }
   }
 

@@ -1758,7 +1758,7 @@ nsresult nsDragService::CreateTempFile(nsITransferable* aItem,
   }
 
   // create and open channel for source uri
-  nsCOMPtr<nsIPrincipal> principal = aItem->GetRequestingPrincipal();
+  nsCOMPtr<nsIPrincipal> principal = aItem->GetDataPrincipal();
   nsContentPolicyType contentPolicyType = aItem->GetContentPolicyType();
   nsCOMPtr<nsICookieJarSettings> cookieJarSettings =
       aItem->GetCookieJarSettings();

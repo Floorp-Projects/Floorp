@@ -769,7 +769,7 @@ NS_IMETHODIMP nsBaseClipboard::AsyncGetData(
     nsCOMPtr<nsITransferable> trans = clipboardCache->GetTransferable();
     MOZ_ASSERT(trans);
 
-    if (nsCOMPtr<nsIPrincipal> principal = trans->GetRequestingPrincipal()) {
+    if (nsCOMPtr<nsIPrincipal> principal = trans->GetDataPrincipal()) {
       if (aRequestingPrincipal->Subsumes(principal)) {
         MOZ_CLIPBOARD_LOG("%s: native clipboard data is from same-origin page.",
                           __FUNCTION__);

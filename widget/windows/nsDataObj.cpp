@@ -346,10 +346,10 @@ HRESULT nsDataObj::CreateStream(IStream** outStream) {
 
   pStream->AddRef();
 
-  // query the requestingPrincipal from the transferable and add it to the new
-  // channel
+  // query the dataPrincipal from the transferable and add it to the new
+  // channel.
   nsCOMPtr<nsIPrincipal> requestingPrincipal =
-      mTransferable->GetRequestingPrincipal();
+      mTransferable->GetDataPrincipal();
   MOZ_ASSERT(requestingPrincipal, "can not create channel without a principal");
 
   // Note that the cookieJarSettings could be null if the data object is for the

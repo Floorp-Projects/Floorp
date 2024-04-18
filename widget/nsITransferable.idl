@@ -203,9 +203,8 @@ interface nsITransferable : nsISupports
    * node principal of the source DOM node from which this transferable was
    * created, or the principal of the global from which this transferable was
    * created.
-   * XXXedgar: Rename it to something more generic, bug 1867636.
    */
-  [notxpcom, nostdcall] attribute nsIPrincipal requestingPrincipal;
+  [notxpcom, nostdcall] attribute nsIPrincipal dataPrincipal;
 
   /**
    * the contentPolicyType for this transferable.
