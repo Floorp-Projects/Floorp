@@ -45,6 +45,9 @@ skip-if = [
 ["browser_fullscreen-sizemode.js"]
 
 ["browser_fullscreen-tab-close-race.js"]
+skip-if = [
+  "apple_silicon && !debug", # Bug 1877642
+]
 
 ["browser_fullscreen-tab-close.js"]
 
