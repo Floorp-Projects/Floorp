@@ -29,11 +29,11 @@ ChromeUtils.defineESModuleGetters(lazy, {
  * @note The generated hash is returned in base64 form.  Mind the fact base64
  * is case-sensitive if you are going to reuse this code.
  */
-function generateHash(aString) {
+function generateHash(aString, hashAlg) {
   const cryptoHash = Cc["@mozilla.org/security/hash;1"].createInstance(
     Ci.nsICryptoHash
   );
-  cryptoHash.init(Ci.nsICryptoHash.MD5);
+  cryptoHash.init(hashAlg);
   const stringStream = Cc[
     "@mozilla.org/io/string-input-stream;1"
   ].createInstance(Ci.nsIStringInputStream);
@@ -66,9 +66,37 @@ class Manifest {
     this._manifestUrl = manifestUrl;
     // The key for this is the manifests URL that is required to be unique.
     // However arbitrary urls are not safe file paths so lets hash it.
-    const fileName = generateHash(manifestUrl) + ".json";
-    this._path = PathUtils.join(MANIFESTS_DIR, fileName);
+    const filename =
+      generateHash(manifestUrl, Ci.nsICryptoHash.SHA256) + ".json";
+    this._path = PathUtils.join(MANIFESTS_DIR, filename);
     this.browser = browser;
+  }
+
+  /**
+   * See Bug 1871109
+   * This function is called at the beginning of initialize() to check if a given
+   * manifest has MD5 based filename, if so we remove it and migrate the content to
+   * a new file with SHA256 based name.
+   * This is done due to security concern, as MD5 is an outdated hashing algorithm and
+   * shouldn't be used anymore
+   */
+  async removeMD5BasedFilename() {
+    const filenameMD5 =
+      generateHash(this._manifestUrl, Ci.nsICryptoHash.MD5) + ".json";
+    const MD5Path = PathUtils.join(MANIFESTS_DIR, filenameMD5);
+    try {
+      await IOUtils.copy(MD5Path, this._path, { noOverwrite: true });
+    } catch (error) {
+      // we are ignoring the failures returned from copy as it should not stop us from
+      // installing a new manifest
+    }
+
+    // Remove the old MD5 based file unconditionally to ensure it's no longer used
+    try {
+      await IOUtils.remove(MD5Path);
+    } catch {
+      // ignore the error in case MD5 based file does not exist
+    }
   }
 
   get browser() {
@@ -80,6 +108,7 @@ class Manifest {
   }
 
   async initialize() {
+    await this.removeMD5BasedFilename();
     this._store = new lazy.JSONFile({ path: this._path, saveDelayMs: 100 });
     await this._store.load();
   }
