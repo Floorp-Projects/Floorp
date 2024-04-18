@@ -13,6 +13,7 @@
 #include "nsString.h"
 
 #include <oleacc.h>
+#include <uiautomation.h>
 
 class nsIFile;
 
@@ -29,9 +30,13 @@ class MsaaRootAccessible;
  *     services in order to fulfill; and
  * (2) LazyInstantiator::ShouldInstantiate returns true.
  */
-class LazyInstantiator final : public IAccessible, public IServiceProvider {
+class LazyInstantiator final : public IAccessible,
+                               public IServiceProvider,
+                               public IRawElementProviderSimple {
  public:
   [[nodiscard]] static already_AddRefed<IAccessible> GetRootAccessible(
+      HWND aHwnd);
+  [[nodiscard]] static already_AddRefed<IRawElementProviderSimple> GetRootUia(
       HWND aHwnd);
   static void EnableBlindAggregation(HWND aHwnd);
 
@@ -83,6 +88,22 @@ class LazyInstantiator final : public IAccessible, public IServiceProvider {
   STDMETHODIMP QueryService(REFGUID aServiceId, REFIID aServiceIid,
                             void** aOutInterface) override;
 
+  // IRawElementProviderSimple
+  virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_ProviderOptions(
+      /* [retval][out] */ __RPC__out enum ProviderOptions* aProviderOptions);
+
+  virtual HRESULT STDMETHODCALLTYPE GetPatternProvider(
+      /* [in] */ PATTERNID aPatternId,
+      /* [retval][out] */ __RPC__deref_out_opt IUnknown** aPatternProvider);
+
+  virtual HRESULT STDMETHODCALLTYPE GetPropertyValue(
+      /* [in] */ PROPERTYID aPropertyId,
+      /* [retval][out] */ __RPC__out VARIANT* aPropertyValue);
+
+  virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_HostRawElementProvider(
+      /* [retval][out] */ __RPC__deref_out_opt IRawElementProviderSimple**
+          aRawElmProvider);
+
   /**
    * We cache the result of UIA detection because it could be expensive if a
    * client repeatedly queries us. This function is called to reset that cache
@@ -117,6 +138,9 @@ class LazyInstantiator final : public IAccessible, public IServiceProvider {
   void TransplantRefCnt();
   void ClearProp();
 
+  template <class T>
+  static already_AddRefed<T> GetRoot(HWND aHwnd);
+
  private:
   mozilla::a11y::AutoRefCnt mRefCnt;
   HWND mHwnd;
@@ -133,6 +157,7 @@ class LazyInstantiator final : public IAccessible, public IServiceProvider {
   MsaaRootAccessible* mWeakMsaaRoot;
   IAccessible* mWeakAccessible;
   IDispatch* mWeakDispatch;
+  IRawElementProviderSimple* mWeakUia;
   static Maybe<bool> sShouldBlockUia;
 };
 

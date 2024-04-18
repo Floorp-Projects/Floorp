@@ -188,7 +188,6 @@
 #  include "mozilla/a11y/DocAccessible.h"
 #  include "mozilla/a11y/LazyInstantiator.h"
 #  include "mozilla/a11y/Platform.h"
-#  include "mozilla/StaticPrefs_accessibility.h"
 #  if !defined(WINABLEAPI)
 #    include <winable.h>
 #  endif  // !defined(WINABLEAPI)
@@ -5880,19 +5879,12 @@ bool nsWindow::ProcessMessageInternal(UINT msg, WPARAM& wParam, LPARAM& lParam,
           a11y::LazyInstantiator::EnableBlindAggregation(mWnd);
           result = true;
         }
-      } else if (objId == UiaRootObjectId &&
-                 StaticPrefs::accessibility_uia_enable()) {
-        if (a11y::LocalAccessible* acc = GetAccessible()) {
-          RefPtr<IAccessible> ia;
-          acc->GetNativeInterface(getter_AddRefs(ia));
-          MOZ_ASSERT(ia);
-          RefPtr<IRawElementProviderSimple> uia;
-          ia->QueryInterface(IID_IRawElementProviderSimple,
-                             getter_AddRefs(uia));
-          if (uia) {
-            *aRetValue = UiaReturnRawElementProvider(mWnd, wParam, lParam, uia);
-            result = true;
-          }
+      } else if (objId == UiaRootObjectId) {
+        if (RefPtr<IRawElementProviderSimple> root =
+                a11y::LazyInstantiator::GetRootUia(mWnd)) {
+          *aRetValue = UiaReturnRawElementProvider(mWnd, wParam, lParam, root);
+          a11y::LazyInstantiator::EnableBlindAggregation(mWnd);
+          result = true;
         }
       }
     } break;
