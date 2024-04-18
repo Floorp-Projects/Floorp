@@ -53,7 +53,7 @@ class DynamicResampler final {
    * Set the sample format type to float or short.
    */
   void SetSampleFormat(AudioSampleFormat aFormat);
-  uint32_t GetOutRate() const { return mOutRate; }
+  uint32_t GetInRate() const { return mInRate; }
   uint32_t GetChannels() const { return mChannels; }
 
   /**
@@ -111,14 +111,14 @@ class DynamicResampler final {
 
   /**
    * Update the output rate or/and the channel count. If a value is not updated
-   * compared to the current one nothing happens. Changing the `aOutRate`
+   * compared to the current one nothing happens. Changing the `aInRate`
    * results in recalculation in the resampler. Changing `aChannels` results in
    * the reallocation of the internal input buffer with the exception of
    * changes between mono to stereo and vice versa where no reallocation takes
    * place. A stereo internal input buffer is always maintained even if the
    * sound is mono.
    */
-  void UpdateResampler(uint32_t aOutRate, uint32_t aChannels);
+  void UpdateResampler(uint32_t aInRate, uint32_t aChannels);
 
  private:
   template <typename T>
@@ -283,14 +283,14 @@ class DynamicResampler final {
   }
 
  public:
-  const uint32_t mInRate;
+  const uint32_t mOutRate;
 
  private:
   bool mIsPreBufferSet = false;
   bool mIsWarmingUp = false;
   uint32_t mInputPreBufferFrameCount;
   uint32_t mChannels = 0;
-  uint32_t mOutRate;
+  uint32_t mInRate;
 
   AutoTArray<AudioRingBuffer, STEREO> mInternalInBuffer;
 

@@ -19,7 +19,7 @@ TEST(TestDynamicResampler, SameRates_Float1)
 
   DynamicResampler dr(in_rate, out_rate);
   dr.SetSampleFormat(AUDIO_FORMAT_FLOAT32);
-  EXPECT_EQ(dr.GetOutRate(), out_rate);
+  EXPECT_EQ(dr.GetInRate(), in_rate);
   EXPECT_EQ(dr.GetChannels(), channels);
 
   // float in_ch1[] = {.1, .2, .3, .4, .5, .6, .7, .8, .9, 1.0};
@@ -76,7 +76,7 @@ TEST(TestDynamicResampler, SameRates_Short1)
 
   DynamicResampler dr(in_rate, out_rate);
   dr.SetSampleFormat(AUDIO_FORMAT_S16);
-  EXPECT_EQ(dr.GetOutRate(), out_rate);
+  EXPECT_EQ(dr.GetInRate(), in_rate);
   EXPECT_EQ(dr.GetChannels(), channels);
 
   short in_ch1[] = {1, 2, 3};
@@ -300,7 +300,7 @@ TEST(TestDynamicResampler, UpdateOutRate_Float)
 
   DynamicResampler dr(in_rate, out_rate);
   dr.SetSampleFormat(AUDIO_FORMAT_FLOAT32);
-  EXPECT_EQ(dr.GetOutRate(), out_rate);
+  EXPECT_EQ(dr.GetInRate(), in_rate);
   EXPECT_EQ(dr.GetChannels(), channels);
 
   float in_ch1[10] = {};
@@ -329,10 +329,10 @@ TEST(TestDynamicResampler, UpdateOutRate_Float)
     EXPECT_FLOAT_EQ(out_ch2[i], 0.0);
   }
 
-  // Update out rate
-  out_rate = 44100;
-  dr.UpdateResampler(out_rate, channels);
-  EXPECT_EQ(dr.GetOutRate(), out_rate);
+  // Update in rate
+  in_rate = 26122;
+  dr.UpdateResampler(in_rate, channels);
+  EXPECT_EQ(dr.GetInRate(), in_rate);
   EXPECT_EQ(dr.GetChannels(), channels);
   out_frames = in_frames * out_rate / in_rate;
   EXPECT_EQ(out_frames, 18u);
@@ -356,7 +356,7 @@ TEST(TestDynamicResampler, UpdateOutRate_Short)
 
   DynamicResampler dr(in_rate, out_rate);
   dr.SetSampleFormat(AUDIO_FORMAT_S16);
-  EXPECT_EQ(dr.GetOutRate(), out_rate);
+  EXPECT_EQ(dr.GetInRate(), in_rate);
   EXPECT_EQ(dr.GetChannels(), channels);
 
   short in_ch1[10] = {};
@@ -385,10 +385,10 @@ TEST(TestDynamicResampler, UpdateOutRate_Short)
     EXPECT_EQ(out_ch2[i], 0.0);
   }
 
-  // Update out rate
-  out_rate = 44100;
-  dr.UpdateResampler(out_rate, channels);
-  EXPECT_EQ(dr.GetOutRate(), out_rate);
+  // Update in rate
+  in_rate = 26122;
+  dr.UpdateResampler(in_rate, channels);
+  EXPECT_EQ(dr.GetInRate(), in_rate);
   EXPECT_EQ(dr.GetChannels(), channels);
   out_frames = in_frames * out_rate / in_rate;
   EXPECT_EQ(out_frames, 18u);
@@ -400,7 +400,7 @@ TEST(TestDynamicResampler, UpdateOutRate_Short)
   EXPECT_FALSE(hasUnderrun);
 }
 
-TEST(TestDynamicResampler, BigRangeOutRates_Float)
+TEST(TestDynamicResampler, BigRangeInRates_Float)
 {
   uint32_t in_frames = 10;
   uint32_t out_frames = 10;
@@ -426,10 +426,14 @@ TEST(TestDynamicResampler, BigRangeOutRates_Float)
   float out_ch1[out_capacity] = {};
   float out_ch2[out_capacity] = {};
 
-  for (uint32_t rate = 10000; rate < 90000; ++rate) {
-    out_rate = rate;
-    dr.UpdateResampler(out_rate, channels);
-    EXPECT_EQ(dr.GetOutRate(), out_rate);
+  // Downsampling at a high enough ratio happens to have enough excess
+  // in_frames from rounding in the out_frames calculation to cover the
+  // skipped input latency when switching from zero-latency 44100->44100 to a
+  // non-1:1 ratio.
+  for (uint32_t rate = 100000; rate >= 10000; rate -= 2) {
+    in_rate = rate;
+    dr.UpdateResampler(in_rate, channels);
+    EXPECT_EQ(dr.GetInRate(), in_rate);
     EXPECT_EQ(dr.GetChannels(), channels);
     in_frames = 20;  // more than we need
     out_frames = in_frames * out_rate / in_rate;
@@ -443,7 +447,7 @@ TEST(TestDynamicResampler, BigRangeOutRates_Float)
   }
 }
 
-TEST(TestDynamicResampler, BigRangeOutRates_Short)
+TEST(TestDynamicResampler, BigRangeInRates_Short)
 {
   uint32_t in_frames = 10;
   uint32_t out_frames = 10;
@@ -469,9 +473,9 @@ TEST(TestDynamicResampler, BigRangeOutRates_Short)
   short out_ch1[out_capacity] = {};
   short out_ch2[out_capacity] = {};
 
-  for (uint32_t rate = 10000; rate < 90000; ++rate) {
-    out_rate = rate;
-    dr.UpdateResampler(out_rate, channels);
+  for (uint32_t rate = 100000; rate >= 10000; rate -= 2) {
+    in_rate = rate;
+    dr.UpdateResampler(in_rate, channels);
     in_frames = 20;  // more than we need
     out_frames = in_frames * out_rate / in_rate;
     for (uint32_t y = 0; y < 2; ++y) {
@@ -515,8 +519,8 @@ TEST(TestDynamicResampler, UpdateChannels_Float)
   EXPECT_FALSE(hasUnderrun);
 
   // Add 3rd channel
-  dr.UpdateResampler(out_rate, 3);
-  EXPECT_EQ(dr.GetOutRate(), out_rate);
+  dr.UpdateResampler(in_rate, 3);
+  EXPECT_EQ(dr.GetInRate(), in_rate);
   EXPECT_EQ(dr.GetChannels(), 3u);
 
   float in_ch3[10] = {};
@@ -544,8 +548,8 @@ TEST(TestDynamicResampler, UpdateChannels_Float)
   in_buffer[3] = in_ch4;
   float out_ch4[10] = {};
 
-  dr.UpdateResampler(out_rate, 4);
-  EXPECT_EQ(dr.GetOutRate(), out_rate);
+  dr.UpdateResampler(in_rate, 4);
+  EXPECT_EQ(dr.GetInRate(), in_rate);
   EXPECT_EQ(dr.GetChannels(), 4u);
   dr.AppendInput(in_buffer, in_frames);
 
@@ -590,8 +594,8 @@ TEST(TestDynamicResampler, UpdateChannels_Short)
   EXPECT_FALSE(hasUnderrun);
 
   // Add 3rd channel
-  dr.UpdateResampler(out_rate, 3);
-  EXPECT_EQ(dr.GetOutRate(), out_rate);
+  dr.UpdateResampler(in_rate, 3);
+  EXPECT_EQ(dr.GetInRate(), in_rate);
   EXPECT_EQ(dr.GetChannels(), 3u);
 
   short in_ch3[10] = {};
@@ -620,8 +624,8 @@ TEST(TestDynamicResampler, UpdateChannels_Short)
   in_buffer[3] = in_ch4;
   short out_ch4[10] = {};
 
-  dr.UpdateResampler(out_rate, 4);
-  EXPECT_EQ(dr.GetOutRate(), out_rate);
+  dr.UpdateResampler(in_rate, 4);
+  EXPECT_EQ(dr.GetInRate(), in_rate);
   EXPECT_EQ(dr.GetChannels(), 4u);
   dr.AppendInput(in_buffer, in_frames);
 
@@ -645,7 +649,7 @@ TEST(TestDynamicResampler, Underrun)
 
   DynamicResampler dr(in_rate, out_rate);
   dr.SetSampleFormat(AUDIO_FORMAT_FLOAT32);
-  EXPECT_EQ(dr.GetOutRate(), out_rate);
+  EXPECT_EQ(dr.GetInRate(), in_rate);
   EXPECT_EQ(dr.GetChannels(), channels);
 
   float in_ch1[in_frames] = {};
@@ -687,7 +691,7 @@ TEST(TestDynamicResampler, Underrun)
   }
 
   // Now try with resampling.
-  dr.UpdateResampler(out_rate / 2, channels);
+  dr.UpdateResampler(in_rate * 2, channels);
   dr.AppendInput(in_buffer, in_frames);
   hasUnderrun = dr.Resample(out_ch1, out_frames, 0);
   EXPECT_TRUE(hasUnderrun);
