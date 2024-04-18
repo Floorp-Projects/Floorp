@@ -31,17 +31,18 @@ Object.defineProperty(obj, "foo", {
 
 Object.freeze(obj);
 
-assert(obj.hasOwnProperty("foo"));
-verifyNotConfigurable(obj, "foo");
+verifyProperty(obj, "foo", {
+  configurable: false,
+});
 
 assert.sameValue(obj.foo, 10);
 
 obj.foo = 12;
 assert(set_funcCalled);
 
-verifyEnumerable(obj, "foo");
-
-var desc = Object.getOwnPropertyDescriptor(obj, "foo");
-assert.sameValue(desc.configurable, false);
+verifyProperty(obj, "foo", {
+  enumerable: true,
+  configurable: false,
+});
 
 reportCompare(0, 0);

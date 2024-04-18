@@ -71,7 +71,7 @@ function f64Repr(f) {
 
 const tz = new (class extends Temporal.TimeZone {
   getPossibleInstantsFor() {
-    // Called in NormalizedTimeDurationToDays 21.a from RoundDuration 7.b.
+    // Called in NormalizedTimeDurationToDays 19 from RoundDuration 7.b.
     // Sets _result_.[[DayLength]] to 2⁵³ - 1 ns, its largest possible value
     return [new Temporal.Instant(-86400_0000_0000_000_000_000n + 2n ** 53n - 1n)];
   }

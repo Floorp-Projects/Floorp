@@ -12,13 +12,11 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-assert.sameValue(
-  Map.prototype.values.name, 'values',
-  'The value of `Map.prototype.values.name` is `"values"`'
-);
-
-verifyNotEnumerable(Map.prototype.values, 'name');
-verifyNotWritable(Map.prototype.values, 'name');
-verifyConfigurable(Map.prototype.values, 'name');
+verifyProperty(Map.prototype.values, "name", {
+  value: "values",
+  writable: false,
+  enumerable: false,
+  configurable: true
+});
 
 reportCompare(0, 0);

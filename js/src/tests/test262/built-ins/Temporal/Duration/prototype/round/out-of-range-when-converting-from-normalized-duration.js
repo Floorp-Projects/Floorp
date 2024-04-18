@@ -14,6 +14,6 @@ const d = new Temporal.Duration(0, 0, 0, 0, 0, 0, /* s = */ Number.MAX_SAFE_INTE
 assert.throws(RangeError, () => d.round({
   largestUnit: "nanoseconds",
   roundingIncrement: 1,
-}), "nanoseconds component is an unsafe integer after balancing");
+}), "nanoseconds component after balancing as a float64-representable integer is out of range");
 
 reportCompare(0, 0);

@@ -29,7 +29,7 @@ assert.sameValue(
 
 assert.throws(TypeError, () => {
   new Object.getOwnPropertyDescriptors({});
-}, '`new Object.getOwnPropertyDescriptors({})` throws TypeError');
+});
 
 
 reportCompare(0, 0);

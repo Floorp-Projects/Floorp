@@ -55,7 +55,7 @@ testWithTypedArrayConstructors(function(TA) {
 
   assert.throws(TypeError, function() {
     typedArray[0] = 1n;
-  }, '`typedArray[0] = 1n` throws TypeError');
+  });
 });
 
 reportCompare(0, 0);

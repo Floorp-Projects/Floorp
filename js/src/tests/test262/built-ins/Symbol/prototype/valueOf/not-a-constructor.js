@@ -29,7 +29,7 @@ assert.sameValue(
 
 assert.throws(TypeError, () => {
   let symbol = Symbol(); new symbol.valueOf();
-}, '`let symbol = Symbol(); new symbol.valueOf()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

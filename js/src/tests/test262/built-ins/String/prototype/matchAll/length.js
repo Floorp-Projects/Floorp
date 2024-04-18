@@ -23,10 +23,11 @@ includes: [propertyHelper.js]
 features: [String.prototype.matchAll]
 ---*/
 
-assert.sameValue(String.prototype.matchAll.length, 1);
-
-verifyNotEnumerable(String.prototype.matchAll, 'length');
-verifyNotWritable(String.prototype.matchAll, 'length');
-verifyConfigurable(String.prototype.matchAll, 'length');
+verifyProperty(String.prototype.matchAll, "length", {
+  value: 1,
+  writable: false,
+  enumerable: false,
+  configurable: true
+});
 
 reportCompare(0, 0);

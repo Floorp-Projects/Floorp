@@ -19,10 +19,11 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-assert.sameValue(String.prototype.toLowerCase.name, "toLowerCase");
-
-verifyNotEnumerable(String.prototype.toLowerCase, "name");
-verifyNotWritable(String.prototype.toLowerCase, "name");
-verifyConfigurable(String.prototype.toLowerCase, "name");
+verifyProperty(String.prototype.toLowerCase, "name", {
+  value: "toLowerCase",
+  writable: false,
+  enumerable: false,
+  configurable: true
+});
 
 reportCompare(0, 0);

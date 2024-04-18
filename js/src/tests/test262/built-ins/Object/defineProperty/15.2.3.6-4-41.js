@@ -16,13 +16,12 @@ Object.defineProperty(JSON, "foo", {
   configurable: true
 });
 
-verifyEqualTo(JSON, "foo", 12);
-
-verifyNotWritable(JSON, "foo");
-
-verifyNotEnumerable(JSON, "foo");
-
-verifyConfigurable(JSON, "foo");
+verifyProperty(JSON, "foo", {
+  value: 12,
+  writable: false,
+  enumerable: false,
+  configurable: true,
+});
 
 delete JSON.foo;
 

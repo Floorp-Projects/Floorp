@@ -25,7 +25,7 @@ assert.sameValue(isConstructor(Math.floor), false, 'isConstructor(Math.floor) mu
 
 assert.throws(TypeError, () => {
   new Math.floor();
-}, '`new Math.floor()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

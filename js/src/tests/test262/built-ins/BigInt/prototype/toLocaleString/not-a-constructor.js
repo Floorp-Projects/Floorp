@@ -28,6 +28,6 @@ assert.sameValue(
 assert.throws(TypeError, () => {
   let n = 1n;
   new n.toLocaleString();
-}, '`let n = 1n; new n.toLocaleString()` throws TypeError');
+});
 
 reportCompare(0, 0);

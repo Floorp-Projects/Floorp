@@ -25,7 +25,7 @@ assert.sameValue(isConstructor(Math.acos), false, 'isConstructor(Math.acos) must
 
 assert.throws(TypeError, () => {
   new Math.acos();
-}, '`new Math.acos()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

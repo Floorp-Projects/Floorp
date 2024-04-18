@@ -30,7 +30,7 @@ assert.sameValue(
 
 assert.throws(TypeError, () => {
   new Atomics.compareExchange(new Int32Array(new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT)));
-}, '`new Atomics.compareExchange(new Int32Array(new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT)))` throws TypeError');
+});
 
 
 reportCompare(0, 0);

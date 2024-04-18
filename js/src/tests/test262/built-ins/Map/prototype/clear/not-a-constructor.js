@@ -25,7 +25,7 @@ assert.sameValue(isConstructor(Map.prototype.clear), false, 'isConstructor(Map.p
 
 assert.throws(TypeError, () => {
   let m = new Map(); new m.clear();
-}, '`let m = new Map(); new m.clear()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

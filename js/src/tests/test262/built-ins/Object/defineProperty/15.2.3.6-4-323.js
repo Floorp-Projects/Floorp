@@ -28,15 +28,15 @@ includes: [propertyHelper.js]
   } catch (e) {
     verifyWritable(arguments, "genericProperty", "genericPropertyString");
 
-    verifyEnumerable(arguments, "genericProperty");
-
-    verifyNotConfigurable(arguments, "genericProperty");
-
     if (!(e instanceof TypeError)) {
       throw new Test262Error("Expected TypeError, got " + e);
     }
-
   }
+
+  verifyProperty(arguments, "genericProperty", {
+    enumerable: true,
+    configurable: false,
+  });
 }(1, 2, 3));
 
 reportCompare(0, 0);

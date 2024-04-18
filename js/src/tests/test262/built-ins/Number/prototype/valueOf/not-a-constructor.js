@@ -29,7 +29,7 @@ assert.sameValue(
 
 assert.throws(TypeError, () => {
   new Number.prototype.valueOf();
-}, '`new Number.prototype.valueOf()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

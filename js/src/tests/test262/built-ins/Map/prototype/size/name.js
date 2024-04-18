@@ -17,13 +17,11 @@ includes: [propertyHelper.js]
 
 var descriptor = Object.getOwnPropertyDescriptor(Map.prototype, 'size');
 
-assert.sameValue(descriptor.get.name,
-  'get size',
-  'The value of `descriptor.get.name` is `get size`'
-);
-
-verifyNotEnumerable(descriptor.get, 'name');
-verifyNotWritable(descriptor.get, 'name');
-verifyConfigurable(descriptor.get, 'name');
+verifyProperty(descriptor.get, "name", {
+  value: "get size",
+  writable: false,
+  enumerable: false,
+  configurable: true
+});
 
 reportCompare(0, 0);

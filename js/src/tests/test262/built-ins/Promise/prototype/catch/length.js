@@ -18,10 +18,11 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-assert.sameValue(Promise.prototype.catch.length, 1);
-
-verifyNotEnumerable(Promise.prototype.catch, 'length');
-verifyNotWritable(Promise.prototype.catch, 'length');
-verifyConfigurable(Promise.prototype.catch, 'length');
+verifyProperty(Promise.prototype.catch, "length", {
+  value: 1,
+  writable: false,
+  enumerable: false,
+  configurable: true
+});
 
 reportCompare(0, 0);

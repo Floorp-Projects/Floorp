@@ -24,7 +24,7 @@ assert.sameValue(isConstructor(unescape), false, 'isConstructor(unescape) must r
 
 assert.throws(TypeError, () => {
   new unescape('');
-}, '`new unescape(\'\')` throws TypeError');
+});
 
 
 reportCompare(0, 0);

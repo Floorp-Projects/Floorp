@@ -25,7 +25,7 @@ assert.sameValue(isConstructor(Array.prototype.flat), false, 'isConstructor(Arra
 
 assert.throws(TypeError, () => {
   new Array.prototype.flat();
-}, '`new Array.prototype.flat()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

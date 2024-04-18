@@ -29,7 +29,7 @@ assert.sameValue(
 
 assert.throws(TypeError, () => {
   new TypedArray.prototype.toSorted();
-}, '`new TypedArray.prototype.toSorted()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

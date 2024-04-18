@@ -21,10 +21,11 @@ includes: [propertyHelper.js]
 features: [TypedArray]
 ---*/
 
-assert.sameValue(Int16Array.name, "Int16Array");
-
-verifyNotEnumerable(Int16Array, "name");
-verifyNotWritable(Int16Array, "name");
-verifyConfigurable(Int16Array, "name");
+verifyProperty(Int16Array, "name", {
+  value: "Int16Array",
+  writable: false,
+  enumerable: false,
+  configurable: true
+});
 
 reportCompare(0, 0);

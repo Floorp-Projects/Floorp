@@ -29,7 +29,7 @@ assert.sameValue(
 
 assert.throws(TypeError, () => {
   let u8 = new Uint8Array(1); new u8.forEach(() => {});
-}, '`let u8 = new Uint8Array(1); new u8.forEach(() => {})` throws TypeError');
+});
 
 
 reportCompare(0, 0);

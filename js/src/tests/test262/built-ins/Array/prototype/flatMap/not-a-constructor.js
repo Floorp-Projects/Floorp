@@ -29,7 +29,7 @@ assert.sameValue(
 
 assert.throws(TypeError, () => {
   new Array.prototype.flatMap(() => {});
-}, '`new Array.prototype.flatMap(() => {})` throws TypeError');
+});
 
 
 reportCompare(0, 0);
