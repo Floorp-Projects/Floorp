@@ -696,7 +696,7 @@ export var DownloadsCommon = {
         message = s.unblockTypePotentiallyUnwanted2;
         break;
       case lazy.Downloads.Error.BLOCK_VERDICT_INSECURE:
-        message = s.unblockInsecure3;
+        message = s.unblockInsecure2;
         break;
       default:
         // Assume Downloads.Error.BLOCK_VERDICT_MALWARE
