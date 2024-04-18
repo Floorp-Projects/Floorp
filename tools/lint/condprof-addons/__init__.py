@@ -13,7 +13,7 @@ import requests
 import yaml
 from mozlint.pathutils import expand_exclusions
 
-BROWSERTIME_FETCHES_PATH = Path("taskcluster/ci/fetch/browsertime.yml")
+BROWSERTIME_FETCHES_PATH = Path("taskcluster/kinds/fetch/browsertime.yml")
 CUSTOMIZATIONS_PATH = Path("testing/condprofile/condprof/customization/")
 DOWNLOAD_TIMEOUT = 30
 ERR_FETCH_TASK_MISSING = "firefox-addons taskcluster fetch config section not found"

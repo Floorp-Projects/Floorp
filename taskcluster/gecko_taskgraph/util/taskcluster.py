@@ -24,7 +24,7 @@ def insert_index(index_path, task_id, data=None, use_proxy=False):
     index_url = get_index_url(index_path, use_proxy=use_proxy)
 
     # Find task expiry.
-    expires = get_task_definition(task_id, use_proxy=use_proxy)["expires"]
+    expires = get_task_definition(task_id, use_proxy)["expires"]
 
     response = _do_request(
         index_url,

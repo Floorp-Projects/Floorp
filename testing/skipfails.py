@@ -843,7 +843,7 @@ class Skipfails(object):
         """Get mozinfo for each test variants"""
 
         if len(self.variants) == 0:
-            variants_file = "taskcluster/ci/test/variants.yml"
+            variants_file = "taskcluster/kinds/test/variants.yml"
             variants_path = self.full_path(variants_file)
             fp = io.open(variants_path, "r", encoding="utf-8")
             raw_variants = load(fp, Loader=Loader)

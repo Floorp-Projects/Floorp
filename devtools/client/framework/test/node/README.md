@@ -19,4 +19,4 @@ The tests run on try on linux64 platforms. The complete name of the try job is `
 Adding the tests to a try push depends on the try selector you are using.
 - try fuzzy: look for the job named `source-test-node-devtools-tests`
 
-The configuration file for try can be found at `taskcluster/ci/source-test/node.yml`
+The configuration file for try can be found at `taskcluster/kinds/source-test/node.yml`

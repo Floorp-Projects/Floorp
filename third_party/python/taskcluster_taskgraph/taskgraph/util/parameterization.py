@@ -20,6 +20,12 @@ def _recurse(val, param_fns):
             if len(val) == 1:
                 for param_key, param_fn in param_fns.items():
                     if set(val.keys()) == {param_key}:
+                        if isinstance(val[param_key], dict):
+                            # handle `{"task-reference": {"<foo>": "bar"}}`
+                            return {
+                                param_fn(key): recurse(v)
+                                for key, v in val[param_key].items()
+                            }
                         return param_fn(val[param_key])
             return {k: recurse(v) for k, v in val.items()}
         else:
@@ -74,16 +80,12 @@ def resolve_task_references(label, task_def, task_id, decision_task_id, dependen
                     task_id = dependencies[dependency]
                 except KeyError:
                     raise KeyError(
-                        "task '{}' has no dependency named '{}'".format(
-                            label, dependency
-                        )
+                        f"task '{label}' has no dependency named '{dependency}'"
                     )
 
             assert artifact_name.startswith(
                 "public/"
-            ), "artifact-reference only supports public artifacts, not `{}`".format(
-                artifact_name
-            )
+            ), f"artifact-reference only supports public artifacts, not `{artifact_name}`"
             return get_artifact_url(task_id, artifact_name)
 
         return ARTIFACT_REFERENCE_PATTERN.sub(repl, val)

@@ -125,7 +125,7 @@ At a glance
 -  Tests are defined in
    `testing/talos/talos/test.py <https://searchfox.org/mozilla-central/source/testing/talos/talos/test.py>`__
 -  Treeherder abbreviations are defined in
-   `taskcluster/ci/test/talos.yml <https://searchfox.org/mozilla-central/source/taskcluster/ci/test/talos.yml>`__
+   `taskcluster/kinds/test/talos.yml <https://searchfox.org/mozilla-central/source/taskcluster/kinds/test/talos.yml>`__
 -  Suites are defined for production in
    `testing/talos/talos.json <https://searchfox.org/mozilla-central/source/testing/talos/talos.json>`__
 
@@ -133,7 +133,7 @@ Test lifecycle
 **************
 
 -  Taskcluster schedules `talos
-   jobs <https://searchfox.org/mozilla-central/source/taskcluster/ci/test/talos.yml>`__
+   jobs <https://searchfox.org/mozilla-central/source/taskcluster/kinds/test/talos.yml>`__
 -  Taskcluster runs a Talos job on a hardware machine when one is
    available - this is bootstrapped by
    `mozharness <https://searchfox.org/mozilla-central/source/testing/mozharness/mozharness/mozilla/testing/talos.py>`__

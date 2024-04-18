@@ -125,7 +125,7 @@ def run_perftest(command_context, **kwargs):
         for plat in platform:
             if plat not in _TRY_PLATFORMS:
                 # we can extend platform support here: linux, win, macOs
-                # by adding more jobs in taskcluster/ci/perftest/kind.yml
+                # by adding more jobs in taskcluster/kinds/perftest/kind.yml
                 # then picking up the right one here
                 raise NotImplementedError(
                     "%r doesn't exist or is not yet supported" % plat

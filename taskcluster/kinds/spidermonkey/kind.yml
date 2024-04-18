@@ -50,7 +50,7 @@ job-defaults:
             - nsprpub/**
             - python/**
             - taskcluster/moz.build
-            - taskcluster/ci/spidermonkey/kind.yml
+            - taskcluster/kinds/spidermonkey/kind.yml
             - testing/mozbase/**
             - testing/web-platform/**
             - test.mozbuild

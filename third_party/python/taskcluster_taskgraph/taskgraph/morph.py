@@ -38,6 +38,7 @@ registered_morphs = []
 
 def register_morph(func):
     registered_morphs.append(func)
+    return func
 
 
 def amend_taskgraph(taskgraph, label_to_taskid, to_add):

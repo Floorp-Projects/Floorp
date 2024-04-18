@@ -74,7 +74,7 @@ def resolve_keyed_by(
 
     For example, given item::
 
-        job:
+        task:
             test-platform: linux128
             chunks:
                 by-test-platform:
@@ -82,10 +82,10 @@ def resolve_keyed_by(
                     win.*: 6
                     default: 12
 
-    a call to `resolve_keyed_by(item, 'job.chunks', item['thing-name'])`
+    a call to `resolve_keyed_by(item, 'task.chunks', item['thing-name'])`
     would mutate item in-place to::
 
-        job:
+        task:
             test-platform: linux128
             chunks: 12
 
@@ -182,7 +182,7 @@ def check_schema(schema):
                 if not identifier_re.match(k) and not excepted(path):
                     raise RuntimeError(
                         "YAML schemas should use dashed lower-case identifiers, "
-                        "not {!r} @ {}".format(k, path)
+                        f"not {k!r} @ {path}"
                     )
             elif isinstance(k, (voluptuous.Optional, voluptuous.Required)):
                 check_identifier(path, k.schema)
@@ -191,9 +191,7 @@ def check_schema(schema):
                     check_identifier(path, v)
             elif not excepted(path):
                 raise RuntimeError(
-                    "Unexpected type in YAML schema: {} @ {}".format(
-                        type(k).__name__, path
-                    )
+                    f"Unexpected type in YAML schema: {type(k).__name__} @ {path}"
                 )
 
         if isinstance(sch, collections.abc.Mapping):

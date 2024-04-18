@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 DEFAULT_TRANSFORMS = [
-    "taskgraph.transforms.job:transforms",
+    "taskgraph.transforms.run:transforms",
     "taskgraph.transforms.task:transforms",
 ]
 
@@ -20,7 +20,7 @@ def loader(kind, path, config, params, loaded_tasks):
     """
     This default loader builds on the `transform` loader by providing sensible
     default transforms that the majority of simple tasks will need.
-    Specifically, `job` and `task` transforms will be appended to the end of the
+    Specifically, `run` and `task` transforms will be appended to the end of the
     list of transforms in the kind being loaded.
     """
     transform_refs = config.setdefault("transforms", [])

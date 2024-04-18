@@ -42,22 +42,25 @@ def replace_group(treeherder_symbol, new_group):
     return join_symbol(new_group, symbol)
 
 
-def inherit_treeherder_from_dep(job, dep_job):
-    """Inherit treeherder defaults from dep_job"""
-    treeherder = job.get("treeherder", {})
+def inherit_treeherder_from_dep(task, dep_task):
+    """Inherit treeherder defaults from dep_task"""
+    treeherder = task.get("treeherder", {})
 
     dep_th_platform = (
-        dep_job.task.get("extra", {})
+        dep_task.task.get("extra", {})
         .get("treeherder", {})
         .get("machine", {})
         .get("platform", "")
     )
     dep_th_collection = list(
-        dep_job.task.get("extra", {}).get("treeherder", {}).get("collection", {}).keys()
+        dep_task.task.get("extra", {})
+        .get("treeherder", {})
+        .get("collection", {})
+        .keys()
     )[0]
     treeherder.setdefault("platform", f"{dep_th_platform}/{dep_th_collection}")
     treeherder.setdefault(
-        "tier", dep_job.task.get("extra", {}).get("treeherder", {}).get("tier", 1)
+        "tier", dep_task.task.get("extra", {}).get("treeherder", {}).get("tier", 1)
     )
     # Does not set symbol
     treeherder.setdefault("kind", "build")

@@ -11,4 +11,4 @@ https://hg.mozilla.org/l10n/gecko-strings-quarantine/.
 
 The code is in https://hg.mozilla.org/mozilla-central/file/tip/python/l10n/mozxchannel/,
 supported as a mach subcommand in https://hg.mozilla.org/mozilla-central/file/tip/tools/compare-locales/mach_commands.py,
-as a taskcluster kind in https://hg.mozilla.org/mozilla-central/file/tip/taskcluster/ci/l10n-cross-channel, and scheduled in cron in https://hg.mozilla.org/mozilla-central/file/tip/.cron.yml.
+as a taskcluster kind in https://hg.mozilla.org/mozilla-central/file/tip/taskcluster/kinds/l10n-cross-channel, and scheduled in cron in https://hg.mozilla.org/mozilla-central/file/tip/.cron.yml.

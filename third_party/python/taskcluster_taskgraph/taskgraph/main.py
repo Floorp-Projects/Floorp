@@ -18,6 +18,7 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 from textwrap import dedent
 from typing import Any, List
+from urllib.parse import urlparse
 
 import appdirs
 import yaml
@@ -463,6 +464,8 @@ def show_taskgraph(options):
             f"--label={options['graph_attr']}@{cur_rev}",
         ]
 
+        non_fatal_failures = []
+
         for spec in parameters:
             base_path = os.path.join(
                 diffdir, f"{options['graph_attr']}_{base_rev_file}"
@@ -475,7 +478,20 @@ def show_taskgraph(options):
                 base_path += f"_{params_name}"
                 cur_path += f"_{params_name}"
 
+            # If the base or cur files are missing it means that generation
+            # failed. If one of them failed but not the other, the failure is
+            # likely due to the patch making changes to taskgraph in modules
+            # that don't get reloaded (safe to ignore). If both generations
+            # failed, there's likely a real issue.
+            base_missing = not os.path.isfile(base_path)
+            cur_missing = not os.path.isfile(cur_path)
+            if base_missing != cur_missing:  # != is equivalent to XOR for booleans
+                non_fatal_failures.append(os.path.basename(base_path))
+                continue
+
             try:
+                # If the output file(s) are missing, this command will raise
+                # CalledProcessError with a returncode > 1.
                 proc = subprocess.run(
                     diffcmd + [base_path, cur_path],
                     capture_output=True,
@@ -498,6 +514,16 @@ def show_taskgraph(options):
                 # console in this case instead.
                 path=None if returncode == 0 else output_file,
                 params_spec=spec if len(parameters) > 1 else None,
+            )
+
+        if non_fatal_failures:
+            failstr = "\n  ".join(sorted(non_fatal_failures))
+            print(
+                "WARNING: Diff skipped for the following generation{s} "
+                "due to failures:\n  {failstr}".format(
+                    s="s" if len(non_fatal_failures) > 1 else "", failstr=failstr
+                ),
+                file=sys.stderr,
             )
 
         if options["format"] != "json":
@@ -661,7 +687,7 @@ def decision(options):
 @argument(
     "--root",
     "-r",
-    default="taskcluster/ci",
+    default="taskcluster",
     help="root of the taskgraph definition relative to topsrcdir",
 )
 def action_callback(options):
@@ -697,7 +723,7 @@ def action_callback(options):
 @argument(
     "--root",
     "-r",
-    default="taskcluster/ci",
+    default="taskcluster",
     help="root of the taskgraph definition relative to topsrcdir",
 )
 @argument(
@@ -835,6 +861,10 @@ def init_taskgraph(options):
         )
         return 1
 
+    context["repo_name"] = urlparse(repo_url).path.rsplit("/", 1)[-1]
+    if context["repo_name"].endswith(".git"):
+        context["repo_name"] = context["repo_name"][: -len(".git")]
+
     # Generate the project.
     cookiecutter(
         options["template"],
@@ -867,6 +897,11 @@ def setup_logging():
 def main(args=sys.argv[1:]):
     setup_logging()
     parser = create_parser()
+
+    if not args:
+        parser.print_help()
+        sys.exit(1)
+
     args = parser.parse_args(args)
     try:
         return args.command(vars(args))

@@ -1,4 +1,4 @@
-#!/usr/bin/python3 -u
+#!/usr/bin/env -S python3 -u
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -624,6 +624,11 @@ def git_checkout(
             "Must specify both ssh_key_file and ssh_known_hosts_file, if either are specified",
         )
 
+    # Bypass Git's "safe directory" feature as the destination could be
+    # coming from a cache and therefore cloned by a different user.
+    args = ["git", "config", "--global", "--add", "safe.directory", Path(destination_path).as_posix()]
+    retry_required_command(b"vcs", args, extra_env=env)
+
     if not os.path.exists(destination_path):
         # Repository doesn't already exist, needs to be cloned
         args = [
@@ -782,9 +787,7 @@ def hg_checkout(
     branch: Optional[str],
     revision: Optional[str],
 ):
-    if IS_MACOSX:
-        hg_bin = "/tools/python27-mercurial/bin/hg"
-    elif IS_POSIX:
+    if IS_MACOSX or IS_POSIX:
         hg_bin = "hg"
     elif IS_WINDOWS:
         # This is where OCC installs it in the AMIs.
@@ -1007,7 +1010,8 @@ def install_pip_requirements(repositories):
     if not requirements:
         return
 
-    cmd = [sys.executable, "-mpip", "install"]
+    # TODO: Stop using system Python (#381)
+    cmd = [sys.executable, "-mpip", "install", "--break-system-packages"]
     if os.environ.get("PIP_DISABLE_REQUIRE_HASHES") != "1":
         cmd.append("--require-hashes")
 
