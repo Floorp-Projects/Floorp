@@ -1461,7 +1461,7 @@ static void set_rt_speed_feature_framesize_dependent(const AV1_COMP *const cpi,
   // for resolutions below 720p.
   if (speed >= 11 && !is_720p_or_larger &&
       cpi->oxcf.tune_cfg.content != AOM_CONTENT_SCREEN) {
-    sf->rt_sf.skip_cdef_sb = 2;
+    sf->rt_sf.skip_cdef_sb = 1;
     sf->rt_sf.force_only_last_ref = 1;
     sf->rt_sf.selective_cdf_update = 1;
     sf->rt_sf.use_nonrd_filter_search = 0;

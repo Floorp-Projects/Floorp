@@ -537,7 +537,9 @@ static AOM_INLINE void encode_nonrd_sb(AV1_COMP *cpi, ThreadData *td,
   // Set the partition
   if (sf->part_sf.partition_search_type == FIXED_PARTITION || seg_skip ||
       (sf->rt_sf.use_fast_fixed_part && x->sb_force_fixed_part == 1 &&
-       !frame_is_intra_only(cm))) {
+       (!frame_is_intra_only(cm) &&
+        (!cpi->ppi->use_svc ||
+         !cpi->svc.layer_context[cpi->svc.temporal_layer_id].is_key_frame)))) {
     // set a fixed-size partition
     av1_set_offsets(cpi, tile_info, x, mi_row, mi_col, sb_size);
     BLOCK_SIZE bsize_select = sf->part_sf.fixed_partition_size;

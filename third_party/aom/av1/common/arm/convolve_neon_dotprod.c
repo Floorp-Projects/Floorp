@@ -102,14 +102,12 @@ static INLINE void convolve_x_sr_12tap_neon_dotprod(
   const int8x16_t filter =
       vcombine_s8(vmovn_s16(filter_0_7), vmovn_s16(filter_8_15));
 
-  const int32_t correction_s32 =
-      vaddvq_s32(vaddq_s32(vpaddlq_s16(vshlq_n_s16(filter_0_7, FILTER_BITS)),
-                           vpaddlq_s16(vshlq_n_s16(filter_8_15, FILTER_BITS))));
-  // A shim of 1 << (ROUND0_BITS - 1) enables us to use a single rounding right
-  // shift by FILTER_BITS - instead of a first rounding right shift by
+  // Adding a shim of 1 << (ROUND0_BITS - 1) enables us to use a single rounding
+  // right shift by FILTER_BITS - instead of a first rounding right shift by
   // ROUND0_BITS, followed by second rounding right shift by FILTER_BITS -
   // ROUND0_BITS.
-  int32x4_t correction = vdupq_n_s32(correction_s32 + (1 << (ROUND0_BITS - 1)));
+  int32x4_t correction =
+      vdupq_n_s32((128 << FILTER_BITS) + (1 << (ROUND0_BITS - 1)));
   const uint8x16_t range_limit = vdupq_n_u8(128);
   const uint8x16x3_t permute_tbl = vld1q_u8_x3(dot_prod_permute_tbl);
 
@@ -274,16 +272,13 @@ void av1_convolve_x_sr_neon_dotprod(const uint8_t *src, int src_stride,
   }
 
   const int16x8_t x_filter_s16 = vld1q_s16(x_filter_ptr);
-  // Dot product constants.
-  const int32_t correction_s32 =
-      vaddlvq_s16(vshlq_n_s16(x_filter_s16, FILTER_BITS - 1));
-  // This shim of (1 << ((ROUND0_BITS - 1) - 1) enables us to use a single
-  // rounding right shift by FILTER_BITS - instead of a first rounding right
-  // shift by ROUND0_BITS, followed by second rounding right shift by
-  // FILTER_BITS - ROUND0_BITS.
-  // The outermost -1 is needed because we will halve the filter values.
+  // Dot product constants:
+  // Adding a shim of 1 << (ROUND0_BITS - 1) enables us to use a single rounding
+  // right shift by FILTER_BITS - instead of a first rounding right shift by
+  // ROUND0_BITS, followed by second rounding right shift by FILTER_BITS -
+  // ROUND0_BITS. Halve the total because we will halve the filter values.
   const int32x4_t correction =
-      vdupq_n_s32(correction_s32 + (1 << ((ROUND0_BITS - 1) - 1)));
+      vdupq_n_s32(((128 << FILTER_BITS) + (1 << ((ROUND0_BITS - 1)))) / 2);
   const uint8x16_t range_limit = vdupq_n_u8(128);
 
   if (w <= 4) {
@@ -465,16 +460,13 @@ static INLINE void convolve_2d_sr_horiz_12tap_neon_dotprod(
     const int8x16_t x_filter = vcombine_s8(vmovn_s16(x_filter_s16.val[0]),
                                            vmovn_s16(x_filter_s16.val[1]));
 
-    // This shim of 1 << (ROUND0_BITS - 1) enables us to use non-rounding shifts
-    // - which are generally faster than rounding shifts on modern CPUs.
+    // Adding a shim of 1 << (ROUND0_BITS - 1) enables us to use non-rounding
+    // shifts - which are generally faster than rounding shifts on modern CPUs.
     const int32_t horiz_const =
         ((1 << (bd + FILTER_BITS - 1)) + (1 << (ROUND0_BITS - 1)));
     // Dot product constants.
-    const int32x4_t correct_tmp =
-        vaddq_s32(vpaddlq_s16(vshlq_n_s16(x_filter_s16.val[0], 7)),
-                  vpaddlq_s16(vshlq_n_s16(x_filter_s16.val[1], 7)));
     const int32x4_t correction =
-        vdupq_n_s32(vaddvq_s32(correct_tmp) + horiz_const);
+        vdupq_n_s32((128 << FILTER_BITS) + horiz_const);
     const uint8x16_t range_limit = vdupq_n_u8(128);
     const uint8x16x3_t permute_tbl = vld1q_u8_x3(dot_prod_permute_tbl);
 
@@ -621,16 +613,15 @@ static INLINE void convolve_2d_sr_horiz_neon_dotprod(
     const uint8_t *src, int src_stride, int16_t *im_block, int im_stride, int w,
     int im_h, const int16_t *x_filter_ptr) {
   const int bd = 8;
-  // This shim of 1 << ((ROUND0_BITS - 1) - 1) enables us to use non-rounding
-  // shifts - which are generally faster than rounding shifts on modern CPUs.
-  // The outermost -1 is needed because we halved the filter values.
-  const int32_t horiz_const =
-      ((1 << (bd + FILTER_BITS - 2)) + (1 << ((ROUND0_BITS - 1) - 1)));
   // Dot product constants.
   const int16x8_t x_filter_s16 = vld1q_s16(x_filter_ptr);
-  const int32_t correction_s32 =
-      vaddlvq_s16(vshlq_n_s16(x_filter_s16, FILTER_BITS - 1));
-  const int32x4_t correction = vdupq_n_s32(correction_s32 + horiz_const);
+  // Adding a shim of 1 << (ROUND0_BITS - 1) enables us to use non-rounding
+  // shifts - which are generally faster than rounding shifts on modern CPUs.
+  const int32_t horiz_const =
+      ((1 << (bd + FILTER_BITS - 1)) + (1 << (ROUND0_BITS - 1)));
+  // Halve the total because we will halve the filter values.
+  const int32x4_t correction =
+      vdupq_n_s32(((128 << FILTER_BITS) + horiz_const) / 2);
   const uint8x16_t range_limit = vdupq_n_u8(128);
 
   const uint8_t *src_ptr = src;

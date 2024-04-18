@@ -124,4 +124,9 @@ INSTANTIATE_TEST_SUITE_P(NEON, ComputeFlowTest,
                          ::testing::Values(aom_compute_flow_at_point_neon));
 #endif
 
+#if HAVE_SVE
+INSTANTIATE_TEST_SUITE_P(SVE, ComputeFlowTest,
+                         ::testing::Values(aom_compute_flow_at_point_sve));
+#endif
+
 }  // namespace

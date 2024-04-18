@@ -19,6 +19,7 @@
 
 #include "av1/encoder/allintra_vis.h"
 #include "av1/encoder/bitstream.h"
+#include "av1/encoder/enc_enums.h"
 #include "av1/encoder/encodeframe.h"
 #include "av1/encoder/encodeframe_utils.h"
 #include "av1/encoder/encoder.h"
@@ -2520,7 +2521,7 @@ void av1_tf_do_filtering_mt(AV1_COMP *cpi) {
 static AOM_INLINE int get_next_gm_job(AV1_COMP *cpi, int *frame_idx,
                                       int cur_dir) {
   GlobalMotionInfo *gm_info = &cpi->gm_info;
-  JobInfo *job_info = &cpi->mt_info.gm_sync.job_info;
+  GlobalMotionJobInfo *job_info = &cpi->mt_info.gm_sync.job_info;
 
   int total_refs = gm_info->num_ref_frames[cur_dir];
   int8_t cur_frame_to_process = job_info->next_frame_to_process[cur_dir];
@@ -2551,7 +2552,7 @@ static int gm_mt_worker_hook(void *arg1, void *unused) {
   AV1_COMP *cpi = thread_data->cpi;
   GlobalMotionInfo *gm_info = &cpi->gm_info;
   AV1GlobalMotionSync *gm_sync = &cpi->mt_info.gm_sync;
-  JobInfo *job_info = &gm_sync->job_info;
+  GlobalMotionJobInfo *job_info = &gm_sync->job_info;
   int thread_id = thread_data->thread_id;
   GlobalMotionData *gm_thread_data = &thread_data->td->gm_data;
 #if CONFIG_MULTITHREAD
@@ -2689,7 +2690,7 @@ static AOM_INLINE void gm_dealloc_thread_data(AV1_COMP *cpi, int num_workers) {
 
 // Implements multi-threading for global motion.
 void av1_global_motion_estimation_mt(AV1_COMP *cpi) {
-  JobInfo *job_info = &cpi->mt_info.gm_sync.job_info;
+  GlobalMotionJobInfo *job_info = &cpi->mt_info.gm_sync.job_info;
 
   av1_zero(*job_info);
 

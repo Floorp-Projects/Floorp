@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, Alliance for Open Media. All rights reserved
+ * Copyright (c) 2024, Alliance for Open Media. All rights reserved
  *
  * This source code is subject to the terms of the BSD 2 Clause License and
  * the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
@@ -12,13 +12,19 @@
 #include "aom_dsp/flow_estimation/disflow.h"
 
 #include <arm_neon.h>
+#include <arm_sve.h>
 #include <math.h>
 
+#include "aom_dsp/arm/aom_neon_sve_bridge.h"
 #include "aom_dsp/arm/mem_neon.h"
 #include "aom_dsp/arm/sum_neon.h"
 #include "aom_dsp/flow_estimation/arm/disflow_neon.h"
 #include "config/aom_config.h"
 #include "config/aom_dsp_rtcd.h"
+
+DECLARE_ALIGNED(16, static const uint16_t, kDeinterleaveTbl[8]) = {
+  0, 2, 4, 6, 1, 3, 5, 7,
+};
 
 // Compare two regions of width x height pixels, one rooted at position
 // (x, y) in src and the other at (x + u, y + v) in ref.
@@ -57,27 +63,28 @@ static INLINE void compute_flow_error(const uint8_t *src, const uint8_t *ref,
 
   // Horizontal convolution.
   const uint8_t *ref_start = ref + (y0 - 1) * stride + (x0 - 1);
-  int16x4_t h_filter = vmovn_s32(vld1q_s32(h_kernel));
+  const int16x4_t h_kernel_s16 = vmovn_s32(vld1q_s32(h_kernel));
+  const int16x8_t h_filter = vcombine_s16(h_kernel_s16, vdup_n_s16(0));
+  const uint16x8_t idx = vld1q_u16(kDeinterleaveTbl);
 
   for (int i = 0; i < DISFLOW_PATCH_SIZE + 3; ++i) {
-    uint8x16_t r = vld1q_u8(ref_start + i * stride);
-    uint16x8_t r0 = vmovl_u8(vget_low_u8(r));
-    uint16x8_t r1 = vmovl_u8(vget_high_u8(r));
+    svuint16_t r0 = svld1ub_u16(svptrue_b16(), ref_start + i * stride + 0);
+    svuint16_t r1 = svld1ub_u16(svptrue_b16(), ref_start + i * stride + 1);
+    svuint16_t r2 = svld1ub_u16(svptrue_b16(), ref_start + i * stride + 2);
+    svuint16_t r3 = svld1ub_u16(svptrue_b16(), ref_start + i * stride + 3);
 
-    int16x8_t s0 = vreinterpretq_s16_u16(r0);
-    int16x8_t s1 = vreinterpretq_s16_u16(vextq_u16(r0, r1, 1));
-    int16x8_t s2 = vreinterpretq_s16_u16(vextq_u16(r0, r1, 2));
-    int16x8_t s3 = vreinterpretq_s16_u16(vextq_u16(r0, r1, 3));
+    int16x8_t s0 = vreinterpretq_s16_u16(svget_neonq_u16(r0));
+    int16x8_t s1 = vreinterpretq_s16_u16(svget_neonq_u16(r1));
+    int16x8_t s2 = vreinterpretq_s16_u16(svget_neonq_u16(r2));
+    int16x8_t s3 = vreinterpretq_s16_u16(svget_neonq_u16(r3));
 
-    int32x4_t sum_lo = vmull_lane_s16(vget_low_s16(s0), h_filter, 0);
-    sum_lo = vmlal_lane_s16(sum_lo, vget_low_s16(s1), h_filter, 1);
-    sum_lo = vmlal_lane_s16(sum_lo, vget_low_s16(s2), h_filter, 2);
-    sum_lo = vmlal_lane_s16(sum_lo, vget_low_s16(s3), h_filter, 3);
+    int64x2_t sum04 = aom_svdot_lane_s16(vdupq_n_s64(0), s0, h_filter, 0);
+    int64x2_t sum15 = aom_svdot_lane_s16(vdupq_n_s64(0), s1, h_filter, 0);
+    int64x2_t sum26 = aom_svdot_lane_s16(vdupq_n_s64(0), s2, h_filter, 0);
+    int64x2_t sum37 = aom_svdot_lane_s16(vdupq_n_s64(0), s3, h_filter, 0);
 
-    int32x4_t sum_hi = vmull_lane_s16(vget_high_s16(s0), h_filter, 0);
-    sum_hi = vmlal_lane_s16(sum_hi, vget_high_s16(s1), h_filter, 1);
-    sum_hi = vmlal_lane_s16(sum_hi, vget_high_s16(s2), h_filter, 2);
-    sum_hi = vmlal_lane_s16(sum_hi, vget_high_s16(s3), h_filter, 3);
+    int32x4_t res0 = vcombine_s32(vmovn_s64(sum04), vmovn_s64(sum15));
+    int32x4_t res1 = vcombine_s32(vmovn_s64(sum26), vmovn_s64(sum37));
 
     // 6 is the maximum allowable number of extra bits which will avoid
     // the intermediate values overflowing an int16_t. The most extreme
@@ -88,10 +95,12 @@ static INLINE void compute_flow_error(const uint8_t *src, const uint8_t *ref,
     // As an integer with 6 fractional bits, that is 18360, which fits
     // in an int16_t. But with 7 fractional bits it would be 36720,
     // which is too large.
+    int16x8_t res = vcombine_s16(vrshrn_n_s32(res0, DISFLOW_INTERP_BITS - 6),
+                                 vrshrn_n_s32(res1, DISFLOW_INTERP_BITS - 6));
 
-    int16x8_t sum = vcombine_s16(vrshrn_n_s32(sum_lo, DISFLOW_INTERP_BITS - 6),
-                                 vrshrn_n_s32(sum_hi, DISFLOW_INTERP_BITS - 6));
-    vst1q_s16(tmp_ + i * DISFLOW_PATCH_SIZE, sum);
+    res = aom_tbl_s16(res, idx);
+
+    vst1q_s16(tmp_ + i * DISFLOW_PATCH_SIZE, res);
   }
 
   // Vertical convolution.
@@ -163,24 +172,20 @@ static INLINE void compute_flow_error(const uint8_t *src, const uint8_t *ref,
 static INLINE void compute_flow_matrix(const int16_t *dx, int dx_stride,
                                        const int16_t *dy, int dy_stride,
                                        double *M_inv) {
-  int32x4_t sum[4] = { vdupq_n_s32(0), vdupq_n_s32(0), vdupq_n_s32(0),
-                       vdupq_n_s32(0) };
+  int64x2_t sum[3] = { vdupq_n_s64(0), vdupq_n_s64(0), vdupq_n_s64(0) };
 
   for (int i = 0; i < DISFLOW_PATCH_SIZE; i++) {
     int16x8_t x = vld1q_s16(dx + i * dx_stride);
     int16x8_t y = vld1q_s16(dy + i * dy_stride);
-    sum[0] = vmlal_s16(sum[0], vget_low_s16(x), vget_low_s16(x));
-    sum[0] = vmlal_s16(sum[0], vget_high_s16(x), vget_high_s16(x));
 
-    sum[1] = vmlal_s16(sum[1], vget_low_s16(x), vget_low_s16(y));
-    sum[1] = vmlal_s16(sum[1], vget_high_s16(x), vget_high_s16(y));
-
-    sum[3] = vmlal_s16(sum[3], vget_low_s16(y), vget_low_s16(y));
-    sum[3] = vmlal_s16(sum[3], vget_high_s16(y), vget_high_s16(y));
+    sum[0] = aom_sdotq_s16(sum[0], x, x);
+    sum[1] = aom_sdotq_s16(sum[1], x, y);
+    sum[2] = aom_sdotq_s16(sum[2], y, y);
   }
-  sum[2] = sum[1];
 
-  int32x4_t res = horizontal_add_4d_s32x4(sum);
+  sum[0] = vpaddq_s64(sum[0], sum[1]);
+  sum[2] = vpaddq_s64(sum[1], sum[2]);
+  int32x4_t res = vcombine_s32(vmovn_s64(sum[0]), vmovn_s64(sum[2]));
 
   // Apply regularization
   // We follow the standard regularization method of adding `k * I` before
@@ -212,27 +217,24 @@ static INLINE void compute_flow_vector(const int16_t *dx, int dx_stride,
                                        const int16_t *dy, int dy_stride,
                                        const int16_t *dt, int dt_stride,
                                        int *b) {
-  int32x4_t b_s32[2] = { vdupq_n_s32(0), vdupq_n_s32(0) };
+  int64x2_t b_s64[2] = { vdupq_n_s64(0), vdupq_n_s64(0) };
 
   for (int i = 0; i < DISFLOW_PATCH_SIZE; i++) {
     int16x8_t dx16 = vld1q_s16(dx + i * dx_stride);
     int16x8_t dy16 = vld1q_s16(dy + i * dy_stride);
     int16x8_t dt16 = vld1q_s16(dt + i * dt_stride);
 
-    b_s32[0] = vmlal_s16(b_s32[0], vget_low_s16(dx16), vget_low_s16(dt16));
-    b_s32[0] = vmlal_s16(b_s32[0], vget_high_s16(dx16), vget_high_s16(dt16));
-
-    b_s32[1] = vmlal_s16(b_s32[1], vget_low_s16(dy16), vget_low_s16(dt16));
-    b_s32[1] = vmlal_s16(b_s32[1], vget_high_s16(dy16), vget_high_s16(dt16));
+    b_s64[0] = aom_sdotq_s16(b_s64[0], dx16, dt16);
+    b_s64[1] = aom_sdotq_s16(b_s64[1], dy16, dt16);
   }
 
-  int32x4_t b_red = horizontal_add_2d_s32(b_s32[0], b_s32[1]);
-  vst1_s32(b, add_pairwise_s32x4(b_red));
+  b_s64[0] = vpaddq_s64(b_s64[0], b_s64[1]);
+  vst1_s32(b, vmovn_s64(b_s64[0]));
 }
 
-void aom_compute_flow_at_point_neon(const uint8_t *src, const uint8_t *ref,
-                                    int x, int y, int width, int height,
-                                    int stride, double *u, double *v) {
+void aom_compute_flow_at_point_sve(const uint8_t *src, const uint8_t *ref,
+                                   int x, int y, int width, int height,
+                                   int stride, double *u, double *v) {
   double M_inv[4];
   int b[2];
   int16_t dt[DISFLOW_PATCH_SIZE * DISFLOW_PATCH_SIZE];

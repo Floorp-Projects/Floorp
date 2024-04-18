@@ -205,6 +205,9 @@ if(CONFIG_AV1_ENCODER)
 
     list(APPEND AOM_DSP_ENCODER_INTRIN_NEON
                 "${AOM_ROOT}/aom_dsp/flow_estimation/arm/disflow_neon.c")
+
+    list(APPEND AOM_DSP_ENCODER_INTRIN_SVE
+                "${AOM_ROOT}/aom_dsp/flow_estimation/arm/disflow_sve.c")
   endif()
 
   list(APPEND AOM_DSP_ENCODER_ASM_SSE2 "${AOM_ROOT}/aom_dsp/x86/sad4d_sse2.asm"

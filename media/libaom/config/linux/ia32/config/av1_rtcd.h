@@ -227,10 +227,10 @@ void av1_compute_stats_sse4_1(int wiener_win, const uint8_t *dgd8, const uint8_t
 void av1_compute_stats_avx2(int wiener_win, const uint8_t *dgd8, const uint8_t *src8, int16_t *dgd_avg, int16_t *src_avg, int h_start, int h_end, int v_start, int v_end, int dgd_stride, int src_stride, int64_t *M, int64_t *H, int use_downsampled_wiener_stats);
 RTCD_EXTERN void (*av1_compute_stats)(int wiener_win, const uint8_t *dgd8, const uint8_t *src8, int16_t *dgd_avg, int16_t *src_avg, int h_start, int h_end, int v_start, int v_end, int dgd_stride, int src_stride, int64_t *M, int64_t *H, int use_downsampled_wiener_stats);
 
-void av1_compute_stats_highbd_c(int wiener_win, const uint8_t *dgd8, const uint8_t *src8, int h_start, int h_end, int v_start, int v_end, int dgd_stride, int src_stride, int64_t *M, int64_t *H, aom_bit_depth_t bit_depth);
-void av1_compute_stats_highbd_sse4_1(int wiener_win, const uint8_t *dgd8, const uint8_t *src8, int h_start, int h_end, int v_start, int v_end, int dgd_stride, int src_stride, int64_t *M, int64_t *H, aom_bit_depth_t bit_depth);
-void av1_compute_stats_highbd_avx2(int wiener_win, const uint8_t *dgd8, const uint8_t *src8, int h_start, int h_end, int v_start, int v_end, int dgd_stride, int src_stride, int64_t *M, int64_t *H, aom_bit_depth_t bit_depth);
-RTCD_EXTERN void (*av1_compute_stats_highbd)(int wiener_win, const uint8_t *dgd8, const uint8_t *src8, int h_start, int h_end, int v_start, int v_end, int dgd_stride, int src_stride, int64_t *M, int64_t *H, aom_bit_depth_t bit_depth);
+void av1_compute_stats_highbd_c(int wiener_win, const uint8_t *dgd8, const uint8_t *src8, int16_t *dgd_avg, int16_t *src_avg, int h_start, int h_end, int v_start, int v_end, int dgd_stride, int src_stride, int64_t *M, int64_t *H, aom_bit_depth_t bit_depth);
+void av1_compute_stats_highbd_sse4_1(int wiener_win, const uint8_t *dgd8, const uint8_t *src8, int16_t *dgd_avg, int16_t *src_avg, int h_start, int h_end, int v_start, int v_end, int dgd_stride, int src_stride, int64_t *M, int64_t *H, aom_bit_depth_t bit_depth);
+void av1_compute_stats_highbd_avx2(int wiener_win, const uint8_t *dgd8, const uint8_t *src8, int16_t *dgd_avg, int16_t *src_avg, int h_start, int h_end, int v_start, int v_end, int dgd_stride, int src_stride, int64_t *M, int64_t *H, aom_bit_depth_t bit_depth);
+RTCD_EXTERN void (*av1_compute_stats_highbd)(int wiener_win, const uint8_t *dgd8, const uint8_t *src8, int16_t *dgd_avg, int16_t *src_avg, int h_start, int h_end, int v_start, int v_end, int dgd_stride, int src_stride, int64_t *M, int64_t *H, aom_bit_depth_t bit_depth);
 
 void av1_convolve_2d_scale_c(const uint8_t *src, int src_stride, uint8_t *dst, int dst_stride, int w, int h, const InterpFilterParams *filter_params_x, const InterpFilterParams *filter_params_y, const int subpel_x_qn, const int x_step_qn, const int subpel_y_qn, const int y_step_qn, ConvolveParams *conv_params);
 void av1_convolve_2d_scale_sse4_1(const uint8_t *src, int src_stride, uint8_t *dst, int dst_stride, int w, int h, const InterpFilterParams *filter_params_x, const InterpFilterParams *filter_params_y, const int subpel_x_qn, const int x_step_qn, const int subpel_y_qn, const int y_step_qn, ConvolveParams *conv_params);
@@ -879,6 +879,10 @@ cfl_subtract_average_fn cfl_get_subtract_average_fn_sse2(TX_SIZE tx_size);
 cfl_subtract_average_fn cfl_get_subtract_average_fn_avx2(TX_SIZE tx_size);
 RTCD_EXTERN cfl_subtract_average_fn (*cfl_get_subtract_average_fn)(TX_SIZE tx_size);
 
+bool resize_vert_dir_c(uint8_t *intbuf, uint8_t *output, int out_stride, int height, int height2, int width2, int start_col);
+bool resize_vert_dir_avx2(uint8_t *intbuf, uint8_t *output, int out_stride, int height, int height2, int width2, int start_col);
+RTCD_EXTERN bool (*resize_vert_dir)(uint8_t *intbuf, uint8_t *output, int out_stride, int height, int height2, int width2, int start_col);
+
 void av1_rtcd(void);
 
 #ifdef RTCD_C
@@ -1236,6 +1240,8 @@ static void setup_rtcd_internal(void)
     cfl_get_subtract_average_fn = cfl_get_subtract_average_fn_c;
     if (flags & HAS_SSE2) cfl_get_subtract_average_fn = cfl_get_subtract_average_fn_sse2;
     if (flags & HAS_AVX2) cfl_get_subtract_average_fn = cfl_get_subtract_average_fn_avx2;
+    resize_vert_dir = resize_vert_dir_c;
+    if (flags & HAS_AVX2) resize_vert_dir = resize_vert_dir_avx2;
 }
 #endif
 

@@ -37,6 +37,7 @@
 #include "av1/encoder/av1_quantize.h"
 #include "av1/encoder/block.h"
 #include "av1/encoder/context_tree.h"
+#include "av1/encoder/enc_enums.h"
 #include "av1/encoder/encodemb.h"
 #include "av1/encoder/external_partition.h"
 #include "av1/encoder/firstpass.h"
@@ -74,7 +75,6 @@
 #endif
 
 #include "aom/internal/aom_codec_internal.h"
-#include "aom_util/aom_thread.h"
 
 #ifdef __cplusplus
 extern "C" {

@@ -1044,10 +1044,13 @@ void av1_compute_stats_c(int wiener_win, const uint8_t *dgd, const uint8_t *src,
 
 #if CONFIG_AV1_HIGHBITDEPTH
 void av1_compute_stats_highbd_c(int wiener_win, const uint8_t *dgd8,
-                                const uint8_t *src8, int h_start, int h_end,
+                                const uint8_t *src8, int16_t *dgd_avg,
+                                int16_t *src_avg, int h_start, int h_end,
                                 int v_start, int v_end, int dgd_stride,
                                 int src_stride, int64_t *M, int64_t *H,
                                 aom_bit_depth_t bit_depth) {
+  (void)dgd_avg;
+  (void)src_avg;
   int i, j, k, l;
   int32_t Y[WIENER_WIN2];
   const int wiener_win2 = wiener_win * wiener_win;
@@ -1659,9 +1662,10 @@ static AOM_INLINE void search_wiener(
     // functions. Optimize intrinsics of HBD design similar to LBD (i.e.,
     // pre-calculate d and s buffers and avoid most of the C operations).
     av1_compute_stats_highbd(reduced_wiener_win, rsc->dgd_buffer,
-                             rsc->src_buffer, limits->h_start, limits->h_end,
-                             limits->v_start, limits->v_end, rsc->dgd_stride,
-                             rsc->src_stride, M, H, cm->seq_params->bit_depth);
+                             rsc->src_buffer, rsc->dgd_avg, rsc->src_avg,
+                             limits->h_start, limits->h_end, limits->v_start,
+                             limits->v_end, rsc->dgd_stride, rsc->src_stride, M,
+                             H, cm->seq_params->bit_depth);
   } else {
     av1_compute_stats(reduced_wiener_win, rsc->dgd_buffer, rsc->src_buffer,
                       rsc->dgd_avg, rsc->src_avg, limits->h_start,
@@ -2081,10 +2085,9 @@ void av1_pick_filter_restoration(const YV12_BUFFER_CONFIG *src, AV1_COMP *cpi) {
   // and height aligned to multiple of 16 is considered for intrinsic purpose.
   rsc.dgd_avg = NULL;
   rsc.src_avg = NULL;
-#if HAVE_AVX2 || HAVE_NEON
-  // The buffers allocated below are used during Wiener filter processing of low
-  // bitdepth path. Hence, allocate the same when Wiener filter is enabled in
-  // low bitdepth path.
+#if HAVE_AVX2
+  // The buffers allocated below are used during Wiener filter processing.
+  // Hence, allocate the same when Wiener filter is enabled.
   if (!cpi->sf.lpf_sf.disable_wiener_filter && !highbd) {
     const int buf_size = sizeof(*cpi->pick_lr_ctxt.dgd_avg) * 6 *
                          RESTORATION_UNITSIZE_MAX * RESTORATION_UNITSIZE_MAX;
@@ -2221,7 +2224,7 @@ void av1_pick_filter_restoration(const YV12_BUFFER_CONFIG *src, AV1_COMP *cpi) {
                               best_luma_unit_size);
   }
 
-#if HAVE_AVX || HAVE_NEON
+#if HAVE_AVX2
   if (!cpi->sf.lpf_sf.disable_wiener_filter && !highbd) {
     aom_free(cpi->pick_lr_ctxt.dgd_avg);
     cpi->pick_lr_ctxt.dgd_avg = NULL;
