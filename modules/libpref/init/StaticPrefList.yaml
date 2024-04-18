@@ -3097,6 +3097,15 @@
   value: true
   mirror: always
 
+# 0 no-op
+# 1 free dirty mozjemalloc pages
+# 2 trigger memory-pressure/heap-minimize
+# 3 trigger memory-pressure/low-memory
+- name: dom.memory.memory_pressure_on_background
+  type: uint32_t
+  value: 0
+  mirror: always
+
 # Enable meta-viewport support in remote APZ-enabled frames.
 - name: dom.meta-viewport.enabled
   type: RelaxedAtomicBool

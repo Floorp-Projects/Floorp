@@ -2781,6 +2781,20 @@ mozilla::ipc::IPCResult ContentChild::RecvNotifyProcessPriorityChanged(
       moz_set_max_dirty_page_modifier(4);
     } else if (mProcessPriority == hal::PROCESS_PRIORITY_BACKGROUND) {
       moz_set_max_dirty_page_modifier(-2);
+
+#if defined(MOZ_MEMORY)
+      if (StaticPrefs::dom_memory_memory_pressure_on_background() == 1) {
+        jemalloc_free_dirty_pages();
+      }
+#endif
+      if (StaticPrefs::dom_memory_memory_pressure_on_background() == 2) {
+        nsCOMPtr<nsIObserverService> obsServ = services::GetObserverService();
+        obsServ->NotifyObservers(nullptr, "memory-pressure", u"heap-minimize");
+      } else if (StaticPrefs::dom_memory_memory_pressure_on_background() == 3) {
+        nsCOMPtr<nsIObserverService> obsServ = services::GetObserverService();
+        obsServ->NotifyObservers(nullptr, "memory-pressure", u"low-memory");
+      }
+
     } else {
       moz_set_max_dirty_page_modifier(0);
     }
