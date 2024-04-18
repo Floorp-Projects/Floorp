@@ -198,7 +198,7 @@ def create_parser(mach_interface=False):
     add_arg(
         "--gecko-profile-interval",
         dest="gecko_profile_interval",
-        type=int,
+        type=float,
         help="How frequently to take samples (milliseconds)",
     )
     add_arg(
