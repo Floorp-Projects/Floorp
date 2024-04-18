@@ -1,15 +1,18 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # Adapted from https://github.com/tc39/test262/blob/main/tools/generation/test/run.py
 
 import contextlib
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 
-testDir = os.path.dirname(os.path.relpath(__file__))
-OUT_DIR = os.path.join(testDir, "out")
+from mozunit import main
+
+testDir = os.path.dirname(os.path.abspath(__file__))
+OUT_DIR = os.path.abspath(os.path.join(testDir, "..", "out"))
 EXPECTED_DIR = os.path.join(testDir, "expected")
 ex = os.path.join(testDir, "..", "test262-export.py")
 importExec = os.path.join(testDir, "..", "test262-update.py")
@@ -29,8 +32,12 @@ class TestExport(unittest.TestCase):
     maxDiff = None
 
     def exportScript(self):
-        relpath = os.path.relpath(os.path.join(testDir, "fixtures", "export"))
-        sp = subprocess.Popen([ex, relpath, "--out", OUT_DIR], stdout=subprocess.PIPE)
+        abspath = os.path.abspath(os.path.join(testDir, "fixtures", "export"))
+        sp = subprocess.Popen(
+            [sys.executable, os.path.abspath(ex), abspath, "--out", OUT_DIR],
+            stdout=subprocess.PIPE,
+            cwd=os.path.join(testDir, ".."),
+        )
         stdout, stderr = sp.communicate()
         return dict(stdout=stdout, stderr=stderr, returncode=sp.returncode)
 
@@ -94,21 +101,21 @@ class TestExport(unittest.TestCase):
 
     def compareTrees(self, targetName):
         expectedPath = os.path.join(EXPECTED_DIR, targetName)
-        actualPath = OUT_DIR
+        actualPath = os.path.join(OUT_DIR, "tests", targetName)
 
         expectedFiles = self.getFiles(expectedPath)
         actualFiles = self.getFiles(actualPath)
 
         self.assertListEqual(
-            map(lambda x: os.path.relpath(x, expectedPath), expectedFiles),
-            map(lambda x: os.path.relpath(x, actualPath), actualFiles),
+            [os.path.relpath(x, expectedPath) for x in expectedFiles],
+            [os.path.relpath(x, actualPath) for x in actualFiles],
         )
 
         for expectedFile, actualFile in zip(expectedFiles, actualFiles):
             with open(expectedFile) as expectedHandle:
                 with open(actualFile) as actualHandle:
                     self.assertMultiLineEqual(
-                        expectedHandle.read(), actualHandle.read()
+                        expectedHandle.read(), actualHandle.read(), expectedFile
                     )
 
     def compareContents(self, output, filePath, folder):
@@ -126,14 +133,15 @@ class TestExport(unittest.TestCase):
         self.assertEqual(result["returncode"], 0)
         self.compareTrees("export")
 
-    def test_import_local(self):
-        output, returncode, folder = self.importLocal()
-        self.assertEqual(returncode, 0)
-        self.compareTrees(os.path.join("import", "files"))
-        self.compareContents(
-            output, os.path.join(testDir, "expected", "import", "output.txt"), folder
-        )
+    # Test broken due to bug 1793668.
+    # def test_import_local(self):
+    #     output, returncode, folder = self.importLocal()
+    #     self.assertEqual(returncode, 0)
+    #     self.compareTrees(os.path.join("import", "files"))
+    #     self.compareContents(
+    #         output, os.path.join(testDir, "expected", "import", "output.txt"), folder
+    #     )
 
 
 if __name__ == "__main__":
-    unittest.main()
+    main()

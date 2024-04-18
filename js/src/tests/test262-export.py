@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
 # This Source Code Form is subject to the terms of the Mozilla Public
@@ -9,6 +9,7 @@ import os
 import re
 import shutil
 import sys
+from typing import Any, Optional
 
 import yaml
 
@@ -26,11 +27,11 @@ SUPPORT_FILES = set(
 )
 
 FRONTMATTER_WRAPPER_PATTERN = re.compile(
-    r"/\*\---\n([\s]*)((?:\s|\S)*)[\n\s*]---\*/", flags=re.DOTALL
+    rb"/\*\---\n([\s]*)((?:\s|\S)*)[\n\s*]---\*/", flags=re.DOTALL
 )
 
 
-def convertTestFile(source, includes):
+def convertTestFile(source: bytes, includes: "list[str]") -> bytes:
     """
     Convert a jstest test to a compatible Test262 test file.
     """
@@ -42,7 +43,7 @@ def convertTestFile(source, includes):
     return source
 
 
-def convertReportCompare(source):
+def convertReportCompare(source: bytes) -> bytes:
     """
     Captures all the reportCompare and convert them accordingly.
 
@@ -53,35 +54,49 @@ def convertReportCompare(source):
     equivalent in Test262
     """
 
-    def replaceFn(matchobj):
-        actual = matchobj.group(1)
-        expected = matchobj.group(2)
+    def replaceFn(matchobj: "re.Match[bytes]") -> bytes:
+        actual: bytes = matchobj.group(1)
+        expected: bytes = matchobj.group(2)
 
-        if actual == expected and actual in ["0", "true", "null"]:
-            return ""
+        if actual == expected and actual in [b"0", b"true", b"null"]:
+            return b""
 
         return matchobj.group()
 
     newSource = re.sub(
-        r".*reportCompare\s*\(\s*(\w*)\s*,\s*(\w*)\s*(,\s*\S*)?\s*\)\s*;*\s*",
+        rb".*reportCompare\s*\(\s*(\w*)\s*,\s*(\w*)\s*(,\s*\S*)?\s*\)\s*;*\s*",
         replaceFn,
         source,
     )
 
-    return re.sub(r"\breportCompare\b", "assert.sameValue", newSource)
+    return re.sub(rb"\breportCompare\b", b"assert.sameValue", newSource)
 
 
-def fetchReftestEntries(reftest):
+class ReftestEntry:
+    def __init__(
+        self,
+        features: "list[str]",
+        error: Optional[str],
+        module: bool,
+        info: Optional[str],
+    ):
+        self.features: list[str] = features
+        self.error: Optional[str] = error
+        self.module: bool = module
+        self.info: Optional[str] = info
+
+
+def fetchReftestEntries(reftest: str) -> ReftestEntry:
     """
     Collects and stores the entries from the reftest header.
     """
 
     # TODO: fails, slow, skip, random, random-if
 
-    features = []
-    error = None
-    comments = None
-    module = False
+    features: list[str] = []
+    error: Optional[str] = None
+    comments: Optional[str] = None
+    module: bool = False
 
     # should capture conditions to skip
     matchesSkip = re.search(r"skip-if\((.*)\)", reftest)
@@ -114,21 +129,22 @@ def fetchReftestEntries(reftest):
     if matchesComments:
         comments = matchesComments.group(1)
 
-    return {"features": features, "error": error, "module": module, "info": comments}
+    return ReftestEntry(features=features, error=error, module=module, info=comments)
 
 
-def parseHeader(source):
+def parseHeader(source: bytes) -> "tuple[bytes, Optional[ReftestEntry]]":
     """
     Parse the source to return it with the extracted the header
     """
     from lib.manifest import TEST_HEADER_PATTERN_INLINE
 
     # Bail early if we do not start with a single comment.
-    if not source.startswith("//"):
-        return (source, {})
+    if not source.startswith(b"//"):
+        return (source, None)
 
     # Extract the token.
-    part, _, _ = source.partition("\n")
+    part, _, rest = source.partition(b"\n")
+    part = part.decode("utf-8")
     matches = TEST_HEADER_PATTERN_INLINE.match(part)
 
     if matches and matches.group(0):
@@ -136,12 +152,12 @@ def parseHeader(source):
 
         # Remove the found header from the source;
         # Fetch and return the reftest entries
-        return (source.replace(reftest + "\n", ""), fetchReftestEntries(reftest))
+        return (rest, fetchReftestEntries(reftest))
 
-    return (source, {})
+    return (source, None)
 
 
-def extractMeta(source):
+def extractMeta(source: bytes) -> "dict[str, Any]":
     """
     Capture the frontmatter metadata as yaml if it exists.
     Returns a new dict if it doesn't.
@@ -153,12 +169,12 @@ def extractMeta(source):
 
     indent, frontmatter_lines = match.groups()
 
-    unindented = re.sub("^%s" % indent, "", frontmatter_lines)
+    unindented = re.sub(b"^%s" % indent, b"", frontmatter_lines)
 
     return yaml.safe_load(unindented)
 
 
-def updateMeta(source, includes):
+def updateMeta(source: bytes, includes: "list[str]") -> bytes:
     """
     Captures the reftest meta and a pre-existing meta if any and merge them
     into a single dict.
@@ -179,7 +195,7 @@ def updateMeta(source, includes):
     return insertMeta(source, properData)
 
 
-def cleanupMeta(meta):
+def cleanupMeta(meta: "dict[str, Any]") -> "dict[str, Any]":
     """
     Clean up all the frontmatter meta tags. This is not a lint tool, just a
     simple cleanup to remove trailing spaces and duplicate entries from lists.
@@ -217,7 +233,11 @@ def cleanupMeta(meta):
     return meta
 
 
-def mergeMeta(reftest, frontmatter, includes):
+def mergeMeta(
+    reftest: "Optional[ReftestEntry]",
+    frontmatter: "dict[str, Any]",
+    includes: "list[str]",
+) -> "dict[str, Any]":
     """
     Merge the metadata from reftest and an existing frontmatter and populate
     required frontmatter fields properly.
@@ -225,16 +245,22 @@ def mergeMeta(reftest, frontmatter, includes):
 
     # Merge the meta from reftest to the frontmatter
 
-    if "features" in reftest:
-        frontmatter.setdefault("features", []).extend(reftest.get("features", []))
+    # Add the shell specific includes
+    if includes:
+        frontmatter["includes"] = list(includes)
+
+    if not reftest:
+        return frontmatter
+
+    frontmatter.setdefault("features", []).extend(reftest.features)
 
     # Only add the module flag if the value from reftest is truish
-    if reftest.get("module"):
+    if reftest.module:
         frontmatter.setdefault("flags", []).append("module")
 
     # Add any comments to the info tag
-    info = reftest.get("info")
-    if info:
+    if reftest.info:
+        info = reftest.info
         # Open some space in an existing info text
         if "info" in frontmatter:
             frontmatter["info"] += "\n\n  \\%s" % info
@@ -242,8 +268,8 @@ def mergeMeta(reftest, frontmatter, includes):
             frontmatter["info"] = info
 
     # Set the negative flags
-    if "error" in reftest:
-        error = reftest["error"]
+    if reftest.error:
+        error = reftest.error
         if "negative" not in frontmatter:
             frontmatter["negative"] = {
                 # This code is assuming error tags are early errors, but they
@@ -262,54 +288,50 @@ def mergeMeta(reftest, frontmatter, includes):
                 % (error, frontmatter["negative"]["type"])
             )
 
-    # Add the shell specific includes
-    if includes:
-        frontmatter["includes"] = list(includes)
-
     return frontmatter
 
 
-def insertCopyrightLines(source):
+def insertCopyrightLines(source: bytes) -> bytes:
     """
     Insert the copyright lines into the file.
     """
     from datetime import date
 
-    lines = []
+    lines: list[bytes] = []
 
-    if not re.match(r"\/\/\s+Copyright.*\. All rights reserved.", source):
+    if not re.match(rb"\/\/\s+Copyright.*\. All rights reserved.", source):
         year = date.today().year
         lines.append(
-            "// Copyright (C) %s Mozilla Corporation. All rights reserved." % year
+            b"// Copyright (C) %d Mozilla Corporation. All rights reserved." % year
         )
         lines.append(
-            "// This code is governed by the BSD license found in the LICENSE file."
+            b"// This code is governed by the BSD license found in the LICENSE file."
         )
-        lines.append("\n")
+        lines.append(b"\n")
 
-    return "\n".join(lines) + source
+    return b"\n".join(lines) + source
 
 
-def insertMeta(source, frontmatter):
+def insertMeta(source: bytes, frontmatter: "dict[str, Any]") -> bytes:
     """
     Insert the formatted frontmatter into the file, use the current existing
     space if any
     """
-    lines = []
+    lines: list[bytes] = []
 
-    lines.append("/*---")
+    lines.append(b"/*---")
 
     for key, value in frontmatter.items():
         if key in ("description", "info"):
-            lines.append("%s: |" % key)
+            lines.append(b"%s: |" % key.encode("ascii"))
             lines.append(
-                "  "
+                b"  "
                 + yaml.dump(
                     value,
                     encoding="utf8",
                 )
                 .strip()
-                .replace("\n...", "")
+                .replace(b"\n...", b"")
             )
         else:
             lines.append(
@@ -318,19 +340,19 @@ def insertMeta(source, frontmatter):
                 ).strip()
             )
 
-    lines.append("---*/")
+    lines.append(b"---*/")
 
     match = FRONTMATTER_WRAPPER_PATTERN.search(source)
 
     if match:
-        return source.replace(match.group(0), "\n".join(lines))
+        return source.replace(match.group(0), b"\n".join(lines))
     else:
-        return "\n".join(lines) + source
+        return b"\n".join(lines) + source
 
 
-def findAndCopyIncludes(dirPath, baseDir, includeDir):
+def findAndCopyIncludes(dirPath: str, baseDir: str, includeDir: str) -> "list[str]":
     relPath = os.path.relpath(dirPath, baseDir)
-    includes = []
+    includes: list[str] = []
 
     # Recurse down all folders in the relative path until
     # we reach the base directory of shell.js include files.
@@ -365,13 +387,11 @@ def findAndCopyIncludes(dirPath, baseDir, includeDir):
     return includes
 
 
-def exportTest262(args):
-    outDir = os.path.abspath(args.out)
-    providedSrcs = args.src
-    includeShell = args.exportshellincludes
-    baseDir = os.getcwd()
-
+def exportTest262(
+    outDir: str, providedSrcs: "list[str]", includeShell: bool, baseDir: str
+):
     # Create the output directory from scratch.
+    print(f"Generating output in {os.path.abspath(outDir)}")
     if os.path.isdir(outDir):
         shutil.rmtree(outDir)
 
@@ -383,6 +403,8 @@ def exportTest262(args):
     # Go through each source path
     for providedSrc in providedSrcs:
         src = os.path.abspath(providedSrc)
+        if not os.path.isdir(src):
+            print(f"Did not find directory {src}")
         # the basename of the path will be used in case multiple "src" arguments
         # are passed in to create an output directory for each "src".
         basename = os.path.basename(src)
@@ -463,6 +485,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "src", nargs="+", help="Source folder with test files to export"
     )
-    parser.set_defaults(func=exportTest262)
     args = parser.parse_args()
-    args.func(args)
+    exportTest262(
+        os.path.abspath(args.out), args.src, args.exportshellincludes, os.getcwd()
+    )
