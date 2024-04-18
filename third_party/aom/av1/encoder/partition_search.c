@@ -2323,8 +2323,9 @@ static void pick_sb_modes_nonrd(AV1_COMP *const cpi, TileDataEnc *tile_data,
   }
   if (cpi->sf.rt_sf.skip_cdef_sb) {
     // cdef_strength is initialized to 1 which means skip_cdef, and is updated
-    // here. Check to see is skipping cdef is allowed.
-    // Always allow cdef_skip for seg_skip = 1.
+    // here. Check to see is skipping cdef is allowed. Never skip on slide/scene
+    // change, near a key frame, or when color sensitivity is set. Always allow
+    // cdef_skip for seg_skip = 1.
     const int allow_cdef_skipping =
         seg_skip ||
         (cpi->rc.frames_since_key > 10 && !cpi->rc.high_source_sad &&
@@ -2338,8 +2339,16 @@ static void pick_sb_modes_nonrd(AV1_COMP *const cpi, TileDataEnc *tile_data,
     MB_MODE_INFO **mi_sb =
         cm->mi_params.mi_grid_base +
         get_mi_grid_idx(&cm->mi_params, mi_row_sb, mi_col_sb);
-    // Do not skip if intra or new mv is picked, or color sensitivity is set.
-    // Never skip on slide/scene change.
+    const int is_720p_or_larger = AOMMIN(cm->width, cm->height) >= 720;
+    unsigned int thresh_spatial_var =
+        (cpi->oxcf.speed >= 11 && !is_720p_or_larger &&
+         cpi->oxcf.tune_cfg.content != AOM_CONTENT_SCREEN)
+            ? 400
+            : UINT_MAX;
+    // For skip_cdef_sb = 1: do not skip if allow_cdef_skipping is false or
+    // intra or new mv is picked, with possible conidition on spatial variance.
+    // For skip_cdef_sb >= 2: more aggressive mode to always skip unless
+    // allow_cdef_skipping is false and source_variance is non-zero.
     if (cpi->sf.rt_sf.skip_cdef_sb >= 2) {
       mi_sb[0]->cdef_strength =
           mi_sb[0]->cdef_strength &&
@@ -2347,7 +2356,8 @@ static void pick_sb_modes_nonrd(AV1_COMP *const cpi, TileDataEnc *tile_data,
     } else {
       mi_sb[0]->cdef_strength =
           mi_sb[0]->cdef_strength && allow_cdef_skipping &&
-          !(mbmi->mode < INTRA_MODES || mbmi->mode == NEWMV);
+          !(x->source_variance < thresh_spatial_var &&
+            (mbmi->mode < INTRA_MODES || mbmi->mode == NEWMV));
     }
     // Store in the pickmode context.
     ctx->mic.cdef_strength = mi_sb[0]->cdef_strength;

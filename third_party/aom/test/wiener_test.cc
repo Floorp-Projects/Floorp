@@ -397,6 +397,12 @@ INSTANTIATE_TEST_SUITE_P(NEON, WienerTest,
                          ::testing::Values(av1_compute_stats_neon));
 #endif  // HAVE_NEON
 
+#if HAVE_SVE
+
+INSTANTIATE_TEST_SUITE_P(SVE, WienerTest,
+                         ::testing::Values(av1_compute_stats_sve));
+#endif  // HAVE_SVE
+
 }  // namespace wiener_lowbd
 
 #if CONFIG_AV1_HIGHBITDEPTH
@@ -514,25 +520,27 @@ static void compute_stats_highbd_win_opt_c(int wiener_win, const uint8_t *dgd8,
 }
 
 void compute_stats_highbd_opt_c(int wiener_win, const uint8_t *dgd,
-                                const uint8_t *src, int h_start, int h_end,
-                                int v_start, int v_end, int dgd_stride,
-                                int src_stride, int64_t *M, int64_t *H,
-                                aom_bit_depth_t bit_depth) {
+                                const uint8_t *src, int16_t *d, int16_t *s,
+                                int h_start, int h_end, int v_start, int v_end,
+                                int dgd_stride, int src_stride, int64_t *M,
+                                int64_t *H, aom_bit_depth_t bit_depth) {
   if (wiener_win == WIENER_WIN || wiener_win == WIENER_WIN_CHROMA) {
     compute_stats_highbd_win_opt_c(wiener_win, dgd, src, h_start, h_end,
                                    v_start, v_end, dgd_stride, src_stride, M, H,
                                    bit_depth);
   } else {
-    av1_compute_stats_highbd_c(wiener_win, dgd, src, h_start, h_end, v_start,
-                               v_end, dgd_stride, src_stride, M, H, bit_depth);
+    av1_compute_stats_highbd_c(wiener_win, dgd, src, d, s, h_start, h_end,
+                               v_start, v_end, dgd_stride, src_stride, M, H,
+                               bit_depth);
   }
 }
 
 static const int kIterations = 100;
 typedef void (*compute_stats_Func)(int wiener_win, const uint8_t *dgd,
-                                   const uint8_t *src, int h_start, int h_end,
-                                   int v_start, int v_end, int dgd_stride,
-                                   int src_stride, int64_t *M, int64_t *H,
+                                   const uint8_t *src, int16_t *d, int16_t *s,
+                                   int h_start, int h_end, int v_start,
+                                   int v_end, int dgd_stride, int src_stride,
+                                   int64_t *M, int64_t *H,
                                    aom_bit_depth_t bit_depth);
 
 typedef std::tuple<const compute_stats_Func> WienerTestParam;
@@ -546,11 +554,17 @@ class WienerTestHighbd : public ::testing::TestWithParam<WienerTestParam> {
     dgd_buf = (uint16_t *)aom_memalign(
         32, MAX_DATA_BLOCK * MAX_DATA_BLOCK * sizeof(*dgd_buf));
     ASSERT_NE(dgd_buf, nullptr);
+    const size_t buf_size =
+        sizeof(*buf) * 6 * RESTORATION_UNITSIZE_MAX * RESTORATION_UNITSIZE_MAX;
+    buf = (int16_t *)aom_memalign(32, buf_size);
+    ASSERT_NE(buf, nullptr);
+    memset(buf, 0, buf_size);
     target_func_ = GET_PARAM(0);
   }
   void TearDown() override {
     aom_free(src_buf);
     aom_free(dgd_buf);
+    aom_free(buf);
   }
   void RunWienerTest(const int32_t wiener_win, int32_t run_times,
                      aom_bit_depth_t bit_depth);
@@ -562,6 +576,7 @@ class WienerTestHighbd : public ::testing::TestWithParam<WienerTestParam> {
   libaom_test::ACMRandom rng_;
   uint16_t *src_buf;
   uint16_t *dgd_buf;
+  int16_t *buf;
 };
 
 void WienerTestHighbd::RunWienerTest(const int32_t wiener_win,
@@ -589,6 +604,9 @@ void WienerTestHighbd::RunWienerTest(const int32_t wiener_win,
   const int dgd_stride = h_end;
   const int src_stride = MAX_DATA_BLOCK;
   const int iters = run_times == 1 ? kIterations : 2;
+  int16_t *dgd_avg = buf;
+  int16_t *src_avg =
+      buf + (3 * RESTORATION_UNITSIZE_MAX * RESTORATION_UNITSIZE_MAX);
   for (int iter = 0; iter < iters && !HasFatalFailure(); ++iter) {
     for (int i = 0; i < MAX_DATA_BLOCK * MAX_DATA_BLOCK; ++i) {
       dgd_buf[i] = rng_.Rand16() % (1 << bit_depth);
@@ -601,16 +619,17 @@ void WienerTestHighbd::RunWienerTest(const int32_t wiener_win,
     aom_usec_timer timer;
     aom_usec_timer_start(&timer);
     for (int i = 0; i < run_times; ++i) {
-      av1_compute_stats_highbd_c(wiener_win, dgd8, src8, h_start, h_end,
-                                 v_start, v_end, dgd_stride, src_stride, M_ref,
-                                 H_ref, bit_depth);
+      av1_compute_stats_highbd_c(wiener_win, dgd8, src8, dgd_avg, src_avg,
+                                 h_start, h_end, v_start, v_end, dgd_stride,
+                                 src_stride, M_ref, H_ref, bit_depth);
     }
     aom_usec_timer_mark(&timer);
     const double time1 = static_cast<double>(aom_usec_timer_elapsed(&timer));
     aom_usec_timer_start(&timer);
     for (int i = 0; i < run_times; ++i) {
-      target_func_(wiener_win, dgd8, src8, h_start, h_end, v_start, v_end,
-                   dgd_stride, src_stride, M_test, H_test, bit_depth);
+      target_func_(wiener_win, dgd8, src8, dgd_avg, src_avg, h_start, h_end,
+                   v_start, v_end, dgd_stride, src_stride, M_test, H_test,
+                   bit_depth);
     }
     aom_usec_timer_mark(&timer);
     const double time2 = static_cast<double>(aom_usec_timer_elapsed(&timer));
@@ -657,6 +676,9 @@ void WienerTestHighbd::RunWienerTest_ExtremeValues(const int32_t wiener_win,
   const int dgd_stride = h_end;
   const int src_stride = MAX_DATA_BLOCK;
   const int iters = 1;
+  int16_t *dgd_avg = buf;
+  int16_t *src_avg =
+      buf + (3 * RESTORATION_UNITSIZE_MAX * RESTORATION_UNITSIZE_MAX);
   for (int iter = 0; iter < iters && !HasFatalFailure(); ++iter) {
     // Fill with alternating extreme values to maximize difference with
     // the average.
@@ -668,12 +690,13 @@ void WienerTestHighbd::RunWienerTest_ExtremeValues(const int32_t wiener_win,
         dgd_buf + wiener_halfwin * MAX_DATA_BLOCK + wiener_halfwin);
     const uint8_t *src8 = CONVERT_TO_BYTEPTR(src_buf);
 
-    av1_compute_stats_highbd_c(wiener_win, dgd8, src8, h_start, h_end, v_start,
-                               v_end, dgd_stride, src_stride, M_ref, H_ref,
-                               bit_depth);
+    av1_compute_stats_highbd_c(wiener_win, dgd8, src8, dgd_avg, src_avg,
+                               h_start, h_end, v_start, v_end, dgd_stride,
+                               src_stride, M_ref, H_ref, bit_depth);
 
-    target_func_(wiener_win, dgd8, src8, h_start, h_end, v_start, v_end,
-                 dgd_stride, src_stride, M_test, H_test, bit_depth);
+    target_func_(wiener_win, dgd8, src8, dgd_avg, src_avg, h_start, h_end,
+                 v_start, v_end, dgd_stride, src_stride, M_test, H_test,
+                 bit_depth);
 
     int failed = 0;
     for (int i = 0; i < wiener_win2; ++i) {

@@ -1008,10 +1008,13 @@ static uint16_t highbd_find_average_neon(const uint16_t *src, int src_stride,
 }
 
 void av1_compute_stats_highbd_neon(int wiener_win, const uint8_t *dgd8,
-                                   const uint8_t *src8, int h_start, int h_end,
+                                   const uint8_t *src8, int16_t *dgd_avg,
+                                   int16_t *src_avg, int h_start, int h_end,
                                    int v_start, int v_end, int dgd_stride,
                                    int src_stride, int64_t *M, int64_t *H,
                                    aom_bit_depth_t bit_depth) {
+  (void)dgd_avg;
+  (void)src_avg;
   assert(wiener_win == WIENER_WIN || wiener_win == WIENER_WIN_REDUCED);
 
   const int wiener_halfwin = wiener_win >> 1;

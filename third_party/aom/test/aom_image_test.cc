@@ -9,6 +9,8 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
+#include <climits>
+
 #include "aom/aom_image.h"
 #include "third_party/googletest/src/googletest/include/gtest/gtest.h"
 
@@ -69,4 +71,67 @@ TEST(AomImageTest, AomImgAllocNv12) {
   EXPECT_EQ(img.stride[AOM_PLANE_V], 0);
   EXPECT_EQ(img.planes[AOM_PLANE_V], nullptr);
   aom_img_free(&img);
+}
+
+TEST(AomImageTest, AomImgAllocHugeWidth) {
+  // The stride (0x80000000 * 2) would overflow unsigned int.
+  aom_image_t *image =
+      aom_img_alloc(nullptr, AOM_IMG_FMT_I42016, 0x80000000, 1, 1);
+  ASSERT_EQ(image, nullptr);
+
+  // The stride (0x80000000) would overflow int.
+  image = aom_img_alloc(nullptr, AOM_IMG_FMT_I420, 0x80000000, 1, 1);
+  ASSERT_EQ(image, nullptr);
+
+  // The aligned width (UINT_MAX + 1) would overflow unsigned int.
+  image = aom_img_alloc(nullptr, AOM_IMG_FMT_I420, UINT_MAX, 1, 1);
+  ASSERT_EQ(image, nullptr);
+
+  image = aom_img_alloc_with_border(nullptr, AOM_IMG_FMT_I422, 1, INT_MAX, 1,
+                                    0x40000000, 0);
+  if (image) {
+    uint16_t *y_plane =
+        reinterpret_cast<uint16_t *>(image->planes[AOM_PLANE_Y]);
+    y_plane[0] = 0;
+    y_plane[image->d_w - 1] = 0;
+    aom_img_free(image);
+  }
+
+  image = aom_img_alloc(nullptr, AOM_IMG_FMT_I420, 0x7ffffffe, 1, 1);
+  if (image) {
+    aom_img_free(image);
+  }
+
+  image = aom_img_alloc(nullptr, AOM_IMG_FMT_I420, 285245883, 64, 1);
+  if (image) {
+    aom_img_free(image);
+  }
+
+  image = aom_img_alloc(nullptr, AOM_IMG_FMT_NV12, 285245883, 64, 1);
+  if (image) {
+    aom_img_free(image);
+  }
+
+  image = aom_img_alloc(nullptr, AOM_IMG_FMT_YV12, 285245883, 64, 1);
+  if (image) {
+    aom_img_free(image);
+  }
+
+  image = aom_img_alloc(nullptr, AOM_IMG_FMT_I42016, 65536, 2, 1);
+  if (image) {
+    uint16_t *y_plane =
+        reinterpret_cast<uint16_t *>(image->planes[AOM_PLANE_Y]);
+    y_plane[0] = 0;
+    y_plane[image->d_w - 1] = 0;
+    aom_img_free(image);
+  }
+
+  image = aom_img_alloc(nullptr, AOM_IMG_FMT_I42016, 285245883, 2, 1);
+  if (image) {
+    uint16_t *y_plane =
+        reinterpret_cast<uint16_t *>(image->planes[AOM_PLANE_Y]);
+    y_plane[0] = 0;
+    y_plane[image->d_w - 1] = 0;
+    aom_img_free(image);
+  }
 }

@@ -166,7 +166,7 @@ bool av1_cnn_predict_c(const float **input, int in_width, int in_height, int in_
 void av1_compute_stats_c(int wiener_win, const uint8_t *dgd8, const uint8_t *src8, int16_t *dgd_avg, int16_t *src_avg, int h_start, int h_end, int v_start, int v_end, int dgd_stride, int src_stride, int64_t *M, int64_t *H, int use_downsampled_wiener_stats);
 #define av1_compute_stats av1_compute_stats_c
 
-void av1_compute_stats_highbd_c(int wiener_win, const uint8_t *dgd8, const uint8_t *src8, int h_start, int h_end, int v_start, int v_end, int dgd_stride, int src_stride, int64_t *M, int64_t *H, aom_bit_depth_t bit_depth);
+void av1_compute_stats_highbd_c(int wiener_win, const uint8_t *dgd8, const uint8_t *src8, int16_t *dgd_avg, int16_t *src_avg, int h_start, int h_end, int v_start, int v_end, int dgd_stride, int src_stride, int64_t *M, int64_t *H, aom_bit_depth_t bit_depth);
 #define av1_compute_stats_highbd av1_compute_stats_highbd_c
 
 void av1_convolve_2d_scale_c(const uint8_t *src, int src_stride, uint8_t *dst, int dst_stride, int w, int h, const InterpFilterParams *filter_params_x, const InterpFilterParams *filter_params_y, const int subpel_x_qn, const int x_step_qn, const int subpel_y_qn, const int y_step_qn, ConvolveParams *conv_params);
@@ -623,6 +623,9 @@ cfl_predict_lbd_fn cfl_get_predict_lbd_fn_c(TX_SIZE tx_size);
 
 cfl_subtract_average_fn cfl_get_subtract_average_fn_c(TX_SIZE tx_size);
 #define cfl_get_subtract_average_fn cfl_get_subtract_average_fn_c
+
+bool resize_vert_dir_c(uint8_t *intbuf, uint8_t *output, int out_stride, int height, int height2, int width2, int start_col);
+#define resize_vert_dir resize_vert_dir_c
 
 void av1_rtcd(void);
 

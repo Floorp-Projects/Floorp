@@ -32,6 +32,7 @@
 #include "av1/common/enums.h"
 #include "av1/common/scale.h"
 #include "av1/encoder/bitstream.h"
+#include "av1/encoder/enc_enums.h"
 #include "av1/encoder/encoder.h"
 #include "av1/encoder/encoder_alloc.h"
 #include "av1/encoder/encoder_utils.h"

@@ -20,6 +20,10 @@
 extern "C" {
 #endif
 
+// Filters for factor of 2 downsampling.
+static const int16_t av1_down2_symeven_half_filter[] = { 56, 12, -3, -1 };
+static const int16_t av1_down2_symodd_half_filter[] = { 64, 35, 0, -3 };
+
 bool av1_resize_plane(const uint8_t *input, int height, int width,
                       int in_stride, uint8_t *output, int height2, int width2,
                       int out_stride);
@@ -92,6 +96,12 @@ void av1_calculate_unscaled_superres_size(int *width, int *height, int denom);
 
 void av1_superres_upscale(AV1_COMMON *cm, BufferPool *const pool,
                           bool alloc_pyramid);
+
+bool av1_resize_plane_to_half(const uint8_t *const input, int height, int width,
+                              int in_stride, uint8_t *output, int height2,
+                              int width2, int out_stride);
+
+bool should_resize_by_half(int height, int width, int height2, int width2);
 
 // Returns 1 if a superres upscaled frame is scaled and 0 otherwise.
 static INLINE int av1_superres_scaled(const AV1_COMMON *cm) {

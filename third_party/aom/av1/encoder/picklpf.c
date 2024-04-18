@@ -257,6 +257,8 @@ void av1_pick_filter_level(const YV12_BUFFER_CONFIG *sd, AV1_COMP *cpi,
         inter_frame_multiplier = inter_frame_multiplier << 1;
       else if (cpi->rc.frame_source_sad > 50000)
         inter_frame_multiplier = 3 * (inter_frame_multiplier >> 1);
+    } else if (cpi->sf.rt_sf.use_fast_fixed_part) {
+      inter_frame_multiplier = inter_frame_multiplier << 1;
     }
     // These values were determined by linear fitting the result of the
     // searched level for 8 bit depth:
