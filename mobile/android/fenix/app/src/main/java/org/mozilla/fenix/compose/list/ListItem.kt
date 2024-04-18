@@ -160,16 +160,17 @@ fun FaviconListItem(
 
 /**
  * List item used to display a label and an icon at the beginning with an optional description
- * text and an optional [IconButton] at the end.
+ * text and an optional [IconButton] or [Icon] at the end.
  *
  * @param label The label in the list item.
  * @param description An optional description text below the label.
  * @param onClick Called when the user clicks on the item.
  * @param beforeIconPainter [Painter] used to display an [Icon] before the list item.
  * @param beforeIconDescription Content description of the icon.
- * @param afterIconPainter [Painter] used to display an [IconButton] after the list item.
+ * @param afterIconPainter [Painter] used to display an icon after the list item.
  * @param afterIconDescription Content description of the icon.
- * @param onAfterIconClick Called when the user clicks on the icon.
+ * @param onAfterIconClick Called when the user clicks on the icon. An [IconButton] will be
+ * displayed if this is provided. Otherwise, an [Icon] will be displayed.
  */
 @Composable
 fun IconListItem(
@@ -208,6 +209,13 @@ fun IconListItem(
                         tint = FirefoxTheme.colors.iconPrimary,
                     )
                 }
+            } else if (afterIconPainter != null) {
+                Icon(
+                    painter = afterIconPainter,
+                    contentDescription = afterIconDescription,
+                    modifier = Modifier.padding(end = 16.dp),
+                    tint = FirefoxTheme.colors.iconPrimary,
+                )
             }
         },
     )
@@ -355,7 +363,7 @@ private fun TextListItemWithIconPreview() {
         Box(Modifier.background(FirefoxTheme.colors.layer1)) {
             TextListItem(
                 label = "Label + right icon",
-                iconPainter = painterResource(R.drawable.ic_menu),
+                iconPainter = painterResource(R.drawable.mozac_ic_folder_24),
                 iconDescription = "click me",
                 onIconClick = { println("icon click") },
             )
@@ -367,11 +375,19 @@ private fun TextListItemWithIconPreview() {
 @Preview(name = "IconListItem", uiMode = Configuration.UI_MODE_NIGHT_YES)
 private fun IconListItemPreview() {
     FirefoxTheme {
-        Box(Modifier.background(FirefoxTheme.colors.layer1)) {
+        Column(Modifier.background(FirefoxTheme.colors.layer1)) {
             IconListItem(
                 label = "Left icon list item",
-                beforeIconPainter = painterResource(R.drawable.ic_folder_icon),
+                beforeIconPainter = painterResource(R.drawable.mozac_ic_folder_24),
                 beforeIconDescription = "click me",
+            )
+
+            IconListItem(
+                label = "Left icon list item + right icon",
+                beforeIconPainter = painterResource(R.drawable.mozac_ic_folder_24),
+                beforeIconDescription = "click me",
+                afterIconPainter = painterResource(R.drawable.mozac_ic_chevron_right_24),
+                afterIconDescription = null,
             )
         }
     }
@@ -379,17 +395,17 @@ private fun IconListItemPreview() {
 
 @Composable
 @Preview(
-    name = "IconListItem with an interactable right icon",
+    name = "IconListItem with a right icon and onClicks",
     uiMode = Configuration.UI_MODE_NIGHT_YES,
 )
 private fun IconListItemWithRightIconPreview() {
     FirefoxTheme {
         Box(Modifier.background(FirefoxTheme.colors.layer1)) {
             IconListItem(
-                label = "Left icon list item + right icon",
-                beforeIconPainter = painterResource(R.drawable.ic_folder_icon),
+                label = "IconListItem + right icon + clicks",
+                beforeIconPainter = painterResource(R.drawable.mozac_ic_folder_24),
                 beforeIconDescription = null,
-                afterIconPainter = painterResource(R.drawable.ic_menu),
+                afterIconPainter = painterResource(R.drawable.mozac_ic_ellipsis_vertical_24),
                 afterIconDescription = "click me",
                 onAfterIconClick = { println("icon click") },
             )
@@ -410,14 +426,14 @@ private fun FaviconListItemPreview() {
                 description = "Description text",
                 onClick = { println("list item click") },
                 url = "",
-                iconPainter = painterResource(R.drawable.ic_menu),
+                iconPainter = painterResource(R.drawable.mozac_ic_ellipsis_vertical_24),
                 onIconClick = { println("icon click") },
             )
 
             FaviconListItem(
                 label = "Favicon + painter",
                 description = "Description text",
-                faviconPainter = painterResource(id = R.drawable.ic_tab_collection),
+                faviconPainter = painterResource(id = R.drawable.mozac_ic_collection_24),
                 onClick = { println("list item click") },
                 url = "",
             )
