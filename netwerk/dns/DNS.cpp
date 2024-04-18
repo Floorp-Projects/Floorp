@@ -21,36 +21,6 @@
 namespace mozilla {
 namespace net {
 
-const char* inet_ntop_internal(int af, const void* src, char* dst,
-                               socklen_t size) {
-#ifdef XP_WIN
-  if (af == AF_INET) {
-    struct sockaddr_in s;
-    memset(&s, 0, sizeof(s));
-    s.sin_family = AF_INET;
-    memcpy(&s.sin_addr, src, sizeof(struct in_addr));
-    int result = getnameinfo((struct sockaddr*)&s, sizeof(struct sockaddr_in),
-                             dst, size, nullptr, 0, NI_NUMERICHOST);
-    if (result == 0) {
-      return dst;
-    }
-  } else if (af == AF_INET6) {
-    struct sockaddr_in6 s;
-    memset(&s, 0, sizeof(s));
-    s.sin6_family = AF_INET6;
-    memcpy(&s.sin6_addr, src, sizeof(struct in_addr6));
-    int result = getnameinfo((struct sockaddr*)&s, sizeof(struct sockaddr_in6),
-                             dst, size, nullptr, 0, NI_NUMERICHOST);
-    if (result == 0) {
-      return dst;
-    }
-  }
-  return nullptr;
-#else
-  return inet_ntop(af, src, dst, size);
-#endif
-}
-
 // Copies the contents of a PRNetAddr to a NetAddr.
 // Does not do a ptr safety check!
 void PRNetAddrToNetAddr(const PRNetAddr* prAddr, NetAddr* addr) {
@@ -135,7 +105,7 @@ bool NetAddr::ToStringBuffer(char* buf, uint32_t bufSize) const {
     }
     struct in_addr nativeAddr = {};
     nativeAddr.s_addr = addr->inet.ip;
-    return !!inet_ntop_internal(AF_INET, &nativeAddr, buf, bufSize);
+    return !!inet_ntop(AF_INET, &nativeAddr, buf, bufSize);
   }
   if (addr->raw.family == AF_INET6) {
     if (bufSize < INET6_ADDRSTRLEN) {
@@ -143,7 +113,7 @@ bool NetAddr::ToStringBuffer(char* buf, uint32_t bufSize) const {
     }
     struct in6_addr nativeAddr = {};
     memcpy(&nativeAddr.s6_addr, &addr->inet6.ip, sizeof(addr->inet6.ip.u8));
-    return !!inet_ntop_internal(AF_INET6, &nativeAddr, buf, bufSize);
+    return !!inet_ntop(AF_INET6, &nativeAddr, buf, bufSize);
   }
 #if defined(XP_UNIX)
   if (addr->raw.family == AF_LOCAL) {
