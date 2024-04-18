@@ -54,6 +54,17 @@
   color-scheme: unset;
   background: var(--tabpanel-background-color);
 
+  &[pendingpaint] {
+    background-image: url(chrome://browser/skin/tabbrowser/pendingpaint.png);
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: 30px;
+  }
+
+  browser:is([blank], [pendingpaint]) {
+    opacity: 0;
+  }
+
   browser[type=content] {
     color-scheme: env(-moz-content-preferred-color-scheme);
   }
@@ -76,7 +87,17 @@
   }
 }
 
+.closing-tabs-spacer {
+  pointer-events: none;
+
+  #tabbrowser-arrowscrollbox:not(:hover) > #tabbrowser-arrowscrollbox-periphery > & {
+    transition: width .15s ease-out;
+  }
+}
+
 .tabbrowser-tab {
+  --tab-label-mask-size: 2em;
+
   appearance: none;
   background-color: transparent;
   color: inherit;
@@ -194,72 +215,80 @@
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .tab-throbber[busy] {
+.tab-throbber {
+  &:not([busy]) {
+    display: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
     background-image: url("chrome://browser/skin/tabbrowser/hourglass.svg");
     background-position: center;
     background-repeat: no-repeat;
     -moz-context-properties: fill;
     fill: currentColor;
     opacity: 0.4;
+
+    &[progress] {
+      opacity: 0.8;
+    }
   }
 
-  .tab-throbber[progress] {
-    opacity: 0.8;
+  @media (prefers-reduced-motion: no-preference) {
+    :root[sessionrestored] & {
+      &[busy] {
+        position: relative;
+        overflow: hidden;
+
+        &::before {
+          content: "";
+          position: absolute;
+          background-image: url("chrome://browser/skin/tabbrowser/loading.svg");
+          background-position: left center;
+          background-repeat: no-repeat;
+          width: 480px;
+          height: 100%;
+          animation: tab-throbber-animation 1.05s steps(30) infinite;
+          -moz-context-properties: fill;
+
+          /* XXX: It would be nice to transition between the "connecting" color and the
+             "loading" color (see the `[progress]::before` rule below);
+             however, that currently forces main thread painting. When this is fixed
+             (after WebRender lands), we can do something like
+             `transition: fill 0.333s, opacity 0.333s;` */
+
+          fill: currentColor;
+          opacity: 0.7;
+        }
+
+        &:-moz-locale-dir(rtl)::before {
+          animation-name: tab-throbber-animation-rtl;
+        }
+      }
+
+      &[progress]::before {
+        fill: var(--tab-loading-fill);
+        opacity: 1;
+      }
+
+      #TabsToolbar[brighttext] &[progress]:not([selected])::before {
+        fill: var(--lwt-tab-loading-fill-inactive, #84c1ff);
+      }
+    }
   }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  :root[sessionrestored] .tab-throbber {
-    &[busy] {
-      position: relative;
-      overflow: hidden;
+@keyframes tab-throbber-animation {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-100%); }
+}
 
-      &::before {
-        content: "";
-        position: absolute;
-        background-image: url("chrome://browser/skin/tabbrowser/loading.svg");
-        background-position: left center;
-        background-repeat: no-repeat;
-        width: 480px;
-        height: 100%;
-        animation: tab-throbber-animation 1.05s steps(30) infinite;
-        -moz-context-properties: fill;
+@keyframes tab-throbber-animation-rtl {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(100%); }
+}
 
-        /* XXX: It would be nice to transition between the "connecting" color and the
-           "loading" color (see the `.tab-throbber[progress]::before` rule below);
-           however, that currently forces main thread painting. When this is fixed
-           (after WebRender lands), we can do something like
-           `transition: fill 0.333s, opacity 0.333s;` */
-
-        fill: currentColor;
-        opacity: 0.7;
-      }
-
-      &:-moz-locale-dir(rtl)::before {
-        animation-name: tab-throbber-animation-rtl;
-      }
-    }
-
-    &[progress]::before {
-      fill: var(--tab-loading-fill);
-      opacity: 1;
-    }
-
-    #TabsToolbar[brighttext] &[progress]:not([selected])::before {
-      fill: var(--lwt-tab-loading-fill-inactive, #84c1ff);
-    }
-  }
-
-  @keyframes tab-throbber-animation {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-100%); }
-  }
-
-  @keyframes tab-throbber-animation-rtl {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(100%); }
-  }
+.tab-icon-pending:is(:not([pendingicon]), [busy], [pinned]) {
+  display: none;
 }
 
 :root {
@@ -279,6 +308,11 @@
   -moz-context-properties: fill;
   fill: currentColor;
 
+  /* Apply crisp rendering for favicons at exactly 2dppx resolution */
+  @media (resolution: 2dppx) {
+    image-rendering: -moz-crisp-edges;
+  }
+
   &:not([src]),
   &:-moz-broken {
     content: url("chrome://global/skin/icons/defaultFavicon.svg");
@@ -288,6 +322,22 @@
     animation: var(--tab-sharing-icon-animation);
     animation-delay: -1.5s;
   }
+
+  &[selected]:not([src], [pinned], [crashed], [pictureinpicture]),
+  &:not([src], [pinned], [crashed], [sharing], [pictureinpicture]),
+  &[busy] {
+    display: none;
+  }
+}
+
+.tab-sharing-icon-overlay,
+.tab-icon-overlay {
+  display: none;
+}
+
+.tab-sharing-icon-overlay[sharing]:not([selected]),
+.tab-icon-overlay:is([soundplaying], [muted], [activemedia-blocked], [crashed]) {
+  display: revert;
 }
 
 .tab-sharing-icon-overlay {
@@ -375,8 +425,36 @@
   }
 }
 
+.tab-label-container {
+  overflow: hidden;
+
+  #tabbrowser-tabs:not([secondarytext-unsupported]) & {
+    height: 2.7em;
+  }
+
+  &[pinned] {
+    width: 0;
+  }
+
+  &[textoverflow] {
+    &[labeldirection=ltr]:not([pinned]),
+    &:not([labeldirection], [pinned]):-moz-locale-dir(ltr) {
+      direction: ltr;
+      mask-image: linear-gradient(to left, transparent, black var(--tab-label-mask-size));
+    }
+
+    &[labeldirection=rtl]:not([pinned]),
+    &:not([labeldirection], [pinned]):-moz-locale-dir(rtl) {
+      direction: rtl;
+      mask-image: linear-gradient(to right, transparent, black var(--tab-label-mask-size));
+    }
+  }
+}
+
 .tab-label {
   margin-inline: 0;
+  line-height: 1.7;  /* override 'normal' in case of fallback math fonts with huge metrics */
+  white-space: nowrap;
 }
 
 .tab-close-button {
@@ -387,6 +465,11 @@
   padding: 6px;
   border-radius: var(--tab-border-radius);
   list-style-image: url(chrome://global/skin/icons/close-12.svg);
+
+  &[pinned],
+  #tabbrowser-tabs[closebuttons="activetab"] > #tabbrowser-arrowscrollbox > .tabbrowser-tab > .tab-stack > .tab-content > &:not([selected]) {
+    display: none;
+  }
 }
 
 /* The following rulesets allow showing more of the tab title */
@@ -401,15 +484,24 @@
 }
 
 
-#tabbrowser-tabs:not([secondarytext-unsupported]) .tab-label-container {
-  height: 2.7em;
-}
-
 .tab-secondary-label {
   font-size: .75em;
+  margin: -.3em 0 .3em; /* adjust margins to compensate for line-height of .tab-label */
   opacity: .8;
 
-  #tabbrowser-tabs[secondarytext-unsupported] & {
+  #tabbrowser-tabs[secondarytext-unsupported] &,
+  :root[uidensity=compact] &,
+  &:not([soundplaying], [muted], [activemedia-blocked], [pictureinpicture]),
+  &:not([activemedia-blocked]) > .tab-icon-sound-blocked-label,
+  &[muted][activemedia-blocked] > .tab-icon-sound-blocked-label,
+  &[activemedia-blocked] > .tab-icon-sound-playing-label,
+  &[muted] > .tab-icon-sound-playing-label,
+  &[pictureinpicture] > .tab-icon-sound-playing-label,
+  &[pictureinpicture] > .tab-icon-sound-muted-label,
+  &:not([pictureinpicture]) > .tab-icon-sound-pip-label,
+  &:not([muted]) > .tab-icon-sound-muted-label,
+  &:not([showtooltip]) > .tab-icon-sound-tooltip-label,
+  &[showtooltip] > .tab-icon-sound-label:not(.tab-icon-sound-tooltip-label) {
     display: none;
   }
 
