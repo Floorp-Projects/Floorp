@@ -275,7 +275,12 @@ impl RemoteBrowser {
             )
         })?;
 
-        handler.prepare(&profile, options.args, options.env.unwrap_or_default(), enable_crash_reporter)?;
+        handler.prepare(
+            &profile,
+            options.args,
+            options.env.unwrap_or_default(),
+            enable_crash_reporter,
+        )?;
 
         handler.launch()?;
 

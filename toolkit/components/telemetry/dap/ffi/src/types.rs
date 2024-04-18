@@ -307,7 +307,6 @@ pub struct Report {
     pub helper_encrypted_input_share: HpkeCiphertext,
 }
 
-
 impl Report {
     /// Creates a minimal report for use in tests.
     pub fn new_dummy() -> Self {
@@ -321,8 +320,16 @@ impl Report {
                 time: Time::generate(1),
             },
             public_share: vec![],
-            leader_encrypted_input_share: HpkeCiphertext { config_id: HpkeConfigId(5), enc: vec![1, 2, 3, 4, 5], payload: vec![6, 7, 8, 9, 10] },
-            helper_encrypted_input_share: HpkeCiphertext { config_id: HpkeConfigId(100), enc: enc.into(), payload: payload.into() },
+            leader_encrypted_input_share: HpkeCiphertext {
+                config_id: HpkeConfigId(5),
+                enc: vec![1, 2, 3, 4, 5],
+                payload: vec![6, 7, 8, 9, 10],
+            },
+            helper_encrypted_input_share: HpkeCiphertext {
+                config_id: HpkeConfigId(100),
+                enc: enc.into(),
+                payload: payload.into(),
+            },
         }
     }
 }

@@ -111,8 +111,6 @@ pub enum PointerType {
     Touch,
 }
 
-
-
 #[derive(Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct PointerActionParameters {
     #[serde(rename = "pointerType")]
@@ -338,8 +336,6 @@ pub enum PointerOrigin {
     #[default]
     Viewport,
 }
-
-
 
 // TODO: The custom deserializer can be removed once the support of the legacy
 // ELEMENT key has been removed from Selenium bindings

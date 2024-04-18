@@ -1233,5 +1233,8 @@ pub unsafe extern "C" fn C_GetFunctionList(ppFunctionList: CK_FUNCTION_LIST_PTR_
     CKR_OK
 }
 
-#[cfg_attr(any(target_os = "macos", target_os = "ios"), link(name = "Security", kind = "framework"))]
+#[cfg_attr(
+    any(target_os = "macos", target_os = "ios"),
+    link(name = "Security", kind = "framework")
+)]
 extern "C" {}
