@@ -233,15 +233,3 @@ def set_expiry(config, jobs):
 
         job["expiration-policy"] = expiration_policy
         yield job
-
-
-@transforms.add
-def add_windows_laf_secret_scope(config, jobs):
-    laf_secret = "secrets:get:project/releng/gecko/build/windows-laf-tokens.data"
-    scopes_key = "scopes"
-    for job in jobs:
-        job.setdefault(scopes_key, [])
-        if laf_secret not in job[scopes_key]:
-            job[scopes_key].append(laf_secret)
-
-        yield job
