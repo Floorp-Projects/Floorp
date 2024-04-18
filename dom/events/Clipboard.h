@@ -51,6 +51,8 @@ class Clipboard : public DOMEventTargetHelper {
   // testing purposes.
   static bool ReadTextEnabled(JSContext* aCx, JSObject* aGlobal);
 
+  static Span<const nsLiteralCString> MandatoryDataTypes();
+
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 

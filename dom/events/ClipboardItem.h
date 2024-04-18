@@ -107,6 +107,8 @@ class ClipboardItem final : public nsWrapperCache {
       const Record<nsString, OwningNonNull<Promise>>& aItems,
       const ClipboardItemOptions& aOptions, ErrorResult& aRv);
 
+  static bool Supports(const GlobalObject& aGlobal, const nsAString& aType);
+
   dom::PresentationStyle PresentationStyle() const {
     return mPresentationStyle;
   };

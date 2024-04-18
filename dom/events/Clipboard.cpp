@@ -59,6 +59,19 @@ bool Clipboard::IsTestingPrefEnabledOrHasReadPermission(
                                                 nsGkAtoms::clipboardRead);
 }
 
+// Mandatory data types defined in
+// https://w3c.github.io/clipboard-apis/#mandatory-data-types-x. The types
+// should be in the same order as kNonPlainTextExternalFormats in
+// DataTransfer.
+static const nsLiteralCString kMandatoryDataTypes[] = {
+    nsLiteralCString(kHTMLMime), nsLiteralCString(kTextMime),
+    nsLiteralCString(kPNGImageMime)};
+
+// static
+Span<const nsLiteralCString> Clipboard::MandatoryDataTypes() {
+  return Span<const nsLiteralCString>(kMandatoryDataTypes);
+}
+
 namespace {
 
 /**
@@ -87,16 +100,6 @@ class ClipboardGetCallback : public nsIAsyncClipboardGetCallback {
   RefPtr<Promise> mPromise;
 };
 
-static nsTArray<nsCString> MandatoryDataTypesAsCStrings() {
-  // Mandatory data types defined in
-  // https://w3c.github.io/clipboard-apis/#mandatory-data-types-x. The types
-  // should be in the same order as kNonPlainTextExternalFormats in
-  // DataTransfer.
-  return nsTArray<nsCString>{nsLiteralCString(kHTMLMime),
-                             nsLiteralCString(kTextMime),
-                             nsLiteralCString(kPNGImageMime)};
-}
-
 class ClipboardGetCallbackForRead final : public ClipboardGetCallback {
  public:
   explicit ClipboardGetCallbackForRead(nsIGlobalObject* aGlobal,
@@ -122,7 +125,7 @@ class ClipboardGetCallbackForRead final : public ClipboardGetCallback {
     AutoTArray<RefPtr<ClipboardItem::ItemEntry>, 3> entries;
     // We might reuse the request from DataTransfer created for paste event,
     // which could contain more types that are not in the mandatory list.
-    for (const auto& format : MandatoryDataTypesAsCStrings()) {
+    for (const auto& format : kMandatoryDataTypes) {
       if (flavorList.Contains(format)) {
         auto entry = MakeRefPtr<ClipboardItem::ItemEntry>(
             mGlobal, NS_ConvertUTF8toUTF16(format));
@@ -287,10 +290,13 @@ void Clipboard::RequestRead(Promise* aPromise, ReadRequestType aType,
         return;
       }
 
+      AutoTArray<nsCString, ArrayLength(kMandatoryDataTypes)> types;
+      types.AppendElements(Span<const nsLiteralCString>(kMandatoryDataTypes));
+
       callback = MakeRefPtr<ClipboardGetCallbackForRead>(global, std::move(p));
-      rv = clipboardService->AsyncGetData(
-          MandatoryDataTypesAsCStrings(), nsIClipboard::kGlobalClipboard,
-          owner->GetWindowContext(), &aPrincipal, callback);
+      rv = clipboardService->AsyncGetData(types, nsIClipboard::kGlobalClipboard,
+                                          owner->GetWindowContext(),
+                                          &aPrincipal, callback);
       break;
     }
     case ReadRequestType::eReadText: {
