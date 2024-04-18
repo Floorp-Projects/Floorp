@@ -7,9 +7,10 @@ const { FirefoxBridgeExtensionUtils } = ChromeUtils.importESModule(
   "resource:///modules/FirefoxBridgeExtensionUtils.sys.mjs"
 );
 
-const FIREFOX_SHELL_OPEN_COMMAND_PATH = "firefox\\shell\\open\\command";
-const FIREFOX_PRIVATE_SHELL_OPEN_COMMAND_PATH =
-  "firefox-private\\shell\\open\\command";
+const OLD_FIREFOX_SHELL_OPEN_COMMAND_PATH = `${FirefoxBridgeExtensionUtils.OLD_PUBLIC_PROTOCOL}\\shell\\open\\command`;
+const OLD_FIREFOX_PRIVATE_SHELL_OPEN_COMMAND_PATH = `${FirefoxBridgeExtensionUtils.OLD_PRIVATE_PROTOCOL}\\shell\\open\\command`;
+const FIREFOX_SHELL_OPEN_COMMAND_PATH = `${FirefoxBridgeExtensionUtils.PUBLIC_PROTOCOL}\\shell\\open\\command`;
+const FIREFOX_PRIVATE_SHELL_OPEN_COMMAND_PATH = `${FirefoxBridgeExtensionUtils.PRIVATE_PROTOCOL}\\shell\\open\\command`;
 
 class StubbedRegistryKey {
   #children;
@@ -145,206 +146,274 @@ class StubbedDeleteBridgeProtocolRegistryEntryHelper {
 }
 
 add_task(async function test_DeleteWhenSameFirefoxInstall() {
-  const applicationPath = "testPath";
+  for (let protocols of [
+    [
+      FirefoxBridgeExtensionUtils.OLD_PUBLIC_PROTOCOL,
+      FirefoxBridgeExtensionUtils.OLD_PRIVATE_PROTOCOL,
+      OLD_FIREFOX_SHELL_OPEN_COMMAND_PATH,
+      OLD_FIREFOX_PRIVATE_SHELL_OPEN_COMMAND_PATH,
+    ],
+    [
+      FirefoxBridgeExtensionUtils.PUBLIC_PROTOCOL,
+      FirefoxBridgeExtensionUtils.PRIVATE_PROTOCOL,
+      FIREFOX_SHELL_OPEN_COMMAND_PATH,
+      FIREFOX_PRIVATE_SHELL_OPEN_COMMAND_PATH,
+    ],
+  ]) {
+    let [publicProtocol, privateProtocol, publicPath, privatePath] = protocols;
+    const applicationPath = "testPath";
 
-  const firefoxEntries = new Map();
-  firefoxEntries.set("", `\"${applicationPath}\" -osint -url \"%1\"`);
+    const firefoxEntries = new Map();
+    firefoxEntries.set("", `\"${applicationPath}\" -osint -url \"%1\"`);
 
-  const firefoxProtocolRegKey = new StubbedRegistryKey(
-    new Map(),
-    firefoxEntries
-  );
+    const firefoxProtocolRegKey = new StubbedRegistryKey(
+      new Map(),
+      firefoxEntries
+    );
 
-  const firefoxPrivateEntries = new Map();
-  firefoxPrivateEntries.set(
-    "",
-    `\"${applicationPath}\" -osint -private-window \"%1\"`
-  );
-  const firefoxPrivateProtocolRegKey = new StubbedRegistryKey(
-    new Map(),
-    firefoxPrivateEntries
-  );
+    const firefoxPrivateEntries = new Map();
+    firefoxPrivateEntries.set(
+      "",
+      `\"${applicationPath}\" -osint -private-window \"%1\"`
+    );
+    const firefoxPrivateProtocolRegKey = new StubbedRegistryKey(
+      new Map(),
+      firefoxPrivateEntries
+    );
 
-  const children = new Map();
-  children.set(FIREFOX_SHELL_OPEN_COMMAND_PATH, firefoxProtocolRegKey);
-  children.set(
-    FIREFOX_PRIVATE_SHELL_OPEN_COMMAND_PATH,
-    firefoxPrivateProtocolRegKey
-  );
+    const children = new Map();
+    children.set(publicPath, firefoxProtocolRegKey);
+    children.set(privatePath, firefoxPrivateProtocolRegKey);
 
-  const registryRootKey = new StubbedRegistryKey(children, new Map());
+    const registryRootKey = new StubbedRegistryKey(children, new Map());
 
-  const stubbedDeleteBridgeProtocolRegistryHelper =
-    new StubbedDeleteBridgeProtocolRegistryEntryHelper({
-      applicationPath,
-      registryRootKey,
-    });
+    const stubbedDeleteBridgeProtocolRegistryHelper =
+      new StubbedDeleteBridgeProtocolRegistryEntryHelper({
+        applicationPath,
+        registryRootKey,
+      });
 
-  FirefoxBridgeExtensionUtils.maybeDeleteBridgeProtocolRegistryEntries(
-    stubbedDeleteBridgeProtocolRegistryHelper
-  );
+    FirefoxBridgeExtensionUtils.maybeDeleteBridgeProtocolRegistryEntries(
+      publicProtocol,
+      privateProtocol,
+      stubbedDeleteBridgeProtocolRegistryHelper
+    );
 
-  ok(registryRootKey.wasCloseCalled, "Root key closed");
+    ok(registryRootKey.wasCloseCalled, "Root key closed");
 
-  ok(firefoxProtocolRegKey.wasOpenedForRead, "Firefox key opened");
-  ok(firefoxProtocolRegKey.wasCloseCalled, "Firefox key closed");
-  ok(
-    registryRootKey.isChildDeleted("firefox"),
-    "Firefox protocol registry entry deleted"
-  );
+    ok(firefoxProtocolRegKey.wasOpenedForRead, "Firefox key opened");
+    ok(firefoxProtocolRegKey.wasCloseCalled, "Firefox key closed");
+    ok(
+      registryRootKey.isChildDeleted(publicProtocol),
+      "Firefox protocol registry entry deleted"
+    );
 
-  ok(
-    firefoxPrivateProtocolRegKey.wasOpenedForRead,
-    "Firefox private key opened"
-  );
-  ok(firefoxPrivateProtocolRegKey.wasCloseCalled, "Firefox private key closed");
-  ok(
-    registryRootKey.isChildDeleted("firefox-private"),
-    "Firefox private protocol registry entry deleted"
-  );
+    ok(
+      firefoxPrivateProtocolRegKey.wasOpenedForRead,
+      "Firefox private key opened"
+    );
+    ok(
+      firefoxPrivateProtocolRegKey.wasCloseCalled,
+      "Firefox private key closed"
+    );
+    ok(
+      registryRootKey.isChildDeleted(privateProtocol),
+      "Firefox private protocol registry entry deleted"
+    );
+  }
 });
 
 add_task(async function test_DeleteWhenDifferentFirefoxInstall() {
-  const applicationPath = "testPath";
-  const badApplicationPath = "testPath2";
+  for (let protocols of [
+    [
+      FirefoxBridgeExtensionUtils.OLD_PUBLIC_PROTOCOL,
+      FirefoxBridgeExtensionUtils.OLD_PRIVATE_PROTOCOL,
+      OLD_FIREFOX_SHELL_OPEN_COMMAND_PATH,
+      OLD_FIREFOX_PRIVATE_SHELL_OPEN_COMMAND_PATH,
+    ],
+    [
+      FirefoxBridgeExtensionUtils.PUBLIC_PROTOCOL,
+      FirefoxBridgeExtensionUtils.PRIVATE_PROTOCOL,
+      FIREFOX_SHELL_OPEN_COMMAND_PATH,
+      FIREFOX_PRIVATE_SHELL_OPEN_COMMAND_PATH,
+    ],
+  ]) {
+    let [publicProtocol, privateProtocol, publicPath, privatePath] = protocols;
+    const applicationPath = "testPath";
+    const badApplicationPath = "testPath2";
 
-  const firefoxEntries = new Map();
-  firefoxEntries.set("", `\"${badApplicationPath}\" -osint -url \"%1\"`);
+    const firefoxEntries = new Map();
+    firefoxEntries.set("", `\"${badApplicationPath}\" -osint -url \"%1\"`);
 
-  const firefoxProtocolRegKey = new StubbedRegistryKey(
-    new Map(),
-    firefoxEntries
-  );
+    const firefoxProtocolRegKey = new StubbedRegistryKey(
+      new Map(),
+      firefoxEntries
+    );
 
-  const firefoxPrivateEntries = new Map();
-  firefoxPrivateEntries.set(
-    "",
-    `\"${badApplicationPath}\" -osint -private-window \"%1\"`
-  );
-  const firefoxPrivateProtocolRegKey = new StubbedRegistryKey(
-    new Map(),
-    firefoxPrivateEntries
-  );
+    const firefoxPrivateEntries = new Map();
+    firefoxPrivateEntries.set(
+      "",
+      `\"${badApplicationPath}\" -osint -private-window \"%1\"`
+    );
+    const firefoxPrivateProtocolRegKey = new StubbedRegistryKey(
+      new Map(),
+      firefoxPrivateEntries
+    );
 
-  const children = new Map();
-  children.set(FIREFOX_SHELL_OPEN_COMMAND_PATH, firefoxProtocolRegKey);
-  children.set(
-    FIREFOX_PRIVATE_SHELL_OPEN_COMMAND_PATH,
-    firefoxPrivateProtocolRegKey
-  );
+    const children = new Map();
+    children.set(publicPath, firefoxProtocolRegKey);
+    children.set(privatePath, firefoxPrivateProtocolRegKey);
 
-  const registryRootKey = new StubbedRegistryKey(children, new Map());
+    const registryRootKey = new StubbedRegistryKey(children, new Map());
 
-  const stubbedDeleteBridgeProtocolRegistryHelper =
-    new StubbedDeleteBridgeProtocolRegistryEntryHelper({
-      applicationPath,
-      registryRootKey,
-    });
+    const stubbedDeleteBridgeProtocolRegistryHelper =
+      new StubbedDeleteBridgeProtocolRegistryEntryHelper({
+        applicationPath,
+        registryRootKey,
+      });
 
-  FirefoxBridgeExtensionUtils.maybeDeleteBridgeProtocolRegistryEntries(
-    stubbedDeleteBridgeProtocolRegistryHelper
-  );
+    FirefoxBridgeExtensionUtils.maybeDeleteBridgeProtocolRegistryEntries(
+      publicProtocol,
+      privateProtocol,
+      stubbedDeleteBridgeProtocolRegistryHelper
+    );
 
-  ok(registryRootKey.wasCloseCalled, "Root key closed");
+    ok(registryRootKey.wasCloseCalled, "Root key closed");
 
-  ok(firefoxProtocolRegKey.wasOpenedForRead, "Firefox key opened");
-  ok(firefoxProtocolRegKey.wasCloseCalled, "Firefox key closed");
-  ok(
-    !registryRootKey.isChildDeleted("firefox"),
-    "Firefox protocol registry entry not deleted"
-  );
+    ok(firefoxProtocolRegKey.wasOpenedForRead, "Firefox key opened");
+    ok(firefoxProtocolRegKey.wasCloseCalled, "Firefox key closed");
+    ok(
+      !registryRootKey.isChildDeleted(publicProtocol),
+      "Firefox protocol registry entry not deleted"
+    );
 
-  ok(
-    firefoxPrivateProtocolRegKey.wasOpenedForRead,
-    "Firefox private key opened"
-  );
-  ok(firefoxPrivateProtocolRegKey.wasCloseCalled, "Firefox private key closed");
-  ok(
-    !registryRootKey.isChildDeleted("firefox-private"),
-    "Firefox private protocol registry entry not deleted"
-  );
+    ok(
+      firefoxPrivateProtocolRegKey.wasOpenedForRead,
+      "Firefox private key opened"
+    );
+    ok(
+      firefoxPrivateProtocolRegKey.wasCloseCalled,
+      "Firefox private key closed"
+    );
+    ok(
+      !registryRootKey.isChildDeleted(privateProtocol),
+      "Firefox private protocol registry entry not deleted"
+    );
+  }
 });
 
 add_task(async function test_DeleteWhenNoRegistryEntries() {
-  const applicationPath = "testPath";
+  for (let protocols of [
+    [
+      FirefoxBridgeExtensionUtils.OLD_PUBLIC_PROTOCOL,
+      FirefoxBridgeExtensionUtils.OLD_PRIVATE_PROTOCOL,
+      OLD_FIREFOX_PRIVATE_SHELL_OPEN_COMMAND_PATH,
+    ],
+    [
+      FirefoxBridgeExtensionUtils.PUBLIC_PROTOCOL,
+      FirefoxBridgeExtensionUtils.PRIVATE_PROTOCOL,
+      FIREFOX_PRIVATE_SHELL_OPEN_COMMAND_PATH,
+    ],
+  ]) {
+    let [publicProtocol, privateProtocol, privatePath] = protocols;
+    const applicationPath = "testPath";
 
-  const firefoxPrivateEntries = new Map();
-  const firefoxPrivateProtocolRegKey = new StubbedRegistryKey(
-    new Map(),
-    firefoxPrivateEntries
-  );
+    const firefoxPrivateEntries = new Map();
+    const firefoxPrivateProtocolRegKey = new StubbedRegistryKey(
+      new Map(),
+      firefoxPrivateEntries
+    );
 
-  const children = new Map();
-  children.set(
-    FIREFOX_PRIVATE_SHELL_OPEN_COMMAND_PATH,
-    firefoxPrivateProtocolRegKey
-  );
+    const children = new Map();
+    children.set(privatePath, firefoxPrivateProtocolRegKey);
 
-  const registryRootKey = new StubbedRegistryKey(children, new Map());
+    const registryRootKey = new StubbedRegistryKey(children, new Map());
 
-  const stubbedDeleteBridgeProtocolRegistryHelper =
-    new StubbedDeleteBridgeProtocolRegistryEntryHelper({
-      applicationPath,
-      registryRootKey,
-    });
+    const stubbedDeleteBridgeProtocolRegistryHelper =
+      new StubbedDeleteBridgeProtocolRegistryEntryHelper({
+        applicationPath,
+        registryRootKey,
+      });
 
-  FirefoxBridgeExtensionUtils.maybeDeleteBridgeProtocolRegistryEntries(
-    stubbedDeleteBridgeProtocolRegistryHelper
-  );
+    FirefoxBridgeExtensionUtils.maybeDeleteBridgeProtocolRegistryEntries(
+      publicProtocol,
+      privateProtocol,
+      stubbedDeleteBridgeProtocolRegistryHelper
+    );
 
-  ok(registryRootKey.wasCloseCalled, "Root key closed");
+    ok(registryRootKey.wasCloseCalled, "Root key closed");
 
-  ok(
-    firefoxPrivateProtocolRegKey.wasOpenedForRead,
-    "Firefox private key opened"
-  );
-  ok(firefoxPrivateProtocolRegKey.wasCloseCalled, "Firefox private key closed");
-  ok(
-    !registryRootKey.isChildDeleted("firefox"),
-    "Firefox protocol registry entry deleted when it shouldn't be"
-  );
-  ok(
-    !registryRootKey.isChildDeleted("firefox-private"),
-    "Firefox private protocol registry deleted when it shouldn't be"
-  );
+    ok(
+      firefoxPrivateProtocolRegKey.wasOpenedForRead,
+      "Firefox private key opened"
+    );
+    ok(
+      firefoxPrivateProtocolRegKey.wasCloseCalled,
+      "Firefox private key closed"
+    );
+    ok(
+      !registryRootKey.isChildDeleted(publicProtocol),
+      "Firefox protocol registry entry deleted when it shouldn't be"
+    );
+    ok(
+      !registryRootKey.isChildDeleted(privateProtocol),
+      "Firefox private protocol registry deleted when it shouldn't be"
+    );
+  }
 });
 
 add_task(async function test_DeleteWhenUnexpectedRegistryEntries() {
-  const applicationPath = "testPath";
+  for (let protocols of [
+    [
+      FirefoxBridgeExtensionUtils.OLD_PUBLIC_PROTOCOL,
+      FirefoxBridgeExtensionUtils.OLD_PRIVATE_PROTOCOL,
+      OLD_FIREFOX_SHELL_OPEN_COMMAND_PATH,
+    ],
+    [
+      FirefoxBridgeExtensionUtils.PUBLIC_PROTOCOL,
+      FirefoxBridgeExtensionUtils.PRIVATE_PROTOCOL,
+      FIREFOX_SHELL_OPEN_COMMAND_PATH,
+    ],
+  ]) {
+    let [publicProtocol, privateProtocol, publicPath] = protocols;
+    const applicationPath = "testPath";
 
-  const firefoxEntries = new Map();
-  firefoxEntries.set("", `\"${applicationPath}\" -osint -url \"%1\"`);
-  firefoxEntries.set("extraEntry", "extraValue");
-  const firefoxProtocolRegKey = new StubbedRegistryKey(
-    new Map(),
-    firefoxEntries
-  );
+    const firefoxEntries = new Map();
+    firefoxEntries.set("", `\"${applicationPath}\" -osint -url \"%1\"`);
+    firefoxEntries.set("extraEntry", "extraValue");
+    const firefoxProtocolRegKey = new StubbedRegistryKey(
+      new Map(),
+      firefoxEntries
+    );
 
-  const children = new Map();
-  children.set(FIREFOX_SHELL_OPEN_COMMAND_PATH, firefoxProtocolRegKey);
+    const children = new Map();
+    children.set(publicPath, firefoxProtocolRegKey);
 
-  const registryRootKey = new StubbedRegistryKey(children, new Map());
+    const registryRootKey = new StubbedRegistryKey(children, new Map());
 
-  const stubbedDeleteBridgeProtocolRegistryHelper =
-    new StubbedDeleteBridgeProtocolRegistryEntryHelper({
-      applicationPath,
-      registryRootKey,
-    });
+    const stubbedDeleteBridgeProtocolRegistryHelper =
+      new StubbedDeleteBridgeProtocolRegistryEntryHelper({
+        applicationPath,
+        registryRootKey,
+      });
 
-  FirefoxBridgeExtensionUtils.maybeDeleteBridgeProtocolRegistryEntries(
-    stubbedDeleteBridgeProtocolRegistryHelper
-  );
+    FirefoxBridgeExtensionUtils.maybeDeleteBridgeProtocolRegistryEntries(
+      publicProtocol,
+      privateProtocol,
+      stubbedDeleteBridgeProtocolRegistryHelper
+    );
 
-  ok(registryRootKey.wasCloseCalled, "Root key closed");
+    ok(registryRootKey.wasCloseCalled, "Root key closed");
 
-  ok(firefoxProtocolRegKey.wasOpenedForRead, "Firefox key opened");
-  ok(firefoxProtocolRegKey.wasCloseCalled, "Firefox key closed");
-  ok(
-    !registryRootKey.isChildDeleted("firefox"),
-    "Firefox protocol registry entry deleted when it shouldn't be"
-  );
-  ok(
-    !registryRootKey.isChildDeleted("firefox-private"),
-    "Firefox private protocol registry deleted when it shouldn't be"
-  );
+    ok(firefoxProtocolRegKey.wasOpenedForRead, "Firefox key opened");
+    ok(firefoxProtocolRegKey.wasCloseCalled, "Firefox key closed");
+    ok(
+      !registryRootKey.isChildDeleted(publicProtocol),
+      "Firefox protocol registry entry deleted when it shouldn't be"
+    );
+    ok(
+      !registryRootKey.isChildDeleted(privateProtocol),
+      "Firefox private protocol registry deleted when it shouldn't be"
+    );
+  }
 });

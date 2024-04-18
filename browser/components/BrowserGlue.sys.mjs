@@ -3769,19 +3769,13 @@ BrowserGlue.prototype = {
   _migrateUI() {
     // Use an increasing number to keep track of the current migration state.
     // Completely unrelated to the current Firefox release number.
-    const UI_VERSION = 144;
+    const UI_VERSION = 145;
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
     if (!Services.prefs.prefHasUserValue("browser.migration.version")) {
       // This is a new profile, nothing to migrate.
       Services.prefs.setIntPref("browser.migration.version", UI_VERSION);
       this._isNewProfile = true;
-
-      if (AppConstants.platform == "win") {
-        // Ensure that the Firefox Bridge protocols are registered for the new profile.
-        // No-op if they are registered for the user or the local machine already.
-        lazy.FirefoxBridgeExtensionUtils.maybeRegisterFirefoxBridgeProtocols();
-      }
 
       return;
     }
@@ -4383,24 +4377,7 @@ BrowserGlue.prototype = {
     }
 
     if (currentUIVersion < 143) {
-      if (AppConstants.platform == "win") {
-        // In Firefox 122, we enabled the firefox and firefox-private protocols.
-        // We switched over to using firefox-bridge and firefox-private-bridge,
-        // but we want to clean up the use of the other protocols.
-        lazy.FirefoxBridgeExtensionUtils.maybeDeleteBridgeProtocolRegistryEntries();
-
-        // Register the new firefox bridge related protocols now
-        lazy.FirefoxBridgeExtensionUtils.maybeRegisterFirefoxBridgeProtocols();
-
-        // Clean up the old user prefs from FX 122
-        Services.prefs.clearUserPref(
-          "network.protocol-handler.external.firefox"
-        );
-        Services.prefs.clearUserPref(
-          "network.protocol-handler.external.firefox-private"
-        );
-        Services.prefs.clearUserPref("browser.shell.customProtocolsRegistered");
-      }
+      // Version 143 has been superseded by version 145 below.
     }
 
     if (currentUIVersion < 144) {
@@ -4420,6 +4397,40 @@ BrowserGlue.prototype = {
       }
     }
 
+    if (currentUIVersion < 145) {
+      if (AppConstants.platform == "win") {
+        // In Firefox 122, we enabled the firefox and firefox-private protocols.
+        // We switched over to using firefox-bridge and firefox-private-bridge,
+        // but we want to clean up the use of the other protocols.
+        lazy.FirefoxBridgeExtensionUtils.maybeDeleteBridgeProtocolRegistryEntries(
+          lazy.FirefoxBridgeExtensionUtils.OLD_PUBLIC_PROTOCOL,
+          lazy.FirefoxBridgeExtensionUtils.OLD_PRIVATE_PROTOCOL
+        );
+
+        // Clean up the old user prefs from FX 122
+        Services.prefs.clearUserPref(
+          "network.protocol-handler.external.firefox"
+        );
+        Services.prefs.clearUserPref(
+          "network.protocol-handler.external.firefox-private"
+        );
+
+        // In Firefox 126, we switched over to using native messaging so the
+        // protocols are no longer necessary even in firefox-bridge and
+        // firefox-private-bridge form
+        lazy.FirefoxBridgeExtensionUtils.maybeDeleteBridgeProtocolRegistryEntries(
+          lazy.FirefoxBridgeExtensionUtils.PUBLIC_PROTOCOL,
+          lazy.FirefoxBridgeExtensionUtils.PRIVATE_PROTOCOL
+        );
+        Services.prefs.clearUserPref(
+          "network.protocol-handler.external.firefox-bridge"
+        );
+        Services.prefs.clearUserPref(
+          "network.protocol-handler.external.firefox-private-bridge"
+        );
+        Services.prefs.clearUserPref("browser.shell.customProtocolsRegistered");
+      }
+    }
     // Update the migration version.
     Services.prefs.setIntPref("browser.migration.version", UI_VERSION);
   },
