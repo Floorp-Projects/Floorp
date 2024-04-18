@@ -152,6 +152,7 @@ void DynamicResampler::UpdateResampler(uint32_t aOutRate, uint32_t aChannels) {
   MOZ_ASSERT(aChannels);
 
   if (mChannels != aChannels) {
+    media::TimeUnit bufferDuration(InFramesBufferSize(), mInRate);
     if (mResampler) {
       speex_resampler_destroy(mResampler);
     }
@@ -192,9 +193,7 @@ void DynamicResampler::UpdateResampler(uint32_t aOutRate, uint32_t aChannels) {
         b->SetSampleFormat(mSampleFormat);
       }
     }
-    media::TimeUnit d = mSetBufferDuration;
-    mSetBufferDuration = media::TimeUnit::Zero();
-    EnsureInputBufferDuration(d);
+    EnsureInputBufferDuration(bufferDuration);
     mInputTail.SetLength(mChannels);
     return;
   }
@@ -264,7 +263,16 @@ void DynamicResampler::AppendInputSilence(const uint32_t aInFrames) {
 }
 
 uint32_t DynamicResampler::InFramesBufferSize() const {
-  return mSetBufferDuration.ToTicksAtRate(mInRate);
+  if (mSampleFormat == AUDIO_FORMAT_SILENCE) {
+    return 0;
+  }
+  // Buffers may have different capacities if a memory allocation has failed.
+  MOZ_ASSERT(!mInternalInBuffer.IsEmpty());
+  uint32_t min = std::numeric_limits<uint32_t>::max();
+  for (const auto& b : mInternalInBuffer) {
+    min = std::min(min, b.Capacity());
+  }
+  return min;
 }
 
 uint32_t DynamicResampler::InFramesBuffered(uint32_t aChannelIndex) const {
