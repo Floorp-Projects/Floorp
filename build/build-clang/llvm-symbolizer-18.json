@@ -1,7 +1,5 @@
 {
     "patches": [
-        "partial-revert-llvmorg-17-init-17713-gc8e055d485ea.patch",
-        "revert-llvmorg-17-init-4120-g02e8eb1a438b.patch",
-        "revert-llvmorg-15-init-11205-gcead4eceb01b_clang_18.patch"
+        "partial-revert-llvmorg-15-init-11205-gcead4eceb01b_clang_18.patch"
     ]
 }

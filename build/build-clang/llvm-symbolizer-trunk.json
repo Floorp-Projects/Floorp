@@ -1,14 +1,5 @@
 {
     "patches": [
-        "revert-llvmorg-19-init-7807-gf04452de1986.patch",
-        "revert-llvmorg-19-init-7619-gf139387fb6e7.patch",
-        "revert-llvmorg-19-init-7501-g27b2d7d4bb79.patch",
-        "revert-llvmorg-19-init-7044-g30fd099d5062.patch",
-        "revert-llvmorg-19-init-6902-gbdb60e6f0c8e.patch",
-        "revert-llvmorg-19-init-6898-g60deb8b39afe.patch",
-        "revert-llvmorg-19-init-6891-ga4de589d117a.patch",
-        "partial-revert-llvmorg-17-init-17713-gc8e055d485ea.patch",
-        "revert-llvmorg-17-init-4120-g02e8eb1a438b.patch",
-        "revert-llvmorg-15-init-11205-gcead4eceb01b_clang_18.patch"
+        "partial-revert-llvmorg-15-init-11205-gcead4eceb01b_clang_18.patch"
     ]
 }

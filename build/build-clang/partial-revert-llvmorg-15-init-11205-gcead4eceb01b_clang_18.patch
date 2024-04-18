@@ -1,0 +1,35 @@
+This partially reverts commit cead4eceb01b935fae07bf4a7e91911b344d2fec for
+causing timeouts on some webrtc tests under TSan (bug 1798613), presumably
+because the change made llvm-symbolizer too slow.
+
+diff --git a/llvm/lib/DebugInfo/DWARF/DWARFContext.cpp b/llvm/lib/DebugInfo/DWARF/DWARFContext.cpp
+index 792df53d304a..75692d56ee55 100644
+--- a/llvm/lib/DebugInfo/DWARF/DWARFContext.cpp
++++ b/llvm/lib/DebugInfo/DWARF/DWARFContext.cpp
+@@ -1520,25 +1520,7 @@ DWARFCompileUnit *DWARFContext::getCompileUnitForCodeAddress(uint64_t Address) {
+ 
+ DWARFCompileUnit *DWARFContext::getCompileUnitForDataAddress(uint64_t Address) {
+   uint64_t CUOffset = getDebugAranges()->findAddress(Address);
+-  if (DWARFCompileUnit *OffsetCU = getCompileUnitForOffset(CUOffset))
+-    return OffsetCU;
+-
+-  // Global variables are often missed by the above search, for one of two
+-  // reasons:
+-  //   1. .debug_aranges may not include global variables. On clang, it seems we
+-  //      put the globals in the aranges, but this isn't true for gcc.
+-  //   2. Even if the global variable is in a .debug_arange, global variables
+-  //      may not be captured in the [start, end) addresses described by the
+-  //      parent compile unit.
+-  //
+-  // So, we walk the CU's and their child DI's manually, looking for the
+-  // specific global variable.
+-  for (std::unique_ptr<DWARFUnit> &CU : compile_units()) {
+-    if (CU->getVariableForAddress(Address)) {
+-      return static_cast<DWARFCompileUnit *>(CU.get());
+-    }
+-  }
+-  return nullptr;
++  return getCompileUnitForOffset(CUOffset);
+ }
+ 
+ DWARFContext::DIEsForAddress DWARFContext::getDIEsForAddress(uint64_t Address,
