@@ -12,7 +12,7 @@ import cpp
 import jinja2
 import jog
 import rust
-from glean_parser import lint, parser, translate, util
+from glean_parser import lint, metrics, parser, translate, util
 from mozbuild.util import FileAvoidWrite, memoize
 from util import generate_metric_ids
 
@@ -186,6 +186,19 @@ def output_gifft_map(output_fd, probe_type, all_objs, cpp_fd):
                     print(
                         f"Glean metric {category_name}.{metric.name} is of type {metric.type}"
                         " which can't be mirrored (we don't know how).",
+                        file=sys.stderr,
+                    )
+                    sys.exit(1)
+                # We only support mirrors for lifetime: ping
+                # If you understand and are okay with how Legacy Telemetry has no
+                # mechanism to which to mirror non-ping lifetimes,
+                # you may use `no_lint: [GIFFT_NON_PING_LIFETIME]`
+                elif (
+                    metric.lifetime != metrics.Lifetime.ping
+                    and "GIFFT_NON_PING_LIFETIME" not in metric.no_lint
+                ):
+                    print(
+                        f"Glean lifetime semantics are not mirrored. {category_name}.{metric.name}'s lifetime of {metric.lifetime} is not supported.",
                         file=sys.stderr,
                     )
                     sys.exit(1)

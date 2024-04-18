@@ -62,7 +62,7 @@ pub mod test {
             name: "custom_distribution_metric".into(),
             category: "test".into(),
             send_in_pings: vec!["metrics".into()],
-            lifetime: Lifetime::Application,
+            lifetime: Lifetime::Ping,
             disabled: false,
             ..Default::default()
         }, 0, 100, 100, HistogramType::Linear)
@@ -270,7 +270,7 @@ pub mod test {
             name: "memory_distribution_metric".into(),
             category: "test".into(),
             send_in_pings: vec!["metrics".into()],
-            lifetime: Lifetime::Application,
+            lifetime: Lifetime::Ping,
             disabled: false,
             ..Default::default()
         }, MemoryUnit::Kilobyte)
@@ -350,7 +350,7 @@ pub mod test {
             name: "timing_distribution_metric".into(),
             category: "test".into(),
             send_in_pings: vec!["metrics".into()],
-            lifetime: Lifetime::Application,
+            lifetime: Lifetime::Ping,
             disabled: false,
             ..Default::default()
         }, TimeUnit::Nanosecond)
