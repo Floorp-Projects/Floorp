@@ -24,6 +24,8 @@ test:
     data_reviews:
       - https://example.com
     telemetry_mirror: SOME_BOOL_SCALAR
+    no_lint:
+      - GIFFT_NON_PING_LIFETIME
 
   labeled_boolean_metric:
     type: labeled_boolean
@@ -39,6 +41,8 @@ test:
     data_reviews:
       - https://example.com
     telemetry_mirror: SOME_KEYED_BOOL_SCALAR
+    no_lint:
+      - GIFFT_NON_PING_LIFETIME
 
   labeled_boolean_metric_labels:
     type: labeled_boolean
@@ -65,6 +69,8 @@ test:
       - nine_labels
       - ten_labels
     telemetry_mirror: SOME_OTHER_KEYED_BOOL_SCALAR
+    no_lint:
+      - GIFFT_NON_PING_LIFETIME
 
   counter_metric:
     type: counter
@@ -80,6 +86,8 @@ test:
     data_reviews:
       - https://example.com
     telemetry_mirror: SOME_UINT_SCALAR
+    no_lint:
+      - GIFFT_NON_PING_LIFETIME
 
   labeled_counter_metric:
     type: labeled_counter
@@ -95,6 +103,8 @@ test:
     data_reviews:
       - https://example.com
     telemetry_mirror: SOME_KEYED_UINT_SCALAR
+    no_lint:
+      - GIFFT_NON_PING_LIFETIME
 
   labeled_counter_metric_labels:
     type: labeled_counter
@@ -113,6 +123,8 @@ test:
       - one_label
       - two_labels
     telemetry_mirror: SOME_OTHER_KEYED_UINT_SCALAR
+    no_lint:
+      - GIFFT_NON_PING_LIFETIME
 
   string_metric:
     type: string
@@ -128,6 +140,8 @@ test:
     data_reviews:
       - https://example.com
     telemetry_mirror: SOME_STRING_SCALAR
+    no_lint:
+      - GIFFT_NON_PING_LIFETIME
 
   labeled_string_metric:
     type: labeled_string
@@ -174,6 +188,8 @@ test:
     data_reviews:
       - https://example.com
     telemetry_mirror: YET_ANOTHER_KEYED_BOOL_SCALAR
+    no_lint:
+      - GIFFT_NON_PING_LIFETIME
 
   text_metric:
     type: text
@@ -204,6 +220,8 @@ test:
     data_reviews:
       - https://example.com
     telemetry_mirror: SOME_OTHER_UINT_SCALAR
+    no_lint:
+      - GIFFT_NON_PING_LIFETIME
 
   timing_distribution_metric:
     type: timing_distribution
@@ -211,7 +229,6 @@ test:
     description: |
       A multi-line
       description
-    lifetime: application
     notification_emails:
       - glean-team@mozilla.com
     bugs:
@@ -226,7 +243,6 @@ test:
     description: |
       A multi-line
       description
-    lifetime: application
     notification_emails:
       - glean-team@mozilla.com
     bugs:
@@ -242,7 +258,6 @@ test:
     description: |
       A multi-line
       description
-    lifetime: application
     notification_emails:
       - glean-team@mozilla.com
     bugs:
@@ -270,6 +285,8 @@ test.nested:
     data_reviews:
       - https://example.com
     telemetry_mirror: SOME_OTHER_STRING_SCALAR
+    no_lint:
+      - GIFFT_NON_PING_LIFETIME
 
   datetime_metric:
     type: datetime
@@ -285,6 +302,8 @@ test.nested:
     data_reviews:
       - https://example.com
     telemetry_mirror: SOME_STILL_OTHER_STRING_SCALAR
+    no_lint:
+      - GIFFT_NON_PING_LIFETIME
 
   event_metric:
     type: event
