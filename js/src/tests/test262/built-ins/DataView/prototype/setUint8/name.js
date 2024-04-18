@@ -19,11 +19,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(DataView.prototype.setUint8, "name", {
-  value: "setUint8",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(DataView.prototype.setUint8.name, "setUint8");
+
+verifyNotEnumerable(DataView.prototype.setUint8, "name");
+verifyNotWritable(DataView.prototype.setUint8, "name");
+verifyConfigurable(DataView.prototype.setUint8, "name");
 
 reportCompare(0, 0);

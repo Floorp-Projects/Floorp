@@ -24,11 +24,12 @@ Object.defineProperty(obj, "foo", {
   configurable: false
 });
 
-verifyProperty(obj, "foo", {
-  value: NaN,
-  writable: false,
-  enumerable: false,
-  configurable: false,
-});
+assert.sameValue(obj.foo, NaN);
+
+verifyNotWritable(obj, "foo");
+
+verifyNotEnumerable(obj, "foo");
+
+verifyNotConfigurable(obj, "foo");
 
 reportCompare(0, 0);

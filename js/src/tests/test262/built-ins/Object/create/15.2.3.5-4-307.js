@@ -17,8 +17,7 @@ var newObj = Object.create({}, {
   }
 });
 
-verifyProperty(newObj, "prop", {
-  writable: false,
-});
+assert(newObj.hasOwnProperty("prop"));
+verifyNotWritable(newObj, "prop");
 
 reportCompare(0, 0);

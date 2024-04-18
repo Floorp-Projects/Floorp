@@ -19,11 +19,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(String.prototype.concat, "name", {
-  value: "concat",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(String.prototype.concat.name, "concat");
+
+verifyNotEnumerable(String.prototype.concat, "name");
+verifyNotWritable(String.prototype.concat, "name");
+verifyConfigurable(String.prototype.concat, "name");
 
 reportCompare(0, 0);

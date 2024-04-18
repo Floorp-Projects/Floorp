@@ -19,11 +19,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Number.prototype.toFixed, "name", {
-  value: "toFixed",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Number.prototype.toFixed.name, "toFixed");
+
+verifyNotEnumerable(Number.prototype.toFixed, "name");
+verifyNotWritable(Number.prototype.toFixed, "name");
+verifyConfigurable(Number.prototype.toFixed, "name");
 
 reportCompare(0, 0);

@@ -11,11 +11,10 @@ includes: [propertyHelper.js]
 features: [Proxy]
 ---*/
 
-verifyProperty(Proxy, "name", {
-  value: "Proxy",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Proxy.name, "Proxy", "The value of `Proxy.name` is `'Proxy'`");
+
+verifyNotEnumerable(Proxy, "name");
+verifyNotWritable(Proxy, "name");
+verifyConfigurable(Proxy, "name");
 
 reportCompare(0, 0);

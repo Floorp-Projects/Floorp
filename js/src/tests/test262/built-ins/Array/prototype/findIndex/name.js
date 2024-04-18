@@ -12,11 +12,13 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Array.prototype.findIndex, "name", {
-  value: "findIndex",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(
+  Array.prototype.findIndex.name, 'findIndex',
+  'The value of `Array.prototype.findIndex.name` is `"findIndex"`'
+);
+
+verifyNotEnumerable(Array.prototype.findIndex, 'name');
+verifyNotWritable(Array.prototype.findIndex, 'name');
+verifyConfigurable(Array.prototype.findIndex, 'name');
 
 reportCompare(0, 0);

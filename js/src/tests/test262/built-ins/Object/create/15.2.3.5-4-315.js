@@ -34,20 +34,20 @@ newObj = Object.create({}, {
   }
 });
 
-verifyProperty(newObj, "foo1", {
-  value: 200,
-  writable: true,
-  enumerable: true,
-  configurable: true,
-});
+verifyEqualTo(newObj, "foo1", 200);
+
+verifyWritable(newObj, "foo1");
+
+verifyEnumerable(newObj, "foo1");
+
+verifyConfigurable(newObj, "foo1");
 
 verifyEqualTo(newObj, "foo2", getFunc());
 
 verifyWritable(newObj, "foo2", "setVerifyHelpProp");
 
-verifyProperty(newObj, "foo2", {
-  enumerable: true,
-  configurable: true,
-});
+verifyEnumerable(newObj, "foo2");
+
+verifyConfigurable(newObj, "foo2");
 
 reportCompare(0, 0);

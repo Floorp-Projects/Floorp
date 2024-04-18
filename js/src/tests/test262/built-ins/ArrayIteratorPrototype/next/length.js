@@ -25,11 +25,10 @@ features: [Symbol.iterator]
 
 var ArrayIteratorProto = Object.getPrototypeOf([][Symbol.iterator]());
 
-verifyProperty(ArrayIteratorProto.next, "length", {
-  value: 0,
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(ArrayIteratorProto.next.length, 0);
+
+verifyNotEnumerable(ArrayIteratorProto.next, "length");
+verifyNotWritable(ArrayIteratorProto.next, "length");
+verifyConfigurable(ArrayIteratorProto.next, "length");
 
 reportCompare(0, 0);

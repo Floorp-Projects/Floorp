@@ -12,11 +12,13 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(WeakSet.prototype.has, "length", {
-  value: 1,
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(
+  WeakSet.prototype.has.length, 1,
+  'The value of WeakSet.prototype.has.length is 1'
+);
+
+verifyNotEnumerable(WeakSet.prototype.has, 'length');
+verifyNotWritable(WeakSet.prototype.has, 'length');
+verifyConfigurable(WeakSet.prototype.has, 'length');
 
 reportCompare(0, 0);

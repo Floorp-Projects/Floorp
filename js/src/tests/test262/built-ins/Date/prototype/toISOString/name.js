@@ -19,11 +19,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Date.prototype.toISOString, "name", {
-  value: "toISOString",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Date.prototype.toISOString.name, "toISOString");
+
+verifyNotEnumerable(Date.prototype.toISOString, "name");
+verifyNotWritable(Date.prototype.toISOString, "name");
+verifyConfigurable(Date.prototype.toISOString, "name");
 
 reportCompare(0, 0);

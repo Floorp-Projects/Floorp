@@ -17,11 +17,12 @@ features: [Symbol.toPrimitive]
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Date.prototype[Symbol.toPrimitive], "name", {
-  value: "[Symbol.toPrimitive]",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(
+  Date.prototype[Symbol.toPrimitive].name, '[Symbol.toPrimitive]'
+);
+
+verifyNotEnumerable(Date.prototype[Symbol.toPrimitive], 'name');
+verifyNotWritable(Date.prototype[Symbol.toPrimitive], 'name');
+verifyConfigurable(Date.prototype[Symbol.toPrimitive], 'name');
 
 reportCompare(0, 0);

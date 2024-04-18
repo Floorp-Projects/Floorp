@@ -23,11 +23,10 @@ includes: [propertyHelper.js, testTypedArray.js]
 features: [TypedArray]
 ---*/
 
-verifyProperty(TypedArray.prototype.entries, "length", {
-  value: 0,
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(TypedArray.prototype.entries.length, 0);
+
+verifyNotEnumerable(TypedArray.prototype.entries, "length");
+verifyNotWritable(TypedArray.prototype.entries, "length");
+verifyConfigurable(TypedArray.prototype.entries, "length");
 
 reportCompare(0, 0);

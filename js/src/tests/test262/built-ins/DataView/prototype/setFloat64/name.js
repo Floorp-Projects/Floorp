@@ -19,11 +19,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(DataView.prototype.setFloat64, "name", {
-  value: "setFloat64",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(DataView.prototype.setFloat64.name, "setFloat64");
+
+verifyNotEnumerable(DataView.prototype.setFloat64, "name");
+verifyNotWritable(DataView.prototype.setFloat64, "name");
+verifyConfigurable(DataView.prototype.setFloat64, "name");
 
 reportCompare(0, 0);

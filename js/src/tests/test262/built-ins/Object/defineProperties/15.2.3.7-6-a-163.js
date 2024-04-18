@@ -24,12 +24,10 @@ Object.defineProperties(arr, {
 });
 
 //try to overwrite length value of arr
-verifyProperty(arr, "length", {
-  value: 1,
-  writable: false,
-});
+verifyNotWritable(arr, "length")
 
 assert(!arr.hasOwnProperty("1"));
+assert.sameValue(arr.length, 1);
 assert.sameValue(arr[0], 0);
 
 reportCompare(0, 0);

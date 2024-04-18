@@ -22,11 +22,10 @@ features: [Symbol.species]
 
 var desc = Object.getOwnPropertyDescriptor(TypedArray, Symbol.species);
 
-verifyProperty(desc.get, "name", {
-  value: "get [Symbol.species]",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(desc.get.name, "get [Symbol.species]");
+
+verifyNotEnumerable(desc.get, "name");
+verifyNotWritable(desc.get, "name");
+verifyConfigurable(desc.get, "name");
 
 reportCompare(0, 0);

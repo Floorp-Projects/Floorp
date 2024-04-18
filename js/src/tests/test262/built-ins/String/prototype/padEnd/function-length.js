@@ -8,11 +8,10 @@ author: Jordan Harband
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(String.prototype.padEnd, "length", {
-  value: 1,
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(String.prototype.padEnd.length, 1, 'Expected String#padEnd.length to be 1');
+
+verifyNotEnumerable(String.prototype.padEnd, 'length');
+verifyNotWritable(String.prototype.padEnd, 'length');
+verifyConfigurable(String.prototype.padEnd, 'length');
 
 reportCompare(0, 0);

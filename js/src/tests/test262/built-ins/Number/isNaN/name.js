@@ -19,11 +19,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Number.isNaN, "name", {
-  value: "isNaN",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Number.isNaN.name, "isNaN");
+
+verifyNotEnumerable(Number.isNaN, "name");
+verifyNotWritable(Number.isNaN, "name");
+verifyConfigurable(Number.isNaN, "name");
 
 reportCompare(0, 0);

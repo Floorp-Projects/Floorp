@@ -20,11 +20,10 @@ includes: [propertyHelper.js]
 features: [Symbol]
 ---*/
 
-verifyProperty(Symbol.keyFor, "name", {
-  value: "keyFor",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Symbol.keyFor.name, "keyFor");
+
+verifyNotEnumerable(Symbol.keyFor, "name");
+verifyNotWritable(Symbol.keyFor, "name");
+verifyConfigurable(Symbol.keyFor, "name");
 
 reportCompare(0, 0);

@@ -29,9 +29,8 @@ assert.throws(TypeError, function() {
 });
 verifyEqualTo(arrObj, "1", getFunc());
 
-verifyProperty(arrObj, "1", {
-  enumerable: false,
-  configurable: true,
-});
+verifyNotEnumerable(arrObj, "1");
+
+verifyConfigurable(arrObj, "1");
 
 reportCompare(0, 0);

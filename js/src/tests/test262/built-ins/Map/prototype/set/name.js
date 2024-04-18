@@ -12,11 +12,13 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Map.prototype.set, "name", {
-  value: "set",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(
+  Map.prototype.set.name, 'set',
+  'The value of `Map.prototype.set.name` is `"set"`'
+);
+
+verifyNotEnumerable(Map.prototype.set, 'name');
+verifyNotWritable(Map.prototype.set, 'name');
+verifyConfigurable(Map.prototype.set, 'name');
 
 reportCompare(0, 0);

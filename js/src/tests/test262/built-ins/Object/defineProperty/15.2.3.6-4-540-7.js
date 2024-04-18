@@ -38,12 +38,11 @@ try {
   verifyEqualTo(obj, "prop", getFunc());
 
   verifyWritable(obj, "prop", "verifySetFunction");
-}
 
-verifyProperty(obj, "prop", {
-  enumerable: false,
-  configurable: false,
-});
+  verifyNotEnumerable(obj, "prop");
+
+  verifyNotConfigurable(obj, "prop");
+}
 
 try {
   Object.defineProperty(obj, "prop", {
@@ -61,14 +60,15 @@ try {
 
   verifyWritable(obj, "prop", "verifySetFunction");
 
+  verifyNotEnumerable(obj, "prop");
+
+  verifyNotConfigurable(obj, "prop");
+
+
   if (!(e1 instanceof TypeError)) {
     throw new Test262Error("Expected TypeError, got " + e1);
   }
-}
 
-verifyProperty(obj, "prop", {
-  enumerable: false,
-  configurable: false,
-});
+}
 
 reportCompare(0, 0);

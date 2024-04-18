@@ -21,11 +21,10 @@ includes: [propertyHelper.js]
 features: [TypedArray]
 ---*/
 
-verifyProperty(Uint32Array, "name", {
-  value: "Uint32Array",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Uint32Array.name, "Uint32Array");
+
+verifyNotEnumerable(Uint32Array, "name");
+verifyNotWritable(Uint32Array, "name");
+verifyConfigurable(Uint32Array, "name");
 
 reportCompare(0, 0);

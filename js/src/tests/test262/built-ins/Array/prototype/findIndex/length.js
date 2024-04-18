@@ -8,11 +8,13 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Array.prototype.findIndex, "length", {
-  value: 1,
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(
+  Array.prototype.findIndex.length, 1,
+  'The value of `Array.prototype.findIndex.length` is `1`'
+);
+
+verifyNotEnumerable(Array.prototype.findIndex, 'length');
+verifyNotWritable(Array.prototype.findIndex, 'length');
+verifyConfigurable(Array.prototype.findIndex, 'length');
 
 reportCompare(0, 0);

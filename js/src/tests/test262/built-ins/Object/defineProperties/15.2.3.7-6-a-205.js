@@ -42,9 +42,8 @@ verifyEqualTo(arr, "0", getFun());
 
 verifyWritable(arr, "0", "setVerifyHelpProp");
 
-verifyProperty(arr, "0", {
-  enumerable: false,
-  configurable: false,
-});
+verifyNotEnumerable(arr, "0");
+
+verifyNotConfigurable(arr, "0");
 
 reportCompare(0, 0);

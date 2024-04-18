@@ -19,11 +19,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Date.prototype.setMonth, "name", {
-  value: "setMonth",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Date.prototype.setMonth.name, "setMonth");
+
+verifyNotEnumerable(Date.prototype.setMonth, "name");
+verifyNotWritable(Date.prototype.setMonth, "name");
+verifyConfigurable(Date.prototype.setMonth, "name");
 
 reportCompare(0, 0);

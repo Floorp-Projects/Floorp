@@ -19,11 +19,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Date.prototype.setSeconds, "name", {
-  value: "setSeconds",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Date.prototype.setSeconds.name, "setSeconds");
+
+verifyNotEnumerable(Date.prototype.setSeconds, "name");
+verifyNotWritable(Date.prototype.setSeconds, "name");
+verifyConfigurable(Date.prototype.setSeconds, "name");
 
 reportCompare(0, 0);

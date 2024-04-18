@@ -16,11 +16,9 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Function.prototype, "name", {
-  value: "",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Function.prototype.name, '');
+verifyNotEnumerable(Function.prototype, 'name');
+verifyNotWritable(Function.prototype, 'name');
+verifyConfigurable(Function.prototype, 'name');
 
 reportCompare(0, 0);

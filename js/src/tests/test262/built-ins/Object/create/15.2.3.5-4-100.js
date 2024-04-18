@@ -15,8 +15,7 @@ var newObj = Object.create({}, {
   }
 });
 
-verifyProperty(newObj, "prop", {
-  configurable: false,
-});
+assert(newObj.hasOwnProperty("prop"), "expected newObj to have 'prop'");
+verifyNotConfigurable(newObj, "prop");
 
 reportCompare(0, 0);

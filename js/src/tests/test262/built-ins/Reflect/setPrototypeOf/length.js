@@ -8,11 +8,13 @@ includes: [propertyHelper.js]
 features: [Reflect, Reflect.setPrototypeOf]
 ---*/
 
-verifyProperty(Reflect.setPrototypeOf, "length", {
-  value: 2,
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(
+  Reflect.setPrototypeOf.length, 2,
+  'The value of `Reflect.setPrototypeOf.length` is `2`'
+);
+
+verifyNotEnumerable(Reflect.setPrototypeOf, 'length');
+verifyNotWritable(Reflect.setPrototypeOf, 'length');
+verifyConfigurable(Reflect.setPrototypeOf, 'length');
 
 reportCompare(0, 0);

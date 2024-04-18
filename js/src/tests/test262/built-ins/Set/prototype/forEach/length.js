@@ -10,11 +10,10 @@ description: >
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Set.prototype.forEach, "length", {
-  value: 1,
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Set.prototype.forEach.length, 1, "The value of `Set.prototype.forEach.length` is `1`");
+
+verifyNotEnumerable(Set.prototype.forEach, "length");
+verifyNotWritable(Set.prototype.forEach, "length");
+verifyConfigurable(Set.prototype.forEach, "length");
 
 reportCompare(0, 0);

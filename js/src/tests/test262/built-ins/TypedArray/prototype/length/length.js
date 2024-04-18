@@ -25,11 +25,10 @@ features: [TypedArray]
 
 var desc = Object.getOwnPropertyDescriptor(TypedArray.prototype, "length");
 
-verifyProperty(desc.get, "length", {
-  value: 0,
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(desc.get.length, 0);
+
+verifyNotEnumerable(desc.get, "length");
+verifyNotWritable(desc.get, "length");
+verifyConfigurable(desc.get, "length");
 
 reportCompare(0, 0);

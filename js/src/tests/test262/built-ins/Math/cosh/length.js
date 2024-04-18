@@ -18,11 +18,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Math.cosh, "length", {
-  value: 1,
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Math.cosh.length, 1);
+
+verifyNotEnumerable(Math.cosh, "length");
+verifyNotWritable(Math.cosh, "length");
+verifyConfigurable(Math.cosh, "length");
 
 reportCompare(0, 0);

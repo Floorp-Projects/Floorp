@@ -19,11 +19,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Math.ceil, "name", {
-  value: "ceil",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Math.ceil.name, "ceil");
+
+verifyNotEnumerable(Math.ceil, "name");
+verifyNotWritable(Math.ceil, "name");
+verifyConfigurable(Math.ceil, "name");
 
 reportCompare(0, 0);

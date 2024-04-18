@@ -19,11 +19,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Promise.prototype.catch, "name", {
-  value: "catch",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Promise.prototype.catch.name, 'catch');
+
+verifyNotEnumerable(Promise.prototype.catch, 'name');
+verifyNotWritable(Promise.prototype.catch, 'name');
+verifyConfigurable(Promise.prototype.catch, 'name');
 
 reportCompare(0, 0);

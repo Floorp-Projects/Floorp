@@ -13,11 +13,13 @@ includes: [propertyHelper.js]
 features: [Reflect]
 ---*/
 
-verifyProperty(Reflect.getPrototypeOf, "name", {
-  value: "getPrototypeOf",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(
+  Reflect.getPrototypeOf.name, 'getPrototypeOf',
+  'The value of `Reflect.getPrototypeOf.name` is `"getPrototypeOf"`'
+);
+
+verifyNotEnumerable(Reflect.getPrototypeOf, 'name');
+verifyNotWritable(Reflect.getPrototypeOf, 'name');
+verifyConfigurable(Reflect.getPrototypeOf, 'name');
 
 reportCompare(0, 0);

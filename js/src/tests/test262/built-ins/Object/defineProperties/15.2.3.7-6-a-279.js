@@ -42,9 +42,8 @@ verifyEqualTo(arg, "0", get_func());
 
 verifyWritable(arg, "0", "setVerifyHelpProp");
 
-verifyProperty(arg, "0", {
-  enumerable: true,
-  configurable: true,
-});
+verifyEnumerable(arg, "0");
+
+verifyConfigurable(arg, "0");
 
 reportCompare(0, 0);

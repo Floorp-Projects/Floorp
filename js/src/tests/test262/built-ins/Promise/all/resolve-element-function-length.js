@@ -29,11 +29,10 @@ NotPromise.resolve = function(v) {
 };
 Promise.all.call(NotPromise, [thenable]);
 
-verifyProperty(resolveElementFunction, "length", {
-  value: 1,
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(resolveElementFunction.length, 1);
+
+verifyNotEnumerable(resolveElementFunction, "length");
+verifyNotWritable(resolveElementFunction, "length");
+verifyConfigurable(resolveElementFunction, "length");
 
 reportCompare(0, 0);

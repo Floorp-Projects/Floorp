@@ -19,11 +19,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Array.prototype.pop, "name", {
-  value: "pop",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Array.prototype.pop.name, "pop");
+
+verifyNotEnumerable(Array.prototype.pop, "name");
+verifyNotWritable(Array.prototype.pop, "name");
+verifyConfigurable(Array.prototype.pop, "name");
 
 reportCompare(0, 0);

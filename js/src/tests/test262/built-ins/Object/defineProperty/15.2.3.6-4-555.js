@@ -36,8 +36,6 @@ Object.defineProperty(obj, "prop", {
   configurable: false
 });
 
-verifyProperty(obj, "prop", {
-  configurable: false,
-});
+verifyNotConfigurable(obj, "prop");
 
 reportCompare(0, 0);

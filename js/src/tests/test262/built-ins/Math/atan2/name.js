@@ -19,11 +19,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Math.atan2, "name", {
-  value: "atan2",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Math.atan2.name, "atan2");
+
+verifyNotEnumerable(Math.atan2, "name");
+verifyNotWritable(Math.atan2, "name");
+verifyConfigurable(Math.atan2, "name");
 
 reportCompare(0, 0);

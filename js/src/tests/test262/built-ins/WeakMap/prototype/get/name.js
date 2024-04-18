@@ -12,11 +12,13 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(WeakMap.prototype.get, "name", {
-  value: "get",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(
+  WeakMap.prototype.get.name, 'get',
+  'The value of `WeakMap.prototype.get.name` is `"get"`'
+);
+
+verifyNotEnumerable(WeakMap.prototype.get, 'name');
+verifyNotWritable(WeakMap.prototype.get, 'name');
+verifyConfigurable(WeakMap.prototype.get, 'name');
 
 reportCompare(0, 0);

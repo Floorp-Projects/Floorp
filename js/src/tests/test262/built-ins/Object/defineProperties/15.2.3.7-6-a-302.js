@@ -24,11 +24,12 @@ Object.defineProperties(arg, {
   }
 });
 
-verifyProperty(arg, "genericProperty", {
-  value: 1001,
-  writable: true,
-  enumerable: true,
-  configurable: true,
-});
+verifyEqualTo(arg, "genericProperty", 1001);
+
+verifyWritable(arg, "genericProperty");
+
+verifyEnumerable(arg, "genericProperty");
+
+verifyConfigurable(arg, "genericProperty");
 
 reportCompare(0, 0);

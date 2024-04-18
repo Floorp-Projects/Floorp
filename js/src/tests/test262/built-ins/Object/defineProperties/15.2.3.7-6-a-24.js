@@ -24,12 +24,13 @@ Object.defineProperties(this, {
   }
 });
 
-verifyProperty(this, "prop", {
-  value: 12,
-  writable: true,
-  enumerable: true,
-  configurable: true,
-});
+verifyEqualTo(this, "prop", 12);
+
+verifyWritable(this, "prop");
+
+verifyEnumerable(this, "prop");
+
+verifyConfigurable(this, "prop");
 
 delete this.prop;
 

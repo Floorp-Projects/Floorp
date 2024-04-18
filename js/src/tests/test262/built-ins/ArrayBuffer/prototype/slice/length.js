@@ -22,11 +22,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(ArrayBuffer.prototype.slice, "length", {
-  value: 2,
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(ArrayBuffer.prototype.slice.length, 2);
+
+verifyNotEnumerable(ArrayBuffer.prototype.slice, "length");
+verifyNotWritable(ArrayBuffer.prototype.slice, "length");
+verifyConfigurable(ArrayBuffer.prototype.slice, "length");
 
 reportCompare(0, 0);

@@ -18,11 +18,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Math.sinh, "length", {
-  value: 1,
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Math.sinh.length, 1);
+
+verifyNotEnumerable(Math.sinh, "length");
+verifyNotWritable(Math.sinh, "length");
+verifyConfigurable(Math.sinh, "length");
 
 reportCompare(0, 0);

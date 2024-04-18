@@ -19,11 +19,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Math.min, "length", {
-  value: 2,
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Math.min.length, 2);
+
+verifyNotEnumerable(Math.min, "length");
+verifyNotWritable(Math.min, "length");
+verifyConfigurable(Math.min, "length");
 
 reportCompare(0, 0);

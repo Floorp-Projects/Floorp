@@ -19,11 +19,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Math.asin, "name", {
-  value: "asin",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Math.asin.name, "asin");
+
+verifyNotEnumerable(Math.asin, "name");
+verifyNotWritable(Math.asin, "name");
+verifyConfigurable(Math.asin, "name");
 
 reportCompare(0, 0);

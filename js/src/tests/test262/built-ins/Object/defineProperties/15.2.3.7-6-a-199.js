@@ -24,8 +24,8 @@ Object.defineProperties(arr, {
   }
 });
 
-verifyProperty(arr, "0", {
-  configurable: false,
-});
+assert(arr.hasOwnProperty("0"));
+verifyNotConfigurable(arr, "0");
+assert(arr.hasOwnProperty("0"));
 
 reportCompare(0, 0);

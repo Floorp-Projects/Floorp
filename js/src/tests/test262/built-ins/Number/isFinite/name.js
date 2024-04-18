@@ -19,11 +19,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Number.isFinite, "name", {
-  value: "isFinite",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Number.isFinite.name, "isFinite");
+
+verifyNotEnumerable(Number.isFinite, "name");
+verifyNotWritable(Number.isFinite, "name");
+verifyConfigurable(Number.isFinite, "name");
 
 reportCompare(0, 0);
