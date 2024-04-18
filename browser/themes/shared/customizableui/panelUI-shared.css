@@ -172,7 +172,6 @@ menupopup {
 
 panelview {
   flex-direction: column;
-  background: var(--arrowpanel-background);
   padding: 0;
 
   /* Prevent a scrollbar from appearing while the animation for transitioning from
