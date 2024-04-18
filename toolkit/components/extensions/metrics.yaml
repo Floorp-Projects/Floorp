@@ -58,6 +58,8 @@ extensions:
     data_sensitivity:
       - technical
     telemetry_mirror: EXTENSIONS_STARTUPCACHE_LOAD_TIME
+    no_lint:
+      - GIFFT_NON_PING_LIFETIME
 
   startup_cache_read_errors:
     type: labeled_counter
@@ -75,6 +77,8 @@ extensions:
     data_sensitivity:
       - technical
     telemetry_mirror: EXTENSIONS_STARTUPCACHE_READ_ERRORS
+    no_lint:
+      - GIFFT_NON_PING_LIFETIME
 
   startup_cache_write_bytelength:
     type: quantity
@@ -92,6 +96,8 @@ extensions:
     data_sensitivity:
       - technical
     telemetry_mirror: EXTENSIONS_STARTUPCACHE_WRITE_BYTELENGTH
+    no_lint:
+      - GIFFT_NON_PING_LIFETIME
 
   process_event:
     type: labeled_counter
@@ -130,7 +136,6 @@ extensions.apis.dnr:
     expires: 138
     description: |
       Amount of data read from the DNR startup cache file.
-    lifetime: application
     notification_emails:
       - addons-dev-internal@mozilla.com
     bugs:
@@ -149,7 +154,6 @@ extensions.apis.dnr:
     expires: 138
     description: |
       Amount of time it takes to read data into the DNR startup cache file.
-    lifetime: application
     notification_emails:
       - addons-dev-internal@mozilla.com
     bugs:
@@ -168,7 +172,6 @@ extensions.apis.dnr:
     expires: 138
     description: |
       Amount of data written to the DNR startup cache file.
-    lifetime: application
     notification_emails:
       - addons-dev-internal@mozilla.com
     bugs:
@@ -187,7 +190,6 @@ extensions.apis.dnr:
     expires: 138
     description: |
       Amount of time it takes to write data into the DNR startup cache file.
-    lifetime: application
     notification_emails:
       - addons-dev-internal@mozilla.com
     bugs:
@@ -221,6 +223,8 @@ extensions.apis.dnr:
       - hit
       - miss
     telemetry_mirror: EXTENSIONS_APIS_DNR_STARTUP_CACHE_ENTRIES
+    no_lint:
+      - GIFFT_NON_PING_LIFETIME
 
   validate_rules_time:
     type: timing_distribution
@@ -229,7 +233,6 @@ extensions.apis.dnr:
     description: |
       Amount of time it takes to validate DNR rules of individual ruleset
       when dynamic or static rulesets have been loaded from disk.
-    lifetime: application
     notification_emails:
       - addons-dev-internal@mozilla.com
     bugs:
@@ -248,7 +251,6 @@ extensions.apis.dnr:
     expires: 138
     description: |
       Amount of time it takes to evaluate DNR rules for one network request.
-    lifetime: application
     notification_emails:
       - addons-dev-internal@mozilla.com
     bugs:
@@ -378,6 +380,8 @@ extensions.quarantined_domains:
     data_sensitivity:
       - technical
     telemetry_mirror: EXTENSIONS_QUARANTINEDDOMAINS_LISTSIZE
+    no_lint:
+      - GIFFT_NON_PING_LIFETIME
 
   listhash:
     type: string
@@ -396,6 +400,8 @@ extensions.quarantined_domains:
     data_sensitivity:
       - technical
     telemetry_mirror: EXTENSIONS_QUARANTINEDDOMAINS_LISTHASH
+    no_lint:
+      - GIFFT_NON_PING_LIFETIME
 
   remotehash:
     type: string
@@ -417,6 +423,8 @@ extensions.quarantined_domains:
     data_sensitivity:
       - technical
     telemetry_mirror: EXTENSIONS_QUARANTINEDDOMAINS_REMOTEHASH
+    no_lint:
+      - GIFFT_NON_PING_LIFETIME
 
 extensions.counters:
 
@@ -488,7 +496,6 @@ extensions.timing:
       description: |
         Amount of time it takes to load a WebExtensions background page, from when the
         build function is called to when the page has finished processing the onload event.
-      lifetime: application
       notification_emails:
         - addons-dev-internal@mozilla.com
       bugs:
@@ -506,7 +513,6 @@ extensions.timing:
       expires: never
       description: |
         Amount of time it takes for a BrowserAction popup to open.
-      lifetime: application
       notification_emails:
         - addons-dev-internal@mozilla.com
       bugs:
@@ -532,7 +538,6 @@ extensions.timing:
       expires: never
       description: |
         Amount of time it takes for content scripts from a WebExtension to be injected into a window.
-      lifetime: application
       notification_emails:
         - addons-dev-internal@mozilla.com
       bugs:
@@ -555,7 +560,6 @@ extensions.timing:
       description: |
         Amount of time (keyed by addon id) that an event page has been running before being suspended,
         or the entire addon shutdown.
-      lifetime: application
       notification_emails:
         - addons-dev-internal@mozilla.com
       bugs:
@@ -573,7 +577,6 @@ extensions.timing:
       description: |
         Amount of time it takes for a WebExtension to start up, from when the
         startup function is called to when the startup promise resolves.
-      lifetime: application
       notification_emails:
         - addons-dev-internal@mozilla.com
       bugs:
@@ -591,7 +594,6 @@ extensions.timing:
       expires: never
       description: |
         Amount of time it takes for a PageAction popup to open.
-      lifetime: application
       notification_emails:
         - addons-dev-internal@mozilla.com
       bugs:
@@ -617,7 +619,6 @@ extensions.timing:
       expires: 128
       description: |
         Amount of time it takes to perform a get via storage.local using the JSONFile backend.
-      lifetime: application
       notification_emails:
         - addons-dev-internal@mozilla.com
       bugs:
@@ -643,7 +644,6 @@ extensions.timing:
       expires: 128
       description: |
         Amount of time it takes to perform a set via storage.local using the JSONFile backend.
-      lifetime: application
       notification_emails:
         - addons-dev-internal@mozilla.com
       bugs:
@@ -669,7 +669,6 @@ extensions.timing:
       expires: never
       description: |
         Amount of time it takes to perform a get via storage.local using the IndexedDB backend.
-      lifetime: application
       notification_emails:
         - addons-dev-internal@mozilla.com
       bugs:
@@ -695,7 +694,6 @@ extensions.timing:
       expires: never
       description: |
         Amount of time it takes to perform a set via storage.local using the Indexed backend.
-      lifetime: application
       notification_emails:
         - addons-dev-internal@mozilla.com
       bugs:
