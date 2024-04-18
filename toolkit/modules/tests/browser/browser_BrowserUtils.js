@@ -51,6 +51,9 @@ add_task(async function test_getSelectionDetails_input() {
 
 add_task(async function test_getSelectionDetails_shadow_selection() {
   const url = kFixtureBaseURL + "file_getSelectionDetails_inputs.html";
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.shadowdom.selection_across_boundary.enabled", true]],
+  });
   await BrowserTestUtils.withNewTab({ gBrowser, url }, async browser => {
     await SpecialPowers.spawn(browser, [], async () => {
       function checkSelection() {
