@@ -888,7 +888,7 @@ DownloadsViewUI.DownloadElementShell.prototype = {
       case lazy.Downloads.Error.BLOCK_VERDICT_INSECURE:
         return [
           s.blockedPotentiallyInsecure,
-          [s.unblockInsecure3, s.unblockTip2],
+          [s.unblockInsecure2, s.unblockTip2],
         ];
       case lazy.Downloads.Error.BLOCK_VERDICT_POTENTIALLY_UNWANTED:
         return [
