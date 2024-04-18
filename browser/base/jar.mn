@@ -79,7 +79,6 @@ browser.jar:
         content/browser/sanitize_v2.xhtml                   (content/sanitize_v2.xhtml)
         content/browser/sanitizeDialog.js                   (content/sanitizeDialog.js)
         content/browser/sanitizeDialog.css                  (content/sanitizeDialog.css)
-        content/browser/tabbrowser.css                      (content/tabbrowser.css)
         content/browser/tabbrowser.js                       (content/tabbrowser.js)
         content/browser/tabbrowser-tab.js                   (content/tabbrowser-tab.js)
         content/browser/tabbrowser-tabs.js                  (content/tabbrowser-tabs.js)
