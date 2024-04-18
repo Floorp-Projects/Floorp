@@ -523,7 +523,7 @@ def apply_partner_priority(config, jobs):
     # Reduce the priority of the partner repack jobs because they don't block QE. Meanwhile
     # leave EME-free jobs alone because they do, and they'll get the branch priority like the rest
     # of the release. Only bother with this in production, not on staging releases on try.
-    # medium is the same as mozilla-central, see taskcluster/ci/config.yml. ie higher than
+    # medium is the same as mozilla-central, see taskcluster/config.yml. ie higher than
     # integration branches because we don't want to wait a lot for the graph to be done, but
     # for multiple releases the partner tasks always wait for non-partner.
     if (

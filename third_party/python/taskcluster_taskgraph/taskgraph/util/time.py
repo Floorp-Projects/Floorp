@@ -73,9 +73,7 @@ def value_of(input_str):
 
     if unit not in ALIASES:
         raise UnknownTimeMeasurement(
-            "{} is not a valid time measure use one of {}".format(
-                unit, sorted(ALIASES.keys())
-            )
+            f"{unit} is not a valid time measure use one of {sorted(ALIASES.keys())}"
         )
 
     return ALIASES[unit](value)

@@ -347,7 +347,7 @@ Adding the linter to the CI
 
 First, the job will have to be declared in Taskcluster.
 
-This should be done in the `mozlint Taskcluster configuration <https://searchfox.org/mozilla-central/source/taskcluster/ci/source-test/mozlint.yml>`_.
+This should be done in the `mozlint Taskcluster configuration <https://searchfox.org/mozilla-central/source/taskcluster/kinds/source-test/mozlint.yml>`_.
 You will need to define a symbol, how it is executed and on what kind of change.
 
 For example, for ruff, the configuration is the following:

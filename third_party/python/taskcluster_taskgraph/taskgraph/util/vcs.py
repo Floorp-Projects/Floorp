@@ -10,9 +10,6 @@ import subprocess
 from abc import ABC, abstractmethod, abstractproperty
 from shutil import which
 
-import requests
-from redo import retry
-
 from taskgraph.util.path import ancestors
 
 PUSHLOG_TMPL = "{}/json-pushes?version=2&changeset={}&tipsonly=1&full=1"
@@ -21,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 class Repository(ABC):
-    # Both mercurial and git use sha1 as revision idenfiers. Luckily, both define
+    # Both mercurial and git use sha1 as revision identifiers. Luckily, both define
     # the same value as the null revision.
     #
     # https://github.com/git/git/blob/dc04167d378fb29d30e1647ff6ff51dd182bc9a3/t/oid-info/hash-info#L7
@@ -519,34 +516,3 @@ def get_repository(path):
             return GitRepository(path)
 
     raise RuntimeError("Current directory is neither a git or hg repository")
-
-
-def find_hg_revision_push_info(repository, revision):
-    """Given the parameters for this action and a revision, find the
-    pushlog_id of the revision."""
-    pushlog_url = PUSHLOG_TMPL.format(repository, revision)
-
-    def query_pushlog(url):
-        r = requests.get(pushlog_url, timeout=60)
-        r.raise_for_status()
-        return r
-
-    r = retry(
-        query_pushlog,
-        args=(pushlog_url,),
-        attempts=5,
-        sleeptime=10,
-    )
-    pushes = r.json()["pushes"]
-    if len(pushes) != 1:
-        raise RuntimeError(
-            "Unable to find a single pushlog_id for {} revision {}: {}".format(
-                repository, revision, pushes
-            )
-        )
-    pushid = list(pushes.keys())[0]
-    return {
-        "pushdate": pushes[pushid]["date"],
-        "pushid": pushid,
-        "user": pushes[pushid]["user"],
-    }

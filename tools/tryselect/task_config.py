@@ -610,7 +610,7 @@ class WorkerOverrides(TryConfig):
 
         if worker_suffixes:
             root = build.topsrcdir
-            root = os.path.join(root, "taskcluster", "ci")
+            root = os.path.join(root, "taskcluster")
             graph_config = load_graph_config(root)
             for worker_suffix in worker_suffixes:
                 alias, suffix = worker_suffix.split("=", 1)

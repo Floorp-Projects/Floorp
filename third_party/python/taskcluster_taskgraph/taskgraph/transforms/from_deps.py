@@ -16,7 +16,7 @@ from textwrap import dedent
 from voluptuous import Any, Extra, Optional, Required
 
 from taskgraph.transforms.base import TransformSequence
-from taskgraph.transforms.job import fetches_schema
+from taskgraph.transforms.run import fetches_schema
 from taskgraph.util.attributes import attrmatch
 from taskgraph.util.dependencies import GROUP_BY_MAP, get_dependencies
 from taskgraph.util.schema import Schema, validate_schema

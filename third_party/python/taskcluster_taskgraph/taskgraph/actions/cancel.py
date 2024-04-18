@@ -34,9 +34,7 @@ def cancel_action(parameters, graph_config, input, task_group_id, task_id):
             # cannot be cancelled at this time, but it's also not running
             # anymore, so we can ignore this error.
             logger.info(
-                'Task "{}" is past its deadline and cannot be cancelled.'.format(
-                    task_id
-                )
+                f'Task "{task_id}" is past its deadline and cannot be cancelled.'
             )
             return
         raise

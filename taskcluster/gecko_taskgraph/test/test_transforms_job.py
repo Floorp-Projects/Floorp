@@ -37,7 +37,7 @@ TASK_DEFAULTS = {
 
 @pytest.fixture(scope="module")
 def config():
-    graph_config = load_graph_config(os.path.join(GECKO, "taskcluster", "ci"))
+    graph_config = load_graph_config(os.path.join(GECKO, "taskcluster"))
     params = FakeParameters(
         {
             "base_repository": "http://hg.example.com",

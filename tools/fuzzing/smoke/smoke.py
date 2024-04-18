@@ -6,7 +6,7 @@
 This script can be used to perform simple calls using `jsshell`
 or whatever other tools you may add.
 
-The call is done via `taskcluster/ci/fuzzing/kind.yml` and
+The call is done via `taskcluster/kinds/fuzzing/kind.yml` and
 files contained in the `target.jsshell.zip` and `target.fuzztest.tests.tar.gz`
 build artifacts are downloaded to run things.
 

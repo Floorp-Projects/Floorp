@@ -92,9 +92,7 @@ def fill_template(config, tasks):
         for p in packages:
             if p not in available_packages:
                 raise Exception(
-                    "Missing package job for {}-{}: {}".format(
-                        config.kind, image_name, p
-                    )
+                    f"Missing package job for {config.kind}-{image_name}: {p}"
                 )
 
         if not taskgraph.fast:
@@ -119,9 +117,7 @@ def fill_template(config, tasks):
         digest_data += [json.dumps(args, sort_keys=True)]
         context_hashes[image_name] = context_hash
 
-        description = "Build the docker image {} for use by dependent tasks".format(
-            image_name
-        )
+        description = f"Build the docker image {image_name} for use by dependent tasks"
 
         args["DOCKER_IMAGE_PACKAGES"] = " ".join(f"<{p}>" for p in packages)
 
@@ -131,6 +127,8 @@ def fill_template(config, tasks):
         # because images are read more often and it is worth the trade-off to
         # burn more CPU once to reduce image size.
         zstd_level = "3" if int(config.params["level"]) == 1 else "10"
+
+        expires = config.graph_config._config.get("task-expires-after", "28 days")
 
         # include some information that is useful in reconstructing this task
         # from JSON
@@ -142,7 +140,7 @@ def fill_template(config, tasks):
                 "artifact_prefix": "public",
             },
             "always-target": True,
-            "expires-after": "28 days" if config.params.is_try() else "1 year",
+            "expires-after": expires if config.params.is_try() else "1 year",
             "scopes": [],
             "run-on-projects": [],
             "worker-type": "images",
@@ -158,9 +156,7 @@ def fill_template(config, tasks):
                 ],
                 "env": {
                     "CONTEXT_TASK_ID": {"task-reference": "<decision>"},
-                    "CONTEXT_PATH": "public/docker-contexts/{}.tar.gz".format(
-                        image_name
-                    ),
+                    "CONTEXT_PATH": f"public/docker-contexts/{image_name}.tar.gz",
                     "HASH": context_hash,
                     "PROJECT": config.params["project"],
                     "IMAGE_NAME": image_name,

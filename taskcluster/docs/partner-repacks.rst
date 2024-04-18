@@ -40,7 +40,7 @@ release. They're both true for Firefox betas >= b8 and releases, but otherwise d
 logic. It's usually looked up during the release promotion action task, using the Github
 GraphQL API in the `get_partner_config_by_url()
 <python/taskgraph.util.html#taskgraph.util.partners.get_partner_config_by_url>`_ function, with the
-url defined in `taskcluster/ci/config.yml <https://searchfox
+url defined in `taskcluster/config.yml <https://searchfox
 .org/mozilla-release/search?q=regexp%3A^partner+path%3Aconfig.yml&redirect=true>`_.
 
 ``release_partner_build_number`` is an integer used to create unique upload paths in the firefox

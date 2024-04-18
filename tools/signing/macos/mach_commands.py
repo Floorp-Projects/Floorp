@@ -306,7 +306,7 @@ def macos_sign(
     # and the channel argument (nightly, devedition, or release) we'll
     # use different entitlements.
     sourcedir = command_context.topsrcdir
-    buildconfigpath = sourcedir + "/taskcluster/ci/config.yml"
+    buildconfigpath = sourcedir + "/taskcluster/config.yml"
 
     command_context.log(
         logging.INFO,

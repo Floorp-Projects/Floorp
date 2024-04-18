@@ -284,7 +284,7 @@ class Parameters(ReadOnlyDict):
             else:
                 raise ParameterMismatch(
                     "Don't know how to determine file URL for non-github"
-                    "repo: {}".format(repo)
+                    f"repo: {repo}"
                 )
         else:
             raise RuntimeError(

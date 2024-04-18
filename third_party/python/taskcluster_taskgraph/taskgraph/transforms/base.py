@@ -147,7 +147,7 @@ class ValidateSchema:
                     kind=config.kind, name=task["name"]
                 )
             elif "label" in task:
-                error = "In job {label!r}:".format(label=task["label"])
+                error = "In task {label!r}:".format(label=task["label"])
             elif "primary-dependency" in task:
                 error = "In {kind} kind task for {dependency!r}:".format(
                     kind=config.kind, dependency=task["primary-dependency"].label

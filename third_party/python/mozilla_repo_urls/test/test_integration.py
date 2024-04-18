@@ -138,24 +138,24 @@ import mozilla_repo_urls
                 },
                 "user": "",
                 "valid": True,
-            },
-        ),
-        (
-            "https://hg.mozilla.org/mozilla-central/raw-file/tip/taskcluster/ci/config.yml",  # noqa: E501
-            does_not_raise(),
-            {
-                "github": False,
+           },
+       ),
+       (
+           "https://hg.mozilla.org/mozilla-central/raw-file/tip/taskcluster/config.yml",  # noqa: E501
+           does_not_raise(),
+           {
+               "github": False,
                 "git_cinnabar": False,
                 "groups": [],
-                "hgmo": True,
-                "host": "hg.mozilla.org",
-                "name": "mozilla-central",
-                "normalized": "https://hg.mozilla.org/mozilla-central/raw-file/tip/taskcluster/ci/config.yml",  # noqa: E501
-                "path_raw": "/raw-file/tip/taskcluster/ci/config.yml",
-                "path": "tip/taskcluster/ci/config.yml",
-                "pathname": "/mozilla-central",
-                "platform": "hgmo",
-                "port": "",
+               "hgmo": True,
+               "host": "hg.mozilla.org",
+               "name": "mozilla-central",
+               "normalized": "https://hg.mozilla.org/mozilla-central/raw-file/tip/taskcluster/config.yml",  # noqa: E501
+               "path_raw": "/raw-file/tip/taskcluster/config.yml",
+               "path": "tip/taskcluster/config.yml",
+               "pathname": "/mozilla-central",
+               "platform": "hgmo",
+               "port": "",
                 "protocol": "https",
                 "protocols": ["https"],
                 "repo": "mozilla-central",
@@ -163,32 +163,32 @@ import mozilla_repo_urls
                 "repo_path": "mozilla-central",
                 "repo_type": "hg",
                 "resource": "hg.mozilla.org",
-                "taskcluster_role_prefix": "repo:hg.mozilla.org/mozilla-central",
-                "urls": {
-                    "hg": "hg://hg.mozilla.org:https/mozilla-central",
-                    "https": "https://hg.mozilla.org/mozilla-central/raw-file/tip/taskcluster/ci/config.yml",  # noqa: E501
-                    "ssh": "ssh://hg.mozilla.org/mozilla-central",
-                },
-                "user": "",
+               "taskcluster_role_prefix": "repo:hg.mozilla.org/mozilla-central",
+               "urls": {
+                   "hg": "hg://hg.mozilla.org:https/mozilla-central",
+                   "https": "https://hg.mozilla.org/mozilla-central/raw-file/tip/taskcluster/config.yml",  # noqa: E501
+                   "ssh": "ssh://hg.mozilla.org/mozilla-central",
+               },
+               "user": "",
                 "valid": True,
-            },
-        ),
-        (
-            "https://hg.mozilla.org/mozilla-central/file/tip/taskcluster/ci/config.yml",  # noqa: E501
-            does_not_raise(),
-            {
-                "github": False,
+           },
+       ),
+       (
+           "https://hg.mozilla.org/mozilla-central/file/tip/taskcluster/config.yml",  # noqa: E501
+           does_not_raise(),
+           {
+               "github": False,
                 "git_cinnabar": False,
                 "groups": [],
-                "hgmo": True,
-                "host": "hg.mozilla.org",
-                "name": "mozilla-central",
-                "normalized": "https://hg.mozilla.org/mozilla-central/file/tip/taskcluster/ci/config.yml",  # noqa: E501
-                "path_raw": "/file/tip/taskcluster/ci/config.yml",
-                "path": "tip/taskcluster/ci/config.yml",
-                "pathname": "/mozilla-central",
-                "platform": "hgmo",
-                "port": "",
+               "hgmo": True,
+               "host": "hg.mozilla.org",
+               "name": "mozilla-central",
+               "normalized": "https://hg.mozilla.org/mozilla-central/file/tip/taskcluster/config.yml",  # noqa: E501
+               "path_raw": "/file/tip/taskcluster/config.yml",
+               "path": "tip/taskcluster/config.yml",
+               "pathname": "/mozilla-central",
+               "platform": "hgmo",
+               "port": "",
                 "protocol": "https",
                 "protocols": ["https"],
                 "repo": "mozilla-central",
@@ -196,13 +196,13 @@ import mozilla_repo_urls
                 "repo_path": "mozilla-central",
                 "repo_type": "hg",
                 "resource": "hg.mozilla.org",
-                "taskcluster_role_prefix": "repo:hg.mozilla.org/mozilla-central",
-                "urls": {
-                    "hg": "hg://hg.mozilla.org:https/mozilla-central",
-                    "https": "https://hg.mozilla.org/mozilla-central/file/tip/taskcluster/ci/config.yml",  # noqa: E501
-                    "ssh": "ssh://hg.mozilla.org/mozilla-central",
-                },
-                "user": "",
+               "taskcluster_role_prefix": "repo:hg.mozilla.org/mozilla-central",
+               "urls": {
+                   "hg": "hg://hg.mozilla.org:https/mozilla-central",
+                   "https": "https://hg.mozilla.org/mozilla-central/file/tip/taskcluster/config.yml",  # noqa: E501
+                   "ssh": "ssh://hg.mozilla.org/mozilla-central",
+               },
+               "user": "",
                 "valid": True,
             },
         ),

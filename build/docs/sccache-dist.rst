@@ -68,7 +68,7 @@ must read::
   will contain the version of ``rustc`` used by automation builds, which may
   lag behind stable for a few days after Rust releases, which is specified by
   the task definition in
-  `this file <https://hg.mozilla.org/mozilla-central/file/tip/taskcluster/ci/toolchain/dist-toolchains.yml>`_.
+  `this file <https://hg.mozilla.org/mozilla-central/file/tip/taskcluster/kinds/toolchain/dist-toolchains.yml>`_.
   For instance, to specify 1.37.0 rather than the current stable, run
   ``rustup toolchain add 1.37.0`` and point to
   ``/path/to/home/.rustup/toolchains/1.37.0-x86_64-apple-darwin/bin/rustc`` in your
