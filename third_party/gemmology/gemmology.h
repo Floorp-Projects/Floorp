@@ -786,7 +786,6 @@ public:
     using batch8 = xsimd::batch<int8_t, Arch>;
     using batch16 = xsimd::batch<int16_t, Arch>;
     using batch32 = xsimd::batch<int32_t, Arch>;
-    using ubatch32 = xsimd::batch<uint32_t, Arch>;
 
     // Put higher rows in the second half of the register.  These will jumble
     // around in the same way then conveniently land in the right place.
@@ -814,7 +813,7 @@ public:
 
       return xsimd::bitwise_cast<int8_t>(
           xsimd::swizzle(xsimd::bitwise_cast<int32_t>(packed),
-                         xsimd::make_batch_constant<ubatch32, Tiler<Arch>>()));
+                         xsimd::make_batch_constant<uint32_t, Arch, Tiler<Arch>>()));
     } else if constexpr (batchf32::size == 8)
       return Tile(quant_mult, input, input + 2 * cols, input + 16 * cols,
                   input + 18 * cols);
@@ -833,7 +832,6 @@ public:
     using batch8 = xsimd::batch<int8_t, Arch>;
     using batch16 = xsimd::batch<int16_t, Arch>;
     using batch32 = xsimd::batch<int32_t, Arch>;
-    using ubatch32 = xsimd::batch<uint32_t, Arch>;
 
     const batch8 neg127(-127);
     // Grab 4 registers at a time in 32-bit format.
@@ -857,7 +855,7 @@ public:
     // and the values are only used for GEMM.
     return xsimd::bitwise_cast<int8_t>(
         xsimd::swizzle(xsimd::bitwise_cast<int32_t>(packed),
-                       xsimd::make_batch_constant<ubatch32, Tiler<Arch>>()));
+                       xsimd::make_batch_constant<uint32_t, Arch, Tiler<Arch>>()));
   }
 
 private:
@@ -869,7 +867,6 @@ private:
     using batch8 = xsimd::batch<int8_t, Arch>;
     using batch16 = xsimd::batch<int16_t, Arch>;
     using batch32 = xsimd::batch<int32_t, Arch>;
-    using ubatch32 = xsimd::batch<uint32_t, Arch>;
 
     const batch8 neg127 = -127;
     const batch8 pos127 = +127;
@@ -894,7 +891,7 @@ private:
     // and the values are only used for GEMM.
     return xsimd::bitwise_cast<uint8_t>(
         xsimd::swizzle(xsimd::bitwise_cast<int32_t>(packed),
-                       xsimd::make_batch_constant<ubatch32, Tiler<Arch>>()));
+                       xsimd::make_batch_constant<uint32_t, Arch, Tiler<Arch>>()));
   }
 };
 
