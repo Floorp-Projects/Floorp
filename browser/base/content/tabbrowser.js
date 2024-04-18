@@ -1610,6 +1610,22 @@
 
     _dataURLRegEx: /^data:[^,]+;base64,/i,
 
+    // Regex to test if a string (potential tab label) consists of only non-
+    // printable characters. We consider Unicode categories Separator
+    // (spaces & line-breaks) and Other (control chars, private use, non-
+    // character codepoints) to be unprintable, along with a few specific
+    // characters whose expected rendering is blank:
+    //   U+2800 BRAILLE PATTERN BLANK (category So)
+    //   U+115F HANGUL CHOSEONG FILLER (category Lo)
+    //   U+1160 HANGUL JUNGSEONG FILLER (category Lo)
+    //   U+3164 HANGUL FILLER (category Lo)
+    //   U+FFA0 HALFWIDTH HANGUL FILLER (category Lo)
+    // We also ignore combining marks, as in the absence of a printable base
+    // character they are unlikely to be usefully rendered, and may well be
+    // clipped away entirely.
+    _nonPrintingRegEx:
+      /^[\p{Z}\p{C}\p{M}\u{115f}\u{1160}\u{2800}\u{3164}\u{ffa0}]*$/u,
+
     setTabTitle(aTab) {
       var browser = this.getBrowserForTab(aTab);
       var title = browser.contentTitle;
@@ -1630,6 +1646,16 @@
       }
 
       let isURL = false;
+
+      // Trim leading and trailing whitespace from the title.
+      title = title.trim();
+
+      // If the title contains only non-printing characters (or only combining
+      // marks, but no base character for them), we won't use it.
+      if (this._nonPrintingRegEx.test(title)) {
+        title = "";
+      }
+
       let isContentTitle = !!title;
       if (!title) {
         // See if we can use the URI as the title.
