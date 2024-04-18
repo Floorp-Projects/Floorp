@@ -166,3 +166,26 @@ TEST(TestDriftController, SmallBufferedFrames)
   c.UpdateClock(hundredMillis, hundredMillis, bufferedLow, 0);
   EXPECT_EQ(c.GetCorrectedSourceRate(), 47952U);
 }
+
+TEST(TestDriftController, VerySmallBufferedFrames)
+{
+  // The buffer level is the only input to the controller logic.
+  uint32_t bufferedLow = 1;
+  uint32_t nominalRate = 48000;
+
+  DriftController c(nominalRate, nominalRate, media::TimeUnit::FromSeconds(1));
+  media::TimeUnit oneSec = media::TimeUnit::FromSeconds(1);
+  media::TimeUnit sourceDuration(1, nominalRate);
+
+  EXPECT_EQ(c.GetCorrectedSourceRate(), nominalRate);
+  uint32_t previousCorrected = nominalRate;
+  // Steps are limited to nominalRate/1000.
+  // Perform 1001 steps to check the corrected rate does not underflow zero.
+  for (uint32_t i = 0; i < 1001; ++i) {
+    c.UpdateClock(sourceDuration, oneSec, bufferedLow, 0);
+    uint32_t correctedRate = c.GetCorrectedSourceRate();
+    EXPECT_LE(correctedRate, previousCorrected) << "for i=" << i;
+    EXPECT_GT(correctedRate, 0u) << "for i=" << i;
+    previousCorrected = correctedRate;
+  }
+}
