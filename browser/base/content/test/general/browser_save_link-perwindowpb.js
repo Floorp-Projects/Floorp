@@ -14,7 +14,7 @@ function triggerSave(aWindow, aCallback) {
   let testBrowser = aWindow.gBrowser.selectedBrowser;
   // This page sets a cookie if and only if a cookie does not exist yet
   let testURI =
-    "https://example.com/browser/browser/base/content/test/general/bug792517-2.html";
+    "http://mochi.test:8888/browser/browser/base/content/test/general/bug792517-2.html";
   BrowserTestUtils.startLoadingURIString(testBrowser, testURI);
   BrowserTestUtils.browserLoaded(testBrowser, false, testURI).then(() => {
     waitForFocus(function () {
@@ -132,7 +132,7 @@ function test() {
     info("onExamineResponse with " + channel.URI.spec);
     if (
       channel.URI.spec !=
-      "https://example.com/browser/browser/base/content/test/general/bug792517.sjs"
+      "http://mochi.test:8888/browser/browser/base/content/test/general/bug792517.sjs"
     ) {
       info("returning");
       return;
@@ -158,7 +158,7 @@ function test() {
     info("onModifyRequest with " + channel.URI.spec);
     if (
       channel.URI.spec !=
-      "https://example.com/browser/browser/base/content/test/general/bug792517.sjs"
+      "http://mochi.test:8888/browser/browser/base/content/test/general/bug792517.sjs"
     ) {
       return;
     }

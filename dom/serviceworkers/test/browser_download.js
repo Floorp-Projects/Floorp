@@ -3,7 +3,7 @@
 
 var gTestRoot = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content/",
-  "https://example.com/"
+  "http://mochi.test:8888/"
 );
 
 function getFile(aFilename) {
