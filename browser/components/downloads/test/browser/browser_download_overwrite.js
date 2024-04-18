@@ -5,7 +5,7 @@
 
 const TEST_ROOT = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
-  "https://example.com"
+  "http://example.com"
 );
 
 var MockFilePicker = SpecialPowers.MockFilePicker;
