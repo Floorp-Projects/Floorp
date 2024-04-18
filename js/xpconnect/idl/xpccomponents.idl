@@ -683,12 +683,6 @@ interface nsIXPCComponents_Utils : nsISupports
     string getClassName(in jsval aObj, in boolean aUnwrap);
 
     /**
-     * Get a DOM classinfo for the given classname.  Only some class
-     * names are supported.
-     */
-    nsIClassInfo getDOMClassInfo(in AString aClassName);
-
-    /**
      * Gets the incument global for the execution of this function. For internal
      * and testing use only.
      *
