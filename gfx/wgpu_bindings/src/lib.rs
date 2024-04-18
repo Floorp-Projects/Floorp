@@ -8,9 +8,9 @@ use wgc::id;
 pub use wgc::command::{compute_ffi::*, render_ffi::*};
 
 pub mod client;
+pub mod command;
 pub mod error;
 pub mod server;
-pub mod command;
 
 pub use wgc::device::trace::Command as CommandEncoderAction;
 

@@ -53,8 +53,6 @@ impl FromStr for AndroidStorageInput {
     }
 }
 
-
-
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum AndroidStorage {
     App,

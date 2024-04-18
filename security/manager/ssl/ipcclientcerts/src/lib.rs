@@ -1045,5 +1045,8 @@ pub extern "C" fn IPCCC_GetFunctionList(ppFunctionList: CK_FUNCTION_LIST_PTR_PTR
     CKR_OK
 }
 
-#[cfg_attr(any(target_os = "macos", target_os = "ios"), link(name = "Security", kind = "framework"))]
+#[cfg_attr(
+    any(target_os = "macos", target_os = "ios"),
+    link(name = "Security", kind = "framework")
+)]
 extern "C" {}

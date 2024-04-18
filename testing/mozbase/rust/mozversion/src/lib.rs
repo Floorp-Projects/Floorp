@@ -256,8 +256,8 @@ pub fn firefox_binary_version(binary: &Path) -> VersionResult<Version> {
 }
 
 fn parse_binary_version(version_str: &str) -> VersionResult<Version> {
-    let version_regexp = Regex::new(r#"Firefox[[:space:]]+(?P<version>.+)"#)
-        .expect("Error parsing version regexp");
+    let version_regexp =
+        Regex::new(r#"Firefox[[:space:]]+(?P<version>.+)"#).expect("Error parsing version regexp");
 
     let version_match = version_regexp
         .captures(version_str)

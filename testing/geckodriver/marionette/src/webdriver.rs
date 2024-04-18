@@ -97,8 +97,6 @@ pub enum PrintOrientation {
     Portrait,
 }
 
-
-
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PrintPage {
     pub width: f64,
