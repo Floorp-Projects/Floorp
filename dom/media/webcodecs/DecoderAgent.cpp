@@ -96,16 +96,18 @@ RefPtr<DecoderAgent::ConfigurePromise> DecoderAgent::Configure(
   auto params = CreateDecoderParams{
       *mInfo,
       CreateDecoderParams::OptionSet(
-          CreateDecoderParams::Option::LowLatency,
           aPreferSoftwareDecoder
               ? CreateDecoderParams::Option::HardwareDecoderNotAllowed
               : CreateDecoderParams::Option::Default),
       mInfo->GetType(), mImageContainer, knowsCompositor};
+  if (aLowLatency) {
+    params.mOptions += CreateDecoderParams::Option::LowLatency;
+  }
 
   LOG("DecoderAgent #%d (%p) is creating a decoder - PreferSW: %s, "
-      "low-latency: %syes",
+      "low-latency: %s",
       mId, this, aPreferSoftwareDecoder ? "yes" : "no",
-      aLowLatency ? "" : "forcibly ");
+      aLowLatency ? "yes" : "no");
 
   RefPtr<ConfigurePromise> p = mConfigurePromise.Ensure(__func__);
 
