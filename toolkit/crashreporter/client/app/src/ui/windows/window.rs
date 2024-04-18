@@ -84,6 +84,15 @@ pub trait CustomWindowClass: WindowClass {
                     0,
                     win::SWP_NOMOVE | win::SWP_NOSIZE | win::SWP_NOZORDER | win::SWP_FRAMECHANGED,
                 ));
+
+                // For reasons that don't make much sense, icons scale poorly unless set with
+                // `WM_SETICON` (see bug 1891920).
+                let icon = W::icon();
+                if icon != 0 {
+                    // The return value doesn't indicate failures.
+                    win::SendMessageW(hwnd, win::WM_SETICON, win::ICON_SMALL as _, icon);
+                    win::SendMessageW(hwnd, win::WM_SETICON, win::ICON_BIG as _, icon);
+                }
             }
 
             let result = unsafe { W::get(hwnd).as_ref() }
