@@ -114,7 +114,7 @@
   },
   "wikipedia": {
     "queryParams": ["wprov"],
-    "topLevelSites": ["www.wikipedia.org"]
+    "topLevelSites": ["www.wikipedia.org", "en.wikipedia.org"]
   },
   "wallstreetjournal": {
     "queryParams": ["reflink"],
@@ -166,7 +166,7 @@
   },
   "cnn": {
     "queryParams": ["ref"],
-    "topLevelSites": ["www.cnn.co.jp", "www.cnn.com"]
+    "topLevelSites": ["www.cnn.co.jp", "www.cnn.com", "edition.cnn.com"]
   },
   "imdb": {
     "queryParams": [
@@ -177,7 +177,7 @@
       "pf_rd_t",
       "pf_rd_r"
     ],
-    "topLevelSites": ["www.imdb.com"]
+    "topLevelSites": ["www.imdb.com", "m.imdb.com"]
   },
   "mirror": {
     "queryParams": ["int_source"],
@@ -210,7 +210,9 @@
       "www.lazada.com.ph",
       "www.lazada.vn",
       "www.lazada.sg",
-      "www.lazada.com.my"
+      "www.lazada.com.my",
+      "pages.lazada.co.id",
+      "www.lazada.co.id"
     ]
   },
   "msn": {
@@ -240,7 +242,11 @@
       "algo_expid",
       "gps-id"
     ],
-    "topLevelSites": ["www.tiktok.com"]
+    "topLevelSites": [
+      "www.aliexpress.com",
+      "robotime.aliexpress.com",
+      "ar.aliexpress.com"
+    ]
   },
   "reddit": {
     "queryParams": [
@@ -286,7 +292,7 @@
       "_from",
       "hash"
     ],
-    "topLevelSites": ["www.ebay.com"]
+    "topLevelSites": ["www.ebay.com", "www.ebay.co.uk"]
   },
   "flipkart": {
     "queryParams": [
@@ -518,7 +524,9 @@
       "www.google.co.za",
       "www.google.co.zm",
       "www.google.co.zw",
-      "www.google.cat"
+      "www.google.cat",
+      "consent.google.de",
+      "support.google.com"
     ]
   },
   "bing": {
@@ -527,7 +535,7 @@
   },
   "twitch": {
     "queryParams": ["tt_content", "tt_medium"],
-    "topLevelSites": ["www.twitch.tv"]
+    "topLevelSites": ["www.twitch.tv", "dev.twitch.tv"]
   },
   "cnet": {
     "queryParams": ["ftag"],
@@ -543,7 +551,7 @@
   },
   "linkedin": {
     "queryParams": ["refId", "trk", "trackingId"],
-    "topLevelSites": ["ca.linkedin.com"]
+    "topLevelSites": ["ca.linkedin.com", "ro.linkedin.com"]
   },
   "newyorker": {
     "queryParams": ["esrc", "bxid", "cndid", "source", "mbid"],
