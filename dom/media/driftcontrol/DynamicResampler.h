@@ -27,15 +27,13 @@ const uint32_t STEREO = 2;
  * to allow the requested to be resampled and returned.
  *
  * Input data buffering makes use of the AudioRingBuffer. The capacity of the
- * buffer is initially 100ms of float audio and it is pre-allocated at the
- * constructor. Should the input data grow beyond that, the input buffer is
- * re-allocated on the fly. In addition to that, due to special feature of
+ * buffer is initially 100ms of audio and it is pre-allocated during
+ * SetSampleFormat(). Should the input data grow beyond that, the input buffer
+ * is re-allocated on the fly. In addition to that, due to special feature of
  * AudioRingBuffer, no extra copies take place when the input data is fed to the
  * resampler.
  *
- * The sample format must be set before using any method. If the provided sample
- * format is of type short the pre-allocated capacity of the input buffer
- * becomes 200ms of short audio.
+ * The sample format must be set before using any method.
  *
  * The DynamicResampler is not thread-safe, so all the methods appart from the
  * constructor must be called on the same thread.
@@ -227,11 +225,6 @@ class DynamicResampler final {
 
   void WarmUpResampler(bool aSkipLatency);
 
-  media::TimeUnit CalculateInputBufferDuration() const {
-    // Pre-allocate something big, twice the pre-buffer, or at least 100ms.
-    return std::max(mPreBufferDuration * 2, media::TimeUnit::FromSeconds(0.1));
-  }
-
   bool EnsureInputBufferDuration(media::TimeUnit aDuration) {
     uint32_t sampleSize = 0;
     if (mSampleFormat == AUDIO_FORMAT_FLOAT32) {
@@ -264,10 +257,14 @@ class DynamicResampler final {
 
     if (aDuration > duration) {
       // A larger buffer than the normal backoff strategy provides is needed, or
-      // this is the first time setting the buffer size. Round up to the nearest
-      // 100ms, some jitter is expected.
-      duration = aDuration.ToBase<media::TimeUnit::CeilingPolicy>(10);
+      // this is the first time setting the buffer size. Add another 50ms, as
+      // some jitter is expected.
+      duration = aDuration + media::TimeUnit::FromSeconds(0.05);
     }
+
+    // mPreBufferDuration is an indication of the desired average buffering.
+    // Provide for at least twice this.
+    duration = std::max(duration, mPreBufferDuration * 2);
 
     duration = std::min(cap, duration);
     const uint32_t newSizeInFrames =
