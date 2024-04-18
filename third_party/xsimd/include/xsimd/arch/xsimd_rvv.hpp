@@ -284,7 +284,7 @@
 
 namespace xsimd
 {
-    template <class batch_type, typename batch_type::value_type... Values>
+    template <typename T, class A, T... Values>
     struct batch_constant;
 
     namespace kernel
@@ -1150,7 +1150,7 @@ namespace xsimd
 
         // swizzle
         template <class A, class T, class I, I... idx>
-        inline batch<T, A> swizzle(batch<T, A> const& arg, batch_constant<batch<I, A>, idx...>, requires_arch<rvv>) noexcept
+        inline batch<T, A> swizzle(batch<T, A> const& arg, batch_constant<I, A, idx...>, requires_arch<rvv>) noexcept
         {
             static_assert(batch<T, A>::size == sizeof...(idx), "invalid swizzle indices");
             const batch<I, A> indices { idx... };
@@ -1159,11 +1159,11 @@ namespace xsimd
 
         template <class A, class T, class I, I... idx>
         inline batch<std::complex<T>, A> swizzle(batch<std::complex<T>, A> const& self,
-                                                 batch_constant<batch<I, A>, idx...>,
+                                                 batch_constant<I, A, idx...>,
                                                  requires_arch<rvv>) noexcept
         {
-            const auto real = swizzle(self.real(), batch_constant<batch<I, A>, idx...> {}, rvv {});
-            const auto imag = swizzle(self.imag(), batch_constant<batch<I, A>, idx...> {}, rvv {});
+            const auto real = swizzle(self.real(), batch_constant<I, A, idx...> {}, rvv {});
+            const auto imag = swizzle(self.imag(), batch_constant<I, A, idx...> {}, rvv {});
             return batch<std::complex<T>>(real, imag);
         }
 
@@ -1188,7 +1188,7 @@ namespace xsimd
         }
 
         template <class A, class T, bool... b>
-        inline batch<T, A> select(batch_bool_constant<batch<T, A>, b...> const&, batch<T, A> const& true_br, batch<T, A> const& false_br, requires_arch<rvv>) noexcept
+        inline batch<T, A> select(batch_bool_constant<T, A, b...> const&, batch<T, A> const& true_br, batch<T, A> const& false_br, requires_arch<rvv>) noexcept
         {
             return select(batch_bool<T, A> { b... }, true_br, false_br, rvv {});
         }

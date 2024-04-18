@@ -617,27 +617,27 @@ namespace xsimd
 
         // swizzle (static version)
         template <class A, uint16_t... Vs>
-        inline batch<uint16_t, A> swizzle(batch<uint16_t, A> const& self, batch_constant<batch<uint16_t, A>, Vs...> mask, requires_arch<avx512bw>) noexcept
+        inline batch<uint16_t, A> swizzle(batch<uint16_t, A> const& self, batch_constant<uint16_t, A, Vs...> mask, requires_arch<avx512bw>) noexcept
         {
-            return swizzle(self, (batch<uint16_t, A>)mask, avx512bw {});
+            return swizzle(self, mask.as_batch(), avx512bw {});
         }
 
         template <class A, uint16_t... Vs>
-        inline batch<int16_t, A> swizzle(batch<int16_t, A> const& self, batch_constant<batch<uint16_t, A>, Vs...> mask, requires_arch<avx512bw>) noexcept
+        inline batch<int16_t, A> swizzle(batch<int16_t, A> const& self, batch_constant<uint16_t, A, Vs...> mask, requires_arch<avx512bw>) noexcept
         {
-            return swizzle(self, (batch<uint16_t, A>)mask, avx512bw {});
+            return swizzle(self, mask.as_batch(), avx512bw {});
         }
 
         template <class A, uint8_t... Vs>
-        inline batch<uint8_t, A> swizzle(batch<uint8_t, A> const& self, batch_constant<batch<uint8_t, A>, Vs...> mask, requires_arch<avx512bw>) noexcept
+        inline batch<uint8_t, A> swizzle(batch<uint8_t, A> const& self, batch_constant<uint8_t, A, Vs...> mask, requires_arch<avx512bw>) noexcept
         {
-            return swizzle(self, (batch<uint8_t, A>)mask, avx512bw {});
+            return swizzle(self, mask.as_batch(), avx512bw {});
         }
 
         template <class A, uint8_t... Vs>
-        inline batch<int8_t, A> swizzle(batch<int8_t, A> const& self, batch_constant<batch<uint8_t, A>, Vs...> mask, requires_arch<avx512bw>) noexcept
+        inline batch<int8_t, A> swizzle(batch<int8_t, A> const& self, batch_constant<uint8_t, A, Vs...> mask, requires_arch<avx512bw>) noexcept
         {
-            return swizzle(self, (batch<uint8_t, A>)mask, avx512bw {});
+            return swizzle(self, mask.as_batch(), avx512bw {});
         }
 
         // zip_hi

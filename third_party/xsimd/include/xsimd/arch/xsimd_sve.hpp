@@ -20,7 +20,7 @@
 
 namespace xsimd
 {
-    template <class batch_type, typename batch_type::value_type... Values>
+    template <typename T, class A, T... Values>
     struct batch_constant;
 
     namespace kernel
@@ -739,19 +739,19 @@ namespace xsimd
 
         // swizzle (static)
         template <class A, class T, class I, I... idx>
-        inline batch<T, A> swizzle(batch<T, A> const& arg, batch_constant<batch<I, A>, idx...> indices, requires_arch<sve>) noexcept
+        inline batch<T, A> swizzle(batch<T, A> const& arg, batch_constant<I, A, idx...> indices, requires_arch<sve>) noexcept
         {
             static_assert(batch<T, A>::size == sizeof...(idx), "invalid swizzle indices");
-            return swizzle(arg, (batch<I, A>)indices, sve {});
+            return swizzle(arg, indices.as_batch(), sve {});
         }
 
         template <class A, class T, class I, I... idx>
         inline batch<std::complex<T>, A> swizzle(batch<std::complex<T>, A> const& arg,
-                                                 batch_constant<batch<I, A>, idx...> indices,
+                                                 batch_constant<I, A, idx...> indices,
                                                  requires_arch<sve>) noexcept
         {
             static_assert(batch<std::complex<T>, A>::size == sizeof...(idx), "invalid swizzle indices");
-            return swizzle(arg, (batch<I, A>)indices, sve {});
+            return swizzle(arg, indices.as_batch(), sve {});
         }
 
         /*************
@@ -811,7 +811,7 @@ namespace xsimd
         }
 
         template <class A, class T, bool... b>
-        inline batch<T, A> select(batch_bool_constant<batch<T, A>, b...> const&, batch<T, A> const& true_br, batch<T, A> const& false_br, requires_arch<sve>) noexcept
+        inline batch<T, A> select(batch_bool_constant<T, A, b...> const&, batch<T, A> const& true_br, batch<T, A> const& false_br, requires_arch<sve>) noexcept
         {
             return select(batch_bool<T, A> { b... }, true_br, false_br, sve {});
         }

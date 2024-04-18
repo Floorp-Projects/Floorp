@@ -21,7 +21,7 @@
 
 namespace xsimd
 {
-    template <class batch_type, bool... Values>
+    template <typename T, class A, bool... Values>
     struct batch_bool_constant;
 
     namespace kernel
@@ -942,7 +942,7 @@ namespace xsimd
         }
 
         template <class A, bool... b>
-        inline batch<double, A> select(batch_bool_constant<batch<double, A>, b...> const&,
+        inline batch<double, A> select(batch_bool_constant<double, A, b...> const&,
                                        batch<double, A> const& true_br,
                                        batch<double, A> const& false_br,
                                        requires_arch<neon64>) noexcept
@@ -1243,7 +1243,7 @@ namespace xsimd
         }
     }
 
-    template <class batch_type, typename batch_type::value_type... Values>
+    template <typename T, class A, T... Values>
     struct batch_constant;
 
     namespace kernel
@@ -1354,42 +1354,40 @@ namespace xsimd
             template <class CB1, class CB2, class IS>
             struct index_burst_impl;
 
-            template <class B1, class B2, typename B2::value_type... V,
-                      typename B2::value_type... incr>
-            struct index_burst_impl<batch_constant<B1>, batch_constant<B2, V...>,
-                                    integer_sequence<typename B2::value_type, incr...>>
+            template <typename T1, class A, typename T2, T2... V,
+                      T2... incr>
+            struct index_burst_impl<batch_constant<T1, A>, batch_constant<T2, A, V...>,
+                                    integer_sequence<T2, incr...>>
             {
-                using type = batch_constant<B2, V...>;
+                using type = batch_constant<T2, A, V...>;
             };
 
-            template <class B1, typename B1::value_type V0, typename B1::value_type... V1,
-                      class B2, typename B2::value_type... V2,
-                      typename B2::value_type... incr>
-            struct index_burst_impl<batch_constant<B1, V0, V1...>, batch_constant<B2, V2...>,
-                                    integer_sequence<typename B2::value_type, incr...>>
+            template <typename T1, class A, T1 V0, T1... V1,
+                      typename T2, T2... V2, T2... incr>
+            struct index_burst_impl<batch_constant<T1, A, V0, V1...>, batch_constant<T2, A, V2...>,
+                                    integer_sequence<T2, incr...>>
             {
-                using value_type = typename B2::value_type;
-                using next_input = batch_constant<B1, V1...>;
-                using next_output = batch_constant<B2, V2..., (V0 + incr)...>;
-                using type = typename index_burst_impl<next_input, next_output, integer_sequence<value_type, incr...>>::type;
+                using next_input = batch_constant<T1, A, V1...>;
+                using next_output = batch_constant<T2, A, V2..., (V0 + incr)...>;
+                using type = typename index_burst_impl<next_input, next_output, integer_sequence<T2, incr...>>::type;
             };
 
             template <class B, class T>
             struct index_burst;
 
-            template <class B, typename B::value_type... V, class T>
-            struct index_burst<batch_constant<B, V...>, T>
+            template <typename Tp, class A, Tp... V, typename T>
+            struct index_burst<batch_constant<Tp, A, V...>, T>
             {
-                static constexpr size_t mul = sizeof(typename B::value_type) / sizeof(T);
-                using input = batch_constant<B, (mul * V)...>;
-                using output = batch_constant<batch<T, typename B::arch_type>>;
+                static constexpr size_t mul = sizeof(Tp) / sizeof(T);
+                using input = batch_constant<Tp, A, (mul * V)...>;
+                using output = batch_constant<T, A>;
                 using type = typename index_burst_impl<input, output, make_integer_sequence<T, mul>>::type;
             };
 
-            template <class B, class T>
+            template <class B, typename T>
             using index_burst_t = typename index_burst<B, T>::type;
 
-            template <class T, class B>
+            template <typename T, class B>
             inline index_burst_t<B, T> burst_index(B)
             {
                 return index_burst_t<B, T>();
@@ -1399,7 +1397,7 @@ namespace xsimd
         template <class A, uint8_t V0, uint8_t V1, uint8_t V2, uint8_t V3, uint8_t V4, uint8_t V5, uint8_t V6, uint8_t V7,
                   uint8_t V8, uint8_t V9, uint8_t V10, uint8_t V11, uint8_t V12, uint8_t V13, uint8_t V14, uint8_t V15>
         inline batch<uint8_t, A> swizzle(batch<uint8_t, A> const& self,
-                                         batch_constant<batch<uint8_t, A>, V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15> idx,
+                                         batch_constant<uint8_t, A, V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15> idx,
                                          requires_arch<neon64>) noexcept
         {
             return vqtbl1q_u8(self, batch<uint8_t, A>(idx));
@@ -1408,7 +1406,7 @@ namespace xsimd
         template <class A, uint8_t V0, uint8_t V1, uint8_t V2, uint8_t V3, uint8_t V4, uint8_t V5, uint8_t V6, uint8_t V7,
                   uint8_t V8, uint8_t V9, uint8_t V10, uint8_t V11, uint8_t V12, uint8_t V13, uint8_t V14, uint8_t V15>
         inline batch<int8_t, A> swizzle(batch<int8_t, A> const& self,
-                                        batch_constant<batch<uint8_t, A>, V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15> idx,
+                                        batch_constant<uint8_t, A, V0, V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15> idx,
                                         requires_arch<neon64>) noexcept
         {
             return vqtbl1q_s8(self, batch<uint8_t, A>(idx));
@@ -1416,7 +1414,7 @@ namespace xsimd
 
         template <class A, uint16_t V0, uint16_t V1, uint16_t V2, uint16_t V3, uint16_t V4, uint16_t V5, uint16_t V6, uint16_t V7>
         inline batch<uint16_t, A> swizzle(batch<uint16_t, A> const& self,
-                                          batch_constant<batch<uint16_t, A>, V0, V1, V2, V3, V4, V5, V6, V7> idx,
+                                          batch_constant<uint16_t, A, V0, V1, V2, V3, V4, V5, V6, V7> idx,
                                           requires_arch<neon64>) noexcept
         {
             using batch_type = batch<uint8_t, A>;
@@ -1425,7 +1423,7 @@ namespace xsimd
 
         template <class A, uint16_t V0, uint16_t V1, uint16_t V2, uint16_t V3, uint16_t V4, uint16_t V5, uint16_t V6, uint16_t V7>
         inline batch<int16_t, A> swizzle(batch<int16_t, A> const& self,
-                                         batch_constant<batch<uint16_t, A>, V0, V1, V2, V3, V4, V5, V6, V7> idx,
+                                         batch_constant<uint16_t, A, V0, V1, V2, V3, V4, V5, V6, V7> idx,
                                          requires_arch<neon64>) noexcept
         {
             using batch_type = batch<int8_t, A>;
@@ -1434,7 +1432,7 @@ namespace xsimd
 
         template <class A, uint32_t V0, uint32_t V1, uint32_t V2, uint32_t V3>
         inline batch<uint32_t, A> swizzle(batch<uint32_t, A> const& self,
-                                          batch_constant<batch<uint32_t, A>, V0, V1, V2, V3> idx,
+                                          batch_constant<uint32_t, A, V0, V1, V2, V3> idx,
                                           requires_arch<neon64>) noexcept
         {
             using batch_type = batch<uint8_t, A>;
@@ -1443,7 +1441,7 @@ namespace xsimd
 
         template <class A, uint32_t V0, uint32_t V1, uint32_t V2, uint32_t V3>
         inline batch<int32_t, A> swizzle(batch<int32_t, A> const& self,
-                                         batch_constant<batch<uint32_t, A>, V0, V1, V2, V3> idx,
+                                         batch_constant<uint32_t, A, V0, V1, V2, V3> idx,
                                          requires_arch<neon64>) noexcept
         {
             using batch_type = batch<int8_t, A>;
@@ -1452,7 +1450,7 @@ namespace xsimd
 
         template <class A, uint64_t V0, uint64_t V1>
         inline batch<uint64_t, A> swizzle(batch<uint64_t, A> const& self,
-                                          batch_constant<batch<uint64_t, A>, V0, V1> idx,
+                                          batch_constant<uint64_t, A, V0, V1> idx,
                                           requires_arch<neon64>) noexcept
         {
             using batch_type = batch<uint8_t, A>;
@@ -1461,7 +1459,7 @@ namespace xsimd
 
         template <class A, uint64_t V0, uint64_t V1>
         inline batch<int64_t, A> swizzle(batch<int64_t, A> const& self,
-                                         batch_constant<batch<uint64_t, A>, V0, V1> idx,
+                                         batch_constant<uint64_t, A, V0, V1> idx,
                                          requires_arch<neon64>) noexcept
         {
             using batch_type = batch<int8_t, A>;
@@ -1470,7 +1468,7 @@ namespace xsimd
 
         template <class A, uint32_t V0, uint32_t V1, uint32_t V2, uint32_t V3>
         inline batch<float, A> swizzle(batch<float, A> const& self,
-                                       batch_constant<batch<uint32_t, A>, V0, V1, V2, V3> idx,
+                                       batch_constant<uint32_t, A, V0, V1, V2, V3> idx,
                                        requires_arch<neon64>) noexcept
         {
             using batch_type = batch<uint8_t, A>;
@@ -1479,7 +1477,7 @@ namespace xsimd
 
         template <class A, uint64_t V0, uint64_t V1>
         inline batch<double, A> swizzle(batch<double, A> const& self,
-                                        batch_constant<batch<uint64_t, A>, V0, V1> idx,
+                                        batch_constant<uint64_t, A, V0, V1> idx,
                                         requires_arch<neon64>) noexcept
         {
             using batch_type = batch<uint8_t, A>;
@@ -1488,7 +1486,7 @@ namespace xsimd
 
         template <class A, uint32_t V0, uint32_t V1, uint32_t V2, uint32_t V3>
         inline batch<std::complex<float>, A> swizzle(batch<std::complex<float>, A> const& self,
-                                                     batch_constant<batch<uint32_t, A>, V0, V1, V2, V3> idx,
+                                                     batch_constant<uint32_t, A, V0, V1, V2, V3> idx,
                                                      requires_arch<neon64>) noexcept
         {
             return batch<std::complex<float>>(swizzle(self.real(), idx, A()), swizzle(self.imag(), idx, A()));
@@ -1496,7 +1494,7 @@ namespace xsimd
 
         template <class A, uint64_t V0, uint64_t V1>
         inline batch<std::complex<double>, A> swizzle(batch<std::complex<double>, A> const& self,
-                                                      batch_constant<batch<uint64_t, A>, V0, V1> idx,
+                                                      batch_constant<uint64_t, A, V0, V1> idx,
                                                       requires_arch<neon64>) noexcept
         {
             return batch<std::complex<double>>(swizzle(self.real(), idx, A()), swizzle(self.imag(), idx, A()));

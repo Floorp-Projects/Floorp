@@ -729,9 +729,9 @@ namespace xsimd
             }
         }
         template <class A, class T, bool... Values, class = typename std::enable_if<std::is_integral<T>::value, void>::type>
-        inline batch<T, A> select(batch_bool_constant<batch<T, A>, Values...> const&, batch<T, A> const& true_br, batch<T, A> const& false_br, requires_arch<avx2>) noexcept
+        inline batch<T, A> select(batch_bool_constant<T, A, Values...> const&, batch<T, A> const& true_br, batch<T, A> const& false_br, requires_arch<avx2>) noexcept
         {
-            constexpr int mask = batch_bool_constant<batch<T, A>, Values...>::mask();
+            constexpr int mask = batch_bool_constant<T, A, Values...>::mask();
             // FIXME: for some reason mask here is not considered as an immediate,
             // but it's okay for _mm256_blend_epi32
             // case 2: return _mm256_blend_epi16(false_br, true_br, mask);
@@ -912,36 +912,36 @@ namespace xsimd
 
         // swizzle (constant mask)
         template <class A, uint32_t V0, uint32_t V1, uint32_t V2, uint32_t V3, uint32_t V4, uint32_t V5, uint32_t V6, uint32_t V7>
-        inline batch<float, A> swizzle(batch<float, A> const& self, batch_constant<batch<uint32_t, A>, V0, V1, V2, V3, V4, V5, V6, V7> mask, requires_arch<avx2>) noexcept
+        inline batch<float, A> swizzle(batch<float, A> const& self, batch_constant<uint32_t, A, V0, V1, V2, V3, V4, V5, V6, V7> mask, requires_arch<avx2>) noexcept
         {
-            return _mm256_permutevar8x32_ps(self, (batch<uint32_t, A>)mask);
+            return _mm256_permutevar8x32_ps(self, mask.as_batch());
         }
 
         template <class A, uint64_t V0, uint64_t V1, uint64_t V2, uint64_t V3>
-        inline batch<double, A> swizzle(batch<double, A> const& self, batch_constant<batch<uint64_t, A>, V0, V1, V2, V3>, requires_arch<avx2>) noexcept
+        inline batch<double, A> swizzle(batch<double, A> const& self, batch_constant<uint64_t, A, V0, V1, V2, V3>, requires_arch<avx2>) noexcept
         {
             constexpr auto mask = detail::shuffle(V0, V1, V2, V3);
             return _mm256_permute4x64_pd(self, mask);
         }
 
         template <class A, uint64_t V0, uint64_t V1, uint64_t V2, uint64_t V3>
-        inline batch<uint64_t, A> swizzle(batch<uint64_t, A> const& self, batch_constant<batch<uint64_t, A>, V0, V1, V2, V3>, requires_arch<avx2>) noexcept
+        inline batch<uint64_t, A> swizzle(batch<uint64_t, A> const& self, batch_constant<uint64_t, A, V0, V1, V2, V3>, requires_arch<avx2>) noexcept
         {
             constexpr auto mask = detail::shuffle(V0, V1, V2, V3);
             return _mm256_permute4x64_epi64(self, mask);
         }
         template <class A, uint64_t V0, uint64_t V1, uint64_t V2, uint64_t V3>
-        inline batch<int64_t, A> swizzle(batch<int64_t, A> const& self, batch_constant<batch<uint64_t, A>, V0, V1, V2, V3> mask, requires_arch<avx2>) noexcept
+        inline batch<int64_t, A> swizzle(batch<int64_t, A> const& self, batch_constant<uint64_t, A, V0, V1, V2, V3> mask, requires_arch<avx2>) noexcept
         {
             return bitwise_cast<int64_t>(swizzle(bitwise_cast<uint64_t>(self), mask, avx2 {}));
         }
         template <class A, uint32_t V0, uint32_t V1, uint32_t V2, uint32_t V3, uint32_t V4, uint32_t V5, uint32_t V6, uint32_t V7>
-        inline batch<uint32_t, A> swizzle(batch<uint32_t, A> const& self, batch_constant<batch<uint32_t, A>, V0, V1, V2, V3, V4, V5, V6, V7> mask, requires_arch<avx2>) noexcept
+        inline batch<uint32_t, A> swizzle(batch<uint32_t, A> const& self, batch_constant<uint32_t, A, V0, V1, V2, V3, V4, V5, V6, V7> mask, requires_arch<avx2>) noexcept
         {
-            return _mm256_permutevar8x32_epi32(self, (batch<uint32_t, A>)mask);
+            return _mm256_permutevar8x32_epi32(self, mask.as_batch());
         }
         template <class A, uint32_t V0, uint32_t V1, uint32_t V2, uint32_t V3, uint32_t V4, uint32_t V5, uint32_t V6, uint32_t V7>
-        inline batch<int32_t, A> swizzle(batch<int32_t, A> const& self, batch_constant<batch<uint32_t, A>, V0, V1, V2, V3, V4, V5, V6, V7> mask, requires_arch<avx2>) noexcept
+        inline batch<int32_t, A> swizzle(batch<int32_t, A> const& self, batch_constant<uint32_t, A, V0, V1, V2, V3, V4, V5, V6, V7> mask, requires_arch<avx2>) noexcept
         {
             return bitwise_cast<int32_t>(swizzle(bitwise_cast<uint32_t>(self), mask, avx2 {}));
         }
