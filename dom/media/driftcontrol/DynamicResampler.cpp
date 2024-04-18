@@ -236,13 +236,9 @@ void DynamicResampler::WarmUpResampler(bool aSkipLatency) {
     }
   }
   if (aSkipLatency) {
-    int inputLatency = speex_resampler_get_input_latency(mResampler);
-    MOZ_ASSERT(inputLatency > 0);
-    uint32_t ratioNum, ratioDen;
-    speex_resampler_get_ratio(mResampler, &ratioNum, &ratioDen);
-    // Ratio at this point is one so only skip the input latency. No special
-    // calculations are needed.
-    speex_resampler_set_skip_frac_num(mResampler, inputLatency * ratioDen);
+    // Don't generate output frames corresponding to times before the next
+    // input sample.
+    speex_resampler_skip_zeros(mResampler);
   }
   mIsWarmingUp = false;
 }
