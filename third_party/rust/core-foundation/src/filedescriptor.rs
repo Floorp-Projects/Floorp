@@ -9,33 +9,41 @@
 
 pub use core_foundation_sys::filedescriptor::*;
 
-use core_foundation_sys::base::{Boolean, CFIndex};
 use core_foundation_sys::base::{kCFAllocatorDefault, CFOptionFlags};
+use core_foundation_sys::base::{Boolean, CFIndex};
 
-use base::TCFType;
-use runloop::CFRunLoopSource;
+use crate::base::TCFType;
+use crate::runloop::CFRunLoopSource;
 
 use std::mem::MaybeUninit;
 use std::os::unix::io::{AsRawFd, RawFd};
 use std::ptr;
 
-declare_TCFType!{
+declare_TCFType! {
     CFFileDescriptor, CFFileDescriptorRef
 }
-impl_TCFType!(CFFileDescriptor, CFFileDescriptorRef, CFFileDescriptorGetTypeID);
+impl_TCFType!(
+    CFFileDescriptor,
+    CFFileDescriptorRef,
+    CFFileDescriptorGetTypeID
+);
 
 impl CFFileDescriptor {
-    pub fn new(fd: RawFd,
-               closeOnInvalidate: bool,
-               callout: CFFileDescriptorCallBack,
-               context: Option<&CFFileDescriptorContext>) -> Option<CFFileDescriptor> {
+    pub fn new(
+        fd: RawFd,
+        closeOnInvalidate: bool,
+        callout: CFFileDescriptorCallBack,
+        context: Option<&CFFileDescriptorContext>,
+    ) -> Option<CFFileDescriptor> {
         let context = context.map_or(ptr::null(), |c| c as *const _);
         unsafe {
-            let fd_ref = CFFileDescriptorCreate(kCFAllocatorDefault,
-                                                fd,
-                                                closeOnInvalidate as Boolean,
-                                                callout,
-                                                context);
+            let fd_ref = CFFileDescriptorCreate(
+                kCFAllocatorDefault,
+                fd,
+                closeOnInvalidate as Boolean,
+                callout,
+                context,
+            );
             if fd_ref.is_null() {
                 None
             } else {
@@ -53,36 +61,25 @@ impl CFFileDescriptor {
     }
 
     pub fn enable_callbacks(&self, callback_types: CFOptionFlags) {
-        unsafe {
-            CFFileDescriptorEnableCallBacks(self.0, callback_types)
-        }
+        unsafe { CFFileDescriptorEnableCallBacks(self.0, callback_types) }
     }
 
     pub fn disable_callbacks(&self, callback_types: CFOptionFlags) {
-        unsafe {
-            CFFileDescriptorDisableCallBacks(self.0, callback_types)
-        }
+        unsafe { CFFileDescriptorDisableCallBacks(self.0, callback_types) }
     }
 
     pub fn valid(&self) -> bool {
-        unsafe {
-            CFFileDescriptorIsValid(self.0) != 0
-        }
+        unsafe { CFFileDescriptorIsValid(self.0) != 0 }
     }
 
     pub fn invalidate(&self) {
-        unsafe {
-            CFFileDescriptorInvalidate(self.0)
-        }
+        unsafe { CFFileDescriptorInvalidate(self.0) }
     }
 
     pub fn to_run_loop_source(&self, order: CFIndex) -> Option<CFRunLoopSource> {
         unsafe {
-            let source_ref = CFFileDescriptorCreateRunLoopSource(
-                kCFAllocatorDefault,
-                self.0,
-                order
-            );
+            let source_ref =
+                CFFileDescriptorCreateRunLoopSource(kCFAllocatorDefault, self.0, order);
             if source_ref.is_null() {
                 None
             } else {
@@ -94,24 +91,21 @@ impl CFFileDescriptor {
 
 impl AsRawFd for CFFileDescriptor {
     fn as_raw_fd(&self) -> RawFd {
-        unsafe {
-            CFFileDescriptorGetNativeDescriptor(self.0)
-        }
+        unsafe { CFFileDescriptorGetNativeDescriptor(self.0) }
     }
 }
-
 
 #[cfg(test)]
 mod test {
     extern crate libc;
 
     use super::*;
+    use crate::runloop::CFRunLoop;
+    use core_foundation_sys::base::CFOptionFlags;
+    use core_foundation_sys::runloop::kCFRunLoopDefaultMode;
+    use libc::O_RDWR;
     use std::ffi::CString;
     use std::os::raw::c_void;
-    use core_foundation_sys::base::{CFOptionFlags};
-    use core_foundation_sys::runloop::{kCFRunLoopDefaultMode};
-    use libc::O_RDWR;
-    use runloop::{CFRunLoop};
 
     #[test]
     fn test_unconsumed() {
@@ -129,14 +123,16 @@ mod test {
         assert_eq!(unsafe { libc::close(raw_fd) }, 0);
     }
 
-    extern "C" fn never_callback(_f: CFFileDescriptorRef,
-                                 _callback_types: CFOptionFlags,
-                                 _info_ptr: *mut c_void) {
+    extern "C" fn never_callback(
+        _f: CFFileDescriptorRef,
+        _callback_types: CFOptionFlags,
+        _info_ptr: *mut c_void,
+    ) {
         unreachable!();
     }
 
     struct TestInfo {
-        value: CFOptionFlags
+        value: CFOptionFlags,
     }
 
     #[test]
@@ -147,7 +143,7 @@ mod test {
             info: &mut info as *mut _ as *mut c_void,
             retain: None,
             release: None,
-            copyDescription: None
+            copyDescription: None,
         };
 
         let path = CString::new("/dev/null").unwrap();
@@ -182,7 +178,11 @@ mod test {
         assert!(!cf_fd.valid());
     }
 
-    extern "C" fn callback(_f: CFFileDescriptorRef, callback_types: CFOptionFlags, info_ptr: *mut c_void) {
+    extern "C" fn callback(
+        _f: CFFileDescriptorRef,
+        callback_types: CFOptionFlags,
+        info_ptr: *mut c_void,
+    ) {
         assert!(!info_ptr.is_null());
 
         let info: *mut TestInfo = info_ptr as *mut TestInfo;

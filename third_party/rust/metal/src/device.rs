@@ -8,8 +8,7 @@
 use super::*;
 
 use block::{Block, ConcreteBlock};
-use foreign_types::ForeignType;
-use objc::runtime::{Object, NO, YES};
+use objc::runtime::{NO, YES};
 
 use std::{ffi::CStr, os::raw::c_char, path::Path, ptr};
 

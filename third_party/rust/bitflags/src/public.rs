@@ -6,7 +6,7 @@
 /// Declare the user-facing bitflags struct.
 ///
 /// This type is guaranteed to be a newtype with a `bitflags`-facing type as its single field.
-#[macro_export(local_inner_macros)]
+#[macro_export]
 #[doc(hidden)]
 macro_rules! __declare_public_bitflags {
     (
@@ -22,13 +22,13 @@ macro_rules! __declare_public_bitflags {
 ///
 /// We need to be careful about adding new methods and trait implementations here because they
 /// could conflict with items added by the end-user.
-#[macro_export(local_inner_macros)]
+#[macro_export]
 #[doc(hidden)]
 macro_rules! __impl_public_bitflags_forward {
     (
         $PublicBitFlags:ident: $T:ty, $InternalBitFlags:ident
     ) => {
-        __impl_bitflags! {
+        $crate::__impl_bitflags! {
             $PublicBitFlags: $T {
                 fn empty() {
                     Self($InternalBitFlags::empty())
@@ -124,7 +124,7 @@ macro_rules! __impl_public_bitflags_forward {
 ///
 /// We need to be careful about adding new methods and trait implementations here because they
 /// could conflict with items added by the end-user.
-#[macro_export(local_inner_macros)]
+#[macro_export]
 #[doc(hidden)]
 macro_rules! __impl_public_bitflags {
     (
@@ -135,7 +135,7 @@ macro_rules! __impl_public_bitflags {
             )*
         }
     ) => {
-        __impl_bitflags! {
+        $crate::__impl_bitflags! {
             $BitFlags: $T {
                 fn empty() {
                     Self(<$T as $crate::Bits>::EMPTY)
@@ -146,7 +146,7 @@ macro_rules! __impl_public_bitflags {
                     let mut i = 0;
 
                     $(
-                        __bitflags_expr_safe_attrs!(
+                        $crate::__bitflags_expr_safe_attrs!(
                             $(#[$inner $($args)*])*
                             {{
                                 let flag = <$PublicBitFlags as $crate::Flags>::FLAGS[i].value().bits();
@@ -185,10 +185,10 @@ macro_rules! __impl_public_bitflags {
 
                 fn from_name(name) {
                     $(
-                        __bitflags_flag!({
+                        $crate::__bitflags_flag!({
                             name: $Flag,
                             named: {
-                                __bitflags_expr_safe_attrs!(
+                                $crate::__bitflags_expr_safe_attrs!(
                                     $(#[$inner $($args)*])*
                                     {
                                         if name == $crate::__private::core::stringify!($Flag) {
@@ -268,7 +268,7 @@ macro_rules! __impl_public_bitflags {
 }
 
 /// Implement iterators on the public (user-facing) bitflags type.
-#[macro_export(local_inner_macros)]
+#[macro_export]
 #[doc(hidden)]
 macro_rules! __impl_public_bitflags_iter {
     ($BitFlags:ident: $T:ty, $PublicBitFlags:ident) => {
@@ -312,7 +312,7 @@ macro_rules! __impl_public_bitflags_iter {
 }
 
 /// Implement traits on the public (user-facing) bitflags type.
-#[macro_export(local_inner_macros)]
+#[macro_export]
 #[doc(hidden)]
 macro_rules! __impl_public_bitflags_ops {
     ($PublicBitFlags:ident) => {
@@ -321,7 +321,8 @@ macro_rules! __impl_public_bitflags_ops {
                 &self,
                 f: &mut $crate::__private::core::fmt::Formatter,
             ) -> $crate::__private::core::fmt::Result {
-                $crate::__private::core::fmt::Binary::fmt(&self.0, f)
+                let inner = self.0;
+                $crate::__private::core::fmt::Binary::fmt(&inner, f)
             }
         }
 
@@ -330,7 +331,8 @@ macro_rules! __impl_public_bitflags_ops {
                 &self,
                 f: &mut $crate::__private::core::fmt::Formatter,
             ) -> $crate::__private::core::fmt::Result {
-                $crate::__private::core::fmt::Octal::fmt(&self.0, f)
+                let inner = self.0;
+                $crate::__private::core::fmt::Octal::fmt(&inner, f)
             }
         }
 
@@ -339,7 +341,8 @@ macro_rules! __impl_public_bitflags_ops {
                 &self,
                 f: &mut $crate::__private::core::fmt::Formatter,
             ) -> $crate::__private::core::fmt::Result {
-                $crate::__private::core::fmt::LowerHex::fmt(&self.0, f)
+                let inner = self.0;
+                $crate::__private::core::fmt::LowerHex::fmt(&inner, f)
             }
         }
 
@@ -348,7 +351,8 @@ macro_rules! __impl_public_bitflags_ops {
                 &self,
                 f: &mut $crate::__private::core::fmt::Formatter,
             ) -> $crate::__private::core::fmt::Result {
-                $crate::__private::core::fmt::UpperHex::fmt(&self.0, f)
+                let inner = self.0;
+                $crate::__private::core::fmt::UpperHex::fmt(&inner, f)
             }
         }
 
@@ -468,7 +472,7 @@ macro_rules! __impl_public_bitflags_ops {
 }
 
 /// Implement constants on the public (user-facing) bitflags type.
-#[macro_export(local_inner_macros)]
+#[macro_export]
 #[doc(hidden)]
 macro_rules! __impl_public_bitflags_consts {
     (
@@ -481,7 +485,7 @@ macro_rules! __impl_public_bitflags_consts {
     ) => {
         impl $PublicBitFlags {
             $(
-                __bitflags_flag!({
+                $crate::__bitflags_flag!({
                     name: $Flag,
                     named: {
                         $(#[$inner $($args)*])*
@@ -499,10 +503,10 @@ macro_rules! __impl_public_bitflags_consts {
         impl $crate::Flags for $PublicBitFlags {
             const FLAGS: &'static [$crate::Flag<$PublicBitFlags>] = &[
                 $(
-                    __bitflags_flag!({
+                    $crate::__bitflags_flag!({
                         name: $Flag,
                         named: {
-                            __bitflags_expr_safe_attrs!(
+                            $crate::__bitflags_expr_safe_attrs!(
                                 $(#[$inner $($args)*])*
                                 {
                                     #[allow(
@@ -514,7 +518,7 @@ macro_rules! __impl_public_bitflags_consts {
                             )
                         },
                         unnamed: {
-                            __bitflags_expr_safe_attrs!(
+                            $crate::__bitflags_expr_safe_attrs!(
                                 $(#[$inner $($args)*])*
                                 {
                                     #[allow(

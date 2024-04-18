@@ -14,13 +14,13 @@ pub use core_foundation_sys::bundle::*;
 use core_foundation_sys::url::kCFURLPOSIXPathStyle;
 use std::path::PathBuf;
 
-use base::{CFType, TCFType};
-use url::CFURL;
-use dictionary::CFDictionary;
+use crate::base::{CFType, TCFType};
+use crate::dictionary::CFDictionary;
+use crate::string::CFString;
+use crate::url::CFURL;
 use std::os::raw::c_void;
-use string::CFString;
 
-declare_TCFType!{
+declare_TCFType! {
     /// A Bundle type.
     CFBundle, CFBundleRef
 }
@@ -51,8 +51,10 @@ impl CFBundle {
 
     pub fn function_pointer_for_name(&self, function_name: CFString) -> *const c_void {
         unsafe {
-            CFBundleGetFunctionPointerForName(self.as_concrete_TypeRef(),
-                                              function_name.as_concrete_TypeRef())
+            CFBundleGetFunctionPointerForName(
+                self.as_concrete_TypeRef(),
+                function_name.as_concrete_TypeRef(),
+            )
         }
     }
 
@@ -96,7 +98,9 @@ impl CFBundle {
     /// Bundle's own location
     pub fn path(&self) -> Option<PathBuf> {
         let url = self.bundle_url()?;
-        Some(PathBuf::from(url.get_file_system_path(kCFURLPOSIXPathStyle).to_string()))
+        Some(PathBuf::from(
+            url.get_file_system_path(kCFURLPOSIXPathStyle).to_string(),
+        ))
     }
 
     /// Bundle's resources location
@@ -114,7 +118,9 @@ impl CFBundle {
     /// Bundle's resources location
     pub fn resources_path(&self) -> Option<PathBuf> {
         let url = self.bundle_resources_url()?;
-        Some(PathBuf::from(url.get_file_system_path(kCFURLPOSIXPathStyle).to_string()))
+        Some(PathBuf::from(
+            url.get_file_system_path(kCFURLPOSIXPathStyle).to_string(),
+        ))
     }
 
     pub fn private_frameworks_url(&self) -> Option<CFURL> {
@@ -140,11 +146,10 @@ impl CFBundle {
     }
 }
 
-
 #[test]
 fn safari_executable_url() {
-    use string::CFString;
-    use url::{CFURL, kCFURLPOSIXPathStyle};
+    use crate::string::CFString;
+    use crate::url::{kCFURLPOSIXPathStyle, CFURL};
 
     let cfstr_path = CFString::from_static_string("/Applications/Safari.app");
     let cfurl_path = CFURL::from_file_system_path(cfstr_path, kCFURLPOSIXPathStyle, true);
@@ -152,18 +157,20 @@ fn safari_executable_url() {
         .expect("Safari not present")
         .executable_url();
     assert!(cfurl_executable.is_some());
-    assert_eq!(cfurl_executable
-                   .unwrap()
-                   .absolute()
-                   .get_file_system_path(kCFURLPOSIXPathStyle)
-                   .to_string(),
-               "/Applications/Safari.app/Contents/MacOS/Safari");
+    assert_eq!(
+        cfurl_executable
+            .unwrap()
+            .absolute()
+            .get_file_system_path(kCFURLPOSIXPathStyle)
+            .to_string(),
+        "/Applications/Safari.app/Contents/MacOS/Safari"
+    );
 }
 
 #[test]
 fn safari_private_frameworks_url() {
-    use string::CFString;
-    use url::{CFURL, kCFURLPOSIXPathStyle};
+    use crate::string::CFString;
+    use crate::url::{kCFURLPOSIXPathStyle, CFURL};
 
     let cfstr_path = CFString::from_static_string("/Applications/Safari.app");
     let cfurl_path = CFURL::from_file_system_path(cfstr_path, kCFURLPOSIXPathStyle, true);
@@ -171,18 +178,20 @@ fn safari_private_frameworks_url() {
         .expect("Safari not present")
         .private_frameworks_url();
     assert!(cfurl_executable.is_some());
-    assert_eq!(cfurl_executable
-                   .unwrap()
-                   .absolute()
-                   .get_file_system_path(kCFURLPOSIXPathStyle)
-                   .to_string(),
-               "/Applications/Safari.app/Contents/Frameworks");
+    assert_eq!(
+        cfurl_executable
+            .unwrap()
+            .absolute()
+            .get_file_system_path(kCFURLPOSIXPathStyle)
+            .to_string(),
+        "/Applications/Safari.app/Contents/Frameworks"
+    );
 }
 
 #[test]
 fn non_existant_bundle() {
-    use string::CFString;
-    use url::{CFURL, kCFURLPOSIXPathStyle};
+    use crate::string::CFString;
+    use crate::url::{kCFURLPOSIXPathStyle, CFURL};
 
     let cfstr_path = CFString::from_static_string("/usr/local/foo");
     let cfurl_path = CFURL::from_file_system_path(cfstr_path, kCFURLPOSIXPathStyle, true);

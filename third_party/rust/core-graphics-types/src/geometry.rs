@@ -7,14 +7,11 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use base::CGFloat;
+use crate::base::CGFloat;
 use core_foundation::base::TCFType;
 use core_foundation::dictionary::CFDictionary;
 
-pub const CG_ZERO_POINT: CGPoint = CGPoint {
-    x: 0.0,
-    y: 0.0,
-};
+pub const CG_ZERO_POINT: CGPoint = CGPoint { x: 0.0, y: 0.0 };
 
 pub const CG_ZERO_SIZE: CGSize = CGSize {
     width: 0.0,
@@ -27,9 +24,12 @@ pub const CG_ZERO_RECT: CGRect = CGRect {
 };
 
 pub const CG_AFFINE_TRANSFORM_IDENTITY: CGAffineTransform = CGAffineTransform {
-    a: 1.0, b: 0.0,
-    c: 0.0, d: 1.0,
-    tx: 0.0, ty: 0.0,
+    a: 1.0,
+    b: 0.0,
+    c: 0.0,
+    d: 1.0,
+    tx: 0.0,
+    ty: 0.0,
 };
 
 #[repr(C)]
@@ -42,17 +42,12 @@ pub struct CGSize {
 impl CGSize {
     #[inline]
     pub fn new(width: CGFloat, height: CGFloat) -> CGSize {
-        CGSize {
-            width: width,
-            height: height,
-        }
+        CGSize { width, height }
     }
 
     #[inline]
     pub fn apply_transform(&self, t: &CGAffineTransform) -> CGSize {
-        unsafe {
-            ffi::CGSizeApplyAffineTransform(*self, *t)
-        }
+        unsafe { ffi::CGSizeApplyAffineTransform(*self, *t) }
     }
 }
 
@@ -66,17 +61,12 @@ pub struct CGPoint {
 impl CGPoint {
     #[inline]
     pub fn new(x: CGFloat, y: CGFloat) -> CGPoint {
-        CGPoint {
-            x: x,
-            y: y,
-        }
+        CGPoint { x, y }
     }
 
     #[inline]
     pub fn apply_transform(&self, t: &CGAffineTransform) -> CGPoint {
-        unsafe {
-            ffi::CGPointApplyAffineTransform(*self, *t)
-        }
+        unsafe { ffi::CGPointApplyAffineTransform(*self, *t) }
     }
 }
 
@@ -84,7 +74,7 @@ impl CGPoint {
 #[derive(Clone, Copy, Debug, Default)]
 pub struct CGRect {
     pub origin: CGPoint,
-    pub size: CGSize
+    pub size: CGSize,
 }
 
 impl CGRect {
@@ -98,9 +88,7 @@ impl CGRect {
 
     #[inline]
     pub fn inset(&self, size: &CGSize) -> CGRect {
-        unsafe {
-            ffi::CGRectInset(*self, size.width, size.height)
-        }
+        unsafe { ffi::CGRectInset(*self, size.width, size.height) }
     }
 
     #[inline]
@@ -134,14 +122,12 @@ impl CGRect {
 
     #[inline]
     pub fn apply_transform(&self, t: &CGAffineTransform) -> CGRect {
-        unsafe {
-            ffi::CGRectApplyAffineTransform(*self, *t)
-        }
+        unsafe { ffi::CGRectApplyAffineTransform(*self, *t) }
     }
 
     #[inline]
     pub fn contains(&self, point: &CGPoint) -> bool {
-        unsafe { ffi::CGRectContainsPoint(*self,*point) == 1 }
+        unsafe { ffi::CGRectContainsPoint(*self, *point) == 1 }
     }
 }
 
@@ -171,22 +157,22 @@ impl CGAffineTransform {
 
     #[inline]
     pub fn invert(&self) -> CGAffineTransform {
-        unsafe {
-            ffi::CGAffineTransformInvert(*self)
-        }
+        unsafe { ffi::CGAffineTransformInvert(*self) }
     }
 }
 
 mod ffi {
-    use base::{CGFloat, boolean_t};
-    use geometry::{CGAffineTransform, CGPoint, CGRect, CGSize};
+    use crate::base::{boolean_t, CGFloat};
+    use crate::geometry::{CGAffineTransform, CGPoint, CGRect, CGSize};
     use core_foundation::dictionary::CFDictionaryRef;
 
-    #[link(name = "CoreGraphics", kind = "framework")]
-    extern {
+    #[cfg_attr(feature = "link", link(name = "CoreGraphics", kind = "framework"))]
+    extern "C" {
         pub fn CGRectInset(rect: CGRect, dx: CGFloat, dy: CGFloat) -> CGRect;
-        pub fn CGRectMakeWithDictionaryRepresentation(dict: CFDictionaryRef,
-                                                      rect: *mut CGRect) -> boolean_t;
+        pub fn CGRectMakeWithDictionaryRepresentation(
+            dict: CFDictionaryRef,
+            rect: *mut CGRect,
+        ) -> boolean_t;
         pub fn CGRectIsEmpty(rect: CGRect) -> boolean_t;
         pub fn CGRectIntersectsRect(rect1: CGRect, rect2: CGRect) -> boolean_t;
 
@@ -196,7 +182,6 @@ mod ffi {
         pub fn CGRectApplyAffineTransform(rect: CGRect, t: CGAffineTransform) -> CGRect;
         pub fn CGSizeApplyAffineTransform(size: CGSize, t: CGAffineTransform) -> CGSize;
 
-        pub fn CGRectContainsPoint(rect:CGRect, point: CGPoint) -> boolean_t;
+        pub fn CGRectContainsPoint(rect: CGRect, point: CGPoint) -> boolean_t;
     }
 }
-

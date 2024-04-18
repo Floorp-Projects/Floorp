@@ -20,13 +20,7 @@ pub extern crate foreign_types;
 #[macro_use]
 pub extern crate paste;
 
-use std::{
-    borrow::{Borrow, ToOwned},
-    marker::PhantomData,
-    mem,
-    ops::Deref,
-    os::raw::c_void,
-};
+use std::{borrow::Borrow, marker::PhantomData, mem, ops::Deref, os::raw::c_void};
 
 use core_graphics_types::{base::CGFloat, geometry::CGSize};
 use foreign_types::ForeignType;

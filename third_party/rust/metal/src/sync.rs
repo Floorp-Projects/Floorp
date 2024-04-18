@@ -7,7 +7,7 @@
 
 use super::*;
 use block::{Block, RcBlock};
-use std::mem;
+use std::ptr;
 
 #[cfg(feature = "dispatch_queue")]
 use dispatch;
@@ -63,7 +63,7 @@ impl SharedEventRef {
                 *mut BlockBase<(&SharedEventRef, u64), ()>,
             >(block);
             (*block).flags |= BLOCK_HAS_SIGNATURE | BLOCK_HAS_COPY_DISPOSE;
-            (*block).extra = &BLOCK_EXTRA;
+            (*block).extra = ptr::addr_of!(BLOCK_EXTRA);
             let () = msg_send![self, notifyListener:listener atValue:value block:block];
         }
 

@@ -9,22 +9,26 @@
 
 pub use core_foundation_sys::attributed_string::*;
 
-use base::TCFType;
-use core_foundation_sys::base::{CFIndex, CFRange, kCFAllocatorDefault};
+use crate::base::TCFType;
+use crate::string::{CFString, CFStringRef};
+use core_foundation_sys::base::{kCFAllocatorDefault, CFIndex, CFRange};
 use std::ptr::null;
-use string::{CFString, CFStringRef};
 
-declare_TCFType!{
+declare_TCFType! {
     CFAttributedString, CFAttributedStringRef
 }
-impl_TCFType!(CFAttributedString, CFAttributedStringRef, CFAttributedStringGetTypeID);
+impl_TCFType!(
+    CFAttributedString,
+    CFAttributedStringRef,
+    CFAttributedStringGetTypeID
+);
 
 impl CFAttributedString {
     #[inline]
     pub fn new(string: &CFString) -> Self {
         unsafe {
-            let astr_ref = CFAttributedStringCreate(
-                kCFAllocatorDefault, string.as_concrete_TypeRef(), null());
+            let astr_ref =
+                CFAttributedStringCreate(kCFAllocatorDefault, string.as_concrete_TypeRef(), null());
 
             CFAttributedString::wrap_under_create_rule(astr_ref)
         }
@@ -32,23 +36,24 @@ impl CFAttributedString {
 
     #[inline]
     pub fn char_len(&self) -> CFIndex {
-        unsafe {
-            CFAttributedStringGetLength(self.0)
-        }
+        unsafe { CFAttributedStringGetLength(self.0) }
     }
 }
 
-declare_TCFType!{
+declare_TCFType! {
     CFMutableAttributedString, CFMutableAttributedStringRef
 }
-impl_TCFType!(CFMutableAttributedString, CFMutableAttributedStringRef, CFAttributedStringGetTypeID);
+impl_TCFType!(
+    CFMutableAttributedString,
+    CFMutableAttributedStringRef,
+    CFAttributedStringGetTypeID
+);
 
 impl CFMutableAttributedString {
     #[inline]
     pub fn new() -> Self {
         unsafe {
-            let astr_ref = CFAttributedStringCreateMutable(
-                kCFAllocatorDefault, 0);
+            let astr_ref = CFAttributedStringCreateMutable(kCFAllocatorDefault, 0);
 
             CFMutableAttributedString::wrap_under_create_rule(astr_ref)
         }
@@ -56,24 +61,20 @@ impl CFMutableAttributedString {
 
     #[inline]
     pub fn char_len(&self) -> CFIndex {
-        unsafe {
-            CFAttributedStringGetLength(self.0)
-        }
+        unsafe { CFAttributedStringGetLength(self.0) }
     }
 
     #[inline]
     pub fn replace_str(&mut self, string: &CFString, range: CFRange) {
         unsafe {
-            CFAttributedStringReplaceString(
-                self.0, range, string.as_concrete_TypeRef());
+            CFAttributedStringReplaceString(self.0, range, string.as_concrete_TypeRef());
         }
     }
 
     #[inline]
     pub fn set_attribute<T: TCFType>(&mut self, range: CFRange, name: CFStringRef, value: &T) {
         unsafe {
-            CFAttributedStringSetAttribute(
-                self.0, range, name, value.as_CFTypeRef());
+            CFAttributedStringSetAttribute(self.0, range, name, value.as_CFTypeRef());
         }
     }
 }
@@ -84,7 +85,6 @@ impl Default for CFMutableAttributedString {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -93,6 +93,9 @@ mod tests {
     fn attributed_string_type_id_comparison() {
         // CFMutableAttributedString TypeID must be equal to CFAttributedString TypeID.
         // Compilation must not fail.
-        assert_eq!(<CFAttributedString as TCFType>::type_id(), <CFMutableAttributedString as TCFType>::type_id());
+        assert_eq!(
+            <CFAttributedString as TCFType>::type_id(),
+            <CFMutableAttributedString as TCFType>::type_id()
+        );
     }
 }

@@ -48,6 +48,7 @@ impl ProgrammableStageDescriptor {
         wgc::pipeline::ProgrammableStageDescriptor {
             module: self.module,
             entry_point: cow_label(&self.entry_point),
+            constants: Cow::Owned(std::collections::HashMap::new()),
         }
     }
 }
@@ -692,7 +693,7 @@ pub extern "C" fn wgpu_client_make_encoder_id(
         .select(backend)
         .command_buffers
         .process(backend)
-        .transmute()
+        .into_command_encoder_id()
 }
 
 #[no_mangle]
@@ -706,7 +707,7 @@ pub extern "C" fn wgpu_client_free_command_encoder_id(
         .lock()
         .select(backend)
         .command_buffers
-        .free(id.transmute())
+        .free(id.into_command_buffer_id())
 }
 
 
@@ -726,7 +727,7 @@ pub extern "C" fn wgpu_client_create_command_encoder(
         .select(backend)
         .command_buffers
         .process(backend)
-        .transmute();
+        .into_command_encoder_id();
 
     let action = DeviceAction::CreateCommandEncoder(id, desc.map_label(|_| label));
     *bb = make_byte_buf(&action);

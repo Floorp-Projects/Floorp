@@ -13,11 +13,11 @@
 edition = "2021"
 rust-version = "1.56.0"
 name = "bitflags"
-version = "2.4.1"
+version = "2.5.0"
 authors = ["The Rust Project Developers"]
 exclude = [
-    "tests",
-    ".github",
+    "/tests",
+    "/.github",
 ]
 description = """
 A macro to generate structures which behave like bitflags.

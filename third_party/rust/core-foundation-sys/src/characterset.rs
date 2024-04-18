@@ -7,10 +7,10 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use crate::base::{Boolean, CFAllocatorRef, CFIndex, CFRange, CFTypeID, UTF32Char};
+use crate::data::CFDataRef;
+use crate::string::{CFStringRef, UniChar};
 use std::os::raw::c_void;
-use base::{Boolean, CFAllocatorRef, CFIndex, CFRange, CFTypeID};
-use data::CFDataRef;
-use string::{CFStringRef, UniChar};
 
 pub type CFCharacterSetPredefinedSet = CFIndex;
 
@@ -35,24 +35,90 @@ pub static kCFCharacterSetNewline: CFCharacterSetPredefinedSet = 15;
 pub struct __CFCharacterSet(c_void);
 
 pub type CFCharacterSetRef = *const __CFCharacterSet;
-pub type CFMutableCharacterSetRef = *const __CFCharacterSet;
+pub type CFMutableCharacterSetRef = *mut __CFCharacterSet;
 
-extern {
-    pub fn CFCharacterSetGetTypeID() -> CFTypeID;
-    pub fn CFCharacterSetGetPredefined(theSetIdentifier: CFCharacterSetPredefinedSet) -> CFCharacterSetRef;
-    pub fn CFCharacterSetCreateWithCharactersInRange(alloc: CFAllocatorRef, theRange: CFRange) -> CFCharacterSetRef;
-    pub fn CFCharacterSetCreateWithCharactersInString(alloc: CFAllocatorRef, theString: CFStringRef) -> CFCharacterSetRef;
-    pub fn CFCharacterSetCreateWithBitmapRepresentation(alloc: CFAllocatorRef, theData: CFDataRef) -> CFCharacterSetRef;
-    pub fn CFCharacterSetCreateMutable(alloc: CFAllocatorRef) -> CFMutableCharacterSetRef;
-    pub fn CFCharacterSetCreateCopy(alloc: CFAllocatorRef, theSet: CFCharacterSetRef) -> CFCharacterSetRef;
-    pub fn CFCharacterSetCreateMutableCopy(alloc: CFAllocatorRef, theSet: CFCharacterSetRef) -> CFMutableCharacterSetRef;
+extern "C" {
+    /*
+     * CFCharacterSet.h
+     */
+
+    /* CFCharacterSet */
+    /* Creating Character Sets */
+    pub fn CFCharacterSetCreateCopy(
+        alloc: CFAllocatorRef,
+        theSet: CFCharacterSetRef,
+    ) -> CFCharacterSetRef;
+    pub fn CFCharacterSetCreateInvertedSet(
+        alloc: CFAllocatorRef,
+        theSet: CFCharacterSetRef,
+    ) -> CFCharacterSetRef;
+    pub fn CFCharacterSetCreateWithCharactersInRange(
+        alloc: CFAllocatorRef,
+        theRange: CFRange,
+    ) -> CFCharacterSetRef;
+    pub fn CFCharacterSetCreateWithCharactersInString(
+        alloc: CFAllocatorRef,
+        theString: CFStringRef,
+    ) -> CFCharacterSetRef;
+    pub fn CFCharacterSetCreateWithBitmapRepresentation(
+        alloc: CFAllocatorRef,
+        theData: CFDataRef,
+    ) -> CFCharacterSetRef;
+
+    /* Getting Predefined Character Sets */
+    pub fn CFCharacterSetGetPredefined(
+        theSetIdentifier: CFCharacterSetPredefinedSet,
+    ) -> CFCharacterSetRef;
+
+    /* Querying Character Sets */
+    pub fn CFCharacterSetCreateBitmapRepresentation(
+        alloc: CFAllocatorRef,
+        theSet: CFCharacterSetRef,
+    ) -> CFDataRef;
+    pub fn CFCharacterSetHasMemberInPlane(theSet: CFCharacterSetRef, thePlane: CFIndex) -> Boolean;
     pub fn CFCharacterSetIsCharacterMember(theSet: CFCharacterSetRef, theChar: UniChar) -> Boolean;
-    pub fn CFCharacterSetCreateBitmapRepresentation(alloc: CFAllocatorRef, theSet: CFCharacterSetRef) -> CFDataRef;
+    pub fn CFCharacterSetIsLongCharacterMember(
+        theSet: CFCharacterSetRef,
+        theChar: UTF32Char,
+    ) -> Boolean;
+    pub fn CFCharacterSetIsSupersetOfSet(
+        theSet: CFCharacterSetRef,
+        theOtherset: CFCharacterSetRef,
+    ) -> Boolean;
+
+    /* Getting the Character Set Type Identifier */
+    pub fn CFCharacterSetGetTypeID() -> CFTypeID;
+
+    /* CFMutableCharacterSet */
+    /* Creating a Mutable Character Set */
+    pub fn CFCharacterSetCreateMutable(alloc: CFAllocatorRef) -> CFMutableCharacterSetRef;
+    pub fn CFCharacterSetCreateMutableCopy(
+        alloc: CFAllocatorRef,
+        theSet: CFCharacterSetRef,
+    ) -> CFMutableCharacterSetRef;
+
+    /* Adding Characters */
     pub fn CFCharacterSetAddCharactersInRange(theSet: CFMutableCharacterSetRef, theRange: CFRange);
-    pub fn CFCharacterSetRemoveCharactersInRange(theSet: CFMutableCharacterSetRef, theRange: CFRange);
-    pub fn CFCharacterSetAddCharactersInString(theSet: CFMutableCharacterSetRef,  theString: CFStringRef);
-    pub fn CFCharacterSetRemoveCharactersInString(theSet: CFMutableCharacterSetRef, theString: CFStringRef);
-    pub fn CFCharacterSetUnion(theSet: CFMutableCharacterSetRef, theOtherSet: CFCharacterSetRef);
-    pub fn CFCharacterSetIntersect(theSet: CFMutableCharacterSetRef, theOtherSet: CFCharacterSetRef);
+    pub fn CFCharacterSetAddCharactersInString(
+        theSet: CFMutableCharacterSetRef,
+        theString: CFStringRef,
+    );
+
+    /* Removing Characters */
+    pub fn CFCharacterSetRemoveCharactersInRange(
+        theSet: CFMutableCharacterSetRef,
+        theRange: CFRange,
+    );
+    pub fn CFCharacterSetRemoveCharactersInString(
+        theSet: CFMutableCharacterSetRef,
+        theString: CFStringRef,
+    );
+
+    /* Logical Operations */
+    pub fn CFCharacterSetIntersect(
+        theSet: CFMutableCharacterSetRef,
+        theOtherSet: CFCharacterSetRef,
+    );
     pub fn CFCharacterSetInvert(theSet: CFMutableCharacterSetRef);
+    pub fn CFCharacterSetUnion(theSet: CFMutableCharacterSetRef, theOtherSet: CFCharacterSetRef);
 }
