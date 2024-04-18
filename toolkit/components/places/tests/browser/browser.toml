@@ -117,3 +117,15 @@ support-files = [
   "favicon.html",
   "final.html",
 ]
+
+["browser_visituri_restriction.js"]
+skip-if = [
+  "verify",
+  "os == 'linux' && (asan || tsan)", # Bug 1891145
+]
+
+["browser_visituri_restriction_origin.js"]
+skip-if = [
+  "verify",
+  "os == 'linux' && (asan || tsan)", # Bug 1891145
+]
