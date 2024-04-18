@@ -14,6 +14,7 @@ pub fn background_command<S: AsRef<OsStr>>(program: S) -> Command {
     let mut cmd = Command::new(program);
     #[cfg(windows)]
     {
+        #[cfg_attr(mock, allow(unused))]
         use std::os::windows::process::CommandExt;
         use windows_sys::Win32::System::Threading::CREATE_NO_WINDOW;
         cmd.creation_flags(CREATE_NO_WINDOW);

@@ -69,6 +69,7 @@ cfg_if::cfg_if! {
 }
 
 /// Display an error dialog with the given message.
+#[cfg_attr(mock, allow(unused))]
 pub fn error_dialog<M: std::fmt::Display>(config: &Config, message: M) {
     let close = data::Event::default();
     // Config may not have localized strings
