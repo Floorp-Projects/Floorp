@@ -120,7 +120,7 @@ manifest conditions pending the triage owner / manager to review.
 Please subscribe to alerts from `firefox-ci <https://groups.google.com/a/mozilla.com/g/firefox-ci>`
 group in order to be aware of changes to the CI, scheduling, or the policy.
 
-.. _variants.yml: https://searchfox.org/mozilla-central/source/taskcluster/kinds/test/variants.yml
+.. _variants.yml: https://searchfox.org/mozilla-central/source/taskcluster/ci/test/variants.yml
 .. _json-e: https://json-e.js.org/
 
 

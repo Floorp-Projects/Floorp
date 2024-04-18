@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 """
-Common support for various task types.  These functions are all named after the
+Common support for various job types.  These functions are all named after the
 worker implementation they operate on, and take the same three parameters, for
 consistency.
 """
@@ -21,21 +21,21 @@ def get_vcsdir_name(os):
         return "vcs"
 
 
-def add_cache(task, taskdesc, name, mount_point, skip_untrusted=False):
+def add_cache(job, taskdesc, name, mount_point, skip_untrusted=False):
     """Adds a cache based on the worker's implementation.
 
     Args:
-        task (dict): Tasks object.
+        job (dict): Task's job description.
         taskdesc (dict): Target task description to modify.
         name (str): Name of the cache.
         mount_point (path): Path on the host to mount the cache.
         skip_untrusted (bool): Whether cache is used in untrusted environments
             (default: False). Only applies to docker-worker.
     """
-    if not task["run"].get("use-caches", True):
+    if not job["run"].get("use-caches", True):
         return
 
-    worker = task["worker"]
+    worker = job["worker"]
 
     if worker["implementation"] == "docker-worker":
         taskdesc["worker"].setdefault("caches", []).append(
@@ -60,7 +60,7 @@ def add_cache(task, taskdesc, name, mount_point, skip_untrusted=False):
         pass
 
 
-def add_artifacts(config, task, taskdesc, path):
+def add_artifacts(config, job, taskdesc, path):
     taskdesc["worker"].setdefault("artifacts", []).append(
         {
             "name": get_artifact_prefix(taskdesc),
@@ -70,28 +70,28 @@ def add_artifacts(config, task, taskdesc, path):
     )
 
 
-def docker_worker_add_artifacts(config, task, taskdesc):
+def docker_worker_add_artifacts(config, job, taskdesc):
     """Adds an artifact directory to the task"""
-    path = "{workdir}/artifacts/".format(**task["run"])
+    path = "{workdir}/artifacts/".format(**job["run"])
     taskdesc["worker"]["env"]["UPLOAD_DIR"] = path
-    add_artifacts(config, task, taskdesc, path)
+    add_artifacts(config, job, taskdesc, path)
 
 
-def generic_worker_add_artifacts(config, task, taskdesc):
+def generic_worker_add_artifacts(config, job, taskdesc):
     """Adds an artifact directory to the task"""
     # The path is the location on disk; it doesn't necessarily
     # mean the artifacts will be public or private; that is set via the name
     # attribute in add_artifacts.
-    add_artifacts(config, task, taskdesc, path=get_artifact_prefix(taskdesc))
+    add_artifacts(config, job, taskdesc, path=get_artifact_prefix(taskdesc))
 
 
-def support_vcs_checkout(config, task, taskdesc, repo_configs, sparse=False):
-    """Update a task with parameters to enable a VCS checkout.
+def support_vcs_checkout(config, job, taskdesc, repo_configs, sparse=False):
+    """Update a job/task with parameters to enable a VCS checkout.
 
     This can only be used with ``run-task`` tasks, as the cache name is
     reserved for ``run-task`` tasks.
     """
-    worker = task["worker"]
+    worker = job["worker"]
     is_mac = worker["os"] == "macosx"
     is_win = worker["os"] == "windows"
     is_linux = worker["os"] == "linux"
@@ -102,7 +102,7 @@ def support_vcs_checkout(config, task, taskdesc, repo_configs, sparse=False):
         checkoutdir = "./build"
         hgstore = "y:/hg-shared"
     elif is_docker:
-        checkoutdir = "{workdir}/checkouts".format(**task["run"])
+        checkoutdir = "{workdir}/checkouts".format(**job["run"])
         hgstore = f"{checkoutdir}/hg-store"
     else:
         checkoutdir = "./checkouts"
@@ -130,7 +130,13 @@ def support_vcs_checkout(config, task, taskdesc, repo_configs, sparse=False):
     if sparse:
         cache_name += "-sparse"
 
-    add_cache(task, taskdesc, cache_name, checkoutdir)
+    # Workers using Mercurial >= 5.8 will enable revlog-compression-zstd, which
+    # workers using older versions can't understand, so they can't share cache.
+    # At the moment, only docker workers use the newer version.
+    if is_docker:
+        cache_name += "-hg58"
+
+    add_cache(job, taskdesc, cache_name, checkoutdir)
 
     env = taskdesc["worker"].setdefault("env", {})
     env.update(
@@ -161,5 +167,5 @@ def support_vcs_checkout(config, task, taskdesc, repo_configs, sparse=False):
             taskdesc["scopes"].append(f"secrets:get:{repo_config.ssh_secret_name}")
 
     # only some worker platforms have taskcluster-proxy enabled
-    if task["worker"]["implementation"] in ("docker-worker",):
+    if job["worker"]["implementation"] in ("docker-worker",):
         taskdesc["worker"]["taskcluster-proxy"] = True

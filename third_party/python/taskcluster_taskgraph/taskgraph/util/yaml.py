@@ -5,10 +5,7 @@
 
 import os
 
-try:
-    from yaml import CSafeLoader as SafeLoader
-except ImportError:
-    from yaml import SafeLoader
+from yaml.loader import SafeLoader
 
 
 class UnicodeLoader(SafeLoader):

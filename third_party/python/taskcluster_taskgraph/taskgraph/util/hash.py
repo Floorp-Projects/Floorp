@@ -39,7 +39,10 @@ def hash_paths(base_path, patterns):
             raise Exception("%s did not match anything" % pattern)
     for path in sorted(found):
         h.update(
-            f"{hash_path(mozpath.abspath(mozpath.join(base_path, path)))} {mozpath.normsep(path)}\n".encode()
+            "{} {}\n".format(
+                hash_path(mozpath.abspath(mozpath.join(base_path, path))),
+                mozpath.normsep(path),
+            ).encode("utf-8")
         )
     return h.hexdigest()
 
@@ -52,8 +55,4 @@ def _find_matching_files(base_path, pattern):
 
 @memoize
 def _get_all_files(base_path):
-    return [
-        mozpath.normsep(str(path))
-        for path in Path(base_path).rglob("*")
-        if path.is_file()
-    ]
+    return [str(path) for path in Path(base_path).rglob("*") if path.is_file()]

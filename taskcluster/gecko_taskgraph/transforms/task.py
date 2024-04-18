@@ -208,7 +208,7 @@ TC_TREEHERDER_SCHEMA_URL = (
 
 
 UNKNOWN_GROUP_NAME = (
-    "Treeherder group {} (from {}) has no name; " "add it to taskcluster/config.yml"
+    "Treeherder group {} (from {}) has no name; " "add it to taskcluster/ci/config.yml"
 )
 
 V2_ROUTE_TEMPLATES = [
@@ -313,7 +313,7 @@ def index_builder(name):
 
 UNSUPPORTED_INDEX_PRODUCT_ERROR = """\
 The gecko-v2 product {product} is not in the list of configured products in
-`taskcluster/config.yml'.
+`taskcluster/ci/config.yml'.
 """
 
 
@@ -1612,7 +1612,7 @@ def task_name_from_label(config, tasks):
 
 UNSUPPORTED_SHIPPING_PRODUCT_ERROR = """\
 The shipping product {product} is not in the list of configured products in
-`taskcluster/config.yml'.
+`taskcluster/ci/config.yml'.
 """
 
 

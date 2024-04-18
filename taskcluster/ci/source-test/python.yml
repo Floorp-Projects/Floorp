@@ -47,7 +47,7 @@ firefox-ci:
     when:
         files-changed:
             - '.taskcluster.yml'
-            - 'taskcluster/kinds/**'
+            - 'taskcluster/ci/**'
             - 'taskcluster/**/*.py'
             - 'tools/tryselect/selectors/auto.py'
 
@@ -359,8 +359,8 @@ tryselect:
         subsuite: try
     when:
         files-changed:
-            - 'taskcluster/config.yml'
-            - 'taskcluster/kinds/test/**'
+            - 'taskcluster/ci/config.yml'
+            - 'taskcluster/ci/test/**'
             - 'taskcluster/gecko_taskgraph/transforms/**'
             - 'tools/tryselect/**'
 

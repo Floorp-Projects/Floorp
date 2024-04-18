@@ -34,7 +34,7 @@ def get_image_digest(image_name):
 
 def load_image_by_name(image_name, tag=None):
     from taskgraph.generator import load_tasks_for_kind
-    from taskgraph.optimize.strategies import IndexSearch
+    from taskgraph.optimize import IndexSearch
     from taskgraph.parameters import Parameters
 
     params = Parameters(
@@ -43,9 +43,8 @@ def load_image_by_name(image_name, tag=None):
     )
     tasks = load_tasks_for_kind(params, "docker-image")
     task = tasks[f"build-docker-image-{image_name}"]
-    deadline = None
     task_id = IndexSearch().should_replace_task(
-        task, {}, deadline, task.optimization.get("index-search", [])
+        task, {}, task.optimization.get("index-search", [])
     )
 
     if task_id in (True, False):
@@ -53,10 +52,8 @@ def load_image_by_name(image_name, tag=None):
             "Could not find artifacts for a docker image "
             "named `{image_name}`. Local commits and other changes "
             "in your checkout may cause this error. Try "
-            "updating to a fresh checkout of {project} "
-            "to download image.".format(
-                image_name=image_name, project=params["project"]
-            )
+            "updating to a fresh checkout of mozilla-central "
+            "to download image.".format(image_name=image_name)
         )
         return False
 

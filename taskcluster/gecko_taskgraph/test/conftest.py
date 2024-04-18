@@ -47,7 +47,7 @@ def enable_logging():
 
 @pytest.fixture(scope="session")
 def graph_config():
-    return load_graph_config(os.path.join(GECKO, "taskcluster"))
+    return load_graph_config(os.path.join(GECKO, "taskcluster", "ci"))
 
 
 @pytest.fixture(scope="session")

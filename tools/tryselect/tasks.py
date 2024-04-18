@@ -78,7 +78,7 @@ def generate_tasks(params=None, full=False, disable_target_task_filter=False):
             "target_tasks_method": target_tasks_method,
         },
     )
-    root = os.path.join(build.topsrcdir, "taskcluster")
+    root = os.path.join(build.topsrcdir, "taskcluster", "ci")
     taskgraph.fast = True
     generator = TaskGraphGenerator(root_dir=root, parameters=params)
 
