@@ -270,10 +270,13 @@ class RingBuffer final {
    * Re-allocates memory if a larger buffer is requested than what is already
    * allocated.
    */
-  bool SetLengthBytes(uint32_t aLengthBytes) {
+  bool EnsureLengthBytes(uint32_t aLengthBytes) {
     MOZ_ASSERT(aLengthBytes % sizeof(T) == 0,
                "Length in bytes is not a whole number of samples");
 
+    if (mMemoryBuffer.Length() >= aLengthBytes) {
+      return true;
+    }
     uint32_t lengthSamples = aLengthBytes / sizeof(T);
     uint32_t oldLengthSamples = Capacity();
     uint32_t availableRead = AvailableRead();
@@ -530,14 +533,17 @@ uint32_t AudioRingBuffer::Clear() {
   return mPtr->mFloatRingBuffer->Clear();
 }
 
-bool AudioRingBuffer::SetLengthBytes(uint32_t aLengthBytes) {
+bool AudioRingBuffer::EnsureLengthBytes(uint32_t aLengthBytes) {
   if (mPtr->mFloatRingBuffer) {
-    return mPtr->mFloatRingBuffer->SetLengthBytes(aLengthBytes);
+    return mPtr->mFloatRingBuffer->EnsureLengthBytes(aLengthBytes);
   }
   if (mPtr->mIntRingBuffer) {
-    return mPtr->mIntRingBuffer->SetLengthBytes(aLengthBytes);
+    return mPtr->mIntRingBuffer->EnsureLengthBytes(aLengthBytes);
   }
   if (mPtr->mBackingBuffer) {
+    if (mPtr->mBackingBuffer->Length() >= aLengthBytes) {
+      return true;
+    }
     return mPtr->mBackingBuffer->SetLength(aLengthBytes);
   }
   MOZ_ASSERT_UNREACHABLE("Unexpected");

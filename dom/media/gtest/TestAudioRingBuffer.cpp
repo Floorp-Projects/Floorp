@@ -1094,7 +1094,7 @@ TEST(TestAudioRingBuffer, PrependSilenceNoWrapShort)
   EXPECT_THAT(out, ElementsAre(2, 3, 4, 5, 0, 0, 6, 7));
 }
 
-TEST(TestAudioRingBuffer, SetLengthBytesNoWrapFloat)
+TEST(TestAudioRingBuffer, EnsureLengthBytesNoWrapFloat)
 {
   AudioRingBuffer rb(6 * sizeof(float));
   rb.SetSampleFormat(AUDIO_FORMAT_FLOAT32);
@@ -1106,7 +1106,7 @@ TEST(TestAudioRingBuffer, SetLengthBytesNoWrapFloat)
   EXPECT_EQ(rb.AvailableWrite(), 0u);
   EXPECT_EQ(rb.Capacity(), 6u);
 
-  EXPECT_TRUE(rb.SetLengthBytes(11 * sizeof(float)));
+  EXPECT_TRUE(rb.EnsureLengthBytes(11 * sizeof(float)));
   float out[10] = {};
   rv = rb.Read(Span(out, 10));
   EXPECT_EQ(rv, 5u);
@@ -1116,7 +1116,7 @@ TEST(TestAudioRingBuffer, SetLengthBytesNoWrapFloat)
   EXPECT_THAT(out, ElementsAre(.1, .2, .3, .4, .5, 0, 0, 0, 0, 0));
 }
 
-TEST(TestAudioRingBuffer, SetLengthBytesNoWrapShort)
+TEST(TestAudioRingBuffer, EnsureLengthBytesNoWrapShort)
 {
   AudioRingBuffer rb(6 * sizeof(short));
   rb.SetSampleFormat(AUDIO_FORMAT_S16);
@@ -1128,7 +1128,7 @@ TEST(TestAudioRingBuffer, SetLengthBytesNoWrapShort)
   EXPECT_EQ(rb.AvailableWrite(), 0u);
   EXPECT_EQ(rb.Capacity(), 6u);
 
-  EXPECT_TRUE(rb.SetLengthBytes(11 * sizeof(short)));
+  EXPECT_TRUE(rb.EnsureLengthBytes(11 * sizeof(short)));
   short out[10] = {};
   rv = rb.Read(Span(out, 10));
   EXPECT_EQ(rv, 5u);
@@ -1138,7 +1138,7 @@ TEST(TestAudioRingBuffer, SetLengthBytesNoWrapShort)
   EXPECT_THAT(out, ElementsAre(1, 2, 3, 4, 5, 0, 0, 0, 0, 0));
 }
 
-TEST(TestAudioRingBuffer, SetLengthBytesWrap1PartFloat)
+TEST(TestAudioRingBuffer, EnsureLengthBytesWrap1PartFloat)
 {
   AudioRingBuffer rb(6 * sizeof(float));
   rb.SetSampleFormat(AUDIO_FORMAT_FLOAT32);
@@ -1158,7 +1158,7 @@ TEST(TestAudioRingBuffer, SetLengthBytesWrap1PartFloat)
   EXPECT_EQ(rb.AvailableRead(), 5u);
   EXPECT_EQ(rb.AvailableWrite(), 0u);
 
-  EXPECT_TRUE(rb.SetLengthBytes(11 * sizeof(float)));
+  EXPECT_TRUE(rb.EnsureLengthBytes(11 * sizeof(float)));
   EXPECT_EQ(rb.AvailableRead(), 5u);
   EXPECT_EQ(rb.AvailableWrite(), 5u);
 
@@ -1175,7 +1175,7 @@ TEST(TestAudioRingBuffer, SetLengthBytesWrap1PartFloat)
   EXPECT_THAT(out, ElementsAre(.1, .2, .3, .4, .5, .6, .7, 0, 0, 0));
 }
 
-TEST(TestAudioRingBuffer, SetLengthBytesWrap1PartShort)
+TEST(TestAudioRingBuffer, EnsureLengthBytesWrap1PartShort)
 {
   AudioRingBuffer rb(6 * sizeof(short));
   rb.SetSampleFormat(AUDIO_FORMAT_S16);
@@ -1195,7 +1195,7 @@ TEST(TestAudioRingBuffer, SetLengthBytesWrap1PartShort)
   EXPECT_EQ(rb.AvailableRead(), 5u);
   EXPECT_EQ(rb.AvailableWrite(), 0u);
 
-  EXPECT_TRUE(rb.SetLengthBytes(11 * sizeof(short)));
+  EXPECT_TRUE(rb.EnsureLengthBytes(11 * sizeof(short)));
   EXPECT_EQ(rb.AvailableRead(), 5u);
   EXPECT_EQ(rb.AvailableWrite(), 5u);
 
@@ -1212,7 +1212,7 @@ TEST(TestAudioRingBuffer, SetLengthBytesWrap1PartShort)
   EXPECT_THAT(out, ElementsAre(1, 2, 3, 4, 5, 6, 7, 0, 0, 0));
 }
 
-TEST(TestAudioRingBuffer, SetLengthBytesWrap2PartsFloat)
+TEST(TestAudioRingBuffer, EnsureLengthBytesWrap2PartsFloat)
 {
   AudioRingBuffer rb(6 * sizeof(float));
   rb.SetSampleFormat(AUDIO_FORMAT_FLOAT32);
@@ -1232,7 +1232,7 @@ TEST(TestAudioRingBuffer, SetLengthBytesWrap2PartsFloat)
   EXPECT_EQ(rb.AvailableRead(), 5u);
   EXPECT_EQ(rb.AvailableWrite(), 0u);
 
-  EXPECT_TRUE(rb.SetLengthBytes(8 * sizeof(float)));
+  EXPECT_TRUE(rb.EnsureLengthBytes(8 * sizeof(float)));
   EXPECT_EQ(rb.AvailableRead(), 5u);
   EXPECT_EQ(rb.AvailableWrite(), 2u);
 
@@ -1249,7 +1249,7 @@ TEST(TestAudioRingBuffer, SetLengthBytesWrap2PartsFloat)
   EXPECT_THAT(out, ElementsAre(.1, .2, .3, .4, .5, .6, .7, 0));
 }
 
-TEST(TestAudioRingBuffer, SetLengthBytesWrap2PartsShort)
+TEST(TestAudioRingBuffer, EnsureLengthBytesWrap2PartsShort)
 {
   AudioRingBuffer rb(6 * sizeof(short));
   rb.SetSampleFormat(AUDIO_FORMAT_S16);
@@ -1269,7 +1269,7 @@ TEST(TestAudioRingBuffer, SetLengthBytesWrap2PartsShort)
   EXPECT_EQ(rb.AvailableRead(), 5u);
   EXPECT_EQ(rb.AvailableWrite(), 0u);
 
-  EXPECT_TRUE(rb.SetLengthBytes(8 * sizeof(short)));
+  EXPECT_TRUE(rb.EnsureLengthBytes(8 * sizeof(short)));
   EXPECT_EQ(rb.AvailableRead(), 5u);
   EXPECT_EQ(rb.AvailableWrite(), 2u);
 
@@ -1284,4 +1284,30 @@ TEST(TestAudioRingBuffer, SetLengthBytesWrap2PartsShort)
   EXPECT_EQ(rb.AvailableWrite(), 7u);
   EXPECT_EQ(rb.Capacity(), 8u);
   EXPECT_THAT(out, ElementsAre(1, 2, 3, 4, 5, 6, 7, 0));
+}
+
+TEST(TestAudioRingBuffer, EnsureLengthShorter)
+{
+  AudioRingBuffer rb(5 * sizeof(float));
+  rb.SetSampleFormat(AUDIO_FORMAT_FLOAT32);
+
+  float in[5] = {.1, .2, .3, .4, .5};
+  EXPECT_EQ(rb.Write(Span(in, 5)), 4u);
+  EXPECT_EQ(rb.AvailableRead(), 4u);
+  EXPECT_EQ(rb.AvailableWrite(), 0u);
+  EXPECT_EQ(rb.Capacity(), 5u);
+
+  float out[5] = {};
+  EXPECT_EQ(rb.Read(Span(out, 3)), 3u);
+  EXPECT_THAT(out, ElementsAre(.1, .2, .3, 0, 0));
+  EXPECT_EQ(rb.AvailableRead(), 1u);
+  EXPECT_EQ(rb.AvailableWrite(), 3u);
+
+  EXPECT_TRUE(rb.EnsureLengthBytes(3 * sizeof(float)));
+  EXPECT_EQ(rb.AvailableRead(), 1u);
+  EXPECT_EQ(rb.AvailableWrite(), 3u);
+  EXPECT_EQ(rb.Capacity(), 5u);
+  EXPECT_EQ(rb.Write(Span(in, 5)), 3u);
+  EXPECT_EQ(rb.Read(Span(out, 5)), 4u);
+  EXPECT_THAT(out, ElementsAre(.4, .1, .2, .3, 0));
 }

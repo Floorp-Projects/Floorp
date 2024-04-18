@@ -93,12 +93,12 @@ class AudioRingBuffer final {
   uint32_t Clear();
 
   /**
-   * Set the length of the ring buffer in bytes. Must be divisible by the sample
-   * size. Will not deallocate memory if the underlying buffer is large enough.
-   * Returns false if setting the length requires allocating memory and the
-   * allocation fails.
+   * Increase the ring buffer size if necessary to at least the specified length
+   * in bytes. Must be divisible by the sample size.
+   * Will not deallocate memory if the underlying buffer is large enough.
+   * Returns false if memory allocation is required and fails.
    */
-  bool SetLengthBytes(uint32_t aLengthBytes);
+  bool EnsureLengthBytes(uint32_t aLengthBytes);
 
   /**
    * Return the number of samples this buffer can hold.
