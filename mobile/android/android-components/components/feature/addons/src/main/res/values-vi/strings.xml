@@ -55,7 +55,7 @@
     <!-- Description for history permission. -->
     <string name="mozac_feature_addons_permissions_history_description">Truy cập lịch sử duyệt web</string>
     <!-- Description for management permission. -->
-    <string name="mozac_feature_addons_permissions_management_description">Theo dõi tần suất sử dụng tiện ích và quản lý các chủ đề</string>
+    <string name="mozac_feature_addons_permissions_management_description">Theo dõi việc sử dụng tiện ích mở rộng và quản lý các chủ đề</string>
     <!-- Description for native_messaging permission. -->
     <string name="mozac_feature_addons_permissions_native_messaging_description">Trao đổi thông báo với các ứng dụng khác</string>
     <!-- Description for notifications permission. -->

@@ -120,9 +120,6 @@
     <!-- Header for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
     <string name="mozac_feature_prompts_suggest_strong_password">تکڑا پاس ورڈ تجویز کرو</string>
 
-    <!-- Title for using the suggest strong password confirmation dialog. %1$s will be replaced with the generated password -->
-    <string name="mozac_feature_prompts_suggest_strong_password_message">تَکڑا پاس ورڈ وَرتو: %1$s</string>
-
     <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
     <string name="mozac_feature_prompt_repost_title">ایں سائٹ تے ڈیٹا ولدا بھیڄوں؟</string>
     <string name="mozac_feature_prompt_repost_message">ایں ورقے کوں تازہ کرݨ نال حالیہ عملاں دی ݙوجھی نقل بݨ سڳدی ہے۔ جیویں جو پیسیاں دی ادائیگی پٹھݨ یا ݙو واری تبصرہ کرݨ۔</string>
@@ -155,9 +152,6 @@
     <!-- Subtitle text displayed under the title of the save credit card dialog. -->
     <string name="mozac_feature_prompts_save_credit_card_prompt_body" moz:removedIn="125" tools:ignore="UnusedResources">کارڈ نمبر دی خفیہ کاری کیتی ویسی۔ حفاظتی کوڈ محفوظ کائناں کیتا ویسی۔</string>
 
-    <!-- Subtitle text displayed under the title of the saved card dialog. Parameter will be replaced by app name-->
-    <string name="mozac_feature_prompts_save_credit_card_prompt_body_2">%s تُہاݙے کارڈ نمبر کوں انکرپٹ کرین٘دا ہِے۔ تُہاݙا سیکیورٹی کوڈ محفوظ کائناں تھیسی۔</string>
-
     <!-- Address Autofill -->
     <!-- Header for the select address prompt to allow users to fill a form with a saved address. -->
     <string name="mozac_feature_prompts_select_address_2">پتہ چُݨو</string>
@@ -181,8 +175,6 @@
     <string name="mozac_feature_prompts_identity_credentials_choose_account_for_provider">%1$s کھاتے نال سائن ان تھیوو</string>
     <!-- Title of the Identity Credential privacy policy dialog title. The %1$s will be replaced with the name of the provider. -->
     <string name="mozac_feature_prompts_identity_credentials_privacy_policy_title">%1$s کوں لاگ ان مہیاکار دے طور تے ورتو</string>
-    <!-- Title of the Identity Credential privacy policy dialog description. The %1$s will be replaced with the name of the provider, %2$s will be replaced with the account, %3$s will be replaced with the privacy policy url and  %4$s will be replaced with the terms of service. -->
-    <string name="mozac_feature_prompts_identity_credentials_privacy_policy_description"><![CDATA[ہِک %2$s اکاؤنٹ دے نال %1$s وِچ لاگ اِن کرݨ اِنّھاں دے <a href="%3$s">رازداری پالیسی</a> اَتے <a href="%4$s">خدمت دیاں شرطاں</a>دے تابع ہِے۔]]></string>
     <!-- Text for the positive button of the Identity Credential dialogs. -->
     <string name="mozac_feature_prompts_identity_credentials_continue">جاری</string>
     <!-- Text for the cancel button of the Identity Credential dialogs. -->

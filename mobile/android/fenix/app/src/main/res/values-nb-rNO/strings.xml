@@ -143,10 +143,8 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Ny privat fane</string>
 
-    <!-- Shortcut action to open Passwords screen -->
-    <string name="home_screen_shortcut_passwords">Passord</string>
-    <!-- Shortcut action to open Passwords screen -->
-    <string name="home_screen_shortcut_open_password_screen" moz:removedIn="126" tools:ignore="UnusedResources">Passordsnarvei</string>
+    <!-- Shortcut action to open Passwords screens -->
+    <string name="home_screen_shortcut_open_password_screen">Passordsnarvei</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -188,13 +186,11 @@
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Stopp</string>
     <!-- Browser menu button that opens the addon manager -->
-    <string name="browser_menu_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Tillegg</string>
-    <!-- Browser menu button that opens the extensions manager -->
-    <string name="browser_menu_extensions">Utvidelser</string>
+    <string name="browser_menu_add_ons">Tillegg</string>
     <!-- Browser menu button that opens account settings -->
     <string name="browser_menu_account_settings">Kontoinformasjon</string>
     <!-- Text displayed when there are no add-ons to be shown -->
-    <string name="no_add_ons" moz:removedIn="126" tools:ignore="UnusedResources">Ingen utvidelser her</string>
+    <string name="no_add_ons">Ingen utvidelser her</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Hjelp</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -211,7 +207,7 @@
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">Legg til på startskjermen</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
-    <string name="browser_menu_install_on_homescreen" moz:removedIn="126" tools:ignore="UnusedResources">Installer</string>
+    <string name="browser_menu_install_on_homescreen">Installer</string>
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">Synkroniser på nytt</string>
     <!-- Browser menu button that opens the find in page menu -->
@@ -247,23 +243,6 @@
 
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">Tilpass startsiden</string>
-
-    <!-- Browser menu label to sign in to sync on the device using Mozilla accounts -->
-    <string name="browser_menu_sign_in">Logg inn</string>
-    <!-- Browser menu caption label for the "Sign in" browser menu item described in `browser_menu_sign_in` -->
-    <string name="browser_menu_sign_in_caption">Synkroniser passord, faner og mer</string>
-    <!-- Browser menu label to sign back in to sync on the device when the user's account needs to be reauthenticated -->
-    <string name="browser_menu_sign_back_in_to_sync">Logg inn igjen for å synkronisere</string>
-    <!-- Browser menu caption label for the "Sign back in to sync" browser menu item described in `browser_menu_sign_back_in_to_sync` when there is an error in syncing -->
-    <string name="browser_menu_syncing_paused_caption">Synkronisering satt på pause</string>
-    <!-- Browser menu label that creates a private tab -->
-    <string name="browser_menu_new_private_tab">Ny privat fane</string>
-    <!-- Browser menu label that navigates to the Password screen -->
-    <string name="browser_menu_passwords">Passord</string>
-
-    <!-- Extensions management fragment -->
-    <!-- Text displayed when there are no extensions to be shown -->
-    <string name="extensions_management_no_extensions">Ingen utvidelser her</string>
 
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
@@ -617,14 +596,10 @@
     <string name="quit_application">Avslutter applikasjonen for å legge til endringer…</string>
 
     <!-- Preference for add_ons -->
-    <string name="preferences_addons" moz:removedIn="126" tools:ignore="UnusedResources">Utvidelser</string>
+    <string name="preferences_addons">Utvidelser</string>
 
-    <!-- Preference for extensions -->
-    <string name="preferences_extensions">Utvidelser</string>
     <!-- Preference for installing a local add-on -->
-    <string name="preferences_install_local_addon" moz:removedIn="126" tools:ignore="UnusedResources">Installer utvidelse fra fil</string>
-    <!-- Preference for installing a local extension -->
-    <string name="preferences_install_local_extension">Installer utvidelse fra fil</string>
+    <string name="preferences_install_local_addon">Installer utvidelse fra fil</string>
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Varslinger</string>
 
@@ -633,25 +608,9 @@
     <!-- Summary for notification preference indicating notifications are not allowed -->
     <string name="notifications_not_allowed_summary">Ikke tillatt</string>
 
-    <!-- Add-on Permissions -->
-    <!-- The title of the required permissions section from addon's permissions screen -->
-    <string name="addons_permissions_heading_required" tools:ignore="UnusedResources">Nødvendig</string>
-    <!-- The title of the optional permissions section from addon's permissions screen -->
-    <string name="addons_permissions_heading_optional" tools:ignore="UnusedResources">Valgfri</string>
-    <!-- The title of the section with websites that have permissions granted from addon's permissions screen -->
-    <string name="addons_permissions_heading_read_and_change_website_data" tools:ignore="UnusedResources">Les og endre nettstedsdata</string>
-    <!-- The description of the icon that can delete one of the websites displayed  -->
-    <string name="addons_permissions_icon_description_delete_website" tools:ignore="UnusedResources">Slett nettsted</string>
-    <!-- The title of the origin permission option allowing a user to enable the extension to run on all sites -->
-    <string name="addons_permissions_allow_for_all_sites" tools:ignore="UnusedResources">Tillat for alle nettsteder</string>
-    <!-- The subtitle for the allow for all sites preference toggle -->
-    <string name="addons_permissions_allow_for_all_sites_subtitle" tools:ignore="UnusedResources">Hvis du stoler på denne utvidelsen, kan du gi den tillatelse på hvert nettsted.</string>
-
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
-    <string name="preferences_customize_amo_collection" moz:removedIn="126" tools:ignore="UnusedResources">Tilpasset tilleggssamling</string>
-    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
-    <string name="preferences_customize_extension_collection">Tilpasset utvidelsessamling</string>
+    <string name="preferences_customize_amo_collection">Tilpasset tilleggssamling</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">OK</string>
     <!-- Button caption to abort the add-on collection configuration -->
@@ -662,7 +621,7 @@
     <string name="customize_addon_collection_user_hint">Samlingseier (bruker-ID)</string>
 
     <!-- Toast shown after confirming the custom add-on collection configuration -->
-    <string name="toast_customize_addon_collection_done" moz:removedIn="126" tools:ignore="UnusedResources">Tilleggssamling endret. Avslutter applikasjonen for å legge til endringer…</string>
+    <string name="toast_customize_addon_collection_done">Tilleggssamling endret. Avslutter applikasjonen for å legge til endringer…</string>
 
     <!-- Customize Home -->
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
@@ -717,21 +676,21 @@
 
     <!-- Add-ons general availability nimbus message-->
     <!-- Title of the Nimbus message for add-ons general availability-->
-    <string name="addon_ga_message_title" moz:removedIn="126" tools:ignore="UnusedResources">Nye utvidelser nå tilgjengelig</string>
+    <string name="addon_ga_message_title" tools:ignore="UnusedResources">Nye utvidelser nå tilgjengelig</string>
     <!-- Body of the Nimbus message for add-ons general availability. 'Firefox' intentionally hardcoded here-->
     <string name="addon_ga_message_body" tools:ignore="UnusedResources">Sjekk ut 100+ nye utvidelser som lar deg gjøre Firefox til din egen.</string>
     <!-- Button text of the Nimbus message for add-ons general availability. -->
-    <string name="addon_ga_message_button" moz:removedIn="126" tools:ignore="UnusedResources">Utforsk utvidelser</string>
+    <string name="addon_ga_message_button" tools:ignore="UnusedResources">Utforsk utvidelser</string>
 
-    <!-- Extension process crash dialog to user -->
+    <!-- Add-on process crash dialog to user -->
     <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
-    <string name="addon_process_crash_dialog_title" moz:removedIn="126" tools:ignore="UnusedResources">Tillegg er midlertidig deaktivert</string>
+    <string name="addon_process_crash_dialog_title" tools:ignore="UnusedResources">Tillegg er midlertidig deaktivert</string>
     <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
-    <string name="addon_process_crash_dialog_message" moz:removedIn="126" tools:ignore="UnusedResources">Ett eller flere tillegg sluttet å virke, noe som gjorde systemet ditt ustabilt. %1$s forsøkte uten hell å starte tillegget/tilleggene på nytt.\n\nTillegg vil ikke bli startet på nytt under den nåværende økten.\n\nHvis du fjerner eller deaktiverer tillegg, kan dette løse problemet.</string>
+    <string name="addon_process_crash_dialog_message" tools:ignore="UnusedResources">Ett eller flere tillegg sluttet å virke, noe som gjorde systemet ditt ustabilt. %1$s forsøkte uten hell å starte tillegget/tilleggene på nytt.\n\nTillegg vil ikke bli startet på nytt under den nåværende økten.\n\nHvis du fjerner eller deaktiverer tillegg, kan dette løse problemet.</string>
     <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
-    <string name="addon_process_crash_dialog_retry_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Prøv å starte tilleggene på nytt</string>
+    <string name="addon_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">Prøv å starte tilleggene på nytt</string>
     <!-- The user will continue with all add-ons disabled -->
-    <string name="addon_process_crash_dialog_disable_addons_button_text" moz:removedIn="126" tools:ignore="UnusedResources">Fortsett med tillegg deaktivert</string>
+    <string name="addon_process_crash_dialog_disable_addons_button_text" tools:ignore="UnusedResources">Fortsett med tillegg deaktivert</string>
 
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->
@@ -2506,7 +2465,7 @@
     <!-- The title of the warning card informs the user that a language is not supported. The first parameter is the name of the language that is not supported. -->
     <string name="translation_error_language_not_supported_warning_text">Beklager, vi støtter ikke %1$s ennå.</string>
     <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
-    <string name="translation_error_language_not_supported_learn_more" moz:removedIn="126" tools:ignore="UnusedResources">Les mer</string>
+    <string name="translation_error_language_not_supported_learn_more">Les mer</string>
 
     <!-- Snackbar title shown if the user closes the Translation Request dialogue and a translation is in progress. -->
     <string name="translation_in_progress_snackbar">Oversetter…</string>
@@ -2520,7 +2479,7 @@
 
     <!-- Translations options dialog -->
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
-    <string name="translation_option_bottom_sheet_title" moz:removedIn="126" tools:ignore="UnusedResources">Oversettelsesinnstillinger</string>
+    <string name="translation_option_bottom_sheet_title">Oversettelsesinnstillinger</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to always offer or suggest translations when available. -->
     <string name="translation_option_bottom_sheet_always_translate">Tilby alltid å oversette</string>
     <!-- Toggle switch label that allows a user to set if they would like a given language to automatically translate or not. The first parameter is the language name, for example, "Spanish". -->
@@ -2658,8 +2617,6 @@
     <string name="debug_drawer_title">Feilsøkingsverktøy</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate back within the debug drawer. -->
     <string name="debug_drawer_back_button_content_description">Naviger tilbake</string>
-
-    <!-- Debug drawer tabs tools -->
     <!-- The title of the Tab Tools feature in the Debug Drawer. -->
     <string name="debug_drawer_tab_tools_title">Faneverktøy</string>
     <!-- The title of the tab count section in Tab Tools. -->
@@ -2682,5 +2639,4 @@
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_inactive">Legg til inaktive faner</string>
     <!-- The button text to add tabs to the private tab group in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_private">Legg til private faner</string>
-
-    </resources>
+</resources>

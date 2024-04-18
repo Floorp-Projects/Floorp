@@ -5,17 +5,11 @@
     <!-- Content description (not visible, for screen readers etc.): Indicates the overflow menu has a highlight -->
     <string name="mozac_browser_menu_highlighted">Uthevet</string>
     <!-- Label for add-ons submenu section -->
-    <string name="mozac_browser_menu_addons" moz:removedIn="126" tools:ignore="UnusedResources">Tillegg</string>
-    <!-- Label for extensions submenu section -->
-    <string name="mozac_browser_menu_extensions">Utvidelser</string>
+    <string name="mozac_browser_menu_addons">Tillegg</string>
     <!-- Label for add-ons sub menu item for add-ons manager -->
-    <string name="mozac_browser_menu_addons_manager" moz:removedIn="126" tools:ignore="UnusedResources">Tilleggsbehandler</string>
-    <!-- Label for extensions sub menu item for extensions manager -->
-    <string name="mozac_browser_menu_extensions_manager">Behandling av utvidelser</string>
+    <string name="mozac_browser_menu_addons_manager">Tilleggsbehandler</string>
     <!-- Content description for the action bar "up" button -->
     <string name="action_bar_up_description">Naviger opp</string>
     <!-- Content description for the action bar "up" button of the add-ons sub menu item -->
-    <string name="mozac_browser_menu_addons_description" moz:removedIn="126" tools:ignore="UnusedResources">Tillegg, naviger opp</string>
-    <!-- Content description for the action bar "up" button of the extensions sub menu item -->
-    <string name="mozac_browser_menu_extensions_content_description">Utvidelser, naviger opp</string>
-</resources>
+    <string name="mozac_browser_menu_addons_description">Tillegg, naviger opp</string>
+    </resources>

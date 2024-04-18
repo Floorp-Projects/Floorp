@@ -143,10 +143,8 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Thẻ riêng tư mới</string>
 
-    <!-- Shortcut action to open Passwords screen -->
-    <string name="home_screen_shortcut_passwords">Mật khẩu</string>
-    <!-- Shortcut action to open Passwords screen -->
-    <string name="home_screen_shortcut_open_password_screen" moz:removedIn="126" tools:ignore="UnusedResources">Lối tắt mật khẩu</string>
+    <!-- Shortcut action to open Passwords screens -->
+    <string name="home_screen_shortcut_open_password_screen">Lối tắt mật khẩu</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -160,7 +158,7 @@
     <!-- Text for button in synced tab card that opens synced tabs tray -->
     <string name="recent_tabs_see_all_synced_tabs_button_text">Xem tất cả các thẻ đã đồng bộ hóa</string>
     <!-- Accessibility description for device icon used for recent synced tab -->
-    <string name="recent_tabs_synced_device_icon_content_description">Thiết bị đã đồng bộ hóa</string>
+    <string name="recent_tabs_synced_device_icon_content_description">Thiết bị được đồng bộ hóa</string>
     <!-- Text for the dropdown menu to remove a recent synced tab from the homescreen -->
     <string name="recent_synced_tab_menu_item_remove">Xóa</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
@@ -176,7 +174,7 @@
     <string name="recently_visited_menu_item_remove">Xóa</string>
 
     <!-- Content description for the button which navigates the user to show all of their history. -->
-    <string name="past_explorations_show_all_content_description_2">Hiện tất cả các khám phá trước đây</string>
+    <string name="past_explorations_show_all_content_description_2">Hiển thị tất cả các khám phá trong quá khứ</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
@@ -248,18 +246,9 @@
     <string name="browser_menu_customize_home_1">Tùy biến trang chủ</string>
 
     <!-- Browser menu label to sign in to sync on the device using Mozilla accounts -->
-    <string name="browser_menu_sign_in">Đăng nhập</string>
-    <!-- Browser menu caption label for the "Sign in" browser menu item described in `browser_menu_sign_in` -->
-    <string name="browser_menu_sign_in_caption">Đồng bộ hóa mật khẩu, thẻ và hơn thế nữa</string>
-
-    <!-- Browser menu label to sign back in to sync on the device when the user's account needs to be reauthenticated -->
-    <string name="browser_menu_sign_back_in_to_sync">Đăng nhập lại để đồng bộ hóa</string>
-    <!-- Browser menu caption label for the "Sign back in to sync" browser menu item described in `browser_menu_sign_back_in_to_sync` when there is an error in syncing -->
-    <string name="browser_menu_syncing_paused_caption">Đã tạm dừng đồng bộ hóa</string>
-    <!-- Browser menu label that creates a private tab -->
-    <string name="browser_menu_new_private_tab">Thẻ riêng tư mới</string>
-    <!-- Browser menu label that navigates to the Password screen -->
-    <string name="browser_menu_passwords">Mật khẩu</string>
+    <string name="browser_menu_sign_in" tools:ignore="UnusedResources">Đăng nhập</string>
+    <!-- Browser menu caption label for the "Sign in" browser menu item described in browser_menu_sign_in -->
+    <string name="browser_menu_sign_in_caption" tools:ignore="UnusedResources">Đồng bộ hóa mật khẩu, thẻ và hơn thế nữa</string>
 
     <!-- Extensions management fragment -->
     <!-- Text displayed when there are no extensions to be shown -->
@@ -539,7 +528,7 @@
     <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the second. -->
     <string name="errorpage_httpsonly_message_summary">Tuy nhiên, cũng có thể có kẻ tấn công tham gia. Nếu bạn tiếp tục vào trang web, bạn không nên nhập bất kỳ thông tin nhạy cảm nào. Nếu bạn tiếp tục, chế độ chỉ HTTPS sẽ tạm thời bị tắt cho trang web.</string>
     <!-- Preference for accessibility -->
-    <string name="preferences_accessibility">Trợ năng</string>
+    <string name="preferences_accessibility">Khả năng truy cập</string>
     <!-- Preference to override the Mozilla account server -->
     <string name="preferences_override_account_server">Máy chủ tài khoản Mozilla tùy chỉnh</string>
     <!-- Preference to override the Sync token server -->
@@ -632,20 +621,6 @@
     <string name="notifications_allowed_summary">Đã cho phép</string>
     <!-- Summary for notification preference indicating notifications are not allowed -->
     <string name="notifications_not_allowed_summary">Không cho phép</string>
-
-    <!-- Add-on Permissions -->
-    <!-- The title of the required permissions section from addon's permissions screen -->
-    <string name="addons_permissions_heading_required" tools:ignore="UnusedResources">Bắt buộc</string>
-    <!-- The title of the optional permissions section from addon's permissions screen -->
-    <string name="addons_permissions_heading_optional" tools:ignore="UnusedResources">Không bắt buộc</string>
-    <!-- The title of the section with websites that have permissions granted from addon's permissions screen -->
-    <string name="addons_permissions_heading_read_and_change_website_data" tools:ignore="UnusedResources">Đọc và thay đổi dữ liệu trang web</string>
-    <!-- The description of the icon that can delete one of the websites displayed  -->
-    <string name="addons_permissions_icon_description_delete_website" tools:ignore="UnusedResources">Xóa trang web</string>
-    <!-- The title of the origin permission option allowing a user to enable the extension to run on all sites -->
-    <string name="addons_permissions_allow_for_all_sites" tools:ignore="UnusedResources">Cho phép tất cả các trang web</string>
-    <!-- The subtitle for the allow for all sites preference toggle -->
-    <string name="addons_permissions_allow_for_all_sites_subtitle" tools:ignore="UnusedResources">Nếu bạn tin tưởng tiện ích mở rộng này, bạn có thể cấp quyền cho nó trên mọi trang web.</string>
 
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
@@ -1346,7 +1321,7 @@
     <!-- Toast shown after copying link to clipboard -->
     <string name="toast_copy_link_to_clipboard">Đã sao chép vào khay nhớ tạm</string>
     <!-- An option from the share dialog to sign into sync -->
-    <string name="sync_sign_in">Đăng nhập để đồng bộ hóa</string>
+    <string name="sync_sign_in">Đăng nhập vào đồng bộ hóa</string>
      <!-- An option from the three dot menu to sync and save data -->
     <string name="sync_menu_sync_and_save_data">Đồng bộ hóa và lưu dữ liệu</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
@@ -1657,7 +1632,7 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Chặn các trình theo dõi từ quảng cáo, video và nội dung khác từ bên ngoài. Có thể ảnh hưởng đến một số chức năng của trang web.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
-    <string name="etp_panel_on">Bảo vệ đã BẬT trên trang web này</string>
+    <string name="etp_panel_on">Bảo vệ đã BẬT cho trang web này</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
     <string name="etp_panel_off">Bảo vệ đã TẮT cho trang web này</string>
     <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
@@ -2480,8 +2455,6 @@
     <string name="translations_bottom_sheet_translate_from">Dịch từ</string>
     <!-- Label for the dropdown to select which language to translate to on the translations dialog. Usually the translate to language selected will be the user's preferred language. -->
     <string name="translations_bottom_sheet_translate_to">Dịch sang</string>
-    <!-- Label for the dropdown to select which language to translate from on the translations dialog when the page language is not supported. This selection is to allow the user to select another language, in case we automatically detected the page language incorrectly. -->
-    <string name="translations_bottom_sheet_translate_from_unsupported_language">Hãy thử ngôn ngữ nguồn khác</string>
     <!-- Button text on the translations dialog to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button">Không phải bây giờ</string>
     <!-- Button text on the translations dialog to restore the translated website back to the original untranslated version. -->
@@ -2506,7 +2479,7 @@
     <!-- The title of the warning card informs the user that a language is not supported. The first parameter is the name of the language that is not supported. -->
     <string name="translation_error_language_not_supported_warning_text">Rất tiếc, chúng tôi chưa hỗ trợ %1$s.</string>
     <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
-    <string name="translation_error_language_not_supported_learn_more" moz:removedIn="126" tools:ignore="UnusedResources">Tìm hiểu thêm</string>
+    <string name="translation_error_language_not_supported_learn_more">Tìm hiểu thêm</string>
 
     <!-- Snackbar title shown if the user closes the Translation Request dialogue and a translation is in progress. -->
     <string name="translation_in_progress_snackbar">Đang dịch…</string>
@@ -2520,9 +2493,7 @@
 
     <!-- Translations options dialog -->
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
-    <string name="translation_option_bottom_sheet_title" moz:removedIn="126" tools:ignore="UnusedResources">Tuỳ chọn dịch</string>
-    <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
-    <string name="translation_option_bottom_sheet_title_heading">Tùy chọn dịch</string>
+    <string name="translation_option_bottom_sheet_title">Tuỳ chọn dịch</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to always offer or suggest translations when available. -->
     <string name="translation_option_bottom_sheet_always_translate">Luôn đề nghị dịch</string>
     <!-- Toggle switch label that allows a user to set if they would like a given language to automatically translate or not. The first parameter is the language name, for example, "Spanish". -->
@@ -2539,9 +2510,6 @@
     <string name="translation_option_bottom_sheet_translation_settings">Cài đặt dịch</string>
     <!-- Button text for the button that will take the user to a website to learn more about how translations works in the given app. The first parameter is the name of the application, for example, "Fenix". -->
     <string name="translation_option_bottom_sheet_about_translations">Về dịch thuật trong %1$s</string>
-
-    <!-- Content description (not visible, for screen readers etc.) for closing the translations bottom sheet. -->
-    <string name="translation_option_bottom_sheet_close_content_description">Đóng bảng dịch</string>
 
     <!-- Translation settings dialog -->
     <!-- Title of the translation settings dialog that allows a user to set their preferred translation settings. -->
@@ -2665,8 +2633,6 @@
     <string name="debug_drawer_title">Công cụ gỡ lỗi</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate back within the debug drawer. -->
     <string name="debug_drawer_back_button_content_description">Điều hướng quay lại</string>
-
-    <!-- Debug drawer tabs tools -->
     <!-- The title of the Tab Tools feature in the Debug Drawer. -->
     <string name="debug_drawer_tab_tools_title">Công cụ thẻ</string>
     <!-- The title of the tab count section in Tab Tools. -->
@@ -2689,14 +2655,4 @@
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_inactive">Thêm vào thẻ không hoạt động</string>
     <!-- The button text to add tabs to the private tab group in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_private">Thêm vào thẻ riêng tư</string>
-
-    <!-- Debug drawer logins -->
-    <!-- The title of the Logins feature in the Debug Drawer. -->
-    <string name="debug_drawer_logins_title">Thông tin đăng nhập</string>
-    <!-- The title of the logins section in the Logins feature, where the parameter will be the site domain  -->
-    <string name="debug_drawer_logins_current_domain_label">Tên miền hiện tại: %s</string>
-    <!-- The label for a button to add a new fake login for the current domain in the Logins feature. -->
-    <string name="debug_drawer_logins_add_login_button">Thêm thông tin đăng nhập giả cho tên miền này</string>
-    <!-- Content description for delete button where parameter will be the username of the login -->
-    <string name="debug_drawer_logins_delete_login_button_content_description">Xóa thông tin đăng nhập với tên người dùng %s</string>
 </resources>
