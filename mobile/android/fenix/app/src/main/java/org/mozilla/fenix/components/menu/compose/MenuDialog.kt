@@ -23,7 +23,6 @@ import org.mozilla.fenix.components.accounts.AccountState.NO_ACCOUNT
 import org.mozilla.fenix.components.menu.compose.header.MenuHeader
 import org.mozilla.fenix.compose.Divider
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
-import org.mozilla.fenix.compose.list.IconListItem
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
 
@@ -94,14 +93,14 @@ private fun MainMenu(
         verticalArrangement = Arrangement.spacedBy(32.dp),
     ) {
         MenuGroup {
-            IconListItem(
+            MenuItem(
                 label = stringResource(id = R.string.library_new_tab),
                 beforeIconPainter = painterResource(id = R.drawable.mozac_ic_plus_24),
             )
 
             Divider(color = FirefoxTheme.colors.borderSecondary)
 
-            IconListItem(
+            MenuItem(
                 label = stringResource(id = R.string.browser_menu_new_private_tab),
                 beforeIconPainter = painterResource(id = R.drawable.mozac_ic_private_mode_circle_fill_24),
             )
@@ -124,7 +123,7 @@ private fun LibraryMenuGroup(
     onPasswordsMenuClick: () -> Unit,
 ) {
     MenuGroup {
-        IconListItem(
+        MenuItem(
             label = stringResource(id = R.string.library_bookmarks),
             onClick = onBookmarksMenuClick,
             beforeIconPainter = painterResource(id = R.drawable.mozac_ic_bookmark_tray_fill_24),
@@ -132,7 +131,7 @@ private fun LibraryMenuGroup(
 
         Divider(color = FirefoxTheme.colors.borderSecondary)
 
-        IconListItem(
+        MenuItem(
             label = stringResource(id = R.string.library_history),
             onClick = onHistoryMenuClick,
             beforeIconPainter = painterResource(id = R.drawable.mozac_ic_history_24),
@@ -140,7 +139,7 @@ private fun LibraryMenuGroup(
 
         Divider(color = FirefoxTheme.colors.borderSecondary)
 
-        IconListItem(
+        MenuItem(
             label = stringResource(id = R.string.library_downloads),
             onClick = onDownloadsMenuClick,
             beforeIconPainter = painterResource(id = R.drawable.mozac_ic_download_24),
@@ -148,7 +147,7 @@ private fun LibraryMenuGroup(
 
         Divider(color = FirefoxTheme.colors.borderSecondary)
 
-        IconListItem(
+        MenuItem(
             label = stringResource(id = R.string.browser_menu_passwords),
             onClick = onPasswordsMenuClick,
             beforeIconPainter = painterResource(id = R.drawable.mozac_ic_login_24),
