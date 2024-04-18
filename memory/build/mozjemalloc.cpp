@@ -438,7 +438,13 @@ struct arena_chunk_t {
 // Maximum size of L1 cache line.  This is used to avoid cache line aliasing,
 // so over-estimates are okay (up to a point), but under-estimates will
 // negatively affect performance.
-static const size_t kCacheLineSize = 64;
+static const size_t kCacheLineSize =
+#if defined(XP_DARWIN) && defined(__aarch64__)
+    128
+#else
+    64
+#endif
+    ;
 
 // Our size classes are inclusive ranges of memory sizes.  By describing the
 // minimums and how memory is allocated in each range the maximums can be
@@ -1518,7 +1524,12 @@ MALLOC_RUNTIME_VAR PoisonType opt_poison = ALL;
 MALLOC_RUNTIME_VAR PoisonType opt_poison = SOME;
 #endif
 
-MALLOC_RUNTIME_VAR size_t opt_poison_size = kCacheLineSize * 4;
+// Keep this larger than and ideally a multiple of kCacheLineSize;
+MALLOC_RUNTIME_VAR size_t opt_poison_size = 256;
+#ifndef MALLOC_RUNTIME_CONFIG
+static_assert(opt_poison_size >= kCacheLineSize);
+static_assert((opt_poison_size % kCacheLineSize) == 0);
+#endif
 
 static bool opt_randomize_small = true;
 
