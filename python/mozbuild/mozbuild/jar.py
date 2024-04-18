@@ -18,7 +18,6 @@ from time import localtime
 
 import mozpack.path as mozpath
 import six
-from mozpack.files import FileFinder
 from MozZipFile import ZipFile
 from six import BytesIO
 
@@ -467,6 +466,8 @@ class JarMaker(object):
 
             prefix = "".join(_prefix(src))
             emitted = set()
+            from mozpack.files import FileFinder
+
             for _srcdir in src_base:
                 finder = FileFinder(_srcdir)
                 for path, _ in finder.find(src):
