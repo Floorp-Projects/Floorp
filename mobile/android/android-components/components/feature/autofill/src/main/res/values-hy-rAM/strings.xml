@@ -41,5 +41,5 @@
 
     <!-- Autofill: Hint shown in the text field used to search specific logins. Shown when the field
      is empty and the user has not entered any text into it yet. -->
-    <string name="mozac_feature_autofill_search_hint">Որոնել մուտքագրումներ</string>
+    <string name="mozac_feature_autofill_search_hint">Որոնել մուտքանուններ</string>
 </resources>
