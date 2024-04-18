@@ -14,7 +14,7 @@ def _quote(s):
     As a special case, if given an int, returns a string containing the int,
     not enclosed in quotes.
     """
-    if type(s) == int:
+    if isinstance(s, int):
         return "%d" % s
 
     # Empty strings need to be quoted to have any significance

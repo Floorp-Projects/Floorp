@@ -126,7 +126,7 @@ def run(
         }
     )
 
-    with open(os.path.join(vcs.path, "taskcluster/ci/config.yml")) as f:
+    with open(os.path.join(vcs.path, "taskcluster/config.yml")) as f:
         migration_configs = yaml.safe_load(f)
     for migration in migrations:
         migration_config = migration_configs["merge-automation"]["behaviors"][migration]

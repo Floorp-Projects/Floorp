@@ -46,21 +46,21 @@ try_task_config_schema_v2 = Schema(
 )
 
 
-def full_task_graph_to_runnable_jobs(full_task_json):
-    runnable_jobs = {}
+def full_task_graph_to_runnable_tasks(full_task_json):
+    runnable_tasks = {}
     for label, node in full_task_json.items():
         if not ("extra" in node["task"] and "treeherder" in node["task"]["extra"]):
             continue
 
         th = node["task"]["extra"]["treeherder"]
-        runnable_jobs[label] = {"symbol": th["symbol"]}
+        runnable_tasks[label] = {"symbol": th["symbol"]}
 
         for i in ("groupName", "groupSymbol", "collection"):
             if i in th:
-                runnable_jobs[label][i] = th[i]
+                runnable_tasks[label][i] = th[i]
         if th.get("machine", {}).get("platform"):
-            runnable_jobs[label]["platform"] = th["machine"]["platform"]
-    return runnable_jobs
+            runnable_tasks[label]["platform"] = th["machine"]["platform"]
+    return runnable_tasks
 
 
 def taskgraph_decision(options, parameters=None):
@@ -104,7 +104,7 @@ def taskgraph_decision(options, parameters=None):
 
     # write out the public/runnable-jobs.json file
     write_artifact(
-        "runnable-jobs.json", full_task_graph_to_runnable_jobs(full_task_json)
+        "runnable-jobs.json", full_task_graph_to_runnable_tasks(full_task_json)
     )
 
     # this is just a test to check whether the from_json() function is working
@@ -214,9 +214,9 @@ def get_decision_parameters(graph_config, options):
         parameters.update(PER_PROJECT_PARAMETERS[project])
     except KeyError:
         logger.warning(
-            "using default project parameters; add {} to "
-            "PER_PROJECT_PARAMETERS in {} to customize behavior "
-            "for this project".format(project, __file__)
+            f"using default project parameters; add {project} to "
+            f"PER_PROJECT_PARAMETERS in {__file__} to customize behavior "
+            "for this project"
         )
         parameters.update(PER_PROJECT_PARAMETERS["default"])
 

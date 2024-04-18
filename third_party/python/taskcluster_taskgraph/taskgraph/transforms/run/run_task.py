@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 """
-Support for running jobs that are invoked via the `run-task` script.
+Support for running tasks that are invoked via the `run-task` script.
 """
 
 import dataclasses
@@ -10,8 +10,8 @@ import os
 
 from voluptuous import Any, Optional, Required
 
-from taskgraph.transforms.job import run_job_using
-from taskgraph.transforms.job.common import support_vcs_checkout
+from taskgraph.transforms.run import run_task_using
+from taskgraph.transforms.run.common import support_vcs_checkout
 from taskgraph.transforms.task import taskref_or_string
 from taskgraph.util import path, taskcluster
 from taskgraph.util.schema import Schema
@@ -25,7 +25,7 @@ run_task_schema = Schema(
     {
         Required("using"): "run-task",
         # if true, add a cache at ~worker/.cache, which is where things like pip
-        # tend to hide their caches.  This cache is never added for level-1 jobs.
+        # tend to hide their caches.  This cache is never added for level-1 tasks.
         # TODO Once bug 1526028 is fixed, this and 'use-caches' should be merged.
         Required("cache-dotcache"): bool,
         # Whether or not to use caches.
@@ -58,8 +58,8 @@ run_task_schema = Schema(
 )
 
 
-def common_setup(config, job, taskdesc, command):
-    run = job["run"]
+def common_setup(config, task, taskdesc, command):
+    run = task["run"]
     if run["checkout"]:
         repo_configs = config.repo_configs
         if len(repo_configs) > 1 and run["checkout"] is True:
@@ -72,7 +72,7 @@ def common_setup(config, job, taskdesc, command):
 
         support_vcs_checkout(
             config,
-            job,
+            task,
             taskdesc,
             repo_configs=repo_configs,
             sparse=bool(run["sparse-profile"]),
@@ -97,7 +97,7 @@ def common_setup(config, job, taskdesc, command):
         raise Exception(
             "Found `{{checkout}}` interpolation in `cwd` for task {name} "
             "but the task doesn't have a checkout: {cwd}".format(
-                cwd=run["cwd"], name=job.get("name", job.get("label"))
+                cwd=run["cwd"], name=task.get("name", task.get("label"))
             )
         )
 
@@ -126,14 +126,14 @@ def script_url(config, script):
     return f"{tc_url}/api/queue/v1/task/{task_id}/artifacts/public/{script}"
 
 
-@run_job_using(
+@run_task_using(
     "docker-worker", "run-task", schema=run_task_schema, defaults=worker_defaults
 )
-def docker_worker_run_task(config, job, taskdesc):
-    run = job["run"]
-    worker = taskdesc["worker"] = job["worker"]
+def docker_worker_run_task(config, task, taskdesc):
+    run = task["run"]
+    worker = taskdesc["worker"] = task["worker"]
     command = run.pop("run-task-command", ["/usr/local/bin/run-task"])
-    common_setup(config, job, taskdesc, command)
+    common_setup(config, task, taskdesc, command)
 
     if run.get("cache-dotcache"):
         worker["caches"].append(
@@ -158,12 +158,12 @@ def docker_worker_run_task(config, job, taskdesc):
     worker["command"] = command
 
 
-@run_job_using(
+@run_task_using(
     "generic-worker", "run-task", schema=run_task_schema, defaults=worker_defaults
 )
-def generic_worker_run_task(config, job, taskdesc):
-    run = job["run"]
-    worker = taskdesc["worker"] = job["worker"]
+def generic_worker_run_task(config, task, taskdesc):
+    run = task["run"]
+    worker = taskdesc["worker"] = task["worker"]
     is_win = worker["os"] == "windows"
     is_mac = worker["os"] == "macosx"
     is_bitbar = worker["os"] == "linux-bitbar"
@@ -177,7 +177,7 @@ def generic_worker_run_task(config, job, taskdesc):
         else:
             command = ["./run-task"]
 
-    common_setup(config, job, taskdesc, command)
+    common_setup(config, task, taskdesc, command)
 
     worker.setdefault("mounts", [])
     if run.get("cache-dotcache"):

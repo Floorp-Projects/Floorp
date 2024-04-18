@@ -14,7 +14,7 @@ _target_task_methods = {}
 _GIT_REFS_HEADS_PREFIX = "refs/heads/"
 
 
-def _target_task(name):
+def register_target_task(name):
     def wrap(func):
         _target_task_methods[name] = func
         return func
@@ -81,7 +81,7 @@ def standard_filter(task, parameters):
     )
 
 
-@_target_task("default")
+@register_target_task("default")
 def target_tasks_default(full_task_graph, parameters, graph_config):
     """Target the tasks which have indicated they should be run on this project
     via the `run_on_projects` attributes."""
@@ -90,7 +90,7 @@ def target_tasks_default(full_task_graph, parameters, graph_config):
     ]
 
 
-@_target_task("codereview")
+@register_target_task("codereview")
 def target_tasks_codereview(full_task_graph, parameters, graph_config):
     """Target the tasks which have indicated they should be run on this project
     via the `run_on_projects` attributes."""
@@ -101,7 +101,7 @@ def target_tasks_codereview(full_task_graph, parameters, graph_config):
     ]
 
 
-@_target_task("nothing")
+@register_target_task("nothing")
 def target_tasks_nothing(full_task_graph, parameters, graph_config):
     """Select nothing, for DONTBUILD pushes"""
     return []

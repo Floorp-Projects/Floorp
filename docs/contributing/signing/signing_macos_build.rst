@@ -127,7 +127,7 @@ Example: Re-Signing Official Nightly
     0:00.20 Using ad-hoc signing identity
     0:00.20 Using nightly channel signing configuration
     0:00.20 Using developer entitlements
-    0:00.20 Reading build config file /Users/me/r/mc/taskcluster/ci/config.yml
+    0:00.20 Reading build config file /Users/me/r/mc/taskcluster/config.yml
     0:00.23 Stripping existing xattrs and signatures
     0:01.91 Signing with codesign
     0:02.72 Verification of signed app /Users/me/Desktop/FirefoxNightly.app OK
@@ -149,7 +149,7 @@ can be exported from Keychain Access in .p12 format.
     0:00.26 Using pkcs12 signing identity
     0:00.26 Using devedition channel signing configuration
     0:00.26 Using developer entitlements
-    0:00.26 Reading build config file /Users/me/r/mc/taskcluster/ci/config.yml
+    0:00.26 Reading build config file /Users/me/r/mc/taskcluster/config.yml
     0:00.29 Stripping existing xattrs and signatures
     0:02.09 Signing with rcodesign
     0:11.16 Verification of signed app /Users/me/Desktop/DevEdition.app OK

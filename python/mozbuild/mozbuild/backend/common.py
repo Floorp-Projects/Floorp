@@ -182,7 +182,7 @@ class CommonBackend(BuildBackend):
                     # the order is not consistent across multiple runs.
                     #
                     # Exclude this file in order to avoid breaking the
-                    # taskcluster/ci/diffoscope/reproducible.yml jobs.
+                    # taskcluster/kinds/diffoscope/reproducible.yml jobs.
                     continue
                 fullpath = ObjDirPath(obj._context, "!" + f).full_path
                 self._handle_generated_sources([fullpath])

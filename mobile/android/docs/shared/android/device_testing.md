@@ -18,7 +18,7 @@ By default the Fenix CI runs tests using virtual devices on `x86`.
 That's faster when the host is also a `x86(_64)` system, but most physical devices use the Arm platform.
 So first we need to instruct it to run tests on Arm.
 
-Which platform to test on is defined in [`taskcluster/ci/ui-test/kind.yml`](https://github.com/mozilla-mobile/fenix/blob/58e12b18e6e9f4f67c059fe9c9bf9f02579a55db/taskcluster/ci/ui-test/kind.yml#L65).
+Which platform to test on is defined in [`taskcluster/kinds/ui-test/kind.yml`](https://searchfox.org/mozilla-central/source/taskcluster/kinds/ui-test/kind.yml).
 Find the line where it downloads the `target.apk` produced in a previous step and change it from `x86` to `arm64-v8a`:
 
 ```patch

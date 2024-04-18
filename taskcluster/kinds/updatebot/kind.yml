@@ -69,7 +69,7 @@ jobs:
             #       path: build\src\obj-build\depot_tools
             # end _GENERATE_DEPOT_TOOLS_BINARIES_
             env:
-                TOOLTOOL_MANIFEST: "taskcluster/ci/updatebot/tooltool-manifests/updatebot.manifest"
+                TOOLTOOL_MANIFEST: "taskcluster/kinds/updatebot/tooltool-manifests/updatebot.manifest"
                 MSYSTEM: "MINGW64"
         run:
             using: run-task

@@ -81,9 +81,9 @@ transforms.add_validate(SCHEMA)
 
 
 @transforms.add
-def render_task(config, jobs):
-    for job in jobs:
-        sub_config = job.pop("task-context")
+def render_task(config, tasks):
+    for task in tasks:
+        sub_config = task.pop("task-context")
         params_context = {}
         for var, path in sub_config.pop("from-parameters", {}).items():
             if isinstance(path, str):
@@ -111,11 +111,11 @@ def render_task(config, jobs):
 
         # Now that we have our combined context, we can substitute.
         for field in fields:
-            container, subfield = job, field
+            container, subfield = task, field
             while "." in subfield:
                 f, subfield = subfield.split(".", 1)
                 container = container[f]
 
             container[subfield] = substitute(container[subfield], **subs)
 
-        yield job
+        yield task

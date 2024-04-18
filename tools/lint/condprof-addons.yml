@@ -5,6 +5,6 @@ condprof-addons:
         - 'testing/condprofile/condprof/customization'
     exclude: []
     extensions: ['json']
-    support-files: ['taskcluster/ci/fetch/browsertime.yml']
+    support-files: ['taskcluster/kinds/fetch/browsertime.yml']
     type: structured_log
     payload: condprof-addons:lint

@@ -96,7 +96,7 @@ Regression Testing
 
 In order to prevent regressions in our clang-tidy based static analysis,
 we have created a
-:searchfox:`task <taskcluster/ci/static-analysis-autotest/kind.yml>`
+:searchfox:`task <taskcluster/kinds/static-analysis-autotest/kind.yml>`
 on automation. This task runs on each commit and launches a test suite
 that is integrated into mach.
 

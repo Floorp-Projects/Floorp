@@ -14,9 +14,9 @@ As of now, there is no easy way to do this. Raptor was not built for debugging f
 To debug a functional failure in Raptor you can follow these steps:
 
 #. If bug 1653617 has not landed yet, apply the patch.
-#. Add the --verbose flag to the extra-options list `here <https://searchfox.org/mozilla-central/source/taskcluster/ci/test/raptor.yml#98-101>`__.
+#. Add the --verbose flag to the extra-options list `here <https://searchfox.org/mozilla-central/source/taskcluster/kinds/test/raptor.yml#98-101>`__.
 #. If the --setenv doesn't exist yet (`bug 1494669 <https://bugzilla.mozilla.org/show_bug.cgi?id=1494669>`_), then add your MOZ_LOG environment variables to give you additional logging `here <https://searchfox.org/mozilla-central/source/testing/raptor/raptor/webextension/desktop.py#42>`_.
-#. If the flag does exist, then you can add the MOZ_LOG variables to the `raptor.yml <https://searchfox.org/mozilla-central/source/taskcluster/ci/test/raptor.yml>`_ configuration file.
+#. If the flag does exist, then you can add the MOZ_LOG variables to the `raptor.yml <https://searchfox.org/mozilla-central/source/taskcluster/kinds/test/raptor.yml>`_ configuration file.
 #. Push to try if you can't reproduce the failure locally.
 
 You can follow `bug 1655554 <https://bugzilla.mozilla.org/show_bug.cgi?id=1655554>`_ as we work on improving this workflow.

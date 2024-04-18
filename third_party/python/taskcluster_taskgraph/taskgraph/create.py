@@ -104,7 +104,7 @@ def create_tasks(graph_config, taskgraph, label_to_taskid, params, decision_task
 
 def create_task(session, task_id, label, task_def):
     # create the task using 'http://taskcluster/queue', which is proxied to the queue service
-    # with credentials appropriate to this job.
+    # with credentials appropriate to this task.
 
     # Resolve timestamps
     now = current_json_time(datetime_format=True)

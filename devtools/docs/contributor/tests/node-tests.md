@@ -15,7 +15,7 @@ They are also run when using the "devtools" preset: `./mach try --preset devtool
 
 ### Node tests try job definition
 
-The definition of those try jobs can be found at [taskcluster/ci/source-test/node.yml](https://searchfox.org/mozilla-central/source/taskcluster/ci/source-test/node.yml).
+The definition of those try jobs can be found at [taskcluster/kinds/source-test/node.yml](https://searchfox.org/mozilla-central/source/taskcluster/kinds/source-test/node.yml).
 
 The definition also contains the list of files that will trigger the node test jobs. Currently the the devtools tests run when any file is modified under `devtools/client` or `devtools/shared`.
 

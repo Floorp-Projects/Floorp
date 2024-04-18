@@ -32,11 +32,12 @@ FETCH_SCHEMA = Schema(
         Optional("task-from"): str,
         # Description of the task.
         Required("description"): str,
+        Optional("expires-after"): str,
         Optional("docker-image"): object,
         Optional(
             "fetch-alias",
-            description="An alias that can be used instead of the real fetch job name in "
-            "fetch stanzas for jobs.",
+            description="An alias that can be used instead of the real fetch task name in "
+            "fetch stanzas for tasks.",
         ): str,
         Optional(
             "artifact-prefix",
@@ -78,20 +79,20 @@ transforms.add_validate(FETCH_SCHEMA)
 
 
 @transforms.add
-def process_fetch_job(config, jobs):
-    # Converts fetch-url entries to the job schema.
-    for job in jobs:
-        typ = job["fetch"]["type"]
-        name = job["name"]
-        fetch = job.pop("fetch")
+def process_fetch_task(config, tasks):
+    # Converts fetch-url entries to the run schema.
+    for task in tasks:
+        typ = task["fetch"]["type"]
+        name = task["name"]
+        fetch = task.pop("fetch")
 
         if typ not in fetch_builders:
             raise Exception(f"Unknown fetch type {typ} in fetch {name}")
         validate_schema(fetch_builders[typ].schema, fetch, f"In task.fetch {name!r}:")
 
-        job.update(configure_fetch(config, typ, name, fetch))
+        task.update(configure_fetch(config, typ, name, fetch))
 
-        yield job
+        yield task
 
 
 def configure_fetch(config, typ, name, fetch):
@@ -103,41 +104,41 @@ def configure_fetch(config, typ, name, fetch):
 
 
 @transforms.add
-def make_task(config, jobs):
+def make_task(config, tasks):
     # Fetch tasks are idempotent and immutable. Have them live for
     # essentially forever.
     if config.params["level"] == "3":
         expires = "1000 years"
     else:
-        expires = "28 days"
+        expires = config.graph_config._config.get("task-expires-after", "28 days")
 
-    for job in jobs:
-        name = job["name"]
-        artifact_prefix = job.get("artifact-prefix", "public")
-        env = job.get("env", {})
+    for task in tasks:
+        name = task["name"]
+        artifact_prefix = task.get("artifact-prefix", "public")
+        env = task.get("env", {})
         env.update({"UPLOAD_DIR": "/builds/worker/artifacts"})
-        attributes = job.get("attributes", {})
-        attributes["fetch-artifact"] = path.join(artifact_prefix, job["artifact_name"])
-        alias = job.get("fetch-alias")
+        attributes = task.get("attributes", {})
+        attributes["fetch-artifact"] = path.join(artifact_prefix, task["artifact_name"])
+        alias = task.get("fetch-alias")
         if alias:
             attributes["fetch-alias"] = alias
 
-        task = {
+        task_desc = {
             "attributes": attributes,
             "name": name,
-            "description": job["description"],
-            "expires-after": expires,
+            "description": task["description"],
+            "expires-after": task.get("expires-after", expires),
             "label": "fetch-%s" % name,
             "run-on-projects": [],
             "run": {
                 "using": "run-task",
                 "checkout": False,
-                "command": job["command"],
+                "command": task["command"],
             },
             "worker-type": "images",
             "worker": {
                 "chain-of-trust": True,
-                "docker-image": job.get("docker-image", {"in-tree": "fetch"}),
+                "docker-image": task.get("docker-image", {"in-tree": "fetch"}),
                 "env": env,
                 "max-run-time": 900,
                 "artifacts": [
@@ -151,29 +152,29 @@ def make_task(config, jobs):
         }
 
         if "treeherder" in config.graph_config:
-            task["treeherder"] = {
+            task_desc["treeherder"] = {
                 "symbol": join_symbol("Fetch", name),
                 "kind": "build",
                 "platform": "fetch/opt",
                 "tier": 1,
             }
 
-        if job.get("secret", None):
-            task["scopes"] = ["secrets:get:" + job.get("secret")]
-            task["worker"]["taskcluster-proxy"] = True
+        if task.get("secret", None):
+            task_desc["scopes"] = ["secrets:get:" + task.get("secret")]
+            task_desc["worker"]["taskcluster-proxy"] = True
 
         if not taskgraph.fast:
-            cache_name = task["label"].replace(f"{config.kind}-", "", 1)
+            cache_name = task_desc["label"].replace(f"{config.kind}-", "", 1)
 
             # This adds the level to the index path automatically.
             add_optimization(
                 config,
-                task,
+                task_desc,
                 cache_type=CACHE_TYPE,
                 cache_name=cache_name,
-                digest_data=job["digest_data"],
+                digest_data=task["digest_data"],
             )
-        yield task
+        yield task_desc
 
 
 @fetch_builder(
