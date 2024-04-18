@@ -231,22 +231,11 @@ FFmpegDataDecoder<LIBAV_VER>::ProcessDrain() {
   empty->mTimecode = mLastInputDts;
   bool gotFrame = false;
   DecodedData results;
-  // When draining the underlying FFmpeg decoder without encountering any
-  // problems, DoDecode will either return a single frame at a time until
-  // gotFrame is set to false, or it will return a block of frames with
-  // NS_ERROR_DOM_MEDIA_END_OF_STREAM (EOS). However, if any issue arises, such
-  // as pending data in the pipeline being corrupt or invalid, non-EOS errors
-  // like NS_ERROR_DOM_MEDIA_DECODE_ERR will be returned and must be handled
-  // accordingly.
-  do {
-    MediaResult r = DoDecode(empty, &gotFrame, results);
-    if (NS_FAILED(r)) {
-      if (r.Code() == NS_ERROR_DOM_MEDIA_END_OF_STREAM) {
-        break;
-      }
-      return DecodePromise::CreateAndReject(r, __func__);
-    }
-  } while (gotFrame);
+  // When draining the FFmpeg decoder will return either a single frame at a
+  // time until gotFrame is set to false; or return a block of frames with
+  // NS_ERROR_DOM_MEDIA_END_OF_STREAM
+  while (NS_SUCCEEDED(DoDecode(empty, &gotFrame, results)) && gotFrame) {
+  }
   return DecodePromise::CreateAndResolve(std::move(results), __func__);
 }
 

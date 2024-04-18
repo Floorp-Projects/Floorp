@@ -1102,9 +1102,7 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
     char errStr[AV_ERROR_MAX_STRING_SIZE];
     mLib->av_strerror(res, errStr, AV_ERROR_MAX_STRING_SIZE);
     FFMPEG_LOG("avcodec_send_packet error: %s", errStr);
-    return MediaResult(res == int(AVERROR_EOF)
-                           ? NS_ERROR_DOM_MEDIA_END_OF_STREAM
-                           : NS_ERROR_DOM_MEDIA_DECODE_ERR,
+    return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
                        RESULT_DETAIL("avcodec_send_packet error: %s", errStr));
   }
   if (aGotFrame) {
