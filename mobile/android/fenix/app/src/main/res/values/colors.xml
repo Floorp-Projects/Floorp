@@ -119,7 +119,7 @@
     <color name="fx_mobile_icon_color_warning" tools:ignore="UnusedResources">@color/photonRed70</color>
     <!-- Warning icon on Secondary button -->
     <color name="fx_mobile_icon_color_warning_button">@color/photonRed70</color>
-    <color name="fx_mobile_icon_color_accent_violet">@color/photonViolet60</color>
+    <color name="fx_mobile_icon_color_accent_violet">@color/photonViolet70</color>
     <color name="fx_mobile_icon_color_accent_blue">@color/photonBlue60</color>
     <color name="fx_mobile_icon_color_accent_pink">@color/photonPink60</color>
     <color name="fx_mobile_icon_color_accent_green">@color/photonGreen60</color>
