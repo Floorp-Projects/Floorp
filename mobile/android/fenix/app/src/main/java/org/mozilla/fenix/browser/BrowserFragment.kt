@@ -311,7 +311,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
     }
 
     private fun initReloadAction(context: Context) {
-        if (!IncompleteRedesignToolbarFeature(context.settings()).isEnabled || refreshAction != null) {
+        if (!IncompleteRedesignToolbarFeature(context.settings()).isEnabled) {
             return
         }
 
