@@ -60,6 +60,16 @@ if [ -n "${MOZ_LOG}" ]; then
   export MOZ_LOG_FILE="${ARTIFACT_DIR}/gecko-log"
 fi
 
+RECORD_SCREEN_PID=0
+if [ "${TEST_RECORD_SCREEN}" = "true" ]; then
+  python3 record.py &
+  RECORD_SCREEN_PID=$!
+  echo "Recording with PID ${RECORD_SCREEN_PID}"
+
+  trap 'echo [EXIT] Stopping screen recording from PID ${RECORD_SCREEN_PID} && kill ${RECORD_SCREEN_PID}' EXIT
+  trap 'echo [ERR] Stopping screen recording from PID ${RECORD_SCREEN_PID} && kill ${RECORD_SCREEN_PID}' ERR
+fi;
+
 if [ "${SUITE}" = "basic" ]; then
   sed -e "s/#RUNTIME_VERSION#/${RUNTIME_VERSION}/#" < basic_tests/expectations.json.in > basic_tests/expectations.json
   python3 basic_tests.py basic_tests/expectations.json

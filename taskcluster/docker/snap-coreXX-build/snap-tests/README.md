@@ -16,6 +16,10 @@ inspecting the browser at the end of a test.
 Data URL containing the diff screenshot will be dumped to stdout/stderr when
 `TEST_DUMP_DIFF` is set in the environment.
 
+A recording of the desktop can be captured via GNOME Screencast feature by
+passing `TEST_RECORD_SCREEN=true` in the enviromnent. Upon completion of the
+task it should upload a WebM file.
+
 Updating reference screenshots
 ==============================
  - `./mach try fuzzy --push-to-lando --full --env TEST_COLLECT_REFERENCE=1 -q "'snap-upstream-test"`
