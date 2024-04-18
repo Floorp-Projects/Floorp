@@ -25,7 +25,6 @@
 #include "mozilla/StoragePrincipalHelper.h"
 #include "mozilla/Telemetry.h"
 #include "mozIThirdPartyUtil.h"
-#include "nsCRT.h"
 #include "nsICookiePermission.h"
 #include "nsIConsoleReportCollector.h"
 #include "nsIEffectiveTLDService.h"
@@ -1181,16 +1180,14 @@ static void RecordPartitionedTelemetry(const CookieStruct& aCookieData,
   }
 }
 
-bool HasSecurePrefix(const nsCString& aString) {
-  static const char kSecure[] = "__Secure-";
-  static constexpr uint32_t kSecureLen = sizeof(kSecure) - 1;
-  return nsCRT::strncasecmp(aString.get(), kSecure, kSecureLen) == 0;
+static bool HasSecurePrefix(const nsACString& aString) {
+  return StringBeginsWith(aString, "__Secure-"_ns,
+                          nsCaseInsensitiveCStringComparator);
 }
 
-bool HasHostPrefix(const nsCString& aString) {
-  static const char kHost[] = "__Host-";
-  static constexpr uint32_t kHostLen = sizeof(kHost) - 1;
-  return nsCRT::strncasecmp(aString.get(), kHost, kHostLen) == 0;
+static bool HasHostPrefix(const nsACString& aString) {
+  return StringBeginsWith(aString, "__Host-"_ns,
+                          nsCaseInsensitiveCStringComparator);
 }
 
 // processes a single cookie, and returns true if there are more cookies
@@ -2050,10 +2047,10 @@ bool CookieService::CheckPath(CookieStruct& aCookieData,
 // regularized and validated the CookieStruct values!
 bool CookieService::CheckPrefixes(CookieStruct& aCookieData,
                                   bool aSecureRequest) {
-  bool isSecure = HasSecurePrefix(aCookieData.name());
-  bool isHost = HasHostPrefix(aCookieData.name());
+  bool hasSecurePrefix = HasSecurePrefix(aCookieData.name());
+  bool hasHostPrefix = HasHostPrefix(aCookieData.name());
 
-  if (!isSecure && !isHost) {
+  if (!hasSecurePrefix && !hasHostPrefix) {
     // not one of the magic prefixes: carry on
     return true;
   }
@@ -2064,7 +2061,7 @@ bool CookieService::CheckPrefixes(CookieStruct& aCookieData,
     return false;
   }
 
-  if (isHost) {
+  if (hasHostPrefix) {
     // The host prefix requires that the path is "/" and that the cookie
     // had no domain attribute. CheckDomain() and CheckPath() MUST be run
     // first to make sure invalid attributes are rejected and to regularlize
