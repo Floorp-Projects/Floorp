@@ -63,12 +63,6 @@ class WMFDecoderModule : public PlatformDecoderModule {
 
   WMFDecoderModule() = default;
   virtual ~WMFDecoderModule() = default;
-
-  static inline StaticMutex sMutex;
-  static inline bool sSupportedTypesInitialized MOZ_GUARDED_BY(sMutex) = false;
-  static inline EnumSet<WMFStreamType> sSupportedTypes MOZ_GUARDED_BY(sMutex);
-  static inline EnumSet<WMFStreamType> sLackOfExtensionTypes
-      MOZ_GUARDED_BY(sMutex);
 };
 
 }  // namespace mozilla
