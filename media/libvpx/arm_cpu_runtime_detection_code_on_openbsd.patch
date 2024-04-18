@@ -6,10 +6,10 @@ Bug 1888772 - Allow ARM CPU runtime detection code to build on OpenBSD
 diff --git a/vpx_ports/aarch64_cpudetect.c b/vpx_ports/aarch64_cpudetect.c
 --- a/vpx_ports/aarch64_cpudetect.c
 +++ b/vpx_ports/aarch64_cpudetect.c
-@@ -10,30 +10,30 @@
-
+@@ -11,30 +11,30 @@
  #include "./vpx_config.h"
- #include "arm_cpudetect.h"
+ #include "vpx_ports/arm.h"
+ #include "vpx_ports/arm_cpudetect.h"
 
  #if defined(__APPLE__)
  #include <sys/sysctl.h>
