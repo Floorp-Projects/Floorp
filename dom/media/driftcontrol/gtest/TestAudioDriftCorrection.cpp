@@ -275,9 +275,9 @@ TEST(TestAudioDriftCorrection, LargerReceiverBlockSizeThanDesiredBuffering)
       MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
   AudioDriftCorrection ad(sampleRate, sampleRate, testPrincipal);
 
+  AudioSegment inSegment;
   for (uint32_t i = 0; i < (sampleRate / 1000) * 500;
        i += transmitterBlockSize) {
-    AudioSegment inSegment;
     AudioChunk chunk =
         CreateAudioChunk<float>(transmitterBlockSize, 1, AUDIO_FORMAT_FLOAT32);
     inSegment.AppendAndConsumeChunk(std::move(chunk));
@@ -285,6 +285,7 @@ TEST(TestAudioDriftCorrection, LargerReceiverBlockSizeThanDesiredBuffering)
     if (i % receiverBlockSize == 0) {
       AudioSegment outSegment = ad.RequestFrames(inSegment, receiverBlockSize);
       EXPECT_EQ(outSegment.GetDuration(), receiverBlockSize);
+      inSegment.Clear();
     }
 
     if (i >= receiverBlockSize) {
@@ -294,11 +295,12 @@ TEST(TestAudioDriftCorrection, LargerReceiverBlockSizeThanDesiredBuffering)
 
   // Input is stable so no corrections should occur.
   EXPECT_EQ(ad.NumCorrectionChanges(), 0U);
+  EXPECT_EQ(ad.NumUnderruns(), 0U);
   // The drift correction buffer size had to be larger than the desired (the
   // buffer size is twice the initial buffering level), to accomodate the large
   // input block size that gets buffered in the resampler only when processing
   // output.
-  EXPECT_EQ(ad.BufferSize(), 19200U);
+  EXPECT_EQ(ad.BufferSize(), 9600U);
 }
 
 TEST(TestAudioDriftCorrection, DynamicInputBufferSizeChanges)
