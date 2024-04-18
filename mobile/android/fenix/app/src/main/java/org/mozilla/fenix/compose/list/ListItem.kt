@@ -23,6 +23,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
@@ -167,8 +168,10 @@ fun FaviconListItem(
  * @param onClick Called when the user clicks on the item.
  * @param beforeIconPainter [Painter] used to display an [Icon] before the list item.
  * @param beforeIconDescription Content description of the icon.
+ * @param beforeIconTint Tint applied to [beforeIconPainter].
  * @param afterIconPainter [Painter] used to display an icon after the list item.
  * @param afterIconDescription Content description of the icon.
+ * @param afterIconTint Tint applied to [afterIconPainter].
  * @param onAfterIconClick Called when the user clicks on the icon. An [IconButton] will be
  * displayed if this is provided. Otherwise, an [Icon] will be displayed.
  */
@@ -179,8 +182,10 @@ fun IconListItem(
     onClick: (() -> Unit)? = null,
     beforeIconPainter: Painter,
     beforeIconDescription: String? = null,
+    beforeIconTint: Color = FirefoxTheme.colors.iconPrimary,
     afterIconPainter: Painter? = null,
     afterIconDescription: String? = null,
+    afterIconTint: Color = FirefoxTheme.colors.iconPrimary,
     onAfterIconClick: (() -> Unit)? = null,
 ) {
     ListItem(
@@ -192,7 +197,7 @@ fun IconListItem(
                 painter = beforeIconPainter,
                 contentDescription = beforeIconDescription,
                 modifier = Modifier.padding(horizontal = 16.dp),
-                tint = FirefoxTheme.colors.iconPrimary,
+                tint = beforeIconTint,
             )
         },
         afterListAction = {
@@ -206,7 +211,7 @@ fun IconListItem(
                     Icon(
                         painter = afterIconPainter,
                         contentDescription = afterIconDescription,
-                        tint = FirefoxTheme.colors.iconPrimary,
+                        tint = afterIconTint,
                     )
                 }
             } else if (afterIconPainter != null) {
@@ -214,7 +219,7 @@ fun IconListItem(
                     painter = afterIconPainter,
                     contentDescription = afterIconDescription,
                     modifier = Modifier.padding(end = 16.dp),
-                    tint = FirefoxTheme.colors.iconPrimary,
+                    tint = afterIconTint,
                 )
             }
         },
