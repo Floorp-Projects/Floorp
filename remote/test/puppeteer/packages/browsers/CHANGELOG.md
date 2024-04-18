@@ -1,5 +1,32 @@
 # Changelog
 
+## [2.2.2](https://github.com/puppeteer/puppeteer/compare/browsers-v2.2.1...browsers-v2.2.2) (2024-04-15)
+
+
+### Bug Fixes
+
+* remove NetworkServiceInProcess2 set by default ([#12261](https://github.com/puppeteer/puppeteer/issues/12261)) ([ff4f70f](https://github.com/puppeteer/puppeteer/commit/ff4f70f4ae7ca8deb0becbec2e49b35322dba336)), closes [#12257](https://github.com/puppeteer/puppeteer/issues/12257)
+
+## [2.2.1](https://github.com/puppeteer/puppeteer/compare/browsers-v2.2.0...browsers-v2.2.1) (2024-04-05)
+
+
+### Bug Fixes
+
+* do not use fallback download URLs if custom baseUrl is provided ([#12206](https://github.com/puppeteer/puppeteer/issues/12206)) ([ab560bc](https://github.com/puppeteer/puppeteer/commit/ab560bcf6fee57cabde94d9d261d28ffc2112948))
+* only set up a single process event listener in launch ([#12200](https://github.com/puppeteer/puppeteer/issues/12200)) ([7bc5e0f](https://github.com/puppeteer/puppeteer/commit/7bc5e0fb2dc443765e2512e4dc15fb2bcc1cb4be))
+
+## [2.2.0](https://github.com/puppeteer/puppeteer/compare/browsers-v2.1.0...browsers-v2.2.0) (2024-03-15)
+
+
+### Features
+
+* allow downloading Firefox channels other than nightly ([#12051](https://github.com/puppeteer/puppeteer/issues/12051)) ([e4cc2f9](https://github.com/puppeteer/puppeteer/commit/e4cc2f9ee944f2507a03cf8f5af99759c97ee2ec))
+
+
+### Bug Fixes
+
+* don't keep connection alive ([#12096](https://github.com/puppeteer/puppeteer/issues/12096)) ([0a142bf](https://github.com/puppeteer/puppeteer/commit/0a142bf0aa8a6666d1ca230d05a1ece0e03ad7d4))
+
 ## [2.1.0](https://github.com/puppeteer/puppeteer/compare/browsers-v2.0.1...browsers-v2.1.0) (2024-02-21)
 
 

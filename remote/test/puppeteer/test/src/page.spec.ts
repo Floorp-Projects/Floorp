@@ -506,11 +506,14 @@ describe('Page', function () {
         console.log(1, 2, 3, globalThis);
       });
       const log = await logPromise;
-      expect(log.text()).toBe('1 2 3 JSHandle@object');
+
+      expect(log.text()).atLeastOneToContain([
+        '1 2 3 JSHandle@object',
+        '1 2 3 JSHandle@window',
+      ]);
       expect(log.args()).toHaveLength(4);
-      expect(await (await log.args()[3]!.getProperty('test')).jsonValue()).toBe(
-        1
-      );
+      using property = await log.args()[3]!.getProperty('test');
+      expect(await property.jsonValue()).toBe(1);
     });
     it('should trigger correct Log', async () => {
       const {page, server, isChrome} = await getTestState();
@@ -1210,13 +1213,15 @@ describe('Page', function () {
       expect(result).toBe(36);
       await page.removeExposedFunction('compute');
 
-      let error: Error | null = null;
-      await page
+      const error = await page
         .evaluate(async function () {
           return (globalThis as any).compute(9, 4);
         })
-        .catch(_error => {
-          return (error = _error);
+        .then(() => {
+          return null;
+        })
+        .catch(error => {
+          return error;
         });
       expect(error).toBeTruthy();
     });

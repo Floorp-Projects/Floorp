@@ -15,6 +15,7 @@ import type {Frame, WaitForOptions} from '../api/Frame.js';
 import type {HTTPRequest} from '../api/HTTPRequest.js';
 import type {HTTPResponse} from '../api/HTTPResponse.js';
 import type {JSHandle} from '../api/JSHandle.js';
+import type {Credentials} from '../api/Page.js';
 import {
   Page,
   PageEvent,
@@ -71,7 +72,7 @@ import {FrameManagerEvent} from './FrameManagerEvents.js';
 import {CdpKeyboard, CdpMouse, CdpTouchscreen} from './Input.js';
 import {MAIN_WORLD} from './IsolatedWorlds.js';
 import {releaseObject} from './JSHandle.js';
-import type {Credentials, NetworkConditions} from './NetworkManager.js';
+import type {NetworkConditions} from './NetworkManager.js';
 import type {CdpTarget} from './Target.js';
 import type {TargetManager} from './TargetManager.js';
 import {TargetManagerEvent} from './TargetManager.js';
@@ -916,7 +917,10 @@ export class CdpPage extends Page {
     options?: WaitForOptions
   ): Promise<HTTPResponse | null> {
     const [result] = await Promise.all([
-      this.waitForNavigation(options),
+      this.waitForNavigation({
+        ...options,
+        ignoreSameDocumentNavigation: true,
+      }),
       this.#primaryTargetClient.send('Page.reload'),
     ]);
 
@@ -1129,6 +1133,16 @@ export class CdpPage extends Page {
     if (omitBackground) {
       await this.#emulationManager.setTransparentBackgroundColor();
     }
+
+    await firstValueFrom(
+      from(
+        this.mainFrame()
+          .isolatedRealm()
+          .evaluate(() => {
+            return document.fonts.ready;
+          })
+      ).pipe(raceWith(timeout(ms)))
+    );
 
     const printCommandPromise = this.#primaryTargetClient.send(
       'Page.printToPDF',
