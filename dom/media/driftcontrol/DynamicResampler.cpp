@@ -35,7 +35,10 @@ void DynamicResampler::SetSampleFormat(AudioSampleFormat aFormat) {
     b.SetSampleFormat(mSampleFormat);
   }
 
-  EnsureInputBufferDuration(CalculateInputBufferDuration());
+  // Pre-allocate something big.
+  // EnsureInputBufferDuration() adds 50ms for jitter to this first allocation
+  // so the 50ms argument means at least 100ms.
+  EnsureInputBufferDuration(media::TimeUnit::FromSeconds(0.05));
 }
 
 void DynamicResampler::EnsurePreBuffer(media::TimeUnit aDuration) {
