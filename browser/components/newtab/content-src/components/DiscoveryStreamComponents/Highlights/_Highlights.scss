@@ -37,6 +37,24 @@
         a {
           text-decoration: none;
         }
+
+        // Override note: The colors set here are intentionally static
+        // due to transparency issues over images.
+        .context-menu-button {
+          background-color: var(--newtab-button-static-background);
+
+          &:hover {
+            background-color: var(--newtab-button-static-hover-background);
+
+            &:active {
+              background-color: var(--newtab-button-static-active-background);
+            }
+          }
+
+          &:focus-visible {
+            background-color: var(--newtab-button-static-focus-background);
+          }
+        }
       }
     }
   }

@@ -11,6 +11,16 @@
   --newtab-text-secondary-color: color-mix(in srgb, var(--newtab-text-primary-color) 70%, transparent);
   --newtab-element-hover-color: color-mix(in srgb, var(--newtab-background-color) 90%, #000);
   --newtab-element-active-color: color-mix(in srgb, var(--newtab-background-color) 80%, #000);
+  --newtab-button-background: var(--button-background-color);
+  --newtab-button-focus-background: var(--newtab-button-background);
+  --newtab-button-focus-border: var(--focus-outline-color);
+  --newtab-button-hover-background: var(--button-background-color-hover);
+  --newtab-button-active-background: var(--button-background-color-active);
+  --newtab-button-text: var(--button-text-color);
+  --newtab-button-static-background: #F0F0F4;
+  --newtab-button-static-focus-background: var(--newtab-button-static-background);
+  --newtab-button-static-hover-background: #E0E0E6;
+  --newtab-button-static-active-background: #CFCFD8;
   --newtab-element-secondary-color: color-mix(in srgb, currentColor 5%, transparent);
   --newtab-element-secondary-hover-color: color-mix(in srgb, currentColor 12%, transparent);
   --newtab-element-secondary-active-color: color-mix(in srgb, currentColor 25%, transparent);
@@ -48,6 +58,9 @@
   --newtab-primary-element-text-color: rgb(43, 42, 51);
   --newtab-wordmark-color: rgb(251, 251, 254);
   --newtab-status-success: #7C6;
+  --newtab-button-static-background: #2B2A33;
+  --newtab-button-static-hover-background: #52525E;
+  --newtab-button-static-active-background: #5B5B66;
 }
 
 @media (prefers-contrast) {
@@ -61,7 +74,7 @@
   background-size: 16px;
   -moz-context-properties: fill;
   display: inline-block;
-  color: var(--newtab-text-primary-color);
+  color: var(--icon-color);
   fill: currentColor;
   height: 16px;
   vertical-align: middle;
