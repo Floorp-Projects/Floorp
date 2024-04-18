@@ -144,10 +144,8 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Yeni gizli sekme</string>
 
-    <!-- Shortcut action to open Passwords screen -->
-    <string name="home_screen_shortcut_passwords">Parolalar</string>
-    <!-- Shortcut action to open Passwords screen -->
-    <string name="home_screen_shortcut_open_password_screen" moz:removedIn="126" tools:ignore="UnusedResources">Parolalar kısayolu</string>
+    <!-- Shortcut action to open Passwords screens -->
+    <string name="home_screen_shortcut_open_password_screen">Parolalar kısayolu</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -250,18 +248,9 @@
     <string name="browser_menu_customize_home_1">Giriş sayfasını özelleştir</string>
 
     <!-- Browser menu label to sign in to sync on the device using Mozilla accounts -->
-    <string name="browser_menu_sign_in">Giriş yap</string>
-    <!-- Browser menu caption label for the "Sign in" browser menu item described in `browser_menu_sign_in` -->
-    <string name="browser_menu_sign_in_caption">Parolaları, sekmeleri ve daha fazlasını eşitle</string>
-
-    <!-- Browser menu label to sign back in to sync on the device when the user's account needs to be reauthenticated -->
-    <string name="browser_menu_sign_back_in_to_sync">Eşitlemek için yeniden giriş yap</string>
-    <!-- Browser menu caption label for the "Sign back in to sync" browser menu item described in `browser_menu_sign_back_in_to_sync` when there is an error in syncing -->
-    <string name="browser_menu_syncing_paused_caption">Eşitleme duraklatıldı</string>
-    <!-- Browser menu label that creates a private tab -->
-    <string name="browser_menu_new_private_tab">Yeni gizli sekme</string>
-    <!-- Browser menu label that navigates to the Password screen -->
-    <string name="browser_menu_passwords">Parolalar</string>
+    <string name="browser_menu_sign_in" tools:ignore="UnusedResources">Giriş yap</string>
+    <!-- Browser menu caption label for the "Sign in" browser menu item described in browser_menu_sign_in -->
+    <string name="browser_menu_sign_in_caption" tools:ignore="UnusedResources">Parolaları, sekmeleri ve daha fazlasını eşitle</string>
 
     <!-- Extensions management fragment -->
     <!-- Text displayed when there are no extensions to be shown -->
@@ -637,20 +626,6 @@
     <string name="notifications_allowed_summary">İzin verildi</string>
     <!-- Summary for notification preference indicating notifications are not allowed -->
     <string name="notifications_not_allowed_summary">İzin verilmedi</string>
-
-    <!-- Add-on Permissions -->
-    <!-- The title of the required permissions section from addon's permissions screen -->
-    <string name="addons_permissions_heading_required" tools:ignore="UnusedResources">Gerekli</string>
-    <!-- The title of the optional permissions section from addon's permissions screen -->
-    <string name="addons_permissions_heading_optional" tools:ignore="UnusedResources">İsteğe bağlı</string>
-    <!-- The title of the section with websites that have permissions granted from addon's permissions screen -->
-    <string name="addons_permissions_heading_read_and_change_website_data" tools:ignore="UnusedResources">Web sitesi verilerini okuma ve değiştirme</string>
-    <!-- The description of the icon that can delete one of the websites displayed  -->
-    <string name="addons_permissions_icon_description_delete_website" tools:ignore="UnusedResources">Siteyi sil</string>
-    <!-- The title of the origin permission option allowing a user to enable the extension to run on all sites -->
-    <string name="addons_permissions_allow_for_all_sites" tools:ignore="UnusedResources">Tüm siteler için izin ver</string>
-    <!-- The subtitle for the allow for all sites preference toggle -->
-    <string name="addons_permissions_allow_for_all_sites_subtitle" tools:ignore="UnusedResources">Bu uzantıya güveniyorsanız her web sitesinde bu uzantıya izin verebilirsiniz.</string>
 
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
@@ -2522,7 +2497,7 @@
     <!-- The title of the warning card informs the user that a language is not supported. The first parameter is the name of the language that is not supported. -->
     <string name="translation_error_language_not_supported_warning_text">Maalesef henüz %1$s dilini desteklemiyoruz.</string>
     <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
-    <string name="translation_error_language_not_supported_learn_more" moz:removedIn="126" tools:ignore="UnusedResources">Daha fazla bilgi al</string>
+    <string name="translation_error_language_not_supported_learn_more">Daha fazla bilgi al</string>
 
     <!-- Snackbar title shown if the user closes the Translation Request dialogue and a translation is in progress. -->
     <string name="translation_in_progress_snackbar">Çevriliyor…</string>
@@ -2537,9 +2512,7 @@
 
     <!-- Translations options dialog -->
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
-    <string name="translation_option_bottom_sheet_title" moz:removedIn="126" tools:ignore="UnusedResources">Çeviri Seçenekleri</string>
-    <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
-    <string name="translation_option_bottom_sheet_title_heading">Çeviri seçenekleri</string>
+    <string name="translation_option_bottom_sheet_title">Çeviri Seçenekleri</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to always offer or suggest translations when available. -->
     <string name="translation_option_bottom_sheet_always_translate">Her zaman çevirmeyi teklif et</string>
     <!-- Toggle switch label that allows a user to set if they would like a given language to automatically translate or not. The first parameter is the language name, for example, "Spanish". -->
@@ -2556,9 +2529,6 @@
     <string name="translation_option_bottom_sheet_translation_settings">Çeviri ayarları</string>
     <!-- Button text for the button that will take the user to a website to learn more about how translations works in the given app. The first parameter is the name of the application, for example, "Fenix". -->
     <string name="translation_option_bottom_sheet_about_translations">%1$s çevirileri hakkında</string>
-
-    <!-- Content description (not visible, for screen readers etc.) for closing the translations bottom sheet. -->
-    <string name="translation_option_bottom_sheet_close_content_description">Çeviriler sayfasını kapat</string>
 
     <!-- Translation settings dialog -->
     <!-- Title of the translation settings dialog that allows a user to set their preferred translation settings. -->
@@ -2684,8 +2654,6 @@
     <string name="debug_drawer_title">Hata ayıklama araçları</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate back within the debug drawer. -->
     <string name="debug_drawer_back_button_content_description">Geri git</string>
-
-    <!-- Debug drawer tabs tools -->
     <!-- The title of the Tab Tools feature in the Debug Drawer. -->
     <string name="debug_drawer_tab_tools_title">Sekme araçları</string>
     <!-- The title of the tab count section in Tab Tools. -->
@@ -2708,10 +2676,4 @@
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_inactive">Pasif sekmelere ekle</string>
     <!-- The button text to add tabs to the private tab group in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_private">Gizli sekmelere ekle</string>
-
-    <!-- Debug drawer logins -->
-    <!-- The title of the Logins feature in the Debug Drawer. -->
-    <string name="debug_drawer_logins_title">Hesaplar</string>
-    <!-- Content description for delete button where parameter will be the username of the login -->
-    <string name="debug_drawer_logins_delete_login_button_content_description">%s kullanıcı adlı hesabı sil</string>
 </resources>

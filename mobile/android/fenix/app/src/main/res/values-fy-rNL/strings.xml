@@ -144,10 +144,8 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Nij priveeljepblêd</string>
 
-    <!-- Shortcut action to open Passwords screen -->
-    <string name="home_screen_shortcut_passwords">Wachtwurden</string>
-    <!-- Shortcut action to open Passwords screen -->
-    <string name="home_screen_shortcut_open_password_screen" moz:removedIn="126" tools:ignore="UnusedResources">Wachtwurdfluchkeppeling</string>
+    <!-- Shortcut action to open Passwords screens -->
+    <string name="home_screen_shortcut_open_password_screen">Wachtwurdfluchkeppeling</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -250,18 +248,9 @@
     <string name="browser_menu_customize_home_1">Startside oanpasse</string>
 
     <!-- Browser menu label to sign in to sync on the device using Mozilla accounts -->
-    <string name="browser_menu_sign_in">Oanmelde</string>
-    <!-- Browser menu caption label for the "Sign in" browser menu item described in `browser_menu_sign_in` -->
-    <string name="browser_menu_sign_in_caption">Wachtwurden, ljepblêden en mear syngronisearje</string>
-
-    <!-- Browser menu label to sign back in to sync on the device when the user's account needs to be reauthenticated -->
-    <string name="browser_menu_sign_back_in_to_sync">Meld jo opnij oan om te syngronisearjen</string>
-    <!-- Browser menu caption label for the "Sign back in to sync" browser menu item described in `browser_menu_sign_back_in_to_sync` when there is an error in syncing -->
-    <string name="browser_menu_syncing_paused_caption">Syngronisaasje ûnderbrutsen</string>
-    <!-- Browser menu label that creates a private tab -->
-    <string name="browser_menu_new_private_tab">Nij priveeljepblêd</string>
-    <!-- Browser menu label that navigates to the Password screen -->
-    <string name="browser_menu_passwords">Wachtwurden</string>
+    <string name="browser_menu_sign_in" tools:ignore="UnusedResources">Oanmelde</string>
+    <!-- Browser menu caption label for the "Sign in" browser menu item described in browser_menu_sign_in -->
+    <string name="browser_menu_sign_in_caption" tools:ignore="UnusedResources">Wachtwurden, ljepblêden en mear syngronisearje</string>
 
     <!-- Extensions management fragment -->
     <!-- Text displayed when there are no extensions to be shown -->
@@ -635,20 +624,6 @@
     <string name="notifications_allowed_summary">Tastien</string>
     <!-- Summary for notification preference indicating notifications are not allowed -->
     <string name="notifications_not_allowed_summary">Net tastien</string>
-
-    <!-- Add-on Permissions -->
-    <!-- The title of the required permissions section from addon's permissions screen -->
-    <string name="addons_permissions_heading_required" tools:ignore="UnusedResources">Fereaske</string>
-    <!-- The title of the optional permissions section from addon's permissions screen -->
-    <string name="addons_permissions_heading_optional" tools:ignore="UnusedResources">Opsjoneel</string>
-    <!-- The title of the section with websites that have permissions granted from addon's permissions screen -->
-    <string name="addons_permissions_heading_read_and_change_website_data" tools:ignore="UnusedResources">Websitegegevens lêze en wizigje</string>
-    <!-- The description of the icon that can delete one of the websites displayed  -->
-    <string name="addons_permissions_icon_description_delete_website" tools:ignore="UnusedResources">Website fuortsmite</string>
-    <!-- The title of the origin permission option allowing a user to enable the extension to run on all sites -->
-    <string name="addons_permissions_allow_for_all_sites" tools:ignore="UnusedResources">Tastean foar alle websites</string>
-    <!-- The subtitle for the allow for all sites preference toggle -->
-    <string name="addons_permissions_allow_for_all_sites_subtitle" tools:ignore="UnusedResources">As jo dizze útwreiding fertrouwe, kinne jo it op elke website tastimming jaan.</string>
 
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
@@ -2492,8 +2467,6 @@ Dizze analyze sil jo allinnich helpe om de beoardielingskwaliteit te beoardielen
     <string name="translations_bottom_sheet_translate_from">Oersette fanút it</string>
     <!-- Label for the dropdown to select which language to translate to on the translations dialog. Usually the translate to language selected will be the user's preferred language. -->
     <string name="translations_bottom_sheet_translate_to">Oersette nei it</string>
-    <!-- Label for the dropdown to select which language to translate from on the translations dialog when the page language is not supported. This selection is to allow the user to select another language, in case we automatically detected the page language incorrectly. -->
-    <string name="translations_bottom_sheet_translate_from_unsupported_language">Probearje in oare boarnetaal</string>
     <!-- Button text on the translations dialog to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button">No net</string>
     <!-- Button text on the translations dialog to restore the translated website back to the original untranslated version. -->
@@ -2518,7 +2491,7 @@ Dizze analyze sil jo allinnich helpe om de beoardielingskwaliteit te beoardielen
     <!-- The title of the warning card informs the user that a language is not supported. The first parameter is the name of the language that is not supported. -->
     <string name="translation_error_language_not_supported_warning_text">Sorry, wy stypje %1$s noch net.</string>
     <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
-    <string name="translation_error_language_not_supported_learn_more" moz:removedIn="126" tools:ignore="UnusedResources">Mear ynfo</string>
+    <string name="translation_error_language_not_supported_learn_more">Mear ynfo</string>
 
     <!-- Snackbar title shown if the user closes the Translation Request dialogue and a translation is in progress. -->
     <string name="translation_in_progress_snackbar">Oersette…</string>
@@ -2531,9 +2504,7 @@ Dizze analyze sil jo allinnich helpe om de beoardielingskwaliteit te beoardielen
 
     <!-- Translations options dialog -->
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
-    <string name="translation_option_bottom_sheet_title" moz:removedIn="126" tools:ignore="UnusedResources">Oersetopsjes</string>
-    <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
-    <string name="translation_option_bottom_sheet_title_heading">Oersetopsjes</string>
+    <string name="translation_option_bottom_sheet_title">Oersetopsjes</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to always offer or suggest translations when available. -->
     <string name="translation_option_bottom_sheet_always_translate">Altyd oanbiede om oer te setten</string>
     <!-- Toggle switch label that allows a user to set if they would like a given language to automatically translate or not. The first parameter is the language name, for example, "Spanish". -->
@@ -2550,9 +2521,6 @@ Dizze analyze sil jo allinnich helpe om de beoardielingskwaliteit te beoardielen
     <string name="translation_option_bottom_sheet_translation_settings">Oersetynstellingen</string>
     <!-- Button text for the button that will take the user to a website to learn more about how translations works in the given app. The first parameter is the name of the application, for example, "Fenix". -->
     <string name="translation_option_bottom_sheet_about_translations">Oer oersettingen yn %1$s</string>
-
-    <!-- Content description (not visible, for screen readers etc.) for closing the translations bottom sheet. -->
-    <string name="translation_option_bottom_sheet_close_content_description">Blêd Oersettingen slute</string>
 
     <!-- Translation settings dialog -->
     <!-- Title of the translation settings dialog that allows a user to set their preferred translation settings. -->
@@ -2675,8 +2643,6 @@ Dizze analyze sil jo allinnich helpe om de beoardielingskwaliteit te beoardielen
     <string name="debug_drawer_title">Helpmiddelen foar debugge</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate back within the debug drawer. -->
     <string name="debug_drawer_back_button_content_description">Tebek blêdzje</string>
-
-    <!-- Debug drawer tabs tools -->
     <!-- The title of the Tab Tools feature in the Debug Drawer. -->
     <string name="debug_drawer_tab_tools_title">Ljepblêdhelpmiddelen</string>
     <!-- The title of the tab count section in Tab Tools. -->
@@ -2699,14 +2665,4 @@ Dizze analyze sil jo allinnich helpe om de beoardielingskwaliteit te beoardielen
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_inactive">Tafoegje oan ynaktive ljepblêden</string>
     <!-- The button text to add tabs to the private tab group in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_private">Tafoegje oan priveeljepblêden</string>
-
-    <!-- Debug drawer logins -->
-    <!-- The title of the Logins feature in the Debug Drawer. -->
-    <string name="debug_drawer_logins_title">Oanmeldingen</string>
-    <!-- The title of the logins section in the Logins feature, where the parameter will be the site domain  -->
-    <string name="debug_drawer_logins_current_domain_label">Aktueel domein: %s</string>
-    <!-- The label for a button to add a new fake login for the current domain in the Logins feature. -->
-    <string name="debug_drawer_logins_add_login_button">Nepoanmelding foar dit domein tafoegje</string>
-    <!-- Content description for delete button where parameter will be the username of the login -->
-    <string name="debug_drawer_logins_delete_login_button_content_description">Oanmelding mei brûkersnamme %s fuortsmite</string>
 </resources>

@@ -149,10 +149,8 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">새 사생활 보호 탭</string>
 
-    <!-- Shortcut action to open Passwords screen -->
-    <string name="home_screen_shortcut_passwords">비밀번호</string>
-    <!-- Shortcut action to open Passwords screen -->
-    <string name="home_screen_shortcut_open_password_screen" moz:removedIn="126" tools:ignore="UnusedResources">비밀번호 바로 가기</string>
+    <!-- Shortcut action to open Passwords screens -->
+    <string name="home_screen_shortcut_open_password_screen">비밀번호 바로 가기</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -256,18 +254,9 @@
     <string name="browser_menu_customize_home_1">홈페이지 개인화</string>
 
     <!-- Browser menu label to sign in to sync on the device using Mozilla accounts -->
-    <string name="browser_menu_sign_in">로그인</string>
-    <!-- Browser menu caption label for the "Sign in" browser menu item described in `browser_menu_sign_in` -->
-    <string name="browser_menu_sign_in_caption">비밀번호, 탭 등을 동기화하세요</string>
-
-    <!-- Browser menu label to sign back in to sync on the device when the user's account needs to be reauthenticated -->
-    <string name="browser_menu_sign_back_in_to_sync">동기화하려면 다시 로그인</string>
-    <!-- Browser menu caption label for the "Sign back in to sync" browser menu item described in `browser_menu_sign_back_in_to_sync` when there is an error in syncing -->
-    <string name="browser_menu_syncing_paused_caption">동기화가 일시중지됨</string>
-    <!-- Browser menu label that creates a private tab -->
-    <string name="browser_menu_new_private_tab">새 사생활 보호 탭</string>
-    <!-- Browser menu label that navigates to the Password screen -->
-    <string name="browser_menu_passwords">비밀번호</string>
+    <string name="browser_menu_sign_in" tools:ignore="UnusedResources">로그인</string>
+    <!-- Browser menu caption label for the "Sign in" browser menu item described in browser_menu_sign_in -->
+    <string name="browser_menu_sign_in_caption" tools:ignore="UnusedResources">비밀번호, 탭 등을 동기화하세요</string>
 
     <!-- Extensions management fragment -->
     <!-- Text displayed when there are no extensions to be shown -->
@@ -644,21 +633,6 @@
     <string name="notifications_allowed_summary">허용됨</string>
     <!-- Summary for notification preference indicating notifications are not allowed -->
     <string name="notifications_not_allowed_summary">허용되지 않음</string>
-
-    <!-- Add-on Permissions -->
-    <!-- The title of the required permissions section from addon's permissions screen -->
-    <string name="addons_permissions_heading_required" tools:ignore="UnusedResources">필수</string>
-    <!-- The title of the optional permissions section from addon's permissions screen -->
-    <string name="addons_permissions_heading_optional" tools:ignore="UnusedResources">선택 사항</string>
-
-    <!-- The title of the section with websites that have permissions granted from addon's permissions screen -->
-    <string name="addons_permissions_heading_read_and_change_website_data" tools:ignore="UnusedResources">웹 사이트 데이터 읽기 및 변경</string>
-    <!-- The description of the icon that can delete one of the websites displayed  -->
-    <string name="addons_permissions_icon_description_delete_website" tools:ignore="UnusedResources">웹 사이트 삭제</string>
-    <!-- The title of the origin permission option allowing a user to enable the extension to run on all sites -->
-    <string name="addons_permissions_allow_for_all_sites" tools:ignore="UnusedResources">모든 사이트에 허용</string>
-    <!-- The subtitle for the allow for all sites preference toggle -->
-    <string name="addons_permissions_allow_for_all_sites_subtitle" tools:ignore="UnusedResources">이 확장 기능을 신뢰한다면 모든 웹 사이트에 권한을 부여할 수 있습니다.</string>
 
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
@@ -2545,8 +2519,6 @@
     <string name="translations_bottom_sheet_translate_from">원본 언어:</string>
     <!-- Label for the dropdown to select which language to translate to on the translations dialog. Usually the translate to language selected will be the user's preferred language. -->
     <string name="translations_bottom_sheet_translate_to">대상 언어:</string>
-    <!-- Label for the dropdown to select which language to translate from on the translations dialog when the page language is not supported. This selection is to allow the user to select another language, in case we automatically detected the page language incorrectly. -->
-    <string name="translations_bottom_sheet_translate_from_unsupported_language">다른 원본 언어 사용</string>
     <!-- Button text on the translations dialog to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button">나중에</string>
     <!-- Button text on the translations dialog to restore the translated website back to the original untranslated version. -->
@@ -2571,7 +2543,7 @@
     <!-- The title of the warning card informs the user that a language is not supported. The first parameter is the name of the language that is not supported. -->
     <string name="translation_error_language_not_supported_warning_text">죄송합니다. 아직 %1$s 언어는 지원되지 않습니다.</string>
     <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
-    <string name="translation_error_language_not_supported_learn_more" moz:removedIn="126" tools:ignore="UnusedResources">더 알아보기</string>
+    <string name="translation_error_language_not_supported_learn_more">더 알아보기</string>
 
     <!-- Snackbar title shown if the user closes the Translation Request dialogue and a translation is in progress. -->
     <string name="translation_in_progress_snackbar">번역 중…</string>
@@ -2585,9 +2557,7 @@
 
     <!-- Translations options dialog -->
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
-    <string name="translation_option_bottom_sheet_title" moz:removedIn="126" tools:ignore="UnusedResources">번역 옵션</string>
-    <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
-    <string name="translation_option_bottom_sheet_title_heading">번역 옵션</string>
+    <string name="translation_option_bottom_sheet_title">번역 옵션</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to always offer or suggest translations when available. -->
     <string name="translation_option_bottom_sheet_always_translate">항상 번역 제안</string>
     <!-- Toggle switch label that allows a user to set if they would like a given language to automatically translate or not. The first parameter is the language name, for example, "Spanish". -->
@@ -2604,9 +2574,6 @@
     <string name="translation_option_bottom_sheet_translation_settings">번역 설정</string>
     <!-- Button text for the button that will take the user to a website to learn more about how translations works in the given app. The first parameter is the name of the application, for example, "Fenix". -->
     <string name="translation_option_bottom_sheet_about_translations">%1$s 번역 정보</string>
-
-    <!-- Content description (not visible, for screen readers etc.) for closing the translations bottom sheet. -->
-    <string name="translation_option_bottom_sheet_close_content_description">번역 시트 닫기</string>
 
     <!-- Translation settings dialog -->
     <!-- Title of the translation settings dialog that allows a user to set their preferred translation settings. -->
@@ -2732,8 +2699,6 @@
     <string name="debug_drawer_title">디버그 도구</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate back within the debug drawer. -->
     <string name="debug_drawer_back_button_content_description">뒤로</string>
-
-    <!-- Debug drawer tabs tools -->
     <!-- The title of the Tab Tools feature in the Debug Drawer. -->
     <string name="debug_drawer_tab_tools_title">탭 도구</string>
     <!-- The title of the tab count section in Tab Tools. -->
@@ -2756,14 +2721,4 @@
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_inactive">비활성 탭에 추가</string>
     <!-- The button text to add tabs to the private tab group in the tab creation tool. -->
     <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_private">사생활 보호 탭에 추가</string>
-
-    <!-- Debug drawer logins -->
-    <!-- The title of the Logins feature in the Debug Drawer. -->
-    <string name="debug_drawer_logins_title">로그인</string>
-    <!-- The title of the logins section in the Logins feature, where the parameter will be the site domain  -->
-    <string name="debug_drawer_logins_current_domain_label">현재 도메인: %s</string>
-    <!-- The label for a button to add a new fake login for the current domain in the Logins feature. -->
-    <string name="debug_drawer_logins_add_login_button">이 도메인에 대한 가짜 로그인 추가</string>
-    <!-- Content description for delete button where parameter will be the username of the login -->
-    <string name="debug_drawer_logins_delete_login_button_content_description">사용자 이름 %s의 로그인 삭제</string>
 </resources>
