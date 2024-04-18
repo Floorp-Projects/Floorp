@@ -23,18 +23,59 @@ function makeTestURL() {
   return url.href;
 }
 
+function generateHash(aString, hashAlg) {
+  const cryptoHash = Cc["@mozilla.org/security/hash;1"].createInstance(
+    Ci.nsICryptoHash
+  );
+  cryptoHash.init(hashAlg);
+  const stringStream = Cc[
+    "@mozilla.org/io/string-input-stream;1"
+  ].createInstance(Ci.nsIStringInputStream);
+  stringStream.data = aString;
+  cryptoHash.updateFromStream(stringStream, -1);
+  // base64 allows the '/' char, but we can't use it for filenames.
+  return cryptoHash.finish(true).replace(/\//g, "-");
+}
+
+const MANIFESTS_DIR = PathUtils.join(PathUtils.profileDir, "manifests");
+
 add_task(async function () {
   const tabOptions = { gBrowser, url: makeTestURL() };
 
-  await BrowserTestUtils.withNewTab(tabOptions, async function (browser) {
-    let manifest = await Manifests.getManifest(browser, manifestUrl);
-    is(manifest.installed, false, "We haven't installed this manifest yet");
+  const filenameMD5 = generateHash(manifestUrl, Ci.nsICryptoHash.MD5) + ".json";
+  const filenameSHA =
+    generateHash(manifestUrl, Ci.nsICryptoHash.SHA256) + ".json";
+  const manifestMD5Path = PathUtils.join(MANIFESTS_DIR, filenameMD5);
+  const manifestSHAPath = PathUtils.join(MANIFESTS_DIR, filenameSHA);
 
+  await BrowserTestUtils.withNewTab(tabOptions, async function (browser) {
+    let tmpManifest = await Manifests.getManifest(browser, manifestUrl);
+    is(tmpManifest.installed, false, "We haven't installed this manifest yet");
+
+    await tmpManifest.install();
+
+    // making sure the manifest is actually installed before proceeding
+    await tmpManifest._store._save();
+    await IOUtils.move(tmpManifest.path, manifestMD5Path);
+
+    let exists = await IOUtils.exists(tmpManifest.path);
+    is(
+      exists,
+      false,
+      "Manually moved manifest from SHA256 based path to MD5 based path"
+    );
+    Manifests.manifestObjs.delete(manifestUrl);
+
+    let manifest = await Manifests.getManifest(browser, manifestUrl);
     await manifest.install(browser);
     is(manifest.name, "hello World", "Manifest has correct name");
     is(manifest.installed, true, "Manifest is installed");
     is(manifest.url, manifestUrl, "has correct url");
     is(manifest.browser, browser, "has correct browser");
+    is(manifest.path, manifestSHAPath, "has correct path");
+
+    exists = await IOUtils.exists(manifestMD5Path);
+    is(exists, false, "MD5 based manifest removed");
 
     manifest = await Manifests.getManifest(browser, manifestUrl);
     is(manifest.installed, true, "New instances are installed");
