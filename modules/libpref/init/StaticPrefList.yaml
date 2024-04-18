@@ -1659,6 +1659,13 @@
   mirror: once
   do_not_use_directly: true
 
+#if defined(NIGHTLY_BUILD) || defined(MOZ_DEV_EDITION) || defined(DEBUG)
+- name: browser.startup.record
+  type: bool
+  value: false
+  mirror: always
+#endif
+
 # Causes SessionStore to ignore non-final update messages from
 # browser tabs that were not caused by a flush from the parent.
 # This is a testing flag and should not be used by end-users.
