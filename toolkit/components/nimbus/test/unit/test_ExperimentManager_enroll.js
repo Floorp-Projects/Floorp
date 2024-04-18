@@ -670,7 +670,6 @@ add_task(async function enroll_in_reference_aw_experiment() {
   Assert.ok(prefValue.length < 3498, "Make sure we don't bloat the prefs");
 
   manager.unenroll(recipe.slug, "enroll_in_reference_aw_experiment:cleanup");
-  manager.store._deleteForTests("aboutwelcome");
 
   await assertEmptyStore(manager.store);
 });
@@ -756,6 +755,7 @@ add_task(async function test_rollout_unenroll_conflict() {
   );
   Assert.ok(enrollStub.calledOnce, "Should call enroll as expected");
 
+  manager.unenroll(rollout.slug, "test-cleanup");
   await assertEmptyStore(manager.store);
 
   sandbox.restore();
@@ -838,7 +838,6 @@ add_task(async function test_forceEnroll() {
 
     for (const { slug } of expected) {
       manager.unenroll(`optin-${slug}`);
-      manager.store._deleteForTests(`optin-${slug}`);
     }
   }
 
