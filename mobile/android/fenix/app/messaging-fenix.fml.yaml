@@ -101,6 +101,7 @@ import:
               - homescreen
               - notification
               - survey
+              - microsurvey
 
         - channel: developer
           value:
