@@ -2152,6 +2152,9 @@ nsresult Http2Session::RecvPing(Http2Session* self) {
     // We need to reset mPreviousUsed. If we don't, the next time
     // Http2Session::SendPing is called, it will have no effect.
     self->mPreviousUsed = false;
+    // We just received a PING from the server, so update mLastDataReadEpoch to
+    // avoid this connection to be pruned.
+    self->mLastDataReadEpoch = self->mLastReadEpoch;
   } else {
     // reply with a ack'd ping
     self->GeneratePing(true);
