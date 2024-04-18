@@ -18,7 +18,7 @@ load 1469472.html
 load 1477831-1.html
 load 1504033.html
 load 1514544-1.html
-asserts(0-5) load 1547420-1.html
+asserts(0-10) load 1547420-1.html # bug 1524064
 load 1549909.html
 load 1551389-1.html
 asserts(0-2) load 1555819-1.html
