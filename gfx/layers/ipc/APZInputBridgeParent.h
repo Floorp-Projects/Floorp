@@ -18,7 +18,7 @@ class APZInputBridgeParent : public PAPZInputBridgeParent {
   NS_INLINE_DECL_REFCOUNTING(APZInputBridgeParent, final)
 
  public:
-  static RefPtr<APZInputBridgeParent> Create(
+  static APZInputBridgeParent* Create(
       const LayersId& aLayersId, Endpoint<PAPZInputBridgeParent>&& aEndpoint);
 
   mozilla::ipc::IPCResult RecvReceiveMultiTouchInputEvent(
@@ -67,6 +67,7 @@ class APZInputBridgeParent : public PAPZInputBridgeParent {
 
  private:
   RefPtr<IAPZCTreeManager> mTreeManager;
+  LayersId mLayersId;
 };
 
 }  // namespace layers

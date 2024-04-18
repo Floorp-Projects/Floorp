@@ -10,11 +10,16 @@
 #include "mozilla/layers/APZInputBridge.h"
 #include "mozilla/layers/PAPZInputBridgeChild.h"
 
+#include "mozilla/layers/GeckoContentControllerTypes.h"
+
 namespace mozilla {
 namespace layers {
 
+class RemoteCompositorSession;
+
 class APZInputBridgeChild : public PAPZInputBridgeChild, public APZInputBridge {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(APZInputBridgeChild, final)
+  using TapType = GeckoContentController_TapType;
 
  public:
   static RefPtr<APZInputBridgeChild> Create(
@@ -23,9 +28,18 @@ class APZInputBridgeChild : public PAPZInputBridgeChild, public APZInputBridge {
 
   void Destroy();
 
+  void SetCompositorSession(RemoteCompositorSession* aSession);
+
   APZEventResult ReceiveInputEvent(
       InputData& aEvent,
       InputBlockCallback&& aCallback = InputBlockCallback()) override;
+
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
+  mozilla::ipc::IPCResult RecvHandleTap(
+      const TapType& aType, const LayoutDevicePoint& aPoint,
+      const Modifiers& aModifiers, const ScrollableLayerGuid& aGuid,
+      const uint64_t& aInputBlockId,
+      const Maybe<DoubleTapToZoomMetrics>& aDoubleTapToZoomMetrics);
 
   mozilla::ipc::IPCResult RecvCallInputBlockCallback(
       uint64_t aInputBlockId, const APZHandledResult& handledResult);
@@ -48,8 +62,16 @@ class APZInputBridgeChild : public PAPZInputBridgeChild, public APZInputBridge {
  private:
   void Open(Endpoint<PAPZInputBridgeChild>&& aEndpoint);
 
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
+  void HandleTapOnMainThread(
+      const TapType& aType, const LayoutDevicePoint& aPoint,
+      const Modifiers& aModifiers, const ScrollableLayerGuid& aGuid,
+      const uint64_t& aInputBlockId,
+      const Maybe<DoubleTapToZoomMetrics>& aDoubleTapToZoomMetrics);
+
   bool mIsOpen;
   uint64_t mProcessToken;
+  MOZ_NON_OWNING_REF RemoteCompositorSession* mCompositorSession = nullptr;
 
   using InputBlockCallbackMap =
       std::unordered_map<uint64_t, InputBlockCallback>;

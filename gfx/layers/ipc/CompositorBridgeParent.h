@@ -24,6 +24,7 @@
 #include "mozilla/layers/ISurfaceAllocator.h"  // for IShmemAllocator
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/layers/PCompositorBridgeParent.h"
+#include "mozilla/layers/APZInputBridgeParent.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 
 namespace mozilla {
@@ -394,6 +395,10 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
     ~LayerTreeState();
     RefPtr<GeckoContentController> mController;
     APZCTreeManagerParent* mApzcTreeManagerParent;
+    // The mApzInputBridgeParent is only populated for LayerTreeState
+    // objects corresponding to root LayerIds (one for each top-level
+    // window).
+    APZInputBridgeParent* mApzInputBridgeParent;
     RefPtr<CompositorBridgeParent> mParent;
     RefPtr<WebRenderBridgeParent> mWrBridge;
     // Pointer to the ContentCompositorBridgeParent. Used by APZCs to share
@@ -438,6 +443,13 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
       LayersId aContentLayersId);
 
   /**
+   * Same as the GetApzcTreeManagerParentForRoot function, but returns
+   * the APZInputBridge for the parent process.
+   */
+  static APZInputBridgeParent* GetApzInputBridgeParentForRoot(
+      LayersId aContentLayersId);
+
+  /**
    * Used by the profiler to denote when a vsync occured
    */
   static void PostInsertVsyncProfilerMarker(mozilla::TimeStamp aVsyncTimestamp);
@@ -453,6 +465,9 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   void AllocateAPZCTreeManagerParent(
       const StaticMonitorAutoLock& aProofOfLayerTreeStateLock,
       const LayersId& aLayersId, LayerTreeState& aLayerTreeStateToUpdate);
+
+  static void SetAPZInputBridgeParent(const LayersId& aLayersId,
+                                      APZInputBridgeParent* aInputBridgeParent);
 
   PAPZParent* AllocPAPZParent(const LayersId& aLayersId) override;
   bool DeallocPAPZParent(PAPZParent* aActor) override;

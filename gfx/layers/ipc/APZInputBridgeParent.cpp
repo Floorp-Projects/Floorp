@@ -16,14 +16,15 @@ namespace mozilla {
 namespace layers {
 
 /* static */
-RefPtr<APZInputBridgeParent> APZInputBridgeParent::Create(
+APZInputBridgeParent* APZInputBridgeParent::Create(
     const LayersId& aLayersId, Endpoint<PAPZInputBridgeParent>&& aEndpoint) {
-  RefPtr<APZInputBridgeParent> parent = new APZInputBridgeParent(aLayersId);
+  APZInputBridgeParent* parent = new APZInputBridgeParent(aLayersId);
   if (!aEndpoint.Bind(parent)) {
     // We can't recover from this.
     MOZ_CRASH("Failed to bind APZInputBridgeParent to endpoint");
   }
 
+  CompositorBridgeParent::SetAPZInputBridgeParent(aLayersId, parent);
   return parent;
 }
 
@@ -31,6 +32,7 @@ APZInputBridgeParent::APZInputBridgeParent(const LayersId& aLayersId) {
   MOZ_ASSERT(XRE_IsGPUProcess());
   MOZ_ASSERT(NS_IsMainThread());
 
+  mLayersId = aLayersId;
   mTreeManager = CompositorBridgeParent::GetAPZCTreeManager(aLayersId);
   MOZ_ASSERT(mTreeManager);
 }
@@ -205,6 +207,10 @@ mozilla::ipc::IPCResult APZInputBridgeParent::RecvProcessUnhandledEvent(
 }
 
 void APZInputBridgeParent::ActorDestroy(ActorDestroyReason aWhy) {
+  StaticMonitorAutoLock lock(CompositorBridgeParent::sIndirectLayerTreesLock);
+  CompositorBridgeParent::LayerTreeState& state =
+      CompositorBridgeParent::sIndirectLayerTrees[mLayersId];
+  state.mApzInputBridgeParent = nullptr;
   // We shouldn't need it after this
   mTreeManager = nullptr;
 }

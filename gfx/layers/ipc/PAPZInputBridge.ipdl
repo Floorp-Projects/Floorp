@@ -6,11 +6,15 @@
 include "ipc/nsGUIEventIPC.h";
 
 using mozilla::LayoutDeviceIntPoint from "Units.h";
+using mozilla::LayoutDevicePoint from "Units.h";
+using mozilla::layers::GeckoContentController_TapType from "mozilla/layers/GeckoContentControllerTypes.h";
+using mozilla::layers::DoubleTapToZoomMetrics from "mozilla/layers/DoubleTapToZoom.h";
 using struct mozilla::layers::ScrollableLayerGuid from "mozilla/layers/ScrollableLayerGuid.h";
 using struct mozilla::layers::APZEventResult from "mozilla/layers/APZInputBridge.h";
 using struct mozilla::layers::APZHandledResult from "mozilla/layers/APZInputBridge.h";
 
 using mozilla::EventMessage from "mozilla/EventForwards.h";
+using mozilla::Modifiers from "mozilla/EventForwards.h";
 using class mozilla::MultiTouchInput from "InputData.h";
 using class mozilla::MouseInput from "InputData.h";
 using class mozilla::PanGestureInput from "InputData.h";
@@ -82,6 +86,10 @@ parent:
 child:
   async CallInputBlockCallback(uint64_t aInputBlockId,
                                APZHandledResult aHandledResult);
+
+  async HandleTap(GeckoContentController_TapType aType, LayoutDevicePoint point,
+                  Modifiers aModifiers, ScrollableLayerGuid aGuid,
+                  uint64_t aInputBlockId, DoubleTapToZoomMetrics? aDoubleTapToZoomMetrics);
 };
 
 } // namespace gfx
