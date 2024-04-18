@@ -14748,7 +14748,6 @@ interface nsIXPCComponents_Utils extends nsISupports {
   waiveXrays(aVal: any): any;
   unwaiveXrays(aVal: any): any;
   getClassName(aObj: any, aUnwrap: boolean): string;
-  getDOMClassInfo(aClassName: string): nsIClassInfo;
   getIncumbentGlobal(callback?: any): any;
   getDebugName(obj: any): string;
   getWatchdogTimestamp(aCategory: string): PRTime;

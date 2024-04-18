@@ -2182,13 +2182,6 @@ nsXPCComponents_Utils::GetClassName(HandleValue aObj, bool aUnwrap,
 }
 
 NS_IMETHODIMP
-nsXPCComponents_Utils::GetDOMClassInfo(const nsAString& aClassName,
-                                       nsIClassInfo** aClassInfo) {
-  *aClassInfo = nullptr;
-  return NS_ERROR_NOT_AVAILABLE;
-}
-
-NS_IMETHODIMP
 nsXPCComponents_Utils::GetIncumbentGlobal(HandleValue aCallback, JSContext* aCx,
                                           MutableHandleValue aOut) {
   nsCOMPtr<nsIGlobalObject> global = mozilla::dom::GetIncumbentGlobal();
