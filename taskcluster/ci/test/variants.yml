@@ -373,9 +373,10 @@ msix:
                         || "ccov" in task["test-platform"]
                     )
                 '
-    merge:
+    replace:
         mozharness:
             extra-options:
+                - "--variant=msix"
                 - "--installer-path installer.msix"
 
 http3:

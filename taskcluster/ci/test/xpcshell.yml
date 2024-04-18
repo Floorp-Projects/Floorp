@@ -5,10 +5,7 @@
 job-defaults:
     suite:
         category: xpcshell
-        name:
-            by-variant:
-                msix: xpcshell-msix
-                default: xpcshell
+        name: xpcshell
     target:
         by-test-platform:
             android-em-7.*: geckoview-test_runner.apk
