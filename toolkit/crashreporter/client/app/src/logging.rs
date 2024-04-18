@@ -12,7 +12,6 @@ use crate::std::{
 
 /// Initialize logging and return a log target which can be used to change the destination of log
 /// statements.
-#[cfg_attr(mock, allow(unused))]
 pub fn init() -> LogTarget {
     let log_target_inner = LogTargetInner::default();
 

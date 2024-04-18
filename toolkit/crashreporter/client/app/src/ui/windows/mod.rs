@@ -698,6 +698,8 @@ impl<'a> WindowChildRenderer<'a> {
                             win::GetClientRect(hwnd, &mut rect);
                             Gdi::InflateRect(&mut rect, -2, -2);
 
+                            let enabled = KeyboardAndMouse::IsWindowEnabled(hwnd) != 0;
+
                             let dc = gdi::DC::new(hwnd).expect("failed to create GDI DC");
                             dc.with_object_selected(
                                 win::SendMessageW(hwnd, win::WM_GETFONT, 0, 0) as _,
@@ -706,7 +708,12 @@ impl<'a> WindowChildRenderer<'a> {
                                         hdc,
                                         Controls::GetThemeSysColor(0, Gdi::COLOR_GRAYTEXT),
                                     );
-                                    Gdi::SetBkMode(hdc, Gdi::TRANSPARENT as i32);
+                                    if !enabled {
+                                        Gdi::SetBkColor(
+                                            hdc,
+                                            Controls::GetThemeSysColor(0, Gdi::COLOR_3DFACE),
+                                        );
+                                    }
                                     success!(nonzero Gdi::DrawTextW(
                                         hdc,
                                         placeholder.pcwstr(),
