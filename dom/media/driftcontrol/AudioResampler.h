@@ -9,7 +9,6 @@
 #include "AudioChunkList.h"
 #include "AudioSegment.h"
 #include "DynamicResampler.h"
-#include "TimeUnits.h"
 
 namespace mozilla {
 
@@ -36,7 +35,7 @@ namespace mozilla {
 class AudioResampler final {
  public:
   AudioResampler(uint32_t aInRate, uint32_t aOutRate,
-                 media::TimeUnit aPreBufferDuration,
+                 uint32_t aInputPreBufferFrameCount,
                  const PrincipalHandle& aPrincipalHandle);
 
   /**
@@ -76,10 +75,10 @@ class AudioResampler final {
   }
 
   /**
-   * Set the duration that should be used for pre-buffering.
+   * Set the number of frames that should be used for input pre-buffering.
    */
-  void SetPreBufferDuration(media::TimeUnit aPreBufferDuration) {
-    mResampler.SetPreBufferDuration(aPreBufferDuration);
+  void SetInputPreBufferFrameCount(uint32_t aInputPreBufferFrameCount) {
+    mResampler.SetInputPreBufferFrameCount(aInputPreBufferFrameCount);
   }
 
  private:

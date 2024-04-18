@@ -45,9 +45,8 @@ class DynamicResampler final {
    * The channel count will be set to stereo. Memory allocation will take
    * place. The input buffer is non-interleaved.
    */
-  DynamicResampler(
-      uint32_t aInRate, uint32_t aOutRate,
-      media::TimeUnit aPreBufferDuration = media::TimeUnit::Zero());
+  DynamicResampler(uint32_t aInRate, uint32_t aOutRate,
+                   uint32_t aInputPreBufferFrameCount = 0);
   ~DynamicResampler();
 
   /**
@@ -79,16 +78,16 @@ class DynamicResampler final {
 
   /**
    * Prepends existing input data with a silent pre-buffer if not already done.
-   * Data will be prepended so that after resampling aOutFrames worth of output
-   * data, the buffering level will be as close as possible to
-   * mPreBufferDuration, which is the desired buffering level.
+   * Data will be prepended so that after resampling aDuration of data,
+   * the buffering level will be as close as possible to
+   * mInputPreBufferFrameCount, which is the desired buffering level.
    */
   void EnsurePreBuffer(media::TimeUnit aDuration);
 
   /**
-   * Set the duration that should be used for pre-buffering.
+   * Set the number of frames that should be used for input pre-buffering.
    */
-  void SetPreBufferDuration(media::TimeUnit aDuration);
+  void SetInputPreBufferFrameCount(uint32_t aInputPreBufferFrameCount);
 
   /*
    * Resample as much frames as needed from the internal input buffer to the
@@ -216,16 +215,14 @@ class DynamicResampler final {
     MOZ_ASSERT(mChannels);
     MOZ_ASSERT(aChannelIndex < mChannels);
     MOZ_ASSERT(aChannelIndex < mInternalInBuffer.Length());
-    EnsureInputBufferDuration(media::TimeUnit(
-        CheckedInt64(mInternalInBuffer[aChannelIndex].AvailableRead()) +
-            aInFrames,
-        mInRate));
+    EnsureInputBufferSizeInFrames(
+        mInternalInBuffer[aChannelIndex].AvailableRead() + aInFrames);
     mInternalInBuffer[aChannelIndex].Write(Span(aInBuffer, aInFrames));
   }
 
   void WarmUpResampler(bool aSkipLatency);
 
-  bool EnsureInputBufferDuration(media::TimeUnit aDuration) {
+  bool EnsureInputBufferSizeInFrames(uint32_t aSizeInFrames) {
     uint32_t sampleSize = 0;
     if (mSampleFormat == AUDIO_FORMAT_FLOAT32) {
       sampleSize = sizeof(float);
@@ -239,40 +236,37 @@ class DynamicResampler final {
     }
 
     uint32_t sizeInFrames = InFramesBufferSize();
-    media::TimeUnit duration(sizeInFrames, mInRate);
-    if (aDuration <= duration) {
+    if (aSizeInFrames <= sizeInFrames) {
       // Buffer size is sufficient.
       return true;  // no reallocation necessary
     }
 
     // 5 second cap.
-    const media::TimeUnit cap = media::TimeUnit::FromSeconds(5);
-    if (duration >= cap) {
+    const uint32_t cap = 5 * mInRate;
+    if (sizeInFrames >= cap) {
       // Already at the cap.
       return false;
     }
 
     // As a backoff strategy, at least double the previous size.
-    duration = duration * 2;
+    sizeInFrames *= 2;
 
-    if (aDuration > duration) {
+    if (aSizeInFrames > sizeInFrames) {
       // A larger buffer than the normal backoff strategy provides is needed, or
       // this is the first time setting the buffer size. Add another 50ms, as
       // some jitter is expected.
-      duration = aDuration + media::TimeUnit::FromSeconds(0.05);
+      sizeInFrames = aSizeInFrames + mInRate / 20;
     }
 
-    // mPreBufferDuration is an indication of the desired average buffering.
-    // Provide for at least twice this.
-    duration = std::max(duration, mPreBufferDuration * 2);
+    // mInputPreBufferFrameCount is an indication of the desired average
+    // buffering.  Provide for at least twice this.
+    sizeInFrames = std::max(sizeInFrames, mInputPreBufferFrameCount * 2);
 
-    duration = std::min(cap, duration);
-    const uint32_t newSizeInFrames =
-        static_cast<uint32_t>(duration.ToTicksAtRate(mInRate));
+    sizeInFrames = std::min(cap, sizeInFrames);
 
     bool success = true;
     for (auto& b : mInternalInBuffer) {
-      success = success && b.EnsureLengthBytes(sampleSize * newSizeInFrames);
+      success = success && b.EnsureLengthBytes(sampleSize * sizeInFrames);
     }
 
     if (success) {
@@ -283,7 +277,7 @@ class DynamicResampler final {
     // Allocating an input buffer failed. We stick with the old buffer size.
     NS_WARNING(nsPrintfCString("Failed to allocate a buffer of %u bytes (%u "
                                "frames). Expect glitches.",
-                               sampleSize * newSizeInFrames, newSizeInFrames)
+                               sampleSize * sizeInFrames, sizeInFrames)
                    .get());
     return false;
   }
@@ -294,7 +288,7 @@ class DynamicResampler final {
  private:
   bool mIsPreBufferSet = false;
   bool mIsWarmingUp = false;
-  media::TimeUnit mPreBufferDuration;
+  uint32_t mInputPreBufferFrameCount;
   uint32_t mChannels = 0;
   uint32_t mOutRate;
 

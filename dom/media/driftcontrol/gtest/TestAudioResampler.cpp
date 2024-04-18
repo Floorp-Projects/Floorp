@@ -64,8 +64,7 @@ TEST(TestAudioResampler, OutAudioSegment_Float)
 
   uint32_t pre_buffer = 21;
 
-  AudioResampler dr(in_rate, out_rate, media::TimeUnit(pre_buffer, in_rate),
-                    testPrincipal);
+  AudioResampler dr(in_rate, out_rate, pre_buffer, testPrincipal);
 
   AudioSegment inSegment =
       CreateAudioSegment<float>(in_frames, channels, AUDIO_FORMAT_FLOAT32);
@@ -121,8 +120,7 @@ TEST(TestAudioResampler, OutAudioSegment_Short)
 
   uint32_t pre_buffer = 21;
 
-  AudioResampler dr(in_rate, out_rate, media::TimeUnit(pre_buffer, in_rate),
-                    testPrincipal);
+  AudioResampler dr(in_rate, out_rate, pre_buffer, testPrincipal);
 
   AudioSegment inSegment =
       CreateAudioSegment<short>(in_frames, channels, AUDIO_FORMAT_S16);
@@ -175,8 +173,7 @@ TEST(TestAudioResampler, OutAudioSegmentLargerThanResampledInput_Float)
 
   uint32_t pre_buffer = 5;
 
-  AudioResampler dr(in_rate, out_rate, media::TimeUnit(pre_buffer, in_rate),
-                    PRINCIPAL_HANDLE_NONE);
+  AudioResampler dr(in_rate, out_rate, pre_buffer, PRINCIPAL_HANDLE_NONE);
 
   AudioSegment inSegment =
       CreateAudioSegment<float>(in_frames, channels, AUDIO_FORMAT_FLOAT32);
@@ -209,8 +206,7 @@ TEST(TestAudioResampler, InAudioSegment_Float)
   uint32_t out_rate = 48000;
 
   uint32_t pre_buffer = 10;
-  AudioResampler dr(in_rate, out_rate, media::TimeUnit(pre_buffer, in_rate),
-                    testPrincipal);
+  AudioResampler dr(in_rate, out_rate, pre_buffer, testPrincipal);
 
   AudioSegment inSegment;
 
@@ -275,8 +271,7 @@ TEST(TestAudioResampler, InAudioSegment_Short)
   uint32_t out_rate = 48000;
 
   uint32_t pre_buffer = 10;
-  AudioResampler dr(in_rate, out_rate, media::TimeUnit(pre_buffer, in_rate),
-                    testPrincipal);
+  AudioResampler dr(in_rate, out_rate, pre_buffer, testPrincipal);
 
   AudioSegment inSegment;
 
@@ -342,8 +337,7 @@ TEST(TestAudioResampler, ChannelChange_MonoToStereo)
 
   uint32_t pre_buffer = 0;
 
-  AudioResampler dr(in_rate, out_rate, media::TimeUnit(pre_buffer, in_rate),
-                    testPrincipal);
+  AudioResampler dr(in_rate, out_rate, pre_buffer, testPrincipal);
 
   AudioChunk monoChunk =
       CreateAudioChunk<float>(in_frames, 1, AUDIO_FORMAT_FLOAT32);
@@ -378,8 +372,7 @@ TEST(TestAudioResampler, ChannelChange_StereoToMono)
 
   uint32_t pre_buffer = 0;
 
-  AudioResampler dr(in_rate, out_rate, media::TimeUnit(pre_buffer, in_rate),
-                    testPrincipal);
+  AudioResampler dr(in_rate, out_rate, pre_buffer, testPrincipal);
 
   AudioChunk monoChunk =
       CreateAudioChunk<float>(in_frames, 1, AUDIO_FORMAT_FLOAT32);
@@ -414,8 +407,7 @@ TEST(TestAudioResampler, ChannelChange_StereoToQuad)
 
   uint32_t pre_buffer = 0;
 
-  AudioResampler dr(in_rate, out_rate, media::TimeUnit(pre_buffer, in_rate),
-                    testPrincipal);
+  AudioResampler dr(in_rate, out_rate, pre_buffer, testPrincipal);
 
   AudioChunk stereoChunk =
       CreateAudioChunk<float>(in_frames, 2, AUDIO_FORMAT_FLOAT32);
@@ -452,7 +444,7 @@ TEST(TestAudioResampler, ChannelChange_QuadToStereo)
   uint32_t in_rate = 24000;
   uint32_t out_rate = 48000;
 
-  AudioResampler dr(in_rate, out_rate, media::TimeUnit::Zero(), testPrincipal);
+  AudioResampler dr(in_rate, out_rate, 0, testPrincipal);
 
   AudioChunk stereoChunk =
       CreateAudioChunk<float>(in_frames, 2, AUDIO_FORMAT_FLOAT32);
@@ -497,7 +489,7 @@ TEST(TestAudioResampler, ChannelChange_Discontinuity)
 
   uint32_t in_frames = in_rate / 100;
   uint32_t out_frames = out_rate / 100;
-  AudioResampler dr(in_rate, out_rate, media::TimeUnit::Zero(), testPrincipal);
+  AudioResampler dr(in_rate, out_rate, 0, testPrincipal);
 
   AudioChunk monoChunk =
       CreateAudioChunk<float>(in_frames, 1, AUDIO_FORMAT_FLOAT32);
@@ -560,8 +552,7 @@ TEST(TestAudioResampler, ChannelChange_Discontinuity2)
 
   uint32_t in_frames = in_rate / 100;
   uint32_t out_frames = out_rate / 100;
-  AudioResampler dr(in_rate, out_rate, media::TimeUnit(10, in_rate),
-                    testPrincipal);
+  AudioResampler dr(in_rate, out_rate, 10, testPrincipal);
 
   AudioChunk monoChunk =
       CreateAudioChunk<float>(in_frames / 2, 1, AUDIO_FORMAT_FLOAT32);
@@ -630,8 +621,7 @@ TEST(TestAudioResampler, ChannelChange_Discontinuity3)
 
   uint32_t in_frames = in_rate / 100;
   uint32_t out_frames = out_rate / 100;
-  AudioResampler dr(in_rate, out_rate, media::TimeUnit(10, in_rate),
-                    testPrincipal);
+  AudioResampler dr(in_rate, out_rate, 10, testPrincipal);
 
   AudioChunk stereoChunk =
       CreateAudioChunk<float>(in_frames, 2, AUDIO_FORMAT_FLOAT32);

@@ -35,8 +35,8 @@ AudioDriftCorrection::AudioDriftCorrection(
     : mTargetRate(aTargetRate),
       mDriftController(MakeUnique<DriftController>(aSourceRate, aTargetRate,
                                                    mDesiredBuffering)),
-      mResampler(MakeUnique<AudioResampler>(
-          aSourceRate, aTargetRate, mDesiredBuffering, aPrincipalHandle)) {}
+      mResampler(MakeUnique<AudioResampler>(aSourceRate, aTargetRate, 0,
+                                            aPrincipalHandle)) {}
 
 AudioDriftCorrection::~AudioDriftCorrection() = default;
 
@@ -171,7 +171,8 @@ void AudioDriftCorrection::SetDesiredBuffering(
     media::TimeUnit aDesiredBuffering) {
   mDesiredBuffering = aDesiredBuffering;
   mDriftController->SetDesiredBuffering(mDesiredBuffering);
-  mResampler->SetPreBufferDuration(mDesiredBuffering);
+  mResampler->SetInputPreBufferFrameCount(
+      mDesiredBuffering.ToTicksAtRate(mDriftController->mSourceRate));
 }
 }  // namespace mozilla
 
