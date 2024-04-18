@@ -10,6 +10,7 @@
 #include "AudioDeviceInfo.h"
 #include "AudioStreamTrack.h"
 #include "CubebDeviceEnumerator.h"
+#include "CubebInputStream.h"
 #include "MediaTimer.h"
 #include "MediaTrackConstraints.h"
 #include "MediaTrackGraph.h"
