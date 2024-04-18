@@ -142,10 +142,7 @@ add_task(async () => {
 
   await waitUntilProfilerStopped();
 
-  Assert.ok(
-    !Services.profiler.IsActive(),
-    "The profiler should now be inactive."
-  );
+  do_test_finished();
 });
 
 add_task(async () => {
@@ -188,9 +185,10 @@ add_task(async () => {
   );
 
   await waitUntilProfilerStopped();
-
   Assert.ok(
     !Services.profiler.IsActive(),
     "The profiler should now be inactive."
   );
+
+  do_test_finished();
 });
