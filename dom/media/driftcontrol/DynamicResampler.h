@@ -233,18 +233,6 @@ class DynamicResampler final {
   }
 
   bool EnsureInputBufferDuration(media::TimeUnit aDuration) {
-    if (aDuration <= mSetBufferDuration) {
-      // Buffer size is sufficient.
-      return true;
-    }
-
-    // 5 second cap.
-    const media::TimeUnit cap = media::TimeUnit::FromSeconds(5);
-    if (mSetBufferDuration == cap) {
-      // Already at the cap.
-      return false;
-    }
-
     uint32_t sampleSize = 0;
     if (mSampleFormat == AUDIO_FORMAT_FLOAT32) {
       sampleSize = sizeof(float);
@@ -257,8 +245,22 @@ class DynamicResampler final {
       return true;
     }
 
+    uint32_t sizeInFrames = InFramesBufferSize();
+    media::TimeUnit duration(sizeInFrames, mInRate);
+    if (aDuration <= duration) {
+      // Buffer size is sufficient.
+      return true;  // no reallocation necessary
+    }
+
+    // 5 second cap.
+    const media::TimeUnit cap = media::TimeUnit::FromSeconds(5);
+    if (duration >= cap) {
+      // Already at the cap.
+      return false;
+    }
+
     // As a backoff strategy, at least double the previous size.
-    media::TimeUnit duration = mSetBufferDuration * 2;
+    duration = duration * 2;
 
     if (aDuration > duration) {
       // A larger buffer than the normal backoff strategy provides is needed, or
@@ -278,7 +280,6 @@ class DynamicResampler final {
 
     if (success) {
       // All buffers have the new size.
-      mSetBufferDuration = duration;
       return true;
     }
 
@@ -297,7 +298,6 @@ class DynamicResampler final {
   bool mIsPreBufferSet = false;
   bool mIsWarmingUp = false;
   media::TimeUnit mPreBufferDuration;
-  media::TimeUnit mSetBufferDuration = media::TimeUnit::Zero();
   uint32_t mChannels = 0;
   uint32_t mOutRate;
 
