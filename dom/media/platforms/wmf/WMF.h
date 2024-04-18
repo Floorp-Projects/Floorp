@@ -23,6 +23,7 @@
 #include <codecapi.h>
 
 #include "mozilla/Atomics.h"
+#include "mozilla/AppShutdown.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticMutex.h"
 #include "nsThreadUtils.h"
@@ -82,6 +83,11 @@ class MediaFoundationInitializer final {
     {
       StaticMutexAutoLock lock(sCreateMutex);
       if (!sInitializer) {
+        // Already in shutdown.
+        if (AppShutdown::GetCurrentShutdownPhase() !=
+            ShutdownPhase::NotInShutdown) {
+          return nullptr;
+        }
         sInitializer.reset(new MediaFoundationInitializer());
         GetMainThreadSerialEventTarget()->Dispatch(
             NS_NewRunnableFunction("MediaFoundationInitializer::Get", [&] {
