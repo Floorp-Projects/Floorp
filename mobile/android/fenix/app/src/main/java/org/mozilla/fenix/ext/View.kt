@@ -108,8 +108,10 @@ internal fun View.getWindowVisibleDisplayFrame(): Rect = with(Rect()) {
     this
 }
 
-@VisibleForTesting
-internal fun View.getKeyboardHeight(): Int {
+/**
+ * Calculates the height of the onscreen keyboard.
+ */
+fun View.getKeyboardHeight(): Int {
     val windowRect = getWindowVisibleDisplayFrame()
     val statusBarHeight = windowRect.top
     var keyboardHeight = rootView.height - (windowRect.height() + statusBarHeight)

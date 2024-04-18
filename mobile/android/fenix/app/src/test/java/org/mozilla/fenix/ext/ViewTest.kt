@@ -177,4 +177,26 @@ class ViewTest {
         assertEquals(250, outRect.right)
         assertEquals(450, outRect.bottom)
     }
+
+    @Test
+    fun `getKeyboardHeight returns the keyboard height when keyboard is considered open`() {
+        val windowVisibleDisplayFrame = Rect(0, 0, 500, 1000)
+        val keyboardHeight = 500
+        every { view.getWindowVisibleDisplayFrame() } returns windowVisibleDisplayFrame
+        every { view.rootView.height } returns windowVisibleDisplayFrame.bottom.plus(keyboardHeight)
+        every { view.rootWindowInsets } returns null
+
+        assertEquals(keyboardHeight, view.getKeyboardHeight())
+    }
+
+    @Test
+    fun `getKeyboardHeight returns zero when keyboard is considered closed`() {
+        val windowVisibleDisplayFrame = Rect(0, 0, 500, 1000)
+        val keyboardHeight = 0
+        every { view.getWindowVisibleDisplayFrame() } returns windowVisibleDisplayFrame
+        every { view.rootView.height } returns windowVisibleDisplayFrame.bottom.plus(keyboardHeight)
+        every { view.rootWindowInsets } returns null
+
+        assertEquals(keyboardHeight, view.getKeyboardHeight())
+    }
 }
