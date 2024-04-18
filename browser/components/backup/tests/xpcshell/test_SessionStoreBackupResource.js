@@ -92,9 +92,7 @@ add_task(async function test_backup() {
   ];
   await createTestFiles(sourcePath, simpleCopyFiles);
 
-  // Read recorded sessionstore state just before backup
   let sessionStoreState = SessionStore.getCurrentState(true);
-
   await sessionStoreBackupResource.backup(stagingPath, sourcePath);
 
   /**
@@ -115,6 +113,12 @@ add_task(async function test_backup() {
     { decompress: true }
   );
 
+  /**
+   * These timestamps might be slightly different from one another, so we'll exclude
+   * them from the comparison.
+   */
+  delete sessionStoreStateStaged.session.lastUpdate;
+  delete sessionStoreState.session.lastUpdate;
   Assert.deepEqual(
     sessionStoreStateStaged,
     sessionStoreState,
