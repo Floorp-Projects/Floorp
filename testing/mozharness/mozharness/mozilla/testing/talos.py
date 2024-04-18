@@ -188,7 +188,7 @@ class Talos(
                 ["--gecko-profile-interval"],
                 {
                     "dest": "gecko_profile_interval",
-                    "type": "int",
+                    "type": "float",
                     "help": "The interval between samples taken by the profiler (milliseconds)",
                 },
             ],

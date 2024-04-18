@@ -275,7 +275,7 @@ def write_test_settings_json(args, test_details, oskey):
                 "gecko_profile_entries": int(
                     test_details.get("gecko_profile_entries", 1000000)
                 ),
-                "gecko_profile_interval": int(
+                "gecko_profile_interval": float(
                     test_details.get("gecko_profile_interval", 1)
                 ),
                 "gecko_profile_threads": ",".join(set(threads)),
