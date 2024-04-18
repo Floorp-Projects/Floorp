@@ -44,22 +44,19 @@ export abstract class Realm extends EventEmitter<{
   /** Emitted when a shared worker is created in the realm. */
   sharedworker: SharedWorkerRealm;
 }> {
-  // keep-sorted start
   #reason?: string;
   protected readonly disposables = new DisposableStack();
   readonly id: string;
   readonly origin: string;
-  // keep-sorted end
+  protected executionContextId?: number;
 
   protected constructor(id: string, origin: string) {
     super();
-    // keep-sorted start
+
     this.id = id;
     this.origin = origin;
-    // keep-sorted end
   }
 
-  // keep-sorted start block=yes
   get disposed(): boolean {
     return this.#reason !== undefined;
   }
@@ -67,7 +64,6 @@ export abstract class Realm extends EventEmitter<{
   get target(): Bidi.Script.Target {
     return {realm: this.id};
   }
-  // keep-sorted end
 
   @inertIfDisposed
   protected dispose(reason?: string): void {
@@ -127,11 +123,15 @@ export abstract class Realm extends EventEmitter<{
     return realm.#reason!;
   })
   async resolveExecutionContextId(): Promise<number> {
-    const {result} = await (this.session.connection as BidiConnection).send(
-      'cdp.resolveRealm',
-      {realm: this.id}
-    );
-    return result.executionContextId;
+    if (!this.executionContextId) {
+      const {result} = await (this.session.connection as BidiConnection).send(
+        'cdp.resolveRealm',
+        {realm: this.id}
+      );
+      this.executionContextId = result.executionContextId;
+    }
+
+    return this.executionContextId;
   }
 
   [disposeSymbol](): void {
@@ -154,19 +154,16 @@ export class WindowRealm extends Realm {
     return realm;
   }
 
-  // keep-sorted start
   readonly browsingContext: BrowsingContext;
   readonly sandbox?: string;
-  // keep-sorted end
 
   readonly #workers = new Map<string, DedicatedWorkerRealm>();
 
   private constructor(context: BrowsingContext, sandbox?: string) {
     super('', '');
-    // keep-sorted start
+
     this.browsingContext = context;
     this.sandbox = sandbox;
-    // keep-sorted end
   }
 
   #initialize(): void {
@@ -188,6 +185,7 @@ export class WindowRealm extends Realm {
       }
       (this as any).id = info.realm;
       (this as any).origin = info.origin;
+      this.executionContextId = undefined;
       this.emit('updated', this);
     });
     sessionEmitter.on('script.realmCreated', info => {
@@ -242,10 +240,8 @@ export class DedicatedWorkerRealm extends Realm {
     return realm;
   }
 
-  // keep-sorted start
   readonly #workers = new Map<string, DedicatedWorkerRealm>();
   readonly owners: Set<DedicatedWorkerOwnerRealm>;
-  // keep-sorted end
 
   private constructor(
     owner: DedicatedWorkerOwnerRealm,
@@ -300,10 +296,8 @@ export class SharedWorkerRealm extends Realm {
     return realm;
   }
 
-  // keep-sorted start
   readonly #workers = new Map<string, DedicatedWorkerRealm>();
   readonly browser: Browser;
-  // keep-sorted end
 
   private constructor(browser: Browser, id: string, origin: string) {
     super(id, origin);

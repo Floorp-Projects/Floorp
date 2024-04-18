@@ -138,6 +138,7 @@ describe('Chrome install', () => {
   });
 
   it('falls back to the chrome-for-testing dashboard URLs if URL is not available', async function () {
+    this.timeout(60000);
     const expectedOutputPath = path.join(
       tmpDir,
       'chrome',
@@ -150,6 +151,7 @@ describe('Chrome install', () => {
       platform: BrowserPlatform.LINUX,
       buildId: testChromeBuildId,
       baseUrl: 'https://127.0.0.1',
+      forceFallbackForTesting: true,
     });
     assert.strictEqual(fs.existsSync(expectedOutputPath), true);
   });

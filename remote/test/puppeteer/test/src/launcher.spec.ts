@@ -116,6 +116,30 @@ describe('Launcher specs', function () {
         const {close} = await launch({});
         await close();
       });
+
+      it('can launch multiple instances without node warnings', async () => {
+        const instances = [];
+        let warning = null;
+        const warningHandler: NodeJS.WarningListener = w => {
+          return (warning = w);
+        };
+        process.on('warning', warningHandler);
+        process.setMaxListeners(1);
+        try {
+          for (let i = 0; i < 2; i++) {
+            instances.push(launch({}));
+          }
+          await Promise.all(
+            (await Promise.all(instances)).map(instance => {
+              return instance.close();
+            })
+          );
+        } finally {
+          process.setMaxListeners(10);
+        }
+        process.off('warning', warningHandler);
+        expect(warning).toBe(null);
+      });
       it('should have default url when launching browser', async function () {
         const {browser, close} = await launch({}, {createContext: false});
         try {
@@ -166,7 +190,9 @@ describe('Launcher specs', function () {
         }).catch(error => {
           return (waitError = error);
         });
-        expect(waitError.message).toContain('Failed to launch');
+        expect(waitError.message).toBe(
+          'Browser was not found at the configured executablePath (random-invalid-path)'
+        );
       });
       it('userDataDir option', async () => {
         const userDataDir = await mkdtemp(TMP_FOLDER);
@@ -591,6 +617,20 @@ describe('Launcher specs', function () {
         });
         expect(error.message).toContain('either pipe or debugging port');
       });
+
+      it('throws an error if executable path is not valid with pipe=true', async () => {
+        const options = {
+          executablePath: '/tmp/does-not-exist',
+          pipe: true,
+        };
+        let error!: Error;
+        await launch(options).catch(error_ => {
+          return (error = error_);
+        });
+        expect(error.message).toContain(
+          'Browser was not found at the configured executablePath (/tmp/does-not-exist)'
+        );
+      });
     });
 
     describe('Puppeteer.launch', function () {
@@ -793,7 +833,7 @@ describe('Launcher specs', function () {
           const restoredPage = pages.find(page => {
             return page.url() === server.PREFIX + '/frames/nested-frames.html';
           })!;
-          expect(dumpFrames(restoredPage.mainFrame())).toEqual([
+          expect(await dumpFrames(restoredPage.mainFrame())).toEqual([
             'http://localhost:<PORT>/frames/nested-frames.html',
             '    http://localhost:<PORT>/frames/two-frames.html (2frames)',
             '        http://localhost:<PORT>/frames/frame.html (uno)',

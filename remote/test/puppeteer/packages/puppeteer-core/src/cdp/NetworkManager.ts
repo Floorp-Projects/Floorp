@@ -8,6 +8,7 @@ import type {Protocol} from 'devtools-protocol';
 
 import {CDPSessionEvent, type CDPSession} from '../api/CDPSession.js';
 import type {Frame} from '../api/Frame.js';
+import type {Credentials} from '../api/Page.js';
 import {EventEmitter, EventSubscription} from '../common/EventEmitter.js';
 import {
   NetworkManagerEvent,
@@ -23,14 +24,6 @@ import {
   NetworkEventManager,
   type FetchRequestId,
 } from './NetworkEventManager.js';
-
-/**
- * @public
- */
-export interface Credentials {
-  username: string;
-  password: string;
-}
 
 /**
  * @public
@@ -147,18 +140,16 @@ export class NetworkManager extends EventEmitter<NetworkManagerEvents> {
     );
   }
 
-  async setExtraHTTPHeaders(
-    extraHTTPHeaders: Record<string, string>
-  ): Promise<void> {
-    this.#extraHTTPHeaders = {};
-    for (const key of Object.keys(extraHTTPHeaders)) {
-      const value = extraHTTPHeaders[key];
+  async setExtraHTTPHeaders(headers: Record<string, string>): Promise<void> {
+    const extraHTTPHeaders: Record<string, string> = {};
+    for (const [key, value] of Object.entries(headers)) {
       assert(
         isString(value),
         `Expected value of header "${key}" to be String, but "${typeof value}" is found.`
       );
-      this.#extraHTTPHeaders[key.toLowerCase()] = value;
+      extraHTTPHeaders[key.toLowerCase()] = value;
     }
+    this.#extraHTTPHeaders = extraHTTPHeaders;
 
     await this.#applyToAllClients(this.#applyExtraHTTPHeaders.bind(this));
   }

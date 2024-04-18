@@ -19,6 +19,8 @@ export class Request extends EventEmitter<{
   /** Emitted when the request is redirected. */
   redirect: Request;
   /** Emitted when the request succeeds. */
+  authenticate: void;
+  /** Emitted when the request succeeds. */
   success: Bidi.Network.ResponseData;
   /** Emitted when the request fails. */
   error: string;
@@ -32,24 +34,21 @@ export class Request extends EventEmitter<{
     return request;
   }
 
-  // keep-sorted start
   #error?: string;
   #redirect?: Request;
   #response?: Bidi.Network.ResponseData;
   readonly #browsingContext: BrowsingContext;
   readonly #disposables = new DisposableStack();
   readonly #event: Bidi.Network.BeforeRequestSentParameters;
-  // keep-sorted end
 
   private constructor(
     browsingContext: BrowsingContext,
     event: Bidi.Network.BeforeRequestSentParameters
   ) {
     super();
-    // keep-sorted start
+
     this.#browsingContext = browsingContext;
     this.#event = event;
-    // keep-sorted end
   }
 
   #initialize() {
@@ -76,6 +75,17 @@ export class Request extends EventEmitter<{
       this.#redirect = Request.from(this.#browsingContext, event);
       this.emit('redirect', this.#redirect);
       this.dispose();
+    });
+    sessionEmitter.on('network.authRequired', event => {
+      if (
+        event.context !== this.#browsingContext.id ||
+        event.request.request !== this.id ||
+        // Don't try to authenticate for events that are not blocked
+        !event.isBlocked
+      ) {
+        return;
+      }
+      this.emit('authenticate', undefined);
     });
     sessionEmitter.on('network.fetchError', event => {
       if (
@@ -107,7 +117,6 @@ export class Request extends EventEmitter<{
     });
   }
 
-  // keep-sorted start block=yes
   get #session() {
     return this.#browsingContext.userContext.browser.session;
   }
@@ -135,13 +144,82 @@ export class Request extends EventEmitter<{
   get redirect(): Request | undefined {
     return this.#redirect;
   }
+  get lastRedirect(): Request | undefined {
+    let redirect = this.#redirect;
+    while (redirect) {
+      if (redirect && !redirect.#redirect) {
+        return redirect;
+      }
+      redirect = redirect.#redirect;
+    }
+    return redirect;
+  }
   get response(): Bidi.Network.ResponseData | undefined {
     return this.#response;
   }
   get url(): string {
     return this.#event.request.url;
   }
-  // keep-sorted end
+  get isBlocked(): boolean {
+    return this.#event.isBlocked;
+  }
+
+  async continueRequest({
+    url,
+    method,
+    headers,
+    cookies,
+    body,
+  }: Omit<Bidi.Network.ContinueRequestParameters, 'request'>): Promise<void> {
+    await this.#session.send('network.continueRequest', {
+      request: this.id,
+      url,
+      method,
+      headers,
+      body,
+      cookies,
+    });
+  }
+
+  async failRequest(): Promise<void> {
+    await this.#session.send('network.failRequest', {
+      request: this.id,
+    });
+  }
+
+  async provideResponse({
+    statusCode,
+    reasonPhrase,
+    headers,
+    body,
+  }: Omit<Bidi.Network.ProvideResponseParameters, 'request'>): Promise<void> {
+    await this.#session.send('network.provideResponse', {
+      request: this.id,
+      statusCode,
+      reasonPhrase,
+      headers,
+      body,
+    });
+  }
+
+  async continueWithAuth(
+    parameters:
+      | Bidi.Network.ContinueWithAuthCredentials
+      | Bidi.Network.ContinueWithAuthNoCredentials
+  ): Promise<void> {
+    if (parameters.action === 'provideCredentials') {
+      await this.#session.send('network.continueWithAuth', {
+        request: this.id,
+        action: parameters.action,
+        credentials: parameters.credentials,
+      });
+    } else {
+      await this.#session.send('network.continueWithAuth', {
+        request: this.id,
+        action: parameters.action,
+      });
+    }
+  }
 
   @inertIfDisposed
   private dispose(): void {

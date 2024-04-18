@@ -13,8 +13,9 @@ import type {BoundingBox} from '../api/ElementHandle.js';
 import type {WaitForOptions} from '../api/Frame.js';
 import type {HTTPResponse} from '../api/HTTPResponse.js';
 import type {
-  MediaFeature,
+  Credentials,
   GeolocationOptions,
+  MediaFeature,
   PageEvents,
 } from '../api/Page.js';
 import {
@@ -27,13 +28,22 @@ import {Accessibility} from '../cdp/Accessibility.js';
 import {Coverage} from '../cdp/Coverage.js';
 import {EmulationManager} from '../cdp/EmulationManager.js';
 import {Tracing} from '../cdp/Tracing.js';
-import type {Cookie, CookieParam, CookieSameSite} from '../common/Cookie.js';
-import type {DeleteCookiesRequest} from '../common/Cookie.js';
+import type {
+  Cookie,
+  CookieParam,
+  CookieSameSite,
+  DeleteCookiesRequest,
+} from '../common/Cookie.js';
 import {UnsupportedOperation} from '../common/Errors.js';
 import {EventEmitter} from '../common/EventEmitter.js';
 import type {PDFOptions} from '../common/PDFOptions.js';
 import type {Awaitable} from '../common/types.js';
-import {evaluationString, parsePDFOptions, timeout} from '../common/util.js';
+import {
+  evaluationString,
+  isString,
+  parsePDFOptions,
+  timeout,
+} from '../common/util.js';
 import type {Viewport} from '../common/Viewport.js';
 import {assert} from '../util/assert.js';
 import {bubble} from '../util/decorators.js';
@@ -43,7 +53,6 @@ import type {BidiBrowser} from './Browser.js';
 import type {BidiBrowserContext} from './BrowserContext.js';
 import type {BidiCdpSession} from './CDPSession.js';
 import type {BrowsingContext} from './core/BrowsingContext.js';
-import {BidiElementHandle} from './ElementHandle.js';
 import {BidiFrame} from './Frame.js';
 import type {BidiHTTPResponse} from './HTTPResponse.js';
 import {BidiKeyboard, BidiMouse, BidiTouchscreen} from './Input.js';
@@ -161,21 +170,28 @@ export class BidiPage extends Page {
   }
 
   async focusedFrame(): Promise<BidiFrame> {
-    using frame = await this.mainFrame()
+    using handle = (await this.mainFrame()
       .isolatedRealm()
       .evaluateHandle(() => {
-        let frame: HTMLIFrameElement | undefined;
-        let win: Window | null = window;
-        while (win?.document.activeElement instanceof HTMLIFrameElement) {
-          frame = win.document.activeElement;
-          win = frame.contentWindow;
+        let win = window;
+        while (
+          win.document.activeElement instanceof win.HTMLIFrameElement ||
+          win.document.activeElement instanceof win.HTMLFrameElement
+        ) {
+          if (win.document.activeElement.contentWindow === null) {
+            break;
+          }
+          win = win.document.activeElement.contentWindow as typeof win;
         }
-        return frame;
-      });
-    if (!(frame instanceof BidiElementHandle)) {
-      return this.mainFrame();
-    }
-    return await frame.contentFrame();
+        return win;
+      })) as BidiJSHandle<Window & typeof globalThis>;
+    const value = handle.remoteValue();
+    assert(value.type === 'window');
+    const frame = this.frames().find(frame => {
+      return frame._id === value.value.context;
+    });
+    assert(frame);
+    return frame;
   }
 
   override frames(): BidiFrame[] {
@@ -311,6 +327,17 @@ export class BidiPage extends Page {
       preferCSSPageSize,
     } = parsePDFOptions(options, 'cm');
     const pageRanges = ranges ? ranges.split(', ') : [];
+
+    await firstValueFrom(
+      from(
+        this.mainFrame()
+          .isolatedRealm()
+          .evaluate(() => {
+            return document.fonts.ready;
+          })
+      ).pipe(raceWith(timeout(ms)))
+    );
+
     const data = await firstValueFrom(
       from(
         this.#frame.browsingContext.print({
@@ -489,8 +516,71 @@ export class BidiPage extends Page {
     return [...this.#workers];
   }
 
-  override setRequestInterception(): never {
-    throw new UnsupportedOperation();
+  #userInterception?: string;
+  override async setRequestInterception(enable: boolean): Promise<void> {
+    this.#userInterception = await this.#toggleInterception(
+      [Bidi.Network.InterceptPhase.BeforeRequestSent],
+      this.#userInterception,
+      enable
+    );
+  }
+
+  /**
+   * @internal
+   */
+  _extraHTTPHeaders: Record<string, string> = {};
+  #extraHeadersInterception?: string;
+  override async setExtraHTTPHeaders(
+    headers: Record<string, string>
+  ): Promise<void> {
+    const extraHTTPHeaders: Record<string, string> = {};
+    for (const [key, value] of Object.entries(headers)) {
+      assert(
+        isString(value),
+        `Expected value of header "${key}" to be String, but "${typeof value}" is found.`
+      );
+      extraHTTPHeaders[key.toLowerCase()] = value;
+    }
+    this._extraHTTPHeaders = extraHTTPHeaders;
+
+    this.#extraHeadersInterception = await this.#toggleInterception(
+      [Bidi.Network.InterceptPhase.BeforeRequestSent],
+      this.#extraHeadersInterception,
+      Boolean(Object.keys(this._extraHTTPHeaders).length)
+    );
+  }
+
+  /**
+   * @internal
+   */
+  _credentials: Credentials | null = null;
+  #authInterception?: string;
+  override async authenticate(credentials: Credentials | null): Promise<void> {
+    this.#authInterception = await this.#toggleInterception(
+      [Bidi.Network.InterceptPhase.AuthRequired],
+      this.#authInterception,
+      Boolean(credentials)
+    );
+
+    this._credentials = credentials;
+  }
+
+  async #toggleInterception(
+    phases: [Bidi.Network.InterceptPhase, ...Bidi.Network.InterceptPhase[]],
+    interception: string | undefined,
+    expected: boolean
+  ): Promise<string | undefined> {
+    if (expected && !interception) {
+      return await this.#frame.browsingContext.addIntercept({
+        phases,
+      });
+    } else if (!expected && interception) {
+      await this.#frame.browsingContext.userContext.browser.removeIntercept(
+        interception
+      );
+      return;
+    }
+    return interception;
   }
 
   override setDragInterception(): never {
@@ -601,14 +691,6 @@ export class BidiPage extends Page {
 
   override async removeExposedFunction(name: string): Promise<void> {
     await this.#frame.removeExposedFunction(name);
-  }
-
-  override authenticate(): never {
-    throw new UnsupportedOperation();
-  }
-
-  override setExtraHTTPHeaders(): never {
-    throw new UnsupportedOperation();
   }
 
   override metrics(): never {
