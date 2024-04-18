@@ -5853,7 +5853,12 @@ void vp9_init_tile_data(VP9_COMP *cpi) {
   int tplist_count = 0;
 
   if (cpi->tile_data == NULL || cpi->allocated_tiles < tile_cols * tile_rows) {
-    if (cpi->tile_data != NULL) vpx_free(cpi->tile_data);
+    if (cpi->tile_data != NULL) {
+      // Free the row mt memory in cpi->tile_data first.
+      vp9_row_mt_mem_dealloc(cpi);
+      vpx_free(cpi->tile_data);
+    }
+    cpi->allocated_tiles = 0;
     CHECK_MEM_ERROR(
         &cm->error, cpi->tile_data,
         vpx_malloc(tile_cols * tile_rows * sizeof(*cpi->tile_data)));
@@ -5883,9 +5888,9 @@ void vp9_init_tile_data(VP9_COMP *cpi) {
     for (tile_col = 0; tile_col < tile_cols; ++tile_col) {
       TileDataEnc *this_tile = &cpi->tile_data[tile_row * tile_cols + tile_col];
       TileInfo *tile_info = &this_tile->tile_info;
-      if (cpi->sf.adaptive_rd_thresh_row_mt &&
-          this_tile->row_base_thresh_freq_fact == NULL)
+      if (cpi->sf.adaptive_rd_thresh_row_mt) {
         vp9_row_mt_alloc_rd_thresh(cpi, this_tile);
+      }
       vp9_tile_init(tile_info, cm, tile_row, tile_col);
 
       cpi->tile_tok[tile_row][tile_col] = pre_tok + tile_tok;

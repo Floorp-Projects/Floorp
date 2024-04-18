@@ -18,6 +18,7 @@
 #include "vpx_dsp/arm/mem_neon.h"
 #include "vpx_dsp/arm/transpose_neon.h"
 #include "vpx_dsp/arm/vpx_convolve8_neon.h"
+#include "vpx_dsp/vpx_filter.h"
 #include "vpx_ports/mem.h"
 
 static INLINE void scaledconvolve_horiz_neon(

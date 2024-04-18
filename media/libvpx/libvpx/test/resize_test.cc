@@ -15,6 +15,7 @@
 #include "test/i420_video_source.h"
 #include "test/video_source.h"
 #include "test/util.h"
+#include "vpx_config.h"
 
 // Enable(1) or Disable(0) writing of the compressed bitstream.
 #define WRITE_COMPRESSED_STREAM 0

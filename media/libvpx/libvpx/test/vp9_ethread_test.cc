@@ -17,6 +17,7 @@
 #include "test/util.h"
 #include "test/y4m_video_source.h"
 #include "vp9/encoder/vp9_firstpass.h"
+#include "vpx_config.h"
 
 namespace {
 // FIRSTPASS_STATS struct:
@@ -168,6 +169,9 @@ static void compare_fp_stats_md5(vpx_fixed_buf_t *fp_stats) {
 }
 
 TEST_P(VPxFirstPassEncoderThreadTest, FirstPassStatsTest) {
+#if CONFIG_REALTIME_ONLY
+  GTEST_SKIP();
+#else
   ::libvpx_test::Y4mVideoSource video("niklas_1280_720_30.y4m", 0, 60);
 
   first_pass_only_ = true;
@@ -216,6 +220,7 @@ TEST_P(VPxFirstPassEncoderThreadTest, FirstPassStatsTest) {
 
   // Compare to check if stats match with row-mt=0/1.
   compare_fp_stats_md5(&firstpass_stats_);
+#endif  // CONFIG_REALTIME_ONLY
 }
 
 class VPxEncoderThreadTest
@@ -407,23 +412,17 @@ INSTANTIATE_TEST_SUITE_P(
     ::testing::Combine(
         ::testing::Values(
             static_cast<const libvpx_test::CodecFactory *>(&libvpx_test::kVP9)),
-        ::testing::Values(::libvpx_test::kTwoPassGood,
-                          ::libvpx_test::kOnePassGood,
-                          ::libvpx_test::kRealTime),
-        ::testing::Range(3, 10),   // cpu_used
-        ::testing::Range(0, 3),    // tile_columns
-        ::testing::Range(2, 5)));  // threads
+        ONE_PASS_TEST_MODES, ::testing::Range(3, 10),  // cpu_used
+        ::testing::Range(0, 3),                        // tile_columns
+        ::testing::Range(2, 5)));                      // threads
 
 INSTANTIATE_TEST_SUITE_P(
     VP9Large, VPxEncoderThreadTest,
     ::testing::Combine(
         ::testing::Values(
             static_cast<const libvpx_test::CodecFactory *>(&libvpx_test::kVP9)),
-        ::testing::Values(::libvpx_test::kTwoPassGood,
-                          ::libvpx_test::kOnePassGood,
-                          ::libvpx_test::kRealTime),
-        ::testing::Range(0, 3),    // cpu_used
-        ::testing::Range(0, 3),    // tile_columns
-        ::testing::Range(2, 5)));  // threads
+        ONE_PASS_TEST_MODES, ::testing::Range(0, 3),  // cpu_used
+        ::testing::Range(0, 3),                       // tile_columns
+        ::testing::Range(2, 5)));                     // threads
 
 }  // namespace

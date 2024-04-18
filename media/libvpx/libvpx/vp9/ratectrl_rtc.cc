@@ -305,7 +305,9 @@ int VP9RateControlRTC::GetLoopfilterLevel() const {
 
 bool VP9RateControlRTC::GetSegmentationData(
     VP9SegmentationData *segmentation_data) const {
-  if (!cpi_->cyclic_refresh->apply_cyclic_refresh) return false;
+  if (!cpi_->cyclic_refresh || !cpi_->cyclic_refresh->apply_cyclic_refresh) {
+    return false;
+  }
 
   segmentation_data->segmentation_map = cpi_->segmentation_map;
   segmentation_data->segmentation_map_size =

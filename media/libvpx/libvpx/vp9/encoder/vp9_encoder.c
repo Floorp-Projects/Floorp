@@ -3901,7 +3901,7 @@ static void set_frame_size(VP9_COMP *cpi) {
   }
   if (!frame_is_intra_only(cm) && !has_valid_ref_frame) {
     vpx_internal_error(
-        &cm->error, VPX_CODEC_CORRUPT_FRAME,
+        &cm->error, VPX_CODEC_ERROR,
         "Can't find at least one reference frame with valid size");
   }
 
@@ -3973,7 +3973,7 @@ static YV12_BUFFER_CONFIG *svc_twostage_scale(
 }
 
 static int encode_without_recode_loop(VP9_COMP *cpi, size_t *size,
-                                      uint8_t *dest) {
+                                      uint8_t *dest, size_t dest_size) {
   VP9_COMMON *const cm = &cpi->common;
   SVC *const svc = &cpi->svc;
   int q = 0, bottom_index = 0, top_index = 0;
@@ -4269,7 +4269,7 @@ static int encode_without_recode_loop(VP9_COMP *cpi, size_t *size,
     int frame_size = 0;
     // Get an estimate of the encoded frame size.
     save_coding_context(cpi);
-    vp9_pack_bitstream(cpi, dest, size);
+    vp9_pack_bitstream(cpi, dest, dest_size, size);
     restore_coding_context(cpi);
     frame_size = (int)(*size) << 3;
     // Check if encoded frame will overshoot too much, and if so, set the q and
@@ -4472,7 +4472,8 @@ static void rq_model_update(const RATE_QINDEX_HISTORY *rq_history,
 }
 #endif  // CONFIG_RATE_CTRL
 
-static void encode_with_recode_loop(VP9_COMP *cpi, size_t *size, uint8_t *dest
+static void encode_with_recode_loop(VP9_COMP *cpi, size_t *size, uint8_t *dest,
+                                    size_t dest_size
 #if CONFIG_RATE_CTRL
                                     ,
                                     RATE_QINDEX_HISTORY *rq_history
@@ -4665,7 +4666,8 @@ static void encode_with_recode_loop(VP9_COMP *cpi, size_t *size, uint8_t *dest
     // to recode.
     if (cpi->sf.recode_loop >= ALLOW_RECODE_KFARFGF) {
       save_coding_context(cpi);
-      if (!cpi->sf.use_nonrd_pick_mode) vp9_pack_bitstream(cpi, dest, size);
+      if (!cpi->sf.use_nonrd_pick_mode)
+        vp9_pack_bitstream(cpi, dest, dest_size, size);
 
       rc->projected_frame_size = (int)(*size) << 3;
 
@@ -5173,7 +5175,7 @@ static void spatial_denoise_frame(VP9_COMP *cpi) {
 
 #if !CONFIG_REALTIME_ONLY
 static void vp9_try_disable_lookahead_aq(VP9_COMP *cpi, size_t *size,
-                                         uint8_t *dest) {
+                                         uint8_t *dest, size_t dest_size) {
   if (cpi->common.seg.enabled)
     if (ALT_REF_AQ_PROTECT_GAIN) {
       size_t nsize = *size;
@@ -5184,7 +5186,7 @@ static void vp9_try_disable_lookahead_aq(VP9_COMP *cpi, size_t *size,
 
       save_coding_context(cpi);
       vp9_disable_segmentation(&cpi->common.seg);
-      vp9_pack_bitstream(cpi, dest, &nsize);
+      vp9_pack_bitstream(cpi, dest, dest_size, &nsize);
       restore_coding_context(cpi);
 
       overhead = (int)*size - (int)nsize;
@@ -5477,8 +5479,8 @@ static void update_encode_frame_result_simple_encode(
 #endif  // !CONFIG_REALTIME_ONLY
 
 static void encode_frame_to_data_rate(
-    VP9_COMP *cpi, size_t *size, uint8_t *dest, unsigned int *frame_flags,
-    ENCODE_FRAME_RESULT *encode_frame_result) {
+    VP9_COMP *cpi, size_t *size, uint8_t *dest, size_t dest_size,
+    unsigned int *frame_flags, ENCODE_FRAME_RESULT *encode_frame_result) {
   VP9_COMMON *const cm = &cpi->common;
   const VP9EncoderConfig *const oxcf = &cpi->oxcf;
   struct segmentation *const seg = &cm->seg;
@@ -5585,16 +5587,17 @@ static void encode_frame_to_data_rate(
   }
 
   if (cpi->sf.recode_loop == DISALLOW_RECODE) {
-    if (!encode_without_recode_loop(cpi, size, dest)) return;
+    if (!encode_without_recode_loop(cpi, size, dest, dest_size)) return;
   } else {
 #if !CONFIG_REALTIME_ONLY
 #if CONFIG_RATE_CTRL
-    encode_with_recode_loop(cpi, size, dest, &encode_frame_result->rq_history);
+    encode_with_recode_loop(cpi, size, dest, dest_size,
+                            &encode_frame_result->rq_history);
 #else  // CONFIG_RATE_CTRL
 #if CONFIG_COLLECT_COMPONENT_TIMING
     start_timing(cpi, encode_with_recode_loop_time);
 #endif
-    encode_with_recode_loop(cpi, size, dest);
+    encode_with_recode_loop(cpi, size, dest, dest_size);
 #if CONFIG_COLLECT_COMPONENT_TIMING
     end_timing(cpi, encode_with_recode_loop_time);
 #endif
@@ -5614,7 +5617,7 @@ static void encode_frame_to_data_rate(
 #if !CONFIG_REALTIME_ONLY
   // Disable segmentation if it decrease rate/distortion ratio
   if (cpi->oxcf.aq_mode == LOOKAHEAD_AQ)
-    vp9_try_disable_lookahead_aq(cpi, size, dest);
+    vp9_try_disable_lookahead_aq(cpi, size, dest, dest_size);
 #endif
 
 #if CONFIG_VP9_TEMPORAL_DENOISING
@@ -5671,7 +5674,7 @@ static void encode_frame_to_data_rate(
   start_timing(cpi, vp9_pack_bitstream_time);
 #endif
   // build the bitstream
-  vp9_pack_bitstream(cpi, dest, size);
+  vp9_pack_bitstream(cpi, dest, dest_size, size);
 #if CONFIG_COLLECT_COMPONENT_TIMING
   end_timing(cpi, vp9_pack_bitstream_time);
 #endif
@@ -5862,32 +5865,33 @@ static void encode_frame_to_data_rate(
 }
 
 static void SvcEncode(VP9_COMP *cpi, size_t *size, uint8_t *dest,
-                      unsigned int *frame_flags) {
+                      size_t dest_size, unsigned int *frame_flags) {
   vp9_rc_get_svc_params(cpi);
-  encode_frame_to_data_rate(cpi, size, dest, frame_flags,
+  encode_frame_to_data_rate(cpi, size, dest, dest_size, frame_flags,
                             /*encode_frame_result = */ NULL);
 }
 
 static void Pass0Encode(VP9_COMP *cpi, size_t *size, uint8_t *dest,
-                        unsigned int *frame_flags) {
+                        size_t dest_size, unsigned int *frame_flags) {
   if (cpi->oxcf.rc_mode == VPX_CBR) {
     vp9_rc_get_one_pass_cbr_params(cpi);
   } else {
     vp9_rc_get_one_pass_vbr_params(cpi);
   }
-  encode_frame_to_data_rate(cpi, size, dest, frame_flags,
+  encode_frame_to_data_rate(cpi, size, dest, dest_size, frame_flags,
                             /*encode_frame_result = */ NULL);
 }
 
 #if !CONFIG_REALTIME_ONLY
 static void Pass2Encode(VP9_COMP *cpi, size_t *size, uint8_t *dest,
-                        unsigned int *frame_flags,
+                        size_t dest_size, unsigned int *frame_flags,
                         ENCODE_FRAME_RESULT *encode_frame_result) {
   cpi->allow_encode_breakout = ENCODE_BREAKOUT_ENABLED;
 #if CONFIG_MISMATCH_DEBUG
   mismatch_move_frame_idx_w();
 #endif
-  encode_frame_to_data_rate(cpi, size, dest, frame_flags, encode_frame_result);
+  encode_frame_to_data_rate(cpi, size, dest, dest_size, frame_flags,
+                            encode_frame_result);
 }
 #endif  // !CONFIG_REALTIME_ONLY
 
@@ -6300,8 +6304,8 @@ void vp9_init_encode_frame_result(ENCODE_FRAME_RESULT *encode_frame_result) {
 }
 
 int vp9_get_compressed_data(VP9_COMP *cpi, unsigned int *frame_flags,
-                            size_t *size, uint8_t *dest, int64_t *time_stamp,
-                            int64_t *time_end, int flush,
+                            size_t *size, uint8_t *dest, size_t dest_size,
+                            int64_t *time_stamp, int64_t *time_end, int flush,
                             ENCODE_FRAME_RESULT *encode_frame_result) {
   const VP9EncoderConfig *const oxcf = &cpi->oxcf;
   VP9_COMMON *const cm = &cpi->common;
@@ -6583,10 +6587,10 @@ int vp9_get_compressed_data(VP9_COMP *cpi, unsigned int *frame_flags,
 #if CONFIG_REALTIME_ONLY
   (void)encode_frame_result;
   if (cpi->use_svc) {
-    SvcEncode(cpi, size, dest, frame_flags);
+    SvcEncode(cpi, size, dest, dest_size, frame_flags);
   } else {
     // One pass encode
-    Pass0Encode(cpi, size, dest, frame_flags);
+    Pass0Encode(cpi, size, dest, dest_size, frame_flags);
   }
 #else  // !CONFIG_REALTIME_ONLY
   if (oxcf->pass == 1 && !cpi->use_svc) {
@@ -6609,16 +6613,16 @@ int vp9_get_compressed_data(VP9_COMP *cpi, unsigned int *frame_flags,
     // Accumulate 2nd pass time in 2-pass case.
     start_timing(cpi, Pass2Encode_time);
 #endif
-    Pass2Encode(cpi, size, dest, frame_flags, encode_frame_result);
+    Pass2Encode(cpi, size, dest, dest_size, frame_flags, encode_frame_result);
     vp9_twopass_postencode_update(cpi);
 #if CONFIG_COLLECT_COMPONENT_TIMING
     end_timing(cpi, Pass2Encode_time);
 #endif
   } else if (cpi->use_svc) {
-    SvcEncode(cpi, size, dest, frame_flags);
+    SvcEncode(cpi, size, dest, dest_size, frame_flags);
   } else {
     // One pass encode
-    Pass0Encode(cpi, size, dest, frame_flags);
+    Pass0Encode(cpi, size, dest, dest_size, frame_flags);
   }
 #endif  // CONFIG_REALTIME_ONLY
 

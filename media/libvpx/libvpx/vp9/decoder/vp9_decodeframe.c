@@ -68,6 +68,7 @@ static int decode_unsigned_max(struct vpx_read_bit_buffer *rb, int max) {
 static TX_MODE read_tx_mode(vpx_reader *r) {
   TX_MODE tx_mode = vpx_read_literal(r, 2);
   if (tx_mode == ALLOW_32X32) tx_mode += vpx_read_bit(r);
+  assert(tx_mode < TX_MODES);
   return tx_mode;
 }
 

@@ -15,93 +15,13 @@
 #include "./vpx_dsp_rtcd.h"
 
 #include "vpx/vpx_integer.h"
+#include "vpx_dsp/arm/highbd_convolve8_sve.h"
 #include "vpx_dsp/arm/mem_neon.h"
 #include "vpx_dsp/arm/transpose_neon.h"
 #include "vpx_dsp/arm/vpx_neon_sve_bridge.h"
 
 DECLARE_ALIGNED(16, static const uint16_t, kTblConv4_8[8]) = { 0, 2, 4, 6,
                                                                1, 3, 5, 7 };
-
-static INLINE uint16x4_t highbd_convolve4_4(const int16x4_t s[4],
-                                            const int16x8_t filter,
-                                            const uint16x4_t max) {
-  int16x8_t s01 = vcombine_s16(s[0], s[1]);
-  int16x8_t s23 = vcombine_s16(s[2], s[3]);
-
-  int64x2_t sum01 = vpx_dotq_lane_s16(vdupq_n_s64(0), s01, filter, 0);
-  int64x2_t sum23 = vpx_dotq_lane_s16(vdupq_n_s64(0), s23, filter, 0);
-
-  int32x4_t res_s32 = vcombine_s32(vmovn_s64(sum01), vmovn_s64(sum23));
-
-  uint16x4_t res_u16 = vqrshrun_n_s32(res_s32, FILTER_BITS);
-  return vmin_u16(res_u16, max);
-}
-
-static INLINE uint16x8_t highbd_convolve4_8(const int16x8_t s[4],
-                                            const int16x8_t filter,
-                                            const uint16x8_t max,
-                                            uint16x8_t idx) {
-  int64x2_t sum04 = vpx_dotq_lane_s16(vdupq_n_s64(0), s[0], filter, 0);
-  int64x2_t sum15 = vpx_dotq_lane_s16(vdupq_n_s64(0), s[1], filter, 0);
-  int64x2_t sum26 = vpx_dotq_lane_s16(vdupq_n_s64(0), s[2], filter, 0);
-  int64x2_t sum37 = vpx_dotq_lane_s16(vdupq_n_s64(0), s[3], filter, 0);
-
-  int32x4_t res0 = vcombine_s32(vmovn_s64(sum04), vmovn_s64(sum15));
-  int32x4_t res1 = vcombine_s32(vmovn_s64(sum26), vmovn_s64(sum37));
-
-  uint16x8_t res = vcombine_u16(vqrshrun_n_s32(res0, FILTER_BITS),
-                                vqrshrun_n_s32(res1, FILTER_BITS));
-
-  res = vpx_tbl_u16(res, idx);
-
-  return vminq_u16(res, max);
-}
-
-static INLINE uint16x4_t highbd_convolve8_4(const int16x8_t s[4],
-                                            const int16x8_t filter,
-                                            const uint16x4_t max) {
-  int64x2_t sum[4];
-
-  sum[0] = vpx_dotq_s16(vdupq_n_s64(0), s[0], filter);
-  sum[1] = vpx_dotq_s16(vdupq_n_s64(0), s[1], filter);
-  sum[2] = vpx_dotq_s16(vdupq_n_s64(0), s[2], filter);
-  sum[3] = vpx_dotq_s16(vdupq_n_s64(0), s[3], filter);
-
-  sum[0] = vpaddq_s64(sum[0], sum[1]);
-  sum[2] = vpaddq_s64(sum[2], sum[3]);
-
-  int32x4_t res_s32 = vcombine_s32(vmovn_s64(sum[0]), vmovn_s64(sum[2]));
-
-  uint16x4_t res_u16 = vqrshrun_n_s32(res_s32, FILTER_BITS);
-  return vmin_u16(res_u16, max);
-}
-
-static INLINE uint16x8_t highbd_convolve8_8(const int16x8_t s[8],
-                                            const int16x8_t filter,
-                                            const uint16x8_t max) {
-  int64x2_t sum[8];
-
-  sum[0] = vpx_dotq_s16(vdupq_n_s64(0), s[0], filter);
-  sum[1] = vpx_dotq_s16(vdupq_n_s64(0), s[1], filter);
-  sum[2] = vpx_dotq_s16(vdupq_n_s64(0), s[2], filter);
-  sum[3] = vpx_dotq_s16(vdupq_n_s64(0), s[3], filter);
-  sum[4] = vpx_dotq_s16(vdupq_n_s64(0), s[4], filter);
-  sum[5] = vpx_dotq_s16(vdupq_n_s64(0), s[5], filter);
-  sum[6] = vpx_dotq_s16(vdupq_n_s64(0), s[6], filter);
-  sum[7] = vpx_dotq_s16(vdupq_n_s64(0), s[7], filter);
-
-  int64x2_t sum01 = vpaddq_s64(sum[0], sum[1]);
-  int64x2_t sum23 = vpaddq_s64(sum[2], sum[3]);
-  int64x2_t sum45 = vpaddq_s64(sum[4], sum[5]);
-  int64x2_t sum67 = vpaddq_s64(sum[6], sum[7]);
-
-  int32x4_t res0 = vcombine_s32(vmovn_s64(sum01), vmovn_s64(sum23));
-  int32x4_t res1 = vcombine_s32(vmovn_s64(sum45), vmovn_s64(sum67));
-
-  uint16x8_t res = vcombine_u16(vqrshrun_n_s32(res0, FILTER_BITS),
-                                vqrshrun_n_s32(res1, FILTER_BITS));
-  return vminq_u16(res, max);
-}
 
 static INLINE void highbd_convolve_4tap_horiz_sve(
     const uint16_t *src, ptrdiff_t src_stride, uint16_t *dst,
@@ -120,10 +40,10 @@ static INLINE void highbd_convolve_4tap_horiz_sve(
       load_s16_4x4(s + 2 * src_stride, 1, &s2[0], &s2[1], &s2[2], &s2[3]);
       load_s16_4x4(s + 3 * src_stride, 1, &s3[0], &s3[1], &s3[2], &s3[3]);
 
-      uint16x4_t d0 = highbd_convolve4_4(s0, filter, max);
-      uint16x4_t d1 = highbd_convolve4_4(s1, filter, max);
-      uint16x4_t d2 = highbd_convolve4_4(s2, filter, max);
-      uint16x4_t d3 = highbd_convolve4_4(s3, filter, max);
+      uint16x4_t d0 = highbd_convolve4_4_sve(s0, filter, max);
+      uint16x4_t d1 = highbd_convolve4_4_sve(s1, filter, max);
+      uint16x4_t d2 = highbd_convolve4_4_sve(s2, filter, max);
+      uint16x4_t d3 = highbd_convolve4_4_sve(s3, filter, max);
 
       store_u16_4x4(d, dst_stride, d0, d1, d2, d3);
 
@@ -147,10 +67,10 @@ static INLINE void highbd_convolve_4tap_horiz_sve(
         load_s16_8x4(s + 2 * src_stride, 1, &s2[0], &s2[1], &s2[2], &s2[3]);
         load_s16_8x4(s + 3 * src_stride, 1, &s3[0], &s3[1], &s3[2], &s3[3]);
 
-        uint16x8_t d0 = highbd_convolve4_8(s0, filter, max, idx);
-        uint16x8_t d1 = highbd_convolve4_8(s1, filter, max, idx);
-        uint16x8_t d2 = highbd_convolve4_8(s2, filter, max, idx);
-        uint16x8_t d3 = highbd_convolve4_8(s3, filter, max, idx);
+        uint16x8_t d0 = highbd_convolve4_8_sve(s0, filter, max, idx);
+        uint16x8_t d1 = highbd_convolve4_8_sve(s1, filter, max, idx);
+        uint16x8_t d2 = highbd_convolve4_8_sve(s2, filter, max, idx);
+        uint16x8_t d3 = highbd_convolve4_8_sve(s3, filter, max, idx);
 
         store_u16_8x4(d, dst_stride, d0, d1, d2, d3);
 
