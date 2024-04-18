@@ -197,7 +197,7 @@ def stream_context_tar(topsrcdir, context_dir, out_file, image_name=None, args=N
 @memoize
 def image_paths():
     """Return a map of image name to paths containing their Dockerfile."""
-    config = load_yaml("taskcluster", "ci", "docker-image", "kind.yml")
+    config = load_yaml("taskcluster", "kinds", "docker-image", "kind.yml")
     return {
         k: os.path.join(IMAGE_DIR, v.get("definition", k))
         for k, v in config["tasks"].items()

@@ -10,7 +10,7 @@
  * This is a test runner dedicated to run DevTools node tests continuous integration
  * platforms. It will parse the logs to output errors compliant with treeherder tooling.
  *
- * See taskcluster/ci/source-test/node.yml for the definition of the task running those
+ * See taskcluster/kinds/source-test/node.yml for the definition of the task running those
  * tests on try.
  */
 

@@ -7,6 +7,9 @@ import hashlib
 import time
 
 TARGET_CACHE_INDEX = "{cache_prefix}.cache.level-{level}.{type}.{name}.hash.{digest}"
+TARGET_PR_CACHE_INDEX = (
+    "{cache_prefix}.cache.head.{head_ref}.{type}.{name}.hash.{digest}"
+)
 EXTRA_CACHE_INDEXES = [
     "{cache_prefix}.cache.level-{level}.{type}.{name}.latest",
     "{cache_prefix}.cache.level-{level}.{type}.{name}.pushdate.{build_date_long}",
@@ -53,31 +56,45 @@ def add_optimization(
 
     # We'll try to find a cached version of the toolchain at levels above and
     # including the current level, starting at the highest level.
-    # Chain-of-trust doesn't handle tasks not built on the tip of a
-    # pull-request, so don't look for level-1 tasks if building a pull-request.
     index_routes = []
     min_level = int(config.params["level"])
-    if config.params["tasks_for"] == "github-pull-request":
-        min_level = max(min_level, 3)
     for level in reversed(range(min_level, 4)):
         subs["level"] = level
         index_routes.append(TARGET_CACHE_INDEX.format(**subs))
 
-        taskdesc["optimization"] = {"index-search": index_routes}
+    # Pull requests use a different target cache index route. This way we can
+    # be confident they won't be used by anything other than the pull request
+    # that created the cache in the first place.
+    if config.params["tasks_for"].startswith(
+        "github-pull-request"
+    ) and config.graph_config["taskgraph"].get("cache-pull-requests", True):
+        subs["head_ref"] = config.params["head_ref"]
+        if subs["head_ref"].startswith("refs/heads/"):
+            subs["head_ref"] = subs["head_ref"][11:]
+        index_routes.append(TARGET_PR_CACHE_INDEX.format(**subs))
+
+    taskdesc["optimization"] = {"index-search": index_routes}
 
     # ... and cache at the lowest level.
     subs["level"] = config.params["level"]
-    taskdesc.setdefault("routes", []).append(
-        f"index.{TARGET_CACHE_INDEX.format(**subs)}"
-    )
 
-    # ... and add some extra routes for humans
-    subs["build_date_long"] = time.strftime(
-        "%Y.%m.%d.%Y%m%d%H%M%S", time.gmtime(config.params["build_date"])
-    )
-    taskdesc["routes"].extend(
-        [f"index.{route.format(**subs)}" for route in EXTRA_CACHE_INDEXES]
-    )
+    if config.params["tasks_for"].startswith("github-pull-request"):
+        if config.graph_config["taskgraph"].get("cache-pull-requests", True):
+            taskdesc.setdefault("routes", []).append(
+                f"index.{TARGET_PR_CACHE_INDEX.format(**subs)}"
+            )
+    else:
+        taskdesc.setdefault("routes", []).append(
+            f"index.{TARGET_CACHE_INDEX.format(**subs)}"
+        )
+
+        # ... and add some extra routes for humans
+        subs["build_date_long"] = time.strftime(
+            "%Y.%m.%d.%Y%m%d%H%M%S", time.gmtime(config.params["build_date"])
+        )
+        taskdesc["routes"].extend(
+            [f"index.{route.format(**subs)}" for route in EXTRA_CACHE_INDEXES]
+        )
 
     taskdesc["attributes"]["cached_task"] = {
         "type": cache_type,

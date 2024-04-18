@@ -32,7 +32,7 @@ Kinds
 Generation starts with "kinds". These are yaml files that denote groupings of
 tasks that are loosely related to one another. For example, in Gecko there are
 ``build`` and ``test`` kinds. Each kind has its own directory under
-`taskcluster/ci`_ which contains a ``kind.yml`` file.
+`taskcluster/kinds`_ which contains a ``kind.yml`` file.
 
 For more information on kinds, see Taskgraph's `kind documentation`_. For a
 list of available kinds in ``mozilla-central``, see the :doc:`kinds reference
@@ -114,7 +114,7 @@ Graph Configuration
 
 There are several configuration settings that are pertain to the entire
 taskgraph. These are specified in :file:`config.yml` at the root of the
-taskgraph configuration (typically :file:`taskcluster/ci/`). The available
+taskgraph configuration (typically :file:`taskcluster`). The available
 settings are documented inline in `taskcluster/gecko_taskgraph/config.py
 <https://searchfox.org/mozilla-central/source/taskcluster/gecko_taskgraph/config.py>`_.
 
@@ -131,7 +131,7 @@ For more information, see Taskgraph's `actions documentation`_.
 
 .. _graph generation documentation: https://taskcluster-taskgraph.readthedocs.io/en/latest/concepts/task-graphs.html
 .. _this guide: https://taskcluster-taskgraph.readthedocs.io/en/latest/howto/run-locally.html
-.. _taskcluster/ci: https://searchfox.org/mozilla-central/source/taskcluster/ci
+.. _taskcluster/kinds: https://searchfox.org/mozilla-central/source/taskcluster/kinds
 .. _kind documentation: https://taskcluster-taskgraph.readthedocs.io/en/latest/concepts/kind.html
 .. _loader documentation: https://taskcluster-taskgraph.readthedocs.io/en/latest/concepts/loading.html
 .. _transforms documentation: https://taskcluster-taskgraph.readthedocs.io/en/latest/concepts/transforms.html

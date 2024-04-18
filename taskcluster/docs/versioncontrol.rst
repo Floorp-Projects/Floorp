@@ -35,7 +35,7 @@ The locations are as follows:
 Debian Packages for Debian and Ubuntu Based Docker Images
 ---------------------------------------------------------
 
-``taskcluster/ci/packages/debian.yml`` and ``taskcluster/ci/packages/ubuntu.yml``
+``taskcluster/kinds/packages/debian.yml`` and ``taskcluster/kinds/packages/ubuntu.yml``
 define custom Debian packages for Mercurial. These are installed in various
 Docker images.
 

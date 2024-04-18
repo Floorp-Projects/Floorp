@@ -213,7 +213,7 @@ avoid-blacklist-and-whitelist:
         - security/sandbox/linux/SandboxFilter.cpp
         - security/sandbox/linux/SandboxFilterUtil.h
         - security/sandbox/linux/Sandbox.h
-        - taskcluster/ci/docker-image/kind.yml
+        - taskcluster/kinds/docker-image/kind.yml
         - taskcluster/gecko_taskgraph/actions/create_interactive.py
         - taskcluster/gecko_taskgraph/transforms/test/other.py
         - taskcluster/gecko_taskgraph/try_option_syntax.py

@@ -27,7 +27,7 @@ mv depot_tools.git depot_tools
 
 # Generating a new version of the preloaded depot_tools download can be done by:
 # 1) Running the task, uncommenting the variable assignment below, uncommenting the
-#    _GENERATE_DEPOT_TOOLS_BINARIES_ section in taskcluster/ci/updatebot/kind.yml,
+#    _GENERATE_DEPOT_TOOLS_BINARIES_ section in taskcluster/kinds/updatebot/kind.yml,
 #    and ensuring that an angle update will actually take place (so it downloads the depot_tools)
 # 2) Downloading and sanity-checking the depot_tools-preloaded-binaries-GIT_HASH-DATE.zip artifact
 # 3) Adding it to tooltool
@@ -121,7 +121,7 @@ if test -n "$GENERATE_DEPOT_TOOLS_BINARIES"; then
 
     # Convoluted way to get the git hash, because we don't have a .git directory
     # Adding extra print statements just in case we need to debug it
-    GIT_HASH=$(grep depot_tools -A 1 "$GECKO_PATH/taskcluster/ci/fetch/updatebot.yml" | tee /dev/tty | grep revision | tee /dev/tty | awk -F': *' '{print $2}' | tee /dev/tty)
+    GIT_HASH=$(grep depot_tools -A 1 "$GECKO_PATH/taskcluster/kinds/fetch/updatebot.yml" | tee /dev/tty | grep revision | tee /dev/tty | awk -F': *' '{print $2}' | tee /dev/tty)
     DATE=$(date -I)
     mv depot_tools-preloaded-binaries.zip "depot_tools-preloaded-binaries-$GIT_HASH-$DATE.zip"
 

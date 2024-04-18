@@ -12,7 +12,7 @@ phase will replace the task with the task from the other graph.
 from voluptuous import Required
 
 from taskgraph.transforms.base import TransformSequence
-from taskgraph.transforms.job import run_job_using
+from taskgraph.transforms.run import run_task_using
 from taskgraph.util.schema import Schema
 
 transforms = TransformSequence()
@@ -29,9 +29,9 @@ run_task_schema = Schema(
 )
 
 
-@run_job_using("always-optimized", "index-search", schema=run_task_schema)
-def fill_template(config, job, taskdesc):
-    run = job["run"]
+@run_task_using("always-optimized", "index-search", schema=run_task_schema)
+def fill_template(config, task, taskdesc):
+    run = task["run"]
     taskdesc["optimization"] = {
         "index-search": [index.format(**config.params) for index in run["index-search"]]
     }

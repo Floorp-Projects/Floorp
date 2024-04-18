@@ -36,7 +36,7 @@ glob:testing/perfdocs/generated/**
 # Python API docs.
 glob:**/*.py
 # Referenced by some python files.
-path:taskcluster/ci/docker-image/kind.yml
+path:taskcluster/kinds/docker-image/kind.yml
 
 # Included in ipc docs
 path:ipc/ipdl/test/ipdl/ok/PMyManaged.ipdl

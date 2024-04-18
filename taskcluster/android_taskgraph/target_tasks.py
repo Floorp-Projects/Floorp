@@ -2,12 +2,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from taskgraph.target_tasks import _target_task
+from taskgraph.target_tasks import register_target_task
 
 from android_taskgraph.release_type import does_task_match_release_type
 
 
-@_target_task("promote_android")
+@register_target_task("promote_android")
 def target_tasks_promote(full_task_graph, parameters, graph_config):
     return _filter_release_promotion(
         full_task_graph,
@@ -17,7 +17,7 @@ def target_tasks_promote(full_task_graph, parameters, graph_config):
     )
 
 
-@_target_task("push_android")
+@register_target_task("push_android")
 def target_tasks_push(full_task_graph, parameters, graph_config):
     filtered_for_candidates = target_tasks_promote(
         full_task_graph,
@@ -29,7 +29,7 @@ def target_tasks_push(full_task_graph, parameters, graph_config):
     )
 
 
-@_target_task("ship_android")
+@register_target_task("ship_android")
 def target_tasks_ship(full_task_graph, parameters, graph_config):
     filtered_for_candidates = target_tasks_push(
         full_task_graph,
@@ -71,7 +71,7 @@ def _filter_release_promotion(
     return [l for l, t in full_task_graph.tasks.items() if filter(t, parameters)]
 
 
-@_target_task("screenshots")
+@register_target_task("screenshots")
 def target_tasks_screnshots(full_task_graph, parameters, graph_config):
     """Select the set of tasks required to generate screenshots on a real device."""
 
@@ -81,7 +81,7 @@ def target_tasks_screnshots(full_task_graph, parameters, graph_config):
     return [l for l, t in full_task_graph.tasks.items() if filter(t, parameters)]
 
 
-@_target_task("legacy_api_ui_tests")
+@register_target_task("legacy_api_ui_tests")
 def target_tasks_legacy_api_ui_tests(full_task_graph, parameters, graph_config):
     """Select the set of tasks required to run select UI tests on other API."""
 

@@ -91,7 +91,7 @@ class Kind:
 
     @classmethod
     def load(cls, root_dir, graph_config, kind_name):
-        path = os.path.join(root_dir, kind_name)
+        path = os.path.join(root_dir, "kinds", kind_name)
         kind_yml = os.path.join(path, "kind.yml")
         if not os.path.exists(kind_yml):
             raise KindNotFound(kind_yml)
@@ -125,13 +125,13 @@ class TaskGraphGenerator:
         write_artifacts=False,
     ):
         """
-        @param root_dir: root directory, with subdirectories for each kind
+        @param root_dir: root directory containing the Taskgraph config.yml file
         @param parameters: parameters for this task-graph generation, or callable
             taking a `GraphConfig` and returning parameters
         @type parameters: Union[Parameters, Callable[[GraphConfig], Parameters]]
         """
         if root_dir is None:
-            root_dir = "taskcluster/ci"
+            root_dir = "taskcluster"
         self.root_dir = root_dir
         self._parameters = parameters
         self._decision_task_id = decision_task_id
@@ -243,7 +243,7 @@ class TaskGraphGenerator:
                 yield kind
                 queue.extend(kind.config.get("kind-dependencies", []))
         else:
-            for kind_name in os.listdir(self.root_dir):
+            for kind_name in os.listdir(os.path.join(self.root_dir, "kinds")):
                 try:
                     yield Kind.load(self.root_dir, graph_config, kind_name)
                 except KindNotFound:

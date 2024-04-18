@@ -204,8 +204,8 @@ Using our example of ``windows_1903``, this would be a new worker type that
 would require these edits:
 
  * `transforms/tests.py <https://searchfox.org/mozilla-central/source/taskcluster/taskgraph/transforms/tests.py#97>`__ (duplicate windows 10 entries)
- * `test-platforms.py <https://searchfox.org/mozilla-central/source/taskcluster/ci/test/test-platforms.yml#229>`__ (copy windows10 debug/opt/shippable/asan entries and make win10_1903)
- * `test-sets.py <https://searchfox.org/mozilla-central/source/taskcluster/ci/test/test-sets.yml#293>`__ (ideally you need nothing, otherwise copy ``windows-tests`` and edit the test list)
+ * `test-platforms.py <https://searchfox.org/mozilla-central/source/taskcluster/kinds/test/test-platforms.yml#229>`__ (copy windows10 debug/opt/shippable/asan entries and make win10_1903)
+ * `test-sets.py <https://searchfox.org/mozilla-central/source/taskcluster/kinds/test/test-sets.yml#293>`__ (ideally you need nothing, otherwise copy ``windows-tests`` and edit the test list)
 
 In general this should allow you to have tests scheduled with no custom flags
 in try server and all of these will be scheduled by default on

@@ -35,7 +35,7 @@ Changing Test Characteristics
 .............................
 
 First, find the test description.  This will be in
-``taskcluster/ci/*/tests.yml``, for the appropriate kind (consult
+``taskcluster/kinds/*/tests.yml``, for the appropriate kind (consult
 :ref:`kinds`).  You will find a YAML stanza for each test suite, and each
 stanza defines the test's characteristics.  For example, the ``chunks``
 property gives the number of chunks to run.  This can be specified as a simple
@@ -65,7 +65,7 @@ Adding a Test Suite
 To add a new test suite, you will need to know the proper mozharness invocation
 for that suite, and which kind it fits into (consult :ref:`kinds`).
 
-Add a new stanza to ``taskcluster/ci/<kind>/tests.yml``, copying from the other
+Add a new stanza to ``taskcluster/kinds/<kind>/tests.yml``, copying from the other
 stanzas in that file.  The meanings should be clear, but authoritative
 documentation is in
 ``taskcluster/gecko_taskgraph/transforms/test/__init__.py`` should you need

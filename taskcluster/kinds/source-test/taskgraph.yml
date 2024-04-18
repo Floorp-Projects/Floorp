@@ -38,5 +38,5 @@ diff:
             python taskcluster/scripts/misc/summarize-tgdiff.py /builds/worker/artifacts/diffs/ 20
     when:
         files-changed:
-            - 'taskcluster/ci/**'
+            - 'taskcluster/kinds/**'
             - 'taskcluster/**/*.py'

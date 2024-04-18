@@ -134,10 +134,8 @@ def verify_task_graph_symbol(task, taskgraph, scratch_pad, graph_config, paramet
             collection_keys = tuple(sorted(treeherder.get("collection", {}).keys()))
             if len(collection_keys) != 1:
                 raise Exception(
-                    "Task {} can't be in multiple treeherder collections "
-                    "(the part of the platform after `/`): {}".format(
-                        task.label, collection_keys
-                    )
+                    f"Task {task.label} can't be in multiple treeherder collections "
+                    f"(the part of the platform after `/`): {collection_keys}"
                 )
             platform = treeherder.get("machine", {}).get("platform")
             group_symbol = treeherder.get("groupSymbol")
@@ -175,9 +173,7 @@ def verify_trust_domain_v2_routes(
         if route.startswith(route_prefix):
             if route in scratch_pad:
                 raise Exception(
-                    "conflict between {}:{} for route: {}".format(
-                        task.label, scratch_pad[route], route
-                    )
+                    f"conflict between {task.label}:{scratch_pad[route]} for route: {route}"
                 )
             else:
                 scratch_pad[route] = task.label
@@ -206,9 +202,7 @@ def verify_routes_notification_filters(
             route_filter = route.split(".")[-1]
             if route_filter not in valid_filters:
                 raise Exception(
-                    "{} has invalid notification filter ({})".format(
-                        task.label, route_filter
-                    )
+                    f"{task.label} has invalid notification filter ({route_filter})"
                 )
 
 
@@ -235,12 +229,7 @@ def verify_dependency_tiers(task, taskgraph, scratch_pad, graph_config, paramete
                     continue
                 if tier < tiers[d]:
                     raise Exception(
-                        "{} (tier {}) cannot depend on {} (tier {})".format(
-                            task.label,
-                            printable_tier(tier),
-                            d,
-                            printable_tier(tiers[d]),
-                        )
+                        f"{task.label} (tier {printable_tier(tier)}) cannot depend on {d} (tier {printable_tier(tiers[d])})"
                     )
 
 
@@ -262,11 +251,7 @@ def verify_toolchain_alias(task, taskgraph, scratch_pad, graph_config, parameter
             if key in scratch_pad:
                 raise Exception(
                     "Duplicate toolchain-alias in tasks "
-                    "`{}`and `{}`: {}".format(
-                        task.label,
-                        scratch_pad[key],
-                        key,
-                    )
+                    f"`{task.label}`and `{scratch_pad[key]}`: {key}"
                 )
             else:
                 scratch_pad[key] = task.label

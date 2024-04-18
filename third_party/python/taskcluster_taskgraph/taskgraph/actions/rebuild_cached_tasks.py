@@ -18,7 +18,7 @@ def rebuild_cached_tasks_action(
     parameters, graph_config, input, task_group_id, task_id
 ):
     decision_task_id, full_task_graph, label_to_taskid = fetch_graph_and_labels(
-        parameters, graph_config
+        parameters, graph_config, task_group_id=task_group_id
     )
     cached_tasks = [
         label

@@ -209,7 +209,7 @@ its content and ensure that's what you're looking for.
     (...)
 
 Once you have found the SDK you want, you can create or update toolchain tasks
-in ``taskcluster/ci/toolchain/macosx-sdk.yml``.
+in ``taskcluster/kinds/toolchain/macosx-sdk.yml``.
 
 The ``taskcluster/scripts/misc/unpack-sdk.py`` script takes the url of a SDK
 package, the sha512 hash for its content, the path to the SDK in the package,

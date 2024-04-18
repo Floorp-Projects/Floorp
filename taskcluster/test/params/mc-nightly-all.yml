@@ -4651,13 +4651,13 @@ existing_tasks:
   valgrind-linux64-valgrind-qr/opt-swr: SNO08UPaRoKwlQjHoyjb5A
 files_changed:
   - taskcluster/android_taskgraph/transforms/build_components.py
-  - taskcluster/ci/build-apk/kind.yml
-  - taskcluster/ci/build-bundle/kind.yml
-  - taskcluster/ci/build-components/kind.yml
-  - taskcluster/ci/build-samples-browser/kind.yml
-  - taskcluster/ci/test-apk/kind.yml
-  - taskcluster/ci/test-components/kind.yml
-  - taskcluster/ci/ui-test-apk/kind.yml
+  - taskcluster/kinds/build-apk/kind.yml
+  - taskcluster/kinds/build-bundle/kind.yml
+  - taskcluster/kinds/build-components/kind.yml
+  - taskcluster/kinds/build-samples-browser/kind.yml
+  - taskcluster/kinds/test-apk/kind.yml
+  - taskcluster/kinds/test-components/kind.yml
+  - taskcluster/kinds/ui-test-apk/kind.yml
 filters:
   - target_tasks_method
 head_ref: d9466bebb4c96b99a227f35b5a7e86bd0c8f5bb5

@@ -124,7 +124,7 @@ def fresh_profile(profile, customization_data):
         logger.info("Downloading addon %s" % name)
         # When running on the CI, we expect the xpi files to have been
         # fetched by the firefox-addons fetch task dependency (see
-        # taskcluster/ci/fetch/browsertime.yml) and the condprof-addons
+        # taskcluster/kinds/fetch/browsertime.yml) and the condprof-addons
         # linter enforces the content of the archive to be unpacked into
         # a subdirectory named "firefox-addons".
         extension = download_file(url, mozfetches_subdir="firefox-addons")

@@ -27,7 +27,7 @@ partner repacks.
 logic. It's usually looked up during the release promotion action task, using the Github
 GraphQL API in the `get_partner_config_by_url()
 <python/taskgraph.util.html#taskgraph.util.partners.get_partner_config_by_url>`_ function, with the
-url defined in `taskcluster/ci/config.yml <https://searchfox.org/mozilla-central/search?q=partner-urls&path=taskcluster%2Fci%2Fconfig.yml&case=true&regexp=false&redirect=true>`_.
+url defined in `taskcluster/config.yml <https://searchfox.org/mozilla-central/search?q=partner-urls&path=taskcluster%2Fconfig.yml&case=true&regexp=false&redirect=true>`_.
 
 ``release_partner_build_number`` is an integer used to create unique upload paths in the firefox
 candidates directory, while ``release_partners`` is a list of partners that should be
