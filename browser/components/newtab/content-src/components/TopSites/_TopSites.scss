@@ -126,23 +126,12 @@ $letter-fallback-color: $white;
     }
   }
 
-  // Necessary for when navigating by a keyboard, having the context
-  // menu open should display the "…" button. This style is a clone
-  // of the `:active` state for `.context-menu-button`
-  &.active {
-    .context-menu-button {
-      opacity: 1;
-      background-color: var(--newtab-button-active-background);
-    }
-  }
-
   .context-menu-button {
     background-image: url('chrome://global/skin/icons/more.svg');
-    background-color: var(--newtab-button-background);
     border: 0;
     border-radius: 4px;
     cursor: pointer;
-    fill: var(--newtab-button-text);
+    fill: var(--newtab-text-primary-color);
     -moz-context-properties: fill;
     height: 20px;
     width: 20px;
@@ -152,18 +141,11 @@ $letter-fallback-color: $white;
     top: -20px;
     transition: opacity 200ms;
 
-    &:hover {
-      background-color: var(--newtab-button-hover-background);
-
-      &:active {
-        background-color: var(--newtab-button-active-background);
-      }
-    }
-
-    &:focus-visible {
-      background-color: var(--newtab-button-focus-background);
-      border-color: var(--newtab-button-focus-border);
+    &:is(:active, :focus) {
+      outline: 0;
       opacity: 1;
+      background-color: var(--newtab-element-hover-color);
+      fill: var(--newtab-primary-action-background);
     }
   }
 

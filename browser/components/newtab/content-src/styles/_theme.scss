@@ -38,21 +38,6 @@ $shadow-image-inset: inset 0 0 0 0.5px $black-15;
   --newtab-element-hover-color: color-mix(in srgb, var(--newtab-background-color) 90%, #{$black});
   --newtab-element-active-color: color-mix(in srgb, var(--newtab-background-color) 80%, #{$black});
 
-  // --newtab-button-*-color is used on all new page card/top site options buttons
-  --newtab-button-background: var(--button-background-color);
-  --newtab-button-focus-background: var(--newtab-button-background);
-  --newtab-button-focus-border: var(--focus-outline-color);
-  --newtab-button-hover-background: var(--button-background-color-hover);
-  --newtab-button-active-background: var(--button-background-color-active);
-  --newtab-button-text: var(--button-text-color);
-
-  // --newtab-button-static*-color is used on pocket cards and require a
-  // static color unit due to transparency issues with `color-mix`
-  --newtab-button-static-background: #F0F0F4;
-  --newtab-button-static-focus-background: var(--newtab-button-static-background);
-  --newtab-button-static-hover-background: #E0E0E6;
-  --newtab-button-static-active-background: #CFCFD8;
-
   // --newtab-element-secondary*-color is used when an element needs to be set
   // off from the secondary background color.
   --newtab-element-secondary-color: color-mix(in srgb, currentColor 5%, transparent);
@@ -102,12 +87,6 @@ $shadow-image-inset: inset 0 0 0 0.5px $black-15;
     --newtab-primary-element-text-color: #{$primary-text-color-dark};
     --newtab-wordmark-color: #{$newtab-wordmark-darktheme-color};
     --newtab-status-success: #{$status-dark-green};
-
-    // --newtab-button-static*-color is used on pocket cards and require a
-    // static color unit due to transparency issues with `color-mix`
-    --newtab-button-static-background: #2B2A33;
-    --newtab-button-static-hover-background: #52525E;
-    --newtab-button-static-active-background: #5B5B66;
   }
 }
 
