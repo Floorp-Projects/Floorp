@@ -49,8 +49,10 @@ skip-if = [
 
 ["test_feature_posix_signals.js"]
 skip-if = [
-  "ccov",
-  "os == 'win'",
+  "tsan", # We have intermittent timeout issues in TSan, see Bug 1889828
+  "ccov", # The signals for the profiler conflict with the ccov signals
+  "os == 'win'", # Not yet supported on windows
+  "os == 'android'", # Not yet supported on android
 ]
 
 # Native stackwalking is somewhat unreliable depending on the platform.
