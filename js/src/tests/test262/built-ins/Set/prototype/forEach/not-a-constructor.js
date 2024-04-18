@@ -29,7 +29,7 @@ assert.sameValue(
 
 assert.throws(TypeError, () => {
   let s = new Set([]); new s.forEach(() => {});
-}, '`let s = new Set([]); new s.forEach(() => {})` throws TypeError');
+});
 
 
 reportCompare(0, 0);

@@ -19,10 +19,11 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-assert.sameValue(Object.freeze.name, "freeze");
-
-verifyNotEnumerable(Object.freeze, "name");
-verifyNotWritable(Object.freeze, "name");
-verifyConfigurable(Object.freeze, "name");
+verifyProperty(Object.freeze, "name", {
+  value: "freeze",
+  writable: false,
+  enumerable: false,
+  configurable: true,
+});
 
 reportCompare(0, 0);

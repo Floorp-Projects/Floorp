@@ -34,8 +34,9 @@ verifyEqualTo(arr, "0", get_func());
 
 verifyWritable(arr, "0", "setVerifyHelpProp");
 
-verifyEnumerable(arr, "0");
-
-verifyConfigurable(arr, "0");
+verifyProperty(arr, "0", {
+  enumerable: true,
+  configurable: true,
+});
 
 reportCompare(0, 0);

@@ -29,7 +29,7 @@ assert.sameValue(
 
 assert.throws(TypeError, () => {
   new Reflect.defineProperty({}, '');
-}, '`new Reflect.defineProperty({}, \'\')` throws TypeError');
+});
 
 
 reportCompare(0, 0);

@@ -28,7 +28,7 @@ assert.sameValue(
 
 assert.throws(TypeError, () => {
   new String.prototype.substr();
-}, '`new String.prototype.substr()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

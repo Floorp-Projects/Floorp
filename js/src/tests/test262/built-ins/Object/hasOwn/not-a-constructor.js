@@ -30,6 +30,6 @@ assert.sameValue(
 
 assert.throws(TypeError, () => {
   new Object.hasOwn('');
-}, '`new Object.hasOwn(\'\')` throws TypeError');
+});
 
 reportCompare(0, 0);

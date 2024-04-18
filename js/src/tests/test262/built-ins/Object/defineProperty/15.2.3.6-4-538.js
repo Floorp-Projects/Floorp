@@ -51,8 +51,9 @@ verifyEqualTo(obj, "prop", 1001);
 
 verifyNotWritable(obj, "prop");
 
-verifyEnumerable(obj, "prop");
-
-verifyConfigurable(obj, "prop");
+verifyProperty(obj, "prop", {
+  enumerable: true,
+  configurable: true,
+});
 
 reportCompare(0, 0);

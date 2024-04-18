@@ -32,18 +32,17 @@ flags: [noStrict]
       throw new Test262Error("Expected TypeError, got " + e);
     }
 
-    verifyEqualTo(arguments, "0", 10);
-
-    verifyNotWritable(arguments, "0");
-
-    verifyEnumerable(arguments, "0");
-
-    verifyNotConfigurable(arguments, "0");
-
     if (a !== 10) {
       throw new Test262Error('Expected "a === 10", actually ' + a);
     }
   }
+
+  verifyProperty(arguments, "0", {
+    value: 10,
+    writable: false,
+    enumerable: true,
+    configurable: false,
+  });
 }(0, 1, 2));
 
 reportCompare(0, 0);

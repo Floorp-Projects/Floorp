@@ -29,7 +29,7 @@ assert.sameValue(
 
 assert.throws(TypeError, () => {
   new String.prototype.startsWith();
-}, '`new String.prototype.startsWith()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

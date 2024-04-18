@@ -24,7 +24,7 @@ assert.sameValue(isConstructor(escape), false, 'isConstructor(escape) must retur
 
 assert.throws(TypeError, () => {
   new escape('');
-}, '`new escape(\'\')` throws TypeError');
+});
 
 
 reportCompare(0, 0);

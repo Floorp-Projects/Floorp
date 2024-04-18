@@ -25,7 +25,7 @@ assert.sameValue(isConstructor(Math.hypot), false, 'isConstructor(Math.hypot) mu
 
 assert.throws(TypeError, () => {
   new Math.hypot();
-}, '`new Math.hypot()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

@@ -19,10 +19,11 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-assert.sameValue(Math.cbrt.name, "cbrt");
-
-verifyNotEnumerable(Math.cbrt, "name");
-verifyNotWritable(Math.cbrt, "name");
-verifyConfigurable(Math.cbrt, "name");
+verifyProperty(Math.cbrt, "name", {
+  value: "cbrt",
+  writable: false,
+  enumerable: false,
+  configurable: true
+});
 
 reportCompare(0, 0);

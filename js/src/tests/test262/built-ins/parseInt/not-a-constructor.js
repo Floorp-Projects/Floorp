@@ -25,7 +25,7 @@ assert.sameValue(isConstructor(parseInt), false, 'isConstructor(parseInt) must r
 
 assert.throws(TypeError, () => {
   new parseInt(1);
-}, '`new parseInt(1)` throws TypeError');
+});
 
 
 reportCompare(0, 0);

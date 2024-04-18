@@ -15,10 +15,10 @@ assert.sameValue(typeof String.prototype.at, 'function');
 
 assert.throws(TypeError, () => {
   String.prototype.at.call(undefined);
-}, '`String.prototype.at.call(undefined)` throws TypeError');
+});
 
 assert.throws(TypeError, () => {
   String.prototype.at.call(null);
-}, '`String.prototype.at.call(null)` throws TypeError');
+});
 
 reportCompare(0, 0);

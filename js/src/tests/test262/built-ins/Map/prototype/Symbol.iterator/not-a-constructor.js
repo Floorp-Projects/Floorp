@@ -29,7 +29,7 @@ assert.sameValue(
 
 assert.throws(TypeError, () => {
   let m = new Map(); new m[Symbol.iterator]();
-}, '`let m = new Map(); new m[Symbol.iterator]()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

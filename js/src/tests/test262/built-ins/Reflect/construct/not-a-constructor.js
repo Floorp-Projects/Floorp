@@ -25,7 +25,7 @@ assert.sameValue(isConstructor(Reflect.construct), false, 'isConstructor(Reflect
 
 assert.throws(TypeError, () => {
   new Reflect.construct(Function, [], Function);
-}, '`new Reflect.construct(Function, [], Function)` throws TypeError');
+});
 
 
 reportCompare(0, 0);

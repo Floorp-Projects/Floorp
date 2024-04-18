@@ -25,7 +25,7 @@ assert.sameValue(isConstructor(Object.isExtensible), false, 'isConstructor(Objec
 
 assert.throws(TypeError, () => {
   new Object.isExtensible({});
-}, '`new Object.isExtensible({})` throws TypeError');
+});
 
 
 reportCompare(0, 0);

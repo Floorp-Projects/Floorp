@@ -34,6 +34,6 @@ try {
 
 assert.throws(TypeError, function() {
   Atomics.notify(i64a, poisoned, poisoned);
-}, '`Atomics.notify(i64a, poisoned, poisoned)` throws TypeError');
+});
 
 reportCompare(0, 0);

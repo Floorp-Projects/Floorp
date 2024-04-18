@@ -30,18 +30,16 @@ try {
   });
   throw new Test262Error("Expected an exception.");
 } catch (e) {
-  verifyEqualTo(arr, "1", undefined);
-
-  verifyNotWritable(arr, "1");
-
-  verifyNotEnumerable(arr, "1");
-
-  verifyNotConfigurable(arr, "1");
-
   if (!(e instanceof TypeError)) {
     throw new Test262Error("Expected TypeError, got " + e);
   }
-
 }
+
+verifyProperty(arr, "1", {
+  value: undefined,
+  writable: false,
+  enumerable: false,
+  configurable: false,
+});
 
 reportCompare(0, 0);

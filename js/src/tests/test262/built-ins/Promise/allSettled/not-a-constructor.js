@@ -25,7 +25,7 @@ assert.sameValue(isConstructor(Promise.allSettled), false, 'isConstructor(Promis
 
 assert.throws(TypeError, () => {
   new Promise.allSettled();
-}, '`new Promise.allSettled()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

@@ -43,14 +43,14 @@ try {
 
   verifyWritable(arg, "genericProperty", "verifySetFun");
 
-  verifyNotEnumerable(arg, "genericProperty");
-
-  verifyNotConfigurable(arg, "genericProperty");
-
   if (!(e instanceof TypeError)) {
     throw new Test262Error("Expected TypeError, got " + e);
   }
-
 }
+
+verifyProperty(arg, "genericProperty", {
+  enumerable: false,
+  configurable: false,
+});
 
 reportCompare(0, 0);

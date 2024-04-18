@@ -8,13 +8,11 @@ includes: [propertyHelper.js]
 features: [Reflect]
 ---*/
 
-assert.sameValue(
-  Reflect.ownKeys.length, 1,
-  'The value of `Reflect.ownKeys.length` is `1`'
-);
-
-verifyNotEnumerable(Reflect.ownKeys, 'length');
-verifyNotWritable(Reflect.ownKeys, 'length');
-verifyConfigurable(Reflect.ownKeys, 'length');
+verifyProperty(Reflect.ownKeys, "length", {
+  value: 1,
+  writable: false,
+  enumerable: false,
+  configurable: true
+});
 
 reportCompare(0, 0);

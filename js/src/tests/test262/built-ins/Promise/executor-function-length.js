@@ -22,10 +22,11 @@ function NotPromise(executor) {
 }
 Promise.resolve.call(NotPromise);
 
-assert.sameValue(executorFunction.length, 2);
-
-verifyNotEnumerable(executorFunction, "length");
-verifyNotWritable(executorFunction, "length");
-verifyConfigurable(executorFunction, "length");
+verifyProperty(executorFunction, "length", {
+  value: 2,
+  writable: false,
+  enumerable: false,
+  configurable: true
+});
 
 reportCompare(0, 0);

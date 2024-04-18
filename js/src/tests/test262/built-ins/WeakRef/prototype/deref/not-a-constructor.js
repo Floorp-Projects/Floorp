@@ -30,7 +30,7 @@ assert.sameValue(
 
 assert.throws(TypeError, () => {
   let wr = new WeakRef({}); new wr.deref();
-}, '`let wr = new WeakRef({}); new wr.deref()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

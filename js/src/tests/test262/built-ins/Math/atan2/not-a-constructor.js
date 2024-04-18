@@ -25,7 +25,7 @@ assert.sameValue(isConstructor(Math.atan2), false, 'isConstructor(Math.atan2) mu
 
 assert.throws(TypeError, () => {
   new Math.atan2();
-}, '`new Math.atan2()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

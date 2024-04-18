@@ -16,12 +16,12 @@ var arrObj = [100];
 Object.defineProperty(arrObj, "0", {
   writable: false
 });
-verifyEqualTo(arrObj, "0", 100);
 
-verifyNotWritable(arrObj, "0");
-
-verifyEnumerable(arrObj, "0");
-
-verifyConfigurable(arrObj, "0");
+verifyProperty(arrObj, "0", {
+  value: 100,
+  writable: false,
+  enumerable: true,
+  configurable: true,
+});
 
 reportCompare(0, 0);

@@ -29,7 +29,7 @@ assert.sameValue(
 
 assert.throws(TypeError, () => {
   new Array.prototype.every(() => {});
-}, '`new Array.prototype.every(() => {})` throws TypeError');
+});
 
 
 reportCompare(0, 0);

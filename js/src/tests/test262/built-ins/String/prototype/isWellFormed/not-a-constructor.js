@@ -29,6 +29,6 @@ assert.sameValue(
 
 assert.throws(TypeError, function () {
   new String.prototype.isWellFormed();
-}, '`new String.prototype.isWellFormed()` throws TypeError');
+});
 
 reportCompare(0, 0);

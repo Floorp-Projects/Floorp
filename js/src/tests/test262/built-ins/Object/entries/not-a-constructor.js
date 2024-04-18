@@ -25,7 +25,7 @@ assert.sameValue(isConstructor(Object.entries), false, 'isConstructor(Object.ent
 
 assert.throws(TypeError, () => {
   new Object.entries({});
-}, '`new Object.entries({})` throws TypeError');
+});
 
 
 reportCompare(0, 0);

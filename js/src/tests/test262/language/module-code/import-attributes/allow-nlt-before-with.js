@@ -7,7 +7,7 @@ description: >
 esid: sec-modules
 info: |
   ImportDeclaration:
-    import ModuleSpecifier[no LineTerminator here] WithClause;
+    import ModuleSpecifier WithClause;
 
   WithClause:
     AttributesKeyword {}

@@ -25,7 +25,7 @@ assert.sameValue(isConstructor(Array.prototype.join), false, 'isConstructor(Arra
 
 assert.throws(TypeError, () => {
   new Array.prototype.join();
-}, '`new Array.prototype.join()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

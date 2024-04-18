@@ -4,76 +4,44 @@
 /*---
 esid: sec-temporal.duration.prototype.round
 description: >
-  NormalizedTimeDurationToDays can loop arbitrarily up to max safe integer
+  NormalizedTimeDurationToDays should not be able to loop arbitrarily.
 info: |
   NormalizedTimeDurationToDays ( norm, zonedRelativeTo, timeZoneRec [ , precalculatedPlainDatetime ] )
   ...
-  21. Repeat, while done is false,
-    a. Let oneDayFarther be ? AddDaysToZonedDateTime(relativeResult.[[Instant]],
-      relativeResult.[[DateTime]], timeZoneRec, zonedRelativeTo.[[Calendar]], sign).
-    b. Set dayLengthNs to NormalizedTimeDurationFromEpochNanosecondsDifference(oneDayFarther.[[EpochNanoseconds]],
-      relativeResult.[[EpochNanoseconds]]).
-    c. Let oneDayLess be ? SubtractNormalizedTimeDuration(norm, dayLengthNs).
-    c. If NormalizedTimeDurationSign(oneDayLess) × sign ≥ 0, then
-        i. Set norm to oneDayLess.
-        ii. Set relativeResult to oneDayFarther.
-        iii. Set days to days + sign.
-    d. Else,
-        i. Set done to true.
-includes: [temporalHelpers.js]
+  22. If NormalizedTimeDurationSign(_oneDayLess_) × _sign_ ≥ 0, then
+    a. Set _norm_ to _oneDayLess_.
+    b. Set _relativeResult_ to _oneDayFarther_.
+    c. Set _days_ to _days_ + _sign_.
+    d. Set _oneDayFarther_ to ? AddDaysToZonedDateTime(_relativeResult_.[[Instant]], _relativeResult_.[[DateTime]], _timeZoneRec_, _zonedRelativeTo_.[[Calendar]], _sign_).
+    e. Set dayLengthNs to NormalizedTimeDurationFromEpochNanosecondsDifference(_oneDayFarther.[[EpochNanoseconds]], relativeResult.[[EpochNanoseconds]]).
+    f. If NormalizedTimeDurationSign(? SubtractNormalizedTimeDuration(_norm_, _dayLengthNs_)) × _sign_ ≥ 0, then
+      i. Throw a *RangeError* exception.
 features: [Temporal]
 ---*/
 
-const calls = [];
 const duration = Temporal.Duration.from({ days: 1 });
 
-function createRelativeTo(count) {
-  const dayLengthNs = 86400000000000n;
-  const dayInstant = new Temporal.Instant(dayLengthNs);
-  const substitutions = [];
-  const timeZone = new Temporal.TimeZone("UTC");
-  // Return constant value for first _count_ calls
-  TemporalHelpers.substituteMethod(
-    timeZone,
-    "getPossibleInstantsFor",
-    substitutions
-  );
-  substitutions.length = count;
-  let i = 0;
-  for (i = 0; i < substitutions.length; i++) {
-    // (this value)
-    substitutions[i] = [dayInstant];
+const dayLengthNs = 86400000000000n;
+const dayInstant = new Temporal.Instant(dayLengthNs);
+let calls = 0;
+const timeZone = new class extends Temporal.TimeZone {
+  getPossibleInstantsFor() {
+    calls++;
+    return [dayInstant];
   }
-  // Record calls in calls[]
-  TemporalHelpers.observeMethod(calls, timeZone, "getPossibleInstantsFor");
-  return new Temporal.ZonedDateTime(0n, timeZone);
-}
+}("UTC");
 
-let zdt = createRelativeTo(50);
-calls.splice(0); // Reset calls list after ZonedDateTime construction
-duration.round({
-  smallestUnit: "days",
-  relativeTo: zdt,
-});
-assert.sameValue(
-  calls.length,
-  50 + 1,
-  "Expected duration.round to call getPossibleInstantsFor correct number of times"
-);
+const relativeTo = new Temporal.ZonedDateTime(0n, timeZone);
 
-zdt = createRelativeTo(100);
-calls.splice(0); // Reset calls list after previous loop + ZonedDateTime construction
-duration.round({
-  smallestUnit: "days",
-  relativeTo: zdt,
-});
-assert.sameValue(
-  calls.length,
-  100 + 1,
-  "Expected duration.round to call getPossibleInstantsFor correct number of times"
-);
-
-zdt = createRelativeTo(107);
-assert.throws(RangeError, () => duration.round({ smallestUnit: "days", relativeTo: zdt }), "107-2 days > 2⁵³ ns");
+assert.throws(RangeError, () => duration.round({ smallestUnit: "days", relativeTo }), "indefinite loop is prevented");
+assert.sameValue(calls, 5, "getPossibleInstantsFor is not called indefinitely");
+  // Expected calls:
+  // RoundDuration -> MoveRelativeZonedDateTime -> AddZonedDateTime (1)
+  // BalanceTimeDurationRelative ->
+  //   AddZonedDateTime (2)
+  //   NormalizedTimeDurationToDays ->
+  //     AddDaysToZonedDateTime (3, step 12)
+  //     AddDaysToZonedDateTime (4, step 15)
+  //     AddDaysToZonedDateTime (5, step 18.d)
 
 reportCompare(0, 0);

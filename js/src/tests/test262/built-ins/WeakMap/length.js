@@ -7,10 +7,11 @@ description: >
 includes: [propertyHelper.js]
 ---*/
 
-assert.sameValue(WeakMap.length, 0, 'The value of `WeakMap.length` is `0`');
-
-verifyNotEnumerable(WeakMap, 'length');
-verifyNotWritable(WeakMap, 'length');
-verifyConfigurable(WeakMap, 'length');
+verifyProperty(WeakMap, "length", {
+  value: 0,
+  writable: false,
+  enumerable: false,
+  configurable: true
+});
 
 reportCompare(0, 0);

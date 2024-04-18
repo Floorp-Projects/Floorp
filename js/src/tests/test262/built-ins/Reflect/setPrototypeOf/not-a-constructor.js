@@ -29,7 +29,7 @@ assert.sameValue(
 
 assert.throws(TypeError, () => {
   new Reflect.setPrototypeOf({}, {});
-}, '`new Reflect.setPrototypeOf({}, {})` throws TypeError');
+});
 
 
 reportCompare(0, 0);

@@ -10,10 +10,11 @@ description: >
 includes: [propertyHelper.js]
 ---*/
 
-assert.sameValue(Set.length, 0, "The value of `Set.length` is `0`");
-
-verifyNotEnumerable(Set, "length");
-verifyNotWritable(Set, "length");
-verifyConfigurable(Set, "length");
+verifyProperty(Set, "length", {
+  value: 0,
+  writable: false,
+  enumerable: false,
+  configurable: true
+});
 
 reportCompare(0, 0);

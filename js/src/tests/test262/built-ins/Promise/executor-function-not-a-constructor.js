@@ -30,7 +30,7 @@ assert.sameValue(isConstructor(executorFunction), false, 'isConstructor(executor
 
 assert.throws(TypeError, () => {
   new executorFunction();
-}, '`new executorFunction()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

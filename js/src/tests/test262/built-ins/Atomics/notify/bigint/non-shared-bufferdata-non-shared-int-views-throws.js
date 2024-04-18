@@ -19,6 +19,6 @@ const poisoned = {
 
 assert.throws(TypeError, function() {
   Atomics.notify(new BigUint64Array(nonsab), poisoned, poisoned);
-}, '`Atomics.notify(new BigUint64Array(nonsab), poisoned, poisoned)` throws TypeError');
+});
 
 reportCompare(0, 0);

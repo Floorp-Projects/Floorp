@@ -25,7 +25,7 @@ assert.sameValue(isConstructor(Proxy.revocable), false, 'isConstructor(Proxy.rev
 
 assert.throws(TypeError, () => {
   new Proxy.revocable({}, {});
-}, '`new Proxy.revocable({}, {})` throws TypeError');
+});
 
 
 reportCompare(0, 0);

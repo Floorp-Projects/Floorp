@@ -24,13 +24,8 @@ Object.defineProperty(obj, "prop", {
   configurable: false
 });
 
-assert(obj.hasOwnProperty("prop"));
-
-var desc = Object.getOwnPropertyDescriptor(obj, "prop");
-
-verifyNotConfigurable(obj, "prop");
-assert.sameValue(desc.configurable, false);
-
-assert(obj.hasOwnProperty("prop"));
+verifyProperty(obj, "prop", {
+  configurable: false,
+});
 
 reportCompare(0, 0);

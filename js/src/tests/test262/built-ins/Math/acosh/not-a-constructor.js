@@ -25,7 +25,7 @@ assert.sameValue(isConstructor(Math.acosh), false, 'isConstructor(Math.acosh) mu
 
 assert.throws(TypeError, () => {
   new Math.acosh();
-}, '`new Math.acosh()` throws TypeError');
+});
 
 
 reportCompare(0, 0);
