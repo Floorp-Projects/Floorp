@@ -204,6 +204,10 @@ RefPtr<Texture> CanvasContext::GetCurrentTexture(ErrorResult& aRv) {
 }
 
 void CanvasContext::MaybeQueueSwapChainPresent() {
+  if (!mConfig) {
+    return;
+  }
+
   MOZ_ASSERT(mTexture);
 
   if (mTexture) {
