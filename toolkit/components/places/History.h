@@ -196,16 +196,6 @@ class History final : public BaseHistory,
   };
 
   nsTHashMap<nsURIHashKey, RecentURIVisit> mRecentlyVisitedURIs;
-
-  struct OriginFloodingRestriction {
-    TimeStamp mLastVisitTimeStamp;
-    unsigned int mExpireIntervalSeconds;
-    unsigned int mAllowedVisitCount;
-  };
-  nsTHashMap<nsCStringHashKey, OriginFloodingRestriction>
-      mOriginFloodingRestrictions;
-  void UpdateOriginFloodingRestriction(nsACString& aOrigin);
-  bool IsRestrictedOrigin(nsACString& aOrigin);
 };
 
 }  // namespace mozilla::places
