@@ -25,7 +25,7 @@ assert.sameValue(isConstructor(Promise.all), false, 'isConstructor(Promise.all) 
 
 assert.throws(TypeError, () => {
   new Promise.all([]);
-}, '`new Promise.all([])` throws TypeError');
+});
 
 
 reportCompare(0, 0);

@@ -25,7 +25,7 @@ assert.sameValue(isConstructor(Math.clz32), false, 'isConstructor(Math.clz32) mu
 
 assert.throws(TypeError, () => {
   new Math.clz32();
-}, '`new Math.clz32()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

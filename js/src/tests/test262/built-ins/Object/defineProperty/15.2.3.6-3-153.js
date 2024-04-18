@@ -17,7 +17,8 @@ var attr = {
 
 Object.defineProperty(obj, "property", attr);
 
-assert(obj.hasOwnProperty("property"));
-verifyNotWritable(obj, "property");
+verifyProperty(obj, "property", {
+  writable: false,
+});
 
 reportCompare(0, 0);

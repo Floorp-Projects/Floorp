@@ -22,12 +22,12 @@ Object.defineProperties(arr, {
     value: undefined
   }
 });
-verifyEqualTo(arr, "0", undefined);
 
-verifyNotWritable(arr, "0");
-
-verifyNotEnumerable(arr, "0");
-
-verifyNotConfigurable(arr, "0");
+verifyProperty(arr, "0", {
+  value: undefined,
+  writable: false,
+  enumerable: false,
+  configurable: false,
+});
 
 reportCompare(0, 0);

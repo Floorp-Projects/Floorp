@@ -19,10 +19,11 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-assert.sameValue(Object.prototype.propertyIsEnumerable.name, "propertyIsEnumerable");
-
-verifyNotEnumerable(Object.prototype.propertyIsEnumerable, "name");
-verifyNotWritable(Object.prototype.propertyIsEnumerable, "name");
-verifyConfigurable(Object.prototype.propertyIsEnumerable, "name");
+verifyProperty(Object.prototype.propertyIsEnumerable, "name", {
+  value: "propertyIsEnumerable",
+  writable: false,
+  enumerable: false,
+  configurable: true,
+});
 
 reportCompare(0, 0);

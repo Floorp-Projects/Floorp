@@ -19,10 +19,11 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-assert.sameValue(Date.prototype.setUTCMinutes.name, "setUTCMinutes");
-
-verifyNotEnumerable(Date.prototype.setUTCMinutes, "name");
-verifyNotWritable(Date.prototype.setUTCMinutes, "name");
-verifyConfigurable(Date.prototype.setUTCMinutes, "name");
+verifyProperty(Date.prototype.setUTCMinutes, "name", {
+  value: "setUTCMinutes",
+  writable: false,
+  enumerable: false,
+  configurable: true
+});
 
 reportCompare(0, 0);

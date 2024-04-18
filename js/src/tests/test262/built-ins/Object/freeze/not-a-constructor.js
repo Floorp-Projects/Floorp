@@ -25,7 +25,7 @@ assert.sameValue(isConstructor(Object.freeze), false, 'isConstructor(Object.free
 
 assert.throws(TypeError, () => {
   new Object.freeze({});
-}, '`new Object.freeze({})` throws TypeError');
+});
 
 
 reportCompare(0, 0);

@@ -24,10 +24,11 @@ includes: [propertyHelper.js]
 
 var desc = Object.getOwnPropertyDescriptor(DataView.prototype, "buffer");
 
-assert.sameValue(desc.get.length, 0);
-
-verifyNotEnumerable(desc.get, "length");
-verifyNotWritable(desc.get, "length");
-verifyConfigurable(desc.get, "length");
+verifyProperty(desc.get, "length", {
+  value: 0,
+  writable: false,
+  enumerable: false,
+  configurable: true
+});
 
 reportCompare(0, 0);

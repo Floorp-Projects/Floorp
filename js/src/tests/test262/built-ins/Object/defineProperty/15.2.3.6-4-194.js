@@ -29,14 +29,14 @@ try {
 } catch (e) {
   verifyEqualTo(arrObj, "0", getFunc());
 
-  verifyNotEnumerable(arrObj, "0");
-
-  verifyNotConfigurable(arrObj, "0");
-
   if (!(e instanceof TypeError)) {
     throw new Test262Error("Expected TypeError, got " + e.name);
   }
-
 }
+
+verifyProperty(arrObj, "0", {
+  enumerable: false,
+  configurable: false,
+});
 
 reportCompare(0, 0);

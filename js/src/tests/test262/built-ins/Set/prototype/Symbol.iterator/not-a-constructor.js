@@ -29,7 +29,7 @@ assert.sameValue(
 
 assert.throws(TypeError, () => {
   let s = new Set([]); new s[Symbol.iterator]();
-}, '`let s = new Set([]); new s[Symbol.iterator]()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

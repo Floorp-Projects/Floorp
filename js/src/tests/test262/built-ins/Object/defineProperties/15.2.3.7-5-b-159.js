@@ -18,7 +18,8 @@ Object.defineProperties(obj, {
   property: JSON
 });
 
-assert(obj.hasOwnProperty("property"));
-verifyNotWritable(obj, "property");
+verifyProperty(obj, "property", {
+  writable: false,
+});
 
 reportCompare(0, 0);

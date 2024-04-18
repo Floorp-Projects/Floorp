@@ -24,7 +24,7 @@ testWithTypedArrayConstructors(TA => {
 
   assert.throws(TypeError, () => {
     a.at(Symbol());
-  }, '`a.at(Symbol())` throws TypeError');
+  });
 });
 
 reportCompare(0, 0);

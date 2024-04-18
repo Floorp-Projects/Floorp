@@ -25,7 +25,7 @@ assert.sameValue(isConstructor(Number.isSafeInteger), false, 'isConstructor(Numb
 
 assert.throws(TypeError, () => {
   new Number.isSafeInteger();
-}, '`new Number.isSafeInteger()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

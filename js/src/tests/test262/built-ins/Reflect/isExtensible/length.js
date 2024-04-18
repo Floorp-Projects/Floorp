@@ -8,13 +8,11 @@ includes: [propertyHelper.js]
 features: [Reflect]
 ---*/
 
-assert.sameValue(
-  Reflect.isExtensible.length, 1,
-  'The value of `Reflect.isExtensible.length` is `1`'
-);
-
-verifyNotEnumerable(Reflect.isExtensible, 'length');
-verifyNotWritable(Reflect.isExtensible, 'length');
-verifyConfigurable(Reflect.isExtensible, 'length');
+verifyProperty(Reflect.isExtensible, "length", {
+  value: 1,
+  writable: false,
+  enumerable: false,
+  configurable: true
+});
 
 reportCompare(0, 0);

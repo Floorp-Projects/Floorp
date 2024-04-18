@@ -13,7 +13,7 @@ features: [ArrayBuffer, Atomics, DataView, SharedArrayBuffer, Symbol, TypedArray
 testWithAtomicsNonViewValues(function(view) {
   assert.throws(TypeError, function() {
     Atomics.exchange(view, 0, 0);
-  }, '`Atomics.exchange(view, 0, 0)` throws TypeError');
+  });
 });
 
 reportCompare(0, 0);

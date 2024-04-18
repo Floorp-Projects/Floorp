@@ -18,12 +18,11 @@ Object.defineProperty(obj, "property", {
   configurable: false
 });
 
-verifyEqualTo(obj, "property", 1001);
-
-verifyNotWritable(obj, "property");
-
-verifyEnumerable(obj, "property");
-
-verifyNotConfigurable(obj, "property");
+verifyProperty(obj, "property", {
+  value: 1001,
+  writable: false,
+  enumerable: true,
+  configurable: false,
+});
 
 reportCompare(0, 0);

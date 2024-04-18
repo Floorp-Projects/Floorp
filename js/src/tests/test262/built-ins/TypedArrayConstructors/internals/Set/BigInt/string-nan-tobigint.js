@@ -60,7 +60,7 @@ testWithBigIntTypedArrayConstructors(function(TA) {
 
   assert.throws(SyntaxError, function() {
     typedArray[0] = "definately not a number";
-  }, '`typedArray[0] = "definately not a number"` throws SyntaxError');
+  });
 
 });
 

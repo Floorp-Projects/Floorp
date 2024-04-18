@@ -25,7 +25,7 @@ assert.sameValue(isConstructor(JSON.stringify), false, 'isConstructor(JSON.strin
 
 assert.throws(TypeError, () => {
   new JSON.stringify({});
-}, '`new JSON.stringify({})` throws TypeError');
+});
 
 
 reportCompare(0, 0);

@@ -19,10 +19,11 @@ features: [Symbol.hasInstance]
 includes: [propertyHelper.js]
 ---*/
 
-assert.sameValue(Function.prototype[Symbol.hasInstance].length, 1);
-
-verifyNotEnumerable(Function.prototype[Symbol.hasInstance], 'length');
-verifyNotWritable(Function.prototype[Symbol.hasInstance], 'length');
-verifyConfigurable(Function.prototype[Symbol.hasInstance], 'length');
+verifyProperty(Function.prototype[Symbol.hasInstance], "length", {
+  value: 1,
+  writable: false,
+  enumerable: false,
+  configurable: true
+});
 
 reportCompare(0, 0);

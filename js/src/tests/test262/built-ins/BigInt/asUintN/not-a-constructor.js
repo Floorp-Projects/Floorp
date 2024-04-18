@@ -23,6 +23,6 @@ assert.sameValue(isConstructor(BigInt.asUintN), false, 'isConstructor(BigInt.asU
 
 assert.throws(TypeError, () => {
   new BigInt.asUintN(64, 1n);
-}, '`new BigInt.asUintN(64, 1n)` throws TypeError');
+});
 
 reportCompare(0, 0);

@@ -25,7 +25,7 @@ assert.sameValue(isConstructor(Math.sign), false, 'isConstructor(Math.sign) must
 
 assert.throws(TypeError, () => {
   new Math.sign();
-}, '`new Math.sign()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

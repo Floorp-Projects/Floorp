@@ -25,7 +25,7 @@ assert.sameValue(isConstructor(Math.round), false, 'isConstructor(Math.round) mu
 
 assert.throws(TypeError, () => {
   new Math.round();
-}, '`new Math.round()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

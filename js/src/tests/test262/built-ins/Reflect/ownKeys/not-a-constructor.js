@@ -25,7 +25,7 @@ assert.sameValue(isConstructor(Reflect.ownKeys), false, 'isConstructor(Reflect.o
 
 assert.throws(TypeError, () => {
   new Reflect.ownKeys({});
-}, '`new Reflect.ownKeys({})` throws TypeError');
+});
 
 
 reportCompare(0, 0);

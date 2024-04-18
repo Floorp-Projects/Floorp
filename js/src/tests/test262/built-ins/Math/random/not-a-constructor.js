@@ -25,7 +25,7 @@ assert.sameValue(isConstructor(Math.random), false, 'isConstructor(Math.random) 
 
 assert.throws(TypeError, () => {
   new Math.random();
-}, '`new Math.random()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

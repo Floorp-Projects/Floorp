@@ -29,7 +29,7 @@ assert.sameValue(
 
 assert.throws(TypeError, () => {
   let m = new Map(); new m.entries();
-}, '`let m = new Map(); new m.entries()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

@@ -28,7 +28,7 @@ assert.sameValue(
 
 assert.throws(TypeError, () => {
   let date = new Date(Date.now()); new date.toGMTString();
-}, '`let date = new Date(Date.now()); new date.toGMTString()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

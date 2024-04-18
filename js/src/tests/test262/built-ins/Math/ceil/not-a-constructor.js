@@ -25,7 +25,7 @@ assert.sameValue(isConstructor(Math.ceil), false, 'isConstructor(Math.ceil) must
 
 assert.throws(TypeError, () => {
   new Math.ceil();
-}, '`new Math.ceil()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

@@ -29,8 +29,10 @@ Object.defineProperty(child, "foo", {
 
 Object.freeze(child);
 
-verifyNotWritable(child, "foo");
-verifyNotConfigurable(child, "foo");
-assert.sameValue(child.foo, 10);
+verifyProperty(child, "foo", {
+  value: 10,
+  writable: false,
+  configurable: false,
+});
 
 reportCompare(0, 0);

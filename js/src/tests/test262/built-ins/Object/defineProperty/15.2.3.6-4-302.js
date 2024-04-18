@@ -32,9 +32,10 @@ includes: [propertyHelper.js]
 
   verifyWritable(arguments, "0", "setVerifyHelpProp");
 
-  verifyNotEnumerable(arguments, "0");
-
-  verifyNotConfigurable(arguments, "0");
+  verifyProperty(arguments, "0", {
+    enumerable: false,
+    configurable: false,
+  });
 }(0, 1, 2));
 
 reportCompare(0, 0);

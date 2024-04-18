@@ -29,7 +29,7 @@ assert.sameValue(
 
 assert.throws(TypeError, () => {
   let wm = new WeakMap(); new wm.set({}, 1);
-}, '`let wm = new WeakMap(); new wm.set({}, 1)` throws TypeError');
+});
 
 
 reportCompare(0, 0);

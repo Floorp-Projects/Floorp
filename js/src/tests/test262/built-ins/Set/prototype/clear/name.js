@@ -10,10 +10,11 @@ description: >
 includes: [propertyHelper.js]
 ---*/
 
-assert.sameValue(Set.prototype.clear.name, "clear", "The value of `Set.prototype.clear.name` is `'clear'`");
-
-verifyNotEnumerable(Set.prototype.clear, "name");
-verifyNotWritable(Set.prototype.clear, "name");
-verifyConfigurable(Set.prototype.clear, "name");
+verifyProperty(Set.prototype.clear, "name", {
+  value: "clear",
+  writable: false,
+  enumerable: false,
+  configurable: true
+});
 
 reportCompare(0, 0);

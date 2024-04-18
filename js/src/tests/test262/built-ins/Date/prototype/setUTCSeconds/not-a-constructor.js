@@ -29,7 +29,7 @@ assert.sameValue(
 
 assert.throws(TypeError, () => {
   let date = new Date(Date.now()); new date.setUTCSeconds();
-}, '`let date = new Date(Date.now()); new date.setUTCSeconds()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

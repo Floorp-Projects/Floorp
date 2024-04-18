@@ -19,10 +19,11 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-assert.sameValue(Math.asinh.name, "asinh");
-
-verifyNotEnumerable(Math.asinh, "name");
-verifyNotWritable(Math.asinh, "name");
-verifyConfigurable(Math.asinh, "name");
+verifyProperty(Math.asinh, "name", {
+  value: "asinh",
+  writable: false,
+  enumerable: false,
+  configurable: true
+});
 
 reportCompare(0, 0);

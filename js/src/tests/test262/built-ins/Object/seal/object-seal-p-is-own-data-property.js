@@ -14,7 +14,9 @@ obj.foo = 10; // default [[Configurable]] attribute value of foo: true
 assert(Object.isExtensible(obj));
 Object.seal(obj);
 
-verifyNotConfigurable(obj, "foo");
-assert.sameValue(obj.foo, 10);
+verifyProperty(obj, "foo", {
+  value: 10,
+  configurable: false,
+});
 
 reportCompare(0, 0);

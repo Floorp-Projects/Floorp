@@ -25,7 +25,7 @@ assert.sameValue(isConstructor(Math.sqrt), false, 'isConstructor(Math.sqrt) must
 
 assert.throws(TypeError, () => {
   new Math.sqrt();
-}, '`new Math.sqrt()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

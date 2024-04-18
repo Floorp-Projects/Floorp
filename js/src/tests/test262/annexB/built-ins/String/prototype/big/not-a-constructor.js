@@ -24,7 +24,7 @@ assert.sameValue(isConstructor(String.prototype.big), false, 'isConstructor(Stri
 
 assert.throws(TypeError, () => {
   new String.prototype.big();
-}, '`new String.prototype.big()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

@@ -25,7 +25,7 @@ assert.sameValue(isConstructor(Math.cbrt), false, 'isConstructor(Math.cbrt) must
 
 assert.throws(TypeError, () => {
   new Math.cbrt();
-}, '`new Math.cbrt()` throws TypeError');
+});
 
 
 reportCompare(0, 0);
