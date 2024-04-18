@@ -21,10 +21,10 @@
 
 namespace xsimd
 {
-    template <class batch_type, typename batch_type::value_type... Values>
+    template <typename T, class A, T... Values>
     struct batch_constant;
 
-    template <class batch_type, bool... Values>
+    template <typename T, class A, bool... Values>
     struct batch_bool_constant;
 
     namespace kernel
@@ -180,7 +180,7 @@ namespace xsimd
                 }
             };
             batch<T, A> tmp(val);
-            return select(make_batch_bool_constant<batch<T, A>, index_mask>(), self, tmp);
+            return select(make_batch_bool_constant<T, A, index_mask>(), self, tmp);
         }
 
         // get
@@ -295,7 +295,7 @@ namespace xsimd
                 }
             };
 
-            return swizzle(self, make_batch_constant<batch<as_unsigned_integer_t<T>, A>, rotate_generator>(), A {});
+            return swizzle(self, make_batch_constant<as_unsigned_integer_t<T>, A, rotate_generator>(), A {});
         }
 
         template <size_t N, class A, class T>
@@ -316,7 +316,7 @@ namespace xsimd
                 }
             };
 
-            return swizzle(self, make_batch_constant<batch<as_unsigned_integer_t<T>, A>, rotate_generator>(), A {});
+            return swizzle(self, make_batch_constant<as_unsigned_integer_t<T>, A, rotate_generator>(), A {});
         }
 
         template <size_t N, class A, class T>
@@ -412,6 +412,12 @@ namespace xsimd
                 return true;
             }
 
+            template <typename ITy>
+            constexpr bool is_zip_lo(size_t, ITy)
+            {
+                return false;
+            }
+
             template <typename ITy0, typename ITy1, typename... ITys>
             constexpr bool is_zip_lo(size_t bsize, ITy0 index0, ITy1 index1, ITys... indices)
             {
@@ -421,6 +427,12 @@ namespace xsimd
             constexpr bool is_zip_hi(size_t)
             {
                 return true;
+            }
+
+            template <typename ITy>
+            constexpr bool is_zip_hi(size_t, ITy)
+            {
+                return false;
             }
 
             template <typename ITy0, typename ITy1, typename... ITys>
@@ -443,19 +455,19 @@ namespace xsimd
         }
 
         template <class A, typename T, typename ITy, ITy... Indices>
-        inline batch<T, A> shuffle(batch<T, A> const& x, batch<T, A> const& y, batch_constant<batch<ITy, A>, Indices...>, requires_arch<generic>) noexcept
+        inline batch<T, A> shuffle(batch<T, A> const& x, batch<T, A> const& y, batch_constant<ITy, A, Indices...>, requires_arch<generic>) noexcept
         {
             constexpr size_t bsize = sizeof...(Indices);
 
             // Detect common patterns
             XSIMD_IF_CONSTEXPR(detail::is_swizzle_fst(bsize, Indices...))
             {
-                return swizzle(x, batch_constant<batch<ITy, A>, ((Indices >= bsize) ? 0 /* never happens */ : Indices)...>());
+                return swizzle(x, batch_constant<ITy, A, ((Indices >= bsize) ? 0 /* never happens */ : Indices)...>());
             }
 
             XSIMD_IF_CONSTEXPR(detail::is_swizzle_snd(bsize, Indices...))
             {
-                return swizzle(y, batch_constant<batch<ITy, A>, ((Indices >= bsize) ? (Indices - bsize) : 0 /* never happens */)...>());
+                return swizzle(y, batch_constant<ITy, A, ((Indices >= bsize) ? (Indices - bsize) : 0 /* never happens */)...>());
             }
 
             XSIMD_IF_CONSTEXPR(detail::is_zip_lo(bsize, Indices...))
@@ -470,7 +482,7 @@ namespace xsimd
 
             XSIMD_IF_CONSTEXPR(detail::is_select(bsize, Indices...))
             {
-                return select(batch_bool_constant<batch<T, A>, (Indices < bsize)...>(), x, y);
+                return select(batch_bool_constant<T, A, (Indices < bsize)...>(), x, y);
             }
 
 #if defined(__has_builtin)
@@ -491,9 +503,9 @@ namespace xsimd
 #else
             // Use a generic_pattern. It is suboptimal but clang optimizes this
             // pretty well.
-            batch<T, A> x_lane = swizzle(x, batch_constant<batch<ITy, A>, ((Indices >= bsize) ? (Indices - bsize) : Indices)...>());
-            batch<T, A> y_lane = swizzle(y, batch_constant<batch<ITy, A>, ((Indices >= bsize) ? (Indices - bsize) : Indices)...>());
-            batch_bool_constant<batch<T, A>, (Indices < bsize)...> select_x_lane;
+            batch<T, A> x_lane = swizzle(x, batch_constant<ITy, A, ((Indices >= bsize) ? (Indices - bsize) : Indices)...>());
+            batch<T, A> y_lane = swizzle(y, batch_constant<ITy, A, ((Indices >= bsize) ? (Indices - bsize) : Indices)...>());
+            batch_bool_constant<T, A, (Indices < bsize)...> select_x_lane;
             return select(select_x_lane, x_lane, y_lane);
 #endif
         }
@@ -530,7 +542,7 @@ namespace xsimd
 
         // swizzle
         template <class A, class T, class ITy, ITy... Vs>
-        inline batch<std::complex<T>, A> swizzle(batch<std::complex<T>, A> const& self, batch_constant<batch<ITy, A>, Vs...> mask, requires_arch<generic>) noexcept
+        inline batch<std::complex<T>, A> swizzle(batch<std::complex<T>, A> const& self, batch_constant<ITy, A, Vs...> mask, requires_arch<generic>) noexcept
         {
             return { swizzle(self.real(), mask), swizzle(self.imag(), mask) };
         }
