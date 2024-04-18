@@ -108,7 +108,7 @@ def get_filtered_taskgraph(taskgraph, tasksregex, exclude_keys):
             for key in exclude_keys:
                 obj = task_dict
                 attrs = key.split(".")
-                while attrs[0] in obj:
+                while obj and attrs[0] in obj:
                     if len(attrs) == 1:
                         del obj[attrs[0]]
                         break
