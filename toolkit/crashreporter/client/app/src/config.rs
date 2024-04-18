@@ -79,7 +79,6 @@ impl Config {
     }
 
     /// Load a configuration from the application environment.
-    #[cfg_attr(mock, allow(unused))]
     pub fn read_from_environment(&mut self) -> anyhow::Result<()> {
         /// Most environment variables are prefixed with `MOZ_CRASHREPORTER_`.
         macro_rules! ekey {

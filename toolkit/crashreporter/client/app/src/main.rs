@@ -31,6 +31,8 @@
 // Use the WINDOWS windows subsystem. This prevents a console window from opening with the
 // application.
 #![cfg_attr(windows, windows_subsystem = "windows")]
+// There's a bunch of things which aren't used in cfg(mock).
+#![cfg_attr(mock, allow(unused))]
 
 use crate::std::sync::Arc;
 use anyhow::Context;

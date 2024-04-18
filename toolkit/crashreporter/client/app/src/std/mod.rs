@@ -10,8 +10,6 @@
 //! Note that, in some cases, this wrapper extends the `std` library. Notably, the [`mock`] module
 //! adds mocking functions.
 
-#![cfg_attr(mock, allow(unused))]
-
 pub use std::*;
 
 #[cfg_attr(not(mock), path = "mock_stub.rs")]
