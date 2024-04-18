@@ -19,7 +19,6 @@ import androidx.compose.ui.unit.dp
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.Divider
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
-import org.mozilla.fenix.compose.list.IconListItem
 import org.mozilla.fenix.theme.FirefoxTheme
 
 private val ROUNDED_CORNER_SHAPE = RoundedCornerShape(12.dp)
@@ -60,14 +59,14 @@ private fun MenuGroupPreview() {
                 .padding(16.dp),
         ) {
             MenuGroup {
-                IconListItem(
+                MenuItem(
                     label = stringResource(id = R.string.browser_menu_add_to_homescreen),
                     beforeIconPainter = painterResource(id = R.drawable.mozac_ic_plus_24),
                 )
 
                 Divider(color = FirefoxTheme.colors.borderSecondary)
 
-                IconListItem(
+                MenuItem(
                     label = stringResource(id = R.string.browser_menu_add_to_homescreen),
                     beforeIconPainter = painterResource(id = R.drawable.mozac_ic_plus_24),
                 )
