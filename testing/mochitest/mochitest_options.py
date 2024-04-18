@@ -945,6 +945,14 @@ class MochitestArguments(ArgumentContainer):
                 "help": "Terminate the session on first failure and restart where you left off.",
             },
         ],
+        [
+            ["--variant"],
+            {
+                "dest": "variant",
+                "default": "",
+                "help": "use specified variant for any harness level changes.",
+            },
+        ],
     ]
 
     defaults = {
