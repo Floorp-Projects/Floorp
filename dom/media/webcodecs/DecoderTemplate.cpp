@@ -85,19 +85,19 @@ DecoderTemplate<DecoderType>::ConfigureMessage::Create(
 
 template <typename DecoderType>
 DecoderTemplate<DecoderType>::DecodeMessage::DecodeMessage(
-    Id aId, ConfigId aConfigId, UniquePtr<InputTypeInternal>&& aData)
+    SeqId aSeqId, ConfigId aConfigId, UniquePtr<InputTypeInternal>&& aData)
     : ControlMessage(
-          nsPrintfCString("decode #%zu (config #%d)", aId, aConfigId)),
-      mId(aId),
+          nsPrintfCString("decode #%zu (config #%d)", aSeqId, aConfigId)),
+      mSeqId(aSeqId),
       mData(std::move(aData)) {}
 
 template <typename DecoderType>
-DecoderTemplate<DecoderType>::FlushMessage::FlushMessage(Id aId,
+DecoderTemplate<DecoderType>::FlushMessage::FlushMessage(SeqId aSeqId,
                                                          ConfigId aConfigId,
                                                          Promise* aPromise)
     : ControlMessage(
-          nsPrintfCString("flush #%zu (config #%d)", aId, aConfigId)),
-      mId(aId),
+          nsPrintfCString("flush #%zu (config #%d)", aSeqId, aConfigId)),
+      mSeqId(aSeqId),
       mPromise(aPromise) {}
 
 template <typename DecoderType>
