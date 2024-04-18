@@ -719,6 +719,13 @@ impl<'a> WindowChildRenderer<'a> {
                             .expect("failed to select font gdi object");
                         }
                     }
+
+                    // Multiline edit controls capture the tab key. We want it to work as usual in
+                    // the dialog (focusing the next input control).
+                    if msg == win::WM_GETDLGCODE && wparam == KeyboardAndMouse::VK_TAB as usize {
+                        return 0;
+                    }
+
                     if msg == win::WM_DESTROY {
                         drop(unsafe { Box::from_raw(dw_ref_data as *mut SubClassData) });
                     }
