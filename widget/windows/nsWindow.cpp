@@ -2473,46 +2473,6 @@ void nsWindow::ResetLayout() {
   Invalidate();
 }
 
-// Internally track the caption status via a window property. Required
-// due to our internal handling of WM_NCACTIVATE when custom client
-// margins are set.
-static const wchar_t kManageWindowInfoProperty[] = L"ManageWindowInfoProperty";
-typedef BOOL(WINAPI* GetWindowInfoPtr)(HWND hwnd, PWINDOWINFO pwi);
-static WindowsDllInterceptor::FuncHookType<GetWindowInfoPtr>
-    sGetWindowInfoPtrStub;
-
-BOOL WINAPI GetWindowInfoHook(HWND hWnd, PWINDOWINFO pwi) {
-  if (!sGetWindowInfoPtrStub) {
-    NS_ASSERTION(FALSE, "Something is horribly wrong in GetWindowInfoHook!");
-    return FALSE;
-  }
-  int windowStatus =
-      reinterpret_cast<LONG_PTR>(GetPropW(hWnd, kManageWindowInfoProperty));
-  // No property set, return the default data.
-  if (!windowStatus) return sGetWindowInfoPtrStub(hWnd, pwi);
-  // Call GetWindowInfo and update dwWindowStatus with our
-  // internally tracked value.
-  BOOL result = sGetWindowInfoPtrStub(hWnd, pwi);
-  if (result && pwi)
-    pwi->dwWindowStatus = (windowStatus == 1 ? 0 : WS_ACTIVECAPTION);
-  return result;
-}
-
-void nsWindow::UpdateGetWindowInfoCaptionStatus(bool aActiveCaption) {
-  if (!mWnd) return;
-
-  sUser32Intercept.Init("user32.dll");
-  sGetWindowInfoPtrStub.Set(sUser32Intercept, "GetWindowInfo",
-                            &GetWindowInfoHook);
-  if (!sGetWindowInfoPtrStub) {
-    return;
-  }
-
-  // Update our internally tracked caption status
-  SetPropW(mWnd, kManageWindowInfoProperty,
-           reinterpret_cast<HANDLE>(static_cast<INT_PTR>(aActiveCaption) + 1));
-}
-
 #define DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1 19
 #define DWMWA_USE_IMMERSIVE_DARK_MODE 20
 
@@ -2734,13 +2694,6 @@ nsresult nsWindow::SetNonClientMargins(const LayoutDeviceIntMargin& margins) {
     // Force a reflow of content based on the new client
     // dimensions.
     ResetLayout();
-
-    int windowStatus =
-        reinterpret_cast<LONG_PTR>(GetPropW(mWnd, kManageWindowInfoProperty));
-    if (windowStatus) {
-      ::SendMessageW(mWnd, WM_NCACTIVATE, 1 != windowStatus, 0);
-    }
-
     return NS_OK;
   }
 
@@ -5198,8 +5151,6 @@ bool nsWindow::ProcessMessageInternal(UINT msg, WPARAM& wParam, LPARAM& lParam,
        * WM_NCACTIVATE paints nc areas. Avoid this and re-route painting
        * through WM_NCPAINT via InvalidateNonClientRegion.
        */
-      UpdateGetWindowInfoCaptionStatus(FALSE != wParam);
-
       if (!mCustomNonClient) {
         break;
       }

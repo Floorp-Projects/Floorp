@@ -518,7 +518,6 @@ class nsWindow final : public nsBaseWidget {
   bool CanTakeFocus();
   bool UpdateNonClientMargins(bool aReflowWindow = true);
   void UpdateDarkModeToolbar();
-  void UpdateGetWindowInfoCaptionStatus(bool aActiveCaption);
   void ResetLayout();
   void InvalidateNonClientRegion();
   static const wchar_t* GetMainWindowClass();
