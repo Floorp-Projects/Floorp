@@ -39,7 +39,6 @@
 #include "nsIXULAppInfo.h"
 #include "nsINIParser.h"
 #include "nsNativeAppSupportWin.h"
-#include "Windows11TaskbarPinning.h"
 
 #include <windows.h>
 #include <shellapi.h>
@@ -1627,7 +1626,7 @@ nsWindowsShellService::GetTaskbarTabPins(nsTArray<nsString>& aShortcutPaths) {
 
 static nsresult PinCurrentAppToTaskbarWin10(bool aCheckOnly,
                                             const nsAString& aAppUserModelId,
-                                            const nsAString& aShortcutPath) {
+                                            nsAutoString aShortcutPath) {
   // The behavior here is identical if we're only checking or if we try to pin
   // but the app is already pinned so we update the variable accordingly.
   if (!aCheckOnly) {
@@ -1696,28 +1695,6 @@ static nsresult PinCurrentAppToTaskbarImpl(
     }
   }
 
-  auto pinWithWin11TaskbarAPIResults =
-      PinCurrentAppToTaskbarWin11(aCheckOnly, aAppUserModelId, shortcutPath);
-  switch (pinWithWin11TaskbarAPIResults.result) {
-    case Win11PinToTaskBarResultStatus::NotSupported:
-      // Fall through to the win 10 mechanism
-      break;
-
-    case Win11PinToTaskBarResultStatus::Success:
-    case Win11PinToTaskBarResultStatus::AlreadyPinned:
-      return NS_OK;
-
-    case Win11PinToTaskBarResultStatus::NotCurrentlyAllowed:
-    case Win11PinToTaskBarResultStatus::Failed:
-      // return NS_ERROR_FAILURE;
-
-      // Fall through to the old mechanism for now
-      // In future, we should be sending telemetry for when
-      // an error occurs or for when pinning is not allowed
-      // with the Win 11 APIs.
-      break;
-  }
-
   return PinCurrentAppToTaskbarWin10(aCheckOnly, aAppUserModelId, shortcutPath);
 }
 
@@ -1743,7 +1720,7 @@ static nsresult PinCurrentAppToTaskbarAsyncImpl(bool aCheckOnly,
   }
 
   nsAutoString aumid;
-  if (NS_WARN_IF(!mozilla::widget::WinTaskbar::GetAppUserModelID(
+  if (NS_WARN_IF(!mozilla::widget::WinTaskbar::GenerateAppUserModelID(
           aumid, aPrivateBrowsing))) {
     return NS_ERROR_FAILURE;
   }
