@@ -1,7 +1,7 @@
 diff --git a/aom_dsp/x86/synonyms.h b/aom_dsp/x86/synonyms.h
 --- a/aom_dsp/x86/synonyms.h
 +++ b/aom_dsp/x86/synonyms.h
-@@ -41,22 +41,35 @@ static INLINE __m128i xx_loadl_64(const 
+@@ -41,22 +41,33 @@ static INLINE __m128i xx_loadl_64(const 
  static INLINE __m128i xx_load_128(const void *a) {
    return _mm_load_si128((const __m128i *)a);
  }
@@ -10,7 +10,6 @@ diff --git a/aom_dsp/x86/synonyms.h b/aom_dsp/x86/synonyms.h
    return _mm_loadu_si128((const __m128i *)a);
  }
  
-+
 +// _mm_loadu_si64 has been introduced in GCC 9, reimplement the function
 +// manually on older compilers.
 +#if !defined(__clang__) && __GNUC_MAJOR__ < 9
@@ -20,7 +19,6 @@ diff --git a/aom_dsp/x86/synonyms.h b/aom_dsp/x86/synonyms.h
 +  memcpy(&lo_, lo, sizeof(lo_));
 +  return _mm_set_epi64(hi_, lo_);
 +}
-+#endif
 +#else
  // Load 64 bits from each of hi and low, and pack into an SSE register
  // Since directly loading as `int64_t`s and using _mm_set_epi64 may violate
