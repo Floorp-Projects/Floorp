@@ -36,6 +36,8 @@ typedef HANDLE pthread_t;
 typedef int pthread_attr_t;
 typedef CRITICAL_SECTION pthread_mutex_t;
 
+#include <errno.h>
+
 #if _WIN32_WINNT < 0x0600
 #error _WIN32_WINNT must target Windows Vista / Server 2008 or newer.
 #endif
