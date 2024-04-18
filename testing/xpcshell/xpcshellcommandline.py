@@ -23,6 +23,20 @@ def add_common_arguments(parser):
         help="application directory (as opposed to XRE directory)",
     )
     parser.add_argument(
+        "--msix-app-path",
+        type=str,
+        dest="msixAppPath",
+        default=None,
+        help="application directory for msix mode (as opposed to XRE directory)",
+    )
+    parser.add_argument(
+        "--msix-app-binary",
+        type=str,
+        dest="msix_app_binary",
+        default=None,
+        help="path to application binary for msix mode (eg: c:\\program files\\mozilla firefox\\firefox.exe)",
+    )
+    parser.add_argument(
         "--interactive",
         action="store_true",
         dest="interactive",
@@ -143,6 +157,15 @@ def add_common_arguments(parser):
         help="absolute path to directory containing XRE (probably xulrunner)",
     )
     parser.add_argument(
+        "--msix-xre-path",
+        action="store",
+        type=str,
+        dest="msixXrePath",
+        # individual scripts will set a sane default
+        default=None,
+        help="absolute path to directory containing XRE in msix mode (probably xulrunner)",
+    )
+    parser.add_argument(
         "--symbols-path",
         action="store",
         type=str,
@@ -246,6 +269,12 @@ def add_common_arguments(parser):
         help="override the number of jobs (threads) when running tests "
         "in parallel, the default is CPU x 1.5 when running via mach "
         "and CPU x 4 when running in automation",
+    )
+    parser.add_argument(
+        "--variant",
+        action="store",
+        default="",
+        help="use specified variant for any harness level changes",
     )
     parser.add_argument(
         "--setpref",
