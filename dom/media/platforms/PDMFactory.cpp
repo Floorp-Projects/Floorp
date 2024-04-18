@@ -27,6 +27,7 @@
 #include "mozilla/RemoteDecoderManagerChild.h"
 #include "mozilla/RemoteDecoderModule.h"
 #include "mozilla/SharedThreadPool.h"
+#include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/TaskQueue.h"
@@ -786,9 +787,11 @@ void PDMFactory::SetCDMProxy(CDMProxy* aProxy) {
   mEMEPDM = MakeRefPtr<EMEDecoderModule>(aProxy, m);
 }
 
+StaticMutex sSupportedMutex;
+
 /* static */
 media::MediaCodecsSupported PDMFactory::Supported(bool aForceRefresh) {
-  MOZ_ASSERT(NS_IsMainThread());
+  StaticMutexAutoLock lock(sSupportedMutex);
 
   static auto calculate = []() {
     auto pdm = MakeRefPtr<PDMFactory>();
