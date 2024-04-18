@@ -85,26 +85,28 @@ DecoderTemplate<DecoderType>::ConfigureMessage::Create(
 
 template <typename DecoderType>
 DecoderTemplate<DecoderType>::DecodeMessage::DecodeMessage(
-    SeqId aSeqId, ConfigId aConfigId, UniquePtr<InputTypeInternal>&& aData)
+    Id aId, ConfigId aConfigId, UniquePtr<InputTypeInternal>&& aData)
     : ControlMessage(
-          nsPrintfCString("decode #%zu (config #%d)", aSeqId, aConfigId)),
-      mSeqId(aSeqId),
+          nsPrintfCString("decode #%zu (config #%d)", aId, aConfigId)),
+      mId(aId),
       mData(std::move(aData)) {}
 
-static int64_t GenerateUniqueId() {
-  // This needs to be atomic since this can run on the main thread or worker
-  // thread.
-  static std::atomic<int64_t> sNextId = 0;
-  return ++sNextId;
-}
+template <typename DecoderType>
+DecoderTemplate<DecoderType>::FlushMessage::FlushMessage(Id aId,
+                                                         ConfigId aConfigId,
+                                                         Promise* aPromise)
+    : ControlMessage(
+          nsPrintfCString("flush #%zu (config #%d)", aId, aConfigId)),
+      mId(aId),
+      mPromise(aPromise) {}
 
 template <typename DecoderType>
-DecoderTemplate<DecoderType>::FlushMessage::FlushMessage(SeqId aSeqId,
-                                                         ConfigId aConfigId)
-    : ControlMessage(
-          nsPrintfCString("flush #%zu (config #%d)", aSeqId, aConfigId)),
-      mSeqId(aSeqId),
-      mUniqueId(GenerateUniqueId()) {}
+void DecoderTemplate<DecoderType>::FlushMessage::RejectPromiseIfAny(
+    const nsresult& aReason) {
+  if (mPromise) {
+    mPromise->MaybeReject(aReason);
+  }
+}
 
 /*
  * Below are DecoderTemplate implementation
@@ -219,17 +221,10 @@ already_AddRefed<Promise> DecoderTemplate<DecoderType>::Flush(
 
   mKeyChunkRequired = true;
 
-  auto msg = UniquePtr<ControlMessage>(
-      new FlushMessage(++mFlushCounter, mLatestConfigureId));
-  const auto flushPromiseId = msg->AsFlushMessage()->mUniqueId;
-  DebugOnly<RefPtr<Promise>> unused;
-  MOZ_ASSERT(!mPendingFlushPromises.Find(flushPromiseId, unused));
-  mPendingFlushPromises.Insert(flushPromiseId, p);
-
-  mControlMessageQueue.emplace(std::move(msg));
-
-  LOG("%s %p enqueues %s, with unique id " PRId64, DecoderType::Name.get(),
-      this, mControlMessageQueue.back()->ToString().get(), flushPromiseId);
+  mControlMessageQueue.emplace(UniquePtr<ControlMessage>(
+      new FlushMessage(++mFlushCounter, mLatestConfigureId, p)));
+  LOG("%s %p enqueues %s", DecoderType::Name.get(), this,
+      mControlMessageQueue.back()->ToString().get());
   ProcessControlMessageQueue();
   return p.forget();
 }
@@ -269,7 +264,7 @@ Result<Ok, nsresult> DecoderTemplate<DecoderType>::ResetInternal(
   mDecodeCounter = 0;
   mFlushCounter = 0;
 
-  CancelPendingControlMessagesAndFlushPromises(aResult);
+  CancelPendingControlMessages(aResult);
   DestroyDecoderAgentIfAny();
 
   if (mDecodeQueueSize > 0) {
@@ -395,7 +390,7 @@ void DecoderTemplate<DecoderType>::ProcessControlMessageQueue() {
 }
 
 template <typename DecoderType>
-void DecoderTemplate<DecoderType>::CancelPendingControlMessagesAndFlushPromises(
+void DecoderTemplate<DecoderType>::CancelPendingControlMessages(
     const nsresult& aResult) {
   AssertIsOnOwningThread();
 
@@ -404,6 +399,11 @@ void DecoderTemplate<DecoderType>::CancelPendingControlMessagesAndFlushPromises(
     LOG("%s %p cancels current %s", DecoderType::Name.get(), this,
         mProcessingMessage->ToString().get());
     mProcessingMessage->Cancel();
+
+    if (FlushMessage* flush = mProcessingMessage->AsFlushMessage()) {
+      flush->RejectPromiseIfAny(aResult);
+    }
+
     mProcessingMessage.reset();
   }
 
@@ -411,19 +411,14 @@ void DecoderTemplate<DecoderType>::CancelPendingControlMessagesAndFlushPromises(
   while (!mControlMessageQueue.empty()) {
     LOG("%s %p cancels pending %s", DecoderType::Name.get(), this,
         mControlMessageQueue.front()->ToString().get());
+
     MOZ_ASSERT(!mControlMessageQueue.front()->IsProcessing());
+    if (FlushMessage* flush = mControlMessageQueue.front()->AsFlushMessage()) {
+      flush->RejectPromiseIfAny(aResult);
+    }
+
     mControlMessageQueue.pop();
   }
-
-  // If there are pending tasks delivering the results of the flush requests,
-  // reject their promises.
-  mPendingFlushPromises.ForEach(
-      [&](const int64_t& id, const RefPtr<Promise>& p) {
-        LOG("%s %p, reject the promise for flush %" PRId64 " (unique id)",
-            DecoderType::Name.get(), this, id);
-        p->MaybeReject(aResult);
-      });
-  mPendingFlushPromises.Clear();
 }
 
 template <typename DecoderType>
@@ -700,8 +695,6 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessFlushMessage(
 
             msg->Complete();
 
-            const auto flushPromiseId = msg->mUniqueId;
-
             // If flush failed, it means decoder fails to decode the data
             // sent before, so we treat it like decode error. We reject
             // the promise first and then queue a task to close
@@ -711,15 +704,14 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessFlushMessage(
               LOGE("%s %p, DecoderAgent #%d failed to flush: %s",
                    DecoderType::Name.get(), self.get(), id,
                    error.Description().get());
+              RefPtr<Promise> promise = msg->TakePromise();
               // Reject with an EncodingError instead of the error we got
               // above.
               self->QueueATask(
                   "Error during flush runnable",
-                  [self = RefPtr{this}]() MOZ_CAN_RUN_SCRIPT_BOUNDARY {
-                    // If Reset() was invoked before this task executes, the
-                    // promise in mPendingFlushPromises is handled there.
-                    // Otherwise, the promise is going to be rejected by
-                    // CloseInternal() below.
+                  [self = RefPtr{this}, promise]() MOZ_CAN_RUN_SCRIPT_BOUNDARY {
+                    promise->MaybeReject(
+                        NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR);
                     self->mProcessingMessage.reset();
                     MOZ_ASSERT(self->mState != CodecState::Closed);
                     self->CloseInternal(
@@ -740,23 +732,14 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessFlushMessage(
                   msgStr.get());
             }
 
+            RefPtr<Promise> promise = msg->TakePromise();
             self->QueueATask(
                 "Flush: output decoding data task",
-                [self = RefPtr{self}, data = std::move(data),
-                 flushPromiseId]() MOZ_CAN_RUN_SCRIPT_BOUNDARY {
-                  self->OutputDecodedData(std::move(data));
-                  // If Reset() was invoked before this task executes, or
-                  // during the output callback above in the execution of this
-                  // task, the promise in mPendingFlushPromises is handled
-                  // there. Otherwise, the promise is resolved here.
-                  RefPtr<Promise> p;
-                  if (self->mPendingFlushPromises.Find(flushPromiseId, p)) {
-                    LOG("%s %p, resolving the promise for flush %" PRId64
-                        " (unique id)",
-                        DecoderType::Name.get(), self.get(), flushPromiseId);
-                    p->MaybeResolveWithUndefined();
-                  }
-                });
+                [self = RefPtr{self}, promise, data = std::move(data)]()
+                    MOZ_CAN_RUN_SCRIPT_BOUNDARY {
+                      self->OutputDecodedData(std::move(data));
+                      promise->MaybeResolveWithUndefined();
+                    });
             self->mProcessingMessage.reset();
             self->ProcessControlMessageQueue();
           })
