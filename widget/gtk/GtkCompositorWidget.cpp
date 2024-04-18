@@ -143,7 +143,9 @@ bool GtkCompositorWidget::SetEGLNativeWindowSize(
 LayoutDeviceIntRegion GtkCompositorWidget::GetTransparentRegion() {
   LayoutDeviceIntRegion fullRegion(
       LayoutDeviceIntRect(LayoutDeviceIntPoint(), GetClientSize()));
-  fullRegion.SubOut(mWidget->GetOpaqueRegion());
+  if (mWidget) {
+    fullRegion.SubOut(mWidget->GetOpaqueRegion());
+  }
   return fullRegion;
 }
 
