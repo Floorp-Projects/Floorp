@@ -36,7 +36,12 @@ ChromeUtils.defineLazyGetter(lazy, "DevToolsStartup", () => {
 // export const backgroundTaskTimeoutSec = X;
 // export const backgroundTaskMinRuntimeMS = Y;
 let timingSettings = {
-  minTaskRuntimeMS: 500,
+  // Set minTaskRuntimeMS to 3 minutes temporarily to investigate bug 1741675
+  // We keep it at 500 ms in testing to avoid test timeouts
+  minTaskRuntimeMS:
+    Cu.isInAutomation || Services.env.exists("MOZ_MARIONETTE")
+      ? 500 // 500 ms.
+      : 3 * 60 * 1000, // 3 minutes.
   maxTaskRuntimeSec: 600, // 10 minutes.
 };
 
