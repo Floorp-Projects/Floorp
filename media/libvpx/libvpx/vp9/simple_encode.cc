@@ -502,6 +502,7 @@ static bool init_encode_frame_result(EncodeFrameResult *encode_frame_result,
 
   encode_frame_result->coding_data.reset(
       new (std::nothrow) uint8_t[max_coding_data_byte_size]);
+  encode_frame_result->max_coding_data_byte_size = max_coding_data_byte_size;
 
   encode_frame_result->num_rows_4x4 = get_num_unit_4x4(frame_height);
   encode_frame_result->num_cols_4x4 = get_num_unit_4x4(frame_width);
@@ -512,6 +513,7 @@ static bool init_encode_frame_result(EncodeFrameResult *encode_frame_result,
   encode_frame_result->tpl_stats_info.resize(MAX_LAG_BUFFERS);
 
   if (encode_frame_result->coding_data.get() == nullptr) {
+    encode_frame_result->max_coding_data_byte_size = 0;
     return false;
   }
   return init_image_buffer(&encode_frame_result->coded_frame, frame_width,
@@ -919,7 +921,7 @@ void SimpleEncode::ComputeFirstPassStats() {
         ENCODE_FRAME_RESULT encode_frame_info;
         vp9_init_encode_frame_result(&encode_frame_info);
         // TODO(angiebird): Call vp9_first_pass directly
-        vp9_get_compressed_data(impl_ptr_->cpi, &frame_flags, &size, nullptr,
+        vp9_get_compressed_data(impl_ptr_->cpi, &frame_flags, &size, nullptr, 0,
                                 &time_stamp, &time_end, flush,
                                 &encode_frame_info);
         // vp9_get_compressed_data only generates first pass stats not
@@ -1205,8 +1207,9 @@ void SimpleEncode::EncodeFrame(EncodeFrameResult *encode_frame_result) {
                                 &encode_frame_info.coded_frame);
     vp9_get_compressed_data(cpi, &frame_flags,
                             &encode_frame_result->coding_data_byte_size,
-                            encode_frame_result->coding_data.get(), &time_stamp,
-                            &time_end, flush, &encode_frame_info);
+                            encode_frame_result->coding_data.get(),
+                            encode_frame_result->max_coding_data_byte_size,
+                            &time_stamp, &time_end, flush, &encode_frame_info);
     if (out_file_ != nullptr) {
       ivf_write_frame_header(out_file_, time_stamp,
                              encode_frame_result->coding_data_byte_size);
@@ -1220,10 +1223,8 @@ void SimpleEncode::EncodeFrame(EncodeFrameResult *encode_frame_result) {
       fprintf(stderr, "Coding data size <= 0\n");
       abort();
     }
-    const size_t max_coding_data_byte_size =
-        get_max_coding_data_byte_size(frame_width_, frame_height_);
     if (encode_frame_result->coding_data_byte_size >
-        max_coding_data_byte_size) {
+        encode_frame_result->max_coding_data_byte_size) {
       fprintf(stderr, "Coding data size exceeds the maximum.\n");
       abort();
     }

@@ -51,6 +51,22 @@ class RateControllerForTest {
     gop_decision.use_key_frame = current_gop_ == 0 ? 1 : 0;
     gop_decision.use_alt_ref = 1;
     gop_decision.gop_coding_frames = kFixedGOPSize;
+    // First frame is key frame
+    gop_decision.update_type[0] = VPX_RC_KF_UPDATE;
+    for (int i = 1; i < kFixedGOPSize; i++) {
+      gop_decision.update_type[i] = VPX_RC_LF_UPDATE;
+      gop_decision.update_ref_index[i] = 0;
+      gop_decision.ref_frame_list[i].index[0] = 0;
+      gop_decision.ref_frame_list[i].name[0] = VPX_RC_LAST_FRAME;
+      gop_decision.ref_frame_list[i].index[1] = 0;
+      gop_decision.ref_frame_list[i].name[1] = VPX_RC_GOLDEN_FRAME;
+      gop_decision.ref_frame_list[i].index[2] = 0;
+      gop_decision.ref_frame_list[i].name[1] = VPX_RC_ALTREF_FRAME;
+    }
+
+    // Second frame is altref
+    gop_decision.update_type[1] = VPX_RC_ARF_UPDATE;
+    gop_decision.update_ref_index[1] = 2;
     return gop_decision;
   }
 
@@ -136,7 +152,11 @@ class ExtRateCtrlTest : public ::libvpx_test::EncoderTest,
 
   void SetUp() override {
     InitializeConfig();
+#if CONFIG_REALTIME_ONLY
+    SetMode(::libvpx_test::kRealTime);
+#else
     SetMode(::libvpx_test::kTwoPassGood);
+#endif
   }
 
   void PreEncodeFrameHook(::libvpx_test::VideoSource *video,

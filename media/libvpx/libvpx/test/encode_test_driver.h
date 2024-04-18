@@ -33,14 +33,23 @@ enum TestMode {
   kTwoPassGood,
   kTwoPassBest
 };
+
+#if CONFIG_REALTIME_ONLY
+#define ALL_TEST_MODES ::testing::Values(::libvpx_test::kRealTime)
+#define ONE_PASS_TEST_MODES ::testing::Values(::libvpx_test::kRealTime)
+#define ONE_OR_TWO_PASS_TEST_MODES ::testing::Values(::libvpx_test::kRealTime)
+#else
 #define ALL_TEST_MODES                                                        \
   ::testing::Values(::libvpx_test::kRealTime, ::libvpx_test::kOnePassGood,    \
                     ::libvpx_test::kOnePassBest, ::libvpx_test::kTwoPassGood, \
                     ::libvpx_test::kTwoPassBest)
-
 #define ONE_PASS_TEST_MODES                                                \
   ::testing::Values(::libvpx_test::kRealTime, ::libvpx_test::kOnePassGood, \
                     ::libvpx_test::kOnePassBest)
+
+#define ONE_OR_TWO_PASS_TEST_MODES \
+  ::testing::Values(::libvpx_test::kOnePassGood, ::libvpx_test::kTwoPassGood)
+#endif
 
 #define TWO_PASS_TEST_MODES \
   ::testing::Values(::libvpx_test::kTwoPassGood, ::libvpx_test::kTwoPassBest)

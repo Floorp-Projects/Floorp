@@ -13,6 +13,7 @@
 #include "test/codec_factory.h"
 #include "test/register_state_check.h"
 #include "test/video_source.h"
+#include "vpx_config.h"
 
 namespace {
 
@@ -167,6 +168,9 @@ class VP9FrameSizeTestsLarge : public ::libvpx_test::EncoderTest,
 };
 
 TEST_F(VP9FrameSizeTestsLarge, TestInvalidSizes) {
+#ifdef CHROMIUM
+  GTEST_SKIP() << "16K framebuffers are not supported by Chromium's allocator.";
+#else
   ::libvpx_test::RandomVideoSource video;
 
 #if CONFIG_SIZE_LIMIT
@@ -175,9 +179,16 @@ TEST_F(VP9FrameSizeTestsLarge, TestInvalidSizes) {
   expected_res_ = VPX_CODEC_MEM_ERROR;
   ASSERT_NO_FATAL_FAILURE(RunLoop(&video, expected_res_));
 #endif
+
+#endif
 }
 
 TEST_F(VP9FrameSizeTestsLarge, ValidSizes) {
+#ifdef CHROMIUM
+  GTEST_SKIP()
+      << "Under Chromium's configuration the allocator is unable to provide"
+         "the space required for a single frame at the maximum resolution.";
+#else
   ::libvpx_test::RandomVideoSource video;
 
 #if CONFIG_SIZE_LIMIT
@@ -202,6 +213,8 @@ TEST_F(VP9FrameSizeTestsLarge, ValidSizes) {
   expected_res_ = VPX_CODEC_OK;
   ASSERT_NO_FATAL_FAILURE(::libvpx_test::EncoderTest::RunLoop(&video));
 #endif
+
+#endif  // defined(CHROMIUM)
 }
 
 TEST_F(VP9FrameSizeTestsLarge, OneByOneVideo) {

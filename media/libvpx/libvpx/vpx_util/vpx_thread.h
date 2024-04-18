@@ -19,8 +19,6 @@
 extern "C" {
 #endif
 
-#define MAX_NUM_THREADS 64
-
 // State of the worker thread object
 typedef enum {
   VPX_WORKER_STATUS_NOT_OK = 0,  // object is unusable

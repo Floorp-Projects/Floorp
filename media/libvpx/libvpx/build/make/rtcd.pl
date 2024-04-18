@@ -73,6 +73,10 @@ sub vpx_config($) {
 }
 
 sub specialize {
+  if (@_ <= 1) {
+    die "'specialize' must be called with a function name and at least one ",
+        "architecture ('C' is implied): \n@_\n";
+  }
   my $fn=$_[0];
   shift;
   foreach my $opt (@_) {

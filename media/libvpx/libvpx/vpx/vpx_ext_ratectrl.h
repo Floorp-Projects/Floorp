@@ -28,6 +28,15 @@ extern "C" {
  */
 #define VPX_EXT_RATECTRL_ABI_VERSION (5 + VPX_TPL_ABI_VERSION)
 
+/*!\brief This is correspondent to MAX_STATIC_GF_GROUP_LENGTH defined in
+ * vp9_ratectrl.h
+ */
+#define VPX_RC_MAX_STATIC_GF_GROUP_LENGTH 250
+
+/*!\brief Max number of ref frames returned by the external RC. Correspondent to
+ * MAX_REF_FRAMES defined in vp9_blockd.h. */
+#define VPX_RC_MAX_REF_FRAMES 4
+
 /*!\brief The control type of the inference API.
  * In VPX_RC_QP mode, the external rate control model determines the
  * quantization parameter (QP) for each frame.
@@ -55,6 +64,29 @@ typedef enum vpx_ext_rc_mode {
   VPX_RC_VBR = 1,
   VPX_RC_CQ = 2,
 } vpx_ext_rc_mode_t;
+
+/*!\brief This is correspondent to FRAME_UPDATE_TYPE defined in vp9_firstpass.h.
+ */
+typedef enum vpx_rc_frame_update_type {
+  VPX_RC_INVALID_UPDATE_TYPE = -1,
+  VPX_RC_KF_UPDATE = 0,
+  VPX_RC_LF_UPDATE = 1,
+  VPX_RC_GF_UPDATE = 2,
+  VPX_RC_ARF_UPDATE = 3,
+  VPX_RC_OVERLAY_UPDATE = 4,
+  VPX_RC_MID_OVERLAY_UPDATE = 5,
+  VPX_RC_USE_BUF_FRAME = 6,
+} vpx_rc_frame_update_type_t;
+
+/*!\brief Name for the ref frames returned by the external RC. Correspondent to
+ * the ref frames defined in vp9_blockd.h. */
+typedef enum vpx_rc_ref_name {
+  VPX_RC_INVALID_REF_FRAME = -1,
+  VPX_RC_INTRA_FRAME = 0,
+  VPX_RC_LAST_FRAME = 1,
+  VPX_RC_GOLDEN_FRAME = 2,
+  VPX_RC_ALTREF_FRAME = 3,
+} vpx_rc_ref_name_t;
 
 /*!\brief Abstract rate control model handler
  *
@@ -318,75 +350,12 @@ typedef struct vpx_rc_config {
   int base_qp;               /**< base QP for leaf frames, 0-255 */
 } vpx_rc_config_t;
 
-/*!\brief Information passed to the external rate control model to
- * help make GOP decisions.
+/*!\brief Control what ref frame to use and its index.
  */
-typedef struct vpx_rc_gop_info {
-  /*!
-   * Minimum allowed gf interval, fixed for the whole clip.
-   * Note that it will be modified to match vp9's level constraints
-   * in the encoder.
-   * The level constraint is defined in vp9_encoder.c:
-   * const Vp9LevelSpec vp9_level_defs[VP9_LEVELS].
-   */
-  int min_gf_interval;
-  /*!
-   * Maximum allowed gf interval, fixed for the whole clip.
-   */
-  int max_gf_interval;
-  /*!
-   * Minimum allowed gf interval for the current GOP, determined
-   * by the encoder.
-   */
-  int active_min_gf_interval;
-  /*!
-   * Maximum allowed gf interval for the current GOP, determined
-   * by the encoder.
-   */
-  int active_max_gf_interval;
-  /*!
-   * Whether to allow the use of alt ref, determined by the encoder.
-   * It is fixed for the entire encode.
-   * See function "is_altref_enabled" in vp9_encoder.h.
-   */
-  int allow_alt_ref;
-  /*!
-   * Is the current frame a key frame.
-   */
-  int is_key_frame;
-  /*!
-   * Does the previous gop use alt ref or not.
-   */
-  int last_gop_use_alt_ref;
-  /*!
-   * Current frame distance to the last keyframe, e.g., if Nth frame is a key,
-   * then the value of the N+1 th frame is 1.
-   */
-  int frames_since_key;
-  /*!
-   * Current frame distance to the next keyframe, e.g. if Nth frame is a key,
-   * then the value of frame N - 1 is 1.
-   */
-  int frames_to_key;
-  /*!
-   * Number of lookahead source frames.
-   */
-  int lag_in_frames;
-  /*!
-   * Display index (temporal stamp) of this frame in the whole clip,
-   * starts from zero.
-   */
-  int show_index;
-  /*!
-   * Coding index of this frame in the whole clip, starts from zero.
-   */
-  int coding_index;
-  /*!
-   * The index of the current gop, starts from zero, resets to zero
-   * when a keyframe is set.
-   */
-  int gop_global_index;
-} vpx_rc_gop_info_t;
+typedef struct vpx_rc_ref_frame {
+  int index[VPX_RC_MAX_REF_FRAMES];
+  vpx_rc_ref_name_t name[VPX_RC_MAX_REF_FRAMES];
+} vpx_rc_ref_frame_t;
 
 /*!\brief The decision made by the external rate control model to set the
  * group of picture.
@@ -395,6 +364,14 @@ typedef struct vpx_rc_gop_decision {
   int gop_coding_frames; /**< The number of frames of this GOP */
   int use_alt_ref;       /**< Whether to use alt ref for this GOP */
   int use_key_frame;     /**< Whether to set key frame for this GOP */
+  // Frame type for each frame in this GOP.
+  // This will be populated to |update_type| in GF_GROUP defined in
+  // vp9_firstpass.h
+  vpx_rc_frame_update_type_t update_type[VPX_RC_MAX_STATIC_GF_GROUP_LENGTH + 2];
+  // Ref frame buffer index to be updated for each frame in this GOP.
+  int update_ref_index[VPX_RC_MAX_STATIC_GF_GROUP_LENGTH + 2];
+  // Ref frame list to be used for each frame in this GOP.
+  vpx_rc_ref_frame_t ref_frame_list[VPX_RC_MAX_STATIC_GF_GROUP_LENGTH + 2];
 } vpx_rc_gop_decision_t;
 
 /*!\brief Create an external rate control model callback prototype

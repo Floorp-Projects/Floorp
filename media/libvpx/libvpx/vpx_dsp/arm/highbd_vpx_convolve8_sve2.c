@@ -15,6 +15,8 @@
 #include "./vpx_dsp_rtcd.h"
 
 #include "vpx/vpx_integer.h"
+#include "vpx_dsp/arm/highbd_convolve8_neon.h"
+#include "vpx_dsp/arm/highbd_convolve8_sve.h"
 #include "vpx_dsp/arm/mem_neon.h"
 #include "vpx_dsp/arm/transpose_neon.h"
 #include "vpx_dsp/arm/vpx_neon_sve_bridge.h"
@@ -30,6 +32,9 @@ DECLARE_ALIGNED(16, static const uint16_t, kDotProdMergeBlockTbl[24]) = {
   3, 0, 1, 2, 7, 4, 5, 6,
 };
 // clang-format on
+
+DECLARE_ALIGNED(16, static const uint16_t, kTblConv4_8[8]) = { 0, 2, 4, 6,
+                                                               1, 3, 5, 7 };
 
 static INLINE void transpose_concat_4x4(const int16x4_t s0, const int16x4_t s1,
                                         const int16x4_t s2, const int16x4_t s3,
@@ -449,4 +454,335 @@ void vpx_highbd_convolve8_avg_vert_sve2(const uint16_t *src,
       w -= 8;
     } while (w != 0);
   }
+}
+
+static INLINE void highbd_convolve_2d_4tap_sve2(
+    const uint16_t *src, ptrdiff_t src_stride, uint16_t *dst,
+    ptrdiff_t dst_stride, int w, int h, const int16x4_t x_filters,
+    const int16x4_t y_filters, int bd) {
+  const int16x8_t x_filter = vcombine_s16(x_filters, vdup_n_s16(0));
+
+  if (w == 4) {
+    const uint16x4_t max = vdup_n_u16((1 << bd) - 1);
+    const int16_t *s = (const int16_t *)src;
+    uint16_t *d = dst;
+
+    int16x4_t h_s0[4], h_s1[4], h_s2[4];
+    load_s16_4x4(s + 0 * src_stride, 1, &h_s0[0], &h_s0[1], &h_s0[2], &h_s0[3]);
+    load_s16_4x4(s + 1 * src_stride, 1, &h_s1[0], &h_s1[1], &h_s1[2], &h_s1[3]);
+    load_s16_4x4(s + 2 * src_stride, 1, &h_s2[0], &h_s2[1], &h_s2[2], &h_s2[3]);
+
+    int16x4_t v_s0 =
+        vreinterpret_s16_u16(highbd_convolve4_4_sve(h_s0, x_filter, max));
+    int16x4_t v_s1 =
+        vreinterpret_s16_u16(highbd_convolve4_4_sve(h_s1, x_filter, max));
+    int16x4_t v_s2 =
+        vreinterpret_s16_u16(highbd_convolve4_4_sve(h_s2, x_filter, max));
+
+    s += 3 * src_stride;
+
+    do {
+      int16x4_t h_s3[4], h_s4[4], h_s5[4], h_s6[4];
+      load_s16_4x4(s + 0 * src_stride, 1, &h_s3[0], &h_s3[1], &h_s3[2],
+                   &h_s3[3]);
+      load_s16_4x4(s + 1 * src_stride, 1, &h_s4[0], &h_s4[1], &h_s4[2],
+                   &h_s4[3]);
+      load_s16_4x4(s + 2 * src_stride, 1, &h_s5[0], &h_s5[1], &h_s5[2],
+                   &h_s5[3]);
+      load_s16_4x4(s + 3 * src_stride, 1, &h_s6[0], &h_s6[1], &h_s6[2],
+                   &h_s6[3]);
+
+      int16x4_t v_s3 =
+          vreinterpret_s16_u16(highbd_convolve4_4_sve(h_s3, x_filter, max));
+      int16x4_t v_s4 =
+          vreinterpret_s16_u16(highbd_convolve4_4_sve(h_s4, x_filter, max));
+      int16x4_t v_s5 =
+          vreinterpret_s16_u16(highbd_convolve4_4_sve(h_s5, x_filter, max));
+      int16x4_t v_s6 =
+          vreinterpret_s16_u16(highbd_convolve4_4_sve(h_s6, x_filter, max));
+
+      uint16x4_t d0 =
+          highbd_convolve4_4_neon(v_s0, v_s1, v_s2, v_s3, y_filters, max);
+      uint16x4_t d1 =
+          highbd_convolve4_4_neon(v_s1, v_s2, v_s3, v_s4, y_filters, max);
+      uint16x4_t d2 =
+          highbd_convolve4_4_neon(v_s2, v_s3, v_s4, v_s5, y_filters, max);
+      uint16x4_t d3 =
+          highbd_convolve4_4_neon(v_s3, v_s4, v_s5, v_s6, y_filters, max);
+
+      store_u16_4x4(d, dst_stride, d0, d1, d2, d3);
+
+      v_s0 = v_s4;
+      v_s1 = v_s5;
+      v_s2 = v_s6;
+      s += 4 * src_stride;
+      d += 4 * dst_stride;
+      h -= 4;
+    } while (h != 0);
+
+  } else {
+    const uint16x8_t max = vdupq_n_u16((1 << bd) - 1);
+    const uint16x8_t idx = vld1q_u16(kTblConv4_8);
+
+    do {
+      const int16_t *s = (const int16_t *)src;
+      uint16_t *d = dst;
+      int height = h;
+
+      int16x8_t h_s0[4], h_s1[4], h_s2[4];
+      load_s16_8x4(s + 0 * src_stride, 1, &h_s0[0], &h_s0[1], &h_s0[2],
+                   &h_s0[3]);
+      load_s16_8x4(s + 1 * src_stride, 1, &h_s1[0], &h_s1[1], &h_s1[2],
+                   &h_s1[3]);
+      load_s16_8x4(s + 2 * src_stride, 1, &h_s2[0], &h_s2[1], &h_s2[2],
+                   &h_s2[3]);
+
+      int16x8_t v_s0 = vreinterpretq_s16_u16(
+          highbd_convolve4_8_sve(h_s0, x_filter, max, idx));
+      int16x8_t v_s1 = vreinterpretq_s16_u16(
+          highbd_convolve4_8_sve(h_s1, x_filter, max, idx));
+      int16x8_t v_s2 = vreinterpretq_s16_u16(
+          highbd_convolve4_8_sve(h_s2, x_filter, max, idx));
+
+      s += 3 * src_stride;
+
+      do {
+        int16x8_t h_s3[4], h_s4[4], h_s5[4], h_s6[4];
+        load_s16_8x4(s + 0 * src_stride, 1, &h_s3[0], &h_s3[1], &h_s3[2],
+                     &h_s3[3]);
+        load_s16_8x4(s + 1 * src_stride, 1, &h_s4[0], &h_s4[1], &h_s4[2],
+                     &h_s4[3]);
+        load_s16_8x4(s + 2 * src_stride, 1, &h_s5[0], &h_s5[1], &h_s5[2],
+                     &h_s5[3]);
+        load_s16_8x4(s + 3 * src_stride, 1, &h_s6[0], &h_s6[1], &h_s6[2],
+                     &h_s6[3]);
+
+        int16x8_t v_s3 = vreinterpretq_s16_u16(
+            highbd_convolve4_8_sve(h_s3, x_filter, max, idx));
+        int16x8_t v_s4 = vreinterpretq_s16_u16(
+            highbd_convolve4_8_sve(h_s4, x_filter, max, idx));
+        int16x8_t v_s5 = vreinterpretq_s16_u16(
+            highbd_convolve4_8_sve(h_s5, x_filter, max, idx));
+        int16x8_t v_s6 = vreinterpretq_s16_u16(
+            highbd_convolve4_8_sve(h_s6, x_filter, max, idx));
+
+        uint16x8_t d0 =
+            highbd_convolve4_8_neon(v_s0, v_s1, v_s2, v_s3, y_filters, max);
+        uint16x8_t d1 =
+            highbd_convolve4_8_neon(v_s1, v_s2, v_s3, v_s4, y_filters, max);
+        uint16x8_t d2 =
+            highbd_convolve4_8_neon(v_s2, v_s3, v_s4, v_s5, y_filters, max);
+        uint16x8_t d3 =
+            highbd_convolve4_8_neon(v_s3, v_s4, v_s5, v_s6, y_filters, max);
+
+        store_u16_8x4(d, dst_stride, d0, d1, d2, d3);
+
+        v_s0 = v_s4;
+        v_s1 = v_s5;
+        v_s2 = v_s6;
+        s += 4 * src_stride;
+        d += 4 * dst_stride;
+        height -= 4;
+      } while (height != 0);
+      src += 8;
+      dst += 8;
+      w -= 8;
+    } while (w != 0);
+  }
+}
+
+static INLINE void highbd_convolve8_2d_horiz_sve2(
+    const uint16_t *src, ptrdiff_t src_stride, uint16_t *dst,
+    ptrdiff_t dst_stride, const InterpKernel *filter, int x0_q4, int x_step_q4,
+    int y0_q4, int y_step_q4, int w, int h, int bd) {
+  assert((intptr_t)dst % 4 == 0);
+  assert(dst_stride % 4 == 0);
+  assert(x_step_q4 == 16);
+  assert(h % 4 == 3 && h >= 7);
+
+  (void)x_step_q4;
+  (void)y0_q4;
+  (void)y_step_q4;
+
+  const int16x8_t filters = vld1q_s16(filter[x0_q4]);
+
+  src -= 3;
+
+  if (w == 4) {
+    const uint16x4_t max = vdup_n_u16((1 << bd) - 1);
+    const int16_t *s = (const int16_t *)src;
+    uint16_t *d = dst;
+
+    do {
+      int16x8_t s0[4], s1[4], s2[4], s3[4];
+      load_s16_8x4(s + 0 * src_stride, 1, &s0[0], &s0[1], &s0[2], &s0[3]);
+      load_s16_8x4(s + 1 * src_stride, 1, &s1[0], &s1[1], &s1[2], &s1[3]);
+      load_s16_8x4(s + 2 * src_stride, 1, &s2[0], &s2[1], &s2[2], &s2[3]);
+      load_s16_8x4(s + 3 * src_stride, 1, &s3[0], &s3[1], &s3[2], &s3[3]);
+
+      uint16x4_t d0 = highbd_convolve8_4(s0, filters, max);
+      uint16x4_t d1 = highbd_convolve8_4(s1, filters, max);
+      uint16x4_t d2 = highbd_convolve8_4(s2, filters, max);
+      uint16x4_t d3 = highbd_convolve8_4(s3, filters, max);
+
+      store_u16_4x4(d, dst_stride, d0, d1, d2, d3);
+
+      s += 4 * src_stride;
+      d += 4 * dst_stride;
+      h -= 4;
+    } while (h != 3);
+
+    // Process final three rows (h % 4 == 3).
+    int16x8_t s0[4], s1[4], s2[4];
+    load_s16_8x4(s + 0 * src_stride, 1, &s0[0], &s0[1], &s0[2], &s0[3]);
+    load_s16_8x4(s + 1 * src_stride, 1, &s1[0], &s1[1], &s1[2], &s1[3]);
+    load_s16_8x4(s + 2 * src_stride, 1, &s2[0], &s2[1], &s2[2], &s2[3]);
+
+    uint16x4_t d0 = highbd_convolve8_4(s0, filters, max);
+    uint16x4_t d1 = highbd_convolve8_4(s1, filters, max);
+    uint16x4_t d2 = highbd_convolve8_4(s2, filters, max);
+
+    store_u16_4x3(d, dst_stride, d0, d1, d2);
+  } else {
+    const uint16x8_t max = vdupq_n_u16((1 << bd) - 1);
+
+    do {
+      const int16_t *s = (const int16_t *)src;
+      uint16_t *d = dst;
+      int width = w;
+
+      do {
+        int16x8_t s0[8], s1[8], s2[8], s3[8];
+        load_s16_8x8(s + 0 * src_stride, 1, &s0[0], &s0[1], &s0[2], &s0[3],
+                     &s0[4], &s0[5], &s0[6], &s0[7]);
+        load_s16_8x8(s + 1 * src_stride, 1, &s1[0], &s1[1], &s1[2], &s1[3],
+                     &s1[4], &s1[5], &s1[6], &s1[7]);
+        load_s16_8x8(s + 2 * src_stride, 1, &s2[0], &s2[1], &s2[2], &s2[3],
+                     &s2[4], &s2[5], &s2[6], &s2[7]);
+        load_s16_8x8(s + 3 * src_stride, 1, &s3[0], &s3[1], &s3[2], &s3[3],
+                     &s3[4], &s3[5], &s3[6], &s3[7]);
+
+        uint16x8_t d0 = highbd_convolve8_8(s0, filters, max);
+        uint16x8_t d1 = highbd_convolve8_8(s1, filters, max);
+        uint16x8_t d2 = highbd_convolve8_8(s2, filters, max);
+        uint16x8_t d3 = highbd_convolve8_8(s3, filters, max);
+
+        store_u16_8x4(d, dst_stride, d0, d1, d2, d3);
+
+        s += 8;
+        d += 8;
+        width -= 8;
+      } while (width != 0);
+      src += 4 * src_stride;
+      dst += 4 * dst_stride;
+      h -= 4;
+    } while (h != 3);
+
+    // Process final three rows (h % 4 == 3).
+    const int16_t *s = (const int16_t *)src;
+    uint16_t *d = dst;
+    int width = w;
+
+    do {
+      int16x8_t s0[8], s1[8], s2[8];
+      load_s16_8x8(s + 0 * src_stride, 1, &s0[0], &s0[1], &s0[2], &s0[3],
+                   &s0[4], &s0[5], &s0[6], &s0[7]);
+      load_s16_8x8(s + 1 * src_stride, 1, &s1[0], &s1[1], &s1[2], &s1[3],
+                   &s1[4], &s1[5], &s1[6], &s1[7]);
+      load_s16_8x8(s + 2 * src_stride, 1, &s2[0], &s2[1], &s2[2], &s2[3],
+                   &s2[4], &s2[5], &s2[6], &s2[7]);
+
+      uint16x8_t d0 = highbd_convolve8_8(s0, filters, max);
+      uint16x8_t d1 = highbd_convolve8_8(s1, filters, max);
+      uint16x8_t d2 = highbd_convolve8_8(s2, filters, max);
+
+      store_u16_8x3(d, dst_stride, d0, d1, d2);
+
+      s += 8;
+      d += 8;
+      width -= 8;
+    } while (width != 0);
+  }
+}
+
+void vpx_highbd_convolve8_sve2(const uint16_t *src, ptrdiff_t src_stride,
+                               uint16_t *dst, ptrdiff_t dst_stride,
+                               const InterpKernel *filter, int x0_q4,
+                               int x_step_q4, int y0_q4, int y_step_q4, int w,
+                               int h, int bd) {
+  if (x_step_q4 != 16 || y_step_q4 != 16) {
+    vpx_highbd_convolve8_c(src, src_stride, dst, dst_stride, filter, x0_q4,
+                           x_step_q4, y0_q4, y_step_q4, w, h, bd);
+    return;
+  }
+
+  assert(y_step_q4 == 16);
+  assert(x_step_q4 == 16);
+
+  const int horiz_filter_taps = vpx_get_filter_taps(filter[x0_q4]) <= 4 ? 4 : 8;
+  const int vert_filter_taps = vpx_get_filter_taps(filter[y0_q4]) <= 4 ? 4 : 8;
+
+  if (horiz_filter_taps == 4 || vert_filter_taps == 4) {
+    const ptrdiff_t horiz_offset = horiz_filter_taps / 2 - 1;
+    const ptrdiff_t vert_offset = (vert_filter_taps / 2 - 1) * src_stride;
+    const int16x4_t x_filter = vld1_s16(filter[x0_q4] + 2);
+    const int16x4_t y_filter = vld1_s16(filter[y0_q4] + 2);
+
+    highbd_convolve_2d_4tap_sve2(src - horiz_offset - vert_offset, src_stride,
+                                 dst, dst_stride, w, h, x_filter, y_filter, bd);
+    return;
+  }
+
+  // Given our constraints: w <= 64, h <= 64, taps <= 8 we can reduce the
+  // maximum buffer size to 64 * (64 + 7).
+  DECLARE_ALIGNED(32, uint16_t, im_block[64 * 71]);
+  const int im_stride = 64;
+
+  // Account for the vertical phase needing SUBPEL_TAPS / 2 - 1 lines prior
+  // and SUBPEL_TAPS / 2 lines post.
+  const int im_height = h + SUBPEL_TAPS - 1;
+  const ptrdiff_t border_offset = SUBPEL_TAPS / 2 - 1;
+
+  highbd_convolve8_2d_horiz_sve2(src - src_stride * border_offset, src_stride,
+                                 im_block, im_stride, filter, x0_q4, x_step_q4,
+                                 y0_q4, y_step_q4, w, im_height, bd);
+
+  // Step into the temporary buffer border_offset rows to get actual frame data.
+  vpx_highbd_convolve8_vert_sve2(im_block + im_stride * border_offset,
+                                 im_stride, dst, dst_stride, filter, x0_q4,
+                                 x_step_q4, y0_q4, y_step_q4, w, h, bd);
+}
+
+void vpx_highbd_convolve8_avg_sve2(const uint16_t *src, ptrdiff_t src_stride,
+                                   uint16_t *dst, ptrdiff_t dst_stride,
+                                   const InterpKernel *filter, int x0_q4,
+                                   int x_step_q4, int y0_q4, int y_step_q4,
+                                   int w, int h, int bd) {
+  if (x_step_q4 != 16 || y_step_q4 != 16) {
+    vpx_highbd_convolve8_c(src, src_stride, dst, dst_stride, filter, x0_q4,
+                           x_step_q4, y0_q4, y_step_q4, w, h, bd);
+    return;
+  }
+
+  assert(y_step_q4 == 16);
+  assert(x_step_q4 == 16);
+
+  // Given our constraints: w <= 64, h <= 64, taps <= 8 we can reduce the
+  // maximum buffer size to 64 * (64 + 7).
+  DECLARE_ALIGNED(32, uint16_t, im_block[64 * 71]);
+  const int im_stride = 64;
+
+  // Account for the vertical phase needing SUBPEL_TAPS / 2 - 1 lines prior
+  // and SUBPEL_TAPS / 2 lines post.
+  const int im_height = h + SUBPEL_TAPS - 1;
+  const ptrdiff_t border_offset = SUBPEL_TAPS / 2 - 1;
+
+  highbd_convolve8_2d_horiz_sve2(src - src_stride * border_offset, src_stride,
+                                 im_block, im_stride, filter, x0_q4, x_step_q4,
+                                 y0_q4, y_step_q4, w, im_height, bd);
+
+  // Step into the temporary buffer border_offset rows to get actual frame data.
+  vpx_highbd_convolve8_avg_vert_sve2(im_block + im_stride * border_offset,
+                                     im_stride, dst, dst_stride, filter, x0_q4,
+                                     x_step_q4, y0_q4, y_step_q4, w, h, bd);
 }
