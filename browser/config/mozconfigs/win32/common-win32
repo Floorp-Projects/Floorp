@@ -1,7 +1,5 @@
 # This file is used by all Win32 builds
 
-. "$topsrcdir/browser/config/mozconfigs/windows-limited-access-features"
-
 ac_add_options --target=i686-pc-windows-msvc
 
 . $topsrcdir/build/mozconfig.clang-cl
