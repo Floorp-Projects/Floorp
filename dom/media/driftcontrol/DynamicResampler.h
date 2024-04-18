@@ -268,11 +268,12 @@ class DynamicResampler final {
     }
 
     duration = std::min(cap, duration);
+    const uint32_t newSizeInFrames =
+        static_cast<uint32_t>(duration.ToTicksAtRate(mInRate));
 
     bool success = true;
     for (auto& b : mInternalInBuffer) {
-      success = success &&
-                b.SetLengthBytes(sampleSize * duration.ToTicksAtRate(mInRate));
+      success = success && b.EnsureLengthBytes(sampleSize * newSizeInFrames);
     }
 
     if (success) {
@@ -281,16 +282,11 @@ class DynamicResampler final {
       return true;
     }
 
-    const uint32_t sizeInFrames =
-        static_cast<uint32_t>(mSetBufferDuration.ToTicksAtRate(mInRate));
     // Allocating an input buffer failed. We stick with the old buffer size.
     NS_WARNING(nsPrintfCString("Failed to allocate a buffer of %u bytes (%u "
                                "frames). Expect glitches.",
-                               sampleSize * sizeInFrames, sizeInFrames)
+                               sampleSize * newSizeInFrames, newSizeInFrames)
                    .get());
-    for (auto& b : mInternalInBuffer) {
-      MOZ_ALWAYS_TRUE(b.SetLengthBytes(sampleSize * sizeInFrames));
-    }
     return false;
   }
 
