@@ -4,7 +4,13 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 126.0 (In Development)
+# 127.0 (In Development)
+
+* **support-base**
+  * Added `StartForegroundService` to safely start a foreground service, see [Bug 1839039](https://bugzilla.mozilla.org/show_bug.cgi?id=1839039) for crash reference.
+  * Added `ProcessInfoProvider` and `BuildVersionProvider` to get information about the app process and the build version.
+
+# 126.0
 
 * **browser-menu**
   * Added enabled state to `BrowserMenuImageText`, see [Bug 1884769](https://bugzilla.mozilla.org/show_bug.cgi?id=1884769).

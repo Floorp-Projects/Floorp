@@ -27,6 +27,8 @@ import mozilla.components.feature.downloads.AbstractFetchDownloadService.Compani
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.lib.state.Store
+import mozilla.components.support.base.android.DefaultPowerManagerInfoProvider
+import mozilla.components.support.base.android.StartForegroundService
 import mozilla.components.support.base.log.logger.Logger
 import kotlin.coroutines.CoroutineContext
 
@@ -42,6 +44,9 @@ class DownloadMiddleware(
     coroutineContext: CoroutineContext = Dispatchers.IO,
     @get:VisibleForTesting
     internal val downloadStorage: DownloadStorage = DownloadStorage(applicationContext),
+    private val startForegroundService: StartForegroundService = StartForegroundService(
+        powerManagerInfoProvider = DefaultPowerManagerInfoProvider(applicationContext),
+    ),
 ) : Middleware<BrowserState, BrowserAction> {
     private val logger = Logger("DownloadMiddleware")
 
@@ -164,7 +169,12 @@ class DownloadMiddleware(
 
     @VisibleForTesting
     internal fun startForegroundService(intent: Intent) {
-        ContextCompat.startForegroundService(applicationContext, intent)
+        /**
+         * @see [StartForegroundService]
+         */
+        startForegroundService {
+            ContextCompat.startForegroundService(applicationContext, intent)
+        }
     }
 
     @VisibleForTesting
