@@ -326,7 +326,204 @@ TODO: layers
 
 ## Pagination
 
-The concepts behind pagination (also known as fragmentation) are a bit
-complicated, so for now we\'ve split them off into a separate document:
-[Gecko:Continuation\_Model](Gecko:Continuation_Model "wikilink"). This
-code is used for printing, print-preview, and multicolumn frames.
+Pagination (also known as fragmentation) is a concept used in printing,
+print-preview, and multicolumn layout.
+
+### Continuations in the Frame Tree
+
+To render a DOM node, represented as `nsIContent` object, Gecko creates
+zero or more frames (`nsIFrame` objects). Each frame represents a
+rectangular area usually corresponding to the node\'s CSS box as
+described by the CSS specs. Simple elements are often representable with
+exactly one frame, but sometimes an element needs to be represented with
+more than one frame. For example, text breaking across lines:
+
+      xxxxxx AAAA
+      AAA xxxxxxx
+
+The A element is a single DOM node but obviously a single rectangular
+frame isn\'t going to represent its layout precisely.
+
+Similarly, consider text breaking across pages:
+
+      | BBBBBBBBBB |
+      | BBBBBBBBBB |
+      +------------+
+
+      +------------+
+      | BBBBBBBBBB |
+      | BBBBBBBBBB |
+      |            |
+
+Again, a single rectangular frame cannot represent the layout of the
+node. Columns are similar.
+
+Another case where a single DOM node is represented by multiple frames
+is when a text node contains bidirectional text (e.g. both Hebrew and
+English text). In this case, the text node and its inline ancestors are
+split so that each frame contains only unidirectional text.
+
+The first frame for an element is called the **primary frame**. The
+other frames are called **continuation frames**. Primary frames are
+created by `nsCSSFrameConstructor` in response to content insertion
+notifications. Continuation frames are created during bidi resolution,
+and during reflow, when reflow detects that a content element cannot be
+fully laid out within the constraints assigned (e.g., when inline text
+will not fit within a particular width constraint, or when a block
+cannot be laid out within a particular height constraint).
+
+Continuation frames created during reflow are called \"fluid\"
+continuations (or \"in-flows\"). Other continuation frames (currently,
+those created during bidi resolution), are, in contrast, \"non-fluid\".
+The `NS_FRAME_IS_FLUID_CONTINUATION` state bit indicates whether a
+continuation frame is fluid or not.
+
+The frames for an element are put in a doubly-linked list. The links are
+accessible via `nsIFrame::GetNextContinuation` and
+`nsIFrame::GetPrevContinuation`. If only fluid continuations are to be
+accessed, `nsIFrame::GetNextInFlow` and `nsIFrame::GetPrevInFlow` are
+used instead.
+
+The following diagram shows the relationship between the original frame
+tree considering just primary frames, and a possible layout with
+breaking and continuations:
+
+    Original frame tree       Frame tree with A broken into three parts
+        Root                      Root
+         |                      /  |  \
+         A                     A1  A2  A3
+        / \                   / |  |    |
+       B   C                 B  C1 C2   C3
+       |  /|\                |  |  | \   |
+       D E F G               D  E  F G1  G2
+
+Certain kinds of frames create multiple child frames for the same
+content element:
+
+-   `nsPageSequenceFrame` creates multiple page children, each one
+    associated with the entire document, separated by page breaks
+-   `nsColumnSetFrame` creates multiple block children, each one
+    associated with the column element, separated by column breaks
+-   `nsBlockFrame` creates multiple inline children, each one associated
+    with the same inline element, separated by line breaks, or by
+    changes in text direction
+-   `nsTableColFrame` creates non-fluid continuations for itself if it
+    has span=\"N\" and N \> 1
+-   If a block frame is a multi-column container and has
+    `column-span:all` children, it creates multiple `nsColumnSetFrame`
+    children, which are linked together as non-fluid continuations.
+    Similarly, if a block frame is within a multi-column formatting
+    context and has `column-span:all` children, it is chopped into
+    several flows, which are linked together as non-fluid continuations
+    as well. See documentation and example frame trees in
+    [`nsCSSFrameConstructor::ConstructBlock()`](https://searchfox.org/mozilla-central/rev/d24696b5abaf9fb75f7985952eab50d5f4ed52ac/layout/base/nsCSSFrameConstructor.cpp#10431).
+
+#### Overflow Container Continuations
+
+Sometimes the content of a frame needs to break across pages even though
+the frame itself is complete. This usually happens if an element with
+fixed height has overflow that doesn\'t fit on one page. In this case,
+the completed frame is \"overflow incomplete\", and special
+continuations are created to hold its overflow. These continuations are
+called \"overflow containers\". They are invisible, and are kept on a
+special list in their parent. See documentation in
+[nsContainerFrame.h](https://searchfox.org/mozilla-central/source/layout/generic/nsContainerFrame.h)
+and example trees in [bug 379349 comment
+3](https://bugzilla.mozilla.org/show_bug.cgi?id=379349#c3).
+
+This infrastructure was extended in [bug
+154892](https://bugzilla.mozilla.org/show_bug.cgi?id=154892) to also
+manage continuations for absolutely-positioned frames.
+
+#### Relationship of continuations to frame tree structure
+
+It is worth emphasizing two points about the relationship of the
+prev-continuation / next-continuation linkage to the existing frame tree
+structure.
+
+First, if you want to traverse the frame tree or a subtree thereof to
+examine all the frames once, you do `<em>`{=html}not`</em>`{=html} want
+to traverse next-continuation links. All continuations are reachable by
+traversing the `GetNextSibling` links from the result of `GetFirstChild`
+for all child lists.
+
+Second, the following property holds:
+
+-   Consider two frames F1 and F2 where F1\'s next-continuation is F2
+    and their respective parent frames are P1 and P2. Then either P1\'s
+    next continuation is P2, or P1 == P2, because P is responsible for
+    breaking F1 and F2.
+
+In other words, continuations are sometimes siblings of each other, and
+sometimes not. If their parent content was broken at the same point,
+then they are not siblings, since they are children of different
+continuations of the parent. So in the frame tree for the markup
+
+` <p>This is <b><i>some <br/>text</i></b>.</p>`
+
+the two continuations for the `b` element are siblings (unless the line
+break is also a page break), but the two continuations for the `i`
+element are not.
+
+There is an exception to that property when F1 is a first-in-flow float
+placeholder. In that case F2\'s parent will be the next-in-flow of F1\'s
+containing block.
+
+### Reflow statuses
+
+The aStatus argument of Reflow reflects that. `IsComplete()` means that
+we reflowed all the content and no more next-in-flows are needed. At
+that point there may still be next in flows, but the parent will delete
+them. `IsIncomplete()` means \"some content did not fit in this frame\".
+`IsOverflowIncomplete()` means that the frame is itself complete, but
+some of its content didn\'t fit: this triggers the creation of overflow
+containers for the frame\'s continuations. `IsIncomplete()` and
+`NextInFlowNeedsReflow()` means \"some content did not fit in this frame
+AND it must be reflowed\". These values are defined and documented in
+[nsIFrame.h](https://searchfox.org/mozilla-central/source/layout/generic/nsIFrame.h)
+(search for \"Reflow status\").
+
+### Dynamic Reflow Considerations
+
+When we reflow a frame F with fluid continuations, two things can
+happen:
+
+-   Some child frames do not fit in the passed-in width or height
+    constraint. These frames must be \"pushed\" to F\'s next-in-flow. If
+    F has no next-in-flow, we must create one under F\'s parent\'s
+    next-in-flow \-\-- or if F\'s parent is managing the breaking of F,
+    then we create F\'s next in flow directly under F\'s parent. If F is
+    a block, it pushes overflowing child frames to its \"overflow\"
+    child list and forces F\'s next in flow to be reflowed. When we
+    reflow a block, we pull the child frames from the prev-in-flow\'s
+    overflow list into the current frame.
+-   All child frames fit in the passed-in width or height constraint.
+    Then child frames must be \"pulled\" from F\'s next-in-flow to fill
+    in the available space. If F\'s next-in-flow becomes empty, we may
+    be able to delete it.
+
+In both of these situations we might end up with a frame F containing
+two child frames, one of which is a continuation of the other. This is
+incorrect. We might also create holes, where there are frames P1 P2 and
+P3, P1 has child F1 and P3 has child F2, but P2 has no F child.
+
+A strategy for avoiding these issues is this: When pulling a frame F2
+from parent P2 to prev-in-flow P1, if F2 is a breakable container, then:
+
+-   If F2 has no prev-in-flow F1 in P1, then create a new primary frame
+    F1 in P1 for F2\'s content, with F2 as its next-in-flow.
+-   Pull children from F2 to F1 until F2 is empty or we run out of
+    space. If F2 goes empty, pull from the next non-empty next-in-flow.
+    Empty continuations with no next-in-flows can be deleted.
+
+When pushing a frame F1 from parent P1 to P2, where F1 has a
+next-in-flow F2 (which must be a child of P2):
+
+-   Merge F2 into F1 by moving all F2\'s children into F1, then deleting
+    F2
+
+For inline frames F, we have our own custom strategy that coalesces
+adjacent inline frames. This need not change.
+
+We do need to implement this strategy when F is a normal in-flow block,
+a floating block, and eventually an absolutely positioned block.
