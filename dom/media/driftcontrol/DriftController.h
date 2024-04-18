@@ -22,8 +22,8 @@ namespace mozilla {
  * the calculations.
  *
  * The DriftController looks at how the current buffering level differs from the
- * desired buffering level and sets a corrected target rate. A resampler should
- * be configured to resample from the nominal source rate to the corrected
+ * desired buffering level and sets a corrected source rate. A resampler should
+ * be configured to resample from the corrected source rate to the nominal
  * target rate. It assumes that the resampler is initially configured to
  * resample from the nominal source rate to the nominal target rate.
  *
@@ -53,12 +53,12 @@ class DriftController final {
   void ResetAfterUnderrun();
 
   /**
-   * Returns the drift-corrected target rate.
+   * Returns the drift-corrected source rate.
    */
-  uint32_t GetCorrectedTargetRate() const;
+  uint32_t GetCorrectedSourceRate() const;
 
   /**
-   * The number of times mCorrectedTargetRate has been changed to adjust to
+   * The number of times mCorrectedSourceRate has been changed to adjust to
    * drift.
    */
   uint32_t NumCorrectionChanges() const { return mNumCorrectionChanges; }
@@ -102,9 +102,12 @@ class DriftController final {
   // This implements a simple PID controller with feedback.
   // Set point:     SP = mDesiredBuffering.
   // Process value: PV(t) = aBufferedFrames. This is the feedback.
-  // Error:         e(t) = mDesiredBuffering - aBufferedFrames.
-  // Control value: CV(t) = the number to add to the nominal target rate, i.e.
-  //                the corrected target rate = CV(t) + nominal target rate.
+  // Error:         e(t) = aBufferedFrames - mDesiredBuffering.
+  //                Error is positive when the process value is high, which is
+  //                the opposite of conventional PID controllers because this
+  //                is a reverse-acting system.
+  // Control value: CV(t) = the value to add to the nominal source rate, i.e.
+  //                the corrected source rate = nominal source rate + CV(t).
   //
   // Controller:
   // Proportional part: The error, p(t) = e(t), multiplied by a gain factor, Kp.
@@ -115,13 +118,13 @@ class DriftController final {
   // Control signal:    The sum of the parts' output,
   //                    u(t) = Kp*p(t) + Ki*i(t) + Kd*d(t).
   //
-  // Control action: Converting the control signal to a target sample rate.
+  // Control action: Converting the control signal to a source sample rate.
   //                 Simplified, a positive control signal means the buffer is
-  //                 lower than desired (because the error is positive), so the
-  //                 target sample rate must be increased in order to consume
-  //                 input data slower. We calculate the corrected target rate
-  //                 by simply adding the control signal, u(t), to the nominal
-  //                 target rate.
+  //                 higher than desired (because the error is positive),
+  //                 so the source sample rate must be increased in order to
+  //                 consume input data faster.
+  //                 We calculate the corrected source rate by simply adding
+  //                 the control signal, u(t), to the nominal source rate.
   //
   // Hysteresis: As long as the error is within a threshold of 20% of the set
   //             point (desired buffering level) (up to 10ms for >50ms desired
@@ -144,7 +147,7 @@ class DriftController final {
   int32_t mPreviousError = 0;
   float mIntegral = 0.0;
   Maybe<float> mIntegralCenterForCap;
-  float mCorrectedTargetRate;
+  float mCorrectedSourceRate;
   Maybe<int32_t> mLastHysteresisBoundaryCorrection;
   media::TimeUnit mDurationWithinHysteresis;
   uint32_t mNumCorrectionChanges = 0;

@@ -61,11 +61,11 @@ AudioSegment AudioResampler::Resample(uint32_t aOutFrames, bool* aHasUnderrun) {
     return segment;
   }
 
-  media::TimeUnit outDuration(aOutFrames, mResampler.GetOutRate());
+  media::TimeUnit outDuration(aOutFrames, mResampler.mOutRate);
   mResampler.EnsurePreBuffer(outDuration);
 
   const media::TimeUnit chunkCapacity(mOutputChunks.ChunkCapacity(),
-                                      mResampler.GetOutRate());
+                                      mResampler.mOutRate);
 
   while (!outDuration.IsZero()) {
     MOZ_ASSERT(outDuration.IsPositive());
@@ -73,8 +73,7 @@ AudioSegment AudioResampler::Resample(uint32_t aOutFrames, bool* aHasUnderrun) {
     const media::TimeUnit chunkDuration = std::min(outDuration, chunkCapacity);
     outDuration -= chunkDuration;
 
-    const uint32_t outFrames =
-        chunkDuration.ToTicksAtRate(mResampler.GetOutRate());
+    const uint32_t outFrames = chunkDuration.ToTicksAtRate(mResampler.mOutRate);
     for (uint32_t i = 0; i < chunk.ChannelCount(); ++i) {
       if (chunk.mBufferFormat == AUDIO_FORMAT_FLOAT32) {
         *aHasUnderrun |= mResampler.Resample(
@@ -94,8 +93,8 @@ AudioSegment AudioResampler::Resample(uint32_t aOutFrames, bool* aHasUnderrun) {
   return segment;
 }
 
-void AudioResampler::Update(uint32_t aOutRate, uint32_t aChannels) {
-  mResampler.UpdateResampler(aOutRate, aChannels);
+void AudioResampler::Update(uint32_t aInRate, uint32_t aChannels) {
+  mResampler.UpdateResampler(aInRate, aChannels);
   mOutputChunks.Update(aChannels);
 }
 

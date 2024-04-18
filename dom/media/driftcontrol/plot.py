@@ -86,23 +86,23 @@ MOZ_LOG_FILE=/tmp/driftcontrol.csv       \
             [d + h for (d, h) in zip(desired, hysteresisthreshold)],
             alpha=0.2,
             color="goldenrod",
-            legend_label="Hysteresis Threshold (won't correct out rate within area)",
+            legend_label="Hysteresis Threshold (won't correct in rate within area)",
         )
 
         fig2 = figure(x_range=fig1.x_range)
         fig2.line(t, inrate, color="hotpink", legend_label="Nominal in sample rate")
         fig2.line(t, outrate, color="firebrick", legend_label="Nominal out sample rate")
         fig2.line(
-            t, corrected, color="dodgerblue", legend_label="Corrected out sample rate"
+            t, corrected, color="dodgerblue", legend_label="Corrected in sample rate"
         )
         fig2.line(
             t,
             hysteresiscorrected,
             color="seagreen",
-            legend_label="Hysteresis-corrected out sample rate",
+            legend_label="Hysteresis-corrected in sample rate",
         )
         fig2.line(
-            t, configured, color="goldenrod", legend_label="Configured out sample rate"
+            t, configured, color="goldenrod", legend_label="Configured in sample rate"
         )
 
         fig3 = figure(x_range=fig1.x_range)

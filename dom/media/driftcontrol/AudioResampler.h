@@ -13,7 +13,7 @@
 namespace mozilla {
 
 /**
- * Audio Resampler is a resampler able to change the output rate and channels
+ * Audio Resampler is a resampler able to change the input rate and channels
  * count on the fly. The API is simple and it is based in AudioSegment in order
  * to be used MTG. Memory allocations, for input and output buffers, will happen
  * in the constructor, when channel count changes and if the amount of input
@@ -68,10 +68,10 @@ class AudioResampler final {
   AudioSegment Resample(uint32_t aOutFrames, bool* aHasUnderrun);
 
   /*
-   * Updates the output rate that will be used by the resampler.
+   * Updates the input rate that will be used by the resampler.
    */
-  void UpdateOutRate(uint32_t aOutRate) {
-    Update(aOutRate, mResampler.GetChannels());
+  void UpdateInRate(uint32_t aInRate) {
+    Update(aInRate, mResampler.GetChannels());
   }
 
   /**
@@ -83,9 +83,9 @@ class AudioResampler final {
 
  private:
   void UpdateChannels(uint32_t aChannels) {
-    Update(mResampler.GetOutRate(), aChannels);
+    Update(mResampler.GetInRate(), aChannels);
   }
-  void Update(uint32_t aOutRate, uint32_t aChannels);
+  void Update(uint32_t aInRate, uint32_t aChannels);
 
  private:
   DynamicResampler mResampler;

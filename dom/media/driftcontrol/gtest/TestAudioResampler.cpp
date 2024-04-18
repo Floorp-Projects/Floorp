@@ -90,9 +90,9 @@ TEST(TestAudioResampler, OutAudioSegment_Float)
     }
   }
 
-  // Update out rate
-  out_rate = 44100;
-  dr.UpdateOutRate(out_rate);
+  // Update in rate
+  in_rate = 26122;
+  dr.UpdateInRate(in_rate);
   out_frames = in_frames * out_rate / in_rate;
   EXPECT_EQ(out_frames, 18u);
   // Even if we provide no input if we have enough buffered input, we can create
@@ -146,9 +146,9 @@ TEST(TestAudioResampler, OutAudioSegment_Short)
     }
   }
 
-  // Update out rate
-  out_rate = 44100;
-  dr.UpdateOutRate(out_rate);
+  // Update in rate
+  in_rate = 26122;
+  dr.UpdateInRate(out_rate);
   out_frames = in_frames * out_rate / in_rate;
   EXPECT_EQ(out_frames, 18u);
   // Even if we provide no input if we have enough buffered input, we can create
@@ -650,9 +650,9 @@ TEST(TestAudioResampler, ChannelChange_Discontinuity3)
 
   // The resampler here is updated due to the rate change. This is because the
   // in and out rate was the same so a pass through logic was used. By updating
-  // the out rate to something different than the in rate, the resampler will
+  // the in rate to something different than the out rate, the resampler will
   // start being used and discontinuity will exist.
-  dr.UpdateOutRate(out_rate + 400);
+  dr.UpdateInRate(in_rate - 400);
   dr.AppendInput(inSegment);
   AudioSegment s2 = dr.Resample(out_frames, &hasUnderrun);
   EXPECT_FALSE(hasUnderrun);

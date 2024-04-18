@@ -9,12 +9,12 @@ namespace mozilla {
 
 DynamicResampler::DynamicResampler(uint32_t aInRate, uint32_t aOutRate,
                                    uint32_t aInputPreBufferFrameCount)
-    : mInRate(aInRate),
+    : mOutRate(aOutRate),
       mInputPreBufferFrameCount(aInputPreBufferFrameCount),
-      mOutRate(aOutRate) {
+      mInRate(aInRate) {
   MOZ_ASSERT(aInRate);
   MOZ_ASSERT(aOutRate);
-  UpdateResampler(mOutRate, STEREO);
+  UpdateResampler(mInRate, STEREO);
   mInputStreamFile.Open("DynamicResamplerInFirstChannel", 1, mInRate);
   mOutputStreamFile.Open("DynamicResamplerOutFirstChannel", 1, mOutRate);
 }
@@ -150,8 +150,8 @@ void DynamicResampler::ResampleInternal(const int16_t* aInBuffer,
   }
 }
 
-void DynamicResampler::UpdateResampler(uint32_t aOutRate, uint32_t aChannels) {
-  MOZ_ASSERT(aOutRate);
+void DynamicResampler::UpdateResampler(uint32_t aInRate, uint32_t aChannels) {
+  MOZ_ASSERT(aInRate);
   MOZ_ASSERT(aChannels);
 
   if (mChannels != aChannels) {
@@ -159,11 +159,11 @@ void DynamicResampler::UpdateResampler(uint32_t aOutRate, uint32_t aChannels) {
     if (mResampler) {
       speex_resampler_destroy(mResampler);
     }
-    mResampler = speex_resampler_init(aChannels, mInRate, aOutRate,
+    mResampler = speex_resampler_init(aChannels, aInRate, mOutRate,
                                       SPEEX_RESAMPLER_QUALITY_MIN, nullptr);
     MOZ_ASSERT(mResampler);
     mChannels = aChannels;
-    mOutRate = aOutRate;
+    mInRate = aInRate;
     // Between mono and stereo changes, keep always allocated 2 channels to
     // avoid reallocations in the most common case.
     if ((mChannels == STEREO || mChannels == 1) &&
@@ -201,7 +201,7 @@ void DynamicResampler::UpdateResampler(uint32_t aOutRate, uint32_t aChannels) {
     return;
   }
 
-  if (mOutRate != aOutRate) {
+  if (mInRate != aInRate) {
     // If the rates was the same the resampler was not being used so warm up.
     if (mOutRate == mInRate) {
       WarmUpResampler(true);
@@ -210,9 +210,9 @@ void DynamicResampler::UpdateResampler(uint32_t aOutRate, uint32_t aChannels) {
 #ifdef DEBUG
     int rv =
 #endif
-        speex_resampler_set_rate(mResampler, mInRate, aOutRate);
+        speex_resampler_set_rate(mResampler, aInRate, mOutRate);
     MOZ_ASSERT(rv == RESAMPLER_ERR_SUCCESS);
-    mOutRate = aOutRate;
+    mInRate = aInRate;
   }
 }
 
