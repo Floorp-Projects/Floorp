@@ -367,9 +367,9 @@
       },
       "id": "05645095-d26e-4f20-9137-f24a14a23f28",
       "identifier": "bing",
-      "last_modified": 1707833224310,
+      "last_modified": 1713282817048,
       "recordType": "engine",
-      "schema": 1706918405822,
+      "schema": 1713199744323,
       "variants": [
         {
           "environment": {
@@ -458,16 +458,18 @@
               "xh",
               "zh-CN"
             ]
-          }
-        },
-        {
-          "environment": {
-            "channels": [
-              "esr"
-            ]
           },
-          "partnerCode": "MOZR",
-          "telemetrySuffix": "esr"
+          "subVariants": [
+            {
+              "environment": {
+                "channels": [
+                  "esr"
+                ]
+              },
+              "partnerCode": "MOZR",
+              "telemetrySuffix": "esr"
+            }
+          ]
         }
       ]
     },
@@ -666,23 +668,25 @@
       },
       "id": "04e99a38-13ee-47d8-8aa4-64482b3dea99",
       "identifier": "ddg",
-      "last_modified": 1702906502754,
+      "last_modified": 1713282817053,
       "recordType": "engine",
-      "schema": 1702901739665,
+      "schema": 1713282081098,
       "variants": [
         {
           "environment": {
             "allRegionsAndLocales": true
-          }
-        },
-        {
-          "environment": {
-            "channels": [
-              "esr"
-            ]
           },
-          "partnerCode": "ftsa",
-          "telemetrySuffix": "esr"
+          "subVariants": [
+            {
+              "environment": {
+                "channels": [
+                  "esr"
+                ]
+              },
+              "partnerCode": "ftsa",
+              "telemetrySuffix": "esr"
+            }
+          ]
         },
         {
           "environment": {
@@ -2068,24 +2072,26 @@
       },
       "id": "7ace4aa1-e762-4f4b-87b9-b23b3c3a930b",
       "identifier": "google",
-      "last_modified": 1702906502757,
+      "last_modified": 1713282817051,
       "recordType": "engine",
-      "schema": 1702901739026,
+      "schema": 1713282083062,
       "variants": [
         {
           "environment": {
             "allRegionsAndLocales": true
           },
+          "subVariants": [
+            {
+              "environment": {
+                "channels": [
+                  "esr"
+                ]
+              },
+              "partnerCode": "firefox-b-e",
+              "telemetrySuffix": "b-e"
+            }
+          ],
           "telemetrySuffix": "b-d"
-        },
-        {
-          "environment": {
-            "channels": [
-              "esr"
-            ]
-          },
-          "partnerCode": "firefox-b-e",
-          "telemetrySuffix": "b-e"
         },
         {
           "environment": {
@@ -2110,33 +2116,21 @@
             ]
           },
           "partnerCode": "firefox-b-1-d",
-          "telemetrySuffix": "b-1-d",
-          "urls": {
-            "search": {
-              "params": [
-                {
-                  "name": "client",
-                  "value": "{partnerCode}"
-                },
-                {
-                  "experimentConfig": "google_channel_us",
-                  "name": "channel"
-                }
-              ]
+          "subVariants": [
+            {
+              "environment": {
+                "channels": [
+                  "esr"
+                ],
+                "regions": [
+                  "us"
+                ]
+              },
+              "partnerCode": "firefox-b-1-e",
+              "telemetrySuffix": "b-1-e"
             }
-          }
-        },
-        {
-          "environment": {
-            "channels": [
-              "esr"
-            ],
-            "regions": [
-              "us"
-            ]
-          },
-          "partnerCode": "firefox-b-1-e",
-          "telemetrySuffix": "b-1-e",
+          ],
+          "telemetrySuffix": "b-1-d",
           "urls": {
             "search": {
               "params": [
@@ -7341,5 +7335,5 @@
       "schema": 1707824831520
     }
   ],
-  "timestamp": 1710766863306
+  "timestamp": 1713282817053
 }
