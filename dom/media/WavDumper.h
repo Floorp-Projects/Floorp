@@ -107,13 +107,23 @@ class WavDumper {
     if (!mFile) {
       return;
     }
-    WriteDumpFileHelper(aBuffer, aSamples);
+    if (aBuffer) {
+      WriteDumpFileHelper(aBuffer, aSamples);
+    } else {
+      constexpr size_t blockSize = 128;
+      T block[blockSize] = {};
+      for (size_t remaining = aSamples; remaining;) {
+        size_t toWrite = std::min(remaining, blockSize);
+        fwrite(block, sizeof(T), toWrite, mFile);
+        remaining -= toWrite;
+      }
+    }
+    fflush(mFile);
   }
 
  private:
   void WriteDumpFileHelper(const int16_t* aInput, size_t aSamples) {
     mozilla::Unused << fwrite(aInput, sizeof(int16_t), aSamples, mFile);
-    fflush(mFile);
   }
 
   void WriteDumpFileHelper(const float* aInput, size_t aSamples) {
@@ -127,7 +137,6 @@ class WavDumper {
       MOZ_ASSERT(rv);
     }
     mozilla::Unused << fwrite(buf.Elements(), buf.Length(), 1, mFile);
-    fflush(mFile);
   }
 
   FILE* mFile = nullptr;

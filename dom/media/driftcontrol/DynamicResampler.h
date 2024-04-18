@@ -174,24 +174,24 @@ class DynamicResampler final {
     }
 
     uint32_t totalOutFramesNeeded = aOutFrames;
-    auto resample = [&] {
-      mInternalInBuffer[aChannelIndex].ReadNoCopy(
-          [&](const Span<const T>& aInBuffer) -> uint32_t {
-            if (!totalOutFramesNeeded) {
-              return 0;
-            }
-            uint32_t outFramesResampled = totalOutFramesNeeded;
-            uint32_t inFrames = aInBuffer.Length();
-            ResampleInternal(aInBuffer.data(), &inFrames, aOutBuffer,
-                             &outFramesResampled, aChannelIndex);
-            aOutBuffer += outFramesResampled;
-            totalOutFramesNeeded -= outFramesResampled;
-            mInputTail[aChannelIndex].StoreTail<T>(aInBuffer.To(inFrames));
-            return inFrames;
-          });
+    auto resample = [&](const T* aInBuffer, uint32_t aInLength) -> uint32_t {
+      uint32_t outFramesResampled = totalOutFramesNeeded;
+      uint32_t inFrames = aInLength;
+      ResampleInternal(aInBuffer, &inFrames, aOutBuffer, &outFramesResampled,
+                       aChannelIndex);
+      aOutBuffer += outFramesResampled;
+      totalOutFramesNeeded -= outFramesResampled;
+      mInputTail[aChannelIndex].StoreTail<T>(aInBuffer, inFrames);
+      return inFrames;
     };
 
-    resample();
+    mInternalInBuffer[aChannelIndex].ReadNoCopy(
+        [&](const Span<const T>& aInBuffer) -> uint32_t {
+          if (!totalOutFramesNeeded) {
+            return 0;
+          }
+          return resample(aInBuffer.Elements(), aInBuffer.Length());
+        });
 
     if (totalOutFramesNeeded == 0) {
       return false;
@@ -204,8 +204,7 @@ class DynamicResampler final {
           ((CheckedUint32(totalOutFramesNeeded) * mInRate + mOutRate - 1) /
            mOutRate)
               .value();
-      mInternalInBuffer[aChannelIndex].WriteSilence(totalInFramesNeeded);
-      resample();
+      resample(nullptr, totalInFramesNeeded);
     }
     mIsPreBufferSet = false;
     return true;
@@ -324,16 +323,16 @@ class DynamicResampler final {
     }
     template <typename T>
     void StoreTail(const T* aInBuffer, uint32_t aInFrames) {
-      if (aInFrames >= MAXSIZE) {
-        PodCopy(Buffer<T>(), aInBuffer + aInFrames - MAXSIZE, MAXSIZE);
-        mSize = MAXSIZE;
+      const T* inBuffer = aInBuffer;
+      mSize = std::min(aInFrames, MAXSIZE);
+      if (inBuffer) {
+        PodCopy(Buffer<T>(), inBuffer + aInFrames - mSize, mSize);
       } else {
-        PodCopy(Buffer<T>(), aInBuffer, aInFrames);
-        mSize = aInFrames;
+        std::fill_n(Buffer<T>(), mSize, static_cast<T>(0));
       }
     }
     uint32_t Length() { return mSize; }
-    static const uint32_t MAXSIZE = 20;
+    static constexpr uint32_t MAXSIZE = 20;
 
    private:
     float mBuffer[MAXSIZE] = {};

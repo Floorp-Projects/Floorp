@@ -47,7 +47,9 @@ void DynamicResampler::EnsurePreBuffer(media::TimeUnit aDuration) {
   if (buffered.IsZero()) {
     // Wait for the first input segment before deciding how much to pre-buffer.
     // If it is large it indicates high-latency, and the buffer would have to
-    // handle that.
+    // handle that.  This also means that the pre-buffer is not set up just
+    // before a large input segment would extend the buffering beyond the
+    // desired level.
     return;
   }
 
@@ -93,7 +95,6 @@ void DynamicResampler::ResampleInternal(const float* aInBuffer,
   MOZ_ASSERT(mInRate);
   MOZ_ASSERT(mOutRate);
 
-  MOZ_ASSERT(aInBuffer);
   MOZ_ASSERT(aInFrames);
   MOZ_ASSERT(*aInFrames > 0);
   MOZ_ASSERT(aOutBuffer);
@@ -125,7 +126,6 @@ void DynamicResampler::ResampleInternal(const int16_t* aInBuffer,
   MOZ_ASSERT(mInRate);
   MOZ_ASSERT(mOutRate);
 
-  MOZ_ASSERT(aInBuffer);
   MOZ_ASSERT(aInFrames);
   MOZ_ASSERT(*aInFrames > 0);
   MOZ_ASSERT(aOutBuffer);

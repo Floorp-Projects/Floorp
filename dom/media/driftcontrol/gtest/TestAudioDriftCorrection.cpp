@@ -459,29 +459,46 @@ TEST(TestAudioDriftCorrection, DriftStepResponseUnderrunHighLatencyInput)
   constexpr uint32_t iterations = 200;
   const PrincipalHandle testPrincipal =
       MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
-  uint32_t inputRate = nominalRate * 1005 / 1000;  // 0.5% drift
-  uint32_t inputInterval = inputRate;
+  uint32_t inputRate1 = nominalRate * 1005 / 1000;  // 0.5% drift
+  uint32_t inputInterval1 = inputRate1;
   AudioGenerator<AudioDataValue> tone(1, nominalRate, 440);
   AudioDriftCorrection ad(nominalRate, nominalRate, testPrincipal);
   for (uint32_t i = 0; i < interval * iterations; i += interval / 100) {
     AudioSegment inSegment;
     if (i > 0 && i % interval == 0) {
-      tone.Generate(inSegment, inputInterval);
+      tone.Generate(inSegment, inputInterval1);
     }
     ad.RequestFrames(inSegment, interval / 100);
   }
 
-  inputRate = nominalRate * 995 / 1000;  // -0.5% drift
-  inputInterval = inputRate;
+  uint32_t inputRate2 = nominalRate * 995 / 1000;  // -0.5% drift
+  uint32_t inputInterval2 = inputRate2;
   for (uint32_t i = 0; i < interval * iterations; i += interval / 100) {
     AudioSegment inSegment;
+    // The first segment is skipped to cause an underrun.
     if (i > 0 && i % interval == 0) {
-      tone.Generate(inSegment, inputInterval);
+      tone.Generate(inSegment, inputInterval2);
     }
     ad.RequestFrames(inSegment, interval / 100);
+    if (i >= interval / 10 && i < interval) {
+      // While the DynamicResampler has not set its pre-buffer after the
+      // underrun, InFramesBuffered() reports the pre-buffer size.
+      // The initial desired buffer and pre-buffer size was
+      // inputInterval1 * 11 / 10 to accomodate the large input block size.
+      // This was doubled when the underrun occurred.
+      EXPECT_EQ(ad.CurrentBuffering(), inputInterval1 * 11 / 10 * 2)
+          << "for i=" << i;
+    } else if (i == interval) {
+      // After the pre-buffer was set and used to generate the first output
+      // block, the actual number of frames buffered almost matches the
+      // pre-buffer size, with some rounding from output to input frame count
+      // conversion.
+      EXPECT_EQ(ad.CurrentBuffering(), inputInterval1 * 11 / 10 * 2 - 1)
+          << "after first input after underrun";
+    }
   }
 
-  EXPECT_EQ(ad.BufferSize(), 220800U);
+  EXPECT_EQ(ad.BufferSize(), 110400U);
   EXPECT_EQ(ad.NumUnderruns(), 1u);
 }
 
