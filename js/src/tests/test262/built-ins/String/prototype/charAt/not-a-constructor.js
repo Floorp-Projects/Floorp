@@ -29,7 +29,7 @@ assert.sameValue(
 
 assert.throws(TypeError, () => {
   new String.prototype.charAt();
-}, '`new String.prototype.charAt()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

@@ -17,10 +17,11 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-assert.sameValue(URIError.prototype.name, "URIError");
-
-verifyNotEnumerable(URIError.prototype, "name");
-verifyWritable(URIError.prototype, "name");
-verifyConfigurable(URIError.prototype, "name");
+verifyProperty(URIError.prototype, "name", {
+  value: "URIError",
+  writable: true,
+  enumerable: false,
+  configurable: true
+});
 
 reportCompare(0, 0);

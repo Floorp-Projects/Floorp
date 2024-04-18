@@ -19,10 +19,11 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-assert.sameValue(DataView.prototype.getUint32.name, "getUint32");
-
-verifyNotEnumerable(DataView.prototype.getUint32, "name");
-verifyNotWritable(DataView.prototype.getUint32, "name");
-verifyConfigurable(DataView.prototype.getUint32, "name");
+verifyProperty(DataView.prototype.getUint32, "name", {
+  value: "getUint32",
+  writable: false,
+  enumerable: false,
+  configurable: true
+});
 
 reportCompare(0, 0);

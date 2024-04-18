@@ -25,10 +25,11 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-assert.sameValue(EvalError.length, 1);
-
-verifyNotEnumerable(EvalError, "length");
-verifyNotWritable(EvalError, "length");
-verifyConfigurable(EvalError, "length");
+verifyProperty(EvalError, "length", {
+  value: 1,
+  writable: false,
+  enumerable: false,
+  configurable: true
+});
 
 reportCompare(0, 0);

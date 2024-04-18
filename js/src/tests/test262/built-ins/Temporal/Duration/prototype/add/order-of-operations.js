@@ -339,18 +339,8 @@ const expectedOpsForZonedRelativeTo = expected.concat([
   "call options.relativeTo.timeZone.getPossibleInstantsFor",
   // AddDuration → DifferenceZonedDateTime
   "call options.relativeTo.timeZone.getOffsetNanosecondsFor",
-  // AddDuration → DifferenceZonedDateTime → DifferenceISODateTime
+  "call options.relativeTo.timeZone.getPossibleInstantsFor",
   "call options.relativeTo.calendar.dateUntil",
-  // AddDuration → DifferenceZonedDateTime → AddZonedDateTime
-  "call options.relativeTo.calendar.dateAdd",
-  "call options.relativeTo.timeZone.getPossibleInstantsFor",
-  // AddDuration → DifferenceZonedDateTime → NanosecondsToDays
-  "call options.relativeTo.timeZone.getOffsetNanosecondsFor",
-  "call options.relativeTo.timeZone.getOffsetNanosecondsFor",
-  // AddDuration → DifferenceZonedDateTime → NanosecondsToDays → AddZonedDateTime 1
-  "call options.relativeTo.timeZone.getPossibleInstantsFor",
-  // AddDuration → DifferenceZonedDateTime → NanosecondsToDays → AddZonedDateTime 2
-  "call options.relativeTo.timeZone.getPossibleInstantsFor",
 ]);
 
 const zonedRelativeTo = TemporalHelpers.propertyBagObserver(actual, {

@@ -25,7 +25,7 @@ assert.sameValue(isConstructor(Reflect.get), false, 'isConstructor(Reflect.get) 
 
 assert.throws(TypeError, () => {
   new Reflect.get({}, '');
-}, '`new Reflect.get({}, \'\')` throws TypeError');
+});
 
 
 reportCompare(0, 0);

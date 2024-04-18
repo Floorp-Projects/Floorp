@@ -25,7 +25,7 @@ assert.sameValue(isConstructor(parseFloat), false, 'isConstructor(parseFloat) mu
 
 assert.throws(TypeError, () => {
   new parseFloat(1);
-}, '`new parseFloat(1)` throws TypeError');
+});
 
 
 reportCompare(0, 0);

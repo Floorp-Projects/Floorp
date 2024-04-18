@@ -58,7 +58,7 @@ testWithBigIntTypedArrayConstructors(function(TA) {
 
   assert.throws(TypeError, function() {
     typedArray[0] = s;
-  }, '`typedArray[0] = s` throws TypeError');
+  });
 
 });
 

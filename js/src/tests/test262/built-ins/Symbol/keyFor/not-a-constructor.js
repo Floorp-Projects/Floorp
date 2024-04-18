@@ -25,7 +25,7 @@ assert.sameValue(isConstructor(Symbol.keyFor), false, 'isConstructor(Symbol.keyF
 
 assert.throws(TypeError, () => {
   new Symbol.keyFor(Symbol());
-}, '`new Symbol.keyFor(Symbol())` throws TypeError');
+});
 
 
 reportCompare(0, 0);

@@ -19,10 +19,11 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-assert.sameValue(Function.prototype.call.name, "call");
-
-verifyNotEnumerable(Function.prototype.call, "name");
-verifyNotWritable(Function.prototype.call, "name");
-verifyConfigurable(Function.prototype.call, "name");
+verifyProperty(Function.prototype.call, "name", {
+  value: "call",
+  writable: false,
+  enumerable: false,
+  configurable: true
+});
 
 reportCompare(0, 0);

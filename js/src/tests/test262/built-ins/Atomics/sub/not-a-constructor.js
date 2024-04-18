@@ -26,7 +26,7 @@ assert.sameValue(isConstructor(Atomics.sub), false, 'isConstructor(Atomics.sub) 
 
 assert.throws(TypeError, () => {
   new Atomics.sub(new Int32Array(new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT)));
-}, '`new Atomics.sub(new Int32Array(new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT)))` throws TypeError');
+});
 
 
 reportCompare(0, 0);

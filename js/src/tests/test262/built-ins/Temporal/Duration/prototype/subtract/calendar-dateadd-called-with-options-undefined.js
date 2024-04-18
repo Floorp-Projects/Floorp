@@ -15,6 +15,6 @@ const calendar = TemporalHelpers.calendarDateAddUndefinedOptions();
 const timeZone = TemporalHelpers.oneShiftTimeZone(new Temporal.Instant(0n), 3600e9);
 const instance = new Temporal.Duration(1, 1, 1, 1);
 instance.subtract(new Temporal.Duration(-1, -1, -1, -1), { relativeTo: new Temporal.ZonedDateTime(0n, timeZone, calendar) });
-assert.sameValue(calendar.dateAddCallCount, 3);
+assert.sameValue(calendar.dateAddCallCount, 2);
 
 reportCompare(0, 0);

@@ -30,7 +30,7 @@ assert.sameValue(
 
 assert.throws(TypeError, () => {
   let sab = new SharedArrayBuffer(1); new sab.slice();
-}, '`let sab = new SharedArrayBuffer(1); new sab.slice()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

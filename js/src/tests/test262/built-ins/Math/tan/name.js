@@ -19,10 +19,11 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-assert.sameValue(Math.tan.name, "tan");
-
-verifyNotEnumerable(Math.tan, "name");
-verifyNotWritable(Math.tan, "name");
-verifyConfigurable(Math.tan, "name");
+verifyProperty(Math.tan, "name", {
+  value: "tan",
+  writable: false,
+  enumerable: false,
+  configurable: true
+});
 
 reportCompare(0, 0);

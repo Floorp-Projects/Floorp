@@ -25,7 +25,7 @@ assert.sameValue(isConstructor(Math.sinh), false, 'isConstructor(Math.sinh) must
 
 assert.throws(TypeError, () => {
   new Math.sinh();
-}, '`new Math.sinh()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

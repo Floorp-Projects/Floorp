@@ -29,7 +29,7 @@ assert.sameValue(
 
 assert.throws(TypeError, () => {
   let p = new Promise(() => {}); new p.then();
-}, '`let p = new Promise(() => {}); new p.then()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

@@ -37,14 +37,14 @@ try {
 
   verifyWritable(arrObj, "property", "setVerifyHelpProp");
 
-  verifyNotEnumerable(arrObj, "property");
-
-  verifyNotConfigurable(arrObj, "property");
-
   if (!(e instanceof TypeError)) {
     throw new Test262Error("Expected TypeError, got " + e);
   }
-
 }
+
+verifyProperty(arrObj, "property", {
+  enumerable: false,
+  configurable: false,
+});
 
 reportCompare(0, 0);

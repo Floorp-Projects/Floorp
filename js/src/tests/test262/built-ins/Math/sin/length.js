@@ -22,10 +22,11 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-assert.sameValue(Math.sin.length, 1);
-
-verifyNotEnumerable(Math.sin, "length");
-verifyNotWritable(Math.sin, "length");
-verifyConfigurable(Math.sin, "length");
+verifyProperty(Math.sin, "length", {
+  value: 1,
+  writable: false,
+  enumerable: false,
+  configurable: true
+});
 
 reportCompare(0, 0);

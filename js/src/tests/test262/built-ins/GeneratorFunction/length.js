@@ -11,10 +11,11 @@ features: [generators]
 
 var GeneratorFunction = Object.getPrototypeOf(function*() {}).constructor;
 
-assert.sameValue(GeneratorFunction.length, 1);
-
-verifyNotEnumerable(GeneratorFunction, 'length');
-verifyNotWritable(GeneratorFunction, 'length');
-verifyConfigurable(GeneratorFunction, 'length');
+verifyProperty(GeneratorFunction, "length", {
+  value: 1,
+  writable: false,
+  enumerable: false,
+  configurable: true
+});
 
 reportCompare(0, 0);

@@ -18,14 +18,11 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-assert.sameValue(
-  Object.setPrototypeOf.length,
-  2,
-  'The value of `Object.setPrototypeOf.length` is `2`'
-);
-
-verifyNotEnumerable(Object.setPrototypeOf, 'length');
-verifyNotWritable(Object.setPrototypeOf, 'length');
-verifyConfigurable(Object.setPrototypeOf, 'length');
+verifyProperty(Object.setPrototypeOf, "length", {
+  value: 2,
+  writable: false,
+  enumerable: false,
+  configurable: true,
+});
 
 reportCompare(0, 0);

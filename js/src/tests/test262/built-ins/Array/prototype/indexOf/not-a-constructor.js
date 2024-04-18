@@ -29,7 +29,7 @@ assert.sameValue(
 
 assert.throws(TypeError, () => {
   new Array.prototype.indexOf();
-}, '`new Array.prototype.indexOf()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

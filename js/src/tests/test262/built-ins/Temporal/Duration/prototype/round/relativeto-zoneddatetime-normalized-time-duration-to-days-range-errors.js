@@ -8,12 +8,12 @@ description: >
   RangeErrors.
 info: |
   NormalizedTimeDurationToDays ( norm, zonedRelativeTo, timeZoneRec [ , precalculatedPlainDateTime ] )
-    22. If days < 0 and sign = 1, throw a RangeError exception.
-    23. If days > 0 and sign = -1, throw a RangeError exception.
+    23. If days < 0 and sign = 1, throw a RangeError exception.
+    24. If days > 0 and sign = -1, throw a RangeError exception.
     ...
-    25. If NormalizedTimeDurationSign(_norm_) = 1 and sign = -1, throw a RangeError exception.
+    26. If NormalizedTimeDurationSign(_norm_) = 1 and sign = -1, throw a RangeError exception.
     ...
-    28. If dayLength ≥ 2⁵³, throw a RangeError exception.
+    29. If dayLength ≥ 2⁵³, throw a RangeError exception.
 features: [Temporal, BigInt]
 includes: [temporalHelpers.js]
 ---*/
@@ -41,7 +41,7 @@ function timeZoneSubstituteValues(
   return tz;
 }
 
-// Step 22: days < 0 and sign = 1
+// Step 23: days < 0 and sign = 1
 let zdt = new Temporal.ZonedDateTime(
   0n, // Sets _startNs_ to 0
   timeZoneSubstituteValues(
@@ -62,7 +62,7 @@ assert.throws(RangeError, () =>
   "RangeError when days < 0 and sign = 1"
 );
 
-// Step 23: days > 0 and sign = -1
+// Step 24: days > 0 and sign = -1
 zdt = new Temporal.ZonedDateTime(
   0n, // Sets _startNs_ to 0
   timeZoneSubstituteValues(
@@ -83,13 +83,13 @@ assert.throws(RangeError, () =>
   "RangeError when days > 0 and sign = -1"
 );
 
-// Step 25: nanoseconds > 0 and sign = -1
+// Step 26: nanoseconds > 0 and sign = -1
 zdt = new Temporal.ZonedDateTime(
   0n, // Sets _startNs_ to 0
   timeZoneSubstituteValues(
     [
       [new Temporal.Instant(-2n)], // Returned in step 16, setting _relativeResult_
-      [new Temporal.Instant(-4n)], // Returned in step 21.a, setting _oneDayFarther_
+      [new Temporal.Instant(-4n)], // Returned in step 19, setting _oneDayFarther_
     ],
     [
       TemporalHelpers.SUBSTITUTE_SKIP, // Pre-conversion in Duration.p.round
@@ -107,12 +107,12 @@ assert.throws(RangeError, () =>
   "RangeError when nanoseconds > 0 and sign = -1"
 );
 
-// Step 28: day length is an unsafe integer
+// Step 29: day length is an unsafe integer
 zdt = new Temporal.ZonedDateTime(
   0n,
   timeZoneSubstituteValues(
     // Not called in step 16 because _days_ = 0
-    // Returned in step 21.a, making _oneDayFarther_ 2^53 ns later than _relativeResult_
+    // Returned in step 19, making _oneDayFarther_ 2^53 ns later than _relativeResult_
     [[new Temporal.Instant(2n ** 53n)]],
     []
   )

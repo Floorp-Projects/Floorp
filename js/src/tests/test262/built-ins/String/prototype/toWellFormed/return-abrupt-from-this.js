@@ -15,10 +15,10 @@ assert.sameValue(typeof String.prototype.toWellFormed, 'function');
 
 assert.throws(TypeError, function () {
   String.prototype.toWellFormed.call(undefined);
-}, '`String.prototype.toWellFormed.call(undefined)` throws TypeError');
+});
 
 assert.throws(TypeError, function () {
   String.prototype.toWellFormed.call(null);
-}, '`String.prototype.toWellFormed.call(null)` throws TypeError');
+});
 
 reportCompare(0, 0);

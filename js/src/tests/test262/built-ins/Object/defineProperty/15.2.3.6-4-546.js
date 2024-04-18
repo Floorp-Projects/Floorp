@@ -29,6 +29,7 @@ Object.defineProperty(obj, "prop", {
   configurable: false
 });
 var desc1 = Object.getOwnPropertyDescriptor(obj, "prop");
+assert.sameValue(desc1.configurable, false);
 
 try {
   Object.defineProperty(obj, "prop", {
@@ -38,12 +39,10 @@ try {
   throw new Test262Error("Expected TypeError");
 } catch (e) {
   assert(e instanceof TypeError);
-  assert.sameValue(desc1.configurable, false);
-
-  var desc2 = Object.getOwnPropertyDescriptor(obj, "prop");
-  assert.sameValue(desc2.configurable, false);
-
-  verifyNotConfigurable(obj, "prop");
 }
+
+verifyProperty(obj, "prop", {
+  configurable: false,
+});
 
 reportCompare(0, 0);

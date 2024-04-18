@@ -11,7 +11,7 @@ features: [Temporal]
 const maxCases = [
   ["P4294967295Y104249991374DT7H36M31.999999999S", "string with max years"],
   [{ years: 4294967295, days: 104249991374, nanoseconds: 27391999999999 }, "property bag with max years"],
-  ["P4294967295M104249991374DT7H36M31.999999999S", "string with max weeks"],
+  ["P4294967295M104249991374DT7H36M31.999999999S", "string with max months"],
   [{ months: 4294967295, days: 104249991374, nanoseconds: 27391999999999 }, "property bag with max months"],
   ["P4294967295W104249991374DT7H36M31.999999999S", "string with max weeks"],
   [{ weeks: 4294967295, days: 104249991374, nanoseconds: 27391999999999 }, "property bag with max weeks"],

@@ -25,7 +25,7 @@ assert.sameValue(isConstructor(Number.parseInt), false, 'isConstructor(Number.pa
 
 assert.throws(TypeError, () => {
   new Number.parseInt();
-}, '`new Number.parseInt()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

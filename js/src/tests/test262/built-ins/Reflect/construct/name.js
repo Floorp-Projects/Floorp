@@ -13,13 +13,11 @@ includes: [propertyHelper.js]
 features: [Reflect, Reflect.construct]
 ---*/
 
-assert.sameValue(
-  Reflect.construct.name, 'construct',
-  'The value of `Reflect.construct.name` is `"construct"`'
-);
-
-verifyNotEnumerable(Reflect.construct, 'name');
-verifyNotWritable(Reflect.construct, 'name');
-verifyConfigurable(Reflect.construct, 'name');
+verifyProperty(Reflect.construct, "name", {
+  value: "construct",
+  writable: false,
+  enumerable: false,
+  configurable: true
+});
 
 reportCompare(0, 0);

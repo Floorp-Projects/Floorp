@@ -25,6 +25,6 @@ const i32a = new Int32Array(
 
 assert.throws(TypeError, function() {
   Atomics.wait(i32a, 0, 0, 0);
-}, '`Atomics.wait(i32a, 0, 0, 0)` throws TypeError');
+});
 
 reportCompare(0, 0);

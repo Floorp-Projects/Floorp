@@ -9,7 +9,6 @@ features: [Temporal]
 ---*/
 
 const badResults = [
-  [undefined, TypeError],
   [null, TypeError],
   [false, TypeError],
   [Infinity, RangeError],

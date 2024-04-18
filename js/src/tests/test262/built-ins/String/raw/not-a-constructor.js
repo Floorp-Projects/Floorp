@@ -25,7 +25,7 @@ assert.sameValue(isConstructor(String.raw), false, 'isConstructor(String.raw) mu
 
 assert.throws(TypeError, () => {
   new String.raw({raw: []}, []);
-}, '`new String.raw({raw: []}, [])` throws TypeError');
+});
 
 
 reportCompare(0, 0);

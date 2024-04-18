@@ -25,7 +25,7 @@ assert.sameValue(isConstructor(decodeURIComponent), false, 'isConstructor(decode
 
 assert.throws(TypeError, () => {
   new decodeURIComponent('');
-}, '`new decodeURIComponent(\'\')` throws TypeError');
+});
 
 
 reportCompare(0, 0);

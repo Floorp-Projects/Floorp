@@ -29,7 +29,7 @@ assert.sameValue(
 
 assert.throws(TypeError, () => {
   new Object.defineProperty({}, '', {});
-}, '`new Object.defineProperty({}, \'\', {})` throws TypeError');
+});
 
 
 reportCompare(0, 0);

@@ -25,7 +25,7 @@ assert.sameValue(isConstructor(Math.cos), false, 'isConstructor(Math.cos) must r
 
 assert.throws(TypeError, () => {
   new Math.cos();
-}, '`new Math.cos()` throws TypeError');
+});
 
 
 reportCompare(0, 0);

@@ -21,10 +21,11 @@ author: Jamie Kyle
 features: [Object.hasOwn]
 ---*/
 
-assert.sameValue(Object.hasOwn.name, "hasOwn");
-
-verifyNotEnumerable(Object.hasOwn, "name");
-verifyNotWritable(Object.hasOwn, "name");
-verifyConfigurable(Object.hasOwn, "name");
+verifyProperty(Object.hasOwn, "name", {
+  value: "hasOwn",
+  writable: false,
+  enumerable: false,
+  configurable: true,
+});
 
 reportCompare(0, 0);

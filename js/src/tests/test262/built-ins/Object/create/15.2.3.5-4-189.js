@@ -31,8 +31,9 @@ var newObj = Object.create({}, {
   prop: descObj
 });
 
-assert(newObj.hasOwnProperty("prop"))
-assert.sameValue(typeof(newObj.prop), "undefined");
-verifyNotWritable(newObj, "prop");
+verifyProperty(newObj, "prop", {
+  value: undefined,
+  writable: false,
+});
 
 reportCompare(0, 0);

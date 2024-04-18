@@ -34,7 +34,7 @@ testWithTypedArrayConstructors(function(TA) {
 
   assert.throws(Test262Error, () => {
     sample.foo;
-  }, '`sample.foo` throws Test262Error');
+  });
 });
 
 reportCompare(0, 0);
