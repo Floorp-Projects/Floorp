@@ -28,6 +28,11 @@ class uiaRawElmProvider : public IAccessibleEx,
                           public IScrollItemProvider,
                           public IValueProvider {
  public:
+  static constexpr enum ProviderOptions kProviderOptions =
+      static_cast<enum ProviderOptions>(ProviderOptions_ServerSideProvider |
+                                        ProviderOptions_UseComThreading |
+                                        ProviderOptions_HasNativeIAccessible);
+
   static void RaiseUiaEventForGeckoEvent(Accessible* aAcc,
                                          uint32_t aGeckoEvent);
   static void RaiseUiaEventForStateChange(Accessible* aAcc, uint64_t aState,
