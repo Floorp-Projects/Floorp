@@ -60,12 +60,12 @@ NS_IMETHODIMP ClipboardWriteRequestParent::OnComplete(nsresult aResult) {
 IPCResult ClipboardWriteRequestParent::RecvSetData(
     const IPCTransferable& aTransferable) {
   if (!mManager->ValidatePrincipal(
-          aTransferable.requestingPrincipal(),
+          aTransferable.dataPrincipal(),
           {ContentParent::ValidatePrincipalOptions::AllowNullPtr,
            ContentParent::ValidatePrincipalOptions::AllowExpanded,
            ContentParent::ValidatePrincipalOptions::AllowSystem})) {
     ContentParent::LogAndAssertFailedPrincipalValidationInfo(
-        aTransferable.requestingPrincipal(), __func__);
+        aTransferable.dataPrincipal(), __func__);
   }
 
   if (!mAsyncSetClipboardData) {

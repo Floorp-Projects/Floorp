@@ -8228,7 +8228,7 @@ nsresult nsContentUtils::IPCTransferableToTransferable(
     aTransferable->SetCookieJarSettings(cookieJarSettings);
   }
   aTransferable->SetReferrerInfo(aIPCTransferable.referrerInfo());
-  aTransferable->SetRequestingPrincipal(aIPCTransferable.requestingPrincipal());
+  aTransferable->SetDataPrincipal(aIPCTransferable.dataPrincipal());
   aTransferable->SetContentPolicyType(aIPCTransferable.contentPolicyType());
 
   return NS_OK;
@@ -8586,8 +8586,7 @@ void nsContentUtils::TransferableToIPCTransferable(
 
   aIPCTransferable->data() = std::move(ipcTransferableData);
   aIPCTransferable->isPrivateData() = aTransferable->GetIsPrivateData();
-  aIPCTransferable->requestingPrincipal() =
-      aTransferable->GetRequestingPrincipal();
+  aIPCTransferable->dataPrincipal() = aTransferable->GetDataPrincipal();
   aIPCTransferable->cookieJarSettings() = std::move(cookieJarSettingsArgs);
   aIPCTransferable->contentPolicyType() = aTransferable->GetContentPolicyType();
   aIPCTransferable->referrerInfo() = aTransferable->GetReferrerInfo();

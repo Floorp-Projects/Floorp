@@ -511,17 +511,16 @@ void nsTransferable::SetIsPrivateData(bool aIsPrivateData) {
   mPrivateData = aIsPrivateData;
 }
 
-nsIPrincipal* nsTransferable::GetRequestingPrincipal() {
+nsIPrincipal* nsTransferable::GetDataPrincipal() {
   MOZ_ASSERT(mInitialized);
 
-  return mRequestingPrincipal;
+  return mDataPrincipal;
 }
 
-void nsTransferable::SetRequestingPrincipal(
-    nsIPrincipal* aRequestingPrincipal) {
+void nsTransferable::SetDataPrincipal(nsIPrincipal* aDataPrincipal) {
   MOZ_ASSERT(mInitialized);
 
-  mRequestingPrincipal = aRequestingPrincipal;
+  mDataPrincipal = aDataPrincipal;
 }
 
 nsContentPolicyType nsTransferable::GetContentPolicyType() {

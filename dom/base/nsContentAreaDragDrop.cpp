@@ -295,7 +295,7 @@ nsContentAreaDragDropDataProvider::GetFlavorData(nsITransferable* aTransferable,
 
     bool isPrivate = aTransferable->GetIsPrivateData();
 
-    nsCOMPtr<nsIPrincipal> principal = aTransferable->GetRequestingPrincipal();
+    nsCOMPtr<nsIPrincipal> principal = aTransferable->GetDataPrincipal();
     nsContentPolicyType contentPolicyType =
         aTransferable->GetContentPolicyType();
     nsCOMPtr<nsICookieJarSettings> cookieJarSettings =

@@ -83,7 +83,7 @@ struct IPCTransferable
 {
   IPCTransferableData data;
   bool isPrivateData;
-  nullable nsIPrincipal requestingPrincipal;
+  nullable nsIPrincipal dataPrincipal;
   CookieJarSettingsArgs? cookieJarSettings;
   nsContentPolicyType contentPolicyType;
   nullable nsIReferrerInfo referrerInfo;

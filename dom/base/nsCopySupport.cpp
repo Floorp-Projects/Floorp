@@ -245,7 +245,7 @@ static nsresult CreateTransferable(
   NS_ENSURE_TRUE(aTransferable, NS_ERROR_NULL_POINTER);
 
   aTransferable->Init(aDocument.GetLoadContext());
-  aTransferable->SetRequestingPrincipal(aDocument.NodePrincipal());
+  aTransferable->SetDataPrincipal(aDocument.NodePrincipal());
   if (aEncodedDocumentWithContext.mUnicodeEncodingIsTextHTML) {
     // Set up a format converter so that clipboard flavor queries work.
     // This converter isn't really used for conversions.
@@ -468,7 +468,7 @@ nsresult nsCopySupport::ImageCopy(
   nsCOMPtr<nsITransferable> trans(do_CreateInstance(kCTransferableCID, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
   trans->Init(aLoadContext);
-  trans->SetRequestingPrincipal(imageNode->NodePrincipal());
+  trans->SetDataPrincipal(imageNode->NodePrincipal());
 
   if (aCopyFlags & nsIDocumentViewerEdit::COPY_IMAGE_TEXT) {
     // get the location from the element
