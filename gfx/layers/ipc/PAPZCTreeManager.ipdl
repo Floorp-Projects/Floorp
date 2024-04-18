@@ -80,10 +80,6 @@ parent:
 
 child:
 
-  async HandleTap(GeckoContentController_TapType aType, LayoutDevicePoint point, Modifiers aModifiers,
-                  ScrollableLayerGuid aGuid, uint64_t aInputBlockId,
-                  DoubleTapToZoomMetrics? aDoubleTapToZoomMetrics);
-
   async NotifyPinchGesture(PinchGestureType aType, ScrollableLayerGuid aGuid,
                            LayoutDevicePoint aFocusPoint, LayoutDeviceCoord aSpanChange,
                            Modifiers aModifiers);

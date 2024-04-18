@@ -167,6 +167,7 @@ bool CompositorBridgeParentBase::DeallocShmem(ipc::Shmem& aShmem) {
 
 CompositorBridgeParent::LayerTreeState::LayerTreeState()
     : mApzcTreeManagerParent(nullptr),
+      mApzInputBridgeParent(nullptr),
       mParent(nullptr),
       mContentCompositorBridgeParent(nullptr) {}
 
@@ -645,9 +646,21 @@ bool CompositorBridgeParent::DeallocPAPZCTreeManagerParent(
   return true;
 }
 
+void CompositorBridgeParent::SetAPZInputBridgeParent(
+    const LayersId& aLayersId, APZInputBridgeParent* aInputBridgeParent) {
+  MOZ_RELEASE_ASSERT(XRE_IsGPUProcess());
+  MOZ_ASSERT(NS_IsMainThread());
+  StaticMonitorAutoLock lock(CompositorBridgeParent::sIndirectLayerTreesLock);
+  CompositorBridgeParent::LayerTreeState& state =
+      CompositorBridgeParent::sIndirectLayerTrees[aLayersId];
+  MOZ_ASSERT(!state.mApzInputBridgeParent);
+  state.mApzInputBridgeParent = aInputBridgeParent;
+}
+
 void CompositorBridgeParent::AllocateAPZCTreeManagerParent(
     const StaticMonitorAutoLock& aProofOfLayerTreeStateLock,
     const LayersId& aLayersId, LayerTreeState& aState) {
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   MOZ_ASSERT(aState.mParent == this);
   MOZ_ASSERT(mApzcTreeManager);
   MOZ_ASSERT(mApzUpdater);
@@ -1710,6 +1723,15 @@ APZCTreeManagerParent* CompositorBridgeParent::GetApzcTreeManagerParentForRoot(
   CompositorBridgeParent::LayerTreeState* state =
       GetStateForRoot(aContentLayersId, lock);
   return state ? state->mApzcTreeManagerParent : nullptr;
+}
+
+/* static */
+APZInputBridgeParent* CompositorBridgeParent::GetApzInputBridgeParentForRoot(
+    LayersId aContentLayersId) {
+  StaticMonitorAutoLock lock(sIndirectLayerTreesLock);
+  CompositorBridgeParent::LayerTreeState* state =
+      GetStateForRoot(aContentLayersId, lock);
+  return state ? state->mApzInputBridgeParent : nullptr;
 }
 
 /* static */

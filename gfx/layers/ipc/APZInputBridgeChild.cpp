@@ -12,6 +12,14 @@
 #include "mozilla/layers/APZThreadUtils.h"
 #include "mozilla/layers/SynchronousTask.h"
 
+#include "mozilla/layers/GeckoContentController.h"  // for GeckoContentController
+#include "mozilla/layers/DoubleTapToZoom.h"  // for DoubleTapToZoomMetrics
+#include "mozilla/layers/RemoteCompositorSession.h"  // for RemoteCompositorSession
+#include "mozilla/dom/BrowserParent.h"               // for BrowserParent
+#ifdef MOZ_WIDGET_ANDROID
+#  include "mozilla/jni/Utils.h"  // for DispatchToGeckoPriorityQueue
+#endif
+
 namespace mozilla {
 namespace layers {
 
@@ -31,12 +39,19 @@ RefPtr<APZInputBridgeChild> APZInputBridgeChild::Create(
 }
 
 APZInputBridgeChild::APZInputBridgeChild(const uint64_t& aProcessToken)
-    : mIsOpen(false), mProcessToken(aProcessToken) {
+    : mIsOpen(false),
+      mProcessToken(aProcessToken),
+      mCompositorSession(nullptr) {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
 }
 
 APZInputBridgeChild::~APZInputBridgeChild() = default;
+
+void APZInputBridgeChild::SetCompositorSession(
+    RemoteCompositorSession* aSession) {
+  mCompositorSession = aSession;
+}
 
 void APZInputBridgeChild::Open(Endpoint<PAPZInputBridgeChild>&& aEndpoint) {
   APZThreadUtils::AssertOnControllerThread();
@@ -174,6 +189,63 @@ APZEventResult APZInputBridgeChild::ReceiveInputEvent(
   }
 
   return res;
+}
+
+void APZInputBridgeChild::HandleTapOnMainThread(
+    const TapType& aType, const LayoutDevicePoint& aPoint,
+    const Modifiers& aModifiers, const ScrollableLayerGuid& aGuid,
+    const uint64_t& aInputBlockId,
+    const Maybe<DoubleTapToZoomMetrics>& aDoubleTapToZoomMetrics) {
+  if (mCompositorSession &&
+      mCompositorSession->RootLayerTreeId() == aGuid.mLayersId &&
+      mCompositorSession->GetContentController()) {
+    RefPtr<GeckoContentController> controller =
+        mCompositorSession->GetContentController();
+    controller->HandleTap(aType, aPoint, aModifiers, aGuid, aInputBlockId,
+                          aDoubleTapToZoomMetrics);
+    return;
+  }
+  dom::BrowserParent* tab =
+      dom::BrowserParent::GetBrowserParentFromLayersId(aGuid.mLayersId);
+  if (tab) {
+#ifdef MOZ_WIDGET_ANDROID
+    // On Android, touch events are dispatched from the UI thread to the main
+    // thread using the Android priority queue. It is possible that this tap has
+    // made it to the GPU process and back before they have been processed. We
+    // must therefore dispatch this message to the same queue, otherwise the tab
+    // may receive the tap event before the touch events that synthesized it.
+    mozilla::jni::DispatchToGeckoPriorityQueue(
+        NewRunnableMethod<TapType, LayoutDevicePoint, Modifiers,
+                          ScrollableLayerGuid, uint64_t,
+                          Maybe<DoubleTapToZoomMetrics>>(
+            "dom::BrowserParent::SendHandleTap", tab,
+            &dom::BrowserParent::SendHandleTap, aType, aPoint, aModifiers,
+            aGuid, aInputBlockId, aDoubleTapToZoomMetrics));
+#else
+    tab->SendHandleTap(aType, aPoint, aModifiers, aGuid, aInputBlockId,
+                       aDoubleTapToZoomMetrics);
+#endif
+  }
+}
+
+mozilla::ipc::IPCResult APZInputBridgeChild::RecvHandleTap(
+    const TapType& aType, const LayoutDevicePoint& aPoint,
+    const Modifiers& aModifiers, const ScrollableLayerGuid& aGuid,
+    const uint64_t& aInputBlockId,
+    const Maybe<DoubleTapToZoomMetrics>& aDoubleTapToZoomMetrics) {
+  if (NS_IsMainThread()) {
+    HandleTapOnMainThread(aType, aPoint, aModifiers, aGuid, aInputBlockId,
+                          aDoubleTapToZoomMetrics);
+  } else {
+    NS_DispatchToMainThread(
+        NewRunnableMethod<TapType, LayoutDevicePoint, Modifiers,
+                          ScrollableLayerGuid, uint64_t,
+                          Maybe<DoubleTapToZoomMetrics>>(
+            "layers::APZInputBridgeChild::HandleTapOnMainThread", this,
+            &APZInputBridgeChild::HandleTapOnMainThread, aType, aPoint,
+            aModifiers, aGuid, aInputBlockId, aDoubleTapToZoomMetrics));
+  }
+  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult APZInputBridgeChild::RecvCallInputBlockCallback(

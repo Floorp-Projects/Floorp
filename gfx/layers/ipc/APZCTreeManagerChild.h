@@ -73,13 +73,6 @@ class APZCTreeManagerChild : public IAPZCTreeManager,
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
  protected:
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  mozilla::ipc::IPCResult RecvHandleTap(
-      const TapType& aType, const LayoutDevicePoint& aPoint,
-      const Modifiers& aModifiers, const ScrollableLayerGuid& aGuid,
-      const uint64_t& aInputBlockId,
-      const Maybe<DoubleTapToZoomMetrics>& aDoubleTapToZoomMetrics);
-
   mozilla::ipc::IPCResult RecvNotifyPinchGesture(
       const PinchGestureType& aType, const ScrollableLayerGuid& aGuid,
       const LayoutDevicePoint& aFocusPoint,
