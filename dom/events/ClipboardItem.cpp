@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/ClipboardItem.h"
 
+#include "mozilla/dom/Clipboard.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/Record.h"
 #include "nsComponentManagerUtils.h"
@@ -288,6 +289,17 @@ already_AddRefed<ClipboardItem> ClipboardItem::Constructor(
   RefPtr<ClipboardItem> item = MakeRefPtr<ClipboardItem>(
       global, aOptions.mPresentationStyle, std::move(items));
   return item.forget();
+}
+
+// static
+bool ClipboardItem::Supports(const GlobalObject& aGlobal,
+                             const nsAString& aType) {
+  for (const auto& mandatoryType : Clipboard::MandatoryDataTypes()) {
+    if (CompareUTF8toUTF16(mandatoryType, aType) == 0) {
+      return true;
+    }
+  }
+  return false;
 }
 
 void ClipboardItem::GetTypes(nsTArray<nsString>& aTypes) const {
