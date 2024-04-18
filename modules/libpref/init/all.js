@@ -4099,15 +4099,3 @@ pref("extensions.webcompat.useScriptingAPI", true);
 pref("privacy.fingerprintingProtection.WebCompatService.logLevel", "Error");
 // To test strip on share site specific parameters by enabling a different list to be used
 pref("privacy.query_stripping.strip_on_share.enableTestMode", false);
-
-// Whether flooding prevention feature is enabled or not.
-pref("places.history.floodingPrevention.enabled", false);
-// Number of consecutive accesses to an origin in a short timeframe before
-// starting to restrict storing visits for it.
-pref("places.history.floodingPrevention.restrictionCount", 3);
-// Duration of the timeframe where consecutive visits to an origin should happen
-// before starting to restrict storing visits for it.
-pref("places.history.floodingPrevention.restrictionExpireSeconds", 5);
-// Maximum elapsed time betwen a user interaction and a visit before starting to
-// apply flooding prevention.
-pref("places.history.floodingPrevention.maxSecondsFromLastUserInteraction", 3);
