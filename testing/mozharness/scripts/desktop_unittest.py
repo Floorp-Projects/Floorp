@@ -216,15 +216,6 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin, CodeCoverageM
                 },
             ],
             [
-                ["--variant"],
-                {
-                    "action": "store",
-                    "dest": "variant",
-                    "default": "",
-                    "help": "specify a variant if mozharness needs to setup paths",
-                },
-            ],
-            [
                 ["--gpu-required"],
                 {
                     "action": "store_true",
@@ -706,9 +697,6 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin, CodeCoverageM
 
             if c.get("threads"):
                 base_cmd.extend(["--threads", c["threads"]])
-
-            if c["variant"]:
-                base_cmd.append("--variant={}".format(c["variant"]))
 
             if c["enable_xorigin_tests"]:
                 base_cmd.append("--enable-xorigin-tests")
