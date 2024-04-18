@@ -33,7 +33,9 @@ def _should_retrigger(task_graph, label):
     """
     if label not in task_graph:
         logger.info(
-            f"Task {label} not in full taskgraph, assuming task should not be retriggered."
+            "Task {} not in full taskgraph, assuming task should not be retriggered.".format(
+                label
+            )
         )
         return False
     return task_graph[label].attributes.get("retrigger", False)
@@ -65,9 +67,7 @@ def retrigger_decision_action(parameters, graph_config, input, task_group_id, ta
     # absolute timestamps relative to the current time.
     task = taskcluster.get_task_definition(task_id)
     task = relativize_datestamps(task)
-    create_task_from_def(
-        slugid(), task, parameters["level"], graph_config["trust-domain"]
-    )
+    create_task_from_def(slugid(), task, parameters["level"])
 
 
 @register_callback_action(
@@ -144,7 +144,7 @@ def retrigger_decision_action(parameters, graph_config, input, task_group_id, ta
 )
 def retrigger_action(parameters, graph_config, input, task_group_id, task_id):
     decision_task_id, full_task_graph, label_to_taskid = fetch_graph_and_labels(
-        parameters, graph_config, task_group_id=task_group_id
+        parameters, graph_config
     )
 
     task = taskcluster.get_task_definition(task_id)
@@ -155,8 +155,8 @@ def retrigger_action(parameters, graph_config, input, task_group_id, task_id):
 
     if not input.get("force", None) and not _should_retrigger(full_task_graph, label):
         logger.info(
-            f"Not retriggering task {label}, task should not be retrigged "
-            "and force not specified."
+            "Not retriggering task {}, task should not be retrigged "
+            "and force not specified.".format(label)
         )
         sys.exit(1)
 
@@ -201,12 +201,14 @@ def rerun_action(parameters, graph_config, input, task_group_id, task_id):
     task = taskcluster.get_task_definition(task_id)
     parameters = dict(parameters)
     decision_task_id, full_task_graph, label_to_taskid = fetch_graph_and_labels(
-        parameters, graph_config, task_group_id=task_group_id
+        parameters, graph_config
     )
     label = task["metadata"]["name"]
     if task_id not in label_to_taskid.values():
         logger.error(
-            f"Refusing to rerun {label}: taskId {task_id} not in decision task {decision_task_id} label_to_taskid!"
+            "Refusing to rerun {}: taskId {} not in decision task {} label_to_taskid!".format(
+                label, task_id, decision_task_id
+            )
         )
 
     _rerun_task(task_id, label)
@@ -216,7 +218,9 @@ def _rerun_task(task_id, label):
     state = taskcluster.state_task(task_id)
     if state not in RERUN_STATES:
         logger.warning(
-            f"No need to rerun {label}: state '{state}' not in {RERUN_STATES}!"
+            "No need to rerun {}: state '{}' not in {}!".format(
+                label, state, RERUN_STATES
+            )
         )
         return
     taskcluster.rerun_task(task_id)
@@ -257,7 +261,7 @@ def _rerun_task(task_id, label):
 )
 def retrigger_multiple(parameters, graph_config, input, task_group_id, task_id):
     decision_task_id, full_task_graph, label_to_taskid = fetch_graph_and_labels(
-        parameters, graph_config, task_group_id=task_group_id
+        parameters, graph_config
     )
 
     suffixes = []

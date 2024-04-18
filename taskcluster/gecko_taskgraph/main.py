@@ -386,7 +386,7 @@ def show_taskgraph(options):
     output_file = options["output_file"]
 
     if options["diff"]:
-        # --root argument is taskgraph's config at <repo>/taskcluster
+        # --root argument is taskgraph's config at <repo>/taskcluster/ci
         repo_root = os.getcwd()
         if options["root"]:
             repo_root = f"{options['root']}/../.."
@@ -707,7 +707,7 @@ def decision(options):
 @argument(
     "--root",
     "-r",
-    default="taskcluster",
+    default="taskcluster/ci",
     help="root of the taskgraph definition relative to topsrcdir",
 )
 def action_callback(options):
@@ -743,7 +743,7 @@ def action_callback(options):
 @argument(
     "--root",
     "-r",
-    default="taskcluster",
+    default="taskcluster/ci",
     help="root of the taskgraph definition relative to topsrcdir",
 )
 @argument(

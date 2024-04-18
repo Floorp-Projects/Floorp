@@ -154,7 +154,9 @@ def register_callback_action(
         ], "register_callback_action must be used as decorator"
         if not cb_name:
             cb_name = name
-        assert cb_name not in callbacks, f"callback name {cb_name} is not unique"
+        assert cb_name not in callbacks, "callback name {} is not unique".format(
+            cb_name
+        )
 
         def action_builder(parameters, graph_config, decision_task_id):
             if not available(parameters):
@@ -163,11 +165,11 @@ def register_callback_action(
             actionPerm = "generic" if generic else cb_name
 
             # gather up the common decision-task-supplied data for this action
+            repo_param = "head_repository"
             repository = {
-                "url": parameters["head_repository"],
+                "url": parameters[repo_param],
                 "project": parameters["project"],
                 "level": parameters["level"],
-                "base_url": parameters["base_repository"],
             }
 
             revision = parameters["head_rev"]
@@ -179,9 +181,6 @@ def register_callback_action(
             branch = parameters.get("head_ref")
             if branch:
                 push["branch"] = branch
-            base_branch = parameters.get("base_ref")
-            if base_branch and branch != base_branch:
-                push["base_branch"] = base_branch
 
             action = {
                 "name": name,
@@ -216,16 +215,13 @@ def register_callback_action(
             if "/" in actionPerm:
                 raise Exception("`/` is not allowed in action names; use `-`")
 
-            if parameters["tasks_for"].startswith("github-pull-request"):
-                hookId = f"in-tree-pr-action-{level}-{actionPerm}/{tcyml_hash}"
-            else:
-                hookId = f"in-tree-action-{level}-{actionPerm}/{tcyml_hash}"
-
             rv.update(
                 {
                     "kind": "hook",
                     "hookGroupId": f"project-{trustDomain}",
-                    "hookId": hookId,
+                    "hookId": "in-tree-action-{}-{}/{}".format(
+                        level, actionPerm, tcyml_hash
+                    ),
                     "hookPayload": {
                         # provide the decision-task parameters as context for triggerHook
                         "decision": {
@@ -301,20 +297,16 @@ def sanity_check_task_scope(callback, parameters, graph_config):
 
     actionPerm = "generic" if action.generic else action.cb_name
 
-    raw_url = parameters["base_repository"]
+    repo_param = "head_repository"
+    raw_url = parameters[repo_param]
     parsed_url = parse(raw_url)
-    action_scope = f"assume:{parsed_url.taskcluster_role_prefix}:action:{actionPerm}"
-    pr_action_scope = (
-        f"assume:{parsed_url.taskcluster_role_prefix}:pr-action:{actionPerm}"
-    )
+    expected_scope = f"assume:{parsed_url.taskcluster_role_prefix}:action:{actionPerm}"
 
     # the scope should appear literally; no need for a satisfaction check. The use of
     # get_current_scopes here calls the auth service through the Taskcluster Proxy, giving
     # the precise scopes available to this task.
-    if not set((action_scope, pr_action_scope)) & set(taskcluster.get_current_scopes()):
-        raise ValueError(
-            f"Expected task scope {action_scope} or {pr_action_scope} for this action"
-        )
+    if expected_scope not in taskcluster.get_current_scopes():
+        raise ValueError(f"Expected task scope {expected_scope} for this action")
 
 
 def trigger_action_callback(

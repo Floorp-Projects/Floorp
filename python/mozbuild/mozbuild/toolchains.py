@@ -14,7 +14,9 @@ def toolchain_task_definitions():
     # Don't import globally to allow this module being imported without
     # the taskgraph module being available (e.g. standalone js)
     params = {"level": os.environ.get("MOZ_SCM_LEVEL", "3")}
-    root_dir = os.path.join(os.path.dirname(__file__), "..", "..", "..", "taskcluster")
+    root_dir = os.path.join(
+        os.path.dirname(__file__), "..", "..", "..", "taskcluster", "ci"
+    )
     toolchains = load_tasks_for_kind(params, "toolchain", root_dir=root_dir)
     aliased = {}
     for t in toolchains.values():

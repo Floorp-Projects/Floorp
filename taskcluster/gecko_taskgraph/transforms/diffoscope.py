@@ -32,7 +32,7 @@ diff_description_schema = Schema(
         Required("original"): index_or_string,
         Required("new"): index_or_string,
         # Arguments to pass to diffoscope, used for job-defaults in
-        # taskcluster/kinds/diffoscope/kind.yml
+        # taskcluster/ci/diffoscope/kind.yml
         Optional("args"): str,
         # Extra arguments to pass to diffoscope, that can be set per job.
         Optional("extra-args"): str,

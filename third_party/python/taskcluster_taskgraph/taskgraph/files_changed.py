@@ -49,7 +49,6 @@ def _get_changed_files_json_automationrelevance(head_repository_url, head_rev):
 
     def get_automationrelevance():
         response = requests.get(url, timeout=30)
-        response.raise_for_status()
         return response.json()
 
     contents = retry(get_automationrelevance, attempts=10, sleeptime=10)

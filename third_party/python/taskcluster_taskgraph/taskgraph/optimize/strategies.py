@@ -56,7 +56,9 @@ class SkipUnlessChanged(OptimizationStrategy):
         changed = files_changed.check(params, file_patterns)
         if not changed:
             logger.debug(
-                f'no files found matching a pattern in `skip-unless-changed` for "{task.label}"'
+                'no files found matching a pattern in `skip-unless-changed` for "{}"'.format(
+                    task.label
+                )
             )
             return True
         return False

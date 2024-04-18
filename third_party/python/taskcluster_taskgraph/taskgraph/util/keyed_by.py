@@ -66,8 +66,8 @@ def evaluate_keyed_by(
             # Error out when only 'default' is specified as only alternatives,
             # because we don't need to by-{keyed_by} there.
             raise Exception(
-                f"Keyed-by '{keyed_by}' unnecessary with only value 'default' "
-                f"found, when determining item {item_name}"
+                "Keyed-by '{}' unnecessary with only value 'default' "
+                "found, when determining item {}".format(keyed_by, item_name)
             )
 
         if key is None:
@@ -76,20 +76,22 @@ def evaluate_keyed_by(
                 continue
             else:
                 raise Exception(
-                    f"No attribute {keyed_by} and no value for 'default' found "
-                    f"while determining item {item_name}"
+                    "No attribute {} and no value for 'default' found "
+                    "while determining item {}".format(keyed_by, item_name)
                 )
 
         matches = keymatch(alternatives, key)
         if enforce_single_match and len(matches) > 1:
             raise Exception(
-                f"Multiple matching values for {keyed_by} {key!r} found while "
-                f"determining item {item_name}"
+                "Multiple matching values for {} {!r} found while "
+                "determining item {}".format(keyed_by, key, item_name)
             )
         elif matches:
             value = matches[0]
             continue
 
         raise Exception(
-            f"No {keyed_by} matching {key!r} nor 'default' found while determining item {item_name}"
+            "No {} matching {!r} nor 'default' found while determining item {}".format(
+                keyed_by, key, item_name
+            )
         )
