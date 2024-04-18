@@ -344,8 +344,7 @@ export async function runBackgroundTask(commandLine) {
   );
   Services.fog.initializeFOG(
     gleanRoot.path,
-    "firefox.desktop.background.update",
-    /* disableInternalPings */ true
+    "firefox.desktop.background.update"
   );
 
   // For convenience, mirror our loglevel.

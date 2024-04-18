@@ -100,7 +100,8 @@ const kNotificationAction = Object.freeze({
 export async function runBackgroundTask(commandLine) {
   Services.fog.initializeFOG(
     undefined,
-    "firefox.desktop.background.defaultagent"
+    "firefox.desktop.background.defaultagent",
+    /* disableInternalPings */ true
   );
 
   let defaultAgent = Cc["@mozilla.org/default-agent;1"].getService(
