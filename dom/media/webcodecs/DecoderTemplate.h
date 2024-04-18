@@ -9,6 +9,7 @@
 
 #include <queue>
 
+#include "WebCodecsUtils.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/DecoderAgent.h"
 #include "mozilla/MozPromise.h"
@@ -18,7 +19,6 @@
 #include "mozilla/dom/WorkerRef.h"
 #include "mozilla/media/MediaUtils.h"
 #include "nsStringFwd.h"
-#include "WebCodecsUtils.h"
 
 namespace mozilla {
 
