@@ -91,7 +91,6 @@ import org.mozilla.geckoview.GeckoWebExecutor;
 import org.mozilla.geckoview.Image;
 import org.mozilla.geckoview.MediaSession;
 import org.mozilla.geckoview.OrientationController;
-import org.mozilla.geckoview.RuntimeTelemetry;
 import org.mozilla.geckoview.SlowScriptResponse;
 import org.mozilla.geckoview.TranslationsController;
 import org.mozilla.geckoview.WebExtension;
@@ -874,7 +873,6 @@ public class GeckoViewActivity extends AppCompatActivity
                   .build())
           .crashHandler(ExampleCrashHandler.class)
           .preferredColorScheme(mPreferredColorScheme.value())
-          .telemetryDelegate(new ExampleTelemetryDelegate())
           .javaScriptEnabled(mJavascriptEnabled.value())
           .extensionsProcessEnabled(mExtensionsProcessEnabled.value())
           .globalPrivacyControlEnabled(mGlobalPrivacyControlEnabled.value())
@@ -3036,28 +3034,6 @@ public class GeckoViewActivity extends AppCompatActivity
       } else {
         mActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
       }
-    }
-  }
-
-  private final class ExampleTelemetryDelegate implements RuntimeTelemetry.Delegate {
-    @Override
-    public void onHistogram(final @NonNull RuntimeTelemetry.Histogram histogram) {
-      Log.d(LOGTAG, "onHistogram " + histogram);
-    }
-
-    @Override
-    public void onBooleanScalar(final @NonNull RuntimeTelemetry.Metric<Boolean> scalar) {
-      Log.d(LOGTAG, "onBooleanScalar " + scalar);
-    }
-
-    @Override
-    public void onLongScalar(final @NonNull RuntimeTelemetry.Metric<Long> scalar) {
-      Log.d(LOGTAG, "onLongScalar " + scalar);
-    }
-
-    @Override
-    public void onStringScalar(final @NonNull RuntimeTelemetry.Metric<String> scalar) {
-      Log.d(LOGTAG, "onStringScalar " + scalar);
     }
   }
 

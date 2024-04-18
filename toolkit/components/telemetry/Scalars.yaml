@@ -9163,7 +9163,6 @@ telemetry.test:
     products:
       - 'firefox'
       - 'fennec'
-      - 'geckoview_streaming'
       - 'thunderbird'
     record_in_processes:
       - 'main' # test_ChildScalars.js depends on this being main-only.
@@ -9181,7 +9180,6 @@ telemetry.test:
     products:
       - 'firefox'
       - 'fennec'
-      - 'geckoview_streaming'
       - 'thunderbird'
     record_in_processes:
       - 'main'
@@ -9199,7 +9197,6 @@ telemetry.test:
     products:
       - 'firefox'
       - 'fennec'
-      - 'geckoview_streaming'
       - 'thunderbird'
     record_in_processes:
       - 'main'

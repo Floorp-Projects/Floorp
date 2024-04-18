@@ -89,7 +89,6 @@ import org.mozilla.geckoview.GeckoSession.TextInputDelegate;
 import org.mozilla.geckoview.GeckoSessionSettings;
 import org.mozilla.geckoview.MediaSession;
 import org.mozilla.geckoview.OrientationController;
-import org.mozilla.geckoview.RuntimeTelemetry;
 import org.mozilla.geckoview.SessionTextInput;
 import org.mozilla.geckoview.TranslationsController;
 import org.mozilla.geckoview.WebExtension;
@@ -988,10 +987,6 @@ public class GeckoSessionTestRule implements TestRule {
     return RuntimeCreator.getRuntime();
   }
 
-  public void setTelemetryDelegate(final RuntimeTelemetry.Delegate delegate) {
-    RuntimeCreator.setTelemetryDelegate(delegate);
-  }
-
   /** Sets an experiment delegate on the runtime creator. */
   public void setExperimentDelegate(final ExperimentDelegate delegate) {
     RuntimeCreator.setExperimentDelegate(delegate);
@@ -1463,7 +1458,6 @@ public class GeckoSessionTestRule implements TestRule {
     mLastWaitStart = 0;
     mLastWaitEnd = 0;
     mTimeoutMillis = 0;
-    RuntimeCreator.setTelemetryDelegate(null);
     RuntimeCreator.setExperimentDelegate(null);
   }
 

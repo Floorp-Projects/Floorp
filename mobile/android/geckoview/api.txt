@@ -102,7 +102,6 @@ import org.mozilla.geckoview.OverscrollEdgeEffect;
 import org.mozilla.geckoview.PanZoomController;
 import org.mozilla.geckoview.ProfilerController;
 import org.mozilla.geckoview.RuntimeSettings;
-import org.mozilla.geckoview.RuntimeTelemetry;
 import org.mozilla.geckoview.ScreenLength;
 import org.mozilla.geckoview.SessionAccessibility;
 import org.mozilla.geckoview.SessionFinder;
@@ -886,7 +885,6 @@ package org.mozilla.geckoview {
     method public boolean getRemoteDebuggingEnabled();
     method @Nullable public GeckoRuntime getRuntime();
     method @Nullable public Rect getScreenSizeOverride();
-    method @Nullable public RuntimeTelemetry.Delegate getTelemetryDelegate();
     method public boolean getTranslationsOfferPopup();
     method @NonNull public String getTrustedRecursiveResolverUri();
     method public int getTrustedRecusiveResolverMode();
@@ -969,7 +967,6 @@ package org.mozilla.geckoview {
     method @NonNull public GeckoRuntimeSettings.Builder preferredColorScheme(int);
     method @NonNull public GeckoRuntimeSettings.Builder remoteDebuggingEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder screenSizeOverride(int, int);
-    method @Deprecated @DeprecationSchedule(id="geckoview-gvst",version=127) @NonNull public GeckoRuntimeSettings.Builder telemetryDelegate(@NonNull RuntimeTelemetry.Delegate);
     method @NonNull public GeckoRuntimeSettings.Builder translationsOfferPopup(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder trustedRecursiveResolverMode(int);
     method @NonNull public GeckoRuntimeSettings.Builder trustedRecursiveResolverUri(@NonNull String);
@@ -2166,28 +2163,6 @@ package org.mozilla.geckoview {
     method @AnyThread @NonNull public Settings build();
     method @AnyThread @NonNull protected Settings getSettings();
     method @AnyThread @NonNull protected abstract Settings newSettings(@Nullable Settings);
-  }
-
-  public final class RuntimeTelemetry {
-    ctor protected RuntimeTelemetry();
-  }
-
-  public static interface RuntimeTelemetry.Delegate {
-    method @AnyThread default public void onBooleanScalar(@NonNull RuntimeTelemetry.Metric<Boolean>);
-    method @AnyThread default public void onHistogram(@NonNull RuntimeTelemetry.Histogram);
-    method @AnyThread default public void onLongScalar(@NonNull RuntimeTelemetry.Metric<Long>);
-    method @AnyThread default public void onStringScalar(@NonNull RuntimeTelemetry.Metric<String>);
-  }
-
-  public static class RuntimeTelemetry.Histogram extends RuntimeTelemetry.Metric<long[]> {
-    ctor protected Histogram();
-    field public final boolean isCategorical;
-  }
-
-  public static class RuntimeTelemetry.Metric<T> {
-    ctor protected Metric();
-    field @NonNull public final String name;
-    field @NonNull public final T value;
   }
 
   public class ScreenLength {

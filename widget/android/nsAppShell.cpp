@@ -69,7 +69,6 @@
 #include "GeckoNetworkManager.h"
 #include "GeckoProcessManager.h"
 #include "GeckoSystemStateListener.h"
-#include "GeckoTelemetryDelegate.h"
 #include "GeckoVRManager.h"
 #include "ImageDecoderSupport.h"
 #include "JavaBuiltins.h"
@@ -412,7 +411,6 @@ nsAppShell::nsAppShell()
       GeckoAppShellSupport::Init();
       XPCOMEventTargetWrapper::Init();
       mozilla::widget::Telemetry::Init();
-      mozilla::widget::GeckoTelemetryDelegate::Init();
 
       if (XRE_IsGPUProcess()) {
         mozilla::gl::AndroidSurfaceTexture::Init();
@@ -443,7 +441,6 @@ nsAppShell::nsAppShell()
     mozilla::widget::Base64UtilsSupport::Init();
     nsWindow::InitNatives();
     mozilla::gl::AndroidSurfaceTexture::Init();
-    mozilla::widget::GeckoTelemetryDelegate::Init();
 
     java::GeckoThread::SetState(java::GeckoThread::State::JNI_READY());
 

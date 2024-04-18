@@ -18,8 +18,6 @@
 // For the public interface to Telemetry functionality, see Telemetry.h.
 
 namespace mozilla {
-// This is only used for the GeckoView persistence.
-class JSONWriter;
 namespace Telemetry {
 struct ScalarAction;
 struct KeyedScalarAction;
@@ -112,22 +110,6 @@ void AddDynamicScalarDefinitions(
  * This includes dynamic stores.
  */
 nsresult GetAllStores(mozilla::Telemetry::Common::StringHashSet& set);
-
-// They are responsible for updating in-memory probes with the data persisted
-// on the disk and vice-versa.
-nsresult SerializeScalars(mozilla::JSONWriter& aWriter);
-nsresult SerializeKeyedScalars(mozilla::JSONWriter& aWriter);
-nsresult DeserializePersistedScalars(JSContext* aCx,
-                                     JS::Handle<JS::Value> aData);
-nsresult DeserializePersistedKeyedScalars(JSContext* aCx,
-                                          JS::Handle<JS::Value> aData);
-// Mark deserialization as in progress.
-// After this, all scalar operations are recorded into the pending operations
-// list.
-void DeserializationStarted();
-// Apply all operations from the pending operations list and mark
-// deserialization finished afterwards.
-void ApplyPendingOperations();
 }  // namespace TelemetryScalar
 
 #endif  // TelemetryScalar_h__

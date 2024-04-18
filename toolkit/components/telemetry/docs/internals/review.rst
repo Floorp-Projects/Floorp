@@ -67,7 +67,7 @@ Considerations for all changes
 - Does this affect products more broadly than expected?
 
   - Consider all our platforms: Windows, Mac, Linux, Android.
-  - Consider all our products: Firefox, Fennec, GeckoView, Glean.
+  - Consider all our products: Firefox, Fenix, Glean.
 
 - Does this fall afoul of common architectural failures?
 

@@ -46,12 +46,6 @@ BASE_DOC_URL = (
 HISTOGRAMS_DOC_URL = BASE_DOC_URL + "collection/histograms.html"
 SCALARS_DOC_URL = BASE_DOC_URL + "collection/scalars.html"
 
-GECKOVIEW_STREAMING_SUPPORTED_KINDS = [
-    "linear",
-    "exponential",
-    "categorical",
-]
-
 
 def linear_buckets(dmin, dmax, n_buckets):
     ret_array = [0] * n_buckets
@@ -435,22 +429,6 @@ class Histogram:
                     'Histogram "%s" has unknown product "%s" in %s.\n%s'
                     % (name, product, field, DOC_URL)
                 ).handle_later()
-            if utils.is_geckoview_streaming_product(product):
-                kind = definition.get("kind")
-                if kind not in GECKOVIEW_STREAMING_SUPPORTED_KINDS:
-                    ParserError(
-                        (
-                            'Histogram "%s" is of kind "%s" which is unsupported for '
-                            'product "%s".'
-                        )
-                        % (name, kind, product)
-                    ).handle_later()
-                keyed = definition.get("keyed")
-                if keyed:
-                    ParserError(
-                        'Keyed histograms like "%s" are unsupported for product "%s"'
-                        % (name, product)
-                    ).handle_later()
 
     def check_operating_systems(self, name, definition):
         if not self._strict_type_checks:
