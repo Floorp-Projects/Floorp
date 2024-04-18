@@ -708,12 +708,7 @@ impl<'a> WindowChildRenderer<'a> {
                                         hdc,
                                         Controls::GetThemeSysColor(0, Gdi::COLOR_GRAYTEXT),
                                     );
-                                    if !enabled {
-                                        Gdi::SetBkColor(
-                                            hdc,
-                                            Controls::GetThemeSysColor(0, Gdi::COLOR_3DFACE),
-                                        );
-                                    }
+                                    Gdi::SetBkMode(hdc, Gdi::TRANSPARENT as i32);
                                     success!(nonzero Gdi::DrawTextW(
                                         hdc,
                                         placeholder.pcwstr(),
