@@ -14,6 +14,9 @@ const PAGE = `
  * Tests that right click on a cross boundary selection shows the context menu
  */
 add_task(async function () {
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.shadowdom.selection_across_boundary.enabled", true]],
+  });
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
