@@ -37,6 +37,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.Favicon
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.compose.button.RadioButton
+import org.mozilla.fenix.compose.button.TextButton
 import org.mozilla.fenix.theme.FirefoxTheme
 
 private val LIST_ITEM_HEIGHT = 56.dp
@@ -227,6 +228,57 @@ fun IconListItem(
 }
 
 /**
+ * List item used to display a label and an icon at the beginning with an optional description
+ * text and an optional [TextButton] at the end.
+ *
+ * @param label The label in the list item.
+ * @param description An optional description text below the label.
+ * @param onClick Called when the user clicks on the item.
+ * @param beforeIconPainter [Painter] used to display an [Icon] before the list item.
+ * @param beforeIconDescription Content description of the icon.
+ * @param beforeIconTint Tint applied to [beforeIconPainter].
+ * @param afterButtonText The button text to be displayed after the list item.
+ * @param afterButtonTextColor [Color] to apply to [afterButtonText].
+ * @param onAfterButtonClick Called when the user clicks on the text button.
+ */
+@Composable
+fun IconListItem(
+    label: String,
+    description: String? = null,
+    onClick: (() -> Unit)? = null,
+    beforeIconPainter: Painter,
+    beforeIconDescription: String? = null,
+    beforeIconTint: Color = FirefoxTheme.colors.iconPrimary,
+    afterButtonText: String? = null,
+    afterButtonTextColor: Color = FirefoxTheme.colors.actionPrimary,
+    onAfterButtonClick: (() -> Unit)? = null,
+) {
+    ListItem(
+        label = label,
+        description = description,
+        onClick = onClick,
+        beforeListAction = {
+            Icon(
+                painter = beforeIconPainter,
+                contentDescription = beforeIconDescription,
+                modifier = Modifier.padding(horizontal = 16.dp),
+                tint = beforeIconTint,
+            )
+        },
+        afterListAction = {
+            if (afterButtonText != null && onAfterButtonClick != null) {
+                TextButton(
+                    text = afterButtonText,
+                    onClick = onAfterButtonClick,
+                    textColor = afterButtonTextColor,
+                    upperCaseText = false,
+                )
+            }
+        },
+    )
+}
+
+/**
  * List item used to display a label with an optional description text and
  * a [RadioButton] at the beginning.
  *
@@ -400,12 +452,12 @@ private fun IconListItemPreview() {
 
 @Composable
 @Preview(
-    name = "IconListItem with a right icon and onClicks",
+    name = "IconListItem with after list action",
     uiMode = Configuration.UI_MODE_NIGHT_YES,
 )
-private fun IconListItemWithRightIconPreview() {
+private fun IconListItemWithAfterListActionPreview() {
     FirefoxTheme {
-        Box(Modifier.background(FirefoxTheme.colors.layer1)) {
+        Column(Modifier.background(FirefoxTheme.colors.layer1)) {
             IconListItem(
                 label = "IconListItem + right icon + clicks",
                 beforeIconPainter = painterResource(R.drawable.mozac_ic_folder_24),
@@ -413,6 +465,15 @@ private fun IconListItemWithRightIconPreview() {
                 afterIconPainter = painterResource(R.drawable.mozac_ic_ellipsis_vertical_24),
                 afterIconDescription = "click me",
                 onAfterIconClick = { println("icon click") },
+            )
+
+            IconListItem(
+                label = "IconListItem + text button",
+                onClick = { println("list item click") },
+                beforeIconPainter = painterResource(R.drawable.mozac_ic_folder_24),
+                beforeIconDescription = "click me",
+                afterButtonText = "Edit",
+                onAfterButtonClick = { println("text button click") },
             )
         }
     }
