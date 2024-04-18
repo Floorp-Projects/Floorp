@@ -5,12 +5,14 @@
 
 #include "AudioResampler.h"
 
+#include "TimeUnits.h"
+
 namespace mozilla {
 
 AudioResampler::AudioResampler(uint32_t aInRate, uint32_t aOutRate,
-                               media::TimeUnit aPreBufferDuration,
+                               uint32_t aInputPreBufferFrameCount,
                                const PrincipalHandle& aPrincipalHandle)
-    : mResampler(aInRate, aOutRate, aPreBufferDuration),
+    : mResampler(aInRate, aOutRate, aInputPreBufferFrameCount),
       mOutputChunks(aOutRate / 10, STEREO, aPrincipalHandle) {}
 
 void AudioResampler::AppendInput(const AudioSegment& aInSegment) {
