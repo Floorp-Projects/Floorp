@@ -457,21 +457,6 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
     }
 
     /**
-     * Add a {@link RuntimeTelemetry.Delegate} instance to this GeckoRuntime. This delegate can be
-     * used by the app to receive streaming telemetry data from GeckoView.
-     *
-     * @param delegate the delegate that will handle telemetry
-     * @return The builder instance.
-     */
-    @Deprecated
-    @DeprecationSchedule(id = "geckoview-gvst", version = 127)
-    public @NonNull Builder telemetryDelegate(final @NonNull RuntimeTelemetry.Delegate delegate) {
-      getSettings().mTelemetryProxy = new RuntimeTelemetry.Proxy(delegate);
-      getSettings().mTelemetryEnabled.set(true);
-      return this;
-    }
-
-    /**
      * Set the {@link ExperimentDelegate} instance on this runtime, if any. This delegate is used to
      * send and receive experiment information from Nimbus.
      *
@@ -663,7 +648,6 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
   /* package */ int mScreenHeightOverride;
   /* package */ Class<? extends Service> mCrashHandler;
   /* package */ String[] mRequestedLocales;
-  /* package */ RuntimeTelemetry.Proxy mTelemetryProxy;
   /* package */ ExperimentDelegate mExperimentDelegate;
 
   /**
@@ -674,10 +658,6 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
   /* package */ void attachTo(final @NonNull GeckoRuntime runtime) {
     mRuntime = runtime;
     commit();
-
-    if (mTelemetryProxy != null) {
-      mTelemetryProxy.attach();
-    }
   }
 
   @Override // RuntimeSettings
@@ -719,7 +699,6 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
     mCrashHandler = settings.mCrashHandler;
     mRequestedLocales = settings.mRequestedLocales;
     mConfigFilePath = settings.mConfigFilePath;
-    mTelemetryProxy = settings.mTelemetryProxy;
     mExperimentDelegate = settings.mExperimentDelegate;
   }
 
@@ -1366,11 +1345,6 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
   public @NonNull GeckoRuntimeSettings setGlMsaaLevel(final int level) {
     mGlMsaaLevel.commit(level);
     return this;
-  }
-
-  @SuppressWarnings("checkstyle:javadocmethod")
-  public @Nullable RuntimeTelemetry.Delegate getTelemetryDelegate() {
-    return mTelemetryProxy.getDelegate();
   }
 
   /**

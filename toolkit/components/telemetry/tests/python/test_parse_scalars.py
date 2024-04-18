@@ -243,25 +243,6 @@ bug_numbers:
         parse_scalars.ScalarType("CATEGORY", "PROVE", scalar, strict_type_checks=True)
         self.assertRaises(SystemExit, ParserError.exit_func)
 
-    def test_gv_streaming_keyed(self):
-        SAMPLE_SCALAR = """
-description: A nice one-line description.
-expires: never
-record_in_processes:
-  - 'main'
-kind: uint
-notification_emails:
-  - test01@mozilla.com
-products: ['geckoview_streaming']
-keyed: true
-bug_numbers:
-  - 12345
-"""
-
-        scalar = load_scalar(SAMPLE_SCALAR)
-        parse_scalars.ScalarType("CATEGORY", "PROVE", scalar, strict_type_checks=True)
-        self.assertRaises(SystemExit, ParserError.exit_func)
-
 
 if __name__ == "__main__":
     mozunit.main()

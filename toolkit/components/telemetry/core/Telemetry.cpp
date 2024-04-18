@@ -16,9 +16,6 @@
 #endif
 #include "base/pickle.h"
 #include "base/process_util.h"
-#if defined(MOZ_TELEMETRY_GECKOVIEW)
-#  include "geckoview/TelemetryGeckoViewPersistence.h"
-#endif
 #include "ipc/TelemetryIPCAccumulator.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"

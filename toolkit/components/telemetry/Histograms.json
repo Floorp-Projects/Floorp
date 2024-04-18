@@ -9738,7 +9738,7 @@
   },
   "TELEMETRY_TEST_CATEGORICAL_OPTOUT": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview_streaming", "thunderbird"],
+    "products": ["firefox", "fennec", "thunderbird"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "bug_numbers": [1188888],
     "expires_in_version": "never",
@@ -9956,7 +9956,7 @@
   },
   "TELEMETRY_TEST_EXPIRED": {
     "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "thunderbird", "geckoview_streaming"],
+    "products": ["firefox", "fennec", "thunderbird"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "4",
     "kind": "linear",
@@ -10210,32 +10210,6 @@
     "bug_numbers": [1498164],
     "description": "a testing histogram; not meant to be touched",
     "record_into_store": ["main", "sync"]
-  },
-  "TELEMETRY_TEST_STREAMING": {
-    "record_in_processes": ["main"],
-    "products": ["geckoview_streaming"],
-    "alert_emails": ["telemetry-client-dev@mozilla.com"],
-    "expires_in_version": "never",
-    "kind": "linear",
-    "low": 1,
-    "high": 2147483646,
-    "n_buckets": 10,
-    "releaseChannelCollection": "opt-out",
-    "bug_numbers": [1566366],
-    "description": "a testing histogram; not meant to be touched"
-  },
-  "TELEMETRY_TEST_STREAMING_2": {
-    "record_in_processes": ["main"],
-    "products": ["geckoview_streaming"],
-    "alert_emails": ["telemetry-client-dev@mozilla.com"],
-    "expires_in_version": "never",
-    "kind": "linear",
-    "low": 1,
-    "high": 2147483646,
-    "n_buckets": 10,
-    "releaseChannelCollection": "opt-out",
-    "bug_numbers": [1566366],
-    "description": "a testing histogram; not meant to be touched"
   },
   "STARTUP_CRASH_DETECTED": {
     "record_in_processes": ["main", "content"],

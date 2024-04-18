@@ -194,11 +194,7 @@ JSString* ToJSString(JSContext* cx, const nsAString& aStr) {
 
 SupportedProduct GetCurrentProduct() {
 #if defined(MOZ_WIDGET_ANDROID)
-  if (mozilla::StaticPrefs::toolkit_telemetry_geckoview_streaming()) {
-    return SupportedProduct::GeckoviewStreaming;
-  } else {
-    return SupportedProduct::Fennec;
-  }
+  return SupportedProduct::Fennec;
 #elif defined(MOZ_THUNDERBIRD)
   return SupportedProduct::Thunderbird;
 #else

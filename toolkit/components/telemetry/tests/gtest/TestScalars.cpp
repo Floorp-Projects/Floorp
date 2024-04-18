@@ -395,68 +395,6 @@ TEST_F(TelemetryTestFixture, ScalarEventSummary_Dynamic) {
                        scalarsSnapshot, 2);
 }
 
-TEST_F(TelemetryTestFixture, WrongScalarOperator) {
-  AutoJSContextWithGlobal cx(mCleanGlobal);
-
-  // Make sure we don't get scalars from other tests.
-  Unused << mTelemetry->ClearScalars();
-
-  const uint32_t expectedValue = 1172015;
-
-  Telemetry::ScalarSet(Telemetry::ScalarID::TELEMETRY_TEST_UNSIGNED_INT_KIND,
-                       expectedValue);
-  Telemetry::ScalarSet(Telemetry::ScalarID::TELEMETRY_TEST_STRING_KIND,
-                       NS_LITERAL_STRING_FROM_CSTRING(EXPECTED_STRING));
-  Telemetry::ScalarSet(Telemetry::ScalarID::TELEMETRY_TEST_BOOLEAN_KIND, true);
-
-  TelemetryScalar::DeserializationStarted();
-
-  Telemetry::ScalarAdd(Telemetry::ScalarID::TELEMETRY_TEST_STRING_KIND, 1447);
-  Telemetry::ScalarAdd(Telemetry::ScalarID::TELEMETRY_TEST_BOOLEAN_KIND, 1447);
-  Telemetry::ScalarSet(Telemetry::ScalarID::TELEMETRY_TEST_UNSIGNED_INT_KIND,
-                       true);
-  TelemetryScalar::ApplyPendingOperations();
-
-  JS::Rooted<JS::Value> scalarsSnapshot(cx.GetJSContext());
-  GetScalarsSnapshot(false, cx.GetJSContext(), &scalarsSnapshot);
-  CheckStringScalar("telemetry.test.string_kind", cx.GetJSContext(),
-                    scalarsSnapshot, EXPECTED_STRING);
-  CheckBoolScalar("telemetry.test.boolean_kind", cx.GetJSContext(),
-                  scalarsSnapshot, true);
-  CheckUintScalar("telemetry.test.unsigned_int_kind", cx.GetJSContext(),
-                  scalarsSnapshot, expectedValue);
-}
-
-TEST_F(TelemetryTestFixture, WrongKeyedScalarOperator) {
-  AutoJSContextWithGlobal cx(mCleanGlobal);
-
-  // Make sure we don't get scalars from other tests.
-  Unused << mTelemetry->ClearScalars();
-
-  const uint32_t kExpectedUint = 1172017;
-
-  Telemetry::ScalarSet(Telemetry::ScalarID::TELEMETRY_TEST_KEYED_UNSIGNED_INT,
-                       u"key1"_ns, kExpectedUint);
-  Telemetry::ScalarSet(Telemetry::ScalarID::TELEMETRY_TEST_KEYED_BOOLEAN_KIND,
-                       u"key2"_ns, true);
-
-  TelemetryScalar::DeserializationStarted();
-
-  Telemetry::ScalarSet(Telemetry::ScalarID::TELEMETRY_TEST_KEYED_UNSIGNED_INT,
-                       u"key1"_ns, false);
-  Telemetry::ScalarSet(Telemetry::ScalarID::TELEMETRY_TEST_KEYED_BOOLEAN_KIND,
-                       u"key2"_ns, static_cast<uint32_t>(13));
-
-  TelemetryScalar::ApplyPendingOperations();
-
-  JS::Rooted<JS::Value> scalarsSnapshot(cx.GetJSContext());
-  GetScalarsSnapshot(true, cx.GetJSContext(), &scalarsSnapshot);
-  CheckKeyedUintScalar("telemetry.test.keyed_unsigned_int", "key1",
-                       cx.GetJSContext(), scalarsSnapshot, kExpectedUint);
-  CheckKeyedBoolScalar("telemetry.test.keyed_boolean_kind", "key2",
-                       cx.GetJSContext(), scalarsSnapshot, true);
-}
-
 TEST_F(TelemetryTestFixture, TestKeyedScalarAllowedKeys) {
   AutoJSContextWithGlobal cx(mCleanGlobal);
   // Make sure we don't get scalars from other tests.
