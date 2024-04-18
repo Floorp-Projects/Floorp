@@ -115,6 +115,7 @@ import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.support.ktx.kotlin.getOrigin
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
 import mozilla.components.support.locale.ActivityContextWrapper
+import mozilla.components.support.utils.ext.isLandscape
 import mozilla.components.ui.widgets.withCenterAlignedButtons
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.FeatureFlags
@@ -165,6 +166,7 @@ import org.mozilla.fenix.ext.breadcrumb
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.hideToolbar
+import org.mozilla.fenix.ext.isTablet
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.navigateWithBreadcrumb
 import org.mozilla.fenix.ext.registerForActivityResult
@@ -173,6 +175,7 @@ import org.mozilla.fenix.ext.runIfFragmentIsAttached
 import org.mozilla.fenix.ext.secure
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.tabClosedUndoMessage
+import org.mozilla.fenix.ext.updateNavBarForConfigurationChange
 import org.mozilla.fenix.home.HomeScreenViewModel
 import org.mozilla.fenix.home.SharedViewModel
 import org.mozilla.fenix.library.bookmarks.BookmarksSharedViewModel
@@ -485,7 +488,11 @@ abstract class BaseBrowserFragment :
             },
         )
 
-        if (IncompleteRedesignToolbarFeature(context.settings()).isEnabled) {
+        // We don't show the navigation bar for tablets and in landscape mode.
+        val shouldAddNavigationBar = IncompleteRedesignToolbarFeature(context.settings()).isEnabled &&
+            !requireContext().isLandscape() &&
+            !isTablet()
+        if (shouldAddNavigationBar) {
             initializeNavBar(
                 browserToolbar = browserToolbarView.view,
                 view = view,
@@ -1785,6 +1792,27 @@ abstract class BaseBrowserFragment :
     @CallSuper
     internal open fun onUpdateToolbarForConfigurationChange(toolbar: BrowserToolbarView) {
         toolbar.dismissMenu()
+
+        // If the navbar feature could be visible, we should update it's state.
+        val shouldUpdateNavBarState =
+            IncompleteRedesignToolbarFeature(requireContext().settings()).isEnabled && !isTablet()
+        if (shouldUpdateNavBarState) {
+            updateNavBarForConfigurationChange(
+                parent = binding.browserLayout,
+                toolbarView = browserToolbarView.view,
+                bottomToolbarContainerView = _bottomToolbarContainerView?.toolbarContainerView,
+                reinitializeNavBar = ::reinitializeNavBar,
+            )
+        }
+    }
+
+    private fun reinitializeNavBar() {
+        initializeNavBar(
+            browserToolbar = browserToolbarView.view,
+            view = requireView(),
+            context = requireContext(),
+            activity = requireActivity() as HomeActivity,
+        )
     }
 
     /*

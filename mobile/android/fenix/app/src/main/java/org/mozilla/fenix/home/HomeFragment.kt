@@ -80,6 +80,7 @@ import mozilla.components.lib.state.ext.consumeFlow
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
+import mozilla.components.support.utils.ext.isLandscape
 import mozilla.components.ui.colors.PhotonColors
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.GleanMetrics.HomeScreen
@@ -107,11 +108,13 @@ import org.mozilla.fenix.databinding.FragmentHomeBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.containsQueryParameters
 import org.mozilla.fenix.ext.hideToolbar
+import org.mozilla.fenix.ext.isTablet
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.scaleToBottomOfView
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.tabClosedUndoMessage
+import org.mozilla.fenix.ext.updateNavBarForConfigurationChange
 import org.mozilla.fenix.home.pocket.DefaultPocketStoriesController
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesCategory
 import org.mozilla.fenix.home.privatebrowsing.controller.DefaultPrivateBrowsingController
@@ -451,7 +454,11 @@ class HomeFragment : Fragment() {
             searchEngine = components.core.store.state.search.selectedOrDefaultSearchEngine,
         )
 
-        if (IncompleteRedesignToolbarFeature(requireContext().settings()).isEnabled) {
+        // We don't show the navigation bar for tablets and in landscape mode.
+        val shouldAddNavigationBar = IncompleteRedesignToolbarFeature(requireContext().settings()).isEnabled &&
+            !requireContext().isLandscape() &&
+            !isTablet()
+        if (shouldAddNavigationBar) {
             initializeNavBar(activity = activity)
         }
 
@@ -478,10 +485,26 @@ class HomeFragment : Fragment() {
         return binding.root
     }
 
+    private fun reinitializeNavBar() {
+        initializeNavBar(activity = requireActivity() as HomeActivity)
+    }
+
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
 
         homeMenuView?.dismissMenu()
+
+        // If the navbar feature could be visible, we should update it's state.
+        val shouldUpdateNavBarState =
+            IncompleteRedesignToolbarFeature(requireContext().settings()).isEnabled && !isTablet()
+        if (shouldUpdateNavBarState) {
+            updateNavBarForConfigurationChange(
+                parent = binding.homeLayout,
+                toolbarView = binding.toolbarLayout,
+                bottomToolbarContainerView = _bottomToolbarContainerView?.toolbarContainerView,
+                reinitializeNavBar = ::reinitializeNavBar,
+            )
+        }
 
         val currentWallpaperName = requireContext().settings().currentWallpaperName
         applyWallpaper(
