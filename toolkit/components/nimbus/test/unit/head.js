@@ -63,10 +63,15 @@ async function assertEmptyStore(store, { cleanup = false } = {}) {
     "Store should have no active enrollments"
   );
 
+  store
+    .getAll()
+    .filter(e => !e.active)
+    .forEach(e => store._deleteForTests(e.slug));
+
   Assert.deepEqual(
     store
       .getAll()
-      .filter(e => e.inactive)
+      .filter(e => !e.active)
       .map(e => e.slug),
     [],
     "Store should have no inactive enrollments"
