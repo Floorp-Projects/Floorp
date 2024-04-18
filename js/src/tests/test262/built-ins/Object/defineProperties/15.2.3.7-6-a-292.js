@@ -43,9 +43,8 @@ Object.defineProperties(arg, {
 
 verifyEqualTo(arg, "0", get_func2());
 
-verifyProperty(arg, "0", {
-  enumerable: false,
-  configurable: false,
-});
+verifyNotEnumerable(arg, "0");
+
+verifyNotConfigurable(arg, "0");
 
 reportCompare(0, 0);

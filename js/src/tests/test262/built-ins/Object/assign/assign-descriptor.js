@@ -7,10 +7,8 @@ includes: [propertyHelper.js]
 es6id: 19.1.2.1
 ---*/
 
-verifyProperty(Object, "assign", {
-  writable: true,
-  enumerable: false,
-  configurable: true,
-});
+verifyWritable(Object, "assign");
+verifyNotEnumerable(Object, "assign");
+verifyConfigurable(Object, "assign");
 
 reportCompare(0, 0);

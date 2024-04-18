@@ -25,11 +25,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Array.prototype.concat, "length", {
-  value: 1,
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Array.prototype.concat.length, 1, 'The value of Array.prototype.concat.length is expected to be 1');
+
+verifyNotEnumerable(Array.prototype.concat, 'length');
+verifyNotWritable(Array.prototype.concat, 'length');
+verifyConfigurable(Array.prototype.concat, 'length');
 
 reportCompare(0, 0);

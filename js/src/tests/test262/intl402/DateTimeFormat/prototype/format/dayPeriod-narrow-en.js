@@ -5,7 +5,7 @@
 esid: sec-createdatetimeformat
 description: Checks basic handling of dayPeriod, narrow format.
 features: [Intl.DateTimeFormat-dayPeriod]
-locale: [en]
+locale: [en-US]
 ---*/
 
 const d0000 = new Date(2017, 11, 12,  0, 0, 0, 0);

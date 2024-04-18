@@ -14,10 +14,8 @@ var arrObj = [0, 1, 2];
 
 Object.freeze(arrObj);
 
-verifyProperty(arrObj, "0", {
-  value: 0,
-  writable: false,
-  configurable: false,
-});
+verifyNotWritable(arrObj, "0");
+verifyNotConfigurable(arrObj, "0");
+assert.sameValue(arrObj[0], 0);
 
 reportCompare(0, 0);

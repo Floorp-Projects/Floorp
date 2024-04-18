@@ -17,11 +17,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(RangeError.prototype, "name", {
-  value: "RangeError",
-  writable: true,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(RangeError.prototype.name, "RangeError");
+
+verifyNotEnumerable(RangeError.prototype, "name");
+verifyWritable(RangeError.prototype, "name");
+verifyConfigurable(RangeError.prototype, "name");
 
 reportCompare(0, 0);

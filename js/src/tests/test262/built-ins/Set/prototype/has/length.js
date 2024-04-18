@@ -10,11 +10,10 @@ description: >
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Set.prototype.has, "length", {
-  value: 1,
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Set.prototype.has.length, 1, "The value of `Set.prototype.has.length` is `1`");
+
+verifyNotEnumerable(Set.prototype.has, "length");
+verifyNotWritable(Set.prototype.has, "length");
+verifyConfigurable(Set.prototype.has, "length");
 
 reportCompare(0, 0);

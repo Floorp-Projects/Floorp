@@ -31,13 +31,11 @@ try {
   throw new Test262Error("Expected TypeError");
 } catch (e) {
   assert(e instanceof TypeError);
+  verifyNotEnumerable(obj, "foo");
 
   assert.sameValue(obj.foo, 10);
 
-  verifyProperty(obj, "foo", {
-    enumerable: false,
-    configurable: false,
-  });
+  verifyNotConfigurable(obj, "foo");
 
   var desc = Object.getOwnPropertyDescriptor(obj, "foo");
 

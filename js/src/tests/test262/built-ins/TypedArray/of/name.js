@@ -20,11 +20,10 @@ includes: [propertyHelper.js, testTypedArray.js]
 features: [TypedArray]
 ---*/
 
-verifyProperty(TypedArray.of, "name", {
-  value: "of",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(TypedArray.of.name, "of");
+
+verifyNotEnumerable(TypedArray.of, "name");
+verifyNotWritable(TypedArray.of, "name");
+verifyConfigurable(TypedArray.of, "name");
 
 reportCompare(0, 0);

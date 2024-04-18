@@ -19,11 +19,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(parseFloat, "name", {
-  value: "parseFloat",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(parseFloat.name, "parseFloat");
+
+verifyNotEnumerable(parseFloat, "name");
+verifyNotWritable(parseFloat, "name");
+verifyConfigurable(parseFloat, "name");
 
 reportCompare(0, 0);

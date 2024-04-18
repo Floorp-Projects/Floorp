@@ -38,10 +38,8 @@ try {
   assert(desc.hasOwnProperty("set") && typeof desc.set === "undefined");
 
   verifyNotWritable(arrObj, "1");
-}
 
-verifyProperty(arrObj, "1", {
-  configurable: false,
-});
+  verifyNotConfigurable(arrObj, "1");
+}
 
 reportCompare(0, 0);

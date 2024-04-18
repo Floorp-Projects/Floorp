@@ -12,11 +12,13 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(WeakSet.prototype.delete, "name", {
-  value: "delete",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(
+  WeakSet.prototype.delete.name, 'delete',
+  'The value of WeakSet.prototype.delete.name is "delete"'
+);
+
+verifyNotEnumerable(WeakSet.prototype.delete, 'name');
+verifyNotWritable(WeakSet.prototype.delete, 'name');
+verifyConfigurable(WeakSet.prototype.delete, 'name');
 
 reportCompare(0, 0);

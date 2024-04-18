@@ -19,11 +19,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Array.prototype.forEach, "name", {
-  value: "forEach",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Array.prototype.forEach.name, "forEach");
+
+verifyNotEnumerable(Array.prototype.forEach, "name");
+verifyNotWritable(Array.prototype.forEach, "name");
+verifyConfigurable(Array.prototype.forEach, "name");
 
 reportCompare(0, 0);

@@ -17,10 +17,8 @@ try {
   var dateObj = new Date();
 
   Object.defineProperty(obj, "property", dateObj);
+  verifyWritable(obj, "property");
 
-  verifyProperty(obj, "property", {
-    writable: true,
-  });
 } finally {
   delete Date.prototype.writable;
 }

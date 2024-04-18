@@ -15,10 +15,9 @@ var strObj = new String("abc");
 
 Object.freeze(strObj);
 
-verifyProperty(strObj, "0", {
-  value: "a",
-  writable: false,
-  configurable: false,
-});
+verifyNotWritable(strObj, "0");
+verifyNotConfigurable(strObj, "0");
+
+assert.sameValue(strObj[0], "a");
 
 reportCompare(0, 0);

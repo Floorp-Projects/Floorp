@@ -8,11 +8,14 @@ author: Jordan Harband
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(String.prototype.padStart, "name", {
-  value: "padStart",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(
+  String.prototype.padStart.name,
+  'padStart',
+  'Expected String#padStart.name to be "padStart"'
+);
+
+verifyNotEnumerable(String.prototype.padStart, 'name');
+verifyNotWritable(String.prototype.padStart, 'name');
+verifyConfigurable(String.prototype.padStart, 'name');
 
 reportCompare(0, 0);

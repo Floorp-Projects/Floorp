@@ -21,11 +21,10 @@ includes: [propertyHelper.js]
 features: [Promise.prototype.finally]
 ---*/
 
-verifyProperty(Promise.prototype.finally, "name", {
-  value: "finally",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Promise.prototype.finally.name, 'finally');
+
+verifyNotEnumerable(Promise.prototype.finally, 'name');
+verifyNotWritable(Promise.prototype.finally, 'name');
+verifyConfigurable(Promise.prototype.finally, 'name');
 
 reportCompare(0, 0);

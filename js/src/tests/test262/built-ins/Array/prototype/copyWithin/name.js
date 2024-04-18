@@ -12,11 +12,13 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Array.prototype.copyWithin, "name", {
-  value: "copyWithin",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(
+  Array.prototype.copyWithin.name, 'copyWithin',
+  'The value of `Array.prototype.copyWithin.name` is `"copyWithin"`'
+);
+
+verifyNotEnumerable(Array.prototype.copyWithin, 'name');
+verifyNotWritable(Array.prototype.copyWithin, 'name');
+verifyConfigurable(Array.prototype.copyWithin, 'name');
 
 reportCompare(0, 0);

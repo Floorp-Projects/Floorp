@@ -24,10 +24,11 @@ var child = new ConstructFun();
 
 Object.defineProperty(obj, "property", child);
 
-verifyProperty(obj, "property", {
-  configurable: false,
-});
+assert(obj.hasOwnProperty("property"));
 
+verifyNotConfigurable(obj, "property");
+
+assert(obj.hasOwnProperty("property"));
 assert.sameValue(typeof(obj.property), "undefined");
 
 reportCompare(0, 0);

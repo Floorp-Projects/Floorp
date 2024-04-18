@@ -46,9 +46,8 @@ verifyEqualTo(arg, "genericProperty", getFun());
 
 verifyWritable(arg, "genericProperty", "testGetFunction");
 
-verifyProperty(arg, "genericProperty", {
-  enumerable: false,
-  configurable: false,
-});
+verifyNotEnumerable(arg, "genericProperty");
+
+verifyNotConfigurable(arg, "genericProperty");
 
 reportCompare(0, 0);

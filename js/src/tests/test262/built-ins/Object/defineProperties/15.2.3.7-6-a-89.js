@@ -30,10 +30,9 @@ Object.defineProperties(obj, {
   }
 });
 
-verifyProperty(obj, "foo", {
-  enumerable: false,
-  configurable: false,
-});
+verifyNotEnumerable(obj, "foo");
+
+verifyNotConfigurable(obj, "foo");
 
 var desc = Object.getOwnPropertyDescriptor(obj, "foo");
 

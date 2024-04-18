@@ -20,11 +20,10 @@ includes: [propertyHelper.js]
 features: [Proxy]
 ---*/
 
-verifyProperty(Proxy.revocable, "name", {
-  value: "revocable",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Proxy.revocable.name, "revocable");
+
+verifyNotEnumerable(Proxy.revocable, "name");
+verifyNotWritable(Proxy.revocable, "name");
+verifyConfigurable(Proxy.revocable, "name");
 
 reportCompare(0, 0);

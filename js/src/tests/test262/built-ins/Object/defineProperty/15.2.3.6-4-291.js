@@ -31,10 +31,9 @@ includes: [propertyHelper.js]
   });
   verifyEqualTo(arguments, "0", getFunc2());
 
-  verifyProperty(arguments, "0", {
-    enumerable: false,
-    configurable: false,
-  });
+  verifyNotEnumerable(arguments, "0");
+
+  verifyNotConfigurable(arguments, "0");
 }(0, 1, 2));
 
 reportCompare(0, 0);

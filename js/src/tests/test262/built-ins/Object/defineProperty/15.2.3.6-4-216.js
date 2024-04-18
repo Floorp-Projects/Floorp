@@ -19,12 +19,12 @@ Object.defineProperty(arrObj, "0", {
 Object.defineProperty(arrObj, "0", {
   value: null
 });
+verifyEqualTo(arrObj, "0", null);
 
-verifyProperty(arrObj, "0", {
-  value: null,
-  writable: false,
-  enumerable: false,
-  configurable: false,
-});
+verifyNotWritable(arrObj, "0");
+
+verifyNotEnumerable(arrObj, "0");
+
+verifyNotConfigurable(arrObj, "0");
 
 reportCompare(0, 0);

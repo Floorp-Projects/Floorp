@@ -19,11 +19,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Math.cos, "name", {
-  value: "cos",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Math.cos.name, "cos");
+
+verifyNotEnumerable(Math.cos, "name");
+verifyNotWritable(Math.cos, "name");
+verifyConfigurable(Math.cos, "name");
 
 reportCompare(0, 0);

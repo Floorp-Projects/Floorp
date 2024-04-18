@@ -12,11 +12,13 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(String.prototype.normalize, "length", {
-  value: 0,
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(
+  String.prototype.normalize.length, 0,
+  'The value of `String.prototype.normalize.length` is `0`'
+);
+
+verifyNotEnumerable(String.prototype.normalize, 'length');
+verifyNotWritable(String.prototype.normalize, 'length');
+verifyConfigurable(String.prototype.normalize, 'length');
 
 reportCompare(0, 0);

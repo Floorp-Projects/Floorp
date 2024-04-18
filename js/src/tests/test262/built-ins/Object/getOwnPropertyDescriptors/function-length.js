@@ -8,11 +8,10 @@ author: Jordan Harband
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Object.getOwnPropertyDescriptors, "length", {
-  value: 1,
-  writable: false,
-  enumerable: false,
-  configurable: true,
-});
+assert.sameValue(Object.getOwnPropertyDescriptors.length, 1, 'Expected Object.getOwnPropertyDescriptors.length to be 1');
+
+verifyNotEnumerable(Object.getOwnPropertyDescriptors, 'length');
+verifyNotWritable(Object.getOwnPropertyDescriptors, 'length');
+verifyConfigurable(Object.getOwnPropertyDescriptors, 'length');
 
 reportCompare(0, 0);

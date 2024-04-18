@@ -19,11 +19,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Math.acos, "name", {
-  value: "acos",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Math.acos.name, "acos");
+
+verifyNotEnumerable(Math.acos, "name");
+verifyNotWritable(Math.acos, "name");
+verifyConfigurable(Math.acos, "name");
 
 reportCompare(0, 0);

@@ -19,11 +19,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Array.prototype.reverse, "name", {
-  value: "reverse",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Array.prototype.reverse.name, "reverse");
+
+verifyNotEnumerable(Array.prototype.reverse, "name");
+verifyNotWritable(Array.prototype.reverse, "name");
+verifyConfigurable(Array.prototype.reverse, "name");
 
 reportCompare(0, 0);

@@ -19,11 +19,14 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Object.assign, "name", {
-  value: "assign",
-  writable: false,
-  enumerable: false,
-  configurable: true,
-});
+assert.sameValue(
+  Object.assign.name,
+  'assign',
+  'The value of `Object.assign.name` is `"assign"`'
+);
+
+verifyNotEnumerable(Object.assign, 'name');
+verifyNotWritable(Object.assign, 'name');
+verifyConfigurable(Object.assign, 'name');
 
 reportCompare(0, 0);

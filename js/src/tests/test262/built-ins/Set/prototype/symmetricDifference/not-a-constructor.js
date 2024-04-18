@@ -18,6 +18,8 @@ assert.throws(
   TypeError,
   () => {
     new Set.prototype.symmetricDifference();
-  });
+  },
+  "`new Set.prototype.symmetricDifference()` throws TypeError"
+);
 
 reportCompare(0, 0);

@@ -14,11 +14,13 @@ var descriptor = Object.getOwnPropertyDescriptor(
   SharedArrayBuffer.prototype, 'byteLength'
 );
 
-verifyProperty(descriptor.get, "name", {
-  value: "get byteLength",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(
+  descriptor.get.name, 'get byteLength',
+  'The value of `descriptor.get.name` is `"get byteLength"`'
+);
+
+verifyNotEnumerable(descriptor.get, 'name');
+verifyNotWritable(descriptor.get, 'name');
+verifyConfigurable(descriptor.get, 'name');
 
 reportCompare(0, 0);

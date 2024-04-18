@@ -22,11 +22,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Number.isNaN, "length", {
-  value: 1,
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Number.isNaN.length, 1);
+
+verifyNotEnumerable(Number.isNaN, "length");
+verifyNotWritable(Number.isNaN, "length");
+verifyConfigurable(Number.isNaN, "length");
 
 reportCompare(0, 0);

@@ -16,8 +16,7 @@ const invalidStrings = [
   "-000000-10-31T17:45+00:00[UTC]",
 ];
 const instance = new Temporal.PlainMonthDay(5, 2);
-invalidStrings.forEach((str) => {
-  const arg = { year: 1976, month: 11, day: 18, calendar: str };
+invalidStrings.forEach((arg) => {
   assert.throws(
     RangeError,
     () => instance.equals(arg),

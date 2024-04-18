@@ -19,11 +19,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Math.log1p, "name", {
-  value: "log1p",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Math.log1p.name, "log1p");
+
+verifyNotEnumerable(Math.log1p, "name");
+verifyNotWritable(Math.log1p, "name");
+verifyConfigurable(Math.log1p, "name");
 
 reportCompare(0, 0);

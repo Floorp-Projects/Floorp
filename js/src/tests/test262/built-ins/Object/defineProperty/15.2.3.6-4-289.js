@@ -19,13 +19,13 @@ includes: [propertyHelper.js]
     enumerable: true,
     configurable: true
   });
+  verifyEqualTo(arguments, "0", 10);
 
-  verifyProperty(arguments, "0", {
-    value: 10,
-    writable: true,
-    enumerable: true,
-    configurable: true,
-  });
+  verifyWritable(arguments, "0");
+
+  verifyEnumerable(arguments, "0");
+
+  verifyConfigurable(arguments, "0");
 }(0, 1, 2));
 
 reportCompare(0, 0);

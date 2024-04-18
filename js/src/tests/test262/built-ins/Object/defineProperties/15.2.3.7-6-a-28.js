@@ -18,9 +18,14 @@ Object.defineProperties(obj, {
   }
 });
 
-verifyProperty(obj, "prop", {
-  value: 1001,
-  writable: false,
-});
+verifyNotWritable(obj, "prop");
+
+if (!obj.hasOwnProperty("prop")) {
+  throw new Test262Error('Expected obj.hasOwnProperty("prop") to be true, actually ' + obj.hasOwnProperty("prop"));
+}
+
+if (obj.prop !== 1001) {
+  throw new Test262Error('Expected obj.prop === 1001, actually ' + obj.prop);
+}
 
 reportCompare(0, 0);

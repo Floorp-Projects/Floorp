@@ -29,9 +29,8 @@ verifyEqualTo(obj, "prop", getFun());
 
 verifyWritable(obj, "prop", "setVerifyHelpProp");
 
-verifyProperty(obj, "prop", {
-  enumerable: false,
-  configurable: false,
-});
+verifyNotEnumerable(obj, "prop");
+
+verifyNotConfigurable(obj, "prop");
 
 reportCompare(0, 0);

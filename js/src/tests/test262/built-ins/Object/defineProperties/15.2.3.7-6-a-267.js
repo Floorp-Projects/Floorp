@@ -33,10 +33,9 @@ verifyEqualTo(arr, "property", get_fun());
 
 verifyWritable(arr, "property", "setVerifyHelpProp");
 
-verifyProperty(arr, "property", {
-  enumerable: true,
-  configurable: true,
-});
+verifyEnumerable(arr, "property");
+
+verifyConfigurable(arr, "property");
 
 if (arr.length !== 0) {
   throw new Test262Error('Expected arr.length === 0, actually ' + arr.length);

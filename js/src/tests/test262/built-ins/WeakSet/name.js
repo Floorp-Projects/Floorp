@@ -10,11 +10,13 @@ description: >
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(WeakSet, "name", {
-  value: "WeakSet",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(
+  WeakSet.name, 'WeakSet',
+  'The value of `WeakSet.name` is "WeakSet"'
+);
+
+verifyNotEnumerable(WeakSet, 'name');
+verifyNotWritable(WeakSet, 'name');
+verifyConfigurable(WeakSet, 'name');
 
 reportCompare(0, 0);

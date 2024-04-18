@@ -29,12 +29,14 @@ Object.defineProperty(obj, "prop", {
   configurable: false
 });
 
+var desc2 = Object.getOwnPropertyDescriptor(obj, "prop");
+
 assert.sameValue(desc1.configurable, true);
+assert.sameValue(desc2.configurable, false);
 
 verifyNotWritable(obj, "prop");
+verifyNotConfigurable(obj, "prop");
 
-verifyProperty(obj, "prop", {
-  configurable: false,
-});
+assert(obj.hasOwnProperty("prop"));
 
 reportCompare(0, 0);

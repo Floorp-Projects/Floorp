@@ -12,11 +12,13 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Map.prototype.has, "length", {
-  value: 1,
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(
+  Map.prototype.has.length, 1,
+  'The value of `Map.prototype.has.length` is `1`'
+);
+
+verifyNotEnumerable(Map.prototype.has, 'length');
+verifyNotWritable(Map.prototype.has, 'length');
+verifyConfigurable(Map.prototype.has, 'length');
 
 reportCompare(0, 0);

@@ -8,11 +8,10 @@ description: >
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(isNaN, "length", {
-  value: 1,
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(isNaN.length, 1, "The value of `isNaN.length` is `1`");
+
+verifyNotEnumerable(isNaN, "length");
+verifyNotWritable(isNaN, "length");
+verifyConfigurable(isNaN, "length");
 
 reportCompare(0, 0);

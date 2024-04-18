@@ -17,9 +17,8 @@ Object.defineProperty(obj, "foo", {
 
 Object.freeze(obj);
 
-verifyProperty(obj, "foo", {
-  writable: false,
-  configurable: false,
-});
+assert(obj.hasOwnProperty("foo"));
+verifyNotWritable(obj, "foo");
+verifyNotConfigurable(obj, "foo");
 
 reportCompare(0, 0);

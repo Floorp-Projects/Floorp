@@ -8,10 +8,8 @@ author: Jordan Harband
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Object, "getOwnPropertyDescriptors", {
-  writable: true,
-  enumerable: false,
-  configurable: true,
-});
+verifyNotEnumerable(Object, 'getOwnPropertyDescriptors');
+verifyWritable(Object, 'getOwnPropertyDescriptors');
+verifyConfigurable(Object, 'getOwnPropertyDescriptors');
 
 reportCompare(0, 0);

@@ -23,11 +23,10 @@ includes: [propertyHelper.js]
 features: [Symbol]
 ---*/
 
-verifyProperty(Symbol.for, "length", {
-  value: 1,
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Symbol.for.length, 1);
+
+verifyNotEnumerable(Symbol.for, "length");
+verifyNotWritable(Symbol.for, "length");
+verifyConfigurable(Symbol.for, "length");
 
 reportCompare(0, 0);

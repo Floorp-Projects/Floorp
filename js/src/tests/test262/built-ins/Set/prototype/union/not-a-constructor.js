@@ -18,6 +18,8 @@ assert.throws(
   TypeError,
   () => {
     new Set.prototype.union();
-  });
+  },
+  "`new Set.prototype.union()` throws TypeError"
+);
 
 reportCompare(0, 0);

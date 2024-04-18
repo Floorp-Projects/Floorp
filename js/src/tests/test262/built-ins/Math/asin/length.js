@@ -22,11 +22,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Math.asin, "length", {
-  value: 1,
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Math.asin.length, 1);
+
+verifyNotEnumerable(Math.asin, "length");
+verifyNotWritable(Math.asin, "length");
+verifyConfigurable(Math.asin, "length");
 
 reportCompare(0, 0);

@@ -19,11 +19,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Math.fround, "name", {
-  value: "fround",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Math.fround.name, "fround");
+
+verifyNotEnumerable(Math.fround, "name");
+verifyNotWritable(Math.fround, "name");
+verifyConfigurable(Math.fround, "name");
 
 reportCompare(0, 0);

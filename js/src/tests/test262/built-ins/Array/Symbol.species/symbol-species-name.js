@@ -15,11 +15,13 @@ includes: [propertyHelper.js]
 
 var descriptor = Object.getOwnPropertyDescriptor(Array, Symbol.species);
 
-verifyProperty(descriptor.get, "name", {
-  value: "get [Symbol.species]",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(
+  descriptor.get.name,
+  'get [Symbol.species]'
+);
+
+verifyNotEnumerable(descriptor.get, 'name');
+verifyNotWritable(descriptor.get, 'name');
+verifyConfigurable(descriptor.get, 'name');
 
 reportCompare(0, 0);

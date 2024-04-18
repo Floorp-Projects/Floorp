@@ -19,11 +19,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Number.prototype.toExponential, "name", {
-  value: "toExponential",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Number.prototype.toExponential.name, "toExponential");
+
+verifyNotEnumerable(Number.prototype.toExponential, "name");
+verifyNotWritable(Number.prototype.toExponential, "name");
+verifyConfigurable(Number.prototype.toExponential, "name");
 
 reportCompare(0, 0);

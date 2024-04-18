@@ -19,11 +19,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Math.round, "name", {
-  value: "round",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Math.round.name, "round");
+
+verifyNotEnumerable(Math.round, "name");
+verifyNotWritable(Math.round, "name");
+verifyConfigurable(Math.round, "name");
 
 reportCompare(0, 0);

@@ -19,11 +19,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(String.prototype.localeCompare, "name", {
-  value: "localeCompare",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(String.prototype.localeCompare.name, "localeCompare");
+
+verifyNotEnumerable(String.prototype.localeCompare, "name");
+verifyNotWritable(String.prototype.localeCompare, "name");
+verifyConfigurable(String.prototype.localeCompare, "name");
 
 reportCompare(0, 0);

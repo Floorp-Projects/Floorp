@@ -19,11 +19,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Math.max, "name", {
-  value: "max",
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Math.max.name, "max");
+
+verifyNotEnumerable(Math.max, "name");
+verifyNotWritable(Math.max, "name");
+verifyConfigurable(Math.max, "name");
 
 reportCompare(0, 0);

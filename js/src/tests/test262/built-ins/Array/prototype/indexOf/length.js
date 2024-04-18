@@ -21,11 +21,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyProperty(Array.prototype.indexOf, "length", {
-  value: 1,
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(Array.prototype.indexOf.length, 1);
+
+verifyNotEnumerable(Array.prototype.indexOf, 'length');
+verifyNotWritable(Array.prototype.indexOf, 'length');
+verifyConfigurable(Array.prototype.indexOf, 'length');
 
 reportCompare(0, 0);

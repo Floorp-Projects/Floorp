@@ -8,11 +8,13 @@ includes: [propertyHelper.js]
 features: [Reflect]
 ---*/
 
-verifyProperty(Reflect.deleteProperty, "length", {
-  value: 2,
-  writable: false,
-  enumerable: false,
-  configurable: true
-});
+assert.sameValue(
+  Reflect.deleteProperty.length, 2,
+  'The value of `Reflect.deleteProperty.length` is `2`'
+);
+
+verifyNotEnumerable(Reflect.deleteProperty, 'length');
+verifyNotWritable(Reflect.deleteProperty, 'length');
+verifyConfigurable(Reflect.deleteProperty, 'length');
 
 reportCompare(0, 0);
