@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.74"
 name = "naga"
-version = "0.19.0"
+version = "0.19.2"
 authors = ["gfx-rs developers"]
 exclude = [
     "bin/**/*",
@@ -48,7 +48,7 @@ harness = false
 [dependencies]
 arrayvec = "0.7"
 bit-set = "0.5"
-bitflags = "2.4"
+bitflags = "2.5"
 log = "0.4"
 num-traits = "0.2"
 rustc-hash = "1.1.0"
@@ -122,7 +122,6 @@ arbitrary = [
     "bitflags/arbitrary",
     "indexmap/arbitrary",
 ]
-clone = []
 compact = []
 default = []
 deserialize = [

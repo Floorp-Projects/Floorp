@@ -17,7 +17,7 @@ Add `bitflags` to your `Cargo.toml`:
 
 ```toml
 [dependencies.bitflags]
-version = "2.4.1"
+version = "2.5.0"
 ```
 
 ## Generating flags types
@@ -252,6 +252,8 @@ mod traits;
 
 #[doc(hidden)]
 pub mod __private {
+    #[allow(unused_imports)]
+    // Easier than conditionally checking any optional external dependencies
     pub use crate::{external::__private::*, traits::__private::*};
 
     pub use core;
@@ -441,7 +443,7 @@ bitflags! {
 }
 ```
 */
-#[macro_export(local_inner_macros)]
+#[macro_export]
 macro_rules! bitflags {
     (
         $(#[$outer:meta])*
@@ -456,13 +458,13 @@ macro_rules! bitflags {
     ) => {
         // Declared in the scope of the `bitflags!` call
         // This type appears in the end-user's API
-        __declare_public_bitflags! {
+        $crate::__declare_public_bitflags! {
             $(#[$outer])*
             $vis struct $BitFlags
         }
 
         // Workaround for: https://github.com/bitflags/bitflags/issues/320
-        __impl_public_bitflags_consts! {
+        $crate::__impl_public_bitflags_consts! {
             $BitFlags: $T {
                 $(
                     $(#[$inner $($args)*])*
@@ -487,11 +489,11 @@ macro_rules! bitflags {
         const _: () = {
             // Declared in a "hidden" scope that can't be reached directly
             // These types don't appear in the end-user's API
-            __declare_internal_bitflags! {
+            $crate::__declare_internal_bitflags! {
                 $vis struct InternalBitFlags: $T
             }
 
-            __impl_internal_bitflags! {
+            $crate::__impl_internal_bitflags! {
                 InternalBitFlags: $T, $BitFlags {
                     $(
                         $(#[$inner $($args)*])*
@@ -501,7 +503,7 @@ macro_rules! bitflags {
             }
 
             // This is where new library trait implementations can be added
-            __impl_external_bitflags! {
+            $crate::__impl_external_bitflags! {
                 InternalBitFlags: $T, $BitFlags {
                     $(
                         $(#[$inner $($args)*])*
@@ -510,20 +512,20 @@ macro_rules! bitflags {
                 }
             }
 
-            __impl_public_bitflags_forward! {
+            $crate::__impl_public_bitflags_forward! {
                 $BitFlags: $T, InternalBitFlags
             }
 
-            __impl_public_bitflags_ops! {
+            $crate::__impl_public_bitflags_ops! {
                 $BitFlags
             }
 
-            __impl_public_bitflags_iter! {
+            $crate::__impl_public_bitflags_iter! {
                 $BitFlags: $T, $BitFlags
             }
         };
 
-        bitflags! {
+        $crate::bitflags! {
             $($t)*
         }
     };
@@ -537,7 +539,7 @@ macro_rules! bitflags {
 
         $($t:tt)*
     ) => {
-        __impl_public_bitflags_consts! {
+        $crate::__impl_public_bitflags_consts! {
             $BitFlags: $T {
                 $(
                     $(#[$inner $($args)*])*
@@ -558,7 +560,7 @@ macro_rules! bitflags {
             clippy::iter_without_into_iter,
         )]
         const _: () = {
-            __impl_public_bitflags! {
+            $crate::__impl_public_bitflags! {
                 $BitFlags: $T, $BitFlags {
                     $(
                         $(#[$inner $($args)*])*
@@ -567,16 +569,16 @@ macro_rules! bitflags {
                 }
             }
 
-            __impl_public_bitflags_ops! {
+            $crate::__impl_public_bitflags_ops! {
                 $BitFlags
             }
 
-            __impl_public_bitflags_iter! {
+            $crate::__impl_public_bitflags_iter! {
                 $BitFlags: $T, $BitFlags
             }
         };
 
-        bitflags! {
+        $crate::bitflags! {
             $($t)*
         }
     };
@@ -587,7 +589,7 @@ macro_rules! bitflags {
 ///
 /// We need to be careful about adding new methods and trait implementations here because they
 /// could conflict with items added by the end-user.
-#[macro_export(local_inner_macros)]
+#[macro_export]
 #[doc(hidden)]
 macro_rules! __impl_bitflags {
     (
@@ -796,7 +798,7 @@ macro_rules! __impl_bitflags {
 ///
 /// If you find yourself with an attribute that should be considered expression-safe
 /// and isn't, it can be added here.
-#[macro_export(local_inner_macros)]
+#[macro_export]
 #[doc(hidden)]
 macro_rules! __bitflags_expr_safe_attrs {
     // Entrypoint: Move all flags and all attributes into `unprocessed` lists
@@ -805,7 +807,7 @@ macro_rules! __bitflags_expr_safe_attrs {
         $(#[$inner:ident $($args:tt)*])*
         { $e:expr }
     ) => {
-        __bitflags_expr_safe_attrs! {
+        $crate::__bitflags_expr_safe_attrs! {
             expr: { $e },
             attrs: {
                 // All attributes start here
@@ -830,7 +832,7 @@ macro_rules! __bitflags_expr_safe_attrs {
             processed: [$($expr:tt)*],
         },
     ) => {
-        __bitflags_expr_safe_attrs! {
+        $crate::__bitflags_expr_safe_attrs! {
             expr: { $e },
             attrs: {
                 unprocessed: [
@@ -857,7 +859,7 @@ macro_rules! __bitflags_expr_safe_attrs {
             processed: [$($expr:tt)*],
         },
     ) => {
-        __bitflags_expr_safe_attrs! {
+        $crate::__bitflags_expr_safe_attrs! {
             expr: { $e },
                 attrs: {
                 unprocessed: [
@@ -884,7 +886,7 @@ macro_rules! __bitflags_expr_safe_attrs {
 }
 
 /// Implement a flag, which may be a wildcard `_`.
-#[macro_export(local_inner_macros)]
+#[macro_export]
 #[doc(hidden)]
 macro_rules! __bitflags_flag {
     (

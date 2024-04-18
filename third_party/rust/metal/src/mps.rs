@@ -7,9 +7,12 @@
 
 use super::*;
 
-use objc::runtime::{BOOL, YES};
+use objc::runtime::BOOL;
 
-#[cfg_attr(feature = "link", link(name = "MetalPerformanceShaders", kind = "framework"))]
+#[cfg_attr(
+    feature = "link",
+    link(name = "MetalPerformanceShaders", kind = "framework")
+)]
 extern "C" {
     fn MPSSupportsMTLDevice(device: *const std::ffi::c_void) -> BOOL;
 }

@@ -12,14 +12,13 @@
 #[cfg(feature = "with-uuid")]
 extern crate uuid;
 
-pub use core_foundation_sys::uuid::*;
 use core_foundation_sys::base::kCFAllocatorDefault;
+pub use core_foundation_sys::uuid::*;
 
-use base::TCFType;
+use crate::base::TCFType;
 
 #[cfg(feature = "with-uuid")]
 use self::uuid::Uuid;
-
 
 declare_TCFType! {
     /// A UUID.
@@ -45,28 +44,12 @@ impl Default for CFUUID {
 }
 
 #[cfg(feature = "with-uuid")]
-impl Into<Uuid> for CFUUID {
-    fn into(self) -> Uuid {
-        let b = unsafe {
-            CFUUIDGetUUIDBytes(self.0)
-        };
+impl From<CFUUID> for Uuid {
+    fn from(val: CFUUID) -> Self {
+        let b = unsafe { CFUUIDGetUUIDBytes(val.0) };
         let bytes = [
-            b.byte0,
-            b.byte1,
-            b.byte2,
-            b.byte3,
-            b.byte4,
-            b.byte5,
-            b.byte6,
-            b.byte7,
-            b.byte8,
-            b.byte9,
-            b.byte10,
-            b.byte11,
-            b.byte12,
-            b.byte13,
-            b.byte14,
-            b.byte15,
+            b.byte0, b.byte1, b.byte2, b.byte3, b.byte4, b.byte5, b.byte6, b.byte7, b.byte8,
+            b.byte9, b.byte10, b.byte11, b.byte12, b.byte13, b.byte14, b.byte15,
         ];
         Uuid::from_bytes(&bytes).unwrap()
     }
@@ -100,7 +83,6 @@ impl From<Uuid> for CFUUID {
         }
     }
 }
-
 
 #[cfg(test)]
 #[cfg(feature = "with-uuid")]

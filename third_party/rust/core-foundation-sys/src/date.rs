@@ -9,7 +9,7 @@
 
 use std::os::raw::c_void;
 
-use base::{CFAllocatorRef, CFComparisonResult, CFTypeID};
+use crate::base::{CFAllocatorRef, CFComparisonResult, CFTypeID};
 
 #[repr(C)]
 pub struct __CFDate(c_void);
@@ -19,7 +19,7 @@ pub type CFDateRef = *const __CFDate;
 pub type CFTimeInterval = f64;
 pub type CFAbsoluteTime = CFTimeInterval;
 
-extern {
+extern "C" {
     pub static kCFAbsoluteTimeIntervalSince1904: CFTimeInterval;
     pub static kCFAbsoluteTimeIntervalSince1970: CFTimeInterval;
 
@@ -28,7 +28,11 @@ extern {
     pub fn CFDateCreate(allocator: CFAllocatorRef, at: CFAbsoluteTime) -> CFDateRef;
     pub fn CFDateGetAbsoluteTime(date: CFDateRef) -> CFAbsoluteTime;
     pub fn CFDateGetTimeIntervalSinceDate(date: CFDateRef, other: CFDateRef) -> CFTimeInterval;
-    pub fn CFDateCompare(date: CFDateRef, other: CFDateRef, context: *mut c_void) -> CFComparisonResult;
+    pub fn CFDateCompare(
+        date: CFDateRef,
+        other: CFDateRef,
+        context: *mut c_void,
+    ) -> CFComparisonResult;
 
     pub fn CFDateGetTypeID() -> CFTypeID;
 }

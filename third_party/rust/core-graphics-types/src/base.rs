@@ -14,9 +14,7 @@
 
 use libc;
 
-#[cfg(any(target_arch = "x86",
-          target_arch = "arm",
-          target_arch = "aarch64"))]
+#[cfg(any(target_arch = "x86", target_arch = "arm", target_arch = "aarch64"))]
 pub type boolean_t = libc::c_int;
 #[cfg(target_arch = "x86_64")]
 pub type boolean_t = libc::c_uint;

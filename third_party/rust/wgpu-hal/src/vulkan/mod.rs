@@ -413,6 +413,15 @@ pub struct TextureView {
     attachment: FramebufferAttachment,
 }
 
+impl TextureView {
+    /// # Safety
+    ///
+    /// - The image view handle must not be manually destroyed
+    pub unsafe fn raw_handle(&self) -> vk::ImageView {
+        self.raw
+    }
+}
+
 #[derive(Debug)]
 pub struct Sampler {
     raw: vk::Sampler,
@@ -438,6 +447,7 @@ pub struct BindGroup {
     set: gpu_descriptor::DescriptorSet<vk::DescriptorSet>,
 }
 
+/// Miscellaneous allocation recycling pool for `CommandAllocator`.
 #[derive(Default)]
 struct Temp {
     marker: Vec<u8>,
@@ -467,11 +477,31 @@ impl Temp {
 pub struct CommandEncoder {
     raw: vk::CommandPool,
     device: Arc<DeviceShared>,
+
+    /// The current command buffer, if `self` is in the ["recording"]
+    /// state.
+    ///
+    /// ["recording"]: crate::CommandEncoder
+    ///
+    /// If non-`null`, the buffer is in the Vulkan "recording" state.
     active: vk::CommandBuffer,
+
+    /// What kind of pass we are currently within: compute or render.
     bind_point: vk::PipelineBindPoint,
+
+    /// Allocation recycling pool for this encoder.
     temp: Temp,
+
+    /// A pool of available command buffers.
+    ///
+    /// These are all in the Vulkan "initial" state.
     free: Vec<vk::CommandBuffer>,
+
+    /// A pool of discarded command buffers.
+    ///
+    /// These could be in any Vulkan state except "pending".
     discarded: Vec<vk::CommandBuffer>,
+
     /// If this is true, the active renderpass enabled a debug span,
     /// and needs to be disabled on renderpass close.
     rpass_debug_marker_active: bool,
@@ -479,6 +509,15 @@ pub struct CommandEncoder {
     /// If set, the end of the next render/compute pass will write a timestamp at
     /// the given pool & location.
     end_of_pass_timer_query: Option<(vk::QueryPool, u32)>,
+}
+
+impl CommandEncoder {
+    /// # Safety
+    ///
+    /// - The command buffer handle must not be manually destroyed
+    pub unsafe fn raw_handle(&self) -> vk::CommandBuffer {
+        self.active
+    }
 }
 
 impl fmt::Debug for CommandEncoder {

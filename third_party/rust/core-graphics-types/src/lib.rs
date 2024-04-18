@@ -7,8 +7,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-extern crate libc;
 extern crate core_foundation;
+extern crate libc;
 
 pub mod base;
 pub mod geometry;

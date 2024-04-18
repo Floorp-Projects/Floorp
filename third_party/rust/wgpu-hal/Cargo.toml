@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.74"
 name = "wgpu-hal"
-version = "0.19.0"
+version = "0.19.3"
 authors = ["gfx-rs developers"]
 description = "WebGPU hardware abstraction layer"
 homepage = "https://wgpu.rs/"
@@ -63,16 +63,15 @@ version = "0.13.1"
 optional = true
 
 [dependencies.naga]
-version = "0.19.0"
+version = "0.19.2"
 path = "../naga"
-features = ["clone"]
 
 [dependencies.profiling]
 version = "1"
 default-features = false
 
 [dependencies.wgt]
-version = "0.19.0"
+version = "0.19.2"
 path = "../wgpu-types"
 package = "wgpu-types"
 
@@ -82,7 +81,7 @@ env_logger = "0.11"
 glam = "0.25.0"
 
 [dev-dependencies.naga]
-version = "0.19.0"
+version = "0.19.2"
 path = "../naga"
 features = ["wgsl-in"]
 
@@ -156,12 +155,16 @@ features = [
 
 [target."cfg(any(target_os=\"macos\", target_os=\"ios\"))".dependencies]
 core-graphics-types = "0.1"
-metal = "0.27.0"
 objc = "0.2.5"
 
 [target."cfg(any(target_os=\"macos\", target_os=\"ios\"))".dependencies.block]
 version = "0.1"
 optional = true
+
+[target."cfg(any(target_os=\"macos\", target_os=\"ios\"))".dependencies.metal]
+version = "0.27.0"
+git = "https://github.com/gfx-rs/metal-rs"
+rev = "ff8fd3d6dc7792852f8a015458d7e6d42d7fb352"
 
 [target."cfg(not(target_arch = \"wasm32\"))".dependencies.ash]
 version = "0.37.3"

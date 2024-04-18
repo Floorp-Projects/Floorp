@@ -7,21 +7,33 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use crate::string::CFStringRef;
 use std::cmp::Ordering;
-use std::os::raw::{c_uint, c_void, c_int};
-use string::CFStringRef;
+use std::os::raw::{c_int, c_short, c_uchar, c_uint, c_ushort, c_void};
 
 pub type Boolean = u8;
 pub type mach_port_t = c_uint;
 pub type CFAllocatorRef = *const c_void;
 pub type CFNullRef = *const c_void;
 pub type CFTypeRef = *const c_void;
+pub type ConstStr255Param = *const c_uchar;
+pub type StringPtr = *mut c_uchar;
+pub type ConstStringPtr = *const c_uchar;
 pub type OSStatus = i32;
+pub type UInt8 = c_uchar;
+pub type UInt16 = c_ushort;
+pub type SInt16 = c_short;
 pub type SInt32 = c_int;
+pub type UInt32 = c_uint;
 pub type CFTypeID = usize;
 pub type CFOptionFlags = usize;
 pub type CFHashCode = usize;
 pub type CFIndex = isize;
+pub type LangCode = SInt16;
+pub type RegionCode = SInt16;
+pub type UTF32Char = c_uint;
+pub type UTF16Char = c_ushort;
+pub type UTF8Char = c_uchar;
 
 #[repr(isize)]
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -31,43 +43,53 @@ pub enum CFComparisonResult {
     GreaterThan = 1,
 }
 
-impl Into<Ordering> for CFComparisonResult {
-    fn into(self) -> Ordering {
-        match self {
+pub type CFComparatorFunction = extern "C" fn(
+    val1: *const c_void,
+    val2: *const c_void,
+    context: *mut c_void,
+) -> CFComparisonResult;
+
+impl From<CFComparisonResult> for Ordering {
+    fn from(val: CFComparisonResult) -> Self {
+        match val {
             CFComparisonResult::LessThan => Ordering::Less,
             CFComparisonResult::EqualTo => Ordering::Equal,
-            CFComparisonResult::GreaterThan => Ordering::Greater
+            CFComparisonResult::GreaterThan => Ordering::Greater,
         }
     }
 }
 
 #[repr(C)]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct CFRange {
     pub location: CFIndex,
-    pub length: CFIndex
+    pub length: CFIndex,
 }
 
 // for back-compat
 impl CFRange {
     pub fn init(location: CFIndex, length: CFIndex) -> CFRange {
-        CFRange {
-            location: location,
-            length: length,
-        }
+        CFRange { location, length }
     }
 }
 
 pub type CFAllocatorRetainCallBack = extern "C" fn(info: *mut c_void) -> *mut c_void;
 pub type CFAllocatorReleaseCallBack = extern "C" fn(info: *mut c_void);
 pub type CFAllocatorCopyDescriptionCallBack = extern "C" fn(info: *mut c_void) -> CFStringRef;
-pub type CFAllocatorAllocateCallBack = extern "C" fn(allocSize: CFIndex, hint: CFOptionFlags, info: *mut c_void) -> *mut c_void;
-pub type CFAllocatorReallocateCallBack = extern "C" fn(ptr: *mut c_void, newsize: CFIndex, hint: CFOptionFlags, info: *mut c_void) -> *mut c_void;
+pub type CFAllocatorAllocateCallBack =
+    extern "C" fn(allocSize: CFIndex, hint: CFOptionFlags, info: *mut c_void) -> *mut c_void;
+pub type CFAllocatorReallocateCallBack = extern "C" fn(
+    ptr: *mut c_void,
+    newsize: CFIndex,
+    hint: CFOptionFlags,
+    info: *mut c_void,
+) -> *mut c_void;
 pub type CFAllocatorDeallocateCallBack = extern "C" fn(ptr: *mut c_void, info: *mut c_void);
-pub type CFAllocatorPreferredSizeCallBack = extern "C" fn(size: CFIndex, hint: CFOptionFlags, info: *mut c_void) -> CFIndex;
+pub type CFAllocatorPreferredSizeCallBack =
+    extern "C" fn(size: CFIndex, hint: CFOptionFlags, info: *mut c_void) -> CFIndex;
 
 #[repr(C)]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct CFAllocatorContext {
     pub version: CFIndex,
     pub info: *mut c_void,
@@ -77,7 +99,7 @@ pub struct CFAllocatorContext {
     pub allocate: Option<CFAllocatorAllocateCallBack>,
     pub reallocate: Option<CFAllocatorReallocateCallBack>,
     pub deallocate: Option<CFAllocatorDeallocateCallBack>,
-    pub preferredSize: Option<CFAllocatorPreferredSizeCallBack>
+    pub preferredSize: Option<CFAllocatorPreferredSizeCallBack>,
 }
 
 /// Trait for all types which are Core Foundation reference types.
@@ -110,7 +132,7 @@ impl<T> TCFTypeRef for *mut T {
 /// Constant used by some functions to indicate failed searches.
 pub static kCFNotFound: CFIndex = -1;
 
-extern {
+extern "C" {
     /*
      * CFBase.h
      */
@@ -124,11 +146,27 @@ extern {
     pub static kCFAllocatorNull: CFAllocatorRef;
     pub static kCFAllocatorUseContext: CFAllocatorRef;
 
-    pub fn CFAllocatorCreate(allocator: CFAllocatorRef, context: *mut CFAllocatorContext) -> CFAllocatorRef;
-    pub fn CFAllocatorAllocate(allocator: CFAllocatorRef, size: CFIndex, hint: CFOptionFlags) -> *mut c_void;
+    pub fn CFAllocatorCreate(
+        allocator: CFAllocatorRef,
+        context: *mut CFAllocatorContext,
+    ) -> CFAllocatorRef;
+    pub fn CFAllocatorAllocate(
+        allocator: CFAllocatorRef,
+        size: CFIndex,
+        hint: CFOptionFlags,
+    ) -> *mut c_void;
     pub fn CFAllocatorDeallocate(allocator: CFAllocatorRef, ptr: *mut c_void);
-    pub fn CFAllocatorGetPreferredSizeForSize(allocator: CFAllocatorRef, size: CFIndex, hint: CFOptionFlags) -> CFIndex;
-    pub fn CFAllocatorReallocate(allocator: CFAllocatorRef, ptr: *mut c_void, newsize: CFIndex, hint: CFOptionFlags) -> *mut c_void;
+    pub fn CFAllocatorGetPreferredSizeForSize(
+        allocator: CFAllocatorRef,
+        size: CFIndex,
+        hint: CFOptionFlags,
+    ) -> CFIndex;
+    pub fn CFAllocatorReallocate(
+        allocator: CFAllocatorRef,
+        ptr: *mut c_void,
+        newsize: CFIndex,
+        hint: CFOptionFlags,
+    ) -> *mut c_void;
     pub fn CFAllocatorGetDefault() -> CFAllocatorRef;
     pub fn CFAllocatorSetDefault(allocator: CFAllocatorRef);
     pub fn CFAllocatorGetContext(allocator: CFAllocatorRef, context: *mut CFAllocatorContext);
@@ -138,10 +176,12 @@ extern {
 
     pub static kCFNull: CFNullRef;
 
+    pub fn CFNullGetTypeID() -> CFTypeID;
+
     /* CFType Reference */
 
-    //fn CFCopyTypeIDDescription
-    //fn CFGetAllocator
+    pub fn CFCopyTypeIDDescription(type_id: CFTypeID) -> CFStringRef;
+    pub fn CFGetAllocator(cf: CFTypeRef) -> CFAllocatorRef;
     pub fn CFCopyDescription(cf: CFTypeRef) -> CFStringRef;
     pub fn CFEqual(cf1: CFTypeRef, cf2: CFTypeRef) -> Boolean;
     pub fn CFGetRetainCount(cf: CFTypeRef) -> CFIndex;

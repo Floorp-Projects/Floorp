@@ -303,7 +303,7 @@ pub unsafe extern "C" fn wgpu_server_adapter_request_device(
     // TODO: in https://github.com/gfx-rs/wgpu/pull/3626/files#diff-033343814319f5a6bd781494692ea626f06f6c3acc0753a12c867b53a646c34eR97
     // which introduced the queue id parameter, the queue id is also the device id. I don't know how applicable this is to
     // other situations (this one in particular).
-    let (_, _, error) = gfx_select!(self_id => global.adapter_request_device(self_id, &desc, trace_path, Some(new_id), Some(new_id.transmute())));
+    let (_, _, error) = gfx_select!(self_id => global.adapter_request_device(self_id, &desc, trace_path, Some(new_id), Some(new_id.into_queue_id())));
     if let Some(err) = error {
         error_buf.init(err);
     }

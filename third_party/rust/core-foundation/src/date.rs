@@ -9,16 +9,15 @@
 
 //! Core Foundation date objects.
 
-pub use core_foundation_sys::date::*;
 use core_foundation_sys::base::kCFAllocatorDefault;
+pub use core_foundation_sys::date::*;
 
-use base::TCFType;
+use crate::base::TCFType;
 
 #[cfg(feature = "with-chrono")]
 use chrono::NaiveDateTime;
 
-
-declare_TCFType!{
+declare_TCFType! {
     /// A date.
     CFDate, CFDateRef
 }
@@ -42,16 +41,12 @@ impl CFDate {
 
     #[inline]
     pub fn abs_time(&self) -> CFAbsoluteTime {
-        unsafe {
-            CFDateGetAbsoluteTime(self.0)
-        }
+        unsafe { CFDateGetAbsoluteTime(self.0) }
     }
 
     #[cfg(feature = "with-chrono")]
     pub fn naive_utc(&self) -> NaiveDateTime {
-        let ts = unsafe {
-            self.abs_time() + kCFAbsoluteTimeIntervalSince1970
-        };
+        let ts = unsafe { self.abs_time() + kCFAbsoluteTimeIntervalSince1970 };
         let (secs, nanos) = if ts.is_sign_positive() {
             (ts.trunc() as i64, ts.fract())
         } else {
@@ -65,9 +60,7 @@ impl CFDate {
     pub fn from_naive_utc(time: NaiveDateTime) -> CFDate {
         let secs = time.timestamp();
         let nanos = time.timestamp_subsec_nanos();
-        let ts = unsafe {
-            secs as f64 + (nanos as f64 / 1e9) - kCFAbsoluteTimeIntervalSince1970
-        };
+        let ts = unsafe { secs as f64 + (nanos as f64 / 1e9) - kCFAbsoluteTimeIntervalSince1970 };
         CFDate::new(ts)
     }
 }
@@ -86,7 +79,7 @@ mod test {
 
         let same_sign = a.is_sign_positive() == b.is_sign_positive();
         let equal = ((a - b).abs() / f64::min(a.abs() + b.abs(), f64::MAX)) < f64::EPSILON;
-        (same_sign && equal)
+        same_sign && equal
     }
 
     #[test]
@@ -119,9 +112,7 @@ mod test {
     fn date_chrono_conversion_negative() {
         use super::kCFAbsoluteTimeIntervalSince1970;
 
-        let ts = unsafe {
-            kCFAbsoluteTimeIntervalSince1970 - 420.0
-        };
+        let ts = unsafe { kCFAbsoluteTimeIntervalSince1970 - 420.0 };
         let date = CFDate::new(ts);
         let datetime: NaiveDateTime = date.naive_utc();
         let converted = CFDate::from_naive_utc(datetime);

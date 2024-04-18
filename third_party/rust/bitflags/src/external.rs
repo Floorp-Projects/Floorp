@@ -14,7 +14,7 @@ Next, re-export the library from the `__private` module here.
 Next, define a macro like so:
 
 ```rust
-#[macro_export(local_inner_macros)]
+#[macro_export]
 #[doc(hidden)]
 #[cfg(feature = "serde")]
 macro_rules! __impl_external_bitflags_my_library {
@@ -30,7 +30,7 @@ macro_rules! __impl_external_bitflags_my_library {
     };
 }
 
-#[macro_export(local_inner_macros)]
+#[macro_export]
 #[doc(hidden)]
 #[cfg(not(feature = "my_library"))]
 macro_rules! __impl_external_bitflags_my_library {
@@ -77,7 +77,7 @@ pub(crate) mod __private {
 }
 
 /// Implements traits from external libraries for the internal bitflags type.
-#[macro_export(local_inner_macros)]
+#[macro_export]
 #[doc(hidden)]
 macro_rules! __impl_external_bitflags {
     (
@@ -92,7 +92,7 @@ macro_rules! __impl_external_bitflags {
         // Use `serde` as an example: generate code when the feature is available,
         // and a no-op when it isn't
 
-        __impl_external_bitflags_serde! {
+        $crate::__impl_external_bitflags_serde! {
             $InternalBitFlags: $T, $PublicBitFlags {
                 $(
                     $(#[$inner $($args)*])*
@@ -101,7 +101,7 @@ macro_rules! __impl_external_bitflags {
             }
         }
 
-        __impl_external_bitflags_arbitrary! {
+        $crate::__impl_external_bitflags_arbitrary! {
             $InternalBitFlags: $T, $PublicBitFlags {
                 $(
                     $(#[$inner $($args)*])*
@@ -110,7 +110,7 @@ macro_rules! __impl_external_bitflags {
             }
         }
 
-        __impl_external_bitflags_bytemuck! {
+        $crate::__impl_external_bitflags_bytemuck! {
             $InternalBitFlags: $T, $PublicBitFlags {
                 $(
                     $(#[$inner $($args)*])*
@@ -125,7 +125,7 @@ macro_rules! __impl_external_bitflags {
 pub mod serde;
 
 /// Implement `Serialize` and `Deserialize` for the internal bitflags type.
-#[macro_export(local_inner_macros)]
+#[macro_export]
 #[doc(hidden)]
 #[cfg(feature = "serde")]
 macro_rules! __impl_external_bitflags_serde {
@@ -161,7 +161,7 @@ macro_rules! __impl_external_bitflags_serde {
     };
 }
 
-#[macro_export(local_inner_macros)]
+#[macro_export]
 #[doc(hidden)]
 #[cfg(not(feature = "serde"))]
 macro_rules! __impl_external_bitflags_serde {
@@ -182,7 +182,7 @@ pub mod arbitrary;
 mod bytemuck;
 
 /// Implement `Arbitrary` for the internal bitflags type.
-#[macro_export(local_inner_macros)]
+#[macro_export]
 #[doc(hidden)]
 #[cfg(feature = "arbitrary")]
 macro_rules! __impl_external_bitflags_arbitrary {
@@ -204,7 +204,7 @@ macro_rules! __impl_external_bitflags_arbitrary {
     };
 }
 
-#[macro_export(local_inner_macros)]
+#[macro_export]
 #[doc(hidden)]
 #[cfg(not(feature = "arbitrary"))]
 macro_rules! __impl_external_bitflags_arbitrary {
@@ -219,7 +219,7 @@ macro_rules! __impl_external_bitflags_arbitrary {
 }
 
 /// Implement `Pod` and `Zeroable` for the internal bitflags type.
-#[macro_export(local_inner_macros)]
+#[macro_export]
 #[doc(hidden)]
 #[cfg(feature = "bytemuck")]
 macro_rules! __impl_external_bitflags_bytemuck {
@@ -247,7 +247,7 @@ macro_rules! __impl_external_bitflags_bytemuck {
     };
 }
 
-#[macro_export(local_inner_macros)]
+#[macro_export]
 #[doc(hidden)]
 #[cfg(not(feature = "bytemuck"))]
 macro_rules! __impl_external_bitflags_bytemuck {

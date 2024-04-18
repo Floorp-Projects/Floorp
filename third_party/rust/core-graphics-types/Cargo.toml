@@ -10,8 +10,9 @@
 # See Cargo.toml.orig for the original contents.
 
 [package]
+edition = "2018"
 name = "core-graphics-types"
-version = "0.1.2"
+version = "0.1.3"
 authors = ["The Servo Project Developers"]
 description = "Bindings for some fundamental Core Graphics types"
 homepage = "https://github.com/servo/core-foundation-rs"
@@ -25,7 +26,12 @@ default-target = "x86_64-apple-darwin"
 version = "1.0"
 
 [dependencies.core-foundation]
-version = "0.9"
+version = "0.9.4"
+default-features = false
 
 [dependencies.libc]
 version = "0.2"
+
+[features]
+default = ["link"]
+link = ["core-foundation/link"]

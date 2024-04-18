@@ -239,6 +239,7 @@ impl<'w> BlockContext<'w> {
                 let init = self.ir_module.constants[handle].init;
                 self.writer.constant_ids[init.index()]
             }
+            crate::Expression::Override(_) => return Err(Error::Override),
             crate::Expression::ZeroValue(_) => self.writer.get_constant_null(result_type_id),
             crate::Expression::Compose { ty, ref components } => {
                 self.temp_list.clear();
@@ -1072,7 +1073,7 @@ impl<'w> BlockContext<'w> {
                         //
                         // bitfieldExtract(x, o, c)
 
-                        let bit_width = arg_ty.scalar_width().unwrap();
+                        let bit_width = arg_ty.scalar_width().unwrap() * 8;
                         let width_constant = self
                             .writer
                             .get_constant_scalar(crate::Literal::U32(bit_width as u32));
@@ -1128,7 +1129,7 @@ impl<'w> BlockContext<'w> {
                     Mf::InsertBits => {
                         // The behavior of InsertBits has the same undefined behavior as ExtractBits.
 
-                        let bit_width = arg_ty.scalar_width().unwrap();
+                        let bit_width = arg_ty.scalar_width().unwrap() * 8;
                         let width_constant = self
                             .writer
                             .get_constant_scalar(crate::Literal::U32(bit_width as u32));
@@ -1184,7 +1185,7 @@ impl<'w> BlockContext<'w> {
                     }
                     Mf::FindLsb => MathOp::Ext(spirv::GLOp::FindILsb),
                     Mf::FindMsb => {
-                        if arg_ty.scalar_width() == Some(32) {
+                        if arg_ty.scalar_width() == Some(4) {
                             let thing = match arg_scalar_kind {
                                 Some(crate::ScalarKind::Uint) => spirv::GLOp::FindUMsb,
                                 Some(crate::ScalarKind::Sint) => spirv::GLOp::FindSMsb,
