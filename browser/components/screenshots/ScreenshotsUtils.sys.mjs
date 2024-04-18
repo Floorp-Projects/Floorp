@@ -1080,7 +1080,13 @@ export var ScreenshotsUtils = {
 
       // Await successful completion of the save via the download manager
       await download.start();
-    } catch (ex) {}
+    } catch (ex) {
+      console.error(
+        `Failed to create download using filename: ${filename} (length: ${
+          new Blob([filename]).size
+        })`
+      );
+    }
 
     let extra = await this.getActor(browser).sendQuery(
       "Screenshots:GetMethodsUsed"

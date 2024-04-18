@@ -29,6 +29,8 @@ skip-if = [
   "apple_catalina",  # Bug 1804441
 ]
 
+["browser_screenshots_download_filenames.js"]
+
 ["browser_screenshots_drag_test.js"]
 
 ["browser_screenshots_focus_test.js"]

@@ -7,11 +7,15 @@ const { AppConstants } = ChromeUtils.importESModule(
 );
 
 const lazy = {};
+// The maximum length of a pathanme - calculated as MAX_PATH minus the null terminator character
+export const MAX_PATHNAME = AppConstants.platform == "win" ? 259 : 1023;
+export const MAX_LEAFNAME = MAX_PATHNAME - 32;
+export const FALLBACK_MAX_LEAFNAME = 64;
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  Downloads: "resource://gre/modules/Downloads.sys.mjs",
   DownloadLastDir: "resource://gre/modules/DownloadLastDir.sys.mjs",
   DownloadPaths: "resource://gre/modules/DownloadPaths.sys.mjs",
-  Downloads: "resource://gre/modules/Downloads.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   ScreenshotsUtils: "resource:///modules/ScreenshotsUtils.sys.mjs",
 });
@@ -29,6 +33,15 @@ export async function getFilename(filenameTitle, browser) {
     );
   }
   const date = new Date();
+  const knownDownloadsDir = await getDownloadDirectory();
+  // if we know the download directory, we can subtract that plus the separator from MAX_PATHNAME to get a length limit
+  // otherwise we just use a conservative length
+  const maxFilenameLength = Math.min(
+    knownDownloadsDir
+      ? MAX_PATHNAME - new Blob([knownDownloadsDir]).size - 1
+      : FALLBACK_MAX_LEAFNAME,
+    MAX_LEAFNAME
+  );
   /* eslint-disable no-control-regex */
   filenameTitle = filenameTitle
     .replace(/[\\/]/g, "_")
@@ -44,43 +57,37 @@ export async function getFilename(filenameTitle, browser) {
   const filenameTime = currentDateTime.substring(11, 19).replace(/:/g, "-");
   let clipFilename = `Screenshot ${filenameDate} at ${filenameTime} ${filenameTitle}`;
 
-  // Crop the filename size at less than 246 bytes, so as to leave
+  // allow space for a potential ellipsis and the extension
+  let maxNameStemLength = maxFilenameLength - "[...].png".length;
+
+  // Crop the filename size so as to leave
   // room for the extension and an ellipsis [...]. Note that JS
   // strings are UTF16 but the filename will be converted to UTF8
   // when saving which could take up more space, and we want a
-  // maximum of 255 bytes (not characters). Here, we iterate
+  // maximum of maxFilenameLength bytes (not characters). Here, we iterate
   // and crop at shorter and shorter points until we fit into
-  // 255 bytes.
+  // our max number of bytes.
   let suffix = "";
-  for (let cropSize = 246; cropSize >= 0; cropSize -= 32) {
-    if (new Blob([clipFilename]).size > 246) {
+  for (let cropSize = maxNameStemLength; cropSize >= 0; cropSize -= 32) {
+    if (new Blob([clipFilename]).size > maxNameStemLength) {
       clipFilename = clipFilename.substring(0, cropSize);
       suffix = "[...]";
     } else {
       break;
     }
   }
-
   clipFilename += suffix;
 
   let extension = ".png";
   let filename = clipFilename + extension;
 
-  let useDownloadDir = Services.prefs.getBoolPref(
-    "browser.download.useDownloadDir"
-  );
-  if (useDownloadDir) {
-    const downloadsDir = await lazy.Downloads.getPreferredDownloadsDirectory();
-    const downloadsDirExists = await IOUtils.exists(downloadsDir);
-    if (downloadsDirExists) {
-      // If filename is absolute, it will override the downloads directory and
-      // still be applied as expected.
-      filename = PathUtils.join(downloadsDir, filename);
-    }
+  if (knownDownloadsDir) {
+    // If filename is absolute, it will override the downloads directory and
+    // still be applied as expected.
+    filename = PathUtils.join(knownDownloadsDir, filename);
   } else {
     let fileInfo = new FileInfo(filename);
     let file;
-
     let fpParams = {
       fpTitleKey: "SaveImageTitle",
       fileInfo,
@@ -88,16 +95,30 @@ export async function getFilename(filenameTitle, browser) {
       saveAsType: 0,
       file,
     };
-
     let accepted = await promiseTargetFile(fpParams, browser.ownerGlobal);
     if (!accepted) {
       return null;
     }
-
     filename = fpParams.file.path;
   }
-
   return filename;
+}
+
+/**
+ * Gets the path to the download directory if "browser.download.useDownloadDir" is true
+ * @returns Path to download directory or null if not available
+ */
+export async function getDownloadDirectory() {
+  let useDownloadDir = Services.prefs.getBoolPref(
+    "browser.download.useDownloadDir"
+  );
+  if (useDownloadDir) {
+    const downloadsDir = await lazy.Downloads.getPreferredDownloadsDirectory();
+    if (await IOUtils.exists(downloadsDir)) {
+      return downloadsDir;
+    }
+  }
+  return null;
 }
 
 // The below functions are a modified copy from toolkit/content/contentAreaUtils.js
