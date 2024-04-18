@@ -44,6 +44,14 @@ class SimpleMap {
     MutexAutoLock lock(mMutex);
     mMap.Clear();
   }
+  // Iterate through all elements of the map and call the function F.
+  template <typename F>
+  void ForEach(F&& aCallback) {
+    MutexAutoLock lock(mMutex);
+    for (const auto& element : mMap) {
+      aCallback(element.first, element.second);
+    }
+  }
 
  private:
   Mutex mMutex MOZ_UNANNOTATED;  // To protect mMap.
