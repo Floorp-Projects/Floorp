@@ -139,7 +139,7 @@ static int RunDecodeToSurfaceFuzzingJXL(nsCOMPtr<nsIInputStream> inputStream) {
 
 int FuzzingInitImage(int* argc, char*** argv) {
   Preferences::SetBool("image.avif.sequence.enabled", true);
-  Preferences::SetBool("image.mem.max_legal_imgframe_size_kb", 65536);
+  Preferences::SetInt("image.mem.max_legal_imgframe_size_kb", 65536);
 #ifdef MOZ_JXL
   Preferences::SetBool("image.jxl.enabled", true);
 #endif
