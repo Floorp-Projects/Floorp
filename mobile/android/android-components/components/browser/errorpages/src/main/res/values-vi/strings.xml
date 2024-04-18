@@ -204,7 +204,7 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title">Địa chỉ không hợp lệ</string>
     <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[
-      <p>Địa chỉ được cung cấp không ở định dạng được công nhận. Vui lòng kiểm tra thanh vị trí cho các lỗi và thử lại.</p>
+      <p>Địa chỉ bạn cung cấp không đúng định dạng. Vui lòng kiểm tra lại thanh địa chỉ để tìm lỗi và thử lại.</p>
     ]]></string>
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title_alternative">Địa chỉ không hợp lệ</string>
@@ -279,7 +279,7 @@
     ]]></string>
 
     <!-- The document title and heading of an error page. -->
-    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Sự cố trang web không mong muốn</string>
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Sự cố với trang web không mong muốn</string>
 
     <!-- The %1$s will be replaced by the malicious website URL-->
     <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[
@@ -295,7 +295,7 @@
     ]]></string>
 
     <!-- The document title and heading of an error page. -->
-    <string name="mozac_browser_errorpages_safe_phishing_uri_title">Vấn đề trang web lừa đảo</string>
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">Sự cố với trang web lừa đảo</string>
     <!-- The %1$s will be replaced by the malicious website URL-->
     <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
       <p>Trang web này tại %1$s đã được báo cáo là trang lừa đảo và đã bị chặn dựa trên tùy chọn bảo mật của bạn.</p>

@@ -6,7 +6,7 @@
     <!-- Name of the "notification channel" used for displaying site controls notification. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_feature_pwa_site_controls_notification_channel">Kiểm soát trang web toàn màn hình</string>
     <!-- Text shown on the second row of the site controls notification. -->
-    <string name="mozac_feature_pwa_site_controls_notification_text">Chạm để sao chép URL cho ứng dụng này</string>
+    <string name="mozac_feature_pwa_site_controls_notification_text">Nhấn để sao chép URL cho ứng dụng này</string>
     <!-- Refresh button in site controls notification. -->
     <string name="mozac_feature_pwa_site_controls_refresh">Làm mới</string>
     <!-- Toast displayed when the website URL is copied. -->

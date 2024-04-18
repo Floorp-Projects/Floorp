@@ -150,6 +150,8 @@
     <string name="mozac_feature_addons_user_rating_count_2">جائزہ:%1$s</string>
     <!-- Accessibility content description for the amount of stars that add-on has, where %1$.02f will be the amount of stars and / separator and 5 the maximum number of stars e.g (2/5, 4.5/5 or 5/5)  . -->
     <string name="mozac_feature_addons_rating_content_description" moz:removedIn="124" tools:ignore="UnusedResources">%1$.02f/5</string>
+    <!-- Accessibility content description for the amount of stars that add-on has, where %1$.02f will be the amount of stars. -->
+    <string name="mozac_feature_addons_rating_content_description_2">درجہ بندی: 5 وِچوں %1$.02f</string>
     <!-- This is the title of page where all the add-ons are listed-->
     <string name="mozac_feature_addons_addons">ایڈ ــ آن</string>
     <!-- Label for add-ons sub menu item for add-ons manager-->
@@ -158,6 +160,10 @@
     <string name="mozac_feature_addons_manager_notification_title_text" moz:removedIn="126" tools:ignore="UnusedResources">ایڈ آن عارضی طور تے غیرفعال ہن۔</string>
     <!-- The title of the "crash" notification in the extensions manager -->
     <string name="mozac_feature_extensions_manager_notification_title_text">ایکسٹنشناں عارضی طور تے غیرفعال ہن۔</string>
+    <!-- The content of the "crash" notification in the add-ons manager -->
+    <string name="mozac_feature_addons_manager_notification_content_text" moz:removedIn="126" tools:ignore="UnusedResources">ہِک یا وَدھ ایڈ آنس نے تُہاݙے سسٹم کوں غیر مستحکم بݨین٘دے ہوئے کَم کرݨ چھوڑ ݙِتّا۔</string>
+    <!-- The content of the "crash" notification in the extensions manager -->
+    <string name="mozac_feature_extensions_manager_notification_content_text">ہِک یا وَدھ ایکسٹینشن نے تُہاݙے سسٹم کوں غیر مستحکم بݨین٘دے ہوئے کَم کرݨ چھوڑ ݙِتّا۔</string>
     <!-- Button to re-enable the add-ons in the "crash" notification -->
     <string name="mozac_feature_addons_manager_notification_restart_button" moz:removedIn="126" tools:ignore="UnusedResources">ایڈ آن ولدا شروع کرو</string>
     <!-- Button to re-enable the extensions in the "crash" notification -->
@@ -226,6 +232,10 @@
     <string name="mozac_feature_addons_failed_to_install_not_signed_error" moz:removedIn="126" tools:ignore="UnusedResources">ایہ ایڈ آن انسٹال نہیں تھی سڳیا کیوں جو ایندی تصدیق نہیں تھئی۔</string>
     <!-- Text shown when attempting to install an add-on and an error occurred because the extension was not signed. -->
     <string name="mozac_feature_addons_extension_failed_to_install_not_signed_error">ایہ ایکسٹنشن انسٹال نہیں تھی سڳی کیوں جو ایندی تصدیق نہیں تھئی۔</string>
+    <!-- Text shown when attempting to install an add-on and an error occurred because the extension was incompatible. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
+    <string name="mozac_feature_addons_failed_to_install_incompatible_error">%1$s کوں انسٹال نِھیں کِیتا ون٘ڄ سڳیا کیوں جو اِیہ %2$s%3$s دے نال میل نئیں رکھین٘دا۔ </string>
+    <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_blocklisted_1">%1$s کوں انسٹال نہیں کیتا ونڄ سڳیا کیوں جو ایندے وِچ استحکام یا سیکورٹی دے مسئلے پیدا تھیوݨ دا زیادہ بھئو ہے۔</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_enabled">%1$s کامیابی نال فعال تھی ڳیا</string>
     <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
@@ -270,6 +280,8 @@
     <string name="mozac_feature_addons_installed_dialog_title">%2$s وچ %1$s شامل تھی ڳیا ہے</string>
     <!-- Text shown in the dialog when add-on installation is completed. -->
     <string name="mozac_feature_addons_installed_dialog_description" moz:removedIn="124" tools:ignore="UnusedResources">ایں کوں مینیو وچ کھولو</string>
+    <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. %2$s is the app name. -->
+    <string name="mozac_feature_addons_installed_dialog_description_2">%2$s مینیو نال %1$s تئیں رسائی حاصل کرو۔</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->
     <string name="mozac_feature_addons_installed_dialog_okay_button" moz:removedIn="124" tools:ignore="UnusedResources">ٹھیک ہے، سمجھ آ ڳیا</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->
@@ -278,4 +290,8 @@
     <string name="mozac_feature_addons_status_learn_more">ٻیا سِکھو</string>
     <!-- Status message below an add-on in the add-ons manager when this add-on has been blocklisted. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_status_blocklisted">سیکیورٹی یا استحکام دے مسائل دی وجہ توں %1$s کوں غیر فعال کر ݙتا ڳیا ہے۔</string>
-    </resources>
+    <!-- Status message below an add-on in the add-ons manager when this add-on hasn't been signed correctly. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_status_unsigned">%1$s کوں محفوظ دے طور تے تصدیق نِھیں کِیتی ون٘ڄ سڳین٘دی اَتے اِیکوں غیر فعال کر ݙِتّا ڳِیا ہِے۔</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on isn't compatible with the application version. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
+    <string name="mozac_feature_addons_status_incompatible">%1$s تُہاݙے %2$s (ورژن %3$s) دے ورژن نال میل نِھیں کھان٘دا۔</string>
+</resources>
