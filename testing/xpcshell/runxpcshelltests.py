@@ -1573,9 +1573,8 @@ class XPCShellTests(object):
 
         self.mozInfo["condprof"] = options.get("conditionedProfile", False)
 
-        self.mozInfo["msix"] = options.get(
-            "app_binary"
-        ) is not None and "WindowsApps" in options.get("app_binary", "")
+        if options.get("variant", ""):
+            self.mozInfo["msix"] = options["variant"] == "msix"
 
         self.mozInfo["is_ubuntu"] = "Ubuntu" in platform.version()
 
@@ -1786,6 +1785,13 @@ class XPCShellTests(object):
         self.crashAsPass = options.get("crashAsPass")
         self.conditionedProfile = options.get("conditionedProfile")
         self.repeat = options.get("repeat", 0)
+        self.variant = options.get("variant", "")
+
+        if self.variant == "msix":
+            self.appPath = options.get("msixAppPath")
+            self.xrePath = options.get("msixXrePath")
+            self.app_binary = options.get("msix_app_binary")
+            self.xpcshell = None
 
         self.testCount = 0
         self.passCount = 0
