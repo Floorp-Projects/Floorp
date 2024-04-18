@@ -1,0 +1,4 @@
+[DEFAULT]
+subsuite = "mozbuild"
+
+["run.py"]
