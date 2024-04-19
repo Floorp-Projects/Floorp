@@ -1,0 +1,23 @@
+<html class="reftest-wait">
+<style>
+#b {
+  writing-mode: vertical-rl;
+  content: url(data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=);
+}
+</style>
+<script>
+let pp;
+document.addEventListener("MozReftestInvalidate", () => {
+  a.after("1")
+  a.insertAdjacentHTML("afterEnd", b.outerHTML);
+  pp = SpecialPowers.wrap(self).printPreview();
+  setTimeout(function() {
+    pp.close();
+    document.documentElement.className = "";
+  }, 400);
+})
+</script>
+<math>
+<munder>
+<mn id="a">2</mn>
+<dl id="b"></dl>
