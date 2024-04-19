@@ -441,6 +441,7 @@ var SelectTranslationsPanel = new (class {
    */
   #handleCommandEvent(target) {
     const {
+      copyButton,
       doneButton,
       fromMenuList,
       fromMenuPopup,
@@ -451,6 +452,10 @@ var SelectTranslationsPanel = new (class {
       tryAnotherSourceMenuPopup,
     } = this.elements;
     switch (target.id) {
+      case copyButton.id: {
+        this.onClickCopyButton();
+        break;
+      }
       case doneButton.id: {
         this.close();
         break;
@@ -574,6 +579,13 @@ var SelectTranslationsPanel = new (class {
   }
 
   /**
+   * Handles events when the panel's copy button is clicked.
+   */
+  onClickCopyButton() {
+    this.#checkCopyButton();
+  }
+
+  /**
    * Handles events when the panel's translate button is clicked.
    */
   onClickTranslateButton() {
@@ -581,6 +593,30 @@ var SelectTranslationsPanel = new (class {
     fromMenuList.value = tryAnotherSourceMenuList.value;
     this.#deselectLanguage(tryAnotherSourceMenuList);
     this.#maybeRequestTranslation();
+  }
+
+  /**
+   * Changes the copy button's visual icon to checked, and its localized text to "Copied".
+   */
+  #checkCopyButton() {
+    const { copyButton } = this.elements;
+    copyButton.classList.add("copied");
+    document.l10n.setAttributes(
+      copyButton,
+      "select-translations-panel-copy-button-copied"
+    );
+  }
+
+  /**
+   * Changes the copy button's visual icon to unchecked, and its localized text to "Copy".
+   */
+  #uncheckCopyButton() {
+    const { copyButton } = this.elements;
+    copyButton.classList.remove("copied");
+    document.l10n.setAttributes(
+      copyButton,
+      "select-translations-panel-copy-button"
+    );
   }
 
   /**
@@ -856,6 +892,31 @@ var SelectTranslationsPanel = new (class {
   }
 
   /**
+   * Handles changes to the copy button based on the current translation state.
+   *
+   * @param {string} phase - The current phase of the translation state.
+   */
+  #handleCopyButtonChanges(phase) {
+    switch (phase) {
+      case "closed":
+      case "translated": {
+        this.#uncheckCopyButton();
+        break;
+      }
+      case "idle":
+      case "translatable":
+      case "translating":
+      case "unsupported": {
+        // Do nothing.
+        break;
+      }
+      default: {
+        throw new Error(`Invalid state change to '${phase}'`);
+      }
+    }
+  }
+
+  /**
    * Handles changes to the text area's background image based on the current translation state.
    *
    * @param {string} phase - The current phase of the translation state.
@@ -1035,6 +1096,7 @@ var SelectTranslationsPanel = new (class {
   #updatePanelUIFromState() {
     const phase = this.phase();
     this.#handlePrimaryUIChanges(phase);
+    this.#handleCopyButtonChanges(phase);
     this.#handleTextAreaBackgroundChanges(phase);
   }
 
@@ -1043,15 +1105,21 @@ var SelectTranslationsPanel = new (class {
    */
   #showMainContent() {
     const {
+      copyButton,
+      doneButton,
       mainContent,
       unsupportedLanguageContent,
-      doneButton,
       translateButton,
       translateFullPageButton,
     } = this.elements;
     this.#setPanelElementAttributes({
       makeHidden: [unsupportedLanguageContent, translateButton],
-      makeVisible: [mainContent, doneButton, translateFullPageButton],
+      makeVisible: [
+        mainContent,
+        copyButton,
+        doneButton,
+        translateFullPageButton,
+      ],
       addDefault: [doneButton],
       removeDefault: [translateButton],
     });
@@ -1062,14 +1130,15 @@ var SelectTranslationsPanel = new (class {
    */
   #showUnsupportedLanguageContent() {
     const {
+      copyButton,
+      doneButton,
       mainContent,
       unsupportedLanguageContent,
-      doneButton,
       translateButton,
       translateFullPageButton,
     } = this.elements;
     this.#setPanelElementAttributes({
-      makeHidden: [mainContent, translateFullPageButton],
+      makeHidden: [mainContent, copyButton, translateFullPageButton],
       makeVisible: [unsupportedLanguageContent, doneButton, translateButton],
       addDefault: [translateButton],
       removeDefault: [doneButton],

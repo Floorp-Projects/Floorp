@@ -42,19 +42,28 @@ select-translations-panel-to-label = To
 select-translations-panel-try-another-language-label = Try another source language
 
 # Text displayed on the cancel button.
-select-translations-panel-cancel-button = Cancel
+select-translations-panel-cancel-button =
+    .label = Cancel
 
-# Text displayed on the copy button.
-select-translations-panel-copy-button = Copy
+# Text displayed on the copy button before it is clicked.
+select-translations-panel-copy-button =
+    .label = Copy
+
+# Text displayed on the copy button after it is clicked.
+select-translations-panel-copy-button-copied =
+    .label = Copied
 
 # Text displayed on the done button.
-select-translations-panel-done-button = Done
+select-translations-panel-done-button =
+    .label = Done
 
 # Text displayed on translate-full-page button.
-select-translations-panel-translate-full-page-button = Translate full page
+select-translations-panel-translate-full-page-button =
+    .label = Translate full page
 
 # Text displayed on translate button.
-select-translations-panel-translate-button = Translate
+select-translations-panel-translate-button =
+    .label = Translate
 
 # Text displayed as a placeholder when the panel is idle.
 select-translations-panel-idle-placeholder-text = Translated text will appear here.

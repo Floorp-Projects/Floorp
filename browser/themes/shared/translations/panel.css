@@ -117,28 +117,29 @@ h1.translations-panel-header-wrapper {
   padding: 12px;
 }
 
-.select-translations-panel-button {
-  align-items: center;
-  justify-content: center;
-  margin-inline: 0;
-}
-
 .select-translations-panel-content {
   padding: var(--arrowpanel-padding);
   padding-block: 4px;
 }
 
 .select-translations-panel-copy-button {
+  list-style-image: url(chrome://global/skin/icons/edit-copy.svg);
   background-color: transparent;
-  font: message-box;
-  font-weight: var(--font-weight-bold);
+  -moz-context-properties: fill;
+  fill: currentColor;
+  margin: 0;
 
-  &::before {
-    content: url(chrome://global/skin/icons/edit-copy.svg);
-    fill: currentColor;
-    margin-inline-end: 5px;
-    -moz-context-properties: fill;
+  > .button-box {
+    gap: var(--space-xsmall);
   }
+
+  &.copied {
+    list-style-image: url(chrome://global/skin/icons/check.svg);
+  }
+}
+
+#select-translations-panel-footer-button-group {
+  justify-content: space-between;
 }
 
 .select-translations-panel-header {

@@ -111,6 +111,8 @@ skip-if = ["os == 'linux' && !debug"] # Bug 1863227
 
 ["browser_translations_select_context_menu_with_text_selected.js"]
 
+["browser_translations_select_panel_copy_button.js"]
+
 ["browser_translations_select_panel_engine_cache.js"]
 
 ["browser_translations_select_panel_fallback_to_doc_language.js"]

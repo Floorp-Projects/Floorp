@@ -97,31 +97,33 @@
                        tabindex="0">
         </html:textarea>
       </vbox>
-
-      <hbox class="select-translations-panel-content">
+    </html:div>
+    <html:moz-button-group id="select-translations-panel-footer-button-group"
+                           class="panel-footer translations-panel-footer">
+      <html:div id="select-translations-panel-start-button-group">
         <button id="select-translations-panel-copy-button"
-                class="footer-button select-translations-panel-button select-translations-panel-copy-button"
+                class="footer-button select-translations-panel-copy-button"
                 data-l10n-id="select-translations-panel-copy-button">
         </button>
-      </hbox>
-    </html:div>
-    <html:moz-button-group class="panel-footer translations-panel-footer">
-      <button id="select-translations-panel-translate-full-page-button"
-              class="footer-button select-translations-panel-button"
-              data-l10n-id="select-translations-panel-translate-full-page-button">
-      </button>
-      <button id="select-translations-panel-done-button"
-              class="footer-button select-translations-panel-button"
-              data-l10n-id="select-translations-panel-done-button"
-              default="true">
-      </button>
-      <button id="select-translations-panel-translate-button"
-              class="footer-button select-translations-panel-button"
-              data-l10n-id="select-translations-panel-translate-button"
-              hidden="true"
-              default="true"
-              disabled="true">
-      </button>
+      </html:div>
+      <html:div id="select-translations-panel-end-button-group">
+        <button id="select-translations-panel-translate-full-page-button"
+                class="footer-button"
+                data-l10n-id="select-translations-panel-translate-full-page-button">
+        </button>
+        <button id="select-translations-panel-done-button"
+                class="footer-button"
+                data-l10n-id="select-translations-panel-done-button"
+                default="true">
+        </button>
+        <button id="select-translations-panel-translate-button"
+                class="footer-button"
+                data-l10n-id="select-translations-panel-translate-button"
+                hidden="true"
+                default="true"
+                disabled="true">
+        </button>
+      </html:div>
     </html:moz-button-group>
   </panel>
 </html:template>
