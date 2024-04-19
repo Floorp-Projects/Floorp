@@ -33,23 +33,34 @@ internal class PocketJSONParser {
         val stories = storiesJSON.mapNotNull(JSONArray::getJSONObject) { jsonToPocketApiStory(it) }
 
         // We return null, rather than the empty list, because devs might forget to check an empty list.
-        if (stories.isNotEmpty()) stories else null
+        stories.ifEmpty { null }
     } catch (e: JSONException) {
         logger.warn("invalid JSON from the Pocket endpoint", e)
         null
     }
 
     private fun jsonToPocketApiStory(json: JSONObject): PocketApiStory? = try {
-        PocketApiStory(
-            // These three properties are required for any valid recommendation.
-            title = json.getString(JSON_STORY_TITLE_KEY),
-            url = json.getString(JSON_STORY_URL_KEY),
-            imageUrl = json.getString(JSON_STORY_IMAGE_URL_KEY),
-            // The following three properties are optional.
-            publisher = json.tryGetString(JSON_STORY_PUBLISHER_KEY) ?: STRING_NOT_FOUND_DEFAULT_VALUE,
-            category = json.tryGetString(JSON_STORY_CATEGORY_KEY) ?: STRING_NOT_FOUND_DEFAULT_VALUE,
-            timeToRead = json.tryGetInt(JSON_STORY_TIME_TO_READ_KEY) ?: INT_NOT_FOUND_DEFAULT_VALUE,
-        )
+        val title = json.tryGetString(JSON_STORY_TITLE_KEY)
+        val url = json.tryGetString(JSON_STORY_URL_KEY)
+        val imageUrl = json.tryGetString(JSON_STORY_IMAGE_URL_KEY)
+
+        // These three properties are required for any valid recommendation.
+        if (title == null || url == null || imageUrl == null) {
+            null
+        } else {
+            PocketApiStory(
+                title = title,
+                url = url,
+                imageUrl = imageUrl,
+                // The following three properties are optional.
+                publisher = json.tryGetString(JSON_STORY_PUBLISHER_KEY)
+                    ?: STRING_NOT_FOUND_DEFAULT_VALUE,
+                category = json.tryGetString(JSON_STORY_CATEGORY_KEY)
+                    ?: STRING_NOT_FOUND_DEFAULT_VALUE,
+                timeToRead = json.tryGetInt(JSON_STORY_TIME_TO_READ_KEY)
+                    ?: INT_NOT_FOUND_DEFAULT_VALUE,
+            )
+        }
     } catch (e: JSONException) {
         null
     }
