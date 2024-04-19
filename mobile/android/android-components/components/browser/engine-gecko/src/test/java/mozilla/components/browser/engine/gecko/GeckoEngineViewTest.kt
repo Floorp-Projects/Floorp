@@ -90,15 +90,6 @@ class GeckoEngineViewTest {
         shadowOf(getMainLooper()).idle()
 
         assertNull(thumbnail)
-
-        // Test GeckoView throwing an exception
-        whenever(mockGeckoView.capturePixels()).thenThrow(IllegalStateException("Compositor not ready"))
-
-        thumbnail = mock()
-        engineView.captureThumbnail {
-            thumbnail = it
-        }
-        assertNull(thumbnail)
     }
 
     @Test

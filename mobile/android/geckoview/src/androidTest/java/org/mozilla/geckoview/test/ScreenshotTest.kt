@@ -12,7 +12,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import androidx.test.platform.app.InstrumentationRegistry
 import org.hamcrest.Matchers.* // ktlint-disable no-wildcard-imports
-import org.junit.Assert
+import org.junit.Assert.*
 import org.junit.Assume.assumeThat
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -25,6 +25,7 @@ import org.mozilla.geckoview.GeckoSession.ContentDelegate
 import org.mozilla.geckoview.GeckoSession.ProgressDelegate
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
+import org.mozilla.geckoview.test.util.UiThreadUtils
 import java.lang.IllegalStateException
 import kotlin.math.absoluteValue
 import kotlin.math.max
@@ -140,6 +141,27 @@ class ScreenshotTest : BaseSessionTest() {
             it.surfaceChanged(SurfaceInfo.Builder(surface).size(SCREEN_WIDTH, SCREEN_HEIGHT).build())
             sessionRule.waitForResult(result)
         }
+    }
+
+    @WithDisplay(height = SCREEN_HEIGHT, width = SCREEN_WIDTH)
+    @Test
+    fun capturePixelsFailsWhenCompositorNotReady() {
+        sessionRule.display?.let { display ->
+            mainSession.close()
+            var exceptionListenerCalled = false
+            val result = display.capturePixels()
+            result.exceptionally { error: Throwable ->
+                assertTrue(error is IllegalStateException)
+                exceptionListenerCalled = true
+                result
+            }.accept {
+                fail("screenshot shouldn't complete successfully after session is closed")
+            }
+            UiThreadUtils.waitForCondition(
+                { exceptionListenerCalled },
+                sessionRule.env.defaultTimeoutMillis,
+            )
+        } ?: run { fail("no display found") }
     }
 
     // This tests tries to catch problems like Bug 1644561.
@@ -430,7 +452,7 @@ class ScreenshotTest : BaseSessionTest() {
             .capture()
             .exceptionally(
                 OnExceptionListener<Throwable> { error: Throwable ->
-                    Assert.assertTrue(error is OutOfMemoryError)
+                    assertTrue(error is OutOfMemoryError)
                     fromException(error)
                 },
             )
