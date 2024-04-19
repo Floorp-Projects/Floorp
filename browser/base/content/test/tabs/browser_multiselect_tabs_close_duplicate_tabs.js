@@ -55,11 +55,12 @@ add_task(async function withAMultiSelectedTab() {
 
 add_task(async function withNotAMultiSelectedTab() {
   let initialTab = gBrowser.selectedTab;
-  let tab1 = await addTab();
-  let tab2 = await addTab();
-  let tab3 = await addTab();
-  let tab4 = await addTab();
-  let tab5 = await addTab();
+  let tab1 = await addTab("http://mochi.test:8888/");
+  let tab2 = await addTab("http://mochi.test:8888/");
+  let tab3 = await addTab("http://mochi.test:8888/");
+  let tab4 = await addTab("http://mochi.test:8888/");
+  let tab5 = await addTab("http://mochi.test:8888/");
+  let tab6 = await addTab("http://mochi.test:8888/", { userContextId: 1 });
 
   is(gBrowser.multiSelectedTabsCount, 0, "Zero multiselected tabs");
 
@@ -83,6 +84,8 @@ add_task(async function withNotAMultiSelectedTab() {
   ok(tab4.pinned, "Tab4 is pinned");
   ok(tab5.multiselected, "Tab5 is multiselected");
   ok(tab5.pinned, "Tab5 is pinned");
+  ok(!tab6.multiselected, "Tab6 is not multiselected");
+  ok(!tab6.pinned, "Tab6 is not pinned");
   is(gBrowser.multiSelectedTabsCount, 3, "Three multiselected tabs");
   is(gBrowser.selectedTab, tab1, "Tab1 is the active tab");
 
@@ -105,6 +108,7 @@ add_task(async function withNotAMultiSelectedTab() {
   ok(!tab3.closing, "Tab3 is not closing");
   ok(!tab4.closing, "Tab4 is not closing");
   ok(!tab5.closing, "Tab5 is not closing");
+  ok(!tab6.closing, "Tab6 is not closing");
   is(
     gBrowser.multiSelectedTabsCount,
     0,
@@ -112,7 +116,7 @@ add_task(async function withNotAMultiSelectedTab() {
   );
   is(gBrowser.selectedTab, tab3, "tab3 is the active tab now");
 
-  for (let tab of [tab3, tab4, tab5]) {
+  for (let tab of [tab3, tab4, tab5, tab6]) {
     BrowserTestUtils.removeTab(tab);
   }
 });
