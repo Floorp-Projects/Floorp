@@ -50,113 +50,6 @@ class BrowsingContextModule extends WindowGlobalBiDiModule {
     this.#subscribedEvents = null;
   }
 
-  #getNavigationInfo(data) {
-    // Note: the navigation id is collected in the parent-process and will be
-    // added via event interception by the windowglobal-in-root module.
-    return {
-      context: this.messageHandler.context,
-      timestamp: Date.now(),
-      url: data.target.URL,
-    };
-  }
-
-  #getOriginRectangle(origin) {
-    const win = this.messageHandler.window;
-
-    if (origin === lazy.OriginType.viewport) {
-      const viewport = win.visualViewport;
-      // Until it's clarified in the scope of the issue:
-      // https://github.com/w3c/webdriver-bidi/issues/592
-      // if we should take into account scrollbar dimensions, when calculating
-      // the viewport size, we match the behavior of WebDriver Classic,
-      // meaning we include scrollbar dimensions.
-      return new DOMRect(
-        viewport.pageLeft,
-        viewport.pageTop,
-        win.innerWidth,
-        win.innerHeight
-      );
-    }
-
-    const documentElement = win.document.documentElement;
-    return new DOMRect(
-      0,
-      0,
-      documentElement.scrollWidth,
-      documentElement.scrollHeight
-    );
-  }
-
-  #startListening() {
-    if (this.#subscribedEvents.size == 0) {
-      this.#loadListener.startListening();
-    }
-  }
-
-  #stopListening() {
-    if (this.#subscribedEvents.size == 0) {
-      this.#loadListener.stopListening();
-    }
-  }
-
-  #subscribeEvent(event) {
-    switch (event) {
-      case "browsingContext._documentInteractive":
-        this.#startListening();
-        this.#subscribedEvents.add("browsingContext._documentInteractive");
-        break;
-      case "browsingContext.domContentLoaded":
-        this.#startListening();
-        this.#subscribedEvents.add("browsingContext.domContentLoaded");
-        break;
-      case "browsingContext.load":
-        this.#startListening();
-        this.#subscribedEvents.add("browsingContext.load");
-        break;
-    }
-  }
-
-  #unsubscribeEvent(event) {
-    switch (event) {
-      case "browsingContext._documentInteractive":
-        this.#subscribedEvents.delete("browsingContext._documentInteractive");
-        break;
-      case "browsingContext.domContentLoaded":
-        this.#subscribedEvents.delete("browsingContext.domContentLoaded");
-        break;
-      case "browsingContext.load":
-        this.#subscribedEvents.delete("browsingContext.load");
-        break;
-    }
-
-    this.#stopListening();
-  }
-
-  #onDOMContentLoaded = (eventName, data) => {
-    if (this.#subscribedEvents.has("browsingContext._documentInteractive")) {
-      this.messageHandler.emitEvent("browsingContext._documentInteractive", {
-        baseURL: data.target.baseURI,
-        contextId: this.messageHandler.contextId,
-        documentURL: data.target.URL,
-        innerWindowId: this.messageHandler.innerWindowId,
-        readyState: data.target.readyState,
-      });
-    }
-
-    if (this.#subscribedEvents.has("browsingContext.domContentLoaded")) {
-      this.emitEvent(
-        "browsingContext.domContentLoaded",
-        this.#getNavigationInfo(data)
-      );
-    }
-  };
-
-  #onLoad = (eventName, data) => {
-    if (this.#subscribedEvents.has("browsingContext.load")) {
-      this.emitEvent("browsingContext.load", this.#getNavigationInfo(data));
-    }
-  };
-
   /**
    * Collect nodes using accessibility attributes.
    *
@@ -211,6 +104,43 @@ class BrowsingContextModule extends WindowGlobalBiDiModule {
     }
 
     return returnedNodes;
+  }
+
+  #getNavigationInfo(data) {
+    // Note: the navigation id is collected in the parent-process and will be
+    // added via event interception by the windowglobal-in-root module.
+    return {
+      context: this.messageHandler.context,
+      timestamp: Date.now(),
+      url: data.target.URL,
+    };
+  }
+
+  #getOriginRectangle(origin) {
+    const win = this.messageHandler.window;
+
+    if (origin === lazy.OriginType.viewport) {
+      const viewport = win.visualViewport;
+      // Until it's clarified in the scope of the issue:
+      // https://github.com/w3c/webdriver-bidi/issues/592
+      // if we should take into account scrollbar dimensions, when calculating
+      // the viewport size, we match the behavior of WebDriver Classic,
+      // meaning we include scrollbar dimensions.
+      return new DOMRect(
+        viewport.pageLeft,
+        viewport.pageTop,
+        win.innerWidth,
+        win.innerHeight
+      );
+    }
+
+    const documentElement = win.document.documentElement;
+    return new DOMRect(
+      0,
+      0,
+      documentElement.scrollWidth,
+      documentElement.scrollHeight
+    );
   }
 
   /**
@@ -341,6 +271,31 @@ class BrowsingContextModule extends WindowGlobalBiDiModule {
     return new DOMRect(x, y, width, height);
   }
 
+  #onDOMContentLoaded = (eventName, data) => {
+    if (this.#subscribedEvents.has("browsingContext._documentInteractive")) {
+      this.messageHandler.emitEvent("browsingContext._documentInteractive", {
+        baseURL: data.target.baseURI,
+        contextId: this.messageHandler.contextId,
+        documentURL: data.target.URL,
+        innerWindowId: this.messageHandler.innerWindowId,
+        readyState: data.target.readyState,
+      });
+    }
+
+    if (this.#subscribedEvents.has("browsingContext.domContentLoaded")) {
+      this.emitEvent(
+        "browsingContext.domContentLoaded",
+        this.#getNavigationInfo(data)
+      );
+    }
+  };
+
+  #onLoad = (eventName, data) => {
+    if (this.#subscribedEvents.has("browsingContext.load")) {
+      this.emitEvent("browsingContext.load", this.#getNavigationInfo(data));
+    }
+  };
+
   /**
    * Create a new rectangle which will be an intersection of
    * rectangles specified as arguments.
@@ -368,6 +323,51 @@ class BrowsingContextModule extends WindowGlobalBiDiModule {
     const height = Math.max(y_max - y_min, 0);
 
     return new DOMRect(x_min, y_min, width, height);
+  }
+
+  #startListening() {
+    if (this.#subscribedEvents.size == 0) {
+      this.#loadListener.startListening();
+    }
+  }
+
+  #stopListening() {
+    if (this.#subscribedEvents.size == 0) {
+      this.#loadListener.stopListening();
+    }
+  }
+
+  #subscribeEvent(event) {
+    switch (event) {
+      case "browsingContext._documentInteractive":
+        this.#startListening();
+        this.#subscribedEvents.add("browsingContext._documentInteractive");
+        break;
+      case "browsingContext.domContentLoaded":
+        this.#startListening();
+        this.#subscribedEvents.add("browsingContext.domContentLoaded");
+        break;
+      case "browsingContext.load":
+        this.#startListening();
+        this.#subscribedEvents.add("browsingContext.load");
+        break;
+    }
+  }
+
+  #unsubscribeEvent(event) {
+    switch (event) {
+      case "browsingContext._documentInteractive":
+        this.#subscribedEvents.delete("browsingContext._documentInteractive");
+        break;
+      case "browsingContext.domContentLoaded":
+        this.#subscribedEvents.delete("browsingContext.domContentLoaded");
+        break;
+      case "browsingContext.load":
+        this.#subscribedEvents.delete("browsingContext.load");
+        break;
+    }
+
+    this.#stopListening();
   }
 
   /**
