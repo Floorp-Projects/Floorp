@@ -22,6 +22,8 @@ import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Region;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.StateListDrawable;
 import android.os.Build;
 import android.os.Handler;
 import android.print.PrintDocumentAdapter;
@@ -268,6 +270,14 @@ public class GeckoView extends FrameLayout implements GeckoDisplay.NewSurfacePro
     // We are adding descendants to this LayerView, but we don't want the
     // descendants to affect the way LayerView retains its focus.
     setDescendantFocusability(FOCUS_BLOCK_DESCENDANTS);
+
+    // When GeckoView.requestFocus() is called with hardware keyboard, the focused state color
+    // might be applied on this view. But we don't want to apply it as default.
+    final StateListDrawable drawable = new StateListDrawable();
+    drawable.addState(
+        new int[] {android.R.attr.state_focused, -android.R.attr.state_focused},
+        new ColorDrawable(Color.WHITE));
+    setBackground(drawable);
 
     // This will stop PropertyAnimator from creating a drawing cache (i.e. a
     // bitmap) from a SurfaceView, which is just not possible (the bitmap will be
