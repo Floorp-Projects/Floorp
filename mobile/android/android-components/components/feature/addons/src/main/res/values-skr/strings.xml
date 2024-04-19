@@ -151,7 +151,7 @@
     <!-- Accessibility content description for the amount of stars that add-on has, where %1$.02f will be the amount of stars and / separator and 5 the maximum number of stars e.g (2/5, 4.5/5 or 5/5)  . -->
     <string name="mozac_feature_addons_rating_content_description" moz:removedIn="124" tools:ignore="UnusedResources">%1$.02f/5</string>
     <!-- Accessibility content description for the amount of stars that add-on has, where %1$.02f will be the amount of stars. -->
-    <string name="mozac_feature_addons_rating_content_description_2">درجہ بندی: 5 وِچوں %1۔ $.02</string>
+    <string name="mozac_feature_addons_rating_content_description_2">درجہ بندی: 5 وِچوں %1$.02f</string>
     <!-- This is the title of page where all the add-ons are listed-->
     <string name="mozac_feature_addons_addons">ایڈ ــ آن</string>
     <!-- Label for add-ons sub menu item for add-ons manager-->
