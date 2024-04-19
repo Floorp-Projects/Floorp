@@ -125,6 +125,12 @@ NS_IMETHODIMP
 CommonSocketControl::StartTLS(void) { return NS_ERROR_NOT_IMPLEMENTED; }
 
 NS_IMETHODIMP
+CommonSocketControl::AsyncStartTLS(JSContext* aCx,
+                                   mozilla::dom::Promise** aPromise) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 CommonSocketControl::SetNPNList(nsTArray<nsCString>& aNPNList) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
