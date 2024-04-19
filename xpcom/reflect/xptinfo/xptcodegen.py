@@ -285,10 +285,6 @@ def link_to_cpp(interfaces, fd, header_fd):
         tag = type["tag"]
         d1 = d2 = 0
 
-        # TD_VOID is used for types that can't be represented in JS, so they
-        # should not be represented in the XPT info.
-        assert tag != "TD_VOID"
-
         if tag == "TD_LEGACY_ARRAY":
             d1 = type["size_is"]
             d2 = lower_extra_type(type["element"])
@@ -353,15 +349,15 @@ def link_to_cpp(interfaces, fd, header_fd):
 
         return True
 
-    def lower_method(method, ifacename):
+    def lower_method(method, ifacename, builtinclass):
         methodname = "%s::%s" % (ifacename, method["name"])
 
         isSymbol = "symbol" in method["flags"]
         reflectable = is_method_reflectable(method)
 
-        if not reflectable:
-            # Hide the parameters of methods that can't be called from JS to
-            # reduce the size of the file.
+        if not reflectable and builtinclass:
+            # Hide the parameters of methods that can't be called from JS and
+            # are on builtinclass interfaces to reduce the size of the file.
             paramidx = name = numparams = 0
         else:
             if isSymbol:
@@ -442,6 +438,8 @@ def link_to_cpp(interfaces, fd, header_fd):
         assert method_cnt < 250, "%s has too many methods" % iface["name"]
         assert const_cnt < 256, "%s has too many constants" % iface["name"]
 
+        builtinclass = "builtinclass" in iface["flags"]
+
         # Store the lowered interface as 'cxx' on the iface object.
         iface["cxx"] = nsXPTInterfaceInfo(
             "%d = %s" % (iface["idx"], iface["name"]),
@@ -453,14 +451,14 @@ def link_to_cpp(interfaces, fd, header_fd):
             mConsts=len(consts),
             mNumConsts=const_cnt,
             # Flags
-            mBuiltinClass="builtinclass" in iface["flags"],
+            mBuiltinClass=builtinclass,
             mMainProcessScriptableOnly="main_process_only" in iface["flags"],
             mFunction="function" in iface["flags"],
         )
 
         # Lower methods and constants used by this interface
         for method in iface["methods"]:
-            lower_method(method, iface["name"])
+            lower_method(method, iface["name"], builtinclass)
         for const in iface["consts"]:
             lower_const(const, iface["name"])
 
