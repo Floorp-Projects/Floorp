@@ -964,7 +964,7 @@ void nsHTMLScrollFrame::ReflowScrolledFrame(ScrollReflowInput& aState,
     nsRect childScrollableOverflow = childOverflow.ScrollableOverflow();
 
     const LogicalMargin inlinePadding =
-        padding.ApplySkipSides(LogicalSides(wm, eLogicalSideBitsBBoth));
+        padding.ApplySkipSides(LogicalSides(wm, LogicalSides::BBoth));
     childScrollableOverflow.Inflate(inlinePadding.GetPhysicalMargin(wm));
 
     nsRect& so = aMetrics->ScrollableOverflow();
