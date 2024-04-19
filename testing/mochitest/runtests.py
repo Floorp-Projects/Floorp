@@ -60,9 +60,11 @@ try:
     from marionette_driver.addons import Addons
     from marionette_driver.marionette import Marionette
 except ImportError as e:  # noqa
+    error = e
+
     # Defer ImportError until attempt to use Marionette
     def reraise(*args, **kwargs):
-        raise (e)  # noqa
+        raise error  # noqa
 
     Marionette = reraise
 
