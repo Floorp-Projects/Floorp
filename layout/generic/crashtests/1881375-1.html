@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<script>
+// Loop count for the handler below. This value seems to be enough for the
+// crashtest to be likely to trigger the crash.
+const MAX_LOADS = 3;
+let loadCount = 0;
+
+// Handler which gets invoked by the iframe whenever it completes a load
+// (and dynamically reloads itself). This lets us allow the testcase to
+// reload over and over (as seems to be required to trigger the crash),
+// while also keeping the test duration reasonably bounded.
+window.addEventListener(
+  "message",
+  (event) => {
+    if (loadCount++ == MAX_LOADS) {
+      // After MAX_LOADS reloads of the iframe, call ourselves done.
+      myIframe.remove();
+      document.documentElement.className = "";
+    }
+  }
+);
+
+</script>
+<iframe id="myIframe" src="1881375-1-helper.html"></iframe>

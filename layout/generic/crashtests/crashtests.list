@@ -678,6 +678,7 @@ load 1405443.html
 load 1405813.html
 load 1405896.html
 load 1406252-1.html
+asserts(2) load 1410243-1.html # assertion is bug 574889
 load 1415185.html
 load 1416544.html
 load 1427824.html
@@ -804,6 +805,7 @@ load 1728319.html
 asserts(2-8) load 1730506.html # asserts from integer overflow & bogus sizes
 asserts(1-4) load 1730570.html # asserts from integer overflow & bogus sizes
 load 1734015.html
+skip-if(Android) load 1741488-1.html # printPreview doesn't work on android
 load 1776079.html
 asserts(0-2) load 1791606.html
 load 1799749.html
@@ -812,3 +814,4 @@ load 1816574.html
 load 1821603.html
 load 1822118.html
 load 1825434.html
+asserts(0-85) load 1881375-1.html # bug 1890687 - assertions about fragmentation invariants, failing many times because the test runs in a loop
