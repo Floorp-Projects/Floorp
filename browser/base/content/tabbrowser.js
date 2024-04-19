@@ -353,22 +353,35 @@
       // One would think that a set is better, but it would need to copy all
       // the strings instead of just keeping references to the nsIURI objects,
       // and the array is presumed to be small anyways.
-      let urisToLookFor = [];
+      let keys = [];
+      let keyForTab = tab => {
+        let uri = tab.linkedBrowser?.currentURI;
+        if (!uri) {
+          return null;
+        }
+        return {
+          uri,
+          userContextId: tab.userContextId,
+        };
+      };
+      let keyEquals = (a, b) => {
+        return a.userContextId == b.userContextId && a.uri.equals(b.uri);
+      };
       if (aTab.multiselected) {
         for (let tab of this.selectedTabs) {
-          let uri = tab.linkedBrowser?.currentURI;
-          if (uri) {
-            urisToLookFor.push(uri);
+          let key = keyForTab(tab);
+          if (key) {
+            keys.push(key);
           }
         }
       } else {
-        let uri = aTab.linkedBrowser?.currentURI;
-        if (uri) {
-          urisToLookFor.push(uri);
+        let key = keyForTab(aTab);
+        if (key) {
+          keys.push(key);
         }
       }
 
-      if (!urisToLookFor.length) {
+      if (!keys.length) {
         return [];
       }
 
@@ -380,8 +393,8 @@
         if (aTab.multiselected && tab.multiselected) {
           continue;
         }
-        let uri = tab.linkedBrowser?.currentURI;
-        if (uri && urisToLookFor.some(u => u.equals(uri))) {
+        let key = keyForTab(tab);
+        if (key && keys.some(k => keyEquals(k, key))) {
           duplicateTabs.push(tab);
         }
       }
