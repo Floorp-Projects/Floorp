@@ -247,30 +247,9 @@ this.SyncedTabsPanelList = class SyncedTabsPanelList {
       if (hasNextPage) {
         tabs = tabs.slice(0, maxTabs);
       }
-      // We have the client obj but we need the FxA device obj so we use the clients
-      // engine to get us the FxA device
-      let device =
-        fxAccounts.device.recentDeviceList &&
-        fxAccounts.device.recentDeviceList.find(
-          d =>
-            d.id === Weave.Service.clientsEngine.getClientFxaDeviceId(client.id)
-        );
-      let remoteTabCloseAvailable =
-        device && fxAccounts.commands.closeTab.isDeviceCompatible(device);
       for (let [index, tab] of tabs.entries()) {
-        let tabEntContainer = document.createXULElement("hbox");
-        tabEntContainer.setAttribute("class", "PanelUI-tabitem-container");
-
         let tabEnt = this._createSyncedTabElement(tab, index);
-        tabEntContainer.appendChild(tabEnt);
-        // We should only add an X button next to tabs if the device
-        // is broadcasting that it can remotely close tabs
-        if (remoteTabCloseAvailable) {
-          tabEntContainer.appendChild(
-            this._createCloseTabElement(tab.url, device)
-          );
-        }
-        container.appendChild(tabEntContainer);
+        container.appendChild(tabEnt);
       }
       if (numInactive) {
         let elt = this._createShowInactiveTabsElement(
@@ -366,20 +345,6 @@ this.SyncedTabsPanelList = class SyncedTabsPanelList {
       this._showSyncedTabs(paginationInfo);
     });
     return showItem;
-  }
-
-  _createCloseTabElement(url, device) {
-    let closeBtn = document.createXULElement("image");
-    closeBtn.setAttribute("class", "close-icon remotetabs-close");
-
-    closeBtn.addEventListener("click", function (e) {
-      e.stopPropagation();
-      // The user could be hitting multiple tabs across multiple devices, with a few
-      // seconds in-between -- we should not immediately fire off pushes, so we
-      // add it to a queue and send in bulk at a later time
-      fxAccounts.commands.closeTab.enqueueTabToClose(device, url);
-    });
-    return closeBtn;
   }
 
   destroy() {

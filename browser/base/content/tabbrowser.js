@@ -4419,56 +4419,6 @@
         );
       }
     },
-    /**
-     * Closes tabs within the browser that match a given list of nsURIs. Returns
-     * any nsURIs that could not be closed successfully. This does not close any
-     * tabs that have a beforeUnload prompt
-     *
-     * @param {nsURI[]} urisToClose
-     *   The set of uris to remove.
-     * @returns {nsURI[]}
-     *  the nsURIs that weren't found in this browser
-     */
-    async closeTabsByURI(urisToClose) {
-      let remainingURIsToClose = [...urisToClose];
-      let tabsToRemove = [];
-      for (let tab of this.tabs) {
-        let currentURI = tab.linkedBrowser.currentURI;
-        // Find any URI that matches the current tab's URI
-        const matchedIndex = remainingURIsToClose.findIndex(uriToClose =>
-          uriToClose.equals(currentURI)
-        );
-
-        if (matchedIndex > -1) {
-          tabsToRemove.push(tab);
-          remainingURIsToClose.splice(matchedIndex, 1); // Remove the matched URI
-        }
-      }
-
-      if (tabsToRemove.length) {
-        const { beforeUnloadComplete, lastToClose } = this._startRemoveTabs(
-          tabsToRemove,
-          {
-            animate: false,
-            suppressWarnAboutClosingWindow: true,
-            skipPermitUnload: false,
-            skipRemoves: false,
-            skipSessionStore: false,
-          }
-        );
-
-        // Wait for the beforeUnload handlers to complete.
-        await beforeUnloadComplete;
-
-        // _startRemoveTabs doesn't close the last tab in the window
-        // for this use case, we simply close it
-        if (lastToClose) {
-          this.removeTab(lastToClose);
-        }
-      }
-      // If we still have uris, that means we couldn't find them in this window instance
-      return remainingURIsToClose;
-    },
 
     /**
      * Handles opening a new tab with mouse middleclick.
