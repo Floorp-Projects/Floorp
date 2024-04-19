@@ -131,11 +131,11 @@ enum LogicalSideBits {
   eLogicalSideBitsAll = eLogicalSideBitsBBoth | eLogicalSideBitsIBoth
 };
 
-enum LineRelativeDir {
-  eLineRelativeDirOver = static_cast<uint8_t>(LogicalSide::BStart),
-  eLineRelativeDirUnder = static_cast<uint8_t>(LogicalSide::BEnd),
-  eLineRelativeDirLeft = static_cast<uint8_t>(LogicalSide::IStart),
-  eLineRelativeDirRight = static_cast<uint8_t>(LogicalSide::IEnd)
+enum class LineRelativeDir : uint8_t {
+  Over = static_cast<uint8_t>(LogicalSide::BStart),
+  Under = static_cast<uint8_t>(LogicalSide::BEnd),
+  Left = static_cast<uint8_t>(LogicalSide::IStart),
+  Right = static_cast<uint8_t>(LogicalSide::IEnd)
 };
 
 /**
