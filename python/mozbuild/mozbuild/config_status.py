@@ -13,6 +13,7 @@ import time
 from argparse import ArgumentParser
 from itertools import chain
 from multiprocessing import Pool, get_start_method
+from time import process_time
 
 from mach.logging import LoggingManager
 
@@ -22,7 +23,7 @@ from mozbuild.base import MachCommandConditions
 from mozbuild.frontend.emitter import TreeMetadataEmitter
 from mozbuild.frontend.reader import BuildReader
 from mozbuild.mozinfo import write_mozinfo
-from mozbuild.util import FileAvoidWrite, process_time
+from mozbuild.util import FileAvoidWrite
 
 log_manager = LoggingManager()
 
