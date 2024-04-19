@@ -11,7 +11,6 @@
 
 #include "mozilla/intl/BidiEmbeddingLevel.h"
 #include "mozilla/ComputedStyle.h"
-#include "mozilla/EnumeratedRange.h"
 #include "mozilla/EnumSet.h"
 #include "nsRect.h"
 #include "nsStyleStruct.h"
@@ -57,11 +56,6 @@ enum class LogicalSide : uint8_t {
   IStart,
   IEnd,
 };
-
-constexpr auto AllLogicalSides() {
-  return mozilla::MakeInclusiveEnumeratedRange(LogicalSide::BStart,
-                                               LogicalSide::IEnd);
-}
 
 enum class LogicalCorner : uint8_t {
   BStartIStart,
