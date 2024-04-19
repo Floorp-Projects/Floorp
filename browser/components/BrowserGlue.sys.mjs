@@ -1149,9 +1149,6 @@ BrowserGlue.prototype = {
       case "fxaccounts:commands:open-uri":
         this._onDisplaySyncURIs(subject);
         break;
-      case "fxaccounts:commands:close-uri":
-        this._onIncomingCloseTabCommand(subject);
-        break;
       case "session-save":
         this._setPrefToSaveSession(true);
         subject.QueryInterface(Ci.nsISupportsPRBool);
@@ -1319,7 +1316,6 @@ BrowserGlue.prototype = {
       "fxaccounts:verify_login",
       "fxaccounts:device_disconnected",
       "fxaccounts:commands:open-uri",
-      "fxaccounts:commands:close-uri",
       "session-save",
       "places-init-complete",
       "distribution-customization-complete",
@@ -4786,32 +4782,6 @@ BrowserGlue.prototype = {
       );
     } catch (ex) {
       console.error("Error displaying tab(s) received by Sync: ", ex);
-    }
-  },
-
-  async _onIncomingCloseTabCommand(data) {
-    // The payload is wrapped weirdly because of how Sync does notifications.
-    const wrappedObj = data.wrappedJSObject.object;
-    let { urls } = wrappedObj[0];
-    let urisToClose = [];
-    urls.forEach(urlString => {
-      try {
-        urisToClose.push(Services.io.newURI(urlString));
-      } catch (ex) {
-        // The url was invalid so we ignore
-        console.error(ex);
-      }
-    });
-    for (let win of lazy.BrowserWindowTracker.orderedWindows) {
-      // Ensure we're operating on fully opened browser windows
-      if (!win.gBrowser) {
-        continue;
-      }
-      urisToClose = await win.gBrowser.closeTabsByURI(urisToClose);
-      // If we've successfully closed all the tabs, break early
-      if (!urisToClose.length) {
-        break;
-      }
     }
   },
 

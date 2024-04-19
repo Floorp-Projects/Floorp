@@ -1934,10 +1934,6 @@ pref("identity.mobilepromo.ios", "https://www.mozilla.org/firefox/ios/?utm_sourc
 // Default is 24 hours.
 pref("identity.fxaccounts.commands.missed.fetch_interval", 86400);
 
-// Controls whether this client can send and receive "close tab"
-// commands from other FxA clients 
-pref("identity.fxaccounts.commands.remoteTabManagement.enabled", false);
-
 // Note: when media.gmp-*.visible is true, provided we're running on a
 // supported platform/OS version, the corresponding CDM appears in the
 // plugins list, Firefox will download the GMP/CDM if enabled, and our
