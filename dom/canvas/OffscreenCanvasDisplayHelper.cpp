@@ -132,11 +132,11 @@ void OffscreenCanvasDisplayHelper::FlushForDisplay() {
     return;
   }
 
-  class FlushWorkerRunnable final : public WorkerRunnable {
+  class FlushWorkerRunnable final : public WorkerThreadRunnable {
    public:
     FlushWorkerRunnable(WorkerPrivate* aWorkerPrivate,
                         OffscreenCanvasDisplayHelper* aDisplayHelper)
-        : WorkerRunnable(aWorkerPrivate, "FlushWorkerRunnable"),
+        : WorkerThreadRunnable(aWorkerPrivate, "FlushWorkerRunnable"),
           mDisplayHelper(aDisplayHelper) {}
 
     bool WorkerRun(JSContext*, WorkerPrivate*) override {

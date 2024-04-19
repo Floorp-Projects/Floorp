@@ -1700,13 +1700,14 @@ class CreateImageBitmapFromBlob final : public DiscardableRunnable,
 NS_IMPL_ISUPPORTS_INHERITED(CreateImageBitmapFromBlob, DiscardableRunnable,
                             imgIContainerCallback, nsIInputStreamCallback)
 
-class CreateImageBitmapFromBlobRunnable final : public WorkerRunnable {
+class CreateImageBitmapFromBlobRunnable final : public WorkerThreadRunnable {
  public:
   explicit CreateImageBitmapFromBlobRunnable(WorkerPrivate* aWorkerPrivate,
                                              CreateImageBitmapFromBlob* aTask,
                                              layers::Image* aImage,
                                              nsresult aStatus)
-      : WorkerRunnable(aWorkerPrivate, "CreateImageBitmapFromBlobRunnable"),
+      : WorkerThreadRunnable(aWorkerPrivate,
+                             "CreateImageBitmapFromBlobRunnable"),
         mTask(aTask),
         mImage(aImage),
         mStatus(aStatus) {}

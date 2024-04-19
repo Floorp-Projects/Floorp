@@ -92,7 +92,7 @@ nsresult GetSubscriptionParams(nsIPushSubscription* aSubscription,
   return NS_OK;
 }
 
-class GetSubscriptionResultRunnable final : public WorkerRunnable {
+class GetSubscriptionResultRunnable final : public WorkerThreadRunnable {
  public:
   GetSubscriptionResultRunnable(WorkerPrivate* aWorkerPrivate,
                                 RefPtr<PromiseWorkerProxy>&& aProxy,
@@ -102,7 +102,7 @@ class GetSubscriptionResultRunnable final : public WorkerRunnable {
                                 nsTArray<uint8_t>&& aRawP256dhKey,
                                 nsTArray<uint8_t>&& aAuthSecret,
                                 nsTArray<uint8_t>&& aAppServerKey)
-      : WorkerRunnable(aWorkerPrivate, "GetSubscriptionResultRunnable"),
+      : WorkerThreadRunnable(aWorkerPrivate, "GetSubscriptionResultRunnable"),
         mProxy(std::move(aProxy)),
         mStatus(aStatus),
         mEndpoint(aEndpoint),
@@ -292,11 +292,12 @@ class GetSubscriptionRunnable final : public Runnable {
   nsTArray<uint8_t> mAppServerKey;
 };
 
-class PermissionResultRunnable final : public WorkerRunnable {
+class PermissionResultRunnable final : public WorkerThreadRunnable {
  public:
   PermissionResultRunnable(PromiseWorkerProxy* aProxy, nsresult aStatus,
                            PermissionState aState)
-      : WorkerRunnable(aProxy->GetWorkerPrivate(), "PermissionResultRunnable"),
+      : WorkerThreadRunnable(aProxy->GetWorkerPrivate(),
+                             "PermissionResultRunnable"),
         mProxy(aProxy),
         mStatus(aStatus),
         mState(aState) {

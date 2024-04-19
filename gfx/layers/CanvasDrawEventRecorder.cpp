@@ -362,11 +362,11 @@ void CanvasDrawEventRecorder::QueueProcessPendingDeletionsLocked(
     return;
   }
 
-  class ProcessPendingRunnable final : public dom::WorkerRunnable {
+  class ProcessPendingRunnable final : public dom::WorkerThreadRunnable {
    public:
     ProcessPendingRunnable(dom::WorkerPrivate* aWorkerPrivate,
                            RefPtr<CanvasDrawEventRecorder>&& aRecorder)
-        : dom::WorkerRunnable(aWorkerPrivate),
+        : dom::WorkerThreadRunnable(aWorkerPrivate),
           mRecorder(std::move(aRecorder)) {}
 
     bool WorkerRun(JSContext*, dom::WorkerPrivate*) override {

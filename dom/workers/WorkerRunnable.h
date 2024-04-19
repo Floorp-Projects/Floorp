@@ -33,7 +33,6 @@ namespace dom {
 
 class WorkerPrivate;
 
-// Use this runnable to communicate from the worker to its parent or vice-versa.
 class WorkerRunnable : public nsIRunnable
 #ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
     ,
@@ -51,9 +50,6 @@ class WorkerRunnable : public nsIRunnable
   };
 
  protected:
-  // The WorkerPrivate that this runnable is associated with.
-  WorkerPrivate* mWorkerPrivate;
-
   // See above.
   Target mTarget;
 
@@ -61,7 +57,6 @@ class WorkerRunnable : public nsIRunnable
   const char* mName = nullptr;
 #endif
 
- private:
   // Whether or not Cancel() is currently being called from inside the Run()
   // method. Avoids infinite recursion when a subclass calls Run() from inside
   // Cancel(). Only checked and modified on the target thread.
@@ -73,11 +68,11 @@ class WorkerRunnable : public nsIRunnable
   NS_DECL_NSINAMED
 #endif
 
-  virtual nsresult Cancel();
+  virtual nsresult Cancel() = 0;
 
   // The return value is true if and only if both PreDispatch and
   // DispatchInternal return true.
-  bool Dispatch();
+  virtual bool Dispatch() = 0;
 
   // True if this runnable is handled by running JavaScript in some global that
   // could possibly be a debuggee, and thus needs to be deferred when the target
@@ -93,23 +88,36 @@ class WorkerRunnable : public nsIRunnable
   static WorkerRunnable* FromRunnable(nsIRunnable* aRunnable);
 
  protected:
-  WorkerRunnable(WorkerPrivate* aWorkerPrivate,
-                 const char* aName = "WorkerRunnable",
-                 Target aTarget = WorkerThread)
-#ifdef DEBUG
-      ;
-#else
-      : mWorkerPrivate(aWorkerPrivate),
-        mTarget(aTarget),
-#  ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
-        mName(aName),
-#  endif
-        mCallingCancelWithinRun(false) {
-  }
-#endif
+  WorkerRunnable(const char* aName = "WorkerRunnable",
+                 Target aTarget = WorkerThread);
 
   // This class is reference counted.
   virtual ~WorkerRunnable() = default;
+
+  // Calling Run() directly is not supported. Just call Dispatch() and
+  // WorkerRun() will be called on the correct thread automatically.
+  NS_DECL_NSIRUNNABLE
+};
+
+class WorkerThreadRunnable : public WorkerRunnable {
+ protected:
+  // The WorkerPrivate that this runnable is associated with.
+  WorkerPrivate* mWorkerPrivate;
+
+ public:
+  virtual nsresult Cancel() override;
+
+  // The return value is true if and only if both PreDispatch and
+  // DispatchInternal return true.
+  bool Dispatch() override;
+
+ protected:
+  explicit WorkerThreadRunnable(WorkerPrivate* aWorkerPrivate,
+                                const char* aName = "WorkerThreadRunnable",
+                                Target aTarget = WorkerRunnable::WorkerThread);
+
+  // This class is reference counted.
+  virtual ~WorkerThreadRunnable() = default;
 
   // Returns true if this runnable should be dispatched to the debugger queue,
   // and false otherwise.
@@ -176,11 +184,12 @@ class WorkerRunnable : public nsIRunnable
 };
 
 // This runnable is used to send a message to a worker debugger.
-class WorkerDebuggerRunnable : public WorkerRunnable {
+class WorkerDebuggerRunnable : public WorkerThreadRunnable {
  protected:
   explicit WorkerDebuggerRunnable(WorkerPrivate* aWorkerPrivate,
                                   const char* aName = "WorkerDebuggerRunnable")
-      : WorkerRunnable(aWorkerPrivate, aName, WorkerThread) {}
+      : WorkerThreadRunnable(aWorkerPrivate, aName,
+                             WorkerRunnable::WorkerThread) {}
 
   virtual ~WorkerDebuggerRunnable() = default;
 
@@ -198,12 +207,12 @@ class WorkerDebuggerRunnable : public WorkerRunnable {
 };
 
 // This runnable is used to send a message directly to a worker's sync loop.
-class WorkerSyncRunnable : public WorkerRunnable {
+class WorkerSyncRunnable : public WorkerThreadRunnable {
  protected:
   nsCOMPtr<nsIEventTarget> mSyncLoopTarget;
 
   // Passing null for aSyncLoopTarget is allowed and will result in the behavior
-  // of a normal WorkerRunnable.
+  // of a normal WorkerThreadRunnable.
   WorkerSyncRunnable(WorkerPrivate* aWorkerPrivate,
                      nsIEventTarget* aSyncLoopTarget,
                      const char* aName = "WorkerSyncRunnable");
@@ -223,7 +232,7 @@ class WorkerSyncRunnable : public WorkerRunnable {
 class MainThreadWorkerSyncRunnable : public WorkerSyncRunnable {
  protected:
   // Passing null for aSyncLoopTarget is allowed and will result in the behavior
-  // of a normal WorkerRunnable.
+  // of a normal WorkerThreadRunnable.
   MainThreadWorkerSyncRunnable(
       WorkerPrivate* aWorkerPrivate, nsIEventTarget* aSyncLoopTarget,
       const char* aName = "MainThreadWorkerSyncRunnable")
@@ -254,17 +263,17 @@ class MainThreadWorkerSyncRunnable : public WorkerSyncRunnable {
 // potentially running before previously queued runnables and perhaps even with
 // other JS code executing on the stack. These runnables must not alter the
 // state of the JS runtime and should only twiddle state values.
-class WorkerControlRunnable : public WorkerRunnable {
+class WorkerControlRunnable : public WorkerThreadRunnable {
   friend class WorkerPrivate;
 
  protected:
-  WorkerControlRunnable(WorkerPrivate* aWorkerPrivate,
-                        const char* aName = "WorkerControlRunnable",
-                        Target aTarget = WorkerThread)
+  explicit WorkerControlRunnable(WorkerPrivate* aWorkerPrivate,
+                                 const char* aName = "WorkerControlRunnable",
+                                 Target aTarget = WorkerRunnable::WorkerThread)
 #ifdef DEBUG
       ;
 #else
-      : WorkerRunnable(aWorkerPrivate, aName, aTarget) {
+      : WorkerThreadRunnable(aWorkerPrivate, aName, aTarget) {
   }
 #endif
 
@@ -273,23 +282,25 @@ class WorkerControlRunnable : public WorkerRunnable {
   nsresult Cancel() override;
 
  public:
-  NS_INLINE_DECL_REFCOUNTING_INHERITED(WorkerControlRunnable, WorkerRunnable)
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(WorkerControlRunnable,
+                                       WorkerThreadRunnable)
 
  private:
   virtual bool DispatchInternal() override;
 
   // Should only be called by WorkerPrivate::DoRunLoop.
-  using WorkerRunnable::Cancel;
+  using WorkerThreadRunnable::Cancel;
 };
 
-// A convenience class for WorkerRunnables that are originated on the main
+// A convenience class for WorkerThreadRunnables that are originated on the main
 // thread.
-class MainThreadWorkerRunnable : public WorkerRunnable {
+class MainThreadWorkerRunnable : public WorkerThreadRunnable {
  protected:
   explicit MainThreadWorkerRunnable(
       WorkerPrivate* aWorkerPrivate,
       const char* aName = "MainThreadWorkerRunnable")
-      : WorkerRunnable(aWorkerPrivate, aName, WorkerThread) {
+      : WorkerThreadRunnable(aWorkerPrivate, aName,
+                             WorkerRunnable::WorkerThread) {
     AssertIsOnMainThread();
   }
 
@@ -313,7 +324,8 @@ class MainThreadWorkerControlRunnable : public WorkerControlRunnable {
   explicit MainThreadWorkerControlRunnable(
       WorkerPrivate* aWorkerPrivate,
       const char* aName = "MainThreadWorkerControlRunnable")
-      : WorkerControlRunnable(aWorkerPrivate, aName, WorkerThread) {}
+      : WorkerControlRunnable(aWorkerPrivate, aName,
+                              WorkerRunnable::WorkerThread) {}
 
   virtual ~MainThreadWorkerControlRunnable() = default;
 
@@ -328,17 +340,18 @@ class MainThreadWorkerControlRunnable : public WorkerControlRunnable {
   }
 };
 
-// A WorkerRunnable that should be dispatched from the worker to itself for
-// async tasks.
+// A WorkerThreadRunnable that should be dispatched from the worker to itself
+// for async tasks.
 //
 // Async tasks will almost always want to use this since
 // a WorkerSameThreadRunnable keeps the Worker from being GCed.
-class WorkerSameThreadRunnable : public WorkerRunnable {
+class WorkerSameThreadRunnable : public WorkerThreadRunnable {
  protected:
   explicit WorkerSameThreadRunnable(
       WorkerPrivate* aWorkerPrivate,
       const char* aName = "WorkerSameThreadRunnable")
-      : WorkerRunnable(aWorkerPrivate, aName, WorkerThread) {}
+      : WorkerThreadRunnable(aWorkerPrivate, aName,
+                             WorkerRunnable::WorkerThread) {}
 
   virtual ~WorkerSameThreadRunnable() = default;
 
@@ -347,7 +360,7 @@ class WorkerSameThreadRunnable : public WorkerRunnable {
   virtual void PostDispatch(WorkerPrivate* aWorkerPrivate,
                             bool aDispatchResult) override;
 
-  // We just delegate PostRun to WorkerRunnable, since it does exactly
+  // We just delegate PostRun to WorkerThreadRunnable, since it does exactly
   // what we want.
 };
 
@@ -470,12 +483,12 @@ class MainThreadStopSyncLoopRunnable : public WorkerSyncRunnable {
 // from a top-level frozen worker to its parent window must not be delivered
 // either, even as the main thread event loop continues to spin. Thus, freezing
 // a top-level worker also pauses mMainThreadDebuggeeEventTarget.
-class WorkerDebuggeeRunnable : public WorkerRunnable {
+class WorkerDebuggeeRunnable : public WorkerThreadRunnable {
  protected:
-  WorkerDebuggeeRunnable(WorkerPrivate* aWorkerPrivate,
-                         const char* aName = "WorkerDebuggeeRunnable",
-                         Target aTarget = ParentThread)
-      : WorkerRunnable(aWorkerPrivate, aName, aTarget) {}
+  explicit WorkerDebuggeeRunnable(WorkerPrivate* aWorkerPrivate,
+                                  const char* aName = "WorkerDebuggeeRunnable",
+                                  Target aTarget = WorkerRunnable::ParentThread)
+      : WorkerThreadRunnable(aWorkerPrivate, aName, aTarget) {}
 
   bool PreDispatch(WorkerPrivate* aWorkerPrivate) override;
 

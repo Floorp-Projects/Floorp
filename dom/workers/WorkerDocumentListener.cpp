@@ -52,10 +52,10 @@ void WorkerDocumentListener::OnVisible(bool aVisible) {
     return;
   }
 
-  class VisibleRunnable final : public WorkerRunnable {
+  class VisibleRunnable final : public WorkerThreadRunnable {
    public:
     VisibleRunnable(WorkerPrivate* aWorkerPrivate, bool aVisible)
-        : WorkerRunnable(aWorkerPrivate, "VisibleRunnable"),
+        : WorkerThreadRunnable(aWorkerPrivate, "VisibleRunnable"),
           mVisible(aVisible) {}
 
     bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) {
