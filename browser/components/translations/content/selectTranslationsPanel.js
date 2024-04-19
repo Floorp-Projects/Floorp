@@ -174,6 +174,8 @@ var SelectTranslationsPanel = new (class {
           "select-translations-panel-translate-full-page-button",
         tryAnotherSourceMenuList:
           "select-translations-panel-try-another-language",
+        tryAnotherSourceMenuPopup:
+          "select-translations-panel-try-another-language-menupopup",
         unsupportedLanguageContent:
           "select-translations-panel-unsupported-language-content",
         unsupportedLanguageMessageBar:
@@ -933,7 +935,8 @@ var SelectTranslationsPanel = new (class {
    */
   #displayUnsupportedLanguageMessage() {
     const { detectedLanguage } = this.#translationState;
-    const { unsupportedLanguageMessageBar } = this.elements;
+    const { unsupportedLanguageMessageBar, tryAnotherSourceMenuList } =
+      this.elements;
     const displayNames = new Services.intl.DisplayNames(undefined, {
       type: "language",
     });
@@ -959,6 +962,7 @@ var SelectTranslationsPanel = new (class {
     }
     this.#updateConditionalUIEnabledState();
     this.#showUnsupportedLanguageContent();
+    this.#maybeFocusMenuList(tryAnotherSourceMenuList);
   }
 
   /**
