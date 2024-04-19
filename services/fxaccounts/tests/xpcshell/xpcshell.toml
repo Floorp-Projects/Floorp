@@ -20,6 +20,8 @@ support-files = [
 
 ["test_commands.js"]
 
+["test_commands_closetab.js"]
+
 ["test_credentials.js"]
 
 ["test_device.js"]
