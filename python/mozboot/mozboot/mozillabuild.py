@@ -9,7 +9,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from mozbuild.util import mozilla_build_version
+from mozbuild.buildversion import mozilla_build_version
 from packaging.version import Version
 
 from mozboot.base import BaseBootstrapper

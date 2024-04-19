@@ -17,10 +17,8 @@ import os
 import re
 import sys
 from io import BytesIO, StringIO
-from pathlib import Path
 
 import six
-from packaging.version import Version
 
 from mozbuild.dirutils import ensureParentDir
 
@@ -1229,18 +1227,3 @@ def hexdump(buf):
         line += "|\n"
         lines.append(line)
     return lines
-
-
-def mozilla_build_version():
-    mozilla_build = os.environ.get("MOZILLABUILD")
-
-    version_file = Path(mozilla_build) / "VERSION"
-
-    assert version_file.exists(), (
-        f'The MozillaBuild VERSION file was not found at "{version_file}".\n'
-        "Please check if MozillaBuild is installed correctly and that the"
-        "`MOZILLABUILD` environment variable is to the correct path."
-    )
-
-    with version_file.open() as file:
-        return Version(file.readline().rstrip("\n"))
