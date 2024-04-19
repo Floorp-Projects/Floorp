@@ -14,8 +14,8 @@ from pathlib import Path
 import mozfile
 import mozpack.path as mozpath
 
+from mozbuild.dirutils import ensureParentDir
 from mozbuild.repackaging.application_ini import get_application_ini_value
-from mozbuild.util import ensureParentDir
 
 _BCJ_OPTIONS = {
     "x86": ["--x86"],

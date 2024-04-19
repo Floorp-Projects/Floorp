@@ -8,8 +8,9 @@ from collections import defaultdict
 
 import buildconfig
 import yaml
+from mozbuild.dirutils import ensureParentDir
 from mozbuild.preprocessor import Preprocessor
-from mozbuild.util import FileAvoidWrite, ensureParentDir
+from mozbuild.util import FileAvoidWrite
 from six import StringIO
 
 VALID_KEYS = {

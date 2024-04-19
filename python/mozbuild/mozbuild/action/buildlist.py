@@ -11,8 +11,8 @@ import io
 import os
 import sys
 
+from mozbuild.dirutils import ensureParentDir
 from mozbuild.lock import lock_file
-from mozbuild.util import ensureParentDir
 
 
 def addEntriesToListFile(listFile, entries):

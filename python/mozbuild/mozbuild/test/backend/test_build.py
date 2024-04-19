@@ -21,9 +21,9 @@ from mozbuild.backend.configenvironment import ConfigEnvironment
 from mozbuild.backend.fastermake import FasterMakeBackend
 from mozbuild.backend.recursivemake import RecursiveMakeBackend
 from mozbuild.base import MozbuildObject
+from mozbuild.dirutils import ensureParentDir
 from mozbuild.frontend.emitter import TreeMetadataEmitter
 from mozbuild.frontend.reader import BuildReader
-from mozbuild.util import ensureParentDir
 
 
 def make_path():

@@ -24,7 +24,7 @@ from mozpack.manifests import InstallManifest
 from mozpack.mozjar import JarWriter
 from reftest import ReftestManifest
 
-from mozbuild.util import ensureParentDir
+from mozbuild.dirutils import ensureParentDir
 
 STAGE = mozpath.join(buildconfig.topobjdir, "dist", "test-stage")
 

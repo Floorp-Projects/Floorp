@@ -6,7 +6,7 @@ import os
 import sys
 
 from mach.decorators import Command, CommandArgument
-from mozbuild.util import mkdir
+from mozbuild.dirutils import mkdir
 
 
 def get_test_parser():

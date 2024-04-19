@@ -34,9 +34,10 @@ from mozterm.widgets import Footer
 from ..backend import get_backend_class
 from ..base import MozbuildObject
 from ..compilation.warnings import WarningsCollector, WarningsDatabase
+from ..dirutils import mkdir
 from ..telemetry import get_cpu_brand
 from ..testing import install_test_files
-from ..util import FileAvoidWrite, mkdir, resolve_target_to_make
+from ..util import FileAvoidWrite, resolve_target_to_make
 from .clobber import Clobberer
 
 FINDER_SLOW_MESSAGE = """

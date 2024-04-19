@@ -8,9 +8,7 @@ import argparse
 import collections
 import collections.abc
 import copy
-import ctypes
 import difflib
-import errno
 import functools
 import hashlib
 import io
@@ -24,13 +22,13 @@ from pathlib import Path
 import six
 from packaging.version import Version
 
+from mozbuild.dirutils import ensureParentDir
+
 MOZBUILD_METRICS_PATH = os.path.abspath(
     os.path.join(__file__, "..", "..", "metrics.yaml")
 )
 
 if sys.platform == "win32":
-    _kernel32 = ctypes.windll.kernel32
-    _FILE_ATTRIBUTE_NOT_CONTENT_INDEXED = 0x2000
     system_encoding = "mbcs"
 else:
     system_encoding = "utf-8"
@@ -149,42 +147,6 @@ class ReadOnlyDefaultDict(ReadOnlyDict):
         value = self._default_factory()
         dict.__setitem__(self, key, value)
         return value
-
-
-def ensureParentDir(path):
-    """Ensures the directory parent to the given file exists."""
-    d = os.path.dirname(path)
-    if d and not os.path.exists(path):
-        try:
-            os.makedirs(d)
-        except OSError as error:
-            if error.errno != errno.EEXIST:
-                raise
-
-
-def mkdir(path, not_indexed=False):
-    """Ensure a directory exists.
-
-    If ``not_indexed`` is True, an attribute is set that disables content
-    indexing on the directory.
-    """
-    try:
-        os.makedirs(path)
-    except OSError as e:
-        if e.errno != errno.EEXIST:
-            raise
-
-    if not_indexed:
-        if sys.platform == "win32":
-            if isinstance(path, six.string_types):
-                fn = _kernel32.SetFileAttributesW
-            else:
-                fn = _kernel32.SetFileAttributesA
-
-            fn(path, _FILE_ATTRIBUTE_NOT_CONTENT_INDEXED)
-        elif sys.platform == "darwin":
-            with open(os.path.join(path, ".metadata_never_index"), "a"):
-                pass
 
 
 def simple_diff(filename, old_lines, new_lines):

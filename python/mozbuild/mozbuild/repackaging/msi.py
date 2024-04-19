@@ -11,7 +11,7 @@ from xml.dom import minidom
 
 import mozpack.path as mozpath
 
-from mozbuild.util import ensureParentDir
+from mozbuild.dirutils import ensureParentDir
 
 _MSI_ARCH = {
     "x86": "x86",

@@ -10,7 +10,7 @@ import zipfile
 import mozpack.path as mozpath
 
 from mozbuild.action.exe_7z_archive import archive_exe
-from mozbuild.util import ensureParentDir
+from mozbuild.dirutils import ensureParentDir
 
 
 def repackage_installer(
