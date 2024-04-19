@@ -111,7 +111,6 @@ def test_install_requirements_file():
                 "-m",
                 "pip",
                 "install",
-                "--no-deps",
                 "-r",
                 "foo",
                 "--no-index",
