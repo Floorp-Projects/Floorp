@@ -1988,6 +1988,7 @@ main section {
   opacity: 0;
   overflow: hidden;
   position: absolute;
+  pointer-events: none;
 }
 
 .wallpapers-reset {
