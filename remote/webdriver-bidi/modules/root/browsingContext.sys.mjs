@@ -85,6 +85,7 @@ const CreateType = {
  * @enum {LocatorType}
  */
 export const LocatorType = {
+  accessibility: "accessibility",
   css: "css",
   innerText: "innerText",
   xpath: "xpath",
@@ -805,10 +806,30 @@ class BrowsingContextModule extends Module {
 
   /**
    * Used as an argument for browsingContext.locateNodes command, as one of the available variants
-   * {CssLocator}, {InnerTextLocator} or {XPathLocator}, to represent a way of how lookup of nodes
+   * {AccessibilityLocator}, {CssLocator}, {InnerTextLocator} or {XPathLocator}, to represent a way of how lookup of nodes
    * is going to be performed.
    *
    * @typedef Locator
+   */
+
+  /**
+   * Used as a value argument for browsingContext.locateNodes command
+   * in case of a lookup by accessibility attributes.
+   *
+   * @typedef AccessibilityLocatorValue
+   *
+   * @property {string=} name
+   * @property {string=} role
+   */
+
+  /**
+   * Used as an argument for browsingContext.locateNodes command
+   * to represent a lookup by accessibility attributes.
+   *
+   * @typedef AccessibilityLocator
+   *
+   * @property {LocatorType} [type=LocatorType.accessibility]
+   * @property {AccessibilityLocatorValue} value
    */
 
   /**
@@ -910,8 +931,32 @@ class BrowsingContextModule extends Module {
         `Expected "locator.value" of "locator.type" "${locator.type}" to be a string, got ${locator.value}`
       );
     }
+    if (locator.type == LocatorType.accessibility) {
+      lazy.assert.object(
+        locator.value,
+        `Expected "locator.value" of "locator.type" "${locator.type}" to be an object, got ${locator.value}`
+      );
 
-    if (![LocatorType.css, LocatorType.xpath].includes(locator.type)) {
+      const { name = null, role = null } = locator.value;
+      if (name !== null) {
+        lazy.assert.string(
+          locator.value.name,
+          `Expected "locator.value.name" of "locator.type" "${locator.type}" to be a string, got ${name}`
+        );
+      }
+      if (role !== null) {
+        lazy.assert.string(
+          locator.value.role,
+          `Expected "locator.value.role" of "locator.type" "${locator.type}" to be a string, got ${role}`
+        );
+      }
+    }
+
+    if (
+      ![LocatorType.accessibility, LocatorType.css, LocatorType.xpath].includes(
+        locator.type
+      )
+    ) {
       throw new lazy.error.UnsupportedOperationError(
         `"locator.type" argument with value: ${locator.type} is not supported yet.`
       );

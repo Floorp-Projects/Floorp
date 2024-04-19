@@ -7,6 +7,8 @@ import { WindowGlobalBiDiModule } from "chrome://remote/content/webdriver-bidi/m
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  accessibility:
+    "chrome://remote/content/shared/webdriver/Accessibility.sys.mjs",
   AnimationFramePromise: "chrome://remote/content/shared/Sync.sys.mjs",
   assert: "chrome://remote/content/shared/webdriver/Assert.sys.mjs",
   ClipRectangleType:
@@ -154,6 +156,86 @@ class BrowsingContextModule extends WindowGlobalBiDiModule {
       this.emitEvent("browsingContext.load", this.#getNavigationInfo(data));
     }
   };
+
+  /**
+   * Collect nodes using accessibility attributes.
+   *
+   * @see https://w3c.github.io/webdriver-bidi/#collect-nodes-using-accessibility-attributes
+   */
+  async #collectNodesUsingAccessibilityAttributes(
+    contextNodes,
+    selector,
+    maxReturnedNodeCount,
+    returnedNodes
+  ) {
+    if (returnedNodes === null) {
+      returnedNodes = [];
+    }
+
+    for (const contextNode of contextNodes) {
+      let match = true;
+
+      if ("role" in selector) {
+        const role = await lazy.accessibility.getComputedRole(contextNode);
+
+        if (selector.role !== role) {
+          match = false;
+        }
+      }
+
+      if ("name" in selector) {
+        const name = await lazy.accessibility.getAccessibleName(contextNode);
+        if (selector.name !== name) {
+          match = false;
+        }
+      }
+
+      if (match) {
+        if (
+          maxReturnedNodeCount !== null &&
+          returnedNodes.length === maxReturnedNodeCount
+        ) {
+          break;
+        }
+        returnedNodes.push(contextNode);
+      }
+
+      const childNodes = [...contextNode.children];
+
+      await this.#collectNodesUsingAccessibilityAttributes(
+        childNodes,
+        selector,
+        maxReturnedNodeCount,
+        returnedNodes
+      );
+    }
+
+    return returnedNodes;
+  }
+
+  /**
+   * Locate nodes using accessibility attributes.
+   *
+   * @see https://w3c.github.io/webdriver-bidi/#locate-nodes-using-accessibility-attributes
+   */
+  async #locateNodesUsingAccessibilityAttributes(
+    contextNodes,
+    selector,
+    maxReturnedNodeCount
+  ) {
+    if (!("role" in selector) && !("name" in selector)) {
+      throw new lazy.error.InvalidSelectorError(
+        "Locating nodes by accessibility attributes requires `role` or `name` arguments"
+      );
+    }
+
+    return this.#collectNodesUsingAccessibilityAttributes(
+      contextNodes,
+      selector,
+      maxReturnedNodeCount,
+      null
+    );
+  }
 
   /**
    * Locate nodes using css selector.
@@ -425,7 +507,7 @@ class BrowsingContextModule extends WindowGlobalBiDiModule {
     return this.#rectangleIntersection(originRect, clipRect);
   }
 
-  _locateNodes(params = {}) {
+  async _locateNodes(params = {}) {
     const { locator, maxNodeCount, serializationOptions, startNodes } = params;
 
     const realm = this.messageHandler.getRealm();
@@ -451,6 +533,14 @@ class BrowsingContextModule extends WindowGlobalBiDiModule {
 
     let returnedNodes;
     switch (locator.type) {
+      case lazy.LocatorType.accessibility: {
+        returnedNodes = await this.#locateNodesUsingAccessibilityAttributes(
+          contextNodes,
+          locator.value,
+          maxNodeCount
+        );
+        break;
+      }
       case lazy.LocatorType.css: {
         returnedNodes = this.#locateNodesUsingCss(
           contextNodes,

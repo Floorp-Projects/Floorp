@@ -157,6 +157,48 @@ accessibility.getAccessible = async function (element) {
 };
 
 /**
+ * Retrieve the accessible name for the provided element.
+ *
+ * @param {Element} element
+ *     The element for which we need to retrieve the accessible name.
+ *
+ * @returns {string}
+ *     The accessible name.
+ */
+accessibility.getAccessibleName = async function (element) {
+  const accessible = await accessibility.getAccessible(element);
+  if (!accessible) {
+    return "";
+  }
+
+  // If name is null (absent), expose the empty string.
+  if (accessible.name === null) {
+    return "";
+  }
+
+  return accessible.name;
+};
+
+/**
+ * Compute the role for the provided element.
+ *
+ * @param {Element} element
+ *     The element for which we need to compute the role.
+ *
+ * @returns {string}
+ *     The computed role.
+ */
+accessibility.getComputedRole = async function (element) {
+  const accessible = await accessibility.getAccessible(element);
+  if (!accessible) {
+    // If it's not in the a11y tree, it's probably presentational.
+    return "none";
+  }
+
+  return accessible.computedARIARole;
+};
+
+/**
  * Component responsible for interacting with platform accessibility
  * API.
  *
