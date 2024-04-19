@@ -69,13 +69,9 @@ cases.
 
 #![deny(missing_docs)]
 #![cfg_attr(not(feature = "std"), no_std)]
-// When testing under miri, we disable tests that take too long. But this
-// provokes lots of dead code warnings. So we just squash them.
-#![cfg_attr(miri, allow(dead_code, unused_macros))]
 
 use core::{
-    convert::TryInto, fmt::Debug, hash::Hash, mem::align_of,
-    ptr::copy_nonoverlapping, slice,
+    convert::TryInto, fmt::Debug, hash::Hash, ptr::copy_nonoverlapping, slice,
 };
 
 #[cfg(feature = "std")]
@@ -1206,7 +1202,6 @@ pub trait ByteOrder:
     #[inline]
     fn read_f32_into(src: &[u8], dst: &mut [f32]) {
         let dst = unsafe {
-            const _: () = assert!(align_of::<u32>() <= align_of::<f32>());
             slice::from_raw_parts_mut(dst.as_mut_ptr() as *mut u32, dst.len())
         };
         Self::read_u32_into(src, dst);
@@ -1268,7 +1263,6 @@ pub trait ByteOrder:
     #[inline]
     fn read_f64_into(src: &[u8], dst: &mut [f64]) {
         let dst = unsafe {
-            const _: () = assert!(align_of::<u64>() <= align_of::<f64>());
             slice::from_raw_parts_mut(dst.as_mut_ptr() as *mut u64, dst.len())
         };
         Self::read_u64_into(src, dst);
@@ -1901,36 +1895,74 @@ pub type NativeEndian = LittleEndian;
 #[cfg(target_endian = "big")]
 pub type NativeEndian = BigEndian;
 
-/// Copies a &[u8] $src into a &mut [$ty] $dst for the endianness given by
-/// $from_bytes (must be either from_be_bytes or from_le_bytes).
+/// Copies $size bytes from a number $n to a &mut [u8] $dst. $ty represents the
+/// numeric type of $n and $which must be either to_be or to_le, depending on
+/// which endianness one wants to use when writing to $dst.
 ///
-/// Panics if $src.len() != $dst.len() * size_of::<$ty>().
-macro_rules! read_slice {
-    ($src:expr, $dst:expr, $ty:ty, $from_bytes:ident) => {{
-        const SIZE: usize = core::mem::size_of::<$ty>();
-        // Check types:
-        let src: &[u8] = $src;
-        let dst: &mut [$ty] = $dst;
-        assert_eq!(src.len(), dst.len() * SIZE);
-        for (src, dst) in src.chunks_exact(SIZE).zip(dst.iter_mut()) {
-            *dst = <$ty>::$from_bytes(src.try_into().unwrap());
+/// This macro is only safe to call when $ty is a numeric type and $size ==
+/// size_of::<$ty>() and where $dst is a &mut [u8].
+macro_rules! unsafe_write_num_bytes {
+    ($ty:ty, $size:expr, $n:expr, $dst:expr, $which:ident) => {{
+        assert!($size <= $dst.len());
+        unsafe {
+            // N.B. https://github.com/rust-lang/rust/issues/22776
+            let bytes = *(&$n.$which() as *const _ as *const [u8; $size]);
+            copy_nonoverlapping((&bytes).as_ptr(), $dst.as_mut_ptr(), $size);
         }
     }};
 }
 
-/// Copies a &[$ty] $src into a &mut [u8] $dst for the endianness given by
-/// $from_bytes (must be either from_be_bytes or from_le_bytes).
+/// Copies a &[u8] $src into a &mut [<numeric>] $dst for the endianness given
+/// by $which (must be either to_be or to_le).
 ///
-/// Panics if $src.len() * size_of::<$ty>() != $dst.len().
+/// This macro is only safe to call when $src and $dst are &[u8] and &mut [u8],
+/// respectively. The macro will panic if $src.len() != $size * $dst.len(),
+/// where $size represents the size of the integers encoded in $src.
+macro_rules! unsafe_read_slice {
+    ($src:expr, $dst:expr, $size:expr, $which:ident) => {{
+        assert_eq!($src.len(), $size * $dst.len());
+
+        unsafe {
+            copy_nonoverlapping(
+                $src.as_ptr(),
+                $dst.as_mut_ptr() as *mut u8,
+                $src.len(),
+            );
+        }
+        for v in $dst.iter_mut() {
+            *v = v.$which();
+        }
+    }};
+}
+
+/// Copies a &[$ty] $src into a &mut [u8] $dst, where $ty must be a numeric
+/// type. This panics if size_of::<$ty>() * $src.len() != $dst.len().
+///
+/// This macro is only safe to call when $src is a slice of numeric types and
+/// $dst is a &mut [u8] and where $ty represents the type of the integers in
+/// $src.
+macro_rules! unsafe_write_slice_native {
+    ($src:expr, $dst:expr, $ty:ty) => {{
+        let size = core::mem::size_of::<$ty>();
+        assert_eq!(size * $src.len(), $dst.len());
+
+        unsafe {
+            copy_nonoverlapping(
+                $src.as_ptr() as *const u8,
+                $dst.as_mut_ptr(),
+                $dst.len(),
+            );
+        }
+    }};
+}
+
 macro_rules! write_slice {
-    ($src:expr, $dst:expr, $ty:ty, $to_bytes:ident) => {{
-        const SIZE: usize = core::mem::size_of::<$ty>();
-        // Check types:
-        let src: &[$ty] = $src;
-        let dst: &mut [u8] = $dst;
-        assert_eq!(src.len() * SIZE, dst.len());
-        for (src, dst) in src.iter().zip(dst.chunks_exact_mut(SIZE)) {
-            dst.copy_from_slice(&src.$to_bytes());
+    ($src:expr, $dst:expr, $ty:ty, $size:expr, $write:expr) => {{
+        assert!($size == ::core::mem::size_of::<$ty>());
+        assert_eq!($size * $src.len(), $dst.len());
+
+        for (&n, chunk) in $src.iter().zip($dst.chunks_mut($size)) {
+            $write(chunk, n);
         }
     }};
 }
@@ -1958,40 +1990,52 @@ impl ByteOrder for BigEndian {
 
     #[inline]
     fn read_uint(buf: &[u8], nbytes: usize) -> u64 {
-        let mut out = [0; 8];
-        assert!(1 <= nbytes && nbytes <= out.len() && nbytes <= buf.len());
-        let start = out.len() - nbytes;
-        out[start..].copy_from_slice(&buf[..nbytes]);
-        u64::from_be_bytes(out)
+        assert!(1 <= nbytes && nbytes <= 8 && nbytes <= buf.len());
+        let mut out = 0u64;
+        let ptr_out = &mut out as *mut u64 as *mut u8;
+        unsafe {
+            copy_nonoverlapping(
+                buf.as_ptr(),
+                ptr_out.offset((8 - nbytes) as isize),
+                nbytes,
+            );
+        }
+        out.to_be()
     }
 
     #[inline]
     fn read_uint128(buf: &[u8], nbytes: usize) -> u128 {
-        let mut out = [0; 16];
-        assert!(1 <= nbytes && nbytes <= out.len() && nbytes <= buf.len());
-        let start = out.len() - nbytes;
-        out[start..].copy_from_slice(&buf[..nbytes]);
-        u128::from_be_bytes(out)
+        assert!(1 <= nbytes && nbytes <= 16 && nbytes <= buf.len());
+        let mut out: u128 = 0;
+        let ptr_out = &mut out as *mut u128 as *mut u8;
+        unsafe {
+            copy_nonoverlapping(
+                buf.as_ptr(),
+                ptr_out.offset((16 - nbytes) as isize),
+                nbytes,
+            );
+        }
+        out.to_be()
     }
 
     #[inline]
     fn write_u16(buf: &mut [u8], n: u16) {
-        buf[..2].copy_from_slice(&n.to_be_bytes());
+        unsafe_write_num_bytes!(u16, 2, n, buf, to_be);
     }
 
     #[inline]
     fn write_u32(buf: &mut [u8], n: u32) {
-        buf[..4].copy_from_slice(&n.to_be_bytes());
+        unsafe_write_num_bytes!(u32, 4, n, buf, to_be);
     }
 
     #[inline]
     fn write_u64(buf: &mut [u8], n: u64) {
-        buf[..8].copy_from_slice(&n.to_be_bytes());
+        unsafe_write_num_bytes!(u64, 8, n, buf, to_be);
     }
 
     #[inline]
     fn write_u128(buf: &mut [u8], n: u128) {
-        buf[..16].copy_from_slice(&n.to_be_bytes());
+        unsafe_write_num_bytes!(u128, 16, n, buf, to_be);
     }
 
     #[inline]
@@ -2024,42 +2068,58 @@ impl ByteOrder for BigEndian {
 
     #[inline]
     fn read_u16_into(src: &[u8], dst: &mut [u16]) {
-        read_slice!(src, dst, u16, from_be_bytes);
+        unsafe_read_slice!(src, dst, 2, to_be);
     }
 
     #[inline]
     fn read_u32_into(src: &[u8], dst: &mut [u32]) {
-        read_slice!(src, dst, u32, from_be_bytes);
+        unsafe_read_slice!(src, dst, 4, to_be);
     }
 
     #[inline]
     fn read_u64_into(src: &[u8], dst: &mut [u64]) {
-        read_slice!(src, dst, u64, from_be_bytes);
+        unsafe_read_slice!(src, dst, 8, to_be);
     }
 
     #[inline]
     fn read_u128_into(src: &[u8], dst: &mut [u128]) {
-        read_slice!(src, dst, u128, from_be_bytes);
+        unsafe_read_slice!(src, dst, 16, to_be);
     }
 
     #[inline]
     fn write_u16_into(src: &[u16], dst: &mut [u8]) {
-        write_slice!(src, dst, u16, to_be_bytes);
+        if cfg!(target_endian = "big") {
+            unsafe_write_slice_native!(src, dst, u16);
+        } else {
+            write_slice!(src, dst, u16, 2, Self::write_u16);
+        }
     }
 
     #[inline]
     fn write_u32_into(src: &[u32], dst: &mut [u8]) {
-        write_slice!(src, dst, u32, to_be_bytes);
+        if cfg!(target_endian = "big") {
+            unsafe_write_slice_native!(src, dst, u32);
+        } else {
+            write_slice!(src, dst, u32, 4, Self::write_u32);
+        }
     }
 
     #[inline]
     fn write_u64_into(src: &[u64], dst: &mut [u8]) {
-        write_slice!(src, dst, u64, to_be_bytes);
+        if cfg!(target_endian = "big") {
+            unsafe_write_slice_native!(src, dst, u64);
+        } else {
+            write_slice!(src, dst, u64, 8, Self::write_u64);
+        }
     }
 
     #[inline]
     fn write_u128_into(src: &[u128], dst: &mut [u8]) {
-        write_slice!(src, dst, u128, to_be_bytes);
+        if cfg!(target_endian = "big") {
+            unsafe_write_slice_native!(src, dst, u128);
+        } else {
+            write_slice!(src, dst, u128, 16, Self::write_u128);
+        }
     }
 
     #[inline]
@@ -2146,38 +2206,44 @@ impl ByteOrder for LittleEndian {
 
     #[inline]
     fn read_uint(buf: &[u8], nbytes: usize) -> u64 {
-        let mut out = [0; 8];
-        assert!(1 <= nbytes && nbytes <= out.len() && nbytes <= buf.len());
-        out[..nbytes].copy_from_slice(&buf[..nbytes]);
-        u64::from_le_bytes(out)
+        assert!(1 <= nbytes && nbytes <= 8 && nbytes <= buf.len());
+        let mut out = 0u64;
+        let ptr_out = &mut out as *mut u64 as *mut u8;
+        unsafe {
+            copy_nonoverlapping(buf.as_ptr(), ptr_out, nbytes);
+        }
+        out.to_le()
     }
 
     #[inline]
     fn read_uint128(buf: &[u8], nbytes: usize) -> u128 {
-        let mut out = [0; 16];
-        assert!(1 <= nbytes && nbytes <= out.len() && nbytes <= buf.len());
-        out[..nbytes].copy_from_slice(&buf[..nbytes]);
-        u128::from_le_bytes(out)
+        assert!(1 <= nbytes && nbytes <= 16 && nbytes <= buf.len());
+        let mut out: u128 = 0;
+        let ptr_out = &mut out as *mut u128 as *mut u8;
+        unsafe {
+            copy_nonoverlapping(buf.as_ptr(), ptr_out, nbytes);
+        }
+        out.to_le()
     }
 
     #[inline]
     fn write_u16(buf: &mut [u8], n: u16) {
-        buf[..2].copy_from_slice(&n.to_le_bytes());
+        unsafe_write_num_bytes!(u16, 2, n, buf, to_le);
     }
 
     #[inline]
     fn write_u32(buf: &mut [u8], n: u32) {
-        buf[..4].copy_from_slice(&n.to_le_bytes());
+        unsafe_write_num_bytes!(u32, 4, n, buf, to_le);
     }
 
     #[inline]
     fn write_u64(buf: &mut [u8], n: u64) {
-        buf[..8].copy_from_slice(&n.to_le_bytes());
+        unsafe_write_num_bytes!(u64, 8, n, buf, to_le);
     }
 
     #[inline]
     fn write_u128(buf: &mut [u8], n: u128) {
-        buf[..16].copy_from_slice(&n.to_le_bytes());
+        unsafe_write_num_bytes!(u128, 16, n, buf, to_le);
     }
 
     #[inline]
@@ -2202,42 +2268,58 @@ impl ByteOrder for LittleEndian {
 
     #[inline]
     fn read_u16_into(src: &[u8], dst: &mut [u16]) {
-        read_slice!(src, dst, u16, from_le_bytes);
+        unsafe_read_slice!(src, dst, 2, to_le);
     }
 
     #[inline]
     fn read_u32_into(src: &[u8], dst: &mut [u32]) {
-        read_slice!(src, dst, u32, from_le_bytes);
+        unsafe_read_slice!(src, dst, 4, to_le);
     }
 
     #[inline]
     fn read_u64_into(src: &[u8], dst: &mut [u64]) {
-        read_slice!(src, dst, u64, from_le_bytes);
+        unsafe_read_slice!(src, dst, 8, to_le);
     }
 
     #[inline]
     fn read_u128_into(src: &[u8], dst: &mut [u128]) {
-        read_slice!(src, dst, u128, from_le_bytes);
+        unsafe_read_slice!(src, dst, 16, to_le);
     }
 
     #[inline]
     fn write_u16_into(src: &[u16], dst: &mut [u8]) {
-        write_slice!(src, dst, u16, to_le_bytes);
+        if cfg!(target_endian = "little") {
+            unsafe_write_slice_native!(src, dst, u16);
+        } else {
+            write_slice!(src, dst, u16, 2, Self::write_u16);
+        }
     }
 
     #[inline]
     fn write_u32_into(src: &[u32], dst: &mut [u8]) {
-        write_slice!(src, dst, u32, to_le_bytes);
+        if cfg!(target_endian = "little") {
+            unsafe_write_slice_native!(src, dst, u32);
+        } else {
+            write_slice!(src, dst, u32, 4, Self::write_u32);
+        }
     }
 
     #[inline]
     fn write_u64_into(src: &[u64], dst: &mut [u8]) {
-        write_slice!(src, dst, u64, to_le_bytes);
+        if cfg!(target_endian = "little") {
+            unsafe_write_slice_native!(src, dst, u64);
+        } else {
+            write_slice!(src, dst, u64, 8, Self::write_u64);
+        }
     }
 
     #[inline]
     fn write_u128_into(src: &[u128], dst: &mut [u8]) {
-        write_slice!(src, dst, u128, to_le_bytes);
+        if cfg!(target_endian = "little") {
+            unsafe_write_slice_native!(src, dst, u128);
+        } else {
+            write_slice!(src, dst, u128, 16, Self::write_u128);
+        }
     }
 
     #[inline]
@@ -2367,7 +2449,6 @@ mod test {
     macro_rules! qc_byte_order {
         ($name:ident, $ty_int:ty, $max:expr,
          $bytes:expr, $read:ident, $write:ident) => {
-            #[cfg(not(miri))]
             mod $name {
                 #[allow(unused_imports)]
                 use super::{qc_sized, Wi128};
@@ -2408,7 +2489,6 @@ mod test {
         };
         ($name:ident, $ty_int:ty, $max:expr,
          $read:ident, $write:ident) => {
-            #[cfg(not(miri))]
             mod $name {
                 #[allow(unused_imports)]
                 use super::{qc_sized, Wi128};
@@ -3325,7 +3405,6 @@ mod stdtests {
     macro_rules! qc_bytes_ext {
         ($name:ident, $ty_int:ty, $max:expr,
          $bytes:expr, $read:ident, $write:ident) => {
-            #[cfg(not(miri))]
             mod $name {
                 #[allow(unused_imports)]
                 use crate::test::{qc_sized, Wi128};
@@ -3376,7 +3455,6 @@ mod stdtests {
             }
         };
         ($name:ident, $ty_int:ty, $max:expr, $read:ident, $write:ident) => {
-            #[cfg(not(miri))]
             mod $name {
                 #[allow(unused_imports)]
                 use crate::test::{qc_sized, Wi128};
@@ -3873,7 +3951,6 @@ mod stdtests {
     // Test slice serialization/deserialization.
     macro_rules! qc_slice {
         ($name:ident, $ty_int:ty, $read:ident, $write:ident, $zero:expr) => {
-            #[cfg(not(miri))]
             mod $name {
                 use super::qc_unsized;
                 #[allow(unused_imports)]

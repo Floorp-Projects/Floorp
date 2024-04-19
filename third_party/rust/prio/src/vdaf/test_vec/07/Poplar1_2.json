@@ -1,0 +1,64 @@
+{
+    "agg_param": [
+        2,
+        [
+            0,
+            2,
+            4,
+            6
+        ]
+    ],
+    "agg_result": [
+        0,
+        0,
+        0,
+        1
+    ],
+    "agg_shares": [
+        "7ea47022f22f6be9bce8e0ee2eb522bcbc2d246c17704beed7043426b646fe26",
+        "835b8fdd0cd0941645171f11d04add4345d2db93e78fb4112bfbcbd948b901d9"
+    ],
+    "bits": 4,
+    "prep": [
+        {
+            "input_shares": [
+                "000102030405060708090a0b0c0d0e0f202122232425262728292a2b2c2d2e2f311e448ab125690bc3a084a34301982c6aa325ab3f268338c9f4db9bda518743ee75c6c8ef7655d2d167d5385213d3bd1be920fad83c1b35fd9239efb406370db4d0a8e97eb41413957e264ded24e074ca433b6b5d451d0f65ec1d4ac246a36da12ecb2a537a449aeeb9d70bd064e930",
+                "101112131415161718191a1b1c1d1e1f303132333435363738393a3b3c3d3e3f96998a1415c9876c2887f2dcc52f090ec64bcaeb3165e98f47d261a0bed49a156c054b063cad6277a526505ac31807288abfb796b6cee614e5c41ab75c2b9912cc246c66c5e248a7cfc30ad92eefec7e67c2da39726d5b7277eb1449c779f834b0ab75f383f07bd2f3747cb7b98f617c"
+            ],
+            "measurement": 13,
+            "nonce": "000102030405060708090a0b0c0d0e0f",
+            "out_shares": [
+                [
+                    "7ea47022f22f6be9",
+                    "bce8e0ee2eb522bc",
+                    "bc2d246c17704bee",
+                    "d7043426b646fe26"
+                ],
+                [
+                    "835b8fdd0cd09416",
+                    "45171f11d04add43",
+                    "45d2db93e78fb411",
+                    "2bfbcbd948b901d9"
+                ]
+            ],
+            "prep_messages": [
+                "6fb240ce8b8a2a8ce62112240f676105e0398515599f04b4",
+                ""
+            ],
+            "prep_shares": [
+                [
+                    "ca0f02c7c61655263bf76d954b8abd16eb6e5ce2b26911b2",
+                    "a5a23e07c573d565ac2aa48ec2dca3eef5ca2833a635f301"
+                ],
+                [
+                    "f5171a3cc9d49422",
+                    "0ce8e5c3352b6bdd"
+                ]
+            ],
+            "public_share": "b2c16aa5676c3188a74dff403c179dfb28c515d5a9892f38e5eb7be1c96bfdb0ebf761e6500e206a4ce363d09ab0a1d9b225e51798fd599f9dcd204058958c2d625646e5662534ff6650a9af834a248d46304f6d7a3b845f46c71433c833a86846147e264aaee1eb3e0bb19e53cd521e92ab9991265b731bfdb508fb164cd9d48d2c43953e7144a8b97e395bdd8aa2db7a1088f3bf8d245e15172e88764bba8271f6a19f70dc47a279e899394ea8658958",
+            "rand": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f"
+        }
+    ],
+    "shares": 2,
+    "verify_key": "000102030405060708090a0b0c0d0e0f"
+}

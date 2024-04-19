@@ -6,9 +6,10 @@
 //! NOTE: The public API for this module is a work in progress.
 
 use crate::field::{FieldElement, FieldElementExt};
-#[cfg(all(feature = "crypto-dependencies", feature = "experimental"))]
+#[cfg(feature = "crypto-dependencies")]
 use crate::vdaf::xof::SeedStreamAes128;
-use crate::vdaf::xof::{Seed, SeedStreamTurboShake128, Xof, XofTurboShake128};
+#[cfg(feature = "crypto-dependencies")]
+use getrandom::getrandom;
 use rand_core::RngCore;
 
 use std::marker::PhantomData;
@@ -18,7 +19,6 @@ const BUFFER_SIZE_IN_ELEMENTS: usize = 32;
 
 /// Errors propagated by methods in this module.
 #[derive(Debug, thiserror::Error)]
-#[non_exhaustive]
 pub enum PrngError {
     /// Failure when calling getrandom().
     #[error("getrandom: {0}")]
@@ -35,7 +35,7 @@ pub(crate) struct Prng<F, S> {
     buffer_index: usize,
 }
 
-#[cfg(all(feature = "crypto-dependencies", feature = "experimental"))]
+#[cfg(feature = "crypto-dependencies")]
 impl<F: FieldElement> Prng<F, SeedStreamAes128> {
     /// Create a [`Prng`] from a seed for Prio 2. The first 16 bytes of the seed and the last 16
     /// bytes of the seed are used, respectively, for the key and initialization vector for AES128
@@ -44,17 +44,12 @@ impl<F: FieldElement> Prng<F, SeedStreamAes128> {
         let seed_stream = SeedStreamAes128::new(&seed[..16], &seed[16..]);
         Self::from_seed_stream(seed_stream)
     }
-}
 
-impl<F: FieldElement> Prng<F, SeedStreamTurboShake128> {
     /// Create a [`Prng`] from a randomly generated seed.
     pub(crate) fn new() -> Result<Self, PrngError> {
-        let seed = Seed::generate()?;
-        Ok(Prng::from_seed_stream(XofTurboShake128::seed_stream(
-            &seed,
-            &[],
-            &[],
-        )))
+        let mut seed = [0; 32];
+        getrandom(&mut seed)?;
+        Ok(Self::from_prio2_seed(&seed))
     }
 }
 
@@ -130,20 +125,18 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    #[cfg(feature = "experimental")]
-    use crate::field::{encode_fieldvec, Field128, FieldPrio2};
     use crate::{
         codec::Decode,
-        field::Field64,
-        vdaf::xof::{Seed, SeedStreamTurboShake128, Xof, XofTurboShake128},
+        field::{Field64, FieldPrio2},
+        vdaf::xof::{Seed, SeedStreamSha3, Xof, XofShake128},
     };
-    #[cfg(feature = "experimental")]
+    #[cfg(feature = "prio2")]
     use base64::{engine::Engine, prelude::BASE64_STANDARD};
-    #[cfg(feature = "experimental")]
+    #[cfg(feature = "prio2")]
     use sha2::{Digest, Sha256};
+    use std::convert::TryInto;
 
     #[test]
-    #[cfg(feature = "experimental")]
     fn secret_sharing_interop() {
         let seed = [
             0xcd, 0x85, 0x5b, 0xd4, 0x86, 0x48, 0xa4, 0xce, 0x52, 0x5c, 0x36, 0xee, 0x5a, 0x71,
@@ -165,22 +158,21 @@ mod tests {
     }
 
     /// takes a seed and hash as base64 encoded strings
-    #[cfg(feature = "experimental")]
+    #[cfg(feature = "prio2")]
     fn random_data_interop(seed_base64: &str, hash_base64: &str, len: usize) {
         let seed = BASE64_STANDARD.decode(seed_base64).unwrap();
         let random_data = extract_share_from_seed::<FieldPrio2>(len, &seed);
 
-        let mut random_bytes = Vec::new();
-        encode_fieldvec(&random_data, &mut random_bytes).unwrap();
+        let random_bytes = FieldPrio2::slice_into_byte_vec(&random_data);
 
-        let mut hasher = <Sha256 as Digest>::new();
+        let mut hasher = Sha256::new();
         hasher.update(&random_bytes);
         let digest = hasher.finalize();
         assert_eq!(BASE64_STANDARD.encode(digest), hash_base64);
     }
 
     #[test]
-    #[cfg(feature = "experimental")]
+    #[cfg(feature = "prio2")]
     fn test_hash_interop() {
         random_data_interop(
             "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
@@ -214,7 +206,6 @@ mod tests {
         );
     }
 
-    #[cfg(feature = "experimental")]
     fn extract_share_from_seed<F: FieldElement>(length: usize, seed: &[u8]) -> Vec<F> {
         assert_eq!(seed.len(), 32);
         Prng::from_prio2_seed(seed.try_into().unwrap())
@@ -227,22 +218,22 @@ mod tests {
         // These constants were found in a brute-force search, and they test that the XOF performs
         // rejection sampling correctly when the raw output exceeds the prime modulus.
         let seed = Seed::get_decoded(&[
-            0xd5, 0x3f, 0xff, 0x5d, 0x88, 0x8c, 0x60, 0x4e, 0x9f, 0x24, 0x16, 0xe1, 0xa2, 0x0a,
-            0x62, 0x34,
+            0x29, 0xb2, 0x98, 0x64, 0xb4, 0xaa, 0x4e, 0x07, 0x2a, 0x44, 0x49, 0x24, 0xf6, 0x74,
+            0x0a, 0x3d,
         ])
         .unwrap();
-        let expected = Field64::from(3401316594827516850);
+        let expected = Field64::from(2035552711764301796);
 
-        let seed_stream = XofTurboShake128::seed_stream(&seed, b"", b"");
+        let seed_stream = XofShake128::seed_stream(&seed, b"", b"");
         let mut prng = Prng::<Field64, _>::from_seed_stream(seed_stream);
-        let actual = prng.nth(662).unwrap();
+        let actual = prng.nth(33236).unwrap();
         assert_eq!(actual, expected);
 
         #[cfg(all(feature = "crypto-dependencies", feature = "experimental"))]
         {
-            let mut seed_stream = XofTurboShake128::seed_stream(&seed, b"", b"");
+            let mut seed_stream = XofShake128::seed_stream(&seed, b"", b"");
             let mut actual = <Field64 as FieldElement>::zero();
-            for _ in 0..=662 {
+            for _ in 0..=33236 {
                 actual = <Field64 as crate::idpf::IdpfValue>::generate(&mut seed_stream, &());
             }
             assert_eq!(actual, expected);
@@ -255,12 +246,12 @@ mod tests {
     fn left_over_buffer_back_fill() {
         let seed = Seed::generate().unwrap();
 
-        let mut prng: Prng<Field64, SeedStreamTurboShake128> =
-            Prng::from_seed_stream(XofTurboShake128::seed_stream(&seed, b"", b""));
+        let mut prng: Prng<Field64, SeedStreamSha3> =
+            Prng::from_seed_stream(XofShake128::seed_stream(&seed, b"", b""));
 
         // Construct a `Prng` with a longer-than-usual buffer.
-        let mut prng_weird_buffer_size: Prng<Field64, SeedStreamTurboShake128> =
-            Prng::from_seed_stream(XofTurboShake128::seed_stream(&seed, b"", b""));
+        let mut prng_weird_buffer_size: Prng<Field64, SeedStreamSha3> =
+            Prng::from_seed_stream(XofShake128::seed_stream(&seed, b"", b""));
         let mut extra = [0; 7];
         prng_weird_buffer_size.seed_stream.fill_bytes(&mut extra);
         prng_weird_buffer_size.buffer.extend_from_slice(&extra);
@@ -274,13 +265,13 @@ mod tests {
 
     #[cfg(feature = "experimental")]
     #[test]
-    fn into_different_field() {
+    fn into_new_field() {
         let seed = Seed::generate().unwrap();
-        let want: Prng<Field64, SeedStreamTurboShake128> =
-            Prng::from_seed_stream(XofTurboShake128::seed_stream(&seed, b"", b""));
+        let want: Prng<Field64, SeedStreamSha3> =
+            Prng::from_seed_stream(XofShake128::seed_stream(&seed, b"", b""));
         let want_buffer = want.buffer.clone();
 
-        let got: Prng<Field128, _> = want.into_new_field();
+        let got: Prng<FieldPrio2, _> = want.into_new_field();
         assert_eq!(got.buffer_index, 0);
         assert_eq!(got.buffer, want_buffer);
     }

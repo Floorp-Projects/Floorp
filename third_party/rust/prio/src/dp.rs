@@ -20,7 +20,6 @@ use serde::{Deserialize, Serialize};
 
 /// Errors propagated by methods in this module.
 #[derive(Debug, thiserror::Error)]
-#[non_exhaustive]
 pub enum DpError {
     /// Tried to use an invalid float as privacy parameter.
     #[error(
