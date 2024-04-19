@@ -109,6 +109,13 @@ var SelectTranslationsPanel = new (class {
   #lazyElements;
 
   /**
+   * Set to true the first time event listeners are initialized.
+   *
+   * @type {boolean}
+   */
+  #eventListenersInitialized = false;
+
+  /**
    * The internal state of the SelectTranslationsPanel.
    *
    * @type {SelectTranslationsPanelState}
@@ -310,6 +317,30 @@ var SelectTranslationsPanel = new (class {
   }
 
   /**
+   * Initializes event listeners on the panel class the first time
+   * this function is called, and is a no-op on subsequent calls.
+   */
+  #initializeEventListeners() {
+    if (this.#eventListenersInitialized) {
+      // Event listeners have already been initialized, do nothing.
+      return;
+    }
+
+    const { panel, fromMenuList, toMenuList, tryAnotherSourceMenuList } =
+      this.elements;
+
+    panel.addEventListener("popupshown", this);
+    panel.addEventListener("popuphidden", this);
+
+    panel.addEventListener("command", this);
+    fromMenuList.addEventListener("command", this);
+    toMenuList.addEventListener("command", this);
+    tryAnotherSourceMenuList.addEventListener("command", this);
+
+    this.#eventListenersInitialized = true;
+  }
+
+  /**
    * Opens the panel, ensuring the panel's UI and state are initialized correctly.
    *
    * @param {Event} event - The triggering event for opening the panel.
@@ -325,12 +356,13 @@ var SelectTranslationsPanel = new (class {
       return;
     }
 
-    this.#registerSourceText(sourceText, langPairPromise);
+    this.#initializeEventListeners();
     await this.#ensureLangListsBuilt();
 
     await Promise.all([
       this.#cachePlaceholderText(),
       this.#initializeLanguageMenuLists(langPairPromise),
+      this.#registerSourceText(sourceText, langPairPromise),
     ]);
 
     this.#maybeRequestTranslation();
@@ -403,14 +435,57 @@ var SelectTranslationsPanel = new (class {
   }
 
   /**
+   * Handles events when a command event is triggered within the panel.
+   *
+   * @param {Element} target - The event target
+   */
+  #handleCommandEvent(target) {
+    const {
+      doneButton,
+      fromMenuList,
+      fromMenuPopup,
+      toMenuList,
+      toMenuPopup,
+      translateButton,
+      tryAnotherSourceMenuList,
+      tryAnotherSourceMenuPopup,
+    } = this.elements;
+    switch (target.id) {
+      case doneButton.id: {
+        this.close();
+        break;
+      }
+      case fromMenuList.id:
+      case fromMenuPopup.id: {
+        this.onChangeFromLanguage();
+        break;
+      }
+      case toMenuList.id:
+      case toMenuPopup.id: {
+        this.onChangeToLanguage();
+        break;
+      }
+      case translateButton.id: {
+        this.onClickTranslateButton();
+        break;
+      }
+      case tryAnotherSourceMenuList.id:
+      case tryAnotherSourceMenuPopup.id: {
+        this.onChangeTryAnotherSourceLanguage();
+        break;
+      }
+    }
+  }
+
+  /**
    * Handles events when a popup is shown within the panel, including showing
    * the panel itself.
    *
-   * @param {Event} event - The event that triggered the popup to show.
+   * @param {Element} target - The event target
    */
-  handlePanelPopupShownEvent(event) {
+  #handlePopupShownEvent(target) {
     const { panel, fromMenuPopup, toMenuPopup } = this.elements;
-    switch (event.target.id) {
+    switch (target.id) {
       case panel.id: {
         this.#updatePanelUIFromState();
         break;
@@ -430,13 +505,43 @@ var SelectTranslationsPanel = new (class {
    * Handles events when a popup is closed within the panel, including closing
    * the panel itself.
    *
-   * @param {Event} event - The event that triggered the popup to close.
+   * @param {Element} target - The event target
    */
-  handlePanelPopupHiddenEvent(event) {
+  #handlePopupHiddenEvent(target) {
     const { panel } = this.elements;
-    switch (event.target.id) {
+    switch (target.id) {
       case panel.id: {
         this.#changeStateToClosed();
+        break;
+      }
+    }
+  }
+
+  /**
+   * Handles events in the SelectTranslationsPanel.
+   *
+   * @param {Event} event - The event to handle.
+   */
+  handleEvent(event) {
+    let target = event.target;
+
+    // If a menuitem within a menulist is the target, those don't have ids,
+    // so we want to traverse until we get to a parent element with an id.
+    while (!target.id && target.parentElement) {
+      target = target.parentElement;
+    }
+
+    switch (event.type) {
+      case "command": {
+        this.#handleCommandEvent(target);
+        break;
+      }
+      case "popupshown": {
+        this.#handlePopupShownEvent(target);
+        break;
+      }
+      case "popuphidden": {
+        this.#handlePopupHiddenEvent(target);
         break;
       }
     }

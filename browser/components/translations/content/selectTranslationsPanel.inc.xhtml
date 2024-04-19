@@ -9,9 +9,7 @@
          role="alertdialog"
          noautofocus="true"
          aria-labelledby="translations-panel-header"
-         orient="vertical"
-         onpopupshown="SelectTranslationsPanel.handlePanelPopupShownEvent(event)"
-         onpopuphidden="SelectTranslationsPanel.handlePanelPopupHiddenEvent(event)">
+         orient="vertical">
     <hbox class="panel-header select-translations-panel-header">
       <html:h1 class="translations-panel-header-wrapper">
         <html:span id="select-translations-panel-header" data-l10n-id="select-translations-panel-header">
@@ -43,8 +41,7 @@
                   size="large"
                   data-l10n-id="translations-panel-choose-language"
                   aria-labelledby="select-translations-panel-try-another-language-label"
-                  noinitialselection="true"
-                  oncommand="SelectTranslationsPanel.onChangeTryAnotherSourceLanguage(event)">
+                  noinitialselection="true">
           <menupopup id="select-translations-panel-try-another-language-menupopup"
                      class="translations-panel-language-menupopup-from">
             <!-- The list of <menuitem> will be dynamically inserted. -->
@@ -66,10 +63,8 @@
                       size="large"
                       data-l10n-id="translations-panel-choose-language"
                       aria-labelledby="select-translations-panel-from-label"
-                      noinitialselection="true"
-                      oncommand="SelectTranslationsPanel.onChangeFromLanguage(event)">
+                      noinitialselection="true">
               <menupopup id="select-translations-panel-from-menupopup"
-                         onpopupshown="SelectTranslationsPanel.handlePanelPopupShownEvent(event)"
                          class="translations-panel-language-menupopup-from">
                 <!-- The list of <menuitem> will be dynamically inserted. -->
               </menupopup>
@@ -86,10 +81,8 @@
                       size="large"
                       data-l10n-id="translations-panel-choose-language"
                       aria-labelledby="select-translations-panel-to-label"
-                      noinitialselection="true"
-                      oncommand="SelectTranslationsPanel.onChangeToLanguage(event)">
+                      noinitialselection="true">
               <menupopup id="select-translations-panel-to-menupopup"
-                         onpopupshown="SelectTranslationsPanel.handlePanelPopupShownEvent(event)"
                          class="translations-panel-language-menupopup-to">
                 <!-- The list of <menuitem> will be dynamically inserted. -->
               </menupopup>
@@ -120,16 +113,14 @@
       <button id="select-translations-panel-done-button"
               class="footer-button select-translations-panel-button"
               data-l10n-id="select-translations-panel-done-button"
-              default="true"
-              oncommand = "SelectTranslationsPanel.close()">
+              default="true">
       </button>
       <button id="select-translations-panel-translate-button"
               class="footer-button select-translations-panel-button"
               data-l10n-id="select-translations-panel-translate-button"
               hidden="true"
               default="true"
-              disabled="true"
-              oncommand = "SelectTranslationsPanel.onClickTranslateButton()">
+              disabled="true">
       </button>
     </html:moz-button-group>
   </panel>
