@@ -62,6 +62,7 @@ VideoCaptureModuleV4L2::VideoCaptureModuleV4L2()
       _deviceId(-1),
       _deviceFd(-1),
       _buffersAllocatedByDevice(-1),
+      _streaming(false),
       _captureStarted(false),
       _pool(NULL) {}
 
