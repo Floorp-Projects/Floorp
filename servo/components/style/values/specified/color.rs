@@ -7,9 +7,7 @@
 use super::AllowQuirks;
 use crate::color::component::ColorComponent;
 use crate::color::convert::normalize_hue;
-use crate::color::parsing::{
-    self, ColorParser, FromParsedColor, NumberOrAngle, NumberOrPercentage,
-};
+use crate::color::parsing::{self, FromParsedColor, NumberOrAngle, NumberOrPercentage};
 use crate::color::{mix::ColorInterpolationMethod, AbsoluteColor, ColorSpace};
 use crate::media_queries::Device;
 use crate::parser::{Parse, ParserContext};
@@ -658,8 +656,7 @@ impl Color {
             },
         };
 
-        let color_parser = ColorParser::new(&context);
-        match input.try_parse(|i| parsing::parse_color_with(&color_parser, i)) {
+        match input.try_parse(|i| parsing::parse_color_with(context, i)) {
             Ok(mut color) => {
                 if let Color::Absolute(ref mut absolute) = color {
                     // Because we can't set the `authored` value at construction time, we have to set it
