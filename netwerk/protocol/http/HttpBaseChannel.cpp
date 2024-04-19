@@ -2298,6 +2298,19 @@ HttpBaseChannel::UpgradeToSecure() {
 }
 
 NS_IMETHODIMP
+HttpBaseChannel::GetRequestObserversCalled(bool* aCalled) {
+  NS_ENSURE_ARG_POINTER(aCalled);
+  *aCalled = LoadRequestObserversCalled();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::SetRequestObserversCalled(bool aCalled) {
+  StoreRequestObserversCalled(aCalled);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 HttpBaseChannel::GetRequestContextID(uint64_t* aRCID) {
   NS_ENSURE_ARG_POINTER(aRCID);
   *aRCID = mRequestContextID;
