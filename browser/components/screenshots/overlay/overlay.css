@@ -107,7 +107,7 @@
   border-color: #fff;
   color: #fff;
 
-  @media (prefers-contrast) {
+  @media (forced-colors) {
     background-color: var(--in-content-button-background);
     color: var(--in-content-button-text-color);
     border-color: var(--in-content-button-border-color);
@@ -118,7 +118,7 @@
   background-color: #fff;
   color: #000;
 
-  @media (prefers-contrast) {
+  @media (forced-colors) {
     background-color: var(--in-content-button-background-hover);
     color: var(--in-content-button-text-color-hover);
     border-color: var(--in-content-button-border-color-hover);
@@ -154,7 +154,7 @@
   width: 64px;
   height: 64px;
 
-  @media (prefers-contrast) {
+  @media (forced-colors) {
     display: none;
   }
 }
@@ -208,7 +208,7 @@
   padding: 20px;
   width: 400px;
 
-  @media (prefers-contrast) {
+  @media (forced-colors) {
     color: CanvasText;
     background-color: Canvas;
   }
@@ -351,7 +351,7 @@
   width: 16px;
   pointer-events: none;
 
-  @media (prefers-contrast) {
+  @media (forced-colors) {
     background-color: ButtonText;
   }
 }
