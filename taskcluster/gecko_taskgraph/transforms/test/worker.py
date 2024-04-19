@@ -7,8 +7,10 @@ from taskgraph.transforms.base import TransformSequence
 # default worker types keyed by instance-size
 LINUX_WORKER_TYPES = {
     "large": "t-linux-large",
+    "large-noscratch": "t-linux-large-noscratch",
     "xlarge": "t-linux-xlarge",
-    "default": "t-linux-large",
+    "xlarge-noscratch": "t-linux-xlarge-noscratch",
+    "default": "t-linux-large-noscratch",
 }
 
 # windows worker types keyed by test-platform and virtualization

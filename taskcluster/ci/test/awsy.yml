@@ -5,7 +5,7 @@
 job-defaults:
     suite: awsy
     max-run-time: 7200
-    instance-size: xlarge
+    instance-size: xlarge-noscratch
     virtualization:
         by-test-platform:
             windows.*(?:-shippable)?-qr/.*: virtual-with-gpu
