@@ -1858,6 +1858,15 @@ class SelectTranslationsTestUtils {
           "select-translations-panel-copy-button-copied",
       "Waiting for copy button to match the copied state."
     );
+
+    const copiedText = SpecialPowers.getClipboardData("text/plain");
+    is(
+      // Because of differences in the clipboard code on Windows, we are going
+      // to explicitly sanitize carriage returns here when checking equality.
+      copiedText.replaceAll("\r", ""),
+      SelectTranslationsPanel.getTranslatedText().replaceAll("\r", ""),
+      "The clipboard should contain the translated text."
+    );
   }
 
   /**
