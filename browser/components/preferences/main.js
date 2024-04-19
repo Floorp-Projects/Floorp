@@ -1130,7 +1130,7 @@ var gMainPane = {
           this.markAllDownloadPhases("downloaded");
         } catch (error) {
           TranslationsView.showError(
-            "translations-manage-error-install",
+            "translations-manage-error-download",
             error
           );
           await this.reloadDownloadPhases();
@@ -1167,7 +1167,7 @@ var gMainPane = {
             this.updateDownloadPhase(langTag, "downloaded");
           } catch (error) {
             TranslationsView.showError(
-              "translations-manage-error-install",
+              "translations-manage-error-download",
               error
             );
             this.updateDownloadPhase(langTag, "uninstalled");
@@ -1221,7 +1221,7 @@ var gMainPane = {
 
           document.l10n.setAttributes(
             downloadButton,
-            "translations-manage-language-install-button"
+            "translations-manage-language-download-button"
           );
           document.l10n.setAttributes(
             deleteButton,
