@@ -7,17 +7,15 @@
 with Files("**"):
     BUG_COMPONENT = ("Toolkit", "Application Update")
 
-DIRS += [
-    "UpdateSettings",
-    "UpdateSettings-localbuild",
-    "UpdateSettings-WrongChannel",
-    "UpdateSettings-xpcshell",
-]
+Framework("ChannelPrefs-localbuild")
+FINAL_TARGET = "dist/update_framework_artifacts"
 
-EXPORTS += [
-    "UpdateSettingsUtil.h",
-]
+DEFINES["MOZ_UPDATE_CHANNEL_OVERRIDE"] = "default"
 
 UNIFIED_SOURCES += [
-    "UpdateSettingsUtil.mm",
+    "../ChannelPrefs/ChannelPrefs.mm",
+]
+
+OS_LIBS += [
+    "-framework Foundation",
 ]

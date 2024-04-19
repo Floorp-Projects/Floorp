@@ -1,0 +1,25 @@
+# vim:set ts=8 sw=8 sts=8 noet:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+include $(topsrcdir)/config/rules.mk
+
+# In a compile build, the moz.build stanzas produce a binary named
+# `ChannelPrefs-localbuild`.  We need to produce
+# `dist/update_framework_artifacts/ChannelPrefs-localbuild.framework/ChannelPrefs`
+# for consumption by artifact builds.
+#
+#  In an artifact build, we already have upstream artifacts in
+# `dist/update_framework_artifacts/ChannelPrefs-localbuild.framework`.
+
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
+libs::
+ifneq (,$(COMPILE_ENVIRONMENT))
+	rm -rf $(FINAL_TARGET)/ChannelPrefs-localbuild.framework
+	$(NSINSTALL) -D $(FINAL_TARGET)/ChannelPrefs-localbuild.framework
+	cp $(FINAL_TARGET)/ChannelPrefs-localbuild ChannelPrefs
+	$(NSINSTALL) ChannelPrefs $(FINAL_TARGET)/ChannelPrefs-localbuild.framework
+endif # COMPILE_ENVIRONMENT
+	$(NSINSTALL) $(srcdir)/../ChannelPrefs/Info.plist $(FINAL_TARGET)/ChannelPrefs-localbuild.framework/Resources
+endif # MOZ_WIDGET_TOOLKIT

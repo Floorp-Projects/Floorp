@@ -6,7 +6,13 @@
 
 #include "mozilla/HelperMacros.h"
 
+#ifdef MOZ_UPDATE_CHANNEL_OVERRIDE
+#  define CHANNEL MOZ_UPDATE_CHANNEL_OVERRIDE
+#else
+#  define CHANNEL MOZ_UPDATE_CHANNEL
+#endif
+
 NSString* ChannelPrefsGetChannel() {
-  return [NSString stringWithCString:MOZ_STRINGIFY(MOZ_UPDATE_CHANNEL)
+  return [NSString stringWithCString:MOZ_STRINGIFY(CHANNEL)
                             encoding:NSUTF8StringEncoding];
 }

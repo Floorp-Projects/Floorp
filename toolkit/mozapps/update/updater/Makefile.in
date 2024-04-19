@@ -5,6 +5,12 @@
 
 # For changes here, also consider ./updater-xpcshell/Makefile.in
 
+# In a compile build, the moz.build stanzas produce the binary named
+# `UpdateSettings`; we just need it in the correct place.
+#
+# In an artifact build, we copy upstream artifacts from
+# `dist/update_framework_artifacts/UpdateSettings-localbuild.framework`
+
 ifndef MOZ_WINCONSOLE
 ifdef MOZ_DEBUG
 MOZ_WINCONSOLE = 1
@@ -26,6 +32,11 @@ libs::
 	$(NSINSTALL) -D $(DIST)/bin/updater.app/Contents/MacOS
 	$(NSINSTALL) $(DIST)/bin/org.mozilla.updater $(DIST)/bin/updater.app/Contents/MacOS
 	$(NSINSTALL) -D $(DIST)/bin/updater.app/Contents/Frameworks
+ifneq (,$(COMPILE_ENVIRONMENT))
 	$(NSINSTALL) $(DIST)/bin/UpdateSettings $(DIST)/bin/updater.app/Contents/Frameworks/UpdateSettings.framework
+endif # COMPILE_ENVIRONMENT
+ifneq (,$(MOZ_ARTIFACT_BUILDS))
+	$(NSINSTALL) $(DIST)/update_framework_artifacts/UpdateSettings-localbuild.framework/UpdateSettings $(DIST)/bin/updater.app/Contents/Frameworks/UpdateSettings.framework
+endif # MOZ_ARTIFACT_BUILDS
 	$(NSINSTALL) $(srcdir)/macos-frameworks/UpdateSettings/Info.plist $(DIST)/bin/updater.app/Contents/Frameworks/UpdateSettings.framework/Resources
 endif
