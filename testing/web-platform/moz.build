@@ -48,9 +48,6 @@ with Files("mozilla/README"):
 with Files("mozilla/meta/**"):
     BUG_COMPONENT = ("Testing", "web-platform-tests")
 
-with Files("mozilla/tests/avif/**"):
-    BUG_COMPONENT = ("Core", "Graphics: ImageLib")
-
 with Files("mozilla/tests/dom/**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
