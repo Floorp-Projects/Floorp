@@ -1500,6 +1500,7 @@ class SelectTranslationsTestUtils {
         translateButton: false,
         translateFullPageButton: false,
         tryAnotherSourceMenuList: false,
+        tryAnotherSourceMenuPopup: false,
         unsupportedLanguageContent: false,
         unsupportedLanguageMessageBar: false,
         // Overwrite any of the above defaults with the passed in expectations.
@@ -1583,8 +1584,11 @@ class SelectTranslationsTestUtils {
    */
   static async assertPanelViewUnsupportedLanguage() {
     await SelectTranslationsTestUtils.waitForPanelState("unsupported");
-    const { translateButton, unsupportedLanguageMessageBar } =
-      SelectTranslationsPanel.elements;
+    const {
+      translateButton,
+      tryAnotherSourceMenuList,
+      unsupportedLanguageMessageBar,
+    } = SelectTranslationsPanel.elements;
     SelectTranslationsTestUtils.#assertPanelElementVisibility({
       betaIcon: true,
       doneButton: true,
@@ -1606,6 +1610,7 @@ class SelectTranslationsTestUtils {
       unsupportedLanguageMessageBar,
       "select-translations-panel-unsupported-language-message-known"
     );
+    SharedTranslationsTestUtils._assertHasFocus(tryAnotherSourceMenuList);
   }
 
   /**
