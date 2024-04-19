@@ -1604,9 +1604,13 @@ nsresult MessageChannel::MessageTask::Run() {
     return NS_OK;
   }
 
+  Channel()->AssertWorkerThread();
+  mMonitor->AssertSameMonitor(*Channel()->mMonitor);
+
 #ifdef FUZZING_SNAPSHOT
   if (!mIsFuzzMsg) {
-    if (fuzzing::Nyx::instance().started()) {
+    if (fuzzing::Nyx::instance().started() && XRE_IsParentProcess() &&
+        Channel()->IsCrossProcess()) {
       // Once we started fuzzing, prevent non-fuzzing tasks from being
       // run and potentially blocking worker threads.
       //
@@ -1622,8 +1626,6 @@ nsresult MessageChannel::MessageTask::Run() {
   }
 #endif
 
-  Channel()->AssertWorkerThread();
-  mMonitor->AssertSameMonitor(*Channel()->mMonitor);
   proxy = Channel()->Listener()->GetLifecycleProxy();
   Channel()->RunMessage(proxy, *this);
 
