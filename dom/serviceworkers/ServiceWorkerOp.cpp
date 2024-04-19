@@ -278,8 +278,7 @@ class ServiceWorkerOp::ServiceWorkerOpRunnable final
 
   ServiceWorkerOpRunnable(RefPtr<ServiceWorkerOp> aOwner,
                           WorkerPrivate* aWorkerPrivate)
-      : WorkerDebuggeeRunnable(aWorkerPrivate, "ServiceWorkerOpRunnable",
-                               WorkerThread),
+      : WorkerDebuggeeRunnable(aWorkerPrivate, "ServiceWorkerOpRunnable"),
         mOwner(std::move(aOwner)) {
     AssertIsOnMainThread();
     MOZ_ASSERT(mOwner);

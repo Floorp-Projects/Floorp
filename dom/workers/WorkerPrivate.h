@@ -590,7 +590,7 @@ class WorkerPrivate final
                                 uint32_t aFlags = NS_DISPATCH_NORMAL);
 
   nsresult DispatchDebuggeeToMainThread(
-      already_AddRefed<WorkerDebuggeeRunnable> aRunnable,
+      already_AddRefed<WorkerRunnable> aRunnable,
       uint32_t aFlags = NS_DISPATCH_NORMAL);
 
   // Get an event target that will dispatch runnables as control runnables on
@@ -1050,10 +1050,12 @@ class WorkerPrivate final
                     nsIEventTarget* aSyncLoopTarget = nullptr);
 
   nsresult DispatchControlRunnable(
-      already_AddRefed<WorkerControlRunnable> aWorkerControlRunnable);
+      already_AddRefed<WorkerRunnable> aWorkerRunnable);
 
   nsresult DispatchDebuggerRunnable(
       already_AddRefed<WorkerRunnable> aDebuggerRunnable);
+
+  nsresult DispatchToParent(already_AddRefed<WorkerRunnable> aRunnable);
 
   bool IsOnParentThread() const;
 
@@ -1368,7 +1370,7 @@ class WorkerPrivate final
 
   WorkerDebugger* mDebugger;
 
-  workerinternals::Queue<WorkerControlRunnable*, 4> mControlQueue;
+  workerinternals::Queue<WorkerRunnable*, 4> mControlQueue;
   workerinternals::Queue<WorkerRunnable*, 4> mDebuggerQueue;
 
   // Touched on multiple threads, protected with mMutex. Only modified on the

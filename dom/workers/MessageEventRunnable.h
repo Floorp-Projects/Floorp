@@ -20,7 +20,21 @@ namespace dom {
 class MessageEventRunnable final : public WorkerDebuggeeRunnable,
                                    public StructuredCloneHolder {
  public:
-  MessageEventRunnable(WorkerPrivate* aWorkerPrivate, Target aTarget);
+  explicit MessageEventRunnable(WorkerPrivate* aWorkerPrivate);
+
+  bool DispatchDOMEvent(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
+                        DOMEventTargetHelper* aTarget, bool aIsMainThread);
+
+ private:
+  bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override;
+
+  void DispatchError(JSContext* aCx, DOMEventTargetHelper* aTarget);
+};
+
+class MessageEventToParentRunnable final : public WorkerParentDebuggeeRunnable,
+                                           public StructuredCloneHolder {
+ public:
+  explicit MessageEventToParentRunnable(WorkerPrivate* aWorkerPrivate);
 
   bool DispatchDOMEvent(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
                         DOMEventTargetHelper* aTarget, bool aIsMainThread);
