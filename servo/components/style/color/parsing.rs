@@ -119,34 +119,6 @@ fn parse_color_function<'i, 't>(
     Ok(color)
 }
 
-fn parse_legacy_alpha<'i, 't>(
-    color_parser: &ColorParser<'_, '_>,
-    arguments: &mut Parser<'i, 't>,
-) -> Result<ColorComponent<NumberOrPercentage>, ParseError<'i>> {
-    if !arguments.is_exhausted() {
-        arguments.expect_comma()?;
-        color_parser.parse_number_or_percentage(arguments, false)
-    } else {
-        Ok(ColorComponent::Value(NumberOrPercentage::Number {
-            value: OPAQUE,
-        }))
-    }
-}
-
-fn parse_modern_alpha<'i, 't>(
-    color_parser: &ColorParser<'_, '_>,
-    arguments: &mut Parser<'i, 't>,
-) -> Result<ColorComponent<NumberOrPercentage>, ParseError<'i>> {
-    if !arguments.is_exhausted() {
-        arguments.expect_delim('/')?;
-        color_parser.parse_number_or_percentage(arguments, true)
-    } else {
-        Ok(ColorComponent::Value(NumberOrPercentage::Number {
-            value: OPAQUE,
-        }))
-    }
-}
-
 impl ColorComponent<NumberOrPercentage> {
     /// Return true if the component contains a percentage.
     pub fn is_percentage(&self) -> Result<bool, ()> {
@@ -239,13 +211,13 @@ fn parse_rgb<'i, 't>(
             (red, green, blue)
         };
 
-        let alpha = parse_legacy_alpha(&color_parser, arguments)?;
+        let alpha = color_parser.parse_legacy_alpha(arguments)?;
 
         ColorFunction::Rgb(red, green, blue, alpha)
     } else {
         let green = color_parser.parse_number_or_percentage(arguments, true)?;
         let blue = color_parser.parse_number_or_percentage(arguments, true)?;
-        let alpha = parse_modern_alpha(&color_parser, arguments)?;
+        let alpha = color_parser.parse_modern_alpha(arguments)?;
 
         // When using the relative color syntax (having an origin color), the
         // resulting color is always in the modern syntax.
@@ -297,19 +269,13 @@ fn parse_hsl<'i, 't>(
         let lightness = color_parser
             .parse_percentage(arguments, false)?
             .map_value(|unit_value| NumberOrPercentage::Percentage { unit_value });
-        (
-            saturation,
-            lightness,
-            parse_legacy_alpha(&color_parser, arguments)?,
-        )
+        let alpha = color_parser.parse_legacy_alpha(arguments)?;
+        (saturation, lightness, alpha)
     } else {
         let saturation = color_parser.parse_number_or_percentage(arguments, true)?;
         let lightness = color_parser.parse_number_or_percentage(arguments, true)?;
-        (
-            saturation,
-            lightness,
-            parse_modern_alpha(&color_parser, arguments)?,
-        )
+        let alpha = color_parser.parse_modern_alpha(arguments)?;
+        (saturation, lightness, alpha)
     };
 
     Ok(ColorFunction::Hsl(hue, saturation, lightness, alpha))
@@ -480,7 +446,7 @@ where
     let r2 = f2(color_parser, input, true)?;
     let r3 = f3(color_parser, input, true)?;
 
-    let alpha = parse_modern_alpha(color_parser, input)?;
+    let alpha = color_parser.parse_modern_alpha(input)?;
 
     Ok((r1, r2, r3, alpha))
 }
@@ -701,6 +667,34 @@ impl<'a, 'b: 'a> ColorParser<'a, 'b> {
         allow_none: bool,
     ) -> Result<ColorComponent<NumberOrPercentage>, ParseError<'i>> {
         ColorComponent::parse(self.context, input, allow_none, self.origin_color)
+    }
+
+    fn parse_legacy_alpha<'i, 't>(
+        &self,
+        arguments: &mut Parser<'i, 't>,
+    ) -> Result<ColorComponent<NumberOrPercentage>, ParseError<'i>> {
+        if !arguments.is_exhausted() {
+            arguments.expect_comma()?;
+            self.parse_number_or_percentage(arguments, false)
+        } else {
+            Ok(ColorComponent::Value(NumberOrPercentage::Number {
+                value: OPAQUE,
+            }))
+        }
+    }
+
+    fn parse_modern_alpha<'i, 't>(
+        &self,
+        arguments: &mut Parser<'i, 't>,
+    ) -> Result<ColorComponent<NumberOrPercentage>, ParseError<'i>> {
+        if !arguments.is_exhausted() {
+            arguments.expect_delim('/')?;
+            self.parse_number_or_percentage(arguments, true)
+        } else {
+            Ok(ColorComponent::Value(NumberOrPercentage::Number {
+                value: OPAQUE,
+            }))
+        }
     }
 }
 
