@@ -900,6 +900,17 @@ class BrowsingContextModule extends Module {
       `Expected "locator.type" to be one of ${locatorTypes}, got ${locator.type}`
     )(locator.type);
 
+    if (
+      [LocatorType.css, LocatorType.innerText, LocatorType.xpath].includes(
+        locator.type
+      )
+    ) {
+      lazy.assert.string(
+        locator.value,
+        `Expected "locator.value" of "locator.type" "${locator.type}" to be a string, got ${locator.value}`
+      );
+    }
+
     if (![LocatorType.css, LocatorType.xpath].includes(locator.type)) {
       throw new lazy.error.UnsupportedOperationError(
         `"locator.type" argument with value: ${locator.type} is not supported yet.`
