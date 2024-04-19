@@ -2175,12 +2175,34 @@ class RuleManager {
     this.#updateAllowAllRequestRules();
   }
 
-  getSessionRules() {
-    return this.sessionRules.rules;
+  /**
+   * Get the session scoped rules.
+   *
+   * @param {Array<integer>|null} ruleIds
+            Optional array of rule IDs to return. By default, all the session
+            scoped rules are returned.
+   */
+  getSessionRules(ruleIds = null) {
+    if (!ruleIds) {
+      return this.sessionRules.rules;
+    }
+
+    return this.sessionRules.rules.filter(rule => ruleIds.includes(rule.id));
   }
 
-  getDynamicRules() {
-    return this.dynamicRules.rules;
+  /**
+   * Get the dynamic rules.
+   *
+   * @param {Array<integer>|null} ruleIds
+            Optional array of rule IDs to return. By default, all the dynamic
+            rules are returned.
+   */
+  getDynamicRules(ruleIds = null) {
+    if (!ruleIds) {
+      return this.dynamicRules.rules;
+    }
+
+    return this.dynamicRules.rules.filter(rule => ruleIds.includes(rule.id));
   }
 
   getRulesCount() {
