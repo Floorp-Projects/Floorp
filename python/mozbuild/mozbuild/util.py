@@ -4,7 +4,6 @@
 
 # This file contains miscellaneous utility functions that don't belong anywhere
 # in particular.
-
 import argparse
 import collections
 import collections.abc
@@ -20,7 +19,6 @@ import os
 import re
 import stat
 import sys
-import time
 from io import BytesIO, StringIO
 from pathlib import Path
 
@@ -1326,13 +1324,6 @@ def ensure_unicode(value, encoding="utf-8"):
     if isinstance(value, six.binary_type):
         return value.decode(encoding)
     return value
-
-
-def process_time():
-    if six.PY2:
-        return time.clock()
-    else:
-        return time.process_time()
 
 
 def hexdump(buf):
