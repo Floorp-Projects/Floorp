@@ -220,6 +220,9 @@ void net_CoalesceDirs(netCoalesceFlags flags, char* path) {
   uint32_t special_ftp_len = 0;
 
   MOZ_ASSERT(*path == '/', "We expect the path to begin with /");
+  if (*path != '/') {
+    return;
+  }
 
   /* Remember if this url is a special ftp one: */
   if (flags & NET_COALESCE_DOUBLE_SLASH_IS_ROOT) {
@@ -251,7 +254,7 @@ void net_CoalesceDirs(netCoalesceFlags flags, char* path) {
   fwdPtr = path;
 
   /* replace all %2E or %2e with . in the path */
-  /* but stop at lastchar if non null */
+  /* but stop at lastslash if non null */
   for (; (*fwdPtr != '\0') && (*fwdPtr != '?') && (*fwdPtr != '#') &&
          (*lastslash == '\0' || fwdPtr != lastslash);
        ++fwdPtr) {
@@ -349,8 +352,10 @@ void net_CoalesceDirs(netCoalesceFlags flags, char* path) {
   }
 
   // Before we start copying past ?#, we must make sure we don't overwrite
-  // the first / character.
-  if (urlPtr == path) {
+  // the first / character.  If fwdPtr is also unchanged, just copy everything
+  // (this shouldn't happen unless we could get in here without a leading
+  // slash).
+  if (urlPtr == path && fwdPtr != path) {
     urlPtr++;
   }
 
