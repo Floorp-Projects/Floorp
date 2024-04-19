@@ -33,8 +33,8 @@ from mozpack.mozjar import JarReader
 from mozpack.packager.unpack import UnpackFinder
 from six.moves import shlex_quote
 
+from mozbuild.dirutils import ensureParentDir
 from mozbuild.repackaging.application_ini import get_application_ini_values
-from mozbuild.util import ensureParentDir
 
 
 def log_copy_result(log, elapsed, destdir, result):

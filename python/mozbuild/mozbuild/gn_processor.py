@@ -17,8 +17,8 @@ import mozpack.path as mozpath
 import six
 
 from mozbuild.bootstrap import bootstrap_toolchain
+from mozbuild.dirutils import mkdir
 from mozbuild.frontend.sandbox import alphabetical_sorted
-from mozbuild.util import mkdir
 
 license_header = """# This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this

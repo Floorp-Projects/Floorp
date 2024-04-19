@@ -7,7 +7,7 @@ import os
 import shutil
 import sys
 
-from mozbuild.util import ensureParentDir
+from mozbuild.dirutils import ensureParentDir
 
 
 def main(argv):

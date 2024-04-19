@@ -65,7 +65,8 @@ from taskgraph.util.taskcluster import find_task_id, get_artifact_url, list_arti
 
 from mozbuild.artifact_builds import JOB_CHOICES
 from mozbuild.artifact_cache import ArtifactCache
-from mozbuild.util import FileAvoidWrite, ensureParentDir, mkdir
+from mozbuild.dirutils import ensureParentDir, mkdir
+from mozbuild.util import FileAvoidWrite
 
 # Number of candidate pushheads to cache per parent changeset.
 NUM_PUSHHEADS_TO_QUERY_PER_PARENT = 50

@@ -11,7 +11,7 @@ from typing import List
 
 import mozfile
 
-from mozbuild.util import ensureParentDir
+from mozbuild.dirutils import ensureParentDir
 
 is_linux = platform.system() == "Linux"
 is_osx = platform.system() == "Darwin"
