@@ -1,7 +1,10 @@
 from setuptools import setup
 
-PACKAGE_VERSION = '4.0'
-deps = ["h2>=4.1.0"]
+PACKAGE_VERSION = '4.0.1'
+deps = [
+    "h2>=4.1.0",
+    "pywebsocket3>=4.0.2",
+]
 
 setup(name='wptserve',
       version=PACKAGE_VERSION,
