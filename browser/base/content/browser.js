@@ -9030,15 +9030,14 @@ var ConfirmationHint = {
    *         - event (DOM event): The event that triggered the feedback
    *         - descriptionId (string): message ID of the description text
    *         - position (string): position of the panel relative to the anchor.
-   *
+   *         - l10nArgs (object): l10n arguments for the messageId.
    */
   show(anchor, messageId, options = {}) {
     this._reset();
 
     MozXULElement.insertFTLIfNeeded("toolkit/branding/brandings.ftl");
     MozXULElement.insertFTLIfNeeded("browser/confirmationHints.ftl");
-    document.l10n.setAttributes(this._message, messageId);
-
+    document.l10n.setAttributes(this._message, messageId, options.l10nArgs);
     if (options.descriptionId) {
       document.l10n.setAttributes(this._description, options.descriptionId);
       this._description.hidden = false;

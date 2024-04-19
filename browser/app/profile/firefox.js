@@ -2228,6 +2228,13 @@ pref("privacy.exposeContentTitleInWindow.pbm", true);
 // Run media transport in a separate process?
 pref("media.peerconnection.mtransport_process", true);
 
+// Whether the "Close duplicate tabs" tab context menu is enabled.
+#ifdef NIGHTLY_BUILD
+pref("browser.tabs.context.close-duplicate.enabled", true);
+#else
+pref("browser.tabs.context.close-duplicate.enabled", false);
+#endif
+
 // For speculatively warming up tabs to improve perceived
 // performance while using the async tab switcher.
 pref("browser.tabs.remote.warmup.enabled", true);

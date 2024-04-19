@@ -142,6 +142,8 @@ support-files = [
 
 ["browser_multiselect_tabs_close.js"]
 
+["browser_multiselect_tabs_close_duplicate_tabs.js"]
+
 ["browser_multiselect_tabs_close_other_tabs.js"]
 
 ["browser_multiselect_tabs_close_tabs_to_the_left.js"]

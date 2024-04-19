@@ -2,11 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const remoteClientsFixture = [
-  { id: 1, name: "Foo" },
-  { id: 2, name: "Bar" },
-];
-
 add_task(async function test() {
   // There should be one tab when we start the test
   let [origTab] = gBrowser.visibleTabs;
@@ -16,9 +11,8 @@ add_task(async function test() {
 
   // Check the context menu with two tabs
   updateTabContextMenu(origTab);
-  is(
-    document.getElementById("context_closeTab").disabled,
-    false,
+  ok(
+    !document.getElementById("context_closeTab").disabled,
     "Close Tab is enabled"
   );
 
@@ -29,10 +23,13 @@ add_task(async function test() {
 
   // Check the context menu with one tab.
   updateTabContextMenu(testTab);
-  is(
-    document.getElementById("context_closeTab").disabled,
-    false,
+  ok(
+    !document.getElementById("context_closeTab").disabled,
     "Close Tab is enabled when more than one tab exists"
+  );
+  ok(
+    !document.getElementById("context_closeDuplicateTabs").disabled,
+    "Close duplicate tabs is enabled when more than one tab with the same URL exists"
   );
 
   // Add a tab that will get pinned
