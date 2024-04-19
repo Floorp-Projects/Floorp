@@ -222,7 +222,7 @@ webrender-dcomp-compositing:
 webrender-sw:
     description: "{description} with software webrender enabled"
     component: "Core::Graphics: WebRender"
-    expiration: "2023-09-01"
+    expiration: "never"
     suffix: "swr"
     merge:
         webrender: true

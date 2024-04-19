@@ -63,9 +63,6 @@ web-platform-tests:
             default: 7200
     variants:
         - no-fission
-        - webrender-sw+no-fission
-        - webrender-sw
-        - editor-legacy-direction
     run-on-projects:
         by-variant:
             webrender-sw:
@@ -74,23 +71,6 @@ web-platform-tests:
                     linux.*64-qr/debug: built-projects
                     windows.*-qr/debug: built-projects
                     android-em-7.0-x86_64-qr/debug: []
-                    default: []
-            webrender-sw+no-fission:
-                by-test-platform:
-                    .*-32.*/.*: []
-                    android-em-7.0-x86_64-qr/debug: built-projects
-                    linux.*64-qr/debug: built-projects
-                    default: []
-            no-fission:
-                by-test-platform:
-                    android-em-7.0-x86_64-qr/debug-isolated-process: []
-                    android.*: built-projects
-                    linux1804-64-qr/debug: ['trunk']
-                    linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
-                    default: []
-            editor-legacy-direction:
-                by-test-platform:
-                    linux1804-64-qr/debug: ['mozilla-central']
                     default: []
             default:
                 by-test-platform:
@@ -164,33 +144,14 @@ web-platform-tests-reftest:
             default: 4
     variants:
         - no-fission
-        - webrender-sw+no-fission
-        - webrender-sw
-        - editor-legacy-direction
     run-on-projects:
         by-variant:
-            webrender-sw:
-                by-test-platform:
-                    .*-32.*/.*: []
-                    linux.*64-qr/debug: built-projects
-                    windows.*-qr/debug: built-projects
-                    default: []
-            webrender-sw+no-fission:
-                by-test-platform:
-                    android-em-7.0-x86_64-qr/debug: built-projects
-                    linux1804-64-qr/debug: ['trunk']
-                    linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
-                    default: []
             no-fission:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug-isolated-process: []
                     linux1804-64-qr/debug: ['trunk']
                     linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
                     android.*: built-projects
-                    default: []
-            editor-legacy-direction:
-                by-test-platform:
-                    linux1804-64-qr/debug: ['mozilla-central']
                     default: []
             default:
                 by-test-platform:
@@ -276,25 +237,9 @@ web-platform-tests-wdspec:
                     - --test-type=wdspec
     variants:
         - no-fission
-        - webrender-sw+no-fission
-        - webrender-sw
         - headless
-        - editor-legacy-direction
     run-on-projects:
         by-variant:
-            webrender-sw+no-fission:
-                by-test-platform:
-                    android-em-7.0-x86_64-qr/debug: built-projects
-                    linux1804-64-qr/debug: ['trunk']
-                    linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
-                    default: []
-            webrender-sw:
-                by-test-platform:
-                    android-em-7.0-x86_64-qr/debug: []
-                    .*-32.*/.*: []
-                    linux.*64-qr/debug: built-projects
-                    windows.*-qr/debug: built-projects
-                    default: []
             headless:
                 by-test-platform:
                     android.*: []
@@ -305,10 +250,6 @@ web-platform-tests-wdspec:
                     linux1804-64-qr/debug: ['trunk']
                     linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
                     android.*: built-projects
-                    default: []
-            editor-legacy-direction:
-                by-test-platform:
-                    linux1804-64-qr/debug: ['mozilla-central']
                     default: []
             default:
                 by-test-platform:

@@ -58,8 +58,6 @@ mochitest-plain:
         - xorigin
         - no-fission
         - socketprocess_networking
-        - webrender-sw+no-fission
-        - webrender-sw
         - headless
         - headless+socketprocess_networking
         - http3
@@ -84,16 +82,6 @@ mochitest-plain:
                 by-test-platform:
                     .*(asan|ccov|wayland).*: []
                     (linux.*64|macosx.*64|windows11-64.*)(-shippable)?-qr/(opt|debug): ['autoland', 'mozilla-central']
-                    default: []
-            webrender-sw+no-fission:
-                by-test-platform:
-                    android-em-7.0-x86_64-qr/debug: built-projects
-                    linux.*asan.*: ['trunk']
-                    linux.*64(-shippable)?-qr/(opt|debug): ['trunk']
-                    default: []
-            webrender-sw:
-                by-test-platform:
-                    linux1804-64-qr/debug: built-projects
                     default: []
             aab+no-fission:
                 by-test-platform:
@@ -239,7 +227,6 @@ mochitest-browser-chrome:
                     linux.*64-shippable-qr/opt: ['release']
                     linux.*64(-shippable)?-qr/opt: built-projects
                     linux.*64-devedition-qr/opt: built-projects
-                    windows1.*-64.*-qr/debug: built-projects
                     default: []
             webrender-sw+a11y-checks:
                 by-test-platform:
@@ -447,7 +434,6 @@ mochitest-devtools-chrome:
     variants:
         - a11y-checks
         - socketprocess_networking
-        - webrender-sw
         - devtools-no-eft+no-fission
         - http3
     run-on-projects:
@@ -469,10 +455,6 @@ mochitest-devtools-chrome:
                     .*asan.*: []
                     .*ccov.*: []
                     (linux.*64|macosx.*64|windows.*)(-shippable)?-qr/(opt|debug): ['autoland', 'mozilla-central']
-                    default: []
-            webrender-sw:
-                by-test-platform:
-                    linux.*64-qr/debug: built-projects
                     default: []
             default:
                 by-test-platform:
@@ -1053,8 +1035,6 @@ mochitest-remote:
     variants:
         - no-fission
         - socketprocess_networking
-        - webrender-sw+no-fission
-        - webrender-sw
     run-on-projects:
         by-variant:
             socketprocess_networking:
@@ -1062,14 +1042,6 @@ mochitest-remote:
                     .*asan.*: []
                     .*ccov.*: []
                     (linux.*64|macosx.*64|windows1.*-64.*)(-shippable)?-qr/(opt|debug): ['autoland', 'mozilla-central']
-                    default: []
-            webrender-sw+no-fission:
-                by-test-platform:
-                    linux.*64-qr/debug: ['trunk']
-                    default: []
-            webrender-sw:
-                by-test-platform:
-                    linux.*64-qr/debug: ['all']
                     default: []
             no-fission:
                 by-test-platform:
