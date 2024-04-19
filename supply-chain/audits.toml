@@ -588,12 +588,6 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.1.4 -> 0.1.5"
 
-[[audits.any_all_workaround]]
-who = "Henri Sivonen <hsivonen@hsivonen.fi>"
-criteria = "safe-to-deploy"
-version = "0.1.0"
-notes = "The little code that is in this crate I reviewed and modified from packed_simd (which has previously been vendored in full instead of just this small part)."
-
 [[audits.anyhow]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"

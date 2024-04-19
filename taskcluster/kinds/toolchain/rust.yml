@@ -11,12 +11,12 @@ job-defaults:
         script: repack_rust.py
         toolchain-artifact: public/build/rustc.tar.zst
 
-linux64-rust-1.76:
+linux64-rust-1.74:
     treeherder:
-        symbol: TL(rust-1.76)
+        symbol: TL(rust-1.74)
     run:
         arguments: [
-            '--channel', '1.76.0',
+            '--channel', '1.74.0',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'i686-unknown-linux-gnu',

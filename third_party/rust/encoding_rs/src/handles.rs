@@ -34,7 +34,7 @@ use crate::simd_funcs::*;
         all(target_endian = "little", target_feature = "neon")
     )
 ))]
-use core::simd::u16x8;
+use packed_simd::u16x8;
 
 use super::DecoderResult;
 use super::EncoderResult;
@@ -90,23 +90,19 @@ impl Endian for LittleEndian {
 
 #[derive(Debug, Copy, Clone)]
 struct UnalignedU16Slice {
-    // Safety invariant: ptr must be valid for reading 2*len bytes
     ptr: *const u8,
     len: usize,
 }
 
 impl UnalignedU16Slice {
-    /// Safety: ptr must be valid for reading 2*len bytes
     #[inline(always)]
     pub unsafe fn new(ptr: *const u8, len: usize) -> UnalignedU16Slice {
-        // Safety: field invariant passed up to caller here
         UnalignedU16Slice { ptr, len }
     }
 
     #[inline(always)]
     pub fn trim_last(&mut self) {
         assert!(self.len > 0);
-        // Safety: invariant upheld here: a slice is still valid with a shorter len
         self.len -= 1;
     }
 
@@ -117,9 +113,7 @@ impl UnalignedU16Slice {
         assert!(i < self.len);
         unsafe {
             let mut u: MaybeUninit<u16> = MaybeUninit::uninit();
-            // Safety: i is at most len - 1, which works here
             ::core::ptr::copy_nonoverlapping(self.ptr.add(i * 2), u.as_mut_ptr() as *mut u8, 2);
-            // Safety: valid read above lets us do this
             u.assume_init()
         }
     }
@@ -127,13 +121,8 @@ impl UnalignedU16Slice {
     #[cfg(feature = "simd-accel")]
     #[inline(always)]
     pub fn simd_at(&self, i: usize) -> u16x8 {
-        // Safety: i/len are on the scale of u16s, each one corresponds to 2 u8s
         assert!(i + SIMD_STRIDE_SIZE / 2 <= self.len);
         let byte_index = i * 2;
-        // Safety: load16_unaligned needs SIMD_STRIDE_SIZE=16 u8 elements to read,
-        // or 16/2 = 8 u16 elements to read.
-        // We have checked that we have at least that many above.
-
         unsafe { to_u16_lanes(load16_unaligned(self.ptr.add(byte_index))) }
     }
 
@@ -147,7 +136,6 @@ impl UnalignedU16Slice {
         // XXX the return value should be restricted not to
         // outlive self.
         assert!(from <= self.len);
-        // Safety: This upholds the same invariant: `from` is in bounds and we're returning a shorter slice
         unsafe { UnalignedU16Slice::new(self.ptr.add(from * 2), self.len - from) }
     }
 
@@ -156,8 +144,6 @@ impl UnalignedU16Slice {
     pub fn copy_bmp_to<E: Endian>(&self, other: &mut [u16]) -> Option<(u16, usize)> {
         assert!(self.len <= other.len());
         let mut offset = 0;
-        // Safety: SIMD_STRIDE_SIZE is measured in bytes, whereas len is in u16s. We check we can
-        // munch SIMD_STRIDE_SIZE / 2 u16s which means we can write SIMD_STRIDE_SIZE u8s
         if SIMD_STRIDE_SIZE / 2 <= self.len {
             let len_minus_stride = self.len - SIMD_STRIDE_SIZE / 2;
             loop {
@@ -165,7 +151,6 @@ impl UnalignedU16Slice {
                 if E::OPPOSITE_ENDIAN {
                     simd = simd_byte_swap(simd);
                 }
-                // Safety: we have enough space on the other side to write this
                 unsafe {
                     store8_unaligned(other.as_mut_ptr().add(offset), simd);
                 }
@@ -173,7 +158,6 @@ impl UnalignedU16Slice {
                     break;
                 }
                 offset += SIMD_STRIDE_SIZE / 2;
-                // Safety: This ensures we still have space for writing SIMD_STRIDE_SIZE u8s
                 if offset > len_minus_stride {
                     break;
                 }
@@ -252,7 +236,6 @@ fn copy_unaligned_basic_latin_to_ascii<E: Endian>(
 ) -> CopyAsciiResult<usize, (u16, usize)> {
     let len = ::core::cmp::min(src.len(), dst.len());
     let mut offset = 0;
-    // Safety: This check ensures we are able to read/write at least SIMD_STRIDE_SIZE elements
     if SIMD_STRIDE_SIZE <= len {
         let len_minus_stride = len - SIMD_STRIDE_SIZE;
         loop {
@@ -266,13 +249,10 @@ fn copy_unaligned_basic_latin_to_ascii<E: Endian>(
                 break;
             }
             let packed = simd_pack(first, second);
-            // Safety: We are able to write SIMD_STRIDE_SIZE elements in this iteration
             unsafe {
                 store16_unaligned(dst.as_mut_ptr().add(offset), packed);
             }
             offset += SIMD_STRIDE_SIZE;
-            // Safety: This is `offset > len - SIMD_STRIDE_SIZE`, which ensures that we can write at least SIMD_STRIDE_SIZE elements
-            // in the next iteration
             if offset > len_minus_stride {
                 break;
             }
@@ -657,7 +637,7 @@ impl<'a> Utf16Destination<'a> {
         self.write_code_unit((0xDC00 + (astral & 0x3FF)) as u16);
     }
     #[inline(always)]
-    fn write_surrogate_pair(&mut self, high: u16, low: u16) {
+    pub fn write_surrogate_pair(&mut self, high: u16, low: u16) {
         self.write_code_unit(high);
         self.write_code_unit(low);
     }
@@ -666,7 +646,6 @@ impl<'a> Utf16Destination<'a> {
         self.write_bmp_excl_ascii(combined);
         self.write_bmp_excl_ascii(combining);
     }
-    // Safety-usable invariant: CopyAsciiResult::GoOn will only contain bytes >=0x80
     #[inline(always)]
     pub fn copy_ascii_from_check_space_bmp<'b>(
         &'b mut self,
@@ -680,8 +659,6 @@ impl<'a> Utf16Destination<'a> {
             } else {
                 (DecoderResult::InputEmpty, src_remaining.len())
             };
-            // Safety: This function is documented as needing valid pointers for src/dest and len, which
-            // is true since we've passed the minumum length of the two
             match unsafe {
                 ascii_to_basic_latin(src_remaining.as_ptr(), dst_remaining.as_mut_ptr(), length)
             } {
@@ -690,20 +667,16 @@ impl<'a> Utf16Destination<'a> {
                     self.pos += length;
                     return CopyAsciiResult::Stop((pending, source.pos, self.pos));
                 }
-                // Safety: the function is documented as returning bytes >=0x80 in the Some
                 Some((non_ascii, consumed)) => {
                     source.pos += consumed;
                     self.pos += consumed;
                     source.pos += 1; // +1 for non_ascii
-                                     // Safety: non-ascii bubbled out here
                     non_ascii
                 }
             }
         };
-        // Safety: non-ascii returned here
         CopyAsciiResult::GoOn((non_ascii_ret, Utf16BmpHandle::new(self)))
     }
-    // Safety-usable invariant: CopyAsciiResult::GoOn will only contain bytes >=0x80
     #[inline(always)]
     pub fn copy_ascii_from_check_space_astral<'b>(
         &'b mut self,
@@ -718,8 +691,6 @@ impl<'a> Utf16Destination<'a> {
             } else {
                 (DecoderResult::InputEmpty, src_remaining.len())
             };
-            // Safety: This function is documented as needing valid pointers for src/dest and len, which
-            // is true since we've passed the minumum length of the two
             match unsafe {
                 ascii_to_basic_latin(src_remaining.as_ptr(), dst_remaining.as_mut_ptr(), length)
             } {
@@ -728,13 +699,11 @@ impl<'a> Utf16Destination<'a> {
                     self.pos += length;
                     return CopyAsciiResult::Stop((pending, source.pos, self.pos));
                 }
-                // Safety: the function is documented as returning bytes >=0x80 in the Some
                 Some((non_ascii, consumed)) => {
                     source.pos += consumed;
                     self.pos += consumed;
                     if self.pos + 1 < dst_len {
                         source.pos += 1; // +1 for non_ascii
-                                         // Safety: non-ascii bubbled out here
                         non_ascii
                     } else {
                         return CopyAsciiResult::Stop((
@@ -746,7 +715,6 @@ impl<'a> Utf16Destination<'a> {
                 }
             }
         };
-        // Safety: non-ascii returned here
         CopyAsciiResult::GoOn((non_ascii_ret, Utf16AstralHandle::new(self)))
     }
     #[inline(always)]

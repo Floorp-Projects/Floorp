@@ -1,0 +1,5 @@
+max_width = 110
+use_small_heuristics = "Max"
+wrap_comments = true
+edition = "2018"
+error_on_line_overflow = true
