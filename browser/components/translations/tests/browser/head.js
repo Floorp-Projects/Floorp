@@ -1534,7 +1534,7 @@ class SelectTranslationsTestUtils {
    * state when the panel has completed its translation.
    */
   static async assertPanelViewTranslated() {
-    const { textArea } = SelectTranslationsPanel.elements;
+    const { textArea, copyButton } = SelectTranslationsPanel.elements;
     await SelectTranslationsTestUtils.waitForPanelState("translated");
     ok(
       !textArea.classList.contains("translating"),
@@ -1559,6 +1559,15 @@ class SelectTranslationsTestUtils {
       doneButton: true,
       translateFullPageButton: true,
     });
+
+    await waitForCondition(
+      () =>
+        !copyButton.classList.contains("copied") &&
+        copyButton.getAttribute("data-l10n-id") ===
+          "select-translations-panel-copy-button",
+      "Waiting for copy button to match the not-copied state."
+    );
+
     SelectTranslationsTestUtils.#assertPanelHasTranslatedText();
     SelectTranslationsTestUtils.#assertPanelTextAreaHeight();
     await SelectTranslationsTestUtils.#assertPanelTextAreaOverflow();
@@ -1824,6 +1833,30 @@ class SelectTranslationsTestUtils {
       () => {
         click(doneButton, "Clicking the done button");
       }
+    );
+  }
+
+  /**
+   * Simulates clicking the copy button and asserts that all relevant states are correctly updated.
+   */
+  static async clickCopyButton() {
+    logAction();
+    const { copyButton } = SelectTranslationsPanel.elements;
+
+    assertVisibility({ visible: { copyButton } });
+    is(
+      SelectTranslationsPanel.phase(),
+      "translated",
+      'The copy button should only be clickable in the "translated" phase'
+    );
+
+    click(copyButton, "Clicking the copy button");
+    await waitForCondition(
+      () =>
+        copyButton.classList.contains("copied") &&
+        copyButton.getAttribute("data-l10n-id") ===
+          "select-translations-panel-copy-button-copied",
+      "Waiting for copy button to match the copied state."
     );
   }
 
