@@ -4,7 +4,7 @@
 //! two aggregators, designated "Leader" and "Helper". This topology is required for implementing
 //! the [Distributed Aggregation Protocol][DAP].
 //!
-//! [VDAF]: https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-07#section-5.8
+//! [VDAF]: https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-08#section-5.8
 //! [DAP]: https://datatracker.ietf.org/doc/html/draft-ietf-ppm-dap
 
 use crate::{
@@ -15,6 +15,7 @@ use std::fmt::Debug;
 
 /// Errors emitted by this module.
 #[derive(Debug, thiserror::Error)]
+#[non_exhaustive]
 pub enum PingPongError {
     /// Error running prepare_init
     #[error("vdaf.prepare_init: {0}")]
@@ -28,12 +29,12 @@ pub enum PingPongError {
     #[error("vdaf.prepare_next {0}")]
     VdafPrepareNext(VdafError),
 
-    /// Error decoding a prepare share
-    #[error("decode prep share {0}")]
+    /// Error encoding or decoding a prepare share
+    #[error("encode/decode prep share {0}")]
     CodecPrepShare(CodecError),
 
-    /// Error decoding a prepare message
-    #[error("decode prep message {0}")]
+    /// Error encoding or decoding a prepare message
+    #[error("encode/decode prep message {0}")]
     CodecPrepMessage(CodecError),
 
     /// Host is in an unexpected state
@@ -63,7 +64,7 @@ pub enum PingPongError {
 /// variants are opaque byte buffers. This is because the ping-pong routines take responsibility for
 /// decoding preparation shares and messages, which usually requires having the preparation state.
 ///
-/// [VDAF]: https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-07#section-5.8
+/// [VDAF]: https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-08#section-5.8
 #[derive(Clone, PartialEq, Eq)]
 pub enum PingPongMessage {
     /// Corresponds to MessageType.initialize.
@@ -108,27 +109,28 @@ impl Debug for PingPongMessage {
 }
 
 impl Encode for PingPongMessage {
-    fn encode(&self, bytes: &mut Vec<u8>) {
+    fn encode(&self, bytes: &mut Vec<u8>) -> Result<(), CodecError> {
         // The encoding includes an implicit discriminator byte, called MessageType in the VDAF
         // spec.
         match self {
             Self::Initialize { prep_share } => {
-                0u8.encode(bytes);
-                encode_u32_items(bytes, &(), prep_share);
+                0u8.encode(bytes)?;
+                encode_u32_items(bytes, &(), prep_share)?;
             }
             Self::Continue {
                 prep_msg,
                 prep_share,
             } => {
-                1u8.encode(bytes);
-                encode_u32_items(bytes, &(), prep_msg);
-                encode_u32_items(bytes, &(), prep_share);
+                1u8.encode(bytes)?;
+                encode_u32_items(bytes, &(), prep_msg)?;
+                encode_u32_items(bytes, &(), prep_share)?;
             }
             Self::Finish { prep_msg } => {
-                2u8.encode(bytes);
-                encode_u32_items(bytes, &(), prep_msg);
+                2u8.encode(bytes)?;
+                encode_u32_items(bytes, &(), prep_msg)?;
             }
         }
+        Ok(())
     }
 
     fn encoded_len(&self) -> Option<usize> {
@@ -182,7 +184,7 @@ impl Decode for PingPongMessage {
 /// preprocessed prepare message. Their encoding is much smaller than the `(State, Message)` tuple,
 /// which can always be recomputed with [`Self::evaluate`].
 ///
-/// [VDAF]: https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-07#section-5.8
+/// [VDAF]: https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-08#section-5.8
 #[derive(Clone, Debug, Eq)]
 pub struct PingPongTransition<
     const VERIFY_KEY_SIZE: usize,
@@ -212,26 +214,31 @@ impl<
         ),
         PingPongError,
     > {
-        let prep_msg = self.current_prepare_message.get_encoded();
+        let prep_msg = self
+            .current_prepare_message
+            .get_encoded()
+            .map_err(PingPongError::CodecPrepMessage)?;
 
         vdaf.prepare_next(
             self.previous_prepare_state.clone(),
             self.current_prepare_message.clone(),
         )
-        .map(|transition| match transition {
-            PrepareTransition::Continue(prep_state, prep_share) => (
+        .map_err(PingPongError::VdafPrepareNext)
+        .and_then(|transition| match transition {
+            PrepareTransition::Continue(prep_state, prep_share) => Ok((
                 PingPongState::Continued(prep_state),
                 PingPongMessage::Continue {
                     prep_msg,
-                    prep_share: prep_share.get_encoded(),
+                    prep_share: prep_share
+                        .get_encoded()
+                        .map_err(PingPongError::CodecPrepShare)?,
                 },
-            ),
-            PrepareTransition::Finish(output_share) => (
+            )),
+            PrepareTransition::Finish(output_share) => Ok((
                 PingPongState::Finished(output_share),
                 PingPongMessage::Finish { prep_msg },
-            ),
+            )),
         })
-        .map_err(PingPongError::VdafPrepareNext)
     }
 }
 
@@ -253,9 +260,9 @@ where
     A: Aggregator<VERIFY_KEY_SIZE, NONCE_SIZE>,
     A::PrepareState: Encode,
 {
-    fn encode(&self, bytes: &mut Vec<u8>) {
-        self.previous_prepare_state.encode(bytes);
-        self.current_prepare_message.encode(bytes);
+    fn encode(&self, bytes: &mut Vec<u8>) -> Result<(), CodecError> {
+        self.previous_prepare_state.encode(bytes)?;
+        self.current_prepare_message.encode(bytes)
     }
 
     fn encoded_len(&self) -> Option<usize> {
@@ -293,7 +300,7 @@ where
 /// code, and the `Rejected` state is represented as `std::result::Result::Err`, so this enum does
 /// not include those variants.
 ///
-/// [VDAF]: https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-07#section-5.8
+/// [VDAF]: https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-08#section-5.8
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum PingPongState<
     const VERIFY_KEY_SIZE: usize,
@@ -331,7 +338,7 @@ pub enum PingPongContinuedValue<
 
 /// Extension trait on [`crate::vdaf::Aggregator`] which adds the [VDAF Ping-Pong Topology][VDAF].
 ///
-/// [VDAF]: https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-07#section-5.8
+/// [VDAF]: https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-08#section-5.8
 pub trait PingPongTopology<const VERIFY_KEY_SIZE: usize, const NONCE_SIZE: usize>:
     Aggregator<VERIFY_KEY_SIZE, NONCE_SIZE>
 {
@@ -351,7 +358,7 @@ pub trait PingPongTopology<const VERIFY_KEY_SIZE: usize, const NONCE_SIZE: usize
     /// leader along with the next [`PingPongMessage`] received from the helper as input to
     /// [`Self::leader_continued`] to advance to the next round.
     ///
-    /// [VDAF]: https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-07#section-5.8
+    /// [VDAF]: https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-08#section-5.8
     fn leader_initialized(
         &self,
         verify_key: &[u8; VERIFY_KEY_SIZE],
@@ -362,7 +369,7 @@ pub trait PingPongTopology<const VERIFY_KEY_SIZE: usize, const NONCE_SIZE: usize
     ) -> Result<(Self::State, PingPongMessage), PingPongError>;
 
     /// Initialize helper state using the helper's input share and the leader's first prepare share.
-    /// Corresponds to `ping_pong_helper_init` in the forthcoming `draft-irtf-cfrg-vdaf-07`.
+    /// Corresponds to `ping_pong_helper_init` in [VDAF].
     ///
     /// If successful, the returned [`PingPongTransition`] should be evaluated, yielding a
     /// [`PingPongMessage`], which should be transmitted to the leader, and a [`PingPongState`].
@@ -378,6 +385,8 @@ pub trait PingPongTopology<const VERIFY_KEY_SIZE: usize, const NONCE_SIZE: usize
     /// # Errors
     ///
     /// `inbound` must be `PingPongMessage::Initialize` or the function will fail.
+    ///
+    /// [VDAF]: https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-08#section-5.8
     fn helper_initialized(
         &self,
         verify_key: &[u8; VERIFY_KEY_SIZE],
@@ -415,15 +424,7 @@ pub trait PingPongTopology<const VERIFY_KEY_SIZE: usize, const NONCE_SIZE: usize
     ///
     /// `inbound` must not be `PingPongMessage::Initialize` or the function will fail.
     ///
-    /// # Notes
-    ///
-    /// The specification of this function in [VDAF] takes the aggregation parameter. This version
-    /// does not, because [`crate::vdaf::Aggregator::prepare_preprocess`] does not take the
-    /// aggregation parameter. This may change in the future if/when [#670][issue] is addressed.
-    ///
-    ///
-    /// [VDAF]: https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-07#section-5.8
-    /// [issue]: https://github.com/divviup/libprio-rs/issues/670
+    /// [VDAF]: https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-08#section-5.8
     fn leader_continued(
         &self,
         leader_state: Self::State,
@@ -458,15 +459,7 @@ pub trait PingPongTopology<const VERIFY_KEY_SIZE: usize, const NONCE_SIZE: usize
     ///
     /// `inbound` must not be `PingPongMessage::Initialize` or the function will fail.
     ///
-    /// # Notes
-    ///
-    /// The specification of this function in [VDAF] takes the aggregation parameter. This version
-    /// does not, because [`crate::vdaf::Aggregator::prepare_preprocess`] does not take the
-    /// aggregation parameter. This may change in the future if/when [#670][issue] is addressed.
-    ///
-    ///
-    /// [VDAF]: https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-07#section-5.8
-    /// [issue]: https://github.com/divviup/libprio-rs/issues/670
+    /// [VDAF]: https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-vdaf-08#section-5.8
     fn helper_continued(
         &self,
         helper_state: Self::State,
@@ -513,15 +506,17 @@ where
             public_share,
             input_share,
         )
-        .map(|(prep_state, prep_share)| {
-            (
+        .map_err(PingPongError::VdafPrepareInit)
+        .and_then(|(prep_state, prep_share)| {
+            Ok((
                 PingPongState::Continued(prep_state),
                 PingPongMessage::Initialize {
-                    prep_share: prep_share.get_encoded(),
+                    prep_share: prep_share
+                        .get_encoded()
+                        .map_err(PingPongError::CodecPrepShare)?,
                 },
-            )
+            ))
         })
-        .map_err(PingPongError::VdafPrepareInit)
     }
 
     fn helper_initialized(
@@ -652,18 +647,14 @@ where
             (PrepareTransition::Finish(output_share), None) => {
                 Ok(PingPongContinuedValue::FinishedNoMessage { output_share })
             }
-            (PrepareTransition::Continue(_, _), None) => {
-                return Err(PingPongError::PeerMessageMismatch {
-                    found: inbound.variant(),
-                    expected: "continue",
-                })
-            }
-            (PrepareTransition::Finish(_), Some(_)) => {
-                return Err(PingPongError::PeerMessageMismatch {
-                    found: inbound.variant(),
-                    expected: "finish",
-                })
-            }
+            (PrepareTransition::Continue(_, _), None) => Err(PingPongError::PeerMessageMismatch {
+                found: inbound.variant(),
+                expected: "continue",
+            }),
+            (PrepareTransition::Finish(_), Some(_)) => Err(PingPongError::PeerMessageMismatch {
+                found: inbound.variant(),
+                expected: "finish",
+            }),
         }
     }
 }
@@ -914,7 +905,7 @@ mod tests {
 
         for (message, expected_hex) in messages {
             let mut encoded_val = Vec::new();
-            message.encode(&mut encoded_val);
+            message.encode(&mut encoded_val).unwrap();
             let got_hex = hex::encode(&encoded_val);
             assert_eq!(
                 &got_hex, expected_hex,
@@ -942,7 +933,7 @@ mod tests {
             current_prepare_message: (),
         };
 
-        let encoded = transition.get_encoded();
+        let encoded = transition.get_encoded().unwrap();
         let hex_encoded = hex::encode(&encoded);
 
         assert_eq!(

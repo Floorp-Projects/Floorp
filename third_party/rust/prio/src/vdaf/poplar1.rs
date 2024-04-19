@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
-//! Implementation of Poplar1 as specified in [[draft-irtf-cfrg-vdaf-07]].
+//! Implementation of Poplar1 as specified in [[draft-irtf-cfrg-vdaf-08]].
 //!
-//! [draft-irtf-cfrg-vdaf-07]: https://datatracker.ietf.org/doc/draft-irtf-cfrg-vdaf/07/
+//! [draft-irtf-cfrg-vdaf-08]: https://datatracker.ietf.org/doc/draft-irtf-cfrg-vdaf/08/
 
 use crate::{
     codec::{CodecError, Decode, Encode, ParameterizedDecode},
@@ -10,7 +10,7 @@ use crate::{
     idpf::{Idpf, IdpfInput, IdpfOutputShare, IdpfPublicShare, IdpfValue, RingBufferCache},
     prng::Prng,
     vdaf::{
-        xof::{Seed, Xof, XofShake128},
+        xof::{Seed, Xof, XofTurboShake128},
         Aggregatable, Aggregator, Client, Collector, PrepareTransition, Vdaf, VdafError,
     },
 };
@@ -34,9 +34,9 @@ const DST_VERIFY_RANDOMNESS: u16 = 4;
 
 impl<P, const SEED_SIZE: usize> Poplar1<P, SEED_SIZE> {
     /// Create an instance of [`Poplar1`]. The caller provides the bit length of each
-    /// measurement (`BITS` as defined in the [[draft-irtf-cfrg-vdaf-07]]).
+    /// measurement (`BITS` as defined in [[draft-irtf-cfrg-vdaf-08]]).
     ///
-    /// [draft-irtf-cfrg-vdaf-07]: https://datatracker.ietf.org/doc/draft-irtf-cfrg-vdaf/07/
+    /// [draft-irtf-cfrg-vdaf-08]: https://datatracker.ietf.org/doc/draft-irtf-cfrg-vdaf/08/
     pub fn new(bits: usize) -> Self {
         Self {
             bits,
@@ -45,12 +45,12 @@ impl<P, const SEED_SIZE: usize> Poplar1<P, SEED_SIZE> {
     }
 }
 
-impl Poplar1<XofShake128, 16> {
-    /// Create an instance of [`Poplar1`] using [`XofShake128`]. The caller provides the bit length of
-    /// each measurement (`BITS` as defined in the [[draft-irtf-cfrg-vdaf-07]]).
+impl Poplar1<XofTurboShake128, 16> {
+    /// Create an instance of [`Poplar1`] using [`XofTurboShake128`]. The caller provides the bit length of
+    /// each measurement (`BITS` as defined in [[draft-irtf-cfrg-vdaf-08]]).
     ///
-    /// [draft-irtf-cfrg-vdaf-07]: https://datatracker.ietf.org/doc/draft-irtf-cfrg-vdaf/07/
-    pub fn new_shake128(bits: usize) -> Self {
+    /// [draft-irtf-cfrg-vdaf-08]: https://datatracker.ietf.org/doc/draft-irtf-cfrg-vdaf/08/
+    pub fn new_turboshake128(bits: usize) -> Self {
         Poplar1::new(bits)
     }
 }
@@ -65,6 +65,7 @@ pub struct Poplar1<P, const SEED_SIZE: usize> {
 impl<P: Xof<SEED_SIZE>, const SEED_SIZE: usize> Poplar1<P, SEED_SIZE> {
     /// Construct a `Prng` with the given seed and info-string suffix.
     fn init_prng<I, B, F>(
+        &self,
         seed: &[u8; SEED_SIZE],
         usage: u16,
         binder_chunks: I,
@@ -75,7 +76,7 @@ impl<P: Xof<SEED_SIZE>, const SEED_SIZE: usize> Poplar1<P, SEED_SIZE> {
         P: Xof<SEED_SIZE>,
         F: FieldElement,
     {
-        let mut xof = P::init(seed, &Self::domain_separation_tag(usage));
+        let mut xof = P::init(seed, &self.domain_separation_tag(usage));
         for binder_chunk in binder_chunks.into_iter() {
             xof.update(binder_chunk.as_ref());
         }
@@ -156,15 +157,15 @@ impl<const SEED_SIZE: usize> ConstantTimeEq for Poplar1InputShare<SEED_SIZE> {
 }
 
 impl<const SEED_SIZE: usize> Encode for Poplar1InputShare<SEED_SIZE> {
-    fn encode(&self, bytes: &mut Vec<u8>) {
-        self.idpf_key.encode(bytes);
-        self.corr_seed.encode(bytes);
+    fn encode(&self, bytes: &mut Vec<u8>) -> Result<(), CodecError> {
+        self.idpf_key.encode(bytes)?;
+        self.corr_seed.encode(bytes)?;
         for corr in self.corr_inner.iter() {
-            corr[0].encode(bytes);
-            corr[1].encode(bytes);
+            corr[0].encode(bytes)?;
+            corr[1].encode(bytes)?;
         }
-        self.corr_leaf[0].encode(bytes);
-        self.corr_leaf[1].encode(bytes);
+        self.corr_leaf[0].encode(bytes)?;
+        self.corr_leaf[1].encode(bytes)
     }
 
     fn encoded_len(&self) -> Option<usize> {
@@ -219,7 +220,7 @@ impl ConstantTimeEq for Poplar1PrepareState {
 }
 
 impl Encode for Poplar1PrepareState {
-    fn encode(&self, bytes: &mut Vec<u8>) {
+    fn encode(&self, bytes: &mut Vec<u8>) -> Result<(), CodecError> {
         self.0.encode(bytes)
     }
 
@@ -268,15 +269,15 @@ impl ConstantTimeEq for PrepareStateVariant {
 }
 
 impl Encode for PrepareStateVariant {
-    fn encode(&self, bytes: &mut Vec<u8>) {
+    fn encode(&self, bytes: &mut Vec<u8>) -> Result<(), CodecError> {
         match self {
             PrepareStateVariant::Inner(prep_state) => {
-                0u8.encode(bytes);
-                prep_state.encode(bytes);
+                0u8.encode(bytes)?;
+                prep_state.encode(bytes)
             }
             PrepareStateVariant::Leaf(prep_state) => {
-                1u8.encode(bytes);
-                prep_state.encode(bytes);
+                1u8.encode(bytes)?;
+                prep_state.encode(bytes)
             }
         }
     }
@@ -342,16 +343,17 @@ impl<F> Debug for PrepareState<F> {
 }
 
 impl<F: FieldElement> Encode for PrepareState<F> {
-    fn encode(&self, bytes: &mut Vec<u8>) {
-        self.sketch.encode(bytes);
+    fn encode(&self, bytes: &mut Vec<u8>) -> Result<(), CodecError> {
+        self.sketch.encode(bytes)?;
         // `expect` safety: output_share's length is the same as the number of prefixes; the number
         // of prefixes is capped at 2^32-1.
         u32::try_from(self.output_share.len())
             .expect("Couldn't convert output_share length to u32")
-            .encode(bytes);
+            .encode(bytes)?;
         for elem in &self.output_share {
-            elem.encode(bytes);
+            elem.encode(bytes)?;
         }
+        Ok(())
     }
 
     fn encoded_len(&self) -> Option<usize> {
@@ -430,14 +432,14 @@ impl<F: ConstantTimeEq> ConstantTimeEq for SketchState<F> {
 }
 
 impl<F: FieldElement> Encode for SketchState<F> {
-    fn encode(&self, bytes: &mut Vec<u8>) {
+    fn encode(&self, bytes: &mut Vec<u8>) -> Result<(), CodecError> {
         match self {
             SketchState::RoundOne {
                 A_share, B_share, ..
             } => {
-                0u8.encode(bytes);
-                A_share.encode(bytes);
-                B_share.encode(bytes);
+                0u8.encode(bytes)?;
+                A_share.encode(bytes)?;
+                B_share.encode(bytes)
             }
             SketchState::RoundTwo => 1u8.encode(bytes),
         }
@@ -519,19 +521,19 @@ enum PrepareMessageVariant {
 }
 
 impl Encode for Poplar1PrepareMessage {
-    fn encode(&self, bytes: &mut Vec<u8>) {
+    fn encode(&self, bytes: &mut Vec<u8>) -> Result<(), CodecError> {
         match self.0 {
             PrepareMessageVariant::SketchInner(vec) => {
-                vec[0].encode(bytes);
-                vec[1].encode(bytes);
-                vec[2].encode(bytes);
+                vec[0].encode(bytes)?;
+                vec[1].encode(bytes)?;
+                vec[2].encode(bytes)
             }
             PrepareMessageVariant::SketchLeaf(vec) => {
-                vec[0].encode(bytes);
-                vec[1].encode(bytes);
-                vec[2].encode(bytes);
+                vec[0].encode(bytes)?;
+                vec[1].encode(bytes)?;
+                vec[2].encode(bytes)
             }
-            PrepareMessageVariant::Done => (),
+            PrepareMessageVariant::Done => Ok(()),
         }
     }
 
@@ -614,17 +616,19 @@ impl ConstantTimeEq for Poplar1FieldVec {
 }
 
 impl Encode for Poplar1FieldVec {
-    fn encode(&self, bytes: &mut Vec<u8>) {
+    fn encode(&self, bytes: &mut Vec<u8>) -> Result<(), CodecError> {
         match self {
             Self::Inner(ref data) => {
                 for elem in data {
-                    elem.encode(bytes);
+                    elem.encode(bytes)?;
                 }
+                Ok(())
             }
             Self::Leaf(ref data) => {
                 for elem in data {
-                    elem.encode(bytes);
+                    elem.encode(bytes)?;
                 }
+                Ok(())
             }
         }
     }
@@ -769,11 +773,11 @@ impl Poplar1AggregationParam {
 }
 
 impl Encode for Poplar1AggregationParam {
-    fn encode(&self, bytes: &mut Vec<u8>) {
+    fn encode(&self, bytes: &mut Vec<u8>) -> Result<(), CodecError> {
         // Okay to unwrap because `try_from_prefixes()` checks this conversion succeeds.
         let prefix_count = u32::try_from(self.prefixes.len()).unwrap();
-        self.level.encode(bytes);
-        prefix_count.encode(bytes);
+        self.level.encode(bytes)?;
+        prefix_count.encode(bytes)?;
 
         // The encoding of the prefixes is defined by treating the IDPF indices as integers,
         // shifting and ORing them together, and encoding the resulting arbitrary precision integer
@@ -799,6 +803,7 @@ impl Encode for Poplar1AggregationParam {
         let mut packed = packed.into_vec();
         packed.reverse();
         bytes.append(&mut packed);
+        Ok(())
     }
 
     fn encoded_len(&self) -> Option<usize> {
@@ -839,7 +844,6 @@ impl Decode for Poplar1AggregationParam {
 }
 
 impl<P: Xof<SEED_SIZE>, const SEED_SIZE: usize> Vdaf for Poplar1<P, SEED_SIZE> {
-    const ID: u32 = 0x00001000;
     type Measurement = IdpfInput;
     type AggregateResult = Vec<u64>;
     type AggregationParam = Poplar1AggregationParam;
@@ -847,6 +851,10 @@ impl<P: Xof<SEED_SIZE>, const SEED_SIZE: usize> Vdaf for Poplar1<P, SEED_SIZE> {
     type InputShare = Poplar1InputShare<SEED_SIZE>;
     type OutputShare = Poplar1FieldVec;
     type AggregateShare = Poplar1FieldVec;
+
+    fn algorithm_id(&self) -> u32 {
+        0x00001000
+    }
 
     fn num_aggregators(&self) -> usize {
         2
@@ -870,7 +878,7 @@ impl<P: Xof<SEED_SIZE>, const SEED_SIZE: usize> Poplar1<P, SEED_SIZE> {
 
         // Generate the authenticator for each inner level of the IDPF tree.
         let mut prng =
-            Self::init_prng::<_, _, Field64>(&poplar_random[2], DST_SHARD_RANDOMNESS, [&[]]);
+            self.init_prng::<_, _, Field64>(&poplar_random[2], DST_SHARD_RANDOMNESS, [nonce]);
         let auth_inner: Vec<Field64> = (0..self.bits - 1).map(|_| prng.get()).collect();
 
         // Generate the authenticator for the last level of the IDPF tree (i.e., the leaves).
@@ -900,12 +908,12 @@ impl<P: Xof<SEED_SIZE>, const SEED_SIZE: usize> Poplar1<P, SEED_SIZE> {
         let corr_seed_0 = &poplar_random[0];
         let corr_seed_1 = &poplar_random[1];
         let mut prng = prng.into_new_field::<Field64>();
-        let mut corr_prng_0 = Self::init_prng::<_, _, Field64>(
+        let mut corr_prng_0 = self.init_prng::<_, _, Field64>(
             corr_seed_0,
             DST_CORR_INNER,
             [[0].as_slice(), nonce.as_slice()],
         );
-        let mut corr_prng_1 = Self::init_prng::<_, _, Field64>(
+        let mut corr_prng_1 = self.init_prng::<_, _, Field64>(
             corr_seed_1,
             DST_CORR_INNER,
             [[1].as_slice(), nonce.as_slice()],
@@ -921,12 +929,12 @@ impl<P: Xof<SEED_SIZE>, const SEED_SIZE: usize> Poplar1<P, SEED_SIZE> {
 
         // Generate the correlated randomness for the leaf nodes.
         let mut prng = prng.into_new_field::<Field255>();
-        let mut corr_prng_0 = Self::init_prng::<_, _, Field255>(
+        let mut corr_prng_0 = self.init_prng::<_, _, Field255>(
             corr_seed_0,
             DST_CORR_LEAF,
             [[0].as_slice(), nonce.as_slice()],
         );
-        let mut corr_prng_1 = Self::init_prng::<_, _, Field255>(
+        let mut corr_prng_1 = self.init_prng::<_, _, Field255>(
             corr_seed_1,
             DST_CORR_LEAF,
             [[1].as_slice(), nonce.as_slice()],
@@ -951,6 +959,60 @@ impl<P: Xof<SEED_SIZE>, const SEED_SIZE: usize> Poplar1<P, SEED_SIZE> {
                 },
             ],
         ))
+    }
+
+    /// Evaluate the IDPF at the given prefixes and compute the Aggregator's share of the sketch.
+    #[allow(clippy::too_many_arguments)]
+    fn eval_and_sketch<F>(
+        &self,
+        verify_key: &[u8; SEED_SIZE],
+        agg_id: usize,
+        nonce: &[u8; 16],
+        agg_param: &Poplar1AggregationParam,
+        public_share: &Poplar1PublicShare,
+        idpf_key: &Seed<16>,
+        corr_prng: &mut Prng<F, P::SeedStream>,
+    ) -> Result<(Vec<F>, Vec<F>), VdafError>
+    where
+        P: Xof<SEED_SIZE>,
+        F: FieldElement,
+        Poplar1IdpfValue<F>:
+            From<IdpfOutputShare<Poplar1IdpfValue<Field64>, Poplar1IdpfValue<Field255>>>,
+    {
+        let mut verify_prng = self.init_prng(
+            verify_key,
+            DST_VERIFY_RANDOMNESS,
+            [nonce.as_slice(), agg_param.level.to_be_bytes().as_slice()],
+        );
+
+        let mut out_share = Vec::with_capacity(agg_param.prefixes.len());
+        let mut sketch_share = vec![
+            corr_prng.get(), // a_share
+            corr_prng.get(), // b_share
+            corr_prng.get(), // c_share
+        ];
+
+        let mut idpf_eval_cache = RingBufferCache::new(agg_param.prefixes.len());
+        let idpf = Idpf::<Poplar1IdpfValue<Field64>, Poplar1IdpfValue<Field255>>::new((), ());
+        for prefix in agg_param.prefixes.iter() {
+            let share = Poplar1IdpfValue::<F>::from(idpf.eval(
+                agg_id,
+                public_share,
+                idpf_key,
+                prefix,
+                nonce,
+                &mut idpf_eval_cache,
+            )?);
+
+            let r = verify_prng.get();
+            let checked_data_share = share.0[0] * r;
+            sketch_share[0] += checked_data_share;
+            sketch_share[1] += checked_data_share * r;
+            sketch_share[2] += share.0[1] * r;
+            out_share.push(share.0[0]);
+        }
+
+        Ok((out_share, sketch_share))
     }
 }
 
@@ -1000,7 +1062,7 @@ impl<P: Xof<SEED_SIZE>, const SEED_SIZE: usize> Aggregator<SEED_SIZE, 16>
         };
 
         if usize::from(agg_param.level) < self.bits - 1 {
-            let mut corr_prng = Self::init_prng::<_, _, Field64>(
+            let mut corr_prng = self.init_prng::<_, _, Field64>(
                 input_share.corr_seed.as_ref(),
                 DST_CORR_INNER,
                 [[agg_id as u8].as_slice(), nonce.as_slice()],
@@ -1011,7 +1073,7 @@ impl<P: Xof<SEED_SIZE>, const SEED_SIZE: usize> Aggregator<SEED_SIZE, 16>
                 corr_prng.get();
             }
 
-            let (output_share, sketch_share) = eval_and_sketch::<P, Field64, SEED_SIZE>(
+            let (output_share, sketch_share) = self.eval_and_sketch::<Field64>(
                 verify_key,
                 agg_id,
                 nonce,
@@ -1033,13 +1095,13 @@ impl<P: Xof<SEED_SIZE>, const SEED_SIZE: usize> Aggregator<SEED_SIZE, 16>
                 Poplar1FieldVec::Inner(sketch_share),
             ))
         } else {
-            let corr_prng = Self::init_prng::<_, _, Field255>(
+            let corr_prng = self.init_prng::<_, _, Field255>(
                 input_share.corr_seed.as_ref(),
                 DST_CORR_LEAF,
                 [[agg_id as u8].as_slice(), nonce.as_slice()],
             );
 
-            let (output_share, sketch_share) = eval_and_sketch::<P, Field255, SEED_SIZE>(
+            let (output_share, sketch_share) = self.eval_and_sketch::<Field255>(
                 verify_key,
                 agg_id,
                 nonce,
@@ -1257,59 +1319,6 @@ fn compute_next_corr_shares<F: FieldElement + From<u64>, S: RngCore>(
     (corr_0, corr_1)
 }
 
-/// Evaluate the IDPF at the given prefixes and compute the Aggregator's share of the sketch.
-fn eval_and_sketch<P, F, const SEED_SIZE: usize>(
-    verify_key: &[u8; SEED_SIZE],
-    agg_id: usize,
-    nonce: &[u8; 16],
-    agg_param: &Poplar1AggregationParam,
-    public_share: &Poplar1PublicShare,
-    idpf_key: &Seed<16>,
-    corr_prng: &mut Prng<F, P::SeedStream>,
-) -> Result<(Vec<F>, Vec<F>), VdafError>
-where
-    P: Xof<SEED_SIZE>,
-    F: FieldElement,
-    Poplar1IdpfValue<F>:
-        From<IdpfOutputShare<Poplar1IdpfValue<Field64>, Poplar1IdpfValue<Field255>>>,
-{
-    // TODO(cjpatton) spec: Consider not encoding the prefixes here.
-    let mut verify_prng = Poplar1::<P, SEED_SIZE>::init_prng(
-        verify_key,
-        DST_VERIFY_RANDOMNESS,
-        [nonce.as_slice(), agg_param.level.to_be_bytes().as_slice()],
-    );
-
-    let mut out_share = Vec::with_capacity(agg_param.prefixes.len());
-    let mut sketch_share = vec![
-        corr_prng.get(), // a_share
-        corr_prng.get(), // b_share
-        corr_prng.get(), // c_share
-    ];
-
-    let mut idpf_eval_cache = RingBufferCache::new(agg_param.prefixes.len());
-    let idpf = Idpf::<Poplar1IdpfValue<Field64>, Poplar1IdpfValue<Field255>>::new((), ());
-    for prefix in agg_param.prefixes.iter() {
-        let share = Poplar1IdpfValue::<F>::from(idpf.eval(
-            agg_id,
-            public_share,
-            idpf_key,
-            prefix,
-            nonce,
-            &mut idpf_eval_cache,
-        )?);
-
-        let r = verify_prng.get();
-        let checked_data_share = share.0[0] * r;
-        sketch_share[0] += checked_data_share;
-        sketch_share[1] += checked_data_share * r;
-        sketch_share[2] += share.0[1] * r;
-        out_share.push(share.0[0]);
-    }
-
-    Ok((out_share, sketch_share))
-}
-
 /// Compute the Aggregator's share of the sketch verifier. The shares should sum to zero.
 #[allow(non_snake_case)]
 fn finish_sketch<F: FieldElement>(
@@ -1447,9 +1456,9 @@ impl<F> Encode for Poplar1IdpfValue<F>
 where
     F: FieldElement,
 {
-    fn encode(&self, bytes: &mut Vec<u8>) {
-        self.0[0].encode(bytes);
-        self.0[1].encode(bytes);
+    fn encode(&self, bytes: &mut Vec<u8>) -> Result<(), CodecError> {
+        self.0[0].encode(bytes)?;
+        self.0[1].encode(bytes)
     }
 
     fn encoded_len(&self) -> Option<usize> {
@@ -1491,7 +1500,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::vdaf::{equality_comparison_test, run_vdaf_prepare};
+    use crate::vdaf::{equality_comparison_test, test_utils::run_vdaf_prepare};
     use assert_matches::assert_matches;
     use rand::prelude::*;
     use serde::Deserialize;
@@ -1628,7 +1637,7 @@ mod tests {
     #[test]
     fn shard_prepare() {
         let mut rng = thread_rng();
-        let vdaf = Poplar1::new_shake128(64);
+        let vdaf = Poplar1::new_turboshake128(64);
         let verify_key = rng.gen();
         let input = IdpfInput::from_bytes(b"12341324");
         let nonce = rng.gen();
@@ -1672,7 +1681,7 @@ mod tests {
     fn heavy_hitters() {
         let mut rng = thread_rng();
         let verify_key = rng.gen();
-        let vdaf = Poplar1::new_shake128(8);
+        let vdaf = Poplar1::new_turboshake128(8);
 
         run_heavy_hitters(
             &vdaf,
@@ -1699,7 +1708,7 @@ mod tests {
             corr_leaf: [Field255::one(), <Field255 as FieldElement>::zero()],
         };
         assert_eq!(
-            input_share.get_encoded().len(),
+            input_share.get_encoded().unwrap().len(),
             input_share.encoded_len().unwrap()
         );
 
@@ -1710,7 +1719,7 @@ mod tests {
             Field64::one(),
         ]));
         assert_eq!(
-            prep_msg.get_encoded().len(),
+            prep_msg.get_encoded().unwrap().len(),
             prep_msg.encoded_len().unwrap()
         );
         let prep_msg = Poplar1PrepareMessage(PrepareMessageVariant::SketchLeaf([
@@ -1719,24 +1728,24 @@ mod tests {
             Field255::one(),
         ]));
         assert_eq!(
-            prep_msg.get_encoded().len(),
+            prep_msg.get_encoded().unwrap().len(),
             prep_msg.encoded_len().unwrap()
         );
         let prep_msg = Poplar1PrepareMessage(PrepareMessageVariant::Done);
         assert_eq!(
-            prep_msg.get_encoded().len(),
+            prep_msg.get_encoded().unwrap().len(),
             prep_msg.encoded_len().unwrap()
         );
 
         // Field vector variants.
         let field_vec = Poplar1FieldVec::Inner(vec![Field64::one(); 23]);
         assert_eq!(
-            field_vec.get_encoded().len(),
+            field_vec.get_encoded().unwrap().len(),
             field_vec.encoded_len().unwrap()
         );
         let field_vec = Poplar1FieldVec::Leaf(vec![Field255::one(); 23]);
         assert_eq!(
-            field_vec.get_encoded().len(),
+            field_vec.get_encoded().unwrap().len(),
             field_vec.encoded_len().unwrap()
         );
 
@@ -1747,7 +1756,7 @@ mod tests {
         ]))
         .unwrap();
         assert_eq!(
-            agg_param.get_encoded().len(),
+            agg_param.get_encoded().unwrap().len(),
             agg_param.encoded_len().unwrap()
         );
         let agg_param = Poplar1AggregationParam::try_from_prefixes(Vec::from([
@@ -1756,14 +1765,14 @@ mod tests {
         ]))
         .unwrap();
         assert_eq!(
-            agg_param.get_encoded().len(),
+            agg_param.get_encoded().unwrap().len(),
             agg_param.encoded_len().unwrap()
         );
     }
 
     #[test]
     fn round_trip_prepare_state() {
-        let vdaf = Poplar1::new_shake128(1);
+        let vdaf = Poplar1::new_turboshake128(1);
         for (agg_id, prep_state) in [
             (
                 0,
@@ -1862,7 +1871,7 @@ mod tests {
                 })),
             ),
         ] {
-            let encoded_prep_state = prep_state.get_encoded();
+            let encoded_prep_state = prep_state.get_encoded().unwrap();
             assert_eq!(prep_state.encoded_len(), Some(encoded_prep_state.len()));
             let decoded_prep_state =
                 Poplar1PrepareState::get_decoded_with_param(&(&vdaf, agg_id), &encoded_prep_state)
@@ -1947,7 +1956,7 @@ mod tests {
             ),
         ] {
             let agg_param = Poplar1AggregationParam::try_from_prefixes(prefixes).unwrap();
-            let encoded = agg_param.get_encoded();
+            let encoded = agg_param.get_encoded().unwrap();
             assert_eq!(encoded, reference_encoding);
             let decoded = Poplar1AggregationParam::get_decoded(reference_encoding).unwrap();
             assert_eq!(decoded, agg_param);
@@ -2037,7 +2046,7 @@ mod tests {
         }
 
         // Shard measurement.
-        let poplar = Poplar1::new_shake128(test_vector.bits);
+        let poplar = Poplar1::new_turboshake128(test_vector.bits);
         let (public_share, input_shares) = poplar
             .shard_with_random(&measurement, &nonce, &idpf_random, &poplar_random)
             .unwrap();
@@ -2118,14 +2127,17 @@ mod tests {
             Poplar1PublicShare::get_decoded_with_param(&poplar, prep.public_share.as_ref())
                 .unwrap()
         );
-        assert_eq!(&public_share.get_encoded(), prep.public_share.as_ref());
+        assert_eq!(
+            &public_share.get_encoded().unwrap(),
+            prep.public_share.as_ref()
+        );
         assert_eq!(
             input_shares[0],
             Poplar1InputShare::get_decoded_with_param(&(&poplar, 0), prep.input_shares[0].as_ref())
                 .unwrap()
         );
         assert_eq!(
-            &input_shares[0].get_encoded(),
+            &input_shares[0].get_encoded().unwrap(),
             prep.input_shares[0].as_ref()
         );
         assert_eq!(
@@ -2134,7 +2146,7 @@ mod tests {
                 .unwrap()
         );
         assert_eq!(
-            &input_shares[1].get_encoded(),
+            &input_shares[1].get_encoded().unwrap(),
             prep.input_shares[1].as_ref()
         );
         assert_eq!(
@@ -2146,7 +2158,7 @@ mod tests {
             .unwrap()
         );
         assert_eq!(
-            &init_prep_share_0.get_encoded(),
+            &init_prep_share_0.get_encoded().unwrap(),
             prep.prep_shares[0][0].as_ref()
         );
         assert_eq!(
@@ -2158,7 +2170,7 @@ mod tests {
             .unwrap()
         );
         assert_eq!(
-            &init_prep_share_1.get_encoded(),
+            &init_prep_share_1.get_encoded().unwrap(),
             prep.prep_shares[0][1].as_ref()
         );
         assert_eq!(
@@ -2169,7 +2181,10 @@ mod tests {
             )
             .unwrap()
         );
-        assert_eq!(&r1_prep_msg.get_encoded(), prep.prep_messages[0].as_ref());
+        assert_eq!(
+            &r1_prep_msg.get_encoded().unwrap(),
+            prep.prep_messages[0].as_ref()
+        );
 
         assert_eq!(
             r1_prep_share_0,
@@ -2180,7 +2195,7 @@ mod tests {
             .unwrap()
         );
         assert_eq!(
-            &r1_prep_share_0.get_encoded(),
+            &r1_prep_share_0.get_encoded().unwrap(),
             prep.prep_shares[1][0].as_ref()
         );
         assert_eq!(
@@ -2192,7 +2207,7 @@ mod tests {
             .unwrap()
         );
         assert_eq!(
-            &r1_prep_share_1.get_encoded(),
+            &r1_prep_share_1.get_encoded().unwrap(),
             prep.prep_shares[1][1].as_ref()
         );
         assert_eq!(
@@ -2203,7 +2218,10 @@ mod tests {
             )
             .unwrap()
         );
-        assert_eq!(&r2_prep_msg.get_encoded(), prep.prep_messages[1].as_ref());
+        assert_eq!(
+            &r2_prep_msg.get_encoded().unwrap(),
+            prep.prep_messages[1].as_ref()
+        );
         for (out_share, expected_out_share) in [
             (out_share_0, &prep.out_shares[0]),
             (out_share_1, &prep.out_shares[1]),
@@ -2212,13 +2230,13 @@ mod tests {
                 Poplar1FieldVec::Inner(vec) => {
                     assert_eq!(vec.len(), expected_out_share.len());
                     for (element, expected) in vec.iter().zip(expected_out_share.iter()) {
-                        assert_eq!(&element.get_encoded(), expected.as_ref());
+                        assert_eq!(&element.get_encoded().unwrap(), expected.as_ref());
                     }
                 }
                 Poplar1FieldVec::Leaf(vec) => {
                     assert_eq!(vec.len(), expected_out_share.len());
                     for (element, expected) in vec.iter().zip(expected_out_share.iter()) {
-                        assert_eq!(&element.get_encoded(), expected.as_ref());
+                        assert_eq!(&element.get_encoded().unwrap(), expected.as_ref());
                     }
                 }
             };
@@ -2233,7 +2251,7 @@ mod tests {
         );
 
         assert_eq!(
-            &agg_share_0.get_encoded(),
+            &agg_share_0.get_encoded().unwrap(),
             test_vector.agg_shares[0].as_ref()
         );
         assert_eq!(
@@ -2245,7 +2263,7 @@ mod tests {
             .unwrap()
         );
         assert_eq!(
-            &agg_share_1.get_encoded(),
+            &agg_share_1.get_encoded().unwrap(),
             test_vector.agg_shares[1].as_ref()
         );
         assert_eq!(agg_result, test_vector.agg_result);
@@ -2253,22 +2271,22 @@ mod tests {
 
     #[test]
     fn test_vec_poplar1_0() {
-        check_test_vec(include_str!("test_vec/07/Poplar1_0.json"));
+        check_test_vec(include_str!("test_vec/08/Poplar1_0.json"));
     }
 
     #[test]
     fn test_vec_poplar1_1() {
-        check_test_vec(include_str!("test_vec/07/Poplar1_1.json"));
+        check_test_vec(include_str!("test_vec/08/Poplar1_1.json"));
     }
 
     #[test]
     fn test_vec_poplar1_2() {
-        check_test_vec(include_str!("test_vec/07/Poplar1_2.json"));
+        check_test_vec(include_str!("test_vec/08/Poplar1_2.json"));
     }
 
     #[test]
     fn test_vec_poplar1_3() {
-        check_test_vec(include_str!("test_vec/07/Poplar1_3.json"));
+        check_test_vec(include_str!("test_vec/08/Poplar1_3.json"));
     }
 
     #[test]

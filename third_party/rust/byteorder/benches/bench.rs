@@ -321,4 +321,6 @@ macro_rules! bench_slice {
     };
 }
 
+bench_slice!(slice_u16, u16, read_u16_into, write_u16_into);
 bench_slice!(slice_u64, u64, read_u64_into, write_u64_into);
+bench_slice!(slice_i64, i64, read_i64_into, write_i64_into);
