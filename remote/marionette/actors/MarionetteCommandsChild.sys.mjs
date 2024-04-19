@@ -7,7 +7,8 @@
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  accessibility: "chrome://remote/content/marionette/accessibility.sys.mjs",
+  accessibility:
+    "chrome://remote/content/shared/webdriver/Accessibility.sys.mjs",
   action: "chrome://remote/content/shared/webdriver/Actions.sys.mjs",
   atom: "chrome://remote/content/marionette/atom.sys.mjs",
   dom: "chrome://remote/content/shared/DOM.sys.mjs",

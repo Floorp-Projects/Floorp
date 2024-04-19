@@ -9,7 +9,8 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
 
-  accessibility: "chrome://remote/content/marionette/accessibility.sys.mjs",
+  accessibility:
+    "chrome://remote/content/shared/webdriver/Accessibility.sys.mjs",
   atom: "chrome://remote/content/marionette/atom.sys.mjs",
   dom: "chrome://remote/content/shared/DOM.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",

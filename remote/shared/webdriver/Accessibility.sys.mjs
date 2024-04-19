@@ -10,9 +10,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   waitForObserverTopic: "chrome://remote/content/marionette/sync.sys.mjs",
 });
 
-ChromeUtils.defineLazyGetter(lazy, "logger", () =>
-  lazy.Log.get(lazy.Log.TYPES.MARIONETTE)
-);
+ChromeUtils.defineLazyGetter(lazy, "logger", () => lazy.Log.get());
 
 ChromeUtils.defineLazyGetter(lazy, "service", () => {
   try {
