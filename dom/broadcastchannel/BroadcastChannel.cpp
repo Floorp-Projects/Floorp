@@ -96,8 +96,7 @@ class TeardownRunnableOnWorker final : public WorkerControlRunnable,
  public:
   TeardownRunnableOnWorker(WorkerPrivate* aWorkerPrivate,
                            BroadcastChannelChild* aActor)
-      : WorkerControlRunnable(aWorkerPrivate, "TeardownRunnableOnWorker",
-                              WorkerThread),
+      : WorkerControlRunnable(aWorkerPrivate, "TeardownRunnableOnWorker"),
         TeardownRunnable(aActor) {}
 
   bool WorkerRun(JSContext*, WorkerPrivate*) override {

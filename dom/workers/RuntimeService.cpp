@@ -619,8 +619,7 @@ class JSDispatchableRunnable final : public WorkerThreadRunnable {
  public:
   JSDispatchableRunnable(WorkerPrivate* aWorkerPrivate,
                          JS::Dispatchable* aDispatchable)
-      : WorkerThreadRunnable(aWorkerPrivate, "JSDispatchableRunnable",
-                             WorkerRunnable::WorkerThread),
+      : WorkerThreadRunnable(aWorkerPrivate, "JSDispatchableRunnable"),
         mDispatchable(aDispatchable) {
     MOZ_ASSERT(mDispatchable);
   }
@@ -1484,8 +1483,7 @@ namespace {
 class DumpCrashInfoRunnable final : public WorkerControlRunnable {
  public:
   explicit DumpCrashInfoRunnable(WorkerPrivate* aWorkerPrivate)
-      : WorkerControlRunnable(aWorkerPrivate, "DumpCrashInfoRunnable",
-                              WorkerThread),
+      : WorkerControlRunnable(aWorkerPrivate, "DumpCrashInfoRunnable"),
         mMonitor("DumpCrashInfoRunnable::mMonitor") {}
 
   bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override {

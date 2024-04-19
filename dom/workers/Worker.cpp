@@ -126,7 +126,7 @@ void Worker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
       JS::ProfilingCategoryPair::DOM, flags);
 
   RefPtr<MessageEventRunnable> runnable =
-      new MessageEventRunnable(mWorkerPrivate, WorkerRunnable::WorkerThread);
+      new MessageEventRunnable(mWorkerPrivate);
 
   JS::CloneDataPolicy clonePolicy;
   // DedicatedWorkers are always part of the same agent cluster.

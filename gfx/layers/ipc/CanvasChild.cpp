@@ -211,8 +211,7 @@ class CanvasDataShmemHolder {
       DestroyRunnable(dom::WorkerPrivate* aWorkerPrivate,
                       CanvasDataShmemHolder* aShmemHolder)
           : dom::WorkerThreadRunnable(aWorkerPrivate,
-                                      "CanvasDataShmemHolder::Destroy",
-                                      dom::WorkerRunnable::WorkerThread),
+                                      "CanvasDataShmemHolder::Destroy"),
             mShmemHolder(aShmemHolder) {}
 
       bool WorkerRun(JSContext* aCx,

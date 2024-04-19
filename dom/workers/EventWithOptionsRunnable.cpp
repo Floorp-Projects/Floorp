@@ -33,8 +33,7 @@
 namespace mozilla::dom {
 EventWithOptionsRunnable::EventWithOptionsRunnable(Worker& aWorker,
                                                    const char* aName)
-    : WorkerDebuggeeRunnable(aWorker.mWorkerPrivate, aName,
-                             WorkerRunnable::WorkerThread),
+    : WorkerDebuggeeRunnable(aWorker.mWorkerPrivate, aName),
       StructuredCloneHolder(CloningSupported, TransferringSupported,
                             StructuredCloneScope::SameProcess) {}
 
@@ -132,19 +131,6 @@ bool EventWithOptionsRunnable::BuildAndFireEvent(
 
 bool EventWithOptionsRunnable::WorkerRun(JSContext* aCx,
                                          WorkerPrivate* aWorkerPrivate) {
-  if (mTarget == ParentThread) {
-    // Don't fire this event if the JS object has been disconnected from the
-    // private object.
-    if (!aWorkerPrivate->IsAcceptingEvents()) {
-      return true;
-    }
-
-    aWorkerPrivate->AssertInnerWindowIsCorrect();
-
-    return BuildAndFireEvent(aCx, aWorkerPrivate,
-                             aWorkerPrivate->ParentEventTargetRef());
-  }
-
   MOZ_ASSERT(aWorkerPrivate == GetWorkerPrivateFromContext(aCx));
   MOZ_ASSERT(aWorkerPrivate->GlobalScope());
 

@@ -39,8 +39,7 @@ class PerformanceEntryAdder final : public WorkerControlRunnable {
   PerformanceEntryAdder(WorkerPrivate* aWorkerPrivate,
                         PerformanceStorageWorker* aStorage,
                         UniquePtr<PerformanceProxyData>&& aData)
-      : WorkerControlRunnable(aWorkerPrivate, "PerformanceEntryAdder",
-                              WorkerThread),
+      : WorkerControlRunnable(aWorkerPrivate, "PerformanceEntryAdder"),
         mStorage(aStorage),
         mData(std::move(aData)) {}
 

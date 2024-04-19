@@ -135,8 +135,7 @@ class ExtensionListenerCallWorkerRunnable final
       ListenerCallOptions* aCallOptions,
       RefPtr<dom::Promise> aPromiseRetval = nullptr)
       : WorkerThreadRunnable(aExtensionEventListener->GetWorkerPrivate(),
-                             "ExtensionListenerCallWorkerRunnable",
-                             WorkerRunnable::WorkerThread),
+                             "ExtensionListenerCallWorkerRunnable"),
         mListener(aExtensionEventListener),
         mArgsHolder(std::move(aArgsHolder)),
         mPromiseResult(std::move(aPromiseRetval)),
