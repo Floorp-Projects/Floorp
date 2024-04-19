@@ -4,9 +4,7 @@
 
 #![deny(missing_docs)]
 
-//! Fairly complete css-color implementation.
-//! Relative colors, color-mix, system colors, and other such things require better calc() support
-//! and integration.
+//! Parsing for CSS colors.
 
 use super::{
     color_function::ColorFunction,
@@ -34,13 +32,6 @@ use style_traits::{ParseError, StyleParseErrorKind};
 #[inline]
 pub fn rcs_enabled() -> bool {
     static_prefs::pref!("layout.css.relative-color-syntax.enabled")
-}
-
-impl From<u8> for ColorComponent<u8> {
-    #[inline]
-    fn from(value: u8) -> Self {
-        ColorComponent::Value(value)
-    }
 }
 
 /// Return the named color with the given name.
@@ -639,75 +630,4 @@ impl<'a, 'b: 'a> ComponentParser<'a, 'b> {
             }))
         }
     }
-}
-
-/// This trait is used by the [`ColorParser`] to construct colors of any type.
-pub trait FromParsedColor {
-    /// Construct a new color from the CSS `currentcolor` keyword.
-    fn from_current_color() -> Self;
-
-    /// Construct a new color from red, green, blue and alpha components.
-    fn from_rgba(
-        red: ColorComponent<u8>,
-        green: ColorComponent<u8>,
-        blue: ColorComponent<u8>,
-        alpha: ColorComponent<NumberOrPercentage>,
-    ) -> Self;
-
-    /// Construct a new color from hue, saturation, lightness and alpha components.
-    fn from_hsl(
-        hue: ColorComponent<NumberOrAngle>,
-        saturation: ColorComponent<NumberOrPercentage>,
-        lightness: ColorComponent<NumberOrPercentage>,
-        alpha: ColorComponent<NumberOrPercentage>,
-    ) -> Self;
-
-    /// Construct a new color from hue, blackness, whiteness and alpha components.
-    fn from_hwb(
-        hue: ColorComponent<NumberOrAngle>,
-        whiteness: ColorComponent<NumberOrPercentage>,
-        blackness: ColorComponent<NumberOrPercentage>,
-        alpha: ColorComponent<NumberOrPercentage>,
-    ) -> Self;
-
-    /// Construct a new color from the `lab` notation.
-    fn from_lab(
-        lightness: ColorComponent<NumberOrPercentage>,
-        a: ColorComponent<NumberOrPercentage>,
-        b: ColorComponent<NumberOrPercentage>,
-        alpha: ColorComponent<NumberOrPercentage>,
-    ) -> Self;
-
-    /// Construct a new color from the `lch` notation.
-    fn from_lch(
-        lightness: ColorComponent<NumberOrPercentage>,
-        chroma: ColorComponent<NumberOrPercentage>,
-        hue: ColorComponent<NumberOrAngle>,
-        alpha: ColorComponent<NumberOrPercentage>,
-    ) -> Self;
-
-    /// Construct a new color from the `oklab` notation.
-    fn from_oklab(
-        lightness: ColorComponent<NumberOrPercentage>,
-        a: ColorComponent<NumberOrPercentage>,
-        b: ColorComponent<NumberOrPercentage>,
-        alpha: ColorComponent<NumberOrPercentage>,
-    ) -> Self;
-
-    /// Construct a new color from the `oklch` notation.
-    fn from_oklch(
-        lightness: ColorComponent<NumberOrPercentage>,
-        chroma: ColorComponent<NumberOrPercentage>,
-        hue: ColorComponent<NumberOrAngle>,
-        alpha: ColorComponent<NumberOrPercentage>,
-    ) -> Self;
-
-    /// Construct a new color with a predefined color space.
-    fn from_color_function(
-        color_space: PredefinedColorSpace,
-        c1: ColorComponent<NumberOrPercentage>,
-        c2: ColorComponent<NumberOrPercentage>,
-        c3: ColorComponent<NumberOrPercentage>,
-        alpha: ColorComponent<NumberOrPercentage>,
-    ) -> Self;
 }
