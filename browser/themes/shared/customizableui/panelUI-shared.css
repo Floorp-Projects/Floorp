@@ -1299,7 +1299,7 @@ panelview .toolbarbutton-1 {
   }
 }
 
-.PanelUI-remotetabs-clientcontainer > toolbarbutton[itemtype="tab"],
+.PanelUI-tabitem-container > toolbarbutton[itemtype="tab"],
 #PanelUI-historyItems > toolbarbutton {
   list-style-image: url("chrome://global/skin/icons/defaultFavicon.svg");
   -moz-context-properties: fill;
@@ -1309,7 +1309,7 @@ panelview .toolbarbutton-1 {
 #fxa-menu-account-fxa-avatar,
 #appMenu-fxa-label > .toolbarbutton-icon,
 #PanelUI-containersItems > .subviewbutton > .toolbarbutton-icon,
-.PanelUI-remotetabs-clientcontainer > toolbarbutton[itemtype="tab"] > .toolbarbutton-icon,
+.PanelUI-tabitem-container > toolbarbutton[itemtype="tab"] > .toolbarbutton-icon,
 #PanelUI-recentlyClosedWindows > toolbarbutton > .toolbarbutton-icon,
 #PanelUI-recentlyClosedTabs > toolbarbutton > .toolbarbutton-icon,
 #PanelUI-historyItems > toolbarbutton > .toolbarbutton-icon {
@@ -1321,6 +1321,15 @@ panelview .toolbarbutton-1 {
   min-width: 0;
 }
 
+.PanelUI-tabitem-container > toolbarbutton[itemtype="tab"] {
+  flex: 1;
+  min-width: 0;
+}
+
+.remotetabs-close {
+  width: 18px;
+  margin-inline-end: 4px;
+}
 #PanelUI-fxa-menu-account-settings-button > .toolbarbutton-icon {
   border-radius: 50%;
 }
