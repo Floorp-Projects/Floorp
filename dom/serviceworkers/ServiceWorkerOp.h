@@ -62,7 +62,8 @@ class ServiceWorkerOp : public RemoteWorkerChild::Op {
   bool IsTerminationOp() const;
 
   // Override to provide a runnable that's not a `ServiceWorkerOpRunnable.`
-  virtual RefPtr<WorkerRunnable> GetRunnable(WorkerPrivate* aWorkerPrivate);
+  virtual RefPtr<WorkerThreadRunnable> GetRunnable(
+      WorkerPrivate* aWorkerPrivate);
 
   // Overridden by ServiceWorkerOp subclasses, it should return true when
   // the ServiceWorkerOp was executed successfully (and false if it did fail).

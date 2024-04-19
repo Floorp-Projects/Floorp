@@ -180,19 +180,21 @@ inline UniquePtrComparator<T> GetUniquePtrComparator(
 // This class is used to wrap any runnables that the worker receives via the
 // nsIEventTarget::Dispatch() method (either from NS_DispatchToCurrentThread or
 // from the worker's EventTarget).
-class ExternalRunnableWrapper final : public WorkerRunnable {
+class ExternalRunnableWrapper final : public WorkerThreadRunnable {
   nsCOMPtr<nsIRunnable> mWrappedRunnable;
 
  public:
   ExternalRunnableWrapper(WorkerPrivate* aWorkerPrivate,
                           nsIRunnable* aWrappedRunnable)
-      : WorkerRunnable(aWorkerPrivate, "ExternalRunnableWrapper", WorkerThread),
+      : WorkerThreadRunnable(aWorkerPrivate, "ExternalRunnableWrapper",
+                             WorkerRunnable::WorkerThread),
         mWrappedRunnable(aWrappedRunnable) {
     MOZ_ASSERT(aWorkerPrivate);
     MOZ_ASSERT(aWrappedRunnable);
   }
 
-  NS_INLINE_DECL_REFCOUNTING_INHERITED(ExternalRunnableWrapper, WorkerRunnable)
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(ExternalRunnableWrapper,
+                                       WorkerThreadRunnable)
 
  private:
   ~ExternalRunnableWrapper() = default;
@@ -436,7 +438,7 @@ class CompileScriptRunnable final : public WorkerDebuggeeRunnable {
     if (!aRunResult) {
       aWorkerPrivate->CloseInternal();
     }
-    WorkerRunnable::PostRun(aCx, aWorkerPrivate, aRunResult);
+    WorkerThreadRunnable::PostRun(aCx, aWorkerPrivate, aRunResult);
   }
 };
 
@@ -511,7 +513,7 @@ class PropagateStorageAccessPermissionGrantedRunnable final
   }
 };
 
-class ReportErrorToConsoleRunnable final : public WorkerRunnable {
+class ReportErrorToConsoleRunnable final : public WorkerThreadRunnable {
   const char* mMessage;
   const nsTArray<nsString> mParams;
 
@@ -543,8 +545,8 @@ class ReportErrorToConsoleRunnable final : public WorkerRunnable {
   ReportErrorToConsoleRunnable(WorkerPrivate* aWorkerPrivate,
                                const char* aMessage,
                                const nsTArray<nsString>& aParams)
-      : WorkerRunnable(aWorkerPrivate, "ReportErrorToConsoleRunnable",
-                       ParentThread),
+      : WorkerThreadRunnable(aWorkerPrivate, "ReportErrorToConsoleRunnable",
+                             WorkerRunnable::ParentThread),
         mMessage(aMessage),
         mParams(aParams.Clone()) {}
 
@@ -565,14 +567,14 @@ class ReportErrorToConsoleRunnable final : public WorkerRunnable {
   }
 };
 
-class RunExpiredTimoutsRunnable final : public WorkerRunnable,
+class RunExpiredTimoutsRunnable final : public WorkerThreadRunnable,
                                         public nsITimerCallback {
  public:
   NS_DECL_ISUPPORTS_INHERITED
 
   explicit RunExpiredTimoutsRunnable(WorkerPrivate* aWorkerPrivate)
-      : WorkerRunnable(aWorkerPrivate, "RunExpiredTimoutsRunnable",
-                       WorkerThread) {}
+      : WorkerThreadRunnable(aWorkerPrivate, "RunExpiredTimoutsRunnable",
+                             WorkerRunnable::WorkerThread) {}
 
  private:
   ~RunExpiredTimoutsRunnable() = default;
@@ -599,17 +601,17 @@ class RunExpiredTimoutsRunnable final : public WorkerRunnable,
   Notify(nsITimer* aTimer) override { return Run(); }
 };
 
-NS_IMPL_ISUPPORTS_INHERITED(RunExpiredTimoutsRunnable, WorkerRunnable,
+NS_IMPL_ISUPPORTS_INHERITED(RunExpiredTimoutsRunnable, WorkerThreadRunnable,
                             nsITimerCallback)
 
-class DebuggerImmediateRunnable final : public WorkerRunnable {
+class DebuggerImmediateRunnable final : public WorkerThreadRunnable {
   RefPtr<dom::Function> mHandler;
 
  public:
   explicit DebuggerImmediateRunnable(WorkerPrivate* aWorkerPrivate,
                                      dom::Function& aHandler)
-      : WorkerRunnable(aWorkerPrivate, "DebuggerImmediateRunnable",
-                       WorkerThread),
+      : WorkerThreadRunnable(aWorkerPrivate, "DebuggerImmediateRunnable",
+                             WorkerRunnable::WorkerThread),
         mHandler(&aHandler) {}
 
  private:
@@ -682,13 +684,13 @@ class UpdateContextOptionsRunnable final : public WorkerControlRunnable {
   }
 };
 
-class UpdateLanguagesRunnable final : public WorkerRunnable {
+class UpdateLanguagesRunnable final : public WorkerThreadRunnable {
   nsTArray<nsString> mLanguages;
 
  public:
   UpdateLanguagesRunnable(WorkerPrivate* aWorkerPrivate,
                           const nsTArray<nsString>& aLanguages)
-      : WorkerRunnable(aWorkerPrivate, "UpdateLanguagesRunnable"),
+      : WorkerThreadRunnable(aWorkerPrivate, "UpdateLanguagesRunnable"),
         mLanguages(aLanguages.Clone()) {}
 
   virtual bool WorkerRun(JSContext* aCx,
@@ -812,10 +814,10 @@ class CycleCollectRunnable final : public WorkerControlRunnable {
   }
 };
 
-class OfflineStatusChangeRunnable final : public WorkerRunnable {
+class OfflineStatusChangeRunnable final : public WorkerThreadRunnable {
  public:
   OfflineStatusChangeRunnable(WorkerPrivate* aWorkerPrivate, bool aIsOffline)
-      : WorkerRunnable(aWorkerPrivate, "OfflineStatusChangeRunnable"),
+      : WorkerThreadRunnable(aWorkerPrivate, "OfflineStatusChangeRunnable"),
         mIsOffline(aIsOffline) {}
 
   bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override {

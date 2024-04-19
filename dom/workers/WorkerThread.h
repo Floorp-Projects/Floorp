@@ -25,9 +25,6 @@ namespace dom {
 
 class WorkerRunnable;
 class WorkerPrivate;
-template <class>
-class WorkerPrivateParent;
-
 namespace workerinternals {
 class RuntimeService;
 }
@@ -38,7 +35,6 @@ class RuntimeService;
 class WorkerThreadFriendKey {
   friend class workerinternals::RuntimeService;
   friend class WorkerPrivate;
-  friend class WorkerPrivateParent<WorkerPrivate>;
 
   WorkerThreadFriendKey();
   ~WorkerThreadFriendKey();

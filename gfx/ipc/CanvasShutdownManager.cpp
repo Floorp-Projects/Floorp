@@ -149,11 +149,11 @@ void CanvasShutdownManager::OnRemoteCanvasRestored() {
 /* static */ void CanvasShutdownManager::OnCompositorManagerRestored() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  class RestoreRunnable final : public WorkerRunnable {
+  class RestoreRunnable final : public WorkerThreadRunnable {
    public:
     explicit RestoreRunnable(WorkerPrivate* aWorkerPrivate)
-        : WorkerRunnable(aWorkerPrivate,
-                         "CanvasShutdownManager::RestoreRunnable") {}
+        : WorkerThreadRunnable(aWorkerPrivate,
+                               "CanvasShutdownManager::RestoreRunnable") {}
 
     bool WorkerRun(JSContext*, WorkerPrivate*) override {
       MaybeRestoreRemoteCanvas();

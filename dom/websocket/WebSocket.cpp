@@ -2785,15 +2785,15 @@ WebSocketImpl::SetTRRMode(nsIRequest::TRRMode aTRRMode) {
 
 namespace {
 
-class WorkerRunnableDispatcher final : public WorkerRunnable {
+class WorkerRunnableDispatcher final : public WorkerThreadRunnable {
   RefPtr<WebSocketImpl> mWebSocketImpl;
 
  public:
   WorkerRunnableDispatcher(WebSocketImpl* aImpl,
                            ThreadSafeWorkerRef* aWorkerRef,
                            already_AddRefed<nsIRunnable> aEvent)
-      : WorkerRunnable(aWorkerRef->Private(), "WorkerRunnableDispatcher",
-                       WorkerThread),
+      : WorkerThreadRunnable(aWorkerRef->Private(), "WorkerRunnableDispatcher",
+                             WorkerRunnable::WorkerThread),
         mWebSocketImpl(aImpl),
         mEvent(std::move(aEvent)) {}
 

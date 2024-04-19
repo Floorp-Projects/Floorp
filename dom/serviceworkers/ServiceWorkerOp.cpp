@@ -320,7 +320,7 @@ class ServiceWorkerOp::ServiceWorkerOpRunnable final
 };
 
 NS_IMPL_ISUPPORTS_INHERITED0(ServiceWorkerOp::ServiceWorkerOpRunnable,
-                             WorkerRunnable)
+                             WorkerThreadRunnable)
 
 bool ServiceWorkerOp::MaybeStart(RemoteWorkerChild* aOwner,
                                  RemoteWorkerChild::State& aState) {
@@ -403,7 +403,7 @@ void ServiceWorkerOp::StartOnMainThread(RefPtr<RemoteWorkerChild>& aOwner) {
     auto lock = aOwner->mState.Lock();
     MOZ_ASSERT(lock->is<Running>());
 
-    RefPtr<WorkerRunnable> workerRunnable =
+    RefPtr<WorkerThreadRunnable> workerRunnable =
         GetRunnable(lock->as<Running>().mWorkerPrivate);
 
     if (NS_WARN_IF(!workerRunnable->Dispatch())) {
@@ -452,7 +452,7 @@ bool ServiceWorkerOp::IsTerminationOp() const {
          ServiceWorkerOpArgs::TServiceWorkerTerminateWorkerOpArgs;
 }
 
-RefPtr<WorkerRunnable> ServiceWorkerOp::GetRunnable(
+RefPtr<WorkerThreadRunnable> ServiceWorkerOp::GetRunnable(
     WorkerPrivate* aWorkerPrivate) {
   AssertIsOnMainThread();
   MOZ_ASSERT(aWorkerPrivate);
@@ -559,7 +559,8 @@ class UpdateServiceWorkerStateOp final : public ServiceWorkerOp {
 
   ~UpdateServiceWorkerStateOp() = default;
 
-  RefPtr<WorkerRunnable> GetRunnable(WorkerPrivate* aWorkerPrivate) override {
+  RefPtr<WorkerThreadRunnable> GetRunnable(
+      WorkerPrivate* aWorkerPrivate) override {
     AssertIsOnMainThread();
     MOZ_ASSERT(aWorkerPrivate);
     MOZ_ASSERT(mArgs.type() ==

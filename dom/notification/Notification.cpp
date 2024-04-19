@@ -1175,7 +1175,7 @@ WorkerNotificationObserver::Observe(nsISupports* aSubject, const char* aTopic,
 
   MOZ_ASSERT(notification->mWorkerPrivate);
 
-  RefPtr<WorkerRunnable> r;
+  RefPtr<WorkerThreadRunnable> r;
   if (!strcmp("alertclickcallback", aTopic)) {
     nsPIDOMWindowInner* window = nullptr;
     if (!notification->mWorkerPrivate->IsServiceWorker()) {

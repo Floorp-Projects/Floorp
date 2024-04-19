@@ -106,12 +106,12 @@ NS_IMPL_RELEASE(SharedWorkerInterfaceRequestor)
 NS_IMPL_QUERY_INTERFACE(SharedWorkerInterfaceRequestor, nsIInterfaceRequestor)
 
 // Normal runnable because AddPortIdentifier() is going to exec JS code.
-class MessagePortIdentifierRunnable final : public WorkerRunnable {
+class MessagePortIdentifierRunnable final : public WorkerThreadRunnable {
  public:
   MessagePortIdentifierRunnable(WorkerPrivate* aWorkerPrivate,
                                 RemoteWorkerChild* aActor,
                                 const MessagePortIdentifier& aPortIdentifier)
-      : WorkerRunnable(aWorkerPrivate, "MessagePortIdentifierRunnable"),
+      : WorkerThreadRunnable(aWorkerPrivate, "MessagePortIdentifierRunnable"),
         mActor(aActor),
         mPortIdentifier(aPortIdentifier) {}
 
