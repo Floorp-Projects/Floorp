@@ -5,7 +5,7 @@
 package org.mozilla.fenix.compose.button
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -20,6 +20,8 @@ import java.util.Locale
  * @param text The button text to be displayed.
  * @param onClick Invoked when the user clicks on the button.
  * @param modifier [Modifier] Used to shape and position the underlying [androidx.compose.material.TextButton].
+ * @param enabled Controls the enabled state of the button. When `false`, this button will not
+ * be clickable.
  * @param textColor [Color] to apply to the button text.
  * @param upperCaseText If the button text should be in uppercase letters.
  */
@@ -28,12 +30,14 @@ fun TextButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
     textColor: Color = FirefoxTheme.colors.textAccent,
     upperCaseText: Boolean = true,
 ) {
     androidx.compose.material.TextButton(
         onClick = onClick,
         modifier = modifier,
+        enabled = enabled,
     ) {
         Text(
             text = if (upperCaseText) {
@@ -41,7 +45,7 @@ fun TextButton(
             } else {
                 text
             },
-            color = textColor,
+            color = if (enabled) textColor else FirefoxTheme.colors.textDisabled,
             style = FirefoxTheme.typography.button,
             maxLines = 1,
         )
@@ -52,10 +56,16 @@ fun TextButton(
 @LightDarkPreview
 private fun TextButtonPreview() {
     FirefoxTheme {
-        Box(Modifier.background(FirefoxTheme.colors.layer1)) {
+        Column(Modifier.background(FirefoxTheme.colors.layer1)) {
             TextButton(
                 text = "label",
                 onClick = {},
+            )
+
+            TextButton(
+                text = "disabled",
+                onClick = {},
+                enabled = false,
             )
         }
     }
