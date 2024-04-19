@@ -55,8 +55,7 @@ void WorkerDocumentListener::OnVisible(bool aVisible) {
   class VisibleRunnable final : public WorkerThreadRunnable {
    public:
     VisibleRunnable(WorkerPrivate* aWorkerPrivate, bool aVisible)
-        : WorkerThreadRunnable(aWorkerPrivate, "VisibleRunnable"),
-          mVisible(aVisible) {}
+        : WorkerThreadRunnable("VisibleRunnable"), mVisible(aVisible) {}
 
     bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) {
       WorkerGlobalScope* scope = aWorkerPrivate->GlobalScope();
@@ -70,7 +69,7 @@ void WorkerDocumentListener::OnVisible(bool aVisible) {
   };
 
   auto runnable = MakeRefPtr<VisibleRunnable>(mWorkerRef->Private(), aVisible);
-  runnable->Dispatch();
+  runnable->Dispatch(mWorkerRef->Private());
 }
 
 void WorkerDocumentListener::SetListening(uint64_t aWindowID, bool aListen) {

@@ -12,7 +12,7 @@ namespace mozilla::dom {
 
 WebTaskWorkerRunnable::WebTaskWorkerRunnable(
     WorkerPrivate* aWorkerPrivate, WebTaskSchedulerWorker* aSchedulerWorker)
-    : WorkerSameThreadRunnable(aWorkerPrivate, "WebTaskWorkerRunnable"),
+    : WorkerSameThreadRunnable("WebTaskWorkerRunnable"),
       mSchedulerWorker(aSchedulerWorker) {
   MOZ_ASSERT(mSchedulerWorker);
 }
@@ -60,7 +60,7 @@ bool WebTaskSchedulerWorker::DispatchEventLoopRunnable() {
   }
   RefPtr<WebTaskWorkerRunnable> runnable =
       new WebTaskWorkerRunnable(mWorkerPrivate, this);
-  return runnable->Dispatch();
+  return runnable->Dispatch(mWorkerPrivate);
 }
 
 void WebTaskSchedulerWorker::Disconnect() {

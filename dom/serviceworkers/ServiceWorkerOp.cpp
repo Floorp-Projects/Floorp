@@ -278,7 +278,7 @@ class ServiceWorkerOp::ServiceWorkerOpRunnable final
 
   ServiceWorkerOpRunnable(RefPtr<ServiceWorkerOp> aOwner,
                           WorkerPrivate* aWorkerPrivate)
-      : WorkerDebuggeeRunnable(aWorkerPrivate, "ServiceWorkerOpRunnable"),
+      : WorkerDebuggeeRunnable("ServiceWorkerOpRunnable"),
         mOwner(std::move(aOwner)) {
     AssertIsOnMainThread();
     MOZ_ASSERT(mOwner);
@@ -405,7 +405,8 @@ void ServiceWorkerOp::StartOnMainThread(RefPtr<RemoteWorkerChild>& aOwner) {
     RefPtr<WorkerThreadRunnable> workerRunnable =
         GetRunnable(lock->as<Running>().mWorkerPrivate);
 
-    if (NS_WARN_IF(!workerRunnable->Dispatch())) {
+    if (NS_WARN_IF(
+            !workerRunnable->Dispatch(lock->as<Running>().mWorkerPrivate))) {
       RejectAll(NS_ERROR_FAILURE);
     }
   }
@@ -521,7 +522,7 @@ class UpdateServiceWorkerStateOp final : public ServiceWorkerOp {
 
     UpdateStateOpRunnable(RefPtr<UpdateServiceWorkerStateOp> aOwner,
                           WorkerPrivate* aWorkerPrivate)
-        : MainThreadWorkerControlRunnable(aWorkerPrivate),
+        : MainThreadWorkerControlRunnable("UpdateStateOpRunnable"),
           mOwner(std::move(aOwner)) {
       AssertIsOnMainThread();
       MOZ_ASSERT(mOwner);

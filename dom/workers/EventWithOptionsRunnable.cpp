@@ -33,7 +33,7 @@
 namespace mozilla::dom {
 EventWithOptionsRunnable::EventWithOptionsRunnable(Worker& aWorker,
                                                    const char* aName)
-    : WorkerDebuggeeRunnable(aWorker.mWorkerPrivate, aName),
+    : WorkerDebuggeeRunnable(aName),
       StructuredCloneHolder(CloningSupported, TransferringSupported,
                             StructuredCloneScope::SameProcess) {}
 

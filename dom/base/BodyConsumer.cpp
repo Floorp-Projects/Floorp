@@ -74,7 +74,7 @@ class ContinueConsumeBodyRunnable final : public MainThreadWorkerRunnable {
   ContinueConsumeBodyRunnable(BodyConsumer* aBodyConsumer,
                               WorkerPrivate* aWorkerPrivate, nsresult aStatus,
                               uint32_t aLength, uint8_t* aResult)
-      : MainThreadWorkerRunnable(aWorkerPrivate, "ContinueConsumeBodyRunnable"),
+      : MainThreadWorkerRunnable("ContinueConsumeBodyRunnable"),
         mBodyConsumer(aBodyConsumer),
         mStatus(aStatus),
         mLength(aLength),
@@ -97,7 +97,7 @@ class AbortConsumeBodyControlRunnable final
  public:
   AbortConsumeBodyControlRunnable(BodyConsumer* aBodyConsumer,
                                   WorkerPrivate* aWorkerPrivate)
-      : MainThreadWorkerControlRunnable(aWorkerPrivate),
+      : MainThreadWorkerControlRunnable("AbortConsumeBodyControlRunnable"),
         mBodyConsumer(aBodyConsumer) {
     MOZ_ASSERT(NS_IsMainThread());
   }
@@ -131,7 +131,7 @@ class MOZ_STACK_CLASS AutoFailConsumeBody final {
       RefPtr<AbortConsumeBodyControlRunnable> r =
           new AbortConsumeBodyControlRunnable(mBodyConsumer,
                                               mWorkerRef->Private());
-      if (!r->Dispatch()) {
+      if (!r->Dispatch(mWorkerRef->Private())) {
         MOZ_CRASH("We are going to leak");
       }
       return;
@@ -159,8 +159,7 @@ class ContinueConsumeBlobBodyRunnable final : public MainThreadWorkerRunnable {
   ContinueConsumeBlobBodyRunnable(BodyConsumer* aBodyConsumer,
                                   WorkerPrivate* aWorkerPrivate,
                                   BlobImpl* aBlobImpl)
-      : MainThreadWorkerRunnable(aWorkerPrivate,
-                                 "ContinueConsumeBlobBodyRunnable"),
+      : MainThreadWorkerRunnable("ContinueConsumeBlobBodyRunnable"),
         mBodyConsumer(aBodyConsumer),
         mBlobImpl(aBlobImpl) {
     MOZ_ASSERT(NS_IsMainThread());
@@ -182,7 +181,7 @@ class AbortConsumeBlobBodyControlRunnable final
  public:
   AbortConsumeBlobBodyControlRunnable(BodyConsumer* aBodyConsumer,
                                       WorkerPrivate* aWorkerPrivate)
-      : MainThreadWorkerControlRunnable(aWorkerPrivate),
+      : MainThreadWorkerControlRunnable("AbortConsumeBlobBodyControlRunnable"),
         mBodyConsumer(aBodyConsumer) {
     MOZ_ASSERT(NS_IsMainThread());
   }
@@ -227,7 +226,7 @@ class ConsumeBodyDoneObserver final : public nsIStreamLoaderObserver,
       RefPtr<ContinueConsumeBodyRunnable> r = new ContinueConsumeBodyRunnable(
           mBodyConsumer, mWorkerRef->Private(), aStatus, aResultLength,
           nonconstResult);
-      if (r->Dispatch()) {
+      if (r->Dispatch(mWorkerRef->Private())) {
         // The caller is responsible for data.
         return NS_SUCCESS_ADOPTED_DATA;
       }
@@ -239,7 +238,7 @@ class ConsumeBodyDoneObserver final : public nsIStreamLoaderObserver,
     RefPtr<AbortConsumeBodyControlRunnable> r =
         new AbortConsumeBodyControlRunnable(mBodyConsumer,
                                             mWorkerRef->Private());
-    if (NS_WARN_IF(!r->Dispatch())) {
+    if (NS_WARN_IF(!r->Dispatch(mWorkerRef->Private()))) {
       return NS_ERROR_FAILURE;
     }
 
@@ -620,14 +619,14 @@ void BodyConsumer::DispatchContinueConsumeBlobBody(
         new ContinueConsumeBlobBodyRunnable(this, aWorkerRef->Private(),
                                             aBlobImpl);
 
-    if (r->Dispatch()) {
+    if (r->Dispatch(aWorkerRef->Private())) {
       return;
     }
   } else {
     RefPtr<ContinueConsumeBodyRunnable> r = new ContinueConsumeBodyRunnable(
         this, aWorkerRef->Private(), NS_ERROR_DOM_ABORT_ERR, 0, nullptr);
 
-    if (r->Dispatch()) {
+    if (r->Dispatch(aWorkerRef->Private())) {
       return;
     }
   }
@@ -638,7 +637,7 @@ void BodyConsumer::DispatchContinueConsumeBlobBody(
   RefPtr<AbortConsumeBlobBodyControlRunnable> r =
       new AbortConsumeBlobBodyControlRunnable(this, aWorkerRef->Private());
 
-  Unused << NS_WARN_IF(!r->Dispatch());
+  Unused << NS_WARN_IF(!r->Dispatch(aWorkerRef->Private()));
 }
 
 /*

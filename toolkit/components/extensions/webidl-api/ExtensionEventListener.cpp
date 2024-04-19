@@ -299,7 +299,7 @@ NS_IMETHODIMP ExtensionEventListener::CallListener(
   RefPtr<ExtensionListenerCallWorkerRunnable> runnable =
       new ExtensionListenerCallWorkerRunnable(this, std::move(argsHolder),
                                               aCallOptions, retPromise);
-  runnable->Dispatch();
+  runnable->Dispatch(GetWorkerPrivate());
   retPromise.forget(aPromiseResult);
 
   return NS_OK;
@@ -332,7 +332,6 @@ bool ExtensionListenerCallWorkerRunnable::WorkerRun(
     JSContext* aCx, dom::WorkerPrivate* aWorkerPrivate) {
   MOZ_ASSERT(aWorkerPrivate);
   aWorkerPrivate->AssertIsOnWorkerThread();
-  MOZ_ASSERT(aWorkerPrivate == mWorkerPrivate);
   auto global = mListener->GetGlobalObject();
   if (NS_WARN_IF(!global)) {
     return true;

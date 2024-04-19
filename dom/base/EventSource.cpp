@@ -1834,7 +1834,7 @@ class WorkerRunnableDispatcher final : public WorkerThreadRunnable {
   WorkerRunnableDispatcher(RefPtr<EventSourceImpl>&& aImpl,
                            WorkerPrivate* aWorkerPrivate,
                            already_AddRefed<nsIRunnable> aEvent)
-      : WorkerThreadRunnable(aWorkerPrivate, "WorkerRunnableDispatcher"),
+      : WorkerThreadRunnable("WorkerRunnableDispatcher"),
         mEventSourceImpl(std::move(aImpl)),
         mEvent(std::move(aEvent)) {}
 
@@ -1928,7 +1928,7 @@ EventSourceImpl::Dispatch(already_AddRefed<nsIRunnable> aEvent,
   RefPtr<WorkerRunnableDispatcher> event = new WorkerRunnableDispatcher(
       this, mWorkerRef->Private(), event_ref.forget());
 
-  if (!event->Dispatch()) {
+  if (!event->Dispatch(mWorkerRef->Private())) {
     return NS_ERROR_FAILURE;
   }
   return NS_OK;

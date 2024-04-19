@@ -125,8 +125,7 @@ class RequestResolver::FinishWorkerRunnable final
 
  public:
   explicit FinishWorkerRunnable(RequestResolver* aResolver)
-      : WorkerThreadRunnable(aResolver->mProxy->GetWorkerPrivate(),
-                             "RequestResolver::FinishWorkerRunnable"),
+      : WorkerThreadRunnable("RequestResolver::FinishWorkerRunnable"),
         mResolver(aResolver) {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(aResolver);
@@ -566,7 +565,7 @@ nsresult RequestResolver::Finish() {
     }
 
     RefPtr<FinishWorkerRunnable> runnable = new FinishWorkerRunnable(this);
-    if (NS_WARN_IF(!runnable->Dispatch())) {
+    if (NS_WARN_IF(!runnable->Dispatch(mProxy->GetWorkerPrivate()))) {
       return NS_ERROR_FAILURE;
     }
   }

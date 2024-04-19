@@ -723,8 +723,7 @@ class PromiseWorkerProxyRunnable final : public WorkerThreadRunnable {
  public:
   PromiseWorkerProxyRunnable(PromiseWorkerProxy* aPromiseWorkerProxy,
                              PromiseWorkerProxy::RunCallbackFunc aFunc)
-      : WorkerThreadRunnable(aPromiseWorkerProxy->GetWorkerPrivate(),
-                             "PromiseWorkerProxyRunnable"),
+      : WorkerThreadRunnable("PromiseWorkerProxyRunnable"),
         mPromiseWorkerProxy(aPromiseWorkerProxy),
         mFunc(aFunc) {
     MOZ_ASSERT(NS_IsMainThread());
@@ -735,7 +734,6 @@ class PromiseWorkerProxyRunnable final : public WorkerThreadRunnable {
                          WorkerPrivate* aWorkerPrivate) override {
     MOZ_ASSERT(aWorkerPrivate);
     aWorkerPrivate->AssertIsOnWorkerThread();
-    MOZ_ASSERT(aWorkerPrivate == mWorkerPrivate);
 
     MOZ_ASSERT(mPromiseWorkerProxy);
     RefPtr<Promise> workerPromise = mPromiseWorkerProxy->GetWorkerPromise();
@@ -862,7 +860,7 @@ void PromiseWorkerProxy::RunCallback(JSContext* aCx,
   RefPtr<PromiseWorkerProxyRunnable> runnable =
       new PromiseWorkerProxyRunnable(this, aFunc);
 
-  runnable->Dispatch();
+  runnable->Dispatch(GetWorkerPrivate());
 }
 
 void PromiseWorkerProxy::ResolvedCallback(JSContext* aCx,

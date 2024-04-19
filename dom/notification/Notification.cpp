@@ -236,7 +236,7 @@ class ReleaseNotificationControlRunnable final
 
  public:
   explicit ReleaseNotificationControlRunnable(Notification* aNotification)
-      : MainThreadWorkerControlRunnable(aNotification->mWorkerPrivate),
+      : MainThreadWorkerControlRunnable("ReleaseNotificationControlRunnable"),
         mNotification(aNotification) {}
 
   bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override {
@@ -310,7 +310,7 @@ class NotificationWorkerRunnable : public MainThreadWorkerRunnable {
   explicit NotificationWorkerRunnable(
       WorkerPrivate* aWorkerPrivate,
       const char* aName = "NotificationWorkerRunnable")
-      : MainThreadWorkerRunnable(aWorkerPrivate, aName) {}
+      : MainThreadWorkerRunnable(aName) {}
 
   bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override {
     aWorkerPrivate->AssertIsOnWorkerThread();
@@ -426,10 +426,10 @@ class NotificationRef final {
         RefPtr<ReleaseNotificationRunnable> r =
             new ReleaseNotificationRunnable(notification);
 
-        if (!r->Dispatch()) {
+        if (!r->Dispatch(notification->mWorkerPrivate)) {
           RefPtr<ReleaseNotificationControlRunnable> r =
               new ReleaseNotificationControlRunnable(notification);
-          MOZ_ALWAYS_TRUE(r->Dispatch());
+          MOZ_ALWAYS_TRUE(r->Dispatch(notification->mWorkerPrivate));
         }
       } else {
         notification->AssertIsOnTargetThread();
@@ -1067,15 +1067,16 @@ class NotificationClickWorkerRunnable final
                                    "NotificationClickWorkerRunnable"),
         mNotification(aNotification),
         mWindow(aWindow) {
-    MOZ_ASSERT_IF(mWorkerPrivate->IsServiceWorker(), !mWindow);
+    MOZ_ASSERT_IF(mNotification->mWorkerPrivate->IsServiceWorker(), !mWindow);
   }
 
   void WorkerRunInternal(WorkerPrivate* aWorkerPrivate) override {
     bool doDefaultAction = mNotification->DispatchClickEvent();
-    MOZ_ASSERT_IF(mWorkerPrivate->IsServiceWorker(), !doDefaultAction);
+    MOZ_ASSERT_IF(mNotification->mWorkerPrivate->IsServiceWorker(),
+                  !doDefaultAction);
     if (doDefaultAction) {
       RefPtr<FocusWindowRunnable> r = new FocusWindowRunnable(mWindow);
-      mWorkerPrivate->DispatchToMainThread(r.forget());
+      mNotification->mWorkerPrivate->DispatchToMainThread(r.forget());
     }
   }
 };
@@ -1207,7 +1208,7 @@ WorkerNotificationObserver::Observe(nsISupports* aSubject, const char* aTopic,
   }
 
   MOZ_ASSERT(r);
-  if (!r->Dispatch()) {
+  if (!r->Dispatch(notification->mWorkerPrivate)) {
     NS_WARNING("Could not dispatch event to worker notification");
   }
   return NS_OK;
@@ -1351,7 +1352,7 @@ void Notification::ShowInternal() {
     if (mWorkerPrivate) {
       RefPtr<NotificationEventWorkerRunnable> r =
           new NotificationEventWorkerRunnable(this, u"error"_ns);
-      if (!r->Dispatch()) {
+      if (!r->Dispatch(mWorkerPrivate)) {
         NS_WARNING("Could not dispatch event to worker notification");
       }
     } else {
@@ -1765,7 +1766,7 @@ class WorkerGetCallback final : public ScopeCheckingGetCallback {
     RefPtr<WorkerGetResultRunnable> r = new WorkerGetResultRunnable(
         proxy->GetWorkerPrivate(), proxy, std::move(mStrings));
 
-    r->Dispatch();
+    r->Dispatch(proxy->GetWorkerPrivate());
     return NS_OK;
   }
 

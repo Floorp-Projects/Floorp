@@ -152,8 +152,7 @@ void CanvasShutdownManager::OnRemoteCanvasRestored() {
   class RestoreRunnable final : public WorkerThreadRunnable {
    public:
     explicit RestoreRunnable(WorkerPrivate* aWorkerPrivate)
-        : WorkerThreadRunnable(aWorkerPrivate,
-                               "CanvasShutdownManager::RestoreRunnable") {}
+        : WorkerThreadRunnable("CanvasShutdownManager::RestoreRunnable") {}
 
     bool WorkerRun(JSContext*, WorkerPrivate*) override {
       MaybeRestoreRemoteCanvas();
@@ -171,7 +170,7 @@ void CanvasShutdownManager::OnRemoteCanvasRestored() {
   for (const auto& manager : sManagers) {
     if (manager->mWorkerRef) {
       auto task = MakeRefPtr<RestoreRunnable>(manager->mWorkerRef->Private());
-      task->Dispatch();
+      task->Dispatch(manager->mWorkerRef->Private());
     }
   }
 }

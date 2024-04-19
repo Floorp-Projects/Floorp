@@ -366,7 +366,7 @@ void CanvasDrawEventRecorder::QueueProcessPendingDeletionsLocked(
    public:
     ProcessPendingRunnable(dom::WorkerPrivate* aWorkerPrivate,
                            RefPtr<CanvasDrawEventRecorder>&& aRecorder)
-        : dom::WorkerThreadRunnable(aWorkerPrivate),
+        : dom::WorkerThreadRunnable("ProcessPendingRunnable"),
           mRecorder(std::move(aRecorder)) {}
 
     bool WorkerRun(JSContext*, dom::WorkerPrivate*) override {
@@ -381,7 +381,7 @@ void CanvasDrawEventRecorder::QueueProcessPendingDeletionsLocked(
 
   auto task = MakeRefPtr<ProcessPendingRunnable>(mWorkerRef->Private(),
                                                  std::move(aRecorder));
-  if (NS_WARN_IF(!task->Dispatch())) {
+  if (NS_WARN_IF(!task->Dispatch(mWorkerRef->Private()))) {
     MOZ_CRASH("ProcessPendingRunnable leaked!");
   }
 }

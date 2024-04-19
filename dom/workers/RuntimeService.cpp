@@ -619,20 +619,19 @@ class JSDispatchableRunnable final : public WorkerThreadRunnable {
  public:
   JSDispatchableRunnable(WorkerPrivate* aWorkerPrivate,
                          JS::Dispatchable* aDispatchable)
-      : WorkerThreadRunnable(aWorkerPrivate, "JSDispatchableRunnable"),
+      : WorkerThreadRunnable("JSDispatchableRunnable"),
         mDispatchable(aDispatchable) {
     MOZ_ASSERT(mDispatchable);
   }
 
   bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override {
-    MOZ_ASSERT(aWorkerPrivate == mWorkerPrivate);
-    MOZ_ASSERT(aCx == mWorkerPrivate->GetJSContext());
+    MOZ_ASSERT(aCx == aWorkerPrivate->GetJSContext());
     MOZ_ASSERT(mDispatchable);
 
     AutoJSAPI jsapi;
     jsapi.Init();
 
-    mDispatchable->run(mWorkerPrivate->GetJSContext(),
+    mDispatchable->run(aWorkerPrivate->GetJSContext(),
                        JS::Dispatchable::NotShuttingDown);
     mDispatchable = nullptr;  // mDispatchable may delete itself
 
@@ -645,7 +644,7 @@ class JSDispatchableRunnable final : public WorkerThreadRunnable {
     AutoJSAPI jsapi;
     jsapi.Init();
 
-    mDispatchable->run(mWorkerPrivate->GetJSContext(),
+    mDispatchable->run(GetCurrentThreadWorkerPrivate()->GetJSContext(),
                        JS::Dispatchable::ShuttingDown);
     mDispatchable = nullptr;  // mDispatchable may delete itself
 
@@ -666,7 +665,7 @@ static bool DispatchToEventLoop(void* aClosure,
   // the JSDispatchableRunnable comment above.
   RefPtr<JSDispatchableRunnable> r =
       new JSDispatchableRunnable(workerPrivate, aDispatchable);
-  return r->Dispatch();
+  return r->Dispatch(workerPrivate);
 }
 
 static bool ConsumeStream(JSContext* aCx, JS::Handle<JSObject*> aObj,
@@ -1483,8 +1482,9 @@ namespace {
 class DumpCrashInfoRunnable final : public WorkerControlRunnable {
  public:
   explicit DumpCrashInfoRunnable(WorkerPrivate* aWorkerPrivate)
-      : WorkerControlRunnable(aWorkerPrivate, "DumpCrashInfoRunnable"),
-        mMonitor("DumpCrashInfoRunnable::mMonitor") {}
+      : WorkerControlRunnable("DumpCrashInfoRunnable"),
+        mMonitor("DumpCrashInfoRunnable::mMonitor"),
+        mWorkerPrivate(aWorkerPrivate) {}
 
   bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override {
     MonitorAutoLock lock(mMonitor);
@@ -1510,7 +1510,7 @@ class DumpCrashInfoRunnable final : public WorkerControlRunnable {
   bool DispatchAndWait() {
     MonitorAutoLock lock(mMonitor);
 
-    if (!Dispatch()) {
+    if (!Dispatch(mWorkerPrivate)) {
       // The worker is already dead but the main thread still didn't remove it
       // from RuntimeService's registry.
       return false;
@@ -1537,6 +1537,7 @@ class DumpCrashInfoRunnable final : public WorkerControlRunnable {
   Monitor mMonitor MOZ_UNANNOTATED;
   nsCString mMsg;
   FlippedOnce<false> mHasMsg;
+  WorkerPrivate* mWorkerPrivate;
 };
 
 struct ActiveWorkerStats {

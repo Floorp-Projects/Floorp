@@ -61,7 +61,8 @@ static ImageBitmapShutdownObserver* sShutdownObserver = nullptr;
 class SendShutdownToWorkerThread : public MainThreadWorkerControlRunnable {
  public:
   explicit SendShutdownToWorkerThread(ImageBitmap* aImageBitmap)
-      : MainThreadWorkerControlRunnable(GetCurrentThreadWorkerPrivate()),
+      : MainThreadWorkerControlRunnable("SendShutdownToWorkerThread"),
+        mWorkerPrivate(GetCurrentThreadWorkerPrivate()),
         mImageBitmap(aImageBitmap) {
     MOZ_ASSERT(GetCurrentThreadWorkerPrivate());
   }
@@ -74,6 +75,7 @@ class SendShutdownToWorkerThread : public MainThreadWorkerControlRunnable {
     return true;
   }
 
+  WorkerPrivate* mWorkerPrivate;
   ImageBitmap* mImageBitmap;
 };
 
@@ -146,7 +148,7 @@ ImageBitmapShutdownObserver::Observe(nsISupports* aSubject, const char* aTopic,
     for (const auto& bitmap : mBitmaps) {
       const auto& runnable = bitmap->mShutdownRunnable;
       if (runnable) {
-        runnable->Dispatch();
+        runnable->Dispatch(runnable->mWorkerPrivate);
       } else {
         bitmap->OnShutdown();
       }
@@ -1578,8 +1580,7 @@ class FulfillImageBitmapPromiseWorkerTask final
  public:
   FulfillImageBitmapPromiseWorkerTask(Promise* aPromise,
                                       ImageBitmap* aImageBitmap)
-      : WorkerSameThreadRunnable(GetCurrentThreadWorkerPrivate(),
-                                 "FulfillImageBitmapPromiseWorkerTask"),
+      : WorkerSameThreadRunnable("FulfillImageBitmapPromiseWorkerTask"),
         FulfillImageBitmapPromise(aPromise, aImageBitmap) {}
 
   bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override {
@@ -1597,7 +1598,8 @@ static void AsyncFulfillImageBitmapPromise(Promise* aPromise,
   } else {
     RefPtr<FulfillImageBitmapPromiseWorkerTask> task =
         new FulfillImageBitmapPromiseWorkerTask(aPromise, aImageBitmap);
-    task->Dispatch();  // Actually, to the current worker-thread.
+    task->Dispatch(GetCurrentThreadWorkerPrivate());  // Actually, to the
+                                                      // current worker-thread.
   }
 }
 
@@ -1706,8 +1708,7 @@ class CreateImageBitmapFromBlobRunnable final : public WorkerThreadRunnable {
                                              CreateImageBitmapFromBlob* aTask,
                                              layers::Image* aImage,
                                              nsresult aStatus)
-      : WorkerThreadRunnable(aWorkerPrivate,
-                             "CreateImageBitmapFromBlobRunnable"),
+      : WorkerThreadRunnable("CreateImageBitmapFromBlobRunnable"),
         mTask(aTask),
         mImage(aImage),
         mStatus(aStatus) {}
@@ -2288,7 +2289,7 @@ void CreateImageBitmapFromBlob::MimeTypeAndDecodeAndCropBlobCompletedMainThread(
     RefPtr<CreateImageBitmapFromBlobRunnable> r =
         new CreateImageBitmapFromBlobRunnable(mWorkerRef->Private(), this,
                                               aImage, aStatus);
-    r->Dispatch();
+    r->Dispatch(mWorkerRef->Private());
     return;
   }
 
