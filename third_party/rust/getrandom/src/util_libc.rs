@@ -1,14 +1,6 @@
-// Copyright 2019 Developers of the Rand project.
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
 #![allow(dead_code)]
 use crate::Error;
 use core::{
-    cmp::min,
     mem::MaybeUninit,
     num::NonZeroU32,
     ptr::NonNull,
@@ -70,17 +62,19 @@ pub fn sys_fill_exact(
 ) -> Result<(), Error> {
     while !buf.is_empty() {
         let res = sys_fill(buf);
-        if res < 0 {
-            let err = last_os_error();
-            // We should try again if the call was interrupted.
-            if err.raw_os_error() != Some(libc::EINTR) {
-                return Err(err);
+        match res {
+            res if res > 0 => buf = buf.get_mut(res as usize..).ok_or(Error::UNEXPECTED)?,
+            -1 => {
+                let err = last_os_error();
+                // We should try again if the call was interrupted.
+                if err.raw_os_error() != Some(libc::EINTR) {
+                    return Err(err);
+                }
             }
-        } else {
-            // We don't check for EOF (ret = 0) as the data we are reading
+            // Negative return codes not equal to -1 should be impossible.
+            // EOF (ret = 0) should be impossible, as the data we are reading
             // should be an infinite stream of random bytes.
-            let len = min(res as usize, buf.len());
-            buf = &mut buf[len..];
+            _ => return Err(Error::UNEXPECTED),
         }
     }
     Ok(())
@@ -155,5 +149,18 @@ pub unsafe fn open_readonly(path: &str) -> Result<libc::c_int, Error> {
         if err.raw_os_error() != Some(libc::EINTR) {
             return Err(err);
         }
+    }
+}
+
+/// Thin wrapper around the `getrandom()` Linux system call
+#[cfg(any(target_os = "android", target_os = "linux"))]
+pub fn getrandom_syscall(buf: &mut [MaybeUninit<u8>]) -> libc::ssize_t {
+    unsafe {
+        libc::syscall(
+            libc::SYS_getrandom,
+            buf.as_mut_ptr() as *mut libc::c_void,
+            buf.len(),
+            0,
+        ) as libc::ssize_t
     }
 }

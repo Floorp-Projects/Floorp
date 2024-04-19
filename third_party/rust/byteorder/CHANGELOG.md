@@ -1,3 +1,7 @@
+**WARNING:** This CHANGELOG is no longer updated. The activity for this project
+is sparse enough that you should refer to the commit log instead.
+
+
 1.3.4
 =====
 This patch release squashes deprecation warnings for the `try!` macro, in

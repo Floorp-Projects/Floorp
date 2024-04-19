@@ -271,8 +271,9 @@ impl<'de> Deserialize<'de> for Field255 {
 }
 
 impl Encode for Field255 {
-    fn encode(&self, bytes: &mut Vec<u8>) {
+    fn encode(&self, bytes: &mut Vec<u8>) -> Result<(), CodecError> {
         bytes.extend_from_slice(&<[u8; Self::ENCODED_SIZE]>::from(*self));
+        Ok(())
     }
 
     fn encoded_len(&self) -> Option<usize> {
@@ -341,7 +342,7 @@ mod tests {
         codec::Encode,
         field::{
             test_utils::{field_element_test_common, TestFieldElementWithInteger},
-            FieldElement, FieldError,
+            FieldElement, FieldError, Integer,
         },
     };
     use assert_matches::assert_matches;
@@ -375,16 +376,30 @@ mod tests {
         }
     }
 
-    impl TestFieldElementWithInteger for Field255 {
-        type Integer = BigUint;
-        type IntegerTryFromError = <Self::Integer as TryFrom<usize>>::Error;
-        type TryIntoU64Error = <Self::Integer as TryInto<u64>>::Error;
+    impl Integer for BigUint {
+        type TryFromUsizeError = <Self as TryFrom<usize>>::Error;
 
-        fn pow(&self, _exp: Self::Integer) -> Self {
+        type TryIntoU64Error = <Self as TryInto<u64>>::Error;
+
+        fn zero() -> Self {
+            Self::new(Vec::new())
+        }
+
+        fn one() -> Self {
+            Self::new(Vec::from([1]))
+        }
+    }
+
+    impl TestFieldElementWithInteger for Field255 {
+        type TestInteger = BigUint;
+        type IntegerTryFromError = <Self::TestInteger as TryFrom<usize>>::Error;
+        type TryIntoU64Error = <Self::TestInteger as TryInto<u64>>::Error;
+
+        fn pow(&self, _exp: Self::TestInteger) -> Self {
             unimplemented!("Field255::pow() is not implemented because it's not needed yet")
         }
 
-        fn modulus() -> Self::Integer {
+        fn modulus() -> Self::TestInteger {
             MODULUS.clone()
         }
     }
@@ -415,7 +430,7 @@ mod tests {
     #[test]
     fn encode_endianness() {
         let mut one_encoded = Vec::new();
-        Field255::one().encode(&mut one_encoded);
+        Field255::one().encode(&mut one_encoded).unwrap();
         assert_eq!(
             one_encoded,
             [
