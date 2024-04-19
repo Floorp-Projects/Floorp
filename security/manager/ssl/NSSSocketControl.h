@@ -51,6 +51,8 @@ class NSSSocketControl final : public CommonSocketControl {
   // From nsITLSSocketControl.
   NS_IMETHOD ProxyStartSSL(void) override;
   NS_IMETHOD StartTLS(void) override;
+  NS_IMETHOD AsyncStartTLS(JSContext* aCx,
+                           mozilla::dom::Promise** aPromise) override;
   NS_IMETHOD SetNPNList(nsTArray<nsCString>& aNPNList) override;
   NS_IMETHOD GetAlpnEarlySelection(nsACString& _retval) override;
   NS_IMETHOD GetEarlyDataAccepted(bool* aEarlyDataAccepted) override;

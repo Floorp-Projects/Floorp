@@ -23,8 +23,15 @@ interface nsIX509Cert;
 // thread (except for asyncGetSecurityInfo);
 [scriptable, builtinclass, uuid(418265c8-654e-4fbb-ba62-4eed27de1f03)]
 interface nsITLSSocketControl : nsISupports {
-    void proxyStartSSL();
-    void StartTLS();
+    [noscript] void proxyStartSSL();
+    [noscript] void StartTLS();
+
+    /**
+     * Calls StartTLS on the socket thread, and resolves with the nsresult
+     * return value of that call.
+     */
+    [implicit_jscontext,must_use]
+    Promise asyncStartTLS();
 
     /* NPN (Next Protocol Negotiation) is a mechanism for
        negotiating the protocol to be spoken inside the SSL

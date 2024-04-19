@@ -124,6 +124,12 @@ NS_IMETHODIMP
 FuzzySocketControl::StartTLS() { return NS_OK; }
 
 NS_IMETHODIMP
+FuzzySocketControl::AsyncStartTLS(JSContext* aCx,
+                                  mozilla::dom::Promise** aPromise) {
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 FuzzySocketControl::SetNPNList(nsTArray<nsCString>& protocolArray) {
   return NS_OK;
 }
