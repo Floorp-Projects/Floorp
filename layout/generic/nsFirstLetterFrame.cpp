@@ -447,12 +447,12 @@ Maybe<nscoord> nsFirstLetterFrame::GetNaturalBaselineBOffset(
 
 LogicalSides nsFirstLetterFrame::GetLogicalSkipSides() const {
   if (GetPrevContinuation()) {
-    // We shouldn't get calls to GetSkipSides for later continuations since
-    // they have separate ComputedStyles with initial values for all the
-    // properties that could trigger a call to GetSkipSides.  Then again,
-    // it's not really an error to call GetSkipSides on any frame, so
+    // We shouldn't get calls to GetLogicalSkipSides for later continuations
+    // since they have separate ComputedStyles with initial values for all the
+    // properties that could trigger a call to GetLogicalSkipSides. Then again,
+    // it's not really an error to call GetLogicalSkipSides on any frame, so
     // that's why we handle it properly.
-    return LogicalSides(mWritingMode, eLogicalSideBitsAll);
+    return LogicalSides(mWritingMode, LogicalSides::All);
   }
   return LogicalSides(mWritingMode);  // first continuation displays all sides
 }

@@ -316,7 +316,7 @@ LogicalSides nsSplittableFrame::GetBlockLevelLogicalSkipSides(
     bool aAfterReflow) const {
   LogicalSides skip(mWritingMode);
   if (MOZ_UNLIKELY(IsTrueOverflowContainer())) {
-    skip |= eLogicalSideBitsBBoth;
+    skip += LogicalSides(mWritingMode, LogicalSides::BBoth);
     return skip;
   }
 
@@ -326,19 +326,19 @@ LogicalSides nsSplittableFrame::GetBlockLevelLogicalSkipSides(
   }
 
   if (GetPrevContinuation()) {
-    skip |= eLogicalSideBitsBStart;
+    skip += LogicalSide::BStart;
   }
 
   // Always skip block-end side if we have a *later* sibling across column-span
   // split.
   if (HasColumnSpanSiblings()) {
-    skip |= eLogicalSideBitsBEnd;
+    skip += LogicalSide::BEnd;
   }
 
   if (aAfterReflow) {
     nsIFrame* nif = GetNextContinuation();
     if (nif && !nif->IsTrueOverflowContainer()) {
-      skip |= eLogicalSideBitsBEnd;
+      skip += LogicalSide::BEnd;
     }
   }
 
