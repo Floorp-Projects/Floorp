@@ -11,8 +11,9 @@
 
 [package]
 edition = "2018"
+rust-version = "1.36"
 name = "encoding_rs"
-version = "0.8.33"
+version = "0.8.34"
 authors = ["Henri Sivonen <hsivonen@hsivonen.fi>"]
 description = "A Gecko-oriented implementation of the Encoding Standard"
 homepage = "https://docs.rs/encoding_rs/"
@@ -36,12 +37,12 @@ repository = "https://github.com/hsivonen/encoding_rs"
 [profile.release]
 lto = true
 
+[dependencies.any_all_workaround]
+version = "0.1.0"
+optional = true
+
 [dependencies.cfg-if]
 version = "1.0"
-
-[dependencies.packed_simd]
-version = "0.3.9"
-optional = true
 
 [dependencies.serde]
 version = "1.0"
@@ -74,10 +75,4 @@ fast-legacy-encode = [
 less-slow-big5-hanzi-encode = []
 less-slow-gb-hanzi-encode = []
 less-slow-kanji-encode = []
-simd-accel = [
-    "packed_simd",
-    "packed_simd/into_bits",
-]
-
-[badges.travis-ci]
-repository = "hsivonen/encoding_rs"
+simd-accel = ["any_all_workaround"]
