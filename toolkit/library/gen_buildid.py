@@ -18,16 +18,7 @@ from mozbuild.preprocessor import Preprocessor
 
 def main(output, input_file):
     with open(input_file) as fh:
-        if buildconfig.substs["EXPAND_LIBS_LIST_STYLE"] == "linkerscript":
-
-            def cleanup(line):
-                assert line.startswith('INPUT("')
-                assert line.endswith('")')
-                return line[len('INPUT("') : -len('")')]
-
-            objs = [cleanup(l.strip()) for l in fh.readlines()]
-        else:
-            objs = [l.strip() for l in fh.readlines()]
+        objs = [l.strip() for l in fh.readlines()]
 
     pp = Preprocessor()
     pp.out = StringIO()
