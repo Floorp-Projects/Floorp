@@ -730,18 +730,14 @@ var SelectTranslationsPanel = new (class {
    * @throws {Error} If an invalid phase is specified.
    */
   #changeStateTo(phase, retainEntries, data = null) {
-    const { textArea } = this.elements;
     switch (phase) {
-      case "translating": {
-        textArea.classList.add("translating");
-        break;
-      }
       case "closed":
       case "idle":
       case "translatable":
+      case "translating":
       case "translated":
       case "unsupported": {
-        textArea.classList.remove("translating");
+        // Phase is valid, continue on.
         break;
       }
       default: {
@@ -857,6 +853,66 @@ var SelectTranslationsPanel = new (class {
     });
 
     return nextPhase;
+  }
+
+  /**
+   * Handles changes to the text area's background image based on the current translation state.
+   *
+   * @param {string} phase - The current phase of the translation state.
+   */
+  #handleTextAreaBackgroundChanges(phase) {
+    const { textArea } = this.elements;
+    switch (phase) {
+      case "translating": {
+        textArea.classList.add("translating");
+        break;
+      }
+      case "closed":
+      case "idle":
+      case "translatable":
+      case "translated":
+      case "unsupported": {
+        textArea.classList.remove("translating");
+        break;
+      }
+      default: {
+        throw new Error(`Invalid state change to '${phase}'`);
+      }
+    }
+  }
+
+  /**
+   * Handles changes to the primary UI components based on the current translation state.
+   *
+   * @param {string} phase  - The current phase of the translation state.
+   */
+  #handlePrimaryUIChanges(phase) {
+    switch (phase) {
+      case "closed":
+      case "idle": {
+        this.#displayIdlePlaceholder();
+        break;
+      }
+      case "translatable": {
+        // Do nothing.
+        break;
+      }
+      case "translating": {
+        this.#displayTranslatingPlaceholder();
+        break;
+      }
+      case "translated": {
+        this.#displayTranslatedText();
+        break;
+      }
+      case "unsupported": {
+        this.#displayUnsupportedLanguageMessage();
+        break;
+      }
+      default: {
+        throw new Error(`Invalid state change to '${phase}'`);
+      }
+    }
   }
 
   /**
@@ -977,23 +1033,9 @@ var SelectTranslationsPanel = new (class {
    * Updates the panel UI based on the current phase of the translation state.
    */
   #updatePanelUIFromState() {
-    switch (this.phase()) {
-      case "idle": {
-        this.#displayIdlePlaceholder();
-        break;
-      }
-      case "translating": {
-        this.#displayTranslatingPlaceholder();
-        break;
-      }
-      case "translated": {
-        this.#displayTranslatedText();
-        break;
-      }
-      case "unsupported": {
-        this.#displayUnsupportedLanguageMessage();
-      }
-    }
+    const phase = this.phase();
+    this.#handlePrimaryUIChanges(phase);
+    this.#handleTextAreaBackgroundChanges(phase);
   }
 
   /**
