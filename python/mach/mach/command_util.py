@@ -93,7 +93,6 @@ MACH_COMMANDS = {
     "doctor": MachCommandReference("python/mozbuild/mozbuild/mach_commands.py"),
     "environment": MachCommandReference("python/mozbuild/mozbuild/mach_commands.py"),
     "eslint": MachCommandReference("tools/lint/mach_commands.py"),
-    "esmify": MachCommandReference("tools/esmify/mach_commands.py"),
     "event-into-legacy": MachCommandReference(
         "toolkit/components/glean/build_scripts/mach_commands.py"
     ),

@@ -74,7 +74,6 @@
 ^browser/components/asrouter/node_modules/
 ^browser/components/newtab/node_modules/
 ^browser/components/aboutwelcome/node_modules/
-^tools/esmify/node_modules/
 ^tools/ts/node_modules/
 
 # Ignore newtab component build assets
@@ -336,12 +335,6 @@ tps_result\.json$
 
 # Ignore design-system node_modules
 toolkit/themes/shared/design-system/node_modules/
-
-# Ignore jscodeshift installed by mach esmify on windows
-^tools/esmify/jscodeshift
-^tools/esmify/jscodeshift\.cmd
-^tools/esmify/jscodeshift\.ps1
-^tools/esmify/package-lock\.json
 
 # Ignore TypeScript declarations reference file updated by tooling.
 ^tools/@types/index.d.ts
