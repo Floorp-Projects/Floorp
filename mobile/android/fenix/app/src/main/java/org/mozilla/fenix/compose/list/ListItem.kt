@@ -165,7 +165,10 @@ fun FaviconListItem(
  * text and an optional [IconButton] or [Icon] at the end.
  *
  * @param label The label in the list item.
+ * @param labelTextColor [Color] to be applied to the label.
  * @param description An optional description text below the label.
+ * @param enabled Controls the enabled state of the list item. When `false`, the list item will not
+ * be clickable.
  * @param onClick Called when the user clicks on the item.
  * @param beforeIconPainter [Painter] used to display an [Icon] before the list item.
  * @param beforeIconDescription Content description of the icon.
@@ -179,7 +182,9 @@ fun FaviconListItem(
 @Composable
 fun IconListItem(
     label: String,
+    labelTextColor: Color = FirefoxTheme.colors.textPrimary,
     description: String? = null,
+    enabled: Boolean = true,
     onClick: (() -> Unit)? = null,
     beforeIconPainter: Painter,
     beforeIconDescription: String? = null,
@@ -191,28 +196,33 @@ fun IconListItem(
 ) {
     ListItem(
         label = label,
+        labelTextColor = labelTextColor,
         description = description,
+        enabled = enabled,
         onClick = onClick,
         beforeListAction = {
             Icon(
                 painter = beforeIconPainter,
                 contentDescription = beforeIconDescription,
                 modifier = Modifier.padding(horizontal = 16.dp),
-                tint = beforeIconTint,
+                tint = if (enabled) beforeIconTint else FirefoxTheme.colors.iconDisabled,
             )
         },
         afterListAction = {
+            val tint = if (enabled) afterIconTint else FirefoxTheme.colors.iconDisabled
+
             if (afterIconPainter != null && onAfterIconClick != null) {
                 IconButton(
                     onClick = onAfterIconClick,
                     modifier = Modifier
                         .padding(end = 16.dp)
                         .size(ICON_SIZE),
+                    enabled = enabled,
                 ) {
                     Icon(
                         painter = afterIconPainter,
                         contentDescription = afterIconDescription,
-                        tint = afterIconTint,
+                        tint = tint,
                     )
                 }
             } else if (afterIconPainter != null) {
@@ -220,7 +230,7 @@ fun IconListItem(
                     painter = afterIconPainter,
                     contentDescription = afterIconDescription,
                     modifier = Modifier.padding(end = 16.dp),
-                    tint = afterIconTint,
+                    tint = tint,
                 )
             }
         },
@@ -232,7 +242,10 @@ fun IconListItem(
  * text and an optional [TextButton] at the end.
  *
  * @param label The label in the list item.
+ * @param labelTextColor [Color] to be applied to the label.
  * @param description An optional description text below the label.
+ * @param enabled Controls the enabled state of the list item. When `false`, the list item will not
+ * be clickable.
  * @param onClick Called when the user clicks on the item.
  * @param beforeIconPainter [Painter] used to display an [Icon] before the list item.
  * @param beforeIconDescription Content description of the icon.
@@ -244,7 +257,9 @@ fun IconListItem(
 @Composable
 fun IconListItem(
     label: String,
+    labelTextColor: Color = FirefoxTheme.colors.textPrimary,
     description: String? = null,
+    enabled: Boolean = true,
     onClick: (() -> Unit)? = null,
     beforeIconPainter: Painter,
     beforeIconDescription: String? = null,
@@ -255,14 +270,16 @@ fun IconListItem(
 ) {
     ListItem(
         label = label,
+        labelTextColor = labelTextColor,
         description = description,
+        enabled = enabled,
         onClick = onClick,
         beforeListAction = {
             Icon(
                 painter = beforeIconPainter,
                 contentDescription = beforeIconDescription,
                 modifier = Modifier.padding(horizontal = 16.dp),
-                tint = beforeIconTint,
+                tint = if (enabled) beforeIconTint else FirefoxTheme.colors.iconDisabled,
             )
         },
         afterListAction = {
@@ -270,6 +287,7 @@ fun IconListItem(
                 TextButton(
                     text = afterButtonText,
                     onClick = onAfterButtonClick,
+                    enabled = enabled,
                     textColor = afterButtonTextColor,
                     upperCaseText = false,
                 )
@@ -335,9 +353,12 @@ fun RadioButtonListItem(
  *
  * @param label The label in the list item.
  * @param modifier [Modifier] to be applied to the layout.
+ * @param labelTextColor [Color] to be applied to the label.
  * @param maxLabelLines An optional maximum number of lines for the label text to span.
  * @param description An optional description text below the label.
  * @param maxDescriptionLines An optional maximum number of lines for the description text to span.
+ * @param enabled Controls the enabled state of the list item. When `false`, the list item will not
+ * be clickable.
  * @param onClick Called when the user clicks on the item.
  * @param beforeListAction Optional Composable for adding UI before the list item.
  * @param afterListAction Optional Composable for adding UI to the end of the list item.
@@ -346,16 +367,18 @@ fun RadioButtonListItem(
 private fun ListItem(
     label: String,
     modifier: Modifier = Modifier,
+    labelTextColor: Color = FirefoxTheme.colors.textPrimary,
     maxLabelLines: Int = 1,
     description: String? = null,
     maxDescriptionLines: Int = 1,
+    enabled: Boolean = true,
     onClick: (() -> Unit)? = null,
     beforeListAction: @Composable RowScope.() -> Unit = {},
     afterListAction: @Composable RowScope.() -> Unit = {},
 ) {
     Row(
         modifier = when (onClick != null) {
-            true -> Modifier.clickable { onClick() }
+            true -> Modifier.clickable(enabled = enabled) { onClick() }
             false -> Modifier
         }.then(
             Modifier.defaultMinSize(minHeight = LIST_ITEM_HEIGHT),
@@ -371,7 +394,7 @@ private fun ListItem(
         ) {
             Text(
                 text = label,
-                color = FirefoxTheme.colors.textPrimary,
+                color = if (enabled) labelTextColor else FirefoxTheme.colors.textDisabled,
                 style = FirefoxTheme.typography.subtitle1,
                 maxLines = maxLabelLines,
             )
@@ -379,7 +402,7 @@ private fun ListItem(
             description?.let {
                 Text(
                     text = description,
-                    color = FirefoxTheme.colors.textSecondary,
+                    color = if (enabled) FirefoxTheme.colors.textSecondary else FirefoxTheme.colors.textDisabled,
                     style = FirefoxTheme.typography.body2,
                     maxLines = maxDescriptionLines,
                 )
@@ -435,12 +458,33 @@ private fun IconListItemPreview() {
         Column(Modifier.background(FirefoxTheme.colors.layer1)) {
             IconListItem(
                 label = "Left icon list item",
+                onClick = {},
                 beforeIconPainter = painterResource(R.drawable.mozac_ic_folder_24),
                 beforeIconDescription = "click me",
             )
 
             IconListItem(
+                label = "Left icon list item",
+                labelTextColor = FirefoxTheme.colors.textAccent,
+                onClick = {},
+                beforeIconPainter = painterResource(R.drawable.mozac_ic_folder_24),
+                beforeIconDescription = "click me",
+                beforeIconTint = FirefoxTheme.colors.iconAccentViolet,
+            )
+
+            IconListItem(
                 label = "Left icon list item + right icon",
+                onClick = {},
+                beforeIconPainter = painterResource(R.drawable.mozac_ic_folder_24),
+                beforeIconDescription = "click me",
+                afterIconPainter = painterResource(R.drawable.mozac_ic_chevron_right_24),
+                afterIconDescription = null,
+            )
+
+            IconListItem(
+                label = "Left icon list item + right icon (disabled)",
+                enabled = false,
+                onClick = {},
                 beforeIconPainter = painterResource(R.drawable.mozac_ic_folder_24),
                 beforeIconDescription = "click me",
                 afterIconPainter = painterResource(R.drawable.mozac_ic_chevron_right_24),
