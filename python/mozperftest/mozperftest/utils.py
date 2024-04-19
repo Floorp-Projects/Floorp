@@ -273,7 +273,6 @@ def install_requirements_file(
                     "-m",
                     "pip",
                     "install",
-                    "--no-deps",
                     "-r",
                     requirements_file,
                     "--no-index",
