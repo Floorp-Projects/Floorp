@@ -43,7 +43,7 @@ object Versions {
     const val zxing = "3.5.3"
 
     const val disklrucache = "2.0.2"
-    const val leakcanary = "2.13"
+    const val leakcanary = "2.14"
 
     const val material = "1.9.0"
     const val ksp = "1.0.20"
