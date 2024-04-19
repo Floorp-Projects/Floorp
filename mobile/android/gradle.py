@@ -8,7 +8,8 @@ import sys
 from contextlib import contextmanager
 
 import mozpack.path as mozpath
-from mozbuild.util import ensureParentDir, lock_file
+from mozbuild.lock import lock_file
+from mozbuild.util import ensureParentDir
 
 
 @contextmanager
