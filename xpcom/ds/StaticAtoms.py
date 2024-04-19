@@ -386,6 +386,8 @@ STATIC_ATOMS = [
     Atom("docNoteref", "doc-noteref"),
     Atom("docNotice", "doc-notice"),
     Atom("docPagebreak", "doc-pagebreak"),
+    Atom("docPagefooter", "doc-pagefooter"),
+    Atom("docPageheader", "doc-pageheader"),
     Atom("docPagelist", "doc-pagelist"),
     Atom("docPart", "doc-part"),
     Atom("docPreface", "doc-preface"),

@@ -256,7 +256,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] = {
     eNoValue,
     eNoAction,
     eNoLiveAttr,
-    kGenericAccType,
+    eDPub,
     kNoReqStates
   },
   { // doc-acknowledgments
@@ -286,7 +286,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] = {
     eNoValue,
     eNoAction,
     eNoLiveAttr,
-    eLandmark,
+    eDPub | eLandmark,
     kNoReqStates
   },
   { // doc-backlink
@@ -296,7 +296,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] = {
     eNoValue,
     eJumpAction,
     eNoLiveAttr,
-    kGenericAccType,
+    eDPub,
     states::LINKED
   },
   { // doc-biblioentry
@@ -306,7 +306,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] = {
     eNoValue,
     eNoAction,
     eNoLiveAttr,
-    kGenericAccType,
+    eDPub,
     states::READONLY
   },
   { // doc-bibliography
@@ -316,7 +316,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] = {
     eNoValue,
     eNoAction,
     eNoLiveAttr,
-    eLandmark,
+    eDPub | eLandmark,
     kNoReqStates
   },
   { // doc-biblioref
@@ -326,7 +326,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] = {
     eNoValue,
     eJumpAction,
     eNoLiveAttr,
-    kGenericAccType,
+    eDPub,
     states::LINKED
   },
   { // doc-chapter
@@ -336,7 +336,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] = {
     eNoValue,
     eNoAction,
     eNoLiveAttr,
-    eLandmark,
+    eDPub | eLandmark,
     kNoReqStates
   },
   { // doc-colophon
@@ -346,7 +346,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] = {
     eNoValue,
     eNoAction,
     eNoLiveAttr,
-    kGenericAccType,
+    eDPub,
     kNoReqStates
   },
   { // doc-conclusion
@@ -356,7 +356,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] = {
     eNoValue,
     eNoAction,
     eNoLiveAttr,
-    eLandmark,
+    eDPub | eLandmark,
     kNoReqStates
   },
   { // doc-cover
@@ -366,7 +366,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] = {
     eNoValue,
     eNoAction,
     eNoLiveAttr,
-    kGenericAccType,
+    eDPub,
     kNoReqStates
   },
   { // doc-credit
@@ -376,7 +376,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] = {
     eNoValue,
     eNoAction,
     eNoLiveAttr,
-    kGenericAccType,
+    eDPub,
     kNoReqStates
   },
   { // doc-credits
@@ -386,7 +386,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] = {
     eNoValue,
     eNoAction,
     eNoLiveAttr,
-    eLandmark,
+    eDPub | eLandmark,
     kNoReqStates
   },
   { // doc-dedication
@@ -396,7 +396,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] = {
     eNoValue,
     eNoAction,
     eNoLiveAttr,
-    kGenericAccType,
+    eDPub,
     kNoReqStates
   },
   { // doc-endnote
@@ -406,7 +406,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] = {
     eNoValue,
     eNoAction,
     eNoLiveAttr,
-    kGenericAccType,
+    eDPub,
     states::READONLY
   },
   { // doc-endnotes
@@ -416,7 +416,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] = {
     eNoValue,
     eNoAction,
     eNoLiveAttr,
-    eLandmark,
+    eDPub | eLandmark,
     kNoReqStates
   },
   { // doc-epigraph
@@ -426,7 +426,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] = {
     eNoValue,
     eNoAction,
     eNoLiveAttr,
-    kGenericAccType,
+    eDPub,
     kNoReqStates
   },
   { // doc-epilogue
@@ -436,7 +436,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] = {
     eNoValue,
     eNoAction,
     eNoLiveAttr,
-    eLandmark,
+    eDPub | eLandmark,
     kNoReqStates
   },
   { // doc-errata
@@ -446,17 +446,17 @@ static const nsRoleMapEntry sWAIRoleMaps[] = {
     eNoValue,
     eNoAction,
     eNoLiveAttr,
-    eLandmark,
+    eDPub | eLandmark,
     kNoReqStates
   },
   { // doc-example
     nsGkAtoms::docExample,
-    roles::SECTION,
+    roles::FIGURE,
     kUseMapRole,
     eNoValue,
     eNoAction,
     eNoLiveAttr,
-    kGenericAccType,
+    eDPub,
     kNoReqStates
   },
   { // doc-footnote
@@ -466,7 +466,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] = {
     eNoValue,
     eNoAction,
     eNoLiveAttr,
-    eLandmark,
+    eDPub | eLandmark,
     kNoReqStates
   },
   { // doc-foreword
@@ -476,7 +476,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] = {
     eNoValue,
     eNoAction,
     eNoLiveAttr,
-    eLandmark,
+    eDPub | eLandmark,
     kNoReqStates
   },
   { // doc-glossary
@@ -486,7 +486,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] = {
     eNoValue,
     eNoAction,
     eNoLiveAttr,
-    eLandmark,
+    eDPub | eLandmark,
     kNoReqStates
   },
   { // doc-glossref
@@ -496,7 +496,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] = {
     eNoValue,
     eJumpAction,
     eNoLiveAttr,
-    kGenericAccType,
+    eDPub,
     states::LINKED
   },
   { // doc-index
@@ -506,7 +506,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] = {
     eNoValue,
     eNoAction,
     eNoLiveAttr,
-    eLandmark,
+    eDPub | eLandmark,
     kNoReqStates
   },
   { // doc-introduction
@@ -516,7 +516,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] = {
     eNoValue,
     eNoAction,
     eNoLiveAttr,
-    eLandmark,
+    eDPub | eLandmark,
     kNoReqStates
   },
   { // doc-noteref
@@ -526,7 +526,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] = {
     eNoValue,
     eJumpAction,
     eNoLiveAttr,
-    kGenericAccType,
+    eDPub,
     states::LINKED
   },
   { // doc-notice
@@ -536,7 +536,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] = {
     eNoValue,
     eNoAction,
     eNoLiveAttr,
-    kGenericAccType,
+    eDPub,
     kNoReqStates
   },
   { // doc-pagebreak
@@ -546,7 +546,27 @@ static const nsRoleMapEntry sWAIRoleMaps[] = {
     eNoValue,
     eNoAction,
     eNoLiveAttr,
-    kGenericAccType,
+    eDPub,
+    kNoReqStates
+  },
+  { // doc-pagefooter
+    nsGkAtoms::docPagefooter,
+    roles::SECTION,
+    kUseMapRole,
+    eNoValue,
+    eNoAction,
+    eNoLiveAttr,
+    eDPub,
+    kNoReqStates
+  },
+  { // doc-pageheader
+    nsGkAtoms::docPageheader,
+    roles::SECTION,
+    kUseMapRole,
+    eNoValue,
+    eNoAction,
+    eNoLiveAttr,
+    eDPub,
     kNoReqStates
   },
   { // doc-pagelist
@@ -556,7 +576,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] = {
     eNoValue,
     eNoAction,
     eNoLiveAttr,
-    eLandmark,
+    eDPub | eLandmark,
     kNoReqStates
   },
   { // doc-part
@@ -566,7 +586,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] = {
     eNoValue,
     eNoAction,
     eNoLiveAttr,
-    eLandmark,
+    eDPub | eLandmark,
     kNoReqStates
   },
   { // doc-preface
@@ -576,7 +596,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] = {
     eNoValue,
     eNoAction,
     eNoLiveAttr,
-    eLandmark,
+    eDPub | eLandmark,
     kNoReqStates
   },
   { // doc-prologue
@@ -586,7 +606,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] = {
     eNoValue,
     eNoAction,
     eNoLiveAttr,
-    eLandmark,
+    eDPub | eLandmark,
     kNoReqStates
   },
   { // doc-pullquote
@@ -596,7 +616,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] = {
     eNoValue,
     eNoAction,
     eNoLiveAttr,
-    kGenericAccType,
+    eDPub,
     kNoReqStates
   },
   { // doc-qna
@@ -606,7 +626,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] = {
     eNoValue,
     eNoAction,
     eNoLiveAttr,
-    kGenericAccType,
+    eDPub,
     kNoReqStates
   },
   { // doc-subtitle
@@ -616,7 +636,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] = {
     eNoValue,
     eNoAction,
     eNoLiveAttr,
-    kGenericAccType,
+    eDPub,
     kNoReqStates
   },
   { // doc-tip
@@ -626,7 +646,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] = {
     eNoValue,
     eNoAction,
     eNoLiveAttr,
-    kGenericAccType,
+    eDPub,
     kNoReqStates
   },
   { // doc-toc
@@ -636,7 +656,7 @@ static const nsRoleMapEntry sWAIRoleMaps[] = {
     eNoValue,
     eNoAction,
     eNoLiveAttr,
-    eLandmark,
+    eDPub | eLandmark,
     kNoReqStates
   },
   { // document
