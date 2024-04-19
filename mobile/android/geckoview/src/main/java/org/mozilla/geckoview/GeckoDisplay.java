@@ -453,13 +453,15 @@ public class GeckoDisplay {
      * <p>This function must be called on the UI thread.
      *
      * @return A {@link GeckoResult} that completes with a {@link Bitmap} containing the pixels and
-     *     size information of the requested portion of the visible web page.
+     *     size information of the requested portion of the visible web page, or returns a failure
+     *     {@link GeckoResult} including the reason why in an {@link Exception}
      */
     @UiThread
     public @NonNull GeckoResult<Bitmap> capture() {
       ThreadUtils.assertOnUiThread();
       if (!mSession.isCompositorReady()) {
-        throw new IllegalStateException("Compositor must be ready before pixels can be captured");
+        return GeckoResult.fromException(
+            new IllegalStateException("Compositor must be ready before pixels can be captured"));
       }
 
       final GeckoResult<Bitmap> result = new GeckoResult<>();
