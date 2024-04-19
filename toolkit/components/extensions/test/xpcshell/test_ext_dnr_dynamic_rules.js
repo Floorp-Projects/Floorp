@@ -414,10 +414,10 @@ add_task(async function test_save_and_load_dynamic_rules() {
       browser.test.onMessage.addListener(async (msg, ...args) => {
         switch (msg) {
           case "assertGetDynamicRules": {
-            const [{ expectedRules }] = args;
+            const [{ expectedRules, filter }] = args;
             browser.test.assertDeepEq(
               expectedRules,
-              await dnr.getDynamicRules(),
+              await dnr.getDynamicRules(filter),
               "getDynamicRules() resolves to the expected dynamic rules"
             );
             break;
@@ -501,6 +501,35 @@ add_task(async function test_save_and_load_dynamic_rules() {
       { removeRuleIds: [3] },
     ],
     expectedRules: getSchemaNormalizedRules(extension, rules),
+  });
+
+  info("Verify getDynamicRules with some filters");
+  // An empty list of rule IDs should return no rule.
+  await callTestMessageHandler(extension, "assertGetDynamicRules", {
+    expectedRules: [],
+    filter: { ruleIds: [] },
+  });
+  // Non-existent rule ID.
+  await callTestMessageHandler(extension, "assertGetDynamicRules", {
+    expectedRules: [],
+    filter: { ruleIds: [456] },
+  });
+  await callTestMessageHandler(extension, "assertGetDynamicRules", {
+    expectedRules: getSchemaNormalizedRules(extension, [rules[0]]),
+    filter: { ruleIds: [rules[0].id] },
+  });
+  await callTestMessageHandler(extension, "assertGetDynamicRules", {
+    expectedRules: getSchemaNormalizedRules(extension, [rules[1]]),
+    filter: { ruleIds: [rules[1].id] },
+  });
+  await callTestMessageHandler(extension, "assertGetDynamicRules", {
+    expectedRules: getSchemaNormalizedRules(extension, rules),
+    filter: { ruleIds: rules.map(rule => rule.id) },
+  });
+  // When `ruleIds` isn't defined, we return all the rules.
+  await callTestMessageHandler(extension, "assertGetDynamicRules", {
+    expectedRules: getSchemaNormalizedRules(extension, rules),
+    filter: {},
   });
 
   const extUUID = extension.uuid;

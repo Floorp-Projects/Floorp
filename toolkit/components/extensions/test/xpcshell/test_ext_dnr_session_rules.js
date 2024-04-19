@@ -218,6 +218,39 @@ add_task(async function register_and_retrieve_session_rules() {
         "getSessionRules() returns all registered session rules"
       );
 
+      browser.test.assertDeepEq(
+        [],
+        await dnr.getSessionRules({ ruleIds: [] }),
+        "getSessionRules() returns no rule because ruleIds is an empty array"
+      );
+      browser.test.assertDeepEq(
+        [],
+        await dnr.getSessionRules({ ruleIds: [1234567890] }),
+        "getSessionRules() returns no rule because rule ID is non-existent"
+      );
+      browser.test.assertDeepEq(
+        [RULE_4321_OUT],
+        await dnr.getSessionRules({ ruleIds: [4321] }),
+        "getSessionRules() returns a rule"
+      );
+      browser.test.assertDeepEq(
+        [RULE_1234_OUT],
+        await dnr.getSessionRules({ ruleIds: [1234] }),
+        "getSessionRules() returns a rule"
+      );
+      // The order is the same as the original input above, not the order of
+      // the IDs in `ruleIds`.
+      browser.test.assertDeepEq(
+        [RULE_4321_OUT, RULE_1234_OUT],
+        await dnr.getSessionRules({ ruleIds: [1234, 4321] }),
+        "getSessionRules() returns two rules"
+      );
+      browser.test.assertDeepEq(
+        [RULE_4321_OUT, RULE_1234_OUT],
+        await dnr.getSessionRules({}),
+        "getSessionRules() returns all the rules because there is no ruleIds"
+      );
+
       await browser.test.assertRejects(
         dnr.updateSessionRules({
           addRules: [RULE_9001_IN, RULE_1234_IN],

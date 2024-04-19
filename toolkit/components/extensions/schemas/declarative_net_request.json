@@ -439,6 +439,18 @@
             }
           }
         }
+      },
+      {
+        "id": "GetRulesFilter",
+        "type": "object",
+        "properties": {
+          "ruleIds": {
+            "type": "array",
+            "optional": true,
+            "description": "If specified, only rules with matching IDs are included.",
+            "items": { "type": "integer" }
+          }
+        }
       }
     ],
     "functions": [
@@ -589,6 +601,12 @@
         "async": "callback",
         "parameters": [
           {
+            "name": "filter",
+            "$ref": "GetRulesFilter",
+            "optional": true,
+            "description": "An object to filter the set of dynamic rules for the extension."
+          },
+          {
             "name": "callback",
             "type": "function",
             "parameters": [
@@ -609,6 +627,12 @@
         "description": "Returns the current set of session scoped rules for the extension.",
         "async": "callback",
         "parameters": [
+          {
+            "name": "filter",
+            "$ref": "GetRulesFilter",
+            "optional": true,
+            "description": "An object to filter the set of session scoped rules for the extension."
+          },
           {
             "name": "callback",
             "type": "function",
