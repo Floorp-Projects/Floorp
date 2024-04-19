@@ -351,6 +351,16 @@ ObliviousHttpChannel::UpgradeToSecure() {
 }
 
 NS_IMETHODIMP
+ObliviousHttpChannel::GetRequestObserversCalled(bool* aCalled) {
+  return mInnerChannel->GetRequestObserversCalled(aCalled);
+}
+
+NS_IMETHODIMP
+ObliviousHttpChannel::SetRequestObserversCalled(bool aCalled) {
+  return mInnerChannel->SetRequestObserversCalled(aCalled);
+}
+
+NS_IMETHODIMP
 ObliviousHttpChannel::GetRequestContextID(uint64_t* _retval) {
   return mInnerChannel->GetRequestContextID(_retval);
 }

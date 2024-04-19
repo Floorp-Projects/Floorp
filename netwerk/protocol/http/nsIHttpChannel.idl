@@ -494,4 +494,12 @@ interface nsIHttpChannel : nsIIdentChannel
     [must_use] attribute AString classicScriptHintCharset;
 
     [must_use] attribute AString documentCharacterSet;
+
+    /**
+     * Update the requestObserversCalled boolean flag.
+     *
+     * Used by WebDriver BiDi network interception to modify properties of the
+     * request such as `method` or `body` as late as possible.
+     */
+    [must_use] attribute boolean requestObserversCalled;
 };
