@@ -358,6 +358,8 @@ head = "head_ongc.js"
 
 ["test_sandbox_name.js"]
 
+["test_scriptable_nsIClassInfo.js"]
+
 ["test_storage.js"]
 
 ["test_structuredClone.js"]
