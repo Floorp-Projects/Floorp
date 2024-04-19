@@ -689,7 +689,7 @@
 //! for discussion about the UTF-16 family.
 
 #![no_std]
-#![cfg_attr(feature = "simd-accel", feature(core_intrinsics))]
+#![cfg_attr(feature = "simd-accel", feature(core_intrinsics, portable_simd))]
 
 #[cfg(feature = "alloc")]
 #[cfg_attr(test, macro_use)]
@@ -698,17 +698,6 @@ extern crate alloc;
 extern crate core;
 #[macro_use]
 extern crate cfg_if;
-
-#[cfg(all(
-    feature = "simd-accel",
-    any(
-        target_feature = "sse2",
-        all(target_endian = "little", target_arch = "aarch64"),
-        all(target_endian = "little", target_feature = "neon")
-    )
-))]
-#[macro_use(shuffle)]
-extern crate packed_simd;
 
 #[cfg(feature = "serde")]
 extern crate serde;

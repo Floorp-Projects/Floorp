@@ -190,6 +190,13 @@ user-id = 4484
 user-login = "hsivonen"
 user-name = "Henri Sivonen"
 
+[[publisher.encoding_rs]]
+version = "0.8.34"
+when = "2024-04-10"
+user-id = 4484
+user-login = "hsivonen"
+user-name = "Henri Sivonen"
+
 [[publisher.errno]]
 version = "0.3.8"
 when = "2023-11-28"
