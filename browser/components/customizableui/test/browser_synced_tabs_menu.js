@@ -336,20 +336,28 @@ add_task(async function () {
   node = node.firstElementChild;
   is(node.getAttribute("itemtype"), "client", "node is a client entry");
   is(node.textContent, "My Desktop", "correct client");
-  // Next entry is the most-recent tab
+  // Next node is an hbox, that contains the tab and potentially
+  // a button for closing the tab remotely
   node = node.nextElementSibling;
-  is(node.getAttribute("itemtype"), "tab", "node is a tab");
-  is(node.getAttribute("label"), "http://example.com/10");
+  is(node.nodeName, "hbox");
+  // Next entry is the most-recent tab
+  let childNode = node.firstElementChild;
+  is(childNode.getAttribute("itemtype"), "tab", "node is a tab");
+  is(childNode.getAttribute("label"), "http://example.com/10");
 
   // Next entry is the next-most-recent tab
   node = node.nextElementSibling;
-  is(node.getAttribute("itemtype"), "tab", "node is a tab");
-  is(node.getAttribute("label"), "http://example.com/5");
+  is(node.nodeName, "hbox");
+  childNode = node.firstElementChild;
+  is(childNode.getAttribute("itemtype"), "tab", "node is a tab");
+  is(childNode.getAttribute("label"), "http://example.com/5");
 
   // Next entry is the least-recent tab from the first client.
   node = node.nextElementSibling;
-  is(node.getAttribute("itemtype"), "tab", "node is a tab");
-  is(node.getAttribute("label"), "http://example.com/1");
+  is(node.nodeName, "hbox");
+  childNode = node.firstElementChild;
+  is(childNode.getAttribute("itemtype"), "tab", "node is a tab");
+  is(childNode.getAttribute("label"), "http://example.com/1");
   node = node.nextElementSibling;
   is(node, null, "no more siblings");
 
@@ -368,8 +376,10 @@ add_task(async function () {
   is(node.textContent, "My Other Desktop", "correct client");
   // Its single tab
   node = node.nextElementSibling;
-  is(node.getAttribute("itemtype"), "tab", "node is a tab");
-  is(node.getAttribute("label"), "http://example.com/6");
+  is(node.nodeName, "hbox");
+  childNode = node.firstElementChild;
+  is(childNode.getAttribute("itemtype"), "tab", "node is a tab");
+  is(childNode.getAttribute("label"), "http://example.com/6");
   node = node.nextElementSibling;
   is(node, null, "no more siblings");
 
@@ -479,14 +489,16 @@ add_task(async function () {
     is(node.textContent, "My Desktop", "correct client");
     for (let i = 0; i < tabsShownCount; i++) {
       node = node.nextElementSibling;
-      is(node.getAttribute("itemtype"), "tab", "node is a tab");
+      is(node.nodeName, "hbox");
+      let childNode = node.firstElementChild;
+      is(childNode.getAttribute("itemtype"), "tab", "node is a tab");
       is(
-        node.getAttribute("label"),
+        childNode.getAttribute("label"),
         "Tab #" + (i + 1),
         "the tab is the correct one"
       );
       is(
-        node.getAttribute("targetURI"),
+        childNode.getAttribute("targetURI"),
         SAMPLE_TAB_URL,
         "url is the correct one"
       );
@@ -509,7 +521,9 @@ add_task(async function () {
 
   async function checkCanOpenURL() {
     let tabList = document.getElementById("PanelUI-remotetabs-tabslist");
-    let node = tabList.firstElementChild.firstElementChild.nextElementSibling;
+    let node =
+      tabList.firstElementChild.firstElementChild.nextElementSibling
+        .firstElementChild;
     let promiseTabOpened = BrowserTestUtils.waitForLocationChange(
       gBrowser,
       SAMPLE_TAB_URL
