@@ -125,32 +125,32 @@ private fun LibraryMenuGroup(
     MenuGroup {
         MenuItem(
             label = stringResource(id = R.string.library_bookmarks),
-            onClick = onBookmarksMenuClick,
             beforeIconPainter = painterResource(id = R.drawable.mozac_ic_bookmark_tray_fill_24),
+            onClick = onBookmarksMenuClick,
         )
 
         Divider(color = FirefoxTheme.colors.borderSecondary)
 
         MenuItem(
             label = stringResource(id = R.string.library_history),
-            onClick = onHistoryMenuClick,
             beforeIconPainter = painterResource(id = R.drawable.mozac_ic_history_24),
+            onClick = onHistoryMenuClick,
         )
 
         Divider(color = FirefoxTheme.colors.borderSecondary)
 
         MenuItem(
             label = stringResource(id = R.string.library_downloads),
-            onClick = onDownloadsMenuClick,
             beforeIconPainter = painterResource(id = R.drawable.mozac_ic_download_24),
+            onClick = onDownloadsMenuClick,
         )
 
         Divider(color = FirefoxTheme.colors.borderSecondary)
 
         MenuItem(
             label = stringResource(id = R.string.browser_menu_passwords),
-            onClick = onPasswordsMenuClick,
             beforeIconPainter = painterResource(id = R.drawable.mozac_ic_login_24),
+            onClick = onPasswordsMenuClick,
         )
     }
 }
