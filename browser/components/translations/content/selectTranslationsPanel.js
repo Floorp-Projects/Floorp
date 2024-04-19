@@ -16,6 +16,13 @@ ChromeUtils.defineESModuleGetters(this, {
   Translator: "chrome://global/content/translations/Translator.mjs",
 });
 
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "ClipboardHelper",
+  "@mozilla.org/widget/clipboardhelper;1",
+  "nsIClipboardHelper"
+);
+
 /**
  * This singleton class controls the Translations popup panel.
  */
@@ -582,6 +589,13 @@ var SelectTranslationsPanel = new (class {
    * Handles events when the panel's copy button is clicked.
    */
   onClickCopyButton() {
+    try {
+      ClipboardHelper.copyString(this.getTranslatedText());
+    } catch (error) {
+      this.console?.error(error);
+      return;
+    }
+
     this.#checkCopyButton();
   }
 
