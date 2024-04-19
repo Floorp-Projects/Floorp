@@ -134,8 +134,7 @@ class ExtensionListenerCallWorkerRunnable final
       UniquePtr<dom::StructuredCloneHolder> aArgsHolder,
       ListenerCallOptions* aCallOptions,
       RefPtr<dom::Promise> aPromiseRetval = nullptr)
-      : WorkerThreadRunnable(aExtensionEventListener->GetWorkerPrivate(),
-                             "ExtensionListenerCallWorkerRunnable"),
+      : WorkerThreadRunnable("ExtensionListenerCallWorkerRunnable"),
         mListener(aExtensionEventListener),
         mArgsHolder(std::move(aArgsHolder)),
         mPromiseResult(std::move(aPromiseRetval)),

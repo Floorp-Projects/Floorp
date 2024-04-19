@@ -290,8 +290,7 @@ class MainThreadProxyRunnable : public MainThreadWorkerSyncRunnable {
 
   MainThreadProxyRunnable(WorkerPrivate* aWorkerPrivate, Proxy* aProxy,
                           const char* aName = "MainThreadProxyRunnable")
-      : MainThreadWorkerSyncRunnable(aWorkerPrivate, aProxy->GetEventTarget(),
-                                     aName),
+      : MainThreadWorkerSyncRunnable(aProxy->GetEventTarget(), aName),
         mProxy(aProxy) {
     MOZ_ASSERT(aProxy);
   }
@@ -777,9 +776,9 @@ void Proxy::Teardown() {
       if (mSyncLoopTarget) {
         // We have an unclosed sync loop.  Fix that now.
         RefPtr<MainThreadStopSyncLoopRunnable> runnable =
-            new MainThreadStopSyncLoopRunnable(
-                mWorkerPrivate, std::move(mSyncLoopTarget), NS_ERROR_FAILURE);
-        MOZ_ALWAYS_TRUE(runnable->Dispatch());
+            new MainThreadStopSyncLoopRunnable(std::move(mSyncLoopTarget),
+                                               NS_ERROR_FAILURE);
+        MOZ_ALWAYS_TRUE(runnable->Dispatch(mWorkerPrivate));
       }
 
       mOutstandingSendCount = 0;
@@ -886,7 +885,7 @@ Proxy::HandleEvent(Event* aEvent) {
     }
 
     if (runnable) {
-      runnable->Dispatch();
+      runnable->Dispatch(mWorkerPrivate);
     }
   }
 
@@ -924,7 +923,7 @@ LoadStartDetectionRunnable::Run() {
 
       RefPtr<ProxyCompleteRunnable> runnable =
           new ProxyCompleteRunnable(mWorkerPrivate, mProxy, mChannelId);
-      if (runnable->Dispatch()) {
+      if (runnable->Dispatch(mWorkerPrivate)) {
         mProxy->mWorkerPrivate = nullptr;
         mProxy->mSyncLoopTarget = nullptr;
         mProxy->mOutstandingSendCount--;

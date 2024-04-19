@@ -136,7 +136,7 @@ void OffscreenCanvasDisplayHelper::FlushForDisplay() {
    public:
     FlushWorkerRunnable(WorkerPrivate* aWorkerPrivate,
                         OffscreenCanvasDisplayHelper* aDisplayHelper)
-        : WorkerThreadRunnable(aWorkerPrivate, "FlushWorkerRunnable"),
+        : WorkerThreadRunnable("FlushWorkerRunnable"),
           mDisplayHelper(aDisplayHelper) {}
 
     bool WorkerRun(JSContext*, WorkerPrivate*) override {
@@ -164,7 +164,7 @@ void OffscreenCanvasDisplayHelper::FlushForDisplay() {
   // Otherwise we are calling from the main thread during painting to a canvas
   // on a worker thread.
   auto task = MakeRefPtr<FlushWorkerRunnable>(mWorkerRef->Private(), this);
-  task->Dispatch();
+  task->Dispatch(mWorkerRef->Private());
 }
 
 bool OffscreenCanvasDisplayHelper::CommitFrameToCompositor(
@@ -434,7 +434,7 @@ OffscreenCanvasDisplayHelper::GetSurfaceSnapshot() {
    public:
     SnapshotWorkerRunnable(WorkerPrivate* aWorkerPrivate,
                            OffscreenCanvasDisplayHelper* aDisplayHelper)
-        : MainThreadWorkerRunnable(aWorkerPrivate, "SnapshotWorkerRunnable"),
+        : MainThreadWorkerRunnable("SnapshotWorkerRunnable"),
           mMonitor("SnapshotWorkerRunnable::mMonitor"),
           mDisplayHelper(aDisplayHelper) {}
 
@@ -514,7 +514,7 @@ OffscreenCanvasDisplayHelper::GetSurfaceSnapshot() {
     if (mWorkerRef) {
       workerRunnable =
           MakeRefPtr<SnapshotWorkerRunnable>(mWorkerRef->Private(), this);
-      workerRunnable->Dispatch();
+      workerRunnable->Dispatch(mWorkerRef->Private());
     }
   }
 

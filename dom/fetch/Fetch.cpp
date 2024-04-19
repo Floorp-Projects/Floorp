@@ -792,7 +792,7 @@ class WorkerFetchResponseRunnable final : public MainThreadWorkerRunnable {
   WorkerFetchResponseRunnable(WorkerPrivate* aWorkerPrivate,
                               WorkerFetchResolver* aResolver,
                               SafeRefPtr<InternalResponse> aResponse)
-      : MainThreadWorkerRunnable(aWorkerPrivate, "WorkerFetchResponseRunnable"),
+      : MainThreadWorkerRunnable("WorkerFetchResponseRunnable"),
         mResolver(aResolver),
         mInternalResponse(std::move(aResponse)) {
     MOZ_ASSERT(mResolver);
@@ -848,7 +848,7 @@ class WorkerDataAvailableRunnable final : public MainThreadWorkerRunnable {
  public:
   WorkerDataAvailableRunnable(WorkerPrivate* aWorkerPrivate,
                               WorkerFetchResolver* aResolver)
-      : MainThreadWorkerRunnable(aWorkerPrivate, "WorkerDataAvailableRunnable"),
+      : MainThreadWorkerRunnable("WorkerDataAvailableRunnable"),
         mResolver(aResolver) {}
 
   bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override {
@@ -889,8 +889,7 @@ class WorkerFetchResponseEndRunnable final : public MainThreadWorkerRunnable,
   WorkerFetchResponseEndRunnable(WorkerPrivate* aWorkerPrivate,
                                  WorkerFetchResolver* aResolver,
                                  FetchDriverObserver::EndReason aReason)
-      : MainThreadWorkerRunnable(aWorkerPrivate,
-                                 "WorkerFetchResponseEndRunnable"),
+      : MainThreadWorkerRunnable("WorkerFetchResponseEndRunnable"),
         WorkerFetchResponseEndBase(aResolver),
         mReason(aReason) {}
 
@@ -917,7 +916,8 @@ class WorkerFetchResponseEndControlRunnable final
  public:
   WorkerFetchResponseEndControlRunnable(WorkerPrivate* aWorkerPrivate,
                                         WorkerFetchResolver* aResolver)
-      : MainThreadWorkerControlRunnable(aWorkerPrivate),
+      : MainThreadWorkerControlRunnable(
+            "WorkerFetchResponseEndControlRunnable"),
         WorkerFetchResponseEndBase(aResolver) {}
 
   bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override {
@@ -940,7 +940,7 @@ void WorkerFetchResolver::OnResponseAvailableInternal(
   RefPtr<WorkerFetchResponseRunnable> r = new WorkerFetchResponseRunnable(
       mPromiseProxy->GetWorkerPrivate(), this, std::move(aResponse));
 
-  if (!r->Dispatch()) {
+  if (!r->Dispatch(mPromiseProxy->GetWorkerPrivate())) {
     NS_WARNING("Could not dispatch fetch response");
   }
 }
@@ -960,7 +960,7 @@ void WorkerFetchResolver::OnDataAvailable() {
 
   RefPtr<WorkerDataAvailableRunnable> r =
       new WorkerDataAvailableRunnable(mPromiseProxy->GetWorkerPrivate(), this);
-  Unused << r->Dispatch();
+  Unused << r->Dispatch(mPromiseProxy->GetWorkerPrivate());
 }
 
 void WorkerFetchResolver::OnResponseEnd(FetchDriverObserver::EndReason aReason,
@@ -978,14 +978,14 @@ void WorkerFetchResolver::OnResponseEnd(FetchDriverObserver::EndReason aReason,
   RefPtr<WorkerFetchResponseEndRunnable> r = new WorkerFetchResponseEndRunnable(
       mPromiseProxy->GetWorkerPrivate(), this, aReason);
 
-  if (!r->Dispatch()) {
+  if (!r->Dispatch(mPromiseProxy->GetWorkerPrivate())) {
     RefPtr<WorkerFetchResponseEndControlRunnable> cr =
         new WorkerFetchResponseEndControlRunnable(
             mPromiseProxy->GetWorkerPrivate(), this);
     // This can fail if the worker thread is canceled or killed causing
     // the PromiseWorkerProxy to give up its WorkerRef immediately,
     // allowing the worker thread to become Dead.
-    if (!cr->Dispatch()) {
+    if (!cr->Dispatch(mPromiseProxy->GetWorkerPrivate())) {
       NS_WARNING("Failed to dispatch WorkerFetchResponseEndControlRunnable");
     }
   }

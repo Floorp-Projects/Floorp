@@ -157,7 +157,7 @@ void Worker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
   // The worker could have closed between the time we entered this function and
   // checked ParentStatusProtected and now, which could cause the dispatch to
   // fail.
-  Unused << NS_WARN_IF(!runnable->Dispatch());
+  Unused << NS_WARN_IF(!runnable->Dispatch(mWorkerPrivate));
 }
 
 void Worker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
@@ -191,7 +191,7 @@ void Worker::PostEventWithOptions(JSContext* aCx,
     return;
   }
 
-  Unused << NS_WARN_IF(!aRunnable->Dispatch());
+  Unused << NS_WARN_IF(!aRunnable->Dispatch(mWorkerPrivate));
 }
 
 void Worker::Terminate() {

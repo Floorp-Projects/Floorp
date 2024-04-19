@@ -34,7 +34,7 @@ class WrappedControlRunnable final : public WorkerControlRunnable {
  public:
   WrappedControlRunnable(WorkerPrivate* aWorkerPrivate,
                          nsCOMPtr<nsIRunnable>&& aInner)
-      : WorkerControlRunnable(aWorkerPrivate, "WrappedControlRunnable"),
+      : WorkerControlRunnable("WrappedControlRunnable"),
         mInner(std::move(aInner)) {}
 
   virtual bool PreDispatch(WorkerPrivate* aWorkerPrivate) override {
@@ -118,7 +118,7 @@ WorkerEventTarget::Dispatch(already_AddRefed<nsIRunnable> aRunnable,
 
     RefPtr<WorkerRunnable> r =
         mWorkerPrivate->MaybeWrapAsWorkerRunnable(runnable.forget());
-    if (r->Dispatch()) {
+    if (r->Dispatch(mWorkerPrivate)) {
       return NS_OK;
     }
     runnable = std::move(r);
@@ -133,7 +133,7 @@ WorkerEventTarget::Dispatch(already_AddRefed<nsIRunnable> aRunnable,
       ("WorkerEventTarget::Dispatch [%p] Wrapped runnable as control "
        "runnable(%p)",
        this, r.get()));
-  if (!r->Dispatch()) {
+  if (!r->Dispatch(mWorkerPrivate)) {
     LOGV(
         ("WorkerEventTarget::Dispatch [%p] Dispatch as control runnable(%p) "
          "fail",

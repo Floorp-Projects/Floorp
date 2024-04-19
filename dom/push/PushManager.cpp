@@ -102,7 +102,7 @@ class GetSubscriptionResultRunnable final : public WorkerThreadRunnable {
                                 nsTArray<uint8_t>&& aRawP256dhKey,
                                 nsTArray<uint8_t>&& aAuthSecret,
                                 nsTArray<uint8_t>&& aAppServerKey)
-      : WorkerThreadRunnable(aWorkerPrivate, "GetSubscriptionResultRunnable"),
+      : WorkerThreadRunnable("GetSubscriptionResultRunnable"),
         mProxy(std::move(aProxy)),
         mStatus(aStatus),
         mEndpoint(aEndpoint),
@@ -183,7 +183,7 @@ class GetSubscriptionCallback final : public nsIPushSubscriptionCallback {
         worker, std::move(mProxy), aStatus, endpoint, mScope,
         std::move(mExpirationTime), std::move(rawP256dhKey),
         std::move(authSecret), std::move(appServerKey));
-    if (!r->Dispatch()) {
+    if (!r->Dispatch(worker)) {
       return NS_ERROR_UNEXPECTED;
     }
 
@@ -296,8 +296,7 @@ class PermissionResultRunnable final : public WorkerThreadRunnable {
  public:
   PermissionResultRunnable(PromiseWorkerProxy* aProxy, nsresult aStatus,
                            PermissionState aState)
-      : WorkerThreadRunnable(aProxy->GetWorkerPrivate(),
-                             "PermissionResultRunnable"),
+      : WorkerThreadRunnable("PermissionResultRunnable"),
         mProxy(aProxy),
         mStatus(aStatus),
         mState(aState) {
@@ -352,7 +351,7 @@ class PermissionStateRunnable final : public Runnable {
 
     // This can fail if the worker thread is already shutting down, but there's
     // nothing we can do in that case.
-    Unused << NS_WARN_IF(!r->Dispatch());
+    Unused << NS_WARN_IF(!r->Dispatch(mProxy->GetWorkerPrivate()));
 
     return NS_OK;
   }

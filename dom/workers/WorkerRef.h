@@ -174,6 +174,8 @@ class WeakWorkerRef final : public WorkerRef {
   WorkerPrivate* GetUnsafePrivate() const;
 
  private:
+  friend class ThreadSafeWeakWorkerRef;
+
   explicit WeakWorkerRef(WorkerPrivate* aWorkerPrivate);
   ~WeakWorkerRef();
 

@@ -19,8 +19,7 @@ namespace {
 class WorkerCSPEventRunnable final : public MainThreadWorkerRunnable {
  public:
   WorkerCSPEventRunnable(WorkerPrivate* aWorkerPrivate, const nsAString& aJSON)
-      : MainThreadWorkerRunnable(aWorkerPrivate, "WorkerCSPEventRunnable"),
-        mJSON(aJSON) {}
+      : MainThreadWorkerRunnable("WorkerCSPEventRunnable"), mJSON(aJSON) {}
 
  private:
   bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) {
@@ -83,7 +82,7 @@ WorkerCSPEventListener::OnCSPViolationEvent(const nsAString& aJSON) {
   if (NS_IsMainThread()) {
     RefPtr<WorkerCSPEventRunnable> runnable =
         new WorkerCSPEventRunnable(workerPrivate, aJSON);
-    runnable->Dispatch();
+    runnable->Dispatch(workerPrivate);
 
     return NS_OK;
   }

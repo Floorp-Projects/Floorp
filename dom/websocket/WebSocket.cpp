@@ -2639,8 +2639,7 @@ namespace {
 class CancelRunnable final : public MainThreadWorkerRunnable {
  public:
   CancelRunnable(ThreadSafeWorkerRef* aWorkerRef, WebSocketImpl* aImpl)
-      : MainThreadWorkerRunnable(aWorkerRef->Private(), "CancelRunnable"),
-        mImpl(aImpl) {}
+      : MainThreadWorkerRunnable("CancelRunnable"), mImpl(aImpl) {}
 
   bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override {
     aWorkerPrivate->AssertIsOnWorkerThread();
@@ -2675,7 +2674,7 @@ WebSocketImpl::Cancel(nsresult aStatus) {
   if (!mIsMainThread) {
     MOZ_ASSERT(mWorkerRef);
     RefPtr<CancelRunnable> runnable = new CancelRunnable(mWorkerRef, this);
-    if (!runnable->Dispatch()) {
+    if (!runnable->Dispatch(mWorkerRef->Private())) {
       return NS_ERROR_FAILURE;
     }
 
@@ -2792,7 +2791,7 @@ class WorkerRunnableDispatcher final : public WorkerThreadRunnable {
   WorkerRunnableDispatcher(WebSocketImpl* aImpl,
                            ThreadSafeWorkerRef* aWorkerRef,
                            already_AddRefed<nsIRunnable> aEvent)
-      : WorkerThreadRunnable(aWorkerRef->Private(), "WorkerRunnableDispatcher"),
+      : WorkerThreadRunnable("WorkerRunnableDispatcher"),
         mWebSocketImpl(aImpl),
         mEvent(std::move(aEvent)) {}
 
@@ -2860,7 +2859,7 @@ WebSocketImpl::Dispatch(already_AddRefed<nsIRunnable> aEvent, uint32_t aFlags) {
   RefPtr<WorkerRunnableDispatcher> event =
       new WorkerRunnableDispatcher(this, mWorkerRef, event_ref.forget());
 
-  if (!event->Dispatch()) {
+  if (!event->Dispatch(mWorkerRef->Private())) {
     return NS_ERROR_FAILURE;
   }
 

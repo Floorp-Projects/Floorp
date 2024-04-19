@@ -788,9 +788,9 @@ class ScriptReaderRunnable final : public nsIRunnable,
     mRv = aRv;
 
     RefPtr<dom::MainThreadStopSyncLoopRunnable> runnable =
-        new dom::MainThreadStopSyncLoopRunnable(
-            mWorkerPrivate, std::move(mSyncLoopTarget), mRv);
-    MOZ_ALWAYS_TRUE(runnable->Dispatch());
+        new dom::MainThreadStopSyncLoopRunnable(std::move(mSyncLoopTarget),
+                                                mRv);
+    MOZ_ALWAYS_TRUE(runnable->Dispatch(mWorkerPrivate));
 
     mWorkerPrivate = nullptr;
     mSyncLoopTarget = nullptr;

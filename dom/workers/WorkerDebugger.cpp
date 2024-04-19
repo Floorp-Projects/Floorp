@@ -37,7 +37,7 @@ class DebuggerMessageEventRunnable final : public WorkerDebuggerRunnable {
  public:
   DebuggerMessageEventRunnable(WorkerPrivate* aWorkerPrivate,
                                const nsAString& aMessage)
-      : WorkerDebuggerRunnable(aWorkerPrivate, "DebuggerMessageEventRunnable"),
+      : WorkerDebuggerRunnable("DebuggerMessageEventRunnable"),
         mMessage(aMessage) {}
 
  private:
@@ -74,7 +74,7 @@ class CompileDebuggerScriptRunnable final : public WorkerDebuggerRunnable {
   CompileDebuggerScriptRunnable(WorkerPrivate* aWorkerPrivate,
                                 const nsAString& aScriptURL,
                                 const mozilla::Encoding* aDocumentEncoding)
-      : WorkerDebuggerRunnable(aWorkerPrivate, "CompileDebuggerScriptRunnable"),
+      : WorkerDebuggerRunnable("CompileDebuggerScriptRunnable"),
         mScriptURL(aScriptURL),
         mDocumentEncoding(aDocumentEncoding) {}
 
@@ -376,7 +376,7 @@ WorkerDebugger::Initialize(const nsAString& aURL) {
     RefPtr<CompileDebuggerScriptRunnable> runnable =
         new CompileDebuggerScriptRunnable(mWorkerPrivate, aURL,
                                           aDocumentEncoding);
-    if (!runnable->Dispatch()) {
+    if (!runnable->Dispatch(mWorkerPrivate)) {
       return NS_ERROR_FAILURE;
     }
 
@@ -396,7 +396,7 @@ WorkerDebugger::PostMessageMoz(const nsAString& aMessage) {
 
   RefPtr<DebuggerMessageEventRunnable> runnable =
       new DebuggerMessageEventRunnable(mWorkerPrivate, aMessage);
-  if (!runnable->Dispatch()) {
+  if (!runnable->Dispatch(mWorkerPrivate)) {
     return NS_ERROR_FAILURE;
   }
 

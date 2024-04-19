@@ -1641,7 +1641,8 @@ void ScriptLoaderRunnable::DispatchProcessPendingRequests() {
         Span<RefPtr<ThreadSafeRequestHandle>>{maybeRangeToExecute->first,
                                               maybeRangeToExecute->second});
 
-    if (!runnable->Dispatch() && mScriptLoader->mSyncLoopTarget) {
+    if (!runnable->Dispatch(mWorkerRef->Private()) &&
+        mScriptLoader->mSyncLoopTarget) {
       MOZ_ASSERT(false, "This should never fail!");
     }
   }
@@ -1651,8 +1652,7 @@ ScriptExecutorRunnable::ScriptExecutorRunnable(
     WorkerScriptLoader* aScriptLoader, WorkerPrivate* aWorkerPrivate,
     nsISerialEventTarget* aSyncLoopTarget,
     Span<RefPtr<ThreadSafeRequestHandle>> aLoadedRequests)
-    : MainThreadWorkerSyncRunnable(aWorkerPrivate, aSyncLoopTarget,
-                                   "ScriptExecutorRunnable"),
+    : MainThreadWorkerSyncRunnable(aSyncLoopTarget, "ScriptExecutorRunnable"),
       mScriptLoader(aScriptLoader),
       mLoadedRequests(aLoadedRequests) {}
 

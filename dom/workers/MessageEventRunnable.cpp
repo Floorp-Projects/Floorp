@@ -15,7 +15,7 @@
 namespace mozilla::dom {
 
 MessageEventRunnable::MessageEventRunnable(WorkerPrivate* aWorkerPrivate)
-    : WorkerDebuggeeRunnable(aWorkerPrivate, "MessageEventRunnable"),
+    : WorkerDebuggeeRunnable("MessageEventRunnable"),
       StructuredCloneHolder(CloningSupported, TransferringSupported,
                             StructuredCloneScope::SameProcess) {}
 
@@ -111,8 +111,7 @@ void MessageEventRunnable::DispatchError(JSContext* aCx,
 
 MessageEventToParentRunnable::MessageEventToParentRunnable(
     WorkerPrivate* aWorkerPrivate)
-    : WorkerParentDebuggeeRunnable(aWorkerPrivate,
-                                   "MessageEventToParentRunnable"),
+    : WorkerParentDebuggeeRunnable("MessageEventToParentRunnable"),
       StructuredCloneHolder(CloningSupported, TransferringSupported,
                             StructuredCloneScope::SameProcess) {}
 
