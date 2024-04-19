@@ -162,6 +162,8 @@ add_task(async function test_enable_experiment_when_pref_is_not_enabled() {
       tagged: "true",
       is_shopping_page: "false",
       num_ads_clicked: "0",
+      num_ads_hidden: "0",
+      num_ads_loaded: "2",
       num_ads_visible: "2",
     },
   ]);

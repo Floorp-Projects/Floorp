@@ -345,6 +345,7 @@ serp:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1868476
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1869064
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1887686
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1892267
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1868476
     data_sensitivity:
@@ -428,6 +429,16 @@ serp:
         description: >
           Indicates if the page is a shopping page.
         type: boolean
+      num_ads_hidden:
+        description: >
+          Number of ads hidden on the page at the time of categorizing the
+          page.
+        type: quantity
+      num_ads_loaded:
+        description: >
+          Number of ads loaded on the page at the time of categorizing the
+          page.
+        type: quantity
       num_ads_visible:
         description: >
           Number of ads visible on the page at the time of categorizing the

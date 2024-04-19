@@ -135,6 +135,8 @@ add_task(
         tagged: "true",
         is_shopping_page: "false",
         num_ads_clicked: "0",
+        num_ads_hidden: "0",
+        num_ads_loaded: "0",
         num_ads_visible: "0",
       },
     ]);

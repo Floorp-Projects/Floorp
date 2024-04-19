@@ -139,6 +139,8 @@ add_task(async function test_categorize_serp_and_wait() {
       tagged: "true",
       is_shopping_page: "false",
       num_ads_clicked: "0",
+      num_ads_hidden: "0",
+      num_ads_loaded: "2",
       num_ads_visible: "2",
     },
   ]);
@@ -184,6 +186,8 @@ add_task(async function test_categorize_serp_open_multiple_tabs() {
       tagged: "true",
       is_shopping_page: "false",
       num_ads_clicked: "0",
+      num_ads_hidden: "0",
+      num_ads_loaded: "2",
       num_ads_visible: "2",
     });
   }
@@ -238,6 +242,8 @@ add_task(async function test_categorize_serp_close_tab_and_wait() {
       tagged: "true",
       is_shopping_page: "false",
       num_ads_clicked: "0",
+      num_ads_hidden: "0",
+      num_ads_loaded: "2",
       num_ads_visible: "2",
     },
   ]);
@@ -292,6 +298,8 @@ add_task(async function test_categorize_serp_open_ad_and_wait() {
       tagged: "true",
       is_shopping_page: "false",
       num_ads_clicked: "1",
+      num_ads_hidden: "0",
+      num_ads_loaded: "2",
       num_ads_visible: "2",
     },
   ]);
