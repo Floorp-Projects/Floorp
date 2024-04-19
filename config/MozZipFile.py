@@ -7,7 +7,7 @@ import time
 import zipfile
 
 import six
-from mozbuild.util import lock_file
+from mozbuild.lock import lock_file
 
 
 class ZipFile(zipfile.ZipFile):
